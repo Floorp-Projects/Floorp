@@ -5,6 +5,8 @@
 use std::error::Error;
 use std::io::Cursor;
 
+use log::{debug, warn};
+
 use prio::vdaf::prio3::Prio3Sum;
 use prio::vdaf::prio3::Prio3SumVec;
 use thin_vec::ThinVec;
@@ -19,8 +21,6 @@ use types::Time;
 
 use prio::codec::Encode;
 use prio::codec::{decode_u16_items, encode_u32_items};
-use prio::flp::types::{Sum, SumVec};
-use prio::vdaf::prio3::Prio3;
 use prio::vdaf::Client;
 use prio::vdaf::VdafError;
 
@@ -41,7 +41,7 @@ extern "C" {
     ) -> bool;
 }
 
-pub fn new_prio_u8(num_aggregators: u8, bits: u32) -> Result<Prio3Sum, VdafError> {
+pub fn new_prio_sum(num_aggregators: u8, bits: usize) -> Result<Prio3Sum, VdafError> {
     if bits > 64 {
         return Err(VdafError::Uncategorized(format!(
             "bit length ({}) exceeds limit for aggregate type (64)",
@@ -49,17 +49,16 @@ pub fn new_prio_u8(num_aggregators: u8, bits: u32) -> Result<Prio3Sum, VdafError
         )));
     }
 
-    Prio3::new(num_aggregators, Sum::new(bits as usize)?)
+    Prio3Sum::new_sum(num_aggregators, bits)
 }
 
-pub fn new_prio_vecu8(num_aggregators: u8, len: usize) -> Result<Prio3SumVec, VdafError> {
+pub fn new_prio_sumvec(
+    num_aggregators: u8,
+    len: usize,
+    bits: usize,
+) -> Result<Prio3SumVec, VdafError> {
     let chunk_length = prio::vdaf::prio3::optimal_chunk_length(8 * len);
-    Prio3::new(num_aggregators, SumVec::new(8, len, chunk_length)?)
-}
-
-pub fn new_prio_vecu16(num_aggregators: u8, len: usize) -> Result<Prio3SumVec, VdafError> {
-    let chunk_length = prio::vdaf::prio3::optimal_chunk_length(16 * len);
-    Prio3::new(num_aggregators, SumVec::new(16, len, chunk_length)?)
+    Prio3SumVec::new_sum_vec(num_aggregators, bits, len, chunk_length)
 }
 
 enum Role {
@@ -112,14 +111,17 @@ impl Shardable for u8 {
         &self,
         nonce: &[u8; 16],
     ) -> Result<(Vec<u8>, Vec<Vec<u8>>), Box<dyn std::error::Error>> {
-        let prio = new_prio_u8(2, 2)?;
+        let prio = new_prio_sum(2, 8)?;
 
         let (public_share, input_shares) = prio.shard(&(*self as u128), nonce)?;
 
         debug_assert_eq!(input_shares.len(), 2);
 
-        let encoded_input_shares = input_shares.iter().map(|s| s.get_encoded()).collect();
-        let encoded_public_share = public_share.get_encoded();
+        let encoded_input_shares = input_shares
+            .iter()
+            .map(|s| s.get_encoded())
+            .collect::<Result<Vec<_>, _>>()?;
+        let encoded_public_share = public_share.get_encoded()?;
         Ok((encoded_public_share, encoded_input_shares))
     }
 }
@@ -129,15 +131,18 @@ impl Shardable for ThinVec<u8> {
         &self,
         nonce: &[u8; 16],
     ) -> Result<(Vec<u8>, Vec<Vec<u8>>), Box<dyn std::error::Error>> {
-        let prio = new_prio_vecu8(2, self.len())?;
+        let prio = new_prio_sumvec(2, self.len(), 8)?;
 
         let measurement: Vec<u128> = self.iter().map(|e| (*e as u128)).collect();
         let (public_share, input_shares) = prio.shard(&measurement, nonce)?;
 
         debug_assert_eq!(input_shares.len(), 2);
 
-        let encoded_input_shares = input_shares.iter().map(|s| s.get_encoded()).collect();
-        let encoded_public_share = public_share.get_encoded();
+        let encoded_input_shares = input_shares
+            .iter()
+            .map(|s| s.get_encoded())
+            .collect::<Result<Vec<_>, _>>()?;
+        let encoded_public_share = public_share.get_encoded()?;
         Ok((encoded_public_share, encoded_input_shares))
     }
 }
@@ -147,15 +152,18 @@ impl Shardable for ThinVec<u16> {
         &self,
         nonce: &[u8; 16],
     ) -> Result<(Vec<u8>, Vec<Vec<u8>>), Box<dyn std::error::Error>> {
-        let prio = new_prio_vecu16(2, self.len())?;
+        let prio = new_prio_sumvec(2, self.len(), 16)?;
 
         let measurement: Vec<u128> = self.iter().map(|e| (*e as u128)).collect();
         let (public_share, input_shares) = prio.shard(&measurement, nonce)?;
 
         debug_assert_eq!(input_shares.len(), 2);
 
-        let encoded_input_shares = input_shares.iter().map(|s| s.get_encoded()).collect();
-        let encoded_public_share = public_share.get_encoded();
+        let encoded_input_shares = input_shares
+            .iter()
+            .map(|s| s.get_encoded())
+            .collect::<Result<Vec<_>, _>>()?;
+        let encoded_public_share = public_share.get_encoded()?;
         Ok((encoded_public_share, encoded_input_shares))
     }
 }
@@ -163,7 +171,7 @@ impl Shardable for ThinVec<u16> {
 /// Pre-fill the info part of the HPKE sealing with the constants from the standard.
 fn make_base_info() -> Vec<u8> {
     let mut info = Vec::<u8>::new();
-    const START: &[u8] = "dap-07 input share".as_bytes();
+    const START: &[u8] = "dap-09 input share".as_bytes();
     info.extend(START);
     const FIXED: u8 = 1;
     info.push(FIXED);
@@ -215,7 +223,8 @@ fn get_dap_report_internal<T: Shardable>(
             }
             .get_encoded()
         })
-        .collect();
+        .collect::<Result<Vec<_>, _>>()?;
+    debug!("Plaintext input shares computed.");
 
     let metadata = ReportMetadata {
         report_id,
@@ -230,18 +239,20 @@ fn get_dap_report_internal<T: Shardable>(
     let mut info = make_base_info();
 
     let mut aad = Vec::from(*task_id);
-    metadata.encode(&mut aad);
-    encode_u32_items(&mut aad, &(), &encoded_public_share);
+    metadata.encode(&mut aad)?;
+    encode_u32_items(&mut aad, &(), &encoded_public_share)?;
 
     info.push(Role::Leader as u8);
 
     let leader_payload =
         hpke_encrypt_wrapper(&plaintext_input_shares[0], &aad, &info, &leader_hpke_config)?;
+    debug!("Leader payload encrypted.");
 
     *info.last_mut().unwrap() = Role::Helper as u8;
 
     let helper_payload =
         hpke_encrypt_wrapper(&plaintext_input_shares[1], &aad, &info, &helper_hpke_config)?;
+    debug!("Helper payload encrypted.");
 
     Ok(Report {
         metadata,
@@ -264,20 +275,22 @@ pub extern "C" fn dapGetReportU8(
 ) -> bool {
     assert_eq!(task_id.len(), 32);
 
-    if let Ok(report) = get_dap_report_internal::<u8>(
+    let Ok(report) = get_dap_report_internal::<u8>(
         leader_hpke_config_encoded,
         helper_hpke_config_encoded,
         &measurement,
         &task_id.as_slice().try_into().unwrap(),
         time_precision,
-    ) {
-        let encoded_report = report.get_encoded();
-        out_report.extend(encoded_report);
-
-        true
-    } else {
-        false
-    }
+    ) else {
+        warn!("Creating report failed!");
+        return false;
+    };
+    let Ok(encoded_report) = report.get_encoded() else {
+        warn!("Encoding report failed!");
+        return false;
+    };
+    out_report.extend(encoded_report);
+    true
 }
 
 #[no_mangle]
@@ -291,20 +304,22 @@ pub extern "C" fn dapGetReportVecU8(
 ) -> bool {
     assert_eq!(task_id.len(), 32);
 
-    if let Ok(report) = get_dap_report_internal::<ThinVec<u8>>(
+    let Ok(report) = get_dap_report_internal::<ThinVec<u8>>(
         leader_hpke_config_encoded,
         helper_hpke_config_encoded,
         measurement,
         &task_id.as_slice().try_into().unwrap(),
         time_precision,
-    ) {
-        let encoded_report = report.get_encoded();
-        out_report.extend(encoded_report);
-
-        true
-    } else {
-        false
-    }
+    ) else {
+        warn!("Creating report failed!");
+        return false;
+    };
+    let Ok(encoded_report) = report.get_encoded() else {
+        warn!("Encoding report failed!");
+        return false;
+    };
+    out_report.extend(encoded_report);
+    true
 }
 
 #[no_mangle]
@@ -318,18 +333,20 @@ pub extern "C" fn dapGetReportVecU16(
 ) -> bool {
     assert_eq!(task_id.len(), 32);
 
-    if let Ok(report) = get_dap_report_internal::<ThinVec<u16>>(
+    let Ok(report) = get_dap_report_internal::<ThinVec<u16>>(
         leader_hpke_config_encoded,
         helper_hpke_config_encoded,
         measurement,
         &task_id.as_slice().try_into().unwrap(),
         time_precision,
-    ) {
-        let encoded_report = report.get_encoded();
-        out_report.extend(encoded_report);
-
-        true
-    } else {
-        false
-    }
+    ) else {
+        warn!("Creating report failed!");
+        return false;
+    };
+    let Ok(encoded_report) = report.get_encoded() else {
+        warn!("Encoding report failed!");
+        return false;
+    };
+    out_report.extend(encoded_report);
+    true
 }
