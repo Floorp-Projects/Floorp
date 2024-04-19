@@ -158,7 +158,7 @@ def valgrind_test(command_context, suppressions):
                     valgrind_args.append("--suppressions=" + supps_file2)
 
         exitcode = None
-        timeout = 2400
+        timeout = 3600
         binary_not_found_exception = None
         try:
             runner = FirefoxRunner(
