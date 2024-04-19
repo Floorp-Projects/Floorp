@@ -151,6 +151,8 @@ add_task(async function test_categorize_serp_and_sleep() {
       tagged: "true",
       is_shopping_page: "false",
       num_ads_clicked: "0",
+      num_ads_hidden: "0",
+      num_ads_loaded: "2",
       num_ads_visible: "2",
     },
   ]);
@@ -209,6 +211,8 @@ add_task(async function test_categorize_serp_and_sleep_not_long_enough() {
       tagged: "true",
       is_shopping_page: "false",
       num_ads_clicked: "0",
+      num_ads_hidden: "0",
+      num_ads_loaded: "2",
       num_ads_visible: "2",
     },
   ]);

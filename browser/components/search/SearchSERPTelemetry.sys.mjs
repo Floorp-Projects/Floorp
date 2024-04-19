@@ -561,6 +561,8 @@ class TelemetryHandler {
         searchBoxSubmitted: false,
         categorizationInfo: null,
         adsClicked: 0,
+        adsHidden: 0,
+        adsLoaded: 0,
         adsVisible: 0,
         searchQuery: info.searchQuery,
       });
@@ -578,6 +580,8 @@ class TelemetryHandler {
           searchBoxSubmitted: false,
           categorizationInfo: null,
           adsClicked: 0,
+          adsHidden: 0,
+          adsLoaded: 0,
           adsVisible: 0,
           searchQuery: info.searchQuery,
         }),
@@ -1663,6 +1667,8 @@ class ContentHandler {
       for (let [componentType, data] of info.adImpressions.entries()) {
         // Not all ad impressions are sponsored.
         if (AD_COMPONENTS.includes(componentType)) {
+          telemetryState.adsHidden += data.adsHidden;
+          telemetryState.adsLoaded += data.adsLoaded;
           telemetryState.adsVisible += data.adsVisible;
         }
 
@@ -1817,6 +1823,8 @@ class ContentHandler {
             tagged: impressionInfo.tagged,
             is_shopping_page: impressionInfo.isShoppingPage,
             num_ads_clicked: telemetryState.adsClicked,
+            num_ads_hidden: telemetryState.adsHidden,
+            num_ads_loaded: telemetryState.adsLoaded,
             num_ads_visible: telemetryState.adsVisible,
           });
         };
@@ -1856,6 +1864,10 @@ class ContentHandler {
  * @typedef {object} CategorizationExtraParams
  * @property {number} num_ads_clicked
  *  The total number of ads clicked on a SERP.
+ * @property {number} num_ads_hidden
+ *  The total number of ads hidden from the user when categorization occured.
+ * @property {number} num_ads_loaded
+ *  The total number of ads loaded when categorization occured.
  * @property {number} num_ads_visible
  *  The total number of ads visible to the user when categorization occured.
  */

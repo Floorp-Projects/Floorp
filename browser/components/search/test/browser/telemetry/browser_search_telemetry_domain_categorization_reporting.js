@@ -136,6 +136,8 @@ add_task(async function test_categorization_reporting() {
       tagged: "true",
       is_shopping_page: "false",
       num_ads_clicked: "0",
+      num_ads_hidden: "0",
+      num_ads_loaded: "2",
       num_ads_visible: "2",
     },
   ]);
@@ -242,6 +244,8 @@ add_task(async function test_reporting_limited_to_10_domains_of_each_kind() {
       tagged: "true",
       is_shopping_page: "false",
       num_ads_clicked: "0",
+      num_ads_hidden: "0",
+      num_ads_loaded: "12",
       num_ads_visible: "12",
     },
   ]);
@@ -279,6 +283,8 @@ add_task(async function test_categorization_reporting_for_shopping_page() {
       tagged: "true",
       is_shopping_page: "true",
       num_ads_clicked: "0",
+      num_ads_hidden: "0",
+      num_ads_loaded: "2",
       num_ads_visible: "2",
     },
   ]);
