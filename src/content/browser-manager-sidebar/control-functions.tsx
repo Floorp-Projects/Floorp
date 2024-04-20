@@ -26,6 +26,7 @@ export class BMSControlFunctions {
         elem.classList.contains("isFloorp") ||
         elem.classList.contains("isExtension")
       ) {
+        //TODO: WHAT?
         const src = elem.getAttribute("src");
         elem.setAttribute("src", "");
         elem.setAttribute("src", src);

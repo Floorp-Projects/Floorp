@@ -1,14 +1,14 @@
 import { insert } from "@solid-xul/solid-xul";
+
 import { BMSContextMenu } from "./context-menu";
 import { BMSControlFunctions } from "./control-functions";
 import { BMSMouseEvent } from "./mouse-event";
+
 import { sidebar } from "./browser-manager-sidebar";
 import { sidebarContext } from "./browser-manager-sidebar-context";
 
 import { Sidebar3Data } from "./SidebarData";
-
 import { BrowserManagerSidebar } from "./BrowserManagerSidebar";
-
 import { PanelWindowUtils } from "@private/browser-manager-sidebar/PanelWindowUtils";
 
 export class CBrowserManagerSidebar {
@@ -18,10 +18,11 @@ export class CBrowserManagerSidebar {
   contextMenu = new BMSContextMenu(this);
   mouseEvent = new BMSMouseEvent();
 
-  currentPanel = "";
-  clickedWebpanel = null;
-  webpanel = null;
-  contextWebpanel = null;
+  //TODO: this to empty string
+  currentPanel = "floorp__bookmarks";
+  clickedWebpanel = "";
+  webpanel = "";
+  contextWebpanel: Element? = null;
   public static getInstance() {
     if (!CBrowserManagerSidebar.instance) {
       CBrowserManagerSidebar.instance = new CBrowserManagerSidebar();
@@ -45,7 +46,7 @@ export class CBrowserManagerSidebar {
       "sidebar2-back",
       "sidebar2-forward",
       "sidebar2-reload",
-      "sidebar2-go-index",
+      "sidebar2-home",
     ];
   }
   getWebpanelIdBySelectedButtonId(selectId: string) {
@@ -61,7 +62,7 @@ export class CBrowserManagerSidebar {
   }
 
   private constructor() {
-    inject();
+    inject(this);
     if (!Services.prefs.prefHasDefaultValue("floorp.browser.sidebar2.data")) {
       BrowserManagerSidebar.updatePrefs();
     }
@@ -116,14 +117,17 @@ export class CBrowserManagerSidebar {
     if (!(sidebarsplit2.getAttribute("hidden") === "true")) {
       this.controlFunctions.changeVisibilityOfWebPanel();
     }
+
+    //TODO: Remove this
+    this.controlFunctions.makeWebpanel("floorp__bookmarks");
   }
 
   // Sidebar button functions
-  sidebarButtons(action) {
+  sidebarButtons(action: "back" | "forward" | "reload" | "home") {
     const modeValuePref = this.currentPanel;
     const webpanel = document.getElementById(`webpanel${modeValuePref}`);
     switch (action) {
-      case 0:
+      case "back":
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
           PanelWindowUtils.goBackPanel(window, webPanelId, true);
@@ -131,7 +135,7 @@ export class CBrowserManagerSidebar {
           webpanel.goBack();
         }
         break;
-      case 1:
+      case "forward":
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
           PanelWindowUtils.goForwardPanel(window, webPanelId, true);
@@ -139,7 +143,7 @@ export class CBrowserManagerSidebar {
           webpanel.goForward();
         }
         break;
-      case 2:
+      case "reload":
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
           PanelWindowUtils.reloadPanel(window, webPanelId, true);
@@ -147,7 +151,7 @@ export class CBrowserManagerSidebar {
           webpanel.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
         }
         break;
-      case 3:
+      case "home":
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
           PanelWindowUtils.goIndexPagePanel(window, webPanelId, true);
@@ -213,17 +217,17 @@ export class CBrowserManagerSidebar {
   }
 }
 
-function inject() {
+function inject(bms: CBrowserManagerSidebar) {
   console.log("browser");
   insert(
     document.getElementById("browser"),
-    sidebar(),
+    sidebar(bms),
     document.getElementById("appcontent"),
   );
   console.log("body");
   insert(
     document.body,
-    sidebarContext(),
+    sidebarContext(bms),
     document.getElementById("window-modal-dialog"),
   );
 }

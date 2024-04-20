@@ -27,6 +27,11 @@ export async function setBrowserDesign() {
 
   tag.rel = "stylesheet";
   tag.href = themeCSS.FluerialUI;
+
+  const floorpTag = document.createElement("link");
+  floorpTag.setAttribute("id", "floorpdesign");
+  floorpTag.rel = "stylesheet";
+  floorpTag.href = "chrome://noraneko/skin/floorp/css/floorp.css";
   //const enableMultitab = Services.prefs.getIntPref("floorp.tabbar.style") == 1;
   //const enableVerticalTabs = Services.prefs.getIntPref("floorp.browser.tabbar.settings") == 2;
 
@@ -52,6 +57,7 @@ export async function setBrowserDesign() {
   // }
 
   document.head.appendChild(tag);
+  document.head?.appendChild(floorpTag);
 
   // recalculate sidebar width
   //setTimeout(() => {

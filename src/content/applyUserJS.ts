@@ -12,12 +12,18 @@ export async function applyUserJS() {
 
       if (value === "true" || value === "false") {
         //console.log(prefName);
-        Services.prefs.setBoolPref(prefName, value as unknown as boolean);
+        Services.prefs
+          .getDefaultBranch("")
+          .setBoolPref(prefName, value as unknown as boolean);
       } else if (value.includes('"')) {
-        Services.prefs.setStringPref(prefName, value.replace('"', ""));
+        Services.prefs
+          .getDefaultBranch("")
+          .setStringPref(prefName, value.replace('"', ""));
       } else if (!Number.isNaN(value)) {
         // integer
-        Services.prefs.setIntPref(prefName, value as unknown as number);
+        Services.prefs
+          .getDefaultBranch("")
+          .setIntPref(prefName, value as unknown as number);
       }
     }
   }

@@ -1,6 +1,7 @@
 import "@solid-xul/jsx-runtime";
+import type { CBrowserManagerSidebar } from ".";
 
-export function sidebar() {
+export function sidebar(bms: CBrowserManagerSidebar) {
   return (
     <>
       <xul:vbox
@@ -14,44 +15,56 @@ export function sidebar() {
             class="sidebar2-icon"
             style="margin-left: 0.5em;"
             data-l10n-id="sidebar-back-button"
-            oncommand="gBrowserManagerSidebar.sidebarButtons(0);"
+            onClick={() => {
+              bms.sidebarButtons("back");
+            }}
           />
           <xul:toolbarbutton
             id="sidebar2-forward"
             class="sidebar2-icon"
             style="margin-left: 1em;"
             data-l10n-id="sidebar-forward-button"
-            oncommand="gBrowserManagerSidebar.sidebarButtons(1);"
+            onClick={() => {
+              bms.sidebarButtons("forward");
+            }}
           />
           <xul:toolbarbutton
             id="sidebar2-reload"
             class="sidebar2-icon"
             style="margin-left: 1em;"
             data-l10n-id="sidebar-reload-button"
-            oncommand="gBrowserManagerSidebar.sidebarButtons(2);"
+            onClick={() => {
+              bms.sidebarButtons("reload");
+            }}
           />
           <xul:toolbarbutton
-            id="sidebar2-go-index"
+            id="sidebar2-home"
             class="sidebar2-icon"
             style="margin-left: 1em;"
             data-l10n-id="sidebar-go-index-button"
-            oncommand="gBrowserManagerSidebar.sidebarButtons(3);"
+            onClick={() => {
+              bms.sidebarButtons("home");
+            }}
           />
           <xul:spacer flex="1" />
           <xul:toolbarbutton
-            id="sidebar2-keeppanelwidth"
+            id="sidebar2-keepPanelWidth"
             context="width-size-context"
             class="sidebar2-icon"
             style="margin-right: 0.5em;"
             data-l10n-id="sidebar-keepWidth-button"
-            oncommand="gBrowserManagerSidebar.keepWebPanelWidth();"
+            onClick={() => {
+              bms.keepWebPanelWidth();
+            }}
           />
           <xul:toolbarbutton
             id="sidebar2-close"
             class="sidebar2-icon"
             style="margin-right: 0.5em;"
             data-l10n-id="sidebar2-close-button"
-            oncommand="gBrowserManagerSidebar.controllFunctions.changeVisibilityOfWebPanel();"
+            onClick={() => {
+              bms.controlFunctions.changeVisibilityOfWebPanel();
+            }}
           />
         </xul:box>
       </xul:vbox>

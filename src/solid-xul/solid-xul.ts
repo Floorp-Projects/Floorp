@@ -17,7 +17,6 @@ export const {
 } = createRenderer<JSX.Element>({
   createElement: (tag: string): Element => {
     if (tag.startsWith("xul:")) {
-      //@ts-expect-error XUL is firefox only
       return document.createXULElement(tag.replace("xul:", ""));
     }
     return document.createElement(tag);
@@ -38,7 +37,11 @@ export const {
     prev?: T,
   ): void => {
     if (node instanceof Element) {
-      node.setAttribute(name, value as unknown as string);
+      if (value instanceof Function) {
+        node.addEventListener(name.slice(2).toLowerCase(), value);
+      } else if (typeof value === "string") {
+        node.setAttribute(name, value);
+      }
     } else {
       node[name] = value;
     }

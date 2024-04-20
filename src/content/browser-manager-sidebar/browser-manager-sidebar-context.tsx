@@ -1,6 +1,7 @@
 import "@solid-xul/jsx-runtime";
+import type { CBrowserManagerSidebar } from ".";
 
-export function sidebarContext() {
+export function sidebarContext(bms: CBrowserManagerSidebar) {
   return (
     <xul:popupset>
       <xul:menupopup
@@ -13,7 +14,9 @@ export function sidebarContext() {
           data-l10n-id="sidebar2-unload-panel"
           label="Unload this webpanel"
           accesskey="U"
-          oncommand="gBrowserManagerSidebar.contextMenu.unloadWebpanel();"
+          onClick={() => {
+            bms.contextMenu.unloadWebpanel();
+          }}
         />
         <xul:menuseparator class="context-webpanel-separator" />
         <xul:menuitem
@@ -22,7 +25,9 @@ export function sidebarContext() {
           data-l10n-id="sidebar2-mute-and-unmute"
           label="Mute/Unmute this webpanel"
           accesskey="M"
-          oncommand="gBrowserManagerSidebar.contextMenu.muteWebpanel();"
+          onClick={() => {
+            bms.contextMenu.muteWebpanel();
+          }}
         />
         <xul:menu
           id="changeZoomLevelMenu"
@@ -35,19 +40,25 @@ export function sidebarContext() {
               id="zoomInMenu"
               accesskey="I"
               data-l10n-id="sidebar2-zoom-in"
-              oncommand="gBrowserManagerSidebar.contextMenu.zoomIn();"
+              onClick={() => {
+                bms.contextMenu.zoomIn();
+              }}
             />
             <xul:menuitem
               id="zoomOutMenu"
               accesskey="O"
               data-l10n-id="sidebar2-zoom-out"
-              oncommand="gBrowserManagerSidebar.contextMenu.zoomOut();"
+              onClick={() => {
+                bms.contextMenu.zoomOut();
+              }}
             />
             <xul:menuitem
               id="resetZoomMenu"
               accesskey="R"
               data-l10n-id="sidebar2-reset-zoom"
-              oncommand="gBrowserManagerSidebar.contextMenu.resetZoom();"
+              onClick={() => {
+                bms.contextMenu.resetZoom();
+              }}
             />
           </xul:menupopup>
         </xul:menu>
@@ -56,14 +67,18 @@ export function sidebarContext() {
           data-l10n-id="sidebar2-change-ua-panel"
           label="Switch User agent to Mobile/Desktop Version at this Webpanel"
           accesskey="R"
-          oncommand="gBrowserManagerSidebar.contextMenu.changeUserAgent();"
+          onClick={() => {
+            bms.contextMenu.changeUserAgent();
+          }}
         />
         <xul:menuseparator class="context-webpanel-separator" />
         <xul:menuitem
           id="deleteWebpanelMenu"
           data-l10n-id="sidebar2-delete-panel"
           accesskey="D"
-          oncommand="gBrowserManagerSidebar.contextMenu.deleteWebpanel();"
+          onClick={() => {
+            bms.contextMenu.deleteWebpanel();
+          }}
         />
       </xul:menupopup>
 
@@ -77,14 +92,18 @@ export function sidebarContext() {
           data-l10n-id="sidebar2-unload-panel"
           label="Unload this webpanel"
           accesskey="U"
-          oncommand="gBrowserManagerSidebar.contextMenu.unloadWebpanel();"
+          onClick={() => {
+            bms.contextMenu.unloadWebpanel();
+          }}
         />
         <xul:menuseparator class="context-webpanel-separator" />
         <xul:menuitem
           id="deleteWebpanelMenu"
           data-l10n-id="sidebar2-delete-panel"
           accesskey="D"
-          oncommand="gBrowserManagerSidebar.contextMenu.deleteWebpanel();"
+          onClick={() => {
+            bms.contextMenu.deleteWebpanel();
+          }}
         />
       </xul:menupopup>
 
@@ -94,7 +113,9 @@ export function sidebarContext() {
           data-l10n-id="sidebar2-keep-width-for-global"
           label="Set width for All Panel"
           accesskey="S"
-          oncommand="gBrowserManagerSidebar.keepWidthToGlobalValue();"
+          onClick={() => {
+            bms.keepWidthToGlobalValue();
+          }}
         />
       </xul:menupopup>
     </xul:popupset>

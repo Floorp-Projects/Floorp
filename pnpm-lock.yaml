@@ -53,8 +53,8 @@ devDependencies:
     specifier: ^3.3.2
     version: 3.3.2
   linkedom:
-    specifier: 0.16.11
-    version: 0.16.11
+    specifier: 0.16.7
+    version: 0.16.7
   postcss:
     specifier: ^8.4.38
     version: 8.4.38
@@ -2224,8 +2224,8 @@ packages:
     engines: {node: '>=14'}
     dev: true
 
-  /linkedom@0.16.11:
-    resolution: {integrity: sha512-WgaTVbj7itjyXTsCvgerpneERXShcnNJF5VIV+/4SLtyRLN+HppPre/WDHRofAr2IpEuujSNgJbCBd5lMl6lRw==}
+  /linkedom@0.16.7:
+    resolution: {integrity: sha512-A4ihM1UIMfX6ZTlQFiggjgvM4019rvi/PsjSoVMlDqMQs3DQRmpO4ugyfSV33j3aa9/liuRk05m4T/iT2X8ZtA==}
     dependencies:
       css-select: 5.1.0
       cssom: 0.5.0
