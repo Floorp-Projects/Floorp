@@ -88,6 +88,11 @@ Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 
 - x86_64 CPU & ARM64 CPU architecture. Floorp provides a Universal build for both architectures.
 
+Homebrew install command: 
+```
+brew install --cask floorp
+```
+
 **After version 11.0.0, Floorp has obtained Apple Notarization & Certification. This means that you can install Floorp without any warning messages. Additionally, Floorp now includes an auto-update system.**
 
 #### Linux
