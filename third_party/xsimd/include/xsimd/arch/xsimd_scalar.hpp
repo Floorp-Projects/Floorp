@@ -86,6 +86,57 @@ namespace xsimd
     using std::tgamma;
     using std::trunc;
 
+    inline signed char abs(signed char v)
+    {
+        return v < 0 ? -v : v;
+    }
+
+    namespace detail
+    {
+        // Use templated type here to prevent automatic instantiation that may
+        // ends up in a warning
+        template <typename char_type>
+        inline char abs(char_type v, std::true_type)
+        {
+            return v;
+        }
+        template <typename char_type>
+        inline char abs(char_type v, std::false_type)
+        {
+            return v < 0 ? -v : v;
+        }
+    }
+
+    inline char abs(char v)
+    {
+        return detail::abs(v, std::is_unsigned<char>::type {});
+    }
+
+    inline short abs(short v)
+    {
+        return v < 0 ? -v : v;
+    }
+    inline unsigned char abs(unsigned char v)
+    {
+        return v;
+    }
+    inline unsigned short abs(unsigned short v)
+    {
+        return v;
+    }
+    inline unsigned int abs(unsigned int v)
+    {
+        return v;
+    }
+    inline unsigned long abs(unsigned long v)
+    {
+        return v;
+    }
+    inline unsigned long long abs(unsigned long long v)
+    {
+        return v;
+    }
+
 #ifndef _WIN32
     using std::isfinite;
     using std::isinf;
@@ -137,7 +188,7 @@ namespace xsimd
 #endif
 
     template <class T, class Tp>
-    inline auto add(T const& x, Tp const& y) noexcept -> decltype(x + y)
+    inline typename std::common_type<T, Tp>::type add(T const& x, Tp const& y) noexcept
     {
         return x + y;
     }
@@ -209,6 +260,15 @@ namespace xsimd
         return x & y;
     }
 
+    template <class T_out, class T_in>
+    inline T_out bitwise_cast(T_in x) noexcept
+    {
+        static_assert(sizeof(T_in) == sizeof(T_out), "bitwise_cast between types of the same size");
+        T_out r;
+        std::memcpy((void*)&r, (void*)&x, sizeof(T_in));
+        return r;
+    }
+
     inline float bitwise_and(float x, float y) noexcept
     {
         uint32_t ix, iy;
@@ -226,35 +286,6 @@ namespace xsimd
         std::memcpy((void*)&ix, (void*)&x, sizeof(double));
         std::memcpy((void*)&iy, (void*)&y, sizeof(double));
         uint64_t ir = bitwise_and(ix, iy);
-        double r;
-        std::memcpy((void*)&r, (void*)&ir, sizeof(double));
-        return r;
-    }
-
-    template <class T>
-    inline typename std::enable_if<std::is_integral<T>::value, T>::type
-    bitwise_andnot(T x, T y) noexcept
-    {
-        return x & ~y;
-    }
-
-    inline float bitwise_andnot(float x, float y) noexcept
-    {
-        uint32_t ix, iy;
-        std::memcpy((void*)&ix, (void*)&x, sizeof(float));
-        std::memcpy((void*)&iy, (void*)&y, sizeof(float));
-        uint32_t ir = bitwise_andnot(ix, iy);
-        float r;
-        std::memcpy((void*)&r, (void*)&ir, sizeof(float));
-        return r;
-    }
-
-    inline double bitwise_andnot(double x, double y) noexcept
-    {
-        uint64_t ix, iy;
-        std::memcpy((void*)&ix, (void*)&x, sizeof(double));
-        std::memcpy((void*)&iy, (void*)&y, sizeof(double));
-        uint64_t ir = bitwise_andnot(ix, iy);
         double r;
         std::memcpy((void*)&r, (void*)&ir, sizeof(double));
         return r;
@@ -281,6 +312,11 @@ namespace xsimd
         return ~x;
     }
 
+    inline bool bitwise_not(bool x) noexcept
+    {
+        return !x;
+    }
+
     inline float bitwise_not(float x) noexcept
     {
         uint32_t ix;
@@ -299,6 +335,12 @@ namespace xsimd
         double r;
         std::memcpy((void*)&r, (void*)&ir, sizeof(double));
         return r;
+    }
+
+    template <class T>
+    inline typename std::enable_if<std::is_scalar<T>::value, T>::type bitwise_andnot(T x, T y) noexcept
+    {
+        return bitwise_and(x, bitwise_not(y));
     }
 
     template <class T>
@@ -360,7 +402,7 @@ namespace xsimd
     }
 
     template <class T, class Tp>
-    inline auto div(T const& x, Tp const& y) noexcept -> decltype(x / y)
+    inline typename std::common_type<T, Tp>::type div(T const& x, Tp const& y) noexcept
     {
         return x / y;
     }
@@ -372,13 +414,13 @@ namespace xsimd
     }
 
     template <class T, class Tp>
-    inline auto mul(T const& x, Tp const& y) noexcept -> decltype(x * y)
+    inline typename std::common_type<T, Tp>::type mul(T const& x, Tp const& y) noexcept
     {
         return x * y;
     }
 
     template <class T>
-    inline auto neg(T const& x) noexcept -> decltype(-x)
+    inline T neg(T const& x) noexcept
     {
         return -x;
     }
@@ -776,9 +818,9 @@ namespace xsimd
     }
 
     template <class T, class = typename std::enable_if<std::is_scalar<T>::value>::type>
-    inline bool bitofsign(T const& x) noexcept
+    inline T bitofsign(T const& x) noexcept
     {
-        return x < T(0);
+        return T(x < T(0));
     }
 
     template <class T>
@@ -842,7 +884,7 @@ namespace xsimd
     }
 
     template <class T, class Tp>
-    inline auto sub(T const& x, Tp const& y) noexcept -> decltype(x - y)
+    inline typename std::common_type<T, Tp>::type sub(T const& x, Tp const& y) noexcept
     {
         return x - y;
     }
