@@ -284,9 +284,9 @@ namespace xsimd
         }
 
         template <class A, class T, bool... Values, class = typename std::enable_if<std::is_integral<T>::value, void>::type>
-        inline batch<T, A> select(batch_bool_constant<batch<T, A>, Values...> const&, batch<T, A> const& true_br, batch<T, A> const& false_br, requires_arch<sse4_1>) noexcept
+        inline batch<T, A> select(batch_bool_constant<T, A, Values...> const&, batch<T, A> const& true_br, batch<T, A> const& false_br, requires_arch<sse4_1>) noexcept
         {
-            constexpr int mask = batch_bool_constant<batch<T, A>, Values...>::mask();
+            constexpr int mask = batch_bool_constant<T, A, Values...>::mask();
             XSIMD_IF_CONSTEXPR(sizeof(T) == 2)
             {
                 return _mm_blend_epi16(false_br, true_br, mask);
@@ -304,19 +304,19 @@ namespace xsimd
             }
             else
             {
-                return select(batch_bool_constant<batch<T, A>, Values...>(), true_br, false_br, ssse3 {});
+                return select(batch_bool_constant<T, A, Values...>(), true_br, false_br, ssse3 {});
             }
         }
         template <class A, bool... Values>
-        inline batch<float, A> select(batch_bool_constant<batch<float, A>, Values...> const&, batch<float, A> const& true_br, batch<float, A> const& false_br, requires_arch<sse4_1>) noexcept
+        inline batch<float, A> select(batch_bool_constant<float, A, Values...> const&, batch<float, A> const& true_br, batch<float, A> const& false_br, requires_arch<sse4_1>) noexcept
         {
-            constexpr int mask = batch_bool_constant<batch<float, A>, Values...>::mask();
+            constexpr int mask = batch_bool_constant<float, A, Values...>::mask();
             return _mm_blend_ps(false_br, true_br, mask);
         }
         template <class A, bool... Values>
-        inline batch<double, A> select(batch_bool_constant<batch<double, A>, Values...> const&, batch<double, A> const& true_br, batch<double, A> const& false_br, requires_arch<sse4_1>) noexcept
+        inline batch<double, A> select(batch_bool_constant<double, A, Values...> const&, batch<double, A> const& true_br, batch<double, A> const& false_br, requires_arch<sse4_1>) noexcept
         {
-            constexpr int mask = batch_bool_constant<batch<double, A>, Values...>::mask();
+            constexpr int mask = batch_bool_constant<double, A, Values...>::mask();
             return _mm_blend_pd(false_br, true_br, mask);
         }
 

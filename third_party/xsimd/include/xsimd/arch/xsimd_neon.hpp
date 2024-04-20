@@ -146,7 +146,7 @@ inline float32x4_t vreinterpretq_f32_f32(float32x4_t arg) noexcept { return arg;
 
 namespace xsimd
 {
-    template <class batch_type, bool... Values>
+    template <typename T, class A, bool... Values>
     struct batch_bool_constant;
 
     namespace kernel
@@ -1743,7 +1743,7 @@ namespace xsimd
         }
 
         template <class A, class T, bool... b, detail::enable_neon_type_t<T> = 0>
-        inline batch<T, A> select(batch_bool_constant<batch<T, A>, b...> const&, batch<T, A> const& true_br, batch<T, A> const& false_br, requires_arch<neon>) noexcept
+        inline batch<T, A> select(batch_bool_constant<T, A, b...> const&, batch<T, A> const& true_br, batch<T, A> const& false_br, requires_arch<neon>) noexcept
         {
             return select(batch_bool<T, A> { b... }, true_br, false_br, neon {});
         }
@@ -2717,7 +2717,7 @@ namespace xsimd
         }
     }
 
-    template <class batch_type, typename batch_type::value_type... Values>
+    template <typename T, class A, T... Values>
     struct batch_constant;
 
     namespace kernel
@@ -2728,7 +2728,7 @@ namespace xsimd
 
         template <class A, class T, class I, I... idx>
         inline batch<T, A> swizzle(batch<T, A> const& self,
-                                   batch_constant<batch<I, A>, idx...>,
+                                   batch_constant<I, A, idx...>,
                                    requires_arch<neon>) noexcept
         {
             static_assert(batch<T, A>::size == sizeof...(idx), "valid swizzle indices");

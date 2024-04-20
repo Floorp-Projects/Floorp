@@ -16,6 +16,10 @@
 
 #include "./xsimd_generic_fwd.hpp"
 
+#if XSIMD_WITH_EMULATED
+#include "./xsimd_emulated.hpp"
+#endif
+
 #if XSIMD_WITH_SSE2
 #include "./xsimd_sse2.hpp"
 #endif
