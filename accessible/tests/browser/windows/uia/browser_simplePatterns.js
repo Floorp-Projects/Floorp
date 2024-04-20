@@ -317,6 +317,7 @@ addUiaTask(
     await setUpWaitForUiaPropEvent("ValueValue", "text");
     await runPython(`pattern.SetValue("after")`);
     await waitForUiaEvent();
+    ok(true, "Got ValueValue prop change event on text");
     is(
       await runPython(`pattern.CurrentValue`),
       "after",
@@ -434,6 +435,7 @@ addUiaTask(
     await setUpWaitForUiaPropEvent("ValueValue", "ariaTextbox");
     await runPython(`pattern.SetValue("after")`);
     await waitForUiaEvent();
+    ok(true, "Got ValueValue prop change event on ariaTextbox");
     is(
       await runPython(`pattern.CurrentValue`),
       "after",
@@ -441,5 +443,97 @@ addUiaTask(
     );
 
     await testPatternAbsent("button", "Value");
+  }
+);
+
+async function testRangeValueProps(id, ro, val, min, max, small, large) {
+  await assignPyVarToUiaWithId(id);
+  await definePyVar("pattern", `getUiaPattern(${id}, "RangeValue")`);
+  ok(await runPython(`bool(pattern)`), `${id} has RangeValue pattern`);
+  is(
+    !!(await runPython(`pattern.CurrentIsReadOnly`)),
+    ro,
+    `${id} has IsReadOnly ${ro}`
+  );
+  is(await runPython(`pattern.CurrentValue`), val, `${id} has correct Value`);
+  is(
+    await runPython(`pattern.CurrentMinimum`),
+    min,
+    `${id} has correct Minimum`
+  );
+  is(
+    await runPython(`pattern.CurrentMaximum`),
+    max,
+    `${id} has correct Maximum`
+  );
+  // IA2 doesn't support small/large change, so the IA2 -> UIA proxy can't
+  // either.
+  if (gIsUiaEnabled) {
+    is(
+      await runPython(`pattern.CurrentSmallChange`),
+      small,
+      `${id} has correct SmallChange`
+    );
+    is(
+      await runPython(`pattern.CurrentLargeChange`),
+      large,
+      `${id} has correct LargeChange`
+    );
+  }
+}
+
+/**
+ * Test the RangeValue pattern.
+ */
+addUiaTask(
+  `
+<input id="range" type="range">
+<input id="rangeBig" type="range" max="1000">
+<progress id="progress" value="0.5"></progress>
+<input id="numberRo" type="number" min="0" max="10" value="5" readonly>
+<div id="ariaSlider" role="slider">slider</div>
+<button id="button">button</button>
+  `,
+  async function testRangeValue(browser) {
+    await definePyVar("doc", `getDocUia()`);
+    await testRangeValueProps("range", false, 50, 0, 100, 1, 10);
+    info("SetValue on range");
+    await setUpWaitForUiaPropEvent("RangeValueValue", "range");
+    await runPython(`pattern.SetValue(20)`);
+    await waitForUiaEvent();
+    ok(true, "Got RangeValueValue prop change event on range");
+    is(await runPython(`pattern.CurrentValue`), 20, "range has correct Value");
+
+    await testRangeValueProps("rangeBig", false, 500, 0, 1000, 1, 100);
+
+    // Gecko a11y doesn't expose progress bars as read only, but it probably
+    // should.
+    await testRangeValueProps("progress", false, 0.5, 0, 1, 0, 0.1);
+    info("Calling SetValue on progress");
+    await testPythonRaises(
+      `pattern.SetValue(0.6)`,
+      "SetValue on progress failed"
+    );
+
+    await testRangeValueProps("numberRo", true, 5, 0, 10, 1, 1);
+    info("Calling SetValue on numberRo");
+    await testPythonRaises(
+      `pattern.SetValue(6)`,
+      "SetValue on numberRo failed"
+    );
+
+    await testRangeValueProps("ariaSlider", false, 50, 0, 100, null, null);
+    info("Setting aria-valuenow on ariaSlider");
+    await setUpWaitForUiaPropEvent("RangeValueValue", "ariaSlider");
+    await invokeSetAttribute(browser, "ariaSlider", "aria-valuenow", "60");
+    await waitForUiaEvent();
+    ok(true, "Got RangeValueValue prop change event on ariaSlider");
+    is(
+      await runPython(`pattern.CurrentValue`),
+      60,
+      "ariaSlider has correct Value"
+    );
+
+    await testPatternAbsent("button", "RangeValue");
   }
 );

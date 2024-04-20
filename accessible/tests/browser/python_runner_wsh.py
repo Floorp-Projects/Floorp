@@ -9,6 +9,7 @@ It is intended to be called from JS browser tests.
 """
 
 import json
+import math
 import os
 import sys
 import traceback
@@ -83,6 +84,9 @@ def web_socket_transfer_data(request):
             exec(code, namespace)
             # Run the function we just defined.
             ret = namespace["run"]()
+            if isinstance(ret, float) and math.isnan(ret):
+                # NaN can't be serialized by JSON.
+                ret = None
             send("return", ret)
         except Exception:
             send("exception", traceback.format_exc())

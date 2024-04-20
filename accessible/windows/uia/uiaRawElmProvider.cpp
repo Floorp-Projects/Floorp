@@ -91,6 +91,12 @@ void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
       uia->get_Value(&newVal.bstrVal);
       gotNewVal = true;
       break;
+    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+      property = UIA_RangeValueValuePropertyId;
+      newVal.vt = VT_R8;
+      uia->get_Value(&newVal.dblVal);
+      gotNewVal = true;
+      break;
   }
   if (property && ::UiaClientsAreListening()) {
     // We can't get the old value. Thankfully, clients don't seem to need it.
@@ -162,6 +168,8 @@ uiaRawElmProvider::QueryInterface(REFIID aIid, void** aInterface) {
     *aInterface = static_cast<IExpandCollapseProvider*>(this);
   } else if (aIid == IID_IInvokeProvider) {
     *aInterface = static_cast<IInvokeProvider*>(this);
+  } else if (aIid == IID_IRangeValueProvider) {
+    *aInterface = static_cast<IRangeValueProvider*>(this);
   } else if (aIid == IID_IScrollItemProvider) {
     *aInterface = static_cast<IScrollItemProvider*>(this);
   } else if (aIid == IID_IToggleProvider) {
@@ -277,6 +285,12 @@ uiaRawElmProvider::GetPatternProvider(
           !HasExpandCollapsePattern()) {
         RefPtr<IInvokeProvider> invoke = this;
         invoke.forget(aPatternProvider);
+      }
+      return S_OK;
+    case UIA_RangeValuePatternId:
+      if (acc->HasNumericValue()) {
+        RefPtr<IValueProvider> value = this;
+        value.forget(aPatternProvider);
       }
       return S_OK;
     case UIA_ScrollItemPatternId: {
@@ -783,6 +797,99 @@ uiaRawElmProvider::get_IsReadOnly(__RPC__out BOOL* aRetVal) {
     return CO_E_OBJNOTCONNECTED;
   }
   *aRetVal = acc->State() & states::READONLY;
+  return S_OK;
+}
+
+// IRangeValueProvider methods
+
+STDMETHODIMP
+uiaRawElmProvider::SetValue(double aVal) {
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  if (!acc->SetCurValue(aVal)) {
+    return UIA_E_INVALIDOPERATION;
+  }
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_Value(__RPC__out double* aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  *aRetVal = acc->CurValue();
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_Maximum(__RPC__out double* aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  *aRetVal = acc->MaxValue();
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_Minimum(
+    /* [retval][out] */ __RPC__out double* aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  *aRetVal = acc->MinValue();
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_LargeChange(
+    /* [retval][out] */ __RPC__out double* aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  // We want the change that would occur if the user pressed page up or page
+  // down. For HTML input elements, this is 10% of the total range unless step
+  // is larger. See:
+  // https://searchfox.org/mozilla-central/rev/c7df16ffad1f12a19c81c16bce0b65e4a15304d0/dom/html/HTMLInputElement.cpp#3878
+  double step = acc->Step();
+  double min = acc->MinValue();
+  double max = acc->MaxValue();
+  if (std::isnan(step) || std::isnan(min) || std::isnan(max)) {
+    *aRetVal = UnspecifiedNaN<double>();
+  } else {
+    *aRetVal = std::max(step, (max - min) / 10);
+  }
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_SmallChange(
+    /* [retval][out] */ __RPC__out double* aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  *aRetVal = acc->Step();
   return S_OK;
 }
 
