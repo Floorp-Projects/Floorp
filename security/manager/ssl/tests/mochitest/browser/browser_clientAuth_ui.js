@@ -14,6 +14,11 @@ const TEST_PORT = 123;
 var certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
   Ci.nsIX509CertDB
 );
+
+ChromeUtils.defineESModuleGetters(this, {
+  PromptUtils: "resource://gre/modules/PromptUtils.sys.mjs",
+});
+
 /**
  * Test certificate (i.e. build/pgo/certs/mochitest.client).
  *
@@ -34,11 +39,16 @@ var cert;
 function openClientAuthDialog(cert) {
   let certArray = [cert];
   let retVals = { cert: undefined, rememberDecision: undefined };
+  let args = PromptUtils.objectToPropBag({
+    hostname: TEST_HOSTNAME,
+    certArray,
+    retVals,
+  });
   let win = window.openDialog(
     "chrome://pippki/content/clientauthask.xhtml",
     "",
     "",
-    { hostname: TEST_HOSTNAME, certArray, retVals }
+    args
   );
   return TestUtils.topicObserved("cert-dialog-loaded").then(() => {
     return { win, retVals };
