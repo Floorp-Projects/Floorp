@@ -653,6 +653,9 @@
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Autoriser pour tous les sites</string>
 
+    <!-- The subtitle for the allow for all sites preference toggle -->
+    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">Si vous faites confiance à cette extension, vous pouvez lui accorder une permission pour n’importe quel site web.</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Collection de modules personnalisée</string>
@@ -2737,4 +2740,8 @@
     <string name="debug_drawer_logins_title">Identifiants</string>
     <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
     <string name="debug_drawer_logins_current_domain_label">Domaine actuel : %s</string>
-    </resources>
+    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+    <string name="debug_drawer_logins_add_login_button">Ajouter un faux identifiant pour ce domaine</string>
+    <!-- Content description for delete button where parameter will be the username of the login -->
+    <string name="debug_drawer_logins_delete_login_button_content_description">Supprimer l’identifiant avec le nom d’utilisateur %s</string>
+</resources>

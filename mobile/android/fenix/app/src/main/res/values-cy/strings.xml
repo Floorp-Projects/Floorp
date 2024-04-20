@@ -253,9 +253,9 @@
     <string name="browser_menu_sign_in_caption">Cydweddu cyfrineiriau, tabiau, a mwy</string>
 
     <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
-    <string name="browser_menu_sign_back_in_to_sync">Mewngofnodwch yn ôl i gysoni</string>
+    <string name="browser_menu_sign_back_in_to_sync">Ail fewngofnodi i gydweddu</string>
     <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
-    <string name="browser_menu_syncing_paused_caption">Seibio cysoni</string>
+    <string name="browser_menu_syncing_paused_caption">Cydweddu wedi\'i oedi</string>
     <!-- Browser menu label that creates a private tab -->
     <string name="browser_menu_new_private_tab">Tab preifat newydd</string>
     <!-- Browser menu label that navigates to the Password screen -->
@@ -644,7 +644,7 @@
     <!-- The description of the icon that can delete one of the websites displayed  -->
     <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Dileu gwefan</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
-    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Caniatáu ar gyfer pob safle</string>
+    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Caniatáu ar gyfer pob gwefan</string>
     <!-- The subtitle for the allow for all sites preference toggle -->
     <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">Os ydych yn ymddiried yn yr estyniad hwn, gallwch roi caniatâd iddo ar bob gwefan.</string>
 
@@ -2531,7 +2531,7 @@
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Dewisiadau Cyfieithu</string>
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title_heading">Opsiynau cyfieithu</string>
+    <string name="translation_option_bottom_sheet_title_heading">Dewisiadau cyfieithu</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Cynnig i gyfieithu bob tro</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
