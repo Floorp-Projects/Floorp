@@ -4298,6 +4298,7 @@ class AnnotationLayerBuilder {
     fieldObjectsPromise = null,
     annotationCanvasMap = null,
     accessibilityManager = null,
+    annotationEditorUIManager = null,
     onAppend = null
   }) {
     this.pdfPage = pdfPage;
@@ -4311,6 +4312,7 @@ class AnnotationLayerBuilder {
     this._fieldObjectsPromise = fieldObjectsPromise || Promise.resolve(null);
     this._annotationCanvasMap = annotationCanvasMap;
     this._accessibilityManager = accessibilityManager;
+    this._annotationEditorUIManager = annotationEditorUIManager;
     this.#onAppend = onAppend;
     this.annotationLayer = null;
     this.div = null;
@@ -4346,6 +4348,7 @@ class AnnotationLayerBuilder {
       div,
       accessibilityManager: this._accessibilityManager,
       annotationCanvasMap: this._annotationCanvasMap,
+      annotationEditorUIManager: this._annotationEditorUIManager,
       page: this.pdfPage,
       viewport: viewport.clone({
         dontFlip: true
@@ -5664,6 +5667,7 @@ class PDFPageView {
     if (!this.annotationLayer && this.#annotationMode !== AnnotationMode.DISABLE) {
       const {
         annotationStorage,
+        annotationEditorUIManager,
         downloadManager,
         enableScripting,
         fieldObjectsPromise,
@@ -5683,6 +5687,7 @@ class PDFPageView {
         fieldObjectsPromise,
         annotationCanvasMap: this._annotationCanvasMap,
         accessibilityManager: this._accessibilityManager,
+        annotationEditorUIManager,
         onAppend: annotationLayerDiv => {
           this.#addLayer(annotationLayerDiv, "annotationLayer");
         }
@@ -5920,7 +5925,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.1.407";
+    const viewerVersion = "4.2.21";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -7510,6 +7515,7 @@ const PDFViewerApplication = {
   baseUrl: "",
   _downloadUrl: "",
   _boundEvents: Object.create(null),
+  _windowAbortController: null,
   documentInfo: null,
   metadata: null,
   _contentDispositionFilename: null,
@@ -7528,8 +7534,6 @@ const PDFViewerApplication = {
   _nimbusDataPromise: null,
   _caretBrowsing: null,
   _isScrolling: false,
-  _lastScrollTop: 0,
-  _lastScrollLeft: 0,
   async initialize(appConfig) {
     let l10nPromise;
     l10nPromise = this.externalServices.createL10n();
@@ -7654,7 +7658,6 @@ const PDFViewerApplication = {
     const container = appConfig.mainContainer,
       viewer = appConfig.viewerContainer;
     const annotationEditorMode = AppOptions.get("annotationEditorMode");
-    const isOffscreenCanvasSupported = AppOptions.get("isOffscreenCanvasSupported") && FeatureTest.isOffscreenCanvasSupported;
     const pageColors = AppOptions.get("forcePageColors") || window.matchMedia("(forced-colors: active)").matches ? {
       background: AppOptions.get("pageColorsBackground"),
       foreground: AppOptions.get("pageColorsForeground")
@@ -7709,7 +7712,7 @@ const PDFViewerApplication = {
     }
     if (appConfig.annotationEditorParams) {
       if (annotationEditorMode !== AnnotationEditorType.DISABLE) {
-        if (AppOptions.get("enableStampEditor") && isOffscreenCanvasSupported) {
+        if (AppOptions.get("enableStampEditor")) {
           appConfig.toolbar?.editorStampButton?.classList.remove("hidden");
         }
         const editorHighlightButton = appConfig.toolbar?.editorHighlightButton;
@@ -8595,11 +8598,17 @@ const PDFViewerApplication = {
     eventBus._on("reporttelemetry", webViewerReportTelemetry);
   },
   bindWindowEvents() {
+    if (this._windowAbortController) {
+      return;
+    }
+    this._windowAbortController = new AbortController();
     const {
       eventBus,
-      _boundEvents,
       appConfig: {
         mainContainer
+      },
+      _windowAbortController: {
+        signal
       }
     } = this;
     function addWindowResolutionChange(evt = null) {
@@ -8608,135 +8617,116 @@ const PDFViewerApplication = {
       }
       const mediaQueryList = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
       mediaQueryList.addEventListener("change", addWindowResolutionChange, {
-        once: true
+        once: true,
+        signal
       });
-      _boundEvents.removeWindowResolutionChange ||= function () {
-        mediaQueryList.removeEventListener("change", addWindowResolutionChange);
-        _boundEvents.removeWindowResolutionChange = null;
-      };
     }
     addWindowResolutionChange();
-    _boundEvents.windowResize = () => {
+    window.addEventListener("visibilitychange", webViewerVisibilityChange, {
+      signal
+    });
+    window.addEventListener("wheel", webViewerWheel, {
+      passive: false,
+      signal
+    });
+    window.addEventListener("touchstart", webViewerTouchStart, {
+      passive: false,
+      signal
+    });
+    window.addEventListener("touchmove", webViewerTouchMove, {
+      passive: false,
+      signal
+    });
+    window.addEventListener("touchend", webViewerTouchEnd, {
+      passive: false,
+      signal
+    });
+    window.addEventListener("click", webViewerClick, {
+      signal
+    });
+    window.addEventListener("keydown", webViewerKeyDown, {
+      signal
+    });
+    window.addEventListener("keyup", webViewerKeyUp, {
+      signal
+    });
+    window.addEventListener("resize", () => {
       eventBus.dispatch("resize", {
         source: window
       });
-    };
-    _boundEvents.windowHashChange = () => {
+    }, {
+      signal
+    });
+    window.addEventListener("hashchange", () => {
       eventBus.dispatch("hashchange", {
         source: window,
         hash: document.location.hash.substring(1)
       });
-    };
-    _boundEvents.windowBeforePrint = () => {
+    }, {
+      signal
+    });
+    window.addEventListener("beforeprint", () => {
       eventBus.dispatch("beforeprint", {
         source: window
       });
-    };
-    _boundEvents.windowAfterPrint = () => {
+    }, {
+      signal
+    });
+    window.addEventListener("afterprint", () => {
       eventBus.dispatch("afterprint", {
         source: window
       });
-    };
-    _boundEvents.windowUpdateFromSandbox = event => {
+    }, {
+      signal
+    });
+    window.addEventListener("updatefromsandbox", event => {
       eventBus.dispatch("updatefromsandbox", {
         source: window,
         detail: event.detail
       });
-    };
-    window.addEventListener("visibilitychange", webViewerVisibilityChange);
-    window.addEventListener("wheel", webViewerWheel, {
-      passive: false
+    }, {
+      signal
     });
-    window.addEventListener("touchstart", webViewerTouchStart, {
-      passive: false
-    });
-    window.addEventListener("touchmove", webViewerTouchMove, {
-      passive: false
-    });
-    window.addEventListener("touchend", webViewerTouchEnd, {
-      passive: false
-    });
-    window.addEventListener("click", webViewerClick);
-    window.addEventListener("keydown", webViewerKeyDown);
-    window.addEventListener("keyup", webViewerKeyUp);
-    window.addEventListener("resize", _boundEvents.windowResize);
-    window.addEventListener("hashchange", _boundEvents.windowHashChange);
-    window.addEventListener("beforeprint", _boundEvents.windowBeforePrint);
-    window.addEventListener("afterprint", _boundEvents.windowAfterPrint);
-    window.addEventListener("updatefromsandbox", _boundEvents.windowUpdateFromSandbox);
-    ({
-      scrollTop: this._lastScrollTop,
-      scrollLeft: this._lastScrollLeft
-    } = mainContainer);
-    const scrollend = _boundEvents.mainContainerScrollend = () => {
-      ({
-        scrollTop: this._lastScrollTop,
-        scrollLeft: this._lastScrollLeft
-      } = mainContainer);
+    const scrollend = () => {
       this._isScrolling = false;
       mainContainer.addEventListener("scroll", scroll, {
-        passive: true
+        passive: true,
+        signal
       });
-      mainContainer.removeEventListener("scrollend", scrollend);
-      mainContainer.removeEventListener("blur", scrollend);
+      mainContainer.removeEventListener("scrollend", scrollend, {
+        signal
+      });
+      mainContainer.removeEventListener("blur", scrollend, {
+        signal
+      });
     };
-    const scroll = _boundEvents.mainContainerScroll = () => {
-      if (this._isCtrlKeyDown || this._lastScrollTop === mainContainer.scrollTop && this._lastScrollLeft === mainContainer.scrollLeft) {
+    const scroll = () => {
+      if (this._isCtrlKeyDown) {
         return;
       }
       mainContainer.removeEventListener("scroll", scroll, {
-        passive: true
+        passive: true,
+        signal
       });
       this._isScrolling = true;
-      mainContainer.addEventListener("scrollend", scrollend);
-      mainContainer.addEventListener("blur", scrollend);
+      mainContainer.addEventListener("scrollend", scrollend, {
+        signal
+      });
+      mainContainer.addEventListener("blur", scrollend, {
+        signal
+      });
     };
     mainContainer.addEventListener("scroll", scroll, {
-      passive: true
+      passive: true,
+      signal
     });
   },
   unbindEvents() {
     throw new Error("Not implemented: unbindEvents");
   },
   unbindWindowEvents() {
-    const {
-      _boundEvents,
-      appConfig: {
-        mainContainer
-      }
-    } = this;
-    window.removeEventListener("visibilitychange", webViewerVisibilityChange);
-    window.removeEventListener("wheel", webViewerWheel, {
-      passive: false
-    });
-    window.removeEventListener("touchstart", webViewerTouchStart, {
-      passive: false
-    });
-    window.removeEventListener("touchmove", webViewerTouchMove, {
-      passive: false
-    });
-    window.removeEventListener("touchend", webViewerTouchEnd, {
-      passive: false
-    });
-    window.removeEventListener("click", webViewerClick);
-    window.removeEventListener("keydown", webViewerKeyDown);
-    window.removeEventListener("keyup", webViewerKeyUp);
-    window.removeEventListener("resize", _boundEvents.windowResize);
-    window.removeEventListener("hashchange", _boundEvents.windowHashChange);
-    window.removeEventListener("beforeprint", _boundEvents.windowBeforePrint);
-    window.removeEventListener("afterprint", _boundEvents.windowAfterPrint);
-    window.removeEventListener("updatefromsandbox", _boundEvents.windowUpdateFromSandbox);
-    mainContainer.removeEventListener("scroll", _boundEvents.mainContainerScroll);
-    mainContainer.removeEventListener("scrollend", _boundEvents.mainContainerScrollend);
-    mainContainer.removeEventListener("blur", _boundEvents.mainContainerScrollend);
-    _boundEvents.removeWindowResolutionChange?.();
-    _boundEvents.windowResize = null;
-    _boundEvents.windowHashChange = null;
-    _boundEvents.windowBeforePrint = null;
-    _boundEvents.windowAfterPrint = null;
-    _boundEvents.windowUpdateFromSandbox = null;
-    _boundEvents.mainContainerScroll = null;
-    _boundEvents.mainContainerScrollend = null;
+    this._windowAbortController?.abort();
+    this._windowAbortController = null;
   },
   _accumulateTicks(ticks, prop) {
     if (this[prop] > 0 && ticks < 0 || this[prop] < 0 && ticks > 0) {
@@ -9537,8 +9527,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.1.407";
-const pdfjsBuild = "2e9451133";
+const pdfjsVersion = "4.2.21";
+const pdfjsBuild = "5ad42c13a";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
