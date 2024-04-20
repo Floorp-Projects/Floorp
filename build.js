@@ -65,7 +65,7 @@ async function compile() {
   for (const _entry of entries) {
     const entry = _entry.replaceAll("\\", "/");
     const stat = await fs.stat(entry);
-    if (stat.isFile) {
+    if (stat.isFile()) {
       if (entry.endsWith(".pcss")) {
         // file that postcss process required
         const result = await postcss([
