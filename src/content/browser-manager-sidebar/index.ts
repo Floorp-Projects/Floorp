@@ -5,13 +5,11 @@ import { BMSMouseEvent } from "./mouse-event";
 import { sidebar } from "./browser-manager-sidebar";
 import { sidebarContext } from "./browser-manager-sidebar-context";
 
-const { BrowserManagerSidebar } = ChromeUtils.importESModule(
-  "resource://noraneko/modules/BrowserManagerSidebar.sys.mjs",
-);
+import { Sidebar3Data } from "./SidebarData";
 
-const { BrowserManagerSidebarPanelWindowUtils } = ChromeUtils.importESModule(
-  "resource://noraneko-private/modules/bms/BrowserManagerSidebarPanelWindowUtils.sys.mjs",
-);
+import { BrowserManagerSidebar } from "./BrowserManagerSidebar";
+
+import { PanelWindowUtils } from "@private/browser-manager-sidebar/PanelWindowUtils";
 
 export class CBrowserManagerSidebar {
   private static instance: CBrowserManagerSidebar;
@@ -36,8 +34,10 @@ export class CBrowserManagerSidebar {
   }
 
   get BROWSER_SIDEBAR_DATA() {
-    return JSON.parse(
-      Services.prefs.getStringPref("floorp.browser.sidebar2.data", undefined),
+    return Sidebar3Data.parse(
+      JSON.parse(
+        Services.prefs.getStringPref("floorp.browser.sidebar2.data", undefined),
+      ),
     );
   }
   get sidebar_icons() {
@@ -62,6 +62,10 @@ export class CBrowserManagerSidebar {
 
   private constructor() {
     inject();
+    if (!Services.prefs.prefHasDefaultValue("floorp.browser.sidebar2.data")) {
+      BrowserManagerSidebar.updatePrefs();
+    }
+
     Services.prefs.addObserver(
       "floorp.browser.sidebar2.global.webpanel.width",
       () => this.controlFunctions.setSidebarWidth(this.currentPanel),
@@ -74,24 +78,24 @@ export class CBrowserManagerSidebar {
     this.controlFunctions.changeVisibleBrowserManagerSidebar(
       Services.prefs.getBoolPref("floorp.browser.sidebar.enable", true),
     );
-    Services.prefs.addObserver("floorp.browser.sidebar2.data", () => {
-      for (const elem of this.BROWSER_SIDEBAR_DATA.index) {
-        if (
-          document.querySelector(`#webpanel${elem}`) &&
-          JSON.stringify(this.BROWSER_SIDEBAR_DATA.data[elem])
-        ) {
-          if (
-            this.currentPanel === elem &&
-            !(sidebarsplit2.getAttribute("hidden") === "true")
-          ) {
-            this.controlFunctions.makeWebpanel(elem);
-          } else {
-            this.controlFunctions.unloadWebpanel(elem);
-          }
-        }
-      }
-      this.controlFunctions.makeSidebarIcon();
-    });
+    // Services.prefs.addObserver("floorp.browser.sidebar2.data", () => {
+    //   for (const elem of this.BROWSER_SIDEBAR_DATA.index) {
+    //     if (
+    //       document.querySelector(`#webpanel${elem}`) &&
+    //       JSON.stringify(this.BROWSER_SIDEBAR_DATA.data[elem])
+    //     ) {
+    //       if (
+    //         this.currentPanel === elem &&
+    //         !(sidebarsplit2.getAttribute("hidden") === "true")
+    //       ) {
+    //         this.controlFunctions.makeWebpanel(elem);
+    //       } else {
+    //         this.controlFunctions.unloadWebpanel(elem);
+    //       }
+    //     }
+    //   }
+    //   this.controlFunctions.makeSidebarIcon();
+    // });
     Services.obs.addObserver(this.servicesObs, "obs-panel-re");
     Services.obs.addObserver(
       this.controlFunctions.changeVisibilityOfWebPanel,
@@ -122,11 +126,7 @@ export class CBrowserManagerSidebar {
       case 0:
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
-          BrowserManagerSidebarPanelWindowUtils.goBackPanel(
-            window,
-            webPanelId,
-            true,
-          );
+          PanelWindowUtils.goBackPanel(window, webPanelId, true);
         } else {
           webpanel.goBack();
         }
@@ -134,11 +134,7 @@ export class CBrowserManagerSidebar {
       case 1:
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
-          BrowserManagerSidebarPanelWindowUtils.goForwardPanel(
-            window,
-            webPanelId,
-            true,
-          );
+          PanelWindowUtils.goForwardPanel(window, webPanelId, true);
         } else {
           webpanel.goForward();
         }
@@ -146,11 +142,7 @@ export class CBrowserManagerSidebar {
       case 2:
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
-          BrowserManagerSidebarPanelWindowUtils.reloadPanel(
-            window,
-            webPanelId,
-            true,
-          );
+          PanelWindowUtils.reloadPanel(window, webPanelId, true);
         } else {
           webpanel.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
         }
@@ -158,23 +150,20 @@ export class CBrowserManagerSidebar {
       case 3:
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
-          BrowserManagerSidebarPanelWindowUtils.goIndexPagePanel(
-            window,
-            webPanelId,
-            true,
-          );
+          PanelWindowUtils.goIndexPagePanel(window, webPanelId, true);
         } else {
           webpanel.gotoIndex();
         }
         break;
     }
+    this.controlFunctions.makeWebpanel("floorp__bookmarks");
   }
 
   // keep sidebar width for each webpanel
   keepWebPanelWidth() {
     const pref = this.currentPanel;
     const currentBSD = this.BROWSER_SIDEBAR_DATA;
-    currentBSD.data[pref].width =
+    currentBSD.panels[pref].width =
       document.getElementById("sidebar2-box").clientWidth;
     Services.prefs.setStringPref(
       "floorp.browser.sidebar2.data",

@@ -9,6 +9,7 @@ SessionStore.promiseInitialized.then(() => {
   //createWebpanel("tmp", "https://manatoki332.net/");
   //console.log(document.getElementById("tmp"));
   window.gBrowserManagerSidebar = CBrowserManagerSidebar.getInstance();
+  import("./testButton");
 });
 
 //Services.obs.addObserver(setBrowserDesign, "browser-window-before-show");

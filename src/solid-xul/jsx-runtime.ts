@@ -14,12 +14,23 @@ declare module "solid-js" {
       autocompletepopup?: string;
       src?: string;
       flex?: string;
-      disablefullscreen?: string;
-      disablehistory?: string;
+      disablefullscreen?: `${boolean}`;
+      disablehistory?: `${boolean}`;
       nodefaultsrc?: string;
       tooltip?: string;
+      xmlns?: string;
+      autoscroll?: `${boolean}`;
+      disableglobalhistory?: `${boolean}`;
+      initialBrowsingContextGroupId?: `${number}`;
+      usercontextid?: `${number}`;
+      changeuseragent?: `${boolean}`;
+      context?: string;
     }
-    interface XULMenuitemElement extends SolidJSX.HTMLAttributes<HTMLElement> {}
+    interface XULMenuitemElement extends SolidJSX.HTMLAttributes<HTMLElement> {
+      label?: string;
+      accesskey?: string;
+      oncommand?: string;
+    }
     interface IntrinsicElements {
       "xul:browser": XULBrowserElement;
       "xul:menuitem": XULMenuitemElement;
@@ -31,6 +42,13 @@ declare module "solid-js" {
       "xul:tooltip";
       "xul:panel";
       "xul:menupopup";
+      "xul:vbox";
+      "xul:box";
+      "xul:toolbarbutton";
+      "xul:spacer";
+      "xul:splitter";
+      "xul:menuseparator";
+      "xul:menu";
     }
   }
 }

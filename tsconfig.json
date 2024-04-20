@@ -15,7 +15,9 @@
     "jsxImportSource": "solid-js",
     "paths": {
       "@types/*": ["./@types/*"],
-      "@solid-xul/*": ["./src/solid-xul/*"]
+      "@solid-xul/*": ["./src/solid-xul/*"],
+      "@private/*": ["./src/private/src/content/*"],
+      "@content/*": ["./src/content/*"]
     }
   },
   "exclude": ["dist/**"]
