@@ -220,7 +220,7 @@ load 1406109-1.html
 load 1411473.html
 load 1413815.html
 load 1419799.html
-skip-if(geckoview) skip-if(geckoview&&isDebugBuild) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) pref(dom.disable_open_during_load,false) load 1419902.html # skip Bug 1419902. Bug 1563013 for GV+WR. Bug 1524493 GV+debug. Bug 1573281 asan
+# load 1419902.html # this test is run at the very end in testing/crashtest/final/crashtests.list
 load 1422883.html
 load 1428053.html
 load 1441029.html

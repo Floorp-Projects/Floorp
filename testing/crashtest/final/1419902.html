@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <script>
+      // Note that despite what it looks like this test does leave windows open
+      // after the test finishes. That's because some of the window.open calls
+      // trigger an exception but still open a window. Because of the
+      // exception, winsToClose.push is not executed and we have no reference
+      // to the window. So far there is no known way to get a reference to it.
+      // It was also tried to give each opened windowed a named target, save
+      // that list of targets, and use window.open("", targetname) to get a
+      // reference to the window. That also doesn't work because either the
+      // window.open calls never end and this page never loads, or if it does
+      // load after a finite time then still some windows are left open for
+      // some reason.
+      var winsToClose = []
+      onbeforeunload = function() {
+        for (let win of winsToClose) {
+          if (win) {
+            win.close();
+          }
+        }
+      };
+      for (let i = 0; i < 38; i++) {
+        customElements.define("custom-element_0", class extends HTMLElement {
+          constructor() {
+            try { o1 = document.createElement("custom-element_0") } catch (e) {}
+            try { winsToClose.push(window.open("javascript:'<html><body>dummy</body></html>';")); } catch (e) {}
+          }
+        })
+        try { o3 = document.createElement("custom-element_0") } catch (e) {}
+      }
+    </script>
+  </head>
+</html>

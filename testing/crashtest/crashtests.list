@@ -83,3 +83,6 @@ include ../../widget/crashtests/crashtests.list
 include ../../widget/gtk/crashtests/crashtests.list
 
 include ../../xpcom/string/crashtests/crashtests.list
+
+# Tests that must be run at the very end of all other crashtests.
+include final/crashtests.list
