@@ -2498,6 +2498,8 @@
     <string name="translations_bottom_sheet_translate_from">Bu dilden</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">Bu dile</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">Başka bir kaynak dil dene</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Şimdi değil</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
@@ -2712,6 +2714,10 @@
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
     <string name="debug_drawer_logins_title">Hesaplar</string>
+    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
+    <string name="debug_drawer_logins_current_domain_label">Geçerli alan adı: %s</string>
+    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+    <string name="debug_drawer_logins_add_login_button">Bu alan adı için uydurma hesap ekle</string>
     <!-- Content description for delete button where parameter will be the username of the login -->
     <string name="debug_drawer_logins_delete_login_button_content_description">%s kullanıcı adlı hesabı sil</string>
 </resources>
