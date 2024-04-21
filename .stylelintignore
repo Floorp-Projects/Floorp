@@ -14,6 +14,7 @@
 
 # Always ignore crashtests - specially crafted files that originally caused a
 # crash.
+**/crashtest/
 **/crashtests/
 # Also ignore reftest - specially crafted to produce expected output.
 **/reftest/
