@@ -1,4 +1,8 @@
 {
+  "typeAcquisition": {
+    "enable": true,
+    "include": ["./@types/content.d.ts"]
+  },
   "compilerOptions": {
     "useDefineForClassFields": true,
     "lib": ["es2022", "DOM"],

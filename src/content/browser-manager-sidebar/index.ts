@@ -3,12 +3,13 @@ import { insert } from "@solid-xul/solid-xul";
 import { BMSContextMenu } from "./context-menu";
 import { BMSControlFunctions } from "./control-functions";
 import { BMSMouseEvent } from "./mouse-event";
+import { BMSUtils } from "./BrowserManagerSidebar";
 
 import { sidebar } from "./browser-manager-sidebar";
 import { sidebarContext } from "./browser-manager-sidebar-context";
+import { sidebarSelectBox } from "@content/browser-webpanel/browser-webpanel";
 
 import { Sidebar3Data } from "./SidebarData";
-import { BrowserManagerSidebar } from "./BrowserManagerSidebar";
 import { PanelWindowUtils } from "@private/browser-manager-sidebar/PanelWindowUtils";
 
 export class CBrowserManagerSidebar {
@@ -17,12 +18,14 @@ export class CBrowserManagerSidebar {
   controlFunctions = new BMSControlFunctions(this);
   contextMenu = new BMSContextMenu(this);
   mouseEvent = new BMSMouseEvent();
+  utils = new BMSUtils();
+  panelWindowUtils = new PanelWindowUtils(this);
 
   //TODO: this to empty string
   currentPanel = "floorp__bookmarks";
   clickedWebpanel = "";
   webpanel = "";
-  contextWebpanel: Element? = null;
+  contextWebpanel: Element | null = null;
   public static getInstance() {
     if (!CBrowserManagerSidebar.instance) {
       CBrowserManagerSidebar.instance = new CBrowserManagerSidebar();
@@ -31,7 +34,7 @@ export class CBrowserManagerSidebar {
   }
 
   get STATIC_SIDEBAR_DATA() {
-    return BrowserManagerSidebar.STATIC_SIDEBAR_DATA;
+    return this.utils.STATIC_SIDEBAR_DATA;
   }
 
   get BROWSER_SIDEBAR_DATA() {
@@ -64,7 +67,7 @@ export class CBrowserManagerSidebar {
   private constructor() {
     inject(this);
     if (!Services.prefs.prefHasDefaultValue("floorp.browser.sidebar2.data")) {
-      BrowserManagerSidebar.updatePrefs();
+      this.utils.updatePrefs();
     }
 
     Services.prefs.addObserver(
@@ -103,12 +106,12 @@ export class CBrowserManagerSidebar {
       "floorp-change-panel-show",
     );
     const addbutton = document.getElementById("add-button");
-    //TODO: remove when addbutton is added
-    if (addbutton) {
-      addbutton.ondragover = this.mouseEvent.dragOver;
-      addbutton.ondragleave = this.mouseEvent.dragLeave;
-      addbutton.ondrop = this.mouseEvent.drop;
-    }
+    // //TODO: remove when addbutton is added
+    // if (addbutton) {
+    //   addbutton.ondragover = this.mouseEvent.dragOver;
+    //   addbutton.ondragleave = this.mouseEvent.dragLeave;
+    //   addbutton.ondrop = this.mouseEvent.drop;
+    // }
 
     //startup functions
     this.controlFunctions.makeSidebarIcon();
@@ -224,6 +227,11 @@ function inject(bms: CBrowserManagerSidebar) {
     sidebar(bms),
     document.getElementById("appcontent"),
   );
+  insert(
+    document.getElementById("browser"),
+    sidebarSelectBox(bms),
+    document.getElementById("appcontent"),
+  );
   console.log("body");
   insert(
     document.body,
@@ -231,7 +239,6 @@ function inject(bms: CBrowserManagerSidebar) {
     document.getElementById("window-modal-dialog"),
   );
 }
-
 // function onDOMLoad() {}
 
 // document.addEventListener("DOMContentLoaded", () => {

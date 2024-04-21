@@ -38,20 +38,13 @@ const STATIC_SIDEBAR_DATA = {
   },
 };
 
-class CBrowserManagerSidebar {
-  private static instance: CBrowserManagerSidebar;
-  static getInstance() {
-    if (!CBrowserManagerSidebar.instance)
-      CBrowserManagerSidebar.instance = new CBrowserManagerSidebar();
-    return CBrowserManagerSidebar.instance;
-  }
+export class BMSUtils {
   STATIC_SIDEBAR_DATA = STATIC_SIDEBAR_DATA;
   DEFAULT_WEBPANEL = [
     "https://translate.google.com",
     "https://support.ablaze.one",
     "https://docs.floorp.app",
   ];
-  private constructor() {}
   addPanel(url: string, uc: string) {
     let parentWindow = Services.wm.getMostRecentWindow("navigator:browser");
     const updateId = `w${new Date().toISOString()}`;
@@ -98,6 +91,7 @@ class CBrowserManagerSidebar {
     const defaultPref = Sidebar3Data.parse({
       panels: {},
     });
+
     let elem: keyof typeof this.STATIC_SIDEBAR_DATA;
     for (elem in this.STATIC_SIDEBAR_DATA) {
       if (this.STATIC_SIDEBAR_DATA[elem].disabled) {
@@ -360,5 +354,3 @@ class CBrowserManagerSidebar {
 //   return new URL(toURL, `moz-extension://${addonUUID[addonId]}/`).href;
 // },
 //};
-
-export const BrowserManagerSidebar = CBrowserManagerSidebar.getInstance();

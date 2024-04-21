@@ -1,6 +1,5 @@
 import type { JSX } from "solid-js";
 import { createRenderer } from "solid-js/universal";
-import type { XULElement } from "@types/gecko/lib.gecko.dom";
 
 export const {
   render,
@@ -10,6 +9,9 @@ export const {
   createElement,
   createTextNode,
   insertNode,
+  /**
+   * insertBefore
+   */
   insert,
   spread,
   setProp,
@@ -38,7 +40,10 @@ export const {
   ): void => {
     if (node instanceof Element) {
       if (value instanceof Function) {
-        node.addEventListener(name.slice(2).toLowerCase(), value);
+        //the eventListener name is on~~~
+        //so have to remove the `on`
+        const evName = name.slice(2).toLowerCase();
+        node.addEventListener(evName, value);
       } else if (typeof value === "string") {
         node.setAttribute(name, value);
       }
