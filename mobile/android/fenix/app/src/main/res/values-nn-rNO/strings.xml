@@ -149,8 +149,10 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Ny privat fane</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">Passordsnarveg</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">Passord</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Passordsnarveg</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -252,9 +254,14 @@
     <string name="browser_menu_customize_home_1">Tilpasse startsida</string>
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Logg inn</string>
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
-    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Synkroniser passord, faner, og meir</string>
+    <string name="browser_menu_sign_in">Logg inn</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">Synkroniser passord, faner, og meir</string>
+
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">Ny privat fane</string>
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">Passord</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -600,6 +607,8 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Utvidingar</string>
     <!-- Preference for installing a local add-on -->
     <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Installer utviding frå fil</string>
     <!-- Preference for notifications -->
@@ -609,6 +618,10 @@
     <string name="notifications_allowed_summary">Tillate</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Ikkje tillate</string>
+
+    <!-- Add-on Permissions -->
+    <!-- The title of the required permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Påkravd</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -2426,7 +2439,7 @@
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Det oppstod eit problem med å omsetje. Prøv på nytt.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more">Les meir</string>
+    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Les meir</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Omset…</string>
@@ -2434,7 +2447,7 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title">Innstillingar for omsetjing</string>
+    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Innstillingar for omsetjing</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Tilby alltid å omsetje</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2557,6 +2570,8 @@
     <string name="debug_drawer_title">Feilsøkingsverktøy</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Naviger tilbake</string>
+
+    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Faneverktøy</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2579,4 +2594,5 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Legg til i uverksame faner</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Legg til i private faner</string>
-</resources>
+
+    </resources>

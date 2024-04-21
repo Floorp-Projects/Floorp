@@ -164,6 +164,8 @@
     <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">Eitt eller fleire tillegg slutta å verke, noko som gjorde systemet ditt ustabilt.</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">Start tillegga på nytt</string>
+    <!-- Button to re-enable the extensions in the "crash" notification -->
+    <string name="mozac_feature_extensions_manager_notification_restart_button">Start utvidingar på nytt</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Finn fleire tillegg</string>
     <!-- Button in the extensions manager that opens AMO in a tab -->
