@@ -18,17 +18,16 @@ interface StorageEvent : Event
   readonly attribute DOMString? key;
   readonly attribute DOMString? oldValue;
   readonly attribute DOMString? newValue;
-  readonly attribute DOMString? url;
+  readonly attribute USVString url;
   readonly attribute Storage? storageArea;
 
-  // Bug 1016053 - This is not spec compliant.
   undefined initStorageEvent(DOMString type,
                              optional boolean canBubble = false,
                              optional boolean cancelable = false,
                              optional DOMString? key = null,
                              optional DOMString? oldValue = null,
                              optional DOMString? newValue = null,
-                             optional DOMString? url = null,
+                             optional USVString url = "",
                              optional Storage? storageArea = null);
 };
 
@@ -37,6 +36,6 @@ dictionary StorageEventInit : EventInit
   DOMString? key = null;
   DOMString? oldValue = null;
   DOMString? newValue = null;
-  DOMString url = "";
+  USVString url = "";
   Storage? storageArea = null;
 };

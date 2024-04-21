@@ -28,7 +28,7 @@ const kTests = [
 
   { createEventArg: "storageEvent",
     type: "ddd", bubbles: false, cancelable: false,
-    key: 'key', oldValue: 'a', newValue: 'b', url: null, storageArea: null },
+    key: 'key', oldValue: 'a', newValue: 'b', url: '', storageArea: null },
 
   { createEventArg: "StorageEvent",
     type: "eee", bubbles: true, cancelable: true,
@@ -36,7 +36,7 @@ const kTests = [
 
   { createEventArg: "storageevent",
     type: "fff", bubbles: false, cancelable: true,
-    key: null, oldValue: null, newValue: null, url: null, storageArea: null },
+    key: null, oldValue: null, newValue: null, url: '', storageArea: null },
   ];
 
 for (var i = 0; i < kTests.length; i++) {
