@@ -452,6 +452,7 @@ var SelectTranslationsPanel = new (class {
    */
   #handleCommandEvent(target) {
     const {
+      cancelButton,
       copyButton,
       doneButton,
       fromMenuList,
@@ -459,16 +460,18 @@ var SelectTranslationsPanel = new (class {
       toMenuList,
       toMenuPopup,
       translateButton,
+      tryAgainButton,
       tryAnotherSourceMenuList,
       tryAnotherSourceMenuPopup,
     } = this.elements;
     switch (target.id) {
-      case copyButton.id: {
-        this.onClickCopyButton();
-        break;
-      }
+      case cancelButton.id:
       case doneButton.id: {
         this.close();
+        break;
+      }
+      case copyButton.id: {
+        this.onClickCopyButton();
         break;
       }
       case fromMenuList.id:
@@ -483,6 +486,10 @@ var SelectTranslationsPanel = new (class {
       }
       case translateButton.id: {
         this.onClickTranslateButton();
+        break;
+      }
+      case tryAgainButton.id: {
+        this.#maybeRequestTranslation();
         break;
       }
       case tryAnotherSourceMenuList.id:
@@ -609,7 +616,6 @@ var SelectTranslationsPanel = new (class {
   onClickTranslateButton() {
     const { fromMenuList, tryAnotherSourceMenuList } = this.elements;
     fromMenuList.value = tryAnotherSourceMenuList.value;
-    this.#deselectLanguage(tryAnotherSourceMenuList);
     this.#maybeRequestTranslation();
   }
 
@@ -787,6 +793,7 @@ var SelectTranslationsPanel = new (class {
     switch (phase) {
       case "closed":
       case "idle":
+      case "failure":
       case "translatable":
       case "translating":
       case "translated":
@@ -872,6 +879,17 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Changes the phase from "translating" to "failure".
+   */
+  #changeStateToFailure() {
+    const phase = this.phase();
+    if (phase !== "translating") {
+      this.console?.error(`Invalid state change (${phase} => failure)`);
+    }
+    this.#changeStateTo("failure", /* retainEntries */ true);
+  }
+
+  /**
    * Transitions the phase of the state based on the given language pair.
    *
    * @param {string} fromLanguage - The BCP-47 from-language tag.
@@ -895,6 +913,7 @@ var SelectTranslationsPanel = new (class {
       !toLanguage ||
       // The languages have not changed, so there is nothing to do.
       (this.phase() !== "idle" &&
+        this.phase() !== "failure" &&
         previousFromLanguage === fromLanguage &&
         previousToLanguage === toLanguage)
     ) {
@@ -917,6 +936,7 @@ var SelectTranslationsPanel = new (class {
   #handleCopyButtonChanges(phase) {
     switch (phase) {
       case "closed":
+      case "failure":
       case "translated": {
         this.#uncheckCopyButton();
         break;
@@ -948,6 +968,7 @@ var SelectTranslationsPanel = new (class {
       }
       case "closed":
       case "idle":
+      case "failure":
       case "translatable":
       case "translated":
       case "unsupported": {
@@ -970,6 +991,10 @@ var SelectTranslationsPanel = new (class {
       case "closed":
       case "idle": {
         this.#displayIdlePlaceholder();
+        break;
+      }
+      case "failure": {
+        this.#displayTranslationFailureMessage();
         break;
       }
       case "translatable": {
@@ -1123,23 +1148,34 @@ var SelectTranslationsPanel = new (class {
    */
   #showMainContent() {
     const {
+      cancelButton,
       copyButton,
       doneButton,
       mainContent,
       unsupportedLanguageContent,
+      textArea,
       translateButton,
       translateFullPageButton,
+      translationFailureMessageBar,
+      tryAgainButton,
     } = this.elements;
     this.#setPanelElementAttributes({
-      makeHidden: [unsupportedLanguageContent, translateButton],
+      makeHidden: [
+        cancelButton,
+        translateButton,
+        translationFailureMessageBar,
+        tryAgainButton,
+        unsupportedLanguageContent,
+      ],
       makeVisible: [
         mainContent,
         copyButton,
         doneButton,
+        textArea,
         translateFullPageButton,
       ],
       addDefault: [doneButton],
-      removeDefault: [translateButton],
+      removeDefault: [translateButton, tryAgainButton],
     });
   }
 
@@ -1148,18 +1184,62 @@ var SelectTranslationsPanel = new (class {
    */
   #showUnsupportedLanguageContent() {
     const {
+      cancelButton,
       copyButton,
       doneButton,
       mainContent,
       unsupportedLanguageContent,
       translateButton,
       translateFullPageButton,
+      tryAgainButton,
     } = this.elements;
     this.#setPanelElementAttributes({
-      makeHidden: [mainContent, copyButton, translateFullPageButton],
-      makeVisible: [unsupportedLanguageContent, doneButton, translateButton],
+      makeHidden: [
+        cancelButton,
+        copyButton,
+        mainContent,
+        translateFullPageButton,
+        tryAgainButton,
+      ],
+      makeVisible: [doneButton, translateButton, unsupportedLanguageContent],
       addDefault: [translateButton],
-      removeDefault: [doneButton],
+      removeDefault: [doneButton, tryAgainButton],
+    });
+  }
+
+  /**
+   * Displays the panel content for when a translation fails to complete.
+   */
+  #displayTranslationFailureMessage() {
+    const {
+      cancelButton,
+      copyButton,
+      doneButton,
+      mainContent,
+      unsupportedLanguageContent,
+      textArea,
+      translateButton,
+      translateFullPageButton,
+      translationFailureMessageBar,
+      tryAgainButton,
+    } = this.elements;
+    this.#setPanelElementAttributes({
+      makeHidden: [
+        doneButton,
+        copyButton,
+        translateButton,
+        translateFullPageButton,
+        textArea,
+        unsupportedLanguageContent,
+      ],
+      makeVisible: [
+        cancelButton,
+        mainContent,
+        translationFailureMessageBar,
+        tryAgainButton,
+      ],
+      addDefault: [tryAgainButton],
+      removeDefault: [doneButton, translateButton],
     });
   }
 
@@ -1306,13 +1386,12 @@ var SelectTranslationsPanel = new (class {
           )
         ) {
           this.#changeStateToTranslated(translatedText);
-        } else if (this.#isOpen()) {
-          this.#changeStateTo("idle", /* retainEntires */ false, {
-            sourceText: this.getSourceText(),
-          });
         }
       })
-      .catch(error => this.console?.error(error));
+      .catch(error => {
+        this.console?.error(error);
+        this.#changeStateToFailure();
+      });
   }
 
   /**

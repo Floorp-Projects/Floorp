@@ -139,4 +139,10 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 
 ["browser_translations_select_panel_translate_on_open.js"]
 
+["browser_translations_select_panel_translation_failure_after_unsupported_language.js"]
+
+["browser_translations_select_panel_translation_failure_on_open.js"]
+
+["browser_translations_select_panel_translation_failure_on_retranslate.js"]
+
 ["browser_translations_select_panel_unsupported_language.js"]
