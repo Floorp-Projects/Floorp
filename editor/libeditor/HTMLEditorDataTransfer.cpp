@@ -505,7 +505,7 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
         editingHost,
         EditorDOMPoint(wsRunScannerAtCaret.GetStartReasonContent()),
         BlockInlineCheck::UseComputedDisplayStyle);
-    WSScanResult backwardScanFromPointToCaretResult =
+    const WSScanResult backwardScanFromPointToCaretResult =
         wsRunScannerAtStartReason.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
             pointToPutCaret);
     if (backwardScanFromPointToCaretResult.InVisibleOrCollapsibleCharacters()) {

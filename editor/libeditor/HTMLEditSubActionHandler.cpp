@@ -1604,7 +1604,7 @@ nsresult HTMLEditor::InsertLineBreakAsSubAction() {
       NS_WARNING("Inserted <br> was unexpectedly removed");
       return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
-    WSScanResult backwardScanFromBeforeBRElementResult =
+    const WSScanResult backwardScanFromBeforeBRElementResult =
         WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
             editingHost,
             EditorDOMPoint(unwrappedInsertBRElementResult.GetNewNode()),
@@ -1615,7 +1615,7 @@ nsresult HTMLEditor::InsertLineBreakAsSubAction() {
       return Err(NS_ERROR_FAILURE);
     }
 
-    WSScanResult forwardScanFromAfterBRElementResult =
+    const WSScanResult forwardScanFromAfterBRElementResult =
         WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
             editingHost, pointToPutCaret,
             BlockInlineCheck::UseComputedDisplayStyle);
@@ -2254,7 +2254,7 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
       aEditingHost, {EmptyCheckOption::TreatNonEditableContentAsInvisible});
   WSRunScanner wsRunScanner(&aEditingHost, aPointToBreak,
                             BlockInlineCheck::UseComputedDisplayStyle);
-  WSScanResult backwardScanResult =
+  const WSScanResult backwardScanResult =
       wsRunScanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(aPointToBreak);
   if (MOZ_UNLIKELY(backwardScanResult.Failed())) {
     NS_WARNING(
@@ -2262,7 +2262,7 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
     return Err(NS_ERROR_FAILURE);
   }
   const bool brElementIsAfterBlock = backwardScanResult.ReachedBlockBoundary();
-  WSScanResult forwardScanResult =
+  const WSScanResult forwardScanResult =
       wsRunScanner.ScanNextVisibleNodeOrBlockBoundaryFrom(aPointToBreak);
   if (MOZ_UNLIKELY(forwardScanResult.Failed())) {
     NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
@@ -2383,7 +2383,7 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
                                std::move(pointToPutCaret));
   }
 
-  WSScanResult forwardScanFromAfterBRElementResult =
+  const WSScanResult forwardScanFromAfterBRElementResult =
       WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
           &aEditingHost, afterBRElement,
           BlockInlineCheck::UseComputedDisplayStyle);
@@ -2612,7 +2612,7 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
     // mailquote (in either inline or block case). The latter can confuse a
     // user if they click there and start typing, because being in the
     // mailquote may affect wrapping behavior, or font color, etc.
-    WSScanResult forwardScanFromPointToSplitResult =
+    const WSScanResult forwardScanFromPointToSplitResult =
         WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
             &aEditingHost, pointToSplit, BlockInlineCheck::UseHTMLDefaultStyle);
     if (forwardScanFromPointToSplitResult.Failed()) {
@@ -2726,7 +2726,7 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
       // XXX Cannot we replace this complicated check with just a call of
       //     HTMLEditUtils::IsVisibleBRElement with
       //     resultOfInsertingBRElement.inspect()?
-      WSScanResult backwardScanFromPointToCreateNewBRElementResult =
+      const WSScanResult backwardScanFromPointToCreateNewBRElementResult =
           WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
               &aEditingHost, pointToCreateNewBRElement,
               BlockInlineCheck::UseComputedDisplayStyle);
@@ -2743,7 +2743,7 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
                .ReachedSpecialContent()) {
         return NS_SUCCESS_DOM_NO_OPERATION;
       }
-      WSScanResult forwardScanFromPointAfterNewBRElementResult =
+      const WSScanResult forwardScanFromPointAfterNewBRElementResult =
           WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
               &aEditingHost,
               EditorRawDOMPoint::After(pointToCreateNewBRElement),
@@ -7654,7 +7654,7 @@ HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction(
       // element even if selected in a blocked phrase element or
       // non-HTMLelement.
       BlockInlineCheck::UseHTMLDefaultStyle);
-  WSScanResult scanResultAtEnd =
+  const WSScanResult scanResultAtEnd =
       wsScannerAtEnd.ScanPreviousVisibleNodeOrBlockBoundaryFrom(endPoint);
   if (scanResultAtEnd.Failed()) {
     NS_WARNING(
@@ -7692,7 +7692,7 @@ HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction(
   // selection past that, it would visibly change meaning of users selection.
   WSRunScanner wsScannerAtStart(&aEditingHost, startPoint,
                                 BlockInlineCheck::UseHTMLDefaultStyle);
-  WSScanResult scanResultAtStart =
+  const WSScanResult scanResultAtStart =
       wsScannerAtStart.ScanNextVisibleNodeOrBlockBoundaryFrom(startPoint);
   if (scanResultAtStart.Failed()) {
     NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
@@ -8944,7 +8944,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
   // If the right list item element is not empty, we need to consider where to
   // put caret in it. If it has non-container inline elements, <br> or <hr>, at
   // the element is proper position.
-  WSScanResult forwardScanFromStartOfListItemResult =
+  const WSScanResult forwardScanFromStartOfListItemResult =
       WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
           &aEditingHost, EditorRawDOMPoint(&rightListItemElement, 0u),
           BlockInlineCheck::UseComputedDisplayStyle);

@@ -95,11 +95,16 @@ class MOZ_STACK_CLASS WSScanResult final {
 
   friend class WSRunScanner;  // Because of WSType.
 
+  explicit WSScanResult(WSType aReason) : mReason(aReason) {
+    MOZ_ASSERT(mReason == WSType::UnexpectedError ||
+               mReason == WSType::NotInitialized);
+  }
+
  public:
   WSScanResult() = delete;
-  MOZ_NEVER_INLINE_DEBUG WSScanResult(nsIContent* aContent, WSType aReason,
+  MOZ_NEVER_INLINE_DEBUG WSScanResult(nsIContent& aContent, WSType aReason,
                                       BlockInlineCheck aBlockInlineCheck)
-      : mContent(aContent), mReason(aReason) {
+      : mContent(&aContent), mReason(aReason) {
     AssertIfInvalidData(aBlockInlineCheck);
   }
   MOZ_NEVER_INLINE_DEBUG WSScanResult(const EditorDOMPoint& aPoint,
@@ -110,6 +115,8 @@ class MOZ_STACK_CLASS WSScanResult final {
         mReason(aReason) {
     AssertIfInvalidData(aBlockInlineCheck);
   }
+
+  static WSScanResult Error() { return WSScanResult(WSType::UnexpectedError); }
 
   MOZ_NEVER_INLINE_DEBUG void AssertIfInvalidData(
       BlockInlineCheck aBlockInlineCheck) const {
@@ -124,37 +131,33 @@ class MOZ_STACK_CLASS WSScanResult final {
                mReason == WSType::CurrentBlockBoundary ||
                mReason == WSType::OtherBlockBoundary);
     MOZ_ASSERT_IF(mReason == WSType::UnexpectedError, !mContent);
+    MOZ_ASSERT_IF(mReason != WSType::UnexpectedError, mContent);
     MOZ_ASSERT_IF(mReason == WSType::InUncomposedDoc,
-                  mContent && !mContent->IsInComposedDoc());
+                  !mContent->IsInComposedDoc());
     MOZ_ASSERT_IF(mContent && !mContent->IsInComposedDoc(),
                   mReason == WSType::InUncomposedDoc);
     MOZ_ASSERT_IF(mReason == WSType::NonCollapsibleCharacters ||
                       mReason == WSType::CollapsibleWhiteSpaces,
-                  mContent && mContent->IsText());
+                  mContent->IsText());
     MOZ_ASSERT_IF(mReason == WSType::BRElement,
-                  mContent && mContent->IsHTMLElement(nsGkAtoms::br));
-    MOZ_ASSERT_IF(mReason == WSType::PreformattedLineBreak,
-                  mContent && mContent->IsText() &&
-                      EditorUtils::IsNewLinePreformatted(*mContent));
+                  mContent->IsHTMLElement(nsGkAtoms::br));
+    MOZ_ASSERT_IF(
+        mReason == WSType::PreformattedLineBreak,
+        mContent->IsText() && EditorUtils::IsNewLinePreformatted(*mContent));
     MOZ_ASSERT_IF(
         mReason == WSType::SpecialContent,
-        mContent &&
-            ((mContent->IsText() && !mContent->IsEditable()) ||
-             (!mContent->IsHTMLElement(nsGkAtoms::br) &&
-              !HTMLEditUtils::IsBlockElement(*mContent, aBlockInlineCheck))));
+        (mContent->IsText() && !mContent->IsEditable()) ||
+            (!mContent->IsHTMLElement(nsGkAtoms::br) &&
+             !HTMLEditUtils::IsBlockElement(*mContent, aBlockInlineCheck)));
     MOZ_ASSERT_IF(mReason == WSType::OtherBlockBoundary,
-                  mContent && HTMLEditUtils::IsBlockElement(*mContent,
-                                                            aBlockInlineCheck));
+                  HTMLEditUtils::IsBlockElement(*mContent, aBlockInlineCheck));
     // If mReason is WSType::CurrentBlockBoundary, mContent can be any content.
     // In most cases, it's current block element which is editable.  However, if
     // there is no editable block parent, this is topmost editable inline
     // content. Additionally, if there is no editable content, this is the
     // container start of scanner and is not editable.
     if (mReason == WSType::CurrentBlockBoundary) {
-      if (!mContent ||
-          // This is what the most preferred result is mContent itself is a
-          // block.
-          HTMLEditUtils::IsBlockElement(*mContent, aBlockInlineCheck) ||
+      if (HTMLEditUtils::IsBlockElement(*mContent, aBlockInlineCheck) ||
           // If mContent is not editable, we cannot check whether there is no
           // block ancestor in the limiter which we don't have.  Therefore,
           // let's skip the ancestor check.
@@ -191,6 +194,10 @@ class MOZ_STACK_CLASS WSScanResult final {
 
   [[nodiscard]] bool ContentIsElement() const {
     return mContent && mContent->IsElement();
+  }
+
+  [[nodiscard]] bool ContentIsText() const {
+    return mContent && mContent->IsText();
   }
 
   /**
