@@ -78,6 +78,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true"
                 android:elevation="@dimen/browser_fragment_toolbar_elevation"/>
 
             <FrameLayout
