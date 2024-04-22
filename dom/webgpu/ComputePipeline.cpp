@@ -27,7 +27,7 @@ ComputePipeline::ComputePipeline(Device* const aParent, RawId aId,
 ComputePipeline::~ComputePipeline() { Cleanup(); }
 
 void ComputePipeline::Cleanup() {
-  if (mValid) {
+  if (!mValid) {
     return;
   }
   mValid = false;
