@@ -33,7 +33,7 @@ native nsDocShellLoadStatePtr(nsDocShellLoadState*);
  * or the provider does not provide a window, the window watcher will proceed
  * to actually open a new window.
  */
-[scriptable, uuid(e97a3830-15ef-499b-8372-c22d128091c1)]
+[scriptable, builtinclass, uuid(e97a3830-15ef-499b-8372-c22d128091c1)]
 interface nsIWindowProvider : nsISupports
 {
   /**

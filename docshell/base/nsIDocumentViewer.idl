@@ -211,8 +211,9 @@ interface nsIDocumentViewer : nsISupports
   /**
    * Sets the print settings for print / print-previewing a subdocument.
    */
-  [can_run_script] void setPrintSettingsForSubdocument(in nsIPrintSettings aPrintSettings,
-                                                       in RemotePrintJobChildPtr aRemotePrintJob);
+  [can_run_script, noscript]
+  void setPrintSettingsForSubdocument(in nsIPrintSettings aPrintSettings,
+                                      in RemotePrintJobChildPtr aRemotePrintJob);
 
   /**
    * Get the history entry that this viewer will save itself into when

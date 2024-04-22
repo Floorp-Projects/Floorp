@@ -44,6 +44,7 @@ interface nsIWebTransport : nsISupports {
                     in unsigned long aSecurityFlags,
                     in WebTransportSessionEventListener aListener);
 
+  [noscript]
   void asyncConnectWithClient(in nsIURI aURI,
                     in boolean aDedicated,
                     in Array<nsIWebTransportHash> aServerCertHashes,

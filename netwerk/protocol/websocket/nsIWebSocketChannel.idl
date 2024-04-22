@@ -146,7 +146,7 @@ interface nsIWebSocketChannel : nsISupports
                    in nsIWebSocketListener aListener,
                    in nsISupports aContext);
 
-    [must_use]
+    [must_use, noscript]
     void asyncOpenNative(in nsIURI aURI,
                          in ACString aOrigin,
                          in OriginAttributes aOriginAttributes,

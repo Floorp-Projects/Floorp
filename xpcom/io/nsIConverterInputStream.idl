@@ -12,7 +12,7 @@ interface nsIInputStream;
  * This allows reading unicode strings from a stream, automatically converting
  * the bytes from a selected character encoding.
  */
-[scriptable, uuid(FC66FFB6-5404-4908-A4A3-27F92FA0579D)]
+[scriptable, builtinclass, uuid(FC66FFB6-5404-4908-A4A3-27F92FA0579D)]
 interface nsIConverterInputStream : nsIUnicharInputStream {
     /**
      * Default replacement char value, U+FFFD REPLACEMENT CHARACTER.

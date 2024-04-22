@@ -26,12 +26,12 @@ interface nsINetAddr;
  * like an enumerator, allowing the caller to easily step through the
  * list of IP addresses.
  */
-[scriptable, uuid(f92228ae-c417-4188-a604-0830a95e7eb9)]
+[scriptable, builtinclass, uuid(f92228ae-c417-4188-a604-0830a95e7eb9)]
 interface nsIDNSRecord : nsISupports
 {
 };
 
-[scriptable, uuid(cb260e20-943f-4309-953b-78c90d3a7638)]
+[scriptable, builtinclass, uuid(cb260e20-943f-4309-953b-78c90d3a7638)]
 interface nsIDNSAddrRecord : nsIDNSRecord
 {
     /**

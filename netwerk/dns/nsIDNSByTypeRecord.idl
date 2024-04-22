@@ -32,7 +32,7 @@ native TypeResult(mozilla::net::TypeRecordResultType);
 native MaybePort(mozilla::Maybe<uint16_t>);
 native MaybeAlpnTuple(mozilla::Maybe<std::tuple<nsCString, mozilla::net::SupportedAlpnRank>>);
 
-[scriptable, uuid(5d13241b-9d46-448a-90d8-77c418491026)]
+[scriptable, builtinclass, uuid(5d13241b-9d46-448a-90d8-77c418491026)]
 interface nsIDNSByTypeRecord : nsIDNSRecord
 {
   /**
@@ -43,10 +43,10 @@ interface nsIDNSByTypeRecord : nsIDNSRecord
   [noscript] readonly attribute TypeResult results;
 };
 
-[scriptable, uuid(2a71750d-cb21-45f1-9e1c-666d18dd7645)]
+[scriptable, builtinclass, uuid(2a71750d-cb21-45f1-9e1c-666d18dd7645)]
 interface nsIDNSTXTRecord : nsISupports
 {
-  CStringArrayRef getRecords();
+  [noscript] CStringArrayRef getRecords();
 
   /*
    * Return concatenated strings.

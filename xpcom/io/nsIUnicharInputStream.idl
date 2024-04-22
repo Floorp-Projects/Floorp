@@ -42,7 +42,7 @@ native nsWriteUnicharSegmentFun(nsWriteUnicharSegmentFun);
  * Abstract UTF-16 input stream
  * @see nsIInputStream
  */
-[scriptable, uuid(d5e3bd80-6723-4b92-b0c9-22f6162fd94f)]
+[scriptable, builtinclass, uuid(d5e3bd80-6723-4b92-b0c9-22f6162fd94f)]
 interface nsIUnicharInputStream : nsISupports {
   /**
    * Reads into a caller-provided array.

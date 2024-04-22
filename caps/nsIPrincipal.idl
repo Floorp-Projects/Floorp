@@ -498,7 +498,7 @@ interface nsIPrincipal : nsISupports
      *
      * May be called from any thread.
      */
-    nsIReferrerInfo createReferrerInfo(in ReferrerPolicy aReferrerPolicy);
+    [noscript] nsIReferrerInfo createReferrerInfo(in ReferrerPolicy aReferrerPolicy);
 
     /**
      * The base part of |origin| without the concatenation with |originSuffix|.

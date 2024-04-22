@@ -8,7 +8,7 @@ interface nsIX509Cert;
 interface nsITLSServerSecurityObserver;
 interface nsISocketTransport;
 
-[scriptable, uuid(cc2c30f9-cfaa-4b8a-bd44-c24881981b74)]
+[scriptable, builtinclass, uuid(cc2c30f9-cfaa-4b8a-bd44-c24881981b74)]
 interface nsITLSServerSocket : nsIServerSocket
 {
   /**

@@ -15,7 +15,7 @@ interface nsIDocShellTreeItem;
  * containing an embedded Gecko web browser.
  */
 
-[scriptable, uuid(E8C414C4-DC38-4BA3-AB4E-EC4CBBE22907)]
+[scriptable, builtinclass, uuid(E8C414C4-DC38-4BA3-AB4E-EC4CBBE22907)]
 interface nsIWebBrowserChrome : nsISupports
 {
     /**
@@ -124,7 +124,7 @@ interface nsIWebBrowserChrome : nsISupports
      *
      * @see nsIBaseWindow
      */
-    void setDimensions(in DimensionRequest aRequest);
+    [noscript] void setDimensions(in DimensionRequest aRequest);
 
     /**
      * Gets the dimensions of the window. The caller may pass
@@ -134,7 +134,7 @@ interface nsIWebBrowserChrome : nsISupports
      *
      * @see nsIBaseWindow
      */
-    void getDimensions(in DimensionKind aDimensionKind, out long aX, out long aY, out long aCX, out long aCY);
+    [noscript] void getDimensions(in DimensionKind aDimensionKind, out long aX, out long aY, out long aCX, out long aCY);
 
     /**
      * Blur the window. This should unfocus the window and send an onblur event.

@@ -126,7 +126,7 @@ interface nsIDragService : nsISupports
    *
    * Note: This method is deprecated for non-native code.
    */
-  [can_run_script]
+  [noscript, can_run_script]
   void invokeDragSessionWithSelection(in Selection aSelection,
                                       in nsIPrincipal aPrincipal,
                                       in nsIContentSecurityPolicy aCsp,

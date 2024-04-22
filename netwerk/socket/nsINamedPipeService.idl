@@ -12,7 +12,7 @@
  * This is the callback interface for nsINamedPipeService.
  * The functions are called by the internal thread in the nsINamedPipeService.
  */
-[scriptable, uuid(de4f460b-94fd-442c-9002-1637beb2185a)]
+[uuid(de4f460b-94fd-442c-9002-1637beb2185a)]
 interface nsINamedPipeDataObserver : nsISupports
 {
     /**
@@ -41,7 +41,7 @@ interface nsINamedPipeDataObserver : nsISupports
 /**
  * nsINamedPipeService
  */
-[scriptable, uuid(1bf19133-5625-4ac8-836a-80b1c215f72b)]
+[uuid(1bf19133-5625-4ac8-836a-80b1c215f72b)]
 interface nsINamedPipeService : nsISupports
 {
     /**

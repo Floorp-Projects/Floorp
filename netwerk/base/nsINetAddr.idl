@@ -21,7 +21,7 @@ native NetAddr(mozilla::net::NetAddr);
  * This interface represents a native NetAddr struct in a readonly
  * interface.
  */
-[scriptable, uuid(652B9EC5-D159-45D7-9127-50BB559486CD)]
+[scriptable, builtinclass, uuid(652B9EC5-D159-45D7-9127-50BB559486CD)]
 interface nsINetAddr : nsISupports
 {
     /**

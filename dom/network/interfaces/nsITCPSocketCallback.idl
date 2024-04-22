@@ -11,12 +11,6 @@
 
 #include "domstubs.idl"
 
-%{C++
-#include "nsTArrayForwardDeclare.h"
-%}
-[ref] native nsUint8TArrayRef(nsTArray<uint8_t>);
-[ptr] native JSContextPtr(JSContext);
-
 
 /*
  * This interface is implemented in TCPSocket.cpp as an internal interface
@@ -36,7 +30,7 @@ interface nsITCPSocketCallback : nsISupports {
   void fireDataStringEvent(in AString type, in ACString data);
 
   // Dispatch a "data" event at this object with an Array
-  void fireDataArrayEvent(in AString type, [const] in nsUint8TArrayRef data);
+  void fireDataArrayEvent(in AString type, in Array<uint8_t> data);
 
   // Dispatch an event of the given type at this object.
   void fireEvent(in AString type);
