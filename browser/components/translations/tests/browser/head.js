@@ -1998,6 +1998,20 @@ class SelectTranslationsTestUtils {
   }
 
   /**
+   * Simulates clicking the translate-full-page button.
+   */
+  static async clickTranslateFullPageButton() {
+    logAction();
+    const { translateFullPageButton } = SelectTranslationsPanel.elements;
+    assertVisibility({ visible: { translateFullPageButton } });
+    click(translateFullPageButton);
+    await FullPageTranslationsTestUtils.assertTranslationsButton(
+      { button: true, circleArrows: true, locale: false, icon: true },
+      "The icon presents the loading indicator."
+    );
+  }
+
+  /**
    * Simulates clicking the try-again button.
    *
    * @param {object} config

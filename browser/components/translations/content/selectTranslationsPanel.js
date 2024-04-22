@@ -503,6 +503,7 @@ var SelectTranslationsPanel = new (class {
       toMenuList,
       toMenuPopup,
       translateButton,
+      translateFullPageButton,
       tryAgainButton,
       tryAnotherSourceMenuList,
       tryAnotherSourceMenuPopup,
@@ -533,6 +534,10 @@ var SelectTranslationsPanel = new (class {
       }
       case translateButton.id: {
         this.onClickTranslateButton();
+        break;
+      }
+      case translateFullPageButton.id: {
+        this.onClickTranslateFullPageButton();
         break;
       }
       case tryAgainButton.id: {
@@ -664,6 +669,28 @@ var SelectTranslationsPanel = new (class {
     const { fromMenuList, tryAnotherSourceMenuList } = this.elements;
     fromMenuList.value = tryAnotherSourceMenuList.value;
     this.#maybeRequestTranslation();
+  }
+
+  /**
+   * Handles events when the panel's translate-full-page button is clicked.
+   */
+  onClickTranslateFullPageButton() {
+    const { panel } = this.elements;
+    const { fromLanguage, toLanguage } = this.#getSelectedLanguagePair();
+    const actor = TranslationsParent.getTranslationsActor(
+      gBrowser.selectedBrowser
+    );
+    panel.addEventListener(
+      "popuphidden",
+      () =>
+        actor.translate(
+          fromLanguage,
+          toLanguage,
+          false // reportAsAutoTranslate
+        ),
+      { once: true }
+    );
+    this.close();
   }
 
   /**
