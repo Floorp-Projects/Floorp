@@ -475,6 +475,10 @@ class Script {
    *        execution is complete.
    */
   async inject(context, reportExceptions = true) {
+    // NOTE: Avoid unnecessary use of "await" in this function, because doing
+    // so can delay script execution beyond the scheduled point. In particular,
+    // document_start scripts should run "immediately" in most cases.
+
     DocumentManager.lazyInit();
     if (this.requiresCleanup) {
       context.addScript(this);
@@ -552,11 +556,19 @@ class Script {
 
     let scripts = this.getCompiledScripts(context);
     if (scripts instanceof Promise) {
+      // Note: in theory, the following async await could result in script
+      // execution being scheduled too late. That would be an issue for
+      // document_start scripts. In practice, this is not a problem because the
+      // compiled script is cached in the process, and preloading to compile
+      // starts as soon as the network request for the document has been
+      // received (see ExtensionPolicyService::CheckRequest).
       scripts = await scripts;
     }
 
-    // Make sure we've injected any related CSS before we run content scripts.
-    await cssPromise;
+    if (cssPromise) {
+      // Make sure we've injected any related CSS before we run content scripts.
+      await cssPromise;
+    }
 
     let result;
 
