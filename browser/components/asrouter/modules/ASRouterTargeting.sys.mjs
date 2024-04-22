@@ -45,7 +45,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
@@ -876,15 +875,6 @@ const TargetingGetters = {
   get userPrefersReducedMotion() {
     let window = Services.appShell.hiddenDOMWindow;
     return window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches;
-  },
-
-  /**
-   * Whether or not the user is in the Major Release 2022 holdback study.
-   */
-  get inMr2022Holdback() {
-    return (
-      lazy.NimbusFeatures.majorRelease2022.getVariable("onboarding") === false
-    );
   },
 
   /**

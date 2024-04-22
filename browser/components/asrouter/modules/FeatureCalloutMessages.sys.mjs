@@ -157,7 +157,7 @@ const MESSAGES = () => {
         // Add the highest possible cap to ensure impressions are recorded while allowing the Spotlight to sync across windows/tabs with Firefox View open
         lifetime: 100,
       },
-      targeting: `!inMr2022Holdback && source == "about:firefoxview" &&
+      targeting: `source == "about:firefoxview" &&
        !'browser.newtabpage.activity-stream.asrouter.providers.cfr'|preferenceIsUserSet &&
        'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features'|preferenceValue &&
        ${matchCurrentScreenTargeting(
@@ -303,7 +303,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 3,
-      targeting: `!inMr2022Holdback && source == "about:firefoxview" && ${matchCurrentScreenTargeting(
+      targeting: `source == "about:firefoxview" && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_[0-9]"
       )} && ${matchIncompleteTargeting(FIREFOX_VIEW_PREF)}`,
@@ -376,7 +376,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 2,
-      targeting: `!inMr2022Holdback && source == "about:firefoxview" && "browser.firefox-view.view-count" | preferenceValue > 2
+      targeting: `source == "about:firefoxview" && "browser.firefox-view.view-count" | preferenceValue > 2
     && (("identity.fxaccounts.enabled" | preferenceValue == false) || !(("services.sync.engine.tabs" | preferenceValue == true) && ("services.sync.username" | preferenceValue))) && (!messageImpressions.FIREFOX_VIEW_SPOTLIGHT[messageImpressions.FIREFOX_VIEW_SPOTLIGHT | length - 1] || messageImpressions.FIREFOX_VIEW_SPOTLIGHT[messageImpressions.FIREFOX_VIEW_SPOTLIGHT | length - 1] < currentDate|date - ${ONE_DAY_IN_MS})`,
       frequency: {
         lifetime: 1,
