@@ -717,6 +717,8 @@ def target_tasks_pine(full_task_graph, parameters, graph_config):
     )
 
     def filter(task):
+        if "android" in task.attributes.get("build_platform", ""):
+            return False
         suite = task.attributes.get("unittest_suite", "")
         if "reftest" in suite or "web-platform" in suite:
             return False
