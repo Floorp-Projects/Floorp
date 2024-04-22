@@ -2281,7 +2281,8 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
   // or, if the previous visible node is different block,
   // we need to skip the following <br>.  So, otherwise, we can insert the
   // block at the insertion point.
-  if (backwardScanFromPointToInsertResult.Failed() ||
+  if (NS_WARN_IF(backwardScanFromPointToInsertResult.Failed()) ||
+      backwardScanFromPointToInsertResult.ReachedInlineEditingHostBoundary() ||
       backwardScanFromPointToInsertResult.ReachedBRElement() ||
       backwardScanFromPointToInsertResult.ReachedCurrentBlockBoundary()) {
     return pointToInsert;

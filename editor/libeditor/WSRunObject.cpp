@@ -1292,7 +1292,9 @@ Result<InsertTextResult, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
       // If the insertion point is (was) before the start of text and it's
       // immediately after a hard line break, the first ASCII white-space should
       // be replaced with an NBSP for making it visible.
-      else if (textFragmentDataAtStart.StartsFromHardLineBreak() &&
+      else if ((textFragmentDataAtStart.StartsFromHardLineBreak() ||
+                textFragmentDataAtStart
+                    .StartsFromInlineEditingHostBoundary()) &&
                isInsertionPointEqualsOrIsBeforeStartOfText) {
         theString.SetCharAt(HTMLEditUtils::kNBSP, 0);
       }
@@ -1325,7 +1327,8 @@ Result<InsertTextResult, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
       // If the end of replacing range is (was) after the end of text and it's
       // immediately before block boundary, the last ASCII white-space should
       // be replaced with an NBSP for making it visible.
-      else if (textFragmentDataAtEnd.EndsByBlockBoundary() &&
+      else if ((textFragmentDataAtEnd.EndsByBlockBoundary() ||
+                textFragmentDataAtEnd.EndsByInlineEditingHostBoundary()) &&
                isInsertionPointEqualsOrAfterEndOfText) {
         theString.SetCharAt(HTMLEditUtils::kNBSP, lastCharIndex);
       }
@@ -2023,7 +2026,11 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
     return BoundaryData(aPoint,
                         const_cast<Element&>(
                             aEditableBlockParentOrTopmostEditableInlineElement),
-                        WSType::CurrentBlockBoundary);
+                        HTMLEditUtils::IsBlockElement(
+                            aEditableBlockParentOrTopmostEditableInlineElement,
+                            aBlockInlineCheck)
+                            ? WSType::CurrentBlockBoundary
+                            : WSType::InlineEditingHostBoundary);
   }
 
   if (HTMLEditUtils::IsBlockElement(*previousLeafContentOrBlock,
@@ -2166,7 +2173,11 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
     return BoundaryData(aPoint.template To<EditorDOMPoint>(),
                         const_cast<Element&>(
                             aEditableBlockParentOrTopmostEditableInlineElement),
-                        WSType::CurrentBlockBoundary);
+                        HTMLEditUtils::IsBlockElement(
+                            aEditableBlockParentOrTopmostEditableInlineElement,
+                            aBlockInlineCheck)
+                            ? WSType::CurrentBlockBoundary
+                            : WSType::InlineEditingHostBoundary);
   }
 
   if (HTMLEditUtils::IsBlockElement(*nextLeafContentOrBlock,
@@ -2220,7 +2231,7 @@ WSRunScanner::TextFragmentData::InvisibleLeadingWhiteSpaceRangeRef() const {
   }
 
   // If it's start of line, there is no invisible leading white-spaces.
-  if (!StartsFromHardLineBreak()) {
+  if (!StartsFromHardLineBreak() && !StartsFromInlineEditingHostBoundary()) {
     mLeadingWhiteSpaceRange.emplace();
     return mLeadingWhiteSpaceRange.ref();
   }
@@ -2250,7 +2261,8 @@ WSRunScanner::TextFragmentData::InvisibleTrailingWhiteSpaceRangeRef() const {
   // If it's not immediately before a block boundary nor an invisible
   // preformatted linefeed, there is no invisible trailing white-spaces.  Note
   // that collapsible white-spaces before a `<br>` element is visible.
-  if (!EndsByBlockBoundary() && !EndsByInvisiblePreformattedLineBreak()) {
+  if (!EndsByBlockBoundary() && !EndsByInlineEditingHostBoundary() &&
+      !EndsByInvisiblePreformattedLineBreak()) {
     mTrailingWhiteSpaceRange.emplace();
     return mTrailingWhiteSpaceRange.ref();
   }
@@ -2380,7 +2392,7 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
     return mVisibleWhiteSpacesData.ref();
   }
 
-  if (!StartsFromHardLineBreak()) {
+  if (!StartsFromHardLineBreak() && !StartsFromInlineEditingHostBoundary()) {
     VisibleWhiteSpacesData visibleWhiteSpaces;
     if (mStart.PointRef().IsSet()) {
       visibleWhiteSpaces.SetStartPoint(mStart.PointRef());
@@ -2400,7 +2412,8 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
     return mVisibleWhiteSpacesData.ref();
   }
 
-  MOZ_ASSERT(StartsFromHardLineBreak());
+  MOZ_ASSERT(StartsFromHardLineBreak() ||
+             StartsFromInlineEditingHostBoundary());
   MOZ_ASSERT(maybeHaveLeadingWhiteSpaces);
 
   VisibleWhiteSpacesData visibleWhiteSpaces;
@@ -2408,7 +2421,7 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
     visibleWhiteSpaces.SetStartPoint(leadingWhiteSpaceRange.EndRef());
   }
   visibleWhiteSpaces.SetStartFromLeadingWhiteSpaces();
-  if (!EndsByBlockBoundary()) {
+  if (!EndsByBlockBoundary() && !EndsByInlineEditingHostBoundary()) {
     // then no trailing ws.  this normal run ends the overall ws run.
     if (mEnd.PointRef().IsSet()) {
       visibleWhiteSpaces.SetEndPoint(mEnd.PointRef());
@@ -2418,7 +2431,7 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
     return mVisibleWhiteSpacesData.ref();
   }
 
-  MOZ_ASSERT(EndsByBlockBoundary());
+  MOZ_ASSERT(EndsByBlockBoundary() || EndsByInlineEditingHostBoundary());
 
   if (!maybeHaveTrailingWhiteSpaces) {
     // normal ws runs right up to adjacent block (nbsp next to block)
@@ -3449,7 +3462,8 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
         isPreviousCharCollapsibleASCIIWhiteSpace) {
       // First, try to insert <br> element if NBSP is at end of a block.
       // XXX We should stop this if there is a visible content.
-      if (visibleWhiteSpaces.EndsByBlockBoundary() &&
+      if ((visibleWhiteSpaces.EndsByBlockBoundary() ||
+           visibleWhiteSpaces.EndsByInlineEditingHostBoundary()) &&
           aPoint.IsInContentNode()) {
         bool insertBRElement = HTMLEditUtils::IsBlockElement(
             *aPoint.template ContainerAs<nsIContent>(),
@@ -4368,7 +4382,8 @@ WSRunScanner::GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries(
     // If there is no invisible white-space and the line starts with a
     // text node, shrink the range to start of the text node.
     else if (!aRange.StartRef().IsInTextNode() &&
-             textFragmentDataAtStart.StartsFromBlockBoundary() &&
+             (textFragmentDataAtStart.StartsFromBlockBoundary() ||
+              textFragmentDataAtStart.StartsFromInlineEditingHostBoundary()) &&
              textFragmentDataAtStart.EndRef().IsInTextNode()) {
       result.SetStart(textFragmentDataAtStart.EndRef());
     }
@@ -4401,7 +4416,8 @@ WSRunScanner::GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries(
     // If there is no invisible white-space and the line ends with a text
     // node, shrink the range to end of the text node.
     else if (!aRange.EndRef().IsInTextNode() &&
-             textFragmentDataAtEnd.EndsByBlockBoundary() &&
+             (textFragmentDataAtEnd.EndsByBlockBoundary() ||
+              textFragmentDataAtEnd.EndsByInlineEditingHostBoundary()) &&
              textFragmentDataAtEnd.StartRef().IsInTextNode()) {
       result.SetEnd(EditorDOMPoint::AtEndOf(
           *textFragmentDataAtEnd.StartRef().ContainerAs<Text>()));
