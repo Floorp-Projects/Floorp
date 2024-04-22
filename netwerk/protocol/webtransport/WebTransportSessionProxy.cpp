@@ -27,6 +27,7 @@ namespace mozilla::net {
 LazyLogModule webTransportLog("nsWebTransport");
 
 NS_IMPL_ISUPPORTS(WebTransportSessionProxy, WebTransportSessionEventListener,
+                  WebTransportSessionEventListenerInternal,
                   WebTransportConnectionSettings, nsIWebTransport,
                   nsIRedirectResultListener, nsIStreamListener,
                   nsIChannelEventSink, nsIInterfaceRequestor);

@@ -625,25 +625,6 @@ void WebTransportParent::NotifyRemoteClosed(bool aCleanly, uint32_t aErrorCode,
       }));
 }
 
-// This method is currently not used by WebTransportSessionProxy to inform of
-// any session related events. All notification is recieved via
-// WebTransportSessionProxy::OnSessionReady and
-// WebTransportSessionProxy::OnSessionClosed methods
-NS_IMETHODIMP
-WebTransportParent::OnSessionReadyInternal(
-    mozilla::net::Http3WebTransportSession* aSession) {
-  Unused << aSession;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WebTransportParent::OnIncomingStreamAvailableInternal(
-    mozilla::net::Http3WebTransportStream* aStream) {
-  // XXX implement once DOM WebAPI supports creation of streams
-  Unused << aStream;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 WebTransportParent::OnIncomingUnidirectionalStreamAvailable(
     nsIWebTransportReceiveStream* aStream) {
@@ -792,13 +773,6 @@ NS_IMETHODIMP WebTransportParent::OnDatagramReceived(
   TimeStamp ts = TimeStamp::Now();
   Unused << SendIncomingDatagram(aData, ts);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP WebTransportParent::OnDatagramReceivedInternal(
-    nsTArray<uint8_t>&& aData) {
-  // this method is used only for internal notificaiton within necko
-  // we dont expect to receive any notification with on this interface
   return NS_OK;
 }
 

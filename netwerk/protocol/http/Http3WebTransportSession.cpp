@@ -447,7 +447,10 @@ Http3WebTransportSession::OnIncomingWebTransportStream(
     return nullptr;
   }
 
-  mListener->OnIncomingStreamAvailableInternal(stream);
+  if (nsCOMPtr<WebTransportSessionEventListenerInternal> listener =
+          do_QueryInterface(mListener)) {
+    listener->OnIncomingStreamAvailableInternal(stream);
+  }
   return stream.forget();
 }
 
@@ -470,7 +473,10 @@ void Http3WebTransportSession::OnDatagramReceived(nsTArray<uint8_t>&& aData) {
     return;
   }
 
-  mListener->OnDatagramReceivedInternal(std::move(aData));
+  if (nsCOMPtr<WebTransportSessionEventListenerInternal> listener =
+          do_QueryInterface(mListener)) {
+    listener->OnDatagramReceivedInternal(std::move(aData));
+  }
 }
 
 void Http3WebTransportSession::GetMaxDatagramSize() {

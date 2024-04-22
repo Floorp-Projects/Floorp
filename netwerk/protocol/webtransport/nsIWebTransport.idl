@@ -79,9 +79,6 @@ interface WebTransportSessionEventListener : nsISupports {
   // This is used to let the consumer of nsIWebTransport know that the
   // underlying WebTransportSession object is ready to use.
   void onSessionReady(in uint64_t aSessionId);
-  // This is used internally to pass the reference of WebTransportSession
-  // object to WebTransportSessionProxy.
-  void onSessionReadyInternal(in Http3WebTransportSessionPtr aSession);
   void onSessionClosed(in boolean aCleanly,
                        in uint32_t aErrorCode,
                        in ACString aReason);
@@ -90,18 +87,11 @@ interface WebTransportSessionEventListener : nsISupports {
   void onIncomingBidirectionalStreamAvailable(in nsIWebTransportBidirectionalStream aStream);
   void onIncomingUnidirectionalStreamAvailable(in nsIWebTransportReceiveStream aStream);
 
-  // This is used internally to pass the reference of Http3WebTransportStream
-  // object to WebTransportSessionProxy.
-  void onIncomingStreamAvailableInternal(in Http3WebTransportStreamPtr aStream);
-
   void onStopSending(in uint64_t aStreamId, in nsresult aError);
   void onResetReceived(in uint64_t aStreamId, in nsresult aError);
 
   // When a new datagram has been received.
   void onDatagramReceived(in Array<uint8_t> aData);
-
-  // This is used internally to pass the datagram to WebTransportSessionProxy.
-  void onDatagramReceivedInternal(in Datagram aData);
 
   void onMaxDatagramSize(in uint64_t aSize);
 
@@ -116,6 +106,20 @@ interface WebTransportSessionEventListener : nsISupports {
     in WebTransportSessionEventListener_DatagramOutcome aOutCome);
 
   // void onStatsAvailable(in WebTransportStats aStats);
+};
+
+[uuid(8fb30aa9-5163-4eb3-81f3-371e1ccb5b0e)]
+interface WebTransportSessionEventListenerInternal : nsISupports {
+  // This is used internally to pass the reference of WebTransportSession
+  // object to WebTransportSessionProxy.
+  void onSessionReadyInternal(in Http3WebTransportSessionPtr aSession);
+
+  // This is used internally to pass the reference of Http3WebTransportStream
+  // object to WebTransportSessionProxy.
+  void onIncomingStreamAvailableInternal(in Http3WebTransportStreamPtr aStream);
+
+  // This is used internally to pass the datagram to WebTransportSessionProxy.
+  void onDatagramReceivedInternal(in Datagram aData);
 };
 
 [uuid(faad75bd-83c6-420b-9fdb-a70bd70be449)]
