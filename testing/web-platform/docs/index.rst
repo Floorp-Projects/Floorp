@@ -372,4 +372,29 @@ bot <https://github.com/mozilla/wpt-sync>`_. This performs the following tasks:
 The nature of a two-way sync means that occasional merge conflicts and
 other problems. If something isn't in sync with upstream in the way
 you expect, please ask on `#interop
-<https://chat.mozilla.org/#/room/#interop:mozilla.org>`_ on matrix.
+<https://chat.mozilla.org/#/room/#interop:mozilla.org>`_ on matritx.
+
+wpt-serve
+---------
+
+Sometimes, it's preferable to run the WPT's web server on its own, and point different browsers to the test files.
+
+    ./mach wpt-serve
+
+can be used for this, after a short setup:
+
+On Unix, one can run:
+
+    ./wpt make-hosts-file | sudo tee -a /etc/hosts
+
+from the root of the WPT checkout, present at ``testing/web-platform/tests/``.
+
+On Windows, from an administrator ``mozilla-build`` shell, one can run:
+
+    ./wpt make-hosts-file >> /c/Windows/System32/drivers/etc/host
+
+from the WPT checkout.
+
+Most of the time, browsing to http://localhost:8000 will allow
+running the test, although some tests have special requirements, such as running
+on a specific domain or running using https.
