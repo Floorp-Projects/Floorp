@@ -561,7 +561,12 @@ class ChildImpl final : public BackgroundChildImpl {
 #endif
   }
 
-  NS_INLINE_DECL_REFCOUNTING(ChildImpl, override)
+  // This type is threadsafe refcounted as actors managed by it may be destroyed
+  // after the thread it is bound to dies, and hold a reference to this object.
+  //
+  // It is _not_ safe to use this type or any methods on it from off of the
+  // thread it was created for.
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChildImpl, override)
 
  private:
   // Forwarded from BackgroundChild.
