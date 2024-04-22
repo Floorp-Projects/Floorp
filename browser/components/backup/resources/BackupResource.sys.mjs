@@ -58,6 +58,19 @@ export class BackupResource {
   }
 
   /**
+   * This can be overridden to return a number indicating the priority the
+   * resource should have in the backup order.
+   *
+   * Resources with a higher priority will be backed up first.
+   * The default priority of 0 indicates it can be processed in any order.
+   *
+   * @returns {number}
+   */
+  static get priority() {
+    return 0;
+  }
+
+  /**
    * Get the size of a file.
    *
    * @param {string} filePath - path to a file.

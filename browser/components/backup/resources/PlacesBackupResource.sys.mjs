@@ -37,8 +37,11 @@ export class PlacesBackupResource extends BackupResource {
     return false;
   }
 
+  static get priority() {
+    return 1;
+  }
+
   async backup(stagingPath, profilePath = PathUtils.profileDir) {
-    const sqliteDatabases = ["places.sqlite", "favicons.sqlite"];
     let canBackupHistory =
       !lazy.PrivateBrowsingUtils.permanentPrivateBrowsing &&
       !lazy.isSanitizeOnShutdownEnabled &&
@@ -59,11 +62,18 @@ export class PlacesBackupResource extends BackupResource {
       return { bookmarksOnly: true };
     }
 
-    await BackupResource.copySqliteDatabases(
-      profilePath,
-      stagingPath,
-      sqliteDatabases
-    );
+    // These are copied in parallel because they're attached[1], and we don't
+    // want them to get out of sync with one another.
+    //
+    // [1]: https://www.sqlite.org/lang_attach.html
+    await Promise.all([
+      BackupResource.copySqliteDatabases(profilePath, stagingPath, [
+        "places.sqlite",
+      ]),
+      BackupResource.copySqliteDatabases(profilePath, stagingPath, [
+        "favicons.sqlite",
+      ]),
+    ]);
 
     return null;
   }

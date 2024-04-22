@@ -138,6 +138,13 @@ add_task(async function test_createBackup() {
     );
   }
 
+  // Check that resources were called from highest to lowest backup priority.
+  sinon.assert.callOrder(
+    FakeBackupResource3.prototype.backup,
+    FakeBackupResource2.prototype.backup,
+    FakeBackupResource1.prototype.backup
+  );
+
   let manifestPath = PathUtils.join(stagingPathRenamed, "backup-manifest.json");
   Assert.ok(await IOUtils.exists(manifestPath), "Manifest file exists");
   let manifest = await IOUtils.readJSON(manifestPath);
