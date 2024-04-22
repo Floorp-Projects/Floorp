@@ -36,6 +36,10 @@ support-files = [
   "../../../base/content/test/tabs/file_mediaPlayback.html",
   "../../../base/content/test/general/audio.ogg",
 ]
+skip-if = [
+  "os == 'linux' && os_version == '18.04' && asan", # Bug 1781868
+  "os == 'linux' && os_version == '18.04' && tsan", # Bug 1781868
+]
 
 ["browser_Telemetry_numberOfSiteOrigins.js"]
 support-files = ["contain_iframe.html"]
