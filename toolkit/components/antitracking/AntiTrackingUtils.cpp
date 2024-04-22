@@ -898,7 +898,9 @@ bool AntiTrackingUtils::IsThirdPartyChannel(nsIChannel* aChannel) {
   }
   bool thirdParty = true;
   rv = tpuService->IsThirdPartyChannel(aChannel, nullptr, &thirdParty);
-  NS_ENSURE_SUCCESS(rv, true);
+  if (NS_FAILED(rv)) {
+    return true;
+  }
   return thirdParty;
 }
 
@@ -973,7 +975,9 @@ bool AntiTrackingUtils::IsThirdPartyDocument(Document* aDocument) {
 
   nsresult rv = tpuService->IsThirdPartyChannel(aDocument->GetChannel(),
                                                 nullptr, &thirdParty);
-  NS_ENSURE_SUCCESS(rv, true);
+  if (NS_FAILED(rv)) {
+    return true;
+  }
   return thirdParty;
 }
 
