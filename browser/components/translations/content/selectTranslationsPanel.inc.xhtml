@@ -96,6 +96,12 @@
                        readonly="true"
                        tabindex="0">
         </html:textarea>
+        <html:moz-message-bar id="select-translations-panel-translation-failure-message-bar"
+                              type="error"
+                              hidden="true"
+                              data-l10n-id="select-translations-panel-translation-failure-message"
+                              data-l10n-attrs="message">
+        </html:moz-message-bar>
       </vbox>
     </html:div>
     <html:moz-button-group id="select-translations-panel-footer-button-group"
@@ -107,6 +113,11 @@
         </button>
       </html:div>
       <html:div id="select-translations-panel-end-button-group">
+        <button id="select-translations-panel-cancel-button"
+                class="footer-button"
+                hidden="true"
+                data-l10n-id="select-translations-panel-cancel-button">
+        </button>
         <button id="select-translations-panel-translate-full-page-button"
                 class="footer-button"
                 data-l10n-id="select-translations-panel-translate-full-page-button">
@@ -122,6 +133,12 @@
                 hidden="true"
                 default="true"
                 disabled="true">
+        </button>
+        <button id="select-translations-panel-try-again-button"
+                class="footer-button"
+                data-l10n-id="select-translations-panel-try-again-button"
+                hidden="true"
+                default="true">
         </button>
       </html:div>
     </html:moz-button-group>

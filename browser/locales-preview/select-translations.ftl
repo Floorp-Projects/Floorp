@@ -57,19 +57,27 @@ select-translations-panel-copy-button-copied =
 select-translations-panel-done-button =
     .label = Done
 
-# Text displayed on translate-full-page button.
+# Text displayed on the translate-full-page button.
 select-translations-panel-translate-full-page-button =
     .label = Translate full page
 
-# Text displayed on translate button.
+# Text displayed on the translate button.
 select-translations-panel-translate-button =
     .label = Translate
+
+# Text displayed on the try-again button.
+select-translations-panel-try-again-button =
+    .label = Try again
 
 # Text displayed as a placeholder when the panel is idle.
 select-translations-panel-idle-placeholder-text = Translated text will appear here.
 
 # Text displayed as a placeholder when the panel is actively translating.
 select-translations-panel-translating-placeholder-text = Translating…
+
+# Text displayed when the translation fails to complete.
+select-translations-panel-translation-failure-message =
+    .message = There was a problem translating. Please try again.
 
 # If your language requires declining the language name, a possible solution
 # is to adapt the structure of the phrase, or use a support noun, e.g.
