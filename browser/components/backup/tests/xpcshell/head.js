@@ -50,6 +50,9 @@ class FakeBackupResource2 extends BackupResource {
   static get requiresEncryption() {
     return true;
   }
+  static get priority() {
+    return 1;
+  }
 }
 
 /**
@@ -61,6 +64,9 @@ class FakeBackupResource3 extends BackupResource {
   }
   static get requiresEncryption() {
     return false;
+  }
+  static get priority() {
+    return 2;
   }
 }
 

@@ -180,8 +180,15 @@ export class BackupService {
 
       let stagingPath = await this.#prepareStagingFolder(backupDirPath);
 
+      // Sort resources be priority.
+      let sortedResources = Array.from(this.#resources.values()).sort(
+        (a, b) => {
+          return b.priority - a.priority;
+        }
+      );
+
       // Perform the backup for each resource.
-      for (let resourceClass of this.#resources.values()) {
+      for (let resourceClass of sortedResources) {
         try {
           lazy.logConsole.debug(
             `Backing up resource with key ${resourceClass.key}. ` +
