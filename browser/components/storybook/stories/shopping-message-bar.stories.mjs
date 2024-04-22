@@ -15,21 +15,19 @@ export default {
   component: "shopping-message-bar",
   argTypes: {
     type: {
-      control: {
-        type: "select",
-        options: [
-          "stale",
-          "generic-error",
-          "not-enough-reviews",
-          "product-not-available",
-          "product-not-available-reported",
-          "thanks-for-reporting",
-          "analysis-in-progress",
-          "reanalysis-in-progress",
-          "page-not-supported",
-          "thank-you-for-feedback",
-        ],
-      },
+      control: { type: "select" },
+      options: [
+        "stale",
+        "generic-error",
+        "not-enough-reviews",
+        "product-not-available",
+        "product-not-available-reported",
+        "thanks-for-reporting",
+        "analysis-in-progress",
+        "reanalysis-in-progress",
+        "page-not-supported",
+        "thank-you-for-feedback",
+      ],
     },
   },
   parameters: {
