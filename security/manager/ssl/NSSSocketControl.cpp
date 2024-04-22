@@ -13,6 +13,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/dom/Promise.h"
 #include "nsNSSCallbacks.h"
+#include "nsProxyRelease.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -318,11 +319,16 @@ NSSSocketControl::AsyncStartTLS(JSContext* aCx,
     return NS_ERROR_UNEXPECTED;
   }
 
+  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
+      "AsyncStartTLS promise", promise);
+
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
-      "AsyncStartTLS::StartTLS", [promise, self = RefPtr{this}]() {
+      "AsyncStartTLS::StartTLS",
+      [promiseHolder = std::move(promiseHolder), self = RefPtr{this}]() {
         nsresult rv = self->StartTLS();
-        NS_DispatchToMainThread(
-            NS_NewRunnableFunction("AsyncStartTLS::Resolve", [rv, promise]() {
+        NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "AsyncStartTLS::Resolve", [rv, promiseHolder]() {
+              dom::Promise* promise = promiseHolder.get()->get();
               if (NS_FAILED(rv)) {
                 promise->MaybeReject(rv);
               } else {
