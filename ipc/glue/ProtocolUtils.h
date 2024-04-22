@@ -237,8 +237,8 @@ class IProtocol : public HasResultCodes {
 
   void SetId(int32_t aId);
 
-  // We have separate functions because the accessibility code manually
-  // calls SetManager.
+  // We have separate functions because the accessibility code and BrowserParent
+  // manually calls SetManager.
   void SetManager(IRefCountedProtocol* aManager);
 
   // Clear `mManager` and `mToplevel` to nullptr. Only intended to be called
