@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.translate.TranslationSupport
  * @property languageModels Set of language machine learning translation models the translation engine has available.
  * @property languageSettings A map containing a key of BCP 47 language code and its
  * [LanguageSetting] to represent the automatic language settings.
+ * @property neverTranslateSites List of sites the user has opted to never translate.
  * @property engineError Holds the error state of the translations engine.
  * See [TranslationsState.translationError] for session level errors.
  */
@@ -25,5 +26,6 @@ data class TranslationsBrowserState(
     val supportedLanguages: TranslationSupport? = null,
     val languageModels: List<LanguageModel>? = null,
     val languageSettings: Map<String, LanguageSetting>? = null,
+    val neverTranslateSites: List<String>? = null,
     val engineError: TranslationError? = null,
 )

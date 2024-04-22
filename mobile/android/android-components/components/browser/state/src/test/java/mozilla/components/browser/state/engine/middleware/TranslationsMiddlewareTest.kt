@@ -327,6 +327,35 @@ class TranslationsMiddlewareTest {
     }
 
     @Test
+    fun `WHEN InitTranslationsBrowserState is dispatched AND the engine is supported THEN SetNeverTranslateSitesAction is also dispatched`() = runTest {
+        // Send Action
+        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+
+        // Set the engine to support
+        val engineSupportedCallback = argumentCaptor<((Boolean) -> Unit)>()
+        // At least once, since InitAction also will trigger this
+        verify(engine, atLeastOnce()).isTranslationsEngineSupported(
+            onSuccess = engineSupportedCallback.capture(),
+            onError = any(),
+        )
+        engineSupportedCallback.value.invoke(true)
+
+        val neverTranslateSitesCallBack = argumentCaptor<((List<String>) -> Unit)>()
+        verify(engine, atLeastOnce()).getNeverTranslateSiteList(onSuccess = neverTranslateSitesCallBack.capture(), onError = any())
+        val mockNeverTranslate = listOf("www.mozilla.org")
+        neverTranslateSitesCallBack.value.invoke(mockNeverTranslate)
+
+        waitForIdle()
+
+        // Verifying at least once
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.SetNeverTranslateSitesAction(
+                neverTranslateSites = mockNeverTranslate,
+            ),
+        )
+    }
+
+    @Test
     fun `WHEN InitTranslationsBrowserState is dispatched AND has an issue with the engine THEN EngineExceptionAction is dispatched`() = runTest() {
         // Send Action
         // Note: Implicitly called once due to connection with InitAction
@@ -726,7 +755,6 @@ class TranslationsMiddlewareTest {
 
         verify(context.store).dispatch(
             TranslationsAction.SetNeverTranslateSitesAction(
-                tabId = tab.id,
                 neverTranslateSites = neverTranslateSites,
             ),
         )
@@ -825,7 +853,7 @@ class TranslationsMiddlewareTest {
     }
 
     @Test
-    fun `WHEN RemoveNeverTranslateSiteAction is dispatched AND removing is unsuccessful THEN FETCH_NEVER_TRANSLATE_SITES is dispatched`() = runTest {
+    fun `WHEN RemoveNeverTranslateSiteAction is dispatched AND removing is unsuccessful THEN SetNeverTranslateSitesAction is dispatched`() = runTest {
         val errorCallback = argumentCaptor<((Throwable) -> Unit)>()
         whenever(
             engine.setNeverTranslateSpecifiedSite(
@@ -838,45 +866,20 @@ class TranslationsMiddlewareTest {
 
         val action =
             TranslationsAction.RemoveNeverTranslateSiteAction(
-                tabId = tab.id,
                 origin = "google.com",
             )
         translationsMiddleware.invoke(context, {}, action)
         waitForIdle()
 
-        // Verify Dispatch
-        verify(store).dispatch(
-            TranslationsAction.OperationRequestedAction(
-                tabId = tab.id,
-                operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
-            ),
-        )
-        waitForIdle()
-    }
-
-    @Test
-    fun `WHEN RemoveNeverTranslateSiteAction is dispatched AND removing is successful THEN FETCH_PAGE_SETTINGS is dispatched`() = runTest {
-        val sitesCallback = argumentCaptor<(() -> Unit)>()
-        val action =
-            TranslationsAction.RemoveNeverTranslateSiteAction(
-                tabId = tab.id,
-                origin = "google.com",
-            )
-        translationsMiddleware.invoke(context, {}, action)
-        verify(engine).setNeverTranslateSpecifiedSite(
-            origin = any(),
-            setting = anyBoolean(),
-            onSuccess = sitesCallback.capture(),
-            onError = any(),
-        )
-        sitesCallback.value.invoke()
-        waitForIdle()
+        val neverTranslateSitesCallBack = argumentCaptor<((List<String>) -> Unit)>()
+        verify(engine, atLeastOnce()).getNeverTranslateSiteList(onSuccess = neverTranslateSitesCallBack.capture(), onError = any())
+        val mockNeverTranslate = listOf("www.mozilla.org")
+        neverTranslateSitesCallBack.value.invoke(mockNeverTranslate)
 
         // Verify Dispatch
         verify(store).dispatch(
-            TranslationsAction.OperationRequestedAction(
-                tabId = tab.id,
-                operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+            TranslationsAction.SetNeverTranslateSitesAction(
+                neverTranslateSites = mockNeverTranslate,
             ),
         )
         waitForIdle()
