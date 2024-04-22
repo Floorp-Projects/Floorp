@@ -23,7 +23,8 @@ add_task(
       expectedFromLanguage: "fr",
       expectedToLanguage: "en",
       downloadHandler: rejectDownloads,
-      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewFailure,
+      onOpenPanel:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.clickCancelButton();
@@ -63,17 +64,20 @@ add_task(
       expectedFromLanguage: "fr",
       expectedToLanguage: "en",
       downloadHandler: rejectDownloads,
-      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewFailure,
+      onOpenPanel:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.clickTryAgainButton({
       downloadHandler: rejectDownloads,
-      viewAssertion: SelectTranslationsTestUtils.assertPanelViewFailure,
+      viewAssertion:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.clickTryAgainButton({
       downloadHandler: rejectDownloads,
-      viewAssertion: SelectTranslationsTestUtils.assertPanelViewFailure,
+      viewAssertion:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.clickTryAgainButton({
