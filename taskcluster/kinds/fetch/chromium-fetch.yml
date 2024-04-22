@@ -7,32 +7,42 @@ job-defaults:
         type: chromium-fetch
         script: /builds/worker/bin/fetch-chromium.py
 
-linux64-chromium:
-    description: 'Linux64 Chromium Fetch'
+linux64-chromiumdriver:
+    description: 'Linux64 Chromium Trunk Chromedriver Fetch'
+    attributes:
+        cached_task: false
     fetch:
         platform: linux
         artifact-name: chromium-linux.tar.bz2
 
-win32-chromium:
-    description: 'Windows32 Chromium Fetch'
+win32-chromiumdriver:
+    description: 'Windows32 Chromium Trunk Chromedriver Fetch'
+    attributes:
+        cached_task: false
     fetch:
         platform: win32
         artifact-name: chromium-win32.tar.bz2
 
-win64-chromium:
-    description: 'Windows64 Chromium Fetch'
+win64-chromiumdriver:
+    description: 'Windows64 Chromium Trunk Chromedriver Fetch'
+    attributes:
+        cached_task: false
     fetch:
         platform: win64
         artifact-name: chromium-win64.tar.bz2
 
-mac-chromium:
-    description: 'MacOSX Chromium Fetch'
+mac-chromiumdriver:
+    description: 'MacOSX Chromium Trunk Chromedriver Fetch'
+    attributes:
+        cached_task: false
     fetch:
         platform: mac
         artifact-name: chromium-mac.tar.bz2
 
-mac-chromium-arm:
-    description: 'MacOSX ARM Chromium Fetch'
+mac-chromiumdriver-arm:
+    description: 'MacOSX ARM Chromium Trunk Chromedriver Fetch'
+    attributes:
+        cached_task: false
     fetch:
         platform: mac-arm
         artifact-name: chromium-mac-arm.tar.bz2
