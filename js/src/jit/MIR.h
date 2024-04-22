@@ -42,6 +42,7 @@
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/Value.h"
 #include "js/Vector.h"
+#include "util/DifferentialTesting.h"
 #include "vm/BigIntType.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
@@ -11895,7 +11896,13 @@ class MWasmNewStructObject : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, instance), (1, typeDefData))
 
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  AliasSet getAliasSet() const override {
+    if (js::SupportDifferentialTesting()) {
+      // Consider allocations effectful for differential testing.
+      return MDefinition::getAliasSet();
+    }
+    return AliasSet::None();
+  }
   bool isOutline() const { return isOutline_; }
   bool zeroFields() const { return zeroFields_; }
   gc::AllocKind allocKind() const { return allocKind_; }
@@ -11923,7 +11930,13 @@ class MWasmNewArrayObject : public MTernaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, instance), (1, numElements), (2, typeDefData))
 
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  AliasSet getAliasSet() const override {
+    if (js::SupportDifferentialTesting()) {
+      // Consider allocations effectful for differential testing.
+      return MDefinition::getAliasSet();
+    }
+    return AliasSet::None();
+  }
   uint32_t elemSize() const { return elemSize_; }
   bool zeroFields() const { return zeroFields_; }
   wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
