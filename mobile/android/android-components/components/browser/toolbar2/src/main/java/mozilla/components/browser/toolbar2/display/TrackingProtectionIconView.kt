@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.display
+package mozilla.components.browser.toolbar2.display
 
 import android.content.Context
 import android.graphics.drawable.Animatable
@@ -13,7 +13,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
-import mozilla.components.browser.toolbar.R
+import mozilla.components.browser.toolbar2.R
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.OFF_FOR_A_SITE
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.OFF_GLOBALLY

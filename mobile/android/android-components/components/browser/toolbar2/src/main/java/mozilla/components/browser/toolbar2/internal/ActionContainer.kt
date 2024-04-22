@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.internal
+package mozilla.components.browser.toolbar2.internal
 
 import android.content.Context
 import android.transition.TransitionManager
@@ -12,7 +12,7 @@ import android.view.View
 import android.widget.LinearLayout
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
-import mozilla.components.browser.toolbar.R
+import mozilla.components.browser.toolbar2.R
 import mozilla.components.concept.toolbar.Toolbar
 
 /**

@@ -19,7 +19,7 @@ android {
         }
     }
 
-    namespace 'mozilla.components.browser.toolbar'
+    namespace 'mozilla.components.browser.toolbar2'
 }
 
 dependencies {

@@ -36,7 +36,7 @@
         tools:ignore="ContentDescription"
         android:layout_marginTop="8dp" />
 
-    <mozilla.components.browser.toolbar.internal.ActionContainer
+    <mozilla.components.browser.toolbar2.internal.ActionContainer
         android:id="@+id/mozac_browser_toolbar_edit_actions_start"
         android:layout_width="wrap_content"
         android:layout_height="40dp"
@@ -89,7 +89,7 @@
         app:layout_constraintEnd_toStartOf="@id/mozac_browser_toolbar_edit_actions_end"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <mozilla.components.browser.toolbar.internal.ActionContainer
+    <mozilla.components.browser.toolbar2.internal.ActionContainer
         android:id="@+id/mozac_browser_toolbar_edit_actions_end"
         android:layout_width="wrap_content"
         android:layout_height="40dp"
