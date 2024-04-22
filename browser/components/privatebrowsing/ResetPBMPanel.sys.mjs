@@ -45,6 +45,9 @@ export const ResetPBMPanel = {
       onViewShowing(aEvent) {
         ResetPBMPanel.onViewShowing(aEvent);
       },
+      onViewHiding(aEvent) {
+        ResetPBMPanel.onViewHiding(aEvent);
+      },
     };
 
     if (this._enabled) {
@@ -59,7 +62,8 @@ export const ResetPBMPanel = {
    * the toolbar button.
    */
   async onViewShowing(event) {
-    let triggeringWindow = event.target.ownerGlobal;
+    let panelview = event.target;
+    let triggeringWindow = panelview.ownerGlobal;
 
     // We may skip the confirmation panel if disabled via pref.
     if (!this._shouldConfirmClear) {
@@ -68,7 +72,7 @@ export const ResetPBMPanel = {
 
       // If the action is triggered from the overflow menu make sure that the
       // panel gets hidden.
-      lazy.CustomizableUI.hidePanelForNode(event.target);
+      lazy.CustomizableUI.hidePanelForNode(panelview);
 
       // Trigger the restart action.
       await this._restartPBM(triggeringWindow);
@@ -77,6 +81,8 @@ export const ResetPBMPanel = {
       return;
     }
 
+    panelview.addEventListener("command", this);
+
     // Before the panel is shown, update checkbox state based on pref.
     this._rememberCheck(triggeringWindow).checked = this._shouldConfirmClear;
 
@@ -84,6 +90,23 @@ export const ResetPBMPanel = {
       action: "show",
       reason: "toolbar-btn",
     });
+  },
+
+  onViewHiding(event) {
+    let panelview = event.target;
+    panelview.removeEventListener("command", this);
+  },
+
+  handleEvent(event) {
+    let button = event.target;
+    switch (button.id) {
+      case "reset-pbm-panel-cancel-button":
+        this.onCancel(button);
+        break;
+      case "reset-pbm-panel-confirm-button":
+        this.onConfirm(button);
+        break;
+    }
   },
 
   /**
