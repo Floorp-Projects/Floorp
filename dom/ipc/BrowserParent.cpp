@@ -292,7 +292,6 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mUpdatedDimensions(false),
       mSizeMode(nsSizeMode_Normal),
       mCreatingWindow(false),
-      mVsyncParent(nullptr),
       mMarkedDestroying(false),
       mIsDestroyed(false),
       mRemoteTargetSetsCursor(false),
@@ -1401,21 +1400,19 @@ IPCResult BrowserParent::RecvNewWindowGlobal(
   return IPC_OK();
 }
 
-PVsyncParent* BrowserParent::AllocPVsyncParent() {
-  MOZ_ASSERT(!mVsyncParent);
-  mVsyncParent = new VsyncParent();
-  UpdateVsyncParentVsyncDispatcher();
-  return mVsyncParent.get();
+already_AddRefed<PVsyncParent> BrowserParent::AllocPVsyncParent() {
+  return MakeAndAddRef<VsyncParent>();
 }
 
-bool BrowserParent::DeallocPVsyncParent(PVsyncParent* aActor) {
-  MOZ_ASSERT(aActor);
-  mVsyncParent = nullptr;
-  return true;
+IPCResult BrowserParent::RecvPVsyncConstructor(PVsyncParent* aActor) {
+  UpdateVsyncParentVsyncDispatcher();
+  return IPC_OK();
 }
 
 void BrowserParent::UpdateVsyncParentVsyncDispatcher() {
-  if (!mVsyncParent) {
+  VsyncParent* actor = static_cast<VsyncParent*>(
+      LoneManagedOrNullAsserts(ManagedPVsyncParent()));
+  if (!actor) {
     return;
   }
 
@@ -1424,7 +1421,7 @@ void BrowserParent::UpdateVsyncParentVsyncDispatcher() {
     if (!vsyncDispatcher) {
       vsyncDispatcher = gfxPlatform::GetPlatform()->GetGlobalVsyncDispatcher();
     }
-    mVsyncParent->UpdateVsyncDispatcher(vsyncDispatcher);
+    actor->UpdateVsyncDispatcher(vsyncDispatcher);
   }
 }
 

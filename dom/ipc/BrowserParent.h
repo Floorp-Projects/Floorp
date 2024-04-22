@@ -423,9 +423,9 @@ class BrowserParent final : public PBrowserParent,
       const nsString& aTitle, const nsString& aInitialColor,
       const nsTArray<nsString>& aDefaultColors);
 
-  PVsyncParent* AllocPVsyncParent();
+  already_AddRefed<PVsyncParent> AllocPVsyncParent();
 
-  bool DeallocPVsyncParent(PVsyncParent* aActor);
+  mozilla::ipc::IPCResult RecvPVsyncConstructor(PVsyncParent* aActor) override;
 
 #ifdef ACCESSIBILITY
   PDocAccessibleParent* AllocPDocAccessibleParent(
@@ -941,8 +941,6 @@ class BrowserParent final : public PBrowserParent,
   nsIWidget::Cursor mCursor;
 
   nsTArray<nsString> mVerifyDropLinks;
-
-  RefPtr<VsyncParent> mVsyncParent;
 
 #ifdef DEBUG
   int32_t mActiveSupressDisplayportCount = 0;
