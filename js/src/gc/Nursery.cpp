@@ -613,6 +613,9 @@ void js::Nursery::leaveZealMode() {
 
   MOZ_ASSERT(isEmpty());
 
+  // Reset the nursery size.
+  setCapacity(minSpaceSize());
+
   toSpace.moveToStartOfChunk(this, 0);
   toSpace.setStartToCurrentPosition();
 
