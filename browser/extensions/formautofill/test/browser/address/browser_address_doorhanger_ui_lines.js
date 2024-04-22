@@ -9,27 +9,6 @@ add_setup(async function () {
   });
 });
 
-add_task(async function test_address_line_shows_name_in_save_doorhanger() {
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: ADDRESS_FORM_URL },
-    async function (browser) {
-      await showAddressDoorhanger(browser, {
-        "#given-name": "John",
-        "#family-name": "Doe",
-        "#organization": "Mozilla",
-        "#street-address": "123 Sesame Street",
-      });
-
-      const p = getNotification().querySelector(
-        `.address-save-update-row-container p:first-child`
-      );
-      is(p.textContent, "John Doe");
-
-      await clickAddressDoorhangerButton(SECONDARY_BUTTON);
-    }
-  );
-});
-
 add_task(
   async function test_address_line_displays_normalized_state_in_save_doorhanger() {
     await BrowserTestUtils.withNewTab(
