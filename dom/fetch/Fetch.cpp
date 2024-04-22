@@ -661,6 +661,8 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
         actor->SetOriginStack(std::move(stack));
       }
 
+      ipcArgs.isThirdPartyContext() = worker->IsThirdPartyContext();
+
       actor->DoFetchOp(ipcArgs);
 
       return p.forget();

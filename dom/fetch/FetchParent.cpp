@@ -103,6 +103,7 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
   mCookieJarSettings = aArgs.cookieJarSettings();
   mNeedOnDataAvailable = aArgs.needOnDataAvailable();
   mHasCSPEventListener = aArgs.hasCSPEventListener();
+  mIsThirdPartyContext = aArgs.isThirdPartyContext();
 
   if (mHasCSPEventListener) {
     mCSPEventListener =
@@ -173,7 +174,8 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
              self->mWorkerScript, self->mClientInfo, self->mController,
              self->mCookieJarSettings, self->mNeedOnDataAvailable,
              self->mCSPEventListener, self->mAssociatedBrowsingContextID,
-             self->mBackgroundEventTarget, self->mID})));
+             self->mBackgroundEventTarget, self->mID,
+             self->mIsThirdPartyContext})));
 
     self->mResponsePromises->GetResponseEndPromise()->Then(
         GetMainThreadSerialEventTarget(), __func__,

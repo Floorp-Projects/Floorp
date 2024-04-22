@@ -101,6 +101,7 @@ class FetchService final : public nsIObserver {
     uint64_t mAssociatedBrowsingContextID;
     nsCOMPtr<nsISerialEventTarget> mEventTarget;
     nsID mActorID;
+    bool mIsThirdPartyContext;
   };
 
   struct UnknownArgs {};
