@@ -11,10 +11,10 @@
 #include "mozilla/ResultVariant.h"
 #include <winerror.h>
 #include <windows.h>  // for HRESULT
+#include "mozilla/DefineEnum.h"
+#include <winerror.h>
 
-enum class Win11LimitedAccessFeatureType {
-  Taskbar,
-};
+MOZ_DEFINE_ENUM_CLASS(Win11LimitedAccessFeatureType, (Taskbar));
 
 /**
  * Class to manage unlocking limited access features on Windows 11.
