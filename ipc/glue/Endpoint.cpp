@@ -88,7 +88,7 @@ bool UntypedManagedEndpoint::BindCommon(IProtocol* aActor,
   mInner.reset();
 
   // Our typed caller will insert the actor into the managed container.
-  aActor->SetManagerAndRegister(aManager, id);
+  MOZ_ALWAYS_TRUE(aActor->SetManagerAndRegister(aManager, id));
 
   aManager->GetIPCChannel()->Send(
       MakeUnique<IPC::Message>(id, MANAGED_ENDPOINT_BOUND_MESSAGE_TYPE));

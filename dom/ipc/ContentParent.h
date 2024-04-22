@@ -422,8 +422,6 @@ class ContentParent final : public PContentParent,
    */
   void FriendlyName(nsAString& aName, bool aAnonymize = false);
 
-  virtual void OnChannelError() override;
-
   mozilla::ipc::IPCResult RecvInitCrashReporter(
       const NativeThreadId& aThreadId);
 

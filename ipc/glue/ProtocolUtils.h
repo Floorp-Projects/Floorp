@@ -124,12 +124,16 @@ enum class LinkStatus : uint8_t {
   // A live link is connected to the other side of this actor.
   Connected,
 
-  // The link has begun being destroyed. Messages may still be received, but
-  // cannot be sent. (exception: sync replies may be sent while Doomed).
+  // The link has begun being destroyed. Messages may no longer be sent. The
+  // ActorDestroy method is queued to be called, but has not been invoked yet,
+  // as managed actors still need to be destroyed first.
+  //
+  // NOTE: While no new IPC can be received at this point, `CanRecv` will still
+  // be true until `LinkStatus::Destroyed`.
   Doomed,
 
-  // The link has been destroyed, and messages will no longer be sent or
-  // received.
+  // The actor has been destroyed, and ActorDestroy has been called, however an
+  // ActorLifecycleProxy still holds a reference to the actor.
   Destroyed,
 };
 
@@ -171,12 +175,8 @@ class IProtocol : public HasResultCodes {
   IToplevelProtocol* ToplevelProtocol() { return mToplevel; }
   const IToplevelProtocol* ToplevelProtocol() const { return mToplevel; }
 
-  // The following methods either directly forward to the toplevel protocol, or
-  // almost directly do.
-  int32_t Register(IProtocol* aRouted);
-  int32_t RegisterID(IProtocol* aRouted, int32_t aId);
+  // Lookup() is forwarded directly to the toplevel protocol.
   IProtocol* Lookup(int32_t aId);
-  void Unregister(int32_t aId);
 
   Shmem::SharedMemory* CreateSharedMemory(size_t aSize, bool aUnsafe,
                                           int32_t* aId);
@@ -204,6 +204,9 @@ class IProtocol : public HasResultCodes {
 
   Side GetSide() const { return mSide; }
   bool CanSend() const { return mLinkStatus == LinkStatus::Connected; }
+
+  // Returns `true` for an active actor until the actor's `ActorDestroy` method
+  // has been called.
   bool CanRecv() const {
     return mLinkStatus == LinkStatus::Connected ||
            mLinkStatus == LinkStatus::Doomed;
@@ -249,8 +252,8 @@ class IProtocol : public HasResultCodes {
   // Sets the manager for the protocol and registers the protocol with
   // its manager, setting up channels for the protocol as well.  Not
   // for use outside of IPDL.
-  void SetManagerAndRegister(IRefCountedProtocol* aManager);
-  void SetManagerAndRegister(IRefCountedProtocol* aManager, int32_t aId);
+  bool SetManagerAndRegister(IRefCountedProtocol* aManager,
+                             int32_t aId = kNullActorId);
 
   // Helpers for calling `Send` on our underlying IPC channel.
   bool ChannelSend(UniquePtr<IPC::Message> aMsg);
@@ -270,28 +273,31 @@ class IProtocol : public HasResultCodes {
     }
   }
 
-  // Collect all actors managed by this object in an array. To make this safer
-  // to iterate, `ActorLifecycleProxy` references are returned rather than raw
-  // actor pointers.
-  virtual void AllManagedActors(
-      nsTArray<RefPtr<ActorLifecycleProxy>>& aActors) const = 0;
-
   virtual uint32_t AllManagedActorsCount() const = 0;
 
   // Internal method called when the actor becomes connected.
-  void ActorConnected();
+  already_AddRefed<ActorLifecycleProxy> ActorConnected();
 
-  // Called immediately before setting the actor state to doomed, and triggering
-  // async actor destruction. Messages may be sent from this callback, but no
-  // later.
-  // FIXME(nika): This is currently unused!
-  virtual void ActorDoom() {}
-  void DoomSubtree();
+  // Internal method called when actor becomes disconnected.
+  void ActorDisconnected(ActorDestroyReason aWhy);
+
+  // Called by DoomSubtree on each managed actor to mark it as Doomed and
+  // prevent further IPC.
+  void SetDoomed() {
+    MOZ_ASSERT(mLinkStatus == LinkStatus::Connected ||
+                   mLinkStatus == LinkStatus::Doomed,
+               "Invalid link status for SetDoomed");
+    mLinkStatus = LinkStatus::Doomed;
+  }
+  virtual void DoomSubtree() = 0;
+
+  // Internal function returning an arbitrary directly managed actor. Used to
+  // identify managed actors to destroy when tearing down an actor tree.
+  virtual IProtocol* PeekManagedActor() = 0;
 
   // Called when the actor has been destroyed due to an error, a __delete__
   // message, or a __doom__ reply.
   virtual void ActorDestroy(ActorDestroyReason aWhy) {}
-  void DestroySubtree(ActorDestroyReason aWhy);
 
   // Called when IPC has acquired its first reference to the actor. This method
   // may take references which will later be freed by `ActorDealloc`.
@@ -428,11 +434,10 @@ class IToplevelProtocol : public IRefCountedProtocol {
   ~IToplevelProtocol() = default;
 
  public:
-  // Shadow methods on IProtocol which are implemented directly on toplevel
-  // actors.
-  int32_t Register(IProtocol* aRouted);
-  int32_t RegisterID(IProtocol* aRouted, int32_t aId);
+  // Shadows the method on IProtocol, which will forward to the top.
   IProtocol* Lookup(int32_t aId);
+
+  int32_t RegisterID(IProtocol* aRouted, int32_t aId);
   void Unregister(int32_t aId);
 
   Shmem::SharedMemory* CreateSharedMemory(size_t aSize, bool aUnsafe,
@@ -446,8 +451,6 @@ class IToplevelProtocol : public IRefCountedProtocol {
 
   void SetOtherProcessId(base::ProcessId aOtherPid);
 
-  virtual void OnChannelClose() = 0;
-  virtual void OnChannelError() = 0;
   virtual void ProcessingError(Result aError, const char* aMsgName) {}
 
   bool Open(ScopedPort aPort, const nsID& aMessageChannelId,
@@ -513,7 +516,26 @@ class IToplevelProtocol : public IRefCountedProtocol {
 
   virtual void OnChannelReceivedMessage(const Message& aMsg) {}
 
-  void OnIPCChannelOpened() { ActorConnected(); }
+  // MessageChannel lifecycle callbacks.
+  void OnIPCChannelOpened() {
+    // Leak the returned ActorLifecycleProxy reference. It will be destroyed in
+    // `OnChannelClose` or `OnChannelError`.
+    Unused << ActorConnected();
+  }
+  void OnChannelClose() {
+    // Re-acquire the ActorLifecycleProxy reference acquired in
+    // OnIPCChannelOpened.
+    RefPtr<ActorLifecycleProxy> proxy = dont_AddRef(GetLifecycleProxy());
+    ActorDisconnected(NormalShutdown);
+    DeallocShmems();
+  }
+  void OnChannelError() {
+    // Re-acquire the ActorLifecycleProxy reference acquired in
+    // OnIPCChannelOpened.
+    RefPtr<ActorLifecycleProxy> proxy = dont_AddRef(GetLifecycleProxy());
+    ActorDisconnected(AbnormalShutdown);
+    DeallocShmems();
+  }
 
   base::ProcessId OtherPidMaybeInvalid() const { return mOtherPid; }
 
@@ -528,7 +550,7 @@ class IToplevelProtocol : public IRefCountedProtocol {
   // NOTE NOTE NOTE
   // Used to be on mState
   int32_t mLastLocalId;
-  IDMap<IProtocol*> mActorMap;
+  IDMap<RefPtr<ActorLifecycleProxy>> mActorMap;
   IDMap<RefPtr<Shmem::SharedMemory>> mShmemMap;
 
   MessageChannel mChannel;
@@ -753,6 +775,8 @@ class ManagedContainer {
       mArray.InsertElementAt(index, aElement);
     }
   }
+
+  Protocol* Peek() { return mArray.IsEmpty() ? nullptr : mArray.LastElement(); }
 
   void Clear() { mArray.Clear(); }
 
