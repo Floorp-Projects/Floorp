@@ -16,6 +16,30 @@ const { FirefoxBridgeExtensionUtils } = ChromeUtils.importESModule(
 const DUAL_BROWSER_EXTENSION_ORIGIN = ["chrome-extension://fake-origin/"];
 const NATIVE_MESSAGING_HOST_ID = "org.mozilla.firefox_bridge_test";
 
+if (AppConstants.platform == "win") {
+  var { MockRegistry } = ChromeUtils.importESModule(
+    "resource://testing-common/MockRegistry.sys.mjs"
+  );
+}
+
+let registry = null;
+add_setup(() => {
+  if (AppConstants.platform == "win") {
+    registry = new MockRegistry();
+    registerCleanupFunction(() => {
+      registry.shutdown();
+    });
+  }
+});
+
+function resetMockRegistry() {
+  if (AppConstants.platform != "win") {
+    return;
+  }
+  registry.shutdown();
+  registry = new MockRegistry();
+}
+
 let dir = FileUtils.getDir("TmpD", ["NativeMessagingHostsTest"]);
 dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
@@ -73,6 +97,35 @@ function getExpectedOutput() {
     type: "stdio",
     allowed_origins: DUAL_BROWSER_EXTENSION_ORIGIN,
   };
+}
+
+function DumpWindowsRegistry() {
+  let key = "";
+  let pathBuffer = [];
+
+  if (AppConstants.platform == "win") {
+    function bufferPrint(line) {
+      let regPath = line.trimStart();
+      if (regPath.includes(":")) {
+        // After trimming white space, keys are formatted as
+        // ": <key> (<value_type>)". We can assume it's only ever
+        // going to be of type REG_SZ for this test.
+        key = regPath.slice(2, regPath.length - " (REG_SZ)".length);
+      } else {
+        pathBuffer.push(regPath);
+      }
+    }
+
+    MockRegistry.dump(
+      MockRegistry.getRoot(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER),
+      "",
+      bufferPrint
+    );
+  } else {
+    Assert.ok(false, "Only windows has a registry!");
+  }
+
+  return [pathBuffer, key];
 }
 
 add_task(async function test_maybeWriteManifestFiles() {
@@ -196,6 +249,7 @@ add_task(async function test_ensureRegistered() {
       appDir.path,
       "Mozilla\\Firefox"
     );
+    resetMockRegistry();
   } else {
     throw new Error("Unsupported platform");
   }
@@ -219,4 +273,65 @@ add_task(async function test_ensureRegistered() {
   let JSONContent = await IOUtils.readUTF8(expectedJSONPath);
   await IOUtils.remove(expectedJSONPath);
   Assert.equal(JSONContent, expectedOutput);
+
+  //  Test that the registry key is written for Windows only
+  if (AppConstants.platform == "win") {
+    let [pathBuffer, key] = DumpWindowsRegistry();
+    Assert.equal(
+      pathBuffer.toString(),
+      [
+        "Software",
+        "Google",
+        "Chrome",
+        "NativeMessagingHosts",
+        nativeHostId,
+      ].toString()
+    );
+    Assert.equal(key, expectedJSONPath);
+  }
+});
+
+add_task(async function test_maybeWriteNativeMessagingRegKeys() {
+  if (AppConstants.platform != "win") {
+    return;
+  }
+  resetMockRegistry();
+  FirefoxBridgeExtensionUtils.maybeWriteNativeMessagingRegKeys(
+    "Test\\Path\\For\\Reg\\Key",
+    binFile.parent.path,
+    NATIVE_MESSAGING_HOST_ID
+  );
+  let [pathBuffer, key] = DumpWindowsRegistry();
+  registry.shutdown();
+  Assert.equal(
+    pathBuffer.toString(),
+    ["Test", "Path", "For", "Reg", "Key", NATIVE_MESSAGING_HOST_ID].toString()
+  );
+  console.log("The key is: " + key);
+  Assert.equal(key, `${binFile.parent.path}\\${NATIVE_MESSAGING_HOST_ID}.json`);
+});
+
+add_task(async function test_maybeWriteNativeMessagingRegKeysIncorrectValue() {
+  if (AppConstants.platform != "win") {
+    return;
+  }
+  resetMockRegistry();
+  registry.setValue(
+    Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+    `Test\\Path\\For\\Reg\\Key\\${NATIVE_MESSAGING_HOST_ID}`,
+    "",
+    "IncorrectValue"
+  );
+  FirefoxBridgeExtensionUtils.maybeWriteNativeMessagingRegKeys(
+    "Test\\Path\\For\\Reg\\Key",
+    binFile.parent.path,
+    NATIVE_MESSAGING_HOST_ID
+  );
+  let [pathBuffer, key] = DumpWindowsRegistry();
+  registry.shutdown();
+  Assert.equal(
+    pathBuffer.toString(),
+    ["Test", "Path", "For", "Reg", "Key", NATIVE_MESSAGING_HOST_ID].toString()
+  );
+  Assert.equal(key, `${binFile.parent.path}\\${NATIVE_MESSAGING_HOST_ID}.json`);
 });
