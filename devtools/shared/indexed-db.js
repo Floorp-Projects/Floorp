@@ -27,9 +27,6 @@ const sandbox = Cu.Sandbox(systemPrincipal, {
 const { indexedDB } = sandbox;
 
 module.exports = Object.freeze({
-  /**
-   * Only the standard version of indexedDB.open is supported.
-   */
   open(name, version) {
     const options = {};
     if (typeof version === "number") {

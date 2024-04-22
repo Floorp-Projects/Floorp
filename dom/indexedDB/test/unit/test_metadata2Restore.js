@@ -15,7 +15,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:81",
       dbName: "dbC",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+82^userContextId=1
@@ -25,7 +25,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:82",
       dbName: "dbD",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+83^userContextId=1
@@ -36,7 +36,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:83",
       dbName: "dbE",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+84^userContextId=1
@@ -47,7 +47,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:84",
       dbName: "dbF",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+85^userContextId=1
@@ -59,7 +59,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:85",
       dbName: "dbG",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+86^userContextId=1
@@ -72,7 +72,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:86",
       dbName: "dbH",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+87^userContextId=1
@@ -85,7 +85,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:87",
       dbName: "dbI",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+88^userContextId=1
@@ -99,7 +99,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:88",
       dbName: "dbJ",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+89^userContextId=1
@@ -113,7 +113,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:89",
       dbName: "dbK",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+90^userContextId=1
@@ -128,7 +128,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:90",
       dbName: "dbL",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+91^userContextId=1
@@ -144,7 +144,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:91",
       dbName: "dbM",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+92^userContextId=1
@@ -160,7 +160,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:92",
       dbName: "dbN",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+93^userContextId=1
@@ -177,7 +177,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:93",
       dbName: "dbO",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+94^userContextId=1
@@ -195,7 +195,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:94",
       dbName: "dbP",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+95^userContextId=1
@@ -213,7 +213,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:95",
       dbName: "dbQ",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+96^userContextId=1
@@ -232,7 +232,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:96",
       dbName: "dbR",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+97^userContextId=1
@@ -252,7 +252,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:97",
       dbName: "dbS",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
 
     // This one lives in storage/default/http+++localhost+98^userContextId=1
@@ -272,7 +272,7 @@ function* testSteps() {
       attrs: { userContextId: 1 },
       url: "http://localhost:98",
       dbName: "dbT",
-      dbOptions: { version: 1, storage: "default" },
+      dbVersion: 1,
     },
   ];
 
@@ -287,10 +287,10 @@ function* testSteps() {
       request = indexedDB.openForPrincipal(
         principal,
         params.dbName,
-        params.dbOptions
+        params.dbVersion
       );
     } else {
-      request = indexedDB.open(params.dbName, params.dbOptions);
+      request = indexedDB.open(params.dbName, params.dbVersion);
     }
     return request;
   }

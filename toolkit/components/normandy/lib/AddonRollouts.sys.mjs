@@ -37,13 +37,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const DB_NAME = "normandy-addon-rollout";
 const STORE_NAME = "addon-rollouts";
-const DB_OPTIONS = { version: 1 };
+const DB_VERSION = 1;
 
 /**
  * Create a new connection to the database.
  */
 function openDatabase() {
-  return lazy.IndexedDB.open(DB_NAME, DB_OPTIONS, db => {
+  return lazy.IndexedDB.open(DB_NAME, DB_VERSION, db => {
     db.createObjectStore(STORE_NAME, {
       keyPath: "slug",
     });

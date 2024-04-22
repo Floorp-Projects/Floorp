@@ -6,7 +6,7 @@
       o1 = new Int32Array(51488)
       o2 = new ArrayBuffer(13964)
       for (let i = 0; i < 51488; i++) o1[i] = 0x41
-      const dbRequest = window.indexedDB.open('', {})
+      const dbRequest = window.indexedDB.open('')
       dbRequest.onupgradeneeded = function(event) {
         const store = event.target.result.createObjectStore('IDBStore_0', {})
         store.add({}, 'ObjectKey_0')
