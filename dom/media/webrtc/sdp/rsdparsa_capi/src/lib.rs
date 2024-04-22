@@ -99,7 +99,7 @@ pub unsafe extern "C" fn sdp_free_session(sdp_ptr: *mut SdpSession) {
 pub unsafe extern "C" fn sdp_new_reference(session: *mut SdpSession) -> *const SdpSession {
     let original = Rc::from_raw(session);
     let ret = Rc::into_raw(Rc::clone(&original));
-    Rc::into_raw(original); // So the original reference doesn't get dropped
+    std::mem::forget(original); // So the original reference doesn't get dropped
     ret
 }
 
