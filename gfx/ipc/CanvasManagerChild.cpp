@@ -207,14 +207,15 @@ RefPtr<layers::CanvasChild> CanvasManagerChild::GetCanvasChild() {
 }
 
 RefPtr<webgpu::WebGPUChild> CanvasManagerChild::GetWebGPUChild() {
-  if (!mWebGPUChild) {
-    mWebGPUChild = MakeAndAddRef<webgpu::WebGPUChild>();
-    if (!SendPWebGPUConstructor(mWebGPUChild)) {
-      mWebGPUChild = nullptr;
-    }
+  if (PWebGPUChild* actor = LoneManagedOrNullAsserts(ManagedPWebGPUChild())) {
+    return static_cast<webgpu::WebGPUChild*>(actor);
   }
 
-  return mWebGPUChild;
+  auto actor = MakeRefPtr<webgpu::WebGPUChild>();
+  if (!SendPWebGPUConstructor(actor)) {
+    return nullptr;
+  }
+  return actor;
 }
 
 layers::ActiveResourceTracker* CanvasManagerChild::GetActiveResourceTracker() {
