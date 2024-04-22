@@ -1721,6 +1721,16 @@ template <typename PT, typename CT>
 WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSet());
+  MOZ_ASSERT(aPoint.IsInComposedDoc());
+
+  // We may not be able to check editable state in uncomposed tree as expected.
+  // For example, only some descendants in an editing host is temporarily
+  // removed from the tree, they are not editable unless nested contenteditable
+  // attribute is set to "true".
+  if (MOZ_UNLIKELY(!aPoint.IsInComposedDoc())) {
+    return WSScanResult(aPoint.template ContainerAs<nsIContent>(),
+                        WSType::InUncomposedDoc, mBlockInlineCheck);
+  }
 
   if (!TextFragmentDataAtStartRef().IsInitialized()) {
     return WSScanResult(nullptr, WSType::UnexpectedError, mBlockInlineCheck);
@@ -1770,6 +1780,16 @@ template <typename PT, typename CT>
 WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
     const EditorDOMPointBase<PT, CT>& aPoint) const {
   MOZ_ASSERT(aPoint.IsSet());
+  MOZ_ASSERT(aPoint.IsInComposedDoc());
+
+  // We may not be able to check editable state in uncomposed tree as expected.
+  // For example, only some descendants in an editing host is temporarily
+  // removed from the tree, they are not editable unless nested contenteditable
+  // attribute is set to "true".
+  if (MOZ_UNLIKELY(!aPoint.IsInComposedDoc())) {
+    return WSScanResult(aPoint.template ContainerAs<nsIContent>(),
+                        WSType::InUncomposedDoc, mBlockInlineCheck);
+  }
 
   if (!TextFragmentDataAtStartRef().IsInitialized()) {
     return WSScanResult(nullptr, WSType::UnexpectedError, mBlockInlineCheck);
