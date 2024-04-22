@@ -238,6 +238,8 @@ export class BackupService {
         BackupService.MANIFEST_FILE_NAME
       );
       await IOUtils.writeJSON(manifestPath, manifest);
+
+      await this.#finalizeStagingFolder(stagingPath);
     } finally {
       this.#backupInProgress = false;
     }
@@ -264,6 +266,57 @@ export class BackupService {
     await IOUtils.makeDirectory(stagingPath);
 
     return stagingPath;
+  }
+
+  /**
+   * Renames the staging folder to an ISO 8601 date string with dashes replacing colons and fractional seconds stripped off.
+   * The ISO date string should be formatted from YYYY-MM-DDTHH:mm:ss.sssZ to YYYY-MM-DDTHH-mm-ssZ
+   *
+   * @param {string} stagingPath
+   *  The path to the populated staging folder.
+   */
+  async #finalizeStagingFolder(stagingPath) {
+    if (!(await IOUtils.exists(stagingPath))) {
+      // If we somehow can't find the specified staging folder, cancel this step.
+      lazy.logConsole.error(
+        `Failed to finalize staging folder. Cannot find ${stagingPath}.`
+      );
+      return;
+    }
+
+    try {
+      lazy.logConsole.debug("Finalizing and renaming staging folder");
+      let currentDateISO = new Date().toISOString();
+      // First strip the fractional seconds
+      let dateISOStripped = currentDateISO.replace(/\.\d+\Z$/, "Z");
+      // Now replace all colons with dashes
+      let dateISOFormatted = dateISOStripped.replaceAll(":", "-");
+
+      let stagingPathParent = PathUtils.parent(stagingPath);
+      let renamedBackupPath = PathUtils.join(
+        stagingPathParent,
+        dateISOFormatted
+      );
+      await IOUtils.move(stagingPath, renamedBackupPath);
+
+      let existingBackups = await IOUtils.getChildren(stagingPathParent);
+
+      /**
+       * Bug 1892532: for now, we only support a single backup file.
+       * If there are other pre-existing backup folders, delete them.
+       */
+      for (let existingBackupPath of existingBackups) {
+        if (existingBackupPath !== renamedBackupPath) {
+          await IOUtils.remove(existingBackupPath, {
+            recursive: true,
+          });
+        }
+      }
+    } catch (e) {
+      lazy.logConsole.error(
+        `Something went wrong while finalizing the staging folder. ${e}`
+      );
+    }
   }
 
   /**
