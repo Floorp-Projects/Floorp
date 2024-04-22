@@ -16837,26 +16837,6 @@
     "n_buckets": 32,
     "description": "The number of style and layout flushes that occur per Refresh Driver tick."
   },
-  "IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "bug_numbers": [1566758],
-    "alert_emails": ["sgiesecke@mozilla.com"],
-    "expires_in_version": "74",
-    "kind": "categorical",
-    "labels": [
-      "system",
-      "content_file",
-      "content_http_https",
-      "content_moz_ext",
-      "content_about",
-      "content_other",
-      "expanded",
-      "other"
-    ],
-    "releaseChannelCollection": "opt-out",
-    "description": "Tracking the use of the custom IDBFactory.open overload accepting an options dictionary in one of the categories."
-  },
   "PRESSHELL_LAYOUT_TOTAL_MS_PER_TICK": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
