@@ -88,7 +88,7 @@ void CacheStorageChild::NoteDeletedActor() {
   // when StartDestroy was called from WorkerRef notification. If the last
   // CacheOpChild is getting destructed; it's the time for us to SendTearDown to
   // the other side.
-  if (NumChildActors() == 1 && mDelayedDestroy) DestroyInternal();
+  if (NumChildActors() == 0 && mDelayedDestroy) DestroyInternal();
 }
 
 void CacheStorageChild::ActorDestroy(ActorDestroyReason aReason) {
