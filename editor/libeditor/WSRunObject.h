@@ -41,6 +41,8 @@ class MOZ_STACK_CLASS WSScanResult final {
     NotInitialized,
     // Could be the DOM tree is broken as like crash tests.
     UnexpectedError,
+    // The scanner cannot work in uncomposed tree, but tried to scan in it.
+    InUncomposedDoc,
     // The run is maybe collapsible white-spaces at start of a hard line.
     LeadingWhiteSpaces,
     // The run is maybe collapsible white-spaces at end of a hard line.
@@ -67,6 +69,8 @@ class MOZ_STACK_CLASS WSScanResult final {
         return aStream << "WSType::NotInitialized";
       case WSType::UnexpectedError:
         return aStream << "WSType::UnexpectedError";
+      case WSType::InUncomposedDoc:
+        return aStream << "WSType::InUncomposedDoc";
       case WSType::LeadingWhiteSpaces:
         return aStream << "WSType::LeadingWhiteSpaces";
       case WSType::TrailingWhiteSpaces:
@@ -111,6 +115,7 @@ class MOZ_STACK_CLASS WSScanResult final {
       BlockInlineCheck aBlockInlineCheck) const {
 #ifdef DEBUG
     MOZ_ASSERT(mReason == WSType::UnexpectedError ||
+               mReason == WSType::InUncomposedDoc ||
                mReason == WSType::NonCollapsibleCharacters ||
                mReason == WSType::CollapsibleWhiteSpaces ||
                mReason == WSType::BRElement ||
@@ -119,6 +124,10 @@ class MOZ_STACK_CLASS WSScanResult final {
                mReason == WSType::CurrentBlockBoundary ||
                mReason == WSType::OtherBlockBoundary);
     MOZ_ASSERT_IF(mReason == WSType::UnexpectedError, !mContent);
+    MOZ_ASSERT_IF(mReason == WSType::InUncomposedDoc,
+                  mContent && !mContent->IsInComposedDoc());
+    MOZ_ASSERT_IF(mContent && !mContent->IsInComposedDoc(),
+                  mReason == WSType::InUncomposedDoc);
     MOZ_ASSERT_IF(mReason == WSType::NonCollapsibleCharacters ||
                       mReason == WSType::CollapsibleWhiteSpaces,
                   mContent && mContent->IsText());
@@ -143,9 +152,6 @@ class MOZ_STACK_CLASS WSScanResult final {
     // container start of scanner and is not editable.
     if (mReason == WSType::CurrentBlockBoundary) {
       if (!mContent ||
-          // Although not expected that scanning in orphan document fragment,
-          // it's okay.
-          !mContent->IsInComposedDoc() ||
           // This is what the most preferred result is mContent itself is a
           // block.
           HTMLEditUtils::IsBlockElement(*mContent, aBlockInlineCheck) ||
