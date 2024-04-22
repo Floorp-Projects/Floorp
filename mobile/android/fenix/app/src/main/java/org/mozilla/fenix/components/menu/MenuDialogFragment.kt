@@ -31,7 +31,6 @@ import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.settings.SupportUtils.SumoTopic
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -47,7 +46,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
             middleware = listOf(
                 MenuNavigationMiddleware(
                     navController = findNavController(),
-                    openSumoTopic = ::openSumoTopic,
+                    openToBrowser = ::openToBrowser,
                     scope = viewModelScope,
                 ),
             ),
@@ -82,6 +81,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     }
 
                     MenuDialog(
+                        accessPoint = args.accesspoint,
                         account = account,
                         accountState = accountState,
                         onMozillaAccountButtonClick = {
@@ -110,20 +110,32 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         onPasswordsMenuClick = {
                             store.dispatch(MenuAction.Navigate.Passwords)
                         },
+                        onCustomizeHomepageMenuClick = {
+                            store.dispatch(MenuAction.Navigate.CustomizeHomepage)
+                        },
+                        onNewInFirefoxMenuClick = {
+                            store.dispatch(MenuAction.Navigate.ReleaseNotes)
+                        },
                     )
                 }
             }
         }
     }
 
-    private fun openSumoTopic(topic: SumoTopic) = runIfFragmentIsAttached {
-        (activity as HomeActivity).openToBrowserAndLoad(
-            searchTermOrURL = SupportUtils.getSumoURLForTopic(
+    private fun openToBrowser(params: BrowserNavigationParams) = runIfFragmentIsAttached {
+        val url = params.url ?: params.sumoTopic?.let {
+            SupportUtils.getSumoURLForTopic(
                 context = requireContext(),
-                topic = topic,
-            ),
-            newTab = true,
-            from = BrowserDirection.FromMenuDialogFragment,
-        )
+                topic = it,
+            )
+        }
+
+        url?.let {
+            (activity as HomeActivity).openToBrowserAndLoad(
+                searchTermOrURL = url,
+                newTab = true,
+                from = BrowserDirection.FromMenuDialogFragment,
+            )
+        }
     }
 }

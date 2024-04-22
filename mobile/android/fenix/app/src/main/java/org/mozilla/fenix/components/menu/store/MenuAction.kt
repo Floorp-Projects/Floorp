@@ -65,5 +65,15 @@ sealed class MenuAction : Action {
          * [Navigate] action dispatched when navigating to passwords.
          */
         data object Passwords : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to customize homepage.
+         */
+        data object CustomizeHomepage : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to release notes.
+         */
+        data object ReleaseNotes : Navigate()
     }
 }
