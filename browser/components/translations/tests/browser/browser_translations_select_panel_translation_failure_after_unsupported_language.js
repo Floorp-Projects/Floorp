@@ -33,12 +33,14 @@ add_task(
 
     await SelectTranslationsTestUtils.clickTranslateButton({
       downloadHandler: rejectDownloads,
-      viewAssertion: SelectTranslationsTestUtils.assertPanelViewFailure,
+      viewAssertion:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.clickTryAgainButton({
       downloadHandler: rejectDownloads,
-      viewAssertion: SelectTranslationsTestUtils.assertPanelViewFailure,
+      viewAssertion:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.clickTryAgainButton({

@@ -1614,8 +1614,8 @@ class SelectTranslationsTestUtils {
    * Asserts that the SelectTranslationsPanel UI matches the expected
    * state when a translation has failed to complete.
    */
-  static async assertPanelViewFailure() {
-    await SelectTranslationsTestUtils.waitForPanelState("failure");
+  static async assertPanelViewTranslationFailure() {
+    await SelectTranslationsTestUtils.waitForPanelState("translation-failure");
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       header: true,
       betaIcon: true,

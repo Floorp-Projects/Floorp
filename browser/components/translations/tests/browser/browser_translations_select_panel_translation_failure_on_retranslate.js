@@ -29,13 +29,15 @@ add_task(
     await SelectTranslationsTestUtils.changeSelectedFromLanguage(["es"], {
       openDropdownMenu: false,
       downloadHandler: rejectDownloads,
-      onChangeLanguage: SelectTranslationsTestUtils.assertPanelViewFailure,
+      onChangeLanguage:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.changeSelectedFromLanguage(["uk"], {
       openDropdownMenu: true,
       downloadHandler: rejectDownloads,
-      onChangeLanguage: SelectTranslationsTestUtils.assertPanelViewFailure,
+      onChangeLanguage:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.changeSelectedFromLanguage(["es"], {
@@ -47,7 +49,8 @@ add_task(
     await SelectTranslationsTestUtils.changeSelectedFromLanguage(["uk"], {
       openDropdownMenu: false,
       downloadHandler: rejectDownloads,
-      onChangeLanguage: SelectTranslationsTestUtils.assertPanelViewFailure,
+      onChangeLanguage:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.clickTryAgainButton({
@@ -87,13 +90,15 @@ add_task(
     await SelectTranslationsTestUtils.changeSelectedToLanguage(["es"], {
       openDropdownMenu: false,
       downloadHandler: rejectDownloads,
-      onChangeLanguage: SelectTranslationsTestUtils.assertPanelViewFailure,
+      onChangeLanguage:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.changeSelectedToLanguage(["uk"], {
       openDropdownMenu: true,
       downloadHandler: rejectDownloads,
-      onChangeLanguage: SelectTranslationsTestUtils.assertPanelViewFailure,
+      onChangeLanguage:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.changeSelectedToLanguage(["es"], {
@@ -106,7 +111,8 @@ add_task(
     await SelectTranslationsTestUtils.changeSelectedToLanguage(["uk"], {
       openDropdownMenu: false,
       downloadHandler: rejectDownloads,
-      onChangeLanguage: SelectTranslationsTestUtils.assertPanelViewFailure,
+      onChangeLanguage:
+        SelectTranslationsTestUtils.assertPanelViewTranslationFailure,
     });
 
     await SelectTranslationsTestUtils.clickTryAgainButton({

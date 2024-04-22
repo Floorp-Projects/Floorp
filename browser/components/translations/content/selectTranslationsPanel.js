@@ -838,7 +838,7 @@ var SelectTranslationsPanel = new (class {
     switch (phase) {
       case "closed":
       case "idle":
-      case "failure":
+      case "translation-failure":
       case "translatable":
       case "translating":
       case "translated":
@@ -926,12 +926,14 @@ var SelectTranslationsPanel = new (class {
   /**
    * Changes the phase from "translating" to "failure".
    */
-  #changeStateToFailure() {
+  #changeStateToTranslationFailure() {
     const phase = this.phase();
     if (phase !== "translating") {
-      this.console?.error(`Invalid state change (${phase} => failure)`);
+      this.console?.error(
+        `Invalid state change (${phase} => translation-failure)`
+      );
     }
-    this.#changeStateTo("failure", /* retainEntries */ true);
+    this.#changeStateTo("translation-failure", /* retainEntries */ true);
   }
 
   /**
@@ -957,7 +959,7 @@ var SelectTranslationsPanel = new (class {
         // The panel has just opened, and this is the initial translation.
         phase === "idle" ||
         // The previous translation failed and we are about to try again.
-        phase === "failure"
+        phase === "translation-failure"
       );
     };
 
@@ -986,7 +988,7 @@ var SelectTranslationsPanel = new (class {
   #handleCopyButtonChanges(phase) {
     switch (phase) {
       case "closed":
-      case "failure":
+      case "translation-failure":
       case "translated": {
         this.#uncheckCopyButton();
         break;
@@ -1018,7 +1020,7 @@ var SelectTranslationsPanel = new (class {
       }
       case "closed":
       case "idle":
-      case "failure":
+      case "translation-failure":
       case "translatable":
       case "translated":
       case "unsupported": {
@@ -1043,7 +1045,7 @@ var SelectTranslationsPanel = new (class {
         this.#displayIdlePlaceholder();
         break;
       }
-      case "failure": {
+      case "translation-failure": {
         this.#displayTranslationFailureMessage();
         break;
       }
@@ -1442,7 +1444,7 @@ var SelectTranslationsPanel = new (class {
       })
       .catch(error => {
         this.console?.error(error);
-        this.#changeStateToFailure();
+        this.#changeStateToTranslationFailure();
       });
   }
 
