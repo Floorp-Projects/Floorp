@@ -51,6 +51,15 @@ let allFieldNames = [
   "tel",
 ];
 
+function makeAddressLabel({ primary, secondary, status }) {
+  return JSON.stringify({
+    primary,
+    secondary,
+    status,
+    ariaLabel: primary + " " + secondary + " " + status,
+  });
+}
+
 let addressTestCases = [
   {
     description: "Focus on an `organization` field",
@@ -67,7 +76,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[0]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "Sesame Street",
             secondary: "123 Sesame Street.",
             status: "Also autofills address, name, phone",
@@ -78,7 +87,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[1]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "Mozilla",
             secondary: "331 E. Evelyn Avenue",
             status: "Also autofills address, name, phone",
@@ -103,7 +112,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[0]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "1-345-345-3456.",
             secondary: "123 Sesame Street.",
             status: "Also autofills address, name, organization",
@@ -114,7 +123,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[1]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "1-650-903-0800",
             secondary: "331 E. Evelyn Avenue",
             status: "Also autofills address, name, organization",
@@ -125,7 +134,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[2]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "1-000-000-0000",
             secondary: "321, No Name St. 2nd line 3rd line",
             status: "Also autofills address",
@@ -150,7 +159,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[0]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "123 Sesame Street.",
             secondary: "Timothy Berners-Lee",
             status: "Also autofills name, organization, phone",
@@ -161,7 +170,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[1]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "331 E. Evelyn Avenue",
             secondary: "John Doe",
             status: "Also autofills name, organization, phone",
@@ -172,7 +181,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[2]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "321, No Name St. 2nd line 3rd line",
             secondary: "1-000-000-0000",
             status: "Also autofills phone",
@@ -197,7 +206,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[0]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "123 Sesame Street.",
             secondary: "Timothy Berners-Lee",
             status: "Also autofills name, organization, phone",
@@ -208,7 +217,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[1]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "331 E. Evelyn Avenue",
             secondary: "John Doe",
             status: "Also autofills name, organization, phone",
@@ -219,7 +228,7 @@ let addressTestCases = [
           value: "",
           style: "autofill",
           comment: JSON.stringify(matchingProfiles[2]),
-          label: JSON.stringify({
+          label: makeAddressLabel({
             primary: "321, No Name St.",
             secondary: "1-000-000-0000",
             status: "Also autofills phone",
