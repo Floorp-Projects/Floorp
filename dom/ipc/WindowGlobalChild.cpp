@@ -867,9 +867,26 @@ nsISupports* WindowGlobalChild::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(WindowGlobalChild, mWindowGlobal,
-                                               mContainerFeaturePolicy,
-                                               mWindowContext)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WindowGlobalChild)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WindowGlobalChild)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mContainerFeaturePolicy)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowContext)
+  tmp->UnlinkManager();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WindowGlobalChild)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContainerFeaturePolicy)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowContext)
+  if (!tmp->IsInProcess()) {
+    CycleCollectionNoteChild(cb, static_cast<BrowserChild*>(tmp->Manager()),
+                             "Manager()");
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalChild)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

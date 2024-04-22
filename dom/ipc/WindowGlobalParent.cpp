@@ -1713,8 +1713,22 @@ IPCResult WindowGlobalParent::RecvOnInitialStorageAccess() {
   return IPC_OK();
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,
-                                   mPageUseCountersWindow)
+NS_IMPL_CYCLE_COLLECTION_CLASS(WindowGlobalParent)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WindowGlobalParent,
+                                                WindowContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPageUseCountersWindow)
+  tmp->UnlinkManager();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WindowGlobalParent,
+                                                  WindowContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPageUseCountersWindow)
+  if (!tmp->IsInProcess()) {
+    CycleCollectionNoteChild(cb, static_cast<BrowserParent*>(tmp->Manager()),
+                             "Manager()");
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WindowGlobalParent,
                                                WindowContext)
