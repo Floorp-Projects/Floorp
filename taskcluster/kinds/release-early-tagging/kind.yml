@@ -44,3 +44,12 @@ jobs:
             symbol: Rel(TagBuild)
             tier: 1
             kind: build
+
+    firefox-android:
+        name: firefox-android-tag-buildN
+        shipping-product: firefox-android
+        treeherder:
+            platform: fenix-android-all/opt
+            symbol: Rel(TagBuild)
+            tier: 1
+            kind: build
