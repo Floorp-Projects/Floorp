@@ -362,6 +362,4 @@ interface nsIX509CertDB : nsISupports {
    */
   [must_use]
   void asyncHasThirdPartyRoots(in nsIAsyncBoolCallback callback);
-
-  unsigned long countTrustObjects();
 };
