@@ -1041,6 +1041,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {Promise<SupportedLanguages>}
    */
   static async getSupportedLanguages() {
+    await chaosMode(1 / 4);
     const languagePairs = await TranslationsParent.getLanguagePairs();
 
     /** @type {Set<string>} */
