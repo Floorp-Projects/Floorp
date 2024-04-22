@@ -124,11 +124,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 ChromeUtils.defineLazyGetter(
   lazy,
   "accountsL10n",
-  () =>
-    new Localization(
-      ["browser/accounts.ftl", "toolkit/branding/accounts.ftl"],
-      true
-    )
+  () => new Localization(["browser/accounts.ftl"], true)
 );
 
 if (AppConstants.ENABLE_WEBDRIVER) {
@@ -3728,7 +3724,7 @@ BrowserGlue.prototype = {
 
   _onThisDeviceConnected() {
     const [title, body] = lazy.accountsL10n.formatValuesSync([
-      "account-connection-title",
+      "account-connection-title-2",
       "account-connection-connected",
     ]);
 
@@ -4853,7 +4849,7 @@ BrowserGlue.prototype = {
 
   _onDeviceConnected(deviceName) {
     const [title, body] = lazy.accountsL10n.formatValuesSync([
-      { id: "account-connection-title" },
+      { id: "account-connection-title-2" },
       deviceName
         ? { id: "account-connection-connected-with", args: { deviceName } }
         : { id: "account-connection-connected-with-noname" },
@@ -4890,7 +4886,7 @@ BrowserGlue.prototype = {
 
   _onDeviceDisconnected() {
     const [title, body] = lazy.accountsL10n.formatValuesSync([
-      "account-connection-title",
+      "account-connection-title-2",
       "account-connection-disconnected",
     ]);
 

@@ -52,7 +52,6 @@ ChromeUtils.defineLazyGetter(lazy, "strings", function () {
   return new Localization([
     "branding/brand.ftl",
     "browser/firefoxRelay.ftl",
-    "toolkit/branding/accounts.ftl",
     "toolkit/branding/brandings.ftl",
   ]);
 });

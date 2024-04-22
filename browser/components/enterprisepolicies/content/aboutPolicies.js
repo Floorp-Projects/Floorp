@@ -294,6 +294,7 @@ function generateDocumentation() {
     SanitizeOnShutdown: "SanitizeOnShutdown2",
     WindowsSSO: "Windows10SSO",
     SecurityDevices: "SecurityDevices2",
+    DisableFirefoxAccounts: "DisableFirefoxAccounts1",
   };
 
   for (let policyName in schema.properties) {
