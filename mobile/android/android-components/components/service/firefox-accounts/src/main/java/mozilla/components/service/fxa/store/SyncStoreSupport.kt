@@ -10,12 +10,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthFlowError
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.service.fxa.manager.AccountState
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.SCOPE_PROFILE
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import java.lang.Exception
 
@@ -95,6 +98,24 @@ internal class FxaAccountObserver(
     private val autoPause: Boolean,
     private val coroutineScope: CoroutineScope,
 ) : AccountObserver {
+    override fun onReady(authenticatedAccount: OAuthAccount?) {
+        coroutineScope.launch {
+            if (authenticatedAccount == null) {
+                return@launch
+            }
+
+            val syncAccount =
+                authenticatedAccount.getProfile()?.toAccount(authenticatedAccount) ?: return@launch
+            store.dispatch(SyncAction.UpdateAccount(account = syncAccount))
+
+            val accountState = when (authenticatedAccount.checkAuthorizationStatus(SCOPE_PROFILE)) {
+                true -> AccountState.Authenticated
+                null, false -> AccountState.AuthenticationProblem
+            }
+            store.dispatch(SyncAction.UpdateAccountState(accountState = accountState))
+        }
+    }
+
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
         coroutineScope.launch(Dispatchers.Main) {
             account.deviceConstellation().registerDeviceObserver(
@@ -106,12 +127,23 @@ internal class FxaAccountObserver(
         coroutineScope.launch {
             val syncAccount = account.getProfile()?.toAccount(account) ?: return@launch
             store.dispatch(SyncAction.UpdateAccount(syncAccount))
+            store.dispatch(SyncAction.UpdateAccountState(AccountState.Authenticated))
         }
+    }
+
+    override fun onAuthenticationProblems() {
+        store.dispatch(SyncAction.UpdateAccountState(accountState = AccountState.AuthenticationProblem))
     }
 
     override fun onLoggedOut() {
         store.dispatch(SyncAction.UpdateSyncStatus(SyncStatus.LoggedOut))
         store.dispatch(SyncAction.UpdateAccount(null))
+        store.dispatch(SyncAction.UpdateAccountState(accountState = AccountState.NotAuthenticated))
+    }
+
+    override fun onFlowError(error: AuthFlowError) {
+        store.dispatch(SyncAction.UpdateAccount(account = null))
+        store.dispatch(SyncAction.UpdateAccountState(accountState = AccountState.NotAuthenticated))
     }
 }
 

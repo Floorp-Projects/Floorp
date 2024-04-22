@@ -52,10 +52,31 @@ import mozilla.components.service.fxa.FxaAuthData
  * State transitions are described by a transition matrix, which is described in [State.next].
  */
 
-internal sealed class AccountState {
+/**
+ * Represents a [State.Idle] in the accounts state machine detailing the state of the account
+ * lifecycle.
+ */
+sealed class AccountState {
+    /**
+     * Account is logged in and authenticated.
+     */
     object Authenticated : AccountState()
+
+    /**
+     * Account is authenticating.
+     *
+     * @property oAuthUrl OAuth URL to be loaded to go through the authentication flow.
+     */
     data class Authenticating(val oAuthUrl: String) : AccountState()
+
+    /**
+     * Account needs to be re-authenticated (e.g. due to a password change).
+     */
     object AuthenticationProblem : AccountState()
+
+    /**
+     * No authenticated account is available (e.g. account is logged out).
+     */
     object NotAuthenticated : AccountState()
 }
 
