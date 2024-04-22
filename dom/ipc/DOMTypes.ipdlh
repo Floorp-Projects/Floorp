@@ -39,6 +39,7 @@ using mozilla::CSSRect from "Units.h";
 using mozilla::CSSSize from "Units.h";
 using mozilla::ScreenIntSize from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
+using mozilla::ImageIntSize from "Units.h";
 using nsSizeMode from "nsIWidgetListener.h";
 using mozilla::ScrollbarPreference from "mozilla/ScrollbarPreferences.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
@@ -324,6 +325,13 @@ struct OwnerShowInfo {
   // TODO(emilio): I think we should really be able to figure this out from the
   // parent process too instead.
   nsSizeMode sizeMode;
+};
+
+struct IPCImage {
+    BigBuffer data;
+    uint32_t stride;
+    SurfaceFormat format;
+    ImageIntSize size;
 };
 
 } // namespace dom

@@ -5235,8 +5235,7 @@ mozilla::ipc::IPCResult ContentParent::RecvFindImageText(
     return IPC_FAIL(this, "Text recognition not available.");
   }
 
-  RefPtr<DataSourceSurface> surf =
-      nsContentUtils::IPCImageToSurface(std::move(aImage));
+  RefPtr<DataSourceSurface> surf = nsContentUtils::IPCImageToSurface(aImage);
   if (!surf) {
     aResolver(TextRecognitionResultOrError("Failed to read image"_ns));
     return IPC_OK();

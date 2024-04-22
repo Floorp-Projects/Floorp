@@ -8319,7 +8319,7 @@ nsresult nsContentUtils::CalculateBufferSizeForImage(
 }
 
 static already_AddRefed<DataSourceSurface> BigBufferToDataSurface(
-    BigBuffer& aData, uint32_t aStride, const IntSize& aImageSize,
+    const BigBuffer& aData, uint32_t aStride, const IntSize& aImageSize,
     SurfaceFormat aFormat) {
   if (!aData.Size() || !aImageSize.width || !aImageSize.height) {
     return nullptr;
@@ -8342,22 +8342,13 @@ static already_AddRefed<DataSourceSurface> BigBufferToDataSurface(
 nsresult nsContentUtils::DeserializeTransferableDataImageContainer(
     const IPCTransferableDataImageContainer& aData,
     imgIContainer** aContainer) {
-  const IntSize size(aData.width(), aData.height());
-  size_t maxBufferSize = 0;
-  size_t usedBufferSize = 0;
-  nsresult rv = CalculateBufferSizeForImage(
-      aData.stride(), size, aData.format(), &maxBufferSize, &usedBufferSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (usedBufferSize > aData.data().Size()) {
-    return NS_ERROR_FAILURE;
-  }
-  RefPtr<DataSourceSurface> surface =
-      CreateDataSourceSurfaceFromData(size, aData.format(), aData.data().Data(),
-                                      static_cast<int32_t>(aData.stride()));
+  RefPtr<DataSourceSurface> surface = IPCImageToSurface(aData.image());
   if (!surface) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(surface, size);
+
+  RefPtr<gfxDrawable> drawable =
+      new gfxSurfaceDrawable(surface, surface->GetSize());
   nsCOMPtr<imgIContainer> imageContainer =
       image::ImageOps::CreateFromDrawable(drawable);
   imageContainer.forget(aContainer);
@@ -8489,23 +8480,16 @@ void nsContentUtils::TransferableToIPCTransferableData(
         if (!dataSurface) {
           continue;
         }
-        size_t length;
-        int32_t stride;
-        Maybe<BigBuffer> surfaceData =
-            GetSurfaceData(*dataSurface, &length, &stride);
 
-        if (surfaceData.isNothing()) {
+        auto imageData = nsContentUtils::SurfaceToIPCImage(*dataSurface);
+        if (!imageData) {
           continue;
         }
 
         IPCTransferableDataItem* item =
             aTransferableData->items().AppendElement();
         item->flavor() = flavorStr;
-
-        mozilla::gfx::IntSize size = dataSurface->GetSize();
-        item->data() = IPCTransferableDataImageContainer(
-            std::move(*surfaceData), size.width, size.height, stride,
-            dataSurface->GetFormat());
+        item->data() = IPCTransferableDataImageContainer(std::move(*imageData));
         continue;
       }
 
@@ -8633,7 +8617,7 @@ Maybe<IPCImage> nsContentUtils::SurfaceToIPCImage(DataSourceSurface& aSurface) {
 }
 
 already_AddRefed<DataSourceSurface> nsContentUtils::IPCImageToSurface(
-    IPCImage&& aImage) {
+    const IPCImage& aImage) {
   return BigBufferToDataSurface(aImage.data(), aImage.stride(),
                                 aImage.size().ToUnknownSize(), aImage.format());
 }
