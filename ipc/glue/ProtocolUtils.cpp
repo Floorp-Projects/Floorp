@@ -504,6 +504,11 @@ void IProtocol::SetManagerAndRegister(IRefCountedProtocol* aManager,
   aManager->RegisterID(this, aId);
 }
 
+void IProtocol::UnlinkManager() {
+  mToplevel = nullptr;
+  mManager = nullptr;
+}
+
 bool IProtocol::ChannelSend(UniquePtr<IPC::Message> aMsg) {
   if (CanSend()) {
     // NOTE: This send call failing can only occur during toplevel channel

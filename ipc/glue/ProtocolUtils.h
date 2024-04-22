@@ -241,6 +241,11 @@ class IProtocol : public HasResultCodes {
   // calls SetManager.
   void SetManager(IRefCountedProtocol* aManager);
 
+  // Clear `mManager` and `mToplevel` to nullptr. Only intended to be called
+  // within the unlink implementation of cycle collected IPDL actors with cycle
+  // collected managers.
+  void UnlinkManager();
+
   // Sets the manager for the protocol and registers the protocol with
   // its manager, setting up channels for the protocol as well.  Not
   // for use outside of IPDL.
