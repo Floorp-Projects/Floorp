@@ -2262,6 +2262,30 @@ TEST_F(Strings, printf) {
     create_printf_strings(format, (char*)anotherString);
     verify_printf_strings(expectedOutput);
   }
+  {
+    const char* format = "RightJustify %8s";
+    const char* expectedOutput = "RightJustify      foo";
+    create_printf_strings(format, "foo");
+    verify_printf_strings(expectedOutput);
+  }
+  {
+    const char* format = "LeftJustify %-8s";
+    const char* expectedOutput = "LeftJustify foo     ";
+    create_printf_strings(format, "foo");
+    verify_printf_strings(expectedOutput);
+  }
+  {
+    const char* format = "RightJustify2 %*s";
+    const char* expectedOutput = "RightJustify2      foo";
+    create_printf_strings(format, 8, "foo");
+    verify_printf_strings(expectedOutput);
+  }
+  {
+    const char* format = "LeftJustify2 %-*s";
+    const char* expectedOutput = "LeftJustify2 foo     ";
+    create_printf_strings(format, 8, "foo");
+    verify_printf_strings(expectedOutput);
+  }
 }
 
 // We don't need these macros following the printf test.
