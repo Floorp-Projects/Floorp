@@ -119,17 +119,20 @@ namespace mozilla::net {
 
 class WebTransportStreamCallbackWrapper;
 
-class WebTransportSessionProxy final : public nsIWebTransport,
-                                       public WebTransportSessionEventListener,
-                                       public WebTransportConnectionSettings,
-                                       public nsIStreamListener,
-                                       public nsIChannelEventSink,
-                                       public nsIRedirectResultListener,
-                                       public nsIInterfaceRequestor {
+class WebTransportSessionProxy final
+    : public nsIWebTransport,
+      public WebTransportSessionEventListener,
+      public WebTransportSessionEventListenerInternal,
+      public WebTransportConnectionSettings,
+      public nsIStreamListener,
+      public nsIChannelEventSink,
+      public nsIRedirectResultListener,
+      public nsIInterfaceRequestor {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBTRANSPORT
   NS_DECL_WEBTRANSPORTSESSIONEVENTLISTENER
+  NS_DECL_WEBTRANSPORTSESSIONEVENTLISTENERINTERNAL
   NS_DECL_WEBTRANSPORTCONNECTIONSETTINGS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
