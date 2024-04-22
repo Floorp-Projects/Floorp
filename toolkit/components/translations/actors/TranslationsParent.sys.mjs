@@ -443,6 +443,15 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Returns whether the Translations Engine is mocked for testing.
+   *
+   * @returns {boolean}
+   */
+  static isTranslationsEngineMocked() {
+    return TranslationsParent.#isTranslationsEngineMocked;
+  }
+
+  /**
    * Offer translations (for instance by automatically opening the popup panel) whenever
    * languages are detected, but only do it once per host per session.
    *
