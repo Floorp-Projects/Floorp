@@ -51,55 +51,6 @@ using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::quota;
 using namespace mozilla::ipc;
 
-namespace {
-
-Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT IdentifyPrincipalType(
-    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
-  switch (aPrincipalInfo.type()) {
-    case PrincipalInfo::TSystemPrincipalInfo:
-      return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::system;
-    case PrincipalInfo::TContentPrincipalInfo: {
-      const ContentPrincipalInfo& info =
-          aPrincipalInfo.get_ContentPrincipalInfo();
-
-      nsCOMPtr<nsIURI> uri;
-
-      if (NS_WARN_IF(NS_FAILED(NS_NewURI(getter_AddRefs(uri), info.spec())))) {
-        // This could be discriminated as an extra error value, but this is
-        // extremely unlikely to fail, so we just misuse ContentOther
-        return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
-            content_other;
-      }
-
-      // TODO Are there constants defined for the schemes somewhere?
-      if (uri->SchemeIs("file")) {
-        return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
-            content_file;
-      }
-      if (uri->SchemeIs("http") || uri->SchemeIs("https")) {
-        return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
-            content_http_https;
-      }
-      if (uri->SchemeIs("moz-extension")) {
-        return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
-            content_moz_ext;
-      }
-      if (uri->SchemeIs("about")) {
-        return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
-            content_about;
-      }
-      return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
-          content_other;
-    }
-    case PrincipalInfo::TExpandedPrincipalInfo:
-      return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::expanded;
-    default:
-      return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::other;
-  }
-}
-
-}  // namespace
-
 struct IDBFactory::PendingRequestInfo {
   RefPtr<IDBOpenDBRequest> mRequest;
   FactoryRequestParams mParams;
@@ -432,33 +383,11 @@ bool IDBFactory::IsChrome() const {
 
 RefPtr<IDBOpenDBRequest> IDBFactory::Open(JSContext* aCx,
                                           const nsAString& aName,
-                                          uint64_t aVersion,
+                                          const Optional<uint64_t>& aVersion,
                                           CallerType aCallerType,
                                           ErrorResult& aRv) {
   return OpenInternal(aCx,
-                      /* aPrincipal */ nullptr, aName,
-                      Optional<uint64_t>(aVersion),
-                      /* aDeleting */ false, aCallerType, aRv);
-}
-
-RefPtr<IDBOpenDBRequest> IDBFactory::Open(JSContext* aCx,
-                                          const nsAString& aName,
-                                          const IDBOpenDBOptions& aOptions,
-                                          CallerType aCallerType,
-                                          ErrorResult& aRv) {
-  // This overload is nonstandard, see bug 1275496.
-  // Ignore calls with empty options for telemetry of usage count.
-  // Unfortunately, we cannot distinguish between the use of the method with
-  // only a single argument (which actually is a standard overload we don't want
-  // to count) an empty dictionary passed explicitly (which is the custom
-  // overload we would like to count). However, we assume that the latter is so
-  // rare that it can be neglected.
-  if (aOptions.IsAnyMemberPresent()) {
-    Telemetry::AccumulateCategorical(IdentifyPrincipalType(*mPrincipalInfo));
-  }
-
-  return OpenInternal(aCx,
-                      /* aPrincipal */ nullptr, aName, aOptions.mVersion,
+                      /* aPrincipal */ nullptr, aName, aVersion,
                       /* aDeleting */ false, aCallerType, aRv);
 }
 
