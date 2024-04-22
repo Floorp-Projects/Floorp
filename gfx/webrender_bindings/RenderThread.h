@@ -489,6 +489,11 @@ class RenderThread final {
   RefPtr<nsIRunnable> mRenderTextureOpsRunnable
       MOZ_GUARDED_BY(mRenderTextureMapLock);
 
+#ifdef DEBUG
+  // used for tests only to ensure render textures don't increase
+  int32_t mRenderTexturesLastTime MOZ_GUARDED_BY(mRenderTextureMapLock) = -1;
+#endif
+
   // Set from MainThread, read from either MainThread or RenderThread
   bool mHasShutdown;
 
