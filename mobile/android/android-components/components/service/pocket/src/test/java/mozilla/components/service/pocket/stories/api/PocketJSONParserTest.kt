@@ -35,7 +35,7 @@ class PocketJSONParserTest {
     @Test
     fun `GIVEN PocketJSONParser WHEN parsing valid stories recommendations THEN PocketApiStories are returned`() {
         val expectedStories = PocketTestResources.apiExpectedPocketStoriesRecommendations
-        val pocketJSON = PocketTestResources.pocketEndointFiveStoriesResponse
+        val pocketJSON = PocketTestResources.pocketEndpointFiveStoriesResponse
         val actualStories = parser.jsonToPocketApiStories(pocketJSON)
 
         assertNotNull(actualStories)
@@ -45,7 +45,7 @@ class PocketJSONParserTest {
 
     @Test
     fun `WHEN parsing stories recommendations with missing titles THEN those entries are dropped`() {
-        val pocketJSON = PocketTestResources.pocketEndointFiveStoriesResponse
+        val pocketJSON = PocketTestResources.pocketEndpointFiveStoriesResponse
         val expectedStoriesIfMissingTitle = ArrayList(PocketTestResources.apiExpectedPocketStoriesRecommendations)
             .apply { removeAt(4) }
         val pocketJsonWithMissingTitle = removeJsonFieldFromArrayIndex("title", 4, pocketJSON)
@@ -57,8 +57,16 @@ class PocketJSONParserTest {
     }
 
     @Test
+    fun `WHEN parsing stories recommendations with a null title value THEN those entries are dropped`() {
+        val pocketJSON = PocketTestResources.pocketEndpointNullTitleStoryBadResponse
+        val result = parser.jsonToPocketApiStories(pocketJSON)
+
+        assertNull(result)
+    }
+
+    @Test
     fun `WHEN parsing stories recommendations with missing urls THEN those entries are dropped`() {
-        val pocketJSON = PocketTestResources.pocketEndointFiveStoriesResponse
+        val pocketJSON = PocketTestResources.pocketEndpointFiveStoriesResponse
         val expectedStoriesIfMissingUrl = ArrayList(PocketTestResources.apiExpectedPocketStoriesRecommendations)
             .apply { removeAt(3) }
         val pocketJsonWithMissingUrl = removeJsonFieldFromArrayIndex("url", 3, pocketJSON)
@@ -70,8 +78,16 @@ class PocketJSONParserTest {
     }
 
     @Test
+    fun `WHEN parsing stories recommendations with a null url THEN those entries are dropped`() {
+        val pocketJSON = PocketTestResources.pocketEndpointNullUrlStoryBadResponse
+        val result = parser.jsonToPocketApiStories(pocketJSON)
+
+        assertNull(result)
+    }
+
+    @Test
     fun `WHEN parsing stories recommendations with missing imageUrls THEN those entries are dropped`() {
-        val pocketJSON = PocketTestResources.pocketEndointFiveStoriesResponse
+        val pocketJSON = PocketTestResources.pocketEndpointFiveStoriesResponse
         val expectedStoriesIfMissingImageUrl = ArrayList(PocketTestResources.apiExpectedPocketStoriesRecommendations)
             .apply { removeAt(2) }
         val pocketJsonWithMissingImageUrl = removeJsonFieldFromArrayIndex("imageUrl", 2, pocketJSON)
@@ -83,8 +99,16 @@ class PocketJSONParserTest {
     }
 
     @Test
+    fun `WHEN parsing story recommendations with a null imageUrl THEN those entries are dropped`() {
+        val pocketJSON = PocketTestResources.pocketEndpointNullImageUrlStoryBadResponse
+        val result = parser.jsonToPocketApiStories(pocketJSON)
+
+        assertNull(result)
+    }
+
+    @Test
     fun `WHEN parsing stories recommendations with missing publishers THEN those entries are kept but with default values`() {
-        val pocketJSON = PocketTestResources.pocketEndointFiveStoriesResponse
+        val pocketJSON = PocketTestResources.pocketEndpointFiveStoriesResponse
         val expectedStoriesIfMissingPublishers = PocketTestResources.apiExpectedPocketStoriesRecommendations
             .mapIndexed { index, story ->
                 if (index == 2) {
@@ -103,7 +127,7 @@ class PocketJSONParserTest {
 
     @Test
     fun `WHEN parsing stories recommendations with missing categories THEN those entries are kept but with default values`() {
-        val pocketJSON = PocketTestResources.pocketEndointFiveStoriesResponse
+        val pocketJSON = PocketTestResources.pocketEndpointFiveStoriesResponse
         val expectedStoriesIfMissingCategories = PocketTestResources.apiExpectedPocketStoriesRecommendations
             .mapIndexed { index, story ->
                 if (index == 3) {
@@ -122,7 +146,7 @@ class PocketJSONParserTest {
 
     @Test
     fun `WHEN parsing stories recommendations with missing timeToRead THEN those entries are kept but with default values`() {
-        val pocketJSON = PocketTestResources.pocketEndointFiveStoriesResponse
+        val pocketJSON = PocketTestResources.pocketEndpointFiveStoriesResponse
         val expectedStoriesIfMissingTimeToRead = PocketTestResources.apiExpectedPocketStoriesRecommendations
             .mapIndexed { index, story ->
                 if (index == 4) {

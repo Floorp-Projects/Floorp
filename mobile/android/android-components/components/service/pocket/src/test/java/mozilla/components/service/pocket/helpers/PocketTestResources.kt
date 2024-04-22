@@ -18,12 +18,24 @@ private const val POCKET_DIR = "pocket"
  * Accessors to resources used in testing.
  */
 internal object PocketTestResources {
-    val pocketEndointFiveStoriesResponse = this::class.java.classLoader!!.getResource(
+    val pocketEndpointFiveStoriesResponse = this::class.java.classLoader!!.getResource(
         "$POCKET_DIR/stories_recommendations_response.json",
     )!!.readText()
 
     val pocketEndpointThreeSpocsResponse = this::class.java.classLoader!!.getResource(
         "$POCKET_DIR/sponsored_stories_response.json",
+    )!!.readText()
+
+    val pocketEndpointNullTitleStoryBadResponse = this::class.java.classLoader!!.getResource(
+        "$POCKET_DIR/story_recommendation_null_title_response.json",
+    )!!.readText()
+
+    val pocketEndpointNullUrlStoryBadResponse = this::class.java.classLoader!!.getResource(
+        "$POCKET_DIR/story_recommendation_null_url_response.json",
+    )!!.readText()
+
+    val pocketEndpointNullImageUrlStoryBadResponse = this::class.java.classLoader!!.getResource(
+        "$POCKET_DIR/story_recommendation_null_imageUrl_response.json",
     )!!.readText()
 
     val apiExpectedPocketStoriesRecommendations: List<PocketApiStory> = listOf(
