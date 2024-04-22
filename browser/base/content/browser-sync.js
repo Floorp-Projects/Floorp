@@ -573,6 +573,14 @@ var gSync = {
       document,
       "PanelUI-fxa-menu-syncnow-button"
     ).addEventListener("mouseover", this);
+    PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-sendtab-not-configured-button"
+    ).addEventListener("command", this);
+    PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-sendtab-connect-device-button"
+    ).addEventListener("command", this);
 
     // If the experiment is enabled, we'll need to update the panels
     // to show some different text to the user
@@ -655,23 +663,26 @@ var gSync = {
 
   onCommand(button) {
     switch (button.id) {
+      case "PanelUI-fxa-menu-sync-prefs-button":
+      // fall through
+      case "PanelUI-fxa-menu-setup-sync-button":
+        this.openPrefsFromFxaMenu("sync_settings", button);
+        break;
+
+      case "PanelUI-fxa-menu-sendtab-connect-device-button":
+      // fall through
+      case "PanelUI-fxa-menu-connect-device-button":
+        this.openConnectAnotherDeviceFromFxaMenu(button);
+        break;
+
       case "fxa-manage-account-button":
         this.clickFxAMenuHeaderButton(button);
         break;
       case "PanelUI-fxa-menu-syncnow-button":
         this.doSyncFromFxaMenu(button);
         break;
-      case "PanelUI-fxa-menu-setup-sync-button":
-        this.openPrefsFromFxaMenu("sync_settings", button);
-        break;
-      case "PanelUI-fxa-menu-connect-device-button":
-        this.openConnectAnotherDeviceFromFxaMenu(button);
-        break;
       case "PanelUI-fxa-menu-sendtab-button":
         this.showSendToDeviceViewFromFxaMenu(button);
-        break;
-      case "PanelUI-fxa-menu-sync-prefs-button":
-        this.openPrefsFromFxaMenu("sync_settings", button);
         break;
       case "PanelUI-fxa-menu-account-signout-button":
         this.disconnect();
@@ -688,6 +699,9 @@ var gSync = {
       case "PanelUI-fxa-menu-vpn-button":
         this.openVPNLink(button);
         break;
+      case "PanelUI-fxa-menu-sendtab-not-configured-button":
+        this.openPrefsFromFxaMenu("send_tab", button);
+        break;
     }
   },
 
@@ -697,10 +711,11 @@ var gSync = {
       return;
     }
     switch (topic) {
-      case UIState.ON_UPDATE:
+      case UIState.ON_UPDATE: {
         const state = UIState.get();
         this.updateAllUI(state);
         break;
+      }
       case "quit-application":
         // Stop the animation timer on shutdown, since we can't update the UI
         // after this.
