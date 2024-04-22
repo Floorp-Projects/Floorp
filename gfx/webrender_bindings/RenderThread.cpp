@@ -979,6 +979,21 @@ void RenderThread::RegisterExternalImage(
     mSyncObjectNeededRenderTextures.emplace(aExternalImageId, texture);
   }
   mRenderTextures.emplace(aExternalImageId, texture);
+
+#ifdef DEBUG
+  int32_t maxAllowedIncrease =
+      StaticPrefs::gfx_testing_assert_render_textures_increase();
+
+  if (maxAllowedIncrease <= 0) {
+    mRenderTexturesLastTime = -1;
+  } else {
+    if (mRenderTexturesLastTime < 0) {
+      mRenderTexturesLastTime = static_cast<int32_t>(mRenderTextures.size());
+    }
+    MOZ_ASSERT((static_cast<int32_t>(mRenderTextures.size()) -
+                mRenderTexturesLastTime) < maxAllowedIncrease);
+  }
+#endif
 }
 
 void RenderThread::UnregisterExternalImage(

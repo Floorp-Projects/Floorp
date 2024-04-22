@@ -1,0 +1,226 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
+requestLongerTimeout(3);
+
+/*
+ * This tests that when we have an animated image in a minimized window we
+ * don't leak.
+ * We've encountered this bug in 3 different ways:
+ * -bug 1830753 - images in top level chrome processes
+ *  (we avoid processing them due to their CompositorBridgeChild being paused)
+ * -bug 1839109 - images in content processes
+ *  (we avoid processing them due to their refresh driver being throttled, this
+ *   would also fix the above case)
+ * -bug 1875100 - images that are in a content iframe that is not the content
+ *  of a tab, so something like an extension iframe in the sidebar
+ *  (this was fixed by making the content of a tab declare that it manually
+ *   manages its activeness and having all other iframes inherit their
+ *   activeness from their parent)
+ * In order to hit this bug we require
+ * -the same image to be in a minimized window and in a non-mininmized window
+ *  so that the image is animated.
+ * -the animated image to go over the
+ *  image.animated.decode-on-demand.threshold-kb threshold so that we do not
+ *  keep all of its frames around (if we keep all its frame around then we
+ *  don't try to keep allocating frames and not freeing the old ones)
+ * -it has to be the same Image object in memory, not just the same uri
+ * Then the visible copy of the image keeps generating new frames, those frames
+ * get sent to the minimized copies of the image but they never get processed
+ * or marked displayed so they can never be freed/reused.
+ *
+ * Note that due to bug 1889840, in order to test this we can't use an image
+ * loaded at the top level (see the last point above). We must use an html page
+ * that contains the image.
+ */
+
+// this test is based in part on https://searchfox.org/mozilla-central/rev/c09764753ea40725eb50decad2c51edecbd33308/browser/components/extensions/test/browser/browser_ext_sidebarAction.js
+
+async function pushPrefs1() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["image.animated.decode-on-demand.threshold-kb", 1],
+      ["image.animated.decode-on-demand.batch-size", 2],
+    ],
+  });
+}
+
+async function openWindowsAndMinimize(taskToPerformBeforeMinimize) {
+  let wins = [null, null, null, null];
+  for (let i = 0; i < wins.length; i++) {
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    await win.delayedStartupPromise;
+    await taskToPerformBeforeMinimize(win);
+
+    // Leave the last window un-minimized.
+    if (i < wins.length - 1) {
+      let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
+        win,
+        "sizemodechange"
+      );
+      win.minimize();
+      await promiseSizeModeChange;
+    }
+
+    wins[i] = win;
+  }
+  return wins;
+}
+
+async function pushPrefs2() {
+  // wait so that at least one frame of the animation has been shown while the
+  // below pref is not set so that the counter gets reset.
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["gfx.testing.assert-render-textures-increase", 75]],
+  });
+}
+
+async function waitForEnoughFrames() {
+  // we want to wait for over 75 frames of the image, it has a delay of 33ms
+  // Windows debug test machines seem to animate at about 10 fps though
+  await new Promise(resolve => setTimeout(resolve, 10000));
+}
+
+async function closeWindows(wins) {
+  for (let i = 0; i < wins.length; i++) {
+    await BrowserTestUtils.closeWindow(wins[i]);
+  }
+}
+
+async function popPrefs() {
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async () => {
+  async function runTest(theTestPath) {
+    await pushPrefs1();
+
+    let wins = await openWindowsAndMinimize(async function (win) {
+      let tab = await BrowserTestUtils.openNewForegroundTab(
+        win.gBrowser,
+        theTestPath
+      );
+    });
+
+    await pushPrefs2();
+
+    await waitForEnoughFrames();
+
+    await closeWindows(wins);
+
+    await popPrefs();
+
+    ok(true, "got here without assserting");
+  }
+
+  function fileURL(filename) {
+    let ifile = getChromeDir(getResolvedURI(gTestPath));
+    ifile.append(filename);
+    return Services.io.newFileURI(ifile).spec;
+  }
+
+  // This tests the image in content process case
+  await runTest(fileURL("helper_animatedImageLeak.html"));
+  // This tests the image in chrome process case
+  await runTest(getRootDirectory(gTestPath) + "helper_animatedImageLeak.html");
+});
+
+// Now we test the image in a sidebar loaded via an extension case.
+
+/*
+ * The data uri below is a 2kb apng that is 3000x200 with 22 frames with delay
+ * of 33ms, it just toggles the color of one pixel from black to red so it's
+ * tiny. We use the same data uri (although that is not important to this test)
+ * in helper_animatedImageLeak.html.
+ */
+
+/*
+ * This is just data to create a simple extension that creates a sidebar with
+ * an image in it.
+ */
+let extData = {
+  manifest: {
+    sidebar_action: {
+      default_panel: "sidebar.html",
+    },
+  },
+  useAddonManager: "temporary",
+
+  files: {
+    "sidebar.html": `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="sidebar.js"></script>
+  </head>
+  <body><p>Sidebar</p>
+  <img src="data:image/png;base64,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"/>
+  </body>
+</html>
+    `,
+
+    "sidebar.js": function () {
+      window.onload = () => {
+        browser.test.sendMessage("sidebar");
+      };
+    },
+  },
+};
+
+function getExtData(manifestUpdates = {}) {
+  return {
+    ...extData,
+    manifest: {
+      ...extData.manifest,
+      ...manifestUpdates,
+    },
+  };
+}
+
+async function sendMessage(ext, msg, data = undefined) {
+  ext.sendMessage({ msg, data });
+  await ext.awaitMessage("done");
+}
+
+add_task(async function sidebar_initial_install() {
+  await pushPrefs1();
+
+  ok(
+    document.getElementById("sidebar-box").hidden,
+    "sidebar box is not visible"
+  );
+
+  let extension = ExtensionTestUtils.loadExtension(getExtData());
+  await extension.startup();
+  await extension.awaitMessage("sidebar");
+
+  // Test sidebar is opened on install
+  ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible");
+
+  // the sidebar appears on all new windows automatically.
+  let wins = await openWindowsAndMinimize(async function (win) {
+    await extension.awaitMessage("sidebar");
+  });
+
+  await pushPrefs2();
+
+  await waitForEnoughFrames();
+
+  await extension.unload();
+  // Test that the sidebar was closed on unload.
+  ok(
+    document.getElementById("sidebar-box").hidden,
+    "sidebar box is not visible"
+  );
+
+  await closeWindows(wins);
+
+  await popPrefs();
+
+  ok(true, "got here without assserting");
+});

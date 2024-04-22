@@ -3,6 +3,12 @@ prefs = [
   "layout.css.properties-and-values.enabled=true",
 ]
 
+["browser_animatedImageLeak.js"]
+skip-if = ["!debug"]
+support-files = [
+  "helper_animatedImageLeak.html"
+]
+
 ["browser_bug617076.js"]
 
 ["browser_bug1701027-1.js"]
