@@ -9,6 +9,9 @@
 const MAX_RESULTS = UrlbarPrefs.get("maxRichResults");
 const RESULT_URL = "https://example.com/test";
 const RESULT_HELP_URL = "https://example.com/help";
+const DEFAULT_HELP_URL =
+  Services.urlFormatter.formatURLPref("app.support.baseURL") +
+  "awesome-bar-result-menu";
 
 add_setup(async function () {
   // Add enough results to fill up the view.
@@ -21,25 +24,60 @@ add_setup(async function () {
   });
 });
 
-// Sets `helpUrl` on a result payload and makes sure the result menu ends up
-// with a help command.
-add_task(async function help() {
-  let provider = registerTestProvider(1);
+// Creates a provider that sets `helpUrl` on its result payload. The specified
+// `helpUrl` should be loaded when the result's help menu item is clicked.
+add_task(async function help_resultHelpUrl() {
+  await doHelpTest({
+    provider: registerTestProvider({
+      resultHelpUrl: RESULT_HELP_URL,
+    }),
+    expectedHelpUrl: RESULT_HELP_URL,
+    expectedHelpL10n: { id: "urlbar-result-menu-tip-get-help", args: null },
+  });
+});
+
+// Creates a provider that does not set `helpUrl` on its result payload but
+// instead implements `getResultCommands()` and returns a "help" command. The
+// default help URL should be loaded when the result's help menu item is
+// clicked.
+add_task(async function help_getResultCommands() {
+  let provider = registerTestProvider({
+    resultHelpUrl: null,
+  });
+  let l10n = { id: "urlbar-result-menu-learn-more", args: null };
+  provider.getResultCommands = () => [{ l10n, name: "help" }];
+
+  await doHelpTest({
+    provider,
+    expectedHelpUrl: DEFAULT_HELP_URL,
+    expectedHelpL10n: l10n,
+  });
+});
+
+async function doHelpTest({
+  provider,
+  expectedHelpUrl,
+  expectedHelpL10n,
+  expectedResultIndex = 1,
+}) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "example",
     window,
   });
 
-  await assertIsTestResult(1);
+  await assertIsTestResult(expectedResultIndex);
 
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    expectedResultIndex
+  );
   let menuButton = result.element.row._buttons.get("menu");
   Assert.ok(menuButton, "Sanity check: menu button should exist");
 
   let menuitem = await UrlbarTestUtils.openResultMenuAndGetItem({
     window,
     command: "help",
-    resultIndex: 1,
+    resultIndex: expectedResultIndex,
     openByMouse: true,
   });
   Assert.ok(menuitem, "Help menu item should exist");
@@ -47,7 +85,7 @@ add_task(async function help() {
   let l10nAttrs = document.l10n.getAttributes(menuitem);
   Assert.deepEqual(
     l10nAttrs,
-    { id: "urlbar-result-menu-tip-get-help", args: null },
+    expectedHelpL10n,
     "The l10n ID attribute was correctly set"
   );
 
@@ -60,7 +98,7 @@ add_task(async function help() {
   let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser);
 
   await UrlbarTestUtils.openResultMenuAndClickItem(window, "help", {
-    resultIndex: 1,
+    resultIndex: expectedResultIndex,
     openByMouse: true,
   });
 
@@ -69,18 +107,18 @@ add_task(async function help() {
   await TestUtils.waitForTick();
   Assert.equal(
     gBrowser.currentURI.spec,
-    RESULT_HELP_URL,
+    expectedHelpUrl,
     "The load URL should be the help URL"
   );
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   UrlbarProvidersManager.unregisterProvider(provider);
-});
+}
 
 // (SHIFT+)TABs through a result with a menu button. The result is the second
 // result and has other results after it.
 add_task(async function keyboardSelection_secondResult() {
-  let provider = registerTestProvider(1);
+  let provider = registerTestProvider();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "example",
     window,
@@ -130,7 +168,7 @@ add_task(async function keyboardSelection_secondResult() {
 // (SHIFT+)TABs through a result with a help button.  The result is the
 // last result.
 add_task(async function keyboardSelection_lastResult() {
-  let provider = registerTestProvider(MAX_RESULTS - 1);
+  let provider = registerTestProvider({ suggestedIndex: MAX_RESULTS - 1 });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "example",
     window,
@@ -221,7 +259,7 @@ add_task(async function pick_help_mouse() {
 async function doPickTest({ pickHelp, useKeyboard }) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     let index = 1;
-    let provider = registerTestProvider(index);
+    let provider = registerTestProvider({ suggestedIndex: index });
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       value: "example",
       window,
@@ -281,31 +319,44 @@ async function doPickTest({ pickHelp, useKeyboard }) {
 }
 
 /**
- * Registers a provider that creates a result with a help URL.
+ * Registers a provider that creates a result optionally with a help URL.
  *
- * @param {number} suggestedIndex
+ * @param {object} options
+ *   Options object
+ * @param {number} options.suggestedIndex
  *   The result's suggestedIndex.
+ * @param {string} options.resultHelpUrl
+ *   The result's helpUrl. Pass a falsey value to prevent setting a helpUrl.
  * @returns {UrlbarProvider}
  *   The new provider.
  */
-function registerTestProvider(suggestedIndex) {
-  let results = [
-    Object.assign(
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.URL,
-        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        {
-          url: RESULT_URL,
-          helpUrl: RESULT_HELP_URL,
-          helpL10n: {
-            id: "urlbar-result-menu-tip-get-help",
-          },
-        }
+function registerTestProvider({
+  suggestedIndex = 1,
+  resultHelpUrl = RESULT_HELP_URL,
+} = {}) {
+  let payload = { url: RESULT_URL };
+  if (resultHelpUrl) {
+    payload = {
+      ...payload,
+      helpUrl: resultHelpUrl,
+      helpL10n: {
+        id: "urlbar-result-menu-tip-get-help",
+      },
+    };
+  }
+
+  let provider = new UrlbarTestUtils.TestProvider({
+    results: [
+      Object.assign(
+        new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.URL,
+          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          payload
+        ),
+        { suggestedIndex }
       ),
-      { suggestedIndex }
-    ),
-  ];
-  let provider = new UrlbarTestUtils.TestProvider({ results });
+    ],
+  });
   UrlbarProvidersManager.registerProvider(provider);
   return provider;
 }
