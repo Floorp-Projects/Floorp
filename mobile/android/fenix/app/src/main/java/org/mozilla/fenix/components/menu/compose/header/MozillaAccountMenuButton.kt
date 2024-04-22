@@ -24,12 +24,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import mozilla.components.service.fxa.manager.AccountState
+import mozilla.components.service.fxa.manager.AccountState.Authenticated
+import mozilla.components.service.fxa.manager.AccountState.Authenticating
+import mozilla.components.service.fxa.manager.AccountState.AuthenticationProblem
+import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import mozilla.components.service.fxa.store.Account
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.accounts.AccountState
-import org.mozilla.fenix.components.accounts.AccountState.AUTHENTICATED
-import org.mozilla.fenix.components.accounts.AccountState.NEEDS_REAUTHENTICATION
-import org.mozilla.fenix.components.accounts.AccountState.NO_ACCOUNT
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -65,7 +66,7 @@ internal fun MozillaAccountMenuButton(
                 .weight(1f),
         ) {
             when (accountState) {
-                NO_ACCOUNT -> {
+                NotAuthenticated -> {
                     Text(
                         text = stringResource(id = R.string.browser_menu_sign_in),
                         color = FirefoxTheme.colors.textSecondary,
@@ -81,7 +82,7 @@ internal fun MozillaAccountMenuButton(
                     )
                 }
 
-                NEEDS_REAUTHENTICATION -> {
+                AuthenticationProblem -> {
                     Text(
                         text = stringResource(id = R.string.browser_menu_sign_back_in_to_sync),
                         color = FirefoxTheme.colors.textSecondary,
@@ -97,7 +98,7 @@ internal fun MozillaAccountMenuButton(
                     )
                 }
 
-                AUTHENTICATED -> {
+                Authenticated -> {
                     Text(
                         text = account?.displayName ?: account?.email
                             ?: stringResource(id = R.string.browser_menu_account_settings),
@@ -106,10 +107,12 @@ internal fun MozillaAccountMenuButton(
                         style = FirefoxTheme.typography.headline7,
                     )
                 }
+
+                is Authenticating -> Unit
             }
         }
 
-        if (accountState == NEEDS_REAUTHENTICATION) {
+        if (accountState == AuthenticationProblem) {
             Icon(
                 painter = painterResource(R.drawable.mozac_ic_warning_fill_24),
                 contentDescription = null,
@@ -146,13 +149,13 @@ private fun MenuHeaderPreviewContent() {
     ) {
         MozillaAccountMenuButton(
             account = null,
-            accountState = NO_ACCOUNT,
+            accountState = NotAuthenticated,
             onSignInButtonClick = {},
         )
 
         MozillaAccountMenuButton(
             account = null,
-            accountState = NEEDS_REAUTHENTICATION,
+            accountState = AuthenticationProblem,
             onSignInButtonClick = {},
         )
 
@@ -165,7 +168,7 @@ private fun MenuHeaderPreviewContent() {
                 currentDeviceId = null,
                 sessionToken = null,
             ),
-            accountState = AUTHENTICATED,
+            accountState = Authenticated,
             onSignInButtonClick = {},
         )
 
@@ -178,7 +181,7 @@ private fun MenuHeaderPreviewContent() {
                 currentDeviceId = null,
                 sessionToken = null,
             ),
-            accountState = AUTHENTICATED,
+            accountState = Authenticated,
             onSignInButtonClick = {},
         )
 
@@ -191,7 +194,7 @@ private fun MenuHeaderPreviewContent() {
                 currentDeviceId = null,
                 sessionToken = null,
             ),
-            accountState = AUTHENTICATED,
+            accountState = Authenticated,
             onSignInButtonClick = {},
         )
     }
