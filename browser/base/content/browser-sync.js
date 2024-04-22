@@ -569,6 +569,10 @@ var gSync = {
     fxaPanelView.addEventListener("ViewShowing", this);
     fxaPanelView.addEventListener("ViewHiding", this);
     fxaPanelView.addEventListener("command", this);
+    PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-syncnow-button"
+    ).addEventListener("mouseover", this);
 
     // If the experiment is enabled, we'll need to update the panels
     // to show some different text to the user
@@ -594,6 +598,9 @@ var gSync = {
 
   handleEvent(event) {
     switch (event.type) {
+      case "mouseover":
+        this.refreshSyncButtonsTooltip();
+        break;
       case "command": {
         this.onCommand(event.target);
         break;

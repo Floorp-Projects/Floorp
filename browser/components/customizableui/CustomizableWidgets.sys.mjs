@@ -485,35 +485,50 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
         lazy.PanelMultiView.getViewNode(doc, "PanelUI-remotetabs-tabslist")
       );
       panelview.addEventListener("command", this);
+      let syncNowButton = lazy.PanelMultiView.getViewNode(
+        aEvent.target.ownerDocument,
+        "PanelUI-remotetabs-syncnow"
+      );
+      syncNowButton.addEventListener("mouseover", this);
     },
     onViewHiding(aEvent) {
-      aEvent.target.syncedTabsPanelList.destroy();
-      aEvent.target.syncedTabsPanelList = null;
-      aEvent.target.removeEventListener("command", this);
+      let panelview = aEvent.target;
+      panelview.syncedTabsPanelList.destroy();
+      panelview.syncedTabsPanelList = null;
+      panelview.removeEventListener("command", this);
+      let syncNowButton = lazy.PanelMultiView.getViewNode(
+        aEvent.target.ownerDocument,
+        "PanelUI-remotetabs-syncnow"
+      );
+      syncNowButton.removeEventListener("mouseover", this);
     },
     handleEvent(aEvent) {
-      if (aEvent.type != "command") {
-        return;
-      }
       let button = aEvent.target;
       let { gSync } = button.ownerGlobal;
-      switch (button.id) {
-        case "PanelUI-remotetabs-syncnow":
-          gSync.doSync();
+      switch (aEvent.type) {
+        case "mouseover":
+          gSync.refreshSyncButtonsTooltip();
           break;
-        case "PanelUI-remotetabs-view-managedevices":
-          gSync.openDevicesManagementPage("syncedtabs-menupanel");
-          break;
-        case "PanelUI-remotetabs-tabsdisabledpane-button":
-        case "PanelUI-remotetabs-setupsync-button":
-        case "PanelUI-remotetabs-syncdisabled-button":
-        case "PanelUI-remotetabs-reauthsync-button":
-        case "PanelUI-remotetabs-unverified-button":
-          gSync.openPrefs("synced-tabs");
-          break;
-        case "PanelUI-remotetabs-connect-device-button":
-          gSync.openConnectAnotherDevice("synced-tabs");
-          break;
+        case "command": {
+          switch (button.id) {
+            case "PanelUI-remotetabs-syncnow":
+              gSync.doSync();
+              break;
+            case "PanelUI-remotetabs-view-managedevices":
+              gSync.openDevicesManagementPage("syncedtabs-menupanel");
+              break;
+            case "PanelUI-remotetabs-tabsdisabledpane-button":
+            case "PanelUI-remotetabs-setupsync-button":
+            case "PanelUI-remotetabs-syncdisabled-button":
+            case "PanelUI-remotetabs-reauthsync-button":
+            case "PanelUI-remotetabs-unverified-button":
+              gSync.openPrefs("synced-tabs");
+              break;
+            case "PanelUI-remotetabs-connect-device-button":
+              gSync.openConnectAnotherDevice("synced-tabs");
+              break;
+          }
+        }
       }
     },
   });
