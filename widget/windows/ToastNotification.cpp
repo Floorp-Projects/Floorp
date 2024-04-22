@@ -776,6 +776,9 @@ ToastNotification::CloseAlert(const nsAString& aAlertName,
                               bool aContextClosed) {
   RefPtr<ToastNotificationHandler> handler;
   if (NS_WARN_IF(!mActiveHandlers.Get(aAlertName, getter_AddRefs(handler)))) {
+    // This can happen when the handler is gone but the closure signal is not
+    // yet reached to the content process, and then the process tries closing
+    // the same signal.
     return NS_OK;
   }
 
