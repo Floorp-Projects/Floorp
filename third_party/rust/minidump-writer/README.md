@@ -22,31 +22,7 @@ For more information on how to dump an external process you can check out the do
 
 #### Local process
 
-```rust
-fn write_minidump() {
-    // At a minimum, the crashdump writer needs to know the process and thread that you want to dump
-    let mut writer = minidump_writer::minidump_writer::MinidumpWriter::new(
-        std::process::id() as _,
-        // This gets the current thread, but you could get the id for any thread
-        // in the current process
-        unsafe { libc::syscall(libc::SYS_gettid) } as i32
-    );
-
-    // If provided with a full [crash_context::CrashContext](https://docs.rs/crash-context/latest/crash_context/struct.CrashContext.html),
-    // the crash will contain more info on the crash cause, such as the signal
-    //writer.set_crash_context(minidump_writer::crash_context::CrashContext { inner: crash_context });
-
-    // Here we could add more context or modify how the minidump is written, eg
-    // Add application specific memory blocks to the minidump
-    //writer.set_app_memory()
-    // Sanitize stack memory before it is written to the minidump by replacing
-    // non-pointer values with a sentinel value
-    //writer.sanitize_stack();
-
-    let mut minidump_file = std::fs::File::create("example_dump.mdmp").expect("failed to create file");
-    writer.dump(&mut minidump_file).expect("failed to write minidump");
-}
-```
+The Linux implementation uses ptrace to gather information about the process when writing a minidump for it, which cannot be done from the process itself. It's possible to clone the process and dump the current process from that clone, but that's out of scope for an example.
 
 #### External process
 

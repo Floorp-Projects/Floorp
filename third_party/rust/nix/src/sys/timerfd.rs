@@ -53,7 +53,7 @@ impl AsFd for TimerFd {
 impl FromRawFd for TimerFd {
     unsafe fn from_raw_fd(fd: RawFd) -> Self {
         TimerFd {
-            fd: OwnedFd::from_raw_fd(fd),
+            fd: unsafe { OwnedFd::from_raw_fd(fd) },
         }
     }
 }

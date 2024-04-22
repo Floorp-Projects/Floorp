@@ -4,7 +4,7 @@
 //! of interfaces and their associated addresses.
 
 use cfg_if::cfg_if;
-#[cfg(any(target_os = "ios", target_os = "macos"))]
+#[cfg(apple_targets)]
 use std::convert::TryFrom;
 use std::ffi;
 use std::iter::Iterator;
@@ -33,7 +33,7 @@ pub struct InterfaceAddress {
 }
 
 cfg_if! {
-    if #[cfg(any(target_os = "android", target_os = "emscripten", target_os = "fuchsia", target_os = "linux"))] {
+    if #[cfg(any(linux_android, target_os = "emscripten", target_os = "fuchsia"))] {
         fn get_ifu_from_sockaddr(info: &libc::ifaddrs) -> *const libc::sockaddr {
             info.ifa_ifu
         }
@@ -53,7 +53,7 @@ cfg_if! {
 /// ss_len field to sizeof(sockaddr_storage). This is supposedly valid as all
 /// members of the sockaddr_storage are "ok" with being zeroed out (there are
 /// no pointers).
-#[cfg(any(target_os = "ios", target_os = "macos"))]
+#[cfg(apple_targets)]
 unsafe fn workaround_xnu_bug(info: &libc::ifaddrs) -> Option<SockaddrStorage> {
     let src_sock = info.ifa_netmask;
     if src_sock.is_null() {
@@ -62,22 +62,24 @@ unsafe fn workaround_xnu_bug(info: &libc::ifaddrs) -> Option<SockaddrStorage> {
 
     let mut dst_sock = mem::MaybeUninit::<libc::sockaddr_storage>::zeroed();
 
-    // memcpy only sa_len bytes, assume the rest is zero
-    std::ptr::copy_nonoverlapping(
-        src_sock as *const u8,
-        dst_sock.as_mut_ptr() as *mut u8,
-        (*src_sock).sa_len.into(),
-    );
+    let dst_sock = unsafe {
+        // memcpy only sa_len bytes, assume the rest is zero
+        std::ptr::copy_nonoverlapping(
+            src_sock as *const u8,
+            dst_sock.as_mut_ptr().cast(),
+            (*src_sock).sa_len.into(),
+        );
 
-    // Initialize ss_len to sizeof(libc::sockaddr_storage).
-    (*dst_sock.as_mut_ptr()).ss_len =
-        u8::try_from(mem::size_of::<libc::sockaddr_storage>()).unwrap();
-    let dst_sock = dst_sock.assume_init();
+        // Initialize ss_len to sizeof(libc::sockaddr_storage).
+        (*dst_sock.as_mut_ptr()).ss_len =
+            u8::try_from(mem::size_of::<libc::sockaddr_storage>()).unwrap();
+        dst_sock.assume_init()
+    };
 
     let dst_sock_ptr =
         &dst_sock as *const libc::sockaddr_storage as *const libc::sockaddr;
 
-    SockaddrStorage::from_raw(dst_sock_ptr, None)
+    unsafe { SockaddrStorage::from_raw(dst_sock_ptr, None) }
 }
 
 impl InterfaceAddress {
@@ -85,14 +87,16 @@ impl InterfaceAddress {
     fn from_libc_ifaddrs(info: &libc::ifaddrs) -> InterfaceAddress {
         let ifname = unsafe { ffi::CStr::from_ptr(info.ifa_name) };
         let address = unsafe { SockaddrStorage::from_raw(info.ifa_addr, None) };
-        #[cfg(any(target_os = "ios", target_os = "macos"))]
+        #[cfg(apple_targets)]
         let netmask = unsafe { workaround_xnu_bug(info) };
-        #[cfg(not(any(target_os = "ios", target_os = "macos")))]
+        #[cfg(not(apple_targets))]
         let netmask =
             unsafe { SockaddrStorage::from_raw(info.ifa_netmask, None) };
         let mut addr = InterfaceAddress {
             interface_name: ifname.to_string_lossy().to_string(),
-            flags: InterfaceFlags::from_bits_truncate(info.ifa_flags as i32),
+            flags: InterfaceFlags::from_bits_truncate(
+                info.ifa_flags as IflagsType,
+            ),
             address,
             netmask,
             broadcast: None,

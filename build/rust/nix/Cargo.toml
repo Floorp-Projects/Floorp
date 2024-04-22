@@ -8,7 +8,7 @@ license = "MPL-2.0"
 path = "lib.rs"
 
 [dependencies.nix]
-version = "0.27"
+version = "0.28"
 default-features = false
 
 [features]

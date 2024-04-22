@@ -185,13 +185,13 @@ impl MinidumpWriter {
                 // This is a mut pointer for some reason...I don't _think_ it is
                 // actually mut in practice...?
                 ExceptionPointers: crash_context.exception_pointers as *mut _,
-                /// The `EXCEPTION_POINTERS` contained in crash context is a pointer into the
-                /// memory of the process that crashed, as it contains an `EXCEPTION_RECORD`
-                /// record which is an internally linked list, so in the case that we are
-                /// dumping a process other than the current one, we need to tell
-                /// `MiniDumpWriteDump` that the pointers come from an external process so that
-                /// it can use eg `ReadProcessMemory` to get the contextual information from
-                /// the crash, rather than from the current process
+                // The `EXCEPTION_POINTERS` contained in crash context is a pointer into the
+                // memory of the process that crashed, as it contains an `EXCEPTION_RECORD`
+                // record which is an internally linked list, so in the case that we are
+                // dumping a process other than the current one, we need to tell
+                // `MiniDumpWriteDump` that the pointers come from an external process so that
+                // it can use eg `ReadProcessMemory` to get the contextual information from
+                // the crash, rather than from the current process
                 ClientPointers: i32::from(is_external_process),
             },
         );

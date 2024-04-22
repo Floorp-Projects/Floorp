@@ -153,7 +153,7 @@ backtrace = { path = "build/rust/backtrace" }
 # Patch bindgen 0.63 to 0.69
 bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen-0.63" }
 
-# Patch nix 0.26 to 0.27
+# Patch nix 0.26 to 0.28
 nix = { path = "build/rust/nix" }
 
 # Patch indexmap 2.0 to 1.0
@@ -167,9 +167,6 @@ autocfg = { path = "third_party/rust/autocfg" }
 
 # Patch goblin 0.7.0 to 0.8
 goblin = { path = "build/rust/goblin" }
-
-# Patch scroll 0.11 to 0.12
-scroll = { path = "build/rust/scroll" }
 
 # Patch memoffset from 0.8.0 to 0.9.0 since it's compatible and it avoids duplication
 memoffset = { path = "build/rust/memoffset" }

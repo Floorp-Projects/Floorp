@@ -13,10 +13,10 @@ ignore = []
 
 [bans]
 multiple-versions = "deny"
-skip = [
-    # scroll still depends on 1.0
-    { name = "syn", version = "=1.0.109" },
+deny = [
+    #{ crate = "chrono", use-instead = "time", reason = "unneccessary dependency" },
 ]
+skip-tree = []
 
 [licenses]
 allow = ["MIT", "Apache-2.0"]

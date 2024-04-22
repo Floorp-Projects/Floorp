@@ -1,10 +1,10 @@
 /// The datatype used for the ioctl number
 #[doc(hidden)]
-#[cfg(not(target_os = "illumos"))]
+#[cfg(not(solarish))]
 pub type ioctl_num_type = ::libc::c_ulong;
 
 #[doc(hidden)]
-#[cfg(target_os = "illumos")]
+#[cfg(solarish)]
 pub type ioctl_num_type = ::libc::c_int;
 
 /// The datatype used for the 3rd argument

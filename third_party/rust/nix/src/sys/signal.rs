@@ -7,14 +7,17 @@ use crate::errno::Errno;
 use crate::{Error, Result};
 use cfg_if::cfg_if;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::mem;
-#[cfg(any(target_os = "dragonfly", target_os = "freebsd"))]
+use std::ops::BitOr;
+#[cfg(freebsdlike)]
 use std::os::unix::io::RawFd;
 use std::ptr;
 use std::str::FromStr;
 
 #[cfg(not(any(
     target_os = "fuchsia",
+    target_os = "hurd",
     target_os = "openbsd",
     target_os = "redox"
 )))]
@@ -63,9 +66,12 @@ libc_enum! {
         /// Software termination signal from kill
         SIGTERM,
         /// Stack fault (obsolete)
-        #[cfg(all(any(target_os = "android", target_os = "emscripten",
-                      target_os = "fuchsia", target_os = "linux"),
-                  not(any(target_arch = "mips", target_arch = "mips64",
+        #[cfg(all(any(linux_android, target_os = "emscripten",
+                      target_os = "fuchsia"),
+                  not(any(target_arch = "mips",
+                          target_arch = "mips32r6",
+                          target_arch = "mips64",
+                          target_arch = "mips64r6",
                           target_arch = "sparc64"))))]
         SIGSTKFLT,
         /// To parent on child stop or exit
@@ -94,27 +100,21 @@ libc_enum! {
         SIGWINCH,
         /// Input/output possible signal
         #[cfg(not(target_os = "haiku"))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         SIGIO,
-        #[cfg(any(target_os = "android", target_os = "emscripten",
-                  target_os = "fuchsia", target_os = "linux",
-                  target_os = "aix"))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        #[cfg(any(linux_android, target_os = "emscripten",
+                  target_os = "fuchsia", target_os = "aix"))]
         /// Power failure imminent.
         SIGPWR,
         /// Bad system call
         SIGSYS,
-        #[cfg(not(any(target_os = "android", target_os = "emscripten",
-                      target_os = "fuchsia", target_os = "linux",
+        #[cfg(not(any(linux_android, target_os = "emscripten",
+                      target_os = "fuchsia",
                       target_os = "redox", target_os = "haiku")))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         /// Emulator trap
         SIGEMT,
-        #[cfg(not(any(target_os = "android", target_os = "emscripten",
-                      target_os = "fuchsia", target_os = "linux",
-                      target_os = "redox", target_os = "haiku",
-                      target_os = "aix")))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        #[cfg(not(any(linux_android, target_os = "emscripten",
+                      target_os = "fuchsia", target_os = "redox",
+                      target_os = "haiku", target_os = "aix")))]
         /// Information request
         SIGINFO,
     }
@@ -143,14 +143,15 @@ impl FromStr for Signal {
             "SIGTERM" => Signal::SIGTERM,
             #[cfg(all(
                 any(
-                    target_os = "android",
+                    linux_android,
                     target_os = "emscripten",
                     target_os = "fuchsia",
-                    target_os = "linux"
                 ),
                 not(any(
                     target_arch = "mips",
+                    target_arch = "mips32r6",
                     target_arch = "mips64",
+                    target_arch = "mips64r6",
                     target_arch = "sparc64"
                 ))
             ))]
@@ -170,27 +171,24 @@ impl FromStr for Signal {
             #[cfg(not(target_os = "haiku"))]
             "SIGIO" => Signal::SIGIO,
             #[cfg(any(
-                target_os = "android",
+                linux_android,
                 target_os = "emscripten",
                 target_os = "fuchsia",
-                target_os = "linux"
             ))]
             "SIGPWR" => Signal::SIGPWR,
             "SIGSYS" => Signal::SIGSYS,
             #[cfg(not(any(
-                target_os = "android",
+                linux_android,
                 target_os = "emscripten",
                 target_os = "fuchsia",
-                target_os = "linux",
                 target_os = "redox",
                 target_os = "haiku"
             )))]
             "SIGEMT" => Signal::SIGEMT,
             #[cfg(not(any(
-                target_os = "android",
+                linux_android,
                 target_os = "emscripten",
                 target_os = "fuchsia",
-                target_os = "linux",
                 target_os = "redox",
                 target_os = "aix",
                 target_os = "haiku"
@@ -227,14 +225,15 @@ impl Signal {
             Signal::SIGTERM => "SIGTERM",
             #[cfg(all(
                 any(
-                    target_os = "android",
+                    linux_android,
                     target_os = "emscripten",
                     target_os = "fuchsia",
-                    target_os = "linux"
                 ),
                 not(any(
                     target_arch = "mips",
+                    target_arch = "mips32r6",
                     target_arch = "mips64",
+                    target_arch = "mips64r6",
                     target_arch = "sparc64"
                 ))
             ))]
@@ -254,28 +253,25 @@ impl Signal {
             #[cfg(not(target_os = "haiku"))]
             Signal::SIGIO => "SIGIO",
             #[cfg(any(
-                target_os = "android",
+                linux_android,
                 target_os = "emscripten",
                 target_os = "fuchsia",
                 target_os = "aix",
-                target_os = "linux"
             ))]
             Signal::SIGPWR => "SIGPWR",
             Signal::SIGSYS => "SIGSYS",
             #[cfg(not(any(
-                target_os = "android",
+                linux_android,
                 target_os = "emscripten",
                 target_os = "fuchsia",
-                target_os = "linux",
                 target_os = "redox",
                 target_os = "haiku"
             )))]
             Signal::SIGEMT => "SIGEMT",
             #[cfg(not(any(
-                target_os = "android",
+                linux_android,
                 target_os = "emscripten",
                 target_os = "fuchsia",
-                target_os = "linux",
                 target_os = "redox",
                 target_os = "aix",
                 target_os = "haiku"
@@ -319,15 +315,12 @@ const SIGNALS: [Signal; 28] = [
     SIGPROF, SIGWINCH, SIGSYS,
 ];
 #[cfg(all(
-    any(
-        target_os = "linux",
-        target_os = "android",
-        target_os = "emscripten",
-        target_os = "fuchsia"
-    ),
+    any(linux_android, target_os = "emscripten", target_os = "fuchsia"),
     not(any(
         target_arch = "mips",
+        target_arch = "mips32r6",
         target_arch = "mips64",
+        target_arch = "mips64r6",
         target_arch = "sparc64"
     ))
 ))]
@@ -339,13 +332,14 @@ const SIGNALS: [Signal; 31] = [
     SIGVTALRM, SIGPROF, SIGWINCH, SIGIO, SIGPWR, SIGSYS,
 ];
 #[cfg(all(
+    any(linux_android, target_os = "emscripten", target_os = "fuchsia"),
     any(
-        target_os = "linux",
-        target_os = "android",
-        target_os = "emscripten",
-        target_os = "fuchsia"
-    ),
-    any(target_arch = "mips", target_arch = "mips64", target_arch = "sparc64")
+        target_arch = "mips",
+        target_arch = "mips32r6",
+        target_arch = "mips64",
+        target_arch = "mips64r6",
+        target_arch = "sparc64"
+    )
 ))]
 #[cfg(feature = "signal")]
 const SIGNALS: [Signal; 30] = [
@@ -363,8 +357,7 @@ const SIGNALS: [Signal; 30] = [
     SIGVTALRM, SIGPROF, SIGXCPU, SIGXFSZ, SIGTRAP,
 ];
 #[cfg(not(any(
-    target_os = "linux",
-    target_os = "android",
+    linux_android,
     target_os = "fuchsia",
     target_os = "emscripten",
     target_os = "aix",
@@ -439,6 +432,7 @@ libc_bitflags! {
         SA_NOCLDSTOP;
         /// When catching a [`Signal::SIGCHLD`] signal, the system will not
         /// create zombie processes when children of the calling process exit.
+        #[cfg(not(target_os = "hurd"))]
         SA_NOCLDWAIT;
         /// Further occurrences of the delivered signal are not masked during
         /// the execution of the handler.
@@ -486,7 +480,7 @@ use std::iter::IntoIterator;
 // We are using `transparent` here to be super sure that `SigSet`
 // is represented exactly like the `sigset_t` struct from C.
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq)]
 pub struct SigSet {
     sigset: libc::sigset_t
 }
@@ -577,7 +571,6 @@ impl SigSet {
     /// Suspends execution of the calling thread until one of the signals in the
     /// signal mask becomes pending, and returns the accepted signal.
     #[cfg(not(target_os = "redox"))] // RedoxFS does not yet support sigwait
-    #[cfg_attr(docsrs, doc(cfg(all())))]
     pub fn wait(&self) -> Result<Signal> {
         use std::convert::TryFrom;
 
@@ -587,6 +580,35 @@ impl SigSet {
         Errno::result(res).map(|_| unsafe {
             Signal::try_from(signum.assume_init()).unwrap()
         })
+    }
+
+    /// Wait for a signal
+    ///
+    /// # Return value
+    /// If `sigsuspend(2)` is interrupted (EINTR), this function returns `Ok`.
+    /// If `sigsuspend(2)` set other error, this function returns `Err`.
+    ///
+    /// For more information see the
+    /// [`sigsuspend(2)`](https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigsuspend.html).
+    #[cfg(any(
+        bsd,
+        linux_android,
+        solarish,
+        target_os = "haiku",
+        target_os = "hurd",
+        target_os = "aix",
+        target_os = "fushsia"
+    ))]
+    #[doc(alias("sigsuspend"))]
+    pub fn suspend(&self) -> Result<()> {
+        let res = unsafe {
+            libc::sigsuspend(&self.sigset as *const libc::sigset_t)
+        };
+        match Errno::result(res).map(drop) {
+            Err(Errno::EINTR) => Ok(()),
+            Err(e) => Err(e),
+            Ok(_) => unreachable!("because this syscall always returns -1 if returns"),
+        }
     }
 
     /// Converts a `libc::sigset_t` object to a [`SigSet`] without checking  whether the
@@ -600,6 +622,42 @@ impl SigSet {
     /// Otherwise, the results are undefined.
     pub unsafe fn from_sigset_t_unchecked(sigset: libc::sigset_t) -> SigSet {
         SigSet { sigset }
+    }
+}
+
+impl From<Signal> for SigSet {
+    fn from(signal: Signal) -> SigSet {
+        let mut sigset = SigSet::empty();
+        sigset.add(signal);
+        sigset
+    }
+}
+
+impl BitOr for Signal {
+    type Output = SigSet;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        let mut sigset = SigSet::empty();
+        sigset.add(self);
+        sigset.add(rhs);
+        sigset
+    }
+}
+
+impl BitOr<Signal> for SigSet {
+    type Output = SigSet;
+
+    fn bitor(mut self, rhs: Signal) -> Self::Output {
+        self.add(rhs);
+        self
+    }
+}
+
+impl BitOr for SigSet {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        self.iter().chain(rhs.iter()).collect()
     }
 }
 
@@ -625,6 +683,27 @@ impl FromIterator<Signal> for SigSet {
         let mut sigset = SigSet::empty();
         sigset.extend(iter);
         sigset
+    }
+}
+
+impl PartialEq for SigSet {
+    fn eq(&self, other: &Self) -> bool {
+        for signal in Signal::iterator() {
+            if self.contains(signal) != other.contains(signal) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+impl Hash for SigSet {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        for signal in Signal::iterator() {
+            if self.contains(signal) {
+                signal.hash(state);
+            }
+        }
     }
 }
 
@@ -670,7 +749,6 @@ pub enum SigHandler {
     /// Use the given signal-catching function, which takes in the signal, information about how
     /// the signal was generated, and a pointer to the threads `ucontext_t`.
     #[cfg(not(target_os = "redox"))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
     SigAction(extern fn(libc::c_int, *mut libc::siginfo_t, *mut libc::c_void))
 }
 
@@ -689,23 +767,27 @@ impl SigAction {
     pub fn new(handler: SigHandler, flags: SaFlags, mask: SigSet) -> SigAction {
         #[cfg(not(target_os = "aix"))]
         unsafe fn install_sig(p: *mut libc::sigaction, handler: SigHandler) {
-            (*p).sa_sigaction = match handler {
-                SigHandler::SigDfl => libc::SIG_DFL,
-                SigHandler::SigIgn => libc::SIG_IGN,
-                SigHandler::Handler(f) => f as *const extern fn(libc::c_int) as usize,
-                #[cfg(not(target_os = "redox"))]
-                SigHandler::SigAction(f) => f as *const extern fn(libc::c_int, *mut libc::siginfo_t, *mut libc::c_void) as usize,
-            };
+            unsafe {
+                 (*p).sa_sigaction = match handler {
+                    SigHandler::SigDfl => libc::SIG_DFL,
+                    SigHandler::SigIgn => libc::SIG_IGN,
+                    SigHandler::Handler(f) => f as *const extern fn(libc::c_int) as usize,
+                    #[cfg(not(target_os = "redox"))]
+                    SigHandler::SigAction(f) => f as *const extern fn(libc::c_int, *mut libc::siginfo_t, *mut libc::c_void) as usize,
+                };
+            }
         }
 
         #[cfg(target_os = "aix")]
         unsafe fn install_sig(p: *mut libc::sigaction, handler: SigHandler) {
-            (*p).sa_union.__su_sigaction = match handler {
-                SigHandler::SigDfl => mem::transmute::<usize, extern "C" fn(libc::c_int, *mut libc::siginfo_t, *mut libc::c_void)>(libc::SIG_DFL),
-                SigHandler::SigIgn => mem::transmute::<usize, extern "C" fn(libc::c_int, *mut libc::siginfo_t, *mut libc::c_void)>(libc::SIG_IGN),
-                SigHandler::Handler(f) => mem::transmute::<extern "C" fn(i32), extern "C" fn(i32, *mut libc::siginfo_t, *mut libc::c_void)>(f),
-                SigHandler::SigAction(f) => f,
-            };
+            unsafe {
+                (*p).sa_union.__su_sigaction = match handler {
+                    SigHandler::SigDfl => unsafe { mem::transmute::<usize, extern "C" fn(libc::c_int, *mut libc::siginfo_t, *mut libc::c_void)>(libc::SIG_DFL) },
+                    SigHandler::SigIgn => unsafe { mem::transmute::<usize, extern "C" fn(libc::c_int, *mut libc::siginfo_t, *mut libc::c_void)>(libc::SIG_IGN) },
+                    SigHandler::Handler(f) => unsafe { mem::transmute::<extern "C" fn(i32), extern "C" fn(i32, *mut libc::siginfo_t, *mut libc::c_void)>(f) },
+                    SigHandler::SigAction(f) => f,
+                };
+            }
         }
 
         let mut s = mem::MaybeUninit::<libc::sigaction>::uninit();
@@ -810,11 +892,11 @@ impl SigAction {
 pub unsafe fn sigaction(signal: Signal, sigaction: &SigAction) -> Result<SigAction> {
     let mut oldact = mem::MaybeUninit::<libc::sigaction>::uninit();
 
-    let res = libc::sigaction(signal as libc::c_int,
+    let res = unsafe { libc::sigaction(signal as libc::c_int,
                               &sigaction.sigaction as *const libc::sigaction,
-                              oldact.as_mut_ptr());
+                              oldact.as_mut_ptr()) };
 
-    Errno::result(res).map(|_| SigAction { sigaction: oldact.assume_init() })
+    Errno::result(res).map(|_| SigAction { sigaction: unsafe { oldact.assume_init() } })
 }
 
 /// Signal management (see [signal(3p)](https://pubs.opengroup.org/onlinepubs/9699919799/functions/signal.html))
@@ -872,9 +954,9 @@ pub unsafe fn sigaction(signal: Signal, sigaction: &SigAction) -> Result<SigActi
 pub unsafe fn signal(signal: Signal, handler: SigHandler) -> Result<SigHandler> {
     let signal = signal as libc::c_int;
     let res = match handler {
-        SigHandler::SigDfl => libc::signal(signal, libc::SIG_DFL),
-        SigHandler::SigIgn => libc::signal(signal, libc::SIG_IGN),
-        SigHandler::Handler(handler) => libc::signal(signal, handler as libc::sighandler_t),
+        SigHandler::SigDfl => unsafe { libc::signal(signal, libc::SIG_DFL) },
+        SigHandler::SigIgn => unsafe { libc::signal(signal, libc::SIG_IGN) },
+        SigHandler::Handler(handler) => unsafe { libc::signal(signal, handler as libc::sighandler_t) },
         #[cfg(not(target_os = "redox"))]
         SigHandler::SigAction(_) => return Err(Errno::ENOTSUP),
     };
@@ -883,9 +965,7 @@ pub unsafe fn signal(signal: Signal, handler: SigHandler) -> Result<SigHandler> 
             libc::SIG_DFL => SigHandler::SigDfl,
             libc::SIG_IGN => SigHandler::SigIgn,
             p => SigHandler::Handler(
-                *(&p as *const usize
-                     as *const extern fn(libc::c_int))
-                as extern fn(libc::c_int)),
+                unsafe { *(&p as *const usize as *const extern fn(libc::c_int)) } as extern fn(libc::c_int)),
         }
     })
 }
@@ -1019,14 +1099,14 @@ feature! {
 #[cfg(target_os = "freebsd")]
 pub type type_of_thread_id = libc::lwpid_t;
 /// Identifies a thread for [`SigevNotify::SigevThreadId`]
-#[cfg(any(target_env = "gnu", target_env = "uclibc"))]
+#[cfg(all(not(target_os = "hurd"), any(target_env = "gnu", target_env = "uclibc")))]
 pub type type_of_thread_id = libc::pid_t;
 
 /// Specifies the notification method used by a [`SigEvent`]
 // sigval is actually a union of a int and a void*.  But it's never really used
 // as a pointer, because neither libc nor the kernel ever dereference it.  nix
 // therefore presents it as an intptr_t, which is how kevent uses it.
-#[cfg(not(any(target_os = "fuchsia", target_os = "openbsd", target_os = "redox")))]
+#[cfg(not(any(target_os = "fuchsia", target_os = "hurd", target_os = "openbsd", target_os = "redox")))]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum SigevNotify {
     /// No notification will be delivered
@@ -1041,8 +1121,7 @@ pub enum SigevNotify {
     },
     // Note: SIGEV_THREAD is not implemented, but could be if desired.
     /// Notify by delivering an event to a kqueue.
-    #[cfg(any(target_os = "dragonfly", target_os = "freebsd"))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
+    #[cfg(freebsdlike)]
     SigevKevent {
         /// File descriptor of the kqueue to notify.
         kq: RawFd,
@@ -1051,7 +1130,6 @@ pub enum SigevNotify {
     },
     /// Notify by delivering an event to a kqueue, with optional event flags set
     #[cfg(target_os = "freebsd")]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
     #[cfg(feature = "event")]
     SigevKeventFlags {
         /// File descriptor of the kqueue to notify.
@@ -1067,7 +1145,6 @@ pub enum SigevNotify {
             target_env = "gnu",
             target_env = "uclibc",
     ))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
     SigevThreadId {
         /// Signal to send
         signal: Signal,
@@ -1082,10 +1159,10 @@ pub enum SigevNotify {
 
 #[cfg(not(any(
     target_os = "fuchsia",
+    target_os = "hurd",
     target_os = "openbsd",
     target_os = "redox"
 )))]
-#[cfg_attr(docsrs, doc(cfg(all())))]
 mod sigevent {
     feature! {
     #![any(feature = "aio", feature = "signal")]
@@ -1251,7 +1328,7 @@ mod sigevent {
                     sev.sigev_signo = signal as libc::c_int;
                     sev.sigev_value.sival_ptr = si_value as *mut libc::c_void
                 },
-                #[cfg(any(target_os = "dragonfly", target_os = "freebsd"))]
+                #[cfg(freebsdlike)]
                 SigevNotify::SigevKevent{kq, udata} => {
                     sev.sigev_notify = libc::SIGEV_KEVENT;
                     sev.sigev_signo = kq;
@@ -1329,229 +1406,5 @@ mod sigevent {
             SigEvent{ sigevent: *sigevent }
         }
     }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[cfg(not(target_os = "redox"))]
-    use std::thread;
-
-    #[test]
-    fn test_contains() {
-        let mut mask = SigSet::empty();
-        mask.add(SIGUSR1);
-
-        assert!(mask.contains(SIGUSR1));
-        assert!(!mask.contains(SIGUSR2));
-
-        let all = SigSet::all();
-        assert!(all.contains(SIGUSR1));
-        assert!(all.contains(SIGUSR2));
-    }
-
-    #[test]
-    fn test_clear() {
-        let mut set = SigSet::all();
-        set.clear();
-        for signal in Signal::iterator() {
-            assert!(!set.contains(signal));
-        }
-    }
-
-    #[test]
-    fn test_from_str_round_trips() {
-        for signal in Signal::iterator() {
-            assert_eq!(signal.as_ref().parse::<Signal>().unwrap(), signal);
-            assert_eq!(signal.to_string().parse::<Signal>().unwrap(), signal);
-        }
-    }
-
-    #[test]
-    fn test_from_str_invalid_value() {
-        let errval = Err(Errno::EINVAL);
-        assert_eq!("NOSIGNAL".parse::<Signal>(), errval);
-        assert_eq!("kill".parse::<Signal>(), errval);
-        assert_eq!("9".parse::<Signal>(), errval);
-    }
-
-    #[test]
-    fn test_extend() {
-        let mut one_signal = SigSet::empty();
-        one_signal.add(SIGUSR1);
-
-        let mut two_signals = SigSet::empty();
-        two_signals.add(SIGUSR2);
-        two_signals.extend(&one_signal);
-
-        assert!(two_signals.contains(SIGUSR1));
-        assert!(two_signals.contains(SIGUSR2));
-    }
-
-    #[test]
-    #[cfg(not(target_os = "redox"))]
-    fn test_thread_signal_set_mask() {
-        thread::spawn(|| {
-            let prev_mask = SigSet::thread_get_mask()
-                .expect("Failed to get existing signal mask!");
-
-            let mut test_mask = prev_mask;
-            test_mask.add(SIGUSR1);
-
-            test_mask.thread_set_mask().expect("assertion failed");
-            let new_mask =
-                SigSet::thread_get_mask().expect("Failed to get new mask!");
-
-            assert!(new_mask.contains(SIGUSR1));
-            assert!(!new_mask.contains(SIGUSR2));
-
-            prev_mask
-                .thread_set_mask()
-                .expect("Failed to revert signal mask!");
-        })
-        .join()
-        .unwrap();
-    }
-
-    #[test]
-    #[cfg(not(target_os = "redox"))]
-    fn test_thread_signal_block() {
-        thread::spawn(|| {
-            let mut mask = SigSet::empty();
-            mask.add(SIGUSR1);
-
-            mask.thread_block().expect("assertion failed");
-
-            assert!(SigSet::thread_get_mask().unwrap().contains(SIGUSR1));
-        })
-        .join()
-        .unwrap();
-    }
-
-    #[test]
-    #[cfg(not(target_os = "redox"))]
-    fn test_thread_signal_unblock() {
-        thread::spawn(|| {
-            let mut mask = SigSet::empty();
-            mask.add(SIGUSR1);
-
-            mask.thread_unblock().expect("assertion failed");
-
-            assert!(!SigSet::thread_get_mask().unwrap().contains(SIGUSR1));
-        })
-        .join()
-        .unwrap();
-    }
-
-    #[test]
-    #[cfg(not(target_os = "redox"))]
-    fn test_thread_signal_swap() {
-        thread::spawn(|| {
-            let mut mask = SigSet::empty();
-            mask.add(SIGUSR1);
-            mask.thread_block().unwrap();
-
-            assert!(SigSet::thread_get_mask().unwrap().contains(SIGUSR1));
-
-            let mut mask2 = SigSet::empty();
-            mask2.add(SIGUSR2);
-
-            let oldmask =
-                mask2.thread_swap_mask(SigmaskHow::SIG_SETMASK).unwrap();
-
-            assert!(oldmask.contains(SIGUSR1));
-            assert!(!oldmask.contains(SIGUSR2));
-
-            assert!(SigSet::thread_get_mask().unwrap().contains(SIGUSR2));
-        })
-        .join()
-        .unwrap();
-    }
-
-    #[test]
-    fn test_from_and_into_iterator() {
-        let sigset = SigSet::from_iter(vec![Signal::SIGUSR1, Signal::SIGUSR2]);
-        let signals = sigset.into_iter().collect::<Vec<Signal>>();
-        assert_eq!(signals, [Signal::SIGUSR1, Signal::SIGUSR2]);
-    }
-
-    #[test]
-    #[cfg(not(target_os = "redox"))]
-    fn test_sigaction() {
-        thread::spawn(|| {
-            extern "C" fn test_sigaction_handler(_: libc::c_int) {}
-            extern "C" fn test_sigaction_action(
-                _: libc::c_int,
-                _: *mut libc::siginfo_t,
-                _: *mut libc::c_void,
-            ) {
-            }
-
-            let handler_sig = SigHandler::Handler(test_sigaction_handler);
-
-            let flags =
-                SaFlags::SA_ONSTACK | SaFlags::SA_RESTART | SaFlags::SA_SIGINFO;
-
-            let mut mask = SigSet::empty();
-            mask.add(SIGUSR1);
-
-            let action_sig = SigAction::new(handler_sig, flags, mask);
-
-            assert_eq!(
-                action_sig.flags(),
-                SaFlags::SA_ONSTACK | SaFlags::SA_RESTART
-            );
-            assert_eq!(action_sig.handler(), handler_sig);
-
-            mask = action_sig.mask();
-            assert!(mask.contains(SIGUSR1));
-            assert!(!mask.contains(SIGUSR2));
-
-            let handler_act = SigHandler::SigAction(test_sigaction_action);
-            let action_act = SigAction::new(handler_act, flags, mask);
-            assert_eq!(action_act.handler(), handler_act);
-
-            let action_dfl = SigAction::new(SigHandler::SigDfl, flags, mask);
-            assert_eq!(action_dfl.handler(), SigHandler::SigDfl);
-
-            let action_ign = SigAction::new(SigHandler::SigIgn, flags, mask);
-            assert_eq!(action_ign.handler(), SigHandler::SigIgn);
-        })
-        .join()
-        .unwrap();
-    }
-
-    #[test]
-    #[cfg(not(target_os = "redox"))]
-    fn test_sigwait() {
-        thread::spawn(|| {
-            let mut mask = SigSet::empty();
-            mask.add(SIGUSR1);
-            mask.add(SIGUSR2);
-            mask.thread_block().unwrap();
-
-            raise(SIGUSR1).unwrap();
-            assert_eq!(mask.wait().unwrap(), SIGUSR1);
-        })
-        .join()
-        .unwrap();
-    }
-
-    #[test]
-    fn test_from_sigset_t_unchecked() {
-        let src_set = SigSet::empty();
-        let set = unsafe { SigSet::from_sigset_t_unchecked(src_set.sigset) };
-
-        for signal in Signal::iterator() {
-            assert!(!set.contains(signal));
-        }
-
-        let src_set = SigSet::all();
-        let set = unsafe { SigSet::from_sigset_t_unchecked(src_set.sigset) };
-
-        for signal in Signal::iterator() {
-            assert!(set.contains(signal));
-        }
     }
 }

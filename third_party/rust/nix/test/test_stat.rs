@@ -21,8 +21,7 @@ use nix::errno::Errno;
 use nix::fcntl;
 #[cfg(any(
     target_os = "linux",
-    target_os = "ios",
-    target_os = "macos",
+    apple_targets,
     target_os = "freebsd",
     target_os = "netbsd"
 ))]
@@ -117,7 +116,7 @@ fn test_fstatat() {
         fcntl::open(tempdir.path(), fcntl::OFlag::empty(), stat::Mode::empty());
 
     let result =
-        stat::fstatat(dirfd.unwrap(), &filename, fcntl::AtFlags::empty());
+        stat::fstatat(Some(dirfd.unwrap()), &filename, fcntl::AtFlags::empty());
     assert_stat_results(result);
 }
 
@@ -235,8 +234,7 @@ fn test_utimes() {
 #[test]
 #[cfg(any(
     target_os = "linux",
-    target_os = "ios",
-    target_os = "macos",
+    apple_targets,
     target_os = "freebsd",
     target_os = "netbsd"
 ))]
@@ -323,7 +321,7 @@ fn test_mkdirat_success_path() {
     let dirfd =
         fcntl::open(tempdir.path(), fcntl::OFlag::empty(), stat::Mode::empty())
             .unwrap();
-    mkdirat(dirfd, filename, Mode::S_IRWXU).expect("mkdirat failed");
+    mkdirat(Some(dirfd), filename, Mode::S_IRWXU).expect("mkdirat failed");
     assert!(Path::exists(&tempdir.path().join(filename)));
 }
 
@@ -337,7 +335,7 @@ fn test_mkdirat_success_mode() {
     let dirfd =
         fcntl::open(tempdir.path(), fcntl::OFlag::empty(), stat::Mode::empty())
             .unwrap();
-    mkdirat(dirfd, filename, Mode::S_IRWXU).expect("mkdirat failed");
+    mkdirat(Some(dirfd), filename, Mode::S_IRWXU).expect("mkdirat failed");
     let permissions = fs::metadata(tempdir.path().join(filename))
         .unwrap()
         .permissions();
@@ -357,16 +355,14 @@ fn test_mkdirat_fail() {
         stat::Mode::empty(),
     )
     .unwrap();
-    let result = mkdirat(dirfd, filename, Mode::S_IRWXU).unwrap_err();
+    let result = mkdirat(Some(dirfd), filename, Mode::S_IRWXU).unwrap_err();
     assert_eq!(result, Errno::ENOTDIR);
 }
 
 #[test]
 #[cfg(not(any(
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "ios",
-    target_os = "macos",
+    freebsdlike,
+    apple_targets,
     target_os = "haiku",
     target_os = "redox"
 )))]
@@ -384,11 +380,9 @@ fn test_mknod() {
 
 #[test]
 #[cfg(not(any(
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "illumos",
-    target_os = "ios",
-    target_os = "macos",
+    solarish,
+    freebsdlike,
+    apple_targets,
     target_os = "haiku",
     target_os = "redox"
 )))]
@@ -402,7 +396,7 @@ fn test_mknodat() {
     let target_dir =
         Dir::open(tempdir.path(), OFlag::O_DIRECTORY, Mode::S_IRWXU).unwrap();
     mknodat(
-        target_dir.as_raw_fd(),
+        Some(target_dir.as_raw_fd()),
         file_name,
         SFlag::S_IFREG,
         Mode::S_IRWXU,
@@ -410,7 +404,7 @@ fn test_mknodat() {
     )
     .unwrap();
     let mode = fstatat(
-        target_dir.as_raw_fd(),
+        Some(target_dir.as_raw_fd()),
         file_name,
         AtFlags::AT_SYMLINK_NOFOLLOW,
     )
@@ -418,4 +412,76 @@ fn test_mknodat() {
     .st_mode as mode_t;
     assert_eq!(mode & libc::S_IFREG, libc::S_IFREG);
     assert_eq!(mode & libc::S_IRWXU, libc::S_IRWXU);
+}
+
+#[test]
+#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+fn test_futimens_unchanged() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let fullpath = tempdir.path().join("file");
+    drop(File::create(&fullpath).unwrap());
+    let fd = fcntl::open(&fullpath, fcntl::OFlag::empty(), stat::Mode::empty())
+        .unwrap();
+
+    let old_atime = fs::metadata(fullpath.as_path())
+        .unwrap()
+        .accessed()
+        .unwrap();
+    let old_mtime = fs::metadata(fullpath.as_path())
+        .unwrap()
+        .modified()
+        .unwrap();
+
+    futimens(fd, &TimeSpec::UTIME_OMIT, &TimeSpec::UTIME_OMIT).unwrap();
+
+    let new_atime = fs::metadata(fullpath.as_path())
+        .unwrap()
+        .accessed()
+        .unwrap();
+    let new_mtime = fs::metadata(fullpath.as_path())
+        .unwrap()
+        .modified()
+        .unwrap();
+    assert_eq!(old_atime, new_atime);
+    assert_eq!(old_mtime, new_mtime);
+}
+
+#[test]
+#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+fn test_utimensat_unchanged() {
+    let _dr = crate::DirRestore::new();
+    let tempdir = tempfile::tempdir().unwrap();
+    let filename = "foo.txt";
+    let fullpath = tempdir.path().join(filename);
+    drop(File::create(&fullpath).unwrap());
+    let dirfd =
+        fcntl::open(tempdir.path(), fcntl::OFlag::empty(), stat::Mode::empty())
+            .unwrap();
+
+    let old_atime = fs::metadata(fullpath.as_path())
+        .unwrap()
+        .accessed()
+        .unwrap();
+    let old_mtime = fs::metadata(fullpath.as_path())
+        .unwrap()
+        .modified()
+        .unwrap();
+    utimensat(
+        Some(dirfd),
+        filename,
+        &TimeSpec::UTIME_OMIT,
+        &TimeSpec::UTIME_OMIT,
+        UtimensatFlags::NoFollowSymlink,
+    )
+    .unwrap();
+    let new_atime = fs::metadata(fullpath.as_path())
+        .unwrap()
+        .accessed()
+        .unwrap();
+    let new_mtime = fs::metadata(fullpath.as_path())
+        .unwrap()
+        .modified()
+        .unwrap();
+    assert_eq!(old_atime, new_atime);
+    assert_eq!(old_mtime, new_mtime);
 }

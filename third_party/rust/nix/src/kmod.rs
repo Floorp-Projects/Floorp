@@ -102,7 +102,11 @@ libc_bitflags!(
     /// See [`man delete_module(2)`](https://man7.org/linux/man-pages/man2/delete_module.2.html)
     /// for a detailed description how these flags work.
     pub struct DeleteModuleFlags: libc::c_int {
+        /// `delete_module` will return immediately, with an error, if the module has a nonzero
+        /// reference count.
         O_NONBLOCK;
+        /// `delete_module` will unload the module immediately, regardless of whether it has a
+        /// nonzero reference count.
         O_TRUNC;
     }
 );

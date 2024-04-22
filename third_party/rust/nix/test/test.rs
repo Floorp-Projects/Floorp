@@ -7,12 +7,14 @@ mod common;
 mod sys;
 #[cfg(not(target_os = "redox"))]
 mod test_dir;
+mod test_errno;
 mod test_fcntl;
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(linux_android)]
 mod test_kmod;
+#[cfg(target_os = "linux")]
+mod test_mount;
 #[cfg(any(
-    target_os = "dragonfly",
-    target_os = "freebsd",
+    freebsdlike,
     target_os = "fushsia",
     target_os = "linux",
     target_os = "netbsd"
@@ -30,36 +32,16 @@ mod test_poll;
     target_os = "haiku"
 )))]
 mod test_pty;
-mod test_resource;
 #[cfg(any(
-    target_os = "android",
+    linux_android,
     target_os = "dragonfly",
     all(target_os = "freebsd", fbsd14),
-    target_os = "linux"
 ))]
 mod test_sched;
-#[cfg(any(
-    target_os = "android",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "ios",
-    target_os = "linux",
-    target_os = "macos"
-))]
+#[cfg(any(linux_android, freebsdlike, apple_targets, solarish))]
 mod test_sendfile;
 mod test_stat;
 mod test_time;
-#[cfg(all(
-    any(
-        target_os = "freebsd",
-        target_os = "illumos",
-        target_os = "linux",
-        target_os = "netbsd"
-    ),
-    feature = "time",
-    feature = "signal"
-))]
-mod test_timer;
 mod test_unistd;
 
 use nix::unistd::{chdir, getcwd, read};

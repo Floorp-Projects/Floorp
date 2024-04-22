@@ -72,7 +72,7 @@
 //! # const SPI_IOC_MAGIC: u8 = b'k'; // Defined in linux/spi/spidev.h
 //! # const SPI_IOC_TYPE_MODE: u8 = 1;
 //! pub unsafe fn spi_read_mode(fd: c_int, data: *mut u8) -> Result<c_int> {
-//!     let res = libc::ioctl(fd, request_code_read!(SPI_IOC_MAGIC, SPI_IOC_TYPE_MODE, mem::size_of::<u8>()), data);
+//!     let res = unsafe { libc::ioctl(fd, request_code_read!(SPI_IOC_MAGIC, SPI_IOC_TYPE_MODE, mem::size_of::<u8>()), data) };
 //!     Errno::result(res)
 //! }
 //! # fn main() {}
@@ -121,11 +121,11 @@
 //!
 //! ```
 //! # #[macro_use] extern crate nix;
-//! # #[cfg(any(target_os = "android", target_os = "linux"))]
+//! # #[cfg(linux_android)]
 //! # use nix::libc::TCGETS as TCGETS;
-//! # #[cfg(any(target_os = "android", target_os = "linux"))]
+//! # #[cfg(linux_android)]
 //! # use nix::libc::termios as termios;
-//! # #[cfg(any(target_os = "android", target_os = "linux"))]
+//! # #[cfg(linux_android)]
 //! ioctl_read_bad!(tcgets, TCGETS, termios);
 //! # fn main() {}
 //! ```
@@ -179,9 +179,13 @@
 //! # const SPI_IOC_TYPE_MESSAGE: u8 = 0;
 //! # pub struct spi_ioc_transfer(u64);
 //! pub unsafe fn spi_message(fd: c_int, data: &mut [spi_ioc_transfer]) -> Result<c_int> {
-//!     let res = libc::ioctl(fd,
-//!                           request_code_write!(SPI_IOC_MAGIC, SPI_IOC_TYPE_MESSAGE, data.len() * mem::size_of::<spi_ioc_transfer>()),
-//!                           data);
+//!     let res = unsafe {
+//!         libc::ioctl(
+//!             fd,
+//!             request_code_write!(SPI_IOC_MAGIC, SPI_IOC_TYPE_MESSAGE, data.len() * mem::size_of::<spi_ioc_transfer>()),
+//!             data
+//!         )
+//!     };
 //!     Errno::result(res)
 //! }
 //! # fn main() {}
@@ -223,40 +227,18 @@
 //! ```
 use cfg_if::cfg_if;
 
-#[cfg(any(target_os = "android", target_os = "linux", target_os = "redox"))]
+#[cfg(any(linux_android, target_os = "redox"))]
 #[macro_use]
 mod linux;
 
-#[cfg(any(
-    target_os = "android",
-    target_os = "linux",
-    target_os = "redox"
-))]
+#[cfg(any(linux_android, target_os = "redox"))]
 pub use self::linux::*;
 
-#[cfg(any(
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "illumos",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "haiku",
-    target_os = "openbsd"
-))]
+#[cfg(any(bsd, solarish, target_os = "haiku",))]
 #[macro_use]
 mod bsd;
 
-#[cfg(any(
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "illumos",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "haiku",
-    target_os = "openbsd"
-))]
+#[cfg(any(bsd, solarish, target_os = "haiku",))]
 pub use self::bsd::*;
 
 /// Convert raw ioctl return value to a Nix result
@@ -305,7 +287,9 @@ macro_rules! ioctl_none {
         $(#[$attr])*
         pub unsafe fn $name(fd: $crate::libc::c_int)
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_none!($ioty, $nr) as $crate::sys::ioctl::ioctl_num_type))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, request_code_none!($ioty, $nr) as $crate::sys::ioctl::ioctl_num_type))
+            }
         }
     )
 }
@@ -345,7 +329,9 @@ macro_rules! ioctl_none_bad {
         $(#[$attr])*
         pub unsafe fn $name(fd: $crate::libc::c_int)
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, $nr as $crate::sys::ioctl::ioctl_num_type))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, $nr as $crate::sys::ioctl::ioctl_num_type))
+            }
         }
     )
 }
@@ -383,7 +369,9 @@ macro_rules! ioctl_read {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: *mut $ty)
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_read!($ioty, $nr, ::std::mem::size_of::<$ty>()) as $crate::sys::ioctl::ioctl_num_type, data))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, request_code_read!($ioty, $nr, ::std::mem::size_of::<$ty>()) as $crate::sys::ioctl::ioctl_num_type, data))
+            }
         }
     )
 }
@@ -408,7 +396,7 @@ macro_rules! ioctl_read {
 ///
 /// ```
 /// # #[macro_use] extern crate nix;
-/// # #[cfg(any(target_os = "android", target_os = "linux"))]
+/// # #[cfg(linux_android)]
 /// ioctl_read_bad!(tcgets, libc::TCGETS, libc::termios);
 /// # fn main() {}
 /// ```
@@ -419,7 +407,9 @@ macro_rules! ioctl_read_bad {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: *mut $ty)
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, $nr as $crate::sys::ioctl::ioctl_num_type, data))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, $nr as $crate::sys::ioctl::ioctl_num_type, data))
+            }
         }
     )
 }
@@ -456,7 +446,9 @@ macro_rules! ioctl_write_ptr {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: *const $ty)
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_write!($ioty, $nr, ::std::mem::size_of::<$ty>()) as $crate::sys::ioctl::ioctl_num_type, data))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, request_code_write!($ioty, $nr, ::std::mem::size_of::<$ty>()) as $crate::sys::ioctl::ioctl_num_type, data))
+            }
         }
     )
 }
@@ -481,7 +473,7 @@ macro_rules! ioctl_write_ptr {
 ///
 /// ```
 /// # #[macro_use] extern crate nix;
-/// # #[cfg(any(target_os = "android", target_os = "linux"))]
+/// # #[cfg(linux_android)]
 /// ioctl_write_ptr_bad!(tcsets, libc::TCSETS, libc::termios);
 /// # fn main() {}
 /// ```
@@ -492,13 +484,15 @@ macro_rules! ioctl_write_ptr_bad {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: *const $ty)
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, $nr as $crate::sys::ioctl::ioctl_num_type, data))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, $nr as $crate::sys::ioctl::ioctl_num_type, data))
+            }
         }
     )
 }
 
 cfg_if! {
-    if #[cfg(any(target_os = "dragonfly", target_os = "freebsd"))] {
+    if #[cfg(freebsdlike)] {
         /// Generates a wrapper function for a ioctl that writes an integer to the kernel.
         ///
         /// The arguments to this macro are:
@@ -533,7 +527,9 @@ cfg_if! {
                 pub unsafe fn $name(fd: $crate::libc::c_int,
                                     data: $crate::sys::ioctl::ioctl_param_type)
                                     -> $crate::Result<$crate::libc::c_int> {
-                    convert_ioctl_res!($crate::libc::ioctl(fd, request_code_write_int!($ioty, $nr) as $crate::sys::ioctl::ioctl_num_type, data))
+                    unsafe {
+                        convert_ioctl_res!($crate::libc::ioctl(fd, request_code_write_int!($ioty, $nr) as $crate::sys::ioctl::ioctl_num_type, data))
+                    }
                 }
             )
         }
@@ -574,7 +570,9 @@ cfg_if! {
                 pub unsafe fn $name(fd: $crate::libc::c_int,
                                     data: $crate::sys::ioctl::ioctl_param_type)
                                     -> $crate::Result<$crate::libc::c_int> {
-                    convert_ioctl_res!($crate::libc::ioctl(fd, request_code_write!($ioty, $nr, ::std::mem::size_of::<$crate::libc::c_int>()) as $crate::sys::ioctl::ioctl_num_type, data))
+                    unsafe {
+                        convert_ioctl_res!($crate::libc::ioctl(fd, request_code_write!($ioty, $nr, ::std::mem::size_of::<$crate::libc::c_int>()) as $crate::sys::ioctl::ioctl_num_type, data))
+                    }
                 }
             )
         }
@@ -600,7 +598,7 @@ cfg_if! {
 ///
 /// ```
 /// # #[macro_use] extern crate nix;
-/// # #[cfg(any(target_os = "android", target_os = "linux"))]
+/// # #[cfg(linux_android)]
 /// ioctl_write_int_bad!(tcsbrk, libc::TCSBRK);
 /// # fn main() {}
 /// ```
@@ -618,7 +616,9 @@ macro_rules! ioctl_write_int_bad {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: $crate::libc::c_int)
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, $nr as $crate::sys::ioctl::ioctl_num_type, data))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, $nr as $crate::sys::ioctl::ioctl_num_type, data))
+            }
         }
     )
 }
@@ -655,7 +655,9 @@ macro_rules! ioctl_readwrite {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: *mut $ty)
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_readwrite!($ioty, $nr, ::std::mem::size_of::<$ty>()) as $crate::sys::ioctl::ioctl_num_type, data))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, request_code_readwrite!($ioty, $nr, ::std::mem::size_of::<$ty>()) as $crate::sys::ioctl::ioctl_num_type, data))
+            }
         }
     )
 }
@@ -683,7 +685,9 @@ macro_rules! ioctl_readwrite_bad {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: *mut $ty)
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, $nr as $crate::sys::ioctl::ioctl_num_type, data))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, $nr as $crate::sys::ioctl::ioctl_num_type, data))
+            }
         }
     )
 }
@@ -712,7 +716,9 @@ macro_rules! ioctl_read_buf {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: &mut [$ty])
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_read!($ioty, $nr, ::std::mem::size_of_val(data)) as $crate::sys::ioctl::ioctl_num_type, data))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, request_code_read!($ioty, $nr, ::std::mem::size_of_val(data)) as $crate::sys::ioctl::ioctl_num_type, data.as_mut_ptr()))
+            }
         }
     )
 }
@@ -751,7 +757,9 @@ macro_rules! ioctl_write_buf {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: &[$ty])
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_write!($ioty, $nr, ::std::mem::size_of_val(data)) as $crate::sys::ioctl::ioctl_num_type, data))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, request_code_write!($ioty, $nr, ::std::mem::size_of_val(data)) as $crate::sys::ioctl::ioctl_num_type, data.as_ptr()))
+            }
         }
     )
 }
@@ -780,7 +788,9 @@ macro_rules! ioctl_readwrite_buf {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: &mut [$ty])
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_readwrite!($ioty, $nr, ::std::mem::size_of_val(data)) as $crate::sys::ioctl::ioctl_num_type, data))
+            unsafe {
+                convert_ioctl_res!($crate::libc::ioctl(fd, request_code_readwrite!($ioty, $nr, ::std::mem::size_of_val(data)) as $crate::sys::ioctl::ioctl_num_type, data.as_mut_ptr()))
+            }
         }
     )
 }

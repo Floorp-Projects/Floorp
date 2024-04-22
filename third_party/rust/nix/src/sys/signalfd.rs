@@ -21,7 +21,7 @@ use crate::Result;
 pub use libc::signalfd_siginfo as siginfo;
 
 use std::mem;
-use std::os::unix::io::{AsRawFd, RawFd, FromRawFd, OwnedFd, AsFd, BorrowedFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, OwnedFd, RawFd};
 
 libc_bitflags! {
     pub struct SfdFlags: libc::c_int {
@@ -45,18 +45,23 @@ pub const SIGNALFD_SIGINFO_SIZE: usize = mem::size_of::<siginfo>();
 ///
 /// See [the signalfd man page for more information](https://man7.org/linux/man-pages/man2/signalfd.2.html)
 #[deprecated(since = "0.27.0", note = "Use SignalFd instead")]
-pub fn signalfd<F: AsFd>(fd: Option<F>, mask: &SigSet, flags: SfdFlags) -> Result<OwnedFd> {
+pub fn signalfd<F: AsFd>(
+    fd: Option<F>,
+    mask: &SigSet,
+    flags: SfdFlags,
+) -> Result<OwnedFd> {
     _signalfd(fd, mask, flags)
 }
 
-fn _signalfd<F: AsFd>(fd: Option<F>, mask: &SigSet, flags: SfdFlags) -> Result<OwnedFd> {
-    let raw_fd = fd.map_or(-1, |x|x.as_fd().as_raw_fd());
+fn _signalfd<F: AsFd>(
+    fd: Option<F>,
+    mask: &SigSet,
+    flags: SfdFlags,
+) -> Result<OwnedFd> {
+    let raw_fd = fd.map_or(-1, |x| x.as_fd().as_raw_fd());
     unsafe {
-        Errno::result(libc::signalfd(
-            raw_fd,
-            mask.as_ref(),
-            flags.bits(),
-        )).map(|raw_fd|FromRawFd::from_raw_fd(raw_fd))
+        Errno::result(libc::signalfd(raw_fd, mask.as_ref(), flags.bits()))
+            .map(|raw_fd| FromRawFd::from_raw_fd(raw_fd))
     }
 }
 
@@ -101,7 +106,7 @@ impl SignalFd {
     }
 
     pub fn set_mask(&mut self, mask: &SigSet) -> Result<()> {
-        _signalfd(Some(self.0.as_fd()), mask, SfdFlags::empty()).map(drop)
+        self.update(mask, SfdFlags::empty())
     }
 
     pub fn read_signal(&mut self) -> Result<Option<siginfo>> {
@@ -109,7 +114,7 @@ impl SignalFd {
 
         let size = mem::size_of_val(&buffer);
         let res = Errno::result(unsafe {
-            libc::read(self.0.as_raw_fd(), buffer.as_mut_ptr() as *mut libc::c_void, size)
+            libc::read(self.0.as_raw_fd(), buffer.as_mut_ptr().cast(), size)
         })
         .map(|r| r as usize);
         match res {
@@ -117,6 +122,14 @@ impl SignalFd {
             Ok(_) => unreachable!("partial read on signalfd"),
             Err(Errno::EAGAIN) => Ok(None),
             Err(error) => Err(error),
+        }
+    }
+
+    fn update(&self, mask: &SigSet, flags: SfdFlags) -> Result<()> {
+        let raw_fd = self.0.as_raw_fd();
+        unsafe {
+            Errno::result(libc::signalfd(raw_fd, mask.as_ref(), flags.bits()))
+                .map(drop)
         }
     }
 }
@@ -140,36 +153,5 @@ impl Iterator for SignalFd {
             Ok(Some(sig)) => Some(sig),
             Ok(None) | Err(_) => None,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn create_signalfd() {
-        let mask = SigSet::empty();
-        SignalFd::new(&mask).unwrap();
-    }
-
-    #[test]
-    fn create_signalfd_with_opts() {
-        let mask = SigSet::empty();
-        SignalFd::with_flags(
-            &mask,
-            SfdFlags::SFD_CLOEXEC | SfdFlags::SFD_NONBLOCK,
-        )
-        .unwrap();
-    }
-
-    #[test]
-    fn read_empty_signalfd() {
-        let mask = SigSet::empty();
-        let mut fd =
-            SignalFd::with_flags(&mask, SfdFlags::SFD_NONBLOCK).unwrap();
-
-        let res = fd.read_signal();
-        assert!(res.unwrap().is_none());
     }
 }

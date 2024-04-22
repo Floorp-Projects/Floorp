@@ -8,21 +8,27 @@ type Error = Box<dyn error::Error + std::marker::Send + std::marker::Sync>;
 #[allow(unused)]
 pub type Result<T> = result::Result<T, Error>;
 
+fn build_command() -> Command {
+    let mut cmd = Command::new("cargo");
+
+    cmd.env("RUST_BACKTRACE", "1")
+        .args(["run", "-q", "--bin", "test"]);
+
+    // In normal cases where the host and target are the same this won't matter,
+    // but tests will fail if you are eg running in a cross container which will
+    // likely be x86_64 but may be targetting aarch64 or i686, which will result
+    // in tests failing, or at the least not testing what you think
+    cmd.args(["--target", current_platform::CURRENT_PLATFORM, "--"]);
+
+    cmd
+}
+
 #[allow(unused)]
 pub fn spawn_child(command: &str, args: &[&str]) {
-    let mut cmd_object = Command::new("cargo");
-    let mut cmd_ref = cmd_object
-        .env("RUST_BACKTRACE", "1")
-        .arg("run")
-        .arg("-q")
-        .arg("--bin")
-        .arg("test")
-        .arg("--")
-        .arg(command);
-    for arg in args {
-        cmd_ref = cmd_ref.arg(arg);
-    }
-    let child = cmd_ref.output().expect("failed to execute child");
+    let mut cmd = build_command();
+    cmd.arg(command).args(args);
+
+    let child = cmd.output().expect("failed to execute child");
 
     println!("Child output:");
     std::io::stdout().write_all(&child.stdout).unwrap();
@@ -30,20 +36,12 @@ pub fn spawn_child(command: &str, args: &[&str]) {
     assert_eq!(child.status.code().expect("No return value"), 0);
 }
 
-fn start_child_and_wait_for_threads_helper(cmd: &str, num: usize) -> Child {
-    let mut child = Command::new("cargo")
-        .env("RUST_BACKTRACE", "1")
-        .arg("run")
-        .arg("-q")
-        .arg("--bin")
-        .arg("test")
-        .arg("--")
-        .arg(cmd)
-        .arg(format!("{}", num))
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("failed to execute child");
+fn start_child_and_wait_for_threads_helper(command: &str, num: usize) -> Child {
+    let mut cmd = build_command();
+    cmd.arg(command).arg(num.to_string());
+    cmd.stdout(Stdio::piped());
 
+    let mut child = cmd.spawn().expect("failed to spawn cargo");
     wait_for_threads(&mut child, num);
     child
 }
@@ -84,17 +82,10 @@ pub fn wait_for_threads(child: &mut Child, num: usize) {
 
 #[allow(unused)]
 pub fn start_child_and_return(args: &[&str]) -> Child {
-    let mut child = Command::new("cargo")
-        .env("RUST_BACKTRACE", "1")
-        .arg("run")
-        .arg("-q")
-        .arg("--bin")
-        .arg("test")
-        .arg("--")
-        .args(args)
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("failed to execute child");
+    let mut cmd = build_command();
+    cmd.args(args);
 
-    child
+    cmd.stdout(Stdio::piped())
+        .spawn()
+        .expect("failed to execute child")
 }

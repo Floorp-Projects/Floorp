@@ -7,16 +7,16 @@ mod test_signal;
 // cases on DragonFly.
 #[cfg(any(
     target_os = "freebsd",
-    target_os = "ios",
+    apple_targets,
     all(target_os = "linux", not(target_env = "uclibc")),
-    target_os = "macos",
     target_os = "netbsd"
 ))]
 mod test_aio;
 #[cfg(not(any(
     target_os = "redox",
     target_os = "fuchsia",
-    target_os = "haiku"
+    target_os = "haiku",
+    target_os = "hurd"
 )))]
 mod test_ioctl;
 #[cfg(not(target_os = "redox"))]
@@ -30,7 +30,7 @@ mod test_socket;
 #[cfg(not(any(target_os = "redox")))]
 mod test_sockopt;
 mod test_stat;
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(linux_android)]
 mod test_sysinfo;
 #[cfg(not(any(
     target_os = "redox",
@@ -41,20 +41,44 @@ mod test_termios;
 mod test_uio;
 mod test_wait;
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(linux_android)]
 mod test_epoll;
+#[cfg(target_os = "linux")]
+mod test_fanotify;
 #[cfg(target_os = "linux")]
 mod test_inotify;
 mod test_pthread;
-#[cfg(any(
-    target_os = "android",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "linux",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+
+#[cfg(any(linux_android, freebsdlike, netbsdlike, apple_targets))]
 mod test_ptrace;
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(linux_android)]
 mod test_timerfd;
+
+#[cfg(all(
+    any(
+        target_os = "freebsd",
+        solarish,
+        target_os = "linux",
+        target_os = "netbsd"
+    ),
+    feature = "time",
+    feature = "signal"
+))]
+mod test_timer;
+
+#[cfg(bsd)]
+mod test_event;
+mod test_statvfs;
+mod test_time;
+mod test_utsname;
+
+#[cfg(any(linux_android, freebsdlike, apple_targets, target_os = "openbsd"))]
+mod test_statfs;
+
+#[cfg(not(any(
+    target_os = "redox",
+    target_os = "fuchsia",
+    solarish,
+    target_os = "haiku"
+)))]
+mod test_resource;

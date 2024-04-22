@@ -85,7 +85,7 @@ libc_bitflags!(
         MNT_DETACH;
         /// Mark the mount point as expired.
         MNT_EXPIRE;
-        /// Don't dereference `target` if it is a symlink.  
+        /// Don't dereference `target` if it is a symlink.
         UMOUNT_NOFOLLOW;
     }
 );

@@ -53,28 +53,36 @@ libc_enum! {
         #[cfg(any(all(target_os = "android", target_pointer_width = "32"),
                   all(target_os = "linux", any(target_env = "musl",
                                                target_arch = "mips",
+                                               target_arch = "mips32r6",
                                                target_arch = "mips64",
+                                               target_arch = "mips64r6",
                                                target_arch = "x86_64",
                                                target_pointer_width = "32"))))]
         PTRACE_GETREGS,
         #[cfg(any(all(target_os = "android", target_pointer_width = "32"),
                   all(target_os = "linux", any(target_env = "musl",
                                                target_arch = "mips",
+                                               target_arch = "mips32r6",
                                                target_arch = "mips64",
+                                               target_arch = "mips64r6",
                                                target_arch = "x86_64",
                                                target_pointer_width = "32"))))]
         PTRACE_SETREGS,
         #[cfg(any(all(target_os = "android", target_pointer_width = "32"),
                   all(target_os = "linux", any(target_env = "musl",
                                                target_arch = "mips",
+                                               target_arch = "mips32r6",
                                                target_arch = "mips64",
+                                               target_arch = "mips64r6",
                                                target_arch = "x86_64",
                                                target_pointer_width = "32"))))]
         PTRACE_GETFPREGS,
         #[cfg(any(all(target_os = "android", target_pointer_width = "32"),
                   all(target_os = "linux", any(target_env = "musl",
                                                target_arch = "mips",
+                                               target_arch = "mips32r6",
                                                target_arch = "mips64",
+                                               target_arch = "mips64r6",
                                                target_arch = "x86_64",
                                                target_pointer_width = "32"))))]
         PTRACE_SETFPREGS,
@@ -82,13 +90,17 @@ libc_enum! {
         PTRACE_DETACH,
         #[cfg(all(target_os = "linux", any(target_env = "musl",
                                            target_arch = "mips",
+                                           target_arch = "mips32r6",
                                            target_arch = "mips64",
+                                           target_arch = "mips64r6",
                                            target_arch = "x86",
                                            target_arch = "x86_64")))]
         PTRACE_GETFPXREGS,
         #[cfg(all(target_os = "linux", any(target_env = "musl",
                                            target_arch = "mips",
+                                           target_arch = "mips32r6",
                                            target_arch = "mips64",
+                                           target_arch = "mips64r6",
                                            target_arch = "x86",
                                            target_arch = "x86_64")))]
         PTRACE_SETFPXREGS,
@@ -98,22 +110,28 @@ libc_enum! {
         PTRACE_GETSIGINFO,
         PTRACE_SETSIGINFO,
         #[cfg(all(target_os = "linux", not(any(target_arch = "mips",
-                                               target_arch = "mips64"))))]
+                                               target_arch = "mips32r6",
+                                               target_arch = "mips64",
+                                               target_arch = "mips64r6"))))]
         PTRACE_GETREGSET,
         #[cfg(all(target_os = "linux", not(any(target_arch = "mips",
-                                               target_arch = "mips64"))))]
+                                               target_arch = "mips32r6",
+                                               target_arch = "mips64",
+                                               target_arch = "mips64r6"))))]
         PTRACE_SETREGSET,
         #[cfg(target_os = "linux")]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         PTRACE_SEIZE,
         #[cfg(target_os = "linux")]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         PTRACE_INTERRUPT,
         #[cfg(all(target_os = "linux", not(any(target_arch = "mips",
-                                               target_arch = "mips64"))))]
+                                               target_arch = "mips32r6",
+                                               target_arch = "mips64",
+                                               target_arch = "mips64r6"))))]
         PTRACE_LISTEN,
         #[cfg(all(target_os = "linux", not(any(target_arch = "mips",
-                                               target_arch = "mips64"))))]
+                                               target_arch = "mips32r6",
+                                               target_arch = "mips64",
+                                               target_arch = "mips64r6"))))]
         PTRACE_PEEKSIGINFO,
         #[cfg(all(target_os = "linux", target_env = "gnu",
                   any(target_arch = "x86", target_arch = "x86_64")))]
@@ -241,13 +259,13 @@ pub fn setregs(pid: Pid, regs: user_regs_struct) -> Result<()> {
 /// and therefore use the data field to return values. This function handles these
 /// requests.
 fn ptrace_get_data<T>(request: Request, pid: Pid) -> Result<T> {
-    let mut data = mem::MaybeUninit::uninit();
+    let mut data = mem::MaybeUninit::<T>::uninit();
     let res = unsafe {
         libc::ptrace(
             request as RequestType,
             libc::pid_t::from(pid),
             ptr::null_mut::<T>(),
-            data.as_mut_ptr() as *const _ as *const c_void,
+            data.as_mut_ptr(),
         )
     };
     Errno::result(res)?;
@@ -260,13 +278,15 @@ unsafe fn ptrace_other(
     addr: AddressType,
     data: *mut c_void,
 ) -> Result<c_long> {
-    Errno::result(libc::ptrace(
-        request as RequestType,
-        libc::pid_t::from(pid),
-        addr,
-        data,
-    ))
-    .map(|_| 0)
+    unsafe {
+        Errno::result(libc::ptrace(
+            request as RequestType,
+            libc::pid_t::from(pid),
+            addr,
+            data,
+        ))
+        .map(|_| 0)
+    }
 }
 
 /// Set options, as with `ptrace(PTRACE_SETOPTIONS, ...)`.
@@ -381,7 +401,6 @@ pub fn attach(pid: Pid) -> Result<()> {
 ///
 /// Attaches to the process specified in pid, making it a tracee of the calling process.
 #[cfg(target_os = "linux")]
-#[cfg_attr(docsrs, doc(cfg(all())))]
 pub fn seize(pid: Pid, options: Options) -> Result<()> {
     unsafe {
         ptrace_other(
@@ -428,7 +447,6 @@ pub fn cont<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
 ///
 /// This request is equivalent to `ptrace(PTRACE_INTERRUPT, ...)`
 #[cfg(target_os = "linux")]
-#[cfg_attr(docsrs, doc(cfg(all())))]
 pub fn interrupt(pid: Pid) -> Result<()> {
     unsafe {
         ptrace_other(
@@ -535,7 +553,7 @@ pub unsafe fn write(
     addr: AddressType,
     data: *mut c_void,
 ) -> Result<()> {
-    ptrace_other(Request::PTRACE_POKEDATA, pid, addr, data).map(drop)
+    unsafe { ptrace_other(Request::PTRACE_POKEDATA, pid, addr, data).map(drop) }
 }
 
 /// Reads a word from a user area at `offset`, as with ptrace(PTRACE_PEEKUSER, ...).
@@ -556,5 +574,7 @@ pub unsafe fn write_user(
     offset: AddressType,
     data: *mut c_void,
 ) -> Result<()> {
-    ptrace_other(Request::PTRACE_POKEUSER, pid, offset, data).map(drop)
+    unsafe {
+        ptrace_other(Request::PTRACE_POKEUSER, pid, offset, data).map(drop)
+    }
 }

@@ -69,9 +69,11 @@ impl MinidumpWriter {
                     } else {
                         // For all other exceptions types, the value in the code
                         // _should_ never exceed 32 bits, crashpad does an actual
-                        // range check here, but since we don't really log anything
-                        // else at the moment I'll punt that for now
-                        // TODO: log/do something if exc.code > u32::MAX
+                        // range check here.
+                        if code > u32::MAX.into() {
+                            // TODO: do something more than logging?
+                            log::warn!("exception code {code:#018x} exceeds the expected 32 bits");
+                        }
                         code as u32
                     };
 

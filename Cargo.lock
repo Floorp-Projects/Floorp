@@ -2460,7 +2460,7 @@ checksum = "bb07a4ffed2093b118a525b1d8f5204ae274faed5604537caf7135d0f18d9887"
 dependencies = [
  "log",
  "plain",
- "scroll 0.12.0",
+ "scroll",
 ]
 
 [[package]]
@@ -3243,9 +3243,9 @@ checksum = "884e2677b40cc8c339eaefcb701c32ef1fd2493d71118dc0ca4b6a736c93bd67"
 
 [[package]]
 name = "libc"
-version = "0.2.152"
+version = "0.2.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13e3bf6590cbc649f4d1a3eefc9d5d6eb746f5200ffb04e5e142700b8faa56e7"
+checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
 
 [[package]]
 name = "libdbus-sys"
@@ -3609,38 +3609,39 @@ dependencies = [
 
 [[package]]
 name = "minidump-common"
-version = "0.19.1"
+version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3dbc11dfb55b3b7b5684fb16d98e0fc9d1e93a64d6b00bf383eabfc4541aaac2"
+checksum = "1bb6eaf88cc770fa58e6ae721cf2e40c2ca6a4c942ae8c7aa324d680bd3c6717"
 dependencies = [
  "bitflags 2.5.0",
  "debugid",
  "num-derive",
  "num-traits",
  "range-map",
- "scroll 0.11.999",
+ "scroll",
  "smart-default",
 ]
 
 [[package]]
 name = "minidump-writer"
-version = "0.8.3"
+version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "017101620fe5d413ac2d98224ab8b1fff0d4bacaf2803c130ad4a6db3e5d3e70"
+checksum = "e2abcd9c8a1e6e1e9d56ce3627851f39a17ea83e17c96bc510f29d7e43d78a7d"
 dependencies = [
  "bitflags 2.5.0",
  "byteorder",
  "cfg-if 1.0.0",
  "crash-context",
- "goblin 0.7.999",
+ "goblin 0.8.0",
  "libc",
+ "log",
  "mach2",
- "memmap2 0.8.999",
+ "memmap2 0.9.3",
  "memoffset 0.9.0",
  "minidump-common",
- "nix 0.27.1",
+ "nix 0.28.0",
  "procfs-core",
- "scroll 0.11.999",
+ "scroll",
  "tempfile",
  "thiserror",
 ]
@@ -4067,17 +4068,18 @@ checksum = "e4a24736216ec316047a1fc4252e27dabb04218aa4a3f37c6e7ddbf1f9782b54"
 name = "nix"
 version = "0.26.99"
 dependencies = [
- "nix 0.27.1",
+ "nix 0.28.0",
 ]
 
 [[package]]
 name = "nix"
-version = "0.27.1"
+version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2eb04e9c688eff1c89d72b407f168cf79bb9e867a9d3323ed6c01519eb9cc053"
+checksum = "ab2156c4fce2f8df6c499cc1c763e4394b7482525bf2a9701c9d79d215f519e4"
 dependencies = [
  "bitflags 2.5.0",
  "cfg-if 1.0.0",
+ "cfg_aliases",
  "libc",
 ]
 
@@ -5043,13 +5045,6 @@ name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
-
-[[package]]
-name = "scroll"
-version = "0.11.999"
-dependencies = [
- "scroll 0.12.0",
-]
 
 [[package]]
 name = "scroll"

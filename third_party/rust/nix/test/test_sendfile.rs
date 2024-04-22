@@ -1,21 +1,20 @@
 use std::io::prelude::*;
-#[cfg(any(target_os = "android", target_os = "linux"))]
-use std::os::unix::io::{FromRawFd, OwnedFd};
 
 use libc::off_t;
 use nix::sys::sendfile::*;
 use tempfile::tempfile;
 
 cfg_if! {
-    if #[cfg(any(target_os = "android", target_os = "linux"))] {
-        use nix::unistd::{close, pipe, read};
-    } else if #[cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "ios", target_os = "macos"))] {
+    if #[cfg(linux_android)] {
+        use nix::unistd::{pipe, read};
+        use std::os::unix::io::AsRawFd;
+    } else if #[cfg(any(freebsdlike, apple_targets, solarish))] {
         use std::net::Shutdown;
         use std::os::unix::net::UnixStream;
     }
 }
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(linux_android)]
 #[test]
 fn test_sendfile_linux() {
     const CONTENTS: &[u8] = b"abcdef123456";
@@ -24,21 +23,14 @@ fn test_sendfile_linux() {
 
     let (rd, wr) = pipe().unwrap();
     let mut offset: off_t = 5;
-    // The construct of this `OwnedFd` is a temporary workaround, when `pipe(2)`
-    // becomes I/O-safe:
-    // pub fn pipe() -> std::result::Result<(OwnedFd, OwnedFd), Error>
-    // then it is no longer needed.
-    let wr = unsafe { OwnedFd::from_raw_fd(wr) };
     let res = sendfile(&wr, &tmp, Some(&mut offset), 2).unwrap();
 
     assert_eq!(2, res);
 
     let mut buf = [0u8; 1024];
-    assert_eq!(2, read(rd, &mut buf).unwrap());
+    assert_eq!(2, read(rd.as_raw_fd(), &mut buf).unwrap());
     assert_eq!(b"f1", &buf[0..2]);
     assert_eq!(7, offset);
-
-    close(rd).unwrap();
 }
 
 #[cfg(target_os = "linux")]
@@ -50,21 +42,14 @@ fn test_sendfile64_linux() {
 
     let (rd, wr) = pipe().unwrap();
     let mut offset: libc::off64_t = 5;
-    // The construct of this `OwnedFd` is a temporary workaround, when `pipe(2)`
-    // becomes I/O-safe:
-    // pub fn pipe() -> std::result::Result<(OwnedFd, OwnedFd), Error>
-    // then it is no longer needed.
-    let wr = unsafe { OwnedFd::from_raw_fd(wr) };
     let res = sendfile64(&wr, &tmp, Some(&mut offset), 2).unwrap();
 
     assert_eq!(2, res);
 
     let mut buf = [0u8; 1024];
-    assert_eq!(2, read(rd, &mut buf).unwrap());
+    assert_eq!(2, read(rd.as_raw_fd(), &mut buf).unwrap());
     assert_eq!(b"f1", &buf[0..2]);
     assert_eq!(7, offset);
-
-    close(rd).unwrap();
 }
 
 #[cfg(target_os = "freebsd")]
@@ -167,7 +152,7 @@ fn test_sendfile_dragonfly() {
     assert_eq!(expected_string, read_string);
 }
 
-#[cfg(any(target_os = "ios", target_os = "macos"))]
+#[cfg(apple_targets)]
 #[test]
 fn test_sendfile_darwin() {
     // Declare the content
@@ -213,5 +198,64 @@ fn test_sendfile_darwin() {
     let mut read_string = String::new();
     let bytes_read = rd.read_to_string(&mut read_string).unwrap();
     assert_eq!(bytes_written as usize, bytes_read);
+    assert_eq!(expected_string, read_string);
+}
+
+#[cfg(solarish)]
+#[test]
+fn test_sendfilev() {
+    use std::os::fd::AsFd;
+    // Declare the content
+    let header_strings =
+        ["HTTP/1.1 200 OK\n", "Content-Type: text/plain\n", "\n"];
+    let body = "Xabcdef123456";
+    let body_offset = 1usize;
+    let trailer_strings = ["\n", "Served by Make Believe\n"];
+
+    // Write data to files
+    let mut header_data = tempfile().unwrap();
+    header_data
+        .write_all(header_strings.concat().as_bytes())
+        .unwrap();
+    let mut body_data = tempfile().unwrap();
+    body_data.write_all(body.as_bytes()).unwrap();
+    let mut trailer_data = tempfile().unwrap();
+    trailer_data
+        .write_all(trailer_strings.concat().as_bytes())
+        .unwrap();
+    let (mut rd, wr) = UnixStream::pair().unwrap();
+    let vec: &[SendfileVec] = &[
+        SendfileVec::new(
+            header_data.as_fd(),
+            0,
+            header_strings.iter().map(|s| s.len()).sum(),
+        ),
+        SendfileVec::new(
+            body_data.as_fd(),
+            body_offset as off_t,
+            body.len() - body_offset,
+        ),
+        SendfileVec::new(
+            trailer_data.as_fd(),
+            0,
+            trailer_strings.iter().map(|s| s.len()).sum(),
+        ),
+    ];
+
+    let (res, bytes_written) = sendfilev(&wr, vec);
+    assert!(res.is_ok());
+    wr.shutdown(Shutdown::Both).unwrap();
+
+    // Prepare the expected result
+    let expected_string = header_strings.concat()
+        + &body[body_offset..]
+        + &trailer_strings.concat();
+
+    // Verify the message that was sent
+    assert_eq!(bytes_written, expected_string.as_bytes().len());
+
+    let mut read_string = String::new();
+    let bytes_read = rd.read_to_string(&mut read_string).unwrap();
+    assert_eq!(bytes_written, bytes_read);
     assert_eq!(expected_string, read_string);
 }

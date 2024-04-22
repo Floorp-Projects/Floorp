@@ -2,7 +2,7 @@
 
 use crate::errno::Errno;
 use crate::Result;
-use libc::{self, c_int, c_void, off_t, size_t};
+use libc::{self, c_int, off_t, size_t};
 use std::io::{IoSlice, IoSliceMut};
 use std::os::unix::io::{AsFd, AsRawFd};
 
@@ -18,7 +18,11 @@ pub fn writev<Fd: AsFd>(fd: Fd, iov: &[IoSlice<'_>]) -> Result<usize> {
     //
     // Because it is ABI compatible, a pointer cast here is valid
     let res = unsafe {
-        libc::writev(fd.as_fd().as_raw_fd(), iov.as_ptr() as *const libc::iovec, iov.len() as c_int)
+        libc::writev(
+            fd.as_fd().as_raw_fd(),
+            iov.as_ptr().cast(),
+            iov.len() as c_int,
+        )
     };
 
     Errno::result(res).map(|r| r as usize)
@@ -33,7 +37,11 @@ pub fn writev<Fd: AsFd>(fd: Fd, iov: &[IoSlice<'_>]) -> Result<usize> {
 pub fn readv<Fd: AsFd>(fd: Fd, iov: &mut [IoSliceMut<'_>]) -> Result<usize> {
     // SAFETY: same as in writev(), IoSliceMut is ABI-compatible with iovec
     let res = unsafe {
-        libc::readv(fd.as_fd().as_raw_fd(), iov.as_ptr() as *const libc::iovec, iov.len() as c_int)
+        libc::readv(
+            fd.as_fd().as_raw_fd(),
+            iov.as_ptr().cast(),
+            iov.len() as c_int,
+        )
     };
 
     Errno::result(res).map(|r| r as usize)
@@ -45,9 +53,12 @@ pub fn readv<Fd: AsFd>(fd: Fd, iov: &mut [IoSliceMut<'_>]) -> Result<usize> {
 /// or an error occurs. The file offset is not changed.
 ///
 /// See also: [`writev`](fn.writev.html) and [`pwrite`](fn.pwrite.html)
-#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
-#[cfg_attr(docsrs, doc(cfg(all())))]
-pub fn pwritev<Fd: AsFd>(fd: Fd, iov: &[IoSlice<'_>], offset: off_t) -> Result<usize> {
+#[cfg(not(any(target_os = "redox", target_os = "haiku", target_os = "solaris")))]
+pub fn pwritev<Fd: AsFd>(
+    fd: Fd,
+    iov: &[IoSlice<'_>],
+    offset: off_t,
+) -> Result<usize> {
     #[cfg(target_env = "uclibc")]
     let offset = offset as libc::off64_t; // uclibc doesn't use off_t
 
@@ -55,7 +66,7 @@ pub fn pwritev<Fd: AsFd>(fd: Fd, iov: &[IoSlice<'_>], offset: off_t) -> Result<u
     let res = unsafe {
         libc::pwritev(
             fd.as_fd().as_raw_fd(),
-            iov.as_ptr() as *const libc::iovec,
+            iov.as_ptr().cast(),
             iov.len() as c_int,
             offset,
         )
@@ -71,8 +82,7 @@ pub fn pwritev<Fd: AsFd>(fd: Fd, iov: &[IoSlice<'_>], offset: off_t) -> Result<u
 /// changed.
 ///
 /// See also: [`readv`](fn.readv.html) and [`pread`](fn.pread.html)
-#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
-#[cfg_attr(docsrs, doc(cfg(all())))]
+#[cfg(not(any(target_os = "redox", target_os = "haiku", target_os = "solaris")))]
 // Clippy doesn't know that we need to pass iov mutably only because the
 // mutation happens after converting iov to a pointer
 #[allow(clippy::needless_pass_by_ref_mut)]
@@ -88,7 +98,7 @@ pub fn preadv<Fd: AsFd>(
     let res = unsafe {
         libc::preadv(
             fd.as_fd().as_raw_fd(),
-            iov.as_ptr() as *const libc::iovec,
+            iov.as_ptr().cast(),
             iov.len() as c_int,
             offset,
         )
@@ -105,7 +115,7 @@ pub fn pwrite<Fd: AsFd>(fd: Fd, buf: &[u8], offset: off_t) -> Result<usize> {
     let res = unsafe {
         libc::pwrite(
             fd.as_fd().as_raw_fd(),
-            buf.as_ptr() as *const c_void,
+            buf.as_ptr().cast(),
             buf.len() as size_t,
             offset,
         )
@@ -122,7 +132,7 @@ pub fn pread<Fd: AsFd>(fd: Fd, buf: &mut [u8], offset: off_t) -> Result<usize> {
     let res = unsafe {
         libc::pread(
             fd.as_fd().as_raw_fd(),
-            buf.as_mut_ptr() as *mut c_void,
+            buf.as_mut_ptr().cast(),
             buf.len() as size_t,
             offset,
         )
@@ -139,8 +149,7 @@ pub fn pread<Fd: AsFd>(fd: Fd, buf: &mut [u8], offset: off_t) -> Result<usize> {
 /// therefore not represented in Rust by an actual slice as `IoSlice` is. It
 /// is used with [`process_vm_readv`](fn.process_vm_readv.html)
 /// and [`process_vm_writev`](fn.process_vm_writev.html).
-#[cfg(any(target_os = "linux", target_os = "android"))]
-#[cfg_attr(docsrs, doc(cfg(all())))]
+#[cfg(linux_android)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct RemoteIoVec {
@@ -173,7 +182,7 @@ feature! {
 /// [ptrace]: ../ptrace/index.html
 /// [`IoSlice`]: https://doc.rust-lang.org/std/io/struct.IoSlice.html
 /// [`RemoteIoVec`]: struct.RemoteIoVec.html
-#[cfg(all(any(target_os = "linux", target_os = "android"), not(target_env = "uclibc")))]
+#[cfg(all(linux_android, not(target_env = "uclibc")))]
 pub fn process_vm_writev(
     pid: crate::unistd::Pid,
     local_iov: &[IoSlice<'_>],
@@ -181,8 +190,8 @@ pub fn process_vm_writev(
 {
     let res = unsafe {
         libc::process_vm_writev(pid.into(),
-                                local_iov.as_ptr() as *const libc::iovec, local_iov.len() as libc::c_ulong,
-                                remote_iov.as_ptr() as *const libc::iovec, remote_iov.len() as libc::c_ulong, 0)
+                                local_iov.as_ptr().cast(), local_iov.len() as libc::c_ulong,
+                                remote_iov.as_ptr().cast(), remote_iov.len() as libc::c_ulong, 0)
     };
 
     Errno::result(res).map(|r| r as usize)
@@ -208,7 +217,7 @@ pub fn process_vm_writev(
 /// [`ptrace`]: ../ptrace/index.html
 /// [`IoSliceMut`]: https://doc.rust-lang.org/std/io/struct.IoSliceMut.html
 /// [`RemoteIoVec`]: struct.RemoteIoVec.html
-#[cfg(all(any(target_os = "linux", target_os = "android"), not(target_env = "uclibc")))]
+#[cfg(all(linux_android, not(target_env = "uclibc")))]
 pub fn process_vm_readv(
     pid: crate::unistd::Pid,
     local_iov: &mut [IoSliceMut<'_>],
@@ -216,8 +225,8 @@ pub fn process_vm_readv(
 {
     let res = unsafe {
         libc::process_vm_readv(pid.into(),
-                               local_iov.as_ptr() as *const libc::iovec, local_iov.len() as libc::c_ulong,
-                               remote_iov.as_ptr() as *const libc::iovec, remote_iov.len() as libc::c_ulong, 0)
+                               local_iov.as_ptr().cast(), local_iov.len() as libc::c_ulong,
+                               remote_iov.as_ptr().cast(), remote_iov.len() as libc::c_ulong, 0)
     };
 
     Errno::result(res).map(|r| r as usize)

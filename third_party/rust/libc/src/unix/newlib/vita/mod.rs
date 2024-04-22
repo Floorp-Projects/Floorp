@@ -94,6 +94,8 @@ pub const SOCK_RAW: ::c_int = 3;
 pub const SOCK_RDM: ::c_int = 4;
 pub const SOCK_SEQPACKET: ::c_int = 5;
 
+pub const SOMAXCONN: ::c_int = 128;
+
 pub const FIONBIO: ::c_ulong = 1;
 
 pub const POLLIN: ::c_short = 0x0001;

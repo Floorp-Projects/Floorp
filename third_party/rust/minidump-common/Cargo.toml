@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "minidump-common"
-version = "0.19.1"
+version = "0.21.1"
 authors = ["Ted Mielczarek <ted@mielczarek.org>"]
 description = "Some common types for working with minidump files."
 homepage = "https://github.com/rust-minidump/rust-minidump"
@@ -42,7 +42,7 @@ version = "0.2"
 version = "0.2"
 
 [dependencies.scroll]
-version = "0.11.0"
+version = "0.12.0"
 features = ["derive"]
 
 [dependencies.smart-default]

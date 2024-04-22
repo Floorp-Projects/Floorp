@@ -316,6 +316,13 @@ user-id = 51017
 user-login = "JohnTitor"
 user-name = "Yuki Okushi"
 
+[[publisher.libc]]
+version = "0.2.153"
+when = "2024-01-31"
+user-id = 51017
+user-login = "JohnTitor"
+user-name = "Yuki Okushi"
+
 [[publisher.linux-raw-sys]]
 version = "0.4.12"
 when = "2023-11-30"
@@ -343,6 +350,13 @@ when = "2020-01-07"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
+
+[[publisher.minidump-common]]
+version = "0.21.1"
+when = "2024-03-01"
+user-id = 72814
+user-login = "gabrielesvelto"
+user-name = "Gabriele Svelto"
 
 [[publisher.mio]]
 version = "0.6.21"

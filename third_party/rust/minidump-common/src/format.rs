@@ -2552,3 +2552,27 @@ pub struct MINIDUMP_HANDLE_DATA_STREAM {
     /// Reserved for future use; must be zero.
     pub reserved: u32,
 }
+
+#[derive(Debug, Clone, Pread, Pwrite, SizeWith)]
+pub struct MINIDUMP_THREAD_INFO {
+    /// Thread identifier
+    pub thread_id: u32,
+    /// Thread state flags
+    pub dump_flags: u32,
+    /// HRESULT value of dump status
+    pub dump_error: u32,
+    /// The thread's exit code
+    pub exit_status: u32,
+    /// UTC time the thread was created
+    pub create_time: u64,
+    /// UTC time the thread exited
+    pub exit_time: u64,
+    /// Time executed in kernel mode
+    pub kernel_time: u64,
+    /// Time executed in user mode
+    pub user_time: u64,
+    /// Start address of the thread
+    pub start_address: u64,
+    /// Processor affinity mask
+    pub affinity: u64,
+}
