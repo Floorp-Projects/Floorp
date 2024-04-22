@@ -46,6 +46,7 @@ fun TranslationSettings(
     onNeverTranslationClicked: () -> Unit,
     onDownloadLanguageClicked: () -> Unit,
 ) {
+    val showHeader = showAutomaticTranslations || showNeverTranslate || showDownloads
     Column(
         modifier = Modifier
             .background(
@@ -67,12 +68,12 @@ fun TranslationSettings(
                         .padding(start = 72.dp, end = 16.dp),
                 )
 
-                if (item.type.hasDivider) {
+                if (item.type.hasDivider && showHeader) {
                     Divider(Modifier.padding(top = 8.dp, bottom = 8.dp))
                 }
             }
 
-            if (showAutomaticTranslations || showNeverTranslate || showDownloads) {
+            if (showHeader) {
                 item {
                     Text(
                         text = stringResource(
