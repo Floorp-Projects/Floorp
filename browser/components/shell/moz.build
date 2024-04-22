@@ -50,6 +50,8 @@ elif CONFIG["OS_ARCH"] == "WINNT":
     ]
     SOURCES += [
         "nsWindowsShellService.cpp",
+        "Windows11LimitedAccessFeatures.cpp",
+        "Windows11TaskbarPinning.cpp",
         "WindowsDefaultBrowser.cpp",
         "WindowsUserChoice.cpp",
     ]
@@ -81,6 +83,7 @@ for var in (
     "MOZ_DEFAULT_BROWSER_AGENT",
 ):
     DEFINES[var] = '"%s"' % CONFIG[var]
+
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
