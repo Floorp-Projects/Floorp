@@ -23,6 +23,7 @@ import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic
 
 class MenuNavigationMiddlewareTest {
@@ -115,16 +116,16 @@ class MenuNavigationMiddlewareTest {
 
     @Test
     fun `WHEN navigate to help action is dispatched THEN navigate to SUMO Help topic`() = runTest {
-        var topic: SumoTopic? = null
+        var params: BrowserNavigationParams? = null
         val store = createStore(
-            openSumoTopic = {
-                topic = it
+            openToBrowser = {
+                params = it
             },
         )
 
         store.dispatch(MenuAction.Navigate.Help).join()
 
-        assertEquals(SumoTopic.HELP, topic)
+        assertEquals(SumoTopic.HELP, params?.sumoTopic)
     }
 
     @Test
@@ -179,14 +180,41 @@ class MenuNavigationMiddlewareTest {
         }
     }
 
+    @Test
+    fun `WHEN navigate to customize homepage action is dispatched THEN navigate to homepage settings`() = runTest {
+        val store = createStore()
+        store.dispatch(MenuAction.Navigate.CustomizeHomepage).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalHomeSettingsFragment(),
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN navigate to release notes action is dispatched THEN navigate to SUMO topic`() = runTest {
+        var params: BrowserNavigationParams? = null
+        val store = createStore(
+            openToBrowser = {
+                params = it
+            },
+        )
+
+        store.dispatch(MenuAction.Navigate.ReleaseNotes).join()
+
+        assertEquals(SupportUtils.WHATS_NEW_URL, params?.url)
+    }
+
     private fun createStore(
-        openSumoTopic: (topic: SumoTopic) -> Unit = {},
+        openToBrowser: (params: BrowserNavigationParams) -> Unit = {},
     ) = MenuStore(
         initialState = MenuState(),
         middleware = listOf(
             MenuNavigationMiddleware(
                 navController = navController,
-                openSumoTopic = openSumoTopic,
+                openToBrowser = openToBrowser,
                 scope = scope,
             ),
         ),

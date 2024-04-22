@@ -16,12 +16,14 @@ import mozilla.components.service.fxa.manager.AccountState.Authenticating
 import mozilla.components.service.fxa.manager.AccountState.AuthenticationProblem
 import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.menu.BrowserNavigationParams
 import org.mozilla.fenix.components.menu.MenuDialogFragmentDirections
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
 import org.mozilla.fenix.components.menu.toFenixFxAEntryPoint
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic
 
 /**
@@ -29,12 +31,13 @@ import org.mozilla.fenix.settings.SupportUtils.SumoTopic
  * dispatched to the [MenuStore].
  *
  * @param navController [NavController] used for navigation.
- * @param openSumoTopic Callback to open the provided [SumoTopic] in a new browser tab.
+ * @param openToBrowser Callback to open the provided [BrowserNavigationParams]
+ * in a new browser tab.
  * @param scope [CoroutineScope] used to launch coroutines.
  */
 class MenuNavigationMiddleware(
     private val navController: NavController,
-    private val openSumoTopic: (topic: SumoTopic) -> Unit,
+    private val openToBrowser: (params: BrowserNavigationParams) -> Unit,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : Middleware<MenuState, MenuAction> {
 
@@ -70,7 +73,9 @@ class MenuNavigationMiddleware(
                     }
                 }
 
-                is MenuAction.Navigate.Help -> openSumoTopic(SumoTopic.HELP)
+                is MenuAction.Navigate.Help -> openToBrowser(
+                    BrowserNavigationParams(sumoTopic = SumoTopic.HELP),
+                )
 
                 is MenuAction.Navigate.Settings -> navController.nav(
                     R.id.menuDialogFragment,
@@ -95,6 +100,15 @@ class MenuNavigationMiddleware(
                 is MenuAction.Navigate.Passwords -> navController.nav(
                     R.id.menuDialogFragment,
                     MenuDialogFragmentDirections.actionGlobalSavedLoginsAuthFragment(),
+                )
+
+                is MenuAction.Navigate.CustomizeHomepage -> navController.nav(
+                    R.id.menuDialogFragment,
+                    MenuDialogFragmentDirections.actionGlobalHomeSettingsFragment(),
+                )
+
+                is MenuAction.Navigate.ReleaseNotes -> openToBrowser(
+                    BrowserNavigationParams(url = SupportUtils.WHATS_NEW_URL),
                 )
 
                 else -> Unit

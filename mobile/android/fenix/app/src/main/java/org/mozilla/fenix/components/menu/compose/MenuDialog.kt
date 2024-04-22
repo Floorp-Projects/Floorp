@@ -20,6 +20,7 @@ import mozilla.components.service.fxa.manager.AccountState
 import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import mozilla.components.service.fxa.store.Account
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.menu.compose.header.MenuHeader
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -29,6 +30,7 @@ import org.mozilla.fenix.theme.Theme
 /**
  * The menu bottom sheet dialog.
  *
+ * @param accessPoint The [MenuAccessPoint] that was used to navigate to the menu dialog.
  * @param account [Account] information available for a synced account.
  * @param accountState The [AccountState] of a Mozilla account.
  * @param onMozillaAccountButtonClick Invoked when the user clicks on Mozilla account button.
@@ -38,10 +40,14 @@ import org.mozilla.fenix.theme.Theme
  * @param onHistoryMenuClick Invoked when the user clicks on the history menu item.
  * @param onDownloadsMenuClick Invoked when the user clicks on the downloads menu item.
  * @param onPasswordsMenuClick Invoked when the user clicks on the passwords menu item.
+ * @param onCustomizeHomepageMenuClick Invoked when the user clicks on the customize
+ * homepage menu item.
+ * @param onNewInFirefoxMenuClick Invoked when the user clicks on the release note menu item.
  */
 @Suppress("LongParameterList")
 @Composable
 fun MenuDialog(
+    accessPoint: MenuAccessPoint,
     account: Account?,
     accountState: AccountState,
     onMozillaAccountButtonClick: () -> Unit,
@@ -51,6 +57,8 @@ fun MenuDialog(
     onHistoryMenuClick: () -> Unit,
     onDownloadsMenuClick: () -> Unit,
     onPasswordsMenuClick: () -> Unit,
+    onCustomizeHomepageMenuClick: () -> Unit,
+    onNewInFirefoxMenuClick: () -> Unit,
 ) {
     Column {
         MenuHeader(
@@ -64,10 +72,13 @@ fun MenuDialog(
         Spacer(modifier = Modifier.height(8.dp))
 
         MainMenu(
+            accessPoint = accessPoint,
             onBookmarksMenuClick = onBookmarksMenuClick,
             onHistoryMenuClick = onHistoryMenuClick,
             onDownloadsMenuClick = onDownloadsMenuClick,
             onPasswordsMenuClick = onPasswordsMenuClick,
+            onCustomizeHomepageMenuClick = onCustomizeHomepageMenuClick,
+            onNewInFirefoxMenuClick = onNewInFirefoxMenuClick,
         )
     }
 }
@@ -77,10 +88,13 @@ fun MenuDialog(
  */
 @Composable
 private fun MainMenu(
+    accessPoint: MenuAccessPoint,
     onBookmarksMenuClick: () -> Unit,
     onHistoryMenuClick: () -> Unit,
     onDownloadsMenuClick: () -> Unit,
     onPasswordsMenuClick: () -> Unit,
+    onCustomizeHomepageMenuClick: () -> Unit,
+    onNewInFirefoxMenuClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -112,6 +126,13 @@ private fun MainMenu(
             onDownloadsMenuClick = onDownloadsMenuClick,
             onPasswordsMenuClick = onPasswordsMenuClick,
         )
+
+        if (accessPoint == MenuAccessPoint.Home) {
+            HomepageMenuGroup(
+                onCustomizeHomepageMenuClick = onCustomizeHomepageMenuClick,
+                onNewInFirefoxMenuClick = onNewInFirefoxMenuClick,
+            )
+        }
     }
 }
 
@@ -155,6 +176,31 @@ private fun LibraryMenuGroup(
     }
 }
 
+@Composable
+private fun HomepageMenuGroup(
+    onCustomizeHomepageMenuClick: () -> Unit,
+    onNewInFirefoxMenuClick: () -> Unit,
+) {
+    MenuGroup {
+        MenuItem(
+            label = stringResource(id = R.string.browser_menu_customize_home_1),
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_grid_add_24),
+            onClick = onCustomizeHomepageMenuClick,
+        )
+
+        Divider(color = FirefoxTheme.colors.borderSecondary)
+
+        MenuItem(
+            label = stringResource(
+                id = R.string.browser_menu_new_in_firefox,
+                stringResource(id = R.string.app_name),
+            ),
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_whats_new_24),
+            onClick = onNewInFirefoxMenuClick,
+        )
+    }
+}
+
 @LightDarkPreview
 @Composable
 private fun MenuDialogPreview() {
@@ -164,6 +210,7 @@ private fun MenuDialogPreview() {
                 .background(color = FirefoxTheme.colors.layer3),
         ) {
             MenuDialog(
+                accessPoint = MenuAccessPoint.Home,
                 account = null,
                 accountState = NotAuthenticated,
                 onMozillaAccountButtonClick = {},
@@ -173,6 +220,8 @@ private fun MenuDialogPreview() {
                 onHistoryMenuClick = {},
                 onDownloadsMenuClick = {},
                 onPasswordsMenuClick = {},
+                onCustomizeHomepageMenuClick = {},
+                onNewInFirefoxMenuClick = {},
             )
         }
     }
@@ -187,6 +236,7 @@ private fun MenuDialogPrivatePreview() {
                 .background(color = FirefoxTheme.colors.layer3),
         ) {
             MenuDialog(
+                accessPoint = MenuAccessPoint.Home,
                 account = null,
                 accountState = NotAuthenticated,
                 onMozillaAccountButtonClick = {},
@@ -196,6 +246,8 @@ private fun MenuDialogPrivatePreview() {
                 onHistoryMenuClick = {},
                 onDownloadsMenuClick = {},
                 onPasswordsMenuClick = {},
+                onCustomizeHomepageMenuClick = {},
+                onNewInFirefoxMenuClick = {},
             )
         }
     }
