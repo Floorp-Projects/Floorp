@@ -541,7 +541,12 @@ var FullPageTranslationsPanel = new (class {
     // Unconditionally hide the intro text in case the panel is re-shown.
     intro.hidden = true;
 
-    if (TranslationsPanelShared.getLangListsInitState(panel) === "error") {
+    if (
+      TranslationsPanelShared.getLangListsInitState(
+        panel,
+        gBrowser.selectedBrowser.innerWindowID
+      ) === "error"
+    ) {
       // There was an error, display it in the view rather than the language
       // dropdowns.
       const { cancelButton, errorHintAction } = this.elements;
