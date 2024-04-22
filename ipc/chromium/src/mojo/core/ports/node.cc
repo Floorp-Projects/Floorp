@@ -837,6 +837,10 @@ int Node::OnObserveProxy(const PortRef& port_ref,
     MaybeResendAckRequest(port_ref);
 
     delegate_->PortStatusChanged(port_ref);
+
+    if (event->proxy_target_node_name() != name_) {
+      delegate_->ObserveRemoteNode(event->proxy_target_node_name());
+    }
   }
 
   return OK;
@@ -1513,6 +1517,11 @@ int Node::AcceptPort(const PortName& port_name,
                           mozilla::MakeUnique<PortAcceptedEvent>(
                               port_descriptor.referring_port_name,
                               kInvalidPortName, kInvalidSequenceNum));
+
+  if (port_descriptor.peer_node_name != name_) {
+    delegate_->ObserveRemoteNode(port_descriptor.peer_node_name);
+  }
+
   return OK;
 }
 
