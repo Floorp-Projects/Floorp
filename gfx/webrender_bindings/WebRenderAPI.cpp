@@ -551,7 +551,11 @@ bool WebRenderAPI::CheckIsRemoteTextureReady(
     return true;
   }
 
+#ifndef DEBUG
   const auto maxWaitDurationMs = 10000;
+#else
+  const auto maxWaitDurationMs = 30000;
+#endif
   const auto now = TimeStamp::Now();
   const auto waitDurationMs =
       static_cast<uint32_t>((now - aTimeStamp).ToMilliseconds());
