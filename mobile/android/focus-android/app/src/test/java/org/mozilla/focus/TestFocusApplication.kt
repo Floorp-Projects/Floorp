@@ -54,6 +54,13 @@ class FakeEngine : Engine {
     override val version: EngineVersion
         get() = throw NotImplementedError("Not needed for test")
 
+    override fun isTranslationsEngineSupported(
+        onSuccess: (Boolean) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        // do nothing
+    }
+
     override fun createView(context: Context, attrs: AttributeSet?): EngineView =
         throw UnsupportedOperationException()
 
