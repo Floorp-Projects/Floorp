@@ -101,7 +101,6 @@ using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using mozilla::EventMessage from "mozilla/EventForwards.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::ImagePoint from "Units.h";
-using mozilla::ImageIntSize from "Units.h";
 using mozilla::widget::ThemeChangeKind from "mozilla/widget/WidgetMessageUtils.h";
 using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
 [MoveOnly=data] using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
@@ -461,13 +460,6 @@ struct TextRecognitionResult {
 union TextRecognitionResultOrError {
     TextRecognitionResult;
     nsCString;
-};
-
-struct IPCImage {
-    BigBuffer data;
-    uint32_t stride;
-    SurfaceFormat format;
-    ImageIntSize size;
 };
 
 struct ClipboardReadRequest {

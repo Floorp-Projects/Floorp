@@ -7,6 +7,7 @@
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/dom/PermissionMessageUtils.h";
 
+include DOMTypes;
 include IPCBlob;
 include NeckoChannelParams;
 
@@ -42,11 +43,7 @@ struct IPCTransferableDataInputStream
 
 struct IPCTransferableDataImageContainer
 {
-  BigBuffer data;
-  uint32_t width;
-  uint32_t height;
-  uint32_t stride;
-  SurfaceFormat format;
+  IPCImage image;
 };
 
 struct IPCTransferableDataBlob
