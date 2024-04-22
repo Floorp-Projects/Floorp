@@ -79,7 +79,6 @@ export class Translator {
     this.#fromLanguage = fromLanguage;
     this.#toLanguage = toLanguage;
     this.#requestTranslationsPort = requestTranslationsPort;
-    this.#createNewPortIfClosed();
   }
 
   /**
@@ -155,7 +154,7 @@ export class Translator {
       toLanguage,
       requestTranslationsPort
     );
-    await translator.ready;
+    await translator.#createNewPortIfClosed();
 
     return translator;
   }
@@ -167,13 +166,14 @@ export class Translator {
    */
   async #createNewPortIfClosed() {
     if (!this.#portClosed) {
-      return this.#ready;
+      return;
     }
 
     this.#port = await this.#requestTranslationsPort(
       this.#fromLanguage,
       this.#toLanguage
     );
+    this.#portClosed = false;
 
     // Create a promise that will be resolved when the engine is ready.
     const { promise, resolve, reject } = Promise.withResolvers();
@@ -190,7 +190,6 @@ export class Translator {
         }
         case "TranslationsPort:GetEngineStatusResponse": {
           if (data.status === "ready") {
-            this.#portClosed = false;
             resolve();
           } else {
             this.#portClosed = true;
@@ -209,8 +208,6 @@ export class Translator {
 
     this.#ready = promise;
     this.#port.postMessage({ type: "TranslationsPort:GetEngineStatusRequest" });
-
-    return this.#ready;
   }
 
   /**
@@ -223,6 +220,8 @@ export class Translator {
    */
   async translate(sourceText, isHTML = false) {
     await this.#createNewPortIfClosed();
+    await this.#ready;
+
     const { promise, resolve, reject } = Promise.withResolvers();
     const messageId = this.#nextMessageId++;
 
