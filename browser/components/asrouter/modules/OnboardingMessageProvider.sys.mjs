@@ -24,6 +24,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
 });
 
@@ -870,7 +871,7 @@ const BASE_MESSAGES = () => [
       ],
       lifetime: 12,
     },
-    targeting: "doesAppNeedPrivatePin",
+    targeting: "!inMr2022Holdback && doesAppNeedPrivatePin",
   },
   {
     id: "PB_NEWTAB_COOKIE_BANNERS_PROMO",
@@ -1373,8 +1374,9 @@ export const OnboardingMessageProvider = {
     return checkDefault && !isDefault;
   },
   _shouldShowPrivacySegmentationScreen() {
-    return Services.prefs.getBoolPref(
-      "browser.privacySegmentation.preferences.show"
+    // Fall back to pref: browser.privacySegmentation.preferences.show
+    return lazy.NimbusFeatures.majorRelease2022.getVariable(
+      "feltPrivacyShowPreferencesSection"
     );
   },
   _doesHomepageNeedReset() {

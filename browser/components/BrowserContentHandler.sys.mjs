@@ -322,7 +322,12 @@ function openBrowserWindow(
           Ci.nsILoadContext
         ).usePrivateBrowsing = true;
 
-        if (AppConstants.platform == "win") {
+        if (
+          AppConstants.platform == "win" &&
+          lazy.NimbusFeatures.majorRelease2022.getVariable(
+            "feltPrivacyWindowSeparation"
+          )
+        ) {
           lazy.WinTaskbar.setGroupIdForWindow(
             win,
             lazy.WinTaskbar.defaultPrivateGroupId

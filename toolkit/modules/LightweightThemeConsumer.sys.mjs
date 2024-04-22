@@ -8,6 +8,7 @@ const lazy = {};
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
 ChromeUtils.defineESModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ThemeContentPropertyList: "resource:///modules/ThemeVariableMap.sys.mjs",
   ThemeVariableMap: "resource:///modules/ThemeVariableMap.sys.mjs",
@@ -254,7 +255,9 @@ LightweightThemeConsumer.prototype = {
 
       // If enabled, apply the dark theme variant to private browsing windows.
       if (
-        Services.prefs.getBoolPref("browser.theme.dark-private-windows") ||
+        !lazy.NimbusFeatures.majorRelease2022.getVariable(
+          "feltPrivacyPBMDarkTheme"
+        ) ||
         !lazy.PrivateBrowsingUtils.isWindowPrivate(this._win) ||
         lazy.PrivateBrowsingUtils.permanentPrivateBrowsing
       ) {
