@@ -316,7 +316,8 @@ void AudioStream::SetStreamName(const nsAString& aStreamName) {
   }
 
   MonitorAutoLock mon(mMonitor);
-  if (InvokeCubeb(cubeb_stream_set_name, aRawStreamName.get()) != CUBEB_OK) {
+  int r = InvokeCubeb(cubeb_stream_set_name, aRawStreamName.get());
+  if (r && r != CUBEB_ERROR_NOT_SUPPORTED) {
     LOGE("Could not set cubeb stream name.");
   }
 }
