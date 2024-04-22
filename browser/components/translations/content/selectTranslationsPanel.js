@@ -890,42 +890,47 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
-   * Transitions the phase of the state based on the given language pair.
+   * Transitions the phase to "translatable" if the proper conditions are met,
+   * otherwise retains the same phase as before.
    *
    * @param {string} fromLanguage - The BCP-47 from-language tag.
    * @param {string} toLanguage - The BCP-47 to-language tag.
-   *
-   * @returns {SelectTranslationsPanelState} The new phase of the translation state.
    */
-  #changeStateByLanguagePair(fromLanguage, toLanguage) {
+  #maybeChangeStateToTranslatable(fromLanguage, toLanguage) {
     const {
-      phase: previousPhase,
       fromLanguage: previousFromLanguage,
       toLanguage: previousToLanguage,
     } = this.#translationState;
 
-    let nextPhase = "translatable";
+    const langSelectionChanged = () =>
+      previousFromLanguage !== fromLanguage ||
+      previousToLanguage !== toLanguage;
+
+    const shouldTranslateEvenIfLangSelectionHasNotChanged = () => {
+      const phase = this.phase();
+      return (
+        // The panel has just opened, and this is the initial translation.
+        phase === "idle" ||
+        // The previous translation failed and we are about to try again.
+        phase === "failure"
+      );
+    };
 
     if (
-      // No from-language is selected, so we cannot translate.
-      !fromLanguage ||
-      // No to-language is selected, so we cannot translate.
-      !toLanguage ||
-      // The languages have not changed, so there is nothing to do.
-      (this.phase() !== "idle" &&
-        this.phase() !== "failure" &&
-        previousFromLanguage === fromLanguage &&
-        previousToLanguage === toLanguage)
+      // A valid from-language is actively selected.
+      fromLanguage &&
+      // A valid to-language is actively selected.
+      toLanguage &&
+      // The language selection has changed, requiring a new translation.
+      (langSelectionChanged() ||
+        // We should try to translate even if the language selection has not changed.
+        shouldTranslateEvenIfLangSelectionHasNotChanged())
     ) {
-      nextPhase = previousPhase;
+      this.#changeStateTo("translatable", /* retainEntries */ true, {
+        fromLanguage,
+        toLanguage,
+      });
     }
-
-    this.#changeStateTo(nextPhase, /* retainEntries */ true, {
-      fromLanguage,
-      toLanguage,
-    });
-
-    return nextPhase;
   }
 
   /**
@@ -1355,9 +1360,11 @@ var SelectTranslationsPanel = new (class {
     if (this.#isClosed()) {
       return;
     }
+
     const { fromLanguage, toLanguage } = this.#getSelectedLanguagePair();
-    const nextState = this.#changeStateByLanguagePair(fromLanguage, toLanguage);
-    if (nextState !== "translatable") {
+    this.#maybeChangeStateToTranslatable(fromLanguage, toLanguage);
+
+    if (this.phase() !== "translatable") {
       return;
     }
 
