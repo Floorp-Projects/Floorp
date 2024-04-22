@@ -15,6 +15,7 @@ job-defaults:
         docker-image: {in-tree: lint}
     always-target: false
     attributes:
+        build_platform: android
         code-review: true
     dependencies:
         build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt

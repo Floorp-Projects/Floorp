@@ -18,6 +18,7 @@ kind-dependencies:
 
 job-defaults:
     attributes:
+        build_platform: android
         build-type: debug
         retrigger: true
     dependencies:
