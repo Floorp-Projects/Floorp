@@ -2021,11 +2021,6 @@ void ContentParent::MarkAsDead() {
   mLifecycleState = LifecycleState::DEAD;
 }
 
-void ContentParent::OnChannelError() {
-  RefPtr<ContentParent> kungFuDeathGrip(this);
-  PContentParent::OnChannelError();
-}
-
 void ContentParent::ProcessingError(Result aCode, const char* aReason) {
   if (MsgDropped == aCode) {
     return;
