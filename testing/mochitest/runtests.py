@@ -2409,14 +2409,14 @@ toolbar#nav-bar {
 
         # Whitelist the _tests directory (../..) so that TESTING_JS_MODULES work
         tests_dir = os.path.dirname(os.path.dirname(SCRIPT_DIR))
-        sandbox_whitelist_paths = [tests_dir] + options.sandboxReadWhitelist
+        sandbox_allowlist_paths = [tests_dir] + options.sandboxReadWhitelist
         if platform.system() == "Linux" or platform.system() in (
             "Windows",
             "Microsoft",
         ):
             # Trailing slashes are needed to indicate directories on Linux and Windows
-            sandbox_whitelist_paths = [
-                os.path.join(p, "") for p in sandbox_whitelist_paths
+            sandbox_allowlist_paths = [
+                os.path.join(p, "") for p in sandbox_allowlist_paths
             ]
 
         if options.conditionedProfile:
@@ -2439,7 +2439,7 @@ toolbar#nav-bar {
             addons=extensions,
             locations=self.locations,
             proxy=self.proxy(options),
-            whitelistpaths=sandbox_whitelist_paths,
+            allowlistpaths=sandbox_allowlist_paths,
         )
 
         # Fix options.profilePath for legacy consumers.
