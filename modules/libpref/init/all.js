@@ -942,7 +942,7 @@ pref("javascript.options.mem.max", -1);
 
 // JSGC_MIN_NURSERY_BYTES / JSGC_MAX_NURSERY_BYTES
 pref("javascript.options.mem.nursery.min_kb", 256);
-pref("javascript.options.mem.nursery.max_kb", 16384);
+pref("javascript.options.mem.nursery.max_kb", 65536);
 
 // JSGC_MODE
 pref("javascript.options.mem.gc_per_zone", true);
