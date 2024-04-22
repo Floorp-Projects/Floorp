@@ -25,10 +25,22 @@
                      data-l10n-id="translations-panel-settings-button"
                      closemenu="none" />
     </hbox>
+    <html:div id="select-translations-panel-init-failure-content"
+              class="translations-panel-content"
+              hidden="true">
+      <html:moz-message-bar id="select-translations-panel-init-failure-message-bar"
+                            type="error"
+                            class="select-translations-panel-message-bar"
+                            data-l10n-id="select-translations-panel-init-failure-message"
+                            data-l10n-attrs="message">
+      </html:moz-message-bar>
+    </html:div>
     <html:div id="select-translations-panel-unsupported-language-content" hidden="true">
       <vbox flex="1" class="select-translations-panel-content">
         <html:moz-message-bar id="select-translations-panel-unsupported-language-message-bar"
+                              type="info"
                               class="select-translations-panel-message-bar"
+                              data-l10n-id="select-translations-panel-unsupported-language-message-unknown"
                               data-l10n-attrs="message">
         </html:moz-message-bar>
         <label id="select-translations-panel-try-another-language-label"

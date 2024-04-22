@@ -1525,6 +1525,8 @@ class SelectTranslationsTestUtils {
         fromMenuList: false,
         fromMenuPopup: false,
         header: false,
+        initFailureContent: false,
+        initFailureMessageBar: false,
         mainContent: false,
         settingsButton: false,
         textArea: false,
