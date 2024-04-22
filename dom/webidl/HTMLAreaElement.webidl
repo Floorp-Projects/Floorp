@@ -28,7 +28,7 @@ interface HTMLAreaElement : HTMLElement {
            [CEReactions, SetterThrows]
            attribute DOMString download;
            [CEReactions, SetterThrows]
-           attribute DOMString ping;
+           attribute USVString ping;
            [CEReactions, SetterThrows]
            attribute DOMString rel;
            [CEReactions, SetterThrows]

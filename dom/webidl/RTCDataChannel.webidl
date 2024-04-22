@@ -36,7 +36,7 @@ interface RTCDataChannel : EventTarget
   attribute EventHandler onbufferedamountlow;
   attribute RTCDataChannelType binaryType;
   [Throws]
-  undefined send(DOMString data);
+  undefined send(USVString data);
   [Throws]
   undefined send(Blob data);
   [Throws]
