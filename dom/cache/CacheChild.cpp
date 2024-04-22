@@ -112,7 +112,7 @@ void CacheChild::NoteDeletedActor() {
   // CacheOpChilds when StartDestroy was called from WorkerRef notification. If
   // the last CacheOpChild is getting destructed; it's the time for us to
   // SendTearDown to the other side.
-  if (NumChildActors() == 1 && mDelayedDestroy && !mLocked) DestroyInternal();
+  if (NumChildActors() == 0 && mDelayedDestroy && !mLocked) DestroyInternal();
 }
 
 already_AddRefed<PCacheOpChild> CacheChild::AllocPCacheOpChild(

@@ -2435,7 +2435,7 @@ void ContentParent::NotifyTabDestroyed(const TabId& aTabId,
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
           ("NotifyTabDestroyed %p", this));
 
-  MaybeBeginShutDown(/* aExpectedBrowserCount */ 1);
+  MaybeBeginShutDown();
 }
 
 TestShellParent* ContentParent::CreateTestShell() {
