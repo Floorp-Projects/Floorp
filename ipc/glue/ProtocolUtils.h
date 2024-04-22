@@ -197,7 +197,7 @@ class IProtocol : public HasResultCodes {
   const char* GetProtocolName() const { return ProtocolIdToName(mProtocolId); }
 
   int32_t Id() const { return mId; }
-  IProtocol* Manager() const { return mManager; }
+  IRefCountedProtocol* Manager() const { return mManager; }
 
   ActorLifecycleProxy* GetLifecycleProxy() { return mLifecycleProxy; }
   WeakActorLifecycleProxy* GetWeakLifecycleProxy();
@@ -239,13 +239,13 @@ class IProtocol : public HasResultCodes {
 
   // We have separate functions because the accessibility code manually
   // calls SetManager.
-  void SetManager(IProtocol* aManager);
+  void SetManager(IRefCountedProtocol* aManager);
 
   // Sets the manager for the protocol and registers the protocol with
   // its manager, setting up channels for the protocol as well.  Not
   // for use outside of IPDL.
-  void SetManagerAndRegister(IProtocol* aManager);
-  void SetManagerAndRegister(IProtocol* aManager, int32_t aId);
+  void SetManagerAndRegister(IRefCountedProtocol* aManager);
+  void SetManagerAndRegister(IRefCountedProtocol* aManager, int32_t aId);
 
   // Helpers for calling `Send` on our underlying IPC channel.
   bool ChannelSend(UniquePtr<IPC::Message> aMsg);
@@ -313,7 +313,7 @@ class IProtocol : public HasResultCodes {
   Side mSide;
   LinkStatus mLinkStatus;
   ActorLifecycleProxy* mLifecycleProxy;
-  IProtocol* mManager;
+  RefPtr<IRefCountedProtocol> mManager;
   IToplevelProtocol* mToplevel;
 };
 
@@ -651,10 +651,6 @@ class ActorLifecycleProxy {
   ActorLifecycleProxy& operator=(const ActorLifecycleProxy&) = delete;
 
   IProtocol* MOZ_NON_OWNING_REF mActor;
-
-  // Hold a reference to the actor's manager's ActorLifecycleProxy to help
-  // prevent it from dying while we're still alive!
-  RefPtr<ActorLifecycleProxy> mManager;
 
   // When requested, the current self-referencing weak reference for this
   // ActorLifecycleProxy.
