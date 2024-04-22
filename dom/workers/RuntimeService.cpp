@@ -343,7 +343,7 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
 
 #define PREF(suffix_, key_)                                          \
   {                                                                  \
-    nsLiteralCString(PREF_MEM_OPTIONS_PREFIX suffix_),               \
+    nsLiteralCString(suffix_),                                       \
         PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX suffix_, key_ \
   }
   constexpr WorkerGCPref kWorkerPrefs[] = {
