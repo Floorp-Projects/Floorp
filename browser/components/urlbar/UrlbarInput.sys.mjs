@@ -2771,20 +2771,18 @@ export class UrlbarInput {
       return;
     }
 
-    let url =
-      element.dataset.command == "help"
-        ? result.payload.helpUrl
-        : element.dataset.url;
+    let url;
+    if (element.dataset.command == "help") {
+      url = result.payload.helpUrl;
+    }
+    url ||= element.dataset.url;
+
     if (!url) {
       return;
     }
 
     let where = this._whereToOpen(event);
-    if (
-      url &&
-      result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP &&
-      where == "current"
-    ) {
+    if (result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP && where == "current") {
       // Open non-tip help links in a new tab unless the user held a modifier.
       // TODO (bug 1696232): Do this for tip help links, too.
       where = "tab";
