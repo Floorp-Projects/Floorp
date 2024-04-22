@@ -37,13 +37,7 @@ internal class LinkingMiddleware(
         when (action) {
             is TabListAction.AddTabAction -> {
                 if (action.tab.engineState.engineSession != null && action.tab.engineState.engineObserver == null) {
-                    engineObserver = link(
-                        context,
-                        action.tab.engineState.engineSession,
-                        action.tab,
-                        skipLoading = true,
-                        includeParent = false,
-                    )
+                    engineObserver = link(context, action.tab.engineState.engineSession, action.tab)
                 }
             }
             is TabListAction.AddMultipleTabsAction -> {
@@ -64,7 +58,7 @@ internal class LinkingMiddleware(
         when (action) {
             is EngineAction.LinkEngineSessionAction -> {
                 context.state.findTabOrCustomTab(action.tabId)?.let { tab ->
-                    engineObserver = link(context, action.engineSession, tab, action.skipLoading, action.includeParent)
+                    engineObserver = link(context, action.engineSession, tab, action.skipLoading)
                 }
             }
             else -> {
@@ -83,7 +77,6 @@ internal class LinkingMiddleware(
         engineSession: EngineSession,
         tab: SessionState,
         skipLoading: Boolean = true,
-        includeParent: Boolean,
     ): Pair<String, EngineObserver> {
         val observer = EngineObserver(tab.id, context.store)
         engineSession.register(observer)
@@ -98,7 +91,7 @@ internal class LinkingMiddleware(
             // tab, but opened by an extension e.g. via browser.tabs.update.
             performLoadOnMainThread(engineSession, tab.content.url, loadFlags = tab.engineState.initialLoadFlags)
         } else {
-            val parentEngineSession = if (includeParent && tab is TabSessionState) {
+            val parentEngineSession = if (tab is TabSessionState) {
                 tab.parentId?.let { context.state.findTabOrCustomTab(it)?.engineState?.engineSession }
             } else {
                 null
