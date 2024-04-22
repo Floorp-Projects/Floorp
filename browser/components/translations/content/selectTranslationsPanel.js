@@ -130,13 +130,6 @@ var SelectTranslationsPanel = new (class {
   #translationState = { phase: "closed" };
 
   /**
-   * The Translator for the current language pair.
-   *
-   * @type {Translator}
-   */
-  #translator;
-
-  /**
    * An Id that increments with each translation, used to help keep track
    * of whether an active translation request continue its progression or
    * stop due to the existence of a newer translation request.
@@ -799,21 +792,6 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
-   * Checks if the translator's language configuration matches the given language pair.
-   *
-   * @param {string} fromLanguage - The from-language to compare.
-   * @param {string} toLanguage - The to-language to compare.
-   *
-   * @returns {boolean} - True if the translator's languages match the given pair, otherwise false.
-   */
-  #translatorMatchesLangPair(fromLanguage, toLanguage) {
-    return (
-      this.#translator?.fromLanguage === fromLanguage &&
-      this.#translator?.toLanguage === toLanguage
-    );
-  }
-
-  /**
    * Retrieves the currently selected language pair from the menu lists.
    *
    * @returns {{fromLanguage: string, toLanguage: string}} An object containing the selected languages.
@@ -1156,9 +1134,7 @@ var SelectTranslationsPanel = new (class {
       // Continue only if the current translationId matches.
       translationId === this.#translationId &&
       // Continue only if the given language pair is still the actively selected pair.
-      this.#isSelectedLangPair(fromLanguage, toLanguage) &&
-      // Continue only if the given language pair matches the current translator.
-      this.#translatorMatchesLangPair(fromLanguage, toLanguage)
+      this.#isSelectedLangPair(fromLanguage, toLanguage)
     );
   }
 
@@ -1484,24 +1460,16 @@ var SelectTranslationsPanel = new (class {
    *
    * @returns {Promise<Translator>} A promise that resolves to a `Translator` instance for the given language pair.
    */
-  async #getOrCreateTranslator(fromLanguage, toLanguage) {
-    if (this.#translatorMatchesLangPair(fromLanguage, toLanguage)) {
-      return this.#translator;
-    }
-
+  async #createTranslator(fromLanguage, toLanguage) {
     this.console?.log(
       `Creating new Translator (${fromLanguage}-${toLanguage})`
     );
-    if (this.#translator) {
-      this.#translator.destroy();
-      this.#translator = null;
-    }
 
-    this.#translator = await Translator.create(fromLanguage, toLanguage, {
+    const translator = await Translator.create(fromLanguage, toLanguage, {
       allowSameLanguage: true,
       requestTranslationsPort: this.#requestTranslationsPort,
     });
-    return this.#translator;
+    return translator;
   }
 
   /**
@@ -1521,7 +1489,7 @@ var SelectTranslationsPanel = new (class {
     }
 
     const translationId = ++this.#translationId;
-    this.#getOrCreateTranslator(fromLanguage, toLanguage)
+    this.#createTranslator(fromLanguage, toLanguage)
       .then(translator => {
         if (
           this.#shouldContinueTranslation(
