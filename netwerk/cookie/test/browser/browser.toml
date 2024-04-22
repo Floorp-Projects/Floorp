@@ -17,6 +17,9 @@ support-files = ["server.sjs"]
 
 ["browser_cookies_ipv6.js"]
 
+["browser_cookies_serviceWorker.js"]
+support-files = ["cookies.sjs", "serviceWorker.js"]
+
 ["browser_domCache.js"]
 
 ["browser_indexedDB.js"]
