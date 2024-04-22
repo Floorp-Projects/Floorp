@@ -646,6 +646,8 @@
     <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Pakollinen</string>
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Valinnainen</string>
+    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
+    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Lue ja muuta verkkosivuston dataa</string>
     <!-- The description of the icon that can delete one of the websites displayed  -->
     <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Poista verkkosivusto</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
@@ -2707,4 +2709,6 @@
     <string name="debug_drawer_logins_current_domain_label">Nykyinen verkkotunnus: %s</string>
     <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
     <string name="debug_drawer_logins_add_login_button">Lisää kuvitteellinen kirjautumistunnus tälle verkkotunnukselle</string>
-    </resources>
+    <!-- Content description for delete button where parameter will be the username of the login -->
+    <string name="debug_drawer_logins_delete_login_button_content_description">Poista kirjautumistieto käyttäjätunnuksella %s</string>
+</resources>

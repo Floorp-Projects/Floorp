@@ -148,8 +148,10 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">ਨਵੀਂ ਨਿੱਜੀ ਟੈਬ</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">ਪਾਸਵਰਡ ਸ਼ਾਰਟਕੱਟ</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">ਪਾਸਵਰਡ</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">ਪਾਸਵਰਡ ਸ਼ਾਰਟਕੱਟ</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -253,9 +255,18 @@
     <string name="browser_menu_customize_home_1">ਮੁੱਖ-ਸਫ਼ੇ ਨੂੰ ਕਸਟਮਾਈਜ਼ ਕਰੋ</string>
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">ਸਾਈਨ ਇਨ</string>
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
-    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">ਪਾਸਵਰਡ, ਟੈਬਾਂ ਤੇ ਹੋਰਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
+    <string name="browser_menu_sign_in">ਸਾਈਨ ਇਨ</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">ਪਾਸਵਰਡ, ਟੈਬਾਂ ਤੇ ਹੋਰਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
+
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">ਸਿੰਕ ਕਰਨ ਲਈ ਵਾਪਸ ਸਾਈਨ ਇਨ ਕਰੋ</string>
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">ਸਿੰਕ ਨੂੰ ਰੋਕਿਆ ਗਿਆ ਹੈ</string>
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">ਨਵੀਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬ</string>
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">ਪਾਸਵਰਡ</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -633,6 +644,20 @@
     <string name="notifications_allowed_summary">ਇਜਾਜ਼ਤ ਦਿੱਤੇ</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">ਇਜ਼ਾਜਤ ਨਹੀ ਹੈ</string>
+
+    <!-- Add-on Permissions -->
+    <!-- The title of the required permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">ਲੋੜੀਂਦਾ</string>
+    <!-- The title of the optional permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">ਚੋਣਵਾਂ</string>
+    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
+    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">ਵੈੱਬਸਾਈਟ ਡਾਟਾ ਪੜ੍ਹਨ ਅਤੇ ਬਦਲਣ</string>
+    <!-- The description of the icon that can delete one of the websites displayed  -->
+    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">ਵੈੱਬਸਾਈਟ ਨੂੰ ਹਟਾਉਣ</string>
+    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
+    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">ਸਭ ਸਾਈਟਾਂ ਲਈ ਮਨਜ਼ੂਰੀ</string>
+    <!-- The subtitle for the allow for all sites preference toggle -->
+    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">ਜੇ ਤੁਸੀਂ ਇਸ ਇਕਸਟੈਨਸ਼ਨ ਉੱਤੇ ਭਰੋਸਾ ਕਦੇ ਹੋ ਤਾਂ ਤੁਸੀਂ ਹਰ ਵੈੱਬਸਾਈਟ ਲਈ ਇਸ ਨੂੰ ਇਜਾਜ਼ਤ ਦੇ ਸਕਦੇ ਹੋ।</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -2492,7 +2517,7 @@
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">ਅਫ਼ਸੋਸ ਅਸੀਂ ਹਾਲੇ %1$s ਲਈ ਸਹਾਇਕ ਨਹੀਂ ਹਾਂ।</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more">ਹੋਰ ਜਾਣੋ</string>
+    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">ਹੋਰ ਜਾਣੋ</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">…ਉਲੱਥਾ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ</string>
@@ -2506,7 +2531,7 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title">ਉਲੱਥੇ ਲਈ ਚੋਣਾਂ</string>
+    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">ਉਲੱਥੇ ਲਈ ਚੋਣਾਂ</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">ਹਮੇਸ਼ਾਂ ਉਲੱਥਾ ਦੀ ਪੇਸ਼ਕਸ਼ ਕਰੋ</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2644,6 +2669,8 @@
     <string name="debug_drawer_title">ਡੀਬੱਗ ਟੂਲ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">ਪਿੱਛੇ ਜਾਓ</string>
+
+    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">ਟੈਬ ਟੂਲ</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2666,4 +2693,5 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">ਨਾ-ਸਰਗਰਮ ਟੈਬਾਂ ਵਿੱਚ ਜੋੜੋ</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਵਿੱਚ ਜੋੜੋ</string>
-</resources>
+
+    </resources>
