@@ -68,7 +68,6 @@ class CanvasManagerChild final : public PCanvasManagerChild {
 
   RefPtr<mozilla::dom::ThreadSafeWorkerRef> mWorkerRef;
   RefPtr<layers::CanvasChild> mCanvasChild;
-  RefPtr<webgpu::WebGPUChild> mWebGPUChild;
   UniquePtr<layers::ActiveResourceTracker> mActiveResourceTracker;
   const uint32_t mId;
   bool mActive = true;
