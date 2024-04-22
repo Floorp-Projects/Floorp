@@ -97,6 +97,7 @@ class FetchParent final : public PFetchParent {
   bool mHasCSPEventListener{false};
   bool mExtendForCSPEventListener{false};
   uint64_t mAssociatedBrowsingContextID{0};
+  bool mIsThirdPartyContext{true};
 
   Atomic<bool> mIsDone{false};
   Atomic<bool> mActorDestroyed{false};

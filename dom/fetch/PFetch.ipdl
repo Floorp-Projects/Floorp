@@ -24,6 +24,7 @@ struct FetchOpArgs{
   bool needOnDataAvailable;
   bool hasCSPEventListener;
   uint64_t associatedBrowsingContextID;
+  bool isThirdPartyContext;
 };
 
 protocol PFetch {

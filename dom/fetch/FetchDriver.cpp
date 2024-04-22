@@ -665,6 +665,13 @@ nsresult FetchDriver::HttpFetch(
     nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
     rv = loadInfo->SetWorkerAssociatedBrowsingContextID(
         mAssociatedBrowsingContextID);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (mIsThirdPartyWorker.isSome()) {
+    nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+    rv = loadInfo->SetIsInThirdPartyContext(mIsThirdPartyWorker.ref());
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // If the fetch is created by FetchEvent.request or NavigationPreload request,
