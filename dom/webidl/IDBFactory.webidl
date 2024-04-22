@@ -27,12 +27,7 @@ interface IDBFactory {
   [NewObject, Throws, NeedsCallerType]
   IDBOpenDBRequest
   open(DOMString name,
-       [EnforceRange] unsigned long long version);
-
-  [NewObject, Throws, NeedsCallerType]
-  IDBOpenDBRequest
-  open(DOMString name,
-       optional IDBOpenDBOptions options = {});
+       optional [EnforceRange] unsigned long long version);
 
   [NewObject, Throws, NeedsCallerType]
   IDBOpenDBRequest
