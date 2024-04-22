@@ -39,7 +39,7 @@ import { toggleBlackBox } from "../../actions/sources/blackbox";
 import { addExpression } from "../../actions/expressions";
 import { evaluateInConsole } from "../../actions/toolbox";
 
-export function showEditorContextMenu(event, editor, location) {
+export function showEditorContextMenu(event, editor, lineObject, location) {
   return async ({ dispatch, getState }) => {
     const { source } = location;
     const state = getState();
@@ -63,9 +63,9 @@ export function showEditorContextMenu(event, editor, location) {
         location,
         isPaused,
         editorWrappingEnabled,
-        selectionText: editor.codeMirror.getSelection().trim(),
-        isTextSelected: editor.codeMirror.somethingSelected(),
-        editor,
+        selectionText: editor.getSelectedText(),
+        isTextSelected: editor.isTextSelected(),
+        lineObject,
         isSourceOnIgnoreList,
         dispatch,
       })
@@ -339,7 +339,7 @@ function editorMenuItems({
   isTextSelected,
   isPaused,
   editorWrappingEnabled,
-  editor,
+  lineObject,
   isSourceOnIgnoreList,
   dispatch,
 }) {
@@ -368,14 +368,8 @@ function editorMenuItems({
     blackBoxMenuItem(source, blackboxedRanges, isSourceOnIgnoreList, dispatch)
   );
 
-  const startLine = toSourceLine(
-    source.id,
-    editor.codeMirror.getCursor("from").line
-  );
-  const endLine = toSourceLine(
-    source.id,
-    editor.codeMirror.getCursor("to").line
-  );
+  const startLine = toSourceLine(source.id, lineObject.from.line);
+  const endLine = toSourceLine(source.id, lineObject.to.line);
 
   // Find any blackbox ranges that exist for the selected lines
   const blackboxRange = findBlackBoxRange(source, blackboxedRanges, {
@@ -400,10 +394,7 @@ function editorMenuItems({
     items.push(
       blackBoxSourceLinesMenuItem(
         source,
-        {
-          from: editor.codeMirror.getCursor("from"),
-          to: editor.codeMirror.getCursor("to"),
-        },
+        lineObject,
         blackboxedRanges,
         isSourceOnIgnoreList,
         null,

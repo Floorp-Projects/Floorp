@@ -238,7 +238,12 @@ class Editor extends PureComponent {
       editor.setUpdateListener(this.onEditorUpdated);
       editor.setGutterEventListeners({
         click: (event, cm, line) => this.onGutterClick(cm, line, null, event),
-        contextmenu: (event, cm, line) => this.openMenu(event, line, true),
+        contextmenu: (event, cm, line) => this.openMenu(event, line),
+      });
+      editor.setContentEventListeners({
+        click: (event, cm, line, column) => this.onClick(event, line, column),
+        contextmenu: (event, cm, line, column) =>
+          this.openMenu(event, line, column),
       });
     }
     this.setState({ editor });
@@ -459,7 +464,7 @@ class Editor extends PureComponent {
   };
   // Note: The line is optional, if not passed (as is likely for codemirror 6)
   // it fallsback to lineAtHeight.
-  openMenu(event, line) {
+  openMenu(event, line, ch) {
     event.stopPropagation();
     event.preventDefault();
 
@@ -508,7 +513,7 @@ class Editor extends PureComponent {
         line
       ).trim();
 
-      const lineObject = { from: { line }, to: { line } };
+      const lineObject = { from: { line, ch }, to: { line, ch } };
 
       this.props.showEditorGutterContextMenu(
         event,
@@ -523,13 +528,23 @@ class Editor extends PureComponent {
       return;
     }
 
-    const location = getSourceLocationFromMouseEvent(
-      editor,
-      selectedSource,
-      event
-    );
+    let location;
+    if (features.codemirrorNext) {
+      location = createLocation({
+        source: selectedSource,
+        line: fromEditorLine(
+          selectedSource.id,
+          line,
+          isWasm(selectedSource.id)
+        ),
+        column: isWasm(selectedSource.id) ? 0 : ch + 1,
+      });
+    } else {
+      location = getSourceLocationFromMouseEvent(editor, selectedSource, event);
+    }
 
-    this.props.showEditorContextMenu(event, editor, location);
+    const lineObject = editor.getSelectionCursor();
+    this.props.showEditorContextMenu(event, editor, lineObject, location);
   }
 
   /**
@@ -617,16 +632,29 @@ class Editor extends PureComponent {
     );
   };
 
-  onClick(e) {
+  onClick(e, line, ch) {
     const { selectedSource, updateCursorPosition, jumpToMappedLocation } =
       this.props;
 
     if (selectedSource) {
-      const sourceLocation = getSourceLocationFromMouseEvent(
-        this.state.editor,
-        selectedSource,
-        e
-      );
+      let sourceLocation;
+      if (features.codemirrorNext) {
+        sourceLocation = createLocation({
+          source: selectedSource,
+          line: fromEditorLine(
+            selectedSource.id,
+            line,
+            isWasm(selectedSource.id)
+          ),
+          column: isWasm(selectedSource.id) ? 0 : ch + 1,
+        });
+      } else {
+        sourceLocation = getSourceLocationFromMouseEvent(
+          this.state.editor,
+          selectedSource,
+          e
+        );
+      }
 
       if (e.metaKey && e.altKey) {
         jumpToMappedLocation(sourceLocation);
