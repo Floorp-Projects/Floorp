@@ -1,4 +1,4 @@
-# [Android Components](../../../README.md) > Browser > Toolbar
+# [Android Components](../../../README.md) > Browser > Toolbar2
 
 A customizable toolbar for browsers.
 
@@ -9,7 +9,7 @@ A customizable toolbar for browsers.
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
-implementation "org.mozilla.components:browser-toolbar:{latest-version}"
+implementation "org.mozilla.components:browser-toolbar2:{latest-version}"
 ```
 
 ## Facts

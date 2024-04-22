@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar
+package mozilla.components.browser.toolbar2
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -17,10 +17,10 @@ import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.toolbar.display.DisplayToolbar
-import mozilla.components.browser.toolbar.display.DisplayToolbarViews
-import mozilla.components.browser.toolbar.display.MenuButton
-import mozilla.components.browser.toolbar.edit.EditToolbar
+import mozilla.components.browser.toolbar2.display.DisplayToolbar
+import mozilla.components.browser.toolbar2.display.DisplayToolbarViews
+import mozilla.components.browser.toolbar2.display.MenuButton
+import mozilla.components.browser.toolbar2.edit.EditToolbar
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity

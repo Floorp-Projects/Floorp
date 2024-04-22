@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.display
+package mozilla.components.browser.toolbar2.display
 
 import android.animation.LayoutTransition
 import android.content.Context
@@ -15,8 +15,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
-import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.browser.toolbar.R
+import mozilla.components.browser.toolbar2.BrowserToolbar
+import mozilla.components.browser.toolbar2.R
 
 private const val TITLE_VIEW_WEIGHT = 5.7f
 private const val URL_VIEW_WEIGHT = 4.3f
