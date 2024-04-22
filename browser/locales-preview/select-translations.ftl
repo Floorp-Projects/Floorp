@@ -89,3 +89,7 @@ select-translations-panel-unsupported-language-message-known =
     .message = Sorry, we don’t support { $language } yet.
 select-translations-panel-unsupported-language-message-unknown =
     .message = Sorry, we don’t support this language yet.
+
+# Text displayed on the menuitem that opens the Translation Settings page.
+select-translations-panel-open-translations-settings-menuitem =
+    .label = Translation settings

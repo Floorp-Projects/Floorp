@@ -447,6 +447,45 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Opens the settings menu popup at the settings button gear-icon.
+   */
+  #openSettingsPopup() {
+    const { settingsButton } = this.elements;
+    const popup = settingsButton.ownerDocument.getElementById(
+      "select-translations-panel-settings-menupopup"
+    );
+    popup.openPopup(settingsButton, "after_start");
+  }
+
+  /**
+   * Opens the "About translation in Firefox" Mozilla support page in a new tab.
+   */
+  onAboutTranslations() {
+    this.close();
+    const window =
+      gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
+    window.openTrustedLinkIn(
+      "https://support.mozilla.org/kb/website-translation",
+      "tab",
+      {
+        forceForeground: true,
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
+      }
+    );
+  }
+
+  /**
+   * Opens the Translations section of about:preferences in a new tab.
+   */
+  openTranslationsSettingsPage() {
+    this.close();
+    const window =
+      gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
+    window.openTrustedLinkIn("about:preferences#general-translations", "tab");
+  }
+
+  /**
    * Handles events when a command event is triggered within the panel.
    *
    * @param {Element} target - The event target
@@ -458,6 +497,7 @@ var SelectTranslationsPanel = new (class {
       doneButton,
       fromMenuList,
       fromMenuPopup,
+      settingsButton,
       toMenuList,
       toMenuPopup,
       translateButton,
@@ -478,6 +518,10 @@ var SelectTranslationsPanel = new (class {
       case fromMenuList.id:
       case fromMenuPopup.id: {
         this.onChangeFromLanguage();
+        break;
+      }
+      case settingsButton.id: {
+        this.#openSettingsPopup();
         break;
       }
       case toMenuList.id:
