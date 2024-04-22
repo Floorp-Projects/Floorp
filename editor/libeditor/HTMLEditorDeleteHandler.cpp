@@ -1846,9 +1846,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
   }
 
   if (aScanFromCaretPointResult.ReachedCurrentBlockBoundary()) {
-    if (NS_WARN_IF(!aScanFromCaretPointResult.ContentIsElement())) {
-      return NS_ERROR_FAILURE;
-    }
+    MOZ_ASSERT(aScanFromCaretPointResult.ContentIsElement());
     MOZ_ASSERT(!aRangesToDelete.Ranges().IsEmpty());
     bool handled = false;
     for (const OwningNonNull<nsRange>& range : aRangesToDelete.Ranges()) {
@@ -2041,9 +2039,7 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
   }
 
   if (aScanFromCaretPointResult.ReachedCurrentBlockBoundary()) {
-    if (NS_WARN_IF(!aScanFromCaretPointResult.ContentIsElement())) {
-      return Err(NS_ERROR_FAILURE);
-    }
+    MOZ_ASSERT(aScanFromCaretPointResult.ContentIsElement());
     MOZ_ASSERT(!aRangesToDelete.Ranges().IsEmpty());
     bool allRangesNotHandled = true;
     auto ret = EditActionResult::IgnoredResult();
@@ -6874,6 +6870,7 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
       }
 
       if (forwardScanFromEndResult.ReachedCurrentBlockBoundary()) {
+        MOZ_ASSERT(forwardScanFromEndResult.ContentIsElement());
         MOZ_ASSERT(forwardScanFromEndResult.GetContent() ==
                    wsScannerAtEnd.GetEndReasonContent());
         // We want to keep looking up.  But stop if we are crossing table
@@ -6887,7 +6884,6 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
         // Don't cross flex-item/grid-item boundary to make new content inserted
         // into it.
         if (StaticPrefs::editor_block_inline_check_use_computed_style() &&
-            forwardScanFromEndResult.ContentIsElement() &&
             HTMLEditUtils::IsFlexOrGridItem(
                 *forwardScanFromEndResult.ElementPtr())) {
           break;

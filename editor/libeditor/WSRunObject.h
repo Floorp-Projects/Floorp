@@ -157,11 +157,11 @@ class MOZ_STACK_CLASS WSScanResult final {
     // content. Additionally, if there is no editable content, this is the
     // container start of scanner and is not editable.
     if (mReason == WSType::CurrentBlockBoundary) {
-      if (HTMLEditUtils::IsBlockElement(*mContent, aBlockInlineCheck) ||
-          // If mContent is not editable, we cannot check whether there is no
-          // block ancestor in the limiter which we don't have.  Therefore,
-          // let's skip the ancestor check.
-          !mContent->IsEditable()) {
+      MOZ_ASSERT_IF(mReason == WSType::CurrentBlockBoundary,
+                    mContent->IsElement());
+      MOZ_ASSERT_IF(mReason == WSType::CurrentBlockBoundary,
+                    mContent->IsEditable());
+      if (HTMLEditUtils::IsBlockElement(*mContent, aBlockInlineCheck)) {
         return;
       }
       const DebugOnly<Element*> closestAncestorEditableBlockElement =
