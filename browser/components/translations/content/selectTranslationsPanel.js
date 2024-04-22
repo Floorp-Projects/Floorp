@@ -179,6 +179,9 @@ var SelectTranslationsPanel = new (class {
         fromMenuList: "select-translations-panel-from",
         fromMenuPopup: "select-translations-panel-from-menupopup",
         header: "select-translations-panel-header",
+        initFailureContent: "select-translations-panel-init-failure-content",
+        initFailureMessageBar:
+          "select-translations-panel-init-failure-message-bar",
         mainContent: "select-translations-panel-main-content",
         settingsButton: "select-translations-panel-settings-button",
         textArea: "select-translations-panel-text-area",
@@ -1203,6 +1206,7 @@ var SelectTranslationsPanel = new (class {
       cancelButton,
       copyButton,
       doneButton,
+      initFailureContent,
       mainContent,
       unsupportedLanguageContent,
       textArea,
@@ -1214,6 +1218,7 @@ var SelectTranslationsPanel = new (class {
     this.#setPanelElementAttributes({
       makeHidden: [
         cancelButton,
+        initFailureContent,
         translateButton,
         translationFailureMessageBar,
         tryAgainButton,
@@ -1239,6 +1244,7 @@ var SelectTranslationsPanel = new (class {
       cancelButton,
       copyButton,
       doneButton,
+      initFailureContent,
       mainContent,
       unsupportedLanguageContent,
       translateButton,
@@ -1249,6 +1255,7 @@ var SelectTranslationsPanel = new (class {
       makeHidden: [
         cancelButton,
         copyButton,
+        initFailureContent,
         mainContent,
         translateFullPageButton,
         tryAgainButton,
@@ -1267,6 +1274,7 @@ var SelectTranslationsPanel = new (class {
       cancelButton,
       copyButton,
       doneButton,
+      initFailureContent,
       mainContent,
       unsupportedLanguageContent,
       textArea,
@@ -1279,6 +1287,7 @@ var SelectTranslationsPanel = new (class {
       makeHidden: [
         doneButton,
         copyButton,
+        initFailureContent,
         translateButton,
         translateFullPageButton,
         textArea,

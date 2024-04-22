@@ -75,6 +75,9 @@ select-translations-panel-idle-placeholder-text = Translated text will appear he
 # Text displayed as a placeholder when the panel is actively translating.
 select-translations-panel-translating-placeholder-text = Translating…
 
+select-translations-panel-init-failure-message =
+    .message = Couldn’t load languages. Check your internet connection and try again.
+
 # Text displayed when the translation fails to complete.
 select-translations-panel-translation-failure-message =
     .message = There was a problem translating. Please try again.
