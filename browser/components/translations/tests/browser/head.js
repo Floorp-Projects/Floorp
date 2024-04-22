@@ -1085,7 +1085,7 @@ class FullPageTranslationsTestUtils {
   static async #clickSettingsMenuItemByL10nId(l10nId) {
     info(`Toggling the "${l10nId}" settings menu item.`);
     click(getByL10nId(l10nId), `Clicking the "${l10nId}" settings menu item.`);
-    await closeSettingsMenuIfOpen();
+    await closeFullPagePanelSettingsMenuIfOpen();
   }
 
   /**
@@ -1976,6 +1976,47 @@ class SelectTranslationsTestUtils {
     if (viewAssertion) {
       await viewAssertion();
     }
+  }
+
+  /**
+   * Opens the SelectTranslationsPanel settings menu.
+   * Requires that the translations panel is already open.
+   */
+  static async openPanelSettingsMenu() {
+    logAction();
+    const { settingsButton } = SelectTranslationsPanel.elements;
+    assertVisibility({ visible: { settingsButton } });
+    await SharedTranslationsTestUtils._waitForPopupEvent(
+      "select-translations-panel-settings-menupopup",
+      "popupshown",
+      () => click(settingsButton, "Opening the settings menu")
+    );
+    const settingsPageMenuItem = document.getElementById(
+      "select-translations-panel-open-settings-page-menuitem"
+    );
+    const aboutTranslationsMenuItem = document.getElementById(
+      "select-translations-panel-about-translations-menuitem"
+    );
+
+    assertVisibility({
+      visible: {
+        settingsPageMenuItem,
+        aboutTranslationsMenuItem,
+      },
+    });
+  }
+
+  /**
+   * Clicks the SelectTranslationsPanel settings menu item
+   * that leads to the Translations Settings in about:preferences.
+   */
+  static clickTranslationsSettingsPageMenuItem() {
+    logAction();
+    const settingsPageMenuItem = document.getElementById(
+      "select-translations-panel-open-settings-page-menuitem"
+    );
+    assertVisibility({ visible: { settingsPageMenuItem } });
+    click(settingsPageMenuItem);
   }
 
   /**

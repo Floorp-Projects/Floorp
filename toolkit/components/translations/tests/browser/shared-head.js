@@ -358,8 +358,9 @@ function getTranslationsParent() {
  * @param {ChromeWindow} [win]
  */
 async function closeAllOpenPanelsAndMenus(win) {
-  await closeSettingsMenuIfOpen(win);
+  await closeFullPagePanelSettingsMenuIfOpen(win);
   await closeFullPageTranslationsPanelIfOpen(win);
+  await closeSelectPanelSettingsMenuIfOpen(win);
   await closeSelectTranslationsPanelIfOpen(win);
   await closeContextMenuIfOpen(win);
 }
@@ -400,15 +401,24 @@ async function closeContextMenuIfOpen(win) {
 }
 
 /**
- * Closes the translations panel settings menu if it is open.
+ * Closes the full-page translations panel settings menu if it is open.
  *
  * @param {ChromeWindow} [win]
  */
-async function closeSettingsMenuIfOpen(win) {
+async function closeFullPagePanelSettingsMenuIfOpen(win) {
   await closePopupIfOpen(
     "full-page-translations-panel-settings-menupopup",
     win
   );
+}
+
+/**
+ * Closes the select translations panel settings menu if it is open.
+ *
+ * @param {ChromeWindow} [win]
+ */
+async function closeSelectPanelSettingsMenuIfOpen(win) {
+  await closePopupIfOpen("select-translations-panel-settings-menupopup", win);
 }
 
 /**
