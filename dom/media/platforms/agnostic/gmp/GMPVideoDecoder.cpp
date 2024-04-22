@@ -130,11 +130,11 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
     mUnorderedData.AppendElement(std::move(v));
   }
 
-    if (mSamples.IsEmpty()) {
-      // If we have no remaining samples in the table, then we have processed
-      // all outstanding decode requests.
-      ProcessReorderQueue(mDecodePromise, __func__);
-    }
+  if (mSamples.IsEmpty()) {
+    // If we have no remaining samples in the table, then we have processed
+    // all outstanding decode requests.
+    ProcessReorderQueue(mDecodePromise, __func__);
+  }
 }
 
 void GMPVideoDecoder::ReceivedDecodedReferenceFrame(const uint64_t aPictureId) {

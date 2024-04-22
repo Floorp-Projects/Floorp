@@ -72,7 +72,9 @@ class GPUVideoImage final : public Image {
   gfx::ColorDepth GetColorDepth() const override { return mColorDepth; }
   gfx::ColorSpace2 GetColorPrimaries() const { return mColorSpace; }
   gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
-  gfx::TransferFunction GetTransferFunction() const { return mTransferFunction; }
+  gfx::TransferFunction GetTransferFunction() const {
+    return mTransferFunction;
+  }
   gfx::ColorRange GetColorRange() const { return mColorRange; }
 
   Maybe<SurfaceDescriptor> GetDesc() override {

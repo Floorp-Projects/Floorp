@@ -17,9 +17,7 @@ using namespace mozilla::layout;
 namespace mozilla::dom {
 
 TabContext::TabContext()
-    : mInitialized(false),
-      mChromeOuterWindowID(0),
-      mMaxTouchPoints(0) {}
+    : mInitialized(false), mChromeOuterWindowID(0), mMaxTouchPoints(0) {}
 
 uint64_t TabContext::ChromeOuterWindowID() const {
   return mChromeOuterWindowID;

@@ -38,7 +38,7 @@ namespace mozilla {
 namespace dom {
 class Document;
 enum class FetchPriority : uint8_t;
-}
+}  // namespace dom
 }  // namespace mozilla
 
 class imgCacheEntry {

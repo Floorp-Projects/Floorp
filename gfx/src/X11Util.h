@@ -18,7 +18,7 @@
 #  error Unknown toolkit
 #endif
 
-#include <string.h>          // for memset
+#include <string.h>  // for memset
 
 namespace mozilla {
 

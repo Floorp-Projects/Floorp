@@ -15,13 +15,13 @@
 #include "mozilla/ServoStyleConsts.h"  // for StyleComputedTimingFunction
 #include "mozilla/dom/AnimationEffectBinding.h"  // for dom::FillMode
 #include "mozilla/dom/KeyframeEffectBinding.h"   // for dom::IterationComposite
-#include "mozilla/dom/KeyframeEffect.h"       // for dom::KeyFrameEffectReadOnly
-#include "mozilla/dom/Nullable.h"             // for dom::Nullable
-#include "mozilla/layers/APZSampler.h"        // for APZSampler
+#include "mozilla/dom/KeyframeEffect.h"  // for dom::KeyFrameEffectReadOnly
+#include "mozilla/dom/Nullable.h"        // for dom::Nullable
+#include "mozilla/layers/APZSampler.h"   // for APZSampler
 #include "mozilla/AnimatedPropertyID.h"
-#include "mozilla/LayerAnimationInfo.h"  // for GetCSSPropertiesFor()
-#include "mozilla/Maybe.h"               // for Maybe<>
-#include "mozilla/MotionPathUtils.h"     // for ResolveMotionPath()
+#include "mozilla/LayerAnimationInfo.h"   // for GetCSSPropertiesFor()
+#include "mozilla/Maybe.h"                // for Maybe<>
+#include "mozilla/MotionPathUtils.h"      // for ResolveMotionPath()
 #include "mozilla/StyleAnimationValue.h"  // for StyleAnimationValue, etc
 #include "nsCSSPropertyID.h"              // for eCSSProperty_offset_path, etc
 #include "nsDisplayList.h"                // for nsDisplayTransform, etc
