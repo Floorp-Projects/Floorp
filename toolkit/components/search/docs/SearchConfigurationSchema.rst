@@ -2,8 +2,9 @@
 Search Configuration Schema
 ===========================
 
-This document outlines the details of the schema and how the various sub-parts
-interact. For the full fields and descriptions, please see the `schema itself`_.
+This document outlines the details of the `search-config-v2`_ schema and how
+the various sub-parts interact. For the full fields and descriptions, please see
+the `schema itself`_.
 
 .. note::
     In the examples, only relevant properties are displayed.
@@ -11,452 +12,255 @@ interact. For the full fields and descriptions, please see the `schema itself`_.
 Overview
 ========
 
-The configuration is a JSON blob which is object with a `data` property which
-is an array of engines:
+The configuration is a JSON blob, an object with a ``data`` property and value
+as an array containing ``engine``, ``defaultEngines``, and ``engineOrders``
+record types:
 
 .. code-block:: js
 
     {
       data: [
         {
+          // defaultEngines details
+        },
+        {
           // engine 1 details
         },
         {
           // engine 2 details
-        }
-      ]
-    }
-
-Engine Objects
-==============
-
-An engine's details are located in the properties of the object associated with it.
-An engine that is deployed globally could be listed simply as:
-
-.. code-block:: js
-
-    {
-      "default": "no",
-      "telemetryId": "engine1-telem",
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-        }
-      }]
-    }
-
-The ``appliesTo`` section is an array of objects. At least one object is required
-to specify which regions/locales the engine is included within. If an
-``appliesTo`` object lists additional attributes then these will override any
-attributes at the top-level.
-
-For example, a more complex engine definition may be available only to users
-located specific regions or with certain locales. For example:
-
-.. code-block:: js
-
-    {
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "region": "us"
         },
-        "webExtension": {
-          "id": "web-us@ext"
-        }
-      }, {
-        "included": {
-          "region": "gb"
-        },
-        "webExtension": {
-          "id": "web-gb@ext"
-        }
-      }]
-    }
-
-In this case users identified as being in the US region would use the WebExtension
-with identifier ``web-us@ext``. GB region users would get
-``web-gb@ext``, and all other users would get ``web@ext``.
-
-To direct search engines to pull ``_locale`` data from a specific locale
-directory, you can use ``webExtension.locales``.
-
-For example, in this code block:
-
-.. code-block:: js
-
-    {
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [
         {
-          "included": {
-            "locales": "en-US"
-          },
-          "webExtension": {
-            "locales": [
-              "us"
-            ]
-          }
-        }, {
-          "included": {
-            "locales": "en-GB"
-          },
-          "webExtension": {
-            "locales": [
-              "uk"
-            ]
-          }
-        }
+          // engineOrders details
+        },
       ]
     }
 
-There should exist a ``us`` and ``uk`` folder in the ``locales`` directory
-of the extension, ``web``.
+Environment
+===========
+An ``environment`` property is contained within each of the record types and is
+used to determine where some, or all, of that record is applied to according to
+the user's detected environment. There are many different properties in ``environment``.
+These may be used individually or together to build up a match. Here is the list
+of those properties:
 
-If a locale is not provided, ``webExtension.locales`` is set to
-``SearchUtils.DEFAULT_TAG``.
+``allRegionsAndLocales``
+  - ``"environment": { "allRegionsAndLocales": true }``
+  - Indicates that this section applies to all regions and locales. May be
+    modified by excludedRegions/excludedLocales.
 
-`Search Extensions directory <https://searchfox.org/mozilla-central/source/browser/components/search/extensions>`__
+``applications``
+  - ``"environment": { "applications": ["firefox"] }``
+  - This property specifies the applications the record would be applied to.
+  - Some applications we support are ``firefox``, ``firefox-android``, ``firefox-ios``,
+    ``focus-android``, and ``focus-ios``.
 
-`Example of a locales directory <https://searchfox.org/mozilla-central/source/browser/components/search/extensions/wikipedia/_locales>`__
-
-
-Special Attributes
-==================
-
-$USER_LOCALE
-------------
-
-If a ``webExtension.locales`` property contains an element with the value
-``"$USER_LOCALE"`` then the special value will be replaced in the
-configuration object with the users locale. For example:
-
-.. code-block:: js
-
-    {
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "locales": {
-            "matches": [
-              "en-US",
-              "en-GB"
-            ]
-          }
-        },
-        "webExtension": {
-          "locales": ["$USER_LOCALE"]
-        }
-      }]
-    }
-
-Will report either ``[en-US]`` or ``[en-GB]`` as the ``webExtension.locales``
-property depending on the user's locale.
-
-Since the special string is replaced, custom folder names can be searched for
-by adding the keyword in between a consistent prefix/suffix.
-
-For example, if ``webExtension.locales`` was ``["example-$USER_LOCALE"]``,
-the locale generator will generate locale names in the form of ``example-en-US``
-and ``example-en-GB``.
-
-Note: Prior to Firefox 100.0, $USER_LOCALE used an exact match.
-In Firefox 100.0 the replacement was updated to use a standard string replacement.
-
-From Firefox 98.0.1 and 97.7.1esr, ``"$USER_LOCALE"`` may also be used in the
-``telemetryId`` field.
-
-$USER_REGION
-------------
-
-This can be used in the same situations as ``"$USER_LOCALE"``, instead
-replacing ``webExtension.locale`` with a string that uses the users region.
-
-.. code-block:: js
-
-    {
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-        },
-        "webExtension": {
-          "locales": ["foo-$USER_REGION"]
-        }
-      }]
-    }
-
-In this example, if the user's region is ``fr``, the ``webExtension.locale``
-will be ``foo-fr``, and the code will look for the ``messages.json`` in
-the ``foo-fr`` folder of the ``_locales`` folder for this extension.
-
-Note: ``"$USER_REGION"`` was added in Firefox 98.0.1 and 97.7.1esr and used an exact match.
-In Firefox 100.0 the replacement was updated to use a standard string replacement.
-
-"default"
----------
-
-You can specify ``"default"`` as a region in the configuration if
-the engine is to be included when we do not know the user's region.
-
-"override"
-----------
-
-The ``"override"`` field can be set to true if you want a section to
-only override otherwise included engines. ``"override"`` will only work for
-sections which apply to distributions or experiments. The experiment case was
-added in Firefox 81.
-
-Starting with Firefox 96, ``"override"`` sections may include ``included`` and
-``excluded`` information which will be applied accordingly. If they are not
-supplied, then the override section will be applied to everywhere.
-
-Example:
-
-.. code-block:: js
-
-    {
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [{
-        // Complicated and lengthy inclusion rules
-      }, {
-        "override": true,
-        "application": { "distributions": ["mydistrocode"]},
-        "params": {
-          "searchUrlGetParams": [
-            { "name": "custom", "value": "foobar" }
-          ]
-        }
-      }]
-    }
-
-Application Scoping
-===================
-
-An engine configuration may be scoped to a particular application.
-
-Name
-----
-
-One or more application names may be specified. Currently the only application
-type supported is ``firefox``. If an application name is specified, then it
-must be matched for the section to apply. If there are no application names
-specified, then the section will match any consumer of the configuration.
-
-In the following example, ``web@ext`` would be included on any consumer
-of the configuration, but ``web1@ext`` would only be included on Firefox desktop.
-
-.. code-block:: js
-
-    {
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-          "application": {
-            "name": []
-          }
-        }
-      ]}
-    },
-    {
-      "webExtension": {
-        "id": "web1@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-          "application": {
-            "name": ["firefox"]
-          }
-        }
-      ]}
-    }
-
-Channel
--------
-
-One or more channels may be specified in an array to restrict a configuration
-to just those channels. The current known channels are:
+``channels``
+  - ``"environment": { "channels": ["default"] }``
+  - One or more channels may be specified in an array to restrict a configuration
+    to just those channels. The following is a list of the channels:
 
     - default: Self-builds of Firefox, or possibly some self-distributed versions.
     - nightly: Firefox Nightly builds.
-    - aurora: Firefox Developer Edition
-    - beta: Firefox Beta
+    - aurora: Firefox Developer Edition.
+    - beta: Firefox Beta.
     - release: The main Firefox release channel.
     - esr: The ESR Channel. This will also match versions of Firefox where the
       displayed version number includes ``esr``. We do this to include Linux
       distributions and other manual builds of ESR.
 
-In the following example, ``web@ext`` would be set as default on the default
-channel only, whereas ``web1@ext`` would be set as default on release and esr
-channels.
+``distributions``
+  - ``"environment": { "distributions": ["distribution-name"] }``
+  - An array of distribution identifiers that the record object applies to.
+  - The identifiers match those supplied by the ``distribution.id`` preference.
+
+``excludedDistributions``
+  - ``"environment": { "distributions": ["distribution-excluded"] }``
+  - An array of distribution identifiers that the record object does not apply to.
+
+``excludedLocales``
+  - ``"environment": { "excludedLocales": ["de"] }``
+  - An array of locales that this section should be excluded from.
+
+``excludedRegions``
+  - ``"environment": { "excludedRegions": ["ca"] }``
+  - An array of regions that this section should be excluded from.
+
+``experiment``
+  - ``"environment": { "experiment": "experimental" }``
+  - Experiments can be run by giving a value to the ``experiment`` property.
+  - The experiment value should also be supplied to the ``experiment`` property
+    of the ``searchConfiguration`` feature on Nimbus.
+
+``locales``
+  - ``"environment": { "locales": ["en-US"] }``
+  - An array of locales that this section applies to.
+
+``regions``
+  - ``"environment": { "regions": ["ca"] }``
+  - An array of regions that this section applies to.
+  - ``"unknown"`` may be used to apply to situations where we have not been able
+    to detect the user's region. However, this is not currently expected to be used.
+
+``maxVersion`` and ``minVersion``
+  - Minimum and Maximum versions may be specified to restrict a configuration to
+    specific ranges. These may be open-ended. Version comparison is performed
+    using `the version comparator`_.
+  - Note: comparison against ``maxVersion`` is a less-than comparison. The
+    ``maxVersion`` won't be matched directly.
+  - ``"environment": { "minVersion": "72.0a1" }`` Indicates the record object
+    will be included for any version after 72.0a1.
+  - ``"environment": { "minVersion": "68.0a1", "maxVersion": "72.0a1" }``
+    Indicates the record object would be included only between 68.0a1 and 71.x
+    version.
+
+Engine Objects
+==============
+
+Each engine object represents a search engine that may be presented to a user.
+Each engine object is treated as a separate engine within the application, with
+independent settings.
 
 .. code-block:: js
 
     {
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-          "default": "yes",
-          "application": {
-            "channel": ["default"]
-          }
-        }
-      ]}
-    },
-    {
-      "webExtension": {
-        "id": "web1@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-          "default": "yes",
-          "application": {
-            "channel": ["release", "esr"]
-          }
-        }
-      ]}
-    }
-
-Distributions
--------------
-
-Distributions may be specified to be included or excluded in an ``appliesTo``
-section. The ``distributions`` field in the ``application`` section is an array
-of distribution identifiers. The identifiers match those supplied by the
-``distribution.id`` preference.
-
-In the following, ``web@ext`` would be included in only the ``cake``
-distribution. ``web1@ext`` would be excluded from the ``apples`` distribution
-but included in the main desktop application, and all other distributions.
-
-.. code-block:: js
-
-    {
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-          "application": {
-            "distributions": ["cake"]
-          }
-        }
-      ]}
-    },
-    {
-      "webExtension": {
-        "id": "web1@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-          "application": {
-            "excludedDistributions": ["apples"]
-          }
-        }
-      ]}
-    }
-
-Version
--------
-
-Minimum and Maximum versions may be specified to restrict a configuration to
-specific ranges. These may be open-ended. Version comparison is performed
-using `the version comparator`_.
-
-Note: comparison against ``maxVersion`` is a less-than comparison. The
-``maxVersion`` won't be matched directly.
-
-In the following example, ``web@ext`` would be included for any version after
-72.0a1, whereas ``web1@ext`` would be included only between 68.0a1 and 71.x
-version.
-
-.. code-block:: js
-
-    {
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-          "application": {
-            "minVersion": "72.0a1"
-          }
-        }
-      ]}
-    },
-    {
-      "webExtension": {
-        "id": "web1@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-          "default": "yes",
-          "application": {
-            "minVersion": "68.0a1"
-            "maxVersion": "72.0a1"
-          }
-        }
-      ]}
-    }
-
-Experiments
-===========
-
-We can run experiments by giving sections within ``appliesTo`` a
-``experiment`` value, the Search Service can then optionally pass in a
-matching ``experiment`` value to match those sections.
-
-Sections which have a ``experiment`` will not be used unless a matching
-``experiment`` has been passed in, for example:
-
-.. code-block:: js
-
-    {
-      "webExtension": {
-        "id": "web@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
+      "base": {
+        "classification": "general"
+        "name": "engine1 name",
+        "partnerCode": "bar",
+        "urls": {
+          "search": {
+            "base": "https://www.example.com",
+            "params": [
+              {
+                "name": "code",
+                "value": "{partnerCode}"
+              }
+            ],
+            "searchTermParamName": "q"
+          },
         },
-        "experiment": "nov-16",
-        "webExtension": {
-          "id": "web-experimental@ext"
+      },
+      "identifier": "engine1",
+      "recordType": "engine",
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true }
         }
-      }, {
-        "included": {
-          "everywhere": true
-        },
-        "webExtension": {
-          "id": "web-gb@ext"
-        }
-      }]
+      ]
     }
+
+The required **top-level** properties are:
+
+- ``base`` Defines the base details for the engine. The required base properties
+  are ``classification``, ``name``, and ``urls``.
+
+    - The ``urls`` may be different types of  urls. These various types include
+      ``search``, ``suggestions``, and ``trending`` urls. The url property contains
+      the base url and any query string params to build the complete url. If
+      ``engine1`` is used to search ``kitten``, the search url will be constructed
+      as ``https://www.example.com/?code=bar&q=kitten``. Notice the ``partnerCode``
+      from the base is inserted into parameters ``{partnerCode}`` value of the search url.
+- ``identifier`` Identifies the search engine and is used internally to set the telemetry id.
+- ``recordType`` The type of record the object is. Always ``engine`` for engine
+  objects.
+- ``variants`` Specifies the environment the engine is included in, which details
+  the region, locale, and other environment properties.
+
+Engine Variants
+===============
+A engine may be available only to users located in specific regions or with
+certain locales. For example, when the ``environment`` section of variants specify
+locales and regions:
+
+.. code-block:: js
+
+    "variants": [
+      {
+        "environment": { "locales": ["en-US"], "regions": ["US"] }
+      }
+    ]
+
+In this case users identified as being in the ``en-US`` locale and ``US`` region
+would be able to have the engine available.
+
+**Multiple Variants**
+
+When there are more than one variant the last matching variant will be applied.
+
+.. code-block:: js
+
+  "variants": [
+    {
+      "environment": { "locales": ["en-US"] }
+      "partnerCode": "bar"
+    },
+    {
+      "environment": { "locales": ["en-US"], "regions": ["US"]}
+      "partnerCode": "foo"
+    },
+  ]
+
+In this case users identified in ``en-US`` locale and ``US`` region  matched
+both the variants. Users in ``en-US`` locale and ``US`` region matched the
+first variant because it has ``en-US`` locales and when regions is not specified,
+it means all regions are included. Then it matched the second variant because it matched
+``en-US`` locale and ``US`` region. The result will be that for this user the
+partner code will have value ``foo``.
+
+Engine Subvariants
+==================
+Nested within ``variants`` may be an array of ``subVariants``. Subvariants
+contain the same properties as variants except the ``subVariants`` property. The
+purpose of subvariants is for the combination of environment properties from the
+last matched subvariant and the top level variant.
+
+.. code-block:: js
+
+    "variants": [
+      {
+        "environment": { "regions": ["US", "CA", "GB"] }
+        "subVariants": [
+          {
+            "environment": { "channels": [ "esr"] },
+            "partnerCode": "bar",
+          },
+        ]
+      }
+    ]
+
+In this case users identified as being in ``US`` region and ``esr`` channel
+would match the subvariant and would be able to have the engine available with
+partner code ``bar`` applied.
+
+**Multiple Subvariants**
+
+When there are more than one subvariant the last matching subvariant will be
+applied.
+
+.. code-block:: js
+
+  "variants": [
+    {
+      "environment": { "regions": ["US", "CA", "GB"] }
+      "subVariants": [
+        {
+          "environment": { "channels": [ "esr"] },
+          "partnerCode": "bar",
+        },
+        {
+          "environment": { "channels": [ "esr"], "locales": ["fr"] },
+          "partnerCode": "foo",
+        }
+      ]
+    }
+  ]
+
+In this case users identified in ``US`` region, ``fr`` locale, and ``esr`` channel
+matched both the subvariants. It matched the first subvariant because the first
+environment has ``US`` region from the top-level variant, ``esr`` channel, and
+all locales. Then it matched the second variant because the second environment
+has ``US`` region from top-level variant, ``fr`` locale, and ``esr`` channel.
+The user will receive the last matched subvariant with partner code ``foo``.
 
 Engine Defaults
 ===============
@@ -472,115 +276,85 @@ pair, then the normal mode engine is used.
 If the instance of the application does not support a separate private browsing mode engine,
 then it will only use the normal mode engine.
 
-An engine may or may not be default for particular regions/locales. The ``default``
-property is a tri-state value with states of ``yes``, ``yes-if-no-other`` and
-``no``. Here's an example of how they apply:
+An engine may or may not be default for particular regions/locales. The
+``defaultEngines`` record is structured to provide ``globalDefault`` and
+``globalDefaultPrivate`` properties, these properties define the user's engine
+if there are no ``specificDefaults`` sections that match the user's environment.
+The ``specificDefaults`` sections can define different engines that match with
+specific user environments.
 
 .. code-block:: js
 
     {
-      "webExtension": {
-        "id": "engine1@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "region": "us"
-        },
-        "default": "yes"
-      }, {
-        "excluded": {
-          "region": "us"
-        },
-        "default": "yes-if-no-other"
-      }]
-    },
-    {
-      "webExtension": {
-        "id": "engine2@ext"
-      },
-      "appliesTo": [{
-        "included": {
-          "region": "gb"
-        },
-        "default": "yes"
-      }]
-    },
-      "webExtension": {
-        "id": "engine3@ext"
-      },
-      "default": "no"
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-        },
-      }]
-    },
-    {
-      "webExtension": {
-        "id": "engine4@ext"
-      },
-      "defaultPrivate": "yes",
-      "appliesTo": [{
-        "included": {
-          "region": "fr"
+      "globalDefault": "engine1",
+      "globalDefaultPrivate": "engine1",
+      "recordType": "defaultEngines",
+      "specificDefaults": [
+        {
+          "default": "engine2",
+          "defaultPrivate": "engine3"
+          "environment": {
+            "locales": [
+              "en-CA"
+            ],
+            "regions": [
+              "CA"
+            ]
+          },
         }
-      }]
+      ]
     }
 
-In this example, for normal mode:
 
-    - engine1@ext is default in the US region, and all other regions except for GB
-    - engine2@ext is default in only the GB region
-    - engine3@ext and engine4 are never default anywhere
+In normal mode:
+
+    - engine1 is default for all regions except for region CA locale en-CA
+    - engine2 is default in only the CA region and locale en-CA
 
 In private browsing mode:
 
-    - engine1@ext is default in the US region, and all other regions except for GB and FR
-    - engine2@ext is default in only the GB region
-    - engine3@ext is never default anywhere
-    - engine4@ext is default in the FR region.
+    - engine1 is private default for all regions except for region CA locale en-CA
+    - engine3 is private default in only the CA region and locale en-CA
 
 Engine Ordering
 ===============
 
-The ``orderHint`` field indicates the suggested ordering of an engine relative to
-other engines when displayed to the user, unless the user has customized their
-ordering.
+The ``engineOrders`` record type indicates the suggested ordering of an engine
+relative to other engines when displayed to the user, unless the user has
+customized their ordering. The ordering is listed in the ``order`` property, an
+ordered array with the first engine being at the lowest index.
 
-The default ordering of engines is based on a combination of if the engine is
-default, and the ``orderHint`` fields. The ordering is structured as follows:
+If there is no matching order for the user's environment, then this order applies:
 
-#. Default engine in normal mode
-#. Default engine in private browsing mode (if different from the normal mode engine)
-#. Other engines in order from the highest ``orderHint`` to the lowest.
+#. Default Engine
+#. Default Private Engine (if any)
+#. Other engines in alphabetical order.
 
 Example:
 
 .. code-block:: js
 
     {
-      "webExtension": {
-        "id": "engine1@ext"
-      },
-      "orderHint": 2000,
-      "default": "no",
-    },
-    {
-      "webExtension": {
-        "id": "engine2@ext"
-      },
-      "orderHint": 1000,
-      "default": "yes"
-    },
-    {
-      "webExtension": {
-        "id": "engine3@ext"
-      },
-      "orderHint": 500,
-      "default": "no"
+      "orders": [
+        {
+          "environment": {
+            "distributions": [
+              "distro"
+            ]
+          },
+          "order": [
+            "c-engine",
+            "b-engine",
+            "a-engine",
+          ]
+        }
+      ]
+      "recordType": "engineOrders",
     }
 
-This would result in the order: ``engine2@ext, engine1@ext, engine3@ext``.
+This would result in the order: ``c-engine``, ``b-engine``, ``a-engine`` for the
+distribution ``distro``.
 
 .. _schema itself: https://searchfox.org/mozilla-central/source/toolkit/components/search/schema/
-.. _the version comparator: https://developer.mozilla.org/en-US/docs/Mozilla/Toolkit_version_format
+.. _the version comparator: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/version/format
+.. _search-config-v2: https://searchfox.org/mozilla-central/source/services/settings/dumps/main/search-config-v2.json
