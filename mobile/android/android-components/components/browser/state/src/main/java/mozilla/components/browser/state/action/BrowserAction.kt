@@ -1060,24 +1060,20 @@ sealed class TranslationsAction : BrowserAction() {
     /**
      * Sets the list of sites that the user has opted to never translate.
      *
-     * @property tabId The ID of the tab the [EngineSession] that requested the list.
      * @property neverTranslateSites The never translate sites.
      */
     data class SetNeverTranslateSitesAction(
-        override val tabId: String,
         val neverTranslateSites: List<String>,
-    ) : TranslationsAction(), ActionWithTab
+    ) : TranslationsAction()
 
     /**
      * Remove from the list of sites the user has opted to never translate.
      *
-     * @property tabId The ID of the tab the [EngineSession] that requested the removal.
      * @property origin A site origin URI that will have the specified never translate permission set.
      */
     data class RemoveNeverTranslateSiteAction(
-        override val tabId: String,
         val origin: String,
-    ) : TranslationsAction(), ActionWithTab
+    ) : TranslationsAction()
 
     /**
      * Sets the list of language machine learning translation models the translation engine has available.

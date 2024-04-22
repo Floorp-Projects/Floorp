@@ -175,11 +175,11 @@ internal object TranslationsStateReducer {
                     // Reset the error state, and then generally expect
                     // [TranslationsAction.SetNeverTranslateSitesAction] to update
                     // state in the success case.
-                    state.copyWithTranslationsState(action.tabId) {
-                        it.copy(
+                    state.copy(
+                        translationEngine = state.translationEngine.copy(
                             neverTranslateSites = null,
-                        )
-                    }
+                        ),
+                    )
                 }
             }
         }
@@ -240,7 +240,6 @@ internal object TranslationsStateReducer {
                 TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
-                            neverTranslateSites = null,
                             settingsError = action.translationError,
                         )
                     }
@@ -277,20 +276,20 @@ internal object TranslationsStateReducer {
             }
 
         is TranslationsAction.SetNeverTranslateSitesAction ->
-            state.copyWithTranslationsState(action.tabId) {
-                it.copy(
+            state.copy(
+                translationEngine = state.translationEngine.copy(
                     neverTranslateSites = action.neverTranslateSites,
-                )
-            }
+                ),
+            )
 
         is TranslationsAction.RemoveNeverTranslateSiteAction -> {
-            val neverTranslateSites = state.findTab(action.tabId)?.translationsState?.neverTranslateSites
+            val neverTranslateSites = state.translationEngine.neverTranslateSites
             val updatedNeverTranslateSites = neverTranslateSites?.filter { it != action.origin }?.toList()
-            state.copyWithTranslationsState(action.tabId) {
-                it.copy(
+            state.copy(
+                translationEngine = state.translationEngine.copy(
                     neverTranslateSites = updatedNeverTranslateSites,
-                )
-            }
+                ),
+            )
         }
 
         is TranslationsAction.OperationRequestedAction ->
@@ -327,11 +326,11 @@ internal object TranslationsStateReducer {
                 }
 
                 TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
-                    state.copyWithTranslationsState(action.tabId) {
-                        it.copy(
+                    state.copy(
+                        translationEngine = state.translationEngine.copy(
                             neverTranslateSites = null,
-                        )
-                    }
+                        ),
+                    )
                 }
                 TranslationOperation.TRANSLATE, TranslationOperation.RESTORE -> {
                     // No state change for these operations

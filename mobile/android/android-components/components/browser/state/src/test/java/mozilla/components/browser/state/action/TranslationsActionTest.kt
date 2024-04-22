@@ -347,44 +347,41 @@ class TranslationsActionTest {
     @Test
     fun `WHEN a SetNeverTranslateSitesAction is dispatched AND successful THEN update neverTranslateSites`() {
         // Initial
-        assertEquals(null, tabState().translationsState.neverTranslateSites)
+        assertNull(store.state.translationEngine.neverTranslateSites)
 
         // Action started
         val neverTranslateSites = listOf("google.com")
         store.dispatch(
             TranslationsAction.SetNeverTranslateSitesAction(
-                tabId = tab.id,
                 neverTranslateSites = neverTranslateSites,
             ),
         ).joinBlocking()
 
         // Action success
-        assertEquals(neverTranslateSites, tabState().translationsState.neverTranslateSites)
+        assertEquals(neverTranslateSites, store.state.translationEngine.neverTranslateSites)
     }
 
     @Test
     fun `WHEN a RemoveNeverTranslateSiteAction is dispatched AND successful THEN update neverTranslateSites`() {
         // Initial add to neverTranslateSites
-        assertEquals(null, tabState().translationsState.neverTranslateSites)
+        assertNull(store.state.translationEngine.neverTranslateSites)
         val neverTranslateSites = listOf("google.com")
         store.dispatch(
             TranslationsAction.SetNeverTranslateSitesAction(
-                tabId = tab.id,
                 neverTranslateSites = neverTranslateSites,
             ),
         ).joinBlocking()
-        assertEquals(neverTranslateSites, tabState().translationsState.neverTranslateSites)
+        assertEquals(neverTranslateSites, store.state.translationEngine.neverTranslateSites)
 
         // Action started
         store.dispatch(
             TranslationsAction.RemoveNeverTranslateSiteAction(
-                tabId = tab.id,
                 origin = "google.com",
             ),
         ).joinBlocking()
 
         // Action success
-        assertEquals(listOf<String>(), tabState().translationsState.neverTranslateSites)
+        assertEquals(listOf<String>(), store.state.translationEngine.neverTranslateSites)
     }
 
     @Test

@@ -86,7 +86,7 @@ class TranslationsMiddleware(
                     }
                     TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
                         scope.launch {
-                            getNeverTranslateSites(context, action.tabId)
+                            requestNeverTranslateSites(context, action.tabId)
                         }
                     }
                     TranslationOperation.TRANSLATE,
@@ -108,7 +108,7 @@ class TranslationsMiddleware(
 
             is TranslationsAction.RemoveNeverTranslateSiteAction -> {
                 scope.launch {
-                    removeNeverTranslateSite(context, action.tabId, action.origin)
+                    removeNeverTranslateSite(context, action.origin)
                 }
             }
 
@@ -168,6 +168,7 @@ class TranslationsMiddleware(
      * Language Support - [requestSupportedLanguages]
      * Language Models - [requestLanguageModels]
      * Language Settings - [requestLanguageSettings]
+     * Never Translate Sites List - [requestNeverTranslateSites]
      *
      * @param context Context to use to dispatch to the store.
      */
@@ -177,6 +178,7 @@ class TranslationsMiddleware(
         requestSupportedLanguages(context)
         requestLanguageModels(context)
         requestLanguageSettings(context)
+        requestNeverTranslateSites(context)
     }
 
     /**
@@ -336,22 +338,22 @@ class TranslationsMiddleware(
     }
 
     /**
-     * Retrieves the list of never translate sites using [scope] and dispatches the result to the
-     * store via [TranslationsAction.SetNeverTranslateSitesAction] or else dispatches the failure
-     * [TranslationsAction.TranslateExceptionAction].
+     * Retrieves the list of never translate sites and dispatches the result to the
+     * store via [TranslationsAction.SetNeverTranslateSitesAction] or else
+     * dispatches the failure via [TranslationsAction.EngineExceptionAction] and
+     * when a [tabId] is provided, [TranslationsAction.TranslateExceptionAction].
      *
      * @param context Context to use to dispatch to the store.
      * @param tabId Tab ID associated with the request.
      */
-    private fun getNeverTranslateSites(
+    private fun requestNeverTranslateSites(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        tabId: String,
+        tabId: String? = null,
     ) {
         engine.getNeverTranslateSiteList(
             onSuccess = {
                 context.store.dispatch(
                     TranslationsAction.SetNeverTranslateSitesAction(
-                        tabId = tabId,
                         neverTranslateSites = it,
                     ),
                 )
@@ -360,12 +362,19 @@ class TranslationsMiddleware(
 
             onError = {
                 context.store.dispatch(
-                    TranslationsAction.TranslateExceptionAction(
-                        tabId = tabId,
-                        operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
-                        translationError = TranslationError.CouldNotLoadNeverTranslateSites(it),
+                    TranslationsAction.EngineExceptionAction(
+                        error = TranslationError.CouldNotLoadNeverTranslateSites(it),
                     ),
                 )
+                if (tabId != null) {
+                    context.store.dispatch(
+                        TranslationsAction.TranslateExceptionAction(
+                            tabId = tabId,
+                            operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
+                            translationError = TranslationError.CouldNotLoadNeverTranslateSites(it),
+                        ),
+                    )
+                }
                 logger.error("Error requesting never translate sites: ", it)
             },
         )
@@ -377,38 +386,23 @@ class TranslationsMiddleware(
      * [TranslationsAction.TranslateExceptionAction].
      *
      * @param context Context to use to dispatch to the store.
-     * @param tabId Tab ID associated with the request.
      * @param origin A site origin URI that will have the specified never translate permission set.
      */
     private fun removeNeverTranslateSite(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        tabId: String,
         origin: String,
     ) {
         engine.setNeverTranslateSpecifiedSite(
             origin = origin,
             setting = false,
             onSuccess = {
-                logger.info("Success requesting never translate sites.")
-
-                // Fetch page settings to ensure the state matches the engine.
-                context.store.dispatch(
-                    TranslationsAction.OperationRequestedAction(
-                        tabId = tabId,
-                        operation = TranslationOperation.FETCH_PAGE_SETTINGS,
-                    ),
-                )
+                logger.info("Success changing never translate sites.")
             },
             onError = {
                 logger.error("Error removing site from never translate list: ", it)
-
-                // Fetch never translate sites to ensure the state matches the engine.
-                context.store.dispatch(
-                    TranslationsAction.OperationRequestedAction(
-                        tabId = tabId,
-                        operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
-                    ),
-                )
+                // Fetch never translate sites to ensure the state matches the engine, because it
+                // was proactively removed in the reducer.
+                requestNeverTranslateSites(context)
             },
         )
     }
