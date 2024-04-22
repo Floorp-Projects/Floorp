@@ -34,6 +34,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [hasMigratedPasswords](#hasmigratedpasswords)
 * [hasPinnedTabs](#haspinnedtabs)
 * [homePageSettings](#homepagesettings)
+* [inMr2022Holdback](#inmr2022holdback)
 * [isBackgroundTaskMode](#isbackgroundtaskmode)
 * [isChinaRepack](#ischinarepack)
 * [isDefaultBrowser](#isdefaultbrowser)
@@ -970,6 +971,10 @@ mode, or `null` if this invocation is not running in background task mode.
 ### `userPrefersReducedMotion`
 
 Checks if user prefers reduced motion as indicated by the value of a media query for `prefers-reduced-motion`.
+
+### `inMr2022Holdback`
+
+A boolean. `true` when the user is in the Major Release 2022 holdback study.
 
 ### `distributionId`
 

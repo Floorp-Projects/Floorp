@@ -3227,8 +3227,8 @@ var gPrivacyPane = {
   initDataCollection() {
     if (
       !AppConstants.MOZ_DATA_REPORTING &&
-      !Services.prefs.getBoolPref(
-        "browser.privacySegmentation.preferences.show"
+      !NimbusFeatures.majorRelease2022.getVariable(
+        "feltPrivacyShowPreferencesSection"
       )
     ) {
       // Nothing to control in the data collection section, remove it.
@@ -3255,19 +3255,16 @@ var gPrivacyPane = {
     // Section visibility
     let section = document.getElementById("privacySegmentationSection");
     let updatePrivacySegmentationSectionVisibilityState = () => {
-      section.hidden = !Services.prefs.getBoolPref(
-        "browser.privacySegmentation.preferences.show"
+      section.hidden = !NimbusFeatures.majorRelease2022.getVariable(
+        "feltPrivacyShowPreferencesSection"
       );
     };
 
-    Services.prefs.addObserver(
-      "browser.privacySegmentation.preferences.show",
+    NimbusFeatures.majorRelease2022.onUpdate(
       updatePrivacySegmentationSectionVisibilityState
     );
-
     window.addEventListener("unload", () => {
-      Services.prefs.removeObserver(
-        "browser.privacySegmentation.preferences.show",
+      NimbusFeatures.majorRelease2022.offUpdate(
         updatePrivacySegmentationSectionVisibilityState
       );
     });
