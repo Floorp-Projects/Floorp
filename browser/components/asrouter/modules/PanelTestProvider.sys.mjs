@@ -37,7 +37,7 @@ const MESSAGES = () => [
         },
         sumo_path: "https://example.com",
       },
-      text: { string_id: "cfr-doorhanger-bookmark-fxa-body" },
+      text: { string_id: "cfr-doorhanger-bookmark-fxa-body-2" },
       icon: "chrome://branding/content/icon64.png",
       icon_class: "cfr-doorhanger-large-icon",
       persistent_doorhanger: true,

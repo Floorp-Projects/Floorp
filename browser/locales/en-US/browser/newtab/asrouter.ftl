@@ -69,7 +69,7 @@ cfr-doorhanger-extension-total-users =
 ## Firefox Accounts Message
 
 cfr-doorhanger-bookmark-fxa-header = Sync your bookmarks everywhere.
-cfr-doorhanger-bookmark-fxa-body = Great find! Now don’t be left without this bookmark on your mobile devices. Get Started with a { -fxaccount-brand-name }.
+cfr-doorhanger-bookmark-fxa-body-2 = Great find! Now don’t be left without this bookmark on your mobile devices. Get started with an account.
 cfr-doorhanger-bookmark-fxa-link-text = Sync bookmarks now…
 cfr-doorhanger-bookmark-fxa-close-btn-tooltip =
   .aria-label = Close button
