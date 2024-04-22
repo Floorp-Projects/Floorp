@@ -81,7 +81,7 @@ add_task(async function check_menu_when_both_existed() {
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({
+    makeAddressLabel({
       primary: address.organization,
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
       status: "Also autofills address, phone"
@@ -93,7 +93,7 @@ add_task(async function check_menu_when_both_existed() {
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({
+    makeAddressLabel({
       primary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
       secondary: address.organization,
       status: "Also autofills organization, phone"
@@ -105,7 +105,7 @@ add_task(async function check_menu_when_both_existed() {
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({
+    makeAddressLabel({
       primary: address.tel,
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
       status: "Also autofills address, organization"
@@ -117,7 +117,7 @@ add_task(async function check_menu_when_both_existed() {
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({
+    makeAddressLabel({
       primary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
       secondary: address.organization,
       status: "Also autofills organization, phone"
@@ -156,7 +156,7 @@ add_task(async function check_fields_after_form_autofill() {
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({
+    makeAddressLabel({
       primary: address.organization,
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
       status: "Also autofills address, phone"
@@ -185,7 +185,7 @@ add_task(async function check_form_autofill_resume() {
   await setInput("#tel", "");
   await triggerPopupAndHoverItem("#tel", 0);
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({
+    makeAddressLabel({
       primary: address.tel,
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
       status: "Also autofills address, organization"

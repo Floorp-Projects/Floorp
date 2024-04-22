@@ -357,14 +357,20 @@ export class AddressResult extends ProfileAutoCompleteResult {
 
         let categories =
           lazy.FormAutofillUtils.getCategoriesFromFieldNames(profileFields);
+        let status = this.getStatusNote(categories, focusedCategory);
+        let secondary = this._getSecondaryLabel(
+          focusedFieldName,
+          allFieldNames,
+          profile
+        );
+        const ariaLabel = [primaryLabel, secondary, status]
+          .filter(chunk => !!chunk) // Exclude empty chunks.
+          .join(" ");
         return {
           primary: primaryLabel,
-          secondary: this._getSecondaryLabel(
-            focusedFieldName,
-            allFieldNames,
-            profile
-          ),
-          status: this.getStatusNote(categories, focusedCategory),
+          secondary,
+          status,
+          ariaLabel,
         };
       });
 

@@ -271,6 +271,15 @@ async function onStorageChanged(type) {
   });
 }
 
+function makeAddressLabel({ primary, secondary, status }) {
+  return JSON.stringify({
+    primary,
+    secondary,
+    status,
+    ariaLabel: primary + " " + secondary + " " + status,
+  });
+}
+
 function checkMenuEntries(expectedValues, extraRows = 1) {
   let actualValues = getMenuEntries();
   let expectedLength = expectedValues.length + extraRows;
