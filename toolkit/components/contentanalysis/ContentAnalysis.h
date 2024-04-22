@@ -7,6 +7,7 @@
 #define mozilla_contentanalysis_h
 
 #include "mozilla/DataMutex.h"
+#include "mozilla/MoveOnlyFunction.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MaybeDiscarded.h"
@@ -24,6 +25,7 @@
 #  include <windows.h>
 #endif  // XP_WIN
 
+class nsBaseClipboard;
 class nsIPrincipal;
 class nsIPrintSettings;
 class ContentAnalysisTest;
@@ -149,6 +151,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
   nsCString GetUserActionId();
   void SetLastResult(nsresult aLastResult) { mLastResult = aLastResult; }
 
+#if defined(XP_WIN)
   struct PrintAllowedResult final {
     bool mAllowed;
     dom::MaybeDiscarded<dom::BrowsingContext>
@@ -175,12 +178,41 @@ class ContentAnalysis final : public nsIContentAnalysis {
   };
   using PrintAllowedPromise =
       MozPromise<PrintAllowedResult, PrintAllowedError, true>;
-#if defined(XP_WIN)
   MOZ_CAN_RUN_SCRIPT static RefPtr<PrintAllowedPromise>
   PrintToPDFToDetermineIfPrintAllowed(
       dom::CanonicalBrowsingContext* aBrowsingContext,
       nsIPrintSettings* aPrintSettings);
 #endif  // defined(XP_WIN)
+
+  class SafeContentAnalysisResultCallback final
+      : public nsIContentAnalysisCallback {
+   public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSICONTENTANALYSISCALLBACK
+    explicit SafeContentAnalysisResultCallback(
+        std::function<void(RefPtr<nsIContentAnalysisResult>&&)> aResolver)
+        : mResolver(std::move(aResolver)) {}
+    void Callback(RefPtr<nsIContentAnalysisResult>&& aResult) {
+      MOZ_ASSERT(mResolver, "Called SafeContentAnalysisResultCallback twice!");
+      if (auto resolver = std::move(mResolver)) {
+        resolver(std::move(aResult));
+      }
+    }
+
+   private:
+    ~SafeContentAnalysisResultCallback() {
+      MOZ_ASSERT(!mResolver, "SafeContentAnalysisResultCallback never called!");
+    }
+    mozilla::MoveOnlyFunction<void(RefPtr<nsIContentAnalysisResult>&&)>
+        mResolver;
+  };
+  static bool CheckClipboardContentAnalysisSync(
+      nsBaseClipboard* aClipboard, mozilla::dom::WindowGlobalParent* aWindow,
+      const nsCOMPtr<nsITransferable>& trans, int32_t aClipboardType);
+  static void CheckClipboardContentAnalysis(
+      nsBaseClipboard* aClipboard, mozilla::dom::WindowGlobalParent* aWindow,
+      nsITransferable* aTransferable, int32_t aClipboardType,
+      SafeContentAnalysisResultCallback* aResolver);
 
  private:
   ~ContentAnalysis();
@@ -210,7 +242,6 @@ class ContentAnalysis final : public nsIContentAnalysis {
       const std::shared_ptr<content_analysis::sdk::Client>& aClient);
   void IssueResponse(RefPtr<ContentAnalysisResponse>& response);
   bool LastRequestSucceeded();
-
   // Did the URL filter completely handle the request or do we need to check
   // with the agent.
   enum UrlFilterResult { eCheck, eDeny, eAllow };
