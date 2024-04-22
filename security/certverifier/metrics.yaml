@@ -45,3 +45,18 @@ cert_verifier:
     notification_emails:
       - jschanck@mozilla.com
     expires: 132
+
+  trust_obj_count:
+    type: quantity
+    description: >
+      The total number of trust objects in cert9.db
+    data_sensitivity:
+      - interaction
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1890795
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1890795
+    notification_emails:
+      - jschanck@mozilla.com
+    expires: 132
+    unit: trust objects
