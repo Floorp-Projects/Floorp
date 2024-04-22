@@ -70,6 +70,8 @@ add_task(async function testPopupSelectPopup() {
   });
 
   const selectRect = await SpecialPowers.spawn(iframe, [], async () => {
+    await SpecialPowers.contentTransformsReceived(content.window);
+
     await ContentTaskUtils.waitForCondition(() => {
       return content.document.querySelector("select");
     });
