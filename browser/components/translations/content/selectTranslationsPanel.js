@@ -172,6 +172,7 @@ var SelectTranslationsPanel = new (class {
 
       TranslationsPanelShared.defineLazyElements(document, this.#lazyElements, {
         betaIcon: "select-translations-panel-beta-icon",
+        cancelButton: "select-translations-panel-cancel-button",
         copyButton: "select-translations-panel-copy-button",
         doneButton: "select-translations-panel-done-button",
         fromLabel: "select-translations-panel-from-label",
@@ -186,6 +187,9 @@ var SelectTranslationsPanel = new (class {
         translateButton: "select-translations-panel-translate-button",
         translateFullPageButton:
           "select-translations-panel-translate-full-page-button",
+        translationFailureMessageBar:
+          "select-translations-panel-translation-failure-message-bar",
+        tryAgainButton: "select-translations-panel-try-again-button",
         tryAnotherSourceMenuList:
           "select-translations-panel-try-another-language",
         tryAnotherSourceMenuPopup:

@@ -1486,6 +1486,7 @@ class SelectTranslationsTestUtils {
       SelectTranslationsPanel.elements,
       {
         betaIcon: false,
+        cancelButton: false,
         copyButton: false,
         doneButton: false,
         fromLabel: false,
@@ -1499,6 +1500,8 @@ class SelectTranslationsTestUtils {
         toMenuPopup: false,
         translateButton: false,
         translateFullPageButton: false,
+        translationFailureMessageBar: false,
+        tryAgainButton: false,
         tryAnotherSourceMenuList: false,
         tryAnotherSourceMenuPopup: false,
         unsupportedLanguageContent: false,
