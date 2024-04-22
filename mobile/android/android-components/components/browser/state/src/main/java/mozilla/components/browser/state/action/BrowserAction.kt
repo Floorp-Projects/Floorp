@@ -1255,6 +1255,7 @@ sealed class EngineAction : BrowserAction() {
         override val tabId: String,
         val skipLoading: Boolean = false,
         val followupAction: BrowserAction? = null,
+        val includeParent: Boolean = false,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -1265,6 +1266,7 @@ sealed class EngineAction : BrowserAction() {
         val url: String,
         val flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
         val additionalHeaders: Map<String, String>? = null,
+        val includeParent: Boolean = false,
     ) : EngineAction(), ActionWithTab
 
     /**
@@ -1402,6 +1404,7 @@ sealed class EngineAction : BrowserAction() {
         val engineSession: EngineSession,
         val timestamp: Long = Clock.elapsedRealtime(),
         val skipLoading: Boolean = false,
+        val includeParent: Boolean = false,
     ) : EngineAction(), ActionWithTab
 
     /**

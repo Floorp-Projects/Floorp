@@ -70,11 +70,11 @@ internal class EngineDelegateMiddleware(
             // session is already pointing to. Creating an EngineSession will do exactly
             // that in the linking step. So let's do that. Otherwise we would load the URL
             // twice.
-            store.dispatch(EngineAction.CreateEngineSessionAction(action.tabId))
+            store.dispatch(EngineAction.CreateEngineSessionAction(action.tabId, includeParent = action.includeParent))
             return@launch
         }
 
-        val parentEngineSession = if (tab is TabSessionState) {
+        val parentEngineSession = if (action.includeParent && tab is TabSessionState) {
             tab.parentId?.let { store.state.findTabOrCustomTab(it)?.engineState?.engineSession }
         } else {
             null
