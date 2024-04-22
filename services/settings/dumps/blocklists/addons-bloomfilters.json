@@ -3,6 +3,29 @@
     {
       "stash": {
         "blocked": [
+          "aleks-v99@ru.ru:0.1.5",
+          "{c11b3a46-39ba-40fe-9c27-ce55352cdb64}:1.1",
+          "{c11b3a46-39ba-40fe-9c27-ce55352cdb64}:2.2",
+          "dogInformation@shop.com:1.2",
+          "{b686f58b-2bbf-46af-8e60-67596609ae89}:1.2",
+          "{9bb22fbc-fa8a-460f-b39d-720bc622a898}:1.5",
+          "dog@shop.com:1.2",
+          "{02c000a8-1030-4885-847c-4cd68b96d671}:1.1.5",
+          "{415e5339-7d66-4e3b-aa64-8109cc698933}:1.1",
+          "{870e64ef-0747-4338-ad4a-074518eecc01}:1.0.7",
+          "windowTable@windowTable:0.0.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1713455790845,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1713551706705,
+      "id": "bb59b9a7-e43d-455d-8d74-5d226464f775",
+      "last_modified": 1713551766987
+    },
+    {
+      "stash": {
+        "blocked": [
           "{329d8f7e-867f-46bb-9cad-9f1e0818a381}:1.5.10.1"
         ],
         "unblocked": []
@@ -537,5 +560,5 @@
       "last_modified": 1707395854769
     }
   ],
-  "timestamp": 1713357360700
+  "timestamp": 1713551766987
 }
