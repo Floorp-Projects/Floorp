@@ -1,2 +1,0 @@
-mock-maker-inline
-// This allows mocking final classes (classes are final by default in Kotlin)

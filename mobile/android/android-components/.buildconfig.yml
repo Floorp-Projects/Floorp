@@ -270,33 +270,6 @@ projects:
     - ui-colors
     - ui-icons
     - ui-widgets
-  browser-toolbar2:
-    description: A customizable toolbar for browsers.
-    path: components/browser/toolbar2
-    publish: true
-    upstream_dependencies:
-      - browser-errorpages
-      - browser-menu
-      - browser-menu2
-      - browser-state
-      - concept-awesomebar
-      - concept-base
-      - concept-engine
-      - concept-fetch
-      - concept-menu
-      - concept-storage
-      - concept-toolbar
-      - lib-publicsuffixlist
-      - lib-state
-      - support-base
-      - support-ktx
-      - support-test
-      - support-utils
-      - tooling-lint
-      - ui-autocomplete
-      - ui-colors
-      - ui-icons
-      - ui-widgets
   compose-awesomebar:
     description: An awesomebar component showing search results matching text entered
       into the toolbar.
