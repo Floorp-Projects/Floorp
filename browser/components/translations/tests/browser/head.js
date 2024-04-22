@@ -1576,6 +1576,26 @@ class SelectTranslationsTestUtils {
     await SelectTranslationsTestUtils.#assertPanelTextAreaOverflow();
   }
 
+  /**
+   * Asserts that the SelectTranslationsPanel UI matches the expected
+   * state when a translation has failed to complete.
+   */
+  static async assertPanelViewFailure() {
+    await SelectTranslationsTestUtils.waitForPanelState("failure");
+    SelectTranslationsTestUtils.#assertPanelElementVisibility({
+      header: true,
+      betaIcon: true,
+      cancelButton: true,
+      fromLabel: true,
+      fromMenuList: true,
+      mainContent: true,
+      toLabel: true,
+      toMenuList: true,
+      translationFailureMessageBar: true,
+      tryAgainButton: true,
+    });
+  }
+
   static #assertPanelTextAreaDirection(langTag = null) {
     const expectedTextDirection = langTag
       ? Services.intl.getScriptDirection(langTag)
@@ -1840,6 +1860,21 @@ class SelectTranslationsTestUtils {
   }
 
   /**
+   * Simulates clicking the cancel button and waits for the panel to close.
+   */
+  static async clickCancelButton() {
+    logAction();
+    const { cancelButton } = SelectTranslationsPanel.elements;
+    assertVisibility({ visible: { cancelButton } });
+    await SelectTranslationsTestUtils.waitForPanelPopupEvent(
+      "popuphidden",
+      () => {
+        click(cancelButton, "Clicking the cancel button");
+      }
+    );
+  }
+
+  /**
    * Simulates clicking the copy button and asserts that all relevant states are correctly updated.
    */
   static async clickCopyButton() {
@@ -1897,6 +1932,38 @@ class SelectTranslationsTestUtils {
     assertVisibility({ visible: { doneButton: translateButton } });
     ok(!translateButton.disabled, "The translate button should be enabled.");
     click(translateButton);
+    await SelectTranslationsTestUtils.waitForPanelState("translatable");
+    if (downloadHandler) {
+      await this.handleDownloads({ downloadHandler, pivotTranslation });
+    }
+    if (viewAssertion) {
+      await viewAssertion();
+    }
+  }
+
+  /**
+   * Simulates clicking the try-again button.
+   *
+   * @param {object} config
+   * @param {Function} [config.downloadHandler]
+   *  - The function handle expected downloads, resolveDownloads() or rejectDownloads()
+   *    Leave as null to test more granularly, such as testing opening the loading view,
+   *    or allowing for the automatic downloading of files.
+   * @param {boolean} [config.pivotTranslation]
+   *  - True if the expected translation is a pivot translation, otherwise false.
+   *    Affects the number of expected downloads.
+   * @param {Function} [config.viewAssertion]
+   *  - An optional callback function to execute for asserting the panel UI state.
+   */
+  static async clickTryAgainButton({
+    downloadHandler,
+    pivotTranslation,
+    viewAssertion,
+  }) {
+    logAction();
+    const { tryAgainButton } = SelectTranslationsPanel.elements;
+    assertVisibility({ visible: { tryAgainButton } });
+    click(tryAgainButton, "Clicking the try-again button");
     await SelectTranslationsTestUtils.waitForPanelState("translatable");
     if (downloadHandler) {
       await this.handleDownloads({ downloadHandler, pivotTranslation });
