@@ -118,14 +118,18 @@ export class PlacesQuery {
         groupBy = "url";
         break;
     }
+    const whereClause =
+      daysOld == Infinity
+        ? ""
+        : `WHERE visit_date >= (strftime('%s','now','localtime','start of day','-${Number(
+            daysOld
+          )} days','utc') * 1000000)`;
     const sql = `SELECT MAX(visit_date) as visit_date, title, url
       FROM moz_historyvisits v
       JOIN moz_places h
       ON v.place_id = h.id
-      WHERE visit_date >= (strftime('%s','now','localtime','start of day','-${Number(
-        daysOld
-      )} days','utc') * 1000000)
       AND hidden = 0
+      ${whereClause}
       GROUP BY ${groupBy}
       ORDER BY visit_date DESC
       LIMIT ${limit > 0 ? limit : -1}`;
