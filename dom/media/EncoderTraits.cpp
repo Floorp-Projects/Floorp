@@ -14,4 +14,4 @@ bool Supports(const EncoderConfig& aConfig) {
   RefPtr<PEMFactory> pem = new PEMFactory();
   return pem->Supports(aConfig);
 }
-}
+}  // namespace mozilla::EncodeTraits

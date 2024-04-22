@@ -62,7 +62,8 @@ class ThemeColors {
   explicit ThemeColors(const nsIFrame* aFrame, StyleAppearance aAppearance)
       : mDoc(*aFrame->PresContext()->Document()),
         mHighContrastInfo(ShouldBeHighContrast(*aFrame->PresContext())),
-        mColorScheme(ColorSchemeForWidget(aFrame, aAppearance, mHighContrastInfo)),
+        mColorScheme(
+            ColorSchemeForWidget(aFrame, aAppearance, mHighContrastInfo)),
         mAccentColor(*aFrame->Style(), mColorScheme) {}
   virtual ~ThemeColors() = default;
 

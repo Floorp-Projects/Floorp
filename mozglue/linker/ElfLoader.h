@@ -47,7 +47,6 @@ int __wrap_dl_iterate_phdr(dl_phdr_cb callback, void* data);
 #ifdef __ARM_EABI__
 const void* __wrap___gnu_Unwind_Find_exidx(void* pc, int* pcount);
 #endif
-
 }
 
 /* Forward declarations for use in LibHandle */

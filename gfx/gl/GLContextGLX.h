@@ -24,9 +24,9 @@ class GLContextGLX : public GLContext {
   static bool FindVisual(Display* display, int screen, int* const out_visualId);
 
   // Finds a GLXFBConfig compatible with the provided window.
-  static bool FindFBConfigForWindow(
-      Display* display, int screen, Window window,
-      GLXFBConfig* const out_config, int* const out_visid, bool aWebRender);
+  static bool FindFBConfigForWindow(Display* display, int screen, Window window,
+                                    GLXFBConfig* const out_config,
+                                    int* const out_visid, bool aWebRender);
 
   virtual ~GLContextGLX();
 

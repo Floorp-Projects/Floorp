@@ -286,7 +286,6 @@ static bool InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars& src,
         break;
       }
     } else {
-
 #define INVALID(report, arg, n2)                                    \
   do {                                                              \
     if (ErrorAction == OnUTF8Error::Throw) {                        \

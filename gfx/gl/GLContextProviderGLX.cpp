@@ -603,9 +603,8 @@ already_AddRefed<GLContext> CreateForWidget(Display* aXDisplay, Window aXWindow,
 
   GLXFBConfig config;
   int visid;
-  if (!GLContextGLX::FindFBConfigForWindow(aXDisplay, xscreen, aXWindow,
-                                           &config, &visid,
-                                           aHardwareWebRender)) {
+  if (!GLContextGLX::FindFBConfigForWindow(
+          aXDisplay, xscreen, aXWindow, &config, &visid, aHardwareWebRender)) {
     return nullptr;
   }
 
@@ -658,7 +657,8 @@ static bool ChooseConfig(GLXLibrary* glx, Display* display, int screen,
   };
 
   int numConfigs = 0;
-  const auto scopedConfigArr = glx->fChooseFBConfig(display, screen, attribs, &numConfigs);
+  const auto scopedConfigArr =
+      glx->fChooseFBConfig(display, screen, attribs, &numConfigs);
   const auto freeConfigList = MakeScopeExit([&]() {
     if (scopedConfigArr) {
       XFree(scopedConfigArr);
@@ -764,9 +764,11 @@ bool GLContextGLX::FindVisual(Display* display, int screen,
   return false;
 }
 
-bool GLContextGLX::FindFBConfigForWindow(
-    Display* display, int screen, Window window,
-    GLXFBConfig* const out_config, int* const out_visid, bool aWebRender) {
+bool GLContextGLX::FindFBConfigForWindow(Display* display, int screen,
+                                         Window window,
+                                         GLXFBConfig* const out_config,
+                                         int* const out_visid,
+                                         bool aWebRender) {
   // XXX the visual ID is almost certainly the LOCAL_GLX_FBCONFIG_ID, so
   // we could probably do this first and replace the glXGetFBConfigs
   // with glXChooseConfigs.  Docs are sparklingly clear as always.

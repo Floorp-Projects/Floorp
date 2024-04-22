@@ -51,7 +51,8 @@ FFTBlock* FFTBlock::CreateInterpolatedBlock(const FFTBlock& block0,
                                             const FFTBlock& block1,
                                             double interp) {
   uint32_t fftSize = block0.FFTSize();
-  FFTBlock* newBlock = new FFTBlock(fftSize, 1.0f / AssertedCast<float>(fftSize));
+  FFTBlock* newBlock =
+      new FFTBlock(fftSize, 1.0f / AssertedCast<float>(fftSize));
 
   newBlock->InterpolateFrequencyComponents(block0, block1, interp);
 

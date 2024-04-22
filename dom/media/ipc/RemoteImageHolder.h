@@ -58,12 +58,12 @@ class RemoteImageHolder final {
   gfx::ColorRange mColorRange = {};
 };
 
-  template <>
-  struct ipc::IPDLParamTraits<RemoteImageHolder> {
-    static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
-                      RemoteImageHolder&& aParam);
-    static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
-                     RemoteImageHolder* aResult);
+template <>
+struct ipc::IPDLParamTraits<RemoteImageHolder> {
+  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+                    RemoteImageHolder&& aParam);
+  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+                   RemoteImageHolder* aResult);
 };
 
 }  // namespace mozilla

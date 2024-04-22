@@ -25,9 +25,7 @@ RevocableStore::~RevocableStore() {
   owning_reference_->set_store(NULL);
 }
 
-void RevocableStore::Add(Revocable* item) {
-  DCHECK(!item->revoked());
-}
+void RevocableStore::Add(Revocable* item) { DCHECK(!item->revoked()); }
 
 void RevocableStore::RevokeAll() {
   // We revoke all the existing items in the store and reset our count.
