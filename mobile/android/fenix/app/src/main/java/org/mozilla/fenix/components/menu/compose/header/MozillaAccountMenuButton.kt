@@ -42,7 +42,7 @@ private val BUTTON_SHAPE = RoundedCornerShape(size = 8.dp)
 internal fun MozillaAccountMenuButton(
     account: Account?,
     accountState: AccountState,
-    onSignInButtonClick: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -52,7 +52,7 @@ internal fun MozillaAccountMenuButton(
                 shape = BUTTON_SHAPE,
             )
             .clip(shape = BUTTON_SHAPE)
-            .clickable { onSignInButtonClick() }
+            .clickable { onClick() }
             .defaultMinSize(minHeight = BUTTON_HEIGHT),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -150,13 +150,13 @@ private fun MenuHeaderPreviewContent() {
         MozillaAccountMenuButton(
             account = null,
             accountState = NotAuthenticated,
-            onSignInButtonClick = {},
+            onClick = {},
         )
 
         MozillaAccountMenuButton(
             account = null,
             accountState = AuthenticationProblem,
-            onSignInButtonClick = {},
+            onClick = {},
         )
 
         MozillaAccountMenuButton(
@@ -169,7 +169,7 @@ private fun MenuHeaderPreviewContent() {
                 sessionToken = null,
             ),
             accountState = Authenticated,
-            onSignInButtonClick = {},
+            onClick = {},
         )
 
         MozillaAccountMenuButton(
@@ -182,7 +182,7 @@ private fun MenuHeaderPreviewContent() {
                 sessionToken = null,
             ),
             accountState = Authenticated,
-            onSignInButtonClick = {},
+            onClick = {},
         )
 
         MozillaAccountMenuButton(
@@ -195,7 +195,7 @@ private fun MenuHeaderPreviewContent() {
                 sessionToken = null,
             ),
             accountState = Authenticated,
-            onSignInButtonClick = {},
+            onClick = {},
         )
     }
 }

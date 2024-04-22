@@ -33,7 +33,7 @@ import org.mozilla.fenix.theme.Theme
 internal fun MenuHeader(
     account: Account?,
     accountState: AccountState,
-    onSignInButtonClick: () -> Unit,
+    onMozillaAccountButtonClick: () -> Unit,
     onHelpButtonClick: () -> Unit,
     onSettingsButtonClick: () -> Unit,
 ) {
@@ -46,7 +46,7 @@ internal fun MenuHeader(
         MozillaAccountMenuButton(
             account = account,
             accountState = accountState,
-            onSignInButtonClick = onSignInButtonClick,
+            onClick = onMozillaAccountButtonClick,
             modifier = Modifier.weight(1f),
         )
 
@@ -87,7 +87,7 @@ private fun MenuHeaderPreview() {
             MenuHeader(
                 account = null,
                 accountState = NotAuthenticated,
-                onSignInButtonClick = {},
+                onMozillaAccountButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
             )
@@ -106,7 +106,7 @@ private fun MenuHeaderPrivatePreview() {
             MenuHeader(
                 account = null,
                 accountState = NotAuthenticated,
-                onSignInButtonClick = {},
+                onMozillaAccountButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
             )

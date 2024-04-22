@@ -30,8 +30,8 @@ import org.mozilla.fenix.theme.Theme
  * The menu bottom sheet dialog.
  *
  * @param account [Account] information available for a synced account.
- * @param accountState The [AccountState] of a synced account.
- * @param onSignInButtonClick Invoked when the user clicks on the "Sign in" button.
+ * @param accountState The [AccountState] of a Mozilla account.
+ * @param onMozillaAccountButtonClick Invoked when the user clicks on Mozilla account button.
  * @param onHelpButtonClick Invoked when the user clicks on the help button.
  * @param onSettingsButtonClick Invoked when the user clicks on the settings button.
  * @param onBookmarksMenuClick Invoked when the user clicks on the bookmarks menu item.
@@ -44,7 +44,7 @@ import org.mozilla.fenix.theme.Theme
 fun MenuDialog(
     account: Account?,
     accountState: AccountState,
-    onSignInButtonClick: () -> Unit,
+    onMozillaAccountButtonClick: () -> Unit,
     onHelpButtonClick: () -> Unit,
     onSettingsButtonClick: () -> Unit,
     onBookmarksMenuClick: () -> Unit,
@@ -56,7 +56,7 @@ fun MenuDialog(
         MenuHeader(
             account = account,
             accountState = accountState,
-            onSignInButtonClick = onSignInButtonClick,
+            onMozillaAccountButtonClick = onMozillaAccountButtonClick,
             onHelpButtonClick = onHelpButtonClick,
             onSettingsButtonClick = onSettingsButtonClick,
         )
@@ -166,7 +166,7 @@ private fun MenuDialogPreview() {
             MenuDialog(
                 account = null,
                 accountState = NotAuthenticated,
-                onSignInButtonClick = {},
+                onMozillaAccountButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
                 onBookmarksMenuClick = {},
@@ -189,7 +189,7 @@ private fun MenuDialogPrivatePreview() {
             MenuDialog(
                 account = null,
                 accountState = NotAuthenticated,
-                onSignInButtonClick = {},
+                onMozillaAccountButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
                 onBookmarksMenuClick = {},

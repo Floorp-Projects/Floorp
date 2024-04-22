@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import mozilla.components.lib.state.ext.observeAsState
@@ -37,6 +38,8 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * A bottom sheet fragment displaying the menu dialog.
  */
 class MenuDialogFragment : BottomSheetDialogFragment() {
+
+    private val args by navArgs<MenuDialogFragmentArgs>()
 
     private val store by lazyStore { viewModelScope ->
         MenuStore(
@@ -81,7 +84,14 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     MenuDialog(
                         account = account,
                         accountState = accountState,
-                        onSignInButtonClick = {},
+                        onMozillaAccountButtonClick = {
+                            store.dispatch(
+                                MenuAction.Navigate.MozillaAccount(
+                                    accountState = accountState,
+                                    accesspoint = args.accesspoint,
+                                ),
+                            )
+                        },
                         onHelpButtonClick = {
                             store.dispatch(MenuAction.Navigate.Help)
                         },
