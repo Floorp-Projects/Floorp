@@ -432,13 +432,13 @@ def setup_browsertime(config, tasks):
         }
 
         chromium_fetches = {
-            "linux.*": ["linux64-chromium"],
-            "macosx1015.*": ["mac-chromium"],
-            "macosx1400.*": ["mac-chromium-arm"],
-            "windows.*aarch64.*": ["win32-chromium"],
-            "windows.*-32.*": ["win32-chromium"],
-            "windows.*-64.*": ["win64-chromium"],
-            "android.*": ["linux64-chromium"],
+            "linux.*": ["linux64-chromiumdriver"],
+            "macosx1015.*": ["mac-chromiumdriver"],
+            "macosx1400.*": ["mac-chromiumdriver-arm"],
+            "windows.*aarch64.*": ["win32-chromiumdriver"],
+            "windows.*-32.*": ["win32-chromiumdriver"],
+            "windows.*-64.*": ["win64-chromiumdriver"],
+            "android.*": ["linux64-chromiumdriver"],
         }
 
         cd_extracted_name = {

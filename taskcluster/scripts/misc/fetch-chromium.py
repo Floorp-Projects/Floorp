@@ -38,30 +38,35 @@ CHROMIUM_INFO = {
     "linux": {
         "platform": "Linux_x64",
         "chromium": "chrome-linux.zip",
+        "dir": "chrome-linux",
         "result": "chromium-linux.tar.bz2",
         "chromedriver": "chromedriver_linux64.zip",
     },
     "win32": {
         "platform": "Win",
         "chromium": "chrome-win.zip",
+        "dir": "chrome-win",
         "result": "chromium-win32.tar.bz2",
         "chromedriver": "chromedriver_win32.zip",
     },
     "win64": {
         "platform": "Win",
         "chromium": "chrome-win.zip",
+        "dir": "chrome-win",
         "result": "chromium-win64.tar.bz2",
         "chromedriver": "chromedriver_win32.zip",
     },
     "mac": {
         "platform": "Mac",
         "chromium": "chrome-mac.zip",
+        "dir": "chrome-mac",
         "result": "chromium-mac.tar.bz2",
         "chromedriver": "chromedriver_mac64.zip",
     },
     "mac-arm": {
         "platform": "Mac_Arm",
         "chromium": "chrome-mac.zip",
+        "dir": "chrome-mac",
         "result": "chromium-mac-arm.tar.bz2",
         "chromedriver": "chromedriver_mac64.zip",
     },
@@ -108,24 +113,11 @@ def fetch_chromium_revision(platform):
     return chromium_revision.strip()
 
 
-def fetch_chromium_build(platform, revision, zippath):
-    """Download a chromium build for a given revision, or the latest."""
+def fetch_chromedriver(platform, revision, chromium_dir):
+    """Get the chromedriver for the given revision and repackage it."""
     if not revision:
         revision = fetch_chromium_revision(platform)
 
-    download_platform = CHROMIUM_INFO[platform]["platform"]
-    download_url = CHROMIUM_BASE_URL.format(
-        download_platform, revision, CHROMIUM_INFO[platform]["chromium"]
-    )
-
-    log("Downloading %s chromium build revision %s..." % (download_platform, revision))
-    log(download_url)
-    fetch_file(download_url, zippath)
-    return revision
-
-
-def fetch_chromedriver(platform, revision, chromium_dir):
-    """Get the chromedriver for the given revision and repackage it."""
     download_url = CHROMIUM_BASE_URL.format(
         CHROMIUM_INFO[platform]["platform"],
         revision,
@@ -152,6 +144,7 @@ def fetch_chromedriver(platform, revision, chromium_dir):
         raise Exception("Could not find chromedriver binary in %s" % tmppath)
     log("Copying chromedriver from: %s to: %s" % (cd_path, chromium_dir))
     shutil.copy(cd_path, chromium_dir)
+    return revision
 
 
 def build_chromium_archive(platform, revision=None):
@@ -173,39 +166,20 @@ def build_chromium_archive(platform, revision=None):
 
     # Make a temporary location for the file
     tmppath = tempfile.mkdtemp()
-    tmpzip = os.path.join(tmppath, "tmp-chromium.zip")
 
-    revision = fetch_chromium_build(platform, revision, tmpzip)
+    # Create the directory format expected for browsertime setup in taskgraph transform
+    artifact_dir = CHROMIUM_INFO[platform]["dir"]
+    chromium_dir = os.path.join(tmppath, artifact_dir)
+    os.mkdir(chromium_dir)
 
-    # Unpack archive in `tmpzip` to store the revision number and
-    # the chromedriver
-    unzip(tmpzip, tmppath)
-
-    dirs = [
-        d
-        for d in os.listdir(tmppath)
-        if os.path.isdir(os.path.join(tmppath, d)) and d.startswith("chrome-")
-    ]
-
-    if len(dirs) > 1:
-        raise Exception(
-            "Too many directories starting with `chrome-` after extracting."
-        )
-    elif len(dirs) == 0:
-        raise Exception(
-            "Could not find any directories after extraction of chromium zip."
-        )
-
-    chromium_dir = os.path.join(tmppath, dirs[0])
+    # Store the revision number and chromedriver
+    revision = fetch_chromedriver(platform, revision, chromium_dir)
     revision_file = os.path.join(chromium_dir, ".REVISION")
     with open(revision_file, "w+") as f:
         f.write(str(revision))
 
-    # Get and store the chromedriver
-    fetch_chromedriver(platform, revision, chromium_dir)
-
     tar_file = CHROMIUM_INFO[platform]["result"]
-    tar_command = ["tar", "cjf", tar_file, "-C", tmppath, dirs[0]]
+    tar_command = ["tar", "cjf", tar_file, "-C", tmppath, artifact_dir]
     log("Added revision to %s file." % revision_file)
 
     log("Tarring with the command: %s" % str(tar_command))
