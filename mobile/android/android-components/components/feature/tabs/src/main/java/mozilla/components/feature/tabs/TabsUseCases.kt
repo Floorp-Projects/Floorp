@@ -194,7 +194,6 @@ class TabsUseCases(
                         url = url,
                         flags = flags,
                         additionalHeaders = additionalHeaders,
-                        includeParent = true,
                     ),
                 )
             }
@@ -413,7 +412,6 @@ class TabsUseCases(
                         tab.id,
                         url,
                         flags,
-                        includeParent = true,
                     ),
                 )
                 tab.id

@@ -89,8 +89,14 @@ class SessionUseCases(
             // If we already have an engine session load Url directly to prevent
             // context switches.
             if (engineSession != null) {
+                val parentEngineSession = if (tab is TabSessionState) {
+                    tab.parentId?.let { store.state.findTabOrCustomTab(it)?.engineState?.engineSession }
+                } else {
+                    null
+                }
                 engineSession.loadUrl(
                     url = url,
+                    parent = parentEngineSession,
                     flags = flags,
                     additionalHeaders = additionalHeaders,
                 )

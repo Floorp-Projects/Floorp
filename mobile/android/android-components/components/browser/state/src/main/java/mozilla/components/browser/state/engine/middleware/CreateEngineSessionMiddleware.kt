@@ -69,7 +69,6 @@ internal class CreateEngineSessionMiddleware(
                 logger,
                 store,
                 action.tabId,
-                action.includeParent,
             )
 
             action.followupAction?.let {
@@ -86,7 +85,6 @@ private fun getOrCreateEngineSession(
     logger: Logger,
     store: Store<BrowserState, BrowserAction>,
     tabId: String,
-    includeParent: Boolean,
 ): EngineSession? {
     val tab = store.state.findTabOrCustomTab(tabId)
     if (tab == null) {
@@ -104,7 +102,7 @@ private fun getOrCreateEngineSession(
         return it
     }
 
-    return createEngineSession(engine, logger, store, tab, includeParent)
+    return createEngineSession(engine, logger, store, tab)
 }
 
 @MainThread
@@ -113,7 +111,6 @@ private fun createEngineSession(
     logger: Logger,
     store: Store<BrowserState, BrowserAction>,
     tab: SessionState,
-    includeParent: Boolean,
 ): EngineSession {
     val engineSession = engine.createSession(tab.content.private, tab.contextId)
     logger.debug("Created engine session for tab ${tab.id}")
@@ -130,7 +127,6 @@ private fun createEngineSession(
             tab.id,
             engineSession,
             skipLoading = skipLoading,
-            includeParent = includeParent,
         ),
     )
 
