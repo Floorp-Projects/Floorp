@@ -26,6 +26,8 @@ TEMPLATE = """
 
 {include}
 
+Identity LimitedAccessFeature {{ L"{lafidentity}_pcsmm0jrprpb2" }}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -112,8 +114,8 @@ def split_and_normalize_version(version, len):
 
 
 def has_manifest(module_rc, manifest_id):
-    for line in module_rc.splitlines():
-        line = line.split(None, 2)
+    for lineFromInput in module_rc.splitlines():
+        line = lineFromInput.split(None, 2)
         if len(line) < 2:
             continue
         id, what, *rest = line
@@ -167,8 +169,15 @@ def generate_module_rc(binary="", rcinclude=None):
     else:
         include = ""
 
+    # Set the identity field for the Limited Access Feature
+    # Must match the tokens used in Win11LimitedAccessFeatures.cpp
+    lafidentity = "MozillaFirefox"
+    # lafidentity = "FirefoxBeta"
+    # lafidentity = "FirefoxNightly"
+
     data = TEMPLATE.format(
         include=include,
+        lafidentity=lafidentity,
         fileversion=overrides.get("WIN32_MODULE_FILEVERSION", milestone_winversion),
         productversion=overrides.get(
             "WIN32_MODULE_PRODUCTVERSION", milestone_winversion
