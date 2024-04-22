@@ -277,15 +277,11 @@ var SelectTranslationsPanel = new (class {
    * dropdowns have already been initialized.
    */
   async #ensureLangListsBuilt() {
-    try {
-      await TranslationsPanelShared.ensureLangListsBuilt(
-        document,
-        this.elements.panel,
-        gBrowser.selectedBrowser.innerWindowID
-      );
-    } catch (error) {
-      this.console?.error(error);
-    }
+    await TranslationsPanelShared.ensureLangListsBuilt(
+      document,
+      this.elements.panel,
+      gBrowser.selectedBrowser.innerWindowID
+    );
   }
 
   /**
@@ -371,16 +367,26 @@ var SelectTranslationsPanel = new (class {
       return;
     }
 
-    this.#initializeEventListeners();
-    await this.#ensureLangListsBuilt();
+    try {
+      this.#initializeEventListeners();
+      await this.#ensureLangListsBuilt();
+      await Promise.all([
+        this.#cachePlaceholderText(),
+        this.#initializeLanguageMenuLists(langPairPromise),
+        this.#registerSourceText(sourceText, langPairPromise),
+      ]);
+      this.#maybeRequestTranslation();
+    } catch (error) {
+      this.console?.error(error);
+      this.#changeStateToInitFailure(
+        event,
+        screenX,
+        screenY,
+        sourceText,
+        langPairPromise
+      );
+    }
 
-    await Promise.all([
-      this.#cachePlaceholderText(),
-      this.#initializeLanguageMenuLists(langPairPromise),
-      this.#registerSourceText(sourceText, langPairPromise),
-    ]);
-
-    this.#maybeRequestTranslation();
     await this.#openPopup(event, screenX, screenY);
   }
 
@@ -537,7 +543,7 @@ var SelectTranslationsPanel = new (class {
         break;
       }
       case tryAgainButton.id: {
-        this.#maybeRequestTranslation();
+        this.onClickTryAgainButton();
         break;
       }
       case tryAnotherSourceMenuList.id:
@@ -665,6 +671,40 @@ var SelectTranslationsPanel = new (class {
     const { fromMenuList, tryAnotherSourceMenuList } = this.elements;
     fromMenuList.value = tryAnotherSourceMenuList.value;
     this.#maybeRequestTranslation();
+  }
+
+  /**
+   * Handles events when the panel's try-again button is clicked.
+   */
+  onClickTryAgainButton() {
+    switch (this.phase()) {
+      case "translation-failure": {
+        // If the translation failed, we just need to try translating again.
+        this.#maybeRequestTranslation();
+        break;
+      }
+      case "init-failure": {
+        // If the initialization failed, we need to close the panel and try reopening it
+        // which will attempt to initialize everything again after failure.
+        const { panel } = this.elements;
+        const { event, screenX, screenY, sourceText, langPairPromise } =
+          this.#translationState;
+
+        panel.addEventListener(
+          "popuphidden",
+          () => this.open(event, screenX, screenY, sourceText, langPairPromise),
+          { once: true }
+        );
+
+        this.close();
+        break;
+      }
+      default: {
+        this.console?.error(
+          `Unexpected state "${this.phase()}" on try-again button click.`
+        );
+      }
+    }
   }
 
   /**
@@ -841,6 +881,7 @@ var SelectTranslationsPanel = new (class {
     switch (phase) {
       case "closed":
       case "idle":
+      case "init-failure":
       case "translation-failure":
       case "translatable":
       case "translating":
@@ -927,7 +968,26 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
-   * Changes the phase from "translating" to "failure".
+   * Changes the phase to "init-failure".
+   */
+  #changeStateToInitFailure(
+    event,
+    screenX,
+    screenY,
+    sourceText,
+    langPairPromise
+  ) {
+    this.#changeStateTo("init-failure", /* retainEntries */ true, {
+      event,
+      screenX,
+      screenY,
+      sourceText,
+      langPairPromise,
+    });
+  }
+
+  /**
+   * Changes the phase from "translating" to "translation-failure".
    */
   #changeStateToTranslationFailure() {
     const phase = this.phase();
@@ -997,6 +1057,7 @@ var SelectTranslationsPanel = new (class {
         break;
       }
       case "idle":
+      case "init-failure":
       case "translatable":
       case "translating":
       case "unsupported": {
@@ -1023,6 +1084,7 @@ var SelectTranslationsPanel = new (class {
       }
       case "closed":
       case "idle":
+      case "init-failure":
       case "translation-failure":
       case "translatable":
       case "translated":
@@ -1046,6 +1108,10 @@ var SelectTranslationsPanel = new (class {
       case "closed":
       case "idle": {
         this.#displayIdlePlaceholder();
+        break;
+      }
+      case "init-failure": {
+        this.#displayInitFailureMessage();
         break;
       }
       case "translation-failure": {
@@ -1263,6 +1329,36 @@ var SelectTranslationsPanel = new (class {
       makeVisible: [doneButton, translateButton, unsupportedLanguageContent],
       addDefault: [translateButton],
       removeDefault: [doneButton, tryAgainButton],
+    });
+  }
+
+  /**
+   * Displays the panel content for when the language dropdowns fail to populate.
+   */
+  #displayInitFailureMessage() {
+    const {
+      cancelButton,
+      copyButton,
+      doneButton,
+      initFailureContent,
+      mainContent,
+      unsupportedLanguageContent,
+      translateButton,
+      translateFullPageButton,
+      tryAgainButton,
+    } = this.elements;
+    this.#setPanelElementAttributes({
+      makeHidden: [
+        doneButton,
+        copyButton,
+        mainContent,
+        translateButton,
+        translateFullPageButton,
+        unsupportedLanguageContent,
+      ],
+      makeVisible: [initFailureContent, cancelButton, tryAgainButton],
+      addDefault: [tryAgainButton],
+      removeDefault: [doneButton, translateButton],
     });
   }
 

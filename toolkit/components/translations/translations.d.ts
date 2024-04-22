@@ -271,10 +271,27 @@ export interface SupportedLanguages {
 export type TranslationErrors = "engine-load-error";
 
 export type SelectTranslationsPanelState =
+  // The panel is closed.
   | { phase: "closed"; }
+
+  // The panel is idle after successful initialization and ready to attempt translation.
   | { phase: "idle"; fromLanguage: string; toLanguage: string, sourceText: string, }
+
+  // The language dropdown menus failed to populate upon opening the panel.
+  // This state contains all of the information for the try-again button to close and re-open the panel.
+  | { phase: "init-failure"; event: Event, screenX: number, screenY: number, sourceText: string, langPairPromise: Promise<{fromLang?: string, toLang?: string}> }
+
+  // The translation failed to complete.
   | { phase: "translation-failure"; fromLanguage: string; toLanguage: string, sourceText: string, }
+
+  // The selected language pair is determined to be translatable.
   | { phase: "translatable"; fromLanguage: string; toLanguage: string, sourceText: string, }
+
+  // The panel is actively translating the source text.
   | { phase: "translating"; fromLanguage: string; toLanguage: string, sourceText: string, }
+
+  // The source text has been translated successfully.
   | { phase: "translated"; fromLanguage: string; toLanguage: string, sourceText: string, translatedText: string, }
+
+  // The source language is not currently supported by Translations in Firefox.
   | { phase: "unsupported"; detectedLanguage: string; toLanguage: string, sourceText: string }

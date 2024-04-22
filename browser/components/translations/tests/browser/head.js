@@ -1614,6 +1614,23 @@ class SelectTranslationsTestUtils {
 
   /**
    * Asserts that the SelectTranslationsPanel UI matches the expected
+   * state when the language lists fail to initialize upon opening the panel.
+   */
+  static async assertPanelViewInitFailure() {
+    await SelectTranslationsTestUtils.waitForPanelState("init-failure");
+    SelectTranslationsTestUtils.#assertPanelElementVisibility({
+      header: true,
+      betaIcon: true,
+      cancelButton: true,
+      initFailureContent: true,
+      initFailureMessageBar: true,
+      settingsButton: true,
+      tryAgainButton: true,
+    });
+  }
+
+  /**
+   * Asserts that the SelectTranslationsPanel UI matches the expected
    * state when a translation has failed to complete.
    */
   static async assertPanelViewTranslationFailure() {
@@ -1998,7 +2015,7 @@ class SelectTranslationsTestUtils {
     downloadHandler,
     pivotTranslation,
     viewAssertion,
-  }) {
+  } = {}) {
     logAction();
     const { tryAgainButton } = SelectTranslationsPanel.elements;
     assertVisibility({ visible: { tryAgainButton } });
