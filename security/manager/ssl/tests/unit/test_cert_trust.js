@@ -283,8 +283,17 @@ add_task(async function () {
   let ee_cert = loadedCerts[2];
   notEqual(ee_cert, null, "EE cert should have successfully loaded");
 
+  let init_num_trustObj = certdb.countTrustObjects();
   setup_basic_trusts(ca_cert, int_cert);
   await test_ca_distrust(ee_cert, ca_cert, true);
+
+  // testing countTrustObjects(), loaded 2 certs from above code
+  let num_trustObj = certdb.countTrustObjects();
+  equal(
+    num_trustObj,
+    init_num_trustObj + 2,
+    "Number of trust objects should be 2"
+  );
 
   setup_basic_trusts(ca_cert, int_cert);
   await test_ca_distrust(ee_cert, int_cert, false);
