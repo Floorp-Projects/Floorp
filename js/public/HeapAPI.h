@@ -380,7 +380,7 @@ enum StackKind {
  * initial value. In the browser this configured by the
  * javascript.options.mem.nursery.max_kb pref.
  */
-const uint32_t DefaultNurseryMaxBytes = 16 * js::gc::ChunkSize;
+const uint32_t DefaultNurseryMaxBytes = 64 * js::gc::ChunkSize;
 
 /* Default maximum heap size in bytes to pass to JS_NewContext(). */
 const uint32_t DefaultHeapMaxBytes = 32 * 1024 * 1024;
