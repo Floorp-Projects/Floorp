@@ -29,6 +29,12 @@ class NodeDelegate {
   // to query the latest status of the port. Note, this event could be spurious
   // if another thread is simultaneously modifying the status of the port.
   virtual void PortStatusChanged(const PortRef& port_ref) = 0;
+
+  // Called after receiving a port with a remote peer, or bypassing a proxy to a
+  // remote peer. Embedders can use this to ensure a connection to the remote
+  // peer, reducing message queueing and ensuring prompt notification of peer
+  // node death.
+  virtual void ObserveRemoteNode(const NodeName& node) = 0;
 };
 
 }  // namespace ports

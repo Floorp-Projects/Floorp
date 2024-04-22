@@ -121,6 +121,11 @@ class NodeController final : public mojo::core::ports::NodeDelegate,
   // Stop communicating with this peer. Must be called on the IO thread.
   void DropPeer(NodeName aNodeName);
 
+  // Ensure that there is a direct connection to a remote node, requesting an
+  // introduction if there is not.
+  // If provided, will optionally send an event to the remote node.
+  void ContactRemotePeer(const NodeName& aNode, UniquePtr<Event> aEvent);
+
   // Message Handlers
   void OnEventMessage(const NodeName& aFromNode,
                       UniquePtr<IPC::Message> aMessage) override;
@@ -138,6 +143,7 @@ class NodeController final : public mojo::core::ports::NodeDelegate,
   void ForwardEvent(const NodeName& aNode, UniquePtr<Event> aEvent) override;
   void BroadcastEvent(UniquePtr<Event> aEvent) override;
   void PortStatusChanged(const PortRef& aPortRef) override;
+  void ObserveRemoteNode(const NodeName& aNode) override;
 
   const NodeName mName;
   const UniquePtr<Node> mNode;

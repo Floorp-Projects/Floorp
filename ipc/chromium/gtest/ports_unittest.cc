@@ -237,6 +237,10 @@ class TestNode : public NodeDelegate {
     }
   }
 
+  void ObserveRemoteNode(const NodeName& node) override {
+    DCHECK(node != node_name_);
+  }
+
   void ClosePortsInEvent(Event* event) {
     if (event->type() != Event::Type::kUserMessage) {
       return;
