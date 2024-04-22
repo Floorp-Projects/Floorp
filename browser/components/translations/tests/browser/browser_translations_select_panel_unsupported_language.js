@@ -69,7 +69,7 @@ add_task(
     );
 
     await SelectTranslationsTestUtils.clickTranslateButton({
-      onTranslated: SelectTranslationsTestUtils.assertPanelViewTranslated,
+      viewAssertion: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
     await SelectTranslationsTestUtils.changeSelectedToLanguage(["uk", "fi"], {
@@ -134,7 +134,7 @@ add_task(
 
     await SelectTranslationsTestUtils.clickTranslateButton({
       downloadHandler: resolveDownloads,
-      onTranslated: SelectTranslationsTestUtils.assertPanelViewTranslated,
+      viewAssertion: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
     await SelectTranslationsTestUtils.changeSelectedFromLanguage(["uk", "fi"], {

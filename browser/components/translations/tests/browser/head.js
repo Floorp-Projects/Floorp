@@ -1881,13 +1881,13 @@ class SelectTranslationsTestUtils {
    * @param {boolean} [config.pivotTranslation]
    *  - True if the expected translation is a pivot translation, otherwise false.
    *    Affects the number of expected downloads.
-   * @param {Function} [config.onTranslated]
-   *  - An optional callback function to execute after the translation completes.
+   * @param {Function} [config.viewAssertion]
+   *  - An optional callback function to execute for asserting the panel UI state.
    */
   static async clickTranslateButton({
     downloadHandler,
     pivotTranslation,
-    onTranslated,
+    viewAssertion,
   }) {
     logAction();
     const { translateButton } = SelectTranslationsPanel.elements;
@@ -1898,8 +1898,8 @@ class SelectTranslationsTestUtils {
     if (downloadHandler) {
       await this.handleDownloads({ downloadHandler, pivotTranslation });
     }
-    if (onTranslated) {
-      await onTranslated();
+    if (viewAssertion) {
+      await viewAssertion();
     }
   }
 
