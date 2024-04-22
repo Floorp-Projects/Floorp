@@ -271,6 +271,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(BrowserParent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowserParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameLoader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowsingContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserDOMWindow)
   tmp->UnlinkManager();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -278,6 +280,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowserParent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserDOMWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(Manager())
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -290,7 +294,6 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
                              uint32_t aChromeFlags)
     : TabContext(aContext),
       mTabId(aTabId),
-      mManager(aManager),
       mBrowsingContext(aBrowsingContext),
       mFrameElement(nullptr),
       mBrowserDOMWindow(nullptr),
@@ -320,6 +323,10 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mLockedNativePointer(false),
       mShowingTooltip(false) {
   MOZ_ASSERT(aManager);
+
+  // We access `Manager()` when updating priorities later in this constructor,
+  // so need to initialize it before IPC does.
+  SetManager(aManager);
 
   RequestingAccessKeyEventData::OnBrowserParentCreated();
 
@@ -395,6 +402,10 @@ TabId BrowserParent::GetTabIdFrom(nsIDocShell* docShell) {
     return static_cast<BrowserChild*>(browserChild.get())->GetTabId();
   }
   return TabId(0);
+}
+
+ContentParent* BrowserParent::Manager() const {
+  return static_cast<ContentParent*>(PBrowserParent::Manager());
 }
 
 void BrowserParent::AddBrowserParentToTable(layers::LayersId aLayersId,
@@ -1402,7 +1413,7 @@ IPCResult BrowserParent::RecvNewWindowGlobal(
     }
   }
 
-  if (!mManager->ValidatePrincipal(aInit.principal(), validationOptions)) {
+  if (!Manager()->ValidatePrincipal(aInit.principal(), validationOptions)) {
     ContentParent::LogAndAssertFailedPrincipalValidationInfo(aInit.principal(),
                                                              __func__);
   }
@@ -3974,7 +3985,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvQueryVisitedState(
   }
 
   auto* gvHistory = static_cast<GeckoViewHistory*>(history.get());
-  gvHistory->QueryVisitedState(widget, mManager, std::move(aURIs));
+  gvHistory->QueryVisitedState(widget, Manager(), std::move(aURIs));
   return IPC_OK();
 #else
   return IPC_FAIL(this, "QueryVisitedState is Android-only");
