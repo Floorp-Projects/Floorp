@@ -19,6 +19,8 @@ job-defaults:
         type: file
         name: 'public/build/target.{abi}.apk'
         path: '/builds/worker/checkouts/gecko/mobile/android/{source_project_name}/app/build/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
+    attributes:
+        build_platform: android
 
 
 jobs:

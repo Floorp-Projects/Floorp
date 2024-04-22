@@ -43,6 +43,8 @@ job-defaults:
             - linux64-jdk
         build-fat-aar:
             - target.maven.tar.xz
+    attributes:
+        build_platform: android
     dependencies:
         build-fat-aar:
             by-build-type:
