@@ -1,25 +1,13 @@
 //! Provides helpers for making ptrace system calls
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(linux_android)]
 mod linux;
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(linux_android)]
 pub use self::linux::*;
 
-#[cfg(any(
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(bsd)]
 mod bsd;
 
-#[cfg(any(
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(bsd)]
 pub use self::bsd::*;

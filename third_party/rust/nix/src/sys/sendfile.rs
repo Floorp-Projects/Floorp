@@ -20,9 +20,9 @@ use crate::Result;
 ///
 /// `in_fd` must support `mmap`-like operations and therefore cannot be a socket.
 ///
-/// For more information, see [the sendfile(2) man page.](https://man7.org/linux/man-pages/man2/sendfile.2.html)
-#[cfg(any(target_os = "android", target_os = "linux"))]
-#[cfg_attr(docsrs, doc(cfg(all())))]
+/// For more information, see [the sendfile(2) man page.](https://man7.org/linux/man-pages/man2/sendfile.2.html) for Linux,
+/// see [the sendfile(2) man page.](https://docs.oracle.com/cd/E88353_01/html/E37843/sendfile-3c.html) for Solaris.
+#[cfg(any(linux_android, solarish))]
 pub fn sendfile<F1: AsFd, F2: AsFd>(
     out_fd: F1,
     in_fd: F2,
@@ -56,7 +56,6 @@ pub fn sendfile<F1: AsFd, F2: AsFd>(
 ///
 /// For more information, see [the sendfile(2) man page.](https://man7.org/linux/man-pages/man2/sendfile.2.html)
 #[cfg(target_os = "linux")]
-#[cfg_attr(docsrs, doc(cfg(all())))]
 pub fn sendfile64<F1: AsFd, F2: AsFd>(
     out_fd: F1,
     in_fd: F2,
@@ -78,46 +77,82 @@ pub fn sendfile64<F1: AsFd, F2: AsFd>(
 }
 
 cfg_if! {
-    if #[cfg(any(target_os = "dragonfly",
-                 target_os = "freebsd",
-                 target_os = "ios",
-                 target_os = "macos"))] {
+    if #[cfg(any(freebsdlike, apple_targets))] {
         use std::io::IoSlice;
 
         #[derive(Clone, Debug)]
-        struct SendfileHeaderTrailer<'a>(
-            libc::sf_hdtr,
-            Option<Vec<IoSlice<'a>>>,
-            Option<Vec<IoSlice<'a>>>,
-        );
+        struct SendfileHeaderTrailer<'a> {
+            raw: libc::sf_hdtr,
+            _headers: Option<Vec<IoSlice<'a>>>,
+            _trailers: Option<Vec<IoSlice<'a>>>,
+        }
 
         impl<'a> SendfileHeaderTrailer<'a> {
             fn new(
                 headers: Option<&'a [&'a [u8]]>,
                 trailers: Option<&'a [&'a [u8]]>
             ) -> SendfileHeaderTrailer<'a> {
-                let header_iovecs: Option<Vec<IoSlice<'_>>> =
+                let mut header_iovecs: Option<Vec<IoSlice<'_>>> =
                     headers.map(|s| s.iter().map(|b| IoSlice::new(b)).collect());
-                let trailer_iovecs: Option<Vec<IoSlice<'_>>> =
+                let mut trailer_iovecs: Option<Vec<IoSlice<'_>>> =
                     trailers.map(|s| s.iter().map(|b| IoSlice::new(b)).collect());
-                SendfileHeaderTrailer(
-                    libc::sf_hdtr {
+
+                SendfileHeaderTrailer {
+                    raw: libc::sf_hdtr {
                         headers: {
                             header_iovecs
-                                .as_ref()
-                                .map_or(ptr::null(), |v| v.as_ptr()) as *mut libc::iovec
+                                .as_mut()
+                                .map_or(ptr::null_mut(), |v| v.as_mut_ptr())
+                                .cast()
                         },
                         hdr_cnt: header_iovecs.as_ref().map(|v| v.len()).unwrap_or(0) as i32,
                         trailers: {
                             trailer_iovecs
-                                .as_ref()
-                                .map_or(ptr::null(), |v| v.as_ptr()) as *mut libc::iovec
+                                .as_mut()
+                                .map_or(ptr::null_mut(), |v| v.as_mut_ptr())
+                                .cast()
                         },
                         trl_cnt: trailer_iovecs.as_ref().map(|v| v.len()).unwrap_or(0) as i32
                     },
-                    header_iovecs,
-                    trailer_iovecs,
-                )
+                    _headers: header_iovecs,
+                    _trailers: trailer_iovecs,
+                }
+            }
+        }
+    } else if #[cfg(solarish)] {
+        use std::os::unix::io::BorrowedFd;
+        use std::marker::PhantomData;
+
+        #[derive(Debug, Copy, Clone)]
+        /// Mapping of the raw C sendfilevec_t struct
+        pub struct SendfileVec<'fd> {
+            raw: libc::sendfilevec_t,
+            phantom: PhantomData<BorrowedFd<'fd>>
+        }
+
+        impl<'fd> SendfileVec<'fd> {
+            /// initialises SendfileVec to send data directly from the process's address space
+            /// same in C with sfv_fd set to SFV_FD_SELF.
+            pub fn newself(
+                off: off_t,
+                len: usize
+            ) -> Self {
+                Self{raw: libc::sendfilevec_t{sfv_fd: libc::SFV_FD_SELF, sfv_flag: 0, sfv_off: off, sfv_len: len}, phantom: PhantomData}
+            }
+
+            /// initialises SendfileVec to send data from `fd`.
+            pub fn new(
+                fd: BorrowedFd<'fd>,
+                off: off_t,
+                len: usize
+            ) -> SendfileVec<'fd> {
+                Self{raw: libc::sendfilevec_t{sfv_fd: fd.as_raw_fd(), sfv_flag: 0, sfv_off:off, sfv_len: len}, phantom: PhantomData}
+            }
+        }
+
+        impl From<SendfileVec<'_>> for libc::sendfilevec_t {
+            fn from<'fd>(vec: SendfileVec) -> libc::sendfilevec_t {
+                vec.raw
             }
         }
     }
@@ -187,7 +222,7 @@ cfg_if! {
             let flags: u32 = (ra32 << 16) | (flags.bits() as u32);
             let mut bytes_sent: off_t = 0;
             let hdtr = headers.or(trailers).map(|_| SendfileHeaderTrailer::new(headers, trailers));
-            let hdtr_ptr = hdtr.as_ref().map_or(ptr::null(), |s| &s.0 as *const libc::sf_hdtr);
+            let hdtr_ptr = hdtr.as_ref().map_or(ptr::null(), |s| &s.raw as *const libc::sf_hdtr);
             let return_code = unsafe {
                 libc::sendfile(in_fd.as_fd().as_raw_fd(),
                                out_sock.as_fd().as_raw_fd(),
@@ -230,7 +265,7 @@ cfg_if! {
         ) -> (Result<()>, off_t) {
             let mut bytes_sent: off_t = 0;
             let hdtr = headers.or(trailers).map(|_| SendfileHeaderTrailer::new(headers, trailers));
-            let hdtr_ptr = hdtr.as_ref().map_or(ptr::null(), |s| &s.0 as *const libc::sf_hdtr);
+            let hdtr_ptr = hdtr.as_ref().map_or(ptr::null(), |s| &s.raw as *const libc::sf_hdtr);
             let return_code = unsafe {
                 libc::sendfile(in_fd.as_fd().as_raw_fd(),
                                out_sock.as_fd().as_raw_fd(),
@@ -242,7 +277,7 @@ cfg_if! {
             };
             (Errno::result(return_code).and(Ok(())), bytes_sent)
         }
-    } else if #[cfg(any(target_os = "ios", target_os = "macos"))] {
+    } else if #[cfg(apple_targets)] {
         /// Read bytes from `in_fd` starting at `offset` and write up to `count` bytes to
         /// `out_sock`.
         ///
@@ -276,7 +311,7 @@ cfg_if! {
         ) -> (Result<()>, off_t) {
             let mut len = count.unwrap_or(0);
             let hdtr = headers.or(trailers).map(|_| SendfileHeaderTrailer::new(headers, trailers));
-            let hdtr_ptr = hdtr.as_ref().map_or(ptr::null(), |s| &s.0 as *const libc::sf_hdtr);
+            let hdtr_ptr = hdtr.as_ref().map_or(ptr::null(), |s| &s.raw as *const libc::sf_hdtr);
             let return_code = unsafe {
                 libc::sendfile(in_fd.as_fd().as_raw_fd(),
                                out_sock.as_fd().as_raw_fd(),
@@ -284,6 +319,31 @@ cfg_if! {
                                &mut len as *mut off_t,
                                hdtr_ptr as *mut libc::sf_hdtr,
                                0)
+            };
+            (Errno::result(return_code).and(Ok(())), len)
+        }
+    } else if #[cfg(solarish)] {
+        /// Write data from the vec arrays to `out_sock` and returns a `Result` and a
+        /// count of bytes written.
+        ///
+        /// Each `SendfileVec` set needs to be instantiated either with `SendfileVec::new` or
+        /// `SendfileVec::newself`.
+        ///
+        /// The former allows to send data from a file descriptor through `fd`,
+        ///  from an offset `off` and for a given amount of data `len`.
+        ///
+        /// The latter allows to send data from the process's address space, from an offset `off`
+        /// and for a given amount of data `len`.
+        ///
+        /// For more information, see
+        /// [the sendfilev(3) man page.](https://illumos.org/man/3EXT/sendfilev)
+        pub fn sendfilev<F: AsFd>(
+            out_sock: F,
+            vec: &[SendfileVec]
+        ) -> (Result<()>, usize) {
+            let mut len = 0usize;
+            let return_code = unsafe {
+                libc::sendfilev(out_sock.as_fd().as_raw_fd(), vec.as_ptr() as *const libc::sendfilevec_t, vec.len() as i32, &mut len)
             };
             (Errno::result(return_code).and(Ok(())), len)
         }

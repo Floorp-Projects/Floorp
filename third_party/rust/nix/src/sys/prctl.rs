@@ -50,7 +50,9 @@ pub fn get_child_subreaper() -> Result<bool> {
     // prctl writes into this var
     let mut subreaper: c_int = 0;
 
-    let res = unsafe { libc::prctl(libc::PR_GET_CHILD_SUBREAPER, &mut subreaper, 0, 0, 0) };
+    let res = unsafe {
+        libc::prctl(libc::PR_GET_CHILD_SUBREAPER, &mut subreaper, 0, 0, 0)
+    };
 
     Errno::result(res).map(|_| subreaper != 0)
 }
@@ -78,7 +80,9 @@ pub fn get_keepcaps() -> Result<bool> {
 
 /// Clear the thread memory corruption kill policy and use the system-wide default
 pub fn clear_mce_kill() -> Result<()> {
-    let res = unsafe { libc::prctl(libc::PR_MCE_KILL, libc::PR_MCE_KILL_CLEAR, 0, 0, 0) };
+    let res = unsafe {
+        libc::prctl(libc::PR_MCE_KILL, libc::PR_MCE_KILL_CLEAR, 0, 0, 0)
+    };
 
     Errno::result(res).map(drop)
 }
@@ -151,10 +155,11 @@ pub fn get_name() -> Result<CString> {
 
     let res = unsafe { libc::prctl(libc::PR_GET_NAME, &buf, 0, 0, 0) };
 
-    let len = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
-    let name = CStr::from_bytes_with_nul(&buf[..=len]).map_err(|_| Errno::EINVAL)?;
-
-    Errno::result(res).map(|_| name.to_owned())
+    Errno::result(res).and_then(|_| {
+        CStr::from_bytes_until_nul(&buf)
+            .map(CStr::to_owned)
+            .map_err(|_| Errno::EINVAL)
+    })
 }
 
 /// Sets the timer slack value for the calling thread. Timer slack is used by the kernel to group
@@ -174,14 +179,16 @@ pub fn get_timerslack() -> Result<i32> {
 
 /// Disable all performance counters attached to the calling process.
 pub fn task_perf_events_disable() -> Result<()> {
-    let res = unsafe { libc::prctl(libc::PR_TASK_PERF_EVENTS_DISABLE, 0, 0, 0, 0) };
+    let res =
+        unsafe { libc::prctl(libc::PR_TASK_PERF_EVENTS_DISABLE, 0, 0, 0, 0) };
 
     Errno::result(res).map(drop)
 }
 
 /// Enable all performance counters attached to the calling process.
 pub fn task_perf_events_enable() -> Result<()> {
-    let res = unsafe { libc::prctl(libc::PR_TASK_PERF_EVENTS_ENABLE, 0, 0, 0, 0) };
+    let res =
+        unsafe { libc::prctl(libc::PR_TASK_PERF_EVENTS_ENABLE, 0, 0, 0, 0) };
 
     Errno::result(res).map(drop)
 }

@@ -2275,6 +2275,8 @@ pub const O_TMPFILE: ::c_int = 0o20000000 | O_DIRECTORY;
 pub const MFD_CLOEXEC: ::c_uint = 0x0001;
 pub const MFD_ALLOW_SEALING: ::c_uint = 0x0002;
 pub const MFD_HUGETLB: ::c_uint = 0x0004;
+pub const MFD_NOEXEC_SEAL: ::c_uint = 0x0008;
+pub const MFD_EXEC: ::c_uint = 0x0010;
 pub const MFD_HUGE_64KB: ::c_uint = 0x40000000;
 pub const MFD_HUGE_512KB: ::c_uint = 0x4c000000;
 pub const MFD_HUGE_1MB: ::c_uint = 0x50000000;
@@ -3467,6 +3469,37 @@ pub const NET_NETFILTER: ::c_int = 19;
 pub const NET_DCCP: ::c_int = 20;
 pub const HUGETLB_FLAG_ENCODE_SHIFT: ::c_int = 26;
 pub const MAP_HUGE_SHIFT: ::c_int = HUGETLB_FLAG_ENCODE_SHIFT;
+
+// include/linux/sched.h
+pub const PF_VCPU: ::c_int = 0x00000001;
+pub const PF_IDLE: ::c_int = 0x00000002;
+pub const PF_EXITING: ::c_int = 0x00000004;
+pub const PF_POSTCOREDUMP: ::c_int = 0x00000008;
+pub const PF_IO_WORKER: ::c_int = 0x00000010;
+pub const PF_WQ_WORKER: ::c_int = 0x00000020;
+pub const PF_FORKNOEXEC: ::c_int = 0x00000040;
+pub const PF_MCE_PROCESS: ::c_int = 0x00000080;
+pub const PF_SUPERPRIV: ::c_int = 0x00000100;
+pub const PF_DUMPCORE: ::c_int = 0x00000200;
+pub const PF_SIGNALED: ::c_int = 0x00000400;
+pub const PF_MEMALLOC: ::c_int = 0x00000800;
+pub const PF_NPROC_EXCEEDED: ::c_int = 0x00001000;
+pub const PF_USED_MATH: ::c_int = 0x00002000;
+pub const PF_USER_WORKER: ::c_int = 0x00004000;
+pub const PF_NOFREEZE: ::c_int = 0x00008000;
+
+pub const PF_KSWAPD: ::c_int = 0x00020000;
+pub const PF_MEMALLOC_NOFS: ::c_int = 0x00040000;
+pub const PF_MEMALLOC_NOIO: ::c_int = 0x00080000;
+pub const PF_LOCAL_THROTTLE: ::c_int = 0x00100000;
+pub const PF_KTHREAD: ::c_int = 0x00200000;
+pub const PF_RANDOMIZE: ::c_int = 0x00400000;
+
+pub const PF_NO_SETAFFINITY: ::c_int = 0x04000000;
+pub const PF_MCE_EARLY: ::c_int = 0x08000000;
+pub const PF_MEMALLOC_PIN: ::c_int = 0x10000000;
+
+pub const PF_SUSPEND_TASK: ::c_int = 0x80000000;
 
 // Most `*_SUPER_MAGIC` constants are defined at the `linux_like` level; the
 // following are only available on newer Linux versions than the versions

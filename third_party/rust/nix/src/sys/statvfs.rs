@@ -21,44 +21,34 @@ libc_bitflags!(
         #[cfg(not(target_os = "haiku"))]
         ST_NOSUID;
         /// Do not interpret character or block-special devices
-        #[cfg(any(target_os = "android", target_os = "linux"))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        #[cfg(linux_android)]
         ST_NODEV;
         /// Do not allow execution of binaries on the filesystem
-        #[cfg(any(target_os = "android", target_os = "linux"))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        #[cfg(linux_android)]
         ST_NOEXEC;
         /// All IO should be done synchronously
-        #[cfg(any(target_os = "android", target_os = "linux"))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        #[cfg(linux_android)]
         ST_SYNCHRONOUS;
         /// Allow mandatory locks on the filesystem
-        #[cfg(any(target_os = "android", target_os = "linux"))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        #[cfg(linux_android)]
         ST_MANDLOCK;
         /// Write on file/directory/symlink
         #[cfg(target_os = "linux")]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         ST_WRITE;
         /// Append-only file
         #[cfg(target_os = "linux")]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         ST_APPEND;
         /// Immutable file
         #[cfg(target_os = "linux")]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         ST_IMMUTABLE;
         /// Do not update access times on files
-        #[cfg(any(target_os = "android", target_os = "linux"))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        #[cfg(linux_android)]
         ST_NOATIME;
         /// Do not update access times on files
-        #[cfg(any(target_os = "android", target_os = "linux"))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        #[cfg(linux_android)]
         ST_NODIRATIME;
         /// Update access time relative to modify/change time
-        #[cfg(any(target_os = "android", all(target_os = "linux", not(target_env = "musl"))))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        #[cfg(any(target_os = "android", all(target_os = "linux", not(target_env = "musl"), not(target_env = "ohos"))))]
         ST_RELATIME;
     }
 );
@@ -114,13 +104,18 @@ impl Statvfs {
     }
 
     /// Get the file system id
+    #[cfg(not(target_os = "hurd"))]
     pub fn filesystem_id(&self) -> c_ulong {
+        self.0.f_fsid
+    }
+    /// Get the file system id
+    #[cfg(target_os = "hurd")]
+    pub fn filesystem_id(&self) -> u64 {
         self.0.f_fsid
     }
 
     /// Get the mount flags
     #[cfg(not(target_os = "redox"))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
     pub fn flags(&self) -> FsFlags {
         FsFlags::from_bits_truncate(self.0.f_flag)
     }
@@ -151,22 +146,5 @@ pub fn fstatvfs<Fd: AsFd>(fd: Fd) -> Result<Statvfs> {
         let mut stat = mem::MaybeUninit::<libc::statvfs>::uninit();
         Errno::result(libc::fstatvfs(fd.as_fd().as_raw_fd(), stat.as_mut_ptr()))
             .map(|_| Statvfs(stat.assume_init()))
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::sys::statvfs::*;
-    use std::fs::File;
-
-    #[test]
-    fn statvfs_call() {
-        statvfs(&b"/"[..]).unwrap();
-    }
-
-    #[test]
-    fn fstatvfs_call() {
-        let root = File::open("/").unwrap();
-        fstatvfs(&root).unwrap();
     }
 }

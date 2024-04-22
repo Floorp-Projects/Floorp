@@ -2,6 +2,7 @@
 
 [![Cirrus Build Status](https://api.cirrus-ci.com/github/nix-rust/nix.svg)](https://cirrus-ci.com/github/nix-rust/nix)
 [![crates.io](https://img.shields.io/crates/v/nix.svg)](https://crates.io/crates/nix)
+[![maintenance-status](https://img.shields.io/badge/maintenance-looking--for--maintainer-orange.svg)](https://github.com/nix-rust/nix/issues/2132)
 
 [Documentation (Releases)](https://docs.rs/nix/)
 
@@ -98,13 +99,14 @@ The following targets are supported by `nix`:
     <li>x86_64-unknown-linux-gnux32</li>
     <li>x86_64-unknown-openbsd</li>
     <li>x86_64-unknown-redox</li>
+    <li>i686-unknown-hurd-gnu</li>
    </td>
   </tr>
 </table>
 
 ## Minimum Supported Rust Version (MSRV)
 
-nix is supported on Rust 1.65 and higher.  Its MSRV will not be
+nix is supported on Rust 1.69 and higher.  Its MSRV will not be
 changed in the future without bumping the major or minor version.
 
 ## Contributing

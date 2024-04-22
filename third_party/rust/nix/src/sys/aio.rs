@@ -35,7 +35,7 @@ use std::{
     ptr, thread,
 };
 
-use libc::{c_void, off_t};
+use libc::off_t;
 use pin_utils::unsafe_pinned;
 
 use crate::{
@@ -53,12 +53,9 @@ libc_enum! {
         /// do it like `fsync`
         O_SYNC,
         /// on supported operating systems only, do it like `fdatasync`
-        #[cfg(any(target_os = "ios",
+        #[cfg(any(apple_targets,
                   target_os = "linux",
-                  target_os = "macos",
-                  target_os = "netbsd",
-                  target_os = "openbsd"))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+                  netbsdlike))]
         O_DSYNC
     }
     impl TryFrom<i32>
@@ -161,7 +158,7 @@ impl AioCb {
         let r = unsafe { libc::aio_error(&self.aiocb().0) };
         match r {
             0 => Ok(()),
-            num if num > 0 => Err(Errno::from_i32(num)),
+            num if num > 0 => Err(Errno::from_raw(num)),
             -1 => Err(Errno::last()),
             num => panic!("unknown aio_error return value {num:?}"),
         }
@@ -581,7 +578,7 @@ impl<'a> AioRead<'a> {
     ) -> Self {
         let mut aiocb = AioCb::common_init(fd, prio, sigev_notify);
         aiocb.aiocb.0.aio_nbytes = buf.len();
-        aiocb.aiocb.0.aio_buf = buf.as_mut_ptr() as *mut c_void;
+        aiocb.aiocb.0.aio_buf = buf.as_mut_ptr().cast();
         aiocb.aiocb.0.aio_lio_opcode = libc::LIO_READ;
         aiocb.aiocb.0.aio_offset = offs;
         AioRead {
@@ -702,7 +699,7 @@ impl<'a> AioReadv<'a> {
         // In vectored mode, aio_nbytes stores the length of the iovec array,
         // not the byte count.
         aiocb.aiocb.0.aio_nbytes = bufs.len();
-        aiocb.aiocb.0.aio_buf = bufs.as_mut_ptr() as *mut c_void;
+        aiocb.aiocb.0.aio_buf = bufs.as_mut_ptr().cast();
         aiocb.aiocb.0.aio_lio_opcode = libc::LIO_READV;
         aiocb.aiocb.0.aio_offset = offs;
         AioReadv {
@@ -817,7 +814,7 @@ impl<'a> AioWrite<'a> {
         // but technically its only unsafe to dereference it, not to create
         // it.  Type Safety guarantees that we'll never pass aiocb to
         // aio_read or aio_readv.
-        aiocb.aiocb.0.aio_buf = buf.as_ptr() as *mut c_void;
+        aiocb.aiocb.0.aio_buf = buf.as_ptr().cast_mut().cast();
         aiocb.aiocb.0.aio_lio_opcode = libc::LIO_WRITE;
         aiocb.aiocb.0.aio_offset = offs;
         AioWrite {
@@ -935,7 +932,7 @@ impl<'a> AioWritev<'a> {
         // but technically its only unsafe to dereference it, not to create
         // it.  Type Safety guarantees that we'll never pass aiocb to
         // aio_read or aio_readv.
-        aiocb.aiocb.0.aio_buf = bufs.as_ptr() as *mut c_void;
+        aiocb.aiocb.0.aio_buf = bufs.as_ptr().cast_mut().cast();
         aiocb.aiocb.0.aio_lio_opcode = libc::LIO_WRITEV;
         aiocb.aiocb.0.aio_offset = offs;
         AioWritev {
@@ -1055,7 +1052,8 @@ pub fn aio_suspend(
     // generic, and accepting arguments like &[AioWrite].  But that would
     // prevent using aio_suspend to wait on a heterogeneous list of mixed
     // operations.
-    let v = list.iter()
+    let v = list
+        .iter()
         .map(|x| x.as_ref() as *const libc::aiocb)
         .collect::<Vec<*const libc::aiocb>>();
     let p = v.as_ptr();
@@ -1175,7 +1173,10 @@ pub fn aio_suspend(
 /// // notification, we know that all operations are complete.
 /// assert_eq!(aiow.as_mut().aio_return().unwrap(), WBUF.len());
 /// ```
-#[deprecated(since = "0.27.0", note = "https://github.com/nix-rust/nix/issues/2017")]
+#[deprecated(
+    since = "0.27.0",
+    note = "https://github.com/nix-rust/nix/issues/2017"
+)]
 pub fn lio_listio(
     mode: LioMode,
     list: &mut [Pin<&mut dyn AsMut<libc::aiocb>>],
@@ -1189,57 +1190,4 @@ pub fn lio_listio(
         libc::lio_listio(mode as i32, p, list.len() as i32, sigevp)
     })
     .map(drop)
-}
-
-#[cfg(test)]
-mod t {
-    use super::*;
-
-    /// aio_suspend relies on casting Rust Aio* struct pointers to libc::aiocb
-    /// pointers.  This test ensures that such casts are valid.
-    #[test]
-    fn casting() {
-        let sev = SigevNotify::SigevNone;
-        let aiof = AioFsync::new(666, AioFsyncMode::O_SYNC, 0, sev);
-        assert_eq!(
-            aiof.as_ref() as *const libc::aiocb,
-            &aiof as *const AioFsync as *const libc::aiocb
-        );
-
-        let mut rbuf = [];
-        let aior = AioRead::new(666, 0, &mut rbuf, 0, sev);
-        assert_eq!(
-            aior.as_ref() as *const libc::aiocb,
-            &aior as *const AioRead as *const libc::aiocb
-        );
-
-        let wbuf = [];
-        let aiow = AioWrite::new(666, 0, &wbuf, 0, sev);
-        assert_eq!(
-            aiow.as_ref() as *const libc::aiocb,
-            &aiow as *const AioWrite as *const libc::aiocb
-        );
-    }
-
-    #[cfg(target_os = "freebsd")]
-    #[test]
-    fn casting_vectored() {
-        let sev = SigevNotify::SigevNone;
-
-        let mut rbuf = [];
-        let mut rbufs = [IoSliceMut::new(&mut rbuf)];
-        let aiorv = AioReadv::new(666, 0, &mut rbufs[..], 0, sev);
-        assert_eq!(
-            aiorv.as_ref() as *const libc::aiocb,
-            &aiorv as *const AioReadv as *const libc::aiocb
-        );
-
-        let wbuf = [];
-        let wbufs = [IoSlice::new(&wbuf)];
-        let aiowv = AioWritev::new(666, 0, &wbufs, 0, sev);
-        assert_eq!(
-            aiowv.as_ref() as *const libc::aiocb,
-            &aiowv as *const AioWritev as *const libc::aiocb
-        );
-    }
 }

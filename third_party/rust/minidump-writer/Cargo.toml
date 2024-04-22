@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "minidump-writer"
-version = "0.8.3"
+version = "0.8.9"
 authors = ["Martin Sirringhaus"]
 description = "Rust rewrite of Breakpad's minidump_writer"
 homepage = "https://github.com/rust-minidump/minidump-writer"
@@ -32,14 +32,17 @@ version = "1.0"
 [dependencies.crash-context]
 version = "0.6"
 
+[dependencies.log]
+version = "0.4"
+
 [dependencies.memoffset]
 version = "0.9"
 
 [dependencies.minidump-common]
-version = "0.19.1"
+version = "0.21"
 
 [dependencies.scroll]
-version = "0.11"
+version = "0.12"
 
 [dependencies.tempfile]
 version = "3.8"
@@ -47,22 +50,26 @@ version = "3.8"
 [dependencies.thiserror]
 version = "1.0"
 
+[dev-dependencies.current_platform]
+version = "0.2"
+
 [dev-dependencies.futures]
 version = "0.3"
 features = ["executor"]
 
 [dev-dependencies.memmap2]
-version = "0.8"
+version = "0.9"
 
 [dev-dependencies.minidump]
-version = "0.19"
+version = "0.21"
 
 [target."cfg(any(target_os = \"linux\", target_os = \"android\"))".dependencies.nix]
-version = "0.27"
+version = "0.28"
 features = [
     "mman",
     "process",
     "ptrace",
+    "signal",
     "user",
 ]
 default-features = false
@@ -79,11 +86,11 @@ version = "2.2"
 default-features = false
 
 [target."cfg(target_os = \"macos\")".dev-dependencies.minidump-processor]
-version = "0.19"
+version = "0.21"
 default-features = false
 
 [target."cfg(target_os = \"macos\")".dev-dependencies.minidump-unwind]
-version = "0.19"
+version = "0.21"
 features = ["debuginfo"]
 
 [target."cfg(target_os = \"macos\")".dev-dependencies.similar-asserts]
@@ -96,10 +103,10 @@ version = "1.4"
 version = "2.4"
 
 [target."cfg(unix)".dependencies.goblin]
-version = "0.7.1"
+version = "0.8"
 
 [target."cfg(unix)".dependencies.libc]
 version = "0.2"
 
 [target."cfg(unix)".dependencies.memmap2]
-version = "0.8"
+version = "0.9"

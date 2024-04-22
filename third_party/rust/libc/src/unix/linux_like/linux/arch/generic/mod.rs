@@ -227,7 +227,11 @@ cfg_if! {
         pub const FS_IOC32_SETFLAGS: ::Ioctl = 0x40046602;
         pub const FS_IOC32_GETVERSION: ::Ioctl = 0x80047601;
         pub const FS_IOC32_SETVERSION: ::Ioctl = 0x40047602;
-    } else if #[cfg(any(target_arch = "x86_64", target_arch = "riscv64", target_arch = "aarch64", target_arch = "s390x"))] {
+    } else if #[cfg(any(target_arch = "x86_64",
+                        target_arch = "riscv64",
+                        target_arch = "aarch64",
+                        target_arch = "s390x",
+                        target_arch = "loongarch64"))] {
         pub const FS_IOC_GETFLAGS: ::Ioctl = 0x80086601;
         pub const FS_IOC_SETFLAGS: ::Ioctl = 0x40086602;
         pub const FS_IOC_GETVERSION: ::Ioctl = 0x80087601;

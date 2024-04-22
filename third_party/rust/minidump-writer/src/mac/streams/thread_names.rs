@@ -25,8 +25,8 @@ impl MinidumpWriter {
             // not a critical failure
             let name_loc = match Self::write_thread_name(buffer, dumper, tid) {
                 Ok(loc) => loc,
-                Err(_err) => {
-                    // TODO: log error
+                Err(err) => {
+                    log::warn!("failed to write thread name for thread {tid}: {err}");
                     write_string_to_location(buffer, "")?
                 }
             };

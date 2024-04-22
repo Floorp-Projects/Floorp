@@ -2,7 +2,6 @@
 // https://github.com/rust-lang/libc/issues/1848
 pub use libc::{suseconds_t, time_t};
 use libc::{timespec, timeval};
-use std::convert::From;
 use std::time::Duration;
 use std::{cmp, fmt, ops};
 
@@ -18,7 +17,7 @@ const fn zero_init_timespec() -> timespec {
     all(
         any(
             target_os = "freebsd",
-            target_os = "illumos",
+            solarish,
             target_os = "linux",
             target_os = "netbsd"
         ),
@@ -88,7 +87,7 @@ pub(crate) mod timer {
         Interval(TimeSpec),
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux"))]
+    #[cfg(linux_android)]
     bitflags! {
         /// Flags that are used for arming the timer.
         #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -97,12 +96,7 @@ pub(crate) mod timer {
             const TFD_TIMER_CANCEL_ON_SET = libc::TFD_TIMER_CANCEL_ON_SET;
         }
     }
-    #[cfg(any(
-        target_os = "freebsd",
-        target_os = "netbsd",
-        target_os = "dragonfly",
-        target_os = "illumos"
-    ))]
+    #[cfg(any(freebsdlike, target_os = "netbsd", solarish))]
     bitflags! {
         /// Flags that are used for arming the timer.
         #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -334,6 +328,17 @@ impl TimeValLike for TimeSpec {
 }
 
 impl TimeSpec {
+    /// Leave the timestamp unchanged.
+    #[cfg(not(target_os = "redox"))]
+    // At the time of writing this PR, redox does not support this feature
+    pub const UTIME_OMIT: TimeSpec =
+        TimeSpec::new(0, libc::UTIME_OMIT as timespec_tv_nsec_t);
+    /// Update the timestamp to `Now`
+    // At the time of writing this PR, redox does not support this feature
+    #[cfg(not(target_os = "redox"))]
+    pub const UTIME_NOW: TimeSpec =
+        TimeSpec::new(0, libc::UTIME_NOW as timespec_tv_nsec_t);
+
     /// Construct a new `TimeSpec` from its components
     #[cfg_attr(target_env = "musl", allow(deprecated))] // https://github.com/rust-lang/libc/issues/1848
     pub const fn new(seconds: time_t, nanoseconds: timespec_tv_nsec_t) -> Self {
@@ -711,102 +716,4 @@ fn mod_floor_64(this: i64, other: i64) -> i64 {
 #[inline]
 fn div_rem_64(this: i64, other: i64) -> (i64, i64) {
     (this / other, this % other)
-}
-
-#[cfg(test)]
-mod test {
-    use super::{TimeSpec, TimeVal, TimeValLike};
-    use std::time::Duration;
-
-    #[test]
-    pub fn test_timespec() {
-        assert_ne!(TimeSpec::seconds(1), TimeSpec::zero());
-        assert_eq!(
-            TimeSpec::seconds(1) + TimeSpec::seconds(2),
-            TimeSpec::seconds(3)
-        );
-        assert_eq!(
-            TimeSpec::minutes(3) + TimeSpec::seconds(2),
-            TimeSpec::seconds(182)
-        );
-    }
-
-    #[test]
-    pub fn test_timespec_from() {
-        let duration = Duration::new(123, 123_456_789);
-        let timespec = TimeSpec::nanoseconds(123_123_456_789);
-
-        assert_eq!(TimeSpec::from(duration), timespec);
-        assert_eq!(Duration::from(timespec), duration);
-    }
-
-    #[test]
-    pub fn test_timespec_neg() {
-        let a = TimeSpec::seconds(1) + TimeSpec::nanoseconds(123);
-        let b = TimeSpec::seconds(-1) + TimeSpec::nanoseconds(-123);
-
-        assert_eq!(a, -b);
-    }
-
-    #[test]
-    pub fn test_timespec_ord() {
-        assert_eq!(TimeSpec::seconds(1), TimeSpec::nanoseconds(1_000_000_000));
-        assert!(TimeSpec::seconds(1) < TimeSpec::nanoseconds(1_000_000_001));
-        assert!(TimeSpec::seconds(1) > TimeSpec::nanoseconds(999_999_999));
-        assert!(TimeSpec::seconds(-1) < TimeSpec::nanoseconds(-999_999_999));
-        assert!(TimeSpec::seconds(-1) > TimeSpec::nanoseconds(-1_000_000_001));
-    }
-
-    #[test]
-    pub fn test_timespec_fmt() {
-        assert_eq!(TimeSpec::zero().to_string(), "0 seconds");
-        assert_eq!(TimeSpec::seconds(42).to_string(), "42 seconds");
-        assert_eq!(TimeSpec::milliseconds(42).to_string(), "0.042 seconds");
-        assert_eq!(TimeSpec::microseconds(42).to_string(), "0.000042 seconds");
-        assert_eq!(
-            TimeSpec::nanoseconds(42).to_string(),
-            "0.000000042 seconds"
-        );
-        assert_eq!(TimeSpec::seconds(-86401).to_string(), "-86401 seconds");
-    }
-
-    #[test]
-    pub fn test_timeval() {
-        assert_ne!(TimeVal::seconds(1), TimeVal::zero());
-        assert_eq!(
-            TimeVal::seconds(1) + TimeVal::seconds(2),
-            TimeVal::seconds(3)
-        );
-        assert_eq!(
-            TimeVal::minutes(3) + TimeVal::seconds(2),
-            TimeVal::seconds(182)
-        );
-    }
-
-    #[test]
-    pub fn test_timeval_ord() {
-        assert_eq!(TimeVal::seconds(1), TimeVal::microseconds(1_000_000));
-        assert!(TimeVal::seconds(1) < TimeVal::microseconds(1_000_001));
-        assert!(TimeVal::seconds(1) > TimeVal::microseconds(999_999));
-        assert!(TimeVal::seconds(-1) < TimeVal::microseconds(-999_999));
-        assert!(TimeVal::seconds(-1) > TimeVal::microseconds(-1_000_001));
-    }
-
-    #[test]
-    pub fn test_timeval_neg() {
-        let a = TimeVal::seconds(1) + TimeVal::microseconds(123);
-        let b = TimeVal::seconds(-1) + TimeVal::microseconds(-123);
-
-        assert_eq!(a, -b);
-    }
-
-    #[test]
-    pub fn test_timeval_fmt() {
-        assert_eq!(TimeVal::zero().to_string(), "0 seconds");
-        assert_eq!(TimeVal::seconds(42).to_string(), "42 seconds");
-        assert_eq!(TimeVal::milliseconds(42).to_string(), "0.042 seconds");
-        assert_eq!(TimeVal::microseconds(42).to_string(), "0.000042 seconds");
-        assert_eq!(TimeVal::nanoseconds(1402).to_string(), "0.000001 seconds");
-        assert_eq!(TimeVal::seconds(-86401).to_string(), "-86401 seconds");
-    }
 }

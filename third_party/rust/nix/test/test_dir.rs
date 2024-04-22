@@ -6,10 +6,10 @@ use tempfile::tempdir;
 
 #[cfg(test)]
 fn flags() -> OFlag {
-    #[cfg(target_os = "illumos")]
+    #[cfg(solarish)]
     let f = OFlag::O_RDONLY | OFlag::O_CLOEXEC;
 
-    #[cfg(not(target_os = "illumos"))]
+    #[cfg(not(solarish))]
     let f = OFlag::O_RDONLY | OFlag::O_CLOEXEC | OFlag::O_DIRECTORY;
 
     f

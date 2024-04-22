@@ -28,7 +28,7 @@ ioctl_readwrite_buf!(readwritebuf_test, 0, 0, u32);
 // TODO:  Need a way to compute these constants at test time.  Using precomputed
 // values is fragile and needs to be maintained.
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(linux_android)]
 mod linux {
     // The cast is not unnecessary on all platforms.
     #[allow(clippy::unnecessary_cast)]
@@ -36,7 +36,9 @@ mod linux {
     fn test_op_none() {
         if cfg!(any(
             target_arch = "mips",
+            target_arch = "mips32r6",
             target_arch = "mips64",
+            target_arch = "mips64r6",
             target_arch = "powerpc",
             target_arch = "powerpc64"
         )) {
@@ -54,7 +56,9 @@ mod linux {
     fn test_op_write() {
         if cfg!(any(
             target_arch = "mips",
+            target_arch = "mips32r6",
             target_arch = "mips64",
+            target_arch = "mips64r6",
             target_arch = "powerpc",
             target_arch = "powerpc64"
         )) {
@@ -69,7 +73,11 @@ mod linux {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_op_write_64() {
-        if cfg!(any(target_arch = "mips64", target_arch = "powerpc64")) {
+        if cfg!(any(
+            target_arch = "mips64",
+            target_arch = "mips64r6",
+            target_arch = "powerpc64"
+        )) {
             assert_eq!(
                 request_code_write!(b'z', 10, 1u64 << 32) as u32,
                 0x8000_7A0A
@@ -88,7 +96,9 @@ mod linux {
     fn test_op_read() {
         if cfg!(any(
             target_arch = "mips",
+            target_arch = "mips32r6",
             target_arch = "mips64",
+            target_arch = "mips64r6",
             target_arch = "powerpc",
             target_arch = "powerpc64"
         )) {
@@ -103,7 +113,11 @@ mod linux {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_op_read_64() {
-        if cfg!(any(target_arch = "mips64", target_arch = "powerpc64")) {
+        if cfg!(any(
+            target_arch = "mips64",
+            target_arch = "mips64r6",
+            target_arch = "powerpc64"
+        )) {
             assert_eq!(
                 request_code_read!(b'z', 10, 1u64 << 32) as u32,
                 0x4000_7A0A
@@ -134,14 +148,7 @@ mod linux {
     }
 }
 
-#[cfg(any(
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(bsd)]
 mod bsd {
     #[test]
     fn test_op_none() {
@@ -149,7 +156,7 @@ mod bsd {
         assert_eq!(request_code_none!(b'a', 255), 0x2000_61FF);
     }
 
-    #[cfg(any(target_os = "dragonfly", target_os = "freebsd"))]
+    #[cfg(freebsdlike)]
     #[test]
     fn test_op_write_int() {
         assert_eq!(request_code_write_int!(b'v', 4), 0x2004_7604);
@@ -193,7 +200,7 @@ mod bsd {
     }
 }
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(linux_android)]
 mod linux_ioctls {
     use std::mem;
     use std::os::unix::io::AsRawFd;

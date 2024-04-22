@@ -21,7 +21,6 @@ libc_bitflags! {
         ADDR_LIMIT_3GB;
         /// User-space function pointers to signal handlers point to descriptors.
         #[cfg(not(any(target_env = "musl", target_env = "uclibc")))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         FDPIC_FUNCPTRS;
         /// Map page 0 as read-only.
         MMAP_PAGE_ZERO;
@@ -43,7 +42,6 @@ libc_bitflags! {
         ///
         /// [`uname(2)`]: https://man7.org/linux/man-pages/man2/uname.2.html
         #[cfg(not(any(target_env = "musl", target_env = "uclibc")))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         UNAME26;
         /// No effects.
         WHOLE_SECONDS;

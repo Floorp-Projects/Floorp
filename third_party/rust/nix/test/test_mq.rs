@@ -112,7 +112,15 @@ fn test_mq_getattr() {
 // FIXME: Fix failures for mips in QEMU
 #[test]
 #[cfg_attr(
-    all(qemu, any(target_arch = "mips", target_arch = "mips64")),
+    all(
+        qemu,
+        any(
+            target_arch = "mips",
+            target_arch = "mips32r6",
+            target_arch = "mips64",
+            target_arch = "mips64r6"
+        )
+    ),
     ignore
 )]
 fn test_mq_setattr() {
@@ -162,7 +170,15 @@ fn test_mq_setattr() {
 // FIXME: Fix failures for mips in QEMU
 #[test]
 #[cfg_attr(
-    all(qemu, any(target_arch = "mips", target_arch = "mips64")),
+    all(
+        qemu,
+        any(
+            target_arch = "mips",
+            target_arch = "mips32r6",
+            target_arch = "mips64",
+            target_arch = "mips64r6"
+        )
+    ),
     ignore
 )]
 fn test_mq_set_nonblocking() {

@@ -37,7 +37,7 @@ impl UtsName {
     }
 
     /// NIS or YP domain name of this machine.
-    #[cfg(any(target_os = "android", target_os = "linux"))]
+    #[cfg(linux_android)]
     pub fn domainname(&self) -> &OsStr {
         cast_and_trim(&self.0.domainname)
     }
@@ -61,25 +61,4 @@ fn cast_and_trim(slice: &[c_char]) -> &OsStr {
         unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), length) };
 
     OsStr::from_bytes(bytes)
-}
-
-#[cfg(test)]
-mod test {
-    #[cfg(target_os = "linux")]
-    #[test]
-    pub fn test_uname_linux() {
-        assert_eq!(super::uname().unwrap().sysname(), "Linux");
-    }
-
-    #[cfg(any(target_os = "macos", target_os = "ios"))]
-    #[test]
-    pub fn test_uname_darwin() {
-        assert_eq!(super::uname().unwrap().sysname(), "Darwin");
-    }
-
-    #[cfg(target_os = "freebsd")]
-    #[test]
-    pub fn test_uname_freebsd() {
-        assert_eq!(super::uname().unwrap().sysname(), "FreeBSD");
-    }
 }

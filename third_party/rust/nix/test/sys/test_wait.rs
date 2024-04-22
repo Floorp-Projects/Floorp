@@ -33,7 +33,12 @@ fn test_wait_signal() {
     //target_os = "haiku",
     all(target_os = "linux", not(target_env = "uclibc")),
 ))]
-#[cfg(not(any(target_arch = "mips", target_arch = "mips64")))]
+#[cfg(not(any(
+    target_arch = "mips",
+    target_arch = "mips32r6",
+    target_arch = "mips64",
+    target_arch = "mips64r6"
+)))]
 fn test_waitid_signal() {
     let _m = crate::FORK_MTX.lock();
 
@@ -76,7 +81,12 @@ fn test_wait_exit() {
     target_os = "haiku",
     all(target_os = "linux", not(target_env = "uclibc")),
 ))]
-#[cfg(not(any(target_arch = "mips", target_arch = "mips64")))]
+#[cfg(not(any(
+    target_arch = "mips",
+    target_arch = "mips32r6",
+    target_arch = "mips64",
+    target_arch = "mips64r6"
+)))]
 fn test_waitid_exit() {
     let _m = crate::FORK_MTX.lock();
 
@@ -140,7 +150,7 @@ fn test_waitid_pid() {
     }
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(linux_android)]
 // FIXME: qemu-user doesn't implement ptrace on most arches
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod ptrace {

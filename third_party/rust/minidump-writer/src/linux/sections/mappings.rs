@@ -83,16 +83,29 @@ fn fill_raw_module(
         sig_section.location()
     };
 
-    let (file_path, _) = mapping
-        .get_mapping_effective_path_and_name()
+    let (file_path, _, so_version) = mapping
+        .get_mapping_effective_path_name_and_version()
         .map_err(|e| errors::SectionMappingsError::GetEffectivePathError(mapping.clone(), e))?;
     let name_header = write_string_to_location(buffer, file_path.to_string_lossy().as_ref())?;
 
-    Ok(MDRawModule {
+    let version_info = so_version.map_or(Default::default(), |sov| format::VS_FIXEDFILEINFO {
+        signature: format::VS_FFI_SIGNATURE,
+        struct_version: format::VS_FFI_STRUCVERSION,
+        file_version_hi: sov.major,
+        file_version_lo: sov.minor,
+        product_version_hi: sov.patch,
+        product_version_lo: sov.prerelease,
+        ..Default::default()
+    });
+
+    let raw_module = MDRawModule {
         base_of_image: mapping.start_address as u64,
         size_of_image: mapping.size as u32,
         cv_record,
         module_name_rva: name_header.rva,
+        version_info,
         ..Default::default()
-    })
+    };
+
+    Ok(raw_module)
 }

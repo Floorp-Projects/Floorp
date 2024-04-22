@@ -42,7 +42,7 @@ fn test_openat() {
         open(tmp.path().parent().unwrap(), OFlag::empty(), Mode::empty())
             .unwrap();
     let fd = openat(
-        dirfd,
+        Some(dirfd),
         tmp.path().file_name().unwrap(),
         OFlag::O_RDONLY,
         Mode::empty(),
@@ -222,7 +222,7 @@ fn test_readlink() {
 
     assert_eq!(readlink(&dst).unwrap().to_str().unwrap(), expected_dir);
     assert_eq!(
-        readlinkat(dirfd, "b").unwrap().to_str().unwrap(),
+        readlinkat(Some(dirfd), "b").unwrap().to_str().unwrap(),
         expected_dir
     );
 }
@@ -234,10 +234,9 @@ fn test_readlink() {
 /// The from_offset should be updated by the call to reflect
 /// the 3 bytes read (6).
 #[cfg(any(
-        target_os = "linux",
+        linux_android,
         // Not available until FreeBSD 13.0
         all(target_os = "freebsd", fbsd14),
-        target_os = "android"
 ))]
 #[test]
 // QEMU does not support copy_file_range. Skip under qemu
@@ -272,7 +271,7 @@ fn test_copy_file_range() {
     assert_eq!(from_offset, 6);
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(linux_android)]
 mod linux_android {
     use libc::loff_t;
     use std::io::prelude::*;
@@ -280,7 +279,7 @@ mod linux_android {
     use std::os::unix::prelude::*;
 
     use nix::fcntl::*;
-    use nix::unistd::{close, pipe, read, write};
+    use nix::unistd::{pipe, read, write};
 
     use tempfile::tempfile;
     #[cfg(target_os = "linux")]
@@ -299,7 +298,7 @@ mod linux_android {
         let res = splice(
             tmp.as_raw_fd(),
             Some(&mut offset),
-            wr,
+            wr.as_raw_fd(),
             None,
             2,
             SpliceFFlags::empty(),
@@ -309,12 +308,9 @@ mod linux_android {
         assert_eq!(2, res);
 
         let mut buf = [0u8; 1024];
-        assert_eq!(2, read(rd, &mut buf).unwrap());
+        assert_eq!(2, read(rd.as_raw_fd(), &mut buf).unwrap());
         assert_eq!(b"f1", &buf[0..2]);
         assert_eq!(7, offset);
-
-        close(rd).unwrap();
-        close(wr).unwrap();
     }
 
     #[test]
@@ -323,24 +319,21 @@ mod linux_android {
         let (rd2, wr2) = pipe().unwrap();
 
         write(wr1, b"abc").unwrap();
-        let res = tee(rd1, wr2, 2, SpliceFFlags::empty()).unwrap();
+        let res =
+            tee(rd1.as_raw_fd(), wr2.as_raw_fd(), 2, SpliceFFlags::empty())
+                .unwrap();
 
         assert_eq!(2, res);
 
         let mut buf = [0u8; 1024];
 
         // Check the tee'd bytes are at rd2.
-        assert_eq!(2, read(rd2, &mut buf).unwrap());
+        assert_eq!(2, read(rd2.as_raw_fd(), &mut buf).unwrap());
         assert_eq!(b"ab", &buf[0..2]);
 
         // Check all the bytes are still at rd1.
-        assert_eq!(3, read(rd1, &mut buf).unwrap());
+        assert_eq!(3, read(rd1.as_raw_fd(), &mut buf).unwrap());
         assert_eq!(b"abc", &buf[0..3]);
-
-        close(rd1).unwrap();
-        close(wr1).unwrap();
-        close(rd2).unwrap();
-        close(wr2).unwrap();
     }
 
     #[test]
@@ -351,17 +344,15 @@ mod linux_android {
         let buf2 = b"defghi";
         let iovecs = [IoSlice::new(&buf1[0..3]), IoSlice::new(&buf2[0..3])];
 
-        let res = vmsplice(wr, &iovecs[..], SpliceFFlags::empty()).unwrap();
+        let res = vmsplice(wr.as_raw_fd(), &iovecs[..], SpliceFFlags::empty())
+            .unwrap();
 
         assert_eq!(6, res);
 
         // Check the bytes can be read at rd.
         let mut buf = [0u8; 32];
-        assert_eq!(6, read(rd, &mut buf).unwrap());
+        assert_eq!(6, read(rd.as_raw_fd(), &mut buf).unwrap());
         assert_eq!(b"abcdef", &buf[0..6]);
-
-        close(rd).unwrap();
-        close(wr).unwrap();
     }
 
     #[cfg(target_os = "linux")]
@@ -481,8 +472,7 @@ mod linux_android {
 }
 
 #[cfg(any(
-    target_os = "linux",
-    target_os = "android",
+    linux_android,
     target_os = "emscripten",
     target_os = "fuchsia",
     target_os = "wasi",
@@ -494,7 +484,7 @@ mod test_posix_fadvise {
     use nix::errno::Errno;
     use nix::fcntl::*;
     use nix::unistd::pipe;
-    use std::os::unix::io::{AsRawFd, RawFd};
+    use std::os::unix::io::AsRawFd;
     use tempfile::NamedTempFile;
 
     #[test]
@@ -509,7 +499,7 @@ mod test_posix_fadvise {
     fn test_errno() {
         let (rd, _wr) = pipe().unwrap();
         let res = posix_fadvise(
-            rd as RawFd,
+            rd.as_raw_fd(),
             0,
             100,
             PosixFadviseAdvice::POSIX_FADV_WILLNEED,
@@ -519,23 +509,18 @@ mod test_posix_fadvise {
 }
 
 #[cfg(any(
-    target_os = "linux",
-    target_os = "android",
-    target_os = "dragonfly",
+    linux_android,
+    freebsdlike,
     target_os = "emscripten",
     target_os = "fuchsia",
     target_os = "wasi",
-    target_os = "freebsd"
 ))]
 mod test_posix_fallocate {
 
     use nix::errno::Errno;
     use nix::fcntl::*;
     use nix::unistd::pipe;
-    use std::{
-        io::Read,
-        os::unix::io::{AsRawFd, RawFd},
-    };
+    use std::{io::Read, os::unix::io::AsRawFd};
     use tempfile::NamedTempFile;
 
     #[test]
@@ -565,10 +550,133 @@ mod test_posix_fallocate {
     #[test]
     fn errno() {
         let (rd, _wr) = pipe().unwrap();
-        let err = posix_fallocate(rd as RawFd, 0, 100).unwrap_err();
+        let err = posix_fallocate(rd.as_raw_fd(), 0, 100).unwrap_err();
         match err {
             Errno::EINVAL | Errno::ENODEV | Errno::ESPIPE | Errno::EBADF => (),
             errno => panic!("unexpected errno {errno}",),
+        }
+    }
+}
+
+#[cfg(any(target_os = "dragonfly", target_os = "netbsd", apple_targets))]
+#[test]
+fn test_f_get_path() {
+    use nix::fcntl::*;
+    use std::{os::unix::io::AsRawFd, path::PathBuf};
+
+    let tmp = NamedTempFile::new().unwrap();
+    let fd = tmp.as_raw_fd();
+    let mut path = PathBuf::new();
+    let res =
+        fcntl(fd, FcntlArg::F_GETPATH(&mut path)).expect("get path failed");
+    assert_ne!(res, -1);
+    assert_eq!(
+        path.as_path().canonicalize().unwrap(),
+        tmp.path().canonicalize().unwrap()
+    );
+}
+
+#[cfg(apple_targets)]
+#[test]
+fn test_f_get_path_nofirmlink() {
+    use nix::fcntl::*;
+    use std::{os::unix::io::AsRawFd, path::PathBuf};
+
+    let tmp = NamedTempFile::new().unwrap();
+    let fd = tmp.as_raw_fd();
+    let mut path = PathBuf::new();
+    let res = fcntl(fd, FcntlArg::F_GETPATH_NOFIRMLINK(&mut path))
+        .expect("get path failed");
+    let mut tmpstr = String::from("/System/Volumes/Data");
+    tmpstr.push_str(
+        &tmp.path()
+            .canonicalize()
+            .unwrap()
+            .into_os_string()
+            .into_string()
+            .unwrap(),
+    );
+    assert_ne!(res, -1);
+    assert_eq!(
+        path.as_path()
+            .canonicalize()
+            .unwrap()
+            .into_os_string()
+            .into_string()
+            .unwrap(),
+        tmpstr
+    );
+}
+
+#[cfg(all(target_os = "freebsd", target_arch = "x86_64"))]
+#[test]
+fn test_f_kinfo() {
+    use nix::fcntl::*;
+    use std::{os::unix::io::AsRawFd, path::PathBuf};
+
+    let tmp = NamedTempFile::new().unwrap();
+    // With TMPDIR set with UFS, the vnode name is not entered
+    // into the name cache thus path is always empty.
+    // Therefore, we reopen the tempfile a second time for the test
+    // to pass.
+    let tmp2 = File::open(tmp.path()).unwrap();
+    let fd = tmp2.as_raw_fd();
+    let mut path = PathBuf::new();
+    let res = fcntl(fd, FcntlArg::F_KINFO(&mut path)).expect("get path failed");
+    assert_ne!(res, -1);
+    assert_eq!(path, tmp.path());
+}
+
+/// Test `Flock` and associated functions.
+///
+#[cfg(not(any(target_os = "redox", target_os = "solaris")))]
+mod test_flock {
+    use nix::fcntl::*;
+    use tempfile::NamedTempFile;
+
+    /// Verify that `Flock::lock()` correctly obtains a lock, and subsequently unlocks upon drop.
+    #[test]
+    fn verify_lock_and_drop() {
+        // Get 2 `File` handles to same underlying file.
+        let file1 = NamedTempFile::new().unwrap();
+        let file2 = file1.reopen().unwrap();
+        let file1 = file1.into_file();
+
+        // Lock first handle
+        let lock1 = Flock::lock(file1, FlockArg::LockExclusive).unwrap();
+
+        // Attempt to lock second handle
+        let file2 = match Flock::lock(file2, FlockArg::LockExclusiveNonblock) {
+            Ok(_) => panic!("Expected second exclusive lock to fail."),
+            Err((f, _)) => f,
+        };
+
+        // Drop first lock
+        std::mem::drop(lock1);
+
+        // Attempt to lock second handle again (but successfully)
+        if Flock::lock(file2, FlockArg::LockExclusiveNonblock).is_err() {
+            panic!("Expected locking to be successful.");
+        }
+    }
+
+    /// Verify that `Flock::unlock()` correctly obtains unlocks.
+    #[test]
+    fn verify_unlock() {
+        // Get 2 `File` handles to same underlying file.
+        let file1 = NamedTempFile::new().unwrap();
+        let file2 = file1.reopen().unwrap();
+        let file1 = file1.into_file();
+
+        // Lock first handle
+        let lock1 = Flock::lock(file1, FlockArg::LockExclusive).unwrap();
+
+        // Unlock and retain file so any erroneous flocks also remain present.
+        let _file1 = lock1.unlock().unwrap();
+
+        // Attempt to lock second handle.
+        if Flock::lock(file2, FlockArg::LockExclusiveNonblock).is_err() {
+            panic!("Expected locking to be successful.");
         }
     }
 }

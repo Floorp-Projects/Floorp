@@ -590,7 +590,8 @@ pub fn sysctl_by_name<T: Sized + Default>(name: &[u8]) -> T {
             0,
         ) != 0
         {
-            // log?
+            // TODO convert to ascii characters when logging?
+            log::warn!("failed to get sysctl for {name:?}");
             T::default()
         } else {
             out

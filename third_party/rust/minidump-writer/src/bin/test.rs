@@ -8,14 +8,14 @@ pub type Result<T> = std::result::Result<T, Error>;
 mod linux {
     use super::*;
     use minidump_writer::{
+        minidump_writer::STOP_TIMEOUT,
         ptrace_dumper::{PtraceDumper, AT_SYSINFO_EHDR},
         LINUX_GATE_LIBRARY_NAME,
     };
     use nix::{
-        sys::mman::{mmap, MapFlags, ProtFlags},
+        sys::mman::{mmap_anonymous, MapFlags, ProtFlags},
         unistd::getppid,
     };
-    use std::os::fd::BorrowedFd;
 
     macro_rules! test {
         ($x:expr, $errmsg:expr) => {
@@ -29,13 +29,13 @@ mod linux {
 
     fn test_setup() -> Result<()> {
         let ppid = getppid();
-        PtraceDumper::new(ppid.as_raw())?;
+        PtraceDumper::new(ppid.as_raw(), STOP_TIMEOUT)?;
         Ok(())
     }
 
     fn test_thread_list() -> Result<()> {
         let ppid = getppid();
-        let dumper = PtraceDumper::new(ppid.as_raw())?;
+        let dumper = PtraceDumper::new(ppid.as_raw(), STOP_TIMEOUT)?;
         test!(!dumper.threads.is_empty(), "No threads")?;
         test!(
             dumper
@@ -51,7 +51,7 @@ mod linux {
 
     fn test_copy_from_process(stack_var: usize, heap_var: usize) -> Result<()> {
         let ppid = getppid().as_raw();
-        let mut dumper = PtraceDumper::new(ppid)?;
+        let mut dumper = PtraceDumper::new(ppid, STOP_TIMEOUT)?;
         dumper.suspend_threads()?;
         let stack_res = PtraceDumper::copy_from_process(ppid, stack_var as *mut libc::c_void, 1)?;
 
@@ -73,7 +73,7 @@ mod linux {
 
     fn test_find_mappings(addr1: usize, addr2: usize) -> Result<()> {
         let ppid = getppid();
-        let dumper = PtraceDumper::new(ppid.as_raw())?;
+        let dumper = PtraceDumper::new(ppid.as_raw(), STOP_TIMEOUT)?;
         dumper
             .find_mapping(addr1)
             .ok_or("No mapping for addr1 found")?;
@@ -90,7 +90,7 @@ mod linux {
         let ppid = getppid().as_raw();
         let exe_link = format!("/proc/{}/exe", ppid);
         let exe_name = std::fs::read_link(exe_link)?.into_os_string();
-        let mut dumper = PtraceDumper::new(getppid().as_raw())?;
+        let mut dumper = PtraceDumper::new(getppid().as_raw(), STOP_TIMEOUT)?;
         let mut found_exe = None;
         for (idx, mapping) in dumper.mappings.iter().enumerate() {
             if mapping.name.as_ref().map(|x| x.into()).as_ref() == Some(&exe_name) {
@@ -107,7 +107,7 @@ mod linux {
 
     fn test_merged_mappings(path: String, mapped_mem: usize, mem_size: usize) -> Result<()> {
         // Now check that PtraceDumper interpreted the mappings properly.
-        let dumper = PtraceDumper::new(getppid().as_raw())?;
+        let dumper = PtraceDumper::new(getppid().as_raw(), STOP_TIMEOUT)?;
         let mut mapping_count = 0;
         for map in &dumper.mappings {
             if map
@@ -129,7 +129,7 @@ mod linux {
 
     fn test_linux_gate_mapping_id() -> Result<()> {
         let ppid = getppid().as_raw();
-        let mut dumper = PtraceDumper::new(ppid)?;
+        let mut dumper = PtraceDumper::new(ppid, STOP_TIMEOUT)?;
         let mut found_linux_gate = false;
         for mut mapping in dumper.mappings.clone() {
             if mapping.name == Some(LINUX_GATE_LIBRARY_NAME.into()) {
@@ -148,7 +148,7 @@ mod linux {
 
     fn test_mappings_include_linux_gate() -> Result<()> {
         let ppid = getppid().as_raw();
-        let dumper = PtraceDumper::new(ppid)?;
+        let dumper = PtraceDumper::new(ppid, STOP_TIMEOUT)?;
         let linux_gate_loc = dumper.auxv[&AT_SYSINFO_EHDR];
         test!(linux_gate_loc != 0, "linux_gate_loc == 0")?;
         let mut found_linux_gate = false;
@@ -215,18 +215,16 @@ mod linux {
         let memory_size = std::num::NonZeroUsize::new(page_size.unwrap() as usize).unwrap();
         // Get some memory to be mapped by the child-process
         let mapped_mem = unsafe {
-            mmap::<BorrowedFd>(
+            mmap_anonymous(
                 None,
                 memory_size,
                 ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
                 MapFlags::MAP_PRIVATE | MapFlags::MAP_ANON,
-                None,
-                0,
             )
             .unwrap()
         };
 
-        println!("{} {}", mapped_mem as usize, memory_size);
+        println!("{} {}", mapped_mem.as_ptr() as usize, memory_size);
         loop {
             std::thread::park();
         }

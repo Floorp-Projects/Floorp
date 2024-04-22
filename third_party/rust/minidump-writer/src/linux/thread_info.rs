@@ -38,19 +38,17 @@ enum NT_Elf {
 }
 
 #[inline]
-pub fn to_u128(slice: &[u32]) -> &[u128] {
-    unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), slice.len().saturating_div(4)) }
-}
-
-#[inline]
-pub fn copy_registers(dst: &mut [u128], src: &[u128]) {
-    let to_copy = std::cmp::min(dst.len(), src.len());
-    dst[..to_copy].copy_from_slice(&src[..to_copy]);
-}
-
-#[inline]
 pub fn copy_u32_registers(dst: &mut [u128], src: &[u32]) {
-    copy_registers(dst, to_u128(src));
+    // SAFETY: We are copying a block of memory from ptrace as u32s to the u128
+    // format of minidump-common
+    unsafe {
+        let dst: &mut [u8] =
+            std::slice::from_raw_parts_mut(dst.as_mut_ptr().cast(), dst.len() * 16);
+        let src: &[u8] = std::slice::from_raw_parts(src.as_ptr().cast(), src.len() * 4);
+
+        let to_copy = std::cmp::min(dst.len(), src.len());
+        dst[..to_copy].copy_from_slice(&src[..to_copy]);
+    }
 }
 
 trait CommonThreadInfo {

@@ -330,7 +330,7 @@ pub enum ExceptionCodeMacResourceThreadsFlavor {
 ///
 /// See the [osfmk/kern/exc_guard.h][header] header in Apple's kernel sources
 ///
-/// [header]: https://github.com/apple/darwin-xnu/blob/main/osfmk/kern/exc_guard.h
+/// [header]: https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/exc_guard.h
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive)]
 pub enum ExceptionCodeMacGuardType {
     GUARD_TYPE_NONE = 0,
@@ -339,18 +339,21 @@ pub enum ExceptionCodeMacGuardType {
     GUARD_TYPE_USER = 3,
     GUARD_TYPE_VN = 4,
     GUARD_TYPE_VIRT_MEMORY = 5,
+    GUARD_TYPE_REJECTED_SC = 6,
 }
 
 /// Mac/iOS Mach port guard exception flavors
 ///
 /// See the [osfmk/mach/port.h][header] header in Apple's kernel sources
 ///
-/// [header]: https://github.com/apple/darwin-xnu/blob/main/osfmk/mach/port.h
+/// [header]: https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/mach/port.h
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive)]
 pub enum ExceptionCodeMacGuardMachPortFlavor {
-    GUARD_EXC_DESTROY = 0x00000001,
-    GUARD_EXC_MOD_REFS = 0x00000002,
-    GUARD_EXC_SET_CONTEXT = 0x00000004,
+    GUARD_EXC_DESTROY = 1,
+    GUARD_EXC_MOD_REFS = 2,
+    GUARD_EXC_INVALID_OPTIONS = 3,
+    GUARD_EXC_SET_CONTEXT = 4,
+    GUARD_EXC_THREAD_SET_STATE = 5,
     GUARD_EXC_UNGUARDED = 0x00000008,
     GUARD_EXC_INCORRECT_GUARD = 0x00000010,
     GUARD_EXC_IMMOVABLE = 0x00000020,
@@ -371,6 +374,8 @@ pub enum ExceptionCodeMacGuardMachPortFlavor {
     GUARD_EXC_RCV_GUARDED_DESC = 0x00100000,
     GUARD_EXC_MOD_REFS_NON_FATAL = 0x00200000,
     GUARD_EXC_IMMOVABLE_NON_FATAL = 0x00400000,
+    GUARD_EXC_REQUIRE_REPLY_PORT_SEMANTICS = 0x00800000,
+    GUARD_EXC_EXCEPTION_BEHAVIOR_ENFORCE = 0x01000000,
 }
 
 /// Mac/iOS fd guard exception flavors
@@ -413,4 +418,14 @@ pub enum ExceptionCodeMacGuardVNFlavor {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive)]
 pub enum ExceptionCodeMacGuardVirtMemoryFlavor {
     GUARD_EXC_DEALLOC_GAP = 0x00000001,
+}
+
+/// Mac/iOS rejected syscall guard exception flavors
+///
+/// See the [osfmk/kern/exc_guard.h][header] header in Apple's kernel sources
+///
+/// [header]: https://github.com/apple-oss-distributions/xnu/blob/1031c584a5e37aff177559b9f69dbd3c8c3fd30a/osfmk/kern/exc_guard.h#L149-L163
+#[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive)]
+pub enum ExceptionCodeMacGuardRejecteSysCallFlavor {
+    GUARD_EXC_MACH_TRAP = 0x00000000,
 }

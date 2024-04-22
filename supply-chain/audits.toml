@@ -275,6 +275,14 @@ start = "2020-11-03"
 end = "2024-03-31"
 notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
 
+[[wildcard-audits.minidump-common]]
+who = "Alex Franchuk <afranchuk@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 72814 # Gabriele Svelto (gabrielesvelto)
+start = "2022-11-30"
+end = "2025-02-28"
+notes = "This crate is written and maintained by mozilla employees."
+
 [[wildcard-audits.mozdevice]]
 who = "Henrik Skupin <mail@hskupin.info>"
 criteria = "safe-to-run"
@@ -2041,6 +2049,12 @@ who = "Gabriele Svelto <gsvelto@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.6.0 -> 0.7.1"
 
+[[audits.goblin]]
+who = "Alex Franchuk <afranchuk@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.7.1 -> 0.8.0"
+notes = "Fairly straightforward feature improvements."
+
 [[audits.gpu-alloc]]
 who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2623,6 +2637,12 @@ criteria = "safe-to-deploy"
 delta = "0.8.1 -> 0.8.3"
 notes = "All changes were authored or reviewed by Mozilla employees"
 
+[[audits.minidump-writer]]
+who = "Alex Franchuk <afranchuk@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.3 -> 0.8.9"
+notes = "Mainly dependency updates and a few small features (in support of mozilla bugs)."
+
 [[audits.miniz_oxide]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -2734,6 +2754,15 @@ delta = "0.25.1 -> 0.26.2"
 who = "Gabriele Svelto <gsvelto@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.26.2 -> 0.27.1"
+
+[[audits.nix]]
+who = "Alex Franchuk <afranchuk@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.27.1 -> 0.28.0"
+notes = """
+Many new features and bugfixes. Obviously there's a lot of unsafe code calling
+libc, but the usage looks correct.
+"""
 
 [[audits.nom]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

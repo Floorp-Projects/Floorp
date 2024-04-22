@@ -4,11 +4,10 @@
 //! [sched.h](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/sched.h.html)
 use crate::{Errno, Result};
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(linux_android)]
 pub use self::sched_linux_like::*;
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
-#[cfg_attr(docsrs, doc(cfg(all())))]
+#[cfg(linux_android)]
 mod sched_linux_like {
     use crate::errno::Errno;
     use crate::unistd::Pid;
@@ -117,17 +116,19 @@ mod sched_linux_like {
         }
 
         let combined = flags.bits() | signal.unwrap_or(0);
-        let ptr = stack.as_mut_ptr().add(stack.len());
-        let ptr_aligned = ptr.sub(ptr as usize % 16);
-        let res = libc::clone(
-            mem::transmute(
-                callback
-                    as extern "C" fn(*mut Box<dyn FnMut() -> isize>) -> i32,
-            ),
-            ptr_aligned as *mut c_void,
-            combined,
-            &mut cb as *mut _ as *mut c_void,
-        );
+        let res = unsafe {
+            let ptr = stack.as_mut_ptr().add(stack.len());
+            let ptr_aligned = ptr.sub(ptr as usize % 16);
+            libc::clone(
+                mem::transmute(
+                    callback
+                        as extern "C" fn(*mut Box<dyn FnMut() -> isize>) -> i32,
+                ),
+                ptr_aligned as *mut c_void,
+                combined,
+                &mut cb as *mut _ as *mut c_void,
+            )
+        };
 
         Errno::result(res).map(Pid::from_raw)
     }
@@ -151,20 +152,10 @@ mod sched_linux_like {
     }
 }
 
-#[cfg(any(
-    target_os = "android",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "linux"
-))]
+#[cfg(any(linux_android, freebsdlike))]
 pub use self::sched_affinity::*;
 
-#[cfg(any(
-    target_os = "android",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "linux"
-))]
+#[cfg(any(linux_android, freebsdlike))]
 mod sched_affinity {
     use crate::errno::Errno;
     use crate::unistd::Pid;
