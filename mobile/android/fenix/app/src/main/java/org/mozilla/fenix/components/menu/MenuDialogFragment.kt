@@ -9,15 +9,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import mozilla.components.lib.state.ext.observeAsState
+import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.accounts.AccountState
+import org.mozilla.fenix.components.components
 import org.mozilla.fenix.components.lazyStore
 import org.mozilla.fenix.components.menu.compose.MenuDialog
 import org.mozilla.fenix.components.menu.compose.MenuDialogBottomSheet
@@ -69,9 +72,15 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
         setContent {
             FirefoxTheme {
                 MenuDialogBottomSheet(onRequestDismiss = {}) {
+                    val syncStore = components.backgroundServices.syncStore
+                    val account by syncStore.observeAsState(initialValue = null) { state -> state.account }
+                    val accountState by syncStore.observeAsState(initialValue = NotAuthenticated) { state ->
+                        state.accountState
+                    }
+
                     MenuDialog(
-                        account = null,
-                        accountState = AccountState.NO_ACCOUNT,
+                        account = account,
+                        accountState = accountState,
                         onSignInButtonClick = {},
                         onHelpButtonClick = {
                             store.dispatch(MenuAction.Navigate.Help)
