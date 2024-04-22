@@ -281,9 +281,7 @@ export class IndexedDB {
    *
    * @param {string} dbName
    *        The name of the database to open.
-   * @param {object} options
-   *        The options with which to open the database.
-   * @param {integer} options.version
+   * @param {integer} version
    *        The schema version with which the database needs to be opened. If
    *        the database does not exist, or its current schema version does
    *        not match, the `onupgradeneeded` function will be called.
@@ -295,8 +293,8 @@ export class IndexedDB {
    *
    * @returns {Promise<IndexedDB>}
    */
-  static open(dbName, options, onupgradeneeded = null) {
-    let request = indexedDB.open(dbName, options);
+  static open(dbName, version, onupgradeneeded = null) {
+    let request = indexedDB.open(dbName, version);
     return this._wrapOpenRequest(request, onupgradeneeded);
   }
 

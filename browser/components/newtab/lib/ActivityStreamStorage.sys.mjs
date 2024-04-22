@@ -75,7 +75,7 @@ export class ActivityStreamStorage {
   }
 
   _openDatabase() {
-    return lazy.IndexedDB.open(this.dbName, { version: this.dbVersion }, db => {
+    return lazy.IndexedDB.open(this.dbName, this.dbVersion, db => {
       // If provided with array of objectStore names we need to create all the
       // individual stores
       this.storeNames.forEach(store => {
