@@ -31,8 +31,7 @@ interface IDBFactory {
 
   [NewObject, Throws, NeedsCallerType]
   IDBOpenDBRequest
-  deleteDatabase(DOMString name,
-                 optional IDBOpenDBOptions options = {});
+  deleteDatabase(DOMString name);
 
   Promise<sequence<IDBDatabaseInfo>> databases();
 
