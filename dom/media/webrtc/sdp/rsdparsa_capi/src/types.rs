@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use libc::size_t;
-use std::boxed::Box;
 use std::convert::TryInto;
 use std::error::Error;
 use std::ffi::CStr;
