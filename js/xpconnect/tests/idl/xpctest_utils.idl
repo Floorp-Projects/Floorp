@@ -37,8 +37,8 @@ interface nsIXPCTestTypeScript : nsISupports {
   void exposedMethod(in long arg);
 
   // Members referencing TSNoncompat typedefs are not exposed.
-  attribute Noncompat noncompatProp;
-  void noncompatMethod(in Noncompat arg);
+  [noscript] attribute Noncompat noncompatProp;
+  [noscript] void noncompatMethod(in Noncompat arg);
 
   // [noscript] attributes and methods are not exposed.
   [noscript] attribute long noscriptProp;

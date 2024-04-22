@@ -22,7 +22,7 @@ class ClassOfService;
 %}
 native ClassOfService(mozilla::net::ClassOfService);
 
-[scriptable, uuid(1ccb58ec-5e07-4cf9-a30d-ac5490d23b41)]
+[scriptable, builtinclass, uuid(1ccb58ec-5e07-4cf9-a30d-ac5490d23b41)]
 interface nsIClassOfService : nsISupports
 {
   attribute unsigned long classFlags;
@@ -30,7 +30,7 @@ interface nsIClassOfService : nsISupports
 
   void clearClassFlags(in unsigned long flags);
   void addClassFlags(in unsigned long flags);
-  void setClassOfService(in ClassOfService s);
+  [noscript] void setClassOfService(in ClassOfService s);
 
   // All these flags have a (de)prioritization effect.
 

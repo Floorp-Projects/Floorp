@@ -161,7 +161,7 @@ interface nsIBaseWindow : nsISupports
    *
    * @see DimensionRequest
    */
-  void setDimensions(in DimensionRequest aRequest);
+  [noscript] void setDimensions(in DimensionRequest aRequest);
 
   /**
    * Gets the dimensions of the window. The caller may pass nullptr for any
@@ -178,7 +178,7 @@ interface nsIBaseWindow : nsISupports
    *
    * @see DimensionRequest
    */
-  void getDimensions(in DimensionKind aDimensionKind, out long aX, out long aY, out long aCX, out long aCY);
+  [noscript] void getDimensions(in DimensionKind aDimensionKind, out long aX, out long aY, out long aCX, out long aCY);
 
   /**
    * Tell the window to repaint itself
@@ -210,7 +210,7 @@ interface nsIBaseWindow : nsISupports
   On controls that don't support setting nativeWindow parents, setting this
   will return a NS_ERROR_NOT_IMPLEMENTED error.
   */
-  attribute nativeWindow parentNativeWindow;
+  [noscript] attribute nativeWindow parentNativeWindow;
 
   /*
   This is the handle (HWND, GdkWindow*, ...) to the native window of the

@@ -56,7 +56,7 @@ interface nsIHttpUpgradeListener : nsISupports
 
     [must_use] void onUpgradeFailed(in nsresult aErrorCode);
 
-    void onWebSocketConnectionAvailable(in WebSocketConnectionBase aConnection);
+    [noscript] void onWebSocketConnectionAvailable(in WebSocketConnectionBase aConnection);
 };
 
 /**

@@ -19,7 +19,7 @@ typedef unsigned long nsServerSocketFlag;
  *
  * An interface to a server socket that can accept incoming connections.
  */
-[scriptable, uuid(7a9c39cb-a13f-4eef-9bdf-a74301628742)]
+[scriptable, builtinclass, uuid(7a9c39cb-a13f-4eef-9bdf-a74301628742)]
 interface nsIServerSocket : nsISupports
 {
     /**

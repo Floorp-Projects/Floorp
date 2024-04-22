@@ -48,7 +48,7 @@ interface nsIInterceptedBodyCallback : nsISupports
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(f4b82975-6a86-4cc4-87fe-9a1fd430c86d)]
+[scriptable, builtinclass, uuid(f4b82975-6a86-4cc4-87fe-9a1fd430c86d)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**

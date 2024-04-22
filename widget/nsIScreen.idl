@@ -75,7 +75,7 @@ interface nsIScreen : nsISupports
   /**
    * ScreenColorGamut is native type, which cannot be declared [infallible].
    */
-  readonly attribute ScreenColorGamut colorGamut;
+  [noscript] readonly attribute ScreenColorGamut colorGamut;
 
   /**
    * The number of device pixels per desktop pixel for this screen (for
