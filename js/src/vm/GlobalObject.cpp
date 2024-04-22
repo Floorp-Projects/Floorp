@@ -920,6 +920,10 @@ bool GlobalObject::getSelfHostedFunction(JSContext* cx,
     return true;
   }
 
+  // Don't collect metadata for self-hosted functions or intrinsics.
+  // This is similar to the suppression in GlobalObject::resolveConstructor.
+  AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
+
   JSRuntime* runtime = cx->runtime();
   frontend::ScriptIndex index =
       runtime->getSelfHostedScriptIndexRange(selfHostedName)->start;
@@ -940,6 +944,10 @@ bool GlobalObject::getIntrinsicValueSlow(JSContext* cx,
                                          Handle<GlobalObject*> global,
                                          Handle<PropertyName*> name,
                                          MutableHandleValue value) {
+  // Don't collect metadata for self-hosted functions or intrinsics.
+  // This is similar to the suppression in GlobalObject::resolveConstructor.
+  AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
+
   // If this is a C++ intrinsic, simply define the function on the intrinsics
   // holder.
   if (const JSFunctionSpec* spec = js::FindIntrinsicSpec(name)) {

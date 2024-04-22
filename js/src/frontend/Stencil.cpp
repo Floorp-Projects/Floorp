@@ -2783,6 +2783,8 @@ JSScript* CompilationStencil::instantiateSelfHostedTopLevelForRealm(
 JSFunction* CompilationStencil::instantiateSelfHostedLazyFunction(
     JSContext* cx, CompilationAtomCache& atomCache, ScriptIndex index,
     Handle<JSAtom*> name) {
+  MOZ_ASSERT(cx->zone()->suppressAllocationMetadataBuilder);
+
   GeneratorKind generatorKind = scriptExtra[index].immutableFlags.hasFlag(
                                     ImmutableScriptFlagsEnum::IsGenerator)
                                     ? GeneratorKind::Generator
