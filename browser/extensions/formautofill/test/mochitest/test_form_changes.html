@@ -61,7 +61,7 @@ async function checkFormChangeHappened(formId) {
   await expectPopup();
   synthesizeKey("KEY_ArrowDown");
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({
+    makeAddressLabel({
       primary: address.tel,
       secondary: address.name,
       status: "Also autofills name, organization"
@@ -92,7 +92,7 @@ async function checkFormChangeHappened(formId) {
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({
+    makeAddressLabel({
       primary: address["address-level2"],
       secondary: address.name,
       status: "Also autofills name, organization, phone"
