@@ -603,12 +603,12 @@ workers:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: 't-linux-kvm-noscratch-gcp'
+            worker-type: '{alias}-gcp'
         t-linux-kvm:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: 't-linux-kvm-gcp'
+            worker-type: 't-linux-kvm-noscratch-gcp'
         t-linux-kvm-aws:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
