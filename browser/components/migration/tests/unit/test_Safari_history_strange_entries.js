@@ -74,7 +74,7 @@ add_task(async function testHistoryImportStrangeEntries() {
   await PlacesUtils.history.clear();
 
   let placesQuery = new PlacesQuery();
-  let emptyHistory = await placesQuery.getHistory();
+  let emptyHistory = await placesQuery.getHistory({ daysOld: Infinity });
   Assert.equal(emptyHistory.size, 0, "Empty history should indeed be empty.");
 
   const EXPECTED_MIGRATED_SITES = 10;
@@ -94,7 +94,10 @@ add_task(async function testHistoryImportStrangeEntries() {
 
   let migrator = await MigrationUtils.getMigrator("safari");
   await promiseMigration(migrator, MigrationUtils.resourceTypes.HISTORY);
-  let migratedHistory = await placesQuery.getHistory({ sortBy: "site" });
+  let migratedHistory = await placesQuery.getHistory({
+    daysOld: Infinity,
+    sortBy: "site",
+  });
   let siteCount = migratedHistory.size;
   let visitCount = 0;
   for (let [, visits] of migratedHistory) {
