@@ -11,11 +11,16 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.service.fxa.manager.AccountState.Authenticated
+import mozilla.components.service.fxa.manager.AccountState.Authenticating
+import mozilla.components.service.fxa.manager.AccountState.AuthenticationProblem
+import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.MenuDialogFragmentDirections
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
+import org.mozilla.fenix.components.menu.toFenixFxAEntryPoint
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic
 
@@ -42,6 +47,29 @@ class MenuNavigationMiddleware(
 
         scope.launch {
             when (action) {
+                is MenuAction.Navigate.MozillaAccount -> {
+                    when (action.accountState) {
+                        Authenticated -> navController.nav(
+                            R.id.menuDialogFragment,
+                            MenuDialogFragmentDirections.actionGlobalAccountSettingsFragment(),
+                        )
+
+                        AuthenticationProblem -> navController.nav(
+                            R.id.menuDialogFragment,
+                            MenuDialogFragmentDirections.actionGlobalAccountProblemFragment(
+                                entrypoint = action.accesspoint.toFenixFxAEntryPoint(),
+                            ),
+                        )
+
+                        is Authenticating, NotAuthenticated -> navController.nav(
+                            R.id.menuDialogFragment,
+                            MenuDialogFragmentDirections.actionGlobalTurnOnSync(
+                                entrypoint = action.accesspoint.toFenixFxAEntryPoint(),
+                            ),
+                        )
+                    }
+                }
+
                 is MenuAction.Navigate.Help -> openSumoTopic(SumoTopic.HELP)
 
                 is MenuAction.Navigate.Settings -> navController.nav(

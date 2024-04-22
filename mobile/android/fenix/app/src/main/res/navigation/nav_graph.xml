@@ -1519,8 +1519,15 @@
     <navigation
         android:id="@+id/menu_graph"
         app:startDestination="@id/menuDialogFragment">
+        <argument
+            android:name="accesspoint"
+            app:argType="org.mozilla.fenix.components.menu.MenuAccessPoint" />
         <dialog
             android:id="@+id/menuDialogFragment"
-            android:name="org.mozilla.fenix.components.menu.MenuDialogFragment" />
+            android:name="org.mozilla.fenix.components.menu.MenuDialogFragment">
+            <argument
+                android:name="accesspoint"
+                app:argType="org.mozilla.fenix.components.menu.MenuAccessPoint" />
+        </dialog>
     </navigation>
 </navigation>

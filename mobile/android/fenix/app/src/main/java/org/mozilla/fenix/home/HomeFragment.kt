@@ -98,6 +98,7 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerView
@@ -582,7 +583,9 @@ class HomeFragment : Fragment() {
                             onMenuButtonClick = {
                                 findNavController().nav(
                                     findNavController().currentDestination?.id,
-                                    HomeFragmentDirections.actionGlobalMenuDialogFragment(),
+                                    HomeFragmentDirections.actionGlobalMenuDialogFragment(
+                                        accesspoint = MenuAccessPoint.Home,
+                                    ),
                                 )
                             },
                         )

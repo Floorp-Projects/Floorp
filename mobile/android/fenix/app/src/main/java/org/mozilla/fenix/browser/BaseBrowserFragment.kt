@@ -135,6 +135,7 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.toolbar.BrowserFragmentState
 import org.mozilla.fenix.components.toolbar.BrowserFragmentStore
@@ -1353,7 +1354,9 @@ abstract class BaseBrowserFragment :
                             onMenuButtonClick = {
                                 findNavController().nav(
                                     R.id.browserFragment,
-                                    BrowserFragmentDirections.actionGlobalMenuDialogFragment(),
+                                    BrowserFragmentDirections.actionGlobalMenuDialogFragment(
+                                        accesspoint = MenuAccessPoint.Browser,
+                                    ),
                                 )
                             },
                         )

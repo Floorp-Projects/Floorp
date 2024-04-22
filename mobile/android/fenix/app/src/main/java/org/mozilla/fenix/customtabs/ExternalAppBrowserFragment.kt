@@ -34,6 +34,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
 import org.mozilla.fenix.browser.FenixSnackbarDelegate
+import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
@@ -130,8 +131,9 @@ class ExternalAppBrowserFragment : BaseBrowserFragment() {
                             onMenuButtonClick = {
                                 nav(
                                     R.id.externalAppBrowserFragment,
-                                    ExternalAppBrowserFragmentDirections
-                                        .actionGlobalMenuDialogFragment(),
+                                    ExternalAppBrowserFragmentDirections.actionGlobalMenuDialogFragment(
+                                        accesspoint = MenuAccessPoint.External,
+                                    ),
                                 )
                             },
                         )
