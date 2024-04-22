@@ -22,6 +22,7 @@ private fun reduce(syncState: SyncState, syncAction: SyncAction): SyncState {
     return when (syncAction) {
         is SyncAction.UpdateSyncStatus -> syncState.copy(status = syncAction.status)
         is SyncAction.UpdateAccount -> syncState.copy(account = syncAction.account)
+        is SyncAction.UpdateAccountState -> syncState.copy(accountState = syncAction.accountState)
         is SyncAction.UpdateDeviceConstellation ->
             syncState.copy(constellationState = syncAction.deviceConstellation)
     }

@@ -9,18 +9,21 @@ import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.lib.state.State
+import mozilla.components.service.fxa.manager.AccountState
 import mozilla.components.service.fxa.sync.WorkManagerSyncManager
 
 /**
  * Global state of Sync.
  *
  * @property status The current status of Sync.
- * @property account The current Sync account, if any.
+ * @property account The current Sync [Account], if any.
+ * @property accountState The current [AccountState] of Sync.
  * @property constellationState The current constellation state, if any.
  */
 data class SyncState(
     val status: SyncStatus = SyncStatus.NotInitialized,
     val account: Account? = null,
+    val accountState: AccountState = AccountState.NotAuthenticated,
     val constellationState: ConstellationState? = null,
 ) : State
 

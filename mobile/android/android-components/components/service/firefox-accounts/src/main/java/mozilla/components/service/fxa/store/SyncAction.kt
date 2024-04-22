@@ -6,6 +6,7 @@ package mozilla.components.service.fxa.store
 
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.lib.state.Action
+import mozilla.components.service.fxa.manager.AccountState
 
 /**
  * Actions for updating the global [SyncState] via [SyncStore].
@@ -20,6 +21,11 @@ sealed class SyncAction : Action {
      * Update the [SyncState.account] of the [SyncStore].
      */
     data class UpdateAccount(val account: Account?) : SyncAction()
+
+    /**
+     * Update the [SyncState.accountState] of the [SyncStore].
+     */
+    data class UpdateAccountState(val accountState: AccountState) : SyncAction()
 
     /**
      * Update the [SyncState.constellationState] of the [SyncStore].
