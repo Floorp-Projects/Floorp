@@ -1994,6 +1994,7 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
         const Element* aEditingHost, NoBreakingSpaceData* aNBSPData,
         BlockInlineCheck aBlockInlineCheck) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
+  MOZ_ASSERT(aEditableBlockParentOrTopmostEditableInlineElement.IsEditable());
 
   if (aPoint.IsInTextNode() && !aPoint.IsStartOfContainer()) {
     Maybe<BoundaryData> startInTextNode =
@@ -2017,10 +2018,8 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
           {LeafNodeType::LeafNodeOrNonEditableNode}, aBlockInlineCheck,
           aEditingHost);
   if (!previousLeafContentOrBlock) {
-    // no prior node means we exhausted
-    // aEditableBlockParentOrTopmostEditableInlineElement
-    // mReasonContent can be either a block element or any non-editable
-    // content in this case.
+    // No previous content means that we reached
+    // aEditableBlockParentOrTopmostEditableInlineElement boundary.
     return BoundaryData(aPoint,
                         const_cast<Element&>(
                             aEditableBlockParentOrTopmostEditableInlineElement),
@@ -2138,6 +2137,7 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
     const Element* aEditingHost, NoBreakingSpaceData* aNBSPData,
     BlockInlineCheck aBlockInlineCheck) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
+  MOZ_ASSERT(aEditableBlockParentOrTopmostEditableInlineElement.IsEditable());
 
   if (aPoint.IsInTextNode() && !aPoint.IsEndOfContainer()) {
     Maybe<BoundaryData> endInTextNode =
@@ -2161,10 +2161,8 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
           {LeafNodeType::LeafNodeOrNonEditableNode}, aBlockInlineCheck,
           aEditingHost);
   if (!nextLeafContentOrBlock) {
-    // no next node means we exhausted
-    // aEditableBlockParentOrTopmostEditableInlineElement
-    // mReasonContent can be either a block element or any non-editable
-    // content in this case.
+    // No next content means that we reached
+    // aEditableBlockParentOrTopmostEditableInlineElement boundary.
     return BoundaryData(aPoint.template To<EditorDOMPoint>(),
                         const_cast<Element&>(
                             aEditableBlockParentOrTopmostEditableInlineElement),
