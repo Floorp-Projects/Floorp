@@ -95,7 +95,7 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   staleWarningTemplate() {
-    return html`<message-bar>
+    return html`<div>
       <article id="message-bar-container" aria-labelledby="header">
         <span
           data-l10n-id="shopping-message-bar-warning-stale-analysis-message-2"
@@ -107,7 +107,7 @@ class ShoppingMessageBar extends MozLitElement {
           @click=${this.onClickAnalysisButton}
         ></button>
       </article>
-    </message-bar>`;
+    </div>`;
   }
 
   genericErrorTemplate() {
@@ -163,7 +163,7 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   analysisInProgressTemplate() {
-    return html`<message-bar
+    return html`<div
       style=${styleMap({
         "--analysis-progress-pcent": `${this.progress}%`,
       })}
@@ -184,11 +184,12 @@ class ShoppingMessageBar extends MozLitElement {
           data-l10n-id="shopping-message-bar-analysis-in-progress-message2"
         ></span>
       </article>
-    </message-bar>`;
+    </div>`;
   }
 
   reanalysisInProgressTemplate() {
-    return html`<message-bar
+    return html`<div
+      id="reanalysis-in-progress-message"
       style=${styleMap({
         "--analysis-progress-pcent": `${this.progress}%`,
       })}
@@ -206,7 +207,7 @@ class ShoppingMessageBar extends MozLitElement {
           })}"
         ></span>
       </article>
-    </message-bar>`;
+    </div>`;
   }
 
   pageNotSupportedTemplate() {

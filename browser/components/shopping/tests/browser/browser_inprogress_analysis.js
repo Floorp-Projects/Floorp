@@ -127,8 +127,9 @@ add_task(async function test_in_progress_analysis_stale() {
             "shopping-message-bar should have progress"
           );
 
-          let messageBarEl =
-            shoppingMessageBarEl?.shadowRoot.querySelector("message-bar");
+          let messageBarEl = shoppingMessageBarEl?.shadowRoot.getElementById(
+            "reanalysis-in-progress-message"
+          );
           is(
             messageBarEl?.getAttribute("style"),
             "--analysis-progress-pcent: 50%;",
