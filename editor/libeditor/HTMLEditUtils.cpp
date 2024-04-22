@@ -2203,7 +2203,7 @@ nsIContent* HTMLEditUtils::GetContentToPreserveInlineStyles(
     return aPoint.template ContainerAs<nsIContent>();
   }
   for (auto point = aPoint.template To<EditorRawDOMPoint>(); point.IsSet();) {
-    WSScanResult nextVisibleThing =
+    const WSScanResult nextVisibleThing =
         WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
             &aEditingHost, point,
             BlockInlineCheck::UseComputedDisplayOutsideStyle);
@@ -2215,8 +2215,8 @@ nsIContent* HTMLEditUtils::GetContentToPreserveInlineStyles(
     // view of users.
     if (nextVisibleThing.ReachedSpecialContent() &&
         nextVisibleThing.IsContentEditable() &&
-        nextVisibleThing.GetContent()->IsElement() &&
-        !nextVisibleThing.GetContent()->HasChildNodes() &&
+        nextVisibleThing.ContentIsElement() &&
+        !nextVisibleThing.ElementPtr()->HasChildNodes() &&
         HTMLEditUtils::IsContainerNode(*nextVisibleThing.ElementPtr())) {
       point.SetAfter(nextVisibleThing.ElementPtr());
       continue;
@@ -2260,13 +2260,12 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
   // If the insertion position is after the last visible item in a line,
   // i.e., the insertion position is just before a visible line break <br>,
   // we want to skip to the position just after the line break (see bug 68767).
-  WSScanResult forwardScanFromPointToInsertResult =
+  const WSScanResult forwardScanFromPointToInsertResult =
       wsScannerForPointToInsert.ScanNextVisibleNodeOrBlockBoundaryFrom(
           pointToInsert);
   // So, if the next visible node isn't a <br> element, we can insert the block
   // level element to the point.
-  if (!forwardScanFromPointToInsertResult.GetContent() ||
-      !forwardScanFromPointToInsertResult.ReachedBRElement()) {
+  if (!forwardScanFromPointToInsertResult.ReachedBRElement()) {
     return pointToInsert;
   }
 
@@ -2274,7 +2273,7 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
   // positioned at the beginning of a block, in that case skipping the <br>
   // would not insert the <br> at the caret position, but after the current
   // empty line.
-  WSScanResult backwardScanFromPointToInsertResult =
+  const WSScanResult backwardScanFromPointToInsertResult =
       wsScannerForPointToInsert.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
           pointToInsert);
   // So, if there is no previous visible node,
@@ -2282,7 +2281,7 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
   // or, if the previous visible node is different block,
   // we need to skip the following <br>.  So, otherwise, we can insert the
   // block at the insertion point.
-  if (!backwardScanFromPointToInsertResult.GetContent() ||
+  if (backwardScanFromPointToInsertResult.Failed() ||
       backwardScanFromPointToInsertResult.ReachedBRElement() ||
       backwardScanFromPointToInsertResult.ReachedCurrentBlockBoundary()) {
     return pointToInsert;
@@ -2310,7 +2309,7 @@ EditorDOMPointType HTMLEditUtils::GetBetterCaretPositionToInsertText(
   if (aPoint.IsEndOfContainer()) {
     WSRunScanner scanner(&aEditingHost, aPoint,
                          BlockInlineCheck::UseComputedDisplayStyle);
-    WSScanResult previousThing =
+    const WSScanResult previousThing =
         scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(aPoint);
     if (previousThing.InVisibleOrCollapsibleCharacters()) {
       return EditorDOMPointType::AtEndOf(*previousThing.TextPtr());

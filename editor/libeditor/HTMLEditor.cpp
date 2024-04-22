@@ -1150,7 +1150,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
     if (Text* text = leafContent->GetAsText()) {
       // If there is editable and visible text node, move caret at first of
       // the visible character.
-      WSScanResult scanResultInTextNode =
+      const WSScanResult scanResultInTextNode =
           WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
               editingHost, EditorRawDOMPoint(text, 0),
               BlockInlineCheck::UseComputedDisplayStyle);
