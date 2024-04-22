@@ -14,6 +14,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,7 +29,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
@@ -87,15 +89,15 @@ fun DownloadIndicator(
         modifier = modifier.then(
             Modifier
                 .clearAndSetSemantics {
-                    disabled()
                     role = Role.Button
                     contentDescription?.let { this.contentDescription = contentDescription }
-                },
+                }
+                .wrapContentSize(),
         ),
-        enabled = false,
         icon = icon,
         iconModifier = Modifier
-            .rotate(rotationAnimation()),
+            .rotate(rotationAnimation())
+            .size(ButtonDefaults.IconSize),
         onClick = {},
     )
 }
