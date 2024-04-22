@@ -180,6 +180,7 @@ var SelectTranslationsPanel = new (class {
         fromMenuPopup: "select-translations-panel-from-menupopup",
         header: "select-translations-panel-header",
         mainContent: "select-translations-panel-main-content",
+        settingsButton: "select-translations-panel-settings-button",
         textArea: "select-translations-panel-text-area",
         toLabel: "select-translations-panel-to-label",
         toMenuList: "select-translations-panel-to",
