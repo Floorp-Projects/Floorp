@@ -7,6 +7,7 @@
 # selected text to a yet-to-be-determined language.
 main-context-menu-translate-selection =
     .label = Translate Selection…
+    .accesskey = n
 
 # Text displayed in the right-click context menu for translating
 # selected text to a target language.
@@ -15,11 +16,13 @@ main-context-menu-translate-selection =
 #   $language (string) - The localized display name of the target language
 main-context-menu-translate-selection-to-language =
     .label = Translate Selection to { $language }
+    .accesskey = n
 
 # Text displayed in the right-click context menu for translating
 # the text of a hyperlink to a yet-to-be-determined language.
 main-context-menu-translate-link-text =
     .label = Translate Link Text…
+    .accesskey = n
 
 # Text displayed in the right-click context menu for translating
 # the text of a hyperlink to a target language.
@@ -28,6 +31,7 @@ main-context-menu-translate-link-text =
 #   $language (string) - The localized display name of the target language
 main-context-menu-translate-link-text-to-language =
     .label = Translate Link Text to { $language }
+    .accesskey = n
 
 # Text displayed in the select translations panel header.
 select-translations-panel-header = Translation
