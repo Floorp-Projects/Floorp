@@ -229,6 +229,7 @@ configurations {
 
 dependencies {
     implementation ComponentsDependencies.androidx_annotation
+    implementation ComponentsDependencies.androidx_collection
 
     implementation "com.google.android.gms:play-services-fido:20.0.1"
     implementation "org.yaml:snakeyaml:2.2"
