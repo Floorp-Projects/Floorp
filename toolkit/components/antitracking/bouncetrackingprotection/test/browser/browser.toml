@@ -4,6 +4,7 @@ prefs = [
   "privacy.bounceTrackingProtection.enabled=true",
   "privacy.bounceTrackingProtection.enableTestMode=true",
   "privacy.bounceTrackingProtection.bounceTrackingPurgeTimerPeriodSec=0",
+  "privacy.bounceTrackingProtection.enableDryRunMode=false",
 ]
 support-files = [
   "file_start.html",
