@@ -4054,6 +4054,13 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     return;
   }
 
+  nsIFrame* child = aChild;
+  auto* placeholder = child->IsPlaceholderFrame()
+                          ? static_cast<nsPlaceholderFrame*>(child)
+                          : nullptr;
+  nsIFrame* childOrOutOfFlow =
+      placeholder ? placeholder->GetOutOfFlowFrame() : child;
+
   // If we're generating a display list for printing, include Link items for
   // frames that correspond to HTML link elements so that we can have active
   // links in saved PDF output. Note that the state of "within a link" is
@@ -4065,16 +4072,9 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   Maybe<nsDisplayListBuilder::Linkifier> linkifier;
   if (StaticPrefs::print_save_as_pdf_links_enabled() &&
       aBuilder->IsForPrinting()) {
-    linkifier.emplace(aBuilder, aChild, aLists.Content());
-    linkifier->MaybeAppendLink(aBuilder, aChild);
+    linkifier.emplace(aBuilder, childOrOutOfFlow, aLists.Content());
+    linkifier->MaybeAppendLink(aBuilder, childOrOutOfFlow);
   }
-
-  nsIFrame* child = aChild;
-  auto* placeholder = child->IsPlaceholderFrame()
-                          ? static_cast<nsPlaceholderFrame*>(child)
-                          : nullptr;
-  nsIFrame* childOrOutOfFlow =
-      placeholder ? placeholder->GetOutOfFlowFrame() : child;
 
   nsIFrame* parent = childOrOutOfFlow->GetParent();
   const auto* parentDisplay = parent->StyleDisplay();
