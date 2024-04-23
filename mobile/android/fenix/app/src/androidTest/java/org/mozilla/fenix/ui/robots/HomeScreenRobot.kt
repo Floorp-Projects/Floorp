@@ -439,12 +439,12 @@ class HomeScreenRobot {
             scrollToElementByText("Recently visited")
             assertUIObjectExists(
                 itemContainingText(searchTerm)
-                    .getFromParent(UiSelector().text("$groupSize sites")),
+                    .getFromParent(UiSelector().text("$groupSize pages")),
             )
         } else {
             assertUIObjectIsGone(
                 itemContainingText(searchTerm)
-                    .getFromParent(UiSelector().text("$groupSize sites")),
+                    .getFromParent(UiSelector().text("$groupSize pages")),
             )
         }
     }

@@ -303,13 +303,12 @@ class ComposeSearchTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1592229
-    @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @Test
     fun verifyAPageIsAddedToASearchGroupOnlyOnceTest() {
         val firstPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 1).url
         val secondPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 2).url
         val originPageUrl =
-            "http://localhost:${searchMockServer.port}/pages/searchResults.html?search=test%20search".toUri()
+            "http://localhost:${searchMockServer.port}/pages/searchResults.html?search=firefox".toUri()
         val searchEngineName = "TestSearchEngine"
         // setting our custom mockWebServer search URL
         setCustomSearchEngine(searchMockServer, searchEngineName)
