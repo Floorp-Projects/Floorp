@@ -192,7 +192,7 @@ pub fn push_quad(
             let unclipped_surface_rect = surface
                 .map_to_device_rect(&clip_chain.pic_coverage_rect, frame_context.spatial_tree);
 
-            scratch.quad_segments.clear();
+            scratch.quad_indirect_segments.clear();
 
             let mut x_coords = vec![clipped_surface_rect.min.x];
             let mut y_coords = vec![clipped_surface_rect.min.y];
@@ -249,7 +249,7 @@ pub fn push_quad(
                         frame_state,
                     );
 
-                    scratch.quad_segments.push(QuadSegment { rect: rect.cast_unit(), task_id });
+                    scratch.quad_indirect_segments.push(QuadSegment { rect: rect.cast_unit(), task_id });
                 }
             }
 
@@ -260,7 +260,7 @@ pub fn push_quad(
                 pattern.is_opaque,
                 frame_state,
                 targets,
-                &scratch.quad_segments,
+                &scratch.quad_indirect_segments,
             );
         }
         QuadRenderStrategy::NinePatch { clip_rect, radius } => {
@@ -301,7 +301,8 @@ pub fn push_quad(
             x_coords.sort_by(|a, b| a.partial_cmp(b).unwrap());
             y_coords.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-            scratch.quad_segments.clear();
+            scratch.quad_direct_segments.clear();
+            scratch.quad_indirect_segments.clear();
 
             // TODO: re-land clip-out mode.
             let mode = ClipMode::Clip;
@@ -325,12 +326,6 @@ pub fn push_quad(
                 }
 
                 for x in 0 .. x_coords.len()-1 {
-                    // We'll create render tasks and segments for the corners in a
-                    // separate loop.
-                    if should_create_task(mode, x, y) {
-                        continue;
-                    }
-
                     if mode == ClipMode::ClipOut && x == 1 && y == 1 {
                         continue;
                     }
@@ -351,14 +346,36 @@ pub fn push_quad(
                         }
                     };
 
-                    scratch.quad_segments.push(QuadSegment {
-                        rect: device_rect.to_f32().cast_unit(),
-                        task_id: RenderTaskId::INVALID,
-                    });
+                    if should_create_task(mode, x, y) {
+                        let task_id = add_render_task_with_mask(
+                            pattern,
+                            device_rect.size(),
+                            device_rect.min.to_f32(),
+                            clip_chain,
+                            prim_spatial_node_index,
+                            pic_context.raster_spatial_node_index,
+                            main_prim_address,
+                            transform_id,
+                            aa_flags,
+                            quad_flags,
+                            device_pixel_scale,
+                            false,
+                            frame_state,
+                        );
+                        scratch.quad_indirect_segments.push(QuadSegment {
+                            rect: device_rect.to_f32().cast_unit(),
+                            task_id,
+                        });
+                    } else {
+                        scratch.quad_direct_segments.push(QuadSegment {
+                            rect: device_rect.to_f32().cast_unit(),
+                            task_id: RenderTaskId::INVALID,
+                        });
+                    };
                 }
             }
 
-            if !scratch.quad_segments.is_empty() {
+            if !scratch.quad_direct_segments.is_empty() {
                 add_pattern_prim(
                     pattern,
                     prim_instance_index,
@@ -366,67 +383,11 @@ pub fn push_quad(
                     pattern.is_opaque,
                     frame_state,
                     targets,
-                    &scratch.quad_segments,
+                    &scratch.quad_direct_segments,
                 );
             }
 
-            scratch.quad_segments.clear();
-            // Only create render tasks for the corners.
-            for y in 0 .. y_coords.len()-1 {
-                let y0 = y_coords[y];
-                let y1 = y_coords[y+1];
-
-                if y1 <= y0 {
-                    continue;
-                }
-
-                for x in 0 .. x_coords.len()-1 {
-                    if !should_create_task(mode, x, y) {
-                        continue;
-                    }
-
-                    if mode == ClipMode::ClipOut && x == 1 && y == 1 {
-                        continue;
-                    }
-
-                    let x0 = x_coords[x];
-                    let x1 = x_coords[x+1];
-
-                    if x1 <= x0 {
-                        continue;
-                    }
-
-                    let rect = DeviceIntRect::new(point2(x0, y0), point2(x1, y1));
-
-                    let device_rect = match rect.intersection(&clipped_surface_rect) {
-                        Some(rect) => rect,
-                        None => {
-                            continue;
-                        }
-                    };
-
-                    let task_id = add_render_task_with_mask(
-                        pattern,
-                        device_rect.size(),
-                        device_rect.min.to_f32(),
-                        clip_chain,
-                        prim_spatial_node_index,
-                        pic_context.raster_spatial_node_index,
-                        main_prim_address,
-                        transform_id,
-                        aa_flags,
-                        quad_flags,
-                        device_pixel_scale,
-                        false,
-                        frame_state,
-                    );
-
-                    let rect = device_rect.to_f32().cast_unit();
-                    scratch.quad_segments.push(QuadSegment { rect, task_id });
-                }
-            }
-
-            if !scratch.quad_segments.is_empty() {
+            if !scratch.quad_indirect_segments.is_empty() {
                 add_composite_prim(
                     pattern,
                     prim_instance_index,
@@ -434,7 +395,7 @@ pub fn push_quad(
                     pattern.is_opaque,
                     frame_state,
                     targets,
-                    &scratch.quad_segments,
+                    &scratch.quad_indirect_segments,
                 );
             }
         }
