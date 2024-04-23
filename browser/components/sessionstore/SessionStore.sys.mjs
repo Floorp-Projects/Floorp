@@ -4093,7 +4093,7 @@ var SessionStoreInternal = {
       "resource:///modules/FloorpAppConstants.sys.mjs"
     );
     if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
-      let windowUuid = aWindow.gWorkspaces._windowId;
+      let windowUuid = aWindow.workspacesWindowId;
       if (windowUuid) {
         winData.windowUuid = windowUuid;
       } else {
@@ -5346,9 +5346,9 @@ var SessionStoreInternal = {
         
         // workspaces Window Id
         if (aWindowId) {
-          aWindow.gWorkspaces._windowId = aWindowId;
+          aWindow.workspacesWindowId = aWindowId;
         } else {
-          aWindow.gWorkspaces._windowId = WorkspacesWindowUuidService.getGeneratedUuid();
+          aWindow.workspacesWindowId = WorkspacesWindowUuidService.getGeneratedUuid();
         }  
       }
 
