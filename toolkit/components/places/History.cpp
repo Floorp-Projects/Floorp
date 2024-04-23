@@ -1434,6 +1434,13 @@ void NotifyEmbedVisit(VisitData& aPlace,
   (void)NS_DispatchToMainThread(event);
 }
 
+void NotifyOriginRestrictedVisit(nsIURI* aURI) {
+  MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread!");
+
+  nsCOMPtr<nsIRunnable> event = new NotifyManyVisitsObservers(VisitData(aURI));
+  (void)NS_DispatchToMainThread(event);
+}
+
 void NotifyVisitIfHavingUserPass(nsIURI* aURI) {
   MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread!");
 
@@ -1868,6 +1875,64 @@ const mozIStorageConnection* History::GetConstDBConn() {
   return mDB->MainConn();
 }
 
+void History::UpdateOriginFloodingRestriction(nsACString& aOrigin) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  TimeStamp latestInputTimeStamp = UserActivation::LatestUserInputStart();
+  if (latestInputTimeStamp.IsNull()) {
+    // Probably just after browser initialization.
+    return;
+  }
+
+  TimeStamp now = TimeStamp::Now();
+
+  // Remove expired flooding resrictions.
+  for (auto iter = mOriginFloodingRestrictions.Iter(); !iter.Done();
+       iter.Next()) {
+    if ((now - iter.Data().mLastVisitTimeStamp).ToSeconds() >
+        iter.Data().mExpireIntervalSeconds) {
+      iter.Remove();
+    }
+  }
+
+  // If not long enough time elapsed sincer last user interaction, this visit
+  // can be stored.
+  if ((now - latestInputTimeStamp).ToSeconds() <
+      StaticPrefs::
+          places_history_floodingPrevention_maxSecondsFromLastUserInteraction()) {
+    mOriginFloodingRestrictions.Remove(aOrigin);
+    return;
+  }
+
+  // Otherwise, update the flooding restriction for the origin.
+  auto restriction = mOriginFloodingRestrictions.Lookup(aOrigin);
+  if (restriction) {
+    if (restriction->mAllowedVisitCount) {
+      // Count down to 0. If 0, the origin should be restricted.
+      restriction->mAllowedVisitCount -= 1;
+    } else {
+      // Since the origin is marked as restricted make its expiration time
+      // longer.
+      restriction->mExpireIntervalSeconds *= 2;
+    }
+  } else {
+    // Initialize OriginFloodingRestriction to store the origin restriction.
+    mOriginFloodingRestrictions.InsertOrUpdate(
+        aOrigin,
+        OriginFloodingRestriction{
+            now,
+            StaticPrefs::
+                places_history_floodingPrevention_restrictionExpireSeconds(),
+            StaticPrefs::places_history_floodingPrevention_restrictionCount()});
+  }
+}
+
+bool History::IsRestrictedOrigin(nsACString& aOrigin) {
+  auto restriction = mOriginFloodingRestrictions.Lookup(aOrigin);
+  // If the count is 0, need to restrict the origin.
+  return restriction && !restriction->mAllowedVisitCount;
+}
+
 void History::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lockedScope(mBlockShutdownMutex);
@@ -2019,6 +2084,31 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
   // Error pages should never be autocompleted.
   place.isUnrecoverableError = aFlags & IHistory::UNRECOVERABLE_ERROR;
 
+  // EMBED visits should not go through the database.
+  // They exist only to keep track of isVisited status during the session.
+  if (place.transitionType == nsINavHistoryService::TRANSITION_EMBED) {
+    NotifyEmbedVisit(place);
+    return NS_OK;
+  }
+
+  if (StaticPrefs::places_history_floodingPrevention_enabled()) {
+    // If the origin is restricted, make isVisited status available during the
+    // session but not stored in the database.
+    nsAutoCString origin;
+    Unused << visitedURI->GetHost(origin);
+    if (StringBeginsWith(origin, "www."_ns)) {
+      origin.Cut(0, 4);
+    }
+
+    UpdateOriginFloodingRestriction(origin);
+
+    if (IsRestrictedOrigin(origin)) {
+      NotifyOriginRestrictedVisit(visitedURI);
+      NotifyVisitIfHavingUserPass(aURI);
+      return NS_OK;
+    }
+  }
+
   nsCOMPtr<nsIBrowserWindowTracker> bwt =
       do_ImportESModule("resource:///modules/BrowserWindowTracker.sys.mjs",
                         "BrowserWindowTracker", &rv);
@@ -2075,17 +2165,11 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
     }
   }
 
-  // EMBED visits should not go through the database.
-  // They exist only to keep track of isVisited status during the session.
-  if (place.transitionType == nsINavHistoryService::TRANSITION_EMBED) {
-    NotifyEmbedVisit(place);
-  } else {
-    mozIStorageConnection* dbConn = GetDBConn();
-    NS_ENSURE_STATE(dbConn);
+  mozIStorageConnection* dbConn = GetDBConn();
+  NS_ENSURE_STATE(dbConn);
 
-    rv = InsertVisitedURIs::Start(dbConn, std::move(placeArray));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  rv = InsertVisitedURIs::Start(dbConn, std::move(placeArray));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // URIs with a userpass component are not stored in the database for security
   // reasons, we store the exposable URI version of them instead.
@@ -2323,6 +2407,7 @@ History::IsURIVisited(nsIURI* aURI, mozIVisitedStatusCallback* aCallback) {
 NS_IMETHODIMP
 History::ClearCache() {
   mRecentlyVisitedURIs.Clear();
+  mOriginFloodingRestrictions.Clear();
   return NS_OK;
 }
 
