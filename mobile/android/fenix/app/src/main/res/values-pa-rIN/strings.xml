@@ -731,20 +731,32 @@
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
     <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">ਨਵੀਆਂ ਐਡ-ਆਨ ਹੁਣ ਮੌਜੂਦ ਹਨ</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">ਨਵੀਆਂ ਇਕਸਟੈਨਸ਼ਨਾਂ ਹੁਣ ਮੌਜੂਦ ਹਨ</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">100+ ਤੋਂ ਵੱਧ ਇਕਸਟੈਨਸ਼ਨ ਨੂੰ ਵੇਖੋ, ਜੋ Firefox ਨੂੰ ਤੁਹਾਡਾ ਆਪਣਾ ਬਣਾਉਣ ਲਈ ਸਹਾਇਕ ਹੋਣਗੀਆਂ।</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
     <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਬਾਰੇ ਜਾਣੋ</string>
 
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">ਇਕਸਟੈਨਸ਼ਨਾਂ ਦੀ ਪੜਚੋਲ ਕਰੋ</string>
+
     <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
     <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਆਰਜ਼ੀ ਤੌਰ ਉੱਤੇ ਅਸਮਰੱਥ ਹਨ</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">ਇਕਸਟੈਨਸ਼ਨਾਂ ਆਰਜ਼ੀ ਤੌਰ ਉੱਤੇ ਅਸਮਰੱਥ ਹਨ</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
     <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">ਇੱਕ ਜਾਂ ਵੱਧ ਐਡ-ਆਨ ਕੰਮ ਨਹੀਂ ਕਰ ਰਹੀਆਂ, ਜਿਸ ਨਾਲ ਤੁਹਾਡਾ ਸਿਸਟਮ ਅਸਥਿਰ ਹੋ ਰਿਹਾ ਹੈ। %1$s ਨੇ ਐਡ-ਆਨ ਨੂੰ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਅਸਫ਼ਲ ਕੋਸ਼ਿਸ਼ ਕੀਤੀ ਸੀ।\n\nਤੁਹਾਡੇ ਮੌਜੂਦਾ ਸ਼ੈਸ਼ਨ ਦੇ ਦੌਰਾਨ ਐਡ-ਆਨ ਮੁੜ-ਸ਼ੁਰੂ ਨਹੀਂ ਹੋਵੇਗੀ।\n\nਐਡ-ਆਨ ਨੂੰ ਹਟਾਉਣ ਜਾਂ ਅਸਮਰੱਥ ਕਰਨ ਨਾਲ ਇਹ ਮਸਲਾ ਠੀਕ ਹੋ ਸਕਦਾ ਹੈ।</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">ਇਕਸਟੈਨਸ਼ਨਾਂ ਨੂੰ ਮੁੜ-ਚਾਲੂ ਕਰਕੇ ਵੇਖੋ</string>
     <!-- The user will continue with all add-ons disabled -->
     <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਨੂੰ ਬੰਦ ਕਰਕੇ ਜਾਰੀ ਰੱਖੋ</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">ਇਕਸਟੈਨਸ਼ਨਾਂ ਨੂੰ ਬੰਦ ਕਰਕੇ ਜਾਰੀ ਰੱਖੋ</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2493,6 +2505,8 @@
     <string name="translations_bottom_sheet_translate_from">ਇਸ ਤੋਂ ਉਲੱਥਾ ਕਰੋ</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">ਇਸ ਵਿੱਚ ਉਲੱਥਾ ਕਰੋ</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">ਹੋਰ ਸਰੋਤ ਭਾਸ਼ਾ ਅਜ਼ਮਾਓ</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">ਹਾਲੇ ਨਹੀਂ</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
@@ -2532,6 +2546,8 @@
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
     <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">ਉਲੱਥੇ ਲਈ ਚੋਣਾਂ</string>
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title_heading">ਉਲੱਥੇ ਲਈ ਚੋਣਾਂ</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">ਹਮੇਸ਼ਾਂ ਉਲੱਥਾ ਦੀ ਪੇਸ਼ਕਸ਼ ਕਰੋ</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2548,6 +2564,9 @@
     <string name="translation_option_bottom_sheet_translation_settings">ਉਲੱਥਾ ਸੈਟਿੰਗਾਂ</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">%1$s ਵਿੱਚ ਉਲੱਥਾ ਬਾਰੇ</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
+    <string name="translation_option_bottom_sheet_close_content_description">ਉਲੱਥਾ ਸ਼ੀਟ ਬੰਦ ਕਰੋ</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2655,6 +2674,8 @@
 
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">ਅਸੀਂ ਅਧੂਰੀਆਂ ਭਾਸ਼ਾਵਾਂ ਨੂੰ ਤੁਹਾਡੀ ਕੈਸ਼ ਲਈ ਡਾਊਨਲੋਡ ਕਰਦੇ ਹਾਂ ਤਾਂ ਕਿ ਉਲੱਥੇ ਨੂੰ ਪ੍ਰਾਈਵੇਟ ਰੱਖਿਆ ਜਾਵੇ।</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">ਅਸੀਂ ਅਧੂਰੀਆਂ ਭਾਸ਼ਾਵਾਂ ਨੂੰ ਡਾਊਨਲੋਡ ਕਰਦੇ ਹਾਂ ਤਾਂ ਕਿ ਉਲੱਥੇ ਨੂੰ ਪ੍ਰਾਈਵੇਟ ਰੱਖਿਆ ਜਾਵੇ।</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">ਡਾਟਾ ਬਚਾਉਣ ਢੰਗ ਵਿੱਚ ਹਮੇਸ਼ਾਂ ਡਾਊਨਲੋਡ ਕਰੋ</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
@@ -2694,4 +2715,13 @@
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਵਿੱਚ ਜੋੜੋ</string>
 
-    </resources>
+    <!-- Debug drawer logins -->
+    <!-- The title of the Logins feature in the Debug Drawer. -->
+    <string name="debug_drawer_logins_title">ਲਾਗਇਨ</string>
+    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
+    <string name="debug_drawer_logins_current_domain_label">ਮੌਜੂਦਾ ਡੋਮੇਨ: %s</string>
+    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+    <string name="debug_drawer_logins_add_login_button">ਇਸ ਡੋਮੇਨ ਲਈ ਫ਼ਰਜ਼ੀ ਲਾਗਇਨ ਜੋੜੋ</string>
+    <!-- Content description for delete button where parameter will be the username of the login -->
+    <string name="debug_drawer_logins_delete_login_button_content_description">%s ਵਰਤੋਂਕਾਰ-ਨਾਂ ਨਾਲ ਲਾਗਇਨ ਨੂੰ ਹਟਾਓ</string>
+</resources>
