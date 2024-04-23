@@ -2083,7 +2083,7 @@ Maybe<nsTArray<uint8_t>>& gfxPlatform::GetCMSOutputProfileData() {
 
 CMSMode GfxColorManagementMode() {
   const auto mode = StaticPrefs::gfx_color_management_mode();
-  if (mode >= 0 && mode < UnderlyingValue(CMSMode::AllCount)) {
+  if (mode >= 0 && mode <= UnderlyingValue(CMSMode::_ENUM_MAX)) {
     return CMSMode(mode);
   }
   return CMSMode::Off;
