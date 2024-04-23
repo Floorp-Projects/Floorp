@@ -198,8 +198,6 @@ class BytecodeLocation {
 
   bool isStrictSetOp() const { return IsStrictSetPC(rawBytecode_); }
 
-  bool isNameOp() const { return IsNameOp(getOp()); }
-
   bool isSpreadOp() const { return IsSpreadOp(getOp()); }
 
   bool isInvokeOp() const { return IsInvokeOp(getOp()); }
