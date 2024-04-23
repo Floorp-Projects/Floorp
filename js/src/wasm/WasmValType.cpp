@@ -52,6 +52,7 @@ RefType RefType::topType() const {
     case RefType::NoExtern:
       return RefType::extern_();
     case RefType::Exn:
+    case RefType::NoExn:
       return RefType::exn();
     case RefType::TypeRef:
       switch (typeDef()->kind()) {
@@ -130,6 +131,10 @@ static bool ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
     }
     if (StringEqualsLiteral(typeLinearStr, "nullexternref")) {
       *out = RefType::noextern();
+      return true;
+    }
+    if (StringEqualsLiteral(typeLinearStr, "nullexnref")) {
+      *out = RefType::noexn();
       return true;
     }
     if (StringEqualsLiteral(typeLinearStr, "nullref")) {
@@ -220,6 +225,9 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       case RefType::NoFunc:
         literal = "nullfuncref";
         break;
+      case RefType::NoExn:
+        literal = "nullexnref";
+        break;
       case RefType::NoExtern:
         literal = "nullexternref";
         break;
@@ -262,6 +270,9 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       break;
     case RefType::NoFunc:
       heapType = "nofunc";
+      break;
+    case RefType::NoExn:
+      heapType = "noexn";
       break;
     case RefType::NoExtern:
       heapType = "noextern";
