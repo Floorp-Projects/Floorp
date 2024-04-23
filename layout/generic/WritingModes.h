@@ -101,12 +101,15 @@ inline LogicalEdge GetEdge(LogicalSide aSide) {
 }
 
 inline LogicalEdge GetOppositeEdge(LogicalEdge aEdge) {
-  // This relies on the only two LogicalEdge enum values being 0 and 1.
-  return LogicalEdge(1 - static_cast<uint8_t>(aEdge));
+  return aEdge == LogicalEdge::Start ? LogicalEdge::End : LogicalEdge::Start;
 }
 
 inline LogicalSide MakeLogicalSide(LogicalAxis aAxis, LogicalEdge aEdge) {
-  return LogicalSide((uint8_t(aAxis) << 1) | static_cast<uint8_t>(aEdge));
+  if (aAxis == LogicalAxis::Inline) {
+    return aEdge == LogicalEdge::Start ? LogicalSide::IStart
+                                       : LogicalSide::IEnd;
+  }
+  return aEdge == LogicalEdge::Start ? LogicalSide::BStart : LogicalSide::BEnd;
 }
 
 inline LogicalSide GetOppositeSide(LogicalSide aSide) {
