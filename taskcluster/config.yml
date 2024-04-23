@@ -280,6 +280,7 @@ treeherder:
         'browser-tabstray': 'browser-tabstray'
         'browser-thumbnails': 'browser-thumbnails'
         'browser-toolbar': 'browser-toolbar'
+        'browser-toolbar2': 'browser-toolbar2'
         'compose-awesomebar': 'compose-engine'
         'compose-browser-toolbar': 'awesomebar-browser-toolbar'
         'compose-engine': 'compose-engine'
