@@ -3243,6 +3243,14 @@ BrowserGlue.prototype = {
       function reportInstallationTelemetry() {
         lazy.BrowserUsageTelemetry.reportInstallationTelemetry();
       },
+
+      function trustObjectTelemetry() {
+        let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+          Ci.nsIX509CertDB
+        );
+        // countTrustObjects also logs the number of trust objects for telemetry purposes
+        certdb.countTrustObjects();
+      },
     ];
 
     for (let task of idleTasks) {

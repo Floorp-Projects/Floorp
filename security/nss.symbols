@@ -306,6 +306,7 @@ PK11_DeriveWithFlags
 PK11_DeriveWithTemplate
 PK11_DestroyContext
 PK11_DestroyGenericObject
+PK11_DestroyGenericObjects
 PK11_DestroyMergeLog
 PK11_DestroyObject
 PK11_DestroyTokenObject
@@ -322,6 +323,7 @@ PK11_FindCertInSlot
 PK11_FindCertsFromEmailAddress
 PK11_FindCertsFromNickname
 PK11_FindEncodedCertInSlot
+PK11_FindGenericObjects
 PK11_FindKeyByAnyCert
 PK11_FindKeyByDERCert
 PK11_FindKeyByKeyID
@@ -357,6 +359,7 @@ PK11_GetLowLevelKeyIDForPrivateKey
 PK11_GetMechanism
 PK11_GetModInfo
 PK11_GetModuleURI
+PK11_GetNextGenericObject
 PK11_GetNextSafe
 PK11_GetNextSymKey
 PK11_GetPadMechanism
