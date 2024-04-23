@@ -8,6 +8,9 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/megalist/VirtualizedList.mjs";
 
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/megalist/RemoveLogins.mjs";
+
 /**
  * Map with limit on how many entries it can have.
  * When over limit entries are added, oldest one are removed.
@@ -74,6 +77,7 @@ export class MegalistView extends MozLitElement {
     super();
     this.selectedIndex = 0;
     this.searchText = "";
+    this.layout = null;
 
     window.addEventListener("MessageFromViewModel", ev =>
       this.#onMessageFromViewModel(ev)
@@ -85,6 +89,7 @@ export class MegalistView extends MozLitElement {
       listLength: { type: Number },
       selectedIndex: { type: Number },
       searchText: { type: String },
+      layout: { type: Object },
     };
   }
 
@@ -297,6 +302,10 @@ export class MegalistView extends MozLitElement {
     this.requestUpdate();
   }
 
+  receiveSetLayout({ layout }) {
+    this.layout = layout;
+  }
+
   #handleInputChange(e) {
     const searchText = e.target.value;
     this.#messageToViewModel("UpdateFilter", { searchText });
@@ -334,6 +343,15 @@ export class MegalistView extends MozLitElement {
   }
 
   #handleClick(e) {
+    const elementWithCommand = e.composedTarget.closest("[data-command]");
+    if (elementWithCommand) {
+      const commandId = elementWithCommand.dataset.command;
+      if (commandId) {
+        this.#messageToViewModel("Command", { commandId });
+        return;
+      }
+    }
+
     const lineElement = e.composedTarget.closest(".line");
     if (!lineElement) {
       return;
@@ -454,28 +472,56 @@ export class MegalistView extends MozLitElement {
     popup.querySelector("button")?.focus();
   }
 
+  /**
+   * Renders data-source specific UI that should be displayed before the
+   * virtualized list. This is determined by the "SetLayout" message provided
+   * by the View Model. Defaults to displaying the search input.
+   */
+  renderBeforeList() {
+    if (this.layout?.id) {
+      const el = document.createElement(this.layout?.id);
+      el.data = this.layout.data;
+      return el;
+    }
+
+    return html`
+      <input
+        class="search"
+        type="search"
+        data-l10n-id="filter-placeholder"
+        .value=${this.searchText}
+        @input=${e => this.#handleInputChange(e)}
+      />
+    `;
+  }
+
+  renderList() {
+    if (this.layout) {
+      return null;
+    }
+
+    return html` <virtualized-list
+      .lineCount=${this.listLength}
+      .lineHeight=${MegalistView.LINE_HEIGHT}
+      .selectedIndex=${this.selectedIndex}
+      .createLineElement=${index => this.createLineElement(index)}
+      @click=${e => this.#handleClick(e)}
+    >
+    </virtualized-list>`;
+  }
+
+  renderAfterList() {}
+
   render() {
     return html`
       <link
         rel="stylesheet"
         href="chrome://global/content/megalist/megalist.css"
       />
-      <div class="container">
-        <input
-          class="search"
-          type="search"
-          data-l10n-id="filter-placeholder"
-          .value=${this.searchText}
-          @input=${e => this.#handleInputChange(e)}
-        />
-        <virtualized-list
-          .lineCount=${this.listLength}
-          .lineHeight=${MegalistView.LINE_HEIGHT}
-          .selectedIndex=${this.selectedIndex}
-          .createLineElement=${index => this.createLineElement(index)}
-          @click=${e => this.#handleClick(e)}
-        >
-        </virtualized-list>
+      <div @click=${this.#handleClick} class="container">
+        <div class="beforeList">${this.renderBeforeList()}</div>
+        ${this.renderList()}
+        <div class="afterList">${this.renderAfterList()}</div>
       </div>
     `;
   }

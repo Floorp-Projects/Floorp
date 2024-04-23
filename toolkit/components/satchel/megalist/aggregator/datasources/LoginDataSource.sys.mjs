@@ -94,6 +94,9 @@ export class LoginDataSource extends DataSourceBase {
           strings.passwordsImportFilePickerTsvFilterTitle
         );
       };
+      this.#header.executeRemoveAll = () => {
+        this.removeAllPasswords();
+      };
       this.#header.executeSettings = () => {
         this.#openPreferences();
       };
@@ -337,6 +340,25 @@ export class LoginDataSource extends DataSourceBase {
         resolve({ result, path: fp.file.path });
       });
     });
+  }
+
+  removeAllPasswords() {
+    let total = 0;
+    let currentRecord;
+    for (const line of this.lines) {
+      if (line.record != currentRecord) {
+        total += 1;
+        currentRecord = line.record;
+      }
+    }
+
+    const data = { total };
+    this.setLayout({ id: "remove-logins", data });
+  }
+
+  confirmRemoveAll() {
+    Services.logins.removeAllLogins();
+    this.cancelDialog();
   }
 
   #openPreferences() {
