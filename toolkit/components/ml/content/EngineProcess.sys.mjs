@@ -207,6 +207,11 @@ export class EngineProcess {
     if (!AppConstants.NIGHTLY_BUILD) {
       throw new Error("MLEngine is only available in Nightly builds.");
     }
+    // the pref is off by default
+    if (!Services.prefs.getBoolPref("browser.ml.enable")) {
+      throw new Error("MLEngine is disabled. Check the browser.ml prefs.");
+    }
+
     if (!this.mlEngineParent) {
       this.mlEngineParent = this.#attachBrowser({
         id: "ml-engine-browser",
