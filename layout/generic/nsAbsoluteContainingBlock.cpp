@@ -372,8 +372,8 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // and be positioned relative to the containing block right edge.
     // 'left' length and 'right' auto is the only combination we can be
     // sure of.
-    if ((wm.GetInlineDir() == WritingMode::eInlineRTL ||
-         wm.GetBlockDir() == WritingMode::eBlockRL) &&
+    if ((wm.GetInlineDir() == WritingMode::InlineDir::RTL ||
+         wm.GetBlockDir() == WritingMode::BlockDir::RL) &&
         !pos->mOffset.Get(eSideRight).IsAuto()) {
       return true;
     }
@@ -383,7 +383,7 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
       return true;
     }
     // See comment above for width changes.
-    if (wm.GetInlineDir() == WritingMode::eInlineBTT &&
+    if (wm.GetInlineDir() == WritingMode::InlineDir::BTT &&
         !pos->mOffset.Get(eSideBottom).IsAuto()) {
       return true;
     }

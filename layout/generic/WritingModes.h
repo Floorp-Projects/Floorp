@@ -137,20 +137,20 @@ class WritingMode {
   /**
    * Absolute inline flow direction
    */
-  enum InlineDir {
-    eInlineLTR = 0x00,  // text flows horizontally left to right
-    eInlineRTL = 0x02,  // text flows horizontally right to left
-    eInlineTTB = 0x01,  // text flows vertically top to bottom
-    eInlineBTT = 0x03,  // text flows vertically bottom to top
+  enum class InlineDir : uint8_t {
+    LTR,  // text flows horizontally left to right
+    RTL,  // text flows horizontally right to left
+    TTB,  // text flows vertically top to bottom
+    BTT,  // text flows vertically bottom to top
   };
 
   /**
    * Absolute block flow direction
    */
-  enum BlockDir {
-    eBlockTB = 0x00,  // horizontal lines stack top to bottom
-    eBlockRL = 0x01,  // vertical lines stack right to left
-    eBlockLR = 0x05,  // vertical lines stack left to right
+  enum class BlockDir : uint8_t {
+    TB,  // horizontal lines stack top to bottom
+    RL,  // vertical lines stack right to left
+    LR,  // vertical lines stack left to right
   };
 
   /**
@@ -165,14 +165,21 @@ class WritingMode {
    * Return the absolute inline flow direction as an InlineDir
    */
   InlineDir GetInlineDir() const {
-    return InlineDir(mWritingMode._0 & eInlineMask);
+    if (IsVertical()) {
+      return IsInlineReversed() ? InlineDir::BTT : InlineDir::TTB;
+    }
+    return IsInlineReversed() ? InlineDir::RTL : InlineDir::LTR;
   }
 
   /**
    * Return the absolute block flow direction as a BlockDir
    */
   BlockDir GetBlockDir() const {
-    return BlockDir(mWritingMode._0 & eBlockMask);
+    if (IsVertical()) {
+      return mWritingMode & StyleWritingMode::VERTICAL_LR ? BlockDir::LR
+                                                          : BlockDir::RL;
+    }
+    return BlockDir::TB;
   }
 
   /**
@@ -219,12 +226,12 @@ class WritingMode {
   /**
    * True if vertical-mode block direction is LR (convenience method).
    */
-  bool IsVerticalLR() const { return eBlockLR == GetBlockDir(); }
+  bool IsVerticalLR() const { return GetBlockDir() == BlockDir::LR; }
 
   /**
    * True if vertical-mode block direction is RL (convenience method).
    */
-  bool IsVerticalRL() const { return eBlockRL == GetBlockDir(); }
+  bool IsVerticalRL() const { return GetBlockDir() == BlockDir::RL; }
 
   /**
    * True if vertical writing mode, i.e. when
@@ -607,12 +614,6 @@ class WritingMode {
   explicit WritingMode(uint8_t aValue) : mWritingMode{aValue} {}
 
   StyleWritingMode mWritingMode;
-
-  enum Masks {
-    // Masks for output enums
-    eInlineMask = 0x03,  // VERTICAL | INLINE_REVERSED
-    eBlockMask = 0x05,   // VERTICAL | VERTICAL_LR
-  };
 };
 
 inline std::ostream& operator<<(std::ostream& aStream, const WritingMode& aWM) {
