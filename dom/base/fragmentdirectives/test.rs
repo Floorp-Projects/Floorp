@@ -145,13 +145,16 @@ mod test {
             ),
             (
                 "http://example.com/page.html?query=irrelevant:~:#bar:~:text=foo",
-                "http://example.com/page.html?query=irrelevant:~:#bar"
-            )
+                "http://example.com/page.html?query=irrelevant:~:#bar",
+            ),
         ] {
             let (stripped_url, fragment_directive, _) =
                 parse_fragment_directive_and_remove_it_from_hash(&url)
                     .expect("The parser must find a result");
-            assert_eq!(stripped_url, stripped_url_ref, "The stripped url is not correct.");
+            assert_eq!(
+                stripped_url, stripped_url_ref,
+                "The stripped url is not correct."
+            );
             assert_eq!(fragment_directive, "text=foo");
         }
     }
@@ -195,9 +198,8 @@ mod test {
     #[test]
     fn test_parse_multiple_text_fragments() {
         let url = "#:~:text=prefix-,start,-suffix&text=foo&text=bar,-suffix";
-        let (_, _, text_directives) =
-            parse_fragment_directive_and_remove_it_from_hash(&url)
-                .expect("The parser must find a result.");
+        let (_, _, text_directives) = parse_fragment_directive_and_remove_it_from_hash(&url)
+            .expect("The parser must find a result.");
         assert_eq!(
             text_directives.len(),
             3,
@@ -339,8 +341,7 @@ mod test {
             "text=prefix-,start",
             "#:~:text=foo-,bar,-baz:~:text=foo",
         ] {
-            let text_directives =
-                parse_fragment_directive_and_remove_it_from_hash(&url);
+            let text_directives = parse_fragment_directive_and_remove_it_from_hash(&url);
             assert!(
                 text_directives.is_none(),
                 "The fragment `{}` does not contain a valid or known fragment directive.",
@@ -369,8 +370,7 @@ mod test {
             "#:~:text=,prefix,start",
             "#:~:text=",
         ] {
-            let text_directives =
-                parse_fragment_directive_and_remove_it_from_hash(&url);
+            let text_directives = parse_fragment_directive_and_remove_it_from_hash(&url);
             assert!(
                 text_directives.is_none(),
                 "The fragment directive `{}` does not contain a valid text directive.",
