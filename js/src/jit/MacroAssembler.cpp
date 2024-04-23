@@ -6551,14 +6551,6 @@ void MacroAssembler::branchWasmRefIsSubtypeExn(Register ref,
     branchTestPtr(Assembler::Zero, ref, ref, nullLabel);
   }
 
-  // The only value that can inhabit 'noexn' is null. So, early out if we got
-  // not-null.
-  if (destType.isNoExn()) {
-    jump(failLabel);
-    bind(&fallthrough);
-    return;
-  }
-
   // There are no other possible types except exnref, so succeed!
   jump(successLabel);
   bind(&fallthrough);

@@ -135,8 +135,6 @@ bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
       return CheckAnyRefValue(cx, v, refval);
     case RefType::NoFunc:
       return CheckNullFuncRefValue(cx, v, fnval);
-    case RefType::NoExn:
-      return CheckNullExnRefValue(cx, v, refval);
     case RefType::NoExtern:
       return CheckNullExternRefValue(cx, v, refval);
     case RefType::None:
@@ -199,18 +197,6 @@ bool wasm::CheckNullFuncRefValue(JSContext* cx, HandleValue v,
     return false;
   }
   MOZ_ASSERT(!fun);
-  return true;
-}
-
-bool wasm::CheckNullExnRefValue(JSContext* cx, HandleValue v,
-                                MutableHandleAnyRef vp) {
-  if (!v.isNull()) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_NULL_EXNREF_VALUE);
-    return false;
-  }
-
-  vp.set(AnyRef::null());
   return true;
 }
 
@@ -437,23 +423,6 @@ bool ToWebAssemblyValue_externref(JSContext* cx, HandleValue val, void** loc,
                                   bool mustWrite64) {
   RootedAnyRef result(cx, AnyRef::null());
   if (!AnyRef::fromJSValue(cx, val, &result)) {
-    return false;
-  }
-  loc[0] = result.get().forCompiledCode();
-#ifndef JS_64BIT
-  if (mustWrite64) {
-    loc[1] = nullptr;
-  }
-#endif
-  Debug::print(*loc);
-  return true;
-}
-
-template <typename Debug = NoDebug>
-bool ToWebAssemblyValue_nullexnref(JSContext* cx, HandleValue val, void** loc,
-                                   bool mustWrite64) {
-  RootedAnyRef result(cx, AnyRef::null());
-  if (!CheckNullExnRefValue(cx, val, &result)) {
     return false;
   }
   loc[0] = result.get().forCompiledCode();
@@ -698,9 +667,6 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
         case RefType::NoFunc:
           return ToWebAssemblyValue_nullfuncref<Debug>(cx, val, (void**)loc,
                                                        mustWrite64);
-        case RefType::NoExn:
-          return ToWebAssemblyValue_nullexnref<Debug>(cx, val, (void**)loc,
-                                                      mustWrite64);
         case RefType::NoExtern:
           return ToWebAssemblyValue_nullexternref<Debug>(cx, val, (void**)loc,
                                                          mustWrite64);
