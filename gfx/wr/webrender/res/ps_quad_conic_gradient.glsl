@@ -61,10 +61,26 @@ void pattern_vertex(PrimitiveInfo info) {
 
 #ifdef WR_FRAGMENT_SHADER
 
+// From https://math.stackexchange.com/questions/1098487/atan2-faster-approximation
+float approx_atan2(float y, float x) {
+    vec2 a = abs(vec2(x, y));
+    float slope = min(a.x, a.y) / max(a.x, a.y);
+    float s2 = slope * slope;
+    float r = ((-0.0464964749 * s2 + 0.15931422) * s2 - 0.327622764) * s2 * slope + slope;
+
+    r = if_then_else(float(a.y > a.x), 1.57079637 - r, r);
+    r = if_then_else(float(x < 0.0),   3.14159274 - r, r);
+    // To match atan2's behavior, -0.0 should count as negative and flip the sign of r.
+    // Does this matter in practice in the context of conic gradients?
+    r = r * sign(y);
+
+    return r;
+}
+
 vec4 pattern_fragment(vec4 color) {
     // Use inverse trig to find the angle offset from the relative position.
     vec2 current_dir = v_dir;
-    float current_angle = atan(current_dir.y, current_dir.x) + v_angle;
+    float current_angle = approx_atan2(current_dir.y, current_dir.x) + v_angle;
     float offset = fract(current_angle / (2.0 * PI)) * v_offset_scale - v_start_offset;
 
     color *= sample_gradient(offset);
