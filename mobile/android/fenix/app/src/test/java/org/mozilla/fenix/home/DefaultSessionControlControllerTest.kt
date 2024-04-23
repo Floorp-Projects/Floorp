@@ -152,7 +152,6 @@ class DefaultSessionControlControllerTest {
         every { activity.settings() } returns settings
         every { activity.components.analytics } returns analytics
         every { activity.filesDir } returns filesDir
-        every { filesDir.path } returns "/test"
     }
 
     @Test
