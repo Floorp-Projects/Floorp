@@ -140,6 +140,10 @@ static bool IsCallableNonCCW(const Value& v) {
   return IsCallable(v) && !IsCrossCompartmentWrapper(&v.toObject());
 }
 
+static bool IsWasmSuspendingWrapper(const Value& v) {
+  return v.isObject() && js::IsWasmSuspendingObject(&v.toObject());
+}
+
 bool js::wasm::GetImports(JSContext* cx, const Module& module,
                           HandleObject importObj, ImportValues* imports) {
   if (!module.imports().empty() && !importObj) {
@@ -208,7 +212,8 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
 
     switch (import.kind) {
       case DefinitionKind::Function: {
-        if (!IsCallableNonCCW(importFieldValue)) {
+        if (!IsCallableNonCCW(importFieldValue) &&
+            !IsWasmSuspendingWrapper(importFieldValue)) {
           return ThrowBadImportType(cx, import.field, "Function");
         }
 
@@ -5352,6 +5357,94 @@ static bool WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc,
   return true;
 }
 
+#ifdef ENABLE_WASM_JSPI
+
+class WasmSuspendingObject : public NativeObject {
+ public:
+  static const JSClass class_;
+  static const unsigned WRAPPED_FN_SLOT = 0;
+  static const unsigned RESERVED_SLOTS = 1;
+
+  JSObject* wrappedFunction() const {
+    return getReservedSlot(WRAPPED_FN_SLOT).toObjectOrNull();
+  }
+  void setWrappedFunction(HandleObject fn) {
+    return setReservedSlot(WRAPPED_FN_SLOT, ObjectValue(*fn));
+  }
+};
+
+const JSClass WasmSuspendingObject::class_ = {
+    "Suspending",
+    JSCLASS_HAS_RESERVED_SLOTS(WasmSuspendingObject::RESERVED_SLOTS),
+    JS_NULL_CLASS_OPS, JS_NULL_CLASS_SPEC};
+
+static bool WebAssembly_suspending(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "WebAssembly.suspending", 1)) {
+    return false;
+  }
+
+  if (!IsCallableNonCCW(args[0])) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_FUNCTION_VALUE);
+    return false;
+  }
+
+  RootedObject callable(cx, &args[0].toObject());
+  Rooted<WasmSuspendingObject*> suspending(
+      cx, NewBuiltinClassInstance<WasmSuspendingObject>(cx));
+  if (!suspending) {
+    return false;
+  }
+  suspending->setWrappedFunction(callable);
+  args.rval().setObject(*suspending);
+  return true;
+}
+
+static bool WebAssembly_promising(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "WebAssembly.promising", 1)) {
+    return false;
+  }
+
+  if (!IsWasmFunction(args[0])) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_FUNCTION_VALUE);
+    return false;
+  }
+
+  RootedObject func(cx, &args[0].toObject());
+  RootedFunction promise(
+      cx, WasmPromisingFunctionCreate(cx, func, wasm::ValTypeVector(),
+                                      wasm::ValTypeVector(),
+                                      SuspenderArgPosition::None));
+  if (!promise) {
+    return false;
+  }
+  args.rval().setObject(*promise);
+  return true;
+}
+
+static const JSFunctionSpec WebAssembly_jspi_methods[] = {
+    JS_FN("suspending", WebAssembly_suspending, 1, JSPROP_ENUMERATE),
+    JS_FN("promising", WebAssembly_promising, 1, JSPROP_ENUMERATE), JS_FS_END};
+
+bool js::IsWasmSuspendingObject(JSObject* obj) {
+  return obj->is<WasmSuspendingObject>();
+}
+
+JSObject* js::MaybeUnwrapSuspendingObject(JSObject* wrapper) {
+  if (!wrapper->is<WasmSuspendingObject>()) {
+    return nullptr;
+  }
+  return wrapper->as<WasmSuspendingObject>().wrappedFunction();
+}
+#else
+bool js::IsWasmSuspendingObject(JSObject* obj) { return false; }
+#endif  // ENABLE_WASM_JSPI
+
 #ifdef ENABLE_WASM_MOZ_INTGEMM
 
 static bool WebAssembly_mozIntGemm(JSContext* cx, unsigned argc, Value* vp) {
@@ -5470,6 +5563,13 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
   }
 
   wasm->setWrappedJSValueTag(wrappedJSValueTagObject);
+
+#ifdef ENABLE_WASM_JSPI
+  if (JSPromiseIntegrationAvailable(cx) &&
+      !JS_DefineFunctions(cx, wasm, WebAssembly_jspi_methods)) {
+    return false;
+  }
+#endif
 
 #ifdef ENABLE_WASM_MOZ_INTGEMM
   if (MozIntGemmAvailable(cx) &&

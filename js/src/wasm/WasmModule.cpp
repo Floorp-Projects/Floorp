@@ -38,6 +38,7 @@
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModuleTypes.h"
+#include "wasm/WasmPI.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmUtility.h"
 

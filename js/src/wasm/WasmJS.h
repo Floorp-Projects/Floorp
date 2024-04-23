@@ -503,6 +503,12 @@ class WasmNamespaceObject : public NativeObject {
 
 extern const JSClass WasmFunctionClass;
 
+bool IsWasmSuspendingObject(JSObject* obj);
+
+#ifdef ENABLE_WASM_JSPI
+JSObject* MaybeUnwrapSuspendingObject(JSObject* wrapper);
+#endif
+
 }  // namespace js
 
 #endif  // wasm_js_h
