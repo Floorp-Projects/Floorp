@@ -371,6 +371,10 @@ using RootedValVectorN = Rooted<ValVectorN<N>>;
 [[nodiscard]] extern bool CheckAnyRefValue(JSContext* cx, HandleValue v,
                                            MutableHandleAnyRef vp);
 
+// The same as above for when the target type is 'nullexnref'.
+[[nodiscard]] extern bool CheckNullExnRefValue(JSContext* cx, HandleValue v,
+                                               MutableHandleAnyRef vp);
+
 // The same as above for when the target type is 'nullexternref'.
 [[nodiscard]] extern bool CheckNullExternRefValue(JSContext* cx, HandleValue v,
                                                   MutableHandleAnyRef vp);
