@@ -183,6 +183,26 @@ objects:
           How often, in minutes, the notification message worker will wake up and check for new
           messages.
         default: 240 # 4 hours
+  MicroSurveyConfig:
+    description: Attributes relating to micro survey content.
+    fields:
+      target-feature:
+        type: String
+        description: The name of the feature the survey is for e.g. "Printing PDF".
+        default: "" # Should not be defaulted
+      icon:
+        description: The asset reference of the icon to use.
+        type: String
+        default: mozac_ic_logo_firefox # Should not be null
+      options:
+        description: The list of options to present to the user e.g. "Satisfied, Dissatisfied...".
+        type: List<String>
+        default:
+          - "very dissatisfied"
+          - "dissatisfied"
+          - "neutral"
+          - "satisfied"
+          - "very satisfied"
 
 enums:
   ControlMessageBehavior:
