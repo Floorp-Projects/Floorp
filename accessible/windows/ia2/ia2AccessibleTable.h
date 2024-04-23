@@ -12,6 +12,7 @@
 #include "AccessibleTable2.h"
 #include "ia2AccessibleHypertext.h"
 #include "IUnknownImpl.h"
+#include "UiaGrid.h"
 
 namespace mozilla {
 namespace a11y {
@@ -20,6 +21,7 @@ class TableAccessible;
 
 class ia2AccessibleTable : public IAccessibleTable,
                            public IAccessibleTable2,
+                           public UiaGrid,
                            public ia2AccessibleHypertext {
  public:
   // IUnknown
