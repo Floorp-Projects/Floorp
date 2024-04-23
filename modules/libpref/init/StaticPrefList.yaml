@@ -14232,7 +14232,7 @@
 # Main pref to enable / disable the feature.
 - name: privacy.bounceTrackingProtection.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: once
 
 # How long to wait for a client redirect after a navigation ends.
@@ -14272,7 +14272,7 @@
 # without risking data loss. Telemetry is still collected normally.
 - name: privacy.bounceTrackingProtection.enableDryRunMode
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # To be used in automated test environments to enable observer messages.
