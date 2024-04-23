@@ -10,8 +10,6 @@ job-defaults:
         use-caches: false
     worker:
         max-run-time: 2700
-        env:
-            JAVA_HOME: "/builds/worker/fetches/jdk/jdk-17.0.6+10"
         docker-image: {in-tree: lint}
     always-target: false
     attributes:
