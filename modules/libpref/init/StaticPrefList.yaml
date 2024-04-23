@@ -13313,7 +13313,7 @@
   # The length of cnonce string used in HTTP digest auth.
 - name: network.http.digest_auth_cnonce_length
   type: uint32_t
-  value: 64
+  value: 16
   mirror: always
 
   # If true, HTTP response content-type headers will be parsed using the standards-compliant MimeType parser
