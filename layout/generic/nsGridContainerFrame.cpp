@@ -8829,10 +8829,12 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
       if (!child->IsPlaceholderFrame()) {
         info = &aState.mGridItems[aState.mIter.ItemIndex()];
       }
+      nsReflowStatus childStatus;
       ReflowInFlowChild(child, info, aContainerSize, Nothing(), nullptr, aState,
-                        aContentArea, aDesiredSize, aStatus);
-      MOZ_ASSERT(aStatus.IsComplete(),
+                        aContentArea, aDesiredSize, childStatus);
+      MOZ_ASSERT(childStatus.IsComplete(),
                  "child should be complete in unconstrained reflow");
+      aStatus.MergeCompletionStatusFrom(childStatus);
     }
   }
 
