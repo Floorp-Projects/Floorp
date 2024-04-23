@@ -13590,6 +13590,33 @@
   value: 10
   mirror: once
 
+# Whether flooding prevention feature is enabled or not.
+- name: places.history.floodingPrevention.enabled
+  type: bool
+  value: false
+  mirror: always
+
+# Maximum elapsed time betwen a user interaction and a visit before starting to
+# apply flooding prevention.
+- name: places.history.floodingPrevention.maxSecondsFromLastUserInteraction
+  type: uint32_t
+  value: 3
+  mirror: always
+
+# Number of consecutive accesses to an origin in a short timeframe before
+# starting to restrict storing visits for it.
+- name: places.history.floodingPrevention.restrictionCount
+  type: uint32_t
+  value: 3
+  mirror: always
+
+# Duration of the timeframe where consecutive visits to an origin should happen
+# before starting to restrict storing visits for it.
+- name: places.history.floodingPrevention.restrictionExpireSeconds
+  type: uint32_t
+  value: 5
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "plain_text."
 #---------------------------------------------------------------------------
