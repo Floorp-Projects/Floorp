@@ -9,6 +9,14 @@
   white-space: pre-wrap;
 }
 
+/* Add padding to the left to create space between
+   the duration choicemenu (#sanitizeDurationChoice)
+   and the label
+*/
+#sanitizeDurationSuffixLabel {
+  margin-inline-start: var(--space-small);
+}
+
 /* Hide the duration dropdown suffix label if it's empty.  Otherwise it
    takes up a little space, causing the end of the dropdown to not be aligned
    with the warning box. */
