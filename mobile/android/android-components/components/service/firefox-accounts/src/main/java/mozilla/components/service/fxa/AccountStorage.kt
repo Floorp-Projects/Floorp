@@ -11,6 +11,7 @@ import mozilla.appservices.fxaclient.FxaRustAuthState
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.AccountEventsObserver
+import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StatePersistenceCallback
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -25,16 +26,16 @@ const val FXA_STATE_KEY = "fxaState"
  * Represents state of our account on disk - is it new, or restored?
  */
 internal sealed class AccountOnDisk : WithAccount {
-    data class Restored(val account: FirefoxAccount) : AccountOnDisk() {
+    data class Restored(val account: OAuthAccount) : AccountOnDisk() {
         override fun account() = account
     }
-    data class New(val account: FirefoxAccount) : AccountOnDisk() {
+    data class New(val account: OAuthAccount) : AccountOnDisk() {
         override fun account() = account
     }
 }
 
 internal interface WithAccount {
-    fun account(): FirefoxAccount
+    fun account(): OAuthAccount
 }
 
 /**
@@ -79,16 +80,16 @@ open class StorageWrapper(
         }
     }
 
-    private fun watchAccount(account: FirefoxAccount) {
+    private fun watchAccount(account: OAuthAccount) {
         account.registerPersistenceCallback(statePersistenceCallback)
         account.deviceConstellation().register(accountEventsIntegration)
     }
 
     /**
-     * Exists strictly for testing purposes, allowing tests to specify their own implementation of [FirefoxAccount].
+     * Exists strictly for testing purposes, allowing tests to specify their own implementation of [OAuthAccount].
      */
     @VisibleForTesting
-    open fun obtainAccount(): FirefoxAccount = FirefoxAccount(serverConfig, crashReporter)
+    open fun obtainAccount(): OAuthAccount = FirefoxAccount(serverConfig, crashReporter)
 }
 
 /**
@@ -109,7 +110,7 @@ internal class AccountEventsIntegration(
 
 internal interface AccountStorage {
     @Throws(Exception::class)
-    fun read(): FirefoxAccount?
+    fun read(): OAuthAccount?
     fun write(accountState: String)
     fun clear()
 }
@@ -155,7 +156,7 @@ internal class SharedPrefAccountStorage(
      * @throws FxaException if JSON failed to parse into a [FirefoxAccount].
      */
     @Throws(FxaException::class)
-    override fun read(): FirefoxAccount? {
+    override fun read(): OAuthAccount? {
         val savedJSON = accountPreferences().getString(FXA_STATE_KEY, null)
             ?: return null
 
@@ -243,7 +244,7 @@ internal class SecureAbove22AccountStorage(
      * @throws FxaException if JSON failed to parse into a [FirefoxAccount].
      */
     @Throws(FxaException::class)
-    override fun read(): FirefoxAccount? {
+    override fun read(): OAuthAccount? {
         return store.getString(KEY_ACCOUNT_STATE).also {
             // If account state is missing, but we expected it to be present, report an exception.
             if (it == null && prefs.getBoolean(PREF_KEY_HAS_STATE, false)) {
