@@ -14,9 +14,9 @@ namespace mozilla::a11y {
 class TableCellAccessible;
 
 /**
- * IGridItemProvider implementation.
+ * IGridItemProvider and ITableItemProvider implementations.
  */
-class UiaGridItem : public IGridItemProvider {
+class UiaGridItem : public IGridItemProvider, public ITableItemProvider {
  public:
   // IGridItemProvider
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Row(
@@ -34,6 +34,13 @@ class UiaGridItem : public IGridItemProvider {
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_ContainingGrid(
       /* [retval][out] */ __RPC__deref_out_opt IRawElementProviderSimple**
           aRetVal);
+
+  // ITableItemProvider
+  virtual HRESULT STDMETHODCALLTYPE GetRowHeaderItems(
+      /* [retval][out] */ __RPC__deref_out_opt SAFEARRAY** aRetVal);
+
+  virtual HRESULT STDMETHODCALLTYPE GetColumnHeaderItems(
+      /* [retval][out] */ __RPC__deref_out_opt SAFEARRAY** aRetVal);
 
  private:
   TableCellAccessible* CellAcc();
