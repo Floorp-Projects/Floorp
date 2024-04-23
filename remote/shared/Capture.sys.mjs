@@ -74,7 +74,7 @@ capture.canvas = async function (
 ) {
   // FIXME(bug 1761032): This looks a bit sketchy, overrideDPPX doesn't
   // influence rendering...
-  const scale = win.browsingContext.overrideDPPX || win.devicePixelRatio;
+  const scale = browsingContext.overrideDPPX || win.devicePixelRatio;
 
   let canvasHeight = height * scale;
   let canvasWidth = width * scale;
