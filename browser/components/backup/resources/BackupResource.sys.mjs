@@ -153,7 +153,8 @@ export class BackupResource {
   /**
    * Copy a set of SQLite databases safely from a source directory to a
    * destination directory. A new read-only connection is opened for each
-   * database, and then a backup is created.
+   * database, and then a backup is created. If the source database does not
+   * exist, it is ignored.
    *
    * @param {string} sourcePath
    *   Path to the source directory of the SQLite databases.
@@ -167,6 +168,11 @@ export class BackupResource {
   static async copySqliteDatabases(sourcePath, destPath, sqliteDatabases) {
     for (let fileName of sqliteDatabases) {
       let sourceFilePath = PathUtils.join(sourcePath, fileName);
+
+      if (!(await IOUtils.exists(sourceFilePath))) {
+        continue;
+      }
+
       let destFilePath = PathUtils.join(destPath, fileName);
       let connection;
 

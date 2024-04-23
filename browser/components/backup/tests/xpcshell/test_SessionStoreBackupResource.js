@@ -93,7 +93,15 @@ add_task(async function test_backup() {
   await createTestFiles(sourcePath, simpleCopyFiles);
 
   let sessionStoreState = SessionStore.getCurrentState(true);
-  await sessionStoreBackupResource.backup(stagingPath, sourcePath);
+  let manifestEntry = await sessionStoreBackupResource.backup(
+    stagingPath,
+    sourcePath
+  );
+  Assert.equal(
+    manifestEntry,
+    null,
+    "SessionStoreBackupResource.backup should return null as its ManifestEntry"
+  );
 
   /**
    * We don't expect the actual file sessionstore.jsonlz4 to exist in the profile directory before calling the backup method.

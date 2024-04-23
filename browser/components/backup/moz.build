@@ -12,6 +12,7 @@ JAR_MANIFESTS += ["jar.mn"]
 SPHINX_TREES["docs"] = "docs"
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
+MARIONETTE_MANIFESTS += ["tests/marionette/manifest.toml"]
 
 EXTRA_JS_MODULES.backup += [
     "BackupResources.sys.mjs",

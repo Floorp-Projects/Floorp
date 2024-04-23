@@ -86,6 +86,14 @@ add_task(async function test_backup() {
   ];
   await createTestFiles(sourcePath, simpleCopyFiles);
 
+  // Create our fake database files. We don't expect these to be copied to the
+  // staging directory in this test due to our stubbing of the backup method, so
+  // we don't include it in `simpleCopyFiles`.
+  await createTestFiles(sourcePath, [
+    { path: "permissions.sqlite" },
+    { path: "content-prefs.sqlite" },
+  ]);
+
   // We have no need to test that Sqlite.sys.mjs's backup method is working -
   // this is something that is tested in Sqlite's own tests. We can just make
   // sure that it's being called using sinon. Unfortunately, we cannot do the
@@ -96,7 +104,15 @@ add_task(async function test_backup() {
   };
   sandbox.stub(Sqlite, "openConnection").returns(fakeConnection);
 
-  await preferencesBackupResource.backup(stagingPath, sourcePath);
+  let manifestEntry = await preferencesBackupResource.backup(
+    stagingPath,
+    sourcePath
+  );
+  Assert.equal(
+    manifestEntry,
+    null,
+    "PreferencesBackupResource.backup should return null as its ManifestEntry"
+  );
 
   await assertFilesExist(stagingPath, simpleCopyFiles);
 
