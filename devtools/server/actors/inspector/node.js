@@ -424,10 +424,7 @@ class NodeActor extends Actor {
    * check if there are any event listeners.
    */
   get _hasEventListeners() {
-    // We need to pass a debugger instance from this compartment because
-    // otherwise we can't make use of it inside the event-collector module.
-    const dbg = this.getParent().targetActor.makeDebugger();
-    return this._eventCollector.hasEventListeners(this.rawNode, dbg);
+    return this._eventCollector.hasEventListeners(this.rawNode);
   }
 
   writeAttrs() {

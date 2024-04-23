@@ -256,26 +256,32 @@ class MainEventCollector {
    *         An array of unfiltered event listeners or an empty array
    */
   getDOMListeners(node) {
-    let listeners;
+    const listeners = [];
+    const listenersTargets = [];
+
     if (
       typeof node.nodeName !== "undefined" &&
       node.nodeName.toLowerCase() === "html"
     ) {
-      const winListeners =
-        Services.els.getListenerInfoFor(node.ownerGlobal) || [];
-      const docElementListeners = Services.els.getListenerInfoFor(node) || [];
-      const docListeners =
-        Services.els.getListenerInfoFor(node.parentNode) || [];
-
-      listeners = [...winListeners, ...docElementListeners, ...docListeners];
+      listenersTargets.push(node.ownerGlobal, node, node.parentNode);
     } else {
-      listeners = Services.els.getListenerInfoFor(node) || [];
+      listenersTargets.push(node);
     }
 
-    return listeners.filter(listener => {
-      const obj = this.unwrap(listener.listenerObject);
-      return !obj || !obj[EXCLUDED_LISTENER];
-    });
+    for (const el of listenersTargets) {
+      const elListeners = Services.els.getListenerInfoFor(el);
+      if (!elListeners) {
+        continue;
+      }
+      for (const listener of elListeners) {
+        const obj = this.unwrap(listener.listenerObject);
+        if (!obj || !obj[EXCLUDED_LISTENER]) {
+          listeners.push(listener);
+        }
+      }
+    }
+
+    return listeners;
   }
 
   getJQuery(node) {
@@ -460,8 +466,10 @@ class JQueryEventCollector extends MainEventCollector {
     }
 
     if (eventsObj) {
-      for (const [type, events] of Object.entries(eventsObj)) {
-        for (const [, event] of Object.entries(events)) {
+      for (const type in eventsObj) {
+        const events = eventsObj[type];
+        for (const key in events) {
+          const event = events[key];
           // Skip events that are part of jQueries internals.
           if (node.nodeType == node.DOCUMENT_NODE && event.selector) {
             continue;
@@ -517,9 +525,9 @@ class JQueryLiveEventCollector extends MainEventCollector {
       return handlers;
     }
 
-    const data = jQuery._data || jQuery.data;
+    const jqueryData = jQuery._data || jQuery.data;
 
-    if (data) {
+    if (jqueryData) {
       // Live events are added to the document and bubble up to all elements.
       // Any element matching the specified selector will trigger the live
       // event.
@@ -527,32 +535,34 @@ class JQueryLiveEventCollector extends MainEventCollector {
       let events = null;
 
       try {
-        events = data(win.document, "events");
+        events = jqueryData(win.document, "events");
       } catch (e) {
         // We have no access to a JS object. This is probably due to a CORS
         // violation. Using try / catch is the only way to avoid this error.
       }
 
-      if (events) {
-        for (const [, eventHolder] of Object.entries(events)) {
-          for (const [idx, event] of Object.entries(eventHolder)) {
+      if (events && node.ownerDocument && node.matches) {
+        for (const eventName in events) {
+          const eventHolder = events[eventName];
+          for (const idx in eventHolder) {
             if (typeof idx !== "string" || isNaN(parseInt(idx, 10))) {
               continue;
             }
 
-            let selector = event.selector;
+            const event = eventHolder[idx];
+            let { selector, data } = event;
 
-            if (!selector && event.data) {
-              selector = event.data.selector || event.data || event.selector;
+            if (!selector && data) {
+              selector = data.selector || data;
             }
 
-            if (!selector || !node.ownerDocument) {
+            if (!selector) {
               continue;
             }
 
             let matches;
             try {
-              matches = node.matches && node.matches(selector);
+              matches = node.matches(selector);
             } catch (e) {
               // Invalid selector, do nothing.
             }
@@ -581,7 +591,7 @@ class JQueryLiveEventCollector extends MainEventCollector {
                 },
               };
 
-              if (!eventInfo.type && event.data?.live) {
+              if (!eventInfo.type && data?.live) {
                 eventInfo.type = event.data.live;
               }
 
