@@ -43,6 +43,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [isFxAEnabled](#isfxaenabled)
 * [isFxASignedIn](#isFxASignedIn)
 * [isMajorUpgrade](#ismajorupgrade)
+* [isMSIX](#ismsix)
 * [isRTAMO](#isrtamo)
 * [launchOnLoginEnabled](#launchonloginenabled)
 * [locale](#locale)
@@ -1008,6 +1009,10 @@ A boolean. `true` if the user is configured to use the embedded Migration Wizard
 ### `isRTAMO`
 
 A boolean. `true` when [RTAMO](first-run.md#return-to-amo-rtamo) has been used to download Firefox, `false` otherwise.
+
+### `isMSIX`
+
+A boolean. `true` when hasPackageId is `true` on Windows, `false` otherwise.
 
 ### `isDeviceMigration`
 

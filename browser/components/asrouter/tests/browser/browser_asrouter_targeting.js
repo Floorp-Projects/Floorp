@@ -1469,6 +1469,28 @@ add_task(async function check_useEmbeddedMigrationWizard() {
   ok(!(await ASRouterTargeting.Environment.useEmbeddedMigrationWizard));
 });
 
+add_task(async function check_isMSIX() {
+  is(
+    typeof ASRouterTargeting.Environment.isMSIX,
+    "boolean",
+    "Should return a boolean"
+  );
+  if (AppConstants.platform !== "win") {
+    is(
+      ASRouterTargeting.Environment.isMSIX,
+      false,
+      "Should always be false on non-Windows"
+    );
+    return;
+  }
+
+  is(
+    ASRouterTargeting.Environment.isMSIX,
+    Services.sysinfo.getProperty("hasWinPackageId"),
+    "Should match the value from sysinfo"
+  );
+});
+
 add_task(async function check_isRTAMO() {
   is(
     typeof ASRouterTargeting.Environment.isRTAMO,
