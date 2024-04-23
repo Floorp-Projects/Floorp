@@ -657,7 +657,7 @@ add_task(async function checkDiscopaneNotice() {
   messageBar = win.document.querySelector("moz-message-bar.discopane-notice");
   ok(messageBar, "Recommended notice should exist in disco view");
 
-  messageBar.closeButtonEl.click();
+  messageBar.closeButton.click();
   messageBar = win.document.querySelector("moz-message-bar.discopane-notice");
   ok(!messageBar, "Recommended notice should not exist in disco view");
   await switchToNonDiscoView(win);
