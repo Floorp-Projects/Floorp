@@ -30,7 +30,6 @@ add_setup(async function () {
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", false],
       ["browser.urlbar.suggest.quickactions", false],
-      ["browser.urlbar.shortcuts.quickactions", true],
     ],
   });
 
@@ -943,7 +942,7 @@ async function doLocalShortcutsShownTest() {
   await rebuildPromise;
 
   let buttons = oneOffSearchButtons.localButtons;
-  Assert.equal(buttons.length, 4, "Expected number of local shortcuts");
+  Assert.equal(buttons.length, 3, "Expected number of local shortcuts");
 
   let expectedSource;
   let seenIDs = new Set();
@@ -962,9 +961,6 @@ async function doLocalShortcutsShownTest() {
         break;
       case "urlbar-engine-one-off-item-history":
         expectedSource = UrlbarUtils.RESULT_SOURCE.HISTORY;
-        break;
-      case "urlbar-engine-one-off-item-actions":
-        expectedSource = UrlbarUtils.RESULT_SOURCE.ACTIONS;
         break;
       default:
         Assert.ok(false, `Unexpected local shortcut ID: ${button.id}`);

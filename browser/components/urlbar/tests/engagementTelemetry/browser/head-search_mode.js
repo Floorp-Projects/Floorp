@@ -78,16 +78,3 @@ async function doTabTest({ trigger, assert }) {
 
   BrowserTestUtils.removeTab(tab);
 }
-
-async function doActionsTest({ trigger, assert }) {
-  await doTest(async () => {
-    await openPopup("add");
-    await UrlbarTestUtils.enterSearchMode(window, {
-      source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
-    });
-    await selectRowByProvider("quickactions");
-
-    await trigger();
-    await assert();
-  });
-}

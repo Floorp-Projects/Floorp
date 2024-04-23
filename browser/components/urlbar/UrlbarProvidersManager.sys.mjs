@@ -40,8 +40,6 @@ var localProviderModules = {
     "resource:///modules/UrlbarProviderCalculator.sys.mjs",
   UrlbarProviderClipboard:
     "resource:///modules/UrlbarProviderClipboard.sys.mjs",
-  UrlbarProviderContextualSearch:
-    "resource:///modules/UrlbarProviderContextualSearch.sys.mjs",
   UrlbarProviderHeuristicFallback:
     "resource:///modules/UrlbarProviderHeuristicFallback.sys.mjs",
   UrlbarProviderHistoryUrlHeuristic:
@@ -54,8 +52,6 @@ var localProviderModules = {
   UrlbarProviderPlaces: "resource:///modules/UrlbarProviderPlaces.sys.mjs",
   UrlbarProviderPrivateSearch:
     "resource:///modules/UrlbarProviderPrivateSearch.sys.mjs",
-  UrlbarProviderQuickActions:
-    "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderQuickSuggestContextualOptIn:
@@ -83,6 +79,14 @@ var localMuxerModules = {
   UrlbarMuxerUnifiedComplete:
     "resource:///modules/UrlbarMuxerUnifiedComplete.sys.mjs",
 };
+
+import { ActionsProviderQuickActions } from "resource:///modules/ActionsProviderQuickActions.sys.mjs";
+import { ActionsProviderContextualSearch } from "resource:///modules/ActionsProviderContextualSearch.sys.mjs";
+
+let globalActionsProviders = [
+  ActionsProviderContextualSearch,
+  ActionsProviderQuickActions,
+];
 
 const DEFAULT_MUXER = "UnifiedComplete";
 
@@ -176,6 +180,17 @@ class ProvidersManager {
    */
   getProvider(name) {
     return this.providers.find(p => p.name == name);
+  }
+
+  /**
+   * Returns the provider with the given name.
+   *
+   * @param {string} name
+   *   The provider name.
+   * @returns {UrlbarProvider} The provider.
+   */
+  getActionProvider(name) {
+    return globalActionsProviders.find(p => p.name == name);
   }
 
   /**
@@ -284,6 +299,12 @@ class ProvidersManager {
       // history and bookmarks even if search engines are not available.
     }
 
+    // All current global actions are currently memory lookups so it is safe to
+    // wait on them.
+    this.#globalAction = lazy.UrlbarPrefs.get("secondaryActions.featureGate")
+      ? await this.pickGlobalAction(queryContext, controller)
+      : null;
+
     if (query.canceled) {
       return;
     }
@@ -356,6 +377,25 @@ class ProvidersManager {
         controller
       );
     }
+  }
+
+  #globalAction = null;
+
+  async pickGlobalAction(queryContext, controller) {
+    for (let provider of globalActionsProviders) {
+      if (provider.isActive(queryContext)) {
+        let action = await provider.queryAction(queryContext, controller);
+        if (action) {
+          action.providerName = provider.name;
+          return action;
+        }
+      }
+    }
+    return null;
+  }
+
+  getGlobalAction() {
+    return this.#globalAction;
   }
 }
 

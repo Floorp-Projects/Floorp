@@ -6,26 +6,26 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  UrlbarProviderQuickActions:
-    "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
+  ActionsProviderQuickActions:
+    "resource:///modules/ActionsProviderQuickActions.sys.mjs",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
 
 add_setup(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.suggest.quickactions", true],
+      ["browser.urlbar.secondaryActions.featureGate", true],
       ["browser.urlbar.quickactions.enabled", true],
     ],
   });
 
-  UrlbarProviderQuickActions.addAction("testaction", {
+  ActionsProviderQuickActions.addAction("testaction", {
     commands: ["testaction"],
     label: "quickactions-downloads2",
   });
 
   registerCleanupFunction(() => {
-    UrlbarProviderQuickActions.removeAction("testaction");
+    ActionsProviderQuickActions.removeAction("testaction");
   });
 });
 
@@ -61,15 +61,23 @@ add_task(async function test_show_prefs() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-async function testActionIsShown(window) {
+async function testActionIsShown(window, name) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "testact",
     waitForFocus: SimpleTest.waitForFocus,
   });
   try {
-    let { result } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-    return result.providerName == "quickactions";
+    await BrowserTestUtils.waitForMutationCondition(
+      window.document,
+      {},
+      () =>
+        !!window.document.querySelector(
+          `.urlbarView-action-btn[data-action=${name}]`
+        )
+    );
+    Assert.ok(true, `We found action "${name}"`);
+    return true;
   } catch (e) {
     return false;
   }
@@ -100,7 +108,7 @@ add_task(async function test_prefs() {
   });
 
   Assert.ok(
-    await testActionIsShown(window),
+    await testActionIsShown(window, "testaction"),
     "Actions are shown after user clicks checkbox"
   );
 

@@ -34,11 +34,18 @@ async function clickQuickActionOneoffButton() {
   });
 }
 
+const assertAction = async name => {
+  await BrowserTestUtils.waitForCondition(() =>
+    window.document.querySelector(`.urlbarView-action-btn[data-action=${name}]`)
+  );
+  Assert.ok(true, `We found action "${name}`);
+};
+
 add_setup(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.quickactions.enabled", true],
-      ["browser.urlbar.suggest.quickactions", true],
+      ["browser.urlbar.secondaryActions.featureGate", true],
       ["browser.urlbar.shortcuts.quickactions", true],
     ],
   });
@@ -61,17 +68,10 @@ add_task(async function test_screenshot() {
     window,
     value: "screenshot",
   });
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    2,
-    "We matched the action"
-  );
-  let { result } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.DYNAMIC);
-  Assert.equal(result.providerName, "quickactions");
+  await assertAction("screenshot");
 
   info("Trigger the screenshot mode");
-  EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+  EventUtils.synthesizeKey("KEY_Tab", {}, window);
   EventUtils.synthesizeKey("KEY_Enter", {}, window);
   await TestUtils.waitForCondition(
     isScreenshotInitialized,
@@ -104,38 +104,6 @@ add_task(async function search_mode_on_webpage() {
   });
   await UrlbarTestUtils.promiseSearchComplete(window);
 
-  info("Enter quick action search mode");
-  await clickQuickActionOneoffButton();
-  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-  Assert.ok(true, "Actions are shown when we enter actions search mode.");
-
-  info("Trigger the screenshot mode");
-  const initialActionButtons = window.document.querySelectorAll(
-    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-button"
-  );
-  let screenshotButton;
-  for (let i = 0; i < initialActionButtons.length; i++) {
-    const item = initialActionButtons.item(i);
-    if (item.dataset.key === "screenshot") {
-      screenshotButton = item;
-      break;
-    }
-  }
-  EventUtils.synthesizeMouseAtCenter(screenshotButton, {}, window);
-  await TestUtils.waitForCondition(
-    isScreenshotInitialized,
-    "Screenshot component is active",
-    200,
-    100
-  );
-
-  info("Press Escape to exit screenshot mode");
-  EventUtils.synthesizeKey("KEY_Escape", {}, window);
-  await TestUtils.waitForCondition(
-    async () => !(await isScreenshotInitialized()),
-    "Screenshot component has been dismissed"
-  );
-
   info("Check the urlbar state");
   Assert.equal(gURLBar.value, UrlbarTestUtils.trimURL("https://example.com"));
   Assert.equal(gURLBar.getAttribute("pageproxystate"), "valid");
@@ -146,23 +114,7 @@ add_task(async function search_mode_on_webpage() {
   });
   await UrlbarTestUtils.promiseSearchComplete(window);
 
-  info("Enter quick action search mode again");
-  await clickQuickActionOneoffButton();
-  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-  const finalActionButtons = window.document.querySelectorAll(
-    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-button"
-  );
-
-  info("Check the action buttons and the urlbar");
-  Assert.equal(
-    finalActionButtons.length,
-    initialActionButtons.length,
-    "The same buttons as initially displayed will display"
-  );
-  Assert.equal(gURLBar.value, "");
-
   info("Clean up");
-  await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_Escape");
   BrowserTestUtils.removeTab(tab);

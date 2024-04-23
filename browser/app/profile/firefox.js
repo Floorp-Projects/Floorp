@@ -422,13 +422,7 @@ pref("browser.urlbar.suggest.engines",              true);
 pref("browser.urlbar.suggest.calculator",           false);
 pref("browser.urlbar.suggest.recentsearches",       true);
 
-#if defined(EARLY_BETA_OR_EARLIER)
-  // Enable QuickActions and its urlbar search mode button.
-  pref("browser.urlbar.quickactions.enabled", true);
-  pref("browser.urlbar.suggest.quickactions", true);
-  pref("browser.urlbar.shortcuts.quickactions", true);
-  pref("browser.urlbar.quickactions.showPrefs", true);
-#endif
+pref("browser.urlbar.secondaryActions.featureGate", false);
 
 #if defined(EARLY_BETA_OR_EARLIER)
   // Enable Trending suggestions.

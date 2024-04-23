@@ -59,9 +59,9 @@ add_task(async function recent_search() {
     assert: () =>
       assertAbandonmentTelemetry([
         {
-          groups: "recent_search,suggested_index",
-          results: "recent_search,action",
-          n_results: 2,
+          groups: "recent_search",
+          results: "recent_search",
+          n_results: 1,
         },
       ]),
   });
@@ -114,9 +114,9 @@ add_task(async function top_site() {
     assert: () =>
       assertAbandonmentTelemetry([
         {
-          groups: "top_site,suggested_index",
-          results: "top_site,action",
-          n_results: 2,
+          groups: "top_site",
+          results: "top_site",
+          n_results: 1,
         },
       ]),
   });
@@ -128,9 +128,9 @@ add_task(async function clipboard() {
     assert: () =>
       assertAbandonmentTelemetry([
         {
-          groups: "general,suggested_index",
-          results: "clipboard,action",
-          n_results: 2,
+          groups: "general",
+          results: "clipboard",
+          n_results: 1,
         },
       ]),
   });
@@ -170,9 +170,9 @@ add_task(async function general() {
     assert: () =>
       assertAbandonmentTelemetry([
         {
-          groups: "heuristic,suggested_index,general",
-          results: "search_engine,action,bookmark",
-          n_results: 3,
+          groups: "heuristic,general",
+          results: "search_engine,bookmark",
+          n_results: 2,
         },
       ]),
   });

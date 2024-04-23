@@ -113,8 +113,7 @@ export var UrlbarUtils = {
     TABS: 4,
     OTHER_LOCAL: 5,
     OTHER_NETWORK: 6,
-    ACTIONS: 7,
-    ADDON: 8,
+    ADDON: 7,
   },
 
   // This defines icon locations that are commonly used in the UI.
@@ -227,13 +226,6 @@ export var UrlbarUtils = {
         icon: "chrome://browser/skin/history.svg",
         pref: "shortcuts.history",
         telemetryLabel: "history",
-      },
-      {
-        source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
-        restrict: lazy.UrlbarTokenizer.RESTRICT.ACTION,
-        icon: "chrome://browser/skin/quickactions.svg",
-        pref: "shortcuts.quickactions",
-        telemetryLabel: "actions",
       },
     ];
   },
@@ -1279,8 +1271,6 @@ export var UrlbarUtils = {
         if (result.providerName == "TabToSearch") {
           // This is the onboarding result.
           return "tabtosearch";
-        } else if (result.providerName == "quickactions") {
-          return "quickaction";
         } else if (result.providerName == "Weather") {
           return "weather";
         }
@@ -1435,14 +1425,10 @@ export var UrlbarUtils = {
         switch (result.providerName) {
           case "calculator":
             return "calc";
-          case "quickactions":
-            return "action";
           case "TabToSearch":
             return "tab_to_search";
           case "UnitConversion":
             return "unit";
-          case "UrlbarProviderContextualSearch":
-            return "site_specific_contextual_search";
           case "UrlbarProviderQuickSuggest":
             return this._getQuickSuggestTelemetryType(result);
           case "UrlbarProviderQuickSuggestContextualOptIn":
@@ -1535,28 +1521,6 @@ export var UrlbarUtils = {
     return "unknown";
   },
 
-  /**
-   * Extracts a subtype for search engagement telemetry from a result and the picked element.
-   *
-   * @param {UrlbarResult} result The result to analyze.
-   * @param {DOMElement} element The picked view element. Nullable.
-   * @returns {string} Subtype as string.
-   */
-  searchEngagementTelemetrySubtype(result, element) {
-    if (!result) {
-      return "";
-    }
-
-    if (
-      result.providerName === "quickactions" &&
-      element?.classList.contains("urlbarView-quickaction-button")
-    ) {
-      return element.dataset.key;
-    }
-
-    return "";
-  },
-
   _getQuickSuggestTelemetryType(result) {
     if (result.payload.telemetryType == "weather") {
       // Return "weather" without the usual source prefix for consistency with
@@ -1641,6 +1605,17 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
     type: "object",
     required: ["url"],
     properties: {
+      action: {
+        type: "object",
+        properties: {
+          l10nId: {
+            type: "string",
+          },
+          key: {
+            type: "string",
+          },
+        },
+      },
       displayUrl: {
         type: "string",
       },

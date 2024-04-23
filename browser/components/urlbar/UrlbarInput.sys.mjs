@@ -24,6 +24,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -900,6 +901,15 @@ export class UrlbarInput {
     if (!result) {
       return;
     }
+    if (element?.dataset.action && element?.dataset.action != "tabswitch") {
+      this.view.close();
+      let provider = lazy.UrlbarProvidersManager.getActionProvider(
+        element.dataset.providerName
+      );
+      let { queryContext } = this.controller._lastQueryContextWrapper || {};
+      provider.pickAction(queryContext, this.controller, element);
+      return;
+    }
     this.pickResult(result, event, element);
   }
 
@@ -1053,7 +1063,13 @@ export class UrlbarInput {
         break;
       }
       case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH: {
-        if (this.hasAttribute("action-override")) {
+        // Behaviour is reversed with SecondaryActions, default behaviour is to navigate
+        // and button is provided to switch to tab.
+        if (
+          this.hasAttribute("action-override") ||
+          (lazy.UrlbarPrefs.get("secondaryActions.featureGate") &&
+            element?.dataset.action !== "tabswitch")
+        ) {
           where = "current";
           break;
         }

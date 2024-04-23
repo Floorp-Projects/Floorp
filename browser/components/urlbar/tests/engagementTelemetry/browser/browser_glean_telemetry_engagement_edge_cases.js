@@ -196,7 +196,6 @@ add_task(async function enter_to_reload_current_url() {
     await BrowserTestUtils.waitForCondition(
       () => window.document.activeElement === gURLBar.inputField
     );
-    await UrlbarTestUtils.promiseSearchComplete(window);
 
     // Press Enter key to reload the page without selecting any suggestions.
     await doEnter();
@@ -213,8 +212,8 @@ add_task(async function enter_to_reload_current_url() {
         selected_result: "input_field",
         selected_result_subtype: "",
         provider: undefined,
-        results: "action",
-        groups: "suggested_index",
+        results: "",
+        groups: "",
       },
     ]);
   });

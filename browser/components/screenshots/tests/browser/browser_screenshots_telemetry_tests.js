@@ -82,11 +82,7 @@ const EXTRA_EVENTS = [
 
 add_task(async function test_started_and_canceled_events() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.quickactions.enabled", true],
-      ["browser.urlbar.suggest.quickactions", true],
-      ["browser.urlbar.shortcuts.quickactions", true],
-    ],
+    set: [["browser.urlbar.secondaryActions.featureGate", true]],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -163,12 +159,9 @@ add_task(async function test_started_and_canceled_events() {
         value: "screenshot",
         waitForFocus: SimpleTest.waitForFocus,
       });
-      let { result } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-      Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.DYNAMIC);
-      Assert.equal(result.providerName, "quickactions");
 
       info("Trigger the screenshot mode");
-      EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+      EventUtils.synthesizeKey("KEY_Tab", {}, window);
       EventUtils.synthesizeKey("KEY_Enter", {}, window);
       await helper.waitForOverlay();
 
@@ -177,13 +170,10 @@ add_task(async function test_started_and_canceled_events() {
         value: "screenshot",
         waitForFocus: SimpleTest.waitForFocus,
       });
-      ({ result } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1));
-      Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.DYNAMIC);
-      Assert.equal(result.providerName, "quickactions");
 
       info("Trigger the screenshot mode");
       screenshotExit = TestUtils.topicObserved("screenshots-exit");
-      EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+      EventUtils.synthesizeKey("KEY_Tab", {}, window);
       EventUtils.synthesizeKey("KEY_Enter", {}, window);
       await helper.waitForOverlayClosed();
       await screenshotExit;

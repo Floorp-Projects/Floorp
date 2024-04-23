@@ -119,9 +119,9 @@ add_task(async function selected_result_bookmark() {
       {
         selected_result: "bookmark",
         selected_result_subtype: "",
-        selected_position: 3,
+        selected_position: 2,
         provider: "Places",
-        results: "search_engine,action,bookmark",
+        results: "search_engine,bookmark",
       },
     ]);
   });
@@ -267,27 +267,11 @@ add_task(async function selected_result_url() {
   });
 });
 
-add_task(async function selected_result_action() {
-  await doTest(async () => {
-    await showResultByArrowDown();
-    await selectRowByProvider("quickactions");
-    const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    doClickSubButton(".urlbarView-quickaction-button[data-key=addons]");
-    await onLoad;
-
-    assertEngagementTelemetry([
-      {
-        selected_result: "action",
-        selected_result_subtype: "addons",
-        selected_position: 1,
-        provider: "quickactions",
-        results: "action",
-      },
-    ]);
-  });
-});
-
 add_task(async function selected_result_tab() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.secondaryActions.featureGate", false]],
+  });
+
   const tab = BrowserTestUtils.addTab(gBrowser, "https://example.com/");
 
   await doTest(async () => {
@@ -307,6 +291,7 @@ add_task(async function selected_result_tab() {
     ]);
   });
 
+  await SpecialPowers.popPrefEnv();
   BrowserTestUtils.removeTab(tab);
 });
 
@@ -402,7 +387,7 @@ add_task(async function selected_result_top_site() {
         selected_result_subtype: "",
         selected_position: 1,
         provider: "UrlbarProviderTopSites",
-        results: "top_site,action",
+        results: "top_site",
       },
     ]);
   });
@@ -456,7 +441,7 @@ add_task(async function selected_result_clipboard() {
         selected_result_subtype: "",
         selected_position: 1,
         provider: "UrlbarProviderClipboard",
-        results: "clipboard,action",
+        results: "clipboard",
       },
     ]);
   });
@@ -487,50 +472,6 @@ add_task(async function selected_result_unit() {
         results: "search_engine,unit",
       },
     ]);
-  });
-
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function selected_result_site_specific_contextual_search() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.contextualSearch.enabled", true]],
-  });
-
-  await doTest(async () => {
-    const extension = await SearchTestUtils.installSearchExtension(
-      {
-        name: "Contextual",
-        search_url: "https://example.com/browser",
-      },
-      { skipUnload: true }
-    );
-    const onLoaded = BrowserTestUtils.browserLoaded(
-      gBrowser.selectedBrowser,
-      false,
-      "https://example.com/"
-    );
-    BrowserTestUtils.startLoadingURIString(
-      gBrowser.selectedBrowser,
-      "https://example.com/"
-    );
-    await onLoaded;
-
-    await openPopup("search");
-    await selectRowByProvider("UrlbarProviderContextualSearch");
-    await doEnter();
-
-    assertEngagementTelemetry([
-      {
-        selected_result: "site_specific_contextual_search",
-        selected_result_subtype: "",
-        selected_position: 2,
-        provider: "UrlbarProviderContextualSearch",
-        results: "search_engine,site_specific_contextual_search",
-      },
-    ]);
-
-    await extension.unload();
   });
 
   await SpecialPowers.popPrefEnv();

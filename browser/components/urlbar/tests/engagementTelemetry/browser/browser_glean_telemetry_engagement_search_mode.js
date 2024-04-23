@@ -42,22 +42,12 @@ add_task(async function tabs() {
   await doTabTest({
     trigger: async () => {
       const currentTab = gBrowser.selectedTab;
+      EventUtils.synthesizeKey("KEY_Tab");
       EventUtils.synthesizeKey("KEY_Enter");
       await BrowserTestUtils.waitForCondition(
         () => gBrowser.selectedTab !== currentTab
       );
     },
     assert: () => assertEngagementTelemetry([{ search_mode: "tabs" }]),
-  });
-});
-
-add_task(async function actions() {
-  await doActionsTest({
-    trigger: async () => {
-      const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-      doClickSubButton(".urlbarView-quickaction-button[data-key=addons]");
-      await onLoad;
-    },
-    assert: () => assertEngagementTelemetry([{ search_mode: "actions" }]),
   });
 });

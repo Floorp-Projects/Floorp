@@ -365,6 +365,8 @@ support-files = [
 
 ["browser_quickactions.js"]
 
+["browser_quickactions_commands.js"]
+
 ["browser_quickactions_devtools.js"]
 
 ["browser_quickactions_screenshot.js"]
@@ -497,6 +499,8 @@ support-files = [
 support-files = ["search-engines", "../../../search/test/browser/trendingSuggestionEngine.sjs"]
 
 ["browser_search_history_from_history_panel.js"]
+
+["browser_secondaryActions.js"]
 
 ["browser_selectStaleResults.js"]
 support-files = [
@@ -643,9 +647,6 @@ tags = "search-telemetry"
 
 ["browser_urlbar_telemetry_places.js"]
 https_first_disabled = true
-tags = "search-telemetry"
-
-["browser_urlbar_telemetry_quickactions.js"]
 tags = "search-telemetry"
 
 ["browser_urlbar_telemetry_remotetab.js"]
