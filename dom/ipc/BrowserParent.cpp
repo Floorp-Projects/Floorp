@@ -2320,12 +2320,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvAsyncMessage(
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
-    const nsCursor& aCursor, const bool& aHasCustomCursor,
-    Maybe<BigBuffer>&& aCursorData, const uint32_t& aWidth,
-    const uint32_t& aHeight, const float& aResolutionX,
-    const float& aResolutionY, const uint32_t& aStride,
-    const gfx::SurfaceFormat& aFormat, const uint32_t& aHotspotX,
-    const uint32_t& aHotspotY, const bool& aForce) {
+    const nsCursor& aCursor, Maybe<IPCImage>&& aCustomCursor,
+    const float& aResolutionX, const float& aResolutionY,
+    const uint32_t& aHotspotX, const uint32_t& aHotspotY, const bool& aForce) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
     return IPC_OK();
@@ -2335,38 +2332,21 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
     widget->ClearCachedCursor();
   }
 
-  nsCOMPtr<imgIContainer> cursorImage;
-  if (aHasCustomCursor) {
-    const bool cursorDataValid = [&] {
-      if (!aCursorData) {
-        return false;
-      }
-      auto expectedSize = CheckedInt<uint32_t>(aHeight) * aStride;
-      if (!expectedSize.isValid() ||
-          expectedSize.value() != aCursorData->Size()) {
-        return false;
-      }
-      auto minStride =
-          CheckedInt<uint32_t>(aWidth) * gfx::BytesPerPixel(aFormat);
-      if (!minStride.isValid() || aStride < minStride.value()) {
-        return false;
-      }
-      return true;
-    }();
-    if (!cursorDataValid) {
+  nsCOMPtr<imgIContainer> customCursorImage;
+  if (aCustomCursor) {
+    RefPtr<gfx::DataSourceSurface> customCursorSurface =
+        nsContentUtils::IPCImageToSurface(*aCustomCursor);
+    if (!customCursorSurface) {
       return IPC_FAIL(this, "Invalid custom cursor data");
     }
-    const gfx::IntSize size(aWidth, aHeight);
-    RefPtr<gfx::DataSourceSurface> customCursor =
-        gfx::CreateDataSourceSurfaceFromData(size, aFormat, aCursorData->Data(),
-                                             aStride);
 
-    RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(customCursor, size);
-    cursorImage = image::ImageOps::CreateFromDrawable(drawable);
+    RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(
+        customCursorSurface, customCursorSurface->GetSize());
+    customCursorImage = image::ImageOps::CreateFromDrawable(drawable);
   }
 
   mCursor = nsIWidget::Cursor{aCursor,
-                              std::move(cursorImage),
+                              std::move(customCursorImage),
                               aHotspotX,
                               aHotspotY,
                               {aResolutionX, aResolutionY}};

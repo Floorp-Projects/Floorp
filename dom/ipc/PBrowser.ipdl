@@ -376,23 +376,12 @@ parent:
      * Set the native cursor.
      * @param value
      *   The widget cursor to set.
-     * @param hasCustomCursor
-     *   Whether there's any custom cursor represented by cursorData and
-     *   company.
-     * @param customCursorData
-     *   Serialized image data.
-     * @param width
-     *   Width of the image.
-     * @param height
-     *   Height of the image.
+     * @param customCursor
+     *   Serialized image data for custom cursor.
      * @param resolutionX
      *   Resolution of the image X axis in dppx units.
      * @param resolutionY
      *   Resolution of the image Y axis in dppx units.
-     * @param stride
-     *   Stride used in the image data.
-     * @param format
-     *   Image format, see gfx::SurfaceFormat for possible values.
      * @param hotspotX
      *   Horizontal hotspot of the image, as specified by the css cursor property.
      * @param hotspotY
@@ -402,11 +391,8 @@ parent:
      *   update.
      */
     async SetCursor(nsCursor value,
-                    bool hasCustomCursor,
-                    BigBuffer? customCursorData,
-                    uint32_t width, uint32_t height,
+                    IPCImage? customCursor,
                     float resolutionX, float resolutionY,
-                    uint32_t stride, SurfaceFormat format,
                     uint32_t hotspotX, uint32_t hotspotY, bool force);
 
     /**
