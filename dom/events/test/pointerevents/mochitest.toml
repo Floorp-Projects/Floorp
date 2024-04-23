@@ -64,7 +64,6 @@ support-files = ["!/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js
 skip-if = [
   "os == 'android'",  # Bug 1312791
   "display == 'wayland' && os_version == '22.04'",  # Bug 1856971
-  "verify && os == 'win'", # Bug 1659744
 ]
 
 ["test_getCoalescedEvents_touch.html"]

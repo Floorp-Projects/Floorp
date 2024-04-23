@@ -18,14 +18,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1303957
 /** Test for Bug 1303957 **/
 SimpleTest.waitForExplicitFinish();
 
-function runTests() {
-  let target0 = window.document.getElementById("target0");
-  let utils = SpecialPowers.getDOMWindowUtils(window);
+SimpleTest.waitForFocus(async () => {
+  await SpecialPowers.pushPrefEnv({"set": [["dom.events.coalesce.mousemove", true]]});
+
+  const target0 = window.document.getElementById("target0");
+  const utils = SpecialPowers.getDOMWindowUtils(window);
   utils.advanceTimeAndRefresh(0);
 
-  SimpleTest.executeSoon(async () => {
-    // Flush all pending mouse events before synthesizing events.
+  await new Promise(resolve => SimpleTest.executeSoon(resolve));
 
+  const waitForPointerMove = new Promise(resolve => {
     target0.addEventListener("pointermove", (ev) => {
       let length = ev.getCoalescedEvents().length;
       ok(length >= 1, "Coalesced events should >= 1, got " + length);
@@ -49,11 +51,11 @@ function runTests() {
 
         ok(coalescedEvent.offsetX >= prevOffsetX, "getCoalescedEvents()[" + i + "].offsetX = " + coalescedEvent.offsetX);
         ok(coalescedEvent.offsetX == 5 || coalescedEvent.offsetX == 10 ||
-           coalescedEvent.offsetX == 15 || coalescedEvent.offsetX == 20, "expected offsetX");
+            coalescedEvent.offsetX == 15 || coalescedEvent.offsetX == 20, "expected offsetX");
 
         ok(coalescedEvent.offsetY >= prevOffsetY, "getCoalescedEvents()[" + i + "].offsetY = " + coalescedEvent.offsetY);
         ok(coalescedEvent.offsetY == 5 || coalescedEvent.offsetY == 10 ||
-           coalescedEvent.offsetY == 15 || coalescedEvent.offsetY == 20, "expected offsetY");
+            coalescedEvent.offsetY == 15 || coalescedEvent.offsetY == 20, "expected offsetY");
 
         prevOffsetX = coalescedEvent.offsetX;
         prevOffsetY = coalescedEvent.offsetY;
@@ -64,23 +66,24 @@ function runTests() {
         ok((coalescedEvent.clientX <= x+2) && (coalescedEvent.clientX >= x-2), "getCoalescedEvents()[" + i + "].clientX");
         ok((coalescedEvent.clientY <= y+2) && (coalescedEvent.clientY >= y-2), "getCoalescedEvents()[" + i + "].clientY");
       }
+      resolve();
     }, { once: true });
-
-    target0.addEventListener("pointerup", (ev) => {
-      utils.restoreNormalRefresh();
-      SimpleTest.finish();
-    }, { once: true });
-
-    await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 5, offsetY: 5 });
-    await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 10, offsetY: 10 });
-    await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 15, offsetY: 15 });
-    await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 20, offsetY: 20 });
-    synthesizeNativeMouseEvent({ type: "click", target: target0, offsetX: 20, offsetY: 20 });
   });
-}
 
-SimpleTest.waitForFocus(() => {
-  SpecialPowers.pushPrefEnv({"set": [["dom.events.coalesce.mousemove", true]]}, runTests);
+  info("Synthesizing native mouse moves....");
+  await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 5, offsetY: 5 });
+  await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 10, offsetY: 10 });
+  await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 15, offsetY: 15 });
+  await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 20, offsetY: 20 });
+  utils.restoreNormalRefresh();
+  await waitForPointerMove;
+
+  target0.addEventListener("pointerup", (ev) => {
+    SimpleTest.finish();
+  }, { once: true });
+
+  info("Synthesizing a native click....");
+  synthesizeNativeMouseEvent({ type: "click", target: target0, offsetX: 20, offsetY: 20 });
 });
 
 </script>
