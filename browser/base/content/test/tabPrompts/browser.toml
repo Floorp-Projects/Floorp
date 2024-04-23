@@ -39,6 +39,8 @@ support-files = ["file_beforeunload_stop.html"]
 https_first_disabled = true
 support-files = ["openPromptOffTimeout.html"]
 
+["browser_promptDelays.js"]
+
 ["browser_promptFocus.js"]
 
 ["browser_prompt_close_event.js"]
