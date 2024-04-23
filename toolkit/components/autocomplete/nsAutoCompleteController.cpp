@@ -490,6 +490,13 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
         }
       }
 
+      // Some script may have changed the value of the text field since our
+      // last keypress or after our focus handler and we don't want to
+      // search for a stale string.
+      nsAutoString value;
+      input->GetTextValue(value);
+      SetSearchStringInternal(value);
+
       // Open the popup if there has been a previous non-errored search, or
       // else kick off a new search
       bool hadPreviousSearch = false;
@@ -521,13 +528,6 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
           // it again.  See bug #395344 for more details
           return NS_OK;
         }
-
-        // Some script may have changed the value of the text field since our
-        // last keypress or after our focus handler and we don't want to
-        // search for a stale string.
-        nsAutoString value;
-        input->GetTextValue(value);
-        SetSearchStringInternal(value);
 
         StartSearches();
       }

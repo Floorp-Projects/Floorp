@@ -124,6 +124,17 @@ add_task(async function simple_clear() {
   await triggerPopupAndHoverItem("#tel", 0);
   await confirmClear("#tel");
   await checkIsFormCleared();
+
+  // Ensure the correctness of the autocomplete popup after the form is cleared
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(MOCK_ADDR_STORAGE.filter(address => !!address.tel).map(address =>
+    JSON.stringify({
+      primary: address.tel,
+      secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]) || address.organization,
+      status: "Also autofills address, organization"
+    })
+  ), 2);
 });
 
 add_task(async function clear_adapted_record() {
