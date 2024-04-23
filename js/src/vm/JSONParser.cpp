@@ -1428,34 +1428,33 @@ class MOZ_STACK_CLASS DelegateHandler {
   }
 
   inline bool setBooleanValue(bool value, mozilla::Span<const CharT>&& source) {
-    return true;
-  }
-  inline bool setNullValue(mozilla::Span<const CharT>&& source) { return true; }
-
-  inline DummyValue numberValue() const { return DummyValue(); }
-
-  inline DummyValue stringValue() const { return DummyValue(); }
-
-  inline DummyValue booleanValue(bool value) {
     if (hadHandlerError_) {
-      return DummyValue();
+      return false;
     }
 
     if (!handler_->booleanValue(value)) {
       hadHandlerError_ = true;
     }
-    return DummyValue();
+    return !hadHandlerError_;
   }
-  inline DummyValue nullValue() {
+  inline bool setNullValue(mozilla::Span<const CharT>&& source) {
     if (hadHandlerError_) {
-      return DummyValue();
+      return false;
     }
 
     if (!handler_->nullValue()) {
       hadHandlerError_ = true;
     }
-    return DummyValue();
+    return !hadHandlerError_;
   }
+
+  inline DummyValue numberValue() const { return DummyValue(); }
+
+  inline DummyValue stringValue() const { return DummyValue(); }
+
+  inline DummyValue booleanValue(bool value) { return DummyValue(); }
+
+  inline DummyValue nullValue() { return DummyValue(); }
 
   inline bool objectOpen(Vector<StackEntry, 10>& stack,
                          PropertyVector** properties) {

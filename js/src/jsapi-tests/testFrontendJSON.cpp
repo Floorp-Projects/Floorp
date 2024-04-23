@@ -472,6 +472,29 @@ BEGIN_FRONTEND_TEST(testParseJSONWithHandler) {
     checkedLast = true;
   }
 
+  {
+    const size_t failAt = 1;
+    MyHandler handler;
+    const char16_t* source;
+
+#define IMMEDIATE_FAIL(json)                                          \
+  handler.failAt.emplace(failAt);                                     \
+  source = json;                                                      \
+  CHECK(!JS::ParseJSONWithHandler(                                    \
+      source, std::char_traits<char16_t>::length(source), &handler)); \
+  CHECK(handler.events.length() == failAt);                           \
+  handler.events.clear();
+
+    IMMEDIATE_FAIL(u"{");
+    IMMEDIATE_FAIL(u"[");
+    IMMEDIATE_FAIL(u"\"string\"");
+    IMMEDIATE_FAIL(u"1");
+    IMMEDIATE_FAIL(u"true");
+    IMMEDIATE_FAIL(u"null");
+
+#undef IMMEDIATE_FAIL
+  }
+
   return true;
 }
 
