@@ -1,4 +1,5 @@
 [DEFAULT]
+run-if = ["nightly_build"] # Bug 1890946 - enable the inference engine in release
 support-files = [
   "head.js",
   "data/**/*.*"
