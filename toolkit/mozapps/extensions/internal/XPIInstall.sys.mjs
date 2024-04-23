@@ -97,7 +97,7 @@ const PREF_XPI_FILE_WHITELISTED = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_WHITELIST_REQUIRED = "xpinstall.whitelist.required";
 const PREF_XPI_WEAK_SIGNATURES_ALLOWED =
   "xpinstall.signatures.weakSignaturesTemporarilyAllowed";
-const PREF_XPI_WEAK_SIGNATURES_ALLOWED_DEFAULT = true;
+const PREF_XPI_WEAK_SIGNATURES_ALLOWED_DEFAULT = !AppConstants.NIGHTLY_BUILD;
 
 const PREF_SELECTED_THEME = "extensions.activeThemeID";
 
