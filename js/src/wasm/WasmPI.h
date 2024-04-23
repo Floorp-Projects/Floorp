@@ -22,7 +22,7 @@
 #include "mozilla/DoublyLinkedList.h"  // for DoublyLinkedListElement
 
 #include "js/TypeDecls.h"
-#include "wasm/WasmValType.h"
+#include "wasm/WasmTypeDef.h"
 
 namespace js::wasm {
 
@@ -137,6 +137,9 @@ JSFunction* WasmSuspendingFunctionCreate(JSContext* cx, HandleObject func,
                                          wasm::ValTypeVector&& params,
                                          wasm::ValTypeVector&& results,
                                          SuspenderArgPosition argPosition);
+
+JSFunction* WasmSuspendingFunctionCreate(JSContext* cx, HandleObject func,
+                                         const FuncType& type);
 
 JSFunction* WasmPromisingFunctionCreate(JSContext* cx, HandleObject func,
                                         wasm::ValTypeVector&& params,

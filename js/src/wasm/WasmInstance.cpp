@@ -2401,6 +2401,23 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
   Tier callerTier = code_->bestTier();
   for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
     JSObject* f = funcImports[i];
+
+#ifdef ENABLE_WASM_JSPI
+    if (JSObject* suspendingObject = MaybeUnwrapSuspendingObject(f)) {
+      // Compile suspending function Wasm wrapper.
+      const FuncImport& fi = metadata(callerTier).funcImports[i];
+      const FuncType& funcType = metadata().getFuncImportType(fi);
+      RootedObject wrapped(cx, suspendingObject);
+      RootedFunction wrapper(
+          cx, WasmSuspendingFunctionCreate(cx, wrapped, funcType));
+      if (!wrapper) {
+        return false;
+      }
+      MOZ_ASSERT(IsWasmExportedFunction(wrapper));
+      f = wrapper;
+    }
+#endif
+
     MOZ_ASSERT(f->isCallable());
     const FuncImport& fi = metadata(callerTier).funcImports[i];
     const FuncType& funcType = metadata().getFuncImportType(fi);

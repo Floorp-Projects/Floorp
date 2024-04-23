@@ -84,7 +84,7 @@ SuspenderContext::~SuspenderContext() {
   MOZ_ASSERT(activeSuspender_ == nullptr);
 }
 
-SuspenderObject* js::wasm::SuspenderContext::activeSuspender() {
+SuspenderObject* SuspenderContext::activeSuspender() {
   return activeSuspender_;
 }
 
@@ -525,6 +525,7 @@ void UnwindStackSwitch(JSContext* cx) {
 //   (type $params (struct (field ..)*)))
 //   (import "" "" (func $suspending.wrappedfn ..))
 //   (import "" "" (func $suspending.add-promise-reactions ..))
+//   (import "" "" (func $suspending.get-suspender ..))
 //   (import "" "" (func $suspending.suspender-check ..))
 //   (import "" "" (func $suspending.get-promise-result ..))
 //   (func $suspending.exported .. )
@@ -541,6 +542,7 @@ class SuspendingFunctionModuleFactory {
   enum FnIdx {
     WrappedFnIndex,
     GetSuspendingResultsFnIndex,
+    CurrentSuspenderFnIndex,
     SuspenderCheckFnIndex,
     GetResultFnIndex,
     ExportedFnIndex,
@@ -553,8 +555,14 @@ class SuspendingFunctionModuleFactory {
   // (func $suspending.exported
   //   (param $suspender externref)? (param ..)* (param $suspender externref)?
   //   (result ..)*
+  //   (local $suspender externref)?
+  //   ;; #if checkSuspender
   //   local.get $suspender
   //   call $suspending.suspender-check
+  //   ;; #else
+  //   call $suspending.get-suspender
+  //   local.tee $suspender
+  //   ;; #endif
   //   ref.func $suspending.trampoline
   //   local.get $i*
   //   stuct.new $param-type
@@ -564,19 +572,37 @@ class SuspendingFunctionModuleFactory {
   // )
   bool encodeExportedFunction(ModuleEnvironment& moduleEnv, uint32_t paramsSize,
                               uint32_t resultSize, uint32_t paramsOffset,
-                              uint32_t suspenderIndex, Bytes& bytecode) {
+                              uint32_t suspenderIndex, bool checkSuspender,
+                              Bytes& bytecode) {
     Encoder encoder(bytecode, *moduleEnv.types);
-    if (!EncodeLocalEntries(encoder, ValTypeVector())) {
+    ValTypeVector locals;
+    if (!checkSuspender && !locals.emplaceBack(RefType::extern_())) {
       return false;
     }
-    if (!encoder.writeOp(Op::LocalGet) ||
-        !encoder.writeVarU32(suspenderIndex)) {
+    if (!EncodeLocalEntries(encoder, locals)) {
       return false;
     }
-    if (!encoder.writeOp(Op::Call) ||
-        !encoder.writeVarU32(SuspenderCheckFnIndex)) {
-      return false;
+
+    if (checkSuspender) {
+      if (!encoder.writeOp(Op::LocalGet) ||
+          !encoder.writeVarU32(suspenderIndex)) {
+        return false;
+      }
+      if (!encoder.writeOp(Op::Call) ||
+          !encoder.writeVarU32(SuspenderCheckFnIndex)) {
+        return false;
+      }
+    } else {
+      if (!encoder.writeOp(Op::Call) ||
+          !encoder.writeVarU32(CurrentSuspenderFnIndex)) {
+        return false;
+      }
+      if (!encoder.writeOp(Op::LocalTee) ||
+          !encoder.writeVarU32(suspenderIndex)) {
+        return false;
+      }
     }
+
     if (!encoder.writeOp(Op::RefFunc) ||
         !encoder.writeVarU32(TrampolineFnIndex)) {
       return false;
@@ -729,29 +755,41 @@ class SuspendingFunctionModuleFactory {
     RefType suspenderType = RefType::extern_();
     RefType promiseType = RefType::extern_();
 
-    size_t paramsSize = params.length() - 1;
+    size_t paramsSize, paramsOffset, suspenderIndex;
     size_t resultsSize = results.length();
-    size_t paramsOffset, suspenderIndex;
+    bool checkSuspender;
     ValTypeVector paramsWithoutSuspender;
     switch (argPosition) {
       case SuspenderArgPosition::First:
+        paramsSize = params.length() - 1;
         paramsOffset = 1;
         suspenderIndex = 0;
         if (!paramsWithoutSuspender.append(params.begin() + 1, params.end())) {
           ReportOutOfMemory(cx);
           return nullptr;
         }
+        checkSuspender = true;
         break;
       case SuspenderArgPosition::Last:
+        paramsSize = params.length() - 1;
         paramsOffset = 0;
         suspenderIndex = paramsSize - 1;
         if (!paramsWithoutSuspender.append(params.begin(), params.end() - 1)) {
           ReportOutOfMemory(cx);
           return nullptr;
         }
+        checkSuspender = true;
         break;
       default:
-        MOZ_CRASH();
+        paramsSize = params.length();
+        paramsOffset = 0;
+        suspenderIndex = paramsSize;
+        if (!paramsWithoutSuspender.append(params.begin(), params.end())) {
+          ReportOutOfMemory(cx);
+          return nullptr;
+        }
+        checkSuspender = false;
+        break;
     }
     ValTypeVector resultsRef;
     if (!resultsRef.emplaceBack(promiseType)) {
@@ -786,6 +824,16 @@ class SuspendingFunctionModuleFactory {
     MOZ_ASSERT(moduleEnv.funcs.length() == GetSuspendingResultsFnIndex);
     if (!moduleEnv.addDefinedFunc(std::move(paramsGetSuspendingResults),
                                   std::move(resultsGetSuspendingResults))) {
+      return nullptr;
+    }
+
+    ValTypeVector paramsCurrentSuspender, resultsCurrentSuspender;
+    if (!resultsCurrentSuspender.emplaceBack(suspenderType)) {
+      return nullptr;
+    }
+    MOZ_ASSERT(moduleEnv.funcs.length() == CurrentSuspenderFnIndex);
+    if (!moduleEnv.addDefinedFunc(std::move(paramsCurrentSuspender),
+                                  std::move(resultsCurrentSuspender))) {
       return nullptr;
     }
 
@@ -860,7 +908,8 @@ class SuspendingFunctionModuleFactory {
     // Build functions and keep bytecodes around until the end.
     Bytes bytecode;
     if (!encodeExportedFunction(moduleEnv, paramsSize, resultsSize,
-                                paramsOffset, suspenderIndex, bytecode)) {
+                                paramsOffset, suspenderIndex, checkSuspender,
+                                bytecode)) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
@@ -1000,6 +1049,21 @@ static bool WasmPIWrapSuspendingImport(JSContext* cx, unsigned argc,
   return RejectPromiseWithPendingError(cx, promise);
 }
 
+// Gets active suspender.
+// Seen as $suspending.get-suspender to wasm.
+static bool WasmPIGetSuspender(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedObject suspender(cx, cx->wasm().promiseIntegration.activeSuspender());
+  if (!suspender) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_JSPI_INVALID_STATE);
+    return false;
+  }
+  args.rval().set(ObjectValue(*suspender));
+  return true;
+}
+
 // Checks suspender passed from the user's code to be an active suspender.
 // Seen as $suspending.suspender-check to wasm.
 static bool WasmPISuspenderCheck(JSContext* cx, unsigned argc, Value* vp) {
@@ -1055,15 +1119,16 @@ JSFunction* WasmSuspendingFunctionCreate(JSContext* cx, HandleObject func,
                                          SuspenderArgPosition argPosition) {
   MOZ_ASSERT(IsCallable(ObjectValue(*func)) &&
              !IsCrossCompartmentWrapper(func));
-  MOZ_ASSERT(argPosition != SuspenderArgPosition::None);
 
-  if (params.length() < 1 ||
-      params[argPosition == SuspenderArgPosition::Last ? params.length() - 1
-                                                       : 0] !=
-          RefType::extern_()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_JSPI_EXPECTED_SUSPENDER);
-    return nullptr;
+  if (argPosition != SuspenderArgPosition::None) {
+    if (params.length() < 1 ||
+        params[argPosition == SuspenderArgPosition::Last ? params.length() - 1
+                                                         : 0] !=
+            RefType::extern_()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_JSPI_EXPECTED_SUSPENDER);
+      return nullptr;
+    }
   }
 
   SuspendingFunctionModuleFactory moduleFactory;
@@ -1097,6 +1162,18 @@ JSFunction* WasmSuspendingFunctionCreate(JSContext* cx, HandleObject func,
     return nullptr;
   }
   if (!imports.get().funcs.append(addPromiseReactions)) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  // Add $suspending.get-suspender to imports.
+  RootedFunction getSuspender(
+      cx, NewNativeFunction(cx, WasmPIGetSuspender, 0, nullptr,
+                            gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
+  if (!getSuspender) {
+    return nullptr;
+  }
+  if (!imports.get().funcs.append(getSuspender)) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -1139,6 +1216,19 @@ JSFunction* WasmSuspendingFunctionCreate(JSContext* cx, HandleObject func,
     return nullptr;
   }
   return wasmFunc;
+}
+
+JSFunction* WasmSuspendingFunctionCreate(JSContext* cx, HandleObject func,
+                                         const FuncType& type) {
+  ValTypeVector params, results;
+  if (!params.append(type.args().begin(), type.args().end()) ||
+      !results.append(type.results().begin(), type.results().end())) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+  return WasmSuspendingFunctionCreate(cx, func, std::move(params),
+                                      std::move(results),
+                                      SuspenderArgPosition::None);
 }
 
 // Promising
@@ -1532,36 +1622,49 @@ JSFunction* WasmPromisingFunctionCreate(JSContext* cx, HandleObject func,
   const FuncType& wrappedWasmFuncType =
       wrappedWasmFunc->wasmTypeDef()->funcType();
 
-  if (results.length() != 1 || results[0] != RefType::extern_()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_JSPI_EXPECTED_PROMISE);
-    return nullptr;
-  }
-
-  size_t paramsOffset, suspenderIndex;
-  switch (argPosition) {
-    case SuspenderArgPosition::First:
-      paramsOffset = 1;
-      suspenderIndex = 0;
-      break;
-    case SuspenderArgPosition::Last:
-      paramsOffset = 0;
-      suspenderIndex = params.length();
-      break;
-    default:
-      MOZ_CRASH();
-  }
-
-  if (wrappedWasmFuncType.args().length() != params.length() + 1 ||
-      wrappedWasmFuncType.args()[suspenderIndex] != RefType::extern_()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_JSPI_EXPECTED_SUSPENDER);
-    return nullptr;
-  }
-  for (size_t i = 0; i < params.length(); i++) {
-    if (params[i] != wrappedWasmFuncType.args()[i + paramsOffset]) {
+  if (argPosition != SuspenderArgPosition::None) {
+    if (results.length() != 1 || results[0] != RefType::extern_()) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_JSPI_SIGNATURE_MISMATCH);
+                                JSMSG_JSPI_EXPECTED_PROMISE);
+      return nullptr;
+    }
+
+    size_t paramsOffset, suspenderIndex;
+    switch (argPosition) {
+      case SuspenderArgPosition::First:
+        paramsOffset = 1;
+        suspenderIndex = 0;
+        break;
+      case SuspenderArgPosition::Last:
+        paramsOffset = 0;
+        suspenderIndex = params.length();
+        break;
+      default:
+        MOZ_CRASH();
+    }
+
+    if (wrappedWasmFuncType.args().length() != params.length() + 1 ||
+        wrappedWasmFuncType.args()[suspenderIndex] != RefType::extern_()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_JSPI_EXPECTED_SUSPENDER);
+      return nullptr;
+    }
+    for (size_t i = 0; i < params.length(); i++) {
+      if (params[i] != wrappedWasmFuncType.args()[i + paramsOffset]) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_JSPI_SIGNATURE_MISMATCH);
+        return nullptr;
+      }
+    }
+  } else {
+    MOZ_ASSERT(results.length() == 0 && params.length() == 0);
+    if (!results.append(RefType::extern_())) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
+    if (!params.append(wrappedWasmFuncType.args().begin(),
+                       wrappedWasmFuncType.args().end())) {
+      ReportOutOfMemory(cx);
       return nullptr;
     }
   }
@@ -1630,7 +1733,7 @@ JSFunction* WasmPromisingFunctionCreate(JSContext* cx, HandleObject func,
 bool IsAllowedOnSuspendableStack(HandleFunction fn) {
   auto ptr = fn->maybeNative();
   return ptr == WasmPISuspenderCheck || ptr == WasmPIGetPromiseResult ||
-         ptr == WasmPISetPromiseResults;
+         ptr == WasmPISetPromiseResults || ptr == WasmPIGetSuspender;
 }
 
 void UpdateSuspenderState(Instance* instance, SuspenderObject* suspender,
