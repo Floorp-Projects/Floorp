@@ -362,7 +362,8 @@ struct WebGLContextOptions final {
 
   dom::WebGLPowerPreference powerPreference =
       dom::WebGLPowerPreference::Default;
-  std::optional<dom::PredefinedColorSpace> colorSpace;
+  bool ignoreColorSpace = true;
+  dom::PredefinedColorSpace colorSpace = dom::PredefinedColorSpace::Srgb;
   bool shouldResistFingerprinting = true;
 
   bool enableDebugRendererInfo = false;
@@ -382,6 +383,7 @@ struct WebGLContextOptions final {
 
       powerPreference,
       colorSpace,
+      ignoreColorSpace,
       shouldResistFingerprinting,
 
       enableDebugRendererInfo);

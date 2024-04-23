@@ -201,9 +201,6 @@ class HostWebGLContext final : public SupportsWeakPtr {
 
   // -
 
-  void SetDrawingBufferColorSpace(const dom::PredefinedColorSpace val) const {
-    mContext->SetDrawingBufferColorSpace(val);
-  }
   void Resize(const uvec2& size) { return mContext->Resize(size); }
 
   uvec2 DrawingBufferSize() { return mContext->DrawingBufferSize(); }

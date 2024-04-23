@@ -42,27 +42,19 @@ typedef struct _qcms_profile qcms_profile;
 
 namespace mozilla::color {
 
-// -
-
 struct YuvLumaCoeffs final {
   float r = 0.2126;
   float g = 0.7152;
   float b = 0.0722;
 
   auto Members() const { return std::tie(r, g, b); }
-  MOZ_MIXIN_DERIVE_CMP_OPS_BY_MEMBERS(YuvLumaCoeffs)
+  INLINE_AUTO_MAPPABLE(YuvLumaCoeffs)
 
   static constexpr auto Rec709() { return YuvLumaCoeffs(); }
 
   static constexpr auto Rec2020() {
-    return YuvLumaCoeffs{
-        .r = 0.2627,
-        .g = 0.6780,
-        .b = 0.0593,
-    };
+    return YuvLumaCoeffs{0.2627, 0.6780, 0.0593};
   }
-
-  static constexpr auto Gbr() { return YuvLumaCoeffs{.r = 0, .g = 1, .b = 0}; }
 };
 
 struct PiecewiseGammaDesc final {
@@ -76,26 +68,26 @@ struct PiecewiseGammaDesc final {
   float k = 12.92;
 
   auto Members() const { return std::tie(a, b, g, k); }
-  MOZ_MIXIN_DERIVE_CMP_OPS_BY_MEMBERS(PiecewiseGammaDesc)
+  INLINE_AUTO_MAPPABLE(PiecewiseGammaDesc)
 
   static constexpr auto Srgb() { return PiecewiseGammaDesc(); }
   static constexpr auto DisplayP3() { return Srgb(); }
 
   static constexpr auto Rec709() {
     return PiecewiseGammaDesc{
-        .a = 1.099,
-        .b = 0.018,
-        .g = 1.0 / 0.45,  // ~2.222
-        .k = 4.5,
+        1.099,
+        0.018,
+        1.0 / 0.45,  // ~2.222
+        4.5,
     };
   }
   // FYI: static constexpr auto Rec2020_10bit() { return Rec709(); }
   static constexpr auto Rec2020_12bit() {
     return PiecewiseGammaDesc{
-        .a = 1.0993,
-        .b = 0.0181,
-        .g = 1.0 / 0.45,  // ~2.222
-        .k = 4.5,
+        1.0993,
+        0.0181,
+        1.0 / 0.45,  // ~2.222
+        4.5,
     };
   }
 };
@@ -107,21 +99,21 @@ struct YcbcrDesc final {
   float uPlusHalf = 240 / 255.0;
 
   auto Members() const { return std::tie(y0, y1, u0, uPlusHalf); }
-  MOZ_MIXIN_DERIVE_CMP_OPS_BY_MEMBERS(YcbcrDesc)
+  INLINE_AUTO_MAPPABLE(YcbcrDesc)
 
   static constexpr auto Narrow8() {  // AKA limited/studio/tv
     return YcbcrDesc();
   }
   static constexpr auto Full8() {  // AKA pc
     return YcbcrDesc{
-        .y0 = 0 / 255.0,
-        .y1 = 255 / 255.0,
-        .u0 = 128 / 255.0,
-        .uPlusHalf = 254 / 255.0,
+        0 / 255.0,
+        255 / 255.0,
+        128 / 255.0,
+        254 / 255.0,
     };
   }
   static constexpr auto Float() {  // Best for a LUT
-    return YcbcrDesc{.y0 = 0.0, .y1 = 1.0, .u0 = 0.5, .uPlusHalf = 1.0};
+    return YcbcrDesc{0.0, 1.0, 0.5, 1.0};
   }
 };
 
@@ -137,7 +129,7 @@ struct Chromaticities final {
   static constexpr float wy = 0.3290;
 
   auto Members() const { return std::tie(rx, ry, gx, gy, bx, by); }
-  MOZ_MIXIN_DERIVE_CMP_OPS_BY_MEMBERS(Chromaticities)
+  INLINE_AUTO_MAPPABLE(Chromaticities)
 
   // -
 
@@ -153,32 +145,23 @@ struct Chromaticities final {
   }
   static constexpr auto Rec601_525_Ntsc() {
     return Chromaticities{
-        .rx = 0.630,
-        .ry = 0.340,  // r
-        .gx = 0.310,
-        .gy = 0.595,  // g
-        .bx = 0.155,
-        .by = 0.070,  // b
+        0.630, 0.340,  // r
+        0.310, 0.595,  // g
+        0.155, 0.070,  // b
     };
   }
   static constexpr auto Rec2020() {
     return Chromaticities{
-        .rx = 0.708,
-        .ry = 0.292,  // r
-        .gx = 0.170,
-        .gy = 0.797,  // g
-        .bx = 0.131,
-        .by = 0.046,  // b
+        0.708, 0.292,  // r
+        0.170, 0.797,  // g
+        0.131, 0.046,  // b
     };
   }
   static constexpr auto DisplayP3() {
     return Chromaticities{
-        .rx = 0.680,
-        .ry = 0.320,  // r
-        .gx = 0.265,
-        .gy = 0.690,  // g
-        .bx = 0.150,
-        .by = 0.060,  // b
+        0.680, 0.320,  // r
+        0.265, 0.690,  // g
+        0.150, 0.060,  // b
     };
   }
 };
@@ -190,7 +173,7 @@ struct YuvDesc final {
   YcbcrDesc ycbcr;
 
   auto Members() const { return std::tie(yCoeffs, ycbcr); }
-  MOZ_MIXIN_DERIVE_CMP_OPS_BY_MEMBERS(YuvDesc)
+  INLINE_AUTO_MAPPABLE(YuvDesc);
 };
 
 struct ColorspaceDesc final {
@@ -199,27 +182,8 @@ struct ColorspaceDesc final {
   std::optional<YuvDesc> yuv;
 
   auto Members() const { return std::tie(chrom, tf, yuv); }
-  MOZ_MIXIN_DERIVE_CMP_OPS_BY_MEMBERS(ColorspaceDesc)
+  INLINE_AUTO_MAPPABLE(ColorspaceDesc);
 };
-
-// -
-
-}  // namespace mozilla::color
-
-#define _(X)  \
-  template <> \
-  struct std::hash<X> : mozilla::StdHashMembers<X> {};
-
-_(mozilla::color::YuvLumaCoeffs)
-_(mozilla::color::PiecewiseGammaDesc)
-_(mozilla::color::YcbcrDesc)
-_(mozilla::color::Chromaticities)
-_(mozilla::color::YuvDesc)
-_(mozilla::color::ColorspaceDesc)
-
-#undef _
-
-namespace mozilla::color {
 
 // -
 
@@ -372,11 +336,6 @@ auto max(const avec<T, N>& a, const avec<T, N>& b) {
 }
 
 template <class T, int N>
-auto clamp(const avec<T, N>& v, const avec<T, N>& lo, const avec<T, N>& hi) {
-  return max(lo, min(v, hi));
-}
-
-template <class T, int N>
 auto floor(const avec<T, N>& a) {
   auto ret = avec<T, N>{};
   for (int i = 0; i < ret.N; i++) {
@@ -444,11 +403,6 @@ struct mat final {
       }
     }
   }
-
-  constexpr bool operator==(const mat& rhs) const {
-    return this->rows == rhs.rows;
-  }
-  constexpr bool operator!=(const mat& rhs) const { return !(*this == rhs); }
 
   const auto& at(const int x, const int y) const { return rows.at(y)[x]; }
   auto& at(const int x, const int y) { return rows.at(y)[x]; }
@@ -768,19 +722,17 @@ inline float SampleOutByIn(const C& outByIn, const float in) {
       return outByIn.at(0);
   }
   MOZ_ASSERT(outByIn.size() >= 2);
+  const auto begin = outByIn.begin();
 
-  // Estimate based on nearest (first) derivative:
-  // Find the nearest point to `in` in `outByIn`.
-  const auto inId = in * (outByIn.size() - 1);
-  const auto inId0F = std::clamp(floorf(inId), 0.f, float(outByIn.size() - 2));
-  const auto inId0 = size_t(inId0F);
-  const auto out0 = outByIn.at(inId0 + 0);
-  const auto out1 = outByIn.at(inId0 + 1);
-  const auto d_inId0 = float(1);
-  const auto d_out0 = out1 - out0;
-  const auto d_inId = inId - inId0;
+  const auto in0i = size_t(floorf(in * (outByIn.size() - 1)));
+  const auto out0_itr = begin + std::min(in0i, outByIn.size() - 2);
 
-  const auto out = out0 + (d_out0 / d_inId0) * d_inId;
+  const auto in0 = float(out0_itr - begin) / (outByIn.size() - 1);
+  const auto out0 = *out0_itr;
+  const auto d_in = float(1) / (outByIn.size() - 1);
+  const auto d_out = *(out0_itr + 1) - *out0_itr;
+
+  const auto out = out0 + (d_out / d_in) * (in - in0);
   // printf("SampleOutByIn(%f)->%f\n", in, out);
   return out;
 }
@@ -1011,7 +963,7 @@ struct ColorProfileConversionDesc {
   };
   static ColorProfileConversionDesc From(const FromDesc&);
 
-  vec3 DstFromSrc(const vec3 src) const {
+  vec3 Apply(const vec3 src) const {
     const auto srcRgb = vec3(srcRgbFromSrcYuv * vec4(src, 1));
     const auto srcLinear = vec3{{
         SampleOutByIn(srcLinearFromSrcTf.r, srcRgb.x()),

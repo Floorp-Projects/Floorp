@@ -18,8 +18,6 @@
 #include "TupleUtils.h"
 #include "WebGLTypes.h"
 
-#include <memory>
-
 namespace mozilla {
 namespace webgl {
 
@@ -651,32 +649,6 @@ struct ParamTraits<mozilla::avec3<U>> final {
   static bool Read(MessageReader* const reader, T* const out) {
     return ReadParam(reader, &out->x) && ReadParam(reader, &out->y) &&
            ReadParam(reader, &out->z);
-  }
-};
-
-// -
-
-template <class U>
-struct ParamTraits<std::optional<U>> final {
-  using T = std::optional<U>;
-
-  static void Write(MessageWriter* const writer, const T& in) {
-    WriteParam(writer, bool{in});
-    if (in) {
-      WriteParam(writer, *in);
-    }
-  }
-
-  static bool Read(MessageReader* const reader, T* const out) {
-    bool isSome;
-    if (!ReadParam(reader, &isSome)) return false;
-
-    if (!isSome) {
-      out->reset();
-      return true;
-    }
-    out->emplace();
-    return ReadParam(reader, &**out);
   }
 };
 

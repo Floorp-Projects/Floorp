@@ -10,7 +10,6 @@
 #include <memory>
 #include <stdarg.h>
 
-#include "Colorspaces.h"
 #include "GLContextTypes.h"
 #include "GLDefs.h"
 #include "GLScreenBuffer.h"
@@ -97,7 +96,6 @@ namespace gl {
 class GLScreenBuffer;
 class MozFramebuffer;
 class SharedSurface;
-class Sampler;
 class Texture;
 }  // namespace gl
 
@@ -537,12 +535,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   gl::SwapChain* GetSwapChain(WebGLFramebuffer*, const bool webvr);
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*,
                                                   const bool webvr);
-
-  std::optional<color::ColorProfileDesc> mDisplayProfile;
-
-  void SetDrawingBufferColorSpace(const dom::PredefinedColorSpace val) {
-    mOptions.colorSpace = val;
-  }
 
   void ClearVRSwapChain();
 
@@ -1164,10 +1156,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   nsTArray<RefPtr<WebGLTexture>> mBound2DArrayTextures;
   nsTArray<RefPtr<WebGLSampler>> mBoundSamplers;
 
-  mutable std::unique_ptr<gl::Sampler> mSamplerLinear;
-
-  GLuint SamplerLinear() const;
-
   void ResolveTexturesForDraw() const;
 
   RefPtr<WebGLProgram> mCurrentProgram;
@@ -1277,10 +1265,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   mutable bool mDefaultFB_IsInvalid = false;
   mutable UniquePtr<gl::MozFramebuffer> mResolvedDefaultFB;
 
-  mutable std::unordered_map<std::tuple<gfx::ColorSpace2, gfx::ColorSpace2>,
-                             std::shared_ptr<gl::Texture>>
-      mLutTexByColorMapping;
-
   gl::SwapChain mSwapChain;
   gl::SwapChain mWebVRSwapChain;
 
@@ -1319,15 +1303,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
       WebGLFramebuffer* const srcAsWebglFb = nullptr,
       const gl::MozFramebuffer* const srcAsMozFb = nullptr,
       bool srcIsBGRA = false) const;
-
-  struct GetDefaultFBForReadDesc {
-    bool endOfFrame = false;
-  };
-  const gl::MozFramebuffer* GetDefaultFBForRead(const GetDefaultFBForReadDesc&);
-  const gl::MozFramebuffer* GetDefaultFBForRead() {
-    return GetDefaultFBForRead({});
-  }
-
   bool BindDefaultFBForRead();
 
   // --

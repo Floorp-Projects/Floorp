@@ -95,7 +95,16 @@ class BindAnglePlanes final {
                   const EGLAttrib* const* postAttribsList = nullptr)
       : mParent(*parent),
         mNumPlanes(numPlanes),
-        mMultiTex(mParent.mGL, mNumPlanes, LOCAL_GL_TEXTURE_EXTERNAL),
+        mMultiTex(
+            mParent.mGL,
+            [&]() {
+              std::vector<uint8_t> ret;
+              for (int i = 0; i < numPlanes; i++) {
+                ret.push_back(i);
+              }
+              return ret;
+            }(),
+            LOCAL_GL_TEXTURE_EXTERNAL),
         mTempTexs{0},
         mStreams{0},
         mSuccess(true) {
@@ -327,7 +336,7 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
 
   const auto& prog = GetDrawBlitProg(
       {kFragHeader_TexExt, {kFragSample_TwoPlane, kFragConvert_ColorMatrix}});
-  prog.Draw(baseArgs, &yuvArgs);
+  prog->Draw(baseArgs, &yuvArgs);
   return true;
 }
 
@@ -382,7 +391,7 @@ bool GLBlitHelper::BlitAngleYCbCr(const WindowsHandle (&handleList)[3],
 
   const auto& prog = GetDrawBlitProg(
       {kFragHeader_TexExt, {kFragSample_ThreePlane, kFragConvert_ColorMatrix}});
-  prog.Draw(baseArgs, &yuvArgs);
+  prog->Draw(baseArgs, &yuvArgs);
   return true;
 }
 

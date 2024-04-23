@@ -96,7 +96,7 @@ void WebGLContext::BindTexture(GLenum rawTarget, WebGLTexture* newTex) {
     return;
   }
 
-  const auto texTarget = TexTarget(rawTarget);
+  const TexTarget texTarget(rawTarget);
   if (newTex) {
     if (!newTex->BindTexture(texTarget)) return;
   } else {
