@@ -302,7 +302,7 @@ mochitest-browser-chrome:
         chunked: true
     instance-size:
         by-test-platform:
-            linux.*64-asan-qr/opt: xlarge  # runs out of memory frequently
+            linux.*64-asan-qr/opt: xlarge-noscratch  # runs out of memory frequently
             default: default
     allow-software-gl-layers: false
 
