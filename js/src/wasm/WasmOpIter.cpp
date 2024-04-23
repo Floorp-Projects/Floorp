@@ -811,6 +811,8 @@ OpKind wasm::Classify(OpBytes op) {
           return OpKind::OldCallIndirect;
         case MozOp::CallBuiltinModuleFunc:
           return OpKind::CallBuiltinModuleFunc;
+        case MozOp::StackSwitch:
+          return OpKind::StackSwitch;
       }
       break;
     }

@@ -53,11 +53,13 @@
 #include "wasm/WasmCode.h"
 #include "wasm/WasmDebug.h"
 #include "wasm/WasmDebugFrame.h"
+#include "wasm/WasmFeatures.h"
 #include "wasm/WasmInitExpr.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmMemory.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmModuleTypes.h"
+#include "wasm/WasmPI.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmTypeDef.h"
 #include "wasm/WasmValType.h"
@@ -307,6 +309,13 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return true;
   }
 
+#ifdef ENABLE_WASM_JSPI
+  // Disable jit exit optimization when JSPI is enabled.
+  if (JSPromiseIntegrationAvailable(cx)) {
+    return true;
+  }
+#endif
+
   // The import may already have become optimized.
   for (auto t : code().tiers()) {
     void* jitExitCode = codeBase(t) + fi.jitExitCodeOffset();
@@ -342,11 +351,30 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   return true;
 }
 
+#ifdef ENABLE_WASM_JSPI
+bool Instance::isImportAllowedOnSuspendableStack(JSContext* cx,
+                                                 int32_t funcImportIndex) {
+  Tier tier = code().bestTier();
+  const FuncImport& fi = metadata(tier).funcImports[funcImportIndex];
+  FuncImportInstanceData& import = funcImportInstanceData(fi);
+  Rooted<JSFunction*> fn(cx, &import.callable->as<JSFunction>());
+  return IsAllowedOnSuspendableStack(fn);
+}
+#endif
+
 /* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_general(Instance* instance, int32_t funcImportIndex,
                              int32_t argc, uint64_t* argv) {
   JSContext* cx = instance->cx();
+#ifndef ENABLE_WASM_JSPI
   return instance->callImport(cx, funcImportIndex, argc, argv);
+#else
+  if (!IsSuspendableStackActive(cx) ||
+      instance->isImportAllowedOnSuspendableStack(cx, funcImportIndex)) {
+    return instance->callImport(cx, funcImportIndex, argc, argv);
+  }
+  return CallImportOnMainThread(cx, instance, funcImportIndex, argc, argv);
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2617,7 +2645,25 @@ bool Instance::isInterrupted() const {
 
 void Instance::resetInterrupt(JSContext* cx) {
   interrupt_ = false;
+#ifdef ENABLE_WASM_JSPI
+  if (cx->wasm().suspendableStackLimit != JS::NativeStackLimitMin) {
+    stackLimit_ = cx->wasm().suspendableStackLimit;
+    return;
+  }
+#endif
   stackLimit_ = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
+}
+
+void Instance::setTemporaryStackLimit(JS::NativeStackLimit limit) {
+  if (!isInterrupted()) {
+    stackLimit_ = limit;
+  }
+}
+
+void Instance::resetTemporaryStackLimit(JSContext* cx) {
+  if (!isInterrupted()) {
+    stackLimit_ = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
+  }
 }
 
 bool Instance::debugFilter(uint32_t funcIndex) const {

@@ -150,3 +150,22 @@ void wasm::ResetInterruptState(JSContext* cx) {
     instance->resetInterrupt(cx);
   }
 }
+
+#ifdef ENABLE_WASM_JSPI
+void wasm::UpdateInstanceStackLimitsForSuspendableStack(
+    JSContext* cx, JS::NativeStackLimit limit) {
+  auto runtimeInstances = cx->runtime()->wasmInstances.lock();
+  cx->wasm().suspendableStackLimit = limit;
+  for (Instance* instance : runtimeInstances.get()) {
+    instance->setTemporaryStackLimit(limit);
+  }
+}
+
+void wasm::ResetInstanceStackLimits(JSContext* cx) {
+  auto runtimeInstances = cx->runtime()->wasmInstances.lock();
+  cx->wasm().suspendableStackLimit = JS::NativeStackLimitMin;
+  for (Instance* instance : runtimeInstances.get()) {
+    instance->resetTemporaryStackLimit(cx);
+  }
+}
+#endif  // ENABLE_WASM_JSPI

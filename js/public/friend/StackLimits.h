@@ -199,9 +199,20 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkLimitImpl(
 #endif
 }
 
+#ifdef ENABLE_WASM_JSPI
+bool IsSuspendableStackActive(JSContext* cx);
+JS::NativeStackLimit GetSuspendableStackLimit(JSContext* cx);
+#endif
+
 MOZ_ALWAYS_INLINE JS::NativeStackLimit
 AutoCheckRecursionLimit::getStackLimitSlow(JSContext* cx) const {
   JS::StackKind kind = stackKindForCurrentPrincipal(cx);
+#ifdef ENABLE_WASM_JSPI
+  if (IsSuspendableStackActive(cx)) {
+    MOZ_RELEASE_ASSERT(kind == JS::StackForUntrustedScript);
+    return GetSuspendableStackLimit(cx);
+  }
+#endif
   return getStackLimitHelper(cx, kind, 0);
 }
 

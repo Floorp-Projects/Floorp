@@ -2459,6 +2459,31 @@ class FunctionCompiler {
     return collectUnaryCallResult(builtin.retType, def);
   }
 
+  [[nodiscard]] bool stackSwitch(MDefinition* suspender, MDefinition* fn,
+                                 MDefinition* data, StackSwitchKind kind) {
+    MOZ_ASSERT(!inDeadCode());
+
+    MInstruction* ins;
+    switch (kind) {
+      case StackSwitchKind::SwitchToMain:
+        ins = MWasmStackSwitchToMain::New(alloc(), suspender, fn, data);
+        break;
+      case StackSwitchKind::SwitchToSuspendable:
+        ins = MWasmStackSwitchToSuspendable::New(alloc(), suspender, fn, data);
+        break;
+      case StackSwitchKind::ContinueOnSuspendable:
+        ins = MWasmStackContinueOnSuspendable::New(alloc(), suspender);
+        break;
+    }
+    if (!ins) {
+      return false;
+    }
+
+    curBlock_->add(ins);
+
+    return true;
+  }
+
 #ifdef ENABLE_WASM_GC
   [[nodiscard]] bool callRef(const FuncType& funcType, MDefinition* ref,
                              uint32_t lineOrBytecode,
@@ -5406,6 +5431,22 @@ static bool EmitCallIndirect(FunctionCompiler& f, bool oldStyle) {
   f.iter().setResults(results.length(), results);
   return true;
 }
+
+#ifdef ENABLE_WASM_JSPI
+static bool EmitStackSwitch(FunctionCompiler& f) {
+  StackSwitchKind kind;
+  MDefinition* suspender;
+  MDefinition* fn;
+  MDefinition* data;
+  if (!f.iter().readStackSwitch(&kind, &suspender, &fn, &data)) {
+    return false;
+  }
+  if (!f.stackSwitch(suspender, fn, data, kind)) {
+    return false;
+  }
+  return true;
+}
+#endif
 
 #ifdef ENABLE_WASM_TAIL_CALLS
 static bool EmitReturnCall(FunctionCompiler& f) {
@@ -9188,6 +9229,15 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           }
           CHECK(EmitCallBuiltinModuleFunc(f));
         }
+#ifdef ENABLE_WASM_JSPI
+        if (op.b1 == uint32_t(MozOp::StackSwitch)) {
+          if (!f.moduleEnv().isBuiltinModule() ||
+              !f.moduleEnv().jsPromiseIntegrationEnabled()) {
+            return f.iter().unrecognizedOpcode(&op);
+          }
+          CHECK(EmitStackSwitch(f));
+        }
+#endif
 
         if (!f.moduleEnv().isAsmJS()) {
           return f.iter().unrecognizedOpcode(&op);

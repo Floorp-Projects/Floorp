@@ -142,6 +142,7 @@ enum class SymbolicAddress {
   ArrayInitData,
   ArrayInitElem,
   ArrayCopy,
+  UpdateSuspenderState,
   SlotsToAllocKindBytesTable,
 #define VISIT_BUILTIN_FUNC(op, export, sa_name, ...) sa_name,
   FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
@@ -280,6 +281,7 @@ extern const SymbolicAddressSignature SASigArrayNewElem;
 extern const SymbolicAddressSignature SASigArrayInitData;
 extern const SymbolicAddressSignature SASigArrayInitElem;
 extern const SymbolicAddressSignature SASigArrayCopy;
+extern const SymbolicAddressSignature SASigUpdateSuspenderState;
 #define VISIT_BUILTIN_FUNC(op, export, sa_name, ...) \
   extern const SymbolicAddressSignature SASig##sa_name;
 FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)

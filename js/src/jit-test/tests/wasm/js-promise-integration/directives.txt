@@ -1,0 +1,1 @@
+|jit-test| include:wasm.js; --setpref=wasm_js_promise_integration=true; skip-if: !wasmJSPromiseIntegrationEnabled()

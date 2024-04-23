@@ -1503,6 +1503,11 @@ static void TraceJitActivation(JSTracer* trc, JitActivation* activation) {
       uint8_t* nextPC = frames.resumePCinCurrentFrame();
       MOZ_ASSERT(nextPC != 0);
       wasm::WasmFrameIter& wasmFrameIter = frames.asWasm();
+#ifdef ENABLE_WASM_JSPI
+      if (wasmFrameIter.stackSwitched()) {
+        highestByteVisitedInPrevWasmFrame = 0;
+      }
+#endif
       wasm::Instance* instance = wasmFrameIter.instance();
       wasm::TraceInstanceEdge(trc, instance, "WasmFrameIter instance");
       highestByteVisitedInPrevWasmFrame = instance->traceFrame(
@@ -1516,6 +1521,9 @@ void TraceJitActivations(JSContext* cx, JSTracer* trc) {
        ++activations) {
     TraceJitActivation(trc, activations->asJit());
   }
+#ifdef ENABLE_WASM_JSPI
+  cx->wasm().promiseIntegration.traceRoots(trc);
+#endif
 }
 
 void TraceWeakJitActivationsInSweepingZones(JSContext* cx, JSTracer* trc) {

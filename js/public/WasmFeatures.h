@@ -62,6 +62,11 @@
 #else
 #  define WASM_TAIL_CALLS_ENABLED 0
 #endif
+#ifdef ENABLE_WASM_JSPI
+#  define WASM_JSPI_ENABLED 1
+#else
+#  define WASM_JSPI_ENABLED 0
+#endif
 #ifdef ENABLE_WASM_MOZ_INTGEMM
 #  define WASM_MOZ_INTGEMM_ENABLED 1
 #else
@@ -157,6 +162,15 @@
     /* flag force enable  */ false,                                     \
     /* flag fuzz enable   */ true,                                      \
     /* preference name    */ tail_calls)                                \
+  FEATURE(                                                              \
+    /* capitalized name   */ JSPromiseIntegration,                      \
+    /* lower case name    */ jsPromiseIntegration,                      \
+    /* compile predicate  */ WASM_JSPI_ENABLED,                         \
+    /* compiler predicate */ IonAvailable(cx),                          \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* flag fuzz enable   */ false,                                     \
+    /* preference name    */ js_promise_integration)                    \
   FEATURE(                                                              \
     /* capitalized name   */ MozIntGemm,                                \
     /* lower case name    */ mozIntGemm,                                \

@@ -170,6 +170,16 @@ FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
   if (features.jsStringBuiltins) {
     features.builtinModules.jsString = options.jsStringBuiltins;
   }
+#ifdef ENABLE_WASM_GC
+  if (options.requireGC) {
+    features.gc = true;
+  }
+#endif
+#ifdef ENABLE_WASM_TAIL_CALLS
+  if (options.requireTailCalls) {
+    features.tailCalls = true;
+  }
+#endif
 
   return features;
 }

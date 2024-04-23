@@ -470,6 +470,7 @@ bool ModuleGenerator::linkCallSites() {
       case CallSiteDesc::FuncRef:
       case CallSiteDesc::FuncRefFast:
       case CallSiteDesc::ReturnStub:
+      case CallSiteDesc::StackSwitch:
         break;
       case CallSiteDesc::ReturnFunc:
       case CallSiteDesc::Func: {

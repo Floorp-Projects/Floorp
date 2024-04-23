@@ -6362,6 +6362,48 @@ void LIRGenerator::visitWasmStackResult(MWasmStackResult* ins) {
   add(lir, ins);
 }
 
+void LIRGenerator::visitWasmStackSwitchToSuspendable(
+    MWasmStackSwitchToSuspendable* ins) {
+#ifdef ENABLE_WASM_JSPI
+  auto* lir = new (alloc()) LWasmStackSwitchToSuspendable(
+      useFixedAtStart(ins->suspender(), ABINonArgReg0),
+      useFixedAtStart(ins->fn(), ABINonArgReg1),
+      useFixedAtStart(ins->data(), ABINonArgReg2));
+
+  add(lir, ins);
+  assignWasmSafepoint(lir);
+#else
+  MOZ_CRASH("NYI");
+#endif
+}
+
+void LIRGenerator::visitWasmStackSwitchToMain(MWasmStackSwitchToMain* ins) {
+#ifdef ENABLE_WASM_JSPI
+  auto* lir = new (alloc())
+      LWasmStackSwitchToMain(useFixedAtStart(ins->suspender(), ABINonArgReg0),
+                             useFixedAtStart(ins->fn(), ABINonArgReg1),
+                             useFixedAtStart(ins->data(), ABINonArgReg2));
+
+  add(lir, ins);
+  assignWasmSafepoint(lir);
+#else
+  MOZ_CRASH("NYI");
+#endif
+}
+
+void LIRGenerator::visitWasmStackContinueOnSuspendable(
+    MWasmStackContinueOnSuspendable* ins) {
+#ifdef ENABLE_WASM_JSPI
+  auto* lir = new (alloc()) LWasmStackContinueOnSuspendable(
+      useFixedAtStart(ins->suspender(), ABINonArgReg0));
+
+  add(lir, ins);
+  assignWasmSafepoint(lir);
+#else
+  MOZ_CRASH("NYI");
+#endif
+}
+
 template <class MWasmCallT>
 void LIRGenerator::visitWasmCall(MWasmCallT ins) {
   bool needsBoundsCheck = true;

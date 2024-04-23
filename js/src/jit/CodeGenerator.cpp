@@ -77,6 +77,7 @@
 #include "vm/StringType.h"
 #include "vm/TypedArrayObject.h"
 #include "wasm/WasmCodegenConstants.h"
+#include "wasm/WasmPI.h"
 #include "wasm/WasmValType.h"
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
@@ -9399,6 +9400,475 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   }
 }
 
+#ifdef ENABLE_WASM_JSPI
+void CodeGenerator::callWasmUpdateSuspenderState(
+    wasm::UpdateSuspenderStateAction kind, Register suspender) {
+  masm.Push(InstanceReg);
+  int32_t framePushedAfterInstance = masm.framePushed();
+
+  masm.move32(Imm32(uint32_t(kind)), ScratchReg);
+
+  masm.setupWasmABICall();
+  masm.passABIArg(InstanceReg);
+  masm.passABIArg(suspender);
+  masm.passABIArg(ScratchReg);
+  int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
+  masm.callWithABI(wasm::BytecodeOffset(0),
+                   wasm::SymbolicAddress::UpdateSuspenderState,
+                   mozilla::Some(instanceOffset));
+
+  masm.Pop(InstanceReg);
+}
+#endif  // ENABLE_WASM_JSPI
+
+void CodeGenerator::visitWasmStackSwitchToSuspendable(
+    LWasmStackSwitchToSuspendable* lir) {
+#ifdef ENABLE_WASM_JSPI
+  const Register SuspenderReg = lir->suspender()->toRegister().gpr();
+  const Register FnReg = lir->fn()->toRegister().gpr();
+  const Register DataReg = lir->data()->toRegister().gpr();
+  const Register SuspenderDataReg = ABINonArgReg3;
+
+#  ifdef JS_CODEGEN_ARM64
+  vixl::UseScratchRegisterScope temps(&masm);
+  const Register ScratchReg = temps.AcquireX().asUnsized();
+#  elif !defined(JS_CODEGEN_X64)
+#    error "NYI: scratch register"
+#  endif
+
+  masm.Push(SuspenderReg);
+  masm.Push(FnReg);
+  masm.Push(DataReg);
+
+  callWasmUpdateSuspenderState(wasm::UpdateSuspenderStateAction::Enter,
+                               SuspenderReg);
+  masm.Pop(DataReg);
+  masm.Pop(FnReg);
+  masm.Pop(SuspenderReg);
+
+  masm.Push(SuspenderReg);
+  int32_t framePushedAtSuspender = masm.framePushed();
+  masm.Push(InstanceReg);
+
+  wasm::CallSiteDesc desc(wasm::CallSiteDesc::Kind::StackSwitch);
+  CodeLabel returnCallsite;
+
+  // Aligning stack before trampoline call.
+  uint32_t reserve = ComputeByteAlignment(
+      masm.framePushed() - sizeof(wasm::Frame), WasmStackAlignment);
+  masm.reserveStack(reserve);
+
+  masm.loadPrivate(Address(SuspenderReg, NativeObject::getFixedSlotOffset(
+                                             wasm::SuspenderObjectDataSlot)),
+                   SuspenderDataReg);
+
+  // Switch stacks to suspendable, keep original FP to maintain
+  // frames chain between main and suspendable stack segments.
+  masm.storeStackPtr(
+      Address(SuspenderDataReg, wasm::SuspenderObjectData::offsetOfMainSP()));
+  masm.storePtr(
+      FramePointer,
+      Address(SuspenderDataReg, wasm::SuspenderObjectData::offsetOfMainFP()));
+
+  masm.loadStackPtr(Address(
+      SuspenderDataReg, wasm::SuspenderObjectData::offsetOfSuspendableSP()));
+
+  masm.assertStackAlignment(WasmStackAlignment);
+
+  // The FramePointer is not changed for SwitchToSuspendable.
+  uint32_t framePushed = masm.framePushed();
+
+  // On different stack, reset framePushed. FramePointer is not valid here.
+  masm.setFramePushed(0);
+
+  // Pass the suspender and data params through the wasm function ABI registers.
+  WasmABIArgGenerator abi;
+  ABIArg arg;
+  arg = abi.next(MIRType::Pointer);
+  MOZ_RELEASE_ASSERT(arg.kind() == ABIArg::GPR);
+  masm.movePtr(SuspenderReg, arg.gpr());
+  arg = abi.next(MIRType::Pointer);
+  MOZ_RELEASE_ASSERT(arg.kind() == ABIArg::GPR);
+  masm.movePtr(DataReg, arg.gpr());
+  unsigned reserveBeforeCall = abi.stackBytesConsumedSoFar();
+
+  MOZ_ASSERT(masm.framePushed() == 0);
+  unsigned argDecrement =
+      StackDecrementForCall(WasmStackAlignment, 0, reserveBeforeCall);
+  masm.reserveStack(argDecrement);
+
+  masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
+                                     WasmCallerInstanceOffsetBeforeCall));
+  // Get wasm instance pointer for callee.
+  size_t instanceSlotOffset = FunctionExtended::offsetOfExtendedSlot(
+      FunctionExtended::WASM_INSTANCE_SLOT);
+  masm.loadPtr(Address(FnReg, instanceSlotOffset), InstanceReg);
+
+  masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
+                                     WasmCalleeInstanceOffsetBeforeCall));
+  masm.loadWasmPinnedRegsFromInstance();
+
+  masm.assertStackAlignment(WasmStackAlignment);
+
+  const Register ReturnAddressReg = ScratchReg;
+
+  // Save future of suspendable stack exit frame pointer.
+  masm.computeEffectiveAddress(
+      Address(masm.getStackPointer(), -int32_t(sizeof(wasm::Frame))),
+      ScratchReg);
+  masm.storePtr(
+      ScratchReg,
+      Address(SuspenderDataReg,
+              wasm::SuspenderObjectData::offsetOfSuspendableExitFP()));
+
+  masm.mov(&returnCallsite, ReturnAddressReg);
+
+  // Call wasm function fast.
+#  ifdef JS_USE_LINK_REGISTER
+  masm.mov(ReturnAddressReg, lr);
+#  else
+  masm.Push(ReturnAddressReg);
+#  endif
+  // Get funcUncheckedCallEntry() from the function's
+  // WASM_FUNC_UNCHECKED_ENTRY_SLOT extended slot.
+  size_t uncheckedEntrySlotOffset = FunctionExtended::offsetOfExtendedSlot(
+      FunctionExtended::WASM_FUNC_UNCHECKED_ENTRY_SLOT);
+  masm.loadPtr(Address(FnReg, uncheckedEntrySlotOffset), ScratchReg);
+  masm.jump(ScratchReg);
+
+  // About to use valid FramePointer -- restore framePushed.
+  masm.setFramePushed(framePushed);
+
+  // For IsPlausibleStackMapKey check for the following callsite.
+  masm.wasmTrapInstruction();
+
+  // Callsite for return from main stack.
+  masm.bind(&returnCallsite);
+  masm.append(desc, *returnCallsite.target());
+  masm.addCodeLabel(returnCallsite);
+
+  masm.assertStackAlignment(WasmStackAlignment);
+
+  markSafepointAt(returnCallsite.target()->offset(), lir);
+  lir->safepoint()->setFramePushedAtStackMapBase(framePushed);
+  lir->safepoint()->setWasmSafepointKind(WasmSafepointKind::StackSwitch);
+  // Rooting SuspenderReg.
+  masm.propagateOOM(
+      lir->safepoint()->addWasmAnyRefSlot(true, framePushedAtSuspender));
+
+  masm.freeStackTo(framePushed);
+
+  masm.freeStack(reserve);
+  masm.Pop(InstanceReg);
+  masm.Pop(SuspenderReg);
+
+  // Using SuspenderDataReg and DataReg as temps.
+  masm.switchToWasmInstanceRealm(SuspenderDataReg, DataReg);
+
+  callWasmUpdateSuspenderState(wasm::UpdateSuspenderStateAction::Leave,
+                               SuspenderReg);
+#else
+  MOZ_CRASH("NYI");
+#endif  // ENABLE_WASM_JSPI
+}
+
+void CodeGenerator::visitWasmStackSwitchToMain(LWasmStackSwitchToMain* lir) {
+#ifdef ENABLE_WASM_JSPI
+  const Register SuspenderReg = lir->suspender()->toRegister().gpr();
+  const Register FnReg = lir->fn()->toRegister().gpr();
+  const Register DataReg = lir->data()->toRegister().gpr();
+  const Register SuspenderDataReg = ABINonArgReg3;
+
+#  ifdef JS_CODEGEN_ARM64
+  vixl::UseScratchRegisterScope temps(&masm);
+  const Register ScratchReg = temps.AcquireX().asUnsized();
+#  elif !defined(JS_CODEGEN_X64)
+#    error "NYI: scratch register"
+#  endif
+
+  masm.Push(SuspenderReg);
+  masm.Push(FnReg);
+  masm.Push(DataReg);
+
+  callWasmUpdateSuspenderState(wasm::UpdateSuspenderStateAction::Suspend,
+                               SuspenderReg);
+
+  masm.Pop(DataReg);
+  masm.Pop(FnReg);
+  masm.Pop(SuspenderReg);
+
+  masm.Push(SuspenderReg);
+  int32_t framePushedAtSuspender = masm.framePushed();
+  masm.Push(InstanceReg);
+
+  wasm::CallSiteDesc desc(wasm::CallSiteDesc::Kind::StackSwitch);
+  CodeLabel returnCallsite;
+
+  // Aligning stack before trampoline call.
+  uint32_t reserve = ComputeByteAlignment(
+      masm.framePushed() - sizeof(wasm::Frame), WasmStackAlignment);
+  masm.reserveStack(reserve);
+
+  masm.loadPrivate(Address(SuspenderReg, NativeObject::getFixedSlotOffset(
+                                             wasm::SuspenderObjectDataSlot)),
+                   SuspenderDataReg);
+
+  // Switch stacks to main.
+  masm.storeStackPtr(Address(
+      SuspenderDataReg, wasm::SuspenderObjectData::offsetOfSuspendableSP()));
+  masm.storePtr(FramePointer,
+                Address(SuspenderDataReg,
+                        wasm::SuspenderObjectData::offsetOfSuspendableFP()));
+
+  masm.loadStackPtr(
+      Address(SuspenderDataReg, wasm::SuspenderObjectData::offsetOfMainSP()));
+  masm.loadPtr(
+      Address(SuspenderDataReg, wasm::SuspenderObjectData::offsetOfMainFP()),
+      FramePointer);
+
+  // Set main_ra field to returnCallsite.
+  masm.mov(&returnCallsite, ScratchReg);
+  masm.storePtr(
+      ScratchReg,
+      Address(SuspenderDataReg,
+              wasm::SuspenderObjectData::offsetOfSuspendedReturnAddress()));
+
+  masm.assertStackAlignment(WasmStackAlignment);
+
+  // The FramePointer is pointing to the same
+  // place as before switch happened.
+  uint32_t framePushed = masm.framePushed();
+
+  // On different stack, reset framePushed. FramePointer is not valid here.
+  masm.setFramePushed(0);
+
+  // Pass the suspender and data params through the wasm function ABI registers.
+  WasmABIArgGenerator abi;
+  ABIArg arg;
+  arg = abi.next(MIRType::Pointer);
+  MOZ_RELEASE_ASSERT(arg.kind() == ABIArg::GPR);
+  masm.movePtr(SuspenderReg, arg.gpr());
+  arg = abi.next(MIRType::Pointer);
+  MOZ_RELEASE_ASSERT(arg.kind() == ABIArg::GPR);
+  masm.movePtr(DataReg, arg.gpr());
+  unsigned reserveBeforeCall = abi.stackBytesConsumedSoFar();
+
+  MOZ_ASSERT(masm.framePushed() == 0);
+  unsigned argDecrement =
+      StackDecrementForCall(WasmStackAlignment, 0, reserveBeforeCall);
+  masm.reserveStack(argDecrement);
+
+  masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
+                                     WasmCallerInstanceOffsetBeforeCall));
+
+  // Get wasm instance pointer for callee.
+  size_t instanceSlotOffset = FunctionExtended::offsetOfExtendedSlot(
+      FunctionExtended::WASM_INSTANCE_SLOT);
+  masm.loadPtr(Address(FnReg, instanceSlotOffset), InstanceReg);
+
+  masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
+                                     WasmCalleeInstanceOffsetBeforeCall));
+  masm.loadWasmPinnedRegsFromInstance();
+
+  masm.assertStackAlignment(WasmStackAlignment);
+
+  const Register ReturnAddressReg = ScratchReg;
+
+  // Load InstanceReg from suspendable stack exit frame.
+  masm.loadPtr(Address(SuspenderDataReg,
+                       wasm::SuspenderObjectData::offsetOfSuspendableExitFP()),
+               ScratchReg);
+  masm.loadPtr(
+      Address(ScratchReg, wasm::FrameWithInstances::callerInstanceOffset()),
+      ScratchReg);
+  masm.storePtr(ScratchReg, Address(masm.getStackPointer(),
+                                    WasmCallerInstanceOffsetBeforeCall));
+
+  // Load RA from suspendable stack exit frame.
+  masm.loadPtr(Address(SuspenderDataReg,
+                       wasm::SuspenderObjectData::offsetOfSuspendableExitFP()),
+               ScratchReg);
+  masm.loadPtr(Address(ScratchReg, wasm::Frame::returnAddressOffset()),
+               ReturnAddressReg);
+
+  // Call wasm function fast.
+#  ifdef JS_USE_LINK_REGISTER
+  masm.mov(ReturnAddressReg, lr);
+#  else
+  masm.Push(ReturnAddressReg);
+#  endif
+  // Get funcUncheckedCallEntry() from the function's
+  // WASM_FUNC_UNCHECKED_ENTRY_SLOT extended slot.
+  size_t uncheckedEntrySlotOffset = FunctionExtended::offsetOfExtendedSlot(
+      FunctionExtended::WASM_FUNC_UNCHECKED_ENTRY_SLOT);
+  masm.loadPtr(Address(FnReg, uncheckedEntrySlotOffset), ScratchReg);
+  masm.jump(ScratchReg);
+
+  // About to use valid FramePointer -- restore framePushed.
+  masm.setFramePushed(framePushed);
+
+  // For IsPlausibleStackMapKey check for the following callsite.
+  masm.wasmTrapInstruction();
+
+  // Callsite for return from suspendable stack.
+  masm.bind(&returnCallsite);
+  masm.append(desc, *returnCallsite.target());
+  masm.addCodeLabel(returnCallsite);
+
+  masm.assertStackAlignment(WasmStackAlignment);
+
+  markSafepointAt(returnCallsite.target()->offset(), lir);
+  lir->safepoint()->setFramePushedAtStackMapBase(framePushed);
+  lir->safepoint()->setWasmSafepointKind(WasmSafepointKind::StackSwitch);
+  // Rooting SuspenderReg.
+  masm.propagateOOM(
+      lir->safepoint()->addWasmAnyRefSlot(true, framePushedAtSuspender));
+
+  masm.freeStackTo(framePushed);
+
+  masm.freeStack(reserve);
+  masm.Pop(InstanceReg);
+  masm.Pop(SuspenderReg);
+
+  // Using SuspenderDataReg and DataReg as temps.
+  masm.switchToWasmInstanceRealm(SuspenderDataReg, DataReg);
+
+  callWasmUpdateSuspenderState(wasm::UpdateSuspenderStateAction::Resume,
+                               SuspenderReg);
+#else
+  MOZ_CRASH("NYI");
+#endif  // ENABLE_WASM_JSPI
+}
+
+void CodeGenerator::visitWasmStackContinueOnSuspendable(
+    LWasmStackContinueOnSuspendable* lir) {
+#ifdef ENABLE_WASM_JSPI
+  const Register SuspenderReg = lir->suspender()->toRegister().gpr();
+  const Register SuspenderDataReg = ABINonArgReg3;
+
+#  ifdef JS_CODEGEN_ARM64
+  vixl::UseScratchRegisterScope temps(&masm);
+  const Register ScratchReg = temps.AcquireX().asUnsized();
+#  elif !defined(JS_CODEGEN_X64)
+#    error "NYI: scratch register"
+#  endif
+
+  masm.Push(SuspenderReg);
+  int32_t framePushedAtSuspender = masm.framePushed();
+  masm.Push(InstanceReg);
+
+  wasm::CallSiteDesc desc(wasm::CallSiteDesc::Kind::StackSwitch);
+  CodeLabel returnCallsite;
+
+  // Aligning stack before trampoline call.
+  uint32_t reserve = ComputeByteAlignment(
+      masm.framePushed() - sizeof(wasm::Frame), WasmStackAlignment);
+  masm.reserveStack(reserve);
+
+  masm.loadPrivate(Address(SuspenderReg, NativeObject::getFixedSlotOffset(
+                                             wasm::SuspenderObjectDataSlot)),
+                   SuspenderDataReg);
+  masm.storeStackPtr(
+      Address(SuspenderDataReg, wasm::SuspenderObjectData::offsetOfMainSP()));
+  masm.storePtr(
+      FramePointer,
+      Address(SuspenderDataReg, wasm::SuspenderObjectData::offsetOfMainFP()));
+
+  // Adjust exit frame FP.
+  masm.loadPtr(Address(SuspenderDataReg,
+                       wasm::SuspenderObjectData::offsetOfSuspendableExitFP()),
+               ScratchReg);
+  masm.storePtr(FramePointer,
+                Address(ScratchReg, wasm::Frame::callerFPOffset()));
+
+  // Adjust exit frame RA.
+  const Register TempReg = SuspenderDataReg;
+  masm.Push(TempReg);
+  masm.mov(&returnCallsite, TempReg);
+  masm.storePtr(TempReg,
+                Address(ScratchReg, wasm::Frame::returnAddressOffset()));
+  masm.Pop(TempReg);
+  // Adjust exit frame caller instance slot.
+  masm.storePtr(
+      InstanceReg,
+      Address(ScratchReg, wasm::FrameWithInstances::callerInstanceOffset()));
+
+  // Switch stacks to suspendable.
+  masm.loadStackPtr(Address(
+      SuspenderDataReg, wasm::SuspenderObjectData::offsetOfSuspendableSP()));
+  masm.loadPtr(Address(SuspenderDataReg,
+                       wasm::SuspenderObjectData::offsetOfSuspendableFP()),
+               FramePointer);
+
+  masm.assertStackAlignment(WasmStackAlignment);
+
+  // The FramePointer is pointing to the same
+  // place as before switch happened.
+  uint32_t framePushed = masm.framePushed();
+
+  // On different stack, reset framePushed. FramePointer is not valid here.
+  masm.setFramePushed(0);
+
+  // Restore shadow stack area and instance slots.
+  WasmABIArgGenerator abi;
+  unsigned reserveBeforeCall = abi.stackBytesConsumedSoFar();
+  MOZ_ASSERT(masm.framePushed() == 0);
+  unsigned argDecrement =
+      StackDecrementForCall(WasmStackAlignment, 0, reserveBeforeCall);
+  masm.reserveStack(argDecrement);
+
+  masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
+                                     WasmCallerInstanceOffsetBeforeCall));
+  masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
+                                     WasmCalleeInstanceOffsetBeforeCall));
+
+  masm.assertStackAlignment(WasmStackAlignment);
+
+  const Register ReturnAddressReg = ScratchReg;
+
+  // Pretend we just returned from the function.
+  masm.loadPtr(
+      Address(SuspenderDataReg,
+              wasm::SuspenderObjectData::offsetOfSuspendedReturnAddress()),
+      ReturnAddressReg);
+  masm.jump(ReturnAddressReg);
+
+  // About to use valid FramePointer -- restore framePushed.
+  masm.setFramePushed(framePushed);
+
+  // For IsPlausibleStackMapKey check for the following callsite.
+  masm.wasmTrapInstruction();
+
+  // Callsite for return from suspendable stack.
+  masm.bind(&returnCallsite);
+  masm.append(desc, *returnCallsite.target());
+  masm.addCodeLabel(returnCallsite);
+
+  masm.assertStackAlignment(WasmStackAlignment);
+
+  markSafepointAt(returnCallsite.target()->offset(), lir);
+  lir->safepoint()->setFramePushedAtStackMapBase(framePushed);
+  lir->safepoint()->setWasmSafepointKind(WasmSafepointKind::StackSwitch);
+  // Rooting SuspenderReg.
+  masm.propagateOOM(
+      lir->safepoint()->addWasmAnyRefSlot(true, framePushedAtSuspender));
+
+  masm.freeStackTo(framePushed);
+
+  masm.freeStack(reserve);
+  masm.Pop(InstanceReg);
+  masm.Pop(SuspenderReg);
+
+  // Using SuspenderDataReg and ABINonArgReg2 as temps.
+  masm.switchToWasmInstanceRealm(SuspenderDataReg, ABINonArgReg2);
+
+  callWasmUpdateSuspenderState(wasm::UpdateSuspenderStateAction::Leave,
+                               SuspenderReg);
+#else
+  MOZ_CRASH("NYI");
+#endif  // ENABLE_WASM_JSPI
+}
+
 void CodeGenerator::visitWasmCallLandingPrePad(LWasmCallLandingPrePad* lir) {
   LBlock* block = lir->block();
   MWasmCallLandingPrePad* mir = lir->mir();
@@ -15421,6 +15891,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   GeneralRegisterForwardIterator refRegsIter(refRegs);
   switch (safepoint.wasmSafepointKind()) {
     case WasmSafepointKind::LirCall:
+    case WasmSafepointKind::StackSwitch:
     case WasmSafepointKind::CodegenCall: {
       size_t spilledNumWords = nRegisterDumpBytes / sizeof(void*);
       regDumpWords += spilledNumWords;

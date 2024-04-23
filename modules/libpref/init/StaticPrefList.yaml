@@ -7906,6 +7906,12 @@
     mirror: always
     set_spidermonkey_pref: startup
 
+-   name: javascript.options.wasm_js_promise_integration
+    type: bool
+    value: false
+    mirror: always
+    set_spidermonkey_pref: startup
+
 -   name: javascript.options.wasm_test_serialization
     type: bool
     value: false

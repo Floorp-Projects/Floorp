@@ -408,6 +408,9 @@ class WasmStructObject : public WasmGcObject,
   inline uint8_t* fieldOffsetToAddress(StorageType fieldType,
                                        uint32_t fieldOffset);
 
+  // Gets JS Value of the structure field.
+  bool getField(JSContext* cx, uint32_t index, MutableHandle<Value> val);
+
   // JIT accessors
   static const uint32_t inlineDataAlignment = 8;
   static constexpr size_t offsetOfOutlineData() {

@@ -68,6 +68,7 @@
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmMemory.h"
 #include "wasm/WasmModule.h"
+#include "wasm/WasmPI.h"
 #include "wasm/WasmProcess.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmStubs.h"
@@ -4224,6 +4225,66 @@ bool WasmFunctionConstruct(JSContext* cx, unsigned argc, Value* vp) {
   if (!ParseValTypes(cx, resultsVal, results)) {
     return false;
   }
+
+#  ifdef ENABLE_WASM_JSPI
+  // Check suspeding and promising
+  SuspenderArgPosition suspending = SuspenderArgPosition::None;
+  SuspenderArgPosition promising = SuspenderArgPosition::None;
+  if (wasm::JSPromiseIntegrationAvailable(cx) && args.length() > 2 &&
+      args[2].isObject()) {
+    RootedObject usageObj(cx, &args[2].toObject());
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, usageObj, "suspending", &val)) {
+      return false;
+    }
+    if (!ParseSuspendingPromisingString(cx, val, suspending)) {
+      return false;
+    }
+    if (!JS_GetProperty(cx, usageObj, "promising", &val)) {
+      return false;
+    }
+    if (!ParseSuspendingPromisingString(cx, val, promising)) {
+      return false;
+    }
+  }
+
+  if (suspending > SuspenderArgPosition::None) {
+    if (!IsCallableNonCCW(args[1])) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_BAD_FUNCTION_VALUE);
+      return false;
+    }
+
+    RootedObject func(cx, &args[1].toObject());
+    RootedFunction suspend(
+        cx, WasmSuspendingFunctionCreate(cx, func, std::move(params),
+                                         std::move(results), suspending));
+    if (!suspend) {
+      return false;
+    }
+    args.rval().setObject(*suspend);
+
+    return true;
+  }
+  if (promising > SuspenderArgPosition::None) {
+    if (!IsWasmFunction(args[1])) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_BAD_FUNCTION_VALUE);
+      return false;
+    }
+
+    RootedObject func(cx, &args[1].toObject());
+    RootedFunction promise(
+        cx, WasmPromisingFunctionCreate(cx, func, std::move(params),
+                                        std::move(results), promising));
+    if (!promise) {
+      return false;
+    }
+    args.rval().setObject(*promise);
+
+    return true;
+  }
+#  endif  // ENABLE_WASM_JSPI
 
   // Get the target function
 

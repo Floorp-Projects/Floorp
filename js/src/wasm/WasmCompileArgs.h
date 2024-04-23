@@ -74,13 +74,34 @@ class Tiers {
 // available under prefs.)
 
 struct FeatureOptions {
-  FeatureOptions() : isBuiltinModule(false), jsStringBuiltins(false) {}
+  FeatureOptions()
+      : isBuiltinModule(false),
+        jsStringBuiltins(false)
+#ifdef ENABLE_WASM_GC
+        ,
+        requireGC(false)
+#endif
+#ifdef ENABLE_WASM_TAIL_CALLS
+        ,
+        requireTailCalls(false)
+#endif
+  {
+  }
 
   // Enables builtin module opcodes, only set in WasmBuiltinModule.cpp.
   bool isBuiltinModule;
   // Enable JS String builtins for this module, only available if the feature
   // is also enabled.
   bool jsStringBuiltins;
+
+#ifdef ENABLE_WASM_GC
+  // Enable GC support.
+  bool requireGC;
+#endif
+#ifdef ENABLE_WASM_TAIL_CALLS
+  // Enable tail-calls support.
+  bool requireTailCalls;
+#endif
 
   // Parse the compile options bag.
   [[nodiscard]] bool init(JSContext* cx, HandleValue val);
