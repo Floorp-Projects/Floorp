@@ -357,14 +357,14 @@ class RefTest(object):
         locations.add_host(server, scheme="http", port=port)
         locations.add_host(server, scheme="https", port=port)
 
-        sandbox_whitelist_paths = options.sandboxReadWhitelist
+        sandbox_allowlist_paths = options.sandboxReadWhitelist
         if platform.system() == "Linux" or platform.system() in (
             "Windows",
             "Microsoft",
         ):
             # Trailing slashes are needed to indicate directories on Linux and Windows
-            sandbox_whitelist_paths = map(
-                lambda p: os.path.join(p, ""), sandbox_whitelist_paths
+            sandbox_allowlist_paths = map(
+                lambda p: os.path.join(p, ""), sandbox_allowlist_paths
             )
 
         addons = []
@@ -390,7 +390,7 @@ class RefTest(object):
         kwargs = {
             "addons": addons,
             "locations": locations,
-            "whitelistpaths": sandbox_whitelist_paths,
+            "allowlistpaths": sandbox_allowlist_paths,
         }
         if profile_to_clone:
             profile = mozprofile.Profile.clone(profile_to_clone, **kwargs)
