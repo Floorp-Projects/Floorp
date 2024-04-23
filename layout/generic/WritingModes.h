@@ -154,14 +154,6 @@ class WritingMode {
   };
 
   /**
-   * Line-relative (bidi-relative) inline flow direction
-   */
-  enum BidiDir {
-    eBidiLTR = 0x00,  // inline flow matches bidi LTR text
-    eBidiRTL = 0x10,  // inline flow matches bidi RTL text
-  };
-
-  /**
    * Return the absolute inline flow direction as an InlineDir
    */
   InlineDir GetInlineDir() const {
@@ -183,13 +175,6 @@ class WritingMode {
   }
 
   /**
-   * Return the line-relative inline flow direction as a BidiDir
-   */
-  BidiDir GetBidiDir() const {
-    return BidiDir((mWritingMode & StyleWritingMode::RTL)._0);
-  }
-
-  /**
    * Return true if the inline flow direction is against physical direction
    * (i.e. right-to-left or bottom-to-top).
    * This occurs when writing-mode is sideways-lr OR direction is rtl (but not
@@ -200,14 +185,14 @@ class WritingMode {
   }
 
   /**
-   * Return true if bidi direction is LTR. (Convenience method)
+   * Return true if bidi direction is LTR.
    */
-  bool IsBidiLTR() const { return eBidiLTR == GetBidiDir(); }
+  bool IsBidiLTR() const { return !IsBidiRTL(); }
 
   /**
-   * Return true if bidi direction is RTL. (Convenience method)
+   * Return true if bidi direction is RTL.
    */
-  bool IsBidiRTL() const { return eBidiRTL == GetBidiDir(); }
+  bool IsBidiRTL() const { return !!(mWritingMode & StyleWritingMode::RTL); }
 
   /**
    * True if it is vertical and vertical-lr, or is horizontal and bidi LTR.
