@@ -1305,7 +1305,11 @@ class BrowsingContextModule extends Module {
    * @param {object=} options
    * @param {string} options.context
    *     Id of the browsing context.
-   * @param {Viewport|null} options.viewport
+   * @param {(number|null)=} options.devicePixelRatio
+   *     A value to override device pixel ratio, or `null` to reset it to
+   *     the original value. Different values will not cause the rendering to change,
+   *     only image srcsets and media queries will be applied as if DPR is redefined.
+   * @param {(Viewport|null)=} options.viewport
    *     Dimensions to set the viewport to, or `null` to reset it
    *     to the original dimensions.
    *
@@ -1315,7 +1319,7 @@ class BrowsingContextModule extends Module {
    *     Raised when the command is called on Android.
    */
   async setViewport(options = {}) {
-    const { context: contextId, viewport } = options;
+    const { context: contextId, devicePixelRatio, viewport } = options;
 
     if (lazy.AppInfo.isAndroid) {
       // Bug 1840084: Add Android support for modifying the viewport.
@@ -1376,6 +1380,24 @@ class BrowsingContextModule extends Module {
 
       browser.style.setProperty("height", targetHeight + "px");
       browser.style.setProperty("width", targetWidth + "px");
+    }
+
+    if (devicePixelRatio !== undefined) {
+      if (devicePixelRatio !== null) {
+        lazy.assert.number(
+          devicePixelRatio,
+          `Expected "devicePixelRatio" to be a number or null, got ${devicePixelRatio}`
+        );
+        lazy.assert.that(
+          devicePixelRatio => devicePixelRatio > 0,
+          `Expected "devicePixelRatio" to be greater than 0, got ${devicePixelRatio}`
+        )(devicePixelRatio);
+
+        context.overrideDPPX = devicePixelRatio;
+      } else {
+        // Will reset to use the global default scaling factor.
+        context.overrideDPPX = 0;
+      }
     }
 
     if (targetHeight !== currentHeight || targetWidth !== currentWidth) {
