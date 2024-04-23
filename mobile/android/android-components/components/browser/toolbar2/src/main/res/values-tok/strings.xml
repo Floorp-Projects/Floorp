@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mozac_clear_button_description">o weka ale</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">lipu li ken ala lukin e sona sina</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">lipu li weka e lipu lukin</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">lipu ni la weka pi lipu lukin li lon ala</string>
+    <!-- Content description: For the site security information icon (the site security icon).-->
+    <string name="mozac_browser_toolbar_content_description_site_info">sona lipu</string>
+    <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
+    <string name="mozac_browser_toolbar_progress_loading">o awen</string>
+    </resources>
