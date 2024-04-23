@@ -12,6 +12,9 @@ DIRS += [
 ]
 
 EXTRA_JS_MODULES += [
+    "ActionsProvider.sys.mjs",
+    "ActionsProviderContextualSearch.sys.mjs",
+    "ActionsProviderQuickActions.sys.mjs",
     "MerinoClient.sys.mjs",
     "QuickActionsLoaderDefault.sys.mjs",
     "QuickSuggest.sys.mjs",
@@ -26,7 +29,6 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderBookmarkKeywords.sys.mjs",
     "UrlbarProviderCalculator.sys.mjs",
     "UrlbarProviderClipboard.sys.mjs",
-    "UrlbarProviderContextualSearch.sys.mjs",
     "UrlbarProviderHeuristicFallback.sys.mjs",
     "UrlbarProviderHistoryUrlHeuristic.sys.mjs",
     "UrlbarProviderInputHistory.sys.mjs",
@@ -35,7 +37,6 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderOpenTabs.sys.mjs",
     "UrlbarProviderPlaces.sys.mjs",
     "UrlbarProviderPrivateSearch.sys.mjs",
-    "UrlbarProviderQuickActions.sys.mjs",
     "UrlbarProviderQuickSuggest.sys.mjs",
     "UrlbarProviderQuickSuggestContextualOptIn.sys.mjs",
     "UrlbarProviderRecentSearches.sys.mjs",

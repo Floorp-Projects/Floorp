@@ -1001,7 +1001,6 @@ class TelemetryEvent {
       searchWords,
       searchSource,
       searchMode,
-      selectedElement,
       selIndex,
       selType,
     }
@@ -1045,11 +1044,7 @@ class TelemetryEvent {
         currentResults[selIndex],
         selType
       );
-      const selected_result_subtype =
-        lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
-          currentResults[selIndex],
-          selectedElement
-        );
+      const selected_result_subtype = "";
 
       if (selected_result === "input_field" && !this._controller.view?.isOpen) {
         numResults = 0;

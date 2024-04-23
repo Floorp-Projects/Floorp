@@ -1635,6 +1635,38 @@ export class UrlbarView {
     item.appendChild(button);
   }
 
+  #createSecondaryAction(action, global = false) {
+    let actionContainer = this.#createElement("div");
+    actionContainer.classList.add("urlbarView-actions-container");
+
+    let button = this.#createElement("span");
+    button.classList.add("urlbarView-action-btn");
+    if (global) {
+      button.classList.add("urlbarView-global-action-btn");
+    }
+    button.setAttribute("role", "button");
+    if (action.icon) {
+      let icon = this.#createElement("img");
+      icon.src = action.icon;
+      button.appendChild(icon);
+    }
+    for (let key in action.dataset ?? {}) {
+      button.dataset[key] = action.dataset[key];
+    }
+    button.dataset.action = action.key;
+    button.dataset.providerName = action.providerName;
+
+    let label = this.#createElement("span");
+    if (action.l10nId) {
+      this.#setElementL10n(label, { id: action.l10nId, args: action.l10nArgs });
+    } else {
+      this.document.l10n.setAttributes(label, action.label, action.l10nArgs);
+    }
+    button.appendChild(label);
+    actionContainer.appendChild(button);
+    return actionContainer;
+  }
+
   // eslint-disable-next-line complexity
   #updateRow(item, result) {
     let oldResult = item.result;
@@ -1706,6 +1738,26 @@ export class UrlbarView {
       this.#addRowButtons(item, result);
     }
     item._content.id = item.id + "-inner";
+
+    let isFirstChild = item === this.#rows.children[0];
+    let secAction =
+      result.heuristic || isFirstChild
+        ? lazy.UrlbarProvidersManager.getGlobalAction()
+        : result.payload.action;
+    let container = item.querySelector(".urlbarView-actions-container");
+    if (secAction && !container) {
+      item.appendChild(this.#createSecondaryAction(secAction, isFirstChild));
+    } else if (
+      secAction &&
+      secAction.key != container.firstChild.dataset.action
+    ) {
+      item.replaceChild(
+        this.#createSecondaryAction(secAction, isFirstChild),
+        container
+      );
+    } else if (!secAction && container) {
+      item.removeChild(container);
+    }
 
     item.removeAttribute("feedback-acknowledgment");
 
@@ -1800,6 +1852,10 @@ export class UrlbarView {
     let isRowSelectable = true;
     switch (result.type) {
       case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+        // Hide chichlet when showing secondaryActions.
+        if (lazy.UrlbarPrefs.get("secondaryActions.featureGate")) {
+          break;
+        }
         actionSetter = () => {
           this.#setSwitchTabActionChiclet(result, action);
         };

@@ -130,6 +130,7 @@ async function doTypedTest({ trigger, assert }) {
 
 async function doTypedWithResultsPopupTest({ trigger, assert }) {
   await doTest(async () => {
+    await addTopSites("https://example.org/");
     await showResultByArrowDown();
     EventUtils.synthesizeKey("x");
     await UrlbarTestUtils.promiseSearchComplete(window);
@@ -150,6 +151,7 @@ async function doPastedTest({ trigger, assert }) {
 
 async function doPastedWithResultsPopupTest({ trigger, assert }) {
   await doTest(async () => {
+    await addTopSites("https://example.org/");
     await showResultByArrowDown();
     await doPaste("x");
 
@@ -257,6 +259,7 @@ async function doPersistedSearchTermsRestartedRefinedTest({
 
   for (const { firstInput, secondInput, expected } of testData) {
     await doTest(async () => {
+      await addTopSites("https://example.com/");
       await openPopup(firstInput);
       await doEnter();
 

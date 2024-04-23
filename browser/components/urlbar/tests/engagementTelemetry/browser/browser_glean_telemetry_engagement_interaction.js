@@ -42,6 +42,7 @@ add_task(async function dropped() {
   });
 
   await doTest(async () => {
+    await addTopSites("https://example.com/");
     await showResultByArrowDown();
     await doDropAndGo("example.com");
 
@@ -67,6 +68,7 @@ add_task(async function pasted() {
   });
 
   await doTest(async () => {
+    await addTopSites("https://example.com/");
     await showResultByArrowDown();
     await doPasteAndGo("www.example.com");
 

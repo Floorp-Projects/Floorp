@@ -69,7 +69,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether to show a link for using the search functionality provided by the
   // active view if the the view utilizes OpenSearch.
-  ["contextualSearch.enabled", false],
+  ["contextualSearch.enabled", true],
 
   // Whether using `ctrl` when hitting return/enter in the URL bar
   // (or clicking 'go') should prefix 'www.' and suffix
@@ -178,7 +178,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // If disabled, QuickActions will not be included in either the default search
   // mode or the QuickActions search mode.
-  ["quickactions.enabled", false],
+  ["quickactions.enabled", true],
 
   // Whether we will match QuickActions within a phrase and not only a prefix.
   ["quickactions.matchInPhrase", true],
@@ -187,9 +187,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // matching actions. Setting this to 0 will show the actions in the
   // zero prefix state.
   ["quickactions.minimumSearchString", 3],
-
-  // Show multiple actions in a random order.
-  ["quickactions.randomOrderActions", false],
 
   // Whether we show the Actions section in about:preferences.
   ["quickactions.showPrefs", false],
@@ -322,11 +319,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // homepage is opened.
   ["searchTips.test.ignoreShowLimits", false],
 
+  // Feature gate pref for secondary actions being shown in the urlbar.
+  ["secondaryActions.featureGate", false],
+
   // Whether to show each local search shortcut button in the view.
   ["shortcuts.bookmarks", true],
   ["shortcuts.tabs", true],
   ["shortcuts.history", true],
-  ["shortcuts.quickactions", false],
 
   // Boolean to determine if the providers defined in `exposureResults`
   // should be displayed in search results. This can be set by a

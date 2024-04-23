@@ -45,10 +45,3 @@ add_task(async function tabs() {
     assert: () => assertAbandonmentTelemetry([{ search_mode: "tabs" }]),
   });
 });
-
-add_task(async function actions() {
-  await doActionsTest({
-    trigger: () => doBlur(),
-    assert: () => assertAbandonmentTelemetry([{ search_mode: "actions" }]),
-  });
-});
