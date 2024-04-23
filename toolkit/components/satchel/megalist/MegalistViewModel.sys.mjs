@@ -184,6 +184,14 @@ export class MegalistViewModel {
   }
 
   async receiveCommand({ commandId, snapshotId, value } = {}) {
+    const dotIndex = commandId.indexOf(".");
+    if (dotIndex >= 0) {
+      const dataSourceName = commandId.substring(0, dotIndex);
+      const functionName = commandId.substring(dotIndex + 1);
+      MegalistViewModel.#aggregator.callFunction(dataSourceName, functionName);
+      return;
+    }
+
     const index = snapshotId
       ? snapshotId - this.#firstSnapshotId
       : this.#selectedIndex;
@@ -236,6 +244,10 @@ export class MegalistViewModel {
       const selectedIndex = this.#selectedIndex;
       this.#messageToView("UpdateSelection", { selectedIndex });
     }
+  }
+
+  setLayout(layout) {
+    this.#messageToView("SetLayout", { layout });
   }
 
   async #verifyUser(promptMessage, prefName) {

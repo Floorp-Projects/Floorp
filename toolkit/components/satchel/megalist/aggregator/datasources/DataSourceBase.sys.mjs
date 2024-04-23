@@ -63,6 +63,10 @@ export class DataSourceBase {
     this.#aggregatorApi.refreshAllLinesOnScreen();
   }
 
+  setLayout(layout) {
+    this.#aggregatorApi.setLayout(layout);
+  }
+
   formatMessages = createFormatMessages("preview/megalist.ftl");
   static ftl = new Localization(["preview/megalist.ftl"]);
 
@@ -265,6 +269,10 @@ export class DataSourceBase {
     }
     this.lines[index].record = record;
     return this.lines[index];
+  }
+
+  cancelDialog() {
+    this.setLayout(null);
   }
 
   *enumerateLinesForMatchingRecords(searchText, stats, match) {
