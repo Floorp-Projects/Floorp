@@ -63,16 +63,10 @@ export class FormAutofillHandler {
    * operations.
    *
    * @param {FormLike} form Form that need to be auto filled
-   * @param {Function} onFormSubmitted Function that can be invoked
-   *                   to simulate form submission. Function is passed
-   *                   four arguments: (1) a FormLike for the form being
-   *                   submitted, (2) the reason for infering the form
-   *                   submission (3) the corresponding Window, and (4)
-   *                   the responsible FormAutofillHandler.
    * @param {Function} onAutofillCallback Function that can be invoked
    *                   when we want to suggest autofill on a form.
    */
-  constructor(form, onFormSubmitted = () => {}, onAutofillCallback = () => {}) {
+  constructor(form, onAutofillCallback = () => {}) {
     this._updateForm(form);
 
     this.window = this.form.rootElement.ownerGlobal;
@@ -86,14 +80,6 @@ export class FormAutofillHandler {
       [FIELD_STATES.AUTO_FILLED]: "autofill",
       // highlighted && grey color text
       [FIELD_STATES.PREVIEW]: "-moz-autofill-preview",
-    };
-
-    /**
-     * This function is used if the form handler (or one of its sections)
-     * determines that it needs to act as if the form had been submitted.
-     */
-    this.onFormSubmitted = formSubmissionReason => {
-      onFormSubmitted(this.form, formSubmissionReason, this.window, this);
     };
 
     this.onAutofillCallback = onAutofillCallback;
