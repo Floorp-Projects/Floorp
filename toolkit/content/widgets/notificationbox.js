@@ -621,7 +621,7 @@
   customElements.define("notification", MozElements.Notification);
 
   async function createNotificationMessageElement() {
-    await window.ensureCustomElements("moz-message-bar");
+    document.createElement("moz-message-bar");
     let MozMessageBar = await customElements.whenDefined("moz-message-bar");
     class NotificationMessage extends MozMessageBar {
       static queries = {
@@ -772,7 +772,6 @@
 
           let buttonElem;
           if (button.hasOwnProperty("supportPage")) {
-            window.ensureCustomElements("moz-support-link");
             buttonElem = document.createElement("a", {
               is: "moz-support-link",
             });

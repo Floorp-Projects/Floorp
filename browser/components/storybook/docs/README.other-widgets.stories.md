@@ -30,8 +30,8 @@ Please refer to the existing [UA widgets documentation](https://firefox-source-d
 
 ### How to use existing Mozilla Custom Elements
 
-The existing Mozilla Custom Elements are automatically imported into all chrome privileged documents.
-These existing elements do not need to be imported individually via `<script>` tag or by using `window.ensureCustomElements()` when in a privileged main process document.
+The existing Mozilla Custom Elements are either [automatically imported](https://searchfox.org/mozilla-central/rev/d23849dd6d83edbe681d3b4828700256ea34a654/toolkit/content/customElements.js#853-878) into all chrome privileged documents, or are [lazy loaded](https://searchfox.org/mozilla-central/rev/d23849dd6d83edbe681d3b4828700256ea34a654/toolkit/content/customElements.js#789-809) and get automatically imported when first used.
+In either case, these existing elements do not need to be imported individually via `<script>` tag.
 As long as you are working in a chrome privileged document, you will have access to the existing Mozilla Custom Elements.
 You can dynamically create one of the existing custom elements by using `document.createDocument("customElement)` or `document.createXULElement("customElement")` in the relevant JS file, or by using the custom element tag in the relevant XHTML document.
 For example, `document.createXULElement("checkbox")` creates an instance of [widgets/checkbox.js](https://searchfox.org/mozilla-central/source/toolkit/content/widgets/checkbox.js) while using `<checkbox>` declares an instance in the XUL document.
@@ -74,11 +74,10 @@ Just like with the UI widgets, [the `browser_all_files_referenced.js` will fail 
 
 ### Using new domain-specific widgets
 
-This is effectively the same as [using new design system components](#using-new-design-system-components).
-You will need to import your widget into the relevant `html`/`xhtml` files via a `script` tag with `type="module"`:
+This is effectively the same as [using new design system components](#using-new-design-system-components). In general you should be able to rely on these elements getting lazily loaded at the time of first use, similar to how existing custom elements are imported.
+
+Outside of chrome privileged documents you may need to import your widget into the relevant `html`/`xhtml` files via a `script` tag with `type="module"`:
 
 ```html
 <script type="module" src="chrome://browser/content/<domain-directory>/<your-widget>.mjs"></script>
 ```
-
-Or use `window.ensureCustomElements("<your-widget>")` as previously stated in [the using new design system components section.](#using-new-design-system-components)
