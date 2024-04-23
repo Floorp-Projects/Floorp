@@ -116,7 +116,6 @@ export class FormAutofillChild extends JSWindowActorChild {
      * @type {FormAutofillFieldDetailsManager} handling state management of current forms and handlers.
      */
     this._fieldDetailsManager = new lazy.FormStateManager(
-      this.formSubmitted.bind(this),
       this.formAutofilled.bind(this)
     );
 
@@ -528,16 +527,8 @@ export class FormAutofillChild extends JSWindowActorChild {
    * @param {HTMLElement} formElement Root element which receives submit event.
    * @param {string} formSubmissionReason Reason for invoking the form submission
    *                 (see options for FORM_SUBMISSION_REASON in FormAutofillUtils))
-   * @param {Window} domWin Content window; passed for unit tests and when
-   *                 invoked by the FormAutofillSection
-   * @param {object} handler FormAutofillHander, if known by caller
    */
-  formSubmitted(
-    formElement,
-    formSubmissionReason,
-    domWin = formElement.ownerGlobal,
-    handler = undefined
-  ) {
+  formSubmitted(formElement, formSubmissionReason) {
     this.debug(`Handling form submission - infered by ${formSubmissionReason}`);
 
     lazy.AutofillTelemetry.recordFormSubmissionHeuristicCount(
@@ -549,16 +540,16 @@ export class FormAutofillChild extends JSWindowActorChild {
       return;
     }
 
+    const domWin = formElement.ownerGlobal;
     // The `domWin` truthiness test is used by unit tests to bypass this check.
     if (domWin && lazy.PrivateBrowsingUtils.isContentWindowPrivate(domWin)) {
       this.debug("Ignoring submission in a private window");
       return;
     }
 
-    handler = handler || this._fieldDetailsManager._getFormHandler(formElement);
-    const records = this._fieldDetailsManager.getRecords(formElement, handler);
+    const records = this._fieldDetailsManager.getRecords(formElement);
 
-    if (!records || !handler) {
+    if (!records) {
       this.debug("Form element could not map to an existing handler");
       return;
     }
@@ -581,7 +572,7 @@ export class FormAutofillChild extends JSWindowActorChild {
           r.section,
           {
             record: r,
-            form: handler.form,
+            form: formElement,
           }
         );
         delete r.section;
