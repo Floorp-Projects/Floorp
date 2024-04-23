@@ -4,6 +4,10 @@
 
 "use strict";
 
+/* eslint-disable camelcase */
+const RowOrColumnMajor_RowMajor = 0;
+/* eslint-enable camelcase */
+
 const SNIPPET = `
 <table id="table">
   <tr><th id="a">a</th><th id="b">b</th><th id="c">c</th></tr>
@@ -106,6 +110,38 @@ addUiaTask(SNIPPET, async function testGridItem() {
 
   await testPatternAbsent("button", "GridItem");
 });
+
+/**
+ * Test the Table pattern.
+ */
+addUiaTask(
+  SNIPPET,
+  async function testTable() {
+    await definePyVar("doc", `getDocUia()`);
+    await assignPyVarToUiaWithId("table");
+    await definePyVar("pattern", `getUiaPattern(table, "Table")`);
+    ok(await runPython(`bool(pattern)`), "table has Table pattern");
+    await isUiaElementArray(
+      `pattern.GetCurrentRowHeaders()`,
+      ["dg", "h"],
+      "table has correct RowHeaders"
+    );
+    await isUiaElementArray(
+      `pattern.GetCurrentColumnHeaders()`,
+      ["a", "b", "c"],
+      "table has correct ColumnHeaders"
+    );
+    is(
+      await runPython(`pattern.CurrentRowOrColumnMajor`),
+      RowOrColumnMajor_RowMajor,
+      "table has correct RowOrColumnMajor"
+    );
+
+    await testPatternAbsent("button", "Table");
+  },
+  // The IA2 -> UIA proxy doesn't support the Row/ColumnHeaders properties.
+  { uiaEnabled: true, uiaDisabled: false }
+);
 
 /**
  * Test the TableItem pattern.

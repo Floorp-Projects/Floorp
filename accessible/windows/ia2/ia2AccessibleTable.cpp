@@ -52,6 +52,12 @@ ia2AccessibleTable::QueryInterface(REFIID iid, void** ppv) {
     return S_OK;
   }
 
+  if (IID_ITableProvider == iid) {
+    *ppv = static_cast<ITableProvider*>(this);
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
+    return S_OK;
+  }
+
   return ia2AccessibleHypertext::QueryInterface(iid, ppv);
 }
 

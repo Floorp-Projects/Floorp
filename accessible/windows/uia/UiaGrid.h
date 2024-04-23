@@ -11,12 +11,13 @@
 #include "uiautomation.h"
 
 namespace mozilla::a11y {
+class Accessible;
 class TableAccessible;
 
 /**
- * IGridProvider implementation.
+ * IGridProvider and ITableProvider implementations.
  */
-class UiaGrid : public IGridProvider {
+class UiaGrid : public IGridProvider, public ITableProvider {
  public:
   // IGridProvider
   virtual HRESULT STDMETHODCALLTYPE GetItem(
@@ -31,7 +32,18 @@ class UiaGrid : public IGridProvider {
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_ColumnCount(
       /* [retval][out] */ __RPC__out int* aRetVal);
 
+  // ITableProvider
+  virtual HRESULT STDMETHODCALLTYPE GetRowHeaders(
+      /* [retval][out] */ __RPC__deref_out_opt SAFEARRAY** aRetVal);
+
+  virtual HRESULT STDMETHODCALLTYPE GetColumnHeaders(
+      /* [retval][out] */ __RPC__deref_out_opt SAFEARRAY** aRetVal);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_RowOrColumnMajor(
+      /* [retval][out] */ __RPC__out enum RowOrColumnMajor* aRetVal);
+
  private:
+  Accessible* Acc();
   TableAccessible* TableAcc();
 };
 
