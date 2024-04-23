@@ -120,9 +120,8 @@ WEBGL_FORMATS = keyed_alternatives(
         #'RGBA16F',
     ],
 )
-WEBGL = cross_combine(
-    [{"e_context": "webgl"}], WEBGL_FORMATS, CANVAS_CSPACES, WEBGL_COLORS
-)
+WEBGL_VERSIONS = keyed_alternatives("e_context", ["webgl", "webgl2"])
+WEBGL = cross_combine(WEBGL_VERSIONS, WEBGL_FORMATS, CANVAS_CSPACES, WEBGL_COLORS)
 
 # -
 
@@ -212,7 +211,7 @@ def correct_color_from_test_config(test_config: Config) -> CssColor:
         canvas_cspace = "srgb"
 
     correct_color = parse_css_color(test_config["e_color"])
-    if test_config["e_context"] == "webgl":
+    if test_config["e_context"].startswith("webgl"):
         # Webgl ignores the color's cspace, because webgl has no concept of
         # source colorspace for clears/draws to the backbuffer.
         # This (correct) behavior is as if the color's cspace were overwritten by the
@@ -231,12 +230,12 @@ def correct_color_from_test_config(test_config: Config) -> CssColor:
 def reftests_from_config(test_config: Config) -> Iterable[ColorReftest]:
     correct_color = correct_color_from_test_config(test_config)
 
-    if test_config["e_context"] == "2d":
+    if test_config["e_context"] in ["2d"]:
         # Canvas2d generally has the same behavior as css, so expect all passing.
         yield ColorReftest([], test_config, correct_color)
         return
 
-    assert test_config["e_context"] == "webgl", test_config["e_context"]
+    assert test_config["e_context"].startswith("webgl"), test_config["e_context"]
 
     # -
 
@@ -248,6 +247,11 @@ def reftests_from_config(test_config: Config) -> Iterable[ColorReftest]:
         # 2. expected-pass test == (incorrect) expected_color
         # If we fix an error, we'll see one unexpected-pass and one unexpected-fail.
         # If we get a new wrong answer, we'll see one unexpected-fail.
+
+        if correct_color.is_same_color(
+            parse_css_color("color(display-p3 0.502 0.000 0.000)")
+        ):
+            notes += ["fuzzy(0-1,0-10000)"]
 
         if not expected_color.is_same_color(correct_color):
             yield ColorReftest(notes + ["fails"], test_config, correct_color)
@@ -261,12 +265,26 @@ def reftests_from_config(test_config: Config) -> Iterable[ColorReftest]:
     # right now. This is the same as "srgb".
 
     expected_color_srgb = CssColor("srgb", correct_color.rgb)
-    # Mac
-    yield from reftests_from_expected_color(["skip-if(!cocoaWidget)"], correct_color)
-    # Win, Lin, Android
-    yield from reftests_from_expected_color(
-        ["skip-if(cocoaWidget) "], expected_color_srgb
-    )
+    if test_config["e_context"] == "webgl2":
+        # Win, Mac
+        yield from reftests_from_expected_color(
+            ["skip-if(!cocoaWidget&&!winWidget)"], correct_color
+        )
+        # Lin, Android
+        yield from reftests_from_expected_color(
+            ["skip-if(cocoaWidget||winWidget)  "], expected_color_srgb
+        )
+    elif test_config["e_context"] == "webgl":
+        # Mac
+        yield from reftests_from_expected_color(
+            ["skip-if(!cocoaWidget)"], correct_color
+        )
+        # Win, Lin, Android
+        yield from reftests_from_expected_color(
+            ["skip-if(cocoaWidget) "], expected_color_srgb
+        )
+    else:
+        assert False, test_config["e_context"]
 
 
 # -
@@ -279,7 +297,7 @@ def amended_notes_from_reftest(reftest: ColorReftest) -> list[str]:
     is_green_only = ref_rgb_vals == (0, ref_rgb_vals[1], 0)
     if (
         "fails" in reftest.notes
-        and reftest.test_config["e_context"] == "webgl"
+        and reftest.test_config["e_context"].startswith("webgl")
         and reftest.test_config["e_cspace"] == "display-p3"
         and is_green_only
     ):

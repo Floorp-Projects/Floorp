@@ -736,6 +736,21 @@ void ClientWebGLContext::GetCanvas(
   }
 }
 
+void ClientWebGLContext::SetDrawingBufferColorSpace(
+    const dom::PredefinedColorSpace val) {
+  mDrawingBufferColorSpace = val;
+
+  // Just in case, update in Options too.
+  // Why not treat our WebGLContextOptions as the source of truth? Well,
+  // mNotLost is lost on context-loss, so we'd lose any setting we had here if
+  // that happens.
+  if (mNotLost) {
+    mNotLost->info.options.colorSpace = mDrawingBufferColorSpace;
+  }
+
+  Run<RPROC(SetDrawingBufferColorSpace)>(mDrawingBufferColorSpace);
+}
+
 void ClientWebGLContext::GetContextAttributes(
     dom::Nullable<dom::WebGLContextAttributes>& retval) {
   retval.SetNull();
@@ -1058,9 +1073,7 @@ ClientWebGLContext::SetContextOptions(JSContext* cx,
   if (attributes.mAntialias.WasPassed()) {
     newOpts.antialias = attributes.mAntialias.Value();
   }
-  newOpts.ignoreColorSpace = true;
   if (attributes.mColorSpace.WasPassed()) {
-    newOpts.ignoreColorSpace = false;
     newOpts.colorSpace = attributes.mColorSpace.Value();
   }
 

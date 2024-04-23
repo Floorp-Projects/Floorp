@@ -182,8 +182,13 @@ class SurfaceFactory {
       const SharedSurfaceDesc&) = 0;
 
  public:
+  virtual bool SupportsCspaces() const { return false; }
+
   UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size,
                                         gfx::ColorSpace2 cs) {
+    if (!SupportsCspaces()) {
+      cs = gfx::ColorSpace2::Display;
+    }
     return CreateSharedImpl({mDesc, size, cs});
   }
 };

@@ -61,25 +61,6 @@ struct QueueParamTraits<avec3<T>> : QueueParamTraits_TiedFields<avec3<T>> {};
 // ---------------------------------------------------------------------
 // Enums!
 
-inline constexpr bool IsEnumCase(const dom::WebGLPowerPreference raw) {
-  switch (raw) {
-    case dom::WebGLPowerPreference::Default:
-    case dom::WebGLPowerPreference::Low_power:
-    case dom::WebGLPowerPreference::High_performance:
-      return true;
-  }
-  return false;
-}
-
-inline constexpr bool IsEnumCase(const dom::PredefinedColorSpace raw) {
-  switch (raw) {
-    case dom::PredefinedColorSpace::Srgb:
-    case dom::PredefinedColorSpace::Display_p3:
-      return true;
-  }
-  return false;
-}
-
 inline constexpr bool IsEnumCase(const webgl::AttribBaseType raw) {
   switch (raw) {
     case webgl::AttribBaseType::Boolean:
@@ -91,16 +72,14 @@ inline constexpr bool IsEnumCase(const webgl::AttribBaseType raw) {
   return false;
 }
 
-static_assert(IsEnumCase(dom::WebGLPowerPreference(2)));
-static_assert(!IsEnumCase(dom::WebGLPowerPreference(3)));
-static_assert(!IsEnumCase(dom::WebGLPowerPreference(5)));
+static_assert(IsEnumCase(webgl::AttribBaseType(3)));
+static_assert(!IsEnumCase(webgl::AttribBaseType(4)));
+static_assert(!IsEnumCase(webgl::AttribBaseType(5)));
 
 #define USE_IS_ENUM_CASE(T) \
   template <>               \
   struct QueueParamTraits<T> : QueueParamTraits_IsEnumCase<T> {};
 
-USE_IS_ENUM_CASE(dom::WebGLPowerPreference)
-USE_IS_ENUM_CASE(dom::PredefinedColorSpace)
 USE_IS_ENUM_CASE(webgl::AttribBaseType)
 USE_IS_ENUM_CASE(webgl::ProvokingVertex)
 
@@ -282,6 +261,20 @@ template <>
 struct QueueParamTraits<gfxAlphaType>
     : public ContiguousEnumSerializerInclusive<
           gfxAlphaType, gfxAlphaType::Opaque, gfxAlphaType::NonPremult> {};
+
+// -
+
+template <class Enum>
+using WebIDLEnumQueueSerializer =
+    ContiguousEnumSerializerInclusive<Enum, ContiguousEnumValues<Enum>::min,
+                                      ContiguousEnumValues<Enum>::max>;
+
+template <>
+struct QueueParamTraits<dom::WebGLPowerPreference>
+    : public WebIDLEnumQueueSerializer<dom::WebGLPowerPreference> {};
+template <>
+struct QueueParamTraits<dom::PredefinedColorSpace>
+    : public WebIDLEnumQueueSerializer<dom::PredefinedColorSpace> {};
 
 }  // namespace webgl
 }  // namespace mozilla
