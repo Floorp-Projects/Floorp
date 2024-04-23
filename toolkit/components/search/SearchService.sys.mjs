@@ -2499,6 +2499,19 @@ export class SearchService {
         } else if (loadPath?.startsWith("[user]")) {
           engine = new lazy.UserSearchEngine({ json: engineJSON });
         } else if (engineJSON.extensionID ?? engineJSON._extensionID) {
+          let existingEngine = this.#getEngineByName(engineJSON._name);
+          let extensionId = engineJSON.extensionID ?? engineJSON._extensionID;
+
+          if (existingEngine && existingEngine._extensionID == extensionId) {
+            // We assume that this WebExtension was already loaded as part of
+            // #loadStartupEngines, and therefore do not try to add it again.
+            lazy.logConsole.log(
+              "Ignoring already added WebExtension",
+              extensionId
+            );
+            continue;
+          }
+
           engine = new lazy.AddonSearchEngine({
             isAppProvided: false,
             json: engineJSON,
