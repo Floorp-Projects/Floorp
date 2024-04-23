@@ -327,7 +327,7 @@ class WalkerActor extends Actor {
         const mutation = {
           type: "events",
           target: actor.actorID,
-          hasEventListeners: actor._hasEventListeners,
+          hasEventListeners: actor.hasEventListeners(/* refreshCache */ true),
         };
         this.queueMutation(mutation);
       }

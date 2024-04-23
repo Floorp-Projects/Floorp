@@ -185,13 +185,14 @@ class NodeActor extends Actor {
     const hostActor = shadowRoot
       ? this.walker.getNode(this.rawNode.host)
       : null;
+    const nodeType = this.rawNode.nodeType;
 
     const form = {
       actor: this.actorID,
       host: hostActor ? hostActor.actorID : undefined,
       baseURI: this.rawNode.baseURI,
       parent: parentNode ? parentNode.actorID : undefined,
-      nodeType: this.rawNode.nodeType,
+      nodeType,
       namespaceURI: this.rawNode.namespaceURI,
       nodeName: this.rawNode.nodeName,
       nodeValue: this.rawNode.nodeValue,
@@ -227,9 +228,23 @@ class NodeActor extends Actor {
       isInHTMLDocument:
         this.rawNode.ownerDocument &&
         this.rawNode.ownerDocument.contentType === "text/html",
-      hasEventListeners: this._hasEventListeners,
       traits: {},
     };
+
+    // The event collector can be expensive, so only check for events on nodes that
+    // can display the `event` badge.
+    if (
+      nodeType !== Node.COMMENT_NODE &&
+      nodeType !== Node.TEXT_NODE &&
+      nodeType !== Node.CDATA_SECTION_NODE &&
+      nodeType !== Node.DOCUMENT_NODE &&
+      nodeType !== Node.DOCUMENT_TYPE_NODE &&
+      !form.isMarkerPseudoElement &&
+      !form.isBeforePseudoElement &&
+      !form.isAfterPseudoElement
+    ) {
+      form.hasEventListeners = this.hasEventListeners();
+    }
 
     if (this.isDocumentElement()) {
       form.isDocumentElement = true;
@@ -422,9 +437,15 @@ class NodeActor extends Actor {
    * Are there event listeners that are listening on this node? This method
    * uses all parsers registered via event-parsers.js.registerEventParser() to
    * check if there are any event listeners.
+   *
+   * @returns {Boolean}
    */
-  get _hasEventListeners() {
-    return this._eventCollector.hasEventListeners(this.rawNode);
+  hasEventListeners(refreshCache = false) {
+    if (this._hasEventListenersCached === undefined || refreshCache) {
+      const result = this._eventCollector.hasEventListeners(this.rawNode);
+      this._hasEventListenersCached = result;
+    }
+    return this._hasEventListenersCached;
   }
 
   writeAttrs() {
