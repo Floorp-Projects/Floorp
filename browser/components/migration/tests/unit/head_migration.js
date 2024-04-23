@@ -118,6 +118,34 @@ async function assertFavicons(pageURIs) {
 }
 
 /**
+ * Check the image data for favicon of given page uri.
+ *
+ * @param {string} pageURI
+ *                 The page URI to which the favicon belongs.
+ * @param {Array} expectedImageData
+ *                 Expected image data of the favicon.
+ * @param {string} expectedMimeType
+ *                 Expected mime type of the favicon.
+ */
+async function assertFavicon(pageURI, expectedImageData, expectedMimeType) {
+  let result = await new Promise(resolve => {
+    PlacesUtils.favicons.getFaviconDataForPage(
+      Services.io.newURI(pageURI),
+      (faviconURI, dataLen, imageData, mimeType) => {
+        resolve({ faviconURI, dataLen, imageData, mimeType });
+      }
+    );
+  });
+  Assert.ok(!!result, `Got favicon for ${pageURI}`);
+  Assert.equal(
+    result.imageData.join(","),
+    expectedImageData.join(","),
+    "Image data is correct"
+  );
+  Assert.equal(result.mimeType, expectedMimeType, "Mime type is correct");
+}
+
+/**
  * Replaces a directory service entry with a given nsIFile.
  *
  * @param {string} key
