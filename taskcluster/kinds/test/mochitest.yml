@@ -278,7 +278,7 @@ mochitest-browser-chrome:
                     macosx.*64.*/opt: 10
                     windows.*-ccov.*/.*: 14
                     windows.*-asan-qr/opt: 14
-                    windows.*32-qr/debug: 12
+                    windows.*-qr/debug: 12
                     default: 8
     max-run-time:
         by-variant:
