@@ -1999,6 +1999,13 @@ var BookmarkingUI = {
       case "ViewHiding":
         this.onPanelMenuViewHiding(aEvent);
         break;
+      case "command":
+        if (aEvent.target.id == "panelMenu_searchBookmarks") {
+          PlacesCommandHook.searchBookmarks();
+        } else if (aEvent.target.id == "panelMenu_viewBookmarksToolbar") {
+          this.toggleBookmarksToolbar("bookmark-tools");
+        }
+        break;
     }
   },
 
@@ -2026,12 +2033,15 @@ var BookmarkingUI = {
       panelview
     );
     panelview.removeEventListener("ViewShowing", this);
+    panelview.addEventListener("command", this);
   },
 
   onPanelMenuViewHiding: function BUI_onViewHiding(aEvent) {
     this._panelMenuView.uninit();
     delete this._panelMenuView;
-    aEvent.target.removeEventListener("ViewHiding", this);
+    let panelview = aEvent.target;
+    panelview.removeEventListener("ViewHiding", this);
+    panelview.removeEventListener("command", this);
   },
 
   handlePlacesEvents(aEvents) {

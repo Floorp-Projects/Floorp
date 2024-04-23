@@ -128,10 +128,15 @@ const PanelUI = {
       this.panel.addEventListener(event, this);
     }
 
+    this._onLibraryCommand = this._onLibraryCommand.bind(this);
     PanelMultiView.getViewNode(document, "PanelUI-helpView").addEventListener(
       "ViewShowing",
       this._onHelpViewShow
     );
+    PanelMultiView.getViewNode(
+      document,
+      "appMenu-libraryView"
+    ).addEventListener("command", this._onLibraryCommand);
     this.mainView.addEventListener("command", this);
     this._eventListenersAdded = true;
   },
@@ -144,6 +149,10 @@ const PanelUI = {
       document,
       "PanelUI-helpView"
     ).removeEventListener("ViewShowing", this._onHelpViewShow);
+    PanelMultiView.getViewNode(
+      document,
+      "appMenu-libraryView"
+    ).removeEventListener("command", this._onLibraryCommand);
     this.mainView.removeEventListener("command", this);
     this._eventListenersAdded = false;
   },
@@ -680,6 +689,22 @@ const PanelUI = {
     }
 
     items.appendChild(fragment);
+  },
+
+  _onLibraryCommand(aEvent) {
+    let button = aEvent.target;
+    let { BookmarkingUI, DownloadsPanel } = button.ownerGlobal;
+    switch (button.id) {
+      case "appMenu-library-bookmarks-button":
+        BookmarkingUI.showSubView(button);
+        break;
+      case "appMenu-library-history-button":
+        this.showSubView("PanelUI-history", button);
+        break;
+      case "appMenu-library-downloads-button":
+        DownloadsPanel.showDownloadsHistory();
+        break;
+    }
   },
 
   _hidePopup() {
