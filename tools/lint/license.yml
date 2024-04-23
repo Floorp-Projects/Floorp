@@ -50,6 +50,7 @@ license:
         - mobile/android/android-components/components/browser/menu/src/main/res/
         - mobile/android/android-components/components/browser/menu2/src/main/res/
         - mobile/android/android-components/components/browser/toolbar/src/main/res/
+        - mobile/android/android-components/components/browser/toolbar2/src/main/res/
         - mobile/android/android-components/components/compose/awesomebar/src/main/res/
         - mobile/android/android-components/components/compose/browser-toolbar/src/main/res/
         - mobile/android/android-components/components/compose/cfr/src/main/res/
