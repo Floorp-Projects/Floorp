@@ -14,9 +14,6 @@ var gPermissionPanel = {
     if (!this._popupInitialized) {
       let wrapper = document.getElementById("template-permission-popup");
       wrapper.replaceWith(wrapper.content);
-
-      window.ensureCustomElements("moz-support-link");
-
       this._popupInitialized = true;
     }
   },

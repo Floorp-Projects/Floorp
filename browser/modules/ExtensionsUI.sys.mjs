@@ -339,8 +339,6 @@ export var ExtensionsUI = {
   async showPermissionsPrompt(target, strings, icon) {
     let { browser, window } = getTabBrowser(target);
 
-    await window.ensureCustomElements("moz-support-link");
-
     // Wait for any pending prompts to complete before showing the next one.
     let pending;
     while ((pending = this.pendingNotifications.get(browser))) {

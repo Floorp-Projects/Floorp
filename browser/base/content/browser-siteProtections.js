@@ -1377,7 +1377,6 @@ var gProtectionsHandler = {
       let wrapper = document.getElementById("template-protections-popup");
       this._protectionsPopup = wrapper.content.firstElementChild;
       wrapper.replaceWith(wrapper.content);
-      window.ensureCustomElements("moz-support-link");
 
       this.maybeSetMilestoneCounterText();
 
@@ -1591,8 +1590,6 @@ var gProtectionsHandler = {
 
     // Add an observer to observe that the history has been cleared.
     Services.obs.addObserver(this, "browser:purge-session-history");
-
-    window.ensureCustomElements("moz-button-group", "moz-toggle");
   },
 
   uninit() {

@@ -1,7 +1,7 @@
 [DEFAULT]
 support-files = ["dummy_page.html"]
 
-["test_custom_element_ensure_custom_element.html"]
+["test_custom_element_auto_import.html"]
 
 ["test_custom_element_htmlconstructor_chrome.html"]
 support-files = [

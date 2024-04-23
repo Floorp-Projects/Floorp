@@ -246,8 +246,6 @@ export var PictureInPicture = {
     let panel = browser.ownerDocument.querySelector("#PictureInPicturePanel");
 
     if (!panel) {
-      browser.ownerGlobal.ensureCustomElements("moz-toggle");
-      browser.ownerGlobal.ensureCustomElements("moz-support-link");
       let template = browser.ownerDocument.querySelector(
         "#PictureInPicturePanelTemplate"
       );
