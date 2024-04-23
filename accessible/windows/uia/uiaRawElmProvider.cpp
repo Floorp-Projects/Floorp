@@ -313,6 +313,13 @@ uiaRawElmProvider::GetPatternProvider(
       scroll.forget(aPatternProvider);
       return S_OK;
     }
+    case UIA_TablePatternId:
+      if (acc->IsTable()) {
+        auto table =
+            GetPatternFromDerived<ia2AccessibleTable, ITableProvider>();
+        table.forget(aPatternProvider);
+      }
+      return S_OK;
     case UIA_TableItemPatternId:
       if (acc->IsTableCell()) {
         auto item =
