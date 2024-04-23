@@ -340,16 +340,17 @@ add_task(function test_lexer_eofchar() {
     ["'\\", "\\'", "'", ""],
   ];
 
-  for (let [
+  const test = (
     cssText,
+    useInspectorCSSParser,
     expectedAppend,
     expectedNoAppend,
-    argText = cssText,
-  ] of EOFCHAR_TESTS) {
+    argText
+  ) => {
     if (!expectedNoAppend) {
       expectedNoAppend = expectedAppend;
     }
-    const lexer = jsLexer.getCSSLexer(cssText);
+    const lexer = jsLexer.getCSSLexer(cssText, useInspectorCSSParser, true);
     while (lexer.nextToken()) {
       // We don't need to do anything with the tokens. We only want to consume the iterator
       // so we can safely call performEOFFixup.
@@ -362,5 +363,18 @@ add_task(function test_lexer_eofchar() {
 
     result = lexer.performEOFFixup(argText, false);
     equal(result, expectedNoAppend);
+  };
+
+  for (const [
+    cssText,
+    expectedAppend,
+    expectedNoAppend,
+    argText = cssText,
+  ] of EOFCHAR_TESTS) {
+    info(`Test "${cssText}" with js-based lexer`);
+    test(cssText, false, expectedAppend, expectedNoAppend, argText);
+
+    info(`Test "${cssText}" with rust-based lexer`);
+    test(cssText, true, expectedAppend, expectedNoAppend, argText);
   }
 });
