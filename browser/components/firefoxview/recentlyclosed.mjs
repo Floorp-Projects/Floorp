@@ -8,11 +8,8 @@ import {
   ifDefined,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import {
-  isSearchEnabled,
-  searchTabList,
-  MAX_TABS_FOR_RECENT_BROWSING,
-} from "./helpers.mjs";
+import { isSearchEnabled, MAX_TABS_FOR_RECENT_BROWSING } from "./helpers.mjs";
+import { searchTabList } from "./search-helpers.mjs";
 import { ViewPage } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/firefoxview/card-container.mjs";

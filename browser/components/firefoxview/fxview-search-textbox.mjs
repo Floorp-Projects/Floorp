@@ -20,7 +20,7 @@ const SEARCH_DEBOUNCE_TIMEOUT_MS = 1000;
  *
  * There is no actual searching done here. That needs to be implemented by the
  * `fxview-search-textbox-query` event handler. `searchTabList()` from
- * `helpers.mjs` can be used as a starting point.
+ * `search-helpers.mjs` can be used as a starting point.
  *
  * @property {string} placeholder
  *   The placeholder text for the search box.

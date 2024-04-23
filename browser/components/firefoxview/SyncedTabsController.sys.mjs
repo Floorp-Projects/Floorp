@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 import { SyncedTabsErrorHandler } from "resource:///modules/firefox-view-synced-tabs-error-handler.sys.mjs";
 import { TabsSetupFlowManager } from "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs";
-import { searchTabList } from "chrome://browser/content/firefoxview/helpers.mjs";
+import { searchTabList } from "chrome://browser/content/firefoxview/search-helpers.mjs";
 
 const SYNCED_TABS_CHANGED = "services.sync.tabs.changed";
 const TOPIC_SETUPSTATE_CHANGED = "firefox-view.setupstate.changed";

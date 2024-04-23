@@ -56,6 +56,7 @@ const Template = ({
       .dateTimeFormat=${dateTimeFormat}
       .maxTabsLength=${maxTabsLength}
       .tabItems=${tabItems}
+      .updatesPaused=${false}
       @fxview-tab-list-secondary-action=${secondaryAction}
       @fxview-tab-list-primary-action=${primaryAction}
     >

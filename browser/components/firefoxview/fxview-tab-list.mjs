@@ -11,7 +11,7 @@ import {
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
-import { escapeRegExp } from "./helpers.mjs";
+import { escapeRegExp } from "./search-helpers.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-button.mjs";
 
