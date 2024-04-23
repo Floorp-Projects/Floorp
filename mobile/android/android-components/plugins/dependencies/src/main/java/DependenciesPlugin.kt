@@ -86,7 +86,7 @@ object Versions {
         const val uiautomator = "2.3.0"
         const val localbroadcastmanager = "1.0.0"
         const val swiperefreshlayout = "1.1.0"
-        const val data_store_preferences="1.0.0"
+        const val datastore="1.1.0"
     }
 
     object Firebase {
@@ -167,7 +167,8 @@ object ComponentsDependencies {
     const val androidx_espresso_core = "androidx.test.espresso:espresso-core:${Versions.AndroidX.espresso}"
     const val androidx_localbroadcastmanager = "androidx.localbroadcastmanager:localbroadcastmanager:${Versions.AndroidX.localbroadcastmanager}"
     const val androidx_swiperefreshlayout = "androidx.swiperefreshlayout:swiperefreshlayout:${Versions.AndroidX.swiperefreshlayout}"
-    const val androidx_data_store_preferences = "androidx.datastore:datastore-preferences:${Versions.AndroidX.data_store_preferences}"
+    const val androidx_datastore = "androidx.datastore:datastore:${Versions.AndroidX.datastore}"
+    const val androidx_datastore_preferences = "androidx.datastore:datastore-preferences:${Versions.AndroidX.datastore}"
 
     const val google_material = "com.google.android.material:material:${Versions.material}"
 

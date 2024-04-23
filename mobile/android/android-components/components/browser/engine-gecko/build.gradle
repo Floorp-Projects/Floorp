@@ -77,7 +77,7 @@ dependencies {
     }
 
     implementation ComponentsDependencies.androidx_paging
-    implementation ComponentsDependencies.androidx_data_store_preferences
+    implementation ComponentsDependencies.androidx_datastore_preferences
     implementation ComponentsDependencies.androidx_lifecycle_livedata
 
     testImplementation ComponentsDependencies.androidx_test_core
