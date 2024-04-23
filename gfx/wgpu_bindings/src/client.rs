@@ -38,17 +38,37 @@ fn make_byte_buf<T: serde::Serialize>(data: &T) -> ByteBuf {
 }
 
 #[repr(C)]
+pub struct ConstantEntry {
+    key: RawString,
+    value: f64,
+}
+
+#[repr(C)]
 pub struct ProgrammableStageDescriptor {
     module: id::ShaderModuleId,
     entry_point: RawString,
+    constants: *const ConstantEntry,
+    constants_length: usize,
 }
 
 impl ProgrammableStageDescriptor {
     fn to_wgpu(&self) -> wgc::pipeline::ProgrammableStageDescriptor {
+        let constants = make_slice(self.constants, self.constants_length)
+            .iter()
+            .map(|ce| {
+                (
+                    unsafe { std::ffi::CStr::from_ptr(ce.key) }
+                        .to_str()
+                        .unwrap()
+                        .to_string(),
+                    ce.value,
+                )
+            })
+            .collect();
         wgc::pipeline::ProgrammableStageDescriptor {
             module: self.module,
             entry_point: cow_label(&self.entry_point),
-            constants: Cow::Owned(std::collections::HashMap::new()),
+            constants: Cow::Owned(constants),
         }
     }
 }

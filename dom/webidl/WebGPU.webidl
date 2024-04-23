@@ -602,7 +602,10 @@ interface mixin GPUPipelineBase {
 dictionary GPUProgrammableStage {
     required GPUShaderModule module;
     USVString entryPoint;
+    record<USVString, GPUPipelineConstantValue> constants;
 };
+
+typedef double GPUPipelineConstantValue; // May represent WGSL's bool, f32, i32, u32, and f16 if enabled.
 
 //TODO: Serializable
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1696219
