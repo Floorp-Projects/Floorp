@@ -149,8 +149,10 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Νέα ιδιωτική καρτέλα</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">Συντόμευση κωδικών πρόσβασης</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">Κωδικοί πρόσβασης</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Συντόμευση κωδικών πρόσβασης</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -253,10 +255,17 @@
     <string name="browser_menu_customize_home_1">Προσαρμογή αρχικής σελίδας</string>
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Σύνδεση</string>
+    <string name="browser_menu_sign_in">Σύνδεση</string>
 
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
-    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Συγχρονίστε κωδικούς πρόσβασης, καρτέλες και πολλά άλλα</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">Συγχρονίστε κωδικούς πρόσβασης, καρτέλες και πολλά άλλα</string>
+
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">Συνδεθείτε ξανά για συγχρονισμό</string>
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">Νέα ιδιωτική καρτέλα</string>
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">Κωδικοί πρόσβασης</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -631,6 +640,18 @@
     <string name="notifications_allowed_summary">Επιτρέπονται</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Δεν επιτρέπονται</string>
+
+    <!-- Add-on Permissions -->
+    <!-- The title of the required permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Απαιτείται</string>
+    <!-- The title of the optional permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Προαιρετικό</string>
+    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
+    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Ανάγνωση και αλλαγή δεδομένων ιστοτόπων</string>
+    <!-- The description of the icon that can delete one of the websites displayed  -->
+    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Διαγραφή ιστοτόπου</string>
+    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
+    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Αποδοχή για όλους τους ιστοτόπους</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -2514,7 +2535,7 @@
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Δυστυχώς, δεν υποστηρίζουμε ακόμα τα %1$s.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more">Μάθετε περισσότερα</string>
+    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Μάθετε περισσότερα</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Μετάφραση…</string>
@@ -2528,7 +2549,9 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title">Επιλογές μετάφρασης</string>
+    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Επιλογές μετάφρασης</string>
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title_heading">Επιλογές μετάφρασης</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Να γίνεται πάντα πρόταση για μετάφραση</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2668,6 +2691,8 @@
     <string name="debug_drawer_title">Εργαλεία εντοπισμού σφαλμάτων</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Πλοήγηση προς τα πίσω</string>
+
+    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Εργαλεία καρτελών</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2690,4 +2715,10 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Προσθήκη στις ανενεργές καρτέλες</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Προσθήκη στις ιδιωτικές καρτέλες</string>
-</resources>
+
+    <!-- Debug drawer logins -->
+    <!-- The title of the Logins feature in the Debug Drawer. -->
+    <string name="debug_drawer_logins_title">Συνδέσεις</string>
+    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
+    <string name="debug_drawer_logins_current_domain_label">Τρέχων τομέας: %s</string>
+    </resources>
