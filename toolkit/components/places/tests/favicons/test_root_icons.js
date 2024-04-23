@@ -9,13 +9,11 @@ add_task(async function () {
   let pageURI = NetUtil.newURI("http://www.places.test/page/");
   await PlacesTestUtils.addVisits(pageURI);
   let faviconURI = NetUtil.newURI("http://www.places.test/favicon.ico");
-  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+  await PlacesTestUtils.setFaviconForPage(
+    pageURI,
     faviconURI,
-    SMALLPNG_DATA_URI.spec,
-    0,
-    systemPrincipal
+    SMALLPNG_DATA_URI
   );
-  await setFaviconForPage(pageURI, faviconURI);
 
   // Sanity checks.
   Assert.equal(await getFaviconUrlForPage(pageURI), faviconURI.spec);
@@ -70,22 +68,18 @@ add_task(async function test_removePagesByTimeframe() {
 
   // Add a normal icon to the most recent page.
   let faviconURI = NetUtil.newURI(`${BASE_URL}/page/favicon.ico`);
-  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+  await PlacesTestUtils.setFaviconForPage(
+    pageURI,
     faviconURI,
-    SMALLSVG_DATA_URI.spec,
-    0,
-    systemPrincipal
+    SMALLSVG_DATA_URI
   );
-  await setFaviconForPage(pageURI, faviconURI);
   // Add a root icon to the most recent page.
   let rootIconURI = NetUtil.newURI(`${BASE_URL}/favicon.ico`);
-  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+  await PlacesTestUtils.setFaviconForPage(
+    pageURI,
     rootIconURI,
-    SMALLPNG_DATA_URI.spec,
-    0,
-    systemPrincipal
+    SMALLPNG_DATA_URI
   );
-  await setFaviconForPage(pageURI, rootIconURI);
 
   // Sanity checks.
   Assert.equal(
@@ -141,13 +135,11 @@ add_task(async function test_different_host() {
   let pageURI = NetUtil.newURI("http://places.test/page/");
   await PlacesTestUtils.addVisits(pageURI);
   let faviconURI = NetUtil.newURI("http://mozilla.test/favicon.ico");
-  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+  await PlacesTestUtils.setFaviconForPage(
+    pageURI,
     faviconURI,
-    SMALLPNG_DATA_URI.spec,
-    0,
-    systemPrincipal
+    SMALLPNG_DATA_URI
   );
-  await setFaviconForPage(pageURI, faviconURI);
 
   Assert.equal(
     await getFaviconUrlForPage(pageURI),
@@ -207,13 +199,7 @@ add_task(async function test_root_on_different_host() {
   // Root favicon for TEST_URL1.
   const ICON_URL = "http://places1.test/favicon.ico";
   let iconURI = NetUtil.newURI(ICON_URL);
-  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-    iconURI,
-    SMALLPNG_DATA_URI.spec,
-    0,
-    systemPrincipal
-  );
-  await setFaviconForPage(pageURI1, iconURI);
+  await PlacesTestUtils.setFaviconForPage(pageURI1, iconURI, SMALLPNG_DATA_URI);
   Assert.equal(await getRootValue(ICON_URL), 1, "Check root == 1");
   Assert.equal(
     await getFaviconUrlForPage(pageURI1, 16),
@@ -222,13 +208,7 @@ add_task(async function test_root_on_different_host() {
   );
 
   // Same favicon for TEST_URL2.
-  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-    iconURI,
-    SMALLPNG_DATA_URI.spec,
-    0,
-    systemPrincipal
-  );
-  await setFaviconForPage(pageURI2, iconURI);
+  await PlacesTestUtils.setFaviconForPage(pageURI2, iconURI, SMALLPNG_DATA_URI);
   Assert.equal(await getRootValue(ICON_URL), 1, "Check root == 1");
   Assert.equal(
     await getFaviconUrlForPage(pageURI2, 16),

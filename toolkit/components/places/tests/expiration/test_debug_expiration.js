@@ -356,13 +356,7 @@ add_task(async function test_expire_icons() {
     }
 
     if (entry.icon) {
-      PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-        Services.io.newURI(entry.icon),
-        dataUrl,
-        0,
-        Services.scriptSecurityManager.getSystemPrincipal()
-      );
-      await PlacesTestUtils.addFavicons(new Map([[entry.page, entry.icon]]));
+      await PlacesTestUtils.setFaviconForPage(entry.page, entry.icon, dataUrl);
       Assert.equal(
         await getFaviconUrlForPage(entry.page),
         entry.icon,
@@ -380,13 +374,7 @@ add_task(async function test_expire_icons() {
     }
 
     if (entry.root) {
-      PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-        Services.io.newURI(entry.root),
-        dataUrl,
-        0,
-        Services.scriptSecurityManager.getSystemPrincipal()
-      );
-      await PlacesTestUtils.addFavicons(new Map([[entry.page, entry.root]]));
+      await PlacesTestUtils.setFaviconForPage(entry.page, entry.root, dataUrl);
     }
 
     if (entry.iconExpired) {
