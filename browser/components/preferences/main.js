@@ -445,7 +445,12 @@ var gMainPane = {
           once: true,
         });
 
-        if (NimbusFeatures.windowsLaunchOnLogin.getVariable("enabled")) {
+        if (
+          Services.prefs.getBoolPref(
+            "browser.startup.windowsLaunchOnLogin.enabled",
+            false
+          )
+        ) {
           document.getElementById("windowsLaunchOnLoginBox").hidden = false;
         }
       }

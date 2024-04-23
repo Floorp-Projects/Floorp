@@ -326,7 +326,7 @@ pref("browser.startup.couldRestoreSession.count", 0);
 pref("browser.startup.preXulSkeletonUI", true);
 
 // Whether the checkbox to enable Windows launch on login is shown
-pref("browser.startup.windowsLaunchOnLogin.enabled", false);
+pref("browser.startup.windowsLaunchOnLogin.enabled", true);
 // Whether to show the launch on login infobar notification
 pref("browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt", false);
 #endif
