@@ -1038,6 +1038,16 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
              JS::RootingContext::get(this));
 }
 
+#ifdef ENABLE_WASM_JSPI
+bool js::IsSuspendableStackActive(JSContext* cx) {
+  return cx->wasm().suspendableStackLimit != JS::NativeStackLimitMin;
+}
+
+JS::NativeStackLimit js::GetSuspendableStackLimit(JSContext* cx) {
+  return cx->wasm().suspendableStackLimit;
+}
+#endif
+
 JSContext::~JSContext() {
 #ifdef DEBUG
   // Clear the initialized_ first, so that ProtectedData checks will allow us to
@@ -1256,6 +1266,9 @@ void JSContext::trace(JSTracer* trc) {
   if (isolate) {
     irregexp::TraceIsolate(trc, isolate.ref());
   }
+#ifdef ENABLE_WASM_JSPI
+  wasm().promiseIntegration.trace(trc);
+#endif
 }
 
 JS::NativeStackLimit JSContext::stackLimitForJitCode(JS::StackKind kind) {

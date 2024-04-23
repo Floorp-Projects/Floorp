@@ -3352,6 +3352,25 @@
 - name: Rotate
   gen_boilerplate: false
 
+- name: WasmStackSwitchToMain
+  operands:
+    suspender: Object
+    fn: Object
+    data: WasmAnyRef
+  type_policy: none
+
+- name: WasmStackSwitchToSuspendable
+  operands:
+    suspender: Object
+    fn: Object
+    data: WasmAnyRef
+  type_policy: none
+
+- name: WasmStackContinueOnSuspendable
+  operands:
+    suspender: Object
+  type_policy: none
+
 - name: WasmBinarySimd128
   gen_boilerplate: false
 

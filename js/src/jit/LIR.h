@@ -1422,6 +1422,8 @@ enum class WasmSafepointKind : uint8_t {
   // For resumable wasm traps where registers will be spilled by the trap
   // handler.
   Trap,
+  // For stack switch call.
+  StackSwitch,
 };
 
 class LSafepoint : public TempObject {

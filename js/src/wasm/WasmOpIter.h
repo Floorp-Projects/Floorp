@@ -234,6 +234,7 @@ enum class OpKind {
   Try,
   TryTable,
   CallBuiltinModuleFunc,
+  StackSwitch,
 };
 
 // Return the OpKind for a given Op. This is used for sanity-checking that
@@ -856,6 +857,11 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
   [[nodiscard]] bool readCallBuiltinModuleFunc(
       const BuiltinModuleFunc** builtinModuleFunc, ValueVector* params);
+
+#ifdef ENABLE_WASM_JSPI
+  [[nodiscard]] bool readStackSwitch(StackSwitchKind* kind, Value* suspender,
+                                     Value* fn, Value* data);
+#endif
 
   // At a location where readOp is allowed, peek at the next opcode
   // without consuming it or updating any internal state.
@@ -4254,6 +4260,46 @@ inline bool OpIter<Policy>::readStoreLane(uint32_t byteSize,
 }
 
 #endif  // ENABLE_WASM_SIMD
+
+#ifdef ENABLE_WASM_JSPI
+template <typename Policy>
+inline bool OpIter<Policy>::readStackSwitch(StackSwitchKind* kind,
+                                            Value* suspender, Value* fn,
+                                            Value* data) {
+  MOZ_ASSERT(Classify(op_) == OpKind::StackSwitch);
+  MOZ_ASSERT(env_.jsPromiseIntegrationEnabled());
+  uint32_t kind_;
+  if (!d_.readVarU32(&kind_)) {
+    return false;
+  }
+  *kind = StackSwitchKind(kind_);
+  if (!popWithType(ValType(RefType::any()), data)) {
+    return false;
+  }
+  StackType stackType;
+  if (!popWithType(ValType(RefType::func()), fn, &stackType)) {
+    return false;
+  }
+#  if DEBUG
+  // Verify that the function takes suspender and data as parameters and
+  // returns no values.
+  MOZ_ASSERT((*kind == StackSwitchKind::ContinueOnSuspendable) ==
+             stackType.isNullableAsOperand());
+  if (!stackType.isNullableAsOperand()) {
+    ValType valType = stackType.valType();
+    MOZ_ASSERT(valType.isRefType() && valType.typeDef()->isFuncType());
+    const FuncType& func = valType.typeDef()->funcType();
+    MOZ_ASSERT(func.args().length() == 2 && func.results().empty() &&
+               func.arg(0).isExternRef() &&
+               ValType::isSubTypeOf(func.arg(1), RefType::any()));
+  }
+#  endif
+  if (!popWithType(ValType(RefType::extern_()), suspender)) {
+    return false;
+  }
+  return true;
+}
+#endif
 
 template <typename Policy>
 inline bool OpIter<Policy>::readCallBuiltinModuleFunc(

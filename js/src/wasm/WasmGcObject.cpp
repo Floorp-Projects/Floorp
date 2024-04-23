@@ -516,6 +516,15 @@ js::gc::AllocKind js::WasmStructObject::allocKindForTypeDef(
   return gc::GetGCObjectKindForBytes(nbytes);
 }
 
+bool WasmStructObject::getField(JSContext* cx, uint32_t index,
+                                MutableHandle<Value> val) {
+  const StructType& resultType = typeDef().structType();
+  MOZ_ASSERT(index <= resultType.fields_.length());
+  const StructField& field = resultType.fields_[index];
+  StorageType ty = field.type.storageType();
+  return ToJSValue(cx, fieldOffsetToAddress(ty, field.offset), ty, val);
+}
+
 /* static */
 void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {
   WasmStructObject& structObj = object->as<WasmStructObject>();

@@ -500,6 +500,15 @@ MSG_DEF(JSMSG_WASM_SUPPLY_ONLY_ONE,    2, JSEXN_TYPEERR,     "exactly one of {0}
 MSG_DEF(JSMSG_WASM_MISSING_REQUIRED,   1, JSEXN_TYPEERR,     "Missing required argument {0}")
 MSG_DEF(JSMSG_WASM_MODIFIED_GC_OBJECT,   0, JSEXN_TYPEERR,     "can't modify WebAssembly GC objects")
 
+// JSPI
+MSG_DEF(JSMSG_JSPI_ARG_POSITION,       0, JSEXN_TYPEERR,              "Invalid argument position value")
+MSG_DEF(JSMSG_JSPI_INVALID_SUSPENDER,  0, JSEXN_WASMRUNTIMEERROR,     "Invalid suspender")
+MSG_DEF(JSMSG_JSPI_INVALID_STATE,      0, JSEXN_WASMRUNTIMEERROR,     "Invalid state")
+MSG_DEF(JSMSG_JSPI_EXPECTED_SUSPENDER, 0, JSEXN_TYPEERR,              "Expected externref for suspender")
+MSG_DEF(JSMSG_JSPI_EXPECTED_PROMISE,   0, JSEXN_TYPEERR,              "Expected externref for returned promise")
+MSG_DEF(JSMSG_JSPI_SIGNATURE_MISMATCH, 0, JSEXN_TYPEERR,              "Signature mismatch")
+MSG_DEF(JSMSG_JSPI_SUSPENDER_LIMIT,    0, JSEXN_WASMRUNTIMEERROR,     "Too many suspenders")
+
 // Proxy
 MSG_DEF(JSMSG_BAD_GETPROTOTYPEOF_TRAP_RETURN,0,JSEXN_TYPEERR,"proxy getPrototypeOf handler returned a non-object, non-null value")
 MSG_DEF(JSMSG_INCONSISTENT_GETPROTOTYPEOF_TRAP,0,JSEXN_TYPEERR,"proxy getPrototypeOf handler didn't return the target object's prototype")

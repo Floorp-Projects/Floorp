@@ -358,6 +358,25 @@
 - name: InterruptCheck
   mir_op: true
 
+- name: WasmStackSwitchToMain
+  operands:
+    suspender: WordSized
+    fn: WordSized
+    data: WordSized
+  call_instruction: true
+
+- name: WasmStackSwitchToSuspendable
+  operands:
+    suspender: WordSized
+    fn: WordSized
+    data: WordSized
+  call_instruction: true
+
+- name: WasmStackContinueOnSuspendable
+  operands:
+    suspender: WordSized
+  call_instruction: true
+
 - name: WasmInterruptCheck
   operands:
     instance: WordSized

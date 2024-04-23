@@ -26,6 +26,7 @@
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmInstanceData.h"
+#include "wasm/WasmPI.h"
 #include "wasm/WasmStubs.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -65,7 +66,8 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
       unwind_(Unwind::False),
       unwoundAddressOfReturnAddress_(nullptr),
       resumePCinCurrentFrame_(nullptr),
-      failedUnwindSignatureMismatch_(false) {
+      failedUnwindSignatureMismatch_(false),
+      stackSwitched_(false) {
   MOZ_ASSERT(fp_);
   instance_ = GetNearestEffectiveInstance(fp_);
 
@@ -100,6 +102,39 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
 
   popFrame();
   MOZ_ASSERT(!done() || unwoundCallerFP_);
+}
+
+WasmFrameIter::WasmFrameIter(FrameWithInstances* fp, void* returnAddress)
+    : activation_(nullptr),
+      code_(nullptr),
+      codeRange_(nullptr),
+      lineOrBytecode_(0),
+      fp_(fp),
+      instance_(fp->calleeInstance()),
+      unwoundCallerFP_(nullptr),
+      unwind_(Unwind::False),
+      unwoundAddressOfReturnAddress_(nullptr),
+      resumePCinCurrentFrame_((uint8_t*)returnAddress),
+      failedUnwindSignatureMismatch_(false),
+      stackSwitched_(false) {
+  // Specialized implementation to avoid popFrame() interation.
+  // It is expected that the iterator starts at a callsite that is in
+  // the function body and has instance reference.
+  code_ = LookupCode(returnAddress, &codeRange_);
+  MOZ_ASSERT(code_ && codeRange_ && codeRange_->kind() == CodeRange::Function);
+
+  const CallSite* callsite = code_->lookupCallSite(returnAddress);
+  MOZ_ASSERT(callsite && callsite->mightBeCrossInstance());
+
+#ifdef ENABLE_WASM_JSPI
+  stackSwitched_ = callsite->isStackSwitch();
+#endif
+
+  MOZ_ASSERT(code_ == &instance_->code());
+  lineOrBytecode_ = callsite->lineOrBytecode();
+  failedUnwindSignatureMismatch_ = false;
+
+  MOZ_ASSERT(!done());
 }
 
 bool WasmFrameIter::done() const {
@@ -145,6 +180,9 @@ static inline void AssertDirectJitCall(const void* fp) {
 void WasmFrameIter::popFrame() {
   uint8_t* returnAddress = fp_->returnAddress();
   code_ = LookupCode(returnAddress, &codeRange_);
+#ifdef ENABLE_WASM_JSPI
+  stackSwitched_ = false;
+#endif
 
   if (!code_) {
     // This is a direct call from the jit into the wasm function's body. The
@@ -240,6 +278,13 @@ void WasmFrameIter::popFrame() {
   if (callsite->mightBeCrossInstance()) {
     instance_ = ExtractCallerInstanceFromFrameWithInstances(prevFP);
   }
+
+#ifdef ENABLE_WASM_JSPI
+  stackSwitched_ = callsite->isStackSwitch();
+  if (stackSwitched_ && unwind_ == Unwind::True) {
+    wasm::UnwindStackSwitch(activation_->cx());
+  }
+#endif
 
   MOZ_ASSERT(code_ == &instance()->code());
   lineOrBytecode_ = callsite->lineOrBytecode();
@@ -1803,6 +1848,8 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native array.init_elem function";
     case SymbolicAddress::ArrayCopy:
       return "call to native array.copy function";
+    case SymbolicAddress::UpdateSuspenderState:
+      return "call to native update suspender state util";
     case SymbolicAddress::SlotsToAllocKindBytesTable:
       MOZ_CRASH(
           "symbolic address was not code and should not have appeared here");

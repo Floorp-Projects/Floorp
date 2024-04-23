@@ -209,6 +209,11 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                              wasm::BytecodeOffset bytecodeOffset);
   void visitOutOfLineWasmNewArray(OutOfLineWasmNewArray* ool);
 
+#ifdef ENABLE_WASM_JSPI
+  void callWasmUpdateSuspenderState(wasm::UpdateSuspenderStateAction kind,
+                                    Register suspender);
+#endif
+
  private:
   void emitPostWriteBarrier(const LAllocation* obj);
   void emitPostWriteBarrier(Register objreg);

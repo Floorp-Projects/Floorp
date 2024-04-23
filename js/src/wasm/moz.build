@@ -41,6 +41,7 @@ UNIFIED_SOURCES += [
     "WasmModule.cpp",
     "WasmModuleTypes.cpp",
     "WasmOpIter.cpp",
+    "WasmPI.cpp",
     "WasmProcess.cpp",
     "WasmRealm.cpp",
     "WasmSerialize.cpp",

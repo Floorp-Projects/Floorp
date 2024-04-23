@@ -750,6 +750,80 @@ def wasm_gc(value):
 set_config("ENABLE_WASM_GC", wasm_gc)
 set_define("ENABLE_WASM_GC", wasm_gc)
 
+# Support for JS PI spec.
+# ===========================
+
+
+@depends(
+    milestone.is_nightly,
+    "--enable-jit",
+    "--enable-simulator",
+    "--enable-wasm-gc",
+    "--enable-wasm-tail-calls",
+    target,
+)
+def default_wasm_jspi(
+    is_nightly,
+    jit_enabled,
+    simulator,
+    gc,
+    tail_calls,
+    target,
+):
+    if not jit_enabled or simulator:
+        return
+
+    if not gc or not tail_calls:
+        return
+
+    if not is_nightly:
+        return
+
+    if target.cpu in ("x86_64", "aarch64"):
+        return True
+
+
+option(
+    "--enable-wasm-jspi",
+    default=default_wasm_jspi,
+    help="{Enable|Disable} WebAssembly JS PI",
+)
+
+
+@depends(
+    "--enable-wasm-jspi",
+    "--enable-jit",
+    "--enable-simulator",
+    "--enable-wasm-gc",
+    "--enable-wasm-tail-calls",
+    "--wasm-no-experimental",
+    target,
+)
+def wasm_jspi(value, jit_enabled, simulator, gc, tail_calls, no_experimental, target):
+    if no_experimental or not value:
+        return
+
+    if not jit_enabled:
+        die("--enable-wasm-jspi requires --enable-jit")
+
+    if not gc:
+        die("--enable-wasm-jspi requires --enable-wasm-gc")
+
+    if not tail_calls:
+        die("--enable-wasm-jspi requires --enable-wasm-tail-calls")
+
+    if simulator:
+        die("--enable-wasm-jspi is not supported for simulators")
+
+    if target.cpu in ("x86_64", "aarch64"):
+        return True
+
+    die("--enable-wasm-jspi only possible when targeting the x86_64/arm64 jits")
+
+
+set_config("ENABLE_WASM_JSPI", wasm_jspi)
+set_define("ENABLE_WASM_JSPI", wasm_jspi)
+
 # Support for WebAssembly JS String Builtins
 # ==========================================
 
