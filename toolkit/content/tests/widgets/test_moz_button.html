@@ -37,7 +37,7 @@
     }
 
     function assertButtonPropertiesMatch(el, propertyToCssVar) {
-      let elStyles = getComputedStyle(el.buttonEl);
+      let elStyles = el.buttonEl ? getComputedStyle(el.buttonEl) : getComputedStyle(el);
       for (let [property, cssVar] of Object.entries(propertyToCssVar)) {
         let propertyVal = elStyles[property];
         let cssVarVal = cssVar.startsWith("--") ? elStyles.getPropertyValue(cssVar) : cssVar;
@@ -52,13 +52,14 @@
 
     add_task(async function testButtonTypes() {
       let [...buttons] = document.querySelectorAll("moz-button");
-      let [one, two, three, four, five, six] = buttons;
+      let [one, two, three, four, five, six, seven] = buttons;
 
       await Promise.all(buttons.map(btn => btn.updateComplete));
 
       is(one.textContent, "Test button", "Text is set");
       is(two.buttonEl.textContent.trim(), "Test button", "Text is set");
       is(three.textContent, "Test button", "Text is set");
+      is(seven.buttonEl.textContent.trim(), "Test button", "Text is set");
 
       assertButtonPropertiesMatch(one, {
         backgroundColor: "--button-background-color",
@@ -93,6 +94,11 @@
         backgroundColor: "transparent",
         fill: "--icon-color",
       });
+      assertButtonPropertiesMatch(seven, {
+        backgroundColor: "--button-background-color",
+        color: "--button-text-color",
+        height: "--button-min-height",
+      });
 
       buttons.forEach(btn => (btn.size = "small"));
 
@@ -119,6 +125,9 @@
         width: "--button-size-icon-small",
         height: "--button-size-icon-small",
       });
+      assertButtonPropertiesMatch(seven, {
+        height: "--button-min-height-small",
+      });
     });
 
     add_task(async function testA11yAttributes() {
@@ -144,6 +153,41 @@
       await testProperty("aria-label", "ariaLabel");
     });
 
+    add_task(async function testIconButtons() {
+      let buttons = ["four", "five", "six", "seven", "eight", "nine"].map(
+        className => document.querySelector(`.${className}`)
+      );
+      let [four, five, six, seven, eight, nine] = buttons;
+      await Promise.all(buttons.map(btn => btn.updateComplete));
+
+      function verifyBackgroundIcon(button) {
+        let img = button.shadowRoot.querySelector("img");
+        ok(!img, "button does not use an img element to display an icon");
+        assertButtonPropertiesMatch(button, {
+          fill: "--icon-color",
+          backgroundSize: "--icon-size-default",
+        });
+      }
+
+      function verifyImageIcon(button) {
+        let img = button.shadowRoot.querySelector("img");
+        ok(img, "button uses an inner img element to display an icon");
+        is(img.src, "chrome://global/skin/icons/edit.svg", "button displays the expected icon");
+        assertButtonPropertiesMatch(img, {
+          fill: "--button-text-color",
+          width: "--icon-size-default",
+          height: "--icon-size-default",
+        });
+      }
+
+      verifyBackgroundIcon(four);
+      verifyBackgroundIcon(five);
+      verifyBackgroundIcon(six);
+
+      verifyImageIcon(seven);
+      verifyImageIcon(eight);
+      verifyImageIcon(nine);
+    });
   </script>
 </head>
 <body>
@@ -153,5 +197,19 @@
   <moz-button class="four" type="icon"></moz-button>
   <moz-button class="five" type="icon ghost"></moz-button>
   <moz-button class="six" type="ghost icon"></moz-button>
+  <moz-button
+    class="seven"
+    label="Test button"
+    icon="chrome://global/skin/icons/edit.svg"
+  ></moz-button>
+  <moz-button
+    class="eight"
+    icon="chrome://global/skin/icons/edit.svg"
+  ></moz-button>
+  <moz-button
+    class="nine"
+    type="ghost"
+    icon="chrome://global/skin/icons/edit.svg"
+  ></moz-button>
 </body>
 </html>
