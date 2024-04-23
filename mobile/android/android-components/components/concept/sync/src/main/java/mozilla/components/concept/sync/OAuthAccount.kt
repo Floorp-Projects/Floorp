@@ -40,6 +40,17 @@ data class MigratingAccountInfo(
 )
 
 /**
+ * User data provided by the web content as a means of delivering the session token to the
+ * application
+ */
+data class UserData(
+    val sessionToken: String,
+    val email: String,
+    val uid: String,
+    val verified: Boolean,
+)
+
+/**
  * Representing all the possible entry points into FxA
  *
  * These entry points will be reflected in the authentication URL and will be tracked
@@ -109,6 +120,14 @@ interface OAuthAccount : AutoCloseable {
      * @return Profile (optional, if successfully retrieved) representing the user's basic profile info
      */
     suspend fun getProfile(ignoreCache: Boolean = false): Profile?
+
+    /**
+     * Sets the user data given by the web content finishing the OAuth flow.
+     * This should only be used by user agents that need the session token
+     *
+     * @param userData: The user data provided by the web content, including the session token
+     */
+    suspend fun setUserData(userData: UserData)
 
     /**
      * Authenticates the current account using the [code] and [state] parameters obtained via the

@@ -17,6 +17,8 @@ import androidx.navigation.fragment.navArgs
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.service.fxa.manager.SCOPE_PROFILE
+import mozilla.components.service.fxa.manager.SCOPE_SYNC
 import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -184,6 +186,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
         requireComponents.services.accountsAuthFeature.beginAuthentication(
             requireContext(),
             entrypoint = args.entrypoint,
+            setOf(SCOPE_PROFILE, SCOPE_SYNC),
         )
         SyncAuth.useEmail.record(NoExtras())
         // TODO The sign-in web content populates session history,

@@ -16,6 +16,9 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import mozilla.components.feature.qr.QrFeature
+import mozilla.components.service.fxa.manager.SCOPE_PROFILE
+import mozilla.components.service.fxa.manager.SCOPE_SESSION
+import mozilla.components.service.fxa.manager.SCOPE_SYNC
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
@@ -54,6 +57,7 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
                         requireContext(),
                         pairingUrl,
                         args.entrypoint,
+                        setOf(SCOPE_SYNC, SCOPE_PROFILE, SCOPE_SESSION),
                     )
                     val vibrator = requireContext().getSystemService<Vibrator>()!!
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

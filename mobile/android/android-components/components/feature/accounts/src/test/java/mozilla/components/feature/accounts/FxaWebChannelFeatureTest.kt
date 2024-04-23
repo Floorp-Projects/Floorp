@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.concept.sync.UserData
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncEngine
@@ -701,6 +702,56 @@ class FxaWebChannelFeatureTest {
         assertTrue(FxaWebChannelFeature.isCommunicationAllowed("http://localhost", "http://localhost"))
     }
 
+    @Test
+    fun `COMMAND_LOGIN must be processed and sets the user's data`() = runTest {
+        val accountManager: FxaAccountManager = mock() // syncConfig is null by default (is not configured)
+        val engineSession: EngineSession = mock()
+        val ext: WebExtension = mock()
+        val port: Port = mock()
+        val messageHandler = argumentCaptor<MessageHandler>()
+
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
+
+        val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, null, emptySet(), accountManager)
+        webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
+
+        verify(ext).registerContentMessageHandler(
+            eq(engineSession),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
+            messageHandler.capture(),
+        )
+        messageHandler.value.onPortConnected(port)
+
+        // Action: signin
+        verifyLogin("sessiontoken123", "foo@bar.com", "uid123", false, messageHandler.value, accountManager)
+    }
+
+    @Test
+    fun `COMMAND_LOGIN invalid json sends back`() = runTest {
+        val accountManager: FxaAccountManager = mock() // syncConfig is null by default (is not configured)
+        val engineSession: EngineSession = mock()
+        val ext: WebExtension = mock()
+        val port: Port = mock()
+        val messageHandler = argumentCaptor<MessageHandler>()
+
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
+
+        val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, null, emptySet(), accountManager)
+        webchannelFeature.start()
+        shadowOf(getMainLooper()).idle()
+
+        verify(ext).registerContentMessageHandler(
+            eq(engineSession),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
+            messageHandler.capture(),
+        )
+        messageHandler.value.onPortConnected(port)
+
+        // Action: signin
+        verifyLogin("sessiontoken123", "foo@bar.com", "uid123", false, messageHandler.value, accountManager)
+    }
+
     private fun JSONObject.getSupportedEngines(): List<String> {
         val engines = this.getJSONObject("message")
             .getJSONObject("data")
@@ -791,6 +842,41 @@ class FxaWebChannelFeatureTest {
                     "code":"$code",
                     "state":"$state",
                     "declinedSyncEngines":${declined.map { "${it.nativeName}," }.filterNotNull()}
+                }
+             }
+            }
+            """.trimIndent(),
+        )
+    }
+
+    private suspend fun verifyLogin(sessionToken: String, email: String, uid: String, verified: Boolean, messageHandler: MessageHandler, accountManager: FxaAccountManager) {
+        val jsonToWebChannel = jsonLogin(sessionToken, email, uid, verified)
+        val port = mock<Port>()
+        whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
+        messageHandler.onPortMessage(jsonToWebChannel, port)
+
+        val expectedUserData = UserData(
+            sessionToken = sessionToken,
+            email = email,
+            uid = uid,
+            verified = verified,
+        )
+        shadowOf(getMainLooper()).idle()
+
+        verify(accountManager).setUserData(expectedUserData)
+    }
+
+    private fun jsonLogin(sessionToken: String, email: String, uid: String, verified: Boolean): JSONObject {
+        return JSONObject(
+            """{
+             "message":{
+                "command": "fxaccounts:login",
+                "messageId":123,
+                "data":{
+                    "email":"$email",
+                    "sessionToken":"$sessionToken",
+                    "uid":"$uid",
+                    "verified":$verified
                 }
              }
             }

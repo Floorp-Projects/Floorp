@@ -20,6 +20,7 @@ import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.sync.AuthType
+import mozilla.components.concept.sync.UserData
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.ServerConfig
@@ -157,6 +158,7 @@ class FxaWebChannelFeature(
                 WebChannelCommand.CAN_LINK_ACCOUNT -> processCanLinkAccountCommand(messageId)
                 WebChannelCommand.FXA_STATUS -> processFxaStatusCommand(accountManager, messageId, fxaCapabilities)
                 WebChannelCommand.OAUTH_LOGIN -> processOauthLoginCommand(accountManager, payload)
+                WebChannelCommand.LOGIN -> processLoginCommand(accountManager, payload)
             }
             response?.let { port.postMessage(it) }
         }
@@ -195,6 +197,7 @@ class FxaWebChannelFeature(
 
         enum class WebChannelCommand {
             CAN_LINK_ACCOUNT,
+            LOGIN,
             OAUTH_LOGIN,
             FXA_STATUS,
         }
@@ -220,6 +223,12 @@ class FxaWebChannelFeature(
          * current Firefox Account (if present).
          */
         private const val COMMAND_STATUS = "fxaccounts:fxa_status"
+
+        /**
+         * Gets triggered when the web content is signed in/up, but not necessarily verified
+         * it passes in its payload the session token the web content is holding on to
+         */
+        private const val COMMAND_LOGIN = "fxaccounts:login"
 
         /**
          * Handles the [COMMAND_CAN_LINK_ACCOUNT] event from the web-channel.
@@ -329,6 +338,32 @@ class FxaWebChannelFeature(
         }
 
         /**
+         * Handles the [COMMAND_LOGIN] event from the web-channel
+         */
+        private fun processLoginCommand(accountManager: FxaAccountManager, payload: JSONObject): JSONObject? {
+            val sessionToken: String
+            val email: String
+            val uid: String
+            val verified: Boolean
+
+            try {
+                val data = payload.getJSONObject("data")
+                sessionToken = data.getString("sessionToken")
+                email = data.getString("email")
+                uid = data.getString("uid")
+                verified = data.getBoolean("verified")
+            } catch (e: JSONException) {
+                logger.error("Error while processing WebChannel login command", e)
+                return null
+            }
+            val userData = UserData(sessionToken, email, uid, verified)
+            CoroutineScope(Dispatchers.Main).launch {
+                accountManager.setUserData(userData)
+            }
+            return null
+        }
+
+        /**
          * Handles the [COMMAND_OAUTH_LOGIN] event from the web-channel.
          */
         private fun processOauthLoginCommand(accountManager: FxaAccountManager, payload: JSONObject): JSONObject? {
@@ -368,6 +403,7 @@ class FxaWebChannelFeature(
                 COMMAND_CAN_LINK_ACCOUNT -> WebChannelCommand.CAN_LINK_ACCOUNT
                 COMMAND_OAUTH_LOGIN -> WebChannelCommand.OAUTH_LOGIN
                 COMMAND_STATUS -> WebChannelCommand.FXA_STATUS
+                COMMAND_LOGIN -> WebChannelCommand.LOGIN
                 else -> {
                     logger.warn("Unrecognized WebChannel command: $this")
                     null

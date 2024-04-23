@@ -17,6 +17,7 @@ import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.concept.sync.UserData
 import mozilla.components.support.base.log.logger.Logger
 
 typealias PersistCallback = mozilla.appservices.fxaclient.FxaClient.PersistCallback
@@ -125,6 +126,12 @@ class FirefoxAccount internal constructor(
     override suspend fun getProfile(ignoreCache: Boolean) = withContext(scope.coroutineContext) {
         handleFxaExceptions(logger, "getProfile", { null }) {
             inner.getProfile(ignoreCache).into()
+        }
+    }
+
+    override suspend fun setUserData(userData: UserData) {
+        handleFxaExceptions(logger, "setUserData", { null }) {
+            inner.setUserData(userData.into())
         }
     }
 
