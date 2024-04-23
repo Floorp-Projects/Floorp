@@ -105,8 +105,8 @@ class nsRangeFrame final : public nsContainerFrame,
   bool IsUpwards() const {
     MOZ_ASSERT(!IsHorizontal());
     mozilla::WritingMode wm = GetWritingMode();
-    return wm.GetBlockDir() == mozilla::WritingMode::eBlockTB ||
-           wm.GetInlineDir() == mozilla::WritingMode::eInlineBTT;
+    return wm.GetBlockDir() == mozilla::WritingMode::BlockDir::TB ||
+           wm.GetInlineDir() == mozilla::WritingMode::InlineDir::BTT;
   }
 
   double GetMin() const;

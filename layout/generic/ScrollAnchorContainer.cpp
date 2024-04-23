@@ -178,15 +178,15 @@ static nsRect FindScrollAnchoringBoundingRect(const nsIFrame* aScrollFrame,
   // axis of the scroll frame
   WritingMode writingMode = aScrollFrame->GetWritingMode();
   switch (writingMode.GetBlockDir()) {
-    case WritingMode::eBlockTB: {
+    case WritingMode::BlockDir::TB: {
       overflowRect.SetBoxY(borderRect.Y(), overflowRect.YMost());
       break;
     }
-    case WritingMode::eBlockLR: {
+    case WritingMode::BlockDir::LR: {
       overflowRect.SetBoxX(borderRect.X(), overflowRect.XMost());
       break;
     }
-    case WritingMode::eBlockRL: {
+    case WritingMode::BlockDir::RL: {
       overflowRect.SetBoxX(overflowRect.X(), borderRect.XMost());
       break;
     }
@@ -522,15 +522,15 @@ void ScrollAnchorContainer::ApplyAdjustments() {
 
   nsPoint physicalAdjustment;
   switch (writingMode.GetBlockDir()) {
-    case WritingMode::eBlockTB: {
+    case WritingMode::BlockDir::TB: {
       physicalAdjustment.y = logicalAdjustment;
       break;
     }
-    case WritingMode::eBlockLR: {
+    case WritingMode::BlockDir::LR: {
       physicalAdjustment.x = logicalAdjustment;
       break;
     }
-    case WritingMode::eBlockRL: {
+    case WritingMode::BlockDir::RL: {
       physicalAdjustment.x = -logicalAdjustment;
       break;
     }

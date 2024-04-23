@@ -570,17 +570,17 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
     // this is a calculation that affects layout.
     if (!reflowChild && shrinkingBSize) {
       switch (wm.GetBlockDir()) {
-        case WritingMode::eBlockTB:
+        case WritingMode::BlockDir::TB:
           if (child->ScrollableOverflowRect().YMost() > aConfig.mColBSize) {
             reflowChild = true;
           }
           break;
-        case WritingMode::eBlockLR:
+        case WritingMode::BlockDir::LR:
           if (child->ScrollableOverflowRect().XMost() > aConfig.mColBSize) {
             reflowChild = true;
           }
           break;
-        case WritingMode::eBlockRL:
+        case WritingMode::BlockDir::RL:
           // XXX not sure how to handle this, so for now just don't attempt
           // the optimization
           reflowChild = true;

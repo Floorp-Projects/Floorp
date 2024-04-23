@@ -725,15 +725,10 @@ ESMAutoDirWheelDeltaAdjuster::ESMAutoDirWheelDeltaAdjuster(
   }
 
   WritingMode writingMode = honouredFrame->GetWritingMode();
-  WritingMode::BlockDir blockDir = writingMode.GetBlockDir();
-  WritingMode::InlineDir inlineDir = writingMode.GetInlineDir();
   // Get whether the honoured frame's content in the horizontal direction starts
   // from right to left(E.g. it's true either if "writing-mode: vertical-rl", or
   // if "writing-mode: horizontal-tb; direction: rtl;" in CSS).
-  mIsHorizontalContentRightToLeft =
-      (blockDir == WritingMode::BlockDir::eBlockRL ||
-       (blockDir == WritingMode::BlockDir::eBlockTB &&
-        inlineDir == WritingMode::InlineDir::eInlineRTL));
+  mIsHorizontalContentRightToLeft = writingMode.IsPhysicalRTL();
 }
 
 void ESMAutoDirWheelDeltaAdjuster::OnAdjusted() {

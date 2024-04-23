@@ -773,11 +773,11 @@ void Theme::PaintMenulistArrow(nsIFrame* aFrame, DrawTarget& aDrawTarget,
   const auto direction = [&] {
     const auto wm = aFrame->GetWritingMode();
     switch (wm.GetBlockDir()) {
-      case WritingMode::BlockDir::eBlockLR:
+      case WritingMode::BlockDir::LR:
         return PhysicalArrowDirection::Right;
-      case WritingMode::BlockDir::eBlockRL:
+      case WritingMode::BlockDir::RL:
         return PhysicalArrowDirection::Left;
-      case WritingMode::BlockDir::eBlockTB:
+      case WritingMode::BlockDir::TB:
         return PhysicalArrowDirection::Bottom;
     }
     MOZ_ASSERT_UNREACHABLE("Unknown direction?");
