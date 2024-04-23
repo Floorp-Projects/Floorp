@@ -186,7 +186,7 @@ class Browsertime(Perftest):
                 # setup once all chrome versions use the new artifact setup.
                 cd_extracted_names_115 = {
                     "windows": str(
-                        pathlib.Path("{}chromedriver-win32", "chromedriver.exe")
+                        pathlib.Path("{}chromedriver-win64", "chromedriver.exe")
                     ),
                     "mac-x86_64": str(
                         pathlib.Path("{}chromedriver-mac-x64", "chromedriver")
@@ -212,7 +212,8 @@ class Browsertime(Perftest):
                     elif "win" in self.config["platform"]:
                         self.browsertime_chromedriver = (
                             self.browsertime_chromedriver.replace(
-                                "{}chromedriver.exe", cd_extracted_names_115["windows"]
+                                "{}chromedriver.exe",
+                                cd_extracted_names_115["windows"],
                             )
                         )
                     else:
