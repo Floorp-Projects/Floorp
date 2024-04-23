@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<script>
+// Notify our parent and reload ourselves.
+function notifyAndReload() {
+  if (window.parent) {
+    window.parent.postMessage("reloaded", "*");
+  }
+  window.location.reload(true)
+}
+</script>
+<style>
+*:nth-child(even) {
+  height: 16em;
+  list-style-image: url(data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=);
+}
+#a {
+  display: inline-grid;
+  grid-auto-flow: column dense;
+}
+#b {
+  padding-top: 8192vmax;
+}
+* {
+  align-content: center;
+  column-width: 1em;
+  float: inline-end;
+}
+</style>
+<body onload="setTimeout(notifyAndReload, 0)">
+<picture></picture>
+<iframe></iframe>
+<isindex>
+<svg></svg>
+<samp id="a">
+<q>
+<a id="b">
+</q>
+<li>
