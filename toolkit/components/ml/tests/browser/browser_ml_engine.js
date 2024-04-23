@@ -174,3 +174,26 @@ add_task(async function test_ml_engine_destruction() {
 
   await cleanup();
 });
+
+/**
+ * Tests that we display a nice error message when the pref is off
+ */
+add_task(async function test_pref_is_off() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ml.enable", false]],
+  });
+
+  info("Get the engine process");
+  let error;
+
+  try {
+    await EngineProcess.getMLEngineParent();
+  } catch (e) {
+    error = e;
+  }
+  is(
+    error?.message,
+    "MLEngine is disabled. Check the browser.ml prefs.",
+    "The error is correctly surfaced."
+  );
+});
