@@ -5,7 +5,7 @@
 ChromeUtils.defineESModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-  BrowserTestUtils: "resource://testing-common/BrowserTestUtils.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
 const { ctypes } = ChromeUtils.importESModule(
@@ -68,23 +68,6 @@ function raiseSignal(pid, sig) {
   return { ok: true };
 }
 
-// We would like to use the following to wait for a stop signal to actually be
-// handled:
-//  await Services.profiler.waitOnePeriodicSampling();
-// However, as we are trying to shut down the profiler using the sampler
-// thread, this can cause complications between the callback waiting for the
-// sampling to be over, and the sampler thread actually finishing.
-// Instead, we use the BrowserTestUtils.waitForCondition to wait until the
-// profiler is no longer active.
-async function waitUntilProfilerStopped(interval = 1000, maxTries = 100) {
-  await BrowserTestUtils.waitForCondition(
-    () => !Services.profiler.IsActive(),
-    "the profiler should be inactive",
-    interval,
-    maxTries
-  );
-}
-
 async function cleanupAfterTest() {
   // We need to cleanup written profiles after a test
   // Get the system downloads directory, and use it to build a profile file
@@ -136,11 +119,15 @@ add_task(async () => {
   // Get the process ID
   let pid = Services.appinfo.processID;
 
+  // Set up an observer to watch for the profiler stopping
+  let stopPromise = TestUtils.topicObserved("profiler-stopped");
+
   // Try and stop the profiler using a signal.
   let result = raiseSignal(pid, SIGUSR2);
   Assert.ok(result, "Raising a SIGUSR2 signal should succeed.");
 
-  await waitUntilProfilerStopped();
+  // Wait for the profiler to stop
+  Assert.ok(await stopPromise, "The profiler should stop");
 
   Assert.ok(
     !Services.profiler.IsActive(),
@@ -177,17 +164,21 @@ add_task(async () => {
   await Services.profiler.StartProfiler(entries, interval, threads, features);
   Assert.ok(Services.profiler.IsActive(), "The profiler should now be active.");
 
+  // Set up an observer to watch for the profiler stopping
+  let stopPromise = TestUtils.topicObserved("profiler-stopped");
+
   // Try and stop the profiler using a signal.
   let result = raiseSignal(pid, SIGUSR2);
   Assert.ok(result, "Raising a SIGUSR2 signal should succeed.");
 
-  // Wait for the file to exist
-  await BrowserTestUtils.waitForCondition(
-    async () => await IOUtils.exists(profile.path),
-    "Waiting for a profile file to be written to disk."
-  );
+  // Wait for the profiler to stop
+  Assert.ok(await stopPromise, "The profiler should stop");
 
-  await waitUntilProfilerStopped();
+  // Now that it's stopped, make sure that we have a profile file
+  Assert.ok(
+    await IOUtils.exists(profile.path),
+    "A profile file should be written to disk."
+  );
 
   Assert.ok(
     !Services.profiler.IsActive(),
