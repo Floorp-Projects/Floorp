@@ -296,4 +296,4 @@ support-files = [
 ["browser_warning_permanent_private_browsing.js"]
 
 ["browser_windows_launch_on_login.js"]
-run-if = ["os == 'win'"]
+run-if = ["(os == 'win' && !msix)"] # Disabled for MSIX due to https://bugzilla.mozilla.org/show_bug.cgi?id=1888263

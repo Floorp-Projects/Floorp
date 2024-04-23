@@ -847,6 +847,19 @@ const TargetingGetters = {
     return lazy.WindowsLaunchOnLogin.getLaunchOnLoginEnabled();
   },
 
+  get isMSIX() {
+    if (AppConstants.platform !== "win") {
+      return false;
+    }
+    // While we can write registry keys using external programs, we have no
+    // way of cleanup on uninstall. If we are on an MSIX build
+    // launch on login should never be enabled.
+    // Default to false so that the feature isn't unnecessarily
+    // disabled.
+    // See Bug 1888263.
+    return Services.sysinfo.getProperty("hasWinPackageId", false);
+  },
+
   /**
    * Is this invocation running in background task mode?
    *

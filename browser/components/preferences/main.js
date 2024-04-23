@@ -430,19 +430,24 @@ var gMainPane = {
         "command",
         gMainPane.onWindowsLaunchOnLoginChange
       );
-      NimbusFeatures.windowsLaunchOnLogin.recordExposureEvent({
-        once: true,
-      });
       // We do a check here for startWithLastProfile as we could
       // have disabled the pref for the user before they're ever
       // exposed to the experiment on a new profile.
+      // If we're using MSIX, we don't show the checkbox as MSIX
+      // can't write to the registry.
       if (
-        NimbusFeatures.windowsLaunchOnLogin.getVariable("enabled") &&
         Cc["@mozilla.org/toolkit/profile-service;1"].getService(
           Ci.nsIToolkitProfileService
-        ).startWithLastProfile
+        ).startWithLastProfile &&
+        !Services.sysinfo.getProperty("hasWinPackageId", false)
       ) {
-        document.getElementById("windowsLaunchOnLoginBox").hidden = false;
+        NimbusFeatures.windowsLaunchOnLogin.recordExposureEvent({
+          once: true,
+        });
+
+        if (NimbusFeatures.windowsLaunchOnLogin.getVariable("enabled")) {
+          document.getElementById("windowsLaunchOnLoginBox").hidden = false;
+        }
       }
     }
     gMainPane.updateBrowserStartupUI =
