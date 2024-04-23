@@ -15,7 +15,7 @@ job-defaults:
     limit-platforms:
         by-app:
             chrome:
-                - .*shippable.*
+                - .*64.*shippable.*
             safari:
                 - .*macos.*shippable.*
             custom-car:

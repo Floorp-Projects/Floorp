@@ -212,11 +212,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-ares6**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-ares6**
         - ❌
         - ❌
@@ -453,11 +448,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-assorted-dom**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-assorted-dom**
         - ❌
         - ❌
@@ -695,11 +685,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-jetstream2**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-jetstream2**
         - ❌
         - ❌
@@ -932,11 +917,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-matrix-react-bench**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-matrix-react-bench**
         - ❌
         - ❌
@@ -1273,11 +1253,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-1-3**
         - ❌
         - ❌
@@ -1614,11 +1589,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-1-3**
         - ❌
         - ❌
@@ -1905,11 +1875,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-animometer**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-animometer**
         - ❌
         - ❌
@@ -2187,11 +2152,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-animometer**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-animometer**
         - ❌
         - ❌
@@ -2478,11 +2438,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-animometer-ramp**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-animometer-ramp**
         - ❌
         - ❌
@@ -2770,11 +2725,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-animometer-ramp**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-animometer-ramp**
         - ❌
         - ❌
@@ -3062,11 +3012,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-htmlsuite**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-htmlsuite**
         - ❌
         - ❌
@@ -3345,11 +3290,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-htmlsuite**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-htmlsuite**
         - ❌
         - ❌
@@ -3686,11 +3626,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-htmlsuite-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-htmlsuite-1-3**
         - ❌
         - ❌
@@ -4027,11 +3962,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-htmlsuite-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-htmlsuite-1-3**
         - ❌
         - ❌
@@ -4324,11 +4254,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-htmlsuite-ramp**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-htmlsuite-ramp**
         - ❌
         - ❌
@@ -4617,11 +4542,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-motionmark-htmlsuite-ramp**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-motionmark-htmlsuite-ramp**
         - ❌
         - ❌
@@ -5016,11 +4936,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-speedometer**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-speedometer**
         - ❌
         - ❌
@@ -5411,11 +5326,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-speedometer**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-speedometer**
         - ❌
         - ❌
@@ -5812,11 +5722,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-speedometer3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-speedometer3**
         - ❌
         - ❌
@@ -6209,11 +6114,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-speedometer3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-speedometer3**
         - ❌
         - ❌
@@ -6453,11 +6353,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-stylebench**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-stylebench**
         - ❌
         - ❌
@@ -6690,11 +6585,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-sunspider**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-sunspider**
         - ❌
         - ❌
@@ -7190,11 +7080,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-unity-webgl**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ❌
         - ❌
@@ -7468,11 +7353,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-unity-webgl**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ❌
         - ❌
@@ -7706,11 +7586,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-wasm-chrome-wasm-godot**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-wasm-firefox-wasm-godot**
         - ❌
         - ❌
@@ -8369,11 +8244,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-wasm-chrome-wasm-misc**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-wasm-firefox-wasm-misc**
         - ❌
         - ❌
@@ -9039,11 +8909,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-chrome-webaudio**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-firefox-webaudio**
         - ❌
         - ❌
@@ -16359,11 +16224,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-upload-chrome-upload**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-upload-firefox-upload**
         - ❌
         - ❌
@@ -16590,11 +16450,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-upload-chrome-upload-h3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-upload-firefox-upload-h3**
         - ❌
         - ❌
