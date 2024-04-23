@@ -19,7 +19,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/layers/ImageDataSerializer.h"
@@ -190,16 +189,16 @@ const char* const kFragConvert_ColorMatrix = R"(
     return (uColorMatrix * vec4(src, 1)).rgb;
   }
 )";
-const char* const kFragConvert_ColorLut3d = R"(
+const char* const kFragConvert_ColorLut = R"(
   uniform PRECISION sampler3D uColorLut;
 
   vec3 metaConvert(vec3 src) {
     // Half-texel filtering hazard!
     // E.g. For texture size of 2,
-    // E.g. x=0.25 is still sampling 100% of texel x=0, 0% of texel x=1.
-    // For the LUT, we need r=0.25 to filter 75/25 from texel 0 and 1.
-    // That is, we need to adjust our sampling point such that it starts in the
-    // center of texel 0, and ends in the center of texel N-1.
+    // E.g. 0.5/2=0.25 is still sampling 100% of texel 0, 0% of texel 1.
+    // For the LUT, we need 0.5/2=0.25 to filter 25/75 texel 0 and 1.
+    // That is, we need to adjust our sampling point such that it's 0.25 of the
+    // way from texel 0's center to texel 1's center.
     // We need, for N=2:
     // v=0.0|N=2 => v'=0.5/2
     // v=1.0|N=2 => v'=1.5/2
@@ -210,44 +209,6 @@ const char* const kFragConvert_ColorLut3d = R"(
     vec3 size = vec3(textureSize(uColorLut, 0));
     src = (0.5 + src * (size - 1.0)) / size;
     return texture(uColorLut, src).rgb;
-  }
-)";
-// Delete if unused after 2024-10-01:
-const char* const kFragConvert_ColorLut2d = R"(
-  uniform PRECISION sampler2D uColorLut;
-  uniform mediump vec3 uColorLut3dSize;
-
-  vec3 metaConvert(vec3 src) {
-    // Half-texel filtering hazard!
-    // E.g. For texture size of 2,
-    // E.g. x=0.25 is still sampling 100% of texel x=0, 0% of texel x=1.
-    // For the LUT, we need r=0.25 to filter 75/25 from texel 0 and 1.
-    // That is, we need to adjust our sampling point such that it starts in the
-    // center of texel 0, and ends in the center of texel N-1.
-    // We need, for N=2:
-    // v=0.0|N=2 => v'=0.5/2
-    // v=1.0|N=2 => v'=1.5/2
-    // For N=3:
-    // v=0.0|N=3 => v'=0.5/3
-    // v=1.0|N=3 => v'=2.5/3
-    // => v' = ( 0.5 + v * (3 - 1) )/3
-    src = clamp(src, vec3(0,0,0), vec3(1,1,1));
-    vec3 lut3dSize = uColorLut3dSize;
-    vec2 lut2dSize = vec2(lut3dSize.x, lut3dSize.y * lut3dSize.z);
-    vec3 texelSrc3d = 0.5 + src * (lut3dSize - 1.0);
-
-    vec3 texelSrc3d_zFloor = texelSrc3d;
-    texelSrc3d_zFloor.z = floor(texelSrc3d_zFloor.z);
-    vec3 texelSrc3d_zNext = texelSrc3d_zFloor + vec3(0,0,1);
-    texelSrc3d_zNext.z = min(texelSrc3d_zNext.z, lut3dSize.z - 1.0);
-
-    vec2 texelSrc2d_zFloor = texelSrc3d_zFloor.xy + vec2(0, texelSrc3d_zFloor.z * lut3dSize.y);
-    vec2 texelSrc2d_zNext  = texelSrc3d_zNext.xy  + vec2(0, texelSrc3d_zNext.z  * lut3dSize.y);
-
-    vec4 dst_zFloor = texture(uColorLut, texelSrc2d_zFloor / lut2dSize);
-    vec4 dst_zNext = texture(uColorLut, texelSrc2d_zNext / lut2dSize);
-
-    return mix(dst_zFloor, dst_zNext, texelSrc3d.z - texelSrc3d_zFloor.z);
   }
 )";
 
@@ -316,13 +277,13 @@ Mat3 SubRectMat3(const gfx::IntRect& bigSubrect, const gfx::IntSize& smallSize,
 // --
 
 ScopedSaveMultiTex::ScopedSaveMultiTex(GLContext* const gl,
-                                       const size_t texUnits,
+                                       const std::vector<uint8_t>& texUnits,
                                        const GLenum texTarget)
     : mGL(*gl),
       mTexUnits(texUnits),
       mTexTarget(texTarget),
       mOldTexUnit(mGL.GetIntAs<GLenum>(LOCAL_GL_ACTIVE_TEXTURE)) {
-  MOZ_RELEASE_ASSERT(texUnits >= 1);
+  MOZ_RELEASE_ASSERT(texUnits.size() >= 1);
 
   GLenum texBinding;
   switch (mTexTarget) {
@@ -343,11 +304,12 @@ ScopedSaveMultiTex::ScopedSaveMultiTex(GLContext* const gl,
       MOZ_CRASH();
   }
 
-  for (const auto i : IntegerRange(mTexUnits)) {
-    mGL.fActiveTexture(LOCAL_GL_TEXTURE0 + i);
+  for (const auto i : IntegerRange(mTexUnits.size())) {
+    const auto& unit = mTexUnits[i];
+    mGL.fActiveTexture(LOCAL_GL_TEXTURE0 + unit);
     if (mGL.IsSupported(GLFeature::sampler_objects)) {
       mOldTexSampler[i] = mGL.GetIntAs<GLuint>(LOCAL_GL_SAMPLER_BINDING);
-      mGL.fBindSampler(i, 0);
+      mGL.fBindSampler(unit, 0);
     }
     mOldTex[i] = mGL.GetIntAs<GLuint>(texBinding);
   }
@@ -357,10 +319,11 @@ ScopedSaveMultiTex::~ScopedSaveMultiTex() {
   // Unbind in reverse order, in case we have repeats.
   // Order matters because we unbound samplers during ctor, so now we have to
   // make sure we rebind them in the right order.
-  for (const auto i : Reversed(IntegerRange(mTexUnits))) {
-    mGL.fActiveTexture(LOCAL_GL_TEXTURE0 + i);
+  for (const auto i : Reversed(IntegerRange(mTexUnits.size()))) {
+    const auto& unit = mTexUnits[i];
+    mGL.fActiveTexture(LOCAL_GL_TEXTURE0 + unit);
     if (mGL.IsSupported(GLFeature::sampler_objects)) {
-      mGL.fBindSampler(i, mOldTexSampler[i]);
+      mGL.fBindSampler(unit, mOldTexSampler[i]);
     }
     mGL.fBindTexture(mTexTarget, mOldTex[i]);
   }
@@ -557,6 +520,11 @@ void DrawBlitProg::Draw(const BaseArgs& args,
   gl->fUniformMatrix3fv(mLoc_uDestMatrix, 1, false, destMatrix.m);
   gl->fUniformMatrix3fv(mLoc_uTexMatrix0, 1, false, args.texMatrix0.m);
 
+  if (args.texUnitForColorLut) {
+    gl->fUniform1i(mLoc_uColorLut,
+                   AssertedCast<GLint>(*args.texUnitForColorLut));
+  }
+
   MOZ_ASSERT(bool(argsYUV) == (mLoc_uColorMatrix != -1));
   if (argsYUV) {
     gl->fUniformMatrix3fv(mLoc_uTexMatrix1, 1, false, argsYUV->texMatrix1.m);
@@ -716,6 +684,10 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
 }
 
 GLBlitHelper::~GLBlitHelper() {
+  for (const auto& pair : mDrawBlitProgs) {
+    const auto& ptr = pair.second;
+    delete ptr;
+  }
   mDrawBlitProgs.clear();
 
   if (!mGL->MakeCurrent()) return;
@@ -730,16 +702,18 @@ GLBlitHelper::~GLBlitHelper() {
 
 // --
 
-const DrawBlitProg& GLBlitHelper::GetDrawBlitProg(
+const DrawBlitProg* GLBlitHelper::GetDrawBlitProg(
     const DrawBlitProg::Key& key) const {
-  auto& ret = mDrawBlitProgs[key];
-  if (!ret) {
-    ret = CreateDrawBlitProg(key);
+  const auto& res = mDrawBlitProgs.insert({key, nullptr});
+  auto& pair = *(res.first);
+  const auto& didInsert = res.second;
+  if (didInsert) {
+    pair.second = CreateDrawBlitProg(pair.first);
   }
-  return *ret;
+  return pair.second;
 }
 
-std::unique_ptr<const DrawBlitProg> GLBlitHelper::CreateDrawBlitProg(
+const DrawBlitProg* GLBlitHelper::CreateDrawBlitProg(
     const DrawBlitProg::Key& key) const {
   const auto precisionPref = StaticPrefs::gfx_blithelper_precision();
   const char* precision;
@@ -816,7 +790,7 @@ std::unique_ptr<const DrawBlitProg> GLBlitHelper::CreateDrawBlitProg(
       mGL->fUniform1i(loc, i);
     }
 
-    return std::make_unique<DrawBlitProg>(this, prog);
+    return new DrawBlitProg(this, prog);
   }
 
   GLuint progLogLen = 0;
@@ -1023,7 +997,7 @@ bool GLBlitHelper::Blit(const java::GeckoSurfaceTexture::Ref& surfaceTexture,
       {kFragHeader_TexExt, {kFragSample_OnePlane, kFragConvert_None}});
   const DrawBlitProg::BaseArgs baseArgs = {transform3, yFlip, destSize,
                                            Nothing()};
-  prog.Draw(baseArgs, nullptr);
+  prog->Draw(baseArgs, nullptr);
 
   if (surfaceTexture->IsSingleBuffer()) {
     surfaceTexture->ReleaseTexImage();
@@ -1113,7 +1087,7 @@ bool GLBlitHelper::BlitPlanarYCbCr(const PlanarYCbCrData& yuvData,
 
   // --
 
-  const ScopedSaveMultiTex saveTex(mGL, 3, LOCAL_GL_TEXTURE_2D);
+  const ScopedSaveMultiTex saveTex(mGL, {0, 1, 2}, LOCAL_GL_TEXTURE_2D);
   const ResetUnpackState reset(mGL);
   const gfx::IntSize yTexSize(yuvData.mYStride, yuvData.YDataSize().height);
   const gfx::IntSize uvTexSize(yuvData.mCbCrStride,
@@ -1165,7 +1139,7 @@ bool GLBlitHelper::BlitPlanarYCbCr(const PlanarYCbCrData& yuvData,
                                            yFlip, destSize, Nothing()};
   const DrawBlitProg::YUVArgs yuvArgs = {
       SubRectMat3(clipRect, uvTexSize, divisors), Some(yuvData.mYUVColorSpace)};
-  prog.Draw(baseArgs, &yuvArgs);
+  prog->Draw(baseArgs, &yuvArgs);
   return true;
 }
 
@@ -1223,7 +1197,11 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
 
   const GLenum texTarget = LOCAL_GL_TEXTURE_RECTANGLE;
 
-  const ScopedSaveMultiTex saveTex(mGL, planes, texTarget);
+  std::vector<uint8_t> texUnits;
+  for (uint8_t i = 0; i < planes; i++) {
+    texUnits.push_back(i);
+  }
+  const ScopedSaveMultiTex saveTex(mGL, texUnits, texTarget);
   const ScopedTexture tex0(mGL);
   const ScopedTexture tex1(mGL);
   const ScopedTexture tex2(mGL);
@@ -1304,7 +1282,7 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
       kFragHeader_Tex2DRect,
       {fragSample, kFragConvert_ColorMatrix},
   });
-  prog.Draw(baseArgs, pYuvArgs);
+  prog->Draw(baseArgs, pYuvArgs);
   return true;
 }
 #endif
@@ -1337,14 +1315,14 @@ void GLBlitHelper::DrawBlitTextureToFramebuffer(const GLuint srcTex,
       {kFragSample_OnePlane, fragConvert},
   });
 
-  const ScopedSaveMultiTex saveTex(mGL, 1, srcTarget);
+  const ScopedSaveMultiTex saveTex(mGL, {0}, srcTarget);
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
   mGL->fBindTexture(srcTarget, srcTex);
 
   const bool yFlip = false;
   const DrawBlitProg::BaseArgs baseArgs = {texMatrix0, yFlip, destSize,
                                            Nothing()};
-  prog.Draw(baseArgs);
+  prog->Draw(baseArgs);
 }
 
 // -----------------------------------------------------------------------------
@@ -1541,7 +1519,11 @@ bool GLBlitHelper::Blit(DMABufSurface* surface, const gfx::IntSize& destSize,
 
   const GLenum texTarget = LOCAL_GL_TEXTURE_2D;
 
-  const ScopedSaveMultiTex saveTex(mGL, planes, texTarget);
+  std::vector<uint8_t> texUnits;
+  for (uint8_t i = 0; i < planes; i++) {
+    texUnits.push_back(i);
+  }
+  const ScopedSaveMultiTex saveTex(mGL, texUnits, texTarget);
   const auto pixelFormat = surface->GetSurfaceType();
 
   const char* fragSample;
@@ -1578,7 +1560,7 @@ bool GLBlitHelper::Blit(DMABufSurface* surface, const gfx::IntSize& destSize,
 
   const auto& prog =
       GetDrawBlitProg({kFragHeader_Tex2D, {fragSample, fragConvert}});
-  prog.Draw(baseArgs, pYuvArgs);
+  prog->Draw(baseArgs, pYuvArgs);
 
   return true;
 }
@@ -1621,205 +1603,23 @@ static uint32_t toRgb10A2(const color::vec4& val) {
   return ret;
 }
 
-// -
-
-color::ColorspaceDesc ToColorspaceDesc(const gfx::YUVRangedColorSpace cs) {
-  switch (cs) {
-    case gfx::YUVRangedColorSpace::BT601_Narrow:
-      return {
-          .chrom = color::Chromaticities::Rec601_525_Ntsc(),
-          .tf = color::PiecewiseGammaDesc::Rec709(),
-          .yuv =
-              color::YuvDesc{
-                  .yCoeffs = color::YuvLumaCoeffs::Rec709(),
-                  .ycbcr = color::YcbcrDesc::Narrow8(),
-              },
-      };
-    case gfx::YUVRangedColorSpace::BT601_Full:
-      return {
-          .chrom = color::Chromaticities::Rec601_525_Ntsc(),
-          .tf = color::PiecewiseGammaDesc::Rec709(),
-          .yuv =
-              color::YuvDesc{
-                  .yCoeffs = color::YuvLumaCoeffs::Rec709(),
-                  .ycbcr = color::YcbcrDesc::Full8(),
-              },
-      };
-    case gfx::YUVRangedColorSpace::BT709_Narrow:
-      return {
-          .chrom = color::Chromaticities::Rec709(),
-          .tf = color::PiecewiseGammaDesc::Rec709(),
-          .yuv =
-              color::YuvDesc{
-                  .yCoeffs = color::YuvLumaCoeffs::Rec709(),
-                  .ycbcr = color::YcbcrDesc::Narrow8(),
-              },
-      };
-    case gfx::YUVRangedColorSpace::BT709_Full:
-      return {
-          .chrom = color::Chromaticities::Rec709(),
-          .tf = color::PiecewiseGammaDesc::Rec709(),
-          .yuv =
-              color::YuvDesc{
-                  .yCoeffs = color::YuvLumaCoeffs::Rec709(),
-                  .ycbcr = color::YcbcrDesc::Full8(),
-              },
-      };
-    case gfx::YUVRangedColorSpace::BT2020_Narrow:
-      return {
-          .chrom = color::Chromaticities::Rec2020(),
-          .tf = color::PiecewiseGammaDesc::Rec2020_12bit(),
-          .yuv =
-              color::YuvDesc{
-                  .yCoeffs = color::YuvLumaCoeffs::Rec709(),
-                  .ycbcr = color::YcbcrDesc::Narrow8(),
-              },
-      };
-    case gfx::YUVRangedColorSpace::BT2020_Full:
-      return {
-          .chrom = color::Chromaticities::Rec2020(),
-          .tf = color::PiecewiseGammaDesc::Rec2020_12bit(),
-          .yuv =
-              color::YuvDesc{
-                  .yCoeffs = color::YuvLumaCoeffs::Rec2020(),
-                  .ycbcr = color::YcbcrDesc::Full8(),
-              },
-      };
-    case gfx::YUVRangedColorSpace::GbrIdentity:
-      return {
-          .chrom = color::Chromaticities::Rec709(),
-          .tf = color::PiecewiseGammaDesc::Rec709(),
-          .yuv =
-              color::YuvDesc{
-                  .yCoeffs = color::YuvLumaCoeffs::Gbr(),
-                  .ycbcr = color::YcbcrDesc::Full8(),
-              },
-      };
-  }
-  MOZ_CRASH("Bad YUVRangedColorSpace.");
-}
-
-static std::optional<color::ColorProfileDesc> ToColorProfileDesc(
-    gfx::ColorSpace2);
-
-}  // namespace gl
-namespace gfx {
-
-color::ColorProfileDesc QueryOutputColorProfile();
-
-}  // namespace gfx
-namespace gl {
-
-// -
-
-static std::optional<color::ColorProfileDesc> ToColorProfileDesc(
-    const gfx::ColorSpace2 cspace) {
-  color::ColorspaceDesc cspaceDesc;
-  switch (cspace) {
-    case gfx::ColorSpace2::Display:
-      if (kIsWindows) {
-#ifdef XP_WIN
-        return gfx::QueryOutputColorProfile();
-#endif
-      }
-      return {};
-
-    case gfx::ColorSpace2::SRGB:
-      cspaceDesc = {.chrom = color::Chromaticities::Srgb(),
-                    .tf = color::PiecewiseGammaDesc::Srgb()};
-      break;
-    case gfx::ColorSpace2::DISPLAY_P3:
-      cspaceDesc = {.chrom = color::Chromaticities::DisplayP3(),
-                    .tf = color::PiecewiseGammaDesc::DisplayP3()};
-      break;
-    case gfx::ColorSpace2::BT601_525:  // aka smpte170m NTSC
-      cspaceDesc = {.chrom = color::Chromaticities::Rec601_525_Ntsc(),
-                    .tf = color::PiecewiseGammaDesc::Rec709()};
-      break;
-    case gfx::ColorSpace2::BT709:  // Same gamut as SRGB, but different gamma.
-      cspaceDesc = {.chrom = color::Chromaticities::Rec709(),
-                    .tf = color::PiecewiseGammaDesc::Rec709()};
-      break;
-    case gfx::ColorSpace2::BT2020:
-      cspaceDesc = {.chrom = color::Chromaticities::Rec2020(),
-                    .tf = color::PiecewiseGammaDesc::Rec2020_12bit()};
-      break;
-  }
-  const auto profileDesc = color::ColorProfileDesc::From(cspaceDesc);
-  return profileDesc;
-}
-
-// -
-
-// For std::visit
-template <class... Ts>
-struct overloaded : Ts... {
-  using Ts::operator()...;
-};
-// explicit deduction guide (not needed as of C++20)
-template <class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
-
-// -
-
-template <typename C, typename K>
-inline auto MaybeFind(C& container, const K& key)
-    -> decltype(&(container.find(key)->second)) {
-  const auto itr = container.find(key);
-  if (itr == container.end()) return nullptr;
-  return &(itr->second);
-}
-
-// -
-
 std::shared_ptr<gl::Texture> GLBlitHelper::GetColorLutTex(
-    const ColorLutKey& request) const {
-  if (const auto found = MaybeFind(mColorLutTexMap, request)) {
-    return *found;  // Might be *Some(nullptr) -> nullptr!
-  }
-
-  return mColorLutTexMap[request] = [&]() -> std::shared_ptr<gl::Texture> {
+    const ColorLutKey& key) const {
+  auto& weak = mColorLutTexMap[key];
+  auto strong = weak.lock();
+  if (!strong) {
     auto& gl = *mGL;
-    const auto tex = std::make_shared<gl::Texture>(gl);
+    strong = std::make_shared<gl::Texture>(gl);
+    weak = strong;
 
-    // -
-
-    const std::optional<color::ColorProfileDesc> srcProfile =
-        std::visit(overloaded{
-                       [&](const gfx::ColorSpace2& cs)
-                           -> std::optional<color::ColorProfileDesc> {
-                         MOZ_ASSERT(cs != request.dst);
-                         const auto cpd = ToColorProfileDesc(cs);
-                         return cpd;
-                       },
-                       [&](const gfx::YUVRangedColorSpace& cs)
-                           -> std::optional<color::ColorProfileDesc> {
-                         const auto csd = ToColorspaceDesc(cs);
-                         const auto cpd = color::ColorProfileDesc::From(csd);
-                         return cpd;
-                       },
-                   },
-                   request.src);
-    MOZ_ASSERT(srcProfile);
-
-    const auto dstProfile = ToColorProfileDesc(request.dst);
-    if (kIsWindows) {
-      MOZ_ASSERT(dstProfile);
-    }
-    if (!srcProfile || !dstProfile) return nullptr;
-    const auto conversion = color::ColorProfileConversionDesc::From({
-        .src = *srcProfile,
-        .dst = *dstProfile,
-    });
+    const auto ct = color::ColorspaceTransform::Create(key.src, key.dst);
 
     // -
 
     const auto minLutSize = color::ivec3{2};
     const auto maxLutSize = color::ivec3{256};
     auto lutSize = minLutSize;
-    const bool isYcbcr =
-        (conversion.srcRgbFromSrcYuv != color::mat4::Identity());
-    if (isYcbcr) {
+    if (ct.srcSpace.yuv) {
       lutSize.x(int(StaticPrefs::gfx_blithelper_lut_size_ycbcr_y()));
       lutSize.y(int(StaticPrefs::gfx_blithelper_lut_size_ycbcr_cb()));
       lutSize.z(int(StaticPrefs::gfx_blithelper_lut_size_ycbcr_cr()));
@@ -1828,20 +1628,15 @@ std::shared_ptr<gl::Texture> GLBlitHelper::GetColorLutTex(
       lutSize.y(int(StaticPrefs::gfx_blithelper_lut_size_rgb_g()));
       lutSize.z(int(StaticPrefs::gfx_blithelper_lut_size_rgb_b()));
     }
-    lutSize = clamp(lutSize, minLutSize, maxLutSize);
+    lutSize = max(minLutSize, min(lutSize, maxLutSize));  // Clamp
 
-    const auto lut = [&]() {
-      auto lut = color::Lut3::Create(lutSize);
-      lut.SetMap(
-          [&](const color::vec3& src) { return conversion.DstFromSrc(src); });
-      return lut;
-    }();
+    const auto lut = ct.ToLut3(lutSize);
     const auto& size = lut.size;
 
     // -
 
     constexpr GLenum target = LOCAL_GL_TEXTURE_3D;
-    const auto bind = gl::ScopedBindTexture(&gl, tex->name, target);
+    const auto bind = gl::ScopedBindTexture(&gl, strong->name, target);
     gl.fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
     gl.fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
     gl.fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_R, LOCAL_GL_CLAMP_TO_EDGE);
@@ -1878,8 +1673,8 @@ std::shared_ptr<gl::Texture> GLBlitHelper::GetColorLutTex(
                         LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV,
                         uploadData.data());
     }
-    return tex;
-  }();
+  }
+  return strong;
 }
 
 }  // namespace gl

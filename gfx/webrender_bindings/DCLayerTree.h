@@ -44,10 +44,6 @@ struct IDCompositionVirtualSurface;
 
 namespace mozilla {
 
-namespace gfx {
-color::ColorProfileDesc QueryOutputColorProfile();
-}
-
 namespace gl {
 class GLContext;
 }
@@ -252,6 +248,8 @@ class DCLayerTree {
 
   bool mPendingCommit;
 
+  static color::ColorProfileDesc QueryOutputColorProfile();
+
   mutable Maybe<color::ColorProfileDesc> mOutputColorProfile;
 
   DCompOverlayTypes mUsedOverlayTypesInFrame = DCompOverlayTypes::NO_OVERLAY;
@@ -260,7 +258,7 @@ class DCLayerTree {
  public:
   const color::ColorProfileDesc& OutputColorProfile() const {
     if (!mOutputColorProfile) {
-      mOutputColorProfile = Some(gfx::QueryOutputColorProfile());
+      mOutputColorProfile = Some(QueryOutputColorProfile());
     }
     return *mOutputColorProfile;
   }
