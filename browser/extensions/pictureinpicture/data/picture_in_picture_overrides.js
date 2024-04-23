@@ -149,9 +149,16 @@ let AVAILABLE_PIP_OVERRIDES;
         visibilityThreshold: 0.7,
       },
     },
+
     mxplayer: {
       "https://*.mxplayer.in/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
+      },
+    },
+
+    nbcnews: {
+      "https://*.nbcnews.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
       },
     },
 

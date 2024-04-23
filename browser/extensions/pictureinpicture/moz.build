@@ -38,6 +38,7 @@ FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["video-wrappers"] +=
     "video-wrappers/hbomax.js",
     "video-wrappers/hotstar.js",
     "video-wrappers/hulu.js",
+    "video-wrappers/jwplayerWrapper.js",
     "video-wrappers/mock-wrapper.js",
     "video-wrappers/netflix.js",
     "video-wrappers/nytimes.js",
