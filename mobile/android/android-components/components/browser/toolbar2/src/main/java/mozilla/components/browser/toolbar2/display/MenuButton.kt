@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.display
+package mozilla.components.browser.toolbar2.display
 
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
@@ -10,7 +10,7 @@ import androidx.core.view.isVisible
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.ext.asCandidateList
 import mozilla.components.browser.menu.ext.getHighlight
-import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
+import mozilla.components.browser.toolbar2.facts.emitOpenMenuFact
 import mozilla.components.concept.menu.MenuController
 
 internal class MenuButton(

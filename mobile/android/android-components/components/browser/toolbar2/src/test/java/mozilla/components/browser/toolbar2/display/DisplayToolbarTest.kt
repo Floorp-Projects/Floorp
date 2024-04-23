@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.display
+package mozilla.components.browser.toolbar2.display
 
 import android.graphics.Color
 import android.os.Build
@@ -14,8 +14,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.browser.toolbar.R
+import mozilla.components.browser.toolbar2.BrowserToolbar
+import mozilla.components.browser.toolbar2.R
 import mozilla.components.concept.menu.MenuButton
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity

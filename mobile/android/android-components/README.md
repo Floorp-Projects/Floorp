@@ -83,6 +83,8 @@ High-level components for building browser(-like) apps.
 
 * 🔵 [**Toolbar**](components/browser/toolbar/README.md) - A customizable toolbar for browsers.
 
+* 🔴 [**Toolbar2**](components/browser/toolbar2/README.md) - A customizable toolbar for browsers.
+
 ## Concept
 
 _API contracts and abstraction layers for browser components._

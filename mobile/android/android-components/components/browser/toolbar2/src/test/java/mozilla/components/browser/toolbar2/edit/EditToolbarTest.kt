@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.edit
+package mozilla.components.browser.toolbar2.edit
 
 import android.view.KeyEvent
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.browser.toolbar.R
+import mozilla.components.browser.toolbar2.BrowserToolbar
+import mozilla.components.browser.toolbar2.R
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.Component

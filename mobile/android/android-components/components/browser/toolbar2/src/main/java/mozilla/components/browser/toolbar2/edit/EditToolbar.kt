@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.edit
+package mozilla.components.browser.toolbar2.edit
 
 import android.content.Context
 import android.graphics.Typeface
@@ -22,11 +22,11 @@ import androidx.core.view.isVisible
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
-import mozilla.components.browser.toolbar.AsyncFilterListener
-import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.browser.toolbar.R
-import mozilla.components.browser.toolbar.facts.emitCommitFact
-import mozilla.components.browser.toolbar.internal.ActionContainer
+import mozilla.components.browser.toolbar2.AsyncFilterListener
+import mozilla.components.browser.toolbar2.BrowserToolbar
+import mozilla.components.browser.toolbar2.R
+import mozilla.components.browser.toolbar2.facts.emitCommitFact
+import mozilla.components.browser.toolbar2.internal.ActionContainer
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.log.logger.Logger

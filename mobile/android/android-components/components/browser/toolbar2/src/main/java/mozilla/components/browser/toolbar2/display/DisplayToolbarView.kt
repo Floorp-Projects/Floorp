@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.display
+package mozilla.components.browser.toolbar2.display
 
 import android.content.Context
 import android.graphics.Canvas
@@ -10,7 +10,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
-import mozilla.components.browser.toolbar.R
+import mozilla.components.browser.toolbar2.R
 
 /**
  * Custom ConstraintLayout for DisplayToolbar that allows us to draw ripple backgrounds on the toolbar

@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.display
+package mozilla.components.browser.toolbar2.display
 
 import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.toolbar.R
+import mozilla.components.browser.toolbar2.R
 import mozilla.components.concept.toolbar.Toolbar.Highlight.NONE
 import mozilla.components.concept.toolbar.Toolbar.Highlight.PERMISSIONS_CHANGED
 import mozilla.components.support.test.robolectric.testContext
