@@ -23,6 +23,8 @@ class ScreenshotsPreview extends HTMLElement {
     // we get passed the <browser> as a param via TabDialogBox.open()
     this.openerBrowser = window.arguments[0];
 
+    window.ensureCustomElements("moz-button");
+
     let [downloadKey, copyKey] =
       lazy.screenshotsLocalization.formatMessagesSync([
         { id: "screenshots-component-download-key" },

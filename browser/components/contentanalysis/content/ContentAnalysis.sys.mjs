@@ -403,6 +403,7 @@ export const ContentAnalysis = {
   },
 
   async showPanel(element, panelUI) {
+    element.ownerGlobal.ensureCustomElements("moz-support-link");
     await element.ownerDocument.l10n.setAttributes(
       lazy.PanelMultiView.getViewNode(
         element.ownerDocument,

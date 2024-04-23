@@ -1043,6 +1043,8 @@ var FullPageTranslationsPanel = new (class {
       isFirstUserInteraction = null,
     }
   ) {
+    await window.ensureCustomElements("moz-button-group");
+
     const { panel, appMenuButton } = this.elements;
     const openedFromAppMenu = target.id === appMenuButton.id;
     const { docLangTag } = await this.#getCachedDetectedLanguages();
@@ -1106,6 +1108,10 @@ var FullPageTranslationsPanel = new (class {
       // Allow only left click, space, or enter.
       return;
     }
+
+    const window =
+      gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
+    window.ensureCustomElements("moz-support-link");
 
     const { button } = this.buttonElements;
 
