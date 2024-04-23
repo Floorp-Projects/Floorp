@@ -94,3 +94,37 @@ UiaGridItem::get_ContainingGrid(
   uia.forget(aRetVal);
   return S_OK;
 }
+
+// ITableItemProvider methods
+
+STDMETHODIMP
+UiaGridItem::GetRowHeaderItems(__RPC__deref_out_opt SAFEARRAY** aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  *aRetVal = nullptr;
+  TableCellAccessible* cell = CellAcc();
+  if (!cell) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  AutoTArray<Accessible*, 10> cells;
+  cell->RowHeaderCells(&cells);
+  *aRetVal = AccessibleArrayToUiaArray(cells);
+  return S_OK;
+}
+
+STDMETHODIMP
+UiaGridItem::GetColumnHeaderItems(__RPC__deref_out_opt SAFEARRAY** aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  *aRetVal = nullptr;
+  TableCellAccessible* cell = CellAcc();
+  if (!cell) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  AutoTArray<Accessible*, 10> cells;
+  cell->ColHeaderCells(&cells);
+  *aRetVal = AccessibleArrayToUiaArray(cells);
+  return S_OK;
+}

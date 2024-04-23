@@ -45,6 +45,22 @@ async function testGridItemProps(id, row, col, rowSpan, colSpan, gridId) {
   );
 }
 
+async function testTableItemProps(id, rowHeaders, colHeaders) {
+  await assignPyVarToUiaWithId(id);
+  await definePyVar("pattern", `getUiaPattern(${id}, "TableItem")`);
+  ok(await runPython(`bool(pattern)`), `${id} has TableItem pattern`);
+  await isUiaElementArray(
+    `pattern.GetCurrentRowHeaderItems()`,
+    rowHeaders,
+    `${id} has correct RowHeaderItems`
+  );
+  await isUiaElementArray(
+    `pattern.GetCurrentColumnHeaderItems()`,
+    colHeaders,
+    `${id} has correct ColumnHeaderItems`
+  );
+}
+
 /**
  * Test the Grid pattern.
  */
@@ -89,4 +105,21 @@ addUiaTask(SNIPPET, async function testGridItem() {
   await testGridItemProps("jkl", 3, 0, 1, 3, "table");
 
   await testPatternAbsent("button", "GridItem");
+});
+
+/**
+ * Test the TableItem pattern.
+ */
+addUiaTask(SNIPPET, async function testTableItem() {
+  await definePyVar("doc", `getDocUia()`);
+  await testTableItemProps("a", [], []);
+  await testTableItemProps("b", [], []);
+  await testTableItemProps("c", [], []);
+  await testTableItemProps("dg", [], ["a"]);
+  await testTableItemProps("ef", ["dg"], ["b", "c"]);
+  await testTableItemProps("h", ["dg"], ["b"]);
+  await testTableItemProps("i", ["dg", "h"], ["c"]);
+  await testTableItemProps("jkl", [], ["a", "b", "c"]);
+
+  await testPatternAbsent("button", "TableItem");
 });

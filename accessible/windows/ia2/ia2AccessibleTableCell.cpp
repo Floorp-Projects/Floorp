@@ -28,6 +28,7 @@ TableCellAccessible* ia2AccessibleTableCell::CellAcc() {
 IMPL_IUNKNOWN_QUERY_HEAD(ia2AccessibleTableCell)
 IMPL_IUNKNOWN_QUERY_IFACE(IAccessibleTableCell)
 IMPL_IUNKNOWN_QUERY_IFACE(IGridItemProvider)
+IMPL_IUNKNOWN_QUERY_IFACE(ITableItemProvider)
 IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(ia2AccessibleHypertext)
 
 ////////////////////////////////////////////////////////////////////////////////

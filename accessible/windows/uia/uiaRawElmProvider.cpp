@@ -313,6 +313,13 @@ uiaRawElmProvider::GetPatternProvider(
       scroll.forget(aPatternProvider);
       return S_OK;
     }
+    case UIA_TableItemPatternId:
+      if (acc->IsTableCell()) {
+        auto item =
+            GetPatternFromDerived<ia2AccessibleTableCell, ITableItemProvider>();
+        item.forget(aPatternProvider);
+      }
+      return S_OK;
     case UIA_TogglePatternId:
       if (HasTogglePattern()) {
         RefPtr<IToggleProvider> toggle = this;
