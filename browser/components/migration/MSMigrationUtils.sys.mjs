@@ -381,7 +381,7 @@ Bookmarks.prototype = {
     }
 
     await MigrationUtils.insertManyBookmarksWrapper(bookmarks, aDestFolderGuid);
-    MigrationUtils.insertManyFavicons(favicons);
+    MigrationUtils.insertManyFavicons(favicons).catch(console.error);
   },
 
   /**
