@@ -67,6 +67,7 @@ DIRS += [
     "tabpreview",
     "tabunloader",
     "textrecognition",
+    "topsites",
     "translations",
     "uitour",
     "urlbar",
