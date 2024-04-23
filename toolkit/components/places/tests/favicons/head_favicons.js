@@ -15,6 +15,9 @@
 
 const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
+// Used in createFavicon().
+let uniqueFaviconId = 0;
+
 /**
  * Checks that the favicon for the given page matches the provided data.
  *
@@ -74,5 +77,84 @@ function promiseFaviconChanged(aExpectedPageURI, aExpectedFaviconURI) {
         }
       }
     });
+  });
+}
+
+/**
+ * Create favicon file to temp directory.
+ *
+ * @param {string} aFileName
+ *        File name that will be created in temp directory.
+ * @returns {object}
+ *          {
+ *            file: nsIFile,
+ *            uri: nsIURI,
+ *            data: byte Array,
+ *            mimetype: String,
+ *          }
+ */
+async function createFavicon(aFileName) {
+  // Copy the favicon file we have to the specified file in temp directory.
+  let originalFaviconFile = do_get_file("favicon-normal16.png");
+  let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
+  let faviconFile = tempDir.clone();
+  faviconFile.append(aFileName);
+  await IOUtils.copy(originalFaviconFile.path, faviconFile.path);
+
+  // Append some data that sniffers/encoders will ignore that will distinguish
+  // the different favicons we'll create.
+  let stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
+    Ci.nsIFileOutputStream
+  );
+  const WRONLY_PERMISSION = 0o600;
+  stream.init(
+    faviconFile,
+    FileUtils.MODE_WRONLY | FileUtils.MODE_APPEND,
+    WRONLY_PERMISSION,
+    0
+  );
+  uniqueFaviconId++;
+  let uniqueStr = "uid:" + uniqueFaviconId;
+  stream.write(uniqueStr, uniqueStr.length);
+  stream.close();
+
+  Assert.equal(faviconFile.leafName.substr(0, aFileName.length), aFileName);
+
+  return {
+    file: faviconFile,
+    uri: uri(faviconFile),
+    data: readFileData(faviconFile),
+    mimeType: "image/png",
+  };
+}
+
+/**
+ * Create nsIURI for given favicon object.
+ *
+ * @param {object} aFavicon
+ *        Favicon object created by createFavicon().
+ * @returns {nsIURI}
+ */
+async function createDataURLForFavicon(aFavicon) {
+  let dataURL = await toDataURL(aFavicon.data, aFavicon.mimeType);
+  return uri(dataURL);
+}
+
+/**
+ * Create data URL string from given byte array and type.
+ *
+ * @param {Array} data
+ *        Byte array.
+ * @param {string} type
+ *        The type of this data.
+ * @returns {string}
+ */
+function toDataURL(data, type) {
+  let blob = new Blob([new Uint8Array(data)], { type });
+  return new Promise((resolve, reject) => {
+    let reader = new FileReader();
+    reader.addEventListener("load", () => resolve(reader.result));
+    reader.addEventListener("error", reject);
+    reader.readAsDataURL(blob);
   });
 }
