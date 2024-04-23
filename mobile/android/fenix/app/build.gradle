@@ -681,8 +681,8 @@ dependencies {
     implementation FenixDependencies.androidx_core_splashscreen
     implementation FenixDependencies.androidx_transition
     implementation ComponentsDependencies.androidx_work_runtime
-    implementation FenixDependencies.androidx_datastore
-    implementation ComponentsDependencies.androidx_data_store_preferences
+    implementation ComponentsDependencies.androidx_datastore
+    implementation ComponentsDependencies.androidx_datastore_preferences
     implementation FenixDependencies.protobuf_javalite
     implementation ComponentsDependencies.google_material
 
