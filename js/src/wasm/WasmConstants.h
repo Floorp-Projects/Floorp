@@ -94,9 +94,6 @@ enum class TypeCode {
   // A null reference in the func hierarchy.
   NullFuncRef = 0x73,  // SLEB128(-0x0D)
 
-  // A null reference in the exn hierarchy.
-  NullExnRef = 0x74,  // SLEB128(-0x0C)
-
   // A reference to any struct value.
   StructRef = 0x6b,  // SLEB128(-0x15)
 

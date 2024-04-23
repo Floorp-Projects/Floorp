@@ -469,7 +469,6 @@ MSG_DEF(JSMSG_WASM_BAD_IMPORT_ARG,     0, JSEXN_TYPEERR,     "second argument mu
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_FIELD,   1, JSEXN_TYPEERR,     "import object field '{0}' is not an Object")
 MSG_DEF(JSMSG_WASM_BAD_REF_NONNULLABLE_VALUE,  0, JSEXN_TYPEERR,     "cannot pass null to non-nullable WebAssembly reference")
 MSG_DEF(JSMSG_WASM_BAD_FUNCREF_VALUE,  0, JSEXN_TYPEERR,     "can only pass WebAssembly exported functions to funcref")
-MSG_DEF(JSMSG_WASM_BAD_NULL_EXNREF_VALUE,  0, JSEXN_TYPEERR,     "can only pass null to nullexnref")
 MSG_DEF(JSMSG_WASM_BAD_NULL_EXTERNREF_VALUE,  0, JSEXN_TYPEERR,     "can only pass null to nullexternref")
 MSG_DEF(JSMSG_WASM_BAD_NULL_FUNCREF_VALUE,  0, JSEXN_TYPEERR,     "can only pass null to nullfuncref")
 MSG_DEF(JSMSG_WASM_BAD_NULL_ANYREF_VALUE,  0, JSEXN_TYPEERR,     "can only pass null to nullref")

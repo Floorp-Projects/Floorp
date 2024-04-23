@@ -316,7 +316,6 @@ class RefType {
     Any = uint8_t(TypeCode::AnyRef),
     NoFunc = uint8_t(TypeCode::NullFuncRef),
     NoExtern = uint8_t(TypeCode::NullExternRef),
-    NoExn = uint8_t(TypeCode::NullExnRef),
     None = uint8_t(TypeCode::NullAnyRef),
     Eq = uint8_t(TypeCode::EqRef),
     I31 = uint8_t(TypeCode::I31Ref),
@@ -374,7 +373,6 @@ class RefType {
       case TypeCode::ArrayRef:
       case TypeCode::NullFuncRef:
       case TypeCode::NullExternRef:
-      case TypeCode::NullExnRef:
       case TypeCode::NullAnyRef:
       case AbstractTypeRefCode:
         return true;
@@ -390,7 +388,6 @@ class RefType {
   static RefType any() { return RefType(Any, true); }
   static RefType nofunc() { return RefType(NoFunc, true); }
   static RefType noextern() { return RefType(NoExtern, true); }
-  static RefType noexn() { return RefType(NoExn, true); }
   static RefType none() { return RefType(None, true); }
   static RefType eq() { return RefType(Eq, true); }
   static RefType i31() { return RefType(I31, true); }
@@ -402,7 +399,6 @@ class RefType {
   bool isAny() const { return kind() == RefType::Any; }
   bool isNoFunc() const { return kind() == RefType::NoFunc; }
   bool isNoExtern() const { return kind() == RefType::NoExtern; }
-  bool isNoExn() const { return kind() == RefType::NoExn; }
   bool isNone() const { return kind() == RefType::None; }
   bool isEq() const { return kind() == RefType::Eq; }
   bool isI31() const { return kind() == RefType::I31; }
@@ -416,9 +412,7 @@ class RefType {
     return RefType(ptc_.withIsNullable(nullable));
   }
 
-  bool isRefBottom() const {
-    return isNone() || isNoFunc() || isNoExtern() || isNoExn();
-  }
+  bool isRefBottom() const { return isNone() || isNoFunc() || isNoExtern(); }
 
   // These methods are defined in WasmTypeDef.h to avoid a cycle while allowing
   // inlining.
@@ -475,7 +469,6 @@ class StorageTypeTraits {
       case TypeCode::FuncRef:
       case TypeCode::ExternRef:
       case TypeCode::ExnRef:
-      case TypeCode::NullExnRef:
 #ifdef ENABLE_WASM_GC
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
@@ -554,7 +547,6 @@ class ValTypeTraits {
       case TypeCode::FuncRef:
       case TypeCode::ExternRef:
       case TypeCode::ExnRef:
-      case TypeCode::NullExnRef:
 #ifdef ENABLE_WASM_GC
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
@@ -733,8 +725,6 @@ class PackedType : public T {
 
   bool isNoExtern() const { return tc_.typeCode() == TypeCode::NullExternRef; }
 
-  bool isNoExn() const { return tc_.typeCode() == TypeCode::NullExnRef; }
-
   bool isNone() const { return tc_.typeCode() == TypeCode::NullAnyRef; }
 
   bool isEqRef() const { return tc_.typeCode() == TypeCode::EqRef; }
@@ -755,9 +745,9 @@ class PackedType : public T {
   // Returns whether the type has a representation in JS.
   bool isExposable() const {
 #if defined(ENABLE_WASM_SIMD)
-    return kind() != Kind::V128 && !isExnRef() && !isNoExn();
+    return kind() != Kind::V128 && !isExnRef();
 #else
-    return !isExnRef() && !isNoExn();
+    return !isExnRef();
 #endif
   }
 
