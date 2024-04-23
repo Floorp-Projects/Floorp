@@ -6,6 +6,7 @@
 
 SOURCES += [
     "UiaGrid.cpp",
+    "UiaGridItem.cpp",
     "uiaRawElmProvider.cpp",
     "UiaRoot.cpp",
 ]
