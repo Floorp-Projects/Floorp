@@ -443,12 +443,6 @@ skip-if = [
 ]
 
 ["test_ext_subframes_privileges.html"]
-skip-if = [
-  "os == 'android'", # Bug 1845918
-  "verify", # Bug 1489771
-  "http3",
-  "http2",
-]
 
 ["test_ext_tabs_captureTab.html"]
 skip-if = [
