@@ -323,6 +323,8 @@ support-files = ["data/search-migration.json"]
 
 ["test_webextensions_startup_remove.js"]
 
+["test_webextensions_startup.js"]
+
 ["test_webextensions_upgrade.js"]
 
 ["test_webextensions_valid.js"]
