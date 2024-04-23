@@ -287,6 +287,9 @@ var allowlist = [
 
   // Referenced programmatically
   { file: "chrome://browser/content/backup/BackupManifest.1.schema.json" },
+
+  // Bug 1892002
+  { file: "resource://app/modules/TopSites.sys.mjs" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {

@@ -670,6 +670,7 @@ module.exports = {
         "browser/components/tabpreview/tabpreview.mjs",
         "browser/components/tests/browser/**",
         "browser/components/textrecognition/**",
+        "browser/components/topsites/**",
         "browser/components/touchbar/**",
         "browser/components/translations/**",
         "browser/components/uitour/**",
