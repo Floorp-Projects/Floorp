@@ -437,19 +437,16 @@ impl OpaqueBatchList {
         // `current_batch_index` instead of iterating the batches.
         z_bounding_rect: &PictureRect,
     ) -> &mut Vec<PrimitiveInstanceData> {
-        // If the area of this primitive is larger than the given threshold,
-        // then it is large enough to warrant breaking a batch for. In this
-        // case we just see if it can be added to the existing batch or
-        // create a new one.
-        let is_large_occluder = z_bounding_rect.area() > self.pixel_area_threshold_for_new_batch;
-        // Since primitives of the same kind tend to come in succession, we keep track
-        // of the current batch index to skip the search in some cases. We ignore the
-        // current batch index in the case of large occluders to make sure they get added
-        // at the top of the bach list.
-        if is_large_occluder || self.current_batch_index == usize::MAX ||
+        if self.current_batch_index == usize::MAX ||
            !self.batches[self.current_batch_index].key.is_compatible_with(&key) {
             let mut selected_batch_index = None;
-            if is_large_occluder {
+            let item_area = z_bounding_rect.area();
+
+            // If the area of this primitive is larger than the given threshold,
+            // then it is large enough to warrant breaking a batch for. In this
+            // case we just see if it can be added to the existing batch or
+            // create a new one.
+            if item_area > self.pixel_area_threshold_for_new_batch {
                 if let Some(batch) = self.batches.last() {
                     if batch.key.is_compatible_with(&key) {
                         selected_batch_index = Some(self.batches.len() - 1);
