@@ -627,6 +627,20 @@ windowsLaunchOnLogin:
         pref: browser.startup.windowsLaunchOnLogin.enabled
       description: Should users see the Windows launch on login checkbox.
 
+firefoxBridge:
+  description: "Controls for Firefox Bridge extension and extension registration"
+  owner: install-update@mozilla.com
+  hasExposure: false
+  variables:
+    enabled:
+      type: boolean
+      setPref:
+        branch: default
+        pref: browser.firefoxbridge.enabled
+      description: >-
+        Should Firefox Bridge be registered within firefoxBridgeNativeMessaging
+        startup idle task for use with native messaging proxy.
+
 windowsJumpList:
   description: "Controls for the Windows Jump List integration."
   owner: mconley@mozilla.com
