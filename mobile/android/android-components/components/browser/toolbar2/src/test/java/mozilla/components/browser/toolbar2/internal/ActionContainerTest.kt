@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.toolbar.internal
+package mozilla.components.browser.toolbar2.internal
 
 import android.view.View
-import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.browser.toolbar2.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals

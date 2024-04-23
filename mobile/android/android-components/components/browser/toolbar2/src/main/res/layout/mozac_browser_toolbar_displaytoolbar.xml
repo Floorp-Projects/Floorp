@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<mozilla.components.browser.toolbar.display.DisplayToolbarView xmlns:android="http://schemas.android.com/apk/res/android"
+<mozilla.components.browser.toolbar2.display.DisplayToolbarView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:mozac="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -12,7 +12,7 @@
 
     <!-- Navigation -->
 
-    <mozilla.components.browser.toolbar.internal.ActionContainer
+    <mozilla.components.browser.toolbar2.internal.ActionContainer
         android:id="@+id/mozac_browser_toolbar_navigation_actions"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
@@ -50,7 +50,7 @@
         app:srcCompat="@drawable/mozac_ic_search_24"
         tools:ignore="ContentDescription" />
 
-    <mozilla.components.browser.toolbar.display.TrackingProtectionIconView
+    <mozilla.components.browser.toolbar2.display.TrackingProtectionIconView
         android:id="@+id/mozac_browser_toolbar_tracking_protection_indicator"
         android:layout_width="40dp"
         android:layout_height="40dp"
@@ -73,7 +73,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/mozac_browser_toolbar_icons_vertical_separator" />
 
-    <mozilla.components.browser.toolbar.display.SiteSecurityIconView
+    <mozilla.components.browser.toolbar2.display.SiteSecurityIconView
         android:id="@+id/mozac_browser_toolbar_security_indicator"
         android:layout_width="40dp"
         android:layout_height="40dp"
@@ -84,7 +84,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/mozac_ic_site_security" />
 
-    <mozilla.components.browser.toolbar.display.HighlightView
+    <mozilla.components.browser.toolbar2.display.HighlightView
         android:id="@+id/mozac_browser_toolbar_permission_indicator"
         android:layout_width="10dp"
         android:layout_height="10dp"
@@ -99,7 +99,7 @@
 
     <!-- URL & Title -->
 
-    <mozilla.components.browser.toolbar.display.OriginView
+    <mozilla.components.browser.toolbar2.display.OriginView
         android:id="@+id/mozac_browser_toolbar_origin_view"
         android:layout_width="0dp"
         android:layout_height="40dp"
@@ -126,7 +126,7 @@
 
     <!-- Page actions -->
 
-    <mozilla.components.browser.toolbar.internal.ActionContainer
+    <mozilla.components.browser.toolbar2.internal.ActionContainer
         android:id="@+id/mozac_browser_toolbar_page_actions"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
@@ -139,7 +139,7 @@
 
     <!-- Browser Actions -->
 
-    <mozilla.components.browser.toolbar.internal.ActionContainer
+    <mozilla.components.browser.toolbar2.internal.ActionContainer
         android:id="@+id/mozac_browser_toolbar_browser_actions"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
@@ -172,4 +172,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-</mozilla.components.browser.toolbar.display.DisplayToolbarView>
+</mozilla.components.browser.toolbar2.display.DisplayToolbarView>
