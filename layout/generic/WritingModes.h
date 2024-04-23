@@ -383,12 +383,12 @@ class WritingMode {
     // StyleWritingMode::INLINE_REVERSED, StyleWritingMode::VERTICAL_LR and
     // StyleWritingMode::LINE_INVERTED bits.  Use these four bits to index into
     // kLogicalInlineSides.
-    MOZ_ASSERT(StyleWritingMode::VERTICAL._0 == 0x01 &&
-                   StyleWritingMode::INLINE_REVERSED._0 == 0x02 &&
-                   StyleWritingMode::VERTICAL_LR._0 == 0x04 &&
-                   StyleWritingMode::LINE_INVERTED._0 == 0x08,
-               "unexpected mask values");
-    int index = mWritingMode._0 & 0x0F;
+    static_assert(StyleWritingMode::VERTICAL._0 == 0x01 &&
+                      StyleWritingMode::INLINE_REVERSED._0 == 0x02 &&
+                      StyleWritingMode::VERTICAL_LR._0 == 0x04 &&
+                      StyleWritingMode::LINE_INVERTED._0 == 0x08,
+                  "Unexpected values for StyleWritingMode constants!");
+    uint8_t index = mWritingMode._0 & 0x0F;
     return kLogicalInlineSides[index][static_cast<uint8_t>(aEdge)];
   }
 
@@ -398,9 +398,9 @@ class WritingMode {
    */
   mozilla::Side PhysicalSide(LogicalSide aSide) const {
     if (IsBlock(aSide)) {
-      MOZ_ASSERT(StyleWritingMode::VERTICAL._0 == 0x01 &&
-                     StyleWritingMode::VERTICAL_LR._0 == 0x04,
-                 "unexpected mask values");
+      static_assert(StyleWritingMode::VERTICAL._0 == 0x01 &&
+                        StyleWritingMode::VERTICAL_LR._0 == 0x04,
+                    "Unexpected values for StyleWritingMode constants!");
       const uint8_t wm =
           ((mWritingMode & StyleWritingMode::VERTICAL_LR)._0 >> 1) |
           (mWritingMode & StyleWritingMode::VERTICAL)._0;
@@ -460,12 +460,12 @@ class WritingMode {
     };
     // clang-format on
 
-    MOZ_ASSERT(StyleWritingMode::VERTICAL._0 == 0x01 &&
-                   StyleWritingMode::INLINE_REVERSED._0 == 0x02 &&
-                   StyleWritingMode::VERTICAL_LR._0 == 0x04 &&
-                   StyleWritingMode::LINE_INVERTED._0 == 0x08,
-               "unexpected mask values");
-    int index = mWritingMode._0 & 0x0F;
+    static_assert(StyleWritingMode::VERTICAL._0 == 0x01 &&
+                      StyleWritingMode::INLINE_REVERSED._0 == 0x02 &&
+                      StyleWritingMode::VERTICAL_LR._0 == 0x04 &&
+                      StyleWritingMode::LINE_INVERTED._0 == 0x08,
+                  "Unexpected values for StyleWritingMode constants!");
+    uint8_t index = mWritingMode._0 & 0x0F;
     return kPhysicalToLogicalSides[index][aSide];
   }
 
