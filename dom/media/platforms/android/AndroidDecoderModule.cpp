@@ -196,7 +196,6 @@ void AndroidDecoderModule::SetSupportedMimeTypes(
     ClearOnShutdown(&sSupportedCodecs);
   }
 
-  DecodeSupportSet support;
   // Process each MIME type string
   for (const auto& s : aSupportedTypes) {
     // Verify MIME type string present
@@ -212,12 +211,13 @@ void AndroidDecoderModule::SetSupportedMimeTypes(
 
     // Extract SW/HW support prefix
     const auto caps = Substring(s, 0, 2);
+    DecodeSupport support{};
     if (caps == "SW"_ns) {
       sSupportedSwMimeTypes->AppendElement(mimeType);
-      support += DecodeSupport::SoftwareDecode;
+      support = DecodeSupport::SoftwareDecode;
     } else if (caps == "HW"_ns) {
       sSupportedHwMimeTypes->AppendElement(mimeType);
-      support += DecodeSupport::HardwareDecode;
+      support = DecodeSupport::HardwareDecode;
     } else {
       SLOG("Error parsing acceleration info from JNI codec string %s",
            s.Data());
