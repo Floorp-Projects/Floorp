@@ -284,18 +284,6 @@ class AsyncGetFaviconDataForPage final : public Runnable {
   nsCString mPageHost;
 };
 
-class AsyncReplaceFaviconData final : public Runnable {
- public:
-  NS_DECL_NSIRUNNABLE
-
-  explicit AsyncReplaceFaviconData(const IconData& aIcon);
-
- private:
-  nsresult RemoveIconDataCacheEntry();
-
-  IconData mIcon;
-};
-
 /**
  * Notifies the icon change to favicon observers.
  */
