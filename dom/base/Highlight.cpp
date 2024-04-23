@@ -101,24 +101,36 @@ already_AddRefed<Selection> Highlight::CreateHighlightSelection(
 }
 
 void Highlight::Add(AbstractRange& aRange, ErrorResult& aRv) {
+  // Manually check if the range `aKey` is already present in this highlight,
+  // because `SetlikeHelpers::Add()` doesn't indicate this.
+  // To keep the setlike and the mirrored array in sync, the range must not
+  // be added to `mRanges` if it was already present.
+  // `SetlikeHelpers::Has()` is much faster in checking this than
+  // `nsTArray<>::Contains()`.
+  if (Highlight_Binding::SetlikeHelpers::Has(this, aRange, aRv) ||
+      aRv.Failed()) {
+    return;
+  }
   Highlight_Binding::SetlikeHelpers::Add(this, aRange, aRv);
   if (aRv.Failed()) {
     return;
   }
-  if (!mRanges.Contains(&aRange)) {
-    mRanges.AppendElement(&aRange);
-    AutoFrameSelectionBatcher selectionBatcher(__FUNCTION__,
-                                               mHighlightRegistries.Count());
-    for (const RefPtr<HighlightRegistry>& registry :
-         mHighlightRegistries.Keys()) {
-      auto frameSelection = registry->GetFrameSelection();
-      selectionBatcher.AddFrameSelection(frameSelection);
-      // since this is run in a context guarded by a selection batcher,
-      // no strong reference is needed to keep `registry` alive.
-      MOZ_KnownLive(registry)->MaybeAddRangeToHighlightSelection(aRange, *this);
-      if (aRv.Failed()) {
-        return;
-      }
+
+  MOZ_ASSERT(!mRanges.Contains(&aRange),
+             "setlike and DOM mirror are not in sync");
+
+  mRanges.AppendElement(&aRange);
+  AutoFrameSelectionBatcher selectionBatcher(__FUNCTION__,
+                                             mHighlightRegistries.Count());
+  for (const RefPtr<HighlightRegistry>& registry :
+       mHighlightRegistries.Keys()) {
+    auto frameSelection = registry->GetFrameSelection();
+    selectionBatcher.AddFrameSelection(frameSelection);
+    // since this is run in a context guarded by a selection batcher,
+    // no strong reference is needed to keep `registry` alive.
+    MOZ_KnownLive(registry)->MaybeAddRangeToHighlightSelection(aRange, *this);
+    if (aRv.Failed()) {
+      return;
     }
   }
 }
