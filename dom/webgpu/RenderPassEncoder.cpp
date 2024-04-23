@@ -157,8 +157,8 @@ ffi::WGPURecordedRenderPass* BeginRenderPass(
 RenderPassEncoder::RenderPassEncoder(CommandEncoder* const aParent,
                                      const dom::GPURenderPassDescriptor& aDesc)
     : ChildOf(aParent), mPass(BeginRenderPass(aParent, aDesc)) {
-  if (!mPass) {
-    mValid = false;
+  mValid = !!mPass;
+  if (!mValid) {
     return;
   }
 
@@ -171,149 +171,165 @@ RenderPassEncoder::RenderPassEncoder(CommandEncoder* const aParent,
   }
 }
 
-RenderPassEncoder::~RenderPassEncoder() {
+RenderPassEncoder::~RenderPassEncoder() { Cleanup(); }
+
+void RenderPassEncoder::Cleanup() {
   if (mValid) {
-    mValid = false;
+    End();
   }
 }
 
 void RenderPassEncoder::SetBindGroup(
     uint32_t aSlot, const BindGroup& aBindGroup,
     const dom::Sequence<uint32_t>& aDynamicOffsets) {
-  if (mValid) {
-    mUsedBindGroups.AppendElement(&aBindGroup);
-    ffi::wgpu_recorded_render_pass_set_bind_group(
-        mPass.get(), aSlot, aBindGroup.mId, aDynamicOffsets.Elements(),
-        aDynamicOffsets.Length());
+  if (!mValid) {
+    return;
   }
+  mUsedBindGroups.AppendElement(&aBindGroup);
+  ffi::wgpu_recorded_render_pass_set_bind_group(
+      mPass.get(), aSlot, aBindGroup.mId, aDynamicOffsets.Elements(),
+      aDynamicOffsets.Length());
 }
 
 void RenderPassEncoder::SetPipeline(const RenderPipeline& aPipeline) {
-  if (mValid) {
-    mUsedPipelines.AppendElement(&aPipeline);
-    ffi::wgpu_recorded_render_pass_set_pipeline(mPass.get(), aPipeline.mId);
+  if (!mValid) {
+    return;
   }
+  mUsedPipelines.AppendElement(&aPipeline);
+  ffi::wgpu_recorded_render_pass_set_pipeline(mPass.get(), aPipeline.mId);
 }
 
 void RenderPassEncoder::SetIndexBuffer(const Buffer& aBuffer,
                                        const dom::GPUIndexFormat& aIndexFormat,
                                        uint64_t aOffset, uint64_t aSize) {
-  if (mValid) {
-    mUsedBuffers.AppendElement(&aBuffer);
-    const auto iformat = aIndexFormat == dom::GPUIndexFormat::Uint32
-                             ? ffi::WGPUIndexFormat_Uint32
-                             : ffi::WGPUIndexFormat_Uint16;
-    ffi::wgpu_recorded_render_pass_set_index_buffer(mPass.get(), aBuffer.mId,
-                                                    iformat, aOffset, aSize);
+  if (!mValid) {
+    return;
   }
+  mUsedBuffers.AppendElement(&aBuffer);
+  const auto iformat = aIndexFormat == dom::GPUIndexFormat::Uint32
+                           ? ffi::WGPUIndexFormat_Uint32
+                           : ffi::WGPUIndexFormat_Uint16;
+  ffi::wgpu_recorded_render_pass_set_index_buffer(mPass.get(), aBuffer.mId,
+                                                  iformat, aOffset, aSize);
 }
 
 void RenderPassEncoder::SetVertexBuffer(uint32_t aSlot, const Buffer& aBuffer,
                                         uint64_t aOffset, uint64_t aSize) {
-  if (mValid) {
-    mUsedBuffers.AppendElement(&aBuffer);
-    ffi::wgpu_recorded_render_pass_set_vertex_buffer(
-        mPass.get(), aSlot, aBuffer.mId, aOffset, aSize);
+  if (!mValid) {
+    return;
   }
+  mUsedBuffers.AppendElement(&aBuffer);
+  ffi::wgpu_recorded_render_pass_set_vertex_buffer(mPass.get(), aSlot,
+                                                   aBuffer.mId, aOffset, aSize);
 }
 
 void RenderPassEncoder::Draw(uint32_t aVertexCount, uint32_t aInstanceCount,
                              uint32_t aFirstVertex, uint32_t aFirstInstance) {
-  if (mValid) {
-    ffi::wgpu_recorded_render_pass_draw(mPass.get(), aVertexCount,
-                                        aInstanceCount, aFirstVertex,
-                                        aFirstInstance);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_render_pass_draw(mPass.get(), aVertexCount, aInstanceCount,
+                                      aFirstVertex, aFirstInstance);
 }
 
 void RenderPassEncoder::DrawIndexed(uint32_t aIndexCount,
                                     uint32_t aInstanceCount,
                                     uint32_t aFirstIndex, int32_t aBaseVertex,
                                     uint32_t aFirstInstance) {
-  if (mValid) {
-    ffi::wgpu_recorded_render_pass_draw_indexed(mPass.get(), aIndexCount,
-                                                aInstanceCount, aFirstIndex,
-                                                aBaseVertex, aFirstInstance);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_render_pass_draw_indexed(mPass.get(), aIndexCount,
+                                              aInstanceCount, aFirstIndex,
+                                              aBaseVertex, aFirstInstance);
 }
 
 void RenderPassEncoder::DrawIndirect(const Buffer& aIndirectBuffer,
                                      uint64_t aIndirectOffset) {
-  if (mValid) {
-    ffi::wgpu_recorded_render_pass_draw_indirect(
-        mPass.get(), aIndirectBuffer.mId, aIndirectOffset);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_render_pass_draw_indirect(mPass.get(), aIndirectBuffer.mId,
+                                               aIndirectOffset);
 }
 
 void RenderPassEncoder::DrawIndexedIndirect(const Buffer& aIndirectBuffer,
                                             uint64_t aIndirectOffset) {
-  if (mValid) {
-    ffi::wgpu_recorded_render_pass_draw_indexed_indirect(
-        mPass.get(), aIndirectBuffer.mId, aIndirectOffset);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_render_pass_draw_indexed_indirect(
+      mPass.get(), aIndirectBuffer.mId, aIndirectOffset);
 }
 
 void RenderPassEncoder::SetViewport(float x, float y, float width, float height,
                                     float minDepth, float maxDepth) {
-  if (mValid) {
-    ffi::wgpu_recorded_render_pass_set_viewport(mPass.get(), x, y, width,
-                                                height, minDepth, maxDepth);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_render_pass_set_viewport(mPass.get(), x, y, width, height,
+                                              minDepth, maxDepth);
 }
 
 void RenderPassEncoder::SetScissorRect(uint32_t x, uint32_t y, uint32_t width,
                                        uint32_t height) {
-  if (mValid) {
-    ffi::wgpu_recorded_render_pass_set_scissor_rect(mPass.get(), x, y, width,
-                                                    height);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_render_pass_set_scissor_rect(mPass.get(), x, y, width,
+                                                  height);
 }
 
 void RenderPassEncoder::SetBlendConstant(
     const dom::DoubleSequenceOrGPUColorDict& color) {
-  if (mValid) {
-    ffi::WGPUColor aColor = ConvertColor(color);
-    ffi::wgpu_recorded_render_pass_set_blend_constant(mPass.get(), &aColor);
+  if (!mValid) {
+    return;
   }
+  ffi::WGPUColor aColor = ConvertColor(color);
+  ffi::wgpu_recorded_render_pass_set_blend_constant(mPass.get(), &aColor);
 }
 
 void RenderPassEncoder::SetStencilReference(uint32_t reference) {
-  if (mValid) {
-    ffi::wgpu_recorded_render_pass_set_stencil_reference(mPass.get(),
-                                                         reference);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_render_pass_set_stencil_reference(mPass.get(), reference);
 }
 
 void RenderPassEncoder::ExecuteBundles(
     const dom::Sequence<OwningNonNull<RenderBundle>>& aBundles) {
-  if (mValid) {
-    nsTArray<ffi::WGPURenderBundleId> renderBundles(aBundles.Length());
-    for (const auto& bundle : aBundles) {
-      mUsedRenderBundles.AppendElement(bundle);
-      renderBundles.AppendElement(bundle->mId);
-    }
-    ffi::wgpu_recorded_render_pass_execute_bundles(
-        mPass.get(), renderBundles.Elements(), renderBundles.Length());
+  if (!mValid) {
+    return;
   }
+  nsTArray<ffi::WGPURenderBundleId> renderBundles(aBundles.Length());
+  for (const auto& bundle : aBundles) {
+    mUsedRenderBundles.AppendElement(bundle);
+    renderBundles.AppendElement(bundle->mId);
+  }
+  ffi::wgpu_recorded_render_pass_execute_bundles(
+      mPass.get(), renderBundles.Elements(), renderBundles.Length());
 }
 
 void RenderPassEncoder::PushDebugGroup(const nsAString& aString) {
-  if (mValid) {
-    const NS_ConvertUTF16toUTF8 utf8(aString);
-    ffi::wgpu_recorded_render_pass_push_debug_group(mPass.get(), utf8.get(), 0);
+  if (!mValid) {
+    return;
   }
+  const NS_ConvertUTF16toUTF8 utf8(aString);
+  ffi::wgpu_recorded_render_pass_push_debug_group(mPass.get(), utf8.get(), 0);
 }
 void RenderPassEncoder::PopDebugGroup() {
-  if (mValid) {
-    ffi::wgpu_recorded_render_pass_pop_debug_group(mPass.get());
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_render_pass_pop_debug_group(mPass.get());
 }
 void RenderPassEncoder::InsertDebugMarker(const nsAString& aString) {
-  if (mValid) {
-    const NS_ConvertUTF16toUTF8 utf8(aString);
-    ffi::wgpu_recorded_render_pass_insert_debug_marker(mPass.get(), utf8.get(),
-                                                       0);
+  if (!mValid) {
+    return;
   }
+  const NS_ConvertUTF16toUTF8 utf8(aString);
+  ffi::wgpu_recorded_render_pass_insert_debug_marker(mPass.get(), utf8.get(),
+                                                     0);
 }
 
 void RenderPassEncoder::End() {
