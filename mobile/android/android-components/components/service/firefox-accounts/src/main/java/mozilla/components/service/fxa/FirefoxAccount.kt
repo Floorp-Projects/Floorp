@@ -97,6 +97,10 @@ class FirefoxAccount internal constructor(
 
     internal fun getAuthState() = inner.getAuthState()
 
+    internal fun simulateNetworkError() = inner.simulateNetworkError()
+    internal fun simulateTemporaryAuthTokenIssue() = inner.simulateTemporaryAuthTokenIssue()
+    internal fun simulatePermanentAuthTokenIssue() = inner.simulatePermanentAuthTokenIssue()
+
     override suspend fun beginOAuthFlow(
         scopes: Set<String>,
         entryPoint: FxAEntryPoint,

@@ -75,13 +75,13 @@ internal class TestableStorageWrapper(
     manager: FxaAccountManager,
     accountEventObserverRegistry: ObserverRegistry<AccountEventsObserver>,
     serverConfig: FxaConfig,
-    private val block: () -> OAuthAccount = {
-        val account: OAuthAccount = mock()
+    private val block: () -> FirefoxAccount = {
+        val account: FirefoxAccount = mock()
         `when`(account.deviceConstellation()).thenReturn(mock())
         account
     },
 ) : StorageWrapper(manager, accountEventObserverRegistry, serverConfig) {
-    override fun obtainAccount(): OAuthAccount = block()
+    override fun obtainAccount(): FirefoxAccount = block()
 }
 
 // Same as the actual account manager, except we get to control how FirefoxAccountShaped instances
@@ -96,8 +96,8 @@ internal open class TestableFxaAccountManager(
     syncConfig: SyncConfig? = null,
     coroutineContext: CoroutineContext,
     crashReporter: CrashReporting? = null,
-    block: () -> OAuthAccount = {
-        val account: OAuthAccount = mock()
+    block: () -> FirefoxAccount = {
+        val account: FirefoxAccount = mock()
         `when`(account.deviceConstellation()).thenReturn(mock())
         account
     },
@@ -202,7 +202,7 @@ class FxaAccountManagerTest {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
         val constellation: DeviceConstellation = mockDeviceConstellation()
-        val account = StatePersistenceTestableAccount(profile, constellation)
+        val account = statePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
             testContext,
@@ -219,17 +219,18 @@ class FxaAccountManagerTest {
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(account)
 
-        assertNull(account.persistenceCallback)
+        verify(account, never()).registerPersistenceCallback(any())
         manager.start()
 
         // Assert that persistence callback is set.
-        assertNotNull(account.persistenceCallback)
+        val captor = argumentCaptor<StatePersistenceCallback>()
+        verify(account).registerPersistenceCallback(captor.capture())
 
         // Assert that ensureCapabilities fired, but not the device initialization (since we're restoring).
         verify(constellation).finalizeDevice(eq(AuthType.Existing), any())
 
         // Assert that persistence callback is interacting with the storage layer.
-        account.persistenceCallback!!.persist("test")
+        captor.value.persist("test")
         verify(accountStorage).write("test")
     }
 
@@ -238,7 +239,7 @@ class FxaAccountManagerTest {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
         val constellation: DeviceConstellation = mockDeviceConstellation()
-        val account = StatePersistenceTestableAccount(profile, constellation)
+        val account = statePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
             testContext,
@@ -255,17 +256,18 @@ class FxaAccountManagerTest {
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(account)
 
-        assertNull(account.persistenceCallback)
+        verify(account, never()).registerPersistenceCallback(any())
         manager.start()
 
         // Assert that persistence callback is set.
-        assertNotNull(account.persistenceCallback)
+        val captor = argumentCaptor<StatePersistenceCallback>()
+        verify(account).registerPersistenceCallback(captor.capture())
 
         // Assert that finalizeDevice fired with a correct auth type. 3 times since we re-try.
         verify(constellation, times(3)).finalizeDevice(eq(AuthType.Existing), any())
 
         // Assert that persistence callback is interacting with the storage layer.
-        account.persistenceCallback!!.persist("test")
+        captor.value.persist("test")
         verify(accountStorage).write("test")
 
         // Since we weren't able to finalize the account state, we're no longer authenticated.
@@ -277,7 +279,7 @@ class FxaAccountManagerTest {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
         val constellation: DeviceConstellation = mockDeviceConstellation()
-        val account = StatePersistenceTestableAccount(profile, constellation, ableToRecoverFromAuthError = false)
+        val account = statePersistenceTestableAccount(profile, constellation, ableToRecoverFromAuthError = false)
 
         val accountObserver: AccountObserver = mock()
         val manager = TestableFxaAccountManager(
@@ -296,19 +298,19 @@ class FxaAccountManagerTest {
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(account)
 
-        assertNull(account.persistenceCallback)
+        verify(account, never()).registerPersistenceCallback(any())
 
         assertFalse(manager.accountNeedsReauth())
-        assertFalse(account.authErrorDetectedCalled)
-        assertFalse(account.checkAuthorizationStatusCalled)
+        verify(account, never()).authErrorDetected()
+        verify(account, never()).checkAuthorizationStatus(any())
         verify(accountObserver, never()).onAuthenticationProblems()
 
         manager.start()
 
         assertTrue(manager.accountNeedsReauth())
         verify(accountObserver, times(1)).onAuthenticationProblems()
-        assertTrue(account.authErrorDetectedCalled)
-        assertTrue(account.checkAuthorizationStatusCalled)
+        verify(account).authErrorDetected()
+        verify(account).checkAuthorizationStatus(any())
     }
 
     @Test(expected = FxaPanicException::class)
@@ -316,7 +318,7 @@ class FxaAccountManagerTest {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
         val constellation: DeviceConstellation = mock()
-        val account = StatePersistenceTestableAccount(profile, constellation)
+        val account = statePersistenceTestableAccount(profile, constellation)
 
         val accountObserver: AccountObserver = mock()
         val manager = TestableFxaAccountManager(
@@ -340,7 +342,7 @@ class FxaAccountManagerTest {
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(account)
 
-        assertNull(account.persistenceCallback)
+        verify(account, never()).registerPersistenceCallback(any())
 
         assertFalse(manager.accountNeedsReauth())
         verify(accountObserver, never()).onAuthenticationProblems()
@@ -353,7 +355,7 @@ class FxaAccountManagerTest {
         val accountStorage: AccountStorage = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val constellation: DeviceConstellation = mockDeviceConstellation()
-        val account = StatePersistenceTestableAccount(profile, constellation)
+        val account = statePersistenceTestableAccount(profile, constellation)
         val accountObserver: AccountObserver = mock()
         // We are not using the "prepareHappy..." helper method here, because our account isn't a mock,
         // but an actual implementation of the interface.
@@ -389,7 +391,9 @@ class FxaAccountManagerTest {
         verify(constellation).finalizeDevice(eq(AuthType.Signin), any())
 
         // Assert that persistence callback is interacting with the storage layer.
-        account.persistenceCallback!!.persist("test")
+        val captor = argumentCaptor<StatePersistenceCallback>()
+        verify(account).registerPersistenceCallback(captor.capture())
+        captor.value.persist("test")
         verify(accountStorage).write("test")
     }
 
@@ -398,7 +402,7 @@ class FxaAccountManagerTest {
         val accountStorage: AccountStorage = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val constellation: DeviceConstellation = mockDeviceConstellation()
-        val account = StatePersistenceTestableAccount(profile, constellation)
+        val account = statePersistenceTestableAccount(profile, constellation)
         val accountObserver: AccountObserver = mock()
         // We are not using the "prepareHappy..." helper method here, because our account isn't a mock,
         // but an actual implementation of the interface.
@@ -424,7 +428,7 @@ class FxaAccountManagerTest {
         manager.finishAuthentication(FxaAuthData(AuthType.Signin, "dummyCode", UNEXPECTED_AUTH_STATE))
         assertTrue(manager.authenticatedAccount() == null)
 
-        // Start authentication. StatePersistenceTestableAccount will produce state=EXPECTED_AUTH_STATE.
+        // Start authentication. statePersistenceTestableAccount will produce state=EXPECTED_AUTH_STATE.
         assertEquals(testAuthFlowUrl(entrypoint = "home-menu").url, manager.beginAuthentication(entrypoint = entryPoint))
 
         // Now attempt to finish it with a correct state.
@@ -436,102 +440,17 @@ class FxaAccountManagerTest {
         assertEquals(account, manager.authenticatedAccount())
     }
 
-    class StatePersistenceTestableAccount(
-        private val profile: Profile,
-        private val constellation: DeviceConstellation,
-        val ableToRecoverFromAuthError: Boolean = false,
-        val tokenServerEndpointUrl: String? = null,
-        val accessToken: (() -> AccessTokenInfo)? = null,
-    ) : OAuthAccount {
+    suspend fun statePersistenceTestableAccount(profile: Profile, constellation: DeviceConstellation, ableToRecoverFromAuthError: Boolean = false): FirefoxAccount {
+        val account = mock<FirefoxAccount>()
+        `when`(account.getProfile(anyBoolean())).thenReturn(profile)
+        `when`(account.deviceConstellation()).thenReturn(constellation)
+        `when`(account.checkAuthorizationStatus(any())).thenReturn(ableToRecoverFromAuthError)
+        `when`(account.beginOAuthFlow(any(), any())).thenReturn(testAuthFlowUrl(entrypoint = "home-menu"))
+        `when`(account.beginPairingFlow(any(), any(), any())).thenReturn(testAuthFlowUrl(entrypoint = "home-menu"))
+        `when`(account.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
+        `when`(account.getCurrentDeviceId()).thenReturn("testFxaDeviceId")
 
-        var persistenceCallback: StatePersistenceCallback? = null
-        var checkAuthorizationStatusCalled = false
-        var authErrorDetectedCalled = false
-        var setUserDataCalledWith: UserData? = null
-
-        override suspend fun beginOAuthFlow(scopes: Set<String>, entryPoint: FxAEntryPoint): AuthFlowUrl? {
-            return AuthFlowUrl(EXPECTED_AUTH_STATE, testAuthFlowUrl(entrypoint = entryPoint.entryName).url)
-        }
-
-        override suspend fun beginPairingFlow(pairingUrl: String, scopes: Set<String>, entryPoint: FxAEntryPoint): AuthFlowUrl? {
-            return AuthFlowUrl(EXPECTED_AUTH_STATE, testAuthFlowUrl(entrypoint = entryPoint.entryName).url)
-        }
-
-        override suspend fun getProfile(ignoreCache: Boolean): Profile? {
-            return profile
-        }
-
-        override fun getCurrentDeviceId(): String? {
-            return "testFxaDeviceId"
-        }
-
-        override suspend fun setUserData(userData: UserData) {
-            setUserDataCalledWith = userData
-        }
-
-        override fun getSessionToken(): String? {
-            return null
-        }
-
-        override suspend fun completeOAuthFlow(code: String, state: String): Boolean {
-            return true
-        }
-
-        override suspend fun getAccessToken(singleScope: String): AccessTokenInfo? {
-            val token = accessToken?.invoke()
-            if (token != null) return token
-
-            fail()
-            return null
-        }
-
-        override fun authErrorDetected() {
-            authErrorDetectedCalled = true
-        }
-
-        override suspend fun checkAuthorizationStatus(singleScope: String): Boolean? {
-            checkAuthorizationStatusCalled = true
-            return ableToRecoverFromAuthError
-        }
-
-        override suspend fun getTokenServerEndpointURL(): String? {
-            if (tokenServerEndpointUrl != null) return tokenServerEndpointUrl
-
-            fail()
-            return ""
-        }
-
-        override suspend fun getManageAccountURL(entryPoint: FxAEntryPoint): String? {
-            return "https://firefox.com/settings"
-        }
-
-        override fun getPairingAuthorityURL(): String {
-            return "https://firefox.com/pair"
-        }
-
-        override fun registerPersistenceCallback(callback: StatePersistenceCallback) {
-            persistenceCallback = callback
-        }
-
-        override fun deviceConstellation(): DeviceConstellation {
-            return constellation
-        }
-
-        override suspend fun disconnect(): Boolean {
-            return true
-        }
-
-        override fun toJSONString(): String {
-            fail()
-            return ""
-        }
-
-        override fun close() {
-            // Only expect 'close' to be called if we can't recover from an auth error.
-            if (ableToRecoverFromAuthError) {
-                fail()
-            }
-        }
+        return account
     }
 
     @Test
@@ -602,7 +521,7 @@ class FxaAccountManagerTest {
     @Test
     fun `with persisted account and profile`() = runTest {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         val profile = Profile(
             "testUid",
@@ -673,7 +592,7 @@ class FxaAccountManagerTest {
 
     @Test
     fun `happy authentication and profile flow`() = runTest {
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -718,7 +637,7 @@ class FxaAccountManagerTest {
 
     @Test(expected = FxaPanicException::class)
     fun `fxa panic during initDevice flow`() = runTest {
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -746,7 +665,7 @@ class FxaAccountManagerTest {
 
     @Test(expected = FxaPanicException::class)
     fun `fxa panic during pairing flow`() = runTest {
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         `when`(mockAccount.deviceConstellation()).thenReturn(mock())
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val accountStorage = mock<AccountStorage>()
@@ -775,7 +694,7 @@ class FxaAccountManagerTest {
 
     @Test
     fun `happy pairing authentication and profile flow`() = runTest {
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -812,7 +731,7 @@ class FxaAccountManagerTest {
 
     @Test
     fun `repeated unfinished authentication attempts succeed`() = runTest {
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -869,7 +788,7 @@ class FxaAccountManagerTest {
     @Test
     fun `unhappy authentication flow`() = runTest {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val accountObserver: AccountObserver = mock()
@@ -917,7 +836,7 @@ class FxaAccountManagerTest {
     @Test
     fun `unhappy pairing authentication flow`() = runTest {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val accountObserver: AccountObserver = mock()
@@ -976,7 +895,7 @@ class FxaAccountManagerTest {
 
     @Test
     fun `authentication issues are propagated via AccountObserver`() = runTest {
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -1031,7 +950,7 @@ class FxaAccountManagerTest {
 
     @Test
     fun `authentication issues are recoverable via checkAuthorizationState`() = runTest {
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -1078,7 +997,7 @@ class FxaAccountManagerTest {
 
     @Test
     fun `authentication recovery flow has a circuit breaker`() = runTest {
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -1169,7 +1088,7 @@ class FxaAccountManagerTest {
     @Test
     fun `unhappy profile fetching flow`() = runTest {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
 
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
@@ -1238,7 +1157,7 @@ class FxaAccountManagerTest {
     @Test
     fun `profile fetching flow hit an unrecoverable auth problem`() = runTest {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
 
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
@@ -1298,7 +1217,7 @@ class FxaAccountManagerTest {
     @Test
     fun `profile fetching flow hit an unrecoverable auth problem for which we can't determine a recovery state`() = runTest {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
 
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
@@ -1359,7 +1278,7 @@ class FxaAccountManagerTest {
     @Test
     fun `profile fetching flow hit a recoverable auth problem`() = runTest {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
         val captor = argumentCaptor<AuthType>()
 
@@ -1443,7 +1362,7 @@ class FxaAccountManagerTest {
     @Test(expected = FxaPanicException::class)
     fun `profile fetching flow hit an fxa panic, which is re-thrown`() = runTest {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: OAuthAccount = mock()
+        val mockAccount: FirefoxAccount = mock()
         val constellation: DeviceConstellation = mock()
 
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
@@ -1570,7 +1489,7 @@ class FxaAccountManagerTest {
     }
 
     private suspend fun prepareHappyAuthenticationFlow(
-        mockAccount: OAuthAccount,
+        mockAccount: FirefoxAccount,
         profile: Profile,
         accountStorage: AccountStorage,
         accountObserver: AccountObserver,
@@ -1614,7 +1533,7 @@ class FxaAccountManagerTest {
     }
 
     private suspend fun prepareUnhappyAuthenticationFlow(
-        mockAccount: OAuthAccount,
+        mockAccount: FirefoxAccount,
         profile: Profile,
         accountStorage: AccountStorage,
         accountObserver: AccountObserver,
