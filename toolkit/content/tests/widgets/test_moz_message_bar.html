@@ -1,23 +1,25 @@
 <!DOCTYPE HTML>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>MozMessageBar tests</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
   <script type="module" src="chrome://global/content/elements/moz-message-bar.mjs"></script>
 </head>
+
 <body>
-<p id="display"></p>
-<div id="content">
-  <moz-message-bar id="infoMessage" heading="Heading" message="Test message"></moz-message-bar>
-  <moz-message-bar id="infoMessage2" dismissable message="Test message"></moz-message-bar>
-  <moz-message-bar id="warningMessage" type="warning" message="Test message"></moz-message-bar>
-  <moz-message-bar id="successMessage" type="success" message="Test message"></moz-message-bar>
-  <moz-message-bar id="errorMessage" type="error" message="Test message"></moz-message-bar>
-</div>
-<pre id="test">
+  <p id="display"></p>
+  <div id="content">
+    <moz-message-bar id="infoMessage" heading="Heading" message="Test message"></moz-message-bar>
+    <moz-message-bar id="infoMessage2" dismissable message="Test message"></moz-message-bar>
+    <moz-message-bar id="warningMessage" type="warning" message="Test message"></moz-message-bar>
+    <moz-message-bar id="successMessage" type="success" message="Test message"></moz-message-bar>
+    <moz-message-bar id="errorMessage" type="error" message="Test message"></moz-message-bar>
+  </div>
+  <pre id="test">
   <script class="testbody" type="application/javascript">
     add_task(async function test_component_declaration() {
       const mozMessageBar = document.querySelector("#infoMessage");
@@ -48,11 +50,11 @@
 
     add_task(async function test_close_button() {
       const notDismissableComponent = document.querySelector("#infoMessage");
-      let closeButton = notDismissableComponent.closeButtonEl;
+      let closeButton = notDismissableComponent.closeButton;
       ok(!closeButton, "Close button doesn't show when the message bar isn't dismissable.");
 
       let dismissableComponent = document.querySelector("#infoMessage2");
-      closeButton = dismissableComponent.closeButtonEl;
+      closeButton = dismissableComponent.closeButton;
       ok(closeButton, "Close button is shown when the message bar is dismissable.");
 
       closeButton.click();
@@ -89,4 +91,5 @@
   </script>
 </pre>
 </body>
+
 </html>
