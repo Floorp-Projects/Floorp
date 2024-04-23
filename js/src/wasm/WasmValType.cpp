@@ -94,14 +94,12 @@ static bool ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
     *out = RefType::extern_();
     return true;
   }
-#ifdef ENABLE_WASM_EXNREF
   if (ExnRefAvailable(cx)) {
     if (StringEqualsLiteral(typeLinearStr, "exnref")) {
       *out = RefType::exn();
       return true;
     }
   }
-#endif
 #ifdef ENABLE_WASM_GC
   if (GcAvailable(cx)) {
     if (StringEqualsLiteral(typeLinearStr, "anyref")) {

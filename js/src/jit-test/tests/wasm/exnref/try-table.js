@@ -382,3 +382,56 @@
     }
   }
 }
+
+// WebAssembly.JSTag property is read-only and enumerable
+WebAssembly.JSTag = null;
+assertEq(WebAssembly.JSTag !== null, true);
+assertEq(WebAssembly.propertyIsEnumerable('JSTag'), true);
+
+// Test try_table catching JS exceptions and unpacking them using JSTag
+{
+  let tag = WebAssembly.JSTag;
+  let values = [...WasmExternrefValues];
+  function throwJS(value) {
+    throw value;
+  }
+  let {test} = wasmEvalText(`(module
+    (import "" "tag" (tag $tag (param externref)))
+    (import "" "throwJS" (func $throwJS (param externref)))
+    (func (export "test") (param externref) (result externref)
+      try_table (catch $tag 0)
+        local.get 0
+        call $throwJS
+      end
+      unreachable
+    )
+  )`, {"": {tag, throwJS}}).exports;
+
+  for (let value of values) {
+    assertEq(value, test(value));
+  }
+}
+
+// Test try_table catching JS exceptions using JSTag and unpacking them using JSTag
+{
+  let tag = WebAssembly.JSTag;
+  let values = [...WasmExternrefValues];
+  function throwJS(value) {
+    throw new WebAssembly.Exception(tag, [value]);
+  }
+  let {test} = wasmEvalText(`(module
+    (import "" "tag" (tag $tag (param externref)))
+    (import "" "throwJS" (func $throwJS (param externref)))
+    (func (export "test") (param externref) (result externref)
+      try_table (catch $tag 0)
+        local.get 0
+        call $throwJS
+      end
+      unreachable
+    )
+  )`, {"": {tag, throwJS}}).exports;
+
+  for (let value of values) {
+    assertEq(value, test(value));
+  }
+}

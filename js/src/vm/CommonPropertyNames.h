@@ -335,6 +335,7 @@
   MACRO_(iterate, "iterate")                                                   \
   MACRO_(join, "join")                                                         \
   MACRO2(js, "js")                                                             \
+  MACRO_(jsTag, "JSTag")                                                       \
   MACRO_(jsStringModule, "js-string")                                          \
   MACRO_(json, "json")                                                         \
   MACRO_(keys, "keys")                                                         \
