@@ -83,8 +83,8 @@ class StateKtTest {
     private fun instantiateEvent(eventClassSimpleName: String): Event {
         return when (eventClassSimpleName) {
             "Start" -> Event.Account.Start
-            "BeginPairingFlow" -> Event.Account.BeginPairingFlow("http://some.pairing.url.com", mock())
-            "BeginEmailFlow" -> Event.Account.BeginEmailFlow(mock())
+            "BeginPairingFlow" -> Event.Account.BeginPairingFlow("http://some.pairing.url.com", mock(), mock())
+            "BeginEmailFlow" -> Event.Account.BeginEmailFlow(mock(), mock())
             "CancelAuth" -> Event.Progress.CancelAuth
             "StartedOAuthFlow" -> Event.Progress.StartedOAuthFlow("https://example.com/oauth-start")
             "AuthenticationError" -> Event.Account.AuthenticationError("fxa op")

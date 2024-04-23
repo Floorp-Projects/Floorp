@@ -38,10 +38,15 @@ class FirefoxAccountsAuthFeature(
      * @param context [Context] The application context
      * @param entrypoint [FxAEntryPoint] The Firefox Accounts feature/entrypoint that is launching
      * authentication
+     * @param scopes [Set<String>] The oAuth scopes being requested
      */
-    fun beginAuthentication(context: Context, entrypoint: FxAEntryPoint) {
+    fun beginAuthentication(
+        context: Context,
+        entrypoint: FxAEntryPoint,
+        scopes: Set<String> = emptySet(),
+    ) {
         beginAuthenticationAsync(context) {
-            accountManager.beginAuthentication(entrypoint = entrypoint)
+            accountManager.beginAuthentication(entrypoint = entrypoint, authScopes = scopes)
         }
     }
 
@@ -50,15 +55,17 @@ class FirefoxAccountsAuthFeature(
      * @param context [Context] The application context
      * @param pairingUrl [String] The pairing URL retrieved from the QR scanner
      * @param entrypoint [FxAEntryPoint] The Firefox Accounts feature/entrypoint that is launching
+     * @param scopes [Set<String>] The oAuth scopes being requested
      * authentication
      */
     fun beginPairingAuthentication(
         context: Context,
         pairingUrl: String,
         entrypoint: FxAEntryPoint,
+        scopes: Set<String> = emptySet(),
     ) {
         beginAuthenticationAsync(context) {
-            accountManager.beginAuthentication(pairingUrl, entrypoint = entrypoint)
+            accountManager.beginAuthentication(pairingUrl, entrypoint = entrypoint, scopes)
         }
     }
 

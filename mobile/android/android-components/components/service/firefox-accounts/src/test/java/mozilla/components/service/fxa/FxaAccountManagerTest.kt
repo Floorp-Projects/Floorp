@@ -30,6 +30,7 @@ import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.ServiceResult
 import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.concept.sync.UserData
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.GlobalAccountManager
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
@@ -446,6 +447,7 @@ class FxaAccountManagerTest {
         var persistenceCallback: StatePersistenceCallback? = null
         var checkAuthorizationStatusCalled = false
         var authErrorDetectedCalled = false
+        var setUserDataCalledWith: UserData? = null
 
         override suspend fun beginOAuthFlow(scopes: Set<String>, entryPoint: FxAEntryPoint): AuthFlowUrl? {
             return AuthFlowUrl(EXPECTED_AUTH_STATE, testAuthFlowUrl(entrypoint = entryPoint.entryName).url)
@@ -461,6 +463,10 @@ class FxaAccountManagerTest {
 
         override fun getCurrentDeviceId(): String? {
             return "testFxaDeviceId"
+        }
+
+        override suspend fun setUserData(userData: UserData) {
+            setUserDataCalledWith = userData
         }
 
         override fun getSessionToken(): String? {

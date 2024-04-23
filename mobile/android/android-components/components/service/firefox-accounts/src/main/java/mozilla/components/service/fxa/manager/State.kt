@@ -91,8 +91,12 @@ internal enum class ProgressState {
 internal sealed class Event {
     internal sealed class Account : Event() {
         internal object Start : Account()
-        data class BeginEmailFlow(val entrypoint: FxAEntryPoint) : Account()
-        data class BeginPairingFlow(val pairingUrl: String?, val entrypoint: FxAEntryPoint) : Account()
+        data class BeginEmailFlow(val entrypoint: FxAEntryPoint, val scopes: Set<String>) : Account()
+        data class BeginPairingFlow(
+            val pairingUrl: String?,
+            val entrypoint: FxAEntryPoint,
+            val scopes: Set<String>,
+        ) : Account()
         data class AuthenticationError(val operation: String, val errorCountWithinTheTimeWindow: Int = 1) : Account() {
             override fun toString(): String {
                 return "${this.javaClass.simpleName} - $operation"
