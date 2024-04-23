@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html, ifDefined } from "../vendor/lit.all.mjs";
+import { html, ifDefined, classMap } from "../vendor/lit.all.mjs";
 import { MozLitElement } from "../lit-utils.mjs";
 
 /**
@@ -19,8 +19,11 @@ import { MozLitElement } from "../lit-utils.mjs";
  * @property {string} titleAttribute - Internal, map title attribute to the title JS property.
  * @property {string} tooltipText - Set the title property, the title attribute will be used first.
  * @property {string} ariaLabel - The button's arial-label attribute, used in shadow DOM and therefore not as an attribute on moz-button.
+ * @property {string} iconSrc - Path to the icon that should be displayed in the button.
  * @property {string} ariaLabelAttribute - Internal, map aria-label attribute to the ariaLabel JS property.
+ * @property {string} hasVisibleLabel - Internal, tracks whether or not the button has a visible label.
  * @property {HTMLButtonElement} buttonEl - The internal button element in the shadow DOM.
+ * @property {HTMLButtonElement} slotEl - The internal slot element in the shadow DOM.
  * @slot default - The button's content, overrides label property.
  * @fires click - The click event.
  */
@@ -44,10 +47,13 @@ export default class MozButton extends MozLitElement {
       reflect: true,
     },
     ariaLabel: { type: String, state: true },
+    iconSrc: { type: String },
+    hasVisibleLabel: { type: Boolean, state: true },
   };
 
   static queries = {
     buttonEl: "button",
+    slotEl: "slot",
   };
 
   constructor() {
@@ -55,6 +61,7 @@ export default class MozButton extends MozLitElement {
     this.type = "default";
     this.size = "default";
     this.disabled = false;
+    this.hasVisibleLabel = !!this.label;
   }
 
   willUpdate(changes) {
@@ -73,6 +80,12 @@ export default class MozButton extends MozLitElement {
     this.buttonEl.click();
   }
 
+  handleSlotchange() {
+    if (this.slotEl?.assignedNodes()?.length) {
+      this.hasVisibleLabel = true;
+    }
+  }
+
   render() {
     return html`
       <link
@@ -86,8 +99,12 @@ export default class MozButton extends MozLitElement {
         title=${ifDefined(this.title || this.tooltipText)}
         aria-label=${ifDefined(this.ariaLabel)}
         part="button"
+        class=${classMap({ labelled: this.label || this.hasVisibleLabel })}
       >
-        <slot>${this.label}</slot>
+        ${this.iconSrc
+          ? html`<img src=${this.iconSrc} role="presentation" />`
+          : ""}
+        <slot @slotchange=${this.handleSlotchange}>${this.label}</slot>
       </button>
     `;
   }
