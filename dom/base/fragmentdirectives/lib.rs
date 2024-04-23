@@ -96,9 +96,7 @@ pub extern "C" fn parse_fragment_directive(
             &url_as_rust_string,
         )
     {
-        result
-            .url_without_fragment_directive
-            .assign(&stripped_url);
+        result.url_without_fragment_directive.assign(&stripped_url);
         result.fragment_directive.assign(&fragment_directive);
         result.text_directives.extend(
             text_directives
