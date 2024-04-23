@@ -265,12 +265,14 @@ web-platform-tests-webgpu:
                     - --default-exclude
                     - --tag=webgpu
                     - --exclude-tag=canvas
+                    - --skip-implementation-status=not-implementing
                     - --setpref=gfx.webgpu.ignore-blocklist=true
                 default:
                     - --test-type=testharness
                     - --default-exclude
                     - --tag=webgpu
                     - --exclude-tag=canvas
+                    - --skip-implementation-status=not-implementing
 
 web-platform-tests-canvas:
     description: "Web platform Canvas test run"
