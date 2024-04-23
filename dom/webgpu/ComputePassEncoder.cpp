@@ -38,65 +38,73 @@ ComputePassEncoder::ComputePassEncoder(
     CommandEncoder* const aParent, const dom::GPUComputePassDescriptor& aDesc)
     : ChildOf(aParent), mPass(BeginComputePass(aParent->mId, aDesc)) {}
 
-ComputePassEncoder::~ComputePassEncoder() {
+ComputePassEncoder::~ComputePassEncoder() { Cleanup(); }
+
+void ComputePassEncoder::Cleanup() {
   if (mValid) {
-    mValid = false;
+    End();
   }
 }
 
 void ComputePassEncoder::SetBindGroup(
     uint32_t aSlot, const BindGroup& aBindGroup,
     const dom::Sequence<uint32_t>& aDynamicOffsets) {
-  if (mValid) {
-    mUsedBindGroups.AppendElement(&aBindGroup);
-    ffi::wgpu_recorded_compute_pass_set_bind_group(
-        mPass.get(), aSlot, aBindGroup.mId, aDynamicOffsets.Elements(),
-        aDynamicOffsets.Length());
+  if (!mValid) {
+    return;
   }
+  mUsedBindGroups.AppendElement(&aBindGroup);
+  ffi::wgpu_recorded_compute_pass_set_bind_group(
+      mPass.get(), aSlot, aBindGroup.mId, aDynamicOffsets.Elements(),
+      aDynamicOffsets.Length());
 }
 
 void ComputePassEncoder::SetPipeline(const ComputePipeline& aPipeline) {
-  if (mValid) {
-    mUsedPipelines.AppendElement(&aPipeline);
-    ffi::wgpu_recorded_compute_pass_set_pipeline(mPass.get(), aPipeline.mId);
+  if (!mValid) {
+    return;
   }
+  mUsedPipelines.AppendElement(&aPipeline);
+  ffi::wgpu_recorded_compute_pass_set_pipeline(mPass.get(), aPipeline.mId);
 }
 
 void ComputePassEncoder::DispatchWorkgroups(uint32_t workgroupCountX,
                                             uint32_t workgroupCountY,
                                             uint32_t workgroupCountZ) {
-  if (mValid) {
-    ffi::wgpu_recorded_compute_pass_dispatch_workgroups(
-        mPass.get(), workgroupCountX, workgroupCountY, workgroupCountZ);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_compute_pass_dispatch_workgroups(
+      mPass.get(), workgroupCountX, workgroupCountY, workgroupCountZ);
 }
 
 void ComputePassEncoder::DispatchWorkgroupsIndirect(
     const Buffer& aIndirectBuffer, uint64_t aIndirectOffset) {
-  if (mValid) {
-    ffi::wgpu_recorded_compute_pass_dispatch_workgroups_indirect(
-        mPass.get(), aIndirectBuffer.mId, aIndirectOffset);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_compute_pass_dispatch_workgroups_indirect(
+      mPass.get(), aIndirectBuffer.mId, aIndirectOffset);
 }
 
 void ComputePassEncoder::PushDebugGroup(const nsAString& aString) {
-  if (mValid) {
-    const NS_ConvertUTF16toUTF8 utf8(aString);
-    ffi::wgpu_recorded_compute_pass_push_debug_group(mPass.get(), utf8.get(),
-                                                     0);
+  if (!mValid) {
+    return;
   }
+  const NS_ConvertUTF16toUTF8 utf8(aString);
+  ffi::wgpu_recorded_compute_pass_push_debug_group(mPass.get(), utf8.get(), 0);
 }
 void ComputePassEncoder::PopDebugGroup() {
-  if (mValid) {
-    ffi::wgpu_recorded_compute_pass_pop_debug_group(mPass.get());
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_recorded_compute_pass_pop_debug_group(mPass.get());
 }
 void ComputePassEncoder::InsertDebugMarker(const nsAString& aString) {
-  if (mValid) {
-    const NS_ConvertUTF16toUTF8 utf8(aString);
-    ffi::wgpu_recorded_compute_pass_insert_debug_marker(mPass.get(), utf8.get(),
-                                                        0);
+  if (!mValid) {
+    return;
   }
+  const NS_ConvertUTF16toUTF8 utf8(aString);
+  ffi::wgpu_recorded_compute_pass_insert_debug_marker(mPass.get(), utf8.get(),
+                                                      0);
 }
 
 void ComputePassEncoder::End() {

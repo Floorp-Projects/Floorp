@@ -49,7 +49,7 @@ class RenderPassEncoder final : public ObjectBase,
 
  protected:
   virtual ~RenderPassEncoder();
-  void Cleanup() {}
+  void Cleanup();
 
   std::unique_ptr<ffi::WGPURecordedRenderPass, ffiWGPURenderPassDeleter> mPass;
   // keep all the used objects alive while the pass is recorded

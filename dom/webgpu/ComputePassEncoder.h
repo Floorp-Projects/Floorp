@@ -41,7 +41,7 @@ class ComputePassEncoder final : public ObjectBase,
 
  private:
   virtual ~ComputePassEncoder();
-  void Cleanup() {}
+  void Cleanup();
 
   std::unique_ptr<ffi::WGPURecordedComputePass, ffiWGPUComputePassDeleter>
       mPass;

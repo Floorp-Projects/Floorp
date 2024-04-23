@@ -72,7 +72,7 @@ RenderBundleEncoder::RenderBundleEncoder(
     const dom::GPURenderBundleEncoderDescriptor& aDesc)
     : ChildOf(aParent),
       mEncoder(CreateRenderBundleEncoder(aParent->mId, aDesc, aBridge)) {
-  mValid = mEncoder.get() != nullptr;
+  mValid = !!mEncoder;
 }
 
 RenderBundleEncoder::~RenderBundleEncoder() { Cleanup(); }
@@ -80,100 +80,112 @@ RenderBundleEncoder::~RenderBundleEncoder() { Cleanup(); }
 void RenderBundleEncoder::Cleanup() {
   if (mValid) {
     mValid = false;
+    mEncoder.release();
   }
 }
 
 void RenderBundleEncoder::SetBindGroup(
     uint32_t aSlot, const BindGroup& aBindGroup,
     const dom::Sequence<uint32_t>& aDynamicOffsets) {
-  if (mValid) {
-    mUsedBindGroups.AppendElement(&aBindGroup);
-    ffi::wgpu_render_bundle_set_bind_group(
-        mEncoder.get(), aSlot, aBindGroup.mId, aDynamicOffsets.Elements(),
-        aDynamicOffsets.Length());
+  if (!mValid) {
+    return;
   }
+  mUsedBindGroups.AppendElement(&aBindGroup);
+  ffi::wgpu_render_bundle_set_bind_group(mEncoder.get(), aSlot, aBindGroup.mId,
+                                         aDynamicOffsets.Elements(),
+                                         aDynamicOffsets.Length());
 }
 
 void RenderBundleEncoder::SetPipeline(const RenderPipeline& aPipeline) {
-  if (mValid) {
-    mUsedPipelines.AppendElement(&aPipeline);
-    ffi::wgpu_render_bundle_set_pipeline(mEncoder.get(), aPipeline.mId);
+  if (!mValid) {
+    return;
   }
+  mUsedPipelines.AppendElement(&aPipeline);
+  ffi::wgpu_render_bundle_set_pipeline(mEncoder.get(), aPipeline.mId);
 }
 
 void RenderBundleEncoder::SetIndexBuffer(
     const Buffer& aBuffer, const dom::GPUIndexFormat& aIndexFormat,
     uint64_t aOffset, uint64_t aSize) {
-  if (mValid) {
-    mUsedBuffers.AppendElement(&aBuffer);
-    const auto iformat = aIndexFormat == dom::GPUIndexFormat::Uint32
-                             ? ffi::WGPUIndexFormat_Uint32
-                             : ffi::WGPUIndexFormat_Uint16;
-    ffi::wgpu_render_bundle_set_index_buffer(mEncoder.get(), aBuffer.mId,
-                                             iformat, aOffset, aSize);
+  if (!mValid) {
+    return;
   }
+  mUsedBuffers.AppendElement(&aBuffer);
+  const auto iformat = aIndexFormat == dom::GPUIndexFormat::Uint32
+                           ? ffi::WGPUIndexFormat_Uint32
+                           : ffi::WGPUIndexFormat_Uint16;
+  ffi::wgpu_render_bundle_set_index_buffer(mEncoder.get(), aBuffer.mId, iformat,
+                                           aOffset, aSize);
 }
 
 void RenderBundleEncoder::SetVertexBuffer(uint32_t aSlot, const Buffer& aBuffer,
                                           uint64_t aOffset, uint64_t aSize) {
-  if (mValid) {
-    mUsedBuffers.AppendElement(&aBuffer);
-    ffi::wgpu_render_bundle_set_vertex_buffer(mEncoder.get(), aSlot,
-                                              aBuffer.mId, aOffset, aSize);
+  if (!mValid) {
+    return;
   }
+  mUsedBuffers.AppendElement(&aBuffer);
+  ffi::wgpu_render_bundle_set_vertex_buffer(mEncoder.get(), aSlot, aBuffer.mId,
+                                            aOffset, aSize);
 }
 
 void RenderBundleEncoder::Draw(uint32_t aVertexCount, uint32_t aInstanceCount,
                                uint32_t aFirstVertex, uint32_t aFirstInstance) {
-  if (mValid) {
-    ffi::wgpu_render_bundle_draw(mEncoder.get(), aVertexCount, aInstanceCount,
-                                 aFirstVertex, aFirstInstance);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_render_bundle_draw(mEncoder.get(), aVertexCount, aInstanceCount,
+                               aFirstVertex, aFirstInstance);
 }
 
 void RenderBundleEncoder::DrawIndexed(uint32_t aIndexCount,
                                       uint32_t aInstanceCount,
                                       uint32_t aFirstIndex, int32_t aBaseVertex,
                                       uint32_t aFirstInstance) {
-  if (mValid) {
-    ffi::wgpu_render_bundle_draw_indexed(mEncoder.get(), aIndexCount,
-                                         aInstanceCount, aFirstIndex,
-                                         aBaseVertex, aFirstInstance);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_render_bundle_draw_indexed(mEncoder.get(), aIndexCount,
+                                       aInstanceCount, aFirstIndex, aBaseVertex,
+                                       aFirstInstance);
 }
 
 void RenderBundleEncoder::DrawIndirect(const Buffer& aIndirectBuffer,
                                        uint64_t aIndirectOffset) {
-  if (mValid) {
-    ffi::wgpu_render_bundle_draw_indirect(mEncoder.get(), aIndirectBuffer.mId,
-                                          aIndirectOffset);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_render_bundle_draw_indirect(mEncoder.get(), aIndirectBuffer.mId,
+                                        aIndirectOffset);
 }
 
 void RenderBundleEncoder::DrawIndexedIndirect(const Buffer& aIndirectBuffer,
                                               uint64_t aIndirectOffset) {
-  if (mValid) {
-    ffi::wgpu_render_bundle_draw_indexed_indirect(
-        mEncoder.get(), aIndirectBuffer.mId, aIndirectOffset);
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_render_bundle_draw_indexed_indirect(
+      mEncoder.get(), aIndirectBuffer.mId, aIndirectOffset);
 }
 
 void RenderBundleEncoder::PushDebugGroup(const nsAString& aString) {
-  if (mValid) {
-    const NS_ConvertUTF16toUTF8 utf8(aString);
-    ffi::wgpu_render_bundle_push_debug_group(mEncoder.get(), utf8.get());
+  if (!mValid) {
+    return;
   }
+  const NS_ConvertUTF16toUTF8 utf8(aString);
+  ffi::wgpu_render_bundle_push_debug_group(mEncoder.get(), utf8.get());
 }
 void RenderBundleEncoder::PopDebugGroup() {
-  if (mValid) {
-    ffi::wgpu_render_bundle_pop_debug_group(mEncoder.get());
+  if (!mValid) {
+    return;
   }
+  ffi::wgpu_render_bundle_pop_debug_group(mEncoder.get());
 }
 void RenderBundleEncoder::InsertDebugMarker(const nsAString& aString) {
-  if (mValid) {
-    const NS_ConvertUTF16toUTF8 utf8(aString);
-    ffi::wgpu_render_bundle_insert_debug_marker(mEncoder.get(), utf8.get());
+  if (!mValid) {
+    return;
   }
+  const NS_ConvertUTF16toUTF8 utf8(aString);
+  ffi::wgpu_render_bundle_insert_debug_marker(mEncoder.get(), utf8.get());
 }
 
 already_AddRefed<RenderBundle> RenderBundleEncoder::Finish(
@@ -189,11 +201,8 @@ already_AddRefed<RenderBundle> RenderBundleEncoder::Finish(
   ipc::ByteBuf bb;
   RawId id;
   if (mValid) {
-    mValid = false;
-
-    auto* encoder = mEncoder.release();
-    id = ffi::wgpu_client_create_render_bundle(bridge->GetClient(), encoder,
-                                               deviceId, &desc, ToFFI(&bb));
+    id = ffi::wgpu_client_create_render_bundle(
+        bridge->GetClient(), mEncoder.get(), deviceId, &desc, ToFFI(&bb));
 
   } else {
     id = ffi::wgpu_client_create_render_bundle_error(
@@ -203,6 +212,8 @@ already_AddRefed<RenderBundle> RenderBundleEncoder::Finish(
   if (bridge->CanSend()) {
     bridge->SendDeviceAction(deviceId, std::move(bb));
   }
+
+  Cleanup();
 
   RefPtr<RenderBundle> bundle = new RenderBundle(mParent, id);
   return bundle.forget();
