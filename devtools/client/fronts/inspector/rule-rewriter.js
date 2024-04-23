@@ -194,7 +194,7 @@ RuleRewriter.prototype = {
     // into "url(;)" by this code -- due to the way "url(...)" is
     // parsed as a single token.
     text = text.replace(/;$/, "");
-    const lexer = getCSSLexer(text);
+    const lexer = getCSSLexer(text, true, true);
 
     let result = "";
     let previousOffset = 0;
@@ -210,7 +210,7 @@ RuleRewriter.prototype = {
       // We set the location of the paren in a funny way, to handle
       // the case where we've seen a function token, where the paren
       // appears at the end.
-      parenStack.push({ closer, offset: result.length - 1 });
+      parenStack.push({ closer, offset: result.length - 1, token });
       previousOffset = token.endOffset;
     };
 
@@ -220,6 +220,18 @@ RuleRewriter.prototype = {
         const paren = parenStack.pop();
 
         if (paren.closer === closer) {
+          return true;
+        }
+
+        // We need to handle non-closed url function differently, as performEOFFixup will
+        // only automatically close missing parenthesis `url`.
+        // In such case, don't do anything here.
+        if (
+          paren.closer === ")" &&
+          closer == null &&
+          paren.token.tokenType === "Function" &&
+          paren.token.value === "url"
+        ) {
           return true;
         }
 
@@ -234,50 +246,43 @@ RuleRewriter.prototype = {
       return false;
     };
 
-    while (true) {
-      const token = lexer.nextToken();
-      if (!token) {
-        break;
-      }
+    let token;
+    while ((token = lexer.nextToken())) {
+      switch (token.tokenType) {
+        case "Semicolon":
+          // We simply drop the ";" here.  This lets us cope with
+          // declarations that don't have a ";" and also other
+          // termination.  The caller handles adding the ";" again.
+          result += text.substring(previousOffset, token.startOffset);
+          previousOffset = token.endOffset;
+          break;
 
-      if (token.tokenType === "symbol") {
-        switch (token.text) {
-          case ";":
-            // We simply drop the ";" here.  This lets us cope with
-            // declarations that don't have a ";" and also other
-            // termination.  The caller handles adding the ";" again.
+        case "CurlyBracketBlock":
+          pushParen(token, "}");
+          break;
+
+        case "ParenthesisBlock":
+        case "Function":
+          pushParen(token, ")");
+          break;
+
+        case "SquareBracketBlock":
+          pushParen(token, "]");
+          break;
+
+        case "CloseCurlyBracket":
+        case "CloseParenthesis":
+        case "CloseSquareBracket":
+          // Did we find an unmatched close bracket?
+          if (!popSomeParens(token.text)) {
+            // Copy out text from |previousOffset|.
             result += text.substring(previousOffset, token.startOffset);
+            // Quote the offending symbol.
+            result += "\\" + token.text;
             previousOffset = token.endOffset;
-            break;
-
-          case "{":
-            pushParen(token, "}");
-            break;
-
-          case "(":
-            pushParen(token, ")");
-            break;
-
-          case "[":
-            pushParen(token, "]");
-            break;
-
-          case "}":
-          case ")":
-          case "]":
-            // Did we find an unmatched close bracket?
-            if (!popSomeParens(token.text)) {
-              // Copy out text from |previousOffset|.
-              result += text.substring(previousOffset, token.startOffset);
-              // Quote the offending symbol.
-              result += "\\" + token.text;
-              previousOffset = token.endOffset;
-              anySanitized = true;
-            }
-            break;
-        }
-      } else if (token.tokenType === "function") {
-        pushParen(token, ")");
+            anySanitized = true;
+          }
+          break;
       }
     }
 
@@ -286,6 +291,7 @@ RuleRewriter.prototype = {
 
     // Copy out any remaining text, then any needed terminators.
     result += text.substring(previousOffset, text.length);
+
     const eofFixup = lexer.performEOFFixup("", true);
     if (eofFixup) {
       anySanitized = true;
