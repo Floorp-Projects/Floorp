@@ -11,6 +11,7 @@
 use euclid::vec2;
 use api::{ExtendMode, GradientStop, PremultipliedColorF};
 use api::units::*;
+use crate::pattern::{Pattern, PatternKind, PatternShaderInput};
 use crate::scene_building::IsVisible;
 use crate::frame_builder::FrameBuildingState;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
@@ -22,8 +23,8 @@ use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimit
 use crate::render_task::{RenderTask, RenderTaskKind};
 use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheKey, RenderTaskParent};
-use crate::renderer::GpuBufferAddress;
-use crate::picture::{SurfaceIndex};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilder};
+use crate::picture::SurfaceIndex;
 
 use std::{hash, ops::{Deref, DerefMut}};
 use super::{stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder};
@@ -329,6 +330,7 @@ impl InternablePrimitive for ConicGradient {
         PrimitiveInstanceKind::ConicGradient {
             data_handle,
             visible_tiles_range: GradientTileRange::empty(),
+            cached: true,
         }
     }
 }
@@ -397,3 +399,44 @@ pub struct ConicGradientCacheKey {
     pub stops: Vec<GradientStopKey>,
 }
 
+pub fn conic_gradient_pattern(
+    center: DevicePoint,
+    scale: DeviceVector2D,
+    params: &ConicGradientParams,
+    extend_mode: ExtendMode,
+    stops: &[GradientStop],
+    gpu_buffer_builder: &mut GpuBufferBuilder
+) -> Pattern {
+    let mut writer = gpu_buffer_builder.f32.write_blocks(2);
+    writer.push_one([
+        center.x,
+        center.y,
+        scale.x,
+        scale.y,
+    ]);
+    writer.push_one([
+        params.start_offset,
+        params.end_offset,
+        params.angle,
+        if extend_mode == ExtendMode::Repeat { 1.0 } else { 0.0 }
+    ]);
+    let gradient_address = writer.finish();
+
+    let stops_address = GradientGpuBlockBuilder::build(
+        false,
+        &mut gpu_buffer_builder.f32,
+        &stops,
+    );
+
+    let is_opaque = stops.iter().all(|stop| stop.color.a >= 1.0);
+
+    Pattern {
+        kind: PatternKind::ConicGradient,
+        shader_input: PatternShaderInput(
+            gradient_address.as_int(),
+            stops_address.as_int(),
+        ),
+        base_color: PremultipliedColorF::WHITE,
+        is_opaque,
+    }
+}
