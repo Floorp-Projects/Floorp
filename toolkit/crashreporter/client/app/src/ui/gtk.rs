@@ -466,11 +466,20 @@ fn render_element_type(element_type: &model::ElementType) -> Option<*mut gtk::Gt
             }
             label_ptr
         }
-        HBox(model::HBox { items, spacing }) => {
+        HBox(model::HBox {
+            items,
+            spacing,
+            affirmative_order,
+        }) => {
             let box_ptr =
                 unsafe { gtk::gtk_box_new(gtk::GtkOrientation_GTK_ORIENTATION_HORIZONTAL, 0) };
             unsafe { gtk::gtk_box_set_spacing(box_ptr as *mut _, *spacing as i32) };
-            for item in items {
+            let items_iter: Box<dyn Iterator<Item = &Element>> = if *affirmative_order {
+                Box::new(items.iter().rev())
+            } else {
+                Box::new(items.iter())
+            };
+            for item in items_iter {
                 if let Some(widget) = render(item) {
                     unsafe {
                         gtk::gtk_container_add(box_ptr as *mut gtk::GtkContainer, widget);

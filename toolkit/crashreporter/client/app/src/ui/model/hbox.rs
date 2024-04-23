@@ -9,11 +9,23 @@ use super::{Element, ElementBuilder};
 pub struct HBox {
     pub items: Vec<Element>,
     pub spacing: u32,
+    pub affirmative_order: bool,
 }
 
 impl ElementBuilder<HBox> {
     pub fn spacing(&mut self, value: u32) {
         self.element_type.spacing = value;
+    }
+
+    /// Whether children are in affirmative order (and should be reordered based on platform
+    /// conventions).
+    ///
+    /// The children passed to `add_child` should be in most-affirmative to least-affirmative order
+    /// (e.g., "OK" then "Cancel" buttons).
+    ///
+    /// This is mainly useful for dialog buttons.
+    pub fn affirmative_order(&mut self, value: bool) {
+        self.element_type.affirmative_order = value;
     }
 
     pub fn add_child(&mut self, child: Element) {
