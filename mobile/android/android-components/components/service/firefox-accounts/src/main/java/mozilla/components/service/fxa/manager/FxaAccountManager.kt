@@ -8,11 +8,9 @@ import android.content.Context
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.fxaclient.FxaStateCheckerEvent
 import mozilla.appservices.fxaclient.FxaStateCheckerState
@@ -949,62 +947,6 @@ open class FxaAccountManager(
 
         override fun onError(error: Exception?) {
             accountManager.syncStatusObserverRegistry.notifyObservers { onError(error) }
-        }
-    }
-
-    /**
-     * Hook this up to the secret debug menu to simulate a network error
-     *
-     * Typical usage is:
-     *   - `adb logcat | grep fxa_client`
-     *   - Trigger this via the secret debug menu item.
-     *   - Watch the logs.  You should see the client perform a call to `get_profile', see a
-     *     network error, then recover.
-     *     - Note: the logs will be more clear once we switch the code to using the app-services state
-     *       machine.
-     *   - Check the UI, it should be in an authenticated state.
-     */
-    public fun simulateNetworkError() {
-        account.simulateNetworkError()
-        CoroutineScope(coroutineContext).launch {
-            refreshProfile(true)
-        }
-    }
-
-    /**
-     * Hook this up to the secret debug menu to simulate a temporary auth error
-     *
-     * Typical usage is:
-     *   - `adb logcat | grep fxa_client`
-     *   - Trigger this via the secret debug menu item.
-     *   - Watch the logs.  You should see the client perform a call to `get_profile', see an
-     *     auth error, then recover.
-     *   - Check the UI, it should be in an authenticated state.
-     */
-    public fun simulateTemporaryAuthTokenIssue() {
-        account.simulateTemporaryAuthTokenIssue()
-        SyncAuthInfoCache(context).clear()
-        CoroutineScope(coroutineContext).launch {
-            refreshProfile(true)
-        }
-    }
-
-    /**
-     * Hook this up to the secret debug menu to simulate an unrecoverable auth error
-     *
-     * Typical usage is:
-     *   - `adb logcat | grep fxa_client`
-     *   - Trigger this via the secret debug menu item.
-     *   - Initiaite a sync, or perform some other action that requires authentication.
-     *   - Watch the logs.  You should see the client perform a call to `get_profile', see an
-     *     auth error, then fail to recover.
-     *   - Check the UI, it should be in an authentication problems state.
-     */
-    public fun simulatePermanentAuthTokenIssue() {
-        account.simulatePermanentAuthTokenIssue()
-        SyncAuthInfoCache(context).clear()
-        CoroutineScope(coroutineContext).launch {
-            refreshProfile(true)
         }
     }
 }

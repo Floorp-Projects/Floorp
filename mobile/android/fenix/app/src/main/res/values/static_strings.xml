@@ -66,12 +66,6 @@
     <string name="preferences_sync_debug_quit_button_title">Stop Firefox</string>
     <!-- Quit app button summary for the Sync Debug preferences -->
     <string name="preferences_sync_debug_quit_button_summary">Custom server changes will take effect on the next Firefox run.</string>
-    <!-- Button title for simulating an FxA network error inside the Sync Debug menu -->
-    <string name="preferences_sync_debug_network_error_button_title">Simulate account network error</string>
-    <!-- Button title for simulating an FxA temporary auth error inside the Sync Debug menu -->
-    <string name="preferences_sync_debug_temporary_auth_error_button_title">Simulate temporary account auth error</string>
-    <!-- Button title for simulating an FxA permanent auth error inside the Sync Debug menu -->
-    <string name="preferences_sync_debug_permanent_auth_error_button_title">Simulate permanent account auth error</string>
     <!-- Label for enabling the Tabs Tray to Compose changes -->
     <string name="preferences_debug_settings_tabs_tray_to_compose" translatable="false">Enable Tabs Tray to Compose rewrite</string>
     <!-- Label for enabling the Compose Top Sites -->
