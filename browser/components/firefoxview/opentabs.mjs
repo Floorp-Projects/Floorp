@@ -13,9 +13,9 @@ import {
   getLogger,
   isSearchEnabled,
   placeLinkOnClipboard,
-  searchTabList,
   MAX_TABS_FOR_RECENT_BROWSING,
 } from "./helpers.mjs";
+import { searchTabList } from "./search-helpers.mjs";
 import { ViewPage, ViewPageContent } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/firefoxview/opentabs-tab-list.mjs";
