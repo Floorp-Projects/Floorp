@@ -23,10 +23,6 @@ button {
   /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
   font-size: var(--button-font-size);
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-small);
 
   &[size=small] {
     min-height: var(--button-min-height-small);
@@ -129,14 +125,13 @@ button {
     }
   }
 
-  &[type~=icon]:not(.labelled) {
+  &[type~=icon] {
     background-size: var(--icon-size-default);
     background-position: center;
     background-repeat: no-repeat;
-  }
-
-  &[type~=icon]:not(.labelled),
-  &:not(.labelled):has(img) {
+    -moz-context-properties: fill, stroke;
+    fill: currentColor;
+    stroke: currentColor;
     width: var(--button-size-icon);
     height: var(--button-size-icon);
     padding: var(--button-padding-icon);
@@ -146,17 +141,5 @@ button {
       width: var(--button-size-icon-small);
       height: var(--button-size-icon-small);
     }
-  }
-
-  img,
-  &[type~=icon]:not(.labelled) {
-    -moz-context-properties: fill, fill-opacity, stroke;
-    fill: currentColor;
-    stroke: currentColor;
-  }
-
-  img {
-    width: var(--icon-size-default);
-    height: var(--icon-size-default);
   }
 }
