@@ -101,6 +101,10 @@ add_task(async function test_copySqliteDatabases() {
     "BackupResource-dest-test"
   );
   let pretendDatabases = ["places.sqlite", "favicons.sqlite"];
+  await createTestFiles(
+    sourcePath,
+    pretendDatabases.map(f => ({ path: f }))
+  );
 
   let fakeConnection = {
     backup: sandbox.stub().resolves(true),

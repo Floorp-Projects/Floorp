@@ -93,13 +93,28 @@ add_task(async function test_backup() {
     "PlacesBackupResource-staging-test"
   );
 
+  // Make sure these files exist in the source directory, otherwise
+  // BackupResource will skip attempting to back them up.
+  await createTestFiles(sourcePath, [
+    { path: "places.sqlite" },
+    { path: "favicons.sqlite" },
+  ]);
+
   let fakeConnection = {
     backup: sandbox.stub().resolves(true),
     close: sandbox.stub().resolves(true),
   };
   sandbox.stub(Sqlite, "openConnection").returns(fakeConnection);
 
-  await placesBackupResource.backup(stagingPath, sourcePath);
+  let manifestEntry = await placesBackupResource.backup(
+    stagingPath,
+    sourcePath
+  );
+  Assert.equal(
+    manifestEntry,
+    null,
+    "PlacesBackupResource.backup should return null as its ManifestEntry"
+  );
 
   Assert.ok(
     fakeConnection.backup.calledTwice,
@@ -154,7 +169,16 @@ add_task(async function test_backup_no_saved_history() {
   Services.prefs.setBoolPref(HISTORY_ENABLED_PREF, false);
   Services.prefs.setBoolPref(SANITIZE_ON_SHUTDOWN_PREF, false);
 
-  await placesBackupResource.backup(stagingPath, sourcePath);
+  let manifestEntry = await placesBackupResource.backup(
+    stagingPath,
+    sourcePath
+  );
+  Assert.deepEqual(
+    manifestEntry,
+    { bookmarksOnly: true },
+    "Should have gotten back a ManifestEntry indicating that we only copied " +
+      "bookmarks"
+  );
 
   Assert.ok(
     fakeConnection.backup.notCalled,
@@ -171,7 +195,13 @@ add_task(async function test_backup_no_saved_history() {
   Services.prefs.setBoolPref(SANITIZE_ON_SHUTDOWN_PREF, true);
 
   fakeConnection.backup.resetHistory();
-  await placesBackupResource.backup(stagingPath, sourcePath);
+  manifestEntry = await placesBackupResource.backup(stagingPath, sourcePath);
+  Assert.deepEqual(
+    manifestEntry,
+    { bookmarksOnly: true },
+    "Should have gotten back a ManifestEntry indicating that we only copied " +
+      "bookmarks"
+  );
 
   Assert.ok(
     fakeConnection.backup.notCalled,
@@ -211,7 +241,16 @@ add_task(async function test_backup_private_browsing() {
   sandbox.stub(Sqlite, "openConnection").returns(fakeConnection);
   sandbox.stub(PrivateBrowsingUtils, "permanentPrivateBrowsing").value(true);
 
-  await placesBackupResource.backup(stagingPath, sourcePath);
+  let manifestEntry = await placesBackupResource.backup(
+    stagingPath,
+    sourcePath
+  );
+  Assert.deepEqual(
+    manifestEntry,
+    { bookmarksOnly: true },
+    "Should have gotten back a ManifestEntry indicating that we only copied " +
+      "bookmarks"
+  );
 
   Assert.ok(
     fakeConnection.backup.notCalled,

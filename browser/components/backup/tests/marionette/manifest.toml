@@ -1,0 +1,5 @@
+[DEFAULT]
+run-if = ["buildapp == 'browser'"]
+prefs = ["browser.backup.enabled=true", "browser.backup.log=true"]
+
+["test_backup.py"]

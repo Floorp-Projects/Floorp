@@ -41,6 +41,8 @@ export class SessionStoreBackupResource extends BackupResource {
     await BackupResource.copyFiles(profilePath, stagingPath, [
       "sessionstore-backups",
     ]);
+
+    return null;
   }
 
   async measure(profilePath = PathUtils.profileDir) {

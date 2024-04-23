@@ -65,6 +65,10 @@ add_task(async function test_backup() {
     "FormHistoryBackupResource-staging-test"
   );
 
+  // Make sure this file exists in the source directory, otherwise
+  // BackupResource will skip attempting to back it up.
+  await createTestFiles(sourcePath, [{ path: "formhistory.sqlite" }]);
+
   // We have no need to test that Sqlite.sys.mjs's backup method is working -
   // this is something that is tested in Sqlite's own tests. We can just make
   // sure that it's being called using sinon. Unfortunately, we cannot do the
@@ -75,7 +79,15 @@ add_task(async function test_backup() {
   };
   sandbox.stub(Sqlite, "openConnection").returns(fakeConnection);
 
-  await formHistoryBackupResource.backup(stagingPath, sourcePath);
+  let manifestEntry = await formHistoryBackupResource.backup(
+    stagingPath,
+    sourcePath
+  );
+  Assert.equal(
+    manifestEntry,
+    null,
+    "FormHistoryBackupResource.backup should return null as its ManifestEntry"
+  );
 
   // Next, we'll make sure that the Sqlite connection had `backup` called on it
   // with the right arguments.

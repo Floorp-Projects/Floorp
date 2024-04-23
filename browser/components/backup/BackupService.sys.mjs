@@ -147,6 +147,12 @@ export class BackupService {
   }
 
   /**
+   * @typedef {object} CreateBackupResult
+   * @property {string} stagingPath
+   *   The staging path for where the backup was created.
+   */
+
+  /**
    * Create a backup of the user's profile.
    *
    * @param {object} [options]
@@ -154,13 +160,15 @@ export class BackupService {
    * @param {string} [options.profilePath=PathUtils.profileDir]
    *   The path to the profile to backup. By default, this is the current
    *   profile.
-   * @returns {Promise<undefined>}
+   * @returns {Promise<CreateBackupResult|null>}
+   *   A promise that resolves to an object containing the path to the staging
+   *   folder where the backup was created, or null if the backup failed.
    */
   async createBackup({ profilePath = PathUtils.profileDir } = {}) {
     // createBackup does not allow re-entry or concurrent backups.
     if (this.#backupInProgress) {
       lazy.logConsole.warn("Backup attempt already in progress");
-      return;
+      return null;
     }
 
     this.#backupInProgress = true;
@@ -204,11 +212,19 @@ export class BackupService {
             resourcePath,
             profilePath
           );
-          lazy.logConsole.debug(
-            `Backup of resource with key ${resourceClass.key} completed`,
-            manifestEntry
-          );
-          manifest.resources[resourceClass.key] = manifestEntry;
+
+          if (manifestEntry === undefined) {
+            lazy.logConsole.error(
+              `Backup of resource with key ${resourceClass.key} returned undefined
+              as its ManifestEntry instead of null or an object`
+            );
+          } else {
+            lazy.logConsole.debug(
+              `Backup of resource with key ${resourceClass.key} completed`,
+              manifestEntry
+            );
+            manifest.resources[resourceClass.key] = manifestEntry;
+          }
         } catch (e) {
           lazy.logConsole.error(
             `Failed to backup resource: ${resourceClass.key}`,
@@ -246,7 +262,12 @@ export class BackupService {
       );
       await IOUtils.writeJSON(manifestPath, manifest);
 
-      await this.#finalizeStagingFolder(stagingPath);
+      let renamedStagingPath = await this.#finalizeStagingFolder(stagingPath);
+      lazy.logConsole.log(
+        "Wrote backup to staging directory at ",
+        renamedStagingPath
+      );
+      return { stagingPath: renamedStagingPath };
     } finally {
       this.#backupInProgress = false;
     }
@@ -280,7 +301,10 @@ export class BackupService {
    * The ISO date string should be formatted from YYYY-MM-DDTHH:mm:ss.sssZ to YYYY-MM-DDTHH-mm-ssZ
    *
    * @param {string} stagingPath
-   *  The path to the populated staging folder.
+   *   The path to the populated staging folder.
+   * @returns {Promise<string|null>}
+   *   The path to the renamed staging folder, or null if the stagingPath was
+   *   not pointing to a valid folder.
    */
   async #finalizeStagingFolder(stagingPath) {
     if (!(await IOUtils.exists(stagingPath))) {
@@ -288,7 +312,7 @@ export class BackupService {
       lazy.logConsole.error(
         `Failed to finalize staging folder. Cannot find ${stagingPath}.`
       );
-      return;
+      return null;
     }
 
     try {
@@ -319,10 +343,12 @@ export class BackupService {
           });
         }
       }
+      return renamedBackupPath;
     } catch (e) {
       lazy.logConsole.error(
         `Something went wrong while finalizing the staging folder. ${e}`
       );
+      throw e;
     }
   }
 

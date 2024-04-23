@@ -63,6 +63,8 @@ export class AddonsBackupResource extends BackupResource {
       stagingPath,
       databases
     );
+
+    return null;
   }
 
   async measure(profilePath = PathUtils.profileDir) {
