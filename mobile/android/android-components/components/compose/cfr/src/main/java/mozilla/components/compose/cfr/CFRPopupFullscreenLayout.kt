@@ -493,7 +493,7 @@ internal class CFRPopupFullscreenLayout(
         disposeComposition()
         setViewTreeLifecycleOwner(null)
         this.setViewTreeSavedStateRegistryOwner(null)
-        windowManager.removeViewImmediate(this)
+        windowManager.removeView(this)
     }
 
     /**
