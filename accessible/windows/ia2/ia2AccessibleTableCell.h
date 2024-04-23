@@ -11,12 +11,14 @@
 #include "AccessibleTableCell.h"
 #include "ia2AccessibleHypertext.h"
 #include "IUnknownImpl.h"
+#include "UiaGridItem.h"
 
 namespace mozilla {
 namespace a11y {
 class TableCellAccessible;
 
 class ia2AccessibleTableCell : public IAccessibleTableCell,
+                               public UiaGridItem,
                                public ia2AccessibleHypertext {
  public:
   // IUnknown

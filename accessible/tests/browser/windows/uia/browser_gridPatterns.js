@@ -22,6 +22,29 @@ async function testGridGetItem(row, col, cellId) {
   );
 }
 
+async function testGridItemProps(id, row, col, rowSpan, colSpan, gridId) {
+  await assignPyVarToUiaWithId(id);
+  await definePyVar("pattern", `getUiaPattern(${id}, "GridItem")`);
+  ok(await runPython(`bool(pattern)`), `${id} has GridItem pattern`);
+  is(await runPython(`pattern.CurrentRow`), row, `${id} has correct Row`);
+  is(await runPython(`pattern.CurrentColumn`), col, `${id} has correct Column`);
+  is(
+    await runPython(`pattern.CurrentRowSpan`),
+    rowSpan,
+    `${id} has correct RowSpan`
+  );
+  is(
+    await runPython(`pattern.CurrentColumnSpan`),
+    colSpan,
+    `${id} has correct ColumnSpan`
+  );
+  is(
+    await runPython(`pattern.CurrentContainingGrid.CurrentAutomationId`),
+    gridId,
+    `${id} ContainingGridItem is ${gridId}`
+  );
+}
+
 /**
  * Test the Grid pattern.
  */
@@ -51,4 +74,19 @@ addUiaTask(SNIPPET, async function testGrid() {
   await testGridGetItem(2, 2, "i");
 
   await testPatternAbsent("button", "Grid");
+});
+
+/**
+ * Test the GridItem pattern.
+ */
+addUiaTask(SNIPPET, async function testGridItem() {
+  await definePyVar("doc", `getDocUia()`);
+  await testGridItemProps("a", 0, 0, 1, 1, "table");
+  await testGridItemProps("b", 0, 1, 1, 1, "table");
+  await testGridItemProps("c", 0, 2, 1, 1, "table");
+  await testGridItemProps("dg", 1, 0, 2, 1, "table");
+  await testGridItemProps("ef", 1, 1, 1, 2, "table");
+  await testGridItemProps("jkl", 3, 0, 1, 3, "table");
+
+  await testPatternAbsent("button", "GridItem");
 });

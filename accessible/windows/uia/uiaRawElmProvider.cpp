@@ -14,6 +14,7 @@
 #include "ApplicationAccessible.h"
 #include "ARIAMap.h"
 #include "ia2AccessibleTable.h"
+#include "ia2AccessibleTableCell.h"
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/StaticPrefs_accessibility.h"
@@ -282,6 +283,13 @@ uiaRawElmProvider::GetPatternProvider(
       if (acc->IsTable()) {
         auto grid = GetPatternFromDerived<ia2AccessibleTable, IGridProvider>();
         grid.forget(aPatternProvider);
+      }
+      return S_OK;
+    case UIA_GridItemPatternId:
+      if (acc->IsTableCell()) {
+        auto item =
+            GetPatternFromDerived<ia2AccessibleTableCell, IGridItemProvider>();
+        item.forget(aPatternProvider);
       }
       return S_OK;
     case UIA_InvokePatternId:
