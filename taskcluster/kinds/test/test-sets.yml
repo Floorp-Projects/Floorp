@@ -18,6 +18,7 @@
 webgpu:
     - mochitest-webgpu
     - web-platform-tests-webgpu
+    - web-platform-tests-webgpu-backlog
 
 web-platform-tests:
     - web-platform-tests

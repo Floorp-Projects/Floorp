@@ -229,11 +229,43 @@ web-platform-tests-webgpu:
     virtualization: virtual-with-gpu
     tier:
         by-test-platform:
-            android.*: 3  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849914
-            macos.*: 3  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849913
-            linux2204.*-64.*: 3  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849912
-            windows.*-64.*: 3  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849911
-            default: 3
+            android.*: 2  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849914
+            macos.*: 2  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849913
+            linux2204.*-64.*: 2  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849912
+            windows.*-64.*: 2  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849911
+            default: 2
+    # Choice of `chunks`:
+    # Time-to-TEST-START on Windows is ~7m (~9m for debug).
+    # (though we're working on reducing this!)
+    # Devs would love ~10-15m runs, but we don't want to be more than
+    # 50% overhead, so let's aim for 15m (20m debug)
+    chunks: 1
+    max-run-time:
+        by-test-platform:
+            .*/debug: 2700  # 45m
+            default: 1800  # 30m
+    variants: []  # We don't need sw or nofis testing.
+    run-on-projects:
+        by-test-platform:
+            android.*: []  # https://bugzilla.mozilla.org/show_bug.cgi?id=1836811
+            .*-wayland/debug.*: []  # https://bugzilla.mozilla.org/show_bug.cgi?id=1864700
+            default: ['trunk']
+    mozharness:
+        chunked: true
+        extra-options:
+            - --test-type=testharness
+            - --skip-implementation-status=backlog
+            - --skip-implementation-status=not-implementing
+            - --default-exclude
+            - --tag=webgpu
+            - --exclude-tag=canvas
+
+web-platform-tests-webgpu-backlog:
+    description: "Web platform WebGPU test run (backlog)"
+    suite: web-platform-tests
+    treeherder-symbol: W(webgpu-backlog)
+    virtualization: virtual-with-gpu
+    tier: 3
     # Choice of `chunks`:
     # Time-to-TEST-START on Windows is ~7m (~9m for debug).
     # (though we're working on reducing this!)
@@ -265,14 +297,18 @@ web-platform-tests-webgpu:
                     - --default-exclude
                     - --tag=webgpu
                     - --exclude-tag=canvas
+                    - --skip-implementation-status=implementing
                     - --skip-implementation-status=not-implementing
+                    - --backlog
                     - --setpref=gfx.webgpu.ignore-blocklist=true
                 default:
                     - --test-type=testharness
                     - --default-exclude
                     - --tag=webgpu
                     - --exclude-tag=canvas
+                    - --skip-implementation-status=implementing
                     - --skip-implementation-status=not-implementing
+                    - --backlog
 
 web-platform-tests-canvas:
     description: "Web platform Canvas test run"
