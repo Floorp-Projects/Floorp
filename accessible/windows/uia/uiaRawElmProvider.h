@@ -12,6 +12,8 @@
 #include <uiautomation.h>
 
 template <class T>
+class nsTArray;
+template <class T>
 class RefPtr;
 
 namespace mozilla {
@@ -158,6 +160,8 @@ class uiaRawElmProvider : public IAccessibleEx,
   template <class Derived, class Interface>
   RefPtr<Interface> GetPatternFromDerived();
 };
+
+SAFEARRAY* AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs);
 
 }  // namespace a11y
 }  // namespace mozilla

@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported gIsUiaEnabled, addUiaTask, definePyVar, assignPyVarToUiaWithId, setUpWaitForUiaEvent, setUpWaitForUiaPropEvent, waitForUiaEvent, testPatternAbsent, testPythonRaises */
+/* exported gIsUiaEnabled, addUiaTask, definePyVar, assignPyVarToUiaWithId, setUpWaitForUiaEvent, setUpWaitForUiaPropEvent, waitForUiaEvent, testPatternAbsent, testPythonRaises, isUiaElementArray */
 
 // Load the shared-head file first.
 Services.scriptloader.loadSubScript(
@@ -125,4 +125,16 @@ async function testPythonRaises(expression, message) {
     failed = true;
   }
   ok(failed, message);
+}
+
+/**
+ * Verify that an array of UIA elements contains (only) elements with the given
+ * DOM ids.
+ */
+async function isUiaElementArray(pyExpr, ids, message) {
+  const result = await runPython(`
+    uias = (${pyExpr})
+    return [uias.GetElement(i).CurrentAutomationId for i in range(uias.Length)]
+  `);
+  SimpleTest.isDeeply(result, ids, message);
 }
