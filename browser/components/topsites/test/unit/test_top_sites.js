@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { TopSitesFeed, DEFAULT_TOP_SITES } = ChromeUtils.importESModule(
+const { TopSites, DEFAULT_TOP_SITES } = ChromeUtils.importESModule(
   "resource:///modules/TopSites.sys.mjs"
 );
 
@@ -67,7 +67,7 @@ let gSearchServiceInitStub;
 let gGetTopSitesStub;
 
 function getTopSitesFeedForTest(sandbox) {
-  let feed = new TopSitesFeed();
+  let feed = new TopSites();
   const storage = {
     init: sandbox.stub().resolves(),
     get: sandbox.stub().resolves(),
@@ -129,14 +129,14 @@ add_setup(async () => {
 });
 
 add_task(async function test_construction() {
-  let feed = new TopSitesFeed();
+  let feed = new TopSites();
   Assert.ok(feed, "Could construct a TopSitesFeed");
   Assert.ok(feed._currentSearchHostname, "_currentSearchHostname defined");
 });
 
 add_task(async function test_refreshDefaults() {
   let sandbox = sinon.createSandbox();
-  let feed = new TopSitesFeed();
+  let feed = new TopSites();
   Assert.ok(
     !DEFAULT_TOP_SITES.length,
     "Should have 0 DEFAULT_TOP_SITES initially."

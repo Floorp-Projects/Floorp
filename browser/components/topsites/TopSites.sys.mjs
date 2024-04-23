@@ -43,7 +43,7 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.importESModule(
     "resource://messaging-system/lib/Logger.sys.mjs"
   );
-  return new Logger("TopSitesFeed");
+  return new Logger("TopSites");
 });
 
 // `contextId` is a unique identifier used by Contextual Services
@@ -547,7 +547,7 @@ export class ContileIntegration {
   }
 }
 
-export class TopSitesFeed {
+export class TopSites {
   constructor() {
     this._telemetryUtility = new TopSitesTelemetry();
     this._contile = new ContileIntegration(this);
