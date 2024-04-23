@@ -483,9 +483,7 @@ const TEST_DATA = [
       enabled: true,
     },
     expected: "something: \\\\;color: red;",
-    // The lexer rewrites the token before we see it.  However this is
-    // so obscure as to be inconsequential.
-    changed: { 0: "\uFFFD\\" },
+    changed: { 0: "\\\\" },
   },
 
   // Termination insertion corner case.

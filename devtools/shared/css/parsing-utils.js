@@ -23,7 +23,6 @@ loader.lazyRequireGetter(
 const SELECTOR_ATTRIBUTE = (exports.SELECTOR_ATTRIBUTE = 1);
 const SELECTOR_ELEMENT = (exports.SELECTOR_ELEMENT = 2);
 const SELECTOR_PSEUDO_CLASS = (exports.SELECTOR_PSEUDO_CLASS = 3);
-const CSS_BLOCKS = { "(": ")", "[": "]" };
 
 // When commenting out a declaration, we put this character into the
 // comment opener so that future parses of the commented text know to
@@ -300,7 +299,7 @@ function parseDeclarationsInternal(
     throw new Error("empty input string");
   }
 
-  const lexer = getCSSLexer(inputString);
+  const lexer = getCSSLexer(inputString, true, true);
 
   let declarations = [getEmptyDeclaration()];
   let lastProp = declarations[0];
@@ -344,7 +343,7 @@ function parseDeclarationsInternal(
 
     // Update the start and end offsets of the declaration, but only
     // when we see a significant token.
-    if (token.tokenType !== "whitespace" && token.tokenType !== "comment") {
+    if (token.tokenType !== "WhiteSpace" && token.tokenType !== "Comment") {
       if (lastProp.offsets[0] === undefined) {
         lastProp.offsets[0] = token.startOffset;
       }
@@ -365,9 +364,8 @@ function parseDeclarationsInternal(
     if (
       // If we're not already in a nested rule
       !isInNested &&
-      token.tokenType === "symbol" &&
       // and there's an opening curly bracket
-      token.text == "{" &&
+      token.tokenType === "CurlyBracketBlock" &&
       // and we're not inside a function or an attribute
       !currentBlocks.length
     ) {
@@ -377,13 +375,10 @@ function parseDeclarationsInternal(
 
       continue;
     } else if (isInNested) {
-      if (token.tokenType === "symbol") {
-        if (token.text == "{") {
-          nestingLevel++;
-        }
-        if (token.text == "}") {
-          nestingLevel--;
-        }
+      if (token.tokenType == "CurlyBracketBlock") {
+        nestingLevel++;
+      } else if (token.tokenType == "CloseCurlyBracket") {
+        nestingLevel--;
       }
 
       // If we were in a nested rule, and we saw the last closing curly bracket,
@@ -396,21 +391,24 @@ function parseDeclarationsInternal(
       }
       continue;
     } else if (
-      token.tokenType === "symbol" &&
-      CSS_BLOCKS[currentBlocks.at(-1)] === token.text
+      token.tokenType === "CloseParenthesis" ||
+      token.tokenType === "CloseSquareBracket"
     ) {
       // Closing the last block that was opened.
       currentBlocks.pop();
       current += token.text;
-    } else if (token.tokenType === "symbol" && CSS_BLOCKS[token.text]) {
+    } else if (
+      token.tokenType === "ParenthesisBlock" ||
+      token.tokenType === "SquareBracketBlock"
+    ) {
       // Opening a new block.
       currentBlocks.push(token.text);
       current += token.text;
-    } else if (token.tokenType === "function") {
+    } else if (token.tokenType === "Function") {
       // Opening a function is like opening a new block, so push one to the stack.
       currentBlocks.push("(");
-      current += token.text + "(";
-    } else if (token.tokenType === "symbol" && token.text === ":") {
+      current += token.text;
+    } else if (token.tokenType === "Colon") {
       // Either way, a "!important" we've seen is no longer valid now.
       importantState = 0;
       importantWS = false;
@@ -436,11 +434,7 @@ function parseDeclarationsInternal(
         // with colons)
         current += ":";
       }
-    } else if (
-      token.tokenType === "symbol" &&
-      token.text === ";" &&
-      !currentBlocks.length
-    ) {
+    } else if (token.tokenType === "Semicolon" && !currentBlocks.length) {
       lastProp.terminator = "";
       // When parsing a comment, if the name hasn't been set, then we
       // have probably just seen an ordinary semicolon used in text,
@@ -460,7 +454,7 @@ function parseDeclarationsInternal(
       }
       lastProp.value = cssTrim(current);
       resetStateForNextDeclaration();
-    } else if (token.tokenType === "ident") {
+    } else if (token.tokenType === "Ident") {
       if (token.text === "important" && importantState === 1) {
         importantState = 2;
       } else {
@@ -475,17 +469,15 @@ function parseDeclarationsInternal(
           importantState = 0;
           importantWS = false;
         }
-        // Re-escape the token to avoid dequoting problems.
-        // See bug 1287620.
-        current += CSS.escape(token.text);
+        current += token.text;
       }
-    } else if (token.tokenType === "symbol" && token.text === "!") {
+    } else if (token.tokenType === "Delim" && token.text === "!") {
       importantState = 1;
-    } else if (token.tokenType === "whitespace") {
+    } else if (token.tokenType === "WhiteSpace") {
       if (current !== "") {
         current = current.trimEnd() + " ";
       }
-    } else if (token.tokenType === "comment") {
+    } else if (token.tokenType === "Comment") {
       if (parseComments && !lastProp.name && !lastProp.value) {
         const commentText = inputString.substring(
           token.startOffset + 2,
