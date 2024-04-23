@@ -389,7 +389,7 @@ def show_taskgraph(options):
         # --root argument is taskgraph's config at <repo>/taskcluster
         repo_root = os.getcwd()
         if options["root"]:
-            repo_root = f"{options['root']}/../.."
+            repo_root = f"{options['root']}/.."
         repo = get_repository(repo_root)
 
         if not repo.working_directory_clean():
