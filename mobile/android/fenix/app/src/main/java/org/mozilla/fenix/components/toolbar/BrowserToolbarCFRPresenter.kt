@@ -439,6 +439,8 @@ class BrowserToolbarCFRPresenter(
                 } else {
                     CFRPopup.IndicatorDirection.DOWN
                 },
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
             ),
             onDismiss = {},
             text = {
