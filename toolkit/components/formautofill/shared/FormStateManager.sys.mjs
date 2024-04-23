@@ -10,17 +10,18 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 export class FormStateManager {
-  /**
-   * @type {WeakMap} mapping FormLike root HTML elements to FormAutofillHandler objects.
-   */
-  #formHandlerByRoot = new WeakMap();
-
-  constructor(onAutofillCallback) {
+  constructor(onSubmit, onAutofillCallback) {
+    /**
+     * @type {WeakMap} mapping FormLike root HTML elements to FormAutofillHandler objects.
+     */
+    this._formsDetails = new WeakMap();
     /**
      * @type {object} The object where to store the active items, e.g. element,
      * handler, section, and field detail.
      */
     this._activeItems = {};
+
+    this.onSubmit = onSubmit;
 
     this.onAutofillCallback = onAutofillCallback;
   }
@@ -78,7 +79,7 @@ export class FormStateManager {
     // reference on the active element. This might be called quite frequently
     // so if _getFormHandler/findRootForField become more costly, we should
     // look into caching this result (eg by adding a weakmap).
-    let handler = this.getFormHandler(activeInput);
+    let handler = this._getFormHandler(activeInput);
     if (handler) {
       handler.focusedInput = activeInput;
     }
@@ -99,26 +100,27 @@ export class FormStateManager {
    *          (or return null if the information is not found in the cache).
    *
    */
-  getFormHandler(element) {
+  _getFormHandler(element) {
     if (!element) {
       return null;
     }
-    const rootElement = lazy.FormLikeFactory.findRootForField(element);
-    return this.#formHandlerByRoot.get(rootElement);
+    let rootElement = lazy.FormLikeFactory.findRootForField(element);
+    return this._formsDetails.get(rootElement);
   }
 
   identifyAutofillFields(element) {
-    let formHandler = this.getFormHandler(element);
+    let formHandler = this._getFormHandler(element);
     if (!formHandler) {
+      let formLike = lazy.FormLikeFactory.createFromField(element);
       formHandler = new lazy.FormAutofillHandler(
-        lazy.FormLikeFactory.createFromField(element),
+        formLike,
+        this.onSubmit,
         this.onAutofillCallback
       );
-      this.#formHandlerByRoot.set(formHandler.form.rootElement, formHandler);
     } else if (!formHandler.updateFormIfNeeded(element)) {
       return formHandler.fieldDetails;
     }
-
+    this._formsDetails.set(formHandler.form.rootElement, formHandler);
     return formHandler.collectFormFields();
   }
 
@@ -133,14 +135,15 @@ export class FormStateManager {
     };
   }
 
-  getRecords(formElement) {
-    const handler = this.#formHandlerByRoot.get(formElement);
-    if (!handler) {
-      return null;
-    }
+  getRecords(formElement, handler) {
+    handler = handler || this._formsDetails.get(formElement);
+    const records = handler?.createRecords();
 
-    const records = handler.createRecords();
-    if (!records || !Object.values(records).some(record => record.length)) {
+    if (
+      !handler ||
+      !records ||
+      !Object.values(records).some(typeRecords => typeRecords.length)
+    ) {
       return null;
     }
     return records;
