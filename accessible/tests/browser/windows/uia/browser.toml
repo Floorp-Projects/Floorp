@@ -11,7 +11,10 @@ support-files = ["head.js"]
 ["browser_elementFromPoint.js"]
 
 ["browser_focus.js"]
+
 ["browser_generalProps.js"]
+
+["browser_gridPatterns.js"]
 
 ["browser_simplePatterns.js"]
 

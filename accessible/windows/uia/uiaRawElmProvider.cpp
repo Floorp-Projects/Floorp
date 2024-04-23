@@ -13,6 +13,7 @@
 #include "AccessibleWrap.h"
 #include "ApplicationAccessible.h"
 #include "ARIAMap.h"
+#include "ia2AccessibleTable.h"
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/StaticPrefs_accessibility.h"
@@ -275,6 +276,12 @@ uiaRawElmProvider::GetPatternProvider(
       if (HasExpandCollapsePattern()) {
         RefPtr<IExpandCollapseProvider> expand = this;
         expand.forget(aPatternProvider);
+      }
+      return S_OK;
+    case UIA_GridPatternId:
+      if (acc->IsTable()) {
+        auto grid = GetPatternFromDerived<ia2AccessibleTable, IGridProvider>();
+        grid.forget(aPatternProvider);
       }
       return S_OK;
     case UIA_InvokePatternId:
@@ -997,4 +1004,14 @@ bool uiaRawElmProvider::HasValuePattern() const {
   }
   const nsRoleMapEntry* roleMapEntry = acc->ARIARoleMap();
   return roleMapEntry && roleMapEntry->Is(nsGkAtoms::textbox);
+}
+
+template <class Derived, class Interface>
+RefPtr<Interface> uiaRawElmProvider::GetPatternFromDerived() {
+  // MsaaAccessible inherits from uiaRawElmProvider. Derived
+  // inherits from MsaaAccessible and Interface. The compiler won't let us
+  // directly static_cast to Interface, hence the intermediate casts.
+  auto* msaa = static_cast<MsaaAccessible*>(this);
+  auto* derived = static_cast<Derived*>(msaa);
+  return derived;
 }

@@ -11,6 +11,9 @@
 #include <stdint.h>
 #include <uiautomation.h>
 
+template <class T>
+class RefPtr;
+
 namespace mozilla {
 namespace a11y {
 
@@ -152,6 +155,8 @@ class uiaRawElmProvider : public IAccessibleEx,
   bool HasTogglePattern();
   bool HasExpandCollapsePattern();
   bool HasValuePattern() const;
+  template <class Derived, class Interface>
+  RefPtr<Interface> GetPatternFromDerived();
 };
 
 }  // namespace a11y
