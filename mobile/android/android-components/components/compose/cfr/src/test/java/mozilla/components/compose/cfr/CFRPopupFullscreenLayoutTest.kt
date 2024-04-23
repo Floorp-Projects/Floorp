@@ -91,7 +91,7 @@ class CFRPopupFullscreenLayoutTest {
 
         assertNull(popupView.findViewTreeLifecycleOwner())
         assertNull(popupView.findViewTreeSavedStateRegistryOwner())
-        verify(windowManager).removeViewImmediate(popupView)
+        verify(windowManager).removeView(popupView)
     }
 
     @Test
