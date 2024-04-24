@@ -671,4 +671,27 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.isTrue(wrapper.find("migration-wizard").exists());
     });
   });
+
+  describe("Custom main content inner custom justify content", () => {
+    const SCREEN_PROPS = {
+      content: {
+        title: "test title",
+        position: "split",
+        split_content_justify_content: "flex-start",
+      },
+    };
+
+    it("should render split screen with custom justify-content", async () => {
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.equal(wrapper.find("main").prop("pos"), "split");
+      assert.exists(wrapper.find(".main-content-inner"));
+      assert.ok(
+        wrapper
+          .find(".main-content-inner")
+          .prop("style")
+          .justifyContent.includes("flex-start")
+      );
+    });
+  });
 });
