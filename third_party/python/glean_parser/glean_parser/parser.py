@@ -11,7 +11,7 @@ Code for parsing metrics.yaml files.
 import functools
 from pathlib import Path
 import textwrap
-from typing import Any, Dict, Generator, Iterable, Optional, Tuple, Union
+from typing import Any, cast, Dict, Generator, Iterable, Optional, Set, Tuple, Union
 
 import jsonschema  # type: ignore
 from jsonschema.exceptions import ValidationError  # type: ignore
@@ -267,6 +267,7 @@ def _instantiate_pings(
     """
     global_no_lint = content.get("no_lint", [])
     assert isinstance(global_no_lint, list)
+    ping_schedule_reverse_map: Dict[str, Set[str]] = dict()
 
     for ping_key, ping_val in sorted(content.items()):
         if ping_key.startswith("$"):
@@ -284,6 +285,22 @@ def _instantiate_pings(
         if not isinstance(ping_val, dict):
             raise TypeError(f"Invalid content for ping {ping_key}")
         ping_val["name"] = ping_key
+
+        if "metadata" in ping_val and "ping_schedule" in ping_val["metadata"]:
+            if ping_key in ping_val["metadata"]["ping_schedule"]:
+                yield util.format_error(
+                    filepath,
+                    f"For ping '{ping_key}'",
+                    "ping_schedule contains its own ping name",
+                )
+                continue
+            for ping_schedule in ping_val["metadata"]["ping_schedule"]:
+                if ping_schedule not in ping_schedule_reverse_map:
+                    ping_schedule_reverse_map[ping_schedule] = set()
+                ping_schedule_reverse_map[ping_schedule].add(ping_key)
+
+            del ping_val["metadata"]["ping_schedule"]
+
         try:
             ping_obj = Ping(
                 defined_in=getattr(ping_val, "defined_in", None),
@@ -312,6 +329,11 @@ def _instantiate_pings(
         else:
             all_objects.setdefault("pings", {})[ping_key] = ping_obj
             sources[ping_key] = filepath
+
+    for scheduler, scheduled in ping_schedule_reverse_map.items():
+        if isinstance(all_objects["pings"][scheduler], Ping):
+            scheduler_obj: Ping = cast(Ping, all_objects["pings"][scheduler])
+            scheduler_obj.schedules_pings = sorted(list(scheduled))
 
 
 def _instantiate_tags(

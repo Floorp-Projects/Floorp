@@ -47,7 +47,7 @@ namespace glean {
     void glean_unregister_event_listener(string tag);
 
     // Server Knobs API
-    void glean_set_metrics_enabled_config(string json);
+    void glean_apply_server_knobs_config(string json);
 
     boolean glean_set_debug_view_tag(string tag);
     boolean glean_set_source_tags(sequence<string> tags);
@@ -292,7 +292,7 @@ enum ErrorType {
 };
 
 interface PingType {
-    constructor(string name, boolean include_client_id, boolean send_if_empty, boolean precise_timestamps, boolean include_info_sections, sequence<string> reason_codes);
+    constructor(string name, boolean include_client_id, boolean send_if_empty, boolean precise_timestamps, boolean include_info_sections, boolean enabled, sequence<string> schedules_pings, sequence<string> reason_codes);
     void submit(optional string? reason = null);
 };
 
@@ -639,4 +639,20 @@ interface TextMetric {
     string? test_get_value(optional string? ping_name = null);
 
     i32 test_get_num_recorded_errors(ErrorType error);
+};
+
+// JSON data encoded into a string
+[Custom]
+typedef string JsonValue;
+
+interface ObjectMetric {
+    constructor(CommonMetricData meta);
+
+    void set_string(string object);
+
+    JsonValue? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error);
+
+    void record_schema_error();
 };

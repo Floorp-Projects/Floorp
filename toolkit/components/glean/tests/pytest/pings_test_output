@@ -21,6 +21,8 @@ pub static not_baseline: Lazy<Ping> = Lazy::new(|| {
         false,
         true,
         true,
+        true,
+        vec![],
         vec!["background".into(), "dirty_startup".into(), "foreground".into()],
     )
 });
@@ -38,6 +40,8 @@ pub static not_deletion_request: Lazy<Ping> = Lazy::new(|| {
         true,
         true,
         true,
+        true,
+        vec![],
         vec![],
     )
 });
@@ -53,6 +57,8 @@ pub static not_events: Lazy<Ping> = Lazy::new(|| {
         false,
         true,
         true,
+        true,
+        vec![],
         vec!["background".into(), "max_capacity".into(), "startup".into()],
     )
 });
@@ -72,6 +78,8 @@ pub static not_metrics: Lazy<Ping> = Lazy::new(|| {
         false,
         true,
         true,
+        true,
+        vec![],
         vec!["overdue".into(), "reschedule".into(), "today".into(), "tomorrow".into(), "upgrade".into()],
     )
 });
@@ -85,6 +93,8 @@ pub static not_ohttp: Lazy<Ping> = Lazy::new(|| {
         true,
         true,
         false,
+        true,
+        vec![],
         vec![],
     )
 });

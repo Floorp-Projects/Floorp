@@ -22,13 +22,13 @@ mod experiment;
 pub(crate) mod labeled;
 mod memory_distribution;
 mod memory_unit;
-mod metrics_enabled_config;
 mod numerator;
 mod object;
 mod ping;
 mod quantity;
 mod rate;
 mod recorded_experiment;
+mod remote_settings_config;
 mod string;
 mod string_list;
 mod text;
@@ -72,7 +72,7 @@ pub use self::uuid::UuidMetric;
 pub use crate::histogram::HistogramType;
 pub use recorded_experiment::RecordedExperiment;
 
-pub use self::metrics_enabled_config::MetricsEnabledConfig;
+pub use self::remote_settings_config::RemoteSettingsConfig;
 
 /// A snapshot of all buckets and the accumulated sum of a distribution.
 //
@@ -180,7 +180,7 @@ pub trait MetricType {
 
         // Technically nothing prevents multiple calls to should_record() to run in parallel,
         // meaning both are reading self.meta().disabled and later writing it. In between it can
-        // also read remote_settings_metrics_config, which also could be modified in between those 2 reads.
+        // also read remote_settings_config, which also could be modified in between those 2 reads.
         // This means we could write the wrong remote_settings_epoch | current_disabled value. All in all
         // at worst we would see that metric enabled/disabled wrongly once.
         // But since everything is tunneled through the dispatcher, this should never ever happen.
@@ -200,11 +200,7 @@ pub trait MetricType {
         }
         // The epoch's didn't match so we need to look up the disabled flag
         // by the base_identifier from the in-memory HashMap
-        let metrics_enabled = &glean
-            .remote_settings_metrics_config
-            .lock()
-            .unwrap()
-            .metrics_enabled;
+        let remote_settings_config = &glean.remote_settings_config.lock().unwrap();
         // Get the value from the remote configuration if it is there, otherwise return the default value.
         let current_disabled = {
             let base_id = self.meta().base_identifier();
@@ -215,8 +211,13 @@ pub trait MetricType {
             // NOTE: The `!` preceding the `*is_enabled` is important for inverting the logic since the
             // underlying property in the metrics.yaml is `disabled` and the outward API is treating it as
             // if it were `enabled` to make it easier to understand.
-            if let Some(is_enabled) = metrics_enabled.get(identifier) {
-                u8::from(!*is_enabled)
+
+            if !remote_settings_config.metrics_enabled.is_empty() {
+                if let Some(is_enabled) = remote_settings_config.metrics_enabled.get(identifier) {
+                    u8::from(!*is_enabled)
+                } else {
+                    u8::from(self.meta().inner.disabled)
+                }
             } else {
                 u8::from(self.meta().inner.disabled)
             }

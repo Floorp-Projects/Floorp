@@ -106,12 +106,17 @@ def type_name(obj: Union[metrics.Metric, pings.Ping]) -> str:
 
         return "{}<{}>".format(class_name(obj.type), generic)
 
+    generate_structure = getattr(obj, "_generate_structure", [])
+    if len(generate_structure):
+        generic = util.Camelize(obj.name) + "Object"
+        return "{}<{}>".format(class_name(obj.type), generic)
+
     return class_name(obj.type)
 
 
 def extra_type_name(typ: str) -> str:
     """
-    Returns the corresponding Kotlin type for event's extra key types.
+    Returns the corresponding Swift type for event's extra key types.
     """
 
     if typ == "boolean":
@@ -120,6 +125,21 @@ def extra_type_name(typ: str) -> str:
         return "String"
     elif typ == "quantity":
         return "Int32"
+    else:
+        return "UNSUPPORTED"
+
+
+def structure_type_name(typ: str) -> str:
+    """
+    Returns the corresponding Swift type for structure items.
+    """
+
+    if typ == "boolean":
+        return "Bool"
+    elif typ == "string":
+        return "String"
+    elif typ == "number":
+        return "Int64"
     else:
         return "UNSUPPORTED"
 
@@ -215,6 +235,7 @@ def output_swift(
             ("class_name", class_name),
             ("variable_name", variable_name),
             ("extra_type_name", extra_type_name),
+            ("structure_type_name", structure_type_name),
         ),
     )
 

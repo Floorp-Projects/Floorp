@@ -513,7 +513,9 @@ add_task(async function test_check_unseen_enrollments_telemetry_events() {
             featureId: "nimbusTelemetry",
             value: {
               gleanMetricConfiguration: {
-                "nimbus_events.enrollment_status": true,
+                metrics_enabled: {
+                  "nimbus_events.enrollment_status": true,
+                },
               },
             },
           },

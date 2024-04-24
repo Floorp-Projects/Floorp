@@ -48,6 +48,10 @@ impl ObjectMetric {
     /// * `value` - the value to set.
     #[doc(hidden)]
     pub fn set_sync(&self, glean: &Glean, value: JsonValue) {
+        if !self.should_record(glean) {
+            return;
+        }
+
         let value = Metric::Object(serde_json::to_string(&value).unwrap());
         glean.storage().record(glean, &self.meta, &value)
     }
@@ -63,6 +67,31 @@ impl ObjectMetric {
     pub fn set(&self, value: JsonValue) {
         let metric = self.clone();
         crate::launch_with_glean(move |glean| metric.set_sync(glean, value))
+    }
+
+    /// Sets to the specified structure.
+    ///
+    /// Parses the passed JSON string.
+    /// If it can't be parsed into a valid object it records an invalid value error.
+    ///
+    /// Note: This does not check the structure. This needs to be done by the wrapper.
+    ///
+    /// # Arguments
+    ///
+    /// * `object` - JSON representation of the object to set.
+    pub fn set_string(&self, object: String) {
+        let metric = self.clone();
+        crate::launch_with_glean(move |glean| {
+            let object = match serde_json::from_str(&object) {
+                Ok(object) => object,
+                Err(_) => {
+                    let msg = "Value did not match predefined schema";
+                    record_error(glean, &metric.meta, ErrorType::InvalidValue, msg, None);
+                    return;
+                }
+            };
+            metric.set_sync(glean, object)
+        })
     }
 
     /// Record an `InvalidValue` error for this metric.

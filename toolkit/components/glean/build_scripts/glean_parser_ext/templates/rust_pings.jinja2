@@ -21,6 +21,8 @@ pub static {{ obj.name|snake_case }}: Lazy<Ping> = Lazy::new(|| {
         {{ obj.send_if_empty|rust }},
         {{ obj.precise_timestamps|rust }},
         {{ obj.include_info_sections|rust }},
+        {{ obj.enabled|rust }},
+        {{ obj.schedules_pings|rust }},
         {{ obj.reason_codes|rust }},
     )
 });

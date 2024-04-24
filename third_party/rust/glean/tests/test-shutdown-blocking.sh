@@ -17,7 +17,7 @@ trap cleanup INT ABRT TERM EXIT
 tmp="${TMPDIR:-/tmp}"
 datapath=$(mktemp -d "${tmp}/glean_long_running.XXXX")
 
-cargo run --example long-running -- "$datapath"
+cargo run -p glean --example long-running -- "$datapath"
 count=$(ls -1q "$datapath/pending_pings" | wc -l)
 
 if [[ "$count" -eq 0 ]]; then

@@ -197,12 +197,12 @@ pub extern "C" fn fog_test_get_experiment_data(
 ///
 /// See [`glean_core::Glean::set_metrics_disabled_config`].
 #[no_mangle]
-pub extern "C" fn fog_set_metrics_feature_config(config_json: &nsACString) {
+pub extern "C" fn fog_apply_server_knobs_config(config_json: &nsACString) {
     // Normalize null and empty strings to a stringified empty map
     if config_json == "null" || config_json.is_empty() {
-        glean::glean_set_metrics_enabled_config("{}".to_owned());
+        glean::glean_apply_server_knobs_config("{}".to_owned());
     }
-    glean::glean_set_metrics_enabled_config(config_json.to_string());
+    glean::glean_apply_server_knobs_config(config_json.to_string());
 }
 
 /// Performs Glean tasks when client state changes to inactive

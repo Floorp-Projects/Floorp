@@ -23,7 +23,7 @@
 //! let cfg = ConfigurationBuilder::new(true, "/tmp/data", "org.mozilla.glean_core.example").build();
 //! glean::initialize(cfg, ClientInfoMetrics::unknown());
 //!
-//! let prototype_ping = PingType::new("prototype", true, true, true, true, vec!());
+//! let prototype_ping = PingType::new("prototype", true, true, true, true, true, vec!(), vec!());
 //!
 //! prototype_ping.submit(None);
 //! ```
@@ -187,9 +187,9 @@ pub fn test_get_experimentation_id() -> Option<String> {
 
 /// Set the remote configuration values for the metrics' disabled property
 ///
-/// See [`glean_core::Glean::set_metrics_enabled_config`].
-pub fn glean_set_metrics_enabled_config(json: String) {
-    glean_core::glean_set_metrics_enabled_config(json)
+/// See [`glean_core::Glean::glean_apply_server_knobs_config`].
+pub fn glean_apply_server_knobs_config(json: String) {
+    glean_core::glean_apply_server_knobs_config(json)
 }
 
 /// Performs the collection/cleanup operations required by becoming active.

@@ -66,6 +66,61 @@ data class {{ obj.name|Camelize }}{{ suffix }}(
 }
 {%- endmacro -%}
 
+{%- macro generate_structure(name, struct) %}
+{%- if struct.type == "array" -%}
+    @Serializable
+    data class {{ name }}(var items: MutableList<{{ name }}Item> = mutableListOf()) : ObjectSerialize {
+        fun add(elem: {{ name }}Item) = items.add(elem)
+
+        fun addAll(elements: Collection<{{ name }}Item>) = items.addAll(elements)
+
+        fun clear() = items.clear()
+
+        fun remove(element: {{ name }}Item) = items.remove(element)
+        fun removeAll(elements: Collection<{{ name }}Item>) = items.removeAll(elements)
+        fun removeAt(index: Int) = items.removeAt(index)
+
+        fun set(index: Int, element: {{ name }}Item) = items.set(index, element)
+
+        override fun intoSerializedObject(): String {
+            return Json.encodeToString(items)
+        }
+    }
+
+    {{ generate_structure(name ~ "Item", struct["items"]) }}
+
+{%- elif struct.type == "object" -%}
+    @Serializable
+    data class {{ name }}(
+        {% for itemname, val in struct.properties.items() %}
+          {% if val.type == "object" %}
+          var {{itemname|camelize}}: {{ name ~ "Item" ~ itemname|Camelize ~ "Object" }}? = null,
+          {% elif val.type == "array" %}
+          var {{itemname|camelize}}: {{ name ~ "Item" ~ itemname|Camelize }} = {{ name ~ "Item" ~ itemname|Camelize }}(),
+          {% else %}
+          var {{itemname|camelize}}: {{val.type|structure_type_name}}? = null,
+          {% endif %}
+        {% endfor %}
+    ): ObjectSerialize {
+        override fun intoSerializedObject(): String {
+            return Json.encodeToString(this)
+        }
+    }
+
+    {% for itemname, val in struct.properties.items() %}
+        {% if val.type == "array" %}
+        {% set nested_name = name ~ "Item" ~ itemname|Camelize %}
+        {{ generate_structure(nested_name, val) }}
+        {% elif val.type == "object" %}
+        {% set nested_name = name ~ "Item" ~ itemname|Camelize ~ "Object" %}
+        {{ generate_structure(nested_name, val) }}
+        {% endif %}
+    {% endfor %}
+
+{% endif %}
+
+{% endmacro %}
+
 /* ktlint-disable no-blank-line-before-rbrace */
 @file:Suppress("PackageNaming", "MaxLineLength")
 package {{ namespace }}
@@ -76,14 +131,20 @@ import {{ glean_namespace }}.private.HistogramType // ktlint-disable import-orde
 import {{ glean_namespace }}.private.Lifetime // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.MemoryUnit // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.NoExtras // ktlint-disable import-ordering no-unused-imports
-import {{ glean_namespace }}.private.ReasonCode // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.NoReasonCodes // ktlint-disable import-ordering no-unused-imports
+import {{ glean_namespace }}.private.ObjectSerialize // ktlint-disable import-ordering no-unused-imports
+import {{ glean_namespace }}.private.ReasonCode // ktlint-disable import-ordering no-unused-imports
 import {{ glean_namespace }}.private.TimeUnit // ktlint-disable import-ordering no-unused-imports
 {% for obj_type in obj_types %}
 import {{ glean_namespace }}.private.{{ obj_type }} // ktlint-disable import-ordering
 {% endfor %}
 {% if has_labeled_metrics %}
 import {{ glean_namespace }}.private.LabeledMetricType // ktlint-disable import-ordering
+{% endif %}
+{% if has_object_metrics %}
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 {% endif %}
 
 internal object {{ category_name|Camelize }} {
@@ -97,6 +158,9 @@ internal object {{ category_name|Camelize }} {
     {% endfor %}
     {% endif %}
     {% else %}
+    {% if obj|attr("_generate_structure") %}
+    {{ generate_structure(obj.name|Camelize ~ "Object", obj._generate_structure) }}
+    {%- endif %}
     {% if obj|attr("_generate_enums") %}
     {% for name, suffix in obj["_generate_enums"] %}
     {% if obj|attr(name)|length %}

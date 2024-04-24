@@ -890,16 +890,17 @@ fn test_set_remote_metric_configuration() {
     );
 
     // 2. Set a configuration to disable the metrics
-    let mut metrics_enabled_config = json!(
+    let mut remote_settings_config = json!(
         {
-            "category.string_metric": false,
-            "category.labeled_string_metric": false,
+            "metrics_enabled": {
+                "category.string_metric": false,
+                "category.labeled_string_metric": false,
+            }
         }
     )
     .to_string();
-    glean.set_metrics_enabled_config(
-        MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
-    );
+    glean
+        .apply_server_knobs_config(RemoteSettingsConfig::try_from(remote_settings_config).unwrap());
 
     // 3. Since the metrics were disabled, setting a new value will be ignored
     metric.set_sync(&glean, "VALUE_AFTER_DISABLED");
@@ -921,15 +922,16 @@ fn test_set_remote_metric_configuration() {
     );
 
     // 4. Set a new configuration where one metric is enabled
-    metrics_enabled_config = json!(
+    remote_settings_config = json!(
         {
-            "category.string_metric": true,
+            "metrics_enabled": {
+                "category.string_metric": true,
+            }
         }
     )
     .to_string();
-    glean.set_metrics_enabled_config(
-        MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
-    );
+    glean
+        .apply_server_knobs_config(RemoteSettingsConfig::try_from(remote_settings_config).unwrap());
 
     // 5. Since the first metric is enabled, setting a new value should work
     // on it but not the second metric
@@ -954,15 +956,16 @@ fn test_set_remote_metric_configuration() {
     // 6. Set a new configuration where the second metric is enabled. This
     // should be merged with the existing configuration and then both
     // metrics should be enabled at that point.
-    metrics_enabled_config = json!(
+    remote_settings_config = json!(
         {
-            "category.labeled_string_metric": true,
+            "metrics_enabled": {
+                "category.labeled_string_metric": true,
+            }
         }
     )
     .to_string();
-    glean.set_metrics_enabled_config(
-        MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
-    );
+    glean
+        .apply_server_knobs_config(RemoteSettingsConfig::try_from(remote_settings_config).unwrap());
 
     // 7. Now both metrics are enabled, setting a new value should work for
     // both metrics with the merged configurations
@@ -992,15 +995,16 @@ fn test_remote_settings_epoch() {
     assert_eq!(0u8, current_epoch, "Current epoch must start at 0");
 
     // 2. Set a configuration which will trigger incrementing the epoch
-    let metrics_enabled_config = json!(
+    let remote_settings_config = json!(
         {
-            "category.string_metric": false
+            "metrics_enabled": {
+                "category.string_metric": false
+            }
         }
     )
     .to_string();
-    glean.set_metrics_enabled_config(
-        MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
-    );
+    glean
+        .apply_server_knobs_config(RemoteSettingsConfig::try_from(remote_settings_config).unwrap());
 
     // 3. Ensure the epoch updated
     current_epoch = glean.remote_settings_epoch.load(Ordering::Acquire);
@@ -1026,15 +1030,16 @@ fn test_remote_settings_epoch_updates_in_metric() {
     );
 
     // 2. Set a configuration to disable the `category.string_metric`
-    let metrics_enabled_config = json!(
+    let remote_settings_config = json!(
         {
-            "category.string_metric": false
+            "metrics_enabled": {
+                "category.string_metric": false
+            }
         }
     )
     .to_string();
-    glean.set_metrics_enabled_config(
-        MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
-    );
+    glean
+        .apply_server_knobs_config(RemoteSettingsConfig::try_from(remote_settings_config).unwrap());
 
     // 3. Ensure the epoch was updated
     let current_epoch = glean.remote_settings_epoch.load(Ordering::Acquire);
@@ -1168,7 +1173,16 @@ fn disabled_pings_are_not_submitted() {
     let dir = tempfile::tempdir().unwrap();
     let (mut glean, _t) = new_glean(Some(dir));
 
-    let ping = PingType::new_internal("custom-disabled", true, false, true, true, vec![], false);
+    let ping = PingType::new_internal(
+        "custom-disabled",
+        true,
+        false,
+        true,
+        true,
+        false,
+        vec![],
+        vec![],
+    );
     glean.register_ping_type(&ping);
 
     // We need to store a metric as an empty ping is not stored.
@@ -1202,4 +1216,54 @@ fn internal_pings_can_be_disabled() {
 
     let submitted = glean.internal_pings.baseline.submit_sync(&glean, None);
     assert!(!submitted);
+}
+
+#[test]
+fn pings_are_controllable_from_remote_settings_config() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dir = tempfile::tempdir().unwrap();
+    let (mut glean, _t) = new_glean(Some(dir));
+
+    let disabled_ping = PingType::new(
+        "custom-disabled",
+        true,
+        true,
+        true,
+        true,
+        false,
+        vec![],
+        vec![],
+    );
+    glean.register_ping_type(&disabled_ping);
+    let enabled_ping = PingType::new(
+        "custom-enabled",
+        true,
+        true,
+        true,
+        true,
+        true,
+        vec![],
+        vec![],
+    );
+    glean.register_ping_type(&enabled_ping);
+
+    assert!(!disabled_ping.submit_sync(&glean, None));
+    assert!(enabled_ping.submit_sync(&glean, None));
+
+    // Now, create a configuration to switch the enabled state of the two pings
+    let remote_settings_config = json!(
+        {
+            "pings_enabled": {
+                "custom-disabled": true,
+                "custom-enabled": false
+            }
+        }
+    )
+    .to_string();
+    glean
+        .apply_server_knobs_config(RemoteSettingsConfig::try_from(remote_settings_config).unwrap());
+
+    assert!(disabled_ping.submit_sync(&glean, None));
+    assert!(!enabled_ping.submit_sync(&glean, None));
 }
