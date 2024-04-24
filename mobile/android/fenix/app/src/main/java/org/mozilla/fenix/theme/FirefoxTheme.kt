@@ -112,7 +112,7 @@ private val darkColorPalette = FirefoxColors(
     actionTertiary = PhotonColors.DarkGrey10,
     actionQuarternary = PhotonColors.DarkGrey80,
     actionWarning = PhotonColors.Yellow40A41,
-    actionConfirmation = PhotonColors.Green70,
+    actionSuccess = PhotonColors.Green70,
     actionError = PhotonColors.Pink70A69,
     actionInfo = PhotonColors.Blue60,
     formDefault = PhotonColors.LightGrey05,
@@ -192,7 +192,7 @@ private val lightColorPalette = FirefoxColors(
     actionTertiary = PhotonColors.LightGrey40,
     actionQuarternary = PhotonColors.LightGrey10,
     actionWarning = PhotonColors.Yellow60A40,
-    actionConfirmation = PhotonColors.Green60,
+    actionSuccess = PhotonColors.Green60,
     actionError = PhotonColors.Red30,
     actionInfo = PhotonColors.Blue50,
     formDefault = PhotonColors.DarkGrey90,
@@ -286,7 +286,7 @@ class FirefoxColors(
     actionTertiary: Color,
     actionQuarternary: Color,
     actionWarning: Color,
-    actionConfirmation: Color,
+    actionSuccess: Color,
     actionError: Color,
     actionInfo: Color,
     formDefault: Color,
@@ -437,7 +437,7 @@ class FirefoxColors(
         private set
 
     // Confirmation button
-    var actionConfirmation by mutableStateOf(actionConfirmation)
+    var actionSuccess by mutableStateOf(actionSuccess)
         private set
 
     // Error button
@@ -673,7 +673,7 @@ class FirefoxColors(
         actionTertiary = other.actionTertiary
         actionQuarternary = other.actionQuarternary
         actionWarning = other.actionWarning
-        actionConfirmation = other.actionConfirmation
+        actionSuccess = other.actionSuccess
         actionError = other.actionError
         actionInfo = other.actionInfo
         formDefault = other.formDefault
@@ -757,7 +757,7 @@ class FirefoxColors(
         actionTertiary: Color = this.actionTertiary,
         actionQuarternary: Color = this.actionQuarternary,
         actionWarning: Color = this.actionWarning,
-        actionConfirmation: Color = this.actionConfirmation,
+        actionSuccess: Color = this.actionSuccess,
         actionError: Color = this.actionError,
         actionInfo: Color = this.actionInfo,
         formDefault: Color = this.formDefault,
@@ -835,7 +835,7 @@ class FirefoxColors(
         actionTertiary = actionTertiary,
         actionQuarternary = actionQuarternary,
         actionWarning = actionWarning,
-        actionConfirmation = actionConfirmation,
+        actionSuccess = actionSuccess,
         actionError = actionError,
         actionInfo = actionInfo,
         formDefault = formDefault,
