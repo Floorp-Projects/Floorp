@@ -1,11 +1,3 @@
-// Copyright 2018 Developers of the Rand project.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 //! An implementation which calls out to an externally defined function.
 use crate::{util::uninit_slice_fill_zero, Error};
 use core::{mem::MaybeUninit, num::NonZeroU32};
@@ -73,7 +65,6 @@ use core::{mem::MaybeUninit, num::NonZeroU32};
 /// [top-level documentation](index.html#custom-implementations) this
 /// registration only has an effect on unsupported targets.
 #[macro_export]
-#[cfg_attr(docsrs, doc(cfg(feature = "custom")))]
 macro_rules! register_custom_getrandom {
     ($path:path) => {
         // TODO(MSRV 1.37): change to unnamed block

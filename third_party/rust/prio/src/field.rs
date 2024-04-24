@@ -7,7 +7,6 @@
 //! [`FftFriendlyFieldElement`], and have an associated element called the "generator" that
 //! generates a multiplicative subgroup of order `2^n` for some `n`.
 
-#[cfg(feature = "crypto-dependencies")]
 use crate::prng::{Prng, PrngError};
 use crate::{
     codec::{CodecError, Decode, Encode},
@@ -25,8 +24,8 @@ use std::{
     io::{Cursor, Read},
     marker::PhantomData,
     ops::{
-        Add, AddAssign, BitAnd, ControlFlow, Div, DivAssign, Mul, MulAssign, Neg, Shl, Shr, Sub,
-        SubAssign,
+        Add, AddAssign, BitAnd, ControlFlow, Div, DivAssign, Mul, MulAssign, Neg, Range, Shl, Shr,
+        Sub, SubAssign,
     },
 };
 use subtle::{Choice, ConditionallyNegatable, ConditionallySelectable, ConstantTimeEq};
@@ -39,6 +38,7 @@ pub use field255::Field255;
 
 /// Possible errors from finite field operations.
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum FieldError {
     /// Input sizes do not match.
     #[error("input sizes do not match")]
@@ -46,19 +46,24 @@ pub enum FieldError {
     /// Returned when decoding a [`FieldElement`] from a too-short byte string.
     #[error("short read from bytes")]
     ShortRead,
-    /// Returned when decoding a [`FieldElement`] from a byte string that encodes an integer greater
-    /// than or equal to the field modulus.
-    #[error("read from byte slice exceeds modulus")]
+    /// Returned when converting an integer to a [`FieldElement`] if the integer is greater than or
+    /// equal to the field modulus.
+    #[error("input value exceeds modulus")]
     ModulusOverflow,
     /// Error while performing I/O.
     #[error("I/O error")]
     Io(#[from] std::io::Error),
     /// Error encoding or decoding a field.
     #[error("Codec error")]
-    Codec(#[from] CodecError),
+    #[deprecated]
+    Codec(CodecError),
     /// Error converting to [`FieldElementWithInteger::Integer`].
     #[error("Integer TryFrom error")]
     IntegerTryFrom,
+    /// Returned when encoding an integer to "bitvector representation", or decoding from the same,
+    /// if the number of bits is larger than the bit length of the field's modulus.
+    #[error("bit vector length exceeds modulus bit length")]
+    BitVectorTooLong,
 }
 
 /// Objects with this trait represent an element of `GF(p)` for some prime `p`.
@@ -100,8 +105,8 @@ pub trait FieldElement:
     fn inv(&self) -> Self;
 
     /// Interprets the next [`Self::ENCODED_SIZE`] bytes from the input slice as an element of the
-    /// field. The `m` most significant bits are cleared, where `m` is equal to the length of
-    /// [`Self::Integer`] in bits minus the length of the modulus in bits.
+    /// field. Any of the most significant bits beyond the bit length of the modulus will be
+    /// cleared, in order to minimize the amount of rejection sampling needed.
     ///
     /// # Errors
     ///
@@ -110,9 +115,9 @@ pub trait FieldElement:
     ///
     /// # Warnings
     ///
-    /// This function should only be used within [`prng::Prng`] to convert a random byte string into
-    /// a field element. Use [`Self::decode`] to deserialize field elements. Use
-    /// [`field::rand`] or [`prng::Prng`] to randomly generate field elements.
+    /// This function should only be used internally to convert a random byte string into
+    /// a field element. Use [`Decode::decode`] to deserialize field elements. Use
+    /// [`random_vector`] to randomly generate field elements.
     #[doc(hidden)]
     fn try_from_random(bytes: &[u8]) -> Result<Self, FieldError>;
 
@@ -129,9 +134,10 @@ pub trait FieldElement:
     /// Ideally we would implement `From<&[F: FieldElement]> for Vec<u8>` or the corresponding
     /// `Into`, but the orphan rule and the stdlib's blanket implementations of `Into` make this
     /// impossible.
+    #[deprecated]
     fn slice_into_byte_vec(values: &[Self]) -> Vec<u8> {
         let mut vec = Vec::with_capacity(values.len() * Self::ENCODED_SIZE);
-        encode_fieldvec(values, &mut vec);
+        encode_fieldvec(values, &mut vec).unwrap();
         vec
     }
 
@@ -149,16 +155,47 @@ pub trait FieldElement:
     /// Ideally we would implement `From<&[u8]> for Vec<F: FieldElement>` or the corresponding
     /// `Into`, but the orphan rule and the stdlib's blanket implementations of `Into` make this
     /// impossible.
+    #[deprecated]
     fn byte_slice_into_vec(bytes: &[u8]) -> Result<Vec<Self>, FieldError> {
         if bytes.len() % Self::ENCODED_SIZE != 0 {
             return Err(FieldError::ShortRead);
         }
         let mut vec = Vec::with_capacity(bytes.len() / Self::ENCODED_SIZE);
         for chunk in bytes.chunks_exact(Self::ENCODED_SIZE) {
-            vec.push(Self::get_decoded(chunk)?);
+            #[allow(deprecated)]
+            vec.push(Self::get_decoded(chunk).map_err(FieldError::Codec)?);
         }
         Ok(vec)
     }
+}
+
+/// An integer type that accompanies a finite field. Integers and field elements may be converted
+/// back and forth via the natural map between residue classes modulo 'p' and integers between 0
+/// and p - 1.
+pub trait Integer:
+    Debug
+    + Eq
+    + Ord
+    + BitAnd<Output = Self>
+    + Div<Output = Self>
+    + Shl<usize, Output = Self>
+    + Shr<usize, Output = Self>
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + TryFrom<usize, Error = Self::TryFromUsizeError>
+    + TryInto<u64, Error = Self::TryIntoU64Error>
+{
+    /// The error returned if converting `usize` to this integer type fails.
+    type TryFromUsizeError: std::error::Error;
+
+    /// The error returned if converting this integer type to a `u64` fails.
+    type TryIntoU64Error: std::error::Error;
+
+    /// Returns zero.
+    fn zero() -> Self;
+
+    /// Returns one.
+    fn one() -> Self;
 }
 
 /// Extension trait for field elements that can be converted back and forth to an integer type.
@@ -168,104 +205,95 @@ pub trait FieldElement:
 /// integer type. This trait also defines methods on field elements, `pow` and `modulus`, that make
 /// use of the associated integer type.
 pub trait FieldElementWithInteger: FieldElement + From<Self::Integer> {
-    /// The error returned if converting `usize` to an `Integer` fails.
-    type IntegerTryFromError: std::error::Error;
-
-    /// The error returned if converting an `Integer` to a `u64` fails.
-    type TryIntoU64Error: std::error::Error;
-
     /// The integer representation of a field element.
-    type Integer: Copy
-        + Debug
-        + Eq
-        + Ord
-        + BitAnd<Output = Self::Integer>
-        + Div<Output = Self::Integer>
-        + Shl<usize, Output = Self::Integer>
-        + Shr<usize, Output = Self::Integer>
-        + Add<Output = Self::Integer>
-        + Sub<Output = Self::Integer>
-        + From<Self>
-        + TryFrom<usize, Error = Self::IntegerTryFromError>
-        + TryInto<u64, Error = Self::TryIntoU64Error>;
+    type Integer: Integer + From<Self> + Copy;
 
     /// Modular exponentation, i.e., `self^exp (mod p)`.
     fn pow(&self, exp: Self::Integer) -> Self;
 
     /// Returns the prime modulus `p`.
     fn modulus() -> Self::Integer;
+    /// Encode the integer `input` as a sequence of bits in two's complement representation, least
+    /// significant bit first, and then map each bit to a field element.
+    ///
+    /// Returns an error if `input` cannot be represented with `bits` many bits, or if `bits`
+    /// is larger than the bit width of the field's modulus.
+    fn encode_as_bitvector(
+        input: Self::Integer,
+        bits: usize,
+    ) -> Result<BitvectorRepresentationIter<Self>, FieldError> {
+        // Check if `bits` is too large for this field.
+        if !Self::valid_integer_bitlength(bits) {
+            return Err(FieldError::BitVectorTooLong);
+        }
+
+        // Check if the input value can be represented in the requested number of bits by shifting
+        // it. The above check on `bits` ensures this shift won't panic due to the shift width
+        // being too large.
+        if input >> bits != Self::Integer::zero() {
+            return Err(FieldError::InputSizeMismatch);
+        }
+
+        Ok(BitvectorRepresentationIter {
+            inner: 0..bits,
+            input,
+        })
+    }
+
+    /// Inverts the encoding done by [`Self::encode_as_bitvector`], and returns a single field
+    /// element.
+    ///
+    /// This performs an inner product between the input vector of field elements and successive
+    /// powers of two (starting with 2^0 = 1). If the input came from [`Self::encode_as_bitvector`],
+    /// then the result will be equal to the originally encoded integer, projected into the field.
+    ///
+    /// Note that this decoding operation is linear, so it can be applied to secret shares of an
+    /// encoded integer, and if the results are summed up, it will be equal to the encoded integer.
+    ///
+    /// Returns an error if the length of the input is larger than the bit width of the field's
+    /// modulus.
+    fn decode_bitvector(input: &[Self]) -> Result<Self, FieldError> {
+        if !Self::valid_integer_bitlength(input.len()) {
+            return Err(FieldError::BitVectorTooLong);
+        }
+
+        let mut decoded = Self::zero();
+        let one = Self::one();
+        let two = one + one;
+        let mut power_of_two = one;
+        for value in input.iter() {
+            decoded += *value * power_of_two;
+            power_of_two *= two;
+        }
+        Ok(decoded)
+    }
+}
+
+/// This iterator returns a sequence of field elements that are equal to zero or one, representing
+/// some integer in two's complement form. See [`FieldElementWithInteger::encode_as_bitvector`].
+// Note that this is implemented with a separate struct, instead of using the map combinator,
+// because return_position_impl_trait_in_trait is not yet stable.
+#[derive(Debug, Clone)]
+pub struct BitvectorRepresentationIter<F: FieldElementWithInteger> {
+    inner: Range<usize>,
+    input: F::Integer,
+}
+
+impl<F> Iterator for BitvectorRepresentationIter<F>
+where
+    F: FieldElementWithInteger,
+{
+    type Item = F;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        let bit_offset = self.inner.next()?;
+        Some(F::from((self.input >> bit_offset) & F::Integer::one()))
+    }
 }
 
 /// Methods common to all `FieldElementWithInteger` implementations that are private to the crate.
 pub(crate) trait FieldElementWithIntegerExt: FieldElementWithInteger {
-    /// Encode `input` as bitvector of elements of `Self`. Output is written into the `output` slice.
-    /// If `output.len()` is smaller than the number of bits required to respresent `input`,
-    /// an error is returned.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - The field element to encode
-    /// * `output` - The slice to write the encoded bits into. Least signicant bit comes first
-    fn fill_with_bitvector_representation(
-        input: &Self::Integer,
-        output: &mut [Self],
-    ) -> Result<(), FieldError> {
-        // Create a mutable copy of `input`. In each iteration of the following loop we take the
-        // least significant bit, and shift input to the right by one bit.
-        let mut i = *input;
-
-        let one = Self::Integer::from(Self::one());
-        for bit in output.iter_mut() {
-            let w = Self::from(i & one);
-            *bit = w;
-            i = i >> 1;
-        }
-
-        // If `i` is still not zero, this means that it cannot be encoded by `bits` bits.
-        if i != Self::Integer::from(Self::zero()) {
-            return Err(FieldError::InputSizeMismatch);
-        }
-
-        Ok(())
-    }
-
-    /// Encode `input` as `bits`-bit vector of elements of `Self` if it's small enough
-    /// to be represented with that many bits.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - The field element to encode
-    /// * `bits` - The number of bits to use for the encoding
-    fn encode_into_bitvector_representation(
-        input: &Self::Integer,
-        bits: usize,
-    ) -> Result<Vec<Self>, FieldError> {
-        let mut result = vec![Self::zero(); bits];
-        Self::fill_with_bitvector_representation(input, &mut result)?;
-        Ok(result)
-    }
-
-    /// Decode the bitvector-represented value `input` into a simple representation as a single
-    /// field element.
-    ///
-    /// # Errors
-    ///
-    /// This function errors if `2^input.len() - 1` does not fit into the field `Self`.
-    fn decode_from_bitvector_representation(input: &[Self]) -> Result<Self, FieldError> {
-        let fi_one = Self::Integer::from(Self::one());
-
-        if !Self::valid_integer_bitlength(input.len()) {
-            return Err(FieldError::ModulusOverflow);
-        }
-
-        let mut decoded = Self::zero();
-        for (l, bit) in input.iter().enumerate() {
-            let w = fi_one << l;
-            decoded += Self::from(w) * *bit;
-        }
-        Ok(decoded)
-    }
-
     /// Interpret `i` as [`Self::Integer`] if it's representable in that type and smaller than the
     /// field modulus.
     fn valid_integer_try_from<N>(i: N) -> Result<Self::Integer, FieldError>
@@ -285,7 +313,7 @@ pub(crate) trait FieldElementWithIntegerExt: FieldElementWithInteger {
         if bits >= 8 * Self::ENCODED_SIZE {
             return false;
         }
-        if Self::modulus() >> bits != Self::Integer::from(Self::zero()) {
+        if Self::modulus() >> bits != Self::Integer::zero() {
             return true;
         }
         false
@@ -382,7 +410,7 @@ macro_rules! make_field {
         ///
         /// As an invariant, this integer representing the field element in the Montgomery domain
         /// must be less than the field modulus, `p`.
-        #[derive(Clone, Copy, PartialOrd, Ord, Default)]
+        #[derive(Clone, Copy, Default)]
         pub struct $elem(u128);
 
         impl $elem {
@@ -640,9 +668,10 @@ macro_rules! make_field {
         }
 
         impl Encode for $elem {
-            fn encode(&self, bytes: &mut Vec<u8>) {
+            fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
                 let slice = <[u8; $elem::ENCODED_SIZE]>::from(*self);
                 bytes.extend_from_slice(&slice);
+                Ok(())
             }
 
             fn encoded_len(&self) -> Option<usize> {
@@ -683,8 +712,6 @@ macro_rules! make_field {
 
         impl FieldElementWithInteger for $elem {
             type Integer = $int;
-            type IntegerTryFromError = <Self::Integer as TryFrom<usize>>::Error;
-            type TryIntoU64Error = <Self::Integer as TryInto<u64>>::Error;
 
             fn pow(&self, exp: Self::Integer) -> Self {
                 // FieldParameters::pow() relies on mul(), and will always return a value less
@@ -715,6 +742,45 @@ macro_rules! make_field {
             }
         }
     };
+}
+
+impl Integer for u32 {
+    type TryFromUsizeError = <Self as TryFrom<usize>>::Error;
+    type TryIntoU64Error = <Self as TryInto<u64>>::Error;
+
+    fn zero() -> Self {
+        0
+    }
+
+    fn one() -> Self {
+        1
+    }
+}
+
+impl Integer for u64 {
+    type TryFromUsizeError = <Self as TryFrom<usize>>::Error;
+    type TryIntoU64Error = <Self as TryInto<u64>>::Error;
+
+    fn zero() -> Self {
+        0
+    }
+
+    fn one() -> Self {
+        1
+    }
+}
+
+impl Integer for u128 {
+    type TryFromUsizeError = <Self as TryFrom<usize>>::Error;
+    type TryIntoU64Error = <Self as TryInto<u64>>::Error;
+
+    fn zero() -> Self {
+        0
+    }
+
+    fn one() -> Self {
+        1
+    }
 }
 
 make_field!(
@@ -761,7 +827,7 @@ pub(crate) fn merge_vector<F: FieldElement>(
 }
 
 /// Outputs an additive secret sharing of the input.
-#[cfg(all(feature = "crypto-dependencies", test))]
+#[cfg(test)]
 pub(crate) fn split_vector<F: FieldElement>(
     inp: &[F],
     num_shares: usize,
@@ -785,18 +851,20 @@ pub(crate) fn split_vector<F: FieldElement>(
 }
 
 /// Generate a vector of uniformly distributed random field elements.
-#[cfg(feature = "crypto-dependencies")]
-#[cfg_attr(docsrs, doc(cfg(feature = "crypto-dependencies")))]
 pub fn random_vector<F: FieldElement>(len: usize) -> Result<Vec<F>, PrngError> {
     Ok(Prng::new()?.take(len).collect())
 }
 
 /// `encode_fieldvec` serializes a type that is equivalent to a vector of field elements.
 #[inline(always)]
-pub(crate) fn encode_fieldvec<F: FieldElement, T: AsRef<[F]>>(val: T, bytes: &mut Vec<u8>) {
+pub(crate) fn encode_fieldvec<F: FieldElement, T: AsRef<[F]>>(
+    val: T,
+    bytes: &mut Vec<u8>,
+) -> Result<(), CodecError> {
     for elem in val.as_ref() {
-        elem.encode(bytes);
+        elem.encode(bytes)?;
     }
+    Ok(())
 }
 
 /// `decode_fieldvec` deserializes some number of field elements from a cursor, and advances the
@@ -822,16 +890,14 @@ pub(crate) fn decode_fieldvec<F: FieldElement>(
 
 #[cfg(test)]
 pub(crate) mod test_utils {
-    use super::{FieldElement, FieldElementWithInteger};
+    use super::{FieldElement, FieldElementWithInteger, Integer};
     use crate::{codec::CodecError, field::FieldError, prng::Prng};
     use assert_matches::assert_matches;
     use std::{
         collections::hash_map::DefaultHasher,
-        convert::{TryFrom, TryInto},
-        fmt::Debug,
+        convert::TryFrom,
         hash::{Hash, Hasher},
         io::Cursor,
-        ops::{Add, BitAnd, Div, Shl, Shr, Sub},
     };
 
     /// A test-only copy of `FieldElementWithInteger`.
@@ -842,42 +908,30 @@ pub(crate) mod test_utils {
     /// requires the `Integer` associated type satisfy `Clone`, not `Copy`, so that it may be used
     /// with arbitrary precision integer implementations.
     pub(crate) trait TestFieldElementWithInteger:
-        FieldElement + From<Self::Integer>
+        FieldElement + From<Self::TestInteger>
     {
         type IntegerTryFromError: std::error::Error;
         type TryIntoU64Error: std::error::Error;
-        type Integer: Clone
-            + Debug
-            + Eq
-            + Ord
-            + BitAnd<Output = Self::Integer>
-            + Div<Output = Self::Integer>
-            + Shl<usize, Output = Self::Integer>
-            + Shr<usize, Output = Self::Integer>
-            + Add<Output = Self::Integer>
-            + Sub<Output = Self::Integer>
-            + From<Self>
-            + TryFrom<usize, Error = Self::IntegerTryFromError>
-            + TryInto<u64, Error = Self::TryIntoU64Error>;
+        type TestInteger: Integer + From<Self> + Clone;
 
-        fn pow(&self, exp: Self::Integer) -> Self;
+        fn pow(&self, exp: Self::TestInteger) -> Self;
 
-        fn modulus() -> Self::Integer;
+        fn modulus() -> Self::TestInteger;
     }
 
     impl<F> TestFieldElementWithInteger for F
     where
         F: FieldElementWithInteger,
     {
-        type IntegerTryFromError = <F as FieldElementWithInteger>::IntegerTryFromError;
-        type TryIntoU64Error = <F as FieldElementWithInteger>::TryIntoU64Error;
-        type Integer = <F as FieldElementWithInteger>::Integer;
+        type IntegerTryFromError = <F::Integer as Integer>::TryFromUsizeError;
+        type TryIntoU64Error = <F::Integer as Integer>::TryIntoU64Error;
+        type TestInteger = F::Integer;
 
-        fn pow(&self, exp: Self::Integer) -> Self {
+        fn pow(&self, exp: Self::TestInteger) -> Self {
             <F as FieldElementWithInteger>::pow(self, exp)
         }
 
-        fn modulus() -> Self::Integer {
+        fn modulus() -> Self::TestInteger {
             <F as FieldElementWithInteger>::modulus()
         }
     }
@@ -885,11 +939,11 @@ pub(crate) mod test_utils {
     pub(crate) fn field_element_test_common<F: TestFieldElementWithInteger>() {
         let mut prng: Prng<F, _> = Prng::new().unwrap();
         let int_modulus = F::modulus();
-        let int_one = F::Integer::try_from(1).unwrap();
+        let int_one = F::TestInteger::try_from(1).unwrap();
         let zero = F::zero();
         let one = F::one();
-        let two = F::from(F::Integer::try_from(2).unwrap());
-        let four = F::from(F::Integer::try_from(4).unwrap());
+        let two = F::from(F::TestInteger::try_from(2).unwrap());
+        let four = F::from(F::TestInteger::try_from(4).unwrap());
 
         // add
         assert_eq!(F::from(int_modulus.clone() - int_one.clone()) + one, zero);
@@ -943,10 +997,22 @@ pub(crate) mod test_utils {
         assert_eq!(a, c);
 
         // integer conversion
-        assert_eq!(F::Integer::from(zero), F::Integer::try_from(0).unwrap());
-        assert_eq!(F::Integer::from(one), F::Integer::try_from(1).unwrap());
-        assert_eq!(F::Integer::from(two), F::Integer::try_from(2).unwrap());
-        assert_eq!(F::Integer::from(four), F::Integer::try_from(4).unwrap());
+        assert_eq!(
+            F::TestInteger::from(zero),
+            F::TestInteger::try_from(0).unwrap()
+        );
+        assert_eq!(
+            F::TestInteger::from(one),
+            F::TestInteger::try_from(1).unwrap()
+        );
+        assert_eq!(
+            F::TestInteger::from(two),
+            F::TestInteger::try_from(2).unwrap()
+        );
+        assert_eq!(
+            F::TestInteger::from(four),
+            F::TestInteger::try_from(4).unwrap()
+        );
 
         // serialization
         let test_inputs = vec![
@@ -957,7 +1023,7 @@ pub(crate) mod test_utils {
         ];
         for want in test_inputs.iter() {
             let mut bytes = vec![];
-            want.encode(&mut bytes);
+            want.encode(&mut bytes).unwrap();
 
             assert_eq!(bytes.len(), F::ENCODED_SIZE);
             assert_eq!(want.encoded_len().unwrap(), F::ENCODED_SIZE);
@@ -966,9 +1032,12 @@ pub(crate) mod test_utils {
             assert_eq!(got, *want);
         }
 
-        let serialized_vec = F::slice_into_byte_vec(&test_inputs);
-        let deserialized = F::byte_slice_into_vec(&serialized_vec).unwrap();
-        assert_eq!(deserialized, test_inputs);
+        #[allow(deprecated)]
+        {
+            let serialized_vec = F::slice_into_byte_vec(&test_inputs);
+            let deserialized = F::byte_slice_into_vec(&serialized_vec).unwrap();
+            assert_eq!(deserialized, test_inputs);
+        }
 
         let test_input = prng.get();
         let json = serde_json::to_string(&test_input).unwrap();
@@ -981,13 +1050,16 @@ pub(crate) mod test_utils {
             element.as_u64().unwrap();
         }
 
-        let err = F::byte_slice_into_vec(&[0]).unwrap_err();
-        assert_matches!(err, FieldError::ShortRead);
+        #[allow(deprecated)]
+        {
+            let err = F::byte_slice_into_vec(&[0]).unwrap_err();
+            assert_matches!(err, FieldError::ShortRead);
 
-        let err = F::byte_slice_into_vec(&vec![0xffu8; F::ENCODED_SIZE]).unwrap_err();
-        assert_matches!(err, FieldError::Codec(CodecError::Other(err)) => {
-            assert_matches!(err.downcast_ref::<FieldError>(), Some(FieldError::ModulusOverflow));
-        });
+            let err = F::byte_slice_into_vec(&vec![0xffu8; F::ENCODED_SIZE]).unwrap_err();
+            assert_matches!(err, FieldError::Codec(CodecError::Other(err)) => {
+                assert_matches!(err.downcast_ref::<FieldError>(), Some(FieldError::ModulusOverflow));
+            });
+        }
 
         let insufficient = vec![0u8; F::ENCODED_SIZE - 1];
         let err = F::try_from(insufficient.as_ref()).unwrap_err();
@@ -1004,7 +1076,7 @@ pub(crate) mod test_utils {
         // various products that should be equal have the same hash. Three is chosen as a generator
         // here because it happens to generate fairly large subgroups of (Z/pZ)* for all four
         // primes.
-        let three = F::from(F::Integer::try_from(3).unwrap());
+        let three = F::from(F::TestInteger::try_from(3).unwrap());
         let mut powers_of_three = Vec::with_capacity(500);
         let mut power = one;
         for _ in 0..500 {
@@ -1169,22 +1241,19 @@ mod tests {
     fn test_encode_into_bitvector() {
         let zero = Field128::zero();
         let one = Field128::one();
-        let zero_enc = Field128::encode_into_bitvector_representation(&0, 4).unwrap();
-        let one_enc = Field128::encode_into_bitvector_representation(&1, 4).unwrap();
-        let fifteen_enc = Field128::encode_into_bitvector_representation(&15, 4).unwrap();
+        let zero_enc = Field128::encode_as_bitvector(0, 4)
+            .unwrap()
+            .collect::<Vec<_>>();
+        let one_enc = Field128::encode_as_bitvector(1, 4)
+            .unwrap()
+            .collect::<Vec<_>>();
+        let fifteen_enc = Field128::encode_as_bitvector(15, 4)
+            .unwrap()
+            .collect::<Vec<_>>();
         assert_eq!(zero_enc, [zero; 4]);
         assert_eq!(one_enc, [one, zero, zero, zero]);
         assert_eq!(fifteen_enc, [one; 4]);
-        Field128::encode_into_bitvector_representation(&16, 4).unwrap_err();
-    }
-
-    #[test]
-    fn test_fill_bitvector() {
-        let zero = Field128::zero();
-        let one = Field128::one();
-        let mut output: Vec<Field128> = vec![zero; 6];
-        Field128::fill_with_bitvector_representation(&9, &mut output[1..5]).unwrap();
-        assert_eq!(output, [zero, one, zero, zero, one, zero]);
-        Field128::fill_with_bitvector_representation(&16, &mut output[1..5]).unwrap_err();
+        Field128::encode_as_bitvector(16, 4).unwrap_err();
+        Field128::encode_as_bitvector(0, 129).unwrap_err();
     }
 }

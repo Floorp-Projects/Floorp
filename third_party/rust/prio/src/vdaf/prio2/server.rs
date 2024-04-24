@@ -101,9 +101,13 @@ pub(crate) fn is_valid_share<F: FftFriendlyFieldElement>(
 #[cfg(test)]
 mod test_util {
     use crate::{
+        codec::ParameterizedDecode,
         field::{merge_vector, FftFriendlyFieldElement},
         prng::Prng,
-        vdaf::prio2::client::proof_length,
+        vdaf::{
+            prio2::client::{proof_length, SerializeError},
+            Share, ShareDecodingParameter,
+        },
     };
 
     use super::{generate_verification_message, is_valid_share, ServerError, VerificationMessage};
@@ -133,17 +137,17 @@ mod test_util {
         /// Deserialize
         fn deserialize_share(&self, share: &[u8]) -> Result<Vec<F>, ServerError> {
             let len = proof_length(self.dimension);
-            Ok(if self.is_first_server {
-                F::byte_slice_into_vec(share)?
+            let decoding_parameter = if self.is_first_server {
+                ShareDecodingParameter::Leader(len)
             } else {
-                if share.len() != 32 {
-                    return Err(ServerError::ShareLength);
-                }
-
-                Prng::from_prio2_seed(&share.try_into().unwrap())
-                    .take(len)
-                    .collect()
-            })
+                ShareDecodingParameter::Helper
+            };
+            let decoded_share = Share::get_decoded_with_param(&decoding_parameter, share)
+                .map_err(SerializeError::from)?;
+            match decoded_share {
+                Share::Leader(vec) => Ok(vec),
+                Share::Helper(seed) => Ok(Prng::from_prio2_seed(&seed.0).take(len).collect()),
+            }
         }
 
         /// Generate verification message from an encrypted share
@@ -194,14 +198,19 @@ mod test_util {
 mod tests {
     use super::*;
     use crate::{
-        codec::Encode,
+        codec::{Encode, ParameterizedDecode},
         field::{FieldElement, FieldPrio2},
         prng::Prng,
         vdaf::{
-            prio2::{client::unpack_proof_mut, server::test_util::Server, Prio2},
-            Client,
+            prio2::{
+                client::{proof_length, unpack_proof_mut},
+                server::test_util::Server,
+                Prio2,
+            },
+            Client, Share, ShareDecodingParameter,
         },
     };
+    use assert_matches::assert_matches;
     use rand::{random, Rng};
 
     fn secret_share(share: &mut [FieldPrio2]) -> Vec<FieldPrio2> {
@@ -286,10 +295,13 @@ mod tests {
 
         let vdaf = Prio2::new(dim).unwrap();
         let (_, shares) = vdaf.shard(&data, &[0; 16]).unwrap();
-        let share1_original = shares[0].get_encoded();
-        let share2 = shares[1].get_encoded();
+        let share1_original = shares[0].get_encoded().unwrap();
+        let share2 = shares[1].get_encoded().unwrap();
 
-        let mut share1_field = FieldPrio2::byte_slice_into_vec(&share1_original).unwrap();
+        let mut share1_field: Vec<FieldPrio2> = assert_matches!(
+            Share::get_decoded_with_param(&ShareDecodingParameter::<32>::Leader(proof_length(dim)), &share1_original),
+            Ok(Share::Leader(vec)) => vec
+        );
         let unpacked_share1 = unpack_proof_mut(&mut share1_field, dim).unwrap();
 
         let one = FieldPrio2::from(1);
@@ -304,7 +316,9 @@ mod tests {
         };
 
         // reserialize altered share1
-        let share1_modified = FieldPrio2::slice_into_byte_vec(&share1_field);
+        let share1_modified = Share::<FieldPrio2, 32>::Leader(share1_field)
+            .get_encoded()
+            .unwrap();
 
         let mut prng = Prng::from_prio2_seed(&random());
         let eval_at = vdaf.choose_eval_at(&mut prng);
