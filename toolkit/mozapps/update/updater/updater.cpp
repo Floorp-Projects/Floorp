@@ -76,13 +76,16 @@ bool IsOwnedByGroupAdmin(const char* aAppBundle);
 bool IsRecursivelyWritable(const char* aPath);
 void LaunchChild(int argc, const char** argv);
 void LaunchMacPostProcess(const char* aAppBundle);
-bool ObtainUpdaterArguments(int* argc, char*** argv);
-bool ServeElevatedUpdate(int argc, const char** argv);
+bool ObtainUpdaterArguments(int* aArgc, char*** aArgv,
+                            MARChannelStringTable* aMARStrings);
+bool ServeElevatedUpdate(int aArgc, const char** aArgv,
+                         const char* aMARChannelID);
 void SetGroupOwnershipAndPermissions(const char* aAppBundle);
 bool PerformInstallationFromDMG(int argc, char** argv);
 struct UpdateServerThreadArgs {
   int argc;
   const NS_tchar** argv;
+  const char* marChannelID;
 };
 #endif
 
@@ -188,15 +191,6 @@ class AutoFile {
   }
 };
 
-struct MARChannelStringTable {
-  MARChannelStringTable() {
-    MARChannelID = mozilla::MakeUnique<char[]>(1);
-    MARChannelID[0] = '\0';
-  }
-
-  mozilla::UniquePtr<char[]> MARChannelID;
-};
-
 //-----------------------------------------------------------------------------
 
 #ifdef XP_MACOSX
@@ -292,6 +286,10 @@ static bool sUsingService = false;
 // with `gIsElevated == false`. If it is run an additional time with elevation,
 // that iteration will run with `gIsElevated == true`.
 static bool gIsElevated = false;
+
+// This string contains the MAR channel IDs that are later extracted by one of
+// the `ReadMARChannelIDsFrom` variants.
+static MARChannelStringTable gMARStrings;
 
 // Normally, we run updates as a result of user action (the user started Firefox
 // or clicked a "Restart to Update" button). But there are some cases when
@@ -2694,26 +2692,29 @@ static int ReadMARChannelIDsFromBuffer(char* aChannels,
 
 /**
  * This function reads in the `ACCEPTED_MAR_CHANNEL_IDS` from the appropriate
- * (platform-dependent) source.
+ * (platform-dependent) source and populates `gMARStrings`.
  *
- * @param aMARStrings
- *        An out-param used to return the channel id string read. The contained
- *        value is not specified if the function's return value is not `OK`.
  * @return
  *        `OK` on success, `UPDATE_SETTINGS_FILE_CHANNEL` on failure.
  */
-static int GetAcceptableChannelIDs(MARChannelStringTable* aMARStrings) {
+static int PopulategMARStrings() {
   int rv = UPDATE_SETTINGS_FILE_CHANNEL;
 #  ifdef XP_MACOSX
-  if (auto marChannels = UpdateSettingsUtil::GetAcceptedMARChannelsValue()) {
-    rv = ReadMARChannelIDsFromBuffer(marChannels->data(), aMARStrings);
+  if (gIsElevated) {
+    // An elevated update process will have already populated gMARStrings when
+    // it connected to the unelevated update process to obtain the command line
+    // args. See `ObtainUpdaterArguments`.
+    rv = OK;
+  } else if (auto marChannels =
+                 UpdateSettingsUtil::GetAcceptedMARChannelsValue()) {
+    rv = ReadMARChannelIDsFromBuffer(marChannels->data(), &gMARStrings);
   }
 #  else
   NS_tchar updateSettingsPath[MAXPATHLEN];
   NS_tsnprintf(updateSettingsPath,
                sizeof(updateSettingsPath) / sizeof(updateSettingsPath[0]),
                NS_T("%s/update-settings.ini"), gInstallDirPath);
-  rv = ReadMARChannelIDsFromPath(updateSettingsPath, aMARStrings);
+  rv = ReadMARChannelIDsFromPath(updateSettingsPath, &gMARStrings);
 #  endif
   return rv == OK ? OK : UPDATE_SETTINGS_FILE_CHANNEL;
 }
@@ -2742,11 +2743,10 @@ static void UpdateThreadFunc(void* param) {
     }
 
     if (rv == OK) {
-      MARChannelStringTable MARStrings;
-      rv = GetAcceptableChannelIDs(&MARStrings);
+      rv = PopulategMARStrings();
       if (rv == OK) {
         rv = gArchiveReader.VerifyProductInformation(
-            MARStrings.MARChannelID.get(), MOZ_APP_VERSION);
+            gMARStrings.MARChannelID.get(), MOZ_APP_VERSION);
       }
     }
 #endif
@@ -2851,7 +2851,8 @@ static void UpdateThreadFunc(void* param) {
 #ifdef XP_MACOSX
 static void ServeElevatedUpdateThreadFunc(void* param) {
   UpdateServerThreadArgs* threadArgs = (UpdateServerThreadArgs*)param;
-  gSucceeded = ServeElevatedUpdate(threadArgs->argc, threadArgs->argv);
+  gSucceeded = ServeElevatedUpdate(threadArgs->argc, threadArgs->argv,
+                                   threadArgs->marChannelID);
   if (!gSucceeded) {
     WriteStatusFile(ELEVATION_CANCELED);
   }
@@ -2989,10 +2990,9 @@ int NS_main(int argc, NS_tchar** argv) {
 
   if (argc == 2 && NS_tstrcmp(argv[1], NS_T("--channels-allowed")) == 0) {
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
-    MARChannelStringTable MARStrings;
-    int rv = GetAcceptableChannelIDs(&MARStrings);
+    int rv = PopulategMARStrings();
     if (rv == OK) {
-      printf("Channels Allowed: %s\n", MARStrings.MARChannelID.get());
+      printf("Channels Allowed: %s\n", gMARStrings.MARChannelID.get());
       return 0;
     }
     printf("Error: %d\n", rv);
@@ -3025,7 +3025,7 @@ int NS_main(int argc, NS_tchar** argv) {
       strstr(argv[0], "/Library/PrivilegedHelperTools/org.mozilla.updater") !=
       0;
   if (isElevated) {
-    if (!ObtainUpdaterArguments(&argc, &argv)) {
+    if (!ObtainUpdaterArguments(&argc, &argv, &gMARStrings)) {
       // Won't actually get here because ObtainUpdaterArguments will terminate
       // the current process on failure.
       return 1;
@@ -3336,6 +3336,7 @@ int NS_main(int argc, NS_tchar** argv) {
       UpdateServerThreadArgs threadArgs;
       threadArgs.argc = argc;
       threadArgs.argv = const_cast<const NS_tchar**>(argv);
+      threadArgs.marChannelID = gMARStrings.MARChannelID.get();
 
       Thread t1;
       if (t1.Run(ServeElevatedUpdateThreadFunc, &threadArgs) == 0) {
@@ -4227,7 +4228,7 @@ int NS_main(int argc, NS_tchar** argv) {
     // Run update process on a background thread. ShowProgressUI may return
     // before QuitProgressUI has been called, so wait for UpdateThreadFunc to
     // terminate. Avoid showing the progress UI when staging an update, or if
-    // this is an elevated process on OSX.
+    // this is an elevated process on macOS.
     Thread t;
     if (t.Run(UpdateThreadFunc, nullptr) == 0) {
       if (!sStagedUpdate && !sReplaceRequest && !sUpdateSilently
