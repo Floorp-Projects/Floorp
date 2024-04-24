@@ -4,17 +4,17 @@
 
 package org.mozilla.fenix.microsurvey.ui
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -23,16 +23,20 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * The UI used for micro-survey when this is opened.
  *
+ * @param question The survey question text.
+ * @param answers The survey answer text options available for the question.
+ * @param icon The survey icon, this will represent the feature the survey is for.
  * @param isSubmitted Whether the user submitted an answer or not.
- * @param isContentAnswerSelected Whether the user clicked on one of the answers or not.
- * @param content The content of the micro-survey.
  */
 @Composable
 fun MicroSurveyOpenView(
+    question: String,
+    answers: List<String>,
+    @DrawableRes icon: Int = R.drawable.ic_print, // todo currently unknown what the default will be if any.
     isSubmitted: Boolean,
-    isContentAnswerSelected: Boolean,
-    content: @Composable () -> Unit,
 ) {
+    val selectedAnswer = remember { mutableStateOf<String?>(null) }
+
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
     ) {
@@ -47,7 +51,13 @@ fun MicroSurveyOpenView(
             ) {}
         }
 
-        content()
+        MicroSurveyContent(
+            question = question,
+            icon = icon,
+            answers = answers,
+            selectedAnswer = selectedAnswer.value,
+            onSelectionChange = { selectedAnswer.value = it },
+        )
 
         Row(
             modifier = Modifier
@@ -56,7 +66,7 @@ fun MicroSurveyOpenView(
         ) {
             MicroSurveyFooter(
                 isSubmitted = isSubmitted,
-                isContentAnswerSelected = isContentAnswerSelected,
+                isContentAnswerSelected = selectedAnswer.value != null,
                 onLinkClick = {},
                 onButtonClick = {},
             )
@@ -67,23 +77,22 @@ fun MicroSurveyOpenView(
 /**
  * The preview for micro-survey open view.
  */
-@Composable
+@PreviewScreenSizes
 @LightDarkPreview
+@Composable
 fun MicroSurveyOpenViewPreview() {
     FirefoxTheme {
         MicroSurveyOpenView(
+            question = "How satisfied are you with printing in Firefox?",
+            icon = R.drawable.ic_print,
+            answers = listOf(
+                stringResource(id = R.string.likert_scale_option_1),
+                stringResource(id = R.string.likert_scale_option_2),
+                stringResource(id = R.string.likert_scale_option_3),
+                stringResource(id = R.string.likert_scale_option_4),
+                stringResource(id = R.string.likert_scale_option_5),
+            ),
             isSubmitted = false,
-            isContentAnswerSelected = false,
-        ) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                backgroundColor = FirefoxTheme.colors.textPrimary,
-                modifier = Modifier
-                    .fillMaxWidth(),
-            ) {
-                Column(modifier = Modifier.height(400.dp)) {
-                }
-            }
-        }
+        )
     }
 }
