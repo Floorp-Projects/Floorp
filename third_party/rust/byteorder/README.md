@@ -4,7 +4,7 @@ This crate provides convenience methods for encoding and decoding
 numbers in either big-endian or little-endian order.
 
 [![Build status](https://github.com/BurntSushi/byteorder/workflows/ci/badge.svg)](https://github.com/BurntSushi/byteorder/actions)
-[![](https://meritbadge.herokuapp.com/byteorder)](https://crates.io/crates/byteorder)
+[![crates.io](https://img.shields.io/crates/v/byteorder.svg)](https://crates.io/crates/byteorder)
 
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org/).
 
@@ -54,6 +54,20 @@ in a `no_std` context, add the following to your `Cargo.toml`:
 [dependencies]
 byteorder = { version = "1", default-features = false }
 ```
+
+
+### Minimum Rust version policy
+
+This crate's minimum supported `rustc` version is `1.60.0`.
+
+The current policy is that the minimum Rust version required to use this crate
+can be increased in minor version updates. For example, if `crate 1.0` requires
+Rust 1.20.0, then `crate 1.0.z` for all values of `z` will also require Rust
+1.20.0 or newer. However, `crate 1.y` for `y > 0` may require a newer minimum
+version of Rust.
+
+In general, this crate will be conservative with respect to the minimum
+supported version of Rust.
 
 
 ### Alternatives

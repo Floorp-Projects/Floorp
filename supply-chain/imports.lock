@@ -71,6 +71,13 @@ user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
+[[publisher.byteorder]]
+version = "1.5.0"
+when = "2023-10-06"
+user-id = 189
+user-login = "BurntSushi"
+user-name = "Andrew Gallant"
+
 [[publisher.bytes]]
 version = "1.4.0"
 when = "2023-01-31"
@@ -423,6 +430,12 @@ user-login = "embark-studios"
 [[publisher.prio]]
 version = "0.15.3"
 when = "2023-10-03"
+user-id = 213776
+user-login = "divviup-github-automation"
+
+[[publisher.prio]]
+version = "0.16.2"
+when = "2024-03-19"
 user-id = 213776
 user-login = "divviup-github-automation"
 
@@ -1395,6 +1408,16 @@ who = "Tim Geoghegan <timg@letsencrypt.org>"
 criteria = "safe-to-deploy"
 delta = "0.2.9 -> 0.2.10"
 notes = "These changes include some new `unsafe` code for the `emscripten` and `psvita` targets, but all it does is call `libc::getentropy`."
+
+[[audits.isrg.audits.getrandom]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "0.2.11 -> 0.2.12"
+
+[[audits.isrg.audits.getrandom]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "0.2.12 -> 0.2.14"
 
 [[audits.isrg.audits.keccak]]
 who = "David Cook <dcook@divviup.org>"

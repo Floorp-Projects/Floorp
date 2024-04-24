@@ -10,6 +10,7 @@ use std::convert::TryFrom;
 
 /// An error returned by an FFT operation.
 #[derive(Debug, PartialEq, Eq, thiserror::Error)]
+#[non_exhaustive]
 pub enum FftError {
     /// The output is too small.
     #[error("output slice is smaller than specified size")]

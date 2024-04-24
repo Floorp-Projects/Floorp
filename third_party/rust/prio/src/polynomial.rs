@@ -3,7 +3,7 @@
 
 //! Functions for polynomial interpolation and evaluation
 
-#[cfg(feature = "prio2")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
 use crate::fft::{discrete_fourier_transform, discrete_fourier_transform_inv_finish};
 use crate::field::FftFriendlyFieldElement;
 
@@ -204,7 +204,7 @@ pub fn poly_mul<F: FftFriendlyFieldElement>(p: &[F], q: &[F]) -> Vec<F> {
     out
 }
 
-#[cfg(feature = "prio2")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
 #[inline]
 pub fn poly_interpret_eval<F: FftFriendlyFieldElement>(
     points: &[F],
