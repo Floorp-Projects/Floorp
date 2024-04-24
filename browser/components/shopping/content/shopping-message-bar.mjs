@@ -95,7 +95,8 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   staleWarningTemplate() {
-    return html`<div>
+    return html`<div class="shopping-message-bar">
+      <span class="icon"></span>
       <article id="message-bar-container" aria-labelledby="header">
         <span
           data-l10n-id="shopping-message-bar-warning-stale-analysis-message-2"
@@ -164,10 +165,12 @@ class ShoppingMessageBar extends MozLitElement {
 
   analysisInProgressTemplate() {
     return html`<div
+      class="shopping-message-bar analysis-in-progress"
       style=${styleMap({
         "--analysis-progress-pcent": `${this.progress}%`,
       })}
     >
+      <span class="icon"></span>
       <article
         id="message-bar-container"
         aria-labelledby="header"
@@ -189,11 +192,13 @@ class ShoppingMessageBar extends MozLitElement {
 
   reanalysisInProgressTemplate() {
     return html`<div
+      class="shopping-message-bar"
       id="reanalysis-in-progress-message"
       style=${styleMap({
         "--analysis-progress-pcent": `${this.progress}%`,
       })}
     >
+      <span class="icon"></span>
       <article
         id="message-bar-container"
         aria-labelledby="header"

@@ -34,45 +34,37 @@ button {
   margin-inline-start: 0;
 }
 
-message-bar::part(container) {
-  align-items: start;
-  padding: 0.5rem 0.75rem;
+.shopping-message-bar {
+  display: flex;
+  align-items: center;
+  padding-block: 0.5rem;
   gap: 0.75rem;
+
+  &.analysis-in-progress {
+    align-items: start;
+  }
+
+  .icon {
+    --message-bar-icon-url: url("chrome://global/skin/icons/info-filled.svg");
+    width: var(--icon-size-default);
+    height: var(--icon-size-default);
+    flex-shrink: 0;
+    appearance: none;
+    -moz-context-properties: fill, stroke;
+    fill: currentColor;
+    stroke: currentColor;
+    color: var(--icon-color);
+    background-image: var(--message-bar-icon-url);
+  }
 }
 
-message-bar::part(icon) {
-  padding: 0;
-}
-
-:host([type=analysis-in-progress]) message-bar::part(icon),
-:host([type=reanalysis-in-progress]) message-bar::part(icon) {
-  border: 1px solid var(--icon-color);
-  border-radius: 50%;
-}
-
-:host([type=analysis-in-progress]) message-bar::part(icon)::after,
-:host([type=reanalysis-in-progress]) message-bar::part(icon)::after {
+:host([type=analysis-in-progress]) .icon,
+:host([type=reanalysis-in-progress]) .icon {
   --message-bar-icon-url: conic-gradient(var(--icon-color-information) var(--analysis-progress-pcent, 0%), transparent var(--analysis-progress-pcent, 0%));
+  border: 1px solid var(--icon-color);
   border-radius: 50%;
   margin-block: 1px 0;
   margin-inline: 1px 0;
-  width: calc(var(--icon-size) - 2px);
-  height: calc(var(--icon-size) - 2px);
-}
-
-:host([type=reanalysis-in-progress]) message-bar::part(container),
-:host([type=stale]) message-bar::part(container) {
-  align-items: center;
-  background-color: transparent;
-  padding: 0;
-}
-
-:host([type=thank-you-for-feedback]) message-bar::part(icon) {
-  --message-bar-icon-url: url("chrome://global/skin/icons/check-filled.svg");
-}
-
-:host([type=thank-you-for-feedback]) message-bar::part(container) {
-  text-align: start;
-  align-items: center;
-  gap: 12px;
+  width: calc(var(--icon-size-default) - 2px);
+  height: calc(var(--icon-size-default) - 2px);
 }
