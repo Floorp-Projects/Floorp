@@ -121,9 +121,6 @@ class DecoderTemplate : public DOMEventTargetHelper {
     // configuration.
     const SeqId mSeqId;
     const int64_t mUniqueId;
-
-   private:
-    RefPtr<Promise> mPromise;
   };
 
  protected:
