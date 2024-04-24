@@ -100,6 +100,7 @@ import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.ifNullOrEmpty
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import java.lang.ref.WeakReference
 import java.security.InvalidParameterException
@@ -436,12 +437,12 @@ class PromptFeature private constructor(
                 }
         }
 
-        // Dismiss all prompts when page URL or session id changes. See Fenix#5326
+        // Dismiss all prompts when page host or session id changes. See Fenix#5326
         dismissPromptScope = store.flowScoped { flow ->
             flow.ifAnyChanged { state ->
                 arrayOf(
                     state.selectedTabId,
-                    state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.url,
+                    state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.url?.tryGetHostFromUrl(),
                 )
             }.collect {
                 dismissSelectPrompts()

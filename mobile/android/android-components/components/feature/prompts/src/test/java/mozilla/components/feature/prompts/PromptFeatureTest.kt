@@ -2348,6 +2348,70 @@ class PromptFeatureTest {
     }
 
     @Test
+    fun `GIVEN saveLoginDialog is visible WHEN host doesn't change THEN keep saveLoginDialog visible`() {
+        val newUrlSameDomain = "https://www.mozilla.org/en-GB/firefox/browsers/mobile/android/"
+        val promptRequest = PromptRequest.Share(
+            data = mock(),
+            onSuccess = {},
+            onFailure = {},
+            onDismiss = {},
+        )
+        val saveLoginPrompt: SaveLoginDialogFragment = mock()
+
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store = store,
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+                fileUploadsDirCleaner = mock(),
+                exitFullscreenUsecase = mock(),
+                isSaveLoginEnabled = { true },
+                loginValidationDelegate = mock(),
+            ) { },
+        )
+        feature.start()
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
+        feature.activePrompt = WeakReference(saveLoginPrompt)
+
+        store.dispatch(ContentAction.UpdateUrlAction(tabId, newUrlSameDomain)).joinBlocking()
+        verify(saveLoginPrompt, never()).dismiss()
+    }
+
+    @Test
+    fun `GIVEN saveLoginDialog is visible WHEN host changes THEN dismiss saveLoginDialog`() {
+        val newUrlDifferentDomain = "https://www.android.com/new-features-on-android/"
+        val promptRequest = PromptRequest.Share(
+            data = mock(),
+            onSuccess = {},
+            onFailure = {},
+            onDismiss = {},
+        )
+        val saveLoginPrompt: SaveLoginDialogFragment = mock()
+
+        val feature = spy(
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+                fileUploadsDirCleaner = mock(),
+                exitFullscreenUsecase = mock(),
+                isSaveLoginEnabled = { true },
+                shareDelegate = mock(),
+            ) { },
+        )
+        feature.start()
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
+        feature.activePrompt = WeakReference(saveLoginPrompt)
+
+        store.dispatch(ContentAction.UpdateUrlAction(tabId, newUrlDifferentDomain)).joinBlocking()
+        verify(saveLoginPrompt, times(1)).dismiss()
+    }
+
+    @Test
     fun `prompt will always start the save login dialog with an icon`() {
         val feature = PromptFeature(
             activity = mock(),
