@@ -1664,12 +1664,13 @@ class AddonInstall {
           this.addon.signedDate &&
           !hasStrongSignature(this.addon)
         ) {
-          const addonAllowedByPolicies = Services.policies.getExtensionSettings(
-            this.addon.id
-          )?.temporarily_allow_weak_signatures;
+          const addonAllowedByPolicies =
+            Services.policies?.getExtensionSettings(
+              this.addon.id
+            )?.temporarily_allow_weak_signatures;
 
           const globallyAllowedByPolicies =
-            Services.policies.getExtensionSettings(
+            Services.policies?.getExtensionSettings(
               "*"
             )?.temporarily_allow_weak_signatures;
 
