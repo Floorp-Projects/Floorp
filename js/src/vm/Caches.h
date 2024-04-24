@@ -43,10 +43,15 @@ struct EvalCacheEntry {
 };
 
 struct EvalCacheLookup {
-  explicit EvalCacheLookup(JSContext* cx) : str(cx), callerScript(cx) {}
-  Rooted<JSLinearString*> str;
-  RootedScript callerScript;
-  MOZ_INIT_OUTSIDE_CTOR jsbytecode* pc;
+  JSLinearString* str = nullptr;
+  JSScript* callerScript = nullptr;
+  MOZ_INIT_OUTSIDE_CTOR jsbytecode* pc = nullptr;
+
+  EvalCacheLookup() = default;
+  EvalCacheLookup(JSLinearString* str, JSScript* callerScript, jsbytecode* pc)
+      : str(str), callerScript(callerScript), pc(pc) {}
+
+  void trace(JSTracer* trc);
 };
 
 struct EvalCacheHashPolicy {
