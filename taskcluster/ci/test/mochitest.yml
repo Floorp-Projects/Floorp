@@ -293,7 +293,7 @@ mochitest-browser-chrome:
     # Bug 1281241: migrating to m3.large instances
     instance-size:
         by-test-platform:
-            linux.*64-tsan-qr/opt: xlarge  # runs out of memory using 8GB
+            linux.*64-tsan-qr/opt: xlarge-noscratch  # runs out of memory using 8GB
             default: default
     allow-software-gl-layers: false
 
