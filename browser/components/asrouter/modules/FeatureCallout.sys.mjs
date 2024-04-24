@@ -1828,6 +1828,14 @@ export class FeatureCallout {
         "simulateContent",
         !!this.theme.simulateContent
       );
+      this._container.classList.toggle(
+        "lwtNewtab",
+        !!(
+          this.theme.lwtNewtab !== false &&
+          this.theme.simulateContent &&
+          ["themed-content", "newtab"].includes(this.theme.preset)
+        )
+      );
       for (const type of ["light", "dark", "hcm"]) {
         const scheme = this.theme[type];
         for (const name of FeatureCallout.themePropNames) {
