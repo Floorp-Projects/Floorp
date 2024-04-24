@@ -4303,7 +4303,9 @@ nsresult nsFocusManager::GetNextTabbableContent(
 
       // Stepping out popover scope.
       // For forward, search for the next tabbable content after invoker.
-      // For backward, we should get back to the invoker.
+      // For backward, we should get back to the invoker if the invoker is
+      // focusable. Otherwise search for the next tabbable content after
+      // invoker.
       if (oldTopLevelScopeOwner &&
           IsOpenPopoverWithInvoker(oldTopLevelScopeOwner) &&
           currentTopLevelScopeOwner != oldTopLevelScopeOwner) {
@@ -4327,12 +4329,21 @@ nsresult nsFocusManager::GetNextTabbableContent(
                 return rv;
               }
             }
-          } else if (invokerContent &&
-                     invokerContent->IsFocusableWithoutStyle()) {
-            // FIXME(emilio): The check above should probably use
-            // nsIFrame::IsFocusable, not IsFocusableWithoutStyle.
-            invokerContent.forget(aResultContent);
-            return NS_OK;
+          } else if (invokerContent) {
+            nsIFrame* frame = invokerContent->GetPrimaryFrame();
+            if (frame && frame->IsFocusable()) {
+              invokerContent.forget(aResultContent);
+              return NS_OK;
+            }
+            nsIContent* contentToFocus = GetNextTabbableContentInScope(
+                currentTopLevelScopeOwner, invokerContent,
+                aOriginalStartContent, aForward, 0, aIgnoreTabIndex,
+                aForDocumentNavigation, aNavigateByKey, false /* aSkipOwner */,
+                aReachedToEndForDocumentNavigation);
+            if (contentToFocus) {
+              NS_ADDREF(*aResultContent = contentToFocus);
+              return NS_OK;
+            }
           }
         }
       }
