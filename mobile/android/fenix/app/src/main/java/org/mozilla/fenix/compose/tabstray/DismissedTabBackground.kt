@@ -60,7 +60,7 @@ fun DismissedTabBackground(
                     .alpha(
                         if (dismissDirection == DismissDirection.StartToEnd || dismissDirection == null) 1f else 0f,
                     ),
-                tint = FirefoxTheme.colors.iconWarning,
+                tint = FirefoxTheme.colors.iconCritical,
             )
 
             Icon(
@@ -72,7 +72,7 @@ fun DismissedTabBackground(
                     .alpha(
                         if (dismissDirection == DismissDirection.EndToStart || dismissDirection == null) 1f else 0f,
                     ),
-                tint = FirefoxTheme.colors.iconWarning,
+                tint = FirefoxTheme.colors.iconCritical,
             )
         }
     }

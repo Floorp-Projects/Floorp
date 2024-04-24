@@ -59,7 +59,7 @@ fun DismissibleItemBackground(
                                 Alignment.CenterStart
                             },
                         ),
-                    tint = FirefoxTheme.colors.iconWarning,
+                    tint = FirefoxTheme.colors.iconCritical,
                 )
             }
         }
