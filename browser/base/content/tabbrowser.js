@@ -67,7 +67,7 @@
     replaceContainerClass("color", hbox, identity.color);
 
     let label = ContextualIdentityService.getUserContextLabel(userContextId);
-    document.getElementById("userContext-label").setAttribute("value", label);
+    document.getElementById("userContext-label").textContent = label;
     // Also set the container label as the tooltip so we can only show the icon
     // in small windows.
     hbox.setAttribute("tooltiptext", label);
