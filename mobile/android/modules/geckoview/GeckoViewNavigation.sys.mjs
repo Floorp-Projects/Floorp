@@ -291,10 +291,10 @@ export class GeckoViewNavigation extends GeckoViewModule {
 
   waitAndSetupWindow(aSessionId, aOpenWindowInfo, aName) {
     if (!aSessionId) {
-      return Promise.resolve(null);
+      return Promise.reject();
     }
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const handler = {
         observe(aSubject, aTopic) {
           if (
@@ -318,6 +318,10 @@ export class GeckoViewNavigation extends GeckoViewModule {
               aSubject.browser.removeAttribute("remoteType");
             }
             Services.obs.removeObserver(handler, "geckoview-window-created");
+            if (!aSubject) {
+              reject();
+              return;
+            }
             resolve(aSubject);
           }
         },
@@ -332,8 +336,46 @@ export class GeckoViewNavigation extends GeckoViewModule {
     debug`handleNewSession: uri=${aUri && aUri.spec}
                              where=${aWhere} flags=${aFlags}`;
 
+    const setupPromise = this.#handleNewSessionAsync(
+      aUri,
+      aOpenWindowInfo,
+      aFlags,
+      aName
+    );
+
+    let browser = undefined;
+    setupPromise.then(
+      window => {
+        browser = window.browser;
+      },
+      () => {
+        browser = null;
+      }
+    );
+
+    // Wait indefinitely for app to respond with a browser or null
+    Services.tm.spinEventLoopUntil(
+      "GeckoViewNavigation.jsm:handleNewSession",
+      () => this.window.closed || browser !== undefined
+    );
+    return browser || null;
+  }
+
+  #isNewTab(aWhere) {
+    return [
+      Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+      Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND,
+      Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_FOREGROUND,
+    ].includes(aWhere);
+  }
+
+  /**
+   * Similar to handleNewSession. But this returns a promise to wait for new
+   * browser.
+   */
+  #handleNewSessionAsync(aUri, aOpenWindowInfo, aFlags, aName) {
     if (!this.enabled) {
-      return null;
+      return Promise.reject();
     }
 
     const newSessionId = Services.uuid
@@ -356,30 +398,15 @@ export class GeckoViewNavigation extends GeckoViewModule {
       aName
     );
 
-    let browser = undefined;
-    this.eventDispatcher
+    return this.eventDispatcher
       .sendRequestForResult(message)
       .then(didOpenSession => {
         if (!didOpenSession) {
+          // New session cannot be opened, so we should throw NS_ERROR_ABORT.
           return Promise.reject();
         }
         return setupPromise;
-      })
-      .then(
-        window => {
-          browser = window.browser;
-        },
-        () => {
-          browser = null;
-        }
-      );
-
-    // Wait indefinitely for app to respond with a browser or null
-    Services.tm.spinEventLoopUntil(
-      "GeckoViewNavigation.sys.mjs:handleNewSession",
-      () => this.window.closed || browser !== undefined
-    );
-    return browser || null;
+      });
   }
 
   // nsIBrowserDOMWindow.
@@ -392,6 +419,11 @@ export class GeckoViewNavigation extends GeckoViewModule {
   ) {
     debug`createContentWindow: uri=${aUri && aUri.spec}
                                 where=${aWhere} flags=${aFlags}`;
+
+    if (!this.enabled) {
+      Components.returnCode = Cr.NS_ERROR_ABORT;
+      return null;
+    }
 
     if (
       lazy.LoadURIDelegate.load(
@@ -408,13 +440,45 @@ export class GeckoViewNavigation extends GeckoViewModule {
       return null;
     }
 
-    const browser = this.handleNewSession(
+    const newTab = this.#isNewTab(aWhere);
+    const promise = this.#handleNewSessionAsync(
       aUri,
       aOpenWindowInfo,
       aWhere,
       aFlags,
       null
     );
+
+    // Actually, GeckoView's createContentWindow always creates new window even
+    // if OPEN_NEWTAB. So the browsing context will be observed via
+    // nsFrameLoader.
+    if (aOpenWindowInfo && !newTab) {
+      promise.catch(() => {
+        aOpenWindowInfo.cancel();
+      });
+      // If nsIOpenWindowInfo isn't null, caller should use the callback.
+      // Also, nsIWindowProvider.provideWindow doesn't use callback, if new
+      // tab option, we have to return browsing context instead of async.
+      return null;
+    }
+
+    let browser = undefined;
+    promise.then(
+      window => {
+        browser = window.browser;
+      },
+      () => {
+        browser = null;
+      }
+    );
+
+    // Wait indefinitely for app to respond with a browser or null.
+    // if browser is null, return error.
+    Services.tm.spinEventLoopUntil(
+      "GeckoViewNavigation.sys.mjs:createContentWindow",
+      () => this.window.closed || browser !== undefined
+    );
+
     if (!browser) {
       Components.returnCode = Cr.NS_ERROR_ABORT;
       return null;
