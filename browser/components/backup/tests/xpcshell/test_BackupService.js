@@ -145,7 +145,11 @@ add_task(async function test_createBackup() {
     FakeBackupResource1.prototype.backup
   );
 
-  let manifestPath = PathUtils.join(stagingPathRenamed, "backup-manifest.json");
+  let manifestPath = PathUtils.join(
+    stagingPathRenamed,
+    BackupService.MANIFEST_FILE_NAME
+  );
+
   Assert.ok(await IOUtils.exists(manifestPath), "Manifest file exists");
   let manifest = await IOUtils.readJSON(manifestPath);
 
@@ -174,5 +178,103 @@ add_task(async function test_createBackup() {
   // renamed with the current date.
   await IOUtils.remove(fakeProfilePath, { recursive: true });
 
+  sandbox.restore();
+});
+
+/**
+ * Creates a directory that looks a lot like a decompressed backup archive,
+ * and then tests that BackupService.recoverFromBackup can create a new profile
+ * and recover into it.
+ */
+add_task(async function test_recoverFromBackup() {
+  let sandbox = sinon.createSandbox();
+  let fakeEntryMap = new Map();
+  let backupResourceClasses = [
+    FakeBackupResource1,
+    FakeBackupResource2,
+    FakeBackupResource3,
+  ];
+
+  let i = 1;
+  for (let backupResourceClass of backupResourceClasses) {
+    let fakeManifestEntry = { [`fake${i}`]: `hello from backup - ${i}` };
+    sandbox
+      .stub(backupResourceClass.prototype, "backup")
+      .resolves(fakeManifestEntry);
+
+    let fakePostRecoveryEntry = { [`fake${i}`]: `hello from recover - ${i}` };
+    sandbox
+      .stub(backupResourceClass.prototype, "recover")
+      .resolves(fakePostRecoveryEntry);
+
+    fakeEntryMap.set(backupResourceClass, {
+      manifestEntry: fakeManifestEntry,
+      postRecoveryEntry: fakePostRecoveryEntry,
+    });
+
+    ++i;
+  }
+
+  let bs = new BackupService({
+    FakeBackupResource1,
+    FakeBackupResource2,
+    FakeBackupResource3,
+  });
+
+  let oldProfilePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "recoverFromBackupTest"
+  );
+  let newProfileRootPath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "recoverFromBackupTest-newProfileRoot"
+  );
+
+  let { stagingPath } = await bs.createBackup({ profilePath: oldProfilePath });
+
+  let profile = await bs.recoverFromBackup(
+    stagingPath,
+    false /* shouldLaunch */,
+    newProfileRootPath
+  );
+  Assert.ok(profile, "An nsIToolkitProfile was created.");
+  let newProfilePath = profile.rootDir.path;
+
+  let postRecoveryFilePath = PathUtils.join(
+    newProfilePath,
+    "post-recovery.json"
+  );
+  let postRecovery = await IOUtils.readJSON(postRecoveryFilePath);
+
+  for (let backupResourceClass of backupResourceClasses) {
+    let expectedResourceFolder = PathUtils.join(
+      stagingPath,
+      backupResourceClass.key
+    );
+
+    let { manifestEntry, postRecoveryEntry } =
+      fakeEntryMap.get(backupResourceClass);
+
+    Assert.ok(
+      backupResourceClass.prototype.recover.calledOnce,
+      `Recover was called for ${backupResourceClass.key}`
+    );
+    Assert.ok(
+      backupResourceClass.prototype.recover.calledWith(
+        manifestEntry,
+        expectedResourceFolder,
+        newProfilePath
+      ),
+      `Recover was passed the right arguments for ${backupResourceClass.key}`
+    );
+    Assert.deepEqual(
+      postRecoveryEntry,
+      postRecovery[backupResourceClass.key],
+      "The post recovery data is as expected"
+    );
+  }
+
+  await IOUtils.remove(oldProfilePath, { recursive: true });
+  await IOUtils.remove(newProfileRootPath, { recursive: true });
   sandbox.restore();
 });
