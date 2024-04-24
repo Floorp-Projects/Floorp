@@ -34,9 +34,8 @@ impl Decode for TaskID {
 }
 
 impl Encode for TaskID {
-    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
+    fn encode(&self, bytes: &mut Vec<u8>) {
         bytes.extend_from_slice(&self.0);
-        Ok(())
     }
 }
 
@@ -53,9 +52,8 @@ impl Decode for Time {
 }
 
 impl Encode for Time {
-    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
-        u64::encode(&self.0, bytes)?;
-        Ok(())
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        u64::encode(&self.0, bytes);
     }
 }
 
@@ -95,10 +93,9 @@ impl Decode for Extension {
 }
 
 impl Encode for Extension {
-    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
-        (self.extension_type as u16).encode(bytes)?;
-        encode_u16_items(bytes, &(), &self.extension_data)?;
-        Ok(())
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        (self.extension_type as u16).encode(bytes);
+        encode_u16_items(bytes, &(), &self.extension_data);
     }
 }
 
@@ -134,10 +131,9 @@ pub struct PlaintextInputShare {
 }
 
 impl Encode for PlaintextInputShare {
-    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
-        encode_u16_items(bytes, &(), &self.extensions)?;
-        encode_u32_items(bytes, &(), &self.payload)?;
-        Ok(())
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        encode_u16_items(bytes, &(), &self.extensions);
+        encode_u32_items(bytes, &(), &self.payload);
     }
 }
 
@@ -154,9 +150,8 @@ impl Decode for HpkeConfigId {
 }
 
 impl Encode for HpkeConfigId {
-    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
-        self.0.encode(bytes)?;
-        Ok(())
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        self.0.encode(bytes);
     }
 }
 
@@ -194,13 +189,12 @@ impl Decode for HpkeConfig {
 }
 
 impl Encode for HpkeConfig {
-    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
-        self.id.encode(bytes)?;
-        self.kem_id.encode(bytes)?;
-        self.kdf_id.encode(bytes)?;
-        self.aead_id.encode(bytes)?;
-        encode_u16_items(bytes, &(), &self.public_key)?;
-        Ok(())
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        self.id.encode(bytes);
+        self.kem_id.encode(bytes);
+        self.kdf_id.encode(bytes);
+        self.aead_id.encode(bytes);
+        encode_u16_items(bytes, &(), &self.public_key);
     }
 }
 
@@ -233,11 +227,10 @@ impl Decode for HpkeCiphertext {
 }
 
 impl Encode for HpkeCiphertext {
-    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
-        self.config_id.encode(bytes)?;
-        encode_u16_items(bytes, &(), &self.enc)?;
-        encode_u32_items(bytes, &(), &self.payload)?;
-        Ok(())
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        self.config_id.encode(bytes);
+        encode_u16_items(bytes, &(), &self.enc);
+        encode_u32_items(bytes, &(), &self.payload);
     }
 }
 
@@ -255,9 +248,8 @@ impl Decode for ReportID {
 }
 
 impl Encode for ReportID {
-    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
+    fn encode(&self, bytes: &mut Vec<u8>) {
         bytes.extend_from_slice(&self.0);
-        Ok(())
     }
 }
 
@@ -294,10 +286,9 @@ impl Decode for ReportMetadata {
 }
 
 impl Encode for ReportMetadata {
-    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
-        self.report_id.encode(bytes)?;
-        self.time.encode(bytes)?;
-        Ok(())
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        self.report_id.encode(bytes);
+        self.time.encode(bytes);
     }
 }
 
@@ -365,11 +356,10 @@ impl Decode for Report {
 }
 
 impl Encode for Report {
-    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
-        self.metadata.encode(bytes)?;
-        encode_u32_items(bytes, &(), &self.public_share)?;
-        self.leader_encrypted_input_share.encode(bytes)?;
-        self.helper_encrypted_input_share.encode(bytes)?;
-        Ok(())
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        self.metadata.encode(bytes);
+        encode_u32_items(bytes, &(), &self.public_share);
+        self.leader_encrypted_input_share.encode(bytes);
+        self.helper_encrypted_input_share.encode(bytes);
     }
 }
