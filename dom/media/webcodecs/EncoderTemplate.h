@@ -11,6 +11,7 @@
 
 #include "EncoderAgent.h"
 #include "MediaData.h"
+#include "SimpleMap.h"
 #include "WebCodecsUtils.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/MozPromise.h"
@@ -116,12 +117,10 @@ class EncoderTemplate : public DOMEventTargetHelper {
       : public ControlMessage,
         public MessageRequestHolder<EncoderAgent::EncodePromise> {
    public:
-    FlushMessage(WebCodecsId aConfigureId, Promise* aPromise);
+    explicit FlushMessage(WebCodecsId aConfigureId);
     virtual void Cancel() override { Disconnect(); }
     virtual bool IsProcessing() override { return Exists(); };
     virtual RefPtr<FlushMessage> AsFlushMessage() override { return this; }
-    already_AddRefed<Promise> TakePromise() { return mPromise.forget(); }
-    void RejectPromiseIfAny(const nsresult& aReason);
 
     nsCString ToString() const override {
       nsCString rv;
@@ -129,9 +128,6 @@ class EncoderTemplate : public DOMEventTargetHelper {
                       this->mMessageId);
       return rv;
     }
-
-   private:
-    RefPtr<Promise> mPromise;
   };
 
  protected:
@@ -207,7 +203,7 @@ class EncoderTemplate : public DOMEventTargetHelper {
                                       const nsresult& aResult);
 
   void ProcessControlMessageQueue();
-  void CancelPendingControlMessages(const nsresult& aResult);
+  void CancelPendingControlMessagesAndFlushPromises(const nsresult& aResult);
 
   template <typename Func>
   void QueueATask(const char* aName, Func&& aSteps);
@@ -235,6 +231,11 @@ class EncoderTemplate : public DOMEventTargetHelper {
   bool mMessageQueueBlocked;
   std::queue<RefPtr<ControlMessage>> mControlMessageQueue;
   RefPtr<ControlMessage> mProcessingMessage;
+
+  // When a flush request is initiated, a promise is created and stored in
+  // mPendingFlushPromises until it is settled in the task delivering the flush
+  // result or Reset() is called before the promise is settled.
+  SimpleMap<RefPtr<Promise>> mPendingFlushPromises;
 
   uint32_t mEncodeQueueSize;
   bool mDequeueEventScheduled;
