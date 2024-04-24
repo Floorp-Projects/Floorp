@@ -124,6 +124,11 @@ add_task(async function simple_clear() {
   await triggerPopupAndHoverItem("#tel", 0);
   await confirmClear("#tel");
   await checkIsFormCleared();
+
+  // Ensure the correctness of the autocomplete popup after the form is cleared
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  is(4, getMenuEntries().length, `Checking length of expected menu`);
 });
 
 add_task(async function clear_adapted_record() {
