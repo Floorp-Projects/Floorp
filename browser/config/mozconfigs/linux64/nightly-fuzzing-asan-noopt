@@ -14,6 +14,7 @@ ac_add_options --enable-valgrind
 # globally in mozconfig.asan because it requires an unstable -Z flag.
 export RUSTFLAGS="$RUSTFLAGS -Zsanitizer=address"
 
+ac_add_options --enable-gczeal
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
 

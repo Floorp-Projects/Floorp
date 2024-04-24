@@ -1,4 +1,5 @@
 . "$topsrcdir/browser/config/mozconfigs/linux64/tsan"
 
+ac_add_options --enable-gczeal
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT

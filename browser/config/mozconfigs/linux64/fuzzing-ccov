@@ -9,6 +9,7 @@ ac_add_options --disable-jemalloc
 
 ac_add_options --enable-debug-symbols=-g1
 ac_add_options --enable-fuzzing
+ac_add_options --enable-gczeal
 
 # Also, for consistency we disable the crash reporter and solely rely
 # on libFuzzer to provide stacks both in the browser fuzzing case as

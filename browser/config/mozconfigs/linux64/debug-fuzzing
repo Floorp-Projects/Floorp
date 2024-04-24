@@ -7,6 +7,7 @@ export LLVM_SYMBOLIZER="$MOZ_FETCHES_DIR/llvm-symbolizer/bin/llvm-symbolizer"
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
+ac_add_options --enable-gczeal
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
 
