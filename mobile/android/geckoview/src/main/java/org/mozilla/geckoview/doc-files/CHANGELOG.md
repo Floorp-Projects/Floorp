@@ -15,6 +15,9 @@ exclude: true
 
 ## v127
 - ⚠️ Removed deprecated [`RuntimeTelemetry`][125.5], [`GeckoRuntimeSettings.getTelemetryDelegate`][125.6] and [`GeckoRuntimeSettings.telemetryDelegate`][125.7].
+- Added [FINDER_FIND_FORWARD][127.1]
+
+[127.1]: {{javadoc_uri}}/GeckoSession.html#FINDER_FIND_FORWARD
 
 ## v125
 - ⚠️ Deprecated [`GeckoSession.NavigationDelegate.onLocationChange`][125.1], to be removed in v127.
@@ -1550,4 +1553,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2de1494e3dcaccbef7c3aeae018c4f657af274e7
+[api-version]: e846e2e55edacaa72a2373326e765daeb86fb35c
