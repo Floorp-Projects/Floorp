@@ -47,7 +47,7 @@ jobs:
                         default: ""
                 DO_MOBILE_EXPERIMENTS:
                     by-project:
-                        mozilla-central: "1"
+                        mozilla-(central|beta): "1"
                         default: ""
             command:
                 - /runme.sh
