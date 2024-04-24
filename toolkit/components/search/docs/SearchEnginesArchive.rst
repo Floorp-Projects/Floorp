@@ -1,44 +1,69 @@
-==============
-Search Engines
-==============
-This document describes the four main type of search engines the Firefox
-serves to the user, enabling users to search the internet with different
-search providers. The types of search engines are:
+=========================
+Search Engines (Archived)
+=========================
+This document describes the three main ways Firefox serves search engines to the
+user, enabling users to search the internet with different search providers.
+The three main ways Firefox serves search engines to the users is through:
 
-- Application Provided Search Engines
 - Add-on Search Engines
-- Open Search Engines
+- OpenSearch Engines
 - Enterprise Policy Engines
 
-These are all represented by `similarly named classes`_ which inherit from
-the ``SearchEngine`` class and implement the :searchfox:`nsISearchEngine.idl <toolkit/components/search/nsISearchService.idl>`
-interface.
-
-Application Provided Search Engines
-===================================
-Application Provided Search Engines are engines provided by the application to
-the user as part of the configuration for the user's locale and region.
-These engines are managed through the `Search Configuration`_ file hosted on Remote Settings.
+An example of a search provider is Google, which is one of the Add-on Search
+Engines described in the first section below. Another example of a search
+provider is Bugzilla, which is an OpenSearch Engine described in the second
+section below.  Lastly, there are Enterprise Policy Search Engines,
+which will be the third section described in this documentation.
 
 Add-on Search Engines
 =====================
-Users can install Add-on Search Engines into Firefox. Add-ons are additional
-functionality that third-party developers provide for users.
+Add-ons are additional functionality that third-party developers provide for
+users to install into Firefox. The add-on mechanism is also used by Firefox to
+ship the search engines provided by the application. To define Add-on Search
+Engines, developers use the `WebExtensions API`_. Since the WebExtensions API
+technology is used, developers interchangeably used the term WebExtension Search
+Engines when referring to Add-ons Search Engines.
 
-To define Add-on Search Engines, developers use the `WebExtensions API`_,
-specifically the `chrome_settings_overrides`_ manifest key.
+.. _WebExtensions API:
+   https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions
 
-Since the WebExtensions API technology is used, developers interchangeably used
-the term WebExtension Search Engines when referring to Add-ons Search Engines.
+The list of Add-on Search Engines provided by Firefox and their extension files
+can be found in `mozilla-central/browser/components/search/extensions
+<https://searchfox.org/mozilla-central/source/browser/components/search/extensions>`__.
+Within each Add-on Search Engine folder, there is a manifest.json file. One of the
+keys in that manifest.json file is `chrome_settings_overrides`, whose value is an object
+that describes how to construct the url, images, strings, icon, etc. Here’s an example of
+how the search provider is set within `chrome_settings_overrides`:
 
+.. code-block:: js
+
+    "chrome_settings_overrides": {
+      "search_provider": {
+      "name": "Discogs",
+      "search_url": "https://www.discogs.com/search/?q={searchTerms}",
+      "keyword": "disc",
+      "favicon_url": "https://www.discogs.com/favicon.ico"
+      }
+    }
+
+
+To see more details on the syntax and properties, visit the `chrome settings
+overrides MDN documentation.
+<https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/
+manifest.json/chrome_settings_overrides>`__
 
 In Practice
 -----------
 All versions of Firefox support add-ons. Firefox switched over from OpenSearch
-to Add-on Search Engines internally in Firefox version 78. We no longer ship
-Application Provided Search Engines through web extensions and switched to
-managing these engines via Remote Settings in Firefox version 126,
-as of April 22, 2024.
+to Add-on Search Engines internally in Firefox version 78. Add-on Search engines
+allows Firefox developers to have more flexibility and control in the
+modification of formatting search engines as we support different search
+providers.
+
+We maintain these Add-on Search Engines through a search configuration file that
+is bundled and configured via Remote Settings. As of this writing, June 2022, we
+use Remote Settings for managing search engines only for Firefox Desktop but not
+outside of Firefox Desktop.
 
 OpenSearch Engines
 ===================
@@ -56,8 +81,9 @@ is it allows site owners to easily provide users with a way to search a site.
 
 History
 -------
-Prior to OpenSearch, search plugins were first created by the `Mycroft Project`_
-and based off of `Sherlock`_, a file and web search
+Prior to OpenSearch, search plugins were first created by the `Mycroft Project
+<https://mycroftproject.com/>`__ and based off of `Sherlock
+<https://en.wikipedia.org/wiki/Sherlock_(software)>`__, a file and web search
 tool created by Apple.
 
 The OpenSearch Protocol was created and launched by A9.com in 2005. OpenSearch
@@ -65,7 +91,8 @@ was added to Firefox version 2 in the year 2006. As of today in 2022, OpenSearch
 is a collection of formats for sharing of search results. The code is stable but
 unchanged for many years.
 
-See the `OpenSearch Documentation`_  for more information on the OpenSearch formats.
+See the `OpenSearch Documentation <https://github.com/dewitt/opensearch>`__ for
+more information on the OpenSearch formats.
 
 Autodiscovery
 -------------
@@ -91,7 +118,9 @@ Bugzilla icon to make a search directly on bugzilla.mozilla.org.
    :scale: 28%
    :align: center
 
-See the `Autodiscovery MDN Documentation`_ for more information on Autodiscovery.
+See the `Autodiscovery MDN Documentation <https://developer.mozilla.org/en-US/
+docs/Web/OpenSearch#autodiscovery_of_search_plugins>`__ for more information on
+Autodiscovery.
 
 Enterprise Policy Engines
 =========================
@@ -103,13 +132,18 @@ configuration that was set in place.
 
 Enterprise Policy Engines are search engines that a company has added as search
 engines on Firefox for their users by setting the Enterprise Policy. In this
-`Enterprise Policy Documentation`_ it outlines the different options that are
-available for enterprises using Firefox ESR (Extended Support Release) and what’s
-available in terms of adding, updating, or removing search engines. The company
-can use the policy to define which search engines are available on their Firefox ESR.
+`Enterprise Policy Documentation
+<https://mozilla.github.io/policy-templates/#searchengines
+-this-policy-is-only-available-on-the-esr>`__,
+it outlines the different options that are available for enterprises using
+Firefox ESR (Extended Support Release) and what’s available in terms of adding,
+updating, or removing search engines. The company can use the policy to define
+which search engines are available on their Firefox ESR.
 
-See the `policy-templates`_ for more information on Enterprise Policy templates
-and the different configuration rules available.
+See the `policy-templates
+<https://mozilla.github.io/policy-templates/>`__ for more
+information on Enterprise Policy templates and the different configuration rules
+available.
 
 Configuration
 -------------
@@ -118,8 +152,11 @@ depending on which operating system their machines are on. The admin can
 configure the policy on a server and when the user logs in, those configurations
 are automatically pushed to the user’s Firefox.
 
-For Windows, the `GPO (Group Policy Object)`_ or `Intune (Microsoft Endpoint Manager)`_ is
-used to set the policy. For macOS, `configuration profiles`_ are created.
+For Windows, the `GPO (Group Policy Object)
+<https://github.com/mozilla/policy-templates/tree/master/windows>`__ or `Intune
+(Microsoft Endpoint Manager) <https://support.mozilla.org/en-US/kb/managing-firefox-intune>`__ is
+used to set the policy. For macOS, `configuration profiles
+<https://github.com/mozilla/policy-templates/tree/master/mac>`__ are created.
 For the generic case, there is a JSON file to describe the policy.
 
 When these configurations are set, Firefox takes the configuration as inputs and
@@ -158,17 +195,3 @@ Firefox will find it and Firefox will open and run with the policy.
 
 Common formatting mistakes are often made when creating the JSON file. The JSON
 file can be validated using a JSON validator such as https://jsonlint.com/.
-
-.. _similarly named classes: https://searchfox.org/mozilla-central/search?q=&path=toolkit%2Fcomponents%2Fsearch%2F*SearchEngine.sys.mjs
-.. _Search Configuration: SearchConfigurationSchema.html
-.. _WebExtensions API: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions
-.. _chrome_settings_overrides: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/chrome_settings_overrides
-.. _Sherlock: https://en.wikipedia.org/wiki/Sherlock_(software)
-.. _Mycroft Project:   https://mycroftproject.com/
-.. _OpenSearch Documentation: https://github.com/dewitt/opensearch
-.. _Autodiscovery MDN Documentation: https://developer.mozilla.org/en-US/docs/Web/OpenSearch#autodiscovery_of_search_plugins
-.. _Enterprise Policy Documentation: https://mozilla.github.io/policy-templates/#searchengines-this-policy-is-only-available-on-the-esr
-.. _policy-templates: https://mozilla.github.io/policy-templates/
-.. _GPO (Group Policy Object): https://github.com/mozilla/policy-templates/tree/master/windows
-.. _Intune (Microsoft Endpoint Manager): https://support.mozilla.org/en-US/kb/managing-firefox-intune
-.. _configuration profiles: https://github.com/mozilla/policy-templates/tree/master/mac

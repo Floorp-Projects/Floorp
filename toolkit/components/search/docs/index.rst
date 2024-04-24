@@ -41,6 +41,7 @@ Contents for search-config (archived)
    SearchServiceHighlevelOverviewArchive
    SearchEngineConfigurationArchive
    SearchConfigurationSchemaArchive
+   SearchEnginesArchive
 
 API Reference
 -------------
