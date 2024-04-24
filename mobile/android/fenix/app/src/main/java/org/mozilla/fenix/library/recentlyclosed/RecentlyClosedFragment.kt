@@ -58,7 +58,7 @@ class RecentlyClosedFragment :
             inflater.inflate(R.menu.history_select_multi, menu)
             menu.findItem(R.id.delete_history_multi_select)?.let { deleteItem ->
                 deleteItem.title = SpannableString(deleteItem.title)
-                    .apply { setTextColor(requireContext(), R.attr.textWarning) }
+                    .apply { setTextColor(requireContext(), R.attr.textCritical) }
             }
         } else {
             inflater.inflate(R.menu.library_menu, menu)

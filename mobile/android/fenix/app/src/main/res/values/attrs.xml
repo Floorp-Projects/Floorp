@@ -29,7 +29,7 @@
     <!-- Disabled text -->
     <attr name="textDisabled" format="reference" />
     <!-- Warning text -->
-    <attr name="textWarning" format="reference"/>
+    <attr name="textCritical" format="reference"/>
     <!-- Small heading, Text link -->
     <attr name="textAccent" format="reference" />
     <!-- Text Inverted/On Color -->

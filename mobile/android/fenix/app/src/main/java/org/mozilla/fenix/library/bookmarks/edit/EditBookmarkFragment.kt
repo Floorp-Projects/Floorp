@@ -299,7 +299,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark), MenuProv
                         ColorStateList.valueOf(
                             ContextCompat.getColor(
                                 requireContext(),
-                                R.color.fx_mobile_text_color_warning,
+                                R.color.fx_mobile_text_color_critical,
                             ),
                         ),
                     )

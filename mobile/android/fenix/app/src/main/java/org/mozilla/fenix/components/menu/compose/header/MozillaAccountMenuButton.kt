@@ -92,7 +92,7 @@ internal fun MozillaAccountMenuButton(
 
                     Text(
                         text = stringResource(id = R.string.browser_menu_syncing_paused_caption),
-                        color = FirefoxTheme.colors.textWarning,
+                        color = FirefoxTheme.colors.textCritical,
                         maxLines = 2,
                         style = FirefoxTheme.typography.caption,
                     )

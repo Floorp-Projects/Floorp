@@ -137,7 +137,7 @@ enum class MenuItemState {
 private fun getLabelTextColor(state: MenuItemState): Color {
     return when (state) {
         MenuItemState.ACTIVE -> FirefoxTheme.colors.textAccent
-        MenuItemState.WARNING -> FirefoxTheme.colors.textWarning
+        MenuItemState.WARNING -> FirefoxTheme.colors.textCritical
         else -> FirefoxTheme.colors.textPrimary
     }
 }

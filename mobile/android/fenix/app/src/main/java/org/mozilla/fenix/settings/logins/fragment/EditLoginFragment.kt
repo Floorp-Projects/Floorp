@@ -273,7 +273,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
                     ColorStateList.valueOf(
                         ContextCompat.getColor(
                             requireContext(),
-                            R.color.fx_mobile_text_color_warning,
+                            R.color.fx_mobile_text_color_critical,
                         ),
                     ),
                 )
@@ -290,7 +290,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
             layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
             layout.setErrorIconTintList(
                 ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_warning),
+                    ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_critical),
                 ),
             )
         }

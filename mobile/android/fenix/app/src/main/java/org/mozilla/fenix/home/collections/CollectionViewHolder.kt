@@ -141,7 +141,7 @@ private fun getMenuItems(
 
         MenuItem(
             title = stringResource(R.string.collection_delete),
-            color = FirefoxTheme.colors.textWarning,
+            color = FirefoxTheme.colors.textCritical,
         ) {
             onDeleteCollectionTapped(collection)
         },
