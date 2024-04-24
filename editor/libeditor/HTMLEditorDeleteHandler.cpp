@@ -1373,8 +1373,8 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
           BlockInlineCheck::UseComputedDisplayOutsideStyle);
       const WSScanResult scanFromCaretPointResult =
           aDirectionAndAmount == nsIEditor::eNext
-              ? wsRunScannerAtCaret.ScanNextVisibleNodeOrBlockBoundaryFrom(
-                    caretPoint)
+              ? wsRunScannerAtCaret
+                    .ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(caretPoint)
               : wsRunScannerAtCaret.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
                     caretPoint);
       if (scanFromCaretPointResult.Failed()) {
@@ -1396,8 +1396,10 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
         if (scanFromCaretPointResult.ReachedInvisibleBRElement()) {
           EditorDOMPoint newCaretPosition =
               aDirectionAndAmount == nsIEditor::eNext
-                  ? scanFromCaretPointResult.PointAfterContent<EditorDOMPoint>()
-                  : scanFromCaretPointResult.PointAtContent<EditorDOMPoint>();
+                  ? scanFromCaretPointResult
+                        .PointAfterReachedContent<EditorDOMPoint>()
+                  : scanFromCaretPointResult
+                        .PointAtReachedContent<EditorDOMPoint>();
           if (NS_WARN_IF(!newCaretPosition.IsSet())) {
             return NS_ERROR_FAILURE;
           }
@@ -1445,7 +1447,8 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
 
           // Otherwise, extend the range to contain the invisible `<br>`
           // element.
-          if (scanFromCaretPointResult.PointAtContent<EditorRawDOMPoint>()
+          if (scanFromCaretPointResult
+                  .PointAtReachedContent<EditorRawDOMPoint>()
                   .IsBefore(
                       aRangesToDelete
                           .GetFirstRangeStartPoint<EditorRawDOMPoint>())) {
@@ -1458,11 +1461,13 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
             return rv;
           }
           if (aRangesToDelete.GetFirstRangeEndPoint<EditorRawDOMPoint>()
-                  .IsBefore(scanFromCaretPointResult
-                                .PointAfterContent<EditorRawDOMPoint>())) {
+                  .IsBefore(
+                      scanFromCaretPointResult
+                          .PointAfterReachedContent<EditorRawDOMPoint>())) {
             nsresult rv = aRangesToDelete.FirstRangeRef()->SetStartAndEnd(
                 aRangesToDelete.FirstRangeRef()->StartRef(),
-                scanFromCaretPointResult.PointAfterContent<EditorRawDOMPoint>()
+                scanFromCaretPointResult
+                    .PointAfterReachedContent<EditorRawDOMPoint>()
                     .ToRawRangeBoundary());
             NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                  "nsRange::SetStartAndEnd() failed");
@@ -1666,8 +1671,9 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::Run(
           BlockInlineCheck::UseComputedDisplayOutsideStyle);
       const WSScanResult scanFromCaretPointResult =
           aDirectionAndAmount == nsIEditor::eNext
-              ? wsRunScannerAtCaret.ScanNextVisibleNodeOrBlockBoundaryFrom(
-                    caretPoint.ref())
+              ? wsRunScannerAtCaret
+                    .ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
+                        caretPoint.ref())
               : wsRunScannerAtCaret.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
                     caretPoint.ref());
       if (MOZ_UNLIKELY(scanFromCaretPointResult.Failed())) {
@@ -1722,7 +1728,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::Run(
             const WSScanResult scanFromCaretPointResult =
                 aDirectionAndAmount == nsIEditor::eNext
                     ? wsRunScannerAtCaret
-                          .ScanNextVisibleNodeOrBlockBoundaryFrom(
+                          .ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
                               caretPoint.ref())
                     : wsRunScannerAtCaret
                           .ScanPreviousVisibleNodeOrBlockBoundaryFrom(
@@ -2521,8 +2527,8 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
       aDirectionAndAmount == nsIEditor::eNext
           ? aWSRunScannerAtCaret.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
                 aCaretPoint)
-          : aWSRunScannerAtCaret.ScanNextVisibleNodeOrBlockBoundaryFrom(
-                aCaretPoint);
+          : aWSRunScannerAtCaret
+                .ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(aCaretPoint);
   // If we found a `<br>` element, we need to delete it instead of joining the
   // contents.
   if (scanFromCaretResult.ReachedBRElement()) {
@@ -2572,7 +2578,7 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::DeleteBRElement(
       return maybePreviousText.Point_Deprecated<EditorDOMPoint>();
     }
     const WSScanResult maybeNextText =
-        scanner.ScanNextVisibleNodeOrBlockBoundaryFrom(
+        scanner.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
             EditorRawDOMPoint::After(*mBRElement));
     if (maybeNextText.IsContentEditable() &&
         maybeNextText.InVisibleOrCollapsibleCharacters()) {
@@ -4323,7 +4329,7 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
 
   // Next, check there is visible contents after the point in current block.
   const WSScanResult forwardScanFromPointResult =
-      wsScannerForPoint.ScanNextVisibleNodeOrBlockBoundaryFrom(aPoint);
+      wsScannerForPoint.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(aPoint);
   if (forwardScanFromPointResult.Failed()) {
     NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
     return NS_ERROR_FAILURE;
@@ -4344,7 +4350,7 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
     }
     if (wsScannerForPoint.GetEndReasonContent()->GetNextSibling()) {
       const WSScanResult scanResult =
-          WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
+          WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
               editingHost,
               EditorRawDOMPoint::After(
                   *wsScannerForPoint.GetEndReasonContent()),
@@ -6841,8 +6847,8 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
               *backwardScanFromStartResult.ElementPtr())) {
         break;
       }
-      rangeToDelete.SetStart(
-          backwardScanFromStartResult.PointAtContent<EditorRawDOMPoint>());
+      rangeToDelete.SetStart(backwardScanFromStartResult
+                                 .PointAtReachedContent<EditorRawDOMPoint>());
     }
     if (aFrameSelection && !aFrameSelection->IsValidSelectionPoint(
                                rangeToDelete.StartRef().GetContainer())) {
@@ -6864,7 +6870,7 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
           closestEditingHost, rangeToDelete.EndRef(),
           BlockInlineCheck::UseComputedDisplayOutsideStyle);
       const WSScanResult forwardScanFromEndResult =
-          wsScannerAtEnd.ScanNextVisibleNodeOrBlockBoundaryFrom(
+          wsScannerAtEnd.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
               rangeToDelete.EndRef());
       if (forwardScanFromEndResult.ReachedBRElement()) {
         // XXX In my understanding, this is odd.  The end reason may not be
@@ -6909,7 +6915,8 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
           break;
         }
         rangeToDelete.SetEnd(
-            forwardScanFromEndResult.PointAfterContent<EditorRawDOMPoint>());
+            forwardScanFromEndResult
+                .PointAfterReachedContent<EditorRawDOMPoint>());
         continue;
       }
 

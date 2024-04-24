@@ -2204,7 +2204,7 @@ nsIContent* HTMLEditUtils::GetContentToPreserveInlineStyles(
   }
   for (auto point = aPoint.template To<EditorRawDOMPoint>(); point.IsSet();) {
     const WSScanResult nextVisibleThing =
-        WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
+        WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
             &aEditingHost, point,
             BlockInlineCheck::UseComputedDisplayOutsideStyle);
     if (nextVisibleThing.InVisibleOrCollapsibleCharacters()) {
@@ -2261,7 +2261,7 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
   // i.e., the insertion position is just before a visible line break <br>,
   // we want to skip to the position just after the line break (see bug 68767).
   const WSScanResult forwardScanFromPointToInsertResult =
-      wsScannerForPointToInsert.ScanNextVisibleNodeOrBlockBoundaryFrom(
+      wsScannerForPointToInsert.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
           pointToInsert);
   // So, if the next visible node isn't a <br> element, we can insert the block
   // level element to the point.
@@ -2289,7 +2289,7 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
   }
 
   return forwardScanFromPointToInsertResult
-      .template PointAfterContent<EditorDOMPointType>();
+      .template PointAfterReachedContent<EditorDOMPointType>();
 }
 
 // static
