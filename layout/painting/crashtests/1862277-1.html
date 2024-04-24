@@ -19,7 +19,7 @@ Note that we set widget.windows.window_occlusion_tracking.enabled=false for this
 crashtests leave windows open and occlud the crashtest window, which means the refresh driver doesn't
 run, which means the requestAnimationFrame don't run. Bug 1864255 tracks fixing this.
 
-Note that we image.decode-sync.enabled=false for this test because sync decoding triggers extra
+Note that we image.teseting.decode-sync.enabled=false for this test because sync decoding triggers extra
 invalidation which "fixes" this bug before it gets a chance to appear. Bug 1866411 tracks this.
 -->
 

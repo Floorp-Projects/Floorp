@@ -6566,7 +6566,7 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
   // We also force sync-decoding via pref for reftests.
   if (aFlags & PaintInternalFlags::PaintSyncDecodeImages ||
       mDocument->IsStaticDocument() ||
-      StaticPrefs::image_decode_sync_enabled()) {
+      StaticPrefs::image_testing_decode_sync_enabled()) {
     flags |= PaintFrameFlags::SyncDecodeImages;
   }
   if (renderer->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
