@@ -12,6 +12,7 @@ ac_add_options --enable-valgrind
 
 . $topsrcdir/build/unix/mozconfig.asan
 
+ac_add_options --enable-gczeal
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
 
