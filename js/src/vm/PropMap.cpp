@@ -967,17 +967,16 @@ void PropMapTable::trace(JSTracer* trc) {
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void PropMapTable::checkAfterMovingGC() {
-  for (Set::Enum e(set_); !e.empty(); e.popFront()) {
-    PropMap* map = e.front().map();
+  CheckTableAfterMovingGC(set_, [](const auto& entry) {
+    PropMap* map = entry.map();
     MOZ_ASSERT(map);
     CheckGCThingAfterMovingGC(map);
 
-    PropertyKey key = map->getKey(e.front().index());
+    PropertyKey key = map->getKey(entry.index());
     MOZ_RELEASE_ASSERT(!key.isVoid());
 
-    auto p = lookupRaw(key);
-    MOZ_RELEASE_ASSERT(p.found() && *p == e.front());
-  }
+    return key;
+  });
 }
 #endif
 

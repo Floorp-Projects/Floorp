@@ -40,19 +40,18 @@ void EntryTrampolineMap::updateScriptsAfterMovingGC(void) {
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
-void EntryTrampoline::checkTrampolineAfterMovingGC() {
+void EntryTrampoline::checkTrampolineAfterMovingGC() const {
   JitCode* trampoline = entryTrampoline_;
   CheckGCThingAfterMovingGC(trampoline);
 }
 
 void EntryTrampolineMap::checkScriptsAfterMovingGC() {
-  for (jit::EntryTrampolineMap::Enum r(*this); !r.empty(); r.popFront()) {
-    BaseScript* script = r.front().key();
+  gc::CheckTableAfterMovingGC(*this, [](const auto& entry) {
+    BaseScript* script = entry.key();
     CheckGCThingAfterMovingGC(script);
-    r.front().value().checkTrampolineAfterMovingGC();
-    auto ptr = lookup(script);
-    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
-  }
+    entry.value().checkTrampolineAfterMovingGC();
+    return script;
+  });
 }
 #endif
 
