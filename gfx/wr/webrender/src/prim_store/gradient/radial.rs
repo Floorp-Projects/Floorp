@@ -24,7 +24,6 @@ use crate::render_task::{RenderTask, RenderTaskKind};
 use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheKey, RenderTaskParent};
 use crate::renderer::{GpuBufferAddress, GpuBufferBuilder};
-use crate::picture::SurfaceIndex;
 
 use std::{hash, ops::{Deref, DerefMut}};
 use super::{
@@ -179,7 +178,6 @@ impl RadialGradientTemplate {
     pub fn update(
         &mut self,
         frame_state: &mut FrameBuildingState,
-        parent_surface: SurfaceIndex,
     ) {
         if let Some(mut request) =
             frame_state.gpu_cache.request(&mut self.common.gpu_cache_handle) {

@@ -26,7 +26,6 @@ use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheKey, RenderTaskParent};
 use crate::renderer::GpuBufferAddress;
 use crate::segment::EdgeAaSegmentMask;
-use crate::picture::{SurfaceIndex};
 use crate::util::pack_as_float;
 use super::{stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder, apply_gradient_local_clip};
 use std::ops::{Deref, DerefMut};
@@ -450,7 +449,6 @@ impl LinearGradientTemplate {
     pub fn update(
         &mut self,
         frame_state: &mut FrameBuildingState,
-        parent_surface: SurfaceIndex,
     ) {
         if let Some(mut request) = frame_state.gpu_cache.request(
             &mut self.common.gpu_cache_handle

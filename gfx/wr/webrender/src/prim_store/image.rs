@@ -13,8 +13,7 @@ use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
 use crate::gpu_cache::{GpuCache, GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
-use crate::internal_types::{LayoutPrimitiveInfo};
-use crate::picture::SurfaceIndex;
+use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{
     EdgeAaSegmentMask, PrimitiveInstanceKind,
     PrimitiveOpacity, PrimKey,
@@ -136,7 +135,6 @@ impl ImageData {
         &mut self,
         common: &mut PrimTemplateCommonData,
         image_instance: &mut ImageInstance,
-        parent_surface: SurfaceIndex,
         prim_spatial_node_index: SpatialNodeIndex,
         frame_state: &mut FrameBuildingState,
         frame_context: &FrameBuildingContext,

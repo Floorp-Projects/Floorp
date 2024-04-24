@@ -11,7 +11,6 @@ use crate::device::TextureFilter;
 use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use crate::gpu_cache::GpuCache;
 use crate::internal_types::FastHashMap;
-use crate::picture::SurfaceIndex;
 use crate::prim_store::image::ImageCacheKey;
 use crate::prim_store::gradient::{
     FastLinearGradientCacheKey, LinearGradientCacheKey, RadialGradientCacheKey,
