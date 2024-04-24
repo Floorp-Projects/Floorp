@@ -42,9 +42,12 @@ from . import util
 SUPPORTED_METRIC_TYPES = ["string", "event"]
 
 
-def event_class_name(ping_name: str, event_metric_exists: bool) -> str:
+def event_class_name(
+    ping_name: str, metrics_by_type: Dict[str, List[metrics.Metric]]
+) -> str:
     # For compatibility with FxA codebase we don't want to add "Logger" suffix
     # when custom pings without event metrics are used.
+    event_metric_exists = "event" in metrics_by_type
     suffix = "Logger" if event_metric_exists else ""
     return util.Camelize(ping_name) + "ServerEvent" + suffix
 
@@ -61,10 +64,13 @@ def generate_js_metric_type(metric: metrics.Metric) -> str:
     return metric.type
 
 
-def generate_ping_factory_method(ping: str, event_metric_exists: bool) -> str:
+def generate_ping_factory_method(
+    ping: str, metrics_by_type: Dict[str, List[metrics.Metric]]
+) -> str:
     # `ServerEventLogger` better describes role of the class that this factory
     # method generates, but for compatibility with existing FxA codebase
     # we use `Event` suffix if no event metrics are defined.
+    event_metric_exists = "event" in metrics_by_type
     suffix = "ServerEventLogger" if event_metric_exists else "Event"
     return f"create{util.Camelize(ping)}{suffix}"
 
@@ -135,6 +141,12 @@ def output(
                     metrics_by_type = ping_to_metrics[ping]
                     metrics_list = metrics_by_type.setdefault(metric.type, [])
                     metrics_list.append(metric)
+
+    # Order pings_to_metrics for backwards compatibility with the existing FxA codebase.
+    # Put pings without `event` type metrics first.
+    ping_to_metrics = dict(
+        sorted(ping_to_metrics.items(), key=lambda item: "event" in item[1])
+    )
 
     PING_METRIC_ERROR_MSG = (
         " Server-side environment is simplified and this"

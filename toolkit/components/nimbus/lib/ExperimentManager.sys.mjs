@@ -207,7 +207,7 @@ export class _ExperimentManager {
         lazy.NimbusFeatures.nimbusTelemetry.getVariable(
           "gleanMetricConfiguration"
         ) ?? {};
-      Services.fog.setMetricsFeatureConfig(JSON.stringify(cfg));
+      Services.fog.applyServerKnobsConfig(JSON.stringify(cfg));
     });
   }
 

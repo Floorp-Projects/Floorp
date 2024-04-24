@@ -11,7 +11,7 @@ Jinja2 template is not. Please file bugs! #}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-{% macro obj_declaration(obj, suffix='', access='') %}
+{%- macro obj_declaration(obj, suffix='', access='') %}
 {{ access }}static let {{ obj.name|camelize|variable_name }}{{ suffix }} = {{ obj|type_name }}( // generated from {{ obj.identifier() }}
         CommonMetricData(
             {% for arg_name in common_metric_args if obj[arg_name] is defined %}
@@ -24,7 +24,7 @@ Jinja2 template is not. Please file bugs! #}
     )
 {% endmacro %}
 
-{% macro struct_decl(obj, name, suffix) %}
+{%- macro struct_decl(obj, name, suffix) %}
 struct {{ obj.name|Camelize }}{{ suffix }}: EventExtras {
         {% for item, typ in obj|attr(name) %}
         var {{ item|camelize|variable_name }}: {{typ|extra_type_name}}?
@@ -42,6 +42,46 @@ struct {{ obj.name|Camelize }}{{ suffix }}: EventExtras {
             return record
         }
     }
+{% endmacro %}
+
+{%- macro generate_structure(name, struct) %}
+{%- if struct.type == "array" -%}
+    typealias {{ name }} = [{{ name }}Item]
+
+    {{ generate_structure(name ~ "Item", struct["items"]) }}
+
+{%- elif struct.type == "object" -%}
+    struct {{ name }}: Codable, Equatable, ObjectSerialize {
+        {% for itemname, val in struct.properties.items() %}
+          {% if val.type == "object" %}
+          var {{itemname|camelize|variable_name}}: {{ name ~ "Item" ~ itemname|Camelize ~ "Object" }}?
+          {% elif val.type == "array" %}
+          var {{itemname|camelize|variable_name}}: {{ name ~ "Item" ~ itemname|Camelize }}
+          {% else %}
+          var {{itemname|camelize|variable_name}}: {{val.type|structure_type_name}}?
+          {% endif %}
+        {% endfor %}
+
+        func intoSerializedObject() -> String {
+            let jsonEncoder = JSONEncoder()
+            let jsonData = try! jsonEncoder.encode(self)
+            let json = String(data: jsonData, encoding: String.Encoding.utf8)!
+            return json
+        }
+    }
+
+    {% for itemname, val in struct.properties.items() %}
+        {% if val.type == "array" %}
+        {% set nested_name = name ~ "Item" ~ itemname|Camelize %}
+        {{ generate_structure(nested_name, val) }}
+        {% elif val.type == "object" %}
+        {% set nested_name = name ~ "Item" ~ itemname|Camelize ~ "Object" %}
+        {{ generate_structure(nested_name, val) }}
+        {% endif %}
+    {% endfor %}
+
+{%- endif -%}
+
 {% endmacro %}
 
 {% if not allow_reserved %}
@@ -97,6 +137,8 @@ extension {{ namespace }} {
             sendIfEmpty: {{obj.send_if_empty|swift}},
             preciseTimestamps: {{obj.precise_timestamps|swift}},
             includeInfoSections: {{obj.include_info_sections|swift}},
+            enabled: {{obj.enabled|swift}},
+            schedulesPings: {{obj.schedules_pings|swift}},
             reasonCodes: {{obj.reason_codes|swift}}
         )
 
@@ -106,6 +148,9 @@ extension {{ namespace }} {
     {% else %}
     enum {{ category.name|Camelize }} {
     {% for obj in category.objs.values() %}
+        {% if obj|attr("_generate_structure") %}
+        {{ generate_structure(obj.name|Camelize ~ "Object", obj._generate_structure) }}
+        {%- endif %}
         {% if obj|attr("_generate_enums") %}
         {% for name, suffix in obj["_generate_enums"] %}
         {% if obj|attr(name)|length %}

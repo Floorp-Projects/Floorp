@@ -19,7 +19,7 @@ datapath=$(mktemp -d "${tmp}/glean_long_running.XXXX")
 
 RUSTFLAGS="-C panic=abort" \
 RUST_LOG=debug \
-cargo run --example crashing-threads -- "$datapath"
+cargo run -p glean --example crashing-threads -- "$datapath"
 ret=$?
 count=$(ls -1q "$datapath/pending_pings" | wc -l)
 

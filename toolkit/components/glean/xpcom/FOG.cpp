@@ -312,14 +312,14 @@ FOG::TestGetExperimentData(const nsACString& aExperimentId, JSContext* aCx,
 }
 
 NS_IMETHODIMP
-FOG::SetMetricsFeatureConfig(const nsACString& aJsonConfig) {
+FOG::ApplyServerKnobsConfig(const nsACString& aJsonConfig) {
 #ifdef MOZ_GLEAN_ANDROID
   NS_WARNING(
       "Don't set metric feature configs from Gecko in Android. Ignoring.");
   return NS_OK;
 #else
   MOZ_ASSERT(XRE_IsParentProcess());
-  glean::impl::fog_set_metrics_feature_config(&aJsonConfig);
+  glean::impl::fog_apply_server_knobs_config(&aJsonConfig);
   return NS_OK;
 #endif
 }
@@ -408,17 +408,16 @@ FOG::TestRegisterRuntimeMetric(
 }
 
 NS_IMETHODIMP
-FOG::TestRegisterRuntimePing(const nsACString& aName,
-                             const bool aIncludeClientId,
-                             const bool aSendIfEmpty,
-                             const bool aPreciseTimestamps,
-                             const bool aIncludeInfoSections,
-                             const nsTArray<nsCString>& aReasonCodes,
-                             uint32_t* aPingIdOut) {
+FOG::TestRegisterRuntimePing(
+    const nsACString& aName, const bool aIncludeClientId,
+    const bool aSendIfEmpty, const bool aPreciseTimestamps,
+    const bool aIncludeInfoSections, const bool aEnabled,
+    const nsTArray<nsCString>& aSchedulesPings,
+    const nsTArray<nsCString>& aReasonCodes, uint32_t* aPingIdOut) {
   *aPingIdOut = 0;
   *aPingIdOut = glean::jog::jog_test_register_ping(
       &aName, aIncludeClientId, aSendIfEmpty, aPreciseTimestamps,
-      aIncludeInfoSections, &aReasonCodes);
+      aIncludeInfoSections, aEnabled, &aSchedulesPings, &aReasonCodes);
   return NS_OK;
 }
 

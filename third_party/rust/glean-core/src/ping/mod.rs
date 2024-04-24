@@ -32,6 +32,8 @@ pub struct Ping<'a> {
     pub headers: HeaderMap,
     /// Whether the content contains {client|ping}_info sections.
     pub includes_info_sections: bool,
+    /// Other pings that should be scheduled when this ping is sent.
+    pub schedules_pings: Vec<String>,
 }
 
 /// Collect a ping's data, assemble it into its full payload and store it on disk.
@@ -314,6 +316,7 @@ impl PingMaker {
             url_path,
             headers: self.get_headers(glean),
             includes_info_sections: ping.include_info_sections(),
+            schedules_pings: ping.schedules_pings().to_vec(),
         })
     }
 

@@ -289,7 +289,16 @@ add_task(async function test_jog_custom_pings() {
     `"ping"`,
     false
   );
-  Services.fog.testRegisterRuntimePing("jog-ping", true, true, true, true, []);
+  Services.fog.testRegisterRuntimePing(
+    "jog-ping",
+    true,
+    true,
+    true,
+    true,
+    true,
+    [],
+    []
+  );
   Assert.ok("jogPing" in GleanPings);
   let submitted = false;
   Glean.jogCat.jogPingBool.set(false);
@@ -639,9 +648,16 @@ add_task(function test_jog_dotted_categories_work() {
 
 add_task(async function test_jog_ping_works() {
   const kReason = "reason-1";
-  Services.fog.testRegisterRuntimePing("my-ping", true, true, true, true, [
-    kReason,
-  ]);
+  Services.fog.testRegisterRuntimePing(
+    "my-ping",
+    true,
+    true,
+    true,
+    true,
+    true,
+    [],
+    [kReason]
+  );
   let submitted = false;
   GleanPings.myPing.testBeforeNextSubmit(reason => {
     submitted = true;
@@ -653,9 +669,16 @@ add_task(async function test_jog_ping_works() {
 
 add_task(async function test_jog_noinfo_ping_works() {
   const kReason = "reason-1";
-  Services.fog.testRegisterRuntimePing("noinfo-ping", true, true, true, false, [
-    kReason,
-  ]);
+  Services.fog.testRegisterRuntimePing(
+    "noinfo-ping",
+    true,
+    true,
+    true,
+    false,
+    true,
+    [],
+    [kReason]
+  );
   let submitted = false;
   GleanPings.noinfoPing.testBeforeNextSubmit(reason => {
     submitted = true;

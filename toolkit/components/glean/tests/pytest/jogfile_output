@@ -313,6 +313,8 @@
       false,
       true,
       true,
+      true,
+      [],
       [
         "background",
         "dirty_startup",
@@ -325,6 +327,8 @@
       true,
       true,
       true,
+      true,
+      [],
       []
     ],
     [
@@ -333,6 +337,8 @@
       false,
       true,
       true,
+      true,
+      [],
       [
         "background",
         "max_capacity",
@@ -345,6 +351,8 @@
       false,
       true,
       true,
+      true,
+      [],
       [
         "overdue",
         "reschedule",
@@ -359,6 +367,8 @@
       true,
       true,
       false,
+      true,
+      [],
       []
     ]
   ]

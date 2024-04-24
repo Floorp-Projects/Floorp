@@ -21,25 +21,28 @@ pub struct InternalPings {
 impl InternalPings {
     pub fn new(enabled: bool) -> InternalPings {
         InternalPings {
-            baseline: PingType::new_internal(
+            baseline: PingType::new(
                 "baseline",
                 true,
                 true,
                 true,
                 true,
+                enabled,
+                vec![],
                 vec![
                     "active".to_string(),
                     "dirty_startup".to_string(),
                     "inactive".to_string(),
                 ],
-                enabled,
             ),
-            metrics: PingType::new_internal(
+            metrics: PingType::new(
                 "metrics",
                 true,
                 false,
                 true,
                 true,
+                enabled,
+                vec![],
                 vec![
                     "overdue".to_string(),
                     "reschedule".to_string(),
@@ -47,20 +50,20 @@ impl InternalPings {
                     "tomorrow".to_string(),
                     "upgrade".to_string(),
                 ],
-                enabled,
             ),
-            events: PingType::new_internal(
+            events: PingType::new(
                 "events",
                 true,
                 false,
                 true,
                 true,
+                enabled,
+                vec![],
                 vec![
                     "startup".to_string(),
                     "inactive".to_string(),
                     "max_capacity".to_string(),
                 ],
-                enabled,
             ),
             deletion_request: PingType::new(
                 "deletion-request",
@@ -68,6 +71,8 @@ impl InternalPings {
                 true,
                 true,
                 true,
+                true, // The deletion-request should not be disabled
+                vec![],
                 vec!["at_init".to_string(), "set_upload_enabled".to_string()],
             ),
         }

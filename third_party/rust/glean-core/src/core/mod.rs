@@ -16,7 +16,7 @@ use crate::event_database::EventDatabase;
 use crate::internal_metrics::{AdditionalMetrics, CoreMetrics, DatabaseMetrics};
 use crate::internal_pings::InternalPings;
 use crate::metrics::{
-    self, ExperimentMetric, Metric, MetricType, MetricsEnabledConfig, PingType, RecordedExperiment,
+    self, ExperimentMetric, Metric, MetricType, PingType, RecordedExperiment, RemoteSettingsConfig,
 };
 use crate::ping::PingMaker;
 use crate::storage::{StorageManager, INTERNAL_STORAGE};
@@ -123,7 +123,7 @@ where
 ///     enable_internal_pings: true,
 /// };
 /// let mut glean = Glean::new(cfg).unwrap();
-/// let ping = PingType::new("sample", true, false, true, true, vec![]);
+/// let ping = PingType::new("sample", true, false, true, true, true, vec![], vec![]);
 /// glean.register_ping_type(&ping);
 ///
 /// let call_counter: CounterMetric = CounterMetric::new(CommonMetricData {
@@ -162,7 +162,7 @@ pub struct Glean {
     pub(crate) app_build: String,
     pub(crate) schedule_metrics_pings: bool,
     pub(crate) remote_settings_epoch: AtomicU8,
-    pub(crate) remote_settings_metrics_config: Arc<Mutex<MetricsEnabledConfig>>,
+    pub(crate) remote_settings_config: Arc<Mutex<RemoteSettingsConfig>>,
     pub(crate) with_timestamps: bool,
 }
 
@@ -222,7 +222,7 @@ impl Glean {
             // Subprocess doesn't use "metrics" pings so has no need for a scheduler.
             schedule_metrics_pings: false,
             remote_settings_epoch: AtomicU8::new(0),
-            remote_settings_metrics_config: Arc::new(Mutex::new(MetricsEnabledConfig::new())),
+            remote_settings_config: Arc::new(Mutex::new(RemoteSettingsConfig::new())),
             with_timestamps: cfg.enable_event_timestamps,
         };
 
@@ -758,19 +758,26 @@ impl Glean {
             .get_value(self, None)
     }
 
-    /// Set configuration to override the default metric enabled/disabled state, typically from a
+    /// Set configuration to override the default state, typically initiated from a
     /// remote_settings experiment or rollout
     ///
     /// # Arguments
     ///
-    /// * `json` - The stringified JSON representation of a `MetricsEnabledConfig` object
-    pub fn set_metrics_enabled_config(&self, cfg: MetricsEnabledConfig) {
-        // Set the current MetricsEnabledConfig, keeping the lock until the epoch is
+    /// * `cfg` - The stringified JSON representation of a `RemoteSettingsConfig` object
+    pub fn apply_server_knobs_config(&self, cfg: RemoteSettingsConfig) {
+        // Set the current RemoteSettingsConfig, keeping the lock until the epoch is
         // updated to prevent against reading a "new" config but an "old" epoch
-        let mut metric_config = self.remote_settings_metrics_config.lock().unwrap();
+        let mut remote_settings_config = self.remote_settings_config.lock().unwrap();
 
-        // Merge the exising configuration with the supplied one
-        metric_config.metrics_enabled.extend(cfg.metrics_enabled);
+        // Merge the exising metrics configuration with the supplied one
+        remote_settings_config
+            .metrics_enabled
+            .extend(cfg.metrics_enabled);
+
+        // Merge the exising ping configuration with the supplied one
+        remote_settings_config
+            .pings_enabled
+            .extend(cfg.pings_enabled);
 
         // Update remote_settings epoch
         self.remote_settings_epoch.fetch_add(1, Ordering::SeqCst);

@@ -21,9 +21,11 @@ add_task(function test_fog_metrics_disabled_remotely() {
 
   // Create and set a feature configuration that disables the test metric.
   const feature_config = {
-    "test_only.cheesy_string": false,
+    metrics_enabled: {
+      "test_only.cheesy_string": false,
+    },
   };
-  Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
+  Services.fog.applyServerKnobsConfig(JSON.stringify(feature_config));
 
   // Attempt to set another cheesy string in the test metric. This should not
   // record because of the override to the metric's default value in the
@@ -49,10 +51,12 @@ add_task(function test_fog_multiple_metrics_disabled_remotely() {
   // Create and set a feature configuration that disables multiple test
   // metrics.
   var feature_config = {
-    "test_only.cheesy_string": false,
-    "test_only.meaning_of_life": false,
+    metrics_enabled: {
+      "test_only.cheesy_string": false,
+      "test_only.meaning_of_life": false,
+    },
   };
-  Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
+  Services.fog.applyServerKnobsConfig(JSON.stringify(feature_config));
 
   // Attempt to set the metrics again. This should not record because of the
   // override to the metrics' default value in the feature configuration.
@@ -65,10 +69,12 @@ add_task(function test_fog_multiple_metrics_disabled_remotely() {
 
   // Change the feature configuration to re-enable the `cheesy_string` metric.
   feature_config = {
-    "test_only.cheesy_string": true,
-    "test_only.meaning_of_life": false,
+    metrics_enabled: {
+      "test_only.cheesy_string": true,
+      "test_only.meaning_of_life": false,
+    },
   };
-  Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
+  Services.fog.applyServerKnobsConfig(JSON.stringify(feature_config));
 
   // Attempt to set the metrics again. This should only record `cheesy_string`
   // because of the most recent feature configuration.
@@ -101,9 +107,11 @@ add_task(function test_fog_metrics_feature_config_api_handles_null_values() {
 
   // Create and set a feature configuration that disables the test metric.
   const feature_config = {
-    "test_only.cheesy_string": false,
+    metrics_enabled: {
+      "test_only.cheesy_string": false,
+    },
   };
-  Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
+  Services.fog.applyServerKnobsConfig(JSON.stringify(feature_config));
 
   // Attempt to set another cheesy string in the test metric. This should not
   // record because of the override to the metric's default value in the
@@ -113,7 +121,7 @@ add_task(function test_fog_metrics_feature_config_api_handles_null_values() {
   Assert.equal(str1, Glean.testOnly.cheesyString.testGetValue("test-ping"));
 
   // Set the configuration to `null`.
-  Services.fog.setMetricsFeatureConfig(null);
+  Services.fog.applyServerKnobsConfig(null);
 
   // Attempt to set another cheesy string in the test metric. This should now
   // record because `null` doesn't change already existing configuration.
@@ -122,7 +130,7 @@ add_task(function test_fog_metrics_feature_config_api_handles_null_values() {
 
   // Set the configuration to `""` to replicate getting an empty string from
   // Nimbus.
-  Services.fog.setMetricsFeatureConfig("");
+  Services.fog.applyServerKnobsConfig("");
 
   // Attempt to set another cheesy string in the test metric. This should now
   // record again because `""` doesn't change already existing configuration.
@@ -140,9 +148,11 @@ add_task(function test_fog_metrics_disabled_reset_fog_behavior() {
 
   // Create and set a feature configuration that disables the test metric.
   const feature_config = {
-    "test_only.cheesy_string": false,
+    metrics_enabled: {
+      "test_only.cheesy_string": false,
+    },
   };
-  Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
+  Services.fog.applyServerKnobsConfig(JSON.stringify(feature_config));
 
   // Attempt to set another cheesy string in the test metric. This should not
   // record because of the override to the metric's default value in the

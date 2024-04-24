@@ -29,13 +29,12 @@ struct InnerPing {
     pub precise_timestamps: bool,
     /// Whether to include the {client|ping}_info sections on assembly.
     pub include_info_sections: bool,
+    /// Whether this ping is enabled.
+    pub enabled: bool,
+    /// Other pings that should be scheduled when this ping is sent.
+    pub schedules_pings: Vec<String>,
     /// The "reason" codes that this ping can send
     pub reason_codes: Vec<String>,
-
-    /// Whether this ping is enabled.
-    /// Note: Data for disabled pings is still recorded.
-    /// It will not be cleared out on submit.
-    enabled: bool,
 }
 
 impl fmt::Debug for PingType {
@@ -46,6 +45,8 @@ impl fmt::Debug for PingType {
             .field("send_if_empty", &self.0.send_if_empty)
             .field("precise_timestamps", &self.0.precise_timestamps)
             .field("include_info_sections", &self.0.include_info_sections)
+            .field("enabled", &self.0.enabled)
+            .field("schedules_pings", &self.0.schedules_pings)
             .field("reason_codes", &self.0.reason_codes)
             .finish()
     }
@@ -64,13 +65,20 @@ impl PingType {
     /// * `name` - The name of the ping.
     /// * `include_client_id` - Whether to include the client ID in the assembled ping when submitting.
     /// * `send_if_empty` - Whether the ping should be sent empty or not.
+    /// * `precise_timestamps` - Whether the ping should use precise timestamps for the start and end time.
+    /// * `include_info_sections` - Whether the ping should include the client/ping_info sections.
+    /// * `enabled` - Whether or not this ping is enabled. Note: Data that would be sent on a disabled
+    ///   ping will still be collected but is discarded rather than being submitted.
     /// * `reason_codes` - The valid reason codes for this ping.
+    #[allow(clippy::too_many_arguments)]
     pub fn new<A: Into<String>>(
         name: A,
         include_client_id: bool,
         send_if_empty: bool,
         precise_timestamps: bool,
         include_info_sections: bool,
+        enabled: bool,
+        schedules_pings: Vec<String>,
         reason_codes: Vec<String>,
     ) -> Self {
         Self::new_internal(
@@ -79,19 +87,22 @@ impl PingType {
             send_if_empty,
             precise_timestamps,
             include_info_sections,
+            enabled,
+            schedules_pings,
             reason_codes,
-            true,
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new_internal<A: Into<String>>(
         name: A,
         include_client_id: bool,
         send_if_empty: bool,
         precise_timestamps: bool,
         include_info_sections: bool,
-        reason_codes: Vec<String>,
         enabled: bool,
+        schedules_pings: Vec<String>,
+        reason_codes: Vec<String>,
     ) -> Self {
         let this = Self(Arc::new(InnerPing {
             name: name.into(),
@@ -99,8 +110,9 @@ impl PingType {
             send_if_empty,
             precise_timestamps,
             include_info_sections,
-            reason_codes,
             enabled,
+            schedules_pings,
+            reason_codes,
         }));
 
         // Register this ping.
@@ -128,6 +140,22 @@ impl PingType {
 
     pub(crate) fn include_info_sections(&self) -> bool {
         self.0.include_info_sections
+    }
+
+    pub(crate) fn enabled(&self, glean: &Glean) -> bool {
+        let remote_settings_config = &glean.remote_settings_config.lock().unwrap();
+
+        if !remote_settings_config.pings_enabled.is_empty() {
+            if let Some(remote_enabled) = remote_settings_config.pings_enabled.get(self.name()) {
+                return *remote_enabled;
+            }
+        }
+
+        self.0.enabled
+    }
+
+    pub(crate) fn schedules_pings(&self) -> &[String] {
+        &self.0.schedules_pings
     }
 
     /// Submits the ping for eventual uploading.
@@ -166,11 +194,6 @@ impl PingType {
     /// Whether the ping was succesfully assembled and queued.
     #[doc(hidden)]
     pub fn submit_sync(&self, glean: &Glean, reason: Option<&str>) -> bool {
-        if !self.0.enabled {
-            log::info!("Ping disabled: not submitting '{}' ping.", self.0.name);
-            return false;
-        }
-
         if !glean.is_upload_enabled() {
             log::info!("Glean disabled: not submitting any pings.");
             return false;
@@ -208,6 +231,15 @@ impl PingType {
                 false
             }
             Some(ping) => {
+                if !self.enabled(glean) {
+                    log::info!(
+                        "The ping '{}' is disabled and will be discarded and not submitted",
+                        ping.name
+                    );
+
+                    return false;
+                }
+
                 // This metric is recorded *after* the ping is collected (since
                 // that is the only way to know *if* it will be submitted). The
                 // implication of this is that the count for a metrics ping will
@@ -219,7 +251,10 @@ impl PingType {
                     .add_sync(glean, 1);
 
                 if let Err(e) = ping_maker.store_ping(glean.get_data_path(), &ping) {
-                    log::warn!("IO error while writing ping to file: {}. Enqueuing upload of what we have in memory.", e);
+                    log::warn!(
+                        "IO error while writing ping to file: {}. Enqueuing upload of what we have in memory.",
+                        e
+                    );
                     glean.additional_metrics.io_errors.add_sync(glean, 1);
                     // `serde_json::to_string` only fails if serialization of the content
                     // fails or it contains maps with non-string keys.
@@ -247,6 +282,17 @@ impl PingType {
                     "The ping '{}' was submitted and will be sent as soon as possible",
                     ping.name
                 );
+
+                if !ping.schedules_pings.is_empty() {
+                    log::info!(
+                        "The ping '{}' is being used to schedule other pings: {:?}",
+                        ping.name,
+                        ping.schedules_pings
+                    );
+                    for scheduled_ping_name in &ping.schedules_pings {
+                        glean.submit_ping_by_name(scheduled_ping_name, reason);
+                    }
+                }
 
                 true
             }

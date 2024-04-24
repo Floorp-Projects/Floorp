@@ -116,8 +116,8 @@ object Glean {
      *
      * @param enabled Map of metrics' enabled state.
      */
-    fun setMetricsEnabledConfig(enabled: Map<String, Boolean>) {
-        GleanCore.setMetricsEnabledConfig(JSONObject(enabled).toString())
+    fun applyServerKnobsConfig(enabled: Map<String, Boolean>) {
+        GleanCore.applyServerKnobsConfig(JSONObject(enabled).toString())
     }
 
     /**

@@ -2937,7 +2937,7 @@ BrowserGlue.prototype = {
             let cfg = lazy.NimbusFeatures.gleanInternalSdk.getVariable(
               "gleanMetricConfiguration"
             );
-            Services.fog.setMetricsFeatureConfig(JSON.stringify(cfg));
+            Services.fog.applyServerKnobsConfig(JSON.stringify(cfg));
           });
 
           // Register Glean to listen for experiment updates releated to the
@@ -2946,7 +2946,7 @@ BrowserGlue.prototype = {
             let cfg = lazy.NimbusFeatures.glean.getVariable(
               "gleanMetricConfiguration"
             );
-            Services.fog.setMetricsFeatureConfig(JSON.stringify(cfg));
+            Services.fog.applyServerKnobsConfig(JSON.stringify(cfg));
           });
         },
       },

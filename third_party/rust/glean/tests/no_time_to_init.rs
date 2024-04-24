@@ -40,8 +40,9 @@ mod pings {
     use once_cell::sync::Lazy;
 
     #[allow(non_upper_case_globals)]
-    pub static validation: Lazy<PingType> =
-        Lazy::new(|| glean::private::PingType::new("validation", true, true, true, true, vec![]));
+    pub static validation: Lazy<PingType> = Lazy::new(|| {
+        glean::private::PingType::new("validation", true, true, true, true, true, vec![], vec![])
+    });
 }
 
 /// Test scenario: Glean initialization fails.

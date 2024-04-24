@@ -167,6 +167,8 @@ fn test_sending_of_event_ping_when_it_fills_up() {
             false,
             true,
             true,
+            true,
+            vec![],
             vec!["max_capacity".to_string()],
         ));
     }
@@ -452,6 +454,8 @@ fn event_storage_trimming() {
             false,
             true,
             true,
+            true,
+            vec![],
             vec![],
         ));
 

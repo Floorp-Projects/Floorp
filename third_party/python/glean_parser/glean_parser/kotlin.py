@@ -107,6 +107,11 @@ def type_name(obj: Union[metrics.Metric, pings.Ping]) -> str:
 
         return "{}<{}>".format(class_name(obj.type), generic)
 
+    generate_structure = getattr(obj, "_generate_structure", [])
+    if len(generate_structure):
+        generic = util.Camelize(obj.name) + "Object"
+        return "{}<{}>".format(class_name(obj.type), generic)
+
     return class_name(obj.type)
 
 
@@ -120,6 +125,21 @@ def extra_type_name(typ: str) -> str:
     elif typ == "string":
         return "String"
     elif typ == "quantity":
+        return "Int"
+    else:
+        return "UNSUPPORTED"
+
+
+def structure_type_name(typ: str) -> str:
+    """
+    Returns the corresponding Kotlin type for structure items.
+    """
+
+    if typ == "boolean":
+        return "Boolean"
+    elif typ == "string":
+        return "String"
+    elif typ == "number":
         return "Int"
     else:
         return "UNSUPPORTED"
@@ -320,6 +340,7 @@ def output_kotlin(
             ("type_name", type_name),
             ("extra_type_name", extra_type_name),
             ("class_name", class_name),
+            ("structure_type_name", structure_type_name),
         ),
     )
 
@@ -332,6 +353,9 @@ def output_kotlin(
         )
         has_labeled_metrics = any(
             getattr(metric, "labeled", False) for metric in category_val.values()
+        )
+        has_object_metrics = any(
+            isinstance(metric, metrics.Object) for metric in category_val.values()
         )
 
         with filepath.open("w", encoding="utf-8") as fd:
@@ -346,6 +370,7 @@ def output_kotlin(
                     ping_args=util.ping_args,
                     namespace=namespace,
                     has_labeled_metrics=has_labeled_metrics,
+                    has_object_metrics=has_object_metrics,
                     glean_namespace=glean_namespace,
                 )
             )
