@@ -43,7 +43,7 @@ user_pref("gfx.logging.level", 1);
 user_pref("image.downscale-during-decode.enabled", false);
 // We do the capturing the reftest results with sync decoding
 // so we want to be consistent.
-user_pref("image.decode-sync.enabled", true);
+user_pref("image.testing.decode-sync.enabled", true);
 // Disable interruptible reflow since (1) it's normally not going to
 // happen, but (2) it might happen if we somehow end up with both
 // pending user events and clock skew.  So to avoid having to change
