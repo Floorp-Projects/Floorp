@@ -57,6 +57,14 @@ nsOpenWindowInfo::BrowsingContextReadyCallback() {
   return mBrowsingContextReadyCallback;
 }
 
+NS_IMETHODIMP nsOpenWindowInfo::Cancel() {
+  if (mBrowsingContextReadyCallback) {
+    mBrowsingContextReadyCallback->BrowsingContextReady(nullptr);
+    mBrowsingContextReadyCallback = nullptr;
+  }
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(nsBrowsingContextReadyCallback,
                   nsIBrowsingContextReadyCallback)
 

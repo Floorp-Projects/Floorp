@@ -74,4 +74,10 @@ interface nsIOpenWindowInfo : nsISupports {
   /* Callback to invoke when the browsing context for a new window is ready. */
   [notxpcom, nostdcall]
   nsIBrowsingContextReadyCallback browsingContextReadyCallback();
+
+  /**
+   * When creating a window fails, we will be called to notify an error via
+   * callback. If no callback, do nothing.
+   */
+  void cancel();
 };
