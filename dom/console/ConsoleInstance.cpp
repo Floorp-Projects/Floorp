@@ -65,9 +65,24 @@ ConsoleInstance::ConsoleInstance(JSContext* aCx,
 
   if (!aOptions.mMaxLogLevelPref.IsEmpty()) {
     if (!NS_IsMainThread()) {
-      NS_WARNING("Console.maxLogLevelPref is not supported on workers!");
       // Set the log level based on what we have.
       SetLogLevel();
+
+      // Flag an error to the console.
+      JS::Rooted<JS::Value> msg(aCx);
+      if (!ToJSValue(
+              aCx,
+              nsLiteralCString(
+                  "Console.maxLogLevelPref is not supported within workers!"),
+              &msg)) {
+        JS_ClearPendingException(aCx);
+        return;
+      }
+
+      AutoTArray<JS::Value, 1> sequence;
+      SequenceRooter rootedSequence(aCx, &sequence);
+      sequence.AppendElement(std::move(msg));
+      this->Error(aCx, std::move(sequence));
       return;
     }
 
@@ -80,8 +95,9 @@ ConsoleInstance::ConsoleInstance(JSContext* aCx,
 }
 
 ConsoleInstance::~ConsoleInstance() {
-  AssertIsOnMainThread();
-  if (!mMaxLogLevelPref.IsEmpty()) {
+  // We should only ever have set `mMaxLogLevelPref` when on the main thread,
+  // but check it here to be safe.
+  if (!mMaxLogLevelPref.IsEmpty() && NS_IsMainThread()) {
     Preferences::UnregisterCallback(MaxLogLevelPrefChangedCallback,
                                     mMaxLogLevelPref, this);
   }
@@ -128,7 +144,6 @@ void ConsoleInstance::SetLogLevel() {
 // static
 void ConsoleInstance::MaxLogLevelPrefChangedCallback(
     const char* /* aPrefName */, void* aSelf) {
-  AssertIsOnMainThread();
   auto* instance = static_cast<ConsoleInstance*>(aSelf);
   if (MOZ_UNLIKELY(!instance->mConsole)) {
     // We've been unlinked already but not destroyed yet. Bail.

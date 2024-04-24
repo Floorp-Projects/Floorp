@@ -76,6 +76,9 @@ lazy.logConsole.error("Something bad happened");
 lazy.logConsole.debug("foo", 123)
 ```
 
+**Note:** Workers are not able to access preferences, and therefore must use
+`maxLogLevel` rather than `maxLogLevelPref`.
+
 ### Other Options to console.createInstance
 
 `console.createInstance` may be passed other options. See
