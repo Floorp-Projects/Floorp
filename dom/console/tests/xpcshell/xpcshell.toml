@@ -11,3 +11,9 @@ support-files = ""
 ["test_formatting.js"]
 
 ["test_reportForServiceWorkerScope.js"]
+
+["test_worker.js"]
+skip-if = ["os == 'android'"] # Uses ChromeWorker.
+support-files = [
+  "worker.mjs",
+]

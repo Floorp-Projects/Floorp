@@ -16,6 +16,7 @@ class ConsoleInstance final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ConsoleInstance)
 
+  MOZ_CAN_RUN_SCRIPT
   explicit ConsoleInstance(JSContext* aCx,
                            const ConsoleInstanceOptions& aOptions);
 
