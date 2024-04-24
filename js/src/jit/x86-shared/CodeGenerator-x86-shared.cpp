@@ -408,6 +408,8 @@ void CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(
     case Scalar::BigInt64:
     case Scalar::BigUint64:
     case Scalar::Simd128:
+    // TODO: See Bug 1835034 for JIT support for Float16Array
+    case Scalar::Float16:
     case Scalar::MaxTypedArrayViewType:
       MOZ_CRASH("unexpected array type");
     case Scalar::Float32:
