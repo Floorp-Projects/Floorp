@@ -181,7 +181,7 @@ enum class ReviewQualityCheckInfoType {
         get() = when (this) {
             Warning -> FirefoxTheme.colors.actionWarning
             Confirmation -> FirefoxTheme.colors.actionSuccess
-            Error -> FirefoxTheme.colors.actionError
+            Error -> FirefoxTheme.colors.actionCritical
             Info -> FirefoxTheme.colors.actionInfo
             AnalysisUpdate -> FirefoxTheme.colors.actionSecondary
         }
