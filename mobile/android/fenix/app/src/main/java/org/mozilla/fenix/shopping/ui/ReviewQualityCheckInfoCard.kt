@@ -170,7 +170,7 @@ enum class ReviewQualityCheckInfoType {
         @Composable
         get() = when (this) {
             Warning -> FirefoxTheme.colors.layerWarning
-            Confirmation -> FirefoxTheme.colors.layerConfirmation
+            Confirmation -> FirefoxTheme.colors.layerSuccess
             Error -> FirefoxTheme.colors.layerError
             Info -> FirefoxTheme.colors.layerInfo
             AnalysisUpdate -> Color.Transparent

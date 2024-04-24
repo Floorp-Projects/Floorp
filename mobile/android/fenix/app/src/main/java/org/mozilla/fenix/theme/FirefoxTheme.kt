@@ -102,7 +102,7 @@ private val darkColorPalette = FirefoxColors(
     layerGradientStart = PhotonColors.Violet70,
     layerGradientEnd = PhotonColors.Violet40,
     layerWarning = PhotonColors.Yellow70A77,
-    layerConfirmation = PhotonColors.Green80,
+    layerSuccess = PhotonColors.Green80,
     layerError = PhotonColors.Pink80,
     layerInfo = PhotonColors.Blue50,
     layerSearch = PhotonColors.DarkGrey80,
@@ -182,7 +182,7 @@ private val lightColorPalette = FirefoxColors(
     layerGradientStart = PhotonColors.Violet70,
     layerGradientEnd = PhotonColors.Violet40,
     layerWarning = PhotonColors.Yellow20,
-    layerConfirmation = PhotonColors.Green20,
+    layerSuccess = PhotonColors.Green20,
     layerError = PhotonColors.Red10,
     layerInfo = PhotonColors.Blue50A44,
     layerSearch = PhotonColors.LightGrey30,
@@ -276,7 +276,7 @@ class FirefoxColors(
     layerGradientStart: Color,
     layerGradientEnd: Color,
     layerWarning: Color,
-    layerConfirmation: Color,
+    layerSuccess: Color,
     layerError: Color,
     layerInfo: Color,
     layerSearch: Color,
@@ -395,7 +395,7 @@ class FirefoxColors(
         private set
 
     // Confirmation background
-    var layerConfirmation by mutableStateOf(layerConfirmation)
+    var layerSuccess by mutableStateOf(layerSuccess)
         private set
 
     // Error Background
@@ -663,7 +663,7 @@ class FirefoxColors(
         layerGradientStart = other.layerGradientStart
         layerGradientEnd = other.layerGradientEnd
         layerWarning = other.layerWarning
-        layerConfirmation = other.layerConfirmation
+        layerSuccess = other.layerSuccess
         layerError = other.layerError
         layerInfo = other.layerInfo
         layerSearch = other.layerSearch
@@ -747,7 +747,7 @@ class FirefoxColors(
         layerGradientStart: Color = this.layerGradientStart,
         layerGradientEnd: Color = this.layerGradientEnd,
         layerWarning: Color = this.layerWarning,
-        layerConfirmation: Color = this.layerConfirmation,
+        layerSuccess: Color = this.layerSuccess,
         layerError: Color = this.layerError,
         layerInfo: Color = this.layerInfo,
         layerSearch: Color = this.layerSearch,
@@ -825,7 +825,7 @@ class FirefoxColors(
         layerGradientStart = layerGradientStart,
         layerGradientEnd = layerGradientEnd,
         layerWarning = layerWarning,
-        layerConfirmation = layerConfirmation,
+        layerSuccess = layerSuccess,
         layerError = layerError,
         layerInfo = layerInfo,
         layerSearch = layerSearch,
