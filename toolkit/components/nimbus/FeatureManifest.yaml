@@ -1434,33 +1434,6 @@ gleanInternalSdk:
         branch: user
         pref: telemetry.glean.internal.maxPingsPerMinute
 
-majorRelease2022:
-  description: Major Release 2022
-  owner: firefoxview@mozilla.com
-  hasExposure: false
-  isEarlyStartup: true
-  variables:
-    feltPrivacyPBMDarkTheme:
-      type: boolean
-      fallbackPref: "browser.theme.dark-private-windows"
-      description: "Use dark theme variant for PBM windows. This is only supported if the theme sets darkTheme data."
-    feltPrivacyShowPreferencesSection:
-      type: boolean
-      fallbackPref: "browser.privacySegmentation.preferences.show"
-      description: "Controls visibility of the privacy segmentation preferences section."
-    feltPrivacyWindowSeparation:
-      type: boolean
-      fallbackPref: "browser.privateWindowSeparation.enabled"
-      description: "Whether or not private browsing windows use a separate icon in the Windows taskbar"
-    colorwayCloset:
-      type: boolean
-      fallbackPref: "browser.theme.colorway-closet"
-      description: "Whether or not to show the colorway closet modal"
-    onboarding:
-      type: boolean
-      fallbackPref: "browser.majorrelease.onboarding"
-      description: "Whether or not to use the MR2022 onboarding settings."
-
 browserLowMemoryPrefs:
   description: Prefs which control the browser's behaviour under low memory.
   owner: haftandilian@mozilla.com
