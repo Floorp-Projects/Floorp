@@ -138,12 +138,23 @@ class IPCFuzzController {
   // If set, `lastActorPortName` is valid and fuzzing is pinned to this port.
   Atomic<bool> useLastPortName;
 
-  // Last port where a new actor appeared. Only valid with `useLastPortName`.
+  // If set, `lastActorPortName` is valid and fuzzing is forever pinned to this
+  // port.
+  Atomic<bool> useLastPortNameAlways;
+
+  // If set, the toplevel actor will be from fuzzing.
+  Atomic<bool> protoFilterTargetExcludeToplevel;
+
+  // Last port where a new actor appeared. Only valid with
+  // `useLastPortName`.
   mojo::core::ports::PortName lastActorPortName;
 
   // Counter to indicate how long fuzzing should stay pinned to the last
   // actor that appeared on `lastActorPortName`.
   Atomic<uint32_t> useLastActor;
+
+  // If this is non-zero, we want a specific actor ID instead of the last.
+  Atomic<int32_t> maybeLastActorId;
 
   // This is the deterministic ordering of toplevel actors for fuzzing.
   // In this matrix, each row (toplevel index) corresponds to one toplevel
