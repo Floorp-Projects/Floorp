@@ -40,7 +40,7 @@
     <!-- Primary button in a disabled state-->
     <color name="fx_mobile_action_color_primary_disabled" tools:ignore="UnusedResources">@color/photonViolet60A50</color>
     <!-- Secondary button -->
-    <color name="fx_mobile_action_color_secondary">@color/photonLightGrey30</color>
+    <color name="fx_mobile_action_color_secondary">@color/photonDarkGrey05</color>
     <!-- Filter -->
     <color name="fx_mobile_action_color_tertiary" tools:ignore="UnusedResources">@color/photonDarkGrey10</color>
     <!-- Chip -->
