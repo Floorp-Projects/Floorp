@@ -68,6 +68,8 @@ skip-if = ["apple_catalina && debug"] # Bug 1773790
 ["browser_UrlbarInput_trimURLs.js"]
 https_first_disabled = true
 
+["browser_UrlbarInput_untrimOnUserInteraction.js"]
+
 ["browser_aboutHomeLoading.js"]
 skip-if = [
   "tsan", # Intermittently times out, see 1622698 (frequent on TSan).

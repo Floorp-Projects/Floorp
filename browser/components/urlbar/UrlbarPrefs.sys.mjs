@@ -463,6 +463,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The index where we show unit conversion results.
   ["unitConversion.suggestedIndex", 1],
 
+  // Untrim url, when urlbar is focused.
+  // Note: This pref will be removed once the feature is stable.
+  ["untrimOnUserInteraction.featureGate", false],
+
   // Controls the empty search behavior in Search Mode:
   //  0 - Show nothing
   //  1 - Show search history

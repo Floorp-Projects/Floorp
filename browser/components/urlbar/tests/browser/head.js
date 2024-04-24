@@ -161,7 +161,7 @@ async function search({
   // Set the input value and move the caret to the end to simulate the user
   // typing. It's important the caret is at the end because otherwise autofill
   // won't happen.
-  gURLBar.value = searchString;
+  gURLBar._setValue(searchString, { allowTrim: false });
   gURLBar.inputField.setSelectionRange(
     searchString.length,
     searchString.length
@@ -173,28 +173,21 @@ async function search({
   // autofill before the search completes.
   UrlbarTestUtils.fireInputEvent(window);
 
-  // Subtract the protocol length, when the searchString contains the https://
-  // protocol and trimHttps is enabled.
-  let trimmedProtocolWSlashes = UrlbarTestUtils.getTrimmedProtocolWithSlashes();
-  let selectionOffset = searchString.includes(trimmedProtocolWSlashes)
-    ? trimmedProtocolWSlashes.length
-    : 0;
-
   // Check the input value and selection immediately, before waiting on the
   // search to complete.
   Assert.equal(
     gURLBar.value,
-    UrlbarTestUtils.trimURL(valueBefore),
+    valueBefore,
     "gURLBar.value before the search completes"
   );
   Assert.equal(
     gURLBar.selectionStart,
-    searchString.length - selectionOffset,
+    searchString.length,
     "gURLBar.selectionStart before the search completes"
   );
   Assert.equal(
     gURLBar.selectionEnd,
-    valueBefore.length - selectionOffset,
+    valueBefore.length,
     "gURLBar.selectionEnd before the search completes"
   );
 
@@ -205,17 +198,17 @@ async function search({
   // Check the final value after the results arrived.
   Assert.equal(
     gURLBar.value,
-    UrlbarTestUtils.trimURL(valueAfter),
+    valueAfter,
     "gURLBar.value after the search completes"
   );
   Assert.equal(
     gURLBar.selectionStart,
-    searchString.length - selectionOffset,
+    searchString.length,
     "gURLBar.selectionStart after the search completes"
   );
   Assert.equal(
     gURLBar.selectionEnd,
-    valueAfter.length - selectionOffset,
+    valueAfter.length,
     "gURLBar.selectionEnd after the search completes"
   );
 
@@ -227,7 +220,7 @@ async function search({
     );
     Assert.strictEqual(
       gURLBar._autofillPlaceholder.value,
-      UrlbarTestUtils.trimURL(placeholderAfter),
+      placeholderAfter,
       "gURLBar._autofillPlaceholder.value after the search completes"
     );
   } else {
@@ -245,4 +238,52 @@ async function search({
     !!placeholderAfter,
     "First result is an autofill result iff a placeholder is expected"
   );
+}
+
+function selectWithMouseDrag(fromX, toX, win = window) {
+  let target = win.gURLBar.inputField;
+  let rect = target.getBoundingClientRect();
+  let promise = BrowserTestUtils.waitForEvent(target, "mouseup");
+  EventUtils.synthesizeMouse(
+    target,
+    fromX,
+    rect.height / 2,
+    { type: "mousemove" },
+    target.ownerGlobal
+  );
+  EventUtils.synthesizeMouse(
+    target,
+    fromX,
+    rect.height / 2,
+    { type: "mousedown" },
+    target.ownerGlobal
+  );
+  EventUtils.synthesizeMouse(
+    target,
+    toX,
+    rect.height / 2,
+    { type: "mousemove" },
+    target.ownerGlobal
+  );
+  EventUtils.synthesizeMouse(
+    target,
+    toX,
+    rect.height / 2,
+    { type: "mouseup" },
+    target.ownerGlobal
+  );
+  return promise;
+}
+
+function selectWithDoubleClick(offsetX, win = window) {
+  let target = win.gURLBar.inputField;
+  let rect = target.getBoundingClientRect();
+  let promise = BrowserTestUtils.waitForEvent(target, "dblclick");
+  EventUtils.synthesizeMouse(target, offsetX, rect.height / 2, {
+    clickCount: 1,
+  });
+  EventUtils.synthesizeMouse(target, offsetX, rect.height / 2, {
+    clickCount: 2,
+  });
+  return promise;
 }

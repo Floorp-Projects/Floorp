@@ -146,12 +146,14 @@ export class UrlbarValueFormatter {
     // we can skip most of this.
     if (
       browser._urlMetaData &&
-      browser._urlMetaData.inputValue == this.urlbarInput.untrimmedValue
+      browser._urlMetaData.inputValue == inputValue &&
+      browser._urlMetaData.untrimmedValue == this.urlbarInput.untrimmedValue
     ) {
       return browser._urlMetaData.data;
     }
     browser._urlMetaData = {
-      inputValue: this.urlbarInput.untrimmedValue,
+      inputValue,
+      untrimmedValue: this.urlbarInput.untrimmedValue,
       data: null,
     };
 

@@ -1162,6 +1162,11 @@
         return;
       }
 
+      let oldBrowser = this.selectedBrowser;
+      // Once the async switcher starts, it's unpredictable when it will touch
+      // the address bar, thus we store its state immediately.
+      gURLBar?.saveSelectionStateForBrowser(oldBrowser);
+
       let newTab = this.getTabForBrowser(newBrowser);
 
       if (!aForceUpdate) {
@@ -1191,18 +1196,11 @@
       }
       this._lastRelatedTabMap = new WeakMap();
 
-      let oldBrowser = this.selectedBrowser;
-
       if (!gMultiProcessBrowser) {
         oldBrowser.removeAttribute("primary");
         oldBrowser.docShellIsActive = false;
         newBrowser.setAttribute("primary", "true");
         newBrowser.docShellIsActive = !document.hidden;
-      }
-
-      if (gURLBar) {
-        oldBrowser._urlbarSelectionStart = gURLBar.selectionStart;
-        oldBrowser._urlbarSelectionEnd = gURLBar.selectionEnd;
       }
 
       this._selectedBrowser = newBrowser;
@@ -1499,19 +1497,12 @@
                 if (currentActiveElement != document.activeElement) {
                   return;
                 }
-
-                gURLBar.setSelectionRange(
-                  newBrowser._urlbarSelectionStart,
-                  newBrowser._urlbarSelectionEnd
-                );
+                gURLBar.restoreSelectionStateForBrowser(newBrowser);
               },
               { once: true }
             );
           } else {
-            gURLBar.setSelectionRange(
-              newBrowser._urlbarSelectionStart,
-              newBrowser._urlbarSelectionEnd
-            );
+            gURLBar.restoreSelectionStateForBrowser(newBrowser);
           }
         };
 
