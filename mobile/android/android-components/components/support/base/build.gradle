@@ -74,6 +74,7 @@ android {
 
 dependencies {
     implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.androidx_lifecycle_viewmodel
 
     api project(":concept-base")

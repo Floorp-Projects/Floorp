@@ -28,6 +28,7 @@ dependencies {
     implementation ComponentsDependencies.kotlin_coroutines
 
     implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_core_ktx
 
     implementation project(':support-ktx')
     implementation project(':support-base')

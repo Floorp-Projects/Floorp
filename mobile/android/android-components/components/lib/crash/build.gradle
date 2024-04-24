@@ -69,6 +69,7 @@ dependencies {
 
     implementation ComponentsDependencies.androidx_appcompat
     implementation ComponentsDependencies.androidx_constraintlayout
+    implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.androidx_recyclerview
 
     implementation project(':support-base')
