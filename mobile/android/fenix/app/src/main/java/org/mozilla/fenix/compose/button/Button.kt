@@ -246,7 +246,7 @@ fun DestructiveButton(
         enabled = enabled,
         icon = icon,
         iconModifier = iconModifier,
-        tint = FirefoxTheme.colors.iconWarningButton,
+        tint = FirefoxTheme.colors.iconCriticalButton,
         onClick = onClick,
     )
 }
