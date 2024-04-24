@@ -254,10 +254,10 @@ private fun TabCreationTool(
                 textColor = FirefoxTheme.colors.textPrimary,
                 backgroundColor = Color.Transparent,
                 cursorColor = FirefoxTheme.colors.borderFormDefault,
-                errorCursorColor = FirefoxTheme.colors.borderWarning,
+                errorCursorColor = FirefoxTheme.colors.borderCritical,
                 focusedIndicatorColor = FirefoxTheme.colors.borderPrimary,
                 unfocusedIndicatorColor = FirefoxTheme.colors.borderPrimary,
-                errorIndicatorColor = FirefoxTheme.colors.borderWarning,
+                errorIndicatorColor = FirefoxTheme.colors.borderCritical,
             ),
         )
 
