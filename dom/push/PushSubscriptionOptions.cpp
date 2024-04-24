@@ -10,6 +10,7 @@
 #include "mozilla/dom/PushSubscriptionOptionsBinding.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/PushUtil.h"
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 
@@ -50,10 +51,13 @@ JSObject* PushSubscriptionOptions::WrapObject(
 void PushSubscriptionOptions::GetApplicationServerKey(
     JSContext* aCx, JS::MutableHandle<JSObject*> aKey, ErrorResult& aRv) {
   if (!mRawAppServerKey.IsEmpty() && !mAppServerKey) {
-    mAppServerKey = ArrayBuffer::Create(aCx, mRawAppServerKey, aRv);
+    JS::Rooted<JSObject*> appServerKey(aCx);
+    PushUtil::CopyArrayToArrayBuffer(aCx, mRawAppServerKey, &appServerKey, aRv);
     if (aRv.Failed()) {
       return;
     }
+    MOZ_ASSERT(appServerKey);
+    mAppServerKey = appServerKey;
   }
   aKey.set(mAppServerKey);
 }
