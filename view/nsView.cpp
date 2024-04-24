@@ -902,28 +902,6 @@ bool nsView::IsRoot() const {
   return mViewManager->GetRootView() == this;
 }
 
-nsRect nsView::GetBoundsInParentUnits() const {
-  nsView* parent = GetParent();
-  nsViewManager* VM = GetViewManager();
-  if (this != VM->GetRootView() || !parent) {
-    return mDimBounds;
-  }
-  int32_t ourAPD = VM->AppUnitsPerDevPixel();
-  int32_t parentAPD = parent->GetViewManager()->AppUnitsPerDevPixel();
-  return mDimBounds.ScaleToOtherAppUnitsRoundOut(ourAPD, parentAPD);
-}
-
-nsPoint nsView::ConvertFromParentCoords(nsPoint aPt) const {
-  const nsView* parent = GetParent();
-  if (parent) {
-    aPt = aPt.ScaleToOtherAppUnits(
-        parent->GetViewManager()->AppUnitsPerDevPixel(),
-        GetViewManager()->AppUnitsPerDevPixel());
-  }
-  aPt -= GetPosition();
-  return aPt;
-}
-
 static bool IsPopupWidget(nsIWidget* aWidget) {
   return aWidget->GetWindowType() == WindowType::Popup;
 }
