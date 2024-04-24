@@ -178,7 +178,7 @@
     opacity: 1;
   }
 
-  &[originaltype="autofill"] > .two-line-wrapper {
+  &[originaltype="autofill"][ac-image]:not([ac-image=""]) > .two-line-wrapper {
     display: grid;
     grid-template-columns: 32px 1fr;
 
