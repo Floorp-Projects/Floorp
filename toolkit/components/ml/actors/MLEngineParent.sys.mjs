@@ -28,7 +28,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
 });
 
-const RS_COLLECTION = "ml-onnx-runtime";
+const RS_RUNTIME_COLLECTION = "ml-onnx-runtime";
+const RS_INFERENCE_OPTIONS_COLLECTION = "ml-inference-options";
 
 /**
  * The ML engine is in its own content process. This actor handles the
@@ -38,9 +39,9 @@ export class MLEngineParent extends JSWindowActorParent {
   /**
    * The RemoteSettingsClient that downloads the wasm binaries.
    *
-   * @type {RemoteSettingsClient | null}
+   * @type {Record<string, RemoteSettingsClient>}
    */
-  static #remoteClient = null;
+  static #remoteClients = {};
 
   /** @type {Promise<WasmRecord> | null} */
   static #wasmRecord = null;
@@ -59,11 +60,11 @@ export class MLEngineParent extends JSWindowActorParent {
   /**
    * Remote settings isn't available in tests, so provide mocked responses.
    *
-   * @param {RemoteSettingsClient} remoteClient
+   * @param {RemoteSettingsClient} remoteClients
    */
-  static mockRemoteSettings(remoteClient) {
+  static mockRemoteSettings(remoteClients) {
     lazy.console.log("Mocking remote settings in MLEngineParent.");
-    MLEngineParent.#remoteClient = remoteClient;
+    MLEngineParent.#remoteClients = remoteClients;
     MLEngineParent.#wasmRecord = null;
   }
 
@@ -72,7 +73,7 @@ export class MLEngineParent extends JSWindowActorParent {
    */
   static removeMocks() {
     lazy.console.log("Removing mocked remote client in MLEngineParent.");
-    MLEngineParent.#remoteClient = null;
+    MLEngineParent.#remoteClients = {};
     MLEngineParent.#wasmRecord = null;
   }
 
@@ -85,8 +86,36 @@ export class MLEngineParent extends JSWindowActorParent {
     return new MLEngine({ mlEngineParent: this, pipelineOptions });
   }
 
+  /** Extracts the task name from the name and validates it.
+   *
+   * Throws an exception if the task name is invalid.
+   *
+   * @param {string} name
+   * @returns {string}
+   */
+  nameToTaskName(name) {
+    // Extract taskName after the specific prefix
+    const taskName = name.split("MLEngine:GetInferenceOptions:")[1];
+
+    // Define a regular expression to verify taskName pattern (alphanumeric and underscores/dashes)
+    const validTaskNamePattern = /^[a-zA-Z0-9_\-]+$/;
+
+    // Check if taskName matches the pattern
+    if (!validTaskNamePattern.test(taskName)) {
+      // Handle invalid taskName, e.g., throw an error or return null
+      throw new Error(
+        "Invalid task name. Task name should contain only alphanumeric characters and underscores/dashes."
+      );
+    }
+    return taskName;
+  }
+
   // eslint-disable-next-line consistent-return
   async receiveMessage({ name }) {
+    if (name.startsWith("MLEngine:GetInferenceOptions")) {
+      return MLEngineParent.getInferenceOptions(this.nameToTaskName(name));
+    }
+
     switch (name) {
       case "MLEngine:Ready":
         if (lazy.EngineProcess.resolveMLEngineParent) {
@@ -140,13 +169,42 @@ export class MLEngineParent extends JSWindowActorParent {
     return record;
   }
 
+  /** Gets the inference options from remote settings given a task name.
+   *
+   * @type {string} taskName - name of the inference :wtask
+   * @returns {Promise<ModelRevisionRecord>}
+   */
+  static async getInferenceOptions(taskName) {
+    const client = MLEngineParent.#getRemoteClient(
+      RS_INFERENCE_OPTIONS_COLLECTION
+    );
+    const records = await client.get({
+      filters: {
+        taskName,
+      },
+    });
+
+    if (records.length === 0) {
+      throw new Error(`No inference options found for task ${taskName}`);
+    }
+    const options = records[0];
+    return {
+      modelRevision: options.modelRevision,
+      modelId: options.modelId,
+      tokenizerRevision: options.tokenizerRevision,
+      tokenizerId: options.tokenizerId,
+      processorRevision: options.processorRevision,
+      processorId: options.processorId,
+    };
+  }
+
   /**
    * Download the wasm for the ML inference engine.
    *
    * @returns {Promise<ArrayBuffer>}
    */
   static async getWasmArrayBuffer() {
-    const client = MLEngineParent.#getRemoteClient();
+    const client = MLEngineParent.#getRemoteClient(RS_RUNTIME_COLLECTION);
 
     if (!MLEngineParent.#wasmRecord) {
       // Place the records into a promise to prevent any races.
@@ -175,22 +233,23 @@ export class MLEngineParent extends JSWindowActorParent {
   /**
    * Lazily initializes the RemoteSettingsClient for the downloaded wasm binary data.
    *
+   * @param {string} collectionName - The name of the collection to use.
    * @returns {RemoteSettingsClient}
    */
-  static #getRemoteClient() {
-    if (MLEngineParent.#remoteClient) {
-      return MLEngineParent.#remoteClient;
+  static #getRemoteClient(collectionName) {
+    if (MLEngineParent.#remoteClients[collectionName]) {
+      return MLEngineParent.#remoteClients[collectionName];
     }
 
     /** @type {RemoteSettingsClient} */
-    const client = lazy.RemoteSettings(RS_COLLECTION, {
+    const client = lazy.RemoteSettings(collectionName, {
       bucketName: "main",
     });
 
-    MLEngineParent.#remoteClient = client;
+    MLEngineParent.#remoteClients[collectionName] = client;
 
     client.on("sync", async ({ data: { created, updated, deleted } }) => {
-      lazy.console.log(`"sync" event for ${RS_COLLECTION}`, {
+      lazy.console.log(`"sync" event for ${collectionName}`, {
         created,
         updated,
         deleted,
