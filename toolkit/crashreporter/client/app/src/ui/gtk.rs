@@ -583,6 +583,7 @@ fn render_element_type(element_type: &model::ElementType) -> Option<*mut gtk::Gt
                 const GTK_WRAP_WORD_CHAR: u32 = 3;
                 gtk::gtk_text_view_set_wrap_mode(text_ptr as *mut _, GTK_WRAP_WORD_CHAR);
                 gtk::gtk_text_view_set_editable(text_ptr as *mut _, editable.clone().into());
+                gtk::gtk_text_view_set_accepts_tab(text_ptr as *mut _, false.into());
             }
             let buffer = unsafe { gtk::gtk_text_view_get_buffer(text_ptr as *mut _) };
 
