@@ -12,7 +12,7 @@ function GetTestWebBasedURL(fileName) {
   return (
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
-      "http://example.org"
+      "https://example.org"
     ) + fileName
   );
 }
@@ -372,7 +372,7 @@ add_task(async function test_tracker_power() {
         [
           GetTestWebBasedURL("dummy.html").replace(
             "example.org",
-            "trackertest.org"
+            "itisatracker.org"
           ),
         ],
         async frameUrl => {
