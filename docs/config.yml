@@ -67,6 +67,7 @@ categories:
         - testing/webrender
         - testing/mochitest-plain
         - testing/xpcshell
+        - testing/tps
         - web-platform
         - gtest
         - tools/fuzzing
