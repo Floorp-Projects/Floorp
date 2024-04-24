@@ -13,7 +13,6 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { BackgroundTasksTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/BackgroundTasksTestUtils.sys.mjs"
 );
-Services.env.set("MINTASKRUNTIME_TEST", "1");
 BackgroundTasksTestUtils.init(this);
 const do_backgroundtask = BackgroundTasksTestUtils.do_backgroundtask.bind(
   BackgroundTasksTestUtils
