@@ -161,7 +161,7 @@ async function testLanguageList(translateSection, menuList) {
     let langButton = languagelist.children[0].querySelector("moz-button");
 
     let clickButton = BrowserTestUtils.waitForEvent(langButton, "click");
-    langButton.dispatchEvent(new Event("click"));
+    langButton.click();
     await clickButton;
 
     if (i < langNum - 1) {
@@ -242,9 +242,7 @@ add_task(async function test_translations_settings_download_languages() {
       langList.children[i].querySelector("moz-button"),
       "click"
     );
-    langList.children[i]
-      .querySelector("moz-button")
-      .dispatchEvent(new Event("click"));
+    langList.children[i].querySelector("moz-button").click();
     await clickButton;
 
     is(
@@ -259,9 +257,7 @@ add_task(async function test_translations_settings_download_languages() {
       langList.children[i].querySelector("moz-button"),
       "click"
     );
-    langList.children[i]
-      .querySelector("moz-button")
-      .dispatchEvent(new Event("click"));
+    langList.children[i].querySelector("moz-button").click();
     await clickButton;
 
     is(
