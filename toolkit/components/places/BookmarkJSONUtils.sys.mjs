@@ -503,11 +503,21 @@ function translateTreeTypes(node) {
 function insertFaviconForNode(node) {
   if (node.icon) {
     try {
-      PlacesUtils.favicons.setFaviconForPage(
+      // Create a fake faviconURI to use (FIXME: bug 523932)
+      let faviconURI = Services.io.newURI("fake-favicon-uri:" + node.url);
+      PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+        faviconURI,
+        node.icon,
+        0,
+        Services.scriptSecurityManager.getSystemPrincipal()
+      );
+      PlacesUtils.favicons.setAndFetchFaviconForPage(
         Services.io.newURI(node.url),
-        // Create a fake faviconURI to use (FIXME: bug 523932)
-        Services.io.newURI("fake-favicon-uri:" + node.url),
-        Services.io.newURI(node.icon)
+        faviconURI,
+        false,
+        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        null,
+        Services.scriptSecurityManager.getSystemPrincipal()
       );
     } catch (ex) {
       console.error("Failed to import favicon data:", ex);

@@ -785,8 +785,7 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
         }
 
         // Import Bookmark Favicons
-        MigrationUtils.insertManyFavicons(favicons).catch(console.error);
-
+        MigrationUtils.insertManyFavicons(favicons);
         if (gotErrors) {
           throw new Error("The migration included errors.");
         }

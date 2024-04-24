@@ -199,24 +199,21 @@ let InternalFaviconLoader = {
       win.addEventListener("unload", unloadHandler, true);
     }
 
-    let callback = this._makeCompletionCallback(win, innerWindowID);
-    if (iconURI?.schemeIs("data")) {
-      lazy.PlacesUtils.favicons.setFaviconForPage(
-        pageURI,
-        uri,
-        iconURI,
-        lazy.PlacesUtils.toPRTime(expiration),
-        () => {
-          callback.onComplete(uri);
-        }
-      );
-      return;
-    }
-
     // First we do the actual setAndFetch call:
     let loadType = lazy.PrivateBrowsingUtils.isWindowPrivate(win)
       ? lazy.PlacesUtils.favicons.FAVICON_LOAD_PRIVATE
       : lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE;
+    let callback = this._makeCompletionCallback(win, innerWindowID);
+
+    if (iconURI && iconURI.schemeIs("data")) {
+      expiration = lazy.PlacesUtils.toPRTime(expiration);
+      lazy.PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+        uri,
+        iconURI.spec,
+        expiration,
+        principal
+      );
+    }
 
     let request = lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
       pageURI,

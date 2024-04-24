@@ -9,16 +9,21 @@ const ICON32_URL = "http://places.test/favicon-normal32.png";
 add_task(async function () {
   await PlacesTestUtils.addVisits(PAGE_URL);
   // Add 2 differently sized favicons for this page.
-  let dataURL16 = await readFileDataAsDataURL(
-    do_get_file("favicon-normal16.png"),
+
+  let data = readFileData(do_get_file("favicon-normal16.png"));
+  PlacesUtils.favicons.replaceFaviconData(
+    Services.io.newURI(ICON16_URL),
+    data,
     "image/png"
   );
-  await PlacesTestUtils.setFaviconForPage(PAGE_URL, ICON16_URL, dataURL16);
-  let dataURL32 = await readFileDataAsDataURL(
-    do_get_file("favicon-normal32.png"),
+  await setFaviconForPage(PAGE_URL, ICON16_URL);
+  data = readFileData(do_get_file("favicon-normal32.png"));
+  PlacesUtils.favicons.replaceFaviconData(
+    Services.io.newURI(ICON32_URL),
+    data,
     "image/png"
   );
-  await PlacesTestUtils.setFaviconForPage(PAGE_URL, ICON32_URL, dataURL32);
+  await setFaviconForPage(PAGE_URL, ICON32_URL);
 
   const PAGE_ICON_URL = "page-icon:" + PAGE_URL;
 
