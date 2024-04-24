@@ -164,7 +164,7 @@ private val darkColorPalette = FirefoxColors(
     borderFormDefault = PhotonColors.LightGrey05,
     borderAccent = PhotonColors.Violet40,
     borderDisabled = PhotonColors.LightGrey05A40,
-    borderWarning = PhotonColors.Red40,
+    borderCritical = PhotonColors.Red20,
     borderToolbarDivider = PhotonColors.DarkGrey60,
 )
 
@@ -244,7 +244,7 @@ private val lightColorPalette = FirefoxColors(
     borderFormDefault = PhotonColors.DarkGrey90,
     borderAccent = PhotonColors.Ink20,
     borderDisabled = PhotonColors.DarkGrey90A40,
-    borderWarning = PhotonColors.Red70,
+    borderCritical = PhotonColors.Red70,
     borderToolbarDivider = PhotonColors.LightGrey10,
 )
 
@@ -338,7 +338,7 @@ class FirefoxColors(
     borderFormDefault: Color,
     borderAccent: Color,
     borderDisabled: Color,
-    borderWarning: Color,
+    borderCritical: Color,
     borderToolbarDivider: Color,
 ) {
     // Layers
@@ -638,7 +638,7 @@ class FirefoxColors(
         private set
 
     // Form parts
-    var borderWarning by mutableStateOf(borderWarning)
+    var borderCritical by mutableStateOf(borderCritical)
         private set
 
     // Toolbar divider
@@ -725,7 +725,7 @@ class FirefoxColors(
         borderFormDefault = other.borderFormDefault
         borderAccent = other.borderAccent
         borderDisabled = other.borderDisabled
-        borderWarning = other.borderWarning
+        borderCritical = other.borderCritical
         borderToolbarDivider = other.borderToolbarDivider
     }
 
@@ -809,7 +809,7 @@ class FirefoxColors(
         borderFormDefault: Color = this.borderFormDefault,
         borderAccent: Color = this.borderAccent,
         borderDisabled: Color = this.borderDisabled,
-        borderWarning: Color = this.borderWarning,
+        borderWarning: Color = this.borderCritical,
         borderToolbarDivider: Color = this.borderToolbarDivider,
     ): FirefoxColors = FirefoxColors(
         layer1 = layer1,
@@ -887,7 +887,7 @@ class FirefoxColors(
         borderFormDefault = borderFormDefault,
         borderAccent = borderAccent,
         borderDisabled = borderDisabled,
-        borderWarning = borderWarning,
+        borderCritical = borderWarning,
         borderToolbarDivider = borderToolbarDivider,
     )
 }

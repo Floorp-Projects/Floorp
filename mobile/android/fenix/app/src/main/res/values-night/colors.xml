@@ -149,7 +149,7 @@
     <!-- Form parts -->
     <color name="fx_mobile_border_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
     <!-- Form parts -->
-    <color name="fx_mobile_border_color_warning" tools:ignore="UnusedResources">@color/photonRed40</color>
+    <color name="fx_mobile_border_color_critical" tools:ignore="UnusedResources">@color/photonRed20</color>
     <!-- Toolbar divider -->
     <color name="fx_mobile_border_color_toolbar_divider">@color/photonDarkGrey60</color>
 
