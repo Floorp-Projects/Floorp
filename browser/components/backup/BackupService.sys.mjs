@@ -91,13 +91,35 @@ export class BackupService {
    */
   static get MANIFEST_SCHEMA() {
     if (!BackupService.#manifestSchemaPromise) {
-      let schemaURL = `chrome://browser/content/backup/BackupManifest.${BackupService.MANIFEST_SCHEMA_VERSION}.schema.json`;
-      BackupService.#manifestSchemaPromise = fetch(schemaURL).then(response =>
-        response.json()
+      BackupService.#manifestSchemaPromise = BackupService.#getSchemaForVersion(
+        BackupService.MANIFEST_SCHEMA_VERSION
       );
     }
 
     return BackupService.#manifestSchemaPromise;
+  }
+
+  /**
+   * The name of the post recovery file written into the newly created profile
+   * directory just after a profile is recovered from a backup.
+   *
+   * @type {string}
+   */
+  static get POST_RECOVERY_FILE_NAME() {
+    return "post-recovery.json";
+  }
+
+  /**
+   * Returns the schema for the backup manifest for a given version.
+   *
+   * @param {number} version
+   *   The version of the schema to return.
+   * @returns {Promise<object>}
+   */
+  static async #getSchemaForVersion(version) {
+    let schemaURL = `chrome://browser/content/backup/BackupManifest.${version}.schema.json`;
+    let response = await fetch(schemaURL);
+    return response.json();
   }
 
   /**
@@ -113,6 +135,12 @@ export class BackupService {
       return this.#instance;
     }
     this.#instance = new BackupService(DefaultBackupResources);
+    // TODO: Here, before taking measurements, we should check to see if the
+    // current user profile contains a file with the POST_RECOVERY_FILE_NAME.
+    // If it does, we should load that file and invoke the associated
+    // BackupResource.postRecovery method for each resource key inside it. Then
+    // we should delete the file. (bug 1888436)
+
     this.#instance.takeMeasurements();
 
     return this.#instance;
@@ -386,6 +414,154 @@ export class BackupService {
       },
       resources: {},
     };
+  }
+
+  /**
+   * Given a decompressed backup archive at recoveryPath, this method does the
+   * following:
+   *
+   * 1. Reads in the backup manifest from the archive and ensures that it is
+   *    valid.
+   * 2. Creates a new named profile directory using the same name as the one
+   *    found in the backup manifest, but with a different prefix.
+   * 3. Iterates over each resource in the manifest and calls the recover()
+   *    method on each found BackupResource, passing in the associated
+   *    ManifestEntry from the backup manifest, and collects any post-recovery
+   *    data from those resources.
+   * 4. Writes a `post-recovery.json` file into the newly created profile
+   *    directory.
+   * 5. Returns the name of the newly created profile directory.
+   *
+   * @param {string} recoveryPath
+   *   The path to the decompressed backup archive on the file system.
+   * @param {boolean} [shouldLaunch=false]
+   *   An optional argument that specifies whether an instance of the app
+   *   should be launched with the newly recovered profile after recovery is
+   *   complete.
+   * @param {string} [profileRootPath=null]
+   *   An optional argument that specifies the root directory where the new
+   *   profile directory should be created. If not provided, the default
+   *   profile root directory will be used. This is primarily meant for
+   *   testing.
+   * @returns {Promise<nsIToolkitProfile>}
+   *   The nsIToolkitProfile that was created for the recovered profile.
+   * @throws {Exception}
+   *   In the event that recovery somehow failed.
+   */
+  async recoverFromBackup(
+    recoveryPath,
+    shouldLaunch = false,
+    profileRootPath = null
+  ) {
+    lazy.logConsole.debug("Recovering from backup at ", recoveryPath);
+
+    try {
+      // Read in the backup manifest.
+      let manifestPath = PathUtils.join(
+        recoveryPath,
+        BackupService.MANIFEST_FILE_NAME
+      );
+      let manifest = await IOUtils.readJSON(manifestPath);
+      if (!manifest.version) {
+        throw new Error("Backup manifest version not found");
+      }
+
+      if (manifest.version > BackupService.MANIFEST_SCHEMA_VERSION) {
+        throw new Error(
+          "Cannot recover from a manifest newer than the current schema version"
+        );
+      }
+
+      // Make sure that it conforms to the schema.
+      let manifestSchema = await BackupService.#getSchemaForVersion(
+        manifest.version
+      );
+      let schemaValidationResult = lazy.JsonSchemaValidator.validate(
+        manifest,
+        manifestSchema
+      );
+      if (!schemaValidationResult.valid) {
+        lazy.logConsole.error(
+          "Backup manifest does not conform to schema:",
+          manifest,
+          manifestSchema,
+          schemaValidationResult
+        );
+        // TODO: Collect telemetry for this case. (bug 1891817)
+        throw new Error("Cannot recover from an invalid backup manifest");
+      }
+
+      // In the future, if we ever bump the MANIFEST_SCHEMA_VERSION and need to
+      // do any special behaviours to interpret older schemas, this is where we
+      // can do that, and we can remove this comment.
+
+      let meta = manifest.meta;
+
+      // Okay, we have a valid backup-manifest.json. Let's create a new profile
+      // and start invoking the recover() method on each BackupResource.
+      let profileSvc = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
+        Ci.nsIToolkitProfileService
+      );
+      let profile = profileSvc.createUniqueProfile(
+        profileRootPath ? await IOUtils.getDirectory(profileRootPath) : null,
+        meta.profileName
+      );
+
+      let postRecovery = {};
+
+      // Iterate over each resource in the manifest and call recover() on each
+      // associated BackupResource.
+      for (let resourceKey in manifest.resources) {
+        let manifestEntry = manifest.resources[resourceKey];
+        let resourceClass = this.#resources.get(resourceKey);
+        if (!resourceClass) {
+          lazy.logConsole.error(
+            `No BackupResource found for key ${resourceKey}`
+          );
+          continue;
+        }
+
+        try {
+          lazy.logConsole.debug(
+            `Restoring resource with key ${resourceKey}. ` +
+              `Requires encryption: ${resourceClass.requiresEncryption}`
+          );
+          let resourcePath = PathUtils.join(recoveryPath, resourceKey);
+          let postRecoveryEntry = await new resourceClass().recover(
+            manifestEntry,
+            resourcePath,
+            profile.rootDir.path
+          );
+          postRecovery[resourceKey] = postRecoveryEntry;
+        } catch (e) {
+          lazy.logConsole.error(
+            `Failed to recover resource: ${resourceKey}`,
+            e
+          );
+        }
+      }
+
+      let postRecoveryPath = PathUtils.join(
+        profile.rootDir.path,
+        BackupService.POST_RECOVERY_FILE_NAME
+      );
+      await IOUtils.writeJSON(postRecoveryPath, postRecovery);
+
+      profileSvc.flush();
+
+      if (shouldLaunch) {
+        Services.startup.createInstanceWithProfile(profile);
+      }
+
+      return profile;
+    } catch (e) {
+      lazy.logConsole.error(
+        "Failed to recover from backup at ",
+        recoveryPath,
+        e
+      );
+      throw e;
+    }
   }
 
   /**
