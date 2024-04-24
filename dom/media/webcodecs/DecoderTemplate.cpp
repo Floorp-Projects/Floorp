@@ -415,8 +415,7 @@ void DecoderTemplate<DecoderType>::CancelPendingControlMessagesAndFlushPromises(
     mControlMessageQueue.pop();
   }
 
-  // If there are pending tasks delivering the results of the flush requests,
-  // reject their promises.
+  // If there are pending flush promises, reject them.
   mPendingFlushPromises.ForEach(
       [&](const int64_t& id, const RefPtr<Promise>& p) {
         LOG("%s %p, reject the promise for flush %" PRId64 " (unique id)",
