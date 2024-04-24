@@ -1207,6 +1207,7 @@ dependencies = [
 name = "dap_ffi"
 version = "0.1.0"
 dependencies = [
+ "log",
  "prio",
  "rand",
  "thin-vec",
