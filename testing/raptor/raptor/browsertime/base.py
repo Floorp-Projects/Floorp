@@ -599,12 +599,18 @@ class Browsertime(Perftest):
                 browsertime_options=browsertime_options, test=test
             )
 
-        return (
+        cmd = (
             [self.browsertime_node, self.browsertime_browsertimejs]
             + self.driver_paths
             + [browsertime_script]
             + browsertime_options
         )
+
+        if test.get("support_class", None):
+            LOG.info("Test support class is modifying the command...")
+            test.get("support_class").modify_command(cmd, test)
+
+        return cmd
 
     def _compose_gecko_profiler_cmds(self, test, priority1_options):
         """Modify the command line options for running the gecko profiler
@@ -916,10 +922,6 @@ class Browsertime(Perftest):
         # timeout is a single page-load timeout value (ms) from the test INI
         # this will be used for btime --timeouts.pageLoad
         cmd = self._compose_cmd(test, timeout)
-
-        if test.get("support_class", None):
-            LOG.info("Test support class is modifying the command...")
-            test.get("support_class").modify_command(cmd, test)
 
         output_timeout = BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT
         if test.get("type", "") == "scenario":
