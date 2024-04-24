@@ -12478,6 +12478,15 @@
   value: 24
   mirror: always
 
+# This makes it so NS_HTTP_REFRESH_DNS is only
+# set on DNS resolutions when LOAD_FRESH_CONNECTION is set.
+# That's because we don't need to refresh DNS on
+# every page reload.
+- name: network.dns.only_refresh_on_fresh_connection
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The proxy type. See nsIProtocolProxyService.idl
 #     PROXYCONFIG_DIRECT   = 0
 #     PROXYCONFIG_MANUAL   = 1
