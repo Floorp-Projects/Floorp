@@ -7,7 +7,6 @@ package mozilla.components.browser.menu2.ext
 import android.graphics.Rect
 import android.view.View
 import android.widget.PopupWindow
-import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu2.R
@@ -755,9 +754,9 @@ internal fun createAnchor(x: Int, y: Int, isRTL: Boolean = false): View {
     }.`when`(view).getLocationInWindow(any())
 
     if (isRTL) {
-        doReturn(ViewCompat.LAYOUT_DIRECTION_RTL).`when`(view).layoutDirection
+        doReturn(View.LAYOUT_DIRECTION_RTL).`when`(view).layoutDirection
     } else {
-        doReturn(ViewCompat.LAYOUT_DIRECTION_LTR).`when`(view).layoutDirection
+        doReturn(View.LAYOUT_DIRECTION_LTR).`when`(view).layoutDirection
     }
     doReturn(10).`when`(view).height
     doReturn(15).`when`(view).width

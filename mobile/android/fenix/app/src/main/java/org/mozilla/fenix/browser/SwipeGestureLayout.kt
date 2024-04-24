@@ -10,7 +10,6 @@ import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.widget.FrameLayout
-import androidx.core.view.GestureDetectorCompat
 
 /**
  * Interface that allows intercepting and handling swipe gestures received in a [SwipeGestureLayout].
@@ -101,7 +100,7 @@ class SwipeGestureLayout @JvmOverloads constructor(
         }
     }
 
-    private val gestureDetector = GestureDetectorCompat(context, gestureListener)
+    private val gestureDetector = GestureDetector(context, gestureListener)
 
     private val listeners = mutableListOf<SwipeGestureListener>()
     private var activeListener: SwipeGestureListener? = null

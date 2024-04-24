@@ -13,7 +13,6 @@ import android.view.ViewTreeObserver
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.MainThread
 import androidx.core.content.getSystemService
-import androidx.core.view.ViewCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -25,13 +24,13 @@ import java.lang.ref.WeakReference
  * Is the horizontal layout direction of this view from Right to Left?
  */
 val View.isRTL: Boolean
-    get() = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL
+    get() = layoutDirection == View.LAYOUT_DIRECTION_RTL
 
 /**
  * Is the horizontal layout direction of this view from Left to Right?
  */
 val View.isLTR: Boolean
-    get() = layoutDirection == ViewCompat.LAYOUT_DIRECTION_LTR
+    get() = layoutDirection == View.LAYOUT_DIRECTION_LTR
 
 /**
  * Tries to focus this view and show the soft input window for it.
