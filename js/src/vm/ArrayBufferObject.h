@@ -202,7 +202,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static const uint8_t RESERVED_SLOTS = 4;
 
-  static const size_t ARRAY_BUFFER_ALIGNMENT = 8;
+  // Alignment for ArrayBuffer objects. Must match the largest possible
+  // TypedArray scalar to ensure TypedArray and Atomics accesses are always
+  // aligned.
+  static constexpr size_t ARRAY_BUFFER_ALIGNMENT = 8;
 
   static_assert(FLAGS_SLOT == JS_ARRAYBUFFER_FLAGS_SLOT,
                 "self-hosted code with burned-in constants must get the "
@@ -306,6 +309,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     void* freeUserData_;
 
     friend class ArrayBufferObject;
+    friend class ResizableArrayBufferObject;
 
     BufferContents(uint8_t* data, BufferKind kind,
                    JS::BufferContentsFreeFunc freeFunc = nullptr,
@@ -320,6 +324,43 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
       // It is the caller's responsibility to ensure that the
       // BufferContents does not outlive the data.
     }
+
+#ifdef DEBUG
+    // Checks if the buffer contents are properly aligned.
+    //
+    // `malloc(0)` is implementation defined and may return a pointer which
+    // isn't aligned to `max_align_t`, so we only require proper alignment when
+    // `byteLength` is non-zero.
+    //
+    // jemalloc doesn't implement restriction, but instead uses `sizeof(void*)`
+    // for its smallest allocation class. Larger allocations are guaranteed to
+    // be eight byte aligned.
+    bool isAligned(size_t byteLength) const {
+      // `malloc(0)` has implementation defined behavior.
+      if (byteLength == 0) {
+        return true;
+      }
+
+      // Allow jemalloc tiny allocations to have smaller alignment requirements
+      // than `std::malloc`.
+      if (sizeof(void*) < ArrayBufferObject::ARRAY_BUFFER_ALIGNMENT) {
+        if (byteLength <= sizeof(void*)) {
+          return true;
+        }
+      }
+
+      // `std::malloc` returns memory at least as strictly aligned as for
+      // max_align_t and the alignment of max_align_t is a multiple of the array
+      // buffer alignment.
+      static_assert(alignof(std::max_align_t) %
+                        ArrayBufferObject::ARRAY_BUFFER_ALIGNMENT ==
+                    0);
+
+      // Otherwise the memory must be correctly alignment.
+      auto ptr = reinterpret_cast<uintptr_t>(data());
+      return ptr % ArrayBufferObject::ARRAY_BUFFER_ALIGNMENT == 0;
+    }
+#endif
 
    public:
     static BufferContents createInlineData(void* data) {
@@ -590,6 +631,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   }
 
   void initialize(size_t byteLength, BufferContents contents) {
+    MOZ_ASSERT(contents.isAligned(byteLength));
     setByteLength(byteLength);
     setFlags(0);
     setFirstView(nullptr);
@@ -670,6 +712,7 @@ class ResizableArrayBufferObject : public ArrayBufferObject {
 
   void initialize(size_t byteLength, size_t maxByteLength,
                   BufferContents contents) {
+    MOZ_ASSERT(contents.isAligned(byteLength));
     setByteLength(byteLength);
     setMaxByteLength(maxByteLength);
     setFlags(RESIZABLE);
