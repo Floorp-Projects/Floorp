@@ -106,8 +106,12 @@
 }
 
 #userContext-label {
-  margin: 0;
-  color: var(--identity-tab-color);
+	color: var(--identity-tab-color);
+	margin: 0;
+  max-width: 8em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 #userContext-icons {
