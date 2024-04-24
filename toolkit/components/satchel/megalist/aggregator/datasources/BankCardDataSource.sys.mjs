@@ -73,30 +73,20 @@ export class BankCardDataSource extends DataSourceBase {
       numberLabel: "card-number-label",
       expirationLabel: "card-expiration-label",
       holderLabel: "card-holder-label",
-      copyCommandLabel: "command-copy",
-      revealCommandLabel: "command-reveal",
-      concealCommandLabel: "command-conceal",
       cardsDisabled: "payments-disabled",
-      deleteCommandLabel: "command-delete",
-      editCommandLabel: "command-edit",
-      cardsCreateCommandLabel: "payments-command-create",
     }).then(strings => {
-      const copyCommand = { id: "Copy", label: strings.copyCommandLabel };
-      const editCommand = {
-        id: "Edit",
-        label: strings.editCommandLabel,
-        verify: true,
-      };
+      const copyCommand = { id: "Copy", label: "command-copy" };
+      const editCommand = { id: "Edit", label: "command-edit", verify: true };
       const deleteCommand = {
         id: "Delete",
-        label: strings.deleteCommandLabel,
+        label: "command-delete",
         verify: true,
       };
       this.#cardsDisabledMessage = strings.cardsDisabled;
       this.#header = this.createHeaderLine(strings.headerLabel);
       this.#header.commands.push({
         id: "Create",
-        label: strings.cardsCreateCommandLabel,
+        label: "payments-command-create",
       });
       this.#cardNumberPrototype = this.prototypeDataLine({
         label: { value: strings.numberLabel },
@@ -140,22 +130,16 @@ export class BankCardDataSource extends DataSourceBase {
           },
         },
         commands: {
-          get() {
-            const commands = [
-              { id: "Conceal", label: strings.concealCommandLabel },
-              { ...copyCommand, verify: true },
-              editCommand,
-              "-",
-              deleteCommand,
-            ];
+          *value() {
             if (this.concealed) {
-              commands[0] = {
-                id: "Reveal",
-                label: strings.revealCommandLabel,
-                verify: true,
-              };
+              yield { id: "Reveal", label: "command-reveal", verify: true };
+            } else {
+              yield { id: "Conceal", label: "command-conceal" };
             }
-            return commands;
+            yield { ...copyCommand, verify: true };
+            yield editCommand;
+            yield "-";
+            yield deleteCommand;
           },
         },
         executeReveal: {

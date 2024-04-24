@@ -43,19 +43,7 @@ export class LoginDataSource extends DataSourceBase {
       originLabel: "passwords-origin-label",
       usernameLabel: "passwords-username-label",
       passwordLabel: "passwords-password-label",
-      openCommandLabel: "command-open",
-      copyCommandLabel: "command-copy",
-      revealCommandLabel: "command-reveal",
-      concealCommandLabel: "command-conceal",
       passwordsDisabled: "passwords-disabled",
-      deleteCommandLabel: "command-delete",
-      editCommandLabel: "command-edit",
-      passwordsCreateCommandLabel: "passwords-command-create",
-      passwordsImportCommandLabel: "passwords-command-import",
-      passwordsExportCommandLabel: "passwords-command-export",
-      passwordsRemoveAllCommandLabel: "passwords-command-remove-all",
-      passwordsSettingsCommandLabel: "passwords-command-settings",
-      passwordsHelpCommandLabel: "passwords-command-help",
       passwordsImportFilePickerTitle: "passwords-import-file-picker-title",
       passwordsImportFilePickerImportButton:
         "passwords-import-file-picker-import-button",
@@ -65,9 +53,9 @@ export class LoginDataSource extends DataSourceBase {
         "passwords-import-file-picker-tsv-filter-title",
       dismissBreachCommandLabel: "passwords-dismiss-breach-alert-command",
     }).then(strings => {
-      const copyCommand = { id: "Copy", label: strings.copyCommandLabel };
-      const editCommand = { id: "Edit", label: strings.editCommandLabel };
-      const deleteCommand = { id: "Delete", label: strings.deleteCommandLabel };
+      const copyCommand = { id: "Copy", label: "command-copy" };
+      const editCommand = { id: "Edit", label: "command-edit" };
+      const deleteCommand = { id: "Delete", label: "command-delete" };
       const dismissBreachCommand = {
         id: "DismissBreach",
         label: strings.dismissBreachCommandLabel,
@@ -79,12 +67,12 @@ export class LoginDataSource extends DataSourceBase {
       this.#loginsDisabledMessage = strings.passwordsDisabled;
       this.#header = this.createHeaderLine(strings.headerLabel);
       this.#header.commands.push(
-        { id: "Create", label: strings.passwordsCreateCommandLabel },
-        { id: "Import", label: strings.passwordsImportCommandLabel },
-        { id: "Export", label: strings.passwordsExportCommandLabel },
-        { id: "RemoveAll", label: strings.passwordsRemoveAllCommandLabel },
-        { id: "Settings", label: strings.passwordsSettingsCommandLabel },
-        { id: "Help", label: strings.passwordsHelpCommandLabel }
+        { id: "Create", label: "passwords-command-create" },
+        { id: "Import", label: "passwords-command-import" },
+        { id: "Export", label: "passwords-command-export" },
+        { id: "RemoveAll", label: "passwords-command-remove-all" },
+        { id: "Settings", label: "passwords-command-settings" },
+        { id: "Help", label: "passwords-command-help" }
       );
       this.#header.executeImport = async () => {
         await this.#importFromFile(
@@ -124,7 +112,7 @@ export class LoginDataSource extends DataSourceBase {
         },
         commands: {
           *value() {
-            yield { id: "Open", label: strings.openCommandLabel };
+            yield { id: "Open", label: "command-open" };
             yield copyCommand;
             yield "-";
             yield deleteCommand;
@@ -210,26 +198,16 @@ export class LoginDataSource extends DataSourceBase {
           },
         },
         commands: {
-          get() {
-            const commands = [
-              { id: "Conceal", label: strings.concealCommandLabel },
-              {
-                id: "Copy",
-                label: strings.copyCommandLabel,
-                verify: true,
-              },
-              editCommand,
-              "-",
-              deleteCommand,
-            ];
+          *value() {
             if (this.concealed) {
-              commands[0] = {
-                id: "Reveal",
-                label: strings.revealCommandLabel,
-                verify: true,
-              };
+              yield { id: "Reveal", label: "command-reveal", verify: true };
+            } else {
+              yield { id: "Conceal", label: "command-conceal" };
             }
-            return commands;
+            yield { ...copyCommand, verify: true };
+            yield editCommand;
+            yield "-";
+            yield deleteCommand;
           },
         },
         executeReveal: {
