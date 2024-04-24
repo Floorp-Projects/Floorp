@@ -261,7 +261,7 @@ impl ImageData {
                         frame_state.rg_builder,
                         None,
                         descriptor.is_opaque(),
-                        RenderTaskParent::Surface(parent_surface),
+                        RenderTaskParent::Surface,
                         &mut frame_state.surface_builder,
                         |rg_builder, _| {
                             // Create a task to blit from the texture cache to

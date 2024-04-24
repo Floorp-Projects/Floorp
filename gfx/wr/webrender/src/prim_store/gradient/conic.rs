@@ -259,7 +259,7 @@ impl ConicGradientTemplate {
             frame_state.rg_builder,
             None,
             false,
-            RenderTaskParent::Surface(parent_surface),
+            RenderTaskParent::Surface,
             &mut frame_state.surface_builder,
             |rg_builder, gpu_buffer_builder| {
                 let stops = GradientGpuBlockBuilder::build(

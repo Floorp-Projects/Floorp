@@ -36,7 +36,7 @@ const MAX_CACHE_TASK_SIZE: f32 = 4096.0;
 /// box-shadow input).
 pub enum RenderTaskParent {
     /// Parent is a surface
-    Surface(SurfaceIndex),
+    Surface,
     /// Parent is a render task
     RenderTask(RenderTaskId),
 }
@@ -288,9 +288,7 @@ impl RenderTaskCache {
         // an input source.
         if let Some(render_task_id) = cache_entry.render_task_id {
             match parent {
-                // TODO(gw): Remove surface from here as a follow up patch, as it's now implicit
-                //           due to using SurfaceBuilder
-                RenderTaskParent::Surface(_surface_index) => {
+                RenderTaskParent::Surface => {
                     // If parent is a surface, use helper fn to add this dependency,
                     // which correctly takes account of the render task configuration
                     // of the surface.

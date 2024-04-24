@@ -394,7 +394,7 @@ fn prepare_interned_prim_for_render(
                     frame_state.rg_builder,
                     None,
                     false,
-                    RenderTaskParent::Surface(pic_context.surface_index),
+                    RenderTaskParent::Surface,
                     &mut frame_state.surface_builder,
                     |rg_builder, _| {
                         rg_builder.add().init(RenderTask::new_dynamic(
@@ -549,7 +549,7 @@ fn prepare_interned_prim_for_render(
                     frame_state.rg_builder,
                     None,
                     false,          // TODO(gw): We don't calculate opacity for borders yet!
-                    RenderTaskParent::Surface(pic_context.surface_index),
+                    RenderTaskParent::Surface,
                     &mut frame_state.surface_builder,
                     |rg_builder, _| {
                         rg_builder.add().init(RenderTask::new_dynamic(

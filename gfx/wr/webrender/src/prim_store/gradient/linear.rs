@@ -526,7 +526,7 @@ impl LinearGradientTemplate {
                 frame_state.rg_builder,
                 None,
                 false,
-                RenderTaskParent::Surface(parent_surface),
+                RenderTaskParent::Surface,
                 &mut frame_state.surface_builder,
                 |rg_builder, _| {
                     rg_builder.add().init(RenderTask::new_dynamic(
@@ -556,7 +556,7 @@ impl LinearGradientTemplate {
                 frame_state.rg_builder,
                 None,
                 false,
-                RenderTaskParent::Surface(parent_surface),
+                RenderTaskParent::Surface,
                 &mut frame_state.surface_builder,
                 |rg_builder, gpu_buffer_builder| {
                     let stops = Some(GradientGpuBlockBuilder::build(
