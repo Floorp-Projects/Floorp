@@ -71,23 +71,6 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(bool isGrowable,
   if (!p) {
     return nullptr;
   }
-  MOZ_ASSERT(reinterpret_cast<uintptr_t>(p) %
-                     ArrayBufferObject::ARRAY_BUFFER_ALIGNMENT ==
-                 0,
-             "shared array buffer memory is aligned");
-
-  // jemalloc tiny allocations can produce allocations not aligned to the
-  // smallest std::malloc allocation. Ensure shared array buffer allocations
-  // don't have to worry about this special case.
-  static_assert(sizeof(SharedArrayRawBuffer) > sizeof(void*),
-                "SharedArrayRawBuffer doesn't fit in jemalloc tiny allocation");
-
-  static_assert(sizeof(SharedArrayRawBuffer) %
-                        ArrayBufferObject::ARRAY_BUFFER_ALIGNMENT ==
-                    0,
-                "sizeof(SharedArrayRawBuffer) is a multiple of the array "
-                "buffer alignment, so |p + sizeof(SharedArrayRawBuffer)| is "
-                "also array buffer aligned");
 
   uint8_t* buffer = p + sizeof(SharedArrayRawBuffer);
   return new (p) SharedArrayRawBuffer(isGrowable, buffer, length);

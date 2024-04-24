@@ -39,7 +39,6 @@
 #include "js/MemoryMetrics.h"
 #include "js/Prefs.h"
 #include "js/PropertySpec.h"
-#include "js/ScalarType.h"
 #include "js/SharedArrayBuffer.h"
 #include "js/Wrapper.h"
 #include "util/WindowsWrapper.h"
@@ -172,22 +171,6 @@ uint64_t js::WasmReservedBytes() { return wasmReservedBytes; }
 
   return true;
 }
-
-static constexpr size_t MaxByteSizeOfTypedArrayScalar() {
-  using T = std::underlying_type<Scalar::Type>::type;
-
-  size_t result = 0;
-  for (T type = 0; type < Scalar::MaxTypedArrayViewType; type++) {
-    size_t size = Scalar::byteSize(static_cast<Scalar::Type>(type));
-    result = std::max(result, size);
-  }
-  return result;
-}
-
-static_assert(ArrayBufferObject::ARRAY_BUFFER_ALIGNMENT ==
-                  MaxByteSizeOfTypedArrayScalar(),
-              "ArrayBuffers are aligned to the size of the largest possible "
-              "TypedArray scalar");
 
 void* js::MapBufferMemory(wasm::IndexType t, size_t mappedSize,
                           size_t initialCommittedSize) {

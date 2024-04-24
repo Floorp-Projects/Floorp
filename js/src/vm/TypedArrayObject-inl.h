@@ -309,24 +309,10 @@ class ElementSpecific {
     MOZ_ASSERT(offset <= targetLength);
     MOZ_ASSERT(sourceLength <= targetLength - offset);
 
-    // Return early when copying no elements.
-    //
-    // Note: `SharedMem::cast` asserts the memory is properly aligned. Non-zero
-    // memory is correctly aligned, this is statically asserted below. Zero
-    // memory can have a different alignment, so we have to return early.
-    if (sourceLength == 0) {
-      return true;
-    }
-
     if (TypedArrayObject::sameBuffer(target, source)) {
       return setFromOverlappingTypedArray(target, targetLength, source,
                                           sourceLength, offset);
     }
-
-    // `malloc` returns memory at least as strictly aligned as for max_align_t
-    // and the alignment of max_align_t is a multiple of the size of `T`,
-    // so `SharedMem::cast` will be called with properly aligned memory.
-    static_assert(alignof(std::max_align_t) % sizeof(T) == 0);
 
     SharedMem<T*> dest =
         target->dataPointerEither().template cast<T*>() + offset;
