@@ -144,7 +144,7 @@ class TransportLayerDtls final : public TransportLayer {
   SECStatus CheckDigest(const DtlsDigest& digest,
                         UniqueCERTCertificate& cert) const;
 
-  void RecordHandshakeCompletionTelemetry(TransportLayer::State endState);
+  void RecordHandshakeCompletionTelemetry(const char* aResult);
   void RecordTlsTelemetry();
 
   static PRBool WriteSrtpXtn(PRFileDesc* fd, SSLHandshakeType message,
