@@ -146,8 +146,10 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Варақаи хусусии нав</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">Дастрасии зуд ба ниҳонвожаҳо</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">Ниҳонвожаҳо</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Дастрасии зуд ба ниҳонвожаҳо</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -250,10 +252,13 @@
     <string name="browser_menu_customize_home_1">Танзимоти саҳифаи асосӣ</string>
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Ворид шудан</string>
+    <string name="browser_menu_sign_in">Ворид шудан</string>
 
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
-    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Ниҳонвожаҳо, варақаҳо ва бисёр чизҳои дигарро ҳамоҳанг созед</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">Ниҳонвожаҳо, варақаҳо ва бисёр чизҳои дигарро ҳамоҳанг созед</string>
+
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">Ниҳонвожаҳо</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -2456,7 +2461,7 @@
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Мутаассифона, забони %1$s то ҳол дастгирӣ карда намешавад.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more">Маълумоти бештар</string>
+    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Маълумоти бештар</string>
 
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
@@ -2465,7 +2470,7 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title">Имконоти тарҷума</string>
+    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Имконоти тарҷума</string>
 
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Тарҷума ҳамеша пешниҳод карда шавад</string>
@@ -2603,6 +2608,8 @@
     <string name="debug_drawer_title">Абзорҳои ислоҳи хатоҳо</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Ба қафо гузаштан</string>
+
+    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Абзорҳои варақаҳо</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2625,4 +2632,5 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Илова кардан ба варақаҳои ғайрифаъол</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Илова кардан ба варақаҳои хусусӣ</string>
-</resources>
+
+    </resources>
