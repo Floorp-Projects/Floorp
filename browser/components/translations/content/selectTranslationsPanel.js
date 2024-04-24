@@ -393,7 +393,7 @@ var SelectTranslationsPanel = new (class {
       );
     }
 
-    this.#openPopup(event, screenX, screenY);
+    await this.#openPopup(event, screenX, screenY);
   }
 
   /**
@@ -403,7 +403,10 @@ var SelectTranslationsPanel = new (class {
    * @param {number} screenX - The x-axis location of the screen at which to open the popup.
    * @param {number} screenY - The y-axis location of the screen at which to open the popup.
    */
-  #openPopup(event, screenX, screenY) {
+  async #openPopup(event, screenX, screenY) {
+    await window.ensureCustomElements("moz-button-group");
+    await window.ensureCustomElements("moz-message-bar");
+
     this.console?.log("Showing SelectTranslationsPanel");
     const { panel } = this.elements;
     panel.openPopupAtScreen(screenX, screenY, /* isContextMenu */ false, event);

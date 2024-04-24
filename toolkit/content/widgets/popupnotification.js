@@ -116,6 +116,8 @@
       MozXULElement.insertFTLIfNeeded("toolkit/global/popupnotification.ftl");
       this.appendChild(this.constructor.fragment);
 
+      window.ensureCustomElements("moz-button-group");
+
       this.button = this.querySelector(".popup-notification-primary-button");
       if (
         this.hasAttribute("buttonlabel") ||

@@ -1358,6 +1358,7 @@ export let FormAutofillPrompter = {
     );
 
     const { ownerGlobal: win } = browser;
+    await win.ensureCustomElements("moz-support-link");
     win.MozXULElement.insertFTLIfNeeded(
       "toolkit/formautofill/formAutofill.ftl"
     );
