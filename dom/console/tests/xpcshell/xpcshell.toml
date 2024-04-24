@@ -11,3 +11,8 @@ support-files = ""
 ["test_formatting.js"]
 
 ["test_reportForServiceWorkerScope.js"]
+
+["test_worker.js"]
+support-files = [
+  "worker.mjs",
+]
