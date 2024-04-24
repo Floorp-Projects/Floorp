@@ -62,6 +62,13 @@ export class PipelineOptions {
   modelId = null;
 
   /**
+   * The revision for the specific model to be used by the pipeline.
+   *
+   * @type {?string}
+   */
+  modelRevision = null;
+
+  /**
    * The identifier for the tokenizer associated with the model, used for pre-processing inputs.
    *
    * @type {?string}
@@ -69,11 +76,26 @@ export class PipelineOptions {
   tokenizerId = null;
 
   /**
+   * The revision for the tokenizer associated with the model, used for pre-processing inputs.
+   *
+   * @type {?string}
+   */
+  tokenizerRevision = null;
+
+  /**
    * The identifier for any processor required by the model, used for additional input processing.
    *
    * @type {?string}
    */
   processorId = null;
+
+  /**
+   * The revision for any processor required by the model, used for additional input processing.
+   *
+   * @type {?string}
+   */
+
+  processorRevision = null;
 
   /**
    * The log level used in the worker
@@ -104,10 +126,14 @@ export class PipelineOptions {
       "modelHubUrlTemplate",
       "timeoutMS",
       "modelId",
+      "modelRevision",
       "tokenizerId",
+      "tokenizerRevision",
       "processorId",
+      "processorRevision",
       "logLevel",
     ];
+
     Object.keys(options).forEach(key => {
       if (allowedKeys.includes(key)) {
         this[key] = options[key]; // Use bracket notation to access setter
@@ -129,8 +155,11 @@ export class PipelineOptions {
       modelHubUrlTemplate: this.modelHubUrlTemplate,
       timeoutMS: this.timeoutMS,
       modelId: this.modelId,
+      modelRevision: this.modelRevision,
       tokenizerId: this.tokenizerId,
+      tokenizerRevision: this.tokenizerRevision,
       processorId: this.processorId,
+      processorRevision: this.processorRevision,
       logLevel: this.logLevel,
     };
   }

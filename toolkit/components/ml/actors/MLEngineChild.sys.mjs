@@ -102,10 +102,21 @@ export class MLEngineChild extends JSWindowActorChild {
   }
 
   /**
-   * @returns {ArrayBuffer}
+   * Gets the wasm array buffer from RemoteSettings.
+   *
+   * @returns {Promise<ArrayBuffer>}
    */
   getWasmArrayBuffer() {
     return this.sendQuery("MLEngine:GetWasmArrayBuffer");
+  }
+
+  /**
+   * Gets the inference options from RemoteSettings.
+   *
+   * @returns {Promise<object>}
+   */
+  getInferenceOptions(taskName) {
+    return this.sendQuery(`MLEngine:GetInferenceOptions:${taskName}`);
   }
 
   /**
@@ -139,6 +150,30 @@ class EngineDispatcher {
   /** @type {string} */
   #taskName;
 
+  /** Creates the inference engine given the wasm runtime and the run options.
+   *
+   * The initialization is done in three steps:
+   * 1. The wasm runtime is fetched from RS
+   * 2. The inference options are fetched from RS and augmented with the pipeline options.
+   * 3. The inference engine is created with the wasm runtime and the options.
+   *
+   * Any exception here will be bubbled up for the constructor to log.
+   *
+   * @param {PipelineOptions} pipelineOptions
+   * @returns {Promise<Engine>}
+   */
+  async initializeInferenceEngine(pipelineOptions) {
+    // Create the inference engine given the wasm runtime and the options.
+    const wasm = await this.mlEngineChild.getWasmArrayBuffer();
+    const inferenceOptions = await this.mlEngineChild.getInferenceOptions(
+      this.#taskName
+    );
+    lazy.console.debug("Inference engine options:", inferenceOptions);
+    pipelineOptions.updateOptions(inferenceOptions);
+
+    return InferenceEngine.create(wasm, pipelineOptions);
+  }
+
   /**
    * @param {MLEngineChild} mlEngineChild
    * @param {MessagePort} port
@@ -149,10 +184,7 @@ class EngineDispatcher {
     this.#taskName = pipelineOptions.taskName;
     this.timeoutMS = pipelineOptions.timeoutMS;
 
-    // Create the inference engine given the wasm runtime and the run options.
-    this.#engine = this.mlEngineChild
-      .getWasmArrayBuffer()
-      .then(wasm => InferenceEngine.create(wasm, pipelineOptions));
+    this.#engine = this.initializeInferenceEngine(pipelineOptions);
 
     // Trigger the keep alive timer.
     this.#engine
