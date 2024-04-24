@@ -307,6 +307,22 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                             requireContext().settings().lastCfrShownTimeInMillis = System.currentTimeMillis()
                         },
                         onMove = tabsTrayInteractor::onTabsMove,
+                        shouldShowInactiveTabsCFR = {
+                            requireContext().settings().shouldShowInactiveTabsOnboardingPopup &&
+                                requireContext().settings().canShowCfr
+                        },
+                        onInactiveTabsCFRShown = {
+                            TabsTray.inactiveTabsCfrVisible.record(NoExtras())
+                        },
+                        onInactiveTabsCFRClick = {
+                            requireContext().settings().shouldShowInactiveTabsOnboardingPopup = false
+                            navigationInteractor.onTabSettingsClicked()
+                            TabsTray.inactiveTabsCfrSettings.record(NoExtras())
+                        },
+                        onInactiveTabsCFRDismiss = {
+                            requireContext().settings().shouldShowInactiveTabsOnboardingPopup = false
+                            TabsTray.inactiveTabsCfrDismissed.record(NoExtras())
+                        },
                     )
                 }
             }

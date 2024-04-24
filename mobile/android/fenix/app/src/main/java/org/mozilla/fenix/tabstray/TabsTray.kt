@@ -92,6 +92,10 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
  * @param onTabAutoCloseBannerDismiss Invoked when the user clicks to dismiss the auto close banner.
  * @param onTabAutoCloseBannerShown Invoked when the auto close banner has been shown to the user.
  * @param onMove Invoked after the drag and drop gesture completed. Swaps positions of two tabs.
+ * @param shouldShowInactiveTabsCFR Returns whether the inactive tabs CFR should be displayed.
+ * @param onInactiveTabsCFRShown Invoked when the inactive tabs CFR is displayed.
+ * @param onInactiveTabsCFRClick Invoked when the inactive tabs CFR is clicked.
+ * @param onInactiveTabsCFRDismiss Invoked when the inactive tabs CFR is dismissed.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Suppress("LongMethod", "LongParameterList", "ComplexMethod")
@@ -132,6 +136,10 @@ fun TabsTray(
     onTabAutoCloseBannerDismiss: () -> Unit,
     onTabAutoCloseBannerShown: () -> Unit,
     onMove: (String, String?, Boolean) -> Unit,
+    shouldShowInactiveTabsCFR: () -> Boolean,
+    onInactiveTabsCFRShown: () -> Unit,
+    onInactiveTabsCFRClick: () -> Unit,
+    onInactiveTabsCFRDismiss: () -> Unit,
 ) {
     val multiselectMode = tabsTrayStore
         .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
@@ -210,6 +218,10 @@ fun TabsTray(
                             onInactiveTabClick = onInactiveTabClick,
                             onInactiveTabClose = onInactiveTabClose,
                             onMove = onMove,
+                            shouldShowInactiveTabsCFR = shouldShowInactiveTabsCFR,
+                            onInactiveTabsCFRShown = onInactiveTabsCFRShown,
+                            onInactiveTabsCFRClick = onInactiveTabsCFRClick,
+                            onInactiveTabsCFRDismiss = onInactiveTabsCFRDismiss,
                         )
                     }
 
@@ -258,6 +270,10 @@ private fun NormalTabsPage(
     onInactiveTabClick: (TabSessionState) -> Unit,
     onInactiveTabClose: (TabSessionState) -> Unit,
     onMove: (String, String?, Boolean) -> Unit,
+    shouldShowInactiveTabsCFR: () -> Boolean,
+    onInactiveTabsCFRShown: () -> Unit,
+    onInactiveTabsCFRClick: () -> Unit,
+    onInactiveTabsCFRDismiss: () -> Unit,
 ) {
     val inactiveTabsExpanded = appStore
         .observeAsComposableState { state -> state.inactiveTabsExpanded }.value ?: false
@@ -283,6 +299,7 @@ private fun NormalTabsPage(
                     inactiveTabs = inactiveTabs,
                     expanded = inactiveTabsExpanded,
                     showAutoCloseDialog = showAutoCloseDialog,
+                    showCFR = shouldShowInactiveTabsCFR(),
                     onHeaderClick = onInactiveTabsHeaderClick,
                     onDeleteAllButtonClick = onDeleteAllInactiveTabsClick,
                     onAutoCloseDismissClick = {
@@ -295,6 +312,9 @@ private fun NormalTabsPage(
                     },
                     onTabClick = onInactiveTabClick,
                     onTabCloseClick = onInactiveTabClose,
+                    onCFRShown = onInactiveTabsCFRShown,
+                    onCFRClick = onInactiveTabsCFRClick,
+                    onCFRDismiss = onInactiveTabsCFRDismiss,
                 )
             }
         }
@@ -580,6 +600,10 @@ private fun TabsTrayPreviewRoot(
             onTabAutoCloseBannerDismiss = {},
             onTabAutoCloseBannerShown = {},
             onMove = { _, _, _ -> },
+            shouldShowInactiveTabsCFR = { false },
+            onInactiveTabsCFRShown = {},
+            onInactiveTabsCFRClick = {},
+            onInactiveTabsCFRDismiss = {},
         )
     }
 }
