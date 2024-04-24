@@ -7921,10 +7921,15 @@ void MacroAssembler::typedArrayElementSize(Register obj, Register output) {
   branchPtr(Assembler::Below, output, ImmPtr(classForType(Scalar::BigInt64)),
             &one);
 
+  static_assert(ValidateSizeRange(Scalar::BigInt64, Scalar::Float16),
+                "element size is eight in [BigInt64, Float16)");
+  branchPtr(Assembler::Below, output, ImmPtr(classForType(Scalar::Float16)),
+            &eight);
+
   static_assert(
-      ValidateSizeRange(Scalar::BigInt64, Scalar::MaxTypedArrayViewType),
-      "element size is eight in [BigInt64, MaxTypedArrayViewType)");
-  // Fall through for BigInt64 and BigUint64
+      ValidateSizeRange(Scalar::Float16, Scalar::MaxTypedArrayViewType),
+      "element size is two in [Float16, MaxTypedArrayViewType)");
+  jump(&two);
 
   bind(&eight);
   move32(Imm32(8), output);
@@ -7993,10 +7998,16 @@ void MacroAssembler::resizableTypedArrayElementShiftBy(Register obj,
   branchPtr(Assembler::Below, scratch, ImmPtr(classForType(Scalar::BigInt64)),
             &zero);
 
+  static_assert(ValidateSizeRange(Scalar::BigInt64, Scalar::Float16),
+                "element shift is three in [BigInt64, Float16)");
+  branchPtr(Assembler::Below, scratch, ImmPtr(classForType(Scalar::Float16)),
+            &three);
+
   static_assert(
-      ValidateSizeRange(Scalar::BigInt64, Scalar::MaxTypedArrayViewType),
-      "element shift is three in [BigInt64, MaxTypedArrayViewType)");
-  // Fall through for BigInt64 and BigUint64
+      ValidateSizeRange(Scalar::Float16, Scalar::MaxTypedArrayViewType),
+      "element shift is one in [Float16, MaxTypedArrayViewType)");
+  branchPtr(Assembler::Below, scratch, ImmPtr(classForType(Scalar::Float16)),
+            &one);
 
   bind(&three);
   rshiftPtr(Imm32(3), output);

@@ -23,6 +23,7 @@
 #include "util/CheckedArithmetic.h"
 #include "util/Unicode.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/Float16.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/Uint8Clamped.h"
 
@@ -1758,6 +1759,7 @@ static Range* GetArrayBufferViewRange(TempAllocator& alloc, Scalar::Type type) {
     case Scalar::BigUint64:
     case Scalar::Int64:
     case Scalar::Simd128:
+    case Scalar::Float16:
     case Scalar::Float32:
     case Scalar::Float64:
     case Scalar::MaxTypedArrayViewType:
