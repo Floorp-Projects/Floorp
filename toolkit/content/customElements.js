@@ -806,32 +806,49 @@
         "chrome://global/content/elements/autocomplete-input.js",
       ],
       ["editor", "chrome://global/content/elements/editor.js"],
-      ["moz-button", "chrome://global/content/elements/moz-button.mjs"],
-      [
-        "moz-button-group",
-        "chrome://global/content/elements/moz-button-group.mjs",
-      ],
-      ["moz-card", "chrome://global/content/elements/moz-card.mjs"],
-      ["moz-five-star", "chrome://global/content/elements/moz-five-star.mjs"],
-      [
-        "moz-message-bar",
-        "chrome://global/content/elements/moz-message-bar.mjs",
-      ],
-      ["moz-page-nav", "chrome://global/content/elements/moz-page-nav.mjs"],
-      [
-        "moz-support-link",
-        "chrome://global/content/elements/moz-support-link.mjs",
-      ],
-      ["moz-toggle", "chrome://global/content/elements/moz-toggle.mjs"],
     ]) {
       customElements.setElementCreationCallback(tag, () => {
-        if (script.endsWith(".mjs")) {
-          ChromeUtils.importESModule(script, { global: "current" });
-        } else {
-          Services.scriptloader.loadSubScript(script, window);
-        }
+        Services.scriptloader.loadSubScript(script, window);
       });
     }
+    // Bug 1813077: This is a workaround until Bug 1803810 lands
+    // which will give us the ability to load ESMs synchronously
+    // like the previous Services.scriptloader.loadSubscript() function
+    function importCustomElementFromESModule(name) {
+      switch (name) {
+        case "moz-button":
+          return import("chrome://global/content/elements/moz-button.mjs");
+        case "moz-button-group":
+          return import(
+            "chrome://global/content/elements/moz-button-group.mjs"
+          );
+        case "moz-message-bar":
+          return import("chrome://global/content/elements/moz-message-bar.mjs");
+        case "moz-support-link":
+          return import(
+            "chrome://global/content/elements/moz-support-link.mjs"
+          );
+        case "moz-toggle":
+          return import("chrome://global/content/elements/moz-toggle.mjs");
+        case "moz-card":
+          return import("chrome://global/content/elements/moz-card.mjs");
+      }
+      throw new Error(`Unknown custom element name (${name})`);
+    }
+
+    /*
+    This function explicitly returns null so that there is no confusion
+    about which custom elements from ES Modules have been loaded.
+    */
+    window.ensureCustomElements = function (...elementNames) {
+      return Promise.all(
+        elementNames
+          .filter(name => !customElements.get(name))
+          .map(name => importCustomElementFromESModule(name))
+      )
+        .then(() => null)
+        .catch(console.error);
+    };
 
     // Immediately load the following elements
     for (let script of [

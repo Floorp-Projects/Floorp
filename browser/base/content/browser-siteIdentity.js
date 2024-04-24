@@ -177,6 +177,7 @@ var gIdentityHandler = {
 
   _popupInitialized: false,
   _initializePopup() {
+    window.ensureCustomElements("moz-support-link");
     if (!this._popupInitialized) {
       let wrapper = document.getElementById("template-identity-popup");
       wrapper.replaceWith(wrapper.content);
