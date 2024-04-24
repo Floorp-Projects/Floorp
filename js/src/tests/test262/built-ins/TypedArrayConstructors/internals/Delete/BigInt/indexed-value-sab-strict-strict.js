@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')) -- SharedArrayBuffer is not enabled unconditionally
+// |reftest| shell-option(--enable-float16array) skip-if(!this.hasOwnProperty('SharedArrayBuffer')) -- SharedArrayBuffer is not enabled unconditionally
 'use strict';
 // Copyright (C) 2020 Rick Waldron. All rights reserved.
 // Copyright (C) 2017 Mozilla Corporation. All rights reserved.
