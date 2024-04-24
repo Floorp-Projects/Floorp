@@ -4,6 +4,7 @@
 <head>
   <script type="application/javascript" src="pc.js"></script>
   <script type="application/javascript" src="sdpUtils.js"></script>
+  <script type="application/javascript" src="iceTestUtils.js"></script>
 </head>
 
 <body>
@@ -578,6 +579,187 @@
       ok(ulpfecNegotiated == 6, "checkLoggingMultipleTransceivers glean should show ulpfec negotiated " + ulpfecNegotiated);
       let preferredVideoCodec = await GleanTest.codecStats.videoPreferredCodec.VP8.testGetValue() || 0;
       ok(preferredVideoCodec == 6, "checkLoggingMultipleTransceivers glean should show preferred video codec VP8 " + preferredVideoCodec);
+    },
+
+    async function checkDtlsHandshakeSuccess() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+      await gleanResetTestValues();
+      let client_successes = await GleanTest.webrtcdtls.clientHandshakeResult.SUCCESS.testGetValue() || 0;
+      let server_successes = await GleanTest.webrtcdtls.serverHandshakeResult.SUCCESS.testGetValue() || 0;
+      let cipher_count = await GleanTest.webrtcdtls.cipher["0x1301"].testGetValue() || 0;
+      let srtp_cipher_count = await GleanTest.webrtcdtls.srtpCipher["0x0007"].testGetValue() || 0;
+      is(client_successes, 0);
+      is(server_successes, 0);
+      is(cipher_count, 0);
+      is(srtp_cipher_count, 0);
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      pc1.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 32000, "DTLS connected", true, true);
+
+      client_successes = await GleanTest.webrtcdtls.clientHandshakeResult.SUCCESS.testGetValue() || 0;
+      server_successes = await GleanTest.webrtcdtls.serverHandshakeResult.SUCCESS.testGetValue() || 0;
+      cipher_count = await GleanTest.webrtcdtls.cipher["0x1301"].testGetValue() || 0;
+      srtp_cipher_count = await GleanTest.webrtcdtls.srtpCipher["0x0007"].testGetValue() || 0;
+      is(client_successes, 1);
+      is(server_successes, 1);
+      is(cipher_count, 2);
+      is(srtp_cipher_count, 2);
+    },
+
+    async function checkDtlsCipherPrefs() {
+      await withPrefs([["security.tls13.aes_128_gcm_sha256", false],
+                       ["security.tls13.aes_256_gcm_sha384", false],
+                       ["security.tls13.chacha20_poly1305_sha256", true]],
+        async () => {
+          const pc1 = new RTCPeerConnection();
+          const pc2 = new RTCPeerConnection();
+          await gleanResetTestValues();
+          let cipher_count = await GleanTest.webrtcdtls.cipher["0x1303"].testGetValue() || 0;
+          is(cipher_count, 0);
+
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          pc1.addTrack(stream.getTracks()[0]);
+
+          await connect(pc1, pc2, 32000, "DTLS connected", true, true);
+
+          cipher_count = await GleanTest.webrtcdtls.cipher["0x1303"].testGetValue() || 0;
+          is(cipher_count, 2);
+      });
+    },
+
+    async function checkDtlsHandshakeFailure() {
+      // We don't have many failures we can induce here, but messing up the
+      // fingerprint is one way.
+      const offerer = new RTCPeerConnection();
+      const answerer = new RTCPeerConnection();
+      await gleanResetTestValues();
+      let client_failures = await GleanTest.webrtcdtls.clientHandshakeResult.SSL_ERROR_BAD_CERTIFICATE.testGetValue() || 0;
+      let server_failures = await GleanTest.webrtcdtls.serverHandshakeResult.SSL_ERROR_BAD_CERT_ALERT.testGetValue() || 0;
+      is(client_failures, 0);
+      is(server_failures, 0);
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      offerer.addTrack(stream.getTracks()[0]);
+
+      trickleIce(offerer, answerer);
+      trickleIce(answerer, offerer);
+      await offerer.setLocalDescription();
+      let badSdp = offerer.localDescription.sdp;
+      // Tweak the last digit in the fingerprint sent to the answerer. Answerer
+      // (which will be the DTLS client) will get an SSL_ERROR_BAD_CERTIFICATE
+      // error, and the offerer (which will be the DTLS server) will get an
+      // SSL_ERROR_BAD_CERT_ALERT.
+      const lastDigit = badSdp.match(/a=fingerprint:.*([0-9A-F])$/m)[1];
+      const newLastDigit = lastDigit == '0' ? '1' : '0';
+      badSdp = badSdp.replace(/(a=fingerprint:.*)[0-9A-F]$/m, "$1" + newLastDigit);
+      info(badSdp);
+      await answerer.setRemoteDescription({sdp: badSdp, type: "offer"});
+      await answerer.setLocalDescription();
+      await offerer.setRemoteDescription(answerer.localDescription);
+
+      const throwOnTimeout = async () => {
+        await wait(32000);
+        throw new Error(
+          `ICE did not complete within ${timeout} ms`);
+      };
+
+      const connectionPromises = [connectionStateReached(offerer, "failed"),
+                                  connectionStateReached(answerer, "failed")];
+
+      await Promise.race([
+        Promise.all(connectionPromises),
+        throwOnTimeout()
+      ]);
+
+      client_failures = await GleanTest.webrtcdtls.clientHandshakeResult.SSL_ERROR_BAD_CERTIFICATE.testGetValue() || 0;
+      server_failures = await GleanTest.webrtcdtls.serverHandshakeResult.SSL_ERROR_BAD_CERT_ALERT.testGetValue() || 0;
+      is(client_failures, 1);
+      is(server_failures, 1);
+    },
+
+    async function checkDtlsVersion1_3() {
+      // 1.3 should be the default
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+      await gleanResetTestValues();
+      let count1_0 = await GleanTest.webrtcdtls.protocolVersion["1.0"].testGetValue() || 0;
+      let count1_2 = await GleanTest.webrtcdtls.protocolVersion["1.2"].testGetValue() || 0;
+      let count1_3 = await GleanTest.webrtcdtls.protocolVersion["1.3"].testGetValue() || 0;
+      is(count1_0, 0);
+      is(count1_2, 0);
+      is(count1_3, 0);
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      pc1.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 32000, "DTLS connected", true, true);
+
+      count1_0 = await GleanTest.webrtcdtls.protocolVersion["1.0"].testGetValue() || 0;
+      count1_2 = await GleanTest.webrtcdtls.protocolVersion["1.2"].testGetValue() || 0;
+      count1_3 = await GleanTest.webrtcdtls.protocolVersion["1.3"].testGetValue() || 0;
+      is(count1_0, 0);
+      is(count1_2, 0);
+      is(count1_3, 2);
+    },
+
+    async function checkDtlsVersion1_2() {
+      // Make 1.2 the default
+      await withPrefs([["media.peerconnection.dtls.version.max", 771]],
+        async () => {
+          const pc1 = new RTCPeerConnection();
+          const pc2 = new RTCPeerConnection();
+          await gleanResetTestValues();
+          let count1_0 = await GleanTest.webrtcdtls.protocolVersion["1.0"].testGetValue() || 0;
+          let count1_2 = await GleanTest.webrtcdtls.protocolVersion["1.2"].testGetValue() || 0;
+          let count1_3 = await GleanTest.webrtcdtls.protocolVersion["1.3"].testGetValue() || 0;
+          is(count1_0, 0);
+          is(count1_2, 0);
+          is(count1_3, 0);
+
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          pc1.addTrack(stream.getTracks()[0]);
+
+          await connect(pc1, pc2, 32000, "DTLS connected", true, true);
+
+          count1_0 = await GleanTest.webrtcdtls.protocolVersion["1.0"].testGetValue() || 0;
+          count1_2 = await GleanTest.webrtcdtls.protocolVersion["1.2"].testGetValue() || 0;
+          count1_3 = await GleanTest.webrtcdtls.protocolVersion["1.3"].testGetValue() || 0;
+          is(count1_0, 0);
+          is(count1_2, 2);
+          is(count1_3, 0);
+      });
+    },
+
+    async function checkDtlsVersion1_0() {
+      // Make 1.0 the default
+      await withPrefs([["media.peerconnection.dtls.version.max", 770],
+                       ["media.peerconnection.dtls.version.min", 770]],
+        async () => {
+          const pc1 = new RTCPeerConnection();
+          const pc2 = new RTCPeerConnection();
+          await gleanResetTestValues();
+          let count1_0 = await GleanTest.webrtcdtls.protocolVersion["1.0"].testGetValue() || 0;
+          let count1_2 = await GleanTest.webrtcdtls.protocolVersion["1.2"].testGetValue() || 0;
+          let count1_3 = await GleanTest.webrtcdtls.protocolVersion["1.3"].testGetValue() || 0;
+          is(count1_0, 0);
+          is(count1_2, 0);
+          is(count1_3, 0);
+
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          pc1.addTrack(stream.getTracks()[0]);
+
+          await connect(pc1, pc2, 32000, "DTLS connected", true, true);
+
+          count1_0 = await GleanTest.webrtcdtls.protocolVersion["1.0"].testGetValue() || 0;
+          count1_2 = await GleanTest.webrtcdtls.protocolVersion["1.2"].testGetValue() || 0;
+          count1_3 = await GleanTest.webrtcdtls.protocolVersion["1.3"].testGetValue() || 0;
+          is(count1_0, 2);
+          is(count1_2, 0);
+          is(count1_3, 0);
+      });
     },
 
   ];

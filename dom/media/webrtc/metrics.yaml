@@ -404,3 +404,84 @@ codec.stats:
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
     expires: 132
+
+webrtcdtls:
+  protocol_version:
+    type: labeled_counter
+    description: >
+      The version of DTLS used for each webrtc connection. Can be 1.0, 1.2, or 1.3 (there is no 1.1 version of DTLS)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884140
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884140
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 135
+
+  cipher:
+    type: labeled_counter
+    description: >
+      The CipherSuite used for each webrtc DTLS connection, as a string
+      representation of the CipherSuite's ID in 4 hex digits (eg;
+      TLS_DHE_RSA_WITH_AES_128_CBC_SHA would be "0x0033")
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884140
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884140
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 135
+
+  srtp_cipher:
+    type: labeled_counter
+    description: >
+      The SRTPProtectionProfile (see RFC 5764) used for each webrtc SRTP
+      connection, as a string representation of the SRTPProtectionProfile's ID
+      in 4 hex digits (eg; SRTP_AES128_CM_HMAC_SHA1_80 would be "0x0001")
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884140
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884140
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 135
+
+  client_handshake_result:
+    type: labeled_counter
+    description: >
+      The result of each webrtc client DTLS handshake as a string containing
+      either the name of the error code (eg; SSL_ERROR_BAD_CERTIFICATE),
+      SUCCESS for successful handshakes, ALPN_FAILURE when ALPN negotiation
+      fails, or CERT_FAILURE when cert validation fails.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884140
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884140
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 135
+
+  server_handshake_result:
+    type: labeled_counter
+    description: >
+      The result of each webrtc server DTLS handshake, as the name of the error
+      code (eg; SSL_ERROR_BAD_CERTIFICATE), the empty string for successful
+      handshakes, ALPN_FAILURE when ALPN negotiation fails, or CERT_FAILURE when
+      cert validation fails.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884140
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884140
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 135
