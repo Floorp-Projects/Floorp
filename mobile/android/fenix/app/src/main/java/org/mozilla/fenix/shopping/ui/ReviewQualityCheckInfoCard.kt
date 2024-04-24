@@ -182,7 +182,7 @@ enum class ReviewQualityCheckInfoType {
             Warning -> FirefoxTheme.colors.actionWarning
             Confirmation -> FirefoxTheme.colors.actionSuccess
             Error -> FirefoxTheme.colors.actionCritical
-            Info -> FirefoxTheme.colors.actionInfo
+            Info -> FirefoxTheme.colors.actionInformation
             AnalysisUpdate -> FirefoxTheme.colors.actionSecondary
         }
 

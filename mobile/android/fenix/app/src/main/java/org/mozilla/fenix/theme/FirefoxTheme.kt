@@ -114,7 +114,7 @@ private val darkColorPalette = FirefoxColors(
     actionWarning = PhotonColors.Yellow40A41,
     actionSuccess = PhotonColors.Green70,
     actionCritical = PhotonColors.Pink70A69,
-    actionInfo = PhotonColors.Blue60,
+    actionInformation = PhotonColors.Blue60,
     formDefault = PhotonColors.LightGrey05,
     formSelected = PhotonColors.Violet40,
     formSurface = PhotonColors.DarkGrey05,
@@ -194,7 +194,7 @@ private val lightColorPalette = FirefoxColors(
     actionWarning = PhotonColors.Yellow60A40,
     actionSuccess = PhotonColors.Green60,
     actionCritical = PhotonColors.Red30,
-    actionInfo = PhotonColors.Blue50,
+    actionInformation = PhotonColors.Blue50,
     formDefault = PhotonColors.DarkGrey90,
     formSelected = PhotonColors.Ink20,
     formSurface = PhotonColors.LightGrey50,
@@ -288,7 +288,7 @@ class FirefoxColors(
     actionWarning: Color,
     actionSuccess: Color,
     actionCritical: Color,
-    actionInfo: Color,
+    actionInformation: Color,
     formDefault: Color,
     formSelected: Color,
     formSurface: Color,
@@ -445,7 +445,7 @@ class FirefoxColors(
         private set
 
     // Info button
-    var actionInfo by mutableStateOf(actionInfo)
+    var actionInformation by mutableStateOf(actionInformation)
         private set
 
     // Checkbox default, Radio button default
@@ -675,7 +675,7 @@ class FirefoxColors(
         actionWarning = other.actionWarning
         actionSuccess = other.actionSuccess
         actionCritical = other.actionCritical
-        actionInfo = other.actionInfo
+        actionInformation = other.actionInformation
         formDefault = other.formDefault
         formSelected = other.formSelected
         formSurface = other.formSurface
@@ -759,7 +759,7 @@ class FirefoxColors(
         actionWarning: Color = this.actionWarning,
         actionSuccess: Color = this.actionSuccess,
         actionCritical: Color = this.actionCritical,
-        actionInfo: Color = this.actionInfo,
+        actionInformation: Color = this.actionInformation,
         formDefault: Color = this.formDefault,
         formSelected: Color = this.formSelected,
         formSurface: Color = this.formSurface,
@@ -837,7 +837,7 @@ class FirefoxColors(
         actionWarning = actionWarning,
         actionSuccess = actionSuccess,
         actionCritical = actionCritical,
-        actionInfo = actionInfo,
+        actionInformation = actionInformation,
         formDefault = formDefault,
         formSelected = formSelected,
         formSurface = formSurface,
