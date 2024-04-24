@@ -189,11 +189,10 @@ pref("pdfjs.enableXfa", true);
 pref("pdfjs.enableStampEditor", true);
 
 // Enable highlighting in a pdf.
+pref("pdfjs.enableHighlightEditor", true);
 #if defined(EARLY_BETA_OR_EARLIER)
-  pref("pdfjs.enableHighlightEditor", true);
   pref("pdfjs.enableHighlightFloatingButton", true);
 #else
-  pref("pdfjs.enableHighlightEditor", false);
   pref("pdfjs.enableHighlightFloatingButton", false);
 #endif
 
