@@ -127,7 +127,7 @@ private val darkColorPalette = FirefoxColors(
     textSecondary = PhotonColors.LightGrey40,
     textDisabled = PhotonColors.LightGrey05A40,
     textCritical = PhotonColors.Red20,
-    textWarningButton = PhotonColors.Red70,
+    textCriticalButton = PhotonColors.Red20,
     textAccent = PhotonColors.Violet20,
     textAccentDisabled = PhotonColors.Violet20A60,
     textOnColorPrimary = PhotonColors.LightGrey05,
@@ -207,7 +207,7 @@ private val lightColorPalette = FirefoxColors(
     textSecondary = PhotonColors.DarkGrey05,
     textDisabled = PhotonColors.DarkGrey90A40,
     textCritical = PhotonColors.Red70,
-    textWarningButton = PhotonColors.Red70,
+    textCriticalButton = PhotonColors.Red70,
     textAccent = PhotonColors.Violet70,
     textAccentDisabled = PhotonColors.Violet70A80,
     textOnColorPrimary = PhotonColors.LightGrey05,
@@ -301,7 +301,7 @@ class FirefoxColors(
     textSecondary: Color,
     textDisabled: Color,
     textCritical: Color,
-    textWarningButton: Color,
+    textCriticalButton: Color,
     textAccent: Color,
     textAccentDisabled: Color,
     textOnColorPrimary: Color,
@@ -499,7 +499,7 @@ class FirefoxColors(
         private set
 
     // Warning text on Secondary button
-    var textWarningButton by mutableStateOf(textWarningButton)
+    var textCriticalButton by mutableStateOf(textCriticalButton)
         private set
 
     // Small heading, Text link
@@ -688,7 +688,7 @@ class FirefoxColors(
         textSecondary = other.textSecondary
         textDisabled = other.textDisabled
         textCritical = other.textCritical
-        textWarningButton = other.textWarningButton
+        textCriticalButton = other.textCriticalButton
         textAccent = other.textAccent
         textAccentDisabled = other.textAccentDisabled
         textOnColorPrimary = other.textOnColorPrimary
@@ -772,7 +772,7 @@ class FirefoxColors(
         textSecondary: Color = this.textSecondary,
         textDisabled: Color = this.textDisabled,
         textCritical: Color = this.textCritical,
-        textWarningButton: Color = this.textWarningButton,
+        textCriticalButton: Color = this.textCriticalButton,
         textAccent: Color = this.textAccent,
         textAccentDisabled: Color = this.textAccentDisabled,
         textOnColorPrimary: Color = this.textOnColorPrimary,
@@ -850,7 +850,7 @@ class FirefoxColors(
         textSecondary = textSecondary,
         textDisabled = textDisabled,
         textCritical = textCritical,
-        textWarningButton = textWarningButton,
+        textCriticalButton = textCriticalButton,
         textAccent = textAccent,
         textAccentDisabled = textAccentDisabled,
         textOnColorPrimary = textOnColorPrimary,

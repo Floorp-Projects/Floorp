@@ -79,7 +79,7 @@
     <!-- Warning text -->
     <color name="fx_mobile_text_color_critical">@color/photonRed70</color>
     <!-- Warning text on Secondary button -->
-    <color name="fx_mobile_text_color_warning_button">@color/photonRed70</color>
+    <color name="fx_mobile_text_color_critical_button">@color/photonRed70</color>
     <!-- Small heading, Text link -->
     <color name="fx_mobile_text_color_accent">@color/photonViolet70</color>
     <!-- Small heading, Text link -->
@@ -216,7 +216,7 @@
     <!-- Warning text -->
     <color name="fx_mobile_private_text_color_critical">@color/photonRed20</color>
     <!-- Warning text on Secondary button -->
-    <color name="fx_mobile_private_text_color_warning_button" tools:ignore="UnusedResources">@color/photonRed70</color>
+    <color name="fx_mobile_private_text_color_critical_button" tools:ignore="UnusedResources">@color/photonRed20</color>
     <!-- Small heading, Text link -->
     <color name="fx_mobile_private_text_color_accent">@color/photonViolet20</color>
     <!-- Small heading, Text link -->
