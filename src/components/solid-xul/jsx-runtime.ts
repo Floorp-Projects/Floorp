@@ -50,5 +50,9 @@ declare module "solid-js" {
       "xul:menuseparator";
       "xul:menu";
     }
+
+    interface Directives {
+      dndzone: Accessor<unknown[]>;
+    }
   }
 }

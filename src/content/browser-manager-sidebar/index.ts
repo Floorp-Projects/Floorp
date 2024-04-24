@@ -1,4 +1,4 @@
-import { insert } from "@solid-xul/solid-xul";
+import { insert } from "../../components/solid-xul/solid-xul";
 
 import { BMSContextMenu } from "./context-menu";
 import { BMSControlFunctions } from "./control-functions";

@@ -34,6 +34,7 @@
     "puppeteer-core": "^22.6.5",
     "tsx": "^4.7.2",
     "typescript": "^5.4.5",
+    "unocss": "^0.59.4",
     "vite": "5.2.9",
     "vite-plugin-solid": "^2.10.2",
     "vite-tsconfig-paths": "^4.3.2",

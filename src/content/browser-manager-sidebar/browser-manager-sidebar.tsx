@@ -1,4 +1,4 @@
-import "@solid-xul/jsx-runtime";
+import "../../components/solid-xul/jsx-runtime";
 import type { CBrowserManagerSidebar } from ".";
 
 export function sidebar(bms: CBrowserManagerSidebar) {

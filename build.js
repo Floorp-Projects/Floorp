@@ -10,15 +10,21 @@ import postcssSorting from "postcss-sorting";
 import chikodar from "chokidar";
 import { build } from "vite";
 import solidPlugin from "vite-plugin-solid";
+import unocssPlugin from "unocss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import * as swc from "@swc/core";
 
 import { injectManifest } from "./scripts/injectmanifest.js";
 import { injectXHTML } from "./scripts/injectxhtml.js";
 
+const r = (/** @type {string} */ dir) => {
+  return path.resolve(import.meta.dirname, dir);
+};
+
 async function compile() {
   await build({
-    root: path.resolve(import.meta.dirname, "src"),
+    root: r("src"),
+    publicDir: r("public"),
     build: {
       sourcemap: true,
       reportCompressedSize: false,
@@ -42,13 +48,14 @@ async function compile() {
           entryFileNames: "content/[name].js",
         },
       },
-      outDir: "../dist/noraneko",
+      outDir: r("dist/noraneko"),
 
       assetsDir: "content/assets",
     },
 
     plugins: [
       tsconfigPaths(),
+      unocssPlugin(),
       solidPlugin({
         solid: {
           generate: "universal",

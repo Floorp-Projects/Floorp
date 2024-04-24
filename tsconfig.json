@@ -15,11 +15,12 @@
     "strict": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
+    "resolvePackageJsonExports": false,
     "isolatedModules": true,
     "jsxImportSource": "solid-js",
     "paths": {
       "@types/*": ["./@types/*"],
-      "@solid-xul/*": ["./src/solid-xul/*"],
+      "@solid-xul/*": ["./src/components/solid-xul/*"],
       "@private/*": ["./src/private/src/content/*"],
       "@content/*": ["./src/content/*"]
     }

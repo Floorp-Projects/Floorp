@@ -4,7 +4,14 @@
 
 import { Sidebar3Data, Sidebar3Panel } from "./SidebarData";
 
-const STATIC_SIDEBAR_DATA = {
+interface StaticSidebarDatum {
+  url: string;
+  l10n: string;
+  defaultWidth: number;
+  disabled: boolean;
+}
+
+const STATIC_SIDEBAR_DATA: Record<string, StaticSidebarDatum> = {
   "floorp//bms": {
     url: "chrome://browser/content/places/places.xhtml",
     l10n: "browser-manager-sidebar",

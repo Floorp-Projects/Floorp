@@ -1,3 +1,4 @@
+import { insert } from "../../components/solid-xul/solid-xul";
 import type { CBrowserManagerSidebar } from ".";
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
@@ -316,150 +317,80 @@ export class BMSControlFunctions {
 
   // Add Sidebar Icon to Sidebar's select box
   makeSidebarIcon() {
-    // for (const elem of this.bmsInstance.BROWSER_SIDEBAR_DATA.index) {
-    //   if (document.getElementById(`select-${elem}`) == null) {
-    //     const sidebarItem = document.createXULElement("toolbarbutton");
-    //     sidebarItem.id = `select-${elem}`;
-    //     sidebarItem.classList.add("sidepanel-icon");
-    //     sidebarItem.classList.add("sicon-list");
-    //     sidebarItem.setAttribute(
-    //       "oncommand",
-    //       "gBrowserManagerSidebar.selectSidebarItem(event)",
-    //     );
-    //     if (
-    //       this.bmsInstance.BROWSER_SIDEBAR_DATA.data[elem].url.slice(0, 8) ===
-    //       "floorp//"
-    //     ) {
-    //       if (
-    //         this.bmsInstance.BROWSER_SIDEBAR_DATA.data[elem].url in
-    //         this.bmsInstance.STATIC_SIDEBAR_DATA
-    //       ) {
-    //         //0~4 - StaticModeSetter | Browser Manager, Bookmark, History, Downloads
-    //         sidebarItem.setAttribute(
-    //           "data-l10n-id",
-    //           "show-" +
-    //             this.bmsInstance.STATIC_SIDEBAR_DATA[
-    //               this.bmsInstance.BROWSER_SIDEBAR_DATA.data[elem].url
-    //             ].l10n,
-    //         );
-    //         sidebarItem.setAttribute("context", "all-panel-context");
-    //       }
-    //     } else {
-    //       //5~ CustomURLSetter | Custom URL have l10n, Userangent, Delete panel & etc...
-    //       sidebarItem.classList.add("webpanel-icon");
-    //       sidebarItem.setAttribute("context", "webpanel-context");
-    //       sidebarItem.setAttribute(
-    //         "tooltiptext",
-    //         this.bmsInstance.BROWSER_SIDEBAR_DATA.data[elem].url,
-    //       );
-    //     }
-    //     if (
-    //       this.bmsInstance.BROWSER_SIDEBAR_DATA.data[elem].url.slice(0, 9) ===
-    //       "extension"
-    //     ) {
-    //       sidebarItem.setAttribute(
-    //         "tooltiptext",
-    //         this.bmsInstance.BROWSER_SIDEBAR_DATA.data[elem].url.split(",")[1],
-    //       );
-    //       sidebarItem.className += " extension-icon";
-    //       const listTexts =
-    //         "chrome://browser/content/BMS-extension-needs-white-bg.txt";
-    //       fetch(listTexts)
-    //         .then((response) => {
-    //           return response.text();
-    //         })
-    //         .then((text) => {
-    //           const lines = text.split(/\r?\n/);
-    //           for (const line of lines) {
-    //             if (
-    //               line ===
-    //               this.bmsInstance.BROWSER_SIDEBAR_DATA.data[elem].url.split(
-    //                 ",",
-    //               )[2]
-    //             ) {
-    //               sidebarItem.className += " extension-icon-add-white";
-    //               break;
-    //             }
-    //           }
-    //         });
-    //     } else {
-    //       sidebarItem.style.listStyleImage = "";
-    //     }
-    //     sidebarItem.onmouseover = this.bmsInstance.mouseEvent.mouseOver;
-    //     sidebarItem.onmouseout = this.bmsInstance.mouseEvent.mouseOut;
-    //     sidebarItem.ondragstart = this.bmsInstance.mouseEvent.dragStart;
-    //     sidebarItem.ondragover = this.bmsInstance.mouseEvent.dragOver;
-    //     sidebarItem.ondragleave = this.bmsInstance.mouseEvent.dragLeave;
-    //     sidebarItem.ondrop = this.bmsInstance.mouseEvent.drop;
-    //     const sidebarItemImage = document.createXULElement("image");
-    //     sidebarItemImage.classList.add("toolbarbutton-icon");
-    //     sidebarItem.appendChild(sidebarItemImage);
-    //     const sidebarItemLabel = document.createXULElement("label");
-    //     sidebarItemLabel.classList.add("toolbarbutton-text");
-    //     sidebarItemLabel.setAttribute("crop", "right");
-    //     sidebarItemLabel.setAttribute("flex", "1");
-    //     sidebarItem.appendChild(sidebarItemLabel);
-    //     document
-    //       .getElementById("panelBox")
-    //       .insertBefore(sidebarItem, document.getElementById("add-button"));
-    //   } else {
-    //     const sidebarItem = document.getElementById(`select-${elem}`);
-    //     if (
-    //       this.bmsInstance.BROWSER_SIDEBAR_DATA.data[elem].url.slice(0, 8) ===
-    //       "floorp//"
-    //     ) {
-    //       if (
-    //         this.bmsInstance.BROWSER_SIDEBAR_DATA.data[elem].url in
-    //         this.bmsInstance.STATIC_SIDEBAR_DATA
-    //       ) {
-    //         sidebarItem.classList.remove("webpanel-icon");
-    //         sidebarItem.setAttribute(
-    //           "data-l10n-id",
-    //           "show-" +
-    //             this.bmsInstance.STATIC_SIDEBAR_DATA[
-    //               this.bmsInstance.BROWSER_SIDEBAR_DATA.data[elem].url
-    //             ].l10n,
-    //         );
-    //         sidebarItem.setAttribute("context", "all-panel-context");
-    //       }
-    //     } else {
-    //       sidebarItem.classList.add("webpanel-icon");
-    //       sidebarItem.removeAttribute("data-l10n-id");
-    //       sidebarItem.setAttribute("context", "webpanel-context");
-    //     }
-    //     document
-    //       .getElementById("panelBox")
-    //       .insertBefore(sidebarItem, document.getElementById("add-button"));
-    //   }
-    // }
-    // const siconAll = document.querySelectorAll(".sicon-list");
-    // const sicon = siconAll.length;
-    // const side = this.bmsInstance.BROWSER_SIDEBAR_DATA.index.length;
-    // if (sicon > side) {
-    //   for (let i = 0; i < sicon - side; i++) {
-    //     if (
-    //       document.getElementById(
-    //         siconAll[i].id.replace("select-", "webpanel"),
-    //       ) != null
-    //     ) {
-    //       const sidebarsplit2 = document.getElementById("sidebar-splitter2");
-    //       if (
-    //         this.bmsInstance.currentPanel ===
-    //         siconAll[i].id.replace("select-", "")
-    //       ) {
-    //         this.bmsInstance.currentPanel = null;
-    //         this.visibleWebpanel();
-    //         if (sidebarsplit2.getAttribute("hidden") !== "true") {
-    //           this.changeVisibilityOfWebPanel();
-    //         }
-    //       }
-    //       document
-    //         .getElementById(siconAll[i].id.replace("select-", "webpanel"))
-    //         .remove();
-    //     }
-    //     siconAll[i].remove();
-    //   }
-    // }
+    for (const [i, elem] of Object.entries(
+      this.bmsInstance.BROWSER_SIDEBAR_DATA.panels,
+    )) {
+      document.getElementById(`select-${i}`)?.remove();
+      //TODO: make this feature with solid-js feature
+      if (document.getElementById(`select-${i}`) == null) {
+        const attr: Record<string, string> = {};
+        const style: Record<string, string> = {};
+        const additionalClazz = [];
+        if (elem.url.startsWith("floorp//")) {
+          if (elem.url in this.bmsInstance.STATIC_SIDEBAR_DATA) {
+            const staticUrl =
+              this.bmsInstance.STATIC_SIDEBAR_DATA[elem.url].url;
+            attr["data-l10n-id"] = `show-${staticUrl}`;
+            attr.context = "all-panel-context";
+          } else {
+            throw "unknown floorp// starting url on webpanel icon";
+          }
+        } else {
+          additionalClazz.push("webpanel-icon");
+          attr.context = "webpanel-context";
+          attr.tooltiptext = elem.url;
+        }
+        if (elem.url.startsWith("extension")) {
+          attr.tooltiptext = elem.url.split(",")[1];
+          additionalClazz.push("extension-icon");
+          //TODO: later
+          // const listTexts =
+          //   "chrome://browser/content/BMS-extension-needs-white-bg.txt";
+          // const res_text = await (await fetch(listTexts)).text()
+
+          // const lines = text.split(/\r?\n/);
+          // for (const line of lines) {
+          //   if (
+          //     line ==
+          //     gBrowserManagerSidebar.BROWSER_SIDEBAR_DATA.data[
+          //       elem
+          //     ].url.split(",")[2]
+          //   ) {
+          //     sidebarItem.className += " extension-icon-add-white";
+          //     break;
+          //   }
+          //   }
+        } else {
+          style.listStyleImage = "";
+        }
+
+        const sidebarItem = (
+          <xul:toolbarbutton
+            id={`select-${i}`}
+            class={`sidepanel-icon sicon-list ${additionalClazz.join(" ")}`}
+            onClick={this.bmsInstance.selectSidebarItem}
+            style={style}
+            onMouseOver={this.bmsInstance.mouseEvent.mouseOver}
+            onMouseOut={this.bmsInstance.mouseEvent.mouseOut}
+            onDragStart={this.bmsInstance.mouseEvent.dragStart}
+            onDragOver={this.bmsInstance.mouseEvent.dragOver}
+            onDragLeave={this.bmsInstance.mouseEvent.dragLeave}
+            onDrop={this.bmsInstance.mouseEvent.drop}
+            {...attr}
+          >
+            <xul:image class="toolbarbutton-icon" />
+            <xul:label class="toolbarbutton-text" crop="right" flex="1" />
+          </xul:toolbarbutton>
+        );
+
+        insert(
+          document.getElementById("panelBox"),
+          () => sidebarItem,
+          document.getElementById("add-button"),
+        );
+      } // if `select-${i}` == null
+    }
+
     // for (const elem of document.querySelectorAll(".sidepanel-icon")) {
     //   if (elem.className.includes("webpanel-icon")) {
     //     const sbar_url =

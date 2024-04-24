@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "../../solid-xul/solid-xul";
+import { render } from "../../components/solid-xul/solid-xul";
 import { webpanel2browser } from "./webPanel";
 
 // //@ts-ignore

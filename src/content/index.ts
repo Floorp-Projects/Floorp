@@ -8,8 +8,9 @@ SessionStore.promiseInitialized.then(() => {
   setBrowserDesign();
   //createWebpanel("tmp", "https://manatoki332.net/");
   //console.log(document.getElementById("tmp"));
-  window.gBrowserManagerSidebar = CBrowserManagerSidebar.getInstance();
+  //window.gBrowserManagerSidebar = CBrowserManagerSidebar.getInstance();
   import("./testButton");
+  import("./browser-sidebar/index");
 });
 
 //Services.obs.addObserver(setBrowserDesign, "browser-window-before-show");
