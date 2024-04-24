@@ -219,13 +219,6 @@ class nsView final : public nsIWidgetListener {
   nsPoint GetOffsetToWidget(nsIWidget* aWidget) const;
 
   /**
-   * Takes a point aPt that is in the coordinate system of |this|'s parent view
-   * and converts it to be in the coordinate system of |this| taking into
-   * account the offset and any app unit per dev pixel ratio differences.
-   */
-  nsPoint ConvertFromParentCoords(nsPoint aPt) const;
-
-  /**
    * Called to query the visibility state of a view.
    * @result current visibility state
    */
@@ -524,9 +517,6 @@ class nsView final : public nsIWidgetListener {
   // Helper function to get mouse grabbing off this view (by moving it to the
   // parent, if we can)
   void DropMouseGrabbing();
-
-  // Same as GetBounds but converts to parent appunits if they are different.
-  nsRect GetBoundsInParentUnits() const;
 
   bool HasNonEmptyDirtyRegion() {
     return mDirtyRegion && !mDirtyRegion->IsEmpty();
