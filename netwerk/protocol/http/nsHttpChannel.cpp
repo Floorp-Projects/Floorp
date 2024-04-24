@@ -6628,8 +6628,10 @@ nsresult nsHttpChannel::BeginConnect() {
   Unused << gHttpHandler->AddConnectionHeader(&mRequestHead, mCaps);
 
   if (!LoadIsTRRServiceChannel() &&
-      (mLoadFlags & VALIDATE_ALWAYS ||
-       BYPASS_LOCAL_CACHE(mLoadFlags, LoadPreferCacheLoadOverBypass()))) {
+      ((mLoadFlags & LOAD_FRESH_CONNECTION) ||
+       (!StaticPrefs::network_dns_only_refresh_on_fresh_connection() &&
+        (mLoadFlags & VALIDATE_ALWAYS ||
+         BYPASS_LOCAL_CACHE(mLoadFlags, LoadPreferCacheLoadOverBypass()))))) {
     mCaps |= NS_HTTP_REFRESH_DNS;
   }
 
