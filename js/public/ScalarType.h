@@ -61,7 +61,7 @@ enum Type {
   Simd128,
 };
 
-static inline size_t byteSize(Type atype) {
+constexpr size_t byteSize(Type atype) {
   switch (atype) {
     case Int8:
     case Uint8:
@@ -87,7 +87,7 @@ static inline size_t byteSize(Type atype) {
   MOZ_CRASH("invalid scalar type");
 }
 
-static inline bool isSignedIntType(Type atype) {
+constexpr bool isSignedIntType(Type atype) {
   switch (atype) {
     case Int8:
     case Int16:
@@ -110,7 +110,7 @@ static inline bool isSignedIntType(Type atype) {
   MOZ_CRASH("invalid scalar type");
 }
 
-static inline bool isBigIntType(Type atype) {
+constexpr bool isBigIntType(Type atype) {
   switch (atype) {
     case BigInt64:
     case BigUint64:
@@ -133,7 +133,7 @@ static inline bool isBigIntType(Type atype) {
   MOZ_CRASH("invalid scalar type");
 }
 
-static inline bool isFloatingType(Type atype) {
+constexpr bool isFloatingType(Type atype) {
   switch (atype) {
     case Int8:
     case Uint8:
@@ -156,7 +156,7 @@ static inline bool isFloatingType(Type atype) {
   MOZ_CRASH("invalid scalar type");
 }
 
-static inline const char* name(Type atype) {
+constexpr const char* name(Type atype) {
   switch (atype) {
     case Int8:
       return "Int8";
@@ -190,7 +190,7 @@ static inline const char* name(Type atype) {
   MOZ_CRASH("invalid scalar type");
 }
 
-static inline const char* byteSizeString(Type atype) {
+constexpr const char* byteSizeString(Type atype) {
   switch (atype) {
     case Int8:
     case Uint8:
