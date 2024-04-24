@@ -71,13 +71,11 @@ async function testBookmarks(migratorKey, subDirs) {
   ).path;
   await IOUtils.copy(sourcePath, target.path);
 
-  // Get page url and the image data for each favicon
-  let favicons = await MigrationUtils.getRowsFromDBWithoutLocks(
+  // Get page url for each favicon
+  let faviconURIs = await MigrationUtils.getRowsFromDBWithoutLocks(
     sourcePath,
     "Chrome Bookmark Favicons",
-    `SELECT page_url, image_data FROM icon_mapping
-     INNER JOIN favicon_bitmaps ON (favicon_bitmaps.icon_id = icon_mapping.icon_id)
-    `
+    `select page_url from icon_mapping`
   );
 
   target.append("Bookmarks");
@@ -173,14 +171,10 @@ async function testBookmarks(migratorKey, subDirs) {
     "Telemetry reporting correct."
   );
   Assert.ok(observerNotified, "The observer should be notified upon migration");
-
-  for (const favicon of favicons) {
-    await assertFavicon(
-      favicon.getResultByName("page_url"),
-      favicon.getResultByName("image_data"),
-      "image/png"
-    );
-  }
+  let pageUrls = Array.from(faviconURIs, f =>
+    Services.io.newURI(f.getResultByName("page_url"))
+  );
+  await assertFavicons(pageUrls);
 }
 
 add_task(async function test_Chrome() {

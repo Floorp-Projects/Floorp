@@ -247,10 +247,21 @@ DistributionCustomizer.prototype = {
 
           if (item.icon && item.iconData) {
             try {
-              lazy.PlacesUtils.favicons.setFaviconForPage(
+              let faviconURI = Services.io.newURI(item.icon);
+              lazy.PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+                faviconURI,
+                item.iconData,
+                0,
+                Services.scriptSecurityManager.getSystemPrincipal()
+              );
+
+              lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
                 Services.io.newURI(item.link),
-                Services.io.newURI(item.icon),
-                Services.io.newURI(item.iconData)
+                faviconURI,
+                false,
+                lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+                null,
+                Services.scriptSecurityManager.getSystemPrincipal()
               );
             } catch (e) {
               console.error(e);

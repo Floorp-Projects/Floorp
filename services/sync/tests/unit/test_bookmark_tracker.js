@@ -764,7 +764,26 @@ add_task(async function test_onFaviconChanged() {
     let iconURL =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
       "AAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
-    await PlacesTestUtils.setFaviconForPage(pageURI, iconURI, iconURL);
+
+    PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+      iconURI,
+      iconURL,
+      0,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
+
+    await new Promise(resolve => {
+      PlacesUtils.favicons.setAndFetchFaviconForPage(
+        pageURI,
+        iconURI,
+        true,
+        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        () => {
+          resolve();
+        },
+        Services.scriptSecurityManager.getSystemPrincipal()
+      );
+    });
     await verifyTrackedItems([]);
     Assert.equal(tracker.score, 0);
   } finally {

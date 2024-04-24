@@ -76,12 +76,25 @@ var gFavicon;
 
 add_task(async function setup() {
   await PlacesTestUtils.addVisits(TEST_URI);
-  await PlacesTestUtils.setFaviconForPage(
-    TEST_URI,
+
+  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
     ICON_URI,
     ICON_DATAURL,
-    (Date.now() + 8640000) * 1000
+    (Date.now() + 8640000) * 1000,
+    Services.scriptSecurityManager.getSystemPrincipal()
   );
+
+  await new Promise(resolve => {
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
+      TEST_URI,
+      ICON_URI,
+      false,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      resolve,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
+  });
+
   gDefaultFavicon = await fetchIconForSpec(
     PlacesUtils.favicons.defaultFavicon.spec
   );
@@ -120,11 +133,13 @@ add_task(async function subpage_url_fallback() {
 
 add_task(async function svg_icon() {
   let faviconURI = NetUtil.newURI("http://places.test/favicon.svg");
-  await PlacesTestUtils.setFaviconForPage(
-    TEST_URI,
+  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
     faviconURI,
-    SMALLSVG_DATA_URI
+    SMALLSVG_DATA_URI.spec,
+    0,
+    Services.scriptSecurityManager.getSystemPrincipal()
   );
+  await setFaviconForPage(TEST_URI, faviconURI);
   let svgIcon = await fetchIconForSpec(SMALLSVG_DATA_URI.spec);
   info(svgIcon.contentType);
   let pageIcon = await fetchIconForSpec("page-icon:" + TEST_URI.spec);
@@ -255,8 +270,23 @@ add_task(async function test_with_user_pass() {
 
   for (const { pageURI, iconURI } of testData) {
     for (const loadingIconURISpec of [PAGE_ICON_NORMAL, PAGE_ICON_USERPASS]) {
+      PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+        iconURI,
+        ICON_DATAURL,
+        0,
+        systemPrincipal
+      );
       await PlacesTestUtils.addVisits(pageURI);
-      await PlacesTestUtils.setFaviconForPage(pageURI, iconURI, ICON_DATAURL);
+      await new Promise(resolve => {
+        PlacesUtils.favicons.setAndFetchFaviconForPage(
+          pageURI,
+          iconURI,
+          false,
+          PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+          resolve,
+          Services.scriptSecurityManager.getSystemPrincipal()
+        );
+      });
 
       let { data, contentType } = await fetchIconForSpec(loadingIconURISpec);
       Assert.equal(contentType, gFavicon.contentType);
