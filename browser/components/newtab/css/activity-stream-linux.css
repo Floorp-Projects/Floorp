@@ -1937,11 +1937,8 @@ main section {
   cursor: pointer;
   outline: 2px solid transparent;
 }
-.wallpaper-list .wallpaper-input.dark-aurora {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-aurora.avif");
-}
-.wallpaper-list .wallpaper-input.dark-city {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-city.avif");
+.wallpaper-list .wallpaper-input.dark-landscape {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-landscape.avif");
 }
 .wallpaper-list .wallpaper-input.dark-color {
   background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-color.avif");
@@ -1955,6 +1952,9 @@ main section {
 .wallpaper-list .wallpaper-input.dark-sky {
   background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-sky.avif");
 }
+.wallpaper-list .wallpaper-input.dark-beach {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-beach.avif");
+}
 .wallpaper-list .wallpaper-input.light-beach {
   background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-beach.avif");
 }
@@ -1967,8 +1967,8 @@ main section {
 .wallpaper-list .wallpaper-input.light-mountain {
   background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-mountain.avif");
 }
-.wallpaper-list .wallpaper-input.light-redpanda {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-redpanda.avif");
+.wallpaper-list .wallpaper-input.light-panda {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-panda.avif");
 }
 .wallpaper-list .wallpaper-input.light-sky {
   background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-sky.avif");
