@@ -104,7 +104,7 @@ private val darkColorPalette = FirefoxColors(
     layerWarning = PhotonColors.Yellow70A77,
     layerSuccess = PhotonColors.Green80,
     layerCritical = PhotonColors.Pink80,
-    layerInfo = PhotonColors.Blue50,
+    layerInformation = PhotonColors.Blue50,
     layerSearch = PhotonColors.DarkGrey80,
     actionPrimary = PhotonColors.Violet60,
     actionPrimaryDisabled = PhotonColors.Violet60A50,
@@ -184,7 +184,7 @@ private val lightColorPalette = FirefoxColors(
     layerWarning = PhotonColors.Yellow20,
     layerSuccess = PhotonColors.Green20,
     layerCritical = PhotonColors.Red10,
-    layerInfo = PhotonColors.Blue50A44,
+    layerInformation = PhotonColors.Blue50A44,
     layerSearch = PhotonColors.LightGrey30,
     actionPrimary = PhotonColors.Ink20,
     actionPrimaryDisabled = PhotonColors.Ink20A50,
@@ -278,7 +278,7 @@ class FirefoxColors(
     layerWarning: Color,
     layerSuccess: Color,
     layerCritical: Color,
-    layerInfo: Color,
+    layerInformation: Color,
     layerSearch: Color,
     actionPrimary: Color,
     actionPrimaryDisabled: Color,
@@ -403,7 +403,7 @@ class FirefoxColors(
         private set
 
     // Info background
-    var layerInfo by mutableStateOf(layerInfo)
+    var layerInformation by mutableStateOf(layerInformation)
         private set
 
     // Search
@@ -665,7 +665,7 @@ class FirefoxColors(
         layerWarning = other.layerWarning
         layerSuccess = other.layerSuccess
         layerCritical = other.layerCritical
-        layerInfo = other.layerInfo
+        layerInformation = other.layerInformation
         layerSearch = other.layerSearch
         actionPrimary = other.actionPrimary
         actionPrimaryDisabled = other.actionPrimaryDisabled
@@ -749,7 +749,7 @@ class FirefoxColors(
         layerWarning: Color = this.layerWarning,
         layerSuccess: Color = this.layerSuccess,
         layerCritical: Color = this.layerCritical,
-        layerInfo: Color = this.layerInfo,
+        layerInformation: Color = this.layerInformation,
         layerSearch: Color = this.layerSearch,
         actionPrimary: Color = this.actionPrimary,
         actionPrimaryDisabled: Color = this.actionPrimaryDisabled,
@@ -827,7 +827,7 @@ class FirefoxColors(
         layerWarning = layerWarning,
         layerSuccess = layerSuccess,
         layerCritical = layerCritical,
-        layerInfo = layerInfo,
+        layerInformation = layerInformation,
         layerSearch = layerSearch,
         actionPrimary = actionPrimary,
         actionPrimaryDisabled = actionPrimaryDisabled,

@@ -31,7 +31,7 @@
     <!-- Error background -->
     <color name="fx_mobile_layer_color_critical" tools:ignore="UnusedResources">@color/photonRed10</color>
     <!-- Info background -->
-    <color name="fx_mobile_layer_color_info" tools:ignore="UnusedResources">@color/photonBlue50A44</color>
+    <color name="fx_mobile_layer_color_information" tools:ignore="UnusedResources">@color/photonBlue50A44</color>
 
     <!-- Action -->
     <!-- Primary button, Snackbar, Floating action button, Chip selected -->
