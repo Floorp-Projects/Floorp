@@ -134,6 +134,7 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   MOZ_CAN_RUN_SCRIPT
   static void Clear(const GlobalObject& aGlobal);
 
+  MOZ_CAN_RUN_SCRIPT
   static already_AddRefed<ConsoleInstance> CreateInstance(
       const GlobalObject& aGlobal, const ConsoleInstanceOptions& aOptions);
 
