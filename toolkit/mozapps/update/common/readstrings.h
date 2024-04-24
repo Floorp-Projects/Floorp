@@ -24,6 +24,15 @@ struct StringTable {
   mozilla::UniquePtr<char[]> info;
 };
 
+struct MARChannelStringTable {
+  MARChannelStringTable() {
+    MARChannelID = mozilla::MakeUnique<char[]>(1);
+    MARChannelID[0] = '\0';
+  }
+
+  mozilla::UniquePtr<char[]> MARChannelID;
+};
+
 /**
  * This function reads in localized strings from updater.ini
  */
