@@ -94,7 +94,7 @@
     <!-- Action Primary disabled text -->
     <color name="fx_mobile_text_color_action_primary_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
     <!-- Action Secondary text -->
-    <color name="fx_mobile_text_color_action_secondary">@color/photonDarkGrey90</color>
+    <color name="fx_mobile_text_color_action_secondary">@color/photonLightGrey05</color>
     <!-- Action Tertiary text -->
     <color name="fx_mobile_text_color_action_tertiary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Action Tertiary Active text -->
