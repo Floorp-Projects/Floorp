@@ -1048,6 +1048,30 @@ sealed class TranslationsAction : BrowserAction() {
     ) : TranslationsAction(), ActionWithTab
 
     /**
+     * Sets the translations offer setting on the global store.
+     * The translations offer setting controls when to offer a translation on a page.
+     *
+     * See [SetPageSettingsAction] for setting the offer setting on the session store.
+     *
+     * @property offerTranslation The offer setting to set.
+     */
+    data class SetGlobalOfferTranslateSettingAction(
+        val offerTranslation: Boolean,
+    ) : TranslationsAction()
+
+    /**
+     * Updates the specified translation offer setting on the translation engine and ensures the final
+     * state on the global store remains in-sync.
+     *
+     * See [UpdatePageSettingAction] for updating the offer setting on the session store.
+     *
+     * @property offerTranslation The offer setting to set.
+     */
+    data class UpdateGlobalOfferTranslateSettingAction(
+        val offerTranslation: Boolean,
+    ) : TranslationsAction()
+
+    /**
      * Sets the map of BCP 47 language codes (key) and the [LanguageSetting] option (value).
      *
      * @property languageSettings A map containing a key of BCP 47 language code and its

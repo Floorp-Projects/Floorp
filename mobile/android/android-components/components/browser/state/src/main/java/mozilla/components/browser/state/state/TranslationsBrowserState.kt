@@ -13,6 +13,7 @@ import mozilla.components.concept.engine.translate.TranslationSupport
  * Value type that represents the state of the translations engine within a [BrowserState].
  *
  * @property isEngineSupported Whether the translations engine supports the device architecture.
+ * @property offerTranslation Whether to offer translations or not to the user.
  * @property supportedLanguages Set of languages the translation engine supports.
  * @property languageModels Set of language machine learning translation models the translation engine has available.
  * @property languageSettings A map containing a key of BCP 47 language code and its
@@ -23,6 +24,7 @@ import mozilla.components.concept.engine.translate.TranslationSupport
  */
 data class TranslationsBrowserState(
     val isEngineSupported: Boolean? = null,
+    val offerTranslation: Boolean? = null,
     val supportedLanguages: TranslationSupport? = null,
     val languageModels: List<LanguageModel>? = null,
     val languageSettings: Map<String, LanguageSetting>? = null,

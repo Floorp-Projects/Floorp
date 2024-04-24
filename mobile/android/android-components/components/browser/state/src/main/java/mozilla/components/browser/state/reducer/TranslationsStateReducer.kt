@@ -163,6 +163,17 @@ internal object TranslationsStateReducer {
                     }
                 }
 
+                TranslationOperation.FETCH_OFFER_SETTING -> {
+                    // Reset the error state, and then generally expect
+                    // [TranslationsAction.SetGlobalOfferTranslateSettingAction] to update state in the
+                    // success case.
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            settingsError = null,
+                        )
+                    }
+                }
+
                 TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS -> {
                     state.copy(
                         translationEngine = state.translationEngine.copy(
@@ -225,6 +236,14 @@ internal object TranslationsStateReducer {
                         it.copy(
                             pageSettings = null,
                             settingsError = action.translationError,
+                        )
+                    }
+                }
+
+                TranslationOperation.FETCH_OFFER_SETTING -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            translationError = action.translationError,
                         )
                     }
                 }
@@ -325,6 +344,14 @@ internal object TranslationsStateReducer {
                     }
                 }
 
+                TranslationOperation.FETCH_OFFER_SETTING -> {
+                    state.copy(
+                        translationEngine = state.translationEngine.copy(
+                            offerTranslation = null,
+                        ),
+                    )
+                }
+
                 TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
                     state.copy(
                         translationEngine = state.translationEngine.copy(
@@ -397,6 +424,22 @@ internal object TranslationsStateReducer {
                     }
                 }
             }
+        }
+
+        is TranslationsAction.SetGlobalOfferTranslateSettingAction -> {
+            state.copy(
+                translationEngine = state.translationEngine.copy(
+                    offerTranslation = action.offerTranslation,
+                ),
+            )
+        }
+
+        is TranslationsAction.UpdateGlobalOfferTranslateSettingAction -> {
+            state.copy(
+                translationEngine = state.translationEngine.copy(
+                    offerTranslation = action.offerTranslation,
+                ),
+            )
         }
 
         is TranslationsAction.SetEngineSupportedAction -> {

@@ -36,6 +36,13 @@ enum class TranslationOperation {
     FETCH_PAGE_SETTINGS,
 
     /**
+     * Fetch the translations offer setting.
+     * Note: this request is also encompassed in [FETCH_PAGE_SETTINGS], but intended for checking
+     * fetching for global settings or when only this setting is needed.
+     */
+    FETCH_OFFER_SETTING,
+
+    /**
      * Fetch the user preference on whether to offer, always translate, or never translate for
      * all supported language settings.
      */

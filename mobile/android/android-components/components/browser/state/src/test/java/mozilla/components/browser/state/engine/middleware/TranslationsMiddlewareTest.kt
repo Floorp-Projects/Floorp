@@ -945,4 +945,81 @@ class TranslationsMiddlewareTest {
 
         waitForIdle()
     }
+
+    @Test
+    fun `WHEN InitTranslationsBrowserState is dispatched AND the engine is supported THEN SetOfferTranslateSettingAction is also dispatched`() = runTest {
+        // Send Action
+        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+
+        // Set the engine to support
+        val engineSupportedCallback = argumentCaptor<((Boolean) -> Unit)>()
+        // At least once, since InitAction also will trigger this
+        verify(engine, atLeastOnce()).isTranslationsEngineSupported(
+            onSuccess = engineSupportedCallback.capture(),
+            onError = any(),
+        )
+        engineSupportedCallback.value.invoke(true)
+
+        // Verify results for offer
+        verify(engine, atLeastOnce()).getTranslationsOfferPopup()
+        waitForIdle()
+
+        // Verifying at least once
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.SetGlobalOfferTranslateSettingAction(
+                offerTranslation = false,
+            ),
+        )
+
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN FETCH_OFFER_SETTING is dispatched with a tab id THEN SetOfferTranslateSettingAction and SetPageSettingsAction are also dispatched`() = runTest {
+        // Set the mock offer value
+        whenever(
+            engine.getTranslationsOfferPopup(),
+        ).thenAnswer { true }
+
+        // Send Action
+        val action =
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_OFFER_SETTING,
+            )
+        translationsMiddleware.invoke(context, {}, action)
+        waitForIdle()
+
+        // Verify Dispatch
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.SetGlobalOfferTranslateSettingAction(
+                offerTranslation = true,
+            ),
+        )
+
+        // Since we had a tabId, this call will also happen
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.SetPageSettingsAction(
+                tabId = tab.id,
+                pageSettings = any(),
+            ),
+        )
+
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN UpdateOfferTranslateSettingAction is called then setTranslationsOfferPopup is called on the engine`() = runTest {
+        // Send Action
+        val action =
+            TranslationsAction.UpdateGlobalOfferTranslateSettingAction(
+                offerTranslation = true,
+            )
+        translationsMiddleware.invoke(context, {}, action)
+        waitForIdle()
+
+        // Verify offer was set
+        verify(engine, atLeastOnce()).setTranslationsOfferPopup(offer = true)
+        waitForIdle()
+    }
 }
