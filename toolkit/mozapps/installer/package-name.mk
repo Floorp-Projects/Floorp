@@ -110,6 +110,9 @@ GTEST_PACKAGE = $(PKG_BASENAME).gtest.tests.tar.gz
 
 # `.xpt` artifacts: for use in artifact builds.
 XPT_ARTIFACTS_ARCHIVE_BASENAME = $(PKG_BASENAME).xpt_artifacts
+ifeq (Darwin, $(OS_ARCH))
+UPDATE_FRAMEWORK_ARTIFACTS_ARCHIVE_BASENAME = $(PKG_BASENAME).update_framework_artifacts
+endif # Darwin
 
 ifneq (,$(wildcard $(DIST)/bin/application.ini))
 BUILDID = $(shell $(PYTHON3) $(MOZILLA_DIR)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)
