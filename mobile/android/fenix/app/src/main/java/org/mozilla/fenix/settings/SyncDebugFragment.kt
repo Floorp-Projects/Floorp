@@ -11,6 +11,7 @@ import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import kotlin.system.exitProcess
@@ -58,6 +59,24 @@ class SyncDebugFragment : PreferenceFragmentCompat() {
         }
         requirePreference<CheckBoxPreference>(R.string.pref_key_use_react_fxa).apply {
             onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+        requirePreference<Preference>(R.string.pref_key_sync_debug_network_error).let { pref ->
+            pref.onPreferenceClickListener = OnPreferenceClickListener {
+                requireComponents.backgroundServices.accountManager.simulateNetworkError()
+                true
+            }
+        }
+        requirePreference<Preference>(R.string.pref_key_sync_debug_temporary_auth_error).let { pref ->
+            pref.onPreferenceClickListener = OnPreferenceClickListener {
+                requireComponents.backgroundServices.accountManager.simulateTemporaryAuthTokenIssue()
+                true
+            }
+        }
+        requirePreference<Preference>(R.string.pref_key_sync_debug_permanent_auth_error).let { pref ->
+            pref.onPreferenceClickListener = OnPreferenceClickListener {
+                requireComponents.backgroundServices.accountManager.simulatePermanentAuthTokenIssue()
+                true
+            }
         }
         updateMenu()
     }

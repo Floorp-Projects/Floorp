@@ -31,4 +31,13 @@
         android:title="@string/preferences_use_react_fxa"
         app:iconSpaceReserved="false"
         />
+    <androidx.preference.Preference
+        android:key="@string/pref_key_sync_debug_network_error"
+        android:title="@string/preferences_sync_debug_network_error_button_title" />
+    <androidx.preference.Preference
+        android:key="@string/pref_key_sync_debug_temporary_auth_error"
+        android:title="@string/preferences_sync_debug_temporary_auth_error_button_title" />
+    <androidx.preference.Preference
+        android:key="@string/pref_key_sync_debug_permanent_auth_error"
+        android:title="@string/preferences_sync_debug_permanent_auth_error_button_title" />
 </PreferenceScreen>
