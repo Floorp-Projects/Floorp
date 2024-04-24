@@ -1059,7 +1059,6 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/na
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/take.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/take-more-than-available.js
 
-
 ##############################################
 # Temporal                                   #
 ##############################################

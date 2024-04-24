@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-float16array)
 if (typeof detachArrayBuffer === "function") {
     const originalNumberToLocaleString = Number.prototype.toLocaleString;
 
