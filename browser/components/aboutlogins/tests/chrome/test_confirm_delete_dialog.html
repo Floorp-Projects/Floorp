@@ -24,6 +24,7 @@ Test the confirmation-dialog component
 </pre>
 <script>
 /** Test the confirmation-dialog component **/
+let isWin = navigator.platform.includes("Win");
 
 let options = {
   title: "confirm-delete-dialog-title",
@@ -65,7 +66,7 @@ add_task(async function test_initial_focus() {
 add_task(async function test_tab_focus() {
   gConfirmationDialog.show(options);
   ok(!gConfirmationDialog.hidden, "The dialog should be visible");
-  sendKey("TAB");
+  synthesizeKey("VK_TAB", { shiftKey: !isWin });
   is(gConfirmationDialog.shadowRoot.activeElement, cancelButton,
      "After opening the dialog and tabbing once, the cancel button should be focused");
   gConfirmationDialog.hide();
@@ -86,7 +87,7 @@ add_task(async function test_enter_key_to_cancel() {
 add_task(async function test_enter_key_to_confirm() {
   let showPromise = gConfirmationDialog.show(options);
   ok(!gConfirmationDialog.hidden, "The dialog should be visible");
-  sendKey("TAB");
+  synthesizeKey("VK_TAB", { shiftKey: !isWin });
   sendKey("RETURN");
   try {
     await showPromise;

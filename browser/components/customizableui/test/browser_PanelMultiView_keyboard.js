@@ -150,7 +150,6 @@ add_setup(async function () {
   gLink.innerText = "gLink";
   gLink.id = "gLink";
   gMainView.appendChild(gLink);
-  await window.ensureCustomElements("moz-toggle");
   gToggle = document.createElement("moz-toggle");
   gToggle.label = "Test label";
   gMainView.appendChild(gToggle);
