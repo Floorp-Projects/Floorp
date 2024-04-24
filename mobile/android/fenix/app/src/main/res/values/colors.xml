@@ -262,7 +262,7 @@
     <!-- Action Primary Icon -->
     <color name="fx_mobile_private_icon_color_action_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Action Secondary Icon -->
-    <color name="fx_mobile_private_icon_color_action_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <color name="fx_mobile_private_icon_color_action_secondary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Action Tertiary Icon -->
     <color name="fx_mobile_private_icon_color_action_tertiary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Reader, ETP Shield -->
