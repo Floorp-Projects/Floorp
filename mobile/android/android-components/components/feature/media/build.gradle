@@ -44,6 +44,7 @@ dependencies {
     implementation project(':support-utils')
 
     implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.androidx_media
 
     testImplementation project(':support-test')

@@ -76,6 +76,7 @@ dependencies {
         api getGeckoViewDependency()
     }
 
+    implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.androidx_paging
     implementation ComponentsDependencies.androidx_datastore_preferences
     implementation ComponentsDependencies.androidx_lifecycle_livedata

@@ -42,6 +42,7 @@ dependencies {
     implementation ComponentsDependencies.kotlin_coroutines
 
     implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.google_material
     implementation ComponentsDependencies.androidx_recyclerview
 }
