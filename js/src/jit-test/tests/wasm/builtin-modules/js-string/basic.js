@@ -34,14 +34,14 @@ let testModule = `(module
   (func
     (import "wasm:js-string" "fromCharCode")
     (param i32)
-    (result externref)
+    (result (ref extern))
   )
   (export "fromCharCode" (func 4))
 
   (func
     (import "wasm:js-string" "fromCodePoint")
     (param i32)
-    (result externref)
+    (result (ref extern))
   )
   (export "fromCodePoint" (func 5))
 
@@ -69,14 +69,14 @@ let testModule = `(module
   (func
     (import "wasm:js-string" "concat")
     (param externref externref)
-    (result externref)
+    (result (ref extern))
   )
   (export "concat" (func 9))
 
   (func
     (import "wasm:js-string" "substring")
     (param externref i32 i32)
-    (result externref)
+    (result (ref extern))
   )
   (export "substring" (func 10))
 
