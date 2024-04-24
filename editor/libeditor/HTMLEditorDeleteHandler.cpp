@@ -1777,8 +1777,11 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
   if (aScanFromCaretPointResult.InCollapsibleWhiteSpaces() ||
       aScanFromCaretPointResult.InNonCollapsibleCharacters() ||
       aScanFromCaretPointResult.ReachedPreformattedLineBreak()) {
+    // This means that if aDirectionAndAmount == nsIEditor::eNext, collapse
+    // selection at the found character.  Otherwise, collapse selection after
+    // the found character.
     nsresult rv = aRangesToDelete.Collapse(
-        aScanFromCaretPointResult.Point<EditorRawDOMPoint>());
+        aScanFromCaretPointResult.Point_Deprecated<EditorRawDOMPoint>());
     if (MOZ_UNLIKELY(NS_FAILED(rv))) {
       NS_WARNING("AutoRangeArray::Collapse() failed");
       return NS_ERROR_FAILURE;
@@ -1894,8 +1897,11 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
     if (aScanFromCaretPointResult.InCollapsibleWhiteSpaces() ||
         aScanFromCaretPointResult.InNonCollapsibleCharacters() ||
         aScanFromCaretPointResult.ReachedPreformattedLineBreak()) {
+      // This means that if aDirectionAndAmount == nsIEditor::eNext, collapse
+      // selection at the found character.  Otherwise, collapse selection after
+      // the found character.
       nsresult rv = aRangesToDelete.Collapse(
-          aScanFromCaretPointResult.Point<EditorRawDOMPoint>());
+          aScanFromCaretPointResult.Point_Deprecated<EditorRawDOMPoint>());
       if (NS_FAILED(rv)) {
         NS_WARNING("AutoRangeArray::Collapse() failed");
         return Err(NS_ERROR_FAILURE);
@@ -1955,7 +1961,10 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
     Result<CaretPoint, nsresult> caretPointOrError =
         HandleDeleteCollapsedSelectionAtVisibleChar(
             aHTMLEditor, aDirectionAndAmount, aRangesToDelete,
-            aScanFromCaretPointResult.Point<EditorDOMPoint>(), aEditingHost);
+            // This means that if aDirectionAndAmount == nsIEditor::eNext,
+            // at the found character.  Otherwise, after the found character.
+            aScanFromCaretPointResult.Point_Deprecated<EditorDOMPoint>(),
+            aEditingHost);
     if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
       NS_WARNING(
           "AutoDeleteRangesHandler::"
@@ -2559,14 +2568,16 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::DeleteBRElement(
     if (maybePreviousText.IsContentEditable() &&
         maybePreviousText.InVisibleOrCollapsibleCharacters() &&
         !HTMLEditor::GetLinkElement(maybePreviousText.TextPtr())) {
-      return maybePreviousText.Point<EditorDOMPoint>();
+      // This means that caret point should be after the previous character.
+      return maybePreviousText.Point_Deprecated<EditorDOMPoint>();
     }
     const WSScanResult maybeNextText =
         scanner.ScanNextVisibleNodeOrBlockBoundaryFrom(
             EditorRawDOMPoint::After(*mBRElement));
     if (maybeNextText.IsContentEditable() &&
         maybeNextText.InVisibleOrCollapsibleCharacters()) {
-      return maybeNextText.Point<EditorDOMPoint>();
+      // This means that caret point should be at the inclusive next character.
+      return maybeNextText.Point_Deprecated<EditorDOMPoint>();
     }
     return EditorDOMPoint();
   }();
@@ -3738,8 +3749,9 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(startOfRightContent);
     if (maybePreviousText.IsContentEditable() &&
         maybePreviousText.InVisibleOrCollapsibleCharacters()) {
+      // This means that collapse selection after the previous character.
       nsresult rv = aHTMLEditor.CollapseSelectionTo(
-          maybePreviousText.Point<EditorRawDOMPoint>());
+          maybePreviousText.Point_Deprecated<EditorRawDOMPoint>());
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::CollapseSelectionTo() failed");
         return Err(rv);
@@ -5166,7 +5178,8 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(startOfRightContent);
     if (maybePreviousText.IsContentEditable() &&
         maybePreviousText.InVisibleOrCollapsibleCharacters()) {
-      mPointToPutCaret = maybePreviousText.Point<EditorDOMPoint>();
+      // This means that caret should be after the previous character.
+      mPointToPutCaret = maybePreviousText.Point_Deprecated<EditorDOMPoint>();
     }
   }
   return result;
