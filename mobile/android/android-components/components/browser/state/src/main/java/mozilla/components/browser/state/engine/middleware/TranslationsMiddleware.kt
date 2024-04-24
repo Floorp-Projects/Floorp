@@ -79,6 +79,12 @@ class TranslationsMiddleware(
                             requestPageSettings(context, action.tabId)
                         }
                     }
+                    TranslationOperation.FETCH_OFFER_SETTING -> {
+                        scope.launch {
+                            requestOfferSetting(context, action.tabId)
+                        }
+                    }
+
                     TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS -> {
                         scope.launch {
                             requestLanguageSettings(context, action.tabId)
@@ -151,6 +157,14 @@ class TranslationsMiddleware(
                         }
                 }
             }
+
+            is TranslationsAction.UpdateGlobalOfferTranslateSettingAction -> {
+                scope.launch {
+                    updateAlwaysOfferPopupPageSetting(
+                        setting = action.offerTranslation,
+                    )
+                }
+            }
             else -> {
                 // no-op
             }
@@ -169,6 +183,7 @@ class TranslationsMiddleware(
      * Language Models - [requestLanguageModels]
      * Language Settings - [requestLanguageSettings]
      * Never Translate Sites List - [requestNeverTranslateSites]
+     * Offer Setting - [requestOfferSetting]
      *
      * @param context Context to use to dispatch to the store.
      */
@@ -179,6 +194,7 @@ class TranslationsMiddleware(
         requestLanguageModels(context)
         requestLanguageSettings(context)
         requestNeverTranslateSites(context)
+        requestOfferSetting(context)
     }
 
     /**
@@ -460,6 +476,38 @@ class TranslationsMiddleware(
                     tabId = tabId,
                     operation = TranslationOperation.FETCH_PAGE_SETTINGS,
                     translationError = TranslationError.CouldNotLoadPageSettingsError(null),
+                ),
+            )
+        }
+    }
+
+    /**
+     * Retrieves the setting to always offer to translate and dispatches the result to the
+     * store via [TranslationsAction.SetGlobalOfferTranslateSettingAction]. Will additionally
+     * dispatch a request to update page settings, when a [tabId] is provided.
+     *
+     * @param context Context to use to dispatch to the store.
+     * @param tabId Tab ID associated with the request.
+     */
+    private fun requestOfferSetting(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        tabId: String? = null,
+    ) {
+        logger.info("Requesting offer setting.")
+        val alwaysOfferPopup: Boolean = engine.getTranslationsOfferPopup()
+
+        context.store.dispatch(
+            TranslationsAction.SetGlobalOfferTranslateSettingAction(
+                offerTranslation = alwaysOfferPopup,
+            ),
+        )
+
+        if (tabId != null) {
+            // Fetch page settings to ensure the state matches the engine.
+            context.store.dispatch(
+                TranslationsAction.OperationRequestedAction(
+                    tabId = tabId,
+                    operation = TranslationOperation.FETCH_PAGE_SETTINGS,
                 ),
             )
         }

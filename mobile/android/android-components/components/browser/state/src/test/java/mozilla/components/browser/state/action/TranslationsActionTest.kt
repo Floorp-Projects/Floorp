@@ -897,4 +897,36 @@ class TranslationsActionTest {
         // Final state
         assertEquals(languageModels, store.state.translationEngine.languageModels)
     }
+
+    @Test
+    fun `WHEN SetOfferTranslateSettingAction is called then set offerToTranslate`() {
+        // Initial State
+        assertNull(store.state.translationEngine.offerTranslation)
+
+        // Action started
+        store.dispatch(
+            TranslationsAction.SetGlobalOfferTranslateSettingAction(
+                offerTranslation = false,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertFalse(store.state.translationEngine.offerTranslation!!)
+    }
+
+    @Test
+    fun `WHEN UpdateOfferTranslateSettingAction is called then set offerToTranslate`() {
+        // Initial State
+        assertNull(store.state.translationEngine.offerTranslation)
+
+        // Action started
+        store.dispatch(
+            TranslationsAction.UpdateGlobalOfferTranslateSettingAction(
+                offerTranslation = false,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertFalse(store.state.translationEngine.offerTranslation!!)
+    }
 }
