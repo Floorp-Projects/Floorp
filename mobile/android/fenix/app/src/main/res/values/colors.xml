@@ -156,9 +156,9 @@
 
     <!-- Layers -->
     <!-- Default Screen background, Frontlayer background, App Bar Top, App Bar Bottom, Frontlayer header -->
-    <color name="fx_mobile_private_layer_color_1">@color/photonInk50</color>
+    <color name="fx_mobile_private_layer_color_1">@color/photonViolet90</color>
     <!-- Card background, Menu background, Dialog, Banner -->
-    <color name="fx_mobile_private_layer_color_2">@color/photonInk50</color>
+    <color name="fx_mobile_private_layer_color_2">@color/photonViolet90</color>
     <!-- Search -->
     <color name="fx_mobile_private_layer_color_3">@color/photonInk90</color>
     <color name="fx_mobile_private_layer_color_search">@color/photonInk90</color>

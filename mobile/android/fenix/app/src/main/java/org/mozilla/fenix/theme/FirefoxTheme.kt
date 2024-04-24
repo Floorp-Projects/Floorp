@@ -249,8 +249,8 @@ private val lightColorPalette = FirefoxColors(
 )
 
 private val privateColorPalette = darkColorPalette.copy(
-    layer1 = PhotonColors.Ink50,
-    layer2 = PhotonColors.Ink50,
+    layer1 = PhotonColors.Violet90,
+    layer2 = PhotonColors.Violet90,
     layer3 = PhotonColors.Ink90,
     layerSearch = PhotonColors.Ink90,
     borderPrimary = PhotonColors.Ink05,
