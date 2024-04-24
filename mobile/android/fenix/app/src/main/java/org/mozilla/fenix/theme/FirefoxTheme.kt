@@ -147,7 +147,7 @@ private val darkColorPalette = FirefoxColors(
     iconNotice = PhotonColors.Blue30,
     iconButton = PhotonColors.LightGrey05,
     iconCritical = PhotonColors.Red20,
-    iconWarningButton = PhotonColors.Red70,
+    iconCriticalButton = PhotonColors.Red20,
     iconAccentViolet = PhotonColors.Violet20,
     iconAccentBlue = PhotonColors.Blue20,
     iconAccentPink = PhotonColors.Pink20,
@@ -227,7 +227,7 @@ private val lightColorPalette = FirefoxColors(
     iconNotice = PhotonColors.Blue30,
     iconButton = PhotonColors.Ink20,
     iconCritical = PhotonColors.Red70,
-    iconWarningButton = PhotonColors.Red70,
+    iconCriticalButton = PhotonColors.Red70,
     iconAccentViolet = PhotonColors.Violet70,
     iconAccentBlue = PhotonColors.Blue60,
     iconAccentPink = PhotonColors.Pink60,
@@ -321,7 +321,7 @@ class FirefoxColors(
     iconNotice: Color,
     iconButton: Color,
     iconCritical: Color,
-    iconWarningButton: Color,
+    iconCriticalButton: Color,
     iconAccentViolet: Color,
     iconAccentBlue: Color,
     iconAccentPink: Color,
@@ -579,7 +579,7 @@ class FirefoxColors(
         private set
 
     // Warning icon on Secondary button
-    var iconWarningButton by mutableStateOf(iconWarningButton)
+    var iconCriticalButton by mutableStateOf(iconCriticalButton)
         private set
     var iconAccentViolet by mutableStateOf(iconAccentViolet)
         private set
@@ -708,7 +708,7 @@ class FirefoxColors(
         iconNotice = other.iconNotice
         iconButton = other.iconButton
         iconCritical = other.iconCritical
-        iconWarningButton = other.iconWarningButton
+        iconCriticalButton = other.iconCriticalButton
         iconAccentViolet = other.iconAccentViolet
         iconAccentBlue = other.iconAccentBlue
         iconAccentPink = other.iconAccentPink
@@ -792,7 +792,7 @@ class FirefoxColors(
         iconNotice: Color = this.iconNotice,
         iconButton: Color = this.iconButton,
         iconCritical: Color = this.iconCritical,
-        iconWarningButton: Color = this.iconWarningButton,
+        iconCriticalButton: Color = this.iconCriticalButton,
         iconAccentViolet: Color = this.iconAccentViolet,
         iconAccentBlue: Color = this.iconAccentBlue,
         iconAccentPink: Color = this.iconAccentPink,
@@ -870,7 +870,7 @@ class FirefoxColors(
         iconNotice = iconNotice,
         iconButton = iconButton,
         iconCritical = iconCritical,
-        iconWarningButton = iconWarningButton,
+        iconCriticalButton = iconCriticalButton,
         iconAccentViolet = iconAccentViolet,
         iconAccentBlue = iconAccentBlue,
         iconAccentPink = iconAccentPink,
