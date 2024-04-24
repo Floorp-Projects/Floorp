@@ -181,14 +181,15 @@ void IPCFuzzController::OnActorConnected(IProtocol* protocol) {
     protoIdFilterInitialized = true;
   }
 
-#ifdef FUZZ_DEBUG
-  MOZ_FUZZING_NYX_PRINTF("INFO: [OnActorConnected] ActorID %d Protocol: %s\n",
-                         protocol->Id(), protocol->GetProtocolName());
-#endif
-
   MessageChannel* channel = protocol->ToplevelProtocol()->GetIPCChannel();
 
   Maybe<PortName> portName = channel->GetPortName();
+
+  if (!portName) {
+    MOZ_FUZZING_NYX_PRINTF("INFO: [OnActorConnected] ActorID %d Protocol: %s\n",
+                           protocol->Id(), protocol->GetProtocolName());
+  }
+
   if (portName) {
     if (!protoIdFilter.empty() &&
         (!Nyx::instance().started() || !allowNewActors) &&
@@ -209,6 +210,13 @@ void IPCFuzzController::OnActorConnected(IProtocol* protocol) {
           "INFO: [OnActorConnected] ActorID %d Protocol: %s is toplevel "
           "actor.\n",
           protocol->Id(), protocol->GetProtocolName());
+    }
+
+    if (!!getenv("MOZ_FUZZ_DEBUG")) {
+      MOZ_FUZZING_NYX_PRINTF(
+          "INFO: [OnActorConnected] ActorID %d Protocol: %s Port: %lu %lu\n",
+          protocol->Id(), protocol->GetProtocolName(), portName->v1,
+          portName->v2);
     }
 
     actorIds[*portName].emplace_back(protocol->Id(), protocol->GetProtocolId());
@@ -293,13 +301,14 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
     if (!channel->mBlockSendRecv) {
       MOZ_FUZZING_NYX_PRINTF(
           "INFO: [NodeChannel::OnMessageReceived] Blocking further "
-          "communication on Port %lu %lu (seen fuzz msg)\n",
+          "communication on node %lu %lu (seen fuzz msg)\n",
           channel->GetName().v1, channel->GetName().v2);
       channel->mBlockSendRecv = true;
     }
     return true;
   } else if (aMessage.type() == mIPCTriggerMsg && !Nyx::instance().started()) {
-    MOZ_FUZZING_NYX_PRINT("DEBUG: Ready message detected.\n");
+    MOZ_FUZZING_NYX_PRINTF("DEBUG: Ready message detected on actor %d.\n",
+                           aMessage.routing_id());
 
     if (!haveTargetNodeName && !!getenv("MOZ_FUZZ_PROTOID_FILTER")) {
       // With a protocol filter set, we want to pin to the actor that
@@ -435,6 +444,7 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
 
           return false;
         }
+        MOZ_FUZZING_NYX_ABORT("Unreachable");
         return true;
       }
     }
@@ -452,6 +462,11 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
       portSeqNos.insert_or_assign(
           name, std::pair<int32_t, uint64_t>(aMessage.seqno(),
                                              userMsgEv->sequence_num()));
+#ifdef FUZZ_DEBUG
+      MOZ_FUZZING_NYX_PRINTF(
+          "DEBUG: Port %lu %lu updated sequence number to %lu\n", name.v1,
+          name.v2, userMsgEv->sequence_num());
+#endif
 
       portNodeName.insert_or_assign(name, channel->GetName());
     }
@@ -735,11 +750,14 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
         auto portNameResult =
             IPCFuzzController::instance().portNodeName.find(iter->first);
         if (portNameResult->second ==
-            IPCFuzzController::instance().targetNodeName) {
-          MOZ_FUZZING_NYX_PRINT(
+                IPCFuzzController::instance().targetNodeName &&
+            IPCFuzzController::instance().mIPCTriggerMsg ==
+                ipcDefaultTriggerMsg) {
+          MOZ_FUZZING_NYX_PRINTF(
               "ERROR: We should not have port map entries without a "
               "corresponding "
-              "entry in our actors map\n");
+              "entry in our actors map (Port %lu %lu)\n",
+              iter->first.v1, iter->first.v2);
           MOZ_REALLY_CRASH(__LINE__);
         } else {
           iter = IPCFuzzController::instance().portSeqNos.erase(iter);
@@ -985,6 +1003,14 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
         msg->header()->flags, msg->header()->txid, msg->header()->num_handles);
 #endif
 
+    if (!!getenv("MOZ_FUZZ_DEBUG")) {
+      MOZ_FUZZING_NYX_PRINTF(
+          "INFO: Flags: IsSync: %d IsReply: %d IsReplyError: %d IsConstructor: "
+          "%d IsRelay: %d IsLazySend: %d\n",
+          msg->is_sync(), msg->is_reply(), msg->is_reply_error(),
+          msg->is_constructor(), msg->is_relay(), msg->is_lazy_send());
+    }
+
     // The number of messages we expect to see stopped.
     expected_messages++;
 
@@ -1117,6 +1143,9 @@ void IPCFuzzController::SynchronizeOnMessageExecution(
       Nyx::instance().handle_event("MOZ_TIMEOUT", nullptr, 0, nullptr);
       MOZ_FUZZING_NYX_PRINT(
           "ERROR: ======== END OF ITERATION (TIMEOUT) ========\n");
+      if (!!getenv("MOZ_FUZZ_CRASH_ON_TIMEOUT")) {
+        MOZ_DIAGNOSTIC_ASSERT(false, "IPCFuzzController Timeout");
+      }
       Nyx::instance().release(
           IPCFuzzController::instance().getMessageStopCount());
     }
@@ -1276,7 +1305,7 @@ UniquePtr<IPC::Message> IPCFuzzController::replaceIPCMessage(
   ipchdr->payload_size = ipcMsgLen - sizeof(IPC::Message::Header);
 
   if (Nyx::instance().is_replay()) {
-    MOZ_FUZZING_NYX_PRINT("INFO: Replaying IPC packet with payload:\n");
+    MOZ_FUZZING_NYX_PRINT("INFO: Replaying single IPC packet with payload:\n");
     for (uint32_t i = 0; i < ipcMsgLen - sizeof(IPC::Message::Header); ++i) {
       if (i % 16 == 0) {
         MOZ_FUZZING_NYX_PRINT("\n  ");
@@ -1290,6 +1319,11 @@ UniquePtr<IPC::Message> IPCFuzzController::replaceIPCMessage(
   }
 
   UniquePtr<IPC::Message> msg(new IPC::Message(ipcMsgData, ipcMsgLen));
+
+  if (!!getenv("MOZ_FUZZ_DEBUG")) {
+    MOZ_FUZZING_NYX_PRINTF("INFO: Name: %s Target: %d\n", msg->name(),
+                           msg->routing_id());
+  }
 
   // This marks the message as a fuzzing message. Without this, it will
   // be ignored by MessageTask and also not even scheduled by NodeChannel
