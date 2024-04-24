@@ -72,7 +72,7 @@ add_task(async function actionURILosslessDecode() {
 
   Assert.equal(
     gURLBar.value,
-    UrlbarTestUtils.trimURL(urlNoScheme),
+    urlNoScheme,
     "The string displayed in the textbox should not be escaped"
   );
 

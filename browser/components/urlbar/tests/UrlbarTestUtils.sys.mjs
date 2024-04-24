@@ -1043,9 +1043,11 @@ export var UrlbarTestUtils = {
    * Removes the scheme from an url according to user prefs.
    *
    * @param {string} url
-   *  The url that is supposed to be sanitizied.
-   * @param {{removeSingleTrailingSlash: (boolean)}} options
-   *    removeSingleTrailingSlash: Remove trailing slash, when trimming enabled.
+   *  The url that is supposed to be trimmed.
+   * @param {object} [options]
+   *  Options for the trimming.
+   * @param {boolean} [options.removeSingleTrailingSlash]
+   *    Remove trailing slash, when trimming enabled.
    * @returns {string}
    *  The sanitized URL.
    */
@@ -1060,14 +1062,12 @@ export var UrlbarTestUtils = {
         lazy.BrowserUIUtils.removeSingleTrailingSlashFromURL(sanitizedURL);
     }
 
+    // Also remove emphasis markers if present.
     if (lazy.UrlbarPrefs.get("trimHttps")) {
-      sanitizedURL = sanitizedURL.replace("https://", "");
+      sanitizedURL = sanitizedURL.replace(/^<?https:\/\/>?/, "");
     } else {
-      sanitizedURL = sanitizedURL.replace("http://", "");
+      sanitizedURL = sanitizedURL.replace(/^<?http:\/\/>?/, "");
     }
-
-    // Remove empty emphasis markers in case the protocol was trimmed.
-    sanitizedURL = sanitizedURL.replace("<>", "");
 
     return sanitizedURL;
   },

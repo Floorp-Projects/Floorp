@@ -51,6 +51,7 @@ add_task(async function () {
 
   info("Press backspace");
   EventUtils.synthesizeKey("KEY_Backspace");
+  info("Backspaced value is " + gURLBar.value);
   await UrlbarTestUtils.promiseSearchComplete(window);
 
   let editedValue = gURLBar.value;
