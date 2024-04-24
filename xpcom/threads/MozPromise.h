@@ -17,6 +17,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticString.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
 #include "nsIDirectTaskDispatcher.h"
@@ -231,7 +232,7 @@ class MozPromise : public MozPromiseBase {
  protected:
   // MozPromise is the public type, and never constructed directly. Construct
   // a MozPromise::Private, defined below.
-  MozPromise(const char* aCreationSite, bool aIsCompletionPromise)
+  MozPromise(StaticString aCreationSite, bool aIsCompletionPromise)
       : mCreationSite(aCreationSite),
         mMutex("MozPromise Mutex"),
         mHaveRequest(false),
@@ -241,7 +242,7 @@ class MozPromise : public MozPromiseBase {
         mMagic4(&mMutex)
 #endif
   {
-    PROMISE_LOG("%s creating MozPromise (%p)", mCreationSite, this);
+    PROMISE_LOG("%s creating MozPromise (%p)", mCreationSite.get(), this);
   }
 
  public:
@@ -257,7 +258,7 @@ class MozPromise : public MozPromiseBase {
 
   template <typename ResolveValueType_>
   [[nodiscard]] static RefPtr<MozPromise> CreateAndResolve(
-      ResolveValueType_&& aResolveValue, const char* aResolveSite) {
+      ResolveValueType_&& aResolveValue, StaticString aResolveSite) {
     static_assert(std::is_convertible_v<ResolveValueType_, ResolveValueT>,
                   "Resolve() argument must be implicitly convertible to "
                   "MozPromise's ResolveValueT");
@@ -269,7 +270,7 @@ class MozPromise : public MozPromiseBase {
 
   template <typename RejectValueType_>
   [[nodiscard]] static RefPtr<MozPromise> CreateAndReject(
-      RejectValueType_&& aRejectValue, const char* aRejectSite) {
+      RejectValueType_&& aRejectValue, StaticString aRejectSite) {
     static_assert(std::is_convertible_v<RejectValueType_, RejectValueT>,
                   "Reject() argument must be implicitly convertible to "
                   "MozPromise's RejectValueT");
@@ -281,7 +282,7 @@ class MozPromise : public MozPromiseBase {
 
   template <typename ResolveOrRejectValueType_>
   [[nodiscard]] static RefPtr<MozPromise> CreateAndResolveOrReject(
-      ResolveOrRejectValueType_&& aValue, const char* aSite) {
+      ResolveOrRejectValueType_&& aValue, StaticString aSite) {
     RefPtr<typename MozPromise::Private> p = new MozPromise::Private(aSite);
     p->ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue), aSite);
     return p;
@@ -497,7 +498,7 @@ class MozPromise : public MozPromiseBase {
       RefPtr<MozPromise> mPromise;
     };
 
-    ThenValueBase(nsISerialEventTarget* aResponseTarget, const char* aCallSite)
+    ThenValueBase(nsISerialEventTarget* aResponseTarget, StaticString aCallSite)
         : mResponseTarget(aResponseTarget), mCallSite(aCallSite) {
       MOZ_ASSERT(aResponseTarget);
     }
@@ -526,7 +527,7 @@ class MozPromise : public MozPromiseBase {
           MOZ_CRASH_UNSAFE_PRINTF(
               "MozPromise::ThenValue created from '%s' destroyed without being "
               "either disconnected, resolved, or rejected (dispatchRv: %s)",
-              mCallSite,
+              mCallSite.get(),
               mDispatchRv ? GetStaticErrorName(*mDispatchRv)
                           : "not dispatched");
         }
@@ -543,8 +544,8 @@ class MozPromise : public MozPromiseBase {
       PROMISE_LOG(
           "%s Then() call made from %s [Runnable=%p, Promise=%p, ThenValue=%p] "
           "%s dispatch",
-          aPromise->mValue.IsResolve() ? "Resolving" : "Rejecting", mCallSite,
-          r.get(), aPromise, this,
+          aPromise->mValue.IsResolve() ? "Resolving" : "Rejecting",
+          mCallSite.get(), r.get(), aPromise, this,
           aPromise->mUseSynchronousTaskDispatch ? "synchronous"
           : aPromise->mUseDirectTaskDispatch    ? "directtask"
                                                 : "normal");
@@ -631,7 +632,7 @@ class MozPromise : public MozPromiseBase {
 #ifdef PROMISE_DEBUG
     uint32_t mMagic1 = sMagic;
 #endif
-    const char* mCallSite;
+    StaticString mCallSite;
 #ifdef PROMISE_DEBUG
     uint32_t mMagic2 = sMagic;
 #endif
@@ -706,7 +707,7 @@ class MozPromise : public MozPromiseBase {
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget, ThisType* aThisVal,
               ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod,
-              const char* aCallSite)
+              StaticString aCallSite)
         : ThenValueBase(aResponseTarget, aCallSite),
           mThisVal(aThisVal),
           mResolveMethod(aResolveMethod),
@@ -767,7 +768,7 @@ class MozPromise : public MozPromiseBase {
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget, ThisType* aThisVal,
               ResolveRejectMethodType aResolveRejectMethod,
-              const char* aCallSite)
+              StaticString aCallSite)
         : ThenValueBase(aResponseTarget, aCallSite),
           mThisVal(aThisVal),
           mResolveRejectMethod(aResolveRejectMethod) {}
@@ -824,7 +825,7 @@ class MozPromise : public MozPromiseBase {
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget,
               ResolveFunction&& aResolveFunction,
-              RejectFunction&& aRejectFunction, const char* aCallSite)
+              RejectFunction&& aRejectFunction, StaticString aCallSite)
         : ThenValueBase(aResponseTarget, aCallSite) {
       mResolveFunction.emplace(std::move(aResolveFunction));
       mRejectFunction.emplace(std::move(aRejectFunction));
@@ -892,7 +893,7 @@ class MozPromise : public MozPromiseBase {
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget,
               ResolveRejectFunction&& aResolveRejectFunction,
-              const char* aCallSite)
+              StaticString aCallSite)
         : ThenValueBase(aResponseTarget, aCallSite) {
       mResolveRejectFunction.emplace(std::move(aResolveRejectFunction));
     }
@@ -945,7 +946,7 @@ class MozPromise : public MozPromiseBase {
 
    public:
     explicit MapValue(nsISerialEventTarget* aResponseTarget,
-                      ResolveFunction&& f, const char* aCallSite)
+                      ResolveFunction&& f, StaticString aCallSite)
         : ThenValueBase(aResponseTarget, aCallSite),
           mResolveFunction(Some(std::forward<ResolveFunction>(f))) {}
 
@@ -991,7 +992,7 @@ class MozPromise : public MozPromiseBase {
 
    public:
     explicit MapErrValue(nsISerialEventTarget* aResponseTarget,
-                         RejectFunction&& f, const char* aCallSite)
+                         RejectFunction&& f, StaticString aCallSite)
         : ThenValueBase(aResponseTarget, aCallSite),
           mRejectFunction(Some(std::forward<RejectFunction>(f))) {}
 
@@ -1030,7 +1031,7 @@ class MozPromise : public MozPromiseBase {
 
  public:
   void ThenInternal(already_AddRefed<ThenValueBase> aThenValue,
-                    const char* aCallSite) {
+                    StaticString aCallSite) {
     PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic &&
                    mMagic3 == sMagic && mMagic4 == &mMutex);
     RefPtr<ThenValueBase> thenValue = aThenValue;
@@ -1040,7 +1041,7 @@ class MozPromise : public MozPromiseBase {
         "Using an exclusive promise in a non-exclusive fashion");
     mHaveRequest = true;
     PROMISE_LOG("%s invoking Then() [this=%p, aThenValue=%p, isPending=%d]",
-                aCallSite, this, thenValue.get(), (int)IsPending());
+                aCallSite.get(), this, thenValue.get(), (int)IsPending());
     if (!IsPending()) {
       thenValue->Dispatch(this);
     } else {
@@ -1072,7 +1073,7 @@ class MozPromise : public MozPromiseBase {
     using PromiseType = typename ThenValueType::PromiseType;
     using Private = typename PromiseType::Private;
 
-    ThenCommand(const char* aCallSite,
+    ThenCommand(StaticString aCallSite,
                 already_AddRefed<ThenValueType> aThenValue,
                 MozPromise* aReceiver)
         : mCallSite(aCallSite), mThenValue(aThenValue), mReceiver(aReceiver) {}
@@ -1137,7 +1138,7 @@ class MozPromise : public MozPromiseBase {
     ThenCommand* operator->() { return this; }
 
    private:
-    const char* mCallSite;
+    StaticString mCallSite;
     RefPtr<ThenValueType> mThenValue;
     RefPtr<MozPromise> mReceiver;
   };
@@ -1146,7 +1147,7 @@ class MozPromise : public MozPromiseBase {
   template <typename ThisType, typename... Methods,
             typename ThenValueType = ThenValue<ThisType*, Methods...>,
             typename ReturnType = ThenCommand<ThenValueType>>
-  ReturnType Then(nsISerialEventTarget* aResponseTarget, const char* aCallSite,
+  ReturnType Then(nsISerialEventTarget* aResponseTarget, StaticString aCallSite,
                   ThisType* aThisVal, Methods... aMethods) {
     RefPtr<ThenValueType> thenValue =
         new ThenValueType(aResponseTarget, aThisVal, aMethods..., aCallSite);
@@ -1156,7 +1157,7 @@ class MozPromise : public MozPromiseBase {
   template <typename... Functions,
             typename ThenValueType = ThenValue<Functions...>,
             typename ReturnType = ThenCommand<ThenValueType>>
-  ReturnType Then(nsISerialEventTarget* aResponseTarget, const char* aCallSite,
+  ReturnType Then(nsISerialEventTarget* aResponseTarget, StaticString aCallSite,
                   Functions&&... aFunctions) {
     RefPtr<ThenValueType> thenValue =
         new ThenValueType(aResponseTarget, std::move(aFunctions)..., aCallSite);
@@ -1166,7 +1167,7 @@ class MozPromise : public MozPromiseBase {
   // Shorthand for a `Then` which simply forwards the reject-value, but performs
   // some additional work with the resolve-value.
   template <typename Function>
-  auto Map(nsISerialEventTarget* aResponseTarget, const char* aCallSite,
+  auto Map(nsISerialEventTarget* aResponseTarget, StaticString aCallSite,
            Function&& function) {
     RefPtr<MapValue<Function>> thenValue = new MapValue<Function>(
         aResponseTarget, std::forward<Function>(function), aCallSite);
@@ -1176,7 +1177,7 @@ class MozPromise : public MozPromiseBase {
   // Shorthand for a `Then` which simply forwards the resolve-value, but
   // performs some additional work with the reject-value.
   template <typename Function>
-  auto MapErr(nsISerialEventTarget* aResponseTarget, const char* aCallSite,
+  auto MapErr(nsISerialEventTarget* aResponseTarget, StaticString aCallSite,
               Function&& function) {
     RefPtr<MapErrValue<Function>> thenValue = new MapErrValue<Function>(
         aResponseTarget, std::forward<Function>(function), aCallSite);
@@ -1185,7 +1186,7 @@ class MozPromise : public MozPromiseBase {
   }
 
   void ChainTo(already_AddRefed<Private> aChainedPromise,
-               const char* aCallSite) {
+               StaticString aCallSite) {
     MutexAutoLock lock(mMutex);
     MOZ_DIAGNOSTIC_ASSERT(
         !IsExclusive || !mHaveRequest,
@@ -1194,7 +1195,7 @@ class MozPromise : public MozPromiseBase {
     RefPtr<Private> chainedPromise = aChainedPromise;
     PROMISE_LOG(
         "%s invoking Chain() [this=%p, chainedPromise=%p, isPending=%d]",
-        aCallSite, this, chainedPromise.get(), (int)IsPending());
+        aCallSite.get(), this, chainedPromise.get(), (int)IsPending());
 
     // We want to use the same type of dispatching method with the chained
     // promises.
@@ -1305,7 +1306,7 @@ class MozPromise : public MozPromiseBase {
 #endif
   };
 
-  const char* mCreationSite;  // For logging
+  StaticString mCreationSite;  // For logging
   Mutex mMutex MOZ_UNANNOTATED;
   ResolveOrRejectValue mValue;
   bool mUseSynchronousTaskDispatch = false;
@@ -1335,21 +1336,22 @@ template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
     : public MozPromise<ResolveValueT, RejectValueT, IsExclusive> {
  public:
-  explicit Private(const char* aCreationSite, bool aIsCompletionPromise = false)
+  explicit Private(StaticString aCreationSite,
+                   bool aIsCompletionPromise = false)
       : MozPromise(aCreationSite, aIsCompletionPromise) {}
 
   template <typename ResolveValueT_>
-  void Resolve(ResolveValueT_&& aResolveValue, const char* aResolveSite) {
+  void Resolve(ResolveValueT_&& aResolveValue, StaticString aResolveSite) {
     PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic &&
                    mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
-    PROMISE_LOG("%s resolving MozPromise (%p created at %s)", aResolveSite,
-                this, mCreationSite);
+    PROMISE_LOG("%s resolving MozPromise (%p created at %s)",
+                aResolveSite.get(), this, mCreationSite.get());
     if (!IsPending()) {
       PROMISE_LOG(
           "%s ignored already resolved or rejected MozPromise (%p created at "
           "%s)",
-          aResolveSite, this, mCreationSite);
+          aResolveSite.get(), this, mCreationSite.get());
       return;
     }
     mValue.SetResolve(std::forward<ResolveValueT_>(aResolveValue));
@@ -1357,17 +1359,17 @@ class MozPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
   }
 
   template <typename RejectValueT_>
-  void Reject(RejectValueT_&& aRejectValue, const char* aRejectSite) {
+  void Reject(RejectValueT_&& aRejectValue, StaticString aRejectSite) {
     PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic &&
                    mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
-    PROMISE_LOG("%s rejecting MozPromise (%p created at %s)", aRejectSite, this,
-                mCreationSite);
+    PROMISE_LOG("%s rejecting MozPromise (%p created at %s)", aRejectSite.get(),
+                this, mCreationSite.get());
     if (!IsPending()) {
       PROMISE_LOG(
           "%s ignored already resolved or rejected MozPromise (%p created at "
           "%s)",
-          aRejectSite, this, mCreationSite);
+          aRejectSite.get(), this, mCreationSite.get());
       return;
     }
     mValue.SetReject(std::forward<RejectValueT_>(aRejectValue));
@@ -1375,17 +1377,17 @@ class MozPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
   }
 
   template <typename ResolveOrRejectValue_>
-  void ResolveOrReject(ResolveOrRejectValue_&& aValue, const char* aSite) {
+  void ResolveOrReject(ResolveOrRejectValue_&& aValue, StaticString aSite) {
     PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic &&
                    mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
-    PROMISE_LOG("%s resolveOrRejecting MozPromise (%p created at %s)", aSite,
-                this, mCreationSite);
+    PROMISE_LOG("%s resolveOrRejecting MozPromise (%p created at %s)",
+                aSite.get(), this, mCreationSite.get());
     if (!IsPending()) {
       PROMISE_LOG(
           "%s ignored already resolved or rejected MozPromise (%p created at "
           "%s)",
-          aSite, this, mCreationSite);
+          aSite.get(), this, mCreationSite.get());
       return;
     }
     mValue = std::forward<ResolveOrRejectValue_>(aValue);
@@ -1403,7 +1405,7 @@ class MozPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
                    mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
     PROMISE_LOG("%s UseSynchronousTaskDispatch MozPromise (%p created at %s)",
-                aSite, this, mCreationSite);
+                aSite, this, mCreationSite.get());
     MOZ_ASSERT(IsPending(),
                "A Promise must not have been already resolved or rejected to "
                "set dispatch state");
@@ -1420,7 +1422,7 @@ class MozPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
                    mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
     PROMISE_LOG("%s UseDirectTaskDispatch MozPromise (%p created at %s)", aSite,
-                this, mCreationSite);
+                this, mCreationSite.get());
     MOZ_ASSERT(IsPending(),
                "A Promise must not have been already resolved or rejected to "
                "set dispatch state");
@@ -1437,7 +1439,7 @@ class MozPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
                    mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
     PROMISE_LOG("%s TaskPriority MozPromise (%p created at %s)", aSite, this,
-                mCreationSite);
+                mCreationSite.get());
     MOZ_ASSERT(IsPending(),
                "A Promise must not have been already resolved or rejected to "
                "set dispatch state");
@@ -1478,7 +1480,7 @@ class MozPromiseHolderBase {
 
   ~MozPromiseHolderBase() { MOZ_ASSERT(!mPromise); }
 
-  already_AddRefed<PromiseType> Ensure(const char* aMethodName) {
+  already_AddRefed<PromiseType> Ensure(StaticString aMethodName) {
     static_cast<ImplType*>(this)->Check();
     if (!mPromise) {
       mPromise = new (typename PromiseType::Private)(aMethodName);
@@ -1498,7 +1500,7 @@ class MozPromiseHolderBase {
   }
 
   template <typename ResolveValueType_>
-  void Resolve(ResolveValueType_&& aResolveValue, const char* aMethodName) {
+  void Resolve(ResolveValueType_&& aResolveValue, StaticString aMethodName) {
     static_assert(std::is_convertible_v<ResolveValueType_,
                                         typename PromiseType::ResolveValueType>,
                   "Resolve() argument must be implicitly convertible to "
@@ -1513,14 +1515,14 @@ class MozPromiseHolderBase {
 
   template <typename ResolveValueType_>
   void ResolveIfExists(ResolveValueType_&& aResolveValue,
-                       const char* aMethodName) {
+                       StaticString aMethodName) {
     if (!IsEmpty()) {
       Resolve(std::forward<ResolveValueType_>(aResolveValue), aMethodName);
     }
   }
 
   template <typename RejectValueType_>
-  void Reject(RejectValueType_&& aRejectValue, const char* aMethodName) {
+  void Reject(RejectValueType_&& aRejectValue, StaticString aMethodName) {
     static_assert(std::is_convertible_v<RejectValueType_,
                                         typename PromiseType::RejectValueType>,
                   "Reject() argument must be implicitly convertible to "
@@ -1534,7 +1536,7 @@ class MozPromiseHolderBase {
 
   template <typename RejectValueType_>
   void RejectIfExists(RejectValueType_&& aRejectValue,
-                      const char* aMethodName) {
+                      StaticString aMethodName) {
     if (!IsEmpty()) {
       Reject(std::forward<RejectValueType_>(aRejectValue), aMethodName);
     }
@@ -1542,7 +1544,7 @@ class MozPromiseHolderBase {
 
   template <typename ResolveOrRejectValueType_>
   void ResolveOrReject(ResolveOrRejectValueType_&& aValue,
-                       const char* aMethodName) {
+                       StaticString aMethodName) {
     static_cast<ImplType*>(this)->Check();
     MOZ_ASSERT(mPromise);
     mPromise->ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue),
@@ -1552,7 +1554,7 @@ class MozPromiseHolderBase {
 
   template <typename ResolveOrRejectValueType_>
   void ResolveOrRejectIfExists(ResolveOrRejectValueType_&& aValue,
-                               const char* aMethodName) {
+                               StaticString aMethodName) {
     if (!IsEmpty()) {
       ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue),
                       aMethodName);
@@ -1718,7 +1720,7 @@ class ProxyRunnable : public CancelableRunnable {
 template <typename... Storages, typename PromiseType, typename ThisType,
           typename... ArgTypes, typename... ActualArgTypes>
 static RefPtr<PromiseType> InvokeAsyncImpl(
-    nsISerialEventTarget* aTarget, ThisType* aThisVal, const char* aCallerName,
+    nsISerialEventTarget* aTarget, ThisType* aThisVal, StaticString aCallerName,
     RefPtr<PromiseType> (ThisType::*aMethod)(ArgTypes...),
     ActualArgTypes&&... aArgs) {
   MOZ_ASSERT(aTarget);
@@ -1758,7 +1760,7 @@ template <typename... Storages, typename PromiseType, typename ThisType,
           typename... ArgTypes, typename... ActualArgTypes,
           std::enable_if_t<sizeof...(Storages) != 0, int> = 0>
 static RefPtr<PromiseType> InvokeAsync(
-    nsISerialEventTarget* aTarget, ThisType* aThisVal, const char* aCallerName,
+    nsISerialEventTarget* aTarget, ThisType* aThisVal, StaticString aCallerName,
     RefPtr<PromiseType> (ThisType::*aMethod)(ArgTypes...),
     ActualArgTypes&&... aArgs) {
   static_assert(
@@ -1777,7 +1779,7 @@ template <typename... Storages, typename PromiseType, typename ThisType,
           typename... ArgTypes, typename... ActualArgTypes,
           std::enable_if_t<sizeof...(Storages) == 0, int> = 0>
 static RefPtr<PromiseType> InvokeAsync(
-    nsISerialEventTarget* aTarget, ThisType* aThisVal, const char* aCallerName,
+    nsISerialEventTarget* aTarget, ThisType* aThisVal, StaticString aCallerName,
     RefPtr<PromiseType> (ThisType::*aMethod)(ArgTypes...),
     ActualArgTypes&&... aArgs) {
   static_assert(
@@ -1831,7 +1833,7 @@ constexpr static bool IsRefPtrMozPromise<RefPtr<MozPromise<T, U, B>>> = true;
 // Invoke a function object (e.g., lambda) asynchronously.
 // Return a promise that the function should eventually resolve or reject.
 template <typename Function>
-static auto InvokeAsync(nsISerialEventTarget* aTarget, const char* aCallerName,
+static auto InvokeAsync(nsISerialEventTarget* aTarget, StaticString aCallerName,
                         Function&& aFunction) -> decltype(aFunction()) {
   static_assert(!std::is_lvalue_reference_v<Function>,
                 "Function object must not be passed by lvalue-ref (to avoid "

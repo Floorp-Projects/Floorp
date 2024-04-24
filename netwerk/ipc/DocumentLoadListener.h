@@ -603,7 +603,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   RefPtr<dom::ContentParent> mContentParent;
 
   void RejectOpenPromise(nsresult aStatus, nsresult aLoadGroupStatus,
-                         bool aContinueNavigating, const char* aLocation) {
+                         bool aContinueNavigating, StaticString aLocation) {
     // It is possible for mOpenPromise to not be set if AsyncOpen failed and
     // the DocumentChannel got canceled.
     if (!mOpenPromiseResolved && mOpenPromise) {

@@ -72,7 +72,8 @@ class ScaffoldingCallHandler {
 
     // Create a second promise that gets resolved by a background task that
     // calls the scaffolding function
-    RefPtr taskPromise = new typename TaskPromiseType::Private(aFuncName.get());
+    RefPtr taskPromise =
+        new typename TaskPromiseType::Private(StaticString(aFuncName));
     nsresult dispatchResult = NS_DispatchBackgroundTask(
         NS_NewRunnableFunction(aFuncName.get(),
                                [args = std::move(convertedArgs), taskPromise,
@@ -80,16 +81,16 @@ class ScaffoldingCallHandler {
                                  auto callResult = CallScaffoldingFunc(
                                      aScaffoldingFunc, std::move(args));
                                  taskPromise->Resolve(std::move(callResult),
-                                                      aFuncName.get());
+                                                      StaticString(aFuncName));
                                }),
         NS_DISPATCH_EVENT_MAY_BLOCK);
     if (NS_FAILED(dispatchResult)) {
-      taskPromise->Reject(dispatchResult, aFuncName.get());
+      taskPromise->Reject(dispatchResult, StaticString(aFuncName));
     }
 
     // When the background task promise completes, resolve the JS promise
     taskPromise->Then(
-        GetCurrentSerialEventTarget(), aFuncName.get(),
+        GetCurrentSerialEventTarget(), StaticString(aFuncName),
         [xpcomGlobal, returnPromise,
          aFuncName](typename TaskPromiseType::ResolveOrRejectValue&& aResult) {
           if (!aResult.IsResolve()) {

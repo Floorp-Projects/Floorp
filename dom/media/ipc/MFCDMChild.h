@@ -30,7 +30,7 @@ class MFCDMChild final : public PMFCDMChild {
 
   template <typename PromiseType>
   already_AddRefed<PromiseType> InvokeAsync(
-      std::function<void()>&& aCall, const char* aCallerName,
+      std::function<void()>&& aCall, StaticString aCallerName,
       MozPromiseHolder<PromiseType>& aPromise);
 
   using InitPromise = MozPromise<MFCDMInitIPDL, nsresult, true>;

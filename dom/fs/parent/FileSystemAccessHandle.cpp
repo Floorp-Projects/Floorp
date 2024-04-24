@@ -177,7 +177,7 @@ FileSystemAccessHandle::BeginInit() {
 
   mLocked = true;
 
-  auto CreateAndRejectInitPromise = [](const char* aFunc, nsresult aRv) {
+  auto CreateAndRejectInitPromise = [](StaticString aFunc, nsresult aRv) {
     return CreateAndRejectMozPromise<InitPromise>(aFunc, aRv);
   };
 

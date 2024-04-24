@@ -20,8 +20,8 @@ struct SeekJob {
   ~SeekJob();
 
   bool Exists() const;
-  void Resolve(const char* aCallSite);
-  void RejectIfExists(const char* aCallSite);
+  void Resolve(StaticString aCallSite);
+  void RejectIfExists(StaticString aCallSite);
 
   Maybe<SeekTarget> mTarget;
   MozPromiseHolder<MediaDecoder::SeekPromise> mPromise;

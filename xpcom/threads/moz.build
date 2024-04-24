@@ -70,6 +70,7 @@ EXPORTS.mozilla += [
     "SpinEventLoopUntil.h",
     "StateMirroring.h",
     "StateWatching.h",
+    "StaticString.h",
     "SynchronizedEventQueue.h",
     "SyncRunnable.h",
     "TaskController.h",

@@ -2516,7 +2516,7 @@ void MediaManager::Dispatch(already_AddRefed<Runnable> task) {
 
 template <typename MozPromiseType, typename FunctionType>
 /* static */
-RefPtr<MozPromiseType> MediaManager::Dispatch(const char* aName,
+RefPtr<MozPromiseType> MediaManager::Dispatch(StaticString aName,
                                               FunctionType&& aFunction) {
   MozPromiseHolder<MozPromiseType> holder;
   RefPtr<MozPromiseType> promise = holder.Ensure(aName);

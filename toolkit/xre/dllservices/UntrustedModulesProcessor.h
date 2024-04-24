@@ -149,7 +149,7 @@ class UntrustedModulesProcessor final : public nsIObserver,
                                                         Priority aPriority);
 
   void CompleteProcessing(ModulesMapResultWithLoads&& aModulesAndLoads);
-  RefPtr<UntrustedModulesPromise> GetAllProcessedData(const char* aSource);
+  RefPtr<UntrustedModulesPromise> GetAllProcessedData(StaticString aSource);
 
  private:
   RefPtr<LazyIdleThread> mThread;

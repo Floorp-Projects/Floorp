@@ -8,6 +8,7 @@
 #define nsTLiteralString_h
 
 #include "nsTStringRepr.h"
+#include "mozilla/StaticString.h"
 
 /**
  * nsTLiteralString_CharT
@@ -78,8 +79,10 @@ class nsTLiteralString : public mozilla::detail::nsTStringRepr<T> {
    * Prohibit get() on temporaries as in "x"_ns.get().
    * These should be written as just "x", using a string literal directly.
    */
-  const typename raw_type<T, int>::type get() const&& = delete;
-  const typename raw_type<T, int>::type get() const& { return this->mData; }
+  constexpr const typename raw_type<T, int>::type get() const&& = delete;
+  constexpr const typename raw_type<T, int>::type get() const& {
+    return this->mData;
+  }
 
 // At least older gcc versions do not accept these friend declarations,
 // complaining about an "invalid argument list" here, but not where the actual
@@ -109,5 +112,10 @@ class nsTLiteralString : public mozilla::detail::nsTStringRepr<T> {
 
 extern template class nsTLiteralString<char>;
 extern template class nsTLiteralString<char16_t>;
+
+namespace mozilla {
+constexpr MOZ_IMPLICIT StaticString::StaticString(nsLiteralCString const& str)
+    : mStr(str.get()) {}
+}  // namespace mozilla
 
 #endif
