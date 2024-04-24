@@ -49,7 +49,7 @@
     <!-- Confirmation button -->
     <color name="fx_mobile_action_color_success" tools:ignore="UnusedResources">@color/photonGreen60</color>
     <!-- Error button -->
-    <color name="fx_mobile_action_color_error" tools:ignore="UnusedResources">@color/photonRed30</color>
+    <color name="fx_mobile_action_color_critical" tools:ignore="UnusedResources">@color/photonRed30</color>
     <!-- Info button -->
     <color name="fx_mobile_action_color_info" tools:ignore="UnusedResources">@color/photonBlue50</color>
     <!-- Checkbox default, Radio button default -->

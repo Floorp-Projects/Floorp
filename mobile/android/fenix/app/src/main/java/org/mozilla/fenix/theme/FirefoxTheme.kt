@@ -113,7 +113,7 @@ private val darkColorPalette = FirefoxColors(
     actionQuarternary = PhotonColors.DarkGrey80,
     actionWarning = PhotonColors.Yellow40A41,
     actionSuccess = PhotonColors.Green70,
-    actionError = PhotonColors.Pink70A69,
+    actionCritical = PhotonColors.Pink70A69,
     actionInfo = PhotonColors.Blue60,
     formDefault = PhotonColors.LightGrey05,
     formSelected = PhotonColors.Violet40,
@@ -193,7 +193,7 @@ private val lightColorPalette = FirefoxColors(
     actionQuarternary = PhotonColors.LightGrey10,
     actionWarning = PhotonColors.Yellow60A40,
     actionSuccess = PhotonColors.Green60,
-    actionError = PhotonColors.Red30,
+    actionCritical = PhotonColors.Red30,
     actionInfo = PhotonColors.Blue50,
     formDefault = PhotonColors.DarkGrey90,
     formSelected = PhotonColors.Ink20,
@@ -287,7 +287,7 @@ class FirefoxColors(
     actionQuarternary: Color,
     actionWarning: Color,
     actionSuccess: Color,
-    actionError: Color,
+    actionCritical: Color,
     actionInfo: Color,
     formDefault: Color,
     formSelected: Color,
@@ -441,7 +441,7 @@ class FirefoxColors(
         private set
 
     // Error button
-    var actionError by mutableStateOf(actionError)
+    var actionCritical by mutableStateOf(actionCritical)
         private set
 
     // Info button
@@ -674,7 +674,7 @@ class FirefoxColors(
         actionQuarternary = other.actionQuarternary
         actionWarning = other.actionWarning
         actionSuccess = other.actionSuccess
-        actionError = other.actionError
+        actionCritical = other.actionCritical
         actionInfo = other.actionInfo
         formDefault = other.formDefault
         formSelected = other.formSelected
@@ -758,7 +758,7 @@ class FirefoxColors(
         actionQuarternary: Color = this.actionQuarternary,
         actionWarning: Color = this.actionWarning,
         actionSuccess: Color = this.actionSuccess,
-        actionError: Color = this.actionError,
+        actionCritical: Color = this.actionCritical,
         actionInfo: Color = this.actionInfo,
         formDefault: Color = this.formDefault,
         formSelected: Color = this.formSelected,
@@ -836,7 +836,7 @@ class FirefoxColors(
         actionQuarternary = actionQuarternary,
         actionWarning = actionWarning,
         actionSuccess = actionSuccess,
-        actionError = actionError,
+        actionCritical = actionCritical,
         actionInfo = actionInfo,
         formDefault = formDefault,
         formSelected = formSelected,
