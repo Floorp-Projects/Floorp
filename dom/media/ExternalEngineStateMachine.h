@@ -154,12 +154,12 @@ class ExternalEngineStateMachine final
         mSeekJob = SeekJob();
         mSeekJob.mTarget = Some(aTarget);
       }
-      void Resolve(const char* aCallSite) {
+      void Resolve(StaticString aCallSite) {
         MOZ_ASSERT(mSeekJob.Exists());
         mSeekJob.Resolve(aCallSite);
         mSeekJob = SeekJob();
       }
-      void RejectIfExists(const char* aCallSite) {
+      void RejectIfExists(StaticString aCallSite) {
         mSeekJob.RejectIfExists(aCallSite);
       }
       bool IsSeeking() const { return mSeekRequest.Exists(); }

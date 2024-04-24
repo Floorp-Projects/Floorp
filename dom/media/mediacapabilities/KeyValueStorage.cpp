@@ -94,7 +94,7 @@ class VoidCallback final : public nsIKeyValueVoidCallback {
     mResultPromise.Reject(NS_ERROR_FAILURE, __func__);
     return NS_OK;
   }
-  RefPtr<GenericPromise> Ensure(const char* aMethodName) {
+  RefPtr<GenericPromise> Ensure(StaticString aMethodName) {
     return mResultPromise.Ensure(aMethodName);
   }
 

@@ -58,8 +58,8 @@ gfxPoint nsIDeviceContextSpec::GetPrintingTranslate() {
 }
 
 RefPtr<PrintEndDocumentPromise>
-nsIDeviceContextSpec::EndDocumentPromiseFromResult(nsresult aResult,
-                                                   const char* aSite) {
+nsIDeviceContextSpec::EndDocumentPromiseFromResult(
+    nsresult aResult, mozilla::StaticString aSite) {
   return NS_SUCCEEDED(aResult)
              ? PrintEndDocumentPromise::CreateAndResolve(true, aSite)
              : PrintEndDocumentPromise::CreateAndReject(aResult, aSite);

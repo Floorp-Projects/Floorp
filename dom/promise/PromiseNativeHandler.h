@@ -12,6 +12,7 @@
 #include "js/Value.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticString.h"
 #include "nsISupports.h"
 
 namespace mozilla::dom {
@@ -58,7 +59,7 @@ class MozPromiseRejectOnDestruction final
   // (Accepting RefPtr<T> instead of T* because compiler fails to implicitly
   // convert it at call sites)
   MozPromiseRejectOnDestruction(const RefPtr<T>& aMozPromise,
-                                const char* aCallSite)
+                                StaticString aCallSite)
       : mMozPromise(aMozPromise), mCallSite(aCallSite) {
     MOZ_ASSERT(aMozPromise);
   }
@@ -70,7 +71,7 @@ class MozPromiseRejectOnDestruction final
   }
 
   RefPtr<T> mMozPromise;
-  const char* mCallSite;
+  StaticString mCallSite;
 };
 
 }  // namespace mozilla::dom

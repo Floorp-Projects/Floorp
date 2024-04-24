@@ -201,7 +201,7 @@ void GMPVideoDecoder::Terminated() {
 }
 
 void GMPVideoDecoder::ProcessReorderQueue(
-    MozPromiseHolder<DecodePromise>& aPromise, const char* aMethodName) {
+    MozPromiseHolder<DecodePromise>& aPromise, StaticString aMethodName) {
   if (aPromise.IsEmpty()) {
     return;
   }

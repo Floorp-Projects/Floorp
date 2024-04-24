@@ -68,12 +68,12 @@ bool MediaTimer::OnMediaTimerThread() {
 }
 
 RefPtr<MediaTimerPromise> MediaTimer::WaitFor(const TimeDuration& aDuration,
-                                              const char* aCallSite) {
+                                              StaticString aCallSite) {
   return WaitUntil(TimeStamp::Now() + aDuration, aCallSite);
 }
 
 RefPtr<MediaTimerPromise> MediaTimer::WaitUntil(const TimeStamp& aTimeStamp,
-                                                const char* aCallSite) {
+                                                StaticString aCallSite) {
   MonitorAutoLock mon(mMonitor);
   TIMER_LOG("MediaTimer::WaitUntil %" PRId64, RelativeMicroseconds(aTimeStamp));
   Entry e(aTimeStamp, aCallSite);

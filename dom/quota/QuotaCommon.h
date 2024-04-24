@@ -22,6 +22,7 @@
 #include "mozilla/MacroArgs.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/StaticString.h"
 #include "mozilla/Try.h"
 #if defined(QM_LOG_ERROR_ENABLED) && defined(QM_ERROR_STACKS_ENABLED)
 #  include "mozilla/Variant.h"
@@ -1133,7 +1134,7 @@ auto ErrToDefaultOk(const nsresult aValue) -> Result<V, nsresult> {
 }
 
 template <typename MozPromiseType, typename RejectValueT = nsresult>
-auto CreateAndRejectMozPromise(const char* aFunc, const RejectValueT& aRv)
+auto CreateAndRejectMozPromise(StaticString aFunc, const RejectValueT& aRv)
     -> decltype(auto) {
   if constexpr (std::is_same_v<RejectValueT, nsresult>) {
     return MozPromiseType::CreateAndReject(aRv, aFunc);
@@ -1142,12 +1143,13 @@ auto CreateAndRejectMozPromise(const char* aFunc, const RejectValueT& aRv)
   }
 }
 
-RefPtr<BoolPromise> CreateAndRejectBoolPromise(const char* aFunc, nsresult aRv);
+RefPtr<BoolPromise> CreateAndRejectBoolPromise(StaticString aFunc,
+                                               nsresult aRv);
 
-RefPtr<Int64Promise> CreateAndRejectInt64Promise(const char* aFunc,
+RefPtr<Int64Promise> CreateAndRejectInt64Promise(StaticString aFunc,
                                                  nsresult aRv);
 
-RefPtr<BoolPromise> CreateAndRejectBoolPromiseFromQMResult(const char* aFunc,
+RefPtr<BoolPromise> CreateAndRejectBoolPromiseFromQMResult(StaticString aFunc,
                                                            const QMResult& aRv);
 
 // Like Rust's collect with a step function, not a generic iterator/range.

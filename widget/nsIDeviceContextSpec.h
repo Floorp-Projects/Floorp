@@ -95,7 +95,7 @@ class nsIDeviceContextSpec : public nsISupports {
       const char* aCallSite, AsyncEndDocumentFunction aFunction);
 
   static RefPtr<mozilla::gfx::PrintEndDocumentPromise>
-  EndDocumentPromiseFromResult(nsresult aResult, const char* aSite);
+  EndDocumentPromiseFromResult(nsresult aResult, mozilla::StaticString aSite);
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
 

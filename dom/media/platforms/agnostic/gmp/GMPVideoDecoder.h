@@ -72,7 +72,7 @@ class GMPVideoDecoder final : public MediaDataDecoder,
   virtual GMPUniquePtr<GMPVideoEncodedFrame> CreateFrame(MediaRawData* aSample);
   virtual const VideoInfo& GetConfig() const;
   void ProcessReorderQueue(MozPromiseHolder<DecodePromise>& aPromise,
-                           const char* aMethodName);
+                           StaticString aMethodName);
 
  private:
   ~GMPVideoDecoder() = default;

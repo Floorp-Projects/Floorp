@@ -994,7 +994,7 @@ class HTMLMediaElement::MediaStreamRenderer {
         graph->CreateSourceTrack(MediaSegment::AUDIO));
   }
 
-  void ResolveAudioDevicePromiseIfExists(const char* aMethodName) {
+  void ResolveAudioDevicePromiseIfExists(StaticString aMethodName) {
     if (mSetAudioDevicePromise.IsEmpty()) {
       return;
     }

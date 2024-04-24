@@ -44,9 +44,9 @@ class MediaTimer {
                                                      DispatchDestroy());
 
   RefPtr<MediaTimerPromise> WaitFor(const TimeDuration& aDuration,
-                                    const char* aCallSite);
+                                    StaticString aCallSite);
   RefPtr<MediaTimerPromise> WaitUntil(const TimeStamp& aTimeStamp,
-                                      const char* aCallSite);
+                                      StaticString aCallSite);
   void Cancel();  // Cancel and reject any unresolved promises with false.
 
  private:
@@ -81,7 +81,7 @@ class MediaTimer {
     TimeStamp mTimeStamp;
     RefPtr<MediaTimerPromise::Private> mPromise;
 
-    explicit Entry(const TimeStamp& aTimeStamp, const char* aCallSite)
+    explicit Entry(const TimeStamp& aTimeStamp, StaticString aCallSite)
         : mTimeStamp(aTimeStamp),
           mPromise(new MediaTimerPromise::Private(aCallSite)) {}
 

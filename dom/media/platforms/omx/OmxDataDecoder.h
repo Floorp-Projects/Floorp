@@ -88,9 +88,9 @@ class OmxDataDecoder final : public MediaDataDecoder,
  protected:
   void InitializationTask();
 
-  void ResolveInitPromise(const char* aMethodName);
+  void ResolveInitPromise(StaticString aMethodName);
 
-  void RejectInitPromise(MediaResult aError, const char* aMethodName);
+  void RejectInitPromise(MediaResult aError, StaticString aMethodName);
 
   void OmxStateRunner();
 

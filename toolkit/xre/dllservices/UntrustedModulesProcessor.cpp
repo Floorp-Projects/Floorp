@@ -409,7 +409,7 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrust(
   RefPtr<ModulesTrustPromise::Private> p(
       new ModulesTrustPromise::Private(__func__));
   nsCOMPtr<nsISerialEventTarget> evtTarget(mThread);
-  const char* source = __func__;
+  StaticString source = __func__;
 
   auto runWrap = [evtTarget = std::move(evtTarget), p, source,
                   run = std::move(run)]() mutable -> void {
@@ -441,7 +441,7 @@ UntrustedModulesProcessor::GetProcessedDataInternal() {
 }
 
 RefPtr<UntrustedModulesPromise> UntrustedModulesProcessor::GetAllProcessedData(
-    const char* aSource) {
+    StaticString aSource) {
   AssertRunningOnLazyIdleThread();
 
   UntrustedModulesData result;
@@ -471,7 +471,7 @@ UntrustedModulesProcessor::GetProcessedDataInternalChildProcess() {
       new UntrustedModulesPromise::Private(__func__));
   nsCOMPtr<nsISerialEventTarget> evtTarget(mThread);
 
-  const char* source = __func__;
+  StaticString source = __func__;
   auto completionRoutine = [evtTarget = std::move(evtTarget), p,
                             self = std::move(self), source,
                             whenProcessed = std::move(whenProcessed)]() {
@@ -570,7 +570,7 @@ void UntrustedModulesProcessor::BackgroundProcessModuleLoadQueueChildProcess() {
   RefPtr<UntrustedModulesProcessor> self(this);
   nsCOMPtr<nsISerialEventTarget> evtTarget(mThread);
 
-  const char* source = __func__;
+  constexpr StaticString const source = __func__;
   auto completionRoutine = [evtTarget = std::move(evtTarget),
                             self = std::move(self), source,
                             whenProcessed = std::move(whenProcessed)]() {

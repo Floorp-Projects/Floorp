@@ -521,14 +521,14 @@ nsTArray<RefPtr<OmxPromiseLayer::BufferData>>* OmxDataDecoder::GetBuffers(
   return &mOutPortBuffers;
 }
 
-void OmxDataDecoder::ResolveInitPromise(const char* aMethodName) {
+void OmxDataDecoder::ResolveInitPromise(StaticString aMethodName) {
   MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
-  LOG("called from %s", aMethodName);
+  LOG("called from %s", aMethodName.get());
   mInitPromise.ResolveIfExists(mTrackInfo->GetType(), aMethodName);
 }
 
 void OmxDataDecoder::RejectInitPromise(MediaResult aError,
-                                       const char* aMethodName) {
+                                       StaticString aMethodName) {
   MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
   mInitPromise.RejectIfExists(aError, aMethodName);
 }

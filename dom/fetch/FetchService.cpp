@@ -65,42 +65,42 @@ FetchServicePromises::GetResponseEndPromise() {
 }
 
 void FetchServicePromises::ResolveResponseAvailablePromise(
-    FetchServiceResponse&& aResponse, const char* aMethodName) {
+    FetchServiceResponse&& aResponse, StaticString aMethodName) {
   if (mAvailablePromise) {
     mAvailablePromise->Resolve(std::move(aResponse), aMethodName);
   }
 }
 
 void FetchServicePromises::RejectResponseAvailablePromise(
-    const CopyableErrorResult&& aError, const char* aMethodName) {
+    const CopyableErrorResult&& aError, StaticString aMethodName) {
   if (mAvailablePromise) {
     mAvailablePromise->Reject(aError, aMethodName);
   }
 }
 
 void FetchServicePromises::ResolveResponseTimingPromise(
-    ResponseTiming&& aTiming, const char* aMethodName) {
+    ResponseTiming&& aTiming, StaticString aMethodName) {
   if (mTimingPromise) {
     mTimingPromise->Resolve(std::move(aTiming), aMethodName);
   }
 }
 
 void FetchServicePromises::RejectResponseTimingPromise(
-    const CopyableErrorResult&& aError, const char* aMethodName) {
+    const CopyableErrorResult&& aError, StaticString aMethodName) {
   if (mTimingPromise) {
     mTimingPromise->Reject(aError, aMethodName);
   }
 }
 
 void FetchServicePromises::ResolveResponseEndPromise(ResponseEndArgs&& aArgs,
-                                                     const char* aMethodName) {
+                                                     StaticString aMethodName) {
   if (mEndPromise) {
     mEndPromise->Resolve(std::move(aArgs), aMethodName);
   }
 }
 
 void FetchServicePromises::RejectResponseEndPromise(
-    const CopyableErrorResult&& aError, const char* aMethodName) {
+    const CopyableErrorResult&& aError, StaticString aMethodName) {
   if (mEndPromise) {
     mEndPromise->Reject(aError, aMethodName);
   }

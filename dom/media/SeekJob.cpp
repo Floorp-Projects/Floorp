@@ -18,12 +18,12 @@ bool SeekJob::Exists() const {
   return mTarget.isSome();
 }
 
-void SeekJob::Resolve(const char* aCallSite) {
+void SeekJob::Resolve(StaticString aCallSite) {
   mPromise.Resolve(true, aCallSite);
   mTarget.reset();
 }
 
-void SeekJob::RejectIfExists(const char* aCallSite) {
+void SeekJob::RejectIfExists(StaticString aCallSite) {
   mTarget.reset();
   mPromise.RejectIfExists(true, aCallSite);
 }
