@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -155,7 +154,6 @@ class ComposeHistoryTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/339696
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
     fun openMultipleSelectedHistoryItemsInANewTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
