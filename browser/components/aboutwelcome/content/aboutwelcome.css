@@ -2109,11 +2109,11 @@ html {
 .onboardingContainer .tiles-theme-section.wallpaper .theme .icon:hover {
   filter: brightness(45%);
 }
-.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-aurora {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-aurora.avif");
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-landscape {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-landscape.avif");
 }
-.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-city {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-city.avif");
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-beach {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-beach.avif");
 }
 .onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-color {
   background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-color.avif");
@@ -2139,8 +2139,8 @@ html {
 .onboardingContainer .tiles-theme-section.wallpaper .theme .icon.light-mountain {
   background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-mountain.avif");
 }
-.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.light-redpanda {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-redpanda.avif");
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.light-panda {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-panda.avif");
 }
 .onboardingContainer .tiles-theme-section.wallpaper .theme .icon.light-sky {
   background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-sky.avif");

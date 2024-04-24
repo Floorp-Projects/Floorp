@@ -40,7 +40,7 @@
     cursor: pointer;
     outline: 2px solid transparent;
 
-    $wallpapers: dark-aurora, dark-city, dark-color, dark-mountain, dark-panda, dark-sky, light-beach, light-color, light-landscape, light-mountain, light-redpanda, light-sky;
+    $wallpapers: dark-landscape, dark-color, dark-mountain, dark-panda, dark-sky, dark-beach, light-beach, light-color, light-landscape, light-mountain, light-panda, light-sky;
 
     @each $wallpaper in $wallpapers {
       &.#{$wallpaper} {
