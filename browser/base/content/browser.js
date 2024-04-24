@@ -2424,8 +2424,9 @@ var gBrowserInit = {
               );
             });
           }
-        } catch (e) {
-          console.error(e);
+        }
+        catch (e) {
+          // Do nothing
         }
       }
 
