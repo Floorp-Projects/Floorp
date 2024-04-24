@@ -116,7 +116,7 @@ internal fun MozillaAccountMenuButton(
             Icon(
                 painter = painterResource(R.drawable.mozac_ic_warning_fill_24),
                 contentDescription = null,
-                tint = FirefoxTheme.colors.iconWarning,
+                tint = FirefoxTheme.colors.iconCritical,
             )
 
             Spacer(modifier = Modifier.width(8.dp))
