@@ -152,4 +152,20 @@ export default [
     rules: ["span::selection { -webkit-text-stroke: 4px navy; }"],
     isActive: true,
   },
+  {
+    info: "display is inactive on ::target-text",
+    property: "display",
+    tagName: "span",
+    rules: ["span::target-text { display: grid; }"],
+    isActive: false,
+    expectedMsgId: "inactive-css-highlight-pseudo-elements-not-supported",
+  },
+  {
+    // accept background shorthand, even if it might hold inactive values
+    info: "background is active on ::target-text",
+    property: "background",
+    tagName: "span",
+    rules: ["span::target-text { background: red; }"],
+    isActive: true,
+  },
 ];

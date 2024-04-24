@@ -5,12 +5,13 @@
 
 // Test that pseudoelements are displayed correctly in the rule view
 
-const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
+const TEST_URI = URL_ROOT + "doc_pseudoelement.html?#:~:text=fox";
 const PSEUDO_PREF = "devtools.inspector.show_pseudo_elements";
 
 add_task(async function () {
   await pushPref(PSEUDO_PREF, true);
   await pushPref("dom.customHighlightAPI.enabled", true);
+  await pushPref("dom.text_fragments.enabled", true);
   await pushPref("layout.css.modern-range-pseudos.enabled", true);
 
   await addTab(TEST_URI);
@@ -26,6 +27,7 @@ add_task(async function () {
   await testDialogBackdrop(inspector, view);
   await testCustomHighlight(inspector, view);
   await testSlider(inspector, view);
+  await testUrlFragmentTextDirective(inspector, view);
 });
 
 async function testTopLeft(inspector, view) {
@@ -376,6 +378,19 @@ async function testSlider(inspector, view) {
   );
 }
 
+async function testUrlFragmentTextDirective(inspector, view) {
+  await assertPseudoElementRulesNumbers(
+    ".url-fragment-text-directives",
+    inspector,
+    view,
+    {
+      elementRulesNb: 3,
+      targetTextRulesNb: 1,
+    }
+  );
+  assertGutters(view);
+}
+
 function convertTextPropsToString(textProps) {
   return textProps
     .map(
@@ -436,6 +451,9 @@ async function assertPseudoElementRulesNumbers(
     sliderTrackRules: elementStyle.rules.filter(
       rule => rule.pseudoElement === "::slider-track"
     ),
+    targetTextRules: elementStyle.rules.filter(
+      rule => rule.pseudoElement === "::target-text"
+    ),
   };
 
   is(
@@ -492,6 +510,11 @@ async function assertPseudoElementRulesNumbers(
     rules.sliderTrackRules.length,
     ruleNbs.sliderTrackRulesNb || 0,
     selector + " has the correct number of ::slider-track rules"
+  );
+  is(
+    rules.targetTextRules.length,
+    ruleNbs.targetTextRulesNb || 0,
+    selector + " has the correct number of ::target-text rules"
   );
 
   // If we do have pseudo element rules displayed, ensure we don't mark their selectors
