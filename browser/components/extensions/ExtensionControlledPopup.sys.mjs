@@ -235,8 +235,6 @@ export class ExtensionControlledPopup {
       return;
     }
 
-    win.ownerGlobal.ensureCustomElements("moz-support-link");
-
     // Find the elements we need.
     let doc = win.document;
     let panel = ExtensionControlledPopup._getAndMaybeCreatePanel(doc);

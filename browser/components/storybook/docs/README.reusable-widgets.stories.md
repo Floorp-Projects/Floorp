@@ -111,17 +111,16 @@ by updating [this array](https://searchfox.org/mozilla-central/rev/5c922d8b93b43
 
 Once you've added a new component to `toolkit/content/widgets` and created
 `chrome://` URLs via `toolkit/content/jar.mn` you should be able to start using it
-throughout Firefox. You can import the component into `html`/`xhtml` files via a
+throughout Firefox. In most cases, you should be able to rely on your custom element getting lazy loaded at the time of first use, provided you are working in a privileged context where `customElements.js` is available.
+
+You can import the component directly into `html`/`xhtml` files via a
 `script` tag with `type="module"`:
 
 ```html
 <script type="module" src="chrome://global/content/elements/your-component-name.mjs"></script>
 ```
 
-If you are unable to import the new component in html, you can use [`ensureCustomElements()` in customElements.js](https://searchfox.org/mozilla-central/rev/31f5847a4494b3646edabbdd7ea39cb88509afe2/toolkit/content/customElements.js#865) in the relevant JS file.
-For example, [we use `window.ensureCustomElements("moz-button-group")` in `browser-siteProtections.js`](https://searchfox.org/mozilla-central/rev/31f5847a4494b3646edabbdd7ea39cb88509afe2/browser/base/content/browser-siteProtections.js#1749).
-**Note** you will need to add your new widget to [the switch in importCustomElementFromESModule](https://searchfox.org/mozilla-central/rev/85b4f7363292b272eb9b606e00de2c37a6be73f0/toolkit/content/customElements.js#845-859) for `ensureCustomElements()` to work as expected.
-Once [Bug 1803810](https://bugzilla.mozilla.org/show_bug.cgi?id=1803810) lands, this process will be simplified: you won't need to use `ensureCustomElements()` and you will [add your widget to the appropriate array in customElements.js instead of the switch statement](https://searchfox.org/mozilla-central/rev/85b4f7363292b272eb9b606e00de2c37a6be73f0/toolkit/content/customElements.js#818-841).
+**Note** you will need to add your new widget to [this array in customElements.js](https://searchfox.org/mozilla-central/rev/cde3d4a8d228491e8b7f1bd94c63bbe039850696/toolkit/content/customElements.js#791-810) to ensure it gets lazy loaded on creation.
 
 ## Common pitfalls
 
