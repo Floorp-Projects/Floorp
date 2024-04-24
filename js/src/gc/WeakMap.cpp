@@ -219,6 +219,8 @@ void ObjectWeakMap::checkAfterMovingGC() {
   for (ObjectValueWeakMap::Range r = map.all(); !r.empty(); r.popFront()) {
     CheckGCThingAfterMovingGC(r.front().key().get());
     CheckGCThingAfterMovingGC(&r.front().value().toObject());
+    auto ptr = map.lookupUnbarriered(r.front().key());
+    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
   }
 }
 #endif  // JSGC_HASH_TABLE_CHECKS

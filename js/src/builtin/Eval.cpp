@@ -538,12 +538,11 @@ JS_PUBLIC_API bool JS::IsJSMEnvironment(JSObject* obj) {
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void RuntimeCaches::checkEvalCacheAfterMinorGC() {
-  for (auto r = evalCache.all(); !r.empty(); r.popFront()) {
-    const EvalCacheEntry& entry = r.front();
+  gc::CheckTableAfterMovingGC(evalCache, [](const auto& entry) {
     CheckGCThingAfterMovingGC(entry.str);
-    EvalCacheLookup lookup(entry.str, entry.callerScript, entry.pc);
-    auto ptr = evalCache.lookup(lookup);
-    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
-  }
+    CheckGCThingAfterMovingGC(entry.script);
+    CheckGCThingAfterMovingGC(entry.callerScript);
+    return EvalCacheLookup(entry.str, entry.callerScript, entry.pc);
+  });
 }
 #endif
