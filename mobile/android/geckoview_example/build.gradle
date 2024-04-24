@@ -53,6 +53,7 @@ android {
 dependencies {
     implementation ComponentsDependencies.androidx_annotation
     implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_core
     implementation ComponentsDependencies.androidx_preferences
 
     implementation project(path: ':geckoview')
