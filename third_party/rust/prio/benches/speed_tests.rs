@@ -15,7 +15,9 @@ use num_rational::Ratio;
 use num_traits::ToPrimitive;
 #[cfg(feature = "experimental")]
 use prio::dp::distributions::DiscreteGaussian;
-#[cfg(feature = "prio2")]
+#[cfg(feature = "experimental")]
+use prio::idpf::test_utils::generate_zipf_distributed_batch;
+#[cfg(feature = "experimental")]
 use prio::vdaf::prio2::Prio2;
 use prio::{
     benchmarked::*,
@@ -35,8 +37,6 @@ use rand::prelude::*;
 #[cfg(feature = "experimental")]
 use std::iter;
 use std::time::Duration;
-#[cfg(feature = "experimental")]
-use zipf::ZipfDistribution;
 
 /// Seed for generation of random benchmark inputs.
 ///
@@ -116,7 +116,7 @@ fn poly_mul(c: &mut Criterion) {
 }
 
 /// Benchmark prio2.
-#[cfg(feature = "prio2")]
+#[cfg(feature = "experimental")]
 fn prio2(c: &mut Criterion) {
     let mut group = c.benchmark_group("prio2_shard");
     for input_length in [10, 100, 1_000] {
@@ -164,14 +164,14 @@ fn prio3(c: &mut Criterion) {
 
     c.bench_function("prio3count_shard", |b| {
         let vdaf = Prio3::new_count(num_shares).unwrap();
-        let measurement = black_box(1);
+        let measurement = black_box(true);
         let nonce = black_box([0u8; 16]);
         b.iter(|| vdaf.shard(&measurement, &nonce).unwrap());
     });
 
     c.bench_function("prio3count_prepare_init", |b| {
         let vdaf = Prio3::new_count(num_shares).unwrap();
-        let measurement = black_box(1);
+        let measurement = black_box(true);
         let nonce = black_box([0u8; 16]);
         let verify_key = black_box([0u8; 16]);
         let (public_share, input_shares) = vdaf.shard(&measurement, &nonce).unwrap();
@@ -712,7 +712,7 @@ fn poplar1(c: &mut Criterion) {
     for size in test_sizes.iter() {
         group.throughput(Throughput::Bytes(*size as u64 / 8));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
-            let vdaf = Poplar1::new_shake128(size);
+            let vdaf = Poplar1::new_turboshake128(size);
             let mut rng = StdRng::seed_from_u64(RNG_SEED);
             let nonce = rng.gen::<[u8; 16]>();
 
@@ -736,7 +736,7 @@ fn poplar1(c: &mut Criterion) {
     for size in test_sizes.iter() {
         group.measurement_time(Duration::from_secs(30)); // slower benchmark
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
-            let vdaf = Poplar1::new_shake128(size);
+            let vdaf = Poplar1::new_turboshake128(size);
             let mut rng = StdRng::seed_from_u64(RNG_SEED);
 
             b.iter_batched(
@@ -746,7 +746,7 @@ fn poplar1(c: &mut Criterion) {
 
                     // Parameters are chosen to match Chris Wood's experimental setup:
                     // https://github.com/chris-wood/heavy-hitter-comparison
-                    let (measurements, prefix_tree) = poplar1_generate_zipf_distributed_batch(
+                    let (measurements, prefix_tree) = generate_zipf_distributed_batch(
                         &mut rng, // rng
                         size,     // bits
                         10,       // threshold
@@ -794,83 +794,54 @@ fn poplar1(c: &mut Criterion) {
     group.finish();
 }
 
-/// Generate a set of Poplar1 measurements with the given bit length `bits`. They are sampled
-/// according to the Zipf distribution with parameters `zipf_support` and `zipf_exponent`. Return
-/// the measurements, along with the prefix tree for the desired threshold.
-///
-/// The prefix tree consists of a sequence of candidate prefixes for each level. For a given level,
-/// the candidate prefixes are computed from the hit counts of the prefixes at the previous level:
-/// For any prefix `p` whose hit count is at least the desired threshold, add `p || 0` and `p || 1`
-/// to the list.
+/// Benchmark VIDPF performance.
 #[cfg(feature = "experimental")]
-fn poplar1_generate_zipf_distributed_batch(
-    rng: &mut impl Rng,
-    bits: usize,
-    threshold: usize,
-    measurement_count: usize,
-    zipf_support: usize,
-    zipf_exponent: f64,
-) -> (Vec<IdpfInput>, Vec<Vec<IdpfInput>>) {
-    // Generate random inputs.
-    let mut inputs = Vec::with_capacity(zipf_support);
-    for _ in 0..zipf_support {
-        let bools: Vec<bool> = (0..bits).map(|_| rng.gen()).collect();
-        inputs.push(IdpfInput::from_bools(&bools));
+fn vidpf(c: &mut Criterion) {
+    use prio::vidpf::{Vidpf, VidpfInput, VidpfWeight};
+
+    let test_sizes = [8usize, 8 * 16, 8 * 256];
+    const NONCE_SIZE: usize = 16;
+    const NONCE: &[u8; NONCE_SIZE] = b"Test Nonce VIDPF";
+
+    let mut group = c.benchmark_group("vidpf_gen");
+    for size in test_sizes.iter() {
+        group.throughput(Throughput::Bytes(*size as u64 / 8));
+        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
+            let bits = iter::repeat_with(random).take(size).collect::<Vec<bool>>();
+            let input = VidpfInput::from_bools(&bits);
+            let weight = VidpfWeight::from(vec![Field255::one(), Field255::one()]);
+
+            let vidpf = Vidpf::<VidpfWeight<Field255>, NONCE_SIZE>::new(2);
+
+            b.iter(|| {
+                let _ = vidpf.gen(&input, &weight, NONCE).unwrap();
+            });
+        });
     }
+    group.finish();
 
-    // Sample a number of inputs according to the Zipf distribution.
-    let mut samples = Vec::with_capacity(measurement_count);
-    let zipf = ZipfDistribution::new(zipf_support, zipf_exponent).unwrap();
-    for _ in 0..measurement_count {
-        samples.push(inputs[zipf.sample(rng) - 1].clone());
+    let mut group = c.benchmark_group("vidpf_eval");
+    for size in test_sizes.iter() {
+        group.throughput(Throughput::Bytes(*size as u64 / 8));
+        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
+            let bits = iter::repeat_with(random).take(size).collect::<Vec<bool>>();
+            let input = VidpfInput::from_bools(&bits);
+            let weight = VidpfWeight::from(vec![Field255::one(), Field255::one()]);
+            let vidpf = Vidpf::<VidpfWeight<Field255>, NONCE_SIZE>::new(2);
+
+            let (public, keys) = vidpf.gen(&input, &weight, NONCE).unwrap();
+
+            b.iter(|| {
+                let _ = vidpf.eval(&keys[0], &public, &input, NONCE).unwrap();
+            });
+        });
     }
-
-    // Compute the prefix tree for the desired threshold.
-    let mut prefix_tree = Vec::with_capacity(bits);
-    prefix_tree.push(vec![
-        IdpfInput::from_bools(&[false]),
-        IdpfInput::from_bools(&[true]),
-    ]);
-
-    for level in 0..bits - 1 {
-        // Compute the hit count of each prefix from the previous level.
-        let mut hit_counts = vec![0; prefix_tree[level].len()];
-        for (hit_count, prefix) in hit_counts.iter_mut().zip(prefix_tree[level].iter()) {
-            for sample in samples.iter() {
-                let mut is_prefix = true;
-                for j in 0..prefix.len() {
-                    if prefix[j] != sample[j] {
-                        is_prefix = false;
-                        break;
-                    }
-                }
-                if is_prefix {
-                    *hit_count += 1;
-                }
-            }
-        }
-
-        // Compute the next set of candidate prefixes.
-        let mut next_prefixes = Vec::new();
-        for (hit_count, prefix) in hit_counts.iter().zip(prefix_tree[level].iter()) {
-            if *hit_count >= threshold {
-                next_prefixes.push(prefix.clone_with_suffix(&[false]));
-                next_prefixes.push(prefix.clone_with_suffix(&[true]));
-            }
-        }
-        prefix_tree.push(next_prefixes);
-    }
-
-    (samples, prefix_tree)
+    group.finish();
 }
 
-#[cfg(all(feature = "prio2", feature = "experimental"))]
-criterion_group!(benches, poplar1, prio3, prio2, poly_mul, prng, idpf, dp_noise);
-#[cfg(all(not(feature = "prio2"), feature = "experimental"))]
-criterion_group!(benches, poplar1, prio3, poly_mul, prng, idpf, dp_noise);
-#[cfg(all(feature = "prio2", not(feature = "experimental")))]
-criterion_group!(benches, prio3, prio2, prng, poly_mul);
-#[cfg(all(not(feature = "prio2"), not(feature = "experimental")))]
+#[cfg(feature = "experimental")]
+criterion_group!(benches, poplar1, prio3, prio2, poly_mul, prng, idpf, dp_noise, vidpf);
+#[cfg(not(feature = "experimental"))]
 criterion_group!(benches, prio3, prng, poly_mul);
 
 criterion_main!(benches);

@@ -17,6 +17,7 @@
 pub mod benchmarked;
 pub mod codec;
 #[cfg(feature = "experimental")]
+#[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
 pub mod dp;
 mod fft;
 pub mod field;
@@ -32,3 +33,9 @@ mod polynomial;
 mod prng;
 pub mod topology;
 pub mod vdaf;
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg_attr(
+    docsrs,
+    doc(cfg(all(feature = "crypto-dependencies", feature = "experimental")))
+)]
+pub mod vidpf;
