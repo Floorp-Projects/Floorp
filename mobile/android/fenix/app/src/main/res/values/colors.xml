@@ -47,7 +47,7 @@
     <!-- Warning button -->
     <color name="fx_mobile_action_color_warning" tools:ignore="UnusedResources">@color/photonYellow60A40</color>
     <!-- Confirmation button -->
-    <color name="fx_mobile_action_color_confirmation" tools:ignore="UnusedResources">@color/photonGreen60</color>
+    <color name="fx_mobile_action_color_success" tools:ignore="UnusedResources">@color/photonGreen60</color>
     <!-- Error button -->
     <color name="fx_mobile_action_color_error" tools:ignore="UnusedResources">@color/photonRed30</color>
     <!-- Info button -->
