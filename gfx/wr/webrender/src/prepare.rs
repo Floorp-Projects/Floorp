@@ -698,7 +698,6 @@ fn prepare_interned_prim_for_render(
             image_data.update(
                 common_data,
                 image_instance,
-                pic_context.surface_index,
                 prim_spatial_node_index,
                 frame_state,
                 frame_context,
@@ -721,7 +720,7 @@ fn prepare_interned_prim_for_render(
 
             // Update the template this instane references, which may refresh the GPU
             // cache with any shared template data.
-            prim_data.update(frame_state, pic_context.surface_index);
+            prim_data.update(frame_state);
 
             if prim_data.stretch_size.width >= prim_data.common.prim_rect.width() &&
                 prim_data.stretch_size.height >= prim_data.common.prim_rect.height() {
@@ -787,7 +786,7 @@ fn prepare_interned_prim_for_render(
 
             // Update the template this instance references, which may refresh the GPU
             // cache with any shared template data.
-            prim_data.update(frame_state, pic_context.surface_index);
+            prim_data.update(frame_state);
 
             if prim_data.tile_spacing != LayoutSize::zero() {
                 prim_data.common.may_need_repetition = false;
@@ -851,7 +850,7 @@ fn prepare_interned_prim_for_render(
 
             // Update the template this instane references, which may refresh the GPU
             // cache with any shared template data.
-            prim_data.update(frame_state, pic_context.surface_index);
+            prim_data.update(frame_state);
 
             if prim_data.tile_spacing != LayoutSize::zero() {
                 prim_data.common.may_need_repetition = false;
@@ -915,7 +914,7 @@ fn prepare_interned_prim_for_render(
 
             // Update the template this instane references, which may refresh the GPU
             // cache with any shared template data.
-            prim_data.update(frame_state, pic_context.surface_index);
+            prim_data.update(frame_state);
 
             if prim_data.tile_spacing != LayoutSize::zero() {
                 prim_data.common.may_need_repetition = false;

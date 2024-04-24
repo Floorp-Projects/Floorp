@@ -494,7 +494,6 @@ fn add_render_task_with_mask(
         RenderTaskKind::new_prim(
             pattern.kind,
             pattern.shader_input,
-            prim_spatial_node_index,
             raster_spatial_node_index,
             device_pixel_scale,
             content_origin,
