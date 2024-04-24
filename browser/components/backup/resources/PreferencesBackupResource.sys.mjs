@@ -45,6 +45,27 @@ export class PreferencesBackupResource extends BackupResource {
     return null;
   }
 
+  async recover(_manifestEntry, recoveryPath, destProfilePath) {
+    const simpleCopyFiles = [
+      "prefs.js",
+      "xulstore.json",
+      "permissions.sqlite",
+      "content-prefs.sqlite",
+      "containers.json",
+      "handlers.json",
+      "search.json.mozlz4",
+      "user.js",
+      "chrome",
+    ];
+    await BackupResource.copyFiles(
+      recoveryPath,
+      destProfilePath,
+      simpleCopyFiles
+    );
+
+    return null;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     const files = [
       "prefs.js",

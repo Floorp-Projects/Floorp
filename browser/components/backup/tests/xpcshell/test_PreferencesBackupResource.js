@@ -146,3 +146,51 @@ add_task(async function test_backup() {
 
   sandbox.restore();
 });
+
+/**
+ * Test that the recover method correctly copies items from the recovery
+ * directory into the destination profile directory.
+ */
+add_task(async function test_recover() {
+  let preferencesBackupResource = new PreferencesBackupResource();
+  let recoveryPath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "PreferencesBackupResource-recovery-test"
+  );
+  let destProfilePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "PreferencesBackupResource-test-profile"
+  );
+
+  const simpleCopyFiles = [
+    { path: "prefs.js" },
+    { path: "xulstore.json" },
+    { path: "permissions.sqlite" },
+    { path: "content-prefs.sqlite" },
+    { path: "containers.json" },
+    { path: "handlers.json" },
+    { path: "search.json.mozlz4" },
+    { path: "user.js" },
+    { path: ["chrome", "userChrome.css"] },
+    { path: ["chrome", "userContent.css"] },
+    { path: ["chrome", "childFolder", "someOtherStylesheet.css"] },
+  ];
+  await createTestFiles(recoveryPath, simpleCopyFiles);
+
+  // The backup method is expected to have returned a null ManifestEntry
+  let postRecoveryEntry = await preferencesBackupResource.recover(
+    null /* manifestEntry */,
+    recoveryPath,
+    destProfilePath
+  );
+  Assert.equal(
+    postRecoveryEntry,
+    null,
+    "PreferencesBackupResource.recover should return null as its post recovery entry"
+  );
+
+  await assertFilesExist(destProfilePath, simpleCopyFiles);
+
+  await maybeRemovePath(recoveryPath);
+  await maybeRemovePath(destProfilePath);
+});
