@@ -28,7 +28,7 @@
     <!-- Confirmation background -->
     <color name="fx_mobile_layer_color_success" tools:ignore="UnusedResources">@color/photonGreen80</color>
     <!-- Error background -->
-    <color name="fx_mobile_layer_color_error" tools:ignore="UnusedResources">@color/photonPink80</color>
+    <color name="fx_mobile_layer_color_critical" tools:ignore="UnusedResources">@color/photonPink80</color>
     <!-- Info background -->
     <color name="fx_mobile_layer_color_info" tools:ignore="UnusedResources">@color/photonBlue50A80</color>
     <!-- Search -->
