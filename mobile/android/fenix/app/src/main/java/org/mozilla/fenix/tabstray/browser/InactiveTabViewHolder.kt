@@ -60,6 +60,7 @@ class InactiveTabViewHolder(
                 inactiveTabs = inactiveTabs,
                 expanded = expanded,
                 showAutoCloseDialog = showAutoClosePrompt,
+                showCFR = false, // The CFR in XML is handled by [TabsTrayInactiveTabsOnboardingBinding]
                 onHeaderClick = { interactor.onInactiveTabsHeaderClicked(!expanded) },
                 onDeleteAllButtonClick = interactor::onDeleteAllInactiveTabsClicked,
                 onAutoCloseDismissClick = {
@@ -73,6 +74,9 @@ class InactiveTabViewHolder(
                 },
                 onTabClick = interactor::onInactiveTabClicked,
                 onTabCloseClick = interactor::onInactiveTabClosed,
+                onCFRShown = {},
+                onCFRClick = {},
+                onCFRDismiss = {},
             )
         }
     }
