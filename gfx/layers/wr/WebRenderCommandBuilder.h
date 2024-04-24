@@ -208,9 +208,6 @@ class WebRenderCommandBuilder final {
   // need this so that WebRenderLayerScrollData items that deeper in the
   // tree don't duplicate scroll metadata that their ancestors already have.
   std::vector<const ActiveScrolledRoot*> mAsrStack;
-  // A similar stack to track the deferred transform that we decided to emit
-  // most recently.
-  std::vector<nsDisplayTransform*> mDeferredTransformStack;
   const ActiveScrolledRoot* mLastAsr;
 
   WebRenderUserDataRefTable mWebRenderUserDatas;
