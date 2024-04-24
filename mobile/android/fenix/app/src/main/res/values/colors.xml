@@ -51,7 +51,7 @@
     <!-- Error button -->
     <color name="fx_mobile_action_color_critical" tools:ignore="UnusedResources">@color/photonRed30</color>
     <!-- Info button -->
-    <color name="fx_mobile_action_color_info" tools:ignore="UnusedResources">@color/photonBlue50</color>
+    <color name="fx_mobile_action_color_information" tools:ignore="UnusedResources">@color/photonBlue50</color>
     <!-- Checkbox default, Radio button default -->
     <color name="fx_mobile_action_color_form_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Checkbox selected, Radio button selected -->
