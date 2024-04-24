@@ -49,11 +49,11 @@ assertDecl("function f(a,[x,y]) { function a() { } }",
                    [ident("a"), arrPatt([assignElem("x"), assignElem("y")])],
                    blockStmt([funDecl(ident("a"), [], blockStmt([]))])));
 
-// Bug 591450: this test currently crashes because of a bug in jsparse
-// assertDecl("function f(a,[x,y],b,[w,z],c) { function b() { } }",
-//            funDecl(ident("f"),
-//                    [ident("a"), arrPatt([ident("x"), ident("y")]), ident("b"), arrPatt([ident("w"), ident("z")]), ident("c")],
-//                    blockStmt([funDecl(ident("b"), [], blockStmt([]))])));
+// Bug 591450: this test was crashing because of a bug in jsparse
+assertDecl("function f(a,[x,y],b,[w,z],c) { function b() { } }",
+           funDecl(ident("f"),
+                   [ident("a"), arrPatt([ident("x"), ident("y")]), ident("b"), arrPatt([ident("w"), ident("z")]), ident("c")],
+                   blockStmt([funDecl(ident("b"), [], blockStmt([]))])));
 
 // redeclarations (TOK_NAME nodes with lexdef)
 
@@ -61,10 +61,9 @@ assertStmt("function f() { function g() { } function g() { } }",
            funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
                                               funDecl(ident("g"), [], blockStmt([]))])));
 
-// Fails due to parser quirks (bug 638577)
-//assertStmt("function f() { function g() { } function g() { return 42 } }",
-//           funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
-//                                              funDecl(ident("g"), [], blockStmt([returnStmt(lit(42))]))])));
+assertStmt("function f() { function g() { } function g() { return 42 } }",
+          funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
+                                             funDecl(ident("g"), [], blockStmt([returnStmt(lit(42))]))])));
 
 assertStmt("function f() { var x = 42; var x = 43; }",
            funDecl(ident("f"), [], blockStmt([varDecl([{ id: ident("x"), init: lit(42) }]),
