@@ -70,6 +70,42 @@ let DebugUI = {
 
         break;
       }
+      case "recover-from-staging": {
+        let backupsDir = PathUtils.join(PathUtils.profileDir, "backups");
+        let fp = Cc["@mozilla.org/filepicker;1"].createInstance(
+          Ci.nsIFilePicker
+        );
+        fp.init(
+          window.browsingContext,
+          "Choose a staging folder",
+          Ci.nsIFilePicker.modeGetFolder
+        );
+        fp.displayDirectory = await IOUtils.getDirectory(backupsDir);
+        let result = await new Promise(resolve => fp.open(resolve));
+        if (result == Ci.nsIFilePicker.returnCancel) {
+          break;
+        }
+
+        let path = fp.file.path;
+        let lastRecoveryStatus = document.querySelector(
+          "#last-recovery-status"
+        );
+        lastRecoveryStatus.textContent = "Recovering from backup...";
+
+        let service = BackupService.get();
+        try {
+          let newProfile = await service.recoverFromBackup(
+            path,
+            true /* shouldLaunch */
+          );
+          lastRecoveryStatus.textContent = `Created profile ${newProfile.name} at ${newProfile.rootDir.path}`;
+        } catch (e) {
+          lastRecoveryStatus.textContent(
+            `Failed to recover: ${e.message} Check the console for the full exception.`
+          );
+          throw e;
+        }
+      }
     }
   },
 };
