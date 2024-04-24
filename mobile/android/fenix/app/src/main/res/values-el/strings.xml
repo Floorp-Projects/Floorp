@@ -653,6 +653,9 @@
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Αποδοχή για όλους τους ιστοτόπους</string>
 
+    <!-- The subtitle for the allow for all sites preference toggle -->
+    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">Εάν εμπιστεύεστε αυτήν την επέκταση, μπορείτε να παραχωρήσετε άδεια σε κάθε ιστότοπο.</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Προσαρμοσμένη συλλογή προσθέτων</string>
@@ -2511,6 +2514,8 @@
     <string name="translations_bottom_sheet_translate_from">Μετάφραση από</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">Μετάφραση σε</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">Δοκιμάστε μια άλλη αρχική γλώσσα</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Όχι τώρα</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
@@ -2568,6 +2573,9 @@
     <string name="translation_option_bottom_sheet_translation_settings">Ρυθμίσεις μεταφράσεων</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">Σχετικά με τις μεταφράσεις στο %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
+    <string name="translation_option_bottom_sheet_close_content_description">Κλείσιμο σελίδας μεταφράσεων</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2721,4 +2729,8 @@
     <string name="debug_drawer_logins_title">Συνδέσεις</string>
     <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
     <string name="debug_drawer_logins_current_domain_label">Τρέχων τομέας: %s</string>
-    </resources>
+    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+    <string name="debug_drawer_logins_add_login_button">Προσθήκη ψεύτικων στοιχείων σύνδεσης για αυτόν τον τομέα</string>
+    <!-- Content description for delete button where parameter will be the username of the login -->
+    <string name="debug_drawer_logins_delete_login_button_content_description">Διαγραφή στοιχείων σύνδεσης με όνομα χρήστη %s</string>
+</resources>
