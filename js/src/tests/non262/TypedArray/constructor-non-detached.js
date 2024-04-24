@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-float16array)
 for (var constructor of typedArrayConstructors) {
     var buf = new constructor();
     detachArrayBuffer(buf.buffer);

@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-float16array)
 // 22.2.4.3 TypedArray ( typedArray )
 
 // Test [[Prototype]] of newly created typed array and its array buffer, and

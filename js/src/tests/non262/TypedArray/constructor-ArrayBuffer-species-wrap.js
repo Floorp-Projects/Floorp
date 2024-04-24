@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| shell-option(--enable-float16array) skip-if(!xulRuntime.shell)
 
 let g = newGlobal();
 
