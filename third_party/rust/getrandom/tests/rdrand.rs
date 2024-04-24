@@ -6,6 +6,8 @@
 use getrandom::Error;
 #[macro_use]
 extern crate cfg_if;
+#[path = "../src/lazy.rs"]
+mod lazy;
 #[path = "../src/rdrand.rs"]
 mod rdrand;
 #[path = "../src/util.rs"]

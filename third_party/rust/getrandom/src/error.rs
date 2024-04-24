@@ -1,10 +1,3 @@
-// Copyright 2018 Developers of the Rand project.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
 use core::{fmt, num::NonZeroU32};
 
 /// A small and `no_std` compatible error type
@@ -35,7 +28,11 @@ impl Error {
     pub const UNSUPPORTED: Error = internal_error(0);
     /// The platform-specific `errno` returned a non-positive value.
     pub const ERRNO_NOT_POSITIVE: Error = internal_error(1);
-    /// Call to iOS [`SecRandomCopyBytes`](https://developer.apple.com/documentation/security/1399291-secrandomcopybytes) failed.
+    /// Encountered an unexpected situation which should not happen in practice.
+    pub const UNEXPECTED: Error = internal_error(2);
+    /// Call to [`CCRandomGenerateBytes`](https://opensource.apple.com/source/CommonCrypto/CommonCrypto-60074/include/CommonRandom.h.auto.html) failed
+    /// on iOS, tvOS, or waatchOS.
+    // TODO: Update this constant name in the next breaking release.
     pub const IOS_SEC_RANDOM: Error = internal_error(3);
     /// Call to Windows [`RtlGenRandom`](https://docs.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-rtlgenrandom) failed.
     pub const WINDOWS_RTL_GEN_RANDOM: Error = internal_error(4);
@@ -164,6 +161,7 @@ fn internal_desc(error: Error) -> Option<&'static str> {
     match error {
         Error::UNSUPPORTED => Some("getrandom: this target is not supported"),
         Error::ERRNO_NOT_POSITIVE => Some("errno: did not return a positive value"),
+        Error::UNEXPECTED => Some("unexpected situation"),
         Error::IOS_SEC_RANDOM => Some("SecRandomCopyBytes: iOS Security framework failure"),
         Error::WINDOWS_RTL_GEN_RANDOM => Some("RtlGenRandom: Windows system function failure"),
         Error::FAILED_RDRAND => Some("RDRAND: failed multiple times: CPU issue likely"),
