@@ -285,7 +285,9 @@
   export: fromCharCode
   params:
     - 'i32'
-  result: 'externref'
+  result:
+    code: 'extern'
+    nullable: false
   fail_mode: FailOnNullPtr
   uses_memory: false
 
@@ -297,7 +299,9 @@
   export: fromCodePoint
   params:
     - 'i32'
-  result: 'externref'
+  result:
+    code: 'extern'
+    nullable: false
   fail_mode: FailOnNullPtr
   uses_memory: false
 
@@ -348,7 +352,9 @@
   params:
     - 'externref'
     - 'externref'
-  result: 'externref'
+  result:
+    code: 'extern'
+    nullable: false
   fail_mode: FailOnNullPtr
   uses_memory: false
 
@@ -362,7 +368,9 @@
     - 'externref'
     - 'i32'
     - 'i32'
-  result: 'externref'
+  result:
+    code: 'extern'
+    nullable: false
   fail_mode: FailOnNullPtr
   uses_memory: false
 
