@@ -253,6 +253,7 @@ private val privateColorPalette = darkColorPalette.copy(
     layer2 = PhotonColors.Ink50,
     layer3 = PhotonColors.Ink90,
     layerSearch = PhotonColors.Ink90,
+    borderPrimary = PhotonColors.Ink05,
     borderSecondary = PhotonColors.Ink10,
     borderToolbarDivider = PhotonColors.Violet80,
 )
