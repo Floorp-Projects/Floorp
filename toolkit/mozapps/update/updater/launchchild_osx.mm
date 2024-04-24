@@ -280,8 +280,9 @@ void CleanupElevatedMacUpdate(bool aFailureOccurred) {
   LaunchChild(3, launchctlArgs);
 }
 
-// Note: Caller is responsible for freeing argv.
-bool ObtainUpdaterArguments(int* argc, char*** argv) {
+// Note: Caller is responsible for freeing aArgv.
+bool ObtainUpdaterArguments(int* aArgc, char*** aArgv,
+                            MARChannelStringTable* aMARStrings) {
   MacAutoreleasePool pool;
 
   id updateServer = ConnectToUpdateServer();
@@ -294,15 +295,22 @@ bool ObtainUpdaterArguments(int* argc, char*** argv) {
   @try {
     NSArray* updaterArguments =
         [updateServer performSelector:@selector(getArguments)];
-    *argc = [updaterArguments count];
-    char** tempArgv = (char**)malloc(sizeof(char*) * (*argc));
-    for (int i = 0; i < *argc; i++) {
+    *aArgc = [updaterArguments count];
+    char** tempArgv = (char**)malloc(sizeof(char*) * (*aArgc));
+    for (int i = 0; i < *aArgc; i++) {
       int argLen = [[updaterArguments objectAtIndex:i] length] + 1;
       tempArgv[i] = (char*)malloc(argLen);
       strncpy(tempArgv[i], [[updaterArguments objectAtIndex:i] UTF8String],
               argLen);
     }
-    *argv = tempArgv;
+    *aArgv = tempArgv;
+
+    NSString* channelID =
+        [updateServer performSelector:@selector(getMARChannelID)];
+    const char* channelIDStr = [channelID UTF8String];
+    aMARStrings->MARChannelID =
+        mozilla::MakeUnique<char[]>(strlen(channelIDStr) + 1);
+    strcpy(aMARStrings->MARChannelID.get(), channelIDStr);
   } @catch (NSException* e) {
     // Let's try our best and clean up.
     CleanupElevatedMacUpdate(true);
@@ -321,10 +329,12 @@ bool ObtainUpdaterArguments(int* argc, char*** argv) {
   NSArray* mUpdaterArguments;
   BOOL mShouldKeepRunning;
   BOOL mAborted;
+  NSString* mMARChannelID;
 }
-- (id)initWithArgs:(NSArray*)args;
+- (id)initWithArgs:(NSArray*)aArgs marChannelID:(NSString*)aMARChannelID;
 - (BOOL)runServer;
 - (NSArray*)getArguments;
+- (NSString*)getMARChannelID;
 - (void)abort;
 - (BOOL)wasAborted;
 - (void)shutdown;
@@ -333,12 +343,13 @@ bool ObtainUpdaterArguments(int* argc, char*** argv) {
 
 @implementation ElevatedUpdateServer
 
-- (id)initWithArgs:(NSArray*)args {
+- (id)initWithArgs:(NSArray*)aArgs marChannelID:(NSString*)aMARChannelID {
   self = [super init];
   if (!self) {
     return nil;
   }
-  mUpdaterArguments = args;
+  mUpdaterArguments = aArgs;
+  mMARChannelID = aMARChannelID;
   mShouldKeepRunning = YES;
   mAborted = NO;
   return self;
@@ -367,6 +378,20 @@ bool ObtainUpdaterArguments(int* argc, char*** argv) {
   return mUpdaterArguments;
 }
 
+/**
+ * The MAR channel ID(s) are stored in the UpdateSettings.framework that ships
+ * with the updater.app bundle. When an elevated update is occurring, the
+ * org.mozilla.updater binary is extracted and installed individually as a
+ * Privileged Helper Tool. This Privileged Helper Tool does not have access to
+ * the UpdateSettings.framework and we therefore rely on the unelevated updater
+ * process to pass this information to the elevated updater process in the same
+ * fashion that the command line arguments are passed to the elevated updater
+ * process by `getArguments`.
+ */
+- (NSString*)getMARChannelID {
+  return mMARChannelID;
+}
+
 - (void)abort {
   mAborted = YES;
   [self shutdown];
@@ -386,16 +411,19 @@ bool ObtainUpdaterArguments(int* argc, char*** argv) {
 
 @end
 
-bool ServeElevatedUpdate(int argc, const char** argv) {
+bool ServeElevatedUpdate(int aArgc, const char** aArgv,
+                         const char* aMARChannelID) {
   MacAutoreleasePool pool;
 
-  NSMutableArray* updaterArguments = [NSMutableArray arrayWithCapacity:argc];
-  for (int i = 0; i < argc; i++) {
-    [updaterArguments addObject:[NSString stringWithUTF8String:argv[i]]];
+  NSMutableArray* updaterArguments = [NSMutableArray arrayWithCapacity:aArgc];
+  for (int i = 0; i < aArgc; i++) {
+    [updaterArguments addObject:[NSString stringWithUTF8String:aArgv[i]]];
   }
 
+  NSString* channelID = [NSString stringWithUTF8String:aMARChannelID];
   ElevatedUpdateServer* updater =
-      [[ElevatedUpdateServer alloc] initWithArgs:[updaterArguments copy]];
+      [[ElevatedUpdateServer alloc] initWithArgs:updaterArguments
+                                    marChannelID:channelID];
   bool didSucceed = [updater runServer];
 
   [updater release];
