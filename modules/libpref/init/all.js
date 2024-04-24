@@ -345,12 +345,8 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
   #endif
 
   // 770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3
-pref("media.peerconnection.dtls.version.min", 771);
-#ifdef NIGHTLY_BUILD
+  pref("media.peerconnection.dtls.version.min", 771);
   pref("media.peerconnection.dtls.version.max", 772);
-#else
-  pref("media.peerconnection.dtls.version.max", 771);
-#endif
 
   // These values (aec, agc, and noise) are from:
   // third_party/libwebrtc/modules/audio_processing/include/audio_processing.h
