@@ -172,7 +172,7 @@ enum class ReviewQualityCheckInfoType {
             Warning -> FirefoxTheme.colors.layerWarning
             Confirmation -> FirefoxTheme.colors.layerSuccess
             Error -> FirefoxTheme.colors.layerCritical
-            Info -> FirefoxTheme.colors.layerInfo
+            Info -> FirefoxTheme.colors.layerInformation
             AnalysisUpdate -> Color.Transparent
         }
 
