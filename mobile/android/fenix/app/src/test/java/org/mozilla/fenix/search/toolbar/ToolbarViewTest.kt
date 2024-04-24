@@ -148,6 +148,7 @@ class ToolbarViewTest {
         every { context.settings().shouldShowBookmarkSuggestions } returns true
         every { context.settings().isTabletAndTabStripEnabled } returns false
         every { context.settings().enableIncompleteToolbarRedesign } returns false
+        every { context.settings().shouldAutocompleteInAwesomebar } returns false
         val view = buildToolbarView(false)
         mockkObject(FeatureFlags)
 
