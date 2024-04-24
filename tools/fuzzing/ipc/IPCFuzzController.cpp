@@ -1056,6 +1056,9 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
       msg->header()->type = msgType;
     }
 
+    // Make sure we're not sending with LAZY_SEND
+    msg->header()->flags.mFlags &= ~IPC::Message::HeaderFlags::LAZY_SEND_BIT;
+
     // Create the footer
     auto messageEvent = MakeUnique<UserMessageEvent>(0);
     messageEvent->set_port_name(new_port_name);
