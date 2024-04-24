@@ -1,4 +1,4 @@
-// |reftest| skip -- Float16Array is not supported
+// |reftest| shell-option(--enable-arraybuffer-resizable) shell-option(--enable-float16array) skip-if(!this.hasOwnProperty('Float16Array')||!ArrayBuffer.prototype.resize||!xulRuntime.shell) -- Float16Array,resizable-arraybuffer is not enabled unconditionally, requires shell-options
 // Copyright (C) 2024 Kevin Gibbons. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
