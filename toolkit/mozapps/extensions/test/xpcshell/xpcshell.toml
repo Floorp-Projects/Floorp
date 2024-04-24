@@ -1,5 +1,4 @@
 [DEFAULT]
-skip-if = ["os == 'android'"]
 tags = "addons"
 head = "head_addons.js"
 firefox-appdir = "browser"
@@ -11,252 +10,374 @@ support-files = [
   "../xpinstall/amosigned-sha1only.xpi",
 ]
 
+# TODO: Most tests are skipped on Android but we should re-enable them,
+# cf. Bug 1872867.
+
 ["test_AMBrowserExtensionsImport.js"]
+skip-if = ["os == 'android'"]
 
 ["test_AbuseReporter.js"]
+skip-if = ["os == 'android'"]
 
 ["test_AddonRepository.js"]
+skip-if = ["os == 'android'"]
 
 ["test_AddonRepository_appIsShuttingDown.js"]
+skip-if = ["os == 'android'"]
 
 ["test_AddonRepository_cache.js"]
+skip-if = ["os == 'android'"]
 
 ["test_AddonRepository_cache_locale.js"]
+skip-if = ["os == 'android'"]
 
 ["test_AddonRepository_langpacks.js"]
+skip-if = ["os == 'android'"]
 
 ["test_AddonRepository_paging.js"]
+skip-if = ["os == 'android'"]
 
 ["test_ProductAddonChecker.js"]
+skip-if = ["os == 'android'"]
 
 ["test_ProductAddonChecker_signatures.js"]
 head = "head_addons.js head_cert_handling.js"
+skip-if = ["os == 'android'"]
 
 ["test_QuarantinedDomains_AMRemoteSettings.js"]
 head = "head_addons.js head_amremotesettings.js ../../../../components/extensions/test/xpcshell/head_telemetry.js"
+skip-if = ["os == 'android'"]
 
 ["test_QuarantinedDomains_AddonWrapper.js"]
+skip-if = ["os == 'android'"]
 
 ["test_XPIStates.js"]
-skip-if = ["condprof"]  # Bug 1769184 - by design for now
+skip-if = [
+  "condprof", # Bug 1769184 - by design for now
+  "os == 'android'",
+]
 
 ["test_XPIcancel.js"]
+skip-if = ["os == 'android'"]
 
 ["test_addonStartup.js"]
+skip-if = ["os == 'android'"]
 
 ["test_addon_manager_telemetry_events.js"]
+skip-if = ["os == 'android'"]
 
 ["test_amo_stats_telemetry.js"]
+skip-if = ["os == 'android'"]
 
 ["test_aom_startup.js"]
+skip-if = ["os == 'android'"]
 
 ["test_bad_json.js"]
+skip-if = ["os == 'android'"]
 
 ["test_badschema.js"]
+skip-if = ["os == 'android'"]
 
 ["test_builtin_location.js"]
+skip-if = ["os == 'android'"]
 
 ["test_cacheflush.js"]
+skip-if = ["os == 'android'"]
 
 ["test_childprocess.js"]
 head = ""
+skip-if = ["os == 'android'"]
 
 ["test_colorways_builtin_theme_upgrades.js"]
-skip-if = ["appname == 'thunderbird'"] # Bug 1809438 - No colorways in Thunderbird
+skip-if = [
+  "appname == 'thunderbird'", # Bug 1809438 - No colorways in Thunderbird
+  "os == 'android'",
+]
 
 ["test_cookies.js"]
+skip-if = ["os == 'android'"]
 
 ["test_corrupt.js"]
+skip-if = ["os == 'android'"]
 
 ["test_crash_annotation_quoting.js"]
+skip-if = ["os == 'android'"]
 
 ["test_db_path.js"]
 head = ""
+skip-if = ["os == 'android'"]
 
 ["test_delay_update_webextension.js"]
 tags = "webextensions"
+skip-if = ["os == 'android'"]
 
 ["test_dependencies.js"]
+skip-if = ["os == 'android'"]
 
 ["test_dictionary_webextension.js"]
+skip-if = ["os == 'android'"]
 
 ["test_distribution.js"]
+skip-if = ["os == 'android'"]
 
 ["test_distribution_langpack.js"]
+skip-if = ["os == 'android'"]
 
 ["test_embedderDisabled.js"]
+skip-if = ["os == 'android'"]
 
 ["test_error.js"]
-skip-if = ["os == 'win'"] # Bug 1508482
+skip-if = [
+  "os == 'win'", # Bug 1508482
+  "os == 'android'",
+]
 
 ["test_ext_management.js"]
 tags = "webextensions"
+skip-if = ["os == 'android'"]
 
 ["test_general.js"]
+skip-if = ["os == 'android'"]
 
 ["test_getInstallSourceFromHost.js"]
+skip-if = ["os == 'android'"]
 
 ["test_gmpProvider.js"]
-skip-if = ["appname != 'firefox'"]
+skip-if = [
+  "appname != 'firefox'",
+  "os == 'android'",
+]
 
 ["test_harness.js"]
+skip-if = ["os == 'android'"]
 
 ["test_hidden.js"]
+skip-if = ["os == 'android'"]
 
 ["test_install.js"]
+skip-if = ["os == 'android'"]
 
 ["test_installOrigins.js"]
+skip-if = ["os == 'android'"]
 
 ["test_install_cancel.js"]
+skip-if = ["os == 'android'"]
 
 ["test_install_file_change.js"]
+skip-if = ["os == 'android'"]
 
 ["test_install_icons.js"]
+skip-if = ["os == 'android'"]
 
 ["test_installtrigger_deprecation.js"]
 head = "head_addons.js head_amremotesettings.js"
+skip-if = ["os == 'android'"]
 
 ["test_installtrigger_schemes.js"]
+skip-if = ["os == 'android'"]
 
 ["test_isDebuggable.js"]
+skip-if = ["os == 'android'"]
 
 ["test_isReady.js"]
+skip-if = ["os == 'android'"]
 
 ["test_loadManifest_isPrivileged.js"]
+skip-if = ["os == 'android'"]
 
 ["test_locale.js"]
+skip-if = ["os == 'android'"]
 
 ["test_moved_extension_metadata.js"]
 skip-if = ["true"] # bug 1777900
 
 ["test_no_addons.js"]
+skip-if = ["os == 'android'"]
 
 ["test_nodisable_hidden.js"]
+skip-if = ["os == 'android'"]
 
 ["test_onPropertyChanged_appDisabled.js"]
 head = "head_addons.js head_compat.js"
-skip-if = ["tsan"] # Times out, bug 1674773
+skip-if = [
+  "tsan", # Times out, bug 1674773
+  "os == 'android'",
+]
 
 ["test_permissions.js"]
+skip-if = ["os == 'android'"]
 
 ["test_permissions_prefs.js"]
+skip-if = ["os == 'android'"]
 
 ["test_pref_properties.js"]
+skip-if = ["os == 'android'"]
 
 ["test_provider_markSafe.js"]
+skip-if = ["os == 'android'"]
 
 ["test_provider_shutdown.js"]
+skip-if = ["os == 'android'"]
 
 ["test_provider_unsafe_access_shutdown.js"]
+skip-if = ["os == 'android'"]
 
 ["test_provider_unsafe_access_startup.js"]
+skip-if = ["os == 'android'"]
 
 ["test_proxies.js"]
-skip-if = ["require_signing"]
+skip-if = [
+  "require_signing",
+  "os == 'android'",
+]
 
 ["test_recommendations.js"]
-skip-if = ["require_signing"]
+skip-if = [
+  "require_signing",
+  "os == 'android'",
+]
 
 ["test_registerchrome.js"]
+skip-if = ["os == 'android'"]
 
 ["test_registry.js"]
 run-if = ["os == 'win'"]
+skip-if = ["os == 'android'"]
 
 ["test_reinstall_disabled_addon.js"]
+skip-if = ["os == 'android'"]
 
 ["test_reload.js"]
-skip-if = ["os == 'win'"] # There's a problem removing a temp file without manually clearing the cache on Windows
+skip-if = [
+  "os == 'win'", # There's a problem removing a temp file without manually clearing the cache on Windows
+  "os == 'android'",
+]
 tags = "webextensions"
 
 ["test_remote_pref_telemetry.js"]
+skip-if = ["os == 'android'"]
 
 ["test_safemode.js"]
+skip-if = ["os == 'android'"]
 
 ["test_schema_change.js"]
+skip-if = ["os == 'android'"]
 
 ["test_seen.js"]
+skip-if = ["os == 'android'"]
 
 ["test_shutdown.js"]
+skip-if = ["os == 'android'"]
 
 ["test_shutdown_barriers.js"]
+skip-if = ["os == 'android'"]
 
 ["test_shutdown_early.js"]
-skip-if = ["condprof"] # Bug 1769184 - by design for now
+skip-if = [
+  "condprof", # Bug 1769184 - by design for now
+  "os == 'android'",
+]
 
 ["test_sideload_scopes.js"]
 head = "head_addons.js head_sideload.js"
 skip-if = [
   "os == 'linux'", # Bug 1613268
   "condprof", # Bug 1769184 - by design for now
+  "os == 'android'",
 ]
 
 ["test_sideloads.js"]
+skip-if = ["os == 'android'"]
 
 ["test_sideloads_after_rebuild.js"]
-skip-if = ["condprof"] # Bug 1769184 - by design for now
+skip-if = [
+  "condprof", # Bug 1769184 - by design for now
+  "os == 'android'",
+]
 head = "head_addons.js head_sideload.js"
 
 ["test_signed_inject.js"]
 skip-if = ["true"] # Bug 1394122
 
 ["test_signed_install.js"]
+skip-if = ["os == 'android'"]
 
 ["test_signed_langpack.js"]
+skip-if = ["os == 'android'"]
 
 ["test_signed_long.js"]
+skip-if = ["os == 'android'"]
 
 ["test_signed_updatepref.js"]
 skip-if = [
   "require_signing",
   "!allow_legacy_extensions",
+  "os == 'android'",
 ]
 
 ["test_signed_verify.js"]
 
 ["test_sitePermsAddonProvider.js"]
-skip-if = ["appname == 'thunderbird'"] # Disabled in extensions.manifest
+skip-if = [
+  "appname == 'thunderbird'", # Disabled in extensions.manifest
+  "os == 'android'",
+]
 
 ["test_startup.js"]
 head = "head_addons.js head_sideload.js"
 skip-if = [
   "os == 'linux'", # Bug 1613268
   "condprof", # Bug 1769184 - by design for now
+  "os == 'android'",
 ]
 
 ["test_startup_enable.js"]
+skip-if = ["os == 'android'"]
 
 ["test_startup_isPrivileged.js"]
+skip-if = ["os == 'android'"]
 
 ["test_startup_scan.js"]
 head = "head_addons.js head_sideload.js"
+skip-if = ["os == 'android'"]
 
 ["test_strictcompatibility.js"]
 head = "head_addons.js head_compat.js"
+skip-if = ["os == 'android'"]
 
 ["test_syncGUID.js"]
+skip-if = ["os == 'android'"]
 
 ["test_system_allowed.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_delay_update.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_profile_location.js"]
+skip-if = ["os == 'android'"]
 
 ["test_system_repository.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_reset.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_update_blank.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_update_checkSizeHash.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_update_custom.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_update_empty.js"]
 head = "head_addons.js head_system_addons.js"
@@ -264,104 +385,149 @@ skip-if = ["true"] # Failing intermittently due to a race condition in the test,
 
 ["test_system_update_enterprisepolicy.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_update_fail.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_update_installTelemetryInfo.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_update_newset.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_update_overlapping.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_update_uninstall_check.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_update_upgrades.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_system_upgrades.js"]
-skip-if = ["condprof"]  # Bug 1769184 - by design for now
+skip-if = [
+  "condprof", # Bug 1769184 - by design for now
+  "os == 'android'",
+]
 head = "head_addons.js head_system_addons.js"
 
 ["test_systemaddomstartupprefs.js"]
-skip-if = ["condprof"]  # Bug 1769184 - by design for now
+skip-if = [
+  "condprof", # Bug 1769184 - by design for now
+  "os == 'android'",
+]
 head = "head_addons.js head_system_addons.js"
 
 ["test_temporary.js"]
-skip-if = ["os == 'win'"] # Bug 1469904
+skip-if = [
+  "os == 'win'", # Bug 1469904
+  "os == 'android'",
+]
 tags = "webextensions"
 
 ["test_trash_directory.js"]
 run-if = ["os == 'win'"]
+skip-if = ["os == 'android'"]
 
 ["test_types.js"]
 
 ["test_undouninstall.js"]
-skip-if = ["os == 'win'"] # Bug 1358846
+skip-if = [
+  "os == 'win'", # Bug 1358846
+  "os == 'android'",
+]
 
 ["test_update.js"]
+skip-if = ["os == 'android'"]
 
 ["test_updateCancel.js"]
+skip-if = ["os == 'android'"]
 
 ["test_update_addontype.js"]
+skip-if = ["os == 'android'"]
 
 ["test_update_compatmode.js"]
 head = "head_addons.js head_compat.js"
+skip-if = ["os == 'android'"]
 
 ["test_update_ignorecompat.js"]
 skip-if = ["true"] # Bug 676922 Bug 1437697
 
 ["test_update_isPrivileged.js"]
-skip-if = ["condprof"]  # Bug 1769184 - by design for now
+skip-if = [
+  "condprof", # Bug 1769184 - by design for now
+  "os == 'android'",
+]
 
 ["test_update_noSystemAddonUpdate.js"]
 head = "head_addons.js head_system_addons.js"
+skip-if = ["os == 'android'"]
 
 ["test_update_strictcompat.js"]
 head = "head_addons.js head_compat.js"
+skip-if = ["os == 'android'"]
 
 ["test_update_theme.js"]
+skip-if = ["os == 'android'"]
 
 ["test_update_webextensions.js"]
 tags = "webextensions"
+skip-if = ["os == 'android'"]
 
 ["test_updatecheck.js"]
+skip-if = ["os == 'android'"]
 
 ["test_updatecheck_errors.js"]
+skip-if = ["os == 'android'"]
 
 ["test_updatecheck_json.js"]
+skip-if = ["os == 'android'"]
 
 ["test_updateid.js"]
+skip-if = ["os == 'android'"]
 
 ["test_updateversion.js"]
+skip-if = ["os == 'android'"]
 
 ["test_upgrade.js"]
 head = "head_addons.js head_compat.js"
 run-sequentially = "Uses global XCurProcD dir."
+skip-if = ["os == 'android'"]
 
 ["test_upgrade_incompatible.js"]
+skip-if = ["os == 'android'"]
 
 ["test_webextension.js"]
 tags = "webextensions"
+skip-if = ["os == 'android'"]
 
 ["test_webextension_events.js"]
 tags = "webextensions"
+skip-if = ["os == 'android'"]
 
 ["test_webextension_icons.js"]
 tags = "webextensions"
+skip-if = ["os == 'android'"]
 
 ["test_webextension_install.js"]
 tags = "webextensions"
+skip-if = ["os == 'android'"]
 
 ["test_webextension_install_syntax_error.js"]
 tags = "webextensions"
+skip-if = ["os == 'android'"]
 
 ["test_webextension_langpack.js"]
 tags = "webextensions"
+skip-if = ["os == 'android'"]
 
 ["test_webextension_theme.js"]
 tags = "webextensions"
+skip-if = ["os == 'android'"]
