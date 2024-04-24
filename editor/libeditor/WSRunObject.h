@@ -210,37 +210,39 @@ class MOZ_STACK_CLASS WSScanResult final {
   }
 
   /**
-   * Returns true if found or reached content is ediable.
+   * Returns true if found or reached content is editable.
    */
   bool IsContentEditable() const { return mContent && mContent->IsEditable(); }
 
   /**
-   *  Offset() returns meaningful value only when
-   * InVisibleOrCollapsibleCharacters() returns true or the scanner
-   * reached to start or end of its scanning range and that is same as start or
-   * end container which are specified when the scanner is initialized.  If it's
-   * result of scanning backward, this offset means before the found point.
-   * Otherwise, i.e., scanning forward, this offset means after the found point.
+   * Offset_Deprecated() returns meaningful value only when
+   * InVisibleOrCollapsibleCharacters() returns true or the scanner reached to
+   * start or end of its scanning range and that is same as start or end
+   * container which are specified when the scanner is initialized.  If it's
+   * result of scanning backward, this offset means the point of the found
+   * point. Otherwise, i.e., scanning forward, this offset means next point
+   * of the found point.  E.g., if it reaches a collapsible white-space, this
+   * offset is at the first non-collapsible character after it.
    */
-  MOZ_NEVER_INLINE_DEBUG uint32_t Offset() const {
+  MOZ_NEVER_INLINE_DEBUG uint32_t Offset_Deprecated() const {
     NS_ASSERTION(mOffset.isSome(), "Retrieved non-meaningful offset");
     return mOffset.valueOr(0);
   }
 
   /**
-   * Point() and RawPoint() return the position in found visible node or
-   * reached block boundary.  So, they return meaningful point only when
-   * Offset() returns meaningful value.
+   * Point_Deprecated() returns the position in found visible node or reached
+   * block boundary.  So, this returns meaningful point only when
+   * Offset_Deprecated() returns meaningful value.
    */
   template <typename EditorDOMPointType>
-  EditorDOMPointType Point() const {
+  EditorDOMPointType Point_Deprecated() const {
     NS_ASSERTION(mOffset.isSome(), "Retrieved non-meaningful point");
     return EditorDOMPointType(mContent, mOffset.valueOr(0));
   }
 
   /**
-   * PointAtContent() and RawPointAtContent() return the position of found
-   * visible content or reached block element.
+   * PointAtContent() returns the position of found visible content or reached
+   * block element.
    */
   template <typename EditorDOMPointType>
   EditorDOMPointType PointAtContent() const {
@@ -249,8 +251,8 @@ class MOZ_STACK_CLASS WSScanResult final {
   }
 
   /**
-   * PointAfterContent() and RawPointAfterContent() retrun the position after
-   * found visible content or reached block element.
+   * PointAfterContent() returns the position after found visible content or
+   * reached block element.
    */
   template <typename EditorDOMPointType>
   EditorDOMPointType PointAfterContent() const {
