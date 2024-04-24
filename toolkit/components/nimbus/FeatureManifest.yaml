@@ -1152,6 +1152,18 @@ fullPageTranslationAutomaticPopup:
         branch: user
         pref: browser.translations.automaticallyPopup
 
+selectTranslation:
+  description: This feature enables the option to translate selected text from the context menu.
+  owner: enordin@mozilla.com
+  hasExposure: false
+  variables:
+    boolean:
+      description: Set to true to enable the select-translations feature
+      type: boolean
+      setPref:
+        branch: user
+        pref: browser.translations.select.enable
+
 pdfjs:
   description: The Firefox pdf reader.
   owner: pdfjs-team@mozilla.com
