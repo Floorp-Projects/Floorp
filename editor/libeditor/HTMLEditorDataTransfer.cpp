@@ -509,9 +509,8 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
         wsRunScannerAtStartReason.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
             pointToPutCaret);
     if (backwardScanFromPointToCaretResult.InVisibleOrCollapsibleCharacters()) {
-      // This means that collapse selection after the found character.
-      pointToPutCaret =
-          backwardScanFromPointToCaretResult.Point_Deprecated<EditorDOMPoint>();
+      pointToPutCaret = backwardScanFromPointToCaretResult
+                            .PointAfterReachedContent<EditorDOMPoint>();
     } else if (backwardScanFromPointToCaretResult.ReachedSpecialContent()) {
       // XXX In my understanding, this is odd.  The end reason may not be
       //     same as the reached special content because the equality is

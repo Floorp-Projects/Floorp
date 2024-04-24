@@ -1656,10 +1656,8 @@ nsresult HTMLEditor::InsertLineBreakAsSubAction() {
       unwrappedInvisibleAdditionalBRElement.IgnoreCaretPointSuggestion();
     } else if (forwardScanFromAfterBRElementResult
                    .InVisibleOrCollapsibleCharacters()) {
-      // This means that caret position should be at the inclusive next
-      // character.
       pointToPutCaret = forwardScanFromAfterBRElementResult
-                            .Point_Deprecated<EditorDOMPoint>();
+                            .PointAtReachedContent<EditorDOMPoint>();
     } else if (forwardScanFromAfterBRElementResult.ReachedSpecialContent()) {
       // Next inserting text should be inserted into styled inline elements if
       // they have first visible thing in the new line.
@@ -9019,10 +9017,9 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
   // Otherwise, return the point at first visible thing.
   // XXX This may be not meaningful position if it reached block element
   //     in aListItemElement.
-  return InsertParagraphResult(
-      &rightListItemElement,
-      // This means that at first character in the right list item.
-      forwardScanFromStartOfListItemResult.Point_Deprecated<EditorDOMPoint>());
+  return InsertParagraphResult(&rightListItemElement,
+                               forwardScanFromStartOfListItemResult
+                                   .PointAtReachedContent<EditorDOMPoint>());
 }
 
 Result<CreateElementResult, nsresult>

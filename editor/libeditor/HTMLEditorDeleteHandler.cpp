@@ -2574,16 +2574,14 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::DeleteBRElement(
     if (maybePreviousText.IsContentEditable() &&
         maybePreviousText.InVisibleOrCollapsibleCharacters() &&
         !HTMLEditor::GetLinkElement(maybePreviousText.TextPtr())) {
-      // This means that caret point should be after the previous character.
-      return maybePreviousText.Point_Deprecated<EditorDOMPoint>();
+      return maybePreviousText.PointAfterReachedContent<EditorDOMPoint>();
     }
     const WSScanResult maybeNextText =
         scanner.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
             EditorRawDOMPoint::After(*mBRElement));
     if (maybeNextText.IsContentEditable() &&
         maybeNextText.InVisibleOrCollapsibleCharacters()) {
-      // This means that caret point should be at the inclusive next character.
-      return maybeNextText.Point_Deprecated<EditorDOMPoint>();
+      return maybeNextText.PointAtReachedContent<EditorDOMPoint>();
     }
     return EditorDOMPoint();
   }();
@@ -3755,9 +3753,8 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(startOfRightContent);
     if (maybePreviousText.IsContentEditable() &&
         maybePreviousText.InVisibleOrCollapsibleCharacters()) {
-      // This means that collapse selection after the previous character.
       nsresult rv = aHTMLEditor.CollapseSelectionTo(
-          maybePreviousText.Point_Deprecated<EditorRawDOMPoint>());
+          maybePreviousText.PointAfterReachedContent<EditorRawDOMPoint>());
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::CollapseSelectionTo() failed");
         return Err(rv);
@@ -5184,8 +5181,8 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(startOfRightContent);
     if (maybePreviousText.IsContentEditable() &&
         maybePreviousText.InVisibleOrCollapsibleCharacters()) {
-      // This means that caret should be after the previous character.
-      mPointToPutCaret = maybePreviousText.Point_Deprecated<EditorDOMPoint>();
+      mPointToPutCaret =
+          maybePreviousText.PointAfterReachedContent<EditorDOMPoint>();
     }
   }
   return result;
