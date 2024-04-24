@@ -77,7 +77,7 @@
     <!-- Disabled text -->
     <color name="fx_mobile_text_color_disabled">@color/photonDarkGrey90A40</color>
     <!-- Warning text -->
-    <color name="fx_mobile_text_color_warning">@color/photonRed70</color>
+    <color name="fx_mobile_text_color_critical">@color/photonRed70</color>
     <!-- Warning text on Secondary button -->
     <color name="fx_mobile_text_color_warning_button">@color/photonRed70</color>
     <!-- Small heading, Text link -->
@@ -214,7 +214,7 @@
     <!-- Disabled text -->
     <color name="fx_mobile_private_text_color_disabled">@color/photonLightGrey05A40</color>
     <!-- Warning text -->
-    <color name="fx_mobile_private_text_color_warning">@color/photonRed20</color>
+    <color name="fx_mobile_private_text_color_critical">@color/photonRed20</color>
     <!-- Warning text on Secondary button -->
     <color name="fx_mobile_private_text_color_warning_button" tools:ignore="UnusedResources">@color/photonRed70</color>
     <!-- Small heading, Text link -->

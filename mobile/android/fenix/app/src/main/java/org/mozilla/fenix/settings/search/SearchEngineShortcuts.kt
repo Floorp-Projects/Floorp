@@ -198,13 +198,13 @@ private fun SearchItem(
                         menuItems = listOf(
                             MenuItem(
                                 stringResource(R.string.search_engine_edit),
-                                color = FirefoxTheme.colors.textWarning,
+                                color = FirefoxTheme.colors.textCritical,
                             ) {
                                 onEditEngineClicked(engine)
                             },
                             MenuItem(
                                 stringResource(R.string.search_engine_delete),
-                                color = FirefoxTheme.colors.textWarning,
+                                color = FirefoxTheme.colors.textCritical,
                             ) {
                                 onDeleteEngineClicked(engine)
                             },

@@ -45,7 +45,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:visibility="gone"
-                app:findInPageNoMatchesTextColor="?attr/textWarning"
+                app:findInPageNoMatchesTextColor="?attr/textCritical"
                 app:findInPageButtonsTint="?attr/textPrimary"
                 app:findInPageResultCountTextColor="?attr/textPrimary" />
 

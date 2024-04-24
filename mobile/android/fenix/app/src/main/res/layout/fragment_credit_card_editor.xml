@@ -180,7 +180,7 @@
                 android:text="@string/credit_cards_delete_card_button"
                 android:textAlignment="center"
                 android:textAllCaps="false"
-                android:textColor="@color/fx_mobile_text_color_warning"
+                android:textColor="@color/fx_mobile_text_color_critical"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />

@@ -191,7 +191,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
                     menu.findItem(R.id.delete_bookmarks_multi_select).title =
                         SpannableString(getString(R.string.bookmark_menu_delete_button)).apply {
-                            setTextColor(requireContext(), R.attr.textWarning)
+                            setTextColor(requireContext(), R.attr.textCritical)
                         }
                 }
             }

@@ -97,7 +97,7 @@ class StandardSnackbarErrorBindingTest {
             snackbar.setSnackBarTextColor(
                 ContextCompat.getColor(
                     activity,
-                    R.color.fx_mobile_text_color_warning,
+                    R.color.fx_mobile_text_color_critical,
                 ),
             )
             snackbar.setAction(
