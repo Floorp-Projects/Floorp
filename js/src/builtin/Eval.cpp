@@ -70,7 +70,7 @@ static bool IsEvalCacheCandidate(JSScript* script) {
 /* static */
 HashNumber EvalCacheHashPolicy::hash(const EvalCacheLookup& l) {
   HashNumber hash = HashStringChars(l.str);
-  return AddToHash(hash, l.callerScript.get(), l.pc);
+  return AddToHash(hash, l.callerScript, l.pc);
 }
 
 /* static */
@@ -82,13 +82,18 @@ bool EvalCacheHashPolicy::match(const EvalCacheEntry& cacheEntry,
          cacheEntry.callerScript == l.callerScript && cacheEntry.pc == l.pc;
 }
 
+void EvalCacheLookup::trace(JSTracer* trc) {
+  TraceNullableRoot(trc, &str, "EvalCacheLookup::str");
+  TraceNullableRoot(trc, &callerScript, "EvalCacheLookup::callerScript");
+}
+
 // Add the script to the eval cache when EvalKernel is finished
 class EvalScriptGuard {
   JSContext* cx_;
   Rooted<JSScript*> script_;
 
   /* These fields are only valid if lookup_.str is non-nullptr. */
-  EvalCacheLookup lookup_;
+  Rooted<EvalCacheLookup> lookup_;
   mozilla::Maybe<DependentAddPtr<EvalCache>> p_;
 
   Rooted<JSLinearString*> lookupStr_;
@@ -100,12 +105,13 @@ class EvalScriptGuard {
   ~EvalScriptGuard() {
     if (script_ && !cx_->isExceptionPending()) {
       script_->cacheForEval();
-      EvalCacheEntry cacheEntry = {lookupStr_, script_, lookup_.callerScript,
-                                   lookup_.pc};
-      lookup_.str = lookupStr_;
-      if (lookup_.str && IsEvalCacheCandidate(script_)) {
+      EvalCacheLookup& lookup = lookup_.get();
+      EvalCacheEntry cacheEntry = {lookupStr_, script_, lookup.callerScript,
+                                   lookup.pc};
+      lookup.str = lookupStr_;
+      if (lookup.str && IsEvalCacheCandidate(script_)) {
         // Ignore failure to add cache entry.
-        if (!p_->add(cx_, cx_->caches().evalCache, lookup_, cacheEntry)) {
+        if (!p_->add(cx_, cx_->caches().evalCache, lookup, cacheEntry)) {
           cx_->recoverFromOutOfMemory();
         }
       }
@@ -115,13 +121,14 @@ class EvalScriptGuard {
   void lookupInEvalCache(JSLinearString* str, JSScript* callerScript,
                          jsbytecode* pc) {
     lookupStr_ = str;
-    lookup_.str = str;
-    lookup_.callerScript = callerScript;
-    lookup_.pc = pc;
-    p_.emplace(cx_, cx_->caches().evalCache, lookup_);
+    EvalCacheLookup& lookup = lookup_.get();
+    lookup.str = str;
+    lookup.callerScript = callerScript;
+    lookup.pc = pc;
+    p_.emplace(cx_, cx_->caches().evalCache, lookup);
     if (*p_) {
       script_ = (*p_)->script;
-      p_->remove(cx_, cx_->caches().evalCache, lookup_);
+      p_->remove(cx_, cx_->caches().evalCache, lookup);
     }
   }
 
@@ -531,14 +538,10 @@ JS_PUBLIC_API bool JS::IsJSMEnvironment(JSObject* obj) {
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void RuntimeCaches::checkEvalCacheAfterMinorGC() {
-  JSContext* cx = TlsContext.get();
   for (auto r = evalCache.all(); !r.empty(); r.popFront()) {
     const EvalCacheEntry& entry = r.front();
     CheckGCThingAfterMovingGC(entry.str);
-    EvalCacheLookup lookup(cx);
-    lookup.str = entry.str;
-    lookup.callerScript = entry.callerScript;
-    lookup.pc = entry.pc;
+    EvalCacheLookup lookup(entry.str, entry.callerScript, entry.pc);
     auto ptr = evalCache.lookup(lookup);
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
   }
