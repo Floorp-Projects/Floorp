@@ -91,7 +91,7 @@ function uploadHandler(request, response) {
   console.log(body.available());
   Assert.equal(
     true,
-    body.available() == 406 || body.available() == 3654,
+    body.available() == 886 || body.available() == 3654,
     "Wrong request body size."
   );
   received = true;

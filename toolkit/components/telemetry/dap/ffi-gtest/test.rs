@@ -17,7 +17,7 @@ use prio::codec::{Decode, Encode};
 pub extern "C" fn dap_test_encoding() {
     let r = Report::new_dummy();
     let mut encoded = Vec::<u8>::new();
-    Report::encode(&r, &mut encoded);
+    Report::encode(&r, &mut encoded).expect("Report encoding failed!");
     let decoded = Report::decode(&mut Cursor::new(&encoded)).expect("Report decoding failed!");
     if r != decoded {
         println!("Report:");
