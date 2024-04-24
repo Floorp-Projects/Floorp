@@ -61,18 +61,17 @@ export class AddressesDataSource extends DataSourceBase {
       nameLabel: "address-name-label",
       phoneLabel: "address-phone-label",
       emailLabel: "address-email-label",
-      copyLabel: "command-copy",
       addressesDisabled: "addresses-disabled",
-      deleteLabel: "command-delete",
-      editLabel: "command-edit",
-      createLabel: "addresses-command-create",
     }).then(strings => {
-      const copyCommand = { id: "Copy", label: strings.copyLabel };
-      const editCommand = { id: "Edit", label: strings.editLabel };
-      const deleteCommand = { id: "Delete", label: strings.deleteLabel };
+      const copyCommand = { id: "Copy", label: "command-copy" };
+      const editCommand = { id: "Edit", label: "command-edit" };
+      const deleteCommand = { id: "Delete", label: "command-delete" };
       this.#addressesDisabledMessage = strings.addressesDisabled;
       this.#header = this.createHeaderLine(strings.headerLabel);
-      this.#header.commands.push({ id: "Create", label: strings.createLabel });
+      this.#header.commands.push({
+        id: "Create",
+        label: "addresses-command-create",
+      });
 
       let self = this;
 

@@ -456,7 +456,7 @@ export class MegalistView extends MozLitElement {
       }
 
       const menuItem = this.ownerDocument.createElement("button");
-      menuItem.textContent = command.label;
+      menuItem.setAttribute("data-l10n-id", command.label);
       menuItem.addEventListener("click", e => {
         this.#messageToViewModel("Command", {
           snapshotId,

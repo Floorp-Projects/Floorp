@@ -171,7 +171,6 @@ export class DataSourceBase {
    * @returns {object} section header line
    */
   createHeaderLine(label) {
-    const toggleCommand = { id: "Toggle", label: "" };
     const result = {
       label,
       value: "",
@@ -191,17 +190,13 @@ export class DataSourceBase {
 
       lineIsReady: () => true,
 
-      commands: [toggleCommand],
+      commands: [{ id: "Toggle", label: "command-toggle" }],
 
       executeToggle() {
         this.collapsed = !this.collapsed;
         this.source.refreshAllLinesOnScreen();
       },
     };
-
-    this.formatMessages("command-toggle").then(([toggleLabel]) => {
-      toggleCommand.label = toggleLabel;
-    });
 
     return result;
   }
