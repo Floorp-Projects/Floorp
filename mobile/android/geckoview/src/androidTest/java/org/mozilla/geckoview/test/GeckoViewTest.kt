@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewStructure
 import android.view.autofill.AutofillId
 import android.view.autofill.AutofillValue
-import androidx.core.view.ViewCompat
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
@@ -79,7 +78,7 @@ class GeckoViewTest : BaseSessionTest() {
         activityRule.scenario.onActivity {
             assertThat(
                 "View should be attached",
-                ViewCompat.isAttachedToWindow(it.view),
+                it.view.isAttachedToWindow(),
                 equalTo(true),
             )
             it.view.session!!.acquireDisplay()

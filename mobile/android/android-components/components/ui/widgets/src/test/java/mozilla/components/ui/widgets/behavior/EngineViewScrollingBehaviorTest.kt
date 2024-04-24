@@ -534,7 +534,7 @@ class EngineViewScrollingBehaviorTest {
         }
         val behavior = spy(EngineViewScrollingBehavior(testContext, null, ViewPosition.BOTTOM))
 
-        behavior.onLayoutChild(container, view, ViewCompat.LAYOUT_DIRECTION_LTR)
+        behavior.onLayoutChild(container, view, View.LAYOUT_DIRECTION_LTR)
 
         assertEquals(view, behavior.dynamicScrollView)
         assertEquals(engineView, behavior.engineView)

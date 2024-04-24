@@ -14,7 +14,6 @@ import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
-import androidx.core.view.ViewCompat
 import androidx.core.widget.PopupWindowCompat
 import mozilla.components.browser.menu.R
 
@@ -34,7 +33,7 @@ internal class CustomTooltip private constructor(
     }
 
     override fun onLongClick(view: View): Boolean {
-        if (ViewCompat.isAttachedToWindow(anchor)) {
+        if (anchor.isAttachedToWindow()) {
             show()
             anchor.addOnAttachStateChangeListener(this)
         }

@@ -17,7 +17,6 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.view.ViewCompat
 import androidx.core.view.children
 import androidx.viewbinding.ViewBinding
 import mozilla.components.concept.base.crash.Breadcrumb
@@ -124,10 +123,7 @@ abstract class StartDownloadDialog(
         parent?.children
             ?.filterNot { it.id == R.id.startDownloadDialogContainer }
             ?.forEach {
-                ViewCompat.setImportantForAccessibility(
-                    it,
-                    ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES,
-                )
+                it.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES)
             }
     }
 
@@ -136,10 +132,7 @@ abstract class StartDownloadDialog(
         parent?.children
             ?.filterNot { it.id == R.id.startDownloadDialogContainer }
             ?.forEach {
-                ViewCompat.setImportantForAccessibility(
-                    it,
-                    ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS,
-                )
+                it.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS)
             }
     }
 
