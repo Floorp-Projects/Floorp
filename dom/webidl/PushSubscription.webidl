@@ -35,10 +35,10 @@ dictionary PushSubscriptionInit
 {
   required USVString endpoint;
   required USVString scope;
-  ArrayBuffer? p256dhKey;
-  ArrayBuffer? authSecret;
-  BufferSource? appServerKey;
-  EpochTimeStamp? expirationTime = null;
+  ArrayBuffer p256dhKey;
+  ArrayBuffer authSecret;
+  BufferSource appServerKey;
+  EpochTimeStamp expirationTime;
 };
 
 [Exposed=(Window,Worker), Func="ServiceWorkerVisible"]

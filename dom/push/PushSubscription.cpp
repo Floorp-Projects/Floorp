@@ -17,7 +17,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/PushSubscriptionOptions.h"
-#include "mozilla/dom/PushUtil.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -231,36 +230,30 @@ already_AddRefed<PushSubscription> PushSubscription::Constructor(
 
   nsTArray<uint8_t> rawKey;
   if (aInitDict.mP256dhKey.WasPassed() &&
-      !aInitDict.mP256dhKey.Value().IsNull() &&
-      !aInitDict.mP256dhKey.Value().Value().AppendDataTo(rawKey)) {
+      !aInitDict.mP256dhKey.Value().AppendDataTo(rawKey)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
 
   nsTArray<uint8_t> authSecret;
   if (aInitDict.mAuthSecret.WasPassed() &&
-      !aInitDict.mAuthSecret.Value().IsNull() &&
-      !aInitDict.mAuthSecret.Value().Value().AppendDataTo(authSecret)) {
+      !aInitDict.mAuthSecret.Value().AppendDataTo(authSecret)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
 
   nsTArray<uint8_t> appServerKey;
   if (aInitDict.mAppServerKey.WasPassed() &&
-      !aInitDict.mAppServerKey.Value().IsNull()) {
-    const OwningArrayBufferViewOrArrayBuffer& bufferSource =
-        aInitDict.mAppServerKey.Value().Value();
-    if (!PushUtil::CopyBufferSourceToArray(bufferSource, appServerKey)) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return nullptr;
-    }
+      !AppendTypedArrayDataTo(aInitDict.mAppServerKey.Value(), appServerKey)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
   }
 
   Nullable<EpochTimeStamp> expirationTime;
-  if (aInitDict.mExpirationTime.IsNull()) {
-    expirationTime.SetNull();
-  } else {
+  if (aInitDict.mExpirationTime.WasPassed()) {
     expirationTime.SetValue(aInitDict.mExpirationTime.Value());
+  } else {
+    expirationTime.SetNull();
   }
 
   RefPtr<PushSubscription> sub = new PushSubscription(
@@ -307,10 +300,10 @@ already_AddRefed<Promise> PushSubscription::Unsubscribe(ErrorResult& aRv) {
 void PushSubscription::GetKey(JSContext* aCx, PushEncryptionKeyName aType,
                               JS::MutableHandle<JSObject*> aKey,
                               ErrorResult& aRv) {
-  if (aType == PushEncryptionKeyName::P256dh) {
-    PushUtil::CopyArrayToArrayBuffer(aCx, mRawP256dhKey, aKey, aRv);
-  } else if (aType == PushEncryptionKeyName::Auth) {
-    PushUtil::CopyArrayToArrayBuffer(aCx, mAuthSecret, aKey, aRv);
+  if (aType == PushEncryptionKeyName::P256dh && !mRawP256dhKey.IsEmpty()) {
+    aKey.set(ArrayBuffer::Create(aCx, mRawP256dhKey, aRv));
+  } else if (aType == PushEncryptionKeyName::Auth && !mAuthSecret.IsEmpty()) {
+    aKey.set(ArrayBuffer::Create(aCx, mAuthSecret, aRv));
   } else {
     aKey.set(nullptr);
   }
