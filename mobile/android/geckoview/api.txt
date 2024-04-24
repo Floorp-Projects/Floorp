@@ -1078,6 +1078,7 @@ package org.mozilla.geckoview {
     field public static final int FINDER_DISPLAY_DRAW_LINK_OUTLINE = 4;
     field public static final int FINDER_DISPLAY_HIGHLIGHT_ALL = 1;
     field public static final int FINDER_FIND_BACKWARDS = 1;
+    field public static final int FINDER_FIND_FORWARD = 0;
     field public static final int FINDER_FIND_LINKS_ONLY = 8;
     field public static final int FINDER_FIND_MATCH_CASE = 2;
     field public static final int FINDER_FIND_WHOLE_WORD = 4;

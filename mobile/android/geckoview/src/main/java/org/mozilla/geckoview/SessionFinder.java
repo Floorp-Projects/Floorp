@@ -27,6 +27,7 @@ public final class SessionFinder {
 
   private static final List<Pair<Integer, String>> sFlagNames =
       Arrays.asList(
+          new Pair<>(GeckoSession.FINDER_FIND_FORWARD, "forward"),
           new Pair<>(GeckoSession.FINDER_FIND_BACKWARDS, "backwards"),
           new Pair<>(GeckoSession.FINDER_FIND_LINKS_ONLY, "linksOnly"),
           new Pair<>(GeckoSession.FINDER_FIND_MATCH_CASE, "matchCase"),
@@ -70,7 +71,8 @@ public final class SessionFinder {
    * previous search string.
    *
    * @param searchString String to search, or null to find again using the previous string.
-   * @param flags Flags for performing the search; either 0 or a combination of {@link
+   * @param flags Flags for performing the search; either FINDER_FIND_FORWARD {@link
+   *     GeckoSession#FINDER_FIND_FORWARD} or a combination of {@link
    *     GeckoSession#FINDER_FIND_BACKWARDS FINDER_FIND_*} constants.
    * @return Result of the search operation as a {@link GeckoResult} object.
    * @see #clear

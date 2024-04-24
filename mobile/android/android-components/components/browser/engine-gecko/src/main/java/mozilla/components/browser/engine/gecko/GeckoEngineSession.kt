@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.engine.gecko
 
-import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Build
 import android.view.WindowManager
@@ -557,9 +556,8 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.findNext]
      */
-    @SuppressLint("WrongConstant") // FinderFindFlags annotation doesn't include a 0 value.
     override fun findNext(forward: Boolean) {
-        val findFlags = if (forward) 0 else GeckoSession.FINDER_FIND_BACKWARDS
+        val findFlags = if (forward) GeckoSession.FINDER_FIND_FORWARD else GeckoSession.FINDER_FIND_BACKWARDS
         geckoSession.finder.find(null, findFlags).then { result: GeckoSession.FinderResult? ->
             result?.let {
                 val activeMatchOrdinal = if (it.current > 0) it.current - 1 else it.current
