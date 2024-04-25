@@ -1,0 +1,64 @@
+Performing a (re)bootstrapping of symbols scraping process
+==========================================================
+
+Whenever for any reason the symbol scraping process might have been faulty long
+enough, we can end up (currently) in a situation where the recorded status of
+`SHA256SUMS.zip` on the TaskCluster index is inconsistent with what we really
+processed.
+
+This document aims at explaining what needs to be done and where to recover
+from that state (this is based on the experience from bug 1893156).
+
+First, you need to identify since how long the problem has been present. As of
+now there is no really better tooling than processing manually the cron tasks
+logs and see when it started to fail.
+
+Once you have identified a date, the next step is to work on the bootstrapping
+content. As visible in
+https://searchfox.org/mozilla-central/rev/f6e3b81aac49e602f06c204f9278da30993cdc8a/taskcluster/docker/system-symbols-linux-scraper/run.sh#62,
+the first source of truth is the gh-pages branch of the symbol-scrapers github
+repository: https://github.com/mozilla/symbol-scrapers/tree/gh-pages.  This
+source of truth is evaluated ONLY if the TaskCluster index is NOT present. The
+route is being computed from the running task's definition:
+https://searchfox.org/mozilla-central/rev/f6e3b81aac49e602f06c204f9278da30993cdc8a/taskcluster/docker/system-symbols-linux-scraper/run.sh#14
+from which we ONLY consider the `latest` alias.
+
+As of today the index is for example for debian:
+index.gecko.v2.mozilla-central.latest.system-symbols.debian and thus one can
+explore the content at
+https://firefox-ci-tc.services.mozilla.com/tasks/index/gecko.v2.mozilla-central.latest.system-symbols.debian,
+other means of browsing including pushdate allows to find e.g.,
+https://firefox-ci-tc.services.mozilla.com/tasks/index/gecko.v2.mozilla-central.pushdate.2024.04.20.20240420094034.system-symbols/debian
+from which we can get a link to the sums file:
+https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-central.pushdate.2024.04.20.20240420094034.system-symbols.debian/artifacts/public%2Fbuild%2FSHA256SUMS.zip
+
+Once you have identified WHEN the problem arose, you can take the above URL
+(adapting with the correct date) and adapting to the various distributions.
+
+Make sure you have an uptodate git clone of the mozilla/symbol-scrapers
+repository, checkout a new branch out of the gh-pages tree, and you can proceed
+to the data extraction following (example with a different date):
+  for distro in alpine archlinux debian fedora firefox-flatpak firefox-snap gnome-sdk-snap mint opensuse ubuntu; do
+    wget https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-central.pushdate.2024.02.07.latest.system-symbols.$distro/artifacts/public%2Fbuild%2FSHA256SUMS.zip -O $distro/SHA256SUMS.zip;
+  done;
+  mv archlinux/SHA256SUMS.zip arch/
+
+Please note that there's a slight difference in naming, archlinux vs arch.
+Please note other distros might have been added since so you need to adapt.
+
+Send a pull request once this is OK, make it reviewed or merge it.
+
+As of now, the content of the boostrapping process is in the state we want, but
+if you run a symbols scraping task, it will still pull data from the
+TaskCluster index.  This time, you need to use the index that refers to latest
+and NOT the pushdate or another one, so the index used in the example SHOULD be
+good. You just have to run deleteTask (with the appropriate credentials if you
+have them, or ask releng for help in #firefox-ci):
+  for distro in alpine archlinux debian fedora firefox-flatpak firefox-snap gnome-sdk-snap mint opensuse ubuntu; do
+    taskcluster api index deleteTask gecko.v2.mozilla-central.latest.system-symbols.$distro
+  done;
+
+From there, HTTP queries to (for the debian example)
+https://firefox-ci-tc.services.mozilla.com/tasks/index/gecko.v2.mozilla-central.latest.system-symbols.debian
+would return 404, which will make the symbol scraping tasks search its data on
+GitHub.
