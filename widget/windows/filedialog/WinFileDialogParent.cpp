@@ -61,35 +61,28 @@ static auto ConvertToFDPromise(
     Ex&& extractor,
     RefPtr<MozPromise<T, mozilla::ipc::ResponseRejectReason, true>>
         aSrcPromise) {
-  // The extractor must produce a `mozilla::Result<..., RemoteError>` from `T`.
+  // The extractor must produce a `mozilla::Result<..., Error>` from `T`.
   using SrcResultInfo = detail::DestructureResult<std::invoke_result_t<Ex, T>>;
   using ResolveT = typename SrcResultInfo::OkT;
-  static_assert(std::is_same_v<typename SrcResultInfo::ErrorT, RemoteError>,
-                "expected T to be a Result<..., RemoteError>");
+  static_assert(std::is_same_v<typename SrcResultInfo::ErrorT, Error>,
+                "expected T to be a Result<..., Error>");
 
   using SrcPromiseT = MozPromise<T, mozilla::ipc::ResponseRejectReason, true>;
   using DstPromiseT = MozPromise<ResolveT, Error, true>;
 
   RefPtr<DstPromiseT> ret = aSrcPromise->Then(
       mozilla::GetCurrentSerialEventTarget(), aMethod,
+
       [extractor, aMethod](T&& val) {
-        mozilla::Result<ResolveT, RemoteError> result =
-            extractor(std::move(val));
+        mozilla::Result<ResolveT, Error> result = extractor(std::move(val));
         if (result.isOk()) {
           return DstPromiseT::CreateAndResolve(result.unwrap(), aMethod);
         }
-
-        RemoteError err = result.unwrapErr();
-        return DstPromiseT::CreateAndReject(Error{.kind = Error::RemoteError,
-                                                  .where = err.where(),
-                                                  .why = err.why()},
-                                            aMethod);
+        return DstPromiseT::CreateAndReject(result.unwrapErr(), aMethod);
       },
       [aMethod](typename mozilla::ipc::ResponseRejectReason&& val) {
-        return DstPromiseT::CreateAndReject(Error{.kind = Error::IPCError,
-                                                  .where = "IPC"_ns,
-                                                  .why = (uint32_t)val},
-                                            aMethod);
+        return DstPromiseT::CreateAndReject(
+            MOZ_FD_ERROR(IPCError, "IPC", (uint32_t)val), aMethod);
       });
 
   return ret;
@@ -99,15 +92,18 @@ template <typename Input, typename Output>
 struct Extractor {
   template <typename Input::Type tag_, Output const& (Input::*getter_)() const>
   static auto get() {
-    return [](Input&& res) -> Result<Output, RemoteError> {
+    return [](Input&& res) -> Result<Output, Error> {
       if (res.type() == tag_) {
         return (res.*getter_)();
       }
       if (res.type() == Input::TRemoteError) {
-        return Err(res.get_RemoteError());
+        RemoteError err = res.get_RemoteError();
+        return Err(Error{.kind = Error::RemoteError,
+                         .where = Error::Location::Deserialize(err.where()),
+                         .why = err.why()});
       }
       MOZ_ASSERT_UNREACHABLE("internal IPC failure?");
-      return Err(RemoteError("internal IPC failure?"_ns, (uint32_t)E_FAIL));
+      return Err(MOZ_FD_ERROR(IPCError, "internal IPC failure?", E_FAIL));
     };
   }
 };

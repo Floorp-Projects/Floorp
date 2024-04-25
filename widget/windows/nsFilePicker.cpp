@@ -117,24 +117,20 @@ template <typename ActionType,
 static auto ShowRemote(ActionType&& action) -> RefPtr<FDPromise<ReturnType>> {
   using RetPromise = FDPromise<ReturnType>;
 
-  constexpr static const auto fail =
-      [](nsLiteralCString where, uint32_t why = 0) -> RefPtr<RetPromise> {
-    return RetPromise::CreateAndReject(
-        Error{.kind = Error::LocalError, .where = std::move(where), .why = why},
-        __PRETTY_FUNCTION__);
-  };
+// "function-local" #define
+#define FAIL(where_, why_)                                             \
+  return RetPromise::CreateAndReject(MOZ_FD_LOCAL_ERROR(where_, why_), \
+                                     __PRETTY_FUNCTION__)
 
   auto mgr = mozilla::ipc::UtilityProcessManager::GetSingleton();
   if (!mgr) {
     MOZ_ASSERT(false);
-    return fail("ShowRemote: UtilityProcessManager::GetSingleton"_ns,
-                E_POINTER);
+    FAIL("ShowRemote: UtilityProcessManager::GetSingleton", E_POINTER);
   }
 
   auto wfda = mgr->CreateWinFileDialogActor();
   if (!wfda) {
-    return fail("ShowRemote: invocation of CreateWinFileDialogActor"_ns,
-                E_POINTER);
+    FAIL("ShowRemote: invocation of CreateWinFileDialogActor", E_POINTER);
   }
 
   using mozilla::widget::filedialog::sLogFileDialog;
@@ -161,9 +157,11 @@ static auto ShowRemote(ActionType&& action) -> RefPtr<FDPromise<ReturnType>> {
         MOZ_LOG(sLogFileDialog, LogLevel::Error,
                 ("could not acquire WinFileDialog: %zu", size_t(error)));
         // TODO: pipe more data up from utility-process creation
-        return fail("UtilityProcessManager::CreateWinFileDialogActor"_ns,
-                    (uint32_t)error);
+        FAIL("UtilityProcessManager::CreateWinFileDialogActor",
+             (uint32_t)error);
       });
+
+#undef FAIL
 }
 
 namespace {
@@ -403,7 +401,7 @@ static auto AsyncExecute(Fn1 local, Fn2 remote, Args const&... args) ->
             MOZ_ASSERT(err.kind == Error::LocalError);
             MOZ_LOG(filedialog::sLogFileDialog, LogLevel::Info,
                     ("local file-dialog failed: where=%s, why=%08" PRIX32,
-                     err.where.get(), err.why));
+                     err.where.c_str(), err.why));
             return Ok();
           });
     }
@@ -414,7 +412,7 @@ static auto AsyncExecute(Fn1 local, Fn2 remote, Args const&... args) ->
             MOZ_LOG(
                 filedialog::sLogFileDialog, LogLevel::Info,
                 ("remote file-dialog failed: kind=%s, where=%s, why=%08" PRIX32,
-                 Error::KindName(err.kind), err.where.get(), err.why));
+                 Error::KindName(err.kind), err.where.c_str(), err.why));
             return Ok();
           });
 
