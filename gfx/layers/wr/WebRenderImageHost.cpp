@@ -18,6 +18,7 @@
 #include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "nsAString.h"
 #include "nsDebug.h"          // for NS_WARNING, NS_ASSERTION
@@ -311,12 +312,15 @@ TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
   // Convert YUV BufferTextureHost to TextureHostWrapperD3D11 if possible
   if (texture->AsBufferTextureHost()) {
     auto identifier = aAsyncImageManager->GetTextureFactoryIdentifier();
-    const bool convertToNV12 =
+    const bool tryConvertToNV12 =
         StaticPrefs::gfx_video_convert_yuv_to_nv12_image_host_win() &&
         identifier.mSupportsD3D11NV12 &&
         KnowsCompositor::SupportsD3D11(identifier) &&
         texture->GetFormat() == gfx::SurfaceFormat::YUV;
-    if (convertToNV12) {
+    if (tryConvertToNV12) {
+      PROFILER_MARKER_TEXT("WebRenderImageHost", GRAPHICS, {},
+                           "Try ConvertToNV12"_ns);
+
       if (!mTextureAllocator) {
         mTextureAllocator = new TextureWrapperD3D11Allocator();
       }
@@ -326,6 +330,13 @@ TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
       if (textureWrapper) {
         texture = textureWrapper;
       }
+    } else if (profiler_thread_is_being_profiled_for_markers() &&
+               StaticPrefs::gfx_video_convert_yuv_to_nv12_image_host_win() &&
+               texture->GetFormat() == gfx::SurfaceFormat::YUV) {
+      nsPrintfCString str("No ConvertToNV12 D3D11 %d NV12 %d",
+                          KnowsCompositor::SupportsD3D11(identifier),
+                          identifier.mSupportsD3D11NV12);
+      PROFILER_MARKER_TEXT("WebRenderImageHost", GRAPHICS, {}, str);
     }
   }
 #endif
