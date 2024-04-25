@@ -25,7 +25,6 @@ ChromeUtils.defineESModuleGetters(
   lazy,
   {
     arrayBufferToBlobURL: "chrome://global/content/ml/Utils.sys.mjs",
-    getRuntimeWasmFilename: "chrome://global/content/ml/Utils.sys.mjs",
   },
   { global: "current" }
 );
@@ -194,7 +193,7 @@ export class Pipeline {
     // ONNX runtime - we set up the wasm runtime we got from RS for the ONNX backend to pick
     debug("Setting up ONNX backend");
     env.backends.onnx.wasm.wasmPaths = {};
-    env.backends.onnx.wasm.wasmPaths[lazy.getRuntimeWasmFilename()] =
+    env.backends.onnx.wasm.wasmPaths[config.runtimeFilename] =
       lazy.arrayBufferToBlobURL(config.runtime);
 
     if (config.modelClass && config.modelId) {
