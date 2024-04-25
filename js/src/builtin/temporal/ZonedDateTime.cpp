@@ -929,7 +929,7 @@ static bool NormalizedTimeDurationToDays(
 
   // Step 11.
   int32_t days = DaysUntil(startDateTime.date, endDateTime.date);
-  MOZ_ASSERT(std::abs(days) <= 200'000'000);
+  MOZ_ASSERT(std::abs(days) <= MaxEpochDaysDuration);
 
   // Step 12.
   int32_t timeSign = CompareTemporalTime(startDateTime.time, endDateTime.time);
