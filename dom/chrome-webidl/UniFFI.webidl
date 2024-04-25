@@ -43,7 +43,7 @@ interface UniFFIPointer { };
 //   to an int including Boolean and CallbackInterface.
 // - ArrayBuffer is used for RustBuffer
 // - UniFFIPointer is used for Arc pointers
-typedef (double or ArrayBuffer or UniFFIPointer) UniFFIScaffoldingType;
+typedef (double or ArrayBuffer or UniFFIPointer) UniFFIScaffoldingValue;
 
 // The result of a call into UniFFI scaffolding call
 enum UniFFIScaffoldingCallCode {
@@ -56,7 +56,7 @@ dictionary UniFFIScaffoldingCallResult {
     required UniFFIScaffoldingCallCode code;
     // For success, this will be the return value for non-void returns
     // For error, this will be an ArrayBuffer storing the serialized error value
-    UniFFIScaffoldingType data;
+    UniFFIScaffoldingValue data;
     // For internal-error, this will be a utf-8 string describing the error
     ByteString internalErrorMessage;
 };
@@ -72,13 +72,13 @@ namespace UniFFIScaffolding {
   //
   // id is a unique identifier for the function, known to both the C++ and JS code
   [Throws]
-  Promise<UniFFIScaffoldingCallResult> callAsync(UniFFIFunctionId id, UniFFIScaffoldingType... args);
+  Promise<UniFFIScaffoldingCallResult> callAsync(UniFFIFunctionId id, UniFFIScaffoldingValue... args);
 
   // Call a scaffolding function on the main thread
   //
   // id is a unique identifier for the function, known to both the C++ and JS code
   [Throws]
-  UniFFIScaffoldingCallResult callSync(UniFFIFunctionId id, UniFFIScaffoldingType... args);
+  UniFFIScaffoldingCallResult callSync(UniFFIFunctionId id, UniFFIScaffoldingValue... args);
 
   // Read a UniFFIPointer from an ArrayBuffer
   //

@@ -16,7 +16,7 @@ using dom::AutoEntryScript;
 using dom::GlobalObject;
 using dom::RootedDictionary;
 using dom::Promise;
-using dom::ScaffoldingType;
+using dom::UniFFIScaffoldingValue;
 using dom::Sequence;
 using dom::UniFFICallbackHandler;
 using dom::UniFFIPointer;
@@ -174,7 +174,7 @@ Maybe<CallbackInterfaceInfo> UniFFIFixturesGetCallbackInterfaceInfo(uint64_t aIn
     }
 }
 
-Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, ErrorResult& aError) {
+Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<UniFFIScaffoldingValue>& aArgs, ErrorResult& aError) {
   switch (aId) {
     case 47: { // arithmetic:uniffi_arithmetical_fn_func_add
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
@@ -576,7 +576,7 @@ Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGl
   return Nothing();
 }
 
-bool UniFFIFixturesCallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue, ErrorResult& aError) {
+bool UniFFIFixturesCallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<UniFFIScaffoldingValue>& aArgs, RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue, ErrorResult& aError) {
   switch (aId) {
     case 47: { // arithmetic:uniffi_arithmetical_fn_func_add
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;

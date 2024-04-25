@@ -16,7 +16,7 @@ using dom::AutoEntryScript;
 using dom::GlobalObject;
 using dom::RootedDictionary;
 using dom::Promise;
-using dom::ScaffoldingType;
+using dom::UniFFIScaffoldingValue;
 using dom::Sequence;
 using dom::UniFFICallbackHandler;
 using dom::UniFFIPointer;
@@ -122,7 +122,7 @@ Maybe<CallbackInterfaceInfo> UniFFIGetCallbackInterfaceInfo(uint64_t aInterfaceI
     }
 }
 
-Maybe<already_AddRefed<Promise>> UniFFICallAsync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, ErrorResult& aError) {
+Maybe<already_AddRefed<Promise>> UniFFICallAsync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<UniFFIScaffoldingValue>& aArgs, ErrorResult& aError) {
   switch (aId) {
     case 0: { // relevancy:uniffi_relevancy_fn_clone_relevancystore
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRelevancyRelevancyStorePointerType>, ScaffoldingObjectConverter<&kRelevancyRelevancyStorePointerType>>;
@@ -316,7 +316,7 @@ Maybe<already_AddRefed<Promise>> UniFFICallAsync(const GlobalObject& aGlobal, ui
   return Nothing();
 }
 
-bool UniFFICallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue, ErrorResult& aError) {
+bool UniFFICallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<UniFFIScaffoldingValue>& aArgs, RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue, ErrorResult& aError) {
   switch (aId) {
     case 0: { // relevancy:uniffi_relevancy_fn_clone_relevancystore
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRelevancyRelevancyStorePointerType>, ScaffoldingObjectConverter<&kRelevancyRelevancyStorePointerType>>;

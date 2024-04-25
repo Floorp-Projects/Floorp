@@ -50,7 +50,7 @@ class ScaffoldingConverter {
   //
   // If this succeeds then IntoRust is also guaranteed to succeed
   static mozilla::Result<IntermediateType, nsCString> FromJs(
-      const dom::ScaffoldingType& aValue) {
+      const dom::UniFFIScaffoldingValue& aValue) {
     if (!aValue.IsDouble()) {
       return Err("Bad argument type"_ns);
     }
@@ -122,7 +122,7 @@ class ScaffoldingConverter {
   // This inputs an r-value reference since we may want to move data out of
   // this type.
   static void IntoJs(JSContext* aContext, IntermediateType&& aValue,
-                     dom::ScaffoldingType& aDest) {
+                     dom::UniFFIScaffoldingValue& aDest) {
     aDest.SetAsDouble() = aValue;
   }
 };
@@ -134,7 +134,7 @@ class ScaffoldingConverter<RustBuffer> {
   using IntermediateType = OwnedRustBuffer;
 
   static mozilla::Result<OwnedRustBuffer, nsCString> FromJs(
-      const dom::ScaffoldingType& aValue) {
+      const dom::UniFFIScaffoldingValue& aValue) {
     if (!aValue.IsArrayBuffer()) {
       return Err("Bad argument type"_ns);
     }
@@ -152,7 +152,7 @@ class ScaffoldingConverter<RustBuffer> {
   }
 
   static void IntoJs(JSContext* aContext, OwnedRustBuffer&& aValue,
-                     dom::ScaffoldingType& aDest) {
+                     dom::UniFFIScaffoldingValue& aDest) {
     aDest.SetAsArrayBuffer().Init(aValue.IntoArrayBuffer(aContext));
   }
 };
@@ -165,7 +165,7 @@ class ScaffoldingObjectConverter {
   using IntermediateType = void*;
 
   static mozilla::Result<void*, nsCString> FromJs(
-      const dom::ScaffoldingType& aValue) {
+      const dom::UniFFIScaffoldingValue& aValue) {
     if (!aValue.IsUniFFIPointer()) {
       return Err("Bad argument type"_ns);
     }
@@ -183,7 +183,7 @@ class ScaffoldingObjectConverter {
   }
 
   static void IntoJs(JSContext* aContext, void* aValue,
-                     dom::ScaffoldingType& aDest) {
+                     dom::UniFFIScaffoldingValue& aDest) {
     aDest.SetAsUniFFIPointer() =
         dom::UniFFIPointer::Create(aValue, PointerType);
   }
