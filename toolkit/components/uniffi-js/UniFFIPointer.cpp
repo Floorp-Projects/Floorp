@@ -73,6 +73,16 @@ void UniFFIPointer::Write(const ArrayBuffer& aArrayBuff, uint32_t aPosition,
   MOZ_LOG(sUniFFIPointerLogger, LogLevel::Info,
           ("[UniFFI] Writing Pointer to buffer"));
 
+  // Clone the pointer outside of ProcessData, since the JS hazard checker
+  // assumes the call could result in a GC pass.
+  //
+  // This means that if the code below fails, we will leak a reference to the
+  // pointer.  This is acceptable because the code should will only fail if
+  // UniFFI incorrectly sizes the array buffers which should be caught by our
+  // unit tests.  Also, there's no way to protect against this in general since
+  // if anything fails after writing a pointer to the array then the reference
+  // will leak.
+  void* clone = ClonePtr();
   CheckedUint32 end = CheckedUint32(aPosition) + 8;
   if (!end.isValid() || !aArrayBuff.ProcessData([&](const Span<uint8_t>& aData,
                                                     JS::AutoCheckCannotGC&&) {
@@ -82,14 +92,7 @@ void UniFFIPointer::Write(const ArrayBuffer& aArrayBuff, uint32_t aPosition,
         // in Rust and Read(), a u64 is read as BigEndian and then converted to
         // a pointer we do the reverse here
         const auto& data_ptr = aData.Subspan(aPosition, 8);
-        // The hazard checker assumes all calls to a function pointer may result
-        // in a GC call and `ClonePtr` calls mType->clone. However, we know that
-        // mtype->clone won't make a GC call since it's essentially just a call
-        // to Rust's `Arc::clone()`. Use AutoSuppressGCAnalysis to tell the
-        // hazard checker to ignore the call.
-        JS::AutoSuppressGCAnalysis suppress;
-        mozilla::BigEndian::writeUint64(data_ptr.Elements(),
-                                        (uint64_t)ClonePtr());
+        mozilla::BigEndian::writeUint64(data_ptr.Elements(), (uint64_t)clone);
         return true;
       })) {
     aError.ThrowRangeError("position is out of range");

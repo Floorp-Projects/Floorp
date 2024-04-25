@@ -11,8 +11,7 @@ namespace mozilla::uniffi {
 
 using dom::ArrayBuffer;
 
-OwnedRustBuffer::OwnedRustBuffer(const RustBuffer& aBuf) {
-  mBuf = aBuf;
+OwnedRustBuffer::OwnedRustBuffer(const RustBuffer& aBuf) : mBuf(aBuf) {
   MOZ_ASSERT(IsValid());
 }
 
@@ -21,14 +20,11 @@ Result<OwnedRustBuffer, nsCString> OwnedRustBuffer::FromArrayBuffer(
   return aArrayBuffer.ProcessData(
       [](const Span<uint8_t>& aData,
          JS::AutoCheckCannotGC&&) -> Result<OwnedRustBuffer, nsCString> {
-        if (aData.Length() > INT32_MAX) {
-          return Err("Input ArrayBuffer is too large"_ns);
-        }
-
+        uint64_t bufLen = aData.Length();
         RustCallStatus status{};
-        RustBuffer buf = uniffi_rustbuffer_alloc(
-            static_cast<uint64_t>(aData.Length()), &status);
-        buf.len = aData.Length();
+        RustBuffer buf =
+            uniffi_rustbuffer_alloc(static_cast<uint64_t>(bufLen), &status);
+        buf.len = bufLen;
         if (status.code != 0) {
           if (status.error_buf.data) {
             auto message = nsCString("uniffi_rustbuffer_alloc: ");
@@ -45,7 +41,7 @@ Result<OwnedRustBuffer, nsCString> OwnedRustBuffer::FromArrayBuffer(
           return Err("Unknown error allocating rust buffer"_ns);
         }
 
-        memcpy(buf.data, aData.Elements(), buf.len);
+        memcpy(buf.data, aData.Elements(), bufLen);
         return OwnedRustBuffer(buf);
       });
 }
