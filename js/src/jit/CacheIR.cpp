@@ -3170,11 +3170,6 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayElement(
 
   auto* tarr = &obj->as<TypedArrayObject>();
 
-  if (tarr->type() == Scalar::Float16) {
-    // TODO: See Bug 1835034 for JIT support for Float16Array.
-    return AttachDecision::NoAction;
-  }
-
   bool handleOOB = false;
   int64_t indexInt64;
   if (!ValueIsInt64Index(idVal_, &indexInt64) || indexInt64 < 0 ||
@@ -4535,7 +4530,6 @@ OperandId IRGenerator::emitNumericGuard(ValOperandId valId, const Value& v,
       return writer.truncateDoubleToUInt32(numId);
     }
 
-    case Scalar::Float16:
     case Scalar::Float32:
     case Scalar::Float64: {
       if (v.isNumber()) {
@@ -5066,11 +5060,6 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
 
   auto* tarr = &obj->as<TypedArrayObject>();
   Scalar::Type elementType = tarr->type();
-
-  if (elementType == Scalar::Float16) {
-    // TODO: See Bug 1835034 for JIT support for Float16Array.
-    return AttachDecision::NoAction;
-  }
 
   // Don't attach if the input type doesn't match the guard added below.
   if (!ValueCanConvertToNumeric(elementType, rhsVal_)) {
@@ -9138,7 +9127,6 @@ static bool AtomicsMeetsPreconditions(TypedArrayObject* typedArray,
     case Scalar::BigUint64:
       break;
 
-    case Scalar::Float16:
     case Scalar::Float32:
     case Scalar::Float64:
     case Scalar::Uint8Clamped:

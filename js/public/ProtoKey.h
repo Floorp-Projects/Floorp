@@ -92,7 +92,6 @@
   REAL(Uint8ClampedArray, TYPED_ARRAY_CLASP(Uint8Clamped))                  \
   REAL(BigInt64Array, TYPED_ARRAY_CLASP(BigInt64))                          \
   REAL(BigUint64Array, TYPED_ARRAY_CLASP(BigUint64))                        \
-  REAL(Float16Array, TYPED_ARRAY_CLASP(Float16))                            \
   REAL(BigInt, OCLASP(BigInt))                                              \
   REAL(Proxy, CLASP(Proxy))                                                 \
   REAL(WeakMap, OCLASP(WeakMap))                                            \

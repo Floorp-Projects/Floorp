@@ -25,6 +25,7 @@ UNSUPPORTED_FEATURES = set(
         "legacy-regexp",  # Bug 1306461
         "regexp-duplicate-named-groups",  # Bug 1773135
         "set-methods",  # Bug 1805038
+        "Float16Array",  # Bug 1833646
         "explicit-resource-management",  # Bug 1569081
         "regexp-modifiers",
     ]
@@ -41,7 +42,6 @@ FEATURE_CHECK_NEEDED = {
     "resizable-arraybuffer": "!ArrayBuffer.prototype.resize",  # Bug 1670026
     "uint8array-base64": "!Uint8Array.fromBase64",  # Bug 1862220
     "json-parse-with-source": "!JSON.hasOwnProperty('isRawJSON')",  # Bug 1658310
-    "Float16Array": "!this.hasOwnProperty('Float16Array')",
 }
 RELEASE_OR_BETA = set(
     [
@@ -57,11 +57,6 @@ SHELL_OPTIONS = {
     "resizable-arraybuffer": "--enable-arraybuffer-resizable",
     "uint8array-base64": "--enable-uint8array-base64",
     "json-parse-with-source": "--enable-json-parse-with-source",
-    "Float16Array": "--enable-float16array",
-}
-
-INCLUDE_FEATURE_DETECTED_OPTIONAL_SHELL_OPTIONS = {
-    "testTypedArray.js": "Float16Array",
 }
 
 
@@ -393,19 +388,6 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
                     ("shell-option({})".format(opt) for opt in sorted(shellOptions))
                 )
 
-    # Optional shell options. Some tests use feature detection for additional
-    # test coverage. We want to get this extra coverage without having to skip
-    # these tests in browser builds.
-    if "includes" in testRec:
-        optionalShellOptions = (
-            SHELL_OPTIONS[INCLUDE_FEATURE_DETECTED_OPTIONAL_SHELL_OPTIONS[include]]
-            for include in testRec["includes"]
-            if include in INCLUDE_FEATURE_DETECTED_OPTIONAL_SHELL_OPTIONS
-        )
-        refTestOptions.extend(
-            ("shell-option({})".format(opt) for opt in sorted(optionalShellOptions))
-        )
-
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all
     # test harness files to the top level shell.js file.
@@ -573,11 +555,7 @@ def process_test262(test262Dir, test262OutDir, strictTests, externManifests):
                 convert = convertFixtureFile(testSource, testName)
             else:
                 convert = convertTestFile(
-                    test262parser,
-                    testSource,
-                    testName,
-                    includeSet,
-                    strictTests,
+                    test262parser, testSource, testName, includeSet, strictTests
                 )
 
             for newFileName, newSource, externRefTest in convert:

@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-float16array)
 const otherGlobal = newGlobal();
 
 // Create with new ArrayBuffer and offset.

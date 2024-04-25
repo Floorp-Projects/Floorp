@@ -696,9 +696,6 @@ skip script test262/staging/Temporal/Regex/old/timezone.js
 skip script test262/language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
 skip script test262/language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
 
-# These don't expect Float16Array to be enabled, see https://github.com/tc39/test262/issues/4029
-skip script test262/harness/testTypedArray.js
-skip script test262/harness/testTypedArray-conversions.js
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
@@ -1061,6 +1058,7 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/le
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/name.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/take.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/take-more-than-available.js
+
 
 ##############################################
 # Temporal                                   #

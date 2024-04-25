@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-float16array) skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell)
 
 if (helperThreadCount() === 0) {
   if (typeof reportCompare === "function")
@@ -18,7 +18,7 @@ const TAConstructors = [
   Float64Array,
   BigInt64Array,
   BigUint64Array,
-].concat(this.Float16Array ?? []);
+];
 
 // Use different size classes to catch any implementation-specific
 // optimisations.
@@ -46,8 +46,6 @@ function ToAtomicTA(TA) {
     return TA;
   case Uint8ClampedArray:
     return Uint8Array;
-  case globalThis.Float16Array:
-    return Uint16Array;
   case Float32Array:
     return Uint32Array;
   case Float64Array:

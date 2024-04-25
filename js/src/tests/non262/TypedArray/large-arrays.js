@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-float16array) slow skip-if(!xulRuntime.shell)
+// |reftest| slow skip-if(!xulRuntime.shell)
 
 // Test that we can access TypedArrays beyond the 4GB mark, if large buffers are
 // supported.

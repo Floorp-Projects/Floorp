@@ -115,9 +115,6 @@ class DataViewObject : public ArrayBufferViewObject {
   static bool getBigUint64Impl(JSContext* cx, const CallArgs& args);
   static bool fun_getBigUint64(JSContext* cx, unsigned argc, Value* vp);
 
-  static bool getFloat16Impl(JSContext* cx, const CallArgs& args);
-  static bool fun_getFloat16(JSContext* cx, unsigned argc, Value* vp);
-
   static bool getFloat32Impl(JSContext* cx, const CallArgs& args);
   static bool fun_getFloat32(JSContext* cx, unsigned argc, Value* vp);
 
@@ -147,9 +144,6 @@ class DataViewObject : public ArrayBufferViewObject {
 
   static bool setBigUint64Impl(JSContext* cx, const CallArgs& args);
   static bool fun_setBigUint64(JSContext* cx, unsigned argc, Value* vp);
-
-  static bool setFloat16Impl(JSContext* cx, const CallArgs& args);
-  static bool fun_setFloat16(JSContext* cx, unsigned argc, Value* vp);
 
   static bool setFloat32Impl(JSContext* cx, const CallArgs& args);
   static bool fun_setFloat32(JSContext* cx, unsigned argc, Value* vp);

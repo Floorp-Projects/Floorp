@@ -60,8 +60,7 @@ class JS_PUBLIC_API AutoRequireNoGC;
   MACRO(double, double, Float64)                  \
   MACRO(uint8_t, js::uint8_clamped, Uint8Clamped) \
   MACRO(int64_t, int64_t, BigInt64)               \
-  MACRO(uint64_t, uint64_t, BigUint64)            \
-  MACRO(uint16_t, js::float16, Float16)
+  MACRO(uint64_t, uint64_t, BigUint64)
 
 /*
  * JS_New(type)Array:

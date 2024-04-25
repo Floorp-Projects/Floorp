@@ -7687,13 +7687,6 @@
     value: false
     mirror: always
     set_spidermonkey_pref: startup
-
-  # Experimental support for Float16Array in JavaScript.
--   name: javascript.options.experimental.float16array
-    type: bool
-    value: false
-    mirror: always
-    set_spidermonkey_pref: startup
 #endif  // NIGHTLY_BUILD
 
 # Experimental support for ArrayBuffer.prototype.transfer{,ToFixedLength}() in JavaScript.
