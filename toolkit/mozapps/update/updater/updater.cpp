@@ -2992,7 +2992,7 @@ int NS_main(int argc, NS_tchar** argv) {
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
     int rv = PopulategMARStrings();
     if (rv == OK) {
-      printf("Channels Allowed: %s\n", gMARStrings.MARChannelID.get());
+      printf("Channels Allowed: '%s'\n", gMARStrings.MARChannelID.get());
       return 0;
     }
     printf("Error: %d\n", rv);
