@@ -2281,6 +2281,7 @@ class SelectTranslationsTestUtils {
    */
   static async #changeSelectedLanguageDirectly(langTags, elements, options) {
     const { menuList } = elements;
+    const { textArea } = SelectTranslationsPanel.elements;
     const { onChangeLanguage, downloadHandler } = options;
 
     for (const langTag of langTags) {
@@ -2290,13 +2291,21 @@ class SelectTranslationsTestUtils {
         () => menuList.value === langTag
       );
 
+      menuList.focus();
       menuList.value = langTag;
       menuList.dispatchEvent(new Event("command"));
       await menuListUpdated;
     }
 
-    menuList.focus();
-    EventUtils.synthesizeKey("KEY_Enter");
+    // Either of these events should trigger a translation after the selected
+    // language has been changed directly.
+    if (Math.random() < 0.5) {
+      info("Attempting to trigger translation via text-area focus.");
+      textArea.focus();
+    } else {
+      info("Attempting to trigger translation via pressing Enter.");
+      EventUtils.synthesizeKey("KEY_Enter");
+    }
 
     if (downloadHandler) {
       await SelectTranslationsTestUtils.handleDownloads(options);
