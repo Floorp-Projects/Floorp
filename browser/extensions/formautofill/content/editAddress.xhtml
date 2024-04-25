@@ -19,65 +19,15 @@
       rel="stylesheet"
       href="chrome://formautofill/content/skin/editDialog.css"
     />
+    <script src="chrome://formautofill/content/addressFormLayout.js"></script>
     <script src="chrome://formautofill/content/editDialog.js"></script>
-    <script src="chrome://formautofill/content/autofillEditForms.js"></script>
     <script
       type="module"
       src="chrome://global/content/elements/moz-button-group.mjs"
     ></script>
   </head>
   <body>
-    <form id="form" class="editAddressForm" autocomplete="off">
-      <!--
-        The <span class="label-text" …/> needs to be after the form field in the same element in
-        order to get proper label styling with :focus and :user-invalid
-      -->
-      <label id="name-container" class="container">
-        <input id="name" type="text" required="required" />
-        <span data-l10n-id="autofill-address-name" class="label-text" />
-      </label>
-      <label id="organization-container" class="container">
-        <input id="organization" type="text" />
-        <span data-l10n-id="autofill-address-organization" class="label-text" />
-      </label>
-      <label id="street-address-container" class="container">
-        <textarea id="street-address" rows="3" />
-        <span data-l10n-id="autofill-address-street" class="label-text" />
-      </label>
-      <label id="address-level3-container" class="container">
-        <input id="address-level3" type="text" />
-        <span class="label-text" />
-      </label>
-      <label id="address-level2-container" class="container">
-        <input id="address-level2" type="text" />
-        <span class="label-text" />
-      </label>
-      <label id="address-level1-container" class="container">
-        <!-- The address-level1 input will get replaced by a select dropdown
-           by autofillEditForms.js when the selected country has provided
-           specific options. -->
-        <input id="address-level1" type="text" />
-        <span class="label-text" />
-      </label>
-      <label id="postal-code-container" class="container">
-        <input id="postal-code" type="text" />
-        <span class="label-text" />
-      </label>
-      <label id="country-container" class="container">
-        <select id="country" required="required">
-          <option />
-        </select>
-        <span data-l10n-id="autofill-address-country" class="label-text" />
-      </label>
-      <label id="tel-container" class="container">
-        <input id="tel" type="tel" dir="auto" />
-        <span data-l10n-id="autofill-address-tel" class="label-text" />
-      </label>
-      <label id="email-container" class="container">
-        <input id="email" type="email" required="required" />
-        <span data-l10n-id="autofill-address-email" class="label-text" />
-      </label>
-    </form>
+    <form id="form" class="editAddressForm" autocomplete="off"></form>
     <div id="controls-container">
       <span
         id="country-warning-message"
@@ -89,30 +39,21 @@
       </moz-button-group>
     </div>
     <script>
-      <![CDATA[
-          "use strict";
+      const { record, noValidate, l10nStrings } = window.arguments?.[0] ?? {};
+      const formElement = document.querySelector("form");
+      formElement.noValidate = !!noValidate;
+      /* import-globals-from addressFormLayout.js */
+      createFormLayoutFromRecord(formElement, record, l10nStrings);
 
-          const {
-            record,
-            noValidate,
-          } = window.arguments?.[0] ?? {};
-
-          /* import-globals-from autofillEditForms.js */
-          const fieldContainer = new EditAddress({
-            form: document.getElementById("form"),
-          }, record, {
-            noValidate,
-          });
-
-          /* import-globals-from editDialog.js */
-          new EditAddressDialog({
-            title: document.querySelector("title"),
-            fieldContainer,
-            controlsContainer: document.getElementById("controls-container"),
-            cancel: document.getElementById("cancel"),
-            save: document.getElementById("save"),
-          }, record);
-        ]]>
+      /* import-globals-from editDialog.js */
+      new EditAddressDialog(
+        {
+          title: document.querySelector("title"),
+          cancel: document.getElementById("cancel"),
+          save: document.getElementById("save"),
+        },
+        record
+      );
     </script>
   </body>
 </html>
