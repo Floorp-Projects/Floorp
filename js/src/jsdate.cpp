@@ -1387,11 +1387,12 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
       if (IsAsciiDigit(s[index])) {
         break;
       }
-    } else {
-      // Reject numbers directly after letters e.g. foo2
-      if (IsAsciiDigit(s[index]) && IsAsciiAlpha(s[index - 1])) {
-        return false;
-      }
+    } else if (!strchr(" ,.-/", s[index])) {
+      // We're only allowing the above delimiters after the day of
+      // week to prevent things such as "foo_1" from being parsed
+      // as a date, which may break software which uses this function
+      // to determine whether or not something is a date.
+      return false;
     }
   }
 
