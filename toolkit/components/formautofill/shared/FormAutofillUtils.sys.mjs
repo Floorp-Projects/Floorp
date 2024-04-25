@@ -38,6 +38,7 @@ const EDIT_ADDRESS_L10N_IDS = [
   "autofill-address-given-name",
   "autofill-address-additional-name",
   "autofill-address-family-name",
+  "autofill-address-name",
   "autofill-address-organization",
   "autofill-address-street",
   "autofill-address-state",
@@ -48,6 +49,26 @@ const EDIT_ADDRESS_L10N_IDS = [
   "autofill-address-postal-code",
   "autofill-address-email",
   "autofill-address-tel",
+  "autofill-edit-address-title",
+  "autofill-address-neighborhood",
+  "autofill-address-village-township",
+  "autofill-address-island",
+  "autofill-address-townland",
+  "autofill-address-district",
+  "autofill-address-post-town",
+  "autofill-address-suburb",
+  "autofill-address-parish",
+  "autofill-address-prefecture",
+  "autofill-address-area",
+  "autofill-address-do-si",
+  "autofill-address-department",
+  "autofill-address-emirate",
+  "autofill-address-oblast",
+  "autofill-address-pin",
+  "autofill-address-eircode",
+  "autofill-address-country-only",
+  "autofill-cancel-button",
+  "autofill-save-button",
 ];
 const MANAGE_CREDITCARDS_L10N_IDS = [
   "autofill-add-card-title",
@@ -1054,6 +1075,58 @@ FormAutofillUtils = {
       ),
       postalCodePattern: dataset.zip,
     };
+  },
+
+  /**
+   * Get flattened form layout information of a given country
+   * TODO(Bug 1891730): Remove getFormFormat and use this instead.
+   *
+   * @param {object} record - An object containing at least the 'country' property.
+   * @returns {Array} Flattened array with the address fiels in order.
+   */
+  getFormLayout(record) {
+    const formFormat = this.getFormFormat(record.country);
+    let fieldsInOrder = formFormat.fieldsOrder;
+
+    // Add missing fields that are always present but not in the .fmt of addresses
+    // TODO: extend libaddress later to support this if possible
+    fieldsInOrder = [
+      ...fieldsInOrder,
+      { fieldId: "country", options: FormAutofill.countries, required: true },
+      { fieldId: "tel", type: "tel" },
+      { fieldId: "email", type: "email" },
+    ];
+
+    for (const field of fieldsInOrder) {
+      const flattenedObject = {
+        fieldId: field.fieldId,
+        newLine: field.newLine,
+        l10nId: this.getAddressFieldL10nId(field.fieldId),
+        required: formFormat.countryRequiredFields.includes(field.fieldId),
+        value: record[field.fieldId] ?? "",
+        ...(field.fieldId === "street-address" && {
+          l10nId: "autofill-address-street",
+          multiline: true,
+        }),
+        ...(field.fieldId === "address-level1" && {
+          l10nId: formFormat.addressLevel1L10nId,
+          options: formFormat.addressLevel1Options,
+        }),
+        ...(field.fieldId === "address-level2" && {
+          l10nId: formFormat.addressLevel2L10nId,
+        }),
+        ...(field.fieldId === "address-level3" && {
+          l10nId: formFormat.addressLevel3L10nId,
+        }),
+        ...(field.fieldId === "postal-code" && {
+          pattern: formFormat.postalCodePattern,
+          l10nId: formFormat.postalCodeL10nId,
+        }),
+      };
+      Object.assign(field, flattenedObject);
+    }
+
+    return fieldsInOrder;
   },
 
   getAddressFieldL10nId(type) {
