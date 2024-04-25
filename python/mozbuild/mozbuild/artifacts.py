@@ -663,16 +663,9 @@ class MacArtifactJob(ArtifactJob):
                 "nmhproxy",
                 "pingsender",
                 "plugin-container.app/Contents/MacOS/plugin-container",
-                "updater.app/Contents/Frameworks/UpdateSettings.framework/UpdateSettings",
                 "updater.app/Contents/MacOS/org.mozilla.updater",
                 # 'xpcshell',
                 "XUL",
-            ],
-        ),
-        (
-            "Contents/Frameworks",
-            [
-                "ChannelPrefs.framework/ChannelPrefs",
             ],
         ),
     )
