@@ -246,7 +246,7 @@ int32_t CompareISODate(const PlainDate& one, const PlainDate& two);
 /**
  * BalanceISODate ( year, month, day )
  */
-bool BalanceISODate(JSContext* cx, int32_t year, int32_t month, int64_t day,
+bool BalanceISODate(JSContext* cx, const PlainDate& date, int64_t days,
                     PlainDate* result);
 
 /**

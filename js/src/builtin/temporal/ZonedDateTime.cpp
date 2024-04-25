@@ -1340,8 +1340,7 @@ static bool RoundISODateTime(JSContext* cx, const PlainDateTime& dateTime,
 
   // Step 4.
   PlainDate balanceResult;
-  if (!BalanceISODate(cx, date.year, date.month,
-                      int64_t(date.day) + roundedTime.days, &balanceResult)) {
+  if (!BalanceISODate(cx, date, roundedTime.days, &balanceResult)) {
     return false;
   }
 

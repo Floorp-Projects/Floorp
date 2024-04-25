@@ -1895,11 +1895,8 @@ bool js::temporal::DisambiguatePossibleInstants(
                "subtracting nanoseconds is at most one day");
 
     // Step 19.c.
-    PlainDate earlierDate;
-    if (!AddISODate(cx, dateTime.date, {0, 0, 0, earlierTime.days},
-                    TemporalOverflow::Constrain, &earlierDate)) {
-      return false;
-    }
+    auto earlierDate = BalanceISODate(dateTime.date.year, dateTime.date.month,
+                                      dateTime.date.day + earlierTime.days);
 
     // Step 19.d.
     Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
@@ -1936,11 +1933,8 @@ bool js::temporal::DisambiguatePossibleInstants(
              "adding nanoseconds is at most one day");
 
   // Step 23.
-  PlainDate laterDate;
-  if (!AddISODate(cx, dateTime.date, {0, 0, 0, laterTime.days},
-                  TemporalOverflow::Constrain, &laterDate)) {
-    return false;
-  }
+  auto laterDate = BalanceISODate(dateTime.date.year, dateTime.date.month,
+                                  dateTime.date.day + laterTime.days);
 
   // Step 24.
   Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));

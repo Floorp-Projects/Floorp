@@ -674,11 +674,8 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
     auto nextMonthDate = ToPlainDate(unwrappedNextMonth);
 
     // Step 14.c.
-    PlainDate endOfMonthISO;
-    if (!AddISODate(cx, nextMonthDate, {0, 0, 0, -1},
-                    TemporalOverflow::Constrain, &endOfMonthISO)) {
-      return false;
-    }
+    auto endOfMonthISO = BalanceISODate(nextMonthDate.year, nextMonthDate.month,
+                                        nextMonthDate.day - 1);
 
     // Step 14.d.
     Rooted<PlainDateWithCalendar> endOfMonth(cx);
