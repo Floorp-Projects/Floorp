@@ -75,7 +75,7 @@ index 2e489757ebc1..810a9f92bb7a 100644
 +        MadeChange |= widenSubvectorLoad(I);
          MadeChange |= foldShuffleOfBinops(I);
          MadeChange |= foldShuffleOfCastops(I);
-         MadeChange |= foldSelectShuffle(I);
+         MadeChange |= foldShuffleOfShuffles(I);
 diff --git a/llvm/test/Other/new-pm-defaults.ll b/llvm/test/Other/new-pm-defaults.ll
 index 13612c3bb459..5f84d28af4a6 100644
 --- a/llvm/test/Other/new-pm-defaults.ll
