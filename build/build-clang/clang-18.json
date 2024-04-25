@@ -12,6 +12,7 @@
         "partial-revert-llvmorg-16-init-17151-gaa0883b59ae1_clang_17.patch",
         "revert-llvmorg-16-init-11301-g163bb6d64e5f_clang_18.patch",
         "revert-llvmorg-15-init-13446-g7524fe962e47.patch",
+        "llvmorg-19-init-7654-gc23135c5488f.patch",
         "win64-ret-null-on-commitment-limit_clang_14.patch",
         "arm64e-hack.patch",
         "compiler-rt-rss-limit-heap-profile.patch"
