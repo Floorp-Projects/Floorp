@@ -17,7 +17,7 @@ add_task(async function test_enabled_migrator() {
     let wizard = dialog.querySelector("migration-wizard");
     let shadow = wizard.openOrClosedShadowRoot;
     let selector = shadow.querySelector("#browser-profile-selector");
-    selector.click();
+    EventUtils.synthesizeMouseAtCenter(selector, {}, prefsWin);
 
     await new Promise(resolve => {
       shadow
@@ -78,7 +78,7 @@ add_task(async function test_disabling_migrator() {
     let wizard = dialog.querySelector("migration-wizard");
     let shadow = wizard.openOrClosedShadowRoot;
     let selector = shadow.querySelector("#browser-profile-selector");
-    selector.click();
+    EventUtils.synthesizeMouseAtCenter(selector, {}, prefsWin);
 
     await new Promise(resolve => {
       shadow

@@ -132,7 +132,7 @@ add_task(async function test_file_migration() {
 
     // Now select our DummyFileMigrator from the list.
     let selector = shadow.querySelector("#browser-profile-selector");
-    selector.click();
+    EventUtils.synthesizeMouseAtCenter(selector, {}, prefsWin);
 
     info("Waiting for panel-list shown");
     await new Promise(resolve => {
@@ -246,7 +246,7 @@ add_task(async function test_file_migration_error() {
 
     // Now select our DummyFileMigrator from the list.
     let selector = shadow.querySelector("#browser-profile-selector");
-    selector.click();
+    EventUtils.synthesizeMouseAtCenter(selector, {}, prefsWin);
 
     info("Waiting for panel-list shown");
     await new Promise(resolve => {
