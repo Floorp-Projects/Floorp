@@ -50,14 +50,14 @@ export class _WallpapersSection extends React.PureComponent {
     const { activeWallpaper } = this.props;
     return (
       <div>
-        <div className="wallpaper-list">
+        <fieldset className="wallpaper-list">
           {wallpaperList.map(({ title, theme, fluent_id }) => {
             return (
               <>
                 <input
                   onChange={this.handleChange}
                   type="radio"
-                  name={`wallpaper-${title}`}
+                  name="wallpaper"
                   id={title}
                   value={title}
                   checked={title === activeWallpaper}
@@ -74,7 +74,7 @@ export class _WallpapersSection extends React.PureComponent {
               </>
             );
           })}
-        </div>
+        </fieldset>
         <button
           className="wallpapers-reset"
           onClick={this.handleReset}

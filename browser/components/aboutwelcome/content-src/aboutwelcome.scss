@@ -1533,15 +1533,11 @@ html {
           transform: scaleX(-1);
         }
 
-        &:focus-visible,
+        &:focus,
         &:active,
         &.selected {
           outline: 2px solid var(--in-content-primary-button-background);
           outline-offset: 2px;
-        }
-
-        &.selected {
-          outline-color: var(--color-accent-primary-active);
         }
 
         &.light {
