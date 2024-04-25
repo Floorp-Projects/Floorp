@@ -1612,6 +1612,19 @@ nsresult WebSocketImpl::Init(JSContext* aCx, bool aIsSecure,
   nsresult rv = mWebSocket->CheckCurrentGlobalCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Assign the sub protocol list and scan it for illegal values
+  for (uint32_t index = 0; index < aProtocolArray.Length(); ++index) {
+    if (!WebSocket::IsValidProtocolString(aProtocolArray[index])) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    if (!mRequestedProtocolList.IsEmpty()) {
+      mRequestedProtocolList.AppendLiteral(", ");
+    }
+
+    AppendUTF16toUTF8(aProtocolArray[index], mRequestedProtocolList);
+  }
+
   // Shut down websocket if window is frozen or destroyed (only needed for
   // "ghost" websockets--see bug 696085)
   RefPtr<WebSocketImplProxy> proxy;
@@ -1793,19 +1806,6 @@ nsresult WebSocketImpl::Init(JSContext* aCx, bool aIsSecure,
         return NS_ERROR_DOM_SECURITY_ERR;
       }
     }
-  }
-
-  // Assign the sub protocol list and scan it for illegal values
-  for (uint32_t index = 0; index < aProtocolArray.Length(); ++index) {
-    if (!WebSocket::IsValidProtocolString(aProtocolArray[index])) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-
-    if (!mRequestedProtocolList.IsEmpty()) {
-      mRequestedProtocolList.AppendLiteral(", ");
-    }
-
-    AppendUTF16toUTF8(aProtocolArray[index], mRequestedProtocolList);
   }
 
   if (mIsMainThread) {
