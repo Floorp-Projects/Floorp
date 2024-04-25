@@ -15,34 +15,41 @@ export class _WallpapersSection extends React.PureComponent {
   }
 
   componentDidMount() {
-    this.prefersHighContrastQuery = globalThis.matchMedia(
-      "(forced-colors: active)"
-    );
     this.prefersDarkQuery = globalThis.matchMedia(
       "(prefers-color-scheme: dark)"
-    );
-    [this.prefersHighContrastQuery, this.prefersDarkQuery].forEach(
-      colorTheme => {
-        colorTheme.addEventListener("change", this.handleReset);
-      }
-    );
-  }
-
-  componentWillUnmount() {
-    [this.prefersHighContrastQuery, this.prefersDarkQuery].forEach(
-      colorTheme => {
-        colorTheme.removeEventListener("change", this.handleReset);
-      }
     );
   }
 
   handleChange(event) {
     const { id } = event.target;
-    this.props.setPref("newtabWallpapers.wallpaper", id);
+    const prefs = this.props.Prefs.values;
+    const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
+    this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, id);
+    // bug 1892095
+    if (
+      prefs["newtabWallpapers.wallpaper-dark"] === "" &&
+      colorMode === "light"
+    ) {
+      this.props.setPref(
+        "newtabWallpapers.wallpaper-dark",
+        id.replace("light", "dark")
+      );
+    }
+
+    if (
+      prefs["newtabWallpapers.wallpaper-light"] === "" &&
+      colorMode === "dark"
+    ) {
+      this.props.setPref(
+        `newtabWallpapers.wallpaper-light`,
+        id.replace("dark", "light")
+      );
+    }
   }
 
   handleReset() {
-    this.props.setPref("newtabWallpapers.wallpaper", "");
+    const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
+    this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
   }
 
   render() {
