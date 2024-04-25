@@ -139,7 +139,24 @@ h1.translations-panel-header-wrapper {
 }
 
 #select-translations-panel-footer-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: var(--space-xsmall);
   justify-content: space-between;
+}
+
+#select-translations-panel-start-button-group,
+#select-translations-panel-end-button-group {
+  display: flex;
+  flex-grow: 1;
+}
+
+#select-translations-panel-start-button-group {
+  justify-content: flex-start;
+}
+
+#select-translations-panel-end-button-group {
+  justify-content: flex-end;
 }
 
 .select-translations-panel-header {
