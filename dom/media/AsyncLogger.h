@@ -17,7 +17,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 #include "GeckoProfiler.h"
-#include "MPSCQueue.h"
+#include "mozilla/dom/MPSCQueue.h"
 
 #if defined(_WIN32)
 #  include <process.h>
