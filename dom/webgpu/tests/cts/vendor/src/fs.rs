@@ -245,15 +245,6 @@ impl Display for Child<'_> {
     }
 }
 
-pub(crate) fn existing_file<P>(path: P) -> P
-where
-    P: AsRef<Path>,
-{
-    let p = path.as_ref();
-    assert!(p.is_file(), "{p:?} does not exist as a file");
-    path
-}
-
 pub(crate) fn copy_dir<P, Q>(source: P, dest: Q) -> miette::Result<()>
 where
     P: Display + AsRef<Path>,
