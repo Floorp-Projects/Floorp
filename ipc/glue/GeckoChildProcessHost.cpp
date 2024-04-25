@@ -67,7 +67,6 @@
 #ifdef XP_WIN
 #  include <stdlib.h>
 
-#  include "mozilla/WindowsVersion.h"
 #  include "nsIWinTaskbar.h"
 #  define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
@@ -251,7 +250,7 @@ class BaseProcessLauncher {
 };
 
 #ifdef XP_WIN
-class WindowsProcessLauncher final : public BaseProcessLauncher {
+class WindowsProcessLauncher : public BaseProcessLauncher {
  public:
   WindowsProcessLauncher(GeckoChildProcessHost* aHost,
                          std::vector<std::string>&& aExtraOpts)
@@ -262,9 +261,6 @@ class WindowsProcessLauncher final : public BaseProcessLauncher {
   virtual Result<Ok, LaunchError> DoSetup() override;
   virtual RefPtr<ProcessHandlePromise> DoLaunch() override;
   virtual Result<Ok, LaunchError> DoFinishLaunch() override;
-
- private:
-  void AddApplicationPrefetchArgument();
 
   mozilla::Maybe<CommandLine> mCmdLine;
 #  ifdef MOZ_SANDBOX
@@ -1408,97 +1404,6 @@ Result<Ok, LaunchError> MacProcessLauncher::DoFinishLaunch() {
 #endif  // XP_MACOSX
 
 #ifdef XP_WIN
-void WindowsProcessLauncher::AddApplicationPrefetchArgument() {
-  // The Application Launch Prefetcher (ALPF) is an ill-documented Windows
-  // subsystem that's intended to speed up process launching, apparently mostly
-  // by assuming that a binary is going to want to load the same DLLs as it did
-  // the last time it launched, and getting those prepped for loading as well.
-  //
-  // For most applications, that's a good bet. For Firefox, it's less so, since
-  // we use the same binary with different arguments to do completely different
-  // things. Windows does allow applications to take up multiple slots in this
-  // cache, but the "which bucket does this invocation go in?" mechanism is
-  // highly unusual: the OS scans the command line and looks for a command-line
-  // switch of a particular form.
-  //
-  // (There is allegedly a way to do this without involving the command line,
-  // OVERRIDE_PREFETCH_PARAMETER, but it's even more poorly documented.)
-
-  // Applications' different prefetch-cache buckets are named with numbers from
-  // "1" to some OS-version-determined limit, with an additional implicit "0"
-  // cache bucket which is used when no valid prefetch cache slot is named.
-  //
-  // (The "0" bucket's existence and behavior is not documented, but has been
-  // confirmed by observing the creation and enumeration of cache files in the
-  // C:\Windows\Prefetch folder.)
-  static size_t const kMaxSlotNo = IsWin1122H2OrLater() ? 16 : 8;
-
-  // Determine the prefetch-slot number to be used for the process we're about
-  // to launch.
-  //
-  // This may be changed freely between Firefox versions, as a Firefox update
-  // will completely invalidate the prefetch cache anyway.
-  size_t const prefetchSlot = [&]() -> size_t {
-    switch (mProcessType) {
-      // This code path is not used when starting the main process...
-      case GeckoProcessType_Default:
-      // ...ForkServer is not used on Windows...
-      case GeckoProcessType_ForkServer:
-      // ..."End" isn't a process-type, just a limit...
-      case GeckoProcessType_End:
-      // ...and any new process-types should be considered explicitly here.
-      default:
-        MOZ_ASSERT_UNREACHABLE("Invalid process type");
-        return 0;
-
-      // We reserve 1 for the main process as started by the launcher process.
-      // (See LauncherProcessWin.cpp.) Otherwise, we mostly match the process-
-      // type enumeration.
-      case GeckoProcessType_Content:
-        return 2;
-      case GeckoProcessType_Socket:
-        return 3;  // usurps IPDLUnitTest
-      case GeckoProcessType_GMPlugin:
-        return 4;
-      case GeckoProcessType_GPU:
-        return 5;
-      case GeckoProcessType_RemoteSandboxBroker:
-        return 6;  // usurps VR
-      case GeckoProcessType_RDD:
-        return 7;
-
-      case GeckoProcessType_Utility: {
-        // Continue the enumeration, using the SandboxingKind as a
-        // probably-passably-precise proxy for the process's purpose.
-        //
-        // (On Win10 and earlier, or when sandboxing is not used, this will lump
-        // all utility processes into slot 8.)
-#  ifndef MOZ_SANDBOX
-        size_t const val = 0;
-#  else
-        size_t const val = static_cast<size_t>(mSandbox);
-#  endif
-        return std::min(kMaxSlotNo, 8 + val);
-      }
-
-      // These process types are started so rarely that we're not concerned
-      // about their interaction with the prefetch cache. Lump them together at
-      // the end (possibly alongside other process types).
-      case GeckoProcessType_IPDLUnitTest:
-      case GeckoProcessType_VR:
-        return kMaxSlotNo;
-    }
-  }();
-  MOZ_ASSERT(prefetchSlot <= kMaxSlotNo);
-
-  if (prefetchSlot == 0) {
-    // default; no explicit argument needed
-    return;
-  }
-
-  mCmdLine->AppendLooseValue(StringPrintf(L"/prefetch:%zu", prefetchSlot));
-}
-
 Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
   Result<Ok, LaunchError> aError = BaseProcessLauncher::DoSetup();
   if (aError.isErr()) {
@@ -1678,9 +1583,6 @@ Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
 
   // Process type
   mCmdLine->AppendLooseValue(UTF8ToWide(ChildProcessType()));
-
-  // Prefetch cache hint
-  AddApplicationPrefetchArgument();
 
 #  ifdef MOZ_SANDBOX
   if (mUseSandbox) {
