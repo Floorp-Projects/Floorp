@@ -46,6 +46,7 @@ use std::mem;
 use std::os::raw::{c_uint, c_void};
 use std::ptr;
 use std::slice;
+use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard, Weak};
 use std::time::{Duration, Instant};
@@ -65,6 +66,32 @@ const SAFE_MIN_LATENCY_FRAMES: u32 = 128;
 const SAFE_MAX_LATENCY_FRAMES: u32 = 512;
 
 const VPIO_IDLE_TIMEOUT: Duration = Duration::from_secs(10);
+
+const MACOS_KERNEL_MAJOR_VERSION_MONTEREY: u32 = 21;
+
+#[derive(Debug, PartialEq)]
+enum ParseMacOSKernelVersionError {
+    SysCtl,
+    Malformed,
+    Parsing,
+}
+
+fn macos_kernel_major_version() -> std::result::Result<u32, ParseMacOSKernelVersionError> {
+    let ver = whatsys::kernel_version();
+    if ver.is_none() {
+        return Err(ParseMacOSKernelVersionError::SysCtl);
+    }
+    let ver = ver.unwrap();
+    let major = ver.split('.').next();
+    if major.is_none() {
+        return Err(ParseMacOSKernelVersionError::Malformed);
+    }
+    let parsed_major = u32::from_str(major.unwrap());
+    if parsed_major.is_err() {
+        return Err(ParseMacOSKernelVersionError::Parsing);
+    }
+    Ok(parsed_major.unwrap())
+}
 
 bitflags! {
     #[allow(non_camel_case_types)]
@@ -3239,7 +3266,8 @@ impl<'ctx> CoreStreamData<'ctx> {
                 .prefs()
                 .contains(StreamPrefs::VOICE)
                 || self.should_force_vpio_for_input_device(&self.input_device))
-            && !self.should_block_vpio_for_device_pair(&self.input_device, &self.output_device);
+            && !self.should_block_vpio_for_device_pair(&self.input_device, &self.output_device)
+            && macos_kernel_major_version() != Ok(MACOS_KERNEL_MAJOR_VERSION_MONTEREY);
 
         let should_use_aggregate_device = {
             // It's impossible to create an aggregate device from an aggregate device, and it's
