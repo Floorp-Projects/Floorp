@@ -16,7 +16,7 @@ const fieldTemplates = {
       id: item.fieldId,
       name: item.fieldId,
       required: item.required,
-      value: item.value,
+      value: item.value ?? "",
     };
   },
   input(item) {
@@ -35,9 +35,7 @@ const fieldTemplates = {
   select(item) {
     return {
       tag: "select",
-      // Maps each option to an "option" element.
-      // Also set the selected option
-      children: [...item.options].map(([value, text]) => ({
+      children: item.options.map(({ value, text }) => ({
         tag: "option",
         selected: value === item.value,
         value,
@@ -149,6 +147,14 @@ const createFormLayoutFromRecord = (
   record = { country: FormAutofill.DEFAULT_REGION },
   l10nStrings = {}
 ) => {
+  // Always clear select values because they are not persisted between countries.
+  // For example from US with state NY, we don't want the address-level1 to be NY
+  // when changing to another country that doesn't have state options
+  const selects = formElement.querySelectorAll("select:not(#country)");
+  for (const select of selects) {
+    select.value = "";
+  }
+
   // Get old data to persist before clearing form
   const formData = getCurrentFormData();
   record = {
@@ -165,8 +171,18 @@ const createFormLayoutFromRecord = (
     formElement.appendChild(fieldElement);
   }
 
-  document.querySelector("#country").addEventListener("change", ev => {
-    record.country = ev.target.value;
-    createFormLayoutFromRecord(formElement, record, l10nStrings);
-  });
+  document.querySelector("#country").addEventListener(
+    "change",
+    ev =>
+      // Allow some time for the user to type
+      // before we set the new country and re-render
+      setTimeout(() => {
+        record.country = ev.target.value;
+        createFormLayoutFromRecord(formElement, record, l10nStrings);
+      }, 300),
+    { once: true }
+  );
+
+  // Used to notify tests that the form has been updated and is ready
+  window.dispatchEvent(new CustomEvent("FormReadyForTests"));
 };

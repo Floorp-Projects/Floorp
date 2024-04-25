@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* exported ManageAddresses, ManageCreditCards */
-
-"use strict";
-
 const EDIT_ADDRESS_URL = "chrome://formautofill/content/editAddress.xhtml";
 const EDIT_CREDIT_CARD_URL =
   "chrome://formautofill/content/editCreditCard.xhtml";
@@ -20,44 +16,44 @@ const { AutofillTelemetry } = ChromeUtils.importESModule(
   "resource://gre/modules/shared/AutofillTelemetry.sys.mjs"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
   formAutofillStorage: "resource://autofill/FormAutofillStorage.sys.mjs",
 });
 
-this.log = null;
-ChromeUtils.defineLazyGetter(this, "log", () =>
-  FormAutofill.defineLogGetter(this, "manageAddresses")
+ChromeUtils.defineLazyGetter(lazy, "log", () =>
+  FormAutofill.defineLogGetter(lazy, "manageAddresses")
 );
 
 ChromeUtils.defineLazyGetter(
-  this,
+  lazy,
   "l10n",
   () => new Localization(["	browser/preferences/formAutofill.ftl"], true)
 );
 
 class ManageRecords {
   constructor(subStorageName, elements) {
-    this._storageInitPromise = formAutofillStorage.initialize();
+    this._storageInitPromise = lazy.formAutofillStorage.initialize();
     this._subStorageName = subStorageName;
     this._elements = elements;
     this._newRequest = false;
     this._isLoadingRecords = false;
     this.prefWin = window.opener;
-    window.addEventListener("DOMContentLoaded", this, { once: true });
+    window.addEventListener("load", this, { once: true });
   }
 
   async init() {
     await this.loadRecords();
     this.attachEventListeners();
     // For testing only: Notify when the dialog is ready for interaction
-    window.dispatchEvent(new CustomEvent("FormReady"));
+    window.dispatchEvent(new CustomEvent("FormReadyForTests"));
   }
 
   uninit() {
-    log.debug("uninit");
+    lazy.log.debug("uninit");
     this.detachEventListeners();
     this._elements = null;
   }
@@ -78,7 +74,7 @@ class ManageRecords {
    */
   async getStorage() {
     await this._storageInitPromise;
-    return formAutofillStorage[this._subStorageName];
+    return lazy.formAutofillStorage[this._subStorageName];
   }
 
   /**
@@ -152,9 +148,9 @@ class ManageRecords {
    * Remove all existing record elements.
    */
   clearRecordElements() {
-    let parent = this._elements.records;
-    while (parent.lastChild) {
-      parent.removeChild(parent.lastChild);
+    const parentElement = this._elements.records;
+    while (parentElement.lastChild) {
+      parentElement.removeChild(parentElement.lastChild);
     }
   }
 
@@ -192,7 +188,7 @@ class ManageRecords {
    * @param  {number} selectedCount
    */
   updateButtonsStates(selectedCount) {
-    log.debug("updateButtonsStates:", selectedCount);
+    lazy.log.debug("updateButtonsStates:", selectedCount);
     if (selectedCount == 0) {
       this._elements.edit.setAttribute("disabled", "disabled");
       this._elements.remove.setAttribute("disabled", "disabled");
@@ -215,7 +211,7 @@ class ManageRecords {
    */
   handleEvent(event) {
     switch (event.type) {
-      case "DOMContentLoaded": {
+      case "load": {
         this.init();
         break;
       }
@@ -308,28 +304,28 @@ class ManageRecords {
   }
 }
 
-class ManageAddresses extends ManageRecords {
+export class ManageAddresses extends ManageRecords {
   telemetryType = AutofillTelemetry.ADDRESS;
 
   constructor(elements) {
     super("addresses", elements);
     elements.add.setAttribute(
       "search-l10n-ids",
-      FormAutofillUtils.EDIT_ADDRESS_L10N_IDS.join(",")
+      lazy.FormAutofillUtils.EDIT_ADDRESS_L10N_IDS.join(",")
     );
     AutofillTelemetry.recordManageEvent(this.telemetryType, "show");
   }
 
-  getAddressL10nStrings() {
+  static getAddressL10nStrings() {
     const l10nIds = [
-      ...FormAutofillUtils.MANAGE_ADDRESSES_L10N_IDS,
-      ...FormAutofillUtils.EDIT_ADDRESS_L10N_IDS,
+      ...lazy.FormAutofillUtils.MANAGE_ADDRESSES_L10N_IDS,
+      ...lazy.FormAutofillUtils.EDIT_ADDRESS_L10N_IDS,
     ];
 
     return l10nIds.reduce(
       (acc, id) => ({
         ...acc,
-        [id]: l10n.formatValueSync(id),
+        [id]: lazy.l10n.formatValueSync(id),
       }),
       {}
     );
@@ -346,23 +342,23 @@ class ManageAddresses extends ManageRecords {
       // Don't validate in preferences since it's fine for fields to be missing
       // for autofill purposes. For PaymentRequest addresses get more validation.
       noValidate: true,
-      l10nStrings: this.getAddressL10nStrings(),
+      l10nStrings: ManageAddresses.getAddressL10nStrings(),
     });
   }
 
   getLabelInfo(address) {
-    return { raw: FormAutofillUtils.getAddressLabel(address) };
+    return { raw: lazy.FormAutofillUtils.getAddressLabel(address) };
   }
 }
 
-class ManageCreditCards extends ManageRecords {
+export class ManageCreditCards extends ManageRecords {
   telemetryType = AutofillTelemetry.CREDIT_CARD;
 
   constructor(elements) {
     super("creditCards", elements);
     elements.add.setAttribute(
       "search-l10n-ids",
-      FormAutofillUtils.EDIT_CREDITCARD_L10N_IDS.join(",")
+      lazy.FormAutofillUtils.EDIT_CREDITCARD_L10N_IDS.join(",")
     );
 
     this._isDecrypted = false;
@@ -377,13 +373,15 @@ class ManageCreditCards extends ManageRecords {
   async openEditDialog(creditCard) {
     // Ask for reauth if user is trying to edit an existing credit card.
     if (creditCard) {
-      const promptMessage = FormAutofillUtils.reauthOSPromptMessage(
+      const promptMessage = lazy.FormAutofillUtils.reauthOSPromptMessage(
         "autofill-edit-payment-method-os-prompt-macos",
         "autofill-edit-payment-method-os-prompt-windows",
         "autofill-edit-payment-method-os-prompt-other"
       );
 
-      const loggedIn = await FormAutofillUtils.ensureLoggedIn(promptMessage);
+      const loggedIn = await lazy.FormAutofillUtils.ensureLoggedIn(
+        promptMessage
+      );
       if (!loggedIn.authenticated) {
         return;
       }
@@ -392,7 +390,7 @@ class ManageCreditCards extends ManageRecords {
     let decryptedCCNumObj = {};
     if (creditCard && creditCard["cc-number-encrypted"]) {
       try {
-        decryptedCCNumObj["cc-number"] = await OSKeyStore.decrypt(
+        decryptedCCNumObj["cc-number"] = await lazy.OSKeyStore.decrypt(
           creditCard["cc-number-encrypted"]
         );
       } catch (ex) {
@@ -432,11 +430,11 @@ class ManageCreditCards extends ManageRecords {
     // Since the text content is generated by Fluent, aria-label must be
     // generated by Fluent also.
     const type = creditCard["cc-type"];
-    const typeL10nId = CreditCard.getNetworkL10nId(type);
+    const typeL10nId = lazy.CreditCard.getNetworkL10nId(type);
     const typeName = typeL10nId
       ? await document.l10n.formatValue(typeL10nId)
       : type ?? ""; // Unknown card type
-    return CreditCard.getLabelInfo({
+    return lazy.CreditCard.getLabelInfo({
       name: creditCard["cc-name"],
       number: creditCard["cc-number"],
       month: creditCard["cc-exp-month"],

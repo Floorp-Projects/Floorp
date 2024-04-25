@@ -1,5 +1,9 @@
 "use strict";
 
+const { ManageAddresses } = ChromeUtils.importESModule(
+  "chrome://formautofill/content/manageDialog.mjs"
+);
+
 const { OSKeyStore } = ChromeUtils.importESModule(
   "resource://gre/modules/OSKeyStore.sys.mjs"
 );
@@ -822,7 +826,7 @@ async function removeAllRecords() {
 async function waitForFocusAndFormReady(win) {
   return Promise.all([
     new Promise(resolve => waitForFocus(resolve, win)),
-    BrowserTestUtils.waitForEvent(win, "FormReady"),
+    BrowserTestUtils.waitForEvent(win, "FormReadyForTests"),
   ]);
 }
 
@@ -855,9 +859,12 @@ async function testDialog(url, testFn, arg = undefined) {
       "cc-number": await OSKeyStore.decrypt(arg.record["cc-number-encrypted"]),
     });
   }
-  let win = window.openDialog(url, null, "width=600,height=600", arg);
+  const win = window.openDialog(url, null, "width=600,height=600", {
+    ...arg,
+    l10nStrings: ManageAddresses.getAddressL10nStrings(),
+  });
   await waitForFocusAndFormReady(win);
-  let unloadPromise = BrowserTestUtils.waitForEvent(win, "unload");
+  const unloadPromise = BrowserTestUtils.waitForEvent(win, "unload");
   await testFn(win);
   return unloadPromise;
 }
