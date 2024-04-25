@@ -255,6 +255,10 @@ bool GPUParent::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   DeviceManagerDx::Init();
   GpuProcessD3D11TextureMap::Init();
   GpuProcessD3D11QueryMap::Init();
+  auto rv = wmf::MediaFoundationInitializer::HasInitialized();
+  if (!rv) {
+    NS_WARNING("Failed to init Media Foundation in the GPU process");
+  }
 #endif
 
   CompositorThreadHolder::Start();
