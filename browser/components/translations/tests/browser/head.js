@@ -383,6 +383,24 @@ class SharedTranslationsTestUtils {
   }
 
   /**
+   * Asserts that the given elements are focusable in order
+   * via the tab key, starting with the first element already
+   * focused and ending back on that same first element.
+   *
+   * @param {Element[]} elements - The focusable elements.
+   */
+  static _assertTabIndexOrder(elements) {
+    if (elements.length) {
+      elements[0].focus();
+      elements.push(elements[0]);
+    }
+    for (const element of elements) {
+      SharedTranslationsTestUtils._assertHasFocus(element);
+      EventUtils.synthesizeKey("KEY_Tab");
+    }
+  }
+
+  /**
    * Executes the provided callback before waiting for the event and then waits for the given event
    * to be fired for the element corresponding to the provided elementId.
    *
@@ -1572,8 +1590,16 @@ class SelectTranslationsTestUtils {
    * state when the panel has completed its translation.
    */
   static async assertPanelViewTranslated() {
-    const { textArea, copyButton, fromMenuList, toMenuList } =
-      SelectTranslationsPanel.elements;
+    const {
+      copyButton,
+      doneButton,
+      fromMenuList,
+      settingsButton,
+      textArea,
+      toMenuList,
+      translateFullPageButton,
+    } = SelectTranslationsPanel.elements;
+    const sameLanguageSelected = fromMenuList.value === toMenuList.value;
     await SelectTranslationsTestUtils.waitForPanelState("translated");
     ok(
       !textArea.classList.contains("translating"),
@@ -1597,7 +1623,7 @@ class SelectTranslationsTestUtils {
       copyButton: true,
       doneButton: true,
       textArea: true,
-      translateFullPageButton: fromMenuList.value !== toMenuList.value,
+      translateFullPageButton: !sameLanguageSelected,
     });
 
     await waitForCondition(
@@ -1611,6 +1637,15 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertPanelHasTranslatedText();
     SelectTranslationsTestUtils.#assertPanelTextAreaHeight();
     await SelectTranslationsTestUtils.#assertPanelTextAreaOverflow();
+    SharedTranslationsTestUtils._assertTabIndexOrder([
+      textArea,
+      copyButton,
+      ...(sameLanguageSelected ? [] : [translateFullPageButton]),
+      doneButton,
+      settingsButton,
+      fromMenuList,
+      toMenuList,
+    ]);
   }
 
   /**
@@ -1618,6 +1653,8 @@ class SelectTranslationsTestUtils {
    * state when the language lists fail to initialize upon opening the panel.
    */
   static async assertPanelViewInitFailure() {
+    const { cancelButton, settingsButton, tryAgainButton } =
+      SelectTranslationsPanel.elements;
     await SelectTranslationsTestUtils.waitForPanelState("init-failure");
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       header: true,
@@ -1628,6 +1665,11 @@ class SelectTranslationsTestUtils {
       settingsButton: true,
       tryAgainButton: true,
     });
+    SharedTranslationsTestUtils._assertTabIndexOrder([
+      tryAgainButton,
+      settingsButton,
+      cancelButton,
+    ]);
   }
 
   /**
@@ -1635,6 +1677,13 @@ class SelectTranslationsTestUtils {
    * state when a translation has failed to complete.
    */
   static async assertPanelViewTranslationFailure() {
+    const {
+      cancelButton,
+      fromMenuList,
+      settingsButton,
+      toMenuList,
+      tryAgainButton,
+    } = SelectTranslationsPanel.elements;
     await SelectTranslationsTestUtils.waitForPanelState("translation-failure");
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       header: true,
@@ -1649,6 +1698,18 @@ class SelectTranslationsTestUtils {
       translationFailureMessageBar: true,
       tryAgainButton: true,
     });
+    is(
+      document.activeElement,
+      tryAgainButton,
+      "The try-again button should have focus."
+    );
+    SharedTranslationsTestUtils._assertTabIndexOrder([
+      tryAgainButton,
+      settingsButton,
+      fromMenuList,
+      toMenuList,
+      cancelButton,
+    ]);
   }
 
   static #assertPanelTextAreaDirection(langTag = null) {
@@ -1672,6 +1733,8 @@ class SelectTranslationsTestUtils {
   static async assertPanelViewUnsupportedLanguage() {
     await SelectTranslationsTestUtils.waitForPanelState("unsupported");
     const {
+      doneButton,
+      settingsButton,
       translateButton,
       tryAnotherSourceMenuList,
       unsupportedLanguageMessageBar,
@@ -1699,6 +1762,11 @@ class SelectTranslationsTestUtils {
       "select-translations-panel-unsupported-language-message-known"
     );
     SharedTranslationsTestUtils._assertHasFocus(tryAnotherSourceMenuList);
+    SharedTranslationsTestUtils._assertTabIndexOrder([
+      tryAnotherSourceMenuList,
+      doneButton,
+      settingsButton,
+    ]);
   }
 
   /**
@@ -1986,9 +2054,22 @@ class SelectTranslationsTestUtils {
     viewAssertion,
   }) {
     logAction();
-    const { translateButton } = SelectTranslationsPanel.elements;
+    const {
+      doneButton,
+      settingsButton,
+      translateButton,
+      tryAnotherSourceMenuList,
+    } = SelectTranslationsPanel.elements;
     assertVisibility({ visible: { doneButton: translateButton } });
+
     ok(!translateButton.disabled, "The translate button should be enabled.");
+    SharedTranslationsTestUtils._assertTabIndexOrder([
+      tryAnotherSourceMenuList,
+      doneButton,
+      translateButton,
+      settingsButton,
+    ]);
+
     click(translateButton);
     await SelectTranslationsTestUtils.waitForPanelState("translatable");
     if (downloadHandler) {
