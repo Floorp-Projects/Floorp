@@ -276,6 +276,24 @@ bool CopyingStructuredCloneWriteCallback(JSContext* aCx,
                                                               aObj);
 }
 
+nsresult ensureCorrectDataCloneError(JSContext* aCx) {
+  // If JS threw a data cloning error, it will be a TypeError, not a
+  // DataCloneError as expected. Clear these and throw the right exception.
+  // But if JS threw another, non-data-cloning error, let it through.
+  if (JS_IsExceptionPending(aCx)) {
+    JS::Rooted<JS::Value> exn(aCx);
+    if (JS_GetPendingException(aCx, &exn)) {
+      JS::Rooted<JSObject*> obj(aCx, &exn.toObject());
+      JSErrorReport* err = JS_ErrorFromException(aCx, obj);
+      if (err->errorNumber == JSMSG_SC_NOT_CLONABLE ||
+          err->errorNumber == JSMSG_SC_NOT_CLONABLE_WITH_COOP_COEP) {
+        JS_ClearPendingException(aCx);
+      }
+    }
+  }
+  return NS_ERROR_DOM_DATA_CLONE_ERR;
+}
+
 nsresult GetAddInfoCallback(JSContext* aCx, void* aClosure) {
   static const JSStructuredCloneCallbacks kStructuredCloneCallbacks = {
       nullptr /* read */,          StructuredCloneWriteCallback /* write */,
@@ -294,7 +312,7 @@ nsresult GetAddInfoCallback(JSContext* aCx, void* aClosure) {
   if (!data->mCloneWriteInfo.mCloneBuffer.write(aCx, data->mValue,
                                                 &kStructuredCloneCallbacks,
                                                 &data->mCloneWriteInfo)) {
-    return NS_ERROR_DOM_DATA_CLONE_ERR;
+    return ensureCorrectDataCloneError(aCx);
   }
 
   return NS_OK;
@@ -604,7 +622,7 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
     }
   } else if (!isAutoIncrement) {
     if (!aValueWrapper.Clone(aCx)) {
-      aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+      aRv.Throw(ensureCorrectDataCloneError(aCx));
       return;
     }
 
@@ -624,7 +642,7 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
   // Figure out indexes and the index values to update here.
 
   if (mSpec->indexes().Length() && !aValueWrapper.Clone(aCx)) {
-    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    aRv.Throw(ensureCorrectDataCloneError(aCx));
     return;
   }
 
@@ -664,7 +682,7 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
 
   if (isAutoIncrement && HasValidKeyPath()) {
     if (!aValueWrapper.Clone(aCx)) {
-      aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+      aRv.Throw(ensureCorrectDataCloneError(aCx));
       return;
     }
 
