@@ -19,6 +19,8 @@ add_task(async function () {
 
   const button = toggleButton(dbg);
   ok(!button, "toggle button shouldn't be there");
+
+  await resume(dbg);
 });
 
 add_task(async function () {
@@ -53,9 +55,13 @@ add_task(async function () {
   const found = findElement(dbg, "callStackBody");
   is(found, null, "Call stack is hidden");
 
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
-    content.document.querySelector("button.pause").click();
-  });
+  const pausedContent = SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    function () {
+      content.document.querySelector("button.pause").click();
+    }
+  );
 
   await waitForPaused(dbg);
   const $group = findElementWithSelector(dbg, ".frames .frames-group");
@@ -69,6 +75,11 @@ add_task(async function () {
     "Angular",
     "Group has expected location"
   );
+
+  await resume(dbg);
+
+  info("Wait for content to be resumed");
+  await pausedContent;
 });
 
 function toggleButton(dbg) {

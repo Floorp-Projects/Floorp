@@ -2,6 +2,148 @@
   "data": [
     {
       "click": {
+        "optIn": "#accept-btn",
+        "optOut": "#decline-btn",
+        "presence": "#privacy-manager-popin"
+      },
+      "schema": 1713199742998,
+      "domains": [
+        "canalplus.com"
+      ],
+      "id": "7b2e3401-697f-440a-b418-8477fcf2cfeb",
+      "last_modified": 1713281881442
+    },
+    {
+      "click": {
+        "optIn": "button#didomi-notice-agree-button",
+        "optOut": "button#didomi-notice-disagree-button",
+        "presence": "div#didomi-host"
+      },
+      "schema": 1713199742998,
+      "cookies": {},
+      "domains": [
+        "doctolib.fr",
+        "pravda.sk",
+        "topky.sk",
+        "zoznam.sk",
+        "tvnoviny.sk",
+        "aukro.cz",
+        "krone.at",
+        "cas.sk",
+        "heureka.sk",
+        "free.fr",
+        "markiza.sk",
+        "willhaben.at",
+        "francetvinfo.fr",
+        "france.tv",
+        "france24.com",
+        "opodo.at",
+        "opodo.ch",
+        "opodo.co.uk",
+        "opodo.de",
+        "opodo.dk",
+        "opodo.fi",
+        "opodo.fr",
+        "opodo.it",
+        "opodo.nl",
+        "opodo.no",
+        "opodo.pl",
+        "opodo.pt",
+        "radiofrance.fr",
+        "rfi.fr",
+        "rtl.fr",
+        "blablacar.fr",
+        "6play.fr",
+        "marianne.net"
+      ],
+      "id": "690aa076-4a8b-48ec-b52c-1443d44ff008",
+      "last_modified": 1713281881438
+    },
+    {
+      "click": {
+        "optIn": "button#onetrust-accept-btn-handler",
+        "optOut": "button.onetrust-close-btn-handler",
+        "presence": "div#onetrust-consent-sdk"
+      },
+      "schema": 1713199742998,
+      "cookies": {},
+      "domains": [
+        "darty.com",
+        "e.leclerc",
+        "fnac.be",
+        "fnac.ch",
+        "fnac.com",
+        "fnac.pt",
+        "leclercdrive.fr",
+        "mondialrelay.fr",
+        "pasteur.fr"
+      ],
+      "id": "2d821158-5945-4134-a078-56c6da4f678d",
+      "last_modified": 1713281881435
+    },
+    {
+      "click": {
+        "optIn": "#popin_tc_privacy_button_3",
+        "optOut": "#popin_tc_privacy_button_2",
+        "presence": "#tc-privacy-wrapper"
+      },
+      "schema": 1713199742998,
+      "domains": [
+        "bouyguestelecom.fr",
+        "enedis.fr",
+        "fortuneo.fr",
+        "lcl.fr",
+        "tf1.fr",
+        "tf1info.fr"
+      ],
+      "id": "98D89E26-F4B6-4C2D-BABF-4295B922E433",
+      "last_modified": 1713281881431
+    },
+    {
+      "click": {
+        "optIn": ".btn-ok",
+        "optOut": ".btn-reject",
+        "presence": "#cookie-policy-info"
+      },
+      "schema": 1713199742998,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "isReadCookiePolicyDNT",
+            "value": "No"
+          },
+          {
+            "name": "isReadCookiePolicyDNTAa",
+            "value": "false"
+          }
+        ]
+      },
+      "domains": [
+        "asus.com"
+      ],
+      "id": "8c949b75-4c7b-4559-8ade-780064af370a",
+      "last_modified": 1713281881428
+    },
+    {
+      "click": {
+        "optOut": ".sp_choice_type_13",
+        "presence": ".message-container > #notice",
+        "runContext": "child"
+      },
+      "schema": 1713199742998,
+      "cookies": {},
+      "domains": [
+        "aktuality.sk",
+        "sky.it",
+        "azet.sk",
+        "bloomberg.com",
+        "formula1.com"
+      ],
+      "id": "ae8f7761-35ff-45b2-92df-7868ca288ad2",
+      "last_modified": 1713281881424
+    },
+    {
+      "click": {
         "optIn": "#c-bns #c-p-bn",
         "optOut": "#c-bns button.grey",
         "presence": "#cm"
@@ -420,70 +562,6 @@
     },
     {
       "click": {
-        "optIn": "button#didomi-notice-agree-button",
-        "optOut": "button#didomi-notice-disagree-button",
-        "presence": "div#didomi-host"
-      },
-      "schema": 1711039008141,
-      "cookies": {},
-      "domains": [
-        "doctolib.fr",
-        "pravda.sk",
-        "topky.sk",
-        "zoznam.sk",
-        "tvnoviny.sk",
-        "aukro.cz",
-        "krone.at",
-        "cas.sk",
-        "heureka.sk",
-        "free.fr",
-        "markiza.sk",
-        "willhaben.at",
-        "francetvinfo.fr",
-        "france.tv",
-        "france24.com",
-        "opodo.at",
-        "opodo.ch",
-        "opodo.co.uk",
-        "opodo.de",
-        "opodo.dk",
-        "opodo.fi",
-        "opodo.fr",
-        "opodo.it",
-        "opodo.nl",
-        "opodo.no",
-        "opodo.pl",
-        "opodo.pt",
-        "radiofrance.fr",
-        "rfi.fr",
-        "blablacar.fr",
-        "6play.fr"
-      ],
-      "id": "690aa076-4a8b-48ec-b52c-1443d44ff008",
-      "last_modified": 1711550955075
-    },
-    {
-      "click": {
-        "optIn": "button#onetrust-accept-btn-handler",
-        "optOut": "button.onetrust-close-btn-handler",
-        "presence": "div#onetrust-consent-sdk"
-      },
-      "schema": 1711039008141,
-      "cookies": {},
-      "domains": [
-        "e.leclerc",
-        "fnac.be",
-        "fnac.ch",
-        "fnac.com",
-        "fnac.pt",
-        "leclercdrive.fr",
-        "mondialrelay.fr"
-      ],
-      "id": "2d821158-5945-4134-a078-56c6da4f678d",
-      "last_modified": 1711550955071
-    },
-    {
-      "click": {
         "optIn": "#popin_tc_privacy_button",
         "optOut": "#popin_tc_privacy_button_3",
         "presence": "#tc-privacy-wrapper"
@@ -497,23 +575,6 @@
       ],
       "id": "43ad2b6b-a57b-4f7a-9d76-e32e696ddc10",
       "last_modified": 1711550955067
-    },
-    {
-      "click": {
-        "optIn": "#popin_tc_privacy_button_3",
-        "optOut": "#popin_tc_privacy_button_2",
-        "presence": "#tc-privacy-wrapper"
-      },
-      "schema": 1711039008141,
-      "domains": [
-        "bouyguestelecom.fr",
-        "enedis.fr",
-        "fortuneo.fr",
-        "lcl.fr",
-        "tf1.fr"
-      ],
-      "id": "98D89E26-F4B6-4C2D-BABF-4295B922E433",
-      "last_modified": 1711550955063
     },
     {
       "click": {
@@ -783,23 +844,6 @@
       ],
       "id": "d42bbaee-f96e-47e7-8e81-efc642518e97",
       "last_modified": 1710331175368
-    },
-    {
-      "click": {
-        "optOut": ".sp_choice_type_13",
-        "presence": ".message-container > #notice",
-        "runContext": "child"
-      },
-      "schema": 1710174339269,
-      "cookies": {},
-      "domains": [
-        "aktuality.sk",
-        "sky.it",
-        "azet.sk",
-        "bloomberg.com"
-      ],
-      "id": "ae8f7761-35ff-45b2-92df-7868ca288ad2",
-      "last_modified": 1710331175359
     },
     {
       "click": {
@@ -1248,19 +1292,6 @@
       ],
       "id": "a2404864-0163-4f71-ab4c-915713f8f349",
       "last_modified": 1708772697167
-    },
-    {
-      "click": {
-        "optIn": ".btn-ok",
-        "optOut": ".btn-reject",
-        "presence": "#cookie-policy-info"
-      },
-      "schema": 1708699541450,
-      "domains": [
-        "asus.com"
-      ],
-      "id": "8c949b75-4c7b-4559-8ade-780064af370a",
-      "last_modified": 1708772697161
     },
     {
       "click": {
@@ -9366,5 +9397,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1711550955136
+  "timestamp": 1713281881442
 }

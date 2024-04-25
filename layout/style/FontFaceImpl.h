@@ -10,7 +10,7 @@
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/RWLock.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "gfxUserFontSet.h"
 #include "nsCSSPropertyID.h"
@@ -50,21 +50,15 @@ class FontFaceImpl final {
     Entry(gfxUserFontSet* aFontSet, nsTArray<gfxFontFaceSrc>&& aFontFaceSrcList,
           gfxUserFontAttributes&& aAttr)
         : gfxUserFontEntry(std::move(aFontFaceSrcList), std::move(aAttr)),
-          mMutex("FontFaceImpl::Entry::mMutex"),
           mFontSet(aFontSet) {}
 
     void SetLoadState(UserFontLoadState aLoadState) override;
     void GetUserFontSets(nsTArray<RefPtr<gfxUserFontSet>>& aResult) override;
     already_AddRefed<gfxUserFontSet> GetUserFontSet() const override;
 
-    void CheckUserFontSet() {
-      MutexAutoLock lock(mMutex);
-      CheckUserFontSetLocked();
-    }
-
 #ifdef DEBUG
     bool HasUserFontSet(gfxUserFontSet* aFontSet) const {
-      MutexAutoLock lock(mMutex);
+      AutoReadLock lock(mLock);
       return mFontSet == aFontSet;
     }
 #endif
@@ -73,19 +67,19 @@ class FontFaceImpl final {
     void RemoveFontFace(FontFaceImpl* aOwner);
     void FindFontFaceOwners(nsTHashSet<FontFace*>& aOwners);
 
-   protected:
-    void CheckUserFontSetLocked() MOZ_REQUIRES(mMutex);
+    RWLock& Lock() const MOZ_RETURN_CAPABILITY(mLock) { return mLock; }
 
-    mutable Mutex mMutex;
+   protected:
+    void CheckUserFontSetLocked() MOZ_REQUIRES(mLock);
 
     // Font set which owns this entry;
-    gfxUserFontSet* MOZ_NON_OWNING_REF mFontSet MOZ_GUARDED_BY(mMutex);
+    gfxUserFontSet* MOZ_NON_OWNING_REF mFontSet MOZ_GUARDED_BY(mLock);
 
     // The FontFace objects that use this user font entry.  We need to store
     // an array of these, not just a single pointer, since the user font
     // cache can return the same entry for different FontFaces that have
     // the same descriptor values and come from the same origin.
-    AutoTArray<FontFaceImpl*, 1> mFontFaces MOZ_GUARDED_BY(mMutex);
+    AutoTArray<FontFaceImpl*, 1> mFontFaces MOZ_GUARDED_BY(mLock);
   };
 
 #ifdef DEBUG

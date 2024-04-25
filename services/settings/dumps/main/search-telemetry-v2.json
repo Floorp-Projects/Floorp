@@ -1,7 +1,81 @@
 {
   "data": [
     {
-      "schema": 1711474853858,
+      "isSPA": true,
+      "schema": 1712762409532,
+      "components": [
+        {
+          "type": "ad_image_row",
+          "included": {
+            "parent": {
+              "selector": "[data-testid='pam.container']"
+            },
+            "children": [
+              {
+                "selector": "[data-slide-index]",
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_link",
+          "included": {
+            "parent": {
+              "selector": "[data-testid='adResult']"
+            }
+          }
+        },
+        {
+          "type": "incontent_searchbox",
+          "topDown": true,
+          "included": {
+            "parent": {
+              "selector": "._1zdrb._1cR1n"
+            },
+            "related": {
+              "selector": "#search-suggestions"
+            },
+            "children": [
+              {
+                "selector": "input[type='search']"
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_link",
+          "default": true
+        }
+      ],
+      "taggedCodes": [
+        "brz-moz",
+        "firefoxqwant"
+      ],
+      "telemetryId": "qwant",
+      "organicCodes": [],
+      "codeParamName": "client",
+      "queryParamName": "q",
+      "queryParamNames": [
+        "q"
+      ],
+      "searchPageRegexp": "^https://www\\.qwant\\.com/",
+      "filter_expression": "env.version|versionCompare(\"124.0a1\")>=0",
+      "followOnParamNames": [],
+      "defaultPageQueryParam": {
+        "key": "t",
+        "value": "web"
+      },
+      "extraAdServersRegexps": [
+        "^https://www\\.bing\\.com/acli?c?k",
+        "^https://api\\.qwant\\.com/v3/r/",
+        "^https://fdn\\.qwant\\.com/v3/r/"
+      ],
+      "id": "19c434a3-d173-4871-9743-290ac92a3f6b",
+      "last_modified": 1713187389066
+    },
+    {
+      "schema": 1712582517430,
       "components": [
         {
           "type": "ad_carousel",
@@ -155,6 +229,20 @@
       "queryParamNames": [
         "q"
       ],
+      "domainExtraction": {
+        "ads": [
+          {
+            "method": "textContent",
+            "selectors": "#b_results .b_ad .b_attribution cite, .adsMvCarousel cite, aside cite"
+          }
+        ],
+        "nonAds": [
+          {
+            "method": "textContent",
+            "selectors": "#b_results .b_algo .b_attribution cite"
+          }
+        ]
+      },
       "searchPageRegexp": "^https://www\\.bing\\.com/search",
       "nonAdsLinkRegexps": [
         "^https://www.bing.com/ck/a"
@@ -163,10 +251,10 @@
         "^https://www\\.bing\\.com/acli?c?k"
       ],
       "id": "e1eec461-f1f3-40de-b94b-3b670b78108c",
-      "last_modified": 1711574102228
+      "last_modified": 1712762409389
     },
     {
-      "schema": 1711137332320,
+      "schema": 1712243919540,
       "components": [
         {
           "type": "ad_carousel",
@@ -180,6 +268,23 @@
             "children": [
               {
                 "selector": "[data-dtld]",
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_carousel",
+          "included": {
+            "parent": {
+              "selector": ".sh-sr__shop-result-group"
+            },
+            "related": {
+              "selector": "g-right-button, g-left-button"
+            },
+            "children": [
+              {
+                "selector": ".sh-np__click-target",
                 "countChildren": true
               }
             ]
@@ -368,10 +473,6 @@
               "dataAttributeKey": "dtld"
             },
             "selectors": "[data-dtld]"
-          },
-          {
-            "method": "href",
-            "selectors": "a.x0Sesd"
           }
         ],
         "nonAds": [
@@ -388,8 +489,11 @@
             "selectors": "a[jsname='UWckNb']"
           },
           {
-            "method": "href",
-            "selectors": "a.iGVLpd"
+            "method": "dataAttribute",
+            "options": {
+              "dataAttributeKey": "lpage"
+            },
+            "selectors": "[data-id='mosaic'] [data-lpage]"
           }
         ]
       },
@@ -411,81 +515,11 @@
       "extraAdServersRegexps": [
         "^https?://www\\.google(?:adservices)?\\.com/(?:pagead/)?aclk"
       ],
+      "nonAdsLinkQueryParamNames": [
+        "url"
+      ],
       "id": "635a3325-1995-42d6-be09-dbe4b2a95453",
-      "last_modified": 1711574102225
-    },
-    {
-      "isSPA": true,
-      "schema": 1707523204491,
-      "components": [
-        {
-          "type": "ad_image_row",
-          "included": {
-            "parent": {
-              "selector": "[data-testid='pam.container']"
-            },
-            "children": [
-              {
-                "selector": "[data-slide-index]",
-                "countChildren": true
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_link",
-          "included": {
-            "parent": {
-              "selector": "[data-testid='adResult']"
-            }
-          }
-        },
-        {
-          "type": "incontent_searchbox",
-          "topDown": true,
-          "included": {
-            "parent": {
-              "selector": "._1zdrb._1cR1n"
-            },
-            "related": {
-              "selector": "#search-suggestions"
-            },
-            "children": [
-              {
-                "selector": "input[type='search']"
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_link",
-          "default": true
-        }
-      ],
-      "taggedCodes": [
-        "brz-moz",
-        "firefoxqwant"
-      ],
-      "telemetryId": "qwant",
-      "organicCodes": [],
-      "codeParamName": "client",
-      "queryParamName": "q",
-      "queryParamNames": [
-        "q"
-      ],
-      "searchPageRegexp": "^https://www\\.qwant\\.com/",
-      "filter_expression": "env.version|versionCompare(\"124.0a1\")>=0",
-      "followOnParamNames": [],
-      "defaultPageQueryParam": {
-        "key": "t",
-        "value": "web"
-      },
-      "extraAdServersRegexps": [
-        "^https://www\\.bing\\.com/acli?c?k",
-        "^https://api\\.qwant\\.com/v3/r/"
-      ],
-      "id": "19c434a3-d173-4871-9743-290ac92a3f6b",
-      "last_modified": 1707833261849
+      "last_modified": 1712582517281
     },
     {
       "schema": 1705363206938,
@@ -752,5 +786,5 @@
       "last_modified": 1698666532324
     }
   ],
-  "timestamp": 1711574102228
+  "timestamp": 1713187389066
 }

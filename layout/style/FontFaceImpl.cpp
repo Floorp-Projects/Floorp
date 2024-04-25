@@ -676,25 +676,40 @@ bool FontFaceImpl::IsInFontFaceSet(FontFaceSetImpl* aFontFaceSet) const {
 void FontFaceImpl::AddFontFaceSet(FontFaceSetImpl* aFontFaceSet) {
   MOZ_ASSERT(!IsInFontFaceSet(aFontFaceSet));
 
-  if (mFontFaceSet == aFontFaceSet) {
-    mInFontFaceSet = true;
+  auto doAddFontFaceSet = [&]() {
+    if (mFontFaceSet == aFontFaceSet) {
+      mInFontFaceSet = true;
+    } else {
+      mOtherFontFaceSets.AppendElement(aFontFaceSet);
+    }
+  };
+
+  if (mUserFontEntry) {
+    AutoWriteLock lock(mUserFontEntry->Lock());
+    doAddFontFaceSet();
   } else {
-    mOtherFontFaceSets.AppendElement(aFontFaceSet);
+    doAddFontFaceSet();
   }
 }
 
 void FontFaceImpl::RemoveFontFaceSet(FontFaceSetImpl* aFontFaceSet) {
   MOZ_ASSERT(IsInFontFaceSet(aFontFaceSet));
 
-  if (mFontFaceSet == aFontFaceSet) {
-    mInFontFaceSet = false;
-  } else {
-    mOtherFontFaceSets.RemoveElement(aFontFaceSet);
-  }
+  auto doRemoveFontFaceSet = [&]() {
+    if (mFontFaceSet == aFontFaceSet) {
+      mInFontFaceSet = false;
+    } else {
+      mOtherFontFaceSets.RemoveElement(aFontFaceSet);
+    }
+  };
 
-  // The caller should be holding a strong reference to the FontFaceSetImpl.
   if (mUserFontEntry) {
-    mUserFontEntry->CheckUserFontSet();
+    AutoWriteLock lock(mUserFontEntry->Lock());
+    doRemoveFontFaceSet();
+    // The caller should be holding a strong reference to the FontFaceSetImpl.
+    mUserFontEntry->CheckUserFontSetLocked();
+  } else {
+    doRemoveFontFaceSet();
   }
 }
 
@@ -737,7 +752,7 @@ void FontFaceImpl::Entry::SetLoadState(UserFontLoadState aLoadState) {
 
   nsTArray<RefPtr<FontFaceImpl>> fontFaces;
   {
-    MutexAutoLock lock(mMutex);
+    AutoReadLock lock(mLock);
     fontFaces.SetCapacity(mFontFaces.Length());
     for (FontFaceImpl* f : mFontFaces) {
       fontFaces.AppendElement(f);
@@ -759,7 +774,7 @@ void FontFaceImpl::Entry::SetLoadState(UserFontLoadState aLoadState) {
 /* virtual */
 void FontFaceImpl::Entry::GetUserFontSets(
     nsTArray<RefPtr<gfxUserFontSet>>& aResult) {
-  MutexAutoLock lock(mMutex);
+  AutoReadLock lock(mLock);
 
   aResult.Clear();
 
@@ -784,7 +799,7 @@ void FontFaceImpl::Entry::GetUserFontSets(
 
 /* virtual */ already_AddRefed<gfxUserFontSet>
 FontFaceImpl::Entry::GetUserFontSet() const {
-  MutexAutoLock lock(mMutex);
+  AutoReadLock lock(mLock);
   if (mFontSet) {
     return do_AddRef(mFontSet);
   }
@@ -817,7 +832,7 @@ void FontFaceImpl::Entry::CheckUserFontSetLocked() {
 }
 
 void FontFaceImpl::Entry::FindFontFaceOwners(nsTHashSet<FontFace*>& aOwners) {
-  MutexAutoLock lock(mMutex);
+  AutoReadLock lock(mLock);
   for (FontFaceImpl* f : mFontFaces) {
     if (FontFace* owner = f->GetOwner()) {
       aOwners.Insert(owner);
@@ -826,13 +841,13 @@ void FontFaceImpl::Entry::FindFontFaceOwners(nsTHashSet<FontFace*>& aOwners) {
 }
 
 void FontFaceImpl::Entry::AddFontFace(FontFaceImpl* aFontFace) {
-  MutexAutoLock lock(mMutex);
+  AutoWriteLock lock(mLock);
   mFontFaces.AppendElement(aFontFace);
   CheckUserFontSetLocked();
 }
 
 void FontFaceImpl::Entry::RemoveFontFace(FontFaceImpl* aFontFace) {
-  MutexAutoLock lock(mMutex);
+  AutoWriteLock lock(mLock);
   mFontFaces.RemoveElement(aFontFace);
   CheckUserFontSetLocked();
 }

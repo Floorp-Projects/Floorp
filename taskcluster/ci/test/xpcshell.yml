@@ -51,6 +51,10 @@ xpcshell:
         - socketprocess_networking
         - no-fission
         - msix
+    instance-size:
+        by-variant:
+            conditioned_profile: large
+            default: large-noscratch
     run-on-projects:
         by-variant:
             conditioned_profile:
@@ -90,7 +94,7 @@ xpcshell:
         by-test-platform:
             .*-asan-qr/opt: 4
             .*-ccov.*/.*: 8
-            .*-tsan-qr/opt: 8
+            .*-tsan-qr/opt: 10
             (android-em-7.*|macosx.*|linux1804-64.*/opt): 2
             default: 4
     max-run-time:
