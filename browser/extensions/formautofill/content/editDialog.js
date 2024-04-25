@@ -5,6 +5,8 @@
 /* exported EditAddressDialog, EditCreditCardDialog */
 /* eslint-disable mozilla/balanced-listeners */ // Not relevant since the document gets unloaded.
 
+/* import-globals-from addressFormLayout.js */
+
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
@@ -139,7 +141,8 @@ class AutofillEditDialog {
   attachEventListeners() {
     window.addEventListener("keypress", this);
     window.addEventListener("contextmenu", this);
-    this._elements.controlsContainer.addEventListener("click", this);
+    this._elements.save.addEventListener("click", this);
+    this._elements.cancel.addEventListener("click", this);
     document.addEventListener("input", this);
   }
 
@@ -171,9 +174,19 @@ class EditAddressDialog extends AutofillEditDialog {
     }
   }
 
+  updateSaveButtonState() {
+    // Toggle disabled attribute on the save button based on
+    // whether the form is filled or empty.
+    if (!canSubmitForm()) {
+      this._elements.save.setAttribute("disabled", true);
+    } else {
+      this._elements.save.removeAttribute("disabled");
+    }
+  }
+
   async handleSubmit() {
     await this.saveRecord(
-      this._elements.fieldContainer.buildFormObject(),
+      getCurrentFormData(),
       this._record ? this._record.guid : null
     );
     this.recordFormSubmit();
