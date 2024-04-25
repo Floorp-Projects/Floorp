@@ -382,6 +382,13 @@ var SelectTranslationsPanel = new (class {
    */
   async open(event, screenX, screenY, sourceText, langPairPromise) {
     if (this.#isOpen()) {
+      await this.#forceReopen(
+        event,
+        screenX,
+        screenY,
+        sourceText,
+        langPairPromise
+      );
       return;
     }
 
@@ -406,6 +413,27 @@ var SelectTranslationsPanel = new (class {
     }
 
     this.#openPopup(event, screenX, screenY);
+  }
+
+  /**
+   * Forces the panel to close and reopen at the same location.
+   *
+   * This should never be called in the regular flow of events, but is good to have in case
+   * the panel somehow gets into an invalid state.
+   *
+   * @param {Event} event - The triggering event for opening the panel.
+   * @param {number} screenX - The x-axis location of the screen at which to open the popup.
+   * @param {number} screenY - The y-axis location of the screen at which to open the popup.
+   * @param {string} sourceText - The text to translate.
+   * @param {Promise} langPairPromise - Promise resolving to language pair data for initializing dropdowns.
+   *
+   * @returns {Promise<void>}
+   */
+  async #forceReopen(event, screenX, screenY, sourceText, langPairPromise) {
+    this.console?.warn("The SelectTranslationsPanel was forced to reopen.");
+    this.close();
+    this.#changeStateToClosed();
+    await this.open(event, screenX, screenY, sourceText, langPairPromise);
   }
 
   /**
