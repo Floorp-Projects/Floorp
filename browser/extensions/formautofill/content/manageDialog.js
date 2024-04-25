@@ -32,6 +32,12 @@ ChromeUtils.defineLazyGetter(this, "log", () =>
   FormAutofill.defineLogGetter(this, "manageAddresses")
 );
 
+ChromeUtils.defineLazyGetter(
+  this,
+  "l10n",
+  () => new Localization(["	browser/preferences/formAutofill.ftl"], true)
+);
+
 class ManageRecords {
   constructor(subStorageName, elements) {
     this._storageInitPromise = formAutofillStorage.initialize();
@@ -314,6 +320,21 @@ class ManageAddresses extends ManageRecords {
     AutofillTelemetry.recordManageEvent(this.telemetryType, "show");
   }
 
+  getAddressL10nStrings() {
+    const l10nIds = [
+      ...FormAutofillUtils.MANAGE_ADDRESSES_L10N_IDS,
+      ...FormAutofillUtils.EDIT_ADDRESS_L10N_IDS,
+    ];
+
+    return l10nIds.reduce(
+      (acc, id) => ({
+        ...acc,
+        [id]: l10n.formatValueSync(id),
+      }),
+      {}
+    );
+  }
+
   /**
    * Open the edit address dialog to create/edit an address.
    *
@@ -325,6 +346,7 @@ class ManageAddresses extends ManageRecords {
       // Don't validate in preferences since it's fine for fields to be missing
       // for autofill purposes. For PaymentRequest addresses get more validation.
       noValidate: true,
+      l10nStrings: this.getAddressL10nStrings(),
     });
   }
 
