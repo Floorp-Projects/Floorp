@@ -1867,6 +1867,32 @@ html {
   .onboardingContainer .screen[pos=split][no-rdm] {
     width: 800px;
   }
+  .onboardingContainer .screen[pos=split][no-rdm][reverse-split] {
+    flex-direction: row-reverse;
+  }
+  .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-main {
+    margin: auto;
+    margin-inline-end: 0;
+    border-radius: 8px 0 0 8px;
+  }
+  .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-main .main-content {
+    border-radius: inherit;
+  }
+  .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-main:dir(rtl) {
+    border-radius: 0 8px 8px 0;
+    margin: auto;
+    margin-inline-end: 0;
+  }
+  .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-secondary {
+    margin: auto;
+    margin-inline-start: 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .onboardingContainer .screen[pos=split][no-rdm][reverse-split] .section-secondary:dir(rtl) {
+    border-radius: 8px 0 0 8px;
+    margin: auto;
+    margin-inline-start: 0;
+  }
 }
 @media only screen and (height <= 650px) and (800px <= width <= 990px) {
   .onboardingContainer .screen[pos=split] .section-main .secondary-cta.top {
