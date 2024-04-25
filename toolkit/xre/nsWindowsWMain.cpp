@@ -111,32 +111,9 @@ static void FreeAllocStrings(int argc, char** argv) {
   delete[] argv;
 }
 
-// Remove "/prefetch:##" argument from the command line, if present. (See
-// GeckoChildProcessHost.cpp for details.)
-//
-// Colons are not permitted in path-elements on Windows, so a string of this
-// form is extremely unlikely to appear with the intent of being a legitimate
-// path-argument.
-void RemovePrefetchArguments(int& argc, WCHAR** argv) {
-  size_t prefetchArgsCount [[maybe_unused]] = 0;
-  for (int i = 0; i < argc; ++i) {
-    constexpr const wchar_t prefix[] = L"/prefetch:";
-    auto const cmp = wcsncmp(argv[i], prefix, ARRAYSIZE(prefix) - 1);
-    if (cmp == 0) {
-      std::copy(argv + i + 1, argv + argc, argv + i);
-      --argc;
-      --i;
-      prefetchArgsCount++;
-    }
-  }
-  MOZ_ASSERT(prefetchArgsCount <= 1,
-             "at most one /prefetch:## argument should be present");
-}
-
 int wmain(int argc, WCHAR** argv) {
   SanitizeEnvironmentVariables();
   SetDllDirectoryW(L"");
-  RemovePrefetchArguments(argc, argv);
 
   // Only run this code if LauncherProcessWin.h was included beforehand, thus
   // signalling that the hosting process should support launcher mode.
