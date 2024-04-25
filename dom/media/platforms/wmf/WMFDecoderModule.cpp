@@ -485,6 +485,9 @@ bool WMFDecoderModule::IsHEVCSupported() {
   return sForceEnableHEVC || StaticPrefs::media_wmf_hevc_enabled() == 1;
 }
 
+/* static */
+void WMFDecoderModule::DisableForceEnableHEVC() { sForceEnableHEVC = false; }
+
 }  // namespace mozilla
 
 #undef WFM_DECODER_MODULE_STATUS_MARKER
