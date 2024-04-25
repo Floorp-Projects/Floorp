@@ -141,7 +141,7 @@ export class MLEngineParent extends JSWindowActorParent {
    * @param {RemoteSettingsClient} client
    */
   static async #getWasmArrayRecord(client) {
-    const wasmFilename = lazy.getRuntimeWasmFilename();
+    const wasmFilename = lazy.getRuntimeWasmFilename(this.browsingContext);
 
     /** @type {WasmRecord[]} */
     const wasmRecords = await lazy.TranslationsParent.getMaxVersionRecords(
@@ -195,6 +195,7 @@ export class MLEngineParent extends JSWindowActorParent {
       tokenizerId: options.tokenizerId,
       processorRevision: options.processorRevision,
       processorId: options.processorId,
+      runtimeFilename: lazy.getRuntimeWasmFilename(this.browsingContext),
     };
   }
 

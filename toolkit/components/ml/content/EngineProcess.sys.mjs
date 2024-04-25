@@ -105,6 +105,13 @@ export class PipelineOptions {
   logLevel = null;
 
   /**
+   * Name of the runtime wasm file
+   *
+   * @type {?string}
+   */
+  runtimeFilename = null;
+
+  /**
    * Create a PipelineOptions instance.
    *
    * @param {object} options - The options for the pipeline. Must include mandatory fields.
@@ -132,6 +139,7 @@ export class PipelineOptions {
       "processorId",
       "processorRevision",
       "logLevel",
+      "runtimeFilename",
     ];
 
     Object.keys(options).forEach(key => {
@@ -161,6 +169,7 @@ export class PipelineOptions {
       processorId: this.processorId,
       processorRevision: this.processorRevision,
       logLevel: this.logLevel,
+      runtimeFilename: this.runtimeFilename,
     };
   }
 
