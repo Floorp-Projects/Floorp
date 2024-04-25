@@ -13,6 +13,7 @@ prefs = [
 ["test_basic.js"]
 
 ["test_bounce_tracking_protection.js"]
+skip-if = ["condprof"] # Bug 1893058
 
 ["test_certs.js"]
 
