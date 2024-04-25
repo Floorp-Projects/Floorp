@@ -107,3 +107,40 @@ add_task(async function test_backup() {
 
   sandbox.restore();
 });
+
+/**
+ * Test that the recover method correctly copies items from the recovery
+ * directory into the destination profile directory.
+ */
+add_task(async function test_recover() {
+  let formHistoryBackupResource = new FormHistoryBackupResource();
+  let recoveryPath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "FormHistoryBackupResource-recovery-test"
+  );
+  let destProfilePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "FormHistoryBackupResource-test-profile"
+  );
+
+  const simpleCopyFiles = [{ path: "formhistory.sqlite" }];
+  await createTestFiles(recoveryPath, simpleCopyFiles);
+
+  // The backup method is expected to have returned a null ManifestEntry
+  let postRecoveryEntry = await formHistoryBackupResource.recover(
+    null /* manifestEntry */,
+    recoveryPath,
+    destProfilePath
+  );
+  Assert.equal(
+    postRecoveryEntry,
+    null,
+    "FormHistoryBackupResource.recover should return null as its post " +
+      "recovery entry"
+  );
+
+  await assertFilesExist(destProfilePath, simpleCopyFiles);
+
+  await maybeRemovePath(recoveryPath);
+  await maybeRemovePath(destProfilePath);
+});
