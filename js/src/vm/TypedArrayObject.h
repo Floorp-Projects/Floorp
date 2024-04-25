@@ -319,7 +319,6 @@ static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
       return 0;
     case Scalar::Int16:
     case Scalar::Uint16:
-    case Scalar::Float16:
       return 1;
     case Scalar::Int32:
     case Scalar::Uint32:

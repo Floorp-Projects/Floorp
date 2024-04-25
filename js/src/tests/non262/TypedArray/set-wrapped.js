@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-float16array)
 // Test %TypedArray%.prototype.set(typedArray, offset) when called with wrapped
 // typed array.
 

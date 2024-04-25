@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-float16array) skip-if(!this.hasOwnProperty('Float16Array')||!xulRuntime.shell) -- Float16Array is not enabled unconditionally, requires shell-options
+// |reftest| skip -- Float16Array is not supported
 // Copyright (C) 2024 Kevin Gibbons. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

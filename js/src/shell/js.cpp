@@ -12049,7 +12049,6 @@ bool InitOptionParser(OptionParser& op) {
           "Enable resizable ArrayBuffers and growable SharedArrayBuffers") ||
       !op.addBoolOption('\0', "enable-uint8array-base64",
                         "Enable Uint8Array base64/hex methods") ||
-      !op.addBoolOption('\0', "enable-float16array", "Enable Float16Array") ||
       !op.addBoolOption('\0', "enable-top-level-await",
                         "Enable top-level await") ||
       !op.addBoolOption('\0', "enable-class-static-blocks",
@@ -12438,9 +12437,6 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   if (op.getBoolOption("enable-uint8array-base64")) {
     JS::Prefs::setAtStartup_experimental_uint8array_base64(true);
   }
-  if (op.getBoolOption("enable-float16array")) {
-    JS::Prefs::setAtStartup_experimental_float16array(true);
-  }
 #endif
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   JS::Prefs::setAtStartup_experimental_json_parse_with_source(
@@ -12673,6 +12669,7 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       op.getBoolOption("enable-import-assertions");
   enableImportAttributes = op.getBoolOption("enable-import-attributes") ||
                            enableImportAttributesAssertSyntax;
+
   JS::ContextOptionsRef(cx)
       .setSourcePragmas(enableSourcePragmas)
       .setAsyncStack(enableAsyncStacks)

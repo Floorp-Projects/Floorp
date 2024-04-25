@@ -1082,7 +1082,6 @@ void MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access,
     }
     case Scalar::Int64:
       MOZ_CRASH("int64 loads must use load64");
-    case Scalar::Float16:
     case Scalar::BigInt64:
     case Scalar::BigUint64:
     case Scalar::Uint8Clamped:
@@ -1136,7 +1135,6 @@ void MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access,
              FaultingCodeOffset(currentOffset()));
       movq(srcAddr, out.reg);
       break;
-    case Scalar::Float16:
     case Scalar::Float32:
     case Scalar::Float64:
     case Scalar::Simd128:
@@ -1201,7 +1199,6 @@ void MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access,
     case Scalar::Uint8Clamped:
     case Scalar::BigInt64:
     case Scalar::BigUint64:
-    case Scalar::Float16:
     case Scalar::MaxTypedArrayViewType:
       MOZ_CRASH("unexpected array type");
   }

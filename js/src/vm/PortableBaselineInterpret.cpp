@@ -1713,7 +1713,6 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
           v = Int32Value(rhs);
           break;
 
-        case Scalar::Float16:
         case Scalar::Float32:
         case Scalar::Float64:
           v = Value::fromRawBits(rhs);

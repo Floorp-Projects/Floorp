@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-float16array)
 // Ensure that when sorting TypedArrays we don't
 // ignore byte offsets (bug 1290579).
 

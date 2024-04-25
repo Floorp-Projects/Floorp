@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-float16array)
 for (var constructor of typedArrayConstructors) {
     // Basic tests for our SpeciesConstructor implementation.
     var undefConstructor = new constructor(2);
