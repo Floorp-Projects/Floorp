@@ -2222,6 +2222,9 @@ html {
   outline: 2px solid var(--in-content-primary-button-background);
   outline-offset: 2px;
 }
+.onboardingContainer .tiles-theme-section .theme .icon.selected {
+  outline-color: var(--color-accent-primary-active);
+}
 .onboardingContainer .tiles-theme-section .theme .icon.light {
   background-image: url("resource://builtin-themes/light/icon.svg");
 }
