@@ -622,8 +622,8 @@ load flex-nested-abspos-1.html
 pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts(0-100) load font-inflation-762332.html # bug 762332
 asserts-if(Android||cocoaWidget,0-2) load outline-on-frameset.xhtml # bug 762332, bug 1594135
 load summary-position-out-of-flow.html
-pref(widget.windows.window_occlusion_tracking.enabled,false) load text-overflow-bug666751-1.html # Bug 1819154
-pref(widget.windows.window_occlusion_tracking.enabled,false) load text-overflow-bug666751-2.html # Bug 1819154
+load text-overflow-bug666751-1.html
+load text-overflow-bug666751-2.html
 load text-overflow-bug670564.xhtml
 load text-overflow-bug671796.xhtml
 load text-overflow-bug713610.html
