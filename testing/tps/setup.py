@@ -5,7 +5,7 @@
 
 from setuptools import find_packages, setup
 
-version = "0.6"
+version = "0.6.1"
 
 deps = [
     "httplib2 == 0.9.2",
@@ -14,8 +14,8 @@ deps = [
     "mozinfo >= 1.2",
     "mozinstall == 2.0.1",
     "mozprocess == 1.3",
-    "mozprofile ~= 2.1",
-    "mozrunner ~= 8.2",
+    "mozprofile ~= 3.0",
+    "mozrunner ~= 8.3",
     "mozversion == 2.3",
     "PyYAML >= 4.0",
 ]

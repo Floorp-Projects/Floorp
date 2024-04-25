@@ -1,6 +1,6 @@
 mozcrash ~= 2.0
-mozrunner ~= 7.0
-mozprofile ~= 2.1
+mozrunner ~= 8.3
+mozprofile ~= 3.0
 manifestparser >= 1.1
 ../tools/wptserve
 ../tools/wpt_third_party/h2
