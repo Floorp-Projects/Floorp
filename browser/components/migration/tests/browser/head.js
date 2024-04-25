@@ -332,7 +332,7 @@ async function selectResourceTypesAndStartMigration(
 
   // First, select the InternalTestingProfileMigrator browser.
   let selector = shadow.querySelector("#browser-profile-selector");
-  EventUtils.synthesizeMouseAtCenter(selector, {}, wizard.ownerGlobal);
+  selector.click();
 
   await new Promise(resolve => {
     shadow
