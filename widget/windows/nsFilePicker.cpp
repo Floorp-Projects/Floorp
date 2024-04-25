@@ -403,7 +403,7 @@ nsFilePicker::FPPromise<filedialog::Results> nsFilePicker::ShowFilePickerRemote(
        commands = commands.Clone()](filedialog::WinFileDialogParent* p) {
         MOZ_LOG(sLogFileDialog, LogLevel::Info,
                 ("%s: p = [%p]", __PRETTY_FUNCTION__, p));
-        return p->SendShowFileDialog((uintptr_t)parent, type, commands);
+        return p->ShowFileDialogImpl(parent, type, commands);
       });
 }
 
@@ -415,7 +415,7 @@ nsFilePicker::FPPromise<nsString> nsFilePicker::ShowFolderPickerRemote(
                                          filedialog::WinFileDialogParent* p) {
     MOZ_LOG(sLogFileDialog, LogLevel::Info,
             ("%s: p = [%p]", __PRETTY_FUNCTION__, p));
-    return p->SendShowFolderDialog((uintptr_t)parent, commands);
+    return p->ShowFolderDialogImpl(parent, commands);
   });
 }
 
