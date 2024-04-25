@@ -183,7 +183,26 @@ const toolkitVariableMap = [
     "--newtab-background-color-secondary",
     { lwtProperty: "ntp_card_background" },
   ],
-  ["--newtab-text-primary-color", { lwtProperty: "ntp_text" }],
+  [
+    "--newtab-text-primary-color",
+    {
+      lwtProperty: "ntp_text",
+      processColor(rgbaChannels, element) {
+        if (!rgbaChannels) {
+          element.removeAttribute("lwt-newtab-brighttext");
+          return null;
+        }
+
+        const { r, g, b } = rgbaChannels;
+        element.toggleAttribute(
+          "lwt-newtab-brighttext",
+          0.2125 * r + 0.7154 * g + 0.0721 * b > 110
+        );
+
+        return _rgbaToString(rgbaChannels);
+      },
+    },
+  ],
 ];
 
 export function LightweightThemeConsumer(aDocument) {

@@ -42,6 +42,12 @@
       @include dark-theme;
     }
 
+    @at-root :root[lwt-newtab-brighttext] #{&}.lwtNewtab {
+      color-scheme: dark;
+
+      @include dark-theme;
+    }
+
     @media (prefers-contrast) {
       @include hcm-theme;
     }
