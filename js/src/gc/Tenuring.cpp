@@ -521,7 +521,7 @@ void JSDependentString::sweepTypedAfterMinorGC() {
 
   const CharT* newBaseChars = tenuredBase->JSString::nonInlineCharsRaw<CharT>();
   relocateNonInlineChars(newBaseChars, offset);
-
+  MOZ_ASSERT(tenuredBase->assertIsValidBase());
   d.s.u3.base = tenuredBase;
 }
 
@@ -1051,6 +1051,8 @@ void js::gc::TenuringTracer::relocateDependentStringChars(
         tenuredDependentStr->relocateNonInlineChars<const CharT*>(
             tenuredRootBase->nonInlineChars<CharT>(nogc), *offset);
         tenuredDependentStr->setBase(tenuredRootBase);
+        MOZ_ASSERT(tenuredRootBase->assertIsValidBase());
+
         if (tenuredDependentStr->isTenured() && !tenuredRootBase->isTenured()) {
           runtime()->gc.storeBuffer().putWholeCell(tenuredDependentStr);
         }
@@ -1077,6 +1079,7 @@ void js::gc::TenuringTracer::relocateDependentStringChars(
         }
 
         tenuredDependentStr->setBase(*rootBase);
+        MOZ_ASSERT((*rootBase)->assertIsValidBase());
 
         return;
       }
@@ -1138,7 +1141,7 @@ void js::gc::TenuringTracer::collectToStringFixedPoint() {
     bool rootBaseNotYetForwarded = false;
     JSLinearString* rootBase = nullptr;
 
-    if (str->isDependent()) {
+    if (str->isDependent() && !str->isAtomRef()) {
       if (str->hasTwoByteChars()) {
         relocateDependentStringChars<char16_t>(
             &str->asDependent(), p->savedNurseryBaseOrRelocOverlay(), &offset,
@@ -1173,6 +1176,7 @@ void js::gc::TenuringTracer::collectToStringFixedPoint() {
       }
 
       str->setBase(tenuredRootBase);
+      MOZ_ASSERT(tenuredRootBase->assertIsValidBase());
       if (str->isTenured() && !tenuredRootBase->isTenured()) {
         runtime()->gc.storeBuffer().putWholeCell(str);
       }
