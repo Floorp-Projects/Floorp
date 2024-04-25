@@ -10,6 +10,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs",
 });
 
+const SNIPPETS_TABLE_NAME = "snippets";
+const FILES_FOR_BACKUP = [
+  "times.json",
+  "enumerate_devices.txt",
+  "protections.sqlite",
+  "SiteSecurityServiceState.bin",
+];
+
 /**
  * Class representing miscellaneous files for telemetry, site storage,
  * media device origin mapping, chrome privileged IndexedDB databases,
@@ -48,7 +56,6 @@ export class MiscDataBackupResource extends BackupResource {
     // one - specifically, the "snippets" table, as this contains information
     // on ASRouter impressions, blocked messages, message group impressions,
     // etc.
-    const SNIPPETS_TABLE_NAME = "snippets";
     let storage = new lazy.ActivityStreamStorage({
       storeNames: [SNIPPETS_TABLE_NAME],
     });
@@ -66,17 +73,47 @@ export class MiscDataBackupResource extends BackupResource {
     return null;
   }
 
-  async measure(profilePath = PathUtils.profileDir) {
-    const files = [
-      "times.json",
-      "enumerate_devices.txt",
-      "protections.sqlite",
-      "SiteSecurityServiceState.bin",
-    ];
+  async recover(_manifestEntry, recoveryPath, destProfilePath) {
+    await BackupResource.copyFiles(
+      recoveryPath,
+      destProfilePath,
+      FILES_FOR_BACKUP
+    );
 
+    // The activity-stream-snippets data will need to be written during the
+    // postRecovery phase, so we'll stash the path to the JSON file in the
+    // post recovery entry.
+    let snippetsBackupFile = PathUtils.join(
+      recoveryPath,
+      "activity-stream-snippets.json"
+    );
+    return { snippetsBackupFile };
+  }
+
+  async postRecovery(postRecoveryEntry) {
+    let { snippetsBackupFile } = postRecoveryEntry;
+
+    // If for some reason, the activity-stream-snippets data file has been
+    // removed already, there's nothing to do.
+    if (!IOUtils.exists(snippetsBackupFile)) {
+      return;
+    }
+
+    let snippetsData = await IOUtils.readJSON(snippetsBackupFile);
+    let storage = new lazy.ActivityStreamStorage({
+      storeNames: [SNIPPETS_TABLE_NAME],
+    });
+    let snippetsTable = await storage.getDbTable(SNIPPETS_TABLE_NAME);
+    for (let key in snippetsData) {
+      let value = snippetsData[key];
+      await snippetsTable.set(key, value);
+    }
+  }
+
+  async measure(profilePath = PathUtils.profileDir) {
     let fullSize = 0;
 
-    for (let filePath of files) {
+    for (let filePath of FILES_FOR_BACKUP) {
       let resourcePath = PathUtils.join(profilePath, filePath);
       let resourceSize = await BackupResource.getFileSize(resourcePath);
       if (Number.isInteger(resourceSize)) {

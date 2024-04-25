@@ -158,3 +158,115 @@ add_task(async function test_backup() {
 
   sandbox.restore();
 });
+
+/**
+ * Test that the recover method correctly copies items from the recovery
+ * directory into the destination profile directory.
+ */
+add_task(async function test_recover() {
+  let miscBackupResource = new MiscDataBackupResource();
+  let recoveryPath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "MiscDataBackupResource-recovery-test"
+  );
+  let destProfilePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "MiscDataBackupResource-test-profile"
+  );
+
+  const simpleCopyFiles = [
+    { path: "times.json" },
+    { path: "enumerate_devices.txt" },
+    { path: "protections.sqlite" },
+    { path: "SiteSecurityServiceState.bin" },
+  ];
+  await createTestFiles(recoveryPath, simpleCopyFiles);
+
+  const SNIPPETS_BACKUP_FILE = "activity-stream-snippets.json";
+
+  // We'll also separately create the activity-stream-snippets.json file, which
+  // is not expected to be copied into the profile directory, but is expected
+  // to exist in the recovery path.
+  await createTestFiles(recoveryPath, [{ path: SNIPPETS_BACKUP_FILE }]);
+
+  // The backup method is expected to have returned a null ManifestEntry
+  let postRecoveryEntry = await miscBackupResource.recover(
+    null /* manifestEntry */,
+    recoveryPath,
+    destProfilePath
+  );
+  Assert.deepEqual(
+    postRecoveryEntry,
+    {
+      snippetsBackupFile: PathUtils.join(recoveryPath, SNIPPETS_BACKUP_FILE),
+    },
+    "MiscDataBackupResource.recover should return the snippets backup data " +
+      "path as its post recovery entry"
+  );
+
+  await assertFilesExist(destProfilePath, simpleCopyFiles);
+
+  // The activity-stream-snippets.json path should _not_ have been written to
+  // the profile path.
+  Assert.ok(
+    !(await IOUtils.exists(
+      PathUtils.join(destProfilePath, SNIPPETS_BACKUP_FILE)
+    )),
+    "Snippets backup data should not have gone into the profile directory"
+  );
+
+  await maybeRemovePath(recoveryPath);
+  await maybeRemovePath(destProfilePath);
+});
+
+/**
+ * Test that the postRecovery method correctly writes the snippets backup data
+ * into the snippets IndexedDB table.
+ */
+add_task(async function test_postRecovery() {
+  let sandbox = sinon.createSandbox();
+
+  let fakeProfilePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "MiscDataBackupResource-test-profile"
+  );
+  let fakeSnippetsData = {
+    key1: "value1",
+    key2: "value2",
+  };
+  const SNIPPEST_BACKUP_FILE = PathUtils.join(
+    fakeProfilePath,
+    "activity-stream-snippets.json"
+  );
+
+  await IOUtils.writeJSON(SNIPPEST_BACKUP_FILE, fakeSnippetsData);
+
+  let snippetsTableStub = {
+    set: sandbox.stub(),
+  };
+
+  sandbox
+    .stub(ActivityStreamStorage.prototype, "getDbTable")
+    .withArgs("snippets")
+    .resolves(snippetsTableStub);
+
+  let miscBackupResource = new MiscDataBackupResource();
+  await miscBackupResource.postRecovery({
+    snippetsBackupFile: SNIPPEST_BACKUP_FILE,
+  });
+
+  Assert.ok(
+    snippetsTableStub.set.calledTwice,
+    "The snippets table's set method was called twice"
+  );
+  Assert.ok(
+    snippetsTableStub.set.firstCall.calledWith("key1", "value1"),
+    "The snippets table's set method was called with the first key-value pair"
+  );
+  Assert.ok(
+    snippetsTableStub.set.secondCall.calledWith("key2", "value2"),
+    "The snippets table's set method was called with the second key-value pair"
+  );
+
+  sandbox.restore();
+});
