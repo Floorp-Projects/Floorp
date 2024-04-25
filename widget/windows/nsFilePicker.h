@@ -87,9 +87,10 @@ class nsFilePicker final : public nsBaseWinFilePicker {
   NS_IMETHOD Open(nsIFilePickerShownCallback* aCallback) override;
 
  private:
-  RefPtr<mozilla::MozPromise<bool, HRESULT, true>> ShowFolderPicker(
+  using Unit = mozilla::Ok;
+  RefPtr<mozilla::MozPromise<bool, Unit, true>> ShowFolderPicker(
       const nsString& aInitialDir);
-  RefPtr<mozilla::MozPromise<bool, HRESULT, true>> ShowFilePicker(
+  RefPtr<mozilla::MozPromise<bool, Unit, true>> ShowFilePicker(
       const nsString& aInitialDir);
 
   void ClearFiles();

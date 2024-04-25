@@ -22,6 +22,20 @@
 
 namespace mozilla::widget::filedialog {
 
+const char* Error::KindName(Error::Kind kind) {
+  switch (kind) {
+    case LocalError:
+      return "LocalError";
+    case RemoteError:
+      return "RemoteError";
+    case IPCError:
+      return "IPCError";
+    default:
+      MOZ_ASSERT(false);
+      return "<bad value>";
+  }
+}
+
 // Visitor to apply commands to the dialog.
 struct Applicator {
   IFileDialog* dialog = nullptr;
@@ -98,13 +112,13 @@ static HRESULT GetShellItemPath(IShellItem* aItem, nsString& aResultString) {
 }
 }  // namespace
 
-#define MOZ_ENSURE_HRESULT_OK(call_)            \
-  do {                                          \
-    HRESULT const _tmp_hr_ = (call_);           \
-    if (FAILED(_tmp_hr_)) return Err(_tmp_hr_); \
+#define MOZ_ENSURE_HRESULT_OK(where, call_)                                   \
+  do {                                                                        \
+    HRESULT const _tmp_hr_ = (call_);                                         \
+    if (FAILED(_tmp_hr_)) return mozilla::Err(Error::Local(where, _tmp_hr_)); \
   } while (0)
 
-mozilla::Result<RefPtr<IFileDialog>, HRESULT> MakeFileDialog(
+mozilla::Result<RefPtr<IFileDialog>, Error> MakeFileDialog(
     FileDialogType type) {
   RefPtr<IFileDialog> dialog;
 
@@ -112,43 +126,44 @@ mozilla::Result<RefPtr<IFileDialog>, HRESULT> MakeFileDialog(
                                                    : CLSID_FileSaveDialog;
   HRESULT const hr = CoCreateInstance(clsid, nullptr, CLSCTX_INPROC_SERVER,
                                       IID_IFileDialog, getter_AddRefs(dialog));
-  MOZ_ENSURE_HRESULT_OK(hr);
+  // more properly: "CoCreateInstance(CLSID_...)", but this suffices
+  MOZ_ENSURE_HRESULT_OK("MakeFileDialog", hr);
 
   return std::move(dialog);
 }
 
-HRESULT ApplyCommands(::IFileDialog* dialog,
-                      nsTArray<Command> const& commands) {
+mozilla::Result<Ok, Error> ApplyCommands(::IFileDialog* dialog,
+                                         nsTArray<Command> const& commands) {
   Applicator applicator{.dialog = dialog};
   for (auto const& cmd : commands) {
     HRESULT const hr = applicator.Visit(cmd);
-    if (FAILED(hr)) {
-      return hr;
-    }
+    MOZ_ENSURE_HRESULT_OK("ApplyCommands", hr);
   }
-  return S_OK;
+  return Ok{};
 }
 
-mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog* dialog) {
+mozilla::Result<Results, Error> GetFileResults(::IFileDialog* dialog) {
   FILEOPENDIALOGOPTIONS fos;
-  MOZ_ENSURE_HRESULT_OK(dialog->GetOptions(&fos));
+  MOZ_ENSURE_HRESULT_OK("IFileDialog::GetOptions", dialog->GetOptions(&fos));
 
   using widget::WinUtils;
 
   // Extract which filter type the user selected
   UINT index;
-  MOZ_ENSURE_HRESULT_OK(dialog->GetFileTypeIndex(&index));
+  MOZ_ENSURE_HRESULT_OK("IFileDialog::GetFileTypeIndex",
+                        dialog->GetFileTypeIndex(&index));
 
   // single selection
   if ((fos & FOS_ALLOWMULTISELECT) == 0) {
     RefPtr<IShellItem> item;
-    MOZ_ENSURE_HRESULT_OK(dialog->GetResult(getter_AddRefs(item)));
+    MOZ_ENSURE_HRESULT_OK("IFileDialog::GetResult",
+                          dialog->GetResult(getter_AddRefs(item)));
     if (!item) {
-      return Err(E_FAIL);
+      return Err(Error::Local("IFileDialog::GetResult: item", E_POINTER));
     }
 
     nsAutoString path;
-    MOZ_ENSURE_HRESULT_OK(GetShellItemPath(item, path));
+    MOZ_ENSURE_HRESULT_OK("GetShellItemPath (1)", GetShellItemPath(item, path));
 
     return Results({path}, index);
   }
@@ -158,25 +173,27 @@ mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog* dialog) {
   dialog->QueryInterface(IID_IFileOpenDialog, getter_AddRefs(openDlg));
   if (!openDlg) {
     MOZ_ASSERT(false, "a file-save dialog was given FOS_ALLOWMULTISELECT?");
-    return Err(E_UNEXPECTED);
+    return Err(Error::Local("Save + FOS_ALLOWMULTISELECT", E_UNEXPECTED));
   }
 
   RefPtr<IShellItemArray> items;
-  MOZ_ENSURE_HRESULT_OK(openDlg->GetResults(getter_AddRefs(items)));
+  MOZ_ENSURE_HRESULT_OK("IFileOpenDialog::GetResults",
+                        openDlg->GetResults(getter_AddRefs(items)));
   if (!items) {
-    return Err(E_FAIL);
+    return Err(Error::Local("IFileOpenDialog::GetResults: items", E_POINTER));
   }
 
   nsTArray<nsString> paths;
 
   DWORD count = 0;
-  MOZ_ENSURE_HRESULT_OK(items->GetCount(&count));
+  MOZ_ENSURE_HRESULT_OK("IShellItemArray::GetCount", items->GetCount(&count));
   for (DWORD idx = 0; idx < count; idx++) {
     RefPtr<IShellItem> item;
-    MOZ_ENSURE_HRESULT_OK(items->GetItemAt(idx, getter_AddRefs(item)));
+    MOZ_ENSURE_HRESULT_OK("IShellItemArray::GetItemAt",
+                          items->GetItemAt(idx, getter_AddRefs(item)));
 
     nsAutoString str;
-    MOZ_ENSURE_HRESULT_OK(GetShellItemPath(item, str));
+    MOZ_ENSURE_HRESULT_OK("GetShellItemPath (2)", GetShellItemPath(item, str));
 
     paths.EmplaceBack(str);
   }
@@ -184,15 +201,17 @@ mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog* dialog) {
   return Results(std::move(paths), std::move(index));
 }
 
-mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog* dialog) {
+mozilla::Result<nsString, Error> GetFolderResults(::IFileDialog* dialog) {
   RefPtr<IShellItem> item;
-  MOZ_ENSURE_HRESULT_OK(dialog->GetResult(getter_AddRefs(item)));
+  MOZ_ENSURE_HRESULT_OK("IFileDialog::GetResult",
+                        dialog->GetResult(getter_AddRefs(item)));
+
   if (!item) {
     // shouldn't happen -- probably a precondition failure on our part, but
     // might be due to misbehaving shell extensions?
     MOZ_ASSERT(false,
                "unexpected lack of item: was `Show`'s return value checked?");
-    return Err(E_FAIL);
+    return Err(Error::Local("IFileDialog::GetResult: item", E_POINTER));
   }
 
   // If the user chose a Win7 Library, resolve to the library's
@@ -200,6 +219,7 @@ mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog* dialog) {
   RefPtr<IShellLibrary> shellLib;
   RefPtr<IShellItem> folderPath;
   MOZ_ENSURE_HRESULT_OK(
+      "CoCreateInstance(CLSID_ShellLibrary)",
       CoCreateInstance(CLSID_ShellLibrary, nullptr, CLSCTX_INPROC_SERVER,
                        IID_IShellLibrary, getter_AddRefs(shellLib)));
 
@@ -211,7 +231,7 @@ mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog* dialog) {
 
   // get the folder's file system path
   nsAutoString str;
-  MOZ_ENSURE_HRESULT_OK(GetShellItemPath(item, str));
+  MOZ_ENSURE_HRESULT_OK("GetShellItemPath", GetShellItemPath(item, str));
   return str;
 }
 
@@ -312,12 +332,22 @@ void LogProcessingError(LogModule* aModule, ipc::IProtocol* aCaller,
 template <typename Res, typename Action, size_t N>
 RefPtr<Promise<Res>> SpawnFileDialogThread(const char (&where)[N],
                                            Action action) {
+  {
+    using ActionRetT = std::invoke_result_t<Action>;
+    using Info = detail::DestructureResult<ActionRetT>;
+
+    MOZ_ASSERT_SAME_TYPE(
+        typename Info::ErrorT, Error,
+        "supplied Action must return Result<T, filedialog::Err>");
+  }
+
   RefPtr<nsIThread> thread;
   {
     nsresult rv = NS_NewNamedThread("File Dialog", getter_AddRefs(thread),
                                     nullptr, {.isUiThread = true});
     if (NS_FAILED(rv)) {
-      return Promise<Res>::CreateAndReject((HRESULT)rv, where);
+      return Promise<Res>::CreateAndReject(
+          Error::Local("NS_NewNamedThread", (HRESULT)rv), where);
     }
   }
   // `thread` is single-purpose, and should not perform any additional work
@@ -393,7 +423,7 @@ RefPtr<Promise<Res>> SpawnFileDialogThread(const char (&where)[N],
     }
 
     // Actually invoke the action and report the result.
-    Result<Res, HRESULT> val = action();
+    Result<Res, Error> val = action();
     if (val.isErr()) {
       promise->Reject(val.unwrapErr(), where);
     } else {
@@ -407,16 +437,16 @@ RefPtr<Promise<Res>> SpawnFileDialogThread(const char (&where)[N],
 // For F returning `Result<T, E>`, yields the type `T`.
 template <typename F, typename... Args>
 using inner_result_of =
-    typename std::remove_reference_t<decltype(std::declval<F>()(
-        std::declval<Args>()...))>::ok_type;
+    typename detail::DestructureResult<std::invoke_result_t<F, Args...>>::OkT;
 
 template <typename ExtractorF,
           typename RetT = inner_result_of<ExtractorF, IFileDialog*>>
 auto SpawnPickerT(HWND parent, FileDialogType type, ExtractorF&& extractor,
                   nsTArray<Command> commands) -> RefPtr<Promise<Maybe<RetT>>> {
+  using ActionRetT = Result<Maybe<RetT>, Error>;
+
   return detail::SpawnFileDialogThread<Maybe<RetT>>(
-      __PRETTY_FUNCTION__,
-      [=, commands = std::move(commands)]() -> Result<Maybe<RetT>, HRESULT> {
+      __PRETTY_FUNCTION__, [=, commands = std::move(commands)]() -> ActionRetT {
         // On Win10, the picker doesn't support per-monitor DPI, so we create it
         // with our context set temporarily to system-dpi-aware.
         WinUtils::AutoSystemDpiAware dpiAwareness;
@@ -424,15 +454,13 @@ auto SpawnPickerT(HWND parent, FileDialogType type, ExtractorF&& extractor,
         RefPtr<IFileDialog> dialog;
         MOZ_TRY_VAR(dialog, MakeFileDialog(type));
 
-        if (HRESULT const rv = ApplyCommands(dialog, commands); FAILED(rv)) {
-          return mozilla::Err(rv);
-        }
+        MOZ_TRY(ApplyCommands(dialog, commands));
 
         if (HRESULT const rv = dialog->Show(parent); FAILED(rv)) {
           if (rv == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
-            return Result<Maybe<RetT>, HRESULT>(Nothing());
+            return ActionRetT{Nothing()};
           }
-          return mozilla::Err(rv);
+          return mozilla::Err(Error::Local("IFileDialog::Show", rv));
         }
 
         RetT res;
