@@ -21,10 +21,6 @@ else:
         "FuzzingInterfaceStream.h",
     ]
 
-    SOURCES += [
-        "FuzzingInterfaceStream.cpp",
-    ]
-
     DIRS += [
         "harness",
     ]

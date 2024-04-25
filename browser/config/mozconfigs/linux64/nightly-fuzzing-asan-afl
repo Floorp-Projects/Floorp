@@ -1,0 +1,9 @@
+. "$topsrcdir/browser/config/mozconfigs/linux64/nightly-fuzzing-asan"
+
+export CC="$MOZ_FETCHES_DIR/afl-instrumentation/bin/afl-clang-fast"
+export CXX="$MOZ_FETCHES_DIR/afl-instrumentation/bin/afl-clang-fast++"
+
+export HOST_CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+export HOST_CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
+
+. "$topsrcdir/build/mozconfig.common.override"

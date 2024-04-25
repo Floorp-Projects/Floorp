@@ -10,8 +10,11 @@ SOURCES += [
     "xpcshell.cpp",
 ]
 
-if CONFIG["LIBFUZZER"]:
-    USE_LIBS += ["fuzzer"]
+if CONFIG["FUZZING_INTERFACES"]:
+    if CONFIG["LIBFUZZER"]:
+        USE_LIBS += ["fuzzer"]
+    else:
+        USE_LIBS += ["fuzzer-interface"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     SOURCES += [
