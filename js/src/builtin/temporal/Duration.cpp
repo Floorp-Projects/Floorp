@@ -2147,7 +2147,13 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
   // Step 5.
   auto largestUnit = std::min(largestUnit1, largestUnit2);
 
-  // Step 6.a.
+  // Step 6.
+  auto normalized1 = NormalizeTimeDuration(one);
+
+  // Step 7.
+  auto normalized2 = NormalizeTimeDuration(two);
+
+  // Step 8.a.
   if (largestUnit <= TemporalUnit::Week) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_DURATION_UNCOMPARABLE,
@@ -2155,19 +2161,13 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
     return false;
   }
 
-  // Step 6.b.
-  auto normalized1 = NormalizeTimeDuration(one);
-
-  // Step 6.c.
-  auto normalized2 = NormalizeTimeDuration(two);
-
-  // Step 6.d.
+  // Step 8.b.
   NormalizedTimeDuration normalized;
   if (!AddNormalizedTimeDuration(cx, normalized1, normalized2, &normalized)) {
     return false;
   }
 
-  // Step 6.e.
+  // Step 8.c.
   int64_t days1 = mozilla::AssertedCast<int64_t>(one.days);
   int64_t days2 = mozilla::AssertedCast<int64_t>(two.days);
   auto totalDays = mozilla::CheckedInt64(days1) + days2;
@@ -2178,13 +2178,13 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
     return false;
   }
 
-  // Step 6.f.
+  // Step 8.d.
   TimeDuration balanced;
   if (!temporal::BalanceTimeDuration(cx, normalized, largestUnit, &balanced)) {
     return false;
   }
 
-  // Steps 6.g.
+  // Steps 8.e.
   *result = balanced.toDuration();
   return true;
 }
@@ -2211,67 +2211,67 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
   // Step 5.
   auto largestUnit = std::min(largestUnit1, largestUnit2);
 
-  // Step 6. (Not applicable)
+  // Step 6.
+  auto normalized1 = NormalizeTimeDuration(one);
 
-  // Step 7.a. (Not applicable in our implementation.)
+  // Step 7.
+  auto normalized2 = NormalizeTimeDuration(two);
 
-  // Step 7.b.
+  // Step 8. (Not applicable)
+
+  // Step 9.a. (Not applicable in our implementation.)
+
+  // Step 9.b.
   auto dateDuration1 = one.toDateDuration();
 
-  // Step 7.c.
+  // Step 9.c.
   auto dateDuration2 = two.toDateDuration();
 
-  // Step 7.d.
+  // Step 9.d.
   Rooted<Wrapped<PlainDateObject*>> intermediate(
       cx, AddDate(cx, calendar, plainRelativeTo, dateDuration1));
   if (!intermediate) {
     return false;
   }
 
-  // Step 7.e.
+  // Step 9.e.
   Rooted<Wrapped<PlainDateObject*>> end(
       cx, AddDate(cx, calendar, intermediate, dateDuration2));
   if (!end) {
     return false;
   }
 
-  // Step 7.f.
+  // Step 9.f.
   auto dateLargestUnit = std::min(TemporalUnit::Day, largestUnit);
 
-  // Steps 7.g-i.
+  // Steps 9.g-i.
   DateDuration dateDifference;
   if (!DifferenceDate(cx, calendar, plainRelativeTo, end, dateLargestUnit,
                       &dateDifference)) {
     return false;
   }
 
-  // Step 7.j.
-  auto normalized1 = NormalizeTimeDuration(one);
-
-  // Step 7.k.
-  auto normalized2 = NormalizeTimeDuration(two);
-
-  // Step 7.l.
+  // Step 9.j.
   NormalizedTimeDuration normalized1WithDays;
   if (!Add24HourDaysToNormalizedTimeDuration(
           cx, normalized1, dateDifference.days, &normalized1WithDays)) {
     return false;
   }
 
-  // Step 7.m.
+  // Step 9.k.
   NormalizedTimeDuration normalized;
   if (!AddNormalizedTimeDuration(cx, normalized1WithDays, normalized2,
                                  &normalized)) {
     return false;
   }
 
-  // Step 7.n.
+  // Step 9.l.
   TimeDuration balanced;
   if (!temporal::BalanceTimeDuration(cx, normalized, largestUnit, &balanced)) {
     return false;
   }
 
-  // Steps 7.o.
+  // Steps 9.m.
   *result = {
       double(dateDifference.years), double(dateDifference.months),
       double(dateDifference.weeks), double(balanced.days),
@@ -2305,22 +2305,22 @@ static bool AddDuration(
   // Step 5.
   auto largestUnit = std::min(largestUnit1, largestUnit2);
 
-  // Steps 6-7. (Not applicable)
+  // Step 6.
+  auto normalized1 = NormalizeTimeDuration(one);
 
-  // Steps 8-9. (Not applicable in our implementation.)
+  // Step 7.
+  auto normalized2 = NormalizeTimeDuration(two);
 
-  // Step 10.
+  // Steps 8-9. (Not applicable)
+
+  // Steps 10-11. (Not applicable in our implementation.)
+
+  // Step 12.
   bool startDateTimeNeeded = largestUnit <= TemporalUnit::Day;
 
-  // Steps 11-17.
+  // Steps 13-17.
   if (!startDateTimeNeeded) {
-    // Steps 11-12. (Not applicable)
-
-    // Step 13.
-    auto normalized1 = NormalizeTimeDuration(one);
-
-    // Step 14.
-    auto normalized2 = NormalizeTimeDuration(two);
+    // Steps 13-14. (Not applicable)
 
     // Step 15. (Inlined AddZonedDateTime, step 6.)
     Instant intermediateNs;
@@ -2352,7 +2352,7 @@ static bool AddDuration(
     return true;
   }
 
-  // Steps 11-12.
+  // Steps 13-14.
   PlainDateTime startDateTime;
   if (!precalculatedPlainDateTime) {
     if (!GetPlainDateTimeFor(cx, timeZone, zonedRelativeTo.instant(),
@@ -2363,23 +2363,21 @@ static bool AddDuration(
     startDateTime = *precalculatedPlainDateTime;
   }
 
-  // Step 13.
-  auto normalized1 = CreateNormalizedDurationRecord(one);
-
-  // Step 14.
-  auto normalized2 = CreateNormalizedDurationRecord(two);
-
   // Step 15.
+  auto norm1 =
+      CreateNormalizedDurationRecord(one.toDateDuration(), normalized1);
   Instant intermediateNs;
   if (!AddZonedDateTime(cx, zonedRelativeTo.instant(), timeZone, calendar,
-                        normalized1, startDateTime, &intermediateNs)) {
+                        norm1, startDateTime, &intermediateNs)) {
     return false;
   }
   MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
 
   // Step 16.
+  auto norm2 =
+      CreateNormalizedDurationRecord(two.toDateDuration(), normalized2);
   Instant endNs;
-  if (!AddZonedDateTime(cx, intermediateNs, timeZone, calendar, normalized2,
+  if (!AddZonedDateTime(cx, intermediateNs, timeZone, calendar, norm2,
                         &endNs)) {
     return false;
   }

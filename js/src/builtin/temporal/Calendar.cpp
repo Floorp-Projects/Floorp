@@ -2600,33 +2600,30 @@ struct RegulatedISOYearMonth final {
 static bool RegulateISOYearMonth(JSContext* cx, double year, double month,
                                  TemporalOverflow overflow,
                                  RegulatedISOYearMonth* result) {
-  // Step 1.
   MOZ_ASSERT(IsInteger(year));
   MOZ_ASSERT(IsInteger(month));
 
-  // Step 2. (Not applicable in our implementation.)
-
-  // Step 3.
+  // Step 1.
   if (overflow == TemporalOverflow::Constrain) {
-    // Step 3.a.
+    // Step 1.a.
     month = std::clamp(month, 1.0, 12.0);
 
-    // Step 3.b.
+    // Step 1.b.
     *result = {year, int32_t(month)};
     return true;
   }
 
-  // Step 4.a.
+  // Step 2.a.
   MOZ_ASSERT(overflow == TemporalOverflow::Reject);
 
-  // Step 4.b.
+  // Step 2.b.
   if (month < 1 || month > 12) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_PLAIN_YEAR_MONTH_INVALID);
     return false;
   }
 
-  // Step 4.c.
+  // Step 2.c.
   *result = {year, int32_t(month)};
   return true;
 }
