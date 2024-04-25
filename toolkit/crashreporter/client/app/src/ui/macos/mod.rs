@@ -881,7 +881,14 @@ fn render_element(
             }
             sv.into()
         }
-        HBox(model::HBox { items, spacing }) => {
+        HBox(model::HBox {
+            mut items,
+            spacing,
+            affirmative_order,
+        }) => {
+            if affirmative_order {
+                items.reverse();
+            }
             let sv = unsafe { StrongRef::new(cocoa::NSStackView::alloc()) }.autorelease();
             unsafe {
                 sv.init();
