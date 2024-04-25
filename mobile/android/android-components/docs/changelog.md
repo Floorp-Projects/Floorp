@@ -6,6 +6,9 @@ permalink: /changelog/
 
 # 127.0 (In Development)
 
+* **feature-prompts** **browser-storage-sync**
+  * A new `isLoginAutofillEnabled` callback is available in `PromptFeature` and `GeckoLoginStorageDelegate` to allow clients controlling whether saved logins should be autofilled or not. Default is false
+
 * **support-base**
   * Added `StartForegroundService` to safely start a foreground service, see [Bug 1839039](https://bugzilla.mozilla.org/show_bug.cgi?id=1839039) for crash reference.
   * Added `ProcessInfoProvider` and `BuildVersionProvider` to get information about the app process and the build version.

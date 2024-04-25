@@ -775,6 +775,9 @@ abstract class BaseBrowserFragment :
                 loginValidationDelegate = DefaultLoginValidationDelegate(
                     context.components.core.lazyPasswordsStorage,
                 ),
+                isLoginAutofillEnabled = {
+                    context.settings().shouldAutofillLogins
+                },
                 isSaveLoginEnabled = {
                     context.settings().shouldPromptToSaveLogins
                 },
