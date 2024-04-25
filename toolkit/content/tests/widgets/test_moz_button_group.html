@@ -10,6 +10,7 @@
       solution for token variables for the new widgets -->
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <script type="module" src="chrome://global/content/elements/moz-button-group.mjs"></script>
+      <script type="module" src="chrome://global/content/elements/moz-button.mjs"></script>
   </head>
   <body>
     <p id="display"></p>
@@ -20,6 +21,7 @@
     </div>
     <!-- This is here to ensure the stylesheet is loaded. It gets removed in setup. -->
     <moz-button-group></moz-button-group>
+    <moz-button>Test</moz-button>
     <pre id="test">
     </pre>
 
@@ -74,54 +76,80 @@
       add_setup(async function setup() {
         ({ html, render} = await import("chrome://global/content/vendor/lit.all.mjs"));
         document.querySelector("moz-button-group").remove();
+        document.querySelector("moz-button").remove();
       });
 
       add_task(async function testButtonOrderingSlot() {
-        render(
+        let markupOptions = [
           html`
             <moz-button-group>
               <button slot="primary" id="primary-button">Primary</button>
               <button id="secondary-button">Secondary</button>
             </moz-button-group>
           `,
-          renderArea
-        );
+          html`
+            <moz-button-group>
+              <moz-button slot="primary" id="primary-button">Primary</moz-button>
+              <moz-button id="secondary-button">Secondary</moz-button>
+            </moz-button-group>
+          `,
+        ];
+        for (let markup of markupOptions) {
+          render(markup, renderArea);
 
-        let buttonGroup = document.querySelector("moz-button-group");
-        let primaryButton = document.getElementById("primary-button");
-        let secondaryButton = document.getElementById("secondary-button");
+          let buttonGroup = document.querySelector("moz-button-group");
+          let primaryButton = document.getElementById("primary-button");
+          let secondaryButton = document.getElementById("secondary-button");
 
-        buttonGroup.platform = "win";
-        await buttonGroup.updateComplete;
-        await checkButtons(primaryButton, secondaryButton);
 
-        buttonGroup.platform = "macosx";
-        await buttonGroup.updateComplete;
-        await checkButtons(secondaryButton, primaryButton);
+          buttonGroup.platform = "win";
+          await buttonGroup.updateComplete;
+          await checkButtons(primaryButton, secondaryButton);
+
+          buttonGroup.platform = "macosx";
+          await buttonGroup.updateComplete;
+          await checkButtons(secondaryButton, primaryButton);
+        }
       });
 
       add_task(async function testPrimaryButtonAutoSlotting() {
-        render(
+        let markupOptions = [
           html`
             <moz-button-group>
               <button class="primary">Primary</button>
               <button class="secondary">Secondary</button>
             </moz-button-group>
           `,
-          renderArea
-        );
+          html`
+            <moz-button-group>
+              <moz-button type="primary">Primary</moz-button>
+              <moz-button type="default">Secondary</moz-button>
+            </moz-button-group>
+          `,
+          html`
+            <moz-button-group>
+              <moz-button type="destructive">Delete</moz-button>
+              <moz-button type="default">Secondary</moz-button>
+            </moz-button-group>
+          `,
+        ];
+        for (let markup of markupOptions) {
+          render(markup, renderArea);
 
-        let buttonGroup = document.querySelector("moz-button-group");
-        let primaryButton = buttonGroup.querySelector(".primary");
-        let secondaryButton = buttonGroup.querySelector(".secondary");
-        buttonGroup.platform = "win";
-        await buttonGroup.updateComplete;
-        is(primaryButton.slot, "primary", "primary button was auto-slotted")
-        await checkButtons(primaryButton, secondaryButton);
+          let buttonGroup = document.querySelector("moz-button-group");
+          let primaryButton = buttonGroup.querySelector(
+            ".primary, [type=primary], [type=destructive]"
+          );
+          let secondaryButton = buttonGroup.querySelector(".secondary, [type=default]");
+          buttonGroup.platform = "win";
+          await buttonGroup.updateComplete;
+          is(primaryButton.slot, "primary", "primary button was auto-slotted")
+          await checkButtons(primaryButton, secondaryButton);
 
-        buttonGroup.platform = "macosx";
-        await buttonGroup.updateComplete;
-        await checkButtons(secondaryButton, primaryButton);
+          buttonGroup.platform = "macosx";
+          await buttonGroup.updateComplete;
+          await checkButtons(secondaryButton, primaryButton);
+        }
       });
 
       add_task(async function testSubmitButtonAutoSlotting() {
@@ -197,38 +225,48 @@
       });
 
       add_task(async function testInitialButtonLightDomReordering() {
-        const renderPlatform = platform => render(
-          html`
+        let markupOptions = [
+          platform => html`
             <moz-button-group .platform=${platform}>
               <button class="primary">First</button>
               <button class="secondary">Secondary</button>
               <button default>Default</button>
             </moz-button-group>
           `,
-          renderArea
-        );
+          platform => html`
+            <moz-button-group .platform=${platform}>
+              <moz-button type="primary" class="primary">First</moz-button>
+              <moz-button class="secondary">Secondary</moz-button>
+              <moz-button type="primary" default>Default</moz-button>
+            </moz-button-group>
+          `,
+        ];
 
-        renderPlatform("win");
-        let buttonGroup = document.querySelector("moz-button-group");
-        await buttonGroup.updateComplete;
-        let primaryButton = buttonGroup.querySelector(".primary");
-        let defaultButton = buttonGroup.querySelector("[default]");
-        let secondaryButton = buttonGroup.querySelector(".secondary");
+        for (let markup of markupOptions) {
+          const renderPlatform = platform => render(markup(platform), renderArea);
 
-        is(primaryButton.slot, "primary", "primary button was auto-slotted");
-        is(defaultButton.slot, "primary", "default button was auto-slotted");
-        await checkButtons(primaryButton, defaultButton, secondaryButton);
+          renderPlatform("win");
+          let buttonGroup = document.querySelector("moz-button-group");
+          await buttonGroup.updateComplete;
+          let primaryButton = buttonGroup.querySelector(".primary");
+          let defaultButton = buttonGroup.querySelector("[default]");
+          let secondaryButton = buttonGroup.querySelector(".secondary");
 
-        renderPlatform("macosx");
-        buttonGroup = document.querySelector("moz-button-group");
-        await buttonGroup.updateComplete;
-        primaryButton = buttonGroup.querySelector(".primary");
-        defaultButton = buttonGroup.querySelector("[default]");
-        secondaryButton = buttonGroup.querySelector(".secondary");
+          is(primaryButton.slot, "primary", "primary button was auto-slotted");
+          is(defaultButton.slot, "primary", "default button was auto-slotted");
+          await checkButtons(primaryButton, defaultButton, secondaryButton);
 
-        is(primaryButton.slot, "primary", "primary button was auto-slotted");
-        is(defaultButton.slot, "primary", "default button was auto-slotted");
-        await checkButtons(secondaryButton, primaryButton, defaultButton);
+          renderPlatform("macosx");
+          buttonGroup = document.querySelector("moz-button-group");
+          await buttonGroup.updateComplete;
+          primaryButton = buttonGroup.querySelector(".primary");
+          defaultButton = buttonGroup.querySelector("[default]");
+          secondaryButton = buttonGroup.querySelector(".secondary");
+
+          is(primaryButton.slot, "primary", "primary button was auto-slotted");
+          is(defaultButton.slot, "primary", "default button was auto-slotted");
+          await checkButtons(secondaryButton, primaryButton, defaultButton);
+        }
       });
     </script>
   </body>

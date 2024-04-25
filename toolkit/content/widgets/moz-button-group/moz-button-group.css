@@ -11,6 +11,7 @@
   margin: 0 !important;
 }
 
-::slotted(button:not(:first-child, .popup-notification-dropmarker)) {
+::slotted(button:not(:first-child, .popup-notification-dropmarker)),
+::slotted(moz-button:not(:first-child)) {
   margin-inline-start: var(--space-small) !important;
 }
