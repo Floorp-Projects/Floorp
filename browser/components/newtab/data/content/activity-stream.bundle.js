@@ -8897,7 +8897,7 @@ class _WallpapersSection extends (external_React_default()).PureComponent {
     const {
       activeWallpaper
     } = this.props;
-    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("fieldset", {
       className: "wallpaper-list"
     }, wallpaperList.map(({
       title,
@@ -8907,7 +8907,7 @@ class _WallpapersSection extends (external_React_default()).PureComponent {
       return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("input", {
         onChange: this.handleChange,
         type: "radio",
-        name: `wallpaper-${title}`,
+        name: "wallpaper",
         id: title,
         value: title,
         checked: title === activeWallpaper,
