@@ -53,6 +53,7 @@ let patterns: string[];
 * [cookieBannerDetected](#cookiebannerdetected)
 * [cookieBannerHandled](#cookiebannerhandled)
 * [messagesLoaded](#messagesloaded)
+* [pageActionInUrlbar](#pageactioninurlbar)
 
 ### `openArticleURL`
 
