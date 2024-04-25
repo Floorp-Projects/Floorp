@@ -859,28 +859,26 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
 
 /**
  * RoundISODateTime ( year, month, day, hour, minute, second, millisecond,
- * microsecond, nanosecond, increment, unit, roundingMode [ , dayLength ] )
+ * microsecond, nanosecond, increment, unit, roundingMode )
  */
-static PlainDateTime RoundISODateTime(const PlainDateTime& dateTime,
-                                      Increment increment, TemporalUnit unit,
-                                      TemporalRoundingMode roundingMode) {
+PlainDateTime js::temporal::RoundISODateTime(
+    const PlainDateTime& dateTime, Increment increment, TemporalUnit unit,
+    TemporalRoundingMode roundingMode) {
   const auto& [date, time] = dateTime;
 
   // Step 1.
   MOZ_ASSERT(IsValidISODateTime(dateTime));
   MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
 
-  // Step 2. (Not applicable in our implementation.)
-
-  // Step 3.
+  // Step 2.
   auto roundedTime = RoundTime(time, increment, unit, roundingMode);
   MOZ_ASSERT(0 <= roundedTime.days && roundedTime.days <= 1);
 
-  // Step 4.
+  // Step 3.
   auto balanceResult = BalanceISODate(date.year, date.month,
                                       date.day + int32_t(roundedTime.days));
 
-  // Step 5.
+  // Step 4.
   return {balanceResult, roundedTime.time};
 }
 
