@@ -690,15 +690,19 @@ PlainDate js::temporal::BalanceISODateNew(int32_t year, int32_t month,
 /**
  * BalanceISODate ( year, month, day )
  */
-bool js::temporal::BalanceISODate(JSContext* cx, int32_t year, int32_t month,
-                                  int64_t day, PlainDate* result) {
+bool js::temporal::BalanceISODate(JSContext* cx, const PlainDate& date,
+                                  int64_t days, PlainDate* result) {
+  MOZ_ASSERT(IsValidISODate(date));
+  MOZ_ASSERT(ISODateTimeWithinLimits(date));
+
+  int64_t day = int64_t(date.day) + days;
   if (!CanBalanceISODay(day)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_PLAIN_DATE_INVALID);
     return false;
   }
 
-  *result = BalanceISODate(year, month, int32_t(day));
+  *result = BalanceISODate(date.year, date.month, int32_t(day));
   return true;
 }
 

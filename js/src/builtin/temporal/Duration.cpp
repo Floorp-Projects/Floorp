@@ -3560,8 +3560,8 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
 
   // Step 9.h.
   PlainDate isoResult;
-  if (!AddISODate(cx, yearsLaterDate, {0, 0, 0, fractionalDays.truncate()},
-                  TemporalOverflow::Constrain, &isoResult)) {
+  if (!BalanceISODate(cx, yearsLaterDate, fractionalDays.truncate(),
+                      &isoResult)) {
     return false;
   }
 
@@ -3703,9 +3703,8 @@ static bool RoundDurationMonth(JSContext* cx,
 
   // Step 10.h.
   PlainDate isoResult;
-  if (!AddISODate(cx, yearsMonthsLaterDate,
-                  {0, 0, 0, fractionalDays.truncate()},
-                  TemporalOverflow::Constrain, &isoResult)) {
+  if (!BalanceISODate(cx, yearsMonthsLaterDate, fractionalDays.truncate(),
+                      &isoResult)) {
     return false;
   }
 
@@ -3816,8 +3815,8 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
 
   // Step 11.a
   PlainDate isoResult;
-  if (!AddISODate(cx, relativeToDate, {0, 0, 0, fractionalDays.truncate()},
-                  TemporalOverflow::Constrain, &isoResult)) {
+  if (!BalanceISODate(cx, relativeToDate, fractionalDays.truncate(),
+                      &isoResult)) {
     return false;
   }
 
