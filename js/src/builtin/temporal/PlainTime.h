@@ -174,18 +174,10 @@ struct RoundedTime final {
 
 /**
  * RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond,
- * increment, unit, roundingMode [ , dayLengthNs ] )
+ * increment, unit, roundingMode )
  */
 RoundedTime RoundTime(const PlainTime& time, Increment increment,
                       TemporalUnit unit, TemporalRoundingMode roundingMode);
-
-/**
- * RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond,
- * increment, unit, roundingMode [ , dayLengthNs ] )
- */
-RoundedTime RoundTime(const PlainTime& time, Increment increment,
-                      TemporalUnit unit, TemporalRoundingMode roundingMode,
-                      const InstantSpan& dayLengthNs);
 
 } /* namespace js::temporal */
 

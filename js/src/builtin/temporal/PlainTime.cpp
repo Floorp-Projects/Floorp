@@ -766,7 +766,7 @@ static int64_t TimeToNanos(const PlainTime& time) {
 
 /**
  * RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond,
- * increment, unit, roundingMode [ , dayLengthNs ] )
+ * increment, unit, roundingMode )
  */
 RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
                                     TemporalUnit unit,
@@ -858,49 +858,6 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
   auto balanced =
       ::BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
   return {int64_t(balanced.days), balanced.time};
-}
-
-/**
- * RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond,
- * increment, unit, roundingMode [ , dayLengthNs ] )
- */
-RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
-                                    TemporalUnit unit,
-                                    TemporalRoundingMode roundingMode,
-                                    const InstantSpan& dayLengthNs) {
-  MOZ_ASSERT(IsValidTime(time));
-  MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
-  MOZ_ASSERT(dayLengthNs > (InstantSpan{}));
-
-  if (unit != TemporalUnit::Day) {
-    return RoundTime(time, increment, unit, roundingMode);
-  }
-
-  // Step 1. (Not applicable)
-
-  // Step 2.
-  int64_t quantity = TimeToNanos(time);
-  MOZ_ASSERT(0 <= quantity && quantity < ToNanoseconds(TemporalUnit::Day));
-
-  // Steps 3-8. (Not applicable)
-
-  // Step 9.
-  //
-  // When the divisor is too large, the expression `quantity / divisor` is a
-  // value near zero. Substitute |divisor| with an equivalent expression.
-  // Choose |86'400'000'000'000| which will give a similar result because
-  // |quantity| is guaranteed to be lower than |86'400'000'000'000|.
-  int64_t divisor = int64_t(std::min(dayLengthNs.toNanoseconds(),
-                                     Int128{ToNanoseconds(TemporalUnit::Day)}));
-  MOZ_ASSERT(divisor > 0);
-  MOZ_ASSERT(increment == Increment{1}, "Rounding increment for 'day' is 1");
-
-  auto result =
-      RoundNumberToIncrement(quantity, divisor, increment, roundingMode);
-  MOZ_ASSERT(result == Int128{int64_t(result)});
-
-  // Step 10.
-  return {int64_t(result), {0, 0, 0, 0, 0, 0}};
 }
 
 /**

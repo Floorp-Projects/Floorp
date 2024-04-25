@@ -105,6 +105,8 @@ inline PlainDateTime ToPlainDateTime(const PlainDateTimeObject* dateTime) {
   return {ToPlainDate(dateTime), ToPlainTime(dateTime)};
 }
 
+class Increment;
+enum class TemporalRoundingMode;
 enum class TemporalUnit;
 
 #ifdef DEBUG
@@ -169,6 +171,14 @@ bool InterpretTemporalDateTimeFields(JSContext* cx,
                                      JS::Handle<CalendarRecord> calendar,
                                      JS::Handle<PlainObject*> fields,
                                      PlainDateTime* result);
+
+/**
+ * RoundISODateTime ( year, month, day, hour, minute, second, millisecond,
+ * microsecond, nanosecond, increment, unit, roundingMode )
+ */
+PlainDateTime RoundISODateTime(const PlainDateTime& dateTime,
+                               Increment increment, TemporalUnit unit,
+                               TemporalRoundingMode roundingMode);
 
 class MOZ_STACK_CLASS PlainDateTimeWithCalendar final {
   PlainDateTime dateTime_;
