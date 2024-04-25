@@ -152,20 +152,6 @@ bool AppleDecoderModule::IsVideoSupported(
             CreateDecoderParams::Option::HardwareDecoderNotAllowed)) {
       return false;
     }
-
-    // HW AV1 decoder only supports 8 or 10 bit color.
-    if (aConfig.mColorDepth != gfx::ColorDepth::COLOR_8 &&
-        aConfig.mColorDepth != gfx::ColorDepth::COLOR_10) {
-      return false;
-    }
-
-    if (aConfig.mColorSpace.isSome()) {
-      if (*aConfig.mColorSpace == YUVColorSpace::Identity) {
-        // HW AV1 decoder doesn't support RGB
-        return false;
-      }
-    }
-
     return true;
   }
 
