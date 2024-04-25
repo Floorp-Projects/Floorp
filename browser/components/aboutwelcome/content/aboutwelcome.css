@@ -167,6 +167,35 @@
     --fc-link-color-active: var(--fc-link-color-hover-active, #AAF2FF);
   }
 }
+:root[lwt-newtab-brighttext] #feature-callout.simulateContent.lwtNewtab {
+  color-scheme: dark;
+  --fc-background: var(--fc-background-dark, rgb(43, 42, 51));
+  --fc-color: var(--fc-color-dark, rgb(251, 251, 254));
+  --fc-border: var(--fc-border-dark, #3A3944);
+  --fc-accent-color: var(--fc-accent-color-dark, rgb(0, 221, 255));
+  --fc-button-background: var(--fc-button-background-dark, #2B2A33);
+  --fc-button-color: var(--fc-button-color-dark, rgb(251, 251, 254));
+  --fc-button-border: var(--fc-button-border-dark, transparent);
+  --fc-button-background-hover: var(--fc-button-background-hover-dark, #52525E);
+  --fc-button-color-hover: var(--fc-button-color-hover-dark, rgb(251, 251, 254));
+  --fc-button-border-hover: var(--fc-button-border-hover-dark, transparent);
+  --fc-button-background-active: var(--fc-button-background-active-dark, #5B5B66);
+  --fc-button-color-active: var(--fc-button-color-active-dark, rgb(251, 251, 254));
+  --fc-button-border-active: var(--fc-button-border-active-dark, transparent);
+  --fc-primary-button-background: var(--fc-primary-button-background-dark, rgb(0,221,255));
+  --fc-primary-button-color: var(--fc-primary-button-color-dark, rgb(43,42,51));
+  --fc-primary-button-border: var(--fc-primary-button-border-dark, transparent);
+  --fc-primary-button-background-hover: var(--fc-primary-button-background-hover-dark, rgb(128,235,255));
+  --fc-primary-button-color-hover: var(--fc-primary-button-color-hover-dark, rgb(43,42,51));
+  --fc-primary-button-border-hover: var(--fc-primary-button-border-hover-dark, transparent);
+  --fc-primary-button-background-active: var(--fc-primary-button-background-active-dark, rgb(170,242,255));
+  --fc-primary-button-color-active: var(--fc-primary-button-color-active-dark, rgb(43,42,51));
+  --fc-primary-button-border-active: var(--fc-primary-button-border-active-dark, transparent);
+  --fc-link-color: var(--fc-link-color-dark, #00DDFF);
+  --fc-link-color-hover: var(--fc-link-color-hover-dark, #80EBFF);
+  --fc-link-color-active: var(--fc-link-color-hover-active, #AAF2FF);
+}
+
 @media (prefers-contrast) {
   #feature-callout.simulateContent {
     --fc-background: var(--fc-background-hcm, -moz-dialog);
