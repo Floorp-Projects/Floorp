@@ -75,6 +75,7 @@ CppUnitTests(
 if CONFIG["OS_ARCH"] != "WASI":
     CppUnitTests(
         [
+            "TestMPSCQueue",
             "TestSPSCQueue",
             "TestThreadSafeWeakPtr",
         ]

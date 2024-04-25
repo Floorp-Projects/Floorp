@@ -73,6 +73,7 @@ EXPORTS.mozilla = [
     "MemoryChecking.h",
     "MemoryReporting.h",
     "MoveOnlyFunction.h",
+    "MPSCQueue.h",
     "MruCache.h",
     "NeverDestroyed.h",
     "NonDereferenceable.h",
