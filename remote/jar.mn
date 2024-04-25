@@ -23,6 +23,8 @@ remote.jar:
   content/shared/MobileTabBrowser.sys.mjs (shared/MobileTabBrowser.sys.mjs)
   content/shared/Navigate.sys.mjs (shared/Navigate.sys.mjs)
   content/shared/NavigationManager.sys.mjs (shared/NavigationManager.sys.mjs)
+  content/shared/NetworkRequest.sys.mjs (shared/NetworkRequest.sys.mjs)
+  content/shared/NetworkResponse.sys.mjs (shared/NetworkResponse.sys.mjs)
   content/shared/PDF.sys.mjs (shared/PDF.sys.mjs)
   content/shared/Prompt.sys.mjs (shared/Prompt.sys.mjs)
   content/shared/Realm.sys.mjs (shared/Realm.sys.mjs)
