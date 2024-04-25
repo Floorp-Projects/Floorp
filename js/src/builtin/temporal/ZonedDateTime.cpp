@@ -1165,7 +1165,7 @@ static bool DifferenceZonedDateTime(
     JSContext* cx, const Instant& ns1, const Instant& ns2,
     Handle<TimeZoneRecord> timeZone, Handle<CalendarRecord> calendar,
     TemporalUnit largestUnit, Handle<PlainObject*> maybeOptions,
-    mozilla::Maybe<const PlainDateTime&> precalculatedPlainDateTime,
+    const PlainDateTime& precalculatedPlainDateTime,
     NormalizedDuration* result) {
   MOZ_ASSERT(IsValidEpochInstant(ns1));
   MOZ_ASSERT(IsValidEpochInstant(ns2));
@@ -1176,17 +1176,11 @@ static bool DifferenceZonedDateTime(
     return true;
   }
 
+  // FIXME: spec issue - precalculatedPlainDateTime is never undefined
+  // https://github.com/tc39/proposal-temporal/issues/2822
+
   // Steps 2-3.
-  PlainDateTime startDateTime;
-  if (!precalculatedPlainDateTime) {
-    // Steps 2.a-b.
-    if (!GetPlainDateTimeFor(cx, timeZone, ns1, &startDateTime)) {
-      return false;
-    }
-  } else {
-    // Step 3.a.
-    startDateTime = *precalculatedPlainDateTime;
-  }
+  const auto& startDateTime = precalculatedPlainDateTime;
 
   // Steps 4-5.
   PlainDateTime endDateTime;
@@ -1195,62 +1189,100 @@ static bool DifferenceZonedDateTime(
   }
 
   // Step 6.
-  DateDuration dateDifference;
-  if (maybeOptions) {
-    if (!DifferenceISODateTime(cx, startDateTime, endDateTime, calendar,
-                               largestUnit, maybeOptions, &dateDifference)) {
-      return false;
-    }
-  } else {
-    if (!DifferenceISODateTime(cx, startDateTime, endDateTime, calendar,
-                               largestUnit, &dateDifference)) {
-      return false;
-    }
-  }
+  int32_t sign = (ns2 - ns1 < InstantSpan{}) ? -1 : 1;
 
   // Step 7.
-  Instant intermediateNs;
-  if (!AddZonedDateTime(cx, ns1, timeZone, calendar,
-                        DateDuration{
-                            dateDifference.years,
-                            dateDifference.months,
-                            dateDifference.weeks,
-                        },
-                        startDateTime, &intermediateNs)) {
-    return false;
-  }
-  MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
+  int32_t maxDayCorrection = 1 + (sign > 0);
 
   // Step 8.
-  auto timeDuration =
-      NormalizedTimeDurationFromEpochNanosecondsDifference(ns2, intermediateNs);
+  int32_t dayCorrection = 0;
 
   // Step 9.
-  Rooted<ZonedDateTime> intermediate(
-      cx,
-      ZonedDateTime{intermediateNs, timeZone.receiver(), calendar.receiver()});
+  auto timeDuration = DifferenceTime(startDateTime.time, endDateTime.time);
 
   // Step 10.
-  NormalizedTimeAndDays timeAndDays;
-  if (!NormalizedTimeDurationToDays(cx, timeDuration, intermediate, timeZone,
-                                    &timeAndDays)) {
-    return false;
+  if (NormalizedTimeDurationSign(timeDuration) == -sign) {
+    dayCorrection += 1;
   }
 
-  // Step 11.
-  auto dateDuration = DateDuration{
-      dateDifference.years,
-      dateDifference.months,
-      dateDifference.weeks,
-      timeAndDays.days,
-  };
-  if (!ThrowIfInvalidDuration(cx, dateDuration)) {
-    return false;
+  // Steps 11-12.
+  Rooted<PlainDateTimeWithCalendar> intermediateDateTime(cx);
+  while (dayCorrection <= maxDayCorrection) {
+    // Step 12.a.
+    auto intermediateDate =
+        BalanceISODate(endDateTime.date.year, endDateTime.date.month,
+                       endDateTime.date.day - dayCorrection * sign);
+
+    // FIXME: spec issue - CreateTemporalDateTime is fallible
+    // https://github.com/tc39/proposal-temporal/issues/2824
+
+    // Step 12.b.
+    if (!CreateTemporalDateTime(cx, {intermediateDate, startDateTime.time},
+                                calendar.receiver(), &intermediateDateTime)) {
+      return false;
+    }
+
+    // Steps 12.c-d.
+    Instant intermediateInstant;
+    if (!GetInstantFor(cx, timeZone, intermediateDateTime,
+                       TemporalDisambiguation::Compatible,
+                       &intermediateInstant)) {
+      return false;
+    }
+
+    // Step 12.e.
+    auto norm = NormalizedTimeDurationFromEpochNanosecondsDifference(
+        ns2, intermediateInstant);
+
+    // Step 12.f.
+    int32_t timeSign = NormalizedTimeDurationSign(norm);
+
+    // Step 12.g.
+    if (sign != -timeSign) {
+      // Step 13.a.
+      const auto& date1 = startDateTime.date;
+      MOZ_ASSERT(ISODateTimeWithinLimits(date1));
+
+      // Step 13.b.
+      const auto& date2 = intermediateDate;
+      MOZ_ASSERT(ISODateTimeWithinLimits(date2));
+
+      // Step 13.c.
+      auto dateLargestUnit = std::min(largestUnit, TemporalUnit::Day);
+
+      // Steps 13.d-e.
+      //
+      // The spec performs an unnecessary copy operation. As an optimization, we
+      // omit this copy.
+      auto untilOptions = maybeOptions;
+
+      // Step 13.f.
+      DateDuration dateDifference;
+      if (untilOptions) {
+        if (!DifferenceDate(cx, calendar, date1, date2, dateLargestUnit,
+                            untilOptions, &dateDifference)) {
+          return false;
+        }
+      } else {
+        if (!DifferenceDate(cx, calendar, date1, date2, dateLargestUnit,
+                            &dateDifference)) {
+          return false;
+        }
+      }
+
+      // Step 13.g.
+      return CreateNormalizedDurationRecord(cx, dateDifference, norm, result);
+    }
+
+    // Step 12.h.
+    dayCorrection += 1;
   }
 
-  return CreateNormalizedDurationRecord(
-      cx, dateDuration,
-      NormalizedTimeDuration::fromNanoseconds(timeAndDays.time), result);
+  // Steps 14-15.
+  JS_ReportErrorNumberASCII(
+      cx, GetErrorMessage, nullptr,
+      JSMSG_TEMPORAL_ZONED_DATE_TIME_INCONSISTENT_INSTANT);
+  return false;
 }
 
 /**
@@ -1262,9 +1294,9 @@ bool js::temporal::DifferenceZonedDateTime(
     Handle<TimeZoneRecord> timeZone, Handle<CalendarRecord> calendar,
     TemporalUnit largestUnit, const PlainDateTime& precalculatedPlainDateTime,
     NormalizedDuration* result) {
-  return ::DifferenceZonedDateTime(
-      cx, ns1, ns2, timeZone, calendar, largestUnit, nullptr,
-      mozilla::SomeRef(precalculatedPlainDateTime), result);
+  return ::DifferenceZonedDateTime(cx, ns1, ns2, timeZone, calendar,
+                                   largestUnit, nullptr,
+                                   precalculatedPlainDateTime, result);
 }
 
 /**
@@ -1489,11 +1521,10 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
 
   // Step 15.
   NormalizedDuration difference;
-  if (!::DifferenceZonedDateTime(
-          cx, zonedDateTime.instant(), other.instant(), timeZone, calendar,
-          settings.largestUnit, resolvedOptions,
-          mozilla::SomeRef<const PlainDateTime>(precalculatedPlainDateTime),
-          &difference)) {
+  if (!::DifferenceZonedDateTime(cx, zonedDateTime.instant(), other.instant(),
+                                 timeZone, calendar, settings.largestUnit,
+                                 resolvedOptions, precalculatedPlainDateTime,
+                                 &difference)) {
     return false;
   }
 
