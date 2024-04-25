@@ -56,8 +56,6 @@ class nsFilePicker final : public nsBaseWinFilePicker {
   using Maybe = mozilla::Maybe<T>;
   template <typename T>
   using Result = mozilla::Result<T, HRESULT>;
-  template <typename Res>
-  using FPPromise = RefPtr<mozilla::MozPromise<Maybe<Res>, HRESULT, true>>;
 
   using Command = mozilla::widget::filedialog::Command;
   using Results = mozilla::widget::filedialog::Results;
@@ -93,18 +91,6 @@ class nsFilePicker final : public nsBaseWinFilePicker {
       const nsString& aInitialDir);
   RefPtr<mozilla::MozPromise<bool, HRESULT, true>> ShowFilePicker(
       const nsString& aInitialDir);
-
-  // Show the dialog out-of-process.
-  static FPPromise<Results> ShowFilePickerRemote(
-      HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
-  static FPPromise<nsString> ShowFolderPickerRemote(
-      HWND aParent, nsTArray<Command> const& commands);
-
-  // Show the dialog in-process.
-  static FPPromise<Results> ShowFilePickerLocal(
-      HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
-  static FPPromise<nsString> ShowFolderPickerLocal(
-      HWND aParent, nsTArray<Command> const& commands);
 
   void ClearFiles();
   using ContentAnalysisResponse = mozilla::MozPromise<bool, nsresult, true>;
