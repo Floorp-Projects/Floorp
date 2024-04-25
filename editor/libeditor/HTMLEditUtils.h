@@ -1853,14 +1853,15 @@ class HTMLEditUtils final {
             continue;
           }
           return lastEmptyContent != &aEmptyContent
-                     ? lastEmptyContent->AsElement()
+                     ? Element::FromNode(lastEmptyContent)
                      : nullptr;
         }
       }
       lastEmptyContent = element;
     }
-    return lastEmptyContent != &aEmptyContent ? lastEmptyContent->AsElement()
-                                              : nullptr;
+    return lastEmptyContent != &aEmptyContent
+               ? Element::FromNode(lastEmptyContent)
+               : nullptr;
   }
 
   /**
