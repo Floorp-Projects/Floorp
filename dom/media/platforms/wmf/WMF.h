@@ -23,6 +23,7 @@
 #include <codecapi.h>
 
 #include "mozilla/Atomics.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticMutex.h"
 #include "nsThreadUtils.h"
@@ -74,7 +75,8 @@ class MediaFoundationInitializer final {
     if (sIsShutdown) {
       return false;
     }
-    return Get()->mHasInitialized;
+    auto* rv = Get();
+    return rv ? rv->mHasInitialized : false;
   }
 
  private:
@@ -82,17 +84,36 @@ class MediaFoundationInitializer final {
     {
       StaticMutexAutoLock lock(sCreateMutex);
       if (!sInitializer) {
+        // Already in shutdown.
+        if (AppShutdown::GetCurrentShutdownPhase() !=
+            ShutdownPhase::NotInShutdown) {
+          sIsShutdown = true;
+          return nullptr;
+        }
         sInitializer.reset(new MediaFoundationInitializer());
-        GetMainThreadSerialEventTarget()->Dispatch(
-            NS_NewRunnableFunction("MediaFoundationInitializer::Get", [&] {
-              // Need to run this before MTA thread gets destroyed.
-              RunOnShutdown(
-                  [&] {
-                    sInitializer.reset();
-                    sIsShutdown = true;
-                  },
-                  ShutdownPhase::XPCOMShutdown);
-            }));
+        auto shutdownCleanUp = [&] {
+          if (AppShutdown::GetCurrentShutdownPhase() !=
+              ShutdownPhase::NotInShutdown) {
+            sInitializer.reset();
+            sIsShutdown = true;
+            return;
+          }
+          // As MFShutdown needs to run on the MTA thread that is destroyed
+          // on XPCOMShutdownThreads, so we need to run cleanup before that
+          // phase.
+          RunOnShutdown(
+              [&]() {
+                sInitializer.reset();
+                sIsShutdown = true;
+              },
+              ShutdownPhase::XPCOMShutdown);
+        };
+        if (NS_IsMainThread()) {
+          shutdownCleanUp();
+        } else {
+          GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+              "MediaFoundationInitializer::Get", shutdownCleanUp));
+        }
       }
     }
     return sInitializer.get();
