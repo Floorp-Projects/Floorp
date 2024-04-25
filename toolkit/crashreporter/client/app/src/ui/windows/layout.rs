@@ -149,7 +149,11 @@ impl<'a> Layout<'a> {
                     height: height + spacing * (items.len().saturating_sub(1) as u32),
                 });
             }
-            HBox(model::HBox { items, spacing }) => {
+            HBox(model::HBox {
+                items,
+                spacing,
+                affirmative_order: _,
+            }) => {
                 let mut width = 0;
                 let mut max_height = 0;
                 let mut remaining_size = inner_size.clone();
@@ -270,7 +274,12 @@ impl<'a> Layout<'a> {
                     size.height = size.height.saturating_sub(consumed);
                 }
             }
-            model::ElementType::HBox(model::HBox { items, spacing }) => {
+            model::ElementType::HBox(model::HBox {
+                items,
+                spacing,
+                // The default ordering matches the windows platform order
+                affirmative_order: _,
+            }) => {
                 let mut position = inner_position;
                 let mut size = inner_size;
                 for item in items {
