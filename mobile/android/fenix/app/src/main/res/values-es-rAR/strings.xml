@@ -2726,6 +2726,31 @@
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Agregar a pestañas privadas</string>
 
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Continuar</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header" tools:ignore="UnusedResources">Completa esta encuesta</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice" tools:ignore="UnusedResources">Nota de privacidad</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Enviar</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Cerrar</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">¡Gracias por sus comentarios!</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">Muy satisfecho</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Satisfecho</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Neutral</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Insatisfecho</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">Muy insatisfecho</string>
+
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
     <string name="debug_drawer_logins_title">Inicios de sesión</string>

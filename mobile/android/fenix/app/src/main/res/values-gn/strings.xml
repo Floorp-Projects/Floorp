@@ -2754,6 +2754,23 @@
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Embojuaju tendayke ñemiguáva</string>
 
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Ku’ejey</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Mondo</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Mboty</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">¡Aguyje nde jehaipyrére!</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Chembovy’a</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Mbytegua</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Nachembovy’ái</string>
+
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
     <string name="debug_drawer_logins_title">Tembiapo moñepyrũ</string>

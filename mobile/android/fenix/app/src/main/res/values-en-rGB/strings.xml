@@ -260,6 +260,10 @@
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">Passwords</string>
 
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">New in %1$s</string>
+
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
     <string name="extensions_management_no_extensions">No extensions here</string>
@@ -2687,6 +2691,31 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Add to inactive tabs</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Add to private tabs</string>
+
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Continue</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header" tools:ignore="UnusedResources">Complete this survey</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice" tools:ignore="UnusedResources">Privacy Notice</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Submit</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Close</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Thanks for your feedback!</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">Very Satisfied</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Satisfied</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Neutral</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Dissatisfied</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">Very Dissatisfied</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
