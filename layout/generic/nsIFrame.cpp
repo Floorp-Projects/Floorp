@@ -8010,7 +8010,7 @@ bool nsIFrame::UpdateOverflow() {
     if (nsView* view = GetView()) {
       // Make sure the frame's view is properly sized.
       nsViewManager* vm = view->GetViewManager();
-      vm->ResizeView(view, overflowAreas.InkOverflow(), true);
+      vm->ResizeView(view, overflowAreas.InkOverflow());
     }
 
     return true;

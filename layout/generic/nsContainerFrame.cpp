@@ -780,7 +780,7 @@ void nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
   if (!(aFlags & ReflowChildFlags::NoSizeView)) {
     nsViewManager* vm = aView->GetViewManager();
 
-    vm->ResizeView(aView, aInkOverflowArea, true);
+    vm->ResizeView(aView, aInkOverflowArea);
   }
 }
 

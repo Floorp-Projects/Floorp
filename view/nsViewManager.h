@@ -180,12 +180,8 @@ class nsViewManager final {
    * The view manager generates the appropriate dirty regions.
    * @param aView view to move
    * @param the new bounds relative to the current position
-   * @param RepaintExposedAreaOnly
-   *     if true Repaint only the expanded or contracted region,
-   *     if false Repaint the union of the old and new rectangles.
    */
-  void ResizeView(nsView* aView, const nsRect& aRect,
-                  bool aRepaintExposedAreaOnly = false);
+  void ResizeView(nsView* aView, const nsRect& aRect);
 
   /**
    * Set the visibility of a view. Hidden views have the effect of hiding

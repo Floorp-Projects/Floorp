@@ -705,7 +705,7 @@ void nsSubDocumentFrame::Reflow(nsPresContext* aPresContext,
 
     nsViewManager* vm = mInnerView->GetViewManager();
     vm->MoveViewTo(mInnerView, destRect.x, destRect.y);
-    vm->ResizeView(mInnerView, nsRect(nsPoint(0, 0), destRect.Size()), true);
+    vm->ResizeView(mInnerView, nsRect(nsPoint(0, 0), destRect.Size()));
   }
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();

@@ -789,8 +789,7 @@ void nsViewManager::MoveViewTo(nsView* aView, nscoord aX, nscoord aY) {
   aView->SetPosition(aX, aY);
 }
 
-void nsViewManager::ResizeView(nsView* aView, const nsRect& aRect,
-                               bool aRepaintExposedAreaOnly) {
+void nsViewManager::ResizeView(nsView* aView, const nsRect& aRect) {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
   nsRect oldDimensions = aView->GetDimensions();
