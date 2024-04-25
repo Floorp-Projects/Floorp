@@ -61,10 +61,12 @@ async function echo(request, _model, _tokenizer, _processor) {
  * Converts an image to text using a machine learning model.
  *
  * @async
- * @param {object} request - The request object containing image data.
- * @param {string} [request.imageUrl] - The URL of the image to process. Either `imageUrl` or `data` must be provided, but not both.
- * @param {ArrayBuffer} [request.data] - The raw image data to process. Either `data` or `imageUrl` must be provided, but not both.
- * @param {string} request.mimeType - The MIME type of the image data.
+ * @param {T} request - The request object containing image data.
+ * It should contain at least one of the following fields:
+ *  - data: Raw data for processing.
+ *  - imageURL: A URL pointing to an image to be fetched and processed
+ * And the following field:
+ *  - mimeType: The MIME type of the data or image, specifying how to interpret or process the input.
  * @param {object} model - The model used for inference.
  * @param {object} tokenizer - The tokenizer used for decoding.
  * @param {object} processor - The processor used for preparing image data.
