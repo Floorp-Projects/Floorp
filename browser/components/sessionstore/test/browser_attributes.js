@@ -38,26 +38,47 @@ add_task(async function test() {
   ok(tab.hasAttribute("muted"), "tab.muted exists");
 
   // Make sure we do not persist 'image' and 'muted' attributes.
-  ss.persistTabAttribute("image");
-  ss.persistTabAttribute("muted");
   let { attributes } = JSON.parse(ss.getTabState(tab));
   ok(!("image" in attributes), "'image' attribute not saved");
   ok(!("muted" in attributes), "'muted' attribute not saved");
-  ok(!("custom" in attributes), "'custom' attribute not saved");
+  ok(!("customizemode" in attributes), "'customizemode' attribute not saved");
 
-  // Test persisting a custom attribute.
-  tab.setAttribute("custom", "foobar");
-  ss.persistTabAttribute("custom");
+  // Test persisting a customizemode attribute.
+  {
+    let customizationReady = BrowserTestUtils.waitForEvent(
+      gNavToolbox,
+      "customizationready"
+    );
+    gCustomizeMode.enter();
+    await customizationReady;
+  }
 
-  ({ attributes } = JSON.parse(ss.getTabState(tab)));
-  is(attributes.custom, "foobar", "'custom' attribute is correct");
+  let customizeIcon = gBrowser.getIcon(gBrowser.selectedTab);
+  ({ attributes } = JSON.parse(ss.getTabState(gBrowser.selectedTab)));
+  ok(!("image" in attributes), "'image' attribute not saved");
+  is(attributes.customizemode, "true", "'customizemode' attribute is correct");
 
-  // Make sure we're backwards compatible and restore old 'image' attributes.
+  {
+    let afterCustomization = BrowserTestUtils.waitForEvent(
+      gNavToolbox,
+      "aftercustomization"
+    );
+    gCustomizeMode.exit();
+    await afterCustomization;
+  }
+
+  // Test restoring a customizemode tab.
   let state = {
-    entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }],
-    attributes: { custom: "foobaz" },
-    image: gBrowser.getIcon(tab),
+    entries: [],
+    attributes: { customizemode: "true", nonpersisted: "true" },
   };
+
+  // Customize mode doesn't like being restored on top of a non-blank tab.
+  // For the moment, it appears it isn't possible to restore customizemode onto
+  // an existing non-blank tab outside of tests, however this may be a latent
+  // bug if we ever try to do that in the future.
+  let principal = Services.scriptSecurityManager.createNullPrincipal({});
+  tab.linkedBrowser.createAboutBlankContentViewer(principal, principal);
 
   // Prepare a pending tab waiting to be restored.
   let promise = promiseTabRestoring(tab);
@@ -65,18 +86,20 @@ add_task(async function test() {
   await promise;
 
   ok(tab.hasAttribute("pending"), "tab is pending");
-  is(gBrowser.getIcon(tab), state.image, "tab has correct icon");
+  ok(tab.hasAttribute("customizemode"), "tab is in customizemode");
+  ok(!tab.hasAttribute("nonpersisted"), "tab has no nonpersisted attribute");
+  is(gBrowser.getIcon(tab), customizeIcon, "tab has correct icon");
   ok(!state.attributes.image, "'image' attribute not saved");
 
   // Let the pending tab load.
   gBrowser.selectedTab = tab;
-  await promiseTabRestored(tab);
 
   // Ensure no 'image' or 'pending' attributes are stored.
   ({ attributes } = JSON.parse(ss.getTabState(tab)));
   ok(!("image" in attributes), "'image' attribute not saved");
   ok(!("pending" in attributes), "'pending' attribute not saved");
-  is(attributes.custom, "foobaz", "'custom' attribute is correct");
+  ok(!("nonpersisted" in attributes), "'nonpersisted' attribute not saved");
+  is(attributes.customizemode, "true", "'customizemode' attribute is correct");
 
   // Clean up.
   gBrowser.removeTab(tab);
