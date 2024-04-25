@@ -385,6 +385,32 @@ struct Instant final : SecondsAndNanoseconds<Instant> {
   static constexpr Instant min() { return -max(); }
 };
 
+// Minimum and maximum valid epoch day relative to midnight at the beginning of
+// 1 January 1970 UTC.
+//
+// NOTE in ISODateTimeWithinLimits:
+//
+// Temporal.PlainDateTime objects can represent points in time within 24 hours
+// (8.64 × 10**13 nanoseconds) of the Temporal.Instant boundaries. This ensures
+// that a Temporal.Instant object can be converted into a Temporal.PlainDateTime
+// object using any time zone.
+//
+// This limits the maximum valid date-time to +275760-09-13T23:59:59.999Z and
+// the minimum valid date-time -271821-04-19T00:00:00.001Z. The corresponding
+// maximum and minimum valid date values are therefore +275760-09-13 and
+// -271821-04-19. There are exactly 100'000'000 days from 1 January 1970 UTC to
+// the maximum valid date and -100'000'001 days to the minimum valid date.
+constexpr inline int32_t MinEpochDay = -100'000'001;
+constexpr inline int32_t MaxEpochDay = 100'000'000;
+
+static_assert(MinEpochDay ==
+              Instant::min().seconds / ToSeconds(TemporalUnit::Day) - 1);
+static_assert(MaxEpochDay ==
+              Instant::max().seconds / ToSeconds(TemporalUnit::Day));
+
+// Maximum number of days between two valid epoch days.
+constexpr inline int32_t MaxEpochDaysDuration = MaxEpochDay - MinEpochDay;
+
 /**
  * Plain date represents a date in the ISO 8601 calendar.
  */

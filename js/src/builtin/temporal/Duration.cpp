@@ -1180,11 +1180,12 @@ int32_t js::temporal::DaysUntil(const PlainDate& earlier,
 
   // Steps 1-2.
   int32_t epochDaysEarlier = MakeDay(earlier);
-  MOZ_ASSERT(std::abs(epochDaysEarlier) <= 100'000'000);
+  MOZ_ASSERT(MinEpochDay <= epochDaysEarlier &&
+             epochDaysEarlier <= MaxEpochDay);
 
   // Steps 3-4.
   int32_t epochDaysLater = MakeDay(later);
-  MOZ_ASSERT(std::abs(epochDaysLater) <= 100'000'000);
+  MOZ_ASSERT(MinEpochDay <= epochDaysLater && epochDaysLater <= MaxEpochDay);
 
   // Step 5.
   return epochDaysLater - epochDaysEarlier;
@@ -1214,7 +1215,7 @@ static bool MoveRelativeDate(
 
   // Step 2.
   *daysResult = DaysUntil(relativeToDate, later);
-  MOZ_ASSERT(std::abs(*daysResult) <= 200'000'000);
+  MOZ_ASSERT(std::abs(*daysResult) <= MaxEpochDaysDuration);
 
   // Step 3.
   return true;
@@ -3221,6 +3222,15 @@ bool js::temporal::RoundDuration(JSContext* cx,
                                                 roundingMode, result);
 }
 
+#ifdef DEBUG
+// Valid duration days are smaller than ⌈(2**53) / (24 * 60 * 60)⌉.
+static constexpr int64_t MaxDurationDays = (int64_t(1) << 53) / (24 * 60 * 60);
+
+// Maximum number of days in |FractionalDays|.
+static constexpr int64_t MaxFractionalDays =
+    2 * MaxDurationDays + 2 * MaxEpochDaysDuration;
+#endif
+
 struct FractionalDays final {
   int64_t days = 0;
   int64_t time = 0;
@@ -3233,8 +3243,9 @@ struct FractionalDays final {
       : days(durationDays + timeAndDays.days),
         time(timeAndDays.time),
         dayLength(timeAndDays.dayLength) {
-    MOZ_ASSERT(durationDays <= (int64_t(1) << 53) / (24 * 60 * 60));
-    MOZ_ASSERT(timeAndDays.days <= (int64_t(1) << 53) / (24 * 60 * 60));
+    MOZ_ASSERT(std::abs(durationDays) <= MaxDurationDays);
+    MOZ_ASSERT(std::abs(timeAndDays.days) <= MaxDurationDays);
+    MOZ_ASSERT(std::abs(days) <= MaxFractionalDays);
 
     // NormalizedTimeDurationToDays guarantees that |dayLength| is strictly
     // positive and less than 2**53.
@@ -3247,14 +3258,16 @@ struct FractionalDays final {
   }
 
   FractionalDays operator+=(int32_t epochDays) {
-    MOZ_ASSERT(std::abs(epochDays) <= 200'000'000);
+    MOZ_ASSERT(std::abs(epochDays) <= MaxEpochDaysDuration);
     days += epochDays;
+    MOZ_ASSERT(std::abs(days) <= MaxFractionalDays);
     return *this;
   }
 
   FractionalDays operator-=(int32_t epochDays) {
-    MOZ_ASSERT(std::abs(epochDays) <= 200'000'000);
+    MOZ_ASSERT(std::abs(epochDays) <= MaxEpochDaysDuration);
     days -= epochDays;
+    MOZ_ASSERT(std::abs(days) <= MaxFractionalDays);
     return *this;
   }
 
@@ -3273,6 +3286,7 @@ struct FractionalDays final {
         truncatedDays -= 1;
       }
     }
+    MOZ_ASSERT(std::abs(truncatedDays) <= MaxFractionalDays + 1);
     return truncatedDays;
   }
 
@@ -3305,23 +3319,10 @@ static RoundedNumber RoundNumberToIncrement(
     const Fraction& fraction, const FractionalDays& fractionalDays,
     Increment increment, TemporalRoundingMode roundingMode,
     ComputeRemainder computeRemainder) {
-#ifdef DEBUG
-  // Valid duration days are smaller than ⌈(2**53) / (24 * 60 * 60)⌉.
-  static constexpr int64_t maxDurationDays =
-      (int64_t(1) << 53) / (24 * 60 * 60);
-
-  // Numbers of days between nsMinInstant and nsMaxInstant.
-  static constexpr int32_t epochDays = 200'000'000;
-
-  // Maximum number of days in |fractionalDays|.
-  static constexpr int64_t maxFractionalDays =
-      2 * maxDurationDays + 2 * epochDays;
-#endif
-
   MOZ_ASSERT(std::abs(fraction.numerator) < (int64_t(1) << 32) * 2);
   MOZ_ASSERT(fraction.denominator > 0);
-  MOZ_ASSERT(fraction.denominator <= epochDays);
-  MOZ_ASSERT(std::abs(fractionalDays.days) <= maxFractionalDays);
+  MOZ_ASSERT(fraction.denominator <= MaxEpochDaysDuration);
+  MOZ_ASSERT(std::abs(fractionalDays.days) <= MaxFractionalDays);
   MOZ_ASSERT(fractionalDays.dayLength > 0);
   MOZ_ASSERT(fractionalDays.dayLength < (int64_t(1) << 53));
   MOZ_ASSERT(std::abs(fractionalDays.time) < fractionalDays.dayLength);
@@ -3450,15 +3451,16 @@ static RoundedNumber RoundNumberToIncrement(
   auto dayLength = Int128{fractionalDays.dayLength};
   MOZ_ASSERT(dayLength < Int128{1} << 53);
 
-  // `fraction.denominator` < 200'000'000, log2(200'000'000) = ~27.57.
+  // `fraction.denominator` < MaxEpochDaysDuration
+  // log2(MaxEpochDaysDuration) = ~27.57.
   auto denominator = dayLength * Int128{fraction.denominator};
   MOZ_ASSERT(denominator < Int128{1} << (53 + 28));
 
-  // log2(24*60*60) = ~16.4 and log2(2 * 200'000'000) = ~28.57.
+  // log2(24*60*60) = ~16.4 and log2(2 * MaxEpochDaysDuration) = ~28.57.
   //
-  //   `abs(maxFractionalDays)`
-  // = `abs(2 * maxDurationDays + 2 * epochDays)`
-  // = `abs(2 * 2**(53 - 16) + 2 * 200'000'000)`
+  //   `abs(MaxFractionalDays)`
+  // = `abs(2 * MaxDurationDays + 2 * MaxEpochDaysDuration)`
+  // = `abs(2 * 2**(53 - 16) + 2 * MaxEpochDaysDuration)`
   // ≤ 2 * 2**37 + 2**29
   // ≤ 2**39
   auto totalDays = Int128{fractionalDays.days};
@@ -3516,11 +3518,6 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
                               Handle<CalendarRecord> calendar,
                               ComputeRemainder computeRemainder,
                               RoundedDuration* result) {
-#ifdef DEBUG
-  // Numbers of days between nsMinInstant and nsMaxInstant.
-  static constexpr int32_t epochDays = 200'000'000;
-#endif
-
   auto [years, months, weeks, days] = duration.date;
 
   // Step 9.a.
@@ -3548,7 +3545,7 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
 
   // Step 9.e.
   int32_t monthsWeeksInDays = DaysUntil(yearsLaterDate, yearsMonthsWeeksLater);
-  MOZ_ASSERT(std::abs(monthsWeeksInDays) <= epochDays);
+  MOZ_ASSERT(std::abs(monthsWeeksInDays) <= MaxEpochDaysDuration);
 
   // Step 9.f. (Moved up)
 
@@ -3594,7 +3591,7 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
                         &newRelativeTo, &daysPassed)) {
     return false;
   }
-  MOZ_ASSERT(std::abs(daysPassed) <= epochDays);
+  MOZ_ASSERT(std::abs(daysPassed) <= MaxEpochDaysDuration);
 
   // Step 9.s.
   fractionalDays -= daysPassed;
@@ -3659,11 +3656,6 @@ static bool RoundDurationMonth(JSContext* cx,
                                Handle<CalendarRecord> calendar,
                                ComputeRemainder computeRemainder,
                                RoundedDuration* result) {
-#ifdef DEBUG
-  // Numbers of days between nsMinInstant and nsMaxInstant.
-  static constexpr int32_t epochDays = 200'000'000;
-#endif
-
   auto [years, months, weeks, days] = duration.date;
 
   // Step 10.a.
@@ -3691,7 +3683,7 @@ static bool RoundDurationMonth(JSContext* cx,
 
   // Step 10.e.
   int32_t weeksInDays = DaysUntil(yearsMonthsLaterDate, yearsMonthsWeeksLater);
-  MOZ_ASSERT(std::abs(weeksInDays) <= epochDays);
+  MOZ_ASSERT(std::abs(weeksInDays) <= MaxEpochDaysDuration);
 
   // Step 10.f. (Moved up)
 
@@ -3737,7 +3729,7 @@ static bool RoundDurationMonth(JSContext* cx,
                         &newRelativeTo, &daysPassed)) {
     return false;
   }
-  MOZ_ASSERT(std::abs(daysPassed) <= epochDays);
+  MOZ_ASSERT(std::abs(daysPassed) <= MaxEpochDaysDuration);
 
   // Step 10.s.
   fractionalDays -= daysPassed;
@@ -3800,11 +3792,6 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
                               Handle<CalendarRecord> calendar,
                               ComputeRemainder computeRemainder,
                               RoundedDuration* result) {
-#ifdef DEBUG
-  // Numbers of days between nsMinInstant and nsMaxInstant.
-  static constexpr int32_t epochDays = 200'000'000;
-#endif
-
   auto [years, months, weeks, days] = duration.date;
 
   auto* unwrappedRelativeTo = dateRelativeTo.unwrap(cx);
@@ -3850,7 +3837,7 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
                         &newRelativeTo, &daysPassed)) {
     return false;
   }
-  MOZ_ASSERT(std::abs(daysPassed) <= epochDays);
+  MOZ_ASSERT(std::abs(daysPassed) <= MaxEpochDaysDuration);
 
   // Step 11.l.
   fractionalDays -= daysPassed;
