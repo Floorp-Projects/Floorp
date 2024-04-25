@@ -49,6 +49,11 @@ class HomeMenu(
         object Bookmarks : Item()
         object History : Item()
         object Downloads : Item()
+
+        /**
+         * The Passwords menu item
+         */
+        object Passwords : Item()
         object Extensions : Item()
         data class SyncAccount(val accountState: AccountState) : Item()
 
@@ -142,6 +147,14 @@ class HomeMenu(
             onItemTapped.invoke(Item.Downloads)
         }
 
+        val passwordsItem = BrowserMenuImageText(
+            context.getString(R.string.preferences_sync_logins_2),
+            R.drawable.mozac_ic_login_24,
+            primaryTextColor,
+        ) {
+            onItemTapped.invoke(Item.Passwords)
+        }
+
         val extensionsItem = BrowserMenuImageText(
             context.getString(R.string.browser_menu_extensions),
             R.drawable.ic_addons_extensions,
@@ -217,6 +230,7 @@ class HomeMenu(
             bookmarksItem,
             historyItem,
             downloadsItem,
+            passwordsItem,
             extensionsItem,
             syncSignInMenuItem,
             accountAuthItem,

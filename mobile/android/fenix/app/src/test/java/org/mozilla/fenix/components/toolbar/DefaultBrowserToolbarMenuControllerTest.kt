@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Intent
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
@@ -22,7 +23,6 @@ import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.action.CustomTabListAction
@@ -79,7 +79,6 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.utils.Settings
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(FenixRobolectricTestRunner::class)
 class DefaultBrowserToolbarMenuControllerTest {
 
@@ -90,6 +89,8 @@ class DefaultBrowserToolbarMenuControllerTest {
     val gleanTestRule = GleanTestRule(testContext)
 
     @MockK private lateinit var snackbarParent: ViewGroup
+
+    @RelaxedMockK private lateinit var fragment: Fragment
 
     @RelaxedMockK private lateinit var activity: HomeActivity
 
@@ -855,6 +856,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         findInPageLauncher: () -> Unit = { },
         bookmarkTapped: (String, String) -> Unit = { _, _ -> },
     ) = DefaultBrowserToolbarMenuController(
+        fragment = fragment,
         store = store,
         activity = activity,
         navController = navController,
@@ -872,6 +874,8 @@ class DefaultBrowserToolbarMenuControllerTest {
         topSitesStorage = topSitesStorage,
         pinnedSiteStorage = pinnedSiteStorage,
         browserStore = browserStore,
+        onShowPinVerification = {},
+        onBiometricAuthenticationSuccessful = {},
     ).apply {
         ioScope = scope
     }

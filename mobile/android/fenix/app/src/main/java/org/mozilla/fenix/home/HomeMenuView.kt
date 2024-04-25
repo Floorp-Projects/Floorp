@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home
 
 import android.content.Context
+import android.content.Intent
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PRIVATE
@@ -29,6 +30,7 @@ import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.biometric.bindBiometricsCredentialsPromptOrShowWarning
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.whatsnew.WhatsNew
@@ -43,18 +45,26 @@ import org.mozilla.fenix.GleanMetrics.HomeMenu as HomeMenuMetrics
  * @param lifecycleOwner [LifecycleOwner] for the view.
  * @param homeActivity [HomeActivity] used to open URLs in a new tab.
  * @param navController [NavController] used for navigation.
+ * @param homeFragment [HomeFragment] used to attach the biometric prompt.
  * @param menuButton The [MenuButton] that will be used to create a menu when the button is
  * clicked.
  * @param fxaEntrypoint The source entry point to FxA.
+ * @param onShowPinVerification Callback for registering the pin verification result.
+ * @param onBiometricAuthenticationSuccessful Callback for displaying the next screen after a
+ * successful biometric authentication.
  */
+@Suppress("LongParameterList")
 class HomeMenuView(
     private val view: View,
     private val context: Context,
     private val lifecycleOwner: LifecycleOwner,
     private val homeActivity: HomeActivity,
     private val navController: NavController,
+    private val homeFragment: HomeFragment,
     private val menuButton: WeakReference<MenuButton>,
     private val fxaEntrypoint: FxAEntryPoint = FenixFxAEntryPoint.HomeMenu,
+    private val onShowPinVerification: (Intent) -> Unit,
+    private val onBiometricAuthenticationSuccessful: () -> Unit,
 ) {
 
     /**
@@ -164,6 +174,13 @@ class HomeMenuView(
                 navController.nav(
                     R.id.homeFragment,
                     HomeFragmentDirections.actionGlobalDownloadsFragment(),
+                )
+            }
+            HomeMenu.Item.Passwords -> {
+                bindBiometricsCredentialsPromptOrShowWarning(
+                    view = view,
+                    onShowPinVerification = onShowPinVerification,
+                    onAuthSuccess = onBiometricAuthenticationSuccessful,
                 )
             }
             HomeMenu.Item.Help -> {

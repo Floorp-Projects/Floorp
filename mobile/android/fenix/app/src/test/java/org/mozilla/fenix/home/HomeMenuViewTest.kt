@@ -47,6 +47,7 @@ class HomeMenuViewTest {
     private lateinit var view: View
     private lateinit var lifecycleOwner: LifecycleOwner
     private lateinit var homeActivity: HomeActivity
+    private lateinit var homeFragment: HomeFragment
     private lateinit var navController: NavController
     private lateinit var menuButton: MenuButton
     private lateinit var homeMenuView: HomeMenuView
@@ -56,6 +57,7 @@ class HomeMenuViewTest {
         view = mockk(relaxed = true)
         lifecycleOwner = mockk(relaxed = true)
         homeActivity = mockk(relaxed = true)
+        homeFragment = mockk(relaxed = true)
         navController = mockk(relaxed = true)
 
         menuButton = spyk(MenuButton(testContext))
@@ -66,7 +68,10 @@ class HomeMenuViewTest {
             lifecycleOwner = lifecycleOwner,
             homeActivity = homeActivity,
             navController = navController,
+            homeFragment = homeFragment,
             menuButton = WeakReference(menuButton),
+            onShowPinVerification = {},
+            onBiometricAuthenticationSuccessful = {},
         )
     }
 

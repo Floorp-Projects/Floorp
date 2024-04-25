@@ -8,6 +8,7 @@ import android.content.Intent
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
@@ -51,6 +52,7 @@ import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
+import org.mozilla.fenix.settings.biometric.bindBiometricsCredentialsPromptOrShowWarning
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.utils.Settings
 
@@ -63,6 +65,7 @@ interface BrowserToolbarMenuController {
 
 @Suppress("LargeClass", "ForbiddenComment", "LongParameterList")
 class DefaultBrowserToolbarMenuController(
+    private val fragment: Fragment,
     private val store: BrowserStore,
     private val activity: HomeActivity,
     private val navController: NavController,
@@ -80,6 +83,8 @@ class DefaultBrowserToolbarMenuController(
     private val topSitesStorage: DefaultTopSitesStorage,
     private val pinnedSiteStorage: PinnedSiteStorage,
     private val browserStore: BrowserStore,
+    private val onShowPinVerification: (Intent) -> Unit,
+    private val onBiometricAuthenticationSuccessful: () -> Unit,
 ) : BrowserToolbarMenuController {
 
     private val currentSession
@@ -365,7 +370,15 @@ class DefaultBrowserToolbarMenuController(
                     BrowserFragmentDirections.actionGlobalHistoryFragment(),
                 )
             }
-
+            is ToolbarMenu.Item.Passwords -> browserAnimator.captureEngineViewAndDrawStatically {
+                fragment.view?.let { view ->
+                    bindBiometricsCredentialsPromptOrShowWarning(
+                        view = view,
+                        onShowPinVerification = onShowPinVerification,
+                        onAuthSuccess = onBiometricAuthenticationSuccessful,
+                    )
+                }
+            }
             is ToolbarMenu.Item.Downloads -> browserAnimator.captureEngineViewAndDrawStatically {
                 navController.nav(
                     R.id.browserFragment,
@@ -494,6 +507,8 @@ class DefaultBrowserToolbarMenuController(
                 Events.browserMenuAction.record(Events.BrowserMenuActionExtra("bookmarks"))
             is ToolbarMenu.Item.History ->
                 Events.browserMenuAction.record(Events.BrowserMenuActionExtra("history"))
+            is ToolbarMenu.Item.Passwords ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("passwords"))
             is ToolbarMenu.Item.Downloads ->
                 Events.browserMenuAction.record(Events.BrowserMenuActionExtra("downloads"))
             is ToolbarMenu.Item.NewTab ->

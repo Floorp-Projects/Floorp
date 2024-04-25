@@ -4,29 +4,16 @@
 
 package org.mozilla.fenix.settings.logins.fragment
 
-import android.app.KeyguardManager
-import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings.ACTION_SECURITY_SETTINGS
-import android.view.View
 import androidx.activity.result.ActivityResultLauncher
-import androidx.appcompat.app.AlertDialog
-import androidx.core.content.getSystemService
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import mozilla.components.feature.autofill.preference.AutofillPreference
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.glean.private.NoExtras
-import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
@@ -34,24 +21,20 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.registerForActivityResult
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.runIfFragmentIsAttached
-import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.SyncPreferenceView
-import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
+import org.mozilla.fenix.settings.biometric.bindBiometricsCredentialsPromptOrShowWarning
 import org.mozilla.fenix.settings.requirePreference
 
 @Suppress("TooManyFunctions")
 class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
-    private val biometricPromptFeature = ViewBoundFeatureWrapper<BiometricPromptFeature>()
-    private lateinit var startForResult: ActivityResultLauncher<Intent>
+    private lateinit var savedLoginsFragmentLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        startForResult = registerForActivityResult {
+        savedLoginsFragmentLauncher = registerForActivityResult {
             navigateToSavedLoginsFragment()
         }
     }
@@ -71,32 +54,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
         requirePreference<Preference>(R.string.pref_key_saved_logins).isEnabled = enabled
     }
 
-    private fun navigateToSavedLogins() {
-        runIfFragmentIsAttached {
-            viewLifecycleOwner.lifecycleScope.launch(Main) {
-                // Workaround for likely biometric library bug
-                // https://github.com/mozilla-mobile/fenix/issues/8438
-                delay(SHORT_DELAY_MS)
-                navigateToSavedLoginsFragment()
-            }
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        biometricPromptFeature.set(
-            feature = BiometricPromptFeature(
-                context = requireContext(),
-                fragment = this,
-                onAuthFailure = { togglePrefsEnabledWhileAuthenticating(true) },
-                onAuthSuccess = ::navigateToSavedLogins,
-            ),
-            owner = this,
-            view = view,
-        )
-    }
-
+    @Suppress("LongMethod")
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_passwords_logins_and_passwords))
@@ -146,7 +104,17 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<Preference>(R.string.pref_key_saved_logins).setOnPreferenceClickListener {
-            verifyCredentialsOrShowSetupWarning(it.context)
+            view?.let { view ->
+                bindBiometricsCredentialsPromptOrShowWarning(
+                    view = view,
+                    onShowPinVerification = { intent ->
+                        savedLoginsFragmentLauncher.launch(intent)
+                    },
+                    onAuthSuccess = ::navigateToSavedLoginsFragment,
+                    onAuthFailure = { togglePrefsEnabledWhileAuthenticating(true) },
+                    doWhileAuthenticating = { togglePrefsEnabledWhileAuthenticating(false) },
+                )
+            }
             true
         }
 
@@ -178,60 +146,6 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
         togglePrefsEnabledWhileAuthenticating(true)
     }
 
-    private fun verifyCredentialsOrShowSetupWarning(context: Context) {
-        // Use the BiometricPrompt first
-        if (BiometricPromptFeature.canUseFeature(context)) {
-            togglePrefsEnabledWhileAuthenticating(false)
-            biometricPromptFeature.get()
-                ?.requestAuthentication(getString(R.string.logins_biometric_prompt_message_2))
-            return
-        }
-
-        // Fallback to prompting for password with the KeyguardManager
-        val manager = context.getSystemService<KeyguardManager>()
-        if (manager?.isKeyguardSecure == true) {
-            showPinVerification(manager)
-        } else {
-            // Warn that the device has not been secured
-            if (context.settings().shouldShowSecurityPinWarning) {
-                showPinDialogWarning(context)
-            } else {
-                navigateToSavedLoginsFragment()
-            }
-        }
-    }
-
-    private fun showPinDialogWarning(context: Context) {
-        AlertDialog.Builder(context).apply {
-            setTitle(getString(R.string.logins_warning_dialog_title_2))
-            setMessage(
-                getString(R.string.logins_warning_dialog_message_2),
-            )
-
-            setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->
-                navigateToSavedLoginsFragment()
-            }
-
-            setPositiveButton(getString(R.string.logins_warning_dialog_set_up_now)) { it: DialogInterface, _ ->
-                it.dismiss()
-                val intent = Intent(ACTION_SECURITY_SETTINGS)
-                startActivity(intent)
-            }
-            create().withCenterAlignedButtons()
-        }.show().secure(activity)
-        context.settings().incrementSecureWarningCount()
-    }
-
-    @Suppress("Deprecation")
-    private fun showPinVerification(manager: KeyguardManager) {
-        val intent = manager.createConfirmDeviceCredentialIntent(
-            getString(R.string.logins_biometric_prompt_message_pin),
-            getString(R.string.logins_biometric_prompt_message),
-        )
-
-        startForResult.launch(intent)
-    }
-
     /**
      * Called when authentication succeeds.
      */
@@ -259,10 +173,5 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
         val directions =
             SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToLoginExceptionsFragment()
         findNavController().navigate(directions)
-    }
-
-    companion object {
-        const val SHORT_DELAY_MS = 100L
-        const val PIN_REQUEST = 303
     }
 }
