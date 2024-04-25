@@ -1660,8 +1660,7 @@ class ThreadsafeContentParentHandle final {
 };
 
 // This is the C++ version of remoteTypePrefix in E10SUtils.sys.mjs.
-const nsDependentCSubstring RemoteTypePrefix(
-    const nsACString& aContentProcessType);
+nsDependentCSubstring RemoteTypePrefix(const nsACString& aContentProcessType);
 
 // This is based on isWebRemoteType in E10SUtils.sys.mjs.
 bool IsWebRemoteType(const nsACString& aContentProcessType);

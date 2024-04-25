@@ -724,8 +724,7 @@ uint32_t ContentParent::GetPoolSize(const nsACString& aContentProcessType) {
   return *sBrowserContentParents->GetOrInsertNew(aContentProcessType);
 }
 
-const nsDependentCSubstring RemoteTypePrefix(
-    const nsACString& aContentProcessType) {
+nsDependentCSubstring RemoteTypePrefix(const nsACString& aContentProcessType) {
   // The suffix after a `=` in a remoteType is dynamic, and used to control the
   // process pool to use.
   int32_t equalIdx = aContentProcessType.FindChar(L'=');
@@ -2316,7 +2315,7 @@ bool ContentParent::ShouldKeepProcessAlive() {
     return false;
   }
 
-  auto contentParents = sBrowserContentParents->Get(mRemoteType);
+  auto* contentParents = sBrowserContentParents->Get(mRemoteType);
   if (!contentParents) {
     return false;
   }
@@ -4071,8 +4070,9 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
            !strcmp(aTopic, "alertdisablecallback") ||
            !strcmp(aTopic, "alertsettingscallback")) {
     if (!SendNotifyAlertsObserver(nsDependentCString(aTopic),
-                                  nsDependentString(aData)))
+                                  nsDependentString(aData))) {
       return NS_ERROR_NOT_AVAILABLE;
+    }
   } else if (!strcmp(aTopic, "child-gc-request")) {
     Unused << SendGarbageCollect();
   } else if (!strcmp(aTopic, "child-cc-request")) {
@@ -4233,7 +4233,7 @@ bool ContentParent::CanOpenBrowser(const IPCTabContext& aContext) {
   if (aContext.type() == IPCTabContext::TPopupIPCTabContext) {
     const PopupIPCTabContext& popupContext = aContext.get_PopupIPCTabContext();
 
-    auto opener = BrowserParent::GetFrom(popupContext.opener().AsParent());
+    auto* opener = BrowserParent::GetFrom(popupContext.opener().AsParent());
     if (!opener) {
       MOZ_CRASH_UNLESS_FUZZING(
           "Got null opener from child; aborting AllocPBrowserParent.");
@@ -4344,7 +4344,7 @@ mozilla::ipc::IPCResult ContentParent::RecvUpdateRemotePrintSettings(
     return IPC_OK();
   }
 
-  Unused << bp->SendUpdateRemotePrintSettings(std::move(aPrintData));
+  Unused << bp->SendUpdateRemotePrintSettings(aPrintData);
   return IPC_OK();
 }
 
@@ -4386,7 +4386,7 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
     // type PopupIPCTabContext, and that the opener BrowserParent is
     // reachable.
     const PopupIPCTabContext& popupContext = aContext.get_PopupIPCTabContext();
-    auto opener = BrowserParent::GetFrom(popupContext.opener().AsParent());
+    auto* opener = BrowserParent::GetFrom(popupContext.opener().AsParent());
     openerTabId = opener->GetTabId();
     openerCpId = opener->Manager()->ChildID();
 
@@ -5115,7 +5115,7 @@ mozilla::ipc::IPCResult ContentParent::RecvReportFrameTimingData(
              "No need to bounce around if in the same process");
 
   Unused << parent->GetContentParent()->SendReportFrameTimingData(
-      loadInfoArgs, entryName, initiatorType, std::move(aData));
+      loadInfoArgs, entryName, initiatorType, aData);
   return IPC_OK();
 }
 
@@ -5386,7 +5386,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateAudioIPCConnection(
   } else {
     result = NS_ERROR_FAILURE;
   }
-  aResolver(std::move(result));
+  aResolver(result);
   return IPC_OK();
 }
 
@@ -7226,16 +7226,14 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateBrowsingContext(
   if (parent && parent->Group() != group) {
     if (parent->Group()->Id() != aGroupId) {
       return IPC_FAIL(this, "Parent has different group ID");
-    } else {
-      return IPC_FAIL(this, "Parent has different group object");
     }
+    return IPC_FAIL(this, "Parent has different group object");
   }
   if (opener && opener->Group() != group) {
     if (opener->Group()->Id() != aGroupId) {
       return IPC_FAIL(this, "Opener has different group ID");
-    } else {
-      return IPC_FAIL(this, "Opener has different group object");
     }
+    return IPC_FAIL(this, "Opener has different group object");
   }
   if (!parent && !opener && !group->Toplevels().IsEmpty()) {
     return IPC_FAIL(this, "Unrelated context from child in stale group");
