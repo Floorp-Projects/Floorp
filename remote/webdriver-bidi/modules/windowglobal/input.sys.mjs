@@ -34,6 +34,10 @@ class InputModule extends WindowGlobalBiDiModule {
     const actionChain = lazy.action.Chain.fromJSON(this.#actionState, actions);
 
     await actionChain.dispatch(this.#actionState, this.messageHandler.window);
+
+    // Terminate the current wheel transaction if there is one. Wheel
+    // transactions should not live longer than a single action chain.
+    ChromeUtils.endWheelTransaction();
   }
 
   async releaseActions() {
