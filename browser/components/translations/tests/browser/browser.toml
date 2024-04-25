@@ -62,6 +62,8 @@ skip-if = ["true"]
 
 ["browser_translations_full_page_panel_gear.js"]
 
+["browser_translations_full_page_panel_init_failure.js"]
+
 ["browser_translations_full_page_panel_never_translate_language.js"]
 
 ["browser_translations_full_page_panel_never_translate_site_auto.js"]
