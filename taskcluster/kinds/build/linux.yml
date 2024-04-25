@@ -1084,6 +1084,56 @@ linux64-asan-fuzzing/noopt:
     optimization:
         skip-unless-expanded: null
 
+linux64-asan-fuzzing-afl/opt:
+    description: "Linux64 Fuzzing Opt ASAN AFL"
+    index:
+        product: firefox
+        job-name: linux64-fuzzing-asan-afl-opt
+    attributes:
+        # The gtest libxul contains libFuzzer targets
+        skip-verify-test-packaging: true
+    treeherder:
+        platform: linux64/asan
+        symbol: Boaf
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: asan-fuzzing-afl
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            AFL_CC: /builds/worker/fetches/clang/bin/clang
+            AFL_CXX: /builds/worker/fetches/clang/bin/clang++
+            AFL_LLVM_INSTRUMENT: llvmnative
+            AFL_LLVM_NO_RPATH: "1"
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_linux_64_builds.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: fuzzing-asan-tc
+        mozconfig-variant: nightly-fuzzing-asan-afl
+        tooltool-downloads: public
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-afl-instrumentation
+            - linux64-clang
+            - linux64-rust-dev
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-llvm-symbolizer
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
+            - linux64-pkgconf
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+    optimization:
+        skip-unless-expanded: null
+
 linux64-asan-fuzzing-nyx/opt:
     description: "Linux64 Fuzzing Opt ASAN NYX"
     index:

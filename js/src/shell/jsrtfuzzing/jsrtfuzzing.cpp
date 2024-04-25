@@ -11,8 +11,10 @@
 
 #include <stdio.h>  // fflush, fprintf, fputs
 
-#include "FuzzerDefs.h"
-#include "FuzzingInterface.h"
+#ifdef LIBFUZZER
+#  include "FuzzerDefs.h"
+#endif
+
 #include "jsapi.h"  // JS_ClearPendingException, JS_IsExceptionPending
 
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate

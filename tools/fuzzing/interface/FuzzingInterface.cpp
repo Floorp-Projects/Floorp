@@ -28,3 +28,21 @@ LazyLogModule gFuzzingLog("nsFuzzing");
 #endif
 
 }  // namespace mozilla
+
+#ifdef AFLFUZZ
+__AFL_FUZZ_INIT();
+
+int afl_interface_raw(FuzzingTestFuncRaw testFunc) {
+#  ifdef __AFL_HAVE_MANUAL_CONTROL
+  __AFL_INIT();
+#  endif
+  uint8_t* buf = __AFL_FUZZ_TESTCASE_BUF;
+
+  while (__AFL_LOOP(1000)) {
+    size_t len = __AFL_FUZZ_TESTCASE_LEN;
+    testFunc(buf, len);
+  }
+
+  return 0;
+}
+#endif  // AFLFUZZ

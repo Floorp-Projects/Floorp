@@ -26,9 +26,10 @@ UNIFIED_SOURCES += [
 
 if CONFIG["FUZZING_INTERFACES"]:
     UNIFIED_SOURCES += ["jsrtfuzzing/jsrtfuzzing.cpp"]
-    USE_LIBS += [
-        "static:fuzzer",
-    ]
+    if CONFIG["LIBFUZZER"]:
+        USE_LIBS += ["static:fuzzer"]
+    else:
+        USE_LIBS += ["static:fuzzer-interface"]
 
 if CONFIG["FUZZING_JS_FUZZILLI"]:
     OS_LIBS += ["rt"]

@@ -62,6 +62,8 @@ if CONFIG["LIBFUZZER"]:
     LOCAL_INCLUDES += [
         "/tools/fuzzing/libfuzzer",
     ]
+elif CONFIG["FUZZING_INTERFACES"]:
+    USE_LIBS += ["fuzzer-interface"]
 
 if CONFIG["MOZ_GECKODRIVER"]:
     DEFINES["MOZ_GECKODRIVER"] = True

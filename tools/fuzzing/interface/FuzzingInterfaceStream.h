@@ -28,32 +28,25 @@
 
 #include "FuzzingInterface.h"
 
-namespace mozilla {
-
 typedef int (*FuzzingTestFuncStream)(nsCOMPtr<nsIInputStream>);
 
 #ifdef AFLFUZZ
-void afl_interface_stream(const char* testFile, FuzzingTestFuncStream testFunc);
-
-#  define MOZ_AFL_INTERFACE_COMMON(initFunc)                              \
-    if (initFunc) initFunc(NULL, NULL);                                   \
-    char* testFilePtr = getenv("MOZ_FUZZ_TESTFILE");                      \
-    if (!testFilePtr) {                                                   \
-      fprintf(stderr,                                                     \
-              "Must specify testfile in MOZ_FUZZ_TESTFILE environment "   \
-              "variable.\n");                                             \
-      return;                                                             \
-    }                                                                     \
-    /* Make a copy of testFilePtr so the testing function can safely call \
-     * getenv                                                             \
-     */                                                                   \
-    std::string testFile(testFilePtr);
-
-#  define MOZ_AFL_INTERFACE_STREAM(initFunc, testFunc, moduleName) \
-    TEST(AFL, moduleName)                                          \
-    {                                                              \
-      MOZ_AFL_INTERFACE_COMMON(initFunc);                          \
-      ::mozilla::afl_interface_stream(testFile.c_str(), testFunc); \
+#  define MOZ_AFL_INTERFACE_STREAM(initFunc, testFunc, moduleName)             \
+    static int afl_fuzz_inner_##moduleName(const uint8_t* data, size_t size) { \
+      if (size > INT32_MAX) return 0;                                          \
+      nsCOMPtr<nsIInputStream> stream;                                         \
+      nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),              \
+                                          Span((const char*)data, size),       \
+                                          NS_ASSIGNMENT_DEPEND);               \
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));                                    \
+      return testFunc(stream.forget());                                        \
+    }                                                                          \
+    static int afl_fuzz_##moduleName(const uint8_t* data, size_t size) {       \
+      return afl_interface_raw(afl_fuzz_inner_##moduleName);                   \
+    }                                                                          \
+    static void __attribute__((constructor)) AFLRegister##moduleName() {       \
+      ::mozilla::FuzzerRegistry::getInstance().registerModule(                 \
+          #moduleName, initFunc, afl_fuzz_##moduleName);                       \
     }
 #else
 #  define MOZ_AFL_INTERFACE_STREAM(initFunc, testFunc, moduleName) /* Nothing \
@@ -84,7 +77,5 @@ void afl_interface_stream(const char* testFile, FuzzingTestFuncStream testFunc);
 #define MOZ_FUZZING_INTERFACE_STREAM(initFunc, testFunc, moduleName) \
   MOZ_LIBFUZZER_INTERFACE_STREAM(initFunc, testFunc, moduleName);    \
   MOZ_AFL_INTERFACE_STREAM(initFunc, testFunc, moduleName);
-
-}  // namespace mozilla
 
 #endif  // FuzzingInterfaceStream_h__
