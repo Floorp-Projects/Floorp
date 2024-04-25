@@ -119,6 +119,14 @@
         android:id="@+id/action_global_addonsManagementFragment"
         app:destination="@id/addons_management_graph" />
     <action
+        android:id="@+id/action_loginsListFragment"
+        app:destination="@id/savedLogins"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/slide_out_left"
+        app:popEnterAnim="@anim/slide_in_left"
+        app:popExitAnim="@anim/slide_out_right" />
+
+    <action
         android:id="@+id/action_global_trackingProtectionFragment"
         app:destination="@id/trackingProtectionFragment" />
     <action
@@ -208,6 +216,13 @@
             android:name="scrollToCollection"
             android:defaultValue="false"
             app:argType="boolean" />
+        <action
+            android:id="@+id/action_homeFragment_to_loginsListFragment"
+            app:destination="@id/savedLogins"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <dialog
@@ -305,6 +320,13 @@
         <action
             android:id="@+id/action_browserFragment_to_translationsDialogFragment"
             app:destination="@id/translations_graph" />
+        <action
+            android:id="@+id/action_loginsListFragment"
+            app:destination="@id/savedLogins"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment

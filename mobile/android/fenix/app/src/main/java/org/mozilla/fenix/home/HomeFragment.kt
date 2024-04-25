@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
@@ -13,6 +14,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -85,6 +87,7 @@ import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Homepage
+import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.NavigationBar
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcutCfr
 import org.mozilla.fenix.HomeActivity
@@ -111,6 +114,7 @@ import org.mozilla.fenix.ext.containsQueryParameters
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.isTablet
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.registerForActivityResult
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.scaleToBottomOfView
 import org.mozilla.fenix.ext.settings
@@ -243,6 +247,8 @@ class HomeFragment : Fragment() {
     private val searchSelectorMenuBinding = ViewBoundFeatureWrapper<SearchSelectorMenuBinding>()
     private val navbarIntegration = ViewBoundFeatureWrapper<NavbarIntegration>()
 
+    private lateinit var savedLoginsLauncher: ActivityResultLauncher<Intent>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
         val profilerStartTime = requireComponents.core.engine.profiler?.getProfilerTime()
@@ -250,6 +256,7 @@ class HomeFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         bundleArgs = args.toBundle()
+        savedLoginsLauncher = registerForActivityResult { navigateToSavedLoginsFragment() }
 
         // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
         requireComponents.core.engine.profiler?.addMarker(
@@ -535,7 +542,10 @@ class HomeFragment : Fragment() {
             lifecycleOwner = viewLifecycleOwner,
             homeActivity = activity,
             navController = findNavController(),
+            homeFragment = this,
             menuButton = WeakReference(menuButton),
+            onShowPinVerification = { intent -> savedLoginsLauncher.launch(intent) },
+            onBiometricAuthenticationSuccessful = ::navigateToSavedLoginsFragment,
         ).also { it.build() }
 
         _bottomToolbarContainerView = BottomToolbarContainerView(
@@ -708,7 +718,10 @@ class HomeFragment : Fragment() {
             lifecycleOwner = viewLifecycleOwner,
             homeActivity = activity as HomeActivity,
             navController = findNavController(),
+            homeFragment = this,
             menuButton = WeakReference(binding.menuButton),
+            onShowPinVerification = { intent -> savedLoginsLauncher.launch(intent) },
+            onBiometricAuthenticationSuccessful = { navigateToSavedLoginsFragment() },
         ).also { it.build() }
 
         tabCounterView = TabCounterView(
@@ -1247,6 +1260,18 @@ class HomeFragment : Fragment() {
                         )
                     }
                 }
+        }
+    }
+
+    /**
+     * Called when authentication succeeds.
+     */
+    private fun navigateToSavedLoginsFragment() {
+        val navController = findNavController()
+        if (navController.currentDestination?.id == R.id.homeFragment) {
+            Logins.openLogins.record(NoExtras())
+            val directions = HomeFragmentDirections.actionLoginsListFragment()
+            navController.navigate(directions)
         }
     }
 

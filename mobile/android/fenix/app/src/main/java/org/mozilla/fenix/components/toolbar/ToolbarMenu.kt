@@ -48,6 +48,11 @@ interface ToolbarMenu {
         object CustomizeReaderView : Item()
         object Bookmarks : Item()
         object History : Item()
+
+        /**
+         * The Passwords menu item
+         */
+        object Passwords : Item()
         object Downloads : Item()
         object NewTab : Item()
     }

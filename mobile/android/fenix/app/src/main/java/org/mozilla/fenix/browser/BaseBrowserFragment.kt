@@ -120,6 +120,7 @@ import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.NavigationBar
 import org.mozilla.fenix.GleanMetrics.PullToRefreshInBrowser
@@ -273,6 +274,13 @@ abstract class BaseBrowserFragment :
 
     private var currentStartDownloadDialog: StartDownloadDialog? = null
 
+    private lateinit var savedLoginsLauncher: ActivityResultLauncher<Intent>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        savedLoginsLauncher = registerForActivityResult { navigateToSavedLoginsFragment() }
+    }
+
     @CallSuper
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -423,6 +431,7 @@ abstract class BaseBrowserFragment :
             },
         )
         val browserToolbarMenuController = DefaultBrowserToolbarMenuController(
+            fragment = this,
             store = store,
             activity = activity,
             navController = findNavController(),
@@ -444,6 +453,8 @@ abstract class BaseBrowserFragment :
             topSitesStorage = requireComponents.core.topSitesStorage,
             pinnedSiteStorage = requireComponents.core.pinnedSiteStorage,
             browserStore = store,
+            onShowPinVerification = { intent -> savedLoginsLauncher.launch(intent) },
+            onBiometricAuthenticationSuccessful = { navigateToSavedLoginsFragment() },
         )
 
         _browserToolbarInteractor = DefaultBrowserToolbarInteractor(
@@ -1966,6 +1977,15 @@ abstract class BaseBrowserFragment :
                     saveLoginJob?.cancel()
                 }
             }
+        }
+    }
+
+    private fun navigateToSavedLoginsFragment() {
+        val navController = findNavController()
+        if (navController.currentDestination?.id == R.id.browserFragment) {
+            Logins.openLogins.record(NoExtras())
+            val directions = BrowserFragmentDirections.actionLoginsListFragment()
+            navController.navigate(directions)
         }
     }
 }
