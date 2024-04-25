@@ -66,16 +66,7 @@ function warning(msg, exception) {
   Services.console.logMessage(consoleMsg);
 }
 
-var gOnceInitializedDeferred = (function () {
-  let deferred = {};
-
-  deferred.promise = new Promise((resolve, reject) => {
-    deferred.resolve = resolve;
-    deferred.reject = reject;
-  });
-
-  return deferred;
-})();
+var gOnceInitializedDeferred = Promise.withResolvers();
 
 /* :::::::: The Service ::::::::::::::: */
 
