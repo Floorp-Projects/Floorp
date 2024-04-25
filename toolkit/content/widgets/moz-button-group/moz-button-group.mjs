@@ -50,15 +50,22 @@ export default class MozButtonGroup extends MozLitElement {
         // Text nodes won't support classList or getAttribute.
         continue;
       }
-      // Bug 1791816: These should check moz-button instead of button.
-      if (
-        child.localName == "button" &&
-        (child.classList.contains("primary") ||
-          child.getAttribute("type") == "submit" ||
-          child.hasAttribute("autofocus") ||
-          child.hasAttribute("default"))
-      ) {
-        child.slot = "primary";
+      switch (child.localName) {
+        case "button":
+          if (
+            child.classList.contains("primary") ||
+            child.getAttribute("type") == "submit" ||
+            child.hasAttribute("autofocus") ||
+            child.hasAttribute("default")
+          ) {
+            child.slot = "primary";
+          }
+          break;
+        case "moz-button":
+          if (child.type == "primary" || child.type == "destructive") {
+            child.slot = "primary";
+          }
+          break;
       }
     }
     this.#reorderLightDom();
