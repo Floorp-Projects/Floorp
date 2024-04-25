@@ -281,7 +281,6 @@ class BookmarksTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1919262
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
     fun verifyOpenAllInPrivateTabsTest() {
         val webPages = listOf(
@@ -301,11 +300,6 @@ class BookmarksTest : TestSetup() {
         browserScreen {
             createBookmark(webPages[0].url, "root")
             createBookmark(webPages[1].url, "sub")
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        browserScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
         }.openThreeDotMenu("root") {
