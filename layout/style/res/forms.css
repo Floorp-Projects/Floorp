@@ -263,6 +263,7 @@ select > button {
   border: 0;
   appearance: auto;
   -moz-default-appearance: -moz-menulist-arrow-button;
+  pointer-events: none;
 
   /* Draw the arrow in the select's color */
   color: inherit;
