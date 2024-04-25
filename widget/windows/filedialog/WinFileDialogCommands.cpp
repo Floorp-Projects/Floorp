@@ -112,10 +112,12 @@ static HRESULT GetShellItemPath(IShellItem* aItem, nsString& aResultString) {
 }
 }  // namespace
 
-#define MOZ_ENSURE_HRESULT_OK(where, call_)                                   \
-  do {                                                                        \
-    HRESULT const _tmp_hr_ = (call_);                                         \
-    if (FAILED(_tmp_hr_)) return mozilla::Err(Error::Local(where, _tmp_hr_)); \
+#define MOZ_ENSURE_HRESULT_OK(where, call_)                     \
+  do {                                                          \
+    HRESULT const _tmp_hr_ = (call_);                           \
+    if (FAILED(_tmp_hr_)) {                                     \
+      return mozilla::Err(MOZ_FD_LOCAL_ERROR(where, _tmp_hr_)); \
+    }                                                           \
   } while (0)
 
 mozilla::Result<RefPtr<IFileDialog>, Error> MakeFileDialog(
@@ -159,11 +161,12 @@ mozilla::Result<Results, Error> GetFileResults(::IFileDialog* dialog) {
     MOZ_ENSURE_HRESULT_OK("IFileDialog::GetResult",
                           dialog->GetResult(getter_AddRefs(item)));
     if (!item) {
-      return Err(Error::Local("IFileDialog::GetResult: item", E_POINTER));
+      return Err(MOZ_FD_LOCAL_ERROR("IFileDialog::GetResult: item", E_POINTER));
     }
 
     nsAutoString path;
-    MOZ_ENSURE_HRESULT_OK("GetShellItemPath (1)", GetShellItemPath(item, path));
+    MOZ_ENSURE_HRESULT_OK("GetFileResults: GetShellItemPath (1)",
+                          GetShellItemPath(item, path));
 
     return Results({path}, index);
   }
@@ -173,14 +176,15 @@ mozilla::Result<Results, Error> GetFileResults(::IFileDialog* dialog) {
   dialog->QueryInterface(IID_IFileOpenDialog, getter_AddRefs(openDlg));
   if (!openDlg) {
     MOZ_ASSERT(false, "a file-save dialog was given FOS_ALLOWMULTISELECT?");
-    return Err(Error::Local("Save + FOS_ALLOWMULTISELECT", E_UNEXPECTED));
+    return Err(MOZ_FD_LOCAL_ERROR("Save + FOS_ALLOWMULTISELECT", E_UNEXPECTED));
   }
 
   RefPtr<IShellItemArray> items;
   MOZ_ENSURE_HRESULT_OK("IFileOpenDialog::GetResults",
                         openDlg->GetResults(getter_AddRefs(items)));
   if (!items) {
-    return Err(Error::Local("IFileOpenDialog::GetResults: items", E_POINTER));
+    return Err(
+        MOZ_FD_LOCAL_ERROR("IFileOpenDialog::GetResults: items", E_POINTER));
   }
 
   nsTArray<nsString> paths;
@@ -193,7 +197,8 @@ mozilla::Result<Results, Error> GetFileResults(::IFileDialog* dialog) {
                           items->GetItemAt(idx, getter_AddRefs(item)));
 
     nsAutoString str;
-    MOZ_ENSURE_HRESULT_OK("GetShellItemPath (2)", GetShellItemPath(item, str));
+    MOZ_ENSURE_HRESULT_OK("GetFileResults: GetShellItemPath (2)",
+                          GetShellItemPath(item, str));
 
     paths.EmplaceBack(str);
   }
@@ -211,7 +216,7 @@ mozilla::Result<nsString, Error> GetFolderResults(::IFileDialog* dialog) {
     // might be due to misbehaving shell extensions?
     MOZ_ASSERT(false,
                "unexpected lack of item: was `Show`'s return value checked?");
-    return Err(Error::Local("IFileDialog::GetResult: item", E_POINTER));
+    return Err(MOZ_FD_LOCAL_ERROR("IFileDialog::GetResult: item", E_POINTER));
   }
 
   // If the user chose a Win7 Library, resolve to the library's
@@ -347,7 +352,7 @@ RefPtr<Promise<Res>> SpawnFileDialogThread(const char (&where)[N],
                                     nullptr, {.isUiThread = true});
     if (NS_FAILED(rv)) {
       return Promise<Res>::CreateAndReject(
-          Error::Local("NS_NewNamedThread", (HRESULT)rv), where);
+          MOZ_FD_LOCAL_ERROR("NS_NewNamedThread", (HRESULT)rv), where);
     }
   }
   // `thread` is single-purpose, and should not perform any additional work
@@ -460,7 +465,7 @@ auto SpawnPickerT(HWND parent, FileDialogType type, ExtractorF&& extractor,
           if (rv == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
             return ActionRetT{Nothing()};
           }
-          return mozilla::Err(Error::Local("IFileDialog::Show", rv));
+          return mozilla::Err(MOZ_FD_LOCAL_ERROR("IFileDialog::Show", rv));
         }
 
         RetT res;

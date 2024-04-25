@@ -46,12 +46,12 @@ struct Results {
 
 // Homolog of filedialog::Err. (Always Err::Kind::RemoteError, by definition.)
 struct RemoteError {
-  // A string describing the location where the error was detected.
+  // An enum (`filedialog::Error::Location`) describing the compile-time location
+  // where the error was detected.
   //
-  // This is an `nsCString` only for simplicity of serialization and data-
-  // transfer; it may go to telemetry, and so should only be constructed from
-  // fixed strings.
-  nsCString where;
+  // (This value is validated at use-sites; if the child process sends a bad
+  // value, nothing of import will happen.)
+  uint32_t where;
   // An error code describing the error itself more precisely. Its semantics
   // depend on the context provided by `where`, but it's probably an HRESULT.
   uint32_t why;

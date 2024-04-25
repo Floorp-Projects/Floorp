@@ -60,7 +60,7 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFileDialog(
                     resolver(val.ResolveValue());
                   } else {
                     auto err = val.RejectValue();
-                    resolver(RemoteError(err.where, err.why));
+                    resolver(RemoteError(err.where.Serialize(), err.why));
                   }
                 });
 
@@ -81,7 +81,7 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFolderDialog(
                     resolver(val.ResolveValue());
                   } else {
                     auto err = val.RejectValue();
-                    resolver(RemoteError(err.where, err.why));
+                    resolver(RemoteError(err.where.Serialize(), err.why));
                   }
                 });
 
