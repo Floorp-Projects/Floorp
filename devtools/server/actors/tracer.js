@@ -119,6 +119,17 @@ class TracerActor extends Actor {
       return;
     }
 
+    // Ignore WindowGlobal target actors for WindowGlobal of iframes running in the same process and thread as their parent document.
+    // isProcessRoot will be true for each WindowGlobal being the top parent within a given process.
+    // It will typically be true for WindowGlobal of iframe running in a distinct origin and process,
+    // but only for the top iframe document. It will also be true for the top level tab document.
+    if (
+      this.targetActor.window &&
+      !this.targetActor.window.windowGlobalChild?.isProcessRoot
+    ) {
+      return;
+    }
+
     this.logMethod = options.logMethod || LOG_METHODS.STDOUT;
 
     if (this.logMethod == LOG_METHODS.PROFILER) {
