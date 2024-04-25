@@ -858,42 +858,6 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
 }
 
 /**
- * DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
- * d2, h2, min2, s2, ms2, mus2, ns2, calendarRec, largestUnit, options )
- */
-bool js::temporal::DifferenceISODateTime(JSContext* cx,
-                                         const PlainDateTime& one,
-                                         const PlainDateTime& two,
-                                         Handle<CalendarRecord> calendar,
-                                         TemporalUnit largestUnit,
-                                         DateDuration* result) {
-  NormalizedDuration normalized;
-  if (!::DifferenceISODateTime(cx, one, two, calendar, largestUnit, nullptr,
-                               &normalized)) {
-    return false;
-  }
-  *result = normalized.date;
-  return true;
-}
-
-/**
- * DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
- * d2, h2, min2, s2, ms2, mus2, ns2, calendarRec, largestUnit, options )
- */
-bool js::temporal::DifferenceISODateTime(
-    JSContext* cx, const PlainDateTime& one, const PlainDateTime& two,
-    Handle<CalendarRecord> calendar, TemporalUnit largestUnit,
-    Handle<PlainObject*> options, DateDuration* result) {
-  NormalizedDuration normalized;
-  if (!::DifferenceISODateTime(cx, one, two, calendar, largestUnit, options,
-                               &normalized)) {
-    return false;
-  }
-  *result = normalized.date;
-  return true;
-}
-
-/**
  * RoundISODateTime ( year, month, day, hour, minute, second, millisecond,
  * microsecond, nanosecond, increment, unit, roundingMode [ , dayLength ] )
  */
