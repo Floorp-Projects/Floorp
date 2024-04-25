@@ -12,6 +12,19 @@ add_task(async function () {
 
   const dbg = await initDebugger("doc-scripts.html");
 
+  // Add an iframe before starting the tracer to later check for key event on it
+  const preExistingIframeBrowsingContext = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    async function () {
+      const iframe = content.document.createElement("iframe");
+      iframe.src = `data:text/html,<input type="text" value="pre existing iframe" onkeydown="console.log('keydown')" />`;
+      content.document.body.appendChild(iframe);
+      await new Promise(resolve => (iframe.onload = resolve));
+      return iframe.contentWindow.browsingContext;
+    }
+  );
+
   info("Enable the tracing");
   await clickElement(dbg, "trace");
 
@@ -54,6 +67,38 @@ add_task(async function () {
 
   await hasConsoleMessage(dbg, "DOM | click");
   await hasConsoleMessage(dbg, "λ simple");
+
+  const iframeBrowsingContext = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    async function () {
+      const iframe = content.document.createElement("iframe");
+      iframe.src = `data:text/html,<input type="text" value="new iframe" onkeypress="console.log('keypress')" />`;
+      content.document.body.appendChild(iframe);
+      await new Promise(resolve => (iframe.onload = resolve));
+      iframe.contentWindow.document.querySelector("input").focus();
+      return iframe.contentWindow.browsingContext;
+    }
+  );
+
+  await BrowserTestUtils.synthesizeKey("x", {}, iframeBrowsingContext);
+  await hasConsoleMessage(dbg, "DOM | keypress");
+  await hasConsoleMessage(dbg, "λ onkeypress");
+
+  await SpecialPowers.spawn(
+    preExistingIframeBrowsingContext,
+    [],
+    async function () {
+      content.document.querySelector("input").focus();
+    }
+  );
+  await BrowserTestUtils.synthesizeKey(
+    "x",
+    {},
+    preExistingIframeBrowsingContext
+  );
+  await hasConsoleMessage(dbg, "DOM | keydown");
+  await hasConsoleMessage(dbg, "λ onkeydown");
 
   // Test Blackboxing
   info("Clear the console from previous traces");
