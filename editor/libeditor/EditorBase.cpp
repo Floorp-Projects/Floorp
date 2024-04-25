@@ -66,17 +66,18 @@
 #include "mozilla/TextInputListener.h"   // for TextInputListener
 #include "mozilla/TextServicesDocument.h"  // for TextServicesDocument
 #include "mozilla/TextEvents.h"
-#include "mozilla/TransactionManager.h"   // for TransactionManager
-#include "mozilla/dom/AbstractRange.h"    // for AbstractRange
-#include "mozilla/dom/Attr.h"             // for Attr
-#include "mozilla/dom/BrowsingContext.h"  // for BrowsingContext
-#include "mozilla/dom/CharacterData.h"    // for CharacterData
-#include "mozilla/dom/DataTransfer.h"     // for DataTransfer
-#include "mozilla/dom/Document.h"         // for Document
-#include "mozilla/dom/DocumentInlines.h"  // for GetObservingPresShell
-#include "mozilla/dom/DragEvent.h"        // for DragEvent
-#include "mozilla/dom/Element.h"          // for Element, nsINode::AsElement
-#include "mozilla/dom/EventTarget.h"      // for EventTarget
+#include "mozilla/TransactionManager.h"    // for TransactionManager
+#include "mozilla/dom/AbstractRange.h"     // for AbstractRange
+#include "mozilla/dom/Attr.h"              // for Attr
+#include "mozilla/dom/BorrowedAttrInfo.h"  // for BorrowedAttrInfo
+#include "mozilla/dom/BrowsingContext.h"   // for BrowsingContext
+#include "mozilla/dom/CharacterData.h"     // for CharacterData
+#include "mozilla/dom/DataTransfer.h"      // for DataTransfer
+#include "mozilla/dom/Document.h"          // for Document
+#include "mozilla/dom/DocumentInlines.h"   // for GetObservingPresShell
+#include "mozilla/dom/DragEvent.h"         // for DragEvent
+#include "mozilla/dom/Element.h"           // for Element, nsINode::AsElement
+#include "mozilla/dom/EventTarget.h"       // for EventTarget
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"    // for Selection, etc.
@@ -2940,49 +2941,52 @@ void EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
   bool isDestElementInBody = rootElement->Contains(destElement);
 
   // Clear existing attributes
-  AutoTArray<OwningNonNull<Attr>, 16> destElementAttributes;
-  if (nsDOMAttributeMap* attributes = destElement->Attributes()) {
-    const uint32_t numberOfAttributes = attributes->Length();
-    destElementAttributes.SetCapacity(numberOfAttributes);
-    for (const auto i : IntegerRange(numberOfAttributes)) {
-      if (Attr* attr = attributes->Item(i)) {
-        destElementAttributes.AppendElement(*attr);
+  AutoTArray<OwningNonNull<nsAtom>, 16> destElementAttributes;
+  if (const uint32_t attrCount = destElement->GetAttrCount()) {
+    destElementAttributes.SetCapacity(attrCount);
+    for (const uint32_t i : IntegerRange(attrCount)) {
+      if (const nsAttrName* attrName = destElement->GetUnsafeAttrNameAt(i)) {
+        MOZ_ASSERT(attrName->LocalName());
+        destElementAttributes.AppendElement(*attrName->LocalName());
       }
     }
   }
-  for (const OwningNonNull<Attr>& attr : destElementAttributes) {
+  for (const OwningNonNull<nsAtom>& attr : destElementAttributes) {
     if (isDestElementInBody) {
-      DebugOnly<nsresult> rvIgnored = RemoveAttributeWithTransaction(
-          destElement, MOZ_KnownLive(*attr->NodeInfo()->NameAtom()));
+      DebugOnly<nsresult> rvIgnored =
+          RemoveAttributeWithTransaction(destElement, MOZ_KnownLive(*attr));
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "EditorBase::RemoveAttributeWithTransaction() failed, but ignored");
     } else {
-      DebugOnly<nsresult> rvIgnored = destElement->UnsetAttr(
-          kNameSpaceID_None, attr->NodeInfo()->NameAtom(), true);
+      DebugOnly<nsresult> rvIgnored =
+          destElement->UnsetAttr(kNameSpaceID_None, attr, true);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                            "Element::UnsetAttr() failed, but ignored");
     }
   }
 
   // Set just the attributes that the source element has
-  AutoTArray<OwningNonNull<Attr>, 16> sourceElementAttributes;
-  if (nsDOMAttributeMap* attributes = sourceElement->Attributes()) {
-    const uint32_t numberOfAttributes = attributes->Length();
-    sourceElementAttributes.SetCapacity(numberOfAttributes);
-    for (const auto i : IntegerRange(numberOfAttributes)) {
-      if (Attr* attr = attributes->Item(i)) {
-        sourceElementAttributes.AppendElement(*attr);
+  AutoTArray<std::pair<OwningNonNull<nsAtom>, nsString>, 16>
+      sourceElementAttributes;
+  if (const uint32_t attrCount = sourceElement->GetAttrCount()) {
+    sourceElementAttributes.SetCapacity(attrCount);
+    for (const uint32_t i : IntegerRange(attrCount)) {
+      const BorrowedAttrInfo attrInfo = sourceElement->GetAttrInfoAt(i);
+      if (const nsAttrName* attrName = attrInfo.mName) {
+        MOZ_ASSERT(attrName->LocalName());
+        MOZ_ASSERT(attrInfo.mValue);
+        nsString value;
+        attrInfo.mValue->ToString(value);
+        sourceElementAttributes.AppendElement(std::make_pair(
+            OwningNonNull<nsAtom>(*attrName->LocalName()), std::move(value)));
       }
     }
   }
-  for (const OwningNonNull<Attr>& attr : sourceElementAttributes) {
-    nsAutoString value;
-    attr->GetValue(value);
+  for (const auto& attr : sourceElementAttributes) {
     if (isDestElementInBody) {
       DebugOnly<nsresult> rvIgnored = SetAttributeOrEquivalent(
-          destElement, MOZ_KnownLive(attr->NodeInfo()->NameAtom()), value,
-          false);
+          destElement, MOZ_KnownLive(attr.first), attr.second, false);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "EditorBase::SetAttributeOrEquivalent() failed, but ignored");
@@ -2990,8 +2994,7 @@ void EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
       // The element is not inserted in the document yet, we don't want to put
       // a transaction on the UndoStack
       DebugOnly<nsresult> rvIgnored = SetAttributeOrEquivalent(
-          destElement, MOZ_KnownLive(attr->NodeInfo()->NameAtom()), value,
-          true);
+          destElement, MOZ_KnownLive(attr.first), attr.second, true);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "EditorBase::SetAttributeOrEquivalent() failed, but ignored");
