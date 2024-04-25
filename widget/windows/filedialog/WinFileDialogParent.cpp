@@ -55,24 +55,62 @@ PWinFileDialogParent::nsresult WinFileDialogParent::BindToUtilityProcess(
 }
 
 // Convert the raw IPC promise-type to a filedialog::Promise.
-template <typename T, size_t N>
+template <typename T, typename Ex, size_t N>
 static auto ConvertToFDPromise(
     const char (&aMethod)[N],  // __func__
-    RefPtr<MozPromise<T, mozilla::ipc::ResponseRejectReason, true>> aSrcPromise)
-    -> RefPtr<MozPromise<T, Error, true>> {
-  using DstPromiseT = MozPromise<T, Error, true>;
+    Ex&& extractor,
+    RefPtr<MozPromise<T, mozilla::ipc::ResponseRejectReason, true>>
+        aSrcPromise) {
+  // The extractor must produce a `mozilla::Result<..., RemoteError>` from `T`.
+  using SrcResultInfo = detail::DestructureResult<std::invoke_result_t<Ex, T>>;
+  using ResolveT = typename SrcResultInfo::OkT;
+  static_assert(std::is_same_v<typename SrcResultInfo::ErrorT, RemoteError>,
+                "expected T to be a Result<..., RemoteError>");
+
   using SrcPromiseT = MozPromise<T, mozilla::ipc::ResponseRejectReason, true>;
+  using DstPromiseT = MozPromise<ResolveT, Error, true>;
 
-  // a note to the reader:
-  static_assert(std::is_same_v<DstPromiseT, Promise<T>>);
+  RefPtr<DstPromiseT> ret = aSrcPromise->Then(
+      mozilla::GetCurrentSerialEventTarget(), aMethod,
+      [extractor, aMethod](T&& val) {
+        mozilla::Result<ResolveT, RemoteError> result =
+            extractor(std::move(val));
+        if (result.isOk()) {
+          return DstPromiseT::CreateAndResolve(result.unwrap(), aMethod);
+        }
 
-  return aSrcPromise->MapErr(mozilla::GetCurrentSerialEventTarget(), aMethod,
-                             [=](typename SrcPromiseT::RejectValueType&& val) {
-                               return Error{.kind = Error::IPCError,
-                                            .where = "IPC"_ns,
-                                            .why = (uint32_t)val};
-                             });
+        RemoteError err = result.unwrapErr();
+        return DstPromiseT::CreateAndReject(Error{.kind = Error::RemoteError,
+                                                  .where = err.where(),
+                                                  .why = err.why()},
+                                            aMethod);
+      },
+      [aMethod](typename mozilla::ipc::ResponseRejectReason&& val) {
+        return DstPromiseT::CreateAndReject(Error{.kind = Error::IPCError,
+                                                  .where = "IPC"_ns,
+                                                  .why = (uint32_t)val},
+                                            aMethod);
+      });
+
+  return ret;
 }
+
+template <typename Input, typename Output>
+struct Extractor {
+  template <typename Input::Type tag_, Output const& (Input::*getter_)() const>
+  static auto get() {
+    return [](Input&& res) -> Result<Output, RemoteError> {
+      if (res.type() == tag_) {
+        return (res.*getter_)();
+      }
+      if (res.type() == Input::TRemoteError) {
+        return Err(res.get_RemoteError());
+      }
+      MOZ_ASSERT_UNREACHABLE("internal IPC failure?");
+      return Err(RemoteError("internal IPC failure?"_ns, (uint32_t)E_FAIL));
+    };
+  }
+};
 
 [[nodiscard]] RefPtr<WinFileDialogParent::ShowFileDialogPromise>
 WinFileDialogParent::ShowFileDialogImpl(HWND parent, const FileDialogType& type,
@@ -80,7 +118,11 @@ WinFileDialogParent::ShowFileDialogImpl(HWND parent, const FileDialogType& type,
   auto inner_promise = PWinFileDialogParent::SendShowFileDialog(
       reinterpret_cast<WindowsHandle>(parent), type, std::move(commands));
 
-  return ConvertToFDPromise(__func__, std::move(inner_promise));
+  return ConvertToFDPromise(
+      __func__,
+      Extractor<FileResult, Maybe<Results>>::get<
+          FileResult::TMaybeResults, &FileResult::get_MaybeResults>(),
+      std::move(inner_promise));
 }
 
 [[nodiscard]] RefPtr<WinFileDialogParent::ShowFolderDialogPromise>
@@ -89,7 +131,11 @@ WinFileDialogParent::ShowFolderDialogImpl(
   auto inner_promise = PWinFileDialogParent::SendShowFolderDialog(
       reinterpret_cast<WindowsHandle>(parent), std::move(commands));
 
-  return ConvertToFDPromise(__func__, std::move(inner_promise));
+  return ConvertToFDPromise(
+      __func__,
+      Extractor<FolderResult, Maybe<nsString>>::get<
+          FolderResult::TMaybensString, &FolderResult::get_MaybensString>(),
+      std::move(inner_promise));
 }
 
 void WinFileDialogParent::ProcessingError(Result aCode, const char* aReason) {
