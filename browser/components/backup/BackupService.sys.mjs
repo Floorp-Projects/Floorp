@@ -92,7 +92,7 @@ export class BackupService {
    */
   static get MANIFEST_SCHEMA() {
     if (!BackupService.#manifestSchemaPromise) {
-      BackupService.#manifestSchemaPromise = BackupService.#getSchemaForVersion(
+      BackupService.#manifestSchemaPromise = BackupService._getSchemaForVersion(
         BackupService.MANIFEST_SCHEMA_VERSION
       );
     }
@@ -113,11 +113,19 @@ export class BackupService {
   /**
    * Returns the schema for the backup manifest for a given version.
    *
+   * This should really be #getSchemaForVersion, but for some reason,
+   * sphinx-js seems to choke on static async private methods (bug 1893362).
+   * We workaround this breakage by using the `_` prefix to indicate that this
+   * method should be _considered_ private, and ask that you not use this method
+   * outside of this class. The sphinx-js issue is tracked at
+   * https://github.com/mozilla/sphinx-js/issues/240.
+   *
+   * @private
    * @param {number} version
    *   The version of the schema to return.
    * @returns {Promise<object>}
    */
-  static async #getSchemaForVersion(version) {
+  static async _getSchemaForVersion(version) {
     let schemaURL = `chrome://browser/content/backup/BackupManifest.${version}.schema.json`;
     let response = await fetch(schemaURL);
     return response.json();
@@ -483,7 +491,7 @@ export class BackupService {
       }
 
       // Make sure that it conforms to the schema.
-      let manifestSchema = await BackupService.#getSchemaForVersion(
+      let manifestSchema = await BackupService._getSchemaForVersion(
         manifest.version
       );
       let schemaValidationResult = lazy.JsonSchemaValidator.validate(
