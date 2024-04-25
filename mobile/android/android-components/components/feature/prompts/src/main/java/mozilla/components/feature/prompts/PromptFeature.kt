@@ -135,6 +135,8 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * a dialog (fragment).
  * @property shareDelegate Delegate used to display share sheet.
  * @property exitFullscreenUsecase Usecase allowing to exit browser tabs' fullscreen mode.
+ * @property isLoginAutofillEnabled A callback invoked before an autofill prompt is triggered. If false,
+ * 'autofill login' prompts will not be shown.
  * @property isSaveLoginEnabled A callback invoked when a login prompt is triggered. If false,
  * 'save login' prompts will not be shown.
  * @property isCreditCardAutofillEnabled A callback invoked when credit card fields are detected in the webpage.
@@ -172,6 +174,7 @@ class PromptFeature private constructor(
     private val exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
     override val creditCardValidationDelegate: CreditCardValidationDelegate? = null,
     override val loginValidationDelegate: LoginValidationDelegate? = null,
+    private val isLoginAutofillEnabled: () -> Boolean = { false },
     private val isSaveLoginEnabled: () -> Boolean = { false },
     private val isCreditCardAutofillEnabled: () -> Boolean = { false },
     private val isAddressAutofillEnabled: () -> Boolean = { false },
@@ -220,6 +223,7 @@ class PromptFeature private constructor(
         exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
         creditCardValidationDelegate: CreditCardValidationDelegate? = null,
         loginValidationDelegate: LoginValidationDelegate? = null,
+        isLoginAutofillEnabled: () -> Boolean = { false },
         isSaveLoginEnabled: () -> Boolean = { false },
         isCreditCardAutofillEnabled: () -> Boolean = { false },
         isAddressAutofillEnabled: () -> Boolean = { false },
@@ -244,6 +248,7 @@ class PromptFeature private constructor(
         exitFullscreenUsecase = exitFullscreenUsecase,
         creditCardValidationDelegate = creditCardValidationDelegate,
         loginValidationDelegate = loginValidationDelegate,
+        isLoginAutofillEnabled = isLoginAutofillEnabled,
         isSaveLoginEnabled = isSaveLoginEnabled,
         isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
         isAddressAutofillEnabled = isAddressAutofillEnabled,
@@ -268,6 +273,7 @@ class PromptFeature private constructor(
         exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
         creditCardValidationDelegate: CreditCardValidationDelegate? = null,
         loginValidationDelegate: LoginValidationDelegate? = null,
+        isLoginAutofillEnabled: () -> Boolean = { false },
         isSaveLoginEnabled: () -> Boolean = { false },
         isCreditCardAutofillEnabled: () -> Boolean = { false },
         isAddressAutofillEnabled: () -> Boolean = { false },
@@ -291,6 +297,7 @@ class PromptFeature private constructor(
         exitFullscreenUsecase = exitFullscreenUsecase,
         creditCardValidationDelegate = creditCardValidationDelegate,
         loginValidationDelegate = loginValidationDelegate,
+        isLoginAutofillEnabled = isLoginAutofillEnabled,
         isSaveLoginEnabled = isSaveLoginEnabled,
         isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
         isAddressAutofillEnabled = isAddressAutofillEnabled,
@@ -560,6 +567,9 @@ class PromptFeature private constructor(
                 }
 
                 is SelectLoginPrompt -> {
+                    if (!isLoginAutofillEnabled()) {
+                        return
+                    }
                     if (promptRequest.logins.isEmpty()) {
                         if (isSuggestStrongPasswordEnabled) {
                             val currentUrl =

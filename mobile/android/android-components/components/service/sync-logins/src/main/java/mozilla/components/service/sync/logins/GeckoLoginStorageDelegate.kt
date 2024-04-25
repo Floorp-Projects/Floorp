@@ -4,6 +4,7 @@
 
 package mozilla.components.service.sync.logins
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -42,10 +43,15 @@ import mozilla.components.concept.storage.LoginsStorage
  *     what the result of the operation will be: saving a new login,
  *     updating an existing login, or filling in a blank username.
  *   - If the user accepts: GV calls [onLoginSave] with the [LoginEntry]
+ *
+ *  @param loginStorage The [LoginsStorage] used for looking up saved credentials to autofill.
+ *  @param scope [CoroutineScope] for long running operations. Defaults to using the [Dispatchers.IO].
+ *  @param isLoginAutofillEnabled callback allowing to limit [loginStorage] operations if autofill is disabled.
  */
 class GeckoLoginStorageDelegate(
     private val loginStorage: Lazy<LoginsStorage>,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    private val isLoginAutofillEnabled: () -> Boolean = { false },
 ) : LoginStorageDelegate {
 
     override fun onLoginUsed(login: Login) {
@@ -55,6 +61,9 @@ class GeckoLoginStorageDelegate(
     }
 
     override fun onLoginFetch(domain: String): Deferred<List<Login>> {
+        if (!isLoginAutofillEnabled()) {
+            return CompletableDeferred(listOf())
+        }
         return scope.async {
             loginStorage.value.getByBaseDomain(domain)
         }

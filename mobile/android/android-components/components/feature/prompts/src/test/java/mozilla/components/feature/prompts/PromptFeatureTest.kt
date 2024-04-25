@@ -1805,6 +1805,74 @@ class PromptFeatureTest {
     }
 
     @Test
+    fun `WHEN login autofill is enabled THEN the select login prompt is shown`() {
+        val loginPickerView: SelectablePromptView<Login> = mock()
+
+        val login =
+            Login(guid = "A", origin = "origin", username = "user123", password = "password123")
+
+        val feature =
+            PromptFeature(
+                activity = mock<Activity>(),
+                store = store,
+                fileUploadsDirCleaner = mock(),
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+                loginDelegate = object : LoginDelegate {
+                    override val loginPickerView = loginPickerView
+                    override val onManageLogins = {}
+                },
+                isLoginAutofillEnabled = { true },
+            ) { }
+        feature.loginPicker = loginPicker
+        val onLoginDismiss: () -> Unit = {}
+        val onLoginConfirm: (Login) -> Unit = {}
+
+        val selectLoginRequest =
+            PromptRequest.SelectLoginPrompt(listOf(login), null, onLoginConfirm, onLoginDismiss)
+
+        feature.start()
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, selectLoginRequest))
+            .joinBlocking()
+
+        verify(loginPicker).handleSelectLoginRequest(selectLoginRequest)
+    }
+
+    @Test
+    fun `WHEN login autofill is disabled THEN the select login prompt is not shown`() {
+        val loginPickerView: SelectablePromptView<Login> = mock()
+
+        val login =
+            Login(guid = "A", origin = "origin", username = "user123", password = "password123")
+
+        val feature =
+            PromptFeature(
+                activity = mock<Activity>(),
+                store = store,
+                fileUploadsDirCleaner = mock(),
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+                exitFullscreenUsecase = mock(),
+                loginDelegate = object : LoginDelegate {
+                    override val loginPickerView = loginPickerView
+                    override val onManageLogins = {}
+                },
+            ) { }
+        feature.loginPicker = loginPicker
+        val onLoginDismiss: () -> Unit = {}
+        val onLoginConfirm: (Login) -> Unit = {}
+
+        val selectLoginRequest =
+            PromptRequest.SelectLoginPrompt(listOf(login), null, onLoginConfirm, onLoginDismiss)
+
+        feature.start()
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, selectLoginRequest))
+            .joinBlocking()
+        verify(loginPicker, never()).handleSelectLoginRequest(selectLoginRequest)
+    }
+
+    @Test
     fun `When page is refreshed login dialog is dismissed`() {
         val loginPickerView: SelectablePromptView<Login> = mock()
         val feature =
@@ -1819,6 +1887,7 @@ class PromptFeatureTest {
                     override val loginPickerView = loginPickerView
                     override val onManageLogins = {}
                 },
+                isLoginAutofillEnabled = { true },
             ) { }
         feature.loginPicker = loginPicker
         val onLoginDismiss: () -> Unit = {}
