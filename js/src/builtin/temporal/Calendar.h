@@ -745,13 +745,6 @@ Wrapped<PlainDateObject*> CalendarDateFromFields(
     JS::Handle<PlainObject*> fields, JS::Handle<PlainObject*> options);
 
 /**
- * CalendarDateFromFields ( calendarRec, fields [ , options ] )
- */
-Wrapped<PlainDateObject*> CalendarDateFromFields(
-    JSContext* cx, JS::Handle<CalendarRecord> calendar,
-    JS::Handle<PlainObject*> fields, TemporalOverflow overflow);
-
-/**
  * CalendarYearMonthFromFields ( calendarRec, fields [ , options ] )
  */
 Wrapped<PlainYearMonthObject*> CalendarYearMonthFromFields(

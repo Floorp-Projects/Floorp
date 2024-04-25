@@ -834,9 +834,8 @@ static bool PlainMonthDay_toPlainDate(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Steps 12-14.
-  auto obj = js::temporal::CalendarDateFromFields(
-      cx, calendar, mergedFromConcatenatedFields, TemporalOverflow::Constrain);
+  // Step 12.
+  auto obj = CalendarDateFromFields(cx, calendar, mergedFromConcatenatedFields);
   if (!obj) {
     return false;
   }

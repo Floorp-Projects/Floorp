@@ -992,8 +992,6 @@ static bool NormalizedTimeDurationToDays(
   MOZ_ASSERT(IsValidISODateTime(oneDayFarther.dateTime));
   MOZ_ASSERT(IsValidEpochInstant(oneDayFarther.instant));
 
-  // FIXME: spec issue - bad markup for |oneDayFarther|.
-
   // Step 19. (Inlined NormalizedTimeDurationFromEpochNanosecondsDifference)
   auto dayLengthNs = oneDayFarther.instant - relativeResult.instant;
   MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
@@ -1040,8 +1038,6 @@ static bool NormalizedTimeDurationToDays(
     MOZ_ASSERT(IsValidISODateTime(oneDayFarther.dateTime));
     MOZ_ASSERT(IsValidEpochInstant(oneDayFarther.instant));
 
-    // FIXME: spec issue - bad markup for |oneDayFarther|.
-
     // Step 21.e. (Inlined NormalizedTimeDurationFromEpochNanosecondsDifference)
     dayLengthNs = oneDayFarther.instant - relativeResult.instant;
     MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
@@ -1065,8 +1061,6 @@ static bool NormalizedTimeDurationToDays(
     // so the difference |oneDayLess| is a valid epoch instant difference value.
     //
     // clang-format on
-
-    // FIXME: spec issue - SubtractNormalizedTimeDuration is infallible
 
     // Step 21.f.
     auto oneDayLess = ns - dayLengthNs;
@@ -1495,10 +1489,6 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
   }
 
   // Step 15.
-  // FIXME: spec bug - unnecessary call to CreateDataPropertyOrThrow
-  // https://github.com/tc39/proposal-temporal/issues/2802
-
-  // Step 16.
   NormalizedDuration difference;
   if (!::DifferenceZonedDateTime(
           cx, zonedDateTime.instant(), other.instant(), timeZone, calendar,
@@ -1508,14 +1498,14 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 17.
+  // Step 16.
   bool roundingGranularityIsNoop =
       settings.smallestUnit == TemporalUnit::Nanosecond &&
       settings.roundingIncrement == Increment{1};
 
-  // Step 18.
+  // Step 17.
   if (!roundingGranularityIsNoop) {
-    // Steps 18.a-b.
+    // Steps 17.a-b.
     NormalizedDuration roundResult;
     if (!RoundDuration(cx, difference, settings.roundingIncrement,
                        settings.smallestUnit, settings.roundingMode,
@@ -1524,17 +1514,17 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
       return false;
     }
 
-    // Step 18.c.
+    // Step 17.c.
     NormalizedTimeAndDays timeAndDays;
     if (!NormalizedTimeDurationToDays(cx, roundResult.time, zonedDateTime,
                                       timeZone, &timeAndDays)) {
       return false;
     }
 
-    // Step 18.d.
+    // Step 17.d.
     int64_t days = roundResult.date.days + timeAndDays.days;
 
-    // Step 18.e.
+    // Step 17.e.
     auto toAdjust = NormalizedDuration{
         {
             roundResult.date.years,
@@ -1552,7 +1542,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
       return false;
     }
 
-    // Step 18.f.
+    // Step 17.f.
     DateDuration balanceResult;
     if (!temporal::BalanceDateDurationRelative(
             cx, adjustResult.date, settings.largestUnit, settings.smallestUnit,
@@ -1560,17 +1550,17 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
       return false;
     }
 
-    // Step 18.g.
+    // Step 17.g.
     if (!CombineDateAndNormalizedTimeDuration(cx, balanceResult,
                                               adjustResult.time, &difference)) {
       return false;
     }
   }
 
-  // Step 19.
+  // Step 18.
   auto timeDuration = BalanceTimeDuration(difference.time, TemporalUnit::Hour);
 
-  // Step 20.
+  // Step 19.
   auto duration = Duration{
       double(difference.date.years), double(difference.date.months),
       double(difference.date.weeks), double(difference.date.days),
@@ -2914,7 +2904,7 @@ static bool ZonedDateTime_withPlainTime(JSContext* cx, const CallArgs& args) {
   Rooted<ZonedDateTime> zonedDateTime(
       cx, ZonedDateTime{&args.thisv().toObject().as<ZonedDateTimeObject>()});
 
-  // Steps 3-4.
+  // Step 3. (Inlined ToTemporalTimeOrMidnight)
   PlainTime time = {};
   if (args.hasDefined(0)) {
     if (!ToTemporalTime(cx, args[0], &time)) {
@@ -2922,7 +2912,7 @@ static bool ZonedDateTime_withPlainTime(JSContext* cx, const CallArgs& args) {
     }
   }
 
-  // Step 5.
+  // Step 4.
   Rooted<TimeZoneRecord> timeZone(cx);
   if (!CreateTimeZoneMethodsRecord(cx, zonedDateTime.timeZone(),
                                    {
@@ -2933,31 +2923,31 @@ static bool ZonedDateTime_withPlainTime(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Steps 6 and 8.
+  // Steps 5 and 7.
   PlainDateTime plainDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, zonedDateTime.instant(),
                            &plainDateTime)) {
     return false;
   }
 
-  // Step 7.
+  // Step 6.
   auto calendar = zonedDateTime.calendar();
 
-  // Step 9.
+  // Step 8.
   Rooted<PlainDateTimeWithCalendar> resultPlainDateTime(cx);
   if (!CreateTemporalDateTime(cx, {plainDateTime.date, time}, calendar,
                               &resultPlainDateTime)) {
     return false;
   }
 
-  // Step 10.
+  // Step 9.
   Instant instant;
   if (!GetInstantFor(cx, timeZone, resultPlainDateTime,
                      TemporalDisambiguation::Compatible, &instant)) {
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   auto* result =
       CreateTemporalZonedDateTime(cx, instant, timeZone.receiver(), calendar);
   if (!result) {
