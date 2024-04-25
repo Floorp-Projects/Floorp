@@ -14,7 +14,6 @@
 #include "GPUProcessManager.h"
 #include "gfxGradientCache.h"
 #include "GfxInfoBase.h"
-#include "VideoUtils.h"
 #include "VRGPUChild.h"
 #include "VRManager.h"
 #include "VRManagerParent.h"
@@ -106,6 +105,63 @@ using namespace ipc;
 using namespace layers;
 
 static GPUParent* sGPUParent;
+
+static void ReportHardwareMediaCodecSupportIfNeeded() {
+  // We only need to report the result once.
+  static bool sReported = false;
+  if (sReported) {
+    return;
+  }
+#if defined(XP_WIN)
+  // Only report telemetry when hardware decoding is available.
+  if (!gfx::gfxVars::IsInitialized() ||
+      !gfx::gfxVars::CanUseHardwareVideoDecoding()) {
+    return;
+  }
+  sReported = true;
+
+  // TODO : we can remove this after HEVC is enabled by default.
+  // HEVC is not enabled. We need to force to enable it in order to know
+  // its support as well, and it would be turn off later.
+  if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
+    WMFDecoderModule::Init(WMFDecoderModule::Config::ForceEnableHEVC);
+  }
+  const auto support = PDMFactory::Supported(true /* force refresh */);
+  if (support.contains(
+          mozilla::media::MediaCodecsSupport::H264HardwareDecode)) {
+    Telemetry::ScalarSet(
+        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"h264"_ns,
+        true);
+  }
+  if (support.contains(mozilla::media::MediaCodecsSupport::VP8HardwareDecode)) {
+    Telemetry::ScalarSet(
+        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"vp8"_ns,
+        true);
+  }
+  if (support.contains(mozilla::media::MediaCodecsSupport::VP9HardwareDecode)) {
+    Telemetry::ScalarSet(
+        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"vp9"_ns,
+        true);
+  }
+  if (support.contains(mozilla::media::MediaCodecsSupport::AV1HardwareDecode)) {
+    Telemetry::ScalarSet(
+        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"av1"_ns,
+        true);
+  }
+  if (support.contains(
+          mozilla::media::MediaCodecsSupport::HEVCHardwareDecode)) {
+    Telemetry::ScalarSet(
+        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"hevc"_ns,
+        true);
+  }
+  if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
+    WMFDecoderModule::Init();
+  }
+
+#endif
+  // TODO : in the future, when we have GPU procss on MacOS, then we can report
+  // HEVC usage as well.
+}
 
 GPUParent::GPUParent() : mLaunchTime(TimeStamp::Now()) { sGPUParent = this; }
 
@@ -411,7 +467,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
               Unused << GPUParent::GetSingleton()
                             ->SendUpdateMediaCodecsSupported(supported);
             }));
-        ReportHardwareMediaCodecSupportProbe();
+        ReportHardwareMediaCodecSupportIfNeeded();
       });
   MOZ_ALWAYS_SUCCEEDS(
       NS_DispatchBackgroundTask(task, nsIEventTarget::DISPATCH_NORMAL));
@@ -511,7 +567,7 @@ mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
                       Unused << GPUParent::GetSingleton()
                                     ->SendUpdateMediaCodecsSupported(supported);
                     }));
-                ReportHardwareMediaCodecSupportProbe();
+                ReportHardwareMediaCodecSupportIfNeeded();
               });
           MOZ_ALWAYS_SUCCEEDS(
               NS_DispatchBackgroundTask(task, nsIEventTarget::DISPATCH_NORMAL));

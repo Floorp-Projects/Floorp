@@ -2959,7 +2959,6 @@ media:
       - 'firefox'
     record_in_processes:
       - 'gpu'
-      - 'rdd'
 
 # The following section contains content process base counters.
 dom.contentprocess:
