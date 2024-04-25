@@ -312,6 +312,37 @@ class JavaScriptTracer {
     this.debuggerNotificationObserver.addListener(this.eventListener);
     this.debuggerNotificationObserver.connect(this.tracedGlobal);
 
+    // When we are tracing a document, also ensure connecting to all its children iframe globals.
+    // If we don't, Debugger API would fire onEnterFrame for their JavaScript code,
+    // but DOM Events wouldn't be notified by DebuggerNotificationObserver.
+    if (!isWorker && this.tracedGlobal instanceof Ci.nsIDOMWindow) {
+      const { browserId } = this.tracedGlobal.browsingContext;
+      // Keep track of any future global
+      this.dbg.onNewGlobalObject = g => {
+        try {
+          const win = g.unsafeDereference();
+          // only process globals relating to documents, and which are within the debugged tab
+          if (
+            win instanceof Ci.nsIDOMWindow &&
+            win.browsingContext.browserId == browserId
+          ) {
+            this.dbg.addDebuggee(g);
+            this.debuggerNotificationObserver.connect(win);
+          }
+        } catch (e) {}
+      };
+      // Register all, already existing children
+      for (const browsingContext of this.tracedGlobal.browsingContext.getAllBrowsingContextsInSubtree()) {
+        try {
+          // Only consider children which run in the same process, and exposes their window object
+          if (browsingContext.window) {
+            this.dbg.addDebuggee(browsingContext.window);
+            this.debuggerNotificationObserver.connect(browsingContext.window);
+          }
+        } catch (e) {}
+      }
+    }
+
     this.currentDOMEvent = null;
   }
 
