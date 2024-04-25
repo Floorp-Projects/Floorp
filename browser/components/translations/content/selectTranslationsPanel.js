@@ -324,13 +324,25 @@ var SelectTranslationsPanel = new (class {
    */
   async #initializeLanguageMenuLists(langPairPromise) {
     const { fromLang, toLang } = await langPairPromise;
-    const { fromMenuList, toMenuList, tryAnotherSourceMenuList } =
-      this.elements;
+    const {
+      fromMenuList,
+      fromMenuPopup,
+      toMenuList,
+      toMenuPopup,
+      tryAnotherSourceMenuList,
+    } = this.elements;
+
     await Promise.all([
       this.#initializeLanguageMenuList(fromLang, fromMenuList),
       this.#initializeLanguageMenuList(toLang, toMenuList),
       this.#initializeLanguageMenuList(null, tryAnotherSourceMenuList),
     ]);
+
+    this.#maybeTranslateOnEvents(["keypress"], fromMenuList);
+    this.#maybeTranslateOnEvents(["keypress"], toMenuList);
+
+    this.#maybeTranslateOnEvents(["popuphidden"], fromMenuPopup);
+    this.#maybeTranslateOnEvents(["popuphidden"], toMenuPopup);
   }
 
   /**
@@ -444,6 +456,8 @@ var SelectTranslationsPanel = new (class {
     } else {
       textArea.style.height = SelectTranslationsPanel.longTextHeight;
     }
+
+    this.#maybeTranslateOnEvents(["focus"], textArea);
   }
 
   /**
@@ -569,18 +583,10 @@ var SelectTranslationsPanel = new (class {
    * @param {Element} target - The event target
    */
   #handlePopupShownEvent(target) {
-    const { panel, fromMenuPopup, toMenuPopup } = this.elements;
+    const { panel } = this.elements;
     switch (target.id) {
       case panel.id: {
         this.#updatePanelUIFromState();
-        break;
-      }
-      case fromMenuPopup.id: {
-        this.#maybeTranslateOnEvents(["popuphidden"], fromMenuPopup);
-        break;
-      }
-      case toMenuPopup.id: {
-        this.#maybeTranslateOnEvents(["popuphidden"], toMenuPopup);
         break;
       }
     }
@@ -637,9 +643,6 @@ var SelectTranslationsPanel = new (class {
    * Handles events when the panels select from-language is changed.
    */
   onChangeFromLanguage() {
-    const { fromMenuList, textArea } = this.elements;
-    this.#maybeTranslateOnEvents(["focus"], textArea);
-    this.#maybeTranslateOnEvents(["keypress"], fromMenuList);
     this.#updateConditionalUIEnabledState();
   }
 
@@ -647,9 +650,6 @@ var SelectTranslationsPanel = new (class {
    * Handles events when the panels select to-language is changed.
    */
   onChangeToLanguage() {
-    const { textArea, toMenuList } = this.elements;
-    this.#maybeTranslateOnEvents(["focus"], textArea);
-    this.#maybeTranslateOnEvents(["keypress"], toMenuList);
     this.#updateConditionalUIEnabledState();
   }
 
@@ -1391,12 +1391,12 @@ var SelectTranslationsPanel = new (class {
       doneButton,
       initFailureContent,
       mainContent,
-      unsupportedLanguageContent,
       textArea,
       translateButton,
       translateFullPageButton,
       translationFailureMessageBar,
       tryAgainButton,
+      unsupportedLanguageContent,
     } = this.elements;
     this.#setPanelElementAttributes({
       makeHidden: [
@@ -1583,7 +1583,6 @@ var SelectTranslationsPanel = new (class {
           case "popuphidden": {
             callback = () => {
               this.#maybeRequestTranslation();
-              this.#removeActiveTranslationListeners();
             };
             break;
           }
@@ -1591,7 +1590,6 @@ var SelectTranslationsPanel = new (class {
             callback = event => {
               if (event.key === "Enter") {
                 this.#maybeRequestTranslation();
-                this.#removeActiveTranslationListeners();
               }
             };
             break;
