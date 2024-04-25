@@ -44,6 +44,19 @@ struct Results {
   uint32_t selectedFileTypeIndex;
 };
 
+// Homolog of filedialog::Err. (Always Err::Kind::RemoteError, by definition.)
+struct RemoteError {
+  // A string describing the location where the error was detected.
+  //
+  // This is an `nsCString` only for simplicity of serialization and data-
+  // transfer; it may go to telemetry, and so should only be constructed from
+  // fixed strings.
+  nsCString where;
+  // An error code describing the error itself more precisely. Its semantics
+  // depend on the context provided by `where`, but it's probably an HRESULT.
+  uint32_t why;
+};
+
 } // namespace filedialog
 } // namespace widget
 } // namespace mozilla

@@ -46,34 +46,23 @@ WinFileDialogChild::IPCResult WinFileDialogChild::MakeIpcFailure(
   return IPC_FAIL(this, what);
 }
 
-#define MOZ_IPC_ENSURE_HRESULT_OK(hr, what)             \
-  do {                                                  \
-    MOZ_LOG(sLogFileDialog, LogLevel::Verbose,          \
-            ("checking HRESULT for %s", what));         \
-    HRESULT const _hr_ = (hr);                          \
-    if (FAILED(_hr_)) {                                 \
-      MOZ_LOG(sLogFileDialog, LogLevel::Error,          \
-              ("HRESULT %8lX while %s", (hr), (what))); \
-      return MakeIpcFailure(_hr_, (what));              \
-    }                                                   \
-  } while (0)
-
 WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFileDialog(
     uintptr_t parentHwnd, FileDialogType type, nsTArray<Command> commands,
     FileResolver&& resolver) {
   MOZ_ABORT_IF_ALREADY_USED();
 
-  SpawnFilePicker(HWND(parentHwnd), type, std::move(commands))
-      ->Then(
-          GetMainThreadSerialEventTarget(), __PRETTY_FUNCTION__,
-          [resolver = std::move(resolver)](Maybe<Results> const& res) {
-            resolver(res);
-          },
-          [self = RefPtr(this)](Error const& err) {
-            // this doesn't need to be returned anywhere; it'll crash the
-            // process as a side effect of construction
-            self->MakeIpcFailure((HRESULT)err.why, "SpawnFilePicker");
-          });
+  auto promise = SpawnFilePicker(HWND(parentHwnd), type, std::move(commands));
+  using RRV = std::decay_t<decltype(*promise)>::ResolveOrRejectValue;
+
+  promise->Then(GetMainThreadSerialEventTarget(), __PRETTY_FUNCTION__,
+                [resolver = std::move(resolver)](RRV&& val) -> void {
+                  if (val.IsResolve()) {
+                    resolver(val.ResolveValue());
+                  } else {
+                    auto err = val.RejectValue();
+                    resolver(RemoteError(err.where, err.why));
+                  }
+                });
 
   return IPC_OK();
 }
@@ -83,22 +72,21 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFolderDialog(
     FolderResolver&& resolver) {
   MOZ_ABORT_IF_ALREADY_USED();
 
-  SpawnFolderPicker(HWND(parentHwnd), std::move(commands))
-      ->Then(
-          GetMainThreadSerialEventTarget(), __PRETTY_FUNCTION__,
-          [resolver = std::move(resolver)](Maybe<nsString> const& res) {
-            resolver(res);
-          },
-          [self = RefPtr(this), resolver](Error const& err) {
-            // this doesn't need to be returned anywhere; it'll crash the
-            // process as a side effect of construction
-            self->MakeIpcFailure((HRESULT)err.why, "SpawnFolderPicker");
-          });
+  auto promise = SpawnFolderPicker(HWND(parentHwnd), std::move(commands));
+  using RRV = std::decay_t<decltype(*promise)>::ResolveOrRejectValue;
+
+  promise->Then(GetMainThreadSerialEventTarget(), __PRETTY_FUNCTION__,
+                [resolver = std::move(resolver)](RRV&& val) -> void {
+                  if (val.IsResolve()) {
+                    resolver(val.ResolveValue());
+                  } else {
+                    auto err = val.RejectValue();
+                    resolver(RemoteError(err.where, err.why));
+                  }
+                });
 
   return IPC_OK();
 }
-
-#undef MOZ_IPC_ENSURE_HRESULT_OK
 
 void WinFileDialogChild::ProcessingError(Result aCode, const char* aReason) {
   detail::LogProcessingError(sLogFileDialog, this, aCode, aReason);

@@ -12,6 +12,16 @@ namespace mozilla {
 namespace widget {
 namespace filedialog {
 
+union FileResult {
+  Results?;
+  RemoteError;
+};
+
+union FolderResult {
+  nsString?;
+  RemoteError;
+};
+
 [ChildProc=Utility]
 protocol PWinFileDialog {
 
@@ -19,12 +29,13 @@ child:
   // Exactly one Show function should be called per instance. Further calls will
   // result in IPC failure.
   //
-  // Each will return `Nothing` iff the operation was canceled by the user.
+  // Each will return `Ok(Nothing)` if the operation was canceled by the user,
+  // or `Err(...)` if the operation actually failed.
 
   async ShowFileDialog(WindowsHandle parentHwnd, FileDialogType type, Command[] commands)
-    returns (Results? results);
+    returns (FileResult result);
   async ShowFolderDialog(WindowsHandle parentHwnd, Command[] commands)
-    returns (nsString? path);
+    returns (FolderResult result);
 };
 
 }  // namespace filedialog

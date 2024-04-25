@@ -26,10 +26,8 @@ class WinFileDialogParent final : private PWinFileDialogParent {
   using UtilityActorName = ::mozilla::UtilityActorName;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WinFileDialogParent, override);
 
-  using ShowFileDialogPromise =
-      Promise<PWinFileDialogParent::ShowFileDialogPromise::ResolveValueType>;
-  using ShowFolderDialogPromise =
-      Promise<PWinFileDialogParent::ShowFolderDialogPromise::ResolveValueType>;
+  using ShowFileDialogPromise = Promise<Maybe<Results>>;
+  using ShowFolderDialogPromise = Promise<Maybe<nsString>>;
 
  public:
   WinFileDialogParent();

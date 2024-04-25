@@ -446,6 +446,7 @@ static auto AsyncExecute(Fn1 local, Fn2 remote, Args const&... args) ->
           typename RPromiseT::RejectValueType err) mutable -> RefPtr<PromiseT> {
         // failure; record time
         auto const t1 = GetTime();
+        // TODO: also propagate `err.where` into telemetry
         HRESULT const hrRemote = err.why;
 
         // retry locally...
