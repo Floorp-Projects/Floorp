@@ -294,6 +294,7 @@ nsresult GetAddInfoCallback(JSContext* aCx, void* aClosure) {
   if (!data->mCloneWriteInfo.mCloneBuffer.write(aCx, data->mValue,
                                                 &kStructuredCloneCallbacks,
                                                 &data->mCloneWriteInfo)) {
+    JS_ClearPendingException(aCx);
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
@@ -604,6 +605,7 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
     }
   } else if (!isAutoIncrement) {
     if (!aValueWrapper.Clone(aCx)) {
+      JS_ClearPendingException(aCx);
       aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
       return;
     }
@@ -624,6 +626,7 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
   // Figure out indexes and the index values to update here.
 
   if (mSpec->indexes().Length() && !aValueWrapper.Clone(aCx)) {
+    JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
@@ -664,6 +667,7 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
 
   if (isAutoIncrement && HasValidKeyPath()) {
     if (!aValueWrapper.Clone(aCx)) {
+      JS_ClearPendingException(aCx);
       aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
       return;
     }
