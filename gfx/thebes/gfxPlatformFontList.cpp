@@ -2209,6 +2209,12 @@ eFontPrefLang gfxPlatformFontList::GetFontPrefLangFor(const char* aLang) {
     if (!nsCRT::strcasecmp(gPrefLangNames[i], aLang)) {
       return eFontPrefLang(i);
     }
+    // If the pref-lang is a two-character lang tag, try ignoring any trailing
+    // subtags in aLang and see if the base lang matches.
+    if (strlen(gPrefLangNames[i]) == 2 && strlen(aLang) > 3 &&
+        aLang[2] == '-' && !nsCRT::strncasecmp(gPrefLangNames[i], aLang, 2)) {
+      return eFontPrefLang(i);
+    }
   }
   return eFontPrefLang_Others;
 }
