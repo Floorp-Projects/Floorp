@@ -14,18 +14,18 @@
 
 namespace mozilla::dom {
 
-using ScaffoldingType = OwningDoubleOrArrayBufferOrUniFFIPointer;
+using UniFFIScaffoldingValue = OwningDoubleOrArrayBufferOrUniFFIPointer;
 
 // Handle functions defined in UniFFIScaffolding.webidl
 class UniFFIScaffolding {
  public:
   static already_AddRefed<Promise> CallAsync(
       const GlobalObject& aGlobal, uint64_t aId,
-      const Sequence<ScaffoldingType>& aArgs, ErrorResult& aErrorResult);
+      const Sequence<UniFFIScaffoldingValue>& aArgs, ErrorResult& aErrorResult);
 
   static void CallSync(
       const GlobalObject& aGlobal, uint64_t aId,
-      const Sequence<ScaffoldingType>& aArgs,
+      const Sequence<UniFFIScaffoldingValue>& aArgs,
       RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue,
       ErrorResult& aErrorResult);
 

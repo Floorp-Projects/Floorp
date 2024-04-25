@@ -21,20 +21,20 @@ using mozilla::dom::ArrayBuffer;
 using mozilla::dom::GlobalObject;
 using mozilla::dom::Promise;
 using mozilla::dom::RootedDictionary;
-using mozilla::dom::ScaffoldingType;
 using mozilla::dom::Sequence;
 using mozilla::dom::UniFFICallbackHandler;
 using mozilla::dom::UniFFIPointer;
 using mozilla::dom::UniFFIScaffoldingCallResult;
+using mozilla::dom::UniFFIScaffoldingValue;
 
 namespace mozilla::uniffi {
 
 // Prototypes for the generated functions
 Maybe<already_AddRefed<Promise>> UniFFICallAsync(
     const GlobalObject& aGlobal, uint64_t aId,
-    const Sequence<ScaffoldingType>& aArgs, ErrorResult& aError);
+    const Sequence<UniFFIScaffoldingValue>& aArgs, ErrorResult& aError);
 bool UniFFICallSync(const GlobalObject& aGlobal, uint64_t aId,
-                    const Sequence<ScaffoldingType>& aArgs,
+                    const Sequence<UniFFIScaffoldingValue>& aArgs,
                     RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue,
                     ErrorResult& aError);
 Maybe<already_AddRefed<UniFFIPointer>> UniFFIReadPointer(
@@ -48,10 +48,10 @@ bool UniFFIWritePointer(const GlobalObject& aGlobal, uint64_t aId,
 #ifdef MOZ_UNIFFI_FIXTURES
 Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(
     const GlobalObject& aGlobal, uint64_t aId,
-    const Sequence<ScaffoldingType>& aArgs, ErrorResult& aError);
+    const Sequence<UniFFIScaffoldingValue>& aArgs, ErrorResult& aError);
 bool UniFFIFixturesCallSync(
     const GlobalObject& aGlobal, uint64_t aId,
-    const Sequence<ScaffoldingType>& aArgs,
+    const Sequence<UniFFIScaffoldingValue>& aArgs,
     RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue,
     ErrorResult& aError);
 Maybe<already_AddRefed<UniFFIPointer>> UniFFIFixturesReadPointer(
@@ -70,7 +70,7 @@ namespace mozilla::dom {
 
 already_AddRefed<Promise> UniFFIScaffolding::CallAsync(
     const GlobalObject& aGlobal, uint64_t aId,
-    const Sequence<ScaffoldingType>& aArgs, ErrorResult& aError) {
+    const Sequence<UniFFIScaffoldingValue>& aArgs, ErrorResult& aError) {
   Maybe<already_AddRefed<Promise>> firstTry =
       uniffi::UniFFICallAsync(aGlobal, aId, aArgs, aError);
   if (firstTry.isSome()) {
@@ -91,7 +91,7 @@ already_AddRefed<Promise> UniFFIScaffolding::CallAsync(
 
 void UniFFIScaffolding::CallSync(
     const GlobalObject& aGlobal, uint64_t aId,
-    const Sequence<ScaffoldingType>& aArgs,
+    const Sequence<UniFFIScaffoldingValue>& aArgs,
     RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue,
     ErrorResult& aError) {
   if (uniffi::UniFFICallSync(aGlobal, aId, aArgs, aReturnValue, aError)) {

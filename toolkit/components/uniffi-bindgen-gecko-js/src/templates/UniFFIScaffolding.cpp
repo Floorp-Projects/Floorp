@@ -16,7 +16,7 @@ using dom::AutoEntryScript;
 using dom::GlobalObject;
 using dom::RootedDictionary;
 using dom::Promise;
-using dom::ScaffoldingType;
+using dom::UniFFIScaffoldingValue;
 using dom::Sequence;
 using dom::UniFFICallbackHandler;
 using dom::UniFFIPointer;
@@ -81,7 +81,7 @@ Maybe<CallbackInterfaceInfo> {{ prefix }}GetCallbackInterfaceInfo(uint64_t aInte
     }
 }
 
-Maybe<already_AddRefed<Promise>> {{ prefix }}CallAsync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, ErrorResult& aError) {
+Maybe<already_AddRefed<Promise>> {{ prefix }}CallAsync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<UniFFIScaffoldingValue>& aArgs, ErrorResult& aError) {
   switch (aId) {
     {%- for (ci, config) in components %}
     {%- for func in ci.exposed_functions() %}
@@ -95,7 +95,7 @@ Maybe<already_AddRefed<Promise>> {{ prefix }}CallAsync(const GlobalObject& aGlob
   return Nothing();
 }
 
-bool {{ prefix }}CallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue, ErrorResult& aError) {
+bool {{ prefix }}CallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<UniFFIScaffoldingValue>& aArgs, RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue, ErrorResult& aError) {
   switch (aId) {
     {%- for (ci, config) in components %}
     {%- for func in ci.exposed_functions() %}
