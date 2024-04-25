@@ -158,7 +158,7 @@ h1.translations-panel-header-wrapper {
 
 .select-translations-panel-text-area {
   height: 8em;
-  resize: none;
+  resize: vertical;
 
   &:disabled {
     color: var(--panel-disabled-color);
