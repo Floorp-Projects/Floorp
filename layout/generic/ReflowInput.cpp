@@ -953,21 +953,10 @@ void ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
   const nsStyleDisplay* display = aFrame->StyleDisplay();
   if (StylePositionProperty::Relative == display->mPosition) {
     *aPosition += nsPoint(aComputedOffsets.left, aComputedOffsets.top);
-  } else if (StylePositionProperty::Sticky == display->mPosition &&
-             !aFrame->GetNextContinuation() && !aFrame->GetPrevContinuation() &&
-             !aFrame->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
-    // Sticky positioning for elements with multiple frames needs to be
-    // computed all at once. We can't safely do that here because we might be
-    // partway through (re)positioning the frames, so leave it until the scroll
-    // container reflows and calls StickyScrollContainer::UpdatePositions.
-    // For single-frame sticky positioned elements, though, go ahead and apply
-    // it now to avoid unnecessary overflow updates later.
-    StickyScrollContainer* ssc =
-        StickyScrollContainer::GetStickyScrollContainerForFrame(aFrame);
-    if (ssc) {
-      *aPosition = ssc->ComputePosition(aFrame);
-    }
   }
+  // For sticky positioned elements, we'll leave them until the scroll container
+  // reflows and calls StickyScrollContainer::UpdatePositions() to update their
+  // positions.
 }
 
 // static
