@@ -385,11 +385,7 @@ load 836990-1.html
 load 840480.html
 load 842114.html
 load 847242.html
-# This test is slow, because it uses setTimeout a lot.
-# After bug 1875100, on windows, it times out because there's a left-over
-# window or so, and that bug causes us to throttle timers. Disable window
-# occlusion to work around this for now, see bug 1864255.
-pref(widget.windows.window_occlusion_tracking.enabled,false) skip-if(ThreadSanitizer) load 852293.html
+skip-if(ThreadSanitizer) load 852293.html
 pref(layers.force-active,true) load 859526-1.html
 pref(layers.force-active,true) load 859630-1.html
 load 860579-1.html
@@ -528,7 +524,7 @@ load 1539303.html
 load 1541679.html
 load 1547261.html
 load 1547391.html
-pref(widget.windows.window_occlusion_tracking.enabled,false) load 1548057.html # Bug 1819154
+load 1548057.html
 load 1549867.html
 load 1553874.html
 load 1560328.html

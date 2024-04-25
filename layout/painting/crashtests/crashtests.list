@@ -8,7 +8,7 @@ load 1418722-1.html
 load 1419917.html
 load 1425271-1.html
 load 1428906-1.html
-pref(widget.windows.window_occlusion_tracking.enabled,false) load 1430589-1.html # Bug 1819154
+load 1430589-1.html
 load 1454105-1.html
 load 1455944-1.html
 load 1458145.html
@@ -31,4 +31,4 @@ load 1714584-1.html
 load 1763006-1.html
 load 1819957-1.html
 load 1851726-1.html
-pref(widget.windows.window_occlusion_tracking.enabled,false) pref(image.testing.decode-sync.enabled,false) load 1862277-1.html
+pref(image.testing.decode-sync.enabled,false) load 1862277-1.html
