@@ -14,6 +14,7 @@
 #include "mozilla/layers/GpuProcessD3D11TextureMap.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/SharedThreadPool.h"
 
 namespace mozilla {
@@ -236,6 +237,14 @@ RefPtr<TextureHost> TextureHostWrapperD3D11::CreateFromBufferTexture(
       colorDepth != gfx::ColorDepth::COLOR_8 ||
       colorRange != gfx::ColorRange::LIMITED ||
       chromaSubsampling != gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT) {
+    if (profiler_thread_is_being_profiled_for_markers()) {
+      nsPrintfCString str(
+          "Unsupported size(%dx%d) colorDepth %hhu colorRange %hhu "
+          "chromaSubsampling %hhu",
+          size.width, size.height, uint8_t(colorDepth), uint8_t(colorRange),
+          uint8_t(chromaSubsampling));
+      PROFILER_MARKER_TEXT("TextureHostWrapperD3D11", GRAPHICS, {}, str);
+    }
     return nullptr;
   }
 
