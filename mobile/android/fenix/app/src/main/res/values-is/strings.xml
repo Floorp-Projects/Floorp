@@ -262,6 +262,10 @@
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">Lykilorð</string>
 
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">Nýtt í %1$s</string>
+
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
     <string name="extensions_management_no_extensions">Engir forritsaukar hér</string>
@@ -2694,6 +2698,31 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Bæta við óvirka flipa</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Bæta við huliðsflipa</string>
+
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Halda áfram</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header" tools:ignore="UnusedResources">Ljúka þessari könnun</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice" tools:ignore="UnusedResources">Meðferð persónuupplýsinga</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Senda inn</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Loka</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Takk fyrir álit þitt!</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">Mjög ánægð/ur</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Ánægð/ur</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Hlutlaus</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Óánægð/ur</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">Mjög óánægð/ur</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
