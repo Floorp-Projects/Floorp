@@ -20,6 +20,13 @@ var prefs = [
   ["mousewheel.transaction.timeout", 0],
 ];
 
+var wheel_transaction_prefs = [
+  ["dom.event.wheel-event-groups.enabled", true],
+  ["mousewheel.transaction.timeout", 10000],
+  ["apz.test.mac.synth_wheel_input", true],
+  ...getSmoothScrollPrefs("wheel"),
+];
+
 // For helper_scroll_over_scrollbar, we need to set a pref to force
 // layerization of the scrollbar track to reproduce the bug being fixed.
 // Otherwise, the bug only manifests with overlay scrollbars on macOS,
@@ -48,6 +55,10 @@ var subtests = [
     prefs: [["general.smoothScroll", false],
              ["apz.test.mac.synth_wheel_input", true]]},
   {"file": "helper_scroll_anchoring_on_wheel.html", prefs: smoothness_prefs},
+  {"file": "helper_scroll_over_subframe.html?scroll=wheel", prefs: wheel_transaction_prefs},
+  {"file": "helper_scroll_over_subframe.html?oop=true&scroll=wheel", prefs: wheel_transaction_prefs},
+  {"file": "helper_scroll_over_subframe.html?scroll=pan", prefs: wheel_transaction_prefs},
+  {"file": "helper_scroll_over_subframe.html?oop=true&scroll=pan", prefs: wheel_transaction_prefs},
 ];
 
 subtests.push(...buildRelativeScrollSmoothnessVariants("wheel", ["scrollBy", "scrollTo", "scrollTop"]));

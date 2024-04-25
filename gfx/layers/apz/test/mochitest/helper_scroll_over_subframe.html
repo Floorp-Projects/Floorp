@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <title>A scroll over an iframe should not terminate the wheel transaction</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+<head>
+<style>
+body {
+  height: 250vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#spacer {
+  height: 50px;
+  width: 100vw;
+  background: yellow;
+}
+
+#subframe {
+  width: 80vw;
+  height: 60vh;
+}
+</style>
+</head>
+<body>
+  <div id="spacer"></div>
+  <iframe id="subframe">
+  </iframe>
+</body>
+<script>
+const searchParams = new URLSearchParams(location.search);
+
+async function scrollWithPan() {
+  await NativePanHandler.promiseNativePanEvent(
+    document.scrollingElement,
+    50,
+    30,
+    0,
+    NativePanHandler.delta,
+    NativePanHandler.beginPhase,
+  );
+
+  await NativePanHandler.promiseNativePanEvent(
+    document.scrollingElement,
+    50,
+    30,
+    0,
+    NativePanHandler.delta,
+    NativePanHandler.updatePhase,
+  );
+
+  await NativePanHandler.promiseNativePanEvent(
+    document.scrollingElement,
+    50,
+    30,
+    0,
+    NativePanHandler.delta,
+    NativePanHandler.endPhase,
+  );
+}
+
+async function scrollWithWheel() {
+  await promiseMoveMouseAndScrollWheelOver(document.scrollingElement, 50, 30,
+                                           false, 100);
+}
+
+async function test() {
+  let iframeURL =
+       SimpleTest.getTestFileURL("helper_scroll_over_subframe_child.html");
+
+  switch (searchParams.get("oop")) {
+    case "true":
+      iframeURL = iframeURL.replace(window.location.origin, "https://example.com/");
+      break;
+    default:
+      break;
+  }
+
+  const iframeLoadPromise = promiseOneEvent(subframe, "load", null);
+  subframe.src = iframeURL;
+  await iframeLoadPromise;
+
+  await SpecialPowers.spawn(subframe, [], async () => {
+    await content.wrappedJSObject.waitUntilApzStable();
+    await SpecialPowers.contentTransformsReceived(content);
+  });
+
+  let childWindowReceivedWheelEvent = false;
+
+  window.addEventListener("message", e => {
+    if (e.data == "child-received-wheel-event") {
+      childWindowReceivedWheelEvent = true;
+    }
+  });
+
+  await SpecialPowers.spawn(subframe, [], () => {
+    let target = content.document.getElementById("target")
+    target.style.backgroundColor = "green";
+    content.getComputedStyle(target).backgroundColor;
+    target.addEventListener("wheel", () => {
+      target.style.backgroundColor = "red";
+      content.getComputedStyle(target).backgroundColor;
+    });
+    return new Promise(resolve => resolve());
+  });
+
+  await promiseFrame();
+
+  let transformEndPromise = promiseTransformEnd();
+
+  // Scroll over the iframe
+  switch (searchParams.get("scroll")) {
+    case "wheel":
+      await scrollWithWheel();
+      break;
+    case "pan":
+      await scrollWithPan();
+      break;
+    default:
+      ok(false, "Unsupported scroll value: " + searchParams.get("scroll"));
+      break;
+  }
+
+  await transformEndPromise;
+
+  // Wait an extra frame to ensure any message from the child has
+  // extra time to be sent to the parent.
+  await promiseFrame();
+
+  let res = await SpecialPowers.spawn(subframe, [], () => {
+    let target = content.document.getElementById("target")
+    return target.style.backgroundColor;
+  });
+
+  await promiseFrame();
+
+  // We should not have fired a wheel event to the element in the iframe
+  ok(!childWindowReceivedWheelEvent, "Child window should not receive wheel events");
+  is(res, "green", "OOP iframe does not halt user scroll of parent");
+}
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+</script>
+</html>
