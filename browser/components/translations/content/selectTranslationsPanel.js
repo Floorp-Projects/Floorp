@@ -637,8 +637,9 @@ var SelectTranslationsPanel = new (class {
    * Handles events when the panels select from-language is changed.
    */
   onChangeFromLanguage() {
-    const { fromMenuList } = this.elements;
-    this.#maybeTranslateOnEvents(["blur", "keypress"], fromMenuList);
+    const { fromMenuList, textArea } = this.elements;
+    this.#maybeTranslateOnEvents(["focus"], textArea);
+    this.#maybeTranslateOnEvents(["keypress"], fromMenuList);
     this.#updateConditionalUIEnabledState();
   }
 
@@ -646,8 +647,9 @@ var SelectTranslationsPanel = new (class {
    * Handles events when the panels select to-language is changed.
    */
   onChangeToLanguage() {
-    const { toMenuList } = this.elements;
-    this.#maybeTranslateOnEvents(["blur", "keypress"], toMenuList);
+    const { textArea, toMenuList } = this.elements;
+    this.#maybeTranslateOnEvents(["focus"], textArea);
+    this.#maybeTranslateOnEvents(["keypress"], toMenuList);
     this.#updateConditionalUIEnabledState();
   }
 
@@ -1577,7 +1579,7 @@ var SelectTranslationsPanel = new (class {
       for (const eventType of eventTypes) {
         let callback;
         switch (eventType) {
-          case "blur":
+          case "focus":
           case "popuphidden": {
             callback = () => {
               this.#maybeRequestTranslation();
@@ -1600,7 +1602,7 @@ var SelectTranslationsPanel = new (class {
             );
           }
         }
-        target.addEventListener(eventType, callback, { once: true });
+        target.addEventListener(eventType, callback);
         target.translationListenerCallbacks.push({ eventType, callback });
       }
     }
@@ -1610,10 +1612,11 @@ var SelectTranslationsPanel = new (class {
    * Removes all translation event listeners from any panel elements that would have one.
    */
   #removeActiveTranslationListeners() {
-    const { fromMenuList, fromMenuPopup, toMenuList, toMenuPopup } =
+    const { fromMenuList, fromMenuPopup, textArea, toMenuList, toMenuPopup } =
       SelectTranslationsPanel.elements;
     this.#removeTranslationListenersFrom(fromMenuList);
     this.#removeTranslationListenersFrom(fromMenuPopup);
+    this.#removeTranslationListenersFrom(textArea);
     this.#removeTranslationListenersFrom(toMenuList);
     this.#removeTranslationListenersFrom(toMenuPopup);
   }
