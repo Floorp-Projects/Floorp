@@ -38,6 +38,7 @@ impl KleeneValue {
 
     /// Return true if any result of f() is true. Otherwise, return the strongest value seen.
     /// Returns false if empty, like that of `Iterator`.
+    #[inline(always)]
     pub fn any<T>(
         iter: impl Iterator<Item = T>,
         f: impl FnMut(T) -> Self,
@@ -47,6 +48,7 @@ impl KleeneValue {
 
     /// Return false if any results of f() is false. Otherwise, return the strongest value seen.
     /// Returns true if empty, opposite of `Iterator`.
+    #[inline(always)]
     pub fn any_false<T>(
         iter: impl Iterator<Item = T>,
         f: impl FnMut(T) -> Self,
@@ -54,6 +56,7 @@ impl KleeneValue {
         Self::any_value(iter, Self::False, Self::True, f)
     }
 
+    #[inline(always)]
     fn any_value<T>(
         iter: impl Iterator<Item = T>,
         value: Self,
