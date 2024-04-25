@@ -63,6 +63,8 @@ const rejected = [
   "Sep 26 1995 foo",
   "1995 foo Sep 26",
   "foo2 Sep 26 1995",
+  "Tuesday_Sep 26 1995",
+  "foo_12",
 ];
 
 for (const format of formats) {
