@@ -69,10 +69,10 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFileDialog(
           [resolver = std::move(resolver)](Maybe<Results> const& res) {
             resolver(res);
           },
-          [self = RefPtr(this)](HRESULT hr) {
+          [self = RefPtr(this)](Error const& err) {
             // this doesn't need to be returned anywhere; it'll crash the
             // process as a side effect of construction
-            self->MakeIpcFailure(hr, "SpawnFilePicker");
+            self->MakeIpcFailure((HRESULT)err.why, "SpawnFilePicker");
           });
 
   return IPC_OK();
@@ -89,10 +89,10 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFolderDialog(
           [resolver = std::move(resolver)](Maybe<nsString> const& res) {
             resolver(res);
           },
-          [self = RefPtr(this), resolver](HRESULT hr) {
+          [self = RefPtr(this), resolver](Error const& err) {
             // this doesn't need to be returned anywhere; it'll crash the
             // process as a side effect of construction
-            self->MakeIpcFailure(hr, "SpawnFolderPicker");
+            self->MakeIpcFailure((HRESULT)err.why, "SpawnFolderPicker");
           });
 
   return IPC_OK();

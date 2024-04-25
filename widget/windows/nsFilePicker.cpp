@@ -44,14 +44,16 @@
 #include "mozilla/widget/filedialog/WinFileDialogCommands.h"
 #include "mozilla/widget/filedialog/WinFileDialogParent.h"
 
+using mozilla::LogLevel;
 using mozilla::UniquePtr;
 
 using namespace mozilla::widget;
 
+template <typename Res>
+using FDPromise = filedialog::Promise<Res>;
+
 UniquePtr<char16_t[], nsFilePicker::FreeDeleter>
     nsFilePicker::sLastUsedUnicodeDirectory;
-
-using mozilla::LogLevel;
 
 #define MAX_EXTENSION_LENGTH 10
 
@@ -106,27 +108,33 @@ NS_IMETHODIMP nsFilePicker::Init(
 }
 
 namespace mozilla::detail {
+using Error = mozilla::widget::filedialog::Error;
+
 // Boilerplate for remotely showing a file dialog.
 template <typename ActionType,
           typename ReturnType = typename decltype(std::declval<ActionType>()(
               nullptr))::element_type::ResolveValueType>
-static auto ShowRemote(ActionType&& action)
-    -> RefPtr<MozPromise<ReturnType, HRESULT, true>> {
-  using RetPromise = MozPromise<ReturnType, HRESULT, true>;
+static auto ShowRemote(ActionType&& action) -> RefPtr<FDPromise<ReturnType>> {
+  using RetPromise = FDPromise<ReturnType>;
 
-  constexpr static const auto fail = []() {
-    return RetPromise::CreateAndReject(E_FAIL, __PRETTY_FUNCTION__);
+  constexpr static const auto fail =
+      [](nsLiteralCString where, uint32_t why = 0) -> RefPtr<RetPromise> {
+    return RetPromise::CreateAndReject(
+        Error{.kind = Error::LocalError, .where = std::move(where), .why = why},
+        __PRETTY_FUNCTION__);
   };
 
   auto mgr = mozilla::ipc::UtilityProcessManager::GetSingleton();
   if (!mgr) {
     MOZ_ASSERT(false);
-    return fail();
+    return fail("ShowRemote: UtilityProcessManager::GetSingleton"_ns,
+                E_POINTER);
   }
 
   auto wfda = mgr->CreateWinFileDialogActor();
   if (!wfda) {
-    return fail();
+    return fail("ShowRemote: invocation of CreateWinFileDialogActor"_ns,
+                E_POINTER);
   }
 
   using mozilla::widget::filedialog::sLogFileDialog;
@@ -135,38 +143,32 @@ static auto ShowRemote(ActionType&& action)
       mozilla::GetMainThreadSerialEventTarget(),
       "nsFilePicker ShowRemote acquire",
       [action = std::forward<ActionType>(action)](
-          filedialog::ProcessProxy const& p) -> RefPtr<RetPromise> {
+          filedialog::ProcessProxy p) -> RefPtr<RetPromise> {
         MOZ_LOG(sLogFileDialog, LogLevel::Info,
                 ("nsFilePicker ShowRemote first callback: p = [%p]", p.get()));
 
         // false positive: not actually redundant
         // NOLINTNEXTLINE(readability-redundant-smartptr-get)
-        return action(p.get())->Then(
-            mozilla::GetMainThreadSerialEventTarget(),
-            "nsFilePicker ShowRemote call",
-            [p](ReturnType ret) {
-              return RetPromise::CreateAndResolve(std::move(ret),
-                                                  __PRETTY_FUNCTION__);
-            },
-            [](mozilla::ipc::ResponseRejectReason error) {
-              MOZ_LOG(sLogFileDialog, LogLevel::Error,
-                      ("IPC call rejected: %zu", size_t(error)));
-              return fail();
+        auto promise = action(p.get());
+        return promise->Map(
+            mozilla::GetMainThreadSerialEventTarget(), __func__,
+            [p = std::move(p)](typename RetPromise::ResolveValueType&& val) {
+              // explicitly retain the ProcessProxy until at least this point
+              return std::move(val);
             });
       },
       [](nsresult error) -> RefPtr<RetPromise> {
         MOZ_LOG(sLogFileDialog, LogLevel::Error,
                 ("could not acquire WinFileDialog: %zu", size_t(error)));
-        return fail();
+        // TODO: pipe more data up from utility-process creation
+        return fail("UtilityProcessManager::CreateWinFileDialogActor"_ns,
+                    (uint32_t)error);
       });
 }
 
 namespace {
 
-template <typename Res>
-using FPPromise = mozilla::MozPromise<Maybe<Res>, HRESULT, true>;
-
-static RefPtr<FPPromise<filedialog::Results>> ShowFilePickerRemote(
+static RefPtr<FDPromise<Maybe<filedialog::Results>>> ShowFilePickerRemote(
     HWND parent, filedialog::FileDialogType type,
     nsTArray<filedialog::Command> const& commands) {
   using mozilla::widget::filedialog::sLogFileDialog;
@@ -179,7 +181,7 @@ static RefPtr<FPPromise<filedialog::Results>> ShowFilePickerRemote(
       });
 }
 
-static RefPtr<FPPromise<nsString>> ShowFolderPickerRemote(
+static RefPtr<FDPromise<Maybe<nsString>>> ShowFolderPickerRemote(
     HWND parent, nsTArray<filedialog::Command> const& commands) {
   using mozilla::widget::filedialog::sLogFileDialog;
   return mozilla::detail::ShowRemote([parent, commands = commands.Clone()](
@@ -190,13 +192,13 @@ static RefPtr<FPPromise<nsString>> ShowFolderPickerRemote(
   });
 }
 
-static RefPtr<FPPromise<filedialog::Results>> ShowFilePickerLocal(
+static RefPtr<FDPromise<Maybe<filedialog::Results>>> ShowFilePickerLocal(
     HWND parent, filedialog::FileDialogType type,
     nsTArray<filedialog::Command> const& commands) {
   return filedialog::SpawnFilePicker(parent, type, commands.Clone());
 }
 
-static RefPtr<FPPromise<nsString>> ShowFolderPickerLocal(
+static RefPtr<FDPromise<Maybe<nsString>>> ShowFolderPickerLocal(
     HWND parent, nsTArray<filedialog::Command> const& commands) {
   return filedialog::SpawnFolderPicker(parent, commands.Clone());
 }
@@ -338,31 +340,83 @@ static void RecordFailure(uint64_t (&&time)[3], HRESULT hrRemote,
 }
 
 }  // namespace telemetry
+
+/* N.B.: L and R stand for Local and Remote, not just Left and Right */
+template <typename FnL, typename FnR, typename... Args>
+struct AsyncExecuteInfo {
+  template <typename T>
+  using DestructurePromise = widget::filedialog::detail::DestructurePromise<T>;
+
+  using Unit = ::mozilla::Ok;
+
+  using RetL = std::invoke_result_t<FnL, Args...>;
+  using RetR = std::invoke_result_t<FnR, Args...>;
+
+  using InfoL = DestructurePromise<RetL>;
+  using InfoR = DestructurePromise<RetR>;
+
+  MOZ_ASSERT_SAME_TYPE(
+      typename InfoL::ResolveT, typename InfoR::ResolveT,
+      "local and remote promises must have identical resolve-types");
+
+  // At present, the local and remote promises have the same type, but this
+  // isn't logically necessary. (In particular, a future refactor may remove the
+  // redundant `.kind` from the local promises' return types.)
+  MOZ_ASSERT_SAME_TYPE(typename InfoL::RejectT, filedialog::Error,
+                       "local promise must reject with a filedialog::Error");
+
+  MOZ_ASSERT_SAME_TYPE(typename InfoR::RejectT, filedialog::Error,
+                       "remote promise must reject with a filedialog::Error");
+
+  using ResolveT = typename InfoL::ResolveT;
+  using PromiseT = MozPromise<ResolveT, Unit, true>;
+
+  using RetT = RefPtr<PromiseT>;
+};
+
 }  // namespace details
 
-// Invoke either or both of a "do locally" and "do remotely" function with the
-// provided arguments, depending on the relevant preference-value and whether
-// or not the remote version fails.
+// Invoke either or both of a promise-returning "do locally" and "do remotely"
+// function with the provided arguments, depending on the relevant preference's
+// value and on whether or not the remote version fails (returns a rejection-
+// promise).
 //
-// Both functions must be asynchronous, returning a `RefPtr<MozPromise<...>>`.
-// "Failure" is defined as the promise being rejected.
+// Both provided functions must return a `RefPtr<filedialog::MozPromise<T>>`. As
+// `AsyncExecute` reports failures itself, its rejection-type is `()`.
 template <typename Fn1, typename Fn2, typename... Args>
-static auto AsyncExecute(Fn1 local, Fn2 remote, Args const&... args)
-    -> std::invoke_result_t<Fn1, Args...> {
+static auto AsyncExecute(Fn1 local, Fn2 remote, Args const&... args) ->
+    typename details::AsyncExecuteInfo<Fn1, Fn2, Args...>::RetT {
   using namespace details;
+  using Info = AsyncExecuteInfo<Fn1, Fn2, Args...>;
 
-  static_assert(std::is_same_v<std::invoke_result_t<Fn1, Args...>,
-                               std::invoke_result_t<Fn2, Args...>>);
-  using PromiseT = typename std::invoke_result_t<Fn1, Args...>::element_type;
+  using ResolveT = typename Info::ResolveT;
+  using PromiseT = typename Info::PromiseT;
+  using LPromiseT = typename Info::InfoL::Promise;
+  using RPromiseT = typename Info::InfoR::Promise;
 
   constexpr static char kFunctionName[] = "LocalAndOrRemote::AsyncExecute";
 
   switch (GetStrategy()) {
-    case Local:
-      return local(args...);
+    case Local: {
+      return local(args...)->MapErr(
+          NS_GetCurrentThread(), __func__, [](Error const& err) {
+            MOZ_ASSERT(err.kind == Error::LocalError);
+            MOZ_LOG(filedialog::sLogFileDialog, LogLevel::Info,
+                    ("local file-dialog failed: where=%s, why=%08" PRIX32,
+                     err.where.get(), err.why));
+            return Ok();
+          });
+    }
 
     case Remote:
-      return remote(args...);
+      return remote(args...)->MapErr(
+          NS_GetCurrentThread(), __func__, [](Error const& err) {
+            MOZ_LOG(
+                filedialog::sLogFileDialog, LogLevel::Info,
+                ("remote file-dialog failed: kind=%s, where=%s, why=%08" PRIX32,
+                 Error::KindName(err.kind), err.where.get(), err.why));
+            return Ok();
+          });
 
     case RemoteWithFallback:
       // more complicated; continue below
@@ -379,34 +433,39 @@ static auto AsyncExecute(Fn1 local, Fn2 remote, Args const&... args)
 
   return remote(args...)->Then(
       NS_GetCurrentThread(), kFunctionName,
-      [t0](typename PromiseT::ResolveValueType result) -> RefPtr<PromiseT> {
+      [t0](typename RPromiseT::ResolveValueType result) -> RefPtr<PromiseT> {
         // success; stop here
         auto const t1 = GetTime();
         // record success
         telemetry::RecordSuccess({t0, t1});
-        return PromiseT::CreateAndResolve(result, kFunctionName);
+        return PromiseT::CreateAndResolve(std::move(result), kFunctionName);
       },
       // initialized lambda pack captures are C++20 (clang 9, gcc 9);
       // `make_tuple` is just a C++17 workaround
       [=, tuple = std::make_tuple(Copy(args)...)](
-          typename PromiseT::RejectValueType err) mutable -> RefPtr<PromiseT> {
+          typename RPromiseT::RejectValueType err) mutable -> RefPtr<PromiseT> {
         // failure; record time
         auto const t1 = GetTime();
-        HRESULT const hrRemote = err;
+        HRESULT const hrRemote = err.why;
 
         // retry locally...
         auto p0 = std::apply(local, std::move(tuple));
         // ...then record the telemetry event
         return p0->Then(
             NS_GetCurrentThread(), kFunctionName,
-            [t0, t1,
-             hrRemote](typename PromiseT::ResolveOrRejectValue const& val)
+            [t0, t1, hrRemote](typename LPromiseT::ResolveOrRejectValue&& val)
                 -> RefPtr<PromiseT> {
               auto const t2 = GetTime();
-              HRESULT const hrLocal = val.IsReject() ? val.RejectValue() : S_OK;
+              HRESULT const hrLocal =
+                  val.IsReject() ? (HRESULT)val.RejectValue().why : S_OK;
               telemetry::RecordFailure({t0, t1, t2}, hrRemote, hrLocal);
 
-              return PromiseT::CreateAndResolveOrReject(val, kFunctionName);
+              using V = typename PromiseT::ResolveOrRejectValue;
+              return PromiseT::CreateAndResolveOrReject(
+                  val.IsResolve()
+                      ? V::MakeResolve(std::move(val).ResolveValue())
+                      : V::MakeReject(Ok{}),
+                  kFunctionName);
             });
       });
 }
@@ -450,16 +509,8 @@ using fd_async::AsyncExecute;
  *          - resolves to false if the dialog was cancelled by the user;
  *          - is rejected with the associated HRESULT if some error occurred.
  */
-RefPtr<mozilla::MozPromise<bool, HRESULT, true>> nsFilePicker::ShowFolderPicker(
-    const nsString& aInitialDir) {
-  using Promise = mozilla::MozPromise<bool, HRESULT, true>;
-  constexpr static auto Ok = [](bool val) {
-    return Promise::CreateAndResolve(val, "nsFilePicker::ShowFolderPicker");
-  };
-  constexpr static auto NotOk = [](HRESULT val = E_FAIL) {
-    return Promise::CreateAndReject(val, "nsFilePicker::ShowFolderPicker");
-  };
-
+RefPtr<mozilla::MozPromise<bool, nsFilePicker::Unit, true>>
+nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
   namespace fd = ::mozilla::widget::filedialog;
   nsTArray<fd::Command> commands = {
       fd::SetOptions(FOS_PICKFOLDERS),
@@ -480,20 +531,15 @@ RefPtr<mozilla::MozPromise<bool, HRESULT, true>> nsFilePicker::ShowFolderPicker(
   return mozilla::detail::AsyncExecute(&mozilla::detail::ShowFolderPickerLocal,
                                        &mozilla::detail::ShowFolderPickerRemote,
                                        shim.get(), commands)
-      ->Then(
-          NS_GetCurrentThread(), __PRETTY_FUNCTION__,
-          [self = RefPtr(this), shim = std::move(shim),
-           awps = std::move(awps)](Maybe<nsString> val) {
-            if (val) {
-              self->mUnicodeFile = val.extract();
-              return Ok(true);
-            }
-            return Ok(false);
-          },
-          [](HRESULT err) {
-            NS_WARNING("ShowFolderPicker failed");
-            return NotOk(err);
-          });
+      ->Map(NS_GetCurrentThread(), __PRETTY_FUNCTION__,
+            [self = RefPtr(this), shim = std::move(shim),
+             awps = std::move(awps)](Maybe<nsString> val) {
+              if (val) {
+                self->mUnicodeFile = val.extract();
+                return true;
+              }
+              return false;
+            });
 }
 
 /*
@@ -511,16 +557,16 @@ RefPtr<mozilla::MozPromise<bool, HRESULT, true>> nsFilePicker::ShowFolderPicker(
  *          - resolves to false if the dialog was cancelled by the user;
  *          - is rejected with the associated HRESULT if some error occurred.
  */
-RefPtr<mozilla::MozPromise<bool, HRESULT, true>> nsFilePicker::ShowFilePicker(
-    const nsString& aInitialDir) {
+RefPtr<mozilla::MozPromise<bool, nsFilePicker::Unit, true>>
+nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
   AUTO_PROFILER_LABEL("nsFilePicker::ShowFilePicker", OTHER);
 
-  using Promise = mozilla::MozPromise<bool, HRESULT, true>;
+  using Promise = mozilla::MozPromise<bool, Unit, true>;
   constexpr static auto Ok = [](bool val) {
     return Promise::CreateAndResolve(val, "nsFilePicker::ShowFilePicker");
   };
-  constexpr static auto NotOk = [](HRESULT val = E_FAIL) {
-    return Promise::CreateAndReject(val, "nsFilePicker::ShowFilePicker");
+  constexpr static auto NotOk = []() {
+    return Promise::CreateAndReject(Unit(), "nsFilePicker::ShowFilePicker");
   };
 
   namespace fd = ::mozilla::widget::filedialog;
@@ -554,7 +600,7 @@ RefPtr<mozilla::MozPromise<bool, HRESULT, true>> nsFilePicker::ShowFilePicker(
 
       case modeGetFolder:
         MOZ_ASSERT(false, "file-picker opened in directory-picker mode");
-        return NotOk(E_FAIL);
+        return NotOk();
     }
 
     commands.AppendElement(fd::SetOptions(fos));
@@ -645,9 +691,9 @@ RefPtr<mozilla::MozPromise<bool, HRESULT, true>> nsFilePicker::ShowFilePicker(
 
         return Ok(true);
       },
-      [](HRESULT err) {
+      [](Unit err) {
         NS_WARNING("ShowFilePicker failed");
-        return NotOk(err);
+        return NotOk();
       });
 }
 
@@ -895,10 +941,8 @@ nsresult nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
 
         callback->Done(retValue);
       },
-      [callback = RefPtr(aCallback)](HRESULT err) {
-        using mozilla::widget::filedialog::sLogFileDialog;
-        MOZ_LOG(sLogFileDialog, LogLevel::Error,
-                ("nsFilePicker: Show failed with hr=0x%08lX", err));
+      [callback = RefPtr(aCallback)](Unit _) {
+        // logging already handled
         callback->Done(ResultCode::returnCancel);
       });
 

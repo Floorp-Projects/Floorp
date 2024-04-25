@@ -54,18 +54,42 @@ PWinFileDialogParent::nsresult WinFileDialogParent::BindToUtilityProcess(
   return NS_OK;
 }
 
+// Convert the raw IPC promise-type to a filedialog::Promise.
+template <typename T, size_t N>
+static auto ConvertToFDPromise(
+    const char (&aMethod)[N],  // __func__
+    RefPtr<MozPromise<T, mozilla::ipc::ResponseRejectReason, true>> aSrcPromise)
+    -> RefPtr<MozPromise<T, Error, true>> {
+  using DstPromiseT = MozPromise<T, Error, true>;
+  using SrcPromiseT = MozPromise<T, mozilla::ipc::ResponseRejectReason, true>;
+
+  // a note to the reader:
+  static_assert(std::is_same_v<DstPromiseT, Promise<T>>);
+
+  return aSrcPromise->MapErr(mozilla::GetCurrentSerialEventTarget(), aMethod,
+                             [=](typename SrcPromiseT::RejectValueType&& val) {
+                               return Error{.kind = Error::IPCError,
+                                            .where = "IPC"_ns,
+                                            .why = (uint32_t)val};
+                             });
+}
+
 [[nodiscard]] RefPtr<WinFileDialogParent::ShowFileDialogPromise>
 WinFileDialogParent::ShowFileDialogImpl(HWND parent, const FileDialogType& type,
                                         mozilla::Span<Command const> commands) {
-  return PWinFileDialogParent::SendShowFileDialog(
+  auto inner_promise = PWinFileDialogParent::SendShowFileDialog(
       reinterpret_cast<WindowsHandle>(parent), type, std::move(commands));
+
+  return ConvertToFDPromise(__func__, std::move(inner_promise));
 }
 
 [[nodiscard]] RefPtr<WinFileDialogParent::ShowFolderDialogPromise>
 WinFileDialogParent::ShowFolderDialogImpl(
     HWND parent, mozilla::Span<Command const> commands) {
-  return PWinFileDialogParent::SendShowFolderDialog(
+  auto inner_promise = PWinFileDialogParent::SendShowFolderDialog(
       reinterpret_cast<WindowsHandle>(parent), std::move(commands));
+
+  return ConvertToFDPromise(__func__, std::move(inner_promise));
 }
 
 void WinFileDialogParent::ProcessingError(Result aCode, const char* aReason) {
