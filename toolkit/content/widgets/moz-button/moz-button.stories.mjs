@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "../vendor/lit.all.mjs";
+import { html, ifDefined } from "../vendor/lit.all.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "./moz-button.mjs";
 
@@ -22,6 +22,10 @@ export default {
       options: ["default", "small"],
       control: { type: "radio" },
     },
+    type: {
+      options: ["default", "primary", "destructive", "icon", "icon ghost"],
+      control: { type: "select" },
+    },
   },
   parameters: {
     actions: {
@@ -40,17 +44,13 @@ moz-button-aria-labelled =
   },
 };
 
-const Template = ({ type, size, l10nId, iconUrl, disabled }) => html`
-  <style>
-    moz-button[type~="icon"]::part(button) {
-      background-image: url("${iconUrl}");
-    }
-  </style>
+const Template = ({ type, size, l10nId, iconSrc, disabled }) => html`
   <moz-button
     data-l10n-id=${l10nId}
     type=${type}
     size=${size}
     ?disabled=${disabled}
+    iconSrc=${ifDefined(iconSrc)}
   ></moz-button>
 `;
 
@@ -59,7 +59,7 @@ Default.args = {
   type: "default",
   size: "default",
   l10nId: "moz-button-labelled",
-  iconUrl: "chrome://global/skin/icons/more.svg",
+  iconSrc: "",
   disabled: false,
 };
 export const DefaultSmall = Template.bind({});
@@ -67,7 +67,7 @@ DefaultSmall.args = {
   type: "default",
   size: "small",
   l10nId: "moz-button-labelled",
-  iconUrl: "chrome://global/skin/icons/more.svg",
+  iconSrc: "",
   disabled: false,
 };
 export const Primary = Template.bind({});
@@ -85,7 +85,7 @@ Destructive.args = {
 export const Icon = Template.bind({});
 Icon.args = {
   ...Default.args,
-  type: "icon",
+  iconSrc: "chrome://global/skin/icons/more.svg",
   l10nId: "moz-button-titled",
 };
 export const IconSmall = Template.bind({});
@@ -96,5 +96,12 @@ IconSmall.args = {
 export const IconGhost = Template.bind({});
 IconGhost.args = {
   ...Icon.args,
-  type: "icon ghost",
+  type: "ghost",
+};
+export const IconText = Template.bind({});
+IconText.args = {
+  type: "default",
+  size: "default",
+  iconSrc: "chrome://global/skin/icons/edit-copy.svg",
+  l10nId: "moz-button-labelled",
 };
