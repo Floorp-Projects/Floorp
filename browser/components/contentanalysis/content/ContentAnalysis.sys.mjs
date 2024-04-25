@@ -403,7 +403,7 @@ export const ContentAnalysis = {
   },
 
   async showPanel(element, panelUI) {
-    await element.ownerDocument.l10n.setAttributes(
+    element.ownerDocument.l10n.setAttributes(
       lazy.PanelMultiView.getViewNode(
         element.ownerDocument,
         "content-analysis-panel-description"
