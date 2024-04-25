@@ -44,11 +44,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
 export class NetworkListener {
   #devtoolsNetworkObserver;
   #listening;
+  #navigationManager;
 
-  constructor() {
+  constructor(navigationManager) {
     lazy.EventEmitter.decorate(this);
 
     this.#listening = false;
+    this.#navigationManager = navigationManager;
   }
 
   destroy() {
@@ -104,6 +106,11 @@ export class NetworkListener {
   };
 
   #onNetworkEvent = (networkEvent, channel) => {
-    return new lazy.NetworkEventRecord(networkEvent, channel, this);
+    return new lazy.NetworkEventRecord(
+      networkEvent,
+      channel,
+      this,
+      this.#navigationManager
+    );
   };
 }
