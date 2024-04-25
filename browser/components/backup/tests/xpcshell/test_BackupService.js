@@ -9,6 +9,9 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { JsonSchemaValidator } = ChromeUtils.importESModule(
   "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs"
 );
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
 
 add_setup(function () {
   // Much of this setup is copied from toolkit/profile/xpcshell/head.js. It is
@@ -52,12 +55,28 @@ add_setup(function () {
 });
 
 /**
- * Tests that calling BackupService.createBackup will call backup on each
- * registered BackupResource, and that each BackupResource will have a folder
- * created for them to write into.
+ * A utility function for testing BackupService.createBackup. This helper
+ * function:
+ *
+ * 1. Ensures that `backup` will be called on BackupResources with the service
+ * 2. Ensures that a backup-manifest.json will be written and contain the
+ *    ManifestEntry data returned by each BackupResource.
+ * 3. Ensures that a `staging` folder will be written to and renamed properly
+ *    once the backup creation is complete.
+ *
+ * Once this is done, a task function can be run. The task function is passed
+ * the parsed backup-manifest.json object as its only argument.
+ *
+ * @param {object} sandbox
+ *   The Sinon sandbox to be used stubs and mocks. The test using this helper
+ *   is responsible for creating and resetting this sandbox.
+ * @param {Function} taskFn
+ *   A function that is run once all default checks are done on the manifest
+ *   and staging folder. After this function returns, the staging folder will
+ *   be cleaned up.
+ * @returns {Promise<undefined>}
  */
-add_task(async function test_createBackup() {
-  let sandbox = sinon.createSandbox();
+async function testCreateBackupHelper(sandbox, taskFn) {
   let fake1ManifestEntry = { fake1: "hello from 1" };
   sandbox
     .stub(FakeBackupResource1.prototype, "backup")
@@ -172,11 +191,71 @@ add_task(async function test_createBackup() {
     "Manifest contains the expected entry for FakeBackupResource3"
   );
 
+  taskFn(manifest);
+
   // After createBackup is more fleshed out, we're going to want to make sure
   // that we're writing the manifest file and that it contains the expected
   // ManifestEntry objects, and that the staging folder was successfully
   // renamed with the current date.
   await IOUtils.remove(fakeProfilePath, { recursive: true });
+}
+
+/**
+ * Tests that calling BackupService.createBackup will call backup on each
+ * registered BackupResource, and that each BackupResource will have a folder
+ * created for them to write into. Tests in the signed-out state.
+ */
+add_task(async function test_createBackup_signed_out() {
+  let sandbox = sinon.createSandbox();
+
+  sandbox
+    .stub(UIState, "get")
+    .returns({ status: UIState.STATUS_NOT_CONFIGURED });
+  await testCreateBackupHelper(sandbox, manifest => {
+    Assert.equal(
+      manifest.meta.accountID,
+      undefined,
+      "Account ID should be undefined."
+    );
+    Assert.equal(
+      manifest.meta.accountEmail,
+      undefined,
+      "Account email should be undefined."
+    );
+  });
+
+  sandbox.restore();
+});
+
+/**
+ * Tests that calling BackupService.createBackup will call backup on each
+ * registered BackupResource, and that each BackupResource will have a folder
+ * created for them to write into. Tests in the signed-in state.
+ */
+add_task(async function test_createBackup_signed_in() {
+  let sandbox = sinon.createSandbox();
+
+  const TEST_UID = "ThisIsMyTestUID";
+  const TEST_EMAIL = "foxy@mozilla.org";
+
+  sandbox.stub(UIState, "get").returns({
+    status: UIState.STATUS_SIGNED_IN,
+    uid: TEST_UID,
+    email: TEST_EMAIL,
+  });
+
+  await testCreateBackupHelper(sandbox, manifest => {
+    Assert.equal(
+      manifest.meta.accountID,
+      TEST_UID,
+      "Account ID should be set properly."
+    );
+    Assert.equal(
+      manifest.meta.accountEmail,
+      TEST_EMAIL,
+      "Account email should be set properly."
+    );
+  });
 
   sandbox.restore();
 });

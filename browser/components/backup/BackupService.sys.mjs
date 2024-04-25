@@ -25,6 +25,7 @@ ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
 ChromeUtils.defineESModuleGetters(lazy, {
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs",
+  UIState: "resource://services-sync/UIState.sys.mjs",
 });
 
 /**
@@ -400,6 +401,16 @@ export class BackupService {
       profileName = profileSvc.currentProfile.name;
     }
 
+    // Default these to undefined rather than null so that they're not included
+    // the meta object if we're not signed in.
+    let accountID = undefined;
+    let accountEmail = undefined;
+    let fxaState = lazy.UIState.get();
+    if (fxaState.status == lazy.UIState.STATUS_SIGNED_IN) {
+      accountID = fxaState.uid;
+      accountEmail = fxaState.email;
+    }
+
     return {
       version: BackupService.MANIFEST_SCHEMA_VERSION,
       meta: {
@@ -411,6 +422,8 @@ export class BackupService {
         machineName: lazy.fxAccounts.device.getLocalName(),
         osName: Services.sysinfo.getProperty("name"),
         osVersion: Services.sysinfo.getProperty("version"),
+        accountID,
+        accountEmail,
       },
       resources: {},
     };
