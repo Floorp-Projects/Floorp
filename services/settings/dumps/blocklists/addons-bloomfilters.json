@@ -3,6 +3,52 @@
     {
       "stash": {
         "blocked": [
+          "{392032f8-b8b9-4729-8b85-5909a5fb7785}:1.0",
+          "{e6ce6d79-9688-4609-8479-8fe5ce05fb94}:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1713875763544,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1713897306045,
+      "id": "050ef823-a352-4664-8cbd-b932cdaa1abb",
+      "last_modified": 1713897363017
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{93b5bb7e-cd0f-4d35-a941-e916a1f7c4fd}:1.7",
+          "{93b5bb7e-cd0f-4d35-a941-e916a1f7c4fd}:1.5",
+          "{93b5bb7e-cd0f-4d35-a941-e916a1f7c4fd}:2.1",
+          "{93b5bb7e-cd0f-4d35-a941-e916a1f7c4fd}:2.0",
+          "{93b5bb7e-cd0f-4d35-a941-e916a1f7c4fd}:1.2",
+          "{93b5bb7e-cd0f-4d35-a941-e916a1f7c4fd}:1.8",
+          "{93b5bb7e-cd0f-4d35-a941-e916a1f7c4fd}:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1713810962117,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1713875706173,
+      "id": "de91d856-0133-44c6-ae65-47b4d58bb2be",
+      "last_modified": 1713875763407
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{5d24d38f-8929-4cc5-98bd-2b4898b8c48d}:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1713551767144,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1713810905694,
+      "id": "6bf8193f-0042-4ec6-bee5-84e7b687379e",
+      "last_modified": 1713810961988
+    },
+    {
+      "stash": {
+        "blocked": [
           "aleks-v99@ru.ru:0.1.5",
           "{c11b3a46-39ba-40fe-9c27-ce55352cdb64}:1.1",
           "{c11b3a46-39ba-40fe-9c27-ce55352cdb64}:2.2",
@@ -560,5 +606,5 @@
       "last_modified": 1707395854769
     }
   ],
-  "timestamp": 1713551766987
+  "timestamp": 1713897363017
 }

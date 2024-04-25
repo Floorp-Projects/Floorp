@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1713801022424,
+      "derHash": "XUSUtl0cFO+ZWcU56r4hlZ8aSmiA8T/dsZC4suGFzNw=",
+      "subject": "CN=certSIGN Web CA,O=CERTSIGN SA,C=RO",
+      "subjectDN": "MFYxCzAJBgNVBAYTAlJPMRQwEgYDVQQKEwtDRVJUU0lHTiBTQTEYMBYGA1UEAxMPY2VydFNJR04gV2ViIENBMRcwFQYDVQRhEw5WQVRSTy0xODI4ODI1MA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e167023854b7a05b9ca70d8db4bc84d6eb3e4d6b1db5f7b7db951e80125300fb",
+        "size": 1975,
+        "filename": "G6NjfcFmFAa5DouUTqNGb3I5tG34kmES3evs_0ubJ68=.pem",
+        "location": "security-state-staging/intermediates/7a2907d8-f702-4338-96fa-ae42d3d1ee3b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "G6NjfcFmFAa5DouUTqNGb3I5tG34kmES3evs/0ubJ68=",
+      "crlite_enrolled": false,
+      "id": "e240965f-851e-4200-ba0b-17b7fa547f5d",
+      "last_modified": 1713801423278
+    },
+    {
       "schema": 1713563345018,
       "derHash": "IZxZzNBtAhCtz26BJXANFXj2mgZwoH/Z3emeSsglJM0=",
       "subject": "CN=ZoTrus RSA OV SSL CA,O=ZoTrus Technology Limited,C=CN",
@@ -27901,24 +27919,6 @@
       "last_modified": 1601517443236
     },
     {
-      "schema": 1601376758715,
-      "derHash": "ZLNULRvJcvWKHRefPQuWUr5DTzrjhC4MRHiA1NYjpN4=",
-      "subject": "CN=Cybertrust Global Root,O=Cybertrust\\, Inc",
-      "subjectDN": "MDsxGDAWBgNVBAoTD0N5YmVydHJ1c3QsIEluYzEfMB0GA1UEAxMWQ3liZXJ0cnVzdCBHbG9iYWwgUm9vdA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "47de0a95895055ce31d99d828b0db0f2ec2817ccee0b1699eac0fc8b4c0d7a15",
-        "size": 1715,
-        "filename": "foeCwVDOOVL4AuY2AjpdPpW7XWjjPoWtsroXgSXOvxU=.pem",
-        "location": "security-state-staging/intermediates/b0359886-f578-4ff8-b6f6-68c9c49ac966.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "foeCwVDOOVL4AuY2AjpdPpW7XWjjPoWtsroXgSXOvxU=",
-      "crlite_enrolled": false,
-      "id": "565f7b1a-68fa-497d-9c56-e9cd5a86b74e",
-      "last_modified": 1601517443097
-    },
-    {
       "schema": 1601376718312,
       "derHash": "y/j7d2YBZ+a6rNDfd82jl9ARfuK+6iO5NTF/i7W147A=",
       "subject": "CN=DigiCert High Assurance EV Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US",
@@ -30691,5 +30691,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1713715023006
+  "timestamp": 1713887823023
 }
