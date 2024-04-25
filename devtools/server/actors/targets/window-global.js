@@ -521,9 +521,15 @@ class WindowGlobalTargetActor extends BaseTargetActor {
    * @return {Array}
    */
   get windows() {
-    return this.docShells.map(docShell => {
-      return docShell.domWindow;
-    });
+    const windows = [];
+    for (const docShell of this.docShells) {
+      try {
+        windows.push(docShell.domWindow);
+      } catch (e) {
+        // Ignore destroying docshells which may throw when accessing domWindow property.
+      }
+    }
+    return windows;
   }
 
   /**
