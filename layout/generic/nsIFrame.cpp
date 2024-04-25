@@ -7952,8 +7952,19 @@ OverflowAreas nsIFrame::GetActualAndNormalOverflowAreasRelativeToParent()
   }
 
   const OverflowAreas overflows = GetOverflowAreas();
-  OverflowAreas actualAndNormalOverflows = overflows + GetPosition();
-  actualAndNormalOverflows.UnionWith(overflows + GetNormalPosition());
+  OverflowAreas actualAndNormalOverflows = overflows + GetNormalPosition();
+  if (IsRelativelyPositioned()) {
+    actualAndNormalOverflows.UnionWith(overflows + GetPosition());
+  } else {
+    // For sticky positioned elements, we only use the normal position for the
+    // scrollable overflow. This avoids circular dependencies between sticky
+    // positioned elements and their scroll container. (The scroll position and
+    // the scroll container's size impact the sticky position, so we don't want
+    // the sticky position to impact them.)
+    MOZ_ASSERT(IsStickyPositioned());
+    actualAndNormalOverflows.UnionWith(
+        OverflowAreas(overflows.InkOverflow() + GetPosition(), nsRect()));
+  }
   return actualAndNormalOverflows;
 }
 
