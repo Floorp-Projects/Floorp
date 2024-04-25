@@ -434,6 +434,10 @@ export var SessionStore = {
     SessionStoreInternal.deleteCustomGlobalValue(aKey);
   },
 
+  persistTabAttribute: function ss_persistTabAttribute(aName) {
+    SessionStoreInternal.persistTabAttribute(aName);
+  },
+
   restoreLastSession: function ss_restoreLastSession() {
     SessionStoreInternal.restoreLastSession();
   },
@@ -3611,6 +3615,12 @@ var SessionStoreInternal = {
     this.saveStateDelayed();
   },
 
+  persistTabAttribute: function ssi_persistTabAttribute(aName) {
+    if (lazy.TabAttributes.persist(aName)) {
+      this.saveStateDelayed();
+    }
+  },
+
   /**
    * Undoes the closing of a tab or window which corresponds
    * to the closedId passed in.
@@ -4770,6 +4780,13 @@ var SessionStoreInternal = {
 
     if (tabData.lastAccessed) {
       tab.updateLastAccessed(tabData.lastAccessed);
+    }
+
+    if ("attributes" in tabData) {
+      // Ensure that we persist tab attributes restored from previous sessions.
+      Object.keys(tabData.attributes).forEach(a =>
+        lazy.TabAttributes.persist(a)
+      );
     }
 
     if (!tabData.entries) {
