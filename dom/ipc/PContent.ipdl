@@ -1206,8 +1206,8 @@ parent:
     async ConsoleMessage(nsString message);
     async ScriptErrorWithStack(nsString message, nsString sourceName, nsString sourceLine,
                                uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
-                               nsCString category, bool privateWindow,
-                               bool fromChromeContext, ClonedMessageData stack);
+                               nsCString category, bool isFromPrivateWindow,
+                               bool isFromChromeContext, ClonedMessageData stack);
 
     // Places the items within dataTransfer on the clipboard.
     async SetClipboard(IPCTransferable aTransferable,
@@ -1815,8 +1815,8 @@ parent:
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
                       uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
-                      nsCString category, bool privateWindow, uint64_t innerWindowId,
-                      bool fromChromeContext);
+                      nsCString category, bool isFromPrivateWindow, uint64_t innerWindowId,
+                      bool isFromChromeContext);
 
     /**
      * Used in fission to report timing data when the parent window is in

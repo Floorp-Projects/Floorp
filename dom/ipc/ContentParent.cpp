@@ -5123,30 +5123,30 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptError(
     const nsAString& aMessage, const nsAString& aSourceName,
     const nsAString& aSourceLine, const uint32_t& aLineNumber,
     const uint32_t& aColNumber, const uint32_t& aFlags,
-    const nsACString& aCategory, const bool& aFromPrivateWindow,
-    const uint64_t& aInnerWindowId, const bool& aFromChromeContext) {
+    const nsACString& aCategory, const bool& aIsFromPrivateWindow,
+    const uint64_t& aInnerWindowId, const bool& aIsFromChromeContext) {
   return RecvScriptErrorInternal(aMessage, aSourceName, aSourceLine,
                                  aLineNumber, aColNumber, aFlags, aCategory,
-                                 aFromPrivateWindow, aFromChromeContext);
+                                 aIsFromPrivateWindow, aIsFromChromeContext);
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvScriptErrorWithStack(
     const nsAString& aMessage, const nsAString& aSourceName,
     const nsAString& aSourceLine, const uint32_t& aLineNumber,
     const uint32_t& aColNumber, const uint32_t& aFlags,
-    const nsACString& aCategory, const bool& aFromPrivateWindow,
-    const bool& aFromChromeContext, const ClonedMessageData& aFrame) {
+    const nsACString& aCategory, const bool& aIsFromPrivateWindow,
+    const bool& aIsFromChromeContext, const ClonedMessageData& aStack) {
   return RecvScriptErrorInternal(
       aMessage, aSourceName, aSourceLine, aLineNumber, aColNumber, aFlags,
-      aCategory, aFromPrivateWindow, aFromChromeContext, &aFrame);
+      aCategory, aIsFromPrivateWindow, aIsFromChromeContext, &aStack);
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
     const nsAString& aMessage, const nsAString& aSourceName,
     const nsAString& aSourceLine, const uint32_t& aLineNumber,
     const uint32_t& aColNumber, const uint32_t& aFlags,
-    const nsACString& aCategory, const bool& aFromPrivateWindow,
-    const bool& aFromChromeContext, const ClonedMessageData* aStack) {
+    const nsACString& aCategory, const bool& aIsFromPrivateWindow,
+    const bool& aIsFromChromeContext, const ClonedMessageData* aStack) {
   nsresult rv;
   nsCOMPtr<nsIConsoleService> consoleService =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
@@ -5187,7 +5187,7 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
   }
 
   rv = msg->Init(aMessage, aSourceName, aSourceLine, aLineNumber, aColNumber,
-                 aFlags, aCategory, aFromPrivateWindow, aFromChromeContext);
+                 aFlags, aCategory, aIsFromPrivateWindow, aIsFromChromeContext);
   if (NS_FAILED(rv)) return IPC_OK();
 
   msg->SetIsForwardedFromContentProcess(true);
@@ -5203,9 +5203,9 @@ bool ContentParent::DoLoadMessageManagerScript(const nsAString& aURL,
 }
 
 nsresult ContentParent::DoSendAsyncMessage(const nsAString& aMessage,
-                                           StructuredCloneData& aHelper) {
+                                           StructuredCloneData& aData) {
   ClonedMessageData data;
-  if (!BuildClonedMessageData(aHelper, data)) {
+  if (!BuildClonedMessageData(aData, data)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
   if (!SendAsyncMessage(aMessage, data)) {
@@ -5260,14 +5260,14 @@ bool ContentParent::ShouldContinueFromReplyTimeout() {
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAddIdleObserver(
-    const uint64_t& aObserver, const uint32_t& aIdleTimeInS) {
+    const uint64_t& aObserverId, const uint32_t& aIdleTimeInS) {
   nsresult rv;
   nsCOMPtr<nsIUserIdleService> idleService =
       do_GetService("@mozilla.org/widget/useridleservice;1", &rv);
   NS_ENSURE_SUCCESS(rv, IPC_FAIL(this, "Failed to get UserIdleService."));
 
   RefPtr<ParentIdleListener> listener =
-      new ParentIdleListener(this, aObserver, aIdleTimeInS);
+      new ParentIdleListener(this, aObserverId, aIdleTimeInS);
   rv = idleService->AddIdleObserver(listener, aIdleTimeInS);
   NS_ENSURE_SUCCESS(rv, IPC_FAIL(this, "AddIdleObserver failed."));
   mIdleListeners.AppendElement(listener);
@@ -5275,11 +5275,11 @@ mozilla::ipc::IPCResult ContentParent::RecvAddIdleObserver(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvRemoveIdleObserver(
-    const uint64_t& aObserver, const uint32_t& aIdleTimeInS) {
+    const uint64_t& aObserverId, const uint32_t& aIdleTimeInS) {
   RefPtr<ParentIdleListener> listener;
   for (int32_t i = mIdleListeners.Length() - 1; i >= 0; --i) {
     listener = static_cast<ParentIdleListener*>(mIdleListeners[i].get());
-    if (listener->mObserver == aObserver && listener->mTime == aIdleTimeInS) {
+    if (listener->mObserver == aObserverId && listener->mTime == aIdleTimeInS) {
       nsresult rv;
       nsCOMPtr<nsIUserIdleService> idleService =
           do_GetService("@mozilla.org/widget/useridleservice;1", &rv);
@@ -5786,7 +5786,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     PBrowserParent* aThisTab, const MaybeDiscarded<BrowsingContext>& aParent,
     PBrowserParent* aNewTab, const uint32_t& aChromeFlags,
     const bool& aCalledFromJS, const bool& aForPrinting,
-    const bool& aForPrintPreview, nsIURI* aURIToLoad,
+    const bool& aForWindowDotPrint, nsIURI* aURIToLoad,
     const nsACString& aFeatures, const UserActivation::Modifiers& aModifiers,
     nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
     nsIReferrerInfo* aReferrerInfo, const OriginAttributes& aOriginAttributes,
@@ -5872,8 +5872,8 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, *parent, newBCOpenerId != 0, aChromeFlags, aCalledFromJS,
-      aForPrinting, aForPrintPreview, aURIToLoad, aFeatures, aModifiers, newTab,
-      VoidString(), rv, newRemoteTab, &cwi.windowOpened(), openLocation,
+      aForPrinting, aForWindowDotPrint, aURIToLoad, aFeatures, aModifiers,
+      newTab, VoidString(), rv, newRemoteTab, &cwi.windowOpened(), openLocation,
       aTriggeringPrincipal, aReferrerInfo, /* aLoadUri = */ false, aCsp,
       aOriginAttributes);
   if (!ipcResult) {
@@ -6277,9 +6277,9 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvGetFilesRequest(
-    const nsID& aUUID, const nsAString& aDirectoryPath,
+    const nsID& aID, const nsAString& aDirectoryPath,
     const bool& aRecursiveFlag) {
-  MOZ_ASSERT(!mGetFilesPendingRequests.GetWeak(aUUID));
+  MOZ_ASSERT(!mGetFilesPendingRequests.GetWeak(aID));
 
   if (!mozilla::Preferences::GetBool("dom.filesystem.pathcheck.disabled",
                                      false)) {
@@ -6295,30 +6295,30 @@ mozilla::ipc::IPCResult ContentParent::RecvGetFilesRequest(
 
   ErrorResult rv;
   RefPtr<GetFilesHelper> helper = GetFilesHelperParent::Create(
-      aUUID, aDirectoryPath, aRecursiveFlag, this, rv);
+      aID, aDirectoryPath, aRecursiveFlag, this, rv);
 
   if (NS_WARN_IF(rv.Failed())) {
-    if (!SendGetFilesResponse(aUUID,
+    if (!SendGetFilesResponse(aID,
                               GetFilesResponseFailure(rv.StealNSResult()))) {
       return IPC_FAIL(this, "SendGetFilesResponse failed.");
     }
     return IPC_OK();
   }
 
-  mGetFilesPendingRequests.InsertOrUpdate(aUUID, std::move(helper));
+  mGetFilesPendingRequests.InsertOrUpdate(aID, std::move(helper));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvDeleteGetFilesRequest(
-    const nsID& aUUID) {
-  mGetFilesPendingRequests.Remove(aUUID);
+    const nsID& aID) {
+  mGetFilesPendingRequests.Remove(aID);
   return IPC_OK();
 }
 
 void ContentParent::SendGetFilesResponseAndForget(
-    const nsID& aUUID, const GetFilesResponseResult& aResult) {
-  if (mGetFilesPendingRequests.Remove(aUUID)) {
-    Unused << SendGetFilesResponse(aUUID, aResult);
+    const nsID& aID, const GetFilesResponseResult& aResult) {
+  if (mGetFilesPendingRequests.Remove(aID)) {
+    Unused << SendGetFilesResponse(aID, aResult);
   }
 }
 
@@ -6740,7 +6740,7 @@ bool ContentParent::DeallocPSessionStorageObserverParent(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvBHRThreadHang(
-    const HangDetails& aDetails) {
+    const HangDetails& aHangDetails) {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     // Copy the HangDetails recieved over the network into a nsIHangDetails, and
@@ -6748,7 +6748,7 @@ mozilla::ipc::IPCResult ContentParent::RecvBHRThreadHang(
     // XXX: We should be able to avoid this potentially expensive copy here by
     // moving our deserialized argument.
     nsCOMPtr<nsIHangDetails> hangDetails =
-        new nsHangDetails(HangDetails(aDetails), PersistedToDisk::No);
+        new nsHangDetails(HangDetails(aHangDetails), PersistedToDisk::No);
     obs->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
   }
   return IPC_OK();
