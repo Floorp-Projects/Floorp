@@ -743,15 +743,17 @@ static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
 
   // Step 1.
   MOZ_ASSERT(IsValidISODateTime(dateTime));
-  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
 
   // Step 2.
-  auto timeResult = AddTime(dateTime.time, duration.time);
+  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
 
   // Step 3.
-  const auto& datePart = dateTime.date;
+  auto timeResult = AddTime(dateTime.time, duration.time);
 
   // Step 4.
+  const auto& datePart = dateTime.date;
+
+  // Step 5.
   auto dateDuration = DateDuration{
       duration.date.years,
       duration.date.months,
@@ -762,13 +764,13 @@ static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
     return false;
   }
 
-  // Step 5.
+  // Step 6.
   PlainDate addedDate;
   if (!AddDate(cx, calendar, datePart, dateDuration, options, &addedDate)) {
     return false;
   }
 
-  // Step 6.
+  // Step 7.
   *result = {addedDate, timeResult.time};
   return true;
 }
@@ -868,17 +870,19 @@ PlainDateTime js::temporal::RoundISODateTime(
 
   // Step 1.
   MOZ_ASSERT(IsValidISODateTime(dateTime));
-  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
 
   // Step 2.
+  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
+
+  // Step 3.
   auto roundedTime = RoundTime(time, increment, unit, roundingMode);
   MOZ_ASSERT(0 <= roundedTime.days && roundedTime.days <= 1);
 
-  // Step 3.
+  // Step 4.
   auto balanceResult = BalanceISODate(date.year, date.month,
                                       date.day + int32_t(roundedTime.days));
 
-  // Step 4.
+  // Step 5.
   return {balanceResult, roundedTime.time};
 }
 
