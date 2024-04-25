@@ -11,7 +11,7 @@ use miette::{bail, ensure, miette, Context, Diagnostic, IntoDiagnostic, Report, 
 use regex::Regex;
 
 use crate::{
-    fs::{copy_dir, create_dir_all, existing_file, remove_file, FileRoot},
+    fs::{copy_dir, create_dir_all, remove_file, FileRoot},
     path::join_path,
     process::{which, EasyCommand},
 };
