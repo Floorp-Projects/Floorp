@@ -43,7 +43,9 @@ class WMFDecoderModule : public PlatformDecoderModule {
     ForceEnableHEVC,
   };
 
-  // Called on main thread.
+  // Can be called on any thread, but avoid calling this on the main thread
+  // because the initialization takes long time and we don't want to block the
+  // main thread.
   static void Init(Config aConfig = Config::None);
 
   // Called from any thread, must call init first
@@ -63,6 +65,12 @@ class WMFDecoderModule : public PlatformDecoderModule {
 
   WMFDecoderModule() = default;
   virtual ~WMFDecoderModule() = default;
+
+  static inline StaticMutex sMutex;
+  static inline bool sSupportedTypesInitialized MOZ_GUARDED_BY(sMutex) = false;
+  static inline EnumSet<WMFStreamType> sSupportedTypes MOZ_GUARDED_BY(sMutex);
+  static inline EnumSet<WMFStreamType> sLackOfExtensionTypes
+      MOZ_GUARDED_BY(sMutex);
 };
 
 }  // namespace mozilla
