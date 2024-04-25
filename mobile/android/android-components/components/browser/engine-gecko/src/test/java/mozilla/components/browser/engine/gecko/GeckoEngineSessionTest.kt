@@ -349,7 +349,7 @@ class GeckoEngineSessionTest {
         val observer: EngineSession.Observer = mock()
         engineSession.register(observer)
 
-        val response = WebResponse.Builder("https://download.mozilla.org/image.png")
+        val response = WebResponse.Builder("https://download.mozilla.org/image%20name.png")
             .addHeader(Headers.Names.CONTENT_TYPE, "image/png")
             .addHeader(Headers.Names.CONTENT_LENGTH, "42")
             .skipConfirmation(true)
@@ -362,8 +362,8 @@ class GeckoEngineSessionTest {
         contentDelegate.value.onExternalResponse(mock(), response)
 
         verify(observer).onExternalResource(
-            url = eq("https://download.mozilla.org/image.png"),
-            fileName = eq("image.png"),
+            url = eq("https://download.mozilla.org/image%20name.png"),
+            fileName = eq("image name.png"),
             contentLength = eq(42),
             contentType = eq("image/png"),
             cookie = eq(null),

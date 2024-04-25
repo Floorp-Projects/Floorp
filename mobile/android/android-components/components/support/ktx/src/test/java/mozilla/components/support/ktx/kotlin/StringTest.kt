@@ -202,6 +202,47 @@ class StringTest {
     }
 
     @Test
+    fun `WHEN a string contains utf 8 encoded characters decode decodes it`() {
+        // List of pairs of encoded strings and their expected decoded results
+        val testCases = listOf(
+            "hello%20world" to "hello world",
+            "wow%21amazing" to "wow!amazing",
+            "quote%22here%22" to "quote\"here\"",
+            "hash%23tag" to "hash#tag",
+            "save%24money" to "save\$money",
+            "100%25complete" to "100%complete",
+            "you%26me" to "you&me",
+            "it%27s%20easy" to "it's easy",
+            "open%28now%29" to "open(now)",
+            "star%2Ashine" to "star*shine",
+            "add%2Bmore" to "add+more",
+            "comma%2Cseparated" to "comma,separated",
+            "dash%2Dbetween" to "dash-between",
+            "end%2Eperiod" to "end.period",
+            "path%2Fto%2Ffile" to "path/to/file",
+            "time%3A12%3A00" to "time:12:00",
+            "wait%3Bplease" to "wait;please",
+            "less%3Cthan" to "less<than",
+            "equals%3Dsign" to "equals=sign",
+            "greater%3Ethan" to "greater>than",
+            "what%3Fwhere" to "what?where",
+            "email%40domain.com" to "email@domain.com",
+            "bracket%5Bopen%5D" to "bracket[open]",
+            "escape%5Cbackslash" to "escape\\backslash",
+            "bracket%5Dclose%5D" to "bracket]close]",
+            "high%5Efive" to "high^five",
+            "accent%60grave" to "accent`grave",
+            "brace%7Bopenclose%7D" to "brace{openclose}",
+            "pipe%7Csymbol" to "pipe|symbol",
+            "tilde%7Ewave" to "tilde~wave",
+        )
+
+        testCases.forEach { (encoded, decoded) ->
+            assertEquals(decoded, encoded.decode())
+        }
+    }
+
+    @Test
     fun `getDataUrlImageExtension returns a default extension if one cannot be extracted from the data url`() {
         val base64Image = "data:;base64,testImage"
 
