@@ -61,6 +61,7 @@ impl UI {
         Objc::<AppDelegate>::register();
         Objc::<Button>::register();
         Objc::<Checkbox>::register();
+        Objc::<TextView>::register();
         Objc::<Window>::register();
 
         rc::autoreleasepool(|| {
@@ -443,6 +444,48 @@ impl Checkbox {
         // # Safety
         // NSButton is the superclass of Objc<Checkbox>.
         unsafe { std::mem::transmute(obj.autorelease()) }
+    }
+}
+
+struct TextView;
+
+objc_class! {
+    impl TextView: NSTextView /*<NSTextViewDelegate>*/ {
+        #[sel(initWithFrame:)]
+        fn init_with_frame(&mut self, frame_rect: Rect) -> cocoa::id {
+            unsafe {
+                let object: cocoa::id = msg_send![super(self.instance, class!(NSTextView)), initWithFrame: frame_rect.0];
+                if object.is_null() {
+                    return object;
+                }
+                let () = msg_send![object, setDelegate: self.instance];
+                object
+            }
+        }
+
+        #[sel(textView:doCommandBySelector:)]
+        fn do_command_by_selector(&mut self, text_view: Ptr<cocoa::NSTextView>, selector: runtime::Sel) -> runtime::BOOL {
+            let Ptr(text_view) = text_view;
+            // Make Tab/Backtab navigate to key views rather than inserting tabs in the text view.
+            // We can't use the `NSText` `fieldEditor` property to implement this behavior because
+            // that will disable the Enter key.
+            if selector == sel!(insertTab:) {
+                unsafe { text_view.window().selectNextKeyView_(text_view.0) };
+                return runtime::YES;
+            } else if selector == sel!(insertBacktab:) {
+                unsafe { text_view.window().selectPreviousKeyView_(text_view.0) };
+                return runtime::YES;
+            }
+            runtime::NO
+        }
+    }
+}
+
+impl From<Objc<TextView>> for cocoa::NSTextView {
+    fn from(tv: Objc<TextView>) -> Self {
+        // # Safety
+        // NSTextView is the superclass of Objc<TextView>.
+        unsafe { std::mem::transmute(tv) }
     }
 }
 
@@ -1009,10 +1052,10 @@ fn render_element(
             content,
             editable,
         }) => {
-            let tv = unsafe { StrongRef::new(cocoa::NSTextView::alloc()) };
+            let tv: StrongRef<cocoa::NSTextView> = TextView.into_object().cast();
             unsafe {
-                tv.init();
                 tv.setEditable_(editable.into());
+
                 cocoa::NSTextView_NSSharing::setAllowsUndo_(&*tv, runtime::YES);
                 tv.setVerticallyResizable_(runtime::YES);
                 if rtl {
