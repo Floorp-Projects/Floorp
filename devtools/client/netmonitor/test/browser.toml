@@ -49,6 +49,7 @@ support-files = [
   "html_single-get-page.html",
   "html_slow-requests-test-page.html",
   "html_send-beacon.html",
+  "html_send-beacon-late-iframe-request.html",
   "html_sorting-test-page.html",
   "html_statistics-edge-case-page.html",
   "html_statistics-test-page.html",

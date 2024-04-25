@@ -90,10 +90,10 @@ function isChannelFromSystemPrincipal(channel) {
   // WindowGlobal which is available on the BrowsingContext
   if (!principal) {
     principal = CanonicalBrowsingContext.isInstance(browsingContext)
-      ? browsingContext.currentWindowGlobal.documentPrincipal
+      ? browsingContext.currentWindowGlobal?.documentPrincipal
       : browsingContext.window.document.nodePrincipal;
   }
-  return principal.isSystemPrincipal;
+  return principal?.isSystemPrincipal;
 }
 
 /**

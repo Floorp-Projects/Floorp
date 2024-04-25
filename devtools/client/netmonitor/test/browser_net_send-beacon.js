@@ -7,6 +7,8 @@
  * Tests if beacons are handled correctly.
  */
 
+const IFRAME_URL = EXAMPLE_URL + "html_send-beacon-late-iframe-request.html";
+
 add_task(async function () {
   const { tab, monitor } = await initNetMonitor(SEND_BEACON_URL, {
     requestCount: 1,
@@ -39,6 +41,27 @@ add_task(async function () {
   ok(request.url.endsWith("beacon_request"), "The URL is correct.");
   is(request.status, "404", "The status is correct.");
   is(request.blockedReason, 0, "The request is not blocked");
+
+  const onNetworkEvents = waitForNetworkEvents(monitor, 2);
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [IFRAME_URL],
+    async function (url) {
+      const iframe = content.document.createElement("iframe");
+      iframe.src = url;
+      content.document.body.appendChild(iframe);
+      await new Promise(resolve => (iframe.onload = resolve));
+      iframe.remove();
+    }
+  );
+  await onNetworkEvents;
+
+  // Request at index 1 will be the HTML page of the iframe
+  const lateRequest = getSortedRequests(store.getState())[2];
+  is(lateRequest.method, "POST", "The method is correct.");
+  ok(lateRequest.url.endsWith("beacon_late_request"), "The URL is correct.");
+  is(lateRequest.status, "404", "The status is correct.");
+  is(lateRequest.blockedReason, 0, "The request is not blocked");
 
   return teardown(monitor);
 });
