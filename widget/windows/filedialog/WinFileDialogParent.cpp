@@ -54,6 +54,20 @@ PWinFileDialogParent::nsresult WinFileDialogParent::BindToUtilityProcess(
   return NS_OK;
 }
 
+[[nodiscard]] RefPtr<WinFileDialogParent::ShowFileDialogPromise>
+WinFileDialogParent::ShowFileDialogImpl(HWND parent, const FileDialogType& type,
+                                        mozilla::Span<Command const> commands) {
+  return PWinFileDialogParent::SendShowFileDialog(
+      reinterpret_cast<WindowsHandle>(parent), type, std::move(commands));
+}
+
+[[nodiscard]] RefPtr<WinFileDialogParent::ShowFolderDialogPromise>
+WinFileDialogParent::ShowFolderDialogImpl(
+    HWND parent, mozilla::Span<Command const> commands) {
+  return PWinFileDialogParent::SendShowFolderDialog(
+      reinterpret_cast<WindowsHandle>(parent), std::move(commands));
+}
+
 void WinFileDialogParent::ProcessingError(Result aCode, const char* aReason) {
   detail::LogProcessingError(sLogFileDialog, this, aCode, aReason);
 }
