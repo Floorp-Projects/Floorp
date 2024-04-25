@@ -136,13 +136,10 @@ export class BackupService {
       return this.#instance;
     }
     this.#instance = new BackupService(DefaultBackupResources);
-    // TODO: Here, before taking measurements, we should check to see if the
-    // current user profile contains a file with the POST_RECOVERY_FILE_NAME.
-    // If it does, we should load that file and invoke the associated
-    // BackupResource.postRecovery method for each resource key inside it. Then
-    // we should delete the file. (bug 1888436)
 
-    this.#instance.takeMeasurements();
+    this.#instance.checkForPostRecovery().then(() => {
+      this.#instance.takeMeasurements();
+    });
 
     return this.#instance;
   }
@@ -574,6 +571,58 @@ export class BackupService {
         e
       );
       throw e;
+    }
+  }
+
+  /**
+   * Checks for the POST_RECOVERY_FILE_NAME in the current profile directory.
+   * If one exists, instantiates any relevant BackupResource's, and calls
+   * postRecovery() on them with the appropriate entry from the file. Once
+   * this is done, deletes the file.
+   *
+   * The file is deleted even if one of the postRecovery() steps rejects or
+   * fails.
+   *
+   * This function resolves silently if the POST_RECOVERY_FILE_NAME file does
+   * not exist, which should be the majority of cases.
+   *
+   * @param {string} [profilePath=PathUtils.profileDir]
+   *  The profile path to look for the POST_RECOVERY_FILE_NAME file. Defaults
+   *  to the current profile.
+   * @returns {Promise<undefined>}
+   */
+  async checkForPostRecovery(profilePath = PathUtils.profileDir) {
+    lazy.logConsole.debug(`Checking for post-recovery file in ${profilePath}`);
+    let postRecoveryFile = PathUtils.join(
+      profilePath,
+      BackupService.POST_RECOVERY_FILE_NAME
+    );
+
+    if (!(await IOUtils.exists(postRecoveryFile))) {
+      lazy.logConsole.debug("Did not find post-recovery file.");
+      return;
+    }
+
+    lazy.logConsole.debug("Found post-recovery file. Loading...");
+
+    try {
+      let postRecovery = await IOUtils.readJSON(postRecoveryFile);
+      for (let resourceKey in postRecovery) {
+        let postRecoveryEntry = postRecovery[resourceKey];
+        let resourceClass = this.#resources.get(resourceKey);
+        if (!resourceClass) {
+          lazy.logConsole.error(
+            `Invalid resource for post-recovery step: ${resourceKey}`
+          );
+          continue;
+        }
+
+        lazy.logConsole.debug(`Running post-recovery step for ${resourceKey}`);
+        await new resourceClass().postRecovery(postRecoveryEntry);
+        lazy.logConsole.debug(`Done post-recovery step for ${resourceKey}`);
+      }
+    } finally {
+      await IOUtils.remove(postRecoveryFile, { ignoreAbsent: true });
     }
   }
 

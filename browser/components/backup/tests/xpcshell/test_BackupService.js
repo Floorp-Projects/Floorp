@@ -357,3 +357,66 @@ add_task(async function test_recoverFromBackup() {
   await IOUtils.remove(newProfileRootPath, { recursive: true });
   sandbox.restore();
 });
+
+/**
+ * Tests that if there's a post-recovery.json file in the profile directory
+ * when checkForPostRecovery() is called, that it is processed, and the
+ * postRecovery methods on the associated BackupResources are called with the
+ * entry values from the file.
+ */
+add_task(async function test_checkForPostRecovery() {
+  let sandbox = sinon.createSandbox();
+
+  let testProfilePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "checkForPostRecoveryTest"
+  );
+  let fakePostRecoveryObject = {
+    [FakeBackupResource1.key]: "test 1",
+    [FakeBackupResource3.key]: "test 3",
+  };
+  await IOUtils.writeJSON(
+    PathUtils.join(testProfilePath, BackupService.POST_RECOVERY_FILE_NAME),
+    fakePostRecoveryObject
+  );
+
+  sandbox.stub(FakeBackupResource1.prototype, "postRecovery").resolves();
+  sandbox.stub(FakeBackupResource2.prototype, "postRecovery").resolves();
+  sandbox.stub(FakeBackupResource3.prototype, "postRecovery").resolves();
+
+  let bs = new BackupService({
+    FakeBackupResource1,
+    FakeBackupResource2,
+    FakeBackupResource3,
+  });
+
+  await bs.checkForPostRecovery(testProfilePath);
+
+  Assert.ok(
+    FakeBackupResource1.prototype.postRecovery.calledOnce,
+    "FakeBackupResource1.postRecovery was called once"
+  );
+  Assert.ok(
+    FakeBackupResource2.prototype.postRecovery.notCalled,
+    "FakeBackupResource2.postRecovery was not called"
+  );
+  Assert.ok(
+    FakeBackupResource3.prototype.postRecovery.calledOnce,
+    "FakeBackupResource3.postRecovery was called once"
+  );
+  Assert.ok(
+    FakeBackupResource1.prototype.postRecovery.calledWith(
+      fakePostRecoveryObject[FakeBackupResource1.key]
+    ),
+    "FakeBackupResource1.postRecovery was called with the expected argument"
+  );
+  Assert.ok(
+    FakeBackupResource3.prototype.postRecovery.calledWith(
+      fakePostRecoveryObject[FakeBackupResource3.key]
+    ),
+    "FakeBackupResource3.postRecovery was called with the expected argument"
+  );
+
+  await IOUtils.remove(testProfilePath, { recursive: true });
+  sandbox.restore();
+});
