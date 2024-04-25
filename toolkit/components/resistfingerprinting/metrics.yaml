@@ -528,3 +528,509 @@ characteristics:
     expires: never
     data_sensitivity:
       - interaction
+
+  prefs_browser_display_use_document_fonts: # browser.display.use_document_fonts
+    type: boolean
+    description: >
+      Allow pages to choose their own fonts.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_default_western: # font.default.x-western
+    type: string
+    description: >
+      The value of the font.default.x-western pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_default_default_group: # font.default.<default language group>
+    type: string
+    description: >
+      The value of the font.default.<default language group> pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_default_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of other modified font.default prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_serif_western: # font.name.serif.x-western
+    type: string
+    description: >
+      The value of the font.name.serif.x-western pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_serif_default_group: # font.name.serif.<default language group>
+    type: string
+    description: >
+      The value of the font.name.serif.<default language group> pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_serif_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of other modified font.name.serif prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_sans_serif_western: # font.name.sans-serif.x-western
+    type: string
+    description: >
+      The value of the font.name.sans-serif.x-western pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_sans_serif_default_group: # font.name.sans-serif.<default language group>
+    type: string
+    description: >
+      The value of the font.name.sans-serif.<default language group> pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_sans_serif_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of other modified font.name.sans-serif prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_monospace_western: # font.name.monospace.x-western
+    type: string
+    description: >
+      The value of the font.name.monospace.x-western pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_monospace_default_group: # font.name.monospace.<default language group>
+    type: string
+    description: >
+      The value of the font.name.monospace.<default language group> pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_monospace_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of other modified font.name.monospace prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_size_variable_western: # font.size.variable.x-western
+    type: string
+    description: >
+      The value of the font.size.variable.x-western pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_size_variable_default_group: # font.size.variable.<default language group>
+    type: string
+    description: >
+      The value of the font.size.variable.<default language group> pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_size_variable_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of other modified font.size.variable prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_size_monospace_western: # font.size.monospace.x-western
+    type: string
+    description: >
+      The value of the font.size.monospace.x-western pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_size_monospace_default_group: # font.size.monospace.<default language group>
+    type: string
+    description: >
+      The value of the font.size.monospace.<default language group> pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_size_monospace_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of other modified font.size.monospace prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_minimum_size_western: # font.minimum-size.x-western
+    type: string
+    description: >
+      The value of the font.minimum-size.x-western pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_minimum_size_default_group: # font.minimum-size.<default language group>
+    type: string
+    description: >
+      The value of the font.minimum-size.<default language group> pref
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_minimum_size_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of other modified font.minimum-size prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_list_serif_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of modified font.name-list.serif. prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_list_sans_serif_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of modified font.name-list.sans-serif. prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_list_monospace_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of modified font.name-list.monospace. prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_list_cursive_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of modified font.name-list.cursive. prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_list_cursive_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of modified font.name-list.cursive. prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_list_emoji_modified:
+    type: quantity
+    unit: int
+    description: >
+      The number of modified font.name-list.cursive. prefs.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  font_name_list_emoji_modified:
+    type: boolean
+    description: >
+      Whether the pref font.name-list.emoji was modified.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887658
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction

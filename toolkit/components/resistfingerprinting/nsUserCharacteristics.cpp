@@ -18,6 +18,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/dom/Promise-inl.h"
 
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -171,6 +172,119 @@ void PopulatePrefs() {
 
   glean::characteristics::prefs_block_popups.Set(
       StaticPrefs::dom_disable_open_during_load());
+
+  glean::characteristics::prefs_browser_display_use_document_fonts.Set(
+      mozilla::StaticPrefs::browser_display_use_document_fonts());
+}
+
+template <typename StringMetric, typename QuantityMetric>
+static void CollectFontPrefValue(nsIPrefBranch* aPrefBranch,
+                                 const nsACString& aDefaultLanguageGroup,
+                                 const char* aStartingAt,
+                                 StringMetric& aWesternMetric,
+                                 StringMetric& aDefaultGroupMetric,
+                                 QuantityMetric& aModifiedMetric) {
+  nsTArray<nsCString> prefNames;
+  if (NS_WARN_IF(
+          NS_FAILED(aPrefBranch->GetChildList(aStartingAt, prefNames)))) {
+    return;
+  }
+
+  nsCString westernPref(aStartingAt);
+  westernPref.Append("x-western");
+  nsCString defaultGroupPref(aStartingAt);
+  defaultGroupPref.Append(aDefaultLanguageGroup);
+
+  nsAutoCString westernPrefValue;
+  Preferences::GetCString(westernPref.get(), westernPrefValue);
+  aWesternMetric.Set(westernPrefValue);
+
+  nsAutoCString defaultGroupPrefValue;
+  if (!westernPref.Equals(defaultGroupPref)) {
+    Preferences::GetCString(defaultGroupPref.get(), defaultGroupPrefValue);
+  }
+  aDefaultGroupMetric.Set(defaultGroupPrefValue);
+
+  uint32_t modifiedCount = 0;
+  for (const auto& prefName : prefNames) {
+    if (!prefName.Equals(westernPref) && !prefName.Equals(defaultGroupPref)) {
+      if (Preferences::HasUserValue(prefName.get())) {
+        modifiedCount++;
+      }
+    }
+  }
+  aModifiedMetric.Set(modifiedCount);
+}
+
+template <typename QuantityMetric>
+static void CollectFontPrefModified(nsIPrefBranch* aPrefBranch,
+                                    const char* aStartingAt,
+                                    QuantityMetric& aModifiedMetric) {
+  nsTArray<nsCString> prefNames;
+  if (NS_WARN_IF(
+          NS_FAILED(aPrefBranch->GetChildList(aStartingAt, prefNames)))) {
+    return;
+  }
+
+  uint32_t modifiedCount = 0;
+  for (const auto& prefName : prefNames) {
+    if (Preferences::HasUserValue(prefName.get())) {
+      modifiedCount++;
+    }
+  }
+  aModifiedMetric.Set(modifiedCount);
+}
+
+void PopulateFontPrefs() {
+  nsIPrefBranch* prefRootBranch = Preferences::GetRootBranch();
+  if (!prefRootBranch) {
+    return;
+  }
+
+  nsCString defaultLanguageGroup;
+  Preferences::GetLocalizedCString("font.language.group", defaultLanguageGroup);
+
+#define FONT_PREF(PREF_NAME, METRIC_NAME)                                   \
+  CollectFontPrefValue(prefRootBranch, defaultLanguageGroup, PREF_NAME,     \
+                       glean::characteristics::METRIC_NAME##_western,       \
+                       glean::characteristics::METRIC_NAME##_default_group, \
+                       glean::characteristics::METRIC_NAME##_modified)
+
+  // The following preferences can be modified using the advanced font options
+  // on the about:preferences page. Every preference has a sub-branch per
+  // script, so for example font.default.x-western or font.default.x-cyrillic
+  // etc. For all of the 7 main preferences, we collect:
+  // - The value for the x-western branch (if user modified)
+  // - The value for the current default language group (~ script) based
+  //   on the localized version of Firefox being used. (Only when not x-western)
+  // - How many /other/ script that are not x-western or the default have been
+  //   modified.
+
+  FONT_PREF("font.default.", font_default);
+  FONT_PREF("font.name.serif.", font_name_serif);
+  FONT_PREF("font.name.sans-serif.", font_name_sans_serif);
+  FONT_PREF("font.name.monospace.", font_name_monospace);
+  FONT_PREF("font.size.variable.", font_size_variable);
+  FONT_PREF("font.size.monospace.", font_size_monospace);
+  FONT_PREF("font.minimum-size.", font_minimum_size);
+
+#undef FONT_PREF
+
+  CollectFontPrefModified(
+      prefRootBranch, "font.name-list.serif.",
+      glean::characteristics::font_name_list_serif_modified);
+  CollectFontPrefModified(
+      prefRootBranch, "font.name-list.sans-serif.",
+      glean::characteristics::font_name_list_sans_serif_modified);
+  CollectFontPrefModified(
+      prefRootBranch, "font.name-list.monospace.",
+      glean::characteristics::font_name_list_monospace_modified);
+  CollectFontPrefModified(
+      prefRootBranch, "font.name-list.cursive.",
+      glean::characteristics::font_name_list_cursive_modified);
+  // Exceptionally this pref has no variants per-script.
+  glean::characteristics::font_name_list_emoji_modified.Set(
+      Preferences::HasUserValue("font.name-list.emoji"));
 }
 
 // ==================================================================
@@ -178,7 +292,7 @@ void PopulatePrefs() {
 // metric is set, this variable should be incremented. It'll be a lot. It's
 // okay. We're going to need it to know (including during development) what is
 // the source of the data we are looking at.
-const int kSubmissionSchema = 1;
+const int kSubmissionSchema = 2;
 
 const auto* const kLastVersionPref =
     "toolkit.telemetry.user_characteristics_ping.last_version_sent";
@@ -304,6 +418,7 @@ void nsUserCharacteristics::PopulateDataAndEventuallySubmit(
     PopulateCSSProperties();
     PopulateScreenProperties();
     PopulatePrefs();
+    PopulateFontPrefs();
 
     glean::characteristics::target_frame_rate.Set(
         gfxPlatform::TargetFrameRate());
