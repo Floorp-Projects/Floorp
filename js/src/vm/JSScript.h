@@ -2040,6 +2040,23 @@ class JSScript : public js::BaseScript {
     return getString(GET_GCTHING_INDEX(pc));
   }
 
+  bool atomizeString(JSContext* cx, jsbytecode* pc) {
+    MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
+    MOZ_ASSERT(js::JOF_OPTYPE((JSOp)*pc) == JOF_STRING);
+    js::GCThingIndex index = GET_GCTHING_INDEX(pc);
+    JSString* str = getString(index);
+    if (str->isAtom()) {
+      return true;
+    }
+    JSAtom* atom = js::AtomizeString(cx, str);
+    if (!atom) {
+      return false;
+    }
+    js::gc::CellPtrPreWriteBarrier(data_->gcthings()[index]);
+    data_->gcthings()[index] = JS::GCCellPtr(atom);
+    return true;
+  }
+
   JSAtom* getAtom(js::GCThingIndex index) const {
     return &gcthings()[index].as<JSString>().asAtom();
   }

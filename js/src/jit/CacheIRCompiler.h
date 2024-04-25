@@ -1420,6 +1420,9 @@ class CacheIRStubInfo {
 
   void replaceStubRawWord(uint8_t* stubData, uint32_t offset, uintptr_t oldWord,
                           uintptr_t newWord) const;
+
+  void replaceStubRawValueBits(uint8_t* stubData, uint32_t offset,
+                               uint64_t oldBits, uint64_t newBits) const;
 };
 
 template <typename T>

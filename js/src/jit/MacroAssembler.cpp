@@ -1310,7 +1310,7 @@ void MacroAssembler::loadStringChars(Register str, Register dest,
       MOZ_ASSERT(encoding == CharEncoding::TwoByte);
       static constexpr uint32_t Mask =
           JSString::LINEAR_BIT | JSString::LATIN1_CHARS_BIT;
-      static_assert(Mask < 1024,
+      static_assert(Mask < 2048,
                     "Mask should be a small, near-null value to ensure we "
                     "block speculative execution when it's used as string "
                     "pointer");
@@ -1344,7 +1344,7 @@ void MacroAssembler::loadNonInlineStringChars(Register str, Register dest,
     static constexpr uint32_t Mask = JSString::LINEAR_BIT |
                                      JSString::INLINE_CHARS_BIT |
                                      JSString::LATIN1_CHARS_BIT;
-    static_assert(Mask < 1024,
+    static_assert(Mask < 2048,
                   "Mask should be a small, near-null value to ensure we "
                   "block speculative execution when it's used as string "
                   "pointer");
@@ -2659,11 +2659,15 @@ void MacroAssembler::loadMegamorphicSetPropCache(Register dest) {
   movePtr(ImmPtr(runtime()->addressOfMegamorphicSetPropCache()), dest);
 }
 
-void MacroAssembler::lookupStringInAtomCacheLastLookups(Register str,
-                                                        Register scratch,
-                                                        Register output,
-                                                        Label* fail) {
-  Label found;
+void MacroAssembler::tryFastAtomize(Register str, Register scratch,
+                                    Register output, Label* fail) {
+  Label found, done, notAtomRef;
+
+  branchTest32(Assembler::Zero, Address(str, JSString::offsetOfFlags()),
+               Imm32(JSString::ATOM_REF_BIT), &notAtomRef);
+  loadPtr(Address(str, JSAtomRefString::offsetOfAtom()), output);
+  jump(&done);
+  bind(&notAtomRef);
 
   uintptr_t cachePtr = uintptr_t(runtime()->addressOfStringToAtomCache());
   void* offset = (void*)(cachePtr + StringToAtomCache::offsetOfLastLookups());
@@ -2682,6 +2686,7 @@ void MacroAssembler::lookupStringInAtomCacheLastLookups(Register str,
   bind(&found);
   size_t atomOffset = StringToAtomCache::LastLookup::offsetOfAtom();
   loadPtr(Address(scratch, atomOffset), output);
+  bind(&done);
 }
 
 void MacroAssembler::loadAtomHash(Register id, Register outHash, Label* done) {
@@ -2741,7 +2746,7 @@ void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
   loadAtomHash(outId, outHash, &done);
 
   bind(&nonAtom);
-  lookupStringInAtomCacheLastLookups(outId, outHash, outId, cacheMiss);
+  tryFastAtomize(outId, outHash, outId, cacheMiss);
   jump(&atom);
 
   bind(&done);
@@ -3382,13 +3387,19 @@ void MacroAssembler::guardSpecificAtom(Register str, JSAtom* atom,
                                        Register scratch,
                                        const LiveRegisterSet& volatileRegs,
                                        Label* fail) {
-  Label done;
+  Label done, notCachedAtom;
   branchPtr(Assembler::Equal, str, ImmGCPtr(atom), &done);
 
   // The pointers are not equal, so if the input string is also an atom it
   // must be a different string.
   branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
                Imm32(JSString::ATOM_BIT), fail);
+
+  // Try to do a cheap atomize on the string and repeat the above test
+  tryFastAtomize(str, scratch, scratch, &notCachedAtom);
+  branchPtr(Assembler::Equal, scratch, ImmGCPtr(atom), &done);
+  jump(fail);
+  bind(&notCachedAtom);
 
   // Check the length.
   branch32(Assembler::NotEqual, Address(str, JSString::offsetOfLength()),
