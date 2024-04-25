@@ -269,6 +269,10 @@
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">비밀번호</string>
 
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">%1$s 새 기능</string>
+
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
     <string name="extensions_management_no_extensions">확장 기능 없음</string>
@@ -2756,6 +2760,32 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">비활성 탭에 추가</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">사생활 보호 탭에 추가</string>
+
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">계속</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header" tools:ignore="UnusedResources">이 설문 조사를 완료하세요</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice" tools:ignore="UnusedResources">개인정보처리방침</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">보내기</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">닫기</string>
+
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">의견을 보내 주셔서 감사합니다!</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">매우 만족</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">만족</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">보통</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">불만족</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">매우 불만족</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->

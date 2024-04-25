@@ -267,6 +267,10 @@
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">Heslá</string>
 
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">Novinky vo %1$se</string>
+
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
     <string name="extensions_management_no_extensions">Nie sú tu žiadne rozšírenia</string>
@@ -2712,6 +2716,31 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Pridať medzi neaktívne karty</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Pridať medzi súkromné karty</string>
+
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Pokračovať</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header" tools:ignore="UnusedResources">Vyplňte tento prieskum</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice" tools:ignore="UnusedResources">Vyhlásenie o ochrane osobných údajov</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Odoslať</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Zavrieť</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Ďakujeme za vašu spätnú väzbu.</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">veľmi spokojný</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">spokojný</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">neutrálny</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">nespokojný</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">veľmi nespokojný</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
