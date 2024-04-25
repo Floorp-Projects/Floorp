@@ -1271,6 +1271,26 @@ static bool RequireIntegralPositiveNumber(JSContext* cx, Handle<Value> value,
   return true;
 }
 
+static bool RequireIntegralNumberOrUndefined(JSContext* cx, Handle<Value> value,
+                                             Handle<PropertyName*> name,
+                                             MutableHandle<Value> result) {
+  if (value.isUndefined()) {
+    result.setUndefined();
+    return true;
+  }
+  return RequireIntegralNumber(cx, value, name, result);
+}
+
+static bool RequireIntegralPositiveNumberOrUndefined(
+    JSContext* cx, Handle<Value> value, Handle<PropertyName*> name,
+    MutableHandle<Value> result) {
+  if (value.isUndefined()) {
+    result.setUndefined();
+    return true;
+  }
+  return RequireIntegralPositiveNumber(cx, value, name, result);
+}
+
 static bool RequireString(JSContext* cx, Handle<Value> value,
                           Handle<PropertyName*> name,
                           MutableHandle<Value> result) {
@@ -1843,7 +1863,7 @@ static bool CalendarWeekOfYear(JSContext* cx, Handle<CalendarValue> calendar,
                                MutableHandle<Value> result) {
   // Steps 1-6.
   return CallCalendarMethod<BuiltinCalendarWeekOfYear,
-                            RequireIntegralPositiveNumber>(
+                            RequireIntegralPositiveNumberOrUndefined>(
       cx, cx->names().weekOfYear, Calendar_weekOfYear, calendar, dateLike, date,
       result);
 }
@@ -1908,7 +1928,8 @@ static bool CalendarYearOfWeek(JSContext* cx, Handle<CalendarValue> calendar,
                                const PlainDate& date,
                                MutableHandle<Value> result) {
   // Steps 1-5.
-  return CallCalendarMethod<BuiltinCalendarYearOfWeek, RequireIntegralNumber>(
+  return CallCalendarMethod<BuiltinCalendarYearOfWeek,
+                            RequireIntegralNumberOrUndefined>(
       cx, cx->names().yearOfWeek, Calendar_yearOfWeek, calendar, dateLike, date,
       result);
 }
