@@ -55,6 +55,7 @@ const EDIT_ADDRESS_L10N_IDS = [
   "autofill-address-island",
   "autofill-address-townland",
   "autofill-address-district",
+  "autofill-address-county",
   "autofill-address-post-town",
   "autofill-address-suburb",
   "autofill-address-parish",
@@ -657,7 +658,7 @@ FormAutofillUtils = {
 
   findSelectOption(selectEl, record, fieldName) {
     if (this.isAddressField(fieldName)) {
-      return this.findAddressSelectOption(selectEl, record, fieldName);
+      return this.findAddressSelectOption(selectEl.options, record, fieldName);
     }
     if (this.isCreditCardField(fieldName)) {
       return this.findCreditCardSelectOption(selectEl, record, fieldName);
@@ -731,13 +732,13 @@ FormAutofillUtils = {
    * 3. Second pass try to identify values from address value and options,
    *    and look for a match.
    *
-   * @param   {DOMElement} selectEl
+   * @param   {Array<{text: string, value: string}>} options
    * @param   {object} address
    * @param   {string} fieldName
    * @returns {DOMElement}
    */
-  findAddressSelectOption(selectEl, address, fieldName) {
-    if (selectEl.options.length > 512) {
+  findAddressSelectOption(options, address, fieldName) {
+    if (options.length > 512) {
       // Allow enough space for all countries (roughly 300 distinct values) and all
       // timezones (roughly 400 distinct values), plus some extra wiggle room.
       return null;
@@ -749,7 +750,7 @@ FormAutofillUtils = {
 
     let collators = this.getSearchCollators(address.country);
 
-    for (let option of selectEl.options) {
+    for (const option of options) {
       if (
         this.strCompare(value, option.value, collators) ||
         this.strCompare(value, option.text, collators)
@@ -784,7 +785,7 @@ FormAutofillUtils = {
             "\\b" + this.escapeRegExp(identifiedValue) + "\\b",
             "i"
           );
-          for (let option of selectEl.options) {
+          for (const option of options) {
             let optionValue = this.identifyValue(
               keys,
               names,
@@ -810,7 +811,7 @@ FormAutofillUtils = {
       }
       case "country": {
         if (this.getCountryAddressData(value)) {
-          for (let option of selectEl.options) {
+          for (const option of options) {
             if (
               this.identifyCountryCode(option.text, value) ||
               this.identifyCountryCode(option.value, value)
@@ -843,23 +844,13 @@ FormAutofillUtils = {
    * @returns {XULElement}
    */
   findAddressSelectOptionWithMenuPopup(menupopup, address, fieldName) {
-    class MenuitemProxy {
-      constructor(menuitem) {
-        this.menuitem = menuitem;
-      }
-      get text() {
-        return this.menuitem.label;
-      }
-      get value() {
-        return this.menuitem.value;
-      }
-    }
-    const selectEl = {
-      options: Array.from(menupopup.childNodes).map(
-        menuitem => new MenuitemProxy(menuitem)
-      ),
-    };
-    return this.findAddressSelectOption(selectEl, address, fieldName)?.menuitem;
+    const options = Array.from(menupopup.childNodes).map(menuitem => ({
+      text: menuitem.label,
+      value: menuitem.value,
+      menuitem,
+    }));
+
+    return this.findAddressSelectOption(options, address, fieldName)?.menuitem;
   },
 
   findCreditCardSelectOption(selectEl, creditCard, fieldName) {
@@ -1076,6 +1067,17 @@ FormAutofillUtils = {
       postalCodePattern: dataset.zip,
     };
   },
+  /**
+   * Converts a Map to an array of objects with `value` and `text` properties ( option like).
+   *
+   * @param {Map} optionsMap
+   * @returns {Array<{ value: string, text: string }>|null}
+   */
+  optionsMapToArray(optionsMap) {
+    return optionsMap?.size
+      ? [...optionsMap].map(([value, text]) => ({ value, text }))
+      : null;
+  },
 
   /**
    * Get flattened form layout information of a given country
@@ -1092,10 +1094,26 @@ FormAutofillUtils = {
     // TODO: extend libaddress later to support this if possible
     fieldsInOrder = [
       ...fieldsInOrder,
-      { fieldId: "country", options: FormAutofill.countries, required: true },
+      {
+        fieldId: "country",
+        options: this.optionsMapToArray(FormAutofill.countries),
+        required: true,
+      },
       { fieldId: "tel", type: "tel" },
       { fieldId: "email", type: "email" },
     ];
+
+    const addressLevel1Options = this.optionsMapToArray(
+      formFormat.addressLevel1Options
+    );
+
+    const addressLevel1SelectedValue = addressLevel1Options
+      ? this.findAddressSelectOption(
+          addressLevel1Options,
+          record,
+          "address-level1"
+        )?.value
+      : record["address-level1"];
 
     for (const field of fieldsInOrder) {
       const flattenedObject = {
@@ -1110,7 +1128,8 @@ FormAutofillUtils = {
         }),
         ...(field.fieldId === "address-level1" && {
           l10nId: formFormat.addressLevel1L10nId,
-          options: formFormat.addressLevel1Options,
+          options: addressLevel1Options,
+          value: addressLevel1SelectedValue,
         }),
         ...(field.fieldId === "address-level2" && {
           l10nId: formFormat.addressLevel2L10nId,

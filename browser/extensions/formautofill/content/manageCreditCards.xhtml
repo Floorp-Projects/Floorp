@@ -18,7 +18,6 @@
       rel="stylesheet"
       href="chrome://formautofill/content/manageDialog.css"
     />
-    <script src="chrome://formautofill/content/manageDialog.js"></script>
   </head>
   <body>
     <fieldset>
@@ -41,9 +40,12 @@
         data-l10n-id="autofill-manage-edit-button"
       />
     </div>
-    <script>
-      "use strict";
-      /* global ManageCreditCards */
+    <!-- eslint-disable -->
+    <!-- For some reason eslint complains here about import only available for sourceType: "module" -->
+    <!-- eventhough type is set to module -->
+    <script type="module">
+      import { ManageCreditCards } from "chrome://formautofill/content/manageDialog.mjs";
+
       new ManageCreditCards({
         records: document.getElementById("credit-cards"),
         controlsContainer: document.getElementById("controls-container"),
@@ -52,5 +54,6 @@
         edit: document.getElementById("edit"),
       });
     </script>
+    <!-- eslint-enable -->
   </body>
 </html>

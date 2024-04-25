@@ -98,6 +98,7 @@
               record,
             } = window.arguments?.[0] ?? {};
 
+            await formAutofillStorage.initialize();
             const addresses = {};
             for (let address of await formAutofillStorage.addresses.getAll()) {
               addresses[address.guid] = address;

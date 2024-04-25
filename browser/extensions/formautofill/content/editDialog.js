@@ -21,7 +21,7 @@ class AutofillEditDialog {
     this._elements = elements;
     this._record = record;
     this.localizeDocument();
-    window.addEventListener("DOMContentLoaded", this, { once: true });
+    window.addEventListener("load", this, { once: true });
   }
 
   async init() {
@@ -30,7 +30,7 @@ class AutofillEditDialog {
     // For testing only: signal to tests that the dialog is ready for testing.
     // This is likely no longer needed since retrieving from storage is fully
     // handled in manageDialog.js now.
-    window.dispatchEvent(new CustomEvent("FormReady"));
+    window.dispatchEvent(new CustomEvent("FormReadyForTests"));
   }
 
   /**
@@ -65,7 +65,7 @@ class AutofillEditDialog {
    */
   handleEvent(event) {
     switch (event.type) {
-      case "DOMContentLoaded": {
+      case "load": {
         this.init();
         break;
       }
