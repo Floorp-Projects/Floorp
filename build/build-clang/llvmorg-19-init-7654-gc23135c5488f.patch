@@ -1,0 +1,155 @@
+From 7db340bcc57fb7f4fabbae34b30065fbd77b0174 Mon Sep 17 00:00:00 2001
+From: Leonard Grey <lgrey@chromium.org>
+Date: Mon, 8 Apr 2024 16:05:52 -0400
+Subject: [PATCH] -fsanitize=function: fix .subsections_via_symbols (#87527)
+
+-fsanitize=function emits a signature and function hash before a
+function. Similar to 7f6e2c9, these can be sheared off when
+`.subsections_via_symbols` is used.
+
+This change uses the same technique 7f6e2c9 introduced for prefixes:
+emitting a symbol for the metadata, then marking the actual function
+entry as an .alt_entry symbol.
+---
+ llvm/include/llvm/CodeGen/AsmPrinter.h      |  3 ++
+ llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp  | 43 ++++++++++++---------
+ llvm/test/CodeGen/AArch64/func-sanitizer.ll |  9 +++++
+ llvm/test/CodeGen/X86/func-sanitizer.ll     | 10 +++++
+ 4 files changed, 46 insertions(+), 19 deletions(-)
+
+diff --git a/llvm/include/llvm/CodeGen/AsmPrinter.h b/llvm/include/llvm/CodeGen/AsmPrinter.h
+index 0ac497c5f8ef..96e302859f44 100644
+--- a/llvm/include/llvm/CodeGen/AsmPrinter.h
++++ b/llvm/include/llvm/CodeGen/AsmPrinter.h
+@@ -840,6 +840,9 @@ private:
+   /// This method emits a comment next to header for the current function.
+   virtual void emitFunctionHeaderComment();
+ 
++  /// This method emits prefix-like data before the current function.
++  void emitFunctionPrefix(ArrayRef<const Constant *> Prefix);
++
+   /// Emit a blob of inline asm to the output streamer.
+   void
+   emitInlineAsm(StringRef Str, const MCSubtargetInfo &STI,
+diff --git a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+index 5381dfdd184c..a1d4c72d2899 100644
+--- a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
++++ b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+@@ -896,6 +896,27 @@ void AsmPrinter::emitDebugValue(const MCExpr *Value, unsigned Size) const {
+ 
+ void AsmPrinter::emitFunctionHeaderComment() {}
+ 
++void AsmPrinter::emitFunctionPrefix(ArrayRef<const Constant *> Prefix) {
++  const Function &F = MF->getFunction();
++  if (!MAI->hasSubsectionsViaSymbols()) {
++    for (auto &C : Prefix)
++      emitGlobalConstant(F.getParent()->getDataLayout(), C);
++    return;
++  }
++  // Preserving prefix-like data on platforms which use subsections-via-symbols
++  // is a bit tricky. Here we introduce a symbol for the prefix-like data
++  // and use the .alt_entry attribute to mark the function's real entry point
++  // as an alternative entry point to the symbol that precedes the function..
++  OutStreamer->emitLabel(OutContext.createLinkerPrivateTempSymbol());
++
++  for (auto &C : Prefix) {
++    emitGlobalConstant(F.getParent()->getDataLayout(), C);
++  }
++
++  // Emit an .alt_entry directive for the actual function symbol.
++  OutStreamer->emitSymbolAttribute(CurrentFnSym, MCSA_AltEntry);
++}
++
+ /// EmitFunctionHeader - This method emits the header for the current
+ /// function.
+ void AsmPrinter::emitFunctionHeader() {
+@@ -935,23 +956,8 @@ void AsmPrinter::emitFunctionHeader() {
+     OutStreamer->emitSymbolAttribute(CurrentFnSym, MCSA_Cold);
+ 
+   // Emit the prefix data.
+-  if (F.hasPrefixData()) {
+-    if (MAI->hasSubsectionsViaSymbols()) {
+-      // Preserving prefix data on platforms which use subsections-via-symbols
+-      // is a bit tricky. Here we introduce a symbol for the prefix data
+-      // and use the .alt_entry attribute to mark the function's real entry point
+-      // as an alternative entry point to the prefix-data symbol.
+-      MCSymbol *PrefixSym = OutContext.createLinkerPrivateTempSymbol();
+-      OutStreamer->emitLabel(PrefixSym);
+-
+-      emitGlobalConstant(F.getParent()->getDataLayout(), F.getPrefixData());
+-
+-      // Emit an .alt_entry directive for the actual function symbol.
+-      OutStreamer->emitSymbolAttribute(CurrentFnSym, MCSA_AltEntry);
+-    } else {
+-      emitGlobalConstant(F.getParent()->getDataLayout(), F.getPrefixData());
+-    }
+-  }
++  if (F.hasPrefixData())
++    emitFunctionPrefix({F.getPrefixData()});
+ 
+   // Emit KCFI type information before patchable-function-prefix nops.
+   emitKCFITypeId(*MF);
+@@ -983,8 +989,7 @@ void AsmPrinter::emitFunctionHeader() {
+ 
+     auto *PrologueSig = mdconst::extract<Constant>(MD->getOperand(0));
+     auto *TypeHash = mdconst::extract<Constant>(MD->getOperand(1));
+-    emitGlobalConstant(F.getParent()->getDataLayout(), PrologueSig);
+-    emitGlobalConstant(F.getParent()->getDataLayout(), TypeHash);
++    emitFunctionPrefix({PrologueSig, TypeHash});
+   }
+ 
+   if (isVerbose()) {
+diff --git a/llvm/test/CodeGen/AArch64/func-sanitizer.ll b/llvm/test/CodeGen/AArch64/func-sanitizer.ll
+index 89f23e7ed80e..de83d70a5784 100644
+--- a/llvm/test/CodeGen/AArch64/func-sanitizer.ll
++++ b/llvm/test/CodeGen/AArch64/func-sanitizer.ll
+@@ -1,4 +1,5 @@
+ ; RUN: llc -mtriple=aarch64-unknown-linux-gnu < %s | FileCheck %s
++; RUN: llc -mtriple=arm64-apple-darwin < %s | FileCheck %s --check-prefix=MACHO
+ 
+ ; CHECK-LABEL: .type _Z3funv,@function
+ ; CHECK-NEXT:    .word   3238382334  // 0xc105cafe
+@@ -7,6 +8,14 @@
+ ; CHECK-NEXT:  // %bb.0:
+ ; CHECK-NEXT:    ret
+ 
++; MACHO:      ltmp0:
++; MACHO-NEXT:   .long 3238382334 ; 0xc105cafe
++; MACHO-NEXT:   .long 42 ; 0x2a
++; MACHO-NEXT:   .alt_entry __Z3funv
++; MACHO-NEXT:   __Z3funv:
++; MACHO-NEXT:   ; %bb.0:
++; MACHO-NEXT:   ret
++
+ define dso_local void @_Z3funv() nounwind !func_sanitize !0 {
+   ret void
+ }
+diff --git a/llvm/test/CodeGen/X86/func-sanitizer.ll b/llvm/test/CodeGen/X86/func-sanitizer.ll
+index b421cb53ddfe..71f062ae2f8c 100644
+--- a/llvm/test/CodeGen/X86/func-sanitizer.ll
++++ b/llvm/test/CodeGen/X86/func-sanitizer.ll
+@@ -1,4 +1,5 @@
+ ; RUN: llc -mtriple=x86_64-unknown-linux-gnu < %s | FileCheck %s
++; RUN: llc -mtriple=x86_64-apple-darwin < %s | FileCheck %s --check-prefix=MACHO
+ 
+ ; CHECK:      .type _Z3funv,@function
+ ; CHECK-NEXT:   .long   3238382334  # 0xc105cafe
+@@ -8,6 +9,15 @@
+ ; CHECK-NEXT:   # %bb.0:
+ ; CHECK-NEXT:   retq
+ 
++; MACHO:      ltmp0:
++; MACHO-NEXT:  .long 3238382334 ## 0xc105cafe
++; MACHO-NEXT:  .long 42 ## 0x2a
++; MACHO-NEXT:  .alt_entry __Z3funv
++; MACHO-NEXT: __Z3funv:
++; MACHO-NEXT:  .cfi_startproc
++; MACHO-NEXT:  # %bb.0:
++; MACHO-NEXT:  retq
++
+ define dso_local void @_Z3funv() !func_sanitize !0 {
+   ret void
+ }
+-- 
+2.44.0.1.g9765aa7075
+
