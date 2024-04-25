@@ -250,7 +250,29 @@ var SessionSaverInternal = {
     }
 
     stopWatchStart("COLLECT_DATA_MS");
+
+    // Floorp Injections
     let state = lazy.SessionStore.getCurrentState(forceUpdateAllWindows);
+
+    for (let i = state.windows.length - 1; i >= 0; i--) {
+      let win = state.windows[i];
+      if (win.floorpWebPanelWindow) {
+        state.windows.splice(i, 1);
+
+        if (state.selectedWindow >= i) {
+          state.selectedWindow--;
+        }
+      } else {
+        for (let tab of win.tabs) {
+          let ssbEnabled = tab.floorpSSB === "true";
+          let webpanelTab = tab.floorpWebPanel;
+          if (ssbEnabled || webpanelTab) {
+            state.windows.splice(i, 1);
+          }
+        }
+      }
+    }
+
     lazy.PrivacyFilter.filterPrivateWindowsAndTabs(state);
 
     // Make sure we only write worth saving tabs to disk.

@@ -421,6 +421,11 @@ var FullZoom = {
    * will happen asynchronously.
    */
   changeZoomBy(aBrowser, aValue) {
+    // Floorp Injection
+    if (window.floorpWebPanelWindow) {
+      return;
+    }
+    // End Floorp Injection
     if (aBrowser.currentURI.spec.startsWith("about:reader")) {
       const message = aValue > 0 ? "Reader::ZoomIn" : "Reader:ZoomOut";
       aBrowser.sendMessageToActor(message, {}, "AboutReader");

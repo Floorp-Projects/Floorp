@@ -5,7 +5,6 @@
 #aboutDialogContainer {
   background-color: #20123a;
   color: #fff;
-  color-scheme: dark;
 }
 
 #clientBox {
@@ -35,6 +34,10 @@
   text-decoration: underline;
 }
 
+.text-link:-moz-focusring {
+  border-color: #fff;
+}
+
 #rightBox {
   margin-inline: 30px;
 }
@@ -49,4 +52,14 @@
   text-align: center;
   color: #999999;
   margin-block: 10px;
+}
+
+#aboutDialogContainer {
+  color: #fff;
+  background-image: url("chrome://branding/content/floorp-background.png");
+  background-size: 115%;
+}
+
+#communityDesc {
+  margin-top: 15px;
 }

@@ -1,0 +1,460 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+#TODO deployments not changed about cache and refactoring
+
+
+name: "(C) ⚠ Deployments"
+
+permissions:
+  contents: write
+  discussions: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-note-url:
+        description: 'Release Note URL'
+        type: string
+        required: true
+        default: 'https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/'
+      release-note-url-ja:
+        type: string
+        required: false
+        default: 'https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/'
+
+#----------------------------------------- JOBS -----------------------------------------#
+jobs:
+  get-display-version:
+    runs-on: ubuntu-latest
+    outputs:
+      display-version: ${{ steps.get.outputs.display-version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.PAT }}
+        sparse-checkout: 'browser/config/version_display.txt'
+    - name: Get Display Version
+      id: get
+      run: |
+        echo "display-version=$(cat browser/config/version_display.txt)" >> $GITHUB_OUTPUT
+
+  get-inside-version:
+    runs-on: ubuntu-latest
+    outputs:
+      inside-version: ${{ steps.get.outputs.inside-version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.PAT }}
+        sparse-checkout: 'browser/config/version.txt'
+    - name: Get Inside Version
+      id: get
+      run: |
+        echo "inside-version=$(cat browser/config/version.txt)" >> $GITHUB_OUTPUT
+
+  get-buildid:
+    runs-on: ubuntu-latest
+    outputs:
+      buildids: ${{ steps.get.outputs.bid }}
+    steps:
+    - id: get
+      shell: bash -xe {0}
+      run: |
+        bdat=`date +"%Y%m%d%I%M%S"`
+        echo "bid=${bdat}" >> $GITHUB_OUTPUT
+
+#----------------------------------------- WIN -----------------------------------------#
+
+#? Original branding of the code is official
+#? It seems in PGO build, branding is not important in NOT deploying binary
+
+  Part1-win-x86_64-build-with-profgen-zstd:
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      profgen: true
+      aarch64: false
+      zstd: true
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+  Part2-win-x86_64-gen-profdata-and-jarlog:
+    needs: Part1-win-x86_64-build-with-profgen-zstd
+    uses: ./.github/workflows/window-generate-profile-data-and-jarlog.yml
+    with:
+      browser-artifact-name: floorp-windows-x86_64-build-with-profgen-zstd
+      arch: x86_64
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+  Part3-win-x86_64-build-with-profdata-and-jarlog:
+    needs: [Part2-win-x86_64-gen-profdata-and-jarlog, get-buildid]
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      aarch64: false
+      beta: false
+      profdata_jarlog_artifact_name: "floorp-windows-x86_64-profdata-and-jarlog"
+      out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      release-note-url: ${{ inputs.release-note-url }}
+      release-note-url-ja: ${{ inputs.release-note-url-ja }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+################################################################ ↑ Windows x86_64 Build ###################################################################################
+
+  Part1-win-x86-build-with-profgen-zstd:
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      profgen: true
+      aarch64: false
+      build32bit: true
+      zstd: true
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+  Part2-win-x86-gen-profdata-and-jarlog:
+    needs: Part1-win-x86-build-with-profgen-zstd
+    uses: ./.github/workflows/window-generate-profile-data-and-jarlog.yml
+    with:
+      browser-artifact-name: floorp-windows-x86-build-with-profgen-zstd
+      arch: x86
+    secrets:
+      PAT: ${{ secrets.PAT }}
+  
+  Part3-win-x86-build-with-profdata-and-jarlog:
+    needs: [get-buildid, Part2-win-x86-gen-profdata-and-jarlog]
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      aarch64: false
+      build32bit: true
+      beta: false
+      out_artifact_name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      release-note-url: ${{ inputs.release-note-url }}
+      release-note-url-ja: ${{ inputs.release-note-url-ja }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+################################################################ ↑ Windows x86 Build ####################################################################################
+
+  Part1-linux-x86_64-build-with-PGO:
+    uses: ./.github/workflows/linux-build.yml
+    needs: [get-buildid]
+    with:
+      aarch64: false
+      beta: false
+      mar: true
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      release-note-url: ${{ inputs.release-note-url }}
+      release-note-url-ja: ${{ inputs.release-note-url-ja }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+################################################################ ↑ Linux x86_64 Build ####################################################################################
+  Part1-linux-aarch64-build:
+    uses: ./.github/workflows/linux-build.yml
+    needs: [get-buildid]
+    with:
+      aarch64: true
+      beta: false
+      mar: true
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      release-note-url: ${{ inputs.release-note-url }}
+      release-note-url-ja: ${{ inputs.release-note-url-ja }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+################################################ ↑ Linux AArch64 Build ################################################
+
+#----------------------------------------- macOS -----------------------------------------#
+
+  Part1-macOS-Universal-build-with-profgen:
+    uses: ./.github/workflows/macOS-Universal.yml
+    with:
+      profgen: true
+    secrets:
+      MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
+      PAT: ${{ secrets.PAT }}
+
+  Part2-macOS-Universal-gen-profdata-and-jarlog:
+    needs: Part1-macOS-Universal-build-with-profgen
+    uses: ./.github/workflows/macOS-generate-profile-data-and-jarlog.yml
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+  Part3-macOS-Universal-build-with-profdata-and-jarlog:
+    uses: ./.github/workflows/macOS-Universal.yml
+    needs: [get-buildid,  Part2-macOS-Universal-gen-profdata-and-jarlog]
+    with:
+      build-with-profdata-and-jarlog: true
+      beta: false
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      release-note-url: ${{ inputs.release-note-url }}
+      release-note-url-ja: ${{ inputs.release-note-url-ja }}
+    secrets:
+      MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
+      PAT: ${{ secrets.PAT }}
+
+  Part4-macOS-Universal-package-and-sign:
+    uses: ./.github/workflows/macOS-integration.yml
+    needs: [get-buildid, get-display-version, get-inside-version, Part3-macOS-Universal-build-with-profdata-and-jarlog]
+    with:
+      beta: false
+      mar: true
+      x86_64_artifact_name: floorp-mac-x86_64-package
+      aarch64_artifact_name: floorp-mac-aarch64-package
+      display_version: ${{needs.get-display-version.outputs.display-version}} 
+      inside_version: ${{needs.get-inside-version.outputs.inside-version}}
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+    secrets:
+      macOS_CERTIFICATES_P12_For_App_BASE64: ${{ secrets.macOS_CERTIFICATES_P12_For_App_BASE64 }}
+      macOS_CERTIFICATES_P12_PASSWORD: ${{ secrets.macOS_CERTIFICATES_P12_PASSWORD }}
+      macOS_AppleDeveloperId: ${{ secrets.macOS_AppleDeveloperId }}
+      macOS_AppleAccountId: ${{ secrets.macOS_AppleAccountId }}
+      macOS_AppleTeamId: ${{ secrets.macOS_AppleTeamId }}
+      macOS_AppleAccountAppSpecificPassword: ${{ secrets.macOS_AppleAccountAppSpecificPassword }}
+      PAT: ${{ secrets.PAT }}
+
+####################################################################### macOS Universal #######################################################################
+
+  Deploy-to-installer:
+    needs: [Part1-linux-x86_64-build-with-PGO, Part1-linux-aarch64-build, Part4-macOS-Universal-package-and-sign, Part3-win-x86_64-build-with-profdata-and-jarlog, Part3-win-x86-build-with-profdata-and-jarlog, get-display-version]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Release version 📦
+      run: |
+        echo "Release version: ${{ needs.get-display-version.outputs.display-version }}"
+
+    - name: make directory 📁
+      run: |
+        mkdir -p ~/downloads/artifacts
+        mkdir -p ~/downloads/artifacts/linux-x64
+        mkdir -p ~/downloads/artifacts/linux-aarch64
+        mkdir -p ~/downloads/artifacts/windows-x64
+        mkdir -p ~/downloads/artifacts/windows-x86
+        mkdir -p ~/downloads/artifacts/macOS-x64
+
+    - name: download Linux x86_64 build artifact 📥
+      uses: actions/download-artifact@v4
+      with:
+        name: floorp-linux-x64
+        path: ~/downloads/artifacts/linux-x64
+
+    - name: download Linux aarch64 build artifact 📥
+      uses: actions/download-artifact@v4
+      with:
+        name: floorp-linux-aarch64
+        path: ~/downloads/artifacts/linux-aarch64
+
+    - name: download Windows x86_64 build artifact📥
+      uses: actions/download-artifact@v4
+      with:
+        name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
+        path: ~/downloads/artifacts/windows-x64
+
+    - name: download Windows x86 build artifact📥
+      uses: actions/download-artifact@v4
+      with:
+        name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
+        path: ~/downloads/artifacts/windows-x86
+
+    - name: download macOS Universal build artifact📥
+      uses: actions/download-artifact@v4
+      with:
+        name: Universal-Artifact
+        path: ~/downloads/artifacts/macOS-x64
+
+    - name: check file structure 🗃
+      run: |
+        cd ~/downloads/artifacts
+        echo "current directory: $PWD"
+        echo "****************************************************************************************************"
+        find . -print | sed -e "s;[^/]*/;|____;g;s;____|; |;g"
+        echo "****************************************************************************************************"
+    
+    - name: Create hashes.txt file 📝
+      run: |
+        cd /home/runner/downloads/artifacts
+        touch hashes.txt
+        echo "SHA256 hashes" > hashes.txt
+        echo "****************************************************************************************************" >> hashes.txt
+        echo "Linux AArch64" >> hashes.txt
+        sha256sum linux-aarch64/floorp-${{ needs.get-display-version.outputs.display-version }}.linux-aarch64.tar.bz2  >> hashes.txt
+        echo "****************************************************************************************************" >> hashes.txt
+        echo "Linux x86_64" >> hashes.txt
+        sha256sum linux-x64/floorp-${{ needs.get-display-version.outputs.display-version }}.linux-x86_64.tar.bz2  >> hashes.txt
+        echo "****************************************************************************************************" >> hashes.txt
+
+    - name: Deploy to GitHub Releases for Stable Version 🚀
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar
+          /home/runner/downloads/artifacts/linux-aarch64/LINUX-aarch64.mar
+          /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.mar
+          /home/runner/downloads/artifacts/linux-x64/floorp-*.linux-x86_64.tar.bz2
+          /home/runner/downloads/artifacts/linux-aarch64/floorp-*.linux-aarch64.tar.bz2
+          /home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe
+          /home/runner/downloads/artifacts/windows-x86/floorp-win32.installer.exe
+          /home/runner/downloads/artifacts/macOS-x64/floorp-macOS-universal.dmg
+          /home/runner/downloads/artifacts/hashes.txt
+        tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
+        name: "v${{ needs.get-display-version.outputs.display-version }}"
+        draft: true
+        prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+
+  Deploy-to-updater:
+    needs: [get-display-version, Deploy-to-installer, get-buildid, get-inside-version]
+    runs-on: ubuntu-latest
+    environment:
+      name: Deploy-to-updater-release
+
+    steps:
+    - name: Run GitHub Actions for Release x86_64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        sleep 60
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-x86_64.mar",
+              "os": "Linux",
+              "arch": "x86_64"
+            }
+          }'
+
+    - name: Run GitHub Actions for Release aarch64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        sleep 60
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-aarch64.mar",
+              "os": "Linux",
+              "arch": "aarch64",
+              "release-note-url": "${{ inputs.release-note-url }}"
+            }
+          }'
+
+    - name: Run GitHub Actions for Release x86_64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        sleep 60
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal.mar",
+              "os": "Darwin",
+              "arch": "x86_64",
+              "display-version": "${{ needs.get-display-version.outputs.display-version }}",
+              "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}",
+              "release-note-url": "${{ inputs.release-note-url }}"
+            }
+          }'
+
+    - name: Run GitHub Actions for Release aarch64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        sleep 60
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal.mar",
+              "os": "Darwin",
+              "arch": "aarch64",
+              "buildid": "${{ needs.get-buildid.outputs.buildids }}",
+              "display-version": "${{ needs.get-display-version.outputs.display-version }}",
+              "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}",
+              "release-note-url": "${{ inputs.release-note-url }}"
+            }
+          }'
+
+    - name: Run GitHub Actions for Release x86_64 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        sleep 60
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
+              "os": "WINNT",
+              "arch": "x86_64",
+              "release-note-url": "${{ inputs.release-note-url }}"
+            }
+          }'
+
+    - name: Run GitHub Actions for Release x86 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+        echo "Preparing to run GitHub Actions for Release x86 Windows MAR, waiting for 30 seconds"
+        sleep 60
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+          -d '{
+            "ref": "main",
+            "inputs": {
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86.mar",
+              "os": "WINNT",
+              "arch": "x86",
+              "release-note-url": "${{ inputs.release-note-url }}"
+            }
+          }'
+
+    - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
+      run: |
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/workflows/linux-x64-deb.yml/dispatches" \
+          -d '{
+            "ref": "ESR115",
+            "inputs": {
+              "ppa": "true",
+              "tarball-url-x86-64": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.linux-x86_64.tar.bz2"
+            }
+          }'
+
+    - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
+      run: |
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/workflows/linux-x64-deb.yml/dispatches" \
+          -d '{
+            "ref": "ESR115",
+            "inputs": {
+              "ppa": "false",
+              "tarball-url-x86-64": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.linux-x86_64.tar.bz2"
+            }
+          }'

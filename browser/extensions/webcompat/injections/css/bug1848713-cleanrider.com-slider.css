@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * www.cleanrider.com - The price slider does not work
+ * Bug #1848713 - https://bugzilla.mozilla.org/show_bug.cgi?id=1848713
+ * WebCompat issue #123642 - https://github.com/webcompat/web-bugs/issues/123642
+ *
+ * the site disables pointer events on the slider and only allows them
+ * in -webkit-slider-thumb style which is not supported in Firefox and
+ * depends on https://bugzilla.mozilla.org/show_bug.cgi?id=1735575
+ */
+
+input[type="range"]::-moz-range-thumb {
+  -webkit-appearance: none;
+  height: 24px;
+  pointer-events: all;
+  width: 24px;
+}

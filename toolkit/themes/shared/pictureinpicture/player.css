@@ -104,8 +104,8 @@ browser {
 
 .end-controls {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-areas: "audio closedcaption fullscreen";
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+  grid-template-areas: "audio audio-scrubber closedcaption fullscreen";
   justify-self: end;
   gap: 8px;
 }
@@ -253,8 +253,7 @@ body:fullscreen #controls[showing]:hover .control-item:not(:hover),
 /* Background gradient is the only control item with a fixed opacity value. */
 #controls[keying] .control-item#controls-bottom-gradient,
 #controls[showing] .control-item#controls-bottom-gradient,
-#controls:hover .control-item#controls-bottom-gradient:hover
-#controls[donthide] .control-item#controls-bottom-gradient {
+#controls:hover .control-item#controls-bottom-gradient:hover #controls[donthide] .control-item#controls-bottom-gradient {
   opacity: 0.8;
 }
 
@@ -304,6 +303,39 @@ body:fullscreen #controls[showing]:hover {
 
 #audio {
   grid-area: audio;
+}
+
+#audio-scrubber {
+  grid-area: audio-scrubber;
+  width: 64px;
+  background-color: transparent;
+  padding: 15px 0;
+  margin: 0;
+}
+
+#audio-scrubber::-moz-range-thumb {
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  position: relative;
+  width: 8px;
+  height: 8px;
+  bottom: 24px;
+  padding: 0;
+}
+
+#audio-scrubber::-moz-range-track {
+  background-color: #969696;
+}
+
+#audio-scrubber::-moz-range-progress {
+  background-color: #FFFFFF;
+}
+
+#audio-scrubber,
+#audio-scrubber::-moz-range-track,
+#audio-scrubber::-moz-range-progress {
+  height: 2px;
+  border-radius: 4px;
 }
 
 #fullscreen {
@@ -386,7 +418,7 @@ body:not(:fullscreen) #fullscreen {
   font-weight: 590;
 }
 
-.box > input[type="radio"]{
+.box > input[type="radio"] {
   background-color: red;
   fill: currentColor;
 }
@@ -589,6 +621,17 @@ input:checked + .slider::before {
 #timestamp::after {
   background: unset;
   content: unset;
+}
+
+@media (width <= 630px) {
+  #audio-scrubber {
+    display: none;
+  }
+
+  .end-controls {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas: "audio closedcaption fullscreen";
+  }
 }
 
 @media (height <= 325px), (width <= 475px) {

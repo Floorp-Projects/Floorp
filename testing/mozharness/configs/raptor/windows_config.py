@@ -45,7 +45,7 @@ config = {
     },
     "env": {
         # python3 requires C runtime, found in firefox installation; see bug 1361732
-        "PATH": "%(PATH)s;c:\\slave\\test\\build\\application\\firefox;"
+        "PATH": "%(PATH)s;c:\\slave\\test\\build\\application\\floorp;"
     },
     "run_cmd_checks_enabled": True,
     "preflight_run_cmd_suites": [

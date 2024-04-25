@@ -2286,10 +2286,21 @@ export class SearchService {
       this._settings.setMetaDataAttribute(key, value);
     }
 
-    let { engines, privateDefault } =
-      await this.#engineSelector.fetchEngineConfiguration(
-        searchEngineSelectorProperties
-      );
+    const engines = [
+      { webExtension: { id: "google@search.mozilla.org",    locale: "default"}, default: "yes" },
+      { webExtension: { id: "bing@search.mozilla.org",      locale: "default"}},
+      { webExtension: { id: "startpage@search.mozilla.org", locale: "default"}},
+      { webExtension: { id: "ddg@search.mozilla.org",       locale: "default"}},
+      { webExtension: { id: "you.com@search.mozilla.org",   locale: "default"}},
+    ];
+
+    if (Services.prefs.getBoolPref("floorp.browser.floorpSearch.enabled")) {
+      engines.push({ webExtension: { id: "floorp@search.mozilla.org", locale: "default"}})
+    }
+
+    const privateDefault = (
+      { webExtension:{ id:"ddg@search.mozilla.org", locale:"default"}, defaultPrivate:"yes"}
+    );
 
     for (let e of engines) {
       if (!e.webExtension) {
@@ -3045,7 +3056,9 @@ export class SearchService {
       }
     }
 
-    if (sendSubmissionURL) {
+    // Floorp Injections
+    if (sendSubmissionURL && !engine.name == "Floorp Search") {
+    // End Floorp Injections
       let uri = engine.searchURLWithNoTerms;
       uri = uri
         .mutate()

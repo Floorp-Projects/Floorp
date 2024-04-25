@@ -101,6 +101,50 @@ function getL10nIdMapping(id) {
   return L10N_ID_MAPPING[id] || id;
 }
 
+const dual_theme_check = function(check_addon){
+  let kaonasi_dual_theme
+  try {
+    kaonasi_dual_theme = JSON.parse(Services.prefs.getStringPref("floorp.dualtheme.theme"))
+  } catch (e) {
+    return false
+  }
+  return kaonasi_dual_theme.includes(check_addon)
+}
+
+const dual_theme_index = function(check_addon){
+  let kaonasi_dual_theme
+  try {
+    kaonasi_dual_theme = JSON.parse(Services.prefs.getStringPref("floorp.dualtheme.theme"))
+  } catch (e) {
+    return -1
+  }
+  return kaonasi_dual_theme.indexOf(check_addon)
+}
+
+var dual_theme_update = []
+function dual_theme_disable(check_addon){
+  let kaonasi_dual_theme
+  try {
+    kaonasi_dual_theme = JSON.parse(Services.prefs.getStringPref("floorp.dualtheme.theme"))
+  } catch (e) {
+    return -1
+  }
+  const kaonasi_dual_theme_after = kaonasi_dual_theme.filter(n => n != check_addon)
+  Services.prefs.setStringPref("floorp.dualtheme.theme",JSON.stringify(kaonasi_dual_theme_after))
+}
+
+function dual_theme_enable(check_addon){
+  let kaonasi_dual_theme
+  try {
+    kaonasi_dual_theme = JSON.parse(Services.prefs.getStringPref("floorp.dualtheme.theme"))
+  } catch (e) {
+    Services.prefs.setStringPref("floorp.dualtheme.theme",`[${kaonasi_dual_theme_after}]`)
+    return -1
+  }
+  kaonasi_dual_theme.push(check_addon)
+  Services.prefs.setStringPref("floorp.dualtheme.theme",JSON.stringify(kaonasi_dual_theme))
+}
+
 function shouldSkipAnimations() {
   return (
     document.body.hasAttribute("skip-animations") ||
@@ -1512,6 +1556,12 @@ class AddonOptions extends HTMLElement {
       case "report":
         el.hidden = !isAbuseReportSupported(addon);
         break;
+      case "dual_theme_disable":
+        el.hidden = !dual_theme_check(addon.id) || addon.isActive || addon.type != "theme" || !Services.prefs.getBoolPref("floorp.enable.dualtheme", false);
+        break;
+      case "dual_theme_enable":
+        el.hidden = dual_theme_check(addon.id) || addon.isActive || addon.type != "theme" || !Services.prefs.getBoolPref("floorp.enable.dualtheme", false);
+        break;
       case "install-update":
         el.hidden = !updateInstall;
         break;
@@ -2393,6 +2443,12 @@ class AddonCard extends HTMLElement {
     this.registerListeners();
   }
 
+  pref_update()
+  {
+    let { addon, card } = this;
+    this.options.update(this, addon, this.updateInstall);
+  }
+
   disconnectedCallback() {
     this.removeListeners();
   }
@@ -2501,6 +2557,9 @@ class AddonCard extends HTMLElement {
       switch (action) {
         case "toggle-disabled":
           // Keep the checked state the same until the add-on's state changes.
+          if(dual_theme_check(addon.id)){
+            dual_theme_disable(addon.id)
+          }
           e.target.checked = !addon.userDisabled;
           if (addon.userDisabled) {
             if (shouldShowPermissionsPrompt(addon)) {
@@ -2511,6 +2570,14 @@ class AddonCard extends HTMLElement {
           } else {
             await addon.disable();
           }
+          break;
+        case "dual_theme_enable":
+          dual_theme_update.push(addon)
+          dual_theme_enable(addon.id)
+         break;
+        case "dual_theme_disable":
+          dual_theme_update.push(addon)
+          dual_theme_disable(addon.id)
           break;
         case "always-activate":
           addon.userDisabled = false;
@@ -2580,6 +2647,9 @@ class AddonCard extends HTMLElement {
               addon
             );
             if (remove) {
+              if(dual_theme_check(addon.id)){
+                dual_theme_disable(addon.id)
+              }
               await addon.uninstall(true);
               this.sendEvent("remove");
               if (report) {
@@ -2707,6 +2777,7 @@ class AddonCard extends HTMLElement {
    * be called if there has been a change to the add-on.
    */
   update() {
+    Services.prefs.addObserver("floorp.dualtheme.theme",this.pref_update.bind(this))
     let { addon, card } = this;
 
     card.setAttribute("active", addon.isActive);
@@ -3227,6 +3298,17 @@ class AddonList extends HTMLElement {
     this.pendingUninstallAddons = new Set();
     this._addonsToUpdate = new Set();
     this._userFocusListenersAdded = false;
+
+    Services.prefs.addObserver("floorp.dualtheme.theme",this.dual_theme_up.bind(this))
+  }
+
+  dual_theme_up(){
+    if(dual_theme_update.length > 0){
+      for (let elem of dual_theme_update){
+        this.updateAddon(elem)
+      }
+      this.update()
+    }
   }
 
   async connectedCallback() {
@@ -3442,9 +3524,16 @@ class AddonList extends HTMLElement {
     }
 
     // Find where to insert the card.
-    let insertBefore = Array.from(sectionCards).find(
-      otherCard => this.sortByFn(card.addon, otherCard.addon) < 0
-    );
+    let insertBefore
+    if(section.firstChild.getAttribute("data-l10n-id") == "dual-theme-enabled-heading"){
+      insertBefore = Array.from(sectionCards).find(
+        otherCard => dual_theme_index(card.addon) -  dual_theme_index(otherCard.addon) < 0
+      );
+    }else{
+      insertBefore = Array.from(sectionCards).find(
+        otherCard => this.sortByFn(card.addon, otherCard.addon) < 0
+      );
+    }
     // This will append if insertBefore is null.
     section.insertBefore(card, insertBefore || null);
   }
@@ -4041,6 +4130,19 @@ gViewController.defineView("list", async type => {
       filterFn: addon =>
         !addon.hidden && addon.isActive && !isPending(addon, "uninstall"),
     },
+    {
+      headingId: "dual-theme-enabled-heading",
+      filterFn: addon =>
+        !addon.hidden &&
+        !addon.isActive &&
+	    dual_theme_check(addon.id),
+      sortByFn: (theme1, theme2) => {
+        return (
+          dual_theme_index(theme1.id) -
+          dual_theme_index(theme2.id)
+        );
+      }
+    }
   ];
 
   const disabledAddonsFilterFn = addon =>

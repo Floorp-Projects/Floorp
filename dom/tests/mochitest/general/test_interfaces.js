@@ -1385,6 +1385,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "URLSearchParams", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "UserActivation", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "UserProximityEvent", insecureContext: true, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ValidityState", insecureContext: true },

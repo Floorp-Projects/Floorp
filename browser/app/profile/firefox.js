@@ -2342,6 +2342,8 @@ pref("app.normandy.onsync_skew_sec", 600);
 //  *.aboutWelcome.languageMismatchEnabled - Enables an onboarding menu in about:welcome
 //      to allow a user to change their language when there is a language mismatch between
 //      the app and browser.
+
+// Multi-lingual preferences
 #if defined(RELEASE_OR_BETA) && !defined(MOZ_DEV_EDITION)
   pref("intl.multilingual.enabled", true);
   pref("intl.multilingual.downloadEnabled", true);
