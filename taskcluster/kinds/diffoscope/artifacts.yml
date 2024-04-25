@@ -17,10 +17,10 @@ job-defaults:
         # bug 1825141 - telemetry.fog.artifact_build isn't stable between
         # artifact and not-artifact builds, so remove its line if present.
         - sed -i '/telemetry\.fog\.artifact\_build/d' b/"$RESOURCE_DIR"/browser/defaults/preferences/firefox.js
-        # Artifact builds have local update configurations, not Nightly update
-        # configurations.
-        - rm {a,b}/"$RESOURCE_DIR"/../Frameworks/ChannelPrefs.framework/ChannelPrefs
-        - rm {a,b}/"$RESOURCE_DIR"/../MacOS/updater.app/Contents/Frameworks/UpdateSettings.framework/UpdateSettings
+        # macOS artifact builds have local update configurations, not Nightly
+        # update configurations.
+        - rm -f {a,b}/"$RESOURCE_DIR"/../Frameworks/ChannelPrefs.framework/ChannelPrefs
+        - rm -f {a,b}/"$RESOURCE_DIR"/../MacOS/updater.app/Contents/Frameworks/UpdateSettings.framework/UpdateSettings
     # Extra diffoscope arguments to account for:
     # - about:buildconfig being expectedly different.
     extra-args: >-
