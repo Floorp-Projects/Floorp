@@ -8870,26 +8870,25 @@ class _WallpapersSection extends (external_React_default()).PureComponent {
     this.prefersDarkQuery = null;
   }
   componentDidMount() {
+    this.prefersHighContrastQuery = globalThis.matchMedia("(forced-colors: active)");
     this.prefersDarkQuery = globalThis.matchMedia("(prefers-color-scheme: dark)");
+    [this.prefersHighContrastQuery, this.prefersDarkQuery].forEach(colorTheme => {
+      colorTheme.addEventListener("change", this.handleReset);
+    });
+  }
+  componentWillUnmount() {
+    [this.prefersHighContrastQuery, this.prefersDarkQuery].forEach(colorTheme => {
+      colorTheme.removeEventListener("change", this.handleReset);
+    });
   }
   handleChange(event) {
     const {
       id
     } = event.target;
-    const prefs = this.props.Prefs.values;
-    const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
-    this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, id);
-    // bug 1892095
-    if (prefs["newtabWallpapers.wallpaper-dark"] === "" && colorMode === "light") {
-      this.props.setPref("newtabWallpapers.wallpaper-dark", id.replace("light", "dark"));
-    }
-    if (prefs["newtabWallpapers.wallpaper-light"] === "" && colorMode === "dark") {
-      this.props.setPref(`newtabWallpapers.wallpaper-light`, id.replace("dark", "light"));
-    }
+    this.props.setPref("newtabWallpapers.wallpaper", id);
   }
   handleReset() {
-    const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
-    this.props.setPref(`newtabWallpapers.wallpaper-${colorMode}`, "");
+    this.props.setPref("newtabWallpapers.wallpaper", "");
   }
   render() {
     const {
@@ -9556,12 +9555,9 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
     this.updateWallpaper = this.updateWallpaper.bind(this);
-    this.prefersDarkQuery = null;
-    this.handleColorModeChange = this.handleColorModeChange.bind(this);
     this.state = {
       fixedSearch: false,
-      firstVisibleTimestamp: null,
-      colorMode: ""
+      firstVisibleTimestamp: null
     };
   }
   setFirstVisibleTimestamp() {
@@ -9586,19 +9582,8 @@ class BaseContent extends (external_React_default()).PureComponent {
       };
       this.props.document.addEventListener(Base_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
     }
-    // track change event to dark/light mode
-    this.prefersDarkQuery = globalThis.matchMedia("(prefers-color-scheme: dark)");
-    this.prefersDarkQuery.addEventListener("change", this.handleColorModeChange);
-    this.handleColorModeChange();
-  }
-  handleColorModeChange() {
-    const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
-    this.setState({
-      colorMode
-    });
   }
   componentWillUnmount() {
-    __webpack_require__.g.prefersDarkQuery.addEventListener("change", this.handleColorModeChange);
     __webpack_require__.g.removeEventListener("scroll", this.onWindowScroll);
     __webpack_require__.g.removeEventListener("keydown", this.handleOnKeyDown);
     if (this._onVisibilityChange) {
@@ -9653,10 +9638,10 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.props.dispatch(actionCreators.SetPref(pref, value));
   }
   renderWallpaperAttribution() {
+    const activeWallpaper = this.props.Prefs.values["newtabWallpapers.wallpaper"];
     const {
       wallpaperList
     } = this.props.Wallpapers;
-    const activeWallpaper = this.props.Prefs.values[`newtabWallpapers.wallpaper-${this.state.colorMode}`];
     const selected = wallpaperList.find(wp => wp.title === activeWallpaper);
     // make sure a wallpaper is selected and that the attribution also exists
     if (!selected?.attribution) {
@@ -9689,14 +9674,13 @@ class BaseContent extends (external_React_default()).PureComponent {
   }
   async updateWallpaper() {
     const prefs = this.props.Prefs.values;
+    const activeWallpaper = prefs["newtabWallpapers.wallpaper"];
     const {
       wallpaperList
     } = this.props.Wallpapers;
     if (wallpaperList) {
-      const lightWallpaper = wallpaperList.find(wp => wp.title === prefs["newtabWallpapers.wallpaper-light"]) || "";
-      const darkWallpaper = wallpaperList.find(wp => wp.title === prefs["newtabWallpapers.wallpaper-dark"]) || "";
-      __webpack_require__.g.document?.body.style.setProperty(`--newtab-wallpaper-light`, `url(${lightWallpaper?.wallpaperUrl || ""})`);
-      __webpack_require__.g.document?.body.style.setProperty(`--newtab-wallpaper-dark`, `url(${darkWallpaper?.wallpaperUrl || ""})`);
+      const wallpaper = wallpaperList.find(wp => wp.title === activeWallpaper) || "";
+      __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper", `url(${wallpaper?.wallpaperUrl || ""})`);
     }
   }
   render() {
@@ -9711,7 +9695,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       customizeMenuVisible
     } = App;
     const prefs = props.Prefs.values;
-    const activeWallpaper = prefs[`newtabWallpapers.wallpaper-${this.state.colorMode}`];
+    const activeWallpaper = prefs["newtabWallpapers.wallpaper"];
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
     const {
       pocketConfig
