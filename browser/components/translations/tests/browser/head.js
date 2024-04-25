@@ -1572,7 +1572,8 @@ class SelectTranslationsTestUtils {
    * state when the panel has completed its translation.
    */
   static async assertPanelViewTranslated() {
-    const { textArea, copyButton } = SelectTranslationsPanel.elements;
+    const { textArea, copyButton, fromMenuList, toMenuList } =
+      SelectTranslationsPanel.elements;
     await SelectTranslationsTestUtils.waitForPanelState("translated");
     ok(
       !textArea.classList.contains("translating"),
@@ -1593,10 +1594,10 @@ class SelectTranslationsTestUtils {
       translateFullPageButton: true,
     });
     SelectTranslationsTestUtils.#assertConditionalUIEnabled({
-      textArea: true,
       copyButton: true,
       doneButton: true,
-      translateFullPageButton: true,
+      textArea: true,
+      translateFullPageButton: fromMenuList.value !== toMenuList.value,
     });
 
     await waitForCondition(
@@ -1777,7 +1778,8 @@ class SelectTranslationsTestUtils {
    * translating placeholder text.
    */
   static async #assertPanelHasTranslatingPlaceholder() {
-    const { textArea } = SelectTranslationsPanel.elements;
+    const { textArea, fromMenuList, toMenuList } =
+      SelectTranslationsPanel.elements;
     const expected = await document.l10n.formatValue(
       "select-translations-panel-translating-placeholder-text"
     );
@@ -1791,7 +1793,7 @@ class SelectTranslationsTestUtils {
       textArea: true,
       copyButton: false,
       doneButton: true,
-      translateFullPageButton: true,
+      translateFullPageButton: fromMenuList.value !== toMenuList.value,
     });
   }
 
@@ -1809,7 +1811,7 @@ class SelectTranslationsTestUtils {
       textArea: true,
       copyButton: true,
       doneButton: true,
-      translateFullPageButton: true,
+      translateFullPageButton: fromLanguage !== toLanguage,
     });
 
     if (fromLanguage === toLanguage) {
@@ -1843,7 +1845,7 @@ class SelectTranslationsTestUtils {
   static #assertConditionalUIEnabled(enabledStates) {
     const elements = SelectTranslationsPanel.elements;
 
-    for (const [elementName, isEnabled] of Object.entries(enabledStates)) {
+    for (const [elementName, expectEnabled] of Object.entries(enabledStates)) {
       const element = elements[elementName];
       if (!element) {
         throw new Error(
@@ -1852,9 +1854,9 @@ class SelectTranslationsTestUtils {
       }
       is(
         element.disabled,
-        !isEnabled,
+        !expectEnabled,
         `The element '${elementName} should be ${
-          isEnabled ? "enabled" : "disabled"
+          expectEnabled ? "enabled" : "disabled"
         }.`
       );
     }
