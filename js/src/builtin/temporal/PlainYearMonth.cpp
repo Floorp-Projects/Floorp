@@ -423,9 +423,6 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
   }
 
   // Step 8.
-  // FIXME: spec issue - duplicate CreateDataPropertyOrThrow for "largestUnit".
-
-  // Step 9.
   Rooted<CalendarRecord> calendarRec(cx);
   if (!CreateCalendarMethodsRecord(cx, calendar,
                                    {
@@ -438,7 +435,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     return false;
   }
 
-  // Step 10.
+  // Step 9.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendarRec,
                       {CalendarField::MonthCode, CalendarField::Year},
@@ -446,56 +443,54 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   Rooted<PlainObject*> thisFields(
       cx, PrepareTemporalFields(cx, yearMonth, fieldNames));
   if (!thisFields) {
     return false;
   }
 
-  // Step 12.
+  // Step 11.
   Value one = Int32Value(1);
   auto handleOne = Handle<Value>::fromMarkedLocation(&one);
   if (!DefineDataProperty(cx, thisFields, cx->names().day, handleOne)) {
     return false;
   }
 
-  // Step 13.
+  // Step 12.
   Rooted<Wrapped<PlainDateObject*>> thisDate(
       cx, CalendarDateFromFields(cx, calendarRec, thisFields));
   if (!thisDate) {
     return false;
   }
 
-  // Step 14.
+  // Step 13.
   Rooted<PlainObject*> otherFields(
       cx, PrepareTemporalFields(cx, other, fieldNames));
   if (!otherFields) {
     return false;
   }
 
-  // Step 15.
+  // Step 14.
   if (!DefineDataProperty(cx, otherFields, cx->names().day, handleOne)) {
     return false;
   }
 
-  // Step 16.
+  // Step 15.
   Rooted<Wrapped<PlainDateObject*>> otherDate(
       cx, CalendarDateFromFields(cx, calendarRec, otherFields));
   if (!otherDate) {
     return false;
   }
 
-  // Steps 17-18.
+  // Steps 16-17.
   DateDuration until;
   if (resolvedOptions) {
-    // Steps 17-18.
     if (!CalendarDateUntil(cx, calendarRec, thisDate, otherDate,
                            settings.largestUnit, resolvedOptions, &until)) {
       return false;
     }
   } else {
-    // Steps 17-18.
     if (!CalendarDateUntil(cx, calendarRec, thisDate, otherDate,
                            settings.largestUnit, &until)) {
       return false;
@@ -505,10 +500,10 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
   // We only care about years and months here, all other fields are set to zero.
   auto dateDuration = DateDuration{until.years, until.months};
 
-  // Step 19.
+  // Step 18.
   if (settings.smallestUnit != TemporalUnit::Month ||
       settings.roundingIncrement != Increment{1}) {
-    // Steps 19.a-b.
+    // Steps 18.a-b.
     NormalizedDuration roundResult;
     if (!RoundDuration(cx, {dateDuration, {}}, settings.roundingIncrement,
                        settings.smallestUnit, settings.roundingMode, thisDate,
@@ -516,7 +511,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
       return false;
     }
 
-    // Step 19.c.
+    // Step 18.c.
     auto toBalance =
         DateDuration{roundResult.date.years, roundResult.date.months};
     if (!temporal::BalanceDateDurationRelative(
@@ -526,7 +521,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     }
   }
 
-  // Step 20.
+  // Step 19.
   auto duration =
       Duration{double(dateDuration.years), double(dateDuration.months)};
   if (operation == TemporalDifference::Since) {
@@ -1460,9 +1455,8 @@ static bool PlainYearMonth_toPlainDate(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Steps 12-14.
-  auto obj = CalendarDateFromFields(cx, calendar, mergedFromConcatenatedFields,
-                                    TemporalOverflow::Constrain);
+  // Step 12.
+  auto obj = CalendarDateFromFields(cx, calendar, mergedFromConcatenatedFields);
   if (!obj) {
     return false;
   }

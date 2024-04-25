@@ -1940,7 +1940,7 @@ static bool PlainDateTime_withPlainTime(JSContext* cx, const CallArgs& args) {
   auto date = ToPlainDate(temporalDateTime);
   Rooted<CalendarValue> calendar(cx, temporalDateTime->calendar());
 
-  // Step 4.
+  // Step 3. (Inlined ToTemporalTimeOrMidnight)
   PlainTime time = {};
   if (args.hasDefined(0)) {
     if (!ToTemporalTime(cx, args[0], &time)) {
@@ -1948,7 +1948,7 @@ static bool PlainDateTime_withPlainTime(JSContext* cx, const CallArgs& args) {
     }
   }
 
-  // Steps 3 and 5.
+  // Step 4.
   auto* obj = CreateTemporalDateTime(cx, {date, time}, calendar);
   if (!obj) {
     return false;
