@@ -46,11 +46,13 @@ perf:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1799727
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1834774
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1862939
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892231
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744#c5
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1799727#c4
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1834774#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1862939#c5
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892231#c3
     notification_emails:
       - perf-telemetry-alerts@mozilla.com
       - dpalmeiro@mozilla.com
@@ -103,6 +105,10 @@ perf:
       same_origin_nav:
         description:
           "If true, a normal navigation was performed on the same origin."
+        type: boolean
+      using_webdriver:
+        description:
+          "If true, a webdriver is running on the client."
         type: boolean
       http_ver:
         description:
