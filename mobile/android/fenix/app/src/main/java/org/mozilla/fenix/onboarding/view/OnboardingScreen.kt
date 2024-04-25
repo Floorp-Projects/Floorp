@@ -88,8 +88,8 @@ fun OnboardingScreen(
     }
 
     val scrollToNextPageOrDismiss: () -> Unit = {
-        if (pagerState.currentPage == pagesToDisplay.lastIndex) {
-            onFinish(pagesToDisplay[pagerState.currentPage])
+        if (pagerState.currentPage >= pagesToDisplay.lastIndex) {
+            onFinish(pagesToDisplay[pagesToDisplay.lastIndex])
         } else {
             coroutineScope.launch {
                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
