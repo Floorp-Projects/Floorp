@@ -98,7 +98,7 @@ jobs:
         worker-type: t-linux-xlarge-pgo
         worker:
             chain-of-trust: true
-            max-run-time: 2700
+            max-run-time: 3600
             docker-image: {in-tree: ubuntu1804-test}
             env:
                 WORKING_DIR: "/builds/worker"
@@ -140,7 +140,7 @@ jobs:
         worker-type: t-linux-xlarge-pgo
         worker:
             chain-of-trust: true
-            max-run-time: 2700
+            max-run-time: 3600
             docker-image: {in-tree: ubuntu1804-test}
             env:
                 WORKING_DIR: "/builds/worker"
