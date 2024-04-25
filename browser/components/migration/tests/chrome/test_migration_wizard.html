@@ -147,7 +147,7 @@
         // Test that the resource type checkboxes are shown or hidden depending on
         // which resourceTypes are included with the MigratorProfileInstance.
         for (let migratorInstance of MIGRATOR_PROFILE_INSTANCES) {
-          selector.click();
+          synthesizeMouseAtCenter(selector, {}, gWiz.ownerGlobal);
           await new Promise(resolve => {
             gShadowRoot
               .querySelector("panel-list")
@@ -248,7 +248,7 @@
         ok(isHidden(preamble), "preamble should be hidden.");
 
         let selector = gShadowRoot.querySelector("#browser-profile-selector");
-        selector.click();
+        synthesizeMouseAtCenter(selector, {}, gWiz.ownerGlobal);
         await new Promise(resolve => {
           let panelList = gShadowRoot.querySelector("panel-list");
           if (panelList) {
