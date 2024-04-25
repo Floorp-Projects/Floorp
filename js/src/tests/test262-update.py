@@ -590,7 +590,7 @@ def fetch_local_changes(inDir, outDir, srcDir, strictTests):
     # TODO: fail if it's in the default branch? or require a branch name?
     # Checks for unstaged or non committed files. A clean branch provides a clean status.
     status = subprocess.check_output(
-        ("git -C %s status --porcelain" % srcDir).split(" ")
+        ("git -C %s status --porcelain" % srcDir).split(" "), encoding="utf-8"
     )
 
     if status.strip():
@@ -601,31 +601,35 @@ def fetch_local_changes(inDir, outDir, srcDir, strictTests):
 
     # Captures the branch name to be used on the output
     branchName = subprocess.check_output(
-        ("git -C %s rev-parse --abbrev-ref HEAD" % srcDir).split(" ")
+        ("git -C %s rev-parse --abbrev-ref HEAD" % srcDir).split(" "), encoding="utf-8"
     ).split("\n")[0]
 
     # Fetches the file names to import
     files = subprocess.check_output(
-        ("git -C %s diff main --diff-filter=ACMR --name-only" % srcDir).split(" ")
+        ("git -C %s diff main --diff-filter=ACMR --name-only" % srcDir).split(" "),
+        encoding="utf-8",
     )
 
     # Fetches the deleted files to print an output log. This can be used to
     # set up the skip list, if necessary.
     deletedFiles = subprocess.check_output(
-        ("git -C %s diff main --diff-filter=D --name-only" % srcDir).split(" ")
+        ("git -C %s diff main --diff-filter=D --name-only" % srcDir).split(" "),
+        encoding="utf-8",
     )
 
     # Fetches the modified files as well for logging to support maintenance
     # in the skip list.
     modifiedFiles = subprocess.check_output(
-        ("git -C %s diff main --diff-filter=M --name-only" % srcDir).split(" ")
+        ("git -C %s diff main --diff-filter=M --name-only" % srcDir).split(" "),
+        encoding="utf-8",
     )
 
     # Fetches the renamed files for the same reason, this avoids duplicate
     # tests if running the new local folder and the general imported Test262
     # files.
     renamedFiles = subprocess.check_output(
-        ("git -C %s diff main --diff-filter=R --summary" % srcDir).split(" ")
+        ("git -C %s diff main --diff-filter=R --summary" % srcDir).split(" "),
+        encoding="utf-8",
     )
 
     # Print some friendly output
