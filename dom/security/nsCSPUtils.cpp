@@ -23,7 +23,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsWhitespaceTokenizer.h"
 
-#include "mozilla/Assertions.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/Document.h"
@@ -1030,23 +1029,6 @@ void nsCSPRequireTrustedTypesForDirectiveValue::toString(
   aOutStr.Append(mValue);
 }
 
-/* =============== nsCSPTrustedTypesDirectiveExpression =============== */
-
-nsCSPTrustedTypesDirectiveExpression::nsCSPTrustedTypesDirectiveExpression(
-    const nsAString& aExpression)
-    : mExpression{aExpression} {}
-
-bool nsCSPTrustedTypesDirectiveExpression::visit(
-    nsCSPSrcVisitor* aVisitor) const {
-  MOZ_ASSERT_UNREACHABLE(
-      "Should only be called for other overloads of this method.");
-  return false;
-}
-
-void nsCSPTrustedTypesDirectiveExpression::toString(nsAString& aOutStr) const {
-  aOutStr.Append(mExpression);
-}
-
 /* ===== nsCSPDirective ====================== */
 
 nsCSPDirective::nsCSPDirective(CSPDirective aDirective) {
@@ -1329,9 +1311,6 @@ bool nsCSPDirective::allowsAllInlineBehavior(CSPDirective aDir) const {
 void nsCSPDirective::toString(nsAString& outStr) const {
   // Append directive name
   outStr.AppendASCII(CSP_CSPDirectiveToString(mDirective));
-
-  MOZ_ASSERT(!mSrcs.IsEmpty());
-
   outStr.AppendLiteral(" ");
 
   // Append srcs
@@ -1473,13 +1452,6 @@ void nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const {
       // Here, the srcs represent the sink group
       // (https://w3c.github.io/trusted-types/dist/spec/#integration-with-content-security-policy).
       outCSP.mRequire_trusted_types_for.Value() = std::move(srcs);
-      return;
-
-    case nsIContentSecurityPolicy::TRUSTED_TYPES_DIRECTIVE:
-      outCSP.mTrusted_types.Construct();
-      // Here, "srcs" represents tt-expressions
-      // (https://w3c.github.io/trusted-types/dist/spec/#trusted-types-csp-directive).
-      outCSP.mTrusted_types.Value() = std::move(srcs);
       return;
 
     default:
