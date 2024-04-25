@@ -28,6 +28,7 @@ class nsOSHelperAppService : public nsExternalHelperAppService {
   // override nsIExternalProtocolService methods
   NS_IMETHOD OSProtocolHandlerExists(const char* aProtocolScheme,
                                      bool* aHandlerExists) override;
+  nsresult LoadUriInternal(nsIURI* aURL);
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme,
                                        nsAString& _retval) override;
 
