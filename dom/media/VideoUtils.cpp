@@ -10,14 +10,10 @@
 #include "ImageContainer.h"
 #include "MediaContainerType.h"
 #include "MediaResource.h"
-#include "PDMFactory.h"
 #include "TimeUnits.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/gfx/gfxVars.h"
-#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/SchedulerGroup.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -31,10 +27,6 @@
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-
-#ifdef XP_WIN
-#  include "WMFDecoderModule.h"
-#endif
 
 namespace mozilla {
 
@@ -1253,42 +1245,6 @@ void DetermineResolutionForTelemetry(const MediaInfo& aInfo,
     }
   }
   aResolutionOut.AppendASCII(resolution);
-}
-
-void ReportHardwareMediaCodecSupportProbe() {
-  // We only need to report the result once.
-  static bool sReported = false;
-  if (sReported) {
-    return;
-  }
-  // Only report telemetry when hardware decoding is available.
-  if (!gfx::gfxVars::IsInitialized() ||
-      !gfx::gfxVars::CanUseHardwareVideoDecoding()) {
-    return;
-  }
-  sReported = true;
-
-#if defined(XP_WIN)
-  // We will disable HVEC later after reporting Telemetry if the pref is off.
-  auto scopeExit = MakeScopeExit([]() {
-    if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
-      WMFDecoderModule::DisableForceEnableHEVC();
-    }
-  });
-  WMFDecoderModule::Init(WMFDecoderModule::Config::ForceEnableHEVC);
-#endif
-
-  const auto support = PDMFactory::Supported(true /* force refresh */);
-  glean::media_playback::device_hardware_decoder_support.Get("h264"_ns).Set(
-      support.contains(mozilla::media::MediaCodecsSupport::H264HardwareDecode));
-  glean::media_playback::device_hardware_decoder_support.Get("vp8"_ns).Set(
-      support.contains(mozilla::media::MediaCodecsSupport::VP8HardwareDecode));
-  glean::media_playback::device_hardware_decoder_support.Get("vp9"_ns).Set(
-      support.contains(mozilla::media::MediaCodecsSupport::VP9HardwareDecode));
-  glean::media_playback::device_hardware_decoder_support.Get("av1"_ns).Set(
-      support.contains(mozilla::media::MediaCodecsSupport::AV1HardwareDecode));
-  glean::media_playback::device_hardware_decoder_support.Get("hevc"_ns).Set(
-      support.contains(mozilla::media::MediaCodecsSupport::HEVCHardwareDecode));
 }
 
 }  // end namespace mozilla

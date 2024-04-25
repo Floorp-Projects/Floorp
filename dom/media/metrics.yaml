@@ -166,27 +166,3 @@ media.playback:
         description: True if the first frame is decoded by a hardware decoder.
         type: boolean
     expires: never
-  device_hardware_decoder_support:
-    type: labeled_boolean
-    description:
-      The results of hardware decoder support for different video codecs. True
-      means that codec can be decoded by hardware on user's device.
-    metadata:
-      tags:
-        - 'Core :: Audio/Video: Playback'
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892516
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892516#c4
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - media-alerts@mozilla.com
-    expires: never
-    labels:
-      - h264
-      - vp8
-      - vp9
-      - av1
-      - hevc
-    telemetry_mirror: MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT
