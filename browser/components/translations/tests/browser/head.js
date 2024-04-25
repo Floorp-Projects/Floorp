@@ -667,6 +667,9 @@ class FullPageTranslationsTestUtils {
         changeSourceLanguageButton: false,
         dismissErrorButton: false,
         error: false,
+        errorMessage: false,
+        errorMessageHint: false,
+        errorHintAction: false,
         fromMenuList: false,
         fromLabel: false,
         header: false,
@@ -743,6 +746,34 @@ class FullPageTranslationsTestUtils {
   }
 
   /**
+   * Asserts that panel element visibility matches the initialization-failure view.
+   */
+  static assertPanelViewInitFailure() {
+    info("Checking that the panel shows the default view");
+    const { translateButton } = FullPageTranslationsPanel.elements;
+    FullPageTranslationsTestUtils.#assertPanelMainViewId(
+      "full-page-translations-panel-view-default"
+    );
+    FullPageTranslationsTestUtils.#assertPanelElementVisibility({
+      cancelButton: true,
+      error: true,
+      errorMessage: true,
+      errorMessageHint: true,
+      errorHintAction: true,
+      header: true,
+      translateButton: true,
+    });
+    is(
+      translateButton.disabled,
+      true,
+      "The translate button should be disabled."
+    );
+    FullPageTranslationsTestUtils.#assertPanelHeaderL10nId(
+      "translations-panel-header"
+    );
+  }
+
+  /**
    * Asserts that panel element visibility matches the panel error view.
    */
   static assertPanelViewError() {
@@ -752,6 +783,7 @@ class FullPageTranslationsTestUtils {
     );
     FullPageTranslationsTestUtils.#assertPanelElementVisibility({
       error: true,
+      errorMessage: true,
       ...FullPageTranslationsTestUtils.#defaultViewVisibilityExpectations,
     });
     FullPageTranslationsTestUtils.#assertPanelHeaderL10nId(
