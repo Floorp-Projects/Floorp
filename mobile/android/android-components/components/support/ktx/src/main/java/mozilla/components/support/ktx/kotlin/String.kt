@@ -330,6 +330,15 @@ fun String.urlEncode(): String {
 }
 
 /**
+ * Decodes '%'-escaped octets in the given string using the UTF-8 scheme.
+ * Replaces invalid octets with the unicode replacement character
+ * ("\\uFFFD").
+ *
+ * @see [Uri.decode]
+ */
+fun String.decode(): String = Uri.decode(this)
+
+/**
  * Returns the string if it's length is not higher than @param[maximumLength] or
  * a @param[replacement] string if String length is higher than @param[maximumLength]
  */
