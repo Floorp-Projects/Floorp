@@ -553,6 +553,10 @@ bool IsWaveMimetype(const nsACString& aMimeType);
 void DetermineResolutionForTelemetry(const MediaInfo& aInfo,
                                      nsCString& aResolutionOut);
 
+// Used in the GPU and RDD process for reporting Glean result on different
+// platforms.
+void ReportHardwareMediaCodecSupportProbe();
+
 }  // end namespace mozilla
 
 #endif
