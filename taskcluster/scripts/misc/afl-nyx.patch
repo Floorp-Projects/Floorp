@@ -17,6 +17,12 @@ index 988e536e..5e9870c0 100644
  
  /* Do not change this unless you really know what you are doing. */
 
+commit e46fac6063f7b0b6eca8e140b10c3a107deb0a0f
+Author: Christian Holler (:decoder) <choller@mozilla.com>
+Date:   Wed Mar 6 10:19:52 2024 +0100
+
+    Fix delayed pcmap writing for code coverage with pc-table
+
 diff --git a/instrumentation/afl-compiler-rt.o.c b/instrumentation/afl-compiler-rt.o.c
 index caa3c3a8..76ceb451 100644
 --- a/instrumentation/afl-compiler-rt.o.c
@@ -51,3 +57,26 @@ index caa3c3a8..76ceb451 100644
 +    }
 
      if (__afl_debug) {
+
+commit 58206a3180479416e14ea324607be71ee69caa6f
+Author: Jesse Schwartzentruber <truber@mozilla.com>
+Date:   Wed Apr 17 14:40:41 2024 -0400
+
+    Set explicit visibility on shared memory variables.
+
+diff --git a/src/afl-cc.c b/src/afl-cc.c
+index dd4fb4ea..57089ae0 100644
+--- a/src/afl-cc.c
++++ b/src/afl-cc.c
+@@ -1591,8 +1591,10 @@ void add_defs_persistent_mode(aflcc_state_t *aflcc) {
+   insert_param(aflcc,
+                "-D__AFL_FUZZ_INIT()="
+                "int __afl_sharedmem_fuzzing = 1;"
+-               "extern unsigned int *__afl_fuzz_len;"
+-               "extern unsigned char *__afl_fuzz_ptr;"
++               "extern __attribute__((visibility(\"default\"))) "
++               "unsigned int *__afl_fuzz_len;"
++               "extern __attribute__((visibility(\"default\"))) "
++               "unsigned char *__afl_fuzz_ptr;"
+                "unsigned char __afl_fuzz_alt[1048576];"
+                "unsigned char *__afl_fuzz_alt_ptr = __afl_fuzz_alt;");
