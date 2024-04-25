@@ -638,6 +638,7 @@ var SelectTranslationsPanel = new (class {
   onChangeFromLanguage() {
     const { fromMenuList } = this.elements;
     this.#maybeTranslateOnEvents(["blur", "keypress"], fromMenuList);
+    this.#updateConditionalUIEnabledState();
   }
 
   /**
@@ -646,6 +647,7 @@ var SelectTranslationsPanel = new (class {
   onChangeToLanguage() {
     const { toMenuList } = this.elements;
     this.#maybeTranslateOnEvents(["blur", "keypress"], toMenuList);
+    this.#updateConditionalUIEnabledState();
   }
 
   /**
@@ -1252,9 +1254,9 @@ var SelectTranslationsPanel = new (class {
     const { fromLanguage, toLanguage } = this.#getSelectedLanguagePair();
     const {
       copyButton,
-      translateFullPageButton,
-      translateButton,
       textArea,
+      translateButton,
+      translateFullPageButton,
       tryAnotherSourceMenuList,
     } = this.elements;
 
@@ -1262,9 +1264,10 @@ var SelectTranslationsPanel = new (class {
     const isTranslating = this.phase() === "translating";
 
     textArea.disabled = invalidLangPairSelected;
-    translateFullPageButton.disabled = invalidLangPairSelected;
     copyButton.disabled = invalidLangPairSelected || isTranslating;
     translateButton.disabled = !tryAnotherSourceMenuList.value;
+    translateFullPageButton.disabled =
+      invalidLangPairSelected || fromLanguage === toLanguage;
   }
 
   /**
