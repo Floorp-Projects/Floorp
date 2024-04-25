@@ -1,10 +1,13 @@
+// GENERATED, DO NOT EDIT
 // file: assert.js
 // Copyright (C) 2017 Ecma International.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: |
     Collection of assertion functions used throughout test262
+defines: [assert]
 ---*/
+
 
 function assert(mustBeTrue, message) {
   if (mustBeTrue === true) {
@@ -12,9 +15,9 @@ function assert(mustBeTrue, message) {
   }
 
   if (message === undefined) {
-    message = 'Expected true but got ' + String(mustBeTrue);
+    message = 'Expected true but got ' + assert._toString(mustBeTrue);
   }
-  $ERROR(message);
+  throw new Test262Error(message);
 }
 
 assert._isSameValue = function (a, b) {
@@ -28,7 +31,12 @@ assert._isSameValue = function (a, b) {
 };
 
 assert.sameValue = function (actual, expected, message) {
-  if (assert._isSameValue(actual, expected)) {
+  try {
+    if (assert._isSameValue(actual, expected)) {
+      return;
+    }
+  } catch (error) {
+    throw new Test262Error(message + ' (_isSameValue operation threw) ' + error);
     return;
   }
 
@@ -38,9 +46,9 @@ assert.sameValue = function (actual, expected, message) {
     message += ' ';
   }
 
-  message += 'Expected SameValue(«' + String(actual) + '», «' + String(expected) + '») to be true';
+  message += 'Expected SameValue(«' + assert._toString(actual) + '», «' + assert._toString(expected) + '») to be true';
 
-  $ERROR(message);
+  throw new Test262Error(message);
 };
 
 assert.notSameValue = function (actual, unexpected, message) {
@@ -54,14 +62,15 @@ assert.notSameValue = function (actual, unexpected, message) {
     message += ' ';
   }
 
-  message += 'Expected SameValue(«' + String(actual) + '», «' + String(unexpected) + '») to be false';
+  message += 'Expected SameValue(«' + assert._toString(actual) + '», «' + assert._toString(unexpected) + '») to be false';
 
-  $ERROR(message);
+  throw new Test262Error(message);
 };
 
 assert.throws = function (expectedErrorConstructor, func, message) {
+  var expectedName, actualName;
   if (typeof func !== "function") {
-    $ERROR('assert.throws requires two arguments: the error constructor ' +
+    throw new Test262Error('assert.throws requires two arguments: the error constructor ' +
       'and a function to run');
     return;
   }
@@ -76,23 +85,38 @@ assert.throws = function (expectedErrorConstructor, func, message) {
   } catch (thrown) {
     if (typeof thrown !== 'object' || thrown === null) {
       message += 'Thrown value was not an object!';
-      $ERROR(message);
+      throw new Test262Error(message);
     } else if (thrown.constructor !== expectedErrorConstructor) {
-      message += 'Expected a ' + expectedErrorConstructor.name + ' but got a ' + thrown.constructor.name;
-      $ERROR(message);
+      expectedName = expectedErrorConstructor.name;
+      actualName = thrown.constructor.name;
+      if (expectedName === actualName) {
+        message += 'Expected a ' + expectedName + ' but got a different error constructor with the same name';
+      } else {
+        message += 'Expected a ' + expectedName + ' but got a ' + actualName;
+      }
+      throw new Test262Error(message);
     }
     return;
   }
 
   message += 'Expected a ' + expectedErrorConstructor.name + ' to be thrown but no exception was thrown at all';
-  $ERROR(message);
+  throw new Test262Error(message);
 };
 
-assert.throws.early = function(err, code) {
-  let wrappedCode = `function wrapperFn() { ${code} }`;
-  let ieval = eval;
+assert._toString = function (value) {
+  try {
+    if (value === 0 && 1 / value === -Infinity) {
+      return '-0';
+    }
 
-  assert.throws(err, () => { Function(wrappedCode); }, `Function: ${code}`);
+    return String(value);
+  } catch (err) {
+    if (err.name === 'TypeError') {
+      return Object.prototype.toString.call(value);
+    }
+
+    throw err;
+  }
 };
 
 // file: compareArray.js
@@ -101,6 +125,7 @@ assert.throws.early = function(err, code) {
 /*---
 description: |
     Compare the contents of two arrays
+defines: [compareArray]
 ---*/
 
 function compareArray(a, b) {
@@ -109,16 +134,41 @@ function compareArray(a, b) {
   }
 
   for (var i = 0; i < a.length; i++) {
-    if (b[i] !== a[i]) {
+    if (!compareArray.isSameValue(b[i], a[i])) {
       return false;
     }
   }
   return true;
 }
 
+compareArray.isSameValue = function(a, b) {
+  if (a === 0 && b === 0) return 1 / a === 1 / b;
+  if (a !== a && b !== b) return true;
+
+  return a === b;
+};
+
+compareArray.format = function(arrayLike) {
+  return `[${[].map.call(arrayLike, String).join(', ')}]`;
+};
+
 assert.compareArray = function(actual, expected, message) {
-  assert(compareArray(actual, expected),
-         `Expected [${actual.join(", ")}] and [${expected.join(", ")}] to have the same contents. ${message}`);
+  message  = message === undefined ? '' : message;
+
+  if (typeof message === 'symbol') {
+    message = message.toString();
+  }
+
+  assert(actual != null, `First argument shouldn't be nullish. ${message}`);
+  assert(expected != null, `Second argument shouldn't be nullish. ${message}`);
+  var format = compareArray.format;
+  var result = compareArray(actual, expected);
+
+  // The following prevents actual and expected from being iterated and evaluated
+  // more than once unless absolutely necessary.
+  if (!result) {
+    assert(false, `Expected ${format(actual)} and ${format(expected)} to have the same contents. ${message}`);
+  }
 };
 
 // file: propertyHelper.js
@@ -128,8 +178,26 @@ assert.compareArray = function(actual, expected, message) {
 description: |
     Collection of functions used to safely verify the correctness of
     property descriptors.
+defines:
+  - verifyProperty
+  - verifyEqualTo # deprecated
+  - verifyWritable # deprecated
+  - verifyNotWritable # deprecated
+  - verifyEnumerable # deprecated
+  - verifyNotEnumerable # deprecated
+  - verifyConfigurable # deprecated
+  - verifyNotConfigurable # deprecated
 ---*/
 
+// @ts-check
+
+/**
+ * @param {object} obj
+ * @param {string|symbol} name
+ * @param {PropertyDescriptor|undefined} desc
+ * @param {object} [options]
+ * @param {boolean} [options.restore]
+ */
 function verifyProperty(obj, name, desc, options) {
   assert(
     arguments.length > 2,
@@ -144,7 +212,7 @@ function verifyProperty(obj, name, desc, options) {
     assert.sameValue(
       originalDesc,
       undefined,
-      `obj['${nameStr}'] descriptor should be undefined`
+      "obj['" + nameStr + "'] descriptor should be undefined"
     );
 
     // desc and originalDesc are both undefined, problem solved;
@@ -153,51 +221,67 @@ function verifyProperty(obj, name, desc, options) {
 
   assert(
     Object.prototype.hasOwnProperty.call(obj, name),
-    `obj should have an own property ${nameStr}`
+    "obj should have an own property " + nameStr
   );
 
   assert.notSameValue(
     desc,
     null,
-    `The desc argument should be an object or undefined, null`
+    "The desc argument should be an object or undefined, null"
   );
 
   assert.sameValue(
     typeof desc,
     "object",
-    `The desc argument should be an object or undefined, ${String(desc)}`
+    "The desc argument should be an object or undefined, " + String(desc)
   );
+
+  var names = Object.getOwnPropertyNames(desc);
+  for (var i = 0; i < names.length; i++) {
+    assert(
+      names[i] === "value" ||
+        names[i] === "writable" ||
+        names[i] === "enumerable" ||
+        names[i] === "configurable" ||
+        names[i] === "get" ||
+        names[i] === "set",
+      "Invalid descriptor field: " + names[i],
+    );
+  }
 
   var failures = [];
 
   if (Object.prototype.hasOwnProperty.call(desc, 'value')) {
-    if (desc.value !== originalDesc.value) {
-      failures.push(`descriptor value should be ${desc.value}`);
+    if (!isSameValue(desc.value, originalDesc.value)) {
+      failures.push("descriptor value should be " + desc.value);
+    }
+    if (!isSameValue(desc.value, obj[name])) {
+      failures.push("object value should be " + desc.value);
     }
   }
 
   if (Object.prototype.hasOwnProperty.call(desc, 'enumerable')) {
     if (desc.enumerable !== originalDesc.enumerable ||
         desc.enumerable !== isEnumerable(obj, name)) {
-      failures.push(`descriptor should ${desc.enumerable ? '' : 'not '}be enumerable`);
+      failures.push('descriptor should ' + (desc.enumerable ? '' : 'not ') + 'be enumerable');
     }
   }
 
   if (Object.prototype.hasOwnProperty.call(desc, 'writable')) {
     if (desc.writable !== originalDesc.writable ||
         desc.writable !== isWritable(obj, name)) {
-      failures.push(`descriptor should ${desc.writable ? '' : 'not '}be writable`);
+      failures.push('descriptor should ' + (desc.writable ? '' : 'not ') + 'be writable');
     }
   }
 
   if (Object.prototype.hasOwnProperty.call(desc, 'configurable')) {
     if (desc.configurable !== originalDesc.configurable ||
         desc.configurable !== isConfigurable(obj, name)) {
-      failures.push(`descriptor should ${desc.configurable ? '' : 'not '}be configurable`);
+      failures.push('descriptor should ' + (desc.configurable ? '' : 'not ') + 'be configurable');
     }
   }
 
-  assert.sameValue(failures.length, 0, failures.join('; '));
+  assert(!failures.length, failures.join('; '));
 
   if (options && options.restore) {
     Object.defineProperty(obj, name, originalDesc);
@@ -207,14 +291,15 @@ function verifyProperty(obj, name, desc, options) {
 }
 
 function isConfigurable(obj, name) {
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
   try {
     delete obj[name];
   } catch (e) {
     if (!(e instanceof TypeError)) {
-      $ERROR("Expected TypeError, got " + e);
+      throw new Test262Error("Expected TypeError, got " + e);
     }
   }
-  return !Object.prototype.hasOwnProperty.call(obj, name);
+  return !hasOwnProperty.call(obj, name);
 }
 
 function isEnumerable(obj, name) {
@@ -237,14 +322,19 @@ function isEnumerable(obj, name) {
     Object.prototype.propertyIsEnumerable.call(obj, name);
 }
 
-function isEqualTo(obj, name, expectedValue) {
-  var actualValue = obj[name];
+function isSameValue(a, b) {
+  if (a === 0 && b === 0) return 1 / a === 1 / b;
+  if (a !== a && b !== b) return true;
 
-  return assert._isSameValue(actualValue, expectedValue);
+  return a === b;
 }
 
+var __isArray = Array.isArray;
 function isWritable(obj, name, verifyProp, value) {
-  var newValue = value || "unlikelyValue";
+  var unlikelyValue = __isArray(obj) && name === "length" ?
+    Math.pow(2, 32) - 1 :
+    "unlikelyValue";
+  var newValue = value || unlikelyValue;
   var hadValue = Object.prototype.hasOwnProperty.call(obj, name);
   var oldValue = obj[name];
   var writeSucceeded;
@@ -253,82 +343,103 @@ function isWritable(obj, name, verifyProp, value) {
     obj[name] = newValue;
   } catch (e) {
     if (!(e instanceof TypeError)) {
-      $ERROR("Expected TypeError, got " + e);
+      throw new Test262Error("Expected TypeError, got " + e);
     }
   }
 
-  writeSucceeded = isEqualTo(obj, verifyProp || name, newValue);
+  writeSucceeded = isSameValue(obj[verifyProp || name], newValue);
 
   // Revert the change only if it was successful (in other cases, reverting
   // is unnecessary and may trigger exceptions for certain property
   // configurations)
   if (writeSucceeded) {
     if (hadValue) {
-    obj[name] = oldValue;
+      obj[name] = oldValue;
     } else {
-    delete obj[name];
+      delete obj[name];
     }
   }
 
   return writeSucceeded;
 }
 
+/**
+ * Deprecated; please use `verifyProperty` in new tests.
+ */
 function verifyEqualTo(obj, name, value) {
-  if (!isEqualTo(obj, name, value)) {
-    $ERROR("Expected obj[" + String(name) + "] to equal " + value +
+  if (!isSameValue(obj[name], value)) {
+    throw new Test262Error("Expected obj[" + String(name) + "] to equal " + value +
            ", actually " + obj[name]);
   }
 }
 
+/**
+ * Deprecated; please use `verifyProperty` in new tests.
+ */
 function verifyWritable(obj, name, verifyProp, value) {
   if (!verifyProp) {
     assert(Object.getOwnPropertyDescriptor(obj, name).writable,
          "Expected obj[" + String(name) + "] to have writable:true.");
   }
   if (!isWritable(obj, name, verifyProp, value)) {
-    $ERROR("Expected obj[" + String(name) + "] to be writable, but was not.");
+    throw new Test262Error("Expected obj[" + String(name) + "] to be writable, but was not.");
   }
 }
 
+/**
+ * Deprecated; please use `verifyProperty` in new tests.
+ */
 function verifyNotWritable(obj, name, verifyProp, value) {
   if (!verifyProp) {
     assert(!Object.getOwnPropertyDescriptor(obj, name).writable,
          "Expected obj[" + String(name) + "] to have writable:false.");
   }
   if (isWritable(obj, name, verifyProp)) {
-    $ERROR("Expected obj[" + String(name) + "] NOT to be writable, but was.");
+    throw new Test262Error("Expected obj[" + String(name) + "] NOT to be writable, but was.");
   }
 }
 
+/**
+ * Deprecated; please use `verifyProperty` in new tests.
+ */
 function verifyEnumerable(obj, name) {
   assert(Object.getOwnPropertyDescriptor(obj, name).enumerable,
        "Expected obj[" + String(name) + "] to have enumerable:true.");
   if (!isEnumerable(obj, name)) {
-    $ERROR("Expected obj[" + String(name) + "] to be enumerable, but was not.");
+    throw new Test262Error("Expected obj[" + String(name) + "] to be enumerable, but was not.");
   }
 }
 
+/**
+ * Deprecated; please use `verifyProperty` in new tests.
+ */
 function verifyNotEnumerable(obj, name) {
   assert(!Object.getOwnPropertyDescriptor(obj, name).enumerable,
        "Expected obj[" + String(name) + "] to have enumerable:false.");
   if (isEnumerable(obj, name)) {
-    $ERROR("Expected obj[" + String(name) + "] NOT to be enumerable, but was.");
+    throw new Test262Error("Expected obj[" + String(name) + "] NOT to be enumerable, but was.");
   }
 }
 
+/**
+ * Deprecated; please use `verifyProperty` in new tests.
+ */
 function verifyConfigurable(obj, name) {
   assert(Object.getOwnPropertyDescriptor(obj, name).configurable,
        "Expected obj[" + String(name) + "] to have configurable:true.");
   if (!isConfigurable(obj, name)) {
-    $ERROR("Expected obj[" + String(name) + "] to be configurable, but was not.");
+    throw new Test262Error("Expected obj[" + String(name) + "] to be configurable, but was not.");
   }
 }
 
+/**
+ * Deprecated; please use `verifyProperty` in new tests.
+ */
 function verifyNotConfigurable(obj, name) {
   assert(!Object.getOwnPropertyDescriptor(obj, name).configurable,
        "Expected obj[" + String(name) + "] to have configurable:false.");
   if (isConfigurable(obj, name)) {
-    $ERROR("Expected obj[" + String(name) + "] NOT to be configurable, but was.");
+    throw new Test262Error("Expected obj[" + String(name) + "] NOT to be configurable, but was.");
   }
 }
 
@@ -341,6 +452,7 @@ description: |
 
     - An error class to avoid false positives when testing for thrown exceptions
     - A function to explicitly throw an exception using the Test262Error class
+defines: [Test262Error, $DONOTEVALUATE]
 ---*/
 
 
@@ -352,10 +464,13 @@ Test262Error.prototype.toString = function () {
   return "Test262Error: " + this.message;
 };
 
-var $ERROR;
-$ERROR = function $ERROR(message) {
+Test262Error.thrower = function (message) {
   throw new Test262Error(message);
 };
+
+function $DONOTEVALUATE() {
+  throw "Test262: This statement should not be evaluated.";
+}
 
 // file: test262-host.js
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -364,18 +479,36 @@ $ERROR = function $ERROR(message) {
 
 // https://github.com/tc39/test262/blob/main/INTERPRETING.md#host-defined-functions
 ;(function createHostObject(global) {
+    "use strict";
+
+    // Save built-in functions and constructors.
     var FunctionToString = global.Function.prototype.toString;
     var ReflectApply = global.Reflect.apply;
-    var NewGlobal = global.newGlobal;
     var Atomics = global.Atomics;
+    var Error = global.Error;
     var SharedArrayBuffer = global.SharedArrayBuffer;
     var Int32Array = global.Int32Array;
+
+    // Save built-in shell functions.
+    var NewGlobal = global.newGlobal;
     var setSharedArrayBuffer = global.setSharedArrayBuffer;
     var getSharedArrayBuffer = global.getSharedArrayBuffer;
     var evalInWorker = global.evalInWorker;
+    var monotonicNow = global.monotonicNow;
+    var gc = global.gc;
+    var clearKeptObjects = global.clearKeptObjects;
+
+    var hasCreateIsHTMLDDA = "createIsHTMLDDA" in global;
     var hasThreads = ("helperThreadCount" in global ? global.helperThreadCount() > 0 : true);
-    var hasMailbox = typeof setSharedArrayBuffer == "function" && typeof getSharedArrayBuffer == "function";
-    var hasEvalInWorker = typeof evalInWorker == "function";
+    var hasMailbox = typeof setSharedArrayBuffer === "function" && typeof getSharedArrayBuffer === "function";
+    var hasEvalInWorker = typeof evalInWorker === "function";
+
+    if (!hasCreateIsHTMLDDA && !("document" in global && "all" in global.document))
+        throw new Error("no [[IsHTMLDDA]] object available for testing");
+
+    var IsHTMLDDA = hasCreateIsHTMLDDA
+                    ? global.createIsHTMLDDA()
+                    : global.document.all;
 
     // The $262.agent framework is not appropriate for browsers yet, and some
     // test cases can't work in browsers (they block the main thread).
@@ -394,6 +527,13 @@ $ERROR = function $ERROR(message) {
         detachArrayBuffer: global.detachArrayBuffer,
         evalScript: global.evaluateScript || global.evaluate,
         global,
+        IsHTMLDDA,
+        gc() {
+            gc();
+        },
+        clearKeptObjects() {
+            clearKeptObjects();
+        },
         agent: (function () {
 
             // SpiderMonkey complication: With run-time argument --no-threads
@@ -407,19 +547,23 @@ $ERROR = function $ERROR(message) {
             // being run at all.
 
             if (!sabTestable) {
+                let {reportCompare, quit} = global;
+
+                function notAvailable() {
+                    // See comment above.
+                    if (!hasThreads && shellCode) {
+                        reportCompare(0, 0);
+                        quit(0);
+                    }
+                    throw new Error("Agents not available");
+                }
+
                 return {
-                    _notAvailable() {
-                        // See comment above.
-                        if (!hasThreads && shellCode) {
-                            global.reportCompare(0,0);
-                            global.quit(0);
-                        }
-                        throw new Error("Agents not available");
-                    },
-                    start(script) { this._notAvailable() },
-                    broadcast(sab, id) { this._notAvailable() },
-                    getReport() { this._notAvailable() },
-                    sleep(s) { this._notAvailable() }
+                    start(script) { notAvailable() },
+                    broadcast(sab, id) { notAvailable() },
+                    getReport() { notAvailable() },
+                    sleep(s) { notAvailable() },
+                    monotonicNow,
                 }
             }
 
@@ -442,102 +586,110 @@ $ERROR = function $ERROR(message) {
 
             var _worker_prefix =
 // BEGIN WORKER PREFIX
-`if (typeof $262 == 'undefined')
+`if (typeof $262 === 'undefined')
     $262 = {};
-$262.agent = (function () {
+$262.agent = (function (global) {
+    var ReflectApply = global.Reflect.apply;
+    var StringCharCodeAt = global.String.prototype.charCodeAt;
+    var {
+        add: Atomics_add,
+        compareExchange: Atomics_compareExchange,
+        load: Atomics_load,
+        store: Atomics_store,
+        wait: Atomics_wait,
+    } = global.Atomics;
+
+    var {getSharedArrayBuffer} = global;
+
     var _ia = new Int32Array(getSharedArrayBuffer());
     var agent = {
         receiveBroadcast(receiver) {
             var k;
-            while (((k = Atomics.load(_ia, ${_MSG_LOC})) & 1) == 0)
+            while (((k = Atomics_load(_ia, ${_MSG_LOC})) & 1) === 0)
                 ;
             var received_sab = getSharedArrayBuffer();
-            var received_id = Atomics.load(_ia, ${_ID_LOC});
-            Atomics.add(_ia, ${_ACK_LOC}, 1);
-            while (Atomics.load(_ia, ${_MSG_LOC}) == k)
+            var received_id = Atomics_load(_ia, ${_ID_LOC});
+            Atomics_add(_ia, ${_ACK_LOC}, 1);
+            while (Atomics_load(_ia, ${_MSG_LOC}) === k)
                 ;
             receiver(received_sab, received_id);
         },
 
         report(msg) {
-            while (Atomics.compareExchange(_ia, ${_LOCKTXT_LOC}, 0, 1) == 1)
+            while (Atomics_compareExchange(_ia, ${_LOCKTXT_LOC}, 0, 1) === 1)
                 ;
             msg = "" + msg;
             var i = _ia[${_NEXT_LOC}];
             _ia[i++] = msg.length;
             for ( let j=0 ; j < msg.length ; j++ )
-                _ia[i++] = msg.charCodeAt(j);
+                _ia[i++] = ReflectApply(StringCharCodeAt, msg, [j]);
             _ia[${_NEXT_LOC}] = i;
-            Atomics.add(_ia, ${_NUMTXT_LOC}, 1);
-            Atomics.store(_ia, ${_LOCKTXT_LOC}, 0);
+            Atomics_add(_ia, ${_NUMTXT_LOC}, 1);
+            Atomics_store(_ia, ${_LOCKTXT_LOC}, 0);
         },
 
         sleep(s) {
-            Atomics.wait(_ia, ${_SLEEP_LOC}, 0, s);
+            Atomics_wait(_ia, ${_SLEEP_LOC}, 0, s);
         },
 
-        leaving() {}
+        leaving() {},
+
+        monotonicNow: global.monotonicNow,
     };
-    Atomics.add(_ia, ${_RDY_LOC}, 1);
+    Atomics_add(_ia, ${_RDY_LOC}, 1);
     return agent;
-})();`;
+})(this);`;
 // END WORKER PREFIX
 
+            var _numWorkers = 0;
+            var _numReports = 0;
+            var _reportPtr = _FIRST;
+            var {
+                add: Atomics_add,
+                load: Atomics_load,
+                store: Atomics_store,
+                wait: Atomics_wait,
+            } = Atomics;
+            var StringFromCharCode = global.String.fromCharCode;
+
             return {
-                _numWorkers: 0,
-                _numReports: 0,
-                _reportPtr: _FIRST,
-
-                _bailIfNotAvailable() {
-                    if (!sabTestable) {
-                        // See comment above.
-                        if (!hasThreads && shellCode) {
-                            global.reportCompare(0,0);
-                            global.quit(0);
-                        }
-                        throw new Error("Agents not available");
-                    }
-                },
-
                 start(script) {
-                    this._bailIfNotAvailable();
                     setSharedArrayBuffer(_ia.buffer);
-                    var oldrdy = Atomics.load(_ia, _RDY_LOC);
+                    var oldrdy = Atomics_load(_ia, _RDY_LOC);
                     evalInWorker(_worker_prefix + script);
-                    while (Atomics.load(_ia, _RDY_LOC) == oldrdy)
+                    while (Atomics_load(_ia, _RDY_LOC) === oldrdy)
                         ;
-                    this._numWorkers++;
+                    _numWorkers++;
                 },
 
                 broadcast(sab, id) {
-                    this._bailIfNotAvailable();
                     setSharedArrayBuffer(sab);
-                    Atomics.store(_ia, _ID_LOC, id);
-                    Atomics.store(_ia, _ACK_LOC, 0);
-                    Atomics.add(_ia, _MSG_LOC, 1);
-                    while (Atomics.load(_ia, _ACK_LOC) < this._numWorkers)
+                    Atomics_store(_ia, _ID_LOC, id);
+                    Atomics_store(_ia, _ACK_LOC, 0);
+                    Atomics_add(_ia, _MSG_LOC, 1);
+                    while (Atomics_load(_ia, _ACK_LOC) < _numWorkers)
                         ;
-                    Atomics.add(_ia, _MSG_LOC, 1);
+                    Atomics_add(_ia, _MSG_LOC, 1);
                 },
 
                 getReport() {
-                    this._bailIfNotAvailable();
-                    if (this._numReports == Atomics.load(_ia, _NUMTXT_LOC))
+                    if (_numReports === Atomics_load(_ia, _NUMTXT_LOC))
                         return null;
                     var s = "";
-                    var i = this._reportPtr;
+                    var i = _reportPtr;
                     var len = _ia[i++];
                     for ( let j=0 ; j < len ; j++ )
-                        s += String.fromCharCode(_ia[i++]);
-                    this._reportPtr = i;
-                    this._numReports++;
+                        s += StringFromCharCode(_ia[i++]);
+                    _reportPtr = i;
+                    _numReports++;
                     return s;
                 },
 
                 sleep(s) {
-                    this._bailIfNotAvailable();
-                    Atomics.wait(_ia, _SLEEP_LOC, 0, s);
+                    Atomics_wait(_ia, _SLEEP_LOC, 0, s);
                 },
+
+                monotonicNow,
             };
         })()
     };
@@ -558,4 +710,14 @@ function $DONE(failure) {
         reportFailure(failure);
     else
         reportCompare(0, 0);
+
+    if (typeof jsTestDriverEnd === "function") {
+        gDelayTestDriverEnd = false;
+        jsTestDriverEnd();
+    }
+}
+
+// Some tests in test262 leave promise rejections unhandled.
+if ("ignoreUnhandledRejections" in this) {
+  ignoreUnhandledRejections();
 }
