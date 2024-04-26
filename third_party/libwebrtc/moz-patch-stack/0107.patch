@@ -1,28 +1,27 @@
 From: Jan Grulich <jgrulich@redhat.com>
-Date: Wed, 6 Mar 2024 10:19:00 +0000
-Subject: Bug 1882438 - WebRTC backport: PipeWire camera - use length of device
- id instead display name r=pehrsons,webrtc-reviewers
+Date: Tue, 5 Mar 2024 08:38:00 +0000
+Subject: Bug 1615282 - WebRTC backport: PipeWire capturer - set capturer as
+ failed when session is closed r=pehrsons,webrtc-reviewers
 
 This is a simple backport of an WebRTC upstream change.
 
-Upstream commit: 16ac10d9f75cde959f00df062f544c49941882da
+Upstream commit: 058bfe3ae37a7a245f9c8c6c03f4f7ac48fe179d
 
-Differential Revision: https://phabricator.services.mozilla.com/D203099
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b572eb8b39b03f714234afff4bd80b4612439521
+Differential Revision: https://phabricator.services.mozilla.com/D202788
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/633149c5da9337f67b6659e5d5bead2233027460
 ---
- modules/video_capture/linux/device_info_pipewire.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
-index f9f08a9c27..31d922035b 100644
---- a/modules/video_capture/linux/device_info_pipewire.cc
-+++ b/modules/video_capture/linux/device_info_pipewire.cc
-@@ -96,7 +96,7 @@ int32_t DeviceInfoPipeWire::CreateCapabilityMap(
-       continue;
+diff --git a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
+index 40764de7ae..81caa9bd2d 100644
+--- a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
++++ b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
+@@ -112,6 +112,7 @@ void BaseCapturerPipeWire::OnScreenCastSessionClosed() {
+   if (!capturer_failed_) {
+     options_.screencast_stream()->StopScreenCastStream();
+   }
++  capturer_failed_ = true;
+ }
  
-     _captureCapabilities = node.capabilities();
--    _lastUsedDeviceNameLength = node.display_name().length();
-+    _lastUsedDeviceNameLength = node.unique_id().length();
-     _lastUsedDeviceName = static_cast<char*>(
-         realloc(_lastUsedDeviceName, _lastUsedDeviceNameLength + 1));
-     memcpy(_lastUsedDeviceName, deviceUniqueIdUTF8,
+ void BaseCapturerPipeWire::UpdateResolution(uint32_t width, uint32_t height) {
