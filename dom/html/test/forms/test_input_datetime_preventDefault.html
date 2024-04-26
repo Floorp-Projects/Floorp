@@ -1,0 +1,23 @@
+<!doctype html>
+<title>Test for bug 1848158</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<input id="input" type="date" value="1998-01-22">
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let value = input.value;
+
+  input.addEventListener("keydown", function(e) {
+    e.preventDefault();
+  });
+
+  isnot(value, "", "should have a value");
+
+  input.focus();
+  synthesizeKey("KEY_Backspace");
+  is(input.value, value, "Value shouldn't change");
+  SimpleTest.finish();
+});
+</script>
