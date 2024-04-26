@@ -1413,6 +1413,7 @@ if (rtc_include_tests) {
     deps = [
       ":async_packet_socket",
       ":gunit_helpers",
+      ":socket_address",
       "../test:test_support",
       "network:received_packet",
       "third_party/sigslot",
