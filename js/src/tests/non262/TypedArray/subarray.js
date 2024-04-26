@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-float16array)
 // Bug 1291003
 if (typeof detachArrayBuffer === "function") {
     for (let constructor of typedArrayConstructors) {

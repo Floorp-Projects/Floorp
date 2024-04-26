@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-float16array)
 const TAConstructors = [
   Int8Array,
   Uint8Array,
@@ -10,7 +11,7 @@ const TAConstructors = [
   Float64Array,
   BigInt64Array,
   BigUint64Array,
-];
+].concat(this.Float16Array ?? []);
 
 // Use different size classes to catch any implementation-specific
 // optimisations.

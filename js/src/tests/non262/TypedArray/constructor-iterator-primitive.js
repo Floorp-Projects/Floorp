@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-float16array)
 var BUGNUMBER = 1021835;
 var summary = "Returning non-object from @@iterator should throw";
 

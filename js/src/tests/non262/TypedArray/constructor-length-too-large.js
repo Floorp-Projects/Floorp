@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| shell-option(--enable-float16array) skip-if(!xulRuntime.shell)
 
 // Test that all TypedArray constructor variants throw a RangeError when
 // attempting to create a too large array.
