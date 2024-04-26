@@ -111,7 +111,13 @@ export class BaseContent extends React.PureComponent {
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
     this.updateWallpaper = this.updateWallpaper.bind(this);
-    this.state = { fixedSearch: false, firstVisibleTimestamp: null };
+    this.prefersDarkQuery = null;
+    this.handleColorModeChange = this.handleColorModeChange.bind(this);
+    this.state = {
+      fixedSearch: false,
+      firstVisibleTimestamp: null,
+      colorMode: "",
+    };
   }
 
   setFirstVisibleTimestamp() {
@@ -143,9 +149,28 @@ export class BaseContent extends React.PureComponent {
         this._onVisibilityChange
       );
     }
+    // track change event to dark/light mode
+    this.prefersDarkQuery = globalThis.matchMedia(
+      "(prefers-color-scheme: dark)"
+    );
+
+    this.prefersDarkQuery.addEventListener(
+      "change",
+      this.handleColorModeChange
+    );
+    this.handleColorModeChange();
+  }
+
+  handleColorModeChange() {
+    const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";
+    this.setState({ colorMode });
   }
 
   componentWillUnmount() {
+    this.prefersDarkQuery?.removeEventListener(
+      "change",
+      this.handleColorModeChange
+    );
     global.removeEventListener("scroll", this.onWindowScroll);
     global.removeEventListener("keydown", this.handleOnKeyDown);
     if (this._onVisibilityChange) {
@@ -194,9 +219,11 @@ export class BaseContent extends React.PureComponent {
   }
 
   renderWallpaperAttribution() {
-    const activeWallpaper =
-      this.props.Prefs.values["newtabWallpapers.wallpaper"];
     const { wallpaperList } = this.props.Wallpapers;
+    const activeWallpaper =
+      this.props.Prefs.values[
+        `newtabWallpapers.wallpaper-${this.state.colorMode}`
+      ];
     const selected = wallpaperList.find(wp => wp.title === activeWallpaper);
     // make sure a wallpaper is selected and that the attribution also exists
     if (!selected?.attribution) {
@@ -231,14 +258,25 @@ export class BaseContent extends React.PureComponent {
 
   async updateWallpaper() {
     const prefs = this.props.Prefs.values;
-    const activeWallpaper = prefs["newtabWallpapers.wallpaper"];
     const { wallpaperList } = this.props.Wallpapers;
+
     if (wallpaperList) {
-      const wallpaper =
-        wallpaperList.find(wp => wp.title === activeWallpaper) || "";
+      const lightWallpaper =
+        wallpaperList.find(
+          wp => wp.title === prefs["newtabWallpapers.wallpaper-light"]
+        ) || "";
+      const darkWallpaper =
+        wallpaperList.find(
+          wp => wp.title === prefs["newtabWallpapers.wallpaper-dark"]
+        ) || "";
       global.document?.body.style.setProperty(
-        "--newtab-wallpaper",
-        `url(${wallpaper?.wallpaperUrl || ""})`
+        `--newtab-wallpaper-light`,
+        `url(${lightWallpaper?.wallpaperUrl || ""})`
+      );
+
+      global.document?.body.style.setProperty(
+        `--newtab-wallpaper-dark`,
+        `url(${darkWallpaper?.wallpaperUrl || ""})`
       );
     }
   }
@@ -248,7 +286,9 @@ export class BaseContent extends React.PureComponent {
     const { App } = props;
     const { initialized, customizeMenuVisible } = App;
     const prefs = props.Prefs.values;
-    const activeWallpaper = prefs["newtabWallpapers.wallpaper"];
+
+    const activeWallpaper =
+      prefs[`newtabWallpapers.wallpaper-${this.state.colorMode}`];
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
 
     const { pocketConfig } = prefs;
