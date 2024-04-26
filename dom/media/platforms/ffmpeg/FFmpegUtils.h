@@ -51,6 +51,36 @@ inline bool IsVideoCodec(AVCodecID aCodecID) {
   }
 }
 
+// Access the correct location for the channel count, based on ffmpeg version.
+template<typename T>
+inline int& ChannelCount(T* aObject) {
+#if LIBAVCODEC_VERSION_MAJOR <= 59
+  return aObject->channels;
+#else
+  return aObject->ch_layout.nb_channels;
+#endif
+}
+
+// Access the correct location for the duration, based on ffmpeg version.
+template<typename T>
+inline int64_t& Duration(T* aObject) {
+#if LIBAVCODEC_VERSION_MAJOR < 61
+  return aObject->pkt_duration;
+#else
+  return aObject->duration;
+#endif
+}
+
+// Access the correct location for the duration, based on ffmpeg version.
+template<typename T>
+inline const int64_t& Duration(const T* aObject) {
+#if LIBAVCODEC_VERSION_MAJOR < 61
+  return aObject->pkt_duration;
+#else
+  return aObject->duration;
+#endif
+}
+
 }  // namespace mozilla
 
 #endif  // DOM_MEDIA_PLATFORMS_FFMPEG_FFMPEGUTILS_H_
