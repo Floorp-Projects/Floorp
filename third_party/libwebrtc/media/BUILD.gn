@@ -653,6 +653,7 @@ if (rtc_build_dcsctp) {
       "../rtc_base:stringutils",
       "../rtc_base:threading",
       "../rtc_base/containers:flat_map",
+      "../rtc_base/network:received_packet",
       "../rtc_base/third_party/sigslot:sigslot",
       "../system_wrappers",
     ]

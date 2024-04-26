@@ -2121,6 +2121,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:threading",
       "../rtc_base:unique_id_generator",
       "../rtc_base/containers:flat_set",
+      "../rtc_base/network:received_packet",
       "../rtc_base/third_party/sigslot",
       "../system_wrappers:metrics",
       "../test:explicit_key_value_config",
