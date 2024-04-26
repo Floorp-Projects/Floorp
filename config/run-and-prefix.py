@@ -31,6 +31,9 @@ while True:
     if data == b"":
         break
 
-    sys.stdout.write(b"%s> %s" % (prefix, data))
+    if data.startswith(b"BUILDSTATUS"):
+        sys.stdout.write(data)
+    else:
+        sys.stdout.write(b"%s> %s" % (prefix, data))
 
 sys.exit(p.wait())

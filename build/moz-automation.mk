@@ -29,9 +29,7 @@ MOZ_AUTOMATION_CHECK := 0
 endif
 
 ifneq (,$(filter automation/%,$(MAKECMDGOALS)))
-ifeq (4.0,$(firstword $(sort 4.0 $(MAKE_VERSION))))
-MAKEFLAGS += --output-sync=target
-else
+ifneq (4.0,$(firstword $(sort 4.0 $(MAKE_VERSION))))
 .NOTPARALLEL:
 endif
 endif
