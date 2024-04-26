@@ -642,7 +642,6 @@ inline EditorInputType ToInputType(EditAction aEditAction) {
 inline bool MayEditActionDeleteAroundCollapsedSelection(
     const EditAction aEditAction) {
   switch (aEditAction) {
-    case EditAction::eCut:
     case EditAction::eDeleteSelection:
     case EditAction::eDeleteBackward:
     case EditAction::eDeleteForward:
