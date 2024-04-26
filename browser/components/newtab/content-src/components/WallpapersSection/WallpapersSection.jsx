@@ -57,7 +57,7 @@ export class _WallpapersSection extends React.PureComponent {
                 <input
                   onChange={this.handleChange}
                   type="radio"
-                  name="wallpaper"
+                  name={`wallpaper-${title}`}
                   id={title}
                   value={title}
                   checked={title === activeWallpaper}
