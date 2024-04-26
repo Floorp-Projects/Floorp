@@ -8,7 +8,9 @@ const {
   angleUtils,
 } = require("resource://devtools/client/shared/css-angle.js");
 const { colorUtils } = require("resource://devtools/shared/css/color.js");
-const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
+const {
+  InspectorCSSParserWrapper,
+} = require("resource://devtools/shared/css/lexer.js");
 const {
   appendText,
 } = require("resource://devtools/client/inspector/shared/utils.js");
@@ -733,7 +735,7 @@ class OutputParser {
     text = text.trim();
     this.#parsed.length = 0;
 
-    const tokenStream = getCSSLexer(text, true);
+    const tokenStream = new InspectorCSSParserWrapper(text);
     return this.#doParse(text, options, tokenStream, false);
   }
 
@@ -931,7 +933,7 @@ class OutputParser {
    */
   // eslint-disable-next-line complexity
   #addPolygonPointNodes(coords, container) {
-    const tokenStream = getCSSLexer(coords, true);
+    const tokenStream = new InspectorCSSParserWrapper(coords);
     let token = tokenStream.nextToken();
     let coord = "";
     let i = 0;
@@ -1081,7 +1083,7 @@ class OutputParser {
    */
   // eslint-disable-next-line complexity
   #addCirclePointNodes(coords, container) {
-    const tokenStream = getCSSLexer(coords, true);
+    const tokenStream = new InspectorCSSParserWrapper(coords);
     let token = tokenStream.nextToken();
     let depth = 0;
     let coord = "";
@@ -1242,7 +1244,7 @@ class OutputParser {
    */
   // eslint-disable-next-line complexity
   #addEllipsePointNodes(coords, container) {
-    const tokenStream = getCSSLexer(coords, true);
+    const tokenStream = new InspectorCSSParserWrapper(coords);
     let token = tokenStream.nextToken();
     let depth = 0;
     let coord = "";
@@ -1413,7 +1415,7 @@ class OutputParser {
   // eslint-disable-next-line complexity
   #addInsetPointNodes(coords, container) {
     const insetPoints = ["top", "right", "bottom", "left"];
-    const tokenStream = getCSSLexer(coords, true);
+    const tokenStream = new InspectorCSSParserWrapper(coords);
     let token = tokenStream.nextToken();
     let depth = 0;
     let coord = "";
@@ -1777,7 +1779,9 @@ class OutputParser {
    */
   #sanitizeURL(url) {
     // Re-lex the URL and add any needed termination characters.
-    const urlTokenizer = getCSSLexer(url, true, true);
+    const urlTokenizer = new InspectorCSSParserWrapper(url, {
+      trackEOFChars: true,
+    });
     // Just read until EOF; there will only be a single token.
     while (urlTokenizer.nextToken()) {
       // Nothing.

@@ -17,7 +17,7 @@ const MAX_DATA_URL_LENGTH = 40;
 
 loader.lazyRequireGetter(
   this,
-  "getCSSLexer",
+  "InspectorCSSParserWrapper",
   "resource://devtools/shared/css/lexer.js",
   true
 );
@@ -290,7 +290,7 @@ function prettifyCSS(text, ruleCount) {
   // minified file.
   let indent = "";
   let indentLevel = 0;
-  const lexer = getCSSLexer(text, true);
+  const lexer = new InspectorCSSParserWrapper(text);
   // List of mappings of token positions from original source to prettified source.
   const mappings = [];
   // Line and column offsets used to shift the token positions after prettyfication.

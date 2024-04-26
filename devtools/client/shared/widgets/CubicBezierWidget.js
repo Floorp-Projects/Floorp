@@ -31,7 +31,9 @@ const {
   PRESETS,
   DEFAULT_PRESET_CATEGORY,
 } = require("resource://devtools/client/shared/widgets/CubicBezierPresets.js");
-const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
+const {
+  InspectorCSSParserWrapper,
+} = require("resource://devtools/shared/css/lexer.js");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -918,7 +920,7 @@ function parseTimingFunction(value) {
     return PREDEFINED[value];
   }
 
-  const tokenStream = getCSSLexer(value, true);
+  const tokenStream = new InspectorCSSParserWrapper(value);
   const getNextToken = () => {
     while (true) {
       const token = tokenStream.nextToken();

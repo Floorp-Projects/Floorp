@@ -9,7 +9,7 @@
  */
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const { getCSSLexer } = require("devtools/shared/css/lexer");
+const { InspectorCSSParserWrapper } = require("devtools/shared/css/lexer");
 const { throttle } = require("devtools/shared/throttle");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -578,7 +578,7 @@ class TimingFunctionPreviewWidget {
  */
 function parseTimingFunction(value) {
   value = value.trim();
-  const tokenStream = getCSSLexer(value, true);
+  const tokenStream = new InspectorCSSParserWrapper(value);
   const getNextToken = () => {
     while (true) {
       const token = tokenStream.nextToken();

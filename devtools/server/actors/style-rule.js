@@ -9,7 +9,9 @@ const {
   styleRuleSpec,
 } = require("resource://devtools/shared/specs/style-rule.js");
 
-const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
+const {
+  InspectorCSSParserWrapper,
+} = require("resource://devtools/shared/css/lexer.js");
 const TrackChangeEmitter = require("resource://devtools/server/actors/utils/track-change-emitter.js");
 const {
   getRuleText,
@@ -1316,7 +1318,7 @@ function getSelectorOffsets(initialText, line, column) {
     line,
     column
   );
-  const lexer = getCSSLexer(text, true);
+  const lexer = new InspectorCSSParserWrapper(text);
 
   // Search forward for the opening brace.
   let endOffset;

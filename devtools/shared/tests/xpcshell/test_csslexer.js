@@ -5,28 +5,15 @@
 
 "use strict";
 
-const jsLexer = require("resource://devtools/shared/css/lexer.js");
+const {
+  InspectorCSSParserWrapper,
+} = require("resource://devtools/shared/css/lexer.js");
 
 add_task(function test_lexer() {
   const LEX_TESTS = [
-    [
-      "simple",
-      ["ident:simple"],
-      [{ tokenType: "Ident", text: "simple", value: "simple" }],
-    ],
+    ["simple", [{ tokenType: "Ident", text: "simple", value: "simple" }]],
     [
       "simple: { hi; }",
-      [
-        "ident:simple",
-        "symbol::",
-        "whitespace",
-        "symbol:{",
-        "whitespace",
-        "ident:hi",
-        "symbol:;",
-        "whitespace",
-        "symbol:}",
-      ],
       [
         { tokenType: "Ident", text: "simple", value: "simple" },
         { tokenType: "Colon", text: ":" },
@@ -41,30 +28,18 @@ add_task(function test_lexer() {
     ],
     [
       "/* whatever */",
-      ["comment"],
       [{ tokenType: "Comment", text: "/* whatever */", value: " whatever " }],
     ],
     [
       "'string'",
-      ["string:string"],
       [{ tokenType: "QuotedString", text: "'string'", value: "string" }],
     ],
     [
       '"string"',
-      ["string:string"],
       [{ tokenType: "QuotedString", text: `"string"`, value: "string" }],
     ],
     [
       "rgb(1,2,3)",
-      [
-        "function:rgb",
-        "number",
-        "symbol:,",
-        "number",
-        "symbol:,",
-        "number",
-        "symbol:)",
-      ],
       [
         { tokenType: "Function", text: "rgb(", value: "rgb" },
         { tokenType: "Number", text: "1", number: 1 },
@@ -75,30 +50,16 @@ add_task(function test_lexer() {
         { tokenType: "CloseParenthesis", text: ")" },
       ],
     ],
-    [
-      "@media",
-      ["at:media"],
-      [{ tokenType: "AtKeyword", text: "@media", value: "media" }],
-    ],
-    [
-      "#hibob",
-      ["id:hibob"],
-      [{ tokenType: "IDHash", text: "#hibob", value: "hibob" }],
-    ],
-    ["#123", ["hash:123"], [{ tokenType: "Hash", text: "#123", value: "123" }]],
+    ["@media", [{ tokenType: "AtKeyword", text: "@media", value: "media" }]],
+    ["#hibob", [{ tokenType: "IDHash", text: "#hibob", value: "hibob" }]],
+    ["#123", [{ tokenType: "Hash", text: "#123", value: "123" }]],
     [
       "23px",
-      ["dimension:px"],
       [{ tokenType: "Dimension", text: "23px", number: 23, unit: "px" }],
     ],
-    [
-      "23%",
-      ["percentage"],
-      [{ tokenType: "Percentage", text: "23%", number: 0.23 }],
-    ],
+    ["23%", [{ tokenType: "Percentage", text: "23%", number: 0.23 }]],
     [
       "url(http://example.com)",
-      ["url:http://example.com"],
       [
         {
           tokenType: "UnquotedUrl",
@@ -109,7 +70,6 @@ add_task(function test_lexer() {
     ],
     [
       "url('http://example.com')",
-      ["url:http://example.com"],
       [
         { tokenType: "Function", text: "url(", value: "url" },
         {
@@ -122,7 +82,6 @@ add_task(function test_lexer() {
     ],
     [
       "url(  'http://example.com'  )",
-      ["url:http://example.com"],
       [
         { tokenType: "Function", text: "url(", value: "url" },
         { tokenType: "WhiteSpace", text: "  " },
@@ -138,7 +97,6 @@ add_task(function test_lexer() {
     // In CSS Level 3, this is an ordinary URL, not a BAD_URL.
     [
       "url(http://example.com",
-      ["url:http://example.com"],
       [
         {
           tokenType: "UnquotedUrl",
@@ -149,7 +107,6 @@ add_task(function test_lexer() {
     ],
     [
       "url(http://example.com @",
-      ["bad_url:http://example.com"],
       [
         {
           tokenType: "BadUrl",
@@ -160,34 +117,23 @@ add_task(function test_lexer() {
     ],
     [
       "quo\\ting",
-      ["ident:quoting"],
       [{ tokenType: "Ident", text: "quo\\ting", value: "quoting" }],
     ],
     [
       "'bad string\n",
-      ["bad_string:bad string", "whitespace"],
       [
         { tokenType: "BadString", text: "'bad string", value: "bad string" },
         { tokenType: "WhiteSpace", text: "\n" },
       ],
     ],
-    ["~=", ["includes"], [{ tokenType: "IncludeMatch", text: "~=" }]],
-    ["|=", ["dashmatch"], [{ tokenType: "DashMatch", text: "|=" }]],
-    ["^=", ["beginsmatch"], [{ tokenType: "PrefixMatch", text: "^=" }]],
-    ["$=", ["endsmatch"], [{ tokenType: "SuffixMatch", text: "$=" }]],
-    ["*=", ["containsmatch"], [{ tokenType: "SubstringMatch", text: "*=" }]],
+    ["~=", [{ tokenType: "IncludeMatch", text: "~=" }]],
+    ["|=", [{ tokenType: "DashMatch", text: "|=" }]],
+    ["^=", [{ tokenType: "PrefixMatch", text: "^=" }]],
+    ["$=", [{ tokenType: "SuffixMatch", text: "$=" }]],
+    ["*=", [{ tokenType: "SubstringMatch", text: "*=" }]],
 
     [
       "<!-- html comment -->",
-      [
-        "htmlcomment",
-        "whitespace",
-        "ident:html",
-        "whitespace",
-        "ident:comment",
-        "whitespace",
-        "htmlcomment",
-      ],
       [
         { tokenType: "CDO", text: "<!--" },
         { tokenType: "WhiteSpace", text: " " },
@@ -203,44 +149,36 @@ add_task(function test_lexer() {
     // unterminated comments are just comments.
     [
       "/* bad comment",
-      ["comment"],
       [{ tokenType: "Comment", text: "/* bad comment", value: " bad comment" }],
     ],
   ];
 
-  const test = (cssText, useInspectorCSSParser, tokenTypes) => {
-    const lexer = jsLexer.getCSSLexer(cssText, useInspectorCSSParser);
+  const test = (cssText, tokenTypes) => {
+    const lexer = new InspectorCSSParserWrapper(cssText);
     let reconstructed = "";
     let lastTokenEnd = 0;
     let i = 0;
     let token;
     while ((token = lexer.nextToken())) {
-      let combined = token.tokenType;
-      if (token.text) {
-        combined += ":" + token.text;
-      }
-      if (useInspectorCSSParser) {
-        const expectedToken = tokenTypes[i];
-        Assert.deepEqual(
-          {
-            tokenType: token.tokenType,
-            text: token.text,
-            value: token.value,
-            number: token.number,
-            unit: token.unit,
-          },
-          {
-            tokenType: expectedToken.tokenType,
-            text: expectedToken.text,
-            value: expectedToken.value ?? null,
-            number: expectedToken.number ?? null,
-            unit: expectedToken.unit ?? null,
-          },
-          `Got expected token #${i} for "${cssText}"`
-        );
-      } else {
-        equal(combined, tokenTypes[i]);
-      }
+      const expectedToken = tokenTypes[i];
+      Assert.deepEqual(
+        {
+          tokenType: token.tokenType,
+          text: token.text,
+          value: token.value,
+          number: token.number,
+          unit: token.unit,
+        },
+        {
+          tokenType: expectedToken.tokenType,
+          text: expectedToken.text,
+          value: expectedToken.value ?? null,
+          number: expectedToken.number ?? null,
+          unit: expectedToken.unit ?? null,
+        },
+        `Got expected token #${i} for "${cssText}"`
+      );
+
       Assert.greater(token.endOffset, token.startOffset);
       equal(token.startOffset, lastTokenEnd);
       lastTokenEnd = token.endOffset;
@@ -253,41 +191,29 @@ add_task(function test_lexer() {
     equal(reconstructed, cssText);
   };
 
-  for (const [cssText, jsTokenTypes, rustTokenTypes] of LEX_TESTS) {
-    info(`Test "${cssText}" with js-based lexer`);
-    test(cssText, false, jsTokenTypes);
-
-    info(`Test "${cssText}" with rust-based lexer`);
-    test(cssText, true, rustTokenTypes);
+  for (const [cssText, rustTokenTypes] of LEX_TESTS) {
+    info(`Test "${cssText}"`);
+    test(cssText, rustTokenTypes);
   }
 });
 
 add_task(function test_lexer_linecol() {
   const LINECOL_TESTS = [
-    ["simple", ["ident:0:0", ":0:6"], ["Ident:0:0", ":0:6"]],
-    [
-      "\n    stuff",
-      ["whitespace:0:0", "ident:1:4", ":1:9"],
-      ["WhiteSpace:0:0", "Ident:1:4", ":1:9"],
-    ],
+    ["simple", ["Ident:0:0", ":0:6"]],
+    ["\n    stuff", ["WhiteSpace:0:0", "Ident:1:4", ":1:9"]],
     [
       '"string with \\\nnewline"    \r\n',
-      ["string:0:0", "whitespace:1:8", ":2:0"],
       ["QuotedString:0:0", "WhiteSpace:1:8", ":2:0"],
     ],
   ];
 
-  const test = (cssText, useInspectorCSSParser, locations) => {
-    const lexer = jsLexer.getCSSLexer(cssText, useInspectorCSSParser);
+  const test = (cssText, locations) => {
+    const lexer = new InspectorCSSParserWrapper(cssText);
     let i = 0;
     let token;
     const testLocation = () => {
-      const startLine = useInspectorCSSParser
-        ? lexer.parser.lineNumber
-        : lexer.lineNumber;
-      const startColumn = useInspectorCSSParser
-        ? lexer.parser.columnNumber
-        : lexer.columnNumber;
+      const startLine = lexer.parser.lineNumber;
+      const startColumn = lexer.parser.columnNumber;
 
       // We do this in a bit of a funny way so that we can also test the
       // location of the EOF.
@@ -308,12 +234,9 @@ add_task(function test_lexer_linecol() {
     equal(i, locations.length);
   };
 
-  for (const [cssText, jsLocations, rustLocations] of LINECOL_TESTS) {
-    info(`Test "${cssText}" with js-based lexer`);
-    test(cssText, false, jsLocations);
-
-    info(`Test "${cssText}" with rust-based lexer`);
-    test(cssText, true, rustLocations);
+  for (const [cssText, rustLocations] of LINECOL_TESTS) {
+    info(`Test "${cssText}"`);
+    test(cssText, rustLocations);
   }
 });
 
@@ -340,17 +263,13 @@ add_task(function test_lexer_eofchar() {
     ["'\\", "\\'", "'", ""],
   ];
 
-  const test = (
-    cssText,
-    useInspectorCSSParser,
-    expectedAppend,
-    expectedNoAppend,
-    argText
-  ) => {
+  const test = (cssText, expectedAppend, expectedNoAppend, argText) => {
     if (!expectedNoAppend) {
       expectedNoAppend = expectedAppend;
     }
-    const lexer = jsLexer.getCSSLexer(cssText, useInspectorCSSParser, true);
+    const lexer = new InspectorCSSParserWrapper(cssText, {
+      trackEOFChars: true,
+    });
     while (lexer.nextToken()) {
       // We don't need to do anything with the tokens. We only want to consume the iterator
       // so we can safely call performEOFFixup.
@@ -371,10 +290,7 @@ add_task(function test_lexer_eofchar() {
     expectedNoAppend,
     argText = cssText,
   ] of EOFCHAR_TESTS) {
-    info(`Test "${cssText}" with js-based lexer`);
-    test(cssText, false, expectedAppend, expectedNoAppend, argText);
-
-    info(`Test "${cssText}" with rust-based lexer`);
-    test(cssText, true, expectedAppend, expectedNoAppend, argText);
+    info(`Test "${cssText}"`);
+    test(cssText, expectedAppend, expectedNoAppend, argText);
   }
 });

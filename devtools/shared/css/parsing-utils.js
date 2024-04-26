@@ -11,7 +11,9 @@
 
 "use strict";
 
-const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
+const {
+  InspectorCSSParserWrapper,
+} = require("resource://devtools/shared/css/lexer.js");
 
 loader.lazyRequireGetter(
   this,
@@ -35,22 +37,18 @@ const COMMENT_PARSING_HEURISTIC_BYPASS_CHAR =
  * CSS tokens.  Comment tokens are dropped.
  *
  * @param {String} CSS source string
- * @param {Boolean} useInspectorCSSParser Set to true to use InspectorCSSParser.
  * @yield {CSSToken} The next CSSToken that is lexed
  * @see CSSToken for details about the returned tokens
  */
-function* cssTokenizer(string, useInspectorCSSParser = false) {
-  const lexer = getCSSLexer(string, useInspectorCSSParser);
+function* cssTokenizer(string) {
+  const lexer = new InspectorCSSParserWrapper(string);
   while (true) {
     const token = lexer.nextToken();
     if (!token) {
       break;
     }
     // None of the existing consumers want comments.
-    if (
-      token.tokenType !== "comment" ||
-      (useInspectorCSSParser && token.tokenType !== "Comment")
-    ) {
+    if (token.tokenType !== "Comment") {
       yield token;
     }
   }
@@ -76,7 +74,7 @@ function* cssTokenizer(string, useInspectorCSSParser = false) {
  *        line and column information.
  */
 function cssTokenizerWithLineColumn(string) {
-  const lexer = getCSSLexer(string, true);
+  const lexer = new InspectorCSSParserWrapper(string);
   const result = [];
   let prevToken = undefined;
   while (true) {
@@ -299,7 +297,9 @@ function parseDeclarationsInternal(
     throw new Error("empty input string");
   }
 
-  const lexer = getCSSLexer(inputString, true, true);
+  const lexer = new InspectorCSSParserWrapper(inputString, {
+    trackEOFChars: true,
+  });
 
   let declarations = [getEmptyDeclaration()];
   let lastProp = declarations[0];
@@ -642,11 +642,7 @@ function parsePseudoClassesAndAttributes(value) {
 
   // See InspectorCSSToken dictionnary in InspectorUtils.webidl for more information
   // about the tokens.
-  const tokensIterator = cssTokenizer(
-    value,
-    // useInspectorCSSParser
-    true
-  );
+  const tokensIterator = cssTokenizer(value);
   const result = [];
   let current = "";
   let functionCount = 0;

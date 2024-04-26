@@ -1030,7 +1030,7 @@ function tokenizeFilterValue(css) {
   let state = "initial";
   let name;
   let contents;
-  for (const token of cssTokenizer(css, true)) {
+  for (const token of cssTokenizer(css)) {
     switch (state) {
       case "initial":
         if (token.tokenType === "Function") {
