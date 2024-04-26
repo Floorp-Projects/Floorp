@@ -570,32 +570,39 @@ export class ProtonScreen extends React.PureComponent {
               </div>
             ) : null}
 
-            <div className="main-content-inner">
-              <div className={`welcome-text ${content.title_style || ""}`}>
-                {content.title ? this.renderTitle(content) : null}
+            <div
+              className="main-content-inner"
+              style={{
+                justifyContent: content.split_content_justify_content,
+              }}
+            >
+              {content.title || content.subtitle ? (
+                <div className={`welcome-text ${content.title_style || ""}`}>
+                  {content.title ? this.renderTitle(content) : null}
 
-                {content.subtitle ? (
-                  <Localized text={content.subtitle}>
-                    <h2
-                      data-l10n-args={JSON.stringify({
-                        "addon-name": this.props.addonName,
-                        ...this.props.appAndSystemLocaleInfo?.displayNames,
-                      })}
-                      aria-flowto={
-                        this.props.messageId?.includes("FEATURE_TOUR")
-                          ? "steps"
-                          : ""
-                      }
+                  {content.subtitle ? (
+                    <Localized text={content.subtitle}>
+                      <h2
+                        data-l10n-args={JSON.stringify({
+                          "addon-name": this.props.addonName,
+                          ...this.props.appAndSystemLocaleInfo?.displayNames,
+                        })}
+                        aria-flowto={
+                          this.props.messageId?.includes("FEATURE_TOUR")
+                            ? "steps"
+                            : ""
+                        }
+                      />
+                    </Localized>
+                  ) : null}
+                  {content.cta_paragraph ? (
+                    <CTAParagraph
+                      content={content.cta_paragraph}
+                      handleAction={this.props.handleAction}
                     />
-                  </Localized>
-                ) : null}
-                {content.cta_paragraph ? (
-                  <CTAParagraph
-                    content={content.cta_paragraph}
-                    handleAction={this.props.handleAction}
-                  />
-                ) : null}
-              </div>
+                  ) : null}
+                </div>
+              ) : null}
               {content.video_container ? (
                 <OnboardingVideo
                   content={content.video_container}

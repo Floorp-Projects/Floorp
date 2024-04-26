@@ -1220,8 +1220,11 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       alt: "",
       role: "presentation"
     })) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: "main-content-inner"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      className: "main-content-inner",
+      style: {
+        justifyContent: content.split_content_justify_content
+      }
+    }, content.title || content.subtitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `welcome-text ${content.title_style || ""}`
     }, content.title ? this.renderTitle(content) : null, content.subtitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
       text: content.subtitle
@@ -1234,7 +1237,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     })) : null, content.cta_paragraph ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CTAParagraph__WEBPACK_IMPORTED_MODULE_8__.CTAParagraph, {
       content: content.cta_paragraph,
       handleAction: this.props.handleAction
-    }) : null), content.video_container ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_OnboardingVideo__WEBPACK_IMPORTED_MODULE_10__.OnboardingVideo, {
+    }) : null) : null, content.video_container ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_OnboardingVideo__WEBPACK_IMPORTED_MODULE_10__.OnboardingVideo, {
       content: content.video_container,
       handleAction: this.props.handleAction
     }) : null, this.renderContentTiles(), this.renderLanguageSwitcher(), content.above_button_content ? this.renderOrderedContent(content.above_button_content) : null, !hideStepsIndicator && aboveButtonStepsIndicator ? this.renderStepsIndicator() : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ProtonScreenActionButtons, {
