@@ -228,6 +228,9 @@ TEST(CSPParser, Directives)
       "script-src http://example.com"},
     { "require-trusted-types-for 'script'",
       "require-trusted-types-for 'script'" },
+    { "trusted-types somePolicyName", "trusted-types somePolicyName" },
+    { "trusted-types somePolicyName anotherPolicyName 1 - # = _ / @ . % *",
+      "trusted-types somePolicyName anotherPolicyName 1 - # = _ / @ . % *" },
       // clang-format on
   };
 
@@ -255,6 +258,11 @@ TEST(CSPParser, Keywords)
       "script-src 'wasm-unsafe-eval'" },
     { "img-src 'none'; script-src 'unsafe-eval' 'unsafe-inline'; default-src 'self'",
       "img-src 'none'; script-src 'unsafe-eval' 'unsafe-inline'; default-src 'self'" },
+    { "trusted-types somePolicyName 'allow-duplicates'",
+      "trusted-types somePolicyName 'allow-duplicates'" },
+    { "trusted-types 'none'", "trusted-types 'none'" },
+    { "trusted-types", "trusted-types 'none'" },
+    { "trusted-types *", "trusted-types *" },
       // clang-format on
   };
 
@@ -597,6 +605,7 @@ TEST(CSPParser, BadPolicies)
     { "report-uri http://:foo", ""},
     { "require-sri-for", ""},
     { "require-sri-for style", ""},
+    { "trusted-types $", ""},
       // clang-format on
   };
 
