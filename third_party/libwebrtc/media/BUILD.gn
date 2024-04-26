@@ -425,7 +425,6 @@ rtc_library("rtc_internal_video_codecs") {
   ]
   if (build_with_mozilla) {
     deps -= [
-      "../modules/video_coding:webrtc_multiplex", # See Bug 1820869.
       "../test:fake_video_codecs",
     ]
   }
@@ -457,7 +456,6 @@ rtc_library("rtc_internal_video_codecs") {
       "engine/fake_video_codec_factory.cc",
       "engine/fake_video_codec_factory.h",
       "engine/internal_encoder_factory.cc", # See Bug 1820869.
-      "engine/multiplex_codec_factory.cc", # See Bug 1820869.
     ]
   }
 }
