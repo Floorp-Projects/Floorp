@@ -28,10 +28,6 @@ pref(
 // is required for the system to function.
 pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "null");
 pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "null");
-pref(
-  "browser.newtabpage.activity-stream.asrouter.providers.whats-new-panel",
-  "null"
-);
 
 // The `browser.newtabpage.activity-stream.asrouter.providers.cfr` provider is
 // disabled, but belt and braces: disable extension recommendations and feature

@@ -130,6 +130,7 @@ lazy_static! {
         ("browser.newtabpage.activity-stream.asrouter.providers.snippets", Pref::new("null")),
 
         ("browser.newtabpage.activity-stream.asrouter.providers.message-groups", Pref::new("null")),
+        // TODO: Remove once minimum supported Firefox release is 126.
         ("browser.newtabpage.activity-stream.asrouter.providers.whats-new-panel", Pref::new("null")),
         ("browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments", Pref::new("null")),
         ("browser.newtabpage.activity-stream.feeds.system.topstories", Pref::new(false)),

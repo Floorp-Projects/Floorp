@@ -2598,14 +2598,14 @@ var gProtectionsHandler = {
   _createHeroElement(doc, message) {
     const messageEl = this._createElement(doc, "div");
     messageEl.setAttribute("id", "protections-popup-message");
-    messageEl.classList.add("whatsNew-hero-message");
+    messageEl.classList.add("protections-hero-message");
     const wrapperEl = this._createElement(doc, "div");
-    wrapperEl.classList.add("whatsNew-message-body");
+    wrapperEl.classList.add("protections-popup-message-body");
     messageEl.appendChild(wrapperEl);
 
     wrapperEl.appendChild(
       this._createElement(doc, "h2", {
-        classList: "whatsNew-message-title",
+        classList: "protections-popup-message-title",
         content: message.content.title,
       })
     );
