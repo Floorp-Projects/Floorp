@@ -42,6 +42,9 @@ if (rtc_include_tests) {
       "../../system_wrappers:system_wrappers",
       "../../test:test_support",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 }
