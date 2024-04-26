@@ -1235,7 +1235,10 @@ fn test_ops_stereo_input_duplex_stream_drain() {
 fn test_ops_input_voice_stream_init_and_destroy() {
     test_default_input_voice_stream_operation("input voice stream: init and destroy", |stream| {
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-        assert!(stm.core_stream_data.using_voice_processing_unit());
+        assert_eq!(
+            stm.core_stream_data.using_voice_processing_unit(),
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
+        );
     });
 }
 
@@ -1244,7 +1247,10 @@ fn test_ops_input_voice_stream_start() {
     test_default_input_voice_stream_operation("input voice stream: start", |stream| {
         assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-        assert!(stm.core_stream_data.using_voice_processing_unit());
+        assert_eq!(
+            stm.core_stream_data.using_voice_processing_unit(),
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
+        );
     });
 }
 
@@ -1253,7 +1259,10 @@ fn test_ops_input_voice_stream_stop() {
     test_default_input_voice_stream_operation("input voice stream: stop", |stream| {
         assert_eq!(unsafe { OPS.stream_stop.unwrap()(stream) }, ffi::CUBEB_OK);
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-        assert!(stm.core_stream_data.using_voice_processing_unit());
+        assert_eq!(
+            stm.core_stream_data.using_voice_processing_unit(),
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
+        );
     });
 }
 
@@ -1261,7 +1270,10 @@ fn test_ops_input_voice_stream_stop() {
 fn test_ops_duplex_voice_stream_init_and_destroy() {
     test_default_duplex_voice_stream_operation("duplex voice stream: init and destroy", |stream| {
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-        assert!(stm.core_stream_data.using_voice_processing_unit());
+        assert_eq!(
+            stm.core_stream_data.using_voice_processing_unit(),
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
+        );
     });
 }
 
@@ -1270,7 +1282,10 @@ fn test_ops_duplex_voice_stream_start() {
     test_default_duplex_voice_stream_operation("duplex voice stream: start", |stream| {
         assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-        assert!(stm.core_stream_data.using_voice_processing_unit());
+        assert_eq!(
+            stm.core_stream_data.using_voice_processing_unit(),
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
+        );
     });
 }
 
@@ -1279,7 +1294,10 @@ fn test_ops_duplex_voice_stream_stop() {
     test_default_duplex_voice_stream_operation("duplex voice stream: stop", |stream| {
         assert_eq!(unsafe { OPS.stream_stop.unwrap()(stream) }, ffi::CUBEB_OK);
         let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-        assert!(stm.core_stream_data.using_voice_processing_unit());
+        assert_eq!(
+            stm.core_stream_data.using_voice_processing_unit(),
+            macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
+        );
     });
 }
 
@@ -1291,7 +1309,10 @@ fn test_ops_duplex_voice_stream_drain() {
         |stream| {
             assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
             let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-            assert!(stm.core_stream_data.using_voice_processing_unit());
+            assert_eq!(
+                stm.core_stream_data.using_voice_processing_unit(),
+                macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
+            );
             thread::sleep(Duration::from_millis(10));
         },
     );
@@ -1300,6 +1321,10 @@ fn test_ops_duplex_voice_stream_drain() {
 #[test]
 #[ignore]
 fn test_ops_timing_sensitive_multiple_voice_stream_init_and_destroy() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     let start = Instant::now();
     let mut t1 = start;
     let mut t2 = start;
@@ -1449,6 +1474,10 @@ fn test_ops_timing_sensitive_multiple_voice_stream_init_and_destroy() {
 #[test]
 #[ignore]
 fn test_ops_timing_sensitive_multiple_duplex_voice_stream_start() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     test_ops_context_operation("multiple duplex voice streams", |context_ptr| {
         let start = Instant::now();
         // First stream uses vpio, creates the shared vpio unit.
@@ -1486,6 +1515,10 @@ fn test_ops_timing_sensitive_multiple_duplex_voice_stream_start() {
 #[test]
 #[ignore]
 fn test_ops_timing_sensitive_multiple_duplex_voice_stream_params() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     test_ops_context_operation("multiple duplex voice streams with params", |context_ptr| {
         let start = Instant::now();
         // First stream uses vpio, creates the shared vpio unit.
@@ -1568,6 +1601,10 @@ fn test_ops_timing_sensitive_multiple_duplex_voice_stream_params() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_mute() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     test_default_duplex_voice_stream_operation("duplex voice stream: mute", |stream| {
         assert_eq!(
             unsafe { OPS.stream_set_input_mute.unwrap()(stream, 1) },
@@ -1580,6 +1617,10 @@ fn test_ops_duplex_voice_stream_set_input_mute() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_mute_before_start() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     test_default_duplex_voice_stream_operation(
         "duplex voice stream: mute before start",
         |stream| {
@@ -1596,6 +1637,10 @@ fn test_ops_duplex_voice_stream_set_input_mute_before_start() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_mute_before_start_with_reinit() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     test_default_duplex_voice_stream_operation(
         "duplex voice stream: mute before start with reinit",
         |stream| {
@@ -1631,6 +1676,10 @@ fn test_ops_duplex_voice_stream_set_input_mute_before_start_with_reinit() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_mute_after_start() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     test_default_duplex_voice_stream_operation("duplex voice stream: mute after start", |stream| {
         assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
         assert_eq!(
@@ -1644,6 +1693,10 @@ fn test_ops_duplex_voice_stream_set_input_mute_after_start() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_processing_params() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     test_default_duplex_voice_stream_operation("duplex voice stream: processing", |stream| {
         let params: ffi::cubeb_input_processing_params =
             ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
@@ -1660,6 +1713,10 @@ fn test_ops_duplex_voice_stream_set_input_processing_params() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_processing_params_before_start() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     test_default_duplex_voice_stream_operation(
         "duplex voice stream: processing before start",
         |stream| {
@@ -1680,6 +1737,10 @@ fn test_ops_duplex_voice_stream_set_input_processing_params_before_start() {
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_processing_params_before_start_with_reinit() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     test_default_duplex_voice_stream_operation(
         "duplex voice stream: processing before start with reinit",
         |stream| {
@@ -1740,6 +1801,10 @@ fn test_ops_duplex_voice_stream_set_input_processing_params_before_start_with_re
 
 #[test]
 fn test_ops_duplex_voice_stream_set_input_processing_params_after_start() {
+    if macos_kernel_major_version().unwrap() == MACOS_KERNEL_MAJOR_VERSION_MONTEREY {
+        // We disable VPIO on Monterey.
+        return;
+    }
     test_default_duplex_voice_stream_operation(
         "duplex voice stream: processing after start",
         |stream| {
@@ -1764,7 +1829,10 @@ fn test_ops_stereo_input_duplex_voice_stream_init_and_destroy() {
         "stereo-input duplex voice stream: init and destroy",
         |stream| {
             let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-            assert!(stm.core_stream_data.using_voice_processing_unit());
+            assert_eq!(
+                stm.core_stream_data.using_voice_processing_unit(),
+                macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
+            );
         },
     );
 }
@@ -1775,7 +1843,10 @@ fn test_ops_stereo_input_duplex_voice_stream_start() {
         "stereo-input duplex voice stream: start",
         |stream| {
             let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-            assert!(stm.core_stream_data.using_voice_processing_unit());
+            assert_eq!(
+                stm.core_stream_data.using_voice_processing_unit(),
+                macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
+            );
             assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
         },
     );
@@ -1787,7 +1858,10 @@ fn test_ops_stereo_input_duplex_voice_stream_stop() {
         "stereo-input duplex voice stream: stop",
         |stream| {
             let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-            assert!(stm.core_stream_data.using_voice_processing_unit());
+            assert_eq!(
+                stm.core_stream_data.using_voice_processing_unit(),
+                macos_kernel_major_version().unwrap() != MACOS_KERNEL_MAJOR_VERSION_MONTEREY
+            );
             assert_eq!(unsafe { OPS.stream_stop.unwrap()(stream) }, ffi::CUBEB_OK);
         },
     );
