@@ -7,6 +7,7 @@ requestLongerTimeout(2);
 let extData = {
   manifest: {
     sidebar_action: {
+      default_icon: "default.png",
       default_panel: "sidebar.html",
     },
   },
@@ -29,6 +30,9 @@ let extData = {
         browser.test.sendMessage("sidebar");
       };
     },
+
+    "default.png": imageBuffer,
+    "1.png": imageBuffer,
   },
 
   background: function () {
@@ -44,6 +48,8 @@ let extData = {
         let { arg = {}, result } = data;
         let isOpen = await browser.sidebarAction.isOpen(arg);
         browser.test.assertEq(result, isOpen, "expected value from isOpen");
+      } else if (msg === "set-icon") {
+        await browser.sidebarAction.setIcon({ path: data });
       }
       browser.test.sendMessage("done");
     });
@@ -300,4 +306,38 @@ add_task(async function testShortcuts() {
   await extension2.unload();
 
   await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function sidebar_switcher_panel_icon_update() {
+  info("Load extension");
+  const extension = ExtensionTestUtils.loadExtension(getExtData());
+  await extension.startup();
+
+  info("Test extension's sidebar is opened on install");
+  await extension.awaitMessage("sidebar");
+  await sendMessage(extension, "isOpen", { result: true });
+  const sidebarID = SidebarUI.currentID;
+
+  const item = SidebarUI._switcherPanel.querySelector(".webextension-menuitem");
+  let iconUrl = `moz-extension://${extension.uuid}/default.png`;
+  is(
+    item.style.getPropertyValue("--webextension-menuitem-image"),
+    `image-set(url("${iconUrl}"), url("${iconUrl}") 2x)`,
+    "Extension has the correct icon."
+  );
+  SidebarUI.hide();
+  await sendMessage(extension, "isOpen", { result: false });
+
+  await sendMessage(extension, "set-icon", "1.png");
+  await SidebarUI.show(sidebarID);
+  await extension.awaitMessage("sidebar");
+  await sendMessage(extension, "isOpen", { result: true });
+  iconUrl = `moz-extension://${extension.uuid}/1.png`;
+  is(
+    item.style.getPropertyValue("--webextension-menuitem-image"),
+    `image-set(url("${iconUrl}"), url("${iconUrl}") 2x)`,
+    "Extension has updated icon."
+  );
+
+  await extension.unload();
 });

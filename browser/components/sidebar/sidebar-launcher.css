@@ -4,7 +4,7 @@
 
 .wrapper {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   box-sizing: border-box;
   height: 100%;
   padding: var(--space-medium);
@@ -12,14 +12,8 @@
   background-color: var(--sidebar-background-color);
   color: var(--sidebar-text-color);
   :host([positionend]) & {
-      border-inline-start: 1px solid var(--chrome-content-separator-color);
-      border-inline-end: none;;
-  }
-}
-
-:host([positionend]) {
-  .wrapper {
     border-inline-start: 1px solid var(--chrome-content-separator-color);
+    border-inline-end: none;
   }
 }
 
