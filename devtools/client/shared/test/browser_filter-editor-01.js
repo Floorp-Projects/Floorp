@@ -10,15 +10,14 @@ const {
 } = require("resource://devtools/client/shared/widgets/FilterWidget.js");
 
 const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
-const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
 
 // Verify that the given string consists of a valid CSS URL token.
 // Return true on success, false on error.
 function verifyURL(string) {
-  const lexer = getCSSLexer(string);
+  const lexer = new InspectorCSSParser(string);
 
   const token = lexer.nextToken();
-  if (!token || token.tokenType !== "url") {
+  if (!token || token.tokenType !== "UnquotedUrl") {
     return false;
   }
 
