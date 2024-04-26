@@ -271,12 +271,11 @@ VideoCodecType GetRuntimeCodecType(rtclog2::FrameDecodedEvents::Codec codec) {
     case rtclog2::FrameDecodedEvents::CODEC_H265:
       return VideoCodecType::kVideoCodecH265;
     case rtclog2::FrameDecodedEvents::CODEC_UNKNOWN:
-      RTC_LOG(LS_ERROR) << "Unknown codec type. Assuming "
-                           "VideoCodecType::kVideoCodecMultiplex";
-      return VideoCodecType::kVideoCodecMultiplex;
+      RTC_LOG(LS_ERROR) << "Unknown codec type. Returning generic.";
+      return VideoCodecType::kVideoCodecGeneric;
   }
   RTC_DCHECK_NOTREACHED();
-  return VideoCodecType::kVideoCodecMultiplex;
+  return VideoCodecType::kVideoCodecGeneric;
 }
 
 ParsedRtcEventLog::ParseStatus GetHeaderExtensions(

@@ -21,8 +21,6 @@
 #include "media/engine/internal_decoder_factory.h"
 #include "media/engine/internal_encoder_factory.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
-#include "modules/video_coding/codecs/multiplex/include/multiplex_decoder_adapter.h"
-#include "modules/video_coding/codecs/multiplex/include/multiplex_encoder_adapter.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "test/call_test.h"
@@ -187,48 +185,6 @@ TEST_F(CodecEndToEndTest,
       []() { return VP9Decoder::Create(); });
   CodecObserver test(5, kVideoRotation_90,
                      CreateTestColorSpace(/*with_hdr_metadata=*/true), "VP9",
-                     &encoder_factory, &decoder_factory);
-  RunBaseTest(&test);
-}
-
-// Mutiplex tests are using VP9 as the underlying implementation.
-TEST_F(CodecEndToEndTest, SendsAndReceivesMultiplex) {
-  InternalEncoderFactory internal_encoder_factory;
-  InternalDecoderFactory internal_decoder_factory;
-  test::FunctionVideoEncoderFactory encoder_factory(
-      [&internal_encoder_factory]() {
-        return std::make_unique<MultiplexEncoderAdapter>(
-            &internal_encoder_factory, SdpVideoFormat(cricket::kVp9CodecName));
-      });
-  test::FunctionVideoDecoderFactory decoder_factory(
-      [&internal_decoder_factory](const Environment& env,
-                                  const SdpVideoFormat& /*format*/) {
-        return std::make_unique<MultiplexDecoderAdapter>(
-            env, &internal_decoder_factory,
-            SdpVideoFormat(cricket::kVp9CodecName));
-      });
-
-  CodecObserver test(5, kVideoRotation_0, absl::nullopt, "multiplex",
-                     &encoder_factory, &decoder_factory);
-  RunBaseTest(&test);
-}
-
-TEST_F(CodecEndToEndTest, SendsAndReceivesMultiplexVideoRotation90) {
-  InternalEncoderFactory internal_encoder_factory;
-  InternalDecoderFactory internal_decoder_factory;
-  test::FunctionVideoEncoderFactory encoder_factory(
-      [&internal_encoder_factory]() {
-        return std::make_unique<MultiplexEncoderAdapter>(
-            &internal_encoder_factory, SdpVideoFormat(cricket::kVp9CodecName));
-      });
-  test::FunctionVideoDecoderFactory decoder_factory(
-      [&internal_decoder_factory](const Environment& env,
-                                  const SdpVideoFormat& /*format*/) {
-        return std::make_unique<MultiplexDecoderAdapter>(
-            env, &internal_decoder_factory,
-            SdpVideoFormat(cricket::kVp9CodecName));
-      });
-  CodecObserver test(5, kVideoRotation_90, absl::nullopt, "multiplex",
                      &encoder_factory, &decoder_factory);
   RunBaseTest(&test);
 }
