@@ -3568,6 +3568,12 @@ pref("reader.line_height", 4);
 // Determines if improved text and layout menu is enabled in reader mode.
 pref("reader.improved_text_menu.enabled", false);
 
+// The default character spacing in reader mode (1-9)
+pref("reader.character_spacing", "");
+
+// The default word spacing in reader mode (1-9)
+pref("reader.word_spacing", "");
+
 // The default text alignment direction in reader mode
 pref("reader.text_alignment", "start");
 
