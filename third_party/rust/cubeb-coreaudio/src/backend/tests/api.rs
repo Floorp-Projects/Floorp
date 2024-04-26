@@ -376,7 +376,6 @@ fn test_get_default_device_id_with_inout_type() {
 #[test]
 fn test_convert_channel_layout() {
     let pairs = [
-        (vec![kAudioObjectUnknown], vec![mixer::Channel::Silence]),
         (
             vec![kAudioChannelLabel_Mono],
             vec![mixer::Channel::FrontCenter],
@@ -398,7 +397,7 @@ fn test_convert_channel_layout() {
             vec![
                 mixer::Channel::FrontLeft,
                 mixer::Channel::FrontRight,
-                mixer::Channel::Silence,
+                mixer::Channel::Discrete,
             ],
         ),
         (

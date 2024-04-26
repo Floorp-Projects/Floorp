@@ -5,7 +5,7 @@ use std::os::raw::{c_int, c_void};
 extern crate audio_mixer;
 pub use self::audio_mixer::Channel;
 
-const CHANNEL_OERDER: [audio_mixer::Channel; audio_mixer::Channel::count()] = [
+const CHANNEL_ORDER: [audio_mixer::Channel; audio_mixer::Channel::count()] = [
     audio_mixer::Channel::FrontLeft,
     audio_mixer::Channel::FrontRight,
     audio_mixer::Channel::FrontCenter,
@@ -25,6 +25,7 @@ const CHANNEL_OERDER: [audio_mixer::Channel; audio_mixer::Channel::count()] = [
     audio_mixer::Channel::TopBackCenter,
     audio_mixer::Channel::TopBackRight,
     audio_mixer::Channel::Silence,
+    audio_mixer::Channel::Discrete,
 ];
 
 pub fn get_channel_order(channel_layout: ChannelLayout) -> Vec<audio_mixer::Channel> {
@@ -33,7 +34,7 @@ pub fn get_channel_order(channel_layout: ChannelLayout) -> Vec<audio_mixer::Chan
     let mut channel_index: usize = 0;
     while map != 0 {
         if map & 1 == 1 {
-            order.push(CHANNEL_OERDER[channel_index]);
+            order.push(CHANNEL_ORDER[channel_index]);
         }
         map >>= 1;
         channel_index += 1;
@@ -44,14 +45,14 @@ pub fn get_channel_order(channel_layout: ChannelLayout) -> Vec<audio_mixer::Chan
 fn get_default_channel_order(channel_count: usize) -> Vec<audio_mixer::Channel> {
     assert_ne!(channel_count, 0);
     let mut channels = Vec::with_capacity(channel_count);
-    for channel in CHANNEL_OERDER.iter().take(channel_count) {
+    for channel in CHANNEL_ORDER.iter().take(channel_count) {
         channels.push(*channel);
     }
 
-    if channel_count > CHANNEL_OERDER.len() {
+    if channel_count > CHANNEL_ORDER.len() {
         channels.extend(vec![
             audio_mixer::Channel::Silence;
-            channel_count - CHANNEL_OERDER.len()
+            channel_count - CHANNEL_ORDER.len()
         ]);
     }
 
@@ -214,7 +215,7 @@ impl Mixer {
         if output_channels.is_empty()
             || out_channel_count != output_channels.len()
             || all_silence == output_channels
-            || Self::non_silent_duplicate_channel_present(&output_channels)
+            || Self::duplicate_channel_present(&output_channels)
         {
             cubeb_log!("Use invalid layout. Apply default layout instead");
             output_channels = get_default_channel_order(out_channel_count);
@@ -261,10 +262,10 @@ impl Mixer {
         )
     }
 
-    fn non_silent_duplicate_channel_present(channels: &[audio_mixer::Channel]) -> bool {
+    fn duplicate_channel_present(channels: &[audio_mixer::Channel]) -> bool {
         let mut bitmap: u32 = 0;
         for channel in channels {
-            if channel != &Channel::Silence {
+            if channel != &Channel::Silence && channel != &Channel::Discrete {
                 if (bitmap & channel.bitmask()) != 0 {
                     return true;
                 }
@@ -456,14 +457,14 @@ fn test_get_channel_order() {
 
 #[test]
 fn test_get_default_channel_order() {
-    for len in 1..CHANNEL_OERDER.len() + 10 {
+    for len in 1..CHANNEL_ORDER.len() + 10 {
         let channels = get_default_channel_order(len);
-        if len <= CHANNEL_OERDER.len() {
-            assert_eq!(channels, &CHANNEL_OERDER[..len]);
+        if len <= CHANNEL_ORDER.len() {
+            assert_eq!(channels, &CHANNEL_ORDER[..len]);
         } else {
-            let silences = vec![audio_mixer::Channel::Silence; len - CHANNEL_OERDER.len()];
-            assert_eq!(channels[..CHANNEL_OERDER.len()], CHANNEL_OERDER);
-            assert_eq!(&channels[CHANNEL_OERDER.len()..], silences.as_slice());
+            let silences = vec![audio_mixer::Channel::Silence; len - CHANNEL_ORDER.len()];
+            assert_eq!(channels[..CHANNEL_ORDER.len()], CHANNEL_ORDER);
+            assert_eq!(&channels[CHANNEL_ORDER.len()..], silences.as_slice());
         }
     }
 }
@@ -478,7 +479,7 @@ fn test_non_silent_duplicate_channels() {
         Channel::Silence,
         Channel::FrontRight,
     ];
-    assert!(Mixer::non_silent_duplicate_channel_present(&duplicate));
+    assert!(Mixer::duplicate_channel_present(&duplicate));
 
     let non_duplicate = [
         Channel::FrontLeft,
@@ -488,5 +489,25 @@ fn test_non_silent_duplicate_channels() {
         Channel::Silence,
         Channel::Silence,
     ];
-    assert!(!Mixer::non_silent_duplicate_channel_present(&non_duplicate));
+    assert!(!Mixer::duplicate_channel_present(&non_duplicate));
+
+    let duplicate = [
+        Channel::FrontLeft,
+        Channel::Discrete,
+        Channel::FrontRight,
+        Channel::FrontCenter,
+        Channel::Discrete,
+        Channel::FrontRight,
+    ];
+    assert!(Mixer::duplicate_channel_present(&duplicate));
+
+    let non_duplicate = [
+        Channel::FrontLeft,
+        Channel::Discrete,
+        Channel::FrontRight,
+        Channel::FrontCenter,
+        Channel::Discrete,
+        Channel::Discrete,
+    ];
+    assert!(!Mixer::duplicate_channel_present(&non_duplicate));
 }
