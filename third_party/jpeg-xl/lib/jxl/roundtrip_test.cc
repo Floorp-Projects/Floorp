@@ -23,6 +23,7 @@
 #include "lib/extras/codec.h"
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/butteraugli/butteraugli.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/dec_bit_reader.h"
@@ -432,7 +433,7 @@ void VerifyRoundtripCompression(
     float butteraugli_score = ButteraugliDistance(
         original_io.frames, decoded_io.frames, ba, *JxlGetDefaultCms(),
         /*distmap=*/nullptr, nullptr);
-    float target_score = 1.3f;
+    float target_score = 1.4f;
     // upsampling mode 1 (unlike default and NN) does not downscale back to the
     // already downsampled image
     if (upsampling_mode == 1 && resampling >= 4 && already_downsampled)

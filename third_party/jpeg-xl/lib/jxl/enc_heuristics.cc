@@ -6,10 +6,10 @@
 #include "lib/jxl/enc_heuristics.h"
 
 #include <jxl/cms_interface.h>
-#include <stddef.h>
-#include <stdint.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <memory>
@@ -24,6 +24,7 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/override.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/butteraugli/butteraugli.h"
 #include "lib/jxl/chroma_from_luma.h"

@@ -8,10 +8,12 @@
 
 // Chooses reference patches, and avoids encoding them once per occurrence.
 
-#include <stddef.h>
-#include <string.h>
 #include <sys/types.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <utility>
 #include <vector>
 
 #include "lib/jxl/base/status.h"

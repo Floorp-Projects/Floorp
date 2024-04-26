@@ -203,12 +203,38 @@ Status ParseTransferFunction(Tokenizer* tokenizer, JxlColorEncoding* c) {
 
 Status ParseDescription(const std::string& description, JxlColorEncoding* c) {
   *c = {};
-  Tokenizer tokenizer(&description, '_');
-  JXL_RETURN_IF_ERROR(ParseColorSpace(&tokenizer, c));
-  JXL_RETURN_IF_ERROR(ParseWhitePoint(&tokenizer, c));
-  JXL_RETURN_IF_ERROR(ParsePrimaries(&tokenizer, c));
-  JXL_RETURN_IF_ERROR(ParseRenderingIntent(&tokenizer, c));
-  JXL_RETURN_IF_ERROR(ParseTransferFunction(&tokenizer, c));
+  if (description == "sRGB") {
+    c->color_space = JXL_COLOR_SPACE_RGB;
+    c->white_point = JXL_WHITE_POINT_D65;
+    c->primaries = JXL_PRIMARIES_SRGB;
+    c->transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
+    c->rendering_intent = JXL_RENDERING_INTENT_PERCEPTUAL;
+  } else if (description == "DisplayP3") {
+    c->color_space = JXL_COLOR_SPACE_RGB;
+    c->white_point = JXL_WHITE_POINT_D65;
+    c->primaries = JXL_PRIMARIES_P3;
+    c->transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
+    c->rendering_intent = JXL_RENDERING_INTENT_PERCEPTUAL;
+  } else if (description == "Rec2100PQ") {
+    c->color_space = JXL_COLOR_SPACE_RGB;
+    c->white_point = JXL_WHITE_POINT_D65;
+    c->primaries = JXL_PRIMARIES_2100;
+    c->transfer_function = JXL_TRANSFER_FUNCTION_PQ;
+    c->rendering_intent = JXL_RENDERING_INTENT_RELATIVE;
+  } else if (description == "Rec2100HLG") {
+    c->color_space = JXL_COLOR_SPACE_RGB;
+    c->white_point = JXL_WHITE_POINT_D65;
+    c->primaries = JXL_PRIMARIES_2100;
+    c->transfer_function = JXL_TRANSFER_FUNCTION_HLG;
+    c->rendering_intent = JXL_RENDERING_INTENT_RELATIVE;
+  } else {
+    Tokenizer tokenizer(&description, '_');
+    JXL_RETURN_IF_ERROR(ParseColorSpace(&tokenizer, c));
+    JXL_RETURN_IF_ERROR(ParseWhitePoint(&tokenizer, c));
+    JXL_RETURN_IF_ERROR(ParsePrimaries(&tokenizer, c));
+    JXL_RETURN_IF_ERROR(ParseRenderingIntent(&tokenizer, c));
+    JXL_RETURN_IF_ERROR(ParseTransferFunction(&tokenizer, c));
+  }
   return true;
 }
 

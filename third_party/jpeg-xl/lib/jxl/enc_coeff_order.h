@@ -6,18 +6,16 @@
 #ifndef LIB_JXL_ENC_COEFF_ORDER_H_
 #define LIB_JXL_ENC_COEFF_ORDER_H_
 
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/status.h"
-#include "lib/jxl/coeff_order.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/coeff_order_fwd.h"
+#include "lib/jxl/common.h"
 #include "lib/jxl/dct_util.h"
-#include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_bit_writer.h"
-#include "lib/jxl/enc_params.h"
 #include "lib/jxl/frame_dimensions.h"
 
 namespace jxl {

@@ -283,14 +283,14 @@ void ProcessCompressionParams(j_compress_ptr cinfo) {
       JPEGLI_ERROR("Invalid sampling factor %d x %d", comp->h_samp_factor,
                    comp->v_samp_factor);
     }
+    if (cinfo->num_components == 1) {
+      // Force samp factors to 1x1 for single-component images.
+      comp->h_samp_factor = comp->v_samp_factor = 1;
+    }
     cinfo->max_h_samp_factor =
         std::max(comp->h_samp_factor, cinfo->max_h_samp_factor);
     cinfo->max_v_samp_factor =
         std::max(comp->v_samp_factor, cinfo->max_v_samp_factor);
-  }
-  if (cinfo->num_components == 1 &&
-      (cinfo->max_h_samp_factor != 1 || cinfo->max_v_samp_factor != 1)) {
-    JPEGLI_ERROR("Sampling is not supported for simgle component image.");
   }
   size_t iMCU_width = DCTSIZE * cinfo->max_h_samp_factor;
   size_t iMCU_height = DCTSIZE * cinfo->max_v_samp_factor;
@@ -713,18 +713,31 @@ void jpegli_set_defaults(j_compress_ptr cinfo) {
 
 void jpegli_default_colorspace(j_compress_ptr cinfo) {
   CheckState(cinfo, jpegli::kEncStart);
+  if (cinfo->in_color_space == JCS_RGB && cinfo->master->xyb_mode) {
+    jpegli_set_colorspace(cinfo, JCS_RGB);
+    return;
+  }
   switch (cinfo->in_color_space) {
     case JCS_GRAYSCALE:
       jpegli_set_colorspace(cinfo, JCS_GRAYSCALE);
       break;
-    case JCS_RGB: {
-      if (cinfo->master->xyb_mode) {
-        jpegli_set_colorspace(cinfo, JCS_RGB);
-      } else {
-        jpegli_set_colorspace(cinfo, JCS_YCbCr);
-      }
+    case JCS_RGB:
+#ifdef JCS_EXTENSIONS
+    case JCS_EXT_RGB:
+    case JCS_EXT_BGR:
+    case JCS_EXT_RGBX:
+    case JCS_EXT_BGRX:
+    case JCS_EXT_XRGB:
+    case JCS_EXT_XBGR:
+#endif
+#if JCS_ALPHA_EXTENSIONS
+    case JCS_EXT_RGBA:
+    case JCS_EXT_BGRA:
+    case JCS_EXT_ARGB:
+    case JCS_EXT_ABGR:
+#endif
+      jpegli_set_colorspace(cinfo, JCS_YCbCr);
       break;
-    }
     case JCS_YCbCr:
       jpegli_set_colorspace(cinfo, JCS_YCbCr);
       break;
@@ -806,6 +819,11 @@ void jpegli_set_colorspace(j_compress_ptr cinfo, J_COLOR_SPACE colorspace) {
     cinfo->comp_info[2].quant_tbl_no = 1;
     cinfo->comp_info[1].dc_tbl_no = cinfo->comp_info[1].ac_tbl_no = 1;
     cinfo->comp_info[2].dc_tbl_no = cinfo->comp_info[2].ac_tbl_no = 1;
+    // Use chroma subsampling by default
+    cinfo->comp_info[0].h_samp_factor = cinfo->comp_info[0].v_samp_factor = 2;
+    if (colorspace == JCS_YCCK) {
+      cinfo->comp_info[3].h_samp_factor = cinfo->comp_info[3].v_samp_factor = 2;
+    }
   }
 }
 

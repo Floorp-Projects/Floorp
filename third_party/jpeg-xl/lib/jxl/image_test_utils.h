@@ -6,17 +6,15 @@
 #ifndef LIB_JXL_IMAGE_TEST_UTILS_H_
 #define LIB_JXL_IMAGE_TEST_UTILS_H_
 
-#include <inttypes.h>
-#include <stddef.h>
-#include <stdint.h>
-
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <sstream>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/random.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/image.h"
 
 namespace jxl {

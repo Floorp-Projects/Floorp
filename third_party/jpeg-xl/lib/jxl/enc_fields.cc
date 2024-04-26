@@ -5,7 +5,7 @@
 
 #include "lib/jxl/enc_fields.h"
 
-#include <cinttypes>
+#include <cinttypes>  // PRIu64
 
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/fields.h"

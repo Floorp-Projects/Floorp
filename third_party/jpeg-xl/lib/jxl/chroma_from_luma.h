@@ -9,11 +9,12 @@
 // Chroma-from-luma, computed using heuristics to determine the best linear
 // model for the X and B channels from the Y channel.
 
-#include <stddef.h>
-#include <stdint.h>
-
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/dec_bit_reader.h"

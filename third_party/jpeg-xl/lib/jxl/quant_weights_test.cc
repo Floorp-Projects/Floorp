@@ -10,14 +10,21 @@
 #include <cmath>
 #include <hwy/base.h>  // HWY_ALIGN_MAX
 #include <hwy/tests/hwy_gtest.h>
+#include <iterator>
 #include <numeric>
+#include <vector>
 
+#include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/random.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/dct_for_test.h"
 #include "lib/jxl/dec_transforms_testonly.h"
 #include "lib/jxl/enc_modular.h"
+#include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_quant_weights.h"
 #include "lib/jxl/enc_transforms.h"
+#include "lib/jxl/frame_header.h"
+#include "lib/jxl/image_metadata.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {

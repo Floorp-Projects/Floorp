@@ -5,10 +5,18 @@
 
 #include "lib/jxl/render_pipeline/stage_splines.h"
 
+#include <cstddef>
+#include <memory>
+
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_splines.cc"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
+
+#include "lib/jxl/base/rect.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/render_pipeline/render_pipeline_stage.h"
+#include "lib/jxl/splines.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {

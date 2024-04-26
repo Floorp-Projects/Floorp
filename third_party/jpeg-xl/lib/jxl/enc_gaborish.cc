@@ -5,12 +5,13 @@
 
 #include "lib/jxl/enc_gaborish.h"
 
-#include <stddef.h>
-
 #include <hwy/base.h>
 
+#include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/convolve.h"
+#include "lib/jxl/image.h"
 #include "lib/jxl/image_ops.h"
 
 namespace jxl {

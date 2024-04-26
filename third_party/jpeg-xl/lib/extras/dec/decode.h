@@ -38,6 +38,8 @@ enum class Codec : uint32_t {
 
 bool CanDecode(Codec codec);
 
+std::string ListOfDecodeCodecs();
+
 // If and only if extension is ".pfm", *bits_per_sample is updated to 32 so
 // that Encode() would encode to PFM instead of PPM.
 Codec CodecFromPath(const std::string& path,

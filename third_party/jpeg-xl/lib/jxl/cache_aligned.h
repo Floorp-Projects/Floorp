@@ -13,8 +13,6 @@
 
 #include <memory>
 
-#include "lib/jxl/base/compiler_specific.h"
-
 namespace jxl {
 
 // Functions that depend on the cache line size.

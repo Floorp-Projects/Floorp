@@ -6,11 +6,12 @@
 #ifndef LIB_JXL_ENC_AR_CONTROL_FIELD_H_
 #define LIB_JXL_ENC_AR_CONTROL_FIELD_H_
 
-#include <stddef.h>
-
+#include <cstddef>
 #include <vector>
 
 #include "lib/jxl/ac_strategy.h"
+#include "lib/jxl/base/rect.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"

@@ -7,8 +7,8 @@
 #define LIB_JXL_FAKE_PARALLEL_RUNNER_TESTONLY_H_
 
 #include <jxl/parallel_runner.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <vector>
 
 #include "lib/jxl/base/compiler_specific.h"

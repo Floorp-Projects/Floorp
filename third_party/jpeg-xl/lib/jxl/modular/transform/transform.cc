@@ -5,7 +5,7 @@
 
 #include "lib/jxl/modular/transform/transform.h"
 
-#include <cinttypes>
+#include <cinttypes>  // PRIu32
 
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/fields.h"

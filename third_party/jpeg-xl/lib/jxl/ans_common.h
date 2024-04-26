@@ -6,23 +6,24 @@
 #ifndef LIB_JXL_ANS_COMMON_H_
 #define LIB_JXL_ANS_COMMON_H_
 
-#include <stdint.h>
-
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <hwy/base.h>
 #include <hwy/cache_control.h>  // Prefetch
 #include <vector>
 
 #include "lib/jxl/ans_params.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/status.h"
 
 namespace jxl {
 
 // Returns the precision (number of bits) that should be used to store
 // a histogram count such that Log2Floor(count) == logcount.
-static JXL_INLINE uint32_t GetPopulationCountPrecision(uint32_t logcount,
-                                                       uint32_t shift) {
+static JXL_MAYBE_UNUSED JXL_INLINE uint32_t
+GetPopulationCountPrecision(uint32_t logcount, uint32_t shift) {
   int32_t r = std::min<int>(
       logcount, static_cast<int>(shift) -
                     static_cast<int>((ANS_LOG_TAB_SIZE - logcount) >> 1));

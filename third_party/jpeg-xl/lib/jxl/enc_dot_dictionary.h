@@ -9,10 +9,10 @@
 // Dots are stored in a dictionary to avoid storing similar dots multiple
 // times.
 
-#include <stddef.h>
-
 #include <vector>
 
+#include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/enc_params.h"

@@ -7,13 +7,14 @@
 #ifndef LIB_JXL_ENC_DETECT_DOTS_H_
 #define LIB_JXL_ENC_DETECT_DOTS_H_
 
-#include <stddef.h>
-#include <stdint.h>
-
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/rect.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/enc_patch_dictionary.h"
 #include "lib/jxl/image.h"
 

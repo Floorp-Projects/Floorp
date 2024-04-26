@@ -6,8 +6,7 @@
 #include "lib/extras/dec/jpg.h"
 
 #if JPEGXL_ENABLE_JPEG
-#include <jpeglib.h>
-#include <setjmp.h>
+#include "lib/jxl/base/include_jpeglib.h"  // NOLINT
 #endif
 #include <stdint.h>
 

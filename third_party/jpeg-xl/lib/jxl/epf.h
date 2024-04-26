@@ -8,8 +8,8 @@
 
 // Fast SIMD "in-loop" edge preserving filter (adaptive, nonlinear).
 
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/dec_cache.h"
-#include "lib/jxl/image.h"
 #include "lib/jxl/loop_filter.h"
 
 namespace jxl {

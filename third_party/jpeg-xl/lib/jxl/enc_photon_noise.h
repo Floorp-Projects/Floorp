@@ -6,8 +6,8 @@
 #ifndef LIB_JXL_ENC_PHOTON_NOISE_H_
 #define LIB_JXL_ENC_PHOTON_NOISE_H_
 
-#include "lib/jxl/dec_xyb.h"
-#include "lib/jxl/image.h"
+#include <cstddef>
+
 #include "lib/jxl/noise.h"
 
 namespace jxl {

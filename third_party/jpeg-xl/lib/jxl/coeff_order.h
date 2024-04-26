@@ -6,11 +6,11 @@
 #ifndef LIB_JXL_COEFF_ORDER_H_
 #define LIB_JXL_COEFF_ORDER_H_
 
-#include <stddef.h>
-#include <stdint.h>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order_fwd.h"
@@ -24,11 +24,12 @@ class BitReader;
 
 static constexpr size_t kCoeffOrderLimit = 6156;
 
-static constexpr std::array<size_t, 3 * kNumOrders + 1> kCoeffOrderOffset = {
-    0,    1,    2,    3,    4,    5,    6,    10,   14,   18,
-    34,   50,   66,   68,   70,   72,   76,   80,   84,   92,
-    100,  108,  172,  236,  300,  332,  364,  396,  652,  908,
-    1164, 1292, 1420, 1548, 2572, 3596, 4620, 5132, 5644, kCoeffOrderLimit};
+static constexpr std::array<size_t, 3 * kNumOrders + 1> JXL_MAYBE_UNUSED
+    kCoeffOrderOffset = {
+        0,    1,    2,    3,    4,    5,    6,    10,   14,   18,
+        34,   50,   66,   68,   70,   72,   76,   80,   84,   92,
+        100,  108,  172,  236,  300,  332,  364,  396,  652,  908,
+        1164, 1292, 1420, 1548, 2572, 3596, 4620, 5132, 5644, kCoeffOrderLimit};
 
 // TODO(eustas): rollback to constexpr once modern C++ becomes reuired.
 #define CoeffOrderOffset(O, C) \

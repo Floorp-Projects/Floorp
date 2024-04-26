@@ -7,13 +7,14 @@
 #define LIB_JXL_ENC_CACHE_H_
 
 #include <jxl/cms_interface.h>
-#include <stddef.h>
-#include <stdint.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/enc_ans.h"

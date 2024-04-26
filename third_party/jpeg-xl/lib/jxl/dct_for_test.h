@@ -8,9 +8,8 @@
 
 // Unoptimized DCT only for use in tests.
 
-#include <string.h>  // memcpy
-
 #include <cmath>
+#include <cstring>  // memcpy
 #include <vector>
 
 #include "lib/jxl/base/common.h"

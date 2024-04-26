@@ -3,7 +3,18 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <ostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include "lib/jpegli/encode.h"
+#include "lib/jpegli/libjpeg_test_util.h"
+#include "lib/jpegli/test_params.h"
 #include "lib/jpegli/test_utils.h"
 #include "lib/jpegli/testing.h"
 
@@ -130,6 +141,7 @@ TEST_P(OutputSuspensionTestParam, RawData) {
     cinfo.input_components = input.components;
     cinfo.in_color_space = JCS_YCbCr;
     jpegli_set_defaults(&cinfo);
+    cinfo.comp_info[0].h_samp_factor = config.jparams.h_sampling[0];
     cinfo.comp_info[0].v_samp_factor = config.jparams.v_sampling[0];
     jpegli_set_progressive_level(&cinfo, 0);
     cinfo.optimize_coding = FALSE;

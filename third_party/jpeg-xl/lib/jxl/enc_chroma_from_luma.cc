@@ -5,11 +5,10 @@
 
 #include "lib/jxl/enc_chroma_from_luma.h"
 
-#include <float.h>
-#include <stdlib.h>
-
 #include <algorithm>
+#include <cfloat>
 #include <cmath>
+#include <cstdlib>
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/enc_chroma_from_luma.cc"
@@ -18,6 +17,7 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/base/common.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/dec_transforms-inl.h"

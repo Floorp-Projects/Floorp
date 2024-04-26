@@ -151,7 +151,7 @@ endif()
 
 ### Library that does not depend on internal parts of jxl library.
 ### Used by cjxl and djxl binaries.
-add_library(jxl_extras_codec
+add_library(jxl_extras_codec STATIC
   $<TARGET_OBJECTS:jxl_extras_core-obj>
 )
 target_link_libraries(jxl_extras_codec PRIVATE

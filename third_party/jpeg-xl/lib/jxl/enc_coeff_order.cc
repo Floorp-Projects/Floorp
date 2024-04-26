@@ -3,13 +3,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include <stdint.h>
-
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <hwy/aligned_allocator.h>
 #include <vector>
 
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/dct_util.h"

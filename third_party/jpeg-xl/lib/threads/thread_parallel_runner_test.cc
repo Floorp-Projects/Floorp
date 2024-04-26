@@ -3,7 +3,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+#include <algorithm>
 #include <atomic>
+#include <cstdint>
+#include <vector>
 
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/test_utils.h"

@@ -23,9 +23,11 @@
 // wavelet transform", IEEE Transactions on Image Processing, vol. 1, no. 2, pp.
 // 205-220, April 1992, doi: 10.1109/83.136597.
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <vector>
 
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/transform/transform.h"
 

@@ -8,8 +8,11 @@
 #include <jxl/encode.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <utility>
+#include <vector>
 
 #include "lib/extras/dec/color_description.h"
 #include "lib/extras/dec/color_hints.h"

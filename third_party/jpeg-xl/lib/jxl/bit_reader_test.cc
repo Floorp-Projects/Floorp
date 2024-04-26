@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <array>
+#include <utility>
 #include <vector>
 
 #include "lib/jxl/base/common.h"

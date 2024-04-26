@@ -91,6 +91,15 @@ bool CanDecode(Codec codec) {
   }
 }
 
+std::string ListOfDecodeCodecs() {
+  std::string list_of_codecs("JXL, PPM, PNM, PFM, PAM, PGX");
+  if (CanDecode(Codec::kPNG)) list_of_codecs.append(", PNG, APNG");
+  if (CanDecode(Codec::kGIF)) list_of_codecs.append(", GIF");
+  if (CanDecode(Codec::kJPG)) list_of_codecs.append(", JPEG");
+  if (CanDecode(Codec::kEXR)) list_of_codecs.append(", EXR");
+  return list_of_codecs;
+}
+
 Status DecodeBytes(const Span<const uint8_t> bytes,
                    const ColorHints& color_hints, extras::PackedPixelFile* ppf,
                    const SizeConstraints* constraints, Codec* orig_codec) {

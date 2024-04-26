@@ -6,14 +6,13 @@
 #ifndef LIB_JXL_DEC_GROUP_BORDER_H_
 #define LIB_JXL_DEC_GROUP_BORDER_H_
 
-#include <stddef.h>
-
 #include <atomic>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 
-#include "lib/jxl/base/arch_macros.h"
-#include "lib/jxl/base/status.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/frame_dimensions.h"
-#include "lib/jxl/image.h"
 
 namespace jxl {
 
