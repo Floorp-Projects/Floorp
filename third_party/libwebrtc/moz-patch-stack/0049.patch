@@ -37,10 +37,10 @@ index 01fb08a009..87ee39e142 100644
      // Timing frame info: all important timestamps for a full lifetime of a
      // single 'timing frame'.
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 9c6ceb2403..5c85734e58 100644
+index ffeaa1cec1..30cc821299 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -365,11 +365,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
+@@ -364,11 +364,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
  
  void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
                                          uint32_t* octet_count,
@@ -57,7 +57,7 @@ index 9c6ceb2403..5c85734e58 100644
  
  std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 36e117af55..7fc541585c 100644
+index ea3863bddb..a368fa9c00 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.h
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.h
 @@ -120,7 +120,8 @@ class RTCPReceiver final {

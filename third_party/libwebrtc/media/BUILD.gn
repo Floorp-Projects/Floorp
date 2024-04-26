@@ -37,11 +37,15 @@ rtc_library("rtc_sdp_video_format_utils") {
   ]
 
   deps = [
+    ":media_constants",
     "../api/video_codecs:video_codecs_api",
     "../rtc_base:checks",
     "../rtc_base:stringutils",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("rtc_media_base") {
@@ -356,6 +360,7 @@ rtc_library("rtc_simulcast_encoder_adapter") {
   ]
   deps = [
     ":rtc_media_base",
+    ":rtc_sdp_video_format_utils",
     "../api:fec_controller_api",
     "../api:field_trials_view",
     "../api:scoped_refptr",

@@ -119,6 +119,7 @@ rtc_library("video") {
     "../call:video_stream_api",
     "../common_video",
     "../media:media_constants",
+    "../media:rtc_sdp_video_format_utils",
     "../modules:module_api",
     "../modules:module_api_public",
     "../modules/pacing",
