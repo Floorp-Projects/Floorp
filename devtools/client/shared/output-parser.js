@@ -884,7 +884,7 @@ class OutputParser {
    */
   // eslint-disable-next-line complexity
   #addPolygonPointNodes(coords, container) {
-    const tokenStream = getCSSLexer(coords);
+    const tokenStream = getCSSLexer(coords, true);
     let token = tokenStream.nextToken();
     let coord = "";
     let i = 0;
@@ -897,7 +897,7 @@ class OutputParser {
     });
 
     while (token) {
-      if (token.tokenType === "symbol" && token.text === ",") {
+      if (token.tokenType === "Comma") {
         // Comma separating coordinate pairs; add coordNode to container and reset vars
         if (!isXCoord) {
           // Y coord not added to coordNode yet
@@ -933,19 +933,19 @@ class OutputParser {
           class: "ruleview-shape-point",
           "data-point": `${i}`,
         });
-      } else if (token.tokenType === "symbol" && token.text === "(") {
+      } else if (token.tokenType === "ParenthesisBlock") {
         depth++;
         coord += coords.substring(token.startOffset, token.endOffset);
-      } else if (token.tokenType === "symbol" && token.text === ")") {
+      } else if (token.tokenType === "CloseParenthesis") {
         depth--;
         coord += coords.substring(token.startOffset, token.endOffset);
-      } else if (token.tokenType === "whitespace" && coord === "") {
+      } else if (token.tokenType === "WhiteSpace" && coord === "") {
         // Whitespace at beginning of coord; add to container
         appendText(
           container,
           coords.substring(token.startOffset, token.endOffset)
         );
-      } else if (token.tokenType === "whitespace" && depth === 0) {
+      } else if (token.tokenType === "WhiteSpace" && depth === 0) {
         // Whitespace signifying end of coord
         const node = this.#createNode(
           "span",
@@ -964,10 +964,10 @@ class OutputParser {
         coord = "";
         isXCoord = !isXCoord;
       } else if (
-        token.tokenType === "number" ||
-        token.tokenType === "dimension" ||
-        token.tokenType === "percentage" ||
-        token.tokenType === "function"
+        token.tokenType === "Number" ||
+        token.tokenType === "Dimension" ||
+        token.tokenType === "Percentage" ||
+        token.tokenType === "Function"
       ) {
         if (isXCoord && coord && depth === 0) {
           // Whitespace is not necessary between x/y coords.
@@ -986,11 +986,11 @@ class OutputParser {
         }
 
         coord += coords.substring(token.startOffset, token.endOffset);
-        if (token.tokenType === "function") {
+        if (token.tokenType === "Function") {
           depth++;
         }
       } else if (
-        token.tokenType === "ident" &&
+        token.tokenType === "Ident" &&
         (token.text === "nonzero" || token.text === "evenodd")
       ) {
         // A fill-rule (nonzero or evenodd).
