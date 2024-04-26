@@ -136,7 +136,7 @@ body {
   margin: 8px;
 }
 
-p, dl, multicol {
+p, dl {
   display: block;
   margin-block-start: 1em;
   margin-block-end: 1em;
