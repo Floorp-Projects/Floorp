@@ -6,12 +6,11 @@ import React from "react";
 import { Localized } from "./MSLocalized";
 
 export const Themes = props => {
+  const category = props.content.tiles?.category?.type;
   return (
     <div className="tiles-theme-container">
       <div>
-        <fieldset
-          className={`tiles-theme-section ${props.content.tiles?.category?.type}`}
-        >
+        <fieldset className={`tiles-theme-section ${category}`}>
           <Localized text={props.content.subtitle}>
             <legend className="sr-only" />
           </Localized>
@@ -29,7 +28,7 @@ export const Themes = props => {
                     <input
                       type="radio"
                       value={theme}
-                      name="theme"
+                      name={category === "wallpaper" ? theme : "theme"}
                       checked={theme === props.activeTheme}
                       className="sr-only input"
                       onClick={props.handleAction}

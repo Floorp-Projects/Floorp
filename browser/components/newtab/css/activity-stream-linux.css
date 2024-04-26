@@ -1943,6 +1943,9 @@ main section {
   background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-sky.avif");
 }
 .wallpaper-list .wallpaper-input:checked {
+  outline-color: var(--color-accent-primary-active);
+}
+.wallpaper-list .wallpaper-input:focus-visible {
   outline-color: var(--newtab-primary-action-background);
 }
 .wallpaper-list .wallpaper-input:hover {

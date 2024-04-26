@@ -425,7 +425,7 @@ describe("MultiStageAboutWelcome module", () => {
       it("should handle wallpaper click", () => {
         const wrapper = mount(<WelcomeScreen {...WALLPAPER_SCREEN_PROPS} />);
         const wallpaperOptions = wrapper.find(
-          ".tiles-theme-section .theme input[name='theme']"
+          ".tiles-theme-section .theme input[name='mountain']"
         );
         wallpaperOptions.simulate("click");
         assert.calledOnce(AboutWelcomeUtils.handleUserAction);
