@@ -6572,6 +6572,7 @@ bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
       valInt32.emplace(allocator.useRegister(masm, Int32OperandId(rhsId)));
       break;
 
+    case Scalar::Float16:
     case Scalar::Float32:
     case Scalar::Float64:
       allocator.ensureDoubleRegister(masm, NumberOperandId(rhsId),
@@ -7064,6 +7065,7 @@ bool CacheIRCompiler::emitStoreDataViewValueResult(
       valInt32.emplace(allocator.useRegister(masm, Int32OperandId(valueId)));
       break;
 
+    case Scalar::Float16:
     case Scalar::Float32:
     case Scalar::Float64:
       allocator.ensureDoubleRegister(masm, NumberOperandId(valueId),

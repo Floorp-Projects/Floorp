@@ -53,8 +53,14 @@
 #  define IF_WASM_TYPE(REAL, IMAGINARY) IMAGINARY
 #endif
 
+#ifdef NIGHTLY_BUILD
+#  define IF_NIGHTLY(REAL, IMAGINARY) REAL
+#else
+#  define IF_NIGHTLY(REAL, IMAGINARY) IMAGINARY
+#endif
+
 #define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, REAL_IF_INTL, REAL_IF_TEMPORAL, \
-                           REAL_IF_WASM_TYPE)                               \
+                           REAL_IF_WASM_TYPE, REAL_IF_NIGHTLY)              \
   IMAGINARY(Null, dummy)                                                    \
   REAL(Object, OCLASP(Plain))                                               \
   REAL(Function, &FunctionClass)                                            \
@@ -92,6 +98,7 @@
   REAL(Uint8ClampedArray, TYPED_ARRAY_CLASP(Uint8Clamped))                  \
   REAL(BigInt64Array, TYPED_ARRAY_CLASP(BigInt64))                          \
   REAL(BigUint64Array, TYPED_ARRAY_CLASP(BigUint64))                        \
+  REAL_IF_NIGHTLY(Float16Array, TYPED_ARRAY_CLASP(Float16))                 \
   REAL(BigInt, OCLASP(BigInt))                                              \
   REAL(Proxy, CLASP(Proxy))                                                 \
   REAL(WeakMap, OCLASP(WeakMap))                                            \
@@ -148,10 +155,10 @@
   IF_RECORD_TUPLE(REAL(Record, (&RecordType::class_)))                      \
   IF_RECORD_TUPLE(REAL(Tuple, (&TupleType::class_)))
 
-#define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
-  JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \
-                     IF_TEMPORAL(REAL, IMAGINARY),              \
-                     IF_WASM_TYPE(REAL, IMAGINARY))
+#define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                                     \
+  JS_FOR_PROTOTYPES_(                                                          \
+      REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), IF_TEMPORAL(REAL, IMAGINARY), \
+      IF_WASM_TYPE(REAL, IMAGINARY), IF_NIGHTLY(REAL, IMAGINARY))
 
 #define JS_FOR_EACH_PROTOTYPE(MACRO) JS_FOR_PROTOTYPES(MACRO, MACRO)
 

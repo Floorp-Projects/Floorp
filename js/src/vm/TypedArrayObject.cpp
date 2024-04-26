@@ -45,6 +45,7 @@
 #include "util/Text.h"
 #include "util/WindowsWrapper.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/Float16.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -94,6 +95,7 @@ bool TypedArrayObject::convertValue(JSContext* cx, HandleValue v,
     case Scalar::Uint16:
     case Scalar::Int32:
     case Scalar::Uint32:
+    case Scalar::Float16:
     case Scalar::Float32:
     case Scalar::Float64:
     case Scalar::Uint8Clamped: {
@@ -3236,6 +3238,25 @@ bool TypedArrayObjectTemplate<uint32_t>::getElementPure(
 }
 
 template <>
+bool TypedArrayObjectTemplate<float16>::getElementPure(TypedArrayObject* tarray,
+                                                       size_t index,
+                                                       Value* vp) {
+  float16 f16 = getIndex(tarray, index);
+  /*
+   * Doubles in typed arrays could be typed-punned arrays of integers. This
+   * could allow user code to break the engine-wide invariant that only
+   * canonical nans are stored into jsvals, which means user code could
+   * confuse the engine into interpreting a double-typed jsval as an
+   * object-typed jsval.
+   *
+   * This could be removed for platforms/compilers known to convert a 32-bit
+   * non-canonical nan to a 64-bit canonical nan.
+   */
+  *vp = JS::CanonicalizedDoubleValue(f16.toDouble());
+  return true;
+}
+
+template <>
 bool TypedArrayObjectTemplate<float>::getElementPure(TypedArrayObject* tarray,
                                                      size_t index, Value* vp) {
   float val = getIndex(tarray, index);
@@ -3934,6 +3955,26 @@ static constexpr
   return val ^ FloatingPoint::kSignBit;
 }
 
+template <typename T, typename UnsignedT>
+static constexpr
+    typename std::enable_if_t<std::is_same_v<T, float16>, UnsignedT>
+    UnsignedSortValue(UnsignedT val) {
+  // Flip sign bit for positive numbers; flip all bits for negative numbers,
+  // except negative NaNs.
+
+  // FC00 is negative infinity, (FC00, FFFF] are all NaNs with
+  // the sign-bit set. So any value
+  // larger than negative infinity is a negative NaN.
+  constexpr UnsignedT NegativeInfinity = 0xFC00;
+  if (val > NegativeInfinity) {
+    return val;
+  }
+  if (val & 0x8000) {
+    return ~val;
+  }
+  return val ^ 0x8000;
+}
+
 template <typename T>
 static typename std::enable_if_t<std::is_integral_v<T> ||
                                  std::is_same_v<T, uint8_clamped>>
@@ -3943,8 +3984,9 @@ TypedArrayStdSort(SharedMem<void*> data, size_t length) {
 }
 
 template <typename T>
-static typename std::enable_if_t<std::is_floating_point_v<T>> TypedArrayStdSort(
-    SharedMem<void*> data, size_t length) {
+static typename std::enable_if_t<std::is_floating_point_v<T> ||
+                                 std::is_same_v<T, float16>>
+TypedArrayStdSort(SharedMem<void*> data, size_t length) {
   // Sort on the unsigned representation for performance reasons.
   using UnsignedT =
       typename mozilla::UnsignedStdintTypeForSize<sizeof(T)>::Type;
@@ -4159,7 +4201,13 @@ template <typename T, typename Ops>
 static constexpr typename std::enable_if_t<sizeof(T) == 2 || sizeof(T) == 4,
                                            TypedArraySortFn>
 TypedArraySort() {
-  return TypedArrayRadixSort<T, Ops>;
+  if constexpr (std::is_same_v<T, float16>) {
+    // TODO: Support radix sort for Float16, see
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1893229
+    return TypedArrayStdSort<T, Ops>;
+  } else {
+    return TypedArrayRadixSort<T, Ops>;
+  }
 }
 
 template <typename T, typename Ops>
