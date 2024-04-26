@@ -638,7 +638,7 @@ void DeviceManagerDx::CreateContentDevicesLocked() {
 
   // We should have been assigned a DeviceStatus from the parent process,
   // GPU process, or the same process if using in-process compositing.
-  MOZ_ASSERT(mDeviceStatus);
+  MOZ_RELEASE_ASSERT(mDeviceStatus);
 
   if (CreateContentDevice() == FeatureStatus::CrashedInHandler) {
     DisableD3D11AfterCrash();
