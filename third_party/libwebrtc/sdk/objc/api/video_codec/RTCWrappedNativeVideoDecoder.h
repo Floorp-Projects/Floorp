@@ -10,13 +10,15 @@
 
 #import <Foundation/Foundation.h>
 
+#import "RTCNativeVideoDecoder.h"
 #import "base/RTCMacros.h"
 #import "base/RTCVideoDecoder.h"
 
 #include "api/video_codecs/video_decoder.h"
 #include "media/base/codec.h"
 
-@interface RTC_OBJC_TYPE (RTCWrappedNativeVideoDecoder) : NSObject <RTC_OBJC_TYPE (RTCVideoDecoder)>
+// TODO: bugs.webrtc.org/15791 - Remove in favor of the RTCNativeVideoDecoderBuilder
+@interface RTC_OBJC_TYPE (RTCWrappedNativeVideoDecoder) : RTC_OBJC_TYPE (RTCNativeVideoDecoder)
 
 - (instancetype)initWithNativeDecoder:(std::unique_ptr<webrtc::VideoDecoder>)decoder;
 
