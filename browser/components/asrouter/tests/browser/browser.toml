@@ -21,6 +21,11 @@ skip-if = ["os == 'linux' && bits == 64 && !debug"] # Bug 1643036
 
 ["browser_asrouter_infobar.js"]
 
+["browser_asrouter_keyboard_cfr.js"]
+https_first_disabled = true
+
+["browser_asrouter_milestone_message_cfr.js"]
+
 ["browser_asrouter_momentspagehub.js"]
 tags = "remote-settings"
 
