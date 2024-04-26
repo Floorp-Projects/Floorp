@@ -9,7 +9,6 @@ import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import kotlinx.coroutines.runBlocking
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -237,7 +236,6 @@ class BookmarksTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1919261
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
     fun verifyOpenAllInNewTabsOptionTest() {
         val webPages = listOf(
@@ -261,11 +259,6 @@ class BookmarksTest : TestSetup() {
             createBookmark(webPages[1].url, "root")
             createBookmark(webPages[2].url, "root")
             createBookmark(webPages[3].url, "sub")
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        browserScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
         }.openThreeDotMenu("root") {
