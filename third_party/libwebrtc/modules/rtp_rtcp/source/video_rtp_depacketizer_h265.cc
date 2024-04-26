@@ -202,9 +202,8 @@ absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> ParseFuNalu(
         rtp_payload.size() - kH265NalHeaderSizeBytes - kH265FuHeaderSizeBytes);
   }
 
-  if (original_nal_type == H265::NaluType::kIdrWRadl ||
-      original_nal_type == H265::NaluType::kIdrNLp ||
-      original_nal_type == H265::NaluType::kCra) {
+  if (original_nal_type >= H265::NaluType::kBlaWLp &&
+      original_nal_type <= H265::NaluType::kRsvIrapVcl23) {
     parsed_payload->video_header.frame_type = VideoFrameType::kVideoFrameKey;
   } else {
     parsed_payload->video_header.frame_type = VideoFrameType::kVideoFrameDelta;
