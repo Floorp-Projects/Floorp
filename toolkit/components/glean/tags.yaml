@@ -9,6 +9,8 @@
 
 ---
 $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
+'Application Services :: Relevancy':
+  description: The Bugzilla component which applies to this object.
 'Cloud Services :: Firefox: Common':
   description: The Bugzilla component which applies to this object.
 'Conduit :: mots':

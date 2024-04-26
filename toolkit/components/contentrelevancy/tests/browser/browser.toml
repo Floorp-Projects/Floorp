@@ -4,3 +4,7 @@ prefs = [
 ]
 
 ["browser_contentrelevancy_nimbus.js"]
+lineno = "6"
+
+["browser_contentrelevancy_telemetry.js"]
+lineno = "9"

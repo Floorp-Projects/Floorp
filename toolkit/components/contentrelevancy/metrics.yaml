@@ -1,0 +1,103 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - "Application Services :: Relevancy"
+
+relevancy.classify:
+  succeed:
+    type: event
+    description: >
+      Record an event of a successful user interest classification.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889404
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889404
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - disco-team@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    extra_keys:
+      input_size:
+        description: >
+          The total number of input elements used for classification.
+        type: quantity
+      input_classified_size:
+        description: >
+          The total number of input elements classified with at least one conclusive interest.
+        type: quantity
+      input_inconclusive_size:
+        description: >
+          The total number of input elements classified with the inconclusive interest.
+        type: quantity
+      output_interest_size:
+        description: >
+          The total number of output interests for classification.
+        type: quantity
+      interest_top_1_hits:
+        description: >
+          The total number of input elements for the interest with the most hits.
+          Defaults to 0. This, along with `input_size` and `input_classified_size`,
+          can be used to calculate the top-N classification percentages and top-N
+          hit percentages.
+        type: quantity
+      interest_top_2_hits:
+        description: >
+          The total number of input elements for the interest with the 2nd most hits.
+          Defaults to 0. This, along with `input_size` and `input_classified_size`,
+          can be used to calculate the top-N classification percentages and top-N
+          hit percentages.
+        type: quantity
+      interest_top_3_hits:
+        description: >
+          The total number of input elements for the interest with the 3rd most hits.
+          Defaults to 0. This, along with `input_size` and `input_classified_size`,
+          can be used to calculate the top-N classification percentages and top-N
+          hit percentages.
+        type: quantity
+  fail:
+    type: event
+    description: >
+      Record an event of a failed / aborted user interest classification.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889404
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889404
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - disco-team@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    extra_keys:
+      reason:
+        description: >
+          The reason of the failed / aborted classification.
+          One of
+            * `insufficient-input`
+            * `component-errors`
+            * `store-not-ready`
+        type: string
+  duration:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Record the duration (in ms) of a successful classification.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889404
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889404
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - disco-team@mozilla.com
+      - najiang@mozilla.com
+    expires: never
