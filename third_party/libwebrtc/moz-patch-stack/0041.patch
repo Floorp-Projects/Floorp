@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e60e2f295fb722f69
  1 file changed, 5 insertions(+)
 
 diff --git a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-index 7894659926..7b4b809ab1 100644
+index 2d9e30902c..9546496f2d 100644
 --- a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
 +++ b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
 @@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
@@ -21,7 +21,7 @@ index 7894659926..7b4b809ab1 100644
  import android.annotation.TargetApi;
  import android.content.Context;
  import android.content.pm.PackageManager;
-@@ -229,6 +230,10 @@ final class WebRtcAudioUtils {
+@@ -248,6 +249,10 @@ public final class WebRtcAudioUtils {
      }
    }
  
@@ -30,5 +30,5 @@ index 7894659926..7b4b809ab1 100644
 +  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
 +  @SuppressLint("WrongConstant")
    private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
-     if (Build.VERSION.SDK_INT < 23) {
+     if (Build.VERSION.SDK_INT < VERSION_CODES.M) {
        return;
