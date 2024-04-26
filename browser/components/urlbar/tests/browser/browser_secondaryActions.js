@@ -119,7 +119,7 @@ add_task(async function test_sitesearch() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: query,
+    value: "sea",
   });
 
   let onLoad = BrowserTestUtils.browserLoaded(
@@ -127,6 +127,8 @@ add_task(async function test_sitesearch() {
     false,
     expectedUrl
   );
+  gURLBar.value = query;
+  UrlbarTestUtils.fireInputEvent(window);
   EventUtils.synthesizeKey("KEY_Tab");
   EventUtils.synthesizeKey("KEY_Enter");
   await onLoad;
