@@ -46,6 +46,20 @@ export let PermissionTestUtils = {
     return pm.addFromPrincipal(convertToPrincipal(subject), ...args);
   },
   /**
+   * Add permission information for a given subject.
+   * Subject can be a principal, uri or origin string.
+   *
+   * This is a variant of add that allows specifying modification time.
+   *
+   * @see nsIPermissionManager for documentation
+   *
+   * @param {Ci.nsIPrincipal|Ci.nsIURI|string} subject
+   * @param {*} args
+   */
+  addWithModificationTime(subject, ...args) {
+    return pm.testAddFromPrincipalByTime(convertToPrincipal(subject), ...args);
+  },
+  /**
    * Get all custom permissions for a given subject.
    * Subject can be a principal, uri or origin string.
    *

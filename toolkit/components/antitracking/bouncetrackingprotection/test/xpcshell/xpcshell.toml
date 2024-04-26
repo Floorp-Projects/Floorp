@@ -8,4 +8,6 @@ prefs = [
 
 ["test_bouncetracking_clearExpiredUserActivation.js"]
 
+["test_bouncetracking_importUserActivationPermissions.js"]
+
 ["test_bouncetracking_purge.js"]
