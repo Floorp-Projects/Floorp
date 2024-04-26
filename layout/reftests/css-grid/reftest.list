@@ -137,9 +137,6 @@ skip-if(!gtkWidget) == grid-container-baselines-001.html grid-container-baseline
 skip-if(!gtkWidget) == grid-container-baselines-002.html grid-container-baselines-002-ref.html
 skip-if(!gtkWidget) == grid-container-baselines-003.html grid-container-baselines-003-ref.html
 == grid-container-baselines-004.html grid-container-baselines-004-ref.html
-== grid-container-baselines-005.html grid-container-baselines-005-ref.html
-== grid-container-baselines-006.html grid-container-baselines-006-ref.html
-== grid-container-baselines-007.html grid-container-baselines-007-ref.html
 == grid-container-synthesized-baseline-001.html grid-container-synthesized-baseline-001-ref.html
 == grid-column-gap-001.html grid-column-gap-001-ref.html
 == grid-column-gap-002.html grid-column-gap-002-ref.html
