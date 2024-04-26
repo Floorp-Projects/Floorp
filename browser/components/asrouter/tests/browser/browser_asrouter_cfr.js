@@ -115,14 +115,6 @@ function checkCFRAddonsElements(notification) {
   );
 }
 
-function checkCFRTrackingProtectionMilestone(notification) {
-  Assert.ok(notification.hidden === false, "Panel should be visible");
-  Assert.ok(
-    notification.getAttribute("data-notification-category") === "short_message",
-    "Panel have correct data attribute"
-  );
-}
-
 function clearNotifications() {
   for (let notification of PopupNotifications._currentNotifications) {
     notification.remove();
@@ -498,59 +490,6 @@ add_task(async function test_cfr_addon_install() {
   Services.fog.testResetFOG();
 });
 
-add_task(
-  async function test_cfr_tracking_protection_milestone_notification_remove() {
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.contentblocking.cfr-milestone.milestone-achieved", 1000],
-        [
-          "browser.newtabpage.activity-stream.asrouter.providers.cfr",
-          `{"id":"cfr","enabled":true,"type":"local","localProvider":"CFRMessageProvider","updateCycleInMs":3600000}`,
-        ],
-      ],
-    });
-
-    // addRecommendation checks that scheme starts with http and host matches
-    let browser = gBrowser.selectedBrowser;
-    BrowserTestUtils.startLoadingURIString(browser, "http://example.com/");
-    await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
-
-    const showPanel = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
-
-    Services.obs.notifyObservers(
-      {
-        wrappedJSObject: {
-          event: "ContentBlockingMilestone",
-        },
-      },
-      "SiteProtection:ContentBlockingMilestone"
-    );
-
-    await showPanel;
-
-    const notification = document.getElementById(
-      "contextual-feature-recommendation-notification"
-    );
-
-    checkCFRTrackingProtectionMilestone(notification);
-
-    Assert.ok(notification.secondaryButton);
-    let hidePanel = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popuphidden"
-    );
-
-    notification.secondaryButton.click();
-    await hidePanel;
-    await SpecialPowers.popPrefEnv();
-    clearNotifications();
-    Services.fog.testResetFOG();
-  }
-);
-
 add_task(async function test_cfr_addon_and_features_show() {
   // addRecommendation checks that scheme starts with http and host matches
   let browser = gBrowser.selectedBrowser;
@@ -745,62 +684,6 @@ add_task(async function test_providerNames() {
       );
     }
   }
-});
-
-add_task(async function test_cfr_notification_keyboard() {
-  // addRecommendation checks that scheme starts with http and host matches
-  const browser = gBrowser.selectedBrowser;
-  BrowserTestUtils.startLoadingURIString(browser, "http://example.com/");
-  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
-
-  const response = await trigger_cfr_panel(browser, "example.com");
-  Assert.ok(
-    response,
-    "Should return true if addRecommendation checks were successful"
-  );
-
-  // Open the panel with the keyboard.
-  // Toolbar buttons aren't always focusable; toolbar keyboard navigation
-  // makes them focusable on demand. Therefore, we must force focus.
-  const button = document.getElementById("contextual-feature-recommendation");
-  button.setAttribute("tabindex", "-1");
-  button.focus();
-  button.removeAttribute("tabindex");
-
-  let focused = BrowserTestUtils.waitForEvent(
-    PopupNotifications.panel,
-    "focus",
-    true
-  );
-  EventUtils.synthesizeKey(" ");
-  await focused;
-  Assert.ok(true, "Focus inside panel after button pressed");
-
-  let hidden = BrowserTestUtils.waitForEvent(
-    PopupNotifications.panel,
-    "popuphidden"
-  );
-  EventUtils.synthesizeKey("KEY_Escape");
-  await hidden;
-  Assert.ok(true, "Panel hidden after Escape pressed");
-
-  const showPanel = BrowserTestUtils.waitForEvent(
-    PopupNotifications.panel,
-    "popupshown"
-  );
-  // Need to dismiss the notification to clear the RecommendationMap
-  document.getElementById("contextual-feature-recommendation").click();
-  await showPanel;
-
-  const hidePanel = BrowserTestUtils.waitForEvent(
-    PopupNotifications.panel,
-    "popuphidden"
-  );
-  document
-    .getElementById("contextual-feature-recommendation-notification")
-    .button.click();
-  await hidePanel;
-  Services.fog.testResetFOG();
 });
 
 add_task(function test_updateCycleForProviders() {
