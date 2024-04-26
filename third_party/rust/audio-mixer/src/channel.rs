@@ -21,6 +21,7 @@ pub enum Channel {
     TopBackCenter = 16,
     TopBackRight = 17,
     Silence = 18,
+    Discrete = 19, // To be used based on its index
 }
 
 impl Channel {
@@ -29,7 +30,7 @@ impl Channel {
     }
 
     pub const fn count() -> usize {
-        Channel::Silence as usize + 1
+        Channel::Discrete as usize + 1
     }
 
     pub const fn bitmask(self) -> u32 {
@@ -58,6 +59,7 @@ bitflags! {
         const TOP_BACK_CENTER = Channel::TopBackCenter.bitmask();
         const TOP_BACK_RIGHT = Channel::TopBackRight.bitmask();
         const SILENCE = Channel::Silence.bitmask();
+        const DISCRETE = Channel::Discrete.bitmask();
     }
 }
 

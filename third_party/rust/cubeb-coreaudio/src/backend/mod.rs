@@ -33,6 +33,8 @@ use self::mixer::*;
 use self::resampler::*;
 use self::utils::*;
 use backend::ringbuf::RingBuffer;
+#[cfg(feature = "audio_dump")]
+use cubeb_backend::ffi::cubeb_audio_dump_stream_t;
 use cubeb_backend::{
     ffi, ChannelLayout, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType,
     Error, InputProcessingParams, Ops, Result, SampleFormat, State, Stream, StreamOps,
@@ -112,6 +114,16 @@ lazy_static! {
         }
         (timebase_info.numer, timebase_info.denom)
     };
+}
+
+#[cfg(feature = "audio_dump")]
+fn dump_audio(stream: cubeb_audio_dump_stream_t, audio_samples: *mut c_void, count: u32) {
+    unsafe {
+        let rv = ffi::cubeb_audio_dump_write(stream, audio_samples, count);
+        if rv != 0 {
+            cubeb_alog!("Error dumping audio data");
+        }
+    }
 }
 
 fn make_sized_audio_channel_layout(sz: usize) -> AutoRelease<AudioChannelLayout> {
@@ -194,7 +206,12 @@ impl From<CAChannelLabel> for mixer::Channel {
             sys::kAudioChannelLabel_TopBackLeft => mixer::Channel::TopBackLeft,
             sys::kAudioChannelLabel_TopBackCenter => mixer::Channel::TopBackCenter,
             sys::kAudioChannelLabel_TopBackRight => mixer::Channel::TopBackRight,
-            _ => mixer::Channel::Silence,
+            sys::kAudioChannelLabel_Unknown => mixer::Channel::Discrete,
+            sys::kAudioChannelLabel_Unused => mixer::Channel::Silence,
+            v => {
+                eprintln!("Warning: channel label value {} isn't handled", v);
+                mixer::Channel::Silence
+            }
         }
     }
 }
@@ -551,6 +568,16 @@ extern "C" fn audiounit_input_callback(
             ErrorHandle::Reinit
         } else {
             assert_eq!(status, NO_ERR);
+
+            #[cfg(feature = "audio_dump")]
+            {
+                dump_audio(
+                    stm.core_stream_data.audio_dump_input,
+                    input_buffer_list.mBuffers[0].mData,
+                    input_frames * stm.core_stream_data.input_dev_desc.mChannelsPerFrame,
+                );
+            }
+
             input_buffer_manager
                 .push_data(input_buffer_list.mBuffers[0].mData, input_frames as usize);
             ErrorHandle::Return(status)
@@ -708,6 +735,14 @@ extern "C" fn audiounit_output_callback(
     if stm.stopped.load(Ordering::SeqCst) {
         cubeb_alog!("({:p}) output stopped.", stm as *const AudioUnitStream);
         audiounit_make_silent(&buffers[0]);
+        #[cfg(feature = "audio_dump")]
+        {
+            dump_audio(
+                stm.core_stream_data.audio_dump_output,
+                buffers[0].mData,
+                output_frames * stm.core_stream_data.output_dev_desc.mChannelsPerFrame,
+            );
+        }
         return NO_ERR;
     }
 
@@ -718,12 +753,20 @@ extern "C" fn audiounit_output_callback(
         cubeb_alog!("({:p}) output drained.", stm as *const AudioUnitStream);
         stm.notify_state_changed(State::Drained);
         let queue = stm.queue.clone();
+        audiounit_make_silent(&buffers[0]);
+        #[cfg(feature = "audio_dump")]
+        {
+            dump_audio(
+                stm.core_stream_data.audio_dump_output,
+                buffers[0].mData,
+                output_frames * stm.core_stream_data.output_dev_desc.mChannelsPerFrame,
+            );
+        }
         // Use a new thread, through the queue, to avoid deadlock when calling
         // AudioOutputUnitStop method from inside render callback
         queue.run_async(move || {
             stm.core_stream_data.stop_audiounits();
         });
-        audiounit_make_silent(&buffers[0]);
         return NO_ERR;
     }
 
@@ -846,12 +889,21 @@ extern "C" fn audiounit_output_callback(
         stm.stopped.store(true, Ordering::SeqCst);
         stm.notify_state_changed(State::Error);
         let queue = stm.queue.clone();
+        audiounit_make_silent(&buffers[0]);
+
+        #[cfg(feature = "audio_dump")]
+        {
+            dump_audio(
+                stm.core_stream_data.audio_dump_output,
+                buffers[0].mData,
+                output_frames * stm.core_stream_data.output_dev_desc.mChannelsPerFrame,
+            );
+        }
         // Use a new thread, through the queue, to avoid deadlock when calling
         // AudioOutputUnitStop method from inside render callback
         queue.run_async(move || {
             stm.core_stream_data.stop_audiounits();
         });
-        audiounit_make_silent(&buffers[0]);
         return NO_ERR;
     }
 
@@ -896,6 +948,15 @@ extern "C" fn audiounit_output_callback(
             output_frames as usize,
             buffers[0].mData,
             buffers[0].mDataByteSize as usize,
+        );
+    }
+
+    #[cfg(feature = "audio_dump")]
+    {
+        dump_audio(
+            stm.core_stream_data.audio_dump_output,
+            buffers[0].mData,
+            output_frames * stm.core_stream_data.output_dev_desc.mChannelsPerFrame,
         );
     }
     NO_ERR
@@ -3010,6 +3071,14 @@ struct CoreStreamData<'ctx> {
     output_alive_listener: Option<device_property_listener>,
     output_source_listener: Option<device_property_listener>,
     input_logging: Option<InputCallbackLogger>,
+    #[cfg(feature = "audio_dump")]
+    audio_dump_session: ffi::cubeb_audio_dump_session_t,
+    #[cfg(feature = "audio_dump")]
+    audio_dump_session_running: bool,
+    #[cfg(feature = "audio_dump")]
+    audio_dump_input: ffi::cubeb_audio_dump_stream_t,
+    #[cfg(feature = "audio_dump")]
+    audio_dump_output: ffi::cubeb_audio_dump_stream_t,
 }
 
 impl<'ctx> Default for CoreStreamData<'ctx> {
@@ -3050,6 +3119,14 @@ impl<'ctx> Default for CoreStreamData<'ctx> {
             output_alive_listener: None,
             output_source_listener: None,
             input_logging: None,
+            #[cfg(feature = "audio_dump")]
+            audio_dump_session: ptr::null_mut(),
+            #[cfg(feature = "audio_dump")]
+            audio_dump_session_running: false,
+            #[cfg(feature = "audio_dump")]
+            audio_dump_input: ptr::null_mut(),
+            #[cfg(feature = "audio_dump")]
+            audio_dump_output: ptr::null_mut(),
         }
     }
 }
@@ -3097,6 +3174,14 @@ impl<'ctx> CoreStreamData<'ctx> {
             output_alive_listener: None,
             output_source_listener: None,
             input_logging: None,
+            #[cfg(feature = "audio_dump")]
+            audio_dump_session: ptr::null_mut(),
+            #[cfg(feature = "audio_dump")]
+            audio_dump_session_running: false,
+            #[cfg(feature = "audio_dump")]
+            audio_dump_input: ptr::null_mut(),
+            #[cfg(feature = "audio_dump")]
+            audio_dump_output: ptr::null_mut(),
         }
     }
 
@@ -3454,6 +3539,11 @@ impl<'ctx> CoreStreamData<'ctx> {
         assert!(!self.stm_ptr.is_null());
         let stream = unsafe { &(*self.stm_ptr) };
 
+        #[cfg(feature = "audio_dump")]
+        unsafe {
+            ffi::cubeb_audio_dump_init(&mut self.audio_dump_session);
+        }
+
         // Configure I/O stream
         if self.has_input() {
             assert!(!self.input_unit.is_null());
@@ -3542,6 +3632,26 @@ impl<'ctx> CoreStreamData<'ctx> {
                 );
                 e
             })?;
+
+            #[cfg(feature = "audio_dump")]
+            {
+                let name = format!("input-{:p}.wav", self.stm_ptr);
+                let cname = CString::new(name).expect("OK");
+                let rv = unsafe {
+                    ffi::cubeb_audio_dump_stream_init(
+                        self.audio_dump_session,
+                        &mut self.audio_dump_input,
+                        *params.as_ptr(),
+                        cname.as_ptr(),
+                    )
+                };
+                if rv == 0 {
+                    assert_ne!(self.audio_dump_input, ptr::null_mut(),);
+                    cubeb_log!("Successfully inited audio dump for input");
+                } else {
+                    cubeb_log!("Failed to init audio dump for input");
+                }
+            }
 
             assert_eq!(self.input_dev_desc.mSampleRate, input_hw_desc.mSampleRate);
 
@@ -3739,6 +3849,26 @@ impl<'ctx> CoreStreamData<'ctx> {
                 e
             })?;
 
+            #[cfg(feature = "audio_dump")]
+            {
+                let name = format!("output-{:p}.wav", self.stm_ptr);
+                let cname = CString::new(name).expect("OK");
+                let rv = unsafe {
+                    ffi::cubeb_audio_dump_stream_init(
+                        self.audio_dump_session,
+                        &mut self.audio_dump_output,
+                        *params.as_ptr(),
+                        cname.as_ptr(),
+                    )
+                };
+                if rv == 0 {
+                    assert_ne!(self.audio_dump_output, ptr::null_mut(),);
+                    cubeb_log!("Successfully inited audio dump for output");
+                } else {
+                    cubeb_log!("Failed to init audio dump for output");
+                }
+            }
+
             let device_layout = self
                 .get_output_channel_layout()
                 .map_err(|e| {
@@ -3906,6 +4036,12 @@ impl<'ctx> CoreStreamData<'ctx> {
         // ring buffer to diagnose issues.
         if self.has_input() && self.has_output() {
             self.input_logging = Some(InputCallbackLogger::new());
+        }
+
+        #[cfg(feature = "audio_dump")]
+        {
+            unsafe { ffi::cubeb_audio_dump_start(self.audio_dump_session) };
+            self.audio_dump_session_running = true;
         }
 
         if !self.input_unit.is_null() {
@@ -4080,6 +4216,36 @@ impl<'ctx> CoreStreamData<'ctx> {
 
         // Return the VPIO unit if present.
         self.voiceprocessing_unit_handle = None;
+
+        #[cfg(feature = "audio_dump")]
+        {
+            if !self.audio_dump_session.is_null() {
+                unsafe {
+                    ffi::cubeb_audio_dump_stop(self.audio_dump_session);
+                    if !self.audio_dump_input.is_null() {
+                        let rv = ffi::cubeb_audio_dump_stream_shutdown(
+                            self.audio_dump_session,
+                            self.audio_dump_input,
+                        );
+                        if rv != 0 {
+                            cubeb_log!("Failed to shutdown audio dump for input");
+                        }
+                    }
+                    if !self.audio_dump_output.is_null() {
+                        let rv = ffi::cubeb_audio_dump_stream_shutdown(
+                            self.audio_dump_session,
+                            self.audio_dump_output,
+                        );
+                        if rv != 0 {
+                            cubeb_log!("Failed to shutdown audio dump for output");
+                        }
+                    }
+                    ffi::cubeb_audio_dump_shutdown(self.audio_dump_session);
+                    self.audio_dump_session = ptr::null_mut();
+                    self.audio_dump_session_running = false;
+                }
+            }
+        }
 
         self.resampler.destroy();
         self.mixer = None;
