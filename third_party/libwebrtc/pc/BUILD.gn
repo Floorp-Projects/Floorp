@@ -498,6 +498,7 @@ rtc_source_set("rtp_transport") {
     "../rtc_base:logging",
     "../rtc_base:network_route",
     "../rtc_base:socket",
+    "../rtc_base/network:received_packet",
     "../rtc_base/network:sent_packet",
   ]
   absl_deps = [

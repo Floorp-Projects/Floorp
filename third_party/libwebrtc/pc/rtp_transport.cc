@@ -191,11 +191,9 @@ flat_set<uint32_t> RtpTransport::GetSsrcsForSink(RtpPacketSinkInterface* sink) {
 }
 
 void RtpTransport::DemuxPacket(rtc::CopyOnWriteBuffer packet,
-                               int64_t packet_time_us) {
-  RtpPacketReceived parsed_packet(&header_extension_map_,
-                                  packet_time_us == -1
-                                      ? Timestamp::MinusInfinity()
-                                      : Timestamp::Micros(packet_time_us));
+                               webrtc::Timestamp arrival_time) {
+  RtpPacketReceived parsed_packet(&header_extension_map_, arrival_time);
+
   if (!parsed_packet.Parse(std::move(packet))) {
     RTC_LOG(LS_ERROR)
         << "Failed to parse the incoming RTP packet before demuxing. Drop it.";
@@ -246,14 +244,21 @@ void RtpTransport::OnSentPacket(rtc::PacketTransportInternal* packet_transport,
   processing_sent_packet_ = false;
 }
 
-void RtpTransport::OnRtpPacketReceived(rtc::CopyOnWriteBuffer packet,
-                                       int64_t packet_time_us) {
-  DemuxPacket(packet, packet_time_us);
+void RtpTransport::OnRtpPacketReceived(
+    const rtc::ReceivedPacket& received_packet) {
+  rtc::CopyOnWriteBuffer payload(received_packet.payload());
+  DemuxPacket(payload, received_packet.arrival_time().value_or(
+                           Timestamp::MinusInfinity()));
 }
 
-void RtpTransport::OnRtcpPacketReceived(rtc::CopyOnWriteBuffer packet,
-                                        int64_t packet_time_us) {
-  SendRtcpPacketReceived(&packet, packet_time_us);
+void RtpTransport::OnRtcpPacketReceived(
+    const rtc::ReceivedPacket& received_packet) {
+  rtc::CopyOnWriteBuffer payload(received_packet.payload());
+  // TODO(bugs.webrtc.org/15368): Propagate timestamp and maybe received packet
+  // further.
+  SendRtcpPacketReceived(&payload, received_packet.arrival_time()
+                                       ? received_packet.arrival_time()->us()
+                                       : -1);
 }
 
 void RtpTransport::OnReadPacket(rtc::PacketTransportInternal* transport,
@@ -279,16 +284,10 @@ void RtpTransport::OnReadPacket(rtc::PacketTransportInternal* transport,
     return;
   }
 
-  rtc::CopyOnWriteBuffer packet(received_packet.payload());
-  int64_t packet_time_us = received_packet.arrival_time()
-                               ? received_packet.arrival_time()->us()
-                               : -1;
-  // TODO(bugs.webrtc.org/15368): Propagate timestamp and received packet
-  // metadata further.
   if (packet_type == cricket::RtpPacketType::kRtcp) {
-    OnRtcpPacketReceived(std::move(packet), packet_time_us);
+    OnRtcpPacketReceived(received_packet);
   } else {
-    OnRtpPacketReceived(std::move(packet), packet_time_us);
+    OnRtpPacketReceived(received_packet);
   }
 }
 
