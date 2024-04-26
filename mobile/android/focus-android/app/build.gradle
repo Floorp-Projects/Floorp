@@ -708,11 +708,6 @@ if (project.hasProperty("coverage")) {
     }
 }
 
-if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
-    ext.gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
-    apply from: "../${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
-}
-
 // -------------------------------------------------------------------------------------------------
 // Task for printing APK information for the requested variant
 // Taskgraph Usage: "./gradlew printVariants
