@@ -15,6 +15,8 @@
 #include "p2p/base/p2p_constants.h"
 #include "rtc_base/gunit.h"
 
+using webrtc::IceCandidateType;
+
 namespace cricket {
 
 TEST(CandidateTest, Id) {
@@ -38,19 +40,19 @@ TEST(CandidateTest, TypeName) {
   Candidate c;
   // The `type_name()` property defaults to "host".
   EXPECT_EQ(c.type_name(), "host");
-  EXPECT_EQ(c.type(), LOCAL_PORT_TYPE);
+  EXPECT_EQ(c.type(), IceCandidateType::kHost);
 
-  c.set_type(STUN_PORT_TYPE);
+  c.set_type(IceCandidateType::kSrflx);
   EXPECT_EQ(c.type_name(), "srflx");
-  EXPECT_EQ(c.type(), STUN_PORT_TYPE);
+  EXPECT_EQ(c.type(), IceCandidateType::kSrflx);
 
-  c.set_type(PRFLX_PORT_TYPE);
+  c.set_type(IceCandidateType::kPrflx);
   EXPECT_EQ(c.type_name(), "prflx");
-  EXPECT_EQ(c.type(), PRFLX_PORT_TYPE);
+  EXPECT_EQ(c.type(), IceCandidateType::kPrflx);
 
-  c.set_type(RELAY_PORT_TYPE);
+  c.set_type(IceCandidateType::kRelay);
   EXPECT_EQ(c.type_name(), "relay");
-  EXPECT_EQ(c.type(), RELAY_PORT_TYPE);
+  EXPECT_EQ(c.type(), IceCandidateType::kRelay);
 }
 
 TEST(CandidateTest, Foundation) {
