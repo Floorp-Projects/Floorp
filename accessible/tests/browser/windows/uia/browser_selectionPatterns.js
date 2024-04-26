@@ -77,6 +77,29 @@ async function testSelectionProps(id, selection, multiple, required) {
   }
 }
 
+async function testSelectionItemProps(id, selected, container) {
+  await assignPyVarToUiaWithId(id);
+  await definePyVar("pattern", `getUiaPattern(${id}, "SelectionItem")`);
+  ok(await runPython(`bool(pattern)`), `${id} has SelectionItem pattern`);
+  is(
+    !!(await runPython(`pattern.CurrentIsSelected`)),
+    selected,
+    `${id} has correct IsSelected`
+  );
+  if (container) {
+    is(
+      await runPython(`pattern.CurrentSelectionContainer.CurrentAutomationId`),
+      container,
+      `${id} has correct SelectionContainer`
+    );
+  } else {
+    ok(
+      !(await runPython(`bool(pattern.CurrentSelectionContainer)`)),
+      `${id} has no SelectionContainer`
+    );
+  }
+}
+
 /**
  * Test the Selection pattern.
  */
@@ -124,4 +147,80 @@ addUiaTask(SNIPPET, async function testSelection(browser) {
   await testPatternAbsent("menu", "Selection");
 
   await testPatternAbsent("button", "Selection");
+});
+
+/**
+ * Test the SelectionItem pattern.
+ */
+addUiaTask(SNIPPET, async function testSelection() {
+  await definePyVar("doc", `getDocUia()`);
+  await testPatternAbsent("selectList", "SelectionItem");
+  await testSelectionItemProps("sl1", true, "selectList");
+  await testSelectionItemProps("sl2", false, "selectList");
+  info("Calling Select on sl2");
+  await setUpWaitForUiaEvent("SelectionItem_ElementSelected", "sl2");
+  await runPython(`pattern.Select()`);
+  await waitForUiaEvent();
+  ok(true, "sl2 got ElementSelected event");
+  await testSelectionItemProps("sl1", false, "selectList");
+  await testSelectionItemProps("sl2", true, "selectList");
+
+  await testSelectionItemProps("sr1", false, "selectRequired");
+
+  await testSelectionItemProps("sm1", true, "selectMulti");
+  await testSelectionItemProps("sm2", false, "selectMulti");
+  info("Calling AddToSelection on sm2");
+  await setUpWaitForUiaEvent("SelectionItem_ElementAddedToSelection", "sm2");
+  await runPython(`pattern.AddToSelection()`);
+  await waitForUiaEvent();
+  ok(true, "sm2 got ElementAddedToSelection event");
+  await testSelectionItemProps("sm2", true, "selectMulti");
+  await testSelectionItemProps("sm3", true, "selectMulti");
+  info("Calling RemoveFromSelection on sm3");
+  await setUpWaitForUiaEvent(
+    "SelectionItem_ElementRemovedFromSelection",
+    "sm3"
+  );
+  await runPython(`pattern.RemoveFromSelection()`);
+  await waitForUiaEvent();
+  ok(true, "sm3 got ElementRemovedFromSelection event");
+  await testSelectionItemProps("sm3", false, "selectMulti");
+
+  await testSelectionItemProps("t1", false, "tablist");
+  await testSelectionItemProps("t2", true, "tablist");
+
+  // The IA2 -> UIA proxy doesn't expose the SelectionItem pattern on grid
+  // cells.
+  if (gIsUiaEnabled) {
+    await testSelectionItemProps("g1", false, "grid");
+    await testSelectionItemProps("g2", true, "grid");
+  }
+
+  await testSelectionItemProps("r1", true, null);
+  await testSelectionItemProps("r2", false, null);
+  // The IA2 -> UIA proxy doesn't fire correct events for radio buttons.
+  if (gIsUiaEnabled) {
+    info("Calling Select on r2");
+    await setUpWaitForUiaEvent("SelectionItem_ElementSelected", "r2");
+    await runPython(`pattern.Select()`);
+    await waitForUiaEvent();
+    ok(true, "r2 got ElementSelected event");
+    await testSelectionItemProps("r1", false, null);
+    await testSelectionItemProps("r2", true, null);
+    info("Calling RemoveFromSelection on r2");
+    await testPythonRaises(
+      `pattern.RemoveFromSelection()`,
+      "RemoveFromSelection failed on r2"
+    );
+  }
+
+  await testPatternAbsent("m1", "SelectionItem");
+  // The IA2 -> UIA proxy doesn't expose the SelectionItem pattern for radio
+  // menu items.
+  if (gIsUiaEnabled) {
+    await testSelectionItemProps("m2", false, null);
+    await testSelectionItemProps("m3", true, null);
+  }
+
+  await testPatternAbsent("button", "SelectionItem");
 });

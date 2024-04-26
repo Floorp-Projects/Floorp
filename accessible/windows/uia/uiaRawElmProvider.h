@@ -33,7 +33,8 @@ class uiaRawElmProvider : public IAccessibleEx,
                           public IScrollItemProvider,
                           public IValueProvider,
                           public IRangeValueProvider,
-                          public ISelectionProvider {
+                          public ISelectionProvider,
+                          public ISelectionItemProvider {
  public:
   static constexpr enum ProviderOptions kProviderOptions =
       static_cast<enum ProviderOptions>(ProviderOptions_ServerSideProvider |
@@ -161,6 +162,20 @@ class uiaRawElmProvider : public IAccessibleEx,
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_IsSelectionRequired(
       /* [retval][out] */ __RPC__out BOOL* aRetVal);
 
+  // ISelectionItemProvider methods
+  virtual HRESULT STDMETHODCALLTYPE Select(void);
+
+  virtual HRESULT STDMETHODCALLTYPE AddToSelection(void);
+
+  virtual HRESULT STDMETHODCALLTYPE RemoveFromSelection(void);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_IsSelected(
+      /* [retval][out] */ __RPC__out BOOL* aRetVal);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_SelectionContainer(
+      /* [retval][out] */ __RPC__deref_out_opt IRawElementProviderSimple**
+          aRetVal);
+
  private:
   Accessible* Acc() const;
   bool IsControl();
@@ -170,6 +185,7 @@ class uiaRawElmProvider : public IAccessibleEx,
   bool HasValuePattern() const;
   template <class Derived, class Interface>
   RefPtr<Interface> GetPatternFromDerived();
+  bool HasSelectionItemPattern();
 };
 
 SAFEARRAY* AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs);
