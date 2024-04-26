@@ -19,7 +19,6 @@
 #import "sdk/objc/api/peerconnection/RTCEncodedImage+Private.h"
 #import "sdk/objc/api/peerconnection/RTCVideoCodecInfo+Private.h"
 #import "sdk/objc/api/video_codec/RTCNativeVideoDecoderBuilder+Native.h"
-#import "sdk/objc/api/video_codec/RTCWrappedNativeVideoDecoder.h"
 #import "sdk/objc/helpers/NSString+StdString.h"
 
 #include "api/video_codecs/sdp_video_format.h"
@@ -100,8 +99,6 @@ std::unique_ptr<VideoDecoder> ObjCVideoDecoderFactory::Create(const Environment 
 
       if ([decoder conformsToProtocol:@protocol(RTC_OBJC_TYPE(RTCNativeVideoDecoderBuilder))]) {
         return [((id<RTC_OBJC_TYPE(RTCNativeVideoDecoderBuilder)>)decoder) build:env];
-      } else if ([decoder isKindOfClass:[RTC_OBJC_TYPE(RTCWrappedNativeVideoDecoder) class]]) {
-        return [(RTC_OBJC_TYPE(RTCWrappedNativeVideoDecoder) *)decoder releaseWrappedDecoder];
       } else {
         return std::unique_ptr<ObjCVideoDecoder>(new ObjCVideoDecoder(decoder));
       }
