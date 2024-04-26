@@ -11,6 +11,7 @@
 #include "media/engine/internal_decoder_factory.h"
 
 #include "absl/strings/match.h"
+#include "api/environment/environment.h"
 #include "api/video_codecs/av1_profile.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
@@ -80,7 +81,8 @@ VideoDecoderFactory::CodecSupport InternalDecoderFactory::QueryCodecSupport(
   return codec_support;
 }
 
-std::unique_ptr<VideoDecoder> InternalDecoderFactory::CreateVideoDecoder(
+std::unique_ptr<VideoDecoder> InternalDecoderFactory::Create(
+    const Environment& env,
     const SdpVideoFormat& format) {
   if (!format.IsCodecInList(GetSupportedFormats())) {
     RTC_LOG(LS_WARNING) << "Trying to create decoder for unsupported format. "
@@ -89,7 +91,7 @@ std::unique_ptr<VideoDecoder> InternalDecoderFactory::CreateVideoDecoder(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName))
-    return VP8Decoder::Create();
+    return CreateVp8Decoder(env);
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return VP9Decoder::Create();
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
