@@ -495,7 +495,7 @@ class RTCStatsCollectorWrapper {
         CreateMockSender(media_type, track, ssrc, attachment_id, {});
     EXPECT_CALL(*sender, Stop());
     EXPECT_CALL(*sender, SetMediaChannel(_));
-    EXPECT_CALL(*sender, SetCodecPreferences(_));
+    EXPECT_CALL(*sender, SetSendCodecs(_));
     pc_->AddSender(sender);
     return sender;
   }
@@ -572,7 +572,7 @@ class RTCStatsCollectorWrapper {
           voice_sender_info.local_stats[0].ssrc + 10, local_stream_ids);
       EXPECT_CALL(*rtp_sender, SetMediaChannel(_)).WillRepeatedly(Return());
       EXPECT_CALL(*rtp_sender, Stop());
-      EXPECT_CALL(*rtp_sender, SetCodecPreferences(_));
+      EXPECT_CALL(*rtp_sender, SetSendCodecs(_));
       pc_->AddSender(rtp_sender);
     }
 
@@ -611,7 +611,7 @@ class RTCStatsCollectorWrapper {
           video_sender_info.local_stats[0].ssrc + 10, local_stream_ids);
       EXPECT_CALL(*rtp_sender, SetMediaChannel(_)).WillRepeatedly(Return());
       EXPECT_CALL(*rtp_sender, Stop());
-      EXPECT_CALL(*rtp_sender, SetCodecPreferences(_));
+      EXPECT_CALL(*rtp_sender, SetSendCodecs(_));
       pc_->AddSender(rtp_sender);
     }
 
@@ -3092,7 +3092,7 @@ TEST_F(RTCStatsCollectorTest, RTCVideoSourceStatsCollectedForSenderWithTrack) {
       cricket::MEDIA_TYPE_VIDEO, video_track, kSsrc, kAttachmentId, {});
   EXPECT_CALL(*sender, Stop());
   EXPECT_CALL(*sender, SetMediaChannel(_));
-  EXPECT_CALL(*sender, SetCodecPreferences(_));
+  EXPECT_CALL(*sender, SetSendCodecs(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -3137,7 +3137,7 @@ TEST_F(RTCStatsCollectorTest,
       cricket::MEDIA_TYPE_VIDEO, video_track, kNoSsrc, kAttachmentId, {});
   EXPECT_CALL(*sender, Stop());
   EXPECT_CALL(*sender, SetMediaChannel(_));
-  EXPECT_CALL(*sender, SetCodecPreferences(_));
+  EXPECT_CALL(*sender, SetSendCodecs(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -3168,7 +3168,7 @@ TEST_F(RTCStatsCollectorTest,
       cricket::MEDIA_TYPE_VIDEO, video_track, kSsrc, kAttachmentId, {});
   EXPECT_CALL(*sender, Stop());
   EXPECT_CALL(*sender, SetMediaChannel(_));
-  EXPECT_CALL(*sender, SetCodecPreferences(_));
+  EXPECT_CALL(*sender, SetSendCodecs(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -3192,7 +3192,7 @@ TEST_F(RTCStatsCollectorTest,
       cricket::MEDIA_TYPE_AUDIO, /*track=*/nullptr, kSsrc, kAttachmentId, {});
   EXPECT_CALL(*sender, Stop());
   EXPECT_CALL(*sender, SetMediaChannel(_));
-  EXPECT_CALL(*sender, SetCodecPreferences(_));
+  EXPECT_CALL(*sender, SetSendCodecs(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -3545,7 +3545,7 @@ TEST_F(RTCStatsCollectorTest,
       cricket::MEDIA_TYPE_VIDEO, /*track=*/nullptr, kSsrc, kAttachmentId, {});
   EXPECT_CALL(*sender, Stop());
   EXPECT_CALL(*sender, SetMediaChannel(_));
-  EXPECT_CALL(*sender, SetCodecPreferences(_));
+  EXPECT_CALL(*sender, SetSendCodecs(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -3667,7 +3667,7 @@ TEST_F(RTCStatsCollectorTest, RtpIsMissingWhileSsrcIsZero) {
   rtc::scoped_refptr<MockRtpSenderInternal> sender =
       CreateMockSender(cricket::MEDIA_TYPE_AUDIO, track, 0, 49, {});
   EXPECT_CALL(*sender, Stop());
-  EXPECT_CALL(*sender, SetCodecPreferences(_));
+  EXPECT_CALL(*sender, SetSendCodecs(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -3685,7 +3685,7 @@ TEST_F(RTCStatsCollectorTest, DoNotCrashIfSsrcIsKnownButInfosAreStillMissing) {
   rtc::scoped_refptr<MockRtpSenderInternal> sender =
       CreateMockSender(cricket::MEDIA_TYPE_AUDIO, track, 4711, 49, {});
   EXPECT_CALL(*sender, Stop());
-  EXPECT_CALL(*sender, SetCodecPreferences(_));
+  EXPECT_CALL(*sender, SetSendCodecs(_));
   pc_->AddSender(sender);
 
   // We do not generate any matching voice_sender_info stats.
