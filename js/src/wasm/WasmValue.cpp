@@ -775,6 +775,9 @@ bool ToJSValue_lossless(JSContext* cx, const void* src, MutableHandleValue dst,
       cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmGlobal));
   Rooted<WasmGlobalObject*> srcGlobal(
       cx, WasmGlobalObject::create(cx, srcVal, false, prototype));
+  if (!srcGlobal) {
+    return false;
+  }
   dst.set(ObjectValue(*srcGlobal.get()));
   return true;
 }
