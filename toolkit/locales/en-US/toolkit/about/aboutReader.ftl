@@ -5,18 +5,18 @@
 about-reader-loading = Loading…
 about-reader-load-error = Failed to load article from page
 
-about-reader-color-theme-light = Light
-    .title = Color Theme Light
-about-reader-color-theme-dark = Dark
-    .title = Color Theme Dark
-about-reader-color-theme-sepia = Sepia
-    .title = Color Theme Sepia
-about-reader-color-theme-auto = Auto
-    .title = Color Theme Auto
-about-reader-color-theme-gray = Gray
-    .title = Color Theme Gray
-about-reader-color-theme-contrast = Contrast
-    .title = Color Theme Contrast
+about-reader-color-light-theme = Light
+    .title = Light theme
+about-reader-color-dark-theme = Dark
+    .title = Dark theme
+about-reader-color-sepia-theme = Sepia
+    .title = Sepia theme
+about-reader-color-auto-theme = Auto
+    .title = Auto theme
+about-reader-color-gray-theme = Gray
+    .title = Gray theme
+about-reader-color-contrast-theme = Contrast
+    .title = Contrast theme
 
 # An estimate for how long it takes to read an article,
 # expressed as a range covering both slow and fast readers.
@@ -53,8 +53,9 @@ about-reader-font-type-sans-serif = Sans-serif
 
 about-reader-toolbar-close = Close Reader View
 about-reader-toolbar-type-controls = Type controls
-about-reader-toolbar-color-controls = Colors
-about-reader-toolbar-savetopocket = Save To { -pocket-brand-name }
+about-reader-toolbar-text-layout-controls = Text and layout
+about-reader-toolbar-theme-controls = Theme
+about-reader-toolbar-savetopocket = Save to { -pocket-brand-name }
 
 ## Reader View colors menu
 
@@ -68,35 +69,43 @@ about-reader-customtheme-tab = Custom
 ## clear and give context for screen reader users.
 
 about-reader-custom-colors-foreground = Text
-    .title = Edit Color
+    .title = Edit color
 about-reader-custom-colors-background = Background
-    .title = Edit Color
+    .title = Edit color
 
 about-reader-custom-colors-unvisited-links = Unvisited links
-    .title = Edit Color
+    .title = Edit color
 about-reader-custom-colors-visited-links = Visited links
-    .title = Edit Color
+    .title = Edit color
 
 about-reader-custom-colors-selection-highlight = Highlighter for read aloud
-    .title = Edit Color
+    .title = Edit color
 
 about-reader-custom-colors-reset-button = Reset defaults
 
 ## Reader View improved text and layout menu
 
+about-reader-layout-header = Layout
 about-reader-advanced-layout-header = Advanced
 
+about-reader-slider-label-width-narrow = Narrow
+about-reader-slider-label-width-wide = Wide
+about-reader-slider-label-spacing-narrow = Narrow
 about-reader-slider-label-spacing-standard = Standard
 about-reader-slider-label-spacing-wide = Wide
 
+about-reader-content-width-label =
+  .label = Content width
+about-reader-line-spacing-label =
+  .label = Line spacing
 about-reader-character-spacing-label =
   .label = Character spacing
 about-reader-word-spacing-label =
   .label = Word spacing
 about-reader-text-alignment-label = Text alignment
 about-reader-text-alignment-left =
-    .title = Align Text Left
+    .title = Align text left
 about-reader-text-alignment-center =
-    .title = Align Text Center
+    .title = Align text center
 about-reader-text-alignment-right =
-    .title = Align Text Right
+    .title = Align text right

@@ -62,23 +62,30 @@
             <li>
               <button
                 class="dropdown-toggle toolbar-button improved-style-button"
-                aria-labelledby="toolbar-type-controls"
-                data-telemetry-id="reader-type-controls"
+                aria-labelledby="toolbar-text-layout-controls"
+                data-telemetry-id="reader-text-layout-controls"
               >
                 <span
                   class="hover-label"
-                  id="toolbar-type-controls"
-                  data-l10n-id="about-reader-toolbar-type-controls"
+                  id="toolbar-text-layout-controls"
+                  data-l10n-id="about-reader-toolbar-text-layout-controls"
                 ></span>
               </button>
             </li>
             <li class="dropdown-popup" id="text-layout-controls">
+              <h2
+                data-l10n-id="about-reader-layout-header"
+                id="about-reader-layout-header"
+              ></h2>
+              <div id="content-width-slider" class="slider-container"></div>
+              <div id="line-spacing-slider" class="slider-container"></div>
+              <hr />
               <details id="about-reader-advanced-layout">
                 <summary class="accordion-header">
-                  <h3
+                  <h2
                     data-l10n-id="about-reader-advanced-layout-header"
                     id="about-reader-advanced-layout-header"
-                  ></h3>
+                  ></h2>
                   <span class="chevron-icon"></span>
                 </summary>
                 <div
@@ -167,7 +174,7 @@
                 <span
                   class="hover-label"
                   id="toolbar-color-controls"
-                  data-l10n-id="about-reader-toolbar-color-controls"
+                  data-l10n-id="about-reader-toolbar-theme-controls"
                 ></span>
               </button>
             </li>
