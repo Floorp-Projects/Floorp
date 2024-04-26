@@ -53,7 +53,7 @@ class ProviderContextualSearch extends ActionsProvider {
     }
 
     let engine = await this.fetchEngine(controller);
-    let icon = engine.icon || (await engine.getIconURL?.());
+    let icon = engine?.icon || (await engine.getIconURL?.());
     let defaultEngine = lazy.UrlbarSearchUtils.getDefaultEngine();
 
     if (
@@ -69,7 +69,6 @@ class ProviderContextualSearch extends ActionsProvider {
       l10nId: "urlbar-result-search-with",
       l10nArgs: { engine: engine.name || engine.title },
       icon,
-      dataset: { input: queryContext.searchString },
     });
   }
 
@@ -91,7 +90,7 @@ class ProviderContextualSearch extends ActionsProvider {
     return engines[0] ?? browser?.engines?.[0];
   }
 
-  async pickAction(_queryContext, controller, element) {
+  async pickAction(queryContext, controller, element) {
     // If we have an engine to add, first create a new OpenSearchEngine, then
     // get and open a url to execute a search for the term in the url bar.
     let engine = await this.fetchEngine(controller);
@@ -104,7 +103,10 @@ class ProviderContextualSearch extends ActionsProvider {
       engine._setIcon(engine.icon, false);
     }
 
-    const [url] = UrlbarUtils.getSearchQueryUrl(engine, element.dataset.input);
+    const [url] = UrlbarUtils.getSearchQueryUrl(
+      engine,
+      queryContext.searchString
+    );
     element.ownerGlobal.gBrowser.fixupAndLoadURIString(url, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
