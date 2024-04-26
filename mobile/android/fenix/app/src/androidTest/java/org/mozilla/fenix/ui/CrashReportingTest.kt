@@ -5,7 +5,6 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -47,7 +46,6 @@ class CrashReportingTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2336134
-    @Ignore("Test failure caused by: https://github.com/mozilla-mobile/fenix/issues/19964")
     @Test
     fun restoreTabFromTabCrashedReporterTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
