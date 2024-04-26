@@ -41,11 +41,10 @@ class VP8Encoder {
   static std::unique_ptr<VideoEncoder> Create(Settings settings);
 };
 
-// TODO: bugs.webrtc.org/15791 - Deprecate and delete in favor of the
-// CreateVp8Decoder function.
+// TODO: bugs.webrtc.org/15791 - Delete in favor of the CreateVp8Decoder below.
 class VP8Decoder {
  public:
-  static std::unique_ptr<VideoDecoder> Create();
+  [[deprecated]] static std::unique_ptr<VideoDecoder> Create();
 };
 
 std::unique_ptr<VideoDecoder> CreateVp8Decoder(const Environment& env);

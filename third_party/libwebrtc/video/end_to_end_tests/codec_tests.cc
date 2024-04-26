@@ -11,6 +11,7 @@
 #include <memory>
 
 #include "absl/types/optional.h"
+#include "api/environment/environment.h"
 #include "api/test/video/function_video_encoder_factory.h"
 #include "api/video/color_space.h"
 #include "api/video/video_rotation.h"
@@ -126,7 +127,9 @@ TEST_F(CodecEndToEndTest, SendsAndReceivesVP8) {
   test::FunctionVideoEncoderFactory encoder_factory(
       []() { return VP8Encoder::Create(); });
   test::FunctionVideoDecoderFactory decoder_factory(
-      []() { return VP8Decoder::Create(); });
+      [](const Environment& env, const SdpVideoFormat& format) {
+        return CreateVp8Decoder(env);
+      });
   CodecObserver test(5, kVideoRotation_0, absl::nullopt, "VP8",
                      &encoder_factory, &decoder_factory);
   RunBaseTest(&test);
@@ -136,7 +139,9 @@ TEST_F(CodecEndToEndTest, SendsAndReceivesVP8Rotation90) {
   test::FunctionVideoEncoderFactory encoder_factory(
       []() { return VP8Encoder::Create(); });
   test::FunctionVideoDecoderFactory decoder_factory(
-      []() { return VP8Decoder::Create(); });
+      [](const Environment& env, const SdpVideoFormat& format) {
+        return CreateVp8Decoder(env);
+      });
   CodecObserver test(5, kVideoRotation_90, absl::nullopt, "VP8",
                      &encoder_factory, &decoder_factory);
   RunBaseTest(&test);
