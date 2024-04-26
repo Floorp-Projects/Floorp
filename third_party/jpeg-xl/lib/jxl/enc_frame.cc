@@ -5,13 +5,12 @@
 
 #include "lib/jxl/enc_frame.h"
 
-#include <stddef.h>
-#include <stdint.h>
-
 #include <algorithm>
 #include <array>
 #include <atomic>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <numeric>
 #include <utility>
@@ -25,6 +24,7 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/coeff_order.h"
@@ -583,10 +583,13 @@ struct PixelStatsForChromacityAdjustment {
     CalcExposedBlue(&opsin->Plane(1), &opsin->Plane(2), rect);
   }
   int HowMuchIsXChannelPixelized() const {
-    if (dx >= 0.03) {
+    if (dx >= 0.026) {
+      return 3;
+    }
+    if (dx >= 0.022) {
       return 2;
     }
-    if (dx >= 0.017) {
+    if (dx >= 0.015) {
       return 1;
     }
     return 0;
@@ -614,17 +617,12 @@ void ComputeChromacityAdjustments(const CompressParams& cparams,
     return;
   }
   // 1) Distance based approach for chromacity adjustment:
-  float x_qm_scale_steps[4] = {1.25f, 7.0f, 15.0f, 24.0f};
-  frame_header->x_qm_scale = 2;
+  float x_qm_scale_steps[3] = {2.5f, 5.5f, 9.5f};
+  frame_header->x_qm_scale = 3;
   for (float x_qm_scale_step : x_qm_scale_steps) {
     if (cparams.original_butteraugli_distance > x_qm_scale_step) {
       frame_header->x_qm_scale++;
     }
-  }
-  if (cparams.butteraugli_distance < 0.299f) {
-    // Favor chromacity preservation for making images appear more
-    // faithful to original even with extreme (5-10x) zooming.
-    frame_header->x_qm_scale++;
   }
   // 2) Pixel-based approach for chromacity adjustment:
   // look at the individual pixels and make a guess how difficult

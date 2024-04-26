@@ -6,13 +6,17 @@
 #ifndef LIB_JXL_MODULAR_TRANSFORM_TRANSFORM_H_
 #define LIB_JXL_MODULAR_TRANSFORM_TRANSFORM_H_
 
+#include <cstddef>
 #include <cstdint>
-#include <string>
 #include <vector>
 
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/field_encodings.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/modular/encoding/context_predict.h"
+#include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/options.h"
 
 namespace jxl {

@@ -6,9 +6,16 @@
 #include "lib/jxl/render_pipeline/low_memory_render_pipeline.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <utility>
+#include <vector>
 
 #include "lib/jxl/base/arch_macros.h"
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/image.h"
 #include "lib/jxl/image_ops.h"
 
 namespace jxl {

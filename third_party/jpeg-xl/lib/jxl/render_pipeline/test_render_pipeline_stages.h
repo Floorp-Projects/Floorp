@@ -3,9 +3,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include <math.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
 
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/render_pipeline/render_pipeline_stage.h"

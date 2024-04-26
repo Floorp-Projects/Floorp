@@ -10,6 +10,7 @@
 
 #include <jxl/cms_interface.h>
 #include <jxl/color_encoding.h>
+#include <jxl/types.h>
 #include <stddef.h>
 #include <stdint.h>
 

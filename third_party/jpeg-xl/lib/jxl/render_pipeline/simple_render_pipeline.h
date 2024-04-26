@@ -6,8 +6,13 @@
 #ifndef LIB_JXL_RENDER_PIPELINE_SIMPLE_RENDER_PIPELINE_H_
 #define LIB_JXL_RENDER_PIPELINE_SIMPLE_RENDER_PIPELINE_H_
 
-#include <stdint.h>
+#include <cstddef>
+#include <utility>
+#include <vector>
 
+#include "lib/jxl/base/rect.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/image.h"
 #include "lib/jxl/render_pipeline/render_pipeline.h"
 
 namespace jxl {

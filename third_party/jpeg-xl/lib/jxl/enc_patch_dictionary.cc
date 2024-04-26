@@ -6,12 +6,12 @@
 #include "lib/jxl/enc_patch_dictionary.h"
 
 #include <jxl/types.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <sys/types.h>
 
 #include <algorithm>
 #include <atomic>
+#include <cstdint>
+#include <cstdlib>
 #include <utility>
 #include <vector>
 
@@ -20,6 +20,7 @@
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/random.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/dec_frame.h"

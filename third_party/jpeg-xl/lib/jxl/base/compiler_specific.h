@@ -8,7 +8,6 @@
 
 // Macros for compiler version + nonstandard keywords, e.g. __builtin_expect.
 
-#include <stdint.h>
 #include <sys/types.h>
 
 #include "lib/jxl/base/sanitizer_definitions.h"
@@ -97,6 +96,11 @@
 #define JXL_UNLIKELY(expr) __builtin_expect(!!(expr), 0)
 #endif
 
+#if JXL_COMPILER_MSVC
+#include <stdint.h>
+using ssize_t = intptr_t;
+#endif
+
 // Returns a void* pointer which the compiler then assumes is N-byte aligned.
 // Example: float* JXL_RESTRICT aligned = (float*)JXL_ASSUME_ALIGNED(in, 32);
 //
@@ -148,10 +152,6 @@
   __attribute__((__format__(__printf__, idx_fmt, idx_arg)))
 #else
 #define JXL_FORMAT(idx_fmt, idx_arg)
-#endif
-
-#if JXL_COMPILER_MSVC
-using ssize_t = intptr_t;
 #endif
 
 #endif  // LIB_JXL_BASE_COMPILER_SPECIFIC_H_

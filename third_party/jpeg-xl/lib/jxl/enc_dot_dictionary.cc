@@ -5,12 +5,12 @@
 
 #include "lib/jxl/enc_dot_dictionary.h"
 
-#include <stddef.h>
-#include <string.h>
-
 #include <array>
+#include <cstddef>
+#include <cstring>
 
 #include "lib/jxl/base/override.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/enc_detect_dots.h"

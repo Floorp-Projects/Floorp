@@ -20,12 +20,7 @@
 #ifndef LIB_JPEGLI_COMMON_H_
 #define LIB_JPEGLI_COMMON_H_
 
-/* clang-format off */
-#include <stdio.h>
-#include <jpeglib.h>
-/* clang-format on */
-
-#include "lib/jpegli/types.h"
+#include "lib/jxl/base/include_jpeglib.h"  // NOLINT
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

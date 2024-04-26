@@ -6,18 +6,23 @@
 #ifndef LIB_JXL_DEC_MODULAR_H_
 #define LIB_JXL_DEC_MODULAR_H_
 
-#include <stddef.h>
-
+#include <cstddef>
+#include <cstdint>
 #include <string>
+#include <vector>
 
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/dec_cache.h"
+#include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/frame_header.h"
-#include "lib/jxl/image.h"
+#include "lib/jxl/modular/encoding/dec_ma.h"
 #include "lib/jxl/modular/encoding/encoding.h"
 #include "lib/jxl/modular/modular_image.h"
+#include "lib/jxl/quant_weights.h"
+#include "lib/jxl/render_pipeline/render_pipeline.h"
 
 namespace jxl {
 

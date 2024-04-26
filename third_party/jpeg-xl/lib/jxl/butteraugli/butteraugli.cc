@@ -22,13 +22,12 @@
 
 #include "lib/jxl/butteraugli/butteraugli.h"
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <vector>
 
@@ -40,6 +39,7 @@
 
 #include "lib/jxl/base/fast_math-inl.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/image_ops.h"

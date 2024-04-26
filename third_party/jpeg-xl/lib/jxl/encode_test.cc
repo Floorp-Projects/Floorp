@@ -233,7 +233,7 @@ void VerifyFrameEncoding(size_t xsize, size_t ysize, JxlEncoder* enc,
 
   static constexpr double kMaxButteraugli =
 #if JXL_HIGH_PRECISION
-      1.84;
+      3.2;
 #else
       8.7;
 #endif
@@ -461,7 +461,7 @@ TEST(EncodeTest, FrameSettingsTest) {
     JxlEncoderFrameSettings* frame_settings =
         JxlEncoderFrameSettingsCreate(enc.get(), nullptr);
     EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetFrameDistance(frame_settings, 0.5));
-    VerifyFrameEncoding(63, 129, enc.get(), frame_settings, 3130, false);
+    VerifyFrameEncoding(63, 129, enc.get(), frame_settings, 3200, false);
     EXPECT_EQ(0.5, enc->last_used_cparams.butteraugli_distance);
   }
 
@@ -1888,7 +1888,7 @@ TEST_P(EncoderStreamingTest, OutputCallback) {
                  p.color_includes_alpha(), p.is_lossless());
 
   std::vector<uint8_t> compressed = std::vector<uint8_t>(64);
-  // without sreaming
+  // without streaming
   {
     JxlEncoderPtr enc = JxlEncoderMake(nullptr);
     ASSERT_NE(nullptr, enc.get());

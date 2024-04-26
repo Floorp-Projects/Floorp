@@ -5,9 +5,8 @@
 
 #include "lib/jxl/dec_modular.h"
 
-#include <stdint.h>
-
 #include <atomic>
+#include <cstdint>
 #include <vector>
 
 #include "lib/jxl/frame_header.h"
@@ -19,6 +18,7 @@
 
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/compressed_dc.h"
 #include "lib/jxl/epf.h"

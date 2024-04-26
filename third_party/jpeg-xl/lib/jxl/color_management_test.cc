@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -20,6 +21,7 @@
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/cms/color_encoding_cms.h"
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/color_encoding_internal.h"
@@ -417,7 +419,7 @@ TEST_F(ColorManagementTest, XYBProfile) {
       }
     }
   }
-  static float kMaxError[3] = {9e-4, 4e-4, 5e-4};
+  static float kMaxError[3] = {8.7e-4, 4.4e-4, 5.2e-4};
   printf("Maximum errors:\n");
   for (size_t c = 0; c < 3; ++c) {
     debug_print_color(max_err_i[c]);

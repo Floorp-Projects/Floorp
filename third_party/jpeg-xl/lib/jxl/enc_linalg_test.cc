@@ -5,6 +5,8 @@
 
 #include "lib/jxl/enc_linalg.h"
 
+#include <cstddef>
+
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/testing.h"
 

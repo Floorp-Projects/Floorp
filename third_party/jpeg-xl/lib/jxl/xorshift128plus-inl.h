@@ -12,8 +12,8 @@
 #define LIB_JXL_XORSHIFT128PLUS_INL_H_
 #endif
 
-#include <stddef.h>
-
+#include <cstddef>
+#include <cstdint>
 #include <hwy/highway.h>
 HWY_BEFORE_NAMESPACE();
 namespace jxl {

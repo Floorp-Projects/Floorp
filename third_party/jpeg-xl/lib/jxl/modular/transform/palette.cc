@@ -5,6 +5,10 @@
 
 #include "lib/jxl/modular/transform/palette.h"
 
+#include <atomic>
+
+#include "lib/jxl/modular/transform/transform.h"  // CheckEqualChannels
+
 namespace jxl {
 
 Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,

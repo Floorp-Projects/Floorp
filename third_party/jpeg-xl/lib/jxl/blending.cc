@@ -5,7 +5,16 @@
 
 #include "lib/jxl/blending.h"
 
+#include <cstddef>
+#include <cstring>
+#include <vector>
+
 #include "lib/jxl/alpha.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/dec_patch_dictionary.h"
+#include "lib/jxl/frame_header.h"
+#include "lib/jxl/image.h"
+#include "lib/jxl/image_metadata.h"
 
 namespace jxl {
 

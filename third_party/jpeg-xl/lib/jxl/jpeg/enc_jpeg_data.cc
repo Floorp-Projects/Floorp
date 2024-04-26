@@ -88,7 +88,7 @@ Status DetectBlobs(jpeg::JPEGData& jpeg_data) {
       // Something is wrong with this marker; does not care.
       continue;
     }
-    if (!have_exif && payload.size() >= sizeof kExifTag &&
+    if (!have_exif && payload.size() > sizeof kExifTag &&
         !memcmp(payload.data(), kExifTag, sizeof kExifTag)) {
       jpeg_data.app_marker_type[i] = AppMarkerType::kExif;
       have_exif = true;

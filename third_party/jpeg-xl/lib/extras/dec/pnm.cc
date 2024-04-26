@@ -5,17 +5,17 @@
 
 #include "lib/extras/dec/pnm.h"
 
-#include <stdlib.h>
-#include <string.h>
+#include <jxl/encode.h>
 
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
-#include <mutex>
+#include <cstdlib>
+#include <cstring>
 
-#include "jxl/encode.h"
 #include "lib/extras/size_constraints.h"
 #include "lib/jxl/base/bits.h"
-#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 
 namespace jxl {

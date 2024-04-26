@@ -6,20 +6,17 @@
 #ifndef LIB_JXL_ENC_ENTROPY_CODER_H_
 #define LIB_JXL_ENC_ENTROPY_CODER_H_
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 
-#include <memory>
-#include <utility>
+#include <cstdint>
 #include <vector>
 
 #include "lib/jxl/ac_context.h"  // BlockCtxMap
 #include "lib/jxl/ac_strategy.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/rect.h"
+#include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/enc_ans.h"
-#include "lib/jxl/field_encodings.h"
 #include "lib/jxl/frame_header.h"  // YCbCrChromaSubsampling
 #include "lib/jxl/image.h"
 

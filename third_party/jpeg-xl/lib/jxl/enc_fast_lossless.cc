@@ -3612,7 +3612,8 @@ bool detect_palette(const unsigned char* r, size_t width,
   size_t x = 0;
   bool collided = false;
   // this is just an unrolling of the next loop
-  for (; x + 7 < width; x += 8) {
+  size_t look_ahead = 7 + ((nb_chans == 1) ? 3 : ((nb_chans < 4) ? 1 : 0));
+  for (; x + look_ahead < width; x += 8) {
     uint32_t p[8] = {}, index[8];
     for (int i = 0; i < 8; i++) memcpy(&p[i], r + (x + i) * nb_chans, 4);
     for (int i = 0; i < 8; i++) p[i] &= ((1llu << (8 * nb_chans)) - 1);

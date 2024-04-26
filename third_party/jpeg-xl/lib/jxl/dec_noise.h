@@ -8,11 +8,11 @@
 
 // Noise synthesis. Currently disabled.
 
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <utility>
 
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/noise.h"

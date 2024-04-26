@@ -11,7 +11,7 @@
 #include <cstddef>
 
 #include "lib/jxl/base/common.h"
-#include "lib/jxl/image.h"
+#include "lib/jxl/base/rect.h"
 
 namespace jxl {
 // Some enums and typedefs used by more than one header file.

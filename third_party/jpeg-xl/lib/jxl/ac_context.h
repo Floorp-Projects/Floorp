@@ -62,7 +62,8 @@ static JXL_INLINE size_t ZeroDensityContext(size_t nonzeros_left, size_t k,
                                             size_t covered_blocks,
                                             size_t log2_covered_blocks,
                                             size_t prev) {
-  JXL_DASSERT((1u << log2_covered_blocks) == covered_blocks);
+  JXL_DASSERT((static_cast<size_t>(1) << log2_covered_blocks) ==
+              covered_blocks);
   nonzeros_left = (nonzeros_left + covered_blocks - 1) >> log2_covered_blocks;
   k >>= log2_covered_blocks;
   JXL_DASSERT(k > 0);
@@ -109,7 +110,8 @@ struct BlockCtxMap {
   // Non-zero context is based on number of non-zeros and block context.
   // For better clustering, contexts with same number of non-zeros are grouped.
   constexpr uint32_t ZeroDensityContextsOffset(uint32_t block_ctx) const {
-    return num_ctxs * kNonZeroBuckets + kZeroDensityContextCount * block_ctx;
+    return static_cast<uint32_t>(num_ctxs * kNonZeroBuckets +
+                                 kZeroDensityContextCount * block_ctx);
   }
 
   // Context map for AC coefficients consists of 2 blocks:
@@ -121,7 +123,8 @@ struct BlockCtxMap {
   //                               number of non-zeros left and
   //                               index in scan order
   constexpr uint32_t NumACContexts() const {
-    return num_ctxs * (kNonZeroBuckets + kZeroDensityContextCount);
+    return static_cast<uint32_t>(num_ctxs *
+                                 (kNonZeroBuckets + kZeroDensityContextCount));
   }
 
   // Non-zero context is based on number of non-zeros and block context.
@@ -134,7 +137,7 @@ struct BlockCtxMap {
     } else {
       ctx = 4 + non_zeros / 2;
     }
-    return ctx * num_ctxs + block_ctx;
+    return static_cast<uint32_t>(ctx * num_ctxs + block_ctx);
   }
 
   BlockCtxMap() {

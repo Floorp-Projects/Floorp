@@ -6,12 +6,13 @@
 #include "lib/jxl/splines.h"
 
 #include <algorithm>
-#include <cinttypes>
+#include <cinttypes>  // PRIu64
 #include <cmath>
 #include <limits>
 
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/common.h"  // JXL_HIGH_PRECISION

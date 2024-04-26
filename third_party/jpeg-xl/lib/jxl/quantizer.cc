@@ -5,11 +5,11 @@
 
 #include "lib/jxl/quantizer.h"
 
-#include <string.h>
-
 #include <algorithm>
+#include <cstring>
 
 #include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/field_encodings.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image.h"

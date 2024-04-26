@@ -454,6 +454,10 @@ Status EncodeJpeg(const PackedPixelFile& ppf, const JpegSettings& jpeg_settings,
         cinfo.comp_info[i].h_samp_factor = 1;
         cinfo.comp_info[i].v_samp_factor = 1;
       }
+    } else if (!jpeg_settings.xyb) {
+      // Default is no chroma subsampling.
+      cinfo.comp_info[0].h_samp_factor = 1;
+      cinfo.comp_info[0].v_samp_factor = 1;
     }
     jpegli_enable_adaptive_quantization(
         &cinfo, TO_JXL_BOOL(jpeg_settings.use_adaptive_quantization));

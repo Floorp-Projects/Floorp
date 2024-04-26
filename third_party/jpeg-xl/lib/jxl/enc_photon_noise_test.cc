@@ -5,7 +5,6 @@
 
 #include "lib/jxl/enc_photon_noise.h"
 
-#include "lib/jxl/base/common.h"
 #include "lib/jxl/noise.h"
 #include "lib/jxl/testing.h"
 

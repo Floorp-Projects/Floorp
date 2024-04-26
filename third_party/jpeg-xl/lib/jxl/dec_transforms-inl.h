@@ -10,12 +10,10 @@
 #define LIB_JXL_DEC_TRANSFORMS_INL_H_
 #endif
 
-#include <stddef.h>
-
+#include <cstddef>
 #include <hwy/highway.h>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/dct-inl.h"
 #include "lib/jxl/dct_scales.h"
 HWY_BEFORE_NAMESPACE();

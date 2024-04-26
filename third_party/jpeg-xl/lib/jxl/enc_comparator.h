@@ -6,6 +6,8 @@
 #ifndef LIB_JXL_ENC_COMPARATOR_H_
 #define LIB_JXL_ENC_COMPARATOR_H_
 
+#include <jxl/cms_interface.h>
+
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/image.h"

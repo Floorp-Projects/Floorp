@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef LIB_JXL_MATRIX_OPS_H_
-#define LIB_JXL_MATRIX_OPS_H_
+#ifndef LIB_JXL_BASE_MATRIX_OPS_H_
+#define LIB_JXL_BASE_MATRIX_OPS_H_
 
 // 3x3 matrix operations.
 
@@ -83,4 +83,4 @@ Status Inv3x3Matrix(Matrix& matrix) {
 
 }  // namespace jxl
 
-#endif  // LIB_JXL_MATRIX_OPS_H_
+#endif  // LIB_JXL_BASE_MATRIX_OPS_H_

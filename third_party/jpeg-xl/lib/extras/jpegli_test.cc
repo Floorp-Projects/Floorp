@@ -255,7 +255,7 @@ TEST(JpegliTest, JpegliHDRRoundtripTest) {
   std::string testimage = "jxl/hdr_room.png";
   PackedPixelFile ppf_in;
   ASSERT_TRUE(ReadTestImage(testimage, &ppf_in));
-  EXPECT_EQ("RGB_D65_202_Rel_HLG", Description(ppf_in.color_encoding));
+  EXPECT_EQ("Rec2100HLG", Description(ppf_in.color_encoding));
   EXPECT_EQ(16, ppf_in.info.bits_per_sample);
 
   std::vector<uint8_t> compressed;

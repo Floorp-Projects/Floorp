@@ -247,7 +247,7 @@ TEST_P(RenderPipelineTestParam, PipelineTest) {
   ASSERT_EQ(io_default.frames.size(), io_slow_pipeline.frames.size());
   for (size_t i = 0; i < io_default.frames.size(); i++) {
 #if JXL_HIGH_PRECISION
-    constexpr float kMaxError = 5e-5;
+    constexpr float kMaxError = 2e-4;
 #else
     constexpr float kMaxError = 5e-4;
 #endif

@@ -6,9 +6,10 @@
 #ifndef LIB_JXL_DCT_UTIL_H_
 #define LIB_JXL_DCT_UTIL_H_
 
-#include <stddef.h>
-
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <type_traits>
 
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/status.h"

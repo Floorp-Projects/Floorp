@@ -6,9 +6,9 @@
 #ifndef LIB_JXL_MODULAR_OPTIONS_H_
 #define LIB_JXL_MODULAR_OPTIONS_H_
 
-#include <stdint.h>
-
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "lib/jxl/enc_ans_params.h"

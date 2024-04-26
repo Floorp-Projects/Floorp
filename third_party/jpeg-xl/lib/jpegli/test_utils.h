@@ -6,22 +6,15 @@
 #ifndef LIB_JPEGLI_TEST_UTILS_H_
 #define LIB_JPEGLI_TEST_UTILS_H_
 
-#include <stddef.h>
-#include <stdint.h>
-
-#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
-/* clang-format off */
-#include <stdio.h>
-#include <jpeglib.h>
-#include <setjmp.h>
-/* clang-format on */
-
-#include "lib/jpegli/common.h"
-#include "lib/jpegli/libjpeg_test_util.h"
 #include "lib/jpegli/test_params.h"
+#include "lib/jpegli/types.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/include_jpeglib.h"  // NOLINT
 
 namespace jpegli {
 
@@ -126,5 +119,16 @@ void VerifyOutputImage(const TestImage& input, const TestImage& output,
                        double max_rms, double max_diff = 255.0);
 
 }  // namespace jpegli
+
+#if !defined(FUZZ_TEST)
+struct FuzzTestSink {
+  template <typename F>
+  FuzzTestSink WithSeeds(F) {
+    return *this;
+  }
+};
+#define FUZZ_TEST(A, B) \
+  const JXL_MAYBE_UNUSED FuzzTestSink unused##A##B = FuzzTestSink()
+#endif
 
 #endif  // LIB_JPEGLI_TEST_UTILS_H_

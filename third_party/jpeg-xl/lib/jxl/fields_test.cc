@@ -5,18 +5,21 @@
 
 #include "lib/jxl/fields.h"
 
-#include <stddef.h>
-#include <stdint.h>
-
 #include <array>
-#include <utility>
+#include <cstddef>
+#include <cstdint>
 
 #include "lib/jxl/base/common.h"
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_fields.h"
+#include "lib/jxl/field_encodings.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/headers.h"
+#include "lib/jxl/image_metadata.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {

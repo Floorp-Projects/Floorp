@@ -21,6 +21,7 @@
 #define LIB_JPEGLI_DECODE_H_
 
 #include "lib/jpegli/common.h"
+#include "lib/jpegli/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

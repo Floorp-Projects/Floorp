@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef LIB_JXL_EXIF_H_
-#define LIB_JXL_EXIF_H_
+#ifndef LIB_JXL_BASE_EXIF_H_
+#define LIB_JXL_BASE_EXIF_H_
 
 // Basic parsing of Exif (just enough for the render-impacting things
 // like orientation)
@@ -87,4 +87,4 @@ JXL_INLINE void InterpretExif(const std::vector<uint8_t>& exif,
 
 }  // namespace jxl
 
-#endif  // LIB_JXL_EXIF_H_
+#endif  // LIB_JXL_BASE_EXIF_H_

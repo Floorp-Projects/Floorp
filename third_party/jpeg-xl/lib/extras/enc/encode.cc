@@ -134,5 +134,13 @@ std::unique_ptr<Encoder> Encoder::FromExtension(std::string extension) {
   return nullptr;
 }
 
+std::string ListOfEncodeCodecs() {
+  std::string list_of_codecs("PPM, PNM, PFM, PAM, PGX");
+  if (GetAPNGEncoder()) list_of_codecs.append(", PNG, APNG");
+  if (GetJPEGEncoder()) list_of_codecs.append(", JPEG");
+  if (GetEXREncoder()) list_of_codecs.append(", EXR");
+  return list_of_codecs;
+}
+
 }  // namespace extras
 }  // namespace jxl

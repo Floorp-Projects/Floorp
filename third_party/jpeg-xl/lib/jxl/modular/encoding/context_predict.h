@@ -6,9 +6,17 @@
 #ifndef LIB_JXL_MODULAR_ENCODING_CONTEXT_PREDICT_H_
 #define LIB_JXL_MODULAR_ENCODING_CONTEXT_PREDICT_H_
 
-#include <utility>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
+#include "lib/jxl/base/bits.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/field_encodings.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/modular/modular_image.h"

@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 #include <vector>
 
 #include "lib/jxl/base/status.h"
@@ -41,6 +42,8 @@ class Span {
                   "Incompatible type of source.");
   }
 
+  using NCT = typename std::remove_const<T>::type;
+
   constexpr T* data() const noexcept { return ptr_; }
 
   constexpr size_t size() const noexcept { return len_; }
@@ -62,11 +65,11 @@ class Span {
     len_ -= n;
   }
 
-  // NCT == non-const-T; compiler will complain if NCT is not compatible with T.
-  template <typename NCT>
   void AppendTo(std::vector<NCT>& dst) const {
     dst.insert(dst.end(), begin(), end());
   }
+
+  std::vector<NCT> Copy() const { return std::vector<NCT>(begin(), end()); }
 
  private:
   T* ptr_;

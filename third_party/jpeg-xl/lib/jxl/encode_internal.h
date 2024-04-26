@@ -214,7 +214,7 @@ class JxlEncoderChunkedFrameAdapter {
   }
 
   // TODO(szabadka) Move instead of copy.
-  void SetJPEGData(const jpeg::JPEGData jpeg_data) {
+  void SetJPEGData(const jpeg::JPEGData& jpeg_data) {
     jpeg_data_ = jpeg_data;
     has_jpeg_data_ = true;
   }

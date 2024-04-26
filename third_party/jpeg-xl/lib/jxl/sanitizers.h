@@ -6,20 +6,20 @@
 #ifndef LIB_JXL_SANITIZERS_H_
 #define LIB_JXL_SANITIZERS_H_
 
-#include <stddef.h>
+#include <cstddef>
 
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/sanitizer_definitions.h"
 #include "lib/jxl/image.h"
 
 #if JXL_MEMORY_SANITIZER
-#include <inttypes.h>
-#include <stdio.h>
-
 #include <algorithm>
+#include <cinttypes>  // PRId64
+#include <cstdio>
 #include <string>
 #include <vector>
 
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
 #include "sanitizer/msan_interface.h"
 #endif

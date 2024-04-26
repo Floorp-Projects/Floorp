@@ -8,14 +8,13 @@
 
 #include <jxl/codestream_header.h>
 #include <jxl/types.h>
-#include <stddef.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
 
 #include "lib/extras/packed_image.h"
-#include "lib/jxl/base/span.h"
 
 namespace jxl {
 namespace test {

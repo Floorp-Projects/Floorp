@@ -5,12 +5,7 @@
 
 #include "lib/jpegli/libjpeg_test_util.h"
 
-/* clang-format off */
-#include <stdio.h>
-#include <jpeglib.h>
-#include <setjmp.h>
-/* clang-format on */
-
+#include "lib/jxl/base/include_jpeglib.h"  // NOLINT
 #include "lib/jxl/sanitizers.h"
 
 namespace jpegli {

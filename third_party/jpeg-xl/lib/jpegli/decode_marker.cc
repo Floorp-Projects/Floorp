@@ -103,9 +103,6 @@ void ProcessSOF(j_decompress_ptr cinfo, const uint8_t* data, size_t len) {
     int quant_tbl_idx = ReadUint8(data, &pos);
     JPEG_VERIFY_INPUT(quant_tbl_idx, 0, NUM_QUANT_TBLS - 1);
     comp->quant_tbl_no = quant_tbl_idx;
-    if (cinfo->quant_tbl_ptrs[quant_tbl_idx] == nullptr) {
-      JPEGLI_ERROR("Quantization table with index %u not found", quant_tbl_idx);
-    }
     comp->quant_table = nullptr;  // will be allocated after SOS marker
   }
   JPEG_VERIFY_MARKER_END();
@@ -168,6 +165,7 @@ void ProcessSOS(j_decompress_ptr cinfo, const uint8_t* data, size_t len) {
   if (!m->found_sof_) {
     JPEGLI_ERROR("Unexpected SOS marker.");
   }
+  m->found_sos_ = true;
   size_t pos = 2;
   JPEG_VERIFY_LEN(1);
   cinfo->comps_in_scan = ReadUint8(data, &pos);
@@ -337,7 +335,7 @@ void ProcessDHT(j_decompress_ptr cinfo, const uint8_t* data, size_t len) {
 
 void ProcessDQT(j_decompress_ptr cinfo, const uint8_t* data, size_t len) {
   jpeg_decomp_master* m = cinfo->master;
-  if (m->found_sof_) {
+  if (m->found_sos_) {
     JPEGLI_ERROR("Updating quant tables between scans is not supported.");
   }
   size_t pos = 2;

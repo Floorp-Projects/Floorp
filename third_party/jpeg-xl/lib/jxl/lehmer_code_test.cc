@@ -5,16 +5,15 @@
 
 #include "lib/jxl/lehmer_code.h"
 
-#include <stdint.h>
-#include <string.h>
-
-#include <algorithm>
+#include <cstdint>
+#include <cstring>
 #include <numeric>
 #include <vector>
 
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/random.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 

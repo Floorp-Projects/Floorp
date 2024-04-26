@@ -6,21 +6,17 @@
 #ifndef LIB_JXL_QUANTIZER_H_
 #define LIB_JXL_QUANTIZER_H_
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-
 #include <algorithm>
 #include <cmath>
-#include <utility>
-#include <vector>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 
-#include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/rect.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/dct_util.h"
 #include "lib/jxl/dec_bit_reader.h"
+#include "lib/jxl/field_encodings.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/quant_weights.h"

@@ -10,7 +10,7 @@
 #include <jxl/decode_cxx.h>
 #include <jxl/types.h>
 
-#include <cinttypes>
+#include <cinttypes>  // PRIu32
 
 #include "lib/extras/common.h"
 #include "lib/extras/dec/color_description.h"
@@ -211,7 +211,7 @@ bool DecodeImageJXL(const uint8_t* bytes, size_t bytes_size,
     return false;
   }
   uint32_t progression_index = 0;
-  bool codestream_done = accepted_formats.empty();
+  bool codestream_done = jpeg_bytes == nullptr && accepted_formats.empty();
   BoxProcessor boxes(dec);
   for (;;) {
     JxlDecoderStatus status = JxlDecoderProcessInput(dec);

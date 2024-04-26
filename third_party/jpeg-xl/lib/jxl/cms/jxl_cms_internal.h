@@ -405,7 +405,7 @@ static Status WriteICCS15Fixed16(float value, size_t pos,
   // Even the first value works well,...
   bool ok = (-32767.995f <= value) && (value <= 32767.995f);
   if (!ok) return JXL_FAILURE("ICC value is out of range / NaN");
-  int32_t i = value * 65536.0f + 0.5f;
+  int32_t i = static_cast<int32_t>(std::lround(value * 65536.0f));
   // Use two's complement
   uint32_t u = static_cast<uint32_t>(i);
   WriteICCUint32(u, pos, icc);
@@ -849,6 +849,20 @@ static std::string ToString(JxlRenderingIntent rendering_intent) {
 }
 
 static std::string ColorEncodingDescriptionImpl(const JxlColorEncoding& c) {
+  if (c.color_space == JXL_COLOR_SPACE_RGB &&
+      c.white_point == JXL_WHITE_POINT_D65) {
+    if (c.rendering_intent == JXL_RENDERING_INTENT_PERCEPTUAL &&
+        c.transfer_function == JXL_TRANSFER_FUNCTION_SRGB) {
+      if (c.primaries == JXL_PRIMARIES_SRGB) return "sRGB";
+      if (c.primaries == JXL_PRIMARIES_P3) return "DisplayP3";
+    }
+    if (c.rendering_intent == JXL_RENDERING_INTENT_RELATIVE &&
+        c.primaries == JXL_PRIMARIES_2100) {
+      if (c.transfer_function == JXL_TRANSFER_FUNCTION_PQ) return "Rec2100PQ";
+      if (c.transfer_function == JXL_TRANSFER_FUNCTION_HLG) return "Rec2100HLG";
+    }
+  }
+
   std::string d = ToString(c.color_space);
 
   bool explicit_wp_tf = (c.color_space != JXL_COLOR_SPACE_XYB);
