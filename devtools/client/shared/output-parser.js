@@ -1730,7 +1730,7 @@ class OutputParser {
    */
   #sanitizeURL(url) {
     // Re-lex the URL and add any needed termination characters.
-    const urlTokenizer = getCSSLexer(url);
+    const urlTokenizer = getCSSLexer(url, true, true);
     // Just read until EOF; there will only be a single token.
     while (urlTokenizer.nextToken()) {
       // Nothing.
