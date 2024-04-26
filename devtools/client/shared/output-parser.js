@@ -67,6 +67,13 @@ const BACKDROP_FILTER_ENABLED = Services.prefs.getBoolPref(
 );
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
+// This regexp matches a URL token.  It puts the "url(", any
+// leading whitespace, and any opening quote into |leader|; the
+// URL text itself into |body|, and any trailing quote, trailing
+// whitespace, and the ")" into |trailer|.
+const URL_REGEX =
+  /^(?<leader>url\([ \t\r\n\f]*(["']?))(?<body>.*?)(?<trailer>\2[ \t\r\n\f]*\))$/i;
+
 // Very long text properties should be truncated using CSS to avoid creating
 // extremely tall propertyvalue containers. 5000 characters is an arbitrary
 // limit. Assuming an average ruleview can hold 50 characters per line, this
@@ -175,7 +182,7 @@ class OutputParser {
    * @param  {Boolean} stopAtComma
    *         If true, stop at a comma.
    * @return {Object}
-   *         An object of the form {tokens, functionData, sawComma, sawVariable}.
+   *         An object of the form {tokens, functionData, sawComma, sawVariable, depth}.
    *         |tokens| is a list of the non-comment, non-whitespace tokens
    *         that were seen. The stopping token (paren or comma) will not
    *         be included.
@@ -184,6 +191,7 @@ class OutputParser {
    *         not be included.
    *         |sawComma| is true if the stop was due to a comma, or false otherwise.
    *         |sawVariable| is true if a variable was seen while parsing the text.
+   *         |depth| is the number of unclosed parenthesis remaining when we return.
    */
   #parseMatchingParens(text, tokenStream, options, stopAtComma) {
     let depth = 1;
@@ -196,24 +204,22 @@ class OutputParser {
       if (!token) {
         break;
       }
-      if (token.tokenType === "comment") {
+      if (token.tokenType === "Comment") {
         continue;
       }
 
-      if (token.tokenType === "symbol") {
-        if (stopAtComma && depth === 1 && token.text === ",") {
-          return { tokens, functionData, sawComma: true, sawVariable };
-        } else if (token.text === "(") {
-          ++depth;
-        } else if (token.text === ")") {
-          --depth;
-          if (depth === 0) {
-            break;
-          }
+      if (stopAtComma && depth === 1 && token.tokenType === "Comma") {
+        return { tokens, functionData, sawComma: true, sawVariable, depth };
+      } else if (token.tokenType === "ParenthesisBlock") {
+        ++depth;
+      } else if (token.tokenType === "CloseParenthesis") {
+        --depth;
+        if (depth === 0) {
+          break;
         }
       } else if (
-        token.tokenType === "function" &&
-        token.text === "var" &&
+        token.tokenType === "Function" &&
+        token.value === "var" &&
         options.getVariableValue
       ) {
         sawVariable = true;
@@ -224,24 +230,24 @@ class OutputParser {
           options
         );
         functionData.push({ node, value, fallbackValue });
-      } else if (token.tokenType === "function") {
+      } else if (token.tokenType === "Function") {
         ++depth;
       }
 
       if (
-        token.tokenType !== "function" ||
-        token.text !== "var" ||
+        token.tokenType !== "Function" ||
+        token.value !== "var" ||
         !options.getVariableValue
       ) {
         functionData.push(text.substring(token.startOffset, token.endOffset));
       }
 
-      if (token.tokenType !== "whitespace") {
+      if (token.tokenType !== "WhiteSpace") {
         tokens.push(token);
       }
     }
 
-    return { tokens, functionData, sawComma: false, sawVariable };
+    return { tokens, functionData, sawComma: false, sawVariable, depth };
   }
 
   /**
@@ -389,19 +395,23 @@ class OutputParser {
       }
       const lowerCaseTokenText = token.text?.toLowerCase();
 
-      if (token.tokenType === "comment") {
+      if (token.tokenType === "Comment") {
         // This doesn't change spaceNeeded, because we didn't emit
         // anything to the output.
         continue;
       }
 
       switch (token.tokenType) {
-        case "function": {
-          const isColorTakingFunction =
-            COLOR_TAKING_FUNCTIONS.includes(lowerCaseTokenText);
+        case "Function": {
+          const functionName = token.value;
+          const lowerCaseFunctionName = functionName.toLowerCase();
+
+          const isColorTakingFunction = COLOR_TAKING_FUNCTIONS.includes(
+            lowerCaseFunctionName
+          );
           if (
             isColorTakingFunction ||
-            ANGLE_TAKING_FUNCTIONS.includes(lowerCaseTokenText)
+            ANGLE_TAKING_FUNCTIONS.includes(lowerCaseFunctionName)
           ) {
             // The function can accept a color or an angle argument, and we know
             // it isn't special in some other way. So, we let it
@@ -414,10 +424,13 @@ class OutputParser {
               outerMostFunctionTakesColor = isColorTakingFunction;
             }
             if (isColorTakingFunction) {
-              colorFunctions.push({ parenDepth, functionName: token.text });
+              colorFunctions.push({ parenDepth, functionName });
             }
             ++parenDepth;
-          } else if (lowerCaseTokenText === "var" && options.getVariableValue) {
+          } else if (
+            lowerCaseFunctionName === "var" &&
+            options.getVariableValue
+          ) {
             const { node: variableNode, value } = this.#parseVariable(
               token,
               text,
@@ -434,20 +447,17 @@ class OutputParser {
               this.#parsed.push(variableNode);
             }
           } else {
-            const { functionData, sawVariable } = this.#parseMatchingParens(
-              text,
-              tokenStream,
-              options
-            );
-
-            const functionName = text.substring(
-              token.startOffset,
-              token.endOffset
-            );
+            const {
+              functionData,
+              sawVariable,
+              tokens: functionArgTokens,
+              depth,
+            } = this.#parseMatchingParens(text, tokenStream, options);
 
             if (sawVariable) {
               const computedFunctionText =
                 functionName +
+                "(" +
                 functionData
                   .map(data => {
                     if (typeof data === "string") {
@@ -466,6 +476,7 @@ class OutputParser {
                   colorFunction: colorFunctions.at(-1)?.functionName,
                   valueParts: [
                     functionName,
+                    "(",
                     ...functionData.map(data => data.node || data),
                     ")",
                   ],
@@ -473,7 +484,7 @@ class OutputParser {
               } else {
                 // If function contains variable, we need to add both strings
                 // and nodes.
-                this.#appendTextNode(functionName);
+                this.#appendTextNode(functionName + "(");
                 for (const data of functionData) {
                   if (typeof data === "string") {
                     this.#appendTextNode(data);
@@ -486,16 +497,40 @@ class OutputParser {
             } else {
               // If no variable in function, join the text together and add
               // to DOM accordingly.
-              const functionText = functionName + functionData.join("") + ")";
+              const functionText =
+                functionName +
+                "(" +
+                functionData.join("") +
+                // only append closing parenthesis if the authored text actually had it
+                // In such case, we should probably indicate that there's a "syntax error"
+                // See Bug 1891461.
+                (depth == 0 ? ")" : "");
 
-              if (
+              if (lowerCaseFunctionName === "url" && options.urlClass) {
+                // url() with quoted strings are not mapped as UnquotedUrl,
+                // instead, we get a "Function" token with "url" function name,
+                // and later, a "QuotedString" token, which contains the actual URL.
+                let url;
+                for (const argToken of functionArgTokens) {
+                  if (argToken.tokenType === "QuotedString") {
+                    url = argToken.value;
+                    break;
+                  }
+                }
+
+                if (url !== undefined) {
+                  this.#appendURL(functionText, url, options);
+                } else {
+                  this.#appendTextNode(functionText);
+                }
+              } else if (
                 options.expectCubicBezier &&
-                lowerCaseTokenText === "cubic-bezier"
+                lowerCaseFunctionName === "cubic-bezier"
               ) {
                 this.#appendCubicBezier(functionText, options);
               } else if (
                 options.expectLinearEasing &&
-                lowerCaseTokenText === "linear"
+                lowerCaseFunctionName === "linear"
               ) {
                 this.#appendLinear(functionText, options);
               } else if (
@@ -508,7 +543,7 @@ class OutputParser {
                 });
               } else if (
                 options.expectShape &&
-                BASIC_SHAPE_FUNCTIONS.includes(lowerCaseTokenText)
+                BASIC_SHAPE_FUNCTIONS.includes(lowerCaseFunctionName)
               ) {
                 this.#appendShape(functionText, options);
               } else {
@@ -519,7 +554,7 @@ class OutputParser {
           break;
         }
 
-        case "ident":
+        case "Ident":
           if (
             options.expectCubicBezier &&
             BEZIER_KEYWORDS.includes(lowerCaseTokenText)
@@ -553,8 +588,8 @@ class OutputParser {
           }
           break;
 
-        case "id":
-        case "hash": {
+        case "IDHash":
+        case "Hash": {
           const original = text.substring(token.startOffset, token.endOffset);
           if (colorOK() && InspectorUtils.isValidCSSColor(original)) {
             if (spaceNeeded) {
@@ -571,7 +606,7 @@ class OutputParser {
           }
           break;
         }
-        case "dimension":
+        case "Dimension":
           const value = text.substring(token.startOffset, token.endOffset);
           if (angleOK(value)) {
             this.#appendAngle(value, options);
@@ -579,16 +614,16 @@ class OutputParser {
             this.#appendTextNode(value);
           }
           break;
-        case "url":
-        case "bad_url":
+        case "UnquotedUrl":
+        case "BadUrl":
           this.#appendURL(
             text.substring(token.startOffset, token.endOffset),
-            token.text,
+            token.value,
             options
           );
           break;
 
-        case "string":
+        case "QuotedString":
           if (options.expectFont) {
             fontFamilyNameParts.push(
               text.substring(token.startOffset, token.endOffset)
@@ -600,7 +635,7 @@ class OutputParser {
           }
           break;
 
-        case "whitespace":
+        case "WhiteSpace":
           if (options.expectFont) {
             fontFamilyNameParts.push(" ");
           } else {
@@ -610,32 +645,44 @@ class OutputParser {
           }
           break;
 
-        case "symbol":
-          if (token.text === "(") {
-            ++parenDepth;
-          } else if (token.text === ")") {
-            --parenDepth;
+        case "ParenthesisBlock":
+          ++parenDepth;
+          this.#appendTextNode(
+            text.substring(token.startOffset, token.endOffset)
+          );
+          break;
 
-            if (colorFunctions.at(-1)?.parenDepth == parenDepth) {
-              colorFunctions.pop();
-            }
+        case "CloseParenthesis":
+          --parenDepth;
 
-            if (stopAtCloseParen && parenDepth === 0) {
-              done = true;
-              break;
-            }
+          if (colorFunctions.at(-1)?.parenDepth == parenDepth) {
+            colorFunctions.pop();
+          }
 
-            if (parenDepth === 0) {
-              outerMostFunctionTakesColor = false;
-            }
-          } else if (
-            (token.text === "," || token.text === "!") &&
+          if (stopAtCloseParen && parenDepth === 0) {
+            done = true;
+            break;
+          }
+
+          if (parenDepth === 0) {
+            outerMostFunctionTakesColor = false;
+          }
+          this.#appendTextNode(
+            text.substring(token.startOffset, token.endOffset)
+          );
+          break;
+
+        case "Comma":
+        case "Delim":
+          if (
+            (token.tokenType === "Comma" || token.text === "!") &&
             options.expectFont &&
             fontFamilyNameParts.length !== 0
           ) {
             this.#appendFontFamily(fontFamilyNameParts.join(""), options);
             fontFamilyNameParts = [];
           }
+
         // falls through
         default:
           this.#appendTextNode(
@@ -647,15 +694,15 @@ class OutputParser {
       // If this token might possibly introduce token pasting when
       // color-cycling, require a space.
       spaceNeeded =
-        token.tokenType === "ident" ||
-        token.tokenType === "at" ||
-        token.tokenType === "id" ||
-        token.tokenType === "hash" ||
-        token.tokenType === "number" ||
-        token.tokenType === "dimension" ||
-        token.tokenType === "percentage" ||
-        token.tokenType === "dimension";
-      previousWasBang = token.tokenType === "symbol" && token.text === "!";
+        token.tokenType === "Ident" ||
+        token.tokenType === "AtKeyword" ||
+        token.tokenType === "IDHash" ||
+        token.tokenType === "Hash" ||
+        token.tokenType === "Number" ||
+        token.tokenType === "Dimension" ||
+        token.tokenType === "Percentage" ||
+        token.tokenType === "Dimension";
+      previousWasBang = token.tokenType === "Delim" && token.text === "!";
     }
 
     if (options.expectFont && fontFamilyNameParts.length !== 0) {
@@ -686,7 +733,7 @@ class OutputParser {
     text = text.trim();
     this.#parsed.length = 0;
 
-    const tokenStream = getCSSLexer(text);
+    const tokenStream = getCSSLexer(text, true);
     return this.#doParse(text, options, tokenStream, false);
   }
 
@@ -1756,14 +1803,7 @@ class OutputParser {
       // leave the termination characters.  This isn't strictly
       // "as-authored", but it makes a bit more sense.
       match = this.#sanitizeURL(match);
-      // This regexp matches a URL token.  It puts the "url(", any
-      // leading whitespace, and any opening quote into |leader|; the
-      // URL text itself into |body|, and any trailing quote, trailing
-      // whitespace, and the ")" into |trailer|.  We considered adding
-      // functionality for this to CSSLexer, in some way, but this
-      // seemed simpler on the whole.
-      const urlParts =
-        /^(url\([ \t\r\n\f]*(["']?))(.*?)(\2[ \t\r\n\f]*\))$/i.exec(match);
+      const urlParts = URL_REGEX.exec(match);
 
       // Bail out if that didn't match anything.
       if (!urlParts) {
@@ -1771,7 +1811,7 @@ class OutputParser {
         return;
       }
 
-      const [, leader, , body, trailer] = urlParts;
+      const { leader, body, trailer } = urlParts.groups;
 
       this.#appendTextNode(leader);
 
