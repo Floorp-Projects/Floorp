@@ -743,10 +743,20 @@ body.hcm .color-scheme-buttons {
     fill: currentColor;
     border: none;
 
-    &.left-align-button {
-      background-image: url("chrome://global/skin/reader/align-left-20.svg");
+    /* border radius does not target class because button order
+     * can be opposite in RTL */
+    &:first-of-type {
       border-start-start-radius: var(--border-radius-small);
       border-end-start-radius: var(--border-radius-small);
+    }
+
+    &:last-of-type {
+      border-start-end-radius: var(--border-radius-small);
+      border-end-end-radius: var(--border-radius-small);
+    }
+
+    &.left-align-button {
+      background-image: url("chrome://global/skin/reader/align-left-20.svg");
     }
 
     &.center-align-button {
@@ -755,8 +765,6 @@ body.hcm .color-scheme-buttons {
 
     &.right-align-button {
       background-image: url("chrome://global/skin/reader/align-right-20.svg");
-      border-start-end-radius: var(--border-radius-small);
-      border-end-end-radius: var(--border-radius-small);
     }
 
     &[checked] {
