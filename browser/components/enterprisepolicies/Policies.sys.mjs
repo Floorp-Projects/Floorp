@@ -2467,13 +2467,6 @@ export var Policies = {
 
   UserMessaging: {
     onBeforeAddons(manager, param) {
-      if ("WhatsNew" in param) {
-        PoliciesUtils.setDefaultPref(
-          "browser.messaging-system.whatsNewPanel.enabled",
-          param.WhatsNew,
-          param.Locked
-        );
-      }
       if ("ExtensionRecommendations" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",

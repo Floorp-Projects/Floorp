@@ -1657,11 +1657,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   }
 }
 
-/* What's New panel */
-#customizationui-widget-multiview #PanelUI-whatsNew {
-  max-width: var(--menu-panel-width);
-}
-
+/* Protections panel info message */
 #protections-popup {
   #info-message-container {
     height: 260px;
@@ -1703,7 +1699,16 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
     margin: 12px 0;
   }
 
-  .whatsNew-message-body {
+  .protections-popup-message-title {
+    display: grid;
+    font-size: 1.3em;
+    font-weight: 600;
+    line-height: 1.4em;
+    margin: 14px 0 0;
+    grid-column-start: 1;
+  }
+
+  .protections-popup-message-body {
     /* -10px to compensate for the margin on the container. We can't get rid of that
        because it helps position the background image. */
     margin: 0 calc(-10px + var(--horizontal-padding)) var(--vertical-section-padding);
@@ -1714,129 +1719,6 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
     color: inherit;
     font-weight: 600;
   }
-}
-
-panelview {
-  &[mainview] #PanelUI-whatsNew-content {
-    height: 43em;
-  }
-
-  /* Hide the What's New header when the panel is a subview */
-  &:not([mainview]) #PanelUI-whatsNew-title {
-    display: none;
-  }
-}
-
-#PanelUI-whatsNew {
-  .panelMenu-toggleWhatsNew-checkbox {
-    padding-inline-start: 16px;
-    min-height: 41px;
-  }
-
-  .whatsNew-message {
-    cursor: pointer;
-    margin: 0;
-    padding: 0;
-  }
-
-  /* The following 2 rules show a 1 pixel line separator between What's New
-  * messages while at the same time ensuring that the first message (which has
-  * a date header) will not show the separator
-  */
-  .whatsNew-message-body::before {
-    content: "";
-    display: block;
-    height: 1px;
-    width: 104%;
-    margin-inline-start: -2%;
-    background: var(--panel-separator-color);
-  }
-
-  .has-icon::before {
-    /* the width of the icon + the grid margin */
-    width: calc(104% + 40px);
-  }
-
-  .whatsNew-message-date + .whatsNew-message-body::before {
-    display: none;
-  }
-
-  .whatsNew-message-date {
-    font-size: .85em;
-    margin: -12px;
-    margin-top: 0;
-    margin-inline-start: 0;
-    padding: 6px 16px;
-    background: var(--arrowpanel-dimmed);
-  }
-
-  .whatsNew-message-body {
-    padding: 5px 0 10px;
-    margin: 10px 16px;
-    text-align: inherit;
-    text-decoration: none;
-    color: inherit;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-
-  .whatsNew-message-body.has-icon {
-    display: grid;
-    grid-template-columns: auto 32px;
-    grid-template-rows: 0;
-    grid-gap: 0 8px;
-  }
-
-  .whatsNew-message-icon {
-    height: 32px;
-    width: 32px;
-    margin: 14px auto;
-    display: grid;
-    grid-column-start: 2;
-  }
-
-  .whatsNew-message-subtitle {
-    margin: 2px 0;
-    font-size: .8em;
-    color: #949494;
-    font-weight: normal;
-    grid-column-start: 1;
-  }
-
-  .whatsNew-message-content {
-    display: grid;
-    margin: 5px 0 10px;
-    grid-column-start: 1;
-  }
-
-  .text-link {
-    background: none;
-    border: 0;
-    color: #45a1ff;
-    cursor: pointer;
-    font-size: .9em;
-    grid-column-start: 1;
-
-    &:hover {
-      color: #0a84ff;
-      text-decoration: underline;
-
-      &:active {
-        color: #0060df;
-      }
-    }
-  }
-}
-
-#PanelUI-whatsNew .whatsNew-message-title,
-#protections-popup-message .whatsNew-message-title {
-  display: grid;
-  font-size: 1.3em;
-  font-weight: 600;
-  line-height: 1.4em;
-  margin: 14px 0 0;
-  grid-column-start: 1;
 }
 
 #customizationui-widget-panel {
