@@ -186,7 +186,9 @@ rtc_library("candidate") {
     "candidate.h",
   ]
   deps = [
+    "../p2p:p2p_constants",
     "../rtc_base:checks",
+    "../rtc_base:crc32",
     "../rtc_base:ip_address",
     "../rtc_base:logging",
     "../rtc_base:network_constants",
