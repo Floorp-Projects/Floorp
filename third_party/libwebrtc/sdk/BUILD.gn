@@ -1548,8 +1548,6 @@ if (is_ios || is_mac) {
         "objc/api/video_codec/RTCNativeVideoDecoder.h",
         "objc/api/video_codec/RTCNativeVideoDecoder.mm",
         "objc/api/video_codec/RTCNativeVideoDecoderBuilder+Native.h",
-        "objc/api/video_codec/RTCWrappedNativeVideoDecoder.h",
-        "objc/api/video_codec/RTCWrappedNativeVideoDecoder.mm",
         "objc/api/video_codec/RTCWrappedNativeVideoEncoder.h",
         "objc/api/video_codec/RTCWrappedNativeVideoEncoder.mm",
       ]
@@ -1563,7 +1561,7 @@ if (is_ios || is_mac) {
         "../api/environment",
         "../api/video_codecs:video_codecs_api",
         "../media:codec",
-        "../media:rtc_media_base",
+        "../rtc_base:checks",
       ]
     }
 

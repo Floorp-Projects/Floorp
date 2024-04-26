@@ -10,9 +10,10 @@
 
 #import <Foundation/Foundation.h>
 
-#import "RTCWrappedNativeVideoDecoder.h"
+#import "RTCNativeVideoDecoder.h"
 #import "base/RTCMacros.h"
 #import "helpers/NSString+StdString.h"
+#include "rtc_base/checks.h"
 
 @implementation RTC_OBJC_TYPE (RTCNativeVideoDecoder)
 
