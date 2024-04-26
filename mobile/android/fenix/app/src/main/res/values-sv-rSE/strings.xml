@@ -2728,7 +2728,7 @@
     <!-- The survey header -->
     <string name="micro_survey_survey_header" tools:ignore="UnusedResources">Besvara den här undersökningen</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice" tools:ignore="UnusedResources">Sekretesspolicy</string>
+    <string name="micro_survey_privacy_notice" tools:ignore="UnusedResources">Sekretessmeddelande</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Skicka in</string>
     <!-- The close button label text -->
