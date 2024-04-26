@@ -787,7 +787,7 @@ index de68885519..099b0be1a3 100644
    method_ = new_method;
  }
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index e42a84bd06..b86a7d775c 100644
+index 9f0374b299..c51692b818 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
 @@ -423,6 +423,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
@@ -837,10 +837,10 @@ index e42a84bd06..b86a7d775c 100644
  //
  // E.g. default video or screenshare.
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index 739d4765d0..fff7db0294 100644
+index 51c083a18b..8dc6f87b1c 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.h
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
-@@ -298,6 +298,21 @@ class ColorSpaceExtension {
+@@ -308,6 +308,21 @@ class ColorSpaceExtension {
    static size_t WriteLuminance(uint8_t* data, float f, int denominator);
  };
  
@@ -878,7 +878,7 @@ index 2a95a3a816..b152cdbd9e 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index ac464493b8..44f1a9e742 100644
+index 922a4b15f4..669947838b 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 @@ -123,6 +123,18 @@ constexpr uint8_t kPacketWithMid[] = {
@@ -900,7 +900,7 @@ index ac464493b8..44f1a9e742 100644
  constexpr uint32_t kCsrcs[] = {0x34567890, 0x32435465};
  constexpr uint8_t kPayload[] = {'p', 'a', 'y', 'l', 'o', 'a', 'd'};
  constexpr uint8_t kPacketPaddingSize = 8;
-@@ -397,6 +409,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
+@@ -399,6 +411,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
    EXPECT_EQ(packet.GetExtension<TransportSequenceNumber>(), absl::nullopt);
  }
  
@@ -946,7 +946,7 @@ index 0b87d6d065..d69ae9420b 100644
  }  // namespace webrtc
  
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index d899b4f44e..f4ba024444 100644
+index 07356b8478..e853507174 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -128,6 +128,10 @@ bool IsNonVolatile(RTPExtensionType type) {
@@ -1650,7 +1650,7 @@ index b171cfe11e..df7f173f58 100644
  
  //////////////////////////////////////////////////////////////////////
 diff --git a/test/fuzzers/rtp_packet_fuzzer.cc b/test/fuzzers/rtp_packet_fuzzer.cc
-index 60afb986de..0e10a8fa3a 100644
+index 02fc64a2dc..371900eb2d 100644
 --- a/test/fuzzers/rtp_packet_fuzzer.cc
 +++ b/test/fuzzers/rtp_packet_fuzzer.cc
 @@ -164,6 +164,11 @@ void FuzzOneInput(const uint8_t* data, size_t size) {

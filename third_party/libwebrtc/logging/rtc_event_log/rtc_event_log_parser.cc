@@ -1036,7 +1036,7 @@ ParsedRtcEventLog::GetDefaultHeaderExtensionMap() {
   constexpr int kDependencyDescriptorDefaultId = 9;
 
   webrtc::RtpHeaderExtensionMap default_map(/*extmap_allow_mixed=*/true);
-  default_map.Register<AudioLevel>(kAudioLevelDefaultId);
+  default_map.Register<AudioLevelExtension>(kAudioLevelDefaultId);
   default_map.Register<TransmissionOffset>(kTimestampOffsetDefaultId);
   default_map.Register<AbsoluteSendTime>(kAbsSendTimeDefaultId);
   default_map.Register<VideoOrientation>(kVideoRotationDefaultId);

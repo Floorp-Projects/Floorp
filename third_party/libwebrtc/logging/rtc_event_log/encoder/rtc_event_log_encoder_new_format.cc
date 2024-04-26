@@ -449,8 +449,8 @@ void RtcEventLogEncoderNewFormat::EncodeRtpPacket(const Batch& batch,
   {
     bool voice_activity;
     uint8_t audio_level;
-    if (base_event->template GetExtension<AudioLevel>(&voice_activity,
-                                                      &audio_level)) {
+    if (base_event->template GetExtension<AudioLevelExtension>(&voice_activity,
+                                                               &audio_level)) {
       RTC_DCHECK_LE(audio_level, 0x7Fu);
       base_audio_level = audio_level;
       proto_batch->set_audio_level(audio_level);
@@ -646,8 +646,8 @@ void RtcEventLogEncoderNewFormat::EncodeRtpPacket(const Batch& batch,
     const EventType* event = batch[i + 1];
     bool voice_activity;
     uint8_t audio_level;
-    if (event->template GetExtension<AudioLevel>(&voice_activity,
-                                                 &audio_level)) {
+    if (event->template GetExtension<AudioLevelExtension>(&voice_activity,
+                                                          &audio_level)) {
       RTC_DCHECK_LE(audio_level, 0x7Fu);
       values[i] = audio_level;
     } else {
@@ -664,8 +664,8 @@ void RtcEventLogEncoderNewFormat::EncodeRtpPacket(const Batch& batch,
     const EventType* event = batch[i + 1];
     bool voice_activity;
     uint8_t audio_level;
-    if (event->template GetExtension<AudioLevel>(&voice_activity,
-                                                 &audio_level)) {
+    if (event->template GetExtension<AudioLevelExtension>(&voice_activity,
+                                                          &audio_level)) {
       RTC_DCHECK_LE(audio_level, 0x7Fu);
       values[i] = voice_activity;
     } else {
