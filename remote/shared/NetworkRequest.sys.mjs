@@ -84,7 +84,7 @@ export class NetworkRequest {
   }
 
   get postDataSize() {
-    return this.#postData ? this.postData.size : 0;
+    return this.#postData ? this.#postData.size : 0;
   }
 
   get redirectCount() {
