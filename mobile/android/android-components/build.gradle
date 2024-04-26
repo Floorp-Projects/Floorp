@@ -90,35 +90,6 @@ subprojects {
     }
 
 
-    // Allow local appservices substitution in each subproject.
-    def appServicesSrcDir = null
-    if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) {
-        appServicesSrcDir = gradle.getProperty('localProperties.autoPublish.application-services.dir')
-    } else if (gradle.hasProperty('localProperties.branchBuild.application-services.dir')) {
-        appServicesSrcDir = gradle.getProperty('localProperties.branchBuild.application-services.dir')
-    }
-    if (appServicesSrcDir) {
-        if (appServicesSrcDir.startsWith("/")) {
-            apply from: "${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
-        } else {
-            apply from: "${rootProject.projectDir}/${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
-        }
-    }
-
-    // Allow local Glean substitution in each subproject.
-    if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
-        ext.gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
-        apply from: "${rootProject.projectDir}/${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
-    }
-
-    if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
-        if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
-            ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
-        }
-        ext.topsrcdir = gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir"
-        apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
-    }
-
     afterEvaluate {
         if (it.hasProperty('android')) {
             jacoco {

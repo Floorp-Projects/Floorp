@@ -890,19 +890,6 @@ afterEvaluate {
     }
 }
 
-if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
-    if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
-        ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
-    }
-    ext.topsrcdir = StringUtils.removeSuffix(gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir", File.separator)
-    apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
-}
-
-if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
-    ext.gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
-    apply from: "../${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
-}
-
 android.applicationVariants.configureEach { variant ->
     tasks.register("apkSize${variant.name.capitalize()}", ApkSizeTask) {
         variantName = variant.name
