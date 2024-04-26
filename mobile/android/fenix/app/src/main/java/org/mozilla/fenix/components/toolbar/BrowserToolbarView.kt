@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
 import android.graphics.Color
+import android.net.Uri
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
@@ -70,6 +71,8 @@ class BrowserToolbarView(
 
     private val tabStripView: ComposeView by lazy { layout.findViewById(R.id.tabStripView) }
 
+    private val isNavBarEnabled = IncompleteRedesignToolbarFeature(context.settings()).isEnabled
+
     val toolbarIntegration: ToolbarIntegration
     val menuToolbar: ToolbarMenu
 
@@ -101,9 +104,11 @@ class BrowserToolbarView(
             true
         }
 
+        view.isNavBarEnabled = isNavBarEnabled
+
         with(context) {
             val isPinningSupported = components.useCases.webAppUseCases.isPinningSupported()
-            val searchUrlBackground = if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
+            val searchUrlBackground = if (isNavBarEnabled) {
                 R.drawable.search_url_background
             } else {
                 R.drawable.search_old_url_background
@@ -150,7 +155,13 @@ class BrowserToolbarView(
                     ThemeManager.resolveAttribute(R.attr.borderToolbarDivider, context),
                 )
 
-                display.urlFormatter = { url -> URLStringUtils.toDisplayUrl(url) }
+                display.urlFormatter = { url ->
+                    if (isNavBarEnabled) {
+                        Uri.parse(url.toString()).host ?: url
+                    } else {
+                        URLStringUtils.toDisplayUrl(url)
+                    }
+                }
 
                 display.colors = display.colors.copy(
                     text = primaryTextColor,
@@ -211,8 +222,6 @@ class BrowserToolbarView(
                     isPrivate = customTabSession.content.private,
                 )
             } else {
-                val isNavBarEnabled = IncompleteRedesignToolbarFeature(context.settings()).isEnabled
-
                 DefaultToolbarIntegration(
                     this,
                     view,
