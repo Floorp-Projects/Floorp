@@ -755,7 +755,7 @@ index 8b23955d5b..a49df7e7d2 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 2088e74dcd..1672be3f95 100644
+index e5f8463419..5ac4c05efd 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -782,7 +782,7 @@ index 2088e74dcd..1672be3f95 100644
    sources = [
      "audio_device_buffer.cc",
      "audio_device_buffer.h",
-@@ -90,6 +93,7 @@ rtc_library("audio_device_buffer") {
+@@ -89,6 +92,7 @@ rtc_library("audio_device_buffer") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -790,7 +790,7 @@ index 2088e74dcd..1672be3f95 100644
  
  rtc_library("audio_device_generic") {
    sources = [
-@@ -266,6 +270,7 @@ if (!build_with_chromium) {
+@@ -265,6 +269,7 @@ if (!build_with_chromium) {
  # Contains default implementations of webrtc::AudioDeviceModule for Windows,
  # Linux, Mac, iOS and Android.
  rtc_library("audio_device_impl") {
@@ -798,7 +798,7 @@ index 2088e74dcd..1672be3f95 100644
    visibility = [ "*" ]
    deps = [
      ":audio_device_api",
-@@ -315,9 +320,9 @@ rtc_library("audio_device_impl") {
+@@ -314,9 +319,9 @@ rtc_library("audio_device_impl") {
    sources = [ "include/fake_audio_device.h" ]
  
    if (build_with_mozilla) {
@@ -811,7 +811,7 @@ index 2088e74dcd..1672be3f95 100644
      ]
    }
  
-@@ -422,6 +427,7 @@ rtc_library("audio_device_impl") {
+@@ -421,6 +426,7 @@ rtc_library("audio_device_impl") {
      sources += [ "dummy/file_audio_device_factory.h" ]
    }
  }
@@ -819,7 +819,7 @@ index 2088e74dcd..1672be3f95 100644
  
  if (is_mac) {
    rtc_source_set("audio_device_impl_frameworks") {
-@@ -439,6 +445,7 @@ if (is_mac) {
+@@ -438,6 +444,7 @@ if (is_mac) {
    }
  }
  
@@ -827,7 +827,7 @@ index 2088e74dcd..1672be3f95 100644
  rtc_source_set("mock_audio_device") {
    visibility = [ "*" ]
    testonly = true
-@@ -456,8 +463,10 @@ rtc_source_set("mock_audio_device") {
+@@ -455,8 +462,10 @@ rtc_source_set("mock_audio_device") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
