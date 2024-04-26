@@ -241,6 +241,11 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_ShadowRealm:
       return !JS::Prefs::experimental_shadow_realms();
 
+#ifdef NIGHTLY_BUILD
+    case JSProto_Float16Array:
+      return !JS::Prefs::experimental_float16array();
+#endif
+
     default:
       MOZ_CRASH("unexpected JSProtoKey");
   }

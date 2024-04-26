@@ -631,6 +631,7 @@ void CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access,
         break;
       case Scalar::Int64:
       case Scalar::Simd128:
+      case Scalar::Float16:
       case Scalar::Float32:
       case Scalar::Float64:
       case Scalar::Uint8Clamped:

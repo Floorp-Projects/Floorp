@@ -280,6 +280,7 @@ bool AtomicAccess(JSContext* cx, HandleValue obj, HandleValue index, Op op) {
       return op(ArrayOps<int64_t>{}, unwrappedTypedArray, intIndex);
     case Scalar::BigUint64:
       return op(ArrayOps<uint64_t>{}, unwrappedTypedArray, intIndex);
+    case Scalar::Float16:
     case Scalar::Float32:
     case Scalar::Float64:
     case Scalar::Uint8Clamped:
