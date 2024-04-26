@@ -28,7 +28,9 @@
  * ratecontrol header.
  */
 
+#include <stdio.h>
 #include <stdint.h>
+#include "libavutil/eval.h"
 
 typedef struct Predictor{
     double coeff;
@@ -78,7 +80,7 @@ typedef struct RateControlContext{
     int frame_count[5];
     int last_non_b_pict_type;
 
-    struct AVExpr *rc_eq_eval;
+    AVExpr * rc_eq_eval;
 }RateControlContext;
 
 struct MpegEncContext;

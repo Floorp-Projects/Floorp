@@ -20,7 +20,7 @@
  */
 
 #include "libavutil/attributes.h"
-#include "libavutil/mem.h"
+#include "libavutil/common.h"
 #include "audio_frame_queue.h"
 #include "encode.h"
 #include "libavutil/avassert.h"

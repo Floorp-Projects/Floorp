@@ -42,7 +42,6 @@
 #include "vp9dec.h"
 #include "vpx_rac.h"
 #include "libavutil/avassert.h"
-#include "libavutil/mem.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/video_enc_params.h"
 

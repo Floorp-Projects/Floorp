@@ -16,15 +16,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVCODEC_ITUT35_H
-#define AVCODEC_ITUT35_H
+#include "libavutil/attributes.h"
+#include "libavutil/cpu.h"
+#include "libavutil/x86/cpu.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/fdctdsp.h"
+#include "fdct.h"
 
-#define ITU_T_T35_COUNTRY_CODE_CN 0x26
-#define ITU_T_T35_COUNTRY_CODE_US 0xB5
+av_cold void ff_fdctdsp_init_x86(FDCTDSPContext *c, AVCodecContext *avctx,
+                                 unsigned high_bit_depth)
+{
+    int cpu_flags = av_get_cpu_flags();
+    const int dct_algo = avctx->dct_algo;
 
-#define ITU_T_T35_PROVIDER_CODE_ATSC  0x31
-#define ITU_T_T35_PROVIDER_CODE_CUVA  0x04
-#define ITU_T_T35_PROVIDER_CODE_DOLBY 0x3B
-#define ITU_T_T35_PROVIDER_CODE_SMTPE 0x3C
+    if (!high_bit_depth) {
+        if ((dct_algo == FF_DCT_AUTO || dct_algo == FF_DCT_MMX)) {
+            if (INLINE_MMX(cpu_flags))
+                c->fdct = ff_fdct_mmx;
 
-#endif /* AVCODEC_ITUT35_H */
+            if (INLINE_MMXEXT(cpu_flags))
+                c->fdct = ff_fdct_mmxext;
+
+            if (INLINE_SSE2(cpu_flags))
+                c->fdct = ff_fdct_sse2;
+        }
+    }
+}

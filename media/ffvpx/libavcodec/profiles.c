@@ -18,8 +18,7 @@
 
 #include "config.h"
 
-#include "codec.h"
-#include "defs.h"
+#include "avcodec.h"
 #include "profiles.h"
 
 #if !CONFIG_SMALL

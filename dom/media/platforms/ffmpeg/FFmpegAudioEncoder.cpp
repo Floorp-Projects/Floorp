@@ -101,13 +101,12 @@ nsresult FFmpegAudioEncoder<LIBAV_VER>::InitSpecific() {
 
   // And now the audio-specific part
   mCodecContext->sample_rate = AssertedCast<int>(mConfig.mSampleRate);
+  mCodecContext->channels = AssertedCast<int>(mConfig.mNumberOfChannels);
 
 #if LIBAVCODEC_VERSION_MAJOR >= 60
   // Gecko's ordering intentionnally matches ffmepg's ordering
   mLib->av_channel_layout_default(&mCodecContext->ch_layout,
-                                  AssertedCast<int>(mConfig.mNumberOfChannels));
-#else
-  mCodecContext->channels = AssertedCast<int>(mConfig.mNumberOfChannels);
+                                  AssertedCast<int>(mCodecContext->channels));
 #endif
 
   switch (mConfig.mCodec) {
@@ -207,7 +206,7 @@ FFmpegAudioEncoder<LIBAV_VER>::EncodeOnePacket(Span<float> aSamples,
   // packets smaller than the packet size are allowed when draining.
   MOZ_ASSERT(AssertedCast<int>(frameCount) <= mCodecContext->frame_size);
 
-  ChannelCount(mFrame) = AssertedCast<int>(mConfig.mNumberOfChannels);
+  mFrame->channels = AssertedCast<int>(mConfig.mNumberOfChannels);
 
 #  if LIBAVCODEC_VERSION_MAJOR >= 60
   int rv = mLib->av_channel_layout_copy(&mFrame->ch_layout,
@@ -230,10 +229,10 @@ FFmpegAudioEncoder<LIBAV_VER>::EncodeOnePacket(Span<float> aSamples,
       AVRational{.num = 1, .den = static_cast<int>(mConfig.mSampleRate)};
 #  endif
   mFrame->pts = aPts.ToTicksAtRate(mConfig.mSampleRate);
+  mFrame->pkt_duration = frameCount;
 #  if LIBAVCODEC_VERSION_MAJOR >= 60
   mFrame->duration = frameCount;
 #  else
-  mFrame->pkt_duration = frameCount;
   // Save duration in the time_base unit.
   mDurationMap.Insert(mFrame->pts, mFrame->pkt_duration);
 #  endif
@@ -259,7 +258,7 @@ FFmpegAudioEncoder<LIBAV_VER>::EncodeOnePacket(Span<float> aSamples,
     MOZ_ASSERT(mCodecContext->sample_fmt == AV_SAMPLE_FMT_FLTP);
     for (uint32_t i = 0; i < mConfig.mNumberOfChannels; i++) {
       DeinterleaveAndConvertBuffer(aSamples.data(), mFrame->nb_samples,
-                                   mConfig.mNumberOfChannels, mFrame->data);
+                                   mFrame->channels, mFrame->data);
     }
   }
 
