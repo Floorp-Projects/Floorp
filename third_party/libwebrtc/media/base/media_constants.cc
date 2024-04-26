@@ -96,6 +96,8 @@ const char kCodecParamMaxBitrate[] = "x-google-max-bitrate";
 const char kCodecParamMinBitrate[] = "x-google-min-bitrate";
 const char kCodecParamStartBitrate[] = "x-google-start-bitrate";
 const char kCodecParamMaxQuantization[] = "x-google-max-quantization";
+const char kCodecParamPerLayerPictureLossIndication[] =
+    "x-google-per-layer-pli";
 
 const char kComfortNoiseCodecName[] = "CN";
 
