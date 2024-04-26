@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/379b080822588b617
  1 file changed, 2 deletions(-)
 
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 45a07212d0..ca5a4ee64b 100644
+index 3819ad515d..fdd03ab95a 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -425,7 +425,6 @@ rtc_library("rtc_internal_video_codecs") {

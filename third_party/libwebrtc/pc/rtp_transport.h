@@ -113,10 +113,7 @@ class RtpTransport : public RtpTransportInternal {
   void OnSentPacket(rtc::PacketTransportInternal* packet_transport,
                     const rtc::SentPacket& sent_packet);
   void OnReadPacket(rtc::PacketTransportInternal* transport,
-                    const char* data,
-                    size_t len,
-                    const int64_t& packet_time_us,
-                    int flags);
+                    const rtc::ReceivedPacket& received_packet);
 
   // Updates "ready to send" for an individual channel and fires
   // SignalReadyToSend.
