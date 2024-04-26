@@ -145,8 +145,11 @@ int av_dict_set(AVDictionary **pm, const char *key, const char *value,
         m->elems[m->count].value = copy_value;
         m->count++;
     } else {
-        err = 0;
-        goto end;
+        if (!m->count) {
+            av_freep(&m->elems);
+            av_freep(pm);
+        }
+        av_freep(&copy_key);
     }
 
     return 0;
@@ -154,13 +157,12 @@ int av_dict_set(AVDictionary **pm, const char *key, const char *value,
 enomem:
     err = AVERROR(ENOMEM);
 err_out:
-    av_free(copy_value);
-end:
     if (m && !m->count) {
         av_freep(&m->elems);
         av_freep(pm);
     }
     av_free(copy_key);
+    av_free(copy_value);
     return err;
 }
 

@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FFmpegAudioDecoder.h"
-#include "FFmpegUtils.h"
 #include "AudioSampleFormat.h"
 #include "FFmpegLog.h"
 #include "TimeUnits.h"
@@ -251,7 +250,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
              aSample->mDuration.ToString().get(),
              mLib->av_get_sample_fmt_name(mFrame->format));
 
-  uint32_t numChannels = ChannelCount(mCodecContext);
+  uint32_t numChannels = mCodecContext->channels;
   uint32_t samplingRate = mCodecContext->sample_rate;
   if (!numChannels) {
     numChannels = mAudioInfo.mChannels;
@@ -285,7 +284,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::PostProcessOutput(
 
   RefPtr<AudioData> data =
       new AudioData(aSample->mOffset, pts, std::move(audio), numChannels,
-                    samplingRate, numChannels);
+                    samplingRate, mCodecContext->channel_layout);
   MOZ_ASSERT(duration == data->mDuration, "must be equal");
   aResults.AppendElement(std::move(data));
 
@@ -396,22 +395,16 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                                     DecodedData& aResults) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   PROCESS_DECODE_LOG(aSample);
-  AVPacket* packet;
-#if LIBAVCODEC_VERSION_MAJOR >= 61
-  packet = mLib->av_packet_alloc();
-#else
-  AVPacket packet_mem;
-  packet = &packet_mem;
-  mLib->av_init_packet(packet);
-#endif
+  AVPacket packet;
+  mLib->av_init_packet(&packet);
 
   FFMPEG_LOG("FFmpegAudioDecoder::DoDecode: %d bytes, [%s,%s] (Duration: %s)",
              aSize, aSample->mTime.ToString().get(),
              aSample->GetEndTime().ToString().get(),
              aSample->mDuration.ToString().get());
 
-  packet->data = const_cast<uint8_t*>(aData);
-  packet->size = aSize;
+  packet.data = const_cast<uint8_t*>(aData);
+  packet.size = aSize;
 
   if (aGotFrame) {
     *aGotFrame = false;
@@ -425,13 +418,8 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   }
 
   bool decoded = false;
-  auto rv = DecodeUsingFFmpeg(packet, decoded, aSample, aResults, aGotFrame);
+  auto rv = DecodeUsingFFmpeg(&packet, decoded, aSample, aResults, aGotFrame);
   NS_ENSURE_SUCCESS(rv, rv);
-
-#if LIBAVCODEC_VERSION_MAJOR >= 61
-  mLib->av_packet_free(&packet);
-#endif
-
   return NS_OK;
 }
 
