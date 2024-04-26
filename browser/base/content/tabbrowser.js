@@ -2189,16 +2189,12 @@
         b.setAttribute("name", name);
       }
 
-      let notificationbox = document.createXULElement("notificationbox");
-      notificationbox.setAttribute("notificationside", "top");
-
       let stack = document.createXULElement("stack");
       stack.className = "browserStack";
       stack.appendChild(b);
 
       let browserContainer = document.createXULElement("vbox");
       browserContainer.className = "browserContainer";
-      browserContainer.appendChild(notificationbox);
       browserContainer.appendChild(stack);
 
       let browserSidebarContainer = document.createXULElement("hbox");
