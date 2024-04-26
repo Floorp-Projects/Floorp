@@ -61,6 +61,9 @@ static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_ENTRIES =
 static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_STARTUP_ENTRIES =
     mozilla::baseprofiler::BASE_PROFILER_DEFAULT_STARTUP_ENTRIES;
 
+static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_SIGHANDLE_ENTRIES =
+    mozilla::MakePowerOfTwo32<64 * 1024 * 1024>();  // 64M entries = 512MiB
+
 #  define PROFILER_DEFAULT_INTERVAL BASE_PROFILER_DEFAULT_INTERVAL
 #  define PROFILER_MAX_INTERVAL BASE_PROFILER_MAX_INTERVAL
 

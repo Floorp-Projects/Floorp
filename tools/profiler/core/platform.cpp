@@ -114,16 +114,30 @@
 #include <string_view>
 #include <type_traits>
 
+// To simplify other code in this file, define a helper definition to avoid
+// repeating the same preprocessor checks.
+
 // The signals that we use to control the profiler conflict with the signals
-// used to control the code coverage tool. Therefore, if coverage is enabled, we
-// need to disable our own signal handling mechanisms.
+// used to control the code coverage tool. Therefore, if coverage is enabled,
+// we need to disable our own signal handling mechanisms.
 #ifndef MOZ_CODE_COVERAGE
 #  ifdef XP_WIN
 // TODO: Add support for windows "signal"-like behaviour. See Bug 1867328.
+#  elif defined(GP_OS_darwin) || defined(GP_OS_linux) || \
+      defined(GP_OS_android) || defined(GP_OS_freebsd)
+// Specify the specific platforms that we want to support
+#    define GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL 1
 #  else
-#    include <signal.h>
-#    include <unistd.h>
+// No support on this unknown platform!
 #  endif
+#endif
+
+// We need some extra includes if we're supporting async posix signals
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
+#  include <signal.h>
+#  include <fcntl.h>
+#  include <unistd.h>
+#  include <errno.h>
 #endif
 
 #if defined(GP_OS_android)
@@ -250,11 +264,22 @@ ProfileChunkedBuffer& profiler_get_core_buffer() {
   return sProfileChunkedBuffer;
 }
 
-mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed> gSkipSampling;
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
+// Control character to start the profiler ('g' for "go"!)
+static const char sAsyncSignalControlCharStart = 'g';
+
+// This is a file descriptor that is the "write" end of the POSIX pipe that we
+// use to start the profiler. It is written to in profiler_start_signal_handler
+// and read from in AsyncSignalControlThread
+static mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed>
+    sAsyncStartProfilerWriteFd(-1);
 
 // Atomic flag to stop the profiler from within the sampling loop
 mozilla::Atomic<bool, mozilla::MemoryOrdering::Relaxed> gStopAndDumpFromSignal(
     false);
+#endif
+
+mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed> gSkipSampling;
 
 #if defined(GP_OS_android)
 class GeckoJavaSampler
@@ -506,6 +531,132 @@ static constexpr size_t MAX_JS_FRAMES =
 using JsFrame = mozilla::profiler::ThreadRegistrationData::JsFrame;
 using JsFrameBuffer = mozilla::profiler::ThreadRegistrationData::JsFrameBuffer;
 
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
+// Forward declare this, so we can call it from the constructor.
+static void* AsyncSignalControlThreadEntry(void* aArg);
+
+// Define our platform specific async (posix) signal control thread here.
+class AsyncSignalControlThread {
+ public:
+  AsyncSignalControlThread() : mThread() {
+    // Try to open a pipe for this to communicate with. If we can't do this,
+    // then we give up and return, as there's no point continuing without
+    // being able to communicate
+    int pipeFds[2];
+    if (pipe(pipeFds)) {
+      LOG("Profiler AsyncSignalControlThread failed to create a pipe.");
+      return;
+    }
+
+    // Close this pipe on calls to exec().
+    fcntl(pipeFds[0], F_SETFD, FD_CLOEXEC);
+    fcntl(pipeFds[1], F_SETFD, FD_CLOEXEC);
+
+    // Write the reading side to mFd, and the writing side to the global atomic
+    mFd = pipeFds[0];
+    sAsyncStartProfilerWriteFd = pipeFds[1];
+
+    // We don't really care about stack size, as it should be minimal, so
+    // leave the pthread attributes as a nullptr, i.e. choose the default.
+    pthread_attr_t* attr_ptr = nullptr;
+    if (pthread_create(&mThread, attr_ptr, AsyncSignalControlThreadEntry,
+                       this) != 0) {
+      MOZ_CRASH("pthread_create failed");
+    }
+  };
+
+  ~AsyncSignalControlThread() {
+    // Derived from code in nsDumpUtils.cpp. Comment reproduced here for
+    // poisterity: Close sAsyncStartProfilerWriteFd /after/ setting the fd to
+    // -1. Otherwise we have the (admittedly far-fetched) race where we
+    //
+    //  1) close sAsyncStartProfilerWriteFd
+    //  2) open a new fd with the same number as sAsyncStartProfilerWriteFd
+    //     had.
+    //  3) receive a signal, then write to the fd.
+    int asyncStartProfilerWriteFd = sAsyncStartProfilerWriteFd.exchange(-1);
+    // This will unblock the "read" in StartWatching.
+    close(asyncStartProfilerWriteFd);
+    // Finally, exit the thread.
+    pthread_join(mThread, nullptr);
+  };
+
+  void Watch() {
+    char msg[1];
+    ssize_t nread;
+    while (true) {
+      // Try reading from the pipe. This will block until something is written:
+      nread = read(mFd, msg, sizeof(msg));
+
+      if (nread == -1 && errno == EINTR) {
+        // nread == -1 and errno == EINTR means that `read` was interrupted
+        // by a signal before reading any data. This is likely because the
+        // profiling thread interrupted us (with SIGPROF). We can safely ignore
+        // this and "go around" the loop again to try and read.
+        continue;
+      }
+
+      if (nread == -1 && errno != EINTR) {
+        // nread == -1 and errno != EINTR means that `read` has failed in some
+        // way that we can't recover from. In this case, all we can do is give
+        // up, and quit the watcher, as the pipe is likely broken.
+        LOG("Error (%d) when reading in AsyncSignalControlThread", errno);
+        return;
+      }
+
+      if (nread == 0) {
+        // nread == 0 signals that the other end of the pipe has been cleanly
+        // closed. Close our end, and exit the reading loop.
+        close(mFd);
+        return;
+      }
+
+      // If we reach here, nread != 0 and nread != -1. This means that we
+      // should have read at least one byte, which should be a control byte
+      // for the profiler.
+      // It *might* happen that `read` is interrupted by the sampler thread
+      // after successfully reading. If this occurs, read returns the number
+      // of bytes read. As anything other than 1 is wrong for us, we can
+      // always assume that we can read whatever `read` read.
+      MOZ_RELEASE_ASSERT(nread == 1);
+
+      if (msg[0] == sAsyncSignalControlCharStart) {
+        // Start the profiler here directly, as we're on a background thread.
+        // set of preferences, configuration of them is TODO, see Bug 1866007
+        uint32_t features = ProfilerFeature::JS | ProfilerFeature::StackWalk |
+                            ProfilerFeature::CPUUtilization;
+        // as we often don't know what threads we'll care about, tell the
+        // profiler to profile all threads.
+        const char* filters[] = {"*"};
+        profiler_start(PROFILER_DEFAULT_SIGHANDLE_ENTRIES,
+                       PROFILER_DEFAULT_INTERVAL, features, filters,
+                       MOZ_ARRAY_LENGTH(filters), 0);
+      } else {
+        LOG("AsyncSignalControlThread recieved unknown control signal: %c",
+            msg[0]);
+      }
+    }
+  };
+
+ private:
+  // The read side of the pipe that we use to communicate from a signal handler
+  // to the AsyncSignalControlThread
+  int mFd;
+
+  // The thread handle for the async signal control thread
+  // Note, that unlike the sampler thread, this is currently a posix-only
+  // feature. Therefore, we don't bother to have a windows equivalent - we
+  // just use a pthread_t
+  pthread_t mThread;
+};
+
+static void* AsyncSignalControlThreadEntry(void* aArg) {
+  auto* thread = static_cast<AsyncSignalControlThread*>(aArg);
+  thread->Watch();
+  return nullptr;
+}
+#endif
+
 // All functions in this file can run on multiple threads unless they have an
 // NS_IsMainThread() assertion.
 
@@ -529,6 +680,10 @@ class CorePS {
   CorePS()
       : mProcessStartTime(TimeStamp::ProcessCreation()),
         mMaybeBandwidthCounter(nullptr)
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
+        ,
+        mAsyncSignalControlThread(nullptr)
+#endif
 #ifdef USE_LUL_STACKWALK
         ,
         mLul(nullptr)
@@ -539,6 +694,9 @@ class CorePS {
   }
 
   ~CorePS() {
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
+    delete mAsyncSignalControlThread;
+#endif
 #ifdef USE_LUL_STACKWALK
     delete sInstance->mLul;
     delete mMaybeBandwidthCounter;
@@ -684,6 +842,14 @@ class CorePS {
     return sInstance->mMaybeBandwidthCounter;
   }
 
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
+  static void SetAsyncSignalControlThread(
+      AsyncSignalControlThread* aAsyncSignalControlThread) {
+    MOZ_ASSERT(sInstance);
+    sInstance->mAsyncSignalControlThread = aAsyncSignalControlThread;
+  }
+#endif
+
  private:
   // The singleton instance
   static CorePS* sInstance;
@@ -700,6 +866,11 @@ class CorePS {
 
   // Non-owning pointers to all active counters
   Vector<BaseProfilerCount*> mCounters;
+
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
+  // Background thread for communicating with async signal handlers
+  AsyncSignalControlThread* mAsyncSignalControlThread;
+#endif
 
 #ifdef USE_LUL_STACKWALK
   // LUL's state. Null prior to the first activation, non-null thereafter.
@@ -4766,6 +4937,7 @@ void SamplerThread::Run() {
       SleepMicro(static_cast<uint32_t>(sampleInterval.ToMicroseconds()));
     }
 
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
     // Check to see if the hard-reset flag has been set to stop the profiler.
     // This should only be used on the worst occasions when we need to stop the
     // profiler from within the sampling thread (e.g. if the main thread is
@@ -4786,6 +4958,7 @@ void SamplerThread::Run() {
       // directly, rather than breaking from the loop.
       return;
     }
+#endif
   }
 
   // End of `while` loop. We can only be here from a `break` inside the loop.
@@ -5069,9 +5242,9 @@ void SamplerThread::SpyOnUnregisteredThreads() {
 
 MOZ_DEFINE_MALLOC_SIZE_OF(GeckoProfilerMallocSizeOf)
 
-NS_IMETHODIMP
-GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                      nsISupports* aData, bool aAnonymize) {
+NS_IMETHODIMP GeckoProfilerReporter::CollectReports(
+    nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+    bool aAnonymize) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   size_t profSize = 0;
@@ -5294,7 +5467,7 @@ static const char* get_size_suffix(const char* str) {
   return ptr;
 }
 
-#if !defined(XP_WIN) && !defined(MOZ_CODE_COVERAGE)
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
 static void profiler_stop_signal_handler(int signal, siginfo_t* info,
                                          void* context) {
   // We cannot really do any logging here, as this is a signal handler.
@@ -5304,6 +5477,26 @@ static void profiler_stop_signal_handler(int signal, siginfo_t* info,
   // how long they can run, we instead set an atomic variable to true to trigger
   // the sampling thread to stop and dump the data in the profiler.
   gStopAndDumpFromSignal = true;
+}
+
+static void profiler_start_signal_handler(int signal, siginfo_t* info,
+                                          void* context) {
+  // Starting the profiler from a signal handler is a risky business: Both of
+  // the main tasks that we would like to accomplish (allocating memory, and
+  // starting a thread) are illegal within a UNIX signal handler. Conversely,
+  // we cannot dispatch to the main thread, as this may be "stuck" (why else
+  // would we be using a signal handler to start the profiler?).
+  // Instead, we have a background thread running that watches a pipe for a
+  // given "control" character. In this handler, we can simply write to that
+  // pipe to get the background thread to start the profiler for us!
+  // Note that `write` is async-signal safe (see signal-safety(7)):
+  // https://www.man7.org/linux/man-pages/man7/signal-safety.7.html
+  // This means that it's safe for us to call within a signal handler.
+  if (sAsyncStartProfilerWriteFd != -1) {
+    char signalControlCharacter = sAsyncSignalControlCharStart;
+    Unused << write(sAsyncStartProfilerWriteFd, &signalControlCharacter,
+                    sizeof(signalControlCharacter));
+  }
 }
 #endif
 
@@ -5379,8 +5572,17 @@ void profiler_dump_and_stop() {
   profiler_stop();
 }
 
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
 void profiler_init_signal_handlers() {
-#if !defined(XP_WIN) && !defined(MOZ_CODE_COVERAGE)
+  // Set a handler to start the profiler
+  struct sigaction prof_start_sa {};
+  memset(&prof_start_sa, 0, sizeof(struct sigaction));
+  prof_start_sa.sa_sigaction = profiler_start_signal_handler;
+  prof_start_sa.sa_flags = SA_RESTART | SA_SIGINFO;
+  sigemptyset(&prof_start_sa.sa_mask);
+  DebugOnly<int> rstart = sigaction(SIGUSR1, &prof_start_sa, nullptr);
+  MOZ_ASSERT(rstart == 0, "Failed to install Profiler SIGUSR1 handler");
+
   // Set a handler to stop the profiler
   struct sigaction prof_stop_sa {};
   memset(&prof_stop_sa, 0, sizeof(struct sigaction));
@@ -5389,8 +5591,8 @@ void profiler_init_signal_handlers() {
   sigemptyset(&prof_stop_sa.sa_mask);
   DebugOnly<int> rstop = sigaction(SIGUSR2, &prof_stop_sa, nullptr);
   MOZ_ASSERT(rstop == 0, "Failed to install Profiler SIGUSR2 handler");
-#endif
 }
+#endif
 
 void profiler_init(void* aStackTop) {
   LOG("profiler_init");
@@ -5444,8 +5646,14 @@ void profiler_init(void* aStackTop) {
     // Platform-specific initialization.
     PlatformInit(lock);
 
+#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
+    // Initialise the background thread to listen for signal handler
+    // communication
+    CorePS::SetAsyncSignalControlThread(new AsyncSignalControlThread);
+
     // Initialise the signal handlers needed to start/stop the profiler
     profiler_init_signal_handlers();
+#endif
 
 #if defined(GP_OS_android)
     if (jni::IsAvailable()) {
