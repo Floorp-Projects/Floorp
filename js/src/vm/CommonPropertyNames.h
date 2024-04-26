@@ -185,6 +185,7 @@
   MACRO_(exponentSeparator, "exponentSeparator")                               \
   MACRO_(export_, "export")                                                    \
   MACRO_(extends, "extends")                                                   \
+  MACRO_(f16round, "f16round")                                                 \
   MACRO_(false_, "false")                                                      \
   MACRO_(few, "few")                                                           \
   IF_DECORATORS(MACRO_(field, "field"))                                        \
