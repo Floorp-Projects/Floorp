@@ -65,7 +65,6 @@ namespace {
 const char* kIsDLPEnabledPref = "browser.contentanalysis.enabled";
 const char* kIsPerUserPref = "browser.contentanalysis.is_per_user";
 const char* kPipePathNamePref = "browser.contentanalysis.pipe_path_name";
-const char* kDefaultAllowPref = "browser.contentanalysis.default_allow";
 const char* kClientSignature = "browser.contentanalysis.client_signature";
 const char* kAllowUrlPref = "browser.contentanalysis.allow_url_regex_list";
 const char* kDenyUrlPref = "browser.contentanalysis.deny_url_regex_list";
@@ -797,6 +796,17 @@ static bool ShouldAllowAction(
          aResponseCode == nsIContentAnalysisResponse::Action::eReportOnly ||
          aResponseCode == nsIContentAnalysisResponse::Action::eWarn;
 }
+
+static DefaultResult GetDefaultResultFromPref() {
+  uint32_t value = StaticPrefs::browser_contentanalysis_default_result();
+  if (value > static_cast<uint32_t>(DefaultResult::eLastValue)) {
+    LOGE(
+        "Invalid value for browser.contentanalysis.default_result pref "
+        "value");
+    return DefaultResult::eBlock;
+  }
+  return static_cast<DefaultResult>(value);
+}
 }  // namespace
 
 NS_IMETHODIMP ContentAnalysisResponse::GetShouldAllowContent(
@@ -809,7 +819,7 @@ NS_IMETHODIMP ContentAnalysisResult::GetShouldAllowContent(
     bool* aShouldAllowContent) {
   if (mValue.is<NoContentAnalysisResult>()) {
     NoContentAnalysisResult result = mValue.as<NoContentAnalysisResult>();
-    if (Preferences::GetBool(kDefaultAllowPref)) {
+    if (GetDefaultResultFromPref() == DefaultResult::eAllow) {
       *aShouldAllowContent =
           result != NoContentAnalysisResult::DENY_DUE_TO_CANCELED;
     } else {
@@ -1067,7 +1077,7 @@ nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
                                           nsresult aResult) {
   return NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
       "ContentAnalysis::CancelWithError",
-      [aResult, aRequestToken = std::move(aRequestToken)] {
+      [aResult, aRequestToken = std::move(aRequestToken)]() mutable {
         RefPtr<ContentAnalysis> owner = GetContentAnalysisFromService();
         if (!owner) {
           // May be shutting down
@@ -1076,12 +1086,24 @@ nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
         owner->SetLastResult(aResult);
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
-        bool allow = Preferences::GetBool(kDefaultAllowPref);
+        DefaultResult defaultResponse = GetDefaultResultFromPref();
+        nsIContentAnalysisResponse::Action action;
+        switch (defaultResponse) {
+          case DefaultResult::eAllow:
+            action = nsIContentAnalysisResponse::Action::eAllow;
+            break;
+          case DefaultResult::eWarn:
+            action = nsIContentAnalysisResponse::Action::eWarn;
+            break;
+          case DefaultResult::eBlock:
+            action = nsIContentAnalysisResponse::Action::eCanceled;
+            break;
+          default:
+            MOZ_ASSERT(false);
+            action = nsIContentAnalysisResponse::Action::eCanceled;
+        }
         RefPtr<ContentAnalysisResponse> response =
-            ContentAnalysisResponse::FromAction(
-                allow ? nsIContentAnalysisResponse::Action::eAllow
-                      : nsIContentAnalysisResponse::Action::eCanceled,
-                aRequestToken);
+            ContentAnalysisResponse::FromAction(action, aRequestToken);
         response->SetOwner(owner);
         nsIContentAnalysisResponse::CancelError cancelError;
         switch (aResult) {
@@ -1097,20 +1119,29 @@ nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
             break;
         }
         response->SetCancelError(cancelError);
-        obsServ->NotifyObservers(response, "dlp-response", nullptr);
-        nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder;
+        Maybe<CallbackData> maybeCallbackData;
         {
           auto lock = owner->mCallbackMap.Lock();
-          auto callbackData = lock->Extract(aRequestToken);
-          if (callbackData.isSome()) {
-            callbackHolder = callbackData->TakeCallbackHolder();
+          maybeCallbackData = lock->Extract(aRequestToken);
+          if (maybeCallbackData.isNothing()) {
+            LOGD("Content analysis did not find callback for token %s",
+                 aRequestToken.get());
+            return;
           }
         }
+        if (action == nsIContentAnalysisResponse::Action::eWarn) {
+          owner->SendWarnResponse(std::move(aRequestToken),
+                                  std::move(*maybeCallbackData), response);
+          return;
+        }
+        nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder =
+            maybeCallbackData->TakeCallbackHolder();
+        obsServ->NotifyObservers(response, "dlp-response", nullptr);
         if (callbackHolder) {
-          if (allow) {
-            callbackHolder->ContentResult(response);
-          } else {
+          if (action == nsIContentAnalysisResponse::Action::eCanceled) {
             callbackHolder->Error(aResult);
+          } else {
+            callbackHolder->ContentResult(response);
           }
         }
       }));
@@ -1294,6 +1325,20 @@ void ContentAnalysis::DoAnalyzeRequest(
       }));
 }
 
+void ContentAnalysis::SendWarnResponse(
+    nsCString&& aResponseRequestToken, CallbackData aCallbackData,
+    RefPtr<ContentAnalysisResponse>& aResponse) {
+  nsCOMPtr<nsIObserverService> obsServ =
+      mozilla::services::GetObserverService();
+  {
+    auto warnResponseDataMap = mWarnResponseDataMap.Lock();
+    warnResponseDataMap->InsertOrUpdate(
+        aResponseRequestToken,
+        WarnResponseData(std::move(aCallbackData), aResponse));
+  }
+  obsServ->NotifyObservers(aResponse, "dlp-response", nullptr);
+}
+
 void ContentAnalysis::IssueResponse(RefPtr<ContentAnalysisResponse>& response) {
   MOZ_ASSERT(NS_IsMainThread());
   nsCString responseRequestToken;
@@ -1341,13 +1386,8 @@ void ContentAnalysis::IssueResponse(RefPtr<ContentAnalysisResponse>& response) {
   nsCOMPtr<nsIObserverService> obsServ =
       mozilla::services::GetObserverService();
   if (action == nsIContentAnalysisResponse::Action::eWarn) {
-    {
-      auto warnResponseDataMap = mWarnResponseDataMap.Lock();
-      warnResponseDataMap->InsertOrUpdate(
-          responseRequestToken,
-          WarnResponseData(std::move(*maybeCallbackData), response));
-    }
-    obsServ->NotifyObservers(response, "dlp-response", nullptr);
+    SendWarnResponse(std::move(responseRequestToken),
+                     std::move(*maybeCallbackData), response);
     return;
   }
 

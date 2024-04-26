@@ -265,8 +265,8 @@
         "ShowBlockedResult": {
           "type": "boolean"
         },
-        "DefaultAllow": {
-          "type": "boolean"
+        "DefaultResult": {
+          "type": "number"
         },
         "BypassForSameTabOperations": {
           "type": "boolean"
