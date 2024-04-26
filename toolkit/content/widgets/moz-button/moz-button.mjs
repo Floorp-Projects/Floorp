@@ -80,10 +80,10 @@ export default class MozButton extends MozLitElement {
     this.buttonEl.click();
   }
 
-  checkForLabelText() {
-    this.hasVisibleLabel = this.slotEl
-      .assignedNodes()
-      .some(node => node.textContent.trim());
+  handleSlotchange() {
+    if (this.slotEl?.assignedNodes()?.length) {
+      this.hasVisibleLabel = true;
+    }
   }
 
   render() {
@@ -104,7 +104,7 @@ export default class MozButton extends MozLitElement {
         ${this.iconSrc
           ? html`<img src=${this.iconSrc} role="presentation" />`
           : ""}
-        <slot @slotchange=${this.checkForLabelText}>${this.label}</slot>
+        <slot @slotchange=${this.handleSlotchange}>${this.label}</slot>
       </button>
     `;
   }
