@@ -17,8 +17,6 @@ about-reader-color-theme-gray = Gray
     .title = Color Theme Gray
 about-reader-color-theme-contrast = Contrast
     .title = Color Theme Contrast
-about-reader-color-theme-custom = Custom colors
-    .title = Color Theme Custom
 
 # An estimate for how long it takes to read an article,
 # expressed as a range covering both slow and fast readers.
@@ -70,16 +68,26 @@ about-reader-customtheme-tab = Custom
 ## clear and give context for screen reader users.
 
 about-reader-custom-colors-foreground = Text
-    .title = Edit color
+    .title = Edit Color
 about-reader-custom-colors-background = Background
-    .title = Edit color
+    .title = Edit Color
 
 about-reader-custom-colors-unvisited-links = Unvisited links
-    .title = Edit color
+    .title = Edit Color
 about-reader-custom-colors-visited-links = Visited links
-    .title = Edit color
+    .title = Edit Color
 
 about-reader-custom-colors-selection-highlight = Highlighter for read aloud
-    .title = Edit color
+    .title = Edit Color
 
 about-reader-custom-colors-reset-button = Reset defaults
+
+## Reader View improved text and layout menu
+
+about-reader-text-alignment-label = Text alignment
+about-reader-text-alignment-left =
+    .title = Align Text Left
+about-reader-text-alignment-center =
+    .title = Align Text Center
+about-reader-text-alignment-right =
+    .title = Align Text Right

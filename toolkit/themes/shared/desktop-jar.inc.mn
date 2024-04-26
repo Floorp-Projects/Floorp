@@ -153,3 +153,6 @@
   skin/classic/global/reader/RM-Content-Width-Plus-44x16.svg           (../../shared/reader/RM-Content-Width-Plus-44x16.svg)
   skin/classic/global/reader/RM-Line-Height-Minus-38x14.svg            (../../shared/reader/RM-Line-Height-Minus-38x14.svg)
   skin/classic/global/reader/RM-Line-Height-Plus-38x24.svg             (../../shared/reader/RM-Line-Height-Plus-38x24.svg)
+  skin/classic/global/reader/align-left-20.svg             (../../shared/reader/align-left-20.svg)
+  skin/classic/global/reader/align-center-20.svg           (../../shared/reader/align-center-20.svg)
+  skin/classic/global/reader/align-right-20.svg            (../../shared/reader/align-right-20.svg)
