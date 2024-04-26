@@ -415,7 +415,6 @@ rtc_library("rtc_internal_video_codecs") {
     "../call:video_stream_api",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:webrtc_h264",
-    "../modules/video_coding:webrtc_multiplex",
     "../modules/video_coding:webrtc_vp8",
     "../modules/video_coding:webrtc_vp9",
     "../rtc_base:checks",
@@ -452,8 +451,6 @@ rtc_library("rtc_internal_video_codecs") {
     "engine/internal_decoder_factory.h",
     "engine/internal_encoder_factory.cc",
     "engine/internal_encoder_factory.h",
-    "engine/multiplex_codec_factory.cc",
-    "engine/multiplex_codec_factory.h",
   ]
   if (build_with_mozilla) {
     sources -= [
@@ -930,7 +927,6 @@ if (rtc_include_tests) {
         "base/video_common_unittest.cc",
         "engine/internal_decoder_factory_unittest.cc",
         "engine/internal_encoder_factory_unittest.cc",
-        "engine/multiplex_codec_factory_unittest.cc",
         "engine/null_webrtc_video_engine_unittest.cc",
         "engine/payload_type_mapper_unittest.cc",
         "engine/simulcast_encoder_adapter_unittest.cc",
