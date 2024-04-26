@@ -637,7 +637,10 @@ rtc_library("packet_transport_internal") {
     "../rtc_base/system:rtc_export",
     "../rtc_base/third_party/sigslot",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("port") {
