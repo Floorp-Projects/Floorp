@@ -16,6 +16,8 @@ support-files = ["head.js"]
 
 ["browser_gridPatterns.js"]
 
+["browser_selectionPatterns.js"]
+
 ["browser_simplePatterns.js"]
 
 ["browser_tree.js"]

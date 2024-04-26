@@ -32,7 +32,8 @@ class uiaRawElmProvider : public IAccessibleEx,
                           public IExpandCollapseProvider,
                           public IScrollItemProvider,
                           public IValueProvider,
-                          public IRangeValueProvider {
+                          public IRangeValueProvider,
+                          public ISelectionProvider {
  public:
   static constexpr enum ProviderOptions kProviderOptions =
       static_cast<enum ProviderOptions>(ProviderOptions_ServerSideProvider |
@@ -149,6 +150,16 @@ class uiaRawElmProvider : public IAccessibleEx,
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_SmallChange(
       /* [retval][out] */ __RPC__out double* aRetVal);
+
+  // ISelectionProvider
+  virtual HRESULT STDMETHODCALLTYPE GetSelection(
+      /* [retval][out] */ __RPC__deref_out_opt SAFEARRAY** aRetVal);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_CanSelectMultiple(
+      /* [retval][out] */ __RPC__out BOOL* aRetVal);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_IsSelectionRequired(
+      /* [retval][out] */ __RPC__out BOOL* aRetVal);
 
  private:
   Accessible* Acc() const;
