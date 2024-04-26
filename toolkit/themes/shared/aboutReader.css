@@ -508,16 +508,11 @@ button:disabled {
   box-shadow: 0 0 10px 0 var(--popup-shadow);
   top: var(--space-xsmall);
 
-  h2,
-  h3 {
+  h2 {
     font-size: var(--font-size-large);
     font-weight: var(--font-weight-bold);
     color: var(--popup-button-foreground);
     margin-block: var(--space-large);
-  }
-
-  h2 {
-    margin-inline: var(--space-large) 0;
   }
 
   hr {
@@ -781,6 +776,10 @@ body.hcm .color-scheme-buttons {
 #color-controls {
   padding-block-end: var(--space-large);
   width: 400px;
+}
+
+#about-reader-colors-menu-header {
+  margin-inline: var(--space-large) 0;
 }
 
 button-group {

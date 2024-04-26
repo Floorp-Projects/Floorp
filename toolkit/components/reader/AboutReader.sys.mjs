@@ -32,12 +32,12 @@ ChromeUtils.defineLazyGetter(
 );
 
 const COLORSCHEME_L10N_IDS = {
-  auto: "about-reader-color-theme-auto",
-  light: "about-reader-color-theme-light",
-  dark: "about-reader-color-theme-dark",
-  sepia: "about-reader-color-theme-sepia",
-  contrast: "about-reader-color-theme-contrast",
-  gray: "about-reader-color-theme-gray",
+  auto: "about-reader-color-auto-theme",
+  light: "about-reader-color-light-theme",
+  dark: "about-reader-color-dark-theme",
+  sepia: "about-reader-color-sepia-theme",
+  contrast: "about-reader-color-contrast-theme",
+  gray: "about-reader-color-gray-theme",
 };
 
 const CUSTOM_THEME_COLOR_INPUTS = [
@@ -249,12 +249,36 @@ export var AboutReader = function (
 
   let fontType = Services.prefs.getCharPref("reader.font_type");
 
-  const [standardSpacingLabel, wideSpacingLabel] = lazy.l10n.formatMessagesSync(
-    [
+  // Differentiates between the tick mark labels for width vs spacing controls
+  // for localization purposes.
+  const [narrowWidthLabel, wideWidthLabel] = lazy.l10n.formatMessagesSync([
+    "about-reader-slider-label-width-narrow",
+    "about-reader-slider-label-width-wide",
+  ]);
+  const [narrowSpacingLabel, standardSpacingLabel, wideSpacingLabel] =
+    lazy.l10n.formatMessagesSync([
+      "about-reader-slider-label-spacing-narrow",
       "about-reader-slider-label-spacing-standard",
       "about-reader-slider-label-spacing-wide",
-    ]
-  );
+    ]);
+
+  let contentWidthSliderOptions = {
+    min: 1,
+    max: 9,
+    ticks: 9,
+    tickLabels: `["${narrowWidthLabel.value}", "${wideWidthLabel.value}"]`,
+    l10nId: "about-reader-content-width-label",
+    icon: "chrome://global/skin/reader/content-width-20.svg",
+  };
+
+  let lineSpacingSliderOptions = {
+    min: 1,
+    max: 9,
+    ticks: 9,
+    tickLabels: `["${narrowSpacingLabel.value}", "${wideSpacingLabel.value}"]`,
+    l10nId: "about-reader-line-spacing-label",
+    icon: "chrome://global/skin/reader/line-spacing-20.svg",
+  };
 
   let characterSpacingSliderOptions = {
     min: 1,
@@ -298,6 +322,24 @@ export var AboutReader = function (
   if (Services.prefs.getBoolPref("reader.improved_text_menu.enabled", false)) {
     doc.getElementById("regular-text-menu").hidden = true;
     doc.getElementById("improved-text-menu").hidden = false;
+
+    let contentWidth = Services.prefs.getIntPref("reader.content_width");
+    this._setupSlider(
+      "content-width",
+      contentWidthSliderOptions,
+      contentWidth,
+      this._setContentWidthSlider.bind(this)
+    );
+    this._setContentWidthSlider(contentWidth);
+
+    let lineSpacing = Services.prefs.getIntPref("reader.line_height");
+    this._setupSlider(
+      "line-spacing",
+      lineSpacingSliderOptions,
+      lineSpacing,
+      this._setLineSpacing.bind(this)
+    );
+    this._setLineSpacing(lineSpacing);
 
     let characterSpacing = Services.prefs.getStringPref(
       "reader.character_spacing"
@@ -883,7 +925,27 @@ AboutReader.prototype = {
     sliderContainer.appendChild(slider);
   },
 
+  // Rename this function to setContentWidth when the old menu is retired.
+  _setContentWidthSlider(newContentWidth) {
+    // We map the slider range [1-9] to 20-60em.
+    let width = 20 + 5 * (newContentWidth - 1) + "em";
+    this._doc.body.style.setProperty("--content-width", width);
+    this._scheduleToolbarOverlapHandler();
+    return lazy.AsyncPrefs.set(
+      "reader.content_width",
+      parseInt(newContentWidth)
+    );
+  },
+
+  _setLineSpacing(newLineSpacing) {
+    // We map the slider range [1-9] to 1-2.6em.
+    let spacing = 1 + 0.2 * (newLineSpacing - 1) + "em";
+    this._containerElement.style.setProperty("--line-height", spacing);
+    return lazy.AsyncPrefs.set("reader.line_height", parseInt(newLineSpacing));
+  },
+
   _setCharacterSpacing(newCharSpacing) {
+    // We map the slider range [1-9] to 0-0.24em.
     let spacing = (newCharSpacing - 1) * 0.03;
     this._containerElement.style.setProperty(
       "--letter-spacing",
@@ -893,6 +955,7 @@ AboutReader.prototype = {
   },
 
   _setWordSpacing(newWordSpacing) {
+    // We map the slider range [1-9] to 0-0.4em.
     let spacing = (newWordSpacing - 1) * 0.05;
     this._containerElement.style.setProperty(
       "--word-spacing",
