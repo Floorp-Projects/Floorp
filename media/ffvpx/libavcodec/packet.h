@@ -324,6 +324,13 @@ enum AVPacketSideDataType {
     AV_PKT_DATA_IAMF_RECON_GAIN_INFO_PARAM,
 
     /**
+     * Ambient viewing environment metadata, as defined by H.274. This metadata
+     * should be associated with a video stream and contains data in the form
+     * of the AVAmbientViewingEnvironment struct.
+    */
+    AV_PKT_DATA_AMBIENT_VIEWING_ENVIRONMENT,
+
+    /**
      * The number of side data types.
      * This is not part of the public API/ABI in the sense that it may
      * change when new side data types are added.
@@ -334,7 +341,9 @@ enum AVPacketSideDataType {
     AV_PKT_DATA_NB
 };
 
+#if FF_API_QUALITY_FACTOR
 #define AV_PKT_DATA_QUALITY_FACTOR AV_PKT_DATA_QUALITY_STATS //DEPRECATED
+#endif
 
 /**
  * This structure stores auxiliary information for decoding, presenting, or
@@ -589,13 +598,6 @@ typedef struct AVPacketList {
 #define AV_PKT_FLAG_DISPOSABLE 0x0010
 
 enum AVSideDataParamChangeFlags {
-#if FF_API_OLD_CHANNEL_LAYOUT
-    /**
-     * @deprecated those are not used by any decoder
-     */
-    AV_SIDE_DATA_PARAM_CHANGE_CHANNEL_COUNT  = 0x0001,
-    AV_SIDE_DATA_PARAM_CHANGE_CHANNEL_LAYOUT = 0x0002,
-#endif
     AV_SIDE_DATA_PARAM_CHANGE_SAMPLE_RATE    = 0x0004,
     AV_SIDE_DATA_PARAM_CHANGE_DIMENSIONS     = 0x0008,
 };
