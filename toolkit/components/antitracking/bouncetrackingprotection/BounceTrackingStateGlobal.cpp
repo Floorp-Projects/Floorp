@@ -42,19 +42,6 @@ nsresult BounceTrackingStateGlobal::RecordUserActivation(
              __FUNCTION__, PromiseFlatCString(aSiteHost).get()));
   }
 
-  // Make sure we don't overwrite an existing, more recent user activation. This
-  // is only relevant for callers that pass in a timestamp that isn't PR_Now(),
-  // e.g. when importing user activation data.
-  Maybe<PRTime> existingUserActivation = mUserActivation.MaybeGet(aSiteHost);
-  if (existingUserActivation.isSome() &&
-      existingUserActivation.value() >= aTime) {
-    MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
-            ("%s: Skip: A more recent user activation "
-             "already exists for %s",
-             __FUNCTION__, PromiseFlatCString(aSiteHost).get()));
-    return NS_OK;
-  }
-
   mUserActivation.InsertOrUpdate(aSiteHost, aTime);
 
   if (aSkipStorage || !ShouldPersistToDisk()) {

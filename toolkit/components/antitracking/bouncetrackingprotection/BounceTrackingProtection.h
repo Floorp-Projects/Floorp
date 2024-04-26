@@ -37,11 +37,8 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
   [[nodiscard]] nsresult RecordStatefulBounces(
       BounceTrackingState* aBounceTrackingState);
 
-  // Stores a user activation flag with a timestamp for the given principal. The
-  // timestamp defaults to the current time, but can be overridden via
-  // aActivationTime.
-  [[nodiscard]] nsresult RecordUserActivation(
-      nsIPrincipal* aPrincipal, Maybe<PRTime> aActivationTime = Nothing());
+  // Stores a user activation flag with a timestamp for the given principal.
+  [[nodiscard]] nsresult RecordUserActivation(nsIPrincipal* aPrincipal);
 
   // Clears expired user interaction flags for the given state global. If
   // aStateGlobal == nullptr, clears expired user interaction flags for all
@@ -94,11 +91,6 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
     nsCString mHost;
     RefPtr<ClearDataMozPromise::Private> mPromise;
   };
-
-  // Imports user activation permissions from permission manager if needed. This
-  // is important so we don't purge data for sites the user has interacted with
-  // before the feature was enabled.
-  [[nodiscard]] nsresult MaybeMigrateUserInteractionPermissions();
 };
 
 }  // namespace mozilla
