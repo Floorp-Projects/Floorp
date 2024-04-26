@@ -66,6 +66,7 @@ interface nsIContentSecurityPolicy : nsISerializable
     STYLE_SRC_ELEM_DIRECTIVE              = 23,
     STYLE_SRC_ATTR_DIRECTIVE              = 24,
     REQUIRE_TRUSTED_TYPES_FOR_DIRECTIVE   = 25,
+    TRUSTED_TYPES_DIRECTIVE               = 26,
   };
 
   /**
