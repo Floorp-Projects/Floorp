@@ -17,8 +17,6 @@ var { IconDetails } = ExtensionParent;
 // WeakMap[Extension -> SidebarAction]
 let sidebarActionMap = new WeakMap();
 
-const sidebarURL = "chrome://browser/content/webext-panels.xhtml";
-
 /**
  * Responsible for the sidebar_action section of the manifest as well
  * as the associated sidebar browser.
@@ -40,7 +38,6 @@ this.sidebarAction = class extends ExtensionAPI {
     let widgetId = makeWidgetId(extension.id);
     this.id = `${widgetId}-sidebar-action`;
     this.menuId = `menubar_menu_${this.id}`;
-    this.switcherMenuId = `sidebarswitcher_menu_${this.id}`;
 
     this.browserStyle = options.browser_style;
 
@@ -66,23 +63,6 @@ this.sidebarAction = class extends ExtensionAPI {
     };
     windowTracker.addOpenListener(this.windowOpenListener);
 
-    this.updateHeader = event => {
-      let window = event.target.ownerGlobal;
-      let details = this.tabContext.get(window.gBrowser.selectedTab);
-      let header = window.document.getElementById("sidebar-switcher-target");
-      if (window.SidebarUI.currentID === this.id) {
-        this.setMenuIcon(header, details);
-      }
-    };
-
-    this.windowCloseListener = window => {
-      let header = window.document.getElementById("sidebar-switcher-target");
-      if (header) {
-        header.removeEventListener("SidebarShown", this.updateHeader);
-      }
-    };
-    windowTracker.addCloseListener(this.windowCloseListener);
-
     sidebarActionMap.set(extension, this);
   }
 
@@ -91,7 +71,7 @@ this.sidebarAction = class extends ExtensionAPI {
   }
 
   onShutdown(isAppShutdown) {
-    sidebarActionMap.delete(this.this);
+    sidebarActionMap.delete(this.extension);
 
     this.tabContext.shutdown();
 
@@ -102,18 +82,10 @@ this.sidebarAction = class extends ExtensionAPI {
     }
 
     for (let window of windowTracker.browserWindows()) {
-      let { document, SidebarUI } = window;
-      if (SidebarUI.currentID === this.id) {
-        SidebarUI.hide();
-      }
-      document.getElementById(this.menuId)?.remove();
-      document.getElementById(this.switcherMenuId)?.remove();
-      let header = document.getElementById("sidebar-switcher-target");
-      header.removeEventListener("SidebarShown", this.updateHeader);
-      SidebarUI.sidebars.delete(this.id);
+      let { SidebarUI } = window;
+      SidebarUI.removeExtension(this.id);
     }
     windowTracker.removeOpenListener(this.windowOpenListener);
-    windowTracker.removeCloseListener(this.windowCloseListener);
   }
 
   static onUninstall(id) {
@@ -149,60 +121,29 @@ this.sidebarAction = class extends ExtensionAPI {
     if (!this.extension.canAccessWindow(window)) {
       return;
     }
-    let { document, SidebarUI } = window;
-    let keyId = `ext-key-id-${this.id}`;
-
-    SidebarUI.sidebars.set(this.id, {
-      title: details.title,
-      url: sidebarURL,
+    this.panel = details.panel;
+    let { SidebarUI } = window;
+    SidebarUI.registerExtension(this.id, {
+      icon: this.getMenuIcon(details),
       menuId: this.menuId,
-      switcherMenuId: this.switcherMenuId,
-      // The following properties are specific to extensions
+      title: details.title,
       extensionId: this.extension.id,
-      panel: details.panel,
-      browserStyle: this.browserStyle,
+      onload: () =>
+        SidebarUI.browser.contentWindow.loadPanel(
+          this.extension.id,
+          this.panel,
+          this.browserStyle
+        ),
     });
-
-    let header = document.getElementById("sidebar-switcher-target");
-    header.addEventListener("SidebarShown", this.updateHeader);
-
-    // Insert a menuitem for View->Show Sidebars.
-    let menuitem = document.createXULElement("menuitem");
-    menuitem.setAttribute("id", this.menuId);
-    menuitem.setAttribute("type", "checkbox");
-    menuitem.setAttribute("label", details.title);
-    menuitem.setAttribute("oncommand", `SidebarUI.toggle("${this.id}");`);
-    menuitem.setAttribute("class", "menuitem-iconic webextension-menuitem");
-    menuitem.setAttribute("key", keyId);
-    this.setMenuIcon(menuitem, details);
-
-    // Insert a toolbarbutton for the sidebar dropdown selector.
-    let switcherMenuitem = menuitem.cloneNode();
-    switcherMenuitem.setAttribute("id", this.switcherMenuId);
-    switcherMenuitem.removeAttribute("type");
-
-    document.getElementById("viewSidebarMenu").appendChild(menuitem);
-    let separator = document.getElementById("sidebar-extensions-separator");
-    separator.parentNode.insertBefore(switcherMenuitem, separator);
-
-    return menuitem;
   }
 
-  setMenuIcon(menuitem, details) {
+  getMenuIcon(details) {
     let getIcon = size =>
       IconDetails.escapeUrl(
         IconDetails.getPreferredIcon(details.icon, this.extension, size).icon
       );
 
-    menuitem.setAttribute(
-      "style",
-      `
-      --webextension-menuitem-image: image-set(
-        url("${getIcon(16)}"),
-        url("${getIcon(32)}") 2x
-      );
-    `
-    );
+    return `image-set(url("${getIcon(16)}"), url("${getIcon(32)}") 2x)`;
   }
 
   /**
@@ -216,32 +157,24 @@ this.sidebarAction = class extends ExtensionAPI {
   updateButton(window, tabData) {
     let { document, SidebarUI } = window;
     let title = tabData.title || this.extension.name;
-    let menu = document.getElementById(this.menuId);
-    if (!menu) {
-      menu = this.createMenuItem(window, tabData);
+    if (!document.getElementById(this.menuId)) {
+      // Menu items are added when new windows are opened, or from onReady (when
+      // an extension has fully started). The menu item may be missing at this
+      // point if the extension updates the sidebar during its startup.
+      this.createMenuItem(window, tabData);
     }
-
-    let urlChanged = tabData.panel !== SidebarUI.sidebars.get(this.id).panel;
+    let urlChanged = tabData.panel !== this.panel;
     if (urlChanged) {
-      SidebarUI.sidebars.get(this.id).panel = tabData.panel;
+      this.panel = tabData.panel;
     }
-
-    menu.setAttribute("label", title);
-    this.setMenuIcon(menu, tabData);
-
-    let button = document.getElementById(this.switcherMenuId);
-    button.setAttribute("label", title);
-    this.setMenuIcon(button, tabData);
-
-    // Update the sidebar if this extension is the current sidebar.
-    if (SidebarUI.currentID === this.id) {
-      SidebarUI.title = title;
-      let header = document.getElementById("sidebar-switcher-target");
-      this.setMenuIcon(header, tabData);
-      if (SidebarUI.isOpen && urlChanged) {
-        SidebarUI.show(this.id);
-      }
-    }
+    SidebarUI.setExtensionAttributes(
+      this.id,
+      {
+        icon: this.getMenuIcon(tabData),
+        label: title,
+      },
+      urlChanged
+    );
   }
 
   /**

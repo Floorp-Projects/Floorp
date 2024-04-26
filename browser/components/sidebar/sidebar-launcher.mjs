@@ -20,9 +20,14 @@ import "chrome://global/content/elements/moz-button.mjs";
 export default class SidebarLauncher extends MozLitElement {
   static properties = {
     topActions: { type: Array },
+    extensionActions: { type: Array },
     bottomActions: { type: Array },
     selectedView: { type: String },
     open: { type: Boolean },
+  };
+
+  static queries = {
+    extensionButtons: { all: ".extension-actions > moz-button" },
   };
 
   constructor() {
@@ -34,7 +39,7 @@ export default class SidebarLauncher extends MozLitElement {
         l10nId: "sidebar-launcher-insights",
       },
     ];
-
+    this.extensionActions = [];
     this.bottomActions = [
       {
         l10nId: "sidebar-menu-history",
@@ -55,9 +60,6 @@ export default class SidebarLauncher extends MozLitElement {
 
     this.selectedView = window.SidebarUI.currentID;
     this.open = window.SidebarUI.isOpen;
-    this.menuMutationObserver = new MutationObserver(() =>
-      this.#setExtensionItems()
-    );
   }
 
   connectedCallback() {
@@ -65,20 +67,22 @@ export default class SidebarLauncher extends MozLitElement {
     this._sidebarBox = document.getElementById("sidebar-box");
     this._sidebarBox.addEventListener("sidebar-show", this);
     this._sidebarBox.addEventListener("sidebar-hide", this);
-    this._sidebarMenu = document.getElementById("viewSidebarMenu");
 
-    this.menuMutationObserver.observe(this._sidebarMenu, {
-      childList: true,
-      subtree: true,
-    });
-    this.#setExtensionItems();
+    window.addEventListener("SidebarItemAdded", this);
+    window.addEventListener("SidebarItemChanged", this);
+    window.addEventListener("SidebarItemRemoved", this);
+
+    this.setExtensionItems();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this._sidebarBox.removeEventListener("sidebar-show", this);
     this._sidebarBox.removeEventListener("sidebar-hide", this);
-    this.menuMutationObserver.disconnect();
+
+    window.removeEventListener("SidebarItemAdded", this);
+    window.removeEventListener("SidebarItemChanged", this);
+    window.removeEventListener("SidebarItemRemoved", this);
   }
 
   getImageUrl(icon, targetURI) {
@@ -101,16 +105,14 @@ export default class SidebarLauncher extends MozLitElement {
     return icon;
   }
 
-  #setExtensionItems() {
-    for (let item of this._sidebarMenu.children) {
-      if (item.id.endsWith("-sidebar-action")) {
-        this.topActions.push({
-          tooltiptext: item.label,
-          icon: item.style.getPropertyValue("--webextension-menuitem-image"),
-          view: item.id.slice("menubar_menu_".length),
-        });
-      }
-    }
+  setExtensionItems() {
+    this.extensionActions = window.SidebarUI.getExtensions().map(
+      ({ commandID, icon, label }) => ({
+        tooltiptext: label,
+        icon,
+        view: commandID,
+      })
+    );
   }
 
   handleEvent(e) {
@@ -121,6 +123,11 @@ export default class SidebarLauncher extends MozLitElement {
         break;
       case "sidebar-hide":
         this.open = false;
+        break;
+      case "SidebarItemAdded":
+      case "SidebarItemChanged":
+      case "SidebarItemRemoved":
+        this.setExtensionItems();
         break;
     }
   }
@@ -158,6 +165,11 @@ export default class SidebarLauncher extends MozLitElement {
       <div class="wrapper">
         <div class="top-actions actions-list">
           ${this.topActions.map(action => this.entrypointTemplate(action))}
+        </div>
+        <div class="extension-actions actions-list">
+          ${this.extensionActions.map(action =>
+            this.entrypointTemplate(action)
+          )}
         </div>
         <div class="bottom-actions actions-list">
           ${this.bottomActions.map(action => this.entrypointTemplate(action))}
