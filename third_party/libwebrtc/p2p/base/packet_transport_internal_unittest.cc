@@ -20,65 +20,8 @@ namespace {
 
 using ::testing::MockFunction;
 
-class SigslotPacketReceiver : public sigslot::has_slots<> {
- public:
-  bool packet_received() const { return packet_received_; }
-
-  void OnPacketReceived(rtc::PacketTransportInternal*,
-                        const char*,
-                        size_t,
-                        const int64_t&,
-                        int flags) {
-    packet_received_ = true;
-    flags_ = flags;
-  }
-
-  bool packet_received_ = false;
-  int flags_ = -1;
-};
-
 TEST(PacketTransportInternal,
-     PacketFlagsCorrectWithUnDecryptedPacketUsingSigslot) {
-  rtc::FakePacketTransport packet_transport("test");
-  SigslotPacketReceiver receiver;
-  packet_transport.SignalReadPacket.connect(
-      &receiver, &SigslotPacketReceiver::OnPacketReceived);
-
-  packet_transport.NotifyPacketReceived(
-      rtc::ReceivedPacket({}, rtc::SocketAddress(), absl::nullopt,
-                          rtc::ReceivedPacket::kNotDecrypted));
-  ASSERT_TRUE(receiver.packet_received_);
-  EXPECT_EQ(receiver.flags_, 0);
-}
-
-TEST(PacketTransportInternal, PacketFlagsCorrectWithSrtpPacketUsingSigslot) {
-  rtc::FakePacketTransport packet_transport("test");
-  SigslotPacketReceiver receiver;
-  packet_transport.SignalReadPacket.connect(
-      &receiver, &SigslotPacketReceiver::OnPacketReceived);
-
-  packet_transport.NotifyPacketReceived(
-      rtc::ReceivedPacket({}, rtc::SocketAddress(), absl::nullopt,
-                          rtc::ReceivedPacket::kSrtpEncrypted));
-  ASSERT_TRUE(receiver.packet_received_);
-  EXPECT_EQ(receiver.flags_, 1);
-}
-
-TEST(PacketTransportInternal, PacketFlagsCorrectWithDtlsDecryptedUsingSigslot) {
-  rtc::FakePacketTransport packet_transport("test");
-  SigslotPacketReceiver receiver;
-  packet_transport.SignalReadPacket.connect(
-      &receiver, &SigslotPacketReceiver::OnPacketReceived);
-
-  packet_transport.NotifyPacketReceived(
-      rtc::ReceivedPacket({}, rtc::SocketAddress(), absl::nullopt,
-                          rtc::ReceivedPacket::kDtlsDecrypted));
-  ASSERT_TRUE(receiver.packet_received_);
-  EXPECT_EQ(receiver.flags_, 0);
-}
-
-TEST(PacketTransportInternal,
-     NotifyPacketReceivedPassThrougPacketToRegisterListener) {
+     NotifyPacketReceivedPassthrougPacketToRegisteredListener) {
   rtc::FakePacketTransport packet_transport("test");
   MockFunction<void(rtc::PacketTransportInternal*, const rtc::ReceivedPacket&)>
       receiver;

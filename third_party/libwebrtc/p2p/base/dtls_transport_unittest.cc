@@ -108,8 +108,11 @@ class DtlsTestClient : public sigslot::has_slots<> {
     dtls_transport_->SetLocalCertificate(certificate_);
     dtls_transport_->SignalWritableState.connect(
         this, &DtlsTestClient::OnTransportWritableState);
-    dtls_transport_->SignalReadPacket.connect(
-        this, &DtlsTestClient::OnTransportReadPacket);
+    dtls_transport_->RegisterReceivedPacketCallback(
+        this, [&](rtc::PacketTransportInternal* transport,
+                  const rtc::ReceivedPacket& packet) {
+          OnTransportReadPacket(transport, packet);
+        });
     dtls_transport_->SignalSentPacket.connect(
         this, &DtlsTestClient::OnTransportSentPacket);
   }
@@ -209,9 +212,11 @@ class DtlsTestClient : public sigslot::has_slots<> {
   size_t NumPacketsReceived() { return received_.size(); }
 
   // Inverse of SendPackets.
-  bool VerifyPacket(const uint8_t* data, size_t size, uint32_t* out_num) {
-    if (size != packet_size_ ||
-        (data[0] != 0 && static_cast<uint8_t>(data[0]) != 0x80)) {
+  bool VerifyPacket(rtc::ArrayView<const uint8_t> payload, uint32_t* out_num) {
+    const uint8_t* data = payload.data();
+    size_t size = payload.size();
+
+    if (size != packet_size_ || (data[0] != 0 && (data[0]) != 0x80)) {
       return false;
     }
     uint32_t packet_num = rtc::GetBE32(data + kPacketNumOffset);
@@ -248,18 +253,21 @@ class DtlsTestClient : public sigslot::has_slots<> {
   }
 
   void OnTransportReadPacket(rtc::PacketTransportInternal* transport,
-                             const char* data,
-                             size_t size,
-                             const int64_t& /* packet_time_us */,
-                             int flags) {
+                             const rtc::ReceivedPacket& packet) {
     uint32_t packet_num = 0;
-    ASSERT_TRUE(VerifyPacket(reinterpret_cast<const uint8_t*>(data), size,
-                             &packet_num));
+    ASSERT_TRUE(VerifyPacket(packet.payload(), &packet_num));
     received_.insert(packet_num);
-    // Only DTLS-SRTP packets should have the bypass flag set.
-    int expected_flags =
-        (certificate_ && IsRtpLeadByte(data[0])) ? PF_SRTP_BYPASS : 0;
-    ASSERT_EQ(expected_flags, flags);
+    switch (packet.decryption_info()) {
+      case rtc::ReceivedPacket::kSrtpEncrypted:
+        ASSERT_TRUE(certificate_ && IsRtpLeadByte(packet.payload()[0]));
+        break;
+      case rtc::ReceivedPacket::kDtlsDecrypted:
+        ASSERT_TRUE(certificate_ && !IsRtpLeadByte(packet.payload()[0]));
+        break;
+      case rtc::ReceivedPacket::kNotDecrypted:
+        ASSERT_FALSE(certificate_);
+        break;
+    }
   }
 
   void OnTransportSentPacket(rtc::PacketTransportInternal* transport,
@@ -291,7 +299,7 @@ class DtlsTestClient : public sigslot::has_slots<> {
       if (data[0] == 23) {
         ASSERT_TRUE(VerifyEncryptedPacket(data, size));
       } else if (IsRtpLeadByte(data[0])) {
-        ASSERT_TRUE(VerifyPacket(data, size, NULL));
+        ASSERT_TRUE(VerifyPacket(packet.payload(), NULL));
       }
     }
   }
