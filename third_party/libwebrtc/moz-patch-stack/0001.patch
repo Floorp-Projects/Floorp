@@ -1,69 +1,217 @@
-From: Philipp Hancke <phancke@microsoft.com>
-Date: Fri, 23 Feb 2024 08:11:56 +0100
-Subject: (cherry-pick-branch-heads/6312) [M123] Fix handling of rejected
- m-lines without transport description
+From: Nicolas Grunbaum <ngrunbaum@mozilla.com>
+Date: Fri, 26 Apr 2024 00:05:24 -0700
+Subject: (tmp-cherry-pick) Revert "Make PeerConnectionInteface methods pure
+ virtual." (de3b1cd597)
 
-A fingerprint should not be required for m-lines which are rejected.
+This reverts commit bff68580b5e575457f9334cd2ee1275f72fa9507.
 
-BUG=chromium:326493639,webrtc:11066
+Reason for revert: Breaks roll into Chromium.
 
-(cherry picked from commit 845d6bef52ec08dfd9c87d3eff5ae5c07c3fe55d)
+Example https://ci.chromium.org/ui/p/chromium/builders/try/linux-rel/1714596/overview and https://chromium-review.googlesource.com/c/chromium/src/+/5316782.
 
-Change-Id: I7428c91a144ca46650e13d72868f160652a98339
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/340322
+Original change's description:
+> Make PeerConnectionInteface methods pure virtual.
+>
+> Bug: none
+> Change-Id: I64fc23f5159bc6a5cd83c0b00b292641f4976513
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/340143
+> Commit-Queue: Per Kjellander <perkj@webrtc.org>
+> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#41782}
+
+Bug: none
+Change-Id: I477d27d33ac2bcf98ed51c3da356605ed9afb6da
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/340323
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Reviewed-by: Per Kjellander <perkj@webrtc.org>
+Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Reviewed-by: Florent Castelli <orphis@webrtc.org>
-Commit-Queue: Philipp Hancke <phancke@microsoft.com>
-Cr-Original-Commit-Position: refs/heads/main@{#41794}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/341023
-Cr-Commit-Position: refs/branch-heads/6312@{#2}
-Cr-Branched-From: 0355f455a48b141a8277442825ec776a74d66fb7-refs/heads/main@{#41763}
+Cr-Commit-Position: refs/heads/main@{#41790}
 ---
- pc/media_session.cc | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ api/peer_connection_interface.h         | 40 +++++++++++++++----------
+ api/test/mock_peerconnectioninterface.h |  9 ------
+ pc/test/fake_peer_connection_base.h     |  4 ---
+ pc/test/mock_peer_connection_internal.h |  8 -----
+ 4 files changed, 24 insertions(+), 37 deletions(-)
 
-diff --git a/pc/media_session.cc b/pc/media_session.cc
-index 4f63f3088f..3928088c7f 100644
---- a/pc/media_session.cc
-+++ b/pc/media_session.cc
-@@ -2174,12 +2174,12 @@ RTCError MediaSessionDescriptionFactory::AddRtpContentForAnswer(
-   }
-   // If this section is part of a bundle, bundle_transport is non-null.
-   // Then require_transport_attributes is false - we can handle sections
--  // without the DTLS parameters. Otherwise, transport attributes MUST
--  // be present.
-+  // without the DTLS parameters. For rejected m-lines it does not matter.
-+  // Otherwise, transport attributes MUST be present.
-   std::unique_ptr<TransportDescription> transport = CreateTransportAnswer(
-       media_description_options.mid, offer_description,
-       media_description_options.transport_options, current_description,
--      bundle_transport == nullptr, ice_credentials);
-+      !offer_content->rejected && bundle_transport == nullptr, ice_credentials);
-   if (!transport) {
-     LOG_AND_RETURN_ERROR(
-         RTCErrorType::INTERNAL_ERROR,
-@@ -2272,7 +2272,7 @@ RTCError MediaSessionDescriptionFactory::AddDataContentForAnswer(
-   std::unique_ptr<TransportDescription> data_transport = CreateTransportAnswer(
-       media_description_options.mid, offer_description,
-       media_description_options.transport_options, current_description,
--      bundle_transport != nullptr, ice_credentials);
-+      !offer_content->rejected && bundle_transport == nullptr, ice_credentials);
-   if (!data_transport) {
-     LOG_AND_RETURN_ERROR(
-         RTCErrorType::INTERNAL_ERROR,
-@@ -2344,10 +2344,11 @@ RTCError MediaSessionDescriptionFactory::AddUnsupportedContentForAnswer(
-     SessionDescription* answer,
-     IceCredentialsIterator* ice_credentials) const {
-   std::unique_ptr<TransportDescription> unsupported_transport =
--      CreateTransportAnswer(media_description_options.mid, offer_description,
--                            media_description_options.transport_options,
--                            current_description, bundle_transport != nullptr,
--                            ice_credentials);
-+      CreateTransportAnswer(
-+          media_description_options.mid, offer_description,
-+          media_description_options.transport_options, current_description,
-+          !offer_content->rejected && bundle_transport == nullptr,
-+          ice_credentials);
-   if (!unsupported_transport) {
-     LOG_AND_RETURN_ERROR(
-         RTCErrorType::INTERNAL_ERROR,
+diff --git a/api/peer_connection_interface.h b/api/peer_connection_interface.h
+index ca6baacd0d..38699ec98a 100644
+--- a/api/peer_connection_interface.h
++++ b/api/peer_connection_interface.h
+@@ -1003,6 +1003,8 @@ class RTC_EXPORT PeerConnectionInterface : public webrtc::RefCountInterface {
+   // for negotiation and subsequent CreateOffer() calls will act as if
+   // RTCOfferAnswerOptions::ice_restart is true.
+   // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-restartice
++  // TODO(hbos): Remove default implementation when downstream projects
++  // implement this.
+   virtual void RestartIce() = 0;
+ 
+   // Create a new offer.
+@@ -1073,7 +1075,9 @@ class RTC_EXPORT PeerConnectionInterface : public webrtc::RefCountInterface {
+   // sure that even if there was a delay (e.g. due to a PostTask) between the
+   // event being generated and the time of firing, the Operations Chain is empty
+   // and the event is still valid to be fired.
+-  virtual bool ShouldFireNegotiationNeededEvent(uint32_t event_id) = 0;
++  virtual bool ShouldFireNegotiationNeededEvent(uint32_t event_id) {
++    return true;
++  }
+ 
+   virtual PeerConnectionInterface::RTCConfiguration GetConfiguration() = 0;
+ 
+@@ -1135,7 +1139,7 @@ class RTC_EXPORT PeerConnectionInterface : public webrtc::RefCountInterface {
+   // Estimation starts when the first RTP packet is sent.
+   // Estimation will be restarted if already started.
+   virtual void ReconfigureBandwidthEstimation(
+-      const BandwidthEstimationSettings& settings) = 0;
++      const BandwidthEstimationSettings& settings) {}
+ 
+   // Enable/disable playout of received audio streams. Enabled by default. Note
+   // that even if playout is enabled, streams will only be played out if the
+@@ -1143,12 +1147,12 @@ class RTC_EXPORT PeerConnectionInterface : public webrtc::RefCountInterface {
+   // playout of the underlying audio device but starts a task which will poll
+   // for audio data every 10ms to ensure that audio processing happens and the
+   // audio statistics are updated.
+-  virtual void SetAudioPlayout(bool playout) = 0;
++  virtual void SetAudioPlayout(bool playout) {}
+ 
+   // Enable/disable recording of transmitted audio streams. Enabled by default.
+   // Note that even if recording is enabled, streams will only be recorded if
+   // the appropriate SDP is also applied.
+-  virtual void SetAudioRecording(bool recording) = 0;
++  virtual void SetAudioRecording(bool recording) {}
+ 
+   // Looks up the DtlsTransport associated with a MID value.
+   // In the Javascript API, DtlsTransport is a property of a sender, but
+@@ -1180,25 +1184,28 @@ class RTC_EXPORT PeerConnectionInterface : public webrtc::RefCountInterface {
+ 
+   // Returns the current state of canTrickleIceCandidates per
+   // https://w3c.github.io/webrtc-pc/#attributes-1
+-  virtual absl::optional<bool> can_trickle_ice_candidates() = 0;
++  virtual absl::optional<bool> can_trickle_ice_candidates() {
++    // TODO(crbug.com/708484): Remove default implementation.
++    return absl::nullopt;
++  }
+ 
+   // When a resource is overused, the PeerConnection will try to reduce the load
+   // on the sysem, for example by reducing the resolution or frame rate of
+   // encoded streams. The Resource API allows injecting platform-specific usage
+   // measurements. The conditions to trigger kOveruse or kUnderuse are up to the
+   // implementation.
+-  virtual void AddAdaptationResource(rtc::scoped_refptr<Resource> resource) = 0;
++  // TODO(hbos): Make pure virtual when implemented by downstream projects.
++  virtual void AddAdaptationResource(rtc::scoped_refptr<Resource> resource) {}
+ 
+   // Start RtcEventLog using an existing output-sink. Takes ownership of
+-  // `output` and passes it on to Call, which will take the ownership. If
+-  // the operation fails the output will be closed and deallocated. The
+-  // event log will send serialized events to the output object every
+-  // `output_period_ms`. Applications using the event log should generally
+-  // make their own trade-off regarding the output period. A long period is
+-  // generally more efficient, with potential drawbacks being more bursty
+-  // thread usage, and more events lost in case the application crashes. If
+-  // the `output_period_ms` argument is omitted, webrtc selects a default
+-  // deemed to be workable in most cases.
++  // `output` and passes it on to Call, which will take the ownership. If the
++  // operation fails the output will be closed and deallocated. The event log
++  // will send serialized events to the output object every `output_period_ms`.
++  // Applications using the event log should generally make their own trade-off
++  // regarding the output period. A long period is generally more efficient,
++  // with potential drawbacks being more bursty thread usage, and more events
++  // lost in case the application crashes. If the `output_period_ms` argument is
++  // omitted, webrtc selects a default deemed to be workable in most cases.
+   virtual bool StartRtcEventLog(std::unique_ptr<RtcEventLogOutput> output,
+                                 int64_t output_period_ms) = 0;
+   virtual bool StartRtcEventLog(std::unique_ptr<RtcEventLogOutput> output) = 0;
+@@ -1219,7 +1226,8 @@ class RTC_EXPORT PeerConnectionInterface : public webrtc::RefCountInterface {
+   //
+   // Also the only thread on which it's safe to use SessionDescriptionInterface
+   // pointers.
+-  virtual rtc::Thread* signaling_thread() const = 0;
++  // TODO(deadbeef): Make pure virtual when all subclasses implement it.
++  virtual rtc::Thread* signaling_thread() const { return nullptr; }
+ 
+  protected:
+   // Dtor protected as objects shouldn't be deleted via this interface.
+diff --git a/api/test/mock_peerconnectioninterface.h b/api/test/mock_peerconnectioninterface.h
+index 814d1b1420..22a77d7dfe 100644
+--- a/api/test/mock_peerconnectioninterface.h
++++ b/api/test/mock_peerconnectioninterface.h
+@@ -160,10 +160,6 @@ class MockPeerConnectionInterface : public webrtc::PeerConnectionInterface {
+               (std::unique_ptr<SessionDescriptionInterface>,
+                rtc::scoped_refptr<SetRemoteDescriptionObserverInterface>),
+               (override));
+-  MOCK_METHOD(bool,
+-              ShouldFireNegotiationNeededEvent,
+-              (uint32_t event_id),
+-              (override));
+   MOCK_METHOD(PeerConnectionInterface::RTCConfiguration,
+               GetConfiguration,
+               (),
+@@ -199,10 +195,6 @@ class MockPeerConnectionInterface : public webrtc::PeerConnectionInterface {
+               (override));
+   MOCK_METHOD(PeerConnectionState, peer_connection_state, (), (override));
+   MOCK_METHOD(IceGatheringState, ice_gathering_state, (), (override));
+-  MOCK_METHOD(void,
+-              AddAdaptationResource,
+-              (rtc::scoped_refptr<Resource>),
+-              (override));
+   MOCK_METHOD(absl::optional<bool>, can_trickle_ice_candidates, (), (override));
+   MOCK_METHOD(bool,
+               StartRtcEventLog,
+@@ -214,7 +206,6 @@ class MockPeerConnectionInterface : public webrtc::PeerConnectionInterface {
+               (override));
+   MOCK_METHOD(void, StopRtcEventLog, (), (override));
+   MOCK_METHOD(void, Close, (), (override));
+-  MOCK_METHOD(rtc::Thread*, signaling_thread, (), (const override));
+ };
+ 
+ static_assert(
+diff --git a/pc/test/fake_peer_connection_base.h b/pc/test/fake_peer_connection_base.h
+index 8422f0b749..9e4ed6d175 100644
+--- a/pc/test/fake_peer_connection_base.h
++++ b/pc/test/fake_peer_connection_base.h
+@@ -177,8 +177,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
+       rtc::scoped_refptr<SetRemoteDescriptionObserverInterface> observer)
+       override {}
+ 
+-  bool ShouldFireNegotiationNeededEvent(uint32_t event_id) { return true; }
+-
+   RTCConfiguration GetConfiguration() override { return RTCConfiguration(); }
+ 
+   RTCError SetConfiguration(
+@@ -231,8 +229,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
+ 
+   absl::optional<bool> can_trickle_ice_candidates() { return absl::nullopt; }
+ 
+-  void AddAdaptationResource(rtc::scoped_refptr<Resource> resource) {}
+-
+   bool StartRtcEventLog(std::unique_ptr<RtcEventLogOutput> output,
+                         int64_t output_period_ms) override {
+     return false;
+diff --git a/pc/test/mock_peer_connection_internal.h b/pc/test/mock_peer_connection_internal.h
+index e586008e1b..b5f47cc46a 100644
+--- a/pc/test/mock_peer_connection_internal.h
++++ b/pc/test/mock_peer_connection_internal.h
+@@ -153,10 +153,6 @@ class MockPeerConnectionInternal : public PeerConnectionInternal {
+               (std::unique_ptr<SessionDescriptionInterface>,
+                rtc::scoped_refptr<SetRemoteDescriptionObserverInterface>),
+               (override));
+-  MOCK_METHOD(bool,
+-              ShouldFireNegotiationNeededEvent,
+-              (uint32_t event_id),
+-              (override));
+   MOCK_METHOD(PeerConnectionInterface::RTCConfiguration,
+               GetConfiguration,
+               (),
+@@ -196,10 +192,6 @@ class MockPeerConnectionInternal : public PeerConnectionInternal {
+               (override));
+   MOCK_METHOD(PeerConnectionState, peer_connection_state, (), (override));
+   MOCK_METHOD(IceGatheringState, ice_gathering_state, (), (override));
+-  MOCK_METHOD(void,
+-              AddAdaptationResource,
+-              (rtc::scoped_refptr<Resource>),
+-              (override));
+   MOCK_METHOD(absl::optional<bool>, can_trickle_ice_candidates, (), (override));
+   MOCK_METHOD(bool,
+               StartRtcEventLog,
