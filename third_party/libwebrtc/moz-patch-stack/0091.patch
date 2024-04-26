@@ -1,30 +1,38 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 5 Oct 2023 14:21:00 +0000
-Subject: Bug 1857037 - pt1 - add shim gni files to limit BUILD.gn changes.
- r=ng,webrtc-reviewers
+From: stransky <stransky@redhat.com>
+Date: Tue, 29 Aug 2023 12:43:00 +0000
+Subject: Bug 1821629 [DMABuf] Don't use DMABuf if it's disabled by Firefox gfx
+ config r=ng,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D190104
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a84d39db037cbe34aa19588b0d18335eb5e2d79b
+Differential Revision: https://phabricator.services.mozilla.com/D172224
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/158a888cad8869a2f0026fa7cfaaa13ecbfcf2ed
 ---
- testing/libfuzzer/fuzzer_test.gni | 2 ++
- testing/test.gni                  | 2 ++
- 2 files changed, 4 insertions(+)
- create mode 100644 testing/libfuzzer/fuzzer_test.gni
- create mode 100644 testing/test.gni
+ .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/testing/libfuzzer/fuzzer_test.gni b/testing/libfuzzer/fuzzer_test.gni
-new file mode 100644
-index 0000000000..8fdf3cdad2
---- /dev/null
-+++ b/testing/libfuzzer/fuzzer_test.gni
-@@ -0,0 +1,2 @@
-+# "empty" file in place of importing new testing/libfuzzer
-+# to allow BUILD.gn imports to succeed.
-diff --git a/testing/test.gni b/testing/test.gni
-new file mode 100644
-index 0000000000..f46fa82778
---- /dev/null
-+++ b/testing/test.gni
-@@ -0,0 +1,2 @@
-+# "empty" file in place of importing new testing/test.gni
-+# to allow BUILD.gn imports to succeed.
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 0c26e7a7d5..22aa355e44 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -28,6 +28,13 @@
+ #include "rtc_base/synchronization/mutex.h"
+ #include "rtc_base/time_utils.h"
+ 
++// Wrapper for gfxVars::UseDMABuf() as we can't include gfxVars here.
++// We don't want to use dmabuf of known broken systems.
++// See FEATURE_DMABUF for details.
++namespace mozilla::gfx {
++bool IsDMABufEnabled();
++}
++
+ namespace webrtc {
+ 
+ const int kBytesPerPixel = 4;
+@@ -294,7 +301,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
+   that->modifier_ =
+       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
+   std::vector<const spa_pod*> params;
+-  const int buffer_types = has_modifier
++  const int buffer_types = has_modifier && mozilla::gfx::IsDMABufEnabled()
+                                ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
+                                : (1 << SPA_DATA_MemFd);
+ 

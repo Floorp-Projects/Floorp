@@ -1,27 +1,33 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 5 Mar 2024 08:38:00 +0000
-Subject: Bug 1615282 - WebRTC backport: PipeWire capturer - set capturer as
- failed when session is closed r=pehrsons,webrtc-reviewers
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 2 Feb 2024 18:43:00 +0000
+Subject: Bug 1878010 - Fix webrtc::VideoCaptureFactory for BSD.
+ r=grulja,gaston,webrtc-reviewers,mjf
 
-This is a simple backport of an WebRTC upstream change.
-
-Upstream commit: 058bfe3ae37a7a245f9c8c6c03f4f7ac48fe179d
-
-Differential Revision: https://phabricator.services.mozilla.com/D202788
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/633149c5da9337f67b6659e5d5bead2233027460
+Differential Revision: https://phabricator.services.mozilla.com/D200427
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f890637efe5abc0020fab83ff2224313cd0c8460
 ---
- modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc | 1 +
- 1 file changed, 1 insertion(+)
+ modules/video_capture/video_capture_factory.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-index 40764de7ae..81caa9bd2d 100644
---- a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-+++ b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-@@ -112,6 +112,7 @@ void BaseCapturerPipeWire::OnScreenCastSessionClosed() {
-   if (!capturer_failed_) {
-     options_.screencast_stream()->StopScreenCastStream();
-   }
-+  capturer_failed_ = true;
- }
- 
- void BaseCapturerPipeWire::UpdateResolution(uint32_t width, uint32_t height) {
+diff --git a/modules/video_capture/video_capture_factory.cc b/modules/video_capture/video_capture_factory.cc
+index e085ac2df8..2790fbbe1c 100644
+--- a/modules/video_capture/video_capture_factory.cc
++++ b/modules/video_capture/video_capture_factory.cc
+@@ -24,7 +24,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
+     const char* deviceUniqueIdUTF8) {
+ // This is only implemented on pure Linux and WEBRTC_LINUX is defined for
+ // Android as well
+-#if !defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
++#if (!defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)) || defined(WEBRTC_ANDROID)
+   return nullptr;
+ #else
+   return videocapturemodule::VideoCaptureImpl::Create(options,
+@@ -40,7 +40,7 @@ VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
+     VideoCaptureOptions* options) {
+ // This is only implemented on pure Linux and WEBRTC_LINUX is defined for
+ // Android as well
+-#if !defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
++#if (!defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)) || defined(WEBRTC_ANDROID)
+   return nullptr;
+ #else
+   return videocapturemodule::VideoCaptureImpl::CreateDeviceInfo(options);

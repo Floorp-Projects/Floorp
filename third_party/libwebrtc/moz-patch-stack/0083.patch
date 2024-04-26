@@ -1,26 +1,33 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Remove this duplicate init (that's also on the wrong
- thread). r=pehrsons,webrtc-reviewers
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 22 Jun 2023 16:23:00 +0000
+Subject: Bug 1837918 - libwebrtc update broke the build on
+ OpenBSD;r=mjf,webrtc-reviewers
 
-This was causing assertions.
-
-Differential Revision: https://phabricator.services.mozilla.com/D179731
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac6592a04a839a6152d5ad5f0778f63dbbd6b1b
+Differential Revision: https://phabricator.services.mozilla.com/D181791
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2a6a838b7021bb285f9485c2ceda6ba2543e0d6f
 ---
- audio/channel_send.cc | 2 --
- 1 file changed, 2 deletions(-)
+ modules/video_capture/video_capture_options.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index c8251b4b52..b8aa573a53 100644
---- a/audio/channel_send.cc
-+++ b/audio/channel_send.cc
-@@ -474,8 +474,6 @@ ChannelSend::ChannelSend(
+diff --git a/modules/video_capture/video_capture_options.h b/modules/video_capture/video_capture_options.h
+index 6f72f7927e..37965305d9 100644
+--- a/modules/video_capture/video_capture_options.h
++++ b/modules/video_capture/video_capture_options.h
+@@ -55,7 +55,7 @@ class RTC_EXPORT VideoCaptureOptions {
  
-   int error = audio_coding_->RegisterTransportCallback(this);
-   RTC_DCHECK_EQ(0, error);
--  if (frame_transformer)
--    InitFrameTransformerDelegate(std::move(frame_transformer));
- }
+   void Init(Callback* callback);
  
- ChannelSend::~ChannelSend() {
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+   bool allow_v4l2() const { return allow_v4l2_; }
+   void set_allow_v4l2(bool allow) { allow_v4l2_ = allow; }
+ #endif
+@@ -68,7 +68,7 @@ class RTC_EXPORT VideoCaptureOptions {
+ #endif
+ 
+  private:
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+   bool allow_v4l2_ = false;
+ #endif
+ #if defined(WEBRTC_USE_PIPEWIRE)

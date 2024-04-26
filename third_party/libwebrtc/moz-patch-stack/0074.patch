@@ -1,74 +1,27 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Fri, 10 Mar 2023 09:21:00 +0000
-Subject: Bug 1819035 - get EGL display based on the used platform in the
- browser r=webrtc-reviewers,ng
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Thu, 6 Jan 2022 00:16:00 +0000
+Subject: Bug 1748458 - Add TRACE_EVENT for keyframe requests. r=bwc
 
-Because of a possible misconfiguration or a possible driver issue it
-might happen that the browser will use a different driver on X11 and
-end up using yet another one for wayland/gbm, which might lead to not
-working screen sharing in the better case, but also to a crash in the
-other driver (Nvidia). This adds a check for platform the browser runs
-on, if it's XWayland or Wayland and based on that query EGL display for
-that specific platform, rather than going for the Wayland one only.
-
-Differential Revision: https://phabricator.services.mozilla.com/D171858
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c8606497de1f461a6352456e0e511c2ae498d526
+Differential Revision: https://phabricator.services.mozilla.com/D135113
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5b2a7894ef1cf096d0e8977754507c0820e757fc
 ---
- .../linux/wayland/egl_dmabuf.cc               | 30 +++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+ video/rtp_video_stream_receiver2.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
-index b529077c6d..6a019c64b4 100644
---- a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
-+++ b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
-@@ -13,6 +13,7 @@
- #include <asm/ioctl.h>
- #include <dlfcn.h>
- #include <fcntl.h>
-+#include <gdk/gdk.h>
- #include <libdrm/drm_fourcc.h>
- #include <linux/types.h>
- #include <spa/param/video/format-utils.h>
-@@ -217,6 +218,26 @@ static void CloseLibrary(void* library) {
-   }
- }
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index d9f7fcbe95..d13e4448b4 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -744,6 +744,12 @@ void RtpVideoStreamReceiver2::OnRtpPacket(const RtpPacketReceived& packet) {
  
-+static bool IsWaylandDisplay() {
-+  static auto sGdkWaylandDisplayGetType =
-+    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_type");
-+  if (!sGdkWaylandDisplayGetType) {
-+    return false;
-+  }
-+  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
-+                                      sGdkWaylandDisplayGetType()));
-+}
-+
-+static bool IsX11Display() {
-+  static auto sGdkX11DisplayGetType =
-+    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_x11_display_get_type");
-+  if (!sGdkX11DisplayGetType) {
-+    return false;
-+  }
-+  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
-+                                      sGdkX11DisplayGetType()));
-+}
-+
- static void* g_lib_egl = nullptr;
- 
- RTC_NO_SANITIZE("cfi-icall")
-@@ -362,8 +383,13 @@ EglDmaBuf::EglDmaBuf() {
-     return;
-   }
- 
--  egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
--                                       (void*)EGL_DEFAULT_DISPLAY, nullptr);
-+  if (IsWaylandDisplay()) {
-+    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
-+                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
-+  } else if (IsX11Display()) {
-+    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_X11_KHR,
-+                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
-+  }
- 
-   if (egl_.display == EGL_NO_DISPLAY) {
-     RTC_LOG(LS_ERROR) << "Failed to obtain default EGL display: "
+ void RtpVideoStreamReceiver2::RequestKeyFrame() {
+   RTC_DCHECK_RUN_ON(&worker_task_checker_);
++  TRACE_EVENT2("webrtc", "RtpVideoStreamReceiver2::RequestKeyFrame",
++               "remote_ssrc", config_.rtp.remote_ssrc, "method",
++               keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp   ? "PLI"
++               : keyframe_request_method_ == KeyFrameReqMethod::kFirRtcp ? "FIR"
++               : keyframe_request_method_ == KeyFrameReqMethod::kNone ? "None"
++                                                                      : "Other");
+   // TODO(bugs.webrtc.org/10336): Allow the sender to ignore key frame requests
+   // issued by anything other than the LossNotificationController if it (the
+   // sender) is relying on LNTF alone.

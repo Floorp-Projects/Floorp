@@ -1,35 +1,47 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 25 Jun 2021 15:12:00 -0500
-Subject: Bug 1654112 - Mirror Bug 1714577 - Part 3 - Register WebRTC threads
- with the Gecko Profiler. r=ng
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Thu, 29 Apr 2021 18:25:00 +0000
+Subject: Bug 1654112 - Work around the old (<1.5) libxrandr headers on our
+ build machines. r=mjf,ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D119412
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d881b16dd8a6813feb5ce1516c2a7ebe0270e72d
+Differential Revision: https://phabricator.services.mozilla.com/D113830
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c91f12b557a1d23b468c75c4f2fc00eb0f8d541a
 ---
- rtc_base/platform_thread.cc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ X11/extensions/Xrandr.h | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+ create mode 100644 X11/extensions/Xrandr.h
 
-diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
-index 556204ac89..71a9f1b224 100644
---- a/rtc_base/platform_thread.cc
-+++ b/rtc_base/platform_thread.cc
-@@ -19,6 +19,8 @@
- 
- #include "rtc_base/checks.h"
- 
-+#include "MicroGeckoProfiler.h"
+diff --git a/X11/extensions/Xrandr.h b/X11/extensions/Xrandr.h
+new file mode 100644
+index 0000000000..876e8b4c7f
+--- /dev/null
++++ b/X11/extensions/Xrandr.h
+@@ -0,0 +1,29 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 +
- namespace rtc {
- namespace {
- 
-@@ -181,6 +183,10 @@ PlatformThread PlatformThread::SpawnThread(
-       new std::function<void()>([thread_function = std::move(thread_function),
-                                  name = std::string(name), attributes] {
-         rtc::SetCurrentThreadName(name.c_str());
++// Hack to compensate for the old (<1.5) Xrandr development headers on
++// Mozilla's build boxes.
 +
-+        char stacktop;
-+        AutoRegisterProfiler profiler(name.c_str(), &stacktop);
++#ifndef _XRANDR_H_WRAPPER_HACK_
++#define _XRANDR_H_WRAPPER_HACK_
 +
-         SetPriority(attributes.priority);
-         thread_function();
-       });
++#include_next <X11/extensions/Xrandr.h>
++
++#if RANDR_MAJOR == 1 && RANDR_MINOR < 5 // defined in randr.h
++typedef struct _XRRMonitorInfo {
++    Atom name;
++    Bool primary;
++    Bool automatic;
++    int noutput;
++    int x;
++    int y;
++    int width;
++    int height;
++    int mwidth;
++    int mheight;
++    RROutput *outputs;
++} XRRMonitorInfo;
++#endif
++
++#endif // _XRANDR_H_WRAPPER_HACK_

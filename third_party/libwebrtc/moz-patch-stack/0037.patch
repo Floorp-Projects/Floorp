@@ -1,47 +1,39 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Thu, 29 Apr 2021 18:25:00 +0000
-Subject: Bug 1654112 - Work around the old (<1.5) libxrandr headers on our
- build machines. r=mjf,ng
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 19 Feb 2021 13:45:00 +0100
+Subject: Bug 1654112 - libwebrtc: Add a REMB on/off switch to
+ VideoReceiveStream. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D113830
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c91f12b557a1d23b468c75c4f2fc00eb0f8d541a
+Differential Revision: https://phabricator.services.mozilla.com/D105774
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7330681cf4de6d8dd868cc661cbdd6679bbc07b3
 ---
- X11/extensions/Xrandr.h | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
- create mode 100644 X11/extensions/Xrandr.h
+ call/video_receive_stream.h         | 3 +++
+ video/rtp_video_stream_receiver2.cc | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/X11/extensions/Xrandr.h b/X11/extensions/Xrandr.h
-new file mode 100644
-index 0000000000..876e8b4c7f
---- /dev/null
-+++ b/X11/extensions/Xrandr.h
-@@ -0,0 +1,29 @@
-+/* This Source Code Form is subject to the terms of the Mozilla Public
-+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
-+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
+index 95f1a47f4e..a1fc204e7c 100644
+--- a/call/video_receive_stream.h
++++ b/call/video_receive_stream.h
+@@ -210,6 +210,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+       // disabled.
+       KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
+ 
++      // See draft-alvestrand-rmcat-remb for information.
++      bool remb = false;
 +
-+// Hack to compensate for the old (<1.5) Xrandr development headers on
-+// Mozilla's build boxes.
-+
-+#ifndef _XRANDR_H_WRAPPER_HACK_
-+#define _XRANDR_H_WRAPPER_HACK_
-+
-+#include_next <X11/extensions/Xrandr.h>
-+
-+#if RANDR_MAJOR == 1 && RANDR_MINOR < 5 // defined in randr.h
-+typedef struct _XRRMonitorInfo {
-+    Atom name;
-+    Bool primary;
-+    Bool automatic;
-+    int noutput;
-+    int x;
-+    int y;
-+    int width;
-+    int height;
-+    int mwidth;
-+    int mheight;
-+    RROutput *outputs;
-+} XRRMonitorInfo;
-+#endif
-+
-+#endif // _XRANDR_H_WRAPPER_HACK_
+       bool tmmbr = false;
+ 
+       // See LntfConfig for description.
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index 624f699b73..3ed4e5bb18 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -1258,7 +1258,7 @@ void RtpVideoStreamReceiver2::StartReceive() {
+     // Change REMB candidate egibility.
+     packet_router_->RemoveReceiveRtpModule(rtp_rtcp_.get());
+     packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(),
+-                                        /*remb_candidate=*/true);
++                                        /*remb_candidate=*/config_.rtp.remb);
+   }
+   receiving_ = true;
+ }

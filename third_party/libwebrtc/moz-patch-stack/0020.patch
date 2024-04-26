@@ -1,53 +1,93 @@
-From: Alex Chronopoulos <achronop@gmail.com>
-Date: Wed, 18 Sep 2019 13:12:00 +0000
-Subject: Bug 1572281 - Remove audio device change notifications from video
- capture in Windows. r=dminor
+From: Dan Minor <dminor@mozilla.com>
+Date: Tue, 17 Sep 2019 06:47:00 +0000
+Subject: Bug 1581193 - Fix devicechange event on Windows; r=achronop
 
-Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the windows part.
+This restores the code for generating devicechange events that was
+accidentally removed as part of updating the Windows video capture code
+in Bug 1552755.
 
-Differential Revision: https://phabricator.services.mozilla.com/D46274
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a5c23245837ebdd99532e8bfaca05774c5c96d9d
+Differential Revision: https://phabricator.services.mozilla.com/D46033
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/840c4edafa021eeac6a7e6ae0e828d0adcfea92e
 ---
- modules/video_capture/windows/device_info_ds.cc | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ .../video_capture/windows/device_info_ds.cc   | 39 +++++++++++++++++++
+ .../video_capture/windows/device_info_ds.h    |  3 ++
+ 2 files changed, 42 insertions(+)
 
 diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index a7eca19bbf..9d22f42f4d 100644
+index d0d274cb02..460ef3b7b9 100644
 --- a/modules/video_capture/windows/device_info_ds.cc
 +++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -20,7 +20,7 @@
+@@ -20,6 +20,29 @@
  namespace webrtc {
  namespace videocapturemodule {
  
--BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
-+BOOL isVideoDevice(DEV_BROADCAST_HDR *pHdr)
- {
-   if (pHdr == NULL) {
-     return FALSE;
-@@ -29,7 +29,7 @@ BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
-     return FALSE;
++LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
++{
++    DeviceInfoDS* pParent;
++    if (uiMsg == WM_CREATE)
++    {
++        pParent = (DeviceInfoDS*)((LPCREATESTRUCT)lParam)->lpCreateParams;
++        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
++    }
++    else if (uiMsg == WM_DESTROY)
++    {
++        SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
++    }
++    else if (uiMsg == WM_DEVICECHANGE)
++    {
++        pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
++        if (pParent)
++        {
++            pParent->DeviceChange();
++        }
++    }
++    return DefWindowProc(hWnd, uiMsg, wParam, lParam);
++}
++
+ // static
+ DeviceInfoDS* DeviceInfoDS::Create() {
+   DeviceInfoDS* dsInfo = new DeviceInfoDS();
+@@ -77,6 +100,18 @@ DeviceInfoDS::DeviceInfoDS()
+                         << rtc::ToHex(hr);
+     }
    }
-   DEV_BROADCAST_DEVICEINTERFACE* pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
--  return pDi->dbcc_classguid == KSCATEGORY_CAPTURE;
-+  return pDi->dbcc_classguid == KSCATEGORY_VIDEO_CAMERA;
++
++  _hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
++  _wndClass = {0};
++  _wndClass.lpfnWndProc = &WndProc;
++  _wndClass.lpszClassName = TEXT("DeviceInfoDS");
++  _wndClass.hInstance = _hInstance;
++
++  if (RegisterClass(&_wndClass)) {
++    _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
++                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
++                         NULL, _hInstance, this);
++  }
  }
  
- LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-@@ -47,7 +47,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-     else if (uiMsg == WM_DEVICECHANGE)
-     {
-         pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
--        if (pParent && isCaptureDevice((PDEV_BROADCAST_HDR)lParam))
-+        if (pParent && isVideoDevice((PDEV_BROADCAST_HDR)lParam))
-         {
-             pParent->DeviceChange();
-         }
-@@ -128,7 +128,7 @@ DeviceInfoDS::DeviceInfoDS()
-     DEV_BROADCAST_DEVICEINTERFACE di = { 0 };
-     di.dbcc_size = sizeof(di);
-     di.dbcc_devicetype  = DBT_DEVTYP_DEVICEINTERFACE;
--    di.dbcc_classguid  = KSCATEGORY_CAPTURE;
-+    di.dbcc_classguid  = KSCATEGORY_VIDEO_CAMERA;
+ DeviceInfoDS::~DeviceInfoDS() {
+@@ -85,6 +120,10 @@ DeviceInfoDS::~DeviceInfoDS() {
+   if (_CoUninitializeIsRequired) {
+     CoUninitialize();
+   }
++  if (_hwnd != NULL) {
++    DestroyWindow(_hwnd);
++  }
++  UnregisterClass(_wndClass.lpszClassName, _hInstance);
+ }
  
-     _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
-                                              DEVICE_NOTIFY_WINDOW_HANDLE);
+ int32_t DeviceInfoDS::Init() {
+diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
+index 1b52645cde..dc7b9b1a24 100644
+--- a/modules/video_capture/windows/device_info_ds.h
++++ b/modules/video_capture/windows/device_info_ds.h
+@@ -93,6 +93,9 @@ class DeviceInfoDS : public DeviceInfoImpl {
+   IEnumMoniker* _dsMonikerDevEnum;
+   bool _CoUninitializeIsRequired;
+   std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
++  HWND _hwnd;
++  WNDCLASS _wndClass;
++  HINSTANCE _hInstance;
+ };
+ }  // namespace videocapturemodule
+ }  // namespace webrtc

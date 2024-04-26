@@ -1,56 +1,38 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 28 Sep 2023 14:12:00 +0000
-Subject: Bug 1832465 - remove libXtst usage from libwebrtc.
- r=ng,webrtc-reviewers
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Ensure that last ref to transformation_queue_ is not
+ released on itself. r=pehrsons,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D189386
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0ec1b33b95dbb2d39355f28b2812fe25b4ad9f20
+Differential Revision: https://phabricator.services.mozilla.com/D181699
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73561ffd2330865f04fcb1a6d
 ---
- modules/desktop_capture/BUILD.gn                      | 3 +++
- modules/desktop_capture/linux/x11/shared_x_display.cc | 4 ++++
- 2 files changed, 7 insertions(+)
+ .../rtp_sender_video_frame_transformer_delegate.cc       | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index dcc1b3c6ac..0634e0e9c4 100644
---- a/modules/desktop_capture/BUILD.gn
-+++ b/modules/desktop_capture/BUILD.gn
-@@ -384,6 +384,9 @@ rtc_library("desktop_capture") {
-       "Xrandr",
-       "Xtst",
-     ]
-+    if (build_with_mozilla) {
-+      libs -= [ "Xtst" ]
-+    }
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+index ff15840529..ae9eb6b4bd 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+@@ -18,6 +18,7 @@
+ #include "api/task_queue/task_queue_factory.h"
+ #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
+ #include "rtc_base/checks.h"
++#include "rtc_base/event.h"
+ #include "rtc_base/logging.h"
+ 
+ namespace webrtc {
+@@ -257,6 +258,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
+     MutexLock lock(&sender_lock_);
+     sender_ = nullptr;
    }
- 
-   if (!is_win && !is_mac && !rtc_use_x11_extensions && !rtc_use_pipewire &&
-diff --git a/modules/desktop_capture/linux/x11/shared_x_display.cc b/modules/desktop_capture/linux/x11/shared_x_display.cc
-index d690b0e2ba..3f3617b074 100644
---- a/modules/desktop_capture/linux/x11/shared_x_display.cc
-+++ b/modules/desktop_capture/linux/x11/shared_x_display.cc
-@@ -11,7 +11,9 @@
- #include "modules/desktop_capture/linux/x11/shared_x_display.h"
- 
- #include <X11/Xlib.h>
-+#if !defined(WEBRTC_MOZILLA_BUILD)
- #include <X11/extensions/XTest.h>
-+#endif
- 
- #include <algorithm>
- 
-@@ -95,6 +97,7 @@ void SharedXDisplay::ProcessPendingXEvents() {
++  // Wait until all pending tasks are executed, to ensure that the last ref
++  // standing is not on the transformation queue.
++  rtc::Event flush;
++  transformation_queue_->PostTask([this, &flush]() {
++    RTC_DCHECK_RUN_ON(transformation_queue_.get());
++    flush.Set();
++  });
++  flush.Wait(rtc::Event::kForever);
  }
  
- void SharedXDisplay::IgnoreXServerGrabs() {
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-   int test_event_base = 0;
-   int test_error_base = 0;
-   int major = 0;
-@@ -103,6 +106,7 @@ void SharedXDisplay::IgnoreXServerGrabs() {
-                           &minor)) {
-     XTestGrabControl(display(), true);
-   }
-+#endif
- }
- 
- }  // namespace webrtc
+ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(

@@ -1,34 +1,43 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 9 Jul 2021 18:14:00 -0500
-Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
+From: Tommi <tommi@webrtc.org>
+Date: Fri, 23 Feb 2024 14:49:05 +0100
+Subject: (cherry-pick-branch-heads/6312) [M123 MERGE] Demote RTC_CHECK for
+ sctp_mid() to RTC_LOG(LS_ERROR) if unavailable
 
-Differential Revision: https://phabricator.services.mozilla.com/D119674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
+(cherry picked from commit efbfc40029b6986137f9179476955c263da7052a)
+
+Bug: chromium:326275823, chromium:325900490
+Change-Id: Icfb8850867d1e39f23661422693da4f2829ecc57
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/340460
+Reviewed-by: Evan Shrubsole <eshr@webrtc.org>
+Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#41793}
+No-Try: True
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/342560
+Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
+Commit-Queue: Florent Castelli <orphis@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6312@{#3}
+Cr-Branched-From: 0355f455a48b141a8277442825ec776a74d66fb7-refs/heads/main@{#41763}
 ---
- rtc_base/logging.cc | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ pc/sdp_offer_answer.cc | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index ad2303735e..9c2d3b0a39 100644
---- a/rtc_base/logging.cc
-+++ b/rtc_base/logging.cc
-@@ -275,8 +275,8 @@ void LogMessage::LogTimestamps(bool on) {
- }
- 
- void LogMessage::LogToDebug(LoggingSeverity min_sev) {
--  g_dbg_sev = min_sev;
-   webrtc::MutexLock lock(&GetLoggingLock());
-+  g_dbg_sev = min_sev;
-   UpdateMinLogSeverity();
- }
- 
-@@ -460,6 +460,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
- 
- // static
- bool LogMessage::IsNoop(LoggingSeverity severity) {
-+  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
-+  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
-+  webrtc::MutexLock lock(&GetLoggingLock());
-   if (severity >= g_dbg_sev || severity >= g_min_sev)
-     return false;
-   return streams_empty_.load(std::memory_order_relaxed);
+diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
+index d75606ab4e..95d54978c7 100644
+--- a/pc/sdp_offer_answer.cc
++++ b/pc/sdp_offer_answer.cc
+@@ -4297,11 +4297,13 @@ void SdpOfferAnswerHandler::GetOptionsForUnifiedPlanOffer(
+             GetMediaDescriptionOptionsForRejectedData(mid));
+       } else {
+         const auto data_mid = pc_->sctp_mid();
+-        RTC_CHECK(data_mid);
+-        if (mid == data_mid.value()) {
++        if (data_mid.has_value() && mid == data_mid.value()) {
+           session_options->media_description_options.push_back(
+               GetMediaDescriptionOptionsForActiveData(mid));
+         } else {
++          if (!data_mid.has_value()) {
++            RTC_LOG(LS_ERROR) << "Datachannel transport not available: " << mid;
++          }
+           session_options->media_description_options.push_back(
+               GetMediaDescriptionOptionsForRejectedData(mid));
+         }

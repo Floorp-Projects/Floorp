@@ -1,87 +1,25 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 8 Jul 2020 17:35:00 +0000
-Subject: Bug 1650572 - Check V4L2_CAP_DEVICE_CAPS before accessing
- device_caps; r=ng
+Date: Tue, 11 Feb 2020 17:04:00 +0000
+Subject: Bug 1578073 - Fix warning: [cast] redundant cast to int; r=ng
 
-The capabilities field is for the physical device, device_caps is for the
-specific /dev/videoX device that has been opened. The device_caps field is
-only populated if V4L2_CAP_DEVICE_CAPS is set, so we should check that, and
-fall back to capabilities if it is not set.
-
-Differential Revision: https://phabricator.services.mozilla.com/D82377
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b5acbf536c46a66c939a61bde34ad93b1977a604
+Differential Revision: https://phabricator.services.mozilla.com/D61852
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/82877c8a864072c03f45234c6649645ed609e098
 ---
- modules/video_capture/linux/device_info_v4l2.cc | 17 ++++++++++++-----
- modules/video_capture/linux/device_info_v4l2.h  |  3 +++
- 2 files changed, 15 insertions(+), 5 deletions(-)
+ sdk/android/api/org/webrtc/TextureBufferImpl.java | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index a2435bcd4f..cd0ba6e3df 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -220,8 +220,7 @@ uint32_t DeviceInfoV4l2::NumberOfDevices() {
-     snprintf(device, sizeof(device), "/dev/video%d", n);
-     if ((fd = open(device, O_RDONLY)) != -1) {
-       // query device capabilities and make sure this is a video capture device
--      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
--          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
-         close(fd);
-         continue;
-       }
-@@ -252,8 +251,7 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
-     snprintf(device, sizeof(device), "/dev/video%d", n);
-     if ((fd = open(device, O_RDONLY)) != -1) {
-       // query device capabilities and make sure this is a video capture device
--      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
--          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
-         close(fd);
-         continue;
-       }
-@@ -331,7 +329,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
-     struct v4l2_capability cap;
-     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-       // skip devices without video capture capability
--      if (!(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (!IsVideoCaptureDevice(&cap)) {
-         continue;
-       }
+diff --git a/sdk/android/api/org/webrtc/TextureBufferImpl.java b/sdk/android/api/org/webrtc/TextureBufferImpl.java
+index 7e2bed84fc..43470d6e39 100644
+--- a/sdk/android/api/org/webrtc/TextureBufferImpl.java
++++ b/sdk/android/api/org/webrtc/TextureBufferImpl.java
+@@ -136,8 +136,8 @@ public class TextureBufferImpl implements VideoFrame.TextureBuffer {
+     cropAndScaleMatrix.preScale(cropWidth / (float) width, cropHeight / (float) height);
  
-@@ -393,6 +391,15 @@ bool DeviceInfoV4l2::IsDeviceNameMatches(const char* name,
-   return false;
- }
+     return applyTransformMatrix(cropAndScaleMatrix,
+-        (int) Math.round(unscaledWidth * cropWidth / (float) width),
+-        (int) Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
++        Math.round(unscaledWidth * cropWidth / (float) width),
++        Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
+   }
  
-+bool DeviceInfoV4l2::IsVideoCaptureDevice(struct v4l2_capability* cap)
-+{
-+  if (cap->capabilities & V4L2_CAP_DEVICE_CAPS) {
-+    return cap->device_caps & V4L2_CAP_VIDEO_CAPTURE;
-+  } else {
-+    return cap->capabilities & V4L2_CAP_VIDEO_CAPTURE;
-+  }
-+}
-+
- int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
-   // set image format
-   struct v4l2_format video_fmt;
-diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index 95432a509d..e3c2395f49 100644
---- a/modules/video_capture/linux/device_info_v4l2.h
-+++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -18,6 +18,8 @@
- #include "rtc_base/platform_thread.h"
- #include <sys/inotify.h>
- 
-+struct v4l2_capability;
-+
- namespace webrtc {
- namespace videocapturemodule {
- class DeviceInfoV4l2 : public DeviceInfoImpl {
-@@ -49,6 +51,7 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
- 
-  private:
-   bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
-+  bool IsVideoCaptureDevice(struct v4l2_capability* cap);
- 
- #ifdef WEBRTC_LINUX
-   void HandleEvent(inotify_event* event, int fd);
+   @Override

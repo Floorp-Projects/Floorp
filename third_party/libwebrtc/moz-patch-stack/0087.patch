@@ -1,38 +1,39 @@
 From: Byron Campen <docfaraday@gmail.com>
 Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Ensure that last ref to transformation_queue_ is not
- released on itself. r=pehrsons,webrtc-reviewers
+Subject: Bug 1838080: Work around a race in
+ ChannelSendFrameTransformerDelegate. r=pehrsons,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D181699
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73561ffd2330865f04fcb1a6d
+This variable can be null when a ChannelSendFrameTransformerDelegate is in use,
+because that does an async dispatch to the encoder queue in the handling for
+transformed frames. If this is unset while that dispatch is in flight, we
+nullptr crash.
+
+Differential Revision: https://phabricator.services.mozilla.com/D180735
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73abff1cbbd06807c2b65fc19
 ---
- .../rtp_sender_video_frame_transformer_delegate.cc       | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ audio/channel_send.cc | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-index ff15840529..ae9eb6b4bd 100644
---- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-@@ -18,6 +18,7 @@
- #include "api/task_queue/task_queue_factory.h"
- #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/event.h"
- #include "rtc_base/logging.h"
- 
- namespace webrtc {
-@@ -257,6 +258,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
-     MutexLock lock(&sender_lock_);
-     sender_ = nullptr;
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index b8aa573a53..ae264a4c77 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -285,12 +285,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
+   void EnqueuePackets(
+       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    }
    }
-+  // Wait until all pending tasks are executed, to ensure that the last ref
-+  // standing is not on the transformation queue.
-+  rtc::Event flush;
-+  transformation_queue_->PostTask([this, &flush]() {
-+    RTC_DCHECK_RUN_ON(transformation_queue_.get());
-+    flush.Set();
-+  });
-+  flush.Wait(rtc::Event::kForever);
- }
  
- std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+   void RemovePacketsForSsrc(uint32_t ssrc) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    }
+   }
+ 
+  private:

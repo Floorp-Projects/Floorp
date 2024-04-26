@@ -1,39 +1,24 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Work around a race in
- ChannelSendFrameTransformerDelegate. r=pehrsons,webrtc-reviewers
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 5 Jul 2023 19:15:00 +0000
+Subject: Bug 1841864 - upstream commit 4baea5b07f should properly check size
+ of encoder_config_.simulcast_layers. r=jib
 
-This variable can be null when a ChannelSendFrameTransformerDelegate is in use,
-because that does an async dispatch to the encoder queue in the handling for
-transformed frames. If this is unset while that dispatch is in flight, we
-nullptr crash.
-
-Differential Revision: https://phabricator.services.mozilla.com/D180735
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73abff1cbbd06807c2b65fc19
+Differential Revision: https://phabricator.services.mozilla.com/D182813
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7179d8d75313b6c9c76a496e10d102da019ff4f
 ---
- audio/channel_send.cc | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ video/video_stream_encoder.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index b8aa573a53..ae264a4c77 100644
---- a/audio/channel_send.cc
-+++ b/audio/channel_send.cc
-@@ -285,12 +285,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
-   void EnqueuePackets(
-       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
-     MutexLock lock(&mutex_);
--    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
-+    if (rtp_packet_pacer_) {
-+      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
-+    }
-   }
+diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
+index 73cd7826f9..afefa0b33f 100644
+--- a/video/video_stream_encoder.cc
++++ b/video/video_stream_encoder.cc
+@@ -1386,7 +1386,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
  
-   void RemovePacketsForSsrc(uint32_t ssrc) override {
-     MutexLock lock(&mutex_);
--    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
-+    if (rtp_packet_pacer_) {
-+      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
-+    }
-   }
- 
-  private:
+   bool is_svc = false;
+   bool single_stream_or_non_first_inactive = true;
+-  for (size_t i = 1; i < encoder_config_.number_of_streams; ++i) {
++  for (size_t i = 1; i < encoder_config_.simulcast_layers.size(); ++i) {
+     if (encoder_config_.simulcast_layers[i].active) {
+       single_stream_or_non_first_inactive = false;
+       break;

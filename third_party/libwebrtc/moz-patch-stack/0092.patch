@@ -1,40 +1,47 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 14 Feb 2023 03:27:00 +0000
-Subject: Bug 1816173 - pt12 - add shim config for
- third_party/libwebrtc/testing/{gmock|gtest} r=ng
+From: stransky <stransky@redhat.com>
+Date: Tue, 29 Aug 2023 12:43:00 +0000
+Subject: Bug 1821629 [Pipewire/DMABuf] Don't create dmabuf backend if it's
+ disabled r=ng,webrtc-reviewers
 
-We don't vendor third_party/libwebrtc/third_party/gmock
-                third_party/libwebrtc/third_party/gtest, so:
-- add BUILD.gn to avoid scattered BUILD.gn changes
+Depends on D172224
 
-Differential Revision: https://phabricator.services.mozilla.com/D169674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4ea9d2db79c42a144235e45c47c71adf1dd01fdc
+Differential Revision: https://phabricator.services.mozilla.com/D172229
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/237d19fe96dd7d25b6a817415ee4e6854678d648
 ---
- testing/gmock/BUILD.gn | 5 +++++
- testing/gtest/BUILD.gn | 5 +++++
- 2 files changed, 10 insertions(+)
- create mode 100644 testing/gmock/BUILD.gn
- create mode 100644 testing/gtest/BUILD.gn
+ .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/testing/gmock/BUILD.gn b/testing/gmock/BUILD.gn
-new file mode 100644
-index 0000000000..a2a1efdea9
---- /dev/null
-+++ b/testing/gmock/BUILD.gn
-@@ -0,0 +1,5 @@
-+import("//third_party/libaom/options.gni")
-+import("../../webrtc.gni")
-+
-+rtc_library("gmock") {
-+}
-diff --git a/testing/gtest/BUILD.gn b/testing/gtest/BUILD.gn
-new file mode 100644
-index 0000000000..c9c2703c37
---- /dev/null
-+++ b/testing/gtest/BUILD.gn
-@@ -0,0 +1,5 @@
-+import("//third_party/libaom/options.gni")
-+import("../../webrtc.gni")
-+
-+rtc_library("gtest") {
-+}
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 22aa355e44..61c6957d27 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -419,7 +419,9 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     RTC_LOG(LS_ERROR) << "Unable to open PipeWire library";
+     return false;
+   }
+-  egl_dmabuf_ = std::make_unique<EglDmaBuf>();
++  if (mozilla::gfx::IsDMABufEnabled()) {
++    egl_dmabuf_ = std::make_unique<EglDmaBuf>();
++  }
+ 
+   pw_stream_node_id_ = stream_node_id;
+ 
+@@ -508,7 +510,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
+                             SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
+       // Modifiers can be used with PipeWire >= 0.3.33
+-      if (has_required_pw_client_version && has_required_pw_server_version) {
++      if (egl_dmabuf_ &&
++          has_required_pw_client_version && has_required_pw_server_version) {
+         modifiers_ = egl_dmabuf_->QueryDmaBufModifiers(format);
+ 
+         if (!modifiers_.empty()) {
+@@ -927,7 +930,7 @@ bool SharedScreenCastStreamPrivate::ProcessDMABuffer(
+ 
+   const uint n_planes = spa_buffer->n_datas;
+ 
+-  if (!n_planes) {
++  if (!n_planes || !egl_dmabuf_) {
+     return false;
+   }
+ 

@@ -1,74 +1,121 @@
-From: Dan Baker <dbaker@mozilla.com>
-Date: Thu, 14 Mar 2024 10:51:00 -0600
-Subject: Bug 1883116 - (fix-e79e722834) add enviroment_factory to libwebrtc
- build and enforce providing clock and task_queue when creating Environment
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Thu, 30 Nov 2023 11:49:00 +0000
+Subject: Bug 1844020 - Add option to DeviceInfo::GetDeviceName() identifying a
+ placeholder device r=pehrsons,webrtc-reviewers
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2185cab977988fd4ab03b38dc67f9b06162444da
+Adds a new parameter "deviceIsPlaceholder" that will be set to true in
+case the returned device is not a real device but a placeholder that is
+just used to inform about camera device existence.
+
+Differential Revision: https://phabricator.services.mozilla.com/D189929
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ed31b2acb5fbca3e2d0691a64bc52e65952070c0
 ---
- BUILD.gn                               |  1 +
- api/environment/environment_factory.cc | 10 ++++++++++
- api/task_queue/BUILD.gn                |  5 +++++
- 3 files changed, 16 insertions(+)
+ modules/video_capture/linux/device_info_pipewire.cc | 4 +++-
+ modules/video_capture/linux/device_info_pipewire.h  | 3 ++-
+ modules/video_capture/linux/device_info_v4l2.cc     | 3 ++-
+ modules/video_capture/linux/device_info_v4l2.h      | 3 ++-
+ modules/video_capture/video_capture.h               | 3 ++-
+ modules/video_capture/windows/device_info_ds.cc     | 3 ++-
+ modules/video_capture/windows/device_info_ds.h      | 3 ++-
+ 7 files changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/BUILD.gn b/BUILD.gn
-index 7feca08e60..85ead4162f 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -580,6 +580,7 @@ if (!build_with_chromium) {
+diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
+index fc0554f384..f9f08a9c27 100644
+--- a/modules/video_capture/linux/device_info_pipewire.cc
++++ b/modules/video_capture/linux/device_info_pipewire.cc
+@@ -50,8 +50,10 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
+                                           uint32_t deviceUniqueIdUTF8Length,
+                                           char* productUniqueIdUTF8,
+                                           uint32_t productUniqueIdUTF8Length,
+-                                          pid_t* pid) {
++                                          pid_t* pid,
++                                          bool* deviceIsPlaceholder) {
+   RTC_CHECK(pipewire_session_);
++
+   if (deviceNumber >= NumberOfDevices())
+     return -1;
  
-     if (build_with_mozilla) {
-       deps += [
-+        "api/environment:environment_factory",
-         "api/video:video_frame",
-         "api/video:video_rtp_headers",
-         "test:rtp_test_utils",
-diff --git a/api/environment/environment_factory.cc b/api/environment/environment_factory.cc
-index c0b681aa08..6f0ec40dbe 100644
---- a/api/environment/environment_factory.cc
-+++ b/api/environment/environment_factory.cc
-@@ -97,12 +97,22 @@ Environment EnvironmentFactory::CreateWithDefaults() && {
-   if (field_trials_ == nullptr) {
-     Set(std::make_unique<FieldTrialBasedConfig>());
-   }
-+#if defined(WEBRTC_MOZILLA_BUILD)
-+  // We want to use our clock, not GetRealTimeClockRaw, and we avoid
-+  // building the code under third_party/libwebrtc/task_queue.  To
-+  // ensure we're setting up things correctly, namely providing an
-+  // Environment object with a preset task_queue_factory and clock,
-+  // we'll do a release assert here.
-+  RTC_CHECK(clock_);
-+  RTC_CHECK(task_queue_factory_);
-+#else
-   if (clock_ == nullptr) {
-     Set(Clock::GetRealTimeClock());
-   }
-   if (task_queue_factory_ == nullptr) {
-     Set(CreateDefaultTaskQueueFactory(field_trials_));
-   }
-+#endif
-   if (event_log_ == nullptr) {
-     Set(std::make_unique<RtcEventLogNull>());
-   }
-diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
-index b9bc81171f..c24c22a1f6 100644
---- a/api/task_queue/BUILD.gn
-+++ b/api/task_queue/BUILD.gn
-@@ -88,6 +88,10 @@ rtc_library("task_queue_test") {
- }
+diff --git a/modules/video_capture/linux/device_info_pipewire.h b/modules/video_capture/linux/device_info_pipewire.h
+index 8a33d75892..00715c94bc 100644
+--- a/modules/video_capture/linux/device_info_pipewire.h
++++ b/modules/video_capture/linux/device_info_pipewire.h
+@@ -30,7 +30,8 @@ class DeviceInfoPipeWire : public DeviceInfoImpl {
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8 = nullptr,
+                         uint32_t productUniqueIdUTF8Length = 0,
+-                        pid_t* pid = 0) override;
++                        pid_t* pid = 0,
++                        bool* deviceIsPlaceholder = 0) override;
+   /*
+    * Fills the membervariable _captureCapabilities with capabilites for the
+    * given device name.
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index 04caaea592..401c38f9c5 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -232,7 +232,8 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
+                                       uint32_t deviceUniqueIdUTF8Length,
+                                       char* /*productUniqueIdUTF8*/,
+                                       uint32_t /*productUniqueIdUTF8Length*/,
+-                                      pid_t* /*pid*/) {
++                                      pid_t* /*pid*/,
++                                      bool* /*deviceIsPlaceholder*/) {
+   // Travel through /dev/video [0-63]
+   uint32_t count = 0;
+   char device[20];
+diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
+index 0bec3eb765..55415845ad 100644
+--- a/modules/video_capture/linux/device_info_v4l2.h
++++ b/modules/video_capture/linux/device_info_v4l2.h
+@@ -36,7 +36,8 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8 = 0,
+                         uint32_t productUniqueIdUTF8Length = 0,
+-                        pid_t* pid=0) override;
++                        pid_t* pid = 0,
++                        bool* deviceIsPlaceholder = 0) override;
+   /*
+    * Fills the membervariable _captureCapabilities with capabilites for the
+    * given device name.
+diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
+index 43a6a7f832..f59c34f8b2 100644
+--- a/modules/video_capture/video_capture.h
++++ b/modules/video_capture/video_capture.h
+@@ -74,7 +74,8 @@ class VideoCaptureModule : public RefCountInterface {
+                                   uint32_t deviceUniqueIdUTF8Length,
+                                   char* productUniqueIdUTF8 = 0,
+                                   uint32_t productUniqueIdUTF8Length = 0,
+-                                  pid_t* pid = 0) = 0;
++                                  pid_t* pid = 0,
++                                  bool* deviceIsPlaceholder = 0) = 0;
  
- rtc_library("default_task_queue_factory") {
-+# Mozilla - disable this entire target to avoid inclusion of code we want
-+# to avoid.  Better here than trying to wack-a-mole for places that list
-+# it as a dependency.
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   if (!is_ios && !is_android) {
-     # Internally webrtc shouldn't rely on any specific TaskQueue implementation
-@@ -126,6 +130,7 @@ rtc_library("default_task_queue_factory") {
-     sources += [ "default_task_queue_factory_stdlib.cc" ]
-     deps += [ "../../rtc_base:rtc_task_queue_stdlib" ]
-   }
-+} # of if (!build_with_mozilla) {
- }
+     // Returns the number of capabilities this device.
+     virtual int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8) = 0;
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index f6927281f3..8ca741239c 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -173,7 +173,8 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
+                                     uint32_t deviceUniqueIdUTF8Length,
+                                     char* productUniqueIdUTF8,
+                                     uint32_t productUniqueIdUTF8Length,
+-                                    pid_t* pid) {
++                                    pid_t* pid,
++                                    bool* deviceIsPlaceholder) {
+   MutexLock lock(&_apiLock);
+   const int32_t result = GetDeviceInfo(
+       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,
+diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
+index e6dfaed366..a9a1449b99 100644
+--- a/modules/video_capture/windows/device_info_ds.h
++++ b/modules/video_capture/windows/device_info_ds.h
+@@ -51,7 +51,8 @@ class DeviceInfoDS : public DeviceInfoImpl {
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8,
+                         uint32_t productUniqueIdUTF8Length,
+-                        pid_t* pid) override;
++                        pid_t* pid,
++                        bool* deviceIsPlaceholder) override;
  
- rtc_library("pending_task_safety_flag") {
+   /*
+    * Display OS /capture device specific settings dialog

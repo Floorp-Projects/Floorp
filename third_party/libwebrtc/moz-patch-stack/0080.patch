@@ -1,33 +1,24 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 22 Jun 2023 16:23:00 +0000
-Subject: Bug 1837918 - libwebrtc update broke the build on
- OpenBSD;r=mjf,webrtc-reviewers
+From: Byron Campen <docfaraday@gmail.com>
+Date: Fri, 7 Apr 2023 20:28:00 +0000
+Subject: Bug 1819048: Remove this bad assertion. r=webrtc-reviewers,jib
 
-Differential Revision: https://phabricator.services.mozilla.com/D181791
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2a6a838b7021bb285f9485c2ceda6ba2543e0d6f
+Differential Revision: https://phabricator.services.mozilla.com/D174978
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda82f0abea668699eb68098dc
 ---
- modules/video_capture/video_capture_options.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ video/task_queue_frame_decode_scheduler.cc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/video_capture_options.h b/modules/video_capture/video_capture_options.h
-index 6f72f7927e..37965305d9 100644
---- a/modules/video_capture/video_capture_options.h
-+++ b/modules/video_capture/video_capture_options.h
-@@ -55,7 +55,7 @@ class RTC_EXPORT VideoCaptureOptions {
- 
-   void Init(Callback* callback);
- 
--#if defined(WEBRTC_LINUX)
-+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
-   bool allow_v4l2() const { return allow_v4l2_; }
-   void set_allow_v4l2(bool allow) { allow_v4l2_ = allow; }
- #endif
-@@ -68,7 +68,7 @@ class RTC_EXPORT VideoCaptureOptions {
- #endif
- 
-  private:
--#if defined(WEBRTC_LINUX)
-+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
-   bool allow_v4l2_ = false;
- #endif
- #if defined(WEBRTC_USE_PIPEWIRE)
+diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
+index cd109c2932..6dd7b47f17 100644
+--- a/video/task_queue_frame_decode_scheduler.cc
++++ b/video/task_queue_frame_decode_scheduler.cc
+@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
+     uint32_t rtp,
+     FrameDecodeTiming::FrameSchedule schedule,
+     FrameReleaseCallback cb) {
+-  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
++  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
++  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
+   RTC_DCHECK(!scheduled_rtp_.has_value())
+       << "Can not schedule two frames for release at the same time.";
+   RTC_DCHECK(cb);

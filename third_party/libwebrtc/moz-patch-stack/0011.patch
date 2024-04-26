@@ -1,42 +1,65 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 19 Sep 2018 15:06:00 -0400
-Subject: Bug 1376873 - Fix up rotation in video_capture_impl.cc; r=pehrsons
+Date: Tue, 31 Jul 2018 13:32:00 -0400
+Subject: Bug 1376873 - OS X desktop capture fixes; r=pehrsons
 
-This fixes a bug in the upstream code introduced when they removed the
-ConvertToI420 helper method from webrtc_libyuv.cc. The buffer size is
-passed into libyuv::ConvertI420 incorrectly when rotation is applied, which
-causes bad rendering and instabilities.
-
-Differential Revision: https://phabricator.services.mozilla.com/D7478
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c56cb66f86518dfb046c642ebeb07cf51c23a3cb
+Differential Revision: https://phabricator.services.mozilla.com/D7464
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/02c038eca65c1218b56fdf8937fdeab3d8767fe6
 ---
- modules/video_capture/video_capture_impl.cc | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ modules/desktop_capture/mac/screen_capturer_mac.h   | 7 +++++++
+ modules/desktop_capture/mac/screen_capturer_mac.mm  | 4 +++-
+ modules/desktop_capture/mouse_cursor_monitor_mac.mm | 2 +-
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 66fd0a0ebe..7071776d0a 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -218,12 +218,21 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     }
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.h b/modules/desktop_capture/mac/screen_capturer_mac.h
+index 7e38b5bd08..e4a2cc2fc9 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.h
++++ b/modules/desktop_capture/mac/screen_capturer_mac.h
+@@ -113,6 +113,13 @@ class ScreenCapturerMac final : public DesktopCapturer {
+ 
+   // Start, CaptureFrame and destructor have to called in the same thread.
+   SequenceChecker thread_checker_;
++
++  // Used to force CaptureFrame to update it's screen configuration
++  // and reregister event handlers. This ensure that this
++  // occurs on the ScreenCapture thread. Read and written from
++  // both the VideoCapture thread and ScreenCapture thread.
++  // Protected by desktop_config_monitor_.
++  bool update_screen_configuration_ = false;
+ };
+ 
+ }  // namespace webrtc
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index 60089fd0f2..a2370ed695 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -182,6 +182,7 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
+       "webrtc", "ScreenCapturermac::Start", "target display id ", current_display_);
+ 
+   callback_ = callback;
++  update_screen_configuration_ = false;
+   // Start and operate CGDisplayStream handler all from capture thread.
+   if (!RegisterRefreshAndMoveHandlers()) {
+     RTC_LOG(LS_ERROR) << "Failed to register refresh and move handlers.";
+@@ -202,7 +203,8 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
    }
  
-+  int dst_width = buffer->width();
-+  int dst_height = buffer->height();
-+
-+  // LibYuv expects pre-rotation_mode values for dst.
-+  // Stride values should correspond to the destination values.
-+  if (rotation_mode == libyuv::kRotate90 || rotation_mode == libyuv::kRotate270) {
-+    std::swap(dst_width, dst_height);
-+  }
-+
-   const int conversionResult = libyuv::ConvertToI420(
-       videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
-       buffer.get()->StrideY(), buffer.get()->MutableDataU(),
-       buffer.get()->StrideU(), buffer.get()->MutableDataV(),
-       buffer.get()->StrideV(), 0, 0,  // No Cropping
--      width, height, target_width, target_height, rotation_mode,
-+      width, height, dst_width, dst_height, rotation_mode,
-       ConvertVideoType(frameInfo.videoType));
-   if (conversionResult != 0) {
-     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
+   MacDesktopConfiguration new_config = desktop_config_monitor_->desktop_configuration();
+-  if (!desktop_config_.Equals(new_config)) {
++  if (update_screen_configuration_ || !desktop_config_.Equals(new_config)) {
++    update_screen_configuration_ = false;
+     desktop_config_ = new_config;
+     // If the display configuraiton has changed then refresh capturer data
+     // structures. Occasionally, the refresh and move handlers are lost when
+diff --git a/modules/desktop_capture/mouse_cursor_monitor_mac.mm b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
+index 3db4332cd1..512103ab5e 100644
+--- a/modules/desktop_capture/mouse_cursor_monitor_mac.mm
++++ b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
+@@ -133,7 +133,7 @@ void DisplaysReconfigured(CGDirectDisplayID display,
+   NSSize nssize = [nsimage size];  // DIP size
+ 
+   // No need to caputre cursor image if it's unchanged since last capture.
+-  if ([[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
++  if (last_cursor_ && [[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
+   last_cursor_ = nsimage;
+ 
+   DesktopSize size(round(nssize.width * scale),
