@@ -1,26 +1,95 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 9 Oct 2019 20:12:00 +0000
-Subject: Bug 1587159 - Fix undefined shift in g722_encode.c; r=ng
+From: Alex Chronopoulos <achronop@gmail.com>
+Date: Wed, 18 Sep 2019 13:16:00 +0000
+Subject: Bug 1572281 - Remove audio device change notifications from video
+ capture in Linux. r=dminor
 
-Left shifting a negative value results in undefined behaviour. It is safer to
-multiply in this case.
+Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the Linux part.
 
-Differential Revision: https://phabricator.services.mozilla.com/D48751
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/385d660fac359c907986e08d1d89ab5a353f30b2
+Differential Revision: https://phabricator.services.mozilla.com/D46272
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7bf7263db30b794139332691f4fbc98b4bfcfdd7
 ---
- modules/third_party/g722/g722_encode.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../video_capture/linux/device_info_v4l2.cc   | 28 ++-----------------
+ 1 file changed, 3 insertions(+), 25 deletions(-)
 
-diff --git a/modules/third_party/g722/g722_encode.c b/modules/third_party/g722/g722_encode.c
-index 10a5bcfe7c..fedf9f5961 100644
---- a/modules/third_party/g722/g722_encode.c
-+++ b/modules/third_party/g722/g722_encode.c
-@@ -74,7 +74,7 @@ static void block4(G722EncoderState *s, int band, int d)
-     /* Block 4, UPPOL2 */
-     for (i = 0;  i < 3;  i++)
-         s->band[band].sg[i] = s->band[band].p[i] >> 15;
--    wd1 = saturate(s->band[band].a[1] << 2);
-+    wd1 = saturate(s->band[band].a[1] * 4);
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index 19b32f16b9..f77d791033 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -62,7 +62,7 @@ namespace videocapturemodule {
+ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
+ {
+     if (event->mask & IN_CREATE) {
+-        if (fd == _fd_v4l || fd == _fd_snd) {
++        if (fd == _fd_v4l) {
+             DeviceChange();
+         } else if ((event->mask & IN_ISDIR) && (fd == _fd_dev)) {
+             if (_wd_v4l < 0) {
+@@ -74,25 +74,15 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
+                     DeviceChange();
+                 }
+             }
+-            if (_wd_snd < 0) {
+-                usleep(5*1000);
+-                _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+-                if (_wd_snd >= 0) {
+-                    DeviceChange();
+-                }
+-            }
+         }
+     } else if (event->mask & IN_DELETE) {
+-        if (fd == _fd_v4l || fd == _fd_snd) {
++        if (fd == _fd_v4l) {
+             DeviceChange();
+         }
+     } else if (event->mask & IN_DELETE_SELF) {
+         if (fd == _fd_v4l) {
+             inotify_rm_watch(_fd_v4l, _wd_v4l);
+             _wd_v4l = -1;
+-        } else if (fd == _fd_snd) {
+-            inotify_rm_watch(_fd_snd, _wd_snd);
+-            _wd_snd = -1;
+         } else {
+             assert(false);
+         }
+@@ -159,11 +149,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
+                 break;
+             }
+         }
+-        if (EventCheck(_fd_snd) > 0) {
+-            if (HandleEvents(_fd_snd) < 0) {
+-                break;
+-            }
+-        }
+     }
+     return 0;
+ }
+@@ -176,11 +161,9 @@ void DeviceInfoV4l2::InotifyEventThread(void* obj)
+ void DeviceInfoV4l2::InotifyProcess()
+ {
+     _fd_v4l = inotify_init();
+-    _fd_snd = inotify_init();
+     _fd_dev = inotify_init();
+-    if (_fd_v4l >= 0 && _fd_snd >= 0 && _fd_dev >= 0) {
++    if (_fd_v4l >= 0 && _fd_dev >= 0) {
+         _wd_v4l = inotify_add_watch(_fd_v4l, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+-        _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+         _wd_dev = inotify_add_watch(_fd_dev, "/dev/", IN_CREATE);
+         ProcessInotifyEvents();
  
-     wd2 = (s->band[band].sg[0] == s->band[band].sg[1])  ?  -wd1  :  wd1;
-     if (wd2 > 32767)
+@@ -188,16 +171,11 @@ void DeviceInfoV4l2::InotifyProcess()
+           inotify_rm_watch(_fd_v4l, _wd_v4l);
+         }
+ 
+-        if (_wd_snd >= 0) {
+-          inotify_rm_watch(_fd_snd, _wd_snd);
+-        }
+-
+         if (_wd_dev >= 0) {
+           inotify_rm_watch(_fd_dev, _wd_dev);
+         }
+ 
+         close(_fd_v4l);
+-        close(_fd_snd);
+         close(_fd_dev);
+     }
+ }

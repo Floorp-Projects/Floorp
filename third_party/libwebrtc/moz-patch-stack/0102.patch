@@ -1,33 +1,36 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 2 Feb 2024 18:43:00 +0000
-Subject: Bug 1878010 - Fix webrtc::VideoCaptureFactory for BSD.
- r=grulja,gaston,webrtc-reviewers,mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Mon, 4 Dec 2023 12:57:00 -0600
+Subject: Bug 1867099 - (fix-66b7275561) disable wgc capture yellow-line
+ removal. r?ng!
 
-Differential Revision: https://phabricator.services.mozilla.com/D200427
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f890637efe5abc0020fab83ff2224313cd0c8460
+This code won't build until we support building with
+Win 10 SDK v10.0.20348.0 or newer.
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0aac94794aad2ddb637f5076bc08706a11866737
 ---
- modules/video_capture/video_capture_factory.cc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ modules/desktop_capture/win/wgc_capture_session.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/modules/video_capture/video_capture_factory.cc b/modules/video_capture/video_capture_factory.cc
-index e085ac2df8..2790fbbe1c 100644
---- a/modules/video_capture/video_capture_factory.cc
-+++ b/modules/video_capture/video_capture_factory.cc
-@@ -24,7 +24,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
-     const char* deviceUniqueIdUTF8) {
- // This is only implemented on pure Linux and WEBRTC_LINUX is defined for
- // Android as well
--#if !defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
-+#if (!defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)) || defined(WEBRTC_ANDROID)
-   return nullptr;
- #else
-   return videocapturemodule::VideoCaptureImpl::Create(options,
-@@ -40,7 +40,7 @@ VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
-     VideoCaptureOptions* options) {
- // This is only implemented on pure Linux and WEBRTC_LINUX is defined for
- // Android as well
--#if !defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
-+#if (!defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)) || defined(WEBRTC_ANDROID)
-   return nullptr;
- #else
-   return videocapturemodule::VideoCaptureImpl::CreateDeviceInfo(options);
+diff --git a/modules/desktop_capture/win/wgc_capture_session.cc b/modules/desktop_capture/win/wgc_capture_session.cc
+index 8c74c2bf24..86afc52411 100644
+--- a/modules/desktop_capture/win/wgc_capture_session.cc
++++ b/modules/desktop_capture/win/wgc_capture_session.cc
+@@ -188,6 +188,11 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+     }
+   }
+ 
++// Until Mozilla builds with Win 10 SDK v10.0.20348.0 or newer, this
++// code will not build.  Once we support the newer SDK, Bug 1868198
++// exists to decide if we ever want to use this code since it is
++// removing an indicator that capture is happening.
++#if !defined(WEBRTC_MOZILLA_BUILD)
+   // By default, the WGC capture API adds a yellow border around the captured
+   // window or display to indicate that a capture is in progress. The section
+   // below is an attempt to remove this yellow border to make the capture
+@@ -199,6 +204,7 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+           &session3))) {
+     session3->put_IsBorderRequired(false);
+   }
++#endif
+ 
+   allow_zero_hertz_ = options.allow_wgc_zero_hertz();
+ 

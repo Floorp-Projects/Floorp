@@ -1,23 +1,27 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 2 Nov 2021 14:35:00 +0000
-Subject: Bug 1729455 - Ensure the libwebrtc system clock is not used. r=bwc
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 28 Oct 2021 18:13:00 +0000
+Subject: Bug 1729367 - P6 - Restore PID recording post cherry-pick;r=mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D128244
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3e8ac168ee3db089dd892bf140df53e15d6f0918
+This restores the code from P0, which was removed to make cherry-picking 439ffe462a66ad9fa9a251b265e4ab28c2647d25 and 449a78b1e20ea85b11f967cf3a184ee610ce21c3 easier.
+
+Differential Revision: https://phabricator.services.mozilla.com/D129714
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/72a83cb2e571023cd4150bbdef5be5455ce851f4
 ---
- rtc_base/system_time.cc | 2 ++
- 1 file changed, 2 insertions(+)
+ modules/desktop_capture/win/window_capture_utils.cc | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/rtc_base/system_time.cc b/rtc_base/system_time.cc
-index 058e6c2990..1a5e447916 100644
---- a/rtc_base/system_time.cc
-+++ b/rtc_base/system_time.cc
-@@ -12,6 +12,8 @@
- // rtc::SystemTimeNanos() must be provided externally.
- #ifndef WEBRTC_EXCLUDE_SYSTEM_TIME
+diff --git a/modules/desktop_capture/win/window_capture_utils.cc b/modules/desktop_capture/win/window_capture_utils.cc
+index ccfef49bc5..d58c02e17c 100644
+--- a/modules/desktop_capture/win/window_capture_utils.cc
++++ b/modules/desktop_capture/win/window_capture_utils.cc
+@@ -79,6 +79,10 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
+   DesktopCapturer::Source window;
+   window.id = reinterpret_cast<WindowId>(hwnd);
  
-+#error Mozilla: Must not use the built-in libwebrtc clock
++  DWORD pid;
++  GetWindowThreadProcessId(hwnd, &pid);
++  window.pid = static_cast<pid_t>(pid);
 +
- #include <stdint.h>
- 
- #include <limits>
+   // GetWindowText* are potentially blocking operations if `hwnd` is
+   // owned by the current process. The APIs will send messages to the window's
+   // message loop, and if the message loop is waiting on this operation we will

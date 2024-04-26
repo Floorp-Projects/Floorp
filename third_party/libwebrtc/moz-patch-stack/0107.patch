@@ -1,39 +1,28 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 Apr 2024 21:54:00 +0000
-Subject: Bug 1888181 - (fix-52fec7d3) Limit scope of race checker in
- VideoCaptureModuleV4L2::StartCapture. r=mjf
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Wed, 6 Mar 2024 10:19:00 +0000
+Subject: Bug 1882438 - WebRTC backport: PipeWire camera - use length of device
+ id instead display name r=pehrsons,webrtc-reviewers
 
-TSAN detects a race between destroying the scoped race checker in StartCapture
-and creating the scoped race checker in CaptureProcess, because once the capture
-thread has been created (and given its run function) there is no synchronization
-before the run function starts to run.
+This is a simple backport of an WebRTC upstream change.
 
-This patch avoids the race by destroying the StartCapture scoped race checker
-before creating the capture thread.
+Upstream commit: 16ac10d9f75cde959f00df062f544c49941882da
 
-Differential Revision: https://phabricator.services.mozilla.com/D207203
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b046a1446cee5ab485d4868b3ca9784b16b2d02f
+Differential Revision: https://phabricator.services.mozilla.com/D203099
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b572eb8b39b03f714234afff4bd80b4612439521
 ---
- modules/video_capture/linux/video_capture_v4l2.cc | 2 ++
- 1 file changed, 2 insertions(+)
+ modules/video_capture/linux/device_info_pipewire.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index 6d8a5e463f..db2450a2c7 100644
---- a/modules/video_capture/linux/video_capture_v4l2.cc
-+++ b/modules/video_capture/linux/video_capture_v4l2.cc
-@@ -129,6 +129,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
-     }
-   }
+diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
+index f9f08a9c27..31d922035b 100644
+--- a/modules/video_capture/linux/device_info_pipewire.cc
++++ b/modules/video_capture/linux/device_info_pipewire.cc
+@@ -96,7 +96,7 @@ int32_t DeviceInfoPipeWire::CreateCapabilityMap(
+       continue;
  
-+  {
-   // We don't want members above to be guarded by capture_checker_ as
-   // it's meant to be for members that are accessed on the API thread
-   // only when we are not capturing. The code above can be called many
-@@ -298,6 +299,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
-   _requestedCapability = capability;
-   _captureStarted = true;
-   _streaming = true;
-+  }
- 
-   // start capture thread;
-   if (_captureThread.empty()) {
+     _captureCapabilities = node.capabilities();
+-    _lastUsedDeviceNameLength = node.display_name().length();
++    _lastUsedDeviceNameLength = node.unique_id().length();
+     _lastUsedDeviceName = static_cast<char*>(
+         realloc(_lastUsedDeviceName, _lastUsedDeviceNameLength + 1));
+     memcpy(_lastUsedDeviceName, deviceUniqueIdUTF8,

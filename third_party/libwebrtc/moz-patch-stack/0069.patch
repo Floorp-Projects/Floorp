@@ -1,46 +1,78 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Thu, 6 Jan 2022 00:16:00 +0000
-Subject: Bug 1748478 - Propagate calculated discarded packets to stats. r=bwc
+Date: Mon, 12 Dec 2022 15:47:00 +0000
+Subject: Bug 1451394 - Expose mac camera capture backend in .gn and switch it
+ to gecko libyuv. r=webrtc-reviewers,mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D135061
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56fbf0469e25fa0d589c51ca112ce534a7c0ab91
+Differential Revision: https://phabricator.services.mozilla.com/D163682
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b0658888969395dca938597783c8a377b9bea209
 ---
- video/receive_statistics_proxy.cc   | 9 +++++++--
- video/rtp_video_stream_receiver2.cc | 4 +++-
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ BUILD.gn     | 4 ++++
+ sdk/BUILD.gn | 6 ++++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
-index 8ef4d553ad..a0f19999d8 100644
---- a/video/receive_statistics_proxy.cc
-+++ b/video/receive_statistics_proxy.cc
-@@ -800,8 +800,13 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
- }
+diff --git a/BUILD.gn b/BUILD.gn
+index f595a2951a..7feca08e60 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -603,6 +603,10 @@ if (!build_with_chromium) {
+       ]
+     }
  
- void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
--  RTC_DCHECK_RUN_ON(&main_thread_);
--  stats_.packets_discarded += packets_discarded;
-+  // Can be called on either the decode queue or the worker thread
-+  // See FrameBuffer2 for more details.
-+  worker_thread_->PostTask(
-+      SafeTask(task_safety_.flag(), [packets_discarded, this]() {
-+        RTC_DCHECK_RUN_ON(&main_thread_);
-+        stats_.packets_discarded += packets_discarded;
-+      }));
- }
- 
- void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 65e45e38f7..49b7d06419 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -1258,7 +1258,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
-     packet_infos_.erase(packet_infos_.begin(),
-                         packet_infos_.upper_bound(unwrapped_rtp_seq_num));
-     uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
--    vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
-+    if (num_packets_cleared > 0) {
-+      vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
++    if (build_with_mozilla && is_mac) {
++      deps += [ "sdk:videocapture_objc" ]
 +    }
-     reference_finder_->ClearTo(seq_num);
++
+     if (rtc_enable_protobuf) {
+       deps += [ "logging:rtc_event_log_proto" ]
+     }
+diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
+index a044c469e0..e973448f05 100644
+--- a/sdk/BUILD.gn
++++ b/sdk/BUILD.gn
+@@ -533,6 +533,7 @@ if (is_ios || is_mac) {
+       }
+     }
+ 
++    if (!build_with_mozilla) {
+     rtc_library("videosource_objc") {
+       sources = [
+         "objc/api/peerconnection/RTCVideoSource+Private.h",
+@@ -562,6 +563,7 @@ if (is_ios || is_mac) {
+         ":used_from_extension",
+       ]
+     }
++    }
+ 
+     rtc_library("videoframebuffer_objc") {
+       visibility = [ "*" ]
+@@ -594,6 +596,7 @@ if (is_ios || is_mac) {
+       ]
+     }
+ 
++    if (!build_with_mozilla) {
+     rtc_library("metal_objc") {
+       visibility = [ "*" ]
+       allow_poison = [
+@@ -655,6 +658,7 @@ if (is_ios || is_mac) {
+         ":videoframebuffer_objc",
+       ]
+     }
++    }
+ 
+     rtc_library("videocapture_objc") {
+       visibility = [ "*" ]
+@@ -683,6 +687,7 @@ if (is_ios || is_mac) {
+       ]
+     }
+ 
++    if (!build_with_mozilla) {
+     rtc_library("videocodec_objc") {
+       visibility = [ "*" ]
+       configs += [ "..:no_global_constructors" ]
+@@ -1744,5 +1749,6 @@ if (is_ios || is_mac) {
+         "VideoToolbox.framework",
+       ]
+     }
++    }
    }
  }

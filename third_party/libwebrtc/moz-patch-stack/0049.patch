@@ -1,26 +1,29 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 28 Oct 2021 18:13:00 +0000
-Subject: Bug 1729367 - P7 - restore mac PID tracking using new API;r=mjf
- a=webrtc-update
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 20 Aug 2021 13:52:00 +0200
+Subject: Bug 1654112 - Don't check the calling thread in
+ webrtc::AudioReceiveStream::GetSources. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D129721
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1495ca5ef535f8ad692a3a579ca42eddc14f39a8
+source_tracker_ is thread safe with its own internal mutex, so this call is safe
+as long as the caller has a guarantee for the lifetime of the
+AudioReceiveStream. This is similar to webrtc::VideoReceiveStream.
+
+Upliftable.
+
+Differential Revision: https://phabricator.services.mozilla.com/D123226
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c186df8a088e46285a15e40149182daa34cc6805
 ---
- modules/desktop_capture/window_capturer_mac.mm | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ audio/audio_receive_stream.cc | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/modules/desktop_capture/window_capturer_mac.mm b/modules/desktop_capture/window_capturer_mac.mm
-index 56c94baada..8f5dc25516 100644
---- a/modules/desktop_capture/window_capturer_mac.mm
-+++ b/modules/desktop_capture/window_capturer_mac.mm
-@@ -169,8 +169,9 @@ void WindowCapturerMac::CaptureFrame() {
-           return webrtc::GetWindowList(
-               [sources](CFDictionaryRef window) {
-                 WindowId window_id = GetWindowId(window);
-+                int pid = GetWindowOwnerPid(window);
-                 if (window_id != kNullWindowId) {
--                  sources->push_back(DesktopCapturer::Source{window_id, GetWindowTitle(window)});
-+                  sources->push_back(DesktopCapturer::Source{window_id, pid, GetWindowTitle(window)});
-                 }
-                 return true;
-               },
+diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
+index 1e8cff5441..32a8e1c172 100644
+--- a/audio/audio_receive_stream.cc
++++ b/audio/audio_receive_stream.cc
+@@ -368,7 +368,6 @@ int AudioReceiveStreamImpl::GetBaseMinimumPlayoutDelayMs() const {
+ }
+ 
+ std::vector<RtpSource> AudioReceiveStreamImpl::GetSources() const {
+-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+   return source_tracker_.GetSources();
+ }
+ 

@@ -1,22 +1,25 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Tue, 4 Apr 2023 16:34:00 -0500
-Subject: Bug 1822194 - (fix-3b51cd328e) - Add missing designated initializer
- that gcc is sad about.
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 8 Feb 2023 08:01:00 +0000
+Subject: Bug 1814692 - Don't attempt realtime scheduling rtc::PlatformThreads.
+ r=webrtc-reviewers,bwc
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf19320c0804e9aee1a3eb4bf
+Differential Revision: https://phabricator.services.mozilla.com/D169036
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9e64a965e26c8379261466e5273c3b383164b2c7
 ---
- modules/audio_processing/audio_processing_impl.cc | 1 +
- 1 file changed, 1 insertion(+)
+ rtc_base/platform_thread.cc | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
-index 0d11e418e6..5f6dd59d02 100644
---- a/modules/audio_processing/audio_processing_impl.cc
-+++ b/modules/audio_processing/audio_processing_impl.cc
-@@ -452,6 +452,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
-                   },
-               .adaptive_digital_controller =
-                   {
-+                      .enabled = false,
-                       .headroom_db = static_cast<float>(headroom_db.Get()),
-                       .max_gain_db = static_cast<float>(max_gain_db.Get()),
-                       .initial_gain_db =
+diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
+index 71a9f1b224..bcbb784b97 100644
+--- a/rtc_base/platform_thread.cc
++++ b/rtc_base/platform_thread.cc
+@@ -50,6 +50,9 @@ bool SetPriority(ThreadPriority priority) {
+   // TODO(tommi): Switch to the same mechanism as Chromium uses for changing
+   // thread priorities.
+   return true;
++#elif defined(WEBRTC_MOZILLA_BUILD) && defined(WEBRTC_LINUX)
++  // Only realtime audio uses realtime scheduling in Firefox.
++  return true;
+ #else
+   const int policy = SCHED_FIFO;
+   const int min_prio = sched_get_priority_min(policy);

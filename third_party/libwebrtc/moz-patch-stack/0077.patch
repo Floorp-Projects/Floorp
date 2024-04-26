@@ -1,24 +1,74 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Fri, 7 Apr 2023 20:28:00 +0000
-Subject: Bug 1819048: Remove this bad assertion. r=webrtc-reviewers,jib
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Fri, 10 Mar 2023 09:21:00 +0000
+Subject: Bug 1819035 - get EGL display based on the used platform in the
+ browser r=webrtc-reviewers,ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D174978
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda82f0abea668699eb68098dc
+Because of a possible misconfiguration or a possible driver issue it
+might happen that the browser will use a different driver on X11 and
+end up using yet another one for wayland/gbm, which might lead to not
+working screen sharing in the better case, but also to a crash in the
+other driver (Nvidia). This adds a check for platform the browser runs
+on, if it's XWayland or Wayland and based on that query EGL display for
+that specific platform, rather than going for the Wayland one only.
+
+Differential Revision: https://phabricator.services.mozilla.com/D171858
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c8606497de1f461a6352456e0e511c2ae498d526
 ---
- video/task_queue_frame_decode_scheduler.cc | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ .../linux/wayland/egl_dmabuf.cc               | 30 +++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
 
-diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
-index cd109c2932..6dd7b47f17 100644
---- a/video/task_queue_frame_decode_scheduler.cc
-+++ b/video/task_queue_frame_decode_scheduler.cc
-@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
-     uint32_t rtp,
-     FrameDecodeTiming::FrameSchedule schedule,
-     FrameReleaseCallback cb) {
--  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
-+  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
-+  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
-   RTC_DCHECK(!scheduled_rtp_.has_value())
-       << "Can not schedule two frames for release at the same time.";
-   RTC_DCHECK(cb);
+diff --git a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
+index b529077c6d..6a019c64b4 100644
+--- a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
++++ b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
+@@ -13,6 +13,7 @@
+ #include <asm/ioctl.h>
+ #include <dlfcn.h>
+ #include <fcntl.h>
++#include <gdk/gdk.h>
+ #include <libdrm/drm_fourcc.h>
+ #include <linux/types.h>
+ #include <spa/param/video/format-utils.h>
+@@ -217,6 +218,26 @@ static void CloseLibrary(void* library) {
+   }
+ }
+ 
++static bool IsWaylandDisplay() {
++  static auto sGdkWaylandDisplayGetType =
++    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_type");
++  if (!sGdkWaylandDisplayGetType) {
++    return false;
++  }
++  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
++                                      sGdkWaylandDisplayGetType()));
++}
++
++static bool IsX11Display() {
++  static auto sGdkX11DisplayGetType =
++    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_x11_display_get_type");
++  if (!sGdkX11DisplayGetType) {
++    return false;
++  }
++  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
++                                      sGdkX11DisplayGetType()));
++}
++
+ static void* g_lib_egl = nullptr;
+ 
+ RTC_NO_SANITIZE("cfi-icall")
+@@ -362,8 +383,13 @@ EglDmaBuf::EglDmaBuf() {
+     return;
+   }
+ 
+-  egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
+-                                       (void*)EGL_DEFAULT_DISPLAY, nullptr);
++  if (IsWaylandDisplay()) {
++    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
++                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
++  } else if (IsX11Display()) {
++    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_X11_KHR,
++                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
++  }
+ 
+   if (egl_.display == EGL_NO_DISPLAY) {
+     RTC_LOG(LS_ERROR) << "Failed to obtain default EGL display: "
