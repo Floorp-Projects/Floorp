@@ -439,10 +439,6 @@
             // using the mouse. Ignore the first focusin event if it's on the
             // triggering target.
             this.focusHasChanged = true;
-          } else if (!target || !inPanelList) {
-            // If the target isn't in the panel, hide. This will close when focus
-            // moves out of the panel.
-            this.hide();
           } else {
             // Just record that there was a focusin event.
             this.focusHasChanged = true;
