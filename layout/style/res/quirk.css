@@ -59,7 +59,7 @@ table {
  * selectors will be hashed in the selector maps and things will be much more
  * efficient.
  */
-:is(body, td, th) > :is(p, dl, multicol, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-first-node {
+:is(body, td, th) > :is(p, dl, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-first-node {
   margin-block-start: 0;
 }
 
@@ -71,11 +71,11 @@ td > p:-moz-last-node, th > p:-moz-last-node {
  *  collapse the bottom or top margins of empty elements
  *  - see bug 97361
  */
-:is(body, td, th) > :is(p, dl, multicol, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-only-whitespace:-moz-first-node {
+:is(body, td, th) > :is(p, dl, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-only-whitespace:-moz-first-node {
   margin-block-end: 0;
 }
 
-:is(td, th) > :is(p, dl, multicol, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-only-whitespace:-moz-last-node {
+:is(td, th) > :is(p, dl, blockquote, h1, h2, h3, h4, h5, h6, listing, plaintext, xmp, pre, ul, menu, dir, ol):-moz-only-whitespace:-moz-last-node {
   margin-block-start: 0;
 }
 
