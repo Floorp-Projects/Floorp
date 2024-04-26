@@ -17,6 +17,7 @@
   --font-size: 12;
   --content-width: 22em;
   --line-height: 1.6em;
+  --text-alignment: start;
 }
 
 body {
@@ -43,6 +44,7 @@ body {
   --popup-shadow: rgba(49, 49, 49, 0.3);
   --popup-button-background: rgba(207, 207, 216, 0.33);
   --popup-button-foreground: var(--main-foreground);
+  --popup-button-selected-foreground:  var(--color-gray-05);
   --popup-button-background-hover: var(--toolbar-button-background-hover);
   --popup-button-foreground-hover: var(--main-foreground);
   --popup-button-background-active: var(--toolbar-button-background-active);
@@ -60,7 +62,7 @@ body {
   --link-selected-foreground: #333;
   --visited-link-foreground: #b5007f;
   --custom-theme-background: var(--color-white);
-  --custom-theme-foreground: #14151A;
+  --custom-theme-foreground: var(--color-gray-100);
   --custom-theme-unvisited-links: var(--color-blue-50);
   --custom-theme-visited-links: #321C64;
   --custom-theme-selection-highlight: #FFFFCC;
@@ -88,7 +90,7 @@ body.contrast {
   --toolbar-button-background-hover: rgb(82, 82, 94);
   --toolbar-button-background-active: rgb(91, 91, 102);
   --popup-background: rgb(66, 65, 77);
-  --popup-button-border: rgba(255, 255, 255, 0.12);
+  --popup-button-border: rgba(255, 255, 255, 0.2);
   --popup-line: rgba(249, 249, 250, 0.1);
   --popup-button-background: rgb(43, 42, 51);
   --font-value-background: rgba(249, 249, 250, 0.15);
@@ -97,6 +99,7 @@ body.contrast {
   --link-selected-foreground: #fff;
   --visited-link-foreground: #e675fd;
   --selected-background: rgba(0, 221, 255, 0.3);
+  --popup-button-selected-foreground: var(--color-gray-100);
   /* dark colours */
 
   .moz-reader-block-img {
@@ -170,6 +173,7 @@ body.hcm {
   --icon-disabled-fill: GrayText;
   --text-selected-background: SelectedItem;
   --text-selected-foreground: SelectedItemText;
+  --popup-button-selected-foreground: SelectedItemText;
   --link-foreground: LinkText;
   --link-selected-background: SelectedItem;
   --link-selected-foreground: SelectedItemText;
@@ -583,7 +587,6 @@ button:disabled {
 .radiorow > label {
   position: relative;
   box-sizing: border-box;
-  border-radius: 2px;
   border: 2px solid var(--popup-button-border);
 }
 
@@ -592,12 +595,14 @@ button:disabled {
 }
 
 .radiorow > label:hover {
-  background-color: var(--toolbar-button-background-hover);
+  background-color: var(--popup-button-background-hover);
+  color: var(--popup-button-foreground-hover);
 }
 
 .radiorow > input[type=radio]:focus-visible + label {
   outline: 2px solid var(--primary-color);
   outline-offset: var(--focus-outline-offset);
+  z-index: 1;
 }
 
 .font-type-buttons > label {
@@ -618,6 +623,7 @@ button:disabled {
    * baselines between serif and sans-serif, this isn't always enough. */
   line-height: 1;
   padding-top: 2px;
+  border-radius: 2px;
 }
 
 .font-type-buttons {
@@ -664,6 +670,7 @@ body.hcm .color-scheme-buttons {
   justify-content: center;
   /* We want 10px between items, but there's no margin collapsing in flexbox. */
   margin: 10px 5px;
+  border-radius: 2px;
   border-color: var(--popup-border);
 }
 
@@ -673,6 +680,58 @@ body.hcm .color-scheme-buttons {
 
 .color-scheme-buttons > label:last-child {
   margin-inline-end: 10px;
+}
+
+/* Improved text and layout menu popup */
+
+#text-layout-controls {
+  width: 340px;
+  padding: var(--space-large);
+  font-size: 15px;
+}
+
+.text-alignment-buttons {
+  margin-top: var(--space-small);
+  gap: var(--space-xxsmall);
+
+  > label {
+    display: flex;
+    flex: 1;
+    min-height: var(--button-min-height);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: var(--popup-button-background);
+    color: var(--popup-button-foreground);
+    -moz-context-properties: fill;
+    fill: currentColor;
+    border: none;
+
+    &.left-align-button {
+      background-image: url("chrome://global/skin/reader/align-left-20.svg");
+      border-start-start-radius: var(--border-radius-small);
+      border-end-start-radius: var(--border-radius-small);
+    }
+
+    &.center-align-button {
+      background-image: url("chrome://global/skin/reader/align-center-20.svg");
+    }
+
+    &.right-align-button {
+      background-image: url("chrome://global/skin/reader/align-right-20.svg");
+      border-start-end-radius: var(--border-radius-small);
+      border-end-end-radius: var(--border-radius-small);
+    }
+
+    &[checked] {
+      background-color: var(--primary-color);
+      border: none;
+      color: var(--popup-button-selected-foreground);
+    }
+
+    body.hcm & {
+      border: 1px solid var(--popup-button-border);
+    }
+  }
 }
 
 /* Separate colors menu popup */
@@ -787,6 +846,10 @@ button[is="named-deck-button"] {
   background-image: url("chrome://global/skin/reader/RM-Type-Controls-24x24.svg");
 }
 
+.improved-style-button {
+  background-image: url("chrome://global/skin/reader/RM-Type-Controls-24x24.svg");
+}
+
 .colors-button {
   background-image: url("chrome://mozapps/skin/extensions/category-themes.svg");
 }
@@ -844,6 +907,11 @@ button[is="named-deck-button"] {
   font-size: var(--font-size);
   max-width: var(--content-width);
   line-height: var(--line-height);
+  text-align: var(--text-alignment);
+
+  .header {
+    text-align: var(--text-alignment);
+  }
 }
 
 pre {

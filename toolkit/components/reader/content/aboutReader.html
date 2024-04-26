@@ -50,7 +50,36 @@
               data-l10n-id="about-reader-toolbar-close"
             ></span>
           </button>
-          <ul class="dropdown style-dropdown">
+          <ul
+            class="dropdown improved-style-dropdown"
+            id="improved-text-menu"
+            hidden="true"
+          >
+            <li>
+              <button
+                class="dropdown-toggle toolbar-button improved-style-button"
+                aria-labelledby="toolbar-type-controls"
+                data-telemetry-id="reader-type-controls"
+              >
+                <span
+                  class="hover-label"
+                  id="toolbar-type-controls"
+                  data-l10n-id="about-reader-toolbar-type-controls"
+                ></span>
+              </button>
+            </li>
+            <li class="dropdown-popup" id="text-layout-controls">
+              <label
+                for="text-alignment-buttons"
+                data-l10n-id="about-reader-text-alignment-label"
+              ></label>
+              <div
+                class="text-alignment-buttons radiorow"
+                id="text-alignment-buttons"
+              ></div>
+            </li>
+          </ul>
+          <ul class="dropdown style-dropdown" id="regular-text-menu">
             <li>
               <button
                 class="dropdown-toggle toolbar-button style-button"

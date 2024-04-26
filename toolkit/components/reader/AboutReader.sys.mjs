@@ -33,7 +33,6 @@ const COLORSCHEME_L10N_IDS = {
   sepia: "about-reader-color-theme-sepia",
   contrast: "about-reader-color-theme-contrast",
   gray: "about-reader-color-theme-gray",
-  custom: "about-reader-color-theme-custom",
 };
 
 const CUSTOM_THEME_COLOR_INPUTS = [
@@ -201,6 +200,7 @@ export var AboutReader = function (
   if (Services.prefs.getBoolPref("reader.colors_menu.enabled", false)) {
     doc.getElementById("regular-color-scheme").hidden = true;
     doc.getElementById("custom-colors-color-scheme").hidden = false;
+
     this._setupSegmentedButton(
       "colors-menu-color-scheme-buttons",
       colorsMenuColorSchemeOptions,
@@ -243,19 +243,56 @@ export var AboutReader = function (
   ];
 
   let fontType = Services.prefs.getCharPref("reader.font_type");
-  this._setupSegmentedButton(
-    "font-type-buttons",
-    fontTypeOptions,
-    fontType,
-    this._setFontType.bind(this)
-  );
-  this._setFontType(fontType);
+
+  let textAlignmentOptions = [
+    {
+      l10nId: "about-reader-text-alignment-left",
+      groupName: "text-alignment",
+      value: "left",
+      itemClass: "left-align-button",
+    },
+    {
+      l10nId: "about-reader-text-alignment-center",
+      groupName: "text-alignment",
+      value: "center",
+      itemClass: "center-align-button",
+    },
+    {
+      l10nId: "about-reader-text-alignment-right",
+      groupName: "text-alignment",
+      value: "right",
+      itemClass: "right-align-button",
+    },
+  ];
+
+  if (Services.prefs.getBoolPref("reader.improved_text_menu.enabled", false)) {
+    doc.getElementById("regular-text-menu").hidden = true;
+    doc.getElementById("improved-text-menu").hidden = false;
+
+    let textAlignment = Services.prefs.getCharPref("reader.text_alignment");
+    this._setupSegmentedButton(
+      "text-alignment-buttons",
+      textAlignmentOptions,
+      textAlignment,
+      this._setTextAlignment.bind(this)
+    );
+    this._setTextAlignment(textAlignment);
+  } else {
+    this._setupSegmentedButton(
+      "font-type-buttons",
+      fontTypeOptions,
+      fontType,
+      this._setFontType.bind(this)
+    );
+  }
 
   this._setupFontSizeButtons();
 
   this._setupContentWidthButtons();
 
   this._setupLineHeightButtons();
+
+  this._setFontType(fontType);
 
   if (win.speechSynthesis && Services.prefs.getBoolPref("narrate.enabled")) {
     new lazy.NarrateControls(win, this._languagePromise);
@@ -775,6 +812,20 @@ AboutReader.prototype = {
     );
   },
 
+  _setTextAlignment(newTextAlignment) {
+    if (this._textAlignment === newTextAlignment) {
+      return false;
+    }
+
+    this._containerElement.style.setProperty(
+      "--text-alignment",
+      newTextAlignment
+    );
+
+    lazy.AsyncPrefs.set("reader.text_alignment", newTextAlignment);
+    return true;
+  },
+
   _setColorScheme(newColorScheme) {
     // There's nothing to change if the new color scheme is the same as our current scheme.
     if (this._colorScheme === newColorScheme) {
@@ -823,7 +874,11 @@ AboutReader.prototype = {
     // The input event for the last selected segmented button is fired
     // upon loading a reader article in the same session. To prevent it
     // from overwriting custom colors, we return false.
-    if (this._colorScheme == "custom" && fromInputEvent) {
+    const colorsMenuEnabled = Services.prefs.getBoolPref(
+      "reader.colors_menu.enabled",
+      false
+    );
+    if (colorsMenuEnabled && this._colorScheme == "custom" && fromInputEvent) {
       lastSelectedTheme = colorSchemePref;
       return false;
     }
