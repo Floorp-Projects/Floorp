@@ -1352,24 +1352,37 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
     // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
     // no proxy is configured since we might be talking with a transparent
     // proxy, i.e. one that operates at the network level.  See bug #14772.
-    rv = mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    // But we should not touch Pragma if Cache-Control is already set
+    // (https://fetch.spec.whatwg.org/#ref-for-concept-request-cache-mode%E2%91%A3)
+    if (!mRequestHead.HasHeader(nsHttp::Pragma)) {
+      rv = mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
     // If we're configured to speak HTTP/1.1 then also send 'Cache-control:
-    // no-cache'
-    if (mRequestHead.Version() >= HttpVersion::v1_1) {
+    // no-cache'. But likewise don't touch Cache-Control if it's already set.
+    if (mRequestHead.Version() >= HttpVersion::v1_1 &&
+        !mRequestHead.HasHeader(nsHttp::Cache_Control)) {
       rv = mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "no-cache", true);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-  } else if ((mLoadFlags & VALIDATE_ALWAYS) && !LoadCacheEntryIsWriteOnly()) {
+  } else if (mLoadFlags & VALIDATE_ALWAYS) {
     // We need to send 'Cache-Control: max-age=0' to force each cache along
     // the path to the origin server to revalidate its own entry, if any,
     // with the next cache or server.  See bug #84847.
     //
     // If we're configured to speak HTTP/1.0 then just send 'Pragma: no-cache'
+    //
+    // But don't send the headers if they're already set:
+    // https://fetch.spec.whatwg.org/#ref-for-concept-request-cache-mode%E2%91%A2
     if (mRequestHead.Version() >= HttpVersion::v1_1) {
-      rv = mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "max-age=0", true);
+      if (!mRequestHead.HasHeader(nsHttp::Cache_Control)) {
+        rv = mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "max-age=0",
+                                        true);
+      }
     } else {
-      rv = mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
+      if (!mRequestHead.HasHeader(nsHttp::Pragma)) {
+        rv = mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
+      }
     }
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
