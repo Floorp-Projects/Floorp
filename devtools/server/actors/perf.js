@@ -157,7 +157,7 @@ exports.PerfActor = class PerfActor extends Actor {
     // Note! If emitting new events make sure and update the list of bridged
     // events in the perf actor.
     switch (topic) {
-      case "profiler-started":
+      case "profiler-started": {
         const param = subject.QueryInterface(Ci.nsIProfilerStartParams);
         this.emit(
           topic,
@@ -168,6 +168,7 @@ exports.PerfActor = class PerfActor extends Actor {
           param.activeTabID
         );
         break;
+      }
       case "profiler-stopped":
         this.emit(topic);
         break;
