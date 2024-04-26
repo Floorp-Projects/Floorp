@@ -280,11 +280,16 @@ body {
   background-color: var(--newtab-background-color);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ubuntu, "Helvetica Neue", sans-serif;
   font-size: 16px;
-  background-image: var(--newtab-wallpaper, "");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
+  background-image: var(--newtab-wallpaper-light, "");
+}
+@media (prefers-color-scheme: dark) {
+  body {
+    background-image: var(--newtab-wallpaper-dark, "");
+  }
 }
 
 .no-scroll {
