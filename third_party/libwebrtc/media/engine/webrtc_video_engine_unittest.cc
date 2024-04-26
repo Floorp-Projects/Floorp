@@ -1421,7 +1421,7 @@ TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, Vp8) {
 
   // Expect no decoder to be created at this point. The decoder will only be
   // created if we receive payload data.
-  EXPECT_CALL(*decoder_factory, CreateVideoDecoder(format)).Times(0);
+  EXPECT_CALL(*decoder_factory, Create).Times(0);
 
   // Create a call.
   webrtc::GlobalSimulatedTimeController time_controller(

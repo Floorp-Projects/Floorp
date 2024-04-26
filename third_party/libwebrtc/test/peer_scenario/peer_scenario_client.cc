@@ -195,8 +195,8 @@ class FakeVideoDecoderFactory : public VideoDecoderFactory {
   std::vector<SdpVideoFormat> GetSupportedFormats() const override {
     return {SdpVideoFormat("VP8")};
   }
-  std::unique_ptr<VideoDecoder> CreateVideoDecoder(
-      const SdpVideoFormat& format) override {
+  std::unique_ptr<VideoDecoder> Create(const Environment& env,
+                                       const SdpVideoFormat& format) override {
     return std::make_unique<FakeDecoder>();
   }
 };
