@@ -1,23 +1,30 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 19 Apr 2024 06:09:00 +0000
-Subject: Bug 1892221 - Initialize VideoCaptureModuleV4L2::_streaming in ctor.
- r=webrtc-reviewers,dbaker
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Fri, 26 Apr 2024 11:10:00 -0700
+Subject: Bug 1892299 - fix-5261619ad2 - remove multiplex codec
+ workaround;r?mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D207926
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/00c4bd7039dc8992dd93d4a5948a9260b72ec2a8
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/379b080822588b617ae635ae3c6fb18de80377a8
 ---
- modules/video_capture/linux/video_capture_v4l2.cc | 1 +
- 1 file changed, 1 insertion(+)
+ media/BUILD.gn | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index e3bdcd5953..e3061556e8 100644
---- a/modules/video_capture/linux/video_capture_v4l2.cc
-+++ b/modules/video_capture/linux/video_capture_v4l2.cc
-@@ -62,6 +62,7 @@ VideoCaptureModuleV4L2::VideoCaptureModuleV4L2()
-       _deviceId(-1),
-       _deviceFd(-1),
-       _buffersAllocatedByDevice(-1),
-+      _streaming(false),
-       _captureStarted(false),
-       _pool(NULL) {}
- 
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index 45a07212d0..ca5a4ee64b 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -425,7 +425,6 @@ rtc_library("rtc_internal_video_codecs") {
+   ]
+   if (build_with_mozilla) {
+     deps -= [
+-      "../modules/video_coding:webrtc_multiplex", # See Bug 1820869.
+       "../test:fake_video_codecs",
+     ]
+   }
+@@ -457,7 +456,6 @@ rtc_library("rtc_internal_video_codecs") {
+       "engine/fake_video_codec_factory.cc",
+       "engine/fake_video_codec_factory.h",
+       "engine/internal_encoder_factory.cc", # See Bug 1820869.
+-      "engine/multiplex_codec_factory.cc", # See Bug 1820869.
+     ]
+   }
+ }
