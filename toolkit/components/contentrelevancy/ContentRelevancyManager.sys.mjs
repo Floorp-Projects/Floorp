@@ -199,8 +199,11 @@ class RelevancyManager {
    *
    * The classification will not be performed if the total number of input URLs
    * is less than `DEFAULT_MIN_URLS` (or the corresponding Nimbus value).
+   *
+   * @param {object} options
+   *   options.minUrlsForTest {number} A minimal URL count used only for testing.
    */
-  async #doClassification() {
+  async #doClassification(options = {}) {
     if (this.isInProgress) {
       lazy.log.info(
         "Another classification is in progress, aborting interest classification"
@@ -212,6 +215,8 @@ class RelevancyManager {
     // exit points & success.
     this.#isInProgress = true;
 
+    let timerId;
+
     try {
       lazy.log.info("Fetching input data for interest classification");
 
@@ -222,26 +227,56 @@ class RelevancyManager {
       const minUrls =
         lazy.NimbusFeatures.contentRelevancy.getVariable(
           NIMBUS_VARIABLE_MIN_INPUT_URLS
-        ) ?? DEFAULT_MIN_URLS;
+        ) ??
+        options.minUrlsForTest ??
+        DEFAULT_MIN_URLS;
       const urls = await lazy.getFrecentRecentCombinedUrls(maxUrls);
       if (urls.length < minUrls) {
         lazy.log.info("Aborting interest classification: insufficient input");
+        Glean.relevancyClassify.fail.record({ reason: "insufficient-input" });
         return;
       }
 
       lazy.log.info("Starting interest classification");
+      timerId = Glean.relevancyClassify.duration.start();
+
       await this.#doClassificationHelper(urls);
+
+      Glean.relevancyClassify.duration.stopAndAccumulate(timerId);
+      Glean.relevancyClassify.succeed.record({
+        input_size: urls.length,
+        // TODO(nanj): Fill out the actual counters once the classification is enabled.
+        input_classified_size: 0,
+        input_inconclusive_size: 0,
+        output_interest_size: 0,
+        interest_top_1_hits: 0,
+        interest_top_2_hits: 0,
+        interest_top_3_hits: 0,
+      });
     } catch (error) {
+      let reason;
+
       if (error instanceof StoreNotAvailableError) {
         lazy.log.error("#store became null, aborting interest classification");
+        reason = "store-not-ready";
       } else {
         lazy.log.error("Classification error: " + (error.reason ?? error));
+        reason = "component-errors";
       }
+      Glean.relevancyClassify.fail.record({ reason });
+      Glean.relevancyClassify.duration.cancel(timerId); // No error is recorded if `start` was not called.
     } finally {
       this.#isInProgress = false;
     }
 
     lazy.log.info("Finished interest classification");
+  }
+
+  /**
+   * Exposed for testing.
+   */
+  async _test_doClassification(options = {}) {
+    await this.#doClassification(options);
   }
 
   /**
@@ -272,7 +307,7 @@ class RelevancyManager {
   /**
    * Exposed for testing.
    */
-  async _test_doClassification(urls) {
+  async _test_doClassificationHelper(urls) {
     await this.#doClassificationHelper(urls);
   }
 
