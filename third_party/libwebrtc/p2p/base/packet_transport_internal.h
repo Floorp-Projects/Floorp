@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/functional/any_invocable.h"
 #include "absl/types/optional.h"
 #include "p2p/base/port.h"
 #include "rtc_base/async_packet_socket.h"
@@ -81,15 +82,13 @@ class RTC_EXPORT PacketTransportInternal : public sigslot::has_slots<> {
   // Emitted when receiving state changes to true.
   sigslot::signal1<PacketTransportInternal*> SignalReceivingState;
 
-  template <typename F>
-  void RegisterReceivedPacketCallback(void* id, F&& callback) {
-    RTC_DCHECK_RUN_ON(&network_checker_);
-    received_packet_callback_list_.AddReceiver(id, std::forward<F>(callback));
-  }
-  void DeregisterReceivedPacketCallback(void* id) {
-    RTC_DCHECK_RUN_ON(&network_checker_);
-    received_packet_callback_list_.RemoveReceivers(id);
-  }
+  // Callback is invoked each time a packet is received on this channel.
+  void RegisterReceivedPacketCallback(
+      void* id,
+      absl::AnyInvocable<void(PacketTransportInternal*,
+                              const rtc::ReceivedPacket&)> callback);
+
+  void DeregisterReceivedPacketCallback(void* id);
 
   // Signalled each time a packet is received on this channel.
   // TODO(bugs.webrtc.org:15368): Deprecate and remove. Replace with
