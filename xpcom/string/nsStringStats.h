@@ -7,7 +7,8 @@
 #ifndef nsStringStats_h
 #define nsStringStats_h
 
-#include "mozilla/Atomics.h"
+#ifdef DEBUG
+#  include "mozilla/Atomics.h"
 
 class nsStringStats {
  public:
@@ -15,7 +16,7 @@ class nsStringStats {
 
   ~nsStringStats();
 
-  using AtomicInt = mozilla::Atomic<int32_t, mozilla::SequentiallyConsistent>;
+  using AtomicInt = mozilla::Atomic<int32_t, mozilla::Relaxed>;
 
   AtomicInt mAllocCount{0};
   AtomicInt mReallocCount{0};
@@ -26,7 +27,9 @@ class nsStringStats {
 };
 
 extern nsStringStats gStringStats;
-
-#define STRING_STAT_INCREMENT(_s) (gStringStats.m##_s##Count)++
+#  define STRING_STAT_INCREMENT(_s) (gStringStats.m##_s##Count)++
+#else
+#  define STRING_STAT_INCREMENT(_s)
+#endif
 
 #endif  // nsStringStats_h
