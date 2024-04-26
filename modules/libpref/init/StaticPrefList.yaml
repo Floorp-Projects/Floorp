@@ -1157,12 +1157,17 @@
   value: false
   mirror: never
 
-# Whether content analysis should allow content if there is a problem communicating
-# with the agent.
-- name: browser.contentanalysis.default_allow
-  type: bool
-  value: false
-  mirror: never
+# What content analysis should return if there is a problem communicating
+# with the agent. (see DefaultResponse enum in ContentAnalysis.h)
+# Make sure these stay in sync with the out-of-range check in Policies.sys.mjs.
+#
+#   0: Block all requests
+#   1: Warn on all requests (which lets the user decide)
+#   2: Allow all requests
+- name: browser.contentanalysis.default_result
+  type: uint32_t
+  value: 0
+  mirror: always
 
 # Is the IPC pipe to the DLP tool specific to the user or to the system?
 - name: browser.contentanalysis.is_per_user

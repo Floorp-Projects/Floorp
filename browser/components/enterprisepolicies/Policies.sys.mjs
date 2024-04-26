@@ -549,10 +549,25 @@ export var Policies = {
           param.ClientSignature
         );
       }
+      if ("DefaultResult" in param) {
+        if (
+          !Number.isInteger(param.DefaultResult) ||
+          param.DefaultResult < 0 ||
+          param.DefaultResult > 2
+        ) {
+          lazy.log.error(
+            `Non-integer or out of range value for DefaultResult: ${param.DefaultResult}`
+          );
+        } else {
+          setAndLockPref(
+            "browser.contentanalysis.default_result",
+            param.DefaultResult
+          );
+        }
+      }
       let boolPrefs = [
         ["IsPerUser", "is_per_user"],
         ["ShowBlockedResult", "show_blocked_result"],
-        ["DefaultAllow", "default_allow"],
         ["BypassForSameTabOperations", "bypass_for_same_tab_operations"],
       ];
       for (let pref of boolPrefs) {

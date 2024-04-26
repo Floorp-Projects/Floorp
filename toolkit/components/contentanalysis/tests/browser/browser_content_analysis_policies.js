@@ -25,7 +25,7 @@ const kAgentNamePref = "agent_name";
 const kClientSignaturePref = "client_signature";
 const kPerUserPref = "is_per_user";
 const kShowBlockedPref = "show_blocked_result";
-const kDefaultAllowPref = "default_allow";
+const kDefaultResultPref = "default_result";
 const kBypassForSameTabOperationsPref = "bypass_for_same_tab_operations";
 
 const ca = Cc["@mozilla.org/contentanalysis;1"].getService(
@@ -88,7 +88,7 @@ add_task(async function test_ca_enterprise_config() {
         ClientSignature: string4,
         IsPerUser: true,
         ShowBlockedResult: false,
-        DefaultAllow: true,
+        DefaultResult: 1,
         BypassForSameTabOperations: true,
       },
     },
@@ -137,9 +137,9 @@ add_task(async function test_ca_enterprise_config() {
     "show blocked match"
   );
   is(
-    Services.prefs.getBoolPref("browser.contentanalysis." + kDefaultAllowPref),
-    true,
-    "default allow match"
+    Services.prefs.getIntPref("browser.contentanalysis." + kDefaultResultPref),
+    1,
+    "default result match"
   );
   is(
     Services.prefs.getBoolPref(

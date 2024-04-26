@@ -44,6 +44,13 @@ class ContentAnalysisResponse;
 
 namespace mozilla::contentanalysis {
 
+enum class DefaultResult : uint8_t {
+  eBlock = 0,
+  eWarn = 1,
+  eAllow = 2,
+  eLastValue = 2
+};
+
 class ContentAnalysisDiagnosticInfo final
     : public nsIContentAnalysisDiagnosticInfo {
  public:
@@ -290,6 +297,9 @@ class ContentAnalysis final : public nsIContentAnalysis {
     RefPtr<ContentAnalysisResponse> mResponse;
   };
   DataMutex<nsTHashMap<nsCString, WarnResponseData>> mWarnResponseDataMap;
+  void SendWarnResponse(nsCString&& aResponseRequestToken,
+                        CallbackData aCallbackData,
+                        RefPtr<ContentAnalysisResponse>& aResponse);
 
   std::vector<std::regex> mAllowUrlList;
   std::vector<std::regex> mDenyUrlList;
