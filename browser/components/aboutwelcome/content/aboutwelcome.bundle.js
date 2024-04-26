@@ -1457,10 +1457,11 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const Themes = props => {
+  const category = props.content.tiles?.category?.type;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "tiles-theme-container"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("fieldset", {
-    className: `tiles-theme-section ${props.content.tiles?.category?.type}`
+    className: `tiles-theme-section ${category}`
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: props.content.subtitle
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("legend", {
@@ -1482,7 +1483,7 @@ const Themes = props => {
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
     type: "radio",
     value: theme,
-    name: "theme",
+    name: category === "wallpaper" ? theme : "theme",
     checked: theme === props.activeTheme,
     className: "sr-only input",
     onClick: props.handleAction

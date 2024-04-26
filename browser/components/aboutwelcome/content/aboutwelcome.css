@@ -2121,13 +2121,17 @@ html {
   justify-content: center;
   gap: 10px;
 }
-.onboardingContainer .tiles-theme-section.wallpaper:hover {
-  outline: unset;
+.onboardingContainer .tiles-theme-section.wallpaper:hover, .onboardingContainer .tiles-theme-section.wallpaper:focus-within {
+  outline: none;
 }
 .onboardingContainer .tiles-theme-section.wallpaper .theme {
   flex: unset;
   width: unset;
   transition: var(--transition);
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme:has(.input:focus) {
+  outline: 2px solid var(--in-content-primary-button-background);
+  outline-offset: 2px;
 }
 .onboardingContainer .tiles-theme-section.wallpaper .theme .icon {
   width: 116px;
@@ -2218,9 +2222,12 @@ html {
 .onboardingContainer .tiles-theme-section .theme .icon:dir(rtl) {
   transform: scaleX(-1);
 }
-.onboardingContainer .tiles-theme-section .theme .icon:focus, .onboardingContainer .tiles-theme-section .theme .icon:active, .onboardingContainer .tiles-theme-section .theme .icon.selected {
+.onboardingContainer .tiles-theme-section .theme .icon:focus-visible, .onboardingContainer .tiles-theme-section .theme .icon:active, .onboardingContainer .tiles-theme-section .theme .icon.selected {
   outline: 2px solid var(--in-content-primary-button-background);
   outline-offset: 2px;
+}
+.onboardingContainer .tiles-theme-section .theme .icon.selected {
+  outline-color: var(--color-accent-primary-active);
 }
 .onboardingContainer .tiles-theme-section .theme .icon.light {
   background-image: url("resource://builtin-themes/light/icon.svg");

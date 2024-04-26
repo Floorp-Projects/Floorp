@@ -49,6 +49,10 @@
     }
 
     &:checked {
+      outline-color: var(--color-accent-primary-active);
+    }
+
+    &:focus-visible {
       outline-color: var(--newtab-primary-action-background);
     }
 
