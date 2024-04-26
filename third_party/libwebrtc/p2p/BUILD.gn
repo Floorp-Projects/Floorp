@@ -421,10 +421,13 @@ rtc_library("dtls_transport") {
     "../rtc_base:checks",
     "../rtc_base:dscp",
     "../rtc_base:logging",
+    "../rtc_base:socket_address",
     "../rtc_base:ssl",
     "../rtc_base:stream",
     "../rtc_base:stringutils",
     "../rtc_base:threading",
+    "../rtc_base:timeutils",
+    "../rtc_base/network:received_packet",
     "../rtc_base/system:no_unique_address",
   ]
   absl_deps = [
