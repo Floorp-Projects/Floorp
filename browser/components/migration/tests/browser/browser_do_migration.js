@@ -106,7 +106,7 @@ add_task(async function test_successful_migrations() {
     );
 
     let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
-    doneButton.click();
+    EventUtils.synthesizeMouseAtCenter(doneButton, {}, prefsWin);
     await dialogClosed;
     assertQuantitiesShown(wizard, [
       MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS,
