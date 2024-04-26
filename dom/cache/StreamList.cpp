@@ -136,13 +136,9 @@ void StreamList::CloseAll() {
   NS_ASSERT_OWNINGTHREAD(StreamList);
 
   if (mStreamControl && mStreamControl->CanSend()) {
-    auto* streamControl = std::exchange(mStreamControl, nullptr);
-
-    streamControl->CloseAll();
-
-    mStreamControl = std::exchange(streamControl, nullptr);
-
-    mStreamControl->Shutdown();
+    // CloseAll will kick off everything needed for shutdown.
+    // mStreamControl may go away immediately or async.
+    mStreamControl->CloseAll();
   } else {
     // We cannot interact with the child, let's just clear our lists of
     // streams to unblock shutdown.
