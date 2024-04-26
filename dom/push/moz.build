@@ -44,7 +44,6 @@ EXPORTS.mozilla.dom += [
     "PushNotifier.h",
     "PushSubscription.h",
     "PushSubscriptionOptions.h",
-    "PushUtil.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -52,7 +51,6 @@ UNIFIED_SOURCES += [
     "PushNotifier.cpp",
     "PushSubscription.cpp",
     "PushSubscriptionOptions.cpp",
-    "PushUtil.cpp",
 ]
 
 TEST_DIRS += ["test/xpcshell"]
