@@ -74,6 +74,11 @@
   border-radius: 4px;
 }
 
+#selection-size {
+  border: var(--border-width) solid var(--in-content-border-color);
+  box-shadow: var(--shadow-30);
+}
+
 .buttons-wrapper,
 #selection-size-container {
   display: flex;
