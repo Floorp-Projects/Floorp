@@ -169,7 +169,11 @@ inline bool isInIgnoredNamespaceForImplicitCtor(const Decl *Declaration) {
          Name == "boost" ||             // boost
          Name == "webrtc" ||            // upstream webrtc
          Name == "rtc" ||               // upstream webrtc 'base' package
+#if CLANG_VERSION_MAJOR >= 16
+         Name.starts_with("icu_") ||    // icu
+#else
          Name.startswith("icu_") ||     // icu
+#endif
          Name == "google" ||            // protobuf
          Name == "google_breakpad" ||   // breakpad
          Name == "soundtouch" ||        // libsoundtouch
