@@ -214,10 +214,10 @@ MOZ_NoReturn(int aLine) {
   MOZ_ASSUME_UNREACHABLE_MARKER();
 }
 
-#  define MOZ_REALLY_CRASH(line) \
-    do {                         \
-      __debugbreak();            \
-      MOZ_NoReturn(line);        \
+#  define MOZ_REALLY_CRASH(line)  \
+    do {                          \
+      MOZ_NOMERGE __debugbreak(); \
+      MOZ_NoReturn(line);         \
     } while (false)
 
 #elif __wasi__
