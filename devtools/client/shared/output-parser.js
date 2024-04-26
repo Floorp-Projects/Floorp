@@ -1366,7 +1366,7 @@ class OutputParser {
   // eslint-disable-next-line complexity
   #addInsetPointNodes(coords, container) {
     const insetPoints = ["top", "right", "bottom", "left"];
-    const tokenStream = getCSSLexer(coords);
+    const tokenStream = getCSSLexer(coords, true);
     let token = tokenStream.nextToken();
     let depth = 0;
     let coord = "";
@@ -1383,16 +1383,16 @@ class OutputParser {
       if (round) {
         // Everything that comes after "round" should just be plain text
         otherText[i].push(coords.substring(token.startOffset, token.endOffset));
-      } else if (token.tokenType === "symbol" && token.text === "(") {
+      } else if (token.tokenType === "ParenthesisBlock") {
         depth++;
         coord += coords.substring(token.startOffset, token.endOffset);
-      } else if (token.tokenType === "symbol" && token.text === ")") {
+      } else if (token.tokenType === "CloseParenthesis") {
         depth--;
         coord += coords.substring(token.startOffset, token.endOffset);
-      } else if (token.tokenType === "whitespace" && coord === "") {
+      } else if (token.tokenType === "WhiteSpace" && coord === "") {
         // Whitespace at beginning of coord; add to container
         otherText[i].push(coords.substring(token.startOffset, token.endOffset));
-      } else if (token.tokenType === "whitespace" && depth === 0) {
+      } else if (token.tokenType === "WhiteSpace" && depth === 0) {
         // Whitespace signifying end of coord; create node and push to nodes
         const node = this.#createNode(
           "span",
@@ -1407,10 +1407,10 @@ class OutputParser {
         otherText[i] = [coords.substring(token.startOffset, token.endOffset)];
         depth = 0;
       } else if (
-        token.tokenType === "number" ||
-        token.tokenType === "dimension" ||
-        token.tokenType === "percentage" ||
-        token.tokenType === "function"
+        token.tokenType === "Number" ||
+        token.tokenType === "Dimension" ||
+        token.tokenType === "Percentage" ||
+        token.tokenType === "Function"
       ) {
         if (coord && depth === 0) {
           // Inset coords don't require whitespace between each coord.
@@ -1428,10 +1428,10 @@ class OutputParser {
         }
 
         coord += coords.substring(token.startOffset, token.endOffset);
-        if (token.tokenType === "function") {
+        if (token.tokenType === "Function") {
           depth++;
         }
-      } else if (token.tokenType === "ident" && token.text === "round") {
+      } else if (token.tokenType === "Ident" && token.text === "round") {
         if (coord && depth === 0) {
           // Whitespace is not necessary before "round"; create a new node for the coord
           const node = this.#createNode(
