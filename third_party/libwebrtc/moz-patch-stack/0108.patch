@@ -1,31 +1,23 @@
-From: Randell Jesup <rjesup@mozilla.com>
-Date: Wed, 17 Apr 2024 21:10:00 +0000
-Subject: Bug 1892045: Quiet a thread-safety warning by taking a mutex in v4l2
- capture r=webrtc-reviewers,pehrsons
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 19 Apr 2024 06:09:00 +0000
+Subject: Bug 1892221 - Initialize VideoCaptureModuleV4L2::_streaming in ctor.
+ r=webrtc-reviewers,dbaker
 
-Just to make the analyzer happy, no risk here
-
-Differential Revision: https://phabricator.services.mozilla.com/D207758
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0b54a6f17243e15da4609bc82afc92afcc4ac6de
+Differential Revision: https://phabricator.services.mozilla.com/D207926
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/00c4bd7039dc8992dd93d4a5948a9260b72ec2a8
 ---
- modules/video_capture/linux/video_capture_v4l2.cc | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ modules/video_capture/linux/video_capture_v4l2.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index db2450a2c7..e3bdcd5953 100644
+index e3bdcd5953..e3061556e8 100644
 --- a/modules/video_capture/linux/video_capture_v4l2.cc
 +++ b/modules/video_capture/linux/video_capture_v4l2.cc
-@@ -303,7 +303,12 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+@@ -62,6 +62,7 @@ VideoCaptureModuleV4L2::VideoCaptureModuleV4L2()
+       _deviceId(-1),
+       _deviceFd(-1),
+       _buffersAllocatedByDevice(-1),
++      _streaming(false),
+       _captureStarted(false),
+       _pool(NULL) {}
  
-   // start capture thread;
-   if (_captureThread.empty()) {
--    quit_ = false;
-+    {
-+      // Probably can't be accessed from another thread with
-+      // _captureThread empty, but the analyzer doesn't know this
-+      MutexLock lock(&capture_lock_);
-+      quit_ = false;
-+    }
-     _captureThread = rtc::PlatformThread::SpawnJoinable(
-         [self = scoped_refptr(this)] {
-           while (self->CaptureProcess()) {

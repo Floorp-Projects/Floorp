@@ -1,34 +1,35 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 15 Jun 2021 12:18:00 -0500
-Subject: Bug 1654112 - suppress android lint warnings for WrongConstant in 2
- libwebrtc java files. r=ng
+Date: Fri, 25 Jun 2021 15:12:00 -0500
+Subject: Bug 1654112 - Mirror Bug 1714577 - Part 3 - Register WebRTC threads
+ with the Gecko Profiler. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D118050
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e60e2f295fb722f69a3a9fe9af34219880afe772
+Differential Revision: https://phabricator.services.mozilla.com/D119412
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d881b16dd8a6813feb5ce1516c2a7ebe0270e72d
 ---
- sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java | 5 +++++
- 1 file changed, 5 insertions(+)
+ rtc_base/platform_thread.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-index 2d9e30902c..9546496f2d 100644
---- a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-+++ b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
- import static android.media.AudioManager.MODE_NORMAL;
- import static android.media.AudioManager.MODE_RINGTONE;
+diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
+index 556204ac89..71a9f1b224 100644
+--- a/rtc_base/platform_thread.cc
++++ b/rtc_base/platform_thread.cc
+@@ -19,6 +19,8 @@
  
-+import android.annotation.SuppressLint;
- import android.annotation.TargetApi;
- import android.content.Context;
- import android.content.pm.PackageManager;
-@@ -248,6 +249,10 @@ public final class WebRtcAudioUtils {
-     }
-   }
+ #include "rtc_base/checks.h"
  
-+  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
-+  // listed in the docs here:
-+  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
-+  @SuppressLint("WrongConstant")
-   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
-     if (Build.VERSION.SDK_INT < VERSION_CODES.M) {
-       return;
++#include "MicroGeckoProfiler.h"
++
+ namespace rtc {
+ namespace {
+ 
+@@ -181,6 +183,10 @@ PlatformThread PlatformThread::SpawnThread(
+       new std::function<void()>([thread_function = std::move(thread_function),
+                                  name = std::string(name), attributes] {
+         rtc::SetCurrentThreadName(name.c_str());
++
++        char stacktop;
++        AutoRegisterProfiler profiler(name.c_str(), &stacktop);
++
+         SetPriority(attributes.priority);
+         thread_function();
+       });
