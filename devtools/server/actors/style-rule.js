@@ -1316,23 +1316,20 @@ function getSelectorOffsets(initialText, line, column) {
     line,
     column
   );
-  const lexer = getCSSLexer(text);
+  const lexer = getCSSLexer(text, true);
 
   // Search forward for the opening brace.
   let endOffset;
-  while (true) {
-    const token = lexer.nextToken();
-    if (!token) {
-      break;
-    }
-    if (token.tokenType === "symbol" && token.text === "{") {
+  let token;
+  while ((token = lexer.nextToken())) {
+    if (token.tokenType === "CurlyBracketBlock") {
       if (endOffset === undefined) {
         break;
       }
       return [textOffset, textOffset + endOffset];
     }
     // Preserve comments and whitespace just before the "{".
-    if (token.tokenType !== "comment" && token.tokenType !== "whitespace") {
+    if (token.tokenType !== "Comment" && token.tokenType !== "WhiteSpace") {
       endOffset = token.endOffset;
     }
   }
