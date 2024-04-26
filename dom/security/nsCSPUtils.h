@@ -94,6 +94,7 @@ static const char* CSPStrDirectives[] = {
     "style-src-elem",             // STYLE_SRC_ELEM_DIRECTIVE
     "style-src-attr",             // STYLE_SRC_ATTR_DIRECTIVE
     "require-trusted-types-for",  // REQUIRE_TRUSTED_TYPES_FOR_DIRECTIVE
+    "trusted-types",              // TRUSTED_TYPES_DIRECTIVE
 };
 
 inline const char* CSP_CSPDirectiveToString(CSPDirective aDir) {
@@ -400,6 +401,20 @@ class nsCSPRequireTrustedTypesForDirectiveValue : public nsCSPBaseSrc {
   const nsString mValue;
 };
 
+/* =============== nsCSPTrustedTypesDirectiveExpression =============== */
+
+class nsCSPTrustedTypesDirectiveExpression : public nsCSPBaseSrc {
+ public:
+  explicit nsCSPTrustedTypesDirectiveExpression(const nsAString& aExpression);
+  virtual ~nsCSPTrustedTypesDirectiveExpression() = default;
+
+  bool visit(nsCSPSrcVisitor* aVisitor) const override;
+  void toString(nsAString& aOutStr) const override;
+
+ private:
+  const nsString mExpression;
+};
+
 /* =============== nsCSPSrcVisitor ================== */
 
 class nsCSPSrcVisitor {
@@ -435,6 +450,7 @@ class nsCSPDirective {
   virtual void toString(nsAString& outStr) const;
   void toDomCSPStruct(mozilla::dom::CSP& outCSP) const;
 
+  // Takes ownership of the passed sources.
   virtual void addSrcs(const nsTArray<nsCSPBaseSrc*>& aSrcs) {
     mSrcs = aSrcs.Clone();
   }
