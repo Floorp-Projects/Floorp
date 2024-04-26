@@ -461,7 +461,7 @@ void EncoderTemplate<AudioEncoderTraits>::OutputEncodedAudioData(
           this->EncoderConfigToDecoderConfig(GetParentObject(), data,
                                              *mActiveConfig);
 
-      // Convert VideoDecoderConfigInternal to VideoDecoderConfig
+      // Convert AudioDecoderConfigInternal to AudioDecoderConfig
       RootedDictionary<AudioDecoderConfig> decoderConfig(cx);
       decoderConfig.mCodec = decoderConfigInternal.mCodec;
       decoderConfig.mNumberOfChannels = decoderConfigInternal.mNumberOfChannels;
