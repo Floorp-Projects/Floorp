@@ -99,9 +99,9 @@ To verify vendoring, run:
 
 When verify_vendoring.sh is successful, please run the following command
 in bash:
-    (source $SCRIPT_DIR/use_config_env.sh ;
-     ./mach python $SCRIPT_DIR/save_patch_stack.py \
-      --repo-path $MOZ_LIBWEBRTC_SRC \
+    (source $SCRIPT_DIR/use_config_env.sh ; \\
+     ./mach python $SCRIPT_DIR/save_patch_stack.py \\
+      --repo-path $MOZ_LIBWEBRTC_SRC \\
       --target-branch-head $MOZ_TARGET_UPSTREAM_BRANCH_HEAD )
 
 You may resume running this script with the following command:
