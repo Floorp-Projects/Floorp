@@ -478,8 +478,11 @@ class P2PTransportChannelTestBase : public ::testing::Test,
         [this](IceTransportInternal* transport, const Candidates& candidates) {
           OnCandidatesRemoved(transport, candidates);
         });
-    channel->SignalReadPacket.connect(
-        this, &P2PTransportChannelTestBase::OnReadPacket);
+    channel->RegisterReceivedPacketCallback(
+        this, [&](rtc::PacketTransportInternal* transport,
+                  const rtc::ReceivedPacket& packet) {
+          OnReadPacket(transport, packet);
+        });
     channel->SignalRoleConflict.connect(
         this, &P2PTransportChannelTestBase::OnRoleConflict);
     channel->SignalNetworkRouteChanged.connect(
@@ -917,12 +920,11 @@ class P2PTransportChannelTestBase : public ::testing::Test,
   }
 
   void OnReadPacket(rtc::PacketTransportInternal* transport,
-                    const char* data,
-                    size_t len,
-                    const int64_t& /* packet_time_us */,
-                    int flags) {
+                    const rtc::ReceivedPacket& packet) {
     std::list<std::string>& packets = GetPacketList(transport);
-    packets.push_front(std::string(data, len));
+    packets.push_front(
+        std::string(reinterpret_cast<const char*>(packet.payload().data()),
+                    packet.payload().size()));
   }
 
   void OnRoleConflict(IceTransportInternal* channel) {
