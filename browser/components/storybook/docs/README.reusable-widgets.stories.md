@@ -16,6 +16,8 @@ re-rendering logic. All new components are being documented in Storybook in an
 effort to create a catalog that engineers and designers can use to see which
 components can be easily lifted off the shelf for use throughout Firefox.
 
+If you want to see the progress over time of these new reusable components, we have a [Reusable Component Adoption chart](https://firefoxux.github.io/recomp-metrics/) that you should check out!
+
 ## Designing new reusable widgets
 
 Widgets that live at the global level, "UI Widgets", should be created in collaboration with the Design System team.
