@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Atomics')) -- Atomics is not enabled unconditionally
+// |reftest| shell-option(--enable-float16array) skip-if(!this.hasOwnProperty('Atomics')) -- Atomics is not enabled unconditionally
 // Copyright (C) 2020 Rick Waldron. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
