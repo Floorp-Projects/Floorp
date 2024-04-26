@@ -9,7 +9,7 @@
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">La protección contra rastreo bloqueó los rastreadores</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
-    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">La protección de rastreo ahora está deshabilitada para este sitio</string>
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">La protección de rastreo está deshabilitada para este sitio</string>
     <!-- Content description: For the site security information icon (the site security icon).-->
     <string name="mozac_browser_toolbar_content_description_site_info">Información del sitio</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
