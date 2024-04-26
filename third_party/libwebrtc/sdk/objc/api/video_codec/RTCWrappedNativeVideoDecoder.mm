@@ -12,7 +12,6 @@
 
 #import "RTCWrappedNativeVideoDecoder.h"
 #import "base/RTCMacros.h"
-#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCWrappedNativeVideoDecoder) {
   std::unique_ptr<webrtc::VideoDecoder> _wrappedDecoder;
@@ -28,36 +27,6 @@
 
 - (std::unique_ptr<webrtc::VideoDecoder>)releaseWrappedDecoder {
   return std::move(_wrappedDecoder);
-}
-
-#pragma mark - RTC_OBJC_TYPE(RTCVideoDecoder)
-
-- (void)setCallback:(RTCVideoDecoderCallback)callback {
-  RTC_DCHECK_NOTREACHED();
-}
-
-- (NSInteger)startDecodeWithNumberOfCores:(int)numberOfCores {
-  RTC_DCHECK_NOTREACHED();
-  return 0;
-}
-
-- (NSInteger)releaseDecoder {
-  RTC_DCHECK_NOTREACHED();
-  return 0;
-}
-
-// TODO(bugs.webrtc.org/15444): Remove obsolete missingFrames param.
-- (NSInteger)decode:(RTC_OBJC_TYPE(RTCEncodedImage) *)encodedImage
-        missingFrames:(BOOL)missingFrames
-    codecSpecificInfo:(nullable id<RTC_OBJC_TYPE(RTCCodecSpecificInfo)>)info
-         renderTimeMs:(int64_t)renderTimeMs {
-  RTC_DCHECK_NOTREACHED();
-  return 0;
-}
-
-- (NSString *)implementationName {
-  RTC_DCHECK_NOTREACHED();
-  return nil;
 }
 
 @end
