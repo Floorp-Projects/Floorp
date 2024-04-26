@@ -27,6 +27,7 @@
 #include "js/Prefs.h"
 #include "js/PropertySpec.h"
 #include "util/DifferentialTesting.h"
+#include "vm/Float16.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/Time.h"
@@ -298,6 +299,34 @@ static bool math_fround(JSContext* cx, unsigned argc, Value* vp) {
 
   return RoundFloat32(cx, args[0], args.rval());
 }
+
+#ifdef NIGHTLY_BUILD
+static bool math_f16round(JSContext* cx, unsigned argc, Value* vp) {
+  // http://tc39.es/proposal-float16array/#sec-function-properties-of-the-math-object
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() == 0) {
+    args.rval().setNaN();
+    return true;
+  }
+
+  // 1. Let n be ? ToNumber(x).
+  double d;
+  if (!ToNumber(cx, args[0], &d)) {
+    return false;
+  }
+  // 2. If n is NaN, return NaN.
+  // 3. If n is one of +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return n.
+  // 4. Let n16 be the result of converting n to IEEE 754-2019 binary16 format
+  // using roundTiesToEven mode.
+  js::float16 f16 = js::float16(d);
+  // 5. Let n64 be the result of converting n16 to IEEE 754-2019 binary64
+  // format.
+  // 6. Return the ECMAScript Number value corresponding to n64.
+  args.rval().setDouble(f16.toDouble());
+  return true;
+}
+#endif
 
 double js::math_log_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
@@ -1030,6 +1059,10 @@ static const JSFunctionSpec math_static_methods[] = {
     JS_INLINABLE_FN("floor", math_floor, 1, 0, MathFloor),
     JS_INLINABLE_FN("imul", math_imul, 2, 0, MathImul),
     JS_INLINABLE_FN("fround", math_fround, 1, 0, MathFRound),
+#ifdef NIGHTLY_BUILD
+    // TODO: See Bug 1835034 for JIT support
+    JS_FN("f16round", math_f16round, 1, 0),
+#endif
     JS_INLINABLE_FN("log", math_log, 1, 0, MathLog),
     JS_INLINABLE_FN("max", math_max, 2, 0, MathMax),
     JS_INLINABLE_FN("min", math_min, 2, 0, MathMin),
@@ -1052,8 +1085,7 @@ static const JSFunctionSpec math_static_methods[] = {
     JS_INLINABLE_FN("hypot", math_hypot, 2, 0, MathHypot),
     JS_INLINABLE_FN("trunc", math_trunc, 1, 0, MathTrunc),
     JS_INLINABLE_FN("sign", math_sign, 1, 0, MathSign),
-    JS_INLINABLE_FN("cbrt", math_cbrt, 1, 0, MathCbrt),
-    JS_FS_END};
+    JS_INLINABLE_FN("cbrt", math_cbrt, 1, 0, MathCbrt), JS_FS_END};
 
 static const JSPropertySpec math_static_properties[] = {
     JS_DOUBLE_PS("E", M_E, JSPROP_READONLY | JSPROP_PERMANENT),
