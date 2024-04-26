@@ -129,6 +129,7 @@ void a11y::PlatformShowHideEvent(Accessible* aTarget, Accessible*, bool aInsert,
 void a11y::PlatformSelectionEvent(Accessible* aTarget, Accessible*,
                                   uint32_t aType) {
   MsaaAccessible::FireWinEvent(aTarget, aType);
+  uiaRawElmProvider::RaiseUiaEventForGeckoEvent(aTarget, aType);
 }
 
 static bool GetInstantiatorExecutable(const DWORD aPid,

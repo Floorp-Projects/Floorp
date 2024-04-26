@@ -27,6 +27,7 @@ addUiaTask(
 <button id="button">button</button>
 <p id="p">p</p>
 <input id="checkbox" type="checkbox">
+<input id="radio" type="radio">
   `,
   async function testInvoke() {
     await definePyVar("doc", `getDocUia()`);
@@ -54,6 +55,8 @@ addUiaTask(
       // Check boxes expose the Toggle pattern, so they should not expose the
       // Invoke pattern.
       await testPatternAbsent("checkbox", "Invoke");
+      // Ditto for radio buttons.
+      await testPatternAbsent("radio", "Invoke");
     }
   }
 );
