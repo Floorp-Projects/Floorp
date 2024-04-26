@@ -319,6 +319,11 @@ export var AboutReader = function (
     },
   ];
 
+  // If the page is rtl, reverse order of text alignment options.
+  if (isAppLocaleRTL) {
+    textAlignmentOptions = textAlignmentOptions.reverse();
+  }
+
   if (Services.prefs.getBoolPref("reader.improved_text_menu.enabled", false)) {
     doc.getElementById("regular-text-menu").hidden = true;
     doc.getElementById("improved-text-menu").hidden = false;
