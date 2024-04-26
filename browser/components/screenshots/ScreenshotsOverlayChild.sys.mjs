@@ -1442,7 +1442,7 @@ export class ScreenshotsOverlay {
       right: boxRight,
       bottom: boxBottom,
     } = this.selectionRegion.dimensions;
-    let { clientWidth, clientHeight, scrollX, scrollY } =
+    let { clientWidth, clientHeight, scrollX, scrollY, scrollWidth } =
       this.windowDimensions.dimensions;
 
     if (
@@ -1467,14 +1467,23 @@ export class ScreenshotsOverlay {
       }
     }
 
-    if (boxRight < 300) {
-      this.buttonsContainer.style.left = `${boxLeft}px`;
-      this.buttonsContainer.style.right = "";
-    } else {
-      this.buttonsContainer.style.right = `calc(100% - ${boxRight}px)`;
-      this.buttonsContainer.style.left = "";
+    let isLTR = !Services.locale.isAppLocaleRTL;
+    let availWidth = isLTR ? boxRight : scrollWidth - boxLeft;
+    // which edge of the selection box should we align the buttons to?
+    let alignEdge = isLTR ? "right" : "left";
+    if (availWidth < 300) {
+      // when there may not be enough space, rather than aligning to the end of edge
+      // of the selection box, we align to the start edge
+      alignEdge = isLTR ? "left" : "right";
     }
 
+    if (alignEdge == "right") {
+      this.buttonsContainer.style.right = `calc(100% - ${boxRight}px)`;
+      this.buttonsContainer.style.left = "";
+    } else {
+      this.buttonsContainer.style.left = `${boxLeft}px`;
+      this.buttonsContainer.style.right = "";
+    }
     this.buttonsContainer.style.top = `${top}px`;
   }
 
