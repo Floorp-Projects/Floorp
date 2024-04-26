@@ -32,6 +32,8 @@ const kAllowedPrefs = new Set([
   "reader.content_width",
   "reader.line_height",
   "reader.text_alignment",
+  "reader.character_spacing",
+  "reader.word_spacing",
   "reader.custom_colors.foreground",
   "reader.custom_colors.background",
   "reader.custom_colors.unvisited-links",

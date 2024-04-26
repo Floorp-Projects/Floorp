@@ -25,6 +25,10 @@
     <link rel="localization" href="toolkit/branding/brandings.ftl" />
     <script
       type="module"
+      src="chrome://global/content/reader/moz-slider.mjs"
+    ></script>
+    <script
+      type="module"
       src="chrome://global/content/reader/color-input.mjs"
     ></script>
     <script
@@ -69,14 +73,28 @@
               </button>
             </li>
             <li class="dropdown-popup" id="text-layout-controls">
-              <label
-                for="text-alignment-buttons"
-                data-l10n-id="about-reader-text-alignment-label"
-              ></label>
-              <div
-                class="text-alignment-buttons radiorow"
-                id="text-alignment-buttons"
-              ></div>
+              <details id="about-reader-advanced-layout">
+                <summary class="accordion-header">
+                  <h3
+                    data-l10n-id="about-reader-advanced-layout-header"
+                    id="about-reader-advanced-layout-header"
+                  ></h3>
+                  <span class="chevron-icon"></span>
+                </summary>
+                <div
+                  id="character-spacing-slider"
+                  class="slider-container"
+                ></div>
+                <div id="word-spacing-slider" class="slider-container"></div>
+                <label
+                  for="text-alignment-buttons"
+                  data-l10n-id="about-reader-text-alignment-label"
+                ></label>
+                <div
+                  class="text-alignment-buttons radiorow"
+                  id="text-alignment-buttons"
+                ></div>
+              </details>
             </li>
           </ul>
           <ul class="dropdown style-dropdown" id="regular-text-menu">

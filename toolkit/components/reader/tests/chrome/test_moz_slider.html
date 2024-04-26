@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MozSlider Tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="module" src="chrome://global/content/reader/moz-slider.mjs"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="max-width: fit-content">
+  <moz-slider min="0" max="3" value="2" ticks="7" ticklabels='["Narrow", "Wide"]'></moz-slider>
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+  add_task(async function testMozSliderDisplay() {
+    const mozSlider = document.querySelector("moz-slider");
+    ok(mozSlider, "moz-slider is rendered");
+    is(mozSlider.value, 2, "moz-slider should set initial value based on prop");
+
+    const ticks = mozSlider.tickMarks;
+    ok(ticks, "moz-slider contains tick marks");
+    is(ticks.childElementCount, 7, "should have the correct number of ticks");
+  });
+
+  add_task(async function testMozSliderValues() {
+    const mozSlider = document.querySelector("moz-slider");
+    const firstVal = mozSlider.value;
+
+    const sliderChanged = new Promise((resolve) => {
+      mozSlider.addEventListener("slider-changed", (event) => resolve(event.detail), { once: true });
+    });
+    mozSlider.sliderTrack.focus();
+    synthesizeKey("KEY_ArrowRight");
+    await sliderChanged;
+    ok(mozSlider.value > firstVal, "moving slider to the right should increase value");
+    is(mozSlider.value - firstVal, 0.5, "should increment by correct step size");
+
+    synthesizeKey("KEY_ArrowRight", { repeat: 2 });
+    await sliderChanged;
+    ok(mozSlider.value == 3, "should not increment beyond max value");
+  });
+</script>
+</pre>
+</body>
+</html>

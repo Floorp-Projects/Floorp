@@ -25,6 +25,11 @@ ChromeUtils.defineLazyGetter(
   "pluralRules",
   () => new Services.intl.PluralRules(undefined)
 );
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "l10n",
+  () => new Localization(["toolkit/about/aboutReader.ftl"], true)
+);
 
 const COLORSCHEME_L10N_IDS = {
   auto: "about-reader-color-theme-auto",
@@ -244,6 +249,31 @@ export var AboutReader = function (
 
   let fontType = Services.prefs.getCharPref("reader.font_type");
 
+  const [standardSpacingLabel, wideSpacingLabel] = lazy.l10n.formatMessagesSync(
+    [
+      "about-reader-slider-label-spacing-standard",
+      "about-reader-slider-label-spacing-wide",
+    ]
+  );
+
+  let characterSpacingSliderOptions = {
+    min: 1,
+    max: 9,
+    ticks: 9,
+    tickLabels: `["${standardSpacingLabel.value}", "${wideSpacingLabel.value}"]`,
+    l10nId: "about-reader-character-spacing-label",
+    icon: "chrome://global/skin/reader/character-spacing-20.svg",
+  };
+
+  let wordSpacingSliderOptions = {
+    min: 1,
+    max: 9,
+    ticks: 9,
+    tickLabels: `["${standardSpacingLabel.value}", "${wideSpacingLabel.value}"]`,
+    l10nId: "about-reader-word-spacing-label",
+    icon: "chrome://global/skin/reader/word-spacing-20.svg",
+  };
+
   let textAlignmentOptions = [
     {
       l10nId: "about-reader-text-alignment-left",
@@ -268,6 +298,26 @@ export var AboutReader = function (
   if (Services.prefs.getBoolPref("reader.improved_text_menu.enabled", false)) {
     doc.getElementById("regular-text-menu").hidden = true;
     doc.getElementById("improved-text-menu").hidden = false;
+
+    let characterSpacing = Services.prefs.getStringPref(
+      "reader.character_spacing"
+    );
+    this._setupSlider(
+      "character-spacing",
+      characterSpacingSliderOptions,
+      characterSpacing,
+      this._setCharacterSpacing.bind(this)
+    );
+    this._setCharacterSpacing(characterSpacing);
+
+    let wordSpacing = Services.prefs.getStringPref("reader.word_spacing");
+    this._setupSlider(
+      "word-spacing",
+      wordSpacingSliderOptions,
+      wordSpacing,
+      this._setWordSpacing.bind(this)
+    );
+    this._setWordSpacing(wordSpacing);
 
     let textAlignment = Services.prefs.getCharPref("reader.text_alignment");
     this._setupSegmentedButton(
@@ -810,6 +860,45 @@ AboutReader.prototype = {
       },
       true
     );
+  },
+
+  _setupSlider(id, options, initialValue, callback) {
+    let doc = this._doc;
+    let slider = doc.createElement("moz-slider");
+
+    slider.setAttribute("min", options.min);
+    slider.setAttribute("max", options.max);
+    slider.setAttribute("value", initialValue);
+    slider.setAttribute("ticks", options.ticks);
+    slider.setAttribute("tick-labels", options.tickLabels);
+    slider.setAttribute("data-l10n-id", options.l10nId);
+    slider.setAttribute("data-l10n-attrs", "label");
+    slider.setAttribute("slider-icon", options.icon);
+
+    slider.addEventListener("slider-changed", e => {
+      callback(e.detail);
+    });
+
+    let sliderContainer = doc.getElementById(`${id}-slider`);
+    sliderContainer.appendChild(slider);
+  },
+
+  _setCharacterSpacing(newCharSpacing) {
+    let spacing = (newCharSpacing - 1) * 0.03;
+    this._containerElement.style.setProperty(
+      "--letter-spacing",
+      `${parseFloat(spacing).toFixed(2)}em`
+    );
+    lazy.AsyncPrefs.set("reader.character_spacing", newCharSpacing);
+  },
+
+  _setWordSpacing(newWordSpacing) {
+    let spacing = (newWordSpacing - 1) * 0.05;
+    this._containerElement.style.setProperty(
+      "--word-spacing",
+      `${parseFloat(spacing).toFixed(2)}em`
+    );
+    lazy.AsyncPrefs.set("reader.word_spacing", newWordSpacing);
   },
 
   _setTextAlignment(newTextAlignment) {
