@@ -785,12 +785,13 @@ async function getResponseForMessage(request, browser) {
           return profileCaptureResult.profile;
         case "ERROR":
           throw profileCaptureResult.error;
-        default:
+        default: {
           const { UnhandledCaseError } = lazy.Utils();
           throw new UnhandledCaseError(
             profileCaptureResult,
             "profileCaptureResult"
           );
+        }
       }
     }
     case "GET_SYMBOL_TABLE": {
@@ -831,13 +832,14 @@ async function getResponseForMessage(request, browser) {
       }
       return [];
     }
-    default:
+    default: {
       console.error(
         "An unknown message type was received by the profiler's WebChannel handler.",
         request
       );
       const { UnhandledCaseError } = lazy.Utils();
       throw new UnhandledCaseError(request, "WebChannel request");
+    }
   }
 }
 
