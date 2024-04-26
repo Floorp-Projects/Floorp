@@ -4,11 +4,14 @@
 /*
  * With no custom cleaning categories set and sanitizeOnShutdown disabled,
  * the checkboxes "alwaysClear" and "deleteOnClose" should share the same state.
- * The state of the cleaning categories cookies, cache and offlineApps should be in the state of the "deleteOnClose" box.
+ * The state of the cleaning categories cookiesAndStorage and cache should be in the state of the "deleteOnClose" box.
  */
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.sanitize.useOldClearHistoryDialog", true]],
+    set: [
+      ["privacy.clearOnShutdown.cookies", true],
+      ["privacy.sanitize.useOldClearHistoryDialog", false],
+    ],
   });
 });
 
@@ -33,20 +36,30 @@ add_task(async function test_syncWithoutCustomPrefs() {
     "DeleteOnClose sets alwaysClear in the same state, selected"
   );
   ok(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
+    Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
     "Cookie cleaning pref is set"
   );
   ok(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.cache"),
+    Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cache"),
     "Cache cleaning pref is set"
   );
   ok(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
-    "OfflineApps cleaning pref is set"
+    Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
+    "Old cookie cleaning pref is not changed"
   );
   ok(
-    !Services.prefs.getBoolPref("privacy.clearOnShutdown.downloads"),
-    "Downloads cleaning pref is not set"
+    !Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
+    ),
+    "History cleaning pref is not set"
+  );
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.siteSettings"),
+    "Site settings cleaning pref is not set"
+  );
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.siteSettings"),
+    "Old Site settings cleaning pref is not set"
   );
 
   deleteOnCloseBox.click();
@@ -59,39 +72,49 @@ add_task(async function test_syncWithoutCustomPrefs() {
   );
 
   ok(
-    !Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
     "Cookie cleaning pref is reset"
   );
   ok(
-    !Services.prefs.getBoolPref("privacy.clearOnShutdown.cache"),
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cache"),
     "Cache cleaning pref is reset"
   );
   ok(
-    !Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
-    "OfflineApps cleaning pref is reset"
+    Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
+    "Old cookie cleaning pref is not changed"
   );
   ok(
-    !Services.prefs.getBoolPref("privacy.clearOnShutdown.downloads"),
-    "Downloads cleaning pref is not set"
+    !Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
+    ),
+    "History cleaning pref is not set"
+  );
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.siteSettings"),
+    "Site settings cleaning pref is not set"
   );
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  Services.prefs.clearUserPref("privacy.clearOnShutdown.downloads");
-  Services.prefs.clearUserPref("privacy.clearOnShutdown.offlineApps");
-  Services.prefs.clearUserPref("privacy.clearOnShutdown.cache");
-  Services.prefs.clearUserPref("privacy.clearOnShutdown.cookies");
+  Services.prefs.clearUserPref(
+    "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
+  );
+  Services.prefs.clearUserPref("privacy.clearOnShutdown_v2.siteSettings");
+  Services.prefs.clearUserPref("privacy.clearOnShutdown_v2.cache");
+  Services.prefs.clearUserPref("privacy.clearOnShutdown_v2.cookiesAndStorage");
   Services.prefs.clearUserPref("privacy.sanitize.sanitizeOnShutdown");
 });
 
 /*
  * With custom cleaning category already set and SanitizeOnShutdown enabled,
  * deselecting "deleteOnClose" should not change the state of "alwaysClear".
- * The state of the cleaning categories cookies, cache and offlineApps should be in the state of the "deleteOnClose" box.
+ * The state of the cleaning categories cookiesAndStorage and cache should be in the state of the "deleteOnClose" box.
  */
 add_task(async function test_syncWithCustomPrefs() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.clearOnShutdown.history", true],
+      ["privacy.clearOnShutdown_v2.historyFormDataAndDownloads", true],
+      ["privacy.clearOnShutdown.history", false],
+      ["privacy.clearOnShutdown_v2.siteSettings", true],
       ["privacy.sanitize.sanitizeOnShutdown", true],
     ],
   });
@@ -104,33 +127,36 @@ add_task(async function test_syncWithCustomPrefs() {
   let deleteOnCloseBox = document.getElementById("deleteOnClose");
   let alwaysClearBox = document.getElementById("alwaysClear");
 
-  ok(!deleteOnCloseBox.checked, "DeleteOnClose initial state is deselected");
+  ok(deleteOnCloseBox.checked, "DeleteOnClose initial state is selected");
   ok(alwaysClearBox.checked, "AlwaysClear initial state is selected");
 
-  deleteOnCloseBox.click();
-
-  ok(deleteOnCloseBox.checked, "DeleteOnClose is selected");
   is(
     deleteOnCloseBox.checked,
     alwaysClearBox.checked,
     "AlwaysClear and deleteOnClose are in the same state, selected"
   );
   ok(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.history"),
+    Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
+    ),
     "History cleaning pref is still set"
+  );
+  ok(
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown.history"),
+    "Old history cleaning pref is not changed"
+  );
+  ok(
+    Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.siteSettings"),
+    "Site settings cleaning pref is still set"
   );
 
   ok(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
+    Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
     "Cookie cleaning pref is set"
   );
   ok(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.cache"),
+    Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cache"),
     "Cache cleaning pref is set"
-  );
-  ok(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
-    "OfflineApps cleaning pref is set"
   );
 
   deleteOnCloseBox.click();
@@ -143,20 +169,22 @@ add_task(async function test_syncWithCustomPrefs() {
   );
 
   ok(
-    !Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies"),
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cookiesAndStorage"),
     "Cookie cleaning pref is reset"
   );
   ok(
-    !Services.prefs.getBoolPref("privacy.clearOnShutdown.cache"),
+    !Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.cache"),
     "Cache cleaning pref is reset"
   );
   ok(
-    !Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps"),
-    "OfflineApps cleaning pref is reset"
+    Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads"
+    ),
+    "History cleaning pref is still set"
   );
   ok(
-    Services.prefs.getBoolPref("privacy.clearOnShutdown.history"),
-    "History cleaning pref is still set"
+    Services.prefs.getBoolPref("privacy.clearOnShutdown_v2.siteSettings"),
+    "Site settings cleaning pref is still set"
   );
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -183,9 +211,8 @@ add_task(async function test_syncWithCustomPrefs() {
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.clearOnShutdown.cookies", true],
-      ["privacy.clearOnShutdown.cache", true],
-      ["privacy.clearOnShutdown.offlineApps", true],
+      ["privacy.clearOnShutdown_v2.cookiesAndStorage", true],
+      ["privacy.clearOnShutdown_v2.cache", true],
       ["privacy.sanitize.sanitizeOnShutdown", true],
     ],
   });
@@ -216,9 +243,8 @@ add_task(async function test_syncWithCustomPrefs() {
 add_task(async function test_initialState() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.clearOnShutdown.cookies", true],
-      ["privacy.clearOnShutdown.cache", true],
-      ["privacy.clearOnShutdown.offlineApps", true],
+      ["privacy.clearOnShutdown_v2.cookiesAndStorage", true],
+      ["privacy.clearOnShutdown_v2.cache", true],
       ["privacy.sanitize.sanitizeOnShutdown", true],
     ],
   });
@@ -239,11 +265,10 @@ add_task(async function test_initialState() {
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.clearOnShutdown.cookies", false],
-      ["privacy.clearOnShutdown.cache", false],
-      ["privacy.clearOnShutdown.offlineApps", false],
+      ["privacy.clearOnShutdown_v2.cookiesAndStorage", false],
+      ["privacy.clearOnShutdown_v2.cache", false],
       ["privacy.sanitize.sanitizeOnShutdown", true],
-      ["privacy.clearOnShutdown.history", true],
+      ["privacy.clearOnShutdown_v2.historyFormDataAndDownloads", true],
     ],
   });
 
@@ -264,9 +289,8 @@ add_task(async function test_initialState() {
   // When private browsing mode autostart is selected, the deleteOnClose Box is selected always
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.clearOnShutdown.cookies", false],
-      ["privacy.clearOnShutdown.cache", false],
-      ["privacy.clearOnShutdown.offlineApps", false],
+      ["privacy.clearOnShutdown_v2.cookiesAndStorage", false],
+      ["privacy.clearOnShutdown_v2.cache", false],
       ["privacy.sanitize.sanitizeOnShutdown", false],
       ["browser.privatebrowsing.autostart", true],
     ],
