@@ -86,8 +86,6 @@ cglobal pred16x16_horizontal_8, 2,3
     punpcklbw m1, m1
     SPLATW    m0, m0, 3
     SPLATW    m1, m1, 3
-    mova [r0+r1*0+8], m0
-    mova [r0+r1*1+8], m1
 %endif
 
     mova [r0+r1*0], m0
@@ -98,7 +96,7 @@ cglobal pred16x16_horizontal_8, 2,3
     RET
 %endmacro
 
-INIT_MMX mmxext
+INIT_XMM sse2
 PRED16x16_H
 INIT_XMM ssse3
 PRED16x16_H
@@ -568,17 +566,17 @@ H264_PRED8x8_PLANE
 ; void ff_pred8x8_vertical_8(uint8_t *src, ptrdiff_t stride)
 ;-----------------------------------------------------------------------------
 
-INIT_MMX mmx
+INIT_XMM sse2
 cglobal pred8x8_vertical_8, 2,2
     sub    r0, r1
-    movq  mm0, [r0]
+    movq   m0, [r0]
 %rep 3
-    movq [r0+r1*1], mm0
-    movq [r0+r1*2], mm0
+    movq [r0+r1*1], m0
+    movq [r0+r1*2], m0
     lea    r0, [r0+r1*2]
 %endrep
-    movq [r0+r1*1], mm0
-    movq [r0+r1*2], mm0
+    movq [r0+r1*1], m0
+    movq [r0+r1*2], m0
     RET
 
 ;-----------------------------------------------------------------------------
@@ -1313,10 +1311,7 @@ PRED8x8L_DOWN_RIGHT
 ;-----------------------------------------------------------------------------
 
 %macro PRED8x8L_VERTICAL_RIGHT 0
-cglobal pred8x8l_vertical_right_8, 4,5,7
-    ; manually spill XMM registers for Win64 because
-    ; the code here is initialized with INIT_MMX
-    WIN64_SPILL_XMM 7
+cglobal pred8x8l_vertical_right_8, 4,5,6
     sub          r0, r3
     lea          r4, [r0+r3*2]
     movq        mm0, [r0+r3*1-8]
@@ -1386,7 +1381,6 @@ cglobal pred8x8l_vertical_right_8, 4,5,7
     movq2dq     xmm4, mm6
     pslldq      xmm4, 8
     por         xmm0, xmm4
-    movdqa      xmm6, [pw_ff00]
     movdqa      xmm1, xmm0
     lea           r2, [r1+r3*2]
     movdqa      xmm2, xmm0
@@ -1396,15 +1390,16 @@ cglobal pred8x8l_vertical_right_8, 4,5,7
     pavgb       xmm2, xmm0
 INIT_XMM cpuname
     PRED4x4_LOWPASS xmm4, xmm3, xmm1, xmm0, xmm5
-    pandn       xmm6, xmm4
+    movdqa      xmm0, [pw_ff00]
+    pandn       xmm0, xmm4
     movdqa      xmm5, xmm4
     psrlw       xmm4, 8
-    packuswb    xmm6, xmm4
-    movhlps     xmm4, xmm6
+    packuswb    xmm0, xmm4
+    movhlps     xmm4, xmm0
     movhps [r0+r3*2], xmm5
     movhps [r0+r3*1], xmm2
     psrldq      xmm5, 4
-    movss       xmm5, xmm6
+    movss       xmm5, xmm0
     psrldq      xmm2, 4
     movss       xmm2, xmm4
     lea           r0, [r2+r3*2]

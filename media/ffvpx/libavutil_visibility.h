@@ -10,10 +10,10 @@
 #define MOZILLA_AVUTIL_VISIBILITY_H
 
 #pragma GCC visibility push(default)
-#include "libavutil/cpu.h"
 
 // We need av_log() to be visible so we can enable assertions in libavcodec.
 #include "libavutil/log.h"
+#include "libavcodec/packet.h"
 
 #pragma GCC visibility pop
 

@@ -25,8 +25,22 @@
 #ifndef AVCODEC_AVCODEC_INTERNAL_H
 #define AVCODEC_AVCODEC_INTERNAL_H
 
+#include "libavutil/frame.h"
+
+#include "packet.h"
+
 struct AVCodecContext;
-struct AVFrame;
+
+typedef struct SideDataMap {
+    enum AVPacketSideDataType packet;
+    enum AVFrameSideDataType frame;
+} SideDataMap;
+
+/**
+ * A map between packet and frame side data types.
+ * Terminated with an entry where packet=AV_PKT_DATA_NB.
+ */
+extern const SideDataMap ff_sd_global_map[];
 
 /**
  * avcodec_receive_frame() implementation for decoders.
@@ -55,5 +69,7 @@ void ff_encode_flush_buffers(struct AVCodecContext *avctx);
 
 struct AVCodecInternal *ff_decode_internal_alloc(void);
 struct AVCodecInternal *ff_encode_internal_alloc(void);
+
+void ff_codec_close(struct AVCodecContext *avctx);
 
 #endif // AVCODEC_AVCODEC_INTERNAL_H

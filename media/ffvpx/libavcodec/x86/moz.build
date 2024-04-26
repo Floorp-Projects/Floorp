@@ -37,6 +37,8 @@ SOURCES += [
     'vp9mc_16bpp.asm',
 ]
 
+LOCAL_INCLUDES += [ "../" ]
+
 if CONFIG['TARGET_CPU'] == 'x86':
     SOURCES += [ 'simple_idct.asm' ]
 
