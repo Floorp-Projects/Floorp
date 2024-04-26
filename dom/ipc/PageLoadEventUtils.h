@@ -27,7 +27,6 @@ struct ParamTraits<mozilla::glean::perf::PageLoadExtra> {
     WriteParam(aWriter, aParam.redirectCount);
     WriteParam(aWriter, aParam.redirectTime);
     WriteParam(aWriter, aParam.sameOriginNav);
-    WriteParam(aWriter, aParam.usingWebdriver);
     WriteParam(aWriter, aParam.trrDomain);
     WriteParam(aWriter, aParam.dnsLookupTime);
   }
@@ -43,7 +42,6 @@ struct ParamTraits<mozilla::glean::perf::PageLoadExtra> {
            ReadParam(aReader, &aResult->redirectCount) &&
            ReadParam(aReader, &aResult->redirectTime) &&
            ReadParam(aReader, &aResult->sameOriginNav) &&
-           ReadParam(aReader, &aResult->usingWebdriver) &&
            ReadParam(aReader, &aResult->trrDomain) &&
            ReadParam(aReader, &aResult->dnsLookupTime);
   }
