@@ -52,8 +52,7 @@ id<RTC_OBJC_TYPE(RTCVideoDecoderFactory)> CreateErrorDecoderFactory() {
 std::unique_ptr<webrtc::VideoDecoder> GetObjCDecoder(
     id<RTC_OBJC_TYPE(RTCVideoDecoderFactory)> factory) {
   webrtc::ObjCVideoDecoderFactory decoder_factory(factory);
-  return decoder_factory.Create(webrtc::CreateEnvironment(),
-                                webrtc::SdpVideoFormat(cricket::kH264CodecName));
+  return decoder_factory.Create(webrtc::CreateEnvironment(), webrtc::SdpVideoFormat::H264());
 }
 
 #pragma mark -
