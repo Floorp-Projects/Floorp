@@ -45,7 +45,25 @@
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
 
+namespace cricket {
 namespace {
+using ::webrtc::IceCandidateType;
+using ::webrtc::RTCError;
+using ::webrtc::RTCErrorType;
+using ::webrtc::SafeTask;
+using ::webrtc::TimeDelta;
+
+IceCandidateType PortTypeToIceCandidateType(PortInterface* port) {
+  auto type = port->Type();
+  if (type == LOCAL_PORT_TYPE)
+    return IceCandidateType::kHost;
+  if (type == STUN_PORT_TYPE)
+    return IceCandidateType::kSrflx;
+  if (type == PRFLX_PORT_TYPE)
+    return IceCandidateType::kPrflx;
+  RTC_DCHECK_EQ(type, RELAY_PORT_TYPE);
+  return IceCandidateType::kRelay;
+}
 
 cricket::PortInterface::CandidateOrigin GetOrigin(
     cricket::PortInterface* port,
@@ -91,14 +109,7 @@ rtc::RouteEndpoint CreateRouteEndpointFromCandidate(
                             uses_turn);
 }
 
-using ::webrtc::RTCError;
-using ::webrtc::RTCErrorType;
-using ::webrtc::SafeTask;
-using ::webrtc::TimeDelta;
-
 }  // unnamed namespace
-
-namespace cricket {
 
 bool IceCredentialsChanged(absl::string_view old_ufrag,
                            absl::string_view old_pwd,
@@ -1411,8 +1422,10 @@ bool P2PTransportChannel::CreateConnection(PortInterface* port,
   }
 
   if (ice_field_trials_.skip_relay_to_non_relay_connections) {
-    if ((port->Type() != remote_candidate.type()) &&
-        (port->Type() == RELAY_PORT_TYPE || remote_candidate.is_relay())) {
+    IceCandidateType port_type = PortTypeToIceCandidateType(port);
+    if ((port_type != remote_candidate.type()) &&
+        (port_type == IceCandidateType::kRelay ||
+         remote_candidate.is_relay())) {
       RTC_LOG(LS_INFO) << ToString() << ": skip creating connection "
                        << port->Type() << " to "
                        << remote_candidate.type_name();

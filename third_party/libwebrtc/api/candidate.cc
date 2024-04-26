@@ -18,6 +18,23 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 
+using webrtc::IceCandidateType;
+
+namespace webrtc {
+absl::string_view IceCandidateTypeToString(IceCandidateType type) {
+  switch (type) {
+    case IceCandidateType::kHost:
+      return "host";
+    case IceCandidateType::kSrflx:
+      return "srflx";
+    case IceCandidateType::kPrflx:
+      return "prflx";
+    case IceCandidateType::kRelay:
+      return "relay";
+  }
+}
+}  // namespace webrtc
+
 namespace cricket {
 
 ABSL_CONST_INIT const absl::string_view LOCAL_PORT_TYPE = "local";
@@ -25,11 +42,25 @@ ABSL_CONST_INIT const absl::string_view STUN_PORT_TYPE = "stun";
 ABSL_CONST_INIT const absl::string_view PRFLX_PORT_TYPE = "prflx";
 ABSL_CONST_INIT const absl::string_view RELAY_PORT_TYPE = "relay";
 
+namespace {
+IceCandidateType CandidateTypeFromString(absl::string_view type) {
+  if (type == LOCAL_PORT_TYPE) {
+    return IceCandidateType::kHost;
+  } else if (type == STUN_PORT_TYPE) {
+    return IceCandidateType::kSrflx;
+  } else if (type == PRFLX_PORT_TYPE) {
+    return IceCandidateType::kPrflx;
+  } else {
+    RTC_DCHECK_EQ(type, RELAY_PORT_TYPE);
+    return IceCandidateType::kRelay;
+  }
+}
+}  // namespace
+
 Candidate::Candidate()
     : id_(rtc::CreateRandomString(8)),
       component_(ICE_CANDIDATE_COMPONENT_DEFAULT),
       priority_(0),
-      type_(LOCAL_PORT_TYPE),
       network_type_(rtc::ADAPTER_TYPE_UNKNOWN),
       underlying_type_for_vpn_(rtc::ADAPTER_TYPE_UNKNOWN),
       generation_(0),
@@ -42,11 +73,11 @@ Candidate::Candidate(int component,
                      uint32_t priority,
                      absl::string_view username,
                      absl::string_view password,
-                     absl::string_view type,
+                     webrtc::IceCandidateType type,
                      uint32_t generation,
                      absl::string_view foundation,
-                     uint16_t network_id,
-                     uint16_t network_cost)
+                     uint16_t network_id /*= 0*/,
+                     uint16_t network_cost /*= 0*/)
     : id_(rtc::CreateRandomString(8)),
       component_(component),
       protocol_(protocol),
@@ -62,6 +93,29 @@ Candidate::Candidate(int component,
       network_id_(network_id),
       network_cost_(network_cost) {}
 
+Candidate::Candidate(int component,
+                     absl::string_view protocol,
+                     const rtc::SocketAddress& address,
+                     uint32_t priority,
+                     absl::string_view username,
+                     absl::string_view password,
+                     absl::string_view type,
+                     uint32_t generation,
+                     absl::string_view foundation,
+                     uint16_t network_id,
+                     uint16_t network_cost)
+    : Candidate(component,
+                protocol,
+                address,
+                priority,
+                username,
+                password,
+                CandidateTypeFromString(type),
+                generation,
+                foundation,
+                network_id,
+                network_cost) {}
+
 Candidate::Candidate(const Candidate&) = default;
 
 Candidate::~Candidate() = default;
@@ -70,28 +124,25 @@ void Candidate::generate_id() {
   id_ = rtc::CreateRandomString(8);
 }
 
+void Candidate::set_type(absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+  set_type(CandidateTypeFromString(type));
+}
+
 bool Candidate::is_local() const {
-  return type_ == LOCAL_PORT_TYPE;
+  return type_ == IceCandidateType::kHost;
 }
 bool Candidate::is_stun() const {
-  return type_ == STUN_PORT_TYPE;
+  return type_ == IceCandidateType::kSrflx;
 }
 bool Candidate::is_prflx() const {
-  return type_ == PRFLX_PORT_TYPE;
+  return type_ == IceCandidateType::kPrflx;
 }
 bool Candidate::is_relay() const {
-  return type_ == RELAY_PORT_TYPE;
+  return type_ == IceCandidateType::kRelay;
 }
 
 absl::string_view Candidate::type_name() const {
-  // The LOCAL_PORT_TYPE and STUN_PORT_TYPE constants are not the standard type
-  // names, so check for those specifically. For other types, `type_` will have
-  // the correct name.
-  if (is_local())
-    return "host";
-  if (is_stun())
-    return "srflx";
-  return type_;
+  return webrtc::IceCandidateTypeToString(type_);
 }
 
 bool Candidate::IsEquivalent(const Candidate& c) const {
@@ -229,7 +280,7 @@ void Candidate::ComputeFoundation(const rtc::SocketAddress& base_address,
   // transport protocols are different.
 
   rtc::StringBuilder sb;
-  sb << type_ << base_address.ipaddr().ToString() << protocol_
+  sb << type_name() << base_address.ipaddr().ToString() << protocol_
      << relay_protocol_;
 
   // https://www.rfc-editor.org/rfc/rfc5245#section-5.2
