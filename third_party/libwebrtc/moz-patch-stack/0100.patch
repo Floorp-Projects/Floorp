@@ -19,10 +19,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d92a578327f524ec3
  5 files changed, 23 insertions(+), 5 deletions(-)
 
 diff --git a/call/rtp_video_sender.cc b/call/rtp_video_sender.cc
-index 580850359c..ac5540a7f2 100644
+index c49d82b095..0646f99dad 100644
 --- a/call/rtp_video_sender.cc
 +++ b/call/rtp_video_sender.cc
-@@ -492,6 +492,7 @@ void RtpVideoSender::SetActiveModulesLocked(bool sending) {
+@@ -491,6 +491,7 @@ void RtpVideoSender::SetActiveModulesLocked(bool sending) {
    active_ = sending;
    for (size_t i = 0; i < rtp_streams_.size(); ++i) {
      RtpRtcpInterface& rtp_module = *rtp_streams_[i].rtp_rtcp;
