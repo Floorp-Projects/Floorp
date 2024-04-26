@@ -30,6 +30,8 @@ var SidebarUI = {
           elementId: "sidebar-switcher-bookmarks",
           url: "chrome://browser/content/places/bookmarksSidebar.xhtml",
           menuId: "menu_bookmarksSidebar",
+          keyId: "viewBookmarksSidebarKb",
+          menuL10nId: "menu-view-bookmarks",
         }),
       ],
       [
@@ -41,6 +43,8 @@ var SidebarUI = {
             : "chrome://browser/content/places/historySidebar.xhtml",
           menuId: "menu_historySidebar",
           triggerButtonId: "appMenuViewHistorySidebar",
+          keyId: "key_gotoHistory",
+          menuL10nId: "menu-view-history-button",
         }),
       ],
       [
@@ -51,6 +55,8 @@ var SidebarUI = {
             ? "chrome://browser/content/sidebar/sidebar-syncedtabs.html"
             : "chrome://browser/content/syncedtabs/sidebar.xhtml",
           menuId: "menu_tabsSidebar",
+          classAttribute: "sync-ui-item",
+          menuL10nId: "menu-view-synced-tabs-sidebar",
         }),
       ],
       [
@@ -59,6 +65,7 @@ var SidebarUI = {
           elementId: "sidebar-switcher-megalist",
           url: "chrome://global/content/megalist/megalist.html",
           menuId: "menu_megalistSidebar",
+          menuL10nId: "menu-view-megalist-sidebar",
         }),
       ],
     ]));
@@ -119,6 +126,12 @@ var SidebarUI = {
     this._switcherPanel = document.getElementById("sidebarMenu-popup");
     this._switcherTarget = document.getElementById("sidebar-switcher-target");
     this._switcherArrow = document.getElementById("sidebar-switcher-arrow");
+
+    const menubar = document.getElementById("viewSidebarMenu");
+    for (const [commandID, sidebar] of this.sidebars.entries()) {
+      const menuitem = this.createMenuItem(commandID, sidebar);
+      menubar.appendChild(menuitem);
+    }
 
     if (this.sidebarRevampEnabled) {
       await import("chrome://browser/content/sidebar/sidebar-launcher.mjs");
@@ -562,6 +575,7 @@ var SidebarUI = {
       menuId: props.menuId,
       switcherMenuId: `sidebarswitcher_menu_${commandID}`,
       keyId: `ext-key-id-${commandID}`,
+      classAttribute: "menuitem-iconic webextension-menuitem",
       // The following properties are specific to extensions
       extensionId: props.extensionId,
       onload: props.onload,
@@ -605,8 +619,15 @@ var SidebarUI = {
     menuitem.setAttribute("id", sidebar.menuId);
     menuitem.setAttribute("type", "checkbox");
     menuitem.addEventListener("command", () => this.toggle(commandID));
-    menuitem.setAttribute("class", "menuitem-iconic webextension-menuitem");
-    menuitem.setAttribute("key", sidebar.keyId);
+    if (sidebar.classAttribute) {
+      menuitem.setAttribute("class", sidebar.classAttribute);
+    }
+    if (sidebar.keyId) {
+      menuitem.setAttribute("key", sidebar.keyId);
+    }
+    if (sidebar.menuL10nId) {
+      menuitem.dataset.l10nId = sidebar.menuL10nId;
+    }
     return menuitem;
   },
 
