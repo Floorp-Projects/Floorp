@@ -1195,7 +1195,7 @@ class OutputParser {
    */
   // eslint-disable-next-line complexity
   #addEllipsePointNodes(coords, container) {
-    const tokenStream = getCSSLexer(coords);
+    const tokenStream = getCSSLexer(coords, true);
     let token = tokenStream.nextToken();
     let depth = 0;
     let coord = "";
@@ -1205,19 +1205,19 @@ class OutputParser {
       "data-point": "center",
     });
     while (token) {
-      if (token.tokenType === "symbol" && token.text === "(") {
+      if (token.tokenType === "ParenthesisBlock") {
         depth++;
         coord += coords.substring(token.startOffset, token.endOffset);
-      } else if (token.tokenType === "symbol" && token.text === ")") {
+      } else if (token.tokenType === "CloseParenthesis") {
         depth--;
         coord += coords.substring(token.startOffset, token.endOffset);
-      } else if (token.tokenType === "whitespace" && coord === "") {
+      } else if (token.tokenType === "WhiteSpace" && coord === "") {
         // Whitespace at beginning of coord; add to container
         appendText(
           container,
           coords.substring(token.startOffset, token.endOffset)
         );
-      } else if (token.tokenType === "whitespace" && depth === 0) {
+      } else if (token.tokenType === "WhiteSpace" && depth === 0) {
         if (point === "rx" || point === "ry") {
           // Whitespace signifying end of rx/ry
           const node = this.#createNode(
@@ -1256,7 +1256,7 @@ class OutputParser {
           coord = "";
           depth = 0;
         }
-      } else if (token.tokenType === "ident" && token.text === "at") {
+      } else if (token.tokenType === "Ident" && token.text === "at") {
         // "at"; Add radius to container if not already done so
         if (point === "ry" && coord) {
           const node = this.#createNode(
@@ -1277,10 +1277,10 @@ class OutputParser {
         coord = "";
         depth = 0;
       } else if (
-        token.tokenType === "number" ||
-        token.tokenType === "dimension" ||
-        token.tokenType === "percentage" ||
-        token.tokenType === "function"
+        token.tokenType === "Number" ||
+        token.tokenType === "Dimension" ||
+        token.tokenType === "Percentage" ||
+        token.tokenType === "Function"
       ) {
         if (point === "rx" && coord && depth === 0) {
           // Radius coords don't require whitespace between x/y.
@@ -1313,7 +1313,7 @@ class OutputParser {
         }
 
         coord += coords.substring(token.startOffset, token.endOffset);
-        if (token.tokenType === "function") {
+        if (token.tokenType === "Function") {
           depth++;
         }
       } else {
