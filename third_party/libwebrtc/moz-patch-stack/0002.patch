@@ -1,69 +1,43 @@
-From: Philipp Hancke <phancke@microsoft.com>
-Date: Fri, 23 Feb 2024 08:11:56 +0100
-Subject: (cherry-pick-branch-heads/6312) [M123] Fix handling of rejected
- m-lines without transport description
+From: Tommi <tommi@webrtc.org>
+Date: Fri, 23 Feb 2024 14:49:05 +0100
+Subject: (cherry-pick-branch-heads/6312) [M123 MERGE] Demote RTC_CHECK for
+ sctp_mid() to RTC_LOG(LS_ERROR) if unavailable
 
-A fingerprint should not be required for m-lines which are rejected.
+(cherry picked from commit efbfc40029b6986137f9179476955c263da7052a)
 
-BUG=chromium:326493639,webrtc:11066
-
-(cherry picked from commit 845d6bef52ec08dfd9c87d3eff5ae5c07c3fe55d)
-
-Change-Id: I7428c91a144ca46650e13d72868f160652a98339
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/340322
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Reviewed-by: Florent Castelli <orphis@webrtc.org>
-Commit-Queue: Philipp Hancke <phancke@microsoft.com>
-Cr-Original-Commit-Position: refs/heads/main@{#41794}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/341023
-Cr-Commit-Position: refs/branch-heads/6312@{#2}
+Bug: chromium:326275823, chromium:325900490
+Change-Id: Icfb8850867d1e39f23661422693da4f2829ecc57
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/340460
+Reviewed-by: Evan Shrubsole <eshr@webrtc.org>
+Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#41793}
+No-Try: True
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/342560
+Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
+Commit-Queue: Florent Castelli <orphis@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6312@{#3}
 Cr-Branched-From: 0355f455a48b141a8277442825ec776a74d66fb7-refs/heads/main@{#41763}
 ---
- pc/media_session.cc | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ pc/sdp_offer_answer.cc | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/pc/media_session.cc b/pc/media_session.cc
-index 4f63f3088f..3928088c7f 100644
---- a/pc/media_session.cc
-+++ b/pc/media_session.cc
-@@ -2174,12 +2174,12 @@ RTCError MediaSessionDescriptionFactory::AddRtpContentForAnswer(
-   }
-   // If this section is part of a bundle, bundle_transport is non-null.
-   // Then require_transport_attributes is false - we can handle sections
--  // without the DTLS parameters. Otherwise, transport attributes MUST
--  // be present.
-+  // without the DTLS parameters. For rejected m-lines it does not matter.
-+  // Otherwise, transport attributes MUST be present.
-   std::unique_ptr<TransportDescription> transport = CreateTransportAnswer(
-       media_description_options.mid, offer_description,
-       media_description_options.transport_options, current_description,
--      bundle_transport == nullptr, ice_credentials);
-+      !offer_content->rejected && bundle_transport == nullptr, ice_credentials);
-   if (!transport) {
-     LOG_AND_RETURN_ERROR(
-         RTCErrorType::INTERNAL_ERROR,
-@@ -2272,7 +2272,7 @@ RTCError MediaSessionDescriptionFactory::AddDataContentForAnswer(
-   std::unique_ptr<TransportDescription> data_transport = CreateTransportAnswer(
-       media_description_options.mid, offer_description,
-       media_description_options.transport_options, current_description,
--      bundle_transport != nullptr, ice_credentials);
-+      !offer_content->rejected && bundle_transport == nullptr, ice_credentials);
-   if (!data_transport) {
-     LOG_AND_RETURN_ERROR(
-         RTCErrorType::INTERNAL_ERROR,
-@@ -2344,10 +2344,11 @@ RTCError MediaSessionDescriptionFactory::AddUnsupportedContentForAnswer(
-     SessionDescription* answer,
-     IceCredentialsIterator* ice_credentials) const {
-   std::unique_ptr<TransportDescription> unsupported_transport =
--      CreateTransportAnswer(media_description_options.mid, offer_description,
--                            media_description_options.transport_options,
--                            current_description, bundle_transport != nullptr,
--                            ice_credentials);
-+      CreateTransportAnswer(
-+          media_description_options.mid, offer_description,
-+          media_description_options.transport_options, current_description,
-+          !offer_content->rejected && bundle_transport == nullptr,
-+          ice_credentials);
-   if (!unsupported_transport) {
-     LOG_AND_RETURN_ERROR(
-         RTCErrorType::INTERNAL_ERROR,
+diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
+index d75606ab4e..95d54978c7 100644
+--- a/pc/sdp_offer_answer.cc
++++ b/pc/sdp_offer_answer.cc
+@@ -4297,11 +4297,13 @@ void SdpOfferAnswerHandler::GetOptionsForUnifiedPlanOffer(
+             GetMediaDescriptionOptionsForRejectedData(mid));
+       } else {
+         const auto data_mid = pc_->sctp_mid();
+-        RTC_CHECK(data_mid);
+-        if (mid == data_mid.value()) {
++        if (data_mid.has_value() && mid == data_mid.value()) {
+           session_options->media_description_options.push_back(
+               GetMediaDescriptionOptionsForActiveData(mid));
+         } else {
++          if (!data_mid.has_value()) {
++            RTC_LOG(LS_ERROR) << "Datachannel transport not available: " << mid;
++          }
+           session_options->media_description_options.push_back(
+               GetMediaDescriptionOptionsForRejectedData(mid));
+         }

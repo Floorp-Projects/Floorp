@@ -1,26 +1,39 @@
 From: Byron Campen <docfaraday@gmail.com>
 Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Remove this duplicate init (that's also on the wrong
- thread). r=pehrsons,webrtc-reviewers
+Subject: Bug 1838080: Work around a race in
+ ChannelSendFrameTransformerDelegate. r=pehrsons,webrtc-reviewers
 
-This was causing assertions.
+This variable can be null when a ChannelSendFrameTransformerDelegate is in use,
+because that does an async dispatch to the encoder queue in the handling for
+transformed frames. If this is unset while that dispatch is in flight, we
+nullptr crash.
 
-Differential Revision: https://phabricator.services.mozilla.com/D179731
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac6592a04a839a6152d5ad5f0778f63dbbd6b1b
+Differential Revision: https://phabricator.services.mozilla.com/D180735
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73abff1cbbd06807c2b65fc19
 ---
- audio/channel_send.cc | 2 --
- 1 file changed, 2 deletions(-)
+ audio/channel_send.cc | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index c04dc2ab20..1a39be95d1 100644
+index 1a39be95d1..6d7b515de7 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
-@@ -474,8 +474,6 @@ ChannelSend::ChannelSend(
+@@ -285,12 +285,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
+   void EnqueuePackets(
+       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    }
+   }
  
-   int error = audio_coding_->RegisterTransportCallback(this);
-   RTC_DCHECK_EQ(0, error);
--  if (frame_transformer)
--    InitFrameTransformerDelegate(std::move(frame_transformer));
- }
+   void RemovePacketsForSsrc(uint32_t ssrc) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    }
+   }
  
- ChannelSend::~ChannelSend() {
+  private:
