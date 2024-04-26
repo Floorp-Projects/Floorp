@@ -169,12 +169,12 @@
         });
       }
 
-      function verifyImageIcon(button) {
+      function verifyImageIcon({ button, isLabelled }) {
         let img = button.shadowRoot.querySelector("img");
         ok(img, "button uses an inner img element to display an icon");
         is(img.src, "chrome://global/skin/icons/edit.svg", "button displays the expected icon");
         assertButtonPropertiesMatch(img, {
-          fill: button.hasAttribute("label") ? "--button-text-color" : "--icon-color",
+          fill: isLabelled ? "--button-text-color" : "--icon-color",
           width: "--icon-size-default",
           height: "--icon-size-default",
         });
@@ -184,9 +184,15 @@
       verifyBackgroundIcon(five);
       verifyBackgroundIcon(six);
 
-      verifyImageIcon(seven);
-      verifyImageIcon(eight);
-      verifyImageIcon(nine);
+      verifyImageIcon({ button: seven, isLabelled: true });
+      verifyImageIcon({ button: eight, isLabelled: false });
+      verifyImageIcon({ button: nine, isLabelled: false });
+      nine.textContent = "With text";
+      await nine.updateComplete;
+      verifyImageIcon({ button: nine, isLabelled: true });
+      nine.textContent = "";
+      await nine.updateComplete;
+      verifyImageIcon({ button: nine, isLabelled: false });
     });
   </script>
 </head>
@@ -206,10 +212,11 @@
     class="eight"
     iconsrc="chrome://global/skin/icons/edit.svg"
   ></moz-button>
+  <!-- Used to verify that empty space doesn't get treated as a label -->
   <moz-button
     class="nine"
     type="ghost"
     iconsrc="chrome://global/skin/icons/edit.svg"
-  ></moz-button>
+  >   </moz-button>
 </body>
 </html>
