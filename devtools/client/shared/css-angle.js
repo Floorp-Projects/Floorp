@@ -6,7 +6,9 @@
 
 const SPECIALVALUES = new Set(["initial", "inherit", "unset"]);
 
-const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
+const {
+  InspectorCSSParserWrapper,
+} = require("resource://devtools/shared/css/lexer.js");
 
 loader.lazyRequireGetter(
   this,
@@ -68,7 +70,7 @@ CssAngle.prototype = {
   },
 
   get valid() {
-    const token = getCSSLexer(this.authored, true).nextToken();
+    const token = new InspectorCSSParserWrapper(this.authored).nextToken();
     if (!token) {
       return false;
     }
