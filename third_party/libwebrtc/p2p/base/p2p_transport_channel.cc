@@ -2211,17 +2211,14 @@ void P2PTransportChannel::OnReadPacket(Connection* connection,
     last_data_received_ms_ =
         std::max(last_data_received_ms_, connection->last_data_received());
 
-    SignalReadPacket(
-        this, reinterpret_cast<const char*>(packet.payload().data()),
-        packet.payload().size(),
-        packet.arrival_time() ? packet.arrival_time()->us() : -1, 0);
+    NotifyPacketReceived(packet);
 
-  // May need to switch the sending connection based on the receiving media
-  // path if this is the controlled side.
-  if (ice_role_ == ICEROLE_CONTROLLED && connection != selected_connection_) {
-    ice_controller_->OnImmediateSwitchRequest(IceSwitchReason::DATA_RECEIVED,
-                                              connection);
-  }
+    // May need to switch the sending connection based on the receiving media
+    // path if this is the controlled side.
+    if (ice_role_ == ICEROLE_CONTROLLED && connection != selected_connection_) {
+      ice_controller_->OnImmediateSwitchRequest(IceSwitchReason::DATA_RECEIVED,
+                                                connection);
+    }
 }
 
 void P2PTransportChannel::OnSentPacket(const rtc::SentPacket& sent_packet) {
