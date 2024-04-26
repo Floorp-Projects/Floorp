@@ -234,6 +234,7 @@
   MACRO_(GetBuiltinConstructor, "GetBuiltinConstructor")                       \
   MACRO_(GetBuiltinPrototype, "GetBuiltinPrototype")                           \
   MACRO_(GetBuiltinSymbol, "GetBuiltinSymbol")                                 \
+  MACRO_(getFloat16, "getFloat16")                                             \
   MACRO_(GetInternalError, "GetInternalError")                                 \
   MACRO_(getInternals, "getInternals")                                         \
   MACRO_(GetIterator, "GetIterator")                                           \
@@ -510,6 +511,7 @@
   MACRO_(setBigUint64, "setBigUint64")                                         \
   MACRO_(SetCanonicalName, "SetCanonicalName")                                 \
   MACRO_(SetConstructorInit, "SetConstructorInit")                             \
+  MACRO_(setFloat16, "setFloat16")                                             \
   MACRO_(SetIsInlinableLargeFunction, "SetIsInlinableLargeFunction")           \
   MACRO_(Set_Iterator_, "Set Iterator")                                        \
   MACRO_(setFromBase64, "setFromBase64")                                       \
