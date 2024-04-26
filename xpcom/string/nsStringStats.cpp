@@ -6,20 +6,21 @@
 
 #include "nsStringStats.h"
 
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/MemoryReporting.h"
-#include "nsString.h"
+#ifdef DEBUG
+#  include "mozilla/IntegerPrintfMacros.h"
+#  include "mozilla/MemoryReporting.h"
+#  include "nsString.h"
 
-#include <stdint.h>
-#include <stdio.h>
+#  include <stdint.h>
+#  include <stdio.h>
 
-#ifdef XP_WIN
-#  include <windows.h>
-#  include <process.h>
-#else
-#  include <unistd.h>
-#  include <pthread.h>
-#endif
+#  ifdef XP_WIN
+#    include <windows.h>
+#    include <process.h>
+#  else
+#    include <unistd.h>
+#    include <pthread.h>
+#  endif
 
 nsStringStats gStringStats;
 
@@ -54,13 +55,14 @@ nsStringStats::~nsStringStats() {
     printf("\n");
   }
 
-#ifdef XP_WIN
+#  ifdef XP_WIN
   auto pid = uintptr_t(_getpid());
   auto tid = uintptr_t(GetCurrentThreadId());
-#else
+#  else
   auto pid = uintptr_t(getpid());
   auto tid = uintptr_t(pthread_self());
-#endif
+#  endif
 
   printf(" => Process ID: %" PRIuPTR ", Thread ID: %" PRIuPTR "\n", pid, tid);
 }
+#endif

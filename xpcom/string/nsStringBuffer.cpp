@@ -9,12 +9,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
-
-#ifdef DEBUG
-#  include "nsStringStats.h"
-#else
-#  define STRING_STAT_INCREMENT(_s)
-#endif
+#include "nsStringStats.h"
 
 void nsStringBuffer::AddRef() {
   // Memory synchronization is not required when incrementing a
