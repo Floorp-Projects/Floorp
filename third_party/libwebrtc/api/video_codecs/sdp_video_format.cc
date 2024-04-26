@@ -192,6 +192,60 @@ bool operator==(const SdpVideoFormat& a, const SdpVideoFormat& b) {
          a.scalability_modes == b.scalability_modes;
 }
 
+const SdpVideoFormat SdpVideoFormat::VP8() {
+  return SdpVideoFormat(cricket::kVp8CodecName, {});
+}
+
+const SdpVideoFormat SdpVideoFormat::H264() {
+  // H264 will typically require more tweaking like setting
+  // * packetization-mode (which defaults to 0 but 1 is more common)
+  // * level-asymmetry-allowed (which defaults to 0 but 1 is more common)
+  // * profile-level-id of which there are many.
+  return SdpVideoFormat(cricket::kH264CodecName, {});
+}
+
+const SdpVideoFormat SdpVideoFormat::VP9Profile0() {
+  return SdpVideoFormat(
+      cricket::kVp9CodecName,
+      {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile0)}});
+}
+
+const SdpVideoFormat SdpVideoFormat::VP9Profile1() {
+  return SdpVideoFormat(
+      cricket::kVp9CodecName,
+      {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile1)}});
+}
+
+const SdpVideoFormat SdpVideoFormat::VP9Profile2() {
+  return SdpVideoFormat(
+      cricket::kVp9CodecName,
+      {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile2)}});
+}
+
+const SdpVideoFormat SdpVideoFormat::VP9Profile3() {
+  return SdpVideoFormat(
+      cricket::kVp9CodecName,
+      {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile3)}});
+}
+
+const SdpVideoFormat SdpVideoFormat::AV1Profile0() {
+  // https://aomediacodec.github.io/av1-rtp-spec/#72-sdp-parameters
+  return SdpVideoFormat(cricket::kAv1CodecName,
+                        {{cricket::kAv1FmtpProfile,
+                          AV1ProfileToString(AV1Profile::kProfile0).data()},
+                         {cricket::kAv1FmtpLevelIdx, "5"},
+                         {cricket::kAv1FmtpTier, "0"}});
+}
+
+const SdpVideoFormat SdpVideoFormat::AV1Profile1() {
+  // https://aomediacodec.github.io/av1-rtp-spec/#72-sdp-parameters
+  return SdpVideoFormat(cricket::kAv1CodecName,
+                        {{cricket::kAv1FmtpProfile,
+                          AV1ProfileToString(AV1Profile::kProfile1).data()},
+                         {cricket::kAv1FmtpLevelIdx, "5"},
+                         {cricket::kAv1FmtpTier, "0"}});
+}
+
 absl::optional<SdpVideoFormat> FuzzyMatchSdpVideoFormat(
     rtc::ArrayView<const SdpVideoFormat> supported_formats,
     const SdpVideoFormat& format) {

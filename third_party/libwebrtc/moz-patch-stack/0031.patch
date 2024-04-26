@@ -9,20 +9,17 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ef548d7758c7de6e7
  1 file changed, 2 insertions(+)
 
 diff --git a/media/engine/internal_decoder_factory.cc b/media/engine/internal_decoder_factory.cc
-index d79cbf2712..44f9c35bb0 100644
+index 33fed924df..5b91209aba 100644
 --- a/media/engine/internal_decoder_factory.cc
 +++ b/media/engine/internal_decoder_factory.cc
-@@ -50,6 +50,7 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
+@@ -50,10 +50,12 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
    for (const SdpVideoFormat& h264_format : SupportedH264DecoderCodecs())
      formats.push_back(h264_format);
  
 +#if !defined(WEBRTC_MOZILLA_BUILD)
    if (kDav1dIsIncluded) {
-     formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
-     formats.push_back(
-@@ -57,6 +58,7 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
-                        {{cricket::kAv1FmtpProfile,
-                          AV1ProfileToString(AV1Profile::kProfile1).data()}}));
+     formats.push_back(SdpVideoFormat::AV1Profile0());
+     formats.push_back(SdpVideoFormat::AV1Profile1());
    }
 +#endif
  
