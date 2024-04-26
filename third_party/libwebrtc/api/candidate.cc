@@ -11,6 +11,8 @@
 #include "api/candidate.h"
 
 #include "absl/base/attributes.h"
+#include "p2p/base/p2p_constants.h"
+#include "rtc_base/crc32.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
@@ -25,7 +27,7 @@ ABSL_CONST_INIT const absl::string_view RELAY_PORT_TYPE = "relay";
 
 Candidate::Candidate()
     : id_(rtc::CreateRandomString(8)),
-      component_(0),
+      component_(ICE_CANDIDATE_COMPONENT_DEFAULT),
       priority_(0),
       type_(LOCAL_PORT_TYPE),
       network_type_(rtc::ADAPTER_TYPE_UNKNOWN),
@@ -207,6 +209,43 @@ Candidate Candidate::ToSanitizedCopy(bool use_hostname_address,
         rtc::EmptySocketAddressWithFamily(copy.address().family()));
   }
   return copy;
+}
+
+void Candidate::ComputeFoundation(const rtc::SocketAddress& base_address,
+                                  uint64_t tie_breaker) {
+  // https://www.rfc-editor.org/rfc/rfc5245#section-4.1.1.3
+  // The foundation is an identifier, scoped within a session.  Two candidates
+  // MUST have the same foundation ID when all of the following are true:
+  //
+  // o they are of the same type.
+  // o their bases have the same IP address (the ports can be different).
+  // o for reflexive and relayed candidates, the STUN or TURN servers used to
+  //   obtain them have the same IP address.
+  // o they were obtained using the same transport protocol (TCP, UDP, etc.).
+  //
+  // Similarly, two candidates MUST have different foundations if their
+  // types are different, their bases have different IP addresses, the STUN or
+  // TURN servers used to obtain them have different IP addresses, or their
+  // transport protocols are different.
+
+  rtc::StringBuilder sb;
+  sb << type_ << base_address.ipaddr().ToString() << protocol_
+     << relay_protocol_;
+
+  // https://www.rfc-editor.org/rfc/rfc5245#section-5.2
+  // [...] it is possible for both agents to mistakenly believe they are
+  // controlled or controlling. To resolve this, each agent MUST select a random
+  // number, called the tie-breaker, uniformly distributed between 0 and (2**64)
+  // - 1 (that is, a 64-bit positive integer).  This number is used in
+  // connectivity checks to detect and repair this case [...]
+  sb << rtc::ToString(tie_breaker);
+  foundation_ = rtc::ToString(rtc::ComputeCrc32(sb.Release()));
+}
+
+void Candidate::ComputePrflxFoundation() {
+  RTC_DCHECK(is_prflx());
+  RTC_DCHECK(!id_.empty());
+  foundation_ = rtc::ToString(rtc::ComputeCrc32(id_));
 }
 
 void Candidate::Assign(std::string& s, absl::string_view view) {

@@ -206,7 +206,7 @@ index 571049f3e4..f393179bbb 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 0c982a2ac6..4549c02b7a 100644
+index 9ced1f2e58..79f7c10105 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -40,6 +40,9 @@ rtc_source_set("enable_media") {
@@ -228,7 +228,7 @@ index 0c982a2ac6..4549c02b7a 100644
    rtc_library("create_peerconnection_factory") {
      visibility = [ "*" ]
      allow_poison = [ "environment_construction" ]
-@@ -219,6 +222,10 @@ rtc_source_set("ice_transport_interface") {
+@@ -221,6 +224,10 @@ rtc_source_set("ice_transport_interface") {
  }
  
  rtc_library("dtls_transport_interface") {
@@ -239,7 +239,7 @@ index 0c982a2ac6..4549c02b7a 100644
    visibility = [ "*" ]
  
    sources = [
-@@ -235,6 +242,7 @@ rtc_library("dtls_transport_interface") {
+@@ -237,6 +244,7 @@ rtc_library("dtls_transport_interface") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -247,7 +247,7 @@ index 0c982a2ac6..4549c02b7a 100644
  
  rtc_library("dtmf_sender_interface") {
    visibility = [ "*" ]
-@@ -247,6 +255,10 @@ rtc_library("dtmf_sender_interface") {
+@@ -249,6 +257,10 @@ rtc_library("dtmf_sender_interface") {
  }
  
  rtc_library("rtp_sender_interface") {
@@ -258,7 +258,7 @@ index 0c982a2ac6..4549c02b7a 100644
    visibility = [ "*" ]
  
    sources = [
-@@ -261,16 +273,31 @@ rtc_library("rtp_sender_interface") {
+@@ -263,16 +275,31 @@ rtc_library("rtp_sender_interface") {
      ":ref_count",
      ":rtc_error",
      ":rtp_parameters",
@@ -290,7 +290,7 @@ index 0c982a2ac6..4549c02b7a 100644
    visibility = [ "*" ]
    cflags = []
    sources = [
-@@ -389,6 +416,7 @@ rtc_library("libjingle_peerconnection_api") {
+@@ -391,6 +418,7 @@ rtc_library("libjingle_peerconnection_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -298,7 +298,7 @@ index 0c982a2ac6..4549c02b7a 100644
  
  rtc_source_set("frame_transformer_interface") {
    visibility = [ "*" ]
-@@ -562,6 +590,7 @@ rtc_source_set("peer_network_dependencies") {
+@@ -564,6 +592,7 @@ rtc_source_set("peer_network_dependencies") {
  }
  
  rtc_source_set("peer_connection_quality_test_fixture_api") {
@@ -306,7 +306,7 @@ index 0c982a2ac6..4549c02b7a 100644
    visibility = [ "*" ]
    testonly = true
    sources = [ "test/peerconnection_quality_test_fixture.h" ]
-@@ -611,6 +640,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
+@@ -613,6 +642,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -314,7 +314,7 @@ index 0c982a2ac6..4549c02b7a 100644
  
  rtc_source_set("frame_generator_api") {
    visibility = [ "*" ]
-@@ -730,6 +760,7 @@ rtc_library("create_frame_generator") {
+@@ -732,6 +762,7 @@ rtc_library("create_frame_generator") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
  
@@ -322,7 +322,7 @@ index 0c982a2ac6..4549c02b7a 100644
  rtc_library("create_peer_connection_quality_test_frame_generator") {
    visibility = [ "*" ]
    testonly = true
-@@ -746,6 +777,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
+@@ -748,6 +779,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -330,7 +330,7 @@ index 0c982a2ac6..4549c02b7a 100644
  
  rtc_source_set("libjingle_logging_api") {
    visibility = [ "*" ]
-@@ -925,6 +957,7 @@ rtc_source_set("refcountedbase") {
+@@ -927,6 +959,7 @@ rtc_source_set("refcountedbase") {
    ]
  }
  
@@ -338,7 +338,7 @@ index 0c982a2ac6..4549c02b7a 100644
  rtc_library("ice_transport_factory") {
    visibility = [ "*" ]
    sources = [
-@@ -948,6 +981,7 @@ rtc_library("ice_transport_factory") {
+@@ -950,6 +983,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log:rtc_event_log",
    ]
  }

@@ -74,10 +74,18 @@ class RTC_EXPORT Candidate {
   void set_component(int component) { component_ = component; }
 
   const std::string& protocol() const { return protocol_; }
+
+  // Valid protocol values are:
+  // UDP_PROTOCOL_NAME, TCP_PROTOCOL_NAME, SSLTCP_PROTOCOL_NAME,
+  // TLS_PROTOCOL_NAME.
   void set_protocol(absl::string_view protocol) { Assign(protocol_, protocol); }
 
   // The protocol used to talk to relay.
   const std::string& relay_protocol() const { return relay_protocol_; }
+
+  // Valid protocol values are:
+  // UDP_PROTOCOL_NAME, TCP_PROTOCOL_NAME, SSLTCP_PROTOCOL_NAME,
+  // TLS_PROTOCOL_NAME.
   void set_relay_protocol(absl::string_view protocol) {
     Assign(relay_protocol_, protocol);
   }
@@ -169,7 +177,15 @@ class RTC_EXPORT Candidate {
   uint16_t network_id() const { return network_id_; }
   void set_network_id(uint16_t network_id) { network_id_ = network_id; }
 
+  // From RFC 5245, section-7.2.1.3:
+  // The foundation of the candidate is set to an arbitrary value, different
+  // from the foundation for all other remote candidates.
+  // Note: Use ComputeFoundation to populate this value.
   const std::string& foundation() const { return foundation_; }
+
+  // TODO(tommi): Deprecate in favor of ComputeFoundation.
+  // For situations where serializing/deserializing a candidate is needed,
+  // the constructor can be used to inject a value for the foundation.
   void set_foundation(absl::string_view foundation) {
     Assign(foundation_, foundation);
   }
@@ -220,6 +236,25 @@ class RTC_EXPORT Candidate {
   // candidate.
   Candidate ToSanitizedCopy(bool use_hostname_address,
                             bool filter_related_address) const;
+
+  // Computes and populates the `foundation()` field.
+  // Foundation:  An arbitrary string that is the same for two candidates
+  //   that have the same type, base IP address, protocol (UDP, TCP,
+  //   etc.), and STUN or TURN server.  If any of these are different,
+  //   then the foundation will be different.  Two candidate pairs with
+  //   the same foundation pairs are likely to have similar network
+  //   characteristics. Foundations are used in the frozen algorithm.
+  // A session wide (peerconnection) tie-breaker is applied to the foundation,
+  // adds additional randomness and must be the same for all candidates.
+  void ComputeFoundation(const rtc::SocketAddress& base_address,
+                         uint64_t tie_breaker);
+
+  // https://www.rfc-editor.org/rfc/rfc5245#section-7.2.1.3
+  // Call to populate the foundation field for a new peer reflexive remote
+  // candidate. The type of the candidate must be "prflx".
+  // The foundation of the candidate is set to an arbitrary value, different
+  // from the foundation for all other remote candidates.
+  void ComputePrflxFoundation();
 
  private:
   // TODO(bugs.webrtc.org/13220): With C++17, we get a std::string assignment
