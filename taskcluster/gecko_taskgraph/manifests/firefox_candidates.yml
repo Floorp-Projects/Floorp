@@ -391,8 +391,6 @@ mapping:
             - win32-shippable
             - win64-devedition
             - win32-devedition
-            - win64-aarch64-shippable
-            - win64-aarch64-devedition
         locale_prefix: 'multi/'
         pretty_name: Firefox Setup ${version}.msix
         checksums_path: ${path_platform}/multi/Firefox Setup ${version}.msix

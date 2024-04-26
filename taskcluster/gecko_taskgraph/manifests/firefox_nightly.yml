@@ -465,7 +465,6 @@ mapping:
             - repackage-signing-shippable-l10n-msix
         only_for_platforms:
             - win64-shippable
-            - win64-aarch64-shippable
             - win32-shippable
         pretty_name: firefox-${version}.multi.${filename_platform}.installer.msix
         checksums_path: firefox-${version}.multi.${filename_platform}.installer.msix
