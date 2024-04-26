@@ -650,6 +650,10 @@ this.DateTimeBoxWidget = class {
   onKeyDown(aEvent) {
     this.log("onKeyDown key: " + aEvent.key);
 
+    if (aEvent.defaultPrevented) {
+      return;
+    }
+
     switch (aEvent.key) {
       // Toggle the picker on Space/Enter on Calendar button or Space on input,
       // close on Escape anywhere.
@@ -691,21 +695,17 @@ this.DateTimeBoxWidget = class {
           aEvent.preventDefault();
           break;
         }
-        if (this.isEditable()) {
-          // TODO(emilio, bug 1571533): These functions should look at
-          // defaultPrevented.
-          // Ctrl+Backspace/Delete on non-macOS and
-          // Cmd+Backspace/Delete on macOS to clear the field
-          if (aEvent.getModifierState("Accel")) {
-            // Clear the input's value
-            this.clearInputFields(false);
-          } else {
-            let targetField = aEvent.originalTarget;
-            this.clearFieldValue(targetField);
-            this.setInputValueFromFields();
-          }
-          aEvent.preventDefault();
+        // Ctrl+Backspace/Delete on non-macOS and
+        // Cmd+Backspace/Delete on macOS to clear the field
+        if (aEvent.getModifierState("Accel")) {
+          // Clear the input's value
+          this.clearInputFields(false);
+        } else {
+          let targetField = aEvent.originalTarget;
+          this.clearFieldValue(targetField);
+          this.setInputValueFromFields();
         }
+        aEvent.preventDefault();
         break;
       }
       case "ArrowRight":
