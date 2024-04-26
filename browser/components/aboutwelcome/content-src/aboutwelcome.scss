@@ -1409,14 +1409,19 @@ html {
       justify-content: center;
       gap: 10px;
 
-      &:hover {
-        outline: unset;
+      &:hover, &:focus-within {
+        outline: none;
       }
 
       .theme {
         flex: unset;
         width: unset;
         transition: var(--transition);
+
+        &:has(.input:focus) {
+          outline: 2px solid var(--in-content-primary-button-background);
+          outline-offset: 2px;
+        }
 
         .icon {
           width: 116px;
@@ -1533,11 +1538,15 @@ html {
           transform: scaleX(-1);
         }
 
-        &:focus,
+        &:focus-visible,
         &:active,
         &.selected {
           outline: 2px solid var(--in-content-primary-button-background);
           outline-offset: 2px;
+        }
+
+        &.selected {
+          outline-color: var(--color-accent-primary-active);
         }
 
         &.light {
