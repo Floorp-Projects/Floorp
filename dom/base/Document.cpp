@@ -2007,10 +2007,6 @@ void Document::RecordPageLoadEventTelemetry(
 
   aEventTelemetryData.loadType = mozilla::Some(loadTypeStr);
 
-  // Set the usingWebdriver flag in the pageload event based on
-  // whether a webdriver is running.
-  aEventTelemetryData.usingWebdriver = mozilla::Some(Navigator::Webdriver());
-
   // Sending a glean ping must be done on the parent process.
   if (ContentChild* cc = ContentChild::GetSingleton()) {
     cc->SendRecordPageLoadEvent(aEventTelemetryData);
