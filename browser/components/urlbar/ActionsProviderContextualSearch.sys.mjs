@@ -53,7 +53,7 @@ class ProviderContextualSearch extends ActionsProvider {
     }
 
     let engine = await this.fetchEngine(controller);
-    let icon = engine?.icon || (await engine.getIconURL?.());
+    let icon = engine?.icon || (await engine?.getIconURL?.());
     let defaultEngine = lazy.UrlbarSearchUtils.getDefaultEngine();
 
     if (
