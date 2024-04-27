@@ -17,12 +17,13 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: [macos-latest-large, macos-latest]
+        runs-on: [macos-13, macos-14]
         # macos-latest-large is x86_64 and macos-latest is arm64
 
     steps:
       - name: Init
         run: |
+          sysctl machdep.cpu
           export RUNNER_USERDIR=`echo ~`
           echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
           mkdir -p ~/downloads/artifacts
