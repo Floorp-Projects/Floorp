@@ -2,6 +2,7 @@
 <resources>
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_toolbar_menu_button">ਮੇਨੂ</string>
+    <!-- Content description: For the clear URL text button. -->
     <string name="mozac_clear_button_description">ਸਾਫ਼ ਕਰੋ</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">ਟਰੈਕ ਕਰਨ ਤੋਂ ਸੁਰੱਖਿਆ ਚਾਲੂ ਹੈ</string>
@@ -12,7 +13,7 @@
     <!-- Content description: For the site security information icon (the site security icon).-->
     <string name="mozac_browser_toolbar_content_description_site_info">ਸਾਈਟ ਜਾਣਕਾਰੀ</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
-    <string name="mozac_browser_toolbar_progress_loading">ਲੋਡ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ</string>
+    <string name="mozac_browser_toolbar_progress_loading">ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ</string>
     <!-- Content description: For the autoplay toolbar icon, it is set when the auto play permission is blocking content playing.-->
     <string name="mozac_browser_toolbar_content_description_autoplay_blocked">ਕੁਝ ਸਮੱਗਰੀ ਨੂੰ ਆਪੇ-ਪਲੇਅ ਦੀ ਸੈਟਿੰਗ ਰਾਹੀਂ ਪਾਬੰਦੀ ਲਾਈ ਹੈ</string>
 </resources>
