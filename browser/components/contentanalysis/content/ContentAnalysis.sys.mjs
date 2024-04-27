@@ -642,6 +642,36 @@ export const ContentAnalysis = {
     });
   },
 
+  _getErrorDialogMessage(aResourceNameOrOperationType) {
+    if (aResourceNameOrOperationType.name) {
+      return this.l10n.formatValueSync(
+        "contentanalysis-error-message-upload-file",
+        {
+          filename: aResourceNameOrOperationType.name,
+        }
+      );
+    }
+    let l10nId = undefined;
+    switch (aResourceNameOrOperationType.operationType) {
+      case Ci.nsIContentAnalysisRequest.eClipboard:
+        l10nId = "contentanalysis-error-message-clipboard";
+        break;
+      case Ci.nsIContentAnalysisRequest.eDroppedText:
+        l10nId = "contentanalysis-error-message-dropped-text";
+        break;
+      case Ci.nsIContentAnalysisRequest.eOperationPrint:
+        l10nId = "contentanalysis-error-message-print";
+        break;
+    }
+    if (!l10nId) {
+      console.error(
+        "Unknown operationTypeForDisplay: ",
+        aResourceNameOrOperationType
+      );
+      return "";
+    }
+    return this.l10n.formatValueSync(l10nId);
+  },
   _showSlowCABlockingMessage(
     aBrowsingContext,
     aRequestToken,
@@ -799,12 +829,10 @@ export const ContentAnalysis = {
       }
       case Ci.nsIContentAnalysisResponse.eUnspecified:
         message = await this.l10n.formatValue(
-          "contentanalysis-unspecified-error-message",
+          "contentanalysis-unspecified-error-message-content",
           {
             agent: lazy.agentName,
-            content: this._getResourceNameFromNameOrOperationType(
-              aResourceNameOrOperationType
-            ),
+            content: this._getErrorDialogMessage(aResourceNameOrOperationType),
           }
         );
         timeoutMs = this._RESULT_NOTIFICATION_TIMEOUT_MS;
@@ -819,26 +847,25 @@ export const ContentAnalysis = {
               );
               return null;
             case Ci.nsIContentAnalysisResponse.eNoAgent:
-              messageId = "contentanalysis-no-agent-connected-message";
+              messageId = "contentanalysis-no-agent-connected-message-content";
               break;
             case Ci.nsIContentAnalysisResponse.eInvalidAgentSignature:
-              messageId = "contentanalysis-invalid-agent-signature-message";
+              messageId =
+                "contentanalysis-invalid-agent-signature-message-content";
               break;
             case Ci.nsIContentAnalysisResponse.eErrorOther:
-              messageId = "contentanalysis-unspecified-error-message";
+              messageId = "contentanalysis-unspecified-error-message-content";
               break;
             default:
               console.error(
                 "Unexpected CA cancelError value: " + aRequestCancelError
               );
-              messageId = "contentanalysis-unspecified-error-message";
+              messageId = "contentanalysis-unspecified-error-message-content";
               break;
           }
           message = await this.l10n.formatValue(messageId, {
             agent: lazy.agentName,
-            content: this._getResourceNameFromNameOrOperationType(
-              aResourceNameOrOperationType
-            ),
+            content: this._getErrorDialogMessage(aResourceNameOrOperationType),
           });
           timeoutMs = this._RESULT_NOTIFICATION_TIMEOUT_MS;
         }
