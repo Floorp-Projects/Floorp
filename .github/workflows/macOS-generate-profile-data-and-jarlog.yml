@@ -17,8 +17,8 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: [macos-latest, self-hosted]
-        # macos-latest is x86_64, self-hosted is arm64
+        runs-on: [macos-latest-large, macos-latest]
+        # macos-latest-large is x86_64 and macos-latest is arm64
 
     steps:
       - name: Init
@@ -78,7 +78,12 @@ jobs:
           
       - name: Generate Profdata 📊
         run: |
-          LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-${ARCH_TYPE}-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
+          ./mach python python/mozbuild/mozbuild/action/install.py $MOZ_FETCHES_DIR/target.dmg $MOZ_FETCHES_DIR
+          ./mach python build/pgo/profileserver.py --binary $MOZ_FETCHES_DIR/*.app/Contents/MacOS/floorp
+
+          export LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata
+          export JARLOG_FILE="en-US.log"
+          ./mach python build/pgo/profileserver.py --binary ./obj-${ARCH_TYPE}-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
         env:
           GHA_BUILD_MACHINE: ${{ matrix.runs-on }}
 
