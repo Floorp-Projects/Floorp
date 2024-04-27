@@ -95,6 +95,11 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         onHelpButtonClick = {
                             store.dispatch(MenuAction.Navigate.Help)
                         },
+                        onSwitchToDesktopSiteMenuClick = {},
+                        onFindInPageMenuClick = {},
+                        onToolsMenuClick = {},
+                        onSaveMenuClick = {},
+                        onExtensionsMenuClick = {},
                         onSettingsButtonClick = {
                             store.dispatch(MenuAction.Navigate.Settings)
                         },
