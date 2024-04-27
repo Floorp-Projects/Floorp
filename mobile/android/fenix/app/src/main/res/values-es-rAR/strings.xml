@@ -2735,7 +2735,7 @@
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Continuar</string>
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Completa esta encuesta</string>
+    <string name="micro_survey_survey_header">Completá esta encuesta</string>
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">Nota de privacidad</string>
     <!-- The submit button label text -->
@@ -2743,7 +2743,7 @@
     <!-- The close button label text -->
     <string name="micro_survey_close_button_label">Cerrar</string>
     <!-- The survey completion confirmation text -->
-    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">¡Gracias por sus comentarios!</string>
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">¡Gracias por tus comentarios!</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">Muy satisfecho</string>
     <!-- Option for likert scale -->
