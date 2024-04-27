@@ -272,5 +272,14 @@ Maybe<gfx::Matrix4x4> StackingContextHelper::GetDeferredTransformMatrix()
   }
 }
 
+void StackingContextHelper::ClearDeferredTransformItem() const {
+  mDeferredTransformItem = nullptr;
+}
+
+void StackingContextHelper::RestoreDeferredTransformItem(
+    nsDisplayTransform* aItem) const {
+  mDeferredTransformItem = aItem;
+}
+
 }  // namespace layers
 }  // namespace mozilla
