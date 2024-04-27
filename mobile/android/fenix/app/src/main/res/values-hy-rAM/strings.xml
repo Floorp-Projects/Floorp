@@ -262,6 +262,10 @@
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">Գաղտնաբառեր</string>
 
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">Նորույթները %1$s-ում</string>
+
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
     <string name="extensions_management_no_extensions">Այստեղ ընդլայնումներ չկան</string>
@@ -2692,6 +2696,31 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Հավելել ոչ ակտիվ ներդիրներին</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Ավելացնել գաղտնի ներդիրներին</string>
+
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Շարունակել</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header">Լրացրեք այս հարցումը</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice">Գաղտնիության դրույթներ</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Ուղարկել</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label">Փակել</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Շնորհակալությո՜ւն Ձեր արձագանքի համար:</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">Շատ գոհ</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Գոհ</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Չեզոք</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Դժգոհ</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">Շատ դժգոհ</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
