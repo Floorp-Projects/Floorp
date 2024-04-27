@@ -368,7 +368,8 @@ renaming_overrides_prefixing = true
 
 "CalcLengthPercentage" = """
   inline CSSCoord ResolveToCSSPixels(CSSCoord aBasis) const;
-  inline nscoord Resolve(nscoord aBasis) const;
+  template<typename Rounder>
+  inline nscoord Resolve(nscoord aBasis, Rounder) const;
 """
 
 "GenericCalcNode" = """
@@ -429,10 +430,10 @@ renaming_overrides_prefixing = true
   inline bool IsDefinitelyZero() const;
   inline CSSCoord ResolveToCSSPixels(CSSCoord aPercentageBasisInCSSPixels) const;
   template<typename T> inline CSSCoord ResolveToCSSPixelsWith(T aPercentageGetter) const;
-  template<typename T, typename PercentRounder>
-  inline nscoord Resolve(T aPercentageGetter, PercentRounder) const;
-  template<typename PercentRounder>
-  inline nscoord Resolve(nscoord aPercentageBasis, PercentRounder) const;
+  template<typename T, typename Rounder>
+  inline nscoord Resolve(T aPercentageGetter, Rounder) const;
+  template<typename Rounder>
+  inline nscoord Resolve(nscoord aPercentageBasis, Rounder) const;
   template<typename T> inline nscoord Resolve(T aPercentageGetter) const;
   inline nscoord Resolve(nscoord aPercentageBasis) const;
 """
