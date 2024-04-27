@@ -1,0 +1,12 @@
+diff --git a/gfx/cairo/cairo/src/cairo-cff-subset.c b/gfx/cairo/cairo/src/cairo-cff-subset.c
+--- a/gfx/cairo/cairo/src/cairo-cff-subset.c
++++ b/gfx/cairo/cairo/src/cairo-cff-subset.c
+@@ -3154,7 +3154,7 @@ static cairo_int_status_t
+     cairo_status_t status;
+     cairo_cff_font_t *font;
+ 
+-    font = _cairo_malloc (sizeof (cairo_cff_font_t));
++    font = calloc (1, sizeof (cairo_cff_font_t));
+     if (unlikely (font == NULL))
+ 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
