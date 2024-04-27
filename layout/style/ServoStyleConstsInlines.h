@@ -700,12 +700,9 @@ CSSCoord StyleCalcLengthPercentage::ResolveToCSSPixels(CSSCoord aBasis) const {
   return Servo_ResolveCalcLengthPercentage(this, aBasis);
 }
 
-template <typename Rounder>
-nscoord StyleCalcLengthPercentage::Resolve(nscoord aBasis,
-                                           Rounder aRounder) const {
-  static_assert(std::is_same_v<decltype(aRounder(1.0f)), nscoord>);
-  CSSCoord result = ResolveToCSSPixels(CSSPixel::FromAppUnits(aBasis));
-  return aRounder(result * AppUnitsPerCSSPixel());
+nscoord StyleCalcLengthPercentage::Resolve(nscoord aBasis) const {
+  return detail::DefaultLengthToAppUnits(
+      ResolveToCSSPixels(CSSPixel::FromAppUnits(aBasis)));
 }
 
 template <>
@@ -730,10 +727,11 @@ CSSCoord LengthPercentage::ResolveToCSSPixelsWith(T aPercentageGetter) const {
   return ResolveToCSSPixels(aPercentageGetter());
 }
 
-template <typename T, typename Rounder>
-nscoord LengthPercentage::Resolve(T aPercentageGetter, Rounder aRounder) const {
+template <typename T, typename PercentRounder>
+nscoord LengthPercentage::Resolve(T aPercentageGetter,
+                                  PercentRounder aPercentRounder) const {
   static_assert(std::is_same_v<decltype(aPercentageGetter()), nscoord>);
-  static_assert(std::is_same_v<decltype(aRounder(1.0f)), nscoord>);
+  static_assert(std::is_same_v<decltype(aPercentRounder(1.0f)), nscoord>);
   if (ConvertsToLength()) {
     return ToLength();
   }
@@ -742,9 +740,9 @@ nscoord LengthPercentage::Resolve(T aPercentageGetter, Rounder aRounder) const {
   }
   nscoord basis = aPercentageGetter();
   if (IsPercentage()) {
-    return aRounder(basis * AsPercentage()._0);
+    return aPercentRounder(basis * AsPercentage()._0);
   }
-  return AsCalc().Resolve(basis, aRounder);
+  return AsCalc().Resolve(basis);
 }
 
 nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
@@ -757,10 +755,11 @@ nscoord LengthPercentage::Resolve(T aPercentageGetter) const {
   return Resolve(aPercentageGetter, detail::DefaultPercentLengthToAppUnits);
 }
 
-template <typename Rounder>
+template <typename PercentRounder>
 nscoord LengthPercentage::Resolve(nscoord aPercentageBasis,
-                                  Rounder aRounder) const {
-  return Resolve([aPercentageBasis] { return aPercentageBasis; }, aRounder);
+                                  PercentRounder aPercentRounder) const {
+  return Resolve([aPercentageBasis] { return aPercentageBasis; },
+                 aPercentRounder);
 }
 
 void LengthPercentage::ScaleLengthsBy(float aScale) {
