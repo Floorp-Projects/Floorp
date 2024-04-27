@@ -76,12 +76,10 @@ jobs:
           mkdir -p ./floorp
           cp ${{ steps.download-artifacts-mac-enable-profgen.outputs.download-path }}/${ARCH_TYPE}-apple-darwin-output.tar.xz ./
           tar xf ${ARCH_TYPE}-apple-darwin-output.tar.xz
-          
+
+## ./mach python python/mozbuild/mozbuild/action/install.py $MOZ_FETCHES_DIR/target.dmg $MOZ_FETCHES_DIR
       - name: Generate Profdata 📊
         run: |
-          ./mach python python/mozbuild/mozbuild/action/install.py $MOZ_FETCHES_DIR/target.dmg $MOZ_FETCHES_DIR
-          ./mach python build/pgo/profileserver.py --binary $MOZ_FETCHES_DIR/*.app/Contents/MacOS/floorp
-
           export LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata
           export JARLOG_FILE="en-US.log"
           ./mach python build/pgo/profileserver.py --binary ./obj-${ARCH_TYPE}-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
