@@ -26,6 +26,30 @@ add_setup(async function setup() {
   await AddonTestUtils.waitForSearchProviderStartup(ext);
 });
 
+add_task(async function test_no_engine() {
+  const ENGINE_TEST_URL = "https://example.org/";
+  let onLoaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    ENGINE_TEST_URL
+  );
+  BrowserTestUtils.startLoadingURIString(
+    gBrowser.selectedBrowser,
+    ENGINE_TEST_URL
+  );
+  await onLoaded;
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
+  });
+
+  Assert.ok(
+    UrlbarTestUtils.getResultCount(window) > 0,
+    "At least one result is shown"
+  );
+});
+
 add_task(async function test_selectContextualSearchResult_already_installed() {
   const ENGINE_TEST_URL = "https://example.com/";
   let onLoaded = BrowserTestUtils.browserLoaded(
