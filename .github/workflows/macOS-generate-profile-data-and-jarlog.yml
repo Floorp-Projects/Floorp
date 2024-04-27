@@ -71,6 +71,10 @@ jobs:
           export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
           ./mach --no-interactive bootstrap --application-choice browser
 
+      - name: Install setup tool via PIP 📦
+        run: |
+          pip install setuptools
+
       - name: Extract artifact 📂
         run: |
           mkdir -p ./floorp
