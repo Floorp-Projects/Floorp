@@ -14,7 +14,6 @@
 #include "mozilla/dom/PushManagerBinding.h"
 #include "mozilla/dom/PushSubscription.h"
 #include "mozilla/dom/PushSubscriptionOptionsBinding.h"
-#include "mozilla/dom/PushUtil.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/WorkerRunnable.h"

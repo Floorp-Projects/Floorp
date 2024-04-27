@@ -35,9 +35,9 @@ dictionary PushSubscriptionInit
 {
   required USVString endpoint;
   required USVString scope;
-  ArrayBuffer? p256dhKey;
-  ArrayBuffer? authSecret;
-  BufferSource? appServerKey;
+  ArrayBuffer? p256dhKey = null;
+  ArrayBuffer? authSecret = null;
+  BufferSource? appServerKey = null;
   EpochTimeStamp? expirationTime = null;
 };
 
