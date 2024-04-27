@@ -2096,9 +2096,12 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         mAsrStack.push_back(stopAtAsrForChildren);
 
         // If we're going to emit a deferred transform onto this layer,
-        // keep track of that so descendant layers know not to emit the
-        // same deferred transform.
+        // clear the deferred transform from the StackingContextHelper
+        // while we are building the subtree of descendant layers.
+        // This ensures that the deferred transform is not applied in
+        // duplicate to any of our descendant layers.
         if (newLayerData->mDeferredItem) {
+          aSc.ClearDeferredTransformItem();
           mDeferredTransformStack.push_back(newLayerData->mDeferredItem);
         }
       }
@@ -2143,6 +2146,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         mAsrStack.pop_back();
 
         if (newLayerData->mDeferredItem) {
+          aSc.RestoreDeferredTransformItem(newLayerData->mDeferredItem);
           MOZ_ASSERT(!mDeferredTransformStack.empty());
           mDeferredTransformStack.pop_back();
         }
