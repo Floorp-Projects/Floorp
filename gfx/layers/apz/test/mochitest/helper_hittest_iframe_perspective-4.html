@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1888904
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test that events are delivered with correct coordinates to an iframe inide a no-op perspective transform</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+  iframe {
+    border: 0;
+    background-color: blue;
+  }
+  .modal-dialog {
+    position: absolute;
+    top: 500px;
+    left: 500px;
+    transform: translate(-50%, -50%);
+    border: 1px solid black;
+  }
+  .item {
+    perspective: 1000px;
+    transform: translate3d(0, 0, 0);
+  }
+  .g-recaptcha {
+    transform-origin: 0 0;
+    transform: scale(0.91);
+  }
+  </style>
+</head>
+<body>
+  <div class="modal-dialog">
+    <div class="item">
+      <div class="g-recaptcha">
+        <iframe id="iframe" src="https://example.com/tests/gfx/layers/apz/test/mochitest/helper_hittest_iframe_perspective_child.html"></iframe>
+      </div>
+    </div>
+      </div>
+    </div>
+  </div>
+  <script type="application/javascript">
+async function test() {
+  // Wait for iframe to receive content transforms.
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await SpecialPowers.contentTransformsReceived(content.window);
+  });
+
+  let clickCoordsInChild = {
+    offsetX: 0,
+    offsetY: 0
+  };
+  let childMessagePromise = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      let data = JSON.parse(event.data);
+      if ("type" in data && data.type == "got-mouse-down") {
+        clickCoordsInChild = data.coords;
+        resolve();
+      }
+    })
+  });
+  await synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    target: iframe,
+    offsetX: 100,
+    offsetY: 100
+  });
+  await childMessagePromise;
+  is(clickCoordsInChild.offsetX, 110 /* 100 / 0.91 */, "x coordinate is correct");
+  is(clickCoordsInChild.offsetY, 110 /* 100 / 0.91 */, "y coordinate is correct");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</body>
+</html>
