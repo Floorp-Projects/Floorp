@@ -36,6 +36,12 @@ import org.mozilla.fenix.theme.Theme
  * @param onMozillaAccountButtonClick Invoked when the user clicks on Mozilla account button.
  * @param onHelpButtonClick Invoked when the user clicks on the help button.
  * @param onSettingsButtonClick Invoked when the user clicks on the settings button.
+ * @param onSwitchToDesktopSiteMenuClick Invoked when the user clicks on the switch to desktop site
+ * menu toggle.
+ * @param onFindInPageMenuClick Invoked when the user clicks on the find in page menu item.
+ * @param onToolsMenuClick Invoked when the user clicks on the tools menu item.
+ * @param onSaveMenuClick Invoked when the user clicks on the save menu item.
+ * @param onExtensionsMenuClick Invoked when the user clicks on the extensions menu item.
  * @param onBookmarksMenuClick Invoked when the user clicks on the bookmarks menu item.
  * @param onHistoryMenuClick Invoked when the user clicks on the history menu item.
  * @param onDownloadsMenuClick Invoked when the user clicks on the downloads menu item.
@@ -53,6 +59,11 @@ fun MenuDialog(
     onMozillaAccountButtonClick: () -> Unit,
     onHelpButtonClick: () -> Unit,
     onSettingsButtonClick: () -> Unit,
+    onSwitchToDesktopSiteMenuClick: () -> Unit,
+    onFindInPageMenuClick: () -> Unit,
+    onToolsMenuClick: () -> Unit,
+    onSaveMenuClick: () -> Unit,
+    onExtensionsMenuClick: () -> Unit,
     onBookmarksMenuClick: () -> Unit,
     onHistoryMenuClick: () -> Unit,
     onDownloadsMenuClick: () -> Unit,
@@ -73,6 +84,11 @@ fun MenuDialog(
 
         MainMenu(
             accessPoint = accessPoint,
+            onSwitchToDesktopSiteMenuClick = onSwitchToDesktopSiteMenuClick,
+            onFindInPageMenuClick = onFindInPageMenuClick,
+            onToolsMenuClick = onToolsMenuClick,
+            onSaveMenuClick = onSaveMenuClick,
+            onExtensionsMenuClick = onExtensionsMenuClick,
             onBookmarksMenuClick = onBookmarksMenuClick,
             onHistoryMenuClick = onHistoryMenuClick,
             onDownloadsMenuClick = onDownloadsMenuClick,
@@ -86,9 +102,15 @@ fun MenuDialog(
 /**
  * Wrapper column containing the main menu items.
  */
+@Suppress("LongParameterList")
 @Composable
 private fun MainMenu(
     accessPoint: MenuAccessPoint,
+    onSwitchToDesktopSiteMenuClick: () -> Unit,
+    onFindInPageMenuClick: () -> Unit,
+    onToolsMenuClick: () -> Unit,
+    onSaveMenuClick: () -> Unit,
+    onExtensionsMenuClick: () -> Unit,
     onBookmarksMenuClick: () -> Unit,
     onHistoryMenuClick: () -> Unit,
     onDownloadsMenuClick: () -> Unit,
@@ -120,6 +142,15 @@ private fun MainMenu(
             )
         }
 
+        ToolsAndActionsMenuGroup(
+            accessPoint = accessPoint,
+            onSwitchToDesktopSiteMenuClick = onSwitchToDesktopSiteMenuClick,
+            onFindInPageMenuClick = onFindInPageMenuClick,
+            onToolsMenuClick = onToolsMenuClick,
+            onSaveMenuClick = onSaveMenuClick,
+            onExtensionsMenuClick = onExtensionsMenuClick,
+        )
+
         LibraryMenuGroup(
             onBookmarksMenuClick = onBookmarksMenuClick,
             onHistoryMenuClick = onHistoryMenuClick,
@@ -133,6 +164,61 @@ private fun MainMenu(
                 onNewInFirefoxMenuClick = onNewInFirefoxMenuClick,
             )
         }
+    }
+}
+
+@Composable
+private fun ToolsAndActionsMenuGroup(
+    accessPoint: MenuAccessPoint,
+    onSwitchToDesktopSiteMenuClick: () -> Unit,
+    onFindInPageMenuClick: () -> Unit,
+    onToolsMenuClick: () -> Unit,
+    onSaveMenuClick: () -> Unit,
+    onExtensionsMenuClick: () -> Unit,
+) {
+    MenuGroup {
+        if (accessPoint == MenuAccessPoint.Browser) {
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_switch_to_desktop_site),
+                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_device_desktop_24),
+                onClick = onSwitchToDesktopSiteMenuClick,
+            )
+
+            Divider(color = FirefoxTheme.colors.borderSecondary)
+
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_find_in_page_2),
+                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_search_24),
+                onClick = onFindInPageMenuClick,
+            )
+
+            Divider(color = FirefoxTheme.colors.borderSecondary)
+
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_tools),
+                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_tool_24),
+                onClick = onToolsMenuClick,
+                afterIconPainter = painterResource(id = R.drawable.mozac_ic_chevron_right_24),
+            )
+
+            Divider(color = FirefoxTheme.colors.borderSecondary)
+
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_save),
+                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_save_24),
+                onClick = onSaveMenuClick,
+                afterIconPainter = painterResource(id = R.drawable.mozac_ic_chevron_right_24),
+            )
+
+            Divider(color = FirefoxTheme.colors.borderSecondary)
+        }
+
+        MenuItem(
+            label = stringResource(id = R.string.browser_menu_extensions),
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_extension_24),
+            onClick = onExtensionsMenuClick,
+            afterIconPainter = painterResource(id = R.drawable.mozac_ic_chevron_right_24),
+        )
     }
 }
 
@@ -216,6 +302,11 @@ private fun MenuDialogPreview() {
                 onMozillaAccountButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
+                onSwitchToDesktopSiteMenuClick = {},
+                onFindInPageMenuClick = {},
+                onToolsMenuClick = {},
+                onSaveMenuClick = {},
+                onExtensionsMenuClick = {},
                 onBookmarksMenuClick = {},
                 onHistoryMenuClick = {},
                 onDownloadsMenuClick = {},
@@ -242,6 +333,11 @@ private fun MenuDialogPrivatePreview() {
                 onMozillaAccountButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
+                onSwitchToDesktopSiteMenuClick = {},
+                onFindInPageMenuClick = {},
+                onToolsMenuClick = {},
+                onSaveMenuClick = {},
+                onExtensionsMenuClick = {},
                 onBookmarksMenuClick = {},
                 onHistoryMenuClick = {},
                 onDownloadsMenuClick = {},
