@@ -162,8 +162,10 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">یئنی گیزلی تاغ</string>
 
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">رمزلر شورتکاتی</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">رمز‌لر</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">رمزلر شورتکاتی</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -205,11 +207,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">دوردور</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">تاخیلان‌لار</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لار</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">اوزانتی‌لار</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">حساب بیلگی‌لری</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">بوردا هئچ تاخیلان یوخ</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">بوردا هئچ تاخیلان یوخ</string>
 
 
     <!-- Browser menu button that sends a user to help articles -->
@@ -227,7 +231,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">آناصفحه‌یه آرتیر</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">قوْش</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">قوْش</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">گئنه دؤنگل</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -266,6 +270,27 @@
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">آنایارپاغی اؤزللشدیر</string>
 
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in">گیریش</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">دؤنگل رمزلری، تاغلاری، و داهاسی</string>
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">دؤنگل اوچون گئنه گیرین</string>
+
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">   دؤنگل دایاندیریلدی</string>
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">یئنی گیزلی تاغ</string>
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">رمز‌لر</string>
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">%1$s-دا یئنی</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">بوردا هئچ اوزانتی یوخ</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">باش صفحه</string>
@@ -278,6 +303,11 @@
 
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">صفحه‌نی ترجومه ائله</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">صفحه %1$s دیلیندن %2$s دیلینه چئویریلدی.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -357,9 +387,15 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">فایرفاکس گیزللیک بیلدیریمی</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">گیزلیلیک بیلدیریمیزده آرتیق بیلین</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">سیزی قوروماغی سئویریک</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">میلیون‌لارجا فایرفاکسی نییه سئودیگینی اؤرگه‌شین</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">داها چوخ سئچیمله گوونلی مورور</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">نفع آختارمیان مورورچوموز، شیرکتلرین سیزی وب‌ده گیزلیجه تعقیب ائتمه‌سینی مسدود ائلییر.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -617,10 +653,10 @@
     <string name="quit_application">دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">تاخیلان‌لار</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لار</string>
 
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">تاخیلانیْ فایل‌دان قوْش</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلانیْ فایل‌دان قوْش</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">بیلدیریش‌لر</string>
     <!-- Summary for notification preference indicating notifications are allowed -->
@@ -630,7 +666,7 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">اؤزل تاخیْلان مجموعه‌سی</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">اؤزل تاخیْلان مجموعه‌سی</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">تامام</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -641,7 +677,7 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">مجموعه صاحیبی (قوللانیجیْ آیدی‌سی)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">تاخیْلان مجموعه‌‌سی ایصلاح اوْلدوُ. دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">تاخیْلان مجموعه‌‌سی ایصلاح اوْلدوُ. دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -700,22 +736,22 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">ایندی یئنی تاخیْلان‌لار وار</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">ایندی یئنی تاخیْلان‌لار وار</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">فایرفاکسیْ اؤزوُنوز ائتمک ایمکانیْ وئرن 100 دن چوْخ یئنی اوُزانتیا باخیْن.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">تاخیلان‌لاریْ آراشدیْر</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لاریْ آراشدیْر</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">تاخیلان‌لار گئچیجی اوْلاراق گوُجدن سالیْنمیش.</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لار گئچیجی اوْلاراق گوُجدن سالیْنمیش.</string>
 
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">بیر و یا نئچه تاخیْلانین ایشی دایاندیریلدیْ، بوُدا سیستمیزی ثابیتسیز ائله‌دی. %1$s تاخیلانی(لاریْ) یئنی‌دن باشلاتماغا باشاریْسیز اوْلدو. \n\n تاخیلانلار ایندیکی اوتورومونوزدا یئنی‌دن ایشه سالیْنمیاجاق. \n\n تاخیلانی(لار)ین سیلینمه‌سی و یا ایشدن سالینماسیْ بو موُشکولو حل ائلیه بیلر.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">بیر و یا نئچه تاخیْلانین ایشی دایاندیریلدیْ، بوُدا سیستمیزی ثابیتسیز ائله‌دی. %1$s تاخیلانی(لاریْ) یئنی‌دن باشلاتماغا باشاریْسیز اوْلدو. \n\n تاخیلانلار ایندیکی اوتورومونوزدا یئنی‌دن ایشه سالیْنمیاجاق. \n\n تاخیلانی(لار)ین سیلینمه‌سی و یا ایشدن سالینماسیْ بو موُشکولو حل ائلیه بیلر.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">تاخیلان‌لاریْ یئنی‌دن باشلاتماغا چالیْشین</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لاریْ یئنی‌دن باشلاتماغا چالیْشین</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">تاخیلان‌لاریْ گوُجسوز ائتمه‌گه ایدامه وئرین</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">تاخیلان‌لاریْ گوُجسوز ائتمه‌گه ایدامه وئرین</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -732,9 +768,9 @@
     <string name="preferences_sync_bookmarks">بوُکمارک‌لار</string>
 
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">گیریش‌لر</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">گیریش‌لر</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">رمز‌لر</string>
+    <string name="preferences_sync_logins_2">رمز‌لر</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">آچیْق تاغ‌لار</string>
     <!-- Preference for signing out -->
@@ -762,10 +798,10 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s - %2$s %3$s</string>
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">اعتباری کارتلار</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">اعتباری کارتلار</string>
 
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">اؤدمه آپاری‌ْلاری</string>
+    <string name="preferences_sync_credit_cards_2">اؤدمه آپاری‌ْلاری</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">آدرس‌لر</string>
 
@@ -1355,5 +1391,7 @@
 
     <!-- Translations feature-->
 
+
+    <!-- Micro survey -->
 
     </resources>

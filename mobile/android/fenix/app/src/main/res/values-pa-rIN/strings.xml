@@ -268,6 +268,10 @@
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">ਪਾਸਵਰਡ</string>
 
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">%1$s ਵਿੱਚ ਨਵਾਂ</string>
+
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
     <string name="extensions_management_no_extensions">ਇੱਥੇ ਕੋਈ ਇਕਸਟੈਨਸ਼ਨ ਨਹੀਂ ਹੈ</string>
@@ -677,6 +681,9 @@
     <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਭੰਡਾਰ ਸੋਧਿਆ ਗਿਆ। ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰਨ ਲਈ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ
 ਬੰਦ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…</string>
 
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">ਇਕਸਟੈਨਸ਼ਨ ਭੰਡਾਰ ਨੂੰ ਸੋਧਿਆ ਗਿਆ। ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰਨ ਲਈ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰਬੰਦ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…</string>
+
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">ਵਾਪਸ ਜਾਓ</string>
@@ -748,6 +755,10 @@
     <string name="extension_process_crash_dialog_title">ਇਕਸਟੈਨਸ਼ਨਾਂ ਆਰਜ਼ੀ ਤੌਰ ਉੱਤੇ ਅਸਮਰੱਥ ਹਨ</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
     <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">ਇੱਕ ਜਾਂ ਵੱਧ ਐਡ-ਆਨ ਕੰਮ ਨਹੀਂ ਕਰ ਰਹੀਆਂ, ਜਿਸ ਨਾਲ ਤੁਹਾਡਾ ਸਿਸਟਮ ਅਸਥਿਰ ਹੋ ਰਿਹਾ ਹੈ। %1$s ਨੇ ਐਡ-ਆਨ ਨੂੰ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਅਸਫ਼ਲ ਕੋਸ਼ਿਸ਼ ਕੀਤੀ ਸੀ।\n\nਤੁਹਾਡੇ ਮੌਜੂਦਾ ਸ਼ੈਸ਼ਨ ਦੇ ਦੌਰਾਨ ਐਡ-ਆਨ ਮੁੜ-ਸ਼ੁਰੂ ਨਹੀਂ ਹੋਵੇਗੀ।\n\nਐਡ-ਆਨ ਨੂੰ ਹਟਾਉਣ ਜਾਂ ਅਸਮਰੱਥ ਕਰਨ ਨਾਲ ਇਹ ਮਸਲਾ ਠੀਕ ਹੋ ਸਕਦਾ ਹੈ।</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">ਇੱਕ ਜਾਂ ਵੱਧ ਇਕਸਟੈਨਸ਼ਨਾਂ ਕੰਮ ਨਹੀਂ ਕਰ ਰਹੀਆਂ, ਜਿਸ ਨਾਲ ਤੁਹਾਡਾ ਸਿਸਟਮ ਅਸਥਿਰ ਹੋ ਰਿਹਾ ਹੈ। %1$s ਨੇ ਇਕਸਟੈਨਸ਼ਨਾਂ ਨੂੰ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਅਸਫ਼ਲ ਕੋਸ਼ਿਸ਼ ਕੀਤੀ ਸੀ।\n\nਤੁਹਾਡੇ ਮੌਜੂਦਾ ਸ਼ੈਸ਼ਨ ਦੇ ਦੌਰਾਨ ਇਕਸਟੈਨਸ਼ਨ ਮੁੜ-ਸ਼ੁਰੂ ਨਹੀਂ ਹੋਵੇਗੀ।\n\nਐਡ-ਆਨ ਨੂੰ ਹਟਾਉਣ ਜਾਂ ਅਸਮਰੱਥ ਕਰਨ ਨਾਲ ਇਹ ਮਸਲਾ ਠੀਕ ਹੋ ਸਕਦਾ ਹੈ।</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
@@ -2714,6 +2725,31 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">ਨਾ-ਸਰਗਰਮ ਟੈਬਾਂ ਵਿੱਚ ਜੋੜੋ</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਵਿੱਚ ਜੋੜੋ</string>
+
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">ਜਾਰੀ ਰੱਖੋ</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header">ਇਹ ਸਰਵੇਖਣ ਨੂੰ ਪੂਰਾ ਕਰੋ</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">ਭੇਜੋ</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label">ਬੰਦ ਕਰੋ</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">ਤੁਹਾਡੀ ਫ਼ੀਡਬੈਕ ਲਈ ਤੁਹਾਡਾ ਧੰਨਵਾਦ ਹੈ!</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">ਬਹੁਤ ਸੰਤੁਸ਼ਟ</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">ਸੰਤੁਸ਼ਟ</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">ਠੀਕ-ਠਾਕ</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">ਅਸੰਤੁਸ਼ਟ</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">ਬਹੁਤ ਅਸੰਤੁਸ਼ਟ</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
