@@ -257,7 +257,7 @@
     <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
     <string name="browser_menu_sign_back_in_to_sync">Volte a iniciar sessão para sincronizar</string>
     <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
-    <string name="browser_menu_syncing_paused_caption">Sincronização em pausa</string>
+    <string name="browser_menu_syncing_paused_caption">Sincronização pausada</string>
     <!-- Browser menu label that creates a private tab -->
     <string name="browser_menu_new_private_tab">Novo separador privado</string>
     <!-- Browser menu label that navigates to the Password screen -->
@@ -2714,13 +2714,13 @@
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Continuar</string>
     <!-- The survey header -->
-    <string name="micro_survey_survey_header" tools:ignore="UnusedResources">Concluir este questionário</string>
+    <string name="micro_survey_survey_header">Concluir este questionário</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice" tools:ignore="UnusedResources">Política de privacidade</string>
+    <string name="micro_survey_privacy_notice">Política de privacidade</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Submeter</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Fechar</string>
+    <string name="micro_survey_close_button_label">Fechar</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Obrigado pela sua opinião!</string>
     <!-- Option for likert scale -->

@@ -89,7 +89,7 @@
     <!-- A link that points to the detail page of the add-on. -->
     <string name="mozac_feature_addons_more_info_link" moz:removedIn="126" tools:ignore="UnusedResources">Mais acerca deste extra</string>
     <!-- A link that points to the detail page of the extension. -->
-    <string name="mozac_feature_addons_more_info_link_2">Mais acerca desta extensão</string>
+    <string name="mozac_feature_addons_more_info_link_2">Mais sobre esta extensão</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Definições</string>
     <!-- Indicates the add-on is enabled. -->
@@ -185,7 +185,7 @@
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel" moz:removedIn="126" tools:ignore="UnusedResources">Atualizações do extra</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_updater_notification_channel_2">Atualizações de extensões</string>
+    <string name="mozac_feature_addons_updater_notification_channel_2">Atualizações da extensão</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_supported_checker_notification_channel" tools:ignore="UnusedResources">Verificador de extras suportados</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
