@@ -480,7 +480,7 @@ function bytesToString(bytes) {
 function check_http_info(request, expected_httpVersion, expected_proxy) {
   let httpVersion = "";
   try {
-    httpVersion = request.protocolVersion;
+    httpVersion = request.QueryInterface(Ci.nsIHttpChannel).protocolVersion;
   } catch (e) {}
 
   request.QueryInterface(Ci.nsIProxiedChannel);
