@@ -88,6 +88,8 @@
     <string name="mozac_feature_addons_rating">Prizadur</string>
     <!-- A link that points to the detail page of the add-on. -->
     <string name="mozac_feature_addons_more_info_link" moz:removedIn="126" tools:ignore="UnusedResources">Gouzout muioc’h diwar-benn an askouezh-mañ</string>
+    <!-- A link that points to the detail page of the extension. -->
+    <string name="mozac_feature_addons_more_info_link_2">Gouzout muioc’h diwar-benn an askouezh-mañ</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Arventennoù</string>
     <!-- Indicates the add-on is enabled. -->
