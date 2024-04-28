@@ -55,6 +55,7 @@ jobs:
           path: ~/downloads/artifacts
 
       - uses: actions/setup-python@v5
+        if: ${{ env.ARCH_TYPE == 'x86_64' }}
         with:
           python-version: '3.11'
 
