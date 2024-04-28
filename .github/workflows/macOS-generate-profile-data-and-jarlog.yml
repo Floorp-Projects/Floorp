@@ -17,7 +17,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: [macos-13, macos-14]
+        runs-on: [macos-13, self-hosted]
         # macos-latest-large is x86_64 and macos-latest is arm64
 
     steps:
