@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
-    <string name="mozac_browser_engine_system_alert_title">%1$s ਉੱਤੇ ਪੇਜ਼ ਕਹਿੰਦਾ ਹੈ:</string>
+    <string name="mozac_browser_engine_system_alert_title">%1$s ਉੱਤੇ ਸਫ਼ਾ ਦਰਸਾਉਂਦਾ ਹੈ:</string>
     <!-- Text for the message of an auth dialog displayed by a web page.
     %1$s will be replaced by the hostname or a description of the protected area/site, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
     <string name="mozac_browser_engine_system_auth_message">%2$s ਤੁਹਾਡੇ ਵਰਤੋਂਕਾਰ-ਨਾਂ ਅਤੇ ਪਾਸਵਰਡ ਦੀ ਮੰਗ ਕਰ ਰਹੀ ਹੈ। ਸਾਈਟ ਕਹਿੰਦੀ ਹੈ: “%1$s”</string>
