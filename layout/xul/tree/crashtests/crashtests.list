@@ -13,5 +13,5 @@ load 399715-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/tree/crashtests/414170-1.xhtml
 load 479931-1.xhtml
 load 585815.html
-skip-if(wayland) load 601427.html # wayland: Bug 1857258
+load 601427.html
 load chrome://reftest/content/crashtests/layout/xul/tree/crashtests/730441-3.xhtml
