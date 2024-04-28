@@ -37,7 +37,7 @@ jobs:
       - name: Check Arch type
         shell: bash
         run: |
-          if [[ $GHA_BUILD_MACHINE != 'macos-latest' ]]; then
+          if [[ $GHA_BUILD_MACHINE != 'macos-13' ]]; then
             export ARCH_TYPE=`echo "aarch64"`
             echo "ARCH_TYPE=$ARCH_TYPE" >> $GITHUB_ENV
           else
