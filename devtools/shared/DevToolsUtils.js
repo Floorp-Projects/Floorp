@@ -730,11 +730,7 @@ function mainThreadFetch(
  * @param {Object} options - The options object passed to @method fetch.
  * @return {nsIChannel} - The newly created channel. Throws on failure.
  */
-function newChannelForURL(
-  url,
-  { policy, window, principal },
-  recursing = false
-) {
+function newChannelForURL(url, { policy, window, principal }) {
   const securityFlags =
     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
 
@@ -778,24 +774,19 @@ function newChannelForURL(
     channelOptions.loadingPrincipal = prin;
   }
 
-  try {
-    return NetUtil.newChannel(channelOptions);
-  } catch (e) {
-    // Don't infinitely recurse if newChannel keeps throwing.
-    if (recursing) {
-      throw e;
-    }
-
-    // In xpcshell tests on Windows, nsExternalProtocolHandler::NewChannel()
-    // can throw NS_ERROR_UNKNOWN_PROTOCOL if the external protocol isn't
-    // supported by Windows, so we also need to handle the exception here if
-    // parsing the URL above doesn't throw.
-    return newChannelForURL(
-      "file://" + url,
-      { policy, window, principal },
-      /* recursing */ true
-    );
+  // In xpcshell tests on Windows, opening the channel
+  // can throw NS_ERROR_UNKNOWN_PROTOCOL if the external protocol isn't
+  // supported by Windows, so we also need to handle that case here if
+  // parsing the URL above doesn't throw.
+  const handler = Services.io.getProtocolHandler(uri.scheme);
+  if (
+    handler instanceof Ci.nsIExternalProtocolHandler &&
+    !handler.externalAppExistsForScheme(uri.scheme)
+  ) {
+    uri = Services.io.newURI("file://" + url);
   }
+
+  return NetUtil.newChannel(channelOptions);
 }
 
 // Fetch is defined differently depending on whether we are on the main thread
