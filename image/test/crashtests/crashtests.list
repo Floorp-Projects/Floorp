@@ -12,7 +12,7 @@ skip-if(Android||isDebugBuild||ThreadSanitizer) load 694165-1.xhtml
 load 732319-1.html
 load 844403-1.html
 load 856616.gif
-skip-if(wayland&&isDebugBuild) skip-if(ThreadSanitizer) load 944353.jpg  # wayland: bug 1857023
+skip-if(ThreadSanitizer) load 944353.jpg
 load 1205923-1.html
 # Ensure we handle detecting that an image is animated, then failing to decode
 # it. (See bug 1210745.)
