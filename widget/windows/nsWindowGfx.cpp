@@ -99,27 +99,20 @@ static IconMetrics sIconMetrics[] = {
  **************************************************************/
 
 // GetRegionToPaint returns the invalidated region that needs to be painted
-LayoutDeviceIntRegion nsWindow::GetRegionToPaint(bool aForceFullRepaint,
-                                                 PAINTSTRUCT ps, HDC aDC) {
-  if (aForceFullRepaint) {
-    RECT paintRect;
-    ::GetClientRect(mWnd, &paintRect);
-    return LayoutDeviceIntRegion(WinUtils::ToIntRect(paintRect));
-  }
-
+LayoutDeviceIntRegion nsWindow::GetRegionToPaint(const PAINTSTRUCT& ps,
+                                                 HDC aDC) const {
+  LayoutDeviceIntRegion fullRegion(WinUtils::ToIntRect(ps.rcPaint));
   HRGN paintRgn = ::CreateRectRgn(0, 0, 0, 0);
-  if (paintRgn != nullptr) {
-    int result = GetRandomRgn(aDC, paintRgn, SYSRGN);
-    if (result == 1) {
+  if (paintRgn) {
+    if (GetRandomRgn(aDC, paintRgn, SYSRGN) == 1) {
       POINT pt = {0, 0};
       ::MapWindowPoints(nullptr, mWnd, &pt, 1);
       ::OffsetRgn(paintRgn, pt.x, pt.y);
+      fullRegion.AndWith(WinUtils::ConvertHRGNToRegion(paintRgn));
     }
-    LayoutDeviceIntRegion rgn(WinUtils::ConvertHRGNToRegion(paintRgn));
     ::DeleteObject(paintRgn);
-    return rgn;
   }
-  return LayoutDeviceIntRegion(WinUtils::ToIntRect(ps.rcPaint));
+  return fullRegion;
 }
 
 nsIWidgetListener* nsWindow::GetPaintListener() {
@@ -175,39 +168,9 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
   KnowsCompositor* knowsCompositor = renderer->AsKnowsCompositor();
   WebRenderLayerManager* layerManager = renderer->AsWebRender();
 
-  if (mClearNCEdge) {
-    // We need to clear this edge of the non-client region to black (once).
-    HDC hdc;
-    RECT rect;
-    hdc = ::GetWindowDC(mWnd);
-    ::GetWindowRect(mWnd, &rect);
-    ::MapWindowPoints(nullptr, mWnd, (LPPOINT)&rect, 2);
-    switch (mClearNCEdge.value()) {
-      case ABE_TOP:
-        rect.bottom = rect.top + kHiddenTaskbarSize;
-        break;
-      case ABE_LEFT:
-        rect.right = rect.left + kHiddenTaskbarSize;
-        break;
-      case ABE_BOTTOM:
-        rect.top = rect.bottom - kHiddenTaskbarSize;
-        break;
-      case ABE_RIGHT:
-        rect.left = rect.right - kHiddenTaskbarSize;
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Invalid edge value");
-        break;
-    }
-    ::FillRect(hdc, &rect,
-               reinterpret_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
-    ::ReleaseDC(mWnd, hdc);
+  const bool didResize = !mBounds.IsEqualEdges(mLastPaintBounds);
 
-    mClearNCEdge.reset();
-  }
-
-  if (knowsCompositor && layerManager &&
-      !mBounds.IsEqualEdges(mLastPaintBounds)) {
+  if (didResize && knowsCompositor && layerManager) {
     // Do an early async composite so that we at least have something on the
     // screen in the right place, even if the content is out of date.
     layerManager->ScheduleComposite(wr::RenderReasons::WIDGET);
@@ -237,37 +200,51 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
     hDC = ::BeginPaint(mWnd, &ps);
   }
 
-  const bool forceRepaint = mTransparencyMode == TransparencyMode::Transparent;
-  const LayoutDeviceIntRegion region = GetRegionToPaint(forceRepaint, ps, hDC);
-
-  if (knowsCompositor && layerManager) {
-    // We need to paint to the screen even if nothing changed, since if we
-    // don't have a compositing window manager, our pixels could be stale.
-    layerManager->SetNeedsComposite(true);
-    layerManager->SendInvalidRegion(region.ToUnknownRegion());
-  }
-
+  const LayoutDeviceIntRegion region = GetRegionToPaint(ps, hDC);
   RefPtr<nsWindow> strongThis(this);
-
-  nsIWidgetListener* listener = GetPaintListener();
-  if (listener) {
+  if (nsIWidgetListener* listener = GetPaintListener()) {
     listener->WillPaintWindow(this);
   }
+
+  if (mNeedsNCAreaClear || didResize) {
+    // We need to clear the non-client-area region, and the transparent parts
+    // of the window to black (once). WillPaintWindow updates the opaque region.
+    HDC hdc = ::GetWindowDC(mWnd);
+    auto black = reinterpret_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH));
+    {
+      HRGN ncRegion = ComputeNonClientHRGN();
+      ::FillRgn(hdc, ncRegion, black);
+      ::DeleteObject(ncRegion);
+    }
+    if (mTransparencyMode == TransparencyMode::Transparent) {
+      RECT winRect;
+      GetWindowRect(mWnd, &winRect);
+      MapWindowPoints(nullptr, mWnd, (LPPOINT)&winRect, 2);
+      LayoutDeviceIntRegion translucent(WinUtils::ToIntRect(winRect));
+      translucent.SubOut(mOpaqueRegion);
+      for (auto iter = translucent.RectIter(); !iter.Done(); iter.Next()) {
+        RECT rect = WinUtils::ToWinRect(iter.Get());
+        ::FillRect(hdc, &rect, black);
+      }
+    }
+    ::ReleaseDC(mWnd, hdc);
+    mNeedsNCAreaClear = false;
+  }
+
   // Re-get the listener since the will paint notification may have killed it.
-  listener = GetPaintListener();
+  nsIWidgetListener* listener = GetPaintListener();
   if (!listener) {
     return false;
   }
 
-  if (knowsCompositor && layerManager && layerManager->NeedsComposite()) {
-    layerManager->ScheduleComposite(wr::RenderReasons::WIDGET);
-    layerManager->SetNeedsComposite(false);
-  }
-
   bool result = true;
   if (!region.IsEmpty() && listener) {
+    if (knowsCompositor && layerManager) {
+      layerManager->SendInvalidRegion(region.ToUnknownRegion());
+      layerManager->ScheduleComposite(wr::RenderReasons::WIDGET);
+    }
     // Should probably pass in a real region here, using GetRandomRgn
-    // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/clipping_4q0e.asp
+    // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getrandomrgn
 
 #ifdef WIDGET_DEBUG_OUTPUT
     debug_DumpPaintEvent(stdout, this, region.ToUnknownRegion(), "noname",
