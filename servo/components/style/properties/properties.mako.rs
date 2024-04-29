@@ -2744,7 +2744,13 @@ impl<'a> StyleBuilder<'a> {
         if matches!(line_height, computed::LineHeight::Normal) {
             self.add_flags(flag);
         }
-        device.calc_line_height(&font, writing_mode, None)
+        let lh = device.calc_line_height(&font, writing_mode, None);
+        if line_height_base == LineHeightBase::InheritedStyle {
+            // Apply our own zoom if our style source is the parent style.
+            computed::NonNegativeLength::new(self.get_box().clone_zoom().zoom(lh.px()))
+        } else {
+            lh
+        }
     }
 
     /// And access to inherited style structs.
