@@ -101,6 +101,7 @@ CONFIG_PER_BOUNCER_PRODUCT = {
         "file_names": {
             "win": "{pretty_product}%20Setup%20{version}.msix",
             "win64": "{pretty_product}%20Setup%20{version}.msix",
+            "win64-aarch64": "{pretty_product}%20Setup%20{version}.msix",
         },
     },
     "pkg": {
