@@ -52,6 +52,10 @@
 #  include "mozilla/SandboxTestingChild.h"
 #endif
 
+#if defined(XP_MACOSX) || defined(XP_LINUX)
+#  include "VideoUtils.h"
+#endif
+
 namespace mozilla {
 
 using namespace ipc;
@@ -132,6 +136,10 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
 
   auto supported = PDMFactory::Supported();
   Unused << SendUpdateMediaCodecsSupported(supported);
+#if defined(XP_MACOSX) || defined(XP_LINUX)
+  // We report probe on GPU process on Windows and Android.
+  ReportHardwareMediaCodecSupportProbe();
+#endif
 
 #if defined(MOZ_SANDBOX)
 #  if defined(XP_MACOSX)
