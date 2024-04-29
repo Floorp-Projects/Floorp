@@ -26767,24 +26767,6 @@
       "last_modified": 1645578266596
     },
     {
-      "schema": 1645577621120,
-      "derHash": "s0oztER0/bAHjxE1J7vbdv5b+ByiS7htYoE2xQFgQ+g=",
-      "subject": "CN=Certum Class I CA,OU=Certum Certification Authority,O=Unizeto Technologies S.A.,C=PL",
-      "subjectDN": "MHYxCzAJBgNVBAYTAlBMMSIwIAYDVQQKExlVbml6ZXRvIFRlY2hub2xvZ2llcyBTLkEuMScwJQYDVQQLEx5DZXJ0dW0gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxGjAYBgNVBAMTEUNlcnR1bSBDbGFzcyBJIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "30af05c15084780c6d3ae3b8241e1c92fd060afc921724be7e63675470aeac33",
-        "size": 1711,
-        "filename": "MbF_6zzENJgNMBtdiV6R_9-GZ7l6Nl4QjwF-GW39Yms=.pem",
-        "location": "security-state-staging/intermediates/c2f18743-c18b-4fe1-b235-ecce5a4917d4.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "MbF/6zzENJgNMBtdiV6R/9+GZ7l6Nl4QjwF+GW39Yms=",
-      "crlite_enrolled": false,
-      "id": "db7340be-ba36-4e17-be92-a5e77a41f0ee",
-      "last_modified": 1645578266555
-    },
-    {
       "schema": 1645577625212,
       "derHash": "Euom9u7v7HarhZJUVAOriFFbAOJ12YiHE0B6hvxcf9c=",
       "subject": "CN=e-Szigno Qualified Organization CA 2017,O=Microsec Ltd.,L=Budapest,C=HU",
@@ -30691,5 +30673,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1713887823023
+  "timestamp": 1714060623159
 }
