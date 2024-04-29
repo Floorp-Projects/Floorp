@@ -475,8 +475,9 @@ static void UndoRecompileBaselineScriptsForDebugMode(
   for (UniqueScriptOSREntryIter iter(entries); !iter.done(); ++iter) {
     const DebugModeOSREntry& entry = iter.entry();
     JSScript* script = entry.script;
-    BaselineScript* baselineScript = script->baselineScript();
     if (entry.recompiled()) {
+      BaselineScript* baselineScript =
+          script->jitScript()->clearBaselineScript(cx->gcContext(), script);
       script->jitScript()->setBaselineScript(script, entry.oldBaselineScript);
       BaselineScript::Destroy(cx->gcContext(), baselineScript);
     }
