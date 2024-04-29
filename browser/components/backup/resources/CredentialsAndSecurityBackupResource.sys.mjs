@@ -36,6 +36,22 @@ export class CredentialsAndSecurityBackupResource extends BackupResource {
     return null;
   }
 
+  async recover(_manifestEntry, recoveryPath, destProfilePath) {
+    const files = [
+      "pkcs11.txt",
+      "logins.json",
+      "logins-backup.json",
+      "autofill-profiles.json",
+      "signedInUser.json",
+      "cert9.db",
+      "key4.db",
+      "credentialstate.sqlite",
+    ];
+    await BackupResource.copyFiles(recoveryPath, destProfilePath, files);
+
+    return null;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     const securityFiles = ["cert9.db", "pkcs11.txt"];
     let securitySize = 0;
