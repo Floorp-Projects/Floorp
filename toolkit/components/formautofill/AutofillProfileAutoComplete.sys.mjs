@@ -338,13 +338,9 @@ export const ProfileAutocomplete = {
           // The observer notification is for autocomplete in a different process.
           break;
         }
-        lazy.FormAutofillContent.autofillPending = true;
-        Services.obs.notifyObservers(null, "autofill-fill-starting");
         await this._fillFromAutocompleteRow(
           lazy.FormAutofillContent.activeInput
         );
-        Services.obs.notifyObservers(null, "autofill-fill-complete");
-        lazy.FormAutofillContent.autofillPending = false;
         break;
       }
     }
@@ -415,10 +411,7 @@ export const ProfileAutocomplete = {
           );
         }
       }
-      return;
     }
-
-    await lazy.FormAutofillContent.activeHandler.autofillFormFields(profile);
   },
 
   _clearProfilePreview() {

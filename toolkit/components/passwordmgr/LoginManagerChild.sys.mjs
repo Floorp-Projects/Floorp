@@ -159,40 +159,6 @@ const observer = {
     loginManagerChild()._onNavigation(window.document);
   },
 
-  // nsIObserver
-  observe(subject, topic, _data) {
-    switch (topic) {
-      case "autocomplete-did-enter-text": {
-        let input = subject.QueryInterface(Ci.nsIAutoCompleteInput);
-        let { selectedIndex } = input.popup;
-        if (selectedIndex < 0 || selectedIndex >= input.controller.matchCount) {
-          break;
-        }
-
-        let { focusedInput } = lazy.gFormFillService;
-        if (focusedInput.nodePrincipal.isNullPrincipal) {
-          // If we have a null principal then prevent any more password manager code from running and
-          // incorrectly using the document `location`.
-          return;
-        }
-
-        let window = focusedInput.ownerGlobal;
-        let loginManagerChild = LoginManagerChild.forWindow(window);
-
-        let style = input.controller.getStyleAt(selectedIndex);
-        if (style == "login" || style == "loginWithOrigin") {
-          let details = JSON.parse(
-            input.controller.getCommentAt(selectedIndex)
-          );
-          loginManagerChild.onFieldAutoComplete(focusedInput, details.guid);
-        } else if (style == "generatedPassword") {
-          loginManagerChild._filledWithGeneratedPassword(focusedInput);
-        }
-        break;
-      }
-    }
-  },
-
   // nsIDOMEventListener
   handleEvent(aEvent) {
     if (!aEvent.isTrusted) {
@@ -436,9 +402,6 @@ const observer = {
     }
   },
 };
-
-// Add this observer once for the process.
-Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
 /**
  * Form scenario defines what can be done with form.
@@ -1529,6 +1492,16 @@ export class LoginManagerChild extends JSWindowActorChild {
         this.notifyObserversOfFormProcessed(msg.data.formid);
         break;
       }
+      case "PasswordManager:fillFields": {
+        const login = lazy.LoginHelper.vanillaObjectToLogin(msg.data);
+        this.fillFields(login);
+        break;
+      }
+      case "PasswordManager:fillGeneratedPassword": {
+        const { focusedInput } = lazy.gFormFillService;
+        this.filledWithGeneratedPassword(focusedInput);
+        break;
+      }
     }
 
     return undefined;
@@ -2178,7 +2151,7 @@ export class LoginManagerChild extends JSWindowActorChild {
   /**
    * A username or password was autocompleted into a field.
    */
-  onFieldAutoComplete(acInputField, loginGUID) {
+  onFieldAutoComplete(acInputField, login) {
     if (!lazy.LoginHelper.enabled) {
       return;
     }
@@ -2193,7 +2166,7 @@ export class LoginManagerChild extends JSWindowActorChild {
     }
 
     if (lazy.LoginHelper.isUsernameFieldType(acInputField)) {
-      this.onUsernameAutocompleted(acInputField, loginGUID);
+      this.onUsernameAutocompleted(acInputField, [login]);
     } else if (acInputField.hasBeenTypePassword) {
       // Ensure the field gets re-masked and edits don't overwrite the generated
       // password in case a generated password was filled into it previously.
@@ -2207,7 +2180,7 @@ export class LoginManagerChild extends JSWindowActorChild {
    * A username field was filled or tabbed away from so try fill in the
    * associated password in the password field.
    */
-  onUsernameAutocompleted(acInputField, loginGUID = null) {
+  async onUsernameAutocompleted(acInputField, loginsFound = null) {
     lazy.log(`Autocompleting input field with name: ${acInputField.name}`);
 
     let acForm = lazy.LoginFormFactory.createFromField(acInputField);
@@ -2223,43 +2196,49 @@ export class LoginManagerChild extends JSWindowActorChild {
     const docState = this.stateForDocument(acInputField.ownerDocument);
     let { usernameField, newPasswordField: passwordField } =
       docState._getFormFields(acForm, false, recipes);
-    if (usernameField == acInputField) {
-      // Fill the form when a password field is present.
-      if (passwordField) {
-        this._getLoginDataFromParent(acForm, {
-          guid: loginGUID,
-          showPrimaryPassword: false,
-        })
-          .then(({ form, loginsFound, recipes }) => {
-            if (!loginGUID) {
-              // not an explicit autocomplete menu selection, filter for exact matches only
-              loginsFound = this._filterForExactFormOriginLogins(
-                loginsFound,
-                acForm
-              );
-              // filter the list for exact matches with the username
-              // NOTE: this could be an empty string which is a valid username
-              let searchString = usernameField.value.toLowerCase();
-              loginsFound = loginsFound.filter(
-                l => l.username.toLowerCase() == searchString
-              );
-            }
+    // Ignore the event, it's for some input we don't care about.
+    if (usernameField != acInputField) {
+      return;
+    }
 
-            this._fillForm(form, loginsFound, recipes, {
-              autofillForm: true,
-              clobberPassword: true,
-              userTriggered: true,
-            });
-          })
-          .catch(console.error);
-        // Use `loginGUID !== null` to distinguish whether this is called when the
-        // field is filled or tabbed away from. For the latter, don't highlight the field.
-      } else if (loginGUID !== null) {
+    if (!passwordField) {
+      // Use `loginsFound !== null` to distinguish whether this is called when the
+      // field is filled or tabbed away from. For the latter, don't highlight the field.
+      if (loginsFound !== null) {
         LoginFormState._highlightFilledField(usernameField);
       }
-    } else {
-      // Ignore the event, it's for some input we don't care about.
+      return;
     }
+
+    // Fill the form when a password field is present.
+    if (!loginsFound) {
+      const loginData = await this._getLoginDataFromParent(acForm, {
+        showPrimaryPassword: false,
+      }).catch(console.error);
+
+      if (!loginData?.loginsFound.length) {
+        return;
+      }
+
+      // not an explicit autocomplete menu selection, filter for exact matches only
+      loginsFound = this._filterForExactFormOriginLogins(
+        loginData.loginsFound,
+        acForm
+      );
+      // filter the list for exact matches with the username
+      // NOTE: this could be an empty string which is a valid username
+      const searchString = usernameField.value.toLowerCase();
+      loginsFound = loginsFound.filter(
+        l => l.username.toLowerCase() == searchString
+      );
+      recipes = loginData.recipes;
+    }
+
+    this._fillForm(acForm, loginsFound, recipes, {
+      autofillForm: true,
+      clobberPassword: true,
+      userTriggered: true,
+    });
   }
 
   /**
@@ -2643,7 +2622,7 @@ export class LoginManagerChild extends JSWindowActorChild {
    * field is handled accordingly.
    * @param {HTMLInputElement} passwordField
    */
-  _filledWithGeneratedPassword(passwordField) {
+  filledWithGeneratedPassword(passwordField) {
     LoginFormState._highlightFilledField(passwordField);
     this._passwordEditedOrGenerated(passwordField, {
       triggeredByFillingGenerated: true,
@@ -3120,7 +3099,7 @@ export class LoginManagerChild extends JSWindowActorChild {
       }
 
       if (style === "generatedPassword") {
-        this._filledWithGeneratedPassword(passwordField);
+        this.filledWithGeneratedPassword(passwordField);
       }
 
       lazy.log("_fillForm succeeded");
@@ -3366,5 +3345,10 @@ export class LoginManagerChild extends JSWindowActorChild {
    */
   #isWebAuthnCredentials(autocompleteInfo) {
     return autocompleteInfo.credentialType == "webauthn";
+  }
+
+  fillFields(login) {
+    let { focusedInput } = lazy.gFormFillService;
+    this.onFieldAutoComplete(focusedInput, login);
   }
 }

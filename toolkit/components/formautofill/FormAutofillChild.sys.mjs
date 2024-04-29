@@ -99,6 +99,9 @@ const observer = {
  * Handles content's interactions for the frame.
  */
 export class FormAutofillChild extends JSWindowActorChild {
+  // Flag indicating whether the form is waiting to be filled by Autofill.
+  #autofillPending = false;
+
   constructor() {
     super();
 
@@ -108,9 +111,6 @@ export class FormAutofillChild extends JSWindowActorChild {
     this._nextHandleElement = null;
     this._hasDOMContentLoadedHandler = false;
     this._hasPendingTask = false;
-
-    // Flag indicating whether the form is waiting to be filled by Autofill.
-    this._autofillPending = false;
 
     /**
      * @type {FormAutofillFieldDetailsManager} handling state management of current forms and handlers.
@@ -478,14 +478,14 @@ export class FormAutofillChild extends JSWindowActorChild {
     this.unregisterProgressListener();
   }
 
-  receiveMessage(message) {
+  async receiveMessage(message) {
     if (!lazy.FormAutofill.isAutofillEnabled) {
       return;
     }
 
     switch (message.name) {
       case "FormAutofill:PreviewProfile": {
-        this.previewProfile(message.data.selectedIndex);
+        this.previewProfile(message.data);
         break;
       }
       case "FormAutofill:ClearForm": {
@@ -493,7 +493,7 @@ export class FormAutofillChild extends JSWindowActorChild {
         break;
       }
       case "FormAutofill:FillForm": {
-        this.activeHandler.autofillFormFields(message.data);
+        await this.autofillFields(message.data);
         break;
       }
     }
@@ -615,7 +615,7 @@ export class FormAutofillChild extends JSWindowActorChild {
     this.debug("updateActiveElement: checking for popup-on-focus");
     // We know this element just received focus. If it's a credit card field,
     // open its popup.
-    if (this._autofillPending) {
+    if (this.#autofillPending) {
       this.debug("updateActiveElement: skipping check; autofill is imminent");
     } else if (element.value?.length !== 0) {
       this.debug(
@@ -634,11 +634,6 @@ export class FormAutofillChild extends JSWindowActorChild {
         lazy.FormAutofillContent.showPopup();
       }
     }
-  }
-
-  set autofillPending(flag) {
-    this.debug("Setting autofillPending to", flag);
-    this._autofillPending = flag;
   }
 
   clearForm() {
@@ -670,22 +665,32 @@ export class FormAutofillChild extends JSWindowActorChild {
       ?.lastProfileAutoCompleteFocusedInput;
   }
 
-  previewProfile(selectedIndex) {
-    if (
-      selectedIndex === -1 ||
-      !this.activeInput ||
-      this.lastProfileAutoCompleteResult?.getStyleAt(selectedIndex) !=
-        "autofill"
-    ) {
-      lazy.ProfileAutocomplete._clearProfilePreview();
+  previewProfile(profile) {
+    if (profile && this.activeSection) {
+      const adaptedProfile = this.activeSection.getAdaptedProfiles([
+        profile,
+      ])[0];
+      this.activeSection.previewFormFields(adaptedProfile);
     } else {
-      lazy.ProfileAutocomplete._previewSelectedProfile(selectedIndex);
+      this.activeSection.clearPreviewedFormFields();
+    }
+  }
+
+  async autofillFields(profile) {
+    this.#autofillPending = true;
+    Services.obs.notifyObservers(null, "autofill-fill-starting");
+    try {
+      Services.obs.notifyObservers(null, "autofill-fill-starting");
+      await this.activeHandler.autofillFormFields(profile);
+      Services.obs.notifyObservers(null, "autofill-fill-complete");
+    } finally {
+      this.#autofillPending = false;
     }
   }
 
   onPopupClosed() {
     this.debug("Popup has closed.");
-    lazy.ProfileAutocomplete._clearProfilePreview();
+    this.activeSection?.clearPreviewedFormFields();
   }
 
   onPopupOpened() {

@@ -832,9 +832,7 @@
 
       setTimeout(() => {
         let selectedIndex = popup ? popup.selectedIndex : -1;
-        actor.manager
-          .getActor("FormAutofill")
-          .sendAsyncMessage("FormAutofill:PreviewProfile", { selectedIndex });
+        actor.previewAutofillProfile(selectedIndex);
       }, 0);
     }
 

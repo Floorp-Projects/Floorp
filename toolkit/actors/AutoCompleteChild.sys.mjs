@@ -141,6 +141,7 @@ export class AutoCompleteChild extends JSWindowActorChild {
       dir,
       inputElementIdentifier,
       formOrigin,
+      actorName: this.lastAutoCompleteProviderName,
     });
 
     this._input = input;
@@ -308,7 +309,7 @@ export class AutoCompleteChild extends JSWindowActorChild {
 
     for (const provider of providers) {
       // Search result could be empty. However, an autocomplete provider might
-      // want to show an autoclmplete popup when there is no search result. For example,
+      // want to show an autocomplete popup when there is no search result. For example,
       // <datalist> for FormHisotry, insecure warning for LoginManager.
       const searchResult = result.find(r => r.actorName == provider.actorName);
       const acResult = provider.searchResultToAutoCompleteResult(
@@ -320,6 +321,10 @@ export class AutoCompleteChild extends JSWindowActorChild {
       // We have not yet supported showing autocomplete entries from multiple providers,
       // Note: The prioty is defined in AutoCompleteParent.
       if (acResult) {
+        // `lastAutoCompleteProviderName` should be removed once we implement
+        // the mapping of autocomplete entry to provider in the parent process.
+        this.lastAutoCompleteProviderName = provider.actorName;
+
         this.lastProfileAutoCompleteResult = acResult;
         listener.onSearchCompletion(acResult);
         return;
@@ -331,6 +336,12 @@ export class AutoCompleteChild extends JSWindowActorChild {
   stopSearch() {
     this.lastProfileAutoCompleteResult = null;
     this.#ongoingSearches.clear();
+  }
+
+  selectEntry() {
+    // we don't need to pass the selected index to the parent process because
+    // the selected index is maintained in the parent.
+    this.sendAsyncMessage("AutoComplete:SelectEntry");
   }
 }
 

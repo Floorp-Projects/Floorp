@@ -1235,6 +1235,8 @@ nsresult nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
     SetSearchStringInternal(value);
   }
 
+  popup->SelectEntry();
+
   obsSvc->NotifyObservers(input, "autocomplete-did-enter-text", nullptr);
 
   input->OnTextEntered(aEvent);
