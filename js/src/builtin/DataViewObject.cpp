@@ -510,6 +510,7 @@ inline bool WebIDLCast<uint64_t>(JSContext* cx, HandleValue value,
   return true;
 }
 
+#ifdef NIGHTLY_BUILD
 template <>
 inline bool WebIDLCast<float16>(JSContext* cx, HandleValue value,
                                 float16* out) {
@@ -520,6 +521,7 @@ inline bool WebIDLCast<float16>(JSContext* cx, HandleValue value,
   *out = float16(temp);
   return true;
 }
+#endif
 
 template <>
 inline bool WebIDLCast<float>(JSContext* cx, HandleValue value, float* out) {
