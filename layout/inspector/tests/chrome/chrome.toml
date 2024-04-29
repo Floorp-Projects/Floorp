@@ -14,6 +14,8 @@ support-files = ["test_bug708874.css"]
 ["test_bug727834.xhtml"]
 support-files = ["test_bug727834.css"]
 
+["test_CSSStyleRule_querySelectorAll.html"]
+
 ["test_fontFaceGeneric.xhtml"]
 
 ["test_fontFaceRanges.xhtml"]

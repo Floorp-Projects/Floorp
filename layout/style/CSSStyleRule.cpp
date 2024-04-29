@@ -312,6 +312,18 @@ void CSSStyleRule::GetSelectorWarnings(
   }
 }
 
+already_AddRefed<nsINodeList> CSSStyleRule::QuerySelectorAll(nsINode& aRoot) {
+  AutoTArray<const StyleLockedStyleRule*, 8> rules;
+  CollectStyleRules(*this, /* aDesugared = */ true, rules);
+  StyleSelectorList* list = Servo_StyleRule_GetSelectorList(&rules);
+
+  RefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(&aRoot);
+  Servo_SelectorList_QueryAll(&aRoot, list, contentList.get(),
+                              /* useInvalidation */ false);
+  Servo_SelectorList_Drop(list);
+  return contentList.forget();
+}
+
 /* virtual */
 JSObject* CSSStyleRule::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
