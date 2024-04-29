@@ -57,6 +57,7 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature.DialogConfig
 import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
 import mozilla.components.lib.state.ext.flowScoped
@@ -72,8 +73,6 @@ import java.security.InvalidParameterException
 import mozilla.components.ui.icons.R as iconsR
 
 internal const val PROMPT_FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
-
-private const val FULL_SCREEN_NOTIFICATION_TAG = "mozac_feature_prompts_full_screen_notification_dialog"
 
 @VisibleForTesting
 internal const val STORAGE_ACCESS_DOCUMENTATION_URL =
@@ -95,6 +94,7 @@ internal const val STORAGE_ACCESS_DOCUMENTATION_URL =
  * need to be requested. Once the request is completed, [onPermissionsResult] needs to be invoked.
  * @property onShouldShowRequestPermissionRationale a callback that allows the feature to query
  * the ActivityCompat.shouldShowRequestPermissionRationale or the Fragment.shouldShowRequestPermissionRationale values.
+ * @property exitFullscreenUseCase optional the use case in charge of exiting fullscreen
  * @property shouldShowDoNotAskAgainCheckBox optional Visibility for Do not ask again Checkbox
  **/
 
@@ -111,6 +111,7 @@ class SitePermissionsFeature(
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions,
     val onShouldShowRequestPermissionRationale: (permission: String) -> Boolean,
     private val store: BrowserStore,
+    private val exitFullscreenUseCase: SessionUseCases.ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
     private val shouldShowDoNotAskAgainCheckBox: Boolean = true,
 ) : LifecycleAwareFeature, PermissionsFeature {
     @VisibleForTesting
@@ -432,11 +433,8 @@ class SitePermissionsFeature(
             consumePermissionRequest(permissionRequest)
             return null
         }
-
-        val private: Boolean? =
-            store.state.findTabOrCustomTabOrSelectedTab(sessionId)?.content?.private
-
-        if (private == null) {
+        val tab = store.state.findTabOrCustomTabOrSelectedTab(sessionId)
+        if (tab == null) {
             logger.error("Unable to find a tab for $sessionId rejecting the prompt request")
             permissionRequest.reject()
             consumePermissionRequest(permissionRequest)
@@ -444,21 +442,20 @@ class SitePermissionsFeature(
         }
 
         val permissionFromStorage = withContext(coroutineScope.coroutineContext) {
-            storage.findSitePermissionsBy(origin, private = private)
+            storage.findSitePermissionsBy(origin, private = tab.content.private)
         }
-
         val prompt = if (shouldApplyRules(permissionFromStorage)) {
             handleRuledFlow(permissionRequest, origin)
         } else {
             handleNoRuledFlow(permissionFromStorage, permissionRequest, origin)
         }
 
-        val fullScreenNotificationDisplayed =
-            fragmentManager.fragments.any { fragment -> fragment.tag == FULL_SCREEN_NOTIFICATION_TAG }
-
-        return if (fullScreenNotificationDisplayed || prompt == null) {
+        return if (prompt == null) {
             null
         } else {
+            // If we are in fullscreen, then exit to show the permission prompt.
+            // This won't have any effect if we are not in fullscreen.
+            exitFullscreenUseCase.invoke(tab.id)
             prompt.show(fragmentManager, PROMPT_FRAGMENT_TAG)
             prompt
         }
