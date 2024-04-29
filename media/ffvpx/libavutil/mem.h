@@ -116,7 +116,7 @@
  *         be allocated
  * @see av_mallocz()
  */
-void *av_malloc(size_t size) av_malloc_attrib av_alloc_size(1) __attribute__((visibility("default")));
+void *av_malloc(size_t size) av_malloc_attrib av_alloc_size(1);
 
 /**
  * Allocate a memory block with alignment suitable for all memory accesses

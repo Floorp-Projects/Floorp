@@ -8,7 +8,6 @@ av_base64_decode
 av_base64_encode
 #endif
 av_bprint_append_data
-av_bprint_channel_layout
 av_bprint_chars
 av_bprint_clear
 av_bprint_escape
@@ -39,7 +38,6 @@ av_channel_layout_compare
 av_channel_layout_copy
 av_channel_layout_default
 av_channel_layout_describe
-av_channel_layout_extract_channel
 av_channel_layout_from_mask
 av_channel_layout_from_mask
 av_channel_layout_uninit
@@ -52,9 +50,7 @@ av_color_space_name
 av_color_transfer_name
 av_compare_mod
 av_compare_ts
-#ifndef MOZ_FFVPX_AUDIOONLY
 av_content_light_metadata_create_side_data
-#endif
 av_cpu_count
 av_crc
 av_crc_get_table
@@ -88,26 +84,13 @@ av_expr_parse_and_eval
 av_fast_malloc
 av_fast_mallocz
 av_fast_realloc
-av_fifo_alloc
 av_fifo_alloc2
-av_fifo_alloc_array
 av_fifo_can_read
 av_fifo_can_write
-av_fifo_drain
 av_fifo_drain2
-av_fifo_free
-av_fifo_freep
 av_fifo_freep2
-av_fifo_generic_peek
-av_fifo_generic_read
-av_fifo_generic_write
-av_fifo_grow
 av_fifo_peek
-av_fifo_realloc2
 av_fifo_read
-av_fifo_reset
-av_fifo_size
-av_fifo_space
 av_fifo_write
 av_find_best_pix_fmt_of_2
 av_find_info_tag
@@ -122,6 +105,8 @@ av_frame_apply_cropping
 av_frame_clone
 av_frame_copy
 av_frame_copy_props
+av_frame_side_data_free
+av_frame_side_data_get_c
 av_frame_free
 av_frame_get_buffer
 av_frame_get_plane_buffer
@@ -142,14 +127,7 @@ av_gcd
 av_get_alt_sample_fmt
 av_get_bits_per_pixel
 av_get_bytes_per_sample
-av_get_channel_description
-av_get_channel_layout
-av_get_channel_layout_channel_index
-av_get_channel_layout_nb_channels
-av_get_channel_layout_string
-av_get_channel_name
 av_get_cpu_flags
-av_get_default_channel_layout
 av_get_known_color_name
 av_get_media_type_string
 av_get_packed_sample_fmt
@@ -162,7 +140,6 @@ av_get_pix_fmt_string
 av_get_planar_sample_fmt
 av_get_sample_fmt
 av_get_sample_fmt_string
-av_get_standard_channel_layout
 av_get_time_base_q
 av_get_token
 av_gettime
@@ -201,9 +178,7 @@ av_log_set_flags
 av_log_set_level
 av_mallocz
 av_malloc
-#ifndef MOZ_FFVPX_AUDIOONLY
 av_mastering_display_metadata_create_side_data
-#endif
 av_match_list
 av_match_name
 av_max_alloc
@@ -225,7 +200,6 @@ av_opt_flag_is_set
 av_opt_free
 av_opt_freep_ranges
 av_opt_get
-av_opt_get_channel_layout
 av_opt_get_dict_val
 av_opt_get_double
 av_opt_get_image_size
@@ -244,7 +218,6 @@ av_opt_query_ranges_default
 av_opt_serialize
 av_opt_set
 av_opt_set_bin
-av_opt_set_channel_layout
 av_opt_set_defaults
 av_opt_set_defaults2
 av_opt_set_dict

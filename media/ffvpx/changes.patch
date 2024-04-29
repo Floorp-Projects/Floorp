@@ -1,21 +1,11 @@
-diff --git a/media/ffvpx/libavutil/eval.c b/media/ffvpx/libavutil/eval.c
-index 7642b91..e938bd5 100644
---- a/media/ffvpx/libavutil/eval.c
-+++ b/media/ffvpx/libavutil/eval.c
-@@ -34,7 +34,7 @@
- #include "internal.h"
- #include "log.h"
- #include "mathematics.h"
--#include "time.h"
-+#include "fftime.h"
- #include "avstring.h"
- #include "timer.h"
- 
-diff --git a/media/ffvpx/libavutil/time.c b/media/ffvpx/libavutil/time.c
-index dbaee02..69419e6 100644
---- a/media/ffvpx/libavutil/time.c
-+++ b/media/ffvpx/libavutil/time.c
-@@ -33,7 +33,7 @@
+--- a/libavutil/time.c	2024-02-14 14:57:10.389087159 +0100
++++ b/libavutil/time.c	2024-04-05 14:43:19.097889433 +0200
+@@ -28,17 +28,17 @@
+ #endif
+ #if HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+ #if HAVE_WINDOWS_H
  #include <windows.h>
  #endif
  
@@ -24,11 +14,19 @@ index dbaee02..69419e6 100644
  #include "error.h"
  
  int64_t av_gettime(void)
-diff --git a/media/ffvpx/libavutil/parseutils.c b/media/ffvpx/libavutil/parseutils.c
-index 9fb8d0a..97ad3b9 100644
---- a/media/ffvpx/libavutil/parseutils.c
-+++ b/media/ffvpx/libavutil/parseutils.c
-@@ -28,7 +28,7 @@
+ {
+ #if HAVE_GETTIMEOFDAY
+     struct timeval tv;
+     gettimeofday(&tv, NULL);
+     return (int64_t)tv.tv_sec * 1000000 + tv.tv_usec;
+--- a/libavutil/parseutils.c	2024-03-26 14:03:12.080640731 +0100
++++ b/libavutil/parseutils.c	2024-04-05 14:44:56.508766832 +0200
+@@ -23,20 +23,20 @@
+ 
+ #include <time.h>
+ 
+ #include "avstring.h"
+ #include "avutil.h"
  #include "common.h"
  #include "eval.h"
  #include "log.h"
@@ -36,8 +34,22 @@ index 9fb8d0a..97ad3b9 100644
 +/* #include "random_seed.h" */
  #include "time_internal.h"
  #include "parseutils.h"
+-#include "time.h"
++#include "fftime.h"
  
-@@ -367,7 +367,7 @@ int av_parse_color(uint8_t *rgba_color, const char *color_string, int slen,
+ #ifdef TEST
+ 
+ #define av_get_random_seed av_get_random_seed_deterministic
+ static uint32_t av_get_random_seed_deterministic(void);
+ 
+ #define av_gettime() 1331972053200000
+ 
+@@ -370,17 +370,17 @@
+     av_strlcpy(color_string2, color_string + hex_offset,
+                FFMIN(slen-hex_offset+1, sizeof(color_string2)));
+     if ((tail = strchr(color_string2, ALPHA_SEP)))
+         *tail++ = 0;
+     len = strlen(color_string2);
      rgba_color[3] = 255;
  
      if (!av_strcasecmp(color_string2, "random") || !av_strcasecmp(color_string2, "bikeshed")) {
@@ -46,37 +58,29 @@ index 9fb8d0a..97ad3b9 100644
          rgba_color[0] = rgba >> 24;
          rgba_color[1] = rgba >> 16;
          rgba_color[2] = rgba >> 8;
-diff -up media/ffvpx/libavutil/fftime.h media/ffvpx/libavutil/fftime.h
---- media/ffvpx/libavutil/fftime.h	2021-12-06 14:51:40.378642713 +0100
-+++ media/ffvpx/libavutil/fftime.h	2021-12-06 14:51:54.618098212 +0100
-@@ -22,6 +22,7 @@
- #define AVUTIL_TIME_H
+         rgba_color[3] = rgba;
+     } else if (hex_offset ||
+                strspn(color_string2, "0123456789ABCDEFabcdef") == len) {
+         char *tail;
+         unsigned int rgba = strtoul(color_string2, &tail, 16);
+--- a/libavutil/eval.c	2024-04-05 14:40:56.917791496 +0200
++++ b/libavutil/eval.c	2024-04-05 17:39:45.061516936 +0200
+@@ -31,17 +31,17 @@
+ #include "avutil.h"
+ #include "common.h"
+ #include "eval.h"
+ #include "ffmath.h"
+ #include "log.h"
+ #include "mathematics.h"
+ #include "mem.h"
+ #include "sfc64.h"
+-#include "time.h"
++#include "fftime.h"
+ #include "avstring.h"
+ #include "reverse.h"
  
- #include <stdint.h>
-+#include <time.h>
- 
- /**
-  * Get the current time in microseconds.
-  *
-diff --git a/media/ffvpx/compat/w32pthreads.h b/media/ffvpx/compat/w32pthreads.h
---- a/media/ffvpx/compat/w32pthreads.h
-+++ b/media/ffvpx/compat/w32pthreads.h
-@@ -39,17 +39,17 @@
- #include <windows.h>
- #include <process.h>
- #include <time.h>
- 
- #include "libavutil/attributes.h"
- #include "libavutil/common.h"
- #include "libavutil/internal.h"
- #include "libavutil/mem.h"
--#include "libavutil/time.h"
-+#include "libavutil/fftime.h"
- 
- typedef struct pthread_t {
-     void *handle;
-     void *(*func)(void* arg);
-     void *arg;
-     void *ret;
- } pthread_t;
- 
+ typedef struct Parser {
+     const AVClass *class;
+     int stack_index;
+     char *s;
+     const double *const_values;
