@@ -264,8 +264,8 @@ def remove_optimization_on_central(config, jobs):
         if not job.get("attributes", {}).get("code-review", False):
             yield job
             continue
-        if "when" not in job:
-            yield job
-            continue
-        del job["when"]
+        if "when" in job:
+            del job["when"]
+        if "optimization" in job and "skip-unless-mozlint" in job["optimization"]:
+            del job["optimization"]
         yield job
