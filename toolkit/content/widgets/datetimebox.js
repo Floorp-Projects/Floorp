@@ -22,9 +22,7 @@ this.DateTimeBoxWidget = class {
     // createEditFieldAndAppend() call.
     this.l10n = new this.window.DOMLocalization(
       ["toolkit/global/datetimebox.ftl"],
-      /* aSync = */ true,
-      undefined,
-      this.window.getWebExposedLocales()
+      /* aSync = */ true
     );
   }
 
