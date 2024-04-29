@@ -1976,6 +1976,12 @@ JS_PUBLIC_API void JS::SetHostEnsureCanAddPrivateElementHook(
   cx->runtime()->canAddPrivateElement = op;
 }
 
+JS_PUBLIC_API bool JS::SetBrittleMode(JSContext* cx, bool setting) {
+  bool wasBrittle = cx->brittleMode;
+  cx->brittleMode = setting;
+  return wasBrittle;
+}
+
 /*** Standard internal methods **********************************************/
 
 JS_PUBLIC_API bool JS_GetPrototype(JSContext* cx, HandleObject obj,

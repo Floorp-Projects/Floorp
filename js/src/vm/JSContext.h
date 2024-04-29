@@ -416,6 +416,16 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   /* If non-null, report JavaScript entry points to this monitor. */
   js::ContextData<JS::dbg::AutoEntryMonitor*> entryMonitor;
 
+  // In brittle mode, any failure will produce a diagnostic assertion rather
+  // than propagating an error or throwing an exception. This is used for
+  // intermittent crash diagnostics: if an operation is failing for unknown
+  // reasons, turn on brittle mode and annotate the operations within
+  // SpiderMonkey that the failing operation uses with:
+  //
+  //   MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode, "specific failure");
+  //
+  bool brittleMode = false;
+
   /*
    * Stack of debuggers that currently disallow debuggee execution.
    *
