@@ -11,6 +11,7 @@ Table of contents
 
 Submitting a patch to Firefox using Git.
 ========================================
+.. _contribute_with_git:
 
 This guide will take you through submitting and updating a patch to
 ``mozilla-central`` as a git user. You need to already be `set up to use
