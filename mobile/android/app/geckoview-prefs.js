@@ -208,9 +208,6 @@ pref("dom.serviceWorkers.disable_open_click_delay", 5000);
 // Enable WebShare support (bug 1402369)
 pref("dom.webshare.enabled", true);
 
-// The abuse report feature needs some UI that we do not have on mobile
-pref("extensions.abuseReport.amWebAPI.enabled", false);
-
 // Disable add-ons that are not installed by the user in all scopes by default (See the SCOPE
 // constants in AddonManager.sys.mjs for values to use here, and Bug 1405528 for a rationale)
 pref("extensions.autoDisableScopes", 15);

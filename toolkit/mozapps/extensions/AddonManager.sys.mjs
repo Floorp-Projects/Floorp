@@ -26,7 +26,6 @@ const MOZ_COMPATIBILITY_NIGHTLY = ![
 
 const INTL_LOCALES_CHANGED = "intl:app-locales-changed";
 
-const PREF_AMO_ABUSEREPORT = "extensions.abuseReport.amWebAPI.enabled";
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_EM_UPDATE_ENABLED = "extensions.update.enabled";
 const PREF_EM_LAST_APP_VERSION = "extensions.lastAppVersion";
@@ -81,7 +80,6 @@ var AsyncShutdown = realAsyncShutdown;
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -3628,54 +3626,6 @@ var AddonManagerInternal = {
         }
       }
     },
-
-    async addonReportAbuse(target, id) {
-      if (!Services.prefs.getBoolPref(PREF_AMO_ABUSEREPORT, false)) {
-        return Promise.reject({
-          message: "amWebAPI reportAbuse not supported",
-        });
-      }
-
-      let existingDialog = lazy.AbuseReporter.getOpenDialog();
-      if (existingDialog) {
-        existingDialog.close();
-      }
-
-      const dialog = await lazy.AbuseReporter.openDialog(
-        id,
-        "amo",
-        target
-      ).catch(err => {
-        Cu.reportError(err);
-        return Promise.reject({
-          message: "Error creating abuse report",
-        });
-      });
-
-      return dialog.promiseReport.then(
-        async report => {
-          if (!report) {
-            return false;
-          }
-
-          await report.submit().catch(err => {
-            Cu.reportError(err);
-            return Promise.reject({
-              message: "Error submitting abuse report",
-            });
-          });
-
-          return true;
-        },
-        err => {
-          Cu.reportError(err);
-          dialog.close();
-          return Promise.reject({
-            message: "Error creating abuse report",
-          });
-        }
-      );
-    },
   },
 };
 
@@ -5246,40 +5196,6 @@ AMTelemetry = {
         source: extra.source,
         source_method: extra.method,
         num_strings: extra.num_strings,
-      })
-    );
-  },
-
-  /**
-   * Record an event on abuse report submissions.
-   *
-   * @params {object} opts
-   * @params {string} opts.addonId
-   *         The id of the addon being reported.
-   * @params {string} [opts.addonType]
-   *         The type of the addon being reported  (only present for an existing
-   *         addonId).
-   * @params {string} [opts.errorType]
-   *         The AbuseReport errorType for a submission failure.
-   * @params {string} opts.reportEntryPoint
-   *         The entry point of the abuse report.
-   */
-  recordReportEvent({ addonId, addonType, errorType, reportEntryPoint }) {
-    this.recordEvent({
-      method: "report",
-      object: reportEntryPoint,
-      value: addonId,
-      extra: this.formatExtraVars({
-        addon_type: addonType,
-        error_type: errorType,
-      }),
-    });
-    Glean.addonsManager.report.record(
-      this.formatExtraVars({
-        addon_id: addonId,
-        addon_type: addonType,
-        entry_point: reportEntryPoint,
-        error_type: errorType,
       })
     );
   },

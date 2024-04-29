@@ -15,26 +15,7 @@ add_setup(async () => {
     ],
   });
 
-  // Explicitly flip the amoFormEnabled pref on builds where the pref is
-  // expected to not be set to true by default.
-  if (AppConstants.MOZ_APP_NAME != "firefox") {
-    await SpecialPowers.pushPrefEnv({
-      set: [["extensions.abuseReport.amoFormEnabled", true]],
-    });
-  }
-
-  const { AbuseReporter } = ChromeUtils.importESModule(
-    "resource://gre/modules/AbuseReporter.sys.mjs"
-  );
-
-  Assert.equal(
-    AbuseReporter.amoFormEnabled,
-    true,
-    "Expect AMO abuse report form to be enabled"
-  );
-
-  // Setting up MockProvider to mock various addon types
-  // as installed.
+  // Setting up MockProvider to mock various addon types as installed.
   await AbuseReportTestUtils.setup();
 });
 
