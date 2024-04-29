@@ -28,13 +28,13 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * Never Translate Site preference screen.
  *
- * @param neverTranslateSiteListPreferences List of [NeverTranslateSiteListItemPreference]s to display.
+ * @param neverTranslateSitesListPreferences List of site urls to display.
  * @param onItemClick Invoked when the user clicks on the a item from the list.
  */
 @Composable
-fun NeverTranslateSitePreference(
-    neverTranslateSiteListPreferences: List<NeverTranslateSiteListItemPreference>,
-    onItemClick: (NeverTranslateSiteListItemPreference) -> Unit,
+fun NeverTranslateSitesPreference(
+    neverTranslateSitesListPreferences: List<String>,
+    onItemClick: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -53,13 +53,13 @@ fun NeverTranslateSitePreference(
         )
 
         LazyColumn {
-            items(neverTranslateSiteListPreferences) { item: NeverTranslateSiteListItemPreference ->
+            items(neverTranslateSitesListPreferences) { item: String ->
                 val itemContentDescription = stringResource(
                     id = R.string.never_translate_site_item_list_content_description_preference,
-                    item.websiteUrl,
+                    item,
                 )
                 TextListItem(
-                    label = item.websiteUrl,
+                    label = item,
                     modifier = Modifier
                         .padding(
                             start = 56.dp,
@@ -78,12 +78,10 @@ fun NeverTranslateSitePreference(
 }
 
 @Composable
-internal fun getNeverTranslateListItemsPreference(): List<NeverTranslateSiteListItemPreference> {
-    return mutableListOf<NeverTranslateSiteListItemPreference>().apply {
+internal fun getNeverTranslateSitesList(): List<String> {
+    return mutableListOf<String>().apply {
         add(
-            NeverTranslateSiteListItemPreference(
-                websiteUrl = "mozilla.org",
-            ),
+            "mozilla.org",
         )
     }
 }
@@ -92,8 +90,8 @@ internal fun getNeverTranslateListItemsPreference(): List<NeverTranslateSiteList
 @LightDarkPreview
 private fun NeverTranslateSitePreferencePreview() {
     FirefoxTheme {
-        NeverTranslateSitePreference(
-            neverTranslateSiteListPreferences = getNeverTranslateListItemsPreference(),
+        NeverTranslateSitesPreference(
+            neverTranslateSitesListPreferences = getNeverTranslateSitesList(),
         ) {}
     }
 }

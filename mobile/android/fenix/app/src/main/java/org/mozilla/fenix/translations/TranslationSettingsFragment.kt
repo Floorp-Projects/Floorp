@@ -67,7 +67,7 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
                         Translations.action.record(Translations.ActionExtra("global_site_settings"))
                         findNavController().navigate(
                             TranslationSettingsFragmentDirections
-                                .actionTranslationSettingsFragmentToNeverTranslateSitePreferenceFragment(),
+                                .actionTranslationSettingsToNeverTranslateSitePreference(),
                         )
                     },
                     onDownloadLanguageClicked = {
