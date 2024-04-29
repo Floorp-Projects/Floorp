@@ -26,7 +26,6 @@
 
 #include "config_components.h"
 
-#include "libavutil/mem.h"
 #include "libavutil/mem_internal.h"
 
 #include "avcodec.h"
@@ -2666,11 +2665,7 @@ int vp78_decode_frame(AVCodecContext *avctx, AVFrame *rframe, int *got_frame,
     if (ret < 0)
         goto err;
 
-    if (!is_vp7 && s->actually_webp) {
-        // VP8 in WebP is supposed to be intra-only. Enforce this here
-        // to ensure that output is reproducible with frame-threading.
-        if (!s->keyframe)
-            return AVERROR_INVALIDDATA;
+    if (s->actually_webp) {
         // avctx->pix_fmt already set in caller.
     } else if (!is_vp7 && s->pix_fmt == AV_PIX_FMT_NONE) {
         s->pix_fmt = get_pixel_format(s);
@@ -2755,7 +2750,7 @@ int vp78_decode_frame(AVCodecContext *avctx, AVFrame *rframe, int *got_frame,
 
     s->next_framep[VP8_FRAME_CURRENT] = curframe;
 
-    if (!is_vp7 && !s->actually_webp)
+    if (ffcodec(avctx->codec)->update_thread_context)
         ff_thread_finish_setup(avctx);
 
     if (avctx->hwaccel) {
@@ -2888,6 +2883,7 @@ int vp78_decode_init(AVCodecContext *avctx, int is_vp7)
     int ret;
 
     s->avctx = avctx;
+    s->vp7   = avctx->codec->id == AV_CODEC_ID_VP7;
     s->pix_fmt = AV_PIX_FMT_NONE;
     avctx->pix_fmt = AV_PIX_FMT_YUV420P;
 
