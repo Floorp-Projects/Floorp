@@ -97,6 +97,7 @@ import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.tabstrip.TabStrip
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -732,7 +733,7 @@ class HomeFragment : Fragment() {
         )
 
         toolbarView?.build()
-        if (requireContext().settings().isTabletAndTabStripEnabled) {
+        if (requireContext().isTabStripEnabled()) {
             initTabStrip()
         }
 

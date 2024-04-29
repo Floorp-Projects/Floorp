@@ -17,6 +17,7 @@ import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.ext.settings
@@ -139,7 +140,7 @@ class ToolbarView(
                 },
             )
 
-            if (settings.isTabletAndTabStripEnabled) {
+            if (context.isTabStripEnabled()) {
                 (layoutParams as ViewGroup.MarginLayoutParams).updateMargins(
                     top = context.resources.getDimensionPixelSize(R.dimen.tab_strip_height),
                 )

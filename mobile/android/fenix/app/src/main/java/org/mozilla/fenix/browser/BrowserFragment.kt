@@ -39,6 +39,7 @@ import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.Shopping
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
@@ -46,7 +47,6 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.isTablet
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
@@ -90,9 +90,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         val context = requireContext()
         val components = context.components
-        val isTabletAndTabStripEnabled = context.settings().isTabletAndTabStripEnabled
 
-        if (!isTabletAndTabStripEnabled && context.settings().isSwipeToolbarToSwitchTabsEnabled) {
+        if (!context.isTabStripEnabled() && context.settings().isSwipeToolbarToSwitchTabsEnabled) {
             binding.gestureLayout.addGestureListener(
                 ToolbarGestureHandler(
                     activity = requireActivity(),

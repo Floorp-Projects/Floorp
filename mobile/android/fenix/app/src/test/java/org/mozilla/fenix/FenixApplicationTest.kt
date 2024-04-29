@@ -148,7 +148,7 @@ class FenixApplicationTest {
         every { application.getDeviceTotalRAM() } returns 7L
         every { settings.inactiveTabsAreEnabled } returns true
         every { application.isDeviceRamAboveThreshold } returns true
-        every { settings.isTabletAndTabStripEnabled } returns true
+        every { settings.isTabStripEnabled } returns true
 
         assertTrue(settings.contileContextId.isEmpty())
         assertNull(TopSites.contextId.testGetValue())

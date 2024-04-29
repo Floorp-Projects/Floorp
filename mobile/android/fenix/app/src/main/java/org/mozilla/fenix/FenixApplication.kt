@@ -870,7 +870,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             disabledAds.set(!settings.isReviewQualityCheckProductRecommendationsEnabled)
         }
 
-        TabStrip.enabled.set(settings.isTabletAndTabStripEnabled)
+        TabStrip.enabled.set(settings.isTabStripEnabled)
     }
 
     @VisibleForTesting

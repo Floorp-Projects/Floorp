@@ -132,6 +132,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
 import org.mozilla.fenix.browser.tabstrip.TabStrip
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
@@ -1025,7 +1026,9 @@ abstract class BaseBrowserFragment :
         )
 
         initializeEngineView(
-            topToolbarHeight = context.settings().getTopToolbarHeight(includeTabStrip = customTabSessionId == null),
+            topToolbarHeight = context.settings().getTopToolbarHeight(
+                includeTabStrip = customTabSessionId == null && context.isTabStripEnabled(),
+            ),
             bottomToolbarHeight = bottomToolbarHeight,
         )
     }
@@ -1241,7 +1244,7 @@ abstract class BaseBrowserFragment :
                         topToolbarHeight = topToolbarHeight,
                     )
             } else {
-                val toolbarHeight = if (customTabSessionId == null && context.settings().isTabletAndTabStripEnabled) {
+                val toolbarHeight = if (customTabSessionId == null && context.isTabStripEnabled()) {
                     resources.getDimensionPixelSize(R.dimen.browser_toolbar_height) +
                         resources.getDimensionPixelSize(R.dimen.tab_strip_height)
                 } else {
@@ -1795,7 +1798,7 @@ abstract class BaseBrowserFragment :
                 browserToolbarView.visible()
                 initializeEngineView(
                     topToolbarHeight = requireContext().settings().getTopToolbarHeight(
-                        includeTabStrip = customTabSessionId == null,
+                        includeTabStrip = customTabSessionId == null && requireContext().isTabStripEnabled(),
                     ),
                     bottomToolbarHeight = requireContext().settings().getBottomToolbarHeight(),
                 )

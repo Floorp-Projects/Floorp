@@ -145,3 +145,9 @@ fun Context.tabClosedUndoMessage(private: Boolean): String =
     } else {
         getString(R.string.snackbar_tab_closed)
     }
+
+/**
+ * Returns true if the device is a tablet
+ */
+fun Context.isTablet(): Boolean =
+    resources.getBoolean(R.bool.tablet)

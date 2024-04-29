@@ -30,6 +30,7 @@ import mozilla.components.concept.toolbar.ScrollableToolbar
 import mozilla.components.support.ktx.util.URLStringUtils
 import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
@@ -44,7 +45,7 @@ import mozilla.components.ui.widgets.behavior.ViewPosition as MozacToolbarPositi
 
 @SuppressWarnings("LargeClass", "LongParameterList")
 class BrowserToolbarView(
-    context: Context,
+    private val context: Context,
     container: ViewGroup,
     private val settings: Settings,
     private val interactor: BrowserToolbarInteractor,
@@ -331,5 +332,5 @@ class BrowserToolbarView(
     }
 
     private fun shouldShowTabStrip() =
-        customTabSession == null && settings.isTabletAndTabStripEnabled
+        customTabSession == null && context.isTabStripEnabled()
 }
