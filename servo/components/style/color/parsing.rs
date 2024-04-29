@@ -675,7 +675,7 @@ impl<'a, 'b: 'a> ComponentParser<'a, 'b> {
             self.parse_number_or_percentage(arguments, true)
         } else {
             Ok(ColorComponent::Value(NumberOrPercentage::Number {
-                value: OPAQUE,
+                value: self.origin_color.map(|c| c.alpha).unwrap_or(OPAQUE),
             }))
         }
     }
