@@ -412,6 +412,10 @@ extern bool DoTypeOfFallback(JSContext* cx, BaselineFrame* frame,
                              ICFallbackStub* stub, HandleValue val,
                              MutableHandleValue res);
 
+extern bool DoTypeOfEqFallback(JSContext* cx, BaselineFrame* frame,
+                               ICFallbackStub* stub, HandleValue val,
+                               MutableHandleValue res);
+
 extern bool DoToPropertyKeyFallback(JSContext* cx, BaselineFrame* frame,
                                     ICFallbackStub* stub, HandleValue val,
                                     MutableHandleValue res);

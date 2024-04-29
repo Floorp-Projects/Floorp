@@ -581,6 +581,8 @@ bool SetPropertyMegamorphic(JSContext* cx, HandleObject obj, HandleId id,
 
 JSString* TypeOfNameObject(JSObject* obj, JSRuntime* rt);
 
+bool TypeOfEqObject(JSObject* obj, JSType type);
+
 bool GetPrototypeOf(JSContext* cx, HandleObject target,
                     MutableHandleValue rval);
 

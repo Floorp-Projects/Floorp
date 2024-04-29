@@ -1893,6 +1893,13 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       return write("(typeof ") && decompilePCForStackOperand(pc, -1) &&
              write(")");
 
+    case JSOp::TypeofEq: {
+      JSType type = JSType(GET_UINT8(pc));
+
+      return write("(typeof ") && decompilePCForStackOperand(pc, -1) &&
+             write(" == \"") && write(JSTypeToString(type)) && write("\")");
+    }
+
     case JSOp::InitElemArray:
       return write("[...]");
 

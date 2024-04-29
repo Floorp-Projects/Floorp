@@ -2247,6 +2247,11 @@ JSString* TypeOfNameObject(JSObject* obj, JSRuntime* rt) {
   return TypeName(type, *rt->commonNames);
 }
 
+bool TypeOfEqObject(JSObject* obj, JSType type) {
+  AutoUnsafeCallWithABI unsafe;
+  return js::TypeOfObject(obj) == type;
+}
+
 bool GetPrototypeOf(JSContext* cx, HandleObject target,
                     MutableHandleValue rval) {
   MOZ_ASSERT(target->hasDynamicPrototype());
