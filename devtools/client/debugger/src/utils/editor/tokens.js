@@ -50,6 +50,8 @@ function _isInvalidTarget(target) {
     target.closest(".CodeMirror-widget") ||
     // exclude in-line "empty" space, as well as the gutter
     target.matches(".CodeMirror-line, .CodeMirror-gutter-elt") ||
+    // exclude items that are not in a line
+    !target.closest(".CodeMirror-line") ||
     target.getBoundingClientRect().top == 0
   ) {
     return true;
