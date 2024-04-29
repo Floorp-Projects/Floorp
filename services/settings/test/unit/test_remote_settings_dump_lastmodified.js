@@ -1,9 +1,5 @@
 "use strict";
 
-const { Utils } = ChromeUtils.importESModule(
-  "resource://services-settings/Utils.sys.mjs"
-);
-
 async function getLocalDumpLastModified(bucket, collection) {
   let res;
   try {

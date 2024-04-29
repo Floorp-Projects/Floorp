@@ -1,22 +1,3 @@
-/* import-globals-from ../../../common/tests/unit/head_helpers.js */
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { TestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TestUtils.sys.mjs"
-);
-
-const { RemoteSettingsWorker } = ChromeUtils.importESModule(
-  "resource://services-settings/RemoteSettingsWorker.sys.mjs"
-);
-const { RemoteSettingsClient } = ChromeUtils.importESModule(
-  "resource://services-settings/RemoteSettingsClient.sys.mjs"
-);
-const { Database } = ChromeUtils.importESModule(
-  "resource://services-settings/Database.sys.mjs"
-);
-
 const IS_ANDROID = AppConstants.platform == "android";
 
 add_task(async function test_canonicaljson() {

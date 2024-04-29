@@ -1,12 +1,3 @@
-/* import-globals-from ../../../common/tests/unit/head_helpers.js */
-
-const { TestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TestUtils.sys.mjs"
-);
-const { Utils } = ChromeUtils.importESModule(
-  "resource://services-settings/Utils.sys.mjs"
-);
-
 const BinaryOutputStream = Components.Constructor(
   "@mozilla.org/binaryoutputstream;1",
   "nsIBinaryOutputStream",

@@ -1,18 +1,3 @@
-/* import-globals-from ../../../common/tests/unit/head_helpers.js */
-
-const { SyncHistory } = ChromeUtils.importESModule(
-  "resource://services-settings/SyncHistory.sys.mjs"
-);
-const { RemoteSettingsClient } = ChromeUtils.importESModule(
-  "resource://services-settings/RemoteSettingsClient.sys.mjs"
-);
-const { RemoteSettings } = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
-);
-const { Utils } = ChromeUtils.importESModule(
-  "resource://services-settings/Utils.sys.mjs"
-);
-
 const PREF_SETTINGS_SERVER = "services.settings.server";
 const CHANGES_PATH = "/v1" + Utils.CHANGES_PATH;
 const BROKEN_SYNC_THRESHOLD = 10; // See default pref value
