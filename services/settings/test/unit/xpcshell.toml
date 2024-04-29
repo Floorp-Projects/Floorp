@@ -1,5 +1,5 @@
 [DEFAULT]
-head = "../../../common/tests/unit/head_global.js ../../../common/tests/unit/head_helpers.js"
+head = "../../../common/tests/unit/head_global.js ../../../common/tests/unit/head_helpers.js head_settings.js"
 firefox-appdir = "browser"
 tags = "remote-settings"
 support-files = ["test_remote_settings_signatures/**"]

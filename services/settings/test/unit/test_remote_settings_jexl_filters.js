@@ -1,7 +1,3 @@
-const { RemoteSettings } = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
-);
-
 let client;
 
 async function createRecords(records) {
@@ -18,11 +14,9 @@ async function createRecords(records) {
   );
 }
 
-function run_test() {
+add_setup(() => {
   client = RemoteSettings("some-key");
-
-  run_next_test();
-}
+});
 
 add_task(async function test_returns_all_without_target() {
   await createRecords([

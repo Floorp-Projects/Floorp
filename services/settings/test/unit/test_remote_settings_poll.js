@@ -1,34 +1,11 @@
-/* import-globals-from ../../../common/tests/unit/head_helpers.js */
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
-
-const { UptakeTelemetry, Policy } = ChromeUtils.importESModule(
-  "resource://services-common/uptake-telemetry.sys.mjs"
-);
-const { RemoteSettingsClient } = ChromeUtils.importESModule(
-  "resource://services-settings/RemoteSettingsClient.sys.mjs"
-);
 const { pushBroadcastService } = ChromeUtils.importESModule(
   "resource://gre/modules/PushBroadcastService.sys.mjs"
 );
-const { SyncHistory } = ChromeUtils.importESModule(
-  "resource://services-settings/SyncHistory.sys.mjs"
-);
-const { RemoteSettings, remoteSettingsBroadcastHandler, BROADCAST_ID } =
+
+const { remoteSettingsBroadcastHandler, BROADCAST_ID } =
   ChromeUtils.importESModule(
     "resource://services-settings/remote-settings.sys.mjs"
   );
-const { Utils } = ChromeUtils.importESModule(
-  "resource://services-settings/Utils.sys.mjs"
-);
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
 
 const IS_ANDROID = AppConstants.platform == "android";
 
@@ -80,7 +57,7 @@ function serveChangesEntries(serverTime, entriesOrFunc) {
   };
 }
 
-function run_test() {
+add_setup(() => {
   // Set up an HTTP Server
   server = new HttpServer();
   server.start(-1);
@@ -89,13 +66,11 @@ function run_test() {
   let oldGetChannel = Policy.getChannel;
   Policy.getChannel = () => "nightly";
 
-  run_next_test();
-
   registerCleanupFunction(() => {
     Policy.getChannel = oldGetChannel;
     server.stop(() => {});
   });
-}
+});
 
 add_task(clear_state);
 

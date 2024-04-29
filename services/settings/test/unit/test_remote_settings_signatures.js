@@ -1,19 +1,6 @@
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 "use strict";
 
-const { RemoteSettings } = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
-);
-const { RemoteSettingsClient } = ChromeUtils.importESModule(
-  "resource://services-settings/RemoteSettingsClient.sys.mjs"
-);
-const { UptakeTelemetry, Policy } = ChromeUtils.importESModule(
-  "resource://services-common/uptake-telemetry.sys.mjs"
-);
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
-
 const PREF_SETTINGS_SERVER = "services.settings.server";
 const SIGNER_NAME = "onecrl.content-signature.mozilla.org";
 const TELEMETRY_COMPONENT = "remotesettings";
@@ -42,7 +29,7 @@ function getCertChain() {
 let server;
 let client;
 
-function run_test() {
+add_setup(() => {
   // Signature verification is enabled by default. We use a custom signer
   // because these tests were originally written for OneCRL.
   client = RemoteSettings("signed", { signerName: SIGNER_NAME });
@@ -57,13 +44,11 @@ function run_test() {
   let oldGetChannel = Policy.getChannel;
   Policy.getChannel = () => "nightly";
 
-  run_next_test();
-
   registerCleanupFunction(() => {
     Policy.getChannel = oldGetChannel;
     server.stop(() => {});
   });
-}
+});
 
 add_task(async function test_check_signatures() {
   // First, perform a signature verification with known data and signature

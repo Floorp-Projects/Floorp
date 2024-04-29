@@ -3,16 +3,8 @@
 
 "use strict";
 
-/* import-globals-from ../../../common/tests/unit/head_helpers.js */
-
 const { TelemetryController } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryController.sys.mjs"
-);
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
-const { Utils } = ChromeUtils.importESModule(
-  "resource://services-settings/Utils.sys.mjs"
 );
 
 const server = new HttpServer();
@@ -36,7 +28,7 @@ async function assertTelemetryEvents(expectedEvents) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   await TelemetryController.testSetup();
 });
 
