@@ -415,13 +415,6 @@ const featureDescriptions = [
     recommended: true,
   },
   {
-    name: "Memory Tracking",
-    value: "memory",
-    title:
-      "Track the memory allocations and deallocations per process over time.",
-    recommended: true,
-  },
-  {
     name: "Java",
     value: "java",
     title: "Profile Java code",

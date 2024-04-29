@@ -584,7 +584,6 @@ BaseProfilerCount* install_memory_hooks() {
     ThreadIntercept::Init();
   } else {
     sCounter->Clear();
-    sCounter->Register();
   }
   jemalloc_replace_dynamic(replace_init);
   return sCounter;
@@ -633,12 +632,6 @@ void disable_native_allocations() {
   ThreadIntercept::DisableAllocationFeature();
   if (gAllocationTracker) {
     gAllocationTracker->Reset();
-  }
-}
-
-void unregister_memory_counter() {
-  if (sCounter) {
-    sCounter->Unregister();
   }
 }
 

@@ -124,7 +124,7 @@ export const presets = {
   "web-developer": {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: ["screenshots", "js", "cpu", "memory"],
+    features: ["screenshots", "js", "cpu"],
     threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
     duration: 0,
     profilerViewMode: "active-tab",
@@ -142,15 +142,7 @@ export const presets = {
   "firefox-platform": {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: [
-      "screenshots",
-      "js",
-      "stackwalk",
-      "cpu",
-      "java",
-      "processcpu",
-      "memory",
-    ],
+    features: ["screenshots", "js", "stackwalk", "cpu", "java", "processcpu"],
     threads: [
       "GeckoMain",
       "Compositor",
@@ -173,7 +165,7 @@ export const presets = {
   graphics: {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: ["stackwalk", "js", "cpu", "java", "processcpu", "memory"],
+    features: ["stackwalk", "js", "cpu", "java", "processcpu"],
     threads: [
       "GeckoMain",
       "Compositor",
@@ -207,7 +199,6 @@ export const presets = {
       "audiocallbacktracing",
       "ipcmessages",
       "processcpu",
-      "memory",
     ],
     threads: [
       "cubeb",
@@ -257,7 +248,6 @@ export const presets = {
       "java",
       "processcpu",
       "bandwidth",
-      "memory",
     ],
     threads: [
       "Compositor",
@@ -296,7 +286,6 @@ export const presets = {
       "markersallthreads",
       "power",
       "bandwidth",
-      "memory",
     ],
     threads: ["GeckoMain", "Renderer"],
     duration: 0,
