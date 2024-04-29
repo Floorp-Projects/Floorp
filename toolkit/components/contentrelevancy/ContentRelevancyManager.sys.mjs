@@ -66,7 +66,7 @@ class RelevancyManager {
    * Note that this should be called once only. `#enable` and `#disable` can be
    * used to toggle the feature once the manager is initialized.
    */
-  async init() {
+  init() {
     if (this.initialized) {
       return;
     }
@@ -74,7 +74,7 @@ class RelevancyManager {
     lazy.log.info("Initializing the manager");
 
     if (this.shouldEnable) {
-      await this.#enable();
+      this.#enable();
     }
 
     this._nimbusUpdateCallback = this.#onNimbusUpdate.bind(this);
@@ -143,14 +143,14 @@ class RelevancyManager {
     );
   }
 
-  async #enable() {
+  #enable() {
     if (!this.#_store) {
       // Init the relevancy store.
       const path = this.#storePath;
       lazy.log.info(`Initializing RelevancyStore: ${path}`);
 
       try {
-        this.#_store = await lazy.RelevancyStore.init(path);
+        this.#_store = lazy.RelevancyStore.init(path);
       } catch (error) {
         lazy.log.error(`Error initializing RelevancyStore: ${error}`);
         return;
@@ -166,13 +166,16 @@ class RelevancyManager {
    * called.
    */
   #disable() {
-    this.#_store = null;
+    if (this._isStoreReady) {
+      this.#_store.close();
+      this.#_store = null;
+    }
     lazy.timerManager.unregisterTimer(TIMER_ID);
   }
 
-  async #toggleFeature() {
+  #toggleFeature() {
     if (this.shouldEnable) {
-      await this.#enable();
+      this.#enable();
     } else {
       this.#disable();
     }

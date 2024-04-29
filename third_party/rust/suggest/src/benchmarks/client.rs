@@ -22,6 +22,7 @@ impl RemoteSettingsWarmUpClient {
     pub fn new() -> Self {
         Self {
             client: Client::new(RemoteSettingsConfig {
+                server: None,
                 server_url: None,
                 bucket_name: None,
                 collection_name: crate::rs::REMOTE_SETTINGS_COLLECTION.into(),

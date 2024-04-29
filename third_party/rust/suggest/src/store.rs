@@ -13,7 +13,8 @@ use error_support::handle_error;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use remote_settings::{
-    self, GetItemsOptions, RemoteSettingsConfig, RemoteSettingsRecord, SortOrder,
+    self, GetItemsOptions, RemoteSettingsConfig, RemoteSettingsRecord, RemoteSettingsServer,
+    SortOrder,
 };
 use rusqlite::{
     types::{FromSql, ToSqlOutput},
@@ -50,6 +51,7 @@ pub struct SuggestStoreBuilder(Mutex<SuggestStoreBuilderInner>);
 #[derive(Default)]
 struct SuggestStoreBuilderInner {
     data_path: Option<String>,
+    remote_settings_server: Option<RemoteSettingsServer>,
     remote_settings_config: Option<RemoteSettingsConfig>,
 }
 
@@ -79,6 +81,11 @@ impl SuggestStoreBuilder {
         self
     }
 
+    pub fn remote_settings_server(self: Arc<Self>, server: RemoteSettingsServer) -> Arc<Self> {
+        self.0.lock().remote_settings_server = Some(server);
+        self
+    }
+
     #[handle_error(Error)]
     pub fn build(&self) -> SuggestApiResult<Arc<SuggestStore>> {
         let inner = self.0.lock();
@@ -86,14 +93,29 @@ impl SuggestStoreBuilder {
             .data_path
             .clone()
             .ok_or_else(|| Error::SuggestStoreBuilder("data_path not specified".to_owned()))?;
-        let settings_client =
-            remote_settings::Client::new(inner.remote_settings_config.clone().unwrap_or_else(
-                || RemoteSettingsConfig {
-                    server_url: None,
-                    bucket_name: None,
-                    collection_name: REMOTE_SETTINGS_COLLECTION.into(),
-                },
-            ))?;
+        let remote_settings_config = match (
+            inner.remote_settings_server.as_ref(),
+            inner.remote_settings_config.as_ref(),
+        ) {
+            (Some(server), None) => RemoteSettingsConfig {
+                server: Some(server.clone()),
+                server_url: None,
+                bucket_name: None,
+                collection_name: REMOTE_SETTINGS_COLLECTION.into(),
+            },
+            (None, Some(remote_settings_config)) => remote_settings_config.clone(),
+            (None, None) => RemoteSettingsConfig {
+                server: None,
+                server_url: None,
+                bucket_name: None,
+                collection_name: REMOTE_SETTINGS_COLLECTION.into(),
+            },
+            (Some(_), Some(_)) => Err(Error::SuggestStoreBuilder(
+                "can't specify both `remote_settings_server` and `remote_settings_config`"
+                    .to_owned(),
+            ))?,
+        };
+        let settings_client = remote_settings::Client::new(remote_settings_config)?;
         Ok(Arc::new(SuggestStore {
             inner: SuggestStoreInner::new(data_path, settings_client),
         }))
@@ -172,6 +194,7 @@ impl SuggestStore {
         let settings_client = || -> Result<_> {
             Ok(remote_settings::Client::new(
                 settings_config.unwrap_or_else(|| RemoteSettingsConfig {
+                    server: None,
                     server_url: None,
                     bucket_name: None,
                     collection_name: REMOTE_SETTINGS_COLLECTION.into(),
@@ -5021,10 +5044,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 18,
+                                schema_version: 19,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 18,
+                                schema_version: 19,
                             },
                         },
                     ),
@@ -5093,10 +5116,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 18,
+                                schema_version: 19,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 18,
+                                schema_version: 19,
                             },
                         },
                     ),
@@ -5292,10 +5315,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 18,
+                                schema_version: 19,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 18,
+                                schema_version: 19,
                             },
                         },
                     ),
@@ -5381,7 +5404,7 @@ mod tests {
                     UnparsableRecords(
                         {
                             "invalid-attachment": UnparsableRecord {
-                                schema_version: 18,
+                                schema_version: 19,
                             },
                         },
                     ),

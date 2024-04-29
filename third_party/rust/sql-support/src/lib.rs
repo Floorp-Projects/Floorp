@@ -10,14 +10,16 @@
 mod conn_ext;
 pub mod debug_tools;
 mod each_chunk;
+mod lazy;
 mod maybe_cached;
 pub mod open_database;
 mod repeat;
 
-pub use crate::conn_ext::*;
-pub use crate::each_chunk::*;
-pub use crate::maybe_cached::*;
-pub use crate::repeat::*;
+pub use conn_ext::*;
+pub use each_chunk::*;
+pub use lazy::*;
+pub use maybe_cached::*;
+pub use repeat::*;
 
 /// In PRAGMA foo='bar', `'bar'` must be a constant string (it cannot be a
 /// bound parameter), so we need to escape manually. According to

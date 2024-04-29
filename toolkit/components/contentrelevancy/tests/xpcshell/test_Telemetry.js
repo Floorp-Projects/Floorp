@@ -21,7 +21,7 @@ add_setup(async function setup() {
   Services.fog.initializeFOG();
 
   Services.prefs.setBoolPref(PREF_CONTENT_RELEVANCY_ENABLED, true);
-  await ContentRelevancyManager.init();
+  ContentRelevancyManager.init();
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(PREF_CONTENT_RELEVANCY_ENABLED);

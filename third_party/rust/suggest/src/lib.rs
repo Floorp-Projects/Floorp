@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use remote_settings::RemoteSettingsConfig;
+use remote_settings::{RemoteSettingsConfig, RemoteSettingsServer};
 #[cfg(feature = "benchmark_api")]
 pub mod benchmarks;
 mod config;
