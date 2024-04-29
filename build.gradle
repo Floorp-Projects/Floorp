@@ -116,7 +116,7 @@ allprojects {
     // Use the semanticdb-javac and semanticdb-kotlinc plugins to generate semanticdb files for Searchfox
     if (mozconfig.substs.ENABLE_MOZSEARCH_PLUGIN || mozconfig.substs.DOWNLOAD_ALL_GRADLE_DEPENDENCIES) {
         def targetRoot = new File(topobjdir, "mozsearch_java_index")
-        def semanticdbJavacVersion = "com.sourcegraph:semanticdb-javac:0.9.6"
+        def semanticdbJavacVersion = "com.sourcegraph:semanticdb-javac:0.9.10"
         def semanticdbKotlincVersion = "com.sourcegraph:semanticdb-kotlinc:0.4.0"
 
         afterEvaluate {
