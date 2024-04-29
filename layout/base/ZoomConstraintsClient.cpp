@@ -53,9 +53,20 @@ static nsIWidget* GetWidget(PresShell* aPresShell) {
     return nullptr;
   }
   if (nsIFrame* rootFrame = aPresShell->GetRootFrame()) {
+#if defined(MOZ_WIDGET_ANDROID)
+    // On Android in cases of about:XX pages loaded in the browser parent
+    // process we need to return the nearest widget since it's the widget owning
+    // an IAPZCTreeManager to communicate with the APZCTreeManager for the
+    // browser.
+    // In bug 1648427 we will apply this code to desktops as well to make
+    // about pages zoomable on desktops, but it will be involving more works,
+    // see https://bugzilla.mozilla.org/show_bug.cgi?id=1648427#c7 .
+    return rootFrame->GetNearestWidget();
+#else
     if (nsView* view = rootFrame->GetView()) {
       return view->GetWidget();
     }
+#endif
   }
   return nullptr;
 }
