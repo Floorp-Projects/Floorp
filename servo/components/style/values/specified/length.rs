@@ -97,9 +97,15 @@ pub enum LineHeightBase {
 impl FontBaseSize {
     /// Calculate the actual size for a given context
     pub fn resolve(&self, context: &Context) -> computed::FontSize {
+        let style = context.style();
         match *self {
-            Self::CurrentStyle => context.style().get_font().clone_font_size(),
-            Self::InheritedStyle => context.style().get_parent_font().clone_font_size(),
+            Self::CurrentStyle => style.get_font().clone_font_size(),
+            Self::InheritedStyle => {
+                // If we're using the size from our inherited style, we still need to apply our
+                // own zoom.
+                let zoom = style.get_box().clone_zoom();
+                style.get_parent_font().clone_font_size().zoom(zoom)
+            },
         }
     }
 }
@@ -351,7 +357,7 @@ impl FontRelativeLength {
                 let reference_size = if context.builder.is_root_element || context.in_media_query {
                     reference_font_size.computed_size()
                 } else {
-                    context.device().root_font_size()
+                    context.device().root_font_size().zoom(context.builder.effective_zoom)
                 };
                 (reference_size, length)
             },
@@ -394,19 +400,19 @@ impl FontRelativeLength {
                 //     When specified on the root element, the rlh units refer
                 //     to the initial values of font and line-height properties.
                 //
-                let reference_size: CSSPixelLength =
-                    if context.builder.is_root_element || context.in_media_query {
-                        context
-                            .device()
-                            .calc_line_height(
-                                &context.default_style().get_font(),
-                                context.style().writing_mode,
-                                None,
-                            )
-                            .0
-                    } else {
-                        context.device().root_line_height()
-                    };
+                let reference_size = if context.builder.is_root_element || context.in_media_query {
+                    context
+                        .device()
+                        .calc_line_height(
+                            &context.default_style().get_font(),
+                            context.style().writing_mode,
+                            None,
+                        )
+                        .0
+                } else {
+                    context.device().root_line_height()
+                };
+                let reference_size = reference_size.zoom(context.builder.effective_zoom);
                 (reference_size, length)
             },
         }
@@ -668,7 +674,7 @@ impl ViewportPercentageLength {
     pub fn to_computed_value(&self, context: &Context) -> CSSPixelLength {
         let (variant, unit, factor) = self.unpack();
         let size = context.viewport_size_for_viewport_unit_resolution(variant);
-        let length = match unit {
+        let length: app_units::Au = match unit {
             ViewportUnit::Vw => size.width,
             ViewportUnit::Vh => size.height,
             ViewportUnit::Vmin => cmp::min(size.width, size.height),
@@ -686,13 +692,15 @@ impl ViewportPercentageLength {
             },
         };
 
+        // NOTE: This is in app units!
+        let length = context.builder.effective_zoom.zoom(length.0 as f32);
+
         // FIXME: Bug 1396535, we need to fix the extremely small viewport length for transform.
-        // See bug 989802. We truncate so that adding multiple viewport units
-        // that add up to 100 does not overflow due to rounding differences.
-        // We convert appUnits to CSS px manually here to avoid premature clamping by
-        // going through the Au type.
+        // See bug 989802. We truncate so that adding multiple viewport units that add up to 100
+        // does not overflow due to rounding differences. We convert appUnits to CSS px manually
+        // here to avoid premature clamping by going through the Au type.
         let trunc_scaled =
-            ((length.0 as f64 * factor as f64 / 100.).trunc() / AU_PER_PX as f64) as f32;
+            ((length as f64 * factor as f64 / 100.).trunc() / AU_PER_PX as f64) as f32;
         CSSPixelLength::new(crate::values::normalize(trunc_scaled))
     }
 }
@@ -797,7 +805,7 @@ impl ToComputedValue for AbsoluteLength {
     type ComputedValue = CSSPixelLength;
 
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
-        CSSPixelLength::new(context.builder.effective_zoom().zoom(self.to_px())).finite()
+        CSSPixelLength::new(self.to_px()).zoom(context.builder.effective_zoom).finite()
     }
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {
@@ -910,6 +918,9 @@ impl ContainerRelativeLength {
             .builder
             .add_flags(ComputedValueFlags::USES_CONTAINER_UNITS);
 
+        // TODO(emilio, bug 1894104): Need to handle zoom here, probably something like
+        // container_zoom - effective_zoom or so. See
+        // https://github.com/w3c/csswg-drafts/issues/10268
         let size = context.get_container_size_query();
         let (factor, container_length) = match *self {
             Self::Cqw(v) => (v, size.get_container_width(context)),
