@@ -34,6 +34,37 @@ pub fn rcs_enabled() -> bool {
     static_prefs::pref!("layout.css.relative-color-syntax.enabled")
 }
 
+/// Represents a channel keyword inside a color.
+#[derive(Clone, Copy, Debug, MallocSizeOf, Parse, PartialEq, PartialOrd, ToCss, ToShmem)]
+pub enum ChannelKeyword {
+    /// alpha
+    Alpha,
+    /// a
+    A,
+    /// b, blackness, blue
+    B,
+    /// chroma
+    C,
+    /// green
+    G,
+    /// hue
+    H,
+    /// lightness
+    L,
+    /// red
+    R,
+    /// saturation
+    S,
+    /// whiteness
+    W,
+    /// x
+    X,
+    /// y
+    Y,
+    /// z
+    Z,
+}
+
 /// Return the named color with the given name.
 ///
 /// Matching is case-insensitive in the ASCII range.
