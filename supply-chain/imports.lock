@@ -814,6 +814,20 @@ criteria = "safe-to-deploy"
 version = "1.0.2"
 notes = "This is a small crate which forbids unsafe code and is a straightforward implementation of the adler hashing algorithm."
 
+[[audits.bytecode-alliance.audits.ahash]]
+who = "Chris Fallin <chris@cfallin.org>"
+criteria = "safe-to-deploy"
+delta = "0.7.6 -> 0.8.2"
+
+[[audits.bytecode-alliance.audits.ahash]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.2 -> 0.8.7"
+notes = """
+Shuffling of features in this update and while there are updates to `unsafe`
+code it's no different than before and the usage remains the same.
+"""
+
 [[audits.bytecode-alliance.audits.arrayref]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"
 criteria = "safe-to-deploy"
