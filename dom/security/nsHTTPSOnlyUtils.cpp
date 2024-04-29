@@ -601,35 +601,28 @@ nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(
     if (navigationStart) {
       mozilla::TimeDuration duration =
           mozilla::TimeStamp::Now() - navigationStart;
+
       bool isPrivateWin =
           loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+      bool isSchemeless =
+          loadInfo->GetWasSchemelessInput() &&
+          !nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled(isPrivateWin);
 
-      if (loadInfo->GetWasSchemelessInput() &&
-          !IsHttpsFirstModeEnabled(isPrivateWin)) {
-        mozilla::glean::httpsfirst::downgraded_schemeless.Add();
-        if (timing) {
-          mozilla::glean::httpsfirst::downgrade_time_schemeless
-              .AccumulateRawDuration(duration);
-        }
-      } else {
-        mozilla::glean::httpsfirst::downgraded.Add();
-        if (timing) {
-          mozilla::glean::httpsfirst::downgrade_time.AccumulateRawDuration(
-              duration);
-        }
-      }
+      using namespace mozilla::glean::httpsfirst;
+      auto downgradedMetric = isSchemeless ? downgraded_schemeless : downgraded;
+      auto downgradedOnTimerMetric =
+          isSchemeless ? downgraded_on_timer_schemeless : downgraded_on_timer;
+      auto downgradeTimeMetric =
+          isSchemeless ? downgrade_time_schemeless : downgrade_time;
 
       nsresult channelStatus;
       channel->GetStatus(&channelStatus);
       if (channelStatus == NS_ERROR_NET_TIMEOUT_EXTERNAL) {
-        if (loadInfo->GetWasSchemelessInput() &&
-            !nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled(isPrivateWin)) {
-          mozilla::glean::httpsfirst::downgraded_on_timer_schemeless
-              .AddToNumerator();
-        } else {
-          mozilla::glean::httpsfirst::downgraded_on_timer.AddToNumerator();
-        }
+        downgradedOnTimerMetric.AddToNumerator();
+      } else {
+        downgradeTimeMetric.AccumulateRawDuration(duration);
       }
+      downgradedMetric.Add();
     }
   }
 
