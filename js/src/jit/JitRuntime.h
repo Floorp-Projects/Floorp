@@ -43,6 +43,7 @@ namespace js {
 
 class AutoLockHelperThreadState;
 class GCMarker;
+enum class ArraySortKind;
 
 namespace jit {
 
@@ -307,7 +308,8 @@ class JitRuntime {
   void generateTrampolineNatives(MacroAssembler& masm,
                                  TrampolineNativeJitEntryOffsets& offsets,
                                  PerfSpewerRangeRecorder& rangeRecorder);
-  uint32_t generateArraySortTrampoline(MacroAssembler& masm);
+  uint32_t generateArraySortTrampoline(MacroAssembler& masm,
+                                       ArraySortKind kind);
 
   void bindLabelToOffset(Label* label, uint32_t offset) {
     MOZ_ASSERT(!trampolineCode_);
