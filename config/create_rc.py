@@ -69,6 +69,11 @@ END
 """
 
 
+class SystemClockDiscrepancy(Exception):
+    """Represents an error encountered during the build when determining delta between the build time and
+    the commit time of milestone.txt via VCS."""
+
+
 def preprocess(path, defines):
     pp = Preprocessor(defines=defines, marker="%")
     pp.context.update(defines)
@@ -96,10 +101,111 @@ def get_buildid():
     return buildid
 
 
-def days_from_2000_to_buildid(buildid):
-    start = datetime(2000, 1, 1, 0, 0, 0)
-    buildid_time = datetime.strptime(buildid, "%Y%m%d%H%M%S")
-    return (buildid_time - start).days
+def last_winversion_segment(buildid, app_version_display):
+    """
+    The last segment needs to fit into a 16 bit number. We also need to
+    encode what channel this version is from. We'll do this by using 2 bits
+    to encode the channel, and 14 bits to encode the number of hours since
+    the 'config/milestone.txt' was modified (relative to the build time).
+
+    This gives us about ~682 days of release hours that will yield a unique
+    file version for a specific channel/milestone combination. This should suffice
+    since the main problem we're trying to address is uniqueness in CI for a
+    channel/milestone over about a 1 month period.
+
+    If two builds for the same channel/milestone are done in CI within the same
+    hour there's still a chance for overlap and issues with AV as originally
+    reported in https://bugzilla.mozilla.org/show_bug.cgi?id=1872242
+
+    If a build is done after the ~682 day window of uniqueness, the value for
+    this segment will always be the maximum value for the channel (no overflow).
+    It will also always be the maximum value for the channel if a build is done
+    from a source distribution, because we cannot determine the milestone date
+    change without a VCS.
+
+    If necessary, you can decode the result of this function. You just need to
+    do integer division and divide it by 4. The quotient will be the delta
+    between the milestone bump and the build time, and the remainder will be
+    the channel digit. Refer to the if/else chain near the end of the function
+    for what channels the channel digits map to.
+
+    Example:
+        Encoded: 1544
+
+        1554 / 4 =
+        Quotient: 388
+        Remainder: 2 (ESR)
+    """
+    from mozversioncontrol import MissingVCSTool, get_repository_object
+
+    # Max 16 bit value with 2 most significant bits as 0 (reserved so we can
+    # shift later and make room for the channel digit).
+    MAX_VALUE = 0x3FFF
+
+    try:
+        import time
+        from datetime import timedelta, timezone
+        from pathlib import Path
+
+        topsrcdir = buildconfig.topsrcdir
+        repo = get_repository_object(topsrcdir)
+
+        milestone_time = repo.get_last_modified_time_for_file(
+            Path(topsrcdir) / "config" / "milestone.txt"
+        )
+        # The buildid doesn't include timezone info, but the milestone_time does.
+        # We're building on this machine, so we just need the system local timezone
+        # added to a buildid constructed datetime object to make a valid comparison.
+        local_tz = timezone(timedelta(seconds=time.timezone))
+        buildid_time = datetime.strptime(buildid, "%Y%m%d%H%M%S").replace(
+            tzinfo=local_tz
+        )
+
+        time_delta = buildid_time - milestone_time
+        # If the time delta is negative it means that the system clock on the build machine is
+        # significantly far ahead. If we're in CI we'll raise an error, since this number mostly
+        # only matters for doing releases in CI. If we're not in CI, we'll just set the value to
+        # the maximum instead of needlessly interrupting the build of a user with fast/intentionally
+        # modified system clock.
+        if time_delta.total_seconds() < 0:
+            if "MOZ_AUTOMATION" in os.environ:
+                raise SystemClockDiscrepancy(
+                    f"The system clock is ahead of the milestone.txt commit time "
+                    f"by at least {int(time_delta.total_seconds())} seconds (Since "
+                    f"the milestone commit must come before the build starts). This "
+                    f"is a problem because use a relative time difference to determine the"
+                    f"file_version (and it can't be negative), so we cannot proceed. \n\n"
+                    f"Please ensure the system clock is correct."
+                )
+            else:
+                hours_from_milestone_date = MAX_VALUE
+        else:
+            # Convert from seconds to hours
+            # When a build is done more than ~682 days in the future, we can't represent the value.
+            # We'll always set the value to the maximum value instead of overflowing.
+            hours_from_milestone_date = min(
+                int(time_delta.total_seconds() / 3600), MAX_VALUE
+            )
+    except MissingVCSTool:
+        # If we're here we can't use the VCS to determine the time differential, so
+        # we'll just set it to the maximum value instead of doing something weird.
+        hours_from_milestone_date = MAX_VALUE
+        pass
+
+    if buildconfig.substs.get("NIGHTLY_BUILD"):
+        # Nightly
+        channel_digit = 0
+    elif "b" in app_version_display:
+        # Beta
+        channel_digit = 1
+    elif buildconfig.substs.get("MOZ_ESR"):
+        # ESR
+        channel_digit = 2
+    else:
+        # Release
+        channel_digit = 3
+    # left shift to make room to encode the channel digit
+    return str((hours_from_milestone_date << 2) + channel_digit)
 
 
 def digits_only(s):
@@ -129,10 +235,11 @@ def generate_module_rc(binary="", rcinclude=None):
     buildid = get_buildid()
     milestone = buildconfig.substs["GRE_MILESTONE"]
     app_version = buildconfig.substs.get("MOZ_APP_VERSION") or milestone
+    app_version_display = buildconfig.substs.get("MOZ_APP_VERSION_DISPLAY")
     app_winversion = ",".join(split_and_normalize_version(app_version, 4))
     milestone_winversion = ",".join(
         split_and_normalize_version(milestone, 3)
-        + [str(days_from_2000_to_buildid(buildid))]
+        + [last_winversion_segment(buildid, app_version_display)]
     )
     display_name = buildconfig.substs.get("MOZ_APP_DISPLAYNAME", "Mozilla")
 
