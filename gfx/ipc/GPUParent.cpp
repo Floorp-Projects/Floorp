@@ -120,12 +120,9 @@ static void ReportHardwareMediaCodecSupportIfNeeded() {
   }
   sReported = true;
 
-  // TODO : we can remove this after HEVC is enabled by default.
-  // HEVC is not enabled. We need to force to enable it in order to know
-  // its support as well, and it would be turn off later.
-  if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
-    WMFDecoderModule::Init(WMFDecoderModule::Config::ForceEnableHEVC);
-  }
+  // We will disable HVEC later after reporting Telemetry if the pref is off.
+  WMFDecoderModule::Init(WMFDecoderModule::Config::ForceEnableHEVC);
+
   const auto support = PDMFactory::Supported(true /* force refresh */);
   if (support.contains(
           mozilla::media::MediaCodecsSupport::H264HardwareDecode)) {
@@ -155,7 +152,7 @@ static void ReportHardwareMediaCodecSupportIfNeeded() {
         true);
   }
   if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
-    WMFDecoderModule::Init();
+    WMFDecoderModule::DisableForceEnableHEVC();
   }
 
 #endif
