@@ -71,8 +71,9 @@ class MOZ_RAII CacheIROpsJitSpewer {
   void spewJSOpImm(const char* name, JSOp op) {
     out_.printf("%s JSOp::%s", name, CodeName(op));
   }
-  void spewJSTypeImm(const char* name, JSType type) {
-    out_.printf("%s %s", name, JSTypeToString(type));
+  void spewTypeofEqOperandImm(const char* name, TypeofEqOperand operand) {
+    out_.printf("%s %s %s", name, JSTypeToString(operand.type()),
+                CodeName(operand.compareOp()));
   }
   void spewStaticStringImm(const char* name, const char* str) {
     out_.printf("%s \"%s\"", name, str);
@@ -226,8 +227,8 @@ class MOZ_RAII CacheIROpsJSONSpewer {
   void spewJSOpImm(const char* name, JSOp op) {
     spewArgImpl(name, "JSOp", CodeName(op));
   }
-  void spewJSTypeImm(const char* name, JSType type) {
-    spewArgImpl(name, "JSType", JSTypeToString(type));
+  void spewTypeofEqOperandImm(const char* name, TypeofEqOperand operand) {
+    spewArgImpl(name, "TypeofEqOperand", uint8_t(operand.rawValue()));
   }
   void spewStaticStringImm(const char* name, const char* str) {
     spewArgImpl(name, "String", str);

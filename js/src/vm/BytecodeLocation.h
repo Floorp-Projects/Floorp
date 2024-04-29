@@ -15,6 +15,7 @@
 #include "vm/CompletionKind.h"      // CompletionKind
 #include "vm/FunctionPrefixKind.h"  // FunctionPrefixKind
 #include "vm/GeneratorResumeKind.h"
+#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 
 namespace js {
 
@@ -278,9 +279,9 @@ class BytecodeLocation {
     return index;
   }
 
-  JSType getJSType() const {
+  TypeofEqOperand getTypeofEqOperand() const {
     MOZ_ASSERT(is(JSOp::TypeofEq));
-    return JSType(GET_UINT8(rawBytecode_));
+    return TypeofEqOperand::fromRawValue(GET_UINT8(rawBytecode_));
   }
 
   FunctionPrefixKind getFunctionPrefixKind() const {

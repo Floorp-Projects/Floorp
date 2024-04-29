@@ -412,16 +412,16 @@
     MACRO(Typeof, typeof_, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     MACRO(TypeofExpr, typeof_expr, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
-     * A compound opcode for `typeof val === "type"`, where `val` is
-     * single identifier.
+     * A compound opcode for `typeof val === "type"` or `typeof val !== "type"`,
+     * where `val` is single identifier.
      *
      * Infallible. The result is always a boolean that depends on the type of
-     * `val` and `"type"` string.
+     * `val` and `"type"` string, and the comparison operator.
      *
      *   Category: Expressions
      *   Type: Other expressions
-     *   Operands: JSType type
-     *   Stack: val => (typeof val === "type")
+     *   Operands: TypeofEqOperand operand
+     *   Stack: val => (typeof val CMP "type")
      */ \
     MACRO(TypeofEq, typeof_eq, NULL, 2, 1, 1, JOF_UINT8|JOF_IC) \
     /*
