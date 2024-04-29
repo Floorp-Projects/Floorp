@@ -79,25 +79,6 @@ interface AddonManager : EventTarget {
    * @return A promise that resolves to an instance of AddonInstall.
    */
   Promise<AddonInstall> createInstall(optional addonInstallOptions options = {});
-
-  /**
-   * Opens an Abuse Report dialog window for the addon with the given id.
-   * The addon may be currently installed (in which case the report will
-   * include the details available locally), or not (in which case the report
-   * will include the details that can be retrieved from the AMO API endpoint).
-   *
-   * @param  id
-   *         The ID of the add-on to report.
-   * @return A promise that resolves to a boolean (true when the report
-   *         has been submitted successfully, false if the user cancelled
-   *         the report). The Promise is rejected is the report fails
-   *         for a reason other than user cancellation.
-   */
-  Promise<boolean> reportAbuse(DOMString id);
-
-  // Indicator to content whether handing off the reports to the integrated
-  // abuse report panel is enabled.
-  readonly attribute boolean abuseReportPanelEnabled;
 };
 
 [ChromeOnly,Exposed=Window,HeaderFile="mozilla/AddonManagerWebAPI.h"]
