@@ -494,9 +494,11 @@ bool CookieCommons::ShouldIncludeCrossSiteCookieForDocument(
   int32_t sameSiteAttr = 0;
   aCookie->GetSameSite(&sameSiteAttr);
 
+  // CHIPS - If a third-party has storage access it can access both it's
+  // partitioned and unpartitioned cookie jars, else its cookies are blocked.
   if (aDocument->CookieJarSettings()->GetPartitionForeign() &&
       StaticPrefs::network_cookie_cookieBehavior_optInPartitioning() &&
-      !aCookie->IsPartitioned()) {
+      !aCookie->IsPartitioned() && !aDocument->UsingStorageAccess()) {
     return false;
   }
 

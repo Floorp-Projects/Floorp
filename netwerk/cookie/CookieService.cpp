@@ -373,15 +373,6 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPrincipal> cookiePrincipal =
-      aDocument->EffectiveCookiePrincipal();
-
-  // TODO (Bug 1874174): A document could access both unpartitioned and
-  // partitioned cookie jars. We will need to prepare partitioned and
-  // unpartitioned principals for access both cookie jars.
-  nsTArray<nsCOMPtr<nsIPrincipal>> principals;
-  principals.AppendElement(cookiePrincipal);
-
   bool thirdParty = true;
   nsPIDOMWindowInner* innerWindow = aDocument->GetInnerWindow();
   // in gtests we don't have a window, let's consider those requests as 3rd
@@ -393,6 +384,26 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
       Unused << thirdPartyUtil->IsThirdPartyWindow(
           innerWindow->GetOuterWindow(), nullptr, &thirdParty);
     }
+  }
+
+  nsCOMPtr<nsIPrincipal> cookiePrincipal =
+      aDocument->EffectiveCookiePrincipal();
+
+  nsTArray<nsCOMPtr<nsIPrincipal>> principals;
+  principals.AppendElement(cookiePrincipal);
+
+  // CHIPS - If CHIPS is enabled the partitioned cookie jar is always available
+  // (and therefore the partitioned principal), the unpartitioned cookie jar is
+  // only available in first-party or third-party with storageAccess contexts.
+  bool isCHIPS = StaticPrefs::network_cookie_cookieBehavior_optInPartitioning();
+  bool isUnpartitioned =
+      cookiePrincipal->OriginAttributesRef().mPartitionKey.IsEmpty();
+  if (isCHIPS && isUnpartitioned) {
+    // Assert that we are only doing this if we are first-party or third-party
+    // with storageAccess.
+    MOZ_ASSERT(!thirdParty || aDocument->UsingStorageAccess());
+    // Add the partitioned principal to principals
+    principals.AppendElement(aDocument->PartitionedPrincipal());
   }
 
   nsTArray<Cookie*> cookieList;
@@ -519,20 +530,40 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
   ThirdPartyAnalysisResult result = mThirdPartyUtil->AnalyzeChannel(
       aChannel, false, aHostURI, nullptr, &rejectedReason);
 
-  OriginAttributes attrs;
-  StoragePrincipalHelper::GetOriginAttributes(
-      aChannel, attrs, StoragePrincipalHelper::eStorageAccessPrincipal);
-
   bool isSafeTopLevelNav = CookieCommons::IsSafeTopLevelNav(aChannel);
   bool hadCrossSiteRedirects = false;
   bool isSameSiteForeign = CookieCommons::IsSameSiteForeign(
       aChannel, aHostURI, &hadCrossSiteRedirects);
 
-  // TODO (Bug 1874174): A channel could load both unpartitioned and partitioned
-  // cookie jars together. We will need to get cookies from both unpartitioned
-  // and partitioned cookie jars according to storage access.
+  OriginAttributes storageOriginAttributes;
+  StoragePrincipalHelper::GetOriginAttributes(
+      aChannel, storageOriginAttributes,
+      StoragePrincipalHelper::eStorageAccessPrincipal);
+
   nsTArray<OriginAttributes> originAttributesList;
-  originAttributesList.AppendElement(attrs);
+  originAttributesList.AppendElement(storageOriginAttributes);
+
+  // CHIPS - If CHIPS is enabled the partitioned cookie jar is always available
+  // (and therefore the partitioned OriginAttributes), the unpartitioned cookie
+  // jar is only available in first-party or third-party with storageAccess
+  // contexts.
+  bool isCHIPS = StaticPrefs::network_cookie_cookieBehavior_optInPartitioning();
+  bool isUnpartitioned = storageOriginAttributes.mPartitionKey.IsEmpty();
+  if (isCHIPS && isUnpartitioned) {
+    // Assert that we are only doing this if we are first-party or third-party
+    // with storageAccess.
+    MOZ_ASSERT(
+        !result.contains(ThirdPartyAnalysis::IsForeign) ||
+        result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted));
+    // Add the partitioned principal to principals
+    OriginAttributes partitionedOriginAttributes;
+    StoragePrincipalHelper::GetOriginAttributes(
+        aChannel, partitionedOriginAttributes,
+        StoragePrincipalHelper::ePartitionedPrincipal);
+    originAttributesList.AppendElement(partitionedOriginAttributes);
+    // Assert partitionedOAs have partitioneKey set.
+    MOZ_ASSERT(!partitionedOriginAttributes.mPartitionKey.IsEmpty());
+  }
 
   AutoTArray<Cookie*, 8> foundCookieList;
   GetCookiesForURI(
