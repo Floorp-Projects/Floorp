@@ -203,8 +203,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
 
   void attachMegamorphicNativeSlot(ObjOperandId objId, jsid id);
 
-  void attachMegamorphicNativeSlotPermissive(ObjOperandId objId, jsid id);
-
   ValOperandId getElemKeyValueId() const {
     MOZ_ASSERT(cacheKind_ == CacheKind::GetElem ||
                cacheKind_ == CacheKind::GetElemSuper);

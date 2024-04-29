@@ -6829,38 +6829,6 @@ MDefinition* MMegamorphicLoadSlotByValue::foldsTo(TempAllocator& alloc) {
   return result;
 }
 
-MDefinition* MMegamorphicLoadSlotByValuePermissive::foldsTo(
-    TempAllocator& alloc) {
-  MDefinition* input = idVal();
-  if (input->isBox()) {
-    input = input->toBox()->input();
-  }
-
-  MDefinition* result = this;
-
-  if (input->isConstant()) {
-    MConstant* constant = input->toConstant();
-    if (constant->type() == MIRType::Symbol) {
-      PropertyKey id = PropertyKey::Symbol(constant->toSymbol());
-      result = MMegamorphicLoadSlotPermissive::New(alloc, object(), id);
-    }
-
-    if (constant->type() == MIRType::String) {
-      JSString* str = constant->toString();
-      if (str->isAtom() && !str->asAtom().isIndex()) {
-        PropertyKey id = PropertyKey::NonIntAtom(str);
-        result = MMegamorphicLoadSlotPermissive::New(alloc, object(), id);
-      }
-    }
-  }
-
-  if (result != this) {
-    result->toMegamorphicLoadSlotPermissive()->stealResumePoint(this);
-  }
-
-  return result;
-}
-
 bool MMegamorphicLoadSlot::congruentTo(const MDefinition* ins) const {
   if (!ins->isMegamorphicLoadSlot()) {
     return false;
