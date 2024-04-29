@@ -801,6 +801,17 @@ function getUuid() {
   return crypto.randomUUID();
 }
 const AnnotationPrefix = "pdfjs_internal_id_";
+const FontRenderOps = {
+  BEZIER_CURVE_TO: 0,
+  MOVE_TO: 1,
+  LINE_TO: 2,
+  QUADRATIC_CURVE_TO: 3,
+  RESTORE: 4,
+  SAVE: 5,
+  SCALE: 6,
+  TRANSFORM: 7,
+  TRANSLATE: 8
+};
 
 ;// CONCATENATED MODULE: ./src/display/base_factory.js
 
@@ -3886,6 +3897,7 @@ class AnnotationEditor {
     };
     this.parent.togglePointerEvents(false);
     window.addEventListener("pointermove", boundResizerPointermove, pointerMoveOptions);
+    window.addEventListener("contextmenu", noContextMenu);
     const savedX = this.x;
     const savedY = this.y;
     const savedWidth = this.width;
@@ -3900,6 +3912,7 @@ class AnnotationEditor {
       window.removeEventListener("pointerup", pointerUpCallback);
       window.removeEventListener("blur", pointerUpCallback);
       window.removeEventListener("pointermove", boundResizerPointermove, pointerMoveOptions);
+      window.removeEventListener("contextmenu", noContextMenu);
       this.parent.div.style.cursor = savedParentCursor;
       this.div.style.cursor = savedCursor;
       this.#addResizeToUndoStack(savedX, savedY, savedWidth, savedHeight);
@@ -4951,7 +4964,6 @@ class FontLoader {
 }
 class FontFaceObject {
   constructor(translatedData, {
-    isEvalSupported = true,
     disableFontFace = false,
     ignoreErrors = false,
     inspectFont = null
@@ -4960,7 +4972,6 @@ class FontFaceObject {
     for (const i in translatedData) {
       this[i] = translatedData[i];
     }
-    this.isEvalSupported = isEvalSupported !== false;
     this.disableFontFace = disableFontFace === true;
     this.ignoreErrors = ignoreErrors === true;
     this._inspectFont = inspectFont;
@@ -5015,22 +5026,72 @@ class FontFaceObject {
         throw ex;
       }
       warn(`getPathGenerator - ignoring character: "${ex}".`);
+    }
+    if (!Array.isArray(cmds) || cmds.length === 0) {
       return this.compiledGlyphs[character] = function (c, size) {};
     }
-    if (this.isEvalSupported && util_FeatureTest.isEvalSupported) {
-      const jsBuf = [];
-      for (const current of cmds) {
-        const args = current.args !== undefined ? current.args.join(",") : "";
-        jsBuf.push("c.", current.cmd, "(", args, ");\n");
+    const commands = [];
+    for (let i = 0, ii = cmds.length; i < ii;) {
+      switch (cmds[i++]) {
+        case FontRenderOps.BEZIER_CURVE_TO:
+          {
+            const [a, b, c, d, e, f] = cmds.slice(i, i + 6);
+            commands.push(ctx => ctx.bezierCurveTo(a, b, c, d, e, f));
+            i += 6;
+          }
+          break;
+        case FontRenderOps.MOVE_TO:
+          {
+            const [a, b] = cmds.slice(i, i + 2);
+            commands.push(ctx => ctx.moveTo(a, b));
+            i += 2;
+          }
+          break;
+        case FontRenderOps.LINE_TO:
+          {
+            const [a, b] = cmds.slice(i, i + 2);
+            commands.push(ctx => ctx.lineTo(a, b));
+            i += 2;
+          }
+          break;
+        case FontRenderOps.QUADRATIC_CURVE_TO:
+          {
+            const [a, b, c, d] = cmds.slice(i, i + 4);
+            commands.push(ctx => ctx.quadraticCurveTo(a, b, c, d));
+            i += 4;
+          }
+          break;
+        case FontRenderOps.RESTORE:
+          commands.push(ctx => ctx.restore());
+          break;
+        case FontRenderOps.SAVE:
+          commands.push(ctx => ctx.save());
+          break;
+        case FontRenderOps.SCALE:
+          assert(commands.length === 2, "Scale command is only valid at the third position.");
+          break;
+        case FontRenderOps.TRANSFORM:
+          {
+            const [a, b, c, d, e, f] = cmds.slice(i, i + 6);
+            commands.push(ctx => ctx.transform(a, b, c, d, e, f));
+            i += 6;
+          }
+          break;
+        case FontRenderOps.TRANSLATE:
+          {
+            const [a, b] = cmds.slice(i, i + 2);
+            commands.push(ctx => ctx.translate(a, b));
+            i += 2;
+          }
+          break;
       }
-      return this.compiledGlyphs[character] = new Function("c", "size", jsBuf.join(""));
     }
-    return this.compiledGlyphs[character] = function (c, size) {
-      for (const current of cmds) {
-        if (current.cmd === "scale") {
-          current.args = [size, -size];
-        }
-        c[current.cmd].apply(c, current.args);
+    return this.compiledGlyphs[character] = function glyphDrawer(ctx, size) {
+      commands[0](ctx);
+      commands[1](ctx);
+      ctx.scale(size, -size);
+      for (let i = 2, ii = commands.length; i < ii; i++) {
+        commands[i](ctx);
       }
     };
   }
@@ -6209,16 +6270,14 @@ function composeSMask(ctx, smask, layerCtx, layerBox) {
   ctx.restore();
 }
 function getImageSmoothingEnabled(transform, interpolate) {
+  if (interpolate) {
+    return true;
+  }
   const scale = Util.singularValueDecompose2dScale(transform);
   scale[0] = Math.fround(scale[0]);
   scale[1] = Math.fround(scale[1]);
   const actualScale = Math.fround((globalThis.devicePixelRatio || 1) * PixelsPerInch.PDF_TO_CSS_UNITS);
-  if (interpolate !== undefined) {
-    return interpolate;
-  } else if (scale[0] <= actualScale || scale[1] <= actualScale) {
-    return true;
-  }
-  return false;
+  return scale[0] <= actualScale && scale[1] <= actualScale;
 }
 const LINE_CAP_STYLES = ["butt", "round", "square"];
 const LINE_JOIN_STYLES = ["miter", "round", "bevel"];
@@ -9249,7 +9308,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.2.21",
+    apiVersion: "4.2.55",
     data,
     password,
     disableAutoFetch,
@@ -9272,7 +9331,6 @@ function getDocument(src) {
   };
   const transportParams = {
     ignoreErrors,
-    isEvalSupported,
     disableFontFace,
     fontExtraProperties,
     enableXfa,
@@ -10422,7 +10480,6 @@ class WorkerTransport {
           }
           const inspectFont = params.pdfBug && globalThis.FontInspector?.enabled ? (font, url) => globalThis.FontInspector.fontAdded(font, url) : null;
           const font = new FontFaceObject(exportedData, {
-            isEvalSupported: params.isEvalSupported,
             disableFontFace: params.disableFontFace,
             ignoreErrors: params.ignoreErrors,
             inspectFont
@@ -10561,7 +10618,7 @@ class WorkerTransport {
     return promise;
   }
   getPageIndex(ref) {
-    if (typeof ref !== "object" || ref === null || !Number.isInteger(ref.num) || ref.num < 0 || !Number.isInteger(ref.gen) || ref.gen < 0) {
+    if (typeof ref !== "object" || !Number.isInteger(ref?.num) || ref.num < 0 || !Number.isInteger(ref?.gen) || ref.gen < 0) {
       return Promise.reject(new Error("Invalid pageIndex request."));
     }
     return this.messageHandler.sendWithPromise("GetPageIndex", {
@@ -10893,8 +10950,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.2.21";
-const build = "5ad42c13a";
+const version = "4.2.55";
+const build = "85e64b5c1";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -12801,6 +12858,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
       });
       selectElement.addEventListener("input", event => {
         const exportValue = getValue(true);
+        const change = getValue(false);
         storage.setValue(id, {
           value: exportValue
         });
@@ -12811,6 +12869,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
             id,
             name: "Keystroke",
             value: selectedValues,
+            change,
             changeEx: exportValue,
             willCommit: false,
             commitKey: 1,
@@ -17677,8 +17736,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.2.21";
-const pdfjsBuild = "5ad42c13a";
+const pdfjsVersion = "4.2.55";
+const pdfjsBuild = "85e64b5c1";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
