@@ -23,7 +23,6 @@
 #include "libavutil/avassert.h"
 #include "libavutil/buffer.h"
 #include "libavutil/common.h"
-#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 
 #include "avcodec.h"

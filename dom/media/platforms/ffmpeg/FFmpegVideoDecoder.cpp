@@ -7,7 +7,6 @@
 #include "FFmpegVideoDecoder.h"
 
 #include "FFmpegLog.h"
-#include "FFmpegUtils.h"
 #include "ImageContainer.h"
 #include "MP4Decoder.h"
 #include "MediaInfo.h"
@@ -872,9 +871,7 @@ int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
   aFrame->height = aCodecContext->coded_height;
   aFrame->format = aCodecContext->pix_fmt;
   aFrame->extended_data = aFrame->data;
-#  if LIBAVCODEC_VERSION_MAJOR < 61
   aFrame->reordered_opaque = aCodecContext->reordered_opaque;
-#  endif
   MOZ_ASSERT(aFrame->data[0] && aFrame->data[1] && aFrame->data[2]);
 
   // This will hold a reference to image, and the reference would be dropped
@@ -994,7 +991,12 @@ void FFmpegVideoDecoder<LIBAV_VER>::DecodeStats::UpdateDecodeTimes(
   float decodeTime = (now - mDecodeStart).ToMilliseconds();
   mDecodeStart = now;
 
-  const float frameDuration = Duration(aFrame) / 1000.0f;
+  if (aFrame->pkt_duration <= 0) {
+    FFMPEGV_LOG("Incorrect frame duration, skipping decode stats.");
+    return;
+  }
+
+  float frameDuration = aFrame->pkt_duration / 1000.0f;
 
   mDecodedFrames++;
   mAverageFrameDuration =
@@ -1042,27 +1044,19 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     MediaRawData* aSample, uint8_t* aData, int aSize, bool* aGotFrame,
     MediaDataDecoder::DecodedData& aResults) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
-  AVPacket* packet;
-
-#if LIBAVCODEC_VERSION_MAJOR >= 61
-  packet = mLib->av_packet_alloc();
-  auto raii = MakeScopeExit([&]() { mLib->av_packet_free(&packet); });
-#else
-  AVPacket packet_mem;
-  packet = &packet_mem;
-  mLib->av_init_packet(packet);
-#endif
+  AVPacket packet;
+  mLib->av_init_packet(&packet);
 
 #if LIBAVCODEC_VERSION_MAJOR >= 58
   mDecodeStats.DecodeStart();
 #endif
 
-  packet->data = aData;
-  packet->size = aSize;
-  packet->dts = aSample->mTimecode.ToMicroseconds();
-  packet->pts = aSample->mTime.ToMicroseconds();
-  packet->flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
-  packet->pos = aSample->mOffset;
+  packet.data = aData;
+  packet.size = aSize;
+  packet.dts = aSample->mTimecode.ToMicroseconds();
+  packet.pts = aSample->mTime.ToMicroseconds();
+  packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
+  packet.pos = aSample->mOffset;
 
   mTrackingId.apply([&](const auto& aId) {
     MediaInfoFlag flag = MediaInfoFlag::None;
@@ -1093,14 +1087,14 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
         break;
     }
     mPerformanceRecorder.Start(
-        packet->dts,
+        packet.dts,
         nsPrintfCString("FFmpegVideoDecoder(%d)", LIBAVCODEC_VERSION_MAJOR),
         aId, flag);
   });
 
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-  packet->duration = aSample->mDuration.ToMicroseconds();
-  int res = mLib->avcodec_send_packet(mCodecContext, packet);
+  packet.duration = aSample->mDuration.ToMicroseconds();
+  int res = mLib->avcodec_send_packet(mCodecContext, &packet);
   if (res < 0) {
     // In theory, avcodec_send_packet could sent -EAGAIN should its internal
     // buffers be full. In practice this can't happen as we only feed one frame
@@ -1162,10 +1156,10 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       }
       if (mUsingV4L2) {
         rv = CreateImageV4L2(mFrame->pkt_pos, GetFramePts(mFrame),
-                             Duration(mFrame), aResults);
+                             mFrame->pkt_duration, aResults);
       } else {
         rv = CreateImageVAAPI(mFrame->pkt_pos, GetFramePts(mFrame),
-                              Duration(mFrame), aResults);
+                              mFrame->pkt_duration, aResults);
       }
 
       // If VA-API/V4L2 playback failed, just quit. Decoder is going to be
@@ -1179,8 +1173,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     } else
 #  endif
     {
-      rv = CreateImage(mFrame->pkt_pos, GetFramePts(mFrame), Duration(mFrame),
-                       aResults);
+      rv = CreateImage(mFrame->pkt_pos, GetFramePts(mFrame),
+                       mFrame->pkt_duration, aResults);
     }
     if (NS_FAILED(rv)) {
       return rv;
@@ -1245,14 +1239,14 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 
   int decoded;
   int bytesConsumed =
-      mLib->avcodec_decode_video2(mCodecContext, mFrame, &decoded, packet);
+      mLib->avcodec_decode_video2(mCodecContext, mFrame, &decoded, &packet);
 
   FFMPEG_LOG(
       "DoDecodeFrame:decode_video: rv=%d decoded=%d "
       "(Input: pts(%" PRId64 ") dts(%" PRId64 ") Output: pts(%" PRId64
       ") "
       "opaque(%" PRId64 ") pts(%" PRId64 ") pkt_dts(%" PRId64 "))",
-      bytesConsumed, decoded, packet->pts, packet->dts, mFrame->pts,
+      bytesConsumed, decoded, packet.pts, packet.dts, mFrame->pts,
       mFrame->reordered_opaque, mFrame->pts, mFrame->pkt_dts);
 
   if (bytesConsumed < 0) {
@@ -1380,8 +1374,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
     int64_t aOffset, int64_t aPts, int64_t aDuration,
     MediaDataDecoder::DecodedData& aResults) const {
   FFMPEG_LOG("Got one frame output with pts=%" PRId64 " dts=%" PRId64
-             " duration=%" PRId64,
-             aPts, mFrame->pkt_dts, aDuration);
+             " duration=%" PRId64 " opaque=%" PRId64,
+             aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
 
   VideoData::YCbCrBuffer b;
   b.mPlanes[0].mData = mFrame->data[0];
@@ -1509,8 +1503,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
     int64_t aOffset, int64_t aPts, int64_t aDuration,
     MediaDataDecoder::DecodedData& aResults) {
   FFMPEG_LOG("VA-API Got one frame output with pts=%" PRId64 " dts=%" PRId64
-             " duration=%" PRId64,
-             aPts, mFrame->pkt_dts, aDuration);
+             " duration=%" PRId64 " opaque=%" PRId64,
+             aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
 
   VADRMPRIMESurfaceDescriptor vaDesc;
   if (!GetVAAPISurfaceDescriptor(&vaDesc)) {
@@ -1555,8 +1549,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageV4L2(
     int64_t aOffset, int64_t aPts, int64_t aDuration,
     MediaDataDecoder::DecodedData& aResults) {
   FFMPEG_LOG("V4L2 Got one frame output with pts=%" PRId64 " dts=%" PRId64
-             " duration=%" PRId64,
-             aPts, mFrame->pkt_dts, aDuration);
+             " duration=%" PRId64 " opaque=%" PRId64,
+             aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
 
   AVDRMFrameDescriptor* desc = (AVDRMFrameDescriptor*)mFrame->data[0];
   if (!desc) {

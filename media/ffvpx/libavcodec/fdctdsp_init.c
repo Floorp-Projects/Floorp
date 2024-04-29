@@ -16,30 +16,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVCODEC_VERSION_H
-#define AVCODEC_VERSION_H
+#include "libavutil/attributes.h"
+#include "libavutil/cpu.h"
+#include "libavutil/x86/cpu.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/fdctdsp.h"
+#include "fdct.h"
 
-/**
- * @file
- * @ingroup libavc
- * Libavcodec version macros.
- */
+av_cold void ff_fdctdsp_init_x86(FDCTDSPContext *c, AVCodecContext *avctx,
+                                 unsigned high_bit_depth)
+{
+    int cpu_flags = av_get_cpu_flags();
+    const int dct_algo = avctx->dct_algo;
 
-#include "libavutil/version.h"
+    if (!high_bit_depth) {
+        if ((dct_algo == FF_DCT_AUTO || dct_algo == FF_DCT_MMX)) {
+            if (INLINE_MMX(cpu_flags))
+                c->fdct = ff_fdct_mmx;
 
-#include "version_major.h"
+            if (INLINE_MMXEXT(cpu_flags))
+                c->fdct = ff_fdct_mmxext;
 
-#define LIBAVCODEC_VERSION_MINOR 5
-#define LIBAVCODEC_VERSION_MICRO 101
-
-#define LIBAVCODEC_VERSION_INT                                       \
-  AV_VERSION_INT(LIBAVCODEC_VERSION_MAJOR, LIBAVCODEC_VERSION_MINOR, \
-                 LIBAVCODEC_VERSION_MICRO)
-#define LIBAVCODEC_VERSION                                       \
-  AV_VERSION(LIBAVCODEC_VERSION_MAJOR, LIBAVCODEC_VERSION_MINOR, \
-             LIBAVCODEC_VERSION_MICRO)
-#define LIBAVCODEC_BUILD LIBAVCODEC_VERSION_INT
-
-#define LIBAVCODEC_IDENT "Lavc" AV_STRINGIFY(LIBAVCODEC_VERSION)
-
-#endif /* AVCODEC_VERSION_H */
+            if (INLINE_SSE2(cpu_flags))
+                c->fdct = ff_fdct_sse2;
+        }
+    }
+}
