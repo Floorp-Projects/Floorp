@@ -405,7 +405,6 @@ static uint32_t AvailableFeatures() {
   }
 #else
   // The memory hooks are not available.
-  ProfilerFeature::ClearMemory(features);
   ProfilerFeature::ClearNativeAllocations(features);
 #endif
 
@@ -1310,11 +1309,6 @@ class ActivePS {
   PROFILER_FOR_EACH_FEATURE(PS_GET_FEATURE)
 
 #undef PS_GET_FEATURE
-
-  static bool ShouldInstallMemoryHooks(PSLockRef) {
-    MOZ_ASSERT(sInstance);
-    return ProfilerFeature::ShouldInstallMemoryHooks(sInstance->mFeatures);
-  }
 
   static uint32_t JSFlags(PSLockRef aLock) {
     uint32_t Flags = 0;
@@ -5825,16 +5819,9 @@ void profiler_init(void* aStackTop) {
   profiler_mark_thread_awake();
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
-  if (ProfilerFeature::ShouldInstallMemoryHooks(features)) {
-    // Start counting memory allocations (outside of lock because this may call
-    // profiler_add_sampled_counter which would attempt to take the lock.)
-    ActivePS::SetMemoryCounter(mozilla::profiler::install_memory_hooks());
-  } else {
-    // Unregister the memory counter in case it was registered before. This will
-    // make sure that the empty memory counter from the previous profiler run is
-    // removed completely and we don't serialize the memory counters.
-    mozilla::profiler::unregister_memory_counter();
-  }
+  // Start counting memory allocations (outside of lock because this may call
+  // profiler_add_sampled_counter which would attempt to take the lock.)
+  ActivePS::SetMemoryCounter(mozilla::profiler::install_memory_hooks());
 #endif
 
   invoke_profiler_state_change_callbacks(ProfilingState::Started);
@@ -6461,16 +6448,9 @@ RefPtr<GenericPromise> profiler_start(PowerOfTwo32 aCapacity, double aInterval,
   }
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
-  if (ProfilerFeature::ShouldInstallMemoryHooks(aFeatures)) {
-    // Start counting memory allocations (outside of lock because this may call
-    // profiler_add_sampled_counter which would attempt to take the lock.)
-    ActivePS::SetMemoryCounter(mozilla::profiler::install_memory_hooks());
-  } else {
-    // Unregister the memory counter in case it was registered before. This will
-    // make sure that the empty memory counter from the previous profiler run is
-    // removed completely and we don't serialize the memory counters.
-    mozilla::profiler::unregister_memory_counter();
-  }
+  // Start counting memory allocations (outside of lock because this may call
+  // profiler_add_sampled_counter which would attempt to take the lock.)
+  ActivePS::SetMemoryCounter(mozilla::profiler::install_memory_hooks());
 #endif
 
   invoke_profiler_state_change_callbacks(ProfilingState::Started);
@@ -6594,8 +6574,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   }
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
-  if (ActivePS::FeatureNativeAllocations(aLock) &&
-      ActivePS::ShouldInstallMemoryHooks(aLock)) {
+  if (ActivePS::FeatureNativeAllocations(aLock)) {
     mozilla::profiler::disable_native_allocations();
   }
 #endif
