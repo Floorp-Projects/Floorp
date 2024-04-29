@@ -43,6 +43,14 @@
 #include "error.h"
 #include "macros.h"
 
+#ifdef HAVE_AV_CONFIG_H
+#   include "config.h"
+#   include "intmath.h"
+#   include "internal.h"
+#else
+#   include "mem.h"
+#endif /* HAVE_AV_CONFIG_H */
+
 //rounded division & shift
 #define RSHIFT(a,b) ((a) > 0 ? ((a) + ((1<<(b))>>1))>>(b) : ((a) + ((1<<(b))>>1)-1)>>(b))
 /* assume b>0 */
@@ -83,11 +91,6 @@
 #define FFABS64U(a) ((a) <= 0 ? -(uint64_t)(a) : (uint64_t)(a))
 
 /* misc math functions */
-
-#ifdef HAVE_AV_CONFIG_H
-#   include "config.h"
-#   include "intmath.h"
-#endif
 
 #ifndef av_ceil_log2
 #   define av_ceil_log2     av_ceil_log2_c
@@ -567,13 +570,5 @@ static av_always_inline av_const int av_parity_c(uint32_t v)
             PUT_16BIT\
         }\
     }\
-
-
-
-#include "mem.h"
-
-#ifdef HAVE_AV_CONFIG_H
-#    include "internal.h"
-#endif /* HAVE_AV_CONFIG_H */
 
 #endif /* AVUTIL_COMMON_H */

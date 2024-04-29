@@ -25,10 +25,10 @@
 #include "common.h"
 #include "imgutils.h"
 #include "imgutils_internal.h"
-#include "internal.h"
 #include "intreadwrite.h"
 #include "log.h"
 #include "mathematics.h"
+#include "mem.h"
 #include "pixdesc.h"
 #include "rational.h"
 
