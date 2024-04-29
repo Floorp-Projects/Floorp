@@ -1272,6 +1272,10 @@ class ContentParent final : public PContentParent,
       const MaybeDiscarded<BrowsingContext>& aContext,
       const Maybe<PositionState>& aState);
 
+  mozilla::ipc::IPCResult RecvNotifyGuessedPositionStateChanged(
+      const MaybeDiscarded<BrowsingContext>& aContext, const nsID& aMediaId,
+      const Maybe<PositionState>& aState);
+
   mozilla::ipc::IPCResult RecvAddOrRemovePageAwakeRequest(
       const MaybeDiscarded<BrowsingContext>& aContext,
       const bool& aShouldAddCount);

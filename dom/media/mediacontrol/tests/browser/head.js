@@ -195,6 +195,58 @@ function checkOrWaitUntilMediaStartedPlaying(tab, elementId) {
 }
 
 /**
+ * Set the playback rate on a media element.
+ *
+ * @param {tab} tab
+ *        The tab that contains the media which we would check
+ * @param {string} elementId
+ *        The element Id of the media which we would check
+ * @param {number} rate
+ *        The playback rate to set
+ * @return {Promise}
+ *         Resolve when the playback rate has been set
+ */
+function setPlaybackRate(tab, elementId, rate) {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [elementId, rate],
+    (Id, rate) => {
+      const video = content.document.getElementById(Id);
+      if (!video) {
+        ok(false, `can't get the media element!`);
+      }
+      video.playbackRate = rate;
+    }
+  );
+}
+
+/**
+ * Set the time on a media element.
+ *
+ * @param {tab} tab
+ *        The tab that contains the media which we would check
+ * @param {string} elementId
+ *        The element Id of the media which we would check
+ * @param {number} currentTime
+ *        The time to set
+ * @return {Promise}
+ *         Resolve when the time has been set
+ */
+function setCurrentTime(tab, elementId, currentTime) {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [elementId, currentTime],
+    (Id, currentTime) => {
+      const video = content.document.getElementById(Id);
+      if (!video) {
+        ok(false, `can't get the media element!`);
+      }
+      video.currentTime = currentTime;
+    }
+  );
+}
+
+/**
  * Returns a promise that resolves when the specific media stops playing.
  *
  * @param {tab} tab
@@ -390,6 +442,18 @@ function waitUntilMediaControllerAmountChanged() {
 }
 
 /**
+ * Wait until the position state that would be displayed on the virtual control
+ * interface changes. we would observe that by listening for
+ * `media-position-state-changed` notification.
+ *
+ * @return {Promise}
+ *         Resolve when observing `media-position-state-changed`
+ */
+function waitUntilPositionStateChanged() {
+  return BrowserUtils.promiseObserved("media-position-state-changed");
+}
+
+/**
  * check if the media controll from given tab is active. If not, return a
  * promise and resolve it when controller become active.
  */
@@ -399,4 +463,21 @@ async function checkOrWaitUntilControllerBecomeActive(tab) {
     return;
   }
   await new Promise(r => (controller.onactivated = r));
+}
+
+/**
+ * Logs all `positionstatechange` events in a tab.
+ */
+function logPositionStateChangeEvents(tab) {
+  tab.linkedBrowser.browsingContext.mediaController.addEventListener(
+    "positionstatechange",
+    event =>
+      info(
+        `got position state: ${JSON.stringify({
+          duration: event.duration,
+          playbackRate: event.playbackRate,
+          position: event.position,
+        })}`
+      )
+  );
 }

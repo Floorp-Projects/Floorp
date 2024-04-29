@@ -7156,6 +7156,19 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyPositionStateChanged(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvNotifyGuessedPositionStateChanged(
+    const MaybeDiscarded<BrowsingContext>& aContext, const nsID& aMediaId,
+    const Maybe<PositionState>& aState) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  if (RefPtr<IMediaInfoUpdater> updater =
+          aContext.get_canonical()->GetMediaController()) {
+    updater->UpdateGuessedPositionState(aContext.ContextId(), aMediaId, aState);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvAddOrRemovePageAwakeRequest(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const bool& aShouldAddCount) {

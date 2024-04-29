@@ -7,9 +7,11 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/MediaSession.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 #include "nsTHashMap.h"
+#include "nsID.h"
 
 namespace mozilla::dom {
 
@@ -63,10 +65,14 @@ class MediaPlaybackStatus final {
  public:
   void UpdateMediaPlaybackState(uint64_t aContextId, MediaPlaybackState aState);
   void UpdateMediaAudibleState(uint64_t aContextId, MediaAudibleState aState);
+  void UpdateGuessedPositionState(uint64_t aContextId, const nsID& aElementId,
+                                  const Maybe<PositionState>& aState);
 
   bool IsPlaying() const;
   bool IsAudible() const;
   bool IsAnyMediaBeingControlled() const;
+  Maybe<PositionState> GuessedMediaPositionState(
+      Maybe<uint64_t> aPreferredContextId) const;
 
   Maybe<uint64_t> GetAudioFocusOwnerContextId() const;
 
@@ -121,6 +127,10 @@ class MediaPlaybackStatus final {
     bool IsAnyMediaBeingControlled() const { return mControlledMediaNum > 0; }
     uint64_t Id() const { return mContextId; }
 
+    Maybe<PositionState> GuessedPositionState() const;
+    void UpdateGuessedPositionState(const nsID& aElementId,
+                                    const Maybe<PositionState>& aState);
+
    private:
     /**
      * The possible value for those three numbers should follow this rule,
@@ -130,6 +140,12 @@ class MediaPlaybackStatus final {
     uint32_t mAudibleMediaNum = 0;
     uint32_t mPlayingMediaNum = 0;
     uint64_t mContextId = 0;
+
+    /**
+     * Contains the guessed position state of all media elements in this
+     * browsing context identified by their ID.
+     */
+    nsTHashMap<nsID, PositionState> mGuessedPositionStateMap;
   };
 
   ContextMediaInfo& GetNotNullContextInfo(uint64_t aContextId);
