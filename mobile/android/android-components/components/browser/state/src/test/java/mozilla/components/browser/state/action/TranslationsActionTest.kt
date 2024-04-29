@@ -929,4 +929,56 @@ class TranslationsActionTest {
         // Action success
         assertFalse(store.state.translationEngine.offerTranslation!!)
     }
+
+    @Test
+    fun `WHEN UpdateGlobalLanguageSettingAction is called then update languageSettings`() {
+        // Initial State
+        assertNull(store.state.translationEngine.languageSettings)
+
+        // No-op null test
+        store.dispatch(
+            TranslationsAction.UpdateLanguageSettingsAction(
+                languageCode = "fr",
+                setting = LanguageSetting.ALWAYS,
+            ),
+        ).joinBlocking()
+
+        assertNull(store.state.translationEngine.languageSettings)
+
+        // Setting Initial State
+        val languageSettings = mapOf<String, LanguageSetting>(
+            "en" to LanguageSetting.OFFER,
+            "es" to LanguageSetting.NEVER,
+            "de" to LanguageSetting.ALWAYS,
+        )
+
+        store.dispatch(
+            TranslationsAction.SetLanguageSettingsAction(
+                languageSettings = languageSettings,
+            ),
+        ).joinBlocking()
+
+        assertEquals(languageSettings, store.state.translationEngine.languageSettings)
+
+        // No-op update test
+        store.dispatch(
+            TranslationsAction.UpdateLanguageSettingsAction(
+                languageCode = "fr",
+                setting = LanguageSetting.ALWAYS,
+            ),
+        ).joinBlocking()
+
+        assertEquals(languageSettings, store.state.translationEngine.languageSettings)
+
+        // Main action started
+        store.dispatch(
+            TranslationsAction.UpdateLanguageSettingsAction(
+                languageCode = "es",
+                setting = LanguageSetting.ALWAYS,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertEquals(LanguageSetting.ALWAYS, store.state.translationEngine.languageSettings!!["es"])
+    }
 }
