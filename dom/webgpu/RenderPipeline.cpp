@@ -58,6 +58,7 @@ void RenderPipeline::Cleanup() {
 already_AddRefed<BindGroupLayout> RenderPipeline::GetBindGroupLayout(
     uint32_t aIndex) const {
   auto bridge = mParent->GetBridge();
+  MOZ_ASSERT(bridge && bridge->CanSend());
   auto* client = bridge->GetClient();
 
   ipc::ByteBuf bb;
