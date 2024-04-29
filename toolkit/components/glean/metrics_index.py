@@ -35,6 +35,7 @@ gecko_metrics = [
     "netwerk/protocol/http/metrics.yaml",
     "security/certverifier/metrics.yaml",
     "security/manager/ssl/metrics.yaml",
+    "toolkit/components/antitracking/bouncetrackingprotection/metrics.yaml",
     "toolkit/components/cookiebanners/metrics.yaml",
     "toolkit/components/extensions/metrics.yaml",
     "toolkit/components/formautofill/metrics.yaml",

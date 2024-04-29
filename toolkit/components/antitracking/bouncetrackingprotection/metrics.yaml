@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: Privacy: Anti-Tracking'
+
+bounce.tracking.protection:
+  purge_duration:
+    type: timing_distribution
+    description: >
+      For every purge that is scheduled, we call the ClearDataService to
+      purge persistent storage for each detected bounce tracker. This may
+      do some blocking work on main thread and dispatch some cleanups to
+      other threads.
+      Collect telemetry on how long it takes to clear in the wild to
+      determine whether we need to improve performance here.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1890582
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1890582#c4
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pbz@mozilla.com
+      - bvandersloot@mozilla.com
+      - manuel@mozilla.com
+    expires: 130
