@@ -35,6 +35,7 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.settings.counterPreference
 import org.mozilla.fenix.components.settings.featureFlagPreference
@@ -862,9 +863,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             return touchExplorationIsEnabled || switchServiceIsEnabled
         }
 
-    private val isTablet: Boolean
-        get() = appContext.resources.getBoolean(R.bool.tablet)
-
     /**
      * Indicates if the user has enabled the tab strip feature.
      */
@@ -872,9 +870,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         key = appContext.getPreferenceKey(R.string.pref_key_enable_tab_strip),
         default = false,
     )
-
-    val isTabletAndTabStripEnabled: Boolean
-        get() = isTablet && isTabStripEnabled
 
     var lastKnownMode: BrowsingMode = BrowsingMode.Normal
         get() {
@@ -944,7 +939,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     val toolbarPosition: ToolbarPosition
-        get() = if (isTabletAndTabStripEnabled) {
+        get() = if (appContext.isTabStripEnabled()) {
             ToolbarPosition.TOP
         } else if (shouldUseBottomToolbar) {
             ToolbarPosition.BOTTOM
@@ -2033,7 +2028,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         val isToolbarAtTop = toolbarPosition == ToolbarPosition.TOP
         val toolbarHeight = appContext.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
 
-        return if (isToolbarAtTop && includeTabStrip && isTabletAndTabStripEnabled) {
+        return if (isToolbarAtTop && includeTabStrip) {
             toolbarHeight + appContext.resources.getDimensionPixelSize(R.dimen.tab_strip_height)
         } else if (isToolbarAtTop) {
             toolbarHeight

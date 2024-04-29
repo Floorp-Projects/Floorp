@@ -19,6 +19,7 @@ import androidx.core.view.updateLayoutParams
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHomeBinding
@@ -106,7 +107,7 @@ class ToolbarView(
                     gravity = Gravity.TOP
                 }
 
-                val isTabletAndTabStripEnabled = context.settings().isTabletAndTabStripEnabled
+                val isTabletAndTabStripEnabled = context.isTabStripEnabled()
                 ConstraintSet().apply {
                     clone(binding.toolbarLayout)
                     clear(binding.bottomBar.id, ConstraintSet.BOTTOM)

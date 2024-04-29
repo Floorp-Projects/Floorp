@@ -19,6 +19,7 @@ import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.PullToRefreshInBrowser
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.tabstrip.isTabStripEnabled
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -53,7 +54,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         bindLightTheme()
         bindAutoBatteryTheme()
         setupRadioGroups()
-        val tabletAndTabStripEnabled = requireContext().settings().isTabletAndTabStripEnabled
+        val tabletAndTabStripEnabled = requireContext().isTabStripEnabled()
         if (tabletAndTabStripEnabled) {
             val preferenceScreen: PreferenceScreen =
                 requirePreference(R.string.pref_key_customization_preference_screen)

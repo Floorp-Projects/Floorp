@@ -18,6 +18,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.tabstrip.isTabStripEligible
 import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -142,7 +143,7 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
 
     private fun setupTabStripPreference() {
         requirePreference<SwitchPreference>(R.string.pref_key_enable_tab_strip).apply {
-            isVisible = Config.channel.isNightlyOrDebug && context.resources.getBoolean(R.bool.tablet)
+            isVisible = context.isTabStripEligible()
             isChecked = context.settings().isTabStripEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
