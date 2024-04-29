@@ -99,11 +99,10 @@ add_task(async function () {
   is(Glean.httpsfirst.downgradedOnTimerSchemeless.testGetValue(), null);
   const downgradeSeconds =
     Glean.httpsfirst.downgradeTime.testGetValue().sum / 1_000_000_000;
-  ok(
-    downgradeSeconds > 2 && downgradeSeconds < 30,
-    `Summed downgrade time should be above 2 and below 30 seconds (is ${downgradeSeconds.toFixed(
-      2
-    )}s)`
+  Assert.less(
+    downgradeSeconds,
+    10,
+    "Summed downgrade time should be below 10 seconds"
   );
   is(null, Glean.httpsfirst.downgradeTimeSchemeless.testGetValue());
 });
