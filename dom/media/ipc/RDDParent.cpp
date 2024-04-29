@@ -167,18 +167,6 @@ mozilla::ipc::IPCResult RDDParent::RecvInit(
 }
 
 IPCResult RDDParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
-#if defined(XP_WIN)
-  auto scopeExit = MakeScopeExit(
-      [couldUseHWDecoder = gfx::gfxVars::CanUseHardwareVideoDecoding()] {
-        if (couldUseHWDecoder != gfx::gfxVars::CanUseHardwareVideoDecoding()) {
-          // The capabilities of the system may have changed, force a refresh by
-          // re-initializing the WMF PDM.
-          WMFDecoderModule::Init();
-          Unused << RDDParent::GetSingleton()->SendUpdateMediaCodecsSupported(
-              PDMFactory::Supported(true /* force refresh */));
-        }
-      });
-#endif
   gfxVars::ApplyUpdate(aUpdate);
   return IPC_OK();
 }
