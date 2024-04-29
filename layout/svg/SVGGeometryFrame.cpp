@@ -114,6 +114,7 @@ void SVGGeometryFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 
   if (element->IsGeometryChangedViaCSS(*Style(), *aOldComputedStyle)) {
     element->ClearAnyCachedPath();
+    SVGObserverUtils::InvalidateRenderingObservers(this);
   }
 }
 
