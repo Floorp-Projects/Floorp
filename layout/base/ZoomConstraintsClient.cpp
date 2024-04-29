@@ -199,6 +199,11 @@ void ZoomConstraintsClient::RefreshZoomConstraints() {
     return;
   }
 
+  // Ignore documents which has been removed from the doc shell.
+  if (!mDocument->IsActive()) {
+    return;
+  }
+
   uint32_t presShellId = 0;
   ScrollableLayerGuid::ViewID viewId = ScrollableLayerGuid::NULL_SCROLL_ID;
   bool scrollIdentifiersValid =
