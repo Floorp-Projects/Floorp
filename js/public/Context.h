@@ -102,6 +102,25 @@ using EnsureCanAddPrivateElementOp = bool (*)(JSContext* cx, HandleValue val);
 JS_PUBLIC_API void SetHostEnsureCanAddPrivateElementHook(
     JSContext* cx, EnsureCanAddPrivateElementOp op);
 
+/**
+ * Transition the cx to a mode where failures that would normally cause a false
+ * return value will instead crash with a diagnostic assertion.
+ *
+ * Return value: the former brittle mode setting.
+ */
+JS_PUBLIC_API bool SetBrittleMode(JSContext* cx, bool setting);
+
+class AutoBrittleMode {
+  bool wasBrittle;
+  JSContext* cx;
+
+ public:
+  explicit AutoBrittleMode(JSContext* cx) : cx(cx) {
+    wasBrittle = SetBrittleMode(cx, true);
+  }
+  ~AutoBrittleMode() { MOZ_ALWAYS_TRUE(SetBrittleMode(cx, wasBrittle)); }
+};
+
 } /* namespace JS */
 
 #endif  // js_Context_h
