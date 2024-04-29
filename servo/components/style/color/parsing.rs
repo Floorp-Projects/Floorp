@@ -12,7 +12,7 @@ use super::{
     AbsoluteColor, ColorFlags, ColorSpace,
 };
 use crate::{
-    parser::ParserContext,
+    parser::{Parse, ParserContext},
     values::{
         generics::calc::CalcUnits,
         specified::{
@@ -173,15 +173,15 @@ fn parse_origin_color<'i, 't>(
     let location = arguments.current_source_location();
 
     // We still fail if we can't parse the origin color.
-    let origin_color = parse_color_with(context, arguments)?;
+    let origin_color = SpecifiedColor::parse(context, arguments)?;
 
     // Right now we only handle absolute colors.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1890972
-    let SpecifiedColor::Absolute(absolute) = origin_color else {
+    let Some(computed) = origin_color.to_computed_color(None) else {
         return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
     };
 
-    Ok(Some(absolute.color))
+    Ok(Some(computed.resolve_to_absolute(&AbsoluteColor::BLACK)))
 }
 
 #[inline]
