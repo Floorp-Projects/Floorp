@@ -58,25 +58,35 @@ void ArraySortData::freeMallocData() {
 #endif
 }
 
+template <ArraySortKind Kind>
 static MOZ_ALWAYS_INLINE ArraySortResult
 MaybeYieldToComparator(ArraySortData* d, const Value& x, const Value& y) {
-  // https://tc39.es/ecma262/#sec-comparearrayelements
-  // 23.1.3.30.2 CompareArrayElements ( x, y, comparefn )
+  if constexpr (Kind == ArraySortKind::Array) {
+    // https://tc39.es/ecma262/#sec-comparearrayelements
+    // 23.1.3.30.2 CompareArrayElements ( x, y, comparefn )
 
-  // Steps 1-2.
-  if (x.isUndefined()) {
-    d->setComparatorReturnValue(Int32Value(y.isUndefined() ? 0 : 1));
-    return ArraySortResult::Done;
+    // Steps 1-2.
+    if (x.isUndefined()) {
+      d->setComparatorReturnValue(Int32Value(y.isUndefined() ? 0 : 1));
+      return ArraySortResult::Done;
+    }
+
+    // Step 3.
+    if (y.isUndefined()) {
+      d->setComparatorReturnValue(Int32Value(-1));
+      return ArraySortResult::Done;
+    }
+  } else {
+    // https://tc39.es/ecma262/#sec-comparetypedarrayelements
+    // 23.2.4.7 CompareTypedArrayElements ( x, y, comparefn )
+
+    // Step 1.
+    MOZ_ASSERT((x.isNumber() && y.isNumber()) ||
+               (x.isBigInt() && y.isBigInt()));
   }
 
-  // Step 3.
-  if (y.isUndefined()) {
-    d->setComparatorReturnValue(Int32Value(-1));
-    return ArraySortResult::Done;
-  }
-
-  // Step 4. Yield to the JIT trampoline (or js::array_sort) if the comparator
-  // is a JS function we can call more efficiently from JIT code.
+  // Yield to the JIT trampoline (or js::array_sort) if the comparator is a JS
+  // function we can call more efficiently from JIT code.
   auto kind = d->comparatorKind();
   if (MOZ_LIKELY(kind != ArraySortData::ComparatorKind::Unoptimized)) {
     d->setComparatorArgs(x, y);
@@ -91,6 +101,12 @@ static MOZ_ALWAYS_INLINE bool RvalIsLessOrEqual(ArraySortData* data,
                                                 bool* lessOrEqual) {
   // https://tc39.es/ecma262/#sec-comparearrayelements
   // 23.1.3.30.2 CompareArrayElements ( x, y, comparefn )
+  //
+  // https://tc39.es/ecma262/#sec-comparetypedarrayelements
+  // 23.2.4.7 CompareTypedArrayElements ( x, y, comparefn )
+  //
+  // Note: CompareTypedArrayElements step 2 is identical to CompareArrayElements
+  // step 4.
 
   // Fast path for int32 return values.
   Value rval = data->comparatorReturnValue();
@@ -119,6 +135,7 @@ static MOZ_ALWAYS_INLINE void CopyValues(Value* out, const Value* list,
 }
 
 // static
+template <ArraySortKind Kind>
 ArraySortResult ArraySortData::sortWithComparatorShared(ArraySortData* d) {
   auto& vec = d->vec;
 
@@ -141,13 +158,14 @@ ArraySortResult ArraySortData::sortWithComparatorShared(ArraySortData* d) {
   d->list = vec.begin();
 
   // Use insertion sort for small arrays.
-  if (d->denseLen < InsertionSortLimit) {
+  if (d->denseLen < insertionSortLimit<Kind>()) {
     for (d->i = 1; d->i < d->denseLen; d->i++) {
       d->item = vec[d->i];
       d->j = d->i - 1;
       do {
         {
-          ArraySortResult res = MaybeYieldToComparator(d, vec[d->j], d->item);
+          ArraySortResult res =
+              MaybeYieldToComparator<Kind>(d, vec[d->j], d->item);
           if (res != ArraySortResult::Done) {
             d->state = State::InsertionSortCall1;
             return res;
@@ -178,7 +196,8 @@ ArraySortResult ArraySortData::sortWithComparatorShared(ArraySortData* d) {
         d->j = d->i - 1;
         do {
           {
-            ArraySortResult res = MaybeYieldToComparator(d, vec[d->j], d->item);
+            ArraySortResult res =
+                MaybeYieldToComparator<Kind>(d, vec[d->j], d->item);
             if (res != ArraySortResult::Done) {
               d->state = State::InsertionSortCall2;
               return res;
@@ -222,8 +241,8 @@ ArraySortResult ArraySortData::sortWithComparatorShared(ArraySortData* d) {
 
         // Skip calling the comparator if the sub-list is already sorted.
         {
-          ArraySortResult res =
-              MaybeYieldToComparator(d, d->list[d->mid], d->list[d->mid + 1]);
+          ArraySortResult res = MaybeYieldToComparator<Kind>(
+              d, d->list[d->mid], d->list[d->mid + 1]);
           if (res != ArraySortResult::Done) {
             d->state = State::MergeSortCall1;
             return res;
@@ -246,7 +265,7 @@ ArraySortResult ArraySortData::sortWithComparatorShared(ArraySortData* d) {
         while (d->i <= d->mid && d->j <= d->end) {
           {
             ArraySortResult res =
-                MaybeYieldToComparator(d, d->list[d->i], d->list[d->j]);
+                MaybeYieldToComparator<Kind>(d, d->list[d->i], d->list[d->j]);
             if (res != ArraySortResult::Done) {
               d->state = State::MergeSortCall2;
               return res;

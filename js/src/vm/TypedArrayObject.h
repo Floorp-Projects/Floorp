@@ -22,6 +22,12 @@
 
 namespace js {
 
+enum class ArraySortResult : uint32_t;
+
+namespace jit {
+class TrampolineNativeFrameLayout;
+}
+
 /*
  * TypedArrayObject
  *
@@ -131,6 +137,7 @@ class TypedArrayObject : public ArrayBufferViewObject {
 
   static bool set(JSContext* cx, unsigned argc, Value* vp);
   static bool copyWithin(JSContext* cx, unsigned argc, Value* vp);
+  static bool sort(JSContext* cx, unsigned argc, Value* vp);
 
   bool convertValue(JSContext* cx, HandleValue v,
                     MutableHandleValue result) const;
@@ -307,10 +314,6 @@ bool DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
                              uint64_t index, Handle<PropertyDescriptor> desc,
                              ObjectOpResult& result);
 
-// Sort a typed array in ascending order. The typed array may be wrapped, but
-// must not be detached.
-bool intrinsic_TypedArrayNativeSort(JSContext* cx, unsigned argc, Value* vp);
-
 static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
   switch (viewType) {
     case Scalar::Int8:
@@ -338,6 +341,9 @@ static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
 static inline constexpr unsigned TypedArrayElemSize(Scalar::Type viewType) {
   return 1u << TypedArrayShift(viewType);
 }
+
+extern ArraySortResult TypedArraySortFromJit(
+    JSContext* cx, jit::TrampolineNativeFrameLayout* frame);
 
 }  // namespace js
 

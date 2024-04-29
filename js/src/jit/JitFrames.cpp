@@ -99,6 +99,7 @@ static void UnwindTrampolineNativeFrame(JSRuntime* rt,
   TrampolineNative native = TrampolineNativeForFrame(rt, layout);
   switch (native) {
     case TrampolineNative::ArraySort:
+    case TrampolineNative::TypedArraySort:
       layout->getFrameData<ArraySortData>()->freeMallocData();
       break;
     case TrampolineNative::Count:
@@ -1433,6 +1434,7 @@ static void TraceTrampolineNativeFrame(JSTracer* trc,
   TrampolineNative native = TrampolineNativeForFrame(trc->runtime(), layout);
   switch (native) {
     case TrampolineNative::ArraySort:
+    case TrampolineNative::TypedArraySort:
       layout->getFrameData<ArraySortData>()->trace(trc);
       break;
     case TrampolineNative::Count:

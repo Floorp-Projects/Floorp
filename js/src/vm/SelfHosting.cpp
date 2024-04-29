@@ -2210,7 +2210,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("TypedArrayLengthZeroOnOutOfBounds",
                     intrinsic_TypedArrayLengthZeroOnOutOfBounds, 1, 0,
                     IntrinsicTypedArrayLengthZeroOnOutOfBounds),
-    JS_FN("TypedArrayNativeSort", intrinsic_TypedArrayNativeSort, 1, 0),
     JS_INLINABLE_FN("UnsafeGetInt32FromReservedSlot",
                     intrinsic_UnsafeGetInt32FromReservedSlot, 2, 0,
                     IntrinsicUnsafeGetInt32FromReservedSlot),
@@ -2385,6 +2384,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 #ifdef ENABLE_RECORD_TUPLE
     JS_FN("std_Tuple_unchecked", tuple_construct, 1, 0),
 #endif
+    JS_TRAMPOLINE_FN("std_TypedArray_sort", TypedArrayObject::sort, 1, 0,
+                     TypedArraySort),
 
     JS_FS_END};
 

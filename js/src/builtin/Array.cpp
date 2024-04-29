@@ -2253,7 +2253,8 @@ static MOZ_ALWAYS_INLINE bool ArraySortPrologue(JSContext* cx,
   uint32_t len = uint32_t(length);
 
   // Merge sort requires extra scratch space.
-  bool needsScratchSpace = len >= ArraySortData::InsertionSortLimit;
+  bool needsScratchSpace =
+      len >= ArraySortData::insertionSortLimit<ArraySortKind::Array>();
 
   Rooted<ArraySortData::ValueVector> vec(cx);
   if (MOZ_UNLIKELY(!vec.reserve(needsScratchSpace ? (2 * len) : len))) {
@@ -2318,7 +2319,7 @@ ArraySortResult js::CallComparatorSlow(ArraySortData* d, const Value& x,
 
 // static
 ArraySortResult ArraySortData::sortArrayWithComparator(ArraySortData* d) {
-  ArraySortResult result = sortWithComparatorShared(d);
+  ArraySortResult result = sortWithComparatorShared<ArraySortKind::Array>(d);
   if (result != ArraySortResult::Done) {
     return result;
   }

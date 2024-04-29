@@ -12,6 +12,7 @@
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
@@ -33,6 +34,7 @@
 #include "gc/Barrier.h"
 #include "gc/MaybeRooted.h"
 #include "jit/InlinableNatives.h"
+#include "jit/TrampolineNatives.h"
 #include "js/Conversions.h"
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType, JS_GetTypedArray{Length,ByteOffset,ByteLength}, JS_IsTypedArrayObject
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
@@ -48,6 +50,7 @@
 #include "vm/Float16.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/PIC.h"
@@ -56,6 +59,7 @@
 #include "vm/Uint8Clamped.h"
 #include "vm/WrapperObject.h"
 
+#include "builtin/Sorting-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/Compartment-inl.h"
@@ -3155,7 +3159,7 @@ static bool uint8array_toHex(JSContext* cx, unsigned argc, Value* vp) {
     JS_SELF_HOSTED_FN("reverse", "TypedArrayReverse", 0, 0),
     JS_SELF_HOSTED_FN("slice", "TypedArraySlice", 2, 0),
     JS_SELF_HOSTED_FN("some", "TypedArraySome", 1, 0),
-    JS_SELF_HOSTED_FN("sort", "TypedArraySort", 1, 0),
+    JS_TRAMPOLINE_FN("sort", TypedArrayObject::sort, 1, 0, TypedArraySort),
     JS_SELF_HOSTED_FN("entries", "TypedArrayEntries", 0, 0),
     JS_SELF_HOSTED_FN("keys", "TypedArrayKeys", 0, 0),
     JS_SELF_HOSTED_FN("values", "$TypedArrayValues", 0, 0),
@@ -4216,43 +4220,260 @@ TypedArraySort() {
   return TypedArrayStdSort<T, Ops>;
 }
 
-bool js::intrinsic_TypedArrayNativeSort(JSContext* cx, unsigned argc,
-                                        Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-
-  TypedArrayObject* typedArray =
-      UnwrapAndDowncastValue<TypedArrayObject>(cx, args[0]);
-  if (!typedArray) {
-    return false;
-  }
-
-  auto length = typedArray->length();
-  MOZ_RELEASE_ASSERT(length,
-                     "TypedArray is neither detached nor out-of-bounds");
-
+static bool TypedArraySortWithoutComparator(JSContext* cx,
+                                            TypedArrayObject* typedArray,
+                                            size_t len) {
   bool isShared = typedArray->isSharedMemory();
   switch (typedArray->type()) {
-#define SORT(_, T, N)                                                   \
-  case Scalar::N:                                                       \
-    if (isShared) {                                                     \
-      if (!TypedArraySort<T, SharedOps>()(cx, typedArray, *length)) {   \
-        return false;                                                   \
-      }                                                                 \
-    } else {                                                            \
-      if (!TypedArraySort<T, UnsharedOps>()(cx, typedArray, *length)) { \
-        return false;                                                   \
-      }                                                                 \
-    }                                                                   \
+#define SORT(_, T, N)                                               \
+  case Scalar::N:                                                   \
+    if (isShared) {                                                 \
+      if (!TypedArraySort<T, SharedOps>()(cx, typedArray, len)) {   \
+        return false;                                               \
+      }                                                             \
+    } else {                                                        \
+      if (!TypedArraySort<T, UnsharedOps>()(cx, typedArray, len)) { \
+        return false;                                               \
+      }                                                             \
+    }                                                               \
     break;
     JS_FOR_EACH_TYPED_ARRAY(SORT)
 #undef SORT
     default:
       MOZ_CRASH("Unsupported TypedArray type");
   }
-
-  args.rval().set(args[0]);
   return true;
+}
+
+static MOZ_ALWAYS_INLINE bool TypedArraySortPrologue(JSContext* cx,
+                                                     Handle<Value> thisv,
+                                                     Handle<Value> comparefn,
+                                                     ArraySortData* d,
+                                                     bool* done) {
+  // https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort
+  // 23.2.3.29 %TypedArray%.prototype.sort ( comparefn )
+
+  // Step 1.
+  if (MOZ_UNLIKELY(!comparefn.isUndefined() && !IsCallable(comparefn))) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_TYPEDARRAY_SORT_ARG);
+    return false;
+  }
+
+  // Steps 2-3.
+  Rooted<TypedArrayObject*> tarrayUnwrapped(
+      cx, UnwrapAndTypeCheckValue<TypedArrayObject>(cx, thisv, [cx, &thisv]() {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_INCOMPATIBLE_METHOD, "sort", "method",
+                                 InformalValueTypeName(thisv));
+      }));
+  if (!tarrayUnwrapped) {
+    return false;
+  }
+  auto arrayLength = tarrayUnwrapped->length();
+  if (!arrayLength) {
+    ReportOutOfBounds(cx, tarrayUnwrapped);
+    return false;
+  }
+
+  // Step 4.
+  size_t len = *arrayLength;
+
+  // Arrays with less than two elements remain unchanged when sorted.
+  if (len <= 1) {
+    d->setReturnValue(&thisv.toObject());
+    *done = true;
+    return true;
+  }
+
+  // Fast path for sorting without a comparator.
+  if (comparefn.isUndefined()) {
+    if (!TypedArraySortWithoutComparator(cx, tarrayUnwrapped, len)) {
+      return false;
+    }
+    d->setReturnValue(&thisv.toObject());
+    *done = true;
+    return true;
+  }
+
+  // Ensure length * 2 (used below) doesn't overflow UINT32_MAX.
+  if (MOZ_UNLIKELY(len > UINT32_MAX / 2)) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+
+  // Merge sort requires extra scratch space.
+  bool needsScratchSpace =
+      len >= ArraySortData::insertionSortLimit<ArraySortKind::TypedArray>();
+
+  Rooted<ArraySortData::ValueVector> vec(cx);
+  if (MOZ_UNLIKELY(!vec.resize(needsScratchSpace ? (2 * len) : len))) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Copy elements to JS Value vector.
+  if (!TypedArrayObject::getElements(cx, tarrayUnwrapped, len, vec.begin())) {
+    return false;
+  }
+
+  d->init(&thisv.toObject(), &comparefn.toObject(), std::move(vec.get()), len,
+          len);
+
+  // Continue in ArraySortData::sortTypedArrayWithComparator.
+  MOZ_ASSERT(!*done);
+  return true;
+}
+
+// Copies sorted elements back to the typed array.
+template <typename T, typename Ops>
+static void StoreSortedElements(TypedArrayObject* tarray, Value* elements,
+                                size_t len) {
+  SharedMem<T*> data = tarray->dataPointerEither().cast<T*>();
+  for (size_t i = 0; i < len; i++) {
+    T val;
+    if constexpr (TypeIsFloatingPoint<T>()) {
+      val = elements[i].toDouble();
+    } else if constexpr (std::is_same_v<T, int64_t>) {
+      val = BigInt::toInt64(elements[i].toBigInt());
+    } else if constexpr (std::is_same_v<T, uint64_t>) {
+      val = BigInt::toUint64(elements[i].toBigInt());
+    } else if constexpr (std::is_same_v<T, uint32_t>) {
+      val = uint32_t(elements[i].toNumber());
+    } else {
+      val = elements[i].toInt32();
+    }
+    Ops::store(data + i, val);
+  }
+}
+
+// static
+ArraySortResult ArraySortData::sortTypedArrayWithComparator(ArraySortData* d) {
+  ArraySortResult result =
+      sortWithComparatorShared<ArraySortKind::TypedArray>(d);
+  if (result != ArraySortResult::Done) {
+    return result;
+  }
+
+  // Copy sorted elements to the typed array.
+  JSContext* cx = d->cx();
+  Rooted<TypedArrayObject*> tarrayUnwrapped(
+      cx, UnwrapAndDowncastObject<TypedArrayObject>(cx, d->obj_));
+  if (MOZ_UNLIKELY(!tarrayUnwrapped)) {
+    return ArraySortResult::Failure;
+  }
+
+  auto length = tarrayUnwrapped->length();
+  if (MOZ_LIKELY(length)) {
+    size_t len = std::min<size_t>(*length, d->denseLen);
+    Value* elements = d->list;
+    bool isShared = tarrayUnwrapped->isSharedMemory();
+    switch (tarrayUnwrapped->type()) {
+#define SORT(_, T, N)                                                      \
+  case Scalar::N:                                                          \
+    if (isShared) {                                                        \
+      StoreSortedElements<T, SharedOps>(tarrayUnwrapped, elements, len);   \
+    } else {                                                               \
+      StoreSortedElements<T, UnsharedOps>(tarrayUnwrapped, elements, len); \
+    }                                                                      \
+    break;
+      JS_FOR_EACH_TYPED_ARRAY(SORT)
+#undef SORT
+      default:
+        MOZ_CRASH("Unsupported TypedArray type");
+    }
+  }
+
+  d->freeMallocData();
+  d->setReturnValue(d->obj_);
+  return ArraySortResult::Done;
+}
+
+// https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort
+// 23.2.3.29 %TypedArray%.prototype.sort ( comparefn )
+// static
+bool TypedArrayObject::sort(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "[TypedArray].prototype", "sort");
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // If we have a comparator argument, use the JIT trampoline implementation
+  // instead. This avoids a performance cliff (especially with large arrays)
+  // because C++ => JIT calls are much slower than Trampoline => JIT calls.
+  if (args.hasDefined(0) && jit::IsBaselineInterpreterEnabled()) {
+    return CallTrampolineNativeJitCode(
+        cx, jit::TrampolineNative::TypedArraySort, args);
+  }
+
+  Rooted<ArraySortData> data(cx, cx);
+
+  // On all return paths other than ArraySortData::sortTypedArrayWithComparator
+  // returning Done, we call freeMallocData to not fail debug assertions. This
+  // matches the JIT trampoline where we can't rely on C++ destructors.
+  auto freeData =
+      mozilla::MakeScopeExit([&]() { data.get().freeMallocData(); });
+
+  bool done = false;
+  if (!TypedArraySortPrologue(cx, args.thisv(), args.get(0), data.address(),
+                              &done)) {
+    return false;
+  }
+  if (done) {
+    args.rval().set(data.get().returnValue());
+    return true;
+  }
+
+  FixedInvokeArgs<2> callArgs(cx);
+  Rooted<Value> rval(cx);
+
+  while (true) {
+    ArraySortResult res =
+        ArraySortData::sortTypedArrayWithComparator(data.address());
+    switch (res) {
+      case ArraySortResult::Failure:
+        return false;
+
+      case ArraySortResult::Done:
+        freeData.release();
+        args.rval().set(data.get().returnValue());
+        return true;
+
+      case ArraySortResult::CallJS:
+      case ArraySortResult::CallJSSameRealmNoRectifier:
+        MOZ_ASSERT(data.get().comparatorThisValue().isUndefined());
+        MOZ_ASSERT(&args[0].toObject() == data.get().comparator());
+        callArgs[0].set(data.get().comparatorArg(0));
+        callArgs[1].set(data.get().comparatorArg(1));
+        if (!js::Call(cx, args[0], UndefinedHandleValue, callArgs, &rval)) {
+          return false;
+        }
+        data.get().setComparatorReturnValue(rval);
+        break;
+    }
+  }
+}
+
+ArraySortResult js::TypedArraySortFromJit(
+    JSContext* cx, jit::TrampolineNativeFrameLayout* frame) {
+  // Initialize the ArraySortData class stored in the trampoline frame.
+  void* dataUninit = frame->getFrameData<ArraySortData>();
+  auto* data = new (dataUninit) ArraySortData(cx);
+
+  Rooted<Value> thisv(cx, frame->thisv());
+  Rooted<Value> comparefn(cx);
+  if (frame->numActualArgs() > 0) {
+    comparefn = frame->actualArgs()[0];
+  }
+
+  bool done = false;
+  if (!TypedArraySortPrologue(cx, thisv, comparefn, data, &done)) {
+    return ArraySortResult::Failure;
+  }
+  if (done) {
+    data->freeMallocData();
+    return ArraySortResult::Done;
+  }
+
+  return ArraySortData::sortTypedArrayWithComparator(data);
 }
 
 /* JS Public API */

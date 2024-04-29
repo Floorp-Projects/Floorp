@@ -46,11 +46,12 @@
 
 #include "proxy/Proxy.h"  // js::ProxyGetProperty
 
-#include "vm/ArgumentsObject.h"  // js::ArgumentsObject::finishForIonPure
-#include "vm/Interpreter.h"      // js::TypeOfObject
-#include "vm/NativeObject.h"     // js::NativeObject
-#include "vm/RegExpShared.h"     // js::ExecuteRegExpAtomRaw
-#include "wasm/WasmBuiltins.h"   // js::wasm::*
+#include "vm/ArgumentsObject.h"   // js::ArgumentsObject::finishForIonPure
+#include "vm/Interpreter.h"       // js::TypeOfObject
+#include "vm/NativeObject.h"      // js::NativeObject
+#include "vm/RegExpShared.h"      // js::ExecuteRegExpAtomRaw
+#include "vm/TypedArrayObject.h"  // js::TypedArraySortFromJit
+#include "wasm/WasmBuiltins.h"    // js::wasm::*
 
 #include "builtin/Boolean-inl.h"  // js::EmulatesUndefined
 
@@ -105,6 +106,7 @@ namespace jit {
   _(js::ArgumentsObject::finishInlineForIonPure)                      \
   _(js::ArrayShiftMoveElements)                                       \
   _(js::ArraySortData::sortArrayWithComparator)                       \
+  _(js::ArraySortData::sortTypedArrayWithComparator)                  \
   _(js::ArraySortFromJit)                                             \
   _(js::ecmaAtan2)                                                    \
   _(js::ecmaHypot)                                                    \
@@ -190,6 +192,7 @@ namespace jit {
   _(js::RegExpPrototypeOptimizableRaw)                                \
   _(js::SetIteratorObject::next)                                      \
   _(js::StringToNumberPure)                                           \
+  _(js::TypedArraySortFromJit)                                        \
   _(js::TypeOfObject)                                                 \
   _(mozilla::SIMD::memchr16)                                          \
   _(mozilla::SIMD::memchr2x16)                                        \
