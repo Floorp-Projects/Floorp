@@ -594,7 +594,6 @@ selfhosted_inputs = [
     "builtin/RegExpLocalReplaceOpt.h.js",
     "builtin/String.js",
     "builtin/Set.js",
-    "builtin/Sorting.js",
     "builtin/TypedArray.js",
     "builtin/WeakMap.js",
     "builtin/WeakSet.js",
