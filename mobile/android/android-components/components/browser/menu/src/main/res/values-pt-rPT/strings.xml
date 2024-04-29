@@ -11,7 +11,7 @@
     <!-- Label for add-ons sub menu item for add-ons manager -->
     <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">Gestor de extras</string>
     <!-- Label for extensions sub menu item for extensions manager -->
-    <string name="mozac_browser_menu_extensions_manager">Gestor de extensões</string>
+    <string name="mozac_browser_menu_extensions_manager">Gestor de Extensões</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Navegar para cima</string>
     <!-- Content description for the action bar "up" button of the add-ons sub menu item -->
