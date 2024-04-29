@@ -15,7 +15,7 @@ Specific documentation on a few topics is available at:
    Creating a release branch<Creating-a-release-branch.md>
    Data practises <Data-Practices.md>
    Development Test Plan <Development-Test-Plan.md>
-   Fennec Migration <Fennec-Migration.md>
+   Fennec Legacy: Migration <Fennec-Migration.md>
    Firebase Cloud Messaging for WebPush <Firebase-Cloud-Messaging-for-WebPush.md>
    Firefox for Android Team Processes <Firefox-for-Android-Team-Processes.md>
    Guide to merging contributor PRs <Guide-to-merging-contributor-PRs.md>

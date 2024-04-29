@@ -3,86 +3,21 @@
 Building Firefox for Android
 ============================
 
-1. Cloning the repo
--------------------
+Run Fenix using command line
+----------------------------
 
-First, you'll want to `set up your machine to build Firefox </setup>`_.
-Follow the instructions there, choosing "GeckoView/Firefox for Android" or "GeckoView/Firefox for Android Artifact Mode" as
-the bootstrap option. Please refer to the "Bootstrap" section below to understand better those options.
+As a first step, you need to set up your development environment using the instruction :ref:`here <firefox_for_android>`.
 
-Once you're set up and have a GeckoView build from the above, please
-continue with the following steps.
 
-2. Bootstrap
-------------
-
-If you intend to work mainly on GeckoView, you can find more information `here <geckoview/contributor/for-gecko-engineers.html>`_.
-
-Bootstrap configures everything for GeckoView and Fenix (Firefox for Android) development.
-
-.. code-block:: shell
-
-    ./mach bootstrap
-
-You should then choose one the following options:
-
-A- You will not change any GeckoView code, or only Java and JS code on GeckoView:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Choose: ``3. GeckoView/Firefox for Android Artifact Mode``
-
-Artifact mode downloads pre-built C++ components rather than building them locally, trading bandwidth for time.
-(more on Artifact mode)
-
-B- You intend to change GeckoView code:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Choose: ``4. GeckoView/Firefox for Android``
-
-This will build GeckoView from scratch, and take more time than the option above.
-
-Once ``./mach bootstrap`` is complete, it will automatically write the configuration into a new ``mozconfig`` file.
-If you already have a ``mozconfig``, mach will instead output a new configuration that you should append to your existing file.
-
-3. Build GeckoView
-------------------
-
-You can now build GeckoView, using
-
-.. code-block:: shell
-
-    ./mach build
-
-.. _build_fenix:
-
-4. Build Fenix or other Android projects Using Android Studio
--------------------------------------------------------------
-
-1. **You will only work on one of those projects: Fenix, Focus, Android Components**
-
-Open your project's folder on Android Studio. You can find it under: ``[your mozilla-central path]/mobile/android``
-
-After ``./mach build`` completed successfully, you will need to use `File/Sync Project with Gradle files`.
-
-2. **You will work on GeckoView only, or GeckoView in integration with the other projects**
-
-Open the root folder (meaning the ``mozilla-central`` folder you just checked out) on Android Studio.
-From there, you should be able to choose the project you want to build.
-
-.. image:: img/android-studio-build-toolbar.png
-  :alt: Screenshot Android Studio's toolbar, showing the projects that can be built
-
-After ``./mach build`` completed successfully, you will need to do a full Gradle Sync.
-
-3. Run Fenix or other Android projects using command line
+Run Fenix or other Android projects using command line
 ---------------------------------------------------------
+.. _run_fenix_from_commandline:
 
 From the root mozilla-central directory, you can run an emulator with the following command:
 
 .. code-block:: shell
 
     ./mach android-emulator
-
 
 From the `mobile/android/fenix` working directory, build, install and launch Fenix with:
 
@@ -92,3 +27,23 @@ From the `mobile/android/fenix` working directory, build, install and launch Fen
     export ANDROID_HOME=$HOME/.mozbuild/android-sdk-<os_name>
     ./gradlew :app:installFenixDebug
     "$ANDROID_HOME/platform-tools/adb" shell am start -n org.mozilla.fenix.debug/org.mozilla.fenix.debug.App
+
+
+Run Fenix tests
+-------------------
+
+You can run tests via all the normal routes:
+
+- For individual test files, click the little green play button at the top
+- For a module/component:
+
+   - Right click in project explorer → run all tests
+   - Select from gradle tasks window
+   - On command line: ``./gradlew :$module:$variant`` e.g.  ``./gradlew :feature-downloads:testDebugUnitTest``
+
+If you see the error "Test events were not received", check your top level folder - this happens if you try and run tests in Android Components from ``mozilla-unified/mobile/android/fenix/``.
+To build tests for Android Components you need to be using the ``build.gradle`` in ``mozilla-unified/mobile/android/android-components/``.
+
+If after running tests on your Android device, you can no longer long press, this is because the connected Android tests mess around with your phone’s accessibility settings.
+They set the long press delay to 3 seconds, which is an uncomfortably long time.
+To fix this, go to Settings → Accessibility → Touch and hold delay, and reset this to default or short (depends on manufacturer).
