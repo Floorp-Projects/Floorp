@@ -4,7 +4,7 @@
 
 //! Parse/serialize and resolve a single color component.
 
-use super::AbsoluteColor;
+use super::{parsing::ChannelKeyword, AbsoluteColor};
 use crate::{
     parser::ParserContext,
     values::{
@@ -93,12 +93,17 @@ impl<ValueType: ColorComponentType> ColorComponent<ValueType> {
                 Ok(ColorComponent::None)
             },
             ref t @ Token::Ident(ref ident) if origin_color.is_some() => {
-                match origin_color
-                    .unwrap()
-                    .get_component_by_channel_keyword(ident)
-                {
-                    Ok(Some(value)) => Ok(Self::Value(ValueType::from_value(value))),
-                    _ => Err(location.new_unexpected_token_error(t.clone())),
+                if let Ok(channel_keyword) = ChannelKeyword::from_ident(ident) {
+                    if let Ok(value) = origin_color
+                        .unwrap()
+                        .get_component_by_channel_keyword(channel_keyword)
+                    {
+                        Ok(Self::Value(ValueType::from_value(value.unwrap_or(0.0))))
+                    } else {
+                        Err(location.new_unexpected_token_error(t.clone()))
+                    }
+                } else {
+                    Err(location.new_unexpected_token_error(t.clone()))
                 }
             },
             Token::Function(ref name) => {

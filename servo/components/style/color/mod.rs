@@ -15,6 +15,7 @@ pub mod mix;
 pub mod parsing;
 mod to_css;
 
+use self::parsing::ChannelKeyword;
 use component::ColorComponent;
 use cssparser::color::PredefinedColorSpace;
 
@@ -450,56 +451,59 @@ impl AbsoluteColor {
     }
 
     /// Return the value of a component by its channel keyword.
-    pub fn get_component_by_channel_keyword(&self, name: &str) -> Result<Option<f32>, ()> {
-        if name.eq_ignore_ascii_case("alpha") {
+    pub fn get_component_by_channel_keyword(
+        &self,
+        channel_keyword: ChannelKeyword,
+    ) -> Result<Option<f32>, ()> {
+        if channel_keyword == ChannelKeyword::Alpha {
             return Ok(self.alpha());
         }
 
         Ok(match self.color_space {
-            ColorSpace::Srgb => match_ignore_ascii_case! { name,
-                "r" => self.c0(),
-                "g" => self.c1(),
-                "b" => self.c2(),
+            ColorSpace::Srgb => match channel_keyword {
+                ChannelKeyword::R => self.c0(),
+                ChannelKeyword::G => self.c1(),
+                ChannelKeyword::B => self.c2(),
                 _ => return Err(()),
             },
-            ColorSpace::Hsl => match_ignore_ascii_case! { name,
-                "h" => self.c0(),
-                "s" => self.c1(),
-                "l" => self.c2(),
+            ColorSpace::Hsl => match channel_keyword {
+                ChannelKeyword::H => self.c0(),
+                ChannelKeyword::S => self.c1(),
+                ChannelKeyword::L => self.c2(),
                 _ => return Err(()),
             },
-            ColorSpace::Hwb => match_ignore_ascii_case! { name,
-                "h" => self.c0(),
-                "w" => self.c1(),
-                "b" => self.c2(),
+            ColorSpace::Hwb => match channel_keyword {
+                ChannelKeyword::H => self.c0(),
+                ChannelKeyword::W => self.c1(),
+                ChannelKeyword::B => self.c2(),
                 _ => return Err(()),
             },
-            ColorSpace::Lab | ColorSpace::Oklab => match_ignore_ascii_case! { name,
-                "l" => self.c0(),
-                "a" => self.c1(),
-                "b" => self.c2(),
+            ColorSpace::Lab | ColorSpace::Oklab => match channel_keyword {
+                ChannelKeyword::L => self.c0(),
+                ChannelKeyword::A => self.c1(),
+                ChannelKeyword::B => self.c2(),
                 _ => return Err(()),
             },
-            ColorSpace::Lch | ColorSpace::Oklch => match_ignore_ascii_case! { name,
-                "l" => self.c0(),
-                "c" => self.c1(),
-                "h" => self.c2(),
+            ColorSpace::Lch | ColorSpace::Oklch => match channel_keyword {
+                ChannelKeyword::L => self.c0(),
+                ChannelKeyword::C => self.c1(),
+                ChannelKeyword::H => self.c2(),
                 _ => return Err(()),
             },
             ColorSpace::SrgbLinear |
             ColorSpace::DisplayP3 |
             ColorSpace::A98Rgb |
             ColorSpace::ProphotoRgb |
-            ColorSpace::Rec2020 => match_ignore_ascii_case! { name,
-                "r" => self.c0(),
-                "g" => self.c1(),
-                "b" => self.c2(),
+            ColorSpace::Rec2020 => match channel_keyword {
+                ChannelKeyword::R => self.c0(),
+                ChannelKeyword::G => self.c1(),
+                ChannelKeyword::B => self.c2(),
                 _ => return Err(()),
             },
-            ColorSpace::XyzD50 | ColorSpace::XyzD65 => match_ignore_ascii_case! { name,
-                "x" => self.c0(),
-                "y" => self.c1(),
-                "z" => self.c2(),
+            ColorSpace::XyzD50 | ColorSpace::XyzD65 => match channel_keyword {
+                ChannelKeyword::X => self.c0(),
+                ChannelKeyword::Y => self.c1(),
+                ChannelKeyword::Z => self.c2(),
                 _ => return Err(()),
             },
         })
