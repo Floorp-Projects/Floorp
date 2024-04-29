@@ -2757,17 +2757,16 @@ void MacroAssembler::emitExtractValueFromMegamorphicCacheEntry(
     ValueOperand output, Label* cacheHit, Label* cacheMiss) {
   Label isMissing, dynamicSlot, protoLoopHead, protoLoopTail;
 
-  // scratch2 = entry->numHops_
-  load8ZeroExtend(Address(entry, MegamorphicCache::Entry::offsetOfNumHops()),
-                  scratch2);
-  // if (scratch2 == NumHopsForMissingOwnProperty) goto cacheMiss
-  branch32(Assembler::Equal, scratch2,
-           Imm32(MegamorphicCache::Entry::NumHopsForMissingOwnProperty),
-           cacheMiss);
+  // scratch2 = entry->hopsAndKind_
+  load8ZeroExtend(
+      Address(entry, MegamorphicCache::Entry::offsetOfHopsAndKind()), scratch2);
   // if (scratch2 == NumHopsForMissingProperty) goto isMissing
   branch32(Assembler::Equal, scratch2,
            Imm32(MegamorphicCache::Entry::NumHopsForMissingProperty),
            &isMissing);
+  // if (scratch2 & NonDataPropertyFlag) goto cacheMiss
+  branchTest32(Assembler::NonZero, scratch2,
+               Imm32(MegamorphicCache::Entry::NonDataPropertyFlag), cacheMiss);
 
   // NOTE: Where this is called, `output` can actually alias `obj`, and before
   // the last cacheMiss branch above we can't write to `obj`, so we can't
@@ -2982,21 +2981,20 @@ void MacroAssembler::emitMegamorphicCacheLookupExists(
                                           outEntryPtr, &cacheMiss,
                                           &cacheMissWithEntry);
 
-  // scratch1 = outEntryPtr->numHops_
+  // scratch1 = outEntryPtr->hopsAndKind_
   load8ZeroExtend(
-      Address(outEntryPtr, MegamorphicCache::Entry::offsetOfNumHops()),
+      Address(outEntryPtr, MegamorphicCache::Entry::offsetOfHopsAndKind()),
       scratch1);
 
   branch32(Assembler::Equal, scratch1,
            Imm32(MegamorphicCache::Entry::NumHopsForMissingProperty),
            &cacheHitFalse);
+  branchTest32(Assembler::NonZero, scratch1,
+               Imm32(MegamorphicCache::Entry::NonDataPropertyFlag),
+               &cacheMissWithEntry);
 
   if (hasOwn) {
     branch32(Assembler::NotEqual, scratch1, Imm32(0), &cacheHitFalse);
-  } else {
-    branch32(Assembler::Equal, scratch1,
-             Imm32(MegamorphicCache::Entry::NumHopsForMissingOwnProperty),
-             &cacheMissWithEntry);
   }
 
   move32(Imm32(1), output);

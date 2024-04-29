@@ -2975,6 +2975,23 @@
   call_instruction: true
   mir_op: true
 
+- name: MegamorphicLoadSlotPermissive
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+  num_temps: 3
+  call_instruction: true
+  mir_op: true
+
+- name: MegamorphicLoadSlotByValuePermissive
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+    id: BoxedValue
+  num_temps: 3
+  call_instruction: true
+  mir_op: true
+
 - name: MegamorphicStoreSlot
   operands:
     object: WordSized
