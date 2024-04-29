@@ -81,9 +81,28 @@ let AVAILABLE_PIP_OVERRIDES;
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
       },
     },
+
     cbc: {
       "https://*.cbc.ca/*": {
         videoWrapperScriptPath: "video-wrappers/cbc.js",
+      },
+    },
+
+    cnbc: {
+      "https://*.cnbc.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
+    cpac: {
+      "https://*.cpac.ca/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
+    cspan: {
+      "https://*.c-span.org/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
       },
     },
 
@@ -133,6 +152,18 @@ let AVAILABLE_PIP_OVERRIDES;
     hulu: {
       "https://www.hulu.com/watch/*": {
         videoWrapperScriptPath: "video-wrappers/hulu.js",
+      },
+    },
+
+    indpendentuk: {
+      "https://*.independent.co.uk/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
+    indy100: {
+      "https://*.indy100.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
       },
     },
 
@@ -214,6 +245,12 @@ let AVAILABLE_PIP_OVERRIDES;
       "https://*.reddit.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
     },
 
+    reuters: {
+      "https://*.reuters.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
     sonyliv: {
       "https://*.sonyliv.com/*": {
         videoWrapperScriptPath: "video-wrappers/sonyliv.js",
@@ -223,6 +260,12 @@ let AVAILABLE_PIP_OVERRIDES;
     ted: {
       "https://*.ted.com/*": {
         showHiddenTextTracks: true,
+      },
+    },
+
+    time: {
+      "https://*.time.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
       },
     },
 
