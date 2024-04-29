@@ -252,9 +252,9 @@ class AddonManager(
             permissions = permissions,
             origins = origins,
             onSuccess = { ext ->
-                val updatedAddon = Addon.newFromWebExtension(ext, toInstalledState(ext))
+                val enabledAddon = addon.copy(installedState = toInstalledState(ext))
                 completePendingAddonAction(pendingAction)
-                onSuccess(updatedAddon)
+                onSuccess(enabledAddon)
             },
             onError = {
                 completePendingAddonAction(pendingAction)
@@ -296,9 +296,9 @@ class AddonManager(
             permissions = permissions,
             origins = origins,
             onSuccess = { ext ->
-                val updatedAddon = Addon.newFromWebExtension(ext, toInstalledState(ext))
+                val enabledAddon = addon.copy(installedState = toInstalledState(ext))
                 completePendingAddonAction(pendingAction)
-                onSuccess(updatedAddon)
+                onSuccess(enabledAddon)
             },
             onError = {
                 completePendingAddonAction(pendingAction)

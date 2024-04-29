@@ -426,10 +426,6 @@ class GeckoEngine(
                     exception as WebExtensionInstallException,
                 )
             }
-
-            override fun onOptionalPermissionsChanged(extension: org.mozilla.geckoview.WebExtension) {
-                webExtensionDelegate.onOptionalPermissionsChanged(GeckoWebExtension(extension, runtime))
-            }
         }
 
         val extensionProcessDelegate = object : WebExtensionController.ExtensionProcessDelegate {

@@ -623,23 +623,6 @@ class AddonManagerListener {
     // the GeckoView side when it is actually going to be available.
     this.onExtensionReady = this.onExtensionReady.bind(this);
     lazy.Management.on("ready", this.onExtensionReady);
-    lazy.Management.on("change-permissions", this.onOptionalPermissionsChanged);
-  }
-
-  async onOptionalPermissionsChanged(type, { extensionId }) {
-    const addon = await lazy.AddonManager.getAddonByID(extensionId);
-    if (!addon) {
-      return;
-    }
-    const extension = await exportExtension(
-      addon,
-      addon.userPermissions,
-      /* aSourceURI */ null
-    );
-    lazy.EventDispatcher.instance.sendRequest({
-      type: "GeckoView:WebExtension:OnOptionalPermissionsChanged",
-      extension,
-    });
   }
 
   async onExtensionReady(name, extInstance) {

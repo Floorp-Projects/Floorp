@@ -269,10 +269,6 @@ object WebExtensionSupport {
                     store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, true))
                 }
 
-                override fun onOptionalPermissionsChanged(extension: WebExtension) {
-                    installedExtensions[extension.id] = extension
-                }
-
                 override fun onDisabled(extension: WebExtension) {
                     installedExtensions[extension.id] = extension
                     store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, false))
