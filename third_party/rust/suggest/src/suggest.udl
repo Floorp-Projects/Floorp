@@ -6,6 +6,9 @@
 [External="remote_settings"]
 typedef extern RemoteSettingsConfig;
 
+[External="remote_settings"]
+typedef extern RemoteSettingsServer;
+
 namespace suggest {
 
 boolean raw_suggestion_url_matches([ByRef] string raw_url, [ByRef] string url);
@@ -154,6 +157,10 @@ interface SuggestStoreBuilder {
     [Self=ByArc]
     SuggestStoreBuilder cache_path(string path);
 
+    [Self=ByArc]
+    SuggestStoreBuilder remote_settings_server(RemoteSettingsServer server);
+
+    // Deprecated: Use `remote_settings_server()` instead.
     [Self=ByArc]
     SuggestStoreBuilder remote_settings_config(RemoteSettingsConfig config);
 

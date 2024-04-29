@@ -20,6 +20,7 @@ license = "MPL-2.0"
 [dependencies]
 lazy_static = "1.4"
 parking_lot = ">=0.11,<=0.12"
+uniffi = "0.27.1"
 
 [dependencies.rusqlite]
 version = "0.30.0"
@@ -29,3 +30,7 @@ features = [
     "bundled",
     "unlock_notify",
 ]
+
+[build-dependencies.uniffi]
+version = "0.27.1"
+features = ["build"]

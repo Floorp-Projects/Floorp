@@ -8,8 +8,18 @@ interface RelevancyApiError {
 // Top-level class for the Relevancy component
 interface RelevancyStore {
     // Construct a new RelevancyStore
+    //
+    // This is non-blocking since databases and other resources are lazily opened.
     [Throws=RelevancyApiError]
     constructor(string dbpath);
+
+    // Close any open resources (for example databases)
+    //
+    // Calling `close` will interrupt any in-progress queries on other threads.
+    void close();
+
+    // Interrupt any current database queries
+    void interrupt();
 
     // Ingest the top URLs by frequency to build up the user's interest vector
     [Throws=RelevancyApiError]
@@ -39,7 +49,7 @@ enum Interest {
     "Finance",
     "Food",
     "Government",
-    "Health",
+    // "Health",
     "Hobbies",
     "Home",
     "News",
@@ -93,7 +103,7 @@ dictionary InterestVector {
     u32 finance;
     u32 food;
     u32 government;
-    u32 health;
+    // u32 health;
     u32 hobbies;
     u32 home;
     u32 news;

@@ -356,7 +356,7 @@ export class RemoteSettings {
                 throw e;
             }
             return UniFFIScaffolding.callSync(
-                6, // remote_settings:uniffi_remote_settings_fn_constructor_remotesettings_new
+                8, // remote_settings:uniffi_remote_settings_fn_constructor_remotesettings_new
                 FfiConverterTypeRemoteSettingsConfig.lower(remoteSettingsConfig),
             )
         }
@@ -383,7 +383,7 @@ export class RemoteSettings {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                7, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path
+                9, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path
                 FfiConverterTypeRemoteSettings.lower(this),
                 FfiConverterString.lower(attachmentId),
                 FfiConverterString.lower(path),
@@ -401,7 +401,7 @@ export class RemoteSettings {
         const liftError = (data) => FfiConverterTypeRemoteSettingsError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                8, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records
+                10, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records
                 FfiConverterTypeRemoteSettings.lower(this),
             )
         }
@@ -425,7 +425,7 @@ export class RemoteSettings {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                9, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records_since
+                11, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records_since
                 FfiConverterTypeRemoteSettings.lower(this),
                 FfiConverterU64.lower(timestamp),
             )
@@ -605,7 +605,7 @@ export class FfiConverterTypeAttachment extends FfiConverterArrayBuffer {
 }
 
 export class RemoteSettingsConfig {
-    constructor({ collectionName, bucketName = null, serverUrl = null } = {}) {
+    constructor({ collectionName, bucketName = null, serverUrl = null, server = null } = {}) {
         try {
             FfiConverterString.checkType(collectionName)
         } catch (e) {
@@ -630,15 +630,25 @@ export class RemoteSettingsConfig {
             }
             throw e;
         }
+        try {
+            FfiConverterOptionalTypeRemoteSettingsServer.checkType(server)
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("server");
+            }
+            throw e;
+        }
         this.collectionName = collectionName;
         this.bucketName = bucketName;
         this.serverUrl = serverUrl;
+        this.server = server;
     }
     equals(other) {
         return (
             this.collectionName == other.collectionName &&
             this.bucketName == other.bucketName &&
-            this.serverUrl == other.serverUrl
+            this.serverUrl == other.serverUrl &&
+            this.server == other.server
         )
     }
 }
@@ -650,12 +660,14 @@ export class FfiConverterTypeRemoteSettingsConfig extends FfiConverterArrayBuffe
             collectionName: FfiConverterString.read(dataStream),
             bucketName: FfiConverterOptionalstring.read(dataStream),
             serverUrl: FfiConverterOptionalstring.read(dataStream),
+            server: FfiConverterOptionalTypeRemoteSettingsServer.read(dataStream),
         });
     }
     static write(dataStream, value) {
         FfiConverterString.write(dataStream, value.collectionName);
         FfiConverterOptionalstring.write(dataStream, value.bucketName);
         FfiConverterOptionalstring.write(dataStream, value.serverUrl);
+        FfiConverterOptionalTypeRemoteSettingsServer.write(dataStream, value.server);
     }
 
     static computeSize(value) {
@@ -663,6 +675,7 @@ export class FfiConverterTypeRemoteSettingsConfig extends FfiConverterArrayBuffe
         totalSize += FfiConverterString.computeSize(value.collectionName);
         totalSize += FfiConverterOptionalstring.computeSize(value.bucketName);
         totalSize += FfiConverterOptionalstring.computeSize(value.serverUrl);
+        totalSize += FfiConverterOptionalTypeRemoteSettingsServer.computeSize(value.server);
         return totalSize
     }
 
@@ -692,6 +705,14 @@ export class FfiConverterTypeRemoteSettingsConfig extends FfiConverterArrayBuffe
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".serverUrl");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterOptionalTypeRemoteSettingsServer.checkType(value.server);
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".server");
             }
             throw e;
         }
@@ -990,6 +1011,17 @@ export class AttachmentsUnsupportedError extends RemoteSettingsError {
     }
 }
 
+export class ConfigError extends RemoteSettingsError {
+
+    constructor(message, ...params) {
+        super(...params);
+        this.message = message;
+    }
+    toString() {
+        return `ConfigError: ${super.toString()}`
+    }
+}
+
 // Export the FFIConverter object to make external types work.
 export class FfiConverterTypeRemoteSettingsError extends FfiConverterArrayBuffer {
     static read(dataStream) {
@@ -1008,6 +1040,8 @@ export class FfiConverterTypeRemoteSettingsError extends FfiConverterArrayBuffer
                 return new ResponseError(FfiConverterString.read(dataStream));
             case 7:
                 return new AttachmentsUnsupportedError(FfiConverterString.read(dataStream));
+            case 8:
+                return new ConfigError(FfiConverterString.read(dataStream));
             default:
                 throw new UniFFITypeError("Unknown RemoteSettingsError variant");
         }
@@ -1034,6 +1068,9 @@ export class FfiConverterTypeRemoteSettingsError extends FfiConverterArrayBuffer
             return totalSize;
         }
         if (value instanceof AttachmentsUnsupportedError) {
+            return totalSize;
+        }
+        if (value instanceof ConfigError) {
             return totalSize;
         }
         throw new UniFFITypeError("Unknown RemoteSettingsError variant");
@@ -1067,11 +1104,114 @@ export class FfiConverterTypeRemoteSettingsError extends FfiConverterArrayBuffer
             dataStream.writeInt32(7);
             return;
         }
+        if (value instanceof ConfigError) {
+            dataStream.writeInt32(8);
+            return;
+        }
         throw new UniFFITypeError("Unknown RemoteSettingsError variant");
     }
 
     static errorClass = RemoteSettingsError;
 }
+
+
+export class RemoteSettingsServer {}
+RemoteSettingsServer.Prod = class extends RemoteSettingsServer{
+    constructor(
+        ) {
+            super();
+        }
+}
+RemoteSettingsServer.Stage = class extends RemoteSettingsServer{
+    constructor(
+        ) {
+            super();
+        }
+}
+RemoteSettingsServer.Dev = class extends RemoteSettingsServer{
+    constructor(
+        ) {
+            super();
+        }
+}
+RemoteSettingsServer.Custom = class extends RemoteSettingsServer{
+    constructor(
+        url
+        ) {
+            super();
+            this.url = url;
+        }
+}
+
+// Export the FFIConverter object to make external types work.
+export class FfiConverterTypeRemoteSettingsServer extends FfiConverterArrayBuffer {
+    static read(dataStream) {
+        switch (dataStream.readInt32()) {
+            case 1:
+                return new RemoteSettingsServer.Prod(
+                    );
+            case 2:
+                return new RemoteSettingsServer.Stage(
+                    );
+            case 3:
+                return new RemoteSettingsServer.Dev(
+                    );
+            case 4:
+                return new RemoteSettingsServer.Custom(
+                    FfiConverterString.read(dataStream)
+                    );
+            default:
+                throw new UniFFITypeError("Unknown RemoteSettingsServer variant");
+        }
+    }
+
+    static write(dataStream, value) {
+        if (value instanceof RemoteSettingsServer.Prod) {
+            dataStream.writeInt32(1);
+            return;
+        }
+        if (value instanceof RemoteSettingsServer.Stage) {
+            dataStream.writeInt32(2);
+            return;
+        }
+        if (value instanceof RemoteSettingsServer.Dev) {
+            dataStream.writeInt32(3);
+            return;
+        }
+        if (value instanceof RemoteSettingsServer.Custom) {
+            dataStream.writeInt32(4);
+            FfiConverterString.write(dataStream, value.url);
+            return;
+        }
+        throw new UniFFITypeError("Unknown RemoteSettingsServer variant");
+    }
+
+    static computeSize(value) {
+        // Size of the Int indicating the variant
+        let totalSize = 4;
+        if (value instanceof RemoteSettingsServer.Prod) {
+            return totalSize;
+        }
+        if (value instanceof RemoteSettingsServer.Stage) {
+            return totalSize;
+        }
+        if (value instanceof RemoteSettingsServer.Dev) {
+            return totalSize;
+        }
+        if (value instanceof RemoteSettingsServer.Custom) {
+            totalSize += FfiConverterString.computeSize(value.url);
+            return totalSize;
+        }
+        throw new UniFFITypeError("Unknown RemoteSettingsServer variant");
+    }
+
+    static checkType(value) {
+      if (!(value instanceof RemoteSettingsServer)) {
+        throw new UniFFITypeError(`${value} is not a subclass instance of RemoteSettingsServer`);
+      }
+    }
+}
+
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
@@ -1144,6 +1284,43 @@ export class FfiConverterOptionalTypeAttachment extends FfiConverterArrayBuffer 
             return 1;
         }
         return 1 + FfiConverterTypeAttachment.computeSize(value)
+    }
+}
+
+// Export the FFIConverter object to make external types work.
+export class FfiConverterOptionalTypeRemoteSettingsServer extends FfiConverterArrayBuffer {
+    static checkType(value) {
+        if (value !== undefined && value !== null) {
+            FfiConverterTypeRemoteSettingsServer.checkType(value)
+        }
+    }
+
+    static read(dataStream) {
+        const code = dataStream.readUint8(0);
+        switch (code) {
+            case 0:
+                return null
+            case 1:
+                return FfiConverterTypeRemoteSettingsServer.read(dataStream)
+            default:
+                throw UniFFIError(`Unexpected code: ${code}`);
+        }
+    }
+
+    static write(dataStream, value) {
+        if (value === null || value === undefined) {
+            dataStream.writeUint8(0);
+            return;
+        }
+        dataStream.writeUint8(1);
+        FfiConverterTypeRemoteSettingsServer.write(dataStream, value)
+    }
+
+    static computeSize(value) {
+        if (value === null || value === undefined) {
+            return 1;
+        }
+        return 1 + FfiConverterTypeRemoteSettingsServer.computeSize(value)
     }
 }
 

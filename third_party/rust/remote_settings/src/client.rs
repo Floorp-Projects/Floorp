@@ -4,7 +4,7 @@
 
 use crate::config::RemoteSettingsConfig;
 use crate::error::{RemoteSettingsError, Result};
-use crate::UniffiCustomTypeConverter;
+use crate::{RemoteSettingsServer, UniffiCustomTypeConverter};
 use parking_lot::Mutex;
 use serde::Deserialize;
 use std::{
@@ -31,11 +31,17 @@ pub struct Client {
 impl Client {
     /// Create a new [Client] with properties matching config.
     pub fn new(config: RemoteSettingsConfig) -> Result<Self> {
-        let server_url = config
-            .server_url
-            .unwrap_or_else(|| String::from("https://firefox.settings.services.mozilla.com"));
+        let server = match (config.server, config.server_url) {
+            (Some(server), None) => server,
+            (None, Some(server_url)) => RemoteSettingsServer::Custom { url: server_url },
+            (None, None) => RemoteSettingsServer::Prod,
+            (Some(_), Some(_)) => Err(RemoteSettingsError::ConfigError(
+                "`RemoteSettingsConfig` takes either `server` or `server_url`, not both".into(),
+            ))?,
+        };
+
         let bucket_name = config.bucket_name.unwrap_or_else(|| String::from("main"));
-        let base_url = Url::parse(&server_url)?;
+        let base_url = server.url()?;
 
         Ok(Self {
             base_url,
@@ -519,6 +525,7 @@ mod test {
     #[test]
     fn test_defaults() {
         let config = RemoteSettingsConfig {
+            server: None,
             server_url: None,
             bucket_name: None,
             collection_name: String::from("the-collection"),
@@ -529,6 +536,33 @@ mod test {
             client.base_url
         );
         assert_eq!(String::from("main"), client.bucket_name);
+    }
+
+    #[test]
+    fn test_deprecated_server_url() {
+        let config = RemoteSettingsConfig {
+            server: None,
+            server_url: Some("https://example.com".into()),
+            bucket_name: None,
+            collection_name: String::from("the-collection"),
+        };
+        let client = Client::new(config).unwrap();
+        assert_eq!(Url::parse("https://example.com").unwrap(), client.base_url);
+    }
+
+    #[test]
+    fn test_invalid_config() {
+        let config = RemoteSettingsConfig {
+            server: Some(RemoteSettingsServer::Prod),
+            server_url: Some("https://example.com".into()),
+            bucket_name: None,
+            collection_name: String::from("the-collection"),
+        };
+        match Client::new(config) {
+            Ok(_) => panic!("Wanted config error; got client"),
+            Err(RemoteSettingsError::ConfigError(_)) => {}
+            Err(err) => panic!("Wanted config error; got {}", err),
+        }
     }
 
     #[test]
@@ -552,7 +586,10 @@ mod test {
         .create();
 
         let config = RemoteSettingsConfig {
-            server_url: Some(mockito::server_url()),
+            server: Some(RemoteSettingsServer::Custom {
+                url: mockito::server_url(),
+            }),
+            server_url: None,
             collection_name: String::from("the-collection"),
             bucket_name: None,
         };
@@ -588,7 +625,10 @@ mod test {
         .create();
 
         let config = RemoteSettingsConfig {
-            server_url: Some(mockito::server_url()),
+            server: Some(RemoteSettingsServer::Custom {
+                url: mockito::server_url(),
+            }),
+            server_url: None,
             collection_name: String::from("the-collection"),
             bucket_name: None,
         };
@@ -617,7 +657,10 @@ mod test {
         .with_header("etag", "\"1000\"")
         .create();
         let config = RemoteSettingsConfig {
-            server_url: Some(mockito::server_url()),
+            server: Some(RemoteSettingsServer::Custom {
+                url: mockito::server_url(),
+            }),
+            server_url: None,
             collection_name: String::from("the-collection"),
             bucket_name: Some(String::from("the-bucket")),
         };
@@ -644,7 +687,10 @@ mod test {
         .with_header("Retry-After", "60")
         .create();
         let config = RemoteSettingsConfig {
-            server_url: Some(mockito::server_url()),
+            server: Some(RemoteSettingsServer::Custom {
+                url: mockito::server_url(),
+            }),
+            server_url: None,
             collection_name: String::from("the-collection"),
             bucket_name: Some(String::from("the-bucket")),
         };
@@ -686,7 +732,10 @@ mod test {
         .with_header("etag", "\"1000\"")
         .create();
         let config = RemoteSettingsConfig {
-            server_url: Some(mockito::server_url()),
+            server: Some(RemoteSettingsServer::Custom {
+                url: mockito::server_url(),
+            }),
+            server_url: None,
             collection_name: String::from("the-collection"),
             bucket_name: Some(String::from("the-bucket")),
         };
@@ -810,7 +859,10 @@ mod test {
         .with_header("etag", "\"1000\"")
         .create();
         let config = RemoteSettingsConfig {
-            server_url: Some(mockito::server_url()),
+            server: Some(RemoteSettingsServer::Custom {
+                url: mockito::server_url(),
+            }),
+            server_url: None,
             collection_name: String::from("the-collection"),
             bucket_name: Some(String::from("the-bucket")),
         };
@@ -850,7 +902,10 @@ mod test {
         .with_header("etag", "\"1000\"")
         .create();
         let config = RemoteSettingsConfig {
-            server_url: Some(mockito::server_url()),
+            server: Some(RemoteSettingsServer::Custom {
+                url: mockito::server_url(),
+            }),
+            server_url: None,
             collection_name: String::from("the-collection"),
             bucket_name: Some(String::from("the-bucket")),
         };
@@ -953,7 +1008,10 @@ mod test {
         .create();
 
         let config = RemoteSettingsConfig {
-            server_url: Some(mockito::server_url()),
+            server: Some(RemoteSettingsServer::Custom {
+                url: mockito::server_url(),
+            }),
+            server_url: None,
             bucket_name: Some(String::from("the-bucket")),
             collection_name: String::from("the-collection"),
         };
@@ -982,7 +1040,10 @@ mod test {
         .create();
 
         let config = RemoteSettingsConfig {
-            server_url: Some(mockito::server_url()),
+            server: Some(RemoteSettingsServer::Custom {
+                url: mockito::server_url(),
+            }),
+            server_url: None,
             bucket_name: Some(String::from("the-bucket")),
             collection_name: String::from("the-collection"),
         };

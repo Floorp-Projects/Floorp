@@ -23,6 +23,9 @@ pub enum Error {
 
     #[error("Error fetching interest data")]
     FetchInterestDataError,
+
+    #[error("Interrupted")]
+    Interrupted(#[from] interrupt_support::Interrupted),
 }
 
 /// Result enum for the public API

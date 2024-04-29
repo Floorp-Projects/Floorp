@@ -35,6 +35,9 @@ url = "2.5"
 [dependencies.error-support]
 path = "../support/error"
 
+[dependencies.interrupt-support]
+path = "../support/interrupt"
+
 [dependencies.rusqlite]
 version = "0.30.0"
 features = ["bundled"]

@@ -31,8 +31,16 @@ impl RelevancyStore {
     #[handle_error(Error)]
     pub fn new(db_path: String) -> ApiResult<Self> {
         Ok(Self {
-            db: RelevancyDb::open(db_path)?,
+            db: RelevancyDb::new(db_path)?,
         })
+    }
+
+    pub fn close(&self) {
+        self.db.close()
+    }
+
+    pub fn interrupt(&self) {
+        self.db.interrupt()
     }
 
     /// Ingest top URLs to build the user's interest vector.

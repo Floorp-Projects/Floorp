@@ -120,3 +120,10 @@ impl Interruptee for SqlInterruptScope {
         self.was_interrupted()
     }
 }
+
+// Needed to allow Weak<SqlInterruptHandle> to be passed to `interrupt::register_interrupt`
+impl AsRef<SqlInterruptHandle> for SqlInterruptHandle {
+    fn as_ref(&self) -> &SqlInterruptHandle {
+        self
+    }
+}

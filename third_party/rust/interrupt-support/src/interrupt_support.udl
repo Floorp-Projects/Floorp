@@ -1,0 +1,5 @@
+namespace interrupt_support {
+    // Enter shutdown mode, causing all current and future interruptable operations to be interrupted.
+    void shutdown();
+};
+

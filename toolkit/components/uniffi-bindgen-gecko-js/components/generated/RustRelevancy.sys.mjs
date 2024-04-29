@@ -316,10 +316,9 @@ export class RelevancyStore {
         this[uniffiObjectPtr] = opts[constructUniffiObject];
     }
     /**
-     * An async constructor for RelevancyStore.
+     * A constructor for RelevancyStore.
      * 
-     * @returns {Promise<RelevancyStore>}: A promise that resolves
-     *      to a newly constructed RelevancyStore
+     * @returns { RelevancyStore }
      */
     static init(dbpath) {
         const liftResult = (result) => FfiConverterTypeRelevancyStore.lift(result);
@@ -333,16 +332,12 @@ export class RelevancyStore {
                 }
                 throw e;
             }
-            return UniFFIScaffolding.callAsync(
+            return UniFFIScaffolding.callSync(
                 1, // relevancy:uniffi_relevancy_fn_constructor_relevancystore_new
                 FfiConverterString.lower(dbpath),
             )
         }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }}
+        return handleRustResult(functionCall(), liftResult, liftError);}
 
     calculateMetrics() {
         const liftResult = (result) => FfiConverterTypeInterestMetrics.lift(result);
@@ -360,6 +355,18 @@ export class RelevancyStore {
         }
     }
 
+    close() {
+        const liftResult = (result) => undefined;
+        const liftError = null;
+        const functionCall = () => {
+            return UniFFIScaffolding.callSync(
+                3, // relevancy:uniffi_relevancy_fn_method_relevancystore_close
+                FfiConverterTypeRelevancyStore.lower(this),
+            )
+        }
+        return handleRustResult(functionCall(), liftResult, liftError);
+    }
+
     ingest(topUrls) {
         const liftResult = (result) => undefined;
         const liftError = (data) => FfiConverterTypeRelevancyApiError.lift(data);
@@ -373,7 +380,7 @@ export class RelevancyStore {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                3, // relevancy:uniffi_relevancy_fn_method_relevancystore_ingest
+                4, // relevancy:uniffi_relevancy_fn_method_relevancystore_ingest
                 FfiConverterTypeRelevancyStore.lower(this),
                 FfiConverterSequencestring.lower(topUrls),
             )
@@ -385,12 +392,24 @@ export class RelevancyStore {
         }
     }
 
+    interrupt() {
+        const liftResult = (result) => undefined;
+        const liftError = null;
+        const functionCall = () => {
+            return UniFFIScaffolding.callSync(
+                5, // relevancy:uniffi_relevancy_fn_method_relevancystore_interrupt
+                FfiConverterTypeRelevancyStore.lower(this),
+            )
+        }
+        return handleRustResult(functionCall(), liftResult, liftError);
+    }
+
     userInterestVector() {
         const liftResult = (result) => FfiConverterTypeInterestVector.lift(result);
         const liftError = (data) => FfiConverterTypeRelevancyApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                4, // relevancy:uniffi_relevancy_fn_method_relevancystore_user_interest_vector
+                6, // relevancy:uniffi_relevancy_fn_method_relevancystore_user_interest_vector
                 FfiConverterTypeRelevancyStore.lower(this),
             )
         }
@@ -527,7 +546,7 @@ export class FfiConverterTypeInterestMetrics extends FfiConverterArrayBuffer {
 }
 
 export class InterestVector {
-    constructor({ animals, arts, autos, business, career, education, fashion, finance, food, government, health, hobbies, home, news, realEstate, society, sports, tech, travel, inconclusive } = {}) {
+    constructor({ animals, arts, autos, business, career, education, fashion, finance, food, government, hobbies, home, news, realEstate, society, sports, tech, travel, inconclusive } = {}) {
         try {
             FfiConverterU32.checkType(animals)
         } catch (e) {
@@ -605,14 +624,6 @@ export class InterestVector {
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart("government");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterU32.checkType(health)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("health");
             }
             throw e;
         }
@@ -698,7 +709,6 @@ export class InterestVector {
         this.finance = finance;
         this.food = food;
         this.government = government;
-        this.health = health;
         this.hobbies = hobbies;
         this.home = home;
         this.news = news;
@@ -721,7 +731,6 @@ export class InterestVector {
             this.finance == other.finance &&
             this.food == other.food &&
             this.government == other.government &&
-            this.health == other.health &&
             this.hobbies == other.hobbies &&
             this.home == other.home &&
             this.news == other.news &&
@@ -749,7 +758,6 @@ export class FfiConverterTypeInterestVector extends FfiConverterArrayBuffer {
             finance: FfiConverterU32.read(dataStream),
             food: FfiConverterU32.read(dataStream),
             government: FfiConverterU32.read(dataStream),
-            health: FfiConverterU32.read(dataStream),
             hobbies: FfiConverterU32.read(dataStream),
             home: FfiConverterU32.read(dataStream),
             news: FfiConverterU32.read(dataStream),
@@ -772,7 +780,6 @@ export class FfiConverterTypeInterestVector extends FfiConverterArrayBuffer {
         FfiConverterU32.write(dataStream, value.finance);
         FfiConverterU32.write(dataStream, value.food);
         FfiConverterU32.write(dataStream, value.government);
-        FfiConverterU32.write(dataStream, value.health);
         FfiConverterU32.write(dataStream, value.hobbies);
         FfiConverterU32.write(dataStream, value.home);
         FfiConverterU32.write(dataStream, value.news);
@@ -796,7 +803,6 @@ export class FfiConverterTypeInterestVector extends FfiConverterArrayBuffer {
         totalSize += FfiConverterU32.computeSize(value.finance);
         totalSize += FfiConverterU32.computeSize(value.food);
         totalSize += FfiConverterU32.computeSize(value.government);
-        totalSize += FfiConverterU32.computeSize(value.health);
         totalSize += FfiConverterU32.computeSize(value.hobbies);
         totalSize += FfiConverterU32.computeSize(value.home);
         totalSize += FfiConverterU32.computeSize(value.news);
@@ -895,14 +901,6 @@ export class FfiConverterTypeInterestVector extends FfiConverterArrayBuffer {
             throw e;
         }
         try {
-            FfiConverterU32.checkType(value.health);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".health");
-            }
-            throw e;
-        }
-        try {
             FfiConverterU32.checkType(value.hobbies);
         } catch (e) {
             if (e instanceof UniFFITypeError) {
@@ -989,16 +987,15 @@ export const Interest = {
     FINANCE: 8,
     FOOD: 9,
     GOVERNMENT: 10,
-    HEALTH: 11,
-    HOBBIES: 12,
-    HOME: 13,
-    NEWS: 14,
-    REAL_ESTATE: 15,
-    SOCIETY: 16,
-    SPORTS: 17,
-    TECH: 18,
-    TRAVEL: 19,
-    INCONCLUSIVE: 20,
+    HOBBIES: 11,
+    HOME: 12,
+    NEWS: 13,
+    REAL_ESTATE: 14,
+    SOCIETY: 15,
+    SPORTS: 16,
+    TECH: 17,
+    TRAVEL: 18,
+    INCONCLUSIVE: 19,
 };
 
 Object.freeze(Interest);
@@ -1027,24 +1024,22 @@ export class FfiConverterTypeInterest extends FfiConverterArrayBuffer {
             case 10:
                 return Interest.GOVERNMENT
             case 11:
-                return Interest.HEALTH
-            case 12:
                 return Interest.HOBBIES
-            case 13:
+            case 12:
                 return Interest.HOME
-            case 14:
+            case 13:
                 return Interest.NEWS
-            case 15:
+            case 14:
                 return Interest.REAL_ESTATE
-            case 16:
+            case 15:
                 return Interest.SOCIETY
-            case 17:
+            case 16:
                 return Interest.SPORTS
-            case 18:
+            case 17:
                 return Interest.TECH
-            case 19:
+            case 18:
                 return Interest.TRAVEL
-            case 20:
+            case 19:
                 return Interest.INCONCLUSIVE
             default:
                 throw new UniFFITypeError("Unknown Interest variant");
@@ -1092,44 +1087,40 @@ export class FfiConverterTypeInterest extends FfiConverterArrayBuffer {
             dataStream.writeInt32(10);
             return;
         }
-        if (value === Interest.HEALTH) {
+        if (value === Interest.HOBBIES) {
             dataStream.writeInt32(11);
             return;
         }
-        if (value === Interest.HOBBIES) {
+        if (value === Interest.HOME) {
             dataStream.writeInt32(12);
             return;
         }
-        if (value === Interest.HOME) {
+        if (value === Interest.NEWS) {
             dataStream.writeInt32(13);
             return;
         }
-        if (value === Interest.NEWS) {
+        if (value === Interest.REAL_ESTATE) {
             dataStream.writeInt32(14);
             return;
         }
-        if (value === Interest.REAL_ESTATE) {
+        if (value === Interest.SOCIETY) {
             dataStream.writeInt32(15);
             return;
         }
-        if (value === Interest.SOCIETY) {
+        if (value === Interest.SPORTS) {
             dataStream.writeInt32(16);
             return;
         }
-        if (value === Interest.SPORTS) {
+        if (value === Interest.TECH) {
             dataStream.writeInt32(17);
             return;
         }
-        if (value === Interest.TECH) {
+        if (value === Interest.TRAVEL) {
             dataStream.writeInt32(18);
             return;
         }
-        if (value === Interest.TRAVEL) {
-            dataStream.writeInt32(19);
-            return;
-        }
         if (value === Interest.INCONCLUSIVE) {
-            dataStream.writeInt32(20);
+            dataStream.writeInt32(19);
             return;
         }
         throw new UniFFITypeError("Unknown Interest variant");
@@ -1140,7 +1131,7 @@ export class FfiConverterTypeInterest extends FfiConverterArrayBuffer {
     }
 
     static checkType(value) {
-      if (!Number.isInteger(value) || value < 1 || value > 20) {
+      if (!Number.isInteger(value) || value < 1 || value > 19) {
           throw new UniFFITypeError(`${value} is not a valid value for Interest`);
       }
     }

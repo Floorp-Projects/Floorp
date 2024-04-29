@@ -35,7 +35,11 @@ udl_file = "third_party/rust/relevancy/src/relevancy.udl"
 
 [relevancy.receiver_thread]
 default = "worker"
-main = []
+main = [
+  "RelevancyStore",
+  "RelevancyStore.close",
+  "RelevancyStore.interrupt",
+]
 
 [remote_settings]
 crate_name = "remote_settings"

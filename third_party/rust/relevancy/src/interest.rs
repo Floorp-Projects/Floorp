@@ -8,6 +8,7 @@
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum Interest {
+    Inconclusive,
     Animals,
     Arts,
     Autos,
@@ -18,7 +19,8 @@ pub enum Interest {
     Finance,
     Food,
     Government,
-    Health,
+    //Disable this per policy consultation
+    // Health,
     Hobbies,
     Home,
     News,
@@ -27,7 +29,6 @@ pub enum Interest {
     Sports,
     Tech,
     Travel,
-    Inconclusive,
 }
 
 impl From<Interest> for u32 {
@@ -54,10 +55,11 @@ impl From<u32> for Interest {
 }
 
 impl Interest {
-    const COUNT: usize = 20;
+    const COUNT: usize = 19;
 
     pub fn all() -> [Interest; Self::COUNT] {
         [
+            Self::Inconclusive,
             Self::Animals,
             Self::Arts,
             Self::Autos,
@@ -68,7 +70,7 @@ impl Interest {
             Self::Finance,
             Self::Food,
             Self::Government,
-            Self::Health,
+            // Self::Health,
             Self::Hobbies,
             Self::Home,
             Self::News,
@@ -77,7 +79,6 @@ impl Interest {
             Self::Sports,
             Self::Tech,
             Self::Travel,
-            Self::Inconclusive,
         ]
     }
 }
@@ -88,6 +89,7 @@ impl Interest {
 /// number of elements.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct InterestVector {
+    pub inconclusive: u32,
     pub animals: u32,
     pub arts: u32,
     pub autos: u32,
@@ -98,7 +100,7 @@ pub struct InterestVector {
     pub finance: u32,
     pub food: u32,
     pub government: u32,
-    pub health: u32,
+    // pub health: u32,
     pub hobbies: u32,
     pub home: u32,
     pub news: u32,
@@ -107,7 +109,6 @@ pub struct InterestVector {
     pub sports: u32,
     pub tech: u32,
     pub travel: u32,
-    pub inconclusive: u32,
 }
 
 impl std::ops::Index<Interest> for InterestVector {
@@ -115,6 +116,7 @@ impl std::ops::Index<Interest> for InterestVector {
 
     fn index(&self, index: Interest) -> &u32 {
         match index {
+            Interest::Inconclusive => &self.inconclusive,
             Interest::Animals => &self.animals,
             Interest::Arts => &self.arts,
             Interest::Autos => &self.autos,
@@ -125,7 +127,7 @@ impl std::ops::Index<Interest> for InterestVector {
             Interest::Finance => &self.finance,
             Interest::Food => &self.food,
             Interest::Government => &self.government,
-            Interest::Health => &self.health,
+            // Interest::Health => &self.health,
             Interest::Hobbies => &self.hobbies,
             Interest::Home => &self.home,
             Interest::News => &self.news,
@@ -134,7 +136,6 @@ impl std::ops::Index<Interest> for InterestVector {
             Interest::Sports => &self.sports,
             Interest::Tech => &self.tech,
             Interest::Travel => &self.travel,
-            Interest::Inconclusive => &self.inconclusive,
         }
     }
 }
@@ -142,6 +143,7 @@ impl std::ops::Index<Interest> for InterestVector {
 impl std::ops::IndexMut<Interest> for InterestVector {
     fn index_mut(&mut self, index: Interest) -> &mut u32 {
         match index {
+            Interest::Inconclusive => &mut self.inconclusive,
             Interest::Animals => &mut self.animals,
             Interest::Arts => &mut self.arts,
             Interest::Autos => &mut self.autos,
@@ -152,7 +154,7 @@ impl std::ops::IndexMut<Interest> for InterestVector {
             Interest::Finance => &mut self.finance,
             Interest::Food => &mut self.food,
             Interest::Government => &mut self.government,
-            Interest::Health => &mut self.health,
+            // Interest::Health => &mut self.health,
             Interest::Hobbies => &mut self.hobbies,
             Interest::Home => &mut self.home,
             Interest::News => &mut self.news,
@@ -161,7 +163,6 @@ impl std::ops::IndexMut<Interest> for InterestVector {
             Interest::Sports => &mut self.sports,
             Interest::Tech => &mut self.tech,
             Interest::Travel => &mut self.travel,
-            Interest::Inconclusive => &mut self.inconclusive,
         }
     }
 }

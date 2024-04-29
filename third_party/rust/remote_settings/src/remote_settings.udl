@@ -7,10 +7,19 @@ typedef string RsJsonObject;
 
 namespace remote_settings {};
 
+[Enum]
+interface RemoteSettingsServer {
+    Prod();
+    Stage();
+    Dev();
+    Custom(string url);
+};
+
 dictionary RemoteSettingsConfig {
     string collection_name;
     string? bucket_name = null;
     string? server_url = null;
+    RemoteSettingsServer? server = null;
 };
 
 dictionary RemoteSettingsResponse {
@@ -43,6 +52,7 @@ enum RemoteSettingsError {
     "BackoffError",
     "ResponseError",
     "AttachmentsUnsupportedError",
+    "ConfigError",
 };
 
 interface RemoteSettings {
