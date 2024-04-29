@@ -174,10 +174,9 @@ impl Device {
         Length::new(f32::from_bits(self.root_font_size.load(Ordering::Relaxed)))
     }
 
-    /// Set the font size of the root element (for rem)
-    pub fn set_root_font_size(&self, size: Length) {
-        self.root_font_size
-            .store(size.px().to_bits(), Ordering::Relaxed)
+    /// Set the font size of the root element (for rem), in zoom-independent CSS pixels.
+    pub fn set_root_font_size(&self, size: f32) {
+        self.root_font_size.store(size.to_bits(), Ordering::Relaxed)
     }
 
     /// Get the line height of the root element (for rlh)
@@ -188,10 +187,9 @@ impl Device {
         ))
     }
 
-    /// Set the line height of the root element (for rlh)
-    pub fn set_root_line_height(&self, size: Length) {
-        self.root_line_height
-            .store(size.px().to_bits(), Ordering::Relaxed);
+    /// Set the line height of the root element (for rlh), in zoom-independent CSS pixels.
+    pub fn set_root_line_height(&self, size: f32) {
+        self.root_line_height.store(size.to_bits(), Ordering::Relaxed);
     }
 
     /// The quirks mode of the document.

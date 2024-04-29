@@ -934,7 +934,8 @@ pub trait MatchMethods: TElement {
             if old_font_size != Some(new_font_size) {
                 if is_root {
                     debug_assert!(self.owner_doc_matches_for_testing(device));
-                    device.set_root_font_size(new_font_size.computed_size().into());
+                    let size = new_font_size.computed_size();
+                    device.set_root_font_size(new_primary_style.effective_zoom.unzoom(size.px()));
                     if device.used_root_font_size() {
                         // If the root font-size changed since last time, and something
                         // in the document did use rem units, ensure we recascade the
@@ -954,7 +955,8 @@ pub trait MatchMethods: TElement {
                 }
             }
 
-            // For line-height, we want the fully resolved value, as `normal` also depends on other font properties.
+            // For line-height, we want the fully resolved value, as `normal` also depends on other
+            // font properties.
             let new_line_height = device
                 .calc_line_height(
                     &new_primary_style.get_font(),
@@ -968,14 +970,12 @@ pub trait MatchMethods: TElement {
                     .0
             });
 
-            if restyle_requirement != ChildRestyleRequirement::MustMatchDescendants &&
-                old_line_height != Some(new_line_height)
-            {
+            if old_line_height != Some(new_line_height) {
                 if is_root {
                     debug_assert!(self.owner_doc_matches_for_testing(device));
-                    device.set_root_line_height(new_line_height.into());
+                    device.set_root_line_height(new_primary_style.effective_zoom.unzoom(new_line_height.px()));
                     if device.used_root_line_height() {
-                        restyle_requirement = ChildRestyleRequirement::MustCascadeDescendants;
+                        restyle_requirement = std::cmp::max(restyle_requirement, ChildRestyleRequirement::MustCascadeDescendants);
                     }
                 }
 
