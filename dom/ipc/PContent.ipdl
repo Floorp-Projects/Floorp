@@ -1737,6 +1737,15 @@ parent:
         PositionState? aState);
 
     /**
+     * This method is used to update a media's position state whenever its
+     * guessed position state is being updated.
+     */
+    async NotifyGuessedPositionStateChanged(
+        MaybeDiscardedBrowsingContext aContext,
+        nsID aMediaId,
+        PositionState? aState);
+
+    /**
      * This method will make canonical browsing context to update the count of
      * callers which want to keep the page from being suspended even if the page
      * is inactive.

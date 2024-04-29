@@ -304,6 +304,37 @@ void ContentMediaAgent::UpdatePositionState(
   }
 }
 
+void ContentMediaAgent::UpdateGuessedPositionState(
+    uint64_t aBrowsingContextId, const nsID& aMediaId,
+    const Maybe<PositionState>& aState) {
+  RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  if (aState) {
+    LOG("Update guessed position state for BC %" PRId64
+        " media id %s (duration=%f, playbackRate=%f, position=%f)",
+        bc->Id(), aMediaId.ToString().get(), aState->mDuration,
+        aState->mPlaybackRate, aState->mLastReportedPlaybackPosition);
+  } else {
+    LOG("Clear guessed position state for BC %" PRId64 " media id %s", bc->Id(),
+        aMediaId.ToString().get());
+  }
+
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyGuessedPositionStateChanged(bc, aMediaId,
+                                                                  aState);
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<IMediaInfoUpdater> updater =
+          bc->Canonical()->GetMediaController()) {
+    updater->UpdateGuessedPositionState(bc->Id(), aMediaId, aState);
+  }
+}
+
 ContentMediaController::ContentMediaController(uint64_t aId) {
   LOG("Create content media controller for BC %" PRId64, aId);
 }

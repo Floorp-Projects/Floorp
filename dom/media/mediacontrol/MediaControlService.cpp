@@ -482,6 +482,7 @@ void MediaControlService::ControllerManager::UpdateMainControllerInternal(
     mSource->SetPlaybackState(mMainController->PlaybackState());
     mSource->SetMediaMetadata(mMainController->GetCurrentMediaMetadata());
     mSource->SetSupportedMediaKeys(mMainController->GetSupportedMediaKeys());
+    mSource->SetPositionState(mMainController->GetCurrentPositionState());
     ConnectMainControllerEvents();
   }
 

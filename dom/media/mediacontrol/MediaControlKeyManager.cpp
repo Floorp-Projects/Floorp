@@ -107,6 +107,7 @@ void MediaControlKeyManager::StopMonitoringControlKeys() {
                            nullptr);
       obs->NotifyObservers(nullptr, "media-displayed-metadata-changed",
                            nullptr);
+      obs->NotifyObservers(nullptr, "media-position-state-changed", nullptr);
     }
   }
 }
@@ -196,6 +197,12 @@ void MediaControlKeyManager::SetPositionState(
 
   if (mEventSource && mEventSource->IsOpened()) {
     mEventSource->SetPositionState(aState);
+  }
+
+  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+      obs->NotifyObservers(nullptr, "media-position-state-changed", nullptr);
+    }
   }
 }
 

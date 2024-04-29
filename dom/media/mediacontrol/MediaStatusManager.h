@@ -120,6 +120,12 @@ class IMediaInfoUpdater {
   // Use this method when media session update its position state.
   virtual void UpdatePositionState(uint64_t aBrowsingContextId,
                                    const Maybe<PositionState>& aState) = 0;
+
+  // Use this method to update controlled media's position state and the
+  // browsing context where controlled media exists.
+  virtual void UpdateGuessedPositionState(
+      uint64_t aBrowsingContextId, const nsID& aMediaId,
+      const Maybe<PositionState>& aGuessedState) = 0;
 };
 
 /**
@@ -165,11 +171,18 @@ class MediaStatusManager : public IMediaInfoUpdater {
                      MediaSessionAction aAction) override;
   void UpdatePositionState(uint64_t aBrowsingContextId,
                            const Maybe<PositionState>& aState) override;
+  void UpdateGuessedPositionState(
+      uint64_t aBrowsingContextId, const nsID& aMediaId,
+      const Maybe<PositionState>& aGuessedState) override;
 
   // Return active media session's metadata if active media session exists and
   // it has already set its metadata. Otherwise, return default media metadata
   // which is based on website's title and favicon.
   MediaMetadataBase GetCurrentMediaMetadata() const;
+
+  // Return the active media session's position state. If the active media
+  // session doesn't exist or doesn't have any state, Nothing is returned.
+  Maybe<PositionState> GetCurrentPositionState() const;
 
   bool IsMediaAudible() const;
   bool IsMediaPlaying() const;
@@ -246,10 +259,6 @@ class MediaStatusManager : public IMediaInfoUpdater {
   // Return the active media session's declared playback state. If the active
   // media session doesn't exist, return  'None' instead.
   MediaSessionPlaybackState GetCurrentDeclaredPlaybackState() const;
-
-  // Return the active media session's position state. If the active media
-  // session doesn't exist or doesn't have any state, Nothing is returned.
-  Maybe<PositionState> GetCurrentPositionState() const;
 
   // This state can match to the `guessed playback state` in the spec [1], it
   // indicates if we have any media element playing within the tab which this
