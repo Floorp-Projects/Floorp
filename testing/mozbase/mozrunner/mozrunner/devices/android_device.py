@@ -13,7 +13,6 @@ import subprocess
 import sys
 import telnetlib
 import time
-from distutils.spawn import find_executable
 from enum import Enum
 
 import six
@@ -942,7 +941,7 @@ def _find_sdk_exe(substs, exe, tools):
 
     if not found:
         # Is exe on PATH?
-        exe_path = find_executable(exe)
+        exe_path = shutil.which(exe)
         if exe_path:
             found = True
         else:
