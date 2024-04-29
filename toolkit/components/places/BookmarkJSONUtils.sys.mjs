@@ -21,7 +21,7 @@ const OLD_BOOKMARK_QUERY_TRANSLATIONS = {
   MOBILE_BOOKMARKS: PlacesUtils.bookmarks.mobileGuid,
 };
 
-export var BookmarkJSONUtils = Object.freeze({
+export var BookmarkJSONUtils = {
   /**
    * Import bookmarks from a url.
    *
@@ -162,7 +162,7 @@ export var BookmarkJSONUtils = Object.freeze({
     });
     return { count, hash };
   },
-});
+};
 
 function BookmarkImporter(aReplace, aSource) {
   this._replace = aReplace;

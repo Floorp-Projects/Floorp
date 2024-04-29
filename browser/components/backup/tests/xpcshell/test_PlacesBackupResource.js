@@ -3,6 +3,9 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
+const { BookmarkJSONUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/BookmarkJSONUtils.sys.mjs"
+);
 const { PlacesBackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/PlacesBackupResource.sys.mjs"
 );
@@ -260,6 +263,107 @@ add_task(async function test_backup_private_browsing() {
 
   await maybeRemovePath(stagingPath);
   await maybeRemovePath(sourcePath);
+
+  sandbox.restore();
+});
+
+/**
+ * Test that the recover method correctly copies places.sqlite and favicons.sqlite
+ * from the recovery directory into the destination profile directory.
+ */
+add_task(async function test_recover() {
+  let placesBackupResource = new PlacesBackupResource();
+  let recoveryPath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "PlacesBackupResource-recovery-test"
+  );
+  let destProfilePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "PlacesBackupResource-test-profile"
+  );
+
+  const simpleCopyFiles = [
+    { path: "places.sqlite" },
+    { path: "favicons.sqlite" },
+  ];
+  await createTestFiles(recoveryPath, simpleCopyFiles);
+
+  // The backup method is expected to have returned a null ManifestEntry
+  let postRecoveryEntry = await placesBackupResource.recover(
+    null /* manifestEntry */,
+    recoveryPath,
+    destProfilePath
+  );
+  Assert.equal(
+    postRecoveryEntry,
+    null,
+    "PlacesBackupResource.recover should return null as its post recovery entry"
+  );
+
+  await assertFilesExist(destProfilePath, simpleCopyFiles);
+
+  await maybeRemovePath(recoveryPath);
+  await maybeRemovePath(destProfilePath);
+});
+
+/**
+ * Test that the recover method correctly copies bookmarks.jsonlz4 from the recovery
+ * directory into the destination profile directory.
+ */
+add_task(async function test_recover_bookmarks_only() {
+  let sandbox = sinon.createSandbox();
+  let placesBackupResource = new PlacesBackupResource();
+  let recoveryPath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "PlacesBackupResource-recovery-test"
+  );
+  let destProfilePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "PlacesBackupResource-test-profile"
+  );
+  let bookmarksImportStub = sandbox
+    .stub(BookmarkJSONUtils, "importFromFile")
+    .resolves(true);
+
+  await createTestFiles(recoveryPath, [{ path: "bookmarks.jsonlz4" }]);
+
+  // The backup method is expected to detect bookmarks import only
+  let postRecoveryEntry = await placesBackupResource.recover(
+    { bookmarksOnly: true },
+    recoveryPath,
+    destProfilePath
+  );
+
+  let expectedBookmarksPath = PathUtils.join(recoveryPath, "bookmarks.jsonlz4");
+
+  // Expect the bookmarks backup file path to be passed from recover()
+  Assert.deepEqual(
+    postRecoveryEntry,
+    { bookmarksBackupPath: expectedBookmarksPath },
+    "PlacesBackupResource.recover should return the expected post recovery entry"
+  );
+
+  // Ensure that files stored in a places backup are not copied to the new profile during recovery
+  for (let placesFile of [
+    "places.sqlite",
+    "favicons.sqlite",
+    "bookmarks.jsonlz4",
+  ]) {
+    Assert.ok(
+      !(await IOUtils.exists(PathUtils.join(destProfilePath, placesFile))),
+      `${placesFile} should not exist in the new profile`
+    );
+  }
+
+  // Now pretend that BackupService called the postRecovery method
+  await placesBackupResource.postRecovery(postRecoveryEntry);
+  Assert.ok(
+    bookmarksImportStub.calledOnce,
+    "BookmarkJSONUtils.importFromFile was called in the postRecovery step"
+  );
+
+  await maybeRemovePath(recoveryPath);
+  await maybeRemovePath(destProfilePath);
 
   sandbox.restore();
 });
