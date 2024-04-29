@@ -75,6 +75,7 @@ class CSSStyleRule final : public css::GroupRule, public SupportsWeakPtr {
                               bool aRelevantLinkVisited);
   NotNull<DeclarationBlock*> GetDeclarationBlock() const;
   void GetSelectorWarnings(nsTArray<SelectorWarning>& aResult) const;
+  already_AddRefed<nsINodeList> QuerySelectorAll(nsINode& aRoot);
 
   // WebIDL interface
   StyleCssRuleType Type() const final;

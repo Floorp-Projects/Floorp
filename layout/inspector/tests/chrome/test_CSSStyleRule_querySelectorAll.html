@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Test CSSStyleRule::QuerySelectorAll</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+    <style>
+      .test-simple {
+      }
+      .test-nested-parent {
+        .test-nested-child {
+          .test-nested-and-non-nested {
+          }
+        }
+      }
+      .test-nested-and-non-nested {
+      }
+      .test-no-match {
+      }
+    </style>
+    <script>
+      SimpleTest.waitForExplicitFinish();
+      addLoadEvent(doTest);
+
+      function doTest() {
+        let { cssRules } = document.styleSheets[1];
+
+        info("Testing simple case");
+        let rule = cssRules[0];
+        let result = rule.querySelectorAll(document);
+        is(result.length, 2, `2 elements are matching "${rule.selectorText}"`);
+        is(
+          result[0].id,
+          "a",
+          `Got expected id for first element matching "${rule.selectorText}"`
+        );
+        is(
+          result[1].id,
+          "b",
+          `Got expected id for second element matching "${rule.selectorText}"`
+        );
+
+        info("Testing nested rule");
+        rule = cssRules[1].cssRules[0];
+        result = rule.querySelectorAll(document);
+        is(result.length, 1, `1 element is matching "${rule.selectorText}"`);
+        is(
+          result[0].id,
+          "d",
+          `Got expected id for element matching "${rule.selectorText}"`
+        );
+
+        info("Testing multi-level deep nested rule");
+        rule = cssRules[1].cssRules[0].cssRules[0];
+        result = rule.querySelectorAll(document);
+        // Check that we're not retrieving `f`, as the rule selectorText is `.test-nested-and-non-nested`,
+        // but it is nested inside `.test-nested-child`.
+        is(result.length, 1, `1 element is matching "${rule.selectorText}"`);
+        is(
+          result[0].id,
+          "e",
+          `Got expected id for element matching "${rule.selectorText}"`
+        );
+
+        info(
+          "Testing rule matching multiple elements with the same class, some nested, some not"
+        );
+        rule = cssRules[2];
+        result = rule.querySelectorAll(document);
+        is(result.length, 2, `2 elements are matching "${rule.selectorText}"`);
+        is(
+          result[0].id,
+          "e",
+          `Got expected id for first element matching "${rule.selectorText}"`
+        );
+        is(
+          result[1].id,
+          "f",
+          `Got expected id for second element matching "${rule.selectorText}"`
+        );
+
+        info("Testing that search results are limited by the passed root node");
+        rule = cssRules[2];
+        result = rule.querySelectorAll(document.querySelector("#c"));
+        is(
+          result.length,
+          1,
+          `An element is matching "${rule.selectorText}" in #c`
+        );
+        is(
+          result[0].id,
+          "e",
+          `Got expected id for element matching "${rule.selectorText}"`
+        );
+
+        info("Testing rule with no matching elements");
+        rule = cssRules[3];
+        result = rule.querySelectorAll(document);
+        is(result.length, 0, `No elements matching "${rule.selectorText}"`);
+
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Test CSSStyleRule::QuerySelectorAll</h1>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+      <div id="a" class="test-simple"></div>
+      <div id="b" class="test-simple"></div>
+      <div id="c" class="test-nested-parent">
+        <span id="d" class="test-nested-child">
+          <b id="e" class="test-nested-and-non-nested"></b>
+        </span>
+      </div>
+      <b id="f" class="test-nested-and-non-nested"></b>
+    </div>
+    <pre id="test"></pre>
+  </body>
+</html>

@@ -2549,6 +2549,11 @@ fn desugared_selector_list(rules: &ThinVec<&LockedStyleRule>) -> SelectorList {
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_StyleRule_GetSelectorList(rules: &ThinVec<&LockedStyleRule>) -> *mut SelectorList {
+    Box::into_raw(Box::new(desugared_selector_list(rules)))
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_StyleRule_GetSelectorDataAtIndex(
     rules: &ThinVec<&LockedStyleRule>,
     index: u32,

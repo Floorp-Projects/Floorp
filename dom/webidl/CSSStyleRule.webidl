@@ -22,6 +22,10 @@ interface CSSStyleRule : CSSGroupingRule {
     optional [LegacyNullToEmptyString] DOMString pseudo = "",
     optional boolean includeVisitedStyle = false);
   [ChromeOnly] sequence<SelectorWarning> getSelectorWarnings();
+  // Get elements on the page matching the rule's selectors. This is helpful for DevTools
+  // so we can avoid computing a desugared selector, which can be very expensive on deeply
+  // nested rules.
+  [ChromeOnly] NodeList querySelectorAll(Node root);
 };
 
 enum SelectorWarningKind {
