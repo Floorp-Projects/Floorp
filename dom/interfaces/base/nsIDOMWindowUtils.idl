@@ -1753,14 +1753,6 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean isPartOfOpaqueLayer(in Element aElement);
 
   /**
-   * Count the number of different PaintedLayers that the supplied elements have
-   * been assigned to in the last paint. Throws an exception if any of the
-   * elements doesn't have a primary frame, or if that frame's display items are
-   * assigned to any other layers than just a single PaintedLayer per element.
-   */
-  unsigned long numberOfAssignedPaintedLayers(in Array<Element> aElements);
-
-  /**
    * Get internal id of the stored blob, file or file handle.
    */
   [implicit_jscontext] long long getFileId(in jsval aFile);
