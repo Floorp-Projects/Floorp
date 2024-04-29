@@ -11,6 +11,7 @@
 #include <algorithm>
 
 #include "builtin/ModuleObject.h"
+#include "builtin/Sorting.h"
 #include "gc/GC.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
@@ -35,6 +36,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmInstance.h"
 
+#include "builtin/Sorting-inl.h"
 #include "debugger/DebugAPI-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/GeckoProfiler-inl.h"

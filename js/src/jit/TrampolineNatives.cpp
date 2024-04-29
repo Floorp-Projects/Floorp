@@ -110,7 +110,7 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm) {
   //     goto checkReturnValue
   //   call_comparator:
   //     call comparator
-  //     call ArraySortData::sortWithComparator
+  //     call ArraySortData::sortArrayWithComparator
   //   checkReturnValue:
   //     check return value, jump to call_comparator if needed
   //     return rval
@@ -186,14 +186,14 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm) {
   masm.bind(&callDone);
   masm.storeValue(JSReturnOperand, Address(FramePointer, RvalOffset));
 
-  // Call ArraySortData::sortWithComparator.
+  // Call ArraySortData::sortArrayWithComparator.
   using Fn2 = ArraySortResult (*)(ArraySortData* data);
   masm.moveStackPtrTo(temp2);
   masm.loadJSContext(temp0);
   pushExitFrame(temp0, temp1);
   masm.setupAlignedABICall();
   masm.passABIArg(temp2);
-  masm.callWithABI<Fn2, ArraySortData::sortWithComparator>(
+  masm.callWithABI<Fn2, ArraySortData::sortArrayWithComparator>(
       ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   // Check return value.
