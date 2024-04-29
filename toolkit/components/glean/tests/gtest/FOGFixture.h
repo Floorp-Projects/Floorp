@@ -14,24 +14,10 @@ using namespace mozilla::glean::impl;
 class FOGFixture : public ::testing::Test {
  protected:
   FOGFixture() = default;
-  virtual void SetUp() { TestResetFOG(); }
-
- public:
-  static void TestResetFOG() {
+  virtual void SetUp() {
     nsCString empty;
     ASSERT_EQ(NS_OK, fog_test_reset(&empty, &empty));
   }
-};
-
-template <typename ParamType>
-class FOGFixtureWithParam : public ::testing::TestWithParam<ParamType> {
- protected:
-  FOGFixtureWithParam() = default;
-
-  virtual void SetUp() { TestResetFOG(); }
-
-  // Can be called by derived fixtures
-  void TestResetFOG() { FOGFixture::TestResetFOG(); }
 };
 
 #endif  // FOGFixture_h_
