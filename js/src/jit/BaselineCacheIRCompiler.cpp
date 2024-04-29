@@ -2041,7 +2041,6 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
       break;
     case CacheKind::GetProp:
     case CacheKind::TypeOf:
-    case CacheKind::TypeOfEq:
     case CacheKind::ToPropertyKey:
     case CacheKind::GetIterator:
     case CacheKind::OptimizeSpreadCall:

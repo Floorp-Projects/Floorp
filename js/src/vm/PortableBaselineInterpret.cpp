@@ -47,7 +47,6 @@
 #include "vm/Opcodes.h"
 #include "vm/PlainObject.h"
 #include "vm/Shape.h"
-#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 
 #include "debugger/DebugAPI-inl.h"
 #include "jit/BaselineFrame-inl.h"
@@ -2691,7 +2690,6 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(LoadConstantString)
   CACHEOP_CASE_UNIMPL(LoadInstanceOfObjectResult)
   CACHEOP_CASE_UNIMPL(LoadTypeOfObjectResult)
-  CACHEOP_CASE_UNIMPL(LoadTypeOfEqObjectResult)
   CACHEOP_CASE_UNIMPL(DoubleAddResult)
   CACHEOP_CASE_UNIMPL(DoubleSubResult)
   CACHEOP_CASE_UNIMPL(DoubleMulResult)
@@ -2874,14 +2872,6 @@ DEFINE_IC(Typeof, 1, {
   IC_LOAD_VAL(value0, 0);
   PUSH_FALLBACK_IC_FRAME();
   if (!DoTypeOfFallback(cx, frame, fallback, value0, &state.res)) {
-    goto error;
-  }
-});
-
-DEFINE_IC(TypeofEq, 1, {
-  IC_LOAD_VAL(value0, 0);
-  PUSH_FALLBACK_IC_FRAME();
-  if (!DoTypeOfEqFallback(cx, frame, fallback, value0, &state.res)) {
     goto error;
   }
 });
@@ -3431,23 +3421,6 @@ PBIResult PortableBaselineInterpret(JSContext* cx_, State& state, Stack& stack,
         IC_PUSH_RESULT();
       }
       END_OP(Typeof);
-    }
-
-    CASE(TypeofEq) {
-      if (kHybridICs) {
-        TypeofEqOperand operand = TypeofEqOperand(GET_UINT8(pc));
-        bool result = js::TypeOfValue(Stack::handle(sp)) == operand.type();
-        if (operand.compareOp() == JSOp::Ne) {
-          result = !result;
-        }
-        sp[0] = StackVal(BooleanValue(result));
-        NEXT_IC();
-      } else {
-        IC_POP_ARG(0);
-        INVOKE_IC(TypeofEq);
-        IC_PUSH_RESULT();
-      }
-      END_OP(TypeofEq);
     }
 
     CASE(Pos) {

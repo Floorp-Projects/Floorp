@@ -43,7 +43,6 @@
 #include "vm/Opcodes.h"
 #include "vm/RealmFuses.h"
 #include "vm/Shape.h"
-#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmValType.h"
 
@@ -257,9 +256,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void writeJSOpImm(JSOp op) {
     static_assert(sizeof(JSOp) == sizeof(uint8_t), "JSOp must fit in a byte");
     buffer_.writeByte(uint8_t(op));
-  }
-  void writeTypeofEqOperandImm(TypeofEqOperand operand) {
-    buffer_.writeByte(operand.rawValue());
   }
   void writeGuardClassKindImm(GuardClassKind kind) {
     static_assert(sizeof(GuardClassKind) == sizeof(uint8_t),

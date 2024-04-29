@@ -564,7 +564,6 @@ bool IonCacheIRCompiler::init() {
     }
     case CacheKind::Call:
     case CacheKind::TypeOf:
-    case CacheKind::TypeOfEq:
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
     case CacheKind::NewArray:
@@ -678,7 +677,6 @@ void IonCacheIRCompiler::assertFloatRegisterAvailable(FloatRegister reg) {
       break;
     case CacheKind::Call:
     case CacheKind::TypeOf:
-    case CacheKind::TypeOfEq:
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
     case CacheKind::NewArray:

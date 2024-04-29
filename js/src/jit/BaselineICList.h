@@ -35,7 +35,6 @@ namespace jit {
   _(OptimizeSpreadCall)                        \
   _(InstanceOf)                                \
   _(TypeOf)                                    \
-  _(TypeOfEq)                                  \
   _(ToPropertyKey)                             \
   _(Rest)                                      \
   _(BinaryArith)                               \

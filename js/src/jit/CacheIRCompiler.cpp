@@ -44,7 +44,6 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GetterSetter.h"
 #include "vm/Interpreter.h"
-#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #include "vm/Uint8Clamped.h"
 
 #include "builtin/Boolean-inl.h"
@@ -7404,69 +7403,6 @@ bool CacheIRCompiler::emitLoadTypeOfObjectResult(ObjOperandId objId) {
     masm.PopRegsInMaskIgnore(save, ignore);
 
     masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
-  }
-
-  masm.bind(&done);
-  return true;
-}
-
-bool CacheIRCompiler::emitLoadTypeOfEqObjectResult(ObjOperandId objId,
-                                                   TypeofEqOperand operand) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-  JSType type = operand.type();
-  JSOp compareOp = operand.compareOp();
-  bool result;
-
-  Label slowCheck, isObject, isCallable, isUndefined, done;
-  masm.typeOfObject(obj, scratch, &slowCheck, &isObject, &isCallable,
-                    &isUndefined);
-
-  masm.bind(&isCallable);
-  result = type == JSTYPE_FUNCTION;
-  if (compareOp == JSOp::Ne) {
-    result = !result;
-  }
-  masm.moveValue(BooleanValue(result), output.valueReg());
-  masm.jump(&done);
-
-  masm.bind(&isUndefined);
-  result = type == JSTYPE_UNDEFINED;
-  if (compareOp == JSOp::Ne) {
-    result = !result;
-  }
-  masm.moveValue(BooleanValue(result), output.valueReg());
-  masm.jump(&done);
-
-  masm.bind(&isObject);
-  result = type == JSTYPE_OBJECT;
-  if (compareOp == JSOp::Ne) {
-    result = !result;
-  }
-  masm.moveValue(BooleanValue(result), output.valueReg());
-  masm.jump(&done);
-
-  {
-    masm.bind(&slowCheck);
-    LiveRegisterSet save(GeneralRegisterSet::Volatile(),
-                         liveVolatileFloatRegs());
-    save.takeUnchecked(output.valueReg());
-    save.takeUnchecked(scratch);
-    masm.PushRegsInMask(save);
-
-    using Fn = bool (*)(JSObject* obj, TypeofEqOperand operand);
-    masm.setupUnalignedABICall(scratch);
-    masm.passABIArg(obj);
-    masm.move32(Imm32(TypeofEqOperand(type, compareOp).rawValue()), scratch);
-    masm.passABIArg(scratch);
-    masm.callWithABI<Fn, TypeOfEqObject>();
-    masm.storeCallBoolResult(scratch);
-
-    masm.PopRegsInMask(save);
-
-    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
   }
 
   masm.bind(&done);

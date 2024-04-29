@@ -63,7 +63,6 @@
 #include "vm/StringType.h"
 #include "vm/ThrowMsgKind.h"  // ThrowMsgKind
 #include "vm/Time.h"
-#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #ifdef ENABLE_RECORD_TUPLE
 #  include "vm/RecordType.h"
 #  include "vm/TupleType.h"
@@ -250,7 +249,7 @@ static inline bool GetNameOperation(JSContext* cx, HandleObject envChain,
                                     Handle<PropertyName*> name, JSOp nextOp,
                                     MutableHandleValue vp) {
   /* Kludge to allow (typeof foo == "undefined") tests. */
-  if (IsTypeOfNameOp(nextOp)) {
+  if (nextOp == JSOp::Typeof) {
     return GetEnvironmentName<GetNameMode::TypeOf>(cx, envChain, name, vp);
   }
   return GetEnvironmentName<GetNameMode::Normal>(cx, envChain, name, vp);
@@ -2650,16 +2649,6 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
       REGS.sp[-1].setString(TypeOfOperation(REGS.sp[-1], cx->runtime()));
     }
     END_CASE(Typeof)
-
-    CASE(TypeofEq) {
-      auto operand = TypeofEqOperand::fromRawValue(GET_UINT8(REGS.pc));
-      bool result = js::TypeOfValue(REGS.sp[-1]) == operand.type();
-      if (operand.compareOp() == JSOp::Ne) {
-        result = !result;
-      }
-      REGS.sp[-1].setBoolean(result);
-    }
-    END_CASE(TypeofEq)
 
     CASE(Void) { REGS.sp[-1].setUndefined(); }
     END_CASE(Void)
