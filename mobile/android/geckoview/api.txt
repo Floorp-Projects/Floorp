@@ -2768,6 +2768,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onInstallationFailed(@Nullable WebExtension, @NonNull WebExtension.InstallException);
     method @UiThread default public void onInstalled(@NonNull WebExtension);
     method @UiThread default public void onInstalling(@NonNull WebExtension);
+    method @UiThread default public void onOptionalPermissionsChanged(@NonNull WebExtension);
     method @UiThread default public void onReady(@NonNull WebExtension);
     method @UiThread default public void onUninstalled(@NonNull WebExtension);
     method @UiThread default public void onUninstalling(@NonNull WebExtension);
