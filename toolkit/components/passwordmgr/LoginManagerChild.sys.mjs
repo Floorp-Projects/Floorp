@@ -3193,7 +3193,7 @@ export class LoginManagerChild extends JSWindowActorChild {
       // autocomplete="new-password" attribute.
       isProbablyANewPasswordField =
         autocompleteInfo.fieldName == "new-password" ||
-        this.#isProbablyANewPasswordField(input);
+        this.isProbablyANewPasswordField(input);
     }
 
     const scenarioName = lazy.FormScenarios.detect({ input }).signUpForm
@@ -3319,7 +3319,7 @@ export class LoginManagerChild extends JSWindowActorChild {
 
   #cachedNewPasswordScore = new WeakMap();
 
-  #isProbablyANewPasswordField(inputElement) {
+  isProbablyANewPasswordField(inputElement) {
     const threshold = lazy.LoginHelper.generationConfidenceThreshold;
     if (threshold == -1) {
       // Fathom is disabled

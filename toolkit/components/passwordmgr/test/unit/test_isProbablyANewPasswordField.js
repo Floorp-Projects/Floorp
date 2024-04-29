@@ -4,9 +4,10 @@
 
 "use strict";
 
-const LoginAutoComplete = Cc[
-  "@mozilla.org/login-manager/autocompletesearch;1"
-].getService(Ci.nsILoginAutoCompleteSearch).wrappedJSObject;
+const { LoginManagerChild } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManagerChild.sys.mjs"
+);
+
 // TODO: create a fake window for the test document to pass fathom.isVisible check.
 // We should consider moving these tests to mochitest because many fathom
 // signals rely on visibility, position, etc., of the test element (See Bug 1712699),
@@ -143,9 +144,10 @@ add_task(async function test_returns_false_when_pref_disabled() {
         "http://localhost:8080/test/",
         testcase.document
       );
+  const lmc = new LoginManagerChild();
   for (let [i, input] of testcase.inputs ||
     document.querySelectorAll(`input[type="password"]`).entries()) {
-    const result = LoginAutoComplete.isProbablyANewPasswordField(input);
+    const result = lmc.isProbablyANewPasswordField(input);
     Assert.strictEqual(
       result,
       false,
@@ -172,10 +174,11 @@ for (let testcase of TESTCASES) {
 
       document = makeDocumentVisibleToFathom(document);
 
+      const lmc = new LoginManagerChild();
       const results = [];
       for (let input of testcase.inputs ||
         document.querySelectorAll(`input[type="password"]`)) {
-        const result = LoginAutoComplete.isProbablyANewPasswordField(input);
+        const result = lmc.isProbablyANewPasswordField(input);
         results.push(result);
       }
 
