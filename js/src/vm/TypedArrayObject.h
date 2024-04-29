@@ -101,11 +101,11 @@ class TypedArrayObject : public ArrayBufferViewObject {
   bool getElementPure(size_t index, Value* vp);
 
   /*
-   * Copy all elements from this typed array to vp. vp must point to rooted
-   * memory.
+   * Copy |length| elements from this typed array to vp. vp must point to rooted
+   * memory. |length| must not exceed the typed array's current length.
    */
   static bool getElements(JSContext* cx, Handle<TypedArrayObject*> tarray,
-                          Value* vp);
+                          size_t length, Value* vp);
 
   static bool GetTemplateObjectForNative(JSContext* cx, Native native,
                                          const JS::HandleValueArray args,
