@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.translations
 
-import android.content.Context
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
@@ -26,7 +25,6 @@ import org.mozilla.fenix.utils.Settings
 @RunWith(FenixRobolectricTestRunner::class)
 class TranslationsDialogMiddlewareTest {
     private val browserStore = mockk<BrowserStore>(relaxed = true)
-    private val context = mockk<Context>(relaxed = true)
     private val settings = Settings(testContext)
     private val translationsDialogMiddleware =
         TranslationsDialogMiddleware(browserStore = browserStore, sessionId = "tab1", settings = settings)

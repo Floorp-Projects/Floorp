@@ -1483,7 +1483,7 @@
                 android:id="@+id/action_translationSettingsFragment_to_automaticTranslationPreferenceFragment"
                 app:destination="@id/automaticTranslationPreferenceFragment" />
             <action
-                android:id="@+id/action_translationSettingsFragment_to_neverTranslateSitePreferenceFragment"
+                android:id="@+id/action_translationSettings_to_neverTranslateSitePreference"
                 app:destination="@id/neverTranslateSitePreferenceFragment" />
         </fragment>
         <fragment
@@ -1502,16 +1502,16 @@
         </fragment>
         <fragment
             android:id="@+id/neverTranslateSitePreferenceFragment"
-            android:name="org.mozilla.fenix.translations.preferences.nevertranslatesite.NeverTranslateSitePreferenceFragment">
+            android:name="org.mozilla.fenix.translations.preferences.nevertranslatesite.NeverTranslateSitesPreferenceFragment">
             <action
-                android:id="@+id/action_neverTranslateSitePreferenceFragment_to_neverTranslateSiteDialogPreferenceFragment"
+                android:id="@+id/action_neverTranslateSitePreference_to_neverTranslateSiteDialogPreference"
                 app:destination="@id/neverTranslateSiteDialogPreferenceFragment" />
         </fragment>
         <dialog
             android:id="@+id/neverTranslateSiteDialogPreferenceFragment"
             android:name="org.mozilla.fenix.translations.preferences.nevertranslatesite.NeverTranslateSiteDialogPreferenceFragment">
             <argument
-                android:name="websiteUrl"
+                android:name="neverTranslateSiteUrl"
                 app:argType="string" />
         </dialog>
         <fragment
