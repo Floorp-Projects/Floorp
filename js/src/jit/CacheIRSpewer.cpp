@@ -71,10 +71,6 @@ class MOZ_RAII CacheIROpsJitSpewer {
   void spewJSOpImm(const char* name, JSOp op) {
     out_.printf("%s JSOp::%s", name, CodeName(op));
   }
-  void spewTypeofEqOperandImm(const char* name, TypeofEqOperand operand) {
-    out_.printf("%s %s %s", name, JSTypeToString(operand.type()),
-                CodeName(operand.compareOp()));
-  }
   void spewStaticStringImm(const char* name, const char* str) {
     out_.printf("%s \"%s\"", name, str);
   }
@@ -226,9 +222,6 @@ class MOZ_RAII CacheIROpsJSONSpewer {
   }
   void spewJSOpImm(const char* name, JSOp op) {
     spewArgImpl(name, "JSOp", CodeName(op));
-  }
-  void spewTypeofEqOperandImm(const char* name, TypeofEqOperand operand) {
-    spewArgImpl(name, "TypeofEqOperand", uint8_t(operand.rawValue()));
   }
   void spewStaticStringImm(const char* name, const char* str) {
     spewArgImpl(name, "String", str);
@@ -434,15 +427,6 @@ void CacheIRSpewer::opcodeProperty(const char* name, const JSOp op) {
 
   j.beginStringProperty(name);
   output_.put(CodeName(op));
-  j.endStringProperty();
-}
-
-void CacheIRSpewer::jstypeProperty(const char* name, const JSType type) {
-  MOZ_ASSERT(enabled());
-  JSONPrinter& j = json_.ref();
-
-  j.beginStringProperty(name);
-  output_.put(JSTypeToString(type));
   j.endStringProperty();
 }
 

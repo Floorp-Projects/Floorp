@@ -2620,14 +2620,6 @@
   args:
     obj: ObjId
 
-- name: LoadTypeOfEqObjectResult
-  shared: true
-  transpile: true
-  cost_estimate: 4
-  args:
-    obj: ObjId
-    operand: TypeofEqOperandImm
-
 - name: DoubleAddResult
   shared: true
   transpile: true

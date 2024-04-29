@@ -73,7 +73,6 @@ Register IonIC::scratchRegisterForEntryJump() {
       return asOptimizeGetIteratorIC()->temp();
     case CacheKind::Call:
     case CacheKind::TypeOf:
-    case CacheKind::TypeOfEq:
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
     case CacheKind::NewArray:
@@ -365,7 +364,7 @@ bool IonGetNameIC::update(JSContext* cx, HandleScript outerScript,
     return false;
   }
 
-  if (IsTypeOfNameOp(JSOp(*GetNextPc(pc)))) {
+  if (JSOp(*GetNextPc(pc)) == JSOp::Typeof) {
     return FetchName<GetNameMode::TypeOf>(cx, obj, holder, name, prop, res);
   }
 

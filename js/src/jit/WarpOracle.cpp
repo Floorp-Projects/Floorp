@@ -583,7 +583,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::OptimizeSpreadCall:
       case JSOp::Typeof:
       case JSOp::TypeofExpr:
-      case JSOp::TypeofEq:
       case JSOp::NewObject:
       case JSOp::NewInit:
       case JSOp::NewArray:
