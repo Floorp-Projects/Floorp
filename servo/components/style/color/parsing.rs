@@ -9,7 +9,7 @@
 use super::{
     color_function::ColorFunction,
     component::{ColorComponent, ColorComponentType},
-    AbsoluteColor, ColorSpace,
+    AbsoluteColor, ColorFlags, ColorSpace,
 };
 use crate::{
     parser::ParserContext,
@@ -191,9 +191,11 @@ fn parse_rgb<'i, 't>(
 ) -> Result<ColorFunction, ParseError<'i>> {
     let component_parser = ComponentParser {
         context: component_parser.context,
-        origin_color: component_parser
-            .origin_color
-            .map(|c| c.to_color_space(ColorSpace::Srgb)),
+        origin_color: component_parser.origin_color.map(|c| {
+            let mut c = c.to_color_space(ColorSpace::Srgb);
+            c.flags.insert(ColorFlags::IS_LEGACY_SRGB);
+            c
+        }),
     };
 
     let location = arguments.current_source_location();
@@ -245,7 +247,23 @@ fn parse_rgb<'i, 't>(
         // When using the relative color syntax (having an origin color), the
         // resulting color is always in the modern syntax.
         if component_parser.origin_color.is_some() {
-            ColorFunction::Color(PredefinedColorSpace::Srgb, maybe_red, green, blue, alpha)
+            fn adjust(v: NumberOrPercentage) -> NumberOrPercentage {
+                if let NumberOrPercentage::Number { value } = v {
+                    NumberOrPercentage::Number {
+                        value: value / 255.0,
+                    }
+                } else {
+                    v
+                }
+            }
+
+            ColorFunction::Color(
+                PredefinedColorSpace::Srgb,
+                maybe_red.map_value(adjust),
+                green.map_value(adjust),
+                blue.map_value(adjust),
+                alpha,
+            )
         } else {
             fn clamp(v: NumberOrPercentage) -> u8 {
                 clamp_floor_256_f32(v.to_number(255.0))

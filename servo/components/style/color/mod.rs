@@ -460,11 +460,22 @@ impl AbsoluteColor {
         }
 
         Ok(match self.color_space {
-            ColorSpace::Srgb => match channel_keyword {
-                ChannelKeyword::R => self.c0(),
-                ChannelKeyword::G => self.c1(),
-                ChannelKeyword::B => self.c2(),
-                _ => return Err(()),
+            ColorSpace::Srgb => {
+                if self.flags.contains(ColorFlags::IS_LEGACY_SRGB) {
+                    match channel_keyword {
+                        ChannelKeyword::R => self.c0().map(|v| v * 255.0),
+                        ChannelKeyword::G => self.c1().map(|v| v * 255.0),
+                        ChannelKeyword::B => self.c2().map(|v| v * 255.0),
+                        _ => return Err(()),
+                    }
+                } else {
+                    match channel_keyword {
+                        ChannelKeyword::R => self.c0(),
+                        ChannelKeyword::G => self.c1(),
+                        ChannelKeyword::B => self.c2(),
+                        _ => return Err(()),
+                    }
+                }
             },
             ColorSpace::Hsl => match channel_keyword {
                 ChannelKeyword::H => self.c0(),
