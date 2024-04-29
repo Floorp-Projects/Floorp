@@ -6,7 +6,7 @@
 
 use super::{Context, Number, ToComputedValue};
 use crate::values::animated::ToAnimatedValue;
-use crate::values::computed::NonNegativeNumber;
+use crate::values::computed::{NonNegativeNumber, Zoom};
 use crate::values::generics::length as generics;
 use crate::values::generics::length::{
     GenericLengthOrNumber, GenericLengthPercentageOrNormal, GenericMaxSize, GenericSize,
@@ -282,6 +282,12 @@ impl CSSPixelLength {
     #[inline]
     pub fn px(self) -> CSSFloat {
         self.0
+    }
+
+    /// Zooms a particular length.
+    #[inline]
+    pub fn zoom(self, zoom: Zoom) -> Self {
+        Self::new(zoom.zoom(self.px()))
     }
 
     /// Return the length with app_unit i32 type.
