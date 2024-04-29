@@ -166,7 +166,13 @@ bool AppleDecoderModule::IsVideoSupported(
       }
     }
 
-    return true;
+    if (aConfig.mExtraData && aConfig.mExtraData->Length() < 2) {
+      return true;  // Assume it's okay.
+    }
+    // top 3 bits are the profile.
+    int profile = aConfig.mExtraData->ElementAt(1) >> 5;
+    // 0 is main profile
+    return profile == 0;
   }
 
   if (!VPXDecoder::IsVP9(aConfig.mMimeType) || !sCanUseVP9Decoder ||
