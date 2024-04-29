@@ -37,6 +37,7 @@
 
 # toolkit tests
 ["include:../../../../../toolkit/components/cleardata/tests/marionette/manifest.toml"]
+["include:../../../../../toolkit/components/extensions/test/marionette/manifest-serviceworker.toml"]
 ["include:../../../../../toolkit/xre/test/marionette/marionette.toml"]
 
 # update tests
