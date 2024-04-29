@@ -111,16 +111,20 @@ objects:
         default: {}
       title:
         type: Option<Text>
-        description: "The title text displayed to the user"
+        description: The title text displayed to the user
         default: null
       text:
         type: Text
-        description: "The message text displayed to the user"
+        description: The message text displayed to the user
         # This should never be defaulted.
         default: ""
+      microsurveyConfig:
+        type: Option<MicroSurveyConfig>
+        description: Optional configuration data for a microsurvey.
+        default: null
       is-control:
         type: Boolean
-        description: "Indicates if this message is the control message, if true shouldn't be displayed"
+        description: Indicates if this message is the control message, if true shouldn't be displayed
         default: false
       experiment:
         type: Option<ExperimentSlug>
