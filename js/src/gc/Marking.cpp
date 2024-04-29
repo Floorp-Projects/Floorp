@@ -757,6 +757,8 @@ template <>
 struct TypeCanHaveImplicitEdges<JSObject> : std::true_type {};
 template <>
 struct TypeCanHaveImplicitEdges<BaseScript> : std::true_type {};
+template <>
+struct TypeCanHaveImplicitEdges<JS::Symbol> : std::true_type {};
 
 template <typename T>
 void GCMarker::markImplicitEdges(T* markedThing) {
@@ -797,6 +799,9 @@ void GCMarker::markImplicitEdges(T* markedThing) {
 
 template void GCMarker::markImplicitEdges(JSObject*);
 template void GCMarker::markImplicitEdges(BaseScript*);
+#ifdef NIGHTLY_BUILD
+template void GCMarker::markImplicitEdges(JS::Symbol*);
+#endif
 
 }  // namespace js
 
@@ -1014,6 +1019,11 @@ void GCMarker::traverse(GetterSetter* thing) {
 }
 template <uint32_t opts>
 void GCMarker::traverse(JS::Symbol* thing) {
+#ifdef NIGHTLY_BUILD
+  if constexpr (bool(opts & MarkingOptions::MarkImplicitEdges)) {
+    markImplicitEdges(thing);
+  }
+#endif
   traceChildren<opts>(thing);
 }
 template <uint32_t opts>
