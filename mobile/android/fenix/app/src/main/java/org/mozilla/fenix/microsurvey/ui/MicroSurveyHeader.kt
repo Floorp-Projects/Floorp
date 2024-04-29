@@ -65,6 +65,7 @@ fun MicroSurveyHeader(
                 tint = FirefoxTheme.colors.iconPrimary,
                 modifier = Modifier
                     .size(20.dp)
+                    .padding(1.dp),
             )
         }
     }
