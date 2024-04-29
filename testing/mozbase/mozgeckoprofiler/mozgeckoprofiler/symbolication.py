@@ -5,9 +5,9 @@ import hashlib
 import http.client
 import os
 import platform
+import shutil
 import subprocess
 import zipfile
-from distutils import spawn
 
 import six
 from mozlog import get_proxy_logger
@@ -95,7 +95,7 @@ class OSXSymbolDumper:
 
 class LinuxSymbolDumper:
     def __init__(self):
-        self.nm = spawn.find_executable("nm")
+        self.nm = shutil.which("nm")
         if not self.nm:
             raise SymbolError("Could not find nm, necessary for symbol dumping")
 

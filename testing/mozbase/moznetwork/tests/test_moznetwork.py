@@ -4,8 +4,8 @@ Unit-Tests for moznetwork
 """
 
 import re
+import shutil
 import subprocess
-from distutils.spawn import find_executable
 from unittest import mock
 
 import mozinfo
@@ -37,7 +37,7 @@ def ip_addresses():
 
     cmd = None
     for command in commands:
-        if find_executable(command[0]):
+        if shutil.which(command[0]):
             cmd = command
             break
     else:
