@@ -12,6 +12,10 @@ xul|tabs {
   position: static;
 }
 
+xul|menulist > xul|menupopup:not([position]) {
+  margin-inline-start: 0;
+}
+
 xul|menupopup > xul|menuitem::after,
 xul|menupopup > xul|menuitem::before {
   content: none;
