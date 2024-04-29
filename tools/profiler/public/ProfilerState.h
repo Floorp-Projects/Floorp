@@ -118,7 +118,10 @@
         "every CPU core for every profiler sample.")                       \
                                                                            \
   MACRO(23, "bandwidth", Bandwidth,                                        \
-        "Record the network bandwidth used for every profiler sample.")
+        "Record the network bandwidth used for every profiler sample.")    \
+  MACRO(                                                                   \
+      24, "memory", Memory,                                                \
+      "Track the memory allocations and deallocations per process over time.")
 // *** Synchronize with lists in BaseProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {
@@ -138,6 +141,12 @@ struct ProfilerFeature {
   PROFILER_FOR_EACH_FEATURE(DECLARE)
 
 #undef DECLARE
+
+  [[nodiscard]] static constexpr bool ShouldInstallMemoryHooks(
+      uint32_t aFeatures) {
+    return ProfilerFeature::HasMemory(aFeatures) ||
+           ProfilerFeature::HasNativeAllocations(aFeatures);
+  }
 };
 
 // clang-format off

@@ -47,7 +47,8 @@
           "power",
           "responsiveness",
           "cpufreq",
-          "bandwidth"
+          "bandwidth",
+          "memory"
         ]
       },
       {
