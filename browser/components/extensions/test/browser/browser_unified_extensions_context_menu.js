@@ -5,10 +5,6 @@
 
 requestLongerTimeout(2);
 
-ChromeUtils.defineESModuleGetters(this, {
-  AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
-});
-
 const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
@@ -30,21 +26,6 @@ const promiseExtensionUninstalled = extensionId => {
     AddonManager.addAddonListener(listener);
   });
 };
-
-function waitClosedWindow(win) {
-  return new Promise(resolve => {
-    function onWindowClosed() {
-      if (win && !win.closed) {
-        // If a specific window reference has been passed, then check
-        // that the window is closed before resolving the promise.
-        return;
-      }
-      Services.obs.removeObserver(onWindowClosed, "xul-window-destroyed");
-      resolve();
-    }
-    Services.obs.addObserver(onWindowClosed, "xul-window-destroyed");
-  });
-}
 
 function assertVisibleContextMenuItems(contextMenu, expected) {
   let visibleItems = contextMenu.querySelectorAll(
@@ -366,90 +347,33 @@ add_task(async function test_report_extension() {
       // closed and about:addons is open with the "abuse report dialog".
       const hidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
 
-      if (AbuseReporter.amoFormEnabled) {
-        const reportURL = Services.urlFormatter
-          .formatURLPref("extensions.abuseReport.amoFormURL")
-          .replace("%addonID%", extension.id);
+      const reportURL = Services.urlFormatter
+        .formatURLPref("extensions.abuseReport.amoFormURL")
+        .replace("%addonID%", extension.id);
 
-        const promiseReportTab = BrowserTestUtils.waitForNewTab(
-          gBrowser,
-          reportURL,
-          /* waitForLoad */ false,
-          // Do not expect it to be the next tab opened
-          /* waitForAnyTab */ true
-        );
-        contextMenu.activateItem(reportButton);
-        const [reportTab] = await Promise.all([promiseReportTab, hidden]);
-        // Remove the report tab and expect the selected tab
-        // to become the about:addons tab.
-        BrowserTestUtils.removeTab(reportTab);
-        if (AbuseReporter.amoFormEnabled) {
-          is(
-            gBrowser.selectedBrowser.currentURI.spec,
-            "about:blank",
-            "Expect about:addons tab to have not been opened (amoFormEnabled=true)"
-          );
-        } else {
-          is(
-            gBrowser.selectedBrowser.currentURI.spec,
-            "about:addons",
-            "Got about:addons tab selected (amoFormEnabled=false)"
-          );
-        }
-        return;
-      }
-
-      const abuseReportOpen = BrowserTestUtils.waitForCondition(
-        () => AbuseReporter.getOpenDialog(),
-        "wait for the abuse report dialog to have been opened"
+      const promiseReportTab = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        reportURL,
+        /* waitForLoad */ false,
+        // Do not expect it to be the next tab opened
+        /* waitForAnyTab */ true
       );
       contextMenu.activateItem(reportButton);
-      const [reportDialogWindow] = await Promise.all([abuseReportOpen, hidden]);
-
-      const reportDialogParams =
-        reportDialogWindow.arguments[0].wrappedJSObject;
+      const [reportTab] = await Promise.all([promiseReportTab, hidden]);
+      // Remove the report tab and expect the selected tab
+      // to become the about:addons tab.
+      BrowserTestUtils.removeTab(reportTab);
       is(
-        reportDialogParams.report.addon.id,
-        extension.id,
-        "abuse report dialog has the expected addon id"
+        gBrowser.selectedBrowser.currentURI.spec,
+        "about:blank",
+        "Expect about:addons tab to have not been opened"
       );
-      is(
-        reportDialogParams.report.reportEntryPoint,
-        "unified_context_menu",
-        "abuse report dialog has the expected reportEntryPoint"
-      );
-
-      let promiseClosedWindow = waitClosedWindow();
-      reportDialogWindow.close();
-      // Wait for the report dialog window to be completely closed
-      // (to prevent an intermittent failure due to a race between
-      // the dialog window being closed and the test tasks that follows
-      // opening the unified extensions button panel to not lose the
-      // focus and be suddently closed before the task has done with
-      // its assertions, see Bug 1782304).
-      await promiseClosedWindow;
     });
   }
 
   const [ext] = createExtensions([{ name: "an extension" }]);
   await ext.startup();
-
-  info("Test report with amoFormEnabled=true");
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.abuseReport.amoFormEnabled", true]],
-  });
   await runReportTest(ext);
-  await SpecialPowers.popPrefEnv();
-
-  info("Test report with amoFormEnabled=false");
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.abuseReport.amoFormEnabled", false]],
-  });
-  await runReportTest(ext);
-  await SpecialPowers.popPrefEnv();
-
   await ext.unload();
 });
 

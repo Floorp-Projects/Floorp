@@ -208,50 +208,6 @@ addons_manager:
                 type: quantity
         expires: 132
 
-    report:
-        type: event
-        description: An abuse report submitted by a user for a given extension.
-        bugs:
-            - https://bugzilla.mozilla.org/1544927
-            - https://bugzilla.mozilla.org/1580561
-            - https://bugzilla.mozilla.org/1590736
-            - https://bugzilla.mozilla.org/1630596
-            - https://bugzilla.mozilla.org/1672570
-            - https://bugzilla.mozilla.org/1714251
-            - https://bugzilla.mozilla.org/1749878
-            - https://bugzilla.mozilla.org/1780746
-            - https://bugzilla.mozilla.org/1781974
-            - https://bugzilla.mozilla.org/1817100
-            - https://bugzilla.mozilla.org/1820153
-        data_reviews:
-            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820153#c3
-        notification_emails:
-            - addons-dev-internal@mozilla.com
-        extra_keys:
-            addon_id:
-                description: Id of the addon being reported.
-                type: string
-            addon_type:
-                description: |
-                    The type of the add-on being reported (missing on
-                    ERROR_ADDON_NOT_FOUND, ERROR_AMODETAILS_NOTFOUND
-                    and ERROR_AMODETAILS_FAILURE).
-                type: string
-            entry_point:
-                description: |
-                    Report entry point, one of: amo, menu,
-                    toolbar_context_menu, unified_context_menu, uninstall.
-                type: string
-            error_type:
-                description: |
-                    AbuseReport Error Type (included in case of submission
-                    failures). The error types include ERROR_ABORTED_SUBMIT,
-                    ERROR_ADDON_NOT_FOUND, ERROR_CLIENT, ERROR_NETWORK,
-                    ERROR_UNKNOWN, ERROR_RECENT_SUBMIT, ERROR_SERVER,
-                    ERROR_AMODETAILS_NOTFOUND, ERROR_AMODETAILS_FAILURE.
-                type: string
-        expires: 132
-
     report_suspicious_site:
         type: event
         description: |

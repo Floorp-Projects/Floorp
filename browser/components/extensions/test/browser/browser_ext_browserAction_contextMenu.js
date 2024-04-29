@@ -2,10 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
-});
-
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "ABUSE_REPORT_ENABLED",
@@ -546,35 +542,6 @@ async function browseraction_contextmenu_report_extension_helper() {
     useAddonManager: "temporary",
   });
 
-  async function testReportDialog(viaUnifiedContextMenu) {
-    const reportDialogWindow = await BrowserTestUtils.waitForCondition(
-      () => AbuseReporter.getOpenDialog(),
-      "Wait for the abuse report dialog to have been opened"
-    );
-
-    const reportDialogParams = reportDialogWindow.arguments[0].wrappedJSObject;
-    is(
-      reportDialogParams.report.addon.id,
-      id,
-      "Abuse report dialog has the expected addon id"
-    );
-    is(
-      reportDialogParams.report.reportEntryPoint,
-      viaUnifiedContextMenu ? "unified_context_menu" : "toolbar_context_menu",
-      "Abuse report dialog has the expected reportEntryPoint"
-    );
-
-    info("Wait the report dialog to complete rendering");
-    await reportDialogParams.promiseReportPanel;
-    info("Close the report dialog");
-    reportDialogWindow.close();
-    is(
-      await reportDialogParams.promiseReport,
-      undefined,
-      "Report resolved as user cancelled when the window is closed"
-    );
-  }
-
   async function testContextMenu(menuId, customizing) {
     info(`Open browserAction context menu in ${menuId}`);
     let menu = await openContextMenu(menuId, buttonId);
@@ -591,54 +558,27 @@ async function browseraction_contextmenu_report_extension_helper() {
 
     let aboutAddonsBrowser;
 
-    if (AbuseReporter.amoFormEnabled) {
-      const reportURL = Services.urlFormatter
-        .formatURLPref("extensions.abuseReport.amoFormURL")
-        .replace("%addonID%", id);
+    const reportURL = Services.urlFormatter
+      .formatURLPref("extensions.abuseReport.amoFormURL")
+      .replace("%addonID%", id);
 
-      const promiseReportTab = BrowserTestUtils.waitForNewTab(
-        gBrowser,
-        reportURL,
-        /* waitForLoad */ false,
-        // Expect it to be the next tab opened
-        /* waitForAnyTab */ false
-      );
-      await closeChromeContextMenu(menuId, reportExtension);
-      const reportTab = await promiseReportTab;
-      // Remove the report tab and expect the selected tab
-      // to become the about:addons tab.
-      BrowserTestUtils.removeTab(reportTab);
-      is(
-        gBrowser.selectedBrowser.currentURI.spec,
-        "about:blank",
-        "Expect about:addons tab to not have been opened (amoFormEnabled=true)"
-      );
-    } else {
-      // When running in customizing mode "about:addons" will load in a new tab,
-      // otherwise it will replace the existing blank tab.
-      const onceAboutAddonsTab = customizing
-        ? BrowserTestUtils.waitForNewTab(gBrowser, "about:addons")
-        : BrowserTestUtils.waitForCondition(() => {
-            return gBrowser.currentURI.spec === "about:addons";
-          }, "Wait an about:addons tab to be opened");
-      await closeChromeContextMenu(menuId, reportExtension);
-      await onceAboutAddonsTab;
-      const browser = gBrowser.selectedBrowser;
-      is(
-        browser.currentURI.spec,
-        "about:addons",
-        "Got about:addons tab selected (amoFormEnabled=false)"
-      );
-      // Do not wait for the about:addons tab to be loaded if its
-      // document is already readyState==complete.
-      // This prevents intermittent timeout failures while running
-      // this test in optimized builds.
-      if (browser.contentDocument?.readyState != "complete") {
-        await BrowserTestUtils.browserLoaded(browser);
-      }
-      await testReportDialog(usingUnifiedContextMenu);
-      aboutAddonsBrowser = browser;
-    }
+    const promiseReportTab = BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      reportURL,
+      /* waitForLoad */ false,
+      // Expect it to be the next tab opened
+      /* waitForAnyTab */ false
+    );
+    await closeChromeContextMenu(menuId, reportExtension);
+    const reportTab = await promiseReportTab;
+    // Remove the report tab and expect the selected tab
+    // to become the about:addons tab.
+    BrowserTestUtils.removeTab(reportTab);
+    is(
+      gBrowser.selectedBrowser.currentURI.spec,
+      "about:blank",
+      "Expect about:addons tab to not have been opened"
+    );
 
     // Close the new about:addons tab when running in customize mode,
     // or cancel the abuse report if the about:addons page has been
@@ -729,22 +669,7 @@ add_task(async function test_unified_extensions_ui() {
   await browseraction_contextmenu_manage_extension_helper();
   await browseraction_contextmenu_remove_extension_helper();
   await test_no_toolbar_pinning_on_builtin_helper();
-});
-
-add_task(async function test_report_amoFormEnabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.abuseReport.amoFormEnabled", true]],
-  });
   await browseraction_contextmenu_report_extension_helper();
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function test_report_amoFormDisabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.abuseReport.amoFormEnabled", false]],
-  });
-  await browseraction_contextmenu_report_extension_helper();
-  await SpecialPowers.popPrefEnv();
 });
 
 /**

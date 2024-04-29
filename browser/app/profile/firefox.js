@@ -23,8 +23,6 @@ pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindowMac.
 
 // Set add-ons abuse report related prefs specific to Firefox Desktop.
 pref("extensions.abuseReport.enabled", true);
-pref("extensions.abuseReport.amWebAPI.enabled", true);
-pref("extensions.abuseReport.amoFormEnabled", true);
 
 // Enables some extra Extension System Logging (can reduce performance)
 pref("extensions.logging.enabled", false);
@@ -1928,7 +1926,7 @@ pref("identity.mobilepromo.ios", "https://www.mozilla.org/firefox/ios/?utm_sourc
 pref("identity.fxaccounts.commands.missed.fetch_interval", 86400);
 
 // Controls whether this client can send and receive "close tab"
-// commands from other FxA clients 
+// commands from other FxA clients
 pref("identity.fxaccounts.commands.remoteTabManagement.enabled", false);
 
 // Note: when media.gmp-*.visible is true, provided we're running on a

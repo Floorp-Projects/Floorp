@@ -185,8 +185,7 @@ search-addons > search-textbox {
   max-width: var(--section-width);
 }
 
-global-warnings,
-#abuse-reports-messages {
+global-warnings {
   margin-inline-start: var(--main-margin-start);
   max-width: var(--section-width);
 }

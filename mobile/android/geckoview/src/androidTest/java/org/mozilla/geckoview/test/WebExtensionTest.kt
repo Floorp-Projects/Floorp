@@ -3721,11 +3721,6 @@ class WebExtensionTest : BaseSessionTest() {
             mainSession.evaluateJS("typeof navigator.mozAddonManager") as String,
             equalTo("object"),
         )
-        assertThat(
-            "mozAddonManager.abuseReportPanelEnabled should be false",
-            mainSession.evaluateJS("navigator.mozAddonManager.abuseReportPanelEnabled") as Boolean,
-            equalTo(false),
-        )
 
         // Install an add-on, then assert results got from `mozAddonManager.getAddonByID()`.
         var addonId = ""

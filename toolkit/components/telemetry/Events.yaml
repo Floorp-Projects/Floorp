@@ -294,33 +294,6 @@ addonsManager:
     record_in_processes: ["main"]
     bug_numbers: [1433335, 1515697, 1523641, 1549770, 1590736, 1630596, 1672570, 1714251, 1749878, 1781974, 1817100, 1861295]
     release_channel_collection: opt-out
-  report:
-    description: >
-      An abuse report submitted by a user for a given extension. The object of the event
-      represent the report entry point, the value is the id of the addon being reported.
-    objects:
-      - amo
-      - menu
-      - toolbar_context_menu
-      - unified_context_menu
-      - uninstall
-    extra_keys:
-      addon_type: >
-        The type of the add-on being reported (missing on ERROR_ADDON_NOT_FOUND, ERROR_AMODETAILS_NOTFOUND
-        and ERROR_AMODETAILS_FAILURE).
-      error_type: >
-        AbuseReport Error Type (included in case of submission failures). The error types include
-        ERROR_ABORTED_SUBMIT, ERROR_ADDON_NOT_FOUND, ERROR_CLIENT, ERROR_NETWORK, ERROR_UNKNOWN,
-        ERROR_RECENT_SUBMIT, ERROR_SERVER, ERROR_AMODETAILS_NOTFOUND, ERROR_AMODETAILS_FAILURE.
-    notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "132"
-    products:
-      - "firefox"
-      - "fennec"
-      - "thunderbird"
-    record_in_processes: ["main"]
-    bug_numbers: [1544927, 1580561, 1590736, 1630596, 1672570, 1714251, 1749878, 1780746, 1781974, 1817100, 1861295]
-    release_channel_collection: opt-out
   reportSuspiciousSite:
     description: >
       Sent when a user clicks "Report Suspicious Site" on the dropdown menu of the third-
