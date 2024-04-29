@@ -6,6 +6,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "nsIBounceTrackingProtection.h"
 #include "nsIClearDataService.h"
 
@@ -82,13 +83,16 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
     NS_DECL_NSICLEARDATACALLBACK
 
     explicit ClearDataCallback(ClearDataMozPromise::Private* aPromise,
-                               const nsACString& aHost)
-        : mHost(aHost), mPromise(aPromise){};
+                               const nsACString& aHost);
 
    private:
-    virtual ~ClearDataCallback() { mPromise->Reject(0, __func__); }
+    virtual ~ClearDataCallback();
 
     nsCString mHost;
+
+    void RecordClearDurationTelemetry();
+
+    glean::TimerId mClearDurationTimer;
     RefPtr<ClearDataMozPromise::Private> mPromise;
   };
 };

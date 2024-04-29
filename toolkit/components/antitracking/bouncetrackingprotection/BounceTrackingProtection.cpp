@@ -660,6 +660,26 @@ nsresult BounceTrackingProtection::ClearExpiredUserInteractions(
 NS_IMPL_ISUPPORTS(BounceTrackingProtection::ClearDataCallback,
                   nsIClearDataCallback);
 
+BounceTrackingProtection::ClearDataCallback::ClearDataCallback(
+    ClearDataMozPromise::Private* aPromise, const nsACString& aHost)
+    : mHost(aHost), mClearDurationTimer(0), mPromise(aPromise) {
+  MOZ_ASSERT(!aHost.IsEmpty(), "Host must not be empty");
+  if (!StaticPrefs::privacy_bounceTrackingProtection_enableDryRunMode()) {
+    // Only collect timing information when actually performing the deletion
+    mClearDurationTimer =
+        glean::bounce_tracking_protection::purge_duration.Start();
+    MOZ_ASSERT(mClearDurationTimer);
+  }
+};
+
+BounceTrackingProtection::ClearDataCallback::~ClearDataCallback() {
+  mPromise->Reject(0, __func__);
+  if (mClearDurationTimer) {
+    glean::bounce_tracking_protection::purge_duration.Cancel(
+        std::move(mClearDurationTimer));
+  }
+}
+
 // nsIClearDataCallback implementation
 NS_IMETHODIMP BounceTrackingProtection::ClearDataCallback::OnDataDeleted(
     uint32_t aFailedFlags) {
@@ -670,7 +690,17 @@ NS_IMETHODIMP BounceTrackingProtection::ClearDataCallback::OnDataDeleted(
             ("%s: Cleared %s", __FUNCTION__, mHost.get()));
     mPromise->Resolve(std::move(mHost), __func__);
   }
+  RecordClearDurationTelemetry();
   return NS_OK;
+}
+
+void BounceTrackingProtection::ClearDataCallback::
+    RecordClearDurationTelemetry() {
+  if (mClearDurationTimer) {
+    glean::bounce_tracking_protection::purge_duration.StopAndAccumulate(
+        std::move(mClearDurationTimer));
+    mClearDurationTimer = 0;
+  }
 }
 
 }  // namespace mozilla
