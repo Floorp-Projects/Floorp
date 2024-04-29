@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "FrameStatistics.h"
+#include "MediaCodecsSupport.h"
 #include "VideoUtils.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/Logging.h"
@@ -789,6 +790,33 @@ double TelemetryProbesReporter::GetMutedPlayTimeInSeconds() const {
 
 double TelemetryProbesReporter::GetAudiblePlayTimeInSeconds() const {
   return GetTotalAudioPlayTimeInSeconds() - GetInaudiblePlayTimeInSeconds();
+}
+
+/*  static */
+void TelemetryProbesReporter::ReportDeviceMediaCodecSupported(
+    const media::MediaCodecsSupported& aSupported) {
+  static bool sReported = false;
+  if (sReported) {
+    return;
+  }
+  MOZ_ASSERT(ContainHardwareCodecsSupported(aSupported));
+  sReported = true;
+
+  glean::media_playback::device_hardware_decoder_support.Get("h264"_ns).Set(
+      aSupported.contains(
+          mozilla::media::MediaCodecsSupport::H264HardwareDecode));
+  glean::media_playback::device_hardware_decoder_support.Get("vp8"_ns).Set(
+      aSupported.contains(
+          mozilla::media::MediaCodecsSupport::VP8HardwareDecode));
+  glean::media_playback::device_hardware_decoder_support.Get("vp9"_ns).Set(
+      aSupported.contains(
+          mozilla::media::MediaCodecsSupport::VP9HardwareDecode));
+  glean::media_playback::device_hardware_decoder_support.Get("av1"_ns).Set(
+      aSupported.contains(
+          mozilla::media::MediaCodecsSupport::AV1HardwareDecode));
+  glean::media_playback::device_hardware_decoder_support.Get("hevc"_ns).Set(
+      aSupported.contains(
+          mozilla::media::MediaCodecsSupport::HEVCHardwareDecode));
 }
 
 #undef LOG

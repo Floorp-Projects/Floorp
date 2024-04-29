@@ -9,6 +9,7 @@
 
 #include "AudioSampleFormat.h"
 #include "MediaInfo.h"
+#include "MediaCodecsSupport.h"
 #include "VideoLimits.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Attributes.h"
@@ -553,9 +554,9 @@ bool IsWaveMimetype(const nsACString& aMimeType);
 void DetermineResolutionForTelemetry(const MediaInfo& aInfo,
                                      nsCString& aResolutionOut);
 
-// Used in the GPU and RDD process for reporting Glean result on different
-// platforms.
-void ReportHardwareMediaCodecSupportProbe();
+// True if given MediaCodecsSupported contains any hardware decoding support.
+bool ContainHardwareCodecsSupported(
+    const media::MediaCodecsSupported& aSupport);
 
 }  // end namespace mozilla
 
