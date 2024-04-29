@@ -426,6 +426,19 @@ internal object TranslationsStateReducer {
             }
         }
 
+        is TranslationsAction.UpdateLanguageSettingsAction -> {
+            val languageSettings = state.translationEngine.languageSettings?.toMutableMap()
+            // Only set when keys are present.
+            if (languageSettings?.get(action.languageCode) != null) {
+                languageSettings[action.languageCode] = action.setting
+            }
+            state.copy(
+                translationEngine = state.translationEngine.copy(
+                    languageSettings = languageSettings,
+                ),
+            )
+        }
+
         is TranslationsAction.SetGlobalOfferTranslateSettingAction -> {
             state.copy(
                 translationEngine = state.translationEngine.copy(

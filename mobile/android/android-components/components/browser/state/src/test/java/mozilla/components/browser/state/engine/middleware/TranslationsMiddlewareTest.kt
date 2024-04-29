@@ -1022,4 +1022,39 @@ class TranslationsMiddlewareTest {
         verify(engine, atLeastOnce()).setTranslationsOfferPopup(offer = true)
         waitForIdle()
     }
+
+    @Test
+    fun `WHEN UpdateLanguageSettingsAction is dispatched and fails THEN SetLanguageSettingsAction is dispatched`() = runTest {
+        // Send Action
+        val action =
+            TranslationsAction.UpdateLanguageSettingsAction(
+                languageCode = "es",
+                setting = LanguageSetting.ALWAYS,
+            )
+        translationsMiddleware.invoke(context, {}, action)
+
+        waitForIdle()
+
+        // Mock engine error
+        val updateLanguagesErrorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine).setLanguageSetting(
+            languageCode = any(),
+            languageSetting = any(),
+            onSuccess = any(),
+            onError = updateLanguagesErrorCallback.capture(),
+        )
+        updateLanguagesErrorCallback.value.invoke(Throwable())
+
+        waitForIdle()
+
+        // Verify Dispatch
+        val languageSettingsCallback = argumentCaptor<((Map<String, LanguageSetting>) -> Unit)>()
+        verify(engine, atLeastOnce()).getLanguageSettings(
+            onSuccess = languageSettingsCallback.capture(),
+            onError = any(),
+        )
+        val mockLanguageSetting = mapOf("en" to LanguageSetting.OFFER)
+        languageSettingsCallback.value.invoke(mockLanguageSetting)
+        waitForIdle()
+    }
 }

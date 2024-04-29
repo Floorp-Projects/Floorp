@@ -165,6 +165,17 @@ class TranslationsMiddleware(
                     )
                 }
             }
+
+            is TranslationsAction.UpdateLanguageSettingsAction -> {
+                scope.launch {
+                    updateLanguageSetting(
+                        context = context,
+                        languageCode = action.languageCode,
+                        setting = action.setting,
+                    )
+                }
+            }
+
             else -> {
                 // no-op
             }
@@ -750,8 +761,8 @@ class TranslationsMiddleware(
     /**
      * Updates the language settings with the [Engine].
      *
-     * If an error occurs, then the method will request the page settings be re-fetched and set on
-     * the browser store.
+     * If an error occurs, and a [tabId] is known then the method will request the page settings be
+     * re-fetched and set on the browser store.
      *
      * @param context The context used to request the page settings.
      * @param tabId Tab ID associated with the request.
@@ -760,7 +771,7 @@ class TranslationsMiddleware(
      */
     private fun updateLanguageSetting(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        tabId: String,
+        tabId: String? = null,
         languageCode: String,
         setting: LanguageSetting,
     ) {
@@ -771,26 +782,37 @@ class TranslationsMiddleware(
             languageSetting = setting,
 
             onSuccess = {
-                // Ensure the session's page settings remain in sync with this update.
-                context.store.dispatch(
-                    TranslationsAction.OperationRequestedAction(
-                        tabId = tabId,
-                        operation = TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS,
-                    ),
-                )
+                // Value was proactively updated in [TranslationsStateReducer] for
+                // [TranslationsBrowserState.languageSettings]
+
+                if (tabId != null) {
+                    // Ensure the session's page settings remain in sync with this update.
+                    context.store.dispatch(
+                        TranslationsAction.OperationRequestedAction(
+                            tabId = tabId,
+                            operation = TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS,
+                        ),
+                    )
+                }
+
                 logger.info("Successfully updated the language preference.")
             },
 
             onError = {
                 logger.error("Could not update the language preference.", it)
+                // The browser store [TranslationsBrowserState.languageSettings] is out of sync,
+                // re-request to sync the state.
+                requestLanguageSettings(context, tabId)
 
-                // Fetch page settings to ensure the state matches the engine.
-                context.store.dispatch(
-                    TranslationsAction.OperationRequestedAction(
-                        tabId = tabId,
-                        operation = TranslationOperation.FETCH_PAGE_SETTINGS,
-                    ),
-                )
+                if (tabId != null) {
+                    // Fetch page settings to ensure the state matches the engine.
+                    context.store.dispatch(
+                        TranslationsAction.OperationRequestedAction(
+                            tabId = tabId,
+                            operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+                        ),
+                    )
+                }
             },
         )
     }

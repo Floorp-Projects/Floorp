@@ -1082,6 +1082,20 @@ sealed class TranslationsAction : BrowserAction() {
     ) : TranslationsAction()
 
     /**
+     * Updates the specified translation language setting on the translation engine and ensures the
+     * final state on the global store remains in-sync.
+     *
+     * See [UpdatePageSettingAction] for updating the language setting on the session store.
+     *
+     * @property languageCode The BCP-47 language code to update.
+     * @property setting The [LanguageSetting] for the language.
+     */
+    data class UpdateLanguageSettingsAction(
+        val languageCode: String,
+        val setting: LanguageSetting,
+    ) : TranslationsAction()
+
+    /**
      * Sets the list of sites that the user has opted to never translate.
      *
      * @property neverTranslateSites The never translate sites.
