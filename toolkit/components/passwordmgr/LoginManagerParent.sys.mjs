@@ -1549,6 +1549,23 @@ export class LoginManagerParent extends JSWindowActorParent {
   async searchAutoCompleteEntries(searchString, data) {
     return this.doAutocompleteSearch(data.formOrigin, data);
   }
+
+  previewFields(_result) {
+    // Logins do not show previews
+  }
+
+  autofillFields(result) {
+    if (result.style == "login" || result.style == "loginWithOrigin") {
+      try {
+        const profile = JSON.parse(result.comment);
+        this.sendAsyncMessage("PasswordManager:fillFields", profile.login);
+      } catch (e) {
+        lazy.log("Fail to get autofill profile: ", e.message);
+      }
+    } else if (result.style == "generatedPassword") {
+      this.sendAsyncMessage("PasswordManager:fillGeneratedPassword");
+    }
+  }
 }
 
 LoginManagerParent.SUGGEST_IMPORT_DEBOUNCE_MS = 10000;

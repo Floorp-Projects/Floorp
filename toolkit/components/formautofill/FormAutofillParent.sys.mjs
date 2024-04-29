@@ -696,4 +696,25 @@ export class FormAutofillParent extends JSWindowActorParent {
 
     return true;
   }
+
+  previewFields(result) {
+    try {
+      const profile =
+        result.style == "autofill" ? JSON.parse(result.comment) : null;
+      this.sendAsyncMessage("FormAutofill:PreviewProfile", profile);
+    } catch (e) {
+      lazy.log.debug("Fail to get preview profile: ", e.message);
+    }
+  }
+
+  autofillFields(result) {
+    if (result.style == "autofill") {
+      try {
+        const profile = JSON.parse(result.comment);
+        this.sendAsyncMessage("FormAutofill:FillForm", profile);
+      } catch (e) {
+        lazy.log.debug("Fail to get autofill profile.");
+      }
+    }
+  }
 }

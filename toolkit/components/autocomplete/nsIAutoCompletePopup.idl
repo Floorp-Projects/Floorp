@@ -92,4 +92,8 @@ interface nsIAutoCompletePopup : nsISupports
    */
   void stopSearch();
 
+  /**
+   * Notify the autocomplete popup that an autocomplete entry is selected.
+   */
+  void selectEntry();
 };

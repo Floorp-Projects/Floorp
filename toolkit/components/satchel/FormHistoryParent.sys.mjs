@@ -205,4 +205,12 @@ export class FormHistoryParent extends JSWindowActorParent {
     }
     entry.totalScore = Math.round(entry.frecency * Math.max(1, boundaryCalc));
   }
+
+  previewFields(_result) {
+    // Not implemented
+  }
+
+  autofillFields(_result) {
+    // Not implemented
+  }
 }
