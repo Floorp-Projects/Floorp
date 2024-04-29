@@ -33,6 +33,10 @@ void ComputePipeline::Cleanup() {
   mValid = false;
 
   auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
   if (bridge->CanSend()) {
     bridge->SendComputePipelineDrop(mId);
     if (mImplicitPipelineLayoutId) {
@@ -54,6 +58,7 @@ void ComputePipeline::Cleanup() {
 already_AddRefed<BindGroupLayout> ComputePipeline::GetBindGroupLayout(
     uint32_t aIndex) const {
   auto bridge = mParent->GetBridge();
+  MOZ_ASSERT(bridge && bridge->CanSend());
   auto* client = bridge->GetClient();
 
   ipc::ByteBuf bb;
