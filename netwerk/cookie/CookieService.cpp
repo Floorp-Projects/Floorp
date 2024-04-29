@@ -630,9 +630,10 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
   ThirdPartyAnalysisResult result = mThirdPartyUtil->AnalyzeChannel(
       aChannel, false, aHostURI, nullptr, &rejectedReason);
 
-  OriginAttributes attrs;
+  OriginAttributes storagePrincipalOriginAttributes;
   StoragePrincipalHelper::GetOriginAttributes(
-      aChannel, attrs, StoragePrincipalHelper::eStorageAccessPrincipal);
+      aChannel, storagePrincipalOriginAttributes,
+      StoragePrincipalHelper::eStorageAccessPrincipal);
 
   // get the base domain for the host URI.
   // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
@@ -660,11 +661,11 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
                                             baseDomainFromURI);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
-  CookieStorage* storage = PickStorage(attrs);
+  CookieStorage* storage = PickStorage(storagePrincipalOriginAttributes);
 
   // check default prefs
   uint32_t priorCookieCount = storage->CountCookiesFromHost(
-      baseDomainFromURI, attrs.mPrivateBrowsingId);
+      baseDomainFromURI, storagePrincipalOriginAttributes.mPrivateBrowsingId);
 
   nsCOMPtr<nsIConsoleReportCollector> crc = do_QueryInterface(aChannel);
 
@@ -674,7 +675,8 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
-      aCookieHeader, priorCookieCount, attrs, &rejectedReason);
+      aCookieHeader, priorCookieCount, storagePrincipalOriginAttributes,
+      &rejectedReason);
 
   MOZ_ASSERT_IF(rejectedReason, cookieStatus == STATUS_REJECTED);
 
@@ -718,9 +720,24 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
 
   nsCString cookieHeader(aCookieHeader);
 
-  bool moreCookieToRead = true;
+  // CHIPS - The partitioned cookie jar is always available and it is always
+  // possible to store cookies in it using the "Partitioned" attribute.
+  // Prepare the partitioned principals OAs to enable possible partitioned
+  // cookie storing from first-party or with StorageAccess.
+  // Similar behavior to CookieServiceChild::SetCookieStringFromHttp().
+  OriginAttributes partitionedPrincipalOriginAttributes;
+  bool isPartitionedPrincipal =
+      !storagePrincipalOriginAttributes.mPartitionKey.IsEmpty();
+  bool isCHIPS = StaticPrefs::network_cookie_cookieBehavior_optInPartitioning();
+  // Only need to get OAs if we don't already use the partitioned principal.
+  if (isCHIPS && !isPartitionedPrincipal) {
+    StoragePrincipalHelper::GetOriginAttributes(
+        aChannel, partitionedPrincipalOriginAttributes,
+        StoragePrincipalHelper::ePartitionedPrincipal);
+  }
 
   // process each cookie in the header
+  bool moreCookieToRead = true;
   while (moreCookieToRead) {
     CookieStruct cookieData;
     bool canSetCookie = false;
@@ -751,8 +768,22 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
       continue;
     }
 
+    // CHIPS - If the partitioned attribute is set, store cookie in partitioned
+    // cookie jar independent of context. If the cookies are stored in the
+    // partitioned cookie jar anyway no special treatment of CHIPS cookies
+    // necessary.
+    bool needPartitioned =
+        isCHIPS && cookieData.isPartitioned() && !isPartitionedPrincipal;
+    OriginAttributes& cookieOriginAttributes =
+        needPartitioned ? partitionedPrincipalOriginAttributes
+                        : storagePrincipalOriginAttributes;
+    // Assert that partitionedPrincipalOriginAttributes are initialized if used.
+    MOZ_ASSERT_IF(
+        needPartitioned,
+        !partitionedPrincipalOriginAttributes.mPartitionKey.IsEmpty());
+
     // create a new Cookie
-    RefPtr<Cookie> cookie = Cookie::Create(cookieData, attrs);
+    RefPtr<Cookie> cookie = Cookie::Create(cookieData, cookieOriginAttributes);
     MOZ_ASSERT(cookie);
 
     int64_t currentTimeInUsec = PR_Now();
@@ -763,8 +794,8 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
     RefPtr<BrowsingContext> bc = loadInfo->GetBrowsingContext();
 
     // add the cookie to the list. AddCookie() takes care of logging.
-    storage->AddCookie(crc, baseDomain, attrs, cookie, currentTimeInUsec,
-                       aHostURI, aCookieHeader, true, bc);
+    storage->AddCookie(crc, baseDomain, cookieOriginAttributes, cookie,
+                       currentTimeInUsec, aHostURI, aCookieHeader, true, bc);
   }
 
   return NS_OK;

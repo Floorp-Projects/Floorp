@@ -488,7 +488,14 @@ CookieServiceChild::SetCookieStringFromDocument(
     // (those come from the parent, which already checks this),
     // but script could see an inconsistent view of things.
 
-    nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveCookiePrincipal();
+    // CHIPS - If the cookie has the "Partitioned" attribute set it will be
+    // stored in the partitioned cookie jar.
+    bool needPartitioned =
+        StaticPrefs::network_cookie_cookieBehavior_optInPartitioning() &&
+        cookie->RawIsPartitioned();
+    nsCOMPtr<nsIPrincipal> principal =
+        needPartitioned ? aDocument->PartitionedPrincipal()
+                        : aDocument->EffectiveCookiePrincipal();
     bool isPotentiallyTrustworthy =
         principal->GetIsOriginPotentiallyTrustworthy();
 
@@ -560,9 +567,10 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
 
   nsCString cookieString(aCookieString);
 
-  OriginAttributes attrs = loadInfo->GetOriginAttributes();
+  OriginAttributes storagePrincipalOriginAttributes =
+      loadInfo->GetOriginAttributes();
   StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
-      aChannel, attrs);
+      aChannel, storagePrincipalOriginAttributes);
 
   bool requireHostMatch;
   nsCString baseDomain;
@@ -580,17 +588,14 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
-      aCookieString, CountCookiesFromHashTable(baseDomain, attrs), attrs,
-      &rejectedReason);
+      aCookieString,
+      CountCookiesFromHashTable(baseDomain, storagePrincipalOriginAttributes),
+      storagePrincipalOriginAttributes, &rejectedReason);
 
   if (cookieStatus != STATUS_ACCEPTED &&
       cookieStatus != STATUS_ACCEPT_SESSION) {
     return NS_OK;
   }
-
-  CookieKey key(baseDomain, attrs);
-
-  nsTArray<CookieStruct> cookiesToSend;
 
   int64_t currentTimeInUsec = PR_Now();
 
@@ -612,6 +617,23 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
       !result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted);
 
+  // CHIPS - The partitioned cookie jar is always available and it is always
+  // possible to store cookies in it using the "Partitioned" attribute.
+  // Prepare the partitioned principals OAs to enable possible partitioned
+  // cookie storing from first-party or with StorageAccess.
+  // Similar behavior to CookieService::SetCookieStringFromHttp().
+  OriginAttributes partitionedPrincipalOriginAttributes;
+  bool isPartitionedPrincipal =
+      !storagePrincipalOriginAttributes.mPartitionKey.IsEmpty();
+  bool isCHIPS = StaticPrefs::network_cookie_cookieBehavior_optInPartitioning();
+  // Only need to get OAs if we don't already use the partitioned principal.
+  if (isCHIPS && !isPartitionedPrincipal) {
+    StoragePrincipalHelper::GetOriginAttributes(
+        aChannel, partitionedPrincipalOriginAttributes,
+        StoragePrincipalHelper::ePartitionedPrincipal);
+  }
+
+  nsTArray<CookieStruct> cookiesToSend, partitionedCookiesToSend;
   bool moreCookies;
   do {
     CookieStruct cookieData;
@@ -642,23 +664,47 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
       continue;
     }
 
-    RefPtr<Cookie> cookie = Cookie::Create(cookieData, attrs);
+    // CHIPS - If the partitioned attribute is set, store cookie in partitioned
+    // cookie jar independent of context. If the cookies are stored in the
+    // partitioned cookie jar anyway no special treatment of CHIPS cookies
+    // necessary.
+    bool needPartitioned =
+        isCHIPS && cookieData.isPartitioned() && !isPartitionedPrincipal;
+    nsTArray<CookieStruct>& cookiesToSendRef =
+        needPartitioned ? partitionedCookiesToSend : cookiesToSend;
+    OriginAttributes& cookieOriginAttributes =
+        needPartitioned ? partitionedPrincipalOriginAttributes
+                        : storagePrincipalOriginAttributes;
+    // Assert that partitionedPrincipalOriginAttributes are initialized if used.
+    MOZ_ASSERT_IF(
+        needPartitioned,
+        !partitionedPrincipalOriginAttributes.mPartitionKey.IsEmpty());
+
+    RefPtr<Cookie> cookie = Cookie::Create(cookieData, cookieOriginAttributes);
     MOZ_ASSERT(cookie);
 
     cookie->SetLastAccessed(currentTimeInUsec);
     cookie->SetCreationTime(
         Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
 
-    RecordDocumentCookie(cookie, attrs);
-    cookiesToSend.AppendElement(cookieData);
+    RecordDocumentCookie(cookie, cookieOriginAttributes);
+    cookiesToSendRef.AppendElement(cookieData);
   } while (moreCookies);
 
   // Asynchronously call the parent.
-  if (CanSend() && !cookiesToSend.IsEmpty()) {
+  if (CanSend()) {
     RefPtr<HttpChannelChild> httpChannelChild = do_QueryObject(aChannel);
     MOZ_ASSERT(httpChannelChild);
-    httpChannelChild->SendSetCookies(baseDomain, attrs, aHostURI, true,
-                                     cookiesToSend);
+    if (!cookiesToSend.IsEmpty()) {
+      httpChannelChild->SendSetCookies(baseDomain,
+                                       storagePrincipalOriginAttributes,
+                                       aHostURI, true, cookiesToSend);
+    }
+    if (!partitionedCookiesToSend.IsEmpty()) {
+      httpChannelChild->SendSetCookies(
+          baseDomain, partitionedPrincipalOriginAttributes, aHostURI, true,
+          partitionedCookiesToSend);
+    }
   }
 
   return NS_OK;
