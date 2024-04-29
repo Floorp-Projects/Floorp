@@ -5,6 +5,7 @@
 #ifndef DOM_TelemetryProbesReporter_H_
 #define DOM_TelemetryProbesReporter_H_
 
+#include "MediaCodecsSupport.h"
 #include "MediaInfo.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/AwakeTimeStamp.h"
@@ -55,6 +56,9 @@ class TelemetryProbesReporter final {
   static MediaContent MediaInfoToMediaContent(const MediaInfo& aInfo);
 
   using AudibleState = dom::AudioChannelService::AudibleState;
+
+  static void ReportDeviceMediaCodecSupported(
+      const media::MediaCodecsSupported& aSupported);
 
   // State transitions
   void OnPlay(Visibility aVisibility, MediaContent aContent, bool aIsMuted);

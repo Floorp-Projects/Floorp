@@ -8,12 +8,15 @@
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
 #include "GfxInfoBase.h"
+#include "TelemetryProbesReporter.h"
+#include "VideoUtils.h"
 #include "VRProcessManager.h"
 #include "gfxConfig.h"
 #include "gfxPlatform.h"
 #include "mozilla/Components.h"
 #include "mozilla/FOGIPC.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/dom/CheckerboardReportService.h"
@@ -341,8 +344,24 @@ mozilla::ipc::IPCResult GPUChild::RecvBHRThreadHang(
 
 mozilla::ipc::IPCResult GPUChild::RecvUpdateMediaCodecsSupported(
     const media::MediaCodecsSupported& aSupported) {
+  if (ContainHardwareCodecsSupported(aSupported)) {
+    mozilla::TelemetryProbesReporter::ReportDeviceMediaCodecSupported(
+        aSupported);
+  }
+#if defined(XP_WIN)
+  // Do not propagate HEVC support if the pref is off
+  media::MediaCodecsSupported trimedSupported = aSupported;
+  if (aSupported.contains(
+          mozilla::media::MediaCodecsSupport::HEVCHardwareDecode) &&
+      StaticPrefs::media_wmf_hevc_enabled() != 1) {
+    trimedSupported -= mozilla::media::MediaCodecsSupport::HEVCHardwareDecode;
+  }
+  dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(
+      RemoteDecodeIn::GpuProcess, trimedSupported);
+#else
   dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(
       RemoteDecodeIn::GpuProcess, aSupported);
+#endif
   return IPC_OK();
 }
 

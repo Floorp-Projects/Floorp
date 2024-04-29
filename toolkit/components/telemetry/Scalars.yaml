@@ -2947,6 +2947,7 @@ media:
   device_hardware_decoding_support:
     bug_numbers:
       - 1850594
+      - 1892516
     description: >
       Record the hardware decoding availability on devices, the key is the name of video codec, eg. h264, av1.
     expires: never
@@ -2958,8 +2959,7 @@ media:
     products:
       - 'firefox'
     record_in_processes:
-      - 'gpu'
-      - 'rdd'
+      - 'main'
 
 # The following section contains content process base counters.
 dom.contentprocess:
