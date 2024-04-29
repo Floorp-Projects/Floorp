@@ -201,6 +201,9 @@ def config_status(
         pool = BackendPool(definitions, processes=processes)
         pool.run(selected_backends)
     else:
+        if len(selected_backends) > 1:
+            definitions = list(definitions)
+
         for backend in selected_backends:
             backend.consume(definitions)
 
