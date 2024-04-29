@@ -169,7 +169,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC(avcodec_register_all, AV_FUNC_53 | AV_FUNC_54 | AV_FUNC_55 |
                                     AV_FUNC_56 | AV_FUNC_57 | AV_FUNC_58)
   AV_FUNC(av_init_packet, (AV_FUNC_55 | AV_FUNC_56 | AV_FUNC_57 | AV_FUNC_58 |
-                              AV_FUNC_59 | AV_FUNC_60))
+                           AV_FUNC_59 | AV_FUNC_60))
   AV_FUNC(av_parser_init, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(av_parser_close, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(av_parser_parse2, AV_FUNC_AVCODEC_ALL)
@@ -277,9 +277,9 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                         AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60 | AV_FUNC_61)
   AV_FUNC_OPTION_SILENT(avcodec_get_name, AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 |
                                               AV_FUNC_60 | AV_FUNC_61)
-  AV_FUNC_OPTION_SILENT(
-      av_get_pix_fmt_string,
-      AV_FUNC_AVUTIL_58 | AV_FUNC_AVUTIL_59 | AV_FUNC_AVUTIL_60 | AV_FUNC_AVUTIL_61)
+  AV_FUNC_OPTION_SILENT(av_get_pix_fmt_string,
+                        AV_FUNC_AVUTIL_58 | AV_FUNC_AVUTIL_59 |
+                            AV_FUNC_AVUTIL_60 | AV_FUNC_AVUTIL_61)
 #endif
 
   AV_FUNC_OPTION(av_tx_init, AV_FUNC_AVUTIL_ALL)
