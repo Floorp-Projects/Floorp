@@ -4544,6 +4544,18 @@ bool BaselineCodeGen<Handler>::emit_TypeofExpr() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_TypeofEq() {
+  frame.popRegsAndSync(1);
+
+  if (!emitNextIC()) {
+    return false;
+  }
+
+  frame.push(R0);
+  return true;
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_ThrowMsg() {
   prepareVMCall();
   pushUint8BytecodeOperandArg(R2.scratchReg());

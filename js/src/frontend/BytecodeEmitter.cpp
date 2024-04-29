@@ -11499,6 +11499,90 @@ bool BytecodeEmitter::emitTypeof(UnaryNode* typeofNode, JSOp op) {
   return emit1(op);
 }
 
+bool BytecodeEmitter::tryEmitTypeofEq(ListNode* node, bool* emitted) {
+  // Emit specialized opcode for `typeof val == "type` if possible.
+  //
+  // NOTE: Given the comparison is done for string, `==` and `===` have
+  //       no difference.
+  MOZ_ASSERT(node->isKind(ParseNodeKind::StrictEqExpr) ||
+             node->isKind(ParseNodeKind::EqExpr));
+
+  if (node->count() != 2) {
+    *emitted = false;
+    return true;
+  }
+
+  ParseNode* left = node->head();
+  ParseNode* right = left->pn_next;
+  MOZ_ASSERT(right);
+
+  UnaryNode* typeofNode;
+  NameNode* typenameNode;
+
+  // NOTE: ParseNodeKind::TypeOfExpr cannot use JSOp::TypeofEq.
+  //       See JSOp::GetName document.
+  if (left->isKind(ParseNodeKind::TypeOfNameExpr) &&
+      right->isKind(ParseNodeKind::StringExpr)) {
+    typeofNode = &left->as<UnaryNode>();
+    typenameNode = &right->as<NameNode>();
+  } else if (right->isKind(ParseNodeKind::TypeOfNameExpr) &&
+             left->isKind(ParseNodeKind::StringExpr)) {
+    typeofNode = &right->as<UnaryNode>();
+    typenameNode = &left->as<NameNode>();
+  } else {
+    *emitted = false;
+    return true;
+  }
+
+  JSType type;
+  TaggedParserAtomIndex typeName = typenameNode->atom();
+  if (typeName == TaggedParserAtomIndex::WellKnown::undefined()) {
+    type = JSTYPE_UNDEFINED;
+  } else if (typeName == TaggedParserAtomIndex::WellKnown::object()) {
+    type = JSTYPE_OBJECT;
+  } else if (typeName == TaggedParserAtomIndex::WellKnown::function()) {
+    type = JSTYPE_FUNCTION;
+  } else if (typeName == TaggedParserAtomIndex::WellKnown::string()) {
+    type = JSTYPE_STRING;
+  } else if (typeName == TaggedParserAtomIndex::WellKnown::number()) {
+    type = JSTYPE_NUMBER;
+  } else if (typeName == TaggedParserAtomIndex::WellKnown::boolean()) {
+    type = JSTYPE_BOOLEAN;
+  } else if (typeName == TaggedParserAtomIndex::WellKnown::symbol()) {
+    type = JSTYPE_SYMBOL;
+  } else if (typeName == TaggedParserAtomIndex::WellKnown::bigint()) {
+    type = JSTYPE_BIGINT;
+  }
+#ifdef ENABLE_RECORD_TUPLE
+  else if (typeName == TaggedParserAtomIndex::WellKnown::record()) {
+    type = JSTYPE_RECORD;
+  } else if (typeName == TaggedParserAtomIndex::WellKnown::tuple()) {
+    type = JSTYPE_TUPLE;
+  }
+#endif
+  else {
+    *emitted = false;
+    return true;
+  }
+
+  if (!updateSourceCoordNotes(typeofNode->pn_pos.begin)) {
+    return false;
+  }
+
+  if (!emitTree(typeofNode->kid())) {
+    //          [stack] VAL
+    return false;
+  }
+
+  if (!emit2(JSOp::TypeofEq, uint8_t(type))) {
+    //          [stack] EQ
+    return false;
+  }
+
+  *emitted = true;
+  return true;
+}
+
 bool BytecodeEmitter::emitFunctionFormalParameters(ParamsBodyNode* paramsBody) {
   FunctionBox* funbox = sc->asFunctionBox();
 
@@ -12394,13 +12478,23 @@ bool BytecodeEmitter::emitTree(
       }
       break;
 
+    case ParseNodeKind::StrictEqExpr:
+    case ParseNodeKind::EqExpr: {
+      bool emitted;
+      if (!tryEmitTypeofEq(&pn->as<ListNode>(), &emitted)) {
+        return false;
+      }
+      if (emitted) {
+        return true;
+      }
+    }
+      [[fallthrough]];
+
     case ParseNodeKind::AddExpr:
     case ParseNodeKind::SubExpr:
     case ParseNodeKind::BitOrExpr:
     case ParseNodeKind::BitXorExpr:
     case ParseNodeKind::BitAndExpr:
-    case ParseNodeKind::StrictEqExpr:
-    case ParseNodeKind::EqExpr:
     case ParseNodeKind::StrictNeExpr:
     case ParseNodeKind::NeExpr:
     case ParseNodeKind::LtExpr:

@@ -1624,6 +1624,22 @@ bool WarpCacheIRTranspiler::emitLoadTypeOfObjectResult(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadTypeOfEqObjectResult(ObjOperandId objId,
+                                                         JSType type) {
+  MDefinition* obj = getOperand(objId);
+  auto* typeOf = MTypeOf::New(alloc(), obj);
+  add(typeOf);
+
+  auto* typeInt = MConstant::New(alloc(), Int32Value(type));
+  add(typeInt);
+
+  auto* ins = MCompare::New(alloc(), typeOf, typeInt, JSOp::Eq,
+                            MCompare::Compare_Int32);
+  add(ins);
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadEnclosingEnvironment(
     ObjOperandId objId, ObjOperandId resultId) {
   MDefinition* env = getOperand(objId);

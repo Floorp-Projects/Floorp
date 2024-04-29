@@ -412,6 +412,19 @@
     MACRO(Typeof, typeof_, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     MACRO(TypeofExpr, typeof_expr, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
+     * A compound opcode for `typeof val === "type"`, where `val` is
+     * single identifier.
+     *
+     * Infallible. The result is always a boolean that depends on the type of
+     * `val` and `"type"` string.
+     *
+     *   Category: Expressions
+     *   Type: Other expressions
+     *   Operands: JSType type
+     *   Stack: val => (typeof val === "type")
+     */ \
+    MACRO(TypeofEq, typeof_eq, NULL, 2, 1, 1, JOF_UINT8|JOF_IC) \
+    /*
      * [The unary `+` operator][1].
      *
      * `+val` doesn't do any actual math. It just calls [ToNumber][2](val).
@@ -2860,7 +2873,8 @@
      *
      * If the binding is an uninitialized lexical, throw a ReferenceError. If
      * no such binding exists, throw a ReferenceError unless the next
-     * instruction is `JSOp::Typeof`, in which case push `undefined`.
+     * instruction is `JSOp::Typeof` or `JSOp::TypeofEq` (see IsTypeOfNameOp),
+     * in which case push `undefined`.
      *
      * Implements: [ResolveBinding][1] followed by [GetValue][2]
      * (adjusted hackily for `typeof`).
@@ -3635,14 +3649,13 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_RECORD_TUPLE(/* empty */, MACRO(235))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(236))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(237))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(238))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(239))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(240))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(241))     \
-  MACRO(242)                                   \
+  IF_RECORD_TUPLE(/* empty */, MACRO(242))     \
   MACRO(243)                                   \
   MACRO(244)                                   \
   MACRO(245)                                   \

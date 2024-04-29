@@ -7409,6 +7409,54 @@ bool CacheIRCompiler::emitLoadTypeOfObjectResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadTypeOfEqObjectResult(ObjOperandId objId,
+                                                   JSType type) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  Label slowCheck, isObject, isCallable, isUndefined, done;
+  masm.typeOfObject(obj, scratch, &slowCheck, &isObject, &isCallable,
+                    &isUndefined);
+
+  masm.bind(&isCallable);
+  masm.moveValue(BooleanValue(type == JSTYPE_FUNCTION), output.valueReg());
+  masm.jump(&done);
+
+  masm.bind(&isUndefined);
+  masm.moveValue(BooleanValue(type == JSTYPE_UNDEFINED), output.valueReg());
+  masm.jump(&done);
+
+  masm.bind(&isObject);
+  masm.moveValue(BooleanValue(type == JSTYPE_OBJECT), output.valueReg());
+  masm.jump(&done);
+
+  {
+    masm.bind(&slowCheck);
+    LiveRegisterSet save(GeneralRegisterSet::Volatile(),
+                         liveVolatileFloatRegs());
+    save.takeUnchecked(output.valueReg());
+    save.takeUnchecked(scratch);
+    masm.PushRegsInMask(save);
+
+    using Fn = bool (*)(JSObject* obj, JSType type);
+    masm.setupUnalignedABICall(scratch);
+    masm.passABIArg(obj);
+    masm.move32(Imm32(type), scratch);
+    masm.passABIArg(scratch);
+    masm.callWithABI<Fn, TypeOfEqObject>();
+    masm.storeCallBoolResult(scratch);
+
+    masm.PopRegsInMask(save);
+
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+  }
+
+  masm.bind(&done);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadInt32TruthyResult(ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);

@@ -182,6 +182,7 @@ class TypedOperandId : public OperandId {
   _(HasOwn)               \
   _(CheckPrivateField)    \
   _(TypeOf)               \
+  _(TypeOfEq)             \
   _(ToPropertyKey)        \
   _(InstanceOf)           \
   _(GetIterator)          \
