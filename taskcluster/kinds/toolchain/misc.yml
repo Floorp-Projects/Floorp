@@ -45,6 +45,8 @@ linux64-cctools-port:
         symbol: TL(cctools-clang)
     run:
         script: build-cctools-port.sh
+        resources:
+            - taskcluster/scripts/misc/cctools.patch
         toolchain-artifact: public/build/cctools.tar.zst
     fetches:
         toolchain:
