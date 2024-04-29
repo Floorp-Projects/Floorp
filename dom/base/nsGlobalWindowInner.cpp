@@ -3513,7 +3513,7 @@ double nsGlobalWindowInner::GetDevicePixelRatio(CallerType aCallerType,
     nsAutoCString origin;
     nsresult rv = this->GetPrincipal()->GetOrigin(origin);
     if (NS_FAILED(rv) || origin != "resource://pdf.js"_ns) {
-      return 2.0;
+      return 1.0;
     }
   }
 
