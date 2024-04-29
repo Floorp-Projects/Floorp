@@ -2357,9 +2357,15 @@ void CodeGenerator::visitEffectiveAddress(LEffectiveAddress* ins) {
   Register base = ToRegister(ins->base());
   Register index = ToRegister(ins->index());
   Register output = ToRegister(ins->output());
+  int32_t shift = Imm32::ShiftOf(mir->scale()).value;
 
-  BaseIndex address(base, index, mir->scale(), mir->displacement());
-  masm.computeEffectiveAddress(address, output);
+  if (shift) {
+    MOZ_ASSERT(shift <= 4);
+    masm.as_alsl_w(output, index, base, shift - 1);
+  } else {
+    masm.as_add_w(output, base, index);
+  }
+  masm.ma_add_w(output, output, Imm32(mir->displacement()));
 }
 
 void CodeGenerator::visitNegI(LNegI* ins) {
