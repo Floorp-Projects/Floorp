@@ -8,10 +8,28 @@ function getNewUtils() {
   return Utils;
 }
 
-function clear_state() {
+// A collection with a dump that's packaged on all builds where this test runs,
+// including on Android at mobile/android/installer/package-manifest.in
+const TEST_BUCKET = "main";
+const TEST_COLLECTION = "password-recipes";
+
+let client;
+let DUMP_LAST_MODIFIED;
+
+async function importData(records) {
+  await RemoteSettingsWorker._execute("_test_only_import", [
+    TEST_BUCKET,
+    TEST_COLLECTION,
+    records,
+    records[0]?.last_modified || 0,
+  ]);
+}
+
+async function clear_state() {
   Services.env.set("MOZ_REMOTE_SETTINGS_DEVTOOLS", "0");
   Services.prefs.clearUserPref("services.settings.server");
   Services.prefs.clearUserPref("services.settings.preview_enabled");
+  await client.db.clear();
 }
 
 add_setup(async function () {
@@ -20,6 +38,15 @@ add_setup(async function () {
   // See `isRunningTests` in `services/settings/Utils.sys.mjs`.
   const before = Services.env.get("MOZ_DISABLE_NONLOCAL_CONNECTIONS");
   Services.env.set("MOZ_DISABLE_NONLOCAL_CONNECTIONS", "0");
+
+  // "services.settings.server" pref is not set.
+  // Test defaults to an unreachable server,
+  // and will only load from the dump if any.
+
+  client = new RemoteSettingsClient(TEST_COLLECTION);
+
+  const dump = await SharedUtils.loadJSONDump(TEST_BUCKET, TEST_COLLECTION);
+  DUMP_LAST_MODIFIED = dump.timestamp;
 
   registerCleanupFunction(() => {
     clear_state();
@@ -182,6 +209,28 @@ add_task(
 
     const Utils = getNewUtils();
     Assert.ok(!Utils.LOAD_DUMPS, "Dumps won't be loaded");
+
+    // Dump is updated regularly, verify that the dump matches our expectations
+    // before running the test.
+    Assert.greater(
+      DUMP_LAST_MODIFIED,
+      1234,
+      "Assuming dump to be newer than dummy 1234"
+    );
+
+    await importData([{ last_modified: 1234, id: "dummy" }]);
+
+    const after = await client.get();
+    Assert.deepEqual(
+      after,
+      [{ last_modified: 1234, id: "dummy" }],
+      "Should have kept the original import"
+    );
+    Assert.equal(
+      await client.getLastModified(),
+      1234,
+      "Should have kept the import's timestamp"
+    );
   }
 );
 add_task(clear_state);
