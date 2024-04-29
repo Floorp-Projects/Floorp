@@ -439,7 +439,7 @@ bool js::GetElements(JSContext* cx, HandleObject aobj, uint32_t length,
   if (aobj->is<TypedArrayObject>()) {
     Handle<TypedArrayObject*> typedArray = aobj.as<TypedArrayObject>();
     if (typedArray->length().valueOr(0) == length) {
-      return TypedArrayObject::getElements(cx, typedArray, vp);
+      return TypedArrayObject::getElements(cx, typedArray, length, vp);
     }
   }
 
