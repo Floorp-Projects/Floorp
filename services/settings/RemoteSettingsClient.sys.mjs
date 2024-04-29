@@ -469,9 +469,10 @@ export class RemoteSettingsClient extends EventEmitter {
         } else {
           lazy.console.debug(`${this.identifier} Awaiting existing import.`);
         }
-      } else if (hasLocalData && loadDumpIfNewer) {
+      } else if (hasLocalData && loadDumpIfNewer && lazy.Utils.LOAD_DUMPS) {
         // Check whether the local data is older than the packaged dump.
-        // If it is, load the packaged dump (which overwrites the local data).
+        // If it is and we are on production, load the packaged dump (which
+        // overwrites the local data).
         let lastModifiedDump = await lazy.Utils.getLocalDumpLastModified(
           this.bucketName,
           this.collectionName
