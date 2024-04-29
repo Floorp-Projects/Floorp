@@ -47,6 +47,7 @@
 #include "vm/Opcodes.h"
 #include "vm/PlainObject.h"
 #include "vm/Shape.h"
+#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 
 #include "debugger/DebugAPI-inl.h"
 #include "jit/BaselineFrame-inl.h"
@@ -3434,8 +3435,11 @@ PBIResult PortableBaselineInterpret(JSContext* cx_, State& state, Stack& stack,
 
     CASE(TypeofEq) {
       if (kHybridICs) {
-        JSType type = JSType(GET_UINT8(pc));
-        bool result = js::TypeOfValue(Stack::handle(sp)) == type;
+        TypeofEqOperand operand = TypeofEqOperand(GET_UINT8(pc));
+        bool result = js::TypeOfValue(Stack::handle(sp)) == operand.type();
+        if (operand.compareOp() == JSOp::Ne) {
+          result = !result;
+        }
         sp[0] = StackVal(BooleanValue(result));
         NEXT_IC();
       } else {

@@ -49,7 +49,8 @@
 #include "vm/ProxyObject.h"
 #include "vm/RegExpObject.h"
 #include "vm/SelfHosting.h"
-#include "vm/ThrowMsgKind.h"  // ThrowCondition
+#include "vm/ThrowMsgKind.h"     // ThrowCondition
+#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #include "vm/Watchtower.h"
 #include "wasm/WasmInstance.h"
 
@@ -5814,10 +5815,12 @@ AttachDecision TypeOfIRGenerator::tryAttachObject(ValOperandId valId) {
 
 TypeOfEqIRGenerator::TypeOfEqIRGenerator(JSContext* cx, HandleScript script,
                                          jsbytecode* pc, ICState state,
-                                         HandleValue value, JSType type)
+                                         HandleValue value, JSType type,
+                                         JSOp compareOp)
     : IRGenerator(cx, script, pc, CacheKind::TypeOfEq, state),
       val_(value),
-      type_(type) {}
+      type_(type),
+      compareOp_(compareOp) {}
 
 void TypeOfEqIRGenerator::trackAttached(const char* name) {
   stubName_ = name ? name : "NotAttached";
@@ -5825,6 +5828,7 @@ void TypeOfEqIRGenerator::trackAttached(const char* name) {
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("val", val_);
     sp.jstypeProperty("type", type_);
+    sp.opcodeProperty("compareOp", compareOp_);
   }
 #endif
 }
@@ -5857,6 +5861,9 @@ AttachDecision TypeOfEqIRGenerator::tryAttachPrimitive(ValOperandId valId) {
   }
 
   bool result = js::TypeOfValue(val_) == type_;
+  if (compareOp_ == JSOp::Ne) {
+    result = !result;
+  }
   writer.loadBooleanResult(result);
   writer.returnFromIC();
   writer.setTypeData(TypeData(JSValueType(val_.type())));
@@ -5870,7 +5877,7 @@ AttachDecision TypeOfEqIRGenerator::tryAttachObject(ValOperandId valId) {
   }
 
   ObjOperandId objId = writer.guardToObject(valId);
-  writer.loadTypeOfEqObjectResult(objId, type_);
+  writer.loadTypeOfEqObjectResult(objId, TypeofEqOperand(type_, compareOp_));
   writer.returnFromIC();
   writer.setTypeData(TypeData(JSValueType(val_.type())));
   trackAttached("TypeOfEq.Object");

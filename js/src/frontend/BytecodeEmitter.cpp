@@ -72,6 +72,7 @@
 #include "vm/Scope.h"               // GetScopeDataTrailingNames
 #include "vm/SharedStencil.h"       // ScopeNote
 #include "vm/ThrowMsgKind.h"        // ThrowMsgKind
+#include "vm/TypeofEqOperand.h"     // TypeofEqOperand
 
 using namespace js;
 using namespace js::frontend;
@@ -11500,12 +11501,15 @@ bool BytecodeEmitter::emitTypeof(UnaryNode* typeofNode, JSOp op) {
 }
 
 bool BytecodeEmitter::tryEmitTypeofEq(ListNode* node, bool* emitted) {
-  // Emit specialized opcode for `typeof val == "type` if possible.
+  // Emit specialized opcode for `typeof val == "type` or `typeof val != "type`
+  // if possible.
   //
   // NOTE: Given the comparison is done for string, `==` and `===` have
-  //       no difference.
+  //       no difference. Same for `!=` and `!==`.
   MOZ_ASSERT(node->isKind(ParseNodeKind::StrictEqExpr) ||
-             node->isKind(ParseNodeKind::EqExpr));
+             node->isKind(ParseNodeKind::EqExpr) ||
+             node->isKind(ParseNodeKind::StrictNeExpr) ||
+             node->isKind(ParseNodeKind::NeExpr));
 
   if (node->count() != 2) {
     *emitted = false;
@@ -11518,6 +11522,14 @@ bool BytecodeEmitter::tryEmitTypeofEq(ListNode* node, bool* emitted) {
 
   UnaryNode* typeofNode;
   NameNode* typenameNode;
+  JSOp op;
+
+  if (node->isKind(ParseNodeKind::StrictEqExpr) ||
+      node->isKind(ParseNodeKind::EqExpr)) {
+    op = JSOp::Eq;
+  } else {
+    op = JSOp::Ne;
+  }
 
   // NOTE: ParseNodeKind::TypeOfExpr cannot use JSOp::TypeofEq.
   //       See JSOp::GetName document.
@@ -11574,8 +11586,8 @@ bool BytecodeEmitter::tryEmitTypeofEq(ListNode* node, bool* emitted) {
     return false;
   }
 
-  if (!emit2(JSOp::TypeofEq, uint8_t(type))) {
-    //          [stack] EQ
+  if (!emit2(JSOp::TypeofEq, TypeofEqOperand(type, op).rawValue())) {
+    //          [stack] CMP
     return false;
   }
 
@@ -12479,7 +12491,9 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::StrictEqExpr:
-    case ParseNodeKind::EqExpr: {
+    case ParseNodeKind::EqExpr:
+    case ParseNodeKind::StrictNeExpr:
+    case ParseNodeKind::NeExpr: {
       bool emitted;
       if (!tryEmitTypeofEq(&pn->as<ListNode>(), &emitted)) {
         return false;
@@ -12495,8 +12509,6 @@ bool BytecodeEmitter::emitTree(
     case ParseNodeKind::BitOrExpr:
     case ParseNodeKind::BitXorExpr:
     case ParseNodeKind::BitAndExpr:
-    case ParseNodeKind::StrictNeExpr:
-    case ParseNodeKind::NeExpr:
     case ParseNodeKind::LtExpr:
     case ParseNodeKind::LeExpr:
     case ParseNodeKind::GtExpr:

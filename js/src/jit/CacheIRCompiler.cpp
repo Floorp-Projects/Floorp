@@ -44,6 +44,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GetterSetter.h"
 #include "vm/Interpreter.h"
+#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #include "vm/Uint8Clamped.h"
 
 #include "builtin/Boolean-inl.h"
@@ -7410,26 +7411,41 @@ bool CacheIRCompiler::emitLoadTypeOfObjectResult(ObjOperandId objId) {
 }
 
 bool CacheIRCompiler::emitLoadTypeOfEqObjectResult(ObjOperandId objId,
-                                                   JSType type) {
+                                                   TypeofEqOperand operand) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  JSType type = operand.type();
+  JSOp compareOp = operand.compareOp();
+  bool result;
 
   Label slowCheck, isObject, isCallable, isUndefined, done;
   masm.typeOfObject(obj, scratch, &slowCheck, &isObject, &isCallable,
                     &isUndefined);
 
   masm.bind(&isCallable);
-  masm.moveValue(BooleanValue(type == JSTYPE_FUNCTION), output.valueReg());
+  result = type == JSTYPE_FUNCTION;
+  if (compareOp == JSOp::Ne) {
+    result = !result;
+  }
+  masm.moveValue(BooleanValue(result), output.valueReg());
   masm.jump(&done);
 
   masm.bind(&isUndefined);
-  masm.moveValue(BooleanValue(type == JSTYPE_UNDEFINED), output.valueReg());
+  result = type == JSTYPE_UNDEFINED;
+  if (compareOp == JSOp::Ne) {
+    result = !result;
+  }
+  masm.moveValue(BooleanValue(result), output.valueReg());
   masm.jump(&done);
 
   masm.bind(&isObject);
-  masm.moveValue(BooleanValue(type == JSTYPE_OBJECT), output.valueReg());
+  result = type == JSTYPE_OBJECT;
+  if (compareOp == JSOp::Ne) {
+    result = !result;
+  }
+  masm.moveValue(BooleanValue(result), output.valueReg());
   masm.jump(&done);
 
   {
@@ -7440,10 +7456,10 @@ bool CacheIRCompiler::emitLoadTypeOfEqObjectResult(ObjOperandId objId,
     save.takeUnchecked(scratch);
     masm.PushRegsInMask(save);
 
-    using Fn = bool (*)(JSObject* obj, JSType type);
+    using Fn = bool (*)(JSObject* obj, TypeofEqOperand operand);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
-    masm.move32(Imm32(type), scratch);
+    masm.move32(Imm32(TypeofEqOperand(type, compareOp).rawValue()), scratch);
     masm.passABIArg(scratch);
     masm.callWithABI<Fn, TypeOfEqObject>();
     masm.storeCallBoolResult(scratch);

@@ -21,6 +21,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Opcodes.h"
+#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 
 #include "gc/ObjectKind-inl.h"
 #include "vm/BytecodeIterator-inl.h"
@@ -1565,7 +1566,9 @@ bool WarpBuilder::build_TypeofExpr(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_TypeofEq(BytecodeLocation loc) {
-  JSType type = loc.getJSType();
+  auto operand = loc.getTypeofEqOperand();
+  JSType type = operand.type();
+  JSOp compareOp = operand.compareOp();
   MDefinition* input = current->pop();
 
   if (const auto* typesSnapshot = getOpSnapshot<WarpPolymorphicTypes>(loc)) {
@@ -1576,7 +1579,7 @@ bool WarpBuilder::build_TypeofEq(BytecodeLocation loc) {
     auto* typeInt = MConstant::New(alloc(), Int32Value(type));
     current->add(typeInt);
 
-    auto* ins = MCompare::New(alloc(), typeOf, typeInt, JSOp::Eq,
+    auto* ins = MCompare::New(alloc(), typeOf, typeInt, compareOp,
                               MCompare::Compare_Int32);
     current->add(ins);
     current->push(ins);
@@ -3426,14 +3429,16 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
     }
     case CacheKind::TypeOfEq: {
       MOZ_ASSERT(numInputs == 1);
-      JSType type = loc.getJSType();
+      auto operand = loc.getTypeofEqOperand();
+      JSType type = operand.type();
+      JSOp compareOp = operand.compareOp();
       auto* typeOf = MTypeOf::New(alloc(), getInput(0));
       current->add(typeOf);
 
       auto* typeInt = MConstant::New(alloc(), Int32Value(type));
       current->add(typeInt);
 
-      auto* ins = MCompare::New(alloc(), typeOf, typeInt, JSOp::Eq,
+      auto* ins = MCompare::New(alloc(), typeOf, typeInt, compareOp,
                                 MCompare::Compare_Int32);
       current->add(ins);
       current->push(ins);
