@@ -484,16 +484,18 @@ private fun TranslationErrorWarning(
     when (translationError) {
         is TranslationError.CouldNotTranslateError -> {
             ReviewQualityCheckInfoCard(
-                title = stringResource(id = R.string.translation_error_could_not_translate_warning_text),
+                description = stringResource(id = R.string.translation_error_could_not_translate_warning_text),
                 type = ReviewQualityCheckInfoType.Error,
+                verticalRowAlignment = Alignment.CenterVertically,
                 modifier = modifier,
             )
         }
 
         is TranslationError.CouldNotLoadLanguagesError -> {
             ReviewQualityCheckInfoCard(
-                title = stringResource(id = R.string.translation_error_could_not_load_languages_warning_text),
+                description = stringResource(id = R.string.translation_error_could_not_load_languages_warning_text),
                 type = ReviewQualityCheckInfoType.Error,
+                verticalRowAlignment = Alignment.CenterVertically,
                 modifier = modifier,
             )
         }
@@ -501,7 +503,7 @@ private fun TranslationErrorWarning(
         is TranslationError.LanguageNotSupportedError -> {
             documentLangDisplayName?.let {
                 ReviewQualityCheckInfoCard(
-                    title = stringResource(
+                    description = stringResource(
                         id = R.string.translation_error_language_not_supported_warning_text,
                         it,
                     ),

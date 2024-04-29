@@ -40,19 +40,20 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * Review Quality Check Info Card UI.
  *
+ * @param modifier Modifier to be applied to the card.
  * @param title The primary text of the info message.
  * @param type The [ReviewQualityCheckInfoType] of message to display.
- * @param modifier Modifier to be applied to the card.
  * @param verticalRowAlignment An optional adjustment of how the row of text aligns.
  * @param description The optional secondary piece of text.
  * @param footer An optional piece of text with a clickable link.
  * @param buttonText The text to show in the optional button.
  */
+@Suppress("LongMethod")
 @Composable
 fun ReviewQualityCheckInfoCard(
-    title: String,
-    type: ReviewQualityCheckInfoType,
     modifier: Modifier = Modifier,
+    title: String? = null,
+    type: ReviewQualityCheckInfoType,
     verticalRowAlignment: Alignment.Vertical = Alignment.Top,
     description: String? = null,
     footer: Pair<String, LinkTextState>? = null,
@@ -67,7 +68,7 @@ fun ReviewQualityCheckInfoCard(
         ),
         elevation = 0.dp,
     ) {
-        val titleContentDescription = headingResource(title)
+        val titleContentDescription = title?.let { headingResource(it) }
 
         Row(
             verticalAlignment = verticalRowAlignment,
@@ -81,7 +82,10 @@ fun ReviewQualityCheckInfoCard(
                     InfoCardIcon(iconId = R.drawable.mozac_ic_checkmark_24)
                 }
 
-                ReviewQualityCheckInfoType.Error,
+                ReviewQualityCheckInfoType.Error -> {
+                    InfoCardIcon(iconId = R.drawable.mozac_ic_critical_fill_24)
+                }
+
                 ReviewQualityCheckInfoType.Info,
                 ReviewQualityCheckInfoType.AnalysisUpdate,
                 -> {
@@ -92,18 +96,22 @@ fun ReviewQualityCheckInfoCard(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column {
-                Text(
-                    text = title,
-                    color = FirefoxTheme.colors.textPrimary,
-                    style = FirefoxTheme.typography.headline8,
-                    modifier = Modifier.semantics {
-                        heading()
-                        contentDescription = titleContentDescription
-                    },
-                )
+                title?.let {
+                    Text(
+                        text = it,
+                        color = FirefoxTheme.colors.textPrimary,
+                        style = FirefoxTheme.typography.headline8,
+                        modifier = Modifier.semantics {
+                            heading()
+                            if (titleContentDescription != null) {
+                                contentDescription = titleContentDescription
+                            }
+                        },
+                    )
+                }
 
                 description?.let {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    title?.let { Spacer(modifier = Modifier.height(4.dp)) }
 
                     Text(
                         text = description,
