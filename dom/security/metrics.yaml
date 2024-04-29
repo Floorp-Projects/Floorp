@@ -118,8 +118,8 @@ httpsfirst:
     description: >
       If a HTTPS-First (`dom.security.https_first` enabled) upgrade isn't
       successful, measures the timespan between the navigation start and the
-      downgrade. This is essentially the overhead caused by HTTPS-First if a
-      site does not support HTTPS.
+      downgrade. This does not include the case in which the https request times
+      out and the http request sent after 3s gets a response faster.
     time_unit: millisecond
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
@@ -135,11 +135,11 @@ httpsfirst:
   downgrade_time_schemeless:
     type: timing_distribution
     description: >
-      If a schemeless HTTPS-First (`dom.security.https_first` disabled, but
-      load marked as schemeless) upgrade isn't successful, measures the
-      timespan between the navigation start and the downgrade. This is
-      essentially the overhead caused by HTTPS-First if a site does not support
-      HTTPS.
+      If a schemeless HTTPS-First (`dom.security.https_first` disabled, but load
+      marked as schemeless) upgrade isn't successful, measures the timespan
+      between the navigation start and the downgrade. This does not include the
+      case in which the https request times out and the http request sent after
+      3s gets a response faster.
     time_unit: millisecond
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
