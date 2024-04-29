@@ -20,8 +20,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormScenarios: "resource://gre/modules/FormScenarios.sys.mjs",
   FormStateManager: "resource://gre/modules/shared/FormStateManager.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  ProfileAutocomplete:
-    "resource://autofill/AutofillProfileAutoComplete.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   FORM_SUBMISSION_REASON: "resource://gre/actors/FormHandlerChild.sys.mjs",
 });
@@ -637,10 +635,7 @@ export class FormAutofillChild extends JSWindowActorChild {
   }
 
   clearForm() {
-    let focusedInput =
-      this.activeInput ||
-      lazy.ProfileAutocomplete._lastAutoCompleteFocusedInput;
-    if (!focusedInput) {
+    if (!this.activeSection) {
       return;
     }
 
