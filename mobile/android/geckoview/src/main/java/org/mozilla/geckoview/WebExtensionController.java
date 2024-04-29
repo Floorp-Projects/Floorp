@@ -336,14 +336,6 @@ public class WebExtensionController {
     default void onDisabling(@NonNull WebExtension extension) {}
 
     /**
-     * Called whenever optional permissions of an extension have changed.
-     *
-     * @param extension The {@link WebExtension} that has optional permissions changed.
-     */
-    @UiThread
-    default void onOptionalPermissionsChanged(@NonNull WebExtension extension) {}
-
-    /**
      * Called whenever an extension has been disabled.
      *
      * @param extension The {@link WebExtension} that is being disabled.
@@ -497,7 +489,6 @@ public class WebExtensionController {
       EventDispatcher.getInstance()
           .unregisterUiThreadListener(
               mInternals,
-              "GeckoView:WebExtension:OnOptionalPermissionsChanged",
               "GeckoView:WebExtension:OnDisabling",
               "GeckoView:WebExtension:OnDisabled",
               "GeckoView:WebExtension:OnEnabling",
@@ -512,7 +503,6 @@ public class WebExtensionController {
       EventDispatcher.getInstance()
           .registerUiThreadListener(
               mInternals,
-              "GeckoView:WebExtension:OnOptionalPermissionsChanged",
               "GeckoView:WebExtension:OnDisabling",
               "GeckoView:WebExtension:OnDisabled",
               "GeckoView:WebExtension:OnEnabling",
@@ -1031,9 +1021,6 @@ public class WebExtensionController {
     } else if ("GeckoView:WebExtension:OnDisabling".equals(event)) {
       onDisabling(bundle);
       return;
-    } else if ("GeckoView:WebExtension:OnOptionalPermissionsChanged".equals(event)) {
-      onOptionalPermissionsChanged(bundle);
-      return;
     } else if ("GeckoView:WebExtension:OnDisabled".equals(event)) {
       onDisabled(bundle);
       return;
@@ -1276,17 +1263,6 @@ public class WebExtensionController {
     final GeckoBundle extensionBundle = bundle.getBundle("extension");
     final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
     mAddonManagerDelegate.onDisabling(extension);
-  }
-
-  private void onOptionalPermissionsChanged(final GeckoBundle bundle) {
-    if (mAddonManagerDelegate == null) {
-      Log.e(LOGTAG, "no AddonManager delegate registered");
-      return;
-    }
-
-    final GeckoBundle extensionBundle = bundle.getBundle("extension");
-    final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
-    mAddonManagerDelegate.onOptionalPermissionsChanged(extension);
   }
 
   private void onDisabled(final GeckoBundle bundle) {
