@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+const BOOKMARKS_BACKUP_FILENAME = "bookmarks.jsonlz4";
+
 /**
  * Class representing Places database related files within a user profile.
  */
@@ -54,7 +56,7 @@ export class PlacesBackupResource extends BackupResource {
     if (!canBackupHistory) {
       let bookmarksBackupFile = PathUtils.join(
         stagingPath,
-        "bookmarks.jsonlz4"
+        BOOKMARKS_BACKUP_FILENAME
       );
       await lazy.BookmarkJSONUtils.exportToFile(bookmarksBackupFile, {
         compress: true,
@@ -76,6 +78,44 @@ export class PlacesBackupResource extends BackupResource {
     ]);
 
     return null;
+  }
+
+  async recover(manifestEntry, recoveryPath, destProfilePath) {
+    if (!manifestEntry) {
+      const simpleCopyFiles = ["places.sqlite", "favicons.sqlite"];
+      await BackupResource.copyFiles(
+        recoveryPath,
+        destProfilePath,
+        simpleCopyFiles
+      );
+    } else {
+      const { bookmarksOnly } = manifestEntry;
+
+      /**
+       * If the recovery file only has bookmarks backed up, pass the file path to postRecovery()
+       * so that we can import all bookmarks into the new profile once it's been launched and restored.
+       */
+      if (bookmarksOnly) {
+        let bookmarksBackupPath = PathUtils.join(
+          recoveryPath,
+          BOOKMARKS_BACKUP_FILENAME
+        );
+        return { bookmarksBackupPath };
+      }
+    }
+
+    return null;
+  }
+
+  async postRecovery(postRecoveryEntry) {
+    if (postRecoveryEntry?.bookmarksBackupPath) {
+      await lazy.BookmarkJSONUtils.importFromFile(
+        postRecoveryEntry.bookmarksBackupPath,
+        {
+          replace: true,
+        }
+      );
+    }
   }
 
   async measure(profilePath = PathUtils.profileDir) {
