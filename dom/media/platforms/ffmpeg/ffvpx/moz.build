@@ -25,7 +25,7 @@ SOURCES += [
 ]
 LOCAL_INCLUDES += [
     "..",
-    "../ffmpeg60/include",
+    "../ffmpeg61/include",
     "/media/mozva",
 ]
 
