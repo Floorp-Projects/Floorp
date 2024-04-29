@@ -15,3 +15,17 @@ index bfb67a3..d5b1c67 100644
  				_deadStripRoots.insert(atom);
  			}
  		}
+diff --git a/cctools/ld64/src/ld/code-sign-blobs/blob.h b/cctools/ld64/src/ld/code-sign-blobs/blob.h
+index 54afb2d..c17d19b 100644
+--- a/cctools/ld64/src/ld/code-sign-blobs/blob.h
++++ b/cctools/ld64/src/ld/code-sign-blobs/blob.h
+@@ -181,9 +181,6 @@ public:
+ 		return NULL;
+ 	}
+ 	
+-	BlobType *clone() const
+-	{ assert(validateBlob()); return specific(this->BlobCore::clone());	}
+-
+ 	static BlobType *readBlob(int fd)
+ 	{ return specific(BlobCore::readBlob(fd, _magic, sizeof(BlobType), 0), true); }
+ 
