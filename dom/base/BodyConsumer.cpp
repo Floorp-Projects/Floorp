@@ -672,12 +672,14 @@ void BodyConsumer::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength,
 
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
     // Per
-    // https://fetch.spec.whatwg.org/#concept-read-all-bytes-from-readablestream
+    // https://streams.spec.whatwg.org/#readablestreamdefaultreader-read-all-bytes
     // Decoding errors should reject with a TypeError
     if (aStatus == NS_ERROR_INVALID_CONTENT_ENCODING) {
       localPromise->MaybeRejectWithTypeError<MSG_DOM_DECODING_FAILED>();
     } else if (aStatus == NS_ERROR_DOM_WRONG_TYPE_ERR) {
       localPromise->MaybeRejectWithTypeError<MSG_FETCH_BODY_WRONG_TYPE>();
+    } else if (aStatus == NS_ERROR_NET_PARTIAL_TRANSFER) {
+      localPromise->MaybeRejectWithTypeError<MSG_FETCH_PARTIAL>();
     } else {
       localPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     }
