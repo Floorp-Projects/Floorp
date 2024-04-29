@@ -124,33 +124,21 @@ static void ReportHardwareMediaCodecSupportIfNeeded() {
   WMFDecoderModule::Init(WMFDecoderModule::Config::ForceEnableHEVC);
 
   const auto support = PDMFactory::Supported(true /* force refresh */);
-  if (support.contains(
-          mozilla::media::MediaCodecsSupport::H264HardwareDecode)) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"h264"_ns,
-        true);
-  }
-  if (support.contains(mozilla::media::MediaCodecsSupport::VP8HardwareDecode)) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"vp8"_ns,
-        true);
-  }
-  if (support.contains(mozilla::media::MediaCodecsSupport::VP9HardwareDecode)) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"vp9"_ns,
-        true);
-  }
-  if (support.contains(mozilla::media::MediaCodecsSupport::AV1HardwareDecode)) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"av1"_ns,
-        true);
-  }
-  if (support.contains(
-          mozilla::media::MediaCodecsSupport::HEVCHardwareDecode)) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"hevc"_ns,
-        true);
-  }
+  Telemetry::ScalarSet(
+      Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"h264"_ns,
+      support.contains(mozilla::media::MediaCodecsSupport::H264HardwareDecode));
+  Telemetry::ScalarSet(
+      Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"vp8"_ns,
+      support.contains(mozilla::media::MediaCodecsSupport::VP8HardwareDecode));
+  Telemetry::ScalarSet(
+      Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"vp9"_ns,
+      support.contains(mozilla::media::MediaCodecsSupport::VP9HardwareDecode));
+  Telemetry::ScalarSet(
+      Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"av1"_ns,
+      support.contains(mozilla::media::MediaCodecsSupport::AV1HardwareDecode));
+  Telemetry::ScalarSet(
+      Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"hevc"_ns,
+      support.contains(mozilla::media::MediaCodecsSupport::HEVCHardwareDecode));
   if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
     WMFDecoderModule::DisableForceEnableHEVC();
   }
