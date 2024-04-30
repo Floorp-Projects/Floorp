@@ -244,8 +244,10 @@ class MOZ_STACK_CLASS SVGColorStopInterpolator
  public:
   SVGColorStopInterpolator(
       gfxPattern* aGradient, const nsTArray<ColorStop>& aStops,
-      const StyleColorInterpolationMethod& aStyleColorInterpolationMethod)
-      : ColorStopInterpolator(aStops, aStyleColorInterpolationMethod),
+      const StyleColorInterpolationMethod& aStyleColorInterpolationMethod,
+      bool aExtendLastStop)
+      : ColorStopInterpolator(aStops, aStyleColorInterpolationMethod,
+                              aExtendLastStop),
         mGradient(aGradient) {}
 
   void CreateStop(float aPosition, DeviceColor aColor) {
@@ -327,7 +329,8 @@ already_AddRefed<gfxPattern> SVGGradientFrame::GetPaintServerPattern(
   if (StyleSVG()->mColorInterpolation == StyleColorInterpolation::Linearrgb) {
     static constexpr auto interpolationMethod = StyleColorInterpolationMethod{
         StyleColorSpace::SrgbLinear, StyleHueInterpolationMethod::Shorter};
-    SVGColorStopInterpolator interpolator(gradient, stops, interpolationMethod);
+    SVGColorStopInterpolator interpolator(gradient, stops, interpolationMethod,
+                                          false);
     interpolator.CreateStops();
   } else {
     // setup standard sRGB stops
