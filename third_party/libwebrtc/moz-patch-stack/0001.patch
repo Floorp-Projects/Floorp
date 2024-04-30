@@ -1,1693 +1,2112 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Mon, 22 Jan 2018 13:31:00 -0500
-Subject: Bug 1376873 - Rollup of local modifications; r=ng
-
-MozReview-Commit-ID: 2euYzBEvuNb
-
-Differential Revision: https://phabricator.services.mozilla.com/D7425
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/28b57e3ba51de982a4663801a3935580114b5477
-
-Bug 1376873 - Rollup conflict fixes for audio/video code; r=pehrsons
-
-MozReview-Commit-ID: 1T8mgqdkzq3
-
-Differential Revision: https://phabricator.services.mozilla.com/D7427
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/93eec571640ee0810da8475ee37e417b88045574
-
-Bug 1376873 - Rollup conflict fixes for rtp_rtcp module; r=ng
-
-MozReview-Commit-ID: D09534DOVLj
-
-Differential Revision: https://phabricator.services.mozilla.com/D7428
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/50f89f4e45b0af87fd6aa45aed60f02f3e69b951
-
-Bug 1497552 - Remove support for 44100 Hz in dtmf_tone_generator; r=padenot
-
-Assertions in NetEqImpl::SetSampleRateAndChannels prevent us from requesting
-tones at 44100 Hz, so this code can be safely removed.
-
-Differential Revision: https://phabricator.services.mozilla.com/D12982
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8ea04ec01e9905d4714aa01ade891d552c56a3a6
-
-Bug 1497577 - Remove code to detect zero size windows; r=ng
-
-This code was added by Bug 1196542 to fix a permanently failing test on our
-Windows test machines. After this landed, upstream added a check for empty
-windows in window_captuer_win.cc, so this should no longer be a problem on
-Windows. As far as I know, this was never a problem on the other platforms,
-so this code can be safely removed.
-
-Differential Revision: https://phabricator.services.mozilla.com/D13448
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/647ade4da0fba74a268aab079677cb47f20f036e
-
-Bug 1509994 - Move video_engine from webrtc to systemservices; r=pehrsons
-
-Historically this code was part of webrtc.org but has since been removed
-from upstream. Rather than maintaining it as a local diff against upstream,
-we should just move it to where it is used.
-
-Differential Revision: https://phabricator.services.mozilla.com/D13092
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0fd399c6caabff60ac0fe53b920b7d26a9806750
-
-Bug 1497606 - Remove disable_composition_ in screen_capturer_win_gdi; r=ng
-
-This removes disable_composition_ and instead uses the value of
-composition_func_ to determine whether or not composition is
-disabled. This is what is done by upstream webrtc.org.
-
-We call options.set_disable_effects(false) in desktop_capture_impl.cc.
-
-Differential Revision: https://phabricator.services.mozilla.com/D13839
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b3f5cca4be44c01024b1ef7b5d4951c7297a112a
-
-Bug 1497974 - Remove local changes to jitter_buffer.cc; r=pehrsons
-
-These modifications are made to code which we do not use and so
-can be removed.
-
-Differential Revision: https://phabricator.services.mozilla.com/D13989
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2fb1dd0d8344ef24e2e0fca94725bbfaf59aa257
-
-Bug 1512459 - Remove webrtc sndio audio device; r=padenot
-
-This code is unused and can be removed.
-
-Differential Revision: https://phabricator.services.mozilla.com/D13929
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fa0a179388e96b1a47eeef2fda9676812c244d3b
-
-Bug 1497650 - Remove 100 bytes added to CalcBufferSize in vp8_impl.cc; r=ng
-
-In Bug 919979 we added 100 bytes to the size returned by CalcBufferSize
-to work around an error with the calculated buffer size with small
-resolutions. I verified that this extra buffer is no longer required with
-a modified mochitest. Given the age of the bug this was working around,
-I don't think a permanent test is required to prevent regressions from
-upstream.
-
-Differential Revision: https://phabricator.services.mozilla.com/D14076
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b20329b1ec0565b3b94db73e13a9c49e43c418c3
-
-Bug 1368816 - Enable VideoCaptureExternalTest Rotation gtest; r=ng
-
-This test started failing after the 57 update and started passing
-again after the 64 update, so we might as well enable it.
-
-Differential Revision: https://phabricator.services.mozilla.com/D13803
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/65a44b43b7b69c066abcb864076003252abc475e
-
-Bug 1497573 - Remove DesktopCapturer::Stop; r=ng
-
-Differential Revision: https://phabricator.services.mozilla.com/D14066
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0d9c607f26195b7f63cca847224bcd137f73720d
-
-Bug 1497619 - Restore thread check in process_thread_impl.cc; r=ng
-
-Not not really needed.
-
-Differential Revision: https://phabricator.services.mozilla.com/D14097
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/923373fdf5e50d44c895141dc1db74709d6610fe
-
-Bug 1497992 - Remove VideoReceiver::Reset; r=pehrsons
-
-This ends up calling VCMReceiver::Reset() which resets the
-state of the VCMJitterBuffer. We no longer use VCMJitterBuffer,
-which is the old jitter buffer implementation, so this code
-no longer has any effect and can be removed.
-
-Differential Revision: https://phabricator.services.mozilla.com/D14185
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9e526b3093ee60791cf9c436ea06b6665eb5ef74
-
-Bug 1497610 - Remove IsNewerOrSameTimestamp; r=bwc
-
-The affected functions are only used by VCMJitterBuffer, which is the older
-jitter buffer that is no longer in use. We can safely remove these
-modifications.
-
-Differential Revision: https://phabricator.services.mozilla.com/D14485
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5ed0ed11b23d82ee026244a9a48e522fe38335e2
-
-Bug 1498253 - Remove mozAvSyncDelay and mozJitterBufferDelay; r=ng
-
-The value for mozAvSyncDelay has been broken since the branch 57 update
-(Bug 1341285). We added SetCurrentSyncOffset() but never called it from
-anywhere.
-
-In the future we should be getting stats from AudioReceiveStream rather than
-modifying the channel code, the delay_estimate_ms field provides almost the
-same information.
-
-Since we're attempting to get rid of moz prefixed stats, it makes sense to just
-remove this code rather than fix it. The associated telemetry code has been
-broken since Bug 1341285 as well so I think it is safe to remove.
-
-Differential Revision: https://phabricator.services.mozilla.com/D14462
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/80e86c169d202e724cda74bbd9535b2d5236305b
-
-Bug 1498205 - Move PlatformUIThread from rtc_base to video_engine; r=pehrsons
-
-PlatformUIThread is only used by the video_engine code, so it makes sense to
-move it there rather than maintain it as a diff against upstream webrtc.org.
-
-Differential Revision: https://phabricator.services.mozilla.com/D13531
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/65bf3e37a4409f3ca0350366d7be19368adfa21b
-
-Bug 1497602 - Enable DirectX screen capturer on Windows; r=pehrsons
-
-This enables support for the DirectX screen capturer. We use the default
-DesktopCaptureOptions which do not set the option to use the DirectX screen
-capturer so this change will have no effect with the current code.
-
-For what it's worth, I tested enabling the DirectX option and it worked fine on my
-system, but I don't see any reason to not follow the defaults provided by
-webrtc.org in this case.
-
-Differential Revision: https://phabricator.services.mozilla.com/D13303
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/eb07312cfbe868780ebed84fc83e5a5470e81fb4
-
-Bug 1439997 - Remove old mac video capture code; r=jib
-
-This code is no longer used and has been removed upstream. We can remove
-it as well.
-
-Differential Revision: https://phabricator.services.mozilla.com/D15196
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e79251fa381cfc9f3425f6a746ac8d8c22046d6b
-
-Bug 1376873 - Updates to Android video capture; r=pehrsons
-
-Differential Revision: https://phabricator.services.mozilla.com/D7452
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1e6d72de0587d24c20fefc142591d8b47c363f89
-
-Bug 1578073 - Move android video capture code to dom/media/systemservices; r=jib
-
-Although originally part of webrtc.org, this code has subsequently been
-removed by upstream. Moving it to under dom/media should make it clearer that
-this is code that we are maintaining and simplify future upstream merges.
-
-Differential Revision: https://phabricator.services.mozilla.com/D61850
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/46c21affcbc14da30abb03b10573076aee6341c0
-
-Bug 1652552 - Remove remaining application capture code; r=jib
-
-Differential Revision: https://phabricator.services.mozilla.com/D83491
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9479d1db92d2f000255664c1
-
-Bug 1846358 - revert mozilla-specific b2g related change in generic_decoder.cc kDecoderFrameMemoryLength. r=ng,webrtc-reviewers
-
-Differential Revision: https://phabricator.services.mozilla.com/D184983
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/478632b0cc4982639276a4a817165ac49ca8fb6e
-
-Bug 1846875 - remove redundant divide by zero protection in libwebrtc's merge.cc r=ng,webrtc-reviewers
-
-Differential Revision: https://phabricator.services.mozilla.com/D185236
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a777f43c4d9cabe80f2fc3aea6bf95c7e3e9c4c1
-
-Bug 1846590 - move SetCaptureAndroidVM declaration from libwebrtc video_capture.h to our VideoEngine.cpp r=ng,webrtc-reviewers
-
-Differential Revision: https://phabricator.services.mozilla.com/D185076
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0b9ef0f6bf04851bcc8bbe9beb88362eb1659a50
-
-Bug 1847466 - remove work-around for missing v4l2_capability::bus_info in v412loopback driver. r=jesup,pehrsons,webrtc-reviewers
-
-Added in Bug 861280, but should no longer be necessary after fixes in upstream
-v4l2loopback commits (fc4c173, fe03e4f, c3b1eaa).
-https://github.com/umlaeute/v4l2loopback/commit/fc4c173
-https://github.com/umlaeute/v4l2loopback/commit/fe03e4f
-https://github.com/umlaeute/v4l2loopback/commit/c3b1eaa
-
-Differential Revision: https://phabricator.services.mozilla.com/D185518
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d054dde5c370feb3ee9c9f9159b512333b3554ac
-
-Bug 1846636 - restore ScreenCapturerWinMagnifier destructor to upstream version. r=ng,webrtc-reviewers
-
-Differential Revision: https://phabricator.services.mozilla.com/D185109
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b50be8861ca0a4f9e6777e9333a9e483bdb57bf9
-
-Bug 1376873 - Fix up logging in WebrtcLog.cpp; r=ng
-
-The webrtc::Trace code is removed by this update. We already had support for
-LOG (now RTC_LOG) in WebrtcLog.cpp. This removes the trace code from
-WebRtcLog.cpp and moves the aec logging code from webrtc::Trace to
-rtc::LogMessage.
-
-This also disables logging to stderr in rtc_base/logging.cc. We could disable
-it using the API, but that happens through peerconnection resulting in some
-logging occuring during getusermedia.
-
-The aec logs were testing with --disable-e10s. Rather than trying to
-work around sandboxing, I think it makes more sense to fix Bug 1404982 and
-store the logs in memory for retrieval from about:webrtc.
-
-Differential Revision: https://phabricator.services.mozilla.com/D7429
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e84c60e2c9373f4d2dc24e769375a92c17c2a0ad
-
-Bug 1847818 - restore aec logging from about:webrtc. r=ng,webrtc-reviewers
-
-Differential Revision: https://phabricator.services.mozilla.com/D185709
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a67a9e51d8b8597caa1511e2f3b7795e92b07068
-
-Bug 1535584 - Restore UpdateCodecFrameSize to vp9_impl.cc; r=bwc
-
-Differential Revision: https://phabricator.services.mozilla.com/D23713
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0898f9cfe09273e1d86c38abdd576cdf273009f0
-
-Bug 1846850 - remove mozilla-added IsGUIThread asserts from libwebrtc. r=ng,webrtc-reviewers
-
-These were added in Bug 1060738 but no longer seem to add value based
-on crash stats.
-
-Differential Revision: https://phabricator.services.mozilla.com/D185222
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5e6f94c1b7c4491bdab454e24dfdb93eb75f80ca
-
-Bug 1846858 - revert changes to libwebrtc's deprecated/session_info.cc since we don't build it. r=ng,webrtc-reviewers
-
-Differential Revision: https://phabricator.services.mozilla.com/D185224
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4836114af07e38525d319b0a2f59f2fd618b7a3b
-
-Bug 1847257 - revert an unneccesary change in libwebrtc's window_capturer_x11.cc r=karlt,webrtc-reviewers
-
-This small change we've been carrying to when ProcessPendingXEvents is called
-in WindowCapturerLinux::Capture should not be necessary.
-
-Differential Revision: https://phabricator.services.mozilla.com/D185449
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9633cb1dde33ecbab435012c4ae1456a4ae79a42
-
-Bug 1847984 - remove mozilla-specific null FILE* checks in apm_data_dumper.h r=ng,webrtc-reviewers
-
-Since upstream commit 4bc60452f7 ApmDataDumper::GetRawFile does a release
-assert if FILE* is null so our mozilla-specific mods to check for valid
-FILE pointers are no longer needed.
-
-Differential Revision: https://phabricator.services.mozilla.com/D185838
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/53ecaeda76c3613b90d3a1c3348f0d903a054821
-
-Bug 1848045 - removing mozilla output directory handling code from apm_data_dumper. r=ng,webrtc-reviewers
-
-Upstream added the capability to set the output directory in commit 4bc60452f7 so
-we can revert to using upstream's version instead of ours.
-
-Differential Revision: https://phabricator.services.mozilla.com/D185863
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/48217906ac982e129b5eedf07e90904396c31ed4
-
-Bug 1847833 - remove aec log output size limiting code from libwebrtc's apm_data_dumper. r=ng,webrtc-reviewers
-
-Differential Revision: https://phabricator.services.mozilla.com/D185930
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7622e6dddeec583e5839b5432d436d85c356f6c3
-
-Bug 1847833 - aec_debug_size_, aec_debug_size(), set_aec_debug_size(uint32_t size) are no longer used. r=ng,webrtc-reviewers
-
-Differential Revision: https://phabricator.services.mozilla.com/D185931
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/525d71640bb7be400040131a5b1a16652c881a0f
-
-Bug 1850146 - remove unnecessary libwebrtc changes in jvm_android.cc. r?dbaker!
-
-After landing Bug 1826428 to remove jvm_android.cc from the build and
-giving time for that to simmer for a while with no known effects, we
-can remove our modifications.
-
-Differential Revision: https://phabricator.services.mozilla.com/D186855
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fc01107426c3adebb169f19efba72a91be19f613
+From: Nicolas Grunbaum <ngrunbaum@mozilla.com>
+Date: Mon, 29 Apr 2024 20:32:34 -0700
+Subject: (tmp-cherry-pick) Revert "Deprecate old constructors and set_type()
+ in Candidate and Port" (ed8390d21a)
+
+This reverts commit aaa6851d53741179a591d79fc82c4dd6651a7ba5.
+
+Reason for revert: breaks chromium webrtc import
+
+Original change's description:
+> Deprecate old constructors and set_type() in Candidate and Port
+>
+> * Deprecates constructors that use string based `type`
+> * Deprecates string based type functions in favor of enum based.
+> * Restrict possible values of Candidate::type. Ensure a valid value
+>   is assigned at construction.
+> * Make Port constructors protected to limit their use to subclasses.
+>   - The reason for this is to make sure that use of SharedSocket()
+>     is controlled (it adds a bit of complexity).
+> * Simplify construction of Port (remove Construct() etc)
+>
+> Bug: webrtc:15846
+> Change-Id: If24ed674e175642efa49da37fd2bc847dd14f613
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/339860
+> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#41865}
+
+Bug: webrtc:15846
+Change-Id: Ic8b7cba97f8fb207ef51a88900e704658ade28b7
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/342140
+Auto-Submit: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Owners-Override: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Cr-Commit-Position: refs/heads/main@{#41867}
 ---
- api/rtp_headers.cc                            |   3 +-
- api/rtp_headers.h                             |  17 +-
- api/rtp_parameters.cc                         |   3 +-
- call/BUILD.gn                                 |   4 +-
- call/video_receive_stream.h                   |   2 +
- modules/audio_coding/acm2/acm_receiver.h      |  12 +-
- modules/audio_coding/neteq/dtmf_buffer.cc     |   6 +-
- modules/desktop_capture/desktop_capturer.h    |   1 +
- .../desktop_capture/fake_desktop_capturer.cc  |   4 +-
- .../linux/x11/mouse_cursor_monitor_x11.cc     |   4 +-
- .../linux/x11/screen_capturer_x11.cc          |   2 +-
- .../linux/x11/window_capturer_x11.cc          |   9 +
- .../linux/x11/window_capturer_x11.h           |   4 +
- .../desktop_capture/linux/x11/x_error_trap.cc |  68 ++++---
- .../desktop_capture/linux/x11/x_error_trap.h  |  29 ++-
- .../win/screen_capture_utils.cc               |   2 +-
- modules/rtp_rtcp/source/rtcp_sender.cc        |   2 +-
- .../rtp_rtcp/source/rtp_header_extensions.cc  |  39 ++++
- .../rtp_rtcp/source/rtp_header_extensions.h   |  15 ++
- modules/rtp_rtcp/source/rtp_packet.cc         |   4 +
- .../rtp_rtcp/source/rtp_packet_unittest.cc    |  30 +++
- modules/rtp_rtcp/source/rtp_rtcp_config.h     |   4 +
- modules/rtp_rtcp/source/rtp_sender.cc         |   4 +
- modules/video_capture/device_info_impl.cc     |   2 +-
- modules/video_capture/device_info_impl.h      |   1 +
- .../video_capture/linux/device_info_v4l2.cc   | 179 +++++++++++++++++-
- .../video_capture/linux/device_info_v4l2.h    |  18 +-
- modules/video_capture/video_capture.h         |  41 +++-
- .../video_capture/video_capture_factory.cc    |   8 -
- modules/video_capture/video_capture_impl.cc   |  34 +++-
- modules/video_capture/video_capture_impl.h    |   6 +-
- .../codecs/vp9/libvpx_vp9_encoder.cc          |  52 +++++
- .../codecs/vp9/libvpx_vp9_encoder.h           |   4 +
- rtc_base/BUILD.gn                             |   6 +
- rtc_base/logging.cc                           |  21 +-
- rtc_base/logging.h                            |   9 +
- test/fuzzers/rtp_packet_fuzzer.cc             |   5 +
- test/vcm_capturer.cc                          |   2 +-
- webrtc.gni                                    |   2 +-
- 39 files changed, 573 insertions(+), 85 deletions(-)
+ api/candidate.h                            |  33 ++--
+ p2p/base/connection.cc                     |  14 +-
+ p2p/base/fake_port_allocator.h             |   2 +-
+ p2p/base/p2p_transport_channel.cc          |  20 +-
+ p2p/base/p2p_transport_channel_unittest.cc | 219 ++++++++-------------
+ p2p/base/port.cc                           |  79 ++++----
+ p2p/base/port.h                            | 107 ++--------
+ p2p/base/port_allocator_unittest.cc        |  14 +-
+ p2p/base/port_interface.h                  |   1 -
+ p2p/base/port_unittest.cc                  |  30 ++-
+ p2p/base/stun_port.cc                      |  11 +-
+ p2p/base/stun_port.h                       |  14 +-
+ p2p/base/tcp_port.cc                       |  14 +-
+ p2p/base/turn_port.cc                      |  10 +-
+ p2p/base/turn_port_unittest.cc             |   4 +-
+ pc/jsep_session_description_unittest.cc    |  34 ++--
+ pc/legacy_stats_collector_unittest.cc      |   4 +-
+ pc/peer_connection_bundle_unittest.cc      |   1 +
+ pc/peer_connection_ice_unittest.cc         |   2 +-
+ pc/rtc_stats_collector_unittest.cc         |  40 ++--
+ pc/webrtc_sdp.cc                           |  10 +-
+ pc/webrtc_sdp_unittest.cc                  |  53 ++---
+ 22 files changed, 291 insertions(+), 425 deletions(-)
 
-diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
-index 0573e54684..40d4690397 100644
---- a/api/rtp_headers.cc
-+++ b/api/rtp_headers.cc
-@@ -26,7 +26,8 @@ RTPHeaderExtension::RTPHeaderExtension()
-       videoRotation(kVideoRotation_0),
-       hasVideoContentType(false),
-       videoContentType(VideoContentType::UNSPECIFIED),
--      has_video_timing(false) {}
-+      has_video_timing(false),
-+      csrcAudioLevels() {}
+diff --git a/api/candidate.h b/api/candidate.h
+index 149da35fc6..95359620c4 100644
+--- a/api/candidate.h
++++ b/api/candidate.h
+@@ -57,18 +57,18 @@ class RTC_EXPORT Candidate {
+             absl::string_view foundation,
+             uint16_t network_id = 0,
+             uint16_t network_cost = 0);
+-  [[deprecated("Use IceCandidateType version")]] Candidate(
+-      int component,
+-      absl::string_view protocol,
+-      const rtc::SocketAddress& address,
+-      uint32_t priority,
+-      absl::string_view username,
+-      absl::string_view password,
+-      absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND,
+-      uint32_t generation,
+-      absl::string_view foundation,
+-      uint16_t network_id = 0,
+-      uint16_t network_cost = 0);
++  // TODO(tommi): Deprecate.
++  Candidate(int component,
++            absl::string_view protocol,
++            const rtc::SocketAddress& address,
++            uint32_t priority,
++            absl::string_view username,
++            absl::string_view password,
++            absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND,
++            uint32_t generation,
++            absl::string_view foundation,
++            uint16_t network_id = 0,
++            uint16_t network_cost = 0);
+   Candidate(const Candidate&);
+   ~Candidate();
  
- RTPHeaderExtension::RTPHeaderExtension(const RTPHeaderExtension& other) =
-     default;
-diff --git a/api/rtp_headers.h b/api/rtp_headers.h
-index 5d4d4190d5..9868365f24 100644
---- a/api/rtp_headers.h
-+++ b/api/rtp_headers.h
-@@ -89,6 +89,19 @@ inline bool operator!=(const AbsoluteCaptureTime& lhs,
-   return !(lhs == rhs);
- }
- 
-+enum { kRtpCsrcSize = 15 };  // RFC 3550 page 13
-+
-+// Audio level of CSRCs See:
-+// https://tools.ietf.org/html/rfc6465
-+struct CsrcAudioLevelList {
-+  CsrcAudioLevelList() : numAudioLevels(0) { }
-+  CsrcAudioLevelList(const CsrcAudioLevelList&) = default;
-+  CsrcAudioLevelList& operator=(const CsrcAudioLevelList&) = default;
-+  uint8_t numAudioLevels;
-+  // arrOfAudioLevels has the same ordering as RTPHeader.arrOfCSRCs
-+  uint8_t arrOfAudioLevels[kRtpCsrcSize];
-+};
-+
- struct RTPHeaderExtension {
-   RTPHeaderExtension();
-   RTPHeaderExtension(const RTPHeaderExtension& other);
-@@ -144,9 +157,9 @@ struct RTPHeaderExtension {
-   std::string mid;
- 
-   absl::optional<ColorSpace> color_space;
--};
- 
--enum { kRtpCsrcSize = 15 };  // RFC 3550 page 13
-+  CsrcAudioLevelList csrcAudioLevels;
-+};
- 
- struct RTC_EXPORT RTPHeader {
-   RTPHeader();
-diff --git a/api/rtp_parameters.cc b/api/rtp_parameters.cc
-index 3ff4b58a2e..ad0f3c9396 100644
---- a/api/rtp_parameters.cc
-+++ b/api/rtp_parameters.cc
-@@ -160,7 +160,8 @@ bool RtpExtension::IsSupportedForAudio(absl::string_view uri) {
-          uri == webrtc::RtpExtension::kTransportSequenceNumberV2Uri ||
-          uri == webrtc::RtpExtension::kMidUri ||
-          uri == webrtc::RtpExtension::kRidUri ||
--         uri == webrtc::RtpExtension::kRepairedRidUri;
-+         uri == webrtc::RtpExtension::kRepairedRidUri ||
-+         uri == webrtc::RtpExtension::kCsrcAudioLevelsUri;
- }
- 
- bool RtpExtension::IsSupportedForVideo(absl::string_view uri) {
-diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 654db9cb1e..57c6f3a516 100644
---- a/call/BUILD.gn
-+++ b/call/BUILD.gn
-@@ -20,6 +20,7 @@ rtc_library("call_interfaces") {
-   sources = [
-     "audio_receive_stream.cc",
-     "audio_receive_stream.h",
-+    "audio_send_stream.cc",
-     "audio_send_stream.h",
-     "audio_state.cc",
-     "audio_state.h",
-@@ -32,9 +33,6 @@ rtc_library("call_interfaces") {
-     "syncable.cc",
-     "syncable.h",
-   ]
--  if (!build_with_mozilla) {
--    sources += [ "audio_send_stream.cc" ]
+@@ -77,10 +77,7 @@ class RTC_EXPORT Candidate {
+   // Generates a new, 8 character long, id.
+   void generate_id();
+   // TODO(tommi): Callers should use generate_id(). Remove.
+-  [[deprecated("Use IceCandidateType version")]] void set_id(
+-      absl::string_view id) {
+-    Assign(id_, id);
 -  }
- 
-   deps = [
-     ":audio_sender_interface",
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 12f6bf60c8..542067d30c 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -206,6 +206,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-       // disabled.
-       KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
- 
-+      bool tmmbr = false;
-+
-       // See LntfConfig for description.
-       LntfConfig lntf;
- 
-diff --git a/modules/audio_coding/acm2/acm_receiver.h b/modules/audio_coding/acm2/acm_receiver.h
-index 820150aede..39653be00b 100644
---- a/modules/audio_coding/acm2/acm_receiver.h
-+++ b/modules/audio_coding/acm2/acm_receiver.h
-@@ -18,6 +18,7 @@
- #include <string>
- #include <utility>
- #include <vector>
-+#include <atomic>
- 
- #include "absl/types/optional.h"
- #include "api/array_view.h"
-@@ -230,12 +231,15 @@ class AcmReceiver {
- 
-   mutable Mutex mutex_;
-   absl::optional<DecoderInfo> last_decoder_ RTC_GUARDED_BY(mutex_);
--  ACMResampler resampler_ RTC_GUARDED_BY(mutex_);
--  std::unique_ptr<int16_t[]> last_audio_buffer_ RTC_GUARDED_BY(mutex_);
--  CallStatistics call_stats_ RTC_GUARDED_BY(mutex_);
-+  ACMResampler resampler_;
-+
-+  // After construction, this is only ever touched on the thread that calls
-+  // AcmReceiver::GetAudio, and only modified in this method.
-+  std::unique_ptr<int16_t[]> last_audio_buffer_;
-+  CallStatistics call_stats_;
-   const std::unique_ptr<NetEq> neteq_;  // NetEq is thread-safe; no lock needed.
-   Clock& clock_;
--  bool resampled_last_output_frame_ RTC_GUARDED_BY(mutex_);
-+  std::atomic<bool> resampled_last_output_frame_;
- };
- 
- }  // namespace acm2
-diff --git a/modules/audio_coding/neteq/dtmf_buffer.cc b/modules/audio_coding/neteq/dtmf_buffer.cc
-index 9f78aca6e2..115bfcf97b 100644
---- a/modules/audio_coding/neteq/dtmf_buffer.cc
-+++ b/modules/audio_coding/neteq/dtmf_buffer.cc
-@@ -193,7 +193,11 @@ bool DtmfBuffer::Empty() const {
- }
- 
- int DtmfBuffer::SetSampleRate(int fs_hz) {
--  if (fs_hz != 8000 && fs_hz != 16000 && fs_hz != 32000 && fs_hz != 48000) {
-+  if (fs_hz != 8000 &&
-+      fs_hz != 16000 &&
-+      fs_hz != 32000 &&
-+      fs_hz != 44100 &&
-+      fs_hz != 48000) {
-     return kInvalidSampleRate;
-   }
-   max_extrapolation_samples_ = 7 * fs_hz / 100;
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 9c7ecc78f4..2c9c419bcd 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -82,6 +82,7 @@ class RTC_EXPORT DesktopCapturer {
-   struct Source {
-     // The unique id to represent a Source of current DesktopCapturer.
-     SourceId id;
-+    pid_t pid;
- 
-     // Title of the window or screen in UTF-8 encoding, maybe empty. This field
-     // should not be used to identify a source.
-diff --git a/modules/desktop_capture/fake_desktop_capturer.cc b/modules/desktop_capture/fake_desktop_capturer.cc
-index f9d9dbd2c4..67149bfcb9 100644
---- a/modules/desktop_capture/fake_desktop_capturer.cc
-+++ b/modules/desktop_capture/fake_desktop_capturer.cc
-@@ -72,8 +72,8 @@ void FakeDesktopCapturer::SetSharedMemoryFactory(
- }
- 
- bool FakeDesktopCapturer::GetSourceList(DesktopCapturer::SourceList* sources) {
--  sources->push_back({kWindowId, "A-Fake-DesktopCapturer-Window"});
--  sources->push_back({kScreenId});
-+  sources->push_back({kWindowId, 1, "A-Fake-DesktopCapturer-Window"});
-+  sources->push_back({kScreenId, 1});
-   return true;
- }
- 
-diff --git a/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc b/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
-index d9c7635c1d..d4b85af6bd 100644
---- a/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
-+++ b/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc
-@@ -38,6 +38,7 @@ namespace {
- // searches up the list of the windows to find the root child that corresponds
- // to `window`.
- Window GetTopLevelWindow(Display* display, Window window) {
-+  webrtc::XErrorTrap error_trap(display);
-   while (true) {
-     // If the window is in WithdrawnState then look at all of its children.
-     ::Window root, parent;
-@@ -104,7 +105,7 @@ MouseCursorMonitorX11::~MouseCursorMonitorX11() {
- }
- 
- void MouseCursorMonitorX11::Init(Callback* callback, Mode mode) {
--  // Init can be called only once per instance of MouseCursorMonitor.
-+  // Init can be called only if not started
-   RTC_DCHECK(!callback_);
-   RTC_DCHECK(callback);
- 
-@@ -116,6 +117,7 @@ void MouseCursorMonitorX11::Init(Callback* callback, Mode mode) {
- 
-   if (have_xfixes_) {
-     // Register for changes to the cursor shape.
-+    XErrorTrap error_trap(display());
-     XFixesSelectCursorInput(display(), window_, XFixesDisplayCursorNotifyMask);
-     x_display_->AddEventHandler(xfixes_event_base_ + XFixesCursorNotify, this);
- 
-diff --git a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-index d5dcd7af86..fa6334e8ba 100644
---- a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-+++ b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-@@ -302,7 +302,7 @@ bool ScreenCapturerX11::GetSourceList(SourceList* sources) {
-     char* monitor_title = XGetAtomName(display(), m.name);
- 
-     // Note name is an X11 Atom used to id the monitor.
--    sources->push_back({static_cast<SourceId>(m.name), monitor_title});
-+    sources->push_back({static_cast<SourceId>(m.name), 0, monitor_title});
-     XFree(monitor_title);
-   }
- 
-diff --git a/modules/desktop_capture/linux/x11/window_capturer_x11.cc b/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-index b55f7e8fa9..2b1392ced0 100644
---- a/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-+++ b/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-@@ -57,6 +57,7 @@ bool WindowCapturerX11::GetSourceList(SourceList* sources) {
-   return GetWindowList(&atom_cache_, [this, sources](::Window window) {
-     Source w;
-     w.id = window;
-+    w.pid = (pid_t)GetWindowProcessID(window);
-     if (this->GetWindowTitle(window, &w.title)) {
-       sources->push_back(w);
-     }
-@@ -237,6 +238,14 @@ bool WindowCapturerX11::GetWindowTitle(::Window window, std::string* title) {
-   return result;
- }
- 
-+int WindowCapturerX11::GetWindowProcessID(::Window window) {
-+  // Get _NET_WM_PID property of the window.
-+  Atom process_atom = XInternAtom(display(), "_NET_WM_PID", True);
-+  XWindowProperty<uint32_t> process_id(display(), window, process_atom);
-+
-+  return process_id.is_valid() ? *process_id.data() : 0;
-+}
-+
- // static
- std::unique_ptr<DesktopCapturer> WindowCapturerX11::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
-diff --git a/modules/desktop_capture/linux/x11/window_capturer_x11.h b/modules/desktop_capture/linux/x11/window_capturer_x11.h
-index ac591c272e..cfd29eca66 100644
---- a/modules/desktop_capture/linux/x11/window_capturer_x11.h
-+++ b/modules/desktop_capture/linux/x11/window_capturer_x11.h
-@@ -22,6 +22,7 @@
- #include "modules/desktop_capture/desktop_capturer.h"
- #include "modules/desktop_capture/desktop_geometry.h"
- #include "modules/desktop_capture/linux/x11/shared_x_display.h"
-+#include "modules/desktop_capture/linux/x11/x_window_property.h"
- #include "modules/desktop_capture/linux/x11/window_finder_x11.h"
- #include "modules/desktop_capture/linux/x11/x_atom_cache.h"
- #include "modules/desktop_capture/linux/x11/x_server_pixel_buffer.h"
-@@ -57,6 +58,9 @@ class WindowCapturerX11 : public DesktopCapturer,
-   // Returns window title for the specified X `window`.
-   bool GetWindowTitle(::Window window, std::string* title);
- 
-+  // Returns the id of the owning process.
-+  int GetWindowProcessID(::Window window);
-+
-   Callback* callback_ = nullptr;
- 
-   rtc::scoped_refptr<SharedXDisplay> x_display_;
-diff --git a/modules/desktop_capture/linux/x11/x_error_trap.cc b/modules/desktop_capture/linux/x11/x_error_trap.cc
-index 24c2065111..3314dd286c 100644
---- a/modules/desktop_capture/linux/x11/x_error_trap.cc
-+++ b/modules/desktop_capture/linux/x11/x_error_trap.cc
-@@ -12,48 +12,58 @@
- 
- #include <stddef.h>
- 
--#include <atomic>
-+#include <limits>
- 
- #include "rtc_base/checks.h"
- 
--namespace webrtc {
--
--namespace {
--
--static int g_last_xserver_error_code = 0;
--static std::atomic<Display*> g_display_for_error_handler = nullptr;
- 
--Mutex* AcquireMutex() {
--  static Mutex* mutex = new Mutex();
--  return mutex;
--}
-+namespace webrtc {
- 
--int XServerErrorHandler(Display* display, XErrorEvent* error_event) {
--  RTC_DCHECK_EQ(display, g_display_for_error_handler.load());
--  g_last_xserver_error_code = error_event->error_code;
--  return 0;
-+Bool XErrorTrap::XServerErrorHandler(Display* display, xReply* rep,
-+                                     char* /* buf */, int /* len */,
-+                                     XPointer data) {
-+  XErrorTrap* self = reinterpret_cast<XErrorTrap*>(data);
-+  if (rep->generic.type != X_Error ||
-+      // Overflow-safe last_request_read <= last_ignored_request_ for skipping
-+      // async replies from requests before XErrorTrap was created.
-+      self->last_ignored_request_ - display->last_request_read <
-+      std::numeric_limits<unsigned long>::max() >> 1)
-+    return False;
-+  self->last_xserver_error_code_ = rep->error.errorCode;
-+  return True;
- }
- 
--}  // namespace
--
--XErrorTrap::XErrorTrap(Display* display) : mutex_lock_(AcquireMutex()) {
--  // We don't expect this class to be used in a nested fashion so therefore
--  // g_display_for_error_handler should never be valid here.
--  RTC_DCHECK(!g_display_for_error_handler.load());
--  RTC_DCHECK(display);
--  g_display_for_error_handler.store(display);
--  g_last_xserver_error_code = 0;
--  original_error_handler_ = XSetErrorHandler(&XServerErrorHandler);
-+XErrorTrap::XErrorTrap(Display* display)
-+    : display_(display),
-+      last_xserver_error_code_(0),
-+      enabled_(true) {
-+  // Use async_handlers instead of XSetErrorHandler().  async_handlers can
-+  // remain in place and then be safely removed at the right time even if a
-+  // handler change happens concurrently on another thread.  async_handlers
-+  // are processed first and so can prevent errors reaching the global
-+  // XSetErrorHandler handler.  They also will not see errors from or affect
-+  // handling of errors on other Displays, which may be processed on other
-+  // threads.
-+  LockDisplay(display);
-+  async_handler_.next = display->async_handlers;
-+  async_handler_.handler = XServerErrorHandler;
-+  async_handler_.data = reinterpret_cast<XPointer>(this);
-+  display->async_handlers = &async_handler_;
-+  last_ignored_request_ = display->request;
-+  UnlockDisplay(display);
- }
- 
- int XErrorTrap::GetLastErrorAndDisable() {
--  g_display_for_error_handler.store(nullptr);
--  XSetErrorHandler(original_error_handler_);
--  return g_last_xserver_error_code;
-+  assert(enabled_);
-+  enabled_ = false;
-+  LockDisplay(display_);
-+  DeqAsyncHandler(display_, &async_handler_);
-+  UnlockDisplay(display_);
-+  return last_xserver_error_code_;
- }
- 
- XErrorTrap::~XErrorTrap() {
--  if (g_display_for_error_handler.load() != nullptr)
-+  if (enabled_)
-     GetLastErrorAndDisable();
- }
- 
-diff --git a/modules/desktop_capture/linux/x11/x_error_trap.h b/modules/desktop_capture/linux/x11/x_error_trap.h
-index 1f21ab969c..df7e86bf03 100644
---- a/modules/desktop_capture/linux/x11/x_error_trap.h
-+++ b/modules/desktop_capture/linux/x11/x_error_trap.h
-@@ -11,30 +11,39 @@
- #ifndef MODULES_DESKTOP_CAPTURE_LINUX_X11_X_ERROR_TRAP_H_
- #define MODULES_DESKTOP_CAPTURE_LINUX_X11_X_ERROR_TRAP_H_
- 
--#include <X11/Xlib.h>
--
--#include "rtc_base/synchronization/mutex.h"
-+#include <X11/Xlibint.h>
-+#undef max // Xlibint.h defines this and it breaks std::max
-+#undef min // Xlibint.h defines this and it breaks std::min
- 
- namespace webrtc {
- 
--// Helper class that registers an X Window error handler. Caller can use
-+// Helper class that registers X Window error handler. Caller can use
- // GetLastErrorAndDisable() to get the last error that was caught, if any.
-+// An XErrorTrap may be constructed on any thread, but errors are collected
-+// from all threads and so |display| should be used only on one thread.
-+// Other Displays are unaffected.
- class XErrorTrap {
-  public:
-   explicit XErrorTrap(Display* display);
-+  ~XErrorTrap();
- 
-   XErrorTrap(const XErrorTrap&) = delete;
-   XErrorTrap& operator=(const XErrorTrap&) = delete;
- 
--  ~XErrorTrap();
--
--  // Returns the last error if one was caught, otherwise 0. Also unregisters the
--  // error handler and replaces it with `original_error_handler_`.
-+  // Returns last error and removes unregisters the error handler.
-+  // Must not be called more than once.
-   int GetLastErrorAndDisable();
- 
-  private:
--  MutexLock mutex_lock_;
--  XErrorHandler original_error_handler_ = nullptr;
-+  static Bool XServerErrorHandler(Display* display, xReply* rep,
-+                                  char* /* buf */, int /* len */,
-+                                  XPointer data);
-+
-+  _XAsyncHandler async_handler_;
-+  Display* display_;
-+  unsigned long last_ignored_request_;
-+  int last_xserver_error_code_;
-+  bool enabled_;
- };
- 
- }  // namespace webrtc
-diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index 3745e9cba5..f68cfb94c1 100644
---- a/modules/desktop_capture/win/screen_capture_utils.cc
-+++ b/modules/desktop_capture/win/screen_capture_utils.cc
-@@ -52,7 +52,7 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
-       continue;
-     }
- 
--    screens->push_back({device_index, std::string()});
-+    screens->push_back({device_index, 0, std::string()});
-     if (device_names) {
-       device_names->push_back(rtc::ToUtf8(device.DeviceName));
-     }
-diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index de68885519..099b0be1a3 100644
---- a/modules/rtp_rtcp/source/rtcp_sender.cc
-+++ b/modules/rtp_rtcp/source/rtcp_sender.cc
-@@ -200,7 +200,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
-     next_time_to_send_rtcp_ = absl::nullopt;
-   } else if (method_ == RtcpMode::kOff) {
-     // When switching on, reschedule the next packet
--    SetNextRtcpSendEvaluationDuration(report_interval_ / 2);
-+    SetNextRtcpSendEvaluationDuration(RTCP_INTERVAL_RAPID_SYNC_MS / 2);
-   }
-   method_ = new_method;
- }
-diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index 9f0374b299..c51692b818 100644
---- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
-+++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-@@ -423,6 +423,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
-   return true;
- }
- 
-+// CSRCAudioLevel
-+//  Sample Audio Level Encoding Using the One-Byte Header Format
-+//  Note that the range of len is 1 to 15 which is encoded as 0 to 14
-+//  0                   1                   2                   3
-+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+// |  ID   | len=2 |0|   level 1   |0|   level 2   |0|   level 3   |
-+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+
-+
-+constexpr RTPExtensionType CsrcAudioLevel::kId;
-+constexpr const char* CsrcAudioLevel::kUri;
-+
-+bool CsrcAudioLevel::Parse(rtc::ArrayView<const uint8_t> data,
-+                           CsrcAudioLevelList* csrcAudioLevels) {
-+  if (data.size() < 1 || data.size() > kRtpCsrcSize)
-+    return false;
-+  csrcAudioLevels->numAudioLevels = data.size();
-+  for(uint8_t i = 0; i < csrcAudioLevels->numAudioLevels; i++) {
-+    // Ensure range is 0 to 127 inclusive
-+    csrcAudioLevels->arrOfAudioLevels[i] = 0x7f & data[i];
-+  }
-+  return true;
-+}
-+
-+size_t CsrcAudioLevel::ValueSize(const CsrcAudioLevelList& csrcAudioLevels) {
-+  return csrcAudioLevels.numAudioLevels;
-+}
-+
-+bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
-+                           const CsrcAudioLevelList& csrcAudioLevels) {
-+  RTC_DCHECK_GE(csrcAudioLevels.numAudioLevels, 0);
-+  for(uint8_t i = 0; i < csrcAudioLevels.numAudioLevels; i++) {
-+    data[i] = csrcAudioLevels.arrOfAudioLevels[i] & 0x7f;
-+  }
-+  // This extension if used must have at least one audio level
-+  return csrcAudioLevels.numAudioLevels;
-+}
-+
- // Video Content Type.
- //
- // E.g. default video or screenshare.
-diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index 51c083a18b..8dc6f87b1c 100644
---- a/modules/rtp_rtcp/source/rtp_header_extensions.h
-+++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
-@@ -308,6 +308,21 @@ class ColorSpaceExtension {
-   static size_t WriteLuminance(uint8_t* data, float f, int denominator);
- };
- 
-+class CsrcAudioLevel {
-+ public:
-+  static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
-+  static constexpr absl::string_view Uri() {
-+    return RtpExtension::kCsrcAudioLevelsUri;
-+  }
-+  static constexpr const char* kUri =
-+      "urn:ietf:params:rtp-hdrext:csrc-audio-level";
-+
-+  static bool Parse(rtc::ArrayView<const uint8_t> data,
-+                    CsrcAudioLevelList* csrcAudioLevels);
-+  static size_t ValueSize(const CsrcAudioLevelList& csrcAudioLevels);
-+  static bool Write(rtc::ArrayView<uint8_t> data, const CsrcAudioLevelList& csrcAudioLevels);
-+};
-+
- // Base extension class for RTP header extensions which are strings.
- // Subclasses must defined kId and kUri static constexpr members.
- class BaseRtpStringExtension {
-diff --git a/modules/rtp_rtcp/source/rtp_packet.cc b/modules/rtp_rtcp/source/rtp_packet.cc
-index 2a95a3a816..b152cdbd9e 100644
---- a/modules/rtp_rtcp/source/rtp_packet.cc
-+++ b/modules/rtp_rtcp/source/rtp_packet.cc
-@@ -205,6 +205,10 @@ void RtpPacket::ZeroMutableExtensions() {
-         // Non-mutable extension. Don't change it.
-         break;
-       }
-+      case RTPExtensionType::kRtpExtensionCsrcAudioLevel: {
-+        // TODO: This is a Mozilla addition, we need to add a handler for this.
-+        RTC_CHECK(false);
-+      }
-     }
-   }
- }
-diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index 922a4b15f4..669947838b 100644
---- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-+++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-@@ -123,6 +123,18 @@ constexpr uint8_t kPacketWithMid[] = {
-     0xbe, 0xde, 0x00, 0x01,
-     0xb2, 'm', 'i', 'd'};
- 
-+constexpr uint8_t kCsrcAudioLevelExtensionId = 0xc;
-+constexpr uint8_t kCsrcAudioLevelsSize = 4;
-+constexpr uint8_t kCsrcAudioLevels[] = {0x7f, 0x00, 0x10, 0x08};
-+constexpr uint8_t kPacketWithCsrcAudioLevels[] = {
-+    0x90, kPayloadType, kSeqNumFirstByte, kSeqNumSecondByte,
-+    0x65, 0x43, 0x12, 0x78,
-+    0x12, 0x34, 0x56, 0x78,
-+    0xbe, 0xde, 0x00, 0x02,
-+    (kCsrcAudioLevelExtensionId << 4) | (kCsrcAudioLevelsSize - 1),
-+          0x7f, 0x00, 0x10,
-+    0x08, 0x00, 0x00, 0x00};
-+
- constexpr uint32_t kCsrcs[] = {0x34567890, 0x32435465};
- constexpr uint8_t kPayload[] = {'p', 'a', 'y', 'l', 'o', 'a', 'd'};
- constexpr uint8_t kPacketPaddingSize = 8;
-@@ -399,6 +411,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
-   EXPECT_EQ(packet.GetExtension<TransportSequenceNumber>(), absl::nullopt);
- }
- 
-+TEST(RtpPacketTest, CreateWithDynamicSizedExtensionCsrcAudioLevel) {
-+  RtpPacketToSend::ExtensionManager extensions;
-+  extensions.Register<CsrcAudioLevel>(kCsrcAudioLevelExtensionId);
-+  RtpPacketToSend packet(&extensions);
-+  packet.SetPayloadType(kPayloadType);
-+  packet.SetSequenceNumber(kSeqNum);
-+  packet.SetTimestamp(kTimestamp);
-+  packet.SetSsrc(kSsrc);
-+  CsrcAudioLevelList levels;
-+  levels.numAudioLevels = kCsrcAudioLevelsSize;
-+  for (uint8_t i = 0; i < kCsrcAudioLevelsSize; i++) {
-+    levels.arrOfAudioLevels[i] = kCsrcAudioLevels[i];
-+  }
-+  packet.SetExtension<CsrcAudioLevel>(levels);
-+  EXPECT_THAT(kPacketWithCsrcAudioLevels,
-+    ElementsAreArray(packet.data(), packet.size()));
-+}
-+
- TEST(RtpPacketTest, SetReservedExtensionsAfterPayload) {
-   const size_t kPayloadSize = 4;
-   RtpPacketToSend::ExtensionManager extensions;
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_config.h b/modules/rtp_rtcp/source/rtp_rtcp_config.h
-index 0b87d6d065..d69ae9420b 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_config.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_config.h
-@@ -11,11 +11,15 @@
- #ifndef MODULES_RTP_RTCP_SOURCE_RTP_RTCP_CONFIG_H_
- #define MODULES_RTP_RTCP_SOURCE_RTP_RTCP_CONFIG_H_
- 
-+#include "api/units/time_delta.h"
-+
- // Configuration file for RTP utilities (RTPSender, RTPReceiver ...)
- namespace webrtc {
- constexpr int kDefaultMaxReorderingThreshold = 50;  // In sequence numbers.
- constexpr int kRtcpMaxNackFields = 253;
- 
-+constexpr TimeDelta RTCP_INTERVAL_RAPID_SYNC_MS =
-+    TimeDelta::Millis(100); // RFX 6051
- constexpr int RTCP_MAX_REPORT_BLOCKS = 31;  // RFC 3550 page 37
- }  // namespace webrtc
- 
-diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 07356b8478..e853507174 100644
---- a/modules/rtp_rtcp/source/rtp_sender.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender.cc
-@@ -128,6 +128,10 @@ bool IsNonVolatile(RTPExtensionType type) {
-     case kRtpExtensionNumberOfExtensions:
-       RTC_DCHECK_NOTREACHED();
-       return false;
-+    case kRtpExtensionCsrcAudioLevel:
-+      // TODO: Mozilla implement for CsrcAudioLevel
-+      RTC_CHECK(false);
-+      return false;
-   }
-   RTC_CHECK_NOTREACHED();
- }
-diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
-index ff32a78580..7cccdb51a7 100644
---- a/modules/video_capture/device_info_impl.cc
-+++ b/modules/video_capture/device_info_impl.cc
-@@ -65,7 +65,7 @@ int32_t DeviceInfoImpl::GetCapability(const char* deviceUniqueIdUTF8,
- 
-   // Make sure the number is valid
-   if (deviceCapabilityNumber >= (unsigned int)_captureCapabilities.size()) {
--    RTC_LOG(LS_ERROR) << "Invalid deviceCapabilityNumber "
-+    RTC_LOG(LS_ERROR) << deviceUniqueIdUTF8 << " Invalid deviceCapabilityNumber "
-                       << deviceCapabilityNumber << ">= number of capabilities ("
-                       << _captureCapabilities.size() << ").";
-     return -1;
-diff --git a/modules/video_capture/device_info_impl.h b/modules/video_capture/device_info_impl.h
-index 546265049c..8acbef6d69 100644
---- a/modules/video_capture/device_info_impl.h
-+++ b/modules/video_capture/device_info_impl.h
-@@ -42,6 +42,7 @@ class DeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
-   /* Initialize this object*/
- 
-   virtual int32_t Init() = 0;
-+  int32_t Refresh() override { return 0; }
-   /*
-    * Fills the member variable _captureCapabilities with capabilities for the
-    * given device name.
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index a472e41a41..7397a10625 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -45,15 +45,187 @@
- #define V4L2_PIX_FMT_RGBA32 v4l2_fourcc('A', 'B', '2', '4')
- #endif
- 
-+#ifdef WEBRTC_LINUX
-+#define EVENT_SIZE  ( sizeof (struct inotify_event) )
-+#define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
-+#endif
-+
- namespace webrtc {
- namespace videocapturemodule {
--DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl() {}
-+#ifdef WEBRTC_LINUX
-+void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
-+{
-+    if (event->mask & IN_CREATE) {
-+        if (fd == _fd_v4l || fd == _fd_snd) {
-+            DeviceChange();
-+        } else if ((event->mask & IN_ISDIR) && (fd == _fd_dev)) {
-+            if (_wd_v4l < 0) {
-+                // Sometimes inotify_add_watch failed if we call it immediately after receiving this event
-+                // Adding 5ms delay to let file system settle down
-+                usleep(5*1000);
-+                _wd_v4l = inotify_add_watch(_fd_v4l, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
-+                if (_wd_v4l >= 0) {
-+                    DeviceChange();
-+                }
-+            }
-+            if (_wd_snd < 0) {
-+                usleep(5*1000);
-+                _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
-+                if (_wd_snd >= 0) {
-+                    DeviceChange();
-+                }
-+            }
-+        }
-+    } else if (event->mask & IN_DELETE) {
-+        if (fd == _fd_v4l || fd == _fd_snd) {
-+            DeviceChange();
-+        }
-+    } else if (event->mask & IN_DELETE_SELF) {
-+        if (fd == _fd_v4l) {
-+            inotify_rm_watch(_fd_v4l, _wd_v4l);
-+            _wd_v4l = -1;
-+        } else if (fd == _fd_snd) {
-+            inotify_rm_watch(_fd_snd, _wd_snd);
-+            _wd_snd = -1;
-+        } else {
-+            assert(false);
-+        }
-+    }
-+}
-+
-+int DeviceInfoV4l2::EventCheck(int fd)
-+{
-+    struct timeval timeout;
-+    fd_set rfds;
-+
-+    timeout.tv_sec = 0;
-+    timeout.tv_usec = 100000;
-+
-+    FD_ZERO(&rfds);
-+    FD_SET(fd, &rfds);
-+
-+    return select(fd+1, &rfds, NULL, NULL, &timeout);
-+}
-+
-+int DeviceInfoV4l2::HandleEvents(int fd)
-+{
-+    char buffer[BUF_LEN];
-+
-+    ssize_t r = read(fd, buffer, BUF_LEN);
-+
-+    if (r <= 0) {
-+        return r;
-+    }
-+
-+    ssize_t buffer_i = 0;
-+    inotify_event* pevent;
-+    size_t eventSize;
-+    int count = 0;
-+
-+    while (buffer_i < r)
-+    {
-+        pevent = (inotify_event *) (&buffer[buffer_i]);
-+        eventSize = sizeof(inotify_event) + pevent->len;
-+        char event[sizeof(inotify_event) + FILENAME_MAX + 1] // null-terminated
-+            __attribute__ ((aligned(__alignof__(struct inotify_event))));
-+
-+        memcpy(event, pevent, eventSize);
-+
-+        HandleEvent((inotify_event*)(event), fd);
-+
-+        buffer_i += eventSize;
-+        count++;
-+    }
-+
-+    return count;
-+}
-+
-+int DeviceInfoV4l2::ProcessInotifyEvents()
-+{
-+    while (!_isShutdown) {
-+        if (EventCheck(_fd_dev) > 0) {
-+            if (HandleEvents(_fd_dev) < 0) {
-+                break;
-+            }
-+        }
-+        if (EventCheck(_fd_v4l) > 0) {
-+            if (HandleEvents(_fd_v4l) < 0) {
-+                break;
-+            }
-+        }
-+        if (EventCheck(_fd_snd) > 0) {
-+            if (HandleEvents(_fd_snd) < 0) {
-+                break;
-+            }
-+        }
-+    }
-+    return 0;
-+}
-+
-+void DeviceInfoV4l2::InotifyEventThread(void* obj)
-+{
-+    static_cast<DeviceInfoLinux*> (obj)->InotifyProcess();
-+}
-+
-+void DeviceInfoV4l2::InotifyProcess()
-+{
-+    _fd_v4l = inotify_init();
-+    _fd_snd = inotify_init();
-+    _fd_dev = inotify_init();
-+    if (_fd_v4l >= 0 && _fd_snd >= 0 && _fd_dev >= 0) {
-+        _wd_v4l = inotify_add_watch(_fd_v4l, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
-+        _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
-+        _wd_dev = inotify_add_watch(_fd_dev, "/dev/", IN_CREATE);
-+        ProcessInotifyEvents();
-+
-+        if (_wd_v4l >= 0) {
-+          inotify_rm_watch(_fd_v4l, _wd_v4l);
-+        }
-+
-+        if (_wd_snd >= 0) {
-+          inotify_rm_watch(_fd_snd, _wd_snd);
-+        }
-+
-+        if (_wd_dev >= 0) {
-+          inotify_rm_watch(_fd_dev, _wd_dev);
-+        }
-+
-+        close(_fd_v4l);
-+        close(_fd_snd);
-+        close(_fd_dev);
-+    }
-+}
-+#endif
-+
-+DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
-+#ifdef WEBRTC_LINUX
-+    , _inotifyEventThread(new rtc::PlatformThread(
-+                            InotifyEventThread, this, "InotifyEventThread"))
-+    , _isShutdown(false)
-+#endif
-+{
-+#ifdef WEBRTC_LINUX
-+    if (_inotifyEventThread)
-+    {
-+        _inotifyEventThread->Start();
-+    }
-+}
-+#endif
- 
- int32_t DeviceInfoV4l2::Init() {
-   return 0;
- }
- 
--DeviceInfoV4l2::~DeviceInfoV4l2() {}
-+DeviceInfoV4l2::~DeviceInfoV4l2() {
-+#ifdef WEBRTC_LINUX
-+    _isShutdown = true;
-+
-+    if (_inotifyEventThread) {
-+        _inotifyEventThread->Stop();
-+        _inotifyEventThread = nullptr;
-+    }
-+#endif
-+}
- 
- uint32_t DeviceInfoV4l2::NumberOfDevices() {
-   uint32_t count = 0;
-@@ -86,7 +258,8 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
-                                       char* deviceUniqueIdUTF8,
-                                       uint32_t deviceUniqueIdUTF8Length,
-                                       char* /*productUniqueIdUTF8*/,
--                                      uint32_t /*productUniqueIdUTF8Length*/) {
-+                                      uint32_t /*productUniqueIdUTF8Length*/,
-+                                      pid_t* /*pid*/) {
-   // Travel through /dev/video [0-63]
-   uint32_t count = 0;
-   char device[20];
-diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index fb95a6020d..95432a509d 100644
---- a/modules/video_capture/linux/device_info_v4l2.h
-+++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -15,6 +15,9 @@
- 
- #include "modules/video_capture/device_info_impl.h"
- 
-+#include "rtc_base/platform_thread.h"
-+#include <sys/inotify.h>
-+
- namespace webrtc {
- namespace videocapturemodule {
- class DeviceInfoV4l2 : public DeviceInfoImpl {
-@@ -28,7 +31,8 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
-                         char* deviceUniqueIdUTF8,
-                         uint32_t deviceUniqueIdUTF8Length,
-                         char* productUniqueIdUTF8 = 0,
--                        uint32_t productUniqueIdUTF8Length = 0) override;
-+                        uint32_t productUniqueIdUTF8Length = 0,
-+                        pid_t* pid=0) override;
-   /*
-    * Fills the membervariable _captureCapabilities with capabilites for the
-    * given device name.
-@@ -45,6 +49,18 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
- 
-  private:
-   bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
-+
-+#ifdef WEBRTC_LINUX
-+  void HandleEvent(inotify_event* event, int fd);
-+  int EventCheck(int fd);
-+  int HandleEvents(int fd);
-+  int ProcessInotifyEvents();
-+  std::unique_ptr<rtc::PlatformThread> _inotifyEventThread;
-+  static void InotifyEventThread(void*);
-+  void InotifyProcess();
-+  int _fd_v4l, _fd_dev, _wd_v4l, _wd_dev; /* accessed on InotifyEventThread thread */
-+  std::atomic<bool> _isShutdown;
-+#endif
- };
- }  // namespace videocapturemodule
- }  // namespace webrtc
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 48920b27c0..f31b239c71 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -15,15 +15,44 @@
- #include "api/video/video_sink_interface.h"
- #include "modules/video_capture/raw_video_sink_interface.h"
- #include "modules/video_capture/video_capture_defines.h"
-+#include <set>
-+
-+#if defined(ANDROID)
-+#include <jni.h>
-+#endif
- 
- namespace webrtc {
- 
-+class VideoInputFeedBack
-+{
-+public:
-+    virtual void OnDeviceChange() = 0;
-+protected:
-+    virtual ~VideoInputFeedBack(){}
-+};
-+
- class VideoCaptureModule : public RefCountInterface {
-  public:
-   // Interface for receiving information about available camera devices.
-   class DeviceInfo {
-    public:
-     virtual uint32_t NumberOfDevices() = 0;
-+    virtual int32_t Refresh() = 0;
-+    virtual void DeviceChange() {
-+      for (auto inputCallBack : _inputCallBacks) {
-+        inputCallBack->OnDeviceChange();
-+      }
-+    }
-+    virtual void RegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
-+      _inputCallBacks.insert(callBack);
-+    }
-+
-+    virtual void DeRegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
-+      auto it = _inputCallBacks.find(callBack);
-+      if (it != _inputCallBacks.end()) {
-+        _inputCallBacks.erase(it);
-+      }
-+    }
- 
-     // Returns the available capture devices.
-     // deviceNumber   - Index of capture device.
-@@ -38,7 +67,8 @@ class VideoCaptureModule : public RefCountInterface {
-                                   char* deviceUniqueIdUTF8,
-                                   uint32_t deviceUniqueIdUTF8Length,
-                                   char* productUniqueIdUTF8 = 0,
--                                  uint32_t productUniqueIdUTF8Length = 0) = 0;
-+                                  uint32_t productUniqueIdUTF8Length = 0,
-+                                  pid_t* pid = 0) = 0;
- 
-     // Returns the number of capabilities this device.
-     virtual int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8) = 0;
-@@ -70,6 +100,8 @@ class VideoCaptureModule : public RefCountInterface {
-         uint32_t positionY) = 0;
- 
-     virtual ~DeviceInfo() {}
-+   private:
-+    std::set<VideoInputFeedBack*> _inputCallBacks;
-   };
- 
-   //   Register capture data callback
-@@ -79,11 +111,16 @@ class VideoCaptureModule : public RefCountInterface {
-       RawVideoSinkInterface* dataCallback) = 0;
- 
-   //  Remove capture data callback
--  virtual void DeRegisterCaptureDataCallback() = 0;
-+  virtual void DeRegisterCaptureDataCallback(
-+      rtc::VideoSinkInterface<VideoFrame> *dataCallback) = 0;
- 
-   // Start capture device
-   virtual int32_t StartCapture(const VideoCaptureCapability& capability) = 0;
- 
-+  virtual int32_t StopCaptureIfAllClientsClose() = 0;
-+
-+  virtual bool FocusOnSelectedSource() { return false; }
-+
-   virtual int32_t StopCapture() = 0;
- 
-   // Returns the name of the device used by this module.
-diff --git a/modules/video_capture/video_capture_factory.cc b/modules/video_capture/video_capture_factory.cc
-index 563ef5abd2..e085ac2df8 100644
---- a/modules/video_capture/video_capture_factory.cc
-+++ b/modules/video_capture/video_capture_factory.cc
-@@ -16,11 +16,7 @@ namespace webrtc {
- 
- rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
-     const char* deviceUniqueIdUTF8) {
--#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
--  return nullptr;
--#else
-   return videocapturemodule::VideoCaptureImpl::Create(deviceUniqueIdUTF8);
--#endif
- }
- 
- rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
-@@ -37,11 +33,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
- }
- 
- VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo() {
--#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
--  return nullptr;
--#else
-   return videocapturemodule::VideoCaptureImpl::CreateDeviceInfo();
--#endif
- }
- 
- VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 428253bf23..66fd0a0ebe 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -77,7 +77,6 @@ VideoCaptureImpl::VideoCaptureImpl()
-       _requestedCapability(),
-       _lastProcessTimeNanos(rtc::TimeNanos()),
-       _lastFrameRateCallbackTimeNanos(rtc::TimeNanos()),
--      _dataCallBack(NULL),
-       _rawDataCallBack(NULL),
-       _lastProcessFrameTimeNanos(rtc::TimeNanos()),
-       _rotateFrame(kVideoRotation_0),
-@@ -91,7 +90,6 @@ VideoCaptureImpl::VideoCaptureImpl()
- 
- VideoCaptureImpl::~VideoCaptureImpl() {
-   RTC_DCHECK_RUN_ON(&api_checker_);
--  DeRegisterCaptureDataCallback();
-   if (_deviceUniqueId)
-     delete[] _deviceUniqueId;
- }
-@@ -100,28 +98,41 @@ void VideoCaptureImpl::RegisterCaptureDataCallback(
-     rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
-   MutexLock lock(&api_lock_);
-   RTC_DCHECK(!_rawDataCallBack);
--  _dataCallBack = dataCallBack;
-+  _dataCallBacks.insert(dataCallBack);
- }
- 
- void VideoCaptureImpl::RegisterCaptureDataCallback(
-     RawVideoSinkInterface* dataCallBack) {
-   MutexLock lock(&api_lock_);
--  RTC_DCHECK(!_dataCallBack);
-+  RTC_DCHECK(_dataCallBacks.empty());
-   _rawDataCallBack = dataCallBack;
- }
- 
--void VideoCaptureImpl::DeRegisterCaptureDataCallback() {
-+void VideoCaptureImpl::DeRegisterCaptureDataCallback(
-+    rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
-   MutexLock lock(&api_lock_);
--  _dataCallBack = NULL;
-+  auto it = _dataCallBacks.find(dataCallBack);
-+  if (it != _dataCallBacks.end()) {
-+    _dataCallBacks.erase(it);
-+  }
-   _rawDataCallBack = NULL;
- }
-+
-+int32_t VideoCaptureImpl::StopCaptureIfAllClientsClose() {
-+  if (_dataCallBacks.empty()) {
-+    return StopCapture();
-+  } else {
-+    return 0;
-+  }
-+}
-+
- int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
-   RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
- 
-   UpdateFrameCount();  // frame count used for local frame rate callback.
- 
--  if (_dataCallBack) {
--    _dataCallBack->OnFrame(captureFrame);
-+  for (auto dataCallBack : _dataCallBacks) {
-+    dataCallBack->OnFrame(captureFrame);
-   }
- 
-   return 0;
-@@ -229,6 +240,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-           .build();
-   captureFrame.set_ntp_time_ms(captureTime);
- 
-+  // This is one ugly hack to let CamerasParent know what rotation
-+  // the frame was captured at. Note that this goes against the intended
-+  // meaning of rotation of the frame (how to rotate it before rendering).
-+  // We do this so CamerasChild can scale to the proper dimensions
-+  // later on in the pipe.
-+  captureFrame.set_rotation(_rotateFrame);
-+
-   DeliverCapturedFrame(captureFrame);
- 
-   return 0;
-diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index 5ec1fd4a83..e46e050609 100644
---- a/modules/video_capture/video_capture_impl.h
-+++ b/modules/video_capture/video_capture_impl.h
-@@ -64,8 +64,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
-       rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
-   virtual void RegisterCaptureDataCallback(
-       RawVideoSinkInterface* dataCallback) override;
--  void DeRegisterCaptureDataCallback() override;
-+  void DeRegisterCaptureDataCallback(
-+      rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
- 
-+  int32_t StopCaptureIfAllClientsClose() override;
-   int32_t SetCaptureRotation(VideoRotation rotation) override;
-   bool SetApplyRotation(bool enable) override;
-   bool GetApplyRotation() override;
-@@ -115,7 +117,7 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
-   // last time the frame rate callback function was called.
-   int64_t _lastFrameRateCallbackTimeNanos RTC_GUARDED_BY(capture_checker_);
- 
--  rtc::VideoSinkInterface<VideoFrame>* _dataCallBack RTC_GUARDED_BY(api_lock_);
-+  std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks RTC_GUARDED_BY(api_lock_);
-   RawVideoSinkInterface* _rawDataCallBack RTC_GUARDED_BY(api_lock_);
- 
-   int64_t _lastProcessFrameTimeNanos RTC_GUARDED_BY(capture_checker_);
-diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-index 20c29abc7c..edbe781639 100644
---- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-+++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-@@ -256,6 +256,7 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(const cricket::VideoCodec& codec,
-       first_frame_in_picture_(true),
-       ss_info_needed_(false),
-       force_all_active_layers_(false),
-+      num_cores_(0),
-       is_flexible_mode_(false),
-       variable_framerate_experiment_(ParseVariableFramerateConfig(trials)),
-       variable_framerate_controller_(
-@@ -580,6 +581,7 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
- 
-   force_key_frame_ = true;
-   pics_since_key_ = 0;
-+  num_cores_ = settings.number_of_cores;
- 
-   scalability_mode_ = inst->GetScalabilityMode();
-   if (scalability_mode_.has_value()) {
-@@ -1167,6 +1169,14 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
-     config_changed_ = false;
-   }
- 
-+  if (input_image.width() != codec_.width ||
-+      input_image.height() != codec_.height) {
-+    int ret = UpdateCodecFrameSize(input_image);
-+    if (ret < 0) {
-+      return ret;
-+    }
-+  }
-+
-   RTC_DCHECK_EQ(input_image.width(), raw_->d_w);
-   RTC_DCHECK_EQ(input_image.height(), raw_->d_h);
- 
-@@ -1289,6 +1299,48 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
-   return WEBRTC_VIDEO_CODEC_OK;
- }
- 
-+int LibvpxVp9Encoder::UpdateCodecFrameSize(
-+    const VideoFrame& input_image) {
-+  RTC_LOG(LS_INFO) << "Reconfiging VP from " <<
-+          codec_.width << "x" << codec_.height << " to " <<
-+          input_image.width() << "x" << input_image.height();
-+  // Preserve latest bitrate/framerate setting
-+  // TODO: Mozilla - see below, we need to save more state here.
-+  //uint32_t old_bitrate_kbit = config_->rc_target_bitrate;
-+  //uint32_t old_framerate = codec_.maxFramerate;
-+
-+  codec_.width = input_image.width();
-+  codec_.height = input_image.height();
-+
-+  vpx_img_free(raw_);
-+  raw_ = vpx_img_wrap(NULL, VPX_IMG_FMT_I420, codec_.width, codec_.height,
-+                      1, NULL);
-+  // Update encoder context for new frame size.
-+  config_->g_w = codec_.width;
-+  config_->g_h = codec_.height;
-+
-+  // Determine number of threads based on the image size and #cores.
-+  config_->g_threads = NumberOfThreads(codec_.width, codec_.height,
-+                                       num_cores_);
-+
-+  // NOTE: We would like to do this the same way vp8 does it
-+  // (with vpx_codec_enc_config_set()), but that causes asserts
-+  // in AQ 3 (cyclic); and in AQ 0 it works, but on a resize to smaller
-+  // than 1/2 x 1/2 original it asserts in convolve().  Given these
-+  // bugs in trying to do it the "right" way, we basically re-do
-+  // the initialization.
-+  vpx_codec_destroy(encoder_); // clean up old state
-+  int result = InitAndSetControlSettings(&codec_);
-+  if (result == WEBRTC_VIDEO_CODEC_OK) {
-+    // TODO: Mozilla rates have become much more complicated, we need to store
-+    // more state or find another way of doing this.
-+    //return SetRates(old_bitrate_kbit, old_framerate);
-+    RTC_CHECK(false);
-+    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
-+  }
-+  return result;
-+}
-+
- bool LibvpxVp9Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
-                                              absl::optional<int>* spatial_idx,
-                                              absl::optional<int>* temporal_idx,
-diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h
-index 3ccaa5fa52..ea4e5810ac 100644
---- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h
-+++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h
-@@ -67,6 +67,9 @@ class LibvpxVp9Encoder : public VP9Encoder {
-   // Call encoder initialize function and set control settings.
-   int InitAndSetControlSettings(const VideoCodec* inst);
- 
-+  // Update frame size for codec.
-+  int UpdateCodecFrameSize(const VideoFrame& input_image);
-+
-   bool PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
-                              absl::optional<int>* spatial_idx,
-                              absl::optional<int>* temporal_idx,
-@@ -148,6 +151,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
-   VideoBitrateAllocation current_bitrate_allocation_;
-   bool ss_info_needed_;
-   bool force_all_active_layers_;
-+  uint8_t num_cores_;
- 
-   std::unique_ptr<ScalableVideoController> svc_controller_;
-   absl::optional<ScalabilityMode> scalability_mode_;
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 775b9100e4..a92d165c49 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -463,6 +463,12 @@ rtc_library("logging") {
-     "//third_party/abseil-cpp/absl/types:optional",
-   ]
- 
-+  # Added to allow including apm_data_dumper.h in rtc_base/logging.cc
-+  # for Mozilla controlling aec logging from about:webrtc.
-+  if (build_with_mozilla) {
-+    configs += [ "../modules/audio_processing:apm_debug_dump" ]
-+  }
-+
-   if (build_with_chromium) {
-     # Dependency on chromium's logging (in //base).
-     deps += [ "//base" ]
-diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index 61a3c667ba..ad2303735e 100644
---- a/rtc_base/logging.cc
-+++ b/rtc_base/logging.cc
-@@ -44,6 +44,7 @@ static const int kMaxLogLineSize = 1024 - 60;
- #include "absl/base/attributes.h"
- #include "absl/strings/string_view.h"
- #include "api/units/timestamp.h"
-+#include "modules/audio_processing/logging/apm_data_dumper.h"
- #include "rtc_base/checks.h"
- #include "rtc_base/platform_thread_types.h"
- #include "rtc_base/string_encode.h"
-@@ -54,6 +55,24 @@ static const int kMaxLogLineSize = 1024 - 60;
- #include "rtc_base/time_utils.h"
- 
- namespace rtc {
-+
-+bool LogMessage::aec_debug_ = false;
-+std::string LogMessage::aec_filename_base_;
-+
-+void LogMessage::set_aec_debug(bool enable) {
-+  aec_debug_ = enable;
-+  webrtc::ApmDataDumper::SetActivated(aec_debug_);
-+}
-+
-+std::string LogMessage::aec_debug_filename() {
-+  return aec_filename_base_;
-+}
-+
-+void LogMessage::set_aec_debug_filename(const char* filename) {
-+  aec_filename_base_ = filename;
-+  webrtc::ApmDataDumper::SetOutputDirectory(aec_filename_base_);
-+}
-+
++  [[deprecated]] void set_id(absl::string_view id) { Assign(id_, id); }
+ 
+   int component() const { return component_; }
+   void set_component(int component) { component_ = component; }
+@@ -127,8 +124,8 @@ class RTC_EXPORT Candidate {
+   // things down. See also the `Port` class.
+   void set_type(webrtc::IceCandidateType type) { type_ = type; }
+ 
+-  [[deprecated("Use IceCandidateType version")]] void set_type(
+-      absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND);
++  // TODO(tommi): Deprecate.
++  void set_type(absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND);
+ 
+   // Simple checkers for checking the candidate type without dependency on the
+   // IceCandidateType enum. The `is_local()` and `is_stun()` names are legacy
+diff --git a/p2p/base/connection.cc b/p2p/base/connection.cc
+index 996ea995c2..b601940667 100644
+--- a/p2p/base/connection.cc
++++ b/p2p/base/connection.cc
+@@ -43,8 +43,6 @@
+ namespace cricket {
  namespace {
  
- // By default, release builds don't log, debug builds at info level
-@@ -114,7 +133,7 @@ std::string LogLineRef::DefaultLogLine() const {
- // LogMessage
- /////////////////////////////////////////////////////////////////////////////
+-using webrtc::IceCandidateType;
+-
+ // Determines whether we have seen at least the given maximum number of
+ // pings fail to have a response.
+ inline bool TooManyFailures(
+@@ -77,16 +75,16 @@ inline bool TooLongWithoutResponse(
  
--bool LogMessage::log_to_stderr_ = true;
-+bool LogMessage::log_to_stderr_ = false;
- 
- // The list of logging streams currently configured.
- // Note: we explicitly do not clean this up, because of the uncertain ordering
-diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index b171cfe11e..df7f173f58 100644
---- a/rtc_base/logging.h
-+++ b/rtc_base/logging.h
-@@ -581,6 +581,12 @@ class LogMessage {
+ // Helper methods for converting string values of log description fields to
+ // enum.
+-IceCandidateType GetRtcEventLogCandidateType(const Candidate& c) {
++webrtc::IceCandidateType GetRtcEventLogCandidateType(const Candidate& c) {
+   if (c.is_local()) {
+-    return IceCandidateType::kHost;
++    return webrtc::IceCandidateType::kHost;
+   } else if (c.is_stun()) {
+-    return IceCandidateType::kSrflx;
++    return webrtc::IceCandidateType::kSrflx;
+   } else if (c.is_prflx()) {
+-    return IceCandidateType::kPrflx;
++    return webrtc::IceCandidateType::kPrflx;
    }
- #endif  // RTC_LOG_ENABLED()
+   RTC_DCHECK(c.is_relay());
+-  return IceCandidateType::kRelay;
++  return webrtc::IceCandidateType::kRelay;
+ }
  
-+  // Enable dumping of AEC inputs and outputs.  Can be changed in mid-call
-+  static void set_aec_debug(bool enable);
-+  static bool aec_debug() { return aec_debug_; }
-+  static std::string aec_debug_filename();
-+  static void set_aec_debug_filename(const char* filename);
+ webrtc::IceCandidatePairProtocol GetProtocolByString(
+@@ -1694,7 +1692,7 @@ void Connection::MaybeUpdateLocalCandidate(StunRequest* request,
+ 
+   // Create a peer-reflexive candidate based on the local candidate.
+   local_candidate_.generate_id();
+-  local_candidate_.set_type(IceCandidateType::kPrflx);
++  local_candidate_.set_type(PRFLX_PORT_TYPE);
+   // Set the related address and foundation attributes before changing the
+   // address.
+   local_candidate_.set_related_address(local_candidate_.address());
+diff --git a/p2p/base/fake_port_allocator.h b/p2p/base/fake_port_allocator.h
+index 9372c5ada0..a51a7ca4ee 100644
+--- a/p2p/base/fake_port_allocator.h
++++ b/p2p/base/fake_port_allocator.h
+@@ -64,7 +64,7 @@ class TestUDPPort : public UDPPort {
+               bool emit_localhost_for_anyaddress,
+               const webrtc::FieldTrialsView* field_trials)
+       : UDPPort(thread,
+-                webrtc::IceCandidateType::kHost,
++                LOCAL_PORT_TYPE,
+                 factory,
+                 network,
+                 min_port,
+diff --git a/p2p/base/p2p_transport_channel.cc b/p2p/base/p2p_transport_channel.cc
+index 07b6d2eb2d..bd6f0bdb3a 100644
+--- a/p2p/base/p2p_transport_channel.cc
++++ b/p2p/base/p2p_transport_channel.cc
+@@ -53,6 +53,18 @@ using ::webrtc::RTCErrorType;
+ using ::webrtc::SafeTask;
+ using ::webrtc::TimeDelta;
+ 
++IceCandidateType PortTypeToIceCandidateType(PortInterface* port) {
++  auto type = port->Type();
++  if (type == LOCAL_PORT_TYPE)
++    return IceCandidateType::kHost;
++  if (type == STUN_PORT_TYPE)
++    return IceCandidateType::kSrflx;
++  if (type == PRFLX_PORT_TYPE)
++    return IceCandidateType::kPrflx;
++  RTC_DCHECK_EQ(type, RELAY_PORT_TYPE);
++  return IceCandidateType::kRelay;
++}
 +
+ cricket::PortInterface::CandidateOrigin GetOrigin(
+     cricket::PortInterface* port,
+     cricket::PortInterface* origin_port) {
+@@ -1071,8 +1083,8 @@ void P2PTransportChannel::OnUnknownAddress(PortInterface* port,
+     // candidate.
+     remote_candidate = Candidate(
+         component(), ProtoToString(proto), address, remote_candidate_priority,
+-        remote_username, remote_password, IceCandidateType::kPrflx,
+-        remote_generation, "", network_id, network_cost);
++        remote_username, remote_password, PRFLX_PORT_TYPE, remote_generation,
++        "", network_id, network_cost);
+     if (proto == PROTO_TCP) {
+       remote_candidate.set_tcptype(TCPTYPE_ACTIVE_STR);
+     }
+@@ -1410,12 +1422,12 @@ bool P2PTransportChannel::CreateConnection(PortInterface* port,
+   }
+ 
+   if (ice_field_trials_.skip_relay_to_non_relay_connections) {
+-    IceCandidateType port_type = PortTypeToIceCandidateType(port->Type());
++    IceCandidateType port_type = PortTypeToIceCandidateType(port);
+     if ((port_type != remote_candidate.type()) &&
+         (port_type == IceCandidateType::kRelay ||
+          remote_candidate.is_relay())) {
+       RTC_LOG(LS_INFO) << ToString() << ": skip creating connection "
+-                       << webrtc::IceCandidateTypeToString(port_type) << " to "
++                       << port->Type() << " to "
+                        << remote_candidate.type_name();
+       return false;
+     }
+diff --git a/p2p/base/p2p_transport_channel_unittest.cc b/p2p/base/p2p_transport_channel_unittest.cc
+index e689ab0ad0..69ea4287e8 100644
+--- a/p2p/base/p2p_transport_channel_unittest.cc
++++ b/p2p/base/p2p_transport_channel_unittest.cc
+@@ -154,7 +154,7 @@ cricket::IceConfig CreateIceConfig(
+   return config;
+ }
+ 
+-cricket::Candidate CreateUdpCandidate(IceCandidateType type,
++cricket::Candidate CreateUdpCandidate(absl::string_view type,
+                                       absl::string_view ip,
+                                       int port,
+                                       int priority,
+@@ -2128,9 +2128,9 @@ TEST_F(P2PTransportChannelTest, TurnToTurnPresumedWritable) {
+   // Add two remote candidates; a host candidate (with higher priority)
+   // and TURN candidate.
+   ep1_ch1()->AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 100));
++      CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 100));
+   ep1_ch1()->AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kRelay, "2.2.2.2", 2, 0));
++      CreateUdpCandidate(RELAY_PORT_TYPE, "2.2.2.2", 2, 0));
+   // Expect that the TURN-TURN candidate pair will be prioritized since it's
+   // "probably writable".
+   EXPECT_TRUE_WAIT(ep1_ch1()->selected_connection() != nullptr, kShortTimeout);
+@@ -2226,7 +2226,7 @@ TEST_F(P2PTransportChannelTest, PresumedWritablePreferredOverUnreliable) {
+   // Add a remote TURN candidate. The first channel should still have a TURN
+   // port available to make a TURN<->TURN pair that's presumed writable.
+   ep1_ch1()->AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kRelay, "2.2.2.2", 2, 0));
++      CreateUdpCandidate(RELAY_PORT_TYPE, "2.2.2.2", 2, 0));
+   EXPECT_TRUE(LocalCandidate(ep1_ch1())->is_relay());
+   EXPECT_TRUE(RemoteCandidate(ep1_ch1())->is_relay());
+   EXPECT_TRUE(ep1_ch1()->writable());
+@@ -2252,7 +2252,7 @@ TEST_F(P2PTransportChannelTest, SignalReadyToSendWithPresumedWritable) {
+   EXPECT_EQ_WAIT(IceGatheringState::kIceGatheringComplete,
+                  ep1_ch1()->gathering_state(), kDefaultTimeout);
+   ep1_ch1()->AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kRelay, "1.1.1.1", 1, 0));
++      CreateUdpCandidate(RELAY_PORT_TYPE, "1.1.1.1", 1, 0));
+   // Sanity checking the type of the connection.
+   EXPECT_TRUE_WAIT(ep1_ch1()->selected_connection() != nullptr, kShortTimeout);
+   EXPECT_TRUE(LocalCandidate(ep1_ch1())->is_relay());
+@@ -3422,7 +3422,7 @@ class P2PTransportChannelPingTest : public ::testing::Test,
+                                             int priority,
+                                             bool writable) {
+     channel->AddRemoteCandidate(
+-        CreateUdpCandidate(IceCandidateType::kHost, ip_addr, port, priority));
++        CreateUdpCandidate(LOCAL_PORT_TYPE, ip_addr, port, priority));
+     EXPECT_TRUE_SIMULATED_WAIT(
+         GetConnectionTo(channel, ip_addr, port) != nullptr, kMediumTimeout,
+         *clock);
+@@ -3567,10 +3567,8 @@ TEST_F(P2PTransportChannelPingTest, TestTriggeredChecks) {
+   P2PTransportChannel ch("trigger checks", 1, &pa, &field_trials_);
+   PrepareChannel(&ch);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 2));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 2));
+ 
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+@@ -3594,10 +3592,8 @@ TEST_F(P2PTransportChannelPingTest, TestAllConnectionsPingedSufficiently) {
+   P2PTransportChannel ch("ping sufficiently", 1, &pa, &field_trials_);
+   PrepareChannel(&ch);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 2));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 2));
+ 
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+@@ -3625,8 +3621,7 @@ TEST_F(P2PTransportChannelPingTest, TestStunPingIntervals) {
+   P2PTransportChannel ch("TestChannel", 1, &pa, &field_trials_);
+   PrepareChannel(&ch);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+   Connection* conn = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+ 
+   ASSERT_TRUE(conn != nullptr);
+@@ -3755,10 +3750,8 @@ TEST_F(P2PTransportChannelPingTest, TestNoTriggeredChecksWhenWritable) {
+   P2PTransportChannel ch("trigger checks", 1, &pa, &field_trials_);
+   PrepareChannel(&ch);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 2));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 2));
+ 
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+@@ -3784,8 +3777,7 @@ TEST_F(P2PTransportChannelPingTest, TestFailedConnectionNotPingable) {
+                          &field_trials_);
+   PrepareChannel(&ch);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+ 
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+@@ -3803,8 +3795,7 @@ TEST_F(P2PTransportChannelPingTest, TestSignalStateChanged) {
+   P2PTransportChannel ch("state change", 1, &pa, &field_trials_);
+   PrepareChannel(&ch);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+   // Pruning the connection reduces the set of active connections and changes
+@@ -3827,8 +3818,8 @@ TEST_F(P2PTransportChannelPingTest, TestAddRemoteCandidateWithVariousUfrags) {
+   PrepareChannel(&ch);
+   ch.MaybeStartGathering();
+   // Add a candidate with a future ufrag.
+-  ch.AddRemoteCandidate(CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1",
+-                                           1, 1, kIceUfrag[2]));
++  ch.AddRemoteCandidate(
++      CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1, kIceUfrag[2]));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+   const Candidate& candidate = conn1->remote_candidate();
+@@ -3845,15 +3836,15 @@ TEST_F(P2PTransportChannelPingTest, TestAddRemoteCandidateWithVariousUfrags) {
+   EXPECT_EQ(conn1, FindNextPingableConnectionAndPingIt(&ch));
+ 
+   // Add a candidate with an old ufrag. No connection will be created.
+-  ch.AddRemoteCandidate(CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2",
+-                                           2, 2, kIceUfrag[1]));
++  ch.AddRemoteCandidate(
++      CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 2, kIceUfrag[1]));
+   rtc::Thread::Current()->ProcessMessages(500);
+   EXPECT_TRUE(GetConnectionTo(&ch, "2.2.2.2", 2) == nullptr);
+ 
+   // Add a candidate with the current ufrag, its pwd and generation will be
+   // assigned, even if the generation is not set.
+-  ch.AddRemoteCandidate(CreateUdpCandidate(IceCandidateType::kHost, "3.3.3.3",
+-                                           3, 0, kIceUfrag[2]));
++  ch.AddRemoteCandidate(
++      CreateUdpCandidate(LOCAL_PORT_TYPE, "3.3.3.3", 3, 0, kIceUfrag[2]));
+   Connection* conn3 = nullptr;
+   ASSERT_TRUE_WAIT((conn3 = GetConnectionTo(&ch, "3.3.3.3", 3)) != nullptr,
+                    kMediumTimeout);
+@@ -3881,16 +3872,14 @@ TEST_F(P2PTransportChannelPingTest, ConnectionResurrection) {
+   ch.MaybeStartGathering();
+ 
+   // Create conn1 and keep track of original candidate priority.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+   uint32_t remote_priority = conn1->remote_candidate().priority();
+ 
+   // Create a higher priority candidate and make the connection
+   // receiving/writable. This will prune conn1.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 2));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 2));
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+   ASSERT_TRUE(conn2 != nullptr);
+   conn2->ReceivedPing();
+@@ -3942,8 +3931,7 @@ TEST_F(P2PTransportChannelPingTest, TestReceivingStateChange) {
+   EXPECT_EQ(500, ch.config().receiving_timeout_or_default());
+   EXPECT_EQ(50, ch.check_receiving_interval());
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1, &clock);
+   ASSERT_TRUE(conn1 != nullptr);
+ 
+@@ -3969,8 +3957,7 @@ TEST_F(P2PTransportChannelPingTest, TestSelectConnectionBeforeNomination) {
+   PrepareChannel(&ch);
+   ch.SetIceRole(ICEROLE_CONTROLLED);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+   // Channel is not ready to send because it is not writable.
+@@ -3991,8 +3978,7 @@ TEST_F(P2PTransportChannelPingTest, TestSelectConnectionBeforeNomination) {
+ 
+   // When a higher priority candidate comes in, the new connection is chosen
+   // as the selected connection.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 10));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 10));
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+   ASSERT_TRUE(conn2 != nullptr);
+   conn2->ReceivedPingResponse(LOW_RTT, "id");
+@@ -4007,8 +3993,7 @@ TEST_F(P2PTransportChannelPingTest, TestSelectConnectionBeforeNomination) {
+   // connection will be set as the selected connection, even though
+   // its priority is lower.
+   EXPECT_EQ(len, SendData(&ch, data, len, ++last_packet_id));
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "3.3.3.3", 3, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "3.3.3.3", 3, 1));
+   Connection* conn3 = WaitForConnectionTo(&ch, "3.3.3.3", 3);
+   ASSERT_TRUE(conn3 != nullptr);
+   // Because it has a lower priority, the selected connection is still conn2.
+@@ -4029,8 +4014,7 @@ TEST_F(P2PTransportChannelPingTest, TestSelectConnectionBeforeNomination) {
+   // the selected connection because the selected connection is nominated by
+   // the controlling side.
+   EXPECT_EQ(len, SendData(&ch, data, len, ++last_packet_id));
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "4.4.4.4", 4, 100));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "4.4.4.4", 4, 100));
+   Connection* conn4 = WaitForConnectionTo(&ch, "4.4.4.4", 4);
+   ASSERT_TRUE(conn4 != nullptr);
+   EXPECT_EQ(conn3, ch.selected_connection());
+@@ -4065,8 +4049,7 @@ TEST_F(P2PTransportChannelPingTest, TestPingOnNomination) {
+   ch.SetIceConfig(ch.config());
+   ch.SetIceRole(ICEROLE_CONTROLLED);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+ 
+@@ -4077,8 +4060,7 @@ TEST_F(P2PTransportChannelPingTest, TestPingOnNomination) {
+ 
+   // When a higher priority candidate comes in, the new connection is chosen
+   // as the selected connection.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 10));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 10));
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+   ASSERT_TRUE(conn2 != nullptr);
+   conn2->ReceivedPingResponse(LOW_RTT, "id");
+@@ -4109,8 +4091,7 @@ TEST_F(P2PTransportChannelPingTest, TestPingOnSwitch) {
+   ch.SetIceConfig(ch.config());
+   ch.SetIceRole(ICEROLE_CONTROLLING);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+ 
+@@ -4121,8 +4102,7 @@ TEST_F(P2PTransportChannelPingTest, TestPingOnSwitch) {
+ 
+   // When a higher priority candidate comes in, the new connection is chosen
+   // as the selected connection.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 10));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 10));
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+   ASSERT_TRUE(conn2 != nullptr);
+ 
+@@ -4150,8 +4130,7 @@ TEST_F(P2PTransportChannelPingTest, TestPingOnSelected) {
+   ch.SetIceConfig(ch.config());
+   ch.SetIceRole(ICEROLE_CONTROLLING);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+ 
+@@ -4197,8 +4176,7 @@ TEST_F(P2PTransportChannelPingTest, TestSelectConnectionFromUnknownAddress) {
+   EXPECT_EQ_WAIT(conn1, ch.selected_connection(), kDefaultTimeout);
+ 
+   // Another connection is nominated via use_candidate.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 1));
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+   ASSERT_TRUE(conn2 != nullptr);
+   // Because it has a lower priority, the selected connection is still conn1.
+@@ -4258,8 +4236,7 @@ TEST_F(P2PTransportChannelPingTest, TestSelectConnectionBasedOnMediaReceived) {
+   PrepareChannel(&ch);
+   ch.SetIceRole(ICEROLE_CONTROLLED);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 10));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 10));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+   conn1->ReceivedPingResponse(LOW_RTT, "id");
+@@ -4268,8 +4245,7 @@ TEST_F(P2PTransportChannelPingTest, TestSelectConnectionBasedOnMediaReceived) {
+   // If a data packet is received on conn2, the selected connection should
+   // switch to conn2 because the controlled side must mirror the media path
+   // chosen by the controlling side.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 1));
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+   ASSERT_TRUE(conn2 != nullptr);
+   conn2->ReceivedPingResponse(LOW_RTT, "id");  // Become writable and receiving.
+@@ -4585,8 +4561,8 @@ TEST_F(P2PTransportChannelPingTest, TestAddRemoteCandidateWithAddressReuse) {
+   const int port_num = 1;
+ 
+   // kIceUfrag[1] is the current generation ufrag.
+-  Candidate candidate = CreateUdpCandidate(
+-      IceCandidateType::kHost, host_address, port_num, 1, kIceUfrag[1]);
++  Candidate candidate = CreateUdpCandidate(LOCAL_PORT_TYPE, host_address,
++                                           port_num, 1, kIceUfrag[1]);
+   ch.AddRemoteCandidate(candidate);
+   Connection* conn1 = WaitForConnectionTo(&ch, host_address, port_num);
+   ASSERT_TRUE(conn1 != nullptr);
+@@ -4623,8 +4599,7 @@ TEST_F(P2PTransportChannelPingTest, TestDontPruneWhenWeak) {
+   PrepareChannel(&ch);
+   ch.SetIceRole(ICEROLE_CONTROLLED);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+   EXPECT_EQ(nullptr, ch.selected_connection());
+@@ -4632,8 +4607,7 @@ TEST_F(P2PTransportChannelPingTest, TestDontPruneWhenWeak) {
+ 
+   // When a higher-priority, nominated candidate comes in, the connections with
+   // lower-priority are pruned.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 10));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 10));
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2, &clock);
+   ASSERT_TRUE(conn2 != nullptr);
+   conn2->ReceivedPingResponse(LOW_RTT, "id");  // Becomes writable and receiving
+@@ -4644,8 +4618,7 @@ TEST_F(P2PTransportChannelPingTest, TestDontPruneWhenWeak) {
+   // Wait until conn2 becomes not receiving.
+   EXPECT_TRUE_SIMULATED_WAIT(!conn2->receiving(), kMediumTimeout, clock);
+ 
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "3.3.3.3", 3, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "3.3.3.3", 3, 1));
+   Connection* conn3 = WaitForConnectionTo(&ch, "3.3.3.3", 3, &clock);
+   ASSERT_TRUE(conn3 != nullptr);
+   // The selected connection should still be conn2. Even through conn3 has lower
+@@ -4693,10 +4666,8 @@ TEST_F(P2PTransportChannelPingTest, TestGetState) {
+   // any connections yet.
+   EXPECT_EQ(webrtc::IceTransportState::kNew, ch.GetIceTransportState());
+   EXPECT_EQ(IceTransportState::STATE_INIT, ch.GetState());
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 100));
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 100));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 1));
+   // Checking candidates that have been added with gathered candidates.
+   ASSERT_GT(ch.connections().size(), 0u);
+   EXPECT_EQ(webrtc::IceTransportState::kChecking, ch.GetIceTransportState());
+@@ -4735,8 +4706,7 @@ TEST_F(P2PTransportChannelPingTest, TestConnectionPrunedAgain) {
+   config.receiving_switching_delay = 800;
+   ch.SetIceConfig(config);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 100));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 100));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1, &clock);
+   ASSERT_TRUE(conn1 != nullptr);
+   EXPECT_EQ(nullptr, ch.selected_connection());
+@@ -4748,8 +4718,7 @@ TEST_F(P2PTransportChannelPingTest, TestConnectionPrunedAgain) {
+   // not be deleted right away. Once the current selected connection becomes not
+   // receiving, `conn2` will start to ping and upon receiving the ping response,
+   // it will become the selected connection.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 1));
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2, &clock);
+   ASSERT_TRUE(conn2 != nullptr);
+   EXPECT_TRUE_SIMULATED_WAIT(!conn2->active(), kDefaultTimeout, clock);
+@@ -4786,8 +4755,7 @@ TEST_F(P2PTransportChannelPingTest, TestDeleteConnectionsIfAllWriteTimedout) {
+   PrepareChannel(&ch);
+   ch.MaybeStartGathering();
+   // Have one connection only but later becomes write-time-out.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 100));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 100));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1, &clock);
+   ASSERT_TRUE(conn1 != nullptr);
+   conn1->ReceivedPing();  // Becomes receiving
+@@ -4795,13 +4763,11 @@ TEST_F(P2PTransportChannelPingTest, TestDeleteConnectionsIfAllWriteTimedout) {
+   EXPECT_TRUE_SIMULATED_WAIT(ch.connections().empty(), kShortTimeout, clock);
+ 
+   // Have two connections but both become write-time-out later.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 1));
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2, &clock);
+   ASSERT_TRUE(conn2 != nullptr);
+   conn2->ReceivedPing();  // Becomes receiving
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "3.3.3.3", 3, 2));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "3.3.3.3", 3, 2));
+   Connection* conn3 = WaitForConnectionTo(&ch, "3.3.3.3", 3, &clock);
+   ASSERT_TRUE(conn3 != nullptr);
+   conn3->ReceivedPing();  // Becomes receiving
+@@ -4822,8 +4788,7 @@ TEST_F(P2PTransportChannelPingTest, TestStopPortAllocatorSessions) {
+   PrepareChannel(&ch);
+   ch.SetIceConfig(CreateIceConfig(2000, GATHER_ONCE));
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 100));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 100));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn1 != nullptr);
+   conn1->ReceivedPingResponse(LOW_RTT, "id");  // Becomes writable and receiving
+@@ -4840,8 +4805,7 @@ TEST_F(P2PTransportChannelPingTest, TestStopPortAllocatorSessions) {
+ 
+   // But if a new connection created from the new session becomes writable,
+   // it will stop the current session.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 100));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 100));
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+   ASSERT_TRUE(conn2 != nullptr);
+   conn2->ReceivedPingResponse(LOW_RTT, "id");  // Becomes writable and receiving
+@@ -4861,8 +4825,7 @@ TEST_F(P2PTransportChannelPingTest, TestIceRoleUpdatedOnRemovedPort) {
+   IceConfig config = CreateIceConfig(1000, GATHER_CONTINUALLY);
+   ch.SetIceConfig(config);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+ 
+   Connection* conn = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn != nullptr);
+@@ -4887,8 +4850,7 @@ TEST_F(P2PTransportChannelPingTest, TestIceRoleUpdatedOnPortAfterIceRestart) {
+   // Starts with ICEROLE_CONTROLLING.
+   PrepareChannel(&ch);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+ 
+   Connection* conn = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn != nullptr);
+@@ -4914,8 +4876,7 @@ TEST_F(P2PTransportChannelPingTest, TestPortDestroyedAfterTimeoutAndPruned) {
+   PrepareChannel(&ch);
+   ch.SetIceRole(ICEROLE_CONTROLLED);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+ 
+   Connection* conn = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   ASSERT_TRUE(conn != nullptr);
+@@ -4945,10 +4906,8 @@ TEST_F(P2PTransportChannelPingTest, TestMaxOutstandingPingsFieldTrial) {
+   ch.SetIceConfig(ch.config());
+   PrepareChannel(&ch);
+   ch.MaybeStartGathering();
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 2));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 2));
+ 
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1);
+   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
+@@ -5034,10 +4993,8 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest,
+   EXPECT_EQ(ch.ports()[0]->Type(), LOCAL_PORT_TYPE);
+   EXPECT_EQ(ch.ports()[1]->Type(), RELAY_PORT_TYPE);
+ 
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kRelay, "1.1.1.1", 1, 1));
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 2));
++  ch.AddRemoteCandidate(CreateUdpCandidate(RELAY_PORT_TYPE, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 2));
+ 
+   EXPECT_TRUE_WAIT(ch.connections().size() == 4, kDefaultTimeout);
+ 
+@@ -5095,8 +5052,7 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest,
+   EXPECT_EQ(ch.ports()[0]->Type(), LOCAL_PORT_TYPE);
+   EXPECT_EQ(ch.ports()[1]->Type(), RELAY_PORT_TYPE);
+ 
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
+   EXPECT_TRUE_WAIT(ch.connections().size() == 2, kDefaultTimeout);
+ 
+   // Initially, only have Local/Local and Local/Relay.
+@@ -5106,8 +5062,7 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest,
+                                IceCandidateType::kHost);
+ 
+   // Remote Relay candidate arrives.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kRelay, "2.2.2.2", 2, 2));
++  ch.AddRemoteCandidate(CreateUdpCandidate(RELAY_PORT_TYPE, "2.2.2.2", 2, 2));
+   EXPECT_TRUE_WAIT(ch.connections().size() == 4, kDefaultTimeout);
+ 
+   // Relay/Relay should be the first since it hasn't been pinged before.
+@@ -5133,8 +5088,7 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest,
+   EXPECT_EQ(ch.ports()[0]->Type(), LOCAL_PORT_TYPE);
+   EXPECT_EQ(ch.ports()[1]->Type(), RELAY_PORT_TYPE);
+ 
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kRelay, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(RELAY_PORT_TYPE, "1.1.1.1", 1, 1));
+   EXPECT_TRUE_WAIT(ch.connections().size() == 2, kDefaultTimeout);
+ 
+   // Initially, only have Relay/Relay and Local/Relay. Ping Relay/Relay first.
+@@ -5146,8 +5100,7 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest,
+                                IceCandidateType::kRelay);
+ 
+   // Remote Local candidate arrives.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 2));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 2));
+   EXPECT_TRUE_WAIT(ch.connections().size() == 4, kDefaultTimeout);
+ 
+   // Local/Local should be the first since it hasn't been pinged before.
+@@ -5177,13 +5130,11 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest,
+   EXPECT_EQ(ch.ports()[1]->Type(), RELAY_PORT_TYPE);
+ 
+   // Remote Relay candidate arrives.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kRelay, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(RELAY_PORT_TYPE, "1.1.1.1", 1, 1));
+   EXPECT_TRUE_WAIT(ch.connections().size() == 1, kDefaultTimeout);
+ 
+   // Remote Local candidate arrives.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 2));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 2));
+   EXPECT_TRUE_WAIT(ch.connections().size() == 2, kDefaultTimeout);
+ }
+ 
+@@ -5204,8 +5155,7 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest, TestTcpTurn) {
+   EXPECT_EQ(ch.ports()[2]->Type(), RELAY_PORT_TYPE);
+ 
+   // Remote Relay candidate arrives.
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kRelay, "1.1.1.1", 1, 1));
++  ch.AddRemoteCandidate(CreateUdpCandidate(RELAY_PORT_TYPE, "1.1.1.1", 1, 1));
+   EXPECT_TRUE_WAIT(ch.connections().size() == 3, kDefaultTimeout);
+ 
+   // UDP Relay/Relay should be pinged first.
+@@ -5659,19 +5609,16 @@ TEST_F(P2PTransportChannelTest,
+   // host, srflx and relay types. Note that the candidates differ in their
+   // ports.
+   cricket::Candidate host_candidate = CreateUdpCandidate(
+-      IceCandidateType::kHost, "1.1.1.1", 1 /* port */, 0 /* priority */);
++      LOCAL_PORT_TYPE, "1.1.1.1", 1 /* port */, 0 /* priority */);
+   ep1_ch1()->AddRemoteCandidate(host_candidate);
+ 
+   std::vector<cricket::Candidate> mdns_candidates;
+-  mdns_candidates.push_back(CreateUdpCandidate(IceCandidateType::kHost,
+-                                               "example.local", 2 /* port */,
+-                                               0 /* priority */));
+-  mdns_candidates.push_back(CreateUdpCandidate(IceCandidateType::kSrflx,
+-                                               "example.local", 3 /* port */,
+-                                               0 /* priority */));
+-  mdns_candidates.push_back(CreateUdpCandidate(IceCandidateType::kRelay,
+-                                               "example.local", 4 /* port */,
+-                                               0 /* priority */));
++  mdns_candidates.push_back(CreateUdpCandidate(LOCAL_PORT_TYPE, "example.local",
++                                               2 /* port */, 0 /* priority */));
++  mdns_candidates.push_back(CreateUdpCandidate(STUN_PORT_TYPE, "example.local",
++                                               3 /* port */, 0 /* priority */));
++  mdns_candidates.push_back(CreateUdpCandidate(RELAY_PORT_TYPE, "example.local",
++                                               4 /* port */, 0 /* priority */));
+   // We just resolve the hostname to 1.1.1.1, and add the candidates with this
+   // address directly to simulate the process of adding remote candidates with
+   // the name resolution.
+@@ -6046,8 +5993,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampening0) {
+   ch.SetIceConfig(ch.config());
+   ch.MaybeStartGathering();
+ 
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 100));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 100));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1, &clock);
+   ASSERT_TRUE(conn1 != nullptr);
+   EXPECT_EQ(nullptr, ch.selected_connection());
+@@ -6072,8 +6018,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampening) {
+   ch.SetIceConfig(ch.config());
+   ch.MaybeStartGathering();
+ 
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 100));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 100));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1, &clock);
+   ASSERT_TRUE(conn1 != nullptr);
+   EXPECT_EQ(nullptr, ch.selected_connection());
+@@ -6099,8 +6044,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampeningPingReceived) {
+   ch.SetIceConfig(ch.config());
+   ch.MaybeStartGathering();
+ 
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 100));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 100));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1, &clock);
+   ASSERT_TRUE(conn1 != nullptr);
+   EXPECT_EQ(nullptr, ch.selected_connection());
+@@ -6129,8 +6073,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampeningBoth) {
+   ch.SetIceConfig(ch.config());
+   ch.MaybeStartGathering();
+ 
+-  ch.AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 100));
++  ch.AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 100));
+   Connection* conn1 = WaitForConnectionTo(&ch, "1.1.1.1", 1, &clock);
+   ASSERT_TRUE(conn1 != nullptr);
+   EXPECT_EQ(nullptr, ch.selected_connection());
+@@ -6234,10 +6177,8 @@ TEST_F(P2PTransportChannelPingTest, TestForgetLearnedState) {
+ 
+   PrepareChannel(ch.get());
+   ch->MaybeStartGathering();
+-  ch->AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "1.1.1.1", 1, 1));
+-  ch->AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "2.2.2.2", 2, 2));
++  ch->AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
++  ch->AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "2.2.2.2", 2, 2));
+ 
+   Connection* conn1 = WaitForConnectionTo(ch.get(), "1.1.1.1", 1);
+   Connection* conn2 = WaitForConnectionTo(ch.get(), "2.2.2.2", 2);
+@@ -6282,7 +6223,7 @@ TEST_F(P2PTransportChannelTest, DisableDnsLookupsWithTransportPolicyRelay) {
+   CreateChannels();
+ 
+   ep1_ch1()->AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "hostname.test", 1, 100));
++      CreateUdpCandidate(LOCAL_PORT_TYPE, "hostname.test", 1, 100));
+ 
+   DestroyChannels();
+ }
+@@ -6308,7 +6249,7 @@ TEST_F(P2PTransportChannelTest, DisableDnsLookupsWithTransportPolicyNone) {
+   CreateChannels();
+ 
+   ep1_ch1()->AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "hostname.test", 1, 100));
++      CreateUdpCandidate(LOCAL_PORT_TYPE, "hostname.test", 1, 100));
+ 
+   DestroyChannels();
+ }
+@@ -6335,7 +6276,7 @@ TEST_F(P2PTransportChannelTest, EnableDnsLookupsWithTransportPolicyNoHost) {
+   CreateChannels();
+ 
+   ep1_ch1()->AddRemoteCandidate(
+-      CreateUdpCandidate(IceCandidateType::kHost, "hostname.test", 1, 100));
++      CreateUdpCandidate(LOCAL_PORT_TYPE, "hostname.test", 1, 100));
+ 
+   EXPECT_TRUE(lookup_started);
+ 
+diff --git a/p2p/base/port.cc b/p2p/base/port.cc
+index 057ba741a3..917167c864 100644
+--- a/p2p/base/port.cc
++++ b/p2p/base/port.cc
+@@ -39,12 +39,9 @@
+ #include "rtc_base/time_utils.h"
+ #include "rtc_base/trace_event.h"
+ 
+-using webrtc::IceCandidateType;
+-
+ namespace cricket {
+ namespace {
+ 
+-using ::webrtc::IceCandidateType;
+ using ::webrtc::RTCError;
+ using ::webrtc::RTCErrorType;
+ using ::webrtc::TaskQueueBase;
+@@ -89,17 +86,6 @@ absl::optional<ProtocolType> StringToProto(absl::string_view proto_name) {
+   return absl::nullopt;
+ }
+ 
+-IceCandidateType PortTypeToIceCandidateType(const absl::string_view type) {
+-  if (type == "host" || type == LOCAL_PORT_TYPE)
+-    return IceCandidateType::kHost;
+-  if (type == "srflx" || type == STUN_PORT_TYPE)
+-    return IceCandidateType::kSrflx;
+-  if (type == PRFLX_PORT_TYPE)
+-    return IceCandidateType::kPrflx;
+-  RTC_DCHECK_EQ(type, RELAY_PORT_TYPE);
+-  return IceCandidateType::kRelay;
+-}
+-
+ // RFC 6544, TCP candidate encoding rules.
+ const int DISCARD_PORT = 9;
+ const char TCPTYPE_ACTIVE_STR[] = "active";
+@@ -107,36 +93,45 @@ const char TCPTYPE_PASSIVE_STR[] = "passive";
+ const char TCPTYPE_SIMOPEN_STR[] = "so";
+ 
+ Port::Port(TaskQueueBase* thread,
+-           webrtc::IceCandidateType type,
++           absl::string_view type,
+            rtc::PacketSocketFactory* factory,
+            const rtc::Network* network,
+            absl::string_view username_fragment,
+            absl::string_view password,
+            const webrtc::FieldTrialsView* field_trials)
+-    : Port(thread,
+-           type,
+-           factory,
+-           network,
+-           0,
+-           0,
+-           username_fragment,
+-           password,
+-           field_trials,
+-           true) {}
++    : thread_(thread),
++      factory_(factory),
++      type_(type),
++      send_retransmit_count_attribute_(false),
++      network_(network),
++      min_port_(0),
++      max_port_(0),
++      component_(ICE_CANDIDATE_COMPONENT_DEFAULT),
++      generation_(0),
++      ice_username_fragment_(username_fragment),
++      password_(password),
++      timeout_delay_(kPortTimeoutDelay),
++      enable_port_packets_(false),
++      ice_role_(ICEROLE_UNKNOWN),
++      tiebreaker_(0),
++      shared_socket_(true),
++      weak_factory_(this),
++      field_trials_(field_trials) {
++  RTC_DCHECK(factory_ != NULL);
++  Construct();
++}
+ 
+ Port::Port(TaskQueueBase* thread,
+-           webrtc::IceCandidateType type,
++           absl::string_view type,
+            rtc::PacketSocketFactory* factory,
+            const rtc::Network* network,
+            uint16_t min_port,
+            uint16_t max_port,
+            absl::string_view username_fragment,
+            absl::string_view password,
+-           const webrtc::FieldTrialsView* field_trials,
+-           bool shared_socket /*= false*/)
++           const webrtc::FieldTrialsView* field_trials)
+     : thread_(thread),
+       factory_(factory),
+-      field_trials_(field_trials),
+       type_(type),
+       send_retransmit_count_attribute_(false),
+       network_(network),
+@@ -150,11 +145,15 @@ Port::Port(TaskQueueBase* thread,
+       enable_port_packets_(false),
+       ice_role_(ICEROLE_UNKNOWN),
+       tiebreaker_(0),
+-      shared_socket_(shared_socket),
+-      network_cost_(network->GetCost(*field_trials_)),
+-      weak_factory_(this) {
++      shared_socket_(false),
++      weak_factory_(this),
++      field_trials_(field_trials) {
++  RTC_DCHECK(factory_ != NULL);
++  Construct();
++}
++
++void Port::Construct() {
+   RTC_DCHECK_RUN_ON(thread_);
+-  RTC_DCHECK(factory_ != nullptr);
+   // TODO(pthatcher): Remove this old behavior once we're sure no one
+   // relies on it.  If the username_fragment and password are empty,
+   // we should just create one.
+@@ -164,6 +163,7 @@ Port::Port(TaskQueueBase* thread,
+     password_ = rtc::CreateRandomString(ICE_PWD_LENGTH);
+   }
+   network_->SignalTypeChanged.connect(this, &Port::OnNetworkTypeChanged);
++  network_cost_ = network_->GetCost(field_trials());
+ 
+   PostDestroyIfDead(/*delayed=*/true);
+   RTC_LOG(LS_INFO) << ToString() << ": Port created with network cost "
+@@ -177,11 +177,7 @@ Port::~Port() {
+ }
+ 
+ const absl::string_view Port::Type() const {
+-  if (type_ == webrtc::IceCandidateType::kHost)
+-    return "local";
+-  if (type_ == webrtc::IceCandidateType::kSrflx)
+-    return "stun";
+-  return webrtc::IceCandidateTypeToString(type_);
++  return type_;
+ }
+ const rtc::Network* Port::Network() const {
+   return network_;
+@@ -245,7 +241,7 @@ void Port::AddAddress(const rtc::SocketAddress& address,
+                       absl::string_view protocol,
+                       absl::string_view relay_protocol,
+                       absl::string_view tcptype,
+-                      IceCandidateType type,
++                      absl::string_view type,
+                       uint32_t type_preference,
+                       uint32_t relay_preference,
+                       absl::string_view url,
+@@ -877,9 +873,8 @@ void Port::OnNetworkTypeChanged(const rtc::Network* network) {
+ std::string Port::ToString() const {
+   rtc::StringBuilder ss;
+   ss << "Port[" << rtc::ToHex(reinterpret_cast<uintptr_t>(this)) << ":"
+-     << content_name_ << ":" << component_ << ":" << generation_ << ":"
+-     << webrtc::IceCandidateTypeToString(type_) << ":" << network_->ToString()
+-     << "]";
++     << content_name_ << ":" << component_ << ":" << generation_ << ":" << type_
++     << ":" << network_->ToString() << "]";
+   return ss.Release();
+ }
+ 
+diff --git a/p2p/base/port.h b/p2p/base/port.h
+index 40e8679351..4021c250fb 100644
+--- a/p2p/base/port.h
++++ b/p2p/base/port.h
+@@ -123,8 +123,6 @@ typedef std::vector<CandidateStats> CandidateStatsList;
+ 
+ const char* ProtoToString(ProtocolType proto);
+ absl::optional<ProtocolType> StringToProto(absl::string_view proto_name);
+-webrtc::IceCandidateType PortTypeToIceCandidateType(
+-    const absl::string_view type);
+ 
+ struct ProtocolAddress {
+   rtc::SocketAddress address;
+@@ -173,67 +171,29 @@ typedef std::set<rtc::SocketAddress> ServerAddresses;
+ // connections to similar mechanisms of the other client.  Subclasses of this
+ // one add support for specific mechanisms like local UDP ports.
+ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
+- protected:
+-  // Constructors for use only by via constructors in derived classes.
++ public:
++  // INIT: The state when a port is just created.
++  // KEEP_ALIVE_UNTIL_PRUNED: A port should not be destroyed even if no
++  // connection is using it.
++  // PRUNED: It will be destroyed if no connection is using it for a period of
++  // 30 seconds.
++  enum class State { INIT, KEEP_ALIVE_UNTIL_PRUNED, PRUNED };
+   Port(webrtc::TaskQueueBase* thread,
+-       webrtc::IceCandidateType type,
++       absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND,
+        rtc::PacketSocketFactory* factory,
+        const rtc::Network* network,
+        absl::string_view username_fragment,
+        absl::string_view password,
+        const webrtc::FieldTrialsView* field_trials = nullptr);
+   Port(webrtc::TaskQueueBase* thread,
+-       webrtc::IceCandidateType type,
++       absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND,
+        rtc::PacketSocketFactory* factory,
+        const rtc::Network* network,
+        uint16_t min_port,
+        uint16_t max_port,
+        absl::string_view username_fragment,
+        absl::string_view password,
+-       const webrtc::FieldTrialsView* field_trials = nullptr,
+-       bool shared_socket = false);
+-
+-  // // TODO: bugs.webrtc.org/15846 - Remove.
+-  [[deprecated("Use IceCandidateType version")]] Port(
+-      webrtc::TaskQueueBase* thread,
+-      absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND,
+-      rtc::PacketSocketFactory* factory,
+-      const rtc::Network* network,
+-      uint16_t min_port,
+-      uint16_t max_port,
+-      absl::string_view username_fragment,
+-      absl::string_view password,
+-      const webrtc::FieldTrialsView* field_trials = nullptr,
+-      bool shared_socket = false)
+-      : Port(thread,
+-             PortTypeToIceCandidateType(type),
+-             factory,
+-             network,
+-             min_port,
+-             max_port,
+-             username_fragment,
+-             password,
+-             field_trials,
+-             shared_socket) {}
+-
+-  // // TODO: bugs.webrtc.org/15846 - Remove.
+-  [[deprecated("Use IceCandidateType version")]] Port(
+-      webrtc::TaskQueueBase* thread,
+-      absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND,
+-      rtc::PacketSocketFactory* factory,
+-      const rtc::Network* network,
+-      absl::string_view username_fragment,
+-      absl::string_view password,
+-      const webrtc::FieldTrialsView* field_trials = nullptr)
+-      : Port(thread,
+-             PortTypeToIceCandidateType(type),
+-             factory,
+-             network,
+-             username_fragment,
+-             password,
+-             field_trials) {}
+-
+- public:
++       const webrtc::FieldTrialsView* field_trials = nullptr);
+   ~Port() override;
+ 
+   // Note that the port type does NOT uniquely identify different subclasses of
+@@ -419,31 +379,13 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
+ 
+   rtc::WeakPtr<Port> NewWeakPtr() { return weak_factory_.GetWeakPtr(); }
+ 
+-  // TODO: bugs.webrtc.org/15846 - Remove.
+-  [[deprecated("Use IceCandidateType version")]] void AddAddress(
+-      const rtc::SocketAddress& address,
+-      const rtc::SocketAddress& base_address,
+-      const rtc::SocketAddress& related_address,
+-      absl::string_view protocol,
+-      absl::string_view relay_protocol,
+-      absl::string_view tcptype,
+-      absl::string_view type,
+-      uint32_t type_preference,
+-      uint32_t relay_preference,
+-      absl::string_view url,
+-      bool is_final) {
+-    AddAddress(address, base_address, related_address, protocol, relay_protocol,
+-               tcptype, PortTypeToIceCandidateType(type), type_preference,
+-               relay_preference, url, is_final);
+-  }
+-
+   void AddAddress(const rtc::SocketAddress& address,
+                   const rtc::SocketAddress& base_address,
+                   const rtc::SocketAddress& related_address,
+                   absl::string_view protocol,
+                   absl::string_view relay_protocol,
+                   absl::string_view tcptype,
+-                  webrtc::IceCandidateType type,
++                  absl::string_view type,
+                   uint32_t type_preference,
+                   uint32_t relay_preference,
+                   absl::string_view url,
+@@ -509,11 +451,8 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
+ 
+   const webrtc::FieldTrialsView& field_trials() const { return *field_trials_; }
+ 
+-  webrtc::IceCandidateType type() const { return type_; }
+-
   private:
-   friend class LogMessageForTesting;
+-  bool MaybeObfuscateAddress(const Candidate& c, bool is_final)
+-      RTC_RUN_ON(thread_);
++  void Construct();
  
-@@ -636,6 +642,9 @@ class LogMessage {
+   void PostDestroyIfDead(bool delayed);
+   void DestroyIfDead();
+@@ -535,10 +474,7 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
  
-   // The stringbuilder that buffers the formatted message before output
-   rtc::StringBuilder print_stream_;
+   webrtc::TaskQueueBase* const thread_;
+   rtc::PacketSocketFactory* const factory_;
+-  webrtc::AlwaysValidPointer<const webrtc::FieldTrialsView,
+-                             webrtc::FieldTrialBasedConfig>
+-      field_trials_;
+-  const webrtc::IceCandidateType type_;
++  const absl::string_view type_;
+   bool send_retransmit_count_attribute_;
+   const rtc::Network* network_;
+   uint16_t min_port_;
+@@ -567,21 +503,20 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
+   // (WiFi. vs. Cellular). It takes precedence over the priority when
+   // comparing two connections.
+   int16_t network_cost_;
+-  // INIT: The state when a port is just created.
+-  // KEEP_ALIVE_UNTIL_PRUNED: A port should not be destroyed even if no
+-  // connection is using it.
+-  // PRUNED: It will be destroyed if no connection is using it for a period of
+-  // 30 seconds.
+-  enum class State { INIT, KEEP_ALIVE_UNTIL_PRUNED, PRUNED };
+   State state_ = State::INIT;
+   int64_t last_time_all_connections_removed_ = 0;
+   MdnsNameRegistrationStatus mdns_name_registration_status_ =
+       MdnsNameRegistrationStatus::kNotStarted;
+ 
+-  webrtc::CallbackList<PortInterface*> port_destroyed_callback_list_;
+-
+-  // Keep as the last member variable.
+   rtc::WeakPtrFactory<Port> weak_factory_;
++  webrtc::AlwaysValidPointer<const webrtc::FieldTrialsView,
++                             webrtc::FieldTrialBasedConfig>
++      field_trials_;
 +
-+  static bool aec_debug_;
-+  static std::string aec_filename_base_;
++  bool MaybeObfuscateAddress(const Candidate& c, bool is_final)
++      RTC_RUN_ON(thread_);
++
++  webrtc::CallbackList<PortInterface*> port_destroyed_callback_list_;
  };
  
- //////////////////////////////////////////////////////////////////////
-diff --git a/test/fuzzers/rtp_packet_fuzzer.cc b/test/fuzzers/rtp_packet_fuzzer.cc
-index 02fc64a2dc..371900eb2d 100644
---- a/test/fuzzers/rtp_packet_fuzzer.cc
-+++ b/test/fuzzers/rtp_packet_fuzzer.cc
-@@ -164,6 +164,11 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
-         // This extension requires state to read and so complicated that
-         // deserves own fuzzer.
-         break;
-+      case kRtpExtensionCsrcAudioLevel: {
-+        CsrcAudioLevelList levels;
-+        packet.GetExtension<CsrcAudioLevel>(&levels);
-+        break;
-+      }
-     }
+ }  // namespace cricket
+diff --git a/p2p/base/port_allocator_unittest.cc b/p2p/base/port_allocator_unittest.cc
+index 1b5584e2e8..2df8662f62 100644
+--- a/p2p/base/port_allocator_unittest.cc
++++ b/p2p/base/port_allocator_unittest.cc
+@@ -19,8 +19,6 @@
+ #include "test/gtest.h"
+ #include "test/scoped_key_value_config.h"
+ 
+-using webrtc::IceCandidateType;
+-
+ static const char kContentName[] = "test content";
+ // Based on ICE_UFRAG_LENGTH
+ static const char kIceUfrag[] = "UF00";
+@@ -296,7 +294,7 @@ TEST_F(PortAllocatorTest, SanitizeEmptyCandidateDefaultConfig) {
+ 
+ TEST_F(PortAllocatorTest, SanitizeIpv4CandidateDefaultConfig) {
+   cricket::Candidate input(1, "udp", rtc::SocketAddress(kIpv4Address, 443), 1,
+-                           "username", "password", IceCandidateType::kHost, 1,
++                           "username", "password", cricket::LOCAL_PORT_TYPE, 1,
+                            "foundation", 1, 1);
+   cricket::Candidate output = allocator_->SanitizeCandidate(input);
+   EXPECT_EQ(kIpv4AddressWithPort, output.address().ToString());
+@@ -306,7 +304,7 @@ TEST_F(PortAllocatorTest, SanitizeIpv4CandidateDefaultConfig) {
+ TEST_F(PortAllocatorTest, SanitizeIpv4CandidateMdnsObfuscationEnabled) {
+   allocator_->SetMdnsObfuscationEnabledForTesting(true);
+   cricket::Candidate input(1, "udp", rtc::SocketAddress(kIpv4Address, 443), 1,
+-                           "username", "password", IceCandidateType::kHost, 1,
++                           "username", "password", cricket::LOCAL_PORT_TYPE, 1,
+                            "foundation", 1, 1);
+   cricket::Candidate output = allocator_->SanitizeCandidate(input);
+   EXPECT_NE(kIpv4AddressWithPort, output.address().ToString());
+@@ -317,7 +315,7 @@ TEST_F(PortAllocatorTest, SanitizePrflxCandidateMdnsObfuscationEnabled) {
+   allocator_->SetMdnsObfuscationEnabledForTesting(true);
+   // Create the candidate from an IP literal. This populates the hostname.
+   cricket::Candidate input(1, "udp", rtc::SocketAddress(kIpv4Address, 443), 1,
+-                           "username", "password", IceCandidateType::kPrflx, 1,
++                           "username", "password", cricket::PRFLX_PORT_TYPE, 1,
+                            "foundation", 1, 1);
+   cricket::Candidate output = allocator_->SanitizeCandidate(input);
+   EXPECT_NE(kIpv4AddressWithPort, output.address().ToString());
+@@ -329,7 +327,7 @@ TEST_F(PortAllocatorTest,
+   allocator_->SetMdnsObfuscationEnabledForTesting(true);
+   // Create the candidate from an IP literal. This populates the hostname.
+   cricket::Candidate input(1, "udp", rtc::SocketAddress(kIpv4Address, 443), 1,
+-                           "username", "password", IceCandidateType::kPrflx, 1,
++                           "username", "password", cricket::PRFLX_PORT_TYPE, 1,
+                            "foundation", 1, 1);
+ 
+   cricket::Candidate output = allocator_->SanitizeCandidate(input);
+@@ -345,8 +343,8 @@ TEST_F(PortAllocatorTest, SanitizeIpv4NonLiteralMdnsObfuscationEnabled) {
+   rtc::IPAddress ip;
+   EXPECT_TRUE(IPFromString(kIpv4Address, &ip));
+   cricket::Candidate input(1, "udp", rtc::SocketAddress(ip, 443), 1, "username",
+-                           "password", IceCandidateType::kHost, 1, "foundation",
+-                           1, 1);
++                           "password", cricket::LOCAL_PORT_TYPE, 1,
++                           "foundation", 1, 1);
+   cricket::Candidate output = allocator_->SanitizeCandidate(input);
+   EXPECT_NE(kIpv4AddressWithPort, output.address().ToString());
+   EXPECT_EQ("", output.address().ipaddr().ToString());
+diff --git a/p2p/base/port_interface.h b/p2p/base/port_interface.h
+index de68306acc..8a1d18d8ba 100644
+--- a/p2p/base/port_interface.h
++++ b/p2p/base/port_interface.h
+@@ -52,7 +52,6 @@ class PortInterface {
+  public:
+   virtual ~PortInterface();
+ 
+-  // TODO: bugs.webrtc.org/15846 - Change return type to IceCandidateType.
+   virtual const absl::string_view Type() const = 0;
+   virtual const rtc::Network* Network() const = 0;
+ 
+diff --git a/p2p/base/port_unittest.cc b/p2p/base/port_unittest.cc
+index 8e049b7145..ab3ff86fd1 100644
+--- a/p2p/base/port_unittest.cc
++++ b/p2p/base/port_unittest.cc
+@@ -82,7 +82,6 @@ using rtc::NATType;
+ using rtc::PacketSocketFactory;
+ using rtc::Socket;
+ using rtc::SocketAddress;
+-using webrtc::IceCandidateType;
+ 
+ namespace cricket {
+ namespace {
+@@ -142,6 +141,7 @@ bool WriteStunMessage(const StunMessage& msg, ByteBufferWriter* buf) {
+ class TestPort : public Port {
+  public:
+   TestPort(rtc::Thread* thread,
++           absl::string_view type,
+            rtc::PacketSocketFactory* factory,
+            const rtc::Network* network,
+            uint16_t min_port,
+@@ -150,7 +150,7 @@ class TestPort : public Port {
+            absl::string_view password,
+            const webrtc::FieldTrialsView* field_trials = nullptr)
+       : Port(thread,
+-             IceCandidateType::kHost,
++             type,
+              factory,
+              network,
+              min_port,
+@@ -185,7 +185,7 @@ class TestPort : public Port {
+     // Act as if the socket was bound to the best IP on the network, to the
+     // first port in the allowed range.
+     rtc::SocketAddress addr(Network()->GetBestIP(), min_port());
+-    AddAddress(addr, addr, rtc::SocketAddress(), "udp", "", "", type(),
++    AddAddress(addr, addr, rtc::SocketAddress(), "udp", "", "", Type(),
+                ICE_TYPE_PREFERENCE_HOST, 0, "", true);
    }
  
-diff --git a/test/vcm_capturer.cc b/test/vcm_capturer.cc
-index 0a9226ef6f..620c1c02f3 100644
---- a/test/vcm_capturer.cc
-+++ b/test/vcm_capturer.cc
-@@ -83,7 +83,7 @@ void VcmCapturer::Destroy() {
-     return;
+@@ -197,12 +197,12 @@ class TestPort : public Port {
  
-   vcm_->StopCapture();
--  vcm_->DeRegisterCaptureDataCallback();
-+  vcm_->DeRegisterCaptureDataCallback(this);
-   // Release reference to VCM.
-   vcm_ = nullptr;
+   // Exposed for testing candidate building.
+   void AddCandidateAddress(const rtc::SocketAddress& addr) {
+-    AddAddress(addr, addr, rtc::SocketAddress(), "udp", "", "", type(),
++    AddAddress(addr, addr, rtc::SocketAddress(), "udp", "", "", Type(),
+                type_preference_, 0, "", false);
+   }
+   void AddCandidateAddress(const rtc::SocketAddress& addr,
+                            const rtc::SocketAddress& base_address,
+-                           IceCandidateType type,
++                           absl::string_view type,
+                            int type_preference,
+                            bool final) {
+     AddAddress(addr, base_address, rtc::SocketAddress(), "udp", "", "", type,
+@@ -825,9 +825,9 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
+       absl::string_view username,
+       absl::string_view password,
+       const webrtc::FieldTrialsView* field_trials = nullptr) {
+-    auto port =
+-        std::make_unique<TestPort>(&main_, &socket_factory_, MakeNetwork(addr),
+-                                   0, 0, username, password, field_trials);
++    auto port = std::make_unique<TestPort>(
++        &main_, cricket::LOCAL_PORT_TYPE, &socket_factory_, MakeNetwork(addr),
++        0, 0, username, password, field_trials);
+     port->SignalRoleConflict.connect(this, &PortTest::OnRoleConflict);
+     return port;
+   }
+@@ -845,8 +845,9 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
+   std::unique_ptr<TestPort> CreateTestPort(const rtc::Network* network,
+                                            absl::string_view username,
+                                            absl::string_view password) {
+-    auto port = std::make_unique<TestPort>(&main_, &socket_factory_, network, 0,
+-                                           0, username, password);
++    auto port = std::make_unique<TestPort>(&main_, cricket::LOCAL_PORT_TYPE,
++                                           &socket_factory_, network, 0, 0,
++                                           username, password);
+     port->SignalRoleConflict.connect(this, &PortTest::OnRoleConflict);
+     return port;
+   }
+@@ -2703,11 +2704,9 @@ TEST_F(PortTest, TestComputeCandidatePriorityWithPriorityAdjustment) {
+ TEST_F(PortTest, TestFoundation) {
+   auto testport = CreateTestPort(kLocalAddr1, "name", "pass");
+   testport->SetIceTiebreaker(kTiebreakerDefault);
+-  testport->AddCandidateAddress(kLocalAddr1, kLocalAddr1,
+-                                IceCandidateType::kHost,
++  testport->AddCandidateAddress(kLocalAddr1, kLocalAddr1, LOCAL_PORT_TYPE,
+                                 cricket::ICE_TYPE_PREFERENCE_HOST, false);
+-  testport->AddCandidateAddress(kLocalAddr2, kLocalAddr1,
+-                                IceCandidateType::kSrflx,
++  testport->AddCandidateAddress(kLocalAddr2, kLocalAddr1, STUN_PORT_TYPE,
+                                 cricket::ICE_TYPE_PREFERENCE_SRFLX, true);
+   EXPECT_NE(testport->Candidates()[0].foundation(),
+             testport->Candidates()[1].foundation());
+@@ -3776,8 +3775,7 @@ TEST_F(PortTest, TestAddConnectionWithSameAddress) {
+   port->PrepareAddress();
+   EXPECT_EQ(1u, port->Candidates().size());
+   rtc::SocketAddress address("1.1.1.1", 5000);
+-  cricket::Candidate candidate(1, "udp", address, 0, "", "",
+-                               IceCandidateType::kRelay, 0, "");
++  cricket::Candidate candidate(1, "udp", address, 0, "", "", "relay", 0, "");
+   cricket::Connection* conn1 =
+       port->CreateConnection(candidate, Port::ORIGIN_MESSAGE);
+   cricket::Connection* conn_in_use = port->GetConnection(address);
+diff --git a/p2p/base/stun_port.cc b/p2p/base/stun_port.cc
+index cf8830afff..648933fd9e 100644
+--- a/p2p/base/stun_port.cc
++++ b/p2p/base/stun_port.cc
+@@ -160,7 +160,7 @@ bool UDPPort::AddressResolver::GetResolvedAddress(
  }
-diff --git a/webrtc.gni b/webrtc.gni
-index 447aae4096..277c12c054 100644
---- a/webrtc.gni
-+++ b/webrtc.gni
-@@ -126,7 +126,7 @@ declare_args() {
  
-   # Selects whether debug dumps for the audio processing module
-   # should be generated.
--  apm_debug_dump = false
-+  apm_debug_dump = build_with_mozilla
+ UDPPort::UDPPort(rtc::Thread* thread,
+-                 webrtc::IceCandidateType type,
++                 absl::string_view type,
+                  rtc::PacketSocketFactory* factory,
+                  const rtc::Network* network,
+                  rtc::AsyncPacketSocket* socket,
+@@ -182,7 +182,7 @@ UDPPort::UDPPort(rtc::Thread* thread,
+       emit_local_for_anyaddress_(emit_local_for_anyaddress) {}
  
-   # Selects whether the audio processing module should be excluded.
-   rtc_exclude_audio_processing_module = false
+ UDPPort::UDPPort(rtc::Thread* thread,
+-                 webrtc::IceCandidateType type,
++                 absl::string_view type,
+                  rtc::PacketSocketFactory* factory,
+                  const rtc::Network* network,
+                  uint16_t min_port,
+@@ -380,8 +380,7 @@ void UDPPort::OnLocalAddressReady(rtc::AsyncPacketSocket* socket,
+   MaybeSetDefaultLocalAddress(&addr);
+ 
+   AddAddress(addr, addr, rtc::SocketAddress(), UDP_PROTOCOL_NAME, "", "",
+-             webrtc::IceCandidateType::kHost, ICE_TYPE_PREFERENCE_HOST, 0, "",
+-             false);
++             LOCAL_PORT_TYPE, ICE_TYPE_PREFERENCE_HOST, 0, "", false);
+   MaybePrepareStunCandidate();
+ }
+ 
+@@ -542,7 +541,7 @@ void UDPPort::OnStunBindingRequestSucceeded(
+     url << "stun:" << stun_server_addr.hostname() << ":"
+         << stun_server_addr.port();
+     AddAddress(stun_reflected_addr, socket_->GetLocalAddress(), related_address,
+-               UDP_PROTOCOL_NAME, "", "", webrtc::IceCandidateType::kSrflx,
++               UDP_PROTOCOL_NAME, "", "", STUN_PORT_TYPE,
+                ICE_TYPE_PREFERENCE_SRFLX, 0, url.str(), false);
+   }
+   MaybeSetPortCompleteOrError();
+@@ -655,7 +654,7 @@ StunPort::StunPort(rtc::Thread* thread,
+                    const ServerAddresses& servers,
+                    const webrtc::FieldTrialsView* field_trials)
+     : UDPPort(thread,
+-              webrtc::IceCandidateType::kSrflx,
++              STUN_PORT_TYPE,
+               factory,
+               network,
+               min_port,
+diff --git a/p2p/base/stun_port.h b/p2p/base/stun_port.h
+index f558b9266f..a28983b040 100644
+--- a/p2p/base/stun_port.h
++++ b/p2p/base/stun_port.h
+@@ -46,9 +46,9 @@ class RTC_EXPORT UDPPort : public Port {
+       absl::optional<int> stun_keepalive_interval,
+       const webrtc::FieldTrialsView* field_trials = nullptr) {
+     // Using `new` to access a non-public constructor.
+-    auto port = absl::WrapUnique(new UDPPort(
+-        thread, webrtc::IceCandidateType::kHost, factory, network, socket,
+-        username, password, emit_local_for_anyaddress, field_trials));
++    auto port = absl::WrapUnique(
++        new UDPPort(thread, LOCAL_PORT_TYPE, factory, network, socket, username,
++                    password, emit_local_for_anyaddress, field_trials));
+     port->set_stun_keepalive_delay(stun_keepalive_interval);
+     if (!port->Init()) {
+       return nullptr;
+@@ -69,8 +69,8 @@ class RTC_EXPORT UDPPort : public Port {
+       const webrtc::FieldTrialsView* field_trials = nullptr) {
+     // Using `new` to access a non-public constructor.
+     auto port = absl::WrapUnique(new UDPPort(
+-        thread, webrtc::IceCandidateType::kHost, factory, network, min_port,
+-        max_port, username, password, emit_local_for_anyaddress, field_trials));
++        thread, LOCAL_PORT_TYPE, factory, network, min_port, max_port, username,
++        password, emit_local_for_anyaddress, field_trials));
+     port->set_stun_keepalive_delay(stun_keepalive_interval);
+     if (!port->Init()) {
+       return nullptr;
+@@ -118,7 +118,7 @@ class RTC_EXPORT UDPPort : public Port {
+ 
+  protected:
+   UDPPort(rtc::Thread* thread,
+-          webrtc::IceCandidateType type,
++          absl::string_view type,
+           rtc::PacketSocketFactory* factory,
+           const rtc::Network* network,
+           uint16_t min_port,
+@@ -129,7 +129,7 @@ class RTC_EXPORT UDPPort : public Port {
+           const webrtc::FieldTrialsView* field_trials);
+ 
+   UDPPort(rtc::Thread* thread,
+-          webrtc::IceCandidateType type,
++          absl::string_view type,
+           rtc::PacketSocketFactory* factory,
+           const rtc::Network* network,
+           rtc::AsyncPacketSocket* socket,
+diff --git a/p2p/base/tcp_port.cc b/p2p/base/tcp_port.cc
+index b1c94a6be7..948849800c 100644
+--- a/p2p/base/tcp_port.cc
++++ b/p2p/base/tcp_port.cc
+@@ -86,7 +86,6 @@
+ #include "rtc_base/thread.h"
+ 
+ namespace cricket {
+-using ::webrtc::IceCandidateType;
+ using ::webrtc::SafeTask;
+ using ::webrtc::TimeDelta;
+ 
+@@ -100,7 +99,7 @@ TCPPort::TCPPort(rtc::Thread* thread,
+                  bool allow_listen,
+                  const webrtc::FieldTrialsView* field_trials)
+     : Port(thread,
+-           IceCandidateType::kHost,
++           LOCAL_PORT_TYPE,
+            factory,
+            network,
+            min_port,
+@@ -182,10 +181,10 @@ void TCPPort::PrepareAddress() {
+     // failed, we still want to add the socket address.
+     RTC_LOG(LS_VERBOSE) << "Preparing TCP address, current state: "
+                         << static_cast<int>(listen_socket_->GetState());
+-    AddAddress(
+-        listen_socket_->GetLocalAddress(), listen_socket_->GetLocalAddress(),
+-        rtc::SocketAddress(), TCP_PROTOCOL_NAME, "", TCPTYPE_PASSIVE_STR,
+-        IceCandidateType::kHost, ICE_TYPE_PREFERENCE_HOST_TCP, 0, "", true);
++    AddAddress(listen_socket_->GetLocalAddress(),
++               listen_socket_->GetLocalAddress(), rtc::SocketAddress(),
++               TCP_PROTOCOL_NAME, "", TCPTYPE_PASSIVE_STR, LOCAL_PORT_TYPE,
++               ICE_TYPE_PREFERENCE_HOST_TCP, 0, "", true);
+   } else {
+     RTC_LOG(LS_INFO) << ToString()
+                      << ": Not listening due to firewall restrictions.";
+@@ -200,8 +199,7 @@ void TCPPort::PrepareAddress() {
+     AddAddress(rtc::SocketAddress(Network()->GetBestIP(), DISCARD_PORT),
+                rtc::SocketAddress(Network()->GetBestIP(), 0),
+                rtc::SocketAddress(), TCP_PROTOCOL_NAME, "", TCPTYPE_ACTIVE_STR,
+-               IceCandidateType::kHost, ICE_TYPE_PREFERENCE_HOST_TCP, 0, "",
+-               true);
++               LOCAL_PORT_TYPE, ICE_TYPE_PREFERENCE_HOST_TCP, 0, "", true);
+   }
+ }
+ 
+diff --git a/p2p/base/turn_port.cc b/p2p/base/turn_port.cc
+index 965a68b3a3..bc35a2250a 100644
+--- a/p2p/base/turn_port.cc
++++ b/p2p/base/turn_port.cc
+@@ -37,7 +37,6 @@
+ 
+ namespace cricket {
+ 
+-using ::webrtc::IceCandidateType;
+ using ::webrtc::SafeTask;
+ using ::webrtc::TaskQueueBase;
+ using ::webrtc::TimeDelta;
+@@ -223,7 +222,7 @@ TurnPort::TurnPort(TaskQueueBase* thread,
+                    rtc::SSLCertificateVerifier* tls_cert_verifier,
+                    const webrtc::FieldTrialsView* field_trials)
+     : Port(thread,
+-           IceCandidateType::kRelay,
++           RELAY_PORT_TYPE,
+            factory,
+            network,
+            username,
+@@ -265,7 +264,7 @@ TurnPort::TurnPort(TaskQueueBase* thread,
+                    rtc::SSLCertificateVerifier* tls_cert_verifier,
+                    const webrtc::FieldTrialsView* field_trials)
+     : Port(thread,
+-           IceCandidateType::kRelay,
++           RELAY_PORT_TYPE,
+            factory,
+            network,
+            min_port,
+@@ -888,9 +887,8 @@ void TurnPort::OnAllocateSuccess(const rtc::SocketAddress& address,
+              UDP_PROTOCOL_NAME,
+              ProtoToString(server_address_.proto),  // The first hop protocol.
+              "",  // TCP candidate type, empty for turn candidates.
+-             IceCandidateType::kRelay,
+-             GetRelayPreference(server_address_.proto), server_priority_,
+-             server_url_, true);
++             RELAY_PORT_TYPE, GetRelayPreference(server_address_.proto),
++             server_priority_, server_url_, true);
+ }
+ 
+ void TurnPort::OnAllocateError(int error_code, absl::string_view reason) {
+diff --git a/p2p/base/turn_port_unittest.cc b/p2p/base/turn_port_unittest.cc
+index eaf28e4ce4..169467d76c 100644
+--- a/p2p/base/turn_port_unittest.cc
++++ b/p2p/base/turn_port_unittest.cc
+@@ -57,7 +57,6 @@ using ::testing::DoAll;
+ using ::testing::Return;
+ using ::testing::ReturnPointee;
+ using ::testing::SetArgPointee;
+-using ::webrtc::IceCandidateType;
+ 
+ static const SocketAddress kLocalAddr1("11.11.11.11", 0);
+ static const SocketAddress kLocalAddr2("22.22.22.22", 0);
+@@ -1599,8 +1598,7 @@ TEST_F(TurnPortTest, TestCandidateAddressFamilyMatch) {
+ 
+   // Create an IPv4 candidate. It will match the TURN candidate.
+   Candidate remote_candidate(ICE_CANDIDATE_COMPONENT_RTP, "udp", kLocalAddr2, 0,
+-                             "", "", IceCandidateType::kHost, 0,
+-                             kCandidateFoundation);
++                             "", "", "local", 0, kCandidateFoundation);
+   remote_candidate.set_address(kLocalAddr2);
+   Connection* conn =
+       turn_port_->CreateConnection(remote_candidate, Port::ORIGIN_MESSAGE);
+diff --git a/pc/jsep_session_description_unittest.cc b/pc/jsep_session_description_unittest.cc
+index c3e1f330e4..c4b993d687 100644
+--- a/pc/jsep_session_description_unittest.cc
++++ b/pc/jsep_session_description_unittest.cc
+@@ -36,7 +36,6 @@ using cricket::MediaProtocolType;
+ using ::testing::Values;
+ using webrtc::IceCandidateCollection;
+ using webrtc::IceCandidateInterface;
+-using webrtc::IceCandidateType;
+ using webrtc::JsepIceCandidate;
+ using webrtc::JsepSessionDescription;
+ using webrtc::SdpType;
+@@ -90,8 +89,7 @@ class JsepSessionDescriptionTest : public ::testing::Test {
+     int port = 1234;
+     rtc::SocketAddress address("127.0.0.1", port++);
+     cricket::Candidate candidate(cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+-                                 address, 1, "", "", IceCandidateType::kHost, 0,
+-                                 "1");
++                                 address, 1, "", "", "local", 0, "1");
+     candidate_ = candidate;
+     const std::string session_id = rtc::ToString(rtc::CreateRandomId64());
+     const std::string session_version = rtc::ToString(rtc::CreateRandomId());
+@@ -140,11 +138,11 @@ TEST_F(JsepSessionDescriptionTest, CloneWithCandidates) {
+   cricket::Candidate candidate_v4(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+       rtc::SocketAddress("192.168.1.5", 1234), kCandidatePriority, "", "",
+-      IceCandidateType::kSrflx, kCandidateGeneration, kCandidateFoundation);
++      cricket::STUN_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+   cricket::Candidate candidate_v6(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+       rtc::SocketAddress("::1", 1234), kCandidatePriority, "", "",
+-      IceCandidateType::kHost, kCandidateGeneration, kCandidateFoundation);
++      cricket::LOCAL_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+ 
+   JsepIceCandidate jice_v4("audio", 0, candidate_v4);
+   JsepIceCandidate jice_v6("audio", 0, candidate_v6);
+@@ -267,7 +265,7 @@ TEST_F(JsepSessionDescriptionTest, AddHostnameCandidate) {
+   c.set_component(cricket::ICE_CANDIDATE_COMPONENT_RTP);
+   c.set_protocol(cricket::UDP_PROTOCOL_NAME);
+   c.set_address(rtc::SocketAddress("example.local", 1234));
+-  c.set_type(IceCandidateType::kHost);
++  c.set_type(cricket::LOCAL_PORT_TYPE);
+   const size_t audio_index = 0;
+   JsepIceCandidate hostname_candidate("audio", audio_index, c);
+   EXPECT_TRUE(jsep_desc_->AddCandidate(&hostname_candidate));
+@@ -298,7 +296,7 @@ TEST_F(JsepSessionDescriptionTest, SerializeDeserializeWithHostnameCandidate) {
+   c.set_component(cricket::ICE_CANDIDATE_COMPONENT_RTP);
+   c.set_protocol(cricket::UDP_PROTOCOL_NAME);
+   c.set_address(rtc::SocketAddress("example.local", 1234));
+-  c.set_type(IceCandidateType::kHost);
++  c.set_type(cricket::LOCAL_PORT_TYPE);
+   const size_t audio_index = 0;
+   const size_t video_index = 1;
+   JsepIceCandidate hostname_candidate_audio("audio", audio_index, c);
+@@ -350,11 +348,11 @@ TEST_F(JsepSessionDescriptionTest, SerializeSessionDescriptionWithIPv6Only) {
+   cricket::Candidate candidate1(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+       rtc::SocketAddress("::1", 1234), kCandidatePriority, "", "",
+-      IceCandidateType::kSrflx, kCandidateGeneration, kCandidateFoundation);
++      cricket::STUN_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+   cricket::Candidate candidate2(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+       rtc::SocketAddress("::2", 1235), kCandidatePriority, "", "",
+-      IceCandidateType::kHost, kCandidateGeneration, kCandidateFoundation);
++      cricket::LOCAL_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+ 
+   JsepIceCandidate jice1("audio", 0, candidate1);
+   JsepIceCandidate jice2("audio", 0, candidate2);
+@@ -380,11 +378,11 @@ TEST_F(JsepSessionDescriptionTest,
+   cricket::Candidate candidate_v4(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+       rtc::SocketAddress("192.168.1.5", 1234), kCandidatePriority, "", "",
+-      IceCandidateType::kSrflx, kCandidateGeneration, kCandidateFoundation);
++      cricket::STUN_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+   cricket::Candidate candidate_v6(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+       rtc::SocketAddress("::1", 1234), kCandidatePriority, "", "",
+-      IceCandidateType::kHost, kCandidateGeneration, kCandidateFoundation);
++      cricket::LOCAL_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+ 
+   JsepIceCandidate jice_v4("audio", 0, candidate_v4);
+   JsepIceCandidate jice_v6("audio", 0, candidate_v6);
+@@ -411,11 +409,11 @@ TEST_F(JsepSessionDescriptionTest,
+   cricket::Candidate candidate1(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "tcp",
+       rtc::SocketAddress("::1", 1234), kCandidatePriority, "", "",
+-      IceCandidateType::kSrflx, kCandidateGeneration, kCandidateFoundation);
++      cricket::STUN_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+   cricket::Candidate candidate2(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+       rtc::SocketAddress("fe80::1234:5678:abcd:ef12", 1235), kCandidatePriority,
+-      "", "", IceCandidateType::kHost, kCandidateGeneration,
++      "", "", cricket::LOCAL_PORT_TYPE, kCandidateGeneration,
+       kCandidateFoundation);
+ 
+   JsepIceCandidate jice1("audio", 0, candidate1);
+@@ -442,11 +440,11 @@ TEST_F(JsepSessionDescriptionTest, SerializeSessionDescriptionWithTCPOnly) {
+   cricket::Candidate candidate1(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "tcp",
+       rtc::SocketAddress("::1", 1234), kCandidatePriority, "", "",
+-      IceCandidateType::kSrflx, kCandidateGeneration, kCandidateFoundation);
++      cricket::STUN_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+   cricket::Candidate candidate2(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "tcp",
+       rtc::SocketAddress("::2", 1235), kCandidatePriority, "", "",
+-      IceCandidateType::kHost, kCandidateGeneration, kCandidateFoundation);
++      cricket::LOCAL_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+ 
+   JsepIceCandidate jice1("audio", 0, candidate1);
+   JsepIceCandidate jice2("audio", 0, candidate2);
+@@ -469,19 +467,19 @@ TEST_F(JsepSessionDescriptionTest, RemoveCandidateAndSetConnectionAddress) {
+   cricket::Candidate candidate1(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+       rtc::SocketAddress("::1", 1234), kCandidatePriority, "", "",
+-      IceCandidateType::kHost, kCandidateGeneration, kCandidateFoundation);
++      cricket::LOCAL_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+   candidate1.set_transport_name("audio");
+ 
+   cricket::Candidate candidate2(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "tcp",
+       rtc::SocketAddress("::2", 1235), kCandidatePriority, "", "",
+-      IceCandidateType::kHost, kCandidateGeneration, kCandidateFoundation);
++      cricket::LOCAL_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+   candidate2.set_transport_name("audio");
+ 
+   cricket::Candidate candidate3(
+       cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+       rtc::SocketAddress("192.168.1.1", 1236), kCandidatePriority, "", "",
+-      IceCandidateType::kHost, kCandidateGeneration, kCandidateFoundation);
++      cricket::LOCAL_PORT_TYPE, kCandidateGeneration, kCandidateFoundation);
+   candidate3.set_transport_name("audio");
+ 
+   JsepIceCandidate jice1("audio", 0, candidate1);
+diff --git a/pc/legacy_stats_collector_unittest.cc b/pc/legacy_stats_collector_unittest.cc
+index af3d3038e1..5f6140da54 100644
+--- a/pc/legacy_stats_collector_unittest.cc
++++ b/pc/legacy_stats_collector_unittest.cc
+@@ -1342,7 +1342,7 @@ TEST_F(LegacyStatsCollectorTest, IceCandidateReport) {
+ 
+   cricket::Candidate local;
+   EXPECT_GT(local.id().length(), 0u);
+-  RTC_DCHECK_EQ(local.type(), IceCandidateType::kHost);
++  local.set_type(cricket::LOCAL_PORT_TYPE);
+   local.set_protocol(cricket::UDP_PROTOCOL_NAME);
+   local.set_address(kLocalAddress);
+   local.set_priority(kPriority);
+@@ -1350,7 +1350,7 @@ TEST_F(LegacyStatsCollectorTest, IceCandidateReport) {
+ 
+   cricket::Candidate remote;
+   EXPECT_GT(remote.id().length(), 0u);
+-  remote.set_type(IceCandidateType::kPrflx);
++  remote.set_type(cricket::PRFLX_PORT_TYPE);
+   remote.set_protocol(cricket::UDP_PROTOCOL_NAME);
+   remote.set_address(kRemoteAddress);
+   remote.set_priority(kPriority);
+diff --git a/pc/peer_connection_bundle_unittest.cc b/pc/peer_connection_bundle_unittest.cc
+index 12ab99440e..0db401276a 100644
+--- a/pc/peer_connection_bundle_unittest.cc
++++ b/pc/peer_connection_bundle_unittest.cc
+@@ -278,6 +278,7 @@ class PeerConnectionBundleBaseTest : public ::testing::Test {
+     candidate.set_component(cricket::ICE_CANDIDATE_COMPONENT_DEFAULT);
+     candidate.set_protocol(cricket::UDP_PROTOCOL_NAME);
+     candidate.set_address(address);
++    candidate.set_type(cricket::LOCAL_PORT_TYPE);
+     return candidate;
+   }
+ 
+diff --git a/pc/peer_connection_ice_unittest.cc b/pc/peer_connection_ice_unittest.cc
+index 78d3103ab9..267cca4959 100644
+--- a/pc/peer_connection_ice_unittest.cc
++++ b/pc/peer_connection_ice_unittest.cc
+@@ -214,10 +214,10 @@ class PeerConnectionIceBaseTest : public ::testing::Test {
+   cricket::Candidate CreateLocalUdpCandidate(
+       const rtc::SocketAddress& address) {
+     cricket::Candidate candidate;
+-    RTC_DCHECK_EQ(candidate.type(), IceCandidateType::kHost);
+     candidate.set_component(cricket::ICE_CANDIDATE_COMPONENT_DEFAULT);
+     candidate.set_protocol(cricket::UDP_PROTOCOL_NAME);
+     candidate.set_address(address);
++    candidate.set_type(cricket::LOCAL_PORT_TYPE);
+     return candidate;
+   }
+ 
+diff --git a/pc/rtc_stats_collector_unittest.cc b/pc/rtc_stats_collector_unittest.cc
+index 6c4cd69ea2..71542ca4bf 100644
+--- a/pc/rtc_stats_collector_unittest.cc
++++ b/pc/rtc_stats_collector_unittest.cc
+@@ -212,7 +212,7 @@ std::unique_ptr<cricket::Candidate> CreateFakeCandidate(
+     int port,
+     const std::string& protocol,
+     const rtc::AdapterType adapter_type,
+-    IceCandidateType candidate_type,
++    const absl::string_view candidate_type,
+     uint32_t priority,
+     const rtc::AdapterType underlying_type_for_vpn =
+         rtc::ADAPTER_TYPE_UNKNOWN) {
+@@ -1660,7 +1660,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
+   // Candidates in the first transport stats.
+   std::unique_ptr<cricket::Candidate> a_local_host = CreateFakeCandidate(
+       "1.2.3.4", 5, "a_local_host's protocol", rtc::ADAPTER_TYPE_VPN,
+-      IceCandidateType::kHost, 0, rtc::ADAPTER_TYPE_ETHERNET);
++      cricket::LOCAL_PORT_TYPE, 0, rtc::ADAPTER_TYPE_ETHERNET);
+   RTCLocalIceCandidateStats expected_a_local_host("I" + a_local_host->id(),
+                                                   Timestamp::Zero());
+   expected_a_local_host.transport_id = "Ta0";
+@@ -1678,7 +1678,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
+ 
+   std::unique_ptr<cricket::Candidate> a_remote_srflx = CreateFakeCandidate(
+       "6.7.8.9", 10, "remote_srflx's protocol", rtc::ADAPTER_TYPE_UNKNOWN,
+-      IceCandidateType::kSrflx, 1);
++      cricket::STUN_PORT_TYPE, 1);
+   RTCRemoteIceCandidateStats expected_a_remote_srflx("I" + a_remote_srflx->id(),
+                                                      Timestamp::Zero());
+   expected_a_remote_srflx.transport_id = "Ta0";
+@@ -1693,7 +1693,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
+ 
+   std::unique_ptr<cricket::Candidate> a_local_prflx = CreateFakeCandidate(
+       "11.12.13.14", 15, "a_local_prflx's protocol",
+-      rtc::ADAPTER_TYPE_CELLULAR_2G, IceCandidateType::kPrflx, 2);
++      rtc::ADAPTER_TYPE_CELLULAR_2G, cricket::PRFLX_PORT_TYPE, 2);
+   RTCLocalIceCandidateStats expected_a_local_prflx("I" + a_local_prflx->id(),
+                                                    Timestamp::Zero());
+   expected_a_local_prflx.transport_id = "Ta0";
+@@ -1711,7 +1711,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
+ 
+   std::unique_ptr<cricket::Candidate> a_remote_relay = CreateFakeCandidate(
+       "16.17.18.19", 20, "a_remote_relay's protocol", rtc::ADAPTER_TYPE_UNKNOWN,
+-      IceCandidateType::kRelay, 3);
++      cricket::RELAY_PORT_TYPE, 3);
+   RTCRemoteIceCandidateStats expected_a_remote_relay("I" + a_remote_relay->id(),
+                                                      Timestamp::Zero());
+   expected_a_remote_relay.transport_id = "Ta0";
+@@ -1726,7 +1726,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
+ 
+   std::unique_ptr<cricket::Candidate> a_local_relay = CreateFakeCandidate(
+       "16.17.18.19", 21, "a_local_relay's protocol", rtc::ADAPTER_TYPE_UNKNOWN,
+-      IceCandidateType::kRelay, 1);
++      cricket::RELAY_PORT_TYPE, 1);
+   a_local_relay->set_relay_protocol("tcp");
+   a_local_relay->set_url("turn:url1");
+ 
+@@ -1749,7 +1749,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
+ 
+   std::unique_ptr<cricket::Candidate> a_local_relay_prflx = CreateFakeCandidate(
+       "11.12.13.20", 22, "a_local_relay_prflx's protocol",
+-      rtc::ADAPTER_TYPE_UNKNOWN, IceCandidateType::kPrflx, 1);
++      rtc::ADAPTER_TYPE_UNKNOWN, cricket::PRFLX_PORT_TYPE, 1);
+   a_local_relay_prflx->set_relay_protocol("udp");
+ 
+   RTCLocalIceCandidateStats expected_a_local_relay_prflx(
+@@ -1771,7 +1771,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
+   // A non-paired local candidate.
+   std::unique_ptr<cricket::Candidate> a_local_host_not_paired =
+       CreateFakeCandidate("1.2.3.4", 4404, "a_local_host_not_paired's protocol",
+-                          rtc::ADAPTER_TYPE_VPN, IceCandidateType::kHost, 0,
++                          rtc::ADAPTER_TYPE_VPN, cricket::LOCAL_PORT_TYPE, 0,
+                           rtc::ADAPTER_TYPE_ETHERNET);
+   RTCLocalIceCandidateStats expected_a_local_host_not_paired(
+       "I" + a_local_host_not_paired->id(), Timestamp::Zero());
+@@ -1792,7 +1792,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
+   // Candidates in the second transport stats.
+   std::unique_ptr<cricket::Candidate> b_local =
+       CreateFakeCandidate("42.42.42.42", 42, "b_local's protocol",
+-                          rtc::ADAPTER_TYPE_WIFI, IceCandidateType::kHost, 42);
++                          rtc::ADAPTER_TYPE_WIFI, cricket::LOCAL_PORT_TYPE, 42);
+   RTCLocalIceCandidateStats expected_b_local("I" + b_local->id(),
+                                              Timestamp::Zero());
+   expected_b_local.transport_id = "Tb0";
+@@ -1810,7 +1810,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
+ 
+   std::unique_ptr<cricket::Candidate> b_remote = CreateFakeCandidate(
+       "42.42.42.42", 42, "b_remote's protocol", rtc::ADAPTER_TYPE_UNKNOWN,
+-      IceCandidateType::kHost, 42);
++      cricket::LOCAL_PORT_TYPE, 42);
+   RTCRemoteIceCandidateStats expected_b_remote("I" + b_remote->id(),
+                                                Timestamp::Zero());
+   expected_b_remote.transport_id = "Tb0";
+@@ -1911,12 +1911,12 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
+ 
+   std::unique_ptr<cricket::Candidate> local_candidate =
+       CreateFakeCandidate("42.42.42.42", 42, "protocol", rtc::ADAPTER_TYPE_WIFI,
+-                          IceCandidateType::kHost, 42);
++                          cricket::LOCAL_PORT_TYPE, 42);
+   local_candidate->set_username("local_iceusernamefragment");
+ 
+   std::unique_ptr<cricket::Candidate> remote_candidate = CreateFakeCandidate(
+       "42.42.42.42", 42, "protocol", rtc::ADAPTER_TYPE_UNKNOWN,
+-      IceCandidateType::kSrflx, 42);
++      cricket::STUN_PORT_TYPE, 42);
+   remote_candidate->set_related_address(rtc::SocketAddress("192.168.2.1", 43));
+   remote_candidate->set_username("remote_iceusernamefragment");
+ 
+@@ -2735,17 +2735,17 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStats) {
+ 
+   std::unique_ptr<cricket::Candidate> rtp_local_candidate =
+       CreateFakeCandidate("42.42.42.42", 42, "protocol", rtc::ADAPTER_TYPE_WIFI,
+-                          IceCandidateType::kHost, 42);
++                          cricket::LOCAL_PORT_TYPE, 42);
+   std::unique_ptr<cricket::Candidate> rtp_remote_candidate =
+       CreateFakeCandidate("42.42.42.42", 42, "protocol",
+-                          rtc::ADAPTER_TYPE_UNKNOWN, IceCandidateType::kHost,
++                          rtc::ADAPTER_TYPE_UNKNOWN, cricket::LOCAL_PORT_TYPE,
+                           42);
+   std::unique_ptr<cricket::Candidate> rtcp_local_candidate =
+       CreateFakeCandidate("42.42.42.42", 42, "protocol", rtc::ADAPTER_TYPE_WIFI,
+-                          IceCandidateType::kHost, 42);
++                          cricket::LOCAL_PORT_TYPE, 42);
+   std::unique_ptr<cricket::Candidate> rtcp_remote_candidate =
+       CreateFakeCandidate("42.42.42.42", 42, "protocol",
+-                          rtc::ADAPTER_TYPE_UNKNOWN, IceCandidateType::kHost,
++                          rtc::ADAPTER_TYPE_UNKNOWN, cricket::LOCAL_PORT_TYPE,
+                           42);
+ 
+   cricket::ConnectionInfo rtp_connection_info;
+@@ -2907,17 +2907,17 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStatsWithCrypto) {
+ 
+   std::unique_ptr<cricket::Candidate> rtp_local_candidate =
+       CreateFakeCandidate("42.42.42.42", 42, "protocol", rtc::ADAPTER_TYPE_WIFI,
+-                          IceCandidateType::kHost, 42);
++                          cricket::LOCAL_PORT_TYPE, 42);
+   std::unique_ptr<cricket::Candidate> rtp_remote_candidate =
+       CreateFakeCandidate("42.42.42.42", 42, "protocol",
+-                          rtc::ADAPTER_TYPE_UNKNOWN, IceCandidateType::kHost,
++                          rtc::ADAPTER_TYPE_UNKNOWN, cricket::LOCAL_PORT_TYPE,
+                           42);
+   std::unique_ptr<cricket::Candidate> rtcp_local_candidate =
+       CreateFakeCandidate("42.42.42.42", 42, "protocol", rtc::ADAPTER_TYPE_WIFI,
+-                          IceCandidateType::kHost, 42);
++                          cricket::LOCAL_PORT_TYPE, 42);
+   std::unique_ptr<cricket::Candidate> rtcp_remote_candidate =
+       CreateFakeCandidate("42.42.42.42", 42, "protocol",
+-                          rtc::ADAPTER_TYPE_UNKNOWN, IceCandidateType::kHost,
++                          rtc::ADAPTER_TYPE_UNKNOWN, cricket::LOCAL_PORT_TYPE,
+                           42);
+ 
+   cricket::ConnectionInfo rtp_connection_info;
+diff --git a/pc/webrtc_sdp.cc b/pc/webrtc_sdp.cc
+index b6cea4dfbf..ea9c8580cd 100644
+--- a/pc/webrtc_sdp.cc
++++ b/pc/webrtc_sdp.cc
+@@ -1120,16 +1120,16 @@ bool ParseCandidate(absl::string_view message,
+       return ParseFailed(first_line, "Unsupported transport type.", error);
+   }
+ 
+-  IceCandidateType candidate_type;
++  absl::string_view candidate_type;
+   const absl::string_view type = fields[7];
+   if (type == kCandidateHost) {
+-    candidate_type = IceCandidateType::kHost;
++    candidate_type = cricket::LOCAL_PORT_TYPE;
+   } else if (type == kCandidateSrflx) {
+-    candidate_type = IceCandidateType::kSrflx;
++    candidate_type = cricket::STUN_PORT_TYPE;
+   } else if (type == kCandidateRelay) {
+-    candidate_type = IceCandidateType::kRelay;
++    candidate_type = cricket::RELAY_PORT_TYPE;
+   } else if (type == kCandidatePrflx) {
+-    candidate_type = IceCandidateType::kPrflx;
++    candidate_type = cricket::PRFLX_PORT_TYPE;
+   } else {
+     return ParseFailed(first_line, "Unsupported candidate type.", error);
+   }
+diff --git a/pc/webrtc_sdp_unittest.cc b/pc/webrtc_sdp_unittest.cc
+index afa2304666..999f0b6b26 100644
+--- a/pc/webrtc_sdp_unittest.cc
++++ b/pc/webrtc_sdp_unittest.cc
+@@ -61,7 +61,9 @@ using cricket::ContentInfo;
+ using cricket::ICE_CANDIDATE_COMPONENT_RTCP;
+ using cricket::ICE_CANDIDATE_COMPONENT_RTP;
+ using cricket::kFecSsrcGroupSemantics;
++using cricket::LOCAL_PORT_TYPE;
+ using cricket::MediaProtocolType;
++using cricket::RELAY_PORT_TYPE;
+ using cricket::RidDescription;
+ using cricket::RidDirection;
+ using cricket::SctpDataContentDescription;
+@@ -69,6 +71,7 @@ using cricket::SessionDescription;
+ using cricket::SimulcastDescription;
+ using cricket::SimulcastLayer;
+ using cricket::StreamParams;
++using cricket::STUN_PORT_TYPE;
+ using cricket::TransportDescription;
+ using cricket::TransportInfo;
+ using cricket::VideoContentDescription;
+@@ -76,7 +79,6 @@ using ::testing::ElementsAre;
+ using ::testing::Field;
+ using webrtc::IceCandidateCollection;
+ using webrtc::IceCandidateInterface;
+-using webrtc::IceCandidateType;
+ using webrtc::JsepIceCandidate;
+ using webrtc::JsepSessionDescription;
+ using webrtc::RtpExtension;
+@@ -1002,42 +1004,42 @@ class WebRtcSdpTest : public ::testing::Test {
+     int port = 1234;
+     rtc::SocketAddress address("192.168.1.5", port++);
+     Candidate candidate1(ICE_CANDIDATE_COMPONENT_RTP, "udp", address,
+-                         kCandidatePriority, "", "", IceCandidateType::kHost,
++                         kCandidatePriority, "", "", LOCAL_PORT_TYPE,
+                          kCandidateGeneration, kCandidateFoundation1);
+     address.SetPort(port++);
+     Candidate candidate2(ICE_CANDIDATE_COMPONENT_RTCP, "udp", address,
+-                         kCandidatePriority, "", "", IceCandidateType::kHost,
++                         kCandidatePriority, "", "", LOCAL_PORT_TYPE,
+                          kCandidateGeneration, kCandidateFoundation1);
+     address.SetPort(port++);
+     Candidate candidate3(ICE_CANDIDATE_COMPONENT_RTCP, "udp", address,
+-                         kCandidatePriority, "", "", IceCandidateType::kHost,
++                         kCandidatePriority, "", "", LOCAL_PORT_TYPE,
+                          kCandidateGeneration, kCandidateFoundation1);
+     address.SetPort(port++);
+     Candidate candidate4(ICE_CANDIDATE_COMPONENT_RTP, "udp", address,
+-                         kCandidatePriority, "", "", IceCandidateType::kHost,
++                         kCandidatePriority, "", "", LOCAL_PORT_TYPE,
+                          kCandidateGeneration, kCandidateFoundation1);
+ 
+     // v6 host
+     rtc::SocketAddress v6_address("::1", port++);
+     cricket::Candidate candidate5(cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+                                   v6_address, kCandidatePriority, "", "",
+-                                  IceCandidateType::kHost, kCandidateGeneration,
+-                                  kCandidateFoundation2);
++                                  cricket::LOCAL_PORT_TYPE,
++                                  kCandidateGeneration, kCandidateFoundation2);
+     v6_address.SetPort(port++);
+     cricket::Candidate candidate6(cricket::ICE_CANDIDATE_COMPONENT_RTCP, "udp",
+                                   v6_address, kCandidatePriority, "", "",
+-                                  IceCandidateType::kHost, kCandidateGeneration,
+-                                  kCandidateFoundation2);
++                                  cricket::LOCAL_PORT_TYPE,
++                                  kCandidateGeneration, kCandidateFoundation2);
+     v6_address.SetPort(port++);
+     cricket::Candidate candidate7(cricket::ICE_CANDIDATE_COMPONENT_RTCP, "udp",
+                                   v6_address, kCandidatePriority, "", "",
+-                                  IceCandidateType::kHost, kCandidateGeneration,
+-                                  kCandidateFoundation2);
++                                  cricket::LOCAL_PORT_TYPE,
++                                  kCandidateGeneration, kCandidateFoundation2);
+     v6_address.SetPort(port++);
+     cricket::Candidate candidate8(cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+                                   v6_address, kCandidatePriority, "", "",
+-                                  IceCandidateType::kHost, kCandidateGeneration,
+-                                  kCandidateFoundation2);
++                                  cricket::LOCAL_PORT_TYPE,
++                                  kCandidateGeneration, kCandidateFoundation2);
+ 
+     // stun
+     int port_stun = 2345;
+@@ -1045,16 +1047,16 @@ class WebRtcSdpTest : public ::testing::Test {
+     rtc::SocketAddress rel_address_stun("192.168.1.5", port_stun++);
+     cricket::Candidate candidate9(cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+                                   address_stun, kCandidatePriority, "", "",
+-                                  IceCandidateType::kSrflx,
+-                                  kCandidateGeneration, kCandidateFoundation3);
++                                  STUN_PORT_TYPE, kCandidateGeneration,
++                                  kCandidateFoundation3);
+     candidate9.set_related_address(rel_address_stun);
+ 
+     address_stun.SetPort(port_stun++);
+     rel_address_stun.SetPort(port_stun++);
+     cricket::Candidate candidate10(cricket::ICE_CANDIDATE_COMPONENT_RTCP, "udp",
+                                    address_stun, kCandidatePriority, "", "",
+-                                   IceCandidateType::kSrflx,
+-                                   kCandidateGeneration, kCandidateFoundation3);
++                                   STUN_PORT_TYPE, kCandidateGeneration,
++                                   kCandidateFoundation3);
+     candidate10.set_related_address(rel_address_stun);
+ 
+     // relay
+@@ -1062,13 +1064,13 @@ class WebRtcSdpTest : public ::testing::Test {
+     rtc::SocketAddress address_relay("74.125.224.39", port_relay++);
+     cricket::Candidate candidate11(cricket::ICE_CANDIDATE_COMPONENT_RTCP, "udp",
+                                    address_relay, kCandidatePriority, "", "",
+-                                   IceCandidateType::kRelay,
++                                   cricket::RELAY_PORT_TYPE,
+                                    kCandidateGeneration, kCandidateFoundation4);
+     address_relay.SetPort(port_relay++);
+     cricket::Candidate candidate12(cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+                                    address_relay, kCandidatePriority, "", "",
+-                                   IceCandidateType::kRelay,
+-                                   kCandidateGeneration, kCandidateFoundation4);
++                                   RELAY_PORT_TYPE, kCandidateGeneration,
++                                   kCandidateFoundation4);
+ 
+     // voice
+     candidates_.push_back(candidate1);
+@@ -2231,10 +2233,9 @@ TEST_F(WebRtcSdpTest, SerializeCandidates) {
+ 
+ TEST_F(WebRtcSdpTest, SerializeHostnameCandidate) {
+   rtc::SocketAddress address("a.test", 1234);
+-  cricket::Candidate candidate(cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp",
+-                               address, kCandidatePriority, "", "",
+-                               IceCandidateType::kHost, kCandidateGeneration,
+-                               kCandidateFoundation1);
++  cricket::Candidate candidate(
++      cricket::ICE_CANDIDATE_COMPONENT_RTP, "udp", address, kCandidatePriority,
++      "", "", LOCAL_PORT_TYPE, kCandidateGeneration, kCandidateFoundation1);
+   JsepIceCandidate jcandidate(std::string("audio_content_name"), 0, candidate);
+   std::string message = webrtc::SdpSerializeCandidate(jcandidate);
+   EXPECT_EQ(std::string(kRawHostnameCandidate), message);
+@@ -2243,7 +2244,7 @@ TEST_F(WebRtcSdpTest, SerializeHostnameCandidate) {
+ TEST_F(WebRtcSdpTest, SerializeTcpCandidates) {
+   Candidate candidate(ICE_CANDIDATE_COMPONENT_RTP, "tcp",
+                       rtc::SocketAddress("192.168.1.5", 9), kCandidatePriority,
+-                      "", "", IceCandidateType::kHost, kCandidateGeneration,
++                      "", "", LOCAL_PORT_TYPE, kCandidateGeneration,
+                       kCandidateFoundation1);
+   candidate.set_tcptype(cricket::TCPTYPE_ACTIVE_STR);
+   std::unique_ptr<IceCandidateInterface> jcandidate(
+@@ -2647,7 +2648,7 @@ TEST_F(WebRtcSdpTest, DeserializeCandidate) {
+   // Make a cricket::Candidate equivalent to kSdpTcpCandidate string.
+   Candidate candidate(ICE_CANDIDATE_COMPONENT_RTP, "tcp",
+                       rtc::SocketAddress("192.168.1.5", 9), kCandidatePriority,
+-                      "", "", IceCandidateType::kHost, kCandidateGeneration,
++                      "", "", LOCAL_PORT_TYPE, kCandidateGeneration,
+                       kCandidateFoundation1);
+   std::unique_ptr<IceCandidateInterface> jcandidate_template(
+       new JsepIceCandidate(std::string("audio_content_name"), 0, candidate));
