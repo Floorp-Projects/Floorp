@@ -82,7 +82,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b86cb7278bc4e5571
  common_audio/BUILD.gn                         |  4 --
  common_audio/fir_filter_avx2.cc               |  2 +
  common_audio/intrin.h                         |  8 ++++
- media/BUILD.gn                                | 35 +++++++++++++-
+ media/BUILD.gn                                | 39 +++++++++++++++-
  media/base/media_channel.h                    |  4 --
  media/base/media_channel_impl.cc              | 13 ------
  modules/audio_coding/BUILD.gn                 |  2 +-
@@ -99,7 +99,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b86cb7278bc4e5571
  test/BUILD.gn                                 | 10 ++++
  video/BUILD.gn                                |  4 +-
  webrtc.gni                                    | 32 ++++++++-----
- 31 files changed, 315 insertions(+), 98 deletions(-)
+ 31 files changed, 319 insertions(+), 98 deletions(-)
  create mode 100644 api/rtp_sender_setparameters_callback.cc
  create mode 100644 api/rtp_sender_setparameters_callback.h
  create mode 100644 common_audio/intrin.h
@@ -206,7 +206,7 @@ index 571049f3e4..f393179bbb 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index bee98fe959..5869f0f31c 100644
+index cf86d5486e..703198bf19 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -40,6 +40,9 @@ rtc_source_set("enable_media") {
@@ -290,7 +290,7 @@ index bee98fe959..5869f0f31c 100644
    visibility = [ "*" ]
    cflags = []
    sources = [
-@@ -391,6 +418,7 @@ rtc_library("libjingle_peerconnection_api") {
+@@ -392,6 +419,7 @@ rtc_library("libjingle_peerconnection_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -298,7 +298,7 @@ index bee98fe959..5869f0f31c 100644
  
  rtc_source_set("frame_transformer_interface") {
    visibility = [ "*" ]
-@@ -564,6 +592,7 @@ rtc_source_set("peer_network_dependencies") {
+@@ -565,6 +593,7 @@ rtc_source_set("peer_network_dependencies") {
  }
  
  rtc_source_set("peer_connection_quality_test_fixture_api") {
@@ -306,7 +306,7 @@ index bee98fe959..5869f0f31c 100644
    visibility = [ "*" ]
    testonly = true
    sources = [ "test/peerconnection_quality_test_fixture.h" ]
-@@ -613,6 +642,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
+@@ -614,6 +643,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -314,7 +314,7 @@ index bee98fe959..5869f0f31c 100644
  
  rtc_source_set("frame_generator_api") {
    visibility = [ "*" ]
-@@ -732,6 +762,7 @@ rtc_library("create_frame_generator") {
+@@ -733,6 +763,7 @@ rtc_library("create_frame_generator") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
  
@@ -322,7 +322,7 @@ index bee98fe959..5869f0f31c 100644
  rtc_library("create_peer_connection_quality_test_frame_generator") {
    visibility = [ "*" ]
    testonly = true
-@@ -748,6 +779,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
+@@ -749,6 +780,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -330,7 +330,7 @@ index bee98fe959..5869f0f31c 100644
  
  rtc_source_set("libjingle_logging_api") {
    visibility = [ "*" ]
-@@ -927,6 +959,7 @@ rtc_source_set("refcountedbase") {
+@@ -928,6 +960,7 @@ rtc_source_set("refcountedbase") {
    ]
  }
  
@@ -338,7 +338,7 @@ index bee98fe959..5869f0f31c 100644
  rtc_library("ice_transport_factory") {
    visibility = [ "*" ]
    sources = [
-@@ -950,6 +983,7 @@ rtc_library("ice_transport_factory") {
+@@ -951,6 +984,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log:rtc_event_log",
    ]
  }
@@ -581,10 +581,10 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index ab1999aa76..a5db169c33 100644
+index 1b470c6f97..bedd5c2012 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
-@@ -68,7 +68,7 @@ rtc_library("rtc_media_base") {
+@@ -79,7 +79,7 @@ rtc_library("rtc_media_base") {
      "../api:media_stream_interface",
      "../api:rtc_error",
      "../api:rtp_parameters",
@@ -593,15 +593,33 @@ index ab1999aa76..a5db169c33 100644
      "../api:scoped_refptr",
      "../api:sequence_checker",
      "../api:transport_api",
-@@ -142,9 +142,19 @@ rtc_library("rtc_media_base") {
-     "base/video_source_base.cc",
-     "base/video_source_base.h",
+@@ -138,11 +138,20 @@ rtc_library("rtc_media_base") {
+     "//third_party/abseil-cpp/absl/strings",
+     "//third_party/abseil-cpp/absl/types:optional",
    ]
-+  if (build_with_mozilla) {
++    if (build_with_mozilla) {
 +    sources -= [
 +      "base/adapted_video_track_source.cc",
 +      "base/adapted_video_track_source.h",
-+      "base/audio_source.h",
++    ]
++  }
+ }
+ 
+ rtc_source_set("audio_source") {
+   sources = [ "base/audio_source.h" ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
++  if (build_with_mozilla) {
++    sources -= [ "base/audio_source.h" ]
++  }
+ }
+ 
+ rtc_library("video_source_base") {
+@@ -182,9 +191,16 @@ rtc_library("media_engine") {
+     "../rtc_base/system:file_wrapper",
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
++  if (build_with_mozilla) {
++    sources -= [
 +      "base/media_engine.cc",
 +      "base/media_engine.h",
 +    ]
@@ -613,7 +631,7 @@ index ab1999aa76..a5db169c33 100644
    sources = [
      "base/media_channel_impl.cc",
      "base/media_channel_impl.h",
-@@ -194,6 +204,7 @@ rtc_library("media_channel_impl") {
+@@ -234,6 +250,7 @@ rtc_library("media_channel_impl") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -621,7 +639,7 @@ index ab1999aa76..a5db169c33 100644
  
  rtc_source_set("media_channel") {
    sources = [ "base/media_channel.h" ]
-@@ -271,6 +282,7 @@ rtc_library("codec") {
+@@ -311,6 +328,7 @@ rtc_library("codec") {
  }
  
  rtc_library("rtp_utils") {
@@ -629,7 +647,7 @@ index ab1999aa76..a5db169c33 100644
    sources = [
      "base/rtp_utils.cc",
      "base/rtp_utils.h",
-@@ -287,8 +299,10 @@ rtc_library("rtp_utils") {
+@@ -327,8 +345,10 @@ rtc_library("rtp_utils") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
  }
@@ -640,7 +658,7 @@ index ab1999aa76..a5db169c33 100644
    sources = [
      "base/stream_params.cc",
      "base/stream_params.h",
-@@ -301,6 +315,7 @@ rtc_library("stream_params") {
+@@ -341,6 +361,7 @@ rtc_library("stream_params") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
  }
@@ -648,7 +666,7 @@ index ab1999aa76..a5db169c33 100644
  
  rtc_library("media_constants") {
    sources = [
-@@ -311,6 +326,7 @@ rtc_library("media_constants") {
+@@ -351,6 +372,7 @@ rtc_library("media_constants") {
  }
  
  rtc_library("turn_utils") {
@@ -656,7 +674,7 @@ index ab1999aa76..a5db169c33 100644
    sources = [
      "base/turn_utils.cc",
      "base/turn_utils.h",
-@@ -321,14 +337,17 @@ rtc_library("turn_utils") {
+@@ -361,14 +383,17 @@ rtc_library("turn_utils") {
      "../rtc_base/system:rtc_export",
    ]
  }
@@ -674,20 +692,19 @@ index ab1999aa76..a5db169c33 100644
  
  rtc_library("rtc_simulcast_encoder_adapter") {
    visibility = [ "*" ]
-@@ -403,6 +422,12 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -443,6 +468,11 @@ rtc_library("rtc_internal_video_codecs") {
      "../system_wrappers:field_trial",
      "../test:fake_video_codecs",
    ]
 +  if (build_with_mozilla) {
 +    deps -= [
-+      "../modules/video_coding:webrtc_multiplex", # See Bug 1820869.
 +      "../test:fake_video_codecs",
 +    ]
 +  }
  
    if (enable_libaom) {
      defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
-@@ -426,6 +451,14 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -466,6 +496,13 @@ rtc_library("rtc_internal_video_codecs") {
      "engine/internal_encoder_factory.cc",
      "engine/internal_encoder_factory.h",
    ]
@@ -696,7 +713,6 @@ index ab1999aa76..a5db169c33 100644
 +      "engine/fake_video_codec_factory.cc",
 +      "engine/fake_video_codec_factory.h",
 +      "engine/internal_encoder_factory.cc", # See Bug 1820869.
-+      "engine/multiplex_codec_factory.cc", # See Bug 1820869.
 +    ]
 +  }
  }
