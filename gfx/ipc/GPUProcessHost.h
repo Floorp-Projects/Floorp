@@ -104,8 +104,9 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   void SetListener(Listener* aListener);
 
-  // Kills the GPU process. Used for tests and diagnostics
-  void KillProcess();
+  // Kills the GPU process. Used in normal operation to recover from an error,
+  // as well as for tests and diagnostics.
+  void KillProcess(bool aGenerateMinidump);
 
   // Causes the GPU process to crash. Used for tests and diagnostics
   void CrashProcess();
@@ -128,7 +129,7 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   void OnChannelClosed();
 
   // Kill the remote process, triggering IPC shutdown.
-  void KillHard(const char* aReason);
+  void KillHard(bool aGenerateMinidump);
 
   void DestroyProcess();
 
