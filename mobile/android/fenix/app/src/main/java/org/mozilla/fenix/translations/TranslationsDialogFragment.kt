@@ -48,6 +48,9 @@ import org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLang
 import org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguageFileDialogType
 import org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguagesFeature
 
+// Friction should be increased, since peek height on this dialog is to fill the screen.
+private const val DIALOG_FRICTION = .65f
+
 /**
  * The enum is to know what bottom sheet to open.
  */
@@ -78,6 +81,7 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                 behavior = BottomSheetBehavior.from(bottomSheet)
                 behavior?.peekHeight = resources.displayMetrics.heightPixels
                 behavior?.state = BottomSheetBehavior.STATE_EXPANDED
+                behavior?.hideFriction = DIALOG_FRICTION
             }
         }
 
