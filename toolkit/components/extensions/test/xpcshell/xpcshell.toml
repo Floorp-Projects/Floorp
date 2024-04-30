@@ -75,6 +75,7 @@ skip-if = ["os == 'android'"] # Not shipped on Android
 ["test_ext_manifest_content_security_policy.js"]
 
 ["test_ext_manifest_incognito.js"]
+skip-if = ["condprof"] # remove in a few days - see bug 1891740
 
 ["test_ext_manifest_minimum_chrome_version.js"]
 
