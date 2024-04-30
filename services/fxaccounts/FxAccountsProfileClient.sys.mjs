@@ -5,7 +5,6 @@
 /**
  * A client to fetch profile information for a Firefox Account.
  */
-"use strict;";
 
 import {
   ERRNO_NETWORK,
