@@ -2674,8 +2674,8 @@
     "testIdPattern": "[network.spec] network Page.authenticate should allow disable authentication",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["firefox", "webDriverBiDi"],
-    "expectations": ["FAIL"],
-    "comment": "The Puppeteer implementation does not expect 2 responseCompleted events (that AuthRequired triggered)"
+    "expectations": ["FAIL", "PASS"],
+    "comment": "FAIL: The Puppeteer implementation does not expect 2 responseCompleted events (that AuthRequired triggered). PASS: Only one event on late beta (Bug 1893664)."
   },
   {
     "testIdPattern": "[network.spec] network Page.authenticate should fail if wrong credentials",
