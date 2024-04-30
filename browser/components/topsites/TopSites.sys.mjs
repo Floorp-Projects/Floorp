@@ -547,7 +547,7 @@ export class ContileIntegration {
   }
 }
 
-export class TopSites {
+class _TopSites {
   constructor() {
     this._telemetryUtility = new TopSitesTelemetry();
     this._contile = new ContileIntegration(this);
@@ -1122,12 +1122,24 @@ export class TopSites {
 
     // Get all frecent sites from history.
     let frecent = [];
-    const cache = await this.frecentCache.request({
-      // We need to overquery due to the top 5 alexa search + default search possibly being removed
-      numItems: numItems + SEARCH_FILTERS.length + 1,
-      topsiteFrecency: FRECENCY_THRESHOLD,
-    });
+    let cache;
+    try {
+      // Request can throw if executing the linkGetter inside LinksCache returns
+      // a null object.
+      cache = await this.frecentCache.request({
+        // We need to overquery due to the top 5 alexa search + default search possibly being removed
+        numItems: numItems + SEARCH_FILTERS.length + 1,
+        topsiteFrecency: FRECENCY_THRESHOLD,
+      });
+    } catch (ex) {
+      cache = [];
+    }
+
     for (let link of cache) {
+      // The cache can contain null values.
+      if (!link) {
+        continue;
+      }
       const hostname = shortURL(link);
       if (!this.shouldFilterSearchTile(hostname)) {
         frecent.push({
@@ -1467,10 +1479,15 @@ export class TopSites {
    * @param {bool} options.isStartup Being called while TopSitesFeed is initting.
    */
   async refresh(options = {}) {
+    // Avoiding refreshing if it's already happening.
+    if (this._refreshing) {
+      return;
+    }
     if (!this._startedUp && !options.isStartup) {
       // Initial refresh still pending.
       return;
     }
+    this._refreshing = true;
     this._startedUp = true;
 
     if (!this._tippyTopProvider.initialized) {
@@ -1502,6 +1519,10 @@ export class TopSites {
     } else {
       // Don't broadcast only update the state and update the preloaded tab.
       this.store.dispatch(ac.AlsoToPreloaded(newAction));
+    }
+    this._refreshing = false;
+    if (Cu.isInAutomation) {
+      Services.obs.notifyObservers(null, "topsites-refreshed");
     }
   }
 
@@ -2014,3 +2035,5 @@ export class TopSites {
     }
   }
 }
+
+export const TopSites = new _TopSites();
