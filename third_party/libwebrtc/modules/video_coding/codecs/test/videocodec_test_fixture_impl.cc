@@ -703,7 +703,7 @@ bool VideoCodecTestFixtureImpl::CreateEncoderAndDecoder() {
     decoder_format = *config_.decoder_format;
   }
 
-  encoder_ = encoder_factory_->CreateVideoEncoder(encoder_format);
+  encoder_ = encoder_factory_->Create(env, encoder_format);
   EXPECT_TRUE(encoder_) << "Encoder not successfully created.";
   if (encoder_ == nullptr) {
     return false;

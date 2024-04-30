@@ -15,6 +15,7 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
+#include "api/environment/environment.h"
 #include "api/video/video_codec_type.h"
 #include "api/video_codecs/video_encoder.h"
 #include "modules/video_coding/include/video_error_codes.h"
@@ -407,6 +408,14 @@ QualityAnalyzingVideoEncoderFactory::CreateVideoEncoder(
     const SdpVideoFormat& format) {
   return std::make_unique<QualityAnalyzingVideoEncoder>(
       peer_name_, delegate_->CreateVideoEncoder(format), bitrate_multiplier_,
+      stream_to_sfu_config_, injector_, analyzer_);
+}
+
+std::unique_ptr<VideoEncoder> QualityAnalyzingVideoEncoderFactory::Create(
+    const Environment& env,
+    const SdpVideoFormat& format) {
+  return std::make_unique<QualityAnalyzingVideoEncoder>(
+      peer_name_, delegate_->Create(env, format), bitrate_multiplier_,
       stream_to_sfu_config_, injector_, analyzer_);
 }
 

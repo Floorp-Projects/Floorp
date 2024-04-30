@@ -1380,6 +1380,7 @@ rtc_library("video_codec_tester") {
   deps = [
     ":scoped_key_value_config",
     "../api:array_view",
+    "../api/environment",
     "../api/numerics:numerics",
     "../api/test/metrics:metric",
     "../api/test/metrics:metrics_logger",

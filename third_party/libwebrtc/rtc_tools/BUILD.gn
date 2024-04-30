@@ -477,6 +477,8 @@ if (!build_with_chromium) {
     deps = [
       "//api:create_frame_generator",
       "//api:frame_generator_api",
+      "//api/environment",
+      "//api/environment:environment_factory",
       "//api/video:builtin_video_bitrate_allocator_factory",
       "//api/video_codecs:builtin_video_encoder_factory",
       "//api/video_codecs:video_codecs_api",

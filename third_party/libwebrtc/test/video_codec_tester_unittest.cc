@@ -194,11 +194,10 @@ class VideoCodecTesterTest : public ::testing::Test {
         .framerate = kTargetFramerate};
 
     NiceMock<MockVideoEncoderFactory> encoder_factory;
-    ON_CALL(encoder_factory, CreateVideoEncoder)
-        .WillByDefault([&](const SdpVideoFormat&) {
-          return std::make_unique<NiceMock<TestVideoEncoder>>(scalability_mode,
-                                                              encoded_frames);
-        });
+    ON_CALL(encoder_factory, Create).WillByDefault(WithoutArgs([&] {
+      return std::make_unique<NiceMock<TestVideoEncoder>>(scalability_mode,
+                                                          encoded_frames);
+    }));
 
     NiceMock<MockVideoDecoderFactory> decoder_factory;
     ON_CALL(decoder_factory, Create).WillByDefault(WithoutArgs([&] {
@@ -610,16 +609,16 @@ class VideoCodecTesterTestPacing
 
 TEST_P(VideoCodecTesterTestPacing, PaceEncode) {
   auto [pacing_settings, expected_delta_ms] = GetParam();
+  const Environment env = CreateEnvironment();
   VideoSourceSettings video_source{
       .file_path = source_yuv_file_path_,
       .resolution = {.width = kSourceWidth, .height = kSourceHeight},
       .framerate = kTargetFramerate};
 
   NiceMock<MockVideoEncoderFactory> encoder_factory;
-  ON_CALL(encoder_factory, CreateVideoEncoder(_))
-      .WillByDefault([](const SdpVideoFormat&) {
-        return std::make_unique<NiceMock<MockVideoEncoder>>();
-      });
+  ON_CALL(encoder_factory, Create).WillByDefault(WithoutArgs([] {
+    return std::make_unique<NiceMock<MockVideoEncoder>>();
+  }));
 
   std::map<uint32_t, EncodingSettings> encoding_settings =
       VideoCodecTester::CreateEncodingSettings(
@@ -629,7 +628,7 @@ TEST_P(VideoCodecTesterTestPacing, PaceEncode) {
   EncoderSettings encoder_settings;
   encoder_settings.pacing_settings = pacing_settings;
   std::vector<Frame> frames =
-      VideoCodecTester::RunEncodeTest(video_source, &encoder_factory,
+      VideoCodecTester::RunEncodeTest(env, video_source, &encoder_factory,
                                       encoder_settings, encoding_settings)
           ->Slice(/*filter=*/{}, /*merge=*/false);
   ASSERT_THAT(frames, SizeIs(kNumFrames));

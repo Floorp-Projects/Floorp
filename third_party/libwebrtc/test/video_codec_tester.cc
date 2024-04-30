@@ -16,6 +16,7 @@
 #include <utility>
 
 #include "api/array_view.h"
+#include "api/environment/environment.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
@@ -883,10 +884,12 @@ class Encoder : public EncodedImageCallback {
   using EncodeCallback =
       absl::AnyInvocable<void(const EncodedImage& encoded_frame)>;
 
-  Encoder(VideoEncoderFactory* encoder_factory,
+  Encoder(const Environment& env,
+          VideoEncoderFactory* encoder_factory,
           const EncoderSettings& encoder_settings,
           VideoCodecAnalyzer* analyzer)
-      : encoder_factory_(encoder_factory),
+      : env_(env),
+        encoder_factory_(encoder_factory),
         analyzer_(analyzer),
         pacer_(encoder_settings.pacing_settings) {
     RTC_CHECK(analyzer_) << "Analyzer must be provided";
@@ -903,8 +906,8 @@ class Encoder : public EncodedImageCallback {
   }
 
   void Initialize(const EncodingSettings& encoding_settings) {
-    encoder_ = encoder_factory_->CreateVideoEncoder(
-        encoding_settings.sdp_video_format);
+    encoder_ =
+        encoder_factory_->Create(env_, encoding_settings.sdp_video_format);
     RTC_CHECK(encoder_) << "Could not create encoder for video format "
                         << encoding_settings.sdp_video_format.ToString();
 
@@ -1192,6 +1195,7 @@ class Encoder : public EncodedImageCallback {
     return encoded_frame;
   }
 
+  const Environment env_;
   VideoEncoderFactory* const encoder_factory_;
   std::unique_ptr<VideoEncoder> encoder_;
   VideoCodecAnalyzer* const analyzer_;
@@ -1552,6 +1556,7 @@ VideoCodecTester::RunDecodeTest(const Environment& env,
 
 std::unique_ptr<VideoCodecTester::VideoCodecStats>
 VideoCodecTester::RunEncodeTest(
+    const Environment& env,
     const VideoSourceSettings& source_settings,
     VideoEncoderFactory* encoder_factory,
     const EncoderSettings& encoder_settings,
@@ -1559,7 +1564,7 @@ VideoCodecTester::RunEncodeTest(
   VideoSource video_source(source_settings);
   std::unique_ptr<VideoCodecAnalyzer> analyzer =
       std::make_unique<VideoCodecAnalyzer>(/*video_source=*/nullptr);
-  Encoder encoder(encoder_factory, encoder_settings, analyzer.get());
+  Encoder encoder(env, encoder_factory, encoder_settings, analyzer.get());
   encoder.Initialize(encoding_settings.begin()->second);
 
   for (const auto& [timestamp_rtp, frame_settings] : encoding_settings) {
@@ -1589,7 +1594,7 @@ VideoCodecTester::RunEncodeDecodeTest(
   std::unique_ptr<VideoCodecAnalyzer> analyzer =
       std::make_unique<VideoCodecAnalyzer>(&video_source);
   const EncodingSettings& frame_settings = encoding_settings.begin()->second;
-  Encoder encoder(encoder_factory, encoder_settings, analyzer.get());
+  Encoder encoder(env, encoder_factory, encoder_settings, analyzer.get());
   encoder.Initialize(frame_settings);
 
   int num_spatial_layers =

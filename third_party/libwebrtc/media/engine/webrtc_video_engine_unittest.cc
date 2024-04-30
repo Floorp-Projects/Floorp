@@ -1415,7 +1415,7 @@ TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, Vp8) {
 
   // Mock encoder creation. `engine` take ownership of the encoder.
   const webrtc::SdpVideoFormat format("VP8");
-  EXPECT_CALL(*encoder_factory, CreateVideoEncoder(format)).WillOnce([&] {
+  EXPECT_CALL(*encoder_factory, Create(_, format)).WillOnce([&] {
     return std::make_unique<FakeWebRtcVideoEncoder>(nullptr);
   });
 
