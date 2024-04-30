@@ -20,7 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.bookmarks.Bookmark
 import java.util.concurrent.TimeUnit
 
 class BookmarksUseCaseTest {
@@ -115,7 +115,7 @@ class BookmarksUseCaseTest {
 
         assertEquals(
             listOf(
-                RecentBookmark(
+                Bookmark(
                     title = bookmarkNode.title,
                     url = bookmarkNode.url,
                     previewImageUrl = visitInfo.previewImageUrl,

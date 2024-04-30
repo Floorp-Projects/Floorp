@@ -34,9 +34,9 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.filterOut
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getFilteredStories
+import org.mozilla.fenix.home.bookmarks.Bookmark
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
-import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
@@ -262,7 +262,7 @@ class AppStoreTest {
             assertEquals(0, appStore.state.collections.size)
             assertEquals(0, appStore.state.topSites.size)
             assertEquals(0, appStore.state.recentTabs.size)
-            assertEquals(0, appStore.state.recentBookmarks.size)
+            assertEquals(0, appStore.state.bookmarks.size)
             assertEquals(0, appStore.state.recentHistory.size)
             assertEquals(BrowsingMode.Normal, appStore.state.mode)
             assertEquals(
@@ -273,7 +273,7 @@ class AppStoreTest {
             val collections: List<TabCollection> = listOf(mockk())
             val topSites: List<TopSite> = listOf(mockk(), mockk())
             val recentTabs: List<RecentTab> = listOf(mockk(), mockk())
-            val recentBookmarks: List<RecentBookmark> = listOf(mockk(), mockk())
+            val bookmarks: List<Bookmark> = listOf(mockk(), mockk())
             val group1 = RecentHistoryGroup(title = "test One")
             val group2 = RecentHistoryGroup(title = "testSearchTerm")
             val group3 = RecentHistoryGroup(title = "test two")
@@ -296,7 +296,7 @@ class AppStoreTest {
                     topSites = topSites,
                     showCollectionPlaceholder = true,
                     recentTabs = recentTabs,
-                    recentBookmarks = recentBookmarks,
+                    bookmarks = bookmarks,
                     recentHistory = recentHistory,
                     recentSyncedTabState = recentSyncedTabState,
                 ),
@@ -305,7 +305,7 @@ class AppStoreTest {
             assertEquals(collections, appStore.state.collections)
             assertEquals(topSites, appStore.state.topSites)
             assertEquals(recentTabs, appStore.state.recentTabs)
-            assertEquals(recentBookmarks, appStore.state.recentBookmarks)
+            assertEquals(bookmarks, appStore.state.bookmarks)
             assertEquals(listOf(group1, group2, group3, highlight), appStore.state.recentHistory)
             assertEquals(BrowsingMode.Private, appStore.state.mode)
             assertEquals(

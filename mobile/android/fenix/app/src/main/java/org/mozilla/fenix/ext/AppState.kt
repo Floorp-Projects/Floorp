@@ -170,7 +170,7 @@ internal fun getFilteredSponsoredStories(
 fun AppState.filterState(blocklistHandler: BlocklistHandler): AppState =
     with(blocklistHandler) {
         copy(
-            recentBookmarks = recentBookmarks.filteredByBlocklist(),
+            bookmarks = bookmarks.filteredByBlocklist(),
             recentTabs = recentTabs.filteredByBlocklist().filterContile(),
             recentHistory = recentHistory.filteredByBlocklist().filterContile(),
             recentSyncedTabState = recentSyncedTabState.filteredByBlocklist().filterContile(),

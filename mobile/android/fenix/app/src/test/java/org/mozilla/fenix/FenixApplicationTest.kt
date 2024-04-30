@@ -139,7 +139,7 @@ class FenixApplicationTest {
         every { settings.shouldUseLightTheme } returns true
         every { settings.signedInFxaAccount } returns true
         every { settings.showRecentTabsFeature } returns true
-        every { settings.showRecentBookmarksFeature } returns true
+        every { settings.showBookmarksHomeFeature } returns true
         every { settings.showTopSitesFeature } returns true
         every { settings.historyMetadataUIFeature } returns true
         every { settings.showPocketRecommendationsFeature } returns true

@@ -9,7 +9,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.appservices.places.uniffi.PlacesApiException
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.storage.HistoryStorage
-import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.bookmarks.Bookmark
 import java.util.concurrent.TimeUnit
 
 /**
@@ -69,14 +69,14 @@ class BookmarksUseCase(
          *
          * @param count The number of recent bookmarks to return.
          * @param maxAgeInMs The maximum age (ms) of a recently added bookmark to return.
-         * @return a list of [RecentBookmark] that were added no older than specify by [maxAgeInMs],
+         * @return a list of [Bookmark] that were added no older than specify by [maxAgeInMs],
          * if any, up to a number specified by [count].
          */
         @WorkerThread
         suspend operator fun invoke(
             count: Int = DEFAULT_BOOKMARKS_TO_RETRIEVE,
             maxAgeInMs: Long = TimeUnit.DAYS.toMillis(DEFAULT_BOOKMARKS_DAYS_AGE_TO_RETRIEVE),
-        ): List<RecentBookmark> {
+        ): List<Bookmark> {
             val currentTime = System.currentTimeMillis()
 
             // Fetch visit information within the time range of now and the specified maximum age.
@@ -88,7 +88,7 @@ class BookmarksUseCase(
             return bookmarksStorage
                 .getRecentBookmarks(count, maxAgeInMs)
                 .map { bookmark ->
-                    RecentBookmark(
+                    Bookmark(
                         title = bookmark.title,
                         url = bookmark.url,
                         previewImageUrl = history?.find { bookmark.url == it.url }?.previewImageUrl,

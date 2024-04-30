@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.home.recentbookmarks.view
+package org.mozilla.fenix.home.bookmarks.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -49,7 +49,7 @@ import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.inComposePreview
-import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.bookmarks.Bookmark
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val cardShape = RoundedCornerShape(8.dp)
@@ -61,58 +61,58 @@ private val imageModifier = Modifier
     .clip(cardShape)
 
 /**
- * A list of recent bookmarks.
+ * A list of bookmarks.
  *
- * @param bookmarks List of [RecentBookmark]s to display.
- * @param menuItems List of [RecentBookmarksMenuItem] shown when long clicking a [RecentBookmarkItem]
+ * @param bookmarks List of [Bookmark]s to display.
+ * @param menuItems List of [BookmarksMenuItem] shown when long clicking a [BookmarkItem]
  * @param backgroundColor The background [Color] of each bookmark.
- * @param onRecentBookmarkClick Invoked when the user clicks on a recent bookmark.
+ * @param onBookmarkClick Invoked when the user clicks on a bookmark.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun RecentBookmarks(
-    bookmarks: List<RecentBookmark>,
-    menuItems: List<RecentBookmarksMenuItem>,
+fun Bookmarks(
+    bookmarks: List<Bookmark>,
+    menuItems: List<BookmarksMenuItem>,
     backgroundColor: Color,
-    onRecentBookmarkClick: (RecentBookmark) -> Unit = {},
+    onBookmarkClick: (Bookmark) -> Unit = {},
 ) {
     LazyRow(
         modifier = Modifier.semantics {
             testTagsAsResourceId = true
-            testTag = "recent.bookmarks"
+            testTag = "bookmarks"
         },
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(bookmarks) { bookmark ->
-            RecentBookmarkItem(
+            BookmarkItem(
                 bookmark = bookmark,
                 menuItems = menuItems,
                 backgroundColor = backgroundColor,
-                onRecentBookmarkClick = onRecentBookmarkClick,
+                onBookmarkClick = onBookmarkClick,
             )
         }
     }
 }
 
 /**
- * A recent bookmark item.
+ * A bookmark item.
  *
- * @param bookmark The [RecentBookmark] to display.
- * @param menuItems The list of [RecentBookmarksMenuItem] shown when long clicking on the recent bookmark item.
- * @param backgroundColor The background [Color] of the recent bookmark item.
- * @param onRecentBookmarkClick Invoked when the user clicks on the recent bookmark item.
+ * @param bookmark The [Bookmark] to display.
+ * @param menuItems The list of [BookmarksMenuItem] shown when long clicking on the bookmark item.
+ * @param backgroundColor The background [Color] of the bookmark item.
+ * @param onBookmarkClick Invoked when the user clicks on the bookmark item.
  */
 @OptIn(
     ExperimentalFoundationApi::class,
     ExperimentalComposeUiApi::class,
 )
 @Composable
-private fun RecentBookmarkItem(
-    bookmark: RecentBookmark,
-    menuItems: List<RecentBookmarksMenuItem>,
+private fun BookmarkItem(
+    bookmark: Bookmark,
+    menuItems: List<BookmarksMenuItem>,
     backgroundColor: Color,
-    onRecentBookmarkClick: (RecentBookmark) -> Unit = {},
+    onBookmarkClick: (Bookmark) -> Unit = {},
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -121,7 +121,7 @@ private fun RecentBookmarkItem(
             .width(158.dp)
             .combinedClickable(
                 enabled = true,
-                onClick = { onRecentBookmarkClick(bookmark) },
+                onClick = { onBookmarkClick(bookmark) },
                 onLongClick = { isMenuExpanded = true },
             ),
         shape = cardShape,
@@ -133,7 +133,7 @@ private fun RecentBookmarkItem(
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
         ) {
-            RecentBookmarkImage(bookmark)
+            BookmarkImage(bookmark)
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -141,7 +141,7 @@ private fun RecentBookmarkItem(
                 text = bookmark.title ?: bookmark.url ?: "",
                 modifier = Modifier.semantics {
                     testTagsAsResourceId = true
-                    testTag = "recent.bookmark.title"
+                    testTag = "bookmark.title"
                 },
                 color = FirefoxTheme.colors.textPrimary,
                 overflow = TextOverflow.Ellipsis,
@@ -155,7 +155,7 @@ private fun RecentBookmarkItem(
                 menuItems = menuItems.map { item -> MenuItem(item.title) { item.onClick(bookmark) } },
                 modifier = Modifier.semantics {
                     testTagsAsResourceId = true
-                    testTag = "recent.bookmark.menu"
+                    testTag = "bookmark.menu"
                 },
             )
         }
@@ -163,7 +163,7 @@ private fun RecentBookmarkItem(
 }
 
 @Composable
-private fun RecentBookmarkImage(bookmark: RecentBookmark) {
+private fun BookmarkImage(bookmark: Bookmark) {
     when {
         !bookmark.previewImageUrl.isNullOrEmpty() -> {
             Image(
@@ -221,26 +221,26 @@ private fun FallbackBookmarkFaviconImage(
 
 @Composable
 @LightDarkPreview
-private fun RecentBookmarksPreview() {
+private fun BookmarksPreview() {
     FirefoxTheme {
-        RecentBookmarks(
+        Bookmarks(
             bookmarks = listOf(
-                RecentBookmark(
+                Bookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
                     previewImageUrl = null,
                 ),
-                RecentBookmark(
+                Bookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
                     previewImageUrl = null,
                 ),
-                RecentBookmark(
+                Bookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
                     previewImageUrl = null,
                 ),
-                RecentBookmark(
+                Bookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
                     previewImageUrl = null,

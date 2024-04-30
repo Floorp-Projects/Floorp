@@ -202,7 +202,7 @@ class Components(private val context: Context) {
                 collections = core.tabCollectionStorage.cachedTabCollections,
                 expandedCollections = emptySet(),
                 topSites = core.topSitesStorage.cachedTopSites.sort(),
-                recentBookmarks = emptyList(),
+                bookmarks = emptyList(),
                 showCollectionPlaceholder = settings.showCollectionsPlaceholderOnHome,
                 // Provide an initial state for recent tabs to prevent re-rendering on the home screen.
                 //  This will otherwise cause a visual jump as the section gets rendered from no state

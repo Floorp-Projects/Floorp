@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.home.recentbookmarks.view
+package org.mozilla.fenix.home.bookmarks.view
 
 import android.view.View
 import androidx.compose.runtime.Composable
@@ -14,14 +14,17 @@ import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
-import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
+import org.mozilla.fenix.home.bookmarks.interactor.BookmarksInteractor
 import org.mozilla.fenix.wallpapers.WallpaperState
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks as RecentBookmarksMetrics
 
-class RecentBookmarksViewHolder(
+/**
+ * ViewHolder for the Bookmarks section in the HomeFragment.
+ */
+class BookmarksViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    val interactor: RecentBookmarksInteractor,
+    val interactor: BookmarksInteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
@@ -34,18 +37,18 @@ class RecentBookmarksViewHolder(
 
     @Composable
     override fun Content() {
-        val recentBookmarks = components.appStore.observeAsComposableState { state -> state.recentBookmarks }
+        val bookmarks = components.appStore.observeAsComposableState { state -> state.bookmarks }
         val wallpaperState = components.appStore
             .observeAsComposableState { state -> state.wallpaperState }.value ?: WallpaperState.default
 
-        RecentBookmarks(
-            bookmarks = recentBookmarks.value ?: emptyList(),
+        Bookmarks(
+            bookmarks = bookmarks.value ?: emptyList(),
             backgroundColor = wallpaperState.wallpaperCardColor,
-            onRecentBookmarkClick = interactor::onRecentBookmarkClicked,
+            onBookmarkClick = interactor::onBookmarkClicked,
             menuItems = listOf(
-                RecentBookmarksMenuItem(
+                BookmarksMenuItem(
                     stringResource(id = R.string.recently_saved_menu_item_remove),
-                    onClick = { bookmark -> interactor.onRecentBookmarkRemoved(bookmark) },
+                    onClick = { bookmark -> interactor.onBookmarkRemoved(bookmark) },
                 ),
             ),
         )

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.home.recentbookmarks.controller
+package org.mozilla.fenix.home.bookmarks.controller
 
 import androidx.navigation.NavController
 import mozilla.appservices.places.BookmarkRoot
@@ -17,43 +17,43 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
-import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
+import org.mozilla.fenix.home.bookmarks.Bookmark
+import org.mozilla.fenix.home.bookmarks.interactor.BookmarksInteractor
 
 /**
- * An interface that handles the view manipulation of the recently saved bookmarks on the
+ * An interface that handles the view manipulation of the bookmarks on the
  * Home screen.
  */
-interface RecentBookmarksController {
+interface BookmarksController {
 
     /**
-     * @see [RecentBookmarksInteractor.onRecentBookmarkClicked]
+     * @see [BookmarksInteractor.onBookmarkClicked]
      */
-    fun handleBookmarkClicked(bookmark: RecentBookmark)
+    fun handleBookmarkClicked(bookmark: Bookmark)
 
     /**
-     * @see [RecentBookmarksInteractor.onShowAllBookmarksClicked]
+     * @see [BookmarksInteractor.onShowAllBookmarksClicked]
      */
     fun handleShowAllBookmarksClicked()
 
     /**
-     * @see [RecentBookmarksInteractor.onRecentBookmarkRemoved]
+     * @see [BookmarksInteractor.onBookmarkRemoved]
      */
-    fun handleBookmarkRemoved(bookmark: RecentBookmark)
+    fun handleBookmarkRemoved(bookmark: Bookmark)
 }
 
 /**
- * The default implementation of [RecentBookmarksController].
+ * The default implementation of [BookmarksController].
  */
-class DefaultRecentBookmarksController(
+class DefaultBookmarksController(
     private val activity: HomeActivity,
     private val navController: NavController,
     private val appStore: AppStore,
     private val browserStore: BrowserStore,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
-) : RecentBookmarksController {
+) : BookmarksController {
 
-    override fun handleBookmarkClicked(bookmark: RecentBookmark) {
+    override fun handleBookmarkClicked(bookmark: Bookmark) {
         val existingTabForBookmark = browserStore.state.tabs.firstOrNull {
             it.content.url == bookmark.url
         }
@@ -80,7 +80,7 @@ class DefaultRecentBookmarksController(
         )
     }
 
-    override fun handleBookmarkRemoved(bookmark: RecentBookmark) {
-        appStore.dispatch(AppAction.RemoveRecentBookmark(bookmark))
+    override fun handleBookmarkRemoved(bookmark: Bookmark) {
+        appStore.dispatch(AppAction.RemoveBookmark(bookmark))
     }
 }

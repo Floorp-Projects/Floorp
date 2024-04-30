@@ -41,7 +41,7 @@ class BlocklistMiddleware(
         when (action) {
             is AppAction.Change -> {
                 action.copy(
-                    recentBookmarks = action.recentBookmarks.filteredByBlocklist(),
+                    bookmarks = action.bookmarks.filteredByBlocklist(),
                     recentTabs = action.recentTabs.filteredByBlocklist().filterContile(),
                     recentHistory = action.recentHistory.filteredByBlocklist().filterContile(),
                     recentSyncedTabState = action.recentSyncedTabState.filteredByBlocklist().filterContile(),
@@ -52,9 +52,9 @@ class BlocklistMiddleware(
                     recentTabs = action.recentTabs.filteredByBlocklist().filterContile(),
                 )
             }
-            is AppAction.RecentBookmarksChange -> {
+            is AppAction.BookmarksChange -> {
                 action.copy(
-                    recentBookmarks = action.recentBookmarks.filteredByBlocklist(),
+                    bookmarks = action.bookmarks.filteredByBlocklist(),
                 )
             }
             is AppAction.RecentHistoryChange -> {
@@ -73,8 +73,8 @@ class BlocklistMiddleware(
                     action
                 }
             }
-            is AppAction.RemoveRecentBookmark -> {
-                action.recentBookmark.url?.let { url ->
+            is AppAction.RemoveBookmark -> {
+                action.bookmark.url?.let { url ->
                     addUrlToBlocklist(url)
                     state.toActionFilteringAllState(this)
                 } ?: action
@@ -99,7 +99,7 @@ class BlocklistMiddleware(
         with(blocklistHandler) {
             AppAction.Change(
                 recentTabs = recentTabs.filteredByBlocklist().filterContile(),
-                recentBookmarks = recentBookmarks.filteredByBlocklist(),
+                bookmarks = bookmarks.filteredByBlocklist(),
                 recentHistory = recentHistory.filteredByBlocklist().filterContile(),
                 topSites = topSites,
                 mode = mode,
