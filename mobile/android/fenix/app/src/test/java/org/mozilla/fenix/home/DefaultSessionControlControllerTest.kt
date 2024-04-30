@@ -46,9 +46,9 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.HomeBookmarks
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Pings
-import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
@@ -1189,12 +1189,12 @@ class DefaultSessionControlControllerTest {
     fun `WHEN handleReportSessionMetrics is called AND there are zero bookmarks THEN report Event#BookmarkCount(0)`() {
         every { appState.bookmarks } returns emptyList()
         every { appState.recentTabs } returns emptyList()
-        assertNull(RecentBookmarks.recentBookmarksCount.testGetValue())
+        assertNull(HomeBookmarks.bookmarksCount.testGetValue())
 
         createController().handleReportSessionMetrics(appState)
 
-        assertNotNull(RecentBookmarks.recentBookmarksCount.testGetValue())
-        assertEquals(0L, RecentBookmarks.recentBookmarksCount.testGetValue())
+        assertNotNull(HomeBookmarks.bookmarksCount.testGetValue())
+        assertEquals(0L, HomeBookmarks.bookmarksCount.testGetValue())
     }
 
     @Test
@@ -1202,12 +1202,12 @@ class DefaultSessionControlControllerTest {
         val bookmark: Bookmark = mockk(relaxed = true)
         every { appState.bookmarks } returns listOf(bookmark)
         every { appState.recentTabs } returns emptyList()
-        assertNull(RecentBookmarks.recentBookmarksCount.testGetValue())
+        assertNull(HomeBookmarks.bookmarksCount.testGetValue())
 
         createController().handleReportSessionMetrics(appState)
 
-        assertNotNull(RecentBookmarks.recentBookmarksCount.testGetValue())
-        assertEquals(1L, RecentBookmarks.recentBookmarksCount.testGetValue())
+        assertNotNull(HomeBookmarks.bookmarksCount.testGetValue())
+        assertEquals(1L, HomeBookmarks.bookmarksCount.testGetValue())
     }
 
     @Test

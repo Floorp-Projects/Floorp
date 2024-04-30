@@ -11,12 +11,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.HomeBookmarks
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.bookmarks.interactor.BookmarksInteractor
 import org.mozilla.fenix.wallpapers.WallpaperState
-import org.mozilla.fenix.GleanMetrics.RecentBookmarks as RecentBookmarksMetrics
 
 /**
  * ViewHolder for the Bookmarks section in the HomeFragment.
@@ -28,7 +28,7 @@ class BookmarksViewHolder(
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
-        RecentBookmarksMetrics.shown.record(NoExtras())
+        HomeBookmarks.shown.record(NoExtras())
     }
 
     companion object {
