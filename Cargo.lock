@@ -1463,6 +1463,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dist-bin"
+version = "0.1.0"
+dependencies = [
+ "mozbuild",
+]
+
+[[package]]
 name = "dllservices-gtest"
 version = "0.1.0"
 dependencies = [
@@ -3810,6 +3817,7 @@ dependencies = [
  "bytes",
  "cc",
  "chrono",
+ "dist-bin",
  "env_logger",
  "flate2",
  "futures-channel",

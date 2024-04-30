@@ -782,6 +782,22 @@ class TestEmitterBasic(unittest.TestCase):
             ],
         )
 
+    def test_shared_lib_paths(self):
+        """Various moz.build settings that change the destination of SHARED_LIBRARY
+        should be accurately reflected in Program.output_path."""
+        reader = self.reader("shared-lib-paths")
+        objs = self.read_topsrcdir(reader)
+        prog_paths = [o.output_path for o in objs if isinstance(o, SharedLibrary)]
+        self.assertEqual(
+            prog_paths,
+            [
+                "!/dist/bin/libdist-bin.so",
+                "!/dist/bin/foo/libdist-subdir.so",
+                "!/final/target/libfinal-target.so",
+                "!libnot-installed.so",
+            ],
+        )
+
     def test_host_program_paths(self):
         """The destination of a HOST_PROGRAM (almost always dist/host/bin)
         should be accurately reflected in Program.output_path."""

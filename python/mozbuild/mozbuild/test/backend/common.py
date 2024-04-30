@@ -179,6 +179,15 @@ CONFIGS = defaultdict(
                 "BIN_SUFFIX": ".prog",
             },
         },
+        "shared-lib-paths": {
+            "defines": {},
+            "substs": {
+                "COMPILE_ENVIRONMENT": "1",
+                "LIB_SUFFIX": "a",
+                "DLL_PREFIX": "lib",
+                "DLL_SUFFIX": ".so",
+            },
+        },
         "linkage": {
             "defines": {},
             "substs": {
