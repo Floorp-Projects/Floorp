@@ -84,7 +84,7 @@ class NimbusMessagingHomescreenTest : TestSetup() {
                     HomeScreenSection.POCKET to false,
                     HomeScreenSection.POCKET_SPONSORED_STORIES to false,
                     HomeScreenSection.RECENT_EXPLORATIONS to false,
-                    HomeScreenSection.RECENTLY_SAVED to false,
+                    HomeScreenSection.BOOKMARKS to false,
                     HomeScreenSection.TOP_SITES to false,
                 ),
             )
