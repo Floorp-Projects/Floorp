@@ -432,6 +432,9 @@ skip-if = ["os == 'android' && debug"]
 
 ["test_ext_runtime_getBrowserInfo.js"]
 
+["test_ext_runtime_getContexts.js"]
+skip-if = ["condprof"] # bug 1875480: to be removed once schema data cached in the conditioned profile is updated.
+
 ["test_ext_runtime_getPlatformInfo.js"]
 
 ["test_ext_runtime_id.js"]

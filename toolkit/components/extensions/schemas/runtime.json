@@ -19,6 +19,108 @@
     "description": "Use the <code>browser.runtime</code> API to retrieve the background page, return details about the manifest, and listen for and respond to events in the app or extension lifecycle. You can also use this API to convert the relative path of URLs to fully-qualified URLs.",
     "types": [
       {
+        "id": "ContextFilter",
+        "min_manifest_version": 3,
+        "type": "object",
+        "description": "A filter to match against existing extension context. Matching contexts must match all specified filters.",
+        "properties": {
+          "contextIds": {
+            "optional": true,
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "contextTypes": {
+            "optional": true,
+            "type": "array",
+            "items": { "$ref": "ContextType" }
+          },
+          "documentIds": {
+            "optional": true,
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "documentOrigins": {
+            "optional": true,
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "documentUrls": {
+            "optional": true,
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "frameIds": {
+            "optional": true,
+            "type": "array",
+            "items": { "type": "integer" }
+          },
+          "tabIds": {
+            "optional": true,
+            "type": "array",
+            "items": { "type": "integer" }
+          },
+          "windowIds": {
+            "optional": true,
+            "type": "array",
+            "items": { "type": "integer" }
+          },
+          "incognito": { "optional": true, "type": "boolean" }
+        }
+      },
+      {
+        "id": "ContextType",
+        "type": "string",
+        "enum": ["BACKGROUND", "POPUP", "SIDE_PANEL", "TAB"],
+        "description": "The type of extension view."
+      },
+      {
+        "id": "ExtensionContext",
+        "type": "object",
+        "description": "A context hosting extension content",
+        "properties": {
+          "contextId": {
+            "type": "string",
+            "description": "An unique identifier associated to this context"
+          },
+          "contextType": {
+            "$ref": "ContextType",
+            "description": "The type of the context"
+          },
+          "documentId": {
+            "type": "string",
+            "unsupported": true,
+            "optional": true,
+            "description": "An UUID for the document associated with this context, or undefined if it is not hosted in a document"
+          },
+          "documentOrigin": {
+            "type": "string",
+            "optional": true,
+            "description": "The origin of the document associated with this context, or undefined if it is not hosted in a document"
+          },
+          "documentUrl": {
+            "type": "string",
+            "optional": true,
+            "description": "The URL of the document associated with this context, or undefined if it is not hosted in a document"
+          },
+          "incognito": {
+            "type": "boolean",
+            "description": "Whether the context is associated with an private browsing context."
+          },
+          "frameId": {
+            "type": "integer",
+            "description": "The frame ID for this context, or -1 if it is not hosted in a frame."
+          },
+          "tabId": {
+            "type": "integer",
+            "description": "The tab ID for this context, or -1 if it is not hosted in a tab."
+          },
+          "windowId": {
+            "type": "integer",
+            "description": "The window ID for this context, or -1 if it is not hosted in a window."
+          }
+        }
+      },
+      {
         "id": "Port",
         "type": "object",
         "allowedContexts": ["content", "devtools"],
@@ -213,6 +315,31 @@
                 "isInstanceOf": "Window",
                 "additionalProperties": { "type": "any" },
                 "description": "The JavaScript 'window' object for the background page."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "getContexts",
+        "type": "function",
+        "description": "Fetches information about active contexts associated with this extension",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "filter",
+            "$ref": "ContextFilter",
+            "description": "A filter to find matching context."
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "contexts",
+                "type": "array",
+                "items": { "$ref": "ExtensionContext" },
+                "description": "The matching contexts, if any."
               }
             ]
           }

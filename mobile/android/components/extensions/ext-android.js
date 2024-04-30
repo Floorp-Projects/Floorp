@@ -283,6 +283,21 @@ class TabTracker extends TabTrackerBase {
     };
   }
 
+  getBrowserDataForContext(context) {
+    // TODO: Bug 1651506: remove this once context.viewType is "popup" for android popups
+    const isPopup = context.currentWindow?.moduleManager?.settings?.isPopup;
+
+    if (["tab", "background"].includes(context.viewType) && !isPopup) {
+      return this.getBrowserData(context.xulBrowser);
+    } else if (context.viewType === "popup" || isPopup) {
+      const chromeWindow = windowTracker.getCurrentWindow(context);
+      const windowId = chromeWindow ? windowTracker.getId(chromeWindow) : -1;
+      return { tabId: -1, windowId };
+    }
+
+    return { tabId: -1, windowId: -1 };
+  }
+
   get activeTab() {
     const window = windowTracker.topWindow;
     if (window) {
