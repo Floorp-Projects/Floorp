@@ -182,7 +182,7 @@ pub fn _cssparser_internal_to_lowercase<'a>(
         let input_bytes =
             unsafe { &*(input.as_bytes() as *const [u8] as *const [MaybeUninit<u8>]) };
 
-        buffer.copy_from_slice(&*input_bytes);
+        buffer.copy_from_slice(input_bytes);
 
         // Same as above re layout, plus these bytes have been initialized:
         let buffer = unsafe { &mut *(buffer as *mut [MaybeUninit<u8>] as *mut [u8]) };
@@ -195,7 +195,7 @@ pub fn _cssparser_internal_to_lowercase<'a>(
     }
 
     Some(
-        match input.bytes().position(|byte| matches!(byte, b'A'..=b'Z')) {
+        match input.bytes().position(|byte| byte.is_ascii_uppercase()) {
             Some(first_uppercase) => make_ascii_lowercase(buffer, input, first_uppercase),
             // common case: input is already lower-case
             None => input,

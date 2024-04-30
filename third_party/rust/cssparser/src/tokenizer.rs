@@ -255,10 +255,10 @@ impl<'a> Tokenizer<'a> {
 
     #[inline]
     pub fn see_function(&mut self, name: &str) {
-        if self.var_or_env_functions == SeenStatus::LookingForThem {
-            if name.eq_ignore_ascii_case("var") || name.eq_ignore_ascii_case("env") {
-                self.var_or_env_functions = SeenStatus::SeenAtLeastOne;
-            }
+        if self.var_or_env_functions == SeenStatus::LookingForThem
+            && (name.eq_ignore_ascii_case("var") || name.eq_ignore_ascii_case("env"))
+        {
+            self.var_or_env_functions = SeenStatus::SeenAtLeastOne;
         }
     }
 
@@ -322,10 +322,12 @@ impl<'a> Tokenizer<'a> {
 
     pub fn current_source_line(&self) -> &'a str {
         let current = self.position();
-        let start = self.slice(SourcePosition(0)..current)
+        let start = self
+            .slice(SourcePosition(0)..current)
             .rfind(|c| matches!(c, '\r' | '\n' | '\x0C'))
             .map_or(0, |start| start + 1);
-        let end = self.slice(current..SourcePosition(self.input.len()))
+        let end = self
+            .slice(current..SourcePosition(self.input.len()))
             .find(|c| matches!(c, '\r' | '\n' | '\x0C'))
             .map_or(self.input.len(), |end| current.0 + end);
         self.slice(SourcePosition(start)..SourcePosition(end))
@@ -424,7 +426,10 @@ impl<'a> Tokenizer<'a> {
 
     #[inline]
     fn next_char(&self) -> char {
-        unsafe { self.input.get_unchecked(self.position().0..) }.chars().next().unwrap()
+        unsafe { self.input.get_unchecked(self.position().0..) }
+            .chars()
+            .next()
+            .unwrap()
     }
 
     // Given that a newline has been seen, advance over the newline
@@ -561,11 +566,11 @@ fn next_token<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, ()> {
         b'#' => {
             tokenizer.advance(1);
             if is_ident_start(tokenizer) { IDHash(consume_name(tokenizer)) }
-            else if !tokenizer.is_eof() && match tokenizer.next_byte_unchecked() {
+            else if !tokenizer.is_eof() &&
+                matches!(tokenizer.next_byte_unchecked(), b'0'..=b'9' | b'-') {
                 // Any other valid case here already resulted in IDHash.
-                b'0'..=b'9' | b'-' => true,
-                _ => false,
-            } { Hash(consume_name(tokenizer)) }
+                Hash(consume_name(tokenizer))
+            }
             else { Delim('#') }
         },
         b'$' => {
@@ -582,11 +587,11 @@ fn next_token<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, ()> {
         b'+' => {
             if (
                 tokenizer.has_at_least(1)
-                && matches!(tokenizer.byte_at(1), b'0'..=b'9')
+                && tokenizer.byte_at(1).is_ascii_digit()
             ) || (
                 tokenizer.has_at_least(2)
                 && tokenizer.byte_at(1) == b'.'
-                && matches!(tokenizer.byte_at(2), b'0'..=b'9')
+                && tokenizer.byte_at(2).is_ascii_digit()
             ) {
                 consume_numeric(tokenizer)
             } else {
@@ -598,11 +603,11 @@ fn next_token<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, ()> {
         b'-' => {
             if (
                 tokenizer.has_at_least(1)
-                && matches!(tokenizer.byte_at(1), b'0'..=b'9')
+                && tokenizer.byte_at(1).is_ascii_digit()
             ) || (
                 tokenizer.has_at_least(2)
                 && tokenizer.byte_at(1) == b'.'
-                && matches!(tokenizer.byte_at(2), b'0'..=b'9')
+                && tokenizer.byte_at(2).is_ascii_digit()
             ) {
                 consume_numeric(tokenizer)
             } else if tokenizer.starts_with(b"-->") {
@@ -617,8 +622,7 @@ fn next_token<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, ()> {
         },
         b'.' => {
             if tokenizer.has_at_least(1)
-                && matches!(tokenizer.byte_at(1), b'0'..=b'9'
-            ) {
+                && tokenizer.byte_at(1).is_ascii_digit() {
                 consume_numeric(tokenizer)
             } else {
                 tokenizer.advance(1);
@@ -1001,7 +1005,7 @@ fn byte_to_hex_digit(b: u8) -> Option<u32> {
 }
 
 fn byte_to_decimal_digit(b: u8) -> Option<u32> {
-    if b >= b'0' && b <= b'9' {
+    if b.is_ascii_digit() {
         Some((b - b'0') as u32)
     } else {
         None
@@ -1038,7 +1042,7 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
     let mut fractional_part: f64 = 0.;
     if tokenizer.has_at_least(1)
         && tokenizer.next_byte_unchecked() == b'.'
-        && matches!(tokenizer.byte_at(1), b'0'..=b'9')
+        && tokenizer.byte_at(1).is_ascii_digit()
     {
         is_integer = false;
         tokenizer.advance(1); // Consume '.'
@@ -1055,32 +1059,32 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
 
     let mut value = sign * (integral_part + fractional_part);
 
-    if tokenizer.has_at_least(1) && matches!(tokenizer.next_byte_unchecked(), b'e' | b'E') {
-        if matches!(tokenizer.byte_at(1), b'0'..=b'9')
+    if tokenizer.has_at_least(1)
+        && matches!(tokenizer.next_byte_unchecked(), b'e' | b'E')
+        && (tokenizer.byte_at(1).is_ascii_digit()
             || (tokenizer.has_at_least(2)
                 && matches!(tokenizer.byte_at(1), b'+' | b'-')
-                && matches!(tokenizer.byte_at(2), b'0'..=b'9'))
-        {
-            is_integer = false;
+                && tokenizer.byte_at(2).is_ascii_digit()))
+    {
+        is_integer = false;
+        tokenizer.advance(1);
+        let (has_sign, sign) = match tokenizer.next_byte_unchecked() {
+            b'-' => (true, -1.),
+            b'+' => (true, 1.),
+            _ => (false, 1.),
+        };
+        if has_sign {
             tokenizer.advance(1);
-            let (has_sign, sign) = match tokenizer.next_byte_unchecked() {
-                b'-' => (true, -1.),
-                b'+' => (true, 1.),
-                _ => (false, 1.),
-            };
-            if has_sign {
-                tokenizer.advance(1);
-            }
-            let mut exponent: f64 = 0.;
-            while let Some(digit) = byte_to_decimal_digit(tokenizer.next_byte_unchecked()) {
-                exponent = exponent * 10. + digit as f64;
-                tokenizer.advance(1);
-                if tokenizer.is_eof() {
-                    break;
-                }
-            }
-            value *= f64::powf(10., sign * exponent);
         }
+        let mut exponent: f64 = 0.;
+        while let Some(digit) = byte_to_decimal_digit(tokenizer.next_byte_unchecked()) {
+            exponent = exponent * 10. + digit as f64;
+            tokenizer.advance(1);
+            if tokenizer.is_eof() {
+                break;
+            }
+        }
+        value *= f64::powf(10., sign * exponent);
     }
 
     let int_value = if is_integer {
@@ -1339,7 +1343,7 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
 }
 
 // (value, number of digits up to 6)
-fn consume_hex_digits<'a>(tokenizer: &mut Tokenizer<'a>) -> (u32, u32) {
+fn consume_hex_digits(tokenizer: &mut Tokenizer<'_>) -> (u32, u32) {
     let mut value = 0;
     let mut digits = 0;
     while digits < 6 && !tokenizer.is_eof() {
