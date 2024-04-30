@@ -13,6 +13,8 @@ from marionette_harness import MarionetteTestCase
  fail if we fail to delete all of the 5,000 1k files we create on disk
  as part of the test.
 """
+QM_TESTING_PREF = "dom.quotaManager.testing"
+
 EXPECTED_CACHEDIR_SIZE_AFTER_CLEANUP = 128 * 1024  # 128KB
 CACHE_ID = "data"
 
@@ -31,10 +33,12 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
     def setUp(self):
         super(CachesDeleteCleanupAtShutdownTestCase, self).setUp()
         self.marionette.restart(in_app=False, clean=True)
+        self.marionette.set_pref(QM_TESTING_PREF, True)
 
     def tearDown(self):
         self.marionette.restart(in_app=False, clean=True)
         super(CachesDeleteCleanupAtShutdownTestCase, self).tearDown()
+        self.marionette.set_pref(QM_TESTING_PREF, False)
 
     def getUsage(self):
         return self.marionette.execute_script(
@@ -71,9 +75,9 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
             script_args=(CACHE_ID,),
         )
 
-    def ensureCleanDirectory(self):
+    def countBodies(self):
         with self.marionette.using_context("chrome"):
-            return self.marionette.execute_script(
+            bodiesCount, cacheDirPath = self.marionette.execute_script(
                 """
                     let originDir = arguments[0];
                     const pathDelimiter = "/";
@@ -110,12 +114,14 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
                     // morgue directory should be empty
                     // or atleast directories under morgue should be empty
                     morgueDir.append("morgue");
+
+                    let bodiesCount = 0;
                     for (let dir of morgueDir.directoryEntries) {
                         for (let file of dir.directoryEntries) {
-                            return false;
+                            ++bodiesCount;
                         }
                     }
-                    return true;
+                    return [bodiesCount, cacheDir.path];
                 """,
                 script_args=(
                     self.marionette.absolute_url("")[:-1]
@@ -125,9 +131,35 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
                 new_sandbox=False,
             )
 
+            print("Cache storage dir = ", cacheDirPath)
+            return bodiesCount
+
+    def ensureCleanDirectory(self):
+        orphanedBodiesCount = self.countBodies()
+        return orphanedBodiesCount == 0
+
+    def isStorageInitialized(self, temporary=False):
+        with self.marionette.using_context("chrome"):
+            return self.marionette.execute_async_script(
+                """
+                    const [resolve] = arguments;
+                    const req = %s;
+                    req.callback = () => {
+                        resolve(req.resultCode == Cr.NS_OK && req.result)
+                    };
+                """
+                % (
+                    "Services.qms.temporaryStorageInitialized()"
+                    if temporary
+                    else "Services.qms.storageInitialized()"
+                ),
+                new_sandbox=False,
+            )
+
     def create_and_cleanup_cache(self, ensureCleanCallback, in_app):
         # create 640 cache entries
         self.doCacheWork(640)
+        print("usage after doCacheWork = ", self.getUsage())
 
         self.marionette.restart(in_app=in_app)
         print("restart successful")
@@ -137,6 +169,14 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
         )
         return ensureCleanCallback()
 
+    def afterCleanupClosure(self, usage):
+        print(
+            f"Storage initialized = {self.isStorageInitialized()}, temporary storage initialized = {self.isStorageInitialized(True)}"
+        )
+        print(f"Usage = {usage} and number of orphaned bodies = {self.countBodies()}")
+
+        return usage < EXPECTED_CACHEDIR_SIZE_AFTER_CLEANUP
+
     def test_ensure_cache_cleanup_after_clean_restart(self):
         self.marionette.navigate(
             self.marionette.absolute_url("dom/cache/cacheUsage.html")
@@ -144,9 +184,8 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
         beforeUsage = self.getUsage()
 
         def ensureCleanCallback():
-            Wait(self.marionette, timeout=60).until(
-                lambda x: (self.getUsage() - beforeUsage)
-                < EXPECTED_CACHEDIR_SIZE_AFTER_CLEANUP,
+            Wait(self.marionette, interval=1, timeout=60).until(
+                lambda _: self.afterCleanupClosure(self.getUsage() - beforeUsage),
                 message="Cache directory is not cleaned up properly",
             )
 
@@ -168,10 +207,8 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
 
         def ensureCleanCallback():
             self.openCache()
-
-            Wait(self.marionette, timeout=60).until(
-                lambda x: (self.getUsage() - beforeUsage)
-                < EXPECTED_CACHEDIR_SIZE_AFTER_CLEANUP,
+            Wait(self.marionette, interval=1, timeout=60).until(
+                lambda _: self.afterCleanupClosure(self.getUsage() - beforeUsage),
                 message="Cache directory is not cleaned up properly",
             )
 
