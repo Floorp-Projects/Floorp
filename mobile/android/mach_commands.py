@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 import tarfile
+import time
 
 import mozpack.path as mozpath
 from mach.decorators import Command, CommandArgument, SubCommand
@@ -551,13 +552,19 @@ def gradle(command_context, args, verbose=False):
     if android_sdk_root:
         env["ANDROID_SDK_ROOT"] = android_sdk_root
 
-    return command_context.run_process(
+    should_print_status = env.get("MACH") and not env.get("NO_BUILDSTATUS_MESSAGES")
+    if should_print_status:
+        print("BUILDSTATUS " + str(time.time()) + " START_Gradle " + args[0])
+    rv = command_context.run_process(
         [command_context.substs["GRADLE"]] + gradle_flags + args,
         explicit_env=env,
         pass_thru=True,  # Allow user to run gradle interactively.
         ensure_exit_code=False,  # Don't throw on non-zero exit code.
         cwd=mozpath.join(command_context.topsrcdir),
     )
+    if should_print_status:
+        print("BUILDSTATUS " + str(time.time()) + " END_Gradle " + args[0])
+    return rv
 
 
 @Command("gradle-install", category="devenv", conditions=[REMOVED])

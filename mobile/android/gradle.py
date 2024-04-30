@@ -5,6 +5,7 @@
 import os
 import subprocess
 import sys
+import time
 from contextlib import contextmanager
 
 import mozpack.path as mozpath
@@ -28,6 +29,10 @@ def gradle_lock(topobjdir, max_wait_seconds=600):
 
 
 def android(verb, *args):
+    env = dict(os.environ)
+    should_print_status = env.get("MACH") and not env.get("NO_BUILDSTATUS_MESSAGES")
+    if should_print_status:
+        print("BUILDSTATUS " + str(time.time()) + " START_Gradle " + verb)
     import buildconfig
 
     with gradle_lock(buildconfig.topobjdir):
@@ -38,7 +43,6 @@ def android(verb, *args):
             verb,
         ]
         cmd.extend(args)
-        env = dict(os.environ)
         # Confusingly, `MACH` is set only within `mach build`.
         if env.get("MACH"):
             env["GRADLE_INVOKED_WITHIN_MACH_BUILD"] = "1"
@@ -46,7 +50,9 @@ def android(verb, *args):
             del env["LD_LIBRARY_PATH"]
         subprocess.check_call(cmd, env=env)
 
-        return 0
+    if should_print_status:
+        print("BUILDSTATUS " + str(time.time()) + " END_Gradle " + verb)
+    return 0
 
 
 def assemble_app(dummy_output_file, *inputs):
