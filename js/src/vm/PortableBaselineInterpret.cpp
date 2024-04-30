@@ -2609,6 +2609,8 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(MathCeilToInt32Result)
   CACHEOP_CASE_UNIMPL(MathTruncToInt32Result)
   CACHEOP_CASE_UNIMPL(MathRoundToInt32Result)
+  CACHEOP_CASE_UNIMPL(MegamorphicLoadSlotByValuePermissiveResult)
+  CACHEOP_CASE_UNIMPL(MegamorphicLoadSlotPermissiveResult)
   CACHEOP_CASE_UNIMPL(NumberMinMax)
   CACHEOP_CASE_UNIMPL(Int32MinMaxArrayResult)
   CACHEOP_CASE_UNIMPL(NumberMinMaxArrayResult)
