@@ -93,55 +93,44 @@ add_task(async function test_link_contextmenu() {
     "context-sendlinktodevice-popup"
   );
 
-  let expectedArray = ["context-openlinkintab"];
-
-  if (
+  const expectOpenLinkInUserContextMenu =
     Services.prefs.getBoolPref("privacy.userContext.enabled") &&
-    ContextualIdentityService.getPublicIdentities().length
-  ) {
-    expectedArray.push("context-openlinkinusercontext-menu");
-  }
+    ContextualIdentityService.getPublicIdentities().length;
 
-  expectedArray.push(
+  const expectStripOnShareLink = Services.prefs.getBoolPref(
+    "privacy.query_stripping.strip_on_share.enabled"
+  );
+
+  const expectTranslateSelection =
+    Services.prefs.getBoolPref("browser.translations.enable") &&
+    Services.prefs.getBoolPref("browser.translations.select.enable");
+
+  const expectInspectAccessibility =
+    Services.prefs.getBoolPref("devtools.accessibility.enabled", true) &&
+    (Services.prefs.getBoolPref("devtools.everOpened", false) ||
+      Services.prefs.getIntPref("devtools.selfxss.count", 0) > 0);
+
+  const expectedArray = [
+    "context-openlinkintab",
+    ...(expectOpenLinkInUserContextMenu
+      ? ["context-openlinkinusercontext-menu"]
+      : []),
     "context-openlink",
     "context-openlinkprivate",
     "context-sep-open",
     "context-bookmarklink",
     "context-savelink",
     "context-savelinktopocket",
-    "context-copylink"
-  );
-
-  if (
-    Services.prefs.getBoolPref("privacy.query_stripping.strip_on_share.enabled")
-  ) {
-    expectedArray.push("context-stripOnShareLink");
-  }
-
-  expectedArray.push(
+    "context-copylink",
+    ...(expectStripOnShareLink ? ["context-stripOnShareLink"] : []),
     "context-sendlinktodevice",
     "context-sep-sendlinktodevice",
-    "context-searchselect"
-  );
-
-  if (
-    Services.prefs.getBoolPref("browser.translations.enable") &&
-    Services.prefs.getBoolPref("browser.translations.select.enable")
-  ) {
-    expectedArray.push("context-translate-selection");
-  }
-
-  expectedArray.push("frame-sep");
-
-  if (
-    Services.prefs.getBoolPref("devtools.accessibility.enabled", true) &&
-    (Services.prefs.getBoolPref("devtools.everOpened", false) ||
-      Services.prefs.getIntPref("devtools.selfxss.count", 0) > 0)
-  ) {
-    expectedArray.push("context-inspect-a11y");
-  }
-
-  expectedArray.push("context-inspect");
+    "context-searchselect",
+    ...(expectTranslateSelection ? ["context-translate-selection"] : []),
+    "frame-sep",
+    ...(expectInspectAccessibility ? ["context-inspect-a11y"] : []),
+    "context-inspect",
+  ];
 
   let menu = document.getElementById("contentAreaContextMenu");
 
