@@ -310,7 +310,7 @@ uint32_t ParseIDFromDeviceID(const nsAString& key, const nsAString& prefix,
     return 0x5143;
   }
   nsresult err;
-  return id.ToInteger(&err, 16);
+  return id.ToUnsignedInteger(&err, 16);
 }
 
 // OS version in 16.16 major/minor form
