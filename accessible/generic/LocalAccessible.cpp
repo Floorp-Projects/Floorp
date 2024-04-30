@@ -127,7 +127,6 @@ ENameValueFlag LocalAccessible::Name(nsString& aName) const {
   if (!aName.IsEmpty()) return eNameOK;
 
   ENameValueFlag nameFlag = NativeName(aName);
-  nsCoreUtils::TrimNonBreakingSpaces(aName);
   if (!aName.IsEmpty()) return nameFlag;
 
   // In the end get the name from tooltip.
