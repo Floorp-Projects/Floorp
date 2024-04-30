@@ -510,7 +510,7 @@ Result<MediaDataEncoder::EncodedData, nsresult> FFmpegVideoEncoder<
   // Save duration in the time_base unit.
   mDurationMap.Insert(mFrame->pts, aSample->mDuration.ToMicroseconds());
 #  endif
-  mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
+  Duration(mFrame) = aSample->mDuration.ToMicroseconds();
 
   // Now send the AVFrame to ffmpeg for encoding, same code for audio and video.
   return FFmpegDataEncoder<LIBAV_VER>::EncodeWithModernAPIs();
