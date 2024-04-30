@@ -7,7 +7,7 @@
 #define VideoFrameConverter_h
 
 #include "ImageContainer.h"
-#include "ImageConversion.h"
+#include "ImageToI420.h"
 #include "Pacer.h"
 #include "PerformanceRecorder.h"
 #include "VideoSegment.h"

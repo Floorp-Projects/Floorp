@@ -3,11 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ImageConversion.h"
+#include "ImageToI420.h"
 
 #include "ImageContainer.h"
 #include "libyuv/convert.h"
-#include "libyuv/convert_from_argb.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageUtils.h"
 #include "mozilla/gfx/Point.h"
@@ -150,58 +149,6 @@ nsresult ConvertToI420(Image* aImage, uint8_t* aDestY, int aDestStrideY,
       MOZ_ASSERT_UNREACHABLE("Surface format conversion not implemented");
       return NS_ERROR_NOT_IMPLEMENTED;
   }
-}
-
-nsresult ConvertToNV12(layers::Image* aImage, uint8_t* aDestY, int aDestStrideY,
-                       uint8_t* aDestUV, int aDestStrideUV) {
-  if (!aImage->IsValid()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (const PlanarYCbCrData* data = GetPlanarYCbCrData(aImage)) {
-    const ImageUtils imageUtils(aImage);
-    Maybe<dom::ImageBitmapFormat> format = imageUtils.GetFormat();
-    if (format.isNothing()) {
-      MOZ_ASSERT_UNREACHABLE("YUV format conversion not implemented");
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    if (format.value() != ImageBitmapFormat::YUV420P) {
-      NS_WARNING("ConvertToNV12: Convert YUV data in I420 only");
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    return MapRv(libyuv::I420ToNV12(
-        data->mYChannel, data->mYStride, data->mCbChannel, data->mCbCrStride,
-        data->mCrChannel, data->mCbCrStride, aDestY, aDestStrideY, aDestUV,
-        aDestStrideUV, aImage->GetSize().width, aImage->GetSize().height));
-  }
-
-  RefPtr<SourceSurface> surf = GetSourceSurface(aImage);
-  if (!surf) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<DataSourceSurface> data = surf->GetDataSurface();
-  if (!data) {
-    return NS_ERROR_FAILURE;
-  }
-
-  DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
-  if (!map.IsMapped()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (surf->GetFormat() != SurfaceFormat::B8G8R8A8 &&
-      surf->GetFormat() != SurfaceFormat::B8G8R8X8) {
-    NS_WARNING("ConvertToNV12: Convert SurfaceFormat in BGR* only");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return MapRv(
-      libyuv::ARGBToNV12(static_cast<uint8_t*>(map.GetData()), map.GetStride(),
-                         aDestY, aDestStrideY, aDestUV, aDestStrideUV,
-                         aImage->GetSize().width, aImage->GetSize().height));
 }
 
 }  // namespace mozilla

@@ -159,8 +159,6 @@ class EncoderConfig final {
 
   static CodecType CodecTypeForMime(const nsACString& aMimeType);
 
-  nsCString ToString() const;
-
   bool IsVideo() const {
     return mCodec > CodecType::_BeginVideo_ && mCodec < CodecType::_EndVideo_;
   }
