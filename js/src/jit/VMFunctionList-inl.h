@@ -173,6 +173,7 @@ namespace jit {
   _(DoToBoolFallback, js::jit::DoToBoolFallback)                               \
   _(DoToPropertyKeyFallback, js::jit::DoToPropertyKeyFallback)                 \
   _(DoTrialInlining, js::jit::DoTrialInlining)                                 \
+  _(DoTypeOfEqFallback, js::jit::DoTypeOfEqFallback)                           \
   _(DoTypeOfFallback, js::jit::DoTypeOfFallback)                               \
   _(DoUnaryArithFallback, js::jit::DoUnaryArithFallback, 1)                    \
   _(EnterWith, js::jit::EnterWith)                                             \

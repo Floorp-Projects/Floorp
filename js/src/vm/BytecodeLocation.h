@@ -278,6 +278,11 @@ class BytecodeLocation {
     return index;
   }
 
+  JSType getJSType() const {
+    MOZ_ASSERT(is(JSOp::TypeofEq));
+    return JSType(GET_UINT8(rawBytecode_));
+  }
+
   FunctionPrefixKind getFunctionPrefixKind() const {
     MOZ_ASSERT(is(JSOp::SetFunName));
     return FunctionPrefixKind(GET_UINT8(rawBytecode_));

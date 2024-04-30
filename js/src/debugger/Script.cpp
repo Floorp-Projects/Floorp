@@ -1620,6 +1620,7 @@ static bool BytecodeIsEffectful(JSScript* script, size_t offset) {
     case JSOp::Object:
     case JSOp::Typeof:
     case JSOp::TypeofExpr:
+    case JSOp::TypeofEq:
     case JSOp::ToAsyncIter:
     case JSOp::ToPropertyKey:
     case JSOp::Lambda:

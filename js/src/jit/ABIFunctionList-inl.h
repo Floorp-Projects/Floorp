@@ -178,6 +178,7 @@ namespace jit {
   _(js::jit::StringTrimEndIndex)                                      \
   _(js::jit::StringTrimStartIndex)                                    \
   _(js::jit::TypeOfNameObject)                                        \
+  _(js::jit::TypeOfEqObject)                                          \
   _(js::jit::WrapObjectPure)                                          \
   ABIFUNCTION_FUZZILLI_LIST(_)                                        \
   _(js::MapIteratorObject::next)                                      \
