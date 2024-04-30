@@ -136,6 +136,16 @@ var SelectTranslationsPanel = new (class {
   #eventListenersInitialized = false;
 
   /**
+   * This value is true if this page does not allow Full Page Translations,
+   * e.g. PDFs, reader mode, internal Firefox pages.
+   *
+   * Many of these are cases where the SelectTranslationsPanel is available
+   * even though the FullPageTranslationsPanel is not, so this helps inform
+   * whether the translate-full-page button should be allowed in this context.
+   */
+  #isFullPageTranslationsRestrictedForPage = true;
+
+  /**
    * The internal state of the SelectTranslationsPanel.
    *
    * @type {SelectTranslationsPanelState}
@@ -422,6 +432,8 @@ var SelectTranslationsPanel = new (class {
     }
 
     try {
+      this.#isFullPageTranslationsRestrictedForPage =
+        TranslationsParent.isFullPageTranslationsRestrictedForPage(gBrowser);
       this.#initializeEventListeners();
       await this.#ensureLangListsBuilt();
       await Promise.all([
@@ -1338,7 +1350,9 @@ var SelectTranslationsPanel = new (class {
     copyButton.disabled = invalidLangPairSelected || isTranslating;
     translateButton.disabled = !tryAnotherSourceMenuList.value;
     translateFullPageButton.disabled =
-      invalidLangPairSelected || fromLanguage === toLanguage;
+      invalidLangPairSelected ||
+      fromLanguage === toLanguage ||
+      this.#isFullPageTranslationsRestrictedForPage;
   }
 
   /**
@@ -1376,13 +1390,18 @@ var SelectTranslationsPanel = new (class {
         translationFailureMessageBar,
         tryAgainButton,
         unsupportedLanguageContent,
+        ...(this.#isFullPageTranslationsRestrictedForPage
+          ? [translateFullPageButton]
+          : []),
       ],
       makeVisible: [
         mainContent,
         copyButton,
         doneButton,
         textArea,
-        translateFullPageButton,
+        ...(this.#isFullPageTranslationsRestrictedForPage
+          ? []
+          : [translateFullPageButton]),
       ],
       addDefault: [doneButton],
       removeDefault: [translateButton, tryAgainButton],
