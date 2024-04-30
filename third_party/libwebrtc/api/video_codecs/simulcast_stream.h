@@ -11,6 +11,7 @@
 #ifndef API_VIDEO_CODECS_SIMULCAST_STREAM_H_
 #define API_VIDEO_CODECS_SIMULCAST_STREAM_H_
 
+#include "absl/types/optional.h"
 #include "api/video_codecs/scalability_mode.h"
 
 namespace webrtc {
@@ -22,6 +23,8 @@ struct SimulcastStream {
   // setting to ScalabilityMode.
   unsigned char GetNumberOfTemporalLayers() const;
   ScalabilityMode GetScalabilityMode() const;
+  // TODO(b/327381318): Rename to GetScalabilityMode.
+  absl::optional<ScalabilityMode> GetScalabilityMode2() const;
   void SetNumberOfTemporalLayers(unsigned char n);
 
   int width = 0;

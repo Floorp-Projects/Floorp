@@ -1158,18 +1158,22 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   rtc::SimpleStringBuilder log_stream(log_stream_buf);
   log_stream << "ReconfigureEncoder: simulcast streams: ";
   for (size_t i = 0; i < codec.numberOfSimulcastStreams; ++i) {
-    log_stream << "{" << i << ": " << codec.simulcastStream[i].width << "x"
-               << codec.simulcastStream[i].height << " "
-               << ScalabilityModeToString(
-                      codec.simulcastStream[i].GetScalabilityMode())
-               << ", min_kbps: " << codec.simulcastStream[i].minBitrate
-               << ", target_kbps: " << codec.simulcastStream[i].targetBitrate
-               << ", max_kbps: " << codec.simulcastStream[i].maxBitrate
-               << ", max_fps: " << codec.simulcastStream[i].maxFramerate
-               << ", max_qp: " << codec.simulcastStream[i].qpMax << ", num_tl: "
-               << codec.simulcastStream[i].numberOfTemporalLayers
-               << ", active: "
-               << (codec.simulcastStream[i].active ? "true" : "false") << "}";
+    absl::optional<ScalabilityMode> scalability_mode =
+        codec.simulcastStream[i].GetScalabilityMode2();
+    if (scalability_mode) {
+      log_stream << "{" << i << ": " << codec.simulcastStream[i].width << "x"
+                 << codec.simulcastStream[i].height << " "
+                 << ScalabilityModeToString(*scalability_mode)
+                 << ", min_kbps: " << codec.simulcastStream[i].minBitrate
+                 << ", target_kbps: " << codec.simulcastStream[i].targetBitrate
+                 << ", max_kbps: " << codec.simulcastStream[i].maxBitrate
+                 << ", max_fps: " << codec.simulcastStream[i].maxFramerate
+                 << ", max_qp: " << codec.simulcastStream[i].qpMax
+                 << ", num_tl: "
+                 << codec.simulcastStream[i].numberOfTemporalLayers
+                 << ", active: "
+                 << (codec.simulcastStream[i].active ? "true" : "false") << "}";
+    }
   }
   if (encoder_config_.codec_type == kVideoCodecVP9 ||
       encoder_config_.codec_type == kVideoCodecAV1) {
