@@ -2626,7 +2626,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    type: JSTypeImm
+    operand: TypeofEqOperandImm
 
 - name: DoubleAddResult
   shared: true

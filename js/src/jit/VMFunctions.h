@@ -19,6 +19,7 @@
 #include "gc/AllocKind.h"
 #include "js/ScalarType.h"
 #include "js/TypeDecls.h"
+#include "vm/TypeofEqOperand.h"
 
 class JSJitInfo;
 class JSLinearString;
@@ -581,7 +582,7 @@ bool SetPropertyMegamorphic(JSContext* cx, HandleObject obj, HandleId id,
 
 JSString* TypeOfNameObject(JSObject* obj, JSRuntime* rt);
 
-bool TypeOfEqObject(JSObject* obj, JSType type);
+bool TypeOfEqObject(JSObject* obj, TypeofEqOperand operand);
 
 bool GetPrototypeOf(JSContext* cx, HandleObject target,
                     MutableHandleValue rval);

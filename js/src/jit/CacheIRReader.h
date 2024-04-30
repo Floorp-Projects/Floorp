@@ -18,6 +18,7 @@
 #include "jit/CompactBuffer.h"
 #include "js/ScalarType.h"
 #include "js/Value.h"
+#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #include "wasm/WasmValType.h"
 
 enum class JSOp : uint8_t;
@@ -112,7 +113,9 @@ class MOZ_RAII CacheIRReader {
   Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
   JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
   JSOp jsop() { return JSOp(buffer_.readByte()); }
-  JSType jstype() { return JSType(buffer_.readByte()); }
+  TypeofEqOperand typeofEqOperand() {
+    return TypeofEqOperand::fromRawValue(buffer_.readByte());
+  }
   int32_t int32Immediate() { return int32_t(buffer_.readFixedUint32_t()); }
   uint32_t uint32Immediate() { return buffer_.readFixedUint32_t(); }
   void* pointer() { return buffer_.readRawPointer(); }
