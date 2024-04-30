@@ -1631,30 +1631,33 @@ void AppWindow::SyncAttributesToWidget() {
 
   NS_ENSURE_TRUE_VOID(mWindow);
 
+  // Only change blank window status once we're loaded, so that a
+  // partially-loaded browser window doesn't start painting early.
+  if (mChromeLoaded) {
+    mWindow->SetIsEarlyBlankWindow(attr.EqualsLiteral("navigator:blank"));
+    NS_ENSURE_TRUE_VOID(mWindow);
+  }
+
   // "icon" attribute
   windowElement->GetAttribute(u"icon"_ns, attr);
   if (!attr.IsEmpty()) {
     mWindow->SetIcon(attr);
-
     NS_ENSURE_TRUE_VOID(mWindow);
   }
 
   // "drawtitle" attribute
   windowElement->GetAttribute(u"drawtitle"_ns, attr);
   mWindow->SetDrawsTitle(attr.LowerCaseEqualsLiteral("true"));
-
   NS_ENSURE_TRUE_VOID(mWindow);
 
   // "toggletoolbar" attribute
   windowElement->GetAttribute(u"toggletoolbar"_ns, attr);
   mWindow->SetShowsToolbarButton(attr.LowerCaseEqualsLiteral("true"));
-
   NS_ENSURE_TRUE_VOID(mWindow);
 
   // "macnativefullscreen" attribute
   windowElement->GetAttribute(u"macnativefullscreen"_ns, attr);
   mWindow->SetSupportsNativeFullscreen(attr.LowerCaseEqualsLiteral("true"));
-
   NS_ENSURE_TRUE_VOID(mWindow);
 
   // "macanimationtype" attribute

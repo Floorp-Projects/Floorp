@@ -261,8 +261,7 @@ class nsWindow final : public nsBaseWidget {
       const LayoutDeviceIntRegion& aRegion) override;
 
   uint32_t GetMaxTouchPoints() const override;
-  void SetWindowClass(const nsAString& xulWinType, const nsAString& xulWinClass,
-                      const nsAString& xulWinName) override;
+  void SetIsEarlyBlankWindow(bool) override;
 
   /**
    * Event helpers

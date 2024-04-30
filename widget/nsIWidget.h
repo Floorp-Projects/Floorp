@@ -1397,6 +1397,8 @@ class nsIWidget : public nsISupports {
                               const nsAString& xulWinClass,
                               const nsAString& xulWinName) = 0;
 
+  virtual void SetIsEarlyBlankWindow(bool) {}
+
   /**
    * Enables/Disables system capture of any and all events that would cause a
    * popup to be rolled up. aListener should be set to a non-null value for
