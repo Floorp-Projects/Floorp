@@ -4313,7 +4313,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 )
                 case = ExprCode(
                     """
-                    MOZ_ALWAYS_TRUE(${container}.EnsureRemoved(static_cast<${manageecxxtype}>(aListener)));
+                    ${container}.EnsureRemoved(static_cast<${manageecxxtype}>(aListener));
                     return;
 
                     """,
