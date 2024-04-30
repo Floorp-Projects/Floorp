@@ -325,15 +325,13 @@ class CommonBackend(BuildBackend):
             list_style = "list"
         list_file_path = mozpath.join(objdir, name)
         objs = [os.path.relpath(o, objdir) for o in objs]
-        if list_style == "linkerscript":
-            ref = list_file_path
-            content = "\n".join('INPUT("%s")' % o for o in objs)
-        elif list_style == "filelist":
+        content = "\n".join(objs)
+        if list_style == "filelist":
             ref = "-Wl,-filelist," + list_file_path
-            content = "\n".join(objs)
+        elif list_style == "linkerlist":
+            ref = "-Wl,@" + list_file_path
         elif list_style == "list":
             ref = "@" + list_file_path
-            content = "\n".join(objs)
         else:
             return None
 
