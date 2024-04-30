@@ -637,7 +637,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {object} gBrowser
    * @returns {boolean}
    */
-  static isRestrictedPage(gBrowser) {
+  static isFullPageTranslationsRestrictedForPage(gBrowser) {
     const contentType = gBrowser.selectedBrowser.documentContentType;
     const scheme = gBrowser.currentURI.scheme;
 
@@ -645,7 +645,8 @@ export class TranslationsParent extends JSWindowActorParent {
       return true;
     }
 
-    // Keep this logic up to date with TranslationsChild.prototype.#isRestrictedPage.
+    // Keep this logic up to date with the "matches" array in the
+    // `toolkit/modules/ActorManagerParent.sys.mjs` definition.
     switch (scheme) {
       case "https":
       case "http":
