@@ -1283,9 +1283,6 @@ TEST_F(Strings, string_tointeger) {
     int32_t result = nsAutoCString(t->str).ToInteger(&rv, t->radix);
     EXPECT_EQ(rv, t->rv);
     EXPECT_EQ(result, t->result);
-    result = nsAutoCString(t->str).ToInteger(&rv, t->radix);
-    EXPECT_EQ(rv, t->rv);
-    EXPECT_EQ(result, t->result);
   }
 }
 
