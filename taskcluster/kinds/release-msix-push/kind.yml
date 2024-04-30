@@ -22,10 +22,7 @@ job-defaults:
         platform: win32-shippable/opt
         kind: build
         tier: 2
-    worker-type:
-        by-release-level:
-            production: scriptworker-k8s/gecko-3-pushmsix
-            staging: scriptworker-k8s/gecko-1-pushmsix
+    worker-type: pushmsix
     worker:
         implementation: push-msix
         channel:
