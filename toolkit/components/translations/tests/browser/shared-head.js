@@ -33,8 +33,8 @@ const SPANISH_PAGE_URL_DOT_ORG =
   URL_ORG_PREFIX + DIR_PATH + "translations-tester-es.html";
 const NO_LANGUAGE_URL =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-no-tag.html";
-const EMPTY_PDF_URL =
-  URL_COM_PREFIX + DIR_PATH + "translations-tester-empty-pdf-file.pdf";
+const PDF_TEST_PAGE_URL =
+  URL_COM_PREFIX + DIR_PATH + "translations-tester-pdf-file.pdf";
 const SELECT_TEST_PAGE_URL =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-select.html";
 
