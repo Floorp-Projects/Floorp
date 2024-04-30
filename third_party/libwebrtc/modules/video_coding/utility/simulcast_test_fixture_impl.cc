@@ -261,7 +261,7 @@ SimulcastTestFixtureImpl::SimulcastTestFixtureImpl(
     SdpVideoFormat video_format)
     : codec_type_(PayloadStringToCodecType(video_format.name)) {
   Environment env = CreateEnvironment();
-  encoder_ = encoder_factory->CreateVideoEncoder(video_format);
+  encoder_ = encoder_factory->Create(env, video_format);
   decoder_ = decoder_factory->Create(env, video_format);
   SetUpCodec((codec_type_ == kVideoCodecVP8 || codec_type_ == kVideoCodecH264)
                  ? kDefaultTemporalLayerProfile

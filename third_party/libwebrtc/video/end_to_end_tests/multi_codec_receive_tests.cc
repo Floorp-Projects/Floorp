@@ -199,7 +199,8 @@ void MultiCodecReceiveTest::RunTestWithCodecs(
   EXPECT_TRUE(!configs.empty());
 
   test::FunctionVideoEncoderFactory encoder_factory(
-      [](const SdpVideoFormat& format) -> std::unique_ptr<VideoEncoder> {
+      [](const Environment& env,
+         const SdpVideoFormat& format) -> std::unique_ptr<VideoEncoder> {
         if (format.name == "VP8") {
           return VP8Encoder::Create();
         }
