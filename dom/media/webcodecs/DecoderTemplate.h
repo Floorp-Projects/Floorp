@@ -214,7 +214,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
   // When a flush request is initiated, a promise is created and stored in
   // mPendingFlushPromises until it is settled in the task delivering the flush
   // result or Reset() is called before the promise is settled.
-  SimpleMap<RefPtr<Promise>> mPendingFlushPromises;
+  SimpleMap<int64_t, RefPtr<Promise>> mPendingFlushPromises;
 
   uint32_t mDecodeQueueSize;
   bool mDequeueEventScheduled;

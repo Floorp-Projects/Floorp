@@ -22,7 +22,7 @@ class FFmpegVideoEncoder : public MediaDataEncoder {};
 
 template <>
 class FFmpegVideoEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
-  using DurationMap = SimpleMap<int64_t>;
+  using DurationMap = SimpleMap<int64_t, int64_t, ThreadSafePolicy>;
 
  public:
   FFmpegVideoEncoder(const FFmpegLibWrapper* aLib, AVCodecID aCodecID,

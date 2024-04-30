@@ -43,7 +43,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   typedef mozilla::layers::Image Image;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::KnowsCompositor KnowsCompositor;
-  typedef SimpleMap<int64_t> DurationMap;
+  typedef SimpleMap<int64_t, int64_t, ThreadSafePolicy> DurationMap;
 
  public:
   FFmpegVideoDecoder(FFmpegLibWrapper* aLib, const VideoInfo& aConfig,
