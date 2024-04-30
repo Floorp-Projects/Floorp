@@ -20,7 +20,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ed31b2acb5fbca3e2
  7 files changed, 15 insertions(+), 7 deletions(-)
 
 diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
-index fc0554f384..f9f08a9c27 100644
+index ef1cf67d54..31d922035b 100644
 --- a/modules/video_capture/linux/device_info_pipewire.cc
 +++ b/modules/video_capture/linux/device_info_pipewire.cc
 @@ -50,8 +50,10 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
