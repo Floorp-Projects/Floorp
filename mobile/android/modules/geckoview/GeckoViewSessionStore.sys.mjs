@@ -184,4 +184,51 @@ export var GeckoViewSessionStore = {
 
     return listener;
   },
+
+  updateSessionStoreFromTabListener(
+    browser,
+    browsingContext,
+    permanentKey,
+    update,
+    forStorage = false
+  ) {
+    permanentKey = browser?.permanentKey ?? permanentKey;
+    if (!permanentKey) {
+      return;
+    }
+
+    if (browsingContext.isReplaced) {
+      return;
+    }
+
+    const listener = this.getOrCreateSHistoryListener(
+      permanentKey,
+      browsingContext
+    );
+
+    if (listener) {
+      const historychange =
+        // If it is not the scheduled update (tab closed, window closed etc),
+        // try to store the loading non-web-controlled page opened in _blank
+        // first.
+        (forStorage &&
+          lazy.SessionHistory.collectNonWebControlledBlankLoadingSession(
+            browsingContext
+          )) ||
+        listener.collect(permanentKey, browsingContext, {
+          collectFull: !!update.sHistoryNeeded,
+          writeToCache: false,
+        });
+
+      if (historychange) {
+        update.data.historychange = historychange;
+      }
+    }
+
+    const win =
+      browsingContext.embedderElement?.ownerGlobal ||
+      browsingContext.currentWindowGlobal?.browsingContext?.window;
+
+    this.onTabStateUpdate(permanentKey, win, update);
+  },
 };

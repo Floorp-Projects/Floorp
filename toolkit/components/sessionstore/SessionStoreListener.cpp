@@ -24,7 +24,7 @@
 #include "nsIXULRuntime.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
-#include "SessionStoreFunctions.h"
+#include "nsISessionStoreFunctions.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -436,9 +436,13 @@ void TabListener::UpdateSessionStore(bool aIsFlush) {
     data.mIsPrivate.Construct() = mSessionStore->GetPrivateModeEnabled();
   }
 
-  nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportESModule(
-      "resource://gre/modules/SessionStoreFunctions.sys.mjs", fallible);
-  nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
+  nsCOMPtr<nsISessionStoreFunctions> sessionStoreFuncs =
+      do_GetService("@mozilla.org/toolkit/sessionstore-functions;1");
+  if (!sessionStoreFuncs) {
+    return;
+  }
+  nsCOMPtr<nsIXPConnectWrappedJS> wrapped =
+      do_QueryInterface(sessionStoreFuncs);
   if (!wrapped) {
     return;
   }
@@ -456,7 +460,7 @@ void TabListener::UpdateSessionStore(bool aIsFlush) {
   JS::Rooted<JS::Value> key(jsapi.cx(),
                             context->Canonical()->Top()->PermanentKey());
 
-  nsresult rv = funcs->UpdateSessionStore(
+  nsresult rv = sessionStoreFuncs->UpdateSessionStore(
       mOwnerContent, context, key, mEpoch,
       mSessionStore->GetAndClearSHistoryChanged(), update);
   if (NS_FAILED(rv)) {

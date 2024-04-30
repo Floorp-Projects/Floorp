@@ -31,15 +31,11 @@ UNIFIED_SOURCES += [
     "SessionStoreUtils.cpp",
 ]
 
-EXTRA_JS_MODULES += [
-    "SessionStoreFunctions.sys.mjs",
-]
-
 XPIDL_MODULE = "sessionstore"
 
 XPIDL_SOURCES += [
+    "nsISessionStoreFunctions.idl",
     "nsISessionStoreRestoreData.idl",
-    "SessionStoreFunctions.idl",
 ]
 
 IPDL_SOURCES += [

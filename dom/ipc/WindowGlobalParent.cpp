@@ -76,7 +76,7 @@
 #include "mozilla/net/PCookieServiceParent.h"
 #include "mozilla/net/CookieServiceParent.h"
 
-#include "SessionStoreFunctions.h"
+#include "nsISessionStoreFunctions.h"
 #include "nsIXPConnect.h"
 #include "nsImportModule.h"
 #include "nsIXULRuntime.h"
