@@ -364,6 +364,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::Marktext:
     case ColorID::Mark:
     case ColorID::SpellCheckerUnderline:
+    case ColorID::MozAutofillBackground:
       aColor = GetStandinForNativeColor(aID, aScheme);
       return NS_OK;
     default:
