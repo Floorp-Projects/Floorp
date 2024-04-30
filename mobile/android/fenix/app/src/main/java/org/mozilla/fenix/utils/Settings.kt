@@ -1591,7 +1591,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var showBookmarksHomeFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_recent_bookmarks),
-        default = { homescreenSections[HomeScreenSection.RECENTLY_SAVED] == true },
+        default = { homescreenSections[HomeScreenSection.BOOKMARKS] == true },
         featureFlag = true,
     )
 
