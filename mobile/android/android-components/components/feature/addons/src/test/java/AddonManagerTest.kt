@@ -666,7 +666,12 @@ class AddonManagerTest {
         val extension: WebExtension = mock()
         whenever(extension.id).thenReturn("ext1")
         WebExtensionSupport.installedExtensions[addon.id] = extension
-
+        val metadata: Metadata = mock()
+        whenever(extension.getMetadata()).thenReturn(metadata)
+        whenever(metadata.optionalPermissions).thenReturn(permission)
+        whenever(metadata.grantedOptionalPermissions).thenReturn(permission)
+        whenever(metadata.optionalOrigins).thenReturn(origin)
+        whenever(metadata.grantedOptionalOrigins).thenReturn(origin)
         val engine: Engine = mock()
         val onSuccessCaptor = argumentCaptor<((WebExtension) -> Unit)>()
 
@@ -685,6 +690,10 @@ class AddonManagerTest {
         onSuccessCaptor.value.invoke(extension)
         assertNotNull(updateAddon)
         assertEquals(addon.id, updateAddon!!.id)
+        assertEquals("permission1", updateAddon!!.optionalPermissions.first().name)
+        assertEquals(true, updateAddon!!.optionalPermissions.first().granted)
+        assertEquals("origin", updateAddon!!.optionalOrigins.first().name)
+        assertEquals(true, updateAddon!!.optionalOrigins.first().granted)
         assertTrue(manager.pendingAddonActions.isEmpty())
     }
 

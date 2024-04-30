@@ -598,6 +598,25 @@ class WebExtensionSupportTest {
     }
 
     @Test
+    fun `reacts to optional permissions for an extension being changed`() {
+        val store = spy(BrowserStore())
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("extensionId")
+        whenever(ext.url).thenReturn("url")
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        assertNull(WebExtensionSupport.installedExtensions[ext.id])
+
+        delegateCaptor.value.onOptionalPermissionsChanged(ext)
+
+        assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
+    }
+
+    @Test
     fun `observes store and registers handlers on new engine sessions`() {
         val tab = createTab(id = "1", url = "https://www.mozilla.org")
         val customTab = createCustomTab(id = "2", url = "https://www.mozilla.org", source = SessionState.Source.Internal.CustomTab)
