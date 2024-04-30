@@ -27,6 +27,7 @@
 #include "config_components.h"
 
 #include "avcodec.h"
+#include "avcodec_internal.h"
 #include "codec_internal.h"
 #include "libavutil/avassert.h"
 #include "libavutil/internal.h"
@@ -124,11 +125,6 @@ static int init_context_defaults(AVCodecContext *s, const AVCodec *codec)
     s->sw_pix_fmt          = AV_PIX_FMT_NONE;
     s->sample_fmt          = AV_SAMPLE_FMT_NONE;
 
-#if FF_API_REORDERED_OPAQUE
-FF_DISABLE_DEPRECATION_WARNINGS
-    s->reordered_opaque    = AV_NOPTS_VALUE;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
     if(codec && codec2->priv_data_size){
         s->priv_data = av_mallocz(codec2->priv_data_size);
         if (!s->priv_data)
@@ -172,14 +168,17 @@ void avcodec_free_context(AVCodecContext **pavctx)
     if (!avctx)
         return;
 
-    avcodec_close(avctx);
+    ff_codec_close(avctx);
 
     av_freep(&avctx->extradata);
     av_freep(&avctx->subtitle_header);
     av_freep(&avctx->intra_matrix);
+    av_freep(&avctx->chroma_intra_matrix);
     av_freep(&avctx->inter_matrix);
     av_freep(&avctx->rc_override);
     av_channel_layout_uninit(&avctx->ch_layout);
+    av_frame_side_data_free(
+        &avctx->decoded_side_data, &avctx->nb_decoded_side_data);
 
     av_freep(pavctx);
 }
@@ -197,7 +196,7 @@ static const AVOption subtitle_rect_options[]={
 {"w", "", SROFFSET(w), AV_OPT_TYPE_INT, {.i64 = 0 }, 0, INT_MAX, 0},
 {"h", "", SROFFSET(h), AV_OPT_TYPE_INT, {.i64 = 0 }, 0, INT_MAX, 0},
 {"type", "", SROFFSET(type), AV_OPT_TYPE_INT, {.i64 = 0 }, 0, INT_MAX, 0},
-{"flags", "", SROFFSET(flags), AV_OPT_TYPE_FLAGS, {.i64 = 0}, 0, 1, 0, "flags"},
+{"flags", "", SROFFSET(flags), AV_OPT_TYPE_FLAGS, {.i64 = 0}, 0, 1, 0, .unit = "flags"},
 {"forced", "", SROFFSET(flags), AV_OPT_TYPE_FLAGS, {.i64 = 0}, 0, 1, 0},
 {NULL},
 };

@@ -362,17 +362,6 @@ void avcodec_align_dimensions(AVCodecContext *s, int *width, int *height)
     align               = FFMAX3(align, linesize_align[1], linesize_align[2]);
     *width              = FFALIGN(*width, align);
 }
-#if FF_API_AVCODEC_CHROMA_POS
-int avcodec_enum_to_chroma_pos(int *xpos, int *ypos, enum AVChromaLocation pos)
-{
-    return av_chroma_location_enum_to_pos(xpos, ypos, pos);
-}
-
-enum AVChromaLocation avcodec_chroma_pos_to_enum(int xpos, int ypos)
-{
-    return av_chroma_location_pos_to_enum(xpos, ypos);
-}
-#endif
 
 int avcodec_fill_audio_frame(AVFrame *frame, int nb_channels,
                              enum AVSampleFormat sample_fmt, const uint8_t *buf,
@@ -795,12 +784,7 @@ int av_get_audio_frame_duration(AVCodecContext *avctx, int frame_bytes)
 {
    int channels = avctx->ch_layout.nb_channels;
    int duration;
-#if FF_API_OLD_CHANNEL_LAYOUT
-FF_DISABLE_DEPRECATION_WARNINGS
-    if (!channels)
-        channels = avctx->channels;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
+
     duration = get_audio_frame_duration(avctx->codec_id, avctx->sample_rate,
                                     channels, avctx->block_align,
                                     avctx->codec_tag, avctx->bits_per_coded_sample,
@@ -813,12 +797,7 @@ int av_get_audio_frame_duration2(AVCodecParameters *par, int frame_bytes)
 {
    int channels = par->ch_layout.nb_channels;
    int duration;
-#if FF_API_OLD_CHANNEL_LAYOUT
-FF_DISABLE_DEPRECATION_WARNINGS
-    if (!channels)
-        channels = par->channels;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
+
     duration = get_audio_frame_duration(par->codec_id, par->sample_rate,
                                     channels, par->block_align,
                                     par->codec_tag, par->bits_per_coded_sample,
@@ -960,9 +939,9 @@ void ff_thread_report_progress2(AVCodecContext *avctx, int field, int thread, in
 
 #endif
 
-const uint8_t *avpriv_find_start_code(const uint8_t *av_restrict p,
+const uint8_t *avpriv_find_start_code(const uint8_t *restrict p,
                                       const uint8_t *end,
-                                      uint32_t *av_restrict state)
+                                      uint32_t *restrict state)
 {
     int i;
 

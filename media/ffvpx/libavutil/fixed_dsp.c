@@ -47,6 +47,7 @@
 
 #include "common.h"
 #include "fixed_dsp.h"
+#include "mem.h"
 
 static void vector_fmul_add_c(int *dst, const int *src0, const int *src1, const int *src2, int len){
     int i;
@@ -135,7 +136,7 @@ static int scalarproduct_fixed_c(const int *v1, const int *v2, int len)
     return (int)(p >> 31);
 }
 
-static void butterflies_fixed_c(int *av_restrict v1s, int *av_restrict v2, int len)
+static void butterflies_fixed_c(int *restrict v1s, int *restrict v2, int len)
 {
     int i;
     unsigned int *v1 = v1s;

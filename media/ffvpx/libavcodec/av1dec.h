@@ -23,6 +23,7 @@
 
 #include <stdint.h>
 
+#include "libavutil/buffer.h"
 #include "libavutil/fifo.h"
 #include "libavutil/frame.h"
 #include "libavutil/pixfmt.h"
@@ -30,6 +31,7 @@
 #include "packet.h"
 #include "cbs.h"
 #include "cbs_av1.h"
+#include "dovi_rpu.h"
 
 typedef struct AV1Frame {
     AVFrame *f;
@@ -69,6 +71,7 @@ typedef struct AV1DecContext {
     CodedBitstreamFragment current_obu;
     AVPacket *pkt;
 
+    AVBufferRef *seq_data_ref;
     AV1RawOBU *seq_ref;    ///< RefStruct reference backing raw_seq
     AV1RawSequenceHeader *raw_seq;
     AV1RawOBU *header_ref; ///< RefStruct reference backing raw_frame_header
@@ -79,6 +82,7 @@ typedef struct AV1DecContext {
     AV1RawMetadataHDRCLL *cll;
     AV1RawOBU *mdcv_ref;   ///< RefStruct reference backing mdcv
     AV1RawMetadataHDRMDCV *mdcv;
+    DOVIContext dovi;
     AVFifo *itut_t35_fifo;
 
     uint16_t tile_num;

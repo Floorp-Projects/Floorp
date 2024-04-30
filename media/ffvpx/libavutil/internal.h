@@ -40,8 +40,8 @@
 #include <stdio.h>
 #include "config.h"
 #include "attributes.h"
+#include "libm.h"
 #include "macros.h"
-#include "pixfmt.h"
 
 #ifndef attribute_align_arg
 #if ARCH_X86_32 && AV_GCC_VERSION_AT_LEAST(4,2)
@@ -74,16 +74,6 @@
 #endif
 
 
-#define FF_MEMORY_POISON 0x2a
-
-/* Check if the hard coded offset of a struct member still matches reality.
- * Induce a compilation failure if not.
- */
-#define AV_CHECK_OFFSET(s, m, o) struct check_##o {    \
-        int x_##o[offsetof(s, m) == o? 1: -1];         \
-    }
-
-
 #define FF_ALLOC_TYPED_ARRAY(p, nelem)  (p = av_malloc_array(nelem, sizeof(*p)))
 #define FF_ALLOCZ_TYPED_ARRAY(p, nelem) (p = av_calloc(nelem, sizeof(*p)))
 
@@ -93,8 +83,6 @@
  * Access a field in a structure by its offset.
  */
 #define FF_FIELD_AT(type, off, obj) (*(type *)((char *)&(obj) + (off)))
-
-#include "libm.h"
 
 /**
  * Return NULL if CONFIG_SMALL is true, otherwise the argument
@@ -162,8 +150,6 @@ void avpriv_request_sample(void *avc,
 #define SUINT   unsigned
 #define SUINT32 uint32_t
 #endif
-
-int avpriv_set_systematic_pal2(uint32_t pal[256], enum AVPixelFormat pix_fmt);
 
 static av_always_inline av_const int avpriv_mirror(int x, int w)
 {

@@ -25,6 +25,7 @@
 #include "libavutil/frame.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/internal.h"
+#include "libavutil/mem.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/samplefmt.h"
 
@@ -198,11 +199,6 @@ int avcodec_encode_subtitle(AVCodecContext *avctx, uint8_t *buf, int buf_size,
 
     ret = ffcodec(avctx->codec)->cb.encode_sub(avctx, buf, buf_size, sub);
     avctx->frame_num++;
-#if FF_API_AVCTX_FRAME_NUMBER
-FF_DISABLE_DEPRECATION_WARNINGS
-    avctx->frame_number = avctx->frame_num;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
     return ret;
 }
 
@@ -239,12 +235,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
 int ff_encode_reordered_opaque(AVCodecContext *avctx,
                                AVPacket *pkt, const AVFrame *frame)
 {
-#if FF_API_REORDERED_OPAQUE
-FF_DISABLE_DEPRECATION_WARNINGS
-    avctx->reordered_opaque = frame->reordered_opaque;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
-
     if (avctx->flags & AV_CODEC_FLAG_COPY_OPAQUE) {
         int ret = av_buffer_replace(&pkt->opaque_ref, frame->opaque_ref);
         if (ret < 0)
@@ -544,11 +534,6 @@ int attribute_align_arg avcodec_send_frame(AVCodecContext *avctx, const AVFrame 
     }
 
     avctx->frame_num++;
-#if FF_API_AVCTX_FRAME_NUMBER
-FF_DISABLE_DEPRECATION_WARNINGS
-    avctx->frame_number = avctx->frame_num;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
 
     return 0;
 }
@@ -737,6 +722,8 @@ static int encode_preinit_audio(AVCodecContext *avctx)
     }
 
     if (!avctx->bits_per_raw_sample)
+        avctx->bits_per_raw_sample = av_get_exact_bits_per_sample(avctx->codec_id);
+    if (!avctx->bits_per_raw_sample)
         avctx->bits_per_raw_sample = 8 * av_get_bytes_per_sample(avctx->sample_fmt);
 
     return 0;
@@ -794,6 +781,29 @@ int ff_encode_preinit(AVCodecContext *avctx)
         avci->recon_frame = av_frame_alloc();
         if (!avci->recon_frame)
             return AVERROR(ENOMEM);
+    }
+
+    for (int i = 0; ff_sd_global_map[i].packet < AV_PKT_DATA_NB; i++) {
+        const enum AVPacketSideDataType type_packet = ff_sd_global_map[i].packet;
+        const enum AVFrameSideDataType  type_frame  = ff_sd_global_map[i].frame;
+        const AVFrameSideData *sd_frame;
+        AVPacketSideData      *sd_packet;
+
+        sd_frame = av_frame_side_data_get(avctx->decoded_side_data,
+                                          avctx->nb_decoded_side_data,
+                                          type_frame);
+        if (!sd_frame ||
+            av_packet_side_data_get(avctx->coded_side_data, avctx->nb_coded_side_data,
+                                    type_packet))
+
+            continue;
+
+        sd_packet = av_packet_side_data_new(&avctx->coded_side_data, &avctx->nb_coded_side_data,
+                                            type_packet, sd_frame->size, 0);
+        if (!sd_packet)
+            return AVERROR(ENOMEM);
+
+        memcpy(sd_packet->data, sd_frame->data, sd_frame->size);
     }
 
     if (CONFIG_FRAME_THREAD_ENCODER) {
