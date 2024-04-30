@@ -5,11 +5,18 @@
 // other aspects of this.
 
 const { LogManager } = ChromeUtils.importESModule(
-  "resource://services-common/logmanager.sys.mjs"
+  "resource://gre/modules/LogManager.sys.mjs"
+);
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
 );
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
+const logManagerDefaultOptions = {
+  logFileSubDirectoryEntries: ["weave", "logs"],
+  testTopicPrefix: "services-tests:common:log-manager:",
+};
 
 // Returns an array of [consoleAppender, dumpAppender, [fileAppenders]] for
 // the specified log.  Note that fileAppenders will usually have length=1
@@ -27,7 +34,12 @@ function getAppenders(log) {
 // Test that the correct thing happens when no prefs exist for the log manager.
 add_task(async function test_noPrefs() {
   // tell the log manager to init with a pref branch that doesn't exist.
-  let lm = new LogManager("no-such-branch.", ["TestLog"], "test");
+  let lm = new LogManager({
+    ...logManagerDefaultOptions,
+    prefRoot: "no-such-branch.",
+    logNames: ["TestLog"],
+    logFilePrefix: "test",
+  });
 
   let log = Log.repository.getLogger("TestLog");
   let [capp, dapp, fapps] = getAppenders(log);
@@ -51,7 +63,12 @@ add_task(async function test_PrefChanges() {
     "log-manager.test.log.appender.file.level",
     "Trace"
   );
-  let lm = new LogManager("log-manager.test.", ["TestLog2"], "test");
+  let lm = new LogManager({
+    ...logManagerDefaultOptions,
+    prefRoot: "log-manager.test.",
+    logNames: ["TestLog2"],
+    logFilePrefix: "test",
+  });
 
   let log = Log.repository.getLogger("TestLog2");
   let [capp, dapp, [fapp]] = getAppenders(log);
@@ -96,7 +113,12 @@ add_task(async function test_SharedLogs() {
     "log-manager-1.test.log.appender.file.level",
     "Trace"
   );
-  let lm1 = new LogManager("log-manager-1.test.", ["TestLog3"], "test");
+  let lm1 = new LogManager({
+    ...logManagerDefaultOptions,
+    prefRoot: "log-manager-1.test.",
+    logNames: ["TestLog3"],
+    logFilePrefix: "test",
+  });
 
   // and the second.
   Services.prefs.setStringPref(
@@ -108,7 +130,12 @@ add_task(async function test_SharedLogs() {
     "log-manager-2.test.log.appender.file.level",
     "Debug"
   );
-  let lm2 = new LogManager("log-manager-2.test.", ["TestLog3"], "test");
+  let lm2 = new LogManager({
+    ...logManagerDefaultOptions,
+    prefRoot: "log-manager-2.test.",
+    logNames: ["TestLog3"],
+    logFilePrefix: "test",
+  });
 
   let log = Log.repository.getLogger("TestLog3");
   let [capp, dapp] = getAppenders(log);
@@ -158,7 +185,12 @@ function checkLogFile(prefix) {
 
 // Test that we correctly write error logs by default
 add_task(async function test_logFileErrorDefault() {
-  let lm = new LogManager("log-manager.test.", ["TestLog2"], "test");
+  let lm = new LogManager({
+    ...logManagerDefaultOptions,
+    prefRoot: "log-manager.test.",
+    logNames: ["TestLog2"],
+    logFilePrefix: "test",
+  });
 
   let log = Log.repository.getLogger("TestLog2");
   log.error("an error message");
@@ -180,7 +212,12 @@ add_task(async function test_logFileSuccess() {
     false
   );
 
-  let lm = new LogManager("log-manager.test.", ["TestLog2"], "test");
+  let lm = new LogManager({
+    ...logManagerDefaultOptions,
+    prefRoot: "log-manager.test.",
+    logNames: ["TestLog2"],
+    logFilePrefix: "test",
+  });
 
   let log = Log.repository.getLogger("TestLog2");
   log.info("an info message");
@@ -230,7 +267,12 @@ add_task(async function test_logFileError() {
     false
   );
 
-  let lm = new LogManager("log-manager.test.", ["TestLog2"], "test");
+  let lm = new LogManager({
+    ...logManagerDefaultOptions,
+    prefRoot: "log-manager.test.",
+    logNames: ["TestLog2"],
+    logFilePrefix: "test",
+  });
 
   let log = Log.repository.getLogger("TestLog2");
   log.info("an info message");
@@ -307,7 +349,12 @@ add_task(async function test_logFileError() {
     true
   );
 
-  let lm = new LogManager("log-manager.test.", ["TestLog2"], "test");
+  let lm = new LogManager({
+    ...logManagerDefaultOptions,
+    prefRoot: "log-manager.test.",
+    logNames: ["TestLog2"],
+    logFilePrefix: "test",
+  });
 
   let log = Log.repository.getLogger("TestLog2");
   log.info("an info message");
