@@ -74,7 +74,7 @@ function getSelectState(ui) {
   let listbox = ui.getElementById("list");
 
   let state = {};
-  state.msg = ui.getElementById("info.txt").value;
+  state.msg = ui.getElementById("info.txt").firstChild.textContent;
   state.selectedIndex = listbox.selectedIndex;
   state.items = [];
 
