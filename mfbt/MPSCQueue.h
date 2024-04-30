@@ -231,8 +231,7 @@ class MPSCRingBufferBase {
    * empty queue
    * */
   void MarkSlot(std::atomic<uint64_t>& aSlotStatus, uint64_t aIndex) {
-    uint64_t current =
-        aSlotStatus.load(std::memory_order::memory_order_relaxed);
+    uint64_t current = aSlotStatus.load(std::memory_order_relaxed);
     do {
       // Attempts to find a slot that is available to enqueue, without
       // cross-thread synchronization
@@ -269,9 +268,9 @@ class MPSCRingBufferBase {
       //
       // In case of failure we require memory_order_relaxed for the load
       // operation because we dont need synchronization at that point.
-      if (aSlotStatus.compare_exchange_weak(
-              current, modified, std::memory_order::memory_order_release,
-              std::memory_order::memory_order_relaxed)) {
+      if (aSlotStatus.compare_exchange_weak(current, modified,
+                                            std::memory_order_release,
+                                            std::memory_order_relaxed)) {
         if constexpr (MPSC_DEBUG) {
           fprintf(stderr,
                   "[enqueue] modified=0x%" PRIx64 " => index=%" PRIu64 "\n",
@@ -297,8 +296,7 @@ class MPSCRingBufferBase {
    * */
   [[nodiscard]] std::optional<uint64_t> UnmarkSlot(
       std::atomic<uint64_t>& aSlotStatus) {
-    uint64_t current =
-        aSlotStatus.load(std::memory_order::memory_order_relaxed);
+    uint64_t current = aSlotStatus.load(std::memory_order_relaxed);
     do {
       uint64_t index = current & mMask;
       if (index == 0) {
@@ -318,9 +316,9 @@ class MPSCRingBufferBase {
       //
       // In case of failure we require memory_order_relaxed for the load
       // operation because we dont need synchronization at that point.
-      if (aSlotStatus.compare_exchange_weak(
-              current, modified, std::memory_order::memory_order_acquire,
-              std::memory_order::memory_order_relaxed)) {
+      if (aSlotStatus.compare_exchange_weak(current, modified,
+                                            std::memory_order_acquire,
+                                            std::memory_order_relaxed)) {
         if constexpr (MPSC_DEBUG) {
           fprintf(stderr,
                   "[dequeue] current=0x%" PRIx64 " => index=%" PRIu64 "\n",
