@@ -18,8 +18,10 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/base/macros.h"
+#include "absl/base/nullability.h"
 #include "absl/strings/match.h"
 #include "absl/types/optional.h"
+#include "api/environment/environment.h"
 #include "api/field_trials_view.h"
 #include "api/scoped_refptr.h"
 #include "api/transport/field_trial_based_config.h"
@@ -871,6 +873,17 @@ VideoEncoder::EncoderInfo LibaomAv1Encoder::GetEncoderInfo() const {
 }
 
 }  // namespace
+
+absl::Nonnull<std::unique_ptr<VideoEncoder>> CreateLibaomAv1Encoder(
+    const Environment& env,
+    LibaomAv1EncoderSettings settings) {
+  if (settings.max_pixel_count_to_cpu_speed.empty()) {
+    return std::make_unique<LibaomAv1Encoder>(absl::nullopt,
+                                              env.field_trials());
+  } else {
+    return std::make_unique<LibaomAv1Encoder>(settings, env.field_trials());
+  }
+}
 
 std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder() {
   return std::make_unique<LibaomAv1Encoder>(absl::nullopt,
