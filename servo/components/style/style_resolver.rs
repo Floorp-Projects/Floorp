@@ -17,7 +17,8 @@ use crate::selector_parser::{PseudoElement, SelectorImpl};
 use crate::stylist::RuleInclusion;
 use log::Level::Trace;
 use selectors::matching::{
-    MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags, VisitedHandlingMode,
+    IncludeStartingStyle, MatchingContext, MatchingForInvalidation, MatchingMode,
+    NeedsSelectorFlags, VisitedHandlingMode,
 };
 use servo_arc::Arc;
 
@@ -47,10 +48,19 @@ where
 struct MatchingResults {
     rule_node: StrongRuleNode,
     flags: ComputedValueFlags,
+    has_starting_style: bool,
 }
 
 /// A style returned from the resolver machinery.
 pub struct ResolvedStyle(pub Arc<ComputedValues>);
+
+impl ResolvedStyle {
+    /// Convenience accessor for the style.
+    #[inline]
+    pub fn style(&self) -> &ComputedValues {
+        &*self.0
+    }
+}
 
 /// The primary style of an element or an element-backed pseudo-element.
 pub struct PrimaryStyle {
@@ -59,6 +69,11 @@ pub struct PrimaryStyle {
     /// Whether the style was reused from another element via the rule node (see
     /// `StyleSharingCache::lookup_by_rules`).
     pub reused_via_rule_node: bool,
+    /// The element may have matched rules inside @starting-style.
+    /// Basically, we don't apply @starting-style rules to |style|. This is a sugar to let us know
+    /// if we should resolve the element again for starting style, which is the after-change style
+    /// with @starting-style rules applied in addition.
+    pub may_have_starting_style: bool,
 }
 
 /// A set of style returned from the resolver machinery.
@@ -78,6 +93,12 @@ impl ResolvedElementStyles {
     /// Convenience mutable accessor for the style.
     pub fn primary_style_mut(&mut self) -> &mut Arc<ComputedValues> {
         &mut self.primary.style.0
+    }
+
+    /// Returns true if this element may have starting style rules.
+    #[inline]
+    pub fn may_have_starting_style(&self) -> bool {
+        self.primary.may_have_starting_style
     }
 }
 
@@ -186,16 +207,22 @@ where
         &mut self,
         parent_style: Option<&ComputedValues>,
         layout_parent_style: Option<&ComputedValues>,
+        include_starting_style: IncludeStartingStyle,
     ) -> PrimaryStyle {
-        let primary_results = self.match_primary(VisitedHandlingMode::AllLinksUnvisited);
+        let primary_results = self.match_primary(
+            VisitedHandlingMode::AllLinksUnvisited,
+            include_starting_style,
+        );
 
         let inside_link = parent_style.map_or(false, |s| s.visited_style().is_some());
 
         let visited_rules = if self.context.shared.visited_styles_enabled &&
             (inside_link || self.element.is_link())
         {
-            let visited_matching_results =
-                self.match_primary(VisitedHandlingMode::RelevantLinkVisited);
+            let visited_matching_results = self.match_primary(
+                VisitedHandlingMode::RelevantLinkVisited,
+                IncludeStartingStyle::No,
+            );
             Some(visited_matching_results.rule_node)
         } else {
             None
@@ -209,6 +236,7 @@ where
             },
             parent_style,
             layout_parent_style,
+            primary_results.has_starting_style,
         )
     }
 
@@ -217,6 +245,7 @@ where
         inputs: CascadeInputs,
         parent_style: Option<&ComputedValues>,
         layout_parent_style: Option<&ComputedValues>,
+        may_have_starting_style: bool,
     ) -> PrimaryStyle {
         // Before doing the cascade, check the sharing cache and see if we can
         // reuse the style via rule node identity.
@@ -253,6 +282,7 @@ where
                 /* pseudo = */ None,
             ),
             reused_via_rule_node: false,
+            may_have_starting_style,
         }
     }
 
@@ -262,7 +292,11 @@ where
         parent_style: Option<&ComputedValues>,
         layout_parent_style: Option<&ComputedValues>,
     ) -> ResolvedElementStyles {
-        let primary_style = self.resolve_primary_style(parent_style, layout_parent_style);
+        let primary_style = self.resolve_primary_style(
+            parent_style,
+            layout_parent_style,
+            IncludeStartingStyle::No,
+        );
 
         let mut pseudo_styles = EagerPseudoStyles::default();
 
@@ -375,10 +409,15 @@ where
     pub fn cascade_styles_with_default_parents(
         &mut self,
         inputs: ElementCascadeInputs,
+        may_have_starting_style: bool,
     ) -> ResolvedElementStyles {
         with_default_parent_styles(self.element, move |parent_style, layout_parent_style| {
-            let primary_style =
-                self.cascade_primary_style(inputs.primary, parent_style, layout_parent_style);
+            let primary_style = self.cascade_primary_style(
+                inputs.primary,
+                parent_style,
+                layout_parent_style,
+                may_have_starting_style,
+            );
 
             let mut pseudo_styles = EagerPseudoStyles::default();
             if let Some(mut pseudo_array) = inputs.pseudos.into_array() {
@@ -427,6 +466,7 @@ where
         let MatchingResults {
             rule_node,
             mut flags,
+            has_starting_style: _,
         } = self.match_pseudo(
             &originating_element_style.style.0,
             pseudo,
@@ -459,7 +499,11 @@ where
         ))
     }
 
-    fn match_primary(&mut self, visited_handling: VisitedHandlingMode) -> MatchingResults {
+    fn match_primary(
+        &mut self,
+        visited_handling: VisitedHandlingMode,
+        include_starting_style: IncludeStartingStyle,
+    ) -> MatchingResults {
         debug!(
             "Match primary for {:?}, visited: {:?}",
             self.element, visited_handling
@@ -473,6 +517,7 @@ where
             Some(bloom_filter),
             selector_caches,
             visited_handling,
+            include_starting_style,
             self.context.shared.quirks_mode(),
             NeedsSelectorFlags::Yes,
             MatchingForInvalidation::No,
@@ -512,6 +557,7 @@ where
         MatchingResults {
             rule_node,
             flags: matching_context.extra_data.cascade_input_flags,
+            has_starting_style: matching_context.has_starting_style,
         }
     }
 
@@ -550,6 +596,7 @@ where
             Some(bloom_filter),
             selector_caches,
             visited_handling,
+            IncludeStartingStyle::No,
             self.context.shared.quirks_mode(),
             NeedsSelectorFlags::Yes,
             MatchingForInvalidation::No,
@@ -580,6 +627,7 @@ where
         Some(MatchingResults {
             rule_node,
             flags: matching_context.extra_data.cascade_input_flags,
+            has_starting_style: false, // We don't care.
         })
     }
 }

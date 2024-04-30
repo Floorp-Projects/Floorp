@@ -330,6 +330,10 @@ impl SelectorMap<Rule> {
     ) where
         E: TElement,
     {
+        use selectors::matching::IncludeStartingStyle;
+
+        let include_starting_style =
+            matches!(matching_context.include_starting_style, IncludeStartingStyle::Yes);
         for rule in rules {
             if !matches_selector(
                 &rule.selector,
@@ -348,6 +352,17 @@ impl SelectorMap<Rule> {
                     element,
                     matching_context,
                 ) {
+                    continue;
+                }
+            }
+
+            if rule.is_starting_style {
+                // Set this flag if there are any rules inside @starting-style. This flag is for
+                // optimization to avoid any redundant resolution of starting style if the author
+                // doesn't specify for this element.
+                matching_context.has_starting_style = true;
+
+                if !include_starting_style {
                     continue;
                 }
             }

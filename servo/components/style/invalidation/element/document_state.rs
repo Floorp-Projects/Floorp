@@ -14,8 +14,8 @@ use crate::invalidation::element::state_and_attributes;
 use crate::stylist::CascadeData;
 use dom::DocumentState;
 use selectors::matching::{
-    MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags, QuirksMode,
-    SelectorCaches, VisitedHandlingMode,
+    IncludeStartingStyle, MatchingContext, MatchingForInvalidation, MatchingMode,
+    NeedsSelectorFlags, QuirksMode, SelectorCaches, VisitedHandlingMode,
 };
 
 /// A struct holding the members necessary to invalidate document state
@@ -59,6 +59,7 @@ impl<'a, 'b, E: TElement, I> DocumentStateInvalidationProcessor<'a, 'b, E, I> {
             None,
             selector_caches,
             VisitedHandlingMode::AllLinksVisitedAndUnvisited,
+            IncludeStartingStyle::No,
             quirks_mode,
             NeedsSelectorFlags::No,
             MatchingForInvalidation::No,
