@@ -317,6 +317,7 @@ export class NetworkResponseListener {
         "br",
         "x-gzip",
         "x-deflate",
+        "zstd",
       ];
       for (const i in encodings) {
         // There can be multiple conversions applied
