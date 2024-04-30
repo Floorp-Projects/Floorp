@@ -947,8 +947,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     encoder_.reset();
 
     encoder_ = MaybeCreateFrameDumpingEncoderWrapper(
-        settings_.encoder_factory->CreateVideoEncoder(
-            encoder_config_.video_format),
+        settings_.encoder_factory->Create(env_, encoder_config_.video_format),
         env_.field_trials());
     if (!encoder_) {
       RTC_LOG(LS_ERROR) << "CreateVideoEncoder failed, failing encoder format: "

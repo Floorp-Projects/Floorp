@@ -10,10 +10,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7179d8d75313b6c9
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
-index 35d9c435cc..bc08681308 100644
+index c28d086fa4..3a51357e58 100644
 --- a/video/video_stream_encoder.cc
 +++ b/video/video_stream_encoder.cc
-@@ -1389,7 +1389,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
+@@ -1388,7 +1388,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
  
    bool is_svc = false;
    bool single_stream_or_non_first_inactive = true;
