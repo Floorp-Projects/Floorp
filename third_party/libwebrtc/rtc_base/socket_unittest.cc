@@ -234,6 +234,15 @@ void SocketTest::TestUdpSocketRecvTimestampUseRtcEpochIPv6() {
   UdpSocketRecvTimestampUseRtcEpoch(kIPv6Loopback);
 }
 
+void SocketTest::TestSocketSendRecvWithEcnIPV4() {
+  SocketSendRecvWithEcn(kIPv4Loopback);
+}
+
+void SocketTest::TestSocketSendRecvWithEcnIPV6() {
+  MAYBE_SKIP_IPV6;
+  SocketSendRecvWithEcn(kIPv6Loopback);
+}
+
 // For unbound sockets, GetLocalAddress / GetRemoteAddress return AF_UNSPEC
 // values on Windows, but an empty address of the same family on Linux/MacOS X.
 bool IsUnspecOrEmptyIP(const IPAddress& address) {
@@ -1079,6 +1088,18 @@ void SocketTest::GetSetOptionsInternal(const IPAddress& loopback) {
   ASSERT_NE(-1, socket->SetOption(Socket::OPT_DSCP, desired_dscp));
   ASSERT_NE(-1, socket->GetOption(Socket::OPT_DSCP, &current_dscp));
   ASSERT_EQ(desired_dscp, current_dscp);
+
+  int current_send_esn, desired_send_esn = 1;
+  ASSERT_NE(-1, socket->GetOption(Socket::OPT_SEND_ECN, &current_send_esn));
+  ASSERT_NE(-1, socket->SetOption(Socket::OPT_SEND_ECN, desired_send_esn));
+  ASSERT_NE(-1, socket->GetOption(Socket::OPT_SEND_ECN, &current_send_esn));
+  ASSERT_EQ(current_send_esn, desired_send_esn);
+
+  int current_recv_esn, desired_recv_esn = 1;
+  ASSERT_NE(-1, socket->GetOption(Socket::OPT_RECV_ECN, &current_recv_esn));
+  ASSERT_NE(-1, socket->SetOption(Socket::OPT_RECV_ECN, desired_recv_esn));
+  ASSERT_NE(-1, socket->GetOption(Socket::OPT_RECV_ECN, &current_recv_esn));
+  ASSERT_EQ(current_recv_esn, desired_recv_esn);
 #endif
 }
 
@@ -1143,4 +1164,41 @@ void SocketTest::UdpSocketRecvTimestampUseRtcEpoch(const IPAddress& loopback) {
   EXPECT_GT(packet_2->packet_time->us(), packet_1->packet_time->us());
   EXPECT_NEAR(packet_2->packet_time->us(), rtc::TimeMicros(), 1000'000);
 }
+
+void SocketTest::SocketSendRecvWithEcn(const IPAddress& loopback) {
+  StreamSink sink;
+  std::unique_ptr<Socket> socket(
+      socket_factory_->CreateSocket(loopback.family(), SOCK_DGRAM));
+  EXPECT_EQ(0, socket->Bind(SocketAddress(loopback, 0)));
+  SocketAddress address = socket->GetLocalAddress();
+  sink.Monitor(socket.get());
+  rtc::Buffer buffer;
+  Socket::ReceiveBuffer receive_buffer(buffer);
+
+  socket->SendTo("foo", 3, address);
+  EXPECT_TRUE_WAIT(sink.Check(socket.get(), SSE_READ), kTimeout);
+  ASSERT_GT(socket->RecvFrom(receive_buffer), 0);
+  EXPECT_EQ(receive_buffer.ecn, EcnMarking::kNotEct);
+
+  socket->SetOption(Socket::OPT_SEND_ECN, 1);  // Ect(1)
+  socket->SetOption(Socket::OPT_RECV_ECN, 1);
+
+  socket->SendTo("bar", 3, address);
+  EXPECT_TRUE_WAIT(sink.Check(socket.get(), SSE_READ), kTimeout);
+  ASSERT_GT(socket->RecvFrom(receive_buffer), 0);
+  EXPECT_EQ(receive_buffer.ecn, EcnMarking::kEct1);
+
+  socket->SetOption(Socket::OPT_SEND_ECN, 2);  // Ect(0)
+  socket->SendTo("bar", 3, address);
+  EXPECT_TRUE_WAIT(sink.Check(socket.get(), SSE_READ), kTimeout);
+  ASSERT_GT(socket->RecvFrom(receive_buffer), 0);
+  EXPECT_EQ(receive_buffer.ecn, EcnMarking::kEct0);
+
+  socket->SetOption(Socket::OPT_SEND_ECN, 3);  // Ce
+  socket->SendTo("bar", 3, address);
+  EXPECT_TRUE_WAIT(sink.Check(socket.get(), SSE_READ), kTimeout);
+  ASSERT_GT(socket->RecvFrom(receive_buffer), 0);
+  EXPECT_EQ(receive_buffer.ecn, EcnMarking::kCe);
+}
+
 }  // namespace rtc
