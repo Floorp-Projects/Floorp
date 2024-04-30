@@ -176,19 +176,19 @@ class PeerConnectionMediaBaseTest : public ::testing::Test {
     EnableFakeMedia(factory_dependencies, std::move(media_engine));
     factory_dependencies.event_log_factory =
         std::make_unique<RtcEventLogFactory>();
-
+    factory_dependencies.trials = std::move(field_trials_);
     auto pc_factory =
         CreateModularPeerConnectionFactory(std::move(factory_dependencies));
 
     auto fake_port_allocator = std::make_unique<cricket::FakePortAllocator>(
         rtc::Thread::Current(),
-        std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get()),
-        &field_trials_);
+        std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get()), nullptr);
     auto observer = std::make_unique<MockPeerConnectionObserver>();
     auto modified_config = config;
     modified_config.sdp_semantics = sdp_semantics_;
     PeerConnectionDependencies pc_dependencies(observer.get());
     pc_dependencies.allocator = std::move(fake_port_allocator);
+
     auto result = pc_factory->CreatePeerConnectionOrError(
         modified_config, std::move(pc_dependencies));
     if (!result.ok()) {
@@ -253,7 +253,7 @@ class PeerConnectionMediaBaseTest : public ::testing::Test {
     return sdp_semantics_ == SdpSemantics::kUnifiedPlan;
   }
 
-  test::ScopedKeyValueConfig field_trials_;
+  std::unique_ptr<test::ScopedKeyValueConfig> field_trials_;
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   rtc::AutoSocketServerThread main_;
   const SdpSemantics sdp_semantics_;
@@ -1641,6 +1641,25 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
 }
 
 TEST_F(PeerConnectionMediaTestUnifiedPlan,
+       SetCodecPreferencesAudioSendOnlyKillswitch) {
+  field_trials_ = std::make_unique<test::ScopedKeyValueConfig>(
+      "WebRTC-SetCodecPreferences-ReceiveOnlyFilterInsteadOfThrow/Disabled/");
+  auto fake_engine = std::make_unique<FakeMediaEngine>();
+  auto send_codecs = fake_engine->voice().send_codecs();
+  send_codecs.push_back(cricket::CreateAudioCodec(send_codecs.back().id + 1,
+                                                  "send_only_codec", 0, 1));
+  fake_engine->SetAudioSendCodecs(send_codecs);
+
+  auto caller = CreatePeerConnectionWithAudio(std::move(fake_engine));
+
+  auto transceiver = caller->pc()->GetTransceivers().front();
+  auto send_capabilities = caller->pc_factory()->GetRtpSenderCapabilities(
+      cricket::MediaType::MEDIA_TYPE_AUDIO);
+
+  EXPECT_TRUE(transceiver->SetCodecPreferences(send_capabilities.codecs).ok());
+}
+
+TEST_F(PeerConnectionMediaTestUnifiedPlan,
        SetCodecPreferencesVideoRejectsAudioCodec) {
   auto caller = CreatePeerConnectionWithVideo();
 
@@ -1732,6 +1751,25 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
                     .media_description()
                     ->codecs();
   EXPECT_TRUE(CompareCodecs(sender_video_codecs, codecs));
+}
+
+TEST_F(PeerConnectionMediaTestUnifiedPlan,
+       SetCodecPreferencesVideoSendOnlyKillswitch) {
+  field_trials_ = std::make_unique<test::ScopedKeyValueConfig>(
+      "WebRTC-SetCodecPreferences-ReceiveOnlyFilterInsteadOfThrow/Disabled/");
+  auto fake_engine = std::make_unique<FakeMediaEngine>();
+  auto send_codecs = fake_engine->voice().send_codecs();
+  send_codecs.push_back(
+      cricket::CreateVideoCodec(send_codecs.back().id + 1, "send_only_codec"));
+  fake_engine->SetAudioSendCodecs(send_codecs);
+
+  auto caller = CreatePeerConnectionWithAudio(std::move(fake_engine));
+
+  auto transceiver = caller->pc()->GetTransceivers().front();
+  auto send_capabilities = caller->pc_factory()->GetRtpSenderCapabilities(
+      cricket::MediaType::MEDIA_TYPE_AUDIO);
+
+  EXPECT_TRUE(transceiver->SetCodecPreferences(send_capabilities.codecs).ok());
 }
 
 TEST_F(PeerConnectionMediaTestUnifiedPlan,
