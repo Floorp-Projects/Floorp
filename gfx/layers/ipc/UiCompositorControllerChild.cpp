@@ -13,6 +13,7 @@
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPtr.h"
 #include "nsBaseWidget.h"
 #include "nsProxyRelease.h"
@@ -287,6 +288,8 @@ void UiCompositorControllerChild::OpenForGPUProcess(
     return;
   }
 
+  SetReplyTimeout();
+
   SendCachedValues();
   // Let Ui thread know the connection is open;
   RecvToolbarAnimatorMessageFromCompositor(COMPOSITOR_CONTROLLER_OPEN);
@@ -345,6 +348,21 @@ void UiCompositorControllerChild::OnCompositorSurfaceChanged(
   }
 }
 #endif
+
+void UiCompositorControllerChild::SetReplyTimeout() {
+#ifndef DEBUG
+  // Add a timeout for release builds to kill GPU process when it hangs.
+  const int32_t timeout =
+      StaticPrefs::layers_gpu_process_ipc_reply_timeout_ms_AtStartup();
+  SetReplyTimeoutMs(timeout);
+#endif
+}
+
+bool UiCompositorControllerChild::ShouldContinueFromReplyTimeout() {
+  gfxCriticalNote << "Killing GPU process due to IPC reply timeout";
+  gfx::GPUProcessManager::Get()->KillProcess(/* aGenerateMinidump */ true);
+  return false;
+}
 
 }  // namespace layers
 }  // namespace mozilla

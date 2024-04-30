@@ -212,6 +212,8 @@ void GPUProcessHost::OnChannelClosed() {
 }
 
 void GPUProcessHost::KillHard(bool aGenerateMinidump) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mGPUChild && aGenerateMinidump) {
     mGPUChild->GeneratePairedMinidump();
   }
