@@ -16,6 +16,12 @@ const FAKE_MODEL_ARGS = {
   file: "config.json",
 };
 
+const FAKE_RELEASED_MODEL_ARGS = {
+  model: "acme/bert",
+  revision: "v0.1",
+  file: "config.json",
+};
+
 const FAKE_ONNX_MODEL_ARGS = {
   model: "acme/bert",
   revision: "main",
@@ -143,6 +149,32 @@ add_task(async function test_getting_file() {
   );
 
   Assert.equal(jsonData.hidden_size, 768);
+});
+
+/**
+ * Test that we can retrieve a file from a released model and skip head calls
+ */
+add_task(async function test_getting_released_file() {
+  const hub = new ModelHub({ rootUrl: FAKE_HUB });
+  console.log(hub);
+
+  let spy = sinon.spy(hub, "getETag");
+  let [array, headers] = await hub.getModelFileAsArrayBuffer(
+    FAKE_RELEASED_MODEL_ARGS
+  );
+
+  Assert.equal(headers["Content-Type"], "application/json");
+
+  // check the content of the file.
+  let jsonData = JSON.parse(
+    String.fromCharCode.apply(null, new Uint8Array(array))
+  );
+
+  Assert.equal(jsonData.hidden_size, 768);
+
+  // check that head calls were not made
+  Assert.ok(!spy.called, "getETag should have never been called.");
+  spy.restore();
 });
 
 /**
@@ -329,6 +361,30 @@ add_task(async function test_Init() {
     IDBDatabase.isInstance(cache.db),
     `The cache should have an IDBDatabase instance. Found ${cache.db}`
   );
+  await deleteCache(cache);
+});
+
+/**
+ * Test checking existence of data in the cache.
+ */
+add_task(async function test_PutAndCheckExists() {
+  const cache = await initializeCache();
+  const testData = new ArrayBuffer(8); // Example data
+  const key = "file.txt";
+  await cache.put("org/model", "v1", "file.txt", testData, {
+    ETag: "ETAG123",
+  });
+
+  // Checking if the file exists
+  let exists = await cache.fileExists("org/model", "v1", key);
+  Assert.ok(exists, "The file should exist in the cache.");
+
+  // Removing all files from the model
+  await cache.deleteModel("org/model", "v1");
+
+  exists = await cache.fileExists("org/model", "v1", key);
+  Assert.ok(!exists, "The file should be gone from the cache.");
+
   await deleteCache(cache);
 });
 
