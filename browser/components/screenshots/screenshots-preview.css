@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  height: 100vh;
+  width: 100vw;
+  display: block;
+}
+
+.image-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.preview-buttons {
+  display: flex;
+  gap: var(--space-small);
+  align-items: center;
+  justify-content: flex-end;
+  width: 98%;
+  padding: var(--space-small) 0;
+}
+
+#preview-image-container {
+  height: 100vh;
+  overflow: auto;
+  padding: 2%;
+  padding-top: 0;
+}
+
+#preview-image {
+  width: 100%;
+}

@@ -209,8 +209,7 @@ add_task(async function test_started_retry() {
       visiblePageButton.click();
       await screenshotReady;
 
-      let dialog = helper.getDialog();
-      let retryButton = dialog._frame.contentDocument.getElementById("retry");
+      let retryButton = helper.getDialogButton("retry");
       ok(retryButton, "Got the retry button");
       retryButton.click();
 
@@ -247,8 +246,7 @@ add_task(async function test_canceled() {
       fullPageButton.click();
       await screenshotReady;
 
-      let dialog = helper.getDialog();
-      let cancelButton = dialog._frame.contentDocument.getElementById("cancel");
+      let cancelButton = helper.getDialogButton("cancel");
       ok(cancelButton, "Got the cancel button");
 
       let screenshotExit = TestUtils.topicObserved("screenshots-exit");
@@ -310,8 +308,7 @@ add_task(async function test_copy() {
       info("clicked visible page, waiting for screenshots-preview-ready");
       await screenshotReady;
 
-      let dialog = helper.getDialog();
-      let copyButton = dialog._frame.contentDocument.getElementById("copy");
+      let copyButton = helper.getDialogButton("copy");
 
       let screenshotExit = TestUtils.topicObserved("screenshots-exit");
       let clipboardChanged = helper.waitForRawClipboardChange(
@@ -421,8 +418,7 @@ add_task(async function test_extra_telemetry() {
       info("clicked visible page, waiting for screenshots-preview-ready");
       await screenshotReady;
 
-      let dialog = helper.getDialog();
-      let retryButton = dialog._frame.contentDocument.getElementById("retry");
+      let retryButton = helper.getDialogButton("retry");
       retryButton.click();
 
       info("waiting for panel");
@@ -439,8 +435,7 @@ add_task(async function test_extra_telemetry() {
 
       let screenshotExit = TestUtils.topicObserved("screenshots-exit");
 
-      dialog = helper.getDialog();
-      let copyButton = dialog._frame.contentDocument.getElementById("copy");
+      let copyButton = helper.getDialogButton("copy");
       retryButton.click();
       // click copy button on dialog box
       info("clicking the copy button");

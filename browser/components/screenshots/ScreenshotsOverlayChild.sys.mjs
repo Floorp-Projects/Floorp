@@ -88,22 +88,18 @@ export class ScreenshotsOverlay {
       cancelLabel,
       cancelAttributes,
       instructions,
-      downloadLabel,
       downloadAttributes,
-      copyLabel,
       copyAttributes,
     ] = lazy.overlayLocalization.formatMessagesSync([
       { id: "screenshots-cancel-button" },
       { id: "screenshots-component-cancel-button" },
       { id: "screenshots-instructions" },
-      { id: "screenshots-component-download-button-label" },
       {
-        id: "screenshots-component-download-button",
+        id: "screenshots-component-download-button-2",
         args: { shortcut: downloadShortcut },
       },
-      { id: "screenshots-component-copy-button-label" },
       {
-        id: "screenshots-component-copy-button",
+        id: "screenshots-component-copy-button-2",
         args: { shortcut: copyShorcut },
       },
     ]);
@@ -160,8 +156,8 @@ export class ScreenshotsOverlay {
           <div id="buttons-container" hidden>
             <div class="buttons-wrapper">
               <button id="cancel" class="screenshots-button" title="${cancelAttributes.attributes[0].value}" aria-label="${cancelAttributes.attributes[1].value}"><img/></button>
-              <button id="copy" class="screenshots-button" title="${copyAttributes.attributes[0].value}" aria-label="${copyAttributes.attributes[1].value}"><img/><label>${copyLabel.value}</label></button>
-              <button id="download" class="screenshots-button primary" title="${downloadAttributes.attributes[0].value}" aria-label="${downloadAttributes.attributes[1].value}"><img/><label>${downloadLabel.value}</label></button>
+              <button id="copy" class="screenshots-button" title="${copyAttributes.attributes[0].value}" aria-label="${copyAttributes.attributes[1].value}"><img/><label>${copyAttributes.value}</label></button>
+              <button id="download" class="screenshots-button primary" title="${downloadAttributes.attributes[0].value}" aria-label="${downloadAttributes.attributes[1].value}"><img/><label>${downloadAttributes.value}</label></button>
             </div>
           </div>
         </div>

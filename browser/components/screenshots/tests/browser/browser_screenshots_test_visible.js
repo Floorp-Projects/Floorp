@@ -48,11 +48,9 @@ add_task(async function test_visibleScreenshot() {
         .shadowRoot.querySelector(".visible-page");
       visiblePageButton.click();
 
-      let dialog = helper.getDialog();
-
       await screenshotReady;
 
-      let copyButton = dialog._frame.contentDocument.getElementById("copy");
+      let copyButton = helper.getDialogButton("copy");
       ok(copyButton, "Got the copy button");
 
       let clipboardChanged = helper.waitForRawClipboardChange(
@@ -147,11 +145,9 @@ add_task(async function test_visibleScreenshotScrolledY() {
         .shadowRoot.querySelector(".visible-page");
       visiblePageButton.click();
 
-      let dialog = helper.getDialog();
-
       await screenshotReady;
 
-      let copyButton = dialog._frame.contentDocument.getElementById("copy");
+      let copyButton = helper.getDialogButton("copy");
       ok(copyButton, "Got the copy button");
 
       let clipboardChanged = helper.waitForRawClipboardChange(
@@ -246,11 +242,9 @@ add_task(async function test_visibleScreenshotScrolledX() {
         .shadowRoot.querySelector(".visible-page");
       visiblePageButton.click();
 
-      let dialog = helper.getDialog();
-
       await screenshotReady;
 
-      let copyButton = dialog._frame.contentDocument.getElementById("copy");
+      let copyButton = helper.getDialogButton("copy");
       ok(copyButton, "Got the copy button");
 
       let clipboardChanged = helper.waitForRawClipboardChange(
@@ -345,11 +339,9 @@ add_task(async function test_visibleScreenshotScrolledXAndY() {
         .shadowRoot.querySelector(".visible-page");
       visiblePageButton.click();
 
-      let dialog = helper.getDialog();
-
       await screenshotReady;
 
-      let copyButton = dialog._frame.contentDocument.getElementById("copy");
+      let copyButton = helper.getDialogButton("copy");
       ok(copyButton, "Got the copy button");
 
       let clipboardChanged = helper.waitForRawClipboardChange(

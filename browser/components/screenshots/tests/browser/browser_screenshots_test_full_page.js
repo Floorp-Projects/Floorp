@@ -44,11 +44,9 @@ add_task(async function test_fullpageScreenshot() {
         .shadowRoot.querySelector(".full-page");
       visiblePage.click();
 
-      let dialog = helper.getDialog();
-
       await screenshotReady;
 
-      let copyButton = dialog._frame.contentDocument.getElementById("copy");
+      let copyButton = helper.getDialogButton("copy");
       ok(copyButton, "Got the copy button");
 
       let clipboardChanged = helper.waitForRawClipboardChange(
@@ -141,11 +139,9 @@ add_task(async function test_fullpageScreenshotScrolled() {
         .shadowRoot.querySelector(".full-page");
       visiblePage.click();
 
-      let dialog = helper.getDialog();
-
       await screenshotReady;
 
-      let copyButton = dialog._frame.contentDocument.getElementById("copy");
+      let copyButton = helper.getDialogButton("copy");
       ok(copyButton, "Got the copy button");
 
       let clipboardChanged = helper.waitForRawClipboardChange(
