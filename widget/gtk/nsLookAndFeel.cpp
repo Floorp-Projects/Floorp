@@ -800,6 +800,7 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::SpellCheckerUnderline:
     case ColorID::Mark:
     case ColorID::Marktext:
+    case ColorID::MozAutofillBackground:
       aColor = GetStandinForNativeColor(
           aID, mIsDark ? ColorScheme::Dark : ColorScheme::Light);
       break;
