@@ -37,3 +37,8 @@
   /* Match the color of the placeholder text to existing inputs in the Debugger */
   color: var(--theme-text-color-alt);
 }
+
+/* Removing the line padding for Codemirror 6 */
+.cm-line:has(div.conditional-breakpoint-panel) {
+  padding: 0;
+}
