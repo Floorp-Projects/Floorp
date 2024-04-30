@@ -690,6 +690,68 @@ impl ShorthandId {
     }
 }
 
+fn parse_non_custom_property_declaration_value_into<'i>(
+    declarations: &mut SourcePropertyDeclaration,
+    context: &ParserContext,
+    input: &mut Parser<'i, '_>,
+    start: &cssparser::ParserState,
+    parse_entirely_into: impl FnOnce(&mut SourcePropertyDeclaration, &mut Parser<'i, '_>) -> Result<(), ParseError<'i>>,
+    parsed_wide_keyword: impl FnOnce(&mut SourcePropertyDeclaration, CSSWideKeyword),
+    parsed_custom: impl FnOnce(&mut SourcePropertyDeclaration, custom_properties::VariableValue),
+) -> Result<(), ParseError<'i>> {
+    let mut starts_with_curly_block = false;
+    if let Ok(token) = input.next() {
+        match token {
+            cssparser::Token::Ident(ref ident) => match CSSWideKeyword::from_ident(ident) {
+                Ok(wk) => {
+                    if input.expect_exhausted().is_ok() {
+                        return Ok(parsed_wide_keyword(declarations, wk));
+                    }
+                },
+                Err(()) => {},
+            },
+            cssparser::Token::CurlyBracketBlock => {
+                starts_with_curly_block = true;
+            },
+            _ => {},
+        }
+    };
+
+    input.reset(&start);
+    input.look_for_var_or_env_functions();
+    let err = match parse_entirely_into(declarations, input) {
+        Ok(()) => {
+            input.seen_var_or_env_functions();
+            return Ok(());
+        },
+        Err(e) => e,
+    };
+
+    // Look for var(), env() and top-level curly blocks after the error.
+    let start_pos = start.position();
+    let mut at_start = start_pos == input.position();
+    let mut invalid = false;
+    while let Ok(token) = input.next() {
+        if matches!(token, cssparser::Token::CurlyBracketBlock) {
+            if !starts_with_curly_block || !at_start {
+                invalid = true;
+                break;
+            }
+        } else if starts_with_curly_block {
+            invalid = true;
+            break;
+        }
+        at_start = false;
+    }
+    if !input.seen_var_or_env_functions() || invalid {
+        return Err(err);
+    }
+    input.reset(start);
+    let value = custom_properties::VariableValue::parse(input, &context.url_data)?;
+    parsed_custom(declarations, value);
+    Ok(())
+}
+
 impl PropertyDeclaration {
     fn with_variables_from_shorthand(&self, shorthand: ShorthandId) -> Option<&str> {
         match *self {
@@ -793,76 +855,67 @@ impl PropertyDeclaration {
         };
         match non_custom_id.longhand_or_shorthand() {
             Ok(longhand_id) => {
-                let declaration = input
-                    .try_parse(CSSWideKeyword::parse)
-                    .map(|keyword| PropertyDeclaration::css_wide_keyword(longhand_id, keyword))
-                    .or_else(|()| {
-                        input.look_for_var_or_env_functions();
-                        input.parse_entirely(|input| longhand_id.parse_value(context, input))
-                    })
-                    .or_else(|err| {
-                        while let Ok(_) = input.next() {} // Look for var() after the error.
-                        if !input.seen_var_or_env_functions() {
-                            return Err(err);
-                        }
-                        input.reset(&start);
-                        let variable_value =
-                            custom_properties::VariableValue::parse(input, &context.url_data)?;
-                        Ok(PropertyDeclaration::WithVariables(VariableDeclaration {
+                parse_non_custom_property_declaration_value_into(
+                    declarations,
+                    context,
+                    input,
+                    &start,
+                    |declarations, input| {
+                        let decl = input.parse_entirely(|input| longhand_id.parse_value(context, input))?;
+                        declarations.push(decl);
+                        Ok(())
+                    },
+                    |declarations, wk| {
+                        declarations.push(PropertyDeclaration::css_wide_keyword(longhand_id, wk));
+                    },
+                    |declarations, variable_value| {
+                        declarations.push(PropertyDeclaration::WithVariables(VariableDeclaration {
                             id: longhand_id,
                             value: Arc::new(UnparsedValue {
                                 variable_value,
                                 from_shorthand: None,
                             }),
                         }))
-                    })?;
-                declarations.push(declaration)
+                    }
+                )?;
             },
             Err(shorthand_id) => {
-                if let Ok(keyword) = input.try_parse(CSSWideKeyword::parse) {
-                    if shorthand_id == ShorthandId::All {
-                        declarations.all_shorthand = AllShorthand::CSSWideKeyword(keyword)
-                    } else {
-                        for longhand in shorthand_id.longhands() {
-                            declarations
-                                .push(PropertyDeclaration::css_wide_keyword(longhand, keyword));
+                parse_non_custom_property_declaration_value_into(
+                    declarations,
+                    context,
+                    input,
+                    &start,
+                    // Not using parse_entirely here: each ShorthandId::parse_into function needs
+                    // to do so *before* pushing to `declarations`.
+                    |declarations, input| shorthand_id.parse_into(declarations, context, input),
+                    |declarations, wk| {
+                        if shorthand_id == ShorthandId::All {
+                            declarations.all_shorthand = AllShorthand::CSSWideKeyword(wk)
+                        } else {
+                            for longhand in shorthand_id.longhands() {
+                                declarations.push(PropertyDeclaration::css_wide_keyword(longhand, wk));
+                            }
+                        }
+                    },
+                    |declarations, variable_value| {
+                        let unparsed = Arc::new(UnparsedValue {
+                            variable_value,
+                            from_shorthand: Some(shorthand_id),
+                        });
+                        if shorthand_id == ShorthandId::All {
+                            declarations.all_shorthand = AllShorthand::WithVariables(unparsed)
+                        } else {
+                            for id in shorthand_id.longhands() {
+                                declarations.push(PropertyDeclaration::WithVariables(
+                                    VariableDeclaration {
+                                        id,
+                                        value: unparsed.clone(),
+                                    },
+                                ))
+                            }
                         }
                     }
-                } else {
-                    input.look_for_var_or_env_functions();
-                    // Not using parse_entirely here: each
-                    // ${shorthand.ident}::parse_into function needs to do so
-                    // *before* pushing to `declarations`.
-                    shorthand_id
-                        .parse_into(declarations, context, input)
-                        .or_else(|err| {
-                            while let Ok(_) = input.next() {} // Look for var() after the error.
-                            if !input.seen_var_or_env_functions() {
-                                return Err(err);
-                            }
-
-                            input.reset(&start);
-                            let variable_value =
-                                custom_properties::VariableValue::parse(input, &context.url_data)?;
-                            let unparsed = Arc::new(UnparsedValue {
-                                variable_value,
-                                from_shorthand: Some(shorthand_id),
-                            });
-                            if shorthand_id == ShorthandId::All {
-                                declarations.all_shorthand = AllShorthand::WithVariables(unparsed)
-                            } else {
-                                for id in shorthand_id.longhands() {
-                                    declarations.push(PropertyDeclaration::WithVariables(
-                                        VariableDeclaration {
-                                            id,
-                                            value: unparsed.clone(),
-                                        },
-                                    ))
-                                }
-                            }
-                            Ok(())
-                        })?;
-                }
+                )?;
             },
         }
         if let Some(use_counters) = context.use_counters {
