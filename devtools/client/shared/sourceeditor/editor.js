@@ -707,16 +707,9 @@ class Editor extends EventEmitter {
    */
   #lineContentMarkersExtension({ markers, domEventHandlers }) {
     const {
-      codemirrorView: { Decoration, ViewPlugin, WidgetType },
+      codemirrorView: { Decoration, ViewPlugin },
       codemirrorState: { RangeSetBuilder, RangeSet },
     } = this.#CodeMirror6;
-
-    class LineContentWidget extends WidgetType {
-      constructor(createElementNode) {
-        super();
-        this.toDOM = createElementNode;
-      }
-    }
 
     // Build and return the decoration set
     function buildDecorations(view) {
@@ -727,20 +720,13 @@ class Editor extends EventEmitter {
       for (const { from, to } of view.visibleRanges) {
         for (let pos = from; pos <= to; ) {
           const line = view.state.doc.lineAt(pos);
-          for (const marker of markers) {
-            if (marker.condition(line.number)) {
-              if (marker.lineClassName) {
-                const classDecoration = Decoration.line({
-                  class: marker.lineClassName,
-                });
-                builder.add(line.from, line.from, classDecoration);
-              }
-              if (marker.createLineElementNode) {
-                const nodeDecoration = Decoration.widget({
-                  widget: new LineContentWidget(marker.createLineElementNode),
-                });
-                builder.add(line.to, line.to, nodeDecoration);
-              }
+          for (const { lineClassName, condition } of markers) {
+            if (condition(line.number)) {
+              builder.add(
+                line.from,
+                line.from,
+                Decoration.line({ class: lineClassName })
+              );
             }
           }
           pos = line.to + 1;
@@ -812,8 +798,6 @@ class Editor extends EventEmitter {
    *   @property {string}     marker.lineClassName - The css class to add to the line
    *   @property {function}   marker.condition - The condition that decides if the marker/class gets added or removed.
    *                                             The line is passed as an argument.
-   *   @property {function}   marker.createLineElementNode - This should return the DOM element which
-   *                                            is used for the marker. This is optional.
    */
   setLineContentMarker(marker) {
     const cm = editors.get(this);

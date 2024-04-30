@@ -95,16 +95,12 @@
   right: -16px;
 }
 
-.new-breakpoint.has-condition .CodeMirror-gutter-wrapper svg,
-/* Codemirror 6*/
-.cm6-gutter-breakpoint .breakpoint-marker.has-condition svg {
+.new-breakpoint.has-condition .CodeMirror-gutter-wrapper svg {
   fill: var(--breakpoint-condition-fill);
   stroke: var(--breakpoint-condition-stroke);
 }
 
-.new-breakpoint.has-log .CodeMirror-gutter-wrapper svg,
-/* Codemirror 6*/
-.cm6-gutter-breakpoint .breakpoint-marker.has-log svg {
+.new-breakpoint.has-log .CodeMirror-gutter-wrapper svg {
   fill: var(--logpoint-fill);
   stroke: var(--logpoint-stroke);
 }
