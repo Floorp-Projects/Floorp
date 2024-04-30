@@ -10,6 +10,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/mscom/Utils.h"
 #include "WMFUtils.h"
+#include <comdef.h>
 
 // Missing from MinGW.
 #ifndef CODECAPI_AVEncAdaptiveMode
@@ -231,6 +232,7 @@ HRESULT MFTEncoder::Create(const GUID& aSubtype) {
 
   RefPtr<IMFActivate> factory = CreateFactory(aSubtype);
   if (!factory) {
+    MFT_ENC_LOGE("CreateFactory error");
     return E_FAIL;
   }
 
@@ -238,12 +240,18 @@ HRESULT MFTEncoder::Create(const GUID& aSubtype) {
   RefPtr<IMFTransform> encoder;
   HRESULT hr = factory->ActivateObject(
       IID_PPV_ARGS(static_cast<IMFTransform**>(getter_AddRefs(encoder))));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (FAILED(hr)) {
+    _com_error error(hr);
+    MFT_ENC_LOGE("MFTEncoder::Create: error = 0x%lX, %ls", hr,
+                 error.ErrorMessage());
+    return hr;
+  }
 
   RefPtr<ICodecAPI> config;
   // Avoid IID_PPV_ARGS() here for MingGW fails to declare UUID for ICodecAPI.
   hr = encoder->QueryInterface(IID_ICodecAPI, getter_AddRefs(config));
   if (FAILED(hr)) {
+    MFT_ENC_LOGE("QueryInterface IID_ICodecAPI error");
     encoder = nullptr;
     factory->ShutdownObject();
     return hr;
@@ -276,7 +284,12 @@ MFTEncoder::SetMediaTypes(IMFMediaType* aInputType, IMFMediaType* aOutputType) {
   MOZ_ASSERT(aInputType && aOutputType);
 
   AsyncMFTResult asyncMFT = AttemptEnableAsync();
-  NS_ENSURE_TRUE(asyncMFT.isOk(), asyncMFT.unwrapErr());
+  if (asyncMFT.isErr()) {
+    HRESULT hr = asyncMFT.inspectErr();
+    _com_error error(hr);
+    MFT_ENC_LOGE("AttemptEnableAsync error: %ls", error.ErrorMessage());
+    return asyncMFT.inspectErr();
+  }
 
   HRESULT hr = GetStreamIDs();
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -325,6 +338,7 @@ MFTEncoder::AsyncMFTResult MFTEncoder::AttemptEnableAsync() {
   IMFAttributes* pAttributes = nullptr;
   HRESULT hr = mEncoder->GetAttributes(&pAttributes);
   if (FAILED(hr)) {
+    MFT_ENC_LOGE("Encoder->GetAttribute error");
     return AsyncMFTResult(hr);
   }
 
@@ -336,6 +350,10 @@ MFTEncoder::AsyncMFTResult MFTEncoder::AttemptEnableAsync() {
     hr = S_OK;
   }
   pAttributes->Release();
+
+  if (FAILED(hr)) {
+    MFT_ENC_LOGE("Setting async unlock");
+  }
 
   return SUCCEEDED(hr) ? AsyncMFTResult(async) : AsyncMFTResult(hr);
 }
