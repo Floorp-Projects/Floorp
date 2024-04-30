@@ -82,6 +82,16 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    canalplus: {
+      "https://*.canalplus.com/live/*": {
+        videoWrapperScriptPath: "video-wrappers/canalplus.js",
+        disabledKeyboardControls: KEYBOARD_CONTROLS.LIVE_SEEK,
+      },
+      "https://*.canalplus.com/*": {
+        videoWrapperScriptPath: "video-wrappers/canalplus.js",
+      },
+    },
+
     cbc: {
       "https://*.cbc.ca/*": {
         videoWrapperScriptPath: "video-wrappers/cbc.js",
@@ -266,6 +276,16 @@ let AVAILABLE_PIP_OVERRIDES;
     time: {
       "https://*.time.com/*": {
         videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
+    timvision: {
+      "https://*.timvision.it/TV/*": {
+        videoWrapperScriptPath: "video-wrappers/canalplus.js",
+        disabledKeyboardControls: KEYBOARD_CONTROLS.LIVE_SEEK,
+      },
+      "https://*.timvision.it/*": {
+        videoWrapperScriptPath: "video-wrappers/canalplus.js",
       },
     },
 
