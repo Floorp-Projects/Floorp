@@ -356,6 +356,8 @@ class MOZ_STATIC_CLASS OpToFallbackKindTable {
     setKind(JSOp::Typeof, BaselineICFallbackKind::TypeOf);
     setKind(JSOp::TypeofExpr, BaselineICFallbackKind::TypeOf);
 
+    setKind(JSOp::TypeofEq, BaselineICFallbackKind::TypeOfEq);
+
     setKind(JSOp::ToPropertyKey, BaselineICFallbackKind::ToPropertyKey);
 
     setKind(JSOp::Iter, BaselineICFallbackKind::GetIterator);
@@ -429,6 +431,7 @@ bool ICSupportsPolymorphicTypeData(JSOp op) {
   switch (kind) {
     case BaselineICFallbackKind::ToBool:
     case BaselineICFallbackKind::TypeOf:
+    case BaselineICFallbackKind::TypeOfEq:
       return true;
     default:
       return false;
@@ -1143,7 +1146,7 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
 
   static_assert(JSOpLength_GetGName == JSOpLength_GetName,
                 "Otherwise our check for JSOp::Typeof isn't ok");
-  if (JSOp(pc[JSOpLength_GetGName]) == JSOp::Typeof) {
+  if (IsTypeOfNameOp(JSOp(pc[JSOpLength_GetGName]))) {
     if (!GetEnvironmentName<GetNameMode::TypeOf>(cx, envChain, name, res)) {
       return false;
     }
@@ -2053,6 +2056,39 @@ bool FallbackICCodeCompiler::emit_TypeOf() {
   using Fn = bool (*)(JSContext*, BaselineFrame*, ICFallbackStub*, HandleValue,
                       MutableHandleValue);
   return tailCallVM<Fn, DoTypeOfFallback>(masm);
+}
+
+//
+// TypeOfEq_Fallback
+//
+
+bool DoTypeOfEqFallback(JSContext* cx, BaselineFrame* frame,
+                        ICFallbackStub* stub, HandleValue val,
+                        MutableHandleValue res) {
+  stub->incrementEnteredCount();
+  MaybeNotifyWarp(frame->outerScript(), stub);
+  FallbackICSpew(cx, stub, "TypeOfEq");
+
+  jsbytecode* pc = StubOffsetToPc(stub, frame->script());
+  JSType type = JSType(GET_UINT8(pc));
+
+  TryAttachStub<TypeOfEqIRGenerator>("TypeOfEq", cx, frame, stub, val, type);
+
+  bool result = js::TypeOfValue(val) == type;
+  res.setBoolean(result);
+  return true;
+}
+
+bool FallbackICCodeCompiler::emit_TypeOfEq() {
+  EmitRestoreTailCallReg(masm);
+
+  masm.pushValue(R0);
+  masm.push(ICStubReg);
+  pushStubPayload(masm, R0.scratchReg());
+
+  using Fn = bool (*)(JSContext*, BaselineFrame*, ICFallbackStub*, HandleValue,
+                      MutableHandleValue);
+  return tailCallVM<Fn, DoTypeOfEqFallback>(masm);
 }
 
 //

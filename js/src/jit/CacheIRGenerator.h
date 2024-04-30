@@ -460,6 +460,21 @@ class MOZ_RAII TypeOfIRGenerator : public IRGenerator {
   AttachDecision tryAttachStub();
 };
 
+class MOZ_RAII TypeOfEqIRGenerator : public IRGenerator {
+  HandleValue val_;
+  JSType type_;
+
+  AttachDecision tryAttachPrimitive(ValOperandId valId);
+  AttachDecision tryAttachObject(ValOperandId valId);
+  void trackAttached(const char* name /* must be a C string literal */);
+
+ public:
+  TypeOfEqIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
+                      ICState state, HandleValue value, JSType type);
+
+  AttachDecision tryAttachStub();
+};
+
 class MOZ_RAII GetIteratorIRGenerator : public IRGenerator {
   HandleValue val_;
 

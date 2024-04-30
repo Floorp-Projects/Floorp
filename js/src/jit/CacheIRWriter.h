@@ -257,6 +257,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     static_assert(sizeof(JSOp) == sizeof(uint8_t), "JSOp must fit in a byte");
     buffer_.writeByte(uint8_t(op));
   }
+  void writeJSTypeImm(JSType type) {
+    static_assert(JSTYPE_LIMIT < 0xff, "JSType value must fit in a byte");
+    buffer_.writeByte(uint8_t(type));
+  }
   void writeGuardClassKindImm(GuardClassKind kind) {
     static_assert(sizeof(GuardClassKind) == sizeof(uint8_t),
                   "GuardClassKind must fit in a byte");

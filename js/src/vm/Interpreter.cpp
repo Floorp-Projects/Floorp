@@ -249,7 +249,7 @@ static inline bool GetNameOperation(JSContext* cx, HandleObject envChain,
                                     Handle<PropertyName*> name, JSOp nextOp,
                                     MutableHandleValue vp) {
   /* Kludge to allow (typeof foo == "undefined") tests. */
-  if (nextOp == JSOp::Typeof) {
+  if (IsTypeOfNameOp(nextOp)) {
     return GetEnvironmentName<GetNameMode::TypeOf>(cx, envChain, name, vp);
   }
   return GetEnvironmentName<GetNameMode::Normal>(cx, envChain, name, vp);
@@ -2649,6 +2649,13 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
       REGS.sp[-1].setString(TypeOfOperation(REGS.sp[-1], cx->runtime()));
     }
     END_CASE(Typeof)
+
+    CASE(TypeofEq) {
+      JSType type = JSType(GET_UINT8(REGS.pc));
+      bool result = js::TypeOfValue(REGS.sp[-1]) == type;
+      REGS.sp[-1].setBoolean(result);
+    }
+    END_CASE(TypeofEq)
 
     CASE(Void) { REGS.sp[-1].setUndefined(); }
     END_CASE(Void)
