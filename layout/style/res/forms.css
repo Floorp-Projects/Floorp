@@ -73,6 +73,8 @@ fieldset {
 
 label {
   cursor: default;
+  /* If you add declarations here, consider whether the select > label and file
+   * input label need them as well. */
 }
 
 /* Default inputs, text inputs, and selects */
@@ -281,6 +283,7 @@ select > button {
 select > label {
   display: inline-block;
   overflow: clip;
+  cursor: unset;
 }
 
 option[label]::before {
@@ -627,6 +630,7 @@ input[type=file] > label {
   min-inline-size: 12em;
   text-align: match-parent;
 
+  cursor: unset;
   color: unset;
   font-size: unset;
   letter-spacing: unset;
