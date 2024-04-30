@@ -810,6 +810,14 @@ workers:
                 by-release-level:
                     staging: '{trust-domain}-1-pushflatpak'
                     production: '{trust-domain}-3-pushflatpak'
+        pushmsix:
+            provisioner: scriptworker-k8s
+            implementation: push-msix
+            os: scriptworker
+            worker-type:
+                by-release-level:
+                    staging: '{trust-domain}-1-pushmsix'
+                    production: '{trust-domain}-3-pushmsix'
         tree:
             provisioner: scriptworker-k8s
             implementation: treescript
