@@ -286,7 +286,7 @@ static bool IsOffsetParent(nsIFrame* aFrame) {
 
 struct OffsetResult {
   Element* mParent = nullptr;
-  CSSIntRect mRect;
+  nsRect mRect;
 };
 
 static OffsetResult GetUnretargetedOffsetsFor(const Element& aElement) {
@@ -303,6 +303,7 @@ static OffsetResult GetUnretargetedOffsetsFor(const Element& aElement) {
   nsIContent* offsetParent = nullptr;
   Element* docElement = aElement.GetComposedDoc()->GetRootElement();
   nsIContent* content = frame->GetContent();
+  const auto effectiveZoom = frame->Style()->EffectiveZoom();
 
   if (content &&
       (content->IsHTMLElement(nsGkAtoms::body) || content == docElement)) {
@@ -317,6 +318,13 @@ static OffsetResult GetUnretargetedOffsetsFor(const Element& aElement) {
 
       // Stop at the first ancestor that is positioned.
       if (parent->IsAbsPosContainingBlock()) {
+        offsetParent = content;
+        break;
+      }
+
+      // WebKit-ism: offsetParent stops at zoom changes.
+      // See https://github.com/w3c/csswg-drafts/issues/10252
+      if (effectiveZoom != parent->Style()->EffectiveZoom()) {
         offsetParent = content;
         break;
       }
@@ -370,8 +378,7 @@ static OffsetResult GetUnretargetedOffsetsFor(const Element& aElement) {
   // we only care about the size. We just have to use something non-null.
   nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, frame);
   rcFrame.MoveTo(origin);
-  return {Element::FromNodeOrNull(offsetParent),
-          CSSIntRect::FromAppUnitsRounded(rcFrame)};
+  return {Element::FromNodeOrNull(offsetParent), rcFrame};
 }
 
 static bool ShouldBeRetargeted(const Element& aReferenceElement,
@@ -393,20 +400,22 @@ static bool ShouldBeRetargeted(const Element& aReferenceElement,
 Element* nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect) {
   aRect = CSSIntRect();
 
-  if (!GetPrimaryFrame(FlushType::Layout)) {
+  nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
+  if (!frame) {
     return nullptr;
   }
 
   OffsetResult thisResult = GetUnretargetedOffsetsFor(*this);
-  aRect = thisResult.mRect;
-
+  nsRect rect = thisResult.mRect;
   Element* parent = thisResult.mParent;
   while (parent && ShouldBeRetargeted(*this, *parent)) {
     OffsetResult result = GetUnretargetedOffsetsFor(*parent);
-    aRect += result.mRect.TopLeft();
+    rect += result.mRect.TopLeft();
     parent = result.mParent;
   }
 
+  aRect = CSSIntRect::FromAppUnitsRounded(
+      frame->Style()->EffectiveZoom().Unzoom(rect));
   return parent;
 }
 
