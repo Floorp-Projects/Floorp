@@ -454,7 +454,9 @@ class DefaultBrowserToolbarControllerTest {
 
         verify {
             navController.navigate(
-                BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(),
+                BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(
+                    sessionId = "1",
+                ),
             )
         }
 

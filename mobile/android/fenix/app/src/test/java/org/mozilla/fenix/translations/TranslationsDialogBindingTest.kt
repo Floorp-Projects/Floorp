@@ -56,6 +56,7 @@ class TranslationsDialogBindingTest {
             val binding = TranslationsDialogBinding(
                 browserStore = browserStore,
                 translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
                 getTranslatedPageTitle = { localizedFrom, localizedTo ->
                     testContext.getString(
                         R.string.translations_bottom_sheet_title_translation_completed,
@@ -137,6 +138,7 @@ class TranslationsDialogBindingTest {
             val binding = TranslationsDialogBinding(
                 browserStore = browserStore,
                 translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
                 getTranslatedPageTitle = { localizedFrom, localizedTo ->
                     testContext.getString(
                         R.string.translations_bottom_sheet_title_translation_completed,
@@ -182,6 +184,7 @@ class TranslationsDialogBindingTest {
             val binding = TranslationsDialogBinding(
                 browserStore = browserStore,
                 translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
                 getTranslatedPageTitle = { localizedFrom, localizedTo ->
                     testContext.getString(
                         R.string.translations_bottom_sheet_title_translation_completed,
@@ -228,6 +231,7 @@ class TranslationsDialogBindingTest {
             val binding = TranslationsDialogBinding(
                 browserStore = browserStore,
                 translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
                 getTranslatedPageTitle = { localizedFrom, localizedTo ->
                     testContext.getString(
                         R.string.translations_bottom_sheet_title_translation_completed,
@@ -277,6 +281,7 @@ class TranslationsDialogBindingTest {
             val binding = TranslationsDialogBinding(
                 browserStore = browserStore,
                 translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
                 getTranslatedPageTitle = { localizedFrom, localizedTo ->
                     testContext.getString(
                         R.string.translations_bottom_sheet_title_translation_completed,
@@ -316,6 +321,7 @@ class TranslationsDialogBindingTest {
             val binding = TranslationsDialogBinding(
                 browserStore = browserStore,
                 translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
                 getTranslatedPageTitle = { localizedFrom, localizedTo ->
                     testContext.getString(
                         R.string.translations_bottom_sheet_title_translation_completed,
@@ -353,6 +359,7 @@ class TranslationsDialogBindingTest {
             val binding = TranslationsDialogBinding(
                 browserStore = browserStore,
                 translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
                 getTranslatedPageTitle = { localizedFrom, localizedTo ->
                     testContext.getString(
                         R.string.translations_bottom_sheet_title_translation_completed,
@@ -403,6 +410,7 @@ class TranslationsDialogBindingTest {
             val binding = TranslationsDialogBinding(
                 browserStore = browserStore,
                 translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
                 getTranslatedPageTitle = { localizedFrom, localizedTo ->
                     testContext.getString(
                         R.string.translations_bottom_sheet_title_translation_completed,

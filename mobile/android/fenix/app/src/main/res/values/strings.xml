@@ -553,8 +553,6 @@
     <string name="preferences_account_sync_error">Reconnect to resume syncing</string>
     <!-- Preference for language -->
     <string name="preferences_language">Language</string>
-    <!-- Preference for translation -->
-    <string name="preferences_translation">Translation</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Data choices</string>
     <!-- Preference for data collection -->

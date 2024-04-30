@@ -868,12 +868,11 @@ translations:
           A string containing the name of the item the user tapped. These items
           include:
           main_flow_toolbar, main_flow_browser, page_settings, global_settings,
-          global_lang_settings, global_site_settings, downloads, global_settings_from_preferences
+          global_lang_settings, global_site_settings, downloads
         type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1883968
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1886851
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1890838
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1883968#c6
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1886851#c8

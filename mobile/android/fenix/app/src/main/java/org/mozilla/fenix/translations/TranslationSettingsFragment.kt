@@ -17,9 +17,11 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import mozilla.components.browser.state.action.TranslationsAction
-import mozilla.components.browser.state.state.TranslationsBrowserState
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.GleanMetrics.Translations
@@ -34,6 +36,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * A fragment displaying the Firefox Translation settings screen.
  */
 class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
+    private val args by navArgs<TranslationSettingsFragmentArgs>()
     private val browserStore: BrowserStore by lazy { requireComponents.core.store }
 
     override fun onResume() {
@@ -81,19 +84,19 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
 
     /**
      * Set the switch item values.
-     * The first one is based on [TranslationsBrowserState.offerTranslation].
+     * The first one is based on [TranslationPageSettings.alwaysOfferPopup].
      * The second one is [DownloadLanguageFileDialog] visibility.
      * This pop-up will appear if the switch item is unchecked, the phone is in saving mode, and
      * doesn't have a WiFi connection.
      */
     @Composable
     private fun getTranslationSwitchItemList(): MutableList<TranslationSwitchItem> {
-        val offerToTranslate = browserStore.observeAsComposableState { state ->
-            state.translationEngine.offerTranslation
+        val pageSettingsState = browserStore.observeAsComposableState { state ->
+            state.findTab(args.sessionId)?.translationsState?.pageSettings
         }.value
         val translationSwitchItems = mutableListOf<TranslationSwitchItem>()
 
-        offerToTranslate?.let {
+        pageSettingsState?.alwaysOfferPopup?.let {
             translationSwitchItems.add(
                 TranslationSwitchItem(
                     type = TranslationSettingsScreenOption.OfferToTranslate(
@@ -104,8 +107,10 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
                     isEnabled = true,
                     onStateChange = { _, checked ->
                         browserStore.dispatch(
-                            TranslationsAction.SetGlobalOfferTranslateSettingAction(
-                                offerTranslation = checked,
+                            TranslationsAction.UpdatePageSettingAction(
+                                tabId = args.sessionId,
+                                operation = TranslationPageSettingOperation.UPDATE_ALWAYS_OFFER_POPUP,
+                                setting = checked,
                             ),
                         )
                         // Ensures persistence of value
@@ -136,15 +141,12 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
     }
 
     override fun onBackPressed(): Boolean {
-        return if (findNavController().previousBackStackEntry?.destination?.id == R.id.browserFragment) {
-            findNavController().navigate(
-                TranslationSettingsFragmentDirections.actionTranslationSettingsFragmentToTranslationsDialogFragment(
-                    translationsDialogAccessPoint = TranslationsDialogAccessPoint.TranslationsOptions,
-                ),
-            )
-            true
-        } else {
-            false
-        }
+        findNavController().navigate(
+            TranslationSettingsFragmentDirections.actionTranslationSettingsFragmentToTranslationsDialogFragment(
+                sessionId = args.sessionId,
+                translationsDialogAccessPoint = TranslationsDialogAccessPoint.TranslationsOptions,
+            ),
+        )
+        return true
     }
 }

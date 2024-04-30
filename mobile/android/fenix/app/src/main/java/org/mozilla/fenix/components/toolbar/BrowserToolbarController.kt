@@ -233,7 +233,9 @@ class DefaultBrowserToolbarController(
     override fun handleTranslationsButtonClick() {
         Translations.action.record(Translations.ActionExtra("main_flow_toolbar"))
         val directions =
-            BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment()
+            BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(
+                sessionId = currentSession?.id,
+            )
         navController.navigateSafe(R.id.browserFragment, directions)
     }
 
