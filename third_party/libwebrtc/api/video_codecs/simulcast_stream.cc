@@ -36,16 +36,4 @@ absl::optional<ScalabilityMode> SimulcastStream::GetScalabilityMode() const {
   return scalability_modes[numberOfTemporalLayers - 1];
 }
 
-absl::optional<ScalabilityMode> SimulcastStream::GetScalabilityMode2() const {
-  static const ScalabilityMode scalability_modes[3] = {
-      ScalabilityMode::kL1T1,
-      ScalabilityMode::kL1T2,
-      ScalabilityMode::kL1T3,
-  };
-  if (numberOfTemporalLayers < 1 || numberOfTemporalLayers > 3) {
-    return absl::nullopt;
-  }
-  return scalability_modes[numberOfTemporalLayers - 1];
-}
-
 }  // namespace webrtc

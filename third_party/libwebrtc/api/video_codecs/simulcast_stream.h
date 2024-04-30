@@ -23,8 +23,6 @@ struct SimulcastStream {
   // setting to ScalabilityMode.
   unsigned char GetNumberOfTemporalLayers() const;
   absl::optional<ScalabilityMode> GetScalabilityMode() const;
-  // TODO(b/327381318): Rename to GetScalabilityMode.
-  absl::optional<ScalabilityMode> GetScalabilityMode2() const;
   void SetNumberOfTemporalLayers(unsigned char n);
 
   int width = 0;
