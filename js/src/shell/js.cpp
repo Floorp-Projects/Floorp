@@ -11432,15 +11432,20 @@ static int Shell(JSContext* cx, OptionParser* op) {
       fflush(stdout);
       fflush(stderr);
       // Send return code to parent and reset edge counters.
-      struct {
-        int status;
-        uint32_t execHash;
-        uint32_t execHashInputs;
-      } s;
-      s.status = (result & 0xff) << 8;
-      s.execHash = cx->executionHash;
-      s.execHashInputs = cx->executionHashInputs;
-      MOZ_RELEASE_ASSERT(write(REPRL_CWFD, &s, 12) == 12);
+      int status = (result & 0xff) << 8;
+      if (js::SupportDifferentialTesting()) {
+        struct {
+          int status;
+          uint32_t execHash;
+          uint32_t execHashInputs;
+        } s;
+        s.status = status;
+        s.execHash = cx->executionHash;
+        s.execHashInputs = cx->executionHashInputs;
+        MOZ_RELEASE_ASSERT(write(REPRL_CWFD, &s, 12) == 12);
+      } else {
+        MOZ_RELEASE_ASSERT(write(REPRL_CWFD, &status, 4) == 4);
+      }
       __sanitizer_cov_reset_edgeguards();
       cx->executionHash = 1;
       cx->executionHashInputs = 0;
