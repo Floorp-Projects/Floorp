@@ -5084,6 +5084,8 @@ void GCRuntime::checkHashTablesAfterMovingGC() {
         table->checkAfterMovingGC(zone);
       }
     }
+
+    WeakMapBase::checkWeakMapsAfterMovingGC(zone);
   }
 
   for (CompartmentsIter c(this); !c.done(); c.next()) {

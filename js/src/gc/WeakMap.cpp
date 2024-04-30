@@ -111,6 +111,15 @@ bool WeakMapBase::checkMarkingForZone(JS::Zone* zone) {
 }
 #endif
 
+#ifdef JSGC_HASH_TABLE_CHECKS
+/* static */
+void WeakMapBase::checkWeakMapsAfterMovingGC(JS::Zone* zone) {
+  for (WeakMapBase* map : zone->gcWeakMapList()) {
+    map->checkAfterMovingGC();
+  }
+}
+#endif
+
 bool WeakMapBase::markZoneIteratively(JS::Zone* zone, GCMarker* marker) {
   bool markedAny = false;
   for (WeakMapBase* m : zone->gcWeakMapList()) {
@@ -213,14 +222,3 @@ void ObjectWeakMap::trace(JSTracer* trc) { map.trace(trc); }
 size_t ObjectWeakMap::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   return map.shallowSizeOfExcludingThis(mallocSizeOf);
 }
-
-#ifdef JSGC_HASH_TABLE_CHECKS
-void ObjectWeakMap::checkAfterMovingGC() {
-  for (ObjectValueWeakMap::Range r = map.all(); !r.empty(); r.popFront()) {
-    CheckGCThingAfterMovingGC(r.front().key().get(), zone());
-    CheckGCThingAfterMovingGC(&r.front().value().toObject(), zone());
-    auto ptr = map.lookupUnbarriered(r.front().key());
-    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
-  }
-}
-#endif  // JSGC_HASH_TABLE_CHECKS

@@ -140,6 +140,10 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   static bool checkMarkingForZone(JS::Zone* zone);
 #endif
 
+#ifdef JSGC_HASH_TABLE_CHECKS
+  static void checkWeakMapsAfterMovingGC(JS::Zone* zone);
+#endif
+
  protected:
   // Instance member functions called by the above. Instantiations of WeakMap
   // override these with definitions appropriate for their Key and Value types.
@@ -170,6 +174,10 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   virtual bool allowKeysInOtherZones() const { return false; }
   friend bool gc::CheckWeakMapEntryMarking(const WeakMapBase*, gc::Cell*,
                                            gc::Cell*);
+#endif
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+  virtual void checkAfterMovingGC() const = 0;
 #endif
 
   // Object that this weak map is part of, if any.
@@ -329,6 +337,10 @@ class WeakMap
 #ifdef JS_GC_ZEAL
   bool checkMarking() const override;
 #endif
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+  void checkAfterMovingGC() const override;
+#endif
 };
 
 using ObjectValueWeakMap = WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>>;
@@ -355,10 +367,6 @@ class ObjectWeakMap {
   }
 
   ObjectValueWeakMap& valueMap() { return map; }
-
-#ifdef JSGC_HASH_TABLE_CHECKS
-  void checkAfterMovingGC();
-#endif
 };
 
 // Get the hash from the Symbol.

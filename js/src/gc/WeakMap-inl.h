@@ -22,6 +22,7 @@
 #include "js/TraceKind.h"
 #include "vm/JSContext.h"
 
+#include "gc/Marking-inl.h"
 #include "gc/StableCellHasher-inl.h"
 
 namespace js {
@@ -392,6 +393,23 @@ bool WeakMap<K, V>::checkMarking() const {
   return ok;
 }
 #endif
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+template <class K, class V>
+void WeakMap<K, V>::checkAfterMovingGC() const {
+  for (Range r = all(); !r.empty(); r.popFront()) {
+    gc::Cell* key = gc::ToMarkable(r.front().key());
+    gc::Cell* value = gc::ToMarkable(r.front().value());
+    CheckGCThingAfterMovingGC(key);
+    if (!allowKeysInOtherZones()) {
+      MOZ_RELEASE_ASSERT(key->zone() == zone() || key->zone()->isAtomsZone());
+    }
+    CheckGCThingAfterMovingGC(value, zone());
+    auto ptr = lookupUnbarriered(r.front().key());
+    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
+  }
+}
+#endif  // JSGC_HASH_TABLE_CHECKS
 
 inline HashNumber GetHash(JS::Symbol* sym) { return sym->hash(); }
 
