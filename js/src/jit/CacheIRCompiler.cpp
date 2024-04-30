@@ -8284,6 +8284,50 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotByValueResult(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitMegamorphicLoadSlotByValuePermissiveResult(
+    ObjOperandId objId, ValOperandId idId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  const AutoOutputRegister& output = callvm.output();
+
+  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand idVal = allocator.useValueRegister(masm, idId);
+
+#ifdef JS_CODEGEN_X86
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegisterMaybeOutputType scratch2(allocator, masm, output);
+#else
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
+#endif
+
+#ifdef JS_CODEGEN_X86
+  masm.xorPtr(scratch2, scratch2);
+#else
+  Label cacheHit;
+  masm.emitMegamorphicCacheLookupByValue(
+      idVal, obj, scratch1, scratch3, scratch2, output.valueReg(), &cacheHit);
+#endif
+
+  callvm.prepare();
+
+  masm.Push(scratch2);
+  masm.Push(idVal);
+  masm.Push(obj);
+
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue,
+                      MegamorphicCacheEntry*, MutableHandleValue);
+  callvm.call<Fn, GetElemMaybeCached>();
+
+#ifndef JS_CODEGEN_X86
+  masm.bind(&cacheHit);
+#endif
+  return true;
+}
+
 bool CacheIRCompiler::emitMegamorphicHasPropResult(ObjOperandId objId,
                                                    ValOperandId idId,
                                                    bool hasOwn) {
@@ -8630,11 +8674,6 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
   AutoScratchRegister scratch2(allocator, masm);
   AutoScratchRegisterMaybeOutputType scratch3(allocator, masm, output);
 
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
 #ifdef JS_CODEGEN_X86
   masm.xorPtr(scratch3, scratch3);
 #else
@@ -8644,6 +8683,11 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
                                          scratch3, output.valueReg(),
                                          &cacheHit);
 #endif
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
 
   masm.branchIfNonNativeObj(obj, scratch1, failure->label());
 
@@ -8682,6 +8726,49 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
   masm.adjustStack(sizeof(Value));
 
   masm.branchIfFalseBool(scratch2, failure->label());
+#ifndef JS_CODEGEN_X86
+  masm.bind(&cacheHit);
+#endif
+
+  return true;
+}
+
+bool CacheIRCompiler::emitMegamorphicLoadSlotPermissiveResult(
+    ObjOperandId objId, uint32_t idOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoCallVM callvm(masm, this, allocator);
+
+  const AutoOutputRegister& output = callvm.output();
+
+  Register obj = allocator.useRegister(masm, objId);
+  StubFieldOffset id(idOffset, StubField::Type::Id);
+
+  AutoScratchRegisterMaybeOutput idReg(allocator, masm, output);
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegisterMaybeOutputType scratch3(allocator, masm, output);
+
+#ifdef JS_CODEGEN_X86
+  masm.xorPtr(scratch3, scratch3);
+#else
+  Label cacheHit;
+  emitLoadStubField(id, idReg);
+  masm.emitMegamorphicCacheLookupByValue(idReg.get(), obj, scratch1, scratch2,
+                                         scratch3, output.valueReg(),
+                                         &cacheHit);
+#endif
+
+  callvm.prepare();
+
+  emitLoadStubField(id, scratch2);
+  masm.Push(scratch3);
+  masm.Push(scratch2);
+  masm.Push(obj);
+
+  using Fn = bool (*)(JSContext*, HandleObject, HandleId,
+                      MegamorphicCacheEntry*, MutableHandleValue);
+  callvm.call<Fn, GetPropMaybeCached>();
+
 #ifndef JS_CODEGEN_X86
   masm.bind(&cacheHit);
 #endif

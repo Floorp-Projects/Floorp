@@ -1944,6 +1944,15 @@
   congruent_to: custom
   alias_set: custom
 
+- name: MegamorphicLoadSlotPermissive
+  operands:
+    object: Object
+  arguments:
+    name: PropertyKey
+  result_type: Value
+  guard: true
+  possibly_calls: true
+
 - name: MegamorphicLoadSlotByValue
   operands:
     object: Object
@@ -1955,6 +1964,15 @@
   folds_to: custom
   congruent_to: if_operands_equal
   alias_set: custom
+  possibly_calls: true
+
+- name: MegamorphicLoadSlotByValuePermissive
+  operands:
+    object: Object
+    idVal: Value
+  result_type: Value
+  guard: true
+  folds_to: custom
   possibly_calls: true
 
 - name: MegamorphicStoreSlot

@@ -1656,19 +1656,21 @@ static void VerifyCacheEntry(JSContext* cx, NativeObject* obj, PropertyKey key,
     MOZ_ASSERT(!obj->containsPure(key));
     return;
   }
-  MOZ_ASSERT(entry.isDataProperty());
+  MOZ_ASSERT(entry.isDataProperty() || entry.isAccessorProperty());
   for (size_t i = 0, numHops = entry.numHops(); i < numHops; i++) {
     MOZ_ASSERT(!obj->containsPure(key));
     obj = &obj->staticPrototype()->as<NativeObject>();
   }
   mozilla::Maybe<PropertyInfo> prop = obj->lookupPure(key);
   MOZ_ASSERT(prop.isSome());
-  MOZ_ASSERT(prop->isDataProperty());
+  MOZ_ASSERT_IF(entry.isDataProperty(), prop->isDataProperty());
+  MOZ_ASSERT_IF(!entry.isDataProperty(), prop->isAccessorProperty());
   MOZ_ASSERT(obj->getTaggedSlotOffset(prop->slot()) == entry.slotOffset());
 #endif
 }
 
-static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPureImpl(
+template <AllowGC allowGC>
+static MOZ_ALWAYS_INLINE bool MaybeGetNativePropertyAndWriteToCache(
     JSContext* cx, JSObject* obj, jsid id, MegamorphicCacheEntry* entry,
     Value* vp) {
   MOZ_ASSERT(obj->is<NativeObject>());
@@ -1685,13 +1687,41 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPureImpl(
     uint32_t index;
     if (PropMap* map = nobj->shape()->lookup(cx, id, &index)) {
       PropertyInfo prop = map->getPropertyInfo(index);
-      if (!prop.isDataProperty()) {
+      if (prop.isDataProperty()) {
+        TaggedSlotOffset offset = nobj->getTaggedSlotOffset(prop.slot());
+        cache.initEntryForDataProperty(entry, receiverShape, id, numHops,
+                                       offset);
+        *vp = nobj->getSlot(prop.slot());
+        return true;
+      }
+      if constexpr (allowGC) {
+        // There's nothing fundamentally blocking us from supporting these,
+        // it's just not a priority
+        if (prop.isCustomDataProperty()) {
+          return false;
+        }
+
+        TaggedSlotOffset offset = nobj->getTaggedSlotOffset(prop.slot());
+        MOZ_ASSERT(prop.isAccessorProperty());
+        cache.initEntryForAccessorProperty(entry, receiverShape, id, numHops,
+                                           offset);
+        vp->setUndefined();
+
+        if (!nobj->hasGetter(prop)) {
+          return true;
+        }
+
+        RootedValue getter(cx, nobj->getGetterValue(prop));
+        RootedValue receiver(cx, ObjectValue(*obj));
+        RootedValue rootedValue(cx);
+        if (js::CallGetter(cx, receiver, getter, &rootedValue)) {
+          *vp = rootedValue;
+          return true;
+        }
+        return false;
+      } else {
         return false;
       }
-      TaggedSlotOffset offset = nobj->getTaggedSlotOffset(prop.slot());
-      cache.initEntryForDataProperty(entry, receiverShape, id, numHops, offset);
-      *vp = nobj->getSlot(prop.slot());
-      return true;
     }
 
     // Property not found. Watch out for Class hooks and TypedArrays.
@@ -1755,10 +1785,13 @@ bool GetNativeDataPropertyPureWithCacheLookup(JSContext* cx, JSObject* obj,
       vp->setUndefined();
       return true;
     }
+    if (entry->isAccessorProperty()) {
+      return false;
+    }
     MOZ_ASSERT(entry->isMissingOwnProperty());
   }
 
-  return GetNativeDataPropertyPureImpl(cx, obj, id, entry, vp);
+  return MaybeGetNativePropertyAndWriteToCache<NoGC>(cx, obj, id, entry, vp);
 }
 
 bool CheckProxyGetByValueResult(JSContext* cx, HandleObject obj,
@@ -1784,7 +1817,7 @@ bool CheckProxyGetByValueResult(JSContext* cx, HandleObject obj,
 bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyKey id,
                                MegamorphicCacheEntry* entry, Value* vp) {
   AutoUnsafeCallWithABI unsafe;
-  return GetNativeDataPropertyPureImpl(cx, obj, id, entry, vp);
+  return MaybeGetNativePropertyAndWriteToCache<NoGC>(cx, obj, id, entry, vp);
 }
 
 static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
@@ -1852,7 +1885,119 @@ bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj,
   }
 
   Value* res = vp + 1;
-  return GetNativeDataPropertyPureImpl(cx, obj, id, entry, res);
+  return MaybeGetNativePropertyAndWriteToCache<NoGC>(cx, obj, id, entry, res);
+}
+
+bool GetPropertyCached(JSContext* cx, HandleObject obj, HandleId id,
+                       MegamorphicCacheEntry* entry,
+                       MutableHandleValue result) {
+  if (entry->isMissingProperty()) {
+    result.setUndefined();
+    return true;
+  }
+
+  MOZ_ASSERT(entry->isDataProperty() || entry->isAccessorProperty());
+
+  NativeObject* nobj = &obj->as<NativeObject>();
+  for (size_t i = 0, numHops = entry->numHops(); i < numHops; i++) {
+    nobj = &nobj->staticPrototype()->as<NativeObject>();
+  }
+
+  uint32_t offset = entry->slotOffset().offset();
+  if (entry->slotOffset().isFixedSlot()) {
+    size_t index = NativeObject::getFixedSlotIndexFromOffset(offset);
+    result.set(nobj->getFixedSlot(index));
+  } else {
+    size_t index = NativeObject::getDynamicSlotIndexFromOffset(offset);
+    result.set(nobj->getDynamicSlot(index));
+  }
+
+  // If it's a data property, we're done - otherwise we need to try to call the
+  // getter
+  if (entry->isDataProperty()) {
+    return true;
+  }
+
+  JSObject* getter = result.toGCThing()->as<GetterSetter>()->getter();
+  if (getter) {
+    RootedValue getterValue(cx, ObjectValue(*getter));
+    RootedValue receiver(cx, ObjectValue(*obj));
+    return js::CallGetter(cx, receiver, getterValue, result);
+  }
+  result.setUndefined();
+  return true;
+}
+
+bool GetPropMaybeCached(JSContext* cx, HandleObject obj, HandleId id,
+                        MegamorphicCacheEntry* entry,
+                        MutableHandleValue result) {
+  if (obj->is<NativeObject>()) {
+    // Look up the entry in the cache if we don't have it
+    Shape* receiverShape = obj->shape();
+    MegamorphicCache& cache = cx->caches().megamorphicCache;
+    if (!entry) {
+      cache.lookup(receiverShape, id, &entry);
+    }
+
+    // If we hit it, load it from the cache. We can't though if it was a
+    // MissingOwnProperty entry (added by the HasOwn handler), because we
+    // need to look it up again to know if it's somewhere on the prototype
+    // chain
+    if (cache.isValidForLookup(*entry, receiverShape, id) &&
+        !entry->isMissingOwnProperty()) {
+      return GetPropertyCached(cx, obj, id, entry, result);
+    }
+
+    if (MaybeGetNativePropertyAndWriteToCache<CanGC>(cx, obj.get(), id.get(),
+                                                     entry, &result.get())) {
+      return true;
+    }
+
+    // The getter call in MaybeGetNativePropertyAndWriteToCache can throw, so
+    // we need to check for that specifically
+    // XXX: I know this is unusual, but I'm not sure on the best approach here -
+    // is this alright?
+    if (JS_IsExceptionPending(cx)) {
+      return false;
+    }
+  }
+
+  return GetProperty(cx, obj, obj, id, result);
+}
+
+bool GetElemMaybeCached(JSContext* cx, HandleObject obj, HandleValue idVal,
+                        MegamorphicCacheEntry* entry,
+                        MutableHandleValue result) {
+  jsid id;
+  if (obj->is<NativeObject>() &&
+      ValueToAtomOrSymbolPure(cx, idVal.get(), &id)) {
+    Shape* receiverShape = obj->shape();
+    MegamorphicCache& cache = cx->caches().megamorphicCache;
+    if (!entry) {
+      cache.lookup(receiverShape, id, &entry);
+    }
+
+    if (cache.isValidForLookup(*entry, receiverShape, id) &&
+        !entry->isMissingOwnProperty()) {
+      RootedId rid(cx, id);
+      return GetPropertyCached(cx, obj, rid, entry, result);
+    }
+
+    if (MaybeGetNativePropertyAndWriteToCache<CanGC>(cx, obj.get(), id, entry,
+                                                     &result.get())) {
+      return true;
+    }
+
+    // The getter call in MaybeGetNativePropertyAndWriteToCache can throw, so
+    // we need to check for that specifically
+    if (JS_IsExceptionPending(cx)) {
+      return false;
+    }
+  }
+
+  RootedValue objVal(cx, ObjectValue(*obj));
+  return GetObjectElementOperation(cx, JSOp::GetElem, obj, objVal, idVal,
+                                   result);
 }
 
 bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,

@@ -562,6 +562,14 @@ bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj,
                                       MegamorphicCacheEntry* cacheEntry,
                                       Value* vp);
 
+bool GetPropMaybeCached(JSContext* cx, HandleObject obj, HandleId id,
+                        MegamorphicCacheEntry* cacheEntry,
+                        MutableHandleValue result);
+
+bool GetElemMaybeCached(JSContext* cx, HandleObject obj, HandleValue id,
+                        MegamorphicCacheEntry* cacheEntry,
+                        MutableHandleValue result);
+
 template <bool HasOwn>
 bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj,
                                MegamorphicCacheEntry* cacheEntry, Value* vp);
