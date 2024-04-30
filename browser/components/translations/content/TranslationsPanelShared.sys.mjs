@@ -11,12 +11,33 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /**
  * A class containing static functionality that is shared by both
  * the FullPageTranslationsPanel and SelectTranslationsPanel classes.
+ *
+ * It is recommended to read the documentation above the TranslationsParent class
+ * definition to understand the scope of the Translations architecture throughout
+ * Firefox.
+ *
+ * @see TranslationsParent
+ *
+ * The static instance of this class is a singleton in the parent process, and is
+ * available throughout all windows and tabs, just like the static instance of
+ * the TranslationsParent class.
+ *
+ * Unlike the TranslationsParent, this class is never instantiated as an actor
+ * outside of the static-context functionality defined below.
  */
 export class TranslationsPanelShared {
   /**
-   * @type {Map<string, string>}
+   * A map from Translations Panel instances to their initialized states.
+   * There is one instance of each panel per top ChromeWindow in Firefox.
+   *
+   * See the documentation above the TranslationsParent class for a detailed
+   * explanation of the translations architecture throughout Firefox.
+   *
+   * @see TranslationsParent
+   *
+   * @type {Map<FullPageTranslationsPanel | SelectTranslationsPanel, string>}
    */
-  static #langListsInitState = new Map();
+  static #langListsInitState = new WeakMap();
 
   /**
    * True if the next language-list initialization to fail for testing.
@@ -35,7 +56,7 @@ export class TranslationsPanelShared {
    * starts from a clean slate.
    */
   static clearCache() {
-    this.#langListsInitState = new Map();
+    this.#langListsInitState = new WeakMap();
   }
 
   /**
@@ -85,11 +106,9 @@ export class TranslationsPanelShared {
    *
    * @param {FullPageTranslationsPanel | SelectTranslationsPanel} panel
    *   - The panel for which to look up the state.
-   * @param {number} innerWindowId - The id of the current window.
    */
-  static getLangListsInitState(panel, innerWindowId) {
-    const key = `${panel.id}-${innerWindowId}`;
-    return TranslationsPanelShared.#langListsInitState.get(key);
+  static getLangListsInitState(panel) {
+    return TranslationsPanelShared.#langListsInitState.get(panel);
   }
 
   /**
@@ -100,11 +119,10 @@ export class TranslationsPanelShared {
    * @param {Document} document - The document object.
    * @param {FullPageTranslationsPanel | SelectTranslationsPanel} panel
    *   - The panel for which to ensure language lists are built.
-   * @param {number} innerWindowId - The id of the current window.
    */
-  static async ensureLangListsBuilt(document, panel, innerWindowId) {
-    const key = `${panel.id}-${innerWindowId}`;
-    switch (TranslationsPanelShared.#langListsInitState.get(key)) {
+  static async ensureLangListsBuilt(document, panel) {
+    const { panel: panelElement } = panel.elements;
+    switch (TranslationsPanelShared.#langListsInitState.get(panel)) {
       case "initialized":
         // This has already been initialized.
         return;
@@ -112,7 +130,7 @@ export class TranslationsPanelShared {
       case undefined:
         // Set the error state in case there is an early exit at any point.
         // This will be set to "initialized" if everything succeeds.
-        TranslationsPanelShared.#langListsInitState.set(key, "error");
+        TranslationsPanelShared.#langListsInitState.set(panel, "error");
         break;
       default:
         throw new Error(
@@ -131,10 +149,10 @@ export class TranslationsPanelShared {
       throw new Error("No translation languages were retrieved.");
     }
 
-    const fromPopups = panel.querySelectorAll(
+    const fromPopups = panelElement.querySelectorAll(
       ".translations-panel-language-menupopup-from"
     );
-    const toPopups = panel.querySelectorAll(
+    const toPopups = panelElement.querySelectorAll(
       ".translations-panel-language-menupopup-to"
     );
 
@@ -168,6 +186,6 @@ export class TranslationsPanelShared {
       }
     }
 
-    TranslationsPanelShared.#langListsInitState.set(key, "initialized");
+    TranslationsPanelShared.#langListsInitState.set(panel, "initialized");
   }
 }
