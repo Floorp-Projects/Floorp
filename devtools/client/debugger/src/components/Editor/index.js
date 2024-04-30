@@ -283,7 +283,7 @@ class Editor extends PureComponent {
     }
   };
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     const {
       selectedSource,
       blackboxedRanges,
@@ -298,8 +298,30 @@ class Editor extends PureComponent {
 
     // Sets the breakables lines for codemirror 6
     if (features.codemirrorNext) {
+      const shouldUpdateBreakableLines =
+        prevProps.breakableLines.size !== this.props.breakableLines.size ||
+        prevProps.selectedSource?.id !== selectedSource.id;
+
       const isSourceWasm = isWasm(selectedSource.id);
-      function blackboxCondition(line) {
+
+      if (shouldUpdateBreakableLines) {
+        editor.setLineGutterMarkers([
+          {
+            id: "empty-line-marker",
+            lineClassName: "empty-line",
+            condition: line => {
+              const lineNumber = fromEditorLine(
+                selectedSource.id,
+                line,
+                isSourceWasm
+              );
+              return !breakableLines.has(lineNumber);
+            },
+          },
+        ]);
+      }
+
+      function condition(line) {
         const lineNumber = fromEditorLine(selectedSource.id, line);
 
         return isLineBlackboxed(
@@ -311,28 +333,15 @@ class Editor extends PureComponent {
 
       editor.setLineGutterMarkers([
         {
-          id: "empty-line-marker",
-          lineClassName: "empty-line",
-          condition: line => {
-            const lineNumber = fromEditorLine(
-              selectedSource.id,
-              line,
-              isSourceWasm
-            );
-            return !breakableLines.has(lineNumber);
-          },
-        },
-        {
           id: "blackboxed-line-gutter-marker",
           lineClassName: "blackboxed-line",
-          condition: blackboxCondition,
+          condition,
         },
       ]);
-
       editor.setLineContentMarker({
         id: "blackboxed-line-marker",
         lineClassName: "blackboxed-line",
-        condition: blackboxCondition,
+        condition,
       });
     }
   }
@@ -815,13 +824,7 @@ class Editor extends PureComponent {
           editor,
         }),
         React.createElement(DebugLine, { editor, selectedSource }),
-        React.createElement(Exceptions, { editor }),
-        conditionalPanelLocation
-          ? React.createElement(ConditionalPanel, {
-              editor,
-              selectedSource,
-            })
-          : null
+        React.createElement(Exceptions, { editor })
       );
     }
 
