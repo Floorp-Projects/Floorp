@@ -243,30 +243,27 @@ add_task(function test_lexer_linecol() {
 add_task(function test_lexer_eofchar() {
   const EOFCHAR_TESTS = [
     ["hello", "hello"],
-    ["hello \\", "hello \\\\", "hello \\\uFFFD"],
+    ["hello \\", "hello \\\\"],
     ["'hello", "'hello'"],
     ['"hello', '"hello"'],
-    ["'hello\\", "'hello\\\\'", "'hello'"],
-    ['"hello\\', '"hello\\\\"', '"hello"'],
+    ["'hello\\", "'hello\\\\'"],
+    ['"hello\\', '"hello\\\\"'],
     ["/*hello", "/*hello*/"],
     ["/*hello*", "/*hello*/"],
     ["/*hello\\", "/*hello\\*/"],
     ["url(hello", "url(hello)"],
     ["url('hello", "url('hello')"],
     ['url("hello', 'url("hello")'],
-    ["url(hello\\", "url(hello\\\\)", "url(hello\\\uFFFD)"],
-    ["url('hello\\", "url('hello\\\\')", "url('hello')"],
-    ['url("hello\\', 'url("hello\\\\")', 'url("hello")'],
+    ["url(hello\\", "url(hello\\\\)"],
+    ["url('hello\\", "url('hello\\\\')"],
+    ['url("hello\\', 'url("hello\\\\")'],
     // Ensure that passing a different inputString to performEOFFixup
     // doesn't cause an assertion trying to strip a backslash from the
     // end of an empty string.
-    ["'\\", "\\'", "'", ""],
+    ["'\\", "\\'", ""],
   ];
 
-  const test = (cssText, expectedAppend, expectedNoAppend, argText) => {
-    if (!expectedNoAppend) {
-      expectedNoAppend = expectedAppend;
-    }
+  const test = (cssText, expectedAppend, argText) => {
     const lexer = new InspectorCSSParserWrapper(cssText, {
       trackEOFChars: true,
     });
@@ -276,21 +273,11 @@ add_task(function test_lexer_eofchar() {
     }
 
     info("EOF char test, input = " + cssText);
-
-    let result = lexer.performEOFFixup(argText, true);
-    equal(result, expectedAppend);
-
-    result = lexer.performEOFFixup(argText, false);
-    equal(result, expectedNoAppend);
+    equal(lexer.performEOFFixup(argText), expectedAppend);
   };
 
-  for (const [
-    cssText,
-    expectedAppend,
-    expectedNoAppend,
-    argText = cssText,
-  ] of EOFCHAR_TESTS) {
+  for (const [cssText, expectedAppend, argText = cssText] of EOFCHAR_TESTS) {
     info(`Test "${cssText}"`);
-    test(cssText, expectedAppend, expectedNoAppend, argText);
+    test(cssText, expectedAppend, argText);
   }
 });

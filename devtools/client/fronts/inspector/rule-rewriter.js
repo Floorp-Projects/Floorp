@@ -294,7 +294,7 @@ RuleRewriter.prototype = {
     // Copy out any remaining text, then any needed terminators.
     result += text.substring(previousOffset, text.length);
 
-    const eofFixup = lexer.performEOFFixup("", true);
+    const eofFixup = lexer.performEOFFixup("");
     if (eofFixup) {
       anySanitized = true;
       result += eofFixup;
