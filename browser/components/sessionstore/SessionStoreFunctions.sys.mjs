@@ -4,38 +4,40 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 import { SessionStore } from "resource:///modules/sessionstore/SessionStore.sys.mjs";
 
-export function UpdateSessionStore(
-  aBrowser,
-  aBrowsingContext,
-  aPermanentKey,
-  aEpoch,
-  aCollectSHistory,
-  aData
-) {
-  return SessionStoreFuncInternal.updateSessionStore(
+export class SessionStoreFunctions {
+  UpdateSessionStore(
     aBrowser,
     aBrowsingContext,
     aPermanentKey,
     aEpoch,
     aCollectSHistory,
     aData
-  );
-}
+  ) {
+    return SessionStoreFuncInternal.updateSessionStore(
+      aBrowser,
+      aBrowsingContext,
+      aPermanentKey,
+      aEpoch,
+      aCollectSHistory,
+      aData
+    );
+  }
 
-export function UpdateSessionStoreForStorage(
-  aBrowser,
-  aBrowsingContext,
-  aPermanentKey,
-  aEpoch,
-  aData
-) {
-  return SessionStoreFuncInternal.updateSessionStoreForStorage(
+  UpdateSessionStoreForStorage(
     aBrowser,
     aBrowsingContext,
     aPermanentKey,
     aEpoch,
     aData
-  );
+  ) {
+    return SessionStoreFuncInternal.updateSessionStoreForStorage(
+      aBrowser,
+      aBrowsingContext,
+      aPermanentKey,
+      aEpoch,
+      aData
+    );
+  }
 }
 
 var SessionStoreFuncInternal = {
@@ -85,3 +87,7 @@ var SessionStoreFuncInternal = {
     );
   },
 };
+
+SessionStoreFunctions.prototype.QueryInterface = ChromeUtils.generateQI([
+  "nsISessionStoreFunctions",
+]);

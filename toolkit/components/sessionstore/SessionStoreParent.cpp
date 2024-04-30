@@ -19,7 +19,7 @@
 #include "mozilla/dom/InProcessParent.h"
 #include "mozilla/dom/SessionStoreChild.h"
 #include "mozilla/dom/SessionStoreUtilsBinding.h"
-#include "SessionStoreFunctions.h"
+#include "nsISessionStoreFunctions.h"
 #include "nsISupports.h"
 #include "nsIXULRuntime.h"
 #include "nsImportModule.h"
@@ -146,9 +146,14 @@ static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
     data.mScroll.Construct(aScroll);
   }
 
-  nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportESModule(
-      "resource://gre/modules/SessionStoreFunctions.sys.mjs", fallible);
-  nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
+  nsCOMPtr<nsISessionStoreFunctions> sessionStoreFuncs =
+      do_GetService("@mozilla.org/toolkit/sessionstore-functions;1");
+  if (!sessionStoreFuncs) {
+    return;
+  }
+
+  nsCOMPtr<nsIXPConnectWrappedJS> wrapped =
+      do_QueryInterface(sessionStoreFuncs);
   if (!wrapped) {
     return;
   }
@@ -166,8 +171,8 @@ static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
   JS::Rooted<JS::Value> key(jsapi.cx(),
                             aBrowsingContext->Top()->PermanentKey());
 
-  Unused << funcs->UpdateSessionStore(nullptr, aBrowsingContext, key, aEpoch,
-                                      aNeedCollectSHistory, update);
+  Unused << sessionStoreFuncs->UpdateSessionStore(
+      nullptr, aBrowsingContext, key, aEpoch, aNeedCollectSHistory, update);
 }
 #endif
 
