@@ -2,30 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-disable camelcase */
-
 "use strict";
 
-const eEOFCharacters_None = 0x0000;
+const EEOFCHARACTERS_NONE = 0x0000;
 
 // to handle \<EOF> inside strings
-const eEOFCharacters_DropBackslash = 0x0001;
+const EEOFCHARACTERS_DROPBACKSLASH = 0x0001;
 
 // to handle \<EOF> outside strings
-const eEOFCharacters_ReplacementChar = 0x0002;
+const EEOFCHARACTERS_REPLACEMENTCHAR = 0x0002;
 
 // to close comments
-const eEOFCharacters_Asterisk = 0x0004;
-const eEOFCharacters_Slash = 0x0008;
+const EEOFCHARACTERS_ASTERISK = 0x0004;
+const EEOFCHARACTERS_SLASH = 0x0008;
 
 // to close double-quoted strings
-const eEOFCharacters_DoubleQuote = 0x0010;
+const EEOFCHARACTERS_DOUBLEQUOTE = 0x0010;
 
 // to close single-quoted strings
-const eEOFCharacters_SingleQuote = 0x0020;
+const EEOFCHARACTERS_SINGLEQUOTE = 0x0020;
 
 // to close URLs
-const eEOFCharacters_CloseParen = 0x0040;
+const EEOFCHARACTERS_CLOSEPAREN = 0x0040;
 
 // Bridge the char/string divide.
 const APOSTROPHE = "'".charCodeAt(0);
@@ -53,7 +51,7 @@ const kImpliedEOFCharacters = [
 class InspectorCSSParserWrapper {
   #offset = 0;
   #trackEOFChars;
-  #eofCharacters = eEOFCharacters_None;
+  #eofCharacters = EEOFCHARACTERS_NONE;
 
   /**
    *
@@ -85,25 +83,25 @@ class InspectorCSSParserWrapper {
       const lastChar = text[text.length - 1];
       if (tokenType === "Comment" && lastChar !== `/`) {
         if (lastChar === `*`) {
-          this.#eofCharacters = eEOFCharacters_Slash;
+          this.#eofCharacters = EEOFCHARACTERS_SLASH;
         } else {
-          this.#eofCharacters = eEOFCharacters_Asterisk | eEOFCharacters_Slash;
+          this.#eofCharacters = EEOFCHARACTERS_ASTERISK | EEOFCHARACTERS_SLASH;
         }
       } else if (tokenType === "QuotedString" || tokenType === "BadString") {
         if (lastChar === "\\") {
           this.#eofCharacters =
-            this.#eofCharacters | eEOFCharacters_DropBackslash;
+            this.#eofCharacters | EEOFCHARACTERS_DROPBACKSLASH;
         }
         if (text[0] !== lastChar) {
           this.#eofCharacters =
             this.#eofCharacters |
             (text[0] === `"`
-              ? eEOFCharacters_DoubleQuote
-              : eEOFCharacters_SingleQuote);
+              ? EEOFCHARACTERS_DOUBLEQUOTE
+              : EEOFCHARACTERS_SINGLEQUOTE);
         }
       } else {
         if (lastChar === "\\") {
-          this.#eofCharacters = eEOFCharacters_ReplacementChar;
+          this.#eofCharacters = EEOFCHARACTERS_REPLACEMENTCHAR;
         }
 
         // For some reason, we only automatically close `url`, other functions
@@ -113,12 +111,12 @@ class InspectorCSSParserWrapper {
           tokenType === "BadUrl" ||
           (tokenType === "UnquotedUrl" && lastChar !== ")")
         ) {
-          this.#eofCharacters = this.#eofCharacters | eEOFCharacters_CloseParen;
+          this.#eofCharacters = this.#eofCharacters | EEOFCHARACTERS_CLOSEPAREN;
         }
 
         if (tokenType === "CloseParenthesis") {
           this.#eofCharacters =
-            this.#eofCharacters & ~eEOFCharacters_CloseParen;
+            this.#eofCharacters & ~EEOFCHARACTERS_CLOSEPAREN;
         }
       }
     }
@@ -174,24 +172,24 @@ class InspectorCSSParserWrapper {
     if (
       preserveBackslash &&
       (eofChars &
-        (eEOFCharacters_DropBackslash | eEOFCharacters_ReplacementChar)) !=
+        (EEOFCHARACTERS_DROPBACKSLASH | EEOFCHARACTERS_REPLACEMENTCHAR)) !=
         0
     ) {
       eofChars &= ~(
-        eEOFCharacters_DropBackslash | eEOFCharacters_ReplacementChar
+        EEOFCHARACTERS_DROPBACKSLASH | EEOFCHARACTERS_REPLACEMENTCHAR
       );
       result += "\\";
     }
 
     if (
-      (eofChars & eEOFCharacters_DropBackslash) != 0 &&
+      (eofChars & EEOFCHARACTERS_DROPBACKSLASH) != 0 &&
       !!result.length &&
       result.endsWith("\\")
     ) {
       result = result.slice(0, -1);
     }
 
-    // First, ignore eEOFCharacters_DropBackslash.
+    // First, ignore EEOFCHARACTERS_DROPBACKSLASH.
     let c = eofChars >> 1;
 
     // All of the remaining EOFCharacters bits represent appended characters,
