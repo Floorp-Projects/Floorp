@@ -27,10 +27,7 @@ jobs:
         description: Beetmover submission for platform-independent langpacks {locales} in {platform} directory
         from-deps:
             group-by: single-with-filters
-        worker-type:
-            by-release-level:
-                production: scriptworker-k8s/gecko-3-beetmover
-                staging: scriptworker-k8s/gecko-1-beetmover
+        worker-type: beetmover
         run-on-projects: []
         shipping-phase: promote
         attributes:
