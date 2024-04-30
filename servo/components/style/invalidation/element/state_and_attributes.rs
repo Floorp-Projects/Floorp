@@ -24,7 +24,8 @@ use dom::ElementState;
 use selectors::attr::CaseSensitivity;
 use selectors::kleene_value::KleeneValue;
 use selectors::matching::{
-    matches_selector_kleene, MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags, SelectorCaches, VisitedHandlingMode
+    matches_selector_kleene, IncludeStartingStyle, MatchingContext, MatchingForInvalidation,
+    MatchingMode, NeedsSelectorFlags, SelectorCaches, VisitedHandlingMode
 };
 use smallvec::SmallVec;
 
@@ -73,6 +74,7 @@ impl<'a, 'b: 'a, E: TElement + 'b> StateAndAttrInvalidationProcessor<'a, 'b, E> 
             None,
             selector_caches,
             VisitedHandlingMode::AllLinksVisitedAndUnvisited,
+            IncludeStartingStyle::No,
             shared_context.quirks_mode(),
             NeedsSelectorFlags::No,
             MatchingForInvalidation::Yes,
