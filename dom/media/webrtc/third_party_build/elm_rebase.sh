@@ -74,6 +74,12 @@ if [ -f $STATE_DIR/rebase_resume_state ]; then
   source $STATE_DIR/rebase_resume_state
 else
 
+  # on first run, we want to verify sanity of the patch-stack so
+  # ending guidance is appropriate regarding changes in
+  # third_party/libwebrtc between the old central we're currently
+  # based on and the new central we're rebasing onto.
+  bash dom/media/webrtc/third_party_build/verify_vendoring.sh
+
   if [ "x" == "x$MOZ_TOP_FF" ]; then
     MOZ_TOP_FF=`hg log -r . -T"{node|short}"`
 
