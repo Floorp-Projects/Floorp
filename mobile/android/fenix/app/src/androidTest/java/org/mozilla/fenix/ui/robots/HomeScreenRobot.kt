@@ -430,8 +430,8 @@ class HomeScreenRobot {
     fun verifyJumpBackInShowAllButton() = assertUIObjectExists(itemContainingText(getStringResource(R.string.recent_tabs_show_all)))
     fun verifyRecentlyVisitedSectionIsDisplayed(exists: Boolean) =
         assertUIObjectExists(itemContainingText(getStringResource(R.string.history_metadata_header_2)), exists = exists)
-    fun verifyRecentBookmarksSectionIsDisplayed(exists: Boolean) =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.recently_saved_title)), exists = exists)
+    fun verifyBookmarksSectionIsDisplayed(exists: Boolean) =
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.home_bookmarks_title)), exists = exists)
 
     fun verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int) {
         // checks if the search group exists in the Recently visited section

@@ -20,8 +20,8 @@
         android:title="@string/customize_toggle_jump_back_in" />
 
     <androidx.preference.SwitchPreference
-        android:key="@string/pref_key_recent_bookmarks"
-        android:title="@string/customize_toggle_recent_bookmarks" />
+        android:key="@string/pref_key_customization_bookmarks"
+        android:title="@string/customize_toggle_bookmarks" />
 
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_history_metadata_feature"
