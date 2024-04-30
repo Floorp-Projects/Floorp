@@ -39,7 +39,35 @@ Some more information on this tool `can be found here <https://wiki.mozilla.org/
 Understanding the Results
 -------------------------
 
-In the image above, the **base**, and **new** columns show the average value across all tests. The number of data points used here can be changed by clicking the **Use replicates** button at the top-right of the table (only for try pushes). Alternatively, you can navigate to the try runs to retrigger the tests, or use the "refresh"-like button mentioned above. Hovering over the values in these columns will show you the spread of the data along with the standard deviation in percentage form.
+In the image above, the **base**, and **new** columns show the average value across all tests. You can navigate to the try runs to retrigger the tests, or use the "refresh"-like button mentioned above (only visible while logged in). Hovering over the values in these columns will show you the spread of the data along with the standard deviation in percentage form. The number of data points used here can also be changed by clicking the **Use replicates** button at the top-right of the table (only for try pushes). It causes the comparison to use the trials/replicates data from the perfherder data instead of the summary values. Only 1 summary value is generated per task, whereas there can be multiple replicates generated per task. Here's an example of where this data comes from in the ``PERFHERDER_DATA`` JSON (output in the performance task logs, or as ``perfherder-data.json`` file):
+
+.. code-block:: none
+
+   ... # This type of data can be found in any PERFHERDER_DATA output
+   "subtests": [
+     {
+       "alertThreshold": 2.0,
+       "lowerIsBetter": true,
+       "name": "Charts-chartjs/Draw opaque scatter/Async",
+       "replicates": [ # These are the trials/replicates (multiple per task)
+         1.74,
+         1.36,
+         1.16,
+         1.62,
+         1.42,
+         1.28,
+         1.12,
+         1.4,
+         1.26,
+         1.44,
+         1.22,
+         3.32
+       ],
+       "unit": "ms",
+       "value": 1.542 # This is the summary value of those replicates (only 1 per task)
+     },
+     ...
+
 
 The **delta** column shows the difference between the two revisions' average in percentage. A negative value here means that the associated metric has decreased, and vice versa for positive values.
 
