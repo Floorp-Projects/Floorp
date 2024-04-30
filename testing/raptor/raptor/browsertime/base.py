@@ -630,7 +630,7 @@ class Browsertime(Perftest):
             (
                 "gecko_profile_features",
                 "--firefox.geckoProfilerParams.features",
-                "js,stackwalk,cpu,screenshots",
+                "js,stackwalk,cpu,screenshots,memory",
             ),
             (
                 "gecko_profile_threads",
