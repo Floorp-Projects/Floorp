@@ -20,6 +20,6 @@ WKWebView
 ---------
 
 WKWebView is part of Apple`s WebKit framework. It supports a complete web browsing experience,
-rendering HTML, CSS, and JavaScrip content alongside an app`s native views. It can also be thought
+rendering HTML, CSS, and JavaScript content alongside an app`s native views. It can also be thought
 of as an API to help render web pages on Apple platforms. For more information on WKWebView itself,
 please see `Apple's documentation <https://developer.apple.com/documentation/webkit/wkwebview>`_.
