@@ -8,7 +8,7 @@
  */
 add_task(async function test_translations_button_disabled_in_pdf() {
   const { cleanup } = await loadTestPage({
-    page: EMPTY_PDF_URL,
+    page: PDF_TEST_PAGE_URL,
   });
 
   const appMenuButton = document.getElementById("PanelUI-menu-button");

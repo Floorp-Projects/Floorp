@@ -3,7 +3,7 @@ support-files = [
   "head.js",
   "shared-head.js",
   "translations-test.mjs",
-  "translations-tester-empty-pdf-file.pdf",
+  "translations-tester-pdf-file.pdf",
   "translations-tester-en.html",
   "translations-tester-es.html",
   "translations-tester-es-2.html",
