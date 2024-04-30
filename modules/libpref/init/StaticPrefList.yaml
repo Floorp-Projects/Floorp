@@ -2563,7 +2563,7 @@
 # to content.
 - name: dom.events.asyncClipboard.clipboardItem
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Skips checking permission and user activation when accessing the clipboard.
