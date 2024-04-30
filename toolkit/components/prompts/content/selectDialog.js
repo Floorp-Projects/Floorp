@@ -30,7 +30,8 @@ function onDCL() {
   document.title = propBag.getProperty("title");
 
   let text = propBag.getProperty("text");
-  document.getElementById("info.txt").setAttribute("value", text);
+  let element = document.getElementById("info.txt");
+  element.appendChild(document.createTextNode(text));
 
   let items = propBag.getProperty("list");
   listBox = document.getElementById("list");
