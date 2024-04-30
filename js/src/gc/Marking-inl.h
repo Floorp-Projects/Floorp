@@ -232,13 +232,23 @@ inline void CheckGCThingAfterMovingGC(T* t) {
 }
 
 template <typename T>
-inline void CheckGCThingAfterMovingGC(const WeakHeapPtr<T*>& t) {
-  CheckGCThingAfterMovingGC(t.unbarrieredGet());
+inline void CheckGCThingAfterMovingGC(T* t, JS::Zone* expectedZone) {
+  if (t) {
+    MOZ_RELEASE_ASSERT(IsGCThingValidAfterMovingGC(t));
+    JS::Zone* zone = t->zoneFromAnyThread();
+    MOZ_RELEASE_ASSERT(zone == expectedZone || zone->isAtomsZone());
+  }
 }
 
-inline void CheckProtoAfterMovingGC(const TaggedProto& proto) {
+template <typename T>
+inline void CheckGCThingAfterMovingGC(const WeakHeapPtr<T*>& t,
+                                      JS::Zone* expectedZone) {
+  CheckGCThingAfterMovingGC(t.unbarrieredGet(), expectedZone);
+}
+
+inline void CheckProtoAfterMovingGC(const TaggedProto& proto, JS::Zone* zone) {
   if (proto.isObject()) {
-    CheckGCThingAfterMovingGC(proto.toObject());
+    CheckGCThingAfterMovingGC(proto.toObject(), zone);
   }
 }
 

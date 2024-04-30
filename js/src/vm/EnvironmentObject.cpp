@@ -2615,15 +2615,15 @@ void DebugEnvironments::checkHashTablesAfterMovingGC() {
    * pointing into the nursery.
    */
   proxiedEnvs.checkAfterMovingGC();
-  CheckTableAfterMovingGC(missingEnvs, [](const auto& entry) {
-    CheckGCThingAfterMovingGC(entry.key().scope());
+  CheckTableAfterMovingGC(missingEnvs, [this](const auto& entry) {
+    CheckGCThingAfterMovingGC(entry.key().scope(), zone());
     // Use unbarrieredGet() to prevent triggering read barrier while collecting.
-    CheckGCThingAfterMovingGC(entry.value().unbarrieredGet());
+    CheckGCThingAfterMovingGC(entry.value().unbarrieredGet(), zone());
     return entry.key();
   });
-  CheckTableAfterMovingGC(liveEnvs, [](const auto& entry) {
-    CheckGCThingAfterMovingGC(entry.key());
-    CheckGCThingAfterMovingGC(entry.value().scope_.get());
+  CheckTableAfterMovingGC(liveEnvs, [this](const auto& entry) {
+    CheckGCThingAfterMovingGC(entry.key(), zone());
+    CheckGCThingAfterMovingGC(entry.value().scope_.get(), zone());
     return entry.key().unbarrieredGet();
   });
 }
