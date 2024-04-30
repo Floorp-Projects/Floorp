@@ -171,6 +171,7 @@ internal fun TranslationsOptionsDialog(
     context: Context,
     showGlobalSettings: Boolean,
     translationPageSettings: TranslationPageSettings? = null,
+    offerTranslation: Boolean? = null,
     initialFrom: Language? = null,
     onStateChange: (TranslationSettingsOption, Boolean) -> Unit,
     onBackClicked: () -> Unit,
@@ -181,6 +182,7 @@ internal fun TranslationsOptionsDialog(
         showGlobalSettings = showGlobalSettings,
         translationOptionsList = getTranslationSwitchItemList(
             translationPageSettings = translationPageSettings,
+            offerTranslation = offerTranslation,
             initialFrom = initialFrom,
             context = context,
             onStateChange = onStateChange,
@@ -194,6 +196,7 @@ internal fun TranslationsOptionsDialog(
 @Composable
 private fun getTranslationSwitchItemList(
     translationPageSettings: TranslationPageSettings? = null,
+    offerTranslation: Boolean? = null,
     initialFrom: Language? = null,
     context: Context,
     onStateChange: (TranslationSettingsOption, Boolean) -> Unit,
@@ -201,12 +204,11 @@ private fun getTranslationSwitchItemList(
     val translationSwitchItemList = mutableListOf<TranslationSwitchItem>()
 
     translationPageSettings?.let {
-        val alwaysOfferPopup = translationPageSettings.alwaysOfferPopup
         val alwaysTranslateLanguage = translationPageSettings.alwaysTranslateLanguage
         val neverTranslateLanguage = translationPageSettings.neverTranslateLanguage
         val neverTranslateSite = translationPageSettings.neverTranslateSite
 
-        alwaysOfferPopup?.let {
+        offerTranslation?.let {
             translationSwitchItemList.add(
                 TranslationSwitchItem(
                     type = TranslationPageSettingsOption.AlwaysOfferPopup(),
