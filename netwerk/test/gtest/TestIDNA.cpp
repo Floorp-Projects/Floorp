@@ -3,6 +3,9 @@
 #include "gtest/BlackBox.h"
 
 #include "nsNetUtil.h"
+#include "nsIURI.h"
+#include "nsCOMPtr.h"
+#include "mozilla/Encoding.h"
 
 #define TEST_COUNT 10000
 
@@ -10,7 +13,7 @@ class TestIDNA : public ::testing::Test {
  protected:
   void SetUp() override {
     // Intentionally Assign and not AssignLiteral
-    // to simulate the usual heap case.
+    // to simulate the heap case.
     mPlainASCII.Assign("example.com");
     mLeadingDigitASCII.Assign("1test.example");
     mUnicodeMixed.Assign("مثال.example");
@@ -20,6 +23,16 @@ class TestIDNA : public ::testing::Test {
     mUnicodeRTL.Assign("الاسم.مثال");
     mPunycodeRTL.Assign("xn--mgba0b1dh.xn--mgbh0fb");
     // Intentionally not assigning to mEmpty
+
+    // For measuring the case inside nsStandardURL
+    mUrlPlainASCII.Assign("https://example.com/");
+    mUrlLeadingDigitASCII.Assign("https://1test.example/");
+    mUrlUnicodeMixed.Assign("https://مثال.example/");
+    mUrlPunycodeMixed.Assign("https://xn--mgbh0fb.example/");
+    mUrlUnicodeLTR.Assign("https://නම.උදාහරණ/");
+    mUrlPunycodeLTR.Assign("https://xn--r0co.xn--ozc8dl2c3bxd/");
+    mUrlUnicodeRTL.Assign("https://الاسم.مثال/");
+    mUrlPunycodeRTL.Assign("https://xn--mgba0b1dh.xn--mgbh0fb/");
   }
 
  public:
@@ -32,6 +45,14 @@ class TestIDNA : public ::testing::Test {
   nsCString mUnicodeRTL;
   nsCString mPunycodeRTL;
   nsCString mEmpty;  // Extremely suspicious measurement!
+  nsCString mUrlPlainASCII;
+  nsCString mUrlLeadingDigitASCII;
+  nsCString mUrlUnicodeMixed;
+  nsCString mUrlPunycodeMixed;
+  nsCString mUrlUnicodeLTR;
+  nsCString mUrlPunycodeLTR;
+  nsCString mUrlUnicodeRTL;
+  nsCString mUrlPunycodeRTL;
 };
 
 #define IDNA_ITERATIONS 50000
@@ -42,6 +63,17 @@ class TestIDNA : public ::testing::Test {
       nsCString dst;                                            \
       func(*mozilla::BlackBox(&src), *mozilla::BlackBox(&dst)); \
     }                                                           \
+  });
+
+#define IDNA_URL_BENCH(name, src)                                            \
+  MOZ_GTEST_BENCH_F(TestIDNA, name, [this] {                                 \
+    for (int i = 0; i < IDNA_ITERATIONS; i++) {                              \
+      nsCOMPtr<nsIURI> dst;                                                  \
+      nsresult rv = NS_NewURI(getter_AddRefs(dst), *mozilla::BlackBox(&src), \
+                              UTF_8_ENCODING);                               \
+      ASSERT_EQ(NS_OK, rv);                                                  \
+      mozilla::BlackBox(&dst);                                               \
+    }                                                                        \
   });
 
 IDNA_BENCH(BenchToASCIIPlainASCII, NS_DomainToASCII, mPlainASCII);
@@ -75,3 +107,12 @@ IDNA_BENCH(BenchToUnicodePunycodeLTR, NS_DomainToUnicode, mPunycodeLTR);
 IDNA_BENCH(BenchToUnicodeUnicodeRTL, NS_DomainToUnicode, mUnicodeRTL);
 IDNA_BENCH(BenchToUnicodePunycodeRTL, NS_DomainToUnicode, mPunycodeRTL);
 IDNA_BENCH(BenchToUnicodeEmpty, NS_DomainToUnicode, mEmpty);
+
+IDNA_URL_BENCH(BenchUrlPlainASCII, mUrlPlainASCII);
+IDNA_URL_BENCH(BenchUrlLeadingDigitASCII, mUrlLeadingDigitASCII);
+IDNA_URL_BENCH(BenchUrlUnicodeMixed, mUrlUnicodeMixed);
+IDNA_URL_BENCH(BenchUrlPunycodeMixed, mUrlPunycodeMixed);
+IDNA_URL_BENCH(BenchUrlUnicodeLTR, mUrlUnicodeLTR);
+IDNA_URL_BENCH(BenchUrlPunycodeLTR, mUrlPunycodeLTR);
+IDNA_URL_BENCH(BenchUrlUnicodeRTL, mUrlUnicodeRTL);
+IDNA_URL_BENCH(BenchUrlPunycodeRTL, mUrlPunycodeRTL);
