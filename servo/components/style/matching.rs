@@ -426,8 +426,9 @@ trait PrivateMatchMethods: TElement {
         // Note: Basically, we have to remove transition rules because the starting style for an
         // element is the after-change style with @starting-style rules applied in addition.
         // However, we expect there is no transition rules for this element when calling this
-        // function because we do this only when we don't have before-change style and it's
-        // unlikely to have running transitions on this element.
+        // function because we do this only when we don't have before-change style or we change
+        // from display:none. In these cases, it's unlikely to have running transitions on this
+        // element.
         let mut resolver = StyleResolverForElement::new(
             *self,
             context,
@@ -460,11 +461,13 @@ trait PrivateMatchMethods: TElement {
             return None;
         }
 
-        // If we don't have before-change-style, we don't have to resolve starting style.
-        // FIXME: we may have to resolve starting style if the old style is display:none and the new
-        // style change the display property. We will have a tentative solution in the following
-        // patches.
-        if old_values.is_some() {
+        // We resolve starting style only if we don't have before-change-style, or we change from
+        // display:none.
+        if old_values.is_some()
+            && !new_styles
+                .primary_style()
+                .is_display_property_changed_from_none(old_values.map(|s| &**s))
+        {
             return None;
         }
 
