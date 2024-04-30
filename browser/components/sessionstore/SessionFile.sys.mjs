@@ -355,7 +355,7 @@ var SessionFileInternal = {
             "session_file",
             null,
             {
-              can_load: !corrupted.toString(),
+              can_load: (!corrupted).toString(),
               path_key: key,
               loadfail_reason: "N/A",
             }
