@@ -9,3 +9,4 @@ toolkit.jar:
    content/global/commonDialog.css            (content/commonDialog.css)
    content/global/selectDialog.js             (content/selectDialog.js)
    content/global/selectDialog.xhtml          (content/selectDialog.xhtml)
+   content/global/selectDialog.css            (content/selectDialog.css)
