@@ -10,6 +10,7 @@
 
 #include "api/video_codecs/simulcast_stream.h"
 
+#include "absl/types/optional.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -31,6 +32,19 @@ ScalabilityMode SimulcastStream::GetScalabilityMode() const {
       ScalabilityMode::kL1T2,
       ScalabilityMode::kL1T3,
   };
+  return scalability_modes[numberOfTemporalLayers - 1];
+}
+
+// TODO(b/327381318): Rename to GetScalabilityMode.
+absl::optional<ScalabilityMode> SimulcastStream::GetScalabilityMode2() const {
+  static const ScalabilityMode scalability_modes[3] = {
+      ScalabilityMode::kL1T1,
+      ScalabilityMode::kL1T2,
+      ScalabilityMode::kL1T3,
+  };
+  if (numberOfTemporalLayers < 1 || numberOfTemporalLayers > 3) {
+    return absl::nullopt;
+  }
   return scalability_modes[numberOfTemporalLayers - 1];
 }
 
