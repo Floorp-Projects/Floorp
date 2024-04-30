@@ -43,14 +43,6 @@ notes = "This is a pinned version of the upstream code, presumably to get a fix 
 audit-as-crates-io = true
 notes = "This is upstream plus a warning fix from bug 1823866."
 
-[policy.cssparser]
-audit-as-crates-io = true
-notes = "Upstream release plus a couple unpublished changes"
-
-[policy.cssparser-macros]
-audit-as-crates-io = true
-notes = "Upstream release plus a couple unpublished changes"
-
 [policy.d3d12]
 audit-as-crates-io = true
 notes = "Part of the wgpu repository, pinned as the rest of wgpu crates."

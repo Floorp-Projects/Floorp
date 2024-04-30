@@ -24,7 +24,7 @@ pub struct UnicodeRange {
 
 impl UnicodeRange {
     /// https://drafts.csswg.org/css-syntax/#urange-syntax
-    pub fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Self, BasicParseError<'i>> {
+    pub fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, BasicParseError<'i>> {
         // <urange> =
         //   u '+' <ident-token> '?'* |
         //   u <dimension-token> '?'* |
@@ -57,7 +57,7 @@ impl UnicodeRange {
     }
 }
 
-fn parse_tokens<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), BasicParseError<'i>> {
+fn parse_tokens<'i>(input: &mut Parser<'i, '_>) -> Result<(), BasicParseError<'i>> {
     match input.next_including_whitespace()?.clone() {
         Token::Delim('+') => {
             match *input.next_including_whitespace()? {
@@ -123,15 +123,13 @@ fn parse_concatenated(text: &[u8]) -> Result<UnicodeRange, ()> {
             start: first_hex_value,
             end: first_hex_value,
         });
-    } else {
-        if let Some((&b'-', mut text)) = text.split_first() {
-            let (second_hex_value, hex_digit_count) = consume_hex(&mut text);
-            if hex_digit_count > 0 && hex_digit_count <= 6 && text.is_empty() {
-                return Ok(UnicodeRange {
-                    start: first_hex_value,
-                    end: second_hex_value,
-                });
-            }
+    } else if let Some((&b'-', mut text)) = text.split_first() {
+        let (second_hex_value, hex_digit_count) = consume_hex(&mut text);
+        if hex_digit_count > 0 && hex_digit_count <= 6 && text.is_empty() {
+            return Ok(UnicodeRange {
+                start: first_hex_value,
+                end: second_hex_value,
+            });
         }
     }
     Err(())

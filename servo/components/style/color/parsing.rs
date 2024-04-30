@@ -25,7 +25,6 @@ use cssparser::{
     color::{clamp_floor_256_f32, clamp_unit_f32, parse_hash_color, PredefinedColorSpace, OPAQUE},
     match_ignore_ascii_case, CowRcStr, Parser, Token,
 };
-use std::str::FromStr;
 use style_traits::{ParseError, StyleParseErrorKind};
 
 /// Returns true if the relative color syntax pref is enabled.
@@ -411,14 +410,7 @@ fn parse_color_with_color_space<'i, 't>(
     component_parser: &ComponentParser<'_, '_>,
     arguments: &mut Parser<'i, 't>,
 ) -> Result<ColorFunction, ParseError<'i>> {
-    let color_space = {
-        let location = arguments.current_source_location();
-
-        let ident = arguments.expect_ident()?;
-        PredefinedColorSpace::from_str(ident)
-            .map_err(|_| location.new_unexpected_token_error(Token::Ident(ident.clone())))?
-    };
-
+    let color_space = PredefinedColorSpace::parse(arguments)?;
     let component_parser = ComponentParser {
         context: component_parser.context,
         origin_color: component_parser

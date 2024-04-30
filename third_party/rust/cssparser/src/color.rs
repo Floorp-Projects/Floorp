@@ -14,9 +14,8 @@
 /// The opaque alpha value of 1.0.
 pub const OPAQUE: f32 = 1.0;
 
-use crate::ToCss;
+use crate::{BasicParseError, Parser, ToCss, Token};
 use std::fmt;
-use std::str::FromStr;
 
 /// Clamp a 0..1 number to a 0..255 range to u8.
 ///
@@ -76,7 +75,9 @@ pub fn serialize_color_alpha(
 
 /// A Predefined color space specified in:
 /// <https://drafts.csswg.org/css-color-4/#predefined>
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
 pub enum PredefinedColorSpace {
     /// <https://drafts.csswg.org/css-color-4/#predefined-sRGB>
     Srgb,
@@ -97,36 +98,21 @@ pub enum PredefinedColorSpace {
 }
 
 impl PredefinedColorSpace {
-    /// Returns the string value of the predefined color space.
-    pub fn as_str(&self) -> &str {
-        match self {
-            PredefinedColorSpace::Srgb => "srgb",
-            PredefinedColorSpace::SrgbLinear => "srgb-linear",
-            PredefinedColorSpace::DisplayP3 => "display-p3",
-            PredefinedColorSpace::A98Rgb => "a98-rgb",
-            PredefinedColorSpace::ProphotoRgb => "prophoto-rgb",
-            PredefinedColorSpace::Rec2020 => "rec2020",
-            PredefinedColorSpace::XyzD50 => "xyz-d50",
-            PredefinedColorSpace::XyzD65 => "xyz-d65",
-        }
-    }
-}
+    /// Parse a PredefinedColorSpace from the given input.
+    pub fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, BasicParseError<'i>> {
+        let location = input.current_source_location();
 
-impl FromStr for PredefinedColorSpace {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match_ignore_ascii_case! { s,
-            "srgb" => PredefinedColorSpace::Srgb,
-            "srgb-linear" => PredefinedColorSpace::SrgbLinear,
-            "display-p3" => PredefinedColorSpace::DisplayP3,
-            "a98-rgb" => PredefinedColorSpace::A98Rgb,
-            "prophoto-rgb" => PredefinedColorSpace::ProphotoRgb,
-            "rec2020" => PredefinedColorSpace::Rec2020,
-            "xyz-d50" => PredefinedColorSpace::XyzD50,
-            "xyz" | "xyz-d65" => PredefinedColorSpace::XyzD65,
-
-            _ => return Err(()),
+        let ident = input.expect_ident()?;
+        Ok(match_ignore_ascii_case! { ident,
+            "srgb" => Self::Srgb,
+            "srgb-linear" => Self::SrgbLinear,
+            "display-p3" => Self::DisplayP3,
+            "a98-rgb" => Self::A98Rgb,
+            "prophoto-rgb" => Self::ProphotoRgb,
+            "rec2020" => Self::Rec2020,
+            "xyz-d50" => Self::XyzD50,
+            "xyz" | "xyz-d65" => Self::XyzD65,
+            _ => return Err(location.new_basic_unexpected_token_error(Token::Ident(ident.clone()))),
         })
     }
 }
@@ -136,11 +122,21 @@ impl ToCss for PredefinedColorSpace {
     where
         W: fmt::Write,
     {
-        dest.write_str(self.as_str())
+        dest.write_str(match self {
+            Self::Srgb => "srgb",
+            Self::SrgbLinear => "srgb-linear",
+            Self::DisplayP3 => "display-p3",
+            Self::A98Rgb => "a98-rgb",
+            Self::ProphotoRgb => "prophoto-rgb",
+            Self::Rec2020 => "rec2020",
+            Self::XyzD50 => "xyz-d50",
+            Self::XyzD65 => "xyz-d65",
+        })
     }
 }
 
 /// Parse a color hash, without the leading '#' character.
+#[allow(clippy::result_unit_err)]
 #[inline]
 pub fn parse_hash_color(value: &[u8]) -> Result<(u8, u8, u8, f32), ()> {
     Ok(match value.len() {
@@ -328,6 +324,7 @@ ascii_case_insensitive_phf_map! {
 
 /// Returns the named color with the given name.
 /// <https://drafts.csswg.org/css-color-4/#typedef-named-color>
+#[allow(clippy::result_unit_err)]
 #[inline]
 pub fn parse_named_color(ident: &str) -> Result<(u8, u8, u8), ()> {
     named_colors::get(ident).copied().ok_or(())

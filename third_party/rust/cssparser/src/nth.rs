@@ -7,8 +7,8 @@ use super::{BasicParseError, Parser, ParserInput, Token};
 /// Parse the *An+B* notation, as found in the `:nth-child()` selector.
 /// The input is typically the arguments of a function,
 /// in which case the caller needs to check if the arguments’ parser is exhausted.
-/// Return `Ok((A, B))`, or `Err(())` for a syntax error.
-pub fn parse_nth<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(i32, i32), BasicParseError<'i>> {
+/// Return `Ok((A, B))`, or an `Err(..)` for a syntax error.
+pub fn parse_nth<'i>(input: &mut Parser<'i, '_>) -> Result<(i32, i32), BasicParseError<'i>> {
     match *input.next()? {
         Token::Number {
             int_value: Some(b), ..
@@ -22,7 +22,7 @@ pub fn parse_nth<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(i32, i32), Basic
                 unit,
                 "n" => Ok(parse_b(input, a)?),
                 "n-" => Ok(parse_signless_b(input, a, -1)?),
-                _ => match parse_n_dash_digits(&*unit) {
+                _ => match parse_n_dash_digits(unit) {
                     Ok(b) => Ok((a, b)),
                     Err(()) => {
                         let unit = unit.clone();
@@ -40,8 +40,8 @@ pub fn parse_nth<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(i32, i32), Basic
                 "n-" => Ok(parse_signless_b(input, 1, -1)?),
                 "-n-" => Ok(parse_signless_b(input, -1, -1)?),
                 _ => {
-                    let (slice, a) = if value.starts_with("-") {
-                        (&value[1..], -1)
+                    let (slice, a) = if let Some(stripped) = value.strip_prefix('-') {
+                        (stripped, -1)
                     } else {
                         (&**value, 1)
                     };
@@ -81,7 +81,7 @@ pub fn parse_nth<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(i32, i32), Basic
     }
 }
 
-fn parse_b<'i, 't>(input: &mut Parser<'i, 't>, a: i32) -> Result<(i32, i32), BasicParseError<'i>> {
+fn parse_b<'i>(input: &mut Parser<'i, '_>, a: i32) -> Result<(i32, i32), BasicParseError<'i>> {
     let start = input.state();
     match input.next() {
         Ok(&Token::Delim('+')) => parse_signless_b(input, a, 1),
@@ -98,8 +98,8 @@ fn parse_b<'i, 't>(input: &mut Parser<'i, 't>, a: i32) -> Result<(i32, i32), Bas
     }
 }
 
-fn parse_signless_b<'i, 't>(
-    input: &mut Parser<'i, 't>,
+fn parse_signless_b<'i>(
+    input: &mut Parser<'i, '_>,
     a: i32,
     b_sign: i32,
 ) -> Result<(i32, i32), BasicParseError<'i>> {
@@ -118,7 +118,7 @@ fn parse_n_dash_digits(string: &str) -> Result<i32, ()> {
     let bytes = string.as_bytes();
     if bytes.len() >= 3
         && bytes[..2].eq_ignore_ascii_case(b"n-")
-        && bytes[2..].iter().all(|&c| matches!(c, b'0'..=b'9'))
+        && bytes[2..].iter().all(|&c| c.is_ascii_digit())
     {
         Ok(parse_number_saturate(&string[1..]).unwrap()) // Include the minus sign
     } else {

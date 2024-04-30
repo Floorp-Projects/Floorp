@@ -4,7 +4,7 @@
 
 use std::borrow::{Borrow, Cow};
 use std::rc::Rc;
-use std::{cmp, fmt, hash, marker, mem, ops, slice, str, ptr};
+use std::{cmp, fmt, hash, marker, mem, ops, ptr, slice, str};
 
 /// A string that is either shared (heap-allocated and reference-counted) or borrowed.
 ///
@@ -23,9 +23,9 @@ pub struct CowRcStr<'a> {
     phantom: marker::PhantomData<Result<&'a str, Rc<String>>>,
 }
 
-fn _static_assert_same_size<'a>() {
+fn _static_assert_same_size() {
     // "Instantiate" the generic function without calling it.
-    let _ = mem::transmute::<CowRcStr<'a>, Option<CowRcStr<'a>>>;
+    let _ = mem::transmute::<CowRcStr<'_>, Option<CowRcStr<'_>>>;
 }
 
 impl<'a> From<Cow<'a, str>> for CowRcStr<'a> {

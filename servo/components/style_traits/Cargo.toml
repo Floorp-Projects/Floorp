@@ -16,7 +16,7 @@ gecko = ["nsstring"]
 [dependencies]
 app_units = "0.7"
 bitflags = "2"
-cssparser = "0.33"
+cssparser = "0.34"
 euclid = "0.22"
 lazy_static = "1"
 malloc_size_of = { path = "../malloc_size_of" }
