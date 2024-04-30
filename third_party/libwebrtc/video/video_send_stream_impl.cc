@@ -437,7 +437,6 @@ VideoSendStreamImpl::VideoSendStreamImpl(
                           &encoder_feedback_,
                           &stats_proxy_,
                           &send_packet_observer_),
-          &env_.event_log(),
           std::move(fec_controller),
           CreateFrameEncryptionConfig(&config_),
           config_.frame_transformer)),
