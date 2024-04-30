@@ -1320,7 +1320,7 @@ index d9f2b92f84..0ce18ecd1e 100644
  rtc_library("call_config_utils") {
    testonly = true
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 952bf215dc..dd227d3349 100644
+index 5efcb58c01..7ddcf1347c 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
@@ -1340,7 +1340,7 @@ index 952bf215dc..dd227d3349 100644
 +    "../api:rtp_sender_setparameters_callback",
      "../api:sequence_checker",
      "../api/adaptation:resource_adaptation_api",
-     "../api/task_queue:pending_task_safety_flag",
+     "../api/environment",
 diff --git a/webrtc.gni b/webrtc.gni
 index 277c12c054..c84464e84a 100644
 --- a/webrtc.gni
