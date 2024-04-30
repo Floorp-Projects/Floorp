@@ -2,9 +2,10 @@
 <resources>
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_toolbar_menu_button">Meny</string>
+    <!-- Content description: For the clear URL text button. -->
     <string name="mozac_clear_button_description">Tøm</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
-    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">Sporingsvern er ppå</string>
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">Sporingsvern er på</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">Sporingsvern har blokkert sporarar</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
