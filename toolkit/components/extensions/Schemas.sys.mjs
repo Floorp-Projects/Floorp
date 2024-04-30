@@ -316,6 +316,27 @@ const POSTPROCESSORS = {
     }
     return value;
   },
+
+  incognitoSplitUnsupportedAndFallback(value, context) {
+    if (value === "split") {
+      // incognito:split has not been implemented (bug 1380812). There are two
+      // alternatives: "spanning" and "not_allowed".
+      //
+      // "incognito":"split" is required by Chrome when extensions want to load
+      // any extension page in a tab in Chrome. In Firefox that is not required,
+      // so extensions could replace "split" with "spanning".
+      // Another (poorly documented) effect of "incognito":"split" is separation
+      // of some state between some extension APIs. Because this can in theory
+      // result in unwanted mixing of state between private and non-private
+      // browsing, we fall back to "not_allowed", which prevents the user from
+      // enabling the extension in private browsing windows.
+      value = "not_allowed";
+      context.logWarning(
+        `incognito "split" is unsupported. Falling back to incognito "${value}".`
+      );
+    }
+    return value;
+  },
 };
 
 // Parses a regular expression, with support for the Python extended

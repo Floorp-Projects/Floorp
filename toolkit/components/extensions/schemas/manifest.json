@@ -121,7 +121,9 @@
 
           "incognito": {
             "type": "string",
-            "enum": ["not_allowed", "spanning"],
+            "description": "The 'split' value is not supported.",
+            "enum": ["not_allowed", "spanning", "split"],
+            "postprocess": "incognitoSplitUnsupportedAndFallback",
             "default": "spanning",
             "optional": true
           },
