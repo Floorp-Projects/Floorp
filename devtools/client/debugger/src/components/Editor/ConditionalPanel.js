@@ -11,7 +11,8 @@ import ReactDOM from "devtools/client/shared/vendor/react-dom";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "devtools/client/shared/vendor/react-redux";
 import { toEditorLine } from "../../utils/editor/index";
-import { prefs } from "../../utils/prefs";
+import { createEditor } from "../../utils/editor/create-editor";
+import { prefs, features } from "../../utils/prefs";
 import actions from "../../actions/index";
 
 import {
@@ -21,6 +22,7 @@ import {
 } from "../../selectors/index";
 
 const classnames = require("resource://devtools/client/shared/classnames.js");
+const CONDITIONAL_BP_MARKER = "conditional-breakpoint-panel-marker";
 
 function addNewLine(doc) {
   const cursor = doc.getCursor();
@@ -49,6 +51,7 @@ export class ConditionalPanel extends PureComponent {
       log: PropTypes.bool.isRequired,
       openConditionalPanel: PropTypes.func.isRequired,
       setBreakpointOptions: PropTypes.func.isRequired,
+      selectedSource: PropTypes.object.isRequired,
     };
   }
 
@@ -111,17 +114,53 @@ export class ConditionalPanel extends PureComponent {
     }
   };
 
+  showConditionalPanel(prevProps) {
+    const { location, editor, breakpoint, selectedSource } = this.props;
+    // When breakpoint is removed
+    if (prevProps?.breakpoint && !breakpoint) {
+      editor.removeLineContentMarker(CONDITIONAL_BP_MARKER);
+      return;
+    }
+    if (selectedSource.id !== location.source.id) {
+      editor.removeLineContentMarker(CONDITIONAL_BP_MARKER);
+      return;
+    }
+    const editorLine = toEditorLine(location.source.id, location.line || 0);
+    editor.setLineContentMarker({
+      id: CONDITIONAL_BP_MARKER,
+      condition: line => line == editorLine,
+      createLineElementNode: () => {
+        // Create a Codemirror 5 editor for the breakpoint panel
+        // TODO: Switch to use Codemirror 6 version Bug 1890205
+        const breakpointPanelEditor = createEditor();
+        breakpointPanelEditor.appendToLocalElement(
+          document.createElement("div")
+        );
+        return this.renderConditionalPanel(this.props, breakpointPanelEditor);
+      },
+    });
+  }
+
   // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
   UNSAFE_componentWillMount() {
-    return this.renderToWidget(this.props);
+    if (features.codemirrorNext) {
+      this.showConditionalPanel();
+    } else {
+      this.renderToWidget(this.props);
+    }
   }
 
   // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
   UNSAFE_componentWillUpdate() {
-    return this.clearConditionalPanel();
+    if (!features.codemirrorNext) {
+      this.clearConditionalPanel();
+    }
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
+    if (features.codemirrorNext) {
+      this.showConditionalPanel(prevProps);
+    }
     this.keepFocusOnInput();
   }
 
@@ -129,7 +168,12 @@ export class ConditionalPanel extends PureComponent {
     // This is called if CodeMirror is re-initializing itself before the
     // user closes the conditional panel. Clear the widget, and re-render it
     // as soon as this component gets remounted
-    return this.clearConditionalPanel();
+    const { editor } = this.props;
+    if (features.codemirrorNext) {
+      editor.removeLineContentMarker(CONDITIONAL_BP_MARKER);
+    } else {
+      this.clearConditionalPanel();
+    }
   }
 
   renderToWidget(props) {
@@ -141,7 +185,7 @@ export class ConditionalPanel extends PureComponent {
     const editorLine = toEditorLine(location.source.id, location.line || 0);
     this.cbPanel = editor.codeMirror.addLineWidget(
       editorLine,
-      this.renderConditionalPanel(props),
+      this.renderConditionalPanel(props, editor),
       {
         coverGutter: true,
         noHScroll: true,
@@ -168,8 +212,8 @@ export class ConditionalPanel extends PureComponent {
     }
   }
 
-  createEditor = input => {
-    const { log, editor, closeConditionalPanel } = this.props;
+  createEditor = (input, editor) => {
+    const { log, closeConditionalPanel } = this.props;
     const codeMirror = editor.CodeMirror.fromTextArea(input, {
       mode: "javascript",
       theme: "mozilla",
@@ -189,8 +233,12 @@ export class ConditionalPanel extends PureComponent {
 
     codeMirror.on("blur", (cm, e) => {
       if (
-        e?.relatedTarget &&
-        e.relatedTarget.closest(".conditional-breakpoint-panel")
+        // if there is no event
+        // or if the focus is the conditional panel
+        // do not close the conditional panel
+        !e ||
+        (e?.relatedTarget &&
+          e.relatedTarget.closest(".conditional-breakpoint-panel"))
       ) {
         return;
       }
@@ -217,7 +265,7 @@ export class ConditionalPanel extends PureComponent {
     return log ? options.logValue : options.condition;
   }
 
-  renderConditionalPanel(props) {
+  renderConditionalPanel(props, editor) {
     const { log } = props;
     const defaultValue = this.getDefaultValue();
 
@@ -239,7 +287,7 @@ export class ConditionalPanel extends PureComponent {
         ),
         textarea({
           defaultValue,
-          ref: input => this.createEditor(input),
+          ref: input => this.createEditor(input, editor),
         })
       ),
       panel
