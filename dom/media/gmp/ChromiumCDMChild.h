@@ -125,7 +125,7 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
   GMPContentChild* mPlugin = nullptr;
   cdm::ContentDecryptionModule_10* mCDM = nullptr;
 
-  typedef SimpleMap<uint64_t> DurationMap;
+  typedef SimpleMap<int64_t, uint64_t, ThreadSafePolicy> DurationMap;
   DurationMap mFrameDurations;
   nsTArray<uint32_t> mLoadSessionPromiseIds;
 

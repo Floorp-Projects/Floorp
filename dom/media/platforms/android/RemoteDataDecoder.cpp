@@ -574,7 +574,7 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
   bool mIsHardwareAccelerated = false;
   // Accessed on mThread and reader's thread. SimpleMap however is
   // thread-safe, so it's okay to do so.
-  SimpleMap<InputInfo> mInputInfos;
+  SimpleMap<int64_t, InputInfo, ThreadSafePolicy> mInputInfos;
   // Only accessed on mThread.
   Maybe<TimeUnit> mSeekTarget;
   Maybe<TimeUnit> mLatestOutputTime;

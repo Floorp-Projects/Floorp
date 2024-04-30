@@ -12,25 +12,50 @@
 
 namespace mozilla {
 
-template <typename T>
-class SimpleMap {
- public:
-  typedef std::pair<int64_t, T> Element;
+struct ThreadSafePolicy {
+  struct PolicyLock {
+    explicit PolicyLock(const char* aName) : mMutex(aName) {}
+    Mutex mMutex MOZ_UNANNOTATED;
+  };
+  PolicyLock& mPolicyLock;
+  explicit ThreadSafePolicy(PolicyLock& aPolicyLock)
+      : mPolicyLock(aPolicyLock) {
+    mPolicyLock.mMutex.Lock();
+  }
+  ~ThreadSafePolicy() { mPolicyLock.mMutex.Unlock(); }
+};
 
-  SimpleMap() : mMutex("SimpleMap") {}
+struct NoOpPolicy {
+  struct PolicyLock {
+    explicit PolicyLock(const char*) {}
+  };
+  explicit NoOpPolicy(PolicyLock&) {}
+  ~NoOpPolicy() = default;
+};
+
+// An map employing an array instead of a hash table to optimize performance,
+// particularly beneficial when the number of expected items in the map is
+// small.
+template <typename K, typename V, typename Policy = NoOpPolicy>
+class SimpleMap {
+  using ElementType = std::pair<K, V>;
+  using MapType = AutoTArray<ElementType, 16>;
+
+ public:
+  SimpleMap() : mLock("SimpleMap"){};
 
   // Insert Key and Value pair at the end of our map.
-  void Insert(int64_t aKey, const T& aValue) {
-    MutexAutoLock lock(mMutex);
+  void Insert(const K& aKey, const V& aValue) {
+    Policy guard(mLock);
     mMap.AppendElement(std::make_pair(aKey, aValue));
   }
   // Sets aValue matching aKey and remove it from the map if found.
   // The element returned is the first one found.
   // Returns true if found, false otherwise.
-  bool Find(int64_t aKey, T& aValue) {
-    MutexAutoLock lock(mMutex);
+  bool Find(const K& aKey, V& aValue) {
+    Policy guard(mLock);
     for (uint32_t i = 0; i < mMap.Length(); i++) {
-      Element& element = mMap[i];
+      ElementType& element = mMap[i];
       if (element.first == aKey) {
         aValue = element.second;
         mMap.RemoveElementAt(i);
@@ -41,21 +66,21 @@ class SimpleMap {
   }
   // Remove all elements of the map.
   void Clear() {
-    MutexAutoLock lock(mMutex);
+    Policy guard(mLock);
     mMap.Clear();
   }
   // Iterate through all elements of the map and call the function F.
   template <typename F>
   void ForEach(F&& aCallback) {
-    MutexAutoLock lock(mMutex);
+    Policy guard(mLock);
     for (const auto& element : mMap) {
       aCallback(element.first, element.second);
     }
   }
 
  private:
-  Mutex mMutex MOZ_UNANNOTATED;  // To protect mMap.
-  AutoTArray<Element, 16> mMap;
+  typename Policy::PolicyLock mLock;
+  MapType mMap;
 };
 
 }  // namespace mozilla
