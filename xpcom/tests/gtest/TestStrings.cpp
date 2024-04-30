@@ -1286,6 +1286,32 @@ TEST_F(Strings, string_tointeger) {
   }
 }
 
+struct ToUnsignedIntegerTest {
+  const char* str;
+  uint32_t radix;
+  uint32_t result;
+  nsresult rv;
+};
+
+static const ToUnsignedIntegerTest kToUnsignedIntegerTests[] = {
+    {"123", 10, 123, NS_OK},
+    {"7b", 16, 123, NS_OK},
+    {"90194313659", 10, 0, NS_ERROR_ILLEGAL_VALUE},
+    {"ffffffff", 16, 0xffffffff, NS_OK},
+    {"4294967295", 10, 4294967295, NS_OK},
+    {"8abc1234", 16, 0x8abc1234, NS_OK},
+    {"-194313659", 10, 0, NS_ERROR_ILLEGAL_VALUE},
+    {nullptr, 0, 0, NS_OK}};
+
+TEST_F(Strings, string_to_unsigned_integer) {
+  nsresult rv;
+  for (const ToUnsignedIntegerTest* t = kToUnsignedIntegerTests; t->str; ++t) {
+    uint32_t result = nsAutoCString(t->str).ToUnsignedInteger(&rv, t->radix);
+    EXPECT_EQ(rv, t->rv);
+    EXPECT_EQ(result, t->result);
+  }
+}
+
 static void test_parse_string_helper(const char* str, char separator, int len,
                                      const char* s1, const char* s2) {
   nsCString data(str);
