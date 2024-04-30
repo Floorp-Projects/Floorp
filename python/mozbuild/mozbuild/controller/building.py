@@ -263,6 +263,12 @@ class BuildMonitor(MozbuildObject):
 
             _, _, disambiguator = args.pop(0).partition("@")
             action = args.pop(0)
+            time = None
+            regexp = re.compile(r"\d{10}(\.\d{1,9})?$")
+            if regexp.match(action):
+                time = float(action)
+                action = args.pop(0)
+
             update_needed = True
 
             if action == "TIERS":
@@ -280,12 +286,12 @@ class BuildMonitor(MozbuildObject):
                 update_needed = False
             elif action.startswith("START_"):
                 self.resources.begin_marker(
-                    action[len("START_") :], " ".join(args), disambiguator
+                    action[len("START_") :], " ".join(args), disambiguator, time
                 )
                 update_needed = False
             elif action.startswith("END_"):
                 self.resources.end_marker(
-                    action[len("END_") :], " ".join(args), disambiguator
+                    action[len("END_") :], " ".join(args), disambiguator, time
                 )
                 update_needed = False
             elif action == "BUILD_VERBOSE":

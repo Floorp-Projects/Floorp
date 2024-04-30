@@ -314,6 +314,7 @@ class SystemResourceMonitor(object):
         self._swap_type = type(swap)
         self._swap_len = len(swap)
         self.start_timestamp = time.time()
+        self.start_time = time.monotonic()
 
         self._pipe, child_pipe = multiprocessing.Pipe(True)
 
@@ -327,6 +328,9 @@ class SystemResourceMonitor(object):
         if self._running:
             self._pipe.send(("terminate",))
             self._process.join()
+
+    def convert_to_monotonic_time(self, timestamp):
+        return timestamp - self.start_timestamp + self.start_time
 
     # Methods to control monitoring.
 
@@ -458,18 +462,24 @@ class SystemResourceMonitor(object):
             SystemResourceMonitor.instance.markers.append((name, start, end, text))
 
     @staticmethod
-    def begin_marker(name, text, disambiguator=None):
+    def begin_marker(name, text, disambiguator=None, timestamp=None):
         if SystemResourceMonitor.instance:
             id = name + ":" + text
             if disambiguator:
                 id += ":" + disambiguator
-            SystemResourceMonitor.instance._active_markers[id] = time.monotonic()
+            SystemResourceMonitor.instance._active_markers[id] = (
+                SystemResourceMonitor.instance.convert_to_monotonic_time(timestamp)
+                if timestamp
+                else time.monotonic()
+            )
 
     @staticmethod
-    def end_marker(name, text, disambiguator=None):
+    def end_marker(name, text, disambiguator=None, timestamp=None):
         if not SystemResourceMonitor.instance:
             return
         end = time.monotonic()
+        if timestamp:
+            end = SystemResourceMonitor.instance.convert_to_monotonic_time(timestamp)
         id = name + ":" + text
         if disambiguator:
             id += ":" + disambiguator
