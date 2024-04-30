@@ -53,6 +53,7 @@ def os_from_name(name):
 # useful when a failure can be safely ignored while fixing it without
 # blocking the LKGR finder on it.
 skipped_lkgr_bots = [
+    "Linux MSan",  # TODO(b/329130536): Re-enable
 ]
 
 # Use LUCI Scheduler BBv2 names and add Scheduler realms configs.
