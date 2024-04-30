@@ -21,12 +21,6 @@ nsresult ConvertToI420(layers::Image* aImage, uint8_t* aDestY, int aDestStrideY,
                        uint8_t* aDestU, int aDestStrideU, uint8_t* aDestV,
                        int aDestStrideV);
 
-/**
- * Converts aImage to an NV12 image and writes it to the given buffers.
- */
-nsresult ConvertToNV12(layers::Image* aImage, uint8_t* aDestY, int aDestStrideY,
-                       uint8_t* aDestUV, int aDestStrideUV);
-
 }  // namespace mozilla
 
 #endif /* ImageToI420Converter_h */
