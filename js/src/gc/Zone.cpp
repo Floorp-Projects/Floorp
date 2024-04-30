@@ -368,9 +368,10 @@ void Zone::checkAllCrossCompartmentWrappersAfterMovingGC() {
 }
 
 void Zone::checkStringWrappersAfterMovingGC() {
-  CheckTableAfterMovingGC(crossZoneStringWrappers(), [](const auto& entry) {
+  CheckTableAfterMovingGC(crossZoneStringWrappers(), [this](const auto& entry) {
     JSString* key = entry.key().get();
-    CheckGCThingAfterMovingGC(key);
+    CheckGCThingAfterMovingGC(key);  // Keys may be in a different zone.
+    CheckGCThingAfterMovingGC(entry.value().unbarrieredGet(), this);
     return key;
   });
 }
@@ -555,8 +556,8 @@ void JS::Zone::beforeClearDelegateInternal(JSObject* wrapper,
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void JS::Zone::checkUniqueIdTableAfterMovingGC() {
-  CheckTableAfterMovingGC(uniqueIds(), [](const auto& entry) {
-    js::gc::CheckGCThingAfterMovingGC(entry.key());
+  CheckTableAfterMovingGC(uniqueIds(), [this](const auto& entry) {
+    js::gc::CheckGCThingAfterMovingGC(entry.key(), this);
     return entry.key();
   });
 }
@@ -859,8 +860,7 @@ void Zone::checkScriptMapsAfterMovingGC() {
   if (scriptCountsMap) {
     CheckTableAfterMovingGC(*scriptCountsMap, [this](const auto& entry) {
       BaseScript* script = entry.key();
-      MOZ_RELEASE_ASSERT(script->zone() == this);
-      CheckGCThingAfterMovingGC(script);
+      CheckGCThingAfterMovingGC(script, this);
       return script;
     });
   }
@@ -868,8 +868,7 @@ void Zone::checkScriptMapsAfterMovingGC() {
   if (scriptLCovMap) {
     CheckTableAfterMovingGC(*scriptLCovMap, [this](const auto& entry) {
       BaseScript* script = entry.key();
-      MOZ_RELEASE_ASSERT(script->zone() == this);
-      CheckGCThingAfterMovingGC(script);
+      CheckGCThingAfterMovingGC(script, this);
       return script;
     });
   }
@@ -878,8 +877,7 @@ void Zone::checkScriptMapsAfterMovingGC() {
   if (scriptVTuneIdMap) {
     CheckTableAfterMovingGC(*scriptVTuneIdMap, [this](const auto& entry) {
       BaseScript* script = entry.key();
-      MOZ_RELEASE_ASSERT(script->zone() == this);
-      CheckGCThingAfterMovingGC(script);
+      CheckGCThingAfterMovingGC(script, this);
       return script;
     });
   }
@@ -890,8 +888,7 @@ void Zone::checkScriptMapsAfterMovingGC() {
     CheckTableAfterMovingGC(*scriptFinalWarmUpCountMap,
                             [this](const auto& entry) {
                               BaseScript* script = entry.key();
-                              MOZ_RELEASE_ASSERT(script->zone() == this);
-                              CheckGCThingAfterMovingGC(script);
+                              CheckGCThingAfterMovingGC(script, this);
                               return script;
                             });
   }

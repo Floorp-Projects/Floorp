@@ -53,7 +53,8 @@ Compartment::Compartment(Zone* zone, bool invisibleToDebugger)
 void Compartment::checkObjectWrappersAfterMovingGC() {
   for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
     auto key = e.front().key();
-    CheckGCThingAfterMovingGC(key.get());
+    CheckGCThingAfterMovingGC(key.get());  // Keys may be in a different zone.
+    CheckGCThingAfterMovingGC(e.front().value().unbarrieredGet(), zone());
     CheckTableEntryAfterMovingGC(crossCompartmentObjectWrappers, e, key);
   }
 }

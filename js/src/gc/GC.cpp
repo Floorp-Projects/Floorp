@@ -5066,7 +5066,7 @@ void GCRuntime::checkHashTablesAfterMovingGC() {
   }
   for (ZonesIter zone(this, SkipAtoms); !zone.done(); zone.next()) {
     zone->checkUniqueIdTableAfterMovingGC();
-    zone->shapeZone().checkTablesAfterMovingGC();
+    zone->shapeZone().checkTablesAfterMovingGC(zone);
     zone->checkAllCrossCompartmentWrappersAfterMovingGC();
     zone->checkScriptMapsAfterMovingGC();
 
@@ -5075,13 +5075,13 @@ void GCRuntime::checkHashTablesAfterMovingGC() {
     for (auto map = zone->cellIterUnsafe<NormalPropMap>(); !map.done();
          map.next()) {
       if (PropMapTable* table = map->asLinked()->maybeTable(nogc)) {
-        table->checkAfterMovingGC();
+        table->checkAfterMovingGC(zone);
       }
     }
     for (auto map = zone->cellIterUnsafe<DictionaryPropMap>(); !map.done();
          map.next()) {
       if (PropMapTable* table = map->asLinked()->maybeTable(nogc)) {
-        table->checkAfterMovingGC();
+        table->checkAfterMovingGC(zone);
       }
     }
   }

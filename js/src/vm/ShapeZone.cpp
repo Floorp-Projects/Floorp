@@ -28,60 +28,60 @@ void ShapeZone::fixupPropMapShapeTableAfterMovingGC() {
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
-void ShapeZone::checkTablesAfterMovingGC() {
-  CheckTableAfterMovingGC(initialPropMaps, [](const auto& entry) {
+void ShapeZone::checkTablesAfterMovingGC(JS::Zone* zone) {
+  CheckTableAfterMovingGC(initialPropMaps, [zone](const auto& entry) {
     SharedPropMap* map = entry.unbarrieredGet();
-    CheckGCThingAfterMovingGC(map);
+    CheckGCThingAfterMovingGC(map, zone);
     PropertyKey key = map->getKey(0);
     if (key.isGCThing()) {
-      CheckGCThingAfterMovingGC(key.toGCThing());
+      CheckGCThingAfterMovingGC(key.toGCThing(), zone);
     }
 
     return InitialPropMapHasher::Lookup(key, map->getPropertyInfo(0));
   });
 
-  CheckTableAfterMovingGC(baseShapes, [](const auto& entry) {
+  CheckTableAfterMovingGC(baseShapes, [zone](const auto& entry) {
     BaseShape* base = entry.unbarrieredGet();
-    CheckGCThingAfterMovingGC(base);
-    CheckProtoAfterMovingGC(base->proto());
+    CheckGCThingAfterMovingGC(base, zone);
+    CheckProtoAfterMovingGC(base->proto(), zone);
 
     return BaseShapeHasher::Lookup(base->clasp(), base->realm(), base->proto());
   });
 
-  CheckTableAfterMovingGC(initialShapes, [](const auto& entry) {
+  CheckTableAfterMovingGC(initialShapes, [zone](const auto& entry) {
     SharedShape* shape = entry.unbarrieredGet();
-    CheckGCThingAfterMovingGC(shape);
-    CheckProtoAfterMovingGC(shape->proto());
+    CheckGCThingAfterMovingGC(shape, zone);
+    CheckProtoAfterMovingGC(shape->proto(), zone);
 
     return InitialShapeHasher::Lookup(shape->getObjectClass(), shape->realm(),
                                       shape->proto(), shape->numFixedSlots(),
                                       shape->objectFlags());
   });
 
-  CheckTableAfterMovingGC(propMapShapes, [](const auto& entry) {
+  CheckTableAfterMovingGC(propMapShapes, [zone](const auto& entry) {
     SharedShape* shape = entry.unbarrieredGet();
-    CheckGCThingAfterMovingGC(shape);
-    CheckGCThingAfterMovingGC(shape->base());
-    CheckGCThingAfterMovingGC(shape->propMap());
+    CheckGCThingAfterMovingGC(shape, zone);
+    CheckGCThingAfterMovingGC(shape->base(), zone);
+    CheckGCThingAfterMovingGC(shape->propMap(), zone);
 
     return PropMapShapeHasher::Lookup(shape->base(), shape->numFixedSlots(),
                                       shape->propMap(), shape->propMapLength(),
                                       shape->objectFlags());
   });
 
-  CheckTableAfterMovingGC(proxyShapes, [](const auto& entry) {
+  CheckTableAfterMovingGC(proxyShapes, [zone](const auto& entry) {
     ProxyShape* shape = entry.unbarrieredGet();
-    CheckGCThingAfterMovingGC(shape);
-    CheckProtoAfterMovingGC(shape->proto());
+    CheckGCThingAfterMovingGC(shape, zone);
+    CheckProtoAfterMovingGC(shape->proto(), zone);
 
     return ProxyShapeHasher::Lookup(shape->getObjectClass(), shape->realm(),
                                     shape->proto(), shape->objectFlags());
   });
 
-  CheckTableAfterMovingGC(wasmGCShapes, [](const auto& entry) {
+  CheckTableAfterMovingGC(wasmGCShapes, [zone](const auto& entry) {
     WasmGCShape* shape = entry.unbarrieredGet();
-    CheckGCThingAfterMovingGC(shape);
-    CheckProtoAfterMovingGC(shape->proto());
+    CheckGCThingAfterMovingGC(shape, zone);
+    CheckProtoAfterMovingGC(shape->proto(), zone);
 
     return WasmGCShapeHasher::Lookup(shape->getObjectClass(), shape->realm(),
                                      shape->proto(), shape->recGroup(),

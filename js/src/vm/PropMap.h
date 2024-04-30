@@ -409,7 +409,7 @@ class PropMapTable {
 
   void trace(JSTracer* trc);
 #ifdef JSGC_HASH_TABLE_CHECKS
-  void checkAfterMovingGC();
+  void checkAfterMovingGC(JS::Zone* zone);
 #endif
 };
 
