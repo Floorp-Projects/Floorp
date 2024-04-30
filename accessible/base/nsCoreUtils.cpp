@@ -547,32 +547,6 @@ bool nsCoreUtils::IsWhitespaceString(const nsAString& aString) {
   return iterBegin == iterEnd;
 }
 
-void nsCoreUtils::TrimNonBreakingSpaces(nsAString& aString) {
-  if (aString.IsEmpty()) {
-    return;
-  }
-
-  // Find the index past the last nbsp prefix character.
-  constexpr char16_t nbsp{0xA0};
-  size_t startIndex = 0;
-  while (aString.CharAt(startIndex) == nbsp) {
-    startIndex++;
-  }
-
-  // Find the index before the first nbsp suffix character.
-  size_t endIndex = aString.Length() - 1;
-  while (endIndex > startIndex && aString.CharAt(endIndex) == nbsp) {
-    endIndex--;
-  }
-  if (startIndex > endIndex) {
-    aString.Truncate();
-    return;
-  }
-
-  // Trim the string down, removing the non-breaking space characters.
-  aString = Substring(aString, startIndex, endIndex - startIndex + 1);
-}
-
 bool nsCoreUtils::AccEventObserversExist() {
   nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
   NS_ENSURE_TRUE(obsService, false);
