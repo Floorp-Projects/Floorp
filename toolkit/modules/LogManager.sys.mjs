@@ -1,8 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict;";
 
+/**
+ * This module provides a file-based, persistent logging facility for scenarios where
+ * retaining those logs over time and across browser restarts is important.
+ * Unless you need this feature specifically, please use console.createInstance.
+ */
+
+// See Bug 1889052
+// eslint-disable-next-line mozilla/use-console-createInstance
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 const lazy = {};
@@ -120,10 +127,13 @@ class StorageStreamAppender extends Log.Appender {
   }
 }
 
-// A storage appender that is flushable to a file on disk.  Policies for
-// when to flush, to what file, log rotation etc are up to the consumer
-// (although it does maintain a .sawError property to help the consumer decide
-// based on its policies)
+/**
+ * A storage appender that is flushable to a file on disk.
+ *
+ * Policies for when to flush, to what file, log rotation etc are up to the consumer
+ * (although it does maintain a .sawError property to help the consumer decide
+ *  based on its policies)
+ */
 class FlushableStorageAppender extends StorageStreamAppender {
   constructor(formatter) {
     super(formatter);
@@ -142,8 +152,12 @@ class FlushableStorageAppender extends StorageStreamAppender {
     this.sawError = false;
   }
 
-  // Flush the current stream to a file. Somewhat counter-intuitively, you
-  // must pass a log which will be written to with details of the operation.
+  /**
+   * Flush the current stream to a file.
+   *
+   * Somewhat counter-intuitively, you must pass a log which will be written to
+   * with details of the operation.
+   */
   async flushToFile(subdirArray, filename, log) {
     let inStream = this.getInputStream();
     this.reset();
@@ -194,22 +208,39 @@ class FlushableStorageAppender extends StorageStreamAppender {
   }
 }
 
-// The public LogManager object.
-export function LogManager(prefRoot, logNames, logFilePrefix) {
-  this._prefObservers = [];
-  this.init(prefRoot, logNames, logFilePrefix);
-}
+/**
+ * Each LogManager monitors preferences, resolves log levels and verbosity,
+ * and manages the creation, rotation and clean up of log files in a profile subdirectory.
+ */
+export class LogManager {
+  constructor(options = {}) {
+    this._prefObservers = [];
+    this.#init(options);
+  }
 
-LogManager.StorageStreamAppender = StorageStreamAppender;
+  static StorageStreamAppender = StorageStreamAppender;
 
-LogManager.prototype = {
-  _cleaningUpFileLogs: false,
+  _cleaningUpFileLogs = false;
 
-  init(prefRoot, logNames, logFilePrefix) {
+  #init({
+    prefRoot,
+    logNames,
+    logFilePrefix,
+    logFileSubDirectoryEntries,
+    testTopicPrefix,
+  } = {}) {
     this._prefs = Services.prefs.getBranch(prefRoot);
     this._prefsBranch = prefRoot;
 
     this.logFilePrefix = logFilePrefix;
+    this._testTopicPrefix = testTopicPrefix;
+
+    // At this point we don't allow a custom directory for the logs, nor allow
+    // it to be outside the profile directory.
+    // This returns an array of the the relative directory entries below the
+    // profile dir, and is the directory about:sync-log uses.
+    this.logFileSubDirectoryEntries = Object.freeze(logFileSubDirectoryEntries);
+
     if (!formatter) {
       // Create a formatter and various appenders to attach to the logs.
       formatter = new Log.BasicFormatter();
@@ -284,7 +315,7 @@ LogManager.prototype = {
     }
     // and use the first specified log as a "root" for our log.
     this._log = Log.repository.getLogger(logNames[0] + ".LogManager");
-  },
+  }
 
   /**
    * Cleanup this instance
@@ -298,23 +329,15 @@ LogManager.prototype = {
       allBranches.delete(this._prefsBranch);
     } catch (e) {}
     this._prefs = null;
-  },
-
-  get _logFileSubDirectoryEntries() {
-    // At this point we don't allow a custom directory for the logs, nor allow
-    // it to be outside the profile directory.
-    // This returns an array of the the relative directory entries below the
-    // profile dir, and is the directory about:sync-log uses.
-    return ["weave", "logs"];
-  },
+  }
 
   get sawError() {
     return this._fileAppender.sawError;
-  },
+  }
 
   // Result values for resetFileLog.
-  SUCCESS_LOG_WRITTEN: "success-log-written",
-  ERROR_LOG_WRITTEN: "error-log-written",
+  SUCCESS_LOG_WRITTEN = "success-log-written";
+  ERROR_LOG_WRITTEN = "error-log-written";
 
   /**
    * Possibly generate a log file for all accumulated log messages and refresh
@@ -357,7 +380,7 @@ LogManager.prototype = {
       let filename =
         reasonPrefix + "-" + this.logFilePrefix + "-" + Date.now() + ".txt";
       await this._fileAppender.flushToFile(
-        this._logFileSubDirectoryEntries,
+        this.logFileSubDirectoryEntries,
         filename,
         this._log
       );
@@ -379,7 +402,7 @@ LogManager.prototype = {
       this._log.error("Failed to resetFileLog", ex);
       return null;
     }
-  },
+  }
 
   /**
    * Finds all logs older than maxErrorAge and deletes them using async I/O.
@@ -396,22 +419,24 @@ LogManager.prototype = {
       return fileInfo.lastModified < threshold;
     };
     return this._deleteLogFiles(shouldDelete);
-  },
+  }
 
   /**
    * Finds all logs and removes them.
    */
   removeAllLogs() {
     return this._deleteLogFiles(() => true);
-  },
+  }
 
-  // Delete some log files. A callback is invoked for each found log file to
-  // determine if that file should be removed.
+  /**
+   * Delete some log files. A callback is invoked for each found log file to
+   * determine if that file should be removed.
+   */
   async _deleteLogFiles(cbShouldDelete) {
     this._cleaningUpFileLogs = true;
     let logDir = lazy.FileUtils.getDir(
       "ProfD",
-      this._logFileSubDirectoryEntries
+      this.logFileSubDirectoryEntries
     );
     for (const path of await IOUtils.getChildren(logDir.path)) {
       const name = PathUtils.filename(path);
@@ -439,9 +464,12 @@ LogManager.prototype = {
     this._cleaningUpFileLogs = false;
     this._log.debug("Done deleting files.");
     // This notification is used only for tests.
-    Services.obs.notifyObservers(
-      null,
-      "services-tests:common:log-manager:cleanup-logs"
-    );
-  },
-};
+    if (this._testTopicPrefix) {
+      Services.obs.notifyObservers(
+        null,
+        `${this._testTopicPrefix}cleanup-logs`
+      );
+      ("cleanup-logs");
+    }
+  }
+}

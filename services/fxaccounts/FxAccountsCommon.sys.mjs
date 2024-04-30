@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-import { LogManager } from "resource://services-common/logmanager.sys.mjs";
+import { LogManager } from "resource://gre/modules/LogManager.sys.mjs";
 
 // loglevel should be one of "Fatal", "Error", "Warn", "Info", "Config",
 // "Debug", "Trace" or "All". If none is specified, "Debug" will be used by
@@ -29,7 +29,13 @@ let logs = [
 ];
 
 // For legacy reasons, the log manager still thinks it's part of sync.
-export let logManager = new LogManager("services.sync.", logs, "sync");
+export let logManager = new LogManager({
+  prefRoot: "services.sync.",
+  logNames: logs,
+  logFilePrefix: "sync",
+  logFileSubDirectoryEntries: ["weave", "logs"],
+  testTopicPrefix: "services-tests:common:log-manager:",
+});
 
 // A boolean to indicate if personally identifiable information (or anything
 // else sensitive, such as credentials) should be logged.

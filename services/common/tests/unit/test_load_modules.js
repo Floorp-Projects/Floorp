@@ -6,12 +6,7 @@ const { AppConstants } = ChromeUtils.importESModule(
 );
 
 const MODULE_BASE = "resource://services-common/";
-const shared_modules = [
-  "async.sys.mjs",
-  "logmanager.sys.mjs",
-  "rest.sys.mjs",
-  "utils.sys.mjs",
-];
+const shared_modules = ["async.sys.mjs", "rest.sys.mjs", "utils.sys.mjs"];
 
 const non_android_modules = ["tokenserverclient.sys.mjs"];
 
@@ -51,6 +46,7 @@ function expectImportsToFail(mm, base = MODULE_BASE) {
 function run_test() {
   expectImportsToSucceed(shared_modules);
   expectImportsToSucceed(shared_test_modules, TEST_BASE);
+  expectImportsToSucceed(["LogManager.sys.mjs"], "resource://gre/modules/");
 
   if (AppConstants.platform != "android") {
     expectImportsToSucceed(non_android_modules);

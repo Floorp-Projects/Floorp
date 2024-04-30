@@ -20,8 +20,6 @@ tags = "blocklist"
 
 ["test_load_modules.js"]
 
-["test_logmanager.js"]
-
 ["test_observers.js"]
 
 ["test_restrequest.js"]

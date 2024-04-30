@@ -22,7 +22,6 @@ EXTRA_JS_MODULES["services-common"] += [
     "kinto-http-client.sys.mjs",
     "kinto-offline-client.sys.mjs",
     "kinto-storage-adapter.sys.mjs",
-    "logmanager.sys.mjs",
     "observers.sys.mjs",
     "rest.sys.mjs",
     "uptake-telemetry.sys.mjs",

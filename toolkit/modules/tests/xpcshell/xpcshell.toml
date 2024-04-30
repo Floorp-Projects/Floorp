@@ -63,6 +63,8 @@ tags = "remote-settings"
 
 ["test_Log.js"]
 
+["test_LogManager.js"]
+
 ["test_Log_double_ext.js"]
 
 ["test_Log_nsIStackFrame.js"]
