@@ -319,7 +319,7 @@
             app:destination="@id/reviewQualityCheckFragment" />
         <action
             android:id="@+id/action_browserFragment_to_translationsDialogFragment"
-            app:destination="@id/translations_graph" />
+            app:destination="@id/translationsDialogFragment" />
         <action
             android:id="@+id/action_loginsListFragment"
             app:destination="@id/savedLogins"
@@ -633,6 +633,13 @@
         <action
             android:id="@+id/action_settingsFragment_to_localeSettingsFragment"
             app:destination="@id/localeSettingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_settingsFragment_to_translationsSettingsFragment"
+            app:destination="@id/translations_settings_graph"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
@@ -1444,33 +1451,24 @@
         </fragment>
     </navigation>
 
-    <navigation
-        android:id="@+id/translations_graph"
-        app:startDestination="@id/translationsDialogFragment">
+    <dialog
+        android:id="@+id/translationsDialogFragment"
+        android:name="org.mozilla.fenix.translations.TranslationsDialogFragment">
         <argument
-            android:name="sessionId"
-            app:argType="string"
-            app:nullable="true" />
-        <dialog
-            android:id="@+id/translationsDialogFragment"
-            android:name="org.mozilla.fenix.translations.TranslationsDialogFragment">
-            <argument
-                android:name="sessionId"
-                app:argType="string" />
-            <argument
-                android:name="translationsDialogAccessPoint"
-                android:defaultValue="Translations"
-                app:argType="org.mozilla.fenix.translations.TranslationsDialogAccessPoint" />
-            <action
-                android:id="@+id/action_translationsDialogFragment_to_translationSettingsFragment"
-                app:destination="@id/translationSettingsFragment" />
-        </dialog>
+            android:name="translationsDialogAccessPoint"
+            android:defaultValue="Translations"
+            app:argType="org.mozilla.fenix.translations.TranslationsDialogAccessPoint" />
+        <action
+            android:id="@+id/action_translationsDialogFragment_to_translationSettingsFragment"
+            app:destination="@id/translations_settings_graph" />
+    </dialog>
+
+    <navigation
+        android:id="@+id/translations_settings_graph"
+        app:startDestination="@id/translationSettingsFragment">
         <fragment
             android:id="@+id/translationSettingsFragment"
             android:name="org.mozilla.fenix.translations.TranslationSettingsFragment">
-            <argument
-                android:name="sessionId"
-                app:argType="string" />
             <action
                 android:id="@+id/action_translationSettingsFragment_to_translationsDialogFragment"
                 app:destination="@id/translationsDialogFragment"

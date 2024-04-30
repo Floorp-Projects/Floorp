@@ -5,12 +5,12 @@
 package org.mozilla.fenix.translations
 
 import mozilla.components.browser.state.action.TranslationsAction
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -18,16 +18,17 @@ import org.mozilla.fenix.utils.Settings
  */
 class TranslationsDialogMiddleware(
     private val browserStore: BrowserStore,
-    private val sessionId: String,
     private val settings: Settings,
 ) : Middleware<TranslationsDialogState, TranslationsDialogAction> {
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun invoke(
         context: MiddlewareContext<TranslationsDialogState, TranslationsDialogAction>,
         next: (TranslationsDialogAction) -> Unit,
         action: TranslationsDialogAction,
     ) {
+        val sessionId = browserStore.state.selectedTab?.id ?: return
+
         when (action) {
             is TranslationsDialogAction.InitTranslationsDialog -> {
                 // If the languages are missing, we should attempt to fetch the supported languages.
@@ -98,10 +99,8 @@ class TranslationsDialogMiddleware(
                     is TranslationPageSettingsOption.AlwaysOfferPopup -> {
                         // Ensures the translations engine has the correct value
                         browserStore.dispatch(
-                            TranslationsAction.UpdatePageSettingAction(
-                                tabId = sessionId,
-                                operation = TranslationPageSettingOperation.UPDATE_ALWAYS_OFFER_POPUP,
-                                setting = action.checkValue,
+                            TranslationsAction.SetGlobalOfferTranslateSettingAction(
+                                offerTranslation = action.checkValue,
                             ),
                         )
 
