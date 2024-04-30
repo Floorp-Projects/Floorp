@@ -2,18 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const lazy = {};
+
 import { html, when } from "chrome://global/content/vendor/lit.all.mjs";
+import { navigateToLink } from "chrome://browser/content/firefoxview/helpers.mjs";
 
 import { SidebarPage } from "./sidebar-page.mjs";
 
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/firefoxview/fxview-search-textbox.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/firefoxview/fxview-tab-list.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://global/content/elements/moz-card.mjs";
-import { HistoryController } from "chrome://browser/content/firefoxview/HistoryController.mjs";
-import { navigateToLink } from "chrome://browser/content/firefoxview/helpers.mjs";
+ChromeUtils.defineESModuleGetters(lazy, {
+  HistoryController: "resource:///modules/HistoryController.sys.mjs",
+});
 
 const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
 
@@ -25,13 +23,13 @@ export class SidebarHistory extends SidebarPage {
     this.maxTabsLength = -1;
   }
 
-  controller = new HistoryController(this, {
+  controller = new lazy.HistoryController(this, {
     component: "sidebar",
   });
 
   connectedCallback() {
     super.connectedCallback();
-    this.controller.updateAllHistoryItems();
+    this.controller.updateCache();
   }
 
   onPrimaryAction(e) {
@@ -48,38 +46,34 @@ export class SidebarHistory extends SidebarPage {
   get cardsTemplate() {
     if (this.controller.searchResults) {
       return this.#searchResultsTemplate();
-    } else if (this.controller.allHistoryItems.size) {
+    } else if (!this.controller.isHistoryEmpty) {
       return this.#historyCardsTemplate();
     }
     return this.#emptyMessageTemplate();
   }
 
   #historyCardsTemplate() {
-    let cardsTemplate = [];
-    this.controller.historyMapByDate.forEach(historyItem => {
-      if (historyItem.items.length) {
-        let dateArg = JSON.stringify({ date: historyItem.items[0].time });
-        cardsTemplate.push(html`<moz-card
-          type="accordion"
-          data-l10n-attrs="heading"
-          data-l10n-id=${historyItem.l10nId}
-          data-l10n-args=${dateArg}
-        >
-          <div>
-            <fxview-tab-list
-              compactRows
-              class="with-context-menu"
-              maxTabsLength=${this.maxTabsLength}
-              .tabItems=${this.getTabItems(historyItem.items)}
-              @fxview-tab-list-primary-action=${this.onPrimaryAction}
-              .updatesPaused=${false}
-            >
-            </fxview-tab-list>
-          </div>
-        </moz-card>`);
-      }
+    return this.controller.historyVisits.map(historyItem => {
+      let dateArg = JSON.stringify({ date: historyItem.items[0].time });
+      return html`<moz-card
+        type="accordion"
+        data-l10n-attrs="heading"
+        data-l10n-id=${historyItem.l10nId}
+        data-l10n-args=${dateArg}
+      >
+        <div>
+          <fxview-tab-list
+            compactRows
+            class="with-context-menu"
+            maxTabsLength=${this.maxTabsLength}
+            .tabItems=${this.getTabItems(historyItem.items)}
+            @fxview-tab-list-primary-action=${this.onPrimaryAction}
+            .updatesPaused=${false}
+          >
+          </fxview-tab-list>
+        </div>
+      </moz-card>`;
     });
-    return cardsTemplate;
   }
 
   #emptyMessageTemplate() {
@@ -154,12 +148,8 @@ export class SidebarHistory extends SidebarPage {
     </moz-card>`;
   }
 
-  async onChangeSortOption(e) {
-    await this.controller.onChangeSortOption(e);
-  }
-
-  async onSearchQuery(e) {
-    await this.controller.onSearchQuery(e);
+  onSearchQuery(e) {
+    this.controller.onSearchQuery(e);
   }
 
   getTabItems(items) {
@@ -187,14 +177,6 @@ export class SidebarHistory extends SidebarPage {
         ${this.cardsTemplate}
       </div>
     `;
-  }
-
-  willUpdate() {
-    if (this.controller.allHistoryItems.size) {
-      // onChangeSortOption() will update history data once it has been fetched
-      // from the API.
-      this.controller.createHistoryMaps();
-    }
   }
 }
 
