@@ -144,36 +144,22 @@ class InspectorCSSParserWrapper {
    * string.  This is handled in different ways, depending on the
    * context and arguments.
    *
-   * If preserveBackslash is true, then the existing backslash at the
-   * end of inputString is preserved, and a new backslash is appended.
+   * The existing backslash at the end of inputString is preserved, and a new backslash
+   * is appended.
    * That is, the input |\| is transformed to |\\|, and the
    * input |'\| is transformed to |'\\'|.
    *
-   * Otherwise, preserveBackslash is false:
-   * If the backslash appears in a string context, then the trailing
-   * backslash is dropped from inputString.  That is, |"\| is
-   * transformed to |""|.
-   * If the backslash appears outside of a string context, then
-   * U+FFFD is appended.  That is, |\| is transformed to a string
-   * with two characters: backslash followed by U+FFFD.
-   *
-   * Passing false for preserveBackslash makes the result conform to
-   * the CSS Syntax specification.  However, passing true may give
-   * somewhat more intuitive behavior.
-   *
    * @param inputString the input string
-   * @param preserveBackslash how to handle trailing backslashes
    * @return the input string with the termination characters appended
    */
-  performEOFFixup(inputString, preserveBackslash) {
+  performEOFFixup(inputString) {
     let result = inputString;
 
     let eofChars = this.#eofCharacters;
     if (
-      preserveBackslash &&
       (eofChars &
         (EEOFCHARACTERS_DROPBACKSLASH | EEOFCHARACTERS_REPLACEMENTCHAR)) !=
-        0
+      0
     ) {
       eofChars &= ~(
         EEOFCHARACTERS_DROPBACKSLASH | EEOFCHARACTERS_REPLACEMENTCHAR

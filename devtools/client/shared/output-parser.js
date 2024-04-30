@@ -1787,7 +1787,7 @@ class OutputParser {
       // Nothing.
     }
 
-    return urlTokenizer.performEOFFixup(url, true);
+    return urlTokenizer.performEOFFixup(url);
   }
 
   /**

@@ -532,7 +532,7 @@ function parseDeclarationsInternal(
         current += "!";
       }
       lastProp.value = cssTrim(current);
-      const terminator = lexer.performEOFFixup("", true);
+      const terminator = lexer.performEOFFixup("");
       lastProp.terminator = terminator + ";";
       // If the input was unterminated, attribute the remainder to
       // this property.  This avoids some bad behavior when rewriting
