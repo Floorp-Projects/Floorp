@@ -47,7 +47,7 @@ class BookmarksViewHolder(
             onBookmarkClick = interactor::onBookmarkClicked,
             menuItems = listOf(
                 BookmarksMenuItem(
-                    stringResource(id = R.string.recently_saved_menu_item_remove),
+                    stringResource(id = R.string.home_bookmarks_menu_item_remove),
                     onClick = { bookmark -> interactor.onBookmarkRemoved(bookmark) },
                 ),
             ),

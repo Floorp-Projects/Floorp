@@ -444,7 +444,7 @@ private fun jumpBackInButton() =
     onView(allOf(withText(R.string.customize_toggle_jump_back_in)))
 
 private fun recentBookmarksButton() =
-    onView(allOf(withText(R.string.customize_toggle_recent_bookmarks)))
+    onView(allOf(withText(R.string.customize_toggle_bookmarks)))
 
 private fun recentlyVisitedButton() =
     onView(allOf(withText(R.string.customize_toggle_recently_visited)))

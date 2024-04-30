@@ -124,12 +124,12 @@ class SettingsHomepageTest : TestSetup() {
         }.openThreeDotMenu {
         }.bookmarkPage {
         }.goToHomescreen {
-            verifyRecentBookmarksSectionIsDisplayed(exists = true)
+            verifyBookmarksSectionIsDisplayed(exists = true)
         }.openThreeDotMenu {
         }.openCustomizeHome {
             clickRecentBookmarksButton()
         }.goBackToHomeScreen {
-            verifyRecentBookmarksSectionIsDisplayed(exists = false)
+            verifyBookmarksSectionIsDisplayed(exists = false)
         }
     }
 
