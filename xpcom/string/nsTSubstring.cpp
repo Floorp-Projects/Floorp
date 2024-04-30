@@ -1322,6 +1322,9 @@ int_type ToIntegerCommon(const nsTSubstring<T>& aSrc, nsresult* aErrorCode,
         break;
       // clang-format on
       case '-':
+        if constexpr (!std::is_signed_v<int_type>) {
+          return 0;
+        }
         negate = true;
         break;
       default:
@@ -1387,6 +1390,12 @@ template <typename T>
 int32_t nsTSubstring<T>::ToInteger(nsresult* aErrorCode,
                                    uint32_t aRadix) const {
   return ToIntegerCommon<T, int32_t>(*this, aErrorCode, aRadix);
+}
+
+template <typename T>
+uint32_t nsTSubstring<T>::ToUnsignedInteger(nsresult* aErrorCode,
+                                            uint32_t aRadix) const {
+  return ToIntegerCommon<T, uint32_t>(*this, aErrorCode, aRadix);
 }
 
 /**
