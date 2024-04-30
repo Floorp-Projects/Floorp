@@ -714,7 +714,7 @@ bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
   // hopefully alleviate the situation.
   if (IsProcessStable(TimeStamp::Now())) {
     if (mProcess) {
-      mProcess->KillProcess(/* aGenerateMinidump */ false);
+      mProcess->KillProcess();
     } else {
       SimulateDeviceReset();
     }
@@ -1070,19 +1070,12 @@ void GPUProcessManager::CleanShutdown() {
   mVsyncIOThread = nullptr;
 }
 
-void GPUProcessManager::KillProcess(bool aGenerateMinidump) {
-  if (!NS_IsMainThread()) {
-    RefPtr<Runnable> task = mTaskFactory.NewRunnableMethod(
-        &GPUProcessManager::KillProcess, aGenerateMinidump);
-    NS_DispatchToMainThread(task.forget());
-    return;
-  }
-
+void GPUProcessManager::KillProcess() {
   if (!mProcess) {
     return;
   }
 
-  mProcess->KillProcess(aGenerateMinidump);
+  mProcess->KillProcess();
 }
 
 void GPUProcessManager::CrashProcess() {
