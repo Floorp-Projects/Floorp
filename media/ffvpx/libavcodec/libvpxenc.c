@@ -33,8 +33,8 @@
 #include "avcodec.h"
 #include "codec_internal.h"
 #include "encode.h"
-#include "internal.h"
 #include "libavutil/avassert.h"
+#include "libavutil/mem.h"
 #include "libvpx.h"
 #include "packet_internal.h"
 #include "profiles.h"
@@ -48,6 +48,9 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
+
+#define IS_VP9(avctx) (CONFIG_LIBVPX_VP9_ENCODER && avctx->codec_id == AV_CODEC_ID_VP9)
+#define IS_VP8(avctx) (CONFIG_LIBVPX_VP8_ENCODER && avctx->codec_id == AV_CODEC_ID_VP8)
 
 /**
  * Portion of struct vpx_codec_cx_pkt from vpx_encoder.h.
@@ -68,9 +71,6 @@ typedef struct FrameData {
     int64_t pts;
     int64_t duration;
 
-#if FF_API_REORDERED_OPAQUE
-    int64_t      reordered_opaque;
-#endif
     void        *frame_opaque;
     AVBufferRef *frame_opaque_ref;
 
@@ -121,6 +121,9 @@ typedef struct VPxEncoderContext {
     int *ts_layer_flags;
     int current_temporal_idx;
 
+    // VP8-only
+    int screen_content_mode;
+
     // VP9-only
     int lossless;
     int tile_columns;
@@ -164,6 +167,7 @@ static const char *const ctlidstr[] = {
     [VP8E_SET_MAX_INTRA_BITRATE_PCT] = "VP8E_SET_MAX_INTRA_BITRATE_PCT",
     [VP8E_SET_SHARPNESS]               = "VP8E_SET_SHARPNESS",
     [VP8E_SET_TEMPORAL_LAYER_ID]       = "VP8E_SET_TEMPORAL_LAYER_ID",
+    [VP8E_SET_SCREEN_CONTENT_MODE]     = "VP8E_SET_SCREEN_CONTENT_MODE",
 #if CONFIG_LIBVPX_VP9_ENCODER
     [VP9E_SET_LOSSLESS]                = "VP9E_SET_LOSSLESS",
     [VP9E_SET_TILE_COLUMNS]            = "VP9E_SET_TILE_COLUMNS",
@@ -356,21 +360,20 @@ static int frame_data_submit(AVCodecContext *avctx, AVFifo *fifo,
     const struct vpx_codec_enc_cfg *enccfg = ctx->encoder.config.enc;
 
     FrameData fd = { .pts = frame->pts };
-
-    AVFrameSideData *av_uninit(sd);
     int ret;
 
-#if CONFIG_LIBVPX_VP9_ENCODER
-    // Keep HDR10+ if it has bit depth higher than 8 and
-    // it has PQ trc (SMPTE2084).
-    sd = av_frame_get_side_data(frame, AV_FRAME_DATA_DYNAMIC_HDR_PLUS);
-    if (avctx->codec_id == AV_CODEC_ID_VP9 && sd &&
+    if (IS_VP9(avctx) &&
+        // Keep HDR10+ if it has bit depth higher than 8 and
+        // it has PQ trc (SMPTE2084).
         enccfg->g_bit_depth > 8 && avctx->color_trc == AVCOL_TRC_SMPTE2084) {
-        fd.hdr10_plus = av_buffer_ref(sd->buf);
-        if (!fd.hdr10_plus)
-            return AVERROR(ENOMEM);
+        const AVFrameSideData *sd = av_frame_get_side_data(frame, AV_FRAME_DATA_DYNAMIC_HDR_PLUS);
+
+        if (sd) {
+            fd.hdr10_plus = av_buffer_ref(sd->buf);
+            if (!fd.hdr10_plus)
+                return AVERROR(ENOMEM);
+        }
     }
-#endif
 
     fd.duration     = frame->duration;
     fd.frame_opaque = frame->opaque;
@@ -379,11 +382,6 @@ static int frame_data_submit(AVCodecContext *avctx, AVFifo *fifo,
         if (ret < 0)
             goto fail;
     }
-#if FF_API_REORDERED_OPAQUE
-FF_DISABLE_DEPRECATION_WARNINGS
-    fd.reordered_opaque = frame->reordered_opaque;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
 
     ret = av_fifo_write(fifo, &fd, 1);
     if (ret < 0)
@@ -409,12 +407,6 @@ static int frame_data_apply(AVCodecContext *avctx, AVFifo *fifo, AVPacket *pkt)
                "this is a bug, please report it\n", pkt->pts, fd.pts);
         goto skip;
     }
-
-#if FF_API_REORDERED_OPAQUE
-FF_DISABLE_DEPRECATION_WARNINGS
-    avctx->reordered_opaque = fd.reordered_opaque;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
 
     pkt->duration = fd.duration;
     if (avctx->flags & AV_CODEC_FLAG_COPY_OPAQUE) {
@@ -794,7 +786,7 @@ static int set_pix_fmt(AVCodecContext *avctx, vpx_codec_caps_t codec_caps,
                        struct vpx_codec_enc_cfg *enccfg, vpx_codec_flags_t *flags,
                        vpx_img_fmt_t *img_fmt)
 {
-    VPxContext av_unused *ctx = avctx->priv_data;
+    VPxContext *ctx = avctx->priv_data;
     const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(avctx->pix_fmt);
     enccfg->g_bit_depth = enccfg->g_input_bit_depth = desc->comp[0].depth;
     switch (avctx->pix_fmt) {
@@ -1262,6 +1254,14 @@ static av_cold int vpx_init(AVCodecContext *avctx,
 #endif
     }
 #endif
+    if (avctx->codec_id == AV_CODEC_ID_VP8 && ctx->screen_content_mode >= 0) {
+        if (ctx->screen_content_mode == 2 && ctx->is_alpha) {
+            av_log(avctx, AV_LOG_ERROR,
+                   "Transparency encoding with screen mode with aggressive rate control not supported\n");
+            return AVERROR(EINVAL);
+        }
+        codecctl_int(avctx, VP8E_SET_SCREEN_CONTENT_MODE, ctx->screen_content_mode);
+    }
 
     av_log(avctx, AV_LOG_DEBUG, "Using deadline: %d\n", ctx->deadline);
 
@@ -1902,24 +1902,24 @@ FF_ENABLE_DEPRECATION_WARNINGS
                          "alternate reference frame selection",    OFFSET(lag_in_frames),   AV_OPT_TYPE_INT, {.i64 = -1},      -1,      INT_MAX, VE}, \
     { "arnr-maxframes",  "altref noise reduction max frame count", OFFSET(arnr_max_frames), AV_OPT_TYPE_INT, {.i64 = -1},      -1,      INT_MAX, VE}, \
     { "arnr-strength",   "altref noise reduction filter strength", OFFSET(arnr_strength),   AV_OPT_TYPE_INT, {.i64 = -1},      -1,      INT_MAX, VE}, \
-    { "arnr-type",       "altref noise reduction filter type",     OFFSET(arnr_type),       AV_OPT_TYPE_INT, {.i64 = -1},      -1,      INT_MAX, VE, "arnr_type"}, \
-    { "backward",        NULL, 0, AV_OPT_TYPE_CONST, {.i64 = 1}, 0, 0, VE, "arnr_type" }, \
-    { "forward",         NULL, 0, AV_OPT_TYPE_CONST, {.i64 = 2}, 0, 0, VE, "arnr_type" }, \
-    { "centered",        NULL, 0, AV_OPT_TYPE_CONST, {.i64 = 3}, 0, 0, VE, "arnr_type" }, \
-    { "tune",            "Tune the encoding to a specific scenario", OFFSET(tune),          AV_OPT_TYPE_INT, {.i64 = -1},      -1,      INT_MAX, VE, "tune"}, \
-    { "psnr",            NULL, 0, AV_OPT_TYPE_CONST, {.i64 = VP8_TUNE_PSNR}, 0, 0, VE, "tune"}, \
-    { "ssim",            NULL, 0, AV_OPT_TYPE_CONST, {.i64 = VP8_TUNE_SSIM}, 0, 0, VE, "tune"}, \
-    { "deadline",        "Time to spend encoding, in microseconds.", OFFSET(deadline),      AV_OPT_TYPE_INT, {.i64 = VPX_DL_GOOD_QUALITY}, INT_MIN, INT_MAX, VE, "quality"}, \
-    { "best",            NULL, 0, AV_OPT_TYPE_CONST, {.i64 = VPX_DL_BEST_QUALITY}, 0, 0, VE, "quality"}, \
-    { "good",            NULL, 0, AV_OPT_TYPE_CONST, {.i64 = VPX_DL_GOOD_QUALITY}, 0, 0, VE, "quality"}, \
-    { "realtime",        NULL, 0, AV_OPT_TYPE_CONST, {.i64 = VPX_DL_REALTIME},     0, 0, VE, "quality"}, \
-    { "error-resilient", "Error resilience configuration", OFFSET(error_resilient), AV_OPT_TYPE_FLAGS, {.i64 = 0}, INT_MIN, INT_MAX, VE, "er"}, \
+    { "arnr-type",       "altref noise reduction filter type",     OFFSET(arnr_type),       AV_OPT_TYPE_INT, {.i64 = -1},      -1,      INT_MAX, VE, .unit = "arnr_type"}, \
+    { "backward",        NULL, 0, AV_OPT_TYPE_CONST, {.i64 = 1}, 0, 0, VE, .unit = "arnr_type" }, \
+    { "forward",         NULL, 0, AV_OPT_TYPE_CONST, {.i64 = 2}, 0, 0, VE, .unit = "arnr_type" }, \
+    { "centered",        NULL, 0, AV_OPT_TYPE_CONST, {.i64 = 3}, 0, 0, VE, .unit = "arnr_type" }, \
+    { "tune",            "Tune the encoding to a specific scenario", OFFSET(tune),          AV_OPT_TYPE_INT, {.i64 = -1},      -1,      INT_MAX, VE, .unit = "tune"}, \
+    { "psnr",            NULL, 0, AV_OPT_TYPE_CONST, {.i64 = VP8_TUNE_PSNR}, 0, 0, VE, .unit = "tune"}, \
+    { "ssim",            NULL, 0, AV_OPT_TYPE_CONST, {.i64 = VP8_TUNE_SSIM}, 0, 0, VE, .unit = "tune"}, \
+    { "deadline",        "Time to spend encoding, in microseconds.", OFFSET(deadline),      AV_OPT_TYPE_INT, {.i64 = VPX_DL_GOOD_QUALITY}, INT_MIN, INT_MAX, VE, .unit = "quality"}, \
+    { "best",            NULL, 0, AV_OPT_TYPE_CONST, {.i64 = VPX_DL_BEST_QUALITY}, 0, 0, VE, .unit = "quality"}, \
+    { "good",            NULL, 0, AV_OPT_TYPE_CONST, {.i64 = VPX_DL_GOOD_QUALITY}, 0, 0, VE, .unit = "quality"}, \
+    { "realtime",        NULL, 0, AV_OPT_TYPE_CONST, {.i64 = VPX_DL_REALTIME},     0, 0, VE, .unit = "quality"}, \
+    { "error-resilient", "Error resilience configuration", OFFSET(error_resilient), AV_OPT_TYPE_FLAGS, {.i64 = 0}, INT_MIN, INT_MAX, VE, .unit = "er"}, \
     { "max-intra-rate",  "Maximum I-frame bitrate (pct) 0=unlimited",  OFFSET(max_intra_rate),  AV_OPT_TYPE_INT,  {.i64 = -1}, -1,      INT_MAX, VE}, \
-    { "default",         "Improve resiliency against losses of whole frames", 0, AV_OPT_TYPE_CONST, {.i64 = VPX_ERROR_RESILIENT_DEFAULT}, 0, 0, VE, "er"}, \
+    { "default",         "Improve resiliency against losses of whole frames", 0, AV_OPT_TYPE_CONST, {.i64 = VPX_ERROR_RESILIENT_DEFAULT}, 0, 0, VE, .unit = "er"}, \
     { "partitions",      "The frame partitions are independently decodable " \
                          "by the bool decoder, meaning that partitions can be decoded even " \
                          "though earlier partitions have been lost. Note that intra prediction" \
-                         " is still done over the partition boundary.",       0, AV_OPT_TYPE_CONST, {.i64 = VPX_ERROR_RESILIENT_PARTITIONS}, 0, 0, VE, "er"}, \
+                         " is still done over the partition boundary.",       0, AV_OPT_TYPE_CONST, {.i64 = VPX_ERROR_RESILIENT_PARTITIONS}, 0, 0, VE, .unit = "er"}, \
     { "crf",              "Select the quality for constant quality mode", offsetof(VPxContext, crf), AV_OPT_TYPE_INT, {.i64 = -1}, -1, 63, VE }, \
     { "static-thresh",    "A change threshold on blocks below which they will be skipped by the encoder", OFFSET(static_thresh), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, INT_MAX, VE }, \
     { "drop-threshold",   "Frame drop threshold", offsetof(VPxContext, drop_threshold), AV_OPT_TYPE_INT, {.i64 = 0 }, INT_MIN, INT_MAX, VE }, \
@@ -1930,10 +1930,10 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
 #define LEGACY_OPTIONS \
     {"speed", "", offsetof(VPxContext, cpu_used), AV_OPT_TYPE_INT, {.i64 = 1}, -16, 16, VE}, \
-    {"quality", "", offsetof(VPxContext, deadline), AV_OPT_TYPE_INT, {.i64 = VPX_DL_GOOD_QUALITY}, INT_MIN, INT_MAX, VE, "quality"}, \
-    {"vp8flags", "", offsetof(VPxContext, flags), AV_OPT_TYPE_FLAGS, {.i64 = 0}, 0, UINT_MAX, VE, "flags"}, \
-    {"error_resilient", "enable error resilience", 0, AV_OPT_TYPE_CONST, {.i64 = VP8F_ERROR_RESILIENT}, INT_MIN, INT_MAX, VE, "flags"}, \
-    {"altref", "enable use of alternate reference frames (VP8/2-pass only)", 0, AV_OPT_TYPE_CONST, {.i64 = VP8F_AUTO_ALT_REF}, INT_MIN, INT_MAX, VE, "flags"}, \
+    {"quality", "", offsetof(VPxContext, deadline), AV_OPT_TYPE_INT, {.i64 = VPX_DL_GOOD_QUALITY}, INT_MIN, INT_MAX, VE, .unit = "quality"}, \
+    {"vp8flags", "", offsetof(VPxContext, flags), AV_OPT_TYPE_FLAGS, {.i64 = 0}, 0, UINT_MAX, VE, .unit = "flags"}, \
+    {"error_resilient", "enable error resilience", 0, AV_OPT_TYPE_CONST, {.i64 = VP8F_ERROR_RESILIENT}, INT_MIN, INT_MAX, VE, .unit = "flags"}, \
+    {"altref", "enable use of alternate reference frames (VP8/2-pass only)", 0, AV_OPT_TYPE_CONST, {.i64 = VP8F_AUTO_ALT_REF}, INT_MIN, INT_MAX, VE, .unit = "flags"}, \
     {"arnr_max_frames", "altref noise reduction max frame count", offsetof(VPxContext, arnr_max_frames), AV_OPT_TYPE_INT, {.i64 = 0}, 0, 15, VE}, \
     {"arnr_strength", "altref noise reduction filter strength", offsetof(VPxContext, arnr_strength), AV_OPT_TYPE_INT, {.i64 = 3}, 0, 6, VE}, \
     {"arnr_type", "altref noise reduction filter type", offsetof(VPxContext, arnr_type), AV_OPT_TYPE_INT, {.i64 = 3}, 1, 3, VE}, \
@@ -1946,6 +1946,7 @@ static const AVOption vp8_options[] = {
     { "auto-alt-ref",    "Enable use of alternate reference "
                          "frames (2-pass only)",                        OFFSET(auto_alt_ref),    AV_OPT_TYPE_INT, {.i64 = -1}, -1,  2, VE},
     { "cpu-used",        "Quality/Speed ratio modifier",                OFFSET(cpu_used),        AV_OPT_TYPE_INT, {.i64 = 1}, -16, 16, VE},
+    { "screen-content-mode",     "Encoder screen content mode",         OFFSET(screen_content_mode), AV_OPT_TYPE_INT, {.i64 = -1}, -1,  2, VE},
     LEGACY_OPTIONS
     { NULL }
 };
@@ -1962,16 +1963,16 @@ static const AVOption vp9_options[] = {
     { "tile-rows",       "Number of tile rows to use, log2",            OFFSET(tile_rows),       AV_OPT_TYPE_INT, {.i64 = -1}, -1, 2, VE},
     { "frame-parallel",  "Enable frame parallel decodability features", OFFSET(frame_parallel),  AV_OPT_TYPE_BOOL,{.i64 = -1}, -1, 1, VE},
 #if VPX_ENCODER_ABI_VERSION >= 12
-    { "aq-mode",         "adaptive quantization mode",                  OFFSET(aq_mode),         AV_OPT_TYPE_INT, {.i64 = -1}, -1, 4, VE, "aq_mode"},
+    { "aq-mode",         "adaptive quantization mode",                  OFFSET(aq_mode),         AV_OPT_TYPE_INT, {.i64 = -1}, -1, 4, VE, .unit = "aq_mode"},
 #else
-    { "aq-mode",         "adaptive quantization mode",                  OFFSET(aq_mode),         AV_OPT_TYPE_INT, {.i64 = -1}, -1, 3, VE, "aq_mode"},
+    { "aq-mode",         "adaptive quantization mode",                  OFFSET(aq_mode),         AV_OPT_TYPE_INT, {.i64 = -1}, -1, 3, VE, .unit = "aq_mode"},
 #endif
-    { "none",            "Aq not used",         0, AV_OPT_TYPE_CONST, {.i64 = 0}, 0, 0, VE, "aq_mode" },
-    { "variance",        "Variance based Aq",   0, AV_OPT_TYPE_CONST, {.i64 = 1}, 0, 0, VE, "aq_mode" },
-    { "complexity",      "Complexity based Aq", 0, AV_OPT_TYPE_CONST, {.i64 = 2}, 0, 0, VE, "aq_mode" },
-    { "cyclic",          "Cyclic Refresh Aq",   0, AV_OPT_TYPE_CONST, {.i64 = 3}, 0, 0, VE, "aq_mode" },
+    { "none",            "Aq not used",         0, AV_OPT_TYPE_CONST, {.i64 = 0}, 0, 0, VE, .unit = "aq_mode" },
+    { "variance",        "Variance based Aq",   0, AV_OPT_TYPE_CONST, {.i64 = 1}, 0, 0, VE, .unit = "aq_mode" },
+    { "complexity",      "Complexity based Aq", 0, AV_OPT_TYPE_CONST, {.i64 = 2}, 0, 0, VE, .unit = "aq_mode" },
+    { "cyclic",          "Cyclic Refresh Aq",   0, AV_OPT_TYPE_CONST, {.i64 = 3}, 0, 0, VE, .unit = "aq_mode" },
 #if VPX_ENCODER_ABI_VERSION >= 12
-    { "equator360",      "360 video Aq",        0, AV_OPT_TYPE_CONST, {.i64 = 4}, 0, 0, VE, "aq_mode" },
+    { "equator360",      "360 video Aq",        0, AV_OPT_TYPE_CONST, {.i64 = 4}, 0, 0, VE, .unit = "aq_mode" },
     {"level", "Specify level", OFFSET(level), AV_OPT_TYPE_FLOAT, {.dbl=-1}, -1, 6.2, VE},
 #endif
 #ifdef VPX_CTRL_VP9E_SET_ROW_MT
@@ -1979,14 +1980,14 @@ static const AVOption vp9_options[] = {
 #endif
 #ifdef VPX_CTRL_VP9E_SET_TUNE_CONTENT
 #if VPX_ENCODER_ABI_VERSION >= 14
-    { "tune-content",    "Tune content type", OFFSET(tune_content), AV_OPT_TYPE_INT, {.i64 = -1}, -1, 2, VE, "tune_content" },
+    { "tune-content",    "Tune content type", OFFSET(tune_content), AV_OPT_TYPE_INT, {.i64 = -1}, -1, 2, VE, .unit = "tune_content" },
 #else
-    { "tune-content",    "Tune content type", OFFSET(tune_content), AV_OPT_TYPE_INT, {.i64 = -1}, -1, 1, VE, "tune_content" },
+    { "tune-content",    "Tune content type", OFFSET(tune_content), AV_OPT_TYPE_INT, {.i64 = -1}, -1, 1, VE, .unit = "tune_content" },
 #endif
-    { "default",         "Regular video content",                  0, AV_OPT_TYPE_CONST, {.i64 = 0}, 0, 0, VE, "tune_content" },
-    { "screen",          "Screen capture content",                 0, AV_OPT_TYPE_CONST, {.i64 = 1}, 0, 0, VE, "tune_content" },
+    { "default",         "Regular video content",                  0, AV_OPT_TYPE_CONST, {.i64 = 0}, 0, 0, VE, .unit = "tune_content" },
+    { "screen",          "Screen capture content",                 0, AV_OPT_TYPE_CONST, {.i64 = 1}, 0, 0, VE, .unit = "tune_content" },
 #if VPX_ENCODER_ABI_VERSION >= 14
-    { "film",            "Film content; improves grain retention", 0, AV_OPT_TYPE_CONST, {.i64 = 2}, 0, 0, VE, "tune_content" },
+    { "film",            "Film content; improves grain retention", 0, AV_OPT_TYPE_CONST, {.i64 = 2}, 0, 0, VE, .unit = "tune_content" },
 #endif
 #endif
 #if VPX_ENCODER_ABI_VERSION >= 14

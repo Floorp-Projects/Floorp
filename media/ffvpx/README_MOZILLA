@@ -36,6 +36,9 @@ Then, make sure the files:
 include conditional compilation directives, by probably reverting them (or
 reverting and adjusting them if new codecs are added).
 
+Revert and adjust libavcodec `dovi_rpu.h` so that it contains just the necessary
+stubs to compile.
+
 ## Add headers for a new major ffmpeg version
 
 If a new major version of ffmpeg is being imported in the tree, it's necessary

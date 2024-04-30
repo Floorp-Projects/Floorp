@@ -20,13 +20,13 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "internal.h"
 #include "refstruct.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/error.h"
 #include "libavutil/macros.h"
 #include "libavutil/mem.h"
+#include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
 
 #ifndef REFSTRUCT_CHECKED
@@ -45,10 +45,10 @@
 #define REFSTRUCT_COOKIE AV_NE((uint64_t)MKBETAG('R', 'e', 'f', 'S') << 32 | MKBETAG('t', 'r', 'u', 'c'), \
                                MKTAG('R', 'e', 'f', 'S') | (uint64_t)MKTAG('t', 'r', 'u', 'c') << 32)
 
-#if __STDC_VERSION__ >= 201112L
-#define REFCOUNT_OFFSET FFALIGN(sizeof(RefCount), FFMAX3(STRIDE_ALIGN, 16, _Alignof(max_align_t)))
+#if __STDC_VERSION__ >= 201112L && !defined(_MSC_VER)
+#define REFCOUNT_OFFSET FFALIGN(sizeof(RefCount), FFMAX(ALIGN_64, _Alignof(max_align_t)))
 #else
-#define REFCOUNT_OFFSET FFALIGN(sizeof(RefCount), FFMAX(STRIDE_ALIGN, 16))
+#define REFCOUNT_OFFSET FFALIGN(sizeof(RefCount), ALIGN_64)
 #endif
 
 typedef struct RefCount {

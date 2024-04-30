@@ -412,6 +412,8 @@ system_headers = [
     "LFocusBox.h",
     "LGrafPortView.h",
     "LHandleStream.h",
+    "libavutil/mem.h",
+    "libavutil/cpu.h",
     "libc_r.h",
     "libelf.h",
     "libelf/libelf.h",

@@ -54,6 +54,20 @@
  */
 #define FF_MAX_EXTRADATA_SIZE ((1 << 28) - AV_INPUT_BUFFER_PADDING_SIZE)
 
+const SideDataMap ff_sd_global_map[] = {
+    { AV_PKT_DATA_REPLAYGAIN ,                AV_FRAME_DATA_REPLAYGAIN },
+    { AV_PKT_DATA_DISPLAYMATRIX,              AV_FRAME_DATA_DISPLAYMATRIX },
+    { AV_PKT_DATA_SPHERICAL,                  AV_FRAME_DATA_SPHERICAL },
+    { AV_PKT_DATA_STEREO3D,                   AV_FRAME_DATA_STEREO3D },
+    { AV_PKT_DATA_AUDIO_SERVICE_TYPE,         AV_FRAME_DATA_AUDIO_SERVICE_TYPE },
+    { AV_PKT_DATA_MASTERING_DISPLAY_METADATA, AV_FRAME_DATA_MASTERING_DISPLAY_METADATA },
+    { AV_PKT_DATA_CONTENT_LIGHT_LEVEL,        AV_FRAME_DATA_CONTENT_LIGHT_LEVEL },
+    { AV_PKT_DATA_ICC_PROFILE,                AV_FRAME_DATA_ICC_PROFILE },
+    { AV_PKT_DATA_AMBIENT_VIEWING_ENVIRONMENT,AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT },
+    { AV_PKT_DATA_NB },
+};
+
+
 int avcodec_default_execute(AVCodecContext *c, int (*func)(AVCodecContext *c2, void *arg2), void *arg, int *ret, int count, int size)
 {
     size_t i;
@@ -241,26 +255,6 @@ int attribute_align_arg avcodec_open2(AVCodecContext *avctx, const AVCodec *code
         goto free_and_end;
     }
 
-#if FF_API_OLD_CHANNEL_LAYOUT
-FF_DISABLE_DEPRECATION_WARNINGS
-    /* compat wrapper for old-style callers */
-    if (avctx->channel_layout && !avctx->channels)
-        avctx->channels = av_popcount64(avctx->channel_layout);
-
-    if ((avctx->channels && avctx->ch_layout.nb_channels != avctx->channels) ||
-        (avctx->channel_layout && (avctx->ch_layout.order != AV_CHANNEL_ORDER_NATIVE ||
-                                   avctx->ch_layout.u.mask != avctx->channel_layout))) {
-        av_channel_layout_uninit(&avctx->ch_layout);
-        if (avctx->channel_layout) {
-            av_channel_layout_from_mask(&avctx->ch_layout, avctx->channel_layout);
-        } else {
-            avctx->ch_layout.order       = AV_CHANNEL_ORDER_UNSPEC;
-        }
-        avctx->ch_layout.nb_channels = avctx->channels;
-    }
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
-
     /* AV_CODEC_CAP_CHANNEL_CONF is a decoder-only flag; so the code below
      * in particular checks that nb_channels is set for all audio encoders. */
     if (avctx->codec_type == AVMEDIA_TYPE_AUDIO && !avctx->ch_layout.nb_channels
@@ -282,11 +276,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
     }
 
     avctx->frame_num = 0;
-#if FF_API_AVCTX_FRAME_NUMBER
-FF_DISABLE_DEPRECATION_WARNINGS
-    avctx->frame_number = avctx->frame_num;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
     avctx->codec_descriptor = avcodec_descriptor_get(avctx->codec_id);
 
     if ((avctx->codec->capabilities & AV_CODEC_CAP_EXPERIMENTAL) &&
@@ -350,15 +339,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
         if (!avctx->bit_rate)
             avctx->bit_rate = get_bit_rate(avctx);
 
-#if FF_API_OLD_CHANNEL_LAYOUT
-FF_DISABLE_DEPRECATION_WARNINGS
-        /* update the deprecated fields for old-style callers */
-        avctx->channels = avctx->ch_layout.nb_channels;
-        avctx->channel_layout = avctx->ch_layout.order == AV_CHANNEL_ORDER_NATIVE ?
-                                avctx->ch_layout.u.mask : 0;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
-
         /* validate channel layout from the decoder */
         if ((avctx->ch_layout.nb_channels && !av_channel_layout_check(&avctx->ch_layout)) ||
             avctx->ch_layout.nb_channels > FF_SANE_NB_CHANNELS) {
@@ -377,7 +357,7 @@ end:
 
     return ret;
 free_and_end:
-    avcodec_close(avctx);
+    ff_codec_close(avctx);
     goto end;
 }
 
@@ -432,12 +412,12 @@ void avsubtitle_free(AVSubtitle *sub)
     memset(sub, 0, sizeof(*sub));
 }
 
-av_cold int avcodec_close(AVCodecContext *avctx)
+av_cold void ff_codec_close(AVCodecContext *avctx)
 {
     int i;
 
     if (!avctx)
-        return 0;
+        return;
 
     if (avcodec_is_open(avctx)) {
         AVCodecInternal *avci = avctx->internal;
@@ -497,9 +477,15 @@ av_cold int avcodec_close(AVCodecContext *avctx)
 
     avctx->codec = NULL;
     avctx->active_thread_type = 0;
+}
 
+#if FF_API_AVCODEC_CLOSE
+int avcodec_close(AVCodecContext *avctx)
+{
+    ff_codec_close(avctx);
     return 0;
 }
+#endif
 
 static const char *unknown_if_null(const char *str)
 {
@@ -619,6 +605,7 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
                        enc->width, enc->height);
 
             if (av_log_get_level() >= AV_LOG_VERBOSE &&
+                enc->coded_width && enc->coded_height &&
                 (enc->width != enc->coded_width ||
                  enc->height != enc->coded_height))
                 av_bprintf(&bprint, " (%dx%d)",
