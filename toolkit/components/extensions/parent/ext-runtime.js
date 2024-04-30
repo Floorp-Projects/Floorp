@@ -12,6 +12,8 @@ var { ExtensionParent } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionParent.sys.mjs"
 );
 
+var { DefaultWeakMap } = ExtensionUtils;
+
 ChromeUtils.defineESModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
@@ -126,10 +128,100 @@ this.runtime = class extends ExtensionAPIPersistent {
     },
   };
 
+  // Although we have an internal context.contextId field, we generate a new one here because
+  // the internal type is an integer and the public field a (UUID) string.
+  // TODO: Move the implementation elsewhere when contextId is used anywhere other than
+  // runtime.getContexts. See https://bugzilla.mozilla.org/show_bug.cgi?id=1628178#c5
+  //
+  // Map<ProxyContextParent, string>
+  #contextUUIDMap = new DefaultWeakMap(_context =>
+    String(Services.uuid.generateUUID()).slice(1, -1)
+  );
+
+  getContexts(filter) {
+    const { extension } = this;
+    const { proxyContexts } = ExtensionParent.ParentAPIManager;
+    const results = [];
+    for (const proxyContext of proxyContexts.values()) {
+      if (proxyContext.extension !== extension) {
+        continue;
+      }
+      let ctx;
+      try {
+        ctx = proxyContext.toExtensionContext();
+      } catch (err) {
+        // toExtensionContext may throw if the contextType getter
+        // raised an exception due to an internal viewType has
+        // not be mapped with a contextType value.
+        //
+        // When running in DEBUG builds we reject the getContexts
+        // call, while in non DEBUG build we just omit the result
+        // and log a warning in the Browser Console.
+        if (AppConstants.DEBUG) {
+          throw err;
+        } else {
+          Cu.reportError(err);
+        }
+      }
+
+      if (this.matchContextFilter(filter, ctx)) {
+        results.push({
+          ...ctx,
+          contextId: this.#contextUUIDMap.get(proxyContext),
+        });
+      }
+    }
+    return results;
+  }
+
+  matchContextFilter(filter, ctx) {
+    if (!ctx) {
+      // Filter out subclasses that do not return any ExtensionContext details
+      // from their toExtensionContext method.
+      return false;
+    }
+    if (filter.contextIds && !filter.contextIds.includes(ctx.contextId)) {
+      return false;
+    }
+    if (filter.contextTypes && !filter.contextTypes.includes(ctx.contextType)) {
+      return false;
+    }
+    if (filter.documentIds && !filter.documentIds.includes(ctx.documentId)) {
+      return false;
+    }
+    if (
+      filter.documentOrigins &&
+      !filter.documentOrigins.includes(ctx.documentOrigin)
+    ) {
+      return false;
+    }
+    if (filter.documentUrls && !filter.documentUrls.includes(ctx.documentUrl)) {
+      return false;
+    }
+    if (filter.frameIds && !filter.frameIds.includes(ctx.frameId)) {
+      return false;
+    }
+    if (filter.tabIds && !filter.tabIds.includes(ctx.tabId)) {
+      return false;
+    }
+    if (filter.windowIds && !filter.windowIds.includes(ctx.windowId)) {
+      return false;
+    }
+    if (
+      typeof filter.incognito === "boolean" &&
+      ctx.incognito !== filter.incognito
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   getAPI(context) {
     let { extension } = context;
     return {
       runtime: {
+        getContexts: filter => this.getContexts(filter),
+
         // onStartup is special-cased in ext-backgroundPages to cause
         // an immediate startup.  We do not prime onStartup.
         onStartup: new EventManager({

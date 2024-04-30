@@ -31,6 +31,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   Schemas: "resource://gre/modules/Schemas.sys.mjs",
   getErrorNameForTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
+  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
@@ -508,6 +509,7 @@ class ProxyContextParent extends BaseContext {
 
     this.childId = params.childId;
     this.uri = Services.io.newURI(params.url);
+    this.browsingContext = browsingContext;
 
     this.incognito = params.incognito;
 
@@ -546,6 +548,39 @@ class ProxyContextParent extends BaseContext {
 
   get isProxyContextParent() {
     return true;
+  }
+
+  get frameId() {
+    if (!this.browsingContext) {
+      return -1;
+    }
+
+    return lazy.WebNavigationFrames.getFrameId(this.browsingContext);
+  }
+
+  get contextType() {
+    switch (this.viewType) {
+      case "background_worker": // intentionally fall-through
+      case "background":
+        return "BACKGROUND";
+      case "popup":
+        return "POPUP";
+      case "sidebar":
+        return "SIDE_PANEL";
+      case "tab":
+        return "TAB";
+      default:
+        throw new Error(
+          `Unexpected missing contextType mapping for viewType "${this.viewType}"`
+        );
+    }
+  }
+
+  toExtensionContext() {
+    // NOTE: implemented in subclasses that should be listed in runtime.getContexts results
+    // when they match the ContextFilter, whereas instances from subclasses that don't
+    // implement it will always be filtered out.
+    return undefined;
   }
 
   trackRunListenerPromise(runListenerPromise) {
@@ -746,6 +781,34 @@ class ExtensionPageContextParent extends ProxyContextParent {
     return undefined;
   }
 
+  toExtensionContext() {
+    const { tabTracker } = apiManager.global;
+    const { tabId, windowId } = tabTracker.getBrowserDataForContext(this);
+    const windowContext = this.browsingContext?.currentWindowContext;
+    return {
+      // NOTE: the contextId property in the final set of properties returned to
+      // extensions code is filled in on the ext-runtime.js and it is not to be
+      // confused with the internal property called contextId.
+      contextId: undefined,
+      // NOTE: contextType is a getter that maps the viewType property used
+      // internally with the value expected for the runtime.ExtensionContext
+      // contextType property (which should be one of the values part of the
+      // runtime.ContextType enum).
+      contextType: this.contextType,
+      // TODO(Bug 1891478): add documentId.
+      // TODO(Bug 1890739): consider switching this to use webExposedOriginSerialization when available
+      // Using nsIPrincipal.originNoSuffix to avoid including the
+      // private browsing (or contextual identity ones)
+      documentOrigin: windowContext?.documentPrincipal.originNoSuffix,
+      documentUrl: windowContext?.documentURI.spec,
+      incognito: this.incognito,
+      frameId: this.frameId,
+      tabId,
+      windowId,
+      // TODO: File followup to also add a Firefox-only userContextId?
+    };
+  }
+
   unload() {
     super.unload();
     this.extension.views.delete(this);
@@ -773,6 +836,12 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     this._onNavigatedListeners = null;
 
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
+  }
+
+  toExtensionContext() {
+    // NOTE: devtools extension contexts are currently omitted in getContexts
+    // results.
+    return undefined;
   }
 
   set devToolsToolbox(toolbox) {

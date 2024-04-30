@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>runtime.getContexts Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function genericChecker() {
+  const params = new URLSearchParams(window.location.search);
+  const kind = params.get("kind");
+  const createdTabIds = [];
+
+  browser.test.onMessage.addListener(async msg => {
+    if (msg == `${kind}-test-get-contexts`) {
+      try {
+        const result = await browser.runtime.getContexts({});
+        browser.test.assertEq(3, result.length, "Expect 3 extension contexts to be found");
+
+        const bgContext = result.find(it => it.contextType === browser.runtime.ContextType.BACKGROUND);
+        const tabContext = result.find(it => it.documentUrl.endsWith("kind=tab"));
+        const popupContext = result.find(it => it.documentUrl.endsWith("kind=action"));
+
+        browser.test.assertEq(window.location.href, bgContext.documentUrl, "background context has the expected documentUrl");
+        browser.test.assertEq(-1, bgContext.windowId, "background context has the expected windowId");
+        browser.test.assertEq(-1, bgContext.tabId, "background context has the expected tabId");
+        browser.test.assertEq("TAB", tabContext.contextType, "Got expected tab context type");
+        browser.test.assertTrue(
+          typeof tabContext.windowId === "number" && tabContext.windowId > 0,
+          "Got expected windowId on tab context"
+        );
+        browser.test.assertTrue(
+          typeof tabContext.windowId === "number" && tabContext.tabId > 0,
+          "Got expected tabId on tab context"
+        );
+        browser.test.assertEq(
+          tabContext.windowId,
+          popupContext.windowId,
+          "Poup and tab expected to have the same windowId"
+        );
+        browser.test.assertEq(-1, popupContext.tabId, "popup context has the expected tabId");
+        // TODO: Bug 1651506: uncomment the following assertion once popup viewType is fixed.
+        // browser.test.assertEq("POPUP", popupContext.contextType, "Got expected popup context type");
+
+        browser.test.sendMessage(`${msg}:done`);
+      } catch (err) {
+        browser.test.fail(`broser.runtime.getContexts call rejected: ${err}`);
+        browser.test.sendMessage(`${msg}:done`);
+      }
+    } else if (msg == `${kind}-open-tab`) {
+      const tab = await browser.tabs.create({ url: "/page.html?kind=tab" });
+      createdTabIds.push(tab.id);
+    } else if (msg == `${kind}-close-tabs`) {
+      await browser.tabs.remove(createdTabIds);
+      browser.test.sendMessage(`${msg}:done`);
+    }
+  });
+
+  browser.test.log(`${kind} extension page loaded`);
+  browser.test.sendMessage(`${kind}-loaded`);
+}
+
+add_task(async function test_runtime_getContexts() {
+  const EXT_ID = "runtime-getContexts@mochitest";
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary", // To automatically show sidebar on load.
+    incognitoOverride: "spanning",
+    manifest: {
+      manifest_version: 3,
+      browser_specific_settings: { gecko: { id: EXT_ID } },
+
+      action: {
+        default_popup: "page.html?kind=action",
+        default_area: "navbar",
+      },
+
+      background: {
+        page: "page.html?kind=background",
+      },
+    },
+
+    files: {
+      "page.html": `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><\/head>
+      <body>
+      <script src="page.js"><\/script>
+      <\/body>
+      <\/html>
+      `,
+
+      "page.js": genericChecker,
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-loaded");
+
+  extension.sendMessage("background-open-tab");
+  await extension.awaitMessage("tab-loaded");
+
+  await AppTestDelegate.clickBrowserAction(window, extension);
+  await extension.awaitMessage("action-loaded");
+
+  extension.sendMessage("background-test-get-contexts");
+  await extension.awaitMessage("background-test-get-contexts:done");
+
+  // Close popup window.
+  await AppTestDelegate.closeBrowserAction(window, extension);
+
+  // Close extension page tabs.
+  extension.sendMessage("background-close-tabs");
+  await extension.awaitMessage("background-close-tabs:done");
+
+  await extension.unload();
+});
+
+</script>
+</body>
+</html>

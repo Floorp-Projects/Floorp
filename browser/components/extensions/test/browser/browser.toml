@@ -392,6 +392,8 @@ run-if = ["crashreporter"]
 
 ["browser_ext_request_permissions.js"]
 
+["browser_ext_runtime_getContexts.js"]
+
 ["browser_ext_runtime_onPerformanceWarning.js"]
 
 ["browser_ext_runtime_openOptionsPage.js"]

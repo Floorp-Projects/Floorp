@@ -350,6 +350,8 @@ skip-if = [
   "http2",
 ]
 
+["test_ext_runtime_getContexts.html"]
+
 ["test_ext_script_filenames.html"]
 
 ["test_ext_scripting_contentScripts.html"]

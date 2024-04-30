@@ -709,6 +709,23 @@ class TabTracker extends TabTrackerBase {
     };
   }
 
+  getBrowserDataForContext(context) {
+    if (["tab", "background"].includes(context.viewType)) {
+      return this.getBrowserData(context.xulBrowser);
+    } else if (["popup", "sidebar"].includes(context.viewType)) {
+      // popups and sidebars are nested inside a browser element
+      // (with url "chrome://browser/content/webext-panels.xhtml")
+      // and so we look for the corresponding topChromeWindow to
+      // determine the windowId the panel belongs to.
+      const chromeWindow =
+        context.xulBrowser?.ownerGlobal?.browsingContext?.topChromeWindow;
+      const windowId = chromeWindow ? windowTracker.getId(chromeWindow) : -1;
+      return { tabId: -1, windowId };
+    }
+
+    return { tabId: -1, windowId: -1 };
+  }
+
   get activeTab() {
     let window = windowTracker.topWindow;
     if (window && window.gBrowser) {
