@@ -463,6 +463,7 @@ class MOZ_RAII TypeOfIRGenerator : public IRGenerator {
 class MOZ_RAII TypeOfEqIRGenerator : public IRGenerator {
   HandleValue val_;
   JSType type_;
+  JSOp compareOp_;
 
   AttachDecision tryAttachPrimitive(ValOperandId valId);
   AttachDecision tryAttachObject(ValOperandId valId);
@@ -470,7 +471,8 @@ class MOZ_RAII TypeOfEqIRGenerator : public IRGenerator {
 
  public:
   TypeOfEqIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
-                      ICState state, HandleValue value, JSType type);
+                      ICState state, HandleValue value, JSType type,
+                      JSOp compareOp);
 
   AttachDecision tryAttachStub();
 };

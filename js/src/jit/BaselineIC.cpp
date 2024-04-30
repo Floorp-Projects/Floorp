@@ -32,6 +32,7 @@
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/Opcodes.h"
+#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif
@@ -2070,11 +2071,17 @@ bool DoTypeOfEqFallback(JSContext* cx, BaselineFrame* frame,
   FallbackICSpew(cx, stub, "TypeOfEq");
 
   jsbytecode* pc = StubOffsetToPc(stub, frame->script());
-  JSType type = JSType(GET_UINT8(pc));
+  auto operand = TypeofEqOperand::fromRawValue(GET_UINT8(pc));
+  JSType type = operand.type();
+  JSOp compareOp = operand.compareOp();
 
-  TryAttachStub<TypeOfEqIRGenerator>("TypeOfEq", cx, frame, stub, val, type);
+  TryAttachStub<TypeOfEqIRGenerator>("TypeOfEq", cx, frame, stub, val, type,
+                                     compareOp);
 
   bool result = js::TypeOfValue(val) == type;
+  if (compareOp == JSOp::Ne) {
+    result = !result;
+  }
   res.setBoolean(result);
   return true;
 }

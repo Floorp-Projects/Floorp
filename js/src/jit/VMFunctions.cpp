@@ -38,6 +38,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/StaticStrings.h"
 #include "vm/TypedArrayObject.h"
+#include "vm/TypeofEqOperand.h"  // TypeofEqOperand
 #include "vm/Watchtower.h"
 #include "wasm/WasmGcObject.h"
 
@@ -2247,9 +2248,13 @@ JSString* TypeOfNameObject(JSObject* obj, JSRuntime* rt) {
   return TypeName(type, *rt->commonNames);
 }
 
-bool TypeOfEqObject(JSObject* obj, JSType type) {
+bool TypeOfEqObject(JSObject* obj, TypeofEqOperand operand) {
   AutoUnsafeCallWithABI unsafe;
-  return js::TypeOfObject(obj) == type;
+  bool result = js::TypeOfObject(obj) == operand.type();
+  if (operand.compareOp() == JSOp::Ne) {
+    result = !result;
+  }
+  return result;
 }
 
 bool GetPrototypeOf(JSContext* cx, HandleObject target,
