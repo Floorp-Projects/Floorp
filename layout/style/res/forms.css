@@ -631,10 +631,6 @@ input[type=file] > label {
   text-align: match-parent;
 
   cursor: unset;
-  color: unset;
-  font-size: unset;
-  letter-spacing: unset;
-
   user-select: none;
   unicode-bidi: plaintext;
 }
