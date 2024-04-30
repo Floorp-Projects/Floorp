@@ -857,6 +857,8 @@ void Zone::fixupScriptMapsAfterMovingGC(JSTracer* trc) {
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void Zone::checkScriptMapsAfterMovingGC() {
+  // |debugScriptMap| is checked automatically because it is s a WeakMap.
+
   if (scriptCountsMap) {
     CheckTableAfterMovingGC(*scriptCountsMap, [this](const auto& entry) {
       BaseScript* script = entry.key();

@@ -2613,8 +2613,9 @@ void DebugEnvironments::checkHashTablesAfterMovingGC() {
    * This is called at the end of StoreBuffer::mark() to check that our
    * postbarriers have worked and that no hashtable keys (or values) are left
    * pointing into the nursery.
+   *
+   * |proxiedEnvs| is checked automatically because it is a WeakMap.
    */
-  proxiedEnvs.checkAfterMovingGC();
   CheckTableAfterMovingGC(missingEnvs, [this](const auto& entry) {
     CheckGCThingAfterMovingGC(entry.key().scope(), zone());
     // Use unbarrieredGet() to prevent triggering read barrier while collecting.
