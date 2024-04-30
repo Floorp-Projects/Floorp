@@ -44,21 +44,27 @@ class MOZ_STACK_CLASS ColorStopInterpolator {
  public:
   ColorStopInterpolator(
       const nsTArray<ColorStop>& aStops,
-      const StyleColorInterpolationMethod& aStyleColorInterpolationMethod)
+      const StyleColorInterpolationMethod& aStyleColorInterpolationMethod,
+      bool aExtendLastStop)
       : mStyleColorInterpolationMethod(aStyleColorInterpolationMethod),
-        mStops(aStops) {}
+        mStops(aStops),
+        mExtendLastStop(aExtendLastStop) {}
 
   void CreateStops() {
-    // This loop intentionally iterates the last stop.
-    for (uint32_t i = 0; i < mStops.Length(); i++) {
+    // This loop intentionally iterates the last stop if extending.
+    uint32_t iterStops = mStops.Length() - (mExtendLastStop ? 0 : 1);
+    for (uint32_t i = 0; i < iterStops; i++) {
       auto nextindex = i + 1 < mStops.Length() ? i + 1 : i;
       const auto& start = mStops[i];
       const auto& end = mStops[nextindex];
       float startPosition = start.mPosition;
       float endPosition = end.mPosition;
-      // For the sake of StyleHueInterpolationMethod == Longer we have to
-      // pretend there is a stop beyond the last stop
-      if (i == mStops.Length() - 1) {
+      // For CSS non-repeating gradients with longer hue specified, we have to
+      // pretend there is a stop beyond the last stop.  This is never the case
+      // on SVG gradients as they only use shorter hue.
+      //
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1885716 for more info.
+      if (i == mStops.Length() - 1 && mExtendLastStop) {
         endPosition = 1.0f;
       }
       uint32_t extraStops =
@@ -82,6 +88,10 @@ class MOZ_STACK_CLASS ColorStopInterpolator {
  protected:
   StyleColorInterpolationMethod mStyleColorInterpolationMethod;
   const nsTArray<ColorStop>& mStops;
+  // This indicates that we want to extend the endPosition on the last stop,
+  // which only matters if this is a CSS non-repeating gradient with
+  // StyleHueInterpolationMethod::Longer (only valid for hsl/hwb/lch/oklch).
+  bool mExtendLastStop;
 
   // This could be made tunable, but at 1.0/128 the error is largely
   // irrelevant, as WebRender re-encodes it to 128 pairs of stops.
