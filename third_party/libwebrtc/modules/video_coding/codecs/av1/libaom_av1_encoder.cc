@@ -374,7 +374,8 @@ bool LibaomAv1Encoder::SetEncoderControlParameters(int param_id,
   return error_code == AOM_CODEC_OK;
 }
 
-// Only positive speeds, range for real-time coding currently is: 6 - 8.
+// Only positive speeds, range for real-time coding currently is: 6 - 10.
+// Speed 11 is used for screen sharing.
 // Lower means slower/better quality, higher means fastest/lower quality.
 int LibaomAv1Encoder::GetCpuSpeed(int width, int height) {
   if (aux_config_) {
@@ -386,6 +387,9 @@ int LibaomAv1Encoder::GetCpuSpeed(int width, int height) {
 
     return 10;
   } else {
+    if (encoder_settings_.mode == VideoCodecMode::kScreensharing) {
+      return 11;
+    }
     // For smaller resolutions, use lower speed setting (get some coding gain at
     // the cost of increased encoding complexity).
     switch (encoder_settings_.GetVideoEncoderComplexity()) {
