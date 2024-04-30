@@ -121,10 +121,17 @@ add_task(async function test_link_contextmenu() {
   expectedArray.push(
     "context-sendlinktodevice",
     "context-sep-sendlinktodevice",
-    "context-searchselect",
-    "context-translate-selection",
-    "frame-sep"
+    "context-searchselect"
   );
+
+  if (
+    Services.prefs.getBoolPref("browser.translations.enable") &&
+    Services.prefs.getBoolPref("browser.translations.select.enable")
+  ) {
+    expectedArray.push("context-translate-selection");
+  }
+
+  expectedArray.push("frame-sep");
 
   if (
     Services.prefs.getBoolPref("devtools.accessibility.enabled", true) &&
