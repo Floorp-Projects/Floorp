@@ -28,20 +28,10 @@ class MFTEncoder;
 
 extern LazyLogModule sPEMLog;
 
-static const GUID CodecToSubtype(CodecType aCodec) {
-  switch (aCodec) {
-    case CodecType::H264:
-      return MFVideoFormat_H264;
-    case CodecType::VP8:
-      return MFVideoFormat_VP80;
-    case CodecType::VP9:
-      return MFVideoFormat_VP90;
-    default:
-      return GUID_NULL;
-  }
-}
+GUID CodecToSubtype(CodecType aCodec);
 
 bool CanCreateWMFEncoder(CodecType aCodec);
+
 already_AddRefed<MediaByteBuffer> ParseH264Parameters(
     nsTArray<uint8_t>& aHeader, const bool aAsAnnexB);
 uint32_t GetProfile(H264_PROFILE aProfileLevel);
