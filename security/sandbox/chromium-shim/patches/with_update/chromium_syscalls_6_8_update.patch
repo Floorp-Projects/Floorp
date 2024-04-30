@@ -1,0 +1,469 @@
+commit 142d1560cb5d65b66a4c0c6f427fa2f04150245f
+Author: Jed Davis <jld@mozilla.com>
+Date:   Wed Apr 17 13:52:26 2024 -0700
+
+    Bug 1889045 - Update Linux sandbox syscall defs to v6.8
+
+diff --git a/security/sandbox/chromium/sandbox/linux/system_headers/arm64_linux_syscalls.h b/security/sandbox/chromium/sandbox/linux/system_headers/arm64_linux_syscalls.h
+index 2224d324383f7..b8efe0da2f897 100644
+--- a/security/sandbox/chromium/sandbox/linux/system_headers/arm64_linux_syscalls.h
++++ b/security/sandbox/chromium/sandbox/linux/system_headers/arm64_linux_syscalls.h
+@@ -3,7 +3,7 @@
+ // found in the LICENSE file.
+ 
+ /* Constructed by running:
+- * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/include/uapi/asm-generic/unistd.h?h=v5.8
++ * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/include/uapi/asm-generic/unistd.h?h=v6.8
+  *   | gcc -D__BITS_PER_LONG=64 -D__ARCH_WANT_STAT64 -D__ARCH_WANT_SET_GET_RLIMIT -D__ARCH_WANT_SYS_CLONE3 -D__ARCH_WANT_RENAMEAT -E -dD -
+  *   | grep __NR | grep -vE '__NR_arch_specific_syscall|__NR_syscalls' | sort -n -k 3 | sed -e 's/__NR3264/__NR/g'
+  *   | awk '{ if ($2 != $3) { print "#if !defined(" $2 ")\n#define " $2 " " $3 "\n#endif\n"; } }
+@@ -1182,6 +1182,10 @@
+ #define __NR_clone3 435
+ #endif
+ 
++#if !defined(__NR_close_range)
++#define __NR_close_range 436
++#endif
++
+ #if !defined(__NR_openat2)
+ #define __NR_openat2 437
+ #endif
+@@ -1194,4 +1198,88 @@
+ #define __NR_faccessat2 439
+ #endif
+ 
++#if !defined(__NR_process_madvise)
++#define __NR_process_madvise 440
++#endif
++
++#if !defined(__NR_epoll_pwait2)
++#define __NR_epoll_pwait2 441
++#endif
++
++#if !defined(__NR_mount_setattr)
++#define __NR_mount_setattr 442
++#endif
++
++#if !defined(__NR_quotactl_fd)
++#define __NR_quotactl_fd 443
++#endif
++
++#if !defined(__NR_landlock_create_ruleset)
++#define __NR_landlock_create_ruleset 444
++#endif
++
++#if !defined(__NR_landlock_add_rule)
++#define __NR_landlock_add_rule 445
++#endif
++
++#if !defined(__NR_landlock_restrict_self)
++#define __NR_landlock_restrict_self 446
++#endif
++
++#if !defined(__NR_process_mrelease)
++#define __NR_process_mrelease 448
++#endif
++
++#if !defined(__NR_futex_waitv)
++#define __NR_futex_waitv 449
++#endif
++
++#if !defined(__NR_set_mempolicy_home_node)
++#define __NR_set_mempolicy_home_node 450
++#endif
++
++#if !defined(__NR_cachestat)
++#define __NR_cachestat 451
++#endif
++
++#if !defined(__NR_fchmodat2)
++#define __NR_fchmodat2 452
++#endif
++
++#if !defined(__NR_map_shadow_stack)
++#define __NR_map_shadow_stack 453
++#endif
++
++#if !defined(__NR_futex_wake)
++#define __NR_futex_wake 454
++#endif
++
++#if !defined(__NR_futex_wait)
++#define __NR_futex_wait 455
++#endif
++
++#if !defined(__NR_futex_requeue)
++#define __NR_futex_requeue 456
++#endif
++
++#if !defined(__NR_statmount)
++#define __NR_statmount 457
++#endif
++
++#if !defined(__NR_listmount)
++#define __NR_listmount 458
++#endif
++
++#if !defined(__NR_lsm_get_self_attr)
++#define __NR_lsm_get_self_attr 459
++#endif
++
++#if !defined(__NR_lsm_set_self_attr)
++#define __NR_lsm_set_self_attr 460
++#endif
++
++#if !defined(__NR_lsm_list_modules)
++#define __NR_lsm_list_modules 461
++#endif
++
+ #endif  // SANDBOX_LINUX_SYSTEM_HEADERS_ARM64_LINUX_SYSCALLS_H_
+diff --git a/security/sandbox/chromium/sandbox/linux/system_headers/arm_linux_syscalls.h b/security/sandbox/chromium/sandbox/linux/system_headers/arm_linux_syscalls.h
+index 5b7f4e511a61d..06d0a6d5801e1 100644
+--- a/security/sandbox/chromium/sandbox/linux/system_headers/arm_linux_syscalls.h
++++ b/security/sandbox/chromium/sandbox/linux/system_headers/arm_linux_syscalls.h
+@@ -3,7 +3,7 @@
+ // found in the LICENSE file.
+ 
+ /* Constructed by running:
+- * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/arch/arm/tools/syscall.tbl?h=v5.8
++ * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/arch/arm/tools/syscall.tbl?h=v6.8
+  *   | grep -vE '^#|^$'
+  *   | awk '{ if ($2 != "oabi") { print "#if !defined(__NR_" $3 ")\n#define __NR_" $3 " (__NR_SYSCALL_BASE+" $1 ")\n#endif\n"; } }'
+  * */
+@@ -1578,6 +1578,10 @@
+ #define __NR_clone3 (__NR_SYSCALL_BASE+435)
+ #endif
+ 
++#if !defined(__NR_close_range)
++#define __NR_close_range (__NR_SYSCALL_BASE+436)
++#endif
++
+ #if !defined(__NR_openat2)
+ #define __NR_openat2 (__NR_SYSCALL_BASE+437)
+ #endif
+@@ -1590,6 +1594,90 @@
+ #define __NR_faccessat2 (__NR_SYSCALL_BASE+439)
+ #endif
+ 
++#if !defined(__NR_process_madvise)
++#define __NR_process_madvise (__NR_SYSCALL_BASE+440)
++#endif
++
++#if !defined(__NR_epoll_pwait2)
++#define __NR_epoll_pwait2 (__NR_SYSCALL_BASE+441)
++#endif
++
++#if !defined(__NR_mount_setattr)
++#define __NR_mount_setattr (__NR_SYSCALL_BASE+442)
++#endif
++
++#if !defined(__NR_quotactl_fd)
++#define __NR_quotactl_fd (__NR_SYSCALL_BASE+443)
++#endif
++
++#if !defined(__NR_landlock_create_ruleset)
++#define __NR_landlock_create_ruleset (__NR_SYSCALL_BASE+444)
++#endif
++
++#if !defined(__NR_landlock_add_rule)
++#define __NR_landlock_add_rule (__NR_SYSCALL_BASE+445)
++#endif
++
++#if !defined(__NR_landlock_restrict_self)
++#define __NR_landlock_restrict_self (__NR_SYSCALL_BASE+446)
++#endif
++
++#if !defined(__NR_process_mrelease)
++#define __NR_process_mrelease (__NR_SYSCALL_BASE+448)
++#endif
++
++#if !defined(__NR_futex_waitv)
++#define __NR_futex_waitv (__NR_SYSCALL_BASE+449)
++#endif
++
++#if !defined(__NR_set_mempolicy_home_node)
++#define __NR_set_mempolicy_home_node (__NR_SYSCALL_BASE+450)
++#endif
++
++#if !defined(__NR_cachestat)
++#define __NR_cachestat (__NR_SYSCALL_BASE+451)
++#endif
++
++#if !defined(__NR_fchmodat2)
++#define __NR_fchmodat2 (__NR_SYSCALL_BASE+452)
++#endif
++
++#if !defined(__NR_map_shadow_stack)
++#define __NR_map_shadow_stack (__NR_SYSCALL_BASE+453)
++#endif
++
++#if !defined(__NR_futex_wake)
++#define __NR_futex_wake (__NR_SYSCALL_BASE+454)
++#endif
++
++#if !defined(__NR_futex_wait)
++#define __NR_futex_wait (__NR_SYSCALL_BASE+455)
++#endif
++
++#if !defined(__NR_futex_requeue)
++#define __NR_futex_requeue (__NR_SYSCALL_BASE+456)
++#endif
++
++#if !defined(__NR_statmount)
++#define __NR_statmount (__NR_SYSCALL_BASE+457)
++#endif
++
++#if !defined(__NR_listmount)
++#define __NR_listmount (__NR_SYSCALL_BASE+458)
++#endif
++
++#if !defined(__NR_lsm_get_self_attr)
++#define __NR_lsm_get_self_attr (__NR_SYSCALL_BASE+459)
++#endif
++
++#if !defined(__NR_lsm_set_self_attr)
++#define __NR_lsm_set_self_attr (__NR_SYSCALL_BASE+460)
++#endif
++
++#if !defined(__NR_lsm_list_modules)
++#define __NR_lsm_list_modules (__NR_SYSCALL_BASE+461)
++#endif
++
+ // ARM private syscalls.
+ #if !defined(__ARM_NR_BASE)
+ #define __ARM_NR_BASE (__NR_SYSCALL_BASE + 0xF0000)
+diff --git a/security/sandbox/chromium/sandbox/linux/system_headers/x86_32_linux_syscalls.h b/security/sandbox/chromium/sandbox/linux/system_headers/x86_32_linux_syscalls.h
+index dc846ee7ad1ab..edcfd05004139 100644
+--- a/security/sandbox/chromium/sandbox/linux/system_headers/x86_32_linux_syscalls.h
++++ b/security/sandbox/chromium/sandbox/linux/system_headers/x86_32_linux_syscalls.h
+@@ -3,7 +3,7 @@
+ // found in the LICENSE file.
+ 
+ /* Constructed by running:
+- * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/arch/x86/entry/syscalls/syscall_32.tbl?h=v5.8
++ * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/arch/x86/entry/syscalls/syscall_32.tbl?h=v6.8
+  *   | grep -vE '^#|^$'
+  *   | awk '{ if ($2 == "i386") { print "#if !defined(__NR_" $3 ")\n#define __NR_" $3 " " $1 "\n#endif\n"; } }'
+  * */
+@@ -1715,6 +1715,10 @@
+ #define __NR_clone3 435
+ #endif
+ 
++#if !defined(__NR_close_range)
++#define __NR_close_range 436
++#endif
++
+ #if !defined(__NR_openat2)
+ #define __NR_openat2 437
+ #endif
+@@ -1727,5 +1731,93 @@
+ #define __NR_faccessat2 439
+ #endif
+ 
++#if !defined(__NR_process_madvise)
++#define __NR_process_madvise 440
++#endif
++
++#if !defined(__NR_epoll_pwait2)
++#define __NR_epoll_pwait2 441
++#endif
++
++#if !defined(__NR_mount_setattr)
++#define __NR_mount_setattr 442
++#endif
++
++#if !defined(__NR_quotactl_fd)
++#define __NR_quotactl_fd 443
++#endif
++
++#if !defined(__NR_landlock_create_ruleset)
++#define __NR_landlock_create_ruleset 444
++#endif
++
++#if !defined(__NR_landlock_add_rule)
++#define __NR_landlock_add_rule 445
++#endif
++
++#if !defined(__NR_landlock_restrict_self)
++#define __NR_landlock_restrict_self 446
++#endif
++
++#if !defined(__NR_memfd_secret)
++#define __NR_memfd_secret 447
++#endif
++
++#if !defined(__NR_process_mrelease)
++#define __NR_process_mrelease 448
++#endif
++
++#if !defined(__NR_futex_waitv)
++#define __NR_futex_waitv 449
++#endif
++
++#if !defined(__NR_set_mempolicy_home_node)
++#define __NR_set_mempolicy_home_node 450
++#endif
++
++#if !defined(__NR_cachestat)
++#define __NR_cachestat 451
++#endif
++
++#if !defined(__NR_fchmodat2)
++#define __NR_fchmodat2 452
++#endif
++
++#if !defined(__NR_map_shadow_stack)
++#define __NR_map_shadow_stack 453
++#endif
++
++#if !defined(__NR_futex_wake)
++#define __NR_futex_wake 454
++#endif
++
++#if !defined(__NR_futex_wait)
++#define __NR_futex_wait 455
++#endif
++
++#if !defined(__NR_futex_requeue)
++#define __NR_futex_requeue 456
++#endif
++
++#if !defined(__NR_statmount)
++#define __NR_statmount 457
++#endif
++
++#if !defined(__NR_listmount)
++#define __NR_listmount 458
++#endif
++
++#if !defined(__NR_lsm_get_self_attr)
++#define __NR_lsm_get_self_attr 459
++#endif
++
++#if !defined(__NR_lsm_set_self_attr)
++#define __NR_lsm_set_self_attr 460
++#endif
++
++#if !defined(__NR_lsm_list_modules)
++#define __NR_lsm_list_modules 461
++#endif
++
+ 
+ #endif  // SANDBOX_LINUX_SYSTEM_HEADERS_X86_32_LINUX_SYSCALLS_H_
+diff --git a/security/sandbox/chromium/sandbox/linux/system_headers/x86_64_linux_syscalls.h b/security/sandbox/chromium/sandbox/linux/system_headers/x86_64_linux_syscalls.h
+index ab51703464aa0..6767d88702f3d 100644
+--- a/security/sandbox/chromium/sandbox/linux/system_headers/x86_64_linux_syscalls.h
++++ b/security/sandbox/chromium/sandbox/linux/system_headers/x86_64_linux_syscalls.h
+@@ -3,7 +3,7 @@
+ // found in the LICENSE file.
+ 
+ /* Constructed by running:
+- * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/arch/x86/entry/syscalls/syscall_64.tbl?h=v5.8
++ * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/arch/x86/entry/syscalls/syscall_64.tbl?h=v6.8
+  *   | grep -vE '^#|^$'
+  *   | awk '{ if ($2 != "x32") { print "#if !defined(__NR_" $3 ")\n#define __NR_" $3 " " $1 "\n#endif\n"; } }'
+  * */
+@@ -1403,6 +1403,10 @@
+ #define __NR_clone3 435
+ #endif
+ 
++#if !defined(__NR_close_range)
++#define __NR_close_range 436
++#endif
++
+ #if !defined(__NR_openat2)
+ #define __NR_openat2 437
+ #endif
+@@ -1415,4 +1419,92 @@
+ #define __NR_faccessat2 439
+ #endif
+ 
++#if !defined(__NR_process_madvise)
++#define __NR_process_madvise 440
++#endif
++
++#if !defined(__NR_epoll_pwait2)
++#define __NR_epoll_pwait2 441
++#endif
++
++#if !defined(__NR_mount_setattr)
++#define __NR_mount_setattr 442
++#endif
++
++#if !defined(__NR_quotactl_fd)
++#define __NR_quotactl_fd 443
++#endif
++
++#if !defined(__NR_landlock_create_ruleset)
++#define __NR_landlock_create_ruleset 444
++#endif
++
++#if !defined(__NR_landlock_add_rule)
++#define __NR_landlock_add_rule 445
++#endif
++
++#if !defined(__NR_landlock_restrict_self)
++#define __NR_landlock_restrict_self 446
++#endif
++
++#if !defined(__NR_memfd_secret)
++#define __NR_memfd_secret 447
++#endif
++
++#if !defined(__NR_process_mrelease)
++#define __NR_process_mrelease 448
++#endif
++
++#if !defined(__NR_futex_waitv)
++#define __NR_futex_waitv 449
++#endif
++
++#if !defined(__NR_set_mempolicy_home_node)
++#define __NR_set_mempolicy_home_node 450
++#endif
++
++#if !defined(__NR_cachestat)
++#define __NR_cachestat 451
++#endif
++
++#if !defined(__NR_fchmodat2)
++#define __NR_fchmodat2 452
++#endif
++
++#if !defined(__NR_map_shadow_stack)
++#define __NR_map_shadow_stack 453
++#endif
++
++#if !defined(__NR_futex_wake)
++#define __NR_futex_wake 454
++#endif
++
++#if !defined(__NR_futex_wait)
++#define __NR_futex_wait 455
++#endif
++
++#if !defined(__NR_futex_requeue)
++#define __NR_futex_requeue 456
++#endif
++
++#if !defined(__NR_statmount)
++#define __NR_statmount 457
++#endif
++
++#if !defined(__NR_listmount)
++#define __NR_listmount 458
++#endif
++
++#if !defined(__NR_lsm_get_self_attr)
++#define __NR_lsm_get_self_attr 459
++#endif
++
++#if !defined(__NR_lsm_set_self_attr)
++#define __NR_lsm_set_self_attr 460
++#endif
++
++#if !defined(__NR_lsm_list_modules)
++#define __NR_lsm_list_modules 461
++#endif
++
+ #endif  // SANDBOX_LINUX_SYSTEM_HEADERS_X86_64_LINUX_SYSCALLS_H_

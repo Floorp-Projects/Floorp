@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 /* Constructed by running:
- * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/arch/arm/tools/syscall.tbl?h=v5.8
+ * curl -vsSL https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/arch/arm/tools/syscall.tbl?h=v6.8
  *   | grep -vE '^#|^$'
  *   | awk '{ if ($2 != "oabi") { print "#if !defined(__NR_" $3 ")\n#define __NR_" $3 " (__NR_SYSCALL_BASE+" $1 ")\n#endif\n"; } }'
  * */
@@ -1578,6 +1578,10 @@
 #define __NR_clone3 (__NR_SYSCALL_BASE+435)
 #endif
 
+#if !defined(__NR_close_range)
+#define __NR_close_range (__NR_SYSCALL_BASE+436)
+#endif
+
 #if !defined(__NR_openat2)
 #define __NR_openat2 (__NR_SYSCALL_BASE+437)
 #endif
@@ -1588,6 +1592,90 @@
 
 #if !defined(__NR_faccessat2)
 #define __NR_faccessat2 (__NR_SYSCALL_BASE+439)
+#endif
+
+#if !defined(__NR_process_madvise)
+#define __NR_process_madvise (__NR_SYSCALL_BASE+440)
+#endif
+
+#if !defined(__NR_epoll_pwait2)
+#define __NR_epoll_pwait2 (__NR_SYSCALL_BASE+441)
+#endif
+
+#if !defined(__NR_mount_setattr)
+#define __NR_mount_setattr (__NR_SYSCALL_BASE+442)
+#endif
+
+#if !defined(__NR_quotactl_fd)
+#define __NR_quotactl_fd (__NR_SYSCALL_BASE+443)
+#endif
+
+#if !defined(__NR_landlock_create_ruleset)
+#define __NR_landlock_create_ruleset (__NR_SYSCALL_BASE+444)
+#endif
+
+#if !defined(__NR_landlock_add_rule)
+#define __NR_landlock_add_rule (__NR_SYSCALL_BASE+445)
+#endif
+
+#if !defined(__NR_landlock_restrict_self)
+#define __NR_landlock_restrict_self (__NR_SYSCALL_BASE+446)
+#endif
+
+#if !defined(__NR_process_mrelease)
+#define __NR_process_mrelease (__NR_SYSCALL_BASE+448)
+#endif
+
+#if !defined(__NR_futex_waitv)
+#define __NR_futex_waitv (__NR_SYSCALL_BASE+449)
+#endif
+
+#if !defined(__NR_set_mempolicy_home_node)
+#define __NR_set_mempolicy_home_node (__NR_SYSCALL_BASE+450)
+#endif
+
+#if !defined(__NR_cachestat)
+#define __NR_cachestat (__NR_SYSCALL_BASE+451)
+#endif
+
+#if !defined(__NR_fchmodat2)
+#define __NR_fchmodat2 (__NR_SYSCALL_BASE+452)
+#endif
+
+#if !defined(__NR_map_shadow_stack)
+#define __NR_map_shadow_stack (__NR_SYSCALL_BASE+453)
+#endif
+
+#if !defined(__NR_futex_wake)
+#define __NR_futex_wake (__NR_SYSCALL_BASE+454)
+#endif
+
+#if !defined(__NR_futex_wait)
+#define __NR_futex_wait (__NR_SYSCALL_BASE+455)
+#endif
+
+#if !defined(__NR_futex_requeue)
+#define __NR_futex_requeue (__NR_SYSCALL_BASE+456)
+#endif
+
+#if !defined(__NR_statmount)
+#define __NR_statmount (__NR_SYSCALL_BASE+457)
+#endif
+
+#if !defined(__NR_listmount)
+#define __NR_listmount (__NR_SYSCALL_BASE+458)
+#endif
+
+#if !defined(__NR_lsm_get_self_attr)
+#define __NR_lsm_get_self_attr (__NR_SYSCALL_BASE+459)
+#endif
+
+#if !defined(__NR_lsm_set_self_attr)
+#define __NR_lsm_set_self_attr (__NR_SYSCALL_BASE+460)
+#endif
+
+#if !defined(__NR_lsm_list_modules)
+#define __NR_lsm_list_modules (__NR_SYSCALL_BASE+461)
 #endif
 
 // ARM private syscalls.

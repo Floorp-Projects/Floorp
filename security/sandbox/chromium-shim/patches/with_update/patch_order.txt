@@ -32,3 +32,4 @@ block_NtImpersonateAnonymousToken_before_LowerToken.patch
 fix_broker_alive_mutex.patch
 fix_max_syscalls_linux_aarch64.patch
 set_delayed_integrity_on_process_acl.patch
+chromium_syscalls_6_8_update.patch
