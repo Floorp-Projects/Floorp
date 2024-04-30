@@ -372,6 +372,18 @@ function handleRequest(request, response) {
           response.finish();
           break;
         }
+        case "zstd": {
+          response.setStatusLine(request.httpVersion, status, "OK");
+          response.setHeader("Content-Type", "text/json", false);
+          response.setHeader("Content-Encoding", "zstd", false);
+          setCacheHeaders();
+          // Use static data since we cannot encode zstandard.
+          const data = "(\xb5/\xfd @E\x00\x00\x10XX\x01\x00\x93\x00\x16";
+          response.setHeader("Content-Length", "" + data.length, false);
+          response.write(data);
+          response.finish();
+          break;
+        }
         case "hls-m3u8": {
           response.setStatusLine(request.httpVersion, status, "OK");
           response.setHeader("Content-Type", "application/x-mpegurl", false);
