@@ -5,10 +5,10 @@
 #ifndef mozilla_SimpleMap_h
 #define mozilla_SimpleMap_h
 
+#include <utility>
+
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
-
-#include <utility>
 
 namespace mozilla {
 
