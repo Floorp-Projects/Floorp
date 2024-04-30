@@ -118,9 +118,9 @@ int
 nr_reg_register_callback(NR_registry name, char action, void (*cb)(void *cb_arg, char action, NR_registry name), void *cb_arg)
 {
     int r, _status;
-    r_assoc *assoc;
+    r_assoc *assoc = 0;
     int create_assoc = 0;
-    nr_reg_cb_info *info;
+    nr_reg_cb_info *info = 0;
     int create_info = 0;
     unsigned char cb_id[SIZEOF_CB_ID];
 
@@ -191,7 +191,7 @@ int
 nr_reg_unregister_callback(char *name, char action, void (*cb)(void *cb_arg, char action, NR_registry name))
 {
     int r, _status;
-    r_assoc *assoc;
+    r_assoc *assoc = 0;
     int size;
     unsigned char cb_id[SIZEOF_CB_ID];
 
@@ -283,12 +283,12 @@ int
 nr_reg_raise_event_recurse(char *name, char *tmp, int action)
 {
     int r, _status;
-    r_assoc *assoc;
+    r_assoc *assoc = 0;
     nr_reg_cb_info *info;
     r_assoc_iterator iter;
-    char *key;
+    char *key = 0;
     int keyl;
-    char *c;
+    char *c = 0;
     int free_tmp = 0;
     int count;
 

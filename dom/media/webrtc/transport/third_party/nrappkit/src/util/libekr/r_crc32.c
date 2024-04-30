@@ -157,7 +157,7 @@ r_crc32(buf, dlen, cval)
   u_int32_t *cval;
 {
     u_int32_t crc = ~0;
-    char *p ;
+    char *p = 0;
     int i;
     u_int32_t crc32_total = 0 ;
 

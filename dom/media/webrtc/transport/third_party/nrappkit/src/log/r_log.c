@@ -375,22 +375,10 @@ int r_vlog(int facility,int level,const char *format,va_list ap)
 
 int stderr_vlog(int facility,int level,const char *format,va_list ap)
   {
-#if 0 /* remove time stamping, for now */
-    char cbuf[30];
-    time_t tt;
-
-    tt=time(0);
-
-    ctime_r(&tt,cbuf);
-    cbuf[strlen(cbuf)-1]=0;
-
-    fprintf(stderr,"%s: ",cbuf);
-#endif
-
     vfprintf(stderr,format,ap);
       fprintf(stderr,"\n");
     return(0);
-    }
+  }
 
 int syslog_vlog(int facility,int level,const char *format,va_list ap)
   {
@@ -525,7 +513,7 @@ int r_logging(int facility, int level)
 
 static int r_log_get_default_level(void)
   {
-    char *log;
+    char *log = 0;
     int _status;
 
     log=getenv("R_LOG_LEVEL");
@@ -546,7 +534,7 @@ static int r_log_get_default_level(void)
 
 static int r_log_get_destinations(int usereg)
   {
-    char *log;
+    char *log = 0;
     int i;
     int r,_status;
 
@@ -627,7 +615,7 @@ int r_log_init()
 int _r_log_init(int use_reg)
   {
 #ifndef WIN32
-    char *log;
+    char *log = 0;
 #endif
 
     if(r_log_initted==0) {

@@ -117,8 +117,8 @@ int r_list_create(listp)
 int r_list_destroy(listp)
   r_list **listp;
   {
-    r_list *list;
-    r_list_el *el;
+    r_list *list = 0;
+    r_list_el *el = 0;
 
     if(!listp || !*listp)
       return(0);
@@ -147,7 +147,7 @@ int r_list_copy(outp,in)
   r_list *in;
   {
     r_list *out=0;
-    r_list_el *el,*el2,*last=0;
+    r_list_el *el = 0, *el2 = 0, *last = 0;
     int r, _status;
 
     if(!in){
