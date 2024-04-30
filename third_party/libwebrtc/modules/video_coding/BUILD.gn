@@ -559,7 +559,6 @@ rtc_library("webrtc_vp8") {
     "../../api:field_trials_view",
     "../../api:scoped_refptr",
     "../../api/environment",
-    "../../api/transport:field_trial_based_config",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
     "../../api/video:encoded_image",
