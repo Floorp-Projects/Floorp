@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
@@ -16,6 +17,7 @@ import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.support.test.capture
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -75,10 +77,11 @@ class BookmarksUseCaseTest {
     }
 
     @Test
-    fun `WHEN recently saved bookmarks exist THEN retrieve the list from storage`() = runTest {
+    fun `WHEN saved bookmarks exist THEN retrieve the list from storage using limited history`() = runTest {
         val bookmarksStorage = mockk<BookmarksStorage>(relaxed = true)
         val historyStorage = mockk<HistoryStorage>(relaxed = true)
         val useCase = BookmarksUseCase(bookmarksStorage, historyStorage)
+        val historyTimeFrameSlot = slot<Long>()
 
         val visitInfo = VisitInfo(
             url = "https://www.firefox.com",
@@ -100,7 +103,7 @@ class BookmarksUseCaseTest {
         )
 
         coEvery {
-            historyStorage.getDetailedVisits(any(), any())
+            historyStorage.getDetailedVisits(capture(historyTimeFrameSlot), any())
         }.coAnswers { listOf(visitInfo) }
 
         coEvery {
@@ -111,7 +114,7 @@ class BookmarksUseCaseTest {
             )
         }.coAnswers { listOf(bookmarkNode) }
 
-        val result = useCase.retrieveRecentBookmarks(BookmarksUseCase.DEFAULT_BOOKMARKS_TO_RETRIEVE, 22)
+        val result = useCase.retrieveRecentBookmarks(BookmarksUseCase.DEFAULT_BOOKMARKS_TO_RETRIEVE)
 
         assertEquals(
             listOf(
@@ -124,17 +127,23 @@ class BookmarksUseCaseTest {
             result,
         )
 
+        val timeNow = System.currentTimeMillis()
+        val nineDaysAgo = timeNow - TimeUnit.DAYS.toMillis(9)
+        val elevenDaysAgo = timeNow - TimeUnit.DAYS.toMillis(11)
+        assertTrue(historyTimeFrameSlot.isCaptured)
+        assertTrue(historyTimeFrameSlot.captured in elevenDaysAgo..nineDaysAgo)
+
         coVerify {
             bookmarksStorage.getRecentBookmarks(
                 BookmarksUseCase.DEFAULT_BOOKMARKS_TO_RETRIEVE,
-                22,
+                null,
                 any(),
             )
         }
     }
 
     @Test
-    fun `WHEN there are no recently saved bookmarks THEN retrieve the empty list from storage`() = runTest {
+    fun `WHEN there are no bookmarks THEN retrieve the empty list from storage`() = runTest {
         val bookmarksStorage = mockk<BookmarksStorage>(relaxed = true)
         val historyStorage = mockk<HistoryStorage>(relaxed = true)
         val useCase = BookmarksUseCase(bookmarksStorage, historyStorage)
@@ -148,7 +157,7 @@ class BookmarksUseCaseTest {
         coVerify {
             bookmarksStorage.getRecentBookmarks(
                 BookmarksUseCase.DEFAULT_BOOKMARKS_TO_RETRIEVE,
-                TimeUnit.DAYS.toMillis(BookmarksUseCase.DEFAULT_BOOKMARKS_DAYS_AGE_TO_RETRIEVE),
+                null,
                 any(),
             )
         }

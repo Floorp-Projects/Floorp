@@ -68,25 +68,24 @@ class BookmarksUseCase(
          * Retrieves a list of recently added bookmarks, if any, up to maximum.
          *
          * @param count The number of recent bookmarks to return.
-         * @param maxAgeInMs The maximum age (ms) of a recently added bookmark to return.
-         * @return a list of [Bookmark] that were added no older than specify by [maxAgeInMs],
-         * if any, up to a number specified by [count].
+         * @param previewImageMaxAgeMs The maximum age (ms) to search history for preview image URLs.
+         * @return a list of [Bookmark]s if any, up to a number specified by [count].
          */
         @WorkerThread
         suspend operator fun invoke(
             count: Int = DEFAULT_BOOKMARKS_TO_RETRIEVE,
-            maxAgeInMs: Long = TimeUnit.DAYS.toMillis(DEFAULT_BOOKMARKS_DAYS_AGE_TO_RETRIEVE),
+            previewImageMaxAgeMs: Long = TimeUnit.DAYS.toMillis(DEFAULT_BOOKMARKS_LENGTH_DAYS_PREVIEW_IMAGE_SEARCH),
         ): List<Bookmark> {
             val currentTime = System.currentTimeMillis()
 
             // Fetch visit information within the time range of now and the specified maximum age.
             val history = historyStorage?.getDetailedVisits(
-                start = currentTime - maxAgeInMs,
+                start = currentTime - previewImageMaxAgeMs,
                 end = currentTime,
             )
 
             return bookmarksStorage
-                .getRecentBookmarks(count, maxAgeInMs)
+                .getRecentBookmarks(count)
                 .map { bookmark ->
                     Bookmark(
                         title = bookmark.title,
@@ -107,9 +106,9 @@ class BookmarksUseCase(
 
     companion object {
         // Number of recent bookmarks to retrieve.
-        const val DEFAULT_BOOKMARKS_TO_RETRIEVE = 4
+        const val DEFAULT_BOOKMARKS_TO_RETRIEVE = 8
 
         // The maximum age in days of a recent bookmarks to retrieve.
-        const val DEFAULT_BOOKMARKS_DAYS_AGE_TO_RETRIEVE = 10L
+        const val DEFAULT_BOOKMARKS_LENGTH_DAYS_PREVIEW_IMAGE_SEARCH = 10L
     }
 }
