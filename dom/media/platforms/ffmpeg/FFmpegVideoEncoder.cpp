@@ -15,7 +15,7 @@
 #include "libavutil/pixfmt.h"
 #include "mozilla/dom/ImageUtils.h"
 #include "nsPrintfCString.h"
-#include "ImageToI420.h"
+#include "ImageConversion.h"
 #include "libyuv.h"
 #include "FFmpegRuntimeLinker.h"
 

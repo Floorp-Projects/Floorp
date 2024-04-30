@@ -7,6 +7,7 @@
 #include "WMFMediaDataEncoder.h"
 
 #include "ImageContainer.h"
+#include "ImageConversion.h"
 #include "MFTEncoder.h"
 #include "PlatformEncoderModule.h"
 #include "TimeUnits.h"
@@ -37,8 +38,7 @@ RefPtr<InitPromise> WMFMediaDataEncoder::Init() {
   return InvokeAsync(mTaskQueue, this, __func__,
                      &WMFMediaDataEncoder::ProcessInit);
 }
-RefPtr<EncodePromise> WMFMediaDataEncoder::Encode(
-    const MediaData* aSample) {
+RefPtr<EncodePromise> WMFMediaDataEncoder::Encode(const MediaData* aSample) {
   MOZ_ASSERT(aSample);
 
   RefPtr<const VideoData> sample(aSample->As<const VideoData>());
@@ -67,8 +67,7 @@ RefPtr<ShutdownPromise> WMFMediaDataEncoder::Shutdown() {
                        return ShutdownPromise::CreateAndResolve(true, __func__);
                      });
 }
-RefPtr<GenericPromise> WMFMediaDataEncoder::SetBitrate(
-    uint32_t aBitsPerSec) {
+RefPtr<GenericPromise> WMFMediaDataEncoder::SetBitrate(uint32_t aBitsPerSec) {
   return InvokeAsync(
       mTaskQueue, __func__,
       [self = RefPtr<WMFMediaDataEncoder>(this), aBitsPerSec]() {
@@ -162,7 +161,8 @@ void WMFMediaDataEncoder::FillConfigData() {
           : nullptr;
 }
 
-RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessEncode(RefPtr<const VideoData>&& aSample) {
+RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessEncode(
+    RefPtr<const VideoData>&& aSample) {
   AssertOnTaskQueue();
   MOZ_ASSERT(mEncoder);
   MOZ_ASSERT(aSample);
@@ -196,43 +196,110 @@ already_AddRefed<IMFSample> WMFMediaDataEncoder::ConvertToNV12InputSample(
   AssertOnTaskQueue();
   MOZ_ASSERT(mEncoder);
 
-  const layers::PlanarYCbCrImage* image = aData->mImage->AsPlanarYCbCrImage();
-  // TODO: Take care non planar Y-Cb-Cr image (Bug 1881647).
-  NS_ENSURE_TRUE(image, nullptr);
+  struct NV12Info {
+    int32_t mYStride = 0;
+    int32_t mUVStride = 0;
+    size_t mYLength = 0;
+    size_t mBufferLength = 0;
+  } info;
 
-  const layers::PlanarYCbCrData* yuv = image->GetData();
-  auto ySize = yuv->YDataSize();
-  auto cbcrSize = yuv->CbCrDataSize();
-  size_t yLength = yuv->mYStride * ySize.height;
-  size_t length = yLength + (yuv->mCbCrStride * cbcrSize.height * 2);
+  if (const layers::PlanarYCbCrImage* image =
+          aData->mImage->AsPlanarYCbCrImage()) {
+    // Assume this is I420. If it's not, the whole process fails in
+    // ConvertToNV12 below.
+    const layers::PlanarYCbCrData* yuv = image->GetData();
+    info.mYStride = yuv->mYStride;
+    info.mUVStride = yuv->mCbCrStride * 2;
+    info.mYLength = info.mYStride * yuv->YDataSize().height;
+    info.mBufferLength =
+        info.mYLength + (info.mUVStride * yuv->CbCrDataSize().height);
+  } else {
+    info.mYStride = aData->mImage->GetSize().width;
+    info.mUVStride = info.mYStride;
+
+    const int32_t yHeight = aData->mImage->GetSize().height;
+    const int32_t uvHeight = yHeight / 2;
+
+    CheckedInt<size_t> yLength(info.mYStride);
+    yLength *= yHeight;
+    if (!yLength.isValid()) {
+      WMF_ENC_LOGE("yLength overflows");
+      return nullptr;
+    }
+    info.mYLength = yLength.value();
+
+    CheckedInt<size_t> uvLength(info.mUVStride);
+    uvLength *= uvHeight;
+    if (!uvLength.isValid()) {
+      WMF_ENC_LOGE("uvLength overflows");
+      return nullptr;
+    }
+
+    CheckedInt<size_t> length(yLength);
+    length += uvLength;
+    if (!length.isValid()) {
+      WMF_ENC_LOGE("length overflows");
+      return nullptr;
+    }
+    info.mBufferLength = length.value();
+  }
 
   RefPtr<IMFSample> input;
-  HRESULT hr = mEncoder->CreateInputSample(&input, length);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  HRESULT hr = mEncoder->CreateInputSample(&input, info.mBufferLength);
+  if (FAILED(hr)) {
+    _com_error error(hr);
+    WMF_ENC_LOGE("CreateInputSample: error = 0x%lX, %ls", hr,
+                 error.ErrorMessage());
+    return nullptr;
+  }
 
   RefPtr<IMFMediaBuffer> buffer;
   hr = input->GetBufferByIndex(0, getter_AddRefs(buffer));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  if (FAILED(hr)) {
+    _com_error error(hr);
+    WMF_ENC_LOGE("GetBufferByIndex: error = 0x%lX, %ls", hr,
+                 error.ErrorMessage());
+    return nullptr;
+  }
 
-  hr = buffer->SetCurrentLength(length);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  hr = buffer->SetCurrentLength(info.mBufferLength);
+  if (FAILED(hr)) {
+    _com_error error(hr);
+    WMF_ENC_LOGE("SetCurrentLength: error = 0x%lX, %ls", hr,
+                 error.ErrorMessage());
+    return nullptr;
+  }
 
   LockBuffer lockBuffer(buffer);
-  NS_ENSURE_TRUE(SUCCEEDED(lockBuffer.Result()), nullptr);
+  hr = lockBuffer.Result();
+  if (FAILED(hr)) {
+    _com_error error(hr);
+    WMF_ENC_LOGE("LockBuffer: error = 0x%lX, %ls", hr, error.ErrorMessage());
+    return nullptr;
+  }
 
-  // TODO: Take care non I420 image (Bug 1881647).
-  bool ok = libyuv::I420ToNV12(
-                yuv->mYChannel, yuv->mYStride, yuv->mCbChannel,
-                yuv->mCbCrStride, yuv->mCrChannel, yuv->mCbCrStride,
-                lockBuffer.Data(), yuv->mYStride, lockBuffer.Data() + yLength,
-                yuv->mCbCrStride * 2, ySize.width, ySize.height) == 0;
-  NS_ENSURE_TRUE(ok, nullptr);
+  nsresult rv =
+      ConvertToNV12(aData->mImage, lockBuffer.Data(), info.mYStride,
+                    lockBuffer.Data() + info.mYLength, info.mUVStride);
+  if (NS_FAILED(rv)) {
+    WMF_ENC_LOGE("Failed to convert to NV12");
+    return nullptr;
+  }
 
   hr = input->SetSampleTime(UsecsToHNs(aData->mTime.ToMicroseconds()));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  if (FAILED(hr)) {
+    _com_error error(hr);
+    WMF_ENC_LOGE("SetSampleTime: error = 0x%lX, %ls", hr, error.ErrorMessage());
+    return nullptr;
+  }
 
   hr = input->SetSampleDuration(UsecsToHNs(aData->mDuration.ToMicroseconds()));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  if (FAILED(hr)) {
+    _com_error error(hr);
+    WMF_ENC_LOGE("SetSampleDuration: error = 0x%lX, %ls", hr,
+                 error.ErrorMessage());
+    return nullptr;
+  }
 
   return input.forget();
 }
