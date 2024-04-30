@@ -72,7 +72,7 @@ int nr_p_buf_ctx_create(size,ctxp)
 int nr_p_buf_ctx_destroy(ctxp)
   nr_p_buf_ctx **ctxp;
   {
-    nr_p_buf_ctx *ctx;
+    nr_p_buf_ctx *ctx = 0;
 
     if(!ctxp || !*ctxp)
       return(0);
@@ -133,7 +133,7 @@ int nr_p_buf_free_chain(ctx,head)
   nr_p_buf_ctx *ctx;
   nr_p_buf_head *head;
   {
-    nr_p_buf *n1,*n2;
+    nr_p_buf *n1 = 0, *n2 = 0;
 
     n1=STAILQ_FIRST(head);
     while(n1){
@@ -155,7 +155,7 @@ int nr_p_buf_write_to_chain(ctx,chain,data,len)
   UINT4 len;
   {
     int r,_status;
-    nr_p_buf *buf;
+    nr_p_buf *buf = 0;
 
     buf=STAILQ_LAST(chain,nr_p_buf_,entry);
     while(len){
@@ -186,7 +186,7 @@ int nr_p_buf_write_to_chain(ctx,chain,data,len)
 static int nr_p_buf_destroy_chain(head)
   nr_p_buf_head *head;
   {
-    nr_p_buf *n1,*n2;
+    nr_p_buf *n1 = 0, *n2 = 0;
 
     n1=STAILQ_FIRST(head);
     while(n1){

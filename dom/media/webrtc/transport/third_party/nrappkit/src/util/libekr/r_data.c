@@ -183,7 +183,7 @@ int r_data_destroy(dp)
 int r_data_destroy_v(v)
   void *v;
   {
-    Data *d;
+    Data *d = 0;
 
     if(!v)
       return(0);
@@ -199,7 +199,7 @@ int r_data_destroy_v(v)
 int r_data_destroy_vp(v)
   void **v;
   {
-    Data *d;
+    Data *d = 0;
 
     if(!v || !*v)
       return(0);

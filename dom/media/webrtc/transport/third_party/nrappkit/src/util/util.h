@@ -43,11 +43,6 @@
 #include "registry.h"
 
 int nr_get_filename(char *base,char *name, char **namep);
-#if 0
-#include <openssl/ssl.h>
-
-int read_RSA_private_key(char *base, char *name,RSA **keyp);
-#endif
 void nr_errprintf_log(const char *fmt,...);
 void nr_errprintf_log2(void *ignore, const char *fmt,...);
 extern int nr_util_default_log_facility;

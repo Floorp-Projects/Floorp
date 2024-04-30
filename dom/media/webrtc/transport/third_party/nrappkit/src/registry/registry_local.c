@@ -134,19 +134,9 @@ static int nr_reg_get_array(char *name, unsigned char type, UCHAR *out, size_t s
 static int nr_reg_set(char *name, int type, void *data);
 static int nr_reg_set_array(char *name, unsigned char type, UCHAR *data, size_t length);
 static int nr_reg_set_parent_registries(char *name);
-
-/* make these static OLD_REGISTRY */
-#if 0
-static int nr_reg_fetch_node(char *name, unsigned char type, nr_registry_node **node, int *free_node);
-static char *nr_reg_alloc_node_data(char *name, nr_registry_node *node, int *freeit);
-#else
 int nr_reg_fetch_node(char *name, unsigned char type, nr_registry_node **node, int *free_node);
 char *nr_reg_alloc_node_data(char *name, nr_registry_node *node, int *freeit);
-#endif
 static int nr_reg_rfree(void *ptr);
-#if 0  /* Unused currently */
-static int nr_reg_noop(void *ptr);
-#endif
 static int nr_reg_compute_length(char *name, nr_registry_node *node, size_t *length);
 char *nr_reg_action_name(int action);
 
@@ -154,10 +144,6 @@ char *nr_reg_action_name(int action);
  * nodes, which are either of type nr_scalar_registry_node or
  * nr_array_registry_node */
 static r_assoc     *nr_registry = 0;
-
-#if 0  /* Unused currently */
-static nr_array_registry_node nr_top_level_node;
-#endif
 
 typedef struct nr_reg_find_children_arg_ {
     size_t         size;
@@ -178,7 +164,7 @@ nr_reg_local_iter(NR_registry prefix, int (*action)(void *ptr, r_assoc_iterator 
 {
     int r, _status;
     r_assoc_iterator iter;
-    char *name;
+    char *name = 0;
     int namel;
     nr_registry_node *node;
     int prefixl;
@@ -246,7 +232,7 @@ nr_reg_local_find_children(void *ptr, r_assoc_iterator *iter, char *prefix, char
 {
   int _status;
   int prefixl = strlen(prefix);
-  char *dot;
+  char *dot = 0;
   nr_reg_find_children_arg *arg = (void*)ptr;
 
   assert(sizeof(*(arg->children)) == sizeof(NR_registry));
@@ -275,7 +261,7 @@ int
 nr_reg_local_count_children(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node)
 {
   int prefixl = strlen(prefix);
-  char *dot;
+  char *dot = 0;
 
   /* only count children */
   if (name[prefixl] == '.') {
@@ -296,7 +282,7 @@ nr_reg_local_dump_print(void *ptr, r_assoc_iterator *iter, char *prefix, char *n
 {
     int _status;
     int freeit = 0;
-    char *data;
+    char *data = 0;
 
     /* only print leaf nodes */
     if (node->type != NR_REG_TYPE_REGISTRY) {
@@ -314,14 +300,6 @@ nr_reg_local_dump_print(void *ptr, r_assoc_iterator *iter, char *prefix, char *n
     return(_status);
 }
 
-
-#if 0  /* Unused currently */
-int
-nr_reg_noop(void *ptr)
-{
-    return 0;
-}
-#endif
 
 int
 nr_reg_rfree(void *ptr)
@@ -750,7 +728,7 @@ nr_reg_set_parent_registries(char *name)
 {
     int r, _status;
     char *parent = 0;
-    char *dot;
+    char *dot = 0;
 
     if ((parent = r_strdup(name)) == 0)
       ABORT(R_NO_MEMORY);
@@ -955,7 +933,7 @@ nr_reg_local_get_type(NR_registry name, NR_registry_type type)
 {
     int r, _status;
     nr_registry_node *node = 0;
-    char *str;
+    char *str = 0;
 
     if ((r=nr_reg_is_valid(name)))
       ABORT(r);
@@ -1044,7 +1022,7 @@ int
 nr_reg_local_get_child_count(NR_registry parent, size_t *count)
 {
     int r, _status;
-    nr_registry_node *ignore1;
+    nr_registry_node *ignore1 = 0;
     int ignore2;
 
 

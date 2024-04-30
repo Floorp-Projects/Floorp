@@ -88,7 +88,7 @@ char *strdup(str)
   char *str;
   {
     int len=strlen(str);
-    char *n;
+    char *n = 0;
 
     if(!(n=(char *)malloc(len+1)))
       return(0);

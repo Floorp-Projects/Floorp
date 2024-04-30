@@ -563,7 +563,7 @@ NR_reg_make_registry(NR_registry parent, char *child, NR_registry out)
     int r, _status;
     size_t plen;
     size_t clen;
-    char *c;
+    char *c = 0;
     size_t i;
 
     if ((r=nr_reg_is_valid(parent)))

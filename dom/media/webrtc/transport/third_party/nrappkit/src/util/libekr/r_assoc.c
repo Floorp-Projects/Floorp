@@ -150,7 +150,7 @@ int r_assoc_create(assocp,hash_func,bits)
 int r_assoc_destroy(assocp)
   r_assoc **assocp;
   {
-    r_assoc *assoc;
+    r_assoc *assoc = 0;
     int i;
 
     if(!assocp || !*assocp)
@@ -169,7 +169,7 @@ int r_assoc_destroy(assocp)
 static int destroy_assoc_chain(chain)
   r_assoc_el *chain;
   {
-    r_assoc_el *nxt;
+    r_assoc_el *nxt = 0;
 
     while(chain){
       nxt=chain->next;
@@ -190,7 +190,7 @@ static int copy_assoc_chain(knewp,old)
   r_assoc_el **knewp;
   r_assoc_el *old;
   {
-    r_assoc_el *knew=0,*ptr,*tmp;
+    r_assoc_el *knew = 0, *ptr = 0, *tmp = 0;
     int r,_status;
 
     ptr=0; /* Pacify GCC's uninitialized warning.
@@ -245,7 +245,7 @@ static int r_assoc_fetch_bucket(assoc,key,len,bucketp)
   r_assoc_el **bucketp;
   {
     UINT4 hash_value;
-    r_assoc_el *bucket;
+    r_assoc_el *bucket = 0;
 
     hash_value=assoc->hash_func(key,len,assoc->bits);
 
@@ -265,7 +265,7 @@ int r_assoc_fetch(assoc,key,len,datap)
   int len;
   void **datap;
   {
-    r_assoc_el *bucket;
+    r_assoc_el *bucket = 0;
     int r;
 
     if(r=r_assoc_fetch_bucket(assoc,key,len,&bucket)){
@@ -287,7 +287,7 @@ int r_assoc_insert(assoc,key,len,data,copy,destroy,how)
   int (*destroy)(void *ptr);
   int how;
   {
-    r_assoc_el *bucket,*new_bucket=0;
+    r_assoc_el *bucket = 0, *new_bucket = 0;
     int r,_status;
 
     if(r=r_assoc_fetch_bucket(assoc,key,len,&bucket)){
@@ -340,7 +340,7 @@ int r_assoc_delete(assoc,key,len)
   int len;
   {
     int r;
-    r_assoc_el *bucket;
+    r_assoc_el *bucket = 0;
     UINT4 hash_value;
 
     if(r=r_assoc_fetch_bucket(assoc,key,len,&bucket)){
@@ -377,7 +377,7 @@ int r_assoc_copy(knewp,old)
   r_assoc *old;
   {
     int r,_status,i;
-    r_assoc *knew;
+    r_assoc *knew = 0;
 
     if(!(knew=(r_assoc *)RCALLOC(sizeof(r_assoc))))
       ABORT(R_NO_MEMORY);
@@ -441,7 +441,7 @@ int r_assoc_iter(iter,key,keyl,val)
   void **val;
   {
     int i;
-    r_assoc_el *ret;
+    r_assoc_el *ret = 0;
 
     if(!iter->next)
       return(R_EOD);

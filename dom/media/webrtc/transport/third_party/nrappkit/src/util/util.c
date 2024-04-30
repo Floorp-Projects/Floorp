@@ -79,38 +79,6 @@ int nr_get_filename(base,name,namep)
     return(_status);
   }
 
-#if 0
-int read_RSA_private_key(base,name,keyp)
-  char *base;
-  char *name;
-  RSA **keyp;
-  {
-    char *keyfile=0;
-    BIO *bio=0;
-    FILE *fp=0;
-    RSA *rsa=0;
-    int r,_status;
-
-    /* Load the keyfile */
-    if(r=get_filename(base,name,&keyfile))
-      ABORT(r);
-    if(!(fp=fopen(keyfile,"r")))
-      ABORT(R_NOT_FOUND);
-    if(!(bio=BIO_new(BIO_s_file())))
-      ABORT(R_NO_MEMORY);
-    BIO_set_fp(bio,fp,BIO_NOCLOSE);
-
-    if(!(rsa=PEM_read_bio_RSAPrivateKey(bio,0,0,0)))
-      ABORT(R_NOT_FOUND);
-
-    *keyp=rsa;
-    _status=0;
-  abort:
-    return(_status);
-  }
-#endif
-
-
 void nr_errprintf_log(const char *format,...)
   {
     va_list ap;
@@ -295,55 +263,6 @@ int nr_sha1_file(char *filename,UCHAR *out)
 #ifdef WIN32
   // TODO
 #else
-
-#if 0
-
-#include <fts.h>
-
-int nr_rm_tree(char *path)
-  {
-    FTS *fts=0;
-    FTSENT *p;
-    int failed=0;
-    int _status;
-    char *argv[2];
-
-    argv[0]=path;
-    argv[1]=0;
-
-    if(!(fts=fts_open(argv,0,NULL))){
-      r_log_e(LOG_COMMON,LOG_ERR,"Couldn't open directory %s",path);
-      ABORT(R_FAILED);
-    }
-
-    while(p=fts_read(fts)){
-      switch(p->fts_info){
-        case FTS_D:
-          break;
-        case FTS_DOT:
-          break;
-        case FTS_ERR:
-          r_log_e(LOG_COMMON,LOG_ERR,"Problem reading %s",p->fts_path);
-          break;
-        default:
-          r_log(LOG_COMMON,LOG_DEBUG,"Removing %s",p->fts_path);
-          errno=0;
-          if(remove(p->fts_path)){
-            r_log_e(LOG_COMMON,LOG_ERR,"Problem removing %s",p->fts_path);
-            failed=1;
-          }
-      }
-    }
-
-    if(failed)
-      ABORT(R_FAILED);
-
-    _status=0;
-  abort:
-    if(fts) fts_close(fts);
-    return(_status);
-  }
-#endif
 
 int nr_write_pid_file(char *pid_filename)
   {
@@ -625,7 +544,7 @@ inet_ntop6(const unsigned char *src, char *dst, size_t size)
    * to use pointer overlays.  All the world's not a VAX.
    */
   char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"];
-  char *tp, *ep;
+  char *tp = 0, *ep = 0;
   struct { int base, len; } best, cur;
   unsigned int words[NS_IN6ADDRSZ / NS_INT16SZ];
   int i;

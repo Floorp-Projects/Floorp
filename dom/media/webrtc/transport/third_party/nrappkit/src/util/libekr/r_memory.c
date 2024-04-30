@@ -66,7 +66,7 @@ void *r_malloc(type,size)
   size_t size;
   {
     size_t total;
-    r_malloc_chunk *chunk;
+    r_malloc_chunk *chunk = 0;
 
     total=size+sizeof(r_malloc_chunk);
 
@@ -90,7 +90,7 @@ void *r_calloc(type,number,size)
   size_t number;
   size_t size;
   {
-    void *ret;
+    void *ret = 0;
     size_t total;
 
     total=number*size;
@@ -106,7 +106,7 @@ void *r_calloc(type,number,size)
 void r_free(ptr)
   void *ptr;
   {
-    r_malloc_chunk *chunk;
+    r_malloc_chunk *chunk = 0;
 
     if(!ptr) return;
 
@@ -125,7 +125,7 @@ void *r_realloc(ptr,size)
   void *ptr;
   size_t size;
   {
-    r_malloc_chunk *chunk,*nchunk;
+    r_malloc_chunk *chunk = 0, *nchunk = 0;
     size_t total;
 
     if(!ptr) return(r_malloc(255,size));
@@ -154,7 +154,7 @@ char *r_strdup(str)
   const char *str;
   {
     int len;
-    char *nstr;
+    char *nstr = 0;
 
     if(!str)
       return(0);
