@@ -33,3 +33,9 @@ function runModule(hint) {
 // Ensure that we have the same result with different branch hints.
 runModule("\\00");
 runModule("\\01");
+
+let module = new WebAssembly.Module(wasmTextToBinary(`
+  (func i32.const 0 (@metadata.code.branch_hint "\\00") if end)
+`))
+
+assertEq(wasmParsedBranchHints(module), true);

@@ -28,17 +28,17 @@ using namespace js::jit;
 bool jit::BranchHinting(MIRGenerator* mir, MIRGraph& graph) {
   JitSpew(JitSpew_BranchHint, "Beginning BranchHinting pass");
 
-  // Push to end all blocks marked as unlikely
+  // Move towards the end all blocks marked as unlikely
   mozilla::Vector<MBasicBlock*, 0> toBeMoved;
 
   for (MBasicBlock* block : graph) {
-    // Collect the unlikely blocks
-    // Several possibilities:
-    // - The unlikely block is in the middle of a loop: keep it there to not
-    // break Ion assumptions.
-    // - The unlikely block is not in a loop: push it to the end of the
-    // function.
-    if (block->branchHintingUnlikely() && block->loopDepth() == 0) {
+    // If this block has a return instruction, it's safe to push it
+    // to the end of the graph.
+    // If the block doesn't contain a return, a backedge outside a loop will be
+    // created, which would break ReversePostOrder assertions.
+    // Avoid moving a block if it's in the middle of a loop as well.
+    if (block->branchHintingUnlikely() && block->loopDepth() == 0 &&
+        block->hasLastIns() && block->lastIns()->is<js::jit::MWasmReturn>()) {
       if (!toBeMoved.append(block)) {
         return false;
       }
@@ -47,7 +47,7 @@ bool jit::BranchHinting(MIRGenerator* mir, MIRGraph& graph) {
 
   for (MBasicBlock* block : toBeMoved) {
 #ifdef JS_JITSPEW
-    JitSpew(JitSpew_BranchHint, "Pushing block%u to the end", block->id());
+    JitSpew(JitSpew_BranchHint, "Moving block%u to the end", block->id());
 #endif
     graph.moveBlockToEnd(block);
   }
