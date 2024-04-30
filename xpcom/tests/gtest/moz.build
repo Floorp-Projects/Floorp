@@ -26,7 +26,6 @@ UNIFIED_SOURCES += [
     "TestGCPostBarriers.cpp",
     "TestID.cpp",
     "TestIDUtils.cpp",
-    "TestINIParser.cpp",
     "TestInputStreamLengthHelper.cpp",
     "TestJSHolderMap.cpp",
     "TestLogCommandLineHandler.cpp",
