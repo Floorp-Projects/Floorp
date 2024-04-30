@@ -40,6 +40,8 @@ namespace jit {
 
 class BailoutFrameInfo;
 
+enum class IsLeavingFrame { No, Yes };
+
 // A JitActivation is used for frames running in Baseline or Ion.
 class JitActivation : public Activation {
   // If Baseline, Ion or Wasm code is on the stack, and has called into C++,
@@ -93,8 +95,6 @@ class JitActivation : public Activation {
   // When wasm traps, the signal handler records some data for unwinding
   // purposes. Wasm code can't trap reentrantly.
   mozilla::Maybe<wasm::TrapData> wasmTrapData_;
-
-  void clearRematerializedFrames();
 
 #ifdef CHECK_OSIPOINT_REGISTERS
  protected:
@@ -156,8 +156,7 @@ class JitActivation : public Activation {
   // The inlineDepth must be within bounds of the frame pointed to by iter.
   RematerializedFrame* getRematerializedFrame(
       JSContext* cx, const JSJitFrameIter& iter, size_t inlineDepth = 0,
-      MaybeReadFallback::FallbackConsequence consequence =
-          MaybeReadFallback::Fallback_Invalidate);
+      IsLeavingFrame leaving = IsLeavingFrame::No);
 
   // Look up a rematerialized frame by the fp. If inlineDepth is out of
   // bounds of what has been rematerialized, nullptr is returned.
