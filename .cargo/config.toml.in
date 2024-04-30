@@ -40,6 +40,11 @@ git = "https://github.com/glandium/mio"
 rev = "9a2ef335c366044ffe73b1c4acabe50a1daefe05"
 replace-with = "vendored-sources"
 
+[source."git+https://github.com/hsivonen/any_all_workaround?rev=7fb1b7034c9f172aade21ee1c8554e8d8a48af80"]
+git = "https://github.com/hsivonen/any_all_workaround"
+rev = "7fb1b7034c9f172aade21ee1c8554e8d8a48af80"
+replace-with = "vendored-sources"
+
 [source."git+https://github.com/hsivonen/chardetng?rev=3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"]
 git = "https://github.com/hsivonen/chardetng"
 rev = "3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"
