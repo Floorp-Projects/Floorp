@@ -34,9 +34,9 @@ TEST(PacketTransportInternal,
             EXPECT_EQ(packet.decryption_info(),
                       rtc::ReceivedPacket::kDtlsDecrypted);
           });
-  packet_transport.NotifyPacketReceived(
-      rtc::ReceivedPacket({}, rtc::SocketAddress(), absl::nullopt,
-                          rtc::ReceivedPacket::kDtlsDecrypted));
+  packet_transport.NotifyPacketReceived(rtc::ReceivedPacket(
+      {}, rtc::SocketAddress(), absl::nullopt, rtc::EcnMarking::kNotEct,
+      rtc::ReceivedPacket::kDtlsDecrypted));
 
   packet_transport.DeregisterReceivedPacketCallback(&receiver);
 }

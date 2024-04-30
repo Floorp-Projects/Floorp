@@ -30,6 +30,7 @@
 
 #include "api/units/timestamp.h"
 #include "rtc_base/buffer.h"
+#include "rtc_base/network/ecn_marking.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -91,6 +92,7 @@ class RTC_EXPORT Socket {
 
     absl::optional<webrtc::Timestamp> arrival_time;
     SocketAddress source_address;
+    EcnMarking ecn = EcnMarking::kNotEct;
     Buffer& payload;
   };
   virtual ~Socket() {}
@@ -144,6 +146,8 @@ class RTC_EXPORT Socket {
     OPT_RTP_SENDTIME_EXTN_ID,  // This is a non-traditional socket option param.
                                // This is specific to libjingle and will be used
                                // if SendTime option is needed at socket level.
+    OPT_SEND_ECN,              // 2-bit ECN
+    OPT_RECV_ECN
   };
   virtual int GetOption(Option opt, int* value) = 0;
   virtual int SetOption(Option opt, int value) = 0;
