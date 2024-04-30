@@ -209,8 +209,7 @@ already_AddRefed<Promise> EncoderTemplate<EncoderType>::Flush(
 
   auto msg = MakeRefPtr<FlushMessage>(mLatestConfigureId);
   const auto flushPromiseId = static_cast<int64_t>(msg->mMessageId);
-  DebugOnly<RefPtr<Promise>> unused;
-  MOZ_ASSERT(!mPendingFlushPromises.Find(flushPromiseId, unused));
+  MOZ_ASSERT(!mPendingFlushPromises.Contains(flushPromiseId));
   mPendingFlushPromises.Insert(flushPromiseId, p);
 
   mControlMessageQueue.emplace(std::move(msg));

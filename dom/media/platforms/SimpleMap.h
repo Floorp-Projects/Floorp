@@ -44,6 +44,16 @@ class SimpleMap {
  public:
   SimpleMap() : mLock("SimpleMap"){};
 
+  // Check if aKey is in the map.
+  bool Contains(const K& aKey) {
+    struct Comparator {
+      bool Equals(const ElementType& aElement, const K& aKey) const {
+        return aElement.first == aKey;
+      }
+    };
+    Policy guard(mLock);
+    return mMap.Contains(aKey, Comparator());
+  }
   // Insert Key and Value pair at the end of our map.
   void Insert(const K& aKey, const V& aValue) {
     Policy guard(mLock);
