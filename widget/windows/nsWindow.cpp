@@ -3951,10 +3951,8 @@ uint32_t nsWindow::GetMaxTouchPoints() const {
   return WinUtils::GetMaxTouchPoints();
 }
 
-void nsWindow::SetWindowClass(const nsAString& xulWinType,
-                              const nsAString& xulWinClass,
-                              const nsAString& xulWinName) {
-  mIsEarlyBlankWindow = xulWinType.EqualsLiteral("navigator:blank");
+void nsWindow::SetIsEarlyBlankWindow(bool aIsEarlyBlankWindow) {
+  mIsEarlyBlankWindow = aIsEarlyBlankWindow;
 }
 
 /**************************************************************
