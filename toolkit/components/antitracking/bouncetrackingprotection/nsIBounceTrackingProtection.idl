@@ -47,4 +47,10 @@ interface nsIBounceTrackingProtection : nsISupports {
 
     [implicit_jscontext]
     void testAddUserActivation(in jsval originAttributes, in ACString aSiteHost, in PRTime aActivationTime);
+
+    // Test helper to trigger user activation import from the permission
+    // manager. Will only import if the pref
+    // privacy.bounceTrackingProtection.hasMigratedUserActivationData is set to
+    // false.
+    void testMaybeMigrateUserInteractionPermissions();
 };
