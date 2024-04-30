@@ -9,8 +9,13 @@
 #include "EncoderConfig.h"
 #include "MFTEncoder.h"
 #include "MediaData.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
+
+#define WMF_ENC_LOG(arg, ...)                         \
+  MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Error, \
+          ("WMFDataEncoderUtils::%s: " arg, __func__, ##__VA_ARGS__))
 
 bool CanCreateWMFEncoder(CodecType aCodec) {
   bool canCreate = false;
@@ -69,41 +74,86 @@ static uint32_t GetProfile(H264_PROFILE aProfileLevel) {
 
 already_AddRefed<IMFMediaType> CreateInputType(EncoderConfig& aConfig) {
   RefPtr<IMFMediaType> type;
-  return SUCCEEDED(wmf::MFCreateMediaType(getter_AddRefs(type))) &&
-                 SUCCEEDED(
-                     type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video)) &&
-                 SUCCEEDED(type->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_NV12)) &&
-                 SUCCEEDED(type->SetUINT32(MF_MT_INTERLACE_MODE,
-                                           MFVideoInterlace_Progressive)) &&
-                 SUCCEEDED(MFSetAttributeRatio(type, MF_MT_FRAME_RATE,
-                                               aConfig.mFramerate, 1)) &&
-                 SUCCEEDED(MFSetAttributeSize(type, MF_MT_FRAME_SIZE,
-                                              aConfig.mSize.width,
-                                              aConfig.mSize.height))
-             ? type.forget()
-             : nullptr;
+  HRESULT hr = wmf::MFCreateMediaType(getter_AddRefs(type));
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("MFCreateMediaType (input) error: %lx", hr);
+    return nullptr;
+  }
+  hr = type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create input type: SetGUID (major type) error: %lx", hr);
+    return nullptr;
+  }
+  hr = type->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_NV12);
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create input type: SetGUID (subtype) error: %lx", hr);
+    return nullptr;
+  }
+  hr = type->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create input type: interlace mode (input) error: %lx", hr);
+    return nullptr;
+  }
+  hr = MFSetAttributeRatio(type, MF_MT_FRAME_RATE, aConfig.mFramerate, 1);
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create input type: frame rate (input) error: %lx", hr);
+    return nullptr;
+  }
+  hr = MFSetAttributeSize(type, MF_MT_FRAME_SIZE, aConfig.mSize.width,
+                          aConfig.mSize.height);
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create input type: frame size (input) error: %lx", hr);
+    return nullptr;
+  }
+  return type.forget();
 }
 
 already_AddRefed<IMFMediaType> CreateOutputType(EncoderConfig& aConfig) {
   RefPtr<IMFMediaType> type;
-  if (FAILED(wmf::MFCreateMediaType(getter_AddRefs(type))) ||
-      FAILED(type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video)) ||
-      FAILED(type->SetGUID(MF_MT_SUBTYPE, CodecToSubtype(aConfig.mCodec))) ||
-      FAILED(type->SetUINT32(MF_MT_AVG_BITRATE, aConfig.mBitrate)) ||
-      FAILED(type->SetUINT32(MF_MT_INTERLACE_MODE,
-                             MFVideoInterlace_Progressive)) ||
-      FAILED(
-          MFSetAttributeRatio(type, MF_MT_FRAME_RATE, aConfig.mFramerate, 1)) ||
-      FAILED(MFSetAttributeSize(type, MF_MT_FRAME_SIZE, aConfig.mSize.width,
-                                aConfig.mSize.height))) {
+  HRESULT hr = wmf::MFCreateMediaType(getter_AddRefs(type));
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("MFCreateMediaType (output) error: %lx", hr);
     return nullptr;
   }
+  hr = type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create output type: set major type error: %lx", hr);
+    return nullptr;
+  }
+  hr = type->SetGUID(MF_MT_SUBTYPE, CodecToSubtype(aConfig.mCodec));
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create output type: set subtype error: %lx", hr);
+    return nullptr;
+  }
+  hr = type->SetUINT32(MF_MT_AVG_BITRATE, aConfig.mBitrate);
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create output type: set bitrate error: %lx", hr);
+    return nullptr;
+  }
+  hr = type->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create output type set interlave mode error: %lx", hr);
+    return nullptr;
+  }
+  hr = MFSetAttributeRatio(type, MF_MT_FRAME_RATE, aConfig.mFramerate, 1);
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create output type set frame rate error: %lx", hr);
+    return nullptr;
+  }
+  hr = MFSetAttributeSize(type, MF_MT_FRAME_SIZE, aConfig.mSize.width,
+                          aConfig.mSize.height);
+  if (FAILED(hr)) {
+    WMF_ENC_LOG("Create output type set frame size error: %lx", hr);
+    return nullptr;
+  }
+
   if (aConfig.mCodecSpecific) {
     if (aConfig.mCodecSpecific->is<H264Specific>()) {
-      if (FAILED(type->SetUINT32(
-              MF_MT_MPEG2_PROFILE,
-              GetProfile(
-                  aConfig.mCodecSpecific->as<H264Specific>().mProfile)))) {
+      hr = FAILED(type->SetUINT32(
+          MF_MT_MPEG2_PROFILE,
+          GetProfile(aConfig.mCodecSpecific->as<H264Specific>().mProfile)));
+      if (hr) {
+        WMF_ENC_LOG("Create output type set profile error: %lx", hr);
         return nullptr;
       }
     }
@@ -126,5 +176,4 @@ HRESULT SetMediaTypes(RefPtr<MFTEncoder>& aEncoder, EncoderConfig& aConfig) {
   return aEncoder->SetMediaTypes(inputType, outputType);
 }
 
-
-}
+}  // namespace mozilla
