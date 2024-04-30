@@ -238,6 +238,26 @@ export class IndexedDBCache {
   }
 
   /**
+   * Checks if a specified model file exists in storage.
+   *
+   * @param {string} model - The model name (organization/name)
+   * @param {string} revision - The model revision.
+   * @param {string} file - The file name.
+   * @returns {Promise<boolean>} A promise that resolves with `true` if the key exists, otherwise `false`.
+   */
+  async fileExists(model, revision, file) {
+    const storeName = this.fileStoreName;
+    const cacheKey = `${model}/${revision}/${file}`;
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([storeName], "readonly");
+      const store = transaction.objectStore(storeName);
+      const request = store.getKey(cacheKey);
+      request.onerror = event => reject(event.target.error);
+      request.onsuccess = event => resolve(event.target.result !== undefined);
+    });
+  }
+
+  /**
    * Retrieves the headers for a specific cache entry.
    *
    * @param {string} model - The model name (organization/name)
@@ -577,7 +597,7 @@ export class ModelHub {
    * @param {number} timeout in ms. Default is 1000
    * @returns {Promise<string>} ETag (can be null)
    */
-  async #getETag(url, timeout = 1000) {
+  async getETag(url, timeout = 1000) {
     const controller = new AbortController();
     const id = lazy.setTimeout(() => controller.abort(), timeout);
 
@@ -653,16 +673,27 @@ export class ModelHub {
 
     await this.#initCache();
 
-    // this can be null if no ETag was found or there were a network error
-    const hubETag = await this.#getETag(url);
+    let useCached;
 
-    //storage lookup
-    const cachedHeaders = await this.cache.getHeaders(model, revision, file);
-    const cachedEtag = cachedHeaders ? cachedHeaders.ETag : null;
+    // If the revision is `main` we want to check the ETag in the hub
+    if (revision === "main") {
+      // this can be null if no ETag was found or there were a network error
+      const hubETag = await this.getETag(url);
 
-    // If we have something in store, and the hub ETag is null or it matches the cached ETag, return the cached response
-    if (cachedEtag !== null && (hubETag === null || cachedEtag === hubETag)) {
-      lazy.console.debug(`Cache Hit`);
+      // Storage ETag lookup
+      const cachedHeaders = await this.cache.getHeaders(model, revision, file);
+      const cachedEtag = cachedHeaders ? cachedHeaders.ETag : null;
+
+      // If we have something in store, and the hub ETag is null or it matches the cached ETag, return the cached response
+      useCached =
+        cachedEtag !== null && (hubETag === null || cachedEtag === hubETag);
+    } else {
+      // If we are dealing with a pinned revision, we ignore the ETag, to spare HEAD hits on every call
+      useCached = await this.cache.fileExists(model, revision, file);
+    }
+
+    if (useCached) {
+      lazy.console.debug(`Cache Hit for ${url}`);
       return await this.cache.getFile(model, revision, file);
     }
 
@@ -675,7 +706,7 @@ export class ModelHub {
           // We don't store the boundary or the charset, just the content type,
           // so we drop what's after the semicolon.
           "Content-Type": response.headers.get("Content-Type").split(";")[0],
-          ETag: hubETag,
+          ETag: response.headers.get("ETag"),
         };
 
         await this.cache.put(
