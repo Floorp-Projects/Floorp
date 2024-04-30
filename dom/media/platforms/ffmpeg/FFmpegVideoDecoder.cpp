@@ -874,7 +874,7 @@ int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
   aFrame->extended_data = aFrame->data;
 #  if LIBAVCODEC_VERSION_MAJOR < 61
   aFrame->reordered_opaque = aCodecContext->reordered_opaque;
-#endif
+#  endif
   MOZ_ASSERT(aFrame->data[0] && aFrame->data[1] && aFrame->data[2]);
 
   // This will hold a reference to image, and the reference would be dropped
@@ -1046,9 +1046,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 
 #if LIBAVCODEC_VERSION_MAJOR >= 61
   packet = mLib->av_packet_alloc();
-  auto raii = MakeScopeExit([&]() {
-    mLib->av_packet_free(&packet);
-  });
+  auto raii = MakeScopeExit([&]() { mLib->av_packet_free(&packet); });
 #else
   AVPacket packet_mem;
   packet = &packet_mem;
@@ -1181,8 +1179,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     } else
 #  endif
     {
-      rv = CreateImage(mFrame->pkt_pos, GetFramePts(mFrame),
-                       Duration(mFrame), aResults);
+      rv = CreateImage(mFrame->pkt_pos, GetFramePts(mFrame), Duration(mFrame),
+                       aResults);
     }
     if (NS_FAILED(rv)) {
       return rv;
