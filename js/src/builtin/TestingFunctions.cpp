@@ -3782,14 +3782,10 @@ static bool NewDependentString(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (requiredHeap.isSome()) {
-    if ((*requiredHeap == gc::Heap::Tenured) != result->isTenured()) {
-      if (result->isTenured()) {
-        JS_ReportErrorASCII(cx, "nursery string created in tenured heap");
-        return false;
-      } else {
-        JS_ReportErrorASCII(cx, "tenured string created in nursery heap");
-        return false;
-      }
+    MOZ_ASSERT_IF(*requiredHeap == gc::Heap::Tenured, result->isTenured());
+    if ((*requiredHeap == gc::Heap::Default) && result->isTenured()) {
+      JS_ReportErrorASCII(cx, "nursery string created in tenured heap");
+      return false;
     }
   }
 
