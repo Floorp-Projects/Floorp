@@ -27,6 +27,10 @@ log = logging.getLogger("upload-symbols")
 log.setLevel(logging.INFO)
 
 DEFAULT_URL = "https://symbols.mozilla.org/upload/"
+TASKCLUSTER_PROXY_URL = os.environ.get("TASKCLUSTER_PROXY_URL", "http://taskcluster")
+TASKCLUSTER_ROOT_URL = os.environ.get(
+    "TASKCLUSTER_ROOT_URL", "https://firefox-ci-tc.services.mozilla.com"
+)
 MAX_RETRIES = 7
 MAX_ZIP_SIZE = 500000000  # 500 MB
 
@@ -43,7 +47,7 @@ def print_error(r):
 
 
 def get_taskcluster_secret(secret_name):
-    secrets_url = "http://taskcluster/secrets/v1/secret/{}".format(secret_name)
+    secrets_url = "{}/secrets/v1/secret/{}".format(TASKCLUSTER_PROXY_URL, secret_name)
     log.info(
         'Using symbol upload token from the secrets service: "{}"'.format(secrets_url)
     )
@@ -55,17 +59,35 @@ def get_taskcluster_secret(secret_name):
     return auth_token
 
 
+def get_taskcluster_artifact_urls(task_id):
+    artifacts_url = "{}/queue/v1/task/{}/artifacts".format(
+        TASKCLUSTER_PROXY_URL, task_id
+    )
+    res = requests.get(artifacts_url)
+    res.raise_for_status()
+    return [
+        "{}/api/queue/v1/task/{}/artifacts/{}".format(
+            TASKCLUSTER_ROOT_URL, task_id, artifact["name"]
+        )
+        for artifact in res.json()["artifacts"]
+        if artifact["name"].startswith("public/build/target.crashreporter-symbols")
+    ]
+
+
 def main():
     logging.basicConfig()
     parser = argparse.ArgumentParser(
         description="Upload symbols in ZIP using token from Taskcluster secrets service."
     )
     parser.add_argument(
-        "archive", help="Symbols archive file - URL or path to local file"
+        "archive",
+        help="Symbols archive file - URL or path to local file",
+        nargs="*",
     )
     parser.add_argument(
         "--ignore-missing", help="No error on missing files", action="store_true"
     )
+    parser.add_argument("--task-id", help="Taskcluster task id to use symbols from")
     args = parser.parse_args()
 
     def check_file_exists(url):
@@ -78,35 +100,45 @@ def main():
             log.info("Retrying...")
         return False
 
-    if args.archive.startswith("http"):
-        is_existing = check_file_exists(args.archive)
-    else:
-        is_existing = os.path.isfile(args.archive)
+    if args.task_id:
+        args.archive.extend(get_taskcluster_artifact_urls(args.task_id))
 
-    if not is_existing:
-        if args.ignore_missing:
-            log.info('Archive file "{0}" does not exist!'.format(args.archive))
-            return 0
+    for archive in args.archive:
+        error = False
+        if archive.startswith("http"):
+            is_existing = check_file_exists(archive)
         else:
-            log.error('Error: archive file "{0}" does not exist!'.format(args.archive))
+            is_existing = os.path.isfile(archive)
+
+        if not is_existing:
+            if args.ignore_missing:
+                log.info('Archive file "{0}" does not exist!'.format(args.archive))
+            else:
+                log.error(
+                    'Error: archive file "{0}" does not exist!'.format(args.archive)
+                )
+                error = True
+        if error:
             return 1
 
     try:
-        tmpdir = None
-        if args.archive.endswith(".tar.zst"):
-            tmpdir = tempfile.TemporaryDirectory()
-            zip_paths = convert_zst_archive(args.archive, tmpdir)
-        else:
-            zip_paths = [args.archive]
-
+        tmpdir = tempfile.TemporaryDirectory()
+        zip_paths = convert_zst_archives(args.archive, tmpdir)
         for zip_path in zip_paths:
             result = upload_symbols(zip_path)
             if result:
                 return result
         return 0
     finally:
-        if tmpdir:
-            tmpdir.cleanup()
+        tmpdir.cleanup()
+
+
+def convert_zst_archives(archives, tmpdir):
+    for archive in archives:
+        if archive.endswith(".tar.zst"):
+            yield from convert_zst_archive(archive, tmpdir)
+        else:
+            yield archive
 
 
 def convert_zst_archive(zst_archive, tmpdir):
