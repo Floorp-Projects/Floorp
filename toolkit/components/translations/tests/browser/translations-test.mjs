@@ -35,6 +35,19 @@ export function getSelectors() {
     getH1() {
       return content.document.querySelector("h1");
     },
+    getPdfSpan() {
+      return ContentTaskUtils.waitForCondition(
+        () =>
+          !!content.document.querySelector(
+            `.page[data-page-number='1'] .textLayer .endOfContent`
+          ),
+        "The text layer must be displayed"
+      ).then(() =>
+        content.document.querySelector(
+          ".page[data-page-number='1'] .textLayer span"
+        )
+      );
+    },
     getHeader() {
       return content.document.querySelector("header");
     },
