@@ -71,6 +71,7 @@ class ShareFragment : AppCompatDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
+        requireComponents.useCases.sessionUseCases.exitFullscreen.invoke()
         val binding = FragmentShareBinding.inflate(
             inflater,
             container,
