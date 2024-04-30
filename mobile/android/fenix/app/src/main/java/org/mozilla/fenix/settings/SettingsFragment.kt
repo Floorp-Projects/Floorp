@@ -47,6 +47,7 @@ import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.CookieBanners
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
+import org.mozilla.fenix.GleanMetrics.Translations
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
@@ -315,6 +316,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SettingsFragmentDirections.actionSettingsFragmentToLocaleSettingsFragment()
             }
 
+            resources.getString(R.string.pref_key_translation) -> {
+                Translations.action.record(Translations.ActionExtra("global_settings_from_preferences"))
+                SettingsFragmentDirections.actionSettingsFragmentToTranslationsSettingsFragment()
+            }
+
             /* Privacy and security preferences */
             resources.getString(R.string.pref_key_private_browsing) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToPrivateBrowsingFragment()
@@ -509,6 +515,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             findPreference<Preference>(
                 getPreferenceKey(R.string.pref_key_sync_debug),
             )?.isVisible = showSecretDebugMenuThisSession
+            findPreference<Preference>(
+                getPreferenceKey(R.string.pref_key_translation),
+            )?.isVisible = FxNimbus.features.translations.value().globalSettingsEnabled
             preferenceStartProfiler?.isVisible = showSecretDebugMenuThisSession &&
                 (requireContext().components.core.engine.profiler?.isProfilerActive() != null)
         }

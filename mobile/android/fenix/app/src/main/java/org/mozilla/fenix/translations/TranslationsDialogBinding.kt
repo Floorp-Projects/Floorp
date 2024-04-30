@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
-import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TranslationsBrowserState
@@ -29,7 +29,6 @@ import java.util.Locale
 class TranslationsDialogBinding(
     browserStore: BrowserStore,
     private val translationsDialogStore: TranslationsDialogStore,
-    private val sessionId: String,
     private val getTranslatedPageTitle: (localizedFrom: String?, localizedTo: String?) -> String,
 ) : AbstractBinding<BrowserState>(browserStore) {
 
@@ -42,7 +41,7 @@ class TranslationsDialogBinding(
             }
 
         // Session level flows
-        val sessionFlow = flow.mapNotNull { state -> state.findTab(sessionId) }
+        val sessionFlow = flow.mapNotNull { state -> state.selectedTab }
             .distinctUntilChangedBy {
                 it.translationsState
             }
