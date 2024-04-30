@@ -218,7 +218,9 @@ abstract class BaseBrowserFragment :
     private lateinit var startForResult: ActivityResultLauncher<Intent>
 
     private var _browserToolbarInteractor: BrowserToolbarInteractor? = null
-    protected val browserToolbarInteractor: BrowserToolbarInteractor
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    internal val browserToolbarInteractor: BrowserToolbarInteractor
         get() = _browserToolbarInteractor!!
 
     @VisibleForTesting
