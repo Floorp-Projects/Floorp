@@ -94,9 +94,6 @@ class UiCompositorControllerChild final
   void OpenForGPUProcess(Endpoint<PUiCompositorControllerChild>&& aEndpoint);
   void SendCachedValues();
 
-  void SetReplyTimeout();
-  bool ShouldContinueFromReplyTimeout() override;
-
   bool mIsOpen;
   uint64_t mProcessToken;
   Maybe<gfx::IntRect> mResize;

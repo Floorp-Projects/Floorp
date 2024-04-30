@@ -249,7 +249,7 @@ bool CompositorManagerChild::ShouldContinueFromReplyTimeout() {
   if (XRE_IsParentProcess()) {
     gfxCriticalNote << "Killing GPU process due to IPC reply timeout";
     MOZ_DIAGNOSTIC_ASSERT(GPUProcessManager::Get()->GetGPUChild());
-    GPUProcessManager::Get()->KillProcess(/* aGenerateMinidump */ true);
+    GPUProcessManager::Get()->KillProcess();
   }
   return false;
 }
