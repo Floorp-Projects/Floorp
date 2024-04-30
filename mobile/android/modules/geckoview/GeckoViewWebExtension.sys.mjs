@@ -623,6 +623,32 @@ class AddonManagerListener {
     // the GeckoView side when it is actually going to be available.
     this.onExtensionReady = this.onExtensionReady.bind(this);
     lazy.Management.on("ready", this.onExtensionReady);
+    lazy.Management.on("change-permissions", this.onOptionalPermissionsChanged);
+  }
+
+  async onOptionalPermissionsChanged(type, { extensionId }) {
+    // In xpcshell tests there wil be test extensions that trigger this event while the
+    // AddonManager has not been started at all, on the contrary on a regular browser
+    // instance the AddonManager is expected to be already fully started for an extension
+    // for the extension to be able to reach the "ready" state, and so we just silently
+    // early exit here if the AddonManager is not ready.
+    if (!lazy.AddonManager.isReady) {
+      return;
+    }
+
+    const addon = await lazy.AddonManager.getAddonByID(extensionId);
+    if (!addon) {
+      return;
+    }
+    const extension = await exportExtension(
+      addon,
+      addon.userPermissions,
+      /* aSourceURI */ null
+    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:WebExtension:OnOptionalPermissionsChanged",
+      extension,
+    });
   }
 
   async onExtensionReady(name, extInstance) {
