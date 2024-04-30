@@ -158,6 +158,46 @@ async function testHoveringInvalidTargetTokens(dbg) {
   is(raceResult, "TIMEOUT", "No popup was displayed over the inline preview");
 
   await resume(dbg);
+
+  info("Test hovering element not in a line");
+  await getDebuggerSplitConsole(dbg);
+  const { hud } = dbg.toolbox.getPanel("webconsole");
+  evaluateExpressionInConsole(
+    hud,
+    `
+      a = 1;
+      debugger;
+      b = 2;`
+  );
+  await waitForPaused(dbg);
+  await dbg.toolbox.toggleSplitConsole();
+
+  resetCursorPositionToTopLeftCorner(dbg);
+
+  const racePromiseLines = Promise.any([
+    waitForElement(dbg, "previewPopup"),
+    wait(500).then(() => "TIMEOUT_LINES"),
+  ]);
+  // We don't want to use hoverToken, as it synthesize the event at the center of the element,
+  // which wouldn't reproduce the original issue we want to check
+  EventUtils.synthesizeMouse(
+    findElementWithSelector(dbg, ".CodeMirror-lines"),
+    0,
+    0,
+    {
+      type: "mousemove",
+    },
+    dbg.win
+  );
+  is(
+    await racePromiseLines,
+    "TIMEOUT_LINES",
+    "No popup was displayed over the .CodeMirror-lines element"
+  );
+
+  // Resume and select back the main JS file that is used by the other assertions
+  await resume(dbg);
+  await selectSource(dbg, "preview.js");
 }
 
 async function assertNoPreviews(dbg, expression, line, column) {
