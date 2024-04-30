@@ -802,6 +802,14 @@ workers:
             implementation: scriptworker-pushapk
             os: scriptworker
             worker-type: '{trust-domain}-{level}-pushapk'
+        pushflatpak:
+            provisioner: scriptworker-k8s
+            implementation: push-flatpak
+            os: scriptworker
+            worker-type:
+                by-release-level:
+                    staging: '{trust-domain}-1-pushflatpak'
+                    production: '{trust-domain}-3-pushflatpak'
         tree:
             provisioner: scriptworker-k8s
             implementation: treescript
