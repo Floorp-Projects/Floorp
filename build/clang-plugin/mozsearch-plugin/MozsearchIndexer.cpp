@@ -138,6 +138,14 @@ struct RAIITracer {
 
 class IndexConsumer;
 
+bool isPure(FunctionDecl* D) {
+#if CLANG_VERSION_MAJOR >= 18
+  return D->isPureVirtual();
+#else
+  return D->isPure();
+#endif
+}
+
 // For each C++ file seen by the analysis (.cpp or .h), we track a
 // FileInfo. This object tracks whether the file is "interesting" (i.e., whether
 // it's in the source dir or the objdir). We also store the analysis output
@@ -1749,7 +1757,7 @@ public:
         D = D2->getTemplateInstantiationPattern();
       }
       // We treat pure virtual declarations as definitions.
-      Kind = (D2->isThisDeclarationADefinition() || D2->isPure()) ? "def" : "decl";
+      Kind = (D2->isThisDeclarationADefinition() || isPure(D2)) ? "def" : "decl";
       PrettyKind = "function";
       PeekRange = getFunctionPeekRange(D2);
 
@@ -1881,7 +1889,7 @@ public:
       }
     }
     if (FunctionDecl *D2 = dyn_cast<FunctionDecl>(D)) {
-      if ((D2->isThisDeclarationADefinition() || D2->isPure()) &&
+      if ((D2->isThisDeclarationADefinition() || isPure(D2)) &&
           // a clause at the top should have generalized and set wasTemplate so
           // it shouldn't be the case that isTemplateInstantiation() is true.
           !D2->isTemplateInstantiation() &&
