@@ -73,6 +73,34 @@ def getRustVersionFor(packageName) {
 }
 
 allprojects {
+    def shouldPrintBuildStatus =
+            System.getenv("MACH") && !System.getenv("NO_BUILDSTATUS_MESSAGES")
+
+    if (shouldPrintBuildStatus) {
+        // Adding new line before each line to make sure they're dumped as a separate line.
+        // Add profile marker to the start of the project evaluation
+        project.beforeEvaluate {
+            println "\nBUILDSTATUS START_gradle:evaluate-project ${project.name}"
+        }
+
+        // Add profile marker to the end of the project evaluation
+        project.afterEvaluate {
+            println "\nBUILDSTATUS END_gradle:evaluate-project ${project.name}"
+        }
+
+        tasks.configureEach { task ->
+            // Add profile marker to the start of the gradle task
+            task.doFirst {
+                println "\nBUILDSTATUS START_gradle:${project.name}-tasks ${task.name}"
+            }
+
+            // Add profile marker to the end of the gradle task
+            task.doLast {
+                println "\nBUILDSTATUS END_gradle:${project.name}-tasks ${task.name}"
+            }
+        }
+    }
+
     // Expose the per-object-directory configuration to all projects.
     ext {
         mozconfig = gradle.mozconfig
