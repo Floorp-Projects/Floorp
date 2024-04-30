@@ -1395,6 +1395,11 @@ class SelectTranslationsTestUtils {
    * @param {boolean} options.selectH1 - Selects the first H1 element of the page.
    * @param {boolean} options.openAtH1 - Opens the context menu at the first H1 element of the page.
    *
+   * The following options will work only in the PDF_TEST_PAGE_URL.
+   *
+   * @param {boolean} options.selectPdfSpan - Selects the first span of text on the first page of a pdf.
+   * @param {boolean} options.openAtPdfSpan - Opens the context menu at the first span of text on the first page of a pdf.
+   *
    * The following options will only work when testing SELECT_TEST_PAGE_URL.
    *
    * @param {boolean} options.selectFrenchSection - Selects the section of French text.
@@ -1421,6 +1426,7 @@ class SelectTranslationsTestUtils {
       expectMenuItemVisible,
       expectedTargetLanguage,
       selectH1,
+      selectPdfSpan,
       selectFrenchSection,
       selectEnglishSection,
       selectSpanishSection,
@@ -1428,6 +1434,7 @@ class SelectTranslationsTestUtils {
       selectEnglishSentence,
       selectSpanishSentence,
       openAtH1,
+      openAtPdfSpan,
       openAtFrenchSection,
       openAtEnglishSection,
       openAtSpanishSection,
@@ -1452,6 +1459,7 @@ class SelectTranslationsTestUtils {
       expectMenuItemVisible,
       expectedTargetLanguage,
       selectH1,
+      selectPdfSpan,
       selectFrenchSection,
       selectEnglishSection,
       selectSpanishSection,
@@ -1459,6 +1467,7 @@ class SelectTranslationsTestUtils {
       selectEnglishSentence,
       selectSpanishSentence,
       openAtH1,
+      openAtPdfSpan,
       openAtFrenchSection,
       openAtEnglishSection,
       openAtSpanishSection,
@@ -2198,10 +2207,18 @@ class SelectTranslationsTestUtils {
    * @param {Function} runInPage - A content-exposed function to run within the context of the page.
    * @param {object} options - Options for opening the context menu.
    *
+   * @param {boolean} options.expectMenuItemVisible - Whether the select-translations menu item should be present in the context menu.
+   * @param {boolean} options.expectedTargetLanguage - The expected target language to be shown in the context menu.
+   *
    * The following options will work on all test pages that have an <h1> element.
    *
    * @param {boolean} options.selectH1 - Selects the first H1 element of the page.
    * @param {boolean} options.openAtH1 - Opens the context menu at the first H1 element of the page.
+   *
+   * The following options will work only in the PDF_TEST_PAGE_URL.
+   *
+   * @param {boolean} options.selectPdfSpan - Selects the first span of text on the first page of a pdf.
+   * @param {boolean} options.openAtPdfSpan - Opens the context menu at the first span of text on the first page of a pdf.
    *
    * The following options will only work when testing SELECT_TEST_PAGE_URL.
    *
@@ -2235,8 +2252,8 @@ class SelectTranslationsTestUtils {
             const selectorFunction =
               TranslationsTest.getSelectors()[data.selectorFunctionName];
             if (typeof selectorFunction === "function") {
-              const paragraph = selectorFunction();
-              TranslationsTest.selectContentElement(paragraph);
+              const element = await selectorFunction();
+              TranslationsTest.selectContentElement(element);
             }
           },
           { selectorFunctionName }
@@ -2245,6 +2262,7 @@ class SelectTranslationsTestUtils {
     };
 
     await maybeSelectContentFrom("H1");
+    await maybeSelectContentFrom("PdfSpan");
     await maybeSelectContentFrom("FrenchSection");
     await maybeSelectContentFrom("EnglishSection");
     await maybeSelectContentFrom("SpanishSection");
@@ -2266,7 +2284,7 @@ class SelectTranslationsTestUtils {
                 const selectorFunction =
                   TranslationsTest.getSelectors()[data.selectorFunctionName];
                 if (typeof selectorFunction === "function") {
-                  const element = selectorFunction();
+                  const element = await selectorFunction();
                   await TranslationsTest.rightClickContentElement(element);
                 }
               },
@@ -2278,6 +2296,7 @@ class SelectTranslationsTestUtils {
     };
 
     await maybeOpenContextMenuAt("H1");
+    await maybeOpenContextMenuAt("PdfSpan");
     await maybeOpenContextMenuAt("FrenchSection");
     await maybeOpenContextMenuAt("EnglishSection");
     await maybeOpenContextMenuAt("SpanishSection");

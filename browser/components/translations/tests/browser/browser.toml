@@ -127,6 +127,8 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 
 ["browser_translations_select_panel_init_failure.js"]
 
+["browser_translations_select_panel_pdf.js"]
+
 ["browser_translations_select_panel_reader_mode.js"]
 
 ["browser_translations_select_panel_retranslate_on_change_language_directly.js"]
