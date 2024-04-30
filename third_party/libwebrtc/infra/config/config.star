@@ -336,10 +336,27 @@ luci.cq_tryjob_verifier(
     cq_group = "cq_infra",
 )
 
+# Internal-only tryjob always included into CQ:
 luci.cq_tryjob_verifier(
     builder = "webrtc-internal:g3.webrtc-internal.try/internal_compile_lite",
     owner_whitelist = ["project-webrtc-internal-tryjob-access"],
     cq_group = "cq",
+)
+
+# Includable via `Cq-Include-Trybots: webrtc-internal/g3.webrtc-internal.try:internal_compile`:
+luci.cq_tryjob_verifier(
+    builder = "webrtc-internal:g3.webrtc-internal.try/internal_compile",
+    owner_whitelist = ["project-webrtc-internal-tryjob-access"],
+    cq_group = "cq",
+    includable_only = True,
+)
+
+# Includable via `Cq-Include-Trybots: webrtc-internal/g3.webrtc-internal.try:internal_tests`:
+luci.cq_tryjob_verifier(
+    builder = "webrtc-internal:g3.webrtc-internal.try/internal_tests",
+    owner_whitelist = ["project-webrtc-internal-tryjob-access"],
+    cq_group = "cq",
+    includable_only = True,
 )
 
 # Notifier definitions:
