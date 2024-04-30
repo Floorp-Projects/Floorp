@@ -11,14 +11,14 @@ import mozilla.components.service.nimbus.messaging.Message
 import mozilla.components.service.pocket.PocketStory
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.home.bookmarks.Bookmark
+import org.mozilla.fenix.home.bookmarks.controller.BookmarksController
+import org.mozilla.fenix.home.bookmarks.interactor.BookmarksInteractor
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketStoriesController
 import org.mozilla.fenix.home.pocket.PocketStoriesInteractor
 import org.mozilla.fenix.home.privatebrowsing.controller.PrivateBrowsingController
 import org.mozilla.fenix.home.privatebrowsing.interactor.PrivateBrowsingInteractor
-import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
-import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
-import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recentsyncedtabs.controller.RecentSyncedTabController
 import org.mozilla.fenix.home.recentsyncedtabs.interactor.RecentSyncedTabInteractor
@@ -229,7 +229,7 @@ class SessionControlInteractor(
     private val controller: SessionControlController,
     private val recentTabController: RecentTabController,
     private val recentSyncedTabController: RecentSyncedTabController,
-    private val recentBookmarksController: RecentBookmarksController,
+    private val bookmarksController: BookmarksController,
     private val recentVisitsController: RecentVisitsController,
     private val pocketStoriesController: PocketStoriesController,
     private val privateBrowsingController: PrivateBrowsingController,
@@ -242,7 +242,7 @@ class SessionControlInteractor(
     MessageCardInteractor,
     RecentTabInteractor,
     RecentSyncedTabInteractor,
-    RecentBookmarksInteractor,
+    BookmarksInteractor,
     RecentVisitsInteractor,
     CustomizeHomeIteractor,
     PocketStoriesInteractor,
@@ -366,16 +366,16 @@ class SessionControlInteractor(
         recentSyncedTabController.handleRecentSyncedTabRemoved(tab)
     }
 
-    override fun onRecentBookmarkClicked(bookmark: RecentBookmark) {
-        recentBookmarksController.handleBookmarkClicked(bookmark)
+    override fun onBookmarkClicked(bookmark: Bookmark) {
+        bookmarksController.handleBookmarkClicked(bookmark)
     }
 
     override fun onShowAllBookmarksClicked() {
-        recentBookmarksController.handleShowAllBookmarksClicked()
+        bookmarksController.handleShowAllBookmarksClicked()
     }
 
-    override fun onRecentBookmarkRemoved(bookmark: RecentBookmark) {
-        recentBookmarksController.handleBookmarkRemoved(bookmark)
+    override fun onBookmarkRemoved(bookmark: Bookmark) {
+        bookmarksController.handleBookmarkRemoved(bookmark)
     }
 
     override fun onHistoryShowAllClicked() {

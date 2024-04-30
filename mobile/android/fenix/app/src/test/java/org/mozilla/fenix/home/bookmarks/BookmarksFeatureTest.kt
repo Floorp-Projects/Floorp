@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.home.recentbookmarks
+package org.mozilla.fenix.home.bookmarks
 
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -24,12 +24,12 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class RecentBookmarksFeatureTest {
+class BookmarksFeatureTest {
 
     private val middleware = CaptureActionsMiddleware<AppState, AppAction>()
     private val appStore = AppStore(middlewares = listOf(middleware))
     private val bookmarksUseCases: BookmarksUseCase = mockk(relaxed = true)
-    private val bookmark = RecentBookmark(
+    private val bookmark = Bookmark(
         title = null,
         url = "https://www.example.com",
         previewImageUrl = null,
@@ -46,16 +46,16 @@ class RecentBookmarksFeatureTest {
     }
 
     @Test
-    fun `GIVEN no recent bookmarks WHEN feature starts THEN fetch bookmarks and notify store`() =
+    fun `GIVEN no bookmarks WHEN feature starts THEN fetch bookmarks and notify store`() =
         runTestOnMain {
-            val feature = RecentBookmarksFeature(
+            val feature = BookmarksFeature(
                 appStore,
                 bookmarksUseCases,
                 scope,
                 testDispatcher,
             )
 
-            assertEquals(emptyList<BookmarkNode>(), appStore.state.recentBookmarks)
+            assertEquals(emptyList<BookmarkNode>(), appStore.state.bookmarks)
 
             feature.start()
 
@@ -66,8 +66,8 @@ class RecentBookmarksFeatureTest {
                 bookmarksUseCases.retrieveRecentBookmarks()
             }
 
-            middleware.assertLastAction(AppAction.RecentBookmarksChange::class) {
-                assertEquals(listOf(bookmark), it.recentBookmarks)
+            middleware.assertLastAction(AppAction.BookmarksChange::class) {
+                assertEquals(listOf(bookmark), it.bookmarks)
             }
         }
 }

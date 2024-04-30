@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.home.recentbookmarks
+package org.mozilla.fenix.home.bookmarks
 
 import androidx.navigation.NavController
 import io.mockk.Runs
@@ -33,10 +33,10 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.home.recentbookmarks.controller.DefaultRecentBookmarksController
+import org.mozilla.fenix.home.bookmarks.controller.DefaultBookmarksController
 
 @RunWith(FenixRobolectricTestRunner::class)
-class DefaultRecentBookmarksControllerTest {
+class DefaultBookmarksControllerTest {
 
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
@@ -49,7 +49,7 @@ class DefaultRecentBookmarksControllerTest {
     private val selectTabUseCase: TabsUseCases = mockk(relaxed = true)
     private val browserStore: BrowserStore = mockk(relaxed = true)
 
-    private lateinit var controller: DefaultRecentBookmarksController
+    private lateinit var controller: DefaultBookmarksController
 
     @Before
     fun setup() {
@@ -57,7 +57,7 @@ class DefaultRecentBookmarksControllerTest {
         every { browserStore.state.tabs }.returns(emptyList())
 
         controller = spyk(
-            DefaultRecentBookmarksController(
+            DefaultBookmarksController(
                 activity = activity,
                 navController = navController,
                 appStore = mockk(),
@@ -68,10 +68,10 @@ class DefaultRecentBookmarksControllerTest {
     }
 
     @Test
-    fun `GIVEN no tabs WHEN a recently saved bookmark is clicked THEN the selected bookmark is opened in a new tab`() {
+    fun `GIVEN no tabs WHEN a bookmark is clicked THEN the selected bookmark is opened in a new tab`() {
         assertNull(RecentBookmarks.bookmarkClicked.testGetValue())
 
-        val bookmark = RecentBookmark(title = null, url = "https://www.example.com")
+        val bookmark = Bookmark(title = null, url = "https://www.example.com")
         controller.handleBookmarkClicked(bookmark)
 
         verify {
@@ -86,13 +86,13 @@ class DefaultRecentBookmarksControllerTest {
     }
 
     @Test
-    fun `GIVEN no matching tabs WHEN a recently saved bookmark is clicked THEN the selected bookmark is opened in a new tab`() {
+    fun `GIVEN no matching tabs WHEN a bookmark is clicked THEN the selected bookmark is opened in a new tab`() {
         assertNull(RecentBookmarks.bookmarkClicked.testGetValue())
 
         val testTab = createTab("https://www.not_example.com")
         every { browserStore.state.tabs }.returns(listOf(testTab))
 
-        val bookmark = RecentBookmark(title = null, url = "https://www.example.com")
+        val bookmark = Bookmark(title = null, url = "https://www.example.com")
         controller.handleBookmarkClicked(bookmark)
 
         verify {
@@ -107,14 +107,14 @@ class DefaultRecentBookmarksControllerTest {
     }
 
     @Test
-    fun `GIVEN matching tab WHEN a recently saved bookmark is clicked THEN the existing tab is opened`() {
+    fun `GIVEN matching tab WHEN a bookmark is clicked THEN the existing tab is opened`() {
         assertNull(RecentBookmarks.bookmarkClicked.testGetValue())
 
         val testUrl = "https://www.example.com"
         val testTab = createTab(testUrl)
         every { browserStore.state.tabs }.returns(listOf(testTab))
 
-        val bookmark = RecentBookmark(title = null, url = testUrl)
+        val bookmark = Bookmark(title = null, url = testUrl)
         controller.handleBookmarkClicked(bookmark)
 
         verify {
@@ -125,7 +125,7 @@ class DefaultRecentBookmarksControllerTest {
     }
 
     @Test
-    fun `WHEN show all recently saved bookmark is clicked THEN the bookmarks root is opened`() = runTestOnMain {
+    fun `WHEN show all bookmarks is clicked THEN the bookmarks root is opened`() = runTestOnMain {
         assertNull(RecentBookmarks.showAllBookmarks.testGetValue())
 
         controller.handleShowAllBookmarksClicked()
@@ -138,7 +138,7 @@ class DefaultRecentBookmarksControllerTest {
     }
 
     @Test
-    fun `WHEN show all is clicked from behind search dialog THEN open bookmarks root`() {
+    fun `WHEN show all bookmarks is clicked from behind search dialog THEN open bookmarks root`() {
         assertNull(RecentBookmarks.showAllBookmarks.testGetValue())
 
         controller.handleShowAllBookmarksClicked()

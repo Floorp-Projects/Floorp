@@ -43,7 +43,7 @@ internal object AppStoreReducer {
             collections = action.collections,
             mode = action.mode,
             topSites = action.topSites,
-            recentBookmarks = action.recentBookmarks,
+            bookmarks = action.bookmarks,
             recentTabs = action.recentTabs,
             recentHistory = action.recentHistory,
             recentSyncedTabState = action.recentSyncedTabState,
@@ -81,9 +81,9 @@ internal object AppStoreReducer {
                 recentSyncedTabState = action.state,
             )
         }
-        is AppAction.RecentBookmarksChange -> state.copy(recentBookmarks = action.recentBookmarks)
-        is AppAction.RemoveRecentBookmark -> {
-            state.copy(recentBookmarks = state.recentBookmarks.filterNot { it.url == action.recentBookmark.url })
+        is AppAction.BookmarksChange -> state.copy(bookmarks = action.bookmarks)
+        is AppAction.RemoveBookmark -> {
+            state.copy(bookmarks = state.bookmarks.filterNot { it.url == action.bookmark.url })
         }
         is AppAction.RecentHistoryChange -> state.copy(
             recentHistory = action.recentHistory,

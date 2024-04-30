@@ -121,11 +121,11 @@ import org.mozilla.fenix.ext.scaleToBottomOfView
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.tabClosedUndoMessage
 import org.mozilla.fenix.ext.updateNavBarForConfigurationChange
+import org.mozilla.fenix.home.bookmarks.BookmarksFeature
+import org.mozilla.fenix.home.bookmarks.controller.DefaultBookmarksController
 import org.mozilla.fenix.home.pocket.DefaultPocketStoriesController
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.privatebrowsing.controller.DefaultPrivateBrowsingController
-import org.mozilla.fenix.home.recentbookmarks.RecentBookmarksFeature
-import org.mozilla.fenix.home.recentbookmarks.controller.DefaultRecentBookmarksController
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabFeature
 import org.mozilla.fenix.home.recentsyncedtabs.controller.DefaultRecentSyncedTabController
 import org.mozilla.fenix.home.recenttabs.RecentTabsListFeature
@@ -242,7 +242,7 @@ class HomeFragment : Fragment() {
     private val messagingFeature = ViewBoundFeatureWrapper<MessagingFeature>()
     private val recentTabsListFeature = ViewBoundFeatureWrapper<RecentTabsListFeature>()
     private val recentSyncedTabFeature = ViewBoundFeatureWrapper<RecentSyncedTabFeature>()
-    private val recentBookmarksFeature = ViewBoundFeatureWrapper<RecentBookmarksFeature>()
+    private val bookmarksFeature = ViewBoundFeatureWrapper<BookmarksFeature>()
     private val historyMetadataFeature = ViewBoundFeatureWrapper<RecentVisitsFeature>()
     private val searchSelectorBinding = ViewBoundFeatureWrapper<SearchSelectorBinding>()
     private val searchSelectorMenuBinding = ViewBoundFeatureWrapper<SearchSelectorMenuBinding>()
@@ -359,9 +359,9 @@ class HomeFragment : Fragment() {
             )
         }
 
-        if (requireContext().settings().showRecentBookmarksFeature) {
-            recentBookmarksFeature.set(
-                feature = RecentBookmarksFeature(
+        if (requireContext().settings().showBookmarksHomeFeature) {
+            bookmarksFeature.set(
+                feature = BookmarksFeature(
                     appStore = components.appStore,
                     bookmarksUseCase = run {
                         requireContext().components.useCases.bookmarksUseCases
@@ -421,7 +421,7 @@ class HomeFragment : Fragment() {
                 accessPoint = TabsTrayAccessPoint.HomeRecentSyncedTab,
                 appStore = components.appStore,
             ),
-            recentBookmarksController = DefaultRecentBookmarksController(
+            bookmarksController = DefaultBookmarksController(
                 activity = activity,
                 navController = findNavController(),
                 appStore = components.appStore,

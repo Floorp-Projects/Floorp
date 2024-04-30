@@ -1589,7 +1589,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the recent saved bookmarks functionality should be visible.
      */
-    var showRecentBookmarksFeature by lazyFeatureFlagPreference(
+    var showBookmarksHomeFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_recent_bookmarks),
         default = { homescreenSections[HomeScreenSection.RECENTLY_SAVED] == true },
         featureFlag = true,

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.home.recentbookmarks.view
+package org.mozilla.fenix.home.bookmarks.view
 
 import android.view.View
 import androidx.compose.foundation.layout.Column
@@ -17,19 +17,19 @@ import androidx.lifecycle.LifecycleOwner
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.home.HomeSectionHeader
-import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
+import org.mozilla.fenix.home.bookmarks.interactor.BookmarksInteractor
 
 /**
- * View holder for the recent bookmarks header and "Show all" button.
+ * View holder for the bookmarks header and "Show all" button.
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
- * @param interactor [RecentBookmarksInteractor] which will have delegated to all user interactions.
+ * @param interactor [BookmarksInteractor] which will have delegated to all user interactions.
  */
-class RecentBookmarksHeaderViewHolder(
+class BookmarksHeaderViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    private val interactor: RecentBookmarksInteractor,
+    private val interactor: BookmarksInteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {

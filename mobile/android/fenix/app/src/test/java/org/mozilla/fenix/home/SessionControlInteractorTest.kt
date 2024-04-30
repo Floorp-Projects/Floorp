@@ -15,11 +15,11 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.home.bookmarks.Bookmark
+import org.mozilla.fenix.home.bookmarks.controller.BookmarksController
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketStoriesController
 import org.mozilla.fenix.home.privatebrowsing.controller.PrivateBrowsingController
-import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
-import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recentsyncedtabs.controller.RecentSyncedTabController
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
@@ -35,7 +35,7 @@ class SessionControlInteractorTest {
     private val controller: DefaultSessionControlController = mockk(relaxed = true)
     private val recentTabController: RecentTabController = mockk(relaxed = true)
     private val recentSyncedTabController: RecentSyncedTabController = mockk(relaxed = true)
-    private val recentBookmarksController: RecentBookmarksController = mockk(relaxed = true)
+    private val bookmarksController: BookmarksController = mockk(relaxed = true)
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
     private val privateBrowsingController: PrivateBrowsingController = mockk(relaxed = true)
     private val searchSelectorController: SearchSelectorController = mockk(relaxed = true)
@@ -52,7 +52,7 @@ class SessionControlInteractorTest {
             controller,
             recentTabController,
             recentSyncedTabController,
-            recentBookmarksController,
+            bookmarksController,
             recentVisitsController,
             pocketStoriesController,
             privateBrowsingController,
@@ -195,11 +195,11 @@ class SessionControlInteractorTest {
     }
 
     @Test
-    fun `WHEN a recently saved bookmark is clicked THEN the selected bookmark is handled`() {
-        val bookmark = RecentBookmark()
+    fun `WHEN a bookmark is clicked THEN the selected bookmark is handled`() {
+        val bookmark = Bookmark()
 
-        interactor.onRecentBookmarkClicked(bookmark)
-        verify { recentBookmarksController.handleBookmarkClicked(bookmark) }
+        interactor.onBookmarkClicked(bookmark)
+        verify { bookmarksController.handleBookmarkClicked(bookmark) }
     }
 
     @Test
@@ -209,9 +209,9 @@ class SessionControlInteractorTest {
     }
 
     @Test
-    fun `WHEN Show All recently saved bookmarks button is clicked THEN the click is handled`() {
+    fun `WHEN Show All bookmarks button is clicked THEN the click is handled`() {
         interactor.onShowAllBookmarksClicked()
-        verify { recentBookmarksController.handleShowAllBookmarksClicked() }
+        verify { bookmarksController.handleShowAllBookmarksClicked() }
     }
 
     @Test
@@ -300,7 +300,7 @@ class SessionControlInteractorTest {
     @Test
     fun reportSessionMetrics() {
         val appState: AppState = mockk(relaxed = true)
-        every { appState.recentBookmarks } returns emptyList()
+        every { appState.bookmarks } returns emptyList()
         interactor.reportSessionMetrics(appState)
         verify { controller.handleReportSessionMetrics(appState) }
     }

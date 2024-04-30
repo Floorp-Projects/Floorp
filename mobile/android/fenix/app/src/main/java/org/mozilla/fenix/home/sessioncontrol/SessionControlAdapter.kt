@@ -18,13 +18,13 @@ import mozilla.components.service.nimbus.messaging.Message
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.home.BottomSpacerViewHolder
 import org.mozilla.fenix.home.TopPlaceholderViewHolder
+import org.mozilla.fenix.home.bookmarks.view.BookmarksHeaderViewHolder
+import org.mozilla.fenix.home.bookmarks.view.BookmarksViewHolder
 import org.mozilla.fenix.home.collections.CollectionViewHolder
 import org.mozilla.fenix.home.collections.TabInCollectionViewHolder
 import org.mozilla.fenix.home.pocket.PocketCategoriesViewHolder
 import org.mozilla.fenix.home.pocket.PocketRecommendationsHeaderViewHolder
 import org.mozilla.fenix.home.pocket.PocketStoriesViewHolder
-import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksHeaderViewHolder
-import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksViewHolder
 import org.mozilla.fenix.home.recentsyncedtabs.view.RecentSyncedTabViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabsHeaderViewHolder
@@ -155,8 +155,15 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     object RecentVisitsHeader : AdapterItem(RecentVisitsHeaderViewHolder.LAYOUT_ID)
     object RecentVisitsItems : AdapterItem(RecentlyVisitedViewHolder.LAYOUT_ID)
 
-    object RecentBookmarksHeader : AdapterItem(RecentBookmarksHeaderViewHolder.LAYOUT_ID)
-    object RecentBookmarks : AdapterItem(RecentBookmarksViewHolder.LAYOUT_ID)
+    /**
+     * The header for the Bookmarks section.
+     */
+    object BookmarksHeader : AdapterItem(BookmarksHeaderViewHolder.LAYOUT_ID)
+
+    /**
+     * The Bookmarks section.
+     */
+    object Bookmarks : AdapterItem(BookmarksViewHolder.LAYOUT_ID)
 
     object PocketStoriesItem : AdapterItem(PocketStoriesViewHolder.LAYOUT_ID)
     object PocketCategoriesItem : AdapterItem(PocketCategoriesViewHolder.LAYOUT_ID)
@@ -230,7 +237,7 @@ class SessionControlAdapter(
                 viewLifecycleOwner = viewLifecycleOwner,
                 interactor = interactor,
             )
-            RecentBookmarksViewHolder.LAYOUT_ID -> return RecentBookmarksViewHolder(
+            BookmarksViewHolder.LAYOUT_ID -> return BookmarksViewHolder(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner = viewLifecycleOwner,
                 interactor = interactor,
@@ -255,7 +262,7 @@ class SessionControlAdapter(
                 viewLifecycleOwner = viewLifecycleOwner,
                 interactor = interactor,
             )
-            RecentBookmarksHeaderViewHolder.LAYOUT_ID -> return RecentBookmarksHeaderViewHolder(
+            BookmarksHeaderViewHolder.LAYOUT_ID -> return BookmarksHeaderViewHolder(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner = viewLifecycleOwner,
                 interactor = interactor,
@@ -314,8 +321,8 @@ class SessionControlAdapter(
             is CustomizeHomeButtonViewHolder,
             is RecentlyVisitedViewHolder,
             is RecentVisitsHeaderViewHolder,
-            is RecentBookmarksViewHolder,
-            is RecentBookmarksHeaderViewHolder,
+            is BookmarksViewHolder,
+            is BookmarksHeaderViewHolder,
             is RecentTabViewHolder,
             is RecentSyncedTabViewHolder,
             is RecentTabsHeaderViewHolder,
@@ -394,7 +401,7 @@ class SessionControlAdapter(
             }
             is TopSitesViewHolder,
             is RecentlyVisitedViewHolder,
-            is RecentBookmarksViewHolder,
+            is BookmarksViewHolder,
             is RecentTabViewHolder,
             is RecentSyncedTabViewHolder,
             is PocketStoriesViewHolder,

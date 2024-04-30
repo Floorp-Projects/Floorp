@@ -62,7 +62,7 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.bookmarks.Bookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.messaging.MessageController
@@ -142,7 +142,7 @@ class DefaultSessionControlControllerTest {
             topSites = emptyList(),
             showCollectionPlaceholder = true,
             recentTabs = emptyList(),
-            recentBookmarks = emptyList(),
+            bookmarks = emptyList(),
         )
 
         every { navController.currentDestination } returns mockk {
@@ -1186,8 +1186,8 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    fun `WHEN handleReportSessionMetrics is called AND there are zero recent bookmarks THEN report Event#RecentBookmarkCount(0)`() {
-        every { appState.recentBookmarks } returns emptyList()
+    fun `WHEN handleReportSessionMetrics is called AND there are zero bookmarks THEN report Event#BookmarkCount(0)`() {
+        every { appState.bookmarks } returns emptyList()
         every { appState.recentTabs } returns emptyList()
         assertNull(RecentBookmarks.recentBookmarksCount.testGetValue())
 
@@ -1198,9 +1198,9 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    fun `WHEN handleReportSessionMetrics is called AND there is at least one recent bookmark THEN report Event#RecentBookmarkCount(1)`() {
-        val recentBookmark: RecentBookmark = mockk(relaxed = true)
-        every { appState.recentBookmarks } returns listOf(recentBookmark)
+    fun `WHEN handleReportSessionMetrics is called AND there is at least one bookmark THEN report Event#BookmarkCount(1)`() {
+        val bookmark: Bookmark = mockk(relaxed = true)
+        every { appState.bookmarks } returns listOf(bookmark)
         every { appState.recentTabs } returns emptyList()
         assertNull(RecentBookmarks.recentBookmarksCount.testGetValue())
 

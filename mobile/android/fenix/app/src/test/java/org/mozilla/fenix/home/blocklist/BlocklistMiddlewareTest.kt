@@ -19,7 +19,7 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.bookmarks.Bookmark
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
@@ -32,7 +32,7 @@ class BlocklistMiddlewareTest {
 
     @Test
     fun `GIVEN empty blocklist WHEN action intercepted THEN unchanged by middleware`() {
-        val updatedBookmark = RecentBookmark(url = "https://www.mozilla.org/")
+        val updatedBookmark = Bookmark(url = "https://www.mozilla.org/")
 
         every { mockSettings.homescreenBlocklist } returns setOf()
         val middleware = BlocklistMiddleware(blocklistHandler)
@@ -48,18 +48,18 @@ class BlocklistMiddlewareTest {
                 collections = appStore.state.collections,
                 showCollectionPlaceholder = appStore.state.showCollectionPlaceholder,
                 recentTabs = appStore.state.recentTabs,
-                recentBookmarks = listOf(updatedBookmark),
+                bookmarks = listOf(updatedBookmark),
                 recentHistory = appStore.state.recentHistory,
                 recentSyncedTabState = appStore.state.recentSyncedTabState,
             ),
         ).joinBlocking()
 
-        assertEquals(updatedBookmark, appStore.state.recentBookmarks[0])
+        assertEquals(updatedBookmark, appStore.state.bookmarks[0])
     }
 
     @Test
     fun `GIVEN non-empty blocklist WHEN action intercepted with no matching elements THEN unchanged by middleware`() {
-        val updatedBookmark = RecentBookmark(url = "https://www.mozilla.org/")
+        val updatedBookmark = Bookmark(url = "https://www.mozilla.org/")
 
         every { mockSettings.homescreenBlocklist } returns setOf("https://www.github.org/".stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
@@ -75,18 +75,18 @@ class BlocklistMiddlewareTest {
                 collections = appStore.state.collections,
                 showCollectionPlaceholder = appStore.state.showCollectionPlaceholder,
                 recentTabs = appStore.state.recentTabs,
-                recentBookmarks = listOf(updatedBookmark),
+                bookmarks = listOf(updatedBookmark),
                 recentHistory = appStore.state.recentHistory,
                 recentSyncedTabState = appStore.state.recentSyncedTabState,
             ),
         ).joinBlocking()
 
-        assertEquals(updatedBookmark, appStore.state.recentBookmarks[0])
+        assertEquals(updatedBookmark, appStore.state.bookmarks[0])
     }
 
     @Test
     fun `GIVEN non-empty blocklist with specific pages WHEN action intercepted with matching host THEN unchanged by middleware`() {
-        val updatedBookmark = RecentBookmark(url = "https://github.com/")
+        val updatedBookmark = Bookmark(url = "https://github.com/")
 
         every { mockSettings.homescreenBlocklist } returns setOf("https://github.com/mozilla-mobile/fenix".stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
@@ -102,18 +102,18 @@ class BlocklistMiddlewareTest {
                 collections = appStore.state.collections,
                 showCollectionPlaceholder = appStore.state.showCollectionPlaceholder,
                 recentTabs = appStore.state.recentTabs,
-                recentBookmarks = listOf(updatedBookmark),
+                bookmarks = listOf(updatedBookmark),
                 recentHistory = appStore.state.recentHistory,
                 recentSyncedTabState = appStore.state.recentSyncedTabState,
             ),
         ).joinBlocking()
 
-        assertEquals(updatedBookmark, appStore.state.recentBookmarks[0])
+        assertEquals(updatedBookmark, appStore.state.bookmarks[0])
     }
 
     @Test
     fun `GIVEN non-empty blocklist WHEN action intercepted with matching elements THEN filtered by middleware`() {
-        val updatedBookmark = RecentBookmark(url = "https://www.mozilla.org/")
+        val updatedBookmark = Bookmark(url = "https://www.mozilla.org/")
 
         every { mockSettings.homescreenBlocklist } returns setOf("https://www.mozilla.org/".stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
@@ -129,19 +129,19 @@ class BlocklistMiddlewareTest {
                 collections = appStore.state.collections,
                 showCollectionPlaceholder = appStore.state.showCollectionPlaceholder,
                 recentTabs = appStore.state.recentTabs,
-                recentBookmarks = listOf(updatedBookmark),
+                bookmarks = listOf(updatedBookmark),
                 recentHistory = appStore.state.recentHistory,
                 recentSyncedTabState = appStore.state.recentSyncedTabState,
             ),
         ).joinBlocking()
 
-        assertTrue(appStore.state.recentBookmarks.isEmpty())
+        assertTrue(appStore.state.bookmarks.isEmpty())
     }
 
     @Test
     fun `GIVEN non-empty blocklist WHEN action intercepted with matching elements THEN all relevant sections filtered by middleware`() {
         val blockedUrl = "https://www.mozilla.org/"
-        val updatedBookmarks = listOf(RecentBookmark(url = blockedUrl))
+        val updatedBookmarks = listOf(Bookmark(url = blockedUrl))
         val updatedRecentTabs = listOf(RecentTab.Tab(createTab(url = blockedUrl)))
 
         every { mockSettings.homescreenBlocklist } returns setOf(blockedUrl.stripAndHash())
@@ -158,13 +158,13 @@ class BlocklistMiddlewareTest {
                 collections = appStore.state.collections,
                 showCollectionPlaceholder = appStore.state.showCollectionPlaceholder,
                 recentTabs = updatedRecentTabs,
-                recentBookmarks = updatedBookmarks,
+                bookmarks = updatedBookmarks,
                 recentHistory = appStore.state.recentHistory,
                 recentSyncedTabState = appStore.state.recentSyncedTabState,
             ),
         ).joinBlocking()
 
-        assertTrue(appStore.state.recentBookmarks.isEmpty())
+        assertTrue(appStore.state.bookmarks.isEmpty())
         assertTrue(appStore.state.recentTabs.isEmpty())
     }
 
@@ -172,9 +172,9 @@ class BlocklistMiddlewareTest {
     fun `GIVEN non-empty blocklist WHEN action intercepted with matching elements THEN only matching urls removed`() {
         val blockedUrl = "https://www.mozilla.org/"
         val unblockedUrl = "https://www.github.org/"
-        val unblockedBookmark = RecentBookmark(unblockedUrl)
+        val unblockedBookmark = Bookmark(unblockedUrl)
         val updatedBookmarks = listOf(
-            RecentBookmark(url = blockedUrl),
+            Bookmark(url = blockedUrl),
             unblockedBookmark,
         )
         val unblockedRecentTab = RecentTab.Tab(createTab(url = unblockedUrl))
@@ -196,13 +196,13 @@ class BlocklistMiddlewareTest {
                 collections = appStore.state.collections,
                 showCollectionPlaceholder = appStore.state.showCollectionPlaceholder,
                 recentTabs = updatedRecentTabs,
-                recentBookmarks = updatedBookmarks,
+                bookmarks = updatedBookmarks,
                 recentHistory = appStore.state.recentHistory,
                 recentSyncedTabState = appStore.state.recentSyncedTabState,
             ),
         ).joinBlocking()
 
-        assertEquals(unblockedBookmark, appStore.state.recentBookmarks[0])
+        assertEquals(unblockedBookmark, appStore.state.bookmarks[0])
         assertEquals(unblockedRecentTab, appStore.state.recentTabs[0])
     }
 
@@ -210,30 +210,30 @@ class BlocklistMiddlewareTest {
     fun `WHEN remove action intercepted THEN hashed url added to blocklist and Change action dispatched`() {
         val captureMiddleware = CaptureActionsMiddleware<AppState, AppAction>()
         val removedUrl = "https://www.mozilla.org/"
-        val removedBookmark = RecentBookmark(url = removedUrl)
+        val removedBookmark = Bookmark(url = removedUrl)
 
         val updateSlot = slot<Set<String>>()
         every { mockSettings.homescreenBlocklist } returns setOf() andThen setOf(removedUrl.stripAndHash())
         every { mockSettings.homescreenBlocklist = capture(updateSlot) } returns Unit
         val middleware = BlocklistMiddleware(blocklistHandler)
         val appStore = AppStore(
-            AppState(recentBookmarks = listOf(removedBookmark)),
+            AppState(bookmarks = listOf(removedBookmark)),
             middlewares = listOf(middleware, captureMiddleware),
         )
 
         appStore.dispatch(
-            AppAction.RemoveRecentBookmark(removedBookmark),
+            AppAction.RemoveBookmark(removedBookmark),
         ).joinBlocking()
 
         val capturedAction = captureMiddleware.findFirstAction(AppAction.Change::class)
-        assertEquals(emptyList<RecentBookmark>(), capturedAction.recentBookmarks)
+        assertEquals(emptyList<Bookmark>(), capturedAction.bookmarks)
         assertEquals(setOf(removedUrl.stripAndHash()), updateSlot.captured)
     }
 
     @Test
     fun `WHEN urls are compared to blocklist THEN protocols are stripped`() {
         val host = "www.mozilla.org/"
-        val updatedBookmark = RecentBookmark(url = "http://$host")
+        val updatedBookmark = Bookmark(url = "http://$host")
 
         every { mockSettings.homescreenBlocklist } returns setOf("https://$host".stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
@@ -249,19 +249,19 @@ class BlocklistMiddlewareTest {
                 collections = appStore.state.collections,
                 showCollectionPlaceholder = appStore.state.showCollectionPlaceholder,
                 recentTabs = appStore.state.recentTabs,
-                recentBookmarks = listOf(updatedBookmark),
+                bookmarks = listOf(updatedBookmark),
                 recentHistory = appStore.state.recentHistory,
                 recentSyncedTabState = appStore.state.recentSyncedTabState,
             ),
         ).joinBlocking()
 
-        assertTrue(appStore.state.recentBookmarks.isEmpty())
+        assertTrue(appStore.state.bookmarks.isEmpty())
     }
 
     @Test
     fun `WHEN urls are compared to blocklist THEN common subdomains are stripped`() {
         val host = "mozilla.org/"
-        val updatedBookmark = RecentBookmark(url = host)
+        val updatedBookmark = Bookmark(url = host)
 
         every { mockSettings.homescreenBlocklist } returns setOf(host.stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
@@ -277,19 +277,19 @@ class BlocklistMiddlewareTest {
                 collections = appStore.state.collections,
                 showCollectionPlaceholder = appStore.state.showCollectionPlaceholder,
                 recentTabs = appStore.state.recentTabs,
-                recentBookmarks = listOf(updatedBookmark),
+                bookmarks = listOf(updatedBookmark),
                 recentHistory = appStore.state.recentHistory,
                 recentSyncedTabState = appStore.state.recentSyncedTabState,
             ),
         ).joinBlocking()
 
-        assertTrue(appStore.state.recentBookmarks.isEmpty())
+        assertTrue(appStore.state.bookmarks.isEmpty())
     }
 
     @Test
     fun `WHEN urls are compared to blocklist THEN trailing slashes are stripped`() {
         val host = "www.mozilla.org"
-        val updatedBookmark = RecentBookmark(url = "http://$host/")
+        val updatedBookmark = Bookmark(url = "http://$host/")
 
         every { mockSettings.homescreenBlocklist } returns setOf("https://$host".stripAndHash())
         val middleware = BlocklistMiddleware(blocklistHandler)
@@ -305,13 +305,13 @@ class BlocklistMiddlewareTest {
                 collections = appStore.state.collections,
                 showCollectionPlaceholder = appStore.state.showCollectionPlaceholder,
                 recentTabs = appStore.state.recentTabs,
-                recentBookmarks = listOf(updatedBookmark),
+                bookmarks = listOf(updatedBookmark),
                 recentHistory = appStore.state.recentHistory,
                 recentSyncedTabState = appStore.state.recentSyncedTabState,
             ),
         ).joinBlocking()
 
-        assertTrue(appStore.state.recentBookmarks.isEmpty())
+        assertTrue(appStore.state.bookmarks.isEmpty())
     }
 
     @Test
