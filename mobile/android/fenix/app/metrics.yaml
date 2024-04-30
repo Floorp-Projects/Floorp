@@ -2827,11 +2827,11 @@ customize_home:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
-  recently_saved:
+  bookmarks:
     type: boolean
     description: |
       An indication of whether the recently
-      saved section is enabled to be displayed
+      saved section is enabled to be displayed. This was previously customize_home.recently_saved.
     send_in_pings:
       - metrics
     bugs:
@@ -2937,7 +2937,8 @@ customize_home:
           toggled.
 
           We currently track: most_visited_sites, jump_back_in,
-          recently_visited, recently_saved, pocket, and contile.
+          recently_visited, bookmarks, pocket, and contile.
+          We previously tracked bookmarks as recently_saved.
       enabled:
         type: boolean
         description: "Whether or not the preference is *now* enabled"
@@ -9893,11 +9894,11 @@ recent_tabs:
       - android-probes@mozilla.com
     expires: never
 
-recent_bookmarks:
+home_bookmarks:
   shown:
     type: event
     description: |
-      Recent bookmarks section was shown to the user.
+      Bookmarks section of home was shown to the user. This was previously recent_bookmarks.shown.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/22103
     data_reviews:
@@ -9914,8 +9915,8 @@ recent_bookmarks:
     lifetime: application
     description: |
       A counter that indicates the number of times that a user
-      has clicked on a recently saved bookmark from the home
-      screen.
+      has clicked on a bookmark from the home
+      screen. This was previously recent_bookmarks.bookmark_clicked.
     send_in_pings:
       - metrics
     bugs:
@@ -9935,8 +9936,8 @@ recent_bookmarks:
     lifetime: application
     description: |
       A counter that indicates the number of times that a user
-      has clicked the show all button for recently saved bookmarks
-      on the home screen.
+      has clicked the show all button for bookmarks
+      on the home screen. This was previously recent_bookmarks.show_all_bookmarks.
     send_in_pings:
       - metrics
     bugs:
@@ -9951,11 +9952,11 @@ recent_bookmarks:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
-  recent_bookmarks_count:
+  bookmarks_count:
     type: quantity
     description: |
       The number of bookmarked items appearing in the
-      Recently Saved section on the home page.
+      Bookmarks section on the home page. This was previously recent_bookmarks.recent_bookmarks_count.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/22075
     data_reviews:

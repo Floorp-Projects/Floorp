@@ -28,7 +28,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.GleanMetrics.RecentBookmarks
+import org.mozilla.fenix.GleanMetrics.HomeBookmarks
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -69,7 +69,7 @@ class DefaultBookmarksControllerTest {
 
     @Test
     fun `GIVEN no tabs WHEN a bookmark is clicked THEN the selected bookmark is opened in a new tab`() {
-        assertNull(RecentBookmarks.bookmarkClicked.testGetValue())
+        assertNull(HomeBookmarks.bookmarkClicked.testGetValue())
 
         val bookmark = Bookmark(title = null, url = "https://www.example.com")
         controller.handleBookmarkClicked(bookmark)
@@ -82,12 +82,12 @@ class DefaultBookmarksControllerTest {
                 from = BrowserDirection.FromHome,
             )
         }
-        assertNotNull(RecentBookmarks.bookmarkClicked.testGetValue())
+        assertNotNull(HomeBookmarks.bookmarkClicked.testGetValue())
     }
 
     @Test
     fun `GIVEN no matching tabs WHEN a bookmark is clicked THEN the selected bookmark is opened in a new tab`() {
-        assertNull(RecentBookmarks.bookmarkClicked.testGetValue())
+        assertNull(HomeBookmarks.bookmarkClicked.testGetValue())
 
         val testTab = createTab("https://www.not_example.com")
         every { browserStore.state.tabs }.returns(listOf(testTab))
@@ -103,12 +103,12 @@ class DefaultBookmarksControllerTest {
                 from = BrowserDirection.FromHome,
             )
         }
-        assertNotNull(RecentBookmarks.bookmarkClicked.testGetValue())
+        assertNotNull(HomeBookmarks.bookmarkClicked.testGetValue())
     }
 
     @Test
     fun `GIVEN matching tab WHEN a bookmark is clicked THEN the existing tab is opened`() {
-        assertNull(RecentBookmarks.bookmarkClicked.testGetValue())
+        assertNull(HomeBookmarks.bookmarkClicked.testGetValue())
 
         val testUrl = "https://www.example.com"
         val testTab = createTab(testUrl)
@@ -121,12 +121,12 @@ class DefaultBookmarksControllerTest {
             selectTabUseCase.invoke(testTab.id)
             navController.navigate(R.id.browserFragment)
         }
-        assertNotNull(RecentBookmarks.bookmarkClicked.testGetValue())
+        assertNotNull(HomeBookmarks.bookmarkClicked.testGetValue())
     }
 
     @Test
     fun `WHEN show all bookmarks is clicked THEN the bookmarks root is opened`() = runTestOnMain {
-        assertNull(RecentBookmarks.showAllBookmarks.testGetValue())
+        assertNull(HomeBookmarks.showAllBookmarks.testGetValue())
 
         controller.handleShowAllBookmarksClicked()
 
@@ -134,12 +134,12 @@ class DefaultBookmarksControllerTest {
         verify {
             navController.navigate(directions)
         }
-        assertNotNull(RecentBookmarks.showAllBookmarks.testGetValue())
+        assertNotNull(HomeBookmarks.showAllBookmarks.testGetValue())
     }
 
     @Test
-    fun `WHEN show all bookmarks is clicked from behind search dialog THEN open bookmarks root`() {
-        assertNull(RecentBookmarks.showAllBookmarks.testGetValue())
+    fun `WHEN show all bppkmarks is clicked from behind search dialog THEN open bookmarks root`() {
+        assertNull(HomeBookmarks.showAllBookmarks.testGetValue())
 
         controller.handleShowAllBookmarksClicked()
 
@@ -148,6 +148,6 @@ class DefaultBookmarksControllerTest {
         verify {
             navController.navigate(directions)
         }
-        assertNotNull(RecentBookmarks.showAllBookmarks.testGetValue())
+        assertNotNull(HomeBookmarks.showAllBookmarks.testGetValue())
     }
 }

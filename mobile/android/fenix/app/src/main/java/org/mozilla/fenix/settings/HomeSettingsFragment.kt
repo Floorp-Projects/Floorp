@@ -91,7 +91,7 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                     CustomizeHome.preferenceToggled.record(
                         CustomizeHome.PreferenceToggledExtra(
                             newValue as Boolean,
-                            "recently_saved",
+                            "bookmarks",
                         ),
                     )
 

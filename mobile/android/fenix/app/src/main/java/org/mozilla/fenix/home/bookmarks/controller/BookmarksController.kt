@@ -11,7 +11,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.GleanMetrics.RecentBookmarks
+import org.mozilla.fenix.GleanMetrics.HomeBookmarks
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
@@ -70,11 +70,11 @@ class DefaultBookmarksController(
             navController.navigate(R.id.browserFragment)
         }
 
-        RecentBookmarks.bookmarkClicked.add()
+        HomeBookmarks.bookmarkClicked.add()
     }
 
     override fun handleShowAllBookmarksClicked() {
-        RecentBookmarks.showAllBookmarks.add()
+        HomeBookmarks.showAllBookmarks.add()
         navController.navigate(
             HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id),
         )
