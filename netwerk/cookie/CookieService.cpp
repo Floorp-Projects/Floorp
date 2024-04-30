@@ -1524,10 +1524,9 @@ bool CookieService::CanSetCookie(
     separators    = ";" | "="
     value-sep     = ";"
     cookie-sep    = CR | LF
-    allowed-chars = <any OCTET except NUL or cookie-sep>
+    allowed-chars = <any OCTET except cookie-sep>
     OCTET         = <any 8-bit sequence of data>
     LWS           = SP | HT
-    NUL           = <US-ASCII NUL, null control character (0)>
     CR            = <US-ASCII CR, carriage return (13)>
     LF            = <US-ASCII LF, linefeed (10)>
     SP            = <US-ASCII SP, space (32)>
@@ -1547,6 +1546,8 @@ bool CookieService::CanSetCookie(
                   | "Max-Age" "=" value
                   | "Comment" "=" value
                   | "Version" "=" value
+                  | "Partitioned"
+                  | "SameSite"
                   | "Secure"
                   | "HttpOnly"
 
@@ -1554,7 +1555,6 @@ bool CookieService::CanSetCookie(
 // clang-format on
 
 // helper functions for GetTokenValue
-static inline bool isnull(char c) { return c == 0; }
 static inline bool iswhitespace(char c) { return c == ' ' || c == '\t'; }
 static inline bool isterminator(char c) { return c == '\n' || c == '\r'; }
 static inline bool isvalueseparator(char c) {
@@ -1582,7 +1582,7 @@ bool CookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
     ++aIter;
   }
   start = aIter;
-  while (aIter != aEndIter && !isnull(*aIter) && !istokenseparator(*aIter)) {
+  while (aIter != aEndIter && !istokenseparator(*aIter)) {
     ++aIter;
   }
 
@@ -1605,7 +1605,7 @@ bool CookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
 
     // process <token>
     // just look for ';' to terminate ('=' allowed)
-    while (aIter != aEndIter && !isnull(*aIter) && !isvalueseparator(*aIter)) {
+    while (aIter != aEndIter && !isvalueseparator(*aIter)) {
       ++aIter;
     }
 
@@ -1643,6 +1643,17 @@ static inline void SetSameSiteAttribute(CookieStruct& aCookieData,
                                         int32_t aValue) {
   aCookieData.sameSite() = aValue;
   aCookieData.rawSameSite() = aValue;
+}
+
+// Tests for control characters, defined by RFC 5234 to be %x00-1F / %x7F.
+// An exception is made for HTAB as the cookie spec treats that as whitespace.
+static bool ContainsControlChars(const nsACString& aString) {
+  const auto* start = aString.BeginReading();
+  const auto* end = aString.EndReading();
+
+  return std::find_if(start, end, [](unsigned char c) {
+           return (c <= 0x1F && c != 0x09) || c == 0x7F;
+         }) != end;
 }
 
 // Parses attributes from cookie header. expires/max-age attributes aren't
@@ -1701,6 +1712,14 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
   while (cookieStart != cookieEnd && !newCookie) {
     newCookie = GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue,
                               equalsFound);
+
+    if (ContainsControlChars(tokenString) || ContainsControlChars(tokenValue)) {
+      CookieLogging::LogMessageToConsole(
+          aCRC, aHostURI, nsIScriptError::errorFlag, CONSOLE_REJECTION_CATEGORY,
+          "CookieRejectedInvalidCharAttributes"_ns,
+          AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
+      return newCookie;
+    }
 
     // decide which attribute we have, and copy the string
     if (tokenString.LowerCaseEqualsLiteral(kPath)) {
