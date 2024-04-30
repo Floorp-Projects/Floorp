@@ -218,6 +218,8 @@
     <string name="resync_button_content_description">Neu synchronisieren</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Seite durchsuchen</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">Seite durchsuchen…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Seite übersetzen</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -269,6 +271,14 @@
     <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
          The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="browser_menu_new_in_firefox">Neu in %1$s</string>
+
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">Zur Website für Desktop-Browser wechseln</string>
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">Werkzeuge</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">Speichern</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -2740,13 +2750,13 @@
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Weiter</string>
     <!-- The survey header -->
-    <string name="micro_survey_survey_header" tools:ignore="UnusedResources">Diese Umfrage ausfüllen</string>
+    <string name="micro_survey_survey_header">Diese Umfrage ausfüllen</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice" tools:ignore="UnusedResources">Datenschutzhinweis</string>
+    <string name="micro_survey_privacy_notice">Datenschutzhinweis</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Absenden</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Schließen</string>
+    <string name="micro_survey_close_button_label">Schließen</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Danke für Ihr Feedback!</string>
     <!-- Option for likert scale -->
