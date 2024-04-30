@@ -58,6 +58,7 @@ exports.PerfActor = class PerfActor extends Actor {
         "stackwalk",
         "cpu",
         "responsiveness",
+        "memory",
       ],
       threads: options.threads || ["GeckoMain", "Compositor"],
       activeTabID: RecordingUtils.getActiveBrowserID(),
