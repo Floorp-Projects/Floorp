@@ -7,6 +7,7 @@
 
 #include <utility>
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
 
@@ -63,16 +64,24 @@ class SimpleMap {
   // The element returned is the first one found.
   // Returns true if found, false otherwise.
   bool Find(const K& aKey, V& aValue) {
+    if (Maybe<V> v = Take(aKey)) {
+      aValue = v.extract();
+      return true;
+    }
+    return false;
+  }
+  // Take the value matching aKey and remove it from the map if found.
+  Maybe<V> Take(const K& aKey) {
     Policy guard(mLock);
     for (uint32_t i = 0; i < mMap.Length(); i++) {
       ElementType& element = mMap[i];
       if (element.first == aKey) {
-        aValue = element.second;
+        Maybe<V> value = Some(element.second);
         mMap.RemoveElementAt(i);
-        return true;
+        return value;
       }
     }
-    return false;
+    return Nothing();
   }
   // Remove all elements of the map.
   void Clear() {
