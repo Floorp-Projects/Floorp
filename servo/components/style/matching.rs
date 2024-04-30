@@ -447,7 +447,7 @@ trait PrivateMatchMethods: TElement {
     fn maybe_resolve_starting_style(
         &self,
         context: &mut StyleContext<Self>,
-        old_styles: &ElementStyles,
+        old_values: Option<&Arc<ComputedValues>>,
         new_styles: &ResolvedElementStyles,
     ) -> Option<Arc<ComputedValues>> {
         // For both cases:
@@ -464,7 +464,7 @@ trait PrivateMatchMethods: TElement {
         // FIXME: we may have to resolve starting style if the old style is display:none and the new
         // style change the display property. We will have a tentative solution in the following
         // patches.
-        if old_styles.primary.is_some() {
+        if old_values.is_some() {
             return None;
         }
 
@@ -474,6 +474,65 @@ trait PrivateMatchMethods: TElement {
         }
 
         Some(starting_style.0)
+    }
+
+    /// Handle CSS Transitions. Returns None if we don't need to update transitions. And it returns
+    /// the before-change style per CSS Transitions spec.
+    ///
+    /// Note: The before-change style could be the computed values of all properties on the element
+    /// as of the previous style change event, or the starting style if we don't have the valid
+    /// before-change style there.
+    #[cfg(feature = "gecko")]
+    fn process_transitions(
+        &self,
+        context: &mut StyleContext<Self>,
+        old_values: Option<&Arc<ComputedValues>>,
+        new_styles: &mut ResolvedElementStyles,
+    ) -> Option<Arc<ComputedValues>> {
+        let starting_values = self.maybe_resolve_starting_style(context, old_values, new_styles);
+        let before_change_or_starting = if starting_values.is_some() {
+            starting_values.as_ref()
+        } else {
+            old_values
+        };
+        let new_values = new_styles.primary_style_mut();
+
+        if !self.might_need_transitions_update(
+            context,
+            before_change_or_starting.map(|s| &**s),
+            new_values,
+            /* pseudo_element = */ None,
+        ) {
+            return None;
+        }
+
+        let after_change_style =
+            if self.has_css_transitions(context.shared, /* pseudo_element = */ None) {
+                self.after_change_style(context, new_values)
+            } else {
+                None
+            };
+
+        // In order to avoid creating a SequentialTask for transitions which
+        // may not be updated, we check it per property to make sure Gecko
+        // side will really update transition.
+        if !self.needs_transitions_update(
+            before_change_or_starting.unwrap(),
+            after_change_style.as_ref().unwrap_or(&new_values),
+        ) {
+            return None;
+        }
+
+        if let Some(values_without_transitions) = after_change_style {
+            *new_values = values_without_transitions;
+        }
+
+        // Move the new-created starting style, or clone the old values.
+        if starting_values.is_some() {
+            starting_values
+        } else {
+            old_values.cloned()
+        }
     }
 
     #[cfg(feature = "gecko")]
@@ -498,25 +557,21 @@ trait PrivateMatchMethods: TElement {
             return;
         }
 
-        // TODO: Use this in the following patches.
-        let _starting_styles = self.maybe_resolve_starting_style(context, old_styles, new_styles);
-        let new_values = new_styles.primary_style_mut();
-
         // Bug 868975: These steps should examine and update the visited styles
         // in addition to the unvisited styles.
 
         let mut tasks = UpdateAnimationsTasks::empty();
 
         if old_values.as_deref().map_or_else(
-            || new_values.get_ui().specifies_scroll_timelines(),
-            |old| !old.get_ui().scroll_timelines_equals(new_values.get_ui()),
+            || new_styles.primary_style().get_ui().specifies_scroll_timelines(),
+            |old| !old.get_ui().scroll_timelines_equals(new_styles.primary_style().get_ui()),
         ) {
             tasks.insert(UpdateAnimationsTasks::SCROLL_TIMELINES);
         }
 
         if old_values.as_deref().map_or_else(
-            || new_values.get_ui().specifies_view_timelines(),
-            |old| !old.get_ui().view_timelines_equals(new_values.get_ui()),
+            || new_styles.primary_style().get_ui().specifies_view_timelines(),
+            |old| !old.get_ui().view_timelines_equals(new_styles.primary_style().get_ui()),
         ) {
             tasks.insert(UpdateAnimationsTasks::VIEW_TIMELINES);
         }
@@ -524,58 +579,27 @@ trait PrivateMatchMethods: TElement {
         if self.needs_animations_update(
             context,
             old_values.as_deref(),
-            new_values,
+            new_styles.primary_style(),
             /* pseudo_element = */ None,
         ) {
             tasks.insert(UpdateAnimationsTasks::CSS_ANIMATIONS);
         }
 
-        let before_change_style = if self.might_need_transitions_update(
-            context,
-            old_values.as_deref(),
-            new_values,
-            /* pseudo_element = */ None,
-        ) {
-            let after_change_style =
-                if self.has_css_transitions(context.shared, /* pseudo_element = */ None) {
-                    self.after_change_style(context, new_values)
-                } else {
-                    None
-                };
-
-            // In order to avoid creating a SequentialTask for transitions which
-            // may not be updated, we check it per property to make sure Gecko
-            // side will really update transition.
-            let needs_transitions_update = {
-                // We borrow new_values here, so need to add a scope to make
-                // sure we release it before assigning a new value to it.
-                let after_change_style_ref = after_change_style.as_ref().unwrap_or(&new_values);
-
-                self.needs_transitions_update(old_values.as_ref().unwrap(), after_change_style_ref)
-            };
-
-            if needs_transitions_update {
-                if let Some(values_without_transitions) = after_change_style {
-                    *new_values = values_without_transitions;
-                }
-                tasks.insert(UpdateAnimationsTasks::CSS_TRANSITIONS);
-
-                // We need to clone old_values into SequentialTask, so we can
-                // use it later.
-                old_values.clone()
-            } else {
-                None
-            }
-        } else {
-            None
-        };
+        let before_change_style =
+            self.process_transitions(context, old_values.as_ref(), new_styles);
+        if before_change_style.is_some() {
+            tasks.insert(UpdateAnimationsTasks::CSS_TRANSITIONS);
+        }
 
         if self.has_animations(&context.shared) {
             tasks.insert(UpdateAnimationsTasks::EFFECT_PROPERTIES);
             if important_rules_changed {
                 tasks.insert(UpdateAnimationsTasks::CASCADE_RESULTS);
             }
-            if new_values.is_display_property_changed_from_none(old_values.as_deref()) {
+            if new_styles
+                .primary_style()
+                .is_display_property_changed_from_none(old_values.as_deref())
+            {
                 tasks.insert(UpdateAnimationsTasks::DISPLAY_CHANGED_FROM_NONE);
             }
         }
