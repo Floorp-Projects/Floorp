@@ -1195,8 +1195,9 @@ class MOZ_STACK_CLASS WrColorStopInterpolator
   WrColorStopInterpolator(
       const nsTArray<ColorStop>& aStops,
       const StyleColorInterpolationMethod& aStyleColorInterpolationMethod,
-      float aOpacity, nsTArray<wr::GradientStop>& aResult)
-      : ColorStopInterpolator(aStops, aStyleColorInterpolationMethod),
+      float aOpacity, nsTArray<wr::GradientStop>& aResult, bool aExtendLastStop)
+      : ColorStopInterpolator(aStops, aStyleColorInterpolationMethod,
+                              aExtendLastStop),
         mResult(aResult),
         mOpacity(aOpacity),
         mOutputStop(0) {}
@@ -1268,8 +1269,15 @@ void nsCSSGradientRenderer::BuildWebRenderParameters(
   // what can happen if we try to be clever here.
   if (styleColorInterpolationMethod.space != StyleColorSpace::Srgb ||
       gfxPlatform::GetCMSMode() == CMSMode::All) {
+    // For the specific case of longer hue interpolation on a CSS non-repeating
+    // gradient, we have to pretend there is another stop at position=1.0 that
+    // duplicates the last stop, this is probably only used for things like a
+    // color wheel.  No such problem for SVG as it doesn't have that complexity.
+    bool extendLastStop = aMode == wr::ExtendMode::Clamp &&
+                          styleColorInterpolationMethod.hue ==
+                              StyleHueInterpolationMethod::Longer;
     WrColorStopInterpolator interpolator(mStops, styleColorInterpolationMethod,
-                                         aOpacity, aStops);
+                                         aOpacity, aStops, extendLastStop);
     interpolator.CreateStops();
   } else {
     aStops.SetLength(mStops.Length());
