@@ -12,6 +12,8 @@ add_task(async function test_window_resize() {
       url: RESIZE_TEST_PAGE,
     },
     async browser => {
+      await new Promise(r => window.requestAnimationFrame(r));
+
       let helper = new ScreenshotsHelper(browser);
       await helper.resizeContentWindow(windowWidth, window.outerHeight);
       const originalContentDimensions = await helper.getContentDimensions();
@@ -60,6 +62,8 @@ add_task(async function test_window_resize_vertical_writing_mode() {
       await SpecialPowers.spawn(browser, [], () => {
         content.document.documentElement.style = "writing-mode: vertical-lr;";
       });
+
+      await new Promise(r => window.requestAnimationFrame(r));
 
       let helper = new ScreenshotsHelper(browser);
       await helper.resizeContentWindow(windowWidth, window.outerHeight);
