@@ -424,7 +424,9 @@ class DefaultBrowserToolbarMenuController(
             ToolbarMenu.Item.Translate -> {
                 Translations.action.record(Translations.ActionExtra("main_flow_browser"))
                 val directions =
-                    BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment()
+                    BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(
+                        sessionId = currentSession?.id,
+                    )
                 navController.navigateSafe(R.id.browserFragment, directions)
             }
         }
