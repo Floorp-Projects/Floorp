@@ -31,3 +31,34 @@ bounce.tracking.protection:
       - bvandersloot@mozilla.com
       - manuel@mozilla.com
     expires: 130
+  enabled_at_startup:
+    type: boolean
+    description: >
+      Keeps track of whether the feature is enabled at startup.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1893964
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1893964#c4
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pbz@mozilla.com
+      - bvandersloot@mozilla.com
+      - manuel@mozilla.com
+    expires: never
+  enabled_dry_run_mode_at_startup:
+    type: boolean
+    description: >
+      Keeps track of whether the feature is enabled and running in dry-run mode
+      at startup.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1893964
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1893964#c4
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pbz@mozilla.com
+      - bvandersloot@mozilla.com
+      - manuel@mozilla.com
+    expires: never
