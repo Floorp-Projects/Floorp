@@ -17,6 +17,32 @@
 }
 </style>
   <script>
+    const { BuiltInThemes } = ChromeUtils.importESModule(
+      "resource:///modules/BuiltInThemes.sys.mjs"
+    );
+    const { AddonManager } = ChromeUtils.importESModule(
+      "resource://gre/modules/AddonManager.sys.mjs"
+    );
+    const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
+
+    // Always run tests with the light theme for consistency and to avoid from false
+    // test passes arising from the fact that --icon-color and --button-text-color
+    // have the same value in the dark theme.
+    add_setup(async function () {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["layout.css.prefers-color-scheme.content-override", 1],
+          ["ui.systemUsesDarkTheme", 0],
+        ],
+      });
+      // Ensure the built-in themes are initialized.
+      await BuiltInThemes.ensureBuiltInThemes();
+
+      // Enable the light theme.
+      let lightTheme = await AddonManager.getAddonByID(LIGHT_THEME_ID);
+      await lightTheme.enable();
+    });
+
     function normalizeColor(val, computedStyles) {
       if (val.includes("currentColor")) {
         val = val.replaceAll("currentColor", computedStyles.color);
@@ -169,12 +195,12 @@
         });
       }
 
-      function verifyImageIcon(button) {
+      function verifyImageIcon({ button, isLabelled }) {
         let img = button.shadowRoot.querySelector("img");
         ok(img, "button uses an inner img element to display an icon");
         is(img.src, "chrome://global/skin/icons/edit.svg", "button displays the expected icon");
         assertButtonPropertiesMatch(img, {
-          fill: button.hasAttribute("label") ? "--button-text-color" : "--icon-color",
+          fill: isLabelled ? "--button-text-color" : "--icon-color",
           width: "--icon-size-default",
           height: "--icon-size-default",
         });
@@ -184,32 +210,45 @@
       verifyBackgroundIcon(five);
       verifyBackgroundIcon(six);
 
-      verifyImageIcon(seven);
-      verifyImageIcon(eight);
-      verifyImageIcon(nine);
+      verifyImageIcon({ button: seven, isLabelled: true });
+      verifyImageIcon({ button: eight, isLabelled: false });
+      verifyImageIcon({ button: nine, isLabelled: false });
+
+      nine.textContent = "With text";
+      // spin the event loop to ensure slotchange callback ran
+      await new Promise(resolve => setTimeout(resolve, 0));
+      verifyImageIcon({ button: nine, isLabelled: true });
+
+      nine.textContent = "";
+      // spin the event loop to ensure slotchange callback ran
+      await new Promise(resolve => setTimeout(resolve, 0));
+      verifyImageIcon({ button: nine, isLabelled: false });
     });
   </script>
 </head>
 <body>
-  <moz-button class="one">Test button</moz-button>
-  <moz-button class="two" label="Test button"></moz-button>
-  <moz-button class="three" type="primary">Test button</moz-button>
-  <moz-button class="four" type="icon"></moz-button>
-  <moz-button class="five" type="icon ghost"></moz-button>
-  <moz-button class="six" type="ghost icon"></moz-button>
-  <moz-button
-    class="seven"
-    label="Test button"
-    iconsrc="chrome://global/skin/icons/edit.svg"
-  ></moz-button>
-  <moz-button
-    class="eight"
-    iconsrc="chrome://global/skin/icons/edit.svg"
-  ></moz-button>
-  <moz-button
-    class="nine"
-    type="ghost"
-    iconsrc="chrome://global/skin/icons/edit.svg"
-  ></moz-button>
+  <div style="height: 500px;">
+    <moz-button class="one">Test button</moz-button>
+    <moz-button class="two" label="Test button"></moz-button>
+    <moz-button class="three" type="primary">Test button</moz-button>
+    <moz-button class="four" type="icon"></moz-button>
+    <moz-button class="five" type="icon ghost"></moz-button>
+    <moz-button class="six" type="ghost icon"></moz-button>
+    <moz-button
+      class="seven"
+      label="Test button"
+      iconsrc="chrome://global/skin/icons/edit.svg"
+    ></moz-button>
+    <moz-button
+      class="eight"
+      iconsrc="chrome://global/skin/icons/edit.svg"
+    ></moz-button>
+    <!-- Used to verify that empty space doesn't get treated as a label -->
+    <moz-button
+      class="nine"
+      type="ghost"
+      iconsrc="chrome://global/skin/icons/edit.svg"
+    >   </moz-button>
+  </div>
 </body>
 </html>
