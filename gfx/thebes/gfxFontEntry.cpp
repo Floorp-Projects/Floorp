@@ -474,8 +474,9 @@ hb_blob_t* gfxFontEntry::FontTableHashEntry::ShareTableAndGetBlob(
       HB_MEMORY_MODE_READONLY, mSharedBlobData, DeleteFontTableBlobData);
   if (mBlob == hb_blob_get_empty()) {
     // The FontTableBlobData was destroyed during hb_blob_create().
-    // The (empty) blob is still be held in the hashtable with a strong
+    // The (empty) blob will still be held in the hashtable with a strong
     // reference.
+    mSharedBlobData = nullptr;
     return hb_blob_reference(mBlob);
   }
 
