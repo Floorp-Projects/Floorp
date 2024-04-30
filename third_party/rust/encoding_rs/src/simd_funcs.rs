@@ -7,55 +7,74 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use packed_simd::u16x8;
-use packed_simd::u8x16;
-use packed_simd::IntoBits;
+use any_all_workaround::all_mask16x8;
+use any_all_workaround::all_mask8x16;
+use any_all_workaround::any_mask16x8;
+use any_all_workaround::any_mask8x16;
+use core::simd::cmp::SimdPartialEq;
+use core::simd::cmp::SimdPartialOrd;
+use core::simd::mask16x8;
+use core::simd::mask8x16;
+use core::simd::simd_swizzle;
+use core::simd::u16x8;
+use core::simd::u8x16;
+use core::simd::ToBytes;
 
 // TODO: Migrate unaligned access to stdlib code if/when the RFC
 // https://github.com/rust-lang/rfcs/pull/1725 is implemented.
 
+/// Safety invariant: ptr must be valid for an unaligned read of 16 bytes
 #[inline(always)]
 pub unsafe fn load16_unaligned(ptr: *const u8) -> u8x16 {
-    let mut simd = ::core::mem::uninitialized();
-    ::core::ptr::copy_nonoverlapping(ptr, &mut simd as *mut u8x16 as *mut u8, 16);
-    simd
+    let mut simd = ::core::mem::MaybeUninit::<u8x16>::uninit();
+    ::core::ptr::copy_nonoverlapping(ptr, simd.as_mut_ptr() as *mut u8, 16);
+    // Safety: copied 16 bytes of initialized memory into this, it is now initialized
+    simd.assume_init()
 }
 
+/// Safety invariant: ptr must be valid for an aligned-for-u8x16 read of 16 bytes
 #[allow(dead_code)]
 #[inline(always)]
 pub unsafe fn load16_aligned(ptr: *const u8) -> u8x16 {
     *(ptr as *const u8x16)
 }
 
+/// Safety invariant: ptr must be valid for an unaligned store of 16 bytes
 #[inline(always)]
 pub unsafe fn store16_unaligned(ptr: *mut u8, s: u8x16) {
     ::core::ptr::copy_nonoverlapping(&s as *const u8x16 as *const u8, ptr, 16);
 }
 
+/// Safety invariant: ptr must be valid for an aligned-for-u8x16 store of 16 bytes
 #[allow(dead_code)]
 #[inline(always)]
 pub unsafe fn store16_aligned(ptr: *mut u8, s: u8x16) {
     *(ptr as *mut u8x16) = s;
 }
 
+/// Safety invariant: ptr must be valid for an unaligned read of 16 bytes
 #[inline(always)]
 pub unsafe fn load8_unaligned(ptr: *const u16) -> u16x8 {
-    let mut simd = ::core::mem::uninitialized();
-    ::core::ptr::copy_nonoverlapping(ptr as *const u8, &mut simd as *mut u16x8 as *mut u8, 16);
-    simd
+    let mut simd = ::core::mem::MaybeUninit::<u16x8>::uninit();
+    ::core::ptr::copy_nonoverlapping(ptr as *const u8, simd.as_mut_ptr() as *mut u8, 16);
+    // Safety: copied 16 bytes of initialized memory into this, it is now initialized
+    simd.assume_init()
 }
 
+/// Safety invariant: ptr must be valid for an aligned-for-u16x8 read of 16 bytes
 #[allow(dead_code)]
 #[inline(always)]
 pub unsafe fn load8_aligned(ptr: *const u16) -> u16x8 {
     *(ptr as *const u16x8)
 }
 
+/// Safety invariant: ptr must be valid for an unaligned store of 16 bytes
 #[inline(always)]
 pub unsafe fn store8_unaligned(ptr: *mut u16, s: u16x8) {
     ::core::ptr::copy_nonoverlapping(&s as *const u16x8 as *const u8, ptr as *mut u8, 16);
 }
 
+/// Safety invariant: ptr must be valid for an aligned-for-u16x8 store of 16 bytes
 #[allow(dead_code)]
 #[inline(always)]
 pub unsafe fn store8_aligned(ptr: *mut u16, s: u16x8) {
@@ -100,7 +119,7 @@ pub fn simd_byte_swap(s: u16x8) -> u16x8 {
 
 #[inline(always)]
 pub fn to_u16_lanes(s: u8x16) -> u16x8 {
-    s.into_bits()
+    u16x8::from_ne_bytes(s)
 }
 
 cfg_if! {
@@ -108,10 +127,11 @@ cfg_if! {
 
         // Expose low-level mask instead of higher-level conclusion,
         // because the non-ASCII case would perform less well otherwise.
+        // Safety-usable invariant: This returned value is whether each high bit is set
         #[inline(always)]
         pub fn mask_ascii(s: u8x16) -> i32 {
             unsafe {
-                _mm_movemask_epi8(s.into_bits())
+                _mm_movemask_epi8(s.into())
             }
         }
 
@@ -125,14 +145,16 @@ cfg_if! {
         #[inline(always)]
         pub fn simd_is_ascii(s: u8x16) -> bool {
             unsafe {
-                _mm_movemask_epi8(s.into_bits()) == 0
+                // Safety: We have cfg()d the correct platform
+                _mm_movemask_epi8(s.into()) == 0
             }
         }
     } else if #[cfg(target_arch = "aarch64")]{
         #[inline(always)]
         pub fn simd_is_ascii(s: u8x16) -> bool {
             unsafe {
-                vmaxvq_u8(s.into_bits()) < 0x80
+                // Safety: We have cfg()d the correct platform
+                vmaxvq_u8(s.into()) < 0x80
             }
         }
     } else {
@@ -141,7 +163,7 @@ cfg_if! {
             // This optimizes better on ARM than
             // the lt formulation.
             let highest_ascii = u8x16::splat(0x7F);
-            !s.gt(highest_ascii).any()
+            !any_mask8x16(s.simd_gt(highest_ascii))
         }
     }
 }
@@ -154,20 +176,21 @@ cfg_if! {
                 return true;
             }
             let above_str_latin1 = u8x16::splat(0xC4);
-            s.lt(above_str_latin1).all()
+            s.simd_lt(above_str_latin1).all()
         }
     } else if #[cfg(target_arch = "aarch64")]{
         #[inline(always)]
         pub fn simd_is_str_latin1(s: u8x16) -> bool {
             unsafe {
-                vmaxvq_u8(s.into_bits()) < 0xC4
+                // Safety: We have cfg()d the correct platform
+                vmaxvq_u8(s.into()) < 0xC4
             }
         }
     } else {
         #[inline(always)]
         pub fn simd_is_str_latin1(s: u8x16) -> bool {
             let above_str_latin1 = u8x16::splat(0xC4);
-            s.lt(above_str_latin1).all()
+            all_mask8x16(s.simd_lt(above_str_latin1))
         }
     }
 }
@@ -177,21 +200,23 @@ cfg_if! {
         #[inline(always)]
         pub fn simd_is_basic_latin(s: u16x8) -> bool {
             unsafe {
-                vmaxvq_u16(s.into_bits()) < 0x80
+                // Safety: We have cfg()d the correct platform
+                vmaxvq_u16(s.into()) < 0x80
             }
         }
 
         #[inline(always)]
         pub fn simd_is_latin1(s: u16x8) -> bool {
             unsafe {
-                vmaxvq_u16(s.into_bits()) < 0x100
+                // Safety: We have cfg()d the correct platform
+                vmaxvq_u16(s.into()) < 0x100
             }
         }
     } else {
         #[inline(always)]
         pub fn simd_is_basic_latin(s: u16x8) -> bool {
             let above_ascii = u16x8::splat(0x80);
-            s.lt(above_ascii).all()
+            all_mask16x8(s.simd_lt(above_ascii))
         }
 
         #[inline(always)]
@@ -200,7 +225,7 @@ cfg_if! {
             // seems faster in this case while the above
             // function is better the other way round...
             let highest_latin1 = u16x8::splat(0xFF);
-            !s.gt(highest_latin1).any()
+            !any_mask16x8(s.simd_gt(highest_latin1))
         }
     }
 }
@@ -209,7 +234,7 @@ cfg_if! {
 pub fn contains_surrogates(s: u16x8) -> bool {
     let mask = u16x8::splat(0xF800);
     let surrogate_bits = u16x8::splat(0xD800);
-    (s & mask).eq(surrogate_bits).any()
+    any_mask16x8((s & mask).simd_eq(surrogate_bits))
 }
 
 cfg_if! {
@@ -217,7 +242,8 @@ cfg_if! {
         macro_rules! aarch64_return_false_if_below_hebrew {
             ($s:ident) => ({
                 unsafe {
-                    if vmaxvq_u16($s.into_bits()) < 0x0590 {
+                    // Safety: We have cfg()d the correct platform
+                    if vmaxvq_u16($s.into()) < 0x0590 {
                         return false;
                     }
                 }
@@ -234,7 +260,7 @@ cfg_if! {
 
         macro_rules! non_aarch64_return_false_if_all {
             ($s:ident) => ({
-                if $s.all() {
+                if all_mask16x8($s) {
                     return false;
                 }
             })
@@ -245,7 +271,7 @@ cfg_if! {
 macro_rules! in_range16x8 {
     ($s:ident, $start:expr, $end:expr) => {{
         // SIMD sub is wrapping
-        ($s - u16x8::splat($start)).lt(u16x8::splat($end - $start))
+        ($s - u16x8::splat($start)).simd_lt(u16x8::splat($end - $start))
     }};
 }
 
@@ -259,43 +285,44 @@ pub fn is_u16x8_bidi(s: u16x8) -> bool {
 
     aarch64_return_false_if_below_hebrew!(s);
 
-    let below_hebrew = s.lt(u16x8::splat(0x0590));
+    let below_hebrew = s.simd_lt(u16x8::splat(0x0590));
 
     non_aarch64_return_false_if_all!(below_hebrew);
 
-    if (below_hebrew | in_range16x8!(s, 0x0900, 0x200F) | in_range16x8!(s, 0x2068, 0xD802)).all() {
+    if all_mask16x8(
+        below_hebrew | in_range16x8!(s, 0x0900, 0x200F) | in_range16x8!(s, 0x2068, 0xD802),
+    ) {
         return false;
     }
 
     // Quick refutation failed. Let's do the full check.
 
-    (in_range16x8!(s, 0x0590, 0x0900)
-        | in_range16x8!(s, 0xFB1D, 0xFE00)
-        | in_range16x8!(s, 0xFE70, 0xFEFF)
-        | in_range16x8!(s, 0xD802, 0xD804)
-        | in_range16x8!(s, 0xD83A, 0xD83C)
-        | s.eq(u16x8::splat(0x200F))
-        | s.eq(u16x8::splat(0x202B))
-        | s.eq(u16x8::splat(0x202E))
-        | s.eq(u16x8::splat(0x2067)))
-    .any()
+    any_mask16x8(
+        (in_range16x8!(s, 0x0590, 0x0900)
+            | in_range16x8!(s, 0xFB1D, 0xFE00)
+            | in_range16x8!(s, 0xFE70, 0xFEFF)
+            | in_range16x8!(s, 0xD802, 0xD804)
+            | in_range16x8!(s, 0xD83A, 0xD83C)
+            | s.simd_eq(u16x8::splat(0x200F))
+            | s.simd_eq(u16x8::splat(0x202B))
+            | s.simd_eq(u16x8::splat(0x202E))
+            | s.simd_eq(u16x8::splat(0x2067))),
+    )
 }
 
 #[inline(always)]
 pub fn simd_unpack(s: u8x16) -> (u16x8, u16x8) {
-    unsafe {
-        let first: u8x16 = shuffle!(
-            s,
-            u8x16::splat(0),
-            [0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23]
-        );
-        let second: u8x16 = shuffle!(
-            s,
-            u8x16::splat(0),
-            [8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31]
-        );
-        (first.into_bits(), second.into_bits())
-    }
+    let first: u8x16 = simd_swizzle!(
+        s,
+        u8x16::splat(0),
+        [0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23]
+    );
+    let second: u8x16 = simd_swizzle!(
+        s,
+        u8x16::splat(0),
+        [8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31]
+    );
+    (u16x8::from_ne_bytes(first), u16x8::from_ne_bytes(second))
 }
 
 cfg_if! {
@@ -303,21 +330,20 @@ cfg_if! {
         #[inline(always)]
         pub fn simd_pack(a: u16x8, b: u16x8) -> u8x16 {
             unsafe {
-                _mm_packus_epi16(a.into_bits(), b.into_bits()).into_bits()
+                // Safety: We have cfg()d the correct platform
+                _mm_packus_epi16(a.into(), b.into()).into()
             }
         }
     } else {
         #[inline(always)]
         pub fn simd_pack(a: u16x8, b: u16x8) -> u8x16 {
-            unsafe {
-                let first: u8x16 = a.into_bits();
-                let second: u8x16 = b.into_bits();
-                shuffle!(
-                    first,
-                    second,
-                    [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
-                )
-            }
+            let first: u8x16 = a.to_ne_bytes();
+            let second: u8x16 = b.to_ne_bytes();
+            simd_swizzle!(
+                first,
+                second,
+                [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+            )
         }
     }
 }

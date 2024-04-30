@@ -19,6 +19,10 @@ url = "https://raw.githubusercontent.com/divviup/libprio-rs/main/supply-chain/au
 [imports.mozilla]
 url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
 
+[policy.any_all_workaround]
+audit-as-crates-io = true
+notes = "This is the upstream code plus the ARM intrinsics workaround from qcms, see bug 1882209."
+
 [policy.autocfg]
 audit-as-crates-io = true
 notes = "This is the upstream code plus a few local fixes, see bug 1685697."

@@ -116,6 +116,11 @@ macro_rules! by_unit_check_alu {
                     }
                     let len_minus_stride = len - ALU_ALIGNMENT / unit_size;
                     if offset + (4 * (ALU_ALIGNMENT / unit_size)) <= len {
+                        // Safety: the above check lets us perform 4 consecutive reads of
+                        // length ALU_ALIGNMENT / unit_size. ALU_ALIGNMENT is the size of usize, and unit_size
+                        // is the size of the `src` pointer, so this is equal to performing four usize reads.
+                        //
+                        // This invariant is upheld on all loop iterations
                         let len_minus_unroll = len - (4 * (ALU_ALIGNMENT / unit_size));
                         loop {
                             let unroll_accu = unsafe { *(src.add(offset) as *const usize) }
@@ -134,12 +139,14 @@ macro_rules! by_unit_check_alu {
                                 return false;
                             }
                             offset += 4 * (ALU_ALIGNMENT / unit_size);
+                            // Safety: this check lets us continue to perform the 4 reads earlier
                             if offset > len_minus_unroll {
                                 break;
                             }
                         }
                     }
                     while offset <= len_minus_stride {
+                        // Safety: the above check lets us perform one usize read.
                         accu |= unsafe { *(src.add(offset) as *const usize) };
                         offset += ALU_ALIGNMENT / unit_size;
                     }
@@ -189,6 +196,11 @@ macro_rules! by_unit_check_simd {
                     }
                     let len_minus_stride = len - SIMD_STRIDE_SIZE / unit_size;
                     if offset + (4 * (SIMD_STRIDE_SIZE / unit_size)) <= len {
+                        // Safety: the above check lets us perform 4 consecutive reads of
+                        // length SIMD_STRIDE_SIZE / unit_size. SIMD_STRIDE_SIZE is the size of $simd_ty, and unit_size
+                        // is the size of the `src` pointer, so this is equal to performing four $simd_ty reads.
+                        //
+                        // This invariant is upheld on all loop iterations
                         let len_minus_unroll = len - (4 * (SIMD_STRIDE_SIZE / unit_size));
                         loop {
                             let unroll_accu = unsafe { *(src.add(offset) as *const $simd_ty) }
@@ -208,6 +220,7 @@ macro_rules! by_unit_check_simd {
                                 return false;
                             }
                             offset += 4 * (SIMD_STRIDE_SIZE / unit_size);
+                            // Safety: this check lets us continue to perform the 4 reads earlier
                             if offset > len_minus_unroll {
                                 break;
                             }
@@ -215,6 +228,7 @@ macro_rules! by_unit_check_simd {
                     }
                     let mut simd_accu = $splat;
                     while offset <= len_minus_stride {
+                        // Safety: the above check lets us perform one $simd_ty read.
                         simd_accu = simd_accu | unsafe { *(src.add(offset) as *const $simd_ty) };
                         offset += SIMD_STRIDE_SIZE / unit_size;
                     }
@@ -234,8 +248,8 @@ macro_rules! by_unit_check_simd {
 cfg_if! {
     if #[cfg(all(feature = "simd-accel", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_feature = "neon"))))] {
         use crate::simd_funcs::*;
-        use packed_simd::u8x16;
-        use packed_simd::u16x8;
+        use core::simd::u8x16;
+        use core::simd::u16x8;
 
         const SIMD_ALIGNMENT: usize = 16;
 
