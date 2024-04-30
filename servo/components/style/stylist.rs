@@ -577,11 +577,12 @@ impl From<StyleRuleInclusion> for RuleInclusion {
 }
 
 /// A struct containing state from ancestor rules like @layer / @import /
-/// @container / nesting.
+/// @container / @starting-style / nesting.
 struct ContainingRuleState {
     layer_name: LayerName,
     layer_id: LayerId,
     container_condition_id: ContainerConditionId,
+    in_starting_style: bool,
     ancestor_selector_lists: SmallVec<[SelectorList<SelectorImpl>; 2]>,
 }
 
@@ -591,6 +592,7 @@ impl Default for ContainingRuleState {
             layer_name: LayerName::new_empty(),
             layer_id: LayerId::root(),
             container_condition_id: ContainerConditionId::none(),
+            in_starting_style: false,
             ancestor_selector_lists: Default::default(),
         }
     }
@@ -601,6 +603,7 @@ struct SavedContainingRuleState {
     layer_name_len: usize,
     layer_id: LayerId,
     container_condition_id: ContainerConditionId,
+    in_starting_style: bool,
 }
 
 impl ContainingRuleState {
@@ -610,6 +613,7 @@ impl ContainingRuleState {
             layer_name_len: self.layer_name.0.len(),
             layer_id: self.layer_id,
             container_condition_id: self.container_condition_id,
+            in_starting_style: self.in_starting_style,
         }
     }
 
@@ -621,6 +625,7 @@ impl ContainingRuleState {
         self.layer_name.0.truncate(saved.layer_name_len);
         self.layer_id = saved.layer_id;
         self.container_condition_id = saved.container_condition_id;
+        self.in_starting_style = saved.in_starting_style;
     }
 }
 
@@ -2858,6 +2863,7 @@ impl CascadeData {
                             self.rules_source_order,
                             containing_rule_state.layer_id,
                             containing_rule_state.container_condition_id,
+                            containing_rule_state.in_starting_style,
                         );
 
                         if collect_replaced_selectors {
@@ -3145,6 +3151,9 @@ impl CascadeData {
                         condition: Some(rule.condition.clone()),
                     });
                     containing_rule_state.container_condition_id = id;
+                },
+                CssRule::StartingStyle(..) => {
+                    containing_rule_state.in_starting_style = true;
                 },
                 // We don't care about any other rule.
                 _ => {},
@@ -3434,6 +3443,9 @@ pub struct Rule {
     /// The current @container rule id.
     pub container_condition_id: ContainerConditionId,
 
+    /// True if this rule is inside @starting-style.
+    pub is_starting_style: bool,
+
     /// The actual style rule.
     #[cfg_attr(
         feature = "gecko",
@@ -3480,6 +3492,7 @@ impl Rule {
         source_order: u32,
         layer_id: LayerId,
         container_condition_id: ContainerConditionId,
+        is_starting_style: bool,
     ) -> Self {
         Rule {
             selector,
@@ -3488,6 +3501,7 @@ impl Rule {
             source_order,
             layer_id,
             container_condition_id,
+            is_starting_style,
         }
     }
 }
