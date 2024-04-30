@@ -28,6 +28,7 @@ class TestDestroyNestedSubParent : public PTestDestroyNestedSubParent {
   void ActorDestroy(ActorDestroyReason aReason) override;
 
   bool mActorDestroyCalled = false;
+  bool mCloseManager = false;
 
   nsrefcnt GetRefCnt() const { return mRefCnt; }
 
@@ -70,13 +71,15 @@ void TestDestroyNestedSubParent::ActorDestroy(ActorDestroyReason aReason) {
   EXPECT_FALSE(mActorDestroyCalled) << "re-entered ActorDestroy()";
   mActorDestroyCalled = true;
 
-  EXPECT_FALSE(
-      static_cast<TestDestroyNestedParent*>(Manager())->mActorDestroyCalled)
-      << "manager already destroyed";
-  Manager()->Close();
-  EXPECT_TRUE(
-      static_cast<TestDestroyNestedParent*>(Manager())->mActorDestroyCalled)
-      << "manager successfully destroyed";
+  if (mCloseManager) {
+    EXPECT_FALSE(
+        static_cast<TestDestroyNestedParent*>(Manager())->mActorDestroyCalled)
+        << "manager already destroyed";
+    Manager()->Close();
+    EXPECT_TRUE(
+        static_cast<TestDestroyNestedParent*>(Manager())->mActorDestroyCalled)
+        << "manager successfully destroyed";
+  }
 
   // Make sure we also process any pending events, because we might be spinning
   // a nested event loop within `ActorDestroy`.
@@ -92,6 +95,7 @@ void TestDestroyNestedParent::ActorDestroy(ActorDestroyReason aReason) {
 
 IPDL_TEST(TestDestroyNested) {
   auto p = MakeRefPtr<TestDestroyNestedSubParent>();
+  p->mCloseManager = true;
   auto* rv1 = mActor->SendPTestDestroyNestedSubConstructor(p);
   ASSERT_EQ(p, rv1) << "can't allocate Sub";
 
@@ -105,6 +109,15 @@ IPDL_TEST(TestDestroyNested) {
   << "Sub not destroyed";
 
   ASSERT_EQ(p->GetRefCnt(), 1u) << "Outstanding references to Sub remain";
+
+  // Try to allocate a new actor under the already-destroyed manager, and ensure
+  // that it is destroyed as expected.
+  auto p2 = MakeRefPtr<TestDestroyNestedSubParent>();
+  auto* rv3 = mActor->SendPTestDestroyNestedSubConstructor(p2);
+  ASSERT_EQ(rv3, nullptr) << "construction succeeded unexpectedly";
+
+  ASSERT_TRUE(p2->mActorDestroyCalled)
+  << "Sub not destroyed";
 }
 
 }  // namespace mozilla::_ipdltest
