@@ -218,9 +218,12 @@ class SandboxPolicyBase : public sandbox::bpf_dsl::Policy {
 #ifdef __NR_epoll_wait
 #  define CASES_FOR_epoll_wait \
     case __NR_epoll_wait:      \
-    case __NR_epoll_pwait
+    case __NR_epoll_pwait:     \
+    case __NR_epoll_pwait2
 #else
-#  define CASES_FOR_epoll_wait case __NR_epoll_pwait
+#  define CASES_FOR_epoll_wait \
+    case __NR_epoll_pwait:     \
+    case __NR_epoll_pwait2
 #endif
 
 #ifdef __NR_pipe
