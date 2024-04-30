@@ -24,18 +24,18 @@ void SimulcastStream::SetNumberOfTemporalLayers(unsigned char n) {
   numberOfTemporalLayers = n;
 }
 
-ScalabilityMode SimulcastStream::GetScalabilityMode() const {
-  RTC_CHECK_GE(numberOfTemporalLayers, 1);
-  RTC_CHECK_LE(numberOfTemporalLayers, 3);
+absl::optional<ScalabilityMode> SimulcastStream::GetScalabilityMode() const {
   static const ScalabilityMode scalability_modes[3] = {
       ScalabilityMode::kL1T1,
       ScalabilityMode::kL1T2,
       ScalabilityMode::kL1T3,
   };
+  if (numberOfTemporalLayers < 1 || numberOfTemporalLayers > 3) {
+    return absl::nullopt;
+  }
   return scalability_modes[numberOfTemporalLayers - 1];
 }
 
-// TODO(b/327381318): Rename to GetScalabilityMode.
 absl::optional<ScalabilityMode> SimulcastStream::GetScalabilityMode2() const {
   static const ScalabilityMode scalability_modes[3] = {
       ScalabilityMode::kL1T1,

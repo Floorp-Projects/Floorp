@@ -93,7 +93,7 @@ std::string VideoCodec::ToString() const {
     for (size_t i = 0; i < numberOfSimulcastStreams; ++i) {
       const SimulcastStream stream = simulcastStream[i];
       absl::optional<ScalabilityMode> scalability_mode =
-          stream.GetScalabilityMode2();
+          stream.GetScalabilityMode();
       if (scalability_mode.has_value()) {
         ss << "[" << stream.width << "x" << stream.height << " "
            << ScalabilityModeToString(*scalability_mode)
