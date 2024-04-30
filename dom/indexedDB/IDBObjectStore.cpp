@@ -276,12 +276,22 @@ bool CopyingStructuredCloneWriteCallback(JSContext* aCx,
                                                               aObj);
 }
 
+void StructuredCloneErrorCallback(JSContext* aCx, uint32_t aErrorId,
+                                  void* aClosure, const char* aErrorMessage) {
+  // This callback is only used to prevent the default cloning TypeErrors
+  // from being thrown, as we will throw DataCloneErrors instead per spec.
+}
+
 nsresult GetAddInfoCallback(JSContext* aCx, void* aClosure) {
   static const JSStructuredCloneCallbacks kStructuredCloneCallbacks = {
-      nullptr /* read */,          StructuredCloneWriteCallback /* write */,
-      nullptr /* reportError */,   nullptr /* readTransfer */,
-      nullptr /* writeTransfer */, nullptr /* freeTransfer */,
-      nullptr /* canTransfer */,   nullptr /* sabCloned */
+      nullptr /* read */,
+      StructuredCloneWriteCallback /* write */,
+      StructuredCloneErrorCallback /* reportError */,
+      nullptr /* readTransfer */,
+      nullptr /* writeTransfer */,
+      nullptr /* freeTransfer */,
+      nullptr /* canTransfer */,
+      nullptr /* sabCloned */
   };
 
   MOZ_ASSERT(aCx);
@@ -555,7 +565,7 @@ bool IDBObjectStore::DeserializeValue(
   static const JSStructuredCloneCallbacks callbacks = {
       StructuredCloneReadCallback<StructuredCloneReadInfoChild>,
       nullptr,
-      nullptr,
+      StructuredCloneErrorCallback,
       nullptr,
       nullptr,
       nullptr,
@@ -1751,7 +1761,7 @@ bool IDBObjectStore::ValueWrapper::Clone(JSContext* aCx) {
   static const JSStructuredCloneCallbacks callbacks = {
       CopyingStructuredCloneReadCallback /* read */,
       CopyingStructuredCloneWriteCallback /* write */,
-      nullptr /* reportError */,
+      StructuredCloneErrorCallback /* reportError */,
       nullptr /* readTransfer */,
       nullptr /* writeTransfer */,
       nullptr /* freeTransfer */,
