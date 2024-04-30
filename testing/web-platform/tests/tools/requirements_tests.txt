@@ -1,4 +1,4 @@
-httpx[http2]==0.24.1
+httpx[http2]==0.27.0
 json-e==4.5.3
 jsonschema==4.17.3
 pyyaml==6.0.1
