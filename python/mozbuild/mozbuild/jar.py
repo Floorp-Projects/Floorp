@@ -17,9 +17,7 @@ import sys
 from time import localtime
 
 import mozpack.path as mozpath
-import six
 from MozZipFile import ZipFile
-from six import BytesIO
 
 from mozbuild.action.buildlist import addEntriesToListFile
 from mozbuild.preprocessor import Preprocessor
@@ -44,7 +42,7 @@ class ZipEntry(object):
     def __init__(self, name, zipfile):
         self._zipfile = zipfile
         self._name = name
-        self._inner = BytesIO()
+        self._inner = io.BytesIO()
 
     def write(self, content):
         """Append the given content to this zip entry"""
@@ -340,7 +338,7 @@ class JarMaker(object):
         myregister = dict.fromkeys(
             map(lambda s: s.replace("%", chromebasepath), register)
         )
-        addEntriesToListFile(manifestPath, six.iterkeys(myregister))
+        addEntriesToListFile(manifestPath, myregister.keys())
 
     def makeJar(self, infile, jardir):
         """makeJar is the main entry point to JarMaker.
@@ -359,7 +357,7 @@ class JarMaker(object):
             self.localedirs = [_normpath(p) for p in self.localedirs]
         elif self.relativesrcdir:
             self.localedirs = self.generateLocaleDirs(self.relativesrcdir)
-        if isinstance(infile, six.text_type):
+        if isinstance(infile, str):
             logging.info("processing " + infile)
             self.sourcedirs.append(_normpath(os.path.dirname(infile)))
         pp = self.pp.clone()
@@ -643,5 +641,6 @@ def main(args=None):
         infile = sys.stdin
     else:
         (infile,) = args
-        infile = six.ensure_text(infile)
+        if isinstance(infile, bytes):
+            infile = infile.decode()
     jm.makeJar(infile, options.d)
