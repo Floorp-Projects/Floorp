@@ -222,8 +222,7 @@ already_AddRefed<Promise> DecoderTemplate<DecoderType>::Flush(
   auto msg = UniquePtr<ControlMessage>(
       new FlushMessage(++mFlushCounter, mLatestConfigureId));
   const auto flushPromiseId = msg->AsFlushMessage()->mUniqueId;
-  DebugOnly<RefPtr<Promise>> unused;
-  MOZ_ASSERT(!mPendingFlushPromises.Find(flushPromiseId, unused));
+  MOZ_ASSERT(!mPendingFlushPromises.Contains(flushPromiseId));
   mPendingFlushPromises.Insert(flushPromiseId, p);
 
   mControlMessageQueue.emplace(std::move(msg));
