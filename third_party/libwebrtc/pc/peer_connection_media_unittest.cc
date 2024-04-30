@@ -2094,6 +2094,31 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
                     .size());
 }
 
+TEST_F(PeerConnectionMediaTestUnifiedPlan,
+       SetCodecPreferencesReceiveOnlyWithSendOnlyTransceiverStops) {
+  auto fake_engine = std::make_unique<cricket::FakeMediaEngine>();
+
+  std::vector<cricket::AudioCodec> audio_codecs;
+  audio_codecs.emplace_back(cricket::CreateAudioCodec(100, "foo", 0, 1));
+  fake_engine->SetAudioRecvCodecs(audio_codecs);
+
+  auto caller = CreatePeerConnectionWithAudio(std::move(fake_engine));
+
+  auto transceivers = caller->pc()->GetTransceivers();
+  ASSERT_EQ(1u, transceivers.size());
+
+  auto audio_transceiver = caller->pc()->GetTransceivers()[0];
+  auto error = audio_transceiver->SetDirectionWithError(
+      RtpTransceiverDirection::kSendOnly);
+  ASSERT_TRUE(error.ok());
+  auto capabilities = caller->pc_factory()->GetRtpReceiverCapabilities(
+      cricket::MediaType::MEDIA_TYPE_AUDIO);
+  EXPECT_TRUE(audio_transceiver->SetCodecPreferences(capabilities.codecs).ok());
+  RTCOfferAnswerOptions options;
+  EXPECT_TRUE(caller->SetLocalDescription(caller->CreateOffer(options)));
+  EXPECT_EQ(audio_transceiver->direction(), RtpTransceiverDirection::kStopped);
+}
+
 INSTANTIATE_TEST_SUITE_P(PeerConnectionMediaTest,
                          PeerConnectionMediaTest,
                          Values(SdpSemantics::kPlanB_DEPRECATED,
