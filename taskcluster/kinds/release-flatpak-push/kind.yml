@@ -22,10 +22,7 @@ job-defaults:
         platform: linux64/opt
         kind: build
         tier: 2
-    worker-type:
-        by-release-level:
-            production: scriptworker-k8s/gecko-3-pushflatpak
-            staging: scriptworker-k8s/gecko-1-pushflatpak
+    worker-type: pushflatpak
     worker:
         implementation: push-flatpak
         channel:
