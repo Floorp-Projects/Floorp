@@ -28,7 +28,7 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         "dependentlibs.list.gtest",
         script="dependentlibs.py",
         entry_point="gen_list",
-        inputs=["!%s" % full_libname],
+        inputs=["!/dist/bin/%s" % full_libname],
     )
     FINAL_TARGET_FILES += ["!dependentlibs.list", "!dependentlibs.list.gtest"]
 

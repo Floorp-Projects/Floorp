@@ -20,6 +20,7 @@ arrayvec = { version = "0.7", features = ["serde"], optional = true }
 bitflags = { version = "2", features = ["serde", "std"], optional = true }
 bytes = { version = "1", optional = true }
 chrono = { version = "0.4", features = ["serde"], optional = true }
+dist-bin = { path = "../rust/dist-bin", optional = true }
 env_logger = { version = "0.10", default-features = false, features = ["color"], optional = true }
 flate2 = { version = "1", optional = true }
 futures-channel = { version = "0.3", features = ["sink"], optional = true }
@@ -190,7 +191,7 @@ crashreporter = ["dep:env_logger", "dep:hyper", "dep:log", "dep:serde_json", "de
 geckodriver = ["dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:uuid", "dep:windows-sys"]
 gkrust = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:env_logger", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:scopeguard", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:url", "dep:uuid", "dep:windows-sys"]
 gkrust-gtest = ["gkrust"]
-http3server = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:windows-sys"]
+http3server = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:windows-sys", "dep:dist-bin"]
 ipcclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex"]
 jsrust = ["dep:arrayvec", "dep:cc", "dep:env_logger", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:num-traits", "dep:once_cell", "dep:semver", "dep:smallvec", "dep:url"]
 mozwer_s = ["dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:once_cell", "dep:serde_json", "dep:uuid", "dep:windows-sys"]

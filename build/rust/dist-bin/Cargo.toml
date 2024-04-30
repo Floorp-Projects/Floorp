@@ -1,0 +1,11 @@
+[package]
+name = "dist-bin"
+version = "0.1.0"
+edition = "2021"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[build-dependencies]
+mozbuild = "0.1"

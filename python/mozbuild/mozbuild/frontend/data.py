@@ -391,6 +391,15 @@ class Linkable(ContextDerived):
         self.lib_defines = Defines(context, OrderedDict())
         self.sources = defaultdict(list)
 
+    @property
+    def output_path(self):
+        if self.installed:
+            return ObjDirPath(
+                self._context, "!/" + mozpath.join(self.install_target, self.name)
+            )
+        else:
+            return ObjDirPath(self._context, "!" + self.name)
+
     def link_library(self, obj):
         assert isinstance(obj, BaseLibrary)
         if obj.KIND != self.KIND:
@@ -480,15 +489,6 @@ class BaseProgram(Linkable):
             program += bin_suffix
         self.program = program
         self.is_unit_test = is_unit_test
-
-    @property
-    def output_path(self):
-        if self.installed:
-            return ObjDirPath(
-                self._context, "!/" + mozpath.join(self.install_target, self.program)
-            )
-        else:
-            return ObjDirPath(self._context, "!" + self.program)
 
     def __repr__(self):
         return "<%s: %s/%s>" % (type(self).__name__, self.relobjdir, self.program)
@@ -636,6 +636,10 @@ class BaseLibrary(Linkable):
     @property
     def name(self):
         return self.lib_name
+
+    @property
+    def import_path(self):
+        return mozpath.join(self.objdir, self.import_name)
 
 
 class Library(BaseLibrary):
@@ -872,6 +876,16 @@ class SharedLibrary(Library):
                     self.symbols_link_arg = "-DEF:" + self.symbols_file
             elif context.config.substs.get("GCC_USE_GNU_LD"):
                 self.symbols_link_arg = "-Wl,--version-script," + self.symbols_file
+
+    @property
+    def import_path(self):
+        if self.config.substs.get("OS_ARCH") == "WINNT":
+            # We build import libs on windows in a library's objdir
+            # to avoid cluttering up dist/bin.
+            return mozpath.join(self.objdir, self.import_name)
+        return mozpath.join(
+            mozpath.dirname(self.output_path.full_path), self.import_name
+        )
 
 
 class HostSharedLibrary(HostMixin, Library):
