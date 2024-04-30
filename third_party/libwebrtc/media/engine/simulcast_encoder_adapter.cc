@@ -810,7 +810,7 @@ webrtc::VideoCodec SimulcastEncoderAdapter::MakeStreamCodec(
   // SimulcastEncoderAdapter is used. This allows multiple encodings of L1Tx,
   // but SimulcastStream currently does not support multiple spatial layers.
   absl::optional<ScalabilityMode> scalability_mode =
-      stream_params.GetScalabilityMode2();
+      stream_params.GetScalabilityMode();
   // To support the full set of scalability modes in the event that this is the
   // only active encoding, prefer VideoCodec::GetScalabilityMode() if all other
   // encodings are inactive.

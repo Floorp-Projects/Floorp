@@ -1158,7 +1158,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   log_stream << "ReconfigureEncoder: simulcast streams: ";
   for (size_t i = 0; i < codec.numberOfSimulcastStreams; ++i) {
     absl::optional<ScalabilityMode> scalability_mode =
-        codec.simulcastStream[i].GetScalabilityMode2();
+        codec.simulcastStream[i].GetScalabilityMode();
     if (scalability_mode) {
       log_stream << "{" << i << ": " << codec.simulcastStream[i].width << "x"
                  << codec.simulcastStream[i].height << " "
