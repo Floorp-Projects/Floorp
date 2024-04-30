@@ -399,8 +399,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   AVPacket* packet;
 #if LIBAVCODEC_VERSION_MAJOR >= 61
   packet = mLib->av_packet_alloc();
-  auto freePacket =
-    MakeScopeExit([&] { mLib->av_packet_free(&packet); });
+  auto freePacket = MakeScopeExit([&] { mLib->av_packet_free(&packet); });
 #else
   AVPacket packet_mem;
   packet = &packet_mem;
