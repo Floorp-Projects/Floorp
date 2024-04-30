@@ -510,7 +510,7 @@ export var ScreenshotsUtils = {
   async openPreviewDialog(browser) {
     let dialogBox = browser.ownerGlobal.gBrowser.getTabDialogBox(browser);
     let { dialog, closedPromise } = await dialogBox.open(
-      `chrome://browser/content/screenshots/screenshots.html?browsingContextId=${browser.browsingContext.id}`,
+      `chrome://browser/content/screenshots/screenshots-preview.html?browsingContextId=${browser.browsingContext.id}`,
       {
         features: "resizable=no",
         sizeTo: "available",
@@ -586,14 +586,19 @@ export var ScreenshotsUtils = {
   openPanel(browser) {
     let buttonsPanel = this.panelForBrowser(browser);
     if (!buttonsPanel.hidden) {
-      return;
+      return null;
     }
     buttonsPanel.hidden = false;
     buttonsPanel.ownerDocument.addEventListener("keydown", this);
 
-    buttonsPanel
-      .querySelector("screenshots-buttons")
-      .focusButton(lazy.SCREENSHOTS_LAST_SCREENSHOT_METHOD);
+    return new Promise(resolve => {
+      browser.ownerGlobal.requestAnimationFrame(() => {
+        buttonsPanel
+          .querySelector("screenshots-buttons")
+          .focusButton(lazy.SCREENSHOTS_LAST_SCREENSHOT_METHOD);
+        resolve();
+      });
+    });
   },
 
   /**
@@ -661,7 +666,7 @@ export var ScreenshotsUtils = {
             dialog._openedURL.endsWith(
               `browsingContextId=${browserContextId}`
             ) &&
-            dialog._openedURL.includes("screenshots.html")
+            dialog._openedURL.includes("screenshots-preview.html")
           ) {
             return dialog;
           }
@@ -817,12 +822,11 @@ export var ScreenshotsUtils = {
 
     let dialog = await this.openPreviewDialog(browser);
     await dialog._dialogReady;
-    let screenshotsUI = dialog._frame.contentDocument.createElement(
+    let screenshotsPreviewEl = dialog._frame.contentDocument.querySelector(
       "screenshots-preview"
     );
-    dialog._frame.contentDocument.body.appendChild(screenshotsUI);
 
-    screenshotsUI.focusButton(lazy.SCREENSHOTS_LAST_SAVED_METHOD);
+    screenshotsPreviewEl.focusButton(lazy.SCREENSHOTS_LAST_SAVED_METHOD);
 
     let rect;
     let lastUsedMethod;
@@ -852,15 +856,12 @@ export var ScreenshotsUtils = {
   async takeScreenshot(browser, dialog, rect) {
     let canvas = await this.createCanvas(rect, browser);
 
-    let newImg = dialog._frame.contentDocument.createElement("img");
     let url = canvas.toDataURL();
+    let screenshotsPreviewEl = dialog._frame.contentDocument.querySelector(
+      "screenshots-preview"
+    );
 
-    newImg.id = "placeholder-image";
-
-    newImg.src = url;
-    dialog._frame.contentDocument
-      .getElementById("preview-image-div")
-      .appendChild(newImg);
+    screenshotsPreviewEl.previewImgEl.src = url;
 
     if (Cu.isInAutomation) {
       Services.obs.notifyObservers(null, "screenshots-preview-ready");

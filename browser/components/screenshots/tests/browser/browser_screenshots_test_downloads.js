@@ -112,12 +112,9 @@ add_task(async function test_download_without_filepicker() {
         .shadowRoot.querySelector(".visible-page");
       visiblePageButton.click();
 
-      let dialog = helper.getDialog();
-
       await screenshotReady;
 
-      let downloadButton =
-        dialog._frame.contentDocument.getElementById("download");
+      let downloadButton = helper.getDialogButton("download");
       ok(downloadButton, "Got the download button");
 
       let screenshotExit = TestUtils.topicObserved("screenshots-exit");

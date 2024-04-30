@@ -97,6 +97,31 @@ class ScreenshotsHelper {
     return button;
   }
 
+  /**
+   * Get the button from screenshots preview dialog
+   * @param {Sting} name The id of the button to query
+   * @returns The button or null
+   */
+  getDialogButton(name) {
+    let dialog = this.getDialog();
+    let screenshotsPreviewEl = dialog._frame.contentDocument.querySelector(
+      "screenshots-preview"
+    );
+
+    switch (name) {
+      case "retry":
+        return screenshotsPreviewEl.retryButtonEl;
+      case "cancel":
+        return screenshotsPreviewEl.cancelButtonEl;
+      case "copy":
+        return screenshotsPreviewEl.copyButtonEl;
+      case "download":
+        return screenshotsPreviewEl.downloadButtonEl;
+    }
+
+    return null;
+  }
+
   async waitForPanel() {
     let panel = this.panel;
     await BrowserTestUtils.waitForCondition(async () => {

@@ -237,8 +237,7 @@ add_task(async function test_focusLastUsedMethod() {
       fullpageButton.click();
       await screenshotReady;
 
-      let dialog = helper.getDialog();
-      let retryButton = dialog._frame.contentDocument.getElementById("retry");
+      let retryButton = helper.getDialogButton("retry");
       retryButton.click();
 
       await helper.waitForOverlay();
@@ -263,8 +262,7 @@ add_task(async function test_focusLastUsedMethod() {
       visiblepageButton.click();
       await screenshotReady;
 
-      dialog = helper.getDialog();
-      retryButton = dialog._frame.contentDocument.getElementById("retry");
+      retryButton = helper.getDialogButton("retry");
       retryButton.click();
 
       await helper.waitForOverlay();
@@ -288,10 +286,7 @@ add_task(async function test_focusLastUsedMethod() {
       expectedFocusedButton.click();
       await screenshotReady;
 
-      dialog = helper.getDialog();
-
-      expectedFocusedButton =
-        dialog._frame.contentDocument.getElementById("download");
+      expectedFocusedButton = helper.getDialogButton("download");
 
       await BrowserTestUtils.waitForCondition(() => {
         return (
@@ -302,12 +297,12 @@ add_task(async function test_focusLastUsedMethod() {
 
       is(
         Services.focus.focusedElement,
-        expectedFocusedButton,
+        expectedFocusedButton.buttonEl,
         "The download button in the preview dialog should have focus"
       );
 
       let screenshotExit = TestUtils.topicObserved("screenshots-exit");
-      let copyButton = dialog._frame.contentDocument.getElementById("copy");
+      let copyButton = helper.getDialogButton("copy");
       copyButton.click();
       await screenshotExit;
 
@@ -320,10 +315,7 @@ add_task(async function test_focusLastUsedMethod() {
       visibleButton.click();
       await screenshotReady;
 
-      dialog = helper.getDialog();
-
-      expectedFocusedButton =
-        dialog._frame.contentDocument.getElementById("copy");
+      expectedFocusedButton = helper.getDialogButton("copy");
 
       await BrowserTestUtils.waitForCondition(() => {
         return (
@@ -334,13 +326,12 @@ add_task(async function test_focusLastUsedMethod() {
 
       is(
         Services.focus.focusedElement,
-        expectedFocusedButton,
+        expectedFocusedButton.buttonEl,
         "The copy button in the preview dialog should have focus"
       );
 
       screenshotExit = TestUtils.topicObserved("screenshots-exit");
-      let downloadButton =
-        dialog._frame.contentDocument.getElementById("download");
+      let downloadButton = helper.getDialogButton("download");
       downloadButton.click();
 
       await Promise.all([screenshotExit, downloadFinishedPromise]);
@@ -356,10 +347,7 @@ add_task(async function test_focusLastUsedMethod() {
       visibleButton.click();
       await screenshotReady;
 
-      dialog = helper.getDialog();
-
-      expectedFocusedButton =
-        dialog._frame.contentDocument.getElementById("download");
+      expectedFocusedButton = helper.getDialogButton("download");
 
       await BrowserTestUtils.waitForCondition(() => {
         return (
@@ -370,7 +358,7 @@ add_task(async function test_focusLastUsedMethod() {
 
       is(
         Services.focus.focusedElement,
-        expectedFocusedButton,
+        expectedFocusedButton.buttonEl,
         "The download button in the preview dialog should have focus"
       );
 
