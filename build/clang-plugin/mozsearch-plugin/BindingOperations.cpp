@@ -8,6 +8,7 @@
 #include <clang/AST/Attr.h>
 #include <clang/AST/Expr.h>
 #include <clang/AST/RecursiveASTVisitor.h>
+#include <clang/Basic/Version.h>
 
 #include <algorithm>
 #include <array>
@@ -173,10 +174,15 @@ constexpr StringRef BoundAs::ANNOTATION;
 template<typename B>
 void setBindingAttr(ASTContext &C, Decl &decl, B binding)
 {
+#if CLANG_VERSION_MAJOR >= 18
+  auto utf8 = StringLiteralKind::UTF8;
+#else
+  auto utf8 = StringLiteral::UTF8;
+#endif
   // recent LLVM: CreateImplicit then setDelayedArgs
-  Expr *langExpr = StringLiteral::Create(C, AbstractBinding::stringFromLang(binding.lang), StringLiteral::UTF8, false, {}, {});
-  Expr *kindExpr = StringLiteral::Create(C, AbstractBinding::stringFromKind(binding.kind), StringLiteral::UTF8, false, {}, {});
-  Expr *symbolExpr = StringLiteral::Create(C, binding.symbol, StringLiteral::UTF8, false, {}, {});
+  Expr *langExpr = StringLiteral::Create(C, AbstractBinding::stringFromLang(binding.lang), utf8, false, {}, {});
+  Expr *kindExpr = StringLiteral::Create(C, AbstractBinding::stringFromKind(binding.kind), utf8, false, {}, {});
+  Expr *symbolExpr = StringLiteral::Create(C, binding.symbol, utf8, false, {}, {});
   auto **args = new (C, 16) Expr *[3]{langExpr, kindExpr, symbolExpr};
   auto *attr = AnnotateAttr::CreateImplicit(C, B::ANNOTATION, args, 3);
   decl.addAttr(attr);
