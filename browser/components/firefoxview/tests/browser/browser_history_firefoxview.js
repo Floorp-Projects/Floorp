@@ -57,15 +57,11 @@ function isElInViewport(element) {
 
 async function historyComponentReady(historyComponent, expectedHistoryItems) {
   await TestUtils.waitForCondition(
-    () =>
-      [...historyComponent.controller.allHistoryItems.values()].reduce(
-        (acc, { length }) => acc + length,
-        0
-      ) === expectedHistoryItems,
+    () => historyComponent.controller.totalVisitsCount === expectedHistoryItems,
     "History component ready"
   );
 
-  let expected = historyComponent.controller.historyMapByDate.length;
+  let expected = historyComponent.controller.historyVisits.length;
   let actual = historyComponent.cards.length;
 
   is(expected, actual, `Total number of cards should be ${expected}`);
@@ -242,8 +238,7 @@ add_task(async function test_list_ordering() {
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     await sortHistoryTelemetry(sortHistoryEvent);
 
-    let expectedNumOfCards =
-      historyComponent.controller.historyMapBySite.length;
+    let expectedNumOfCards = historyComponent.controller.historyVisits.length;
 
     info(`Total number of cards should be ${expectedNumOfCards}`);
     await BrowserTestUtils.waitForMutationCondition(
@@ -485,7 +480,7 @@ add_task(async function test_search_history() {
       { childList: true, subtree: true },
       () =>
         historyComponent.cards.length ===
-        historyComponent.controller.historyMapByDate.length
+        historyComponent.controller.historyVisits.length
     );
     searchTextbox.blur();
 
@@ -514,7 +509,7 @@ add_task(async function test_search_history() {
       { childList: true, subtree: true },
       () =>
         historyComponent.cards.length ===
-        historyComponent.controller.historyMapByDate.length
+        historyComponent.controller.historyVisits.length
     );
   });
 });
@@ -528,11 +523,7 @@ add_task(async function test_persist_collapse_card_after_view_change() {
     const historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
     await TestUtils.waitForCondition(
-      () =>
-        [...historyComponent.controller.allHistoryItems.values()].reduce(
-          (acc, { length }) => acc + length,
-          0
-        ) === 4
+      () => historyComponent.controller.totalVisitsCount === 4
     );
     let firstHistoryCard = historyComponent.cards[0];
     ok(

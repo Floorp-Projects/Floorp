@@ -313,7 +313,7 @@ export class PlacesQuery {
     }
     this.#historyListener = null;
     this.#historyListenerCallback = null;
-    if (!this.#historyObserverTask.isFinalized) {
+    if (this.#historyObserverTask && !this.#historyObserverTask.isFinalized) {
       this.#historyObserverTask.disarm();
       this.#historyObserverTask.finalize();
     }

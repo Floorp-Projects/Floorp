@@ -32,7 +32,9 @@ add_task(async function test_max_render_count_on_win_resize() {
     await navigateToViewAndWait(document, "history");
 
     let historyComponent = document.querySelector("view-history");
-    let tabList = historyComponent.lists[0];
+    let tabList = await TestUtils.waitForCondition(
+      () => historyComponent.lists[0]
+    );
     let rootVirtualList = tabList.rootVirtualListEl;
 
     const initialHeight = window.outerHeight;
