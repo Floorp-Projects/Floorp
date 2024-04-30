@@ -1089,11 +1089,11 @@ MessageProcessedResult EncoderTemplate<EncoderType>::ProcessFlushMessage(
                      // during the output callback above in the execution of
                      // this task, the promise in mPendingFlushPromises is
                      // handled there. Otherwise, the promise is resolved here.
-                     RefPtr<Promise> p;
-                     if (self->mPendingFlushPromises.Find(flushPromiseId, p)) {
+                     if (Maybe<RefPtr<Promise>> p =
+                             self->mPendingFlushPromises.Take(flushPromiseId)) {
                        LOG("%s %p, resolving the promise for flush %" PRId64,
                            EncoderType::Name.get(), self.get(), flushPromiseId);
-                       p->MaybeResolveWithUndefined();
+                       p.value()->MaybeResolveWithUndefined();
                      }
                    });
                self->mProcessingMessage = nullptr;
