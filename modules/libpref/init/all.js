@@ -513,19 +513,6 @@ pref("ui.textHighlightBackground", "#ef0fff");
 // The foreground color for the matched text in findbar highlighting
 // Used with nsISelectionController::SELECTION_FIND
 pref("ui.textHighlightForeground", "#ffffff");
-// The background color for :autofill-ed inputs.
-//
-// In the past, we used the following `filter` to paint autofill backgrounds:
-//
-//   grayscale(21%) brightness(88%) contrast(161%) invert(10%) sepia(40%) saturate(206%);
-//
-// but there are some pages where using `filter` caused issues because it
-// changes the z-order (see bug 1687682, bug 1727950).
-//
-// The color is chosen so that you get the same final color on a white
-// background as the filter above (#fffcc8), but with some alpha so as to
-// prevent fully illegible text.
-pref("ui.-moz-autofill-background", "rgba(255, 249, 145, .5)");
 
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug

@@ -296,6 +296,9 @@ std::pair<sRGBColor, sRGBColor> Theme::ComputeButtonColors(
   bool isHovered = aState.HasState(ElementState::HOVER);
 
   nscolor backgroundColor = [&] {
+    if (aState.HasState(ElementState::AUTOFILL)) {
+      return aColors.SystemNs(StyleSystemColor::MozAutofillBackground);
+    }
     if (isDisabled) {
       return aColors.SystemNs(StyleSystemColor::MozButtondisabledface);
     }
@@ -308,12 +311,6 @@ std::pair<sRGBColor, sRGBColor> Theme::ComputeButtonColors(
     return aColors.SystemNs(StyleSystemColor::Buttonface);
   }();
 
-  if (aState.HasState(ElementState::AUTOFILL)) {
-    backgroundColor = NS_ComposeColors(
-        backgroundColor,
-        aColors.SystemNs(StyleSystemColor::MozAutofillBackground));
-  }
-
   const sRGBColor borderColor =
       ComputeBorderColor(aState, aColors, OutlineCoversBorder::Yes);
   return std::make_pair(sRGBColor::FromABGR(backgroundColor), borderColor);
@@ -323,17 +320,14 @@ std::pair<sRGBColor, sRGBColor> Theme::ComputeTextfieldColors(
     const ElementState& aState, const Colors& aColors,
     OutlineCoversBorder aOutlineCoversBorder) {
   nscolor backgroundColor = [&] {
+    if (aState.HasState(ElementState::AUTOFILL)) {
+      return aColors.SystemNs(StyleSystemColor::MozAutofillBackground);
+    }
     if (aState.HasState(ElementState::DISABLED)) {
       return aColors.SystemNs(StyleSystemColor::MozDisabledfield);
     }
     return aColors.SystemNs(StyleSystemColor::Field);
   }();
-
-  if (aState.HasState(ElementState::AUTOFILL)) {
-    backgroundColor = NS_ComposeColors(
-        backgroundColor,
-        aColors.SystemNs(StyleSystemColor::MozAutofillBackground));
-  }
 
   const sRGBColor borderColor =
       ComputeBorderColor(aState, aColors, aOutlineCoversBorder);
