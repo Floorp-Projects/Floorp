@@ -4572,7 +4572,7 @@ static void WatchdogMain(JSContext* cx) {
          */
         sc->watchdogTimeout = Nothing();
         {
-          UnlockGuard<Mutex> unlock(guard);
+          UnlockGuard unlock(guard);
           CancelExecution(cx);
         }
 

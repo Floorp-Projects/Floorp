@@ -932,7 +932,7 @@ FutexThread::WaitResult js::FutexThread::wait(
   // See explanation below.
 
   if (state_ == WaitingInterrupted) {
-    UnlockGuard<Mutex> unlock(locked);
+    UnlockGuard unlock(locked);
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_ATOMICS_WAIT_NOT_ALLOWED);
     return WaitResult::Error;
@@ -1033,7 +1033,7 @@ FutexThread::WaitResult js::FutexThread::wait(
 
         state_ = WaitingInterrupted;
         {
-          UnlockGuard<Mutex> unlock(locked);
+          UnlockGuard unlock(locked);
           if (!cx->handleInterrupt()) {
             return WaitResult::Error;
           }

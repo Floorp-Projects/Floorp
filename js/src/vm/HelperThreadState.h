@@ -82,7 +82,6 @@ typedef Vector<Tier2GeneratorTask*, 0, SystemAllocPolicy>
 // Per-process state for off thread work items.
 class GlobalHelperThreadState {
   friend class AutoLockHelperThreadState;
-  friend class AutoUnlockHelperThreadState;
 
  public:
   // A single tier-2 ModuleGenerator job spawns many compilation jobs, and we

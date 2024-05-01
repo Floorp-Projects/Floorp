@@ -70,18 +70,13 @@ extern Mutex gHelperThreadLock MOZ_UNANNOTATED;
 
 class MOZ_RAII AutoLockHelperThreadState : public LockGuard<Mutex> {
   using Base = LockGuard<Mutex>;
+  friend class UnlockGuard<AutoLockHelperThreadState>;
 
  public:
   explicit AutoLockHelperThreadState() : Base(gHelperThreadLock) {}
 };
 
-class MOZ_RAII AutoUnlockHelperThreadState : public UnlockGuard<Mutex> {
-  using Base = UnlockGuard<Mutex>;
-
- public:
-  explicit AutoUnlockHelperThreadState(AutoLockHelperThreadState& locked)
-      : Base(locked) {}
-};
+using AutoUnlockHelperThreadState = UnlockGuard<AutoLockHelperThreadState>;
 
 // Create data structures used by helper threads.
 bool CreateHelperThreadsState();
