@@ -27,6 +27,7 @@ let uniqueFaviconId = 0;
  *        Expected MIME type of the icon, for example "image/png".
  * @param aExpectedData
  *        Expected icon data, expressed as an array of byte values.
+ *        If set null, skip the test for the favicon data.
  * @param aCallback
  *        This function is called after the check finished.
  */
@@ -40,7 +41,9 @@ function checkFaviconDataForPage(
     aPageURI,
     async function (aURI, aDataLen, aData, aMimeType) {
       Assert.equal(aExpectedMimeType, aMimeType);
-      Assert.ok(compareArrays(aExpectedData, aData));
+      if (aExpectedData) {
+        Assert.ok(compareArrays(aExpectedData, aData));
+      }
       await check_guid_for_uri(aPageURI);
       aCallback();
     }

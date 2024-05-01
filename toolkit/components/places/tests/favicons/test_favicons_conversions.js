@@ -43,29 +43,24 @@ async function checkFaviconDataConversion(
   });
   let faviconURI = NetUtil.newURI("http://places.test/icon/" + aFileName);
   let fileData = readFileOfLength(aFileName, aFileLength);
+  let fileDataURL = await fileDataToDataURL(fileData, aFileMimeType);
+  await PlacesTestUtils.setFaviconForPage(
+    pageURI.spec,
+    faviconURI.spec,
+    fileDataURL
+  );
 
-  PlacesUtils.favicons.replaceFaviconData(faviconURI, fileData, aFileMimeType);
   await new Promise(resolve => {
-    PlacesUtils.favicons.setAndFetchFaviconForPage(
-      pageURI,
-      faviconURI,
-      true,
-      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      (aURI, aDataLen, aData, aMimeType) => {
-        if (!aExpectConversion) {
-          Assert.ok(compareArrays(aData, fileData));
-          Assert.equal(aMimeType, aFileMimeType);
-        } else {
-          if (!aVaryOnWindows || !isWindows) {
-            let expectedFile = do_get_file("expected-" + aFileName + ".png");
-            Assert.ok(compareArrays(aData, readFileData(expectedFile)));
-          }
-          Assert.equal(aMimeType, "image/png");
-        }
-        resolve();
-      },
-      Services.scriptSecurityManager.getSystemPrincipal()
-    );
+    if (!aExpectConversion) {
+      checkFaviconDataForPage(pageURI, aFileMimeType, fileData, resolve);
+    } else if (!aVaryOnWindows || !isWindows) {
+      let expectedFile = do_get_file("expected-" + aFileName + ".png");
+      let expectedData = readFileData(expectedFile);
+      checkFaviconDataForPage(pageURI, "image/png", expectedData, resolve);
+    } else {
+      // Not check the favicon data.
+      checkFaviconDataForPage(pageURI, "image/png", null, resolve);
+    }
   });
 }
 

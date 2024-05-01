@@ -169,7 +169,6 @@ function readFileData(aFile) {
   }
   return bytes;
 }
-
 /**
  * Reads the data from the named file, verifying the expected file length.
  *
@@ -184,6 +183,42 @@ function readFileOfLength(aFileName, aExpectedLength) {
   let data = readFileData(do_get_file(aFileName));
   Assert.equal(data.length, aExpectedLength);
   return data;
+}
+
+/**
+ * Reads the data from the specified nsIFile, then returns it as data URL.
+ *
+ * @param file
+ *        The nsIFile to read from.
+ * @param mimeType
+ *        The mime type of the file content.
+ * @return Promise that retunes data URL.
+ */
+async function readFileDataAsDataURL(file, mimeType) {
+  const data = readFileData(file);
+  return fileDataToDataURL(data, mimeType);
+}
+
+/**
+ * Converts the given data to the data URL.
+ *
+ * @param data
+ *        The file data.
+ * @param mimeType
+ *        The mime type of the file content.
+ * @return Promise that retunes data URL.
+ */
+async function fileDataToDataURL(data, mimeType) {
+  const dataURL = await new Promise(resolve => {
+    const buffer = new Uint8ClampedArray(data);
+    const blob = new Blob([buffer], { type: mimeType });
+    const reader = new FileReader();
+    reader.onload = e => {
+      resolve(e.target.result);
+    };
+    reader.readAsDataURL(blob);
+  });
+  return dataURL;
 }
 
 /**
