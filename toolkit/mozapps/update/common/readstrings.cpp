@@ -144,7 +144,7 @@ int ReadStrings(const NS_tchar* path, const char* keyList,
 
   size_t flen = size_t(len);
 
-  char* fileContents = new char[flen + 1];
+  mozilla::UniquePtr<char[]> fileContents(new char[flen + 1]);
   if (!fileContents) {
     return READ_STRINGS_MEM_ERROR;
   }
@@ -154,16 +154,15 @@ int ReadStrings(const NS_tchar* path, const char* keyList,
     return READ_ERROR;
   }
 
-  size_t rd = fread(fileContents, sizeof(char), flen, fp);
+  size_t rd = fread(fileContents.get(), sizeof(char), flen, fp);
   if (rd != flen) {
     return READ_ERROR;
   }
 
   fileContents[flen] = '\0';
 
-  int result = ReadStringsFromBuffer(fileContents, keyList, numStrings, results,
-                                     section);
-  delete[] fileContents;
+  int result = ReadStringsFromBuffer(fileContents.get(), keyList, numStrings,
+                                     results, section);
   return result;
 }
 
