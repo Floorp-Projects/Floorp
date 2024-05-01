@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test different complete-length fields of Content-Range headers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/dom/serviceworkers/test/utils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+"use strict";
+
+let oncomplete;
+navigator.serviceWorker.addEventListener("message", e => {
+  switch (e.data.type) {
+  case "is":
+    is(e.data.got, e.data.expected, e.data.name);
+    break;
+  case "done":
+    oncomplete();
+    break;
+  default:
+    record(false, "unknown e.data.type", e.data.type);
+  }
+});
+
+add_task(async () => {
+  // Unregister any previous ServiceWorkerRegistrations that may not have been
+  // removed before a page reload.
+  await unregisterAll();
+  const registration =
+        await registerAndWaitForActive("complete_length_worker.js");
+  SimpleTest.registerCleanupFunction(() => registration.unregister());
+
+  const audio = new Audio("media-resource");
+  audio.preload = "metadata";
+  // An error event is generated because the resource is incomplete.
+  const error_promise = new Promise(r => audio.onerror = r);
+  await error_promise;
+  is(audio.error.code, MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED, "error.code");
+  is(audio.error.message, "NS_ERROR_DOM_MEDIA_METADATA_ERR (0x806e0006)",
+     "error.message");
+
+  // Tell the ServiceWorker that media-resource requests have completed.
+  navigator.serviceWorker.controller.postMessage({type: "got error event"});
+  await new Promise(r => oncomplete = r);
+});
+</script>
+</html>
