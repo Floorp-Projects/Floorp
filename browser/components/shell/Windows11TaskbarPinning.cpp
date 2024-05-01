@@ -138,7 +138,7 @@ Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
     // user interface thread or Windows will cause them to fail.
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "PinCurrentAppToTaskbarWin11",
-        [&event, &count, &hr, &resultStatus, aCheckOnly] {
+        [&event, &hr, &resultStatus, aCheckOnly] {
           auto CompletedOperations =
               [&event, &resultStatus](Win11PinToTaskBarResultStatus status) {
                 resultStatus = status;

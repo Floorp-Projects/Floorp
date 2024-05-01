@@ -5,7 +5,10 @@
 
 #define UNICODE
 
+#include "nsWindowsShellServiceInternal.h"
 #include "nsWindowsShellService.h"
+
+#include "mozilla/glean/GleanMetrics.h"
 
 #include "BinaryPath.h"
 #include "imgIContainer.h"
@@ -1637,26 +1640,28 @@ static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
   return ManageShortcutTaskbarPins(aCheckOnly, pinType, aShortcutPath);
 }
 
-static nsresult PinCurrentAppToTaskbarImpl(
-    bool aCheckOnly, bool aPrivateBrowsing, const nsAString& aAppUserModelId,
-    const nsAString& aShortcutName, const nsAString& aShortcutSubstring,
-    nsIFile* aShortcutsLogDir, nsIFile* aGreDir, nsIFile* aProgramsDir) {
+void PinCurrentAppToTaskbarHelper::CheckNotMainThread() {
   MOZ_DIAGNOSTIC_ASSERT(
       !NS_IsMainThread(),
       "PinCurrentAppToTaskbarImpl should be called off main thread only");
+}
 
-  nsAutoString shortcutPath;
+Result<bool, nsresult> PinCurrentAppToTaskbarHelper::CreateShortcutForTaskbar(
+    bool aCheckOnly, bool aPrivateBrowsing, const nsAString& aAppUserModelId,
+    const nsAString& aShortcutName, const nsAString& aShortcutSubstring,
+    nsIFile* aShortcutsLogDir, nsIFile* aGreDir, nsIFile* aProgramsDir,
+    nsAutoString& aShortcutPath) {
   nsresult rv = FindMatchingShortcut(aAppUserModelId, aShortcutSubstring,
-                                     aPrivateBrowsing, shortcutPath);
+                                     aPrivateBrowsing, aShortcutPath);
   if (NS_FAILED(rv)) {
-    shortcutPath.Truncate();
+    aShortcutPath.Truncate();
   }
-  if (shortcutPath.IsEmpty()) {
+  if (aShortcutPath.IsEmpty()) {
     if (aCheckOnly) {
       // Later checks rely on a shortcut already existing.
       // We don't want to create a shortcut in check only mode
       // so the best we can do is assume those parts will work.
-      return NS_OK;
+      return false;
     }
 
     nsAutoString linkName(aShortcutName);
@@ -1666,23 +1671,23 @@ static nsresult PinCurrentAppToTaskbarImpl(
       nsAutoString pbExeStr(PRIVATE_BROWSING_BINARY);
       nsresult rv = exeFile->Append(pbExeStr);
       if (!NS_SUCCEEDED(rv)) {
-        return NS_ERROR_FAILURE;
+        return Err(NS_ERROR_FAILURE);
       }
     } else {
       wchar_t exePath[MAXPATHLEN] = {};
       if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
-        return NS_ERROR_FAILURE;
+        return Err(NS_ERROR_FAILURE);
       }
       nsAutoString exeStr(exePath);
       nsresult rv = NS_NewLocalFile(exeStr, true, getter_AddRefs(exeFile));
       if (!NS_SUCCEEDED(rv)) {
-        return NS_ERROR_FILE_NOT_FOUND;
+        return Err(NS_ERROR_FILE_NOT_FOUND);
       }
     }
 
     nsCOMPtr<nsIFile> shortcutFile(aProgramsDir);
     shortcutFile->Append(aShortcutName);
-    shortcutPath.Assign(shortcutFile->NativePath());
+    aShortcutPath.Assign(shortcutFile->NativePath());
 
     nsTArray<nsString> arguments;
     rv = CreateShortcutImpl(exeFile, arguments, aShortcutName, exeFile,
@@ -1692,12 +1697,62 @@ static nsresult PinCurrentAppToTaskbarImpl(
                             linkName, shortcutFile->NativePath(),
                             aShortcutsLogDir);
     if (!NS_SUCCEEDED(rv)) {
-      return NS_ERROR_FILE_NOT_FOUND;
+      return Err(NS_ERROR_FILE_NOT_FOUND);
     }
   }
 
+  return true;
+}
+
+Win11PinToTaskBarResult PinCurrentAppToTaskbarHelper::PinCurrentAppViaAPI(
+    bool aCheckOnly, const nsAString& aAppUserModelId,
+    nsAutoString aShortcutPath) {
+  return PinCurrentAppToTaskbarWin11(aCheckOnly, aAppUserModelId,
+                                     aShortcutPath);
+}
+
+nsresult PinCurrentAppToTaskbarHelper::PinCurrentAppFallback(
+    bool aCheckOnly, const nsAString& aAppUserModelId,
+    const nsAString& aShortcutPath) {
+  return PinCurrentAppToTaskbarWin10(aCheckOnly, aAppUserModelId,
+                                     aShortcutPath);
+}
+
+nsresult PinCurrentAppToTaskbarImpl(
+    bool aCheckOnly, bool aPrivateBrowsing, const nsAString& aAppUserModelId,
+    const nsAString& aShortcutName, const nsAString& aShortcutSubstring,
+    nsIFile* aShortcutsLogDir, nsIFile* aGreDir, nsIFile* aProgramsDir,
+    UniquePtr<PinCurrentAppToTaskbarHelper> helper) {
+  if (!helper) {
+    helper.reset(new PinCurrentAppToTaskbarHelper);
+  }
+
+  helper->CheckNotMainThread();
+
+  nsAutoString shortcutPath;
+
+  auto shortcutResult = helper->CreateShortcutForTaskbar(
+      aCheckOnly, aPrivateBrowsing, aAppUserModelId, aShortcutName,
+      aShortcutSubstring, aShortcutsLogDir, aGreDir, aProgramsDir,
+      shortcutPath);
+
+  if (shortcutResult.isErr()) {
+    nsresult err = shortcutResult.unwrapErr();
+
+    telemetry::shortcut::Record(aCheckOnly, err, aPrivateBrowsing);
+
+    return err;
+  } else {
+    if (!shortcutResult.unwrap()) {
+      return NS_OK;
+    }
+  }
+
+  telemetry::shortcut::Record(aCheckOnly, NS_OK, aPrivateBrowsing);
+
   auto pinWithWin11TaskbarAPIResults =
-      PinCurrentAppToTaskbarWin11(aCheckOnly, aAppUserModelId, shortcutPath);
+      helper->PinCurrentAppViaAPI(aCheckOnly, aAppUserModelId, shortcutPath);
+
   switch (pinWithWin11TaskbarAPIResults.result) {
     case Win11PinToTaskBarResultStatus::NotSupported:
       // Fall through to the win 10 mechanism
@@ -1705,11 +1760,21 @@ static nsresult PinCurrentAppToTaskbarImpl(
 
     case Win11PinToTaskBarResultStatus::Success:
     case Win11PinToTaskBarResultStatus::AlreadyPinned:
+      telemetry::pinning::Record(aCheckOnly, pinWithWin11TaskbarAPIResults,
+                                 aPrivateBrowsing, false);
       return NS_OK;
 
     case Win11PinToTaskBarResultStatus::ErrorLimitedAccessFeatures:
     case Win11PinToTaskBarResultStatus::LimitedAccessFeaturesLocked:
     case Win11PinToTaskBarResultStatus::NotCurrentlyAllowed:
+      // return NS_ERROR_FAILURE;
+
+      // Fall through to the old mechanism for now
+      // In future, we should be sending telemetry for when
+      // an error occurs or for when pinning is not allowed
+      // with the Win 11 APIs.
+      break;
+
     case Win11PinToTaskBarResultStatus::Failed:
       // return NS_ERROR_FAILURE;
 
@@ -1720,7 +1785,13 @@ static nsresult PinCurrentAppToTaskbarImpl(
       break;
   }
 
-  return PinCurrentAppToTaskbarWin10(aCheckOnly, aAppUserModelId, shortcutPath);
+  auto result =
+      helper->PinCurrentAppFallback(aCheckOnly, aAppUserModelId, shortcutPath);
+
+  telemetry::pinning::Record(aCheckOnly, pinWithWin11TaskbarAPIResults,
+                             aPrivateBrowsing, NS_SUCCEEDED(result));
+
+  return result;
 }
 
 static nsresult PinCurrentAppToTaskbarAsyncImpl(bool aCheckOnly,
