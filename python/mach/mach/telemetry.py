@@ -2,19 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import configparser
 import json
 import os
 import subprocess
 import sys
+import urllib.parse as urllib_parse
 from pathlib import Path
 from textwrap import dedent
 
 import requests
-import six.moves.urllib.parse as urllib_parse
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 from mozbuild.telemetry import filter_args
 from mozversioncontrol import InvalidRepoPath, get_repository_object
-from six.moves import configparser, input
 
 from mach.config import ConfigSettings
 from mach.settings import MachSettings
