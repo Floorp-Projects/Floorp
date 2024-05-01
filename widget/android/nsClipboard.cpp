@@ -164,7 +164,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
     }
   }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsresult nsClipboard::EmptyNativeClipboardData(int32_t aWhichClipboard) {

@@ -149,5 +149,20 @@ clipboardTypes.forEach(function (clipboardType) {
       // Clear all clipboard data.
       cleanupAllClipboard();
     });
+
+    add_task(function test_unsupport_flavor() {
+      try {
+        is(
+          getClipboardData("foo/bar", clipboardType),
+          null,
+          `Test getData for clipboard type ${clipboardType}`
+        );
+      } catch (e) {
+        ok(
+          false,
+          `getData should not throw error for clipboard type ${clipboardType}`
+        );
+      }
+    });
   }
 });
