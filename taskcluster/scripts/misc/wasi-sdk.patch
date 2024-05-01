@@ -21,10 +21,10 @@ index d2ccff6..95f395b 100644
      -DUNIX:BOOL=ON \
      --debug-trycompile
 diff --git a/src/wasi-libc/Makefile b/src/wasi-libc/Makefile
-index f350ecb..9a5c940 100644
+index f350ecb..3b73115 100644
 --- a/src/wasi-libc/Makefile
 +++ b/src/wasi-libc/Makefile
-@@ -308,7 +308,7 @@ ASMFLAGS += --target=$(TARGET_TRIPLE)
+@@ -305,7 +305,7 @@ ASMFLAGS += --target=$(TARGET_TRIPLE)
  # TODO: Add -fno-signaling-nans when the compiler supports it.
  CFLAGS += -fno-trapping-math
  # Add all warnings, but disable a few which occur in third-party code.
@@ -33,7 +33,16 @@ index f350ecb..9a5c940 100644
    -Wno-null-pointer-arithmetic \
    -Wno-unused-parameter \
    -Wno-sign-compare \
-@@ -671,6 +671,10 @@ check-symbols: startup_files libc
+@@ -639,7 +639,7 @@ check-symbols: startup_files libc
+ 	for undef_sym in $$("$(NM)" --undefined-only "$(SYSROOT_LIB)"/libc.a "$(SYSROOT_LIB)"/libc-*.a "$(SYSROOT_LIB)"/*.o \
+ 	    |grep ' U ' |sed 's/.* U //' |LC_ALL=C sort |uniq); do \
+ 	    grep -q '\<'$$undef_sym'\>' "$(DEFINED_SYMBOLS)" || echo $$undef_sym; \
+-	done | grep -v "^__mul" > "$(UNDEFINED_SYMBOLS)"
++	done | grep -E -v "^__mul|__indirect_function_table" > "$(UNDEFINED_SYMBOLS)"
+ 	grep '^_*imported_wasi_' "$(UNDEFINED_SYMBOLS)" \
+ 	    > "$(SYSROOT_LIB)/libc.imports"
+ 
+@@ -671,10 +671,16 @@ check-symbols: startup_files libc
  	@#
  	@# TODO: Filter out __NO_MATH_ERRNO_ and a few __*WIDTH__ that are new to clang 14.
  	@# TODO: Filter out __GCC_HAVE_SYNC_COMPARE_AND_SWAP_* that are new to clang 16.
@@ -44,7 +53,22 @@ index f350ecb..9a5c940 100644
  	@# TODO: clang defined __FLT_EVAL_METHOD__ until clang 15, so we force-undefine it
  	@# for older versions.
  	@# TODO: Undefine __wasm_mutable_globals__ and __wasm_sign_ext__, that are new to
-@@ -702,6 +703,10 @@ check-symbols: startup_files libc
+ 	@# clang 16 for -mcpu=generic.
++	@# TODO: Undefine __wasm_multivalue__ and __wasm_reference_types__, that are new to
++	@# clang 19 for -mcpu=generic.
+ 	@# TODO: As of clang 16, __GNUC_VA_LIST is #defined without a value.
+ 	$(CC) $(CFLAGS) "$(SYSROOT_SHARE)/include-all.c" \
+ 	    -isystem $(SYSROOT_INC) \
+@@ -691,6 +697,8 @@ check-symbols: startup_files libc
+ 	    -U__clang_wide_literal_encoding__ \
+ 	    -U__wasm_mutable_globals__ \
+ 	    -U__wasm_sign_ext__ \
++	    -U__wasm_multivalue__ \
++	    -U__wasm_reference_types__ \
+ 	    -U__GNUC__ \
+ 	    -U__GNUC_MINOR__ \
+ 	    -U__GNUC_PATCHLEVEL__ \
+@@ -702,6 +710,10 @@ check-symbols: startup_files libc
  	    | sed -e 's/__GNUC_VA_LIST $$/__GNUC_VA_LIST 1/' \
  	    | grep -v '^#define __\(BOOL\|INT_\(LEAST\|FAST\)\(8\|16\|32\|64\)\|INT\|LONG\|LLONG\|SHRT\)_WIDTH__' \
  	    | grep -v '^#define __GCC_HAVE_SYNC_COMPARE_AND_SWAP_\(1\|2\|4\|8\)' \
