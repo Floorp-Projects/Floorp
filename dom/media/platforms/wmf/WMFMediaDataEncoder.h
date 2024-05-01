@@ -13,6 +13,8 @@
 #include "TimeUnits.h"
 #include "WMFDataEncoderUtils.h"
 #include "WMFUtils.h"
+#include <comdef.h>
+#include "mozilla/WindowsProcessMitigations.h"
 
 namespace mozilla {
 
@@ -130,7 +132,9 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
     mscom::EnsureMTA([&]() { hr = InitMFTEncoder(encoder); });
 
     if (FAILED(hr)) {
-      WMF_ENC_LOGE("init MFTEncoder: error = 0x%lX", hr);
+      _com_error error(hr);
+      WMF_ENC_LOGE("init MFTEncoder: error = 0x%lX, %ls", hr,
+                   error.ErrorMessage());
       return InitPromise::CreateAndReject(
           MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                       RESULT_DETAIL("Can't create the MFT encoder.")),
@@ -145,13 +149,28 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
 
   HRESULT InitMFTEncoder(RefPtr<MFTEncoder>& aEncoder) {
     HRESULT hr = aEncoder->Create(CodecToSubtype(mConfig.mCodec));
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    if (FAILED(hr)) {
+      _com_error error(hr);
+      WMF_ENC_LOGE("MFTEncoder::Create: error = 0x%lX, %ls", hr,
+                   error.ErrorMessage());
+      return hr;
+    }
 
     hr = SetMediaTypes(aEncoder, mConfig);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    if (FAILED(hr)) {
+      _com_error error(hr);
+      WMF_ENC_LOGE("MFTEncoder::SetMediaType: error = 0x%lX, %ls", hr,
+                   error.ErrorMessage());
+      return hr;
+    }
 
     hr = aEncoder->SetModes(mConfig.mBitrate);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+    if (FAILED(hr)) {
+      _com_error error(hr);
+      WMF_ENC_LOGE("MFTEncoder::SetMode: error = 0x%lX, %ls", hr,
+                   error.ErrorMessage());
+      return hr;
+    }
 
     return S_OK;
   }
