@@ -214,4 +214,5 @@ tools/esmify/package-lock.json
 docs/mots/index.rst
 
 # Ignore .venv or venv directories if somebody uses virtualenv
-[.]venv/
+[Vv]env/
+.[Vv]env/
