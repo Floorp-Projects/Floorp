@@ -134,7 +134,7 @@ var gBuiltInInputs = {
     type: kInputTypes.BUTTON,
     callback: () => {
       let win = lazy.BrowserWindowTracker.getTopWindow();
-      win.SidebarController.toggle();
+      win.SidebarUI.toggle();
     },
   },
   AddBookmark: {

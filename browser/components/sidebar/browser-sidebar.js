@@ -3,11 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * SidebarController handles logic such as toggling sidebar panels,
- * dynamically adding menubar menu items for the View -> Sidebar menu,
- * and provides APIs for sidebar extensions, etc.
+ * SidebarUI controls showing and hiding the browser sidebar.
  */
-var SidebarController = {
+var SidebarUI = {
   get sidebars() {
     if (this._sidebars) {
       return this._sidebars;
@@ -136,8 +134,8 @@ var SidebarController = {
     }
 
     if (this.sidebarRevampEnabled) {
-      await import("chrome://browser/content/sidebar/sidebar-main.mjs");
-      document.getElementById("sidebar-main").hidden = false;
+      await import("chrome://browser/content/sidebar/sidebar-launcher.mjs");
+      document.getElementById("sidebar-launcher").hidden = false;
       document.getElementById("sidebar-header").hidden = true;
     } else {
       this._switcherTarget.addEventListener("command", () => {
@@ -353,30 +351,30 @@ var SidebarController = {
     [...browser.children].forEach((node, i) => {
       node.style.order = i + 1;
     });
-    let sidebarMain = document.querySelector("sidebar-main");
+    let sidebarLauncher = document.querySelector("sidebar-launcher");
 
     if (!this._positionStart) {
-      // DOM ordering is:     sidebar-main |  sidebar-box  | splitter |   appcontent  |
-      // Want to display as:  |   appcontent  | splitter |  sidebar-box  | sidebar-main
-      // So we just swap box and appcontent ordering and move sidebar-main to the end
+      // DOM ordering is:     sidebar-launcher |  sidebar-box  | splitter |   appcontent  |
+      // Want to display as:  |   appcontent  | splitter |  sidebar-box  | sidebar-launcher
+      // So we just swap box and appcontent ordering and move sidebar-launcher to the end
       let appcontent = document.getElementById("appcontent");
       let boxOrdinal = this._box.style.order;
       this._box.style.order = appcontent.style.order;
 
       appcontent.style.order = boxOrdinal;
       // the launcher should be on the right of the sidebar-box
-      sidebarMain.style.order = parseInt(this._box.style.order) + 1;
+      sidebarLauncher.style.order = parseInt(this._box.style.order) + 1;
       // Indicate we've switched ordering to the box
       this._box.setAttribute("positionend", true);
-      sidebarMain.setAttribute("positionend", true);
+      sidebarLauncher.setAttribute("positionend", true);
     } else {
       this._box.removeAttribute("positionend");
-      sidebarMain.removeAttribute("positionend");
+      sidebarLauncher.removeAttribute("positionend");
     }
 
     this.hideSwitcherPanel();
 
-    let content = SidebarController.browser.contentWindow;
+    let content = SidebarUI.browser.contentWindow;
     if (content && content.updatePosition) {
       content.updatePosition();
     }
@@ -393,7 +391,7 @@ var SidebarController = {
     // If the opener had a sidebar, open the same sidebar in our window.
     // The opener can be the hidden window too, if we're coming from the state
     // where no windows are open, and the hidden window has no sidebar box.
-    let sourceUI = sourceWindow.SidebarController;
+    let sourceUI = sourceWindow.SidebarUI;
     if (!sourceUI || !sourceUI._box) {
       // no source UI or no _box means we also can't adopt the state.
       return false;
@@ -906,14 +904,14 @@ var SidebarController = {
 // Add getters related to the position here, since we will want them
 // available for both startDelayedLoad and init.
 XPCOMUtils.defineLazyPreferenceGetter(
-  SidebarController,
+  SidebarUI,
   "_positionStart",
-  SidebarController.POSITION_START_PREF,
+  SidebarUI.POSITION_START_PREF,
   true,
-  SidebarController.setPosition.bind(SidebarController)
+  SidebarUI.setPosition.bind(SidebarUI)
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  SidebarController,
+  SidebarUI,
   "sidebarRevampEnabled",
   "sidebar.revamp",
   false

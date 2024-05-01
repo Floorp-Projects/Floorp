@@ -83,7 +83,7 @@ add_task(async function test_extension_sidebar_actions() {
   // await one "sidebar" message.
   const win = await BrowserTestUtils.openNewBrowserWindow();
   const { document } = win;
-  const sidebar = document.getElementById("sidebar-main");
+  const sidebar = document.getElementById("sidebar-launcher");
   ok(sidebar, "Sidebar is shown.");
 
   const extension = ExtensionTestUtils.loadExtension({ ...extData });
@@ -121,7 +121,7 @@ add_task(async function test_extension_sidebar_actions() {
   await sendMessage(extension, "set-panel", "1.html");
   const panelUrl = `moz-extension://${extension.uuid}/1.html`;
   await TestUtils.waitForCondition(() => {
-    const browser = SidebarController.browser.contentDocument.getElementById(
+    const browser = SidebarUI.browser.contentDocument.getElementById(
       "webext-panels-browser"
     );
     return browser.currentURI.spec === panelUrl;
@@ -144,7 +144,7 @@ add_task(async function test_open_new_window_after_install() {
 
   const win = await BrowserTestUtils.openNewBrowserWindow();
   const { document } = win;
-  const sidebar = document.getElementById("sidebar-main");
+  const sidebar = document.getElementById("sidebar-launcher");
   ok(sidebar, "Sidebar is shown.");
   await extension.awaitMessage("sidebar");
   is(
@@ -172,7 +172,7 @@ add_task(async function test_open_new_private_window_after_install() {
     private: true,
   });
   const { document } = privateWin;
-  const sidebar = document.getElementById("sidebar-main");
+  const sidebar = document.getElementById("sidebar-launcher");
   ok(sidebar, "Sidebar is shown.");
   await TestUtils.waitForCondition(
     () => sidebar.extensionButtons,

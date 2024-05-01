@@ -5728,7 +5728,7 @@ var SessionStoreInternal = {
         (sidebarBox.getAttribute("sidebarcommand") != aSidebar ||
           !sidebarBox.getAttribute("checked"))
       ) {
-        aWindow.SidebarController.showInitially(aSidebar);
+        aWindow.SidebarUI.showInitially(aSidebar);
       }
       // since resizing/moving a window brings it to the foreground,
       // we might want to re-focus the last focused window

@@ -18,7 +18,7 @@ add_task(async function persist_sidebar_width() {
   {
     info("Showing new window and setting sidebar box");
     const win = await BrowserTestUtils.openNewBrowserWindow();
-    await win.SidebarController.show("viewBookmarksSidebar");
+    await win.SidebarUI.show("viewBookmarksSidebar");
     win.document.getElementById("sidebar-box").style.width = "100px";
     await BrowserTestUtils.closeWindow(win);
   }
@@ -26,7 +26,7 @@ add_task(async function persist_sidebar_width() {
   {
     info("Showing new window and seeing persisted width");
     const win = await BrowserTestUtils.openNewBrowserWindow();
-    await win.SidebarController.show("viewBookmarksSidebar");
+    await win.SidebarUI.show("viewBookmarksSidebar");
     is(
       win.document.getElementById("sidebar-box").style.width,
       "100px",

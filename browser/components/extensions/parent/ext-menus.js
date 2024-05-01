@@ -1100,11 +1100,11 @@ const menuTracker = {
     );
     sidebarHeader.addEventListener("SidebarShown", menuTracker.onSidebarShown);
 
-    await window.SidebarController.promiseInitialized;
+    await window.SidebarUI.promiseInitialized;
 
     if (
       !window.closed &&
-      window.SidebarController.currentID === "viewBookmarksSidebar"
+      window.SidebarUI.currentID === "viewBookmarksSidebar"
     ) {
       menuTracker.onSidebarShown({ currentTarget: sidebarHeader });
     }
@@ -1121,8 +1121,8 @@ const menuTracker = {
     );
     sidebarHeader.removeEventListener("SidebarShown", this.onSidebarShown);
 
-    if (window.SidebarController.currentID === "viewBookmarksSidebar") {
-      let sidebarBrowser = window.SidebarController.browser;
+    if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
+      let sidebarBrowser = window.SidebarUI.browser;
       sidebarBrowser.removeEventListener("load", this.onSidebarShown);
       const menu =
         sidebarBrowser.contentDocument.getElementById("placesContext");
@@ -1134,10 +1134,10 @@ const menuTracker = {
     // The event target is an element in a browser window, so |window| will be
     // the browser window that contains the sidebar.
     const window = event.currentTarget.ownerGlobal;
-    if (window.SidebarController.currentID === "viewBookmarksSidebar") {
-      let sidebarBrowser = window.SidebarController.browser;
+    if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
+      let sidebarBrowser = window.SidebarUI.browser;
       if (sidebarBrowser.contentDocument.readyState !== "complete") {
-        // SidebarController.currentID may be updated before the bookmark sidebar's
+        // SidebarUI.currentID may be updated before the bookmark sidebar's
         // document has finished loading. This sometimes happens when the
         // sidebar is automatically shown when a new window is opened.
         sidebarBrowser.addEventListener("load", menuTracker.onSidebarShown, {

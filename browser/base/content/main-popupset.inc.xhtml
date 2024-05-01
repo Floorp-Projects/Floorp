@@ -256,26 +256,26 @@
     <menuitem id="sidebar-switcher-bookmarks"
               data-l10n-id="sidebar-menu-bookmarks"
               key="viewBookmarksSidebarKb"
-              oncommand="SidebarController.show('viewBookmarksSidebar');"/>
+              oncommand="SidebarUI.show('viewBookmarksSidebar');"/>
     <menuitem id="sidebar-switcher-history"
               data-l10n-id="sidebar-menu-history"
               key="key_gotoHistory"
-              oncommand="SidebarController.show('viewHistorySidebar');"/>
+              oncommand="SidebarUI.show('viewHistorySidebar');"/>
     <menuitem id="sidebar-switcher-tabs"
               data-l10n-id="sidebar-menu-synced-tabs"
               class="sync-ui-item"
-              oncommand="SidebarController.show('viewTabsSidebar');"/>
+              oncommand="SidebarUI.show('viewTabsSidebar');"/>
     <menuitem id="sidebar-switcher-megalist"
               data-l10n-id="sidebar-menu-megalist"
-              oncommand="SidebarController.show('viewMegalistSidebar');"/>
+              oncommand="SidebarUI.show('viewMegalistSidebar');"/>
     <menuseparator/>
     <!-- Extension toolbarbuttons go here. -->
     <menuseparator id="sidebar-extensions-separator"/>
     <menuitem id="sidebar-reverse-position"
-              oncommand="SidebarController.reversePosition()"/>
+              oncommand="SidebarUI.reversePosition()"/>
     <menuseparator/>
     <menuitem data-l10n-id="sidebar-menu-close"
-              oncommand="SidebarController.hide()"/>
+              oncommand="SidebarUI.hide()"/>
   </menupopup>
 
   <menupopup id="toolbar-context-menu"
