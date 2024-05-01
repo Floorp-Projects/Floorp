@@ -60,12 +60,8 @@ add_task(async function test_fallback() {
   info("Set icon for the root");
   await PlacesTestUtils.addVisits(ROOT_URL);
   let data = readFileData(do_get_file("favicon-normal16.png"));
-  PlacesUtils.favicons.replaceFaviconData(
-    NetUtil.newURI(ROOT_ICON_URL),
-    data,
-    "image/png"
-  );
-  await setFaviconForPage(ROOT_URL, ROOT_ICON_URL);
+  let dataURL = await fileDataToDataURL(data, "image/png");
+  await PlacesTestUtils.setFaviconForPage(ROOT_URL, ROOT_ICON_URL, dataURL);
 
   info("check fallback icons");
   await new Promise(resolve => {
@@ -96,12 +92,8 @@ add_task(async function test_fallback() {
   info("Now add a proper icon for the page");
   await PlacesTestUtils.addVisits(SUBPAGE_URL);
   let data32 = readFileData(do_get_file("favicon-normal32.png"));
-  PlacesUtils.favicons.replaceFaviconData(
-    NetUtil.newURI(ICON32_URL),
-    data32,
-    "image/png"
-  );
-  await setFaviconForPage(SUBPAGE_URL, ICON32_URL);
+  let dataURL32 = await fileDataToDataURL(data32, "image/png");
+  await PlacesTestUtils.setFaviconForPage(SUBPAGE_URL, ICON32_URL, dataURL32);
 
   info("check no fallback icons");
   await new Promise(resolve => {
