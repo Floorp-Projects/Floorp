@@ -293,13 +293,9 @@ toolchains.json
 lextab.py
 
 # Ignore Visual Studio/Visual Studio Code workspace files.
+# (but the root .vscode directory)
 .vs/
-# lint-ignore-next-line: syntax-difference
-.vscode/
-# lint-ignore-next-line: syntax-difference
-!.vscode/extensions.json
-# lint-ignore-next-line: syntax-difference
-!.vscode/tasks.json
+*/.vscode/
 *.user
 
 # Thunderbird source tree
