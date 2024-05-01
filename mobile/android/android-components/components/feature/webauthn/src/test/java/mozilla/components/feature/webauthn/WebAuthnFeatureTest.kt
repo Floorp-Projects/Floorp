@@ -22,6 +22,8 @@ import org.mockito.Mockito.verify
 class WebAuthnFeatureTest {
     private lateinit var engine: Engine
     private lateinit var activity: Activity
+    private val exitFullScreen: (String?) -> Unit = { _ -> exitFullScreenUseCaseCalled = true }
+    private var exitFullScreenUseCaseCalled = false
 
     @Before
     fun setup() {
@@ -31,7 +33,7 @@ class WebAuthnFeatureTest {
 
     @Test
     fun `feature registers itself on start`() {
-        val feature = WebAuthnFeature(engine, activity)
+        val feature = webAuthnFeature()
 
         feature.start()
 
@@ -40,7 +42,7 @@ class WebAuthnFeatureTest {
 
     @Test
     fun `feature unregisters itself on stop`() {
-        val feature = WebAuthnFeature(engine, activity)
+        val feature = webAuthnFeature()
 
         feature.stop()
 
@@ -49,7 +51,7 @@ class WebAuthnFeatureTest {
 
     @Test
     fun `activity delegate starts intent sender`() {
-        val feature = WebAuthnFeature(engine, activity)
+        val feature = webAuthnFeature()
         val callback: ((Intent?) -> Unit) = { }
         val intentSender: IntentSender = mock()
 
@@ -60,7 +62,7 @@ class WebAuthnFeatureTest {
 
     @Test
     fun `callback is invoked`() {
-        val feature = WebAuthnFeature(engine, activity)
+        val feature = webAuthnFeature()
         var callbackInvoked = false
         val callback: ((Intent?) -> Unit) = { callbackInvoked = true }
         val intentSender: IntentSender = mock()
@@ -77,10 +79,14 @@ class WebAuthnFeatureTest {
 
     @Test
     fun `feature won't process results with the wrong request code`() {
-        val feature = WebAuthnFeature(engine, activity)
+        val feature = webAuthnFeature()
 
         val result = feature.onActivityResult(ACTIVITY_REQUEST_CODE - 5, Intent(), 0)
 
         assertFalse(result)
+    }
+
+    private fun webAuthnFeature(): WebAuthnFeature {
+        return WebAuthnFeature(engine, activity, { exitFullScreen("") }) { "" }
     }
 }
