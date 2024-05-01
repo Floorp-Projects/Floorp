@@ -86,7 +86,6 @@ add_setup(async function () {
   // Enable local telemetry recording for the duration of the tests.
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.search.serpEventTelemetry.enabled", true],
       // Set the IPC count to a small number so that we only have to open
       // one additional tab to reuse the same process.
       ["dom.ipc.processCount.webIsolated", 1],

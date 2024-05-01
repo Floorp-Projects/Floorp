@@ -41,7 +41,6 @@ add_setup(async function () {
       ],
       // Ensure to add search suggestion telemetry as search_suggestion not search_formhistory.
       ["browser.urlbar.maxHistoricalSearchSuggestions", 0],
-      ["browser.search.serpEventTelemetry.enabled", true],
     ],
   });
   // Enable local telemetry recording for the duration of the tests.

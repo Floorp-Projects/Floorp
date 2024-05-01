@@ -7,7 +7,6 @@ ChromeUtils.defineESModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
-  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
@@ -268,10 +267,6 @@ async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
 do_get_profile();
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref(
-    SearchUtils.BROWSER_SEARCH_PREF + "serpEventTelemetry.enabled",
-    true
-  );
   Services.fog.initializeFOG();
   await SearchSERPTelemetry.init();
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
