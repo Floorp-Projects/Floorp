@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -30,7 +31,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * The header UI used for micro-survey.
  *
- * @param title The text that will be visible on header.
+ * @param title The text that will be visible on the header.
  * @param onCloseButtonClick Invoked when the close button is clicked.
  */
 @Composable
@@ -69,12 +70,10 @@ fun MicroSurveyHeader(
     }
 }
 
-/**
- * The preview for micro-survey header
- */
-@Composable
+@PreviewScreenSizes
 @LightDarkPreview
-fun MicroSurveyHeaderPreview() {
+@Composable
+private fun MicroSurveyHeaderPreview() {
     FirefoxTheme {
         Box(
             modifier = Modifier
