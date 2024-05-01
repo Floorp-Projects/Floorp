@@ -59,19 +59,27 @@ fun CFRPopupLayout(
                 onCFRShown()
             }
 
+            var popup: CFRPopup? = null
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { context ->
-                    View(context)
+                    View(context).also {
+                        popup = CFRPopup(
+                            anchor = it,
+                            properties = properties,
+                            onDismiss = onDismiss,
+                            text = text,
+                            action = action,
+                        )
+                    }
                 },
-                update = { view ->
-                    CFRPopup(
-                        anchor = view,
-                        properties = properties,
-                        onDismiss = onDismiss,
-                        text = text,
-                        action = action,
-                    ).show()
+                onRelease = {
+                    popup?.dismiss()
+                    popup = null
+                },
+                update = {
+                    popup?.dismiss()
+                    popup?.show()
                 },
             )
         }
