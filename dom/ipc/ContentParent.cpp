@@ -3469,7 +3469,7 @@ static Result<nsCOMPtr<nsITransferable>, nsresult> CreateTransferable(
 mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
     nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
     const MaybeDiscarded<WindowContext>& aRequestingWindowContext,
-    IPCTransferableData* aTransferableData) {
+    IPCTransferableDataOrError* aTransferableDataOrError) {
   nsresult rv;
   // We expect content processes to always pass a non-null window so Content
   // Analysis can analyze it. (if Content Analysis is active)
@@ -3479,6 +3479,7 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
     NS_WARNING(
         "discarded window passed to RecvGetClipboard(); returning no clipboard "
         "content");
+    *aTransferableDataOrError = NS_ERROR_FAILURE;
     return IPC_OK();
   }
   if (aRequestingWindowContext.IsNull()) {
@@ -3488,21 +3489,29 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
   // Retrieve clipboard
   nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
   if (NS_FAILED(rv)) {
+    *aTransferableDataOrError = rv;
     return IPC_OK();
   }
 
   // Create transferable
   auto result = CreateTransferable(aTypes);
   if (result.isErr()) {
+    *aTransferableDataOrError = result.unwrapErr();
     return IPC_OK();
   }
 
   // Get data from clipboard
   nsCOMPtr<nsITransferable> trans = result.unwrap();
-  clipboard->GetData(trans, aWhichClipboard, window);
+  rv = clipboard->GetData(trans, aWhichClipboard, window);
+  if (NS_FAILED(rv)) {
+    *aTransferableDataOrError = rv;
+    return IPC_OK();
+  }
 
+  IPCTransferableData transferableData;
   nsContentUtils::TransferableToIPCTransferableData(
-      trans, aTransferableData, true /* aInSyncMessage */, this);
+      trans, &transferableData, true /* aInSyncMessage */, this);
+  *aTransferableDataOrError = std::move(transferableData);
   return IPC_OK();
 }
 

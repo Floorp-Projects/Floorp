@@ -1219,7 +1219,7 @@ parent:
     // which is used for content analysis.
     sync GetClipboard(nsCString[] aTypes, int32_t aWhichClipboard,
                       MaybeDiscardedWindowContext aRequestingWindowContext)
-        returns (IPCTransferableData transferableData);
+        returns (IPCTransferableDataOrError transferableDataOrError);
 
     // Requests getting data from clipboard.
     async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard,
