@@ -8,7 +8,7 @@
 
 add_task(function cleanup() {
   registerCleanupFunction(() => {
-    SidebarUI.hide();
+    SidebarController.hide();
   });
 });
 
@@ -17,7 +17,7 @@ add_task(function cleanup() {
  */
 async function testLiveReloading(sidebarName) {
   info("Showing the sidebar " + sidebarName);
-  await SidebarUI.show(sidebarName);
+  await SidebarController.show(sidebarName);
 
   function getTreeChildren() {
     const sidebarDoc =
@@ -44,7 +44,7 @@ async function testLiveReloading(sidebarName) {
   );
 
   info("Hiding the sidebar");
-  SidebarUI.hide();
+  SidebarController.hide();
 }
 
 add_task(async function test_bookmarks_sidebar() {

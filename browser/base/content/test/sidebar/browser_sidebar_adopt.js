@@ -5,7 +5,7 @@
  * during the initial browser startup - but it would be hard to do with a mochitest. */
 
 registerCleanupFunction(() => {
-  SidebarUI.hide();
+  SidebarController.hide();
 });
 
 function failIfSidebarFocusedFires() {
@@ -26,7 +26,7 @@ add_task(async function testAdoptedTwoWindows() {
   info("Ensure that sidebar state is adopted only from the opener");
 
   let win1 = await BrowserTestUtils.openNewBrowserWindow();
-  await win1.SidebarUI.show("viewBookmarksSidebar");
+  await win1.SidebarController.show("viewBookmarksSidebar");
   await BrowserTestUtils.closeWindow(win1);
 
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
@@ -34,7 +34,7 @@ add_task(async function testAdoptedTwoWindows() {
     !win2.document.getElementById("sidebar-button").hasAttribute("checked"),
     "Sidebar button isn't checked"
   );
-  ok(!win2.SidebarUI.isOpen, "Sidebar is closed");
+  ok(!win2.SidebarController.isOpen, "Sidebar is closed");
   await BrowserTestUtils.closeWindow(win2);
 });
 
@@ -46,7 +46,7 @@ add_task(async function testEventsReceivedInMainWindow() {
   let initialShown = BrowserTestUtils.waitForEvent(window, "SidebarShown");
   let initialFocus = BrowserTestUtils.waitForEvent(window, "SidebarFocused");
 
-  await SidebarUI.show("viewBookmarksSidebar");
+  await SidebarController.show("viewBookmarksSidebar");
   await initialShown;
   await initialFocus;
 

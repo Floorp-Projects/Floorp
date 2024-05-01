@@ -31,7 +31,7 @@ add_task(async function test_sidebarpanels_click() {
       false,
       "Unexpected sidebar found - a previous test failed to cleanup correctly"
     );
-    SidebarUI.hide();
+    SidebarController.hide();
   }
 
   // Ensure history is clean before starting the test.
@@ -137,7 +137,7 @@ async function testPlacesPanel(testInfo) {
           await promiseAlert;
 
           executeSoon(async function () {
-            SidebarUI.hide();
+            SidebarController.hide();
             await testInfo.cleanup();
             resolve();
           });
@@ -147,7 +147,7 @@ async function testPlacesPanel(testInfo) {
     );
   });
 
-  SidebarUI.show(testInfo.sidebarName);
+  SidebarController.show(testInfo.sidebarName);
 
   return promise;
 }

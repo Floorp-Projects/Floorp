@@ -12,7 +12,7 @@ function test() {
 
   // opens a sidebar
   function openSidebar(win) {
-    return win.SidebarUI.show("viewBookmarksSidebar").then(() => win);
+    return win.SidebarController.show("viewBookmarksSidebar").then(() => win);
   }
 
   let windowCache = [];

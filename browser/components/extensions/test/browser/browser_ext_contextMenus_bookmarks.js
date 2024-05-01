@@ -54,7 +54,7 @@ add_task(async function test_bookmark_sidebar_contextmenu() {
       expectedVirtualID,
     ] of expected_bookmarkID_2_virtualID) {
       info(`Testing context menu for Bookmark ID "${expectedBookmarkID}"`);
-      let sidebar = window.SidebarUI.browser;
+      let sidebar = window.SidebarController.browser;
       let menu = sidebar.contentDocument.getElementById("placesContext");
       tree.selectItems([expectedBookmarkID]);
 

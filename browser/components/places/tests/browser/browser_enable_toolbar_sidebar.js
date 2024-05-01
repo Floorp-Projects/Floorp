@@ -11,7 +11,7 @@
 registerCleanupFunction(async () => {
   CustomizableUI.setToolbarVisibility("PersonalToolbar", false);
   CustomizableUI.removeWidgetFromArea("library-button");
-  SidebarUI.hide();
+  SidebarController.hide();
 });
 
 async function selectAppMenuView(buttonId, viewId) {

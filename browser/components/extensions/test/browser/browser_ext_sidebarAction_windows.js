@@ -49,7 +49,7 @@ add_task(async function sidebar_windows() {
 
   let secondSidebar = extension.awaitMessage("sidebar");
 
-  // SidebarUI relies on window.opener being set, which is normal behavior when
+  // SidebarController relies on window.opener being set, which is normal behavior when
   // using menu or key commands to open a new browser window.
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
