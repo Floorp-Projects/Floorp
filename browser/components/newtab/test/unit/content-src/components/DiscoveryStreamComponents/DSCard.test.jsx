@@ -70,7 +70,9 @@ describe("<DSCard>", () => {
   });
 
   it("should render DSLinkMenu", () => {
-    assert.equal(wrapper.children().at(3).type(), DSLinkMenu);
+    // Note: <DSLinkMenu> component moved from a direct child element of `.ds-card`. See Bug 1893936
+    const default_link_menu = wrapper.find(DSLinkMenu);
+    assert.ok(default_link_menu.exists());
   });
 
   it("should start with no .active class", () => {

@@ -2967,11 +2967,11 @@ class _DSCard extends (external_React_default()).PureComponent {
       ctaButtonVariant: ctaButtonVariant,
       dispatch: this.props.dispatch,
       spocMessageVariant: this.props.spocMessageVariant
-    }), saveToPocketCard && /*#__PURE__*/external_React_default().createElement("div", {
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "card-stp-button-hover-background"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "card-stp-button-position-wrapper"
-    }, !this.props.flightId && stpButton(), /*#__PURE__*/external_React_default().createElement(DSLinkMenu, {
+    }, saveToPocketCard && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, !this.props.flightId && stpButton()), /*#__PURE__*/external_React_default().createElement(DSLinkMenu, {
       id: this.props.id,
       index: this.props.pos,
       dispatch: this.props.dispatch,
@@ -2989,25 +2989,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       saveToPocketCard: saveToPocketCard,
       pocket_button_enabled: pocketButtonEnabled,
       isRecentSave: isRecentSave
-    }))), !saveToPocketCard && /*#__PURE__*/external_React_default().createElement(DSLinkMenu, {
-      id: this.props.id,
-      index: this.props.pos,
-      dispatch: this.props.dispatch,
-      url: this.props.url,
-      title: this.props.title,
-      source: source,
-      type: this.props.type,
-      pocket_id: this.props.pocket_id,
-      shim: this.props.shim,
-      bookmarkGuid: this.props.bookmarkGuid,
-      flightId: !this.props.is_collection ? this.props.flightId : undefined,
-      showPrivacyInfo: !!this.props.flightId,
-      hostRef: this.contextMenuButtonHostRef,
-      onMenuUpdate: this.onMenuUpdate,
-      onMenuShow: this.onMenuShow,
-      pocket_button_enabled: pocketButtonEnabled,
-      isRecentSave: isRecentSave
-    }));
+    }))));
   }
 }
 _DSCard.defaultProps = {
