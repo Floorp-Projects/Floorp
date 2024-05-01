@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="reftest-wait"
-     onload="setTimeAndSnapshot(5, true)">
+     class="reftest-wait">
   <title>Test animation of the "numOctaves" &lt;integer&gt; attribute on the "feTurbulence" element</title>
   <script xlink:href="smil-util.js" type="text/javascript"/>
 
@@ -214,4 +213,10 @@
   </filter>
   <rect x="20" y="100" width="20" height="20" filter="url(#filter_12)"/>
 
+  <script type="text/javascript">
+    function doTest() {
+      setTimeAndSnapshot(5, true);
+    }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
 </svg>

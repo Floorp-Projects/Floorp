@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="reftest-wait"
-     onload="setTimeAndSnapshot(1, true)">
+     class="reftest-wait">
   <title>Test animation of the "dx" and "dy" attributes on the "feOffset" element</title>
   <script xlink:href="smil-util.js" type="text/javascript"/>
   <filter id="offset_filter_1" x="0%" y="0%" width="300%" height="100%">
@@ -31,4 +30,11 @@
   <!-- test 100% completed animation -->
   <rect y="100" width="100" height="100" fill="red"/>
   <rect width="100" height="100" fill="lime" filter="url(#offset_filter_2)"/>
+
+  <script type="text/javascript">
+    function doTest() {
+      setTimeAndSnapshot(1, true);
+    }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
 </svg>
