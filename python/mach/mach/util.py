@@ -20,20 +20,12 @@ def setenv(key, value):
     """Compatibility shim to ensure the proper string type is used with
     os.environ for the version of Python being used.
     """
-    from six import text_type
-
     encoding = "mbcs" if sys.platform == "win32" else "utf-8"
 
-    if sys.version_info[0] == 2:
-        if isinstance(key, text_type):
-            key = key.encode(encoding)
-        if isinstance(value, text_type):
-            value = value.encode(encoding)
-    else:
-        if isinstance(key, bytes):
-            key = key.decode(encoding)
-        if isinstance(value, bytes):
-            value = value.decode(encoding)
+    if isinstance(key, bytes):
+        key = key.decode(encoding)
+    if isinstance(value, bytes):
+        value = value.decode(encoding)
 
     os.environ[key] = value
 

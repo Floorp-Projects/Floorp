@@ -8,7 +8,6 @@
 import errno
 import os
 import re
-import sys
 import uuid
 from pathlib import Path
 from xml.dom import getDOMImplementation
@@ -35,8 +34,6 @@ MSNATVIS_NAMESPACE = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010"
 
 
 def get_id(name):
-    if sys.version_info[0] == 2:
-        name = name.encode("utf-8")
     return str(uuid.uuid5(uuid.NAMESPACE_URL, name)).upper()
 
 

@@ -4,7 +4,6 @@
 
 import inspect
 import re
-import sys
 import types
 from dis import Bytecode
 from functools import wraps
@@ -25,27 +24,9 @@ from .help import HelpFormatter
 
 
 def code_replace(code, co_filename, co_name, co_firstlineno):
-    if sys.version_info < (3, 8):
-        codetype_args = [
-            code.co_argcount,
-            code.co_kwonlyargcount,
-            code.co_nlocals,
-            code.co_stacksize,
-            code.co_flags,
-            code.co_code,
-            code.co_consts,
-            code.co_names,
-            code.co_varnames,
-            co_filename,
-            co_name,
-            co_firstlineno,
-            code.co_lnotab,
-        ]
-        return types.CodeType(*codetype_args)
-    else:
-        return code.replace(
-            co_filename=co_filename, co_name=co_name, co_firstlineno=co_firstlineno
-        )
+    return code.replace(
+        co_filename=co_filename, co_name=co_name, co_firstlineno=co_firstlineno
+    )
 
 
 class LintSandbox(ConfigureSandbox):
