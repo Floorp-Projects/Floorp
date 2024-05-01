@@ -57,10 +57,6 @@ support-files = [
 
 ["test_query_result_favicon_changed_on_child.js"]
 
-["test_replaceFaviconData.js"]
-
-["test_replaceFaviconDataFromDataURL.js"]
-
 ["test_root_icons.js"]
 
 ["test_setAndFetchFaviconForPage.js"]
