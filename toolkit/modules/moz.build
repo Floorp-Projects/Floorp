@@ -230,7 +230,6 @@ EXTRA_JS_MODULES.sessionstore += [
     "sessionstore/PrivacyFilter.sys.mjs",
     "sessionstore/PrivacyLevel.sys.mjs",
     "sessionstore/SessionHistory.sys.mjs",
-    "sessionstore/Utils.sys.mjs",
 ]
 
 EXTRA_JS_MODULES.third_party.fathom += ["third_party/fathom/fathom.mjs"]

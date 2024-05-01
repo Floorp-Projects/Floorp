@@ -119,59 +119,6 @@ const WINDOW_OPEN_FEATURES_MAP = {
   statusbar: "status",
 };
 
-// Messages that will be received via the Frame Message Manager.
-const MESSAGES = [
-  // The content script sends us data that has been invalidated and needs to
-  // be saved to disk.
-  "SessionStore:update",
-
-  // The restoreHistory code has run. This is a good time to run SSTabRestoring.
-  "SessionStore:restoreHistoryComplete",
-
-  // The load for the restoring tab has begun. We update the URL bar at this
-  // time; if we did it before, the load would overwrite it.
-  "SessionStore:restoreTabContentStarted",
-
-  // All network loads for a restoring tab are done, so we should
-  // consider restoring another tab in the queue. The document has
-  // been restored, and forms have been filled. We trigger
-  // SSTabRestored at this time.
-  "SessionStore:restoreTabContentComplete",
-
-  // The content script encountered an error.
-  "SessionStore:error",
-];
-
-// The list of messages we accept from <xul:browser>s that have no tab
-// assigned, or whose windows have gone away. Those are for example the
-// ones that preload about:newtab pages, or from browsers where the window
-// has just been closed.
-const NOTAB_MESSAGES = new Set([
-  // For a description see above.
-  "SessionStore:update",
-
-  // For a description see above.
-  "SessionStore:error",
-]);
-
-// The list of messages we accept without an "epoch" parameter.
-// See getCurrentEpoch() and friends to find out what an "epoch" is.
-const NOEPOCH_MESSAGES = new Set([
-  // For a description see above.
-  "SessionStore:error",
-]);
-
-// The list of messages we want to receive even during the short period after a
-// frame has been removed from the DOM and before its frame script has finished
-// unloading.
-const CLOSED_MESSAGES = new Set([
-  // For a description see above.
-  "SessionStore:update",
-
-  // For a description see above.
-  "SessionStore:error",
-]);
-
 // These are tab events that we listen to.
 const TAB_EVENTS = [
   "TabOpen",
@@ -578,18 +525,6 @@ export var SessionStore = {
         }
       }
     }
-  },
-
-  /**
-   * Prepares to change the remoteness of the given browser, by ensuring that
-   * the local instance of session history is up-to-date.
-   */
-  async prepareToChangeRemoteness(aTab) {
-    await SessionStoreInternal.prepareToChangeRemoteness(aTab);
-  },
-
-  finishTabRemotenessChange(aTab, aSwitchId) {
-    SessionStoreInternal.finishTabRemotenessChange(aTab, aSwitchId);
   },
 };
 
@@ -1043,8 +978,6 @@ var SessionStoreInternal = {
       "privacy.resistFingerprinting"
     );
     Services.prefs.addObserver("privacy.resistFingerprinting", this);
-
-    this._shistoryInParent = Services.appinfo.sessionHistoryInParent;
   },
 
   /**
@@ -1123,33 +1056,26 @@ var SessionStoreInternal = {
         }
         break;
       case "browsing-context-did-set-embedder":
-        if (Services.appinfo.sessionHistoryInParent) {
-          if (
-            aSubject &&
-            aSubject === aSubject.top &&
-            aSubject.isContent &&
-            aSubject.embedderElement &&
-            aSubject.embedderElement.permanentKey
-          ) {
-            let permanentKey = aSubject.embedderElement.permanentKey;
-            this._browserSHistoryListener.get(permanentKey)?.unregister();
-            this.getOrCreateSHistoryListener(permanentKey, aSubject, true);
-          }
+        if (
+          aSubject &&
+          aSubject === aSubject.top &&
+          aSubject.isContent &&
+          aSubject.embedderElement &&
+          aSubject.embedderElement.permanentKey
+        ) {
+          let permanentKey = aSubject.embedderElement.permanentKey;
+          this._browserSHistoryListener.get(permanentKey)?.unregister();
+          this.getOrCreateSHistoryListener(permanentKey, aSubject, true);
         }
         break;
       case "browsing-context-discarded":
-        if (Services.appinfo.sessionHistoryInParent) {
-          let permanentKey = aSubject?.embedderElement?.permanentKey;
-          if (permanentKey) {
-            this._browserSHistoryListener.get(permanentKey)?.unregister();
-          }
+        let permanentKey = aSubject?.embedderElement?.permanentKey;
+        if (permanentKey) {
+          this._browserSHistoryListener.get(permanentKey)?.unregister();
         }
         break;
       case "browser-shutdown-tabstate-updated":
-        if (Services.appinfo.sessionHistoryInParent) {
-          // Non-SHIP code calls this when the frame script is unloaded.
-          this.onFinalTabStateUpdateComplete(aSubject);
-        }
+        this.onFinalTabStateUpdateComplete(aSubject);
         this._notifyOfClosedObjectsChange();
         break;
     }
@@ -1260,10 +1186,6 @@ var SessionStoreInternal = {
       OnHistoryReplaceEntry() {
         this.collectFrom(-1);
       }
-    }
-
-    if (!Services.appinfo.sessionHistoryInParent) {
-      throw new Error("This function should only be used with SHIP");
     }
 
     if (!permanentKey || browsingContext !== browsingContext.top) {
@@ -1379,29 +1301,27 @@ var SessionStoreInternal = {
       return;
     }
 
-    if (Services.appinfo.sessionHistoryInParent) {
-      let listener = this.getOrCreateSHistoryListener(
-        permanentKey,
-        browsingContext
-      );
+    let listener = this.getOrCreateSHistoryListener(
+      permanentKey,
+      browsingContext
+    );
 
-      if (listener) {
-        let historychange =
-          // If it is not the scheduled update (tab closed, window closed etc),
-          // try to store the loading non-web-controlled page opened in _blank
-          // first.
-          (forStorage &&
-            lazy.SessionHistory.collectNonWebControlledBlankLoadingSession(
-              browsingContext
-            )) ||
-          listener.collect(permanentKey, browsingContext, {
-            collectFull: !!update.sHistoryNeeded,
-            writeToCache: false,
-          });
+    if (listener) {
+      let historychange =
+        // If it is not the scheduled update (tab closed, window closed etc),
+        // try to store the loading non-web-controlled page opened in _blank
+        // first.
+        (forStorage &&
+          lazy.SessionHistory.collectNonWebControlledBlankLoadingSession(
+            browsingContext
+          )) ||
+        listener.collect(permanentKey, browsingContext, {
+          collectFull: !!update.sHistoryNeeded,
+          writeToCache: false,
+        });
 
-        if (historychange) {
-          update.data.historychange = historychange;
-        }
+      if (historychange) {
+        update.data.historychange = historychange;
       }
     }
 
@@ -1410,98 +1330,6 @@ var SessionStoreInternal = {
       browsingContext.currentWindowGlobal?.browsingContext?.window;
 
     this.onTabStateUpdate(permanentKey, win, update);
-  },
-
-  /**
-   * This method handles incoming messages sent by the session store content
-   * script via the Frame Message Manager or Parent Process Message Manager,
-   * and thus enables communication with OOP tabs.
-   */
-  receiveMessage(aMessage) {
-    if (Services.appinfo.sessionHistoryInParent) {
-      throw new Error(
-        `received unexpected message '${aMessage.name}' with ` +
-          `sessionHistoryInParent enabled`
-      );
-    }
-
-    // If we got here, that means we're dealing with a frame message
-    // manager message, so the target will be a <xul:browser>.
-    var browser = aMessage.target;
-    let win = browser.ownerGlobal;
-    let tab = win ? win.gBrowser.getTabForBrowser(browser) : null;
-
-    // Ensure we receive only specific messages from <xul:browser>s that
-    // have no tab or window assigned, e.g. the ones that preload
-    // about:newtab pages, or windows that have closed.
-    if (!tab && !NOTAB_MESSAGES.has(aMessage.name)) {
-      throw new Error(
-        `received unexpected message '${aMessage.name}' ` +
-          `from a browser that has no tab or window`
-      );
-    }
-
-    let data = aMessage.data || {};
-    let hasEpoch = data.hasOwnProperty("epoch");
-
-    // Most messages sent by frame scripts require to pass an epoch.
-    if (!hasEpoch && !NOEPOCH_MESSAGES.has(aMessage.name)) {
-      throw new Error(`received message '${aMessage.name}' without an epoch`);
-    }
-
-    // Ignore messages from previous epochs.
-    if (hasEpoch && !this.isCurrentEpoch(browser.permanentKey, data.epoch)) {
-      return;
-    }
-
-    switch (aMessage.name) {
-      case "SessionStore:update":
-        // |browser.frameLoader| might be empty if the browser was already
-        // destroyed and its tab removed. In that case we still have the last
-        // frameLoader we know about to compare.
-        let frameLoader =
-          browser.frameLoader ||
-          this._lastKnownFrameLoader.get(browser.permanentKey);
-
-        // If the message isn't targeting the latest frameLoader discard it.
-        if (frameLoader != aMessage.targetFrameLoader) {
-          return;
-        }
-
-        this.onTabStateUpdate(browser.permanentKey, browser.ownerGlobal, data);
-
-        // SHIP code will call this when it receives "browser-shutdown-tabstate-updated"
-        if (data.isFinal) {
-          if (!Services.appinfo.sessionHistoryInParent) {
-            this.onFinalTabStateUpdateComplete(browser);
-          }
-        } else if (data.flushID) {
-          // This is an update kicked off by an async flush request. Notify the
-          // TabStateFlusher so that it can finish the request and notify its
-          // consumer that's waiting for the flush to be done.
-          lazy.TabStateFlusher.resolve(browser, data.flushID);
-        }
-
-        break;
-      case "SessionStore:restoreHistoryComplete":
-        this._restoreHistoryComplete(browser, data);
-        break;
-      case "SessionStore:restoreTabContentStarted":
-        this._restoreTabContentStarted(browser, data);
-        break;
-      case "SessionStore:restoreTabContentComplete":
-        this._restoreTabContentComplete(browser, data);
-        break;
-      case "SessionStore:error":
-        lazy.TabStateFlusher.resolveAll(
-          browser,
-          false,
-          "Received error from the content process"
-        );
-        break;
-      default:
-        throw new Error(`received unknown message '${aMessage.name}'`);
-    }
   },
 
   /* ........ Window Event Handlers .............. */
@@ -1602,21 +1430,6 @@ var SessionStoreInternal = {
     // Assign the window a unique identifier we can use to reference
     // internal data about the window.
     aWindow.__SSi = this._generateWindowID();
-
-    if (!Services.appinfo.sessionHistoryInParent) {
-      let mm = aWindow.getGroupMessageManager("browsers");
-      MESSAGES.forEach(msg => {
-        let listenWhenClosed = CLOSED_MESSAGES.has(msg);
-        mm.addMessageListener(msg, this, listenWhenClosed);
-      });
-
-      // Load the frame script after registering listeners.
-      mm.loadFrameScript(
-        "chrome://browser/content/content-sessionStore.js",
-        true,
-        true
-      );
-    }
 
     // and create its data object
     this._windows[aWindow.__SSi] = {
@@ -2085,11 +1898,6 @@ var SessionStoreInternal = {
 
     // Cache the window state until it is completely gone.
     DyingWindowCache.set(aWindow, winData);
-
-    if (!Services.appinfo.sessionHistoryInParent) {
-      let mm = aWindow.getGroupMessageManager("browsers");
-      MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
-    }
 
     this._saveableClosedWindowData.delete(winData);
     delete aWindow.__SSi;
@@ -4941,7 +4749,6 @@ var SessionStoreInternal = {
 
     let browser = aTab.linkedBrowser;
     let window = aTab.ownerGlobal;
-    let tabbrowser = window.gBrowser;
     let tabData = lazy.TabState.clone(aTab, TAB_CUSTOM_VALUES.get(aTab));
     let activeIndex = tabData.index - 1;
     let activePageData = tabData.entries[activeIndex] || null;
@@ -4949,36 +4756,9 @@ var SessionStoreInternal = {
 
     this.markTabAsRestoring(aTab);
 
-    let isRemotenessUpdate = aOptions.isRemotenessUpdate;
-    let explicitlyUpdateRemoteness = !Services.appinfo.sessionHistoryInParent;
-    // If we aren't already updating the browser's remoteness, check if it's
-    // necessary.
-    if (explicitlyUpdateRemoteness && !isRemotenessUpdate) {
-      isRemotenessUpdate = tabbrowser.updateBrowserRemotenessByURL(
-        browser,
-        uri
-      );
-
-      if (isRemotenessUpdate) {
-        // We updated the remoteness, so we need to send the history down again.
-        //
-        // Start a new epoch to discard all frame script messages relating to a
-        // previous epoch. All async messages that are still on their way to chrome
-        // will be ignored and don't override any tab data set when restoring.
-        let epoch = this.startNextEpoch(browser.permanentKey);
-
-        this._sendRestoreHistory(browser, {
-          tabData,
-          epoch,
-          loadArguments,
-          isRemotenessUpdate,
-        });
-      }
-    }
-
     this._sendRestoreTabContent(browser, {
       loadArguments,
-      isRemotenessUpdate,
+      isRemotenessUpdate: aOptions.isRemotenessUpdate,
       reason:
         aOptions.restoreContentReason || RESTORE_TAB_CONTENT_REASON.SET_STATE,
     });
@@ -6032,10 +5812,8 @@ var SessionStoreInternal = {
     // The browser is no longer in any sort of restoring state.
     TAB_STATE_FOR_BROWSER.delete(browser);
 
-    if (Services.appinfo.sessionHistoryInParent) {
-      this._restoreListeners.get(browser.permanentKey)?.unregister();
-      browser.browsingContext.clearRestoreState();
-    }
+    this._restoreListeners.get(browser.permanentKey)?.unregister();
+    browser.browsingContext.clearRestoreState();
 
     aTab.removeAttribute("pending");
 
@@ -6059,9 +5837,6 @@ var SessionStoreInternal = {
       return;
     }
 
-    if (!Services.appinfo.sessionHistoryInParent) {
-      browser.messageManager.sendAsyncMessage("SessionStore:resetRestore", {});
-    }
     this._resetLocalTabRestoringState(tab);
   },
 
@@ -6340,10 +6115,6 @@ var SessionStoreInternal = {
    * history restores.
    */
   _restoreHistory(browser, data) {
-    if (!Services.appinfo.sessionHistoryInParent) {
-      throw new Error("This function should only be used with SHIP");
-    }
-
     this._tabStateToRestore.set(browser.permanentKey, data);
 
     // In case about:blank isn't done yet.
@@ -6435,10 +6206,6 @@ var SessionStoreInternal = {
    * history restores.
    */
   _restoreTabContent(browser, options = {}) {
-    if (!Services.appinfo.sessionHistoryInParent) {
-      throw new Error("This function should only be used with SHIP");
-    }
-
     this._restoreListeners.get(browser.permanentKey)?.unregister();
 
     this._restoreTabContentStarted(browser, options);
@@ -6463,14 +6230,7 @@ var SessionStoreInternal = {
   },
 
   _sendRestoreTabContent(browser, options) {
-    if (Services.appinfo.sessionHistoryInParent) {
-      this._restoreTabContent(browser, options);
-    } else {
-      browser.messageManager.sendAsyncMessage(
-        "SessionStore:restoreTabContent",
-        options
-      );
-    }
+    this._restoreTabContent(browser, options);
   },
 
   _restoreHistoryComplete(browser, data) {
@@ -6614,67 +6374,11 @@ var SessionStoreInternal = {
       delete options.tabData.storage;
     }
 
-    if (Services.appinfo.sessionHistoryInParent) {
-      this._restoreHistory(browser, options);
-    } else {
-      browser.messageManager.sendAsyncMessage(
-        "SessionStore:restoreHistory",
-        options
-      );
-    }
+    this._restoreHistory(browser, options);
 
     if (browser && browser.frameLoader) {
       browser.frameLoader.requestEpochUpdate(options.epoch);
     }
-  },
-
-  // Flush out session history state so that it can be used to restore the state
-  // into a new process in `finishTabRemotenessChange`.
-  //
-  // NOTE: This codepath is temporary while the Fission Session History rewrite
-  // is in process, and will be removed & replaced once that rewrite is
-  // complete. (bug 1645062)
-  async prepareToChangeRemoteness(aBrowser) {
-    aBrowser.messageManager.sendAsyncMessage(
-      "SessionStore:prepareForProcessChange"
-    );
-    await lazy.TabStateFlusher.flush(aBrowser);
-  },
-
-  // Handle finishing the remoteness change for a tab by restoring session
-  // history state into it, and resuming the ongoing network load.
-  //
-  // NOTE: This codepath is temporary while the Fission Session History rewrite
-  // is in process, and will be removed & replaced once that rewrite is
-  // complete. (bug 1645062)
-  finishTabRemotenessChange(aTab, aSwitchId) {
-    let window = aTab.ownerGlobal;
-    if (!window || !window.__SSi || window.closed) {
-      return;
-    }
-
-    let tabState = lazy.TabState.clone(aTab, TAB_CUSTOM_VALUES.get(aTab));
-    let options = {
-      restoreImmediately: true,
-      restoreContentReason: RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE,
-      isRemotenessUpdate: true,
-      loadArguments: {
-        redirectLoadSwitchId: aSwitchId,
-        // As we're resuming a load which has been redirected from another
-        // process, record the history index which is currently being requested.
-        // It has to be offset by 1 to get back to native history indices from
-        // SessionStore history indicies.
-        redirectHistoryIndex: tabState.requestedIndex - 1,
-      },
-    };
-
-    // Need to reset restoring tabs.
-    if (TAB_STATE_FOR_BROWSER.has(aTab.linkedBrowser)) {
-      this._resetLocalTabRestoringState(aTab);
-    }
-
-    // Restore the state into the tab.
-    this.restoreTab(aTab, tabState, options);
   },
 };
 

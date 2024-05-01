@@ -23,7 +23,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
-  Utils: "resource://gre/modules/sessionstore/Utils.sys.mjs",
 });
 
 export class GeckoViewContentChild extends GeckoViewActorChild {
@@ -271,29 +270,48 @@ export class GeckoViewContentChild extends GeckoViewActorChild {
     const { contentWindow } = this;
     const { formdata, scrolldata } = message.data;
 
-    if (formdata) {
-      lazy.Utils.restoreFrameTreeData(
-        contentWindow,
-        formdata,
-        (frame, data) => {
-          // restore() will return false, and thus abort restoration for the
-          // current |frame| and its descendants, if |data.url| is given but
-          // doesn't match the loaded document's URL.
-          return SessionStoreUtils.restoreFormData(frame.document, data);
+    /**
+     * Restores frame tree |data|, starting at the given root |frame|. As the
+     * function recurses into descendant frames it will call cb(frame, data) for
+     * each frame it encounters, starting with the given root.
+     */
+    function restoreFrameTreeData(frame, data, cb) {
+      // Restore data for the root frame.
+      // The callback can abort by returning false.
+      if (cb(frame, data) === false) {
+        return;
+      }
+
+      if (!data.hasOwnProperty("children")) {
+        return;
+      }
+
+      // Recurse into child frames.
+      SessionStoreUtils.forEachNonDynamicChildFrame(
+        frame,
+        (subframe, index) => {
+          if (data.children[index]) {
+            restoreFrameTreeData(subframe, data.children[index], cb);
+          }
         }
       );
     }
 
+    if (formdata) {
+      restoreFrameTreeData(contentWindow, formdata, (frame, data) => {
+        // restore() will return false, and thus abort restoration for the
+        // current |frame| and its descendants, if |data.url| is given but
+        // doesn't match the loaded document's URL.
+        return SessionStoreUtils.restoreFormData(frame.document, data);
+      });
+    }
+
     if (scrolldata) {
-      lazy.Utils.restoreFrameTreeData(
-        contentWindow,
-        scrolldata,
-        (frame, data) => {
-          if (data.scroll) {
-            SessionStoreUtils.restoreScrollPosition(frame, data);
-          }
+      restoreFrameTreeData(contentWindow, scrolldata, (frame, data) => {
+        if (data.scroll) {
+          SessionStoreUtils.restoreScrollPosition(frame, data);
         }
-      );
+      });
     }
 
     if (scrolldata && scrolldata.zoom && scrolldata.zoom.displaySize) {
