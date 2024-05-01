@@ -216,7 +216,7 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Canfod ar y dudalen</string>
     <!-- Browser menu button that opens the find in page menu -->
-    <string name="browser_menu_find_in_page_2">Darganfod ar dudalen…</string>
+    <string name="browser_menu_find_in_page_2">Canfod ar dudalen…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Cyfieithu\'r dudalen</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -268,7 +268,7 @@
     <string name="browser_menu_new_in_firefox">Yn newydd yn %1$s</string>
 
     <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
-    <string name="browser_menu_switch_to_desktop_site">Newid i safle bwrdd gwaith</string>
+    <string name="browser_menu_switch_to_desktop_site">Newid i wefan bwrdd gwaith</string>
     <!-- Browser menu label that navigates to the page tools sub-menu -->
     <string name="browser_menu_tools">Offer</string>
     <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as

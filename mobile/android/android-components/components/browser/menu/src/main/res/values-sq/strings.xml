@@ -5,11 +5,17 @@
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">E theksuar</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons">Shtesa</string>
+    <string name="mozac_browser_menu_addons" moz:removedIn="126" tools:ignore="UnusedResources">Shtesa</string>
+    <!-- Label for extensions submenu section -->
+    <string name="mozac_browser_menu_extensions">Zgjerime</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager">Përgjegjës Shtesash</string>
+    <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">Përgjegjës Shtesash</string>
+    <!-- Label for extensions sub menu item for extensions manager -->
+    <string name="mozac_browser_menu_extensions_manager">Përgjegjës Zgjerimesh</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Lëvizni për sipër</string>
     <!-- Content description for the action bar "up" button of the add-ons sub menu item -->
-    <string name="mozac_browser_menu_addons_description">Shtesa, shkoni sipër</string>
-    </resources>
+    <string name="mozac_browser_menu_addons_description" moz:removedIn="126" tools:ignore="UnusedResources">Shtesa, shkoni sipër</string>
+    <!-- Content description for the action bar "up" button of the extensions sub menu item -->
+    <string name="mozac_browser_menu_extensions_content_description">Zgjerime, shkoni sipër</string>
+</resources>
