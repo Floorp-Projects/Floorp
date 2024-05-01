@@ -1707,6 +1707,8 @@ static nsresult PinCurrentAppToTaskbarImpl(
     case Win11PinToTaskBarResultStatus::AlreadyPinned:
       return NS_OK;
 
+    case Win11PinToTaskBarResultStatus::ErrorLimitedAccessFeatures:
+    case Win11PinToTaskBarResultStatus::LimitedAccessFeaturesLocked:
     case Win11PinToTaskBarResultStatus::NotCurrentlyAllowed:
     case Win11PinToTaskBarResultStatus::Failed:
       // return NS_ERROR_FAILURE;

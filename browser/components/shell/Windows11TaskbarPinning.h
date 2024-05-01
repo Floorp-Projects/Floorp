@@ -21,11 +21,14 @@ enum class Win11PinToTaskBarResultStatus {
   AlreadyPinned,
   Success,
   NotSupported,
+  ErrorLimitedAccessFeatures,
+  LimitedAccessFeaturesLocked,
 };
 
 struct Win11PinToTaskBarResult {
   HRESULT errorCode;
   Win11PinToTaskBarResultStatus result;
+  int numAttempts;
 };
 
 Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
