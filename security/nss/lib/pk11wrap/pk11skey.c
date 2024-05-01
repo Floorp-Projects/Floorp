@@ -526,16 +526,16 @@ PK11_ImportDataKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, PK11Origin origin
         return NULL;
     }
     handle = PK11_GetObjectHandle(PK11_TypeGeneric, genObject, NULL);
-    if (handle == CK_INVALID_HANDLE) {
-        return NULL;
-    }
     /* A note about ownership of the PKCS #11 handle:
      * PK11_CreateGenericObject() will not destroy the object it creates
      * on Free, For that you want PK11_CreateManagedGenericObject().
      * Below we import the handle into the symKey structure. We pass
      * PR_TRUE as the owner so that the symKey will destroy the object
-     * once it's freed. This is way it's safe to free now. */
+     * once it's freed. This is why it's safe to destroy genObject now. */
     PK11_DestroyGenericObject(genObject);
+    if (handle == CK_INVALID_HANDLE) {
+        return NULL;
+    }
     return PK11_SymKeyFromHandle(slot, NULL, origin, type, handle, PR_TRUE, wincx);
 }
 
