@@ -22,7 +22,7 @@ mozbuild:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34
     notification_emails:
       - build-telemetry@mozilla.com
-      - mhentges@mozilla.com
+      - ahochheiden@mozilla.com
     expires: never
     send_in_pings:
       - usage
@@ -36,7 +36,7 @@ mozbuild:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34
     notification_emails:
       - build-telemetry@mozilla.com
-      - mhentges@mozilla.com
+      - ahochheiden@mozilla.com
     expires: never
     send_in_pings:
       - usage
@@ -50,7 +50,7 @@ mozbuild:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34
     notification_emails:
       - build-telemetry@mozilla.com
-      - mhentges@mozilla.com
+      - ahochheiden@mozilla.com
     expires: never
     send_in_pings:
       - usage
@@ -64,7 +64,7 @@ mozbuild:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34
     notification_emails:
       - build-telemetry@mozilla.com
-      - mhentges@mozilla.com
+      - ahochheiden@mozilla.com
     expires: never
     send_in_pings:
       - usage
@@ -78,7 +78,7 @@ mozbuild:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34
     notification_emails:
       - build-telemetry@mozilla.com
-      - mhentges@mozilla.com
+      - ahochheiden@mozilla.com
     expires: never
     send_in_pings:
       - usage
@@ -92,7 +92,7 @@ mozbuild:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34
     notification_emails:
       - build-telemetry@mozilla.com
-      - mhentges@mozilla.com
+      - ahochheiden@mozilla.com
     expires: never
     send_in_pings:
       - usage
@@ -106,7 +106,7 @@ mozbuild:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34
     notification_emails:
       - build-telemetry@mozilla.com
-      - mhentges@mozilla.com
+      - ahochheiden@mozilla.com
     expires: never
     send_in_pings:
       - usage
@@ -120,7 +120,7 @@ mozbuild:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1526072#c15
     notification_emails:
       - build-telemetry@mozilla.com
-      - mhentges@mozilla.com
+      - ahochheiden@mozilla.com
     expires: never
     send_in_pings:
       - usage
@@ -134,7 +134,7 @@ mozbuild:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1654084#c2
     notification_emails:
       - build-telemetry@mozilla.com
-      - mhentges@mozilla.com
+      - ahochheiden@mozilla.com
     expires: never
     send_in_pings:
       - usage

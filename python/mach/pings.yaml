@@ -19,4 +19,4 @@ usage:
   include_client_id: true
   notification_emails:
     - build-telemetry@mozilla.com
-    - mhentges@mozilla.com
+    - ahochheiden@mozilla.com
