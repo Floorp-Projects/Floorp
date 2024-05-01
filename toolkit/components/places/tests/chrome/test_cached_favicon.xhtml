@@ -104,19 +104,12 @@ function test()
     // icon with a page explicitly in order for it to be visible through
     // the protocol.
     info("Replace favicon data");
-    var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
-                            .createInstance(Ci.nsIPrincipal);
-    PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-      Services.io.newURI(tests[1].url),
-      tests[1].expectedIcon,
-      (Date.now() + 86400) * 1000,
-      systemPrincipal);
-    info("Set favicon data");
-    PlacesUtils.favicons.setAndFetchFaviconForPage(
+    PlacesUtils.favicons.setFaviconForPage(
       Services.io.newURI("https://example.com/favicon_annotations"),
       Services.io.newURI(tests[1].url),
-      true, PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
-      systemPrincipal);
+      Services.io.newURI(tests[1].expectedIcon),
+      (Date.now() + 86400) * 1000,
+    );
 
     // And start our test process.
     loadNextTest();
