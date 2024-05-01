@@ -80,12 +80,6 @@ class gfxASurface {
    */
   virtual already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
-  /**
-   * Creates a new ARGB32 image surface with the same contents as this surface.
-   * Returns null on error.
-   */
-  already_AddRefed<gfxImageSurface> CopyToARGB32ImageSurface();
-
   int CairoStatus();
 
   static gfxContentType ContentFromFormat(gfxImageFormat format);
