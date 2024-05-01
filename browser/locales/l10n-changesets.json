@@ -1941,7 +1941,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "5ca1742cd732d42b86363be441d48363b81e334d"
+        "revision": "482b4b4bd4d0a02bfa46e72cbdbeca5a5188dd09"
     },
     "trs": {
         "pin": false,
