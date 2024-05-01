@@ -273,18 +273,6 @@ class gfxFontEntry {
     return flag == LazyFlag::Yes;
   }
 
-  inline bool AlwaysNeedsMaskForShadow() {
-    LazyFlag flag = mNeedsMaskForShadow;
-    if (flag == LazyFlag::Uninitialized) {
-      flag =
-          TryGetColorGlyphs() || TryGetSVGData(nullptr) || HasColorBitmapTable()
-              ? LazyFlag::Yes
-              : LazyFlag::No;
-      mNeedsMaskForShadow = flag;
-    }
-    return flag == LazyFlag::Yes;
-  }
-
   inline bool HasCmapTable() {
     if (!mCharacterMap && !mShmemCharacterMap) {
       ReadCMAP();
@@ -682,7 +670,6 @@ class gfxFontEntry {
   std::atomic<LazyFlag> mHasGraphiteTables;
   std::atomic<LazyFlag> mHasGraphiteSpaceContextuals;
   std::atomic<LazyFlag> mHasColorBitmapTable;
-  std::atomic<LazyFlag> mNeedsMaskForShadow;
 
   enum class SpaceFeatures : uint8_t {
     Uninitialized = 0xff,
