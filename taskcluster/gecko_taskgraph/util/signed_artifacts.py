@@ -57,7 +57,7 @@ def generate_specifications_of_artifacts_to_sign(
     elif "macosx" in build_platform:
         langpack_formats = []
         if is_notarization_kind(config.kind):
-            formats = ["apple_notarization"]
+            formats = ["apple_notarization_stacked"]
             artifacts_specifications = [
                 {
                     "artifacts": [

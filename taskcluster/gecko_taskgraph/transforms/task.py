@@ -842,6 +842,7 @@ def build_generic_worker_payload(config, task, task_def):
         # behavior for mac iscript
         Optional("mac-behavior"): Any(
             "apple_notarization",
+            "apple_notarization_stacked",
             "mac_sign_and_pkg",
             "mac_sign_and_pkg_hardened",
             "mac_geckodriver",

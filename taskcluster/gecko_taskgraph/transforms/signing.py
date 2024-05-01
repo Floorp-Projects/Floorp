@@ -77,6 +77,7 @@ transforms.add_validate(signing_description_schema)
 def add_requirements_link(config, jobs):
     for job in jobs:
         dep_job = get_primary_dependency(config, job)
+        assert dep_job
         requirements_path = evaluate_keyed_by(
             config.graph_config["mac-signing"]["mac-requirements"],
             "mac requirements",
@@ -95,6 +96,7 @@ def add_requirements_link(config, jobs):
 def make_task_description(config, jobs):
     for job in jobs:
         dep_job = get_primary_dependency(config, job)
+        assert dep_job
         attributes = dep_job.attributes
 
         signing_format_scopes = []
@@ -105,6 +107,7 @@ def make_task_description(config, jobs):
 
         is_shippable = dep_job.attributes.get("shippable", False)
         build_platform = dep_job.attributes.get("build_platform")
+        assert build_platform
         treeherder = None
         if "partner" not in config.kind and "eme-free" not in config.kind:
             treeherder = job.get("treeherder", {})
@@ -187,7 +190,6 @@ def make_task_description(config, jobs):
 
         # build-mac-{signing,notarization} uses signingscript instead of iscript
         if "macosx" in build_platform and config.kind.endswith("-mac-notarization"):
-            task["worker"]["mac-behavior"] = "apple_notarization"
             task["scopes"] = [
                 add_scope_prefix(config, "signing:cert:release-apple-notarization")
             ]
