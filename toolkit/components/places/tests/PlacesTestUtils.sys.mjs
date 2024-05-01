@@ -156,6 +156,43 @@ export var PlacesTestUtils = Object.freeze({
     await Promise.all(faviconPromises);
   },
 
+  /*
+   * Helper function to call PlacesUtils.favicons.setFaviconForPage() and waits
+   * finishing setting. This function throws an error if the status of
+   * PlacesUtils.favicons.setFaviconForPage() is not success.
+   *
+   * @param {string or nsIURI} pageURI
+   * @param {string or nsIURI} faviconURI
+   * @param {string or nsIURI} faviconDataURL
+   * @param {Number} [optional] expiration
+   * @return {Promise} waits for finishing setting
+   */
+  setFaviconForPage(pageURI, faviconURI, faviconDataURL, expiration = 0) {
+    return new Promise((resolve, reject) => {
+      lazy.PlacesUtils.favicons.setFaviconForPage(
+        pageURI instanceof Ci.nsIURI ? pageURI : Services.io.newURI(pageURI),
+        faviconURI instanceof Ci.nsIURI
+          ? faviconURI
+          : Services.io.newURI(faviconURI),
+        faviconDataURL instanceof Ci.nsIURI
+          ? faviconDataURL
+          : Services.io.newURI(faviconDataURL),
+        expiration,
+        status => {
+          if (Components.isSuccessCode(status)) {
+            resolve(status);
+          } else {
+            reject(
+              new Error(
+                `Failed to process setFaviconForPage(): status code = ${status}`
+              )
+            );
+          }
+        }
+      );
+    });
+  },
+
   /**
    * Clears any favicons stored in the database.
    */

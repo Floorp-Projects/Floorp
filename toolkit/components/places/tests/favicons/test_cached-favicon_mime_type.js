@@ -68,14 +68,12 @@ add_task(async function () {
   info("Test that the content type of a favicon we add is correct.");
   let testURI = uri("http://mozilla.org/");
   // Add the data before opening
-  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-    testIconURI,
-    testFaviconData,
-    0,
-    systemPrincipal
-  );
   await PlacesTestUtils.addVisits(testURI);
-  await setFaviconForPage(testURI, testIconURI);
+  await PlacesTestUtils.setFaviconForPage(
+    testURI,
+    testIconURI,
+    testFaviconData
+  );
   // Open the channel
   let channel = NetUtil.newChannel({
     uri: PlacesUtils.favicons.getFaviconLinkForIcon(testIconURI).spec,
@@ -120,14 +118,12 @@ add_task(async function test_userpass() {
       CACHED_ICON_NORMAL,
       CACHED_ICON_USERPASS,
     ]) {
-      PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-        iconURI,
-        testFaviconData,
-        0,
-        systemPrincipal
-      );
       await PlacesTestUtils.addVisits(pageURI);
-      await setFaviconForPage(pageURI, iconURI);
+      await PlacesTestUtils.setFaviconForPage(
+        pageURI,
+        iconURI,
+        testFaviconData
+      );
 
       // Open the channel
       let channel = NetUtil.newChannel({
