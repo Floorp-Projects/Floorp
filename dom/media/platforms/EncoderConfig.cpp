@@ -49,7 +49,8 @@ nsCString EncoderConfig::ToString() const {
       rv.AppendLiteral(", hw: no preference");
     }
     rv.AppendPrintf(" format: %s", GetEnumString(mPixelFormat).get());
-    rv.AppendPrintf(" format (source): %s", GetEnumString(mSourcePixelFormat).get());
+    rv.AppendPrintf(" format (source): %s",
+                    GetEnumString(mSourcePixelFormat).get());
     if (mScalabilityMode == ScalabilityMode::L1T2) {
       rv.AppendLiteral(" (L1T2)");
     } else if (mScalabilityMode == ScalabilityMode::L1T3) {
