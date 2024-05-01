@@ -14,16 +14,12 @@
 #include "nsString.h"
 #include <wrl.h>
 #include <windows.h>  // for HRESULT
+#include <mozilla/DefineEnum.h>
 
-enum class Win11PinToTaskBarResultStatus {
-  Failed,
-  NotCurrentlyAllowed,
-  AlreadyPinned,
-  Success,
-  NotSupported,
-  ErrorLimitedAccessFeatures,
-  LimitedAccessFeaturesLocked,
-};
+MOZ_DEFINE_ENUM_CLASS(Win11PinToTaskBarResultStatus,
+                      (Failed, NotCurrentlyAllowed, AlreadyPinned, Success,
+                       NotSupported, ErrorLimitedAccessFeatures,
+                       LimitedAccessFeaturesLocked));
 
 struct Win11PinToTaskBarResult {
   HRESULT errorCode;
