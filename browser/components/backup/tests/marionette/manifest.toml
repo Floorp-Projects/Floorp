@@ -3,3 +3,4 @@ run-if = ["buildapp == 'browser'"]
 prefs = ["browser.backup.enabled=true", "browser.backup.log=true"]
 
 ["test_backup.py"]
+support-files = ["http2-ca.pem"]
