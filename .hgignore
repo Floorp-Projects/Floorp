@@ -289,10 +289,10 @@ tps_result\.json$
 ^lextab\.py$
 
 # Ignore Visual Studio/Visual Studio Code workspace files.
-^\.vs/
-# lint-ignore-next-line: syntax-difference
-^\.vscode/(?!extensions\.json$|tasks\.json$)
-.*\.user$
+# (but the root .vscode directory)
+\.vs/
+.+/\.vscode/
+\.user$
 
 # Thunderbird source tree
 ^comm/
