@@ -1332,7 +1332,7 @@ def test_pdfpaint_has_expected_attributes_with_chunk(pdfpaint_dir_info):
     assert len([line for line in manifest_lines if line]) == 100
 
     assert test_config["tpcycles"] == 1
-    assert test_config["tppagecycles"] == 5
+    assert test_config["tppagecycles"] == 15
     assert test_config["tptimeout"] == 60000
     assert test_config["gecko_profile_entries"] == 16777216
     assert test_config["filters"] is not None
@@ -1378,7 +1378,7 @@ def test_pdfpaint_with_pdf_name(pdfpaint_dir_info):
     assert manifest_lines[0].split("/")[-1] == "1"
 
     assert test_config["tpcycles"] == 1
-    assert test_config["tppagecycles"] == 5
+    assert test_config["tppagecycles"] == 15
 
 
 @mock.patch("talos.config.get_browser_config")
