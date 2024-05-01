@@ -439,30 +439,26 @@ export class BackupService {
       profileName = profileSvc.currentProfile.name;
     }
 
-    // Default these to undefined rather than null so that they're not included
-    // the meta object if we're not signed in.
-    let accountID = undefined;
-    let accountEmail = undefined;
+    let meta = {
+      date: new Date().toISOString(),
+      appName: AppConstants.MOZ_APP_NAME,
+      appVersion: AppConstants.MOZ_APP_VERSION,
+      buildID: AppConstants.MOZ_BUILDID,
+      profileName,
+      machineName: lazy.fxAccounts.device.getLocalName(),
+      osName: Services.sysinfo.getProperty("name"),
+      osVersion: Services.sysinfo.getProperty("version"),
+    };
+
     let fxaState = lazy.UIState.get();
     if (fxaState.status == lazy.UIState.STATUS_SIGNED_IN) {
-      accountID = fxaState.uid;
-      accountEmail = fxaState.email;
+      meta.accountID = fxaState.uid;
+      meta.accountEmail = fxaState.email;
     }
 
     return {
       version: BackupService.MANIFEST_SCHEMA_VERSION,
-      meta: {
-        date: new Date().toISOString(),
-        appName: AppConstants.MOZ_APP_NAME,
-        appVersion: AppConstants.MOZ_APP_VERSION,
-        buildID: AppConstants.MOZ_BUILDID,
-        profileName,
-        machineName: lazy.fxAccounts.device.getLocalName(),
-        osName: Services.sysinfo.getProperty("name"),
-        osVersion: Services.sysinfo.getProperty("version"),
-        accountID,
-        accountEmail,
-      },
+      meta,
       resources: {},
     };
   }
