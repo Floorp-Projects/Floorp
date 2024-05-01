@@ -2050,11 +2050,7 @@ nsresult OggDemuxer::SeekBisection(TrackInfo::TrackType aType,
           interval = 0;
           break;
         }
-
         backsteps = std::min(backsteps + 1, maxBackStep);
-        // We reset mustBackoff. If we still need to backoff further, it will
-        // be set to true again.
-        mustBackoff = false;
       } else {
         backsteps = 0;
       }
