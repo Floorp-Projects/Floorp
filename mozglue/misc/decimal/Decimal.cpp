@@ -239,11 +239,6 @@ Decimal::Decimal(int32_t i32)
 Decimal::Decimal(Sign sign, int exponent, uint64_t coefficient)
     : m_data(sign, coefficient ? exponent : 0, coefficient) {}
 
-Decimal::Decimal(const EncodedData& data)
-    : m_data(data)
-{
-}
-
 Decimal::Decimal(const Decimal& other)
     : m_data(other.m_data)
 {
@@ -851,11 +846,6 @@ Decimal Decimal::fromString(const String& str)
 Decimal Decimal::infinity(const Sign sign)
 {
     return Decimal(EncodedData(sign, EncodedData::ClassInfinity));
-}
-
-Decimal Decimal::nan()
-{
-    return Decimal(EncodedData(Positive, EncodedData::ClassNaN));
 }
 
 Decimal Decimal::remainder(const Decimal& rhs) const
