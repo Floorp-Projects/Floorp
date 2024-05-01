@@ -14,7 +14,6 @@
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 #include "imgLoader.h"
-#include "PlacesCompletionCallback.h"
 
 class nsIPrincipal;
 
@@ -193,33 +192,6 @@ class AsyncAssociateIconToPage final : public Runnable {
 };
 
 /**
- * Set favicon for the page, finally dispatches an event to the
- * main thread to notify the change to observers.
- */
-class AsyncSetIconForPage final : public Runnable {
- public:
-  NS_DECL_NSIRUNNABLE
-
-  /**
-   * Constructor.
-   *
-   * @param aIcon
-   *        Icon to be associated.
-   * @param aPage
-   *        Page to which associate the icon.
-   * @param aCallback
-   *        Function to be called when the associate process finishes.
-   */
-  AsyncSetIconForPage(const IconData& aIcon, const PageData& aPage,
-                      PlacesCompletionCallback* aCallback);
-
- private:
-  nsMainThreadPtrHandle<PlacesCompletionCallback> mCallback;
-  IconData mIcon;
-  PageData mPage;
-};
-
-/**
  * Asynchronously tries to get the URL of a page's favicon, then notifies the
  * given observer.
  */
@@ -284,6 +256,18 @@ class AsyncGetFaviconDataForPage final : public Runnable {
   nsCString mPageHost;
 };
 
+class AsyncReplaceFaviconData final : public Runnable {
+ public:
+  NS_DECL_NSIRUNNABLE
+
+  explicit AsyncReplaceFaviconData(const IconData& aIcon);
+
+ private:
+  nsresult RemoveIconDataCacheEntry();
+
+  IconData mIcon;
+};
+
 /**
  * Notifies the icon change to favicon observers.
  */
@@ -292,7 +276,7 @@ class NotifyIconObservers final : public Runnable {
   NS_DECL_NSIRUNNABLE
 
   /**
-   * Constructor for nsIFaviconDataCallback.
+   * Constructor.
    *
    * @param aIcon
    *        Icon information. Can be empty if no icon is associated to the page.
