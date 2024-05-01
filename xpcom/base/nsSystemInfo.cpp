@@ -1374,7 +1374,8 @@ JSObject* GetJSObjForProcessInfo(JSContext* aCx, const ProcessInfo& info) {
   JS::Rooted<JS::Value> valCountInfo(aCx, JS::Int32Value(info.cpuCount));
   JS_SetProperty(aCx, jsInfo, "count", valCountInfo);
 
-  JS::Rooted<JS::Value> valCoreInfo(aCx, JS::Int32Value(info.cpuCores));
+  JS::Rooted<JS::Value> valCoreInfo(
+      aCx, info.cpuCores ? JS::Int32Value(info.cpuCores) : JS::NullValue());
   JS_SetProperty(aCx, jsInfo, "cores", valCoreInfo);
 
   JSString* strVendor =
