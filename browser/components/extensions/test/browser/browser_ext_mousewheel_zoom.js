@@ -120,7 +120,7 @@ async function test_mousewheel_zoom(test) {
     const sidebar = document.getElementById("sidebar-box");
     ok(!sidebar.hidden, "Sidebar box is visible");
 
-    browser = SidebarUI.browser.contentWindow.gBrowser.selectedBrowser;
+    browser = SidebarController.browser.contentWindow.gBrowser.selectedBrowser;
   } else if (test == TESTS.BROWSER_ACTION) {
     browser = await openBrowserActionPanel(extension, undefined, true);
   } else if (test == TESTS.PAGE_ACTION) {

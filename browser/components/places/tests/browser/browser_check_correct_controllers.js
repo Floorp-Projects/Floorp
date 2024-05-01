@@ -32,7 +32,7 @@ add_task(async function test() {
 
   let sidebar = await promiseLoadedSidebar("viewBookmarksSidebar");
   registerCleanupFunction(() => {
-    SidebarUI.hide();
+    SidebarController.hide();
   });
 
   // Focus the tree and check if its controller is returned.
@@ -109,6 +109,6 @@ function promiseLoadedSidebar(cmd) {
       { capture: true, once: true }
     );
 
-    SidebarUI.show(cmd);
+    SidebarController.show(cmd);
   });
 }

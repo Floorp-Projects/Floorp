@@ -12,7 +12,7 @@ add_task(async function test_search_input_popupshowing() {
   let sidebar = document.getElementById("sidebar");
 
   let loadPromise = BrowserTestUtils.waitForEvent(sidebar, "load", true);
-  SidebarUI.toggle("viewBookmarksSidebar");
+  SidebarController.toggle("viewBookmarksSidebar");
   await loadPromise;
 
   let inputField =
@@ -45,5 +45,5 @@ add_task(async function test_search_input_popupshowing() {
   popup.hidePopup();
   await popuphidden;
 
-  SidebarUI.toggle("viewBookmarksSidebar");
+  SidebarController.toggle("viewBookmarksSidebar");
 });

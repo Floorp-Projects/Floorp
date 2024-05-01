@@ -590,7 +590,7 @@ add_task(async function webextension() {
 
     // Clear the last opened ID so if this test runs again the sidebar won't
     // automatically open when the extension is installed.
-    window.SidebarUI.lastOpenedId = null;
+    window.SidebarController.lastOpenedId = null;
 
     // The second should retain its ID.
     click("random_addon2_example_com-browser-action");

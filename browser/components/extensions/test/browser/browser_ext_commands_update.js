@@ -401,11 +401,11 @@ add_task(async function updateSidebarCommand() {
   await extension.awaitMessage("sidebar");
 
   // Show and hide the switcher panel to generate the initial shortcuts.
-  let switcherShown = promisePopupShown(SidebarUI._switcherPanel);
-  SidebarUI.showSwitcherPanel();
+  let switcherShown = promisePopupShown(SidebarController._switcherPanel);
+  SidebarController.showSwitcherPanel();
   await switcherShown;
-  let switcherHidden = promisePopupHidden(SidebarUI._switcherPanel);
-  SidebarUI.hideSwitcherPanel();
+  let switcherHidden = promisePopupHidden(SidebarController._switcherPanel);
+  SidebarController.hideSwitcherPanel();
   await switcherHidden;
 
   let menuitemId = `sidebarswitcher_menu_${makeWidgetId(
