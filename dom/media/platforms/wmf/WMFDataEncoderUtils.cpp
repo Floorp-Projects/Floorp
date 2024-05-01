@@ -67,6 +67,8 @@ static uint32_t GetProfile(H264_PROFILE aProfileLevel) {
       return eAVEncH264VProfile_Base;
     case H264_PROFILE_MAIN:
       return eAVEncH264VProfile_Main;
+    case H264_PROFILE_HIGH:
+      return eAVEncH264VProfile_High;
     default:
       return eAVEncH264VProfile_unknown;
   }
@@ -84,6 +86,7 @@ already_AddRefed<IMFMediaType> CreateInputType(EncoderConfig& aConfig) {
     WMF_ENC_LOG("Create input type: SetGUID (major type) error: %lx", hr);
     return nullptr;
   }
+  // Always NV12 input
   hr = type->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_NV12);
   if (FAILED(hr)) {
     WMF_ENC_LOG("Create input type: SetGUID (subtype) error: %lx", hr);
@@ -94,10 +97,17 @@ already_AddRefed<IMFMediaType> CreateInputType(EncoderConfig& aConfig) {
     WMF_ENC_LOG("Create input type: interlace mode (input) error: %lx", hr);
     return nullptr;
   }
-  hr = MFSetAttributeRatio(type, MF_MT_FRAME_RATE, aConfig.mFramerate, 1);
-  if (FAILED(hr)) {
-    WMF_ENC_LOG("Create input type: frame rate (input) error: %lx", hr);
-    return nullptr;
+  // WMF requires a framerate to intialize properly. Provide something
+  // reasonnable if not provided.
+  if (!aConfig.mFramerate) {
+    aConfig.mFramerate = 30;
+  }
+  if (aConfig.mFramerate) {
+    hr = MFSetAttributeRatio(type, MF_MT_FRAME_RATE, aConfig.mFramerate, 1);
+    if (FAILED(hr)) {
+      WMF_ENC_LOG("Create input type: frame rate (input) error: %lx", hr);
+      return nullptr;
+    }
   }
   hr = MFSetAttributeSize(type, MF_MT_FRAME_SIZE, aConfig.mSize.width,
                           aConfig.mSize.height);
@@ -125,6 +135,19 @@ already_AddRefed<IMFMediaType> CreateOutputType(EncoderConfig& aConfig) {
     WMF_ENC_LOG("Create output type: set subtype error: %lx", hr);
     return nullptr;
   }
+  // A bitrate need to be set here, attempt to make an educated guess if none is
+  // provided. This could be per codec to have nicer defaults.
+  size_t longDimension = std::max(aConfig.mSize.width, aConfig.mSize.height);
+  if (!aConfig.mBitrate) {
+    if (longDimension < 720) {
+      aConfig.mBitrate = 2000000;
+    } else if (longDimension < 1080) {
+      aConfig.mBitrate = 4000000;
+    } else {
+      aConfig.mBitrate = 8000000;
+    }
+  }
+  // No way to set variable / constant here.
   hr = type->SetUINT32(MF_MT_AVG_BITRATE, aConfig.mBitrate);
   if (FAILED(hr)) {
     WMF_ENC_LOG("Create output type: set bitrate error: %lx", hr);
@@ -135,11 +158,16 @@ already_AddRefed<IMFMediaType> CreateOutputType(EncoderConfig& aConfig) {
     WMF_ENC_LOG("Create output type set interlave mode error: %lx", hr);
     return nullptr;
   }
-  hr = MFSetAttributeRatio(type, MF_MT_FRAME_RATE, aConfig.mFramerate, 1);
-  if (FAILED(hr)) {
-    WMF_ENC_LOG("Create output type set frame rate error: %lx", hr);
-    return nullptr;
+  // A positive rate must always be preset here, see the Input config part.
+  MOZ_ASSERT(aConfig.mFramerate);
+  if (aConfig.mFramerate) {
+    hr = MFSetAttributeRatio(type, MF_MT_FRAME_RATE, aConfig.mFramerate, 1);
+    if (FAILED(hr)) {
+      WMF_ENC_LOG("Create output type set frame rate error: %lx", hr);
+      return nullptr;
+    }
   }
+  // Required
   hr = MFSetAttributeSize(type, MF_MT_FRAME_SIZE, aConfig.mSize.width,
                           aConfig.mSize.height);
   if (FAILED(hr)) {
@@ -149,6 +177,7 @@ already_AddRefed<IMFMediaType> CreateOutputType(EncoderConfig& aConfig) {
 
   if (aConfig.mCodecSpecific) {
     if (aConfig.mCodecSpecific->is<H264Specific>()) {
+      MOZ_ASSERT(aConfig.mCodec == CodecType::H264);
       hr = FAILED(type->SetUINT32(
           MF_MT_MPEG2_PROFILE,
           GetProfile(aConfig.mCodecSpecific->as<H264Specific>().mProfile)));
