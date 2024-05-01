@@ -161,8 +161,6 @@ class GCParallelTask : private mozilla::LinkedListElement<GCParallelTask>,
   void joinWithLockHeld(
       AutoLockHelperThreadState& lock,
       mozilla::Maybe<mozilla::TimeStamp> deadline = mozilla::Nothing());
-  void joinNonIdleTask(mozilla::Maybe<mozilla::TimeStamp> deadline,
-                       AutoLockHelperThreadState& lock);
 
   // Instead of dispatching to a helper, run the task on the current thread.
   void runFromMainThread();
@@ -246,6 +244,9 @@ class GCParallelTask : private mozilla::LinkedListElement<GCParallelTask>,
     state_ = State::Idle;
   }
   friend class gc::GCRuntime;
+
+  void joinNonIdleTask(mozilla::Maybe<mozilla::TimeStamp> deadline,
+                       AutoLockHelperThreadState& lock);
 
   void runTask(JS::GCContext* gcx, AutoLockHelperThreadState& lock);
 

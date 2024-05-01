@@ -81,8 +81,6 @@ typedef Vector<Tier2GeneratorTask*, 0, SystemAllocPolicy>
 
 // Per-process state for off thread work items.
 class GlobalHelperThreadState {
-  friend class AutoLockHelperThreadState;
-
  public:
   // A single tier-2 ModuleGenerator job spawns many compilation jobs, and we
   // do not want to allow more than one such ModuleGenerator to run at a time.
@@ -181,6 +179,7 @@ class GlobalHelperThreadState {
   // JS::SetHelperThreadTaskCallback. If this is not set the internal thread
   // pool is used.
   JS::HelperThreadTaskCallback dispatchTaskCallback = nullptr;
+  friend class AutoHelperTaskQueue;
 
   // The number of tasks dispatched to the thread pool that have not started
   // running yet.
@@ -227,7 +226,7 @@ class GlobalHelperThreadState {
   void assertIsLockedByCurrentThread() const;
 #endif
 
-  void wait(AutoLockHelperThreadState& locked,
+  void wait(AutoLockHelperThreadState& lock,
             mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
   void notifyAll(const AutoLockHelperThreadState&);
 

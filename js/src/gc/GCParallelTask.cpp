@@ -100,6 +100,12 @@ void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
     return;
   }
 
+  if (lock.hasQueuedTasks()) {
+    // Unlock to allow task dispatch without lock held, otherwise we could wait
+    // forever.
+    AutoUnlockHelperThreadState unlock(lock);
+  }
+
   if (isNotYetRunning(lock) && deadline.isNothing()) {
     // If the task was dispatched but has not yet started then cancel the task
     // and run it from the main thread. This stops us from blocking here when
