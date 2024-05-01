@@ -57,6 +57,23 @@ export class BackupService {
   #backupInProgress = false;
 
   /**
+   * A Promise that will resolve once the postRecovery steps are done. It will
+   * also resolve if postRecovery steps didn't need to run.
+   *
+   * @see BackupService.checkForPostRecovery()
+   * @type {Promise<undefined>}
+   */
+  #postRecoveryPromise;
+
+  /**
+   * The resolving function for #postRecoveryPromise, which should be called
+   * by checkForPostRecovery() before exiting.
+   *
+   * @type {Function}
+   */
+  #postRecoveryResolver;
+
+  /**
    * The name of the backup manifest file.
    *
    * @type {string}
@@ -178,6 +195,22 @@ export class BackupService {
       let resource = backupResources[resourceName];
       this.#resources.set(resource.key, resource);
     }
+
+    let { promise, resolve } = Promise.withResolvers();
+    this.#postRecoveryPromise = promise;
+    this.#postRecoveryResolver = resolve;
+  }
+
+  /**
+   * Returns a reference to a Promise that will resolve with undefined once
+   * postRecovery steps have had a chance to run. This will also be resolved
+   * with undefined if no postRecovery steps needed to be run.
+   *
+   * @see BackupService.checkForPostRecovery()
+   * @returns {Promise<undefined>}
+   */
+  get postRecoveryComplete() {
+    return this.#postRecoveryPromise;
   }
 
   /**
@@ -608,6 +641,7 @@ export class BackupService {
 
     if (!(await IOUtils.exists(postRecoveryFile))) {
       lazy.logConsole.debug("Did not find post-recovery file.");
+      this.#postRecoveryResolver();
       return;
     }
 
@@ -631,6 +665,7 @@ export class BackupService {
       }
     } finally {
       await IOUtils.remove(postRecoveryFile, { ignoreAbsent: true });
+      this.#postRecoveryResolver();
     }
   }
 

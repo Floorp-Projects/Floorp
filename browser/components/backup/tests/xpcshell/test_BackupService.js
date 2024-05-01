@@ -391,6 +391,7 @@ add_task(async function test_checkForPostRecovery() {
   });
 
   await bs.checkForPostRecovery(testProfilePath);
+  await bs.postRecoveryComplete;
 
   Assert.ok(
     FakeBackupResource1.prototype.postRecovery.calledOnce,
