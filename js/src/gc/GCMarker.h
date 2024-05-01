@@ -124,6 +124,7 @@ class MarkStack {
    public:
     TaggedPtr() = default;
     TaggedPtr(Tag tag, Cell* ptr);
+    uintptr_t asBits() const;
     Tag tag() const;
     uintptr_t tagUnchecked() const;
     template <typename T>
@@ -144,6 +145,7 @@ class MarkStack {
     TaggedPtr ptr() const;
 
     void setStart(size_t newStart);
+    void setEmpty();
 
    private:
     static constexpr size_t StartShift = 2;
