@@ -155,6 +155,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
 
     var origLength = items.length;
     items = defaults.concat(items);
+    var modifiers = [...items];
     while (
       items[0].match(
         /^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail|pref|test-pref|ref-pref|fuzzy|chaos-mode|wr-capture|wr-capture-ref|noautofuzz)/
@@ -492,6 +493,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
           chaosMode,
           wrCapture,
           noAutoFuzz,
+          modifiers,
         },
         aFilter,
         aManifestID
@@ -572,6 +574,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
           chaosMode,
           wrCapture,
           noAutoFuzz,
+          modifiers,
         },
         aFilter,
         aManifestID

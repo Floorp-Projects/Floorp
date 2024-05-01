@@ -46,6 +46,7 @@ class ErrorSummaryFormatter(BaseFormatter):
             "expected": item["expected"],
             "message": item.get("message"),
             "stack": item.get("stack"),
+            "modifiers": item.get("extra", {}).get("modifiers", ""),
             "known_intermittent": item.get("known_intermittent", []),
         }
         return self._output("test_result", data)
