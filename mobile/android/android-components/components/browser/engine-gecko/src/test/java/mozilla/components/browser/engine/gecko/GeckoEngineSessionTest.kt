@@ -4361,7 +4361,7 @@ class GeckoEngineSessionTest {
             mockLoadRequest("sample:about", triggeredByRedirect = true),
         )
 
-        assertEquals(geckoResult!!, GeckoResult.fromValue(AllowOrDeny.ALLOW))
+        assertEquals(geckoResult!!, GeckoResult.allow())
     }
 
     @Test
