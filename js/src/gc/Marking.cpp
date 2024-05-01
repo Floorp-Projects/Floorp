@@ -1389,7 +1389,10 @@ void GCMarker::updateRangesAtStartOfSlice() {
   for (MarkStackIter iter(stack); !iter.done(); iter.next()) {
     if (iter.isSlotsOrElementsRange()) {
       MarkStack::SlotsOrElementsRange& range = iter.slotsOrElementsRange();
-      if (range.kind() == SlotsOrElementsKind::Elements) {
+      JSObject* obj = range.ptr().asRangeObject();
+      if (!obj->is<NativeObject>()) {
+        range.setEmpty();
+      } else if (range.kind() == SlotsOrElementsKind::Elements) {
         NativeObject* obj = &range.ptr().asRangeObject()->as<NativeObject>();
         size_t index = range.start();
         size_t numShifted = obj->getElementsHeader()->numShiftedElements();
@@ -1660,6 +1663,8 @@ inline MarkStack::TaggedPtr::TaggedPtr(Tag tag, Cell* ptr)
   assertValid();
 }
 
+inline uintptr_t MarkStack::TaggedPtr::asBits() const { return bits; }
+
 inline uintptr_t MarkStack::TaggedPtr::tagUnchecked() const {
   return bits & TagMask;
 }
@@ -1723,6 +1728,12 @@ inline size_t MarkStack::SlotsOrElementsRange::start() const {
 inline void MarkStack::SlotsOrElementsRange::setStart(size_t newStart) {
   startAndKind_ = (newStart << StartShift) | uintptr_t(kind());
   MOZ_ASSERT(start() == newStart);
+}
+
+inline void MarkStack::SlotsOrElementsRange::setEmpty() {
+  TaggedPtr entry = TaggedPtr(ObjectTag, ptr().asRangeObject());
+  ptr_ = entry;
+  startAndKind_ = entry.asBits();
 }
 
 inline MarkStack::TaggedPtr MarkStack::SlotsOrElementsRange::ptr() const {
