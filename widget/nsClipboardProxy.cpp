@@ -72,12 +72,18 @@ nsClipboardProxy::GetData(nsITransferable* aTransferable,
   nsTArray<nsCString> types;
   aTransferable->FlavorsTransferableCanImport(types);
 
-  IPCTransferableData transferable;
-  ContentChild::GetSingleton()->SendGetClipboard(types, aWhichClipboard,
-                                                 aWindowContext, &transferable);
+  IPCTransferableDataOrError transferableOrError;
+  ContentChild::GetSingleton()->SendGetClipboard(
+      types, aWhichClipboard, aWindowContext, &transferableOrError);
+
+  if (transferableOrError.type() == IPCTransferableDataOrError::Tnsresult) {
+    MOZ_ASSERT(NS_FAILED(transferableOrError.get_nsresult()));
+    return transferableOrError.get_nsresult();
+  }
+
   return nsContentUtils::IPCTransferableDataToTransferable(
-      transferable, false /* aAddDataFlavor */, aTransferable,
-      false /* aFilterUnknownFlavors */);
+      transferableOrError.get_IPCTransferableData(), false /* aAddDataFlavor */,
+      aTransferable, false /* aFilterUnknownFlavors */);
 }
 
 namespace {
