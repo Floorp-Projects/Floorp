@@ -73,15 +73,15 @@ endif
 MOZ_AUTOMATION_TIERS := $(foreach sym,$(moz_automation_symbols),$(if $(filter 1,$($(sym))),$(tier_$(sym))))
 
 # Dependencies between automation build steps
-automation-start/uploadsymbols: automation/buildsymbols
+automation/uploadsymbols: automation/buildsymbols
 
-automation-start/upload: automation/package
-automation-start/upload: automation/package-tests
-automation-start/upload: automation/buildsymbols
-automation-start/upload: automation/package-generated-sources
+automation/upload: automation/package
+automation/upload: automation/package-tests
+automation/upload: automation/buildsymbols
+automation/upload: automation/package-generated-sources
 
 # Run the check tier after everything else.
-automation-start/check: $(addprefix automation/,$(filter-out check,$(MOZ_AUTOMATION_TIERS)))
+automation/check: $(addprefix automation/,$(filter-out check,$(MOZ_AUTOMATION_TIERS)))
 
 automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
 	@echo Automation steps completed.
@@ -96,13 +96,9 @@ AUTOMATION_EXTRA_CMDLINE-check = --keep-going
 # case because it is a prerequisite of automation/upload.
 define automation_commands
 @+$(PYTHON3) $(topsrcdir)/config/run-and-prefix.py $1 $(MAKE) $1 $(AUTOMATION_EXTRA_CMDLINE-$1)
-$(call BUILDSTATUS,TIER_FINISH $1)
 endef
 
-# The tier start message is in a separate target so make doesn't buffer it
-# until the step completes with output syncing enabled.
-automation-start/%:
-	$(if $(filter $*,$(MOZ_AUTOMATION_TIERS)),$(call BUILDSTATUS,TIER_START $*))
-
-automation/%: automation-start/%
+automation/%:
+	$(if $(filter $*,$(filter-out $(ALL_TIERS),$(MOZ_AUTOMATION_TIERS))),$(call BUILDSTATUS,TIER_START $*))
 	$(if $(filter $*,$(MOZ_AUTOMATION_TIERS)),$(call automation_commands,$*))
+	$(if $(filter $*,$(filter-out $(ALL_TIERS),$(MOZ_AUTOMATION_TIERS))),$(call BUILDSTATUS,TIER_FINISH $*))
