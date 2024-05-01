@@ -889,25 +889,23 @@ void GlobalHelperThreadState::assertIsLockedByCurrentThread() const {
 }
 #endif  // DEBUG
 
-void GlobalHelperThreadState::dispatch(
-    DispatchReason reason, const AutoLockHelperThreadState& locked) {
-  if (canStartTasks(locked) && tasksPending_ < threadCount) {
+void GlobalHelperThreadState::dispatch(DispatchReason reason,
+                                       const AutoLockHelperThreadState& lock) {
+  if (canStartTasks(lock) && tasksPending_ < threadCount) {
     // This doesn't guarantee that we don't dispatch more tasks to the external
     // pool than necessary if tasks are taking a long time to start, but it does
     // limit the number.
     tasksPending_++;
 
-    // The hazard analysis can't tell that the callback doesn't GC.
-    JS::AutoSuppressGCAnalysis nogc;
-
-    dispatchTaskCallback(reason);
+    lock.queueTaskToDispatch(reason);
   }
 }
 
 void GlobalHelperThreadState::wait(
-    AutoLockHelperThreadState& locked,
+    AutoLockHelperThreadState& lock,
     TimeDuration timeout /* = TimeDuration::Forever() */) {
-  consumerWakeup.wait_for(locked, timeout);
+  MOZ_ASSERT(!lock.hasQueuedTasks());
+  consumerWakeup.wait_for(lock, timeout);
 }
 
 void GlobalHelperThreadState::notifyAll(const AutoLockHelperThreadState&) {
@@ -1534,6 +1532,10 @@ void js::RunPendingSourceCompressions(JSRuntime* runtime) {
 
   HelperThreadState().startHandlingCompressionTasks(
       GlobalHelperThreadState::ScheduleCompressionTask::API, nullptr, lock);
+  {
+    // Dispatch tasks.
+    AutoUnlockHelperThreadState unlock(lock);
+  }
 
   // Wait until all tasks have started compression.
   while (!HelperThreadState().compressionWorklist(lock).empty()) {
@@ -1734,4 +1736,29 @@ void GlobalHelperThreadState::runTaskLocked(HelperThreadTask* task,
   runningTaskCount[threadType]--;
 
   js::oom::SetThreadType(js::THREAD_TYPE_NONE);
+}
+
+void AutoHelperTaskQueue::queueTaskToDispatch(JS::DispatchReason reason) const {
+  // This is marked const because it doesn't release the mutex.
+
+  if (reason == JS::DispatchReason::FinishedTask) {
+    finishedTasksToDispatch++;
+    return;
+  }
+
+  newTasksToDispatch++;
+}
+
+void AutoHelperTaskQueue::dispatchQueuedTasks() {
+  // The hazard analysis can't tell that the callback doesn't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  for (size_t i = 0; i < newTasksToDispatch; i++) {
+    HelperThreadState().dispatchTaskCallback(JS::DispatchReason::NewTask);
+  }
+  for (size_t i = 0; i < finishedTasksToDispatch; i++) {
+    HelperThreadState().dispatchTaskCallback(JS::DispatchReason::FinishedTask);
+  }
+  newTasksToDispatch = 0;
+  finishedTasksToDispatch = 0;
 }
