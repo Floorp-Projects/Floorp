@@ -355,7 +355,7 @@ bool gfxFontEntry::TryGetSVGData(const gfxFont* aFont) {
     mSVGInitialized = true;
   }
 
-  if (GetSVGGlyphs()) {
+  if (GetSVGGlyphs() && aFont) {
     AutoWriteLock lock(mLock);
     if (!mFontsUsingSVGGlyphs.Contains(aFont)) {
       mFontsUsingSVGGlyphs.AppendElement(aFont);
