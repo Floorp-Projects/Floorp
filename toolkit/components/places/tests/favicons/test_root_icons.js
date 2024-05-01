@@ -158,16 +158,25 @@ add_task(async function test_different_host() {
 add_task(async function test_same_size() {
   // Add two icons with the same size, one is a root icon. Check that the
   // non-root icon is preferred when a smaller size is requested.
-  let data = readFileData(do_get_file("favicon-normal32.png"));
+  let dataURL = await readFileDataAsDataURL(
+    do_get_file("favicon-normal32.png"),
+    "image/png"
+  );
   let pageURI = NetUtil.newURI("http://new_places.test/page/");
   await PlacesTestUtils.addVisits(pageURI);
 
   let faviconURI = NetUtil.newURI("http://new_places.test/favicon.ico");
-  PlacesUtils.favicons.replaceFaviconData(faviconURI, data, "image/png");
-  await setFaviconForPage(pageURI, faviconURI);
+  await PlacesTestUtils.setFaviconForPage(
+    pageURI.spec,
+    faviconURI.spec,
+    dataURL
+  );
   faviconURI = NetUtil.newURI("http://new_places.test/another_icon.ico");
-  PlacesUtils.favicons.replaceFaviconData(faviconURI, data, "image/png");
-  await setFaviconForPage(pageURI, faviconURI);
+  await PlacesTestUtils.setFaviconForPage(
+    pageURI.spec,
+    faviconURI.spec,
+    dataURL
+  );
 
   Assert.equal(
     await getFaviconUrlForPage(pageURI, 20),

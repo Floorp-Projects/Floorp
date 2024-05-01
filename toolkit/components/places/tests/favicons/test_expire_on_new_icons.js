@@ -28,23 +28,23 @@ add_task(async function test_expire_associated() {
   ];
 
   for (let icon of favicons) {
-    let data = readFileData(do_get_file(icon.name));
-    PlacesUtils.favicons.replaceFaviconData(
-      NetUtil.newURI(TEST_URL + icon.name),
-      data,
+    let dataURL = await readFileDataAsDataURL(
+      do_get_file(icon.name),
       icon.mimeType
     );
-    await setFaviconForPage(TEST_URL, TEST_URL + icon.name);
+    await PlacesTestUtils.setFaviconForPage(
+      TEST_URL,
+      TEST_URL + icon.name,
+      dataURL
+    );
     if (icon.expired) {
       await expireIconRelationsForPage(TEST_URL);
       // Add the same icon to another page.
-      PlacesUtils.favicons.replaceFaviconData(
-        NetUtil.newURI(TEST_URL + icon.name),
-        data,
-        icon.mimeType,
-        icon.expire
+      await PlacesTestUtils.setFaviconForPage(
+        TEST_URL2,
+        TEST_URL + icon.name,
+        dataURL
       );
-      await setFaviconForPage(TEST_URL2, TEST_URL + icon.name);
     }
   }
 

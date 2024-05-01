@@ -98,7 +98,7 @@ Bookmarks.prototype = {
       let rows = await MigrationUtils.getRowsFromDBWithoutLocks(
         dbPath,
         "Safari favicons",
-        `SELECT I.uuid, I.url AS favicon_url, P.url 
+        `SELECT I.uuid, I.url AS favicon_url, P.url
         FROM icon_info I
         INNER JOIN page_url P ON I.uuid = P.uuid;`
       );
@@ -253,7 +253,7 @@ Bookmarks.prototype = {
       parentGuid
     );
 
-    MigrationUtils.insertManyFavicons(favicons);
+    MigrationUtils.insertManyFavicons(favicons).catch(console.error);
   },
 
   /**
