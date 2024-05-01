@@ -49,6 +49,10 @@ endif
 endif
 endif
 
+ifneq (,$(findstring k,$(filter-out --%, $(MAKEFLAGS))))
+cargo_build_flags += --keep-going
+endif
+
 # Without -j > 1, make will not pass jobserver info down to cargo. Force
 # one job when requested as a special case.
 cargo_build_flags += $(filter -j1,$(MAKEFLAGS))
