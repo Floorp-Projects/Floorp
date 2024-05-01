@@ -1512,6 +1512,8 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
             extra.image1 = image1;
           }
         }
+        extra.modifiers = g.urls[0].modifiers;
+
         logger.testStatus(
           g.urls[0].identifier,
           message,

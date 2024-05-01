@@ -33,7 +33,7 @@ import pytest
             ],
             """
                 {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
-                {"test": "test_baz", "subtest": null, "group": "manifestA", "status": "PASS", "expected": "FAIL", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 8}
+                {"test": "test_baz", "subtest": null, "group": "manifestA", "status": "PASS", "expected": "FAIL", "message": null, "stack": null, "modifiers": "", "known_intermittent": [], "action": "test_result", "line": 8}
                 {"group": "manifestA", "status": "ERROR", "duration": 20, "action": "group_result", "line": 9}
                 {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 9}
             """.strip(),
@@ -86,7 +86,7 @@ import pytest
             ],
             """
                 {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
-                {"test": "test_bar", "subtest": null, "group": "manifestA", "status": "CRASH", "expected": "OK", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 4}
+                {"test": "test_bar", "subtest": null, "group": "manifestA", "status": "CRASH", "expected": "OK", "message": null, "stack": null, "modifiers": "", "known_intermittent": [], "action": "test_result", "line": 4}
                 {"group": "manifestA", "status": "ERROR", "duration": 20, "action": "group_result", "line": 9}
                 {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 9}
             """.strip(),
@@ -143,8 +143,8 @@ import pytest
             ],
             """
                 {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
-                {"test": "test_baz", "subtest": "Test timed out", "group": "manifestA", "status": "FAIL", "expected": "PASS", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 8}
-                {"test": "test_baz", "subtest": "", "group": "manifestA", "status": "TIMEOUT", "expected": "PASS", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 9}
+                {"test": "test_baz", "subtest": "Test timed out", "group": "manifestA", "status": "FAIL", "expected": "PASS", "message": null, "stack": null, "modifiers": "", "known_intermittent": [], "action": "test_result", "line": 8}
+                {"test": "test_baz", "subtest": "", "group": "manifestA", "status": "TIMEOUT", "expected": "PASS", "message": null, "stack": null, "modifiers": "", "known_intermittent": [], "action": "test_result", "line": 9}
                 {"test": "manifestA", "group": "manifestA", "signature": "signature", "stackwalk_stderr": null, "stackwalk_stdout": null, "action": "crash", "line": 10}
                 {"group": "manifestA", "status": "ERROR", "duration": 49, "action": "group_result", "line": 12}
                 {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 12}
@@ -225,7 +225,7 @@ import pytest
             ],
             """
                 {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
-                {"test": "test_baz", "group": "manifestA", "status": "FAIL", "expected": "OK", "subtest": null, "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 8}
+                {"test": "test_baz", "group": "manifestA", "status": "FAIL", "expected": "OK", "subtest": null, "message": null, "stack": null, "modifiers": "", "known_intermittent": [], "action": "test_result", "line": 8}
             """.strip(),
             id="timeout_no_group_status",
         ),
