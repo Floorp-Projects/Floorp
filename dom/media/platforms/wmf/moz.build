@@ -57,9 +57,11 @@ UNIFIED_SOURCES += [
     "MFTDecoder.cpp",
     "MFTEncoder.cpp",
     "WMFAudioMFTManager.cpp",
+    "WMFDataEncoderUtils.cpp",
     "WMFDecoderModule.cpp",
     "WMFEncoderModule.cpp",
     "WMFMediaDataDecoder.cpp",
+    "WMFMediaDataEncoder.cpp",
     "WMFVideoMFTManager.cpp",
 ]
 
