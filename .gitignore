@@ -31,14 +31,10 @@ ID
 # Filesystem temporaries
 .fuse_hidden*
 
-# Ignore Python .egg-info directories for first-party modules (but,
-# still add vendored packages' .egg-info directories)
-# lint-ignore-next-line: syntax-difference
-*.egg-info
-# lint-ignore-next-line: syntax-difference
-!third_party/python/**/*.egg-info
-# lint-ignore-next-line: syntax-difference
-!testing/web-platform/tests/tools/third_party/**/*.egg-info
+# Ignore Python .egg-info directories.
+# This is only relevant for first-party modules, but adding that directory for
+# third-party packages is dealt with by the script vendoring them.
+*.egg-info/
 
 # Vim swap files.
 .*.sw[a-z]
