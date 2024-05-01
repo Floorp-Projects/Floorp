@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="reftest-wait"
-     onload="setTimeAndSnapshot(1, true)">
+     class="reftest-wait">
   <title>Test animation of the "filterUnits" enum attributes of the "filter" element</title>
   <script xlink:href="smil-util.js" type="text/javascript"/>
   <filter id="flood_filter_1" filterUnits="userSpaceOnUse"
@@ -39,4 +38,11 @@
   <svg y="50" height="50">
     <rect width="50%" height="100%" fill="red" filter="url(#flood_filter_2)"/>
   </svg>
+
+  <script type="text/javascript">
+    function doTest() {
+      setTimeAndSnapshot(1, true);
+    }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
 </svg>

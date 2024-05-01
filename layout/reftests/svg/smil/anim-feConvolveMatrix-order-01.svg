@@ -4,8 +4,7 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="reftest-wait"
-     onload="setTimeAndSnapshot(2, true)">
+     class="reftest-wait">
   <title>Testcase for animation of the "order" attribute of the "feConvolveMatrix" element</title>
   <script xlink:href="smil-util.js" type="text/javascript"/>
   <defs>
@@ -50,4 +49,11 @@
     <rect x="10" y="10" width="50" height="100" fill="orange"/>
     <rect x="60" y="10" width="50" height="100" fill="blue"/>
   </g>
+
+  <script type="text/javascript">
+    function doTest() {
+      setTimeAndSnapshot(2, true);
+    }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
 </svg>

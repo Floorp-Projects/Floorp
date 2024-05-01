@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="reftest-wait"
-     onload="setTimeAndSnapshot(1, true)">
+     class="reftest-wait">
   <title>Test animation of the &lt;number-list&gt; attribute on the 'text' element</title>
   <script xlink:href="smil-util.js" type="text/javascript"/>
 
@@ -98,4 +97,10 @@
   <rect x="20" y="140" width="256" height="20" fill="url(#gradient)"
         filter="url(#f_calcMode_discrete)"/>
 
+  <script type="text/javascript">
+    function doTest() {
+      setTimeAndSnapshot(1, true);
+    }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
 </svg>

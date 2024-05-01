@@ -4,8 +4,7 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="reftest-wait"
-     onload="setTimeAndSnapshot(1, true)">
+     class="reftest-wait">
   <title>Testcase for animation of the "elevation" attribute of the "feDistantLight" element</title>
   <script xlink:href="smil-util.js" type="text/javascript"/>
   <defs>
@@ -22,4 +21,11 @@
     </filter>
   </defs>
   <path d="M0,0 h100 v100 h-100 z" filter="url(#f)"/>
+
+  <script type="text/javascript">
+    function doTest() {
+      setTimeAndSnapshot(1, true);
+    }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
 </svg>
