@@ -23,7 +23,6 @@ if CONFIG["MOZ_PLACES"]:
         "nsINavBookmarksService.idl",
         "nsIPlacesPreviewsHelperService.idl",
         "nsITaggingService.idl",
-        "PlacesCompletionCallback.idl",
     ]
 
     EXPORTS.mozilla.places = [

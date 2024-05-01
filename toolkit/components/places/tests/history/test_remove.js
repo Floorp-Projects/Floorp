@@ -292,7 +292,20 @@ add_task(async function test_orphans() {
   );
   // Also create a root icon.
   let faviconURI = Services.io.newURI(uri.spec + "favicon.ico");
-  await PlacesTestUtils.setFaviconForPage(uri, faviconURI, SMALLPNG_DATA_URI);
+  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+    faviconURI,
+    SMALLPNG_DATA_URI.spec,
+    0,
+    Services.scriptSecurityManager.getSystemPrincipal()
+  );
+  PlacesUtils.favicons.setAndFetchFaviconForPage(
+    uri,
+    faviconURI,
+    true,
+    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+    null,
+    Services.scriptSecurityManager.getSystemPrincipal()
+  );
 
   await PlacesUtils.history.update({
     url: uri,

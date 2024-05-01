@@ -21,16 +21,17 @@ add_task(async function test_notificationClose() {
   Services.prefs.setBoolPref("alerts.showFavicons", true);
 
   await PlacesTestUtils.addVisits(notificationURI);
-  let dataURL = makeURI(
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"
-  );
-  await new Promise(resolve => {
-    PlacesUtils.favicons.setFaviconForPage(
+  let faviconURI = await new Promise(resolve => {
+    let uri = makeURI(
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"
+    );
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
       notificationURI,
-      dataURL,
-      dataURL,
-      null,
-      resolve
+      uri,
+      true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      uriResult => resolve(uriResult),
+      Services.scriptSecurityManager.getSystemPrincipal()
     );
   });
 
@@ -66,7 +67,11 @@ add_task(async function test_notificationClose() {
         "Body text of notification should be present"
       );
       let alertIcon = alertWindow.document.getElementById("alertIcon");
-      is(alertIcon.src, dataURL.spec, "Icon of notification should be present");
+      is(
+        alertIcon.src,
+        faviconURI.spec,
+        "Icon of notification should be present"
+      );
 
       let alertCloseButton = alertWindow.document.querySelector(".close-icon");
       is(alertCloseButton.localName, "toolbarbutton", "close button found");

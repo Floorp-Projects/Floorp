@@ -870,53 +870,36 @@ class MigrationUtils {
    * Iterates through the favicons, sniffs for a mime type,
    * and uses the mime type to properly import the favicon.
    *
-   * Note: You may not want to await on the returned promise, especially if by
-   *       doing so there's risk of interrupting the migration of more critical
-   *       data (e.g. bookmarks).
-   *
    * @param {object[]} favicons
    *   An array of Objects with these properties:
    *     {Uint8Array} faviconData: The binary data of a favicon
    *     {nsIURI} uri: The URI of the associated page
    */
-  async insertManyFavicons(favicons) {
+  insertManyFavicons(favicons) {
     let sniffer = Cc["@mozilla.org/image/loader;1"].createInstance(
       Ci.nsIContentSniffer
     );
-
     for (let faviconDataItem of favicons) {
-      let dataURL;
-
-      try {
-        // getMIMETypeFromContent throws error if could not get the mime type
-        // from the data.
-        let mimeType = sniffer.getMIMETypeFromContent(
-          null,
-          faviconDataItem.faviconData,
-          faviconDataItem.faviconData.length
-        );
-
-        dataURL = await new Promise((resolve, reject) => {
-          let buffer = new Uint8ClampedArray(faviconDataItem.faviconData);
-          let blob = new Blob([buffer], { type: mimeType });
-          let reader = new FileReader();
-          reader.addEventListener("load", () => resolve(reader.result));
-          reader.addEventListener("error", reject);
-          reader.readAsDataURL(blob);
-        });
-      } catch (e) {
-        // Even if error happens for favicon, continue the process.
-        console.warn(e);
-        continue;
-      }
-
+      let mimeType = sniffer.getMIMETypeFromContent(
+        null,
+        faviconDataItem.faviconData,
+        faviconDataItem.faviconData.length
+      );
       let fakeFaviconURI = Services.io.newURI(
         "fake-favicon-uri:" + faviconDataItem.uri.spec
       );
-      lazy.PlacesUtils.favicons.setFaviconForPage(
+      lazy.PlacesUtils.favicons.replaceFaviconData(
+        fakeFaviconURI,
+        faviconDataItem.faviconData,
+        mimeType
+      );
+      lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
         faviconDataItem.uri,
         fakeFaviconURI,
-        Services.io.newURI(dataURL)
+        true,
+        lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        null,
+        Services.scriptSecurityManager.getSystemPrincipal()
       );
     }
   }
