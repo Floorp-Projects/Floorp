@@ -1112,7 +1112,7 @@ class AsymmetricSignVerifyTask : public WebCryptoTask {
 
       mEarlyRv = GetAlgorithmName(aCx, params.mHash, hashAlgName);
       if (NS_FAILED(mEarlyRv)) {
-        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         return;
       }
     } else {
@@ -2424,7 +2424,7 @@ class DeriveHkdfBitsTask : public ReturnArrayBufferViewTask {
 
     // length must be greater than zero.
     if (aLength == 0) {
-      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+      mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
     }
 
@@ -2768,7 +2768,7 @@ class DeriveEcdhBitsTask : public ReturnArrayBufferViewTask {
     nsString curve2 = publicKey->Algorithm().mEc.mNamedCurve;
 
     if (!curve1.Equals(curve2)) {
-      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
       return;
     }
   }
