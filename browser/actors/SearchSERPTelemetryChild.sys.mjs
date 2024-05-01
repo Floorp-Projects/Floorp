@@ -13,13 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
-  "serpEventsEnabled",
-  "browser.search.serpEventTelemetry.enabled",
-  true
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
   "serpEventTelemetryCategorization",
   "browser.search.serpEventTelemetryCategorization.enabled",
   false
@@ -1396,7 +1389,6 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
     }
 
     if (
-      lazy.serpEventsEnabled &&
       providerInfo.components?.length &&
       (eventType == "load" || eventType == "pageshow")
     ) {
@@ -1524,17 +1516,13 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         // so that we remain consistent with the *.in-content:sap* count for the
         // SEARCH_COUNTS histogram.
         if (event.persisted) {
+          this.#checkForPageImpressionComponents();
           this.#check(event.type);
-          if (lazy.serpEventsEnabled) {
-            this.#checkForPageImpressionComponents();
-          }
         }
         break;
       }
       case "DOMContentLoaded": {
-        if (lazy.serpEventsEnabled) {
-          this.#checkForPageImpressionComponents();
-        }
+        this.#checkForPageImpressionComponents();
         this.#check(event.type);
         break;
       }

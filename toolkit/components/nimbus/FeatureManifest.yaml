@@ -106,12 +106,6 @@ search:
         pref: browser.urlbar.richSuggestions.featureGate
       description: >-
         Feature gate that controls whether Rich Suggestions are enabled.
-    serpEventTelemetryEnabled:
-      type: boolean
-      setPref:
-        branch: default
-        pref: browser.search.serpEventTelemetry.enabled
-      description: Whether the Glean SERP event telemetry is enabled.
     serpEventTelemetryCategorizationEnabled:
       type: boolean
       setPref:

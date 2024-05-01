@@ -30,10 +30,6 @@ const TEST_PROVIDER_INFO = [
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
-  // Enable local telemetry recording for the duration of the tests.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.serpEventTelemetry.enabled", true]],
-  });
 
   registerCleanupFunction(async () => {
     SearchSERPTelemetry.overrideSearchTelemetryForTests();

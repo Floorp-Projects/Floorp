@@ -103,9 +103,6 @@ add_setup(async function () {
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.serpEventTelemetry.enabled", true]],
-  });
 
   // The tests evaluate whether or not ads are visible depending on whether
   // they are within the view of the window. To ensure the test results
