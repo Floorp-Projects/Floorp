@@ -9,7 +9,7 @@
 #include <vpx/vpx_encoder.h>
 
 #include "DriftCompensation.h"
-#include "ImageToI420.h"
+#include "ImageConversion.h"
 #include "mozilla/gfx/2D.h"
 #include "prsystem.h"
 #include "VideoSegment.h"
