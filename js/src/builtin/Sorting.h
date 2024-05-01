@@ -50,6 +50,9 @@ class ArraySortData {
     JSSameRealmNoRectifier,
   };
 
+  // Insertion sort is used if the length is <= InsertionSortMaxLength.
+  static constexpr size_t InsertionSortMaxLength = 8;
+
   static constexpr size_t ComparatorActualArgs = 2;
 
   using ValueVector = GCVector<Value, 8, SystemAllocPolicy>;
@@ -105,6 +108,11 @@ class ArraySortData {
 #endif
 
  private:
+  // Merge sort requires extra scratch space in the vector. Insertion sort
+  // should be used for short arrays that fit in the vector's inline storage, to
+  // avoid extra malloc calls.
+  static_assert(decltype(vec)::InlineLength <= InsertionSortMaxLength);
+
   template <ArraySortKind Kind>
   static MOZ_ALWAYS_INLINE ArraySortResult
   sortWithComparatorShared(ArraySortData* d);
@@ -117,19 +125,6 @@ class ArraySortData {
                               uint32_t denseLen);
 
   JSContext* cx() const { return cx_; }
-
-  // Insertion sort is used if the length is < insertionSortLimit().
-  // We have different limits for arrays and typed arrays to match behavior of
-  // the previous implementation in self-hosted code.
-  // Follow-up TODO: measure this and use the same limit for both.
-  template <ArraySortKind Kind>
-  static constexpr size_t insertionSortLimit() {
-    if constexpr (Kind == ArraySortKind::Array) {
-      return 24;
-    }
-    MOZ_ASSERT(Kind == ArraySortKind::TypedArray);
-    return 8;
-  }
 
   JSObject* comparator() const {
     MOZ_ASSERT(comparator_);

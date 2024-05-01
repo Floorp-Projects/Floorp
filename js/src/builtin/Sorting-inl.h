@@ -158,7 +158,7 @@ ArraySortResult ArraySortData::sortWithComparatorShared(ArraySortData* d) {
   d->list = vec.begin();
 
   // Use insertion sort for small arrays.
-  if (d->denseLen < insertionSortLimit<Kind>()) {
+  if (d->denseLen <= InsertionSortMaxLength) {
     for (d->i = 1; d->i < d->denseLen; d->i++) {
       d->item = vec[d->i];
       d->j = d->i - 1;

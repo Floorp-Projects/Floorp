@@ -4303,8 +4303,7 @@ static MOZ_ALWAYS_INLINE bool TypedArraySortPrologue(JSContext* cx,
   }
 
   // Merge sort requires extra scratch space.
-  bool needsScratchSpace =
-      len >= ArraySortData::insertionSortLimit<ArraySortKind::TypedArray>();
+  bool needsScratchSpace = len > ArraySortData::InsertionSortMaxLength;
 
   Rooted<ArraySortData::ValueVector> vec(cx);
   if (MOZ_UNLIKELY(!vec.resize(needsScratchSpace ? (2 * len) : len))) {
