@@ -41,7 +41,7 @@ use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData}
 use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
-use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDescriptor};
+use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDescriptor, ReferenceFrameMapper};
 use api::{APZScrollGeneration, HasScrollLinkedEffect, Shadow, SpatialId, StickyFrameDescriptor, ImageMask, ItemTag};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::{ReferenceTransformBinding, Rotation, FillRule, SpatialTreeItem, ReferenceFrameDescriptor};
@@ -471,6 +471,9 @@ pub struct SceneBuilder<'a> {
     /// Reference to the set of data that is interned across display lists.
     interners: &'a mut Interners,
 
+    /// Helper struct to map stacking context coords <-> reference frame coords.
+    rf_mapper: ReferenceFrameMapper,
+
     /// Helper struct to map spatial nodes to external scroll offsets.
     external_scroll_mapper: ScrollOffsetMapper,
 
@@ -564,6 +567,7 @@ impl<'a> SceneBuilder<'a> {
             prim_store: PrimitiveStore::new(&stats.prim_store_stats),
             clip_store: ClipStore::new(),
             interners,
+            rf_mapper: ReferenceFrameMapper::new(),
             external_scroll_mapper: ScrollOffsetMapper::new(),
             iframe_size: Vec::new(),
             root_iframe_clip: None,
@@ -779,17 +783,26 @@ impl<'a> SceneBuilder<'a> {
         pictures[pic_index.0].prim_list = prim_list;
     }
 
-    /// Retrieve the current external scroll offset on the provided spatial node.
-    fn current_external_scroll_offset(
+    /// Retrieve the current offset to allow converting a stacking context
+    /// relative coordinate to be relative to the owing reference frame,
+    /// also considering any external scroll offset on the provided
+    /// spatial node.
+    fn current_offset(
         &mut self,
         spatial_node_index: SpatialNodeIndex,
     ) -> LayoutVector2D {
+        // Get the current offset from stacking context <-> reference frame space.
+        let rf_offset = self.rf_mapper.current_offset();
+
         // Get the external scroll offset, if applicable.
-        self.external_scroll_mapper
+        let scroll_offset = self
+            .external_scroll_mapper
             .external_scroll_offset(
                 spatial_node_index,
                 self.spatial_tree,
-            )
+            );
+
+        rf_offset + scroll_offset
     }
 
     fn build_spatial_tree_for_display_list(
@@ -909,6 +922,7 @@ impl<'a> SceneBuilder<'a> {
                             info.stacking_context.flags,
                         );
 
+                        self.rf_mapper.push_offset(info.origin.to_vector());
                         let new_context = BuildContext {
                             pipeline_id: bc.pipeline_id,
                             kind: ContextKind::StackingContext {
@@ -926,6 +940,7 @@ impl<'a> SceneBuilder<'a> {
                         profile_scope!("build_reference_frame");
                         let mut subtraversal = item.sub_iter();
 
+                        self.rf_mapper.push_scope();
                         let new_context = BuildContext {
                             pipeline_id: bc.pipeline_id,
                             kind: ContextKind::ReferenceFrame,
@@ -967,12 +982,15 @@ impl<'a> SceneBuilder<'a> {
             match bc.kind {
                 ContextKind::Root => {}
                 ContextKind::StackingContext { sc_info } => {
+                    self.rf_mapper.pop_offset();
                     self.pop_stacking_context(sc_info);
                 }
                 ContextKind::ReferenceFrame => {
+                    self.rf_mapper.pop_scope();
                 }
                 ContextKind::Iframe { parent_traversal } => {
                     self.iframe_size.pop();
+                    self.rf_mapper.pop_scope();
                     self.clip_tree_builder.pop_clip();
                     self.clip_tree_builder.pop_clip();
 
@@ -1017,10 +1035,8 @@ impl<'a> SceneBuilder<'a> {
         parent_node_index: SpatialNodeIndex,
         instance_id: PipelineInstanceId,
     ) {
-        let external_scroll_offset = self.current_external_scroll_offset(parent_node_index);
-
         let sticky_frame_info = StickyFrameInfo::new(
-            info.bounds.translate(external_scroll_offset),
+            info.bounds,
             info.margins,
             info.vertical_offset_bounds,
             info.horizontal_offset_bounds,
@@ -1094,8 +1110,6 @@ impl<'a> SceneBuilder<'a> {
             },
         };
 
-        let external_scroll_offset = self.current_external_scroll_offset(parent_space);
-
         self.push_reference_frame(
             info.reference_frame.id,
             parent_space,
@@ -1103,7 +1117,7 @@ impl<'a> SceneBuilder<'a> {
             info.reference_frame.transform_style,
             transform,
             info.reference_frame.kind,
-            (info.origin + external_scroll_offset).to_vector(),        // !!!!!!!!!
+            info.origin.to_vector(),
             SpatialNodeUid::external(info.reference_frame.key, pipeline_id, instance_id),
         );
     }
@@ -1119,14 +1133,13 @@ impl<'a> SceneBuilder<'a> {
         // SpatialNode::scroll(..) API as well as for properly setting sticky
         // positioning offsets.
         let content_size = info.content_rect.size();
-        let external_scroll_offset = self.current_external_scroll_offset(parent_node_index);
 
         self.add_scroll_frame(
             info.scroll_frame_id,
             parent_node_index,
             info.external_id,
             pipeline_id,
-            &info.frame_rect.translate(external_scroll_offset),
+            &info.frame_rect,
             &content_size,
             ScrollFrameKind::Explicit,
             info.external_scroll_offset,
@@ -1167,8 +1180,6 @@ impl<'a> SceneBuilder<'a> {
 
         self.clip_tree_builder.push_clip_chain(Some(info.space_and_clip.clip_chain_id), false);
 
-        let external_scroll_offset = self.current_external_scroll_offset(spatial_node_index);
-
         // TODO(gw): This is the only remaining call site that relies on ClipId parenting, remove me!
         self.add_rect_clip_node(
             ClipId::root(iframe_pipeline_id),
@@ -1183,7 +1194,7 @@ impl<'a> SceneBuilder<'a> {
         self.id_to_index_mapper_stack.push(NodeIdToIndexMapper::default());
 
         let bounds = self.snap_rect(
-            &info.bounds.translate(external_scroll_offset),
+            &info.bounds,
             spatial_node_index,
         );
 
@@ -1229,6 +1240,7 @@ impl<'a> SceneBuilder<'a> {
             self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
         }
         self.iframe_size.push(info.bounds.size());
+        self.rf_mapper.push_scope();
 
         self.build_spatial_tree_for_display_list(
             &pipeline.display_list.display_list,
@@ -1261,7 +1273,7 @@ impl<'a> SceneBuilder<'a> {
         bounds: Option<&LayoutRect>,
     ) -> (LayoutPrimitiveInfo, LayoutRect, SpatialNodeIndex, ClipNodeId) {
         let spatial_node_index = self.get_space(common.spatial_id);
-        let current_offset = self.current_external_scroll_offset(spatial_node_index);
+        let current_offset = self.current_offset(spatial_node_index);
 
         let unsnapped_clip_rect = common.clip_rect.translate(current_offset);
         let unsnapped_rect = bounds.map(|bounds| {
@@ -1415,7 +1427,6 @@ impl<'a> SceneBuilder<'a> {
                     &info.color,
                     item.glyphs(),
                     info.glyph_options,
-                    info.ref_frame_offset,
                 );
             }
             DisplayItem::Rectangle(ref info) => {
@@ -1444,7 +1455,7 @@ impl<'a> SceneBuilder<'a> {
                 profile_scope!("hit_test");
 
                 let spatial_node_index = self.get_space(info.spatial_id);
-                let current_offset = self.current_external_scroll_offset(spatial_node_index);
+                let current_offset = self.current_offset(spatial_node_index);
                 let unsnapped_rect = info.rect.translate(current_offset);
 
                 let rect = self.snap_rect(
@@ -1859,6 +1870,7 @@ impl<'a> SceneBuilder<'a> {
     fn create_primitive<P>(
         &mut self,
         info: &LayoutPrimitiveInfo,
+        spatial_node_index: SpatialNodeIndex,
         clip_leaf_id: ClipLeafId,
         prim: P,
     ) -> PrimitiveInstance
@@ -1869,6 +1881,7 @@ impl<'a> SceneBuilder<'a> {
         // Build a primitive key.
         let prim_key = prim.into_key(info);
 
+        let current_offset = self.current_offset(spatial_node_index);
         let interner = self.interners.as_mut();
         let prim_data_handle = interner
             .intern(&prim_key, || ());
@@ -1877,6 +1890,7 @@ impl<'a> SceneBuilder<'a> {
             prim_key,
             prim_data_handle,
             &mut self.prim_store,
+            current_offset,
         );
 
         PrimitiveInstance::new(
@@ -2025,6 +2039,7 @@ impl<'a> SceneBuilder<'a> {
     {
         let prim_instance = self.create_primitive(
             info,
+            spatial_node_index,
             clip_leaf_id,
             prim,
         );
@@ -2676,10 +2691,9 @@ impl<'a> SceneBuilder<'a> {
         points_range: ItemRange<LayoutPoint>,
     ) {
         let spatial_node_index = self.get_space(spatial_id);
-        let external_scroll_offset = self.current_external_scroll_offset(spatial_node_index);
 
         let snapped_mask_rect = self.snap_rect(
-            &image_mask.rect.translate(external_scroll_offset),
+            &image_mask.rect,
             spatial_node_index,
         );
         let points: Vec<LayoutPoint> = points_range.iter().collect();
@@ -2724,10 +2738,9 @@ impl<'a> SceneBuilder<'a> {
         clip_rect: &LayoutRect,
     ) {
         let spatial_node_index = self.get_space(spatial_id);
-        let external_scroll_offset = self.current_external_scroll_offset(spatial_node_index);
 
         let snapped_clip_rect = self.snap_rect(
-            &clip_rect.translate(external_scroll_offset),
+            clip_rect,
             spatial_node_index,
         );
 
@@ -2757,10 +2770,9 @@ impl<'a> SceneBuilder<'a> {
         clip: &ComplexClipRegion,
     ) {
         let spatial_node_index = self.get_space(spatial_id);
-        let external_scroll_offset = self.current_external_scroll_offset(spatial_node_index);
 
         let snapped_region_rect = self.snap_rect(
-            &clip.rect.translate(external_scroll_offset),
+            &clip.rect,
             spatial_node_index,
         );
         let item = ClipItemKey {
@@ -3051,6 +3063,7 @@ impl<'a> SceneBuilder<'a> {
         // Construct and add a primitive for the given shadow.
         let shadow_prim_instance = self.create_primitive(
             &info,
+            pending_primitive.spatial_node_index,
             clip_set,
             pending_primitive.prim.create_shadow(
                 &pending_shadow.shadow,
@@ -3426,9 +3439,8 @@ impl<'a> SceneBuilder<'a> {
         text_color: &ColorF,
         glyph_range: ItemRange<GlyphInstance>,
         glyph_options: Option<GlyphOptions>,
-        ref_frame_offset: LayoutVector2D,
     ) {
-        let offset = self.current_external_scroll_offset(spatial_node_index) + ref_frame_offset;
+        let offset = self.current_offset(spatial_node_index);
 
         let text_run = {
             let shared_key = self.fonts.instance_keys.map_key(font_instance_key);
@@ -3492,7 +3504,6 @@ impl<'a> SceneBuilder<'a> {
                 font,
                 shadow: false,
                 requested_raster_space,
-                reference_frame_relative_offset: offset,
             }
         };
 
@@ -3623,6 +3634,7 @@ impl<'a> SceneBuilder<'a> {
         // picture that reads from the backdrop root
         let backdrop_capture_instance = self.create_primitive(
             info,
+            spatial_node_index,
             clip_leaf_id,
             BackdropCapture {
             },
@@ -3721,6 +3733,7 @@ impl<'a> SceneBuilder<'a> {
             // Add the prim that renders the result of the backdrop filter chain
             let mut backdrop_render_instance = self.create_primitive(
                 info,
+                spatial_node_index,
                 clip_leaf_id,
                 BackdropRender {
                 },

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use api::units::*;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{
@@ -132,6 +133,7 @@ impl InternablePrimitive for BackdropCapture {
         _key: BackdropCaptureKey,
         data_handle: BackdropCaptureDataHandle,
         _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::BackdropCapture {
             data_handle,
@@ -151,6 +153,7 @@ impl InternablePrimitive for BackdropRender {
         _key: BackdropRenderKey,
         data_handle: BackdropRenderDataHandle,
         _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::BackdropRender {
             data_handle,
