@@ -424,6 +424,7 @@ class pdfpaint(PageloaderTest):
     tptimeout = 60000
     pdfpaint = True
     unit = "ms"
+    subtest_alerts = True
 
 
 @register_test()
