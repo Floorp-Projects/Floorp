@@ -17,6 +17,19 @@ namespace mozilla {
   MOZ_LOG(mozilla::sPEMLog, mozilla::LogLevel::Error, \
           ("WMFDataEncoderUtils::%s: " arg, __func__, ##__VA_ARGS__))
 
+GUID CodecToSubtype(CodecType aCodec) {
+  switch (aCodec) {
+    case CodecType::H264:
+      return MFVideoFormat_H264;
+    case CodecType::VP8:
+      return MFVideoFormat_VP80;
+    case CodecType::VP9:
+      return MFVideoFormat_VP90;
+    default:
+      return GUID_NULL;
+  }
+}
+
 bool CanCreateWMFEncoder(CodecType aCodec) {
   bool canCreate = false;
   mscom::EnsureMTA([&]() {
