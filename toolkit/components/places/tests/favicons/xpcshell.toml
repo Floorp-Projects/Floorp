@@ -69,4 +69,6 @@ support-files = [
 
 ["test_setAndFetchFaviconForPage_redirects.js"]
 
+["test_setFaviconForPage.js"]
+
 ["test_svg_favicon.js"]
