@@ -832,48 +832,62 @@ GMPDownloader.prototype = {
           gmpAddon.version,
         ]);
         let installPromise = gmpInstaller.install();
-        return installPromise.then(
-          extractedPaths => {
-            // Success, set the prefs
-            let now = Math.round(Date.now() / 1000);
-            GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, now, gmpAddon.id);
-            // Remember our ABI, so that if the profile is migrated to another
-            // platform or from 32 -> 64 bit, we notice and don't try to load the
-            // unexecutable plugin library.
-            let abi = GMPUtils._expectedABI(gmpAddon);
-            log.info("Setting ABI to '" + abi + "' for " + gmpAddon.id);
-            GMPPrefs.setString(GMPPrefs.KEY_PLUGIN_ABI, abi, gmpAddon.id);
-            // We use the combination of the hash and version to ensure we are
-            // up to date.
-            GMPPrefs.setString(
-              GMPPrefs.KEY_PLUGIN_HASHVALUE,
-              gmpAddon.hashValue,
-              gmpAddon.id
-            );
-            // Setting the version pref signals installation completion to consumers,
-            // if you need to set other prefs etc. do it before this.
-            GMPPrefs.setString(
-              GMPPrefs.KEY_PLUGIN_VERSION,
-              gmpAddon.version,
-              gmpAddon.id
-            );
-            return extractedPaths;
-          },
-          reason => {
-            GMPPrefs.setString(
-              GMPPrefs.KEY_PLUGIN_LAST_INSTALL_FAIL_REASON,
-              reason,
-              gmpAddon.id
-            );
-            let now = Math.round(Date.now() / 1000);
-            GMPPrefs.setInt(
-              GMPPrefs.KEY_PLUGIN_LAST_INSTALL_FAILED,
-              now,
-              gmpAddon.id
-            );
-            throw reason;
-          }
-        );
+        return installPromise
+          .then(
+            extractedPaths => {
+              // Success, set the prefs
+              let now = Math.round(Date.now() / 1000);
+              GMPPrefs.setInt(
+                GMPPrefs.KEY_PLUGIN_LAST_UPDATE,
+                now,
+                gmpAddon.id
+              );
+              // Remember our ABI, so that if the profile is migrated to another
+              // platform or from 32 -> 64 bit, we notice and don't try to load the
+              // unexecutable plugin library.
+              let abi = GMPUtils._expectedABI(gmpAddon);
+              log.info("Setting ABI to '" + abi + "' for " + gmpAddon.id);
+              GMPPrefs.setString(GMPPrefs.KEY_PLUGIN_ABI, abi, gmpAddon.id);
+              // We use the combination of the hash and version to ensure we are
+              // up to date.
+              GMPPrefs.setString(
+                GMPPrefs.KEY_PLUGIN_HASHVALUE,
+                gmpAddon.hashValue,
+                gmpAddon.id
+              );
+              // Setting the version pref signals installation completion to consumers,
+              // if you need to set other prefs etc. do it before this.
+              GMPPrefs.setString(
+                GMPPrefs.KEY_PLUGIN_VERSION,
+                gmpAddon.version,
+                gmpAddon.id
+              );
+              return extractedPaths;
+            },
+            reason => {
+              GMPPrefs.setString(
+                GMPPrefs.KEY_PLUGIN_LAST_INSTALL_FAIL_REASON,
+                reason,
+                gmpAddon.id
+              );
+              let now = Math.round(Date.now() / 1000);
+              GMPPrefs.setInt(
+                GMPPrefs.KEY_PLUGIN_LAST_INSTALL_FAILED,
+                now,
+                gmpAddon.id
+              );
+              throw reason;
+            }
+          )
+          .finally(() => {
+            log.info(`Deleting ${gmpAddon.id} temporary zip file ${zipPath}`);
+            // We need to send out an observer event to ensure the nsZipReaderCache
+            // clears its cache entries associated with our temporary file. Otherwise
+            // if the addons downloader reuses the temporary file path, then we may hit
+            // the cache and get different contents than expected.
+            Services.obs.notifyObservers(null, "flush-cache-entry", zipPath);
+            IOUtils.remove(zipPath);
+          });
       },
       reason => {
         GMPPrefs.setString(
