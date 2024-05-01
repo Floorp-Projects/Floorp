@@ -9,6 +9,7 @@ interface nsIURI;
 interface nsIPrincipal;
 interface mozIPlacesPendingOperation;
 interface nsIFaviconDataCallback;
+interface PlacesCompletionCallback;
 
 [scriptable, uuid(e81e0b0c-b9f1-4c2e-8f3c-b809933cf73c)]
 interface nsIFaviconService : nsISupports
@@ -139,6 +140,37 @@ interface nsIFaviconService : nsISupports
     [optional] in nsIFaviconDataCallback aCallback,
     [optional] in nsIPrincipal aLoadingPrincipal,
     [optional] in unsigned long long aRequestContextID);
+
+  /**
+   * Stores the relation between a page URI and a favicon URI, whose icon data
+   * is provided through a data URL.
+   * The process is asynchronous and a callback with the status of the operation
+   * will be invoked at the end of it.
+   *
+   * @param aPageURI
+   *        URI of the page whose favicon is being set.
+   * @param aFaviconURI
+   *        URI of the favicon to associate with the page.
+   * @param aDataURL
+   *        String that represents a data URL to replace as the favicon content.
+   * @param [optional] aExpiration
+   *        Time in microseconds since the epoch when this favicon expires.
+   *        Until this time, we won't try to load it again.
+   *        If this argument is omitted, the expiration defaults to
+   *        7 days (FaviconHelpers::MAX_FAVICON_EXPIRATION) from now.
+   * @param [optional] aCallback
+   *        Once we're done setting and/or fetching the favicon, we invoke this
+   *        callback.
+   *
+   * @see PlacesCompletionCallback in PlacesCompletionCallback.idl.
+   */
+  void setFaviconForPage(
+    in nsIURI aPageURI,
+    in nsIURI aFaviconURI,
+    in nsIURI aDataURL,
+    [optional] in PRTime aExpiration,
+    [optional] in PlacesCompletionCallback aCallback
+  );
 
   /**
    * Sets the data for a given favicon URI either by replacing existing data in
