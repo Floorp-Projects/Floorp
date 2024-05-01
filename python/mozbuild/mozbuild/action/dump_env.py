@@ -12,19 +12,5 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from shellutil import quote
 
-
-def environ():
-    # We would use six.ensure_text but the global Python isn't guaranteed to have
-    # the correct version of six installed.
-    def ensure_text(s):
-        if sys.version_info > (3, 0) or isinstance(s, unicode):
-            # os.environ always returns string keys and values in Python 3.
-            return s
-        else:
-            return s.decode("utf-8")
-
-    return [(ensure_text(k), ensure_text(v)) for (k, v) in os.environ.items()]
-
-
-for key, value in environ():
+for key, value in os.environ.items():
     print("%s=%s" % (key, quote(value)))

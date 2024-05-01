@@ -219,14 +219,10 @@ import inspect
 
 
 def node_to_name(code, node):
-    if (
-        not FORCE_DOWNGRADE_BEHAVIOR
-        and sys.version_info[0] >= 3
-        and sys.version_info[1] >= 8
-    ):
-        return ast.get_source_segment(code, node)
+    if FORCE_DOWNGRADE_BEHAVIOR:
+        return node.__class__.__name__
 
-    return node.__class__.__name__
+    return ast.get_source_segment(code, node)
 
 
 def get_attribute_label(node):
@@ -254,11 +250,7 @@ def get_attribute_label(node):
 def ast_get_source_segment(code, node):
     caller = inspect.stack()[1]
 
-    if "sphinx" in caller.filename or (
-        not FORCE_DOWNGRADE_BEHAVIOR
-        and sys.version_info[0] >= 3
-        and sys.version_info[1] >= 8
-    ):
+    if "sphinx" in caller.filename or not FORCE_DOWNGRADE_BEHAVIOR:
         return ast.original_get_source_segment(code, node)
 
     if caller.function == "assignment_node_to_source_filename_list":
@@ -271,9 +263,8 @@ def ast_get_source_segment(code, node):
 
 
 # Overwrite it so we don't accidently use it
-if sys.version_info[0] >= 3 and sys.version_info[1] >= 8:
-    ast.original_get_source_segment = ast.get_source_segment
-    ast.get_source_segment = ast_get_source_segment
+ast.original_get_source_segment = ast.get_source_segment
+ast.get_source_segment = ast_get_source_segment
 
 
 ##############################################

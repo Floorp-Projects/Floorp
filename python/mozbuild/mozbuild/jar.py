@@ -630,10 +630,7 @@ def main(args=None):
     noise = logging.INFO
     if options.verbose is not None:
         noise = options.verbose and logging.DEBUG or logging.WARN
-    if sys.version_info[:2] > (2, 3):
-        logging.basicConfig(format="%(message)s")
-    else:
-        logging.basicConfig()
+    logging.basicConfig(format="%(message)s")
     logging.getLogger().setLevel(noise)
     topsrc = options.t
     topsrc = os.path.normpath(os.path.abspath(topsrc))
