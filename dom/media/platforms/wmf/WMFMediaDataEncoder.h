@@ -24,8 +24,7 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
         mTaskQueue(aTaskQueue),
         mHardwareNotAllowed(aConfig.mHardwarePreference ==
                                 HardwarePreference::RequireSoftware ||
-                            aConfig.mHardwarePreference ==
-                                HardwarePreference::None) {
+                            IsWin32kLockedDown()) {
     MOZ_ASSERT(mTaskQueue);
   }
 
