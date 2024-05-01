@@ -333,7 +333,7 @@ class AudioStream final {
   const AudioConfig::ChannelLayout::ChannelMap mChannelMap;
 
   // The monitor is held to protect all access to member variables below.
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
 
   const uint32_t mOutChannels;
 
