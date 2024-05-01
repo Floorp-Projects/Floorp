@@ -24,7 +24,7 @@ use crate::util::PrimaryArc;
 use std::ops;
 use std::sync::Arc;
 
-use super::{storage, VectorKey};
+use super::storage;
 
 /// A run of glyphs, with associated font information.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -36,7 +36,6 @@ pub struct TextRunKey {
     pub glyphs: PrimaryArc<Vec<GlyphInstance>>,
     pub shadow: bool,
     pub requested_raster_space: RasterSpace,
-    pub reference_frame_relative_offset: VectorKey,
 }
 
 impl TextRunKey {
@@ -50,7 +49,6 @@ impl TextRunKey {
             glyphs: PrimaryArc(text_run.glyphs),
             shadow: text_run.shadow,
             requested_raster_space: text_run.requested_raster_space,
-            reference_frame_relative_offset: text_run.reference_frame_relative_offset.into(),
         }
     }
 }
@@ -148,7 +146,6 @@ pub struct TextRun {
     pub glyphs: Arc<Vec<GlyphInstance>>,
     pub shadow: bool,
     pub requested_raster_space: RasterSpace,
-    pub reference_frame_relative_offset: LayoutVector2D,
 }
 
 impl intern::Internable for TextRun {
@@ -173,9 +170,8 @@ impl InternablePrimitive for TextRun {
         key: TextRunKey,
         data_handle: TextRunDataHandle,
         prim_store: &mut PrimitiveStore,
+        reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
-        let reference_frame_relative_offset = key.reference_frame_relative_offset.into();
-
         let run_index = prim_store.text_runs.push(TextRunPrimitive {
             used_font: key.font.clone(),
             glyph_keys_range: storage::Range::empty(),
@@ -216,7 +212,6 @@ impl CreateShadow for TextRun {
             glyphs: self.glyphs.clone(),
             shadow: true,
             requested_raster_space,
-            reference_frame_relative_offset: self.reference_frame_relative_offset,
         }
     }
 }
@@ -496,8 +491,8 @@ fn test_struct_sizes() {
     //     test expectations and move on.
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
-    assert_eq!(mem::size_of::<TextRun>(), 72, "TextRun size changed");
+    assert_eq!(mem::size_of::<TextRun>(), 64, "TextRun size changed");
     assert_eq!(mem::size_of::<TextRunTemplate>(), 80, "TextRunTemplate size changed");
-    assert_eq!(mem::size_of::<TextRunKey>(), 88, "TextRunKey size changed");
+    assert_eq!(mem::size_of::<TextRunKey>(), 80, "TextRunKey size changed");
     assert_eq!(mem::size_of::<TextRunPrimitive>(), 80, "TextRunPrimitive size changed");
 }
