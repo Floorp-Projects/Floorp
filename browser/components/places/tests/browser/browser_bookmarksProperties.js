@@ -156,7 +156,7 @@ gTests.push({
   },
 
   finish() {
-    SidebarController.hide();
+    SidebarUI.hide();
   },
 
   async cleanup() {
@@ -282,7 +282,7 @@ gTests.push({
   },
 
   finish() {
-    SidebarController.hide();
+    SidebarUI.hide();
   },
 
   async cleanup() {
@@ -399,7 +399,7 @@ gTests.push({
   },
 
   finish() {
-    SidebarController.hide();
+    SidebarUI.hide();
   },
 
   async cleanup() {
@@ -450,7 +450,7 @@ function execute_test_in_sidebar(test) {
       },
       { capture: true, once: true }
     );
-    SidebarController.show(test.sidebar);
+    SidebarUI.show(test.sidebar);
   });
 }
 

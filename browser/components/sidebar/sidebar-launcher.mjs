@@ -13,10 +13,11 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import "chrome://global/content/elements/moz-button.mjs";
 
 /**
- * Sidebar with expanded and collapsed states that provides entry points
- * to various sidebar panels and sidebar extensions.
+ * Vertical strip attached to the launcher that provides an entry point
+ * to various sidebar panels.
+ *
  */
-export default class SidebarMain extends MozLitElement {
+export default class SidebarLauncher extends MozLitElement {
   static properties = {
     topActions: { type: Array },
     extensionActions: { type: Array },
@@ -35,7 +36,7 @@ export default class SidebarMain extends MozLitElement {
       {
         icon: `url("chrome://browser/skin/insights.svg")`,
         view: null,
-        l10nId: "sidebar-main-insights",
+        l10nId: "sidebar-launcher-insights",
       },
     ];
     this.extensionActions = [];
@@ -57,8 +58,8 @@ export default class SidebarMain extends MozLitElement {
       },
     ];
 
-    this.selectedView = window.SidebarController.currentID;
-    this.open = window.SidebarController.isOpen;
+    this.selectedView = window.SidebarUI.currentID;
+    this.open = window.SidebarUI.isOpen;
   }
 
   connectedCallback() {
@@ -105,7 +106,7 @@ export default class SidebarMain extends MozLitElement {
   }
 
   setExtensionItems() {
-    this.extensionActions = window.SidebarController.getExtensions().map(
+    this.extensionActions = window.SidebarUI.getExtensions().map(
       ({ commandID, icon, label }) => ({
         tooltiptext: label,
         icon,
@@ -133,7 +134,7 @@ export default class SidebarMain extends MozLitElement {
 
   showView(e) {
     let view = e.target.getAttribute("view");
-    window.SidebarController.toggle(view);
+    window.SidebarUI.toggle(view);
   }
 
   buttonType(action) {
@@ -159,7 +160,7 @@ export default class SidebarMain extends MozLitElement {
     return html`
       <link
         rel="stylesheet"
-        href="chrome://browser/content/sidebar/sidebar-main.css"
+        href="chrome://browser/content/sidebar/sidebar-launcher.css"
       />
       <div class="wrapper">
         <div class="top-actions actions-list">
@@ -177,4 +178,4 @@ export default class SidebarMain extends MozLitElement {
     `;
   }
 }
-customElements.define("sidebar-main", SidebarMain);
+customElements.define("sidebar-launcher", SidebarLauncher);

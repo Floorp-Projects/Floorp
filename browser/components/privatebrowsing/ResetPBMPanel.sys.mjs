@@ -213,7 +213,7 @@ export const ResetPBMPanel = {
     });
 
     // In the remaining PBM window: If the sidebar is open close it.
-    triggeringWindow.SidebarController?.hide();
+    triggeringWindow.SidebarUI?.hide();
 
     // Clear session store data for the remaining PBM window.
     lazy.SessionStore.purgeDataForPrivateWindow(triggeringWindow);

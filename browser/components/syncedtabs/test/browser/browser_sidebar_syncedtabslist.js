@@ -91,28 +91,28 @@ function setupSyncedTabsStubs({
 async function testClean() {
   sinon.restore();
   await new Promise(resolve => {
-    window.SidebarController.browser.contentWindow.addEventListener(
+    window.SidebarUI.browser.contentWindow.addEventListener(
       "unload",
       function () {
         resolve();
       },
       { once: true }
     );
-    SidebarController.hide();
+    SidebarUI.hide();
   });
 }
 
 add_task(async function testSyncedTabsSidebarList() {
-  await SidebarController.show("viewTabsSidebar");
+  await SidebarUI.show("viewTabsSidebar");
 
   Assert.equal(
-    SidebarController.currentID,
+    SidebarUI.currentID,
     "viewTabsSidebar",
     "Sidebar should have SyncedTabs loaded"
   );
 
   let syncedTabsDeckComponent =
-    SidebarController.browser.contentWindow.syncedTabsDeckComponent;
+    SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
 
   Assert.ok(syncedTabsDeckComponent, "component exists");
 
@@ -172,9 +172,9 @@ add_task(async function testSyncedTabsSidebarList() {
 add_task(testClean);
 
 add_task(async function testSyncedTabsSidebarFilteredList() {
-  await SidebarController.show("viewTabsSidebar");
+  await SidebarUI.show("viewTabsSidebar");
   let syncedTabsDeckComponent =
-    window.SidebarController.browser.contentWindow.syncedTabsDeckComponent;
+    window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
 
   Assert.ok(syncedTabsDeckComponent, "component exists");
 
@@ -244,9 +244,9 @@ add_task(async function testSyncedTabsSidebarFilteredList() {
 add_task(testClean);
 
 add_task(async function testSyncedTabsSidebarStatus() {
-  await SidebarController.show("viewTabsSidebar");
+  await SidebarUI.show("viewTabsSidebar");
   let syncedTabsDeckComponent =
-    window.SidebarController.browser.contentWindow.syncedTabsDeckComponent;
+    window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
 
   Assert.ok(syncedTabsDeckComponent, "component exists");
 
@@ -377,9 +377,9 @@ add_task(async function testSyncedTabsSidebarStatus() {
 add_task(testClean);
 
 add_task(async function testSyncedTabsSidebarContextMenu() {
-  await SidebarController.show("viewTabsSidebar");
+  await SidebarUI.show("viewTabsSidebar");
   let syncedTabsDeckComponent =
-    window.SidebarController.browser.contentWindow.syncedTabsDeckComponent;
+    window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
 
   Assert.ok(syncedTabsDeckComponent, "component exists");
 
@@ -547,8 +547,7 @@ async function testContextMenu(
 
   let chromeWindow = triggerElement.ownerGlobal.top;
   let rect = triggerElement.getBoundingClientRect();
-  let contentRect =
-    chromeWindow.SidebarController.browser.getBoundingClientRect();
+  let contentRect = chromeWindow.SidebarUI.browser.getBoundingClientRect();
   // The offsets in `rect` are relative to the content window, but
   // `synthesizeMouseAtPoint` calls `nsIDOMWindowUtils.sendMouseEvent`,
   // which interprets the offsets relative to the containing *chrome* window.

@@ -136,16 +136,16 @@ add_task(async function test_openPopup_requires_user_interaction() {
     {},
     gBrowser.selectedBrowser
   );
-  await TestUtils.waitForCondition(() => !SidebarController.isOpen);
+  await TestUtils.waitForCondition(() => !SidebarUI.isOpen);
 
   await click("#toggleSidebarAction");
-  await TestUtils.waitForCondition(() => SidebarController.isOpen);
+  await TestUtils.waitForCondition(() => SidebarUI.isOpen);
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#toggleSidebarAction",
     {},
     gBrowser.selectedBrowser
   );
-  await TestUtils.waitForCondition(() => !SidebarController.isOpen);
+  await TestUtils.waitForCondition(() => !SidebarUI.isOpen);
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await extension.unload();

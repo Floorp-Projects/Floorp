@@ -1711,7 +1711,7 @@ var gBrowserInit = {
     gBrowser.addProgressListener(window.XULBrowserWindow);
     gBrowser.addTabsProgressListener(window.TabsProgressListener);
 
-    SidebarController.init();
+    SidebarUI.init();
 
     // We do this in onload because we want to ensure the button's state
     // doesn't flicker as the window is being shown.
@@ -1982,7 +1982,7 @@ var gBrowserInit = {
       // Enable the Restore Last Session command if needed
       RestoreLastSessionObserver.init();
 
-      SidebarController.startDelayedLoad();
+      SidebarUI.startDelayedLoad();
 
       PanicButtonNotifier.init();
     });
@@ -2519,7 +2519,7 @@ var gBrowserInit = {
 
     CaptivePortalWatcher.uninit();
 
-    SidebarController.uninit();
+    SidebarUI.uninit();
 
     DownloadsButton.uninit();
 
@@ -2632,7 +2632,7 @@ function HandleAppCommandEvent(evt) {
       BrowserSearch.webSearch();
       break;
     case "Bookmarks":
-      SidebarController.toggle("viewBookmarksSidebar");
+      SidebarUI.toggle("viewBookmarksSidebar");
       break;
     case "Home":
       BrowserCommands.home();
@@ -6275,10 +6275,9 @@ var gUIDensity = {
     }
 
     let docs = [document.documentElement];
-    let shouldUpdateSidebar =
-      SidebarController.initialized && SidebarController.isOpen;
+    let shouldUpdateSidebar = SidebarUI.initialized && SidebarUI.isOpen;
     if (shouldUpdateSidebar) {
-      docs.push(SidebarController.browser.contentDocument.documentElement);
+      docs.push(SidebarUI.browser.contentDocument.documentElement);
     }
     for (let doc of docs) {
       switch (mode) {
@@ -6294,7 +6293,7 @@ var gUIDensity = {
       }
     }
     if (shouldUpdateSidebar) {
-      let tree = SidebarController.browser.contentDocument.querySelector(
+      let tree = SidebarUI.browser.contentDocument.querySelector(
         ".sidebar-placesTree"
       );
       if (tree) {

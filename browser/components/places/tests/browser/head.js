@@ -395,7 +395,7 @@ var withSidebarTree = async function (type, taskFn) {
   });
   let sidebarId =
     type == "bookmarks" ? "viewBookmarksSidebar" : "viewHistorySidebar";
-  SidebarController.show(sidebarId);
+  SidebarUI.show(sidebarId);
   await sidebarLoadedPromise;
 
   let treeId = type == "bookmarks" ? "bookmarks-view" : "historyTree";
@@ -406,7 +406,7 @@ var withSidebarTree = async function (type, taskFn) {
   try {
     await taskFn(tree);
   } finally {
-    SidebarController.hide();
+    SidebarUI.hide();
   }
 };
 

@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <hbox flex="1" id="browser">
-  <html:sidebar-main id="sidebar-main" flex="1" hidden="true"></html:sidebar-main>
+  <html:sidebar-launcher id="sidebar-launcher" flex="1" hidden="true"></html:sidebar-launcher>
   <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
     <box id="sidebar-header" align="center">
       <toolbarbutton id="sidebar-switcher-target" class="tabbable" aria-expanded="false">
@@ -13,7 +13,7 @@
       </toolbarbutton>
       <image id="sidebar-throbber"/>
       <spacer id="sidebar-spacer"/>
-      <toolbarbutton id="sidebar-close" class="close-icon tabbable" data-l10n-id="sidebar-close-button" oncommand="SidebarController.hide();"/>
+      <toolbarbutton id="sidebar-close" class="close-icon tabbable" data-l10n-id="sidebar-close-button" oncommand="SidebarUI.hide();"/>
     </box>
     <browser id="sidebar" autoscroll="false" disablehistory="true" disablefullscreen="true" tooltip="aHTMLTooltip"/>
   </vbox>

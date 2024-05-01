@@ -682,23 +682,23 @@ add_task(async function test_reset_action_closes_sidebar() {
   info(
     "Open the sidebar of both the private browsing window and the normal browsing window."
   );
-  await SidebarController.show("viewBookmarksSidebar");
-  await win.SidebarController.show("viewBookmarksSidebar");
+  await SidebarUI.show("viewBookmarksSidebar");
+  await win.SidebarUI.show("viewBookmarksSidebar");
 
   info("Trigger the restart PBM action");
   await ResetPBMPanel._restartPBM(win);
 
   Assert.ok(
-    SidebarController.isOpen,
+    SidebarUI.isOpen,
     "Normal browsing window sidebar should still be open."
   );
   Assert.ok(
-    !win.SidebarController.isOpen,
+    !win.SidebarUI.isOpen,
     "Private browsing sidebar should be closed."
   );
 
   // Cleanup: Close the sidebar of the normal browsing window.
-  SidebarController.hide();
+  SidebarUI.hide();
 
   // Cleanup: Close the private window that remained open.
   await BrowserTestUtils.closeWindow(win);

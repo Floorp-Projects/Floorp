@@ -276,7 +276,7 @@
     <key id="viewBookmarksSidebarKb"
          data-l10n-id="bookmark-show-sidebar-shortcut"
          modifiers="accel"
-         oncommand="SidebarController.toggle('viewBookmarksSidebar');"/>
+         oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
     <key id="viewBookmarksToolbarKb"
          data-l10n-id="bookmark-show-toolbar-shortcut"
          oncommand="BookmarkingUI.toggleBookmarksToolbar('shortcut');"
@@ -295,7 +295,7 @@
 #else
          modifiers="accel"
 #endif
-         oncommand="SidebarController.toggle('viewHistorySidebar');"/>
+         oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
 
     <key id="key_fullZoomReduce" data-l10n-id="full-zoom-reduce-shortcut" command="cmd_fullZoomReduce"  modifiers="accel"/>
     <key                         data-l10n-id="full-zoom-reduce-shortcut-alt-a" command="cmd_fullZoomReduce"  modifiers="accel"/>

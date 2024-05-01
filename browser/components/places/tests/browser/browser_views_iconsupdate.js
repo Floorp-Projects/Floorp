@@ -28,9 +28,9 @@ add_task(async function () {
   let promiseSidebarLoaded = new Promise(resolve => {
     sidebar.addEventListener("load", resolve, { capture: true, once: true });
   });
-  SidebarController.show("viewBookmarksSidebar");
+  SidebarUI.show("viewBookmarksSidebar");
   registerCleanupFunction(() => {
-    SidebarController.hide();
+    SidebarUI.hide();
   });
   await promiseSidebarLoaded;
 

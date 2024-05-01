@@ -9,7 +9,7 @@ registerCleanupFunction(async function () {
 
   // Ensure sidebar is hidden after each test:
   if (!document.getElementById("sidebar-box").hidden) {
-    SidebarController.hide();
+    SidebarUI.hide();
   }
 });
 
@@ -21,14 +21,14 @@ var showSidebar = async function (win = window) {
   );
   EventUtils.synthesizeMouseAtCenter(button, {}, win);
   await sidebarFocusedPromise;
-  ok(win.SidebarController.isOpen, "Sidebar is opened");
+  ok(win.SidebarUI.isOpen, "Sidebar is opened");
   ok(button.hasAttribute("checked"), "Toolbar button is checked");
 };
 
 var hideSidebar = async function (win = window) {
   let button = win.document.getElementById("sidebar-button");
   EventUtils.synthesizeMouseAtCenter(button, {}, win);
-  ok(!win.SidebarController.isOpen, "Sidebar is closed");
+  ok(!win.SidebarUI.isOpen, "Sidebar is closed");
   ok(!button.hasAttribute("checked"), "Toolbar button isn't checked");
 };
 
@@ -37,26 +37,18 @@ add_task(async function () {
   CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
 
   await showSidebar();
-  is(
-    SidebarController.currentID,
-    "viewBookmarksSidebar",
-    "Default sidebar selected"
-  );
-  await SidebarController.show("viewHistorySidebar");
+  is(SidebarUI.currentID, "viewBookmarksSidebar", "Default sidebar selected");
+  await SidebarUI.show("viewHistorySidebar");
 
   await hideSidebar();
   await showSidebar();
-  is(
-    SidebarController.currentID,
-    "viewHistorySidebar",
-    "Selected sidebar remembered"
-  );
+  is(SidebarUI.currentID, "viewHistorySidebar", "Selected sidebar remembered");
 
   await hideSidebar();
   let otherWin = await BrowserTestUtils.openNewBrowserWindow();
   await showSidebar(otherWin);
   is(
-    otherWin.SidebarController.currentID,
+    otherWin.SidebarUI.currentID,
     "viewHistorySidebar",
     "Selected sidebar remembered across windows"
   );
