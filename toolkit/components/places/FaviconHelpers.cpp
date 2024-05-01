@@ -1084,61 +1084,6 @@ AsyncGetFaviconDataForPage::Run() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//// AsyncReplaceFaviconData
-
-AsyncReplaceFaviconData::AsyncReplaceFaviconData(const IconData& aIcon)
-    : Runnable("places::AsyncReplaceFaviconData"), mIcon(aIcon) {
-  MOZ_ASSERT(NS_IsMainThread());
-}
-
-NS_IMETHODIMP
-AsyncReplaceFaviconData::Run() {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  RefPtr<Database> DB = Database::GetDatabase();
-  NS_ENSURE_STATE(DB);
-
-  mozStorageTransaction transaction(
-      DB->MainConn(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-  // XXX Handle the error, bug 1696133.
-  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
-
-  nsresult rv = SetIconInfo(DB, mIcon, true);
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
-    // There's no previous icon to replace, we don't need to do anything.
-    (void)transaction.Commit();
-    return NS_OK;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // We can invalidate the cache version since we now persist the icon.
-  nsCOMPtr<nsIRunnable> event = NewRunnableMethod(
-      "places::AsyncReplaceFaviconData::RemoveIconDataCacheEntry", this,
-      &AsyncReplaceFaviconData::RemoveIconDataCacheEntry);
-  rv = NS_DispatchToMainThread(event);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult AsyncReplaceFaviconData::RemoveIconDataCacheEntry() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIURI> iconURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsFaviconService* favicons = nsFaviconService::GetFaviconService();
-  NS_ENSURE_STATE(favicons);
-  favicons->mUnassociatedIcons.RemoveEntry(iconURI);
-
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 //// NotifyIconObservers
 
 NotifyIconObservers::NotifyIconObservers(
