@@ -26,14 +26,8 @@ function test() {
   let browser = tab.linkedBrowser;
 
   promiseTabState(tab, tabState).then(() => {
-    let entry;
-    if (!Services.appinfo.sessionHistoryInParent) {
-      let sessionHistory = browser.sessionHistory;
-      entry = sessionHistory.legacySHistory.getEntryAtIndex(0);
-    } else {
-      let sessionHistory = browser.browsingContext.sessionHistory;
-      entry = sessionHistory.getEntryAtIndex(0);
-    }
+    let sessionHistory = browser.browsingContext.sessionHistory;
+    let entry = sessionHistory.getEntryAtIndex(0);
 
     whenChildCount(entry, 1, function () {
       whenChildCount(entry, 2, function () {

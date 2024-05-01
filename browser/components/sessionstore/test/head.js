@@ -671,35 +671,9 @@ function setPropertyOfFormField(browserContext, selector, propName, newValue) {
 }
 
 function promiseOnHistoryReplaceEntry(browser) {
-  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-    return new Promise(resolve => {
-      let sessionHistory = browser.browsingContext?.sessionHistory;
-      if (sessionHistory) {
-        var historyListener = {
-          OnHistoryNewEntry() {},
-          OnHistoryGotoIndex() {},
-          OnHistoryPurge() {},
-          OnHistoryReload() {
-            return true;
-          },
-
-          OnHistoryReplaceEntry() {
-            resolve();
-          },
-
-          QueryInterface: ChromeUtils.generateQI([
-            "nsISHistoryListener",
-            "nsISupportsWeakReference",
-          ]),
-        };
-
-        sessionHistory.addSHistoryListener(historyListener);
-      }
-    });
-  }
-
-  return SpecialPowers.spawn(browser, [], () => {
-    return new Promise(resolve => {
+  return new Promise(resolve => {
+    let sessionHistory = browser.browsingContext?.sessionHistory;
+    if (sessionHistory) {
       var historyListener = {
         OnHistoryNewEntry() {},
         OnHistoryGotoIndex() {},
@@ -718,13 +692,8 @@ function promiseOnHistoryReplaceEntry(browser) {
         ]),
       };
 
-      var { sessionHistory } = this.docShell.QueryInterface(
-        Ci.nsIWebNavigation
-      );
-      if (sessionHistory) {
-        sessionHistory.legacySHistory.addSHistoryListener(historyListener);
-      }
-    });
+      sessionHistory.addSHistoryListener(historyListener);
+    }
   });
 }
 
