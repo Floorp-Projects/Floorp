@@ -1,5 +1,5 @@
 FROM $DOCKER_IMAGE_PARENT
-LABEL maintainer="Mitchell Hentges mhentges@mozilla.com"
+LABEL maintainer="Alex Hochheiden ahochheiden@mozilla.com"
 
 VOLUME  /builds/worker/checkouts
 
