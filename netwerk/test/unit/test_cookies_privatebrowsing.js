@@ -96,20 +96,9 @@ add_task(async () => {
   Services.cookies.setCookieStringFromHttp(uri2, "oh=hai; max-age=1000", chan2);
   Assert.equal(await getCookieStringFromPrivateDocument(uri2.spec), "oh=hai");
 
-  // on android fission the privateBrowsingHolder prevents
-  // the cookies on the content process from being updated
-  // Let's release the last PB window.
-  privateBrowsingHolder.close();
-
   // Fake a profile change.
   await promise_close_profile();
   do_load_profile();
-
-  // keep the private browsing window open again
-  const privateBrowsingHolder2 = await CookieXPCShellUtils.loadContentPage(
-    "http://bar.com/",
-    { privateBrowsing: true }
-  );
 
   // We're still in private browsing mode, but should have a new session.
   // Check counts.
@@ -138,6 +127,6 @@ add_task(async () => {
   Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
   // Let's release the last PB window.
-  privateBrowsingHolder2.close();
+  privateBrowsingHolder.close();
   Services.prefs.clearUserPref("dom.security.https_first");
 });
