@@ -444,6 +444,7 @@ support-files = [
   "chained-audio-video.ogg^headers^",
   "chromeHelper.js",
   "cloneElementVisually_helpers.js",
+  "complete_length_worker.js",
   "contentType.sjs",
   "detodos.opus",
   "detodos.opus^headers^",
@@ -766,6 +767,9 @@ tags = "cloneelementvisually"
 
 ["test_clone_media_element.html"]
 skip-if = ["os == 'android'"] # bug 1108558, android(bug 1232305)
+
+["test_complete_length.html"]
+scheme = "https"
 
 ["test_fastSeek-forwards.html"]
 
