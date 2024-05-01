@@ -13,9 +13,30 @@ trap 'show_error_msg $LINENO' ERR
 source dom/media/webrtc/third_party_build/use_config_env.sh
 export HGPLAIN=1
 
+if [ "x$ALLOW_RERUN" = "x" ]; then
+  ALLOW_RERUN="0"
+fi
+
 echo "MOZ_LIBWEBRTC_SRC: $MOZ_LIBWEBRTC_SRC"
 echo "MOZ_LIBWEBRTC_BRANCH: $MOZ_LIBWEBRTC_BRANCH"
 echo "MOZ_FASTFORWARD_BUG: $MOZ_FASTFORWARD_BUG"
+echo "ALLOW_RERUN: $ALLOW_RERUN"
+
+ERROR_HELP=$"
+A copy of moz-libwebrtc already exists at $MOZ_LIBWEBRTC_SRC
+While this script is not technically idempotent, it will try.
+However, the safest way forward is to start fresh by running:
+    rm -rf $STATE_DIR && \\
+    bash $0
+
+If you are sure you want to reuse the existing directory, run:
+    ALLOW_RERUN=1 bash $0
+"
+if [ -d $MOZ_LIBWEBRTC_SRC ] && [ "x$ALLOW_RERUN" != "x1" ]; then
+  echo "$ERROR_HELP"
+  exit 1
+fi
+ERROR_HELP=""
 
 # After this point:
 # * eE: All commands should succeed.
@@ -66,8 +87,25 @@ rm -f *.patch
 
 # create a new work branch and "export" a new patch stack to rebase
 # find the common commit between our upstream release branch and trunk
-CHERRY_PICK_BASE=`git merge-base branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM master`
-echo "common commit: $CHERRY_PICK_BASE"
+PREVIOUS_RELEASE_BRANCH_BASE=`git merge-base branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM master`
+echo "PREVIOUS_RELEASE_BRANCH_BASE: $PREVIOUS_RELEASE_BRANCH_BASE"
+
+NEXT_RELEASE_BRANCH_BASE=`git merge-base $MOZ_TARGET_UPSTREAM_BRANCH_HEAD master`
+echo "NEXT_RELEASE_BRANCH_BASE: $NEXT_RELEASE_BRANCH_BASE"
+
+ERROR_HELP=$"
+The previous release branch base ($PREVIOUS_RELEASE_BRANCH_BASE)
+and the next release branch base ($NEXT_RELEASE_BRANCH_BASE) are the
+same and should not be.  This indicates a problem in the git repo at
+$MOZ_LIBWEBRTC_SRC.
+At the least it likely means that 'master' is older than the two
+release branches.  Investigation is necessary.
+"
+if [ "x$PREVIOUS_RELEASE_BRANCH_BASE" == "x$NEXT_RELEASE_BRANCH_BASE" ]; then
+  echo "$ERROR_HELP"
+  exit 1
+fi
+ERROR_HELP=""
 
 # find the last upstream commit used by the previous update, so we don't
 # accidentally grab release branch commits that were added after we started
@@ -85,9 +123,9 @@ commands will allow the process to continue:
     git checkout $MOZ_LIBWEBRTC_BRANCH && \\
     git checkout -b $MOZ_LIBWEBRTC_BRANCH-old && \\
     git branch -D $MOZ_LIBWEBRTC_BRANCH ) && \\
-  bash $0
+  ALLOW_RERUN=1 bash $0
 "
-git branch $MOZ_LIBWEBRTC_BRANCH $CHERRY_PICK_BASE
+git branch $MOZ_LIBWEBRTC_BRANCH $PREVIOUS_RELEASE_BRANCH_BASE
 ERROR_HELP=""
 git checkout $MOZ_LIBWEBRTC_BRANCH
 
@@ -95,7 +133,7 @@ git checkout $MOZ_LIBWEBRTC_BRANCH
 rm -f $TMP_DIR/*.patch $TMP_DIR/*.patch.bak
 
 # grab the patches for all the commits in chrome's release branch for libwebrtc
-git format-patch -o $TMP_DIR -k $CHERRY_PICK_BASE..$LAST_UPSTREAM_COMMIT_SHA
+git format-patch -o $TMP_DIR -k $PREVIOUS_RELEASE_BRANCH_BASE..$LAST_UPSTREAM_COMMIT_SHA
 # tweak the release branch commit summaries to show they were cherry picked
 sed -i.bak -e "/^Subject: / s/^Subject: /Subject: (cherry-pick-branch-heads\/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM) /" $TMP_DIR/*.patch
 git am $TMP_DIR/*.patch # applies to branch mozpatches
