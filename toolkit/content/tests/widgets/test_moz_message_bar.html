@@ -24,6 +24,7 @@
     add_task(async function test_component_declaration() {
       const mozMessageBar = document.querySelector("#infoMessage");
       ok(mozMessageBar, "moz-message-bar component is rendered.");
+      is(mozMessageBar.getAttribute("role"), "alert", "moz-message-bar component is marked up as alert.");
 
       const icon = mozMessageBar.shadowRoot.querySelector(".icon");
       const iconUrl = icon.src;

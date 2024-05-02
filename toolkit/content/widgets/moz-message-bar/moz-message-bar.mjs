@@ -78,7 +78,7 @@ export default class MozMessageBar extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.setAttribute("role", "status");
+    this.setAttribute("role", "alert");
   }
 
   disconnectedCallback() {
