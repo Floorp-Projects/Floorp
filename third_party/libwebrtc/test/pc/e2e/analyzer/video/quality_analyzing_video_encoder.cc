@@ -403,14 +403,6 @@ QualityAnalyzingVideoEncoderFactory::QueryCodecSupport(
   return delegate_->QueryCodecSupport(format, scalability_mode);
 }
 
-std::unique_ptr<VideoEncoder>
-QualityAnalyzingVideoEncoderFactory::CreateVideoEncoder(
-    const SdpVideoFormat& format) {
-  return std::make_unique<QualityAnalyzingVideoEncoder>(
-      peer_name_, delegate_->CreateVideoEncoder(format), bitrate_multiplier_,
-      stream_to_sfu_config_, injector_, analyzer_);
-}
-
 std::unique_ptr<VideoEncoder> QualityAnalyzingVideoEncoderFactory::Create(
     const Environment& env,
     const SdpVideoFormat& format) {
