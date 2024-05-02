@@ -2667,6 +2667,15 @@ main section {
   width: auto;
   flex-grow: 1;
 }
+.discoverystream-admin .weather-section {
+  margin-block-end: 24px;
+}
+.discoverystream-admin .weather-section form {
+  display: flex;
+}
+.discoverystream-admin .weather-section form label {
+  margin-inline-end: 12px;
+}
 
 .pocket-logged-in-cta {
   font-size: 13px;
