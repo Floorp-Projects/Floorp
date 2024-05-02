@@ -1685,6 +1685,7 @@ impl YamlFrameReader {
             yaml["horizontal-offset-bounds"].as_sticky_offset_bounds(),
             yaml["previously-applied-offset"].as_vector().unwrap_or_else(LayoutVector2D::zero),
             self.next_spatial_key(),
+            None,
         );
 
         if let Some(numeric_id) = numeric_id {
