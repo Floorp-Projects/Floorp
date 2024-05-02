@@ -811,6 +811,74 @@ const CFR_MESSAGES = [
     },
     trigger: { id: "preferenceObserver", params: ["foo.bar"] },
   },
+  {
+    id: "FACEBOOK_CONTAINER_ADDON_A",
+    template: "cfr_doorhanger",
+    groups: ["cfr"],
+    content: {
+      layout: "addon_recommendation",
+      category: "cfrAddons",
+      bucket_id: "CFR",
+      anchor_id: "PanelUI-menu-button",
+      skip_address_bar_notifier: true,
+      icon_class: "cfr-doorhanger-medium-icon",
+      notification_text: {
+        string_id: "cfr-doorhanger-extension-notification2",
+      },
+      heading_text: {
+        string_id: "cfr-doorhanger-extension-heading",
+      },
+      info_icon: {
+        label: {
+          string_id: "cfr-doorhanger-extension-sumo-link",
+        },
+        sumo_path: "extensionrecommendations",
+      },
+      addon: {
+        id: "954390",
+        title: "Facebook Container",
+        icon: "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/03c866df-82ea-489c-83c7-df6d0662d893.svg",
+        rating: "4.5",
+        users: "1.1M",
+        author: "Mozilla",
+        amo_url: "https://addons.mozilla.org/firefox/addon/facebook-container/",
+      },
+      text: "Make it harder for Facebook to track your browsing activity, including info from medical and financial sites.",
+      buttons: {
+        primary: {
+          label: {
+            string_id: "firefoxview-cfr-primarybutton",
+          },
+          action: {
+            type: "INSTALL_ADDON_FROM_URL",
+            data: {
+              url: "https://example.com",
+              telemetrySource: "amo",
+            },
+          },
+        },
+        secondary: [
+          {
+            label: {
+              string_id: "firefoxview-cfr-secondarybutton",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+        ],
+      },
+    },
+    frequency: {
+      lifetime: 1,
+    },
+    targeting:
+      "!('@contain-facebook' in addonsInfo.addons|keys) && !('@testpilot-containers' in addonsInfo.addons|keys) && ('browser.discovery.enabled'|preferenceValue)",
+    trigger: {
+      id: "openURL",
+      params: ["www.facebook.com", "facebook.com"],
+    },
+  },
 ];
 
 export const CFRMessageProvider = {
