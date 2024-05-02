@@ -58,6 +58,11 @@ rtc_library("rtc_media_base") {
     "base/video_broadcaster.h",  # Used downstream
     "base/video_common.h",  # Used downstream
   ]
+  if (build_with_mozilla) {
+    sources -= [
+      "base/adapted_video_track_source.h",
+    ]
+  }
   deps = [
     ":adapted_video_track_source",
     ":codec",
@@ -138,12 +143,6 @@ rtc_library("rtc_media_base") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
-    if (build_with_mozilla) {
-    sources -= [
-      "base/adapted_video_track_source.cc",
-      "base/adapted_video_track_source.h",
-    ]
-  }
 }
 
 rtc_library("adapted_video_track_source") {
@@ -151,6 +150,12 @@ rtc_library("adapted_video_track_source") {
     "base/adapted_video_track_source.cc",
     "base/adapted_video_track_source.h",
   ]
+  if (build_with_mozilla) {
+    sources -= [
+      "base/adapted_video_track_source.cc",
+      "base/adapted_video_track_source.h",
+    ]
+  }
   deps = [
     ":video_adapter",
     ":video_broadcaster",
