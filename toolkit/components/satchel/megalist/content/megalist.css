@@ -101,11 +101,19 @@ virtualized-list {
   > .content {
     flex-grow: 1;
 
+    &:not(.section) {
+      display: grid;
+      grid-template-rows: max-content 1fr;
+      grid-template-columns: max-content;
+      grid-column-gap: 8px;
+      padding-inline-start: 8px;
+      padding-block-start: 4px;
+    }
+
     > div {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      padding-inline-start: 10px;
 
       &:last-child {
         padding-block-end: 10px;
@@ -123,6 +131,8 @@ virtualized-list {
     > .label {
       color: var(--text-color-deemphasized);
       padding-block: 2px 4px;
+      grid-row: 1;
+      align-content: end;
     }
 
     > .value {
@@ -133,7 +143,7 @@ virtualized-list {
         fill: currentColor;
         width: auto;
         height: 16px;
-        margin-inline: 4px;
+        margin-inline-end: 4px;
         vertical-align: text-bottom;
       }
 
@@ -147,12 +157,14 @@ virtualized-list {
     }
 
     > .stickers {
-      text-align: end;
-      margin-block-start: 2px;
+      grid-row: 1;
+      align-content: start;
 
       > span {
-        padding: 2px;
+        padding: 4px;
         margin-inline-end: 2px;
+        border-radius: 24px;
+        font-size: xx-small;
       }
 
       /* Hard-coded colors will be addressed in FXCM-1013 */
