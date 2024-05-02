@@ -1769,10 +1769,10 @@ ClipboardContentAnalysisResult CheckClipboardContentAnalysisAsText(
     uint64_t aInnerWindowId,
     ContentAnalysis::SafeContentAnalysisResultCallback* aResolver,
     nsIURI* aDocumentURI, nsIContentAnalysis* aContentAnalysis,
-    nsITransferable* aTextTrans) {
+    nsITransferable* aTextTrans, const char* aFlavor) {
   nsCOMPtr<nsISupports> transferData;
-  if (NS_FAILED(aTextTrans->GetTransferData(kTextMime,
-                                            getter_AddRefs(transferData)))) {
+  if (NS_FAILED(
+          aTextTrans->GetTransferData(aFlavor, getter_AddRefs(transferData)))) {
     return false;
   }
   nsCOMPtr<nsISupportsString> textData = do_QueryInterface(transferData);
@@ -1923,14 +1923,27 @@ void ContentAnalysis::CheckClipboardContentAnalysis(
   if (keepChecking) {
     // Failed to get the clipboard data as a file, so try as text
     auto textResult = CheckClipboardContentAnalysisAsText(
-        innerWindowId, aResolver, currentURI, contentAnalysis, aTransferable);
+        innerWindowId, aResolver, currentURI, contentAnalysis, aTransferable,
+        kTextMime);
     if (textResult.isErr()) {
       aResolver->Callback(
           ContentAnalysisResult::FromNoResult(textResult.unwrapErr()));
       return;
     }
-    if (!textResult.unwrap()) {
-      // Couldn't get file or text data from this
+    keepChecking = !textResult.unwrap();
+  }
+  if (keepChecking) {
+    // Failed to get the clipboard data as a file or text, so try as html
+    auto htmlResult = CheckClipboardContentAnalysisAsText(
+        innerWindowId, aResolver, currentURI, contentAnalysis, aTransferable,
+        kHTMLMime);
+    if (htmlResult.isErr()) {
+      aResolver->Callback(
+          ContentAnalysisResult::FromNoResult(htmlResult.unwrapErr()));
+      return;
+    }
+    if (!htmlResult.unwrap()) {
+      // Couldn't get file or text or html data from this
       aResolver->Callback(ContentAnalysisResult::FromNoResult(
           NoContentAnalysisResult::ALLOW_DUE_TO_COULD_NOT_GET_DATA));
       return;
