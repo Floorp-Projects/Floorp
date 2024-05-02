@@ -5207,7 +5207,7 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
   Maybe<wr::WrAnimationProperty> prop;
   bool needsProp = aManager->LayerManager()->AsyncPanZoomEnabled() &&
                    (IsScrollThumbLayer() || IsZoomingLayer() ||
-                    ShouldGetFixedOrStickyAnimationId() ||
+                    ShouldGetFixedAnimationId() ||
                     (IsRootScrollbarContainer() && HasDynamicToolbar()));
 
   if (needsProp) {
@@ -5234,7 +5234,7 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
     params.prim_flags |= wr::PrimitiveFlags::IS_SCROLLBAR_CONTAINER;
   }
   if (IsZoomingLayer() ||
-      (ShouldGetFixedOrStickyAnimationId() ||
+      (ShouldGetFixedAnimationId() ||
        (IsRootScrollbarContainer() && HasDynamicToolbar()))) {
     params.is_2d_scale_translation = true;
     params.should_snap = true;
@@ -5250,9 +5250,8 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
 
 bool nsDisplayOwnLayer::UpdateScrollData(WebRenderScrollData* aData,
                                          WebRenderLayerScrollData* aLayerData) {
-  bool isRelevantToApz =
-      (IsScrollThumbLayer() || IsScrollbarContainer() || IsZoomingLayer() ||
-       ShouldGetFixedOrStickyAnimationId());
+  bool isRelevantToApz = (IsScrollThumbLayer() || IsScrollbarContainer() ||
+                          IsZoomingLayer() || ShouldGetFixedAnimationId());
 
   if (!isRelevantToApz) {
     return false;
@@ -5267,13 +5266,8 @@ bool nsDisplayOwnLayer::UpdateScrollData(WebRenderScrollData* aData,
     return true;
   }
 
-  if (IsFixedPositionLayer() && ShouldGetFixedOrStickyAnimationId()) {
+  if (IsFixedPositionLayer() && ShouldGetFixedAnimationId()) {
     aLayerData->SetFixedPositionAnimationId(mWrAnimationId);
-    return true;
-  }
-
-  if (IsStickyPositionLayer() && ShouldGetFixedOrStickyAnimationId()) {
-    aLayerData->SetStickyPositionAnimationId(mWrAnimationId);
     return true;
   }
 
@@ -5458,7 +5452,7 @@ bool nsDisplayFixedPosition::UpdateScrollData(
   return true;
 }
 
-bool nsDisplayFixedPosition::ShouldGetFixedOrStickyAnimationId() {
+bool nsDisplayFixedPosition::ShouldGetFixedAnimationId() {
 #if defined(MOZ_WIDGET_ANDROID)
   return mFrame->PresContext()->IsRootContentDocumentCrossProcess() &&
          nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext()) ==
@@ -5522,7 +5516,8 @@ nsDisplayStickyPosition::nsDisplayStickyPosition(
     : nsDisplayOwnLayer(aBuilder, aFrame, aList, aActiveScrolledRoot),
       mContainerASR(aContainerASR),
       mClippedToDisplayPort(aClippedToDisplayPort),
-      mShouldFlatten(false) {
+      mShouldFlatten(false),
+      mWrStickyAnimationId(0) {
   MOZ_COUNT_CTOR(nsDisplayStickyPosition);
 }
 
@@ -5738,13 +5733,27 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
     wr::LayoutVector2D applied = {
         NSAppUnitsToFloatPixels(appliedOffset.x, auPerDevPixel),
         NSAppUnitsToFloatPixels(appliedOffset.y, auPerDevPixel)};
+    bool needsProp = ShouldGetStickyAnimationId();
+    Maybe<wr::WrAnimationProperty> prop;
+    auto spatialKey = wr::SpatialKey(uint64_t(mFrame), GetPerFrameKey(),
+                                     wr::SpatialKeyKind::Sticky);
+    if (needsProp) {
+      RefPtr<WebRenderAPZAnimationData> animationData =
+          aManager->CommandBuilder()
+              .CreateOrRecycleWebRenderUserData<WebRenderAPZAnimationData>(
+                  this);
+      mWrStickyAnimationId = animationData->GetAnimationId();
+
+      prop.emplace();
+      prop->id = mWrStickyAnimationId;
+      prop->key = spatialKey;
+      prop->effect_type = wr::WrAnimationType::Transform;
+    }
     wr::WrSpatialId spatialId = aBuilder.DefineStickyFrame(
         wr::ToLayoutRect(bounds), topMargin.ptrOr(nullptr),
         rightMargin.ptrOr(nullptr), bottomMargin.ptrOr(nullptr),
-        leftMargin.ptrOr(nullptr), vBounds, hBounds, applied,
-        wr::SpatialKey(uint64_t(mFrame), GetPerFrameKey(),
-                       wr::SpatialKeyKind::Sticky),
-        nullptr);
+        leftMargin.ptrOr(nullptr), vBounds, hBounds, applied, spatialKey,
+        prop.ptrOr(nullptr));
 
     saccHelper.emplace(aBuilder, spatialId);
     aManager->CommandBuilder().PushOverrideForASR(mContainerASR, spatialId);
@@ -5813,6 +5822,10 @@ bool nsDisplayStickyPosition::UpdateScrollData(
                                                ->GetContent());
       aLayerData->SetStickyPositionScrollContainerId(scrollId);
     }
+
+    if (ShouldGetStickyAnimationId()) {
+      aLayerData->SetStickyPositionAnimationId(mWrStickyAnimationId);
+    }
   }
   // Return true if either there is a dynamic toolbar affecting this sticky
   // item or the OwnLayer base implementation returns true for some other
@@ -5822,10 +5835,11 @@ bool nsDisplayStickyPosition::UpdateScrollData(
   return ret;
 }
 
-bool nsDisplayStickyPosition::ShouldGetFixedOrStickyAnimationId() {
+bool nsDisplayStickyPosition::ShouldGetStickyAnimationId() const {
 #if defined(MOZ_WIDGET_ANDROID)
   if (HasDynamicToolbar()) {  // also implies being in the cross-process RCD
-    StickyScrollContainer* stickyScrollContainer = GetStickyScrollContainer();
+    StickyScrollContainer* stickyScrollContainer =
+        const_cast<nsDisplayStickyPosition*>(this)->GetStickyScrollContainer();
     if (stickyScrollContainer) {
       ScrollableLayerGuid::ViewID scrollId =
           nsLayoutUtils::FindOrCreateIDFor(stickyScrollContainer->ScrollFrame()
