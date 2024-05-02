@@ -732,6 +732,7 @@ let JSWINDOWACTORS = {
         "Screenshots:OverlaySelection": {},
         "Screenshots:RecordEvent": {},
         "Screenshots:ShowPanel": {},
+        "Screenshots:FocusPanel": {},
       },
     },
     enablePreference: "screenshots.browser.component.enabled",

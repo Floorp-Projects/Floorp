@@ -41,7 +41,7 @@ add_task(async function test_fullpageScreenshot() {
       // click the full page button in panel
       let visiblePage = panel
         .querySelector("screenshots-buttons")
-        .shadowRoot.querySelector(".full-page");
+        .shadowRoot.querySelector("#full-page");
       visiblePage.click();
 
       await screenshotReady;
@@ -136,7 +136,7 @@ add_task(async function test_fullpageScreenshotScrolled() {
       // click the full page button in panel
       let visiblePage = panel
         .querySelector("screenshots-buttons")
-        .shadowRoot.querySelector(".full-page");
+        .shadowRoot.querySelector("#full-page");
       visiblePage.click();
 
       await screenshotReady;

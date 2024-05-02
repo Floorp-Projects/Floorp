@@ -20,9 +20,10 @@
         <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
         <html:link rel="stylesheet" href="chrome://browser/content/screenshots/screenshots-buttons.css" />
         <html:moz-button-group>
-          <html:button class="visible-page footer-button" data-l10n-id="screenshots-save-visible-button"></html:button>
-          <html:button class="full-page footer-button primary" data-l10n-id="screenshots-save-page-button"></html:button>
+          <html:button id="visible-page" class="screenshot-button footer-button" data-l10n-id="screenshots-save-visible-button"></html:button>
+          <html:button id="full-page" class="screenshot-button footer-button primary" data-l10n-id="screenshots-save-page-button"></html:button>
         </html:moz-button-group>
+
       `;
     }
 
@@ -41,12 +42,12 @@
 
       this.shadowRoot.append(ScreenshotsButtons.fragment);
 
-      let visibleButton = this.shadowRoot.querySelector(".visible-page");
+      let visibleButton = shadowRoot.getElementById("visible-page");
       visibleButton.onclick = function () {
         ScreenshotsUtils.doScreenshot(gBrowser.selectedBrowser, "visible");
       };
 
-      let fullpageButton = this.shadowRoot.querySelector(".full-page");
+      let fullpageButton = shadowRoot.getElementById("full-page");
       fullpageButton.onclick = function () {
         ScreenshotsUtils.doScreenshot(gBrowser.selectedBrowser, "full_page");
       };
@@ -65,11 +66,19 @@
       await this.shadowRoot.querySelector("moz-button-group").updateComplete;
       if (buttonToFocus === "fullpage") {
         this.shadowRoot
-          .querySelector(".full-page")
+          .getElementById("full-page")
           .focus({ focusVisible: true });
+      } else if (buttonToFocus === "first") {
+        this.shadowRoot
+          .querySelector("moz-button-group")
+          .firstElementChild.focus({ focusVisible: true });
+      } else if (buttonToFocus === "last") {
+        this.shadowRoot
+          .querySelector("moz-button-group")
+          .lastElementChild.focus({ focusVisible: true });
       } else {
         this.shadowRoot
-          .querySelector(".visible-page")
+          .getElementById("visible-page")
           .focus({ focusVisible: true });
       }
     }

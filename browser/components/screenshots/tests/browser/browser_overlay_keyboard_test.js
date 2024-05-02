@@ -136,9 +136,6 @@ const SHIFT_PLUS_KEY_TO_EXPECTED_POSITION_ARRAY = [
   ],
 ];
 
-/**
- *
- */
 add_task(async function test_moveRegionWithKeyboard() {
   await BrowserTestUtils.withNewTab(
     {
