@@ -4303,20 +4303,22 @@ nsresult nsFocusManager::GetNextTabbableContent(
 
       // Stepping out popover scope.
       // For forward, search for the next tabbable content after invoker.
-      // For backward, we should get back to the invoker.
+      // For backward, we should get back to the invoker if the invoker is
+      // focusable. Otherwise search for the next tabbable content after
+      // invoker.
       if (oldTopLevelScopeOwner &&
           IsOpenPopoverWithInvoker(oldTopLevelScopeOwner) &&
           currentTopLevelScopeOwner != oldTopLevelScopeOwner) {
         if (auto* popover = Element::FromNode(oldTopLevelScopeOwner)) {
           RefPtr<nsIContent> invokerContent =
               popover->GetPopoverData()->GetInvoker()->AsContent();
+          RefPtr<nsIContent> rootElement = invokerContent;
+          if (auto* doc = invokerContent->GetComposedDoc()) {
+            rootElement = doc->GetRootElement();
+          }
           if (aForward) {
             nsIFrame* frame = invokerContent->GetPrimaryFrame();
             int32_t tabIndex = frame->IsFocusable().mTabIndex;
-            RefPtr<nsIContent> rootElement = invokerContent;
-            if (auto* doc = invokerContent->GetComposedDoc()) {
-              rootElement = doc->GetRootElement();
-            }
             if (tabIndex >= 0 &&
                 (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
               nsresult rv = GetNextTabbableContent(
@@ -4327,12 +4329,19 @@ nsresult nsFocusManager::GetNextTabbableContent(
                 return rv;
               }
             }
-          } else if (invokerContent &&
-                     invokerContent->IsFocusableWithoutStyle()) {
-            // FIXME(emilio): The check above should probably use
-            // nsIFrame::IsFocusable, not IsFocusableWithoutStyle.
-            invokerContent.forget(aResultContent);
-            return NS_OK;
+          } else if (invokerContent) {
+            nsIFrame* frame = invokerContent->GetPrimaryFrame();
+            if (frame && frame->IsFocusable()) {
+              invokerContent.forget(aResultContent);
+              return NS_OK;
+            }
+            nsresult rv = GetNextTabbableContent(
+                aPresShell, rootElement, aOriginalStartContent, invokerContent,
+                false, 0, true, false, aNavigateByKey, true,
+                aReachedToEndForDocumentNavigation, aResultContent);
+            if (NS_SUCCEEDED(rv) && *aResultContent) {
+              return rv;
+            }
           }
         }
       }
