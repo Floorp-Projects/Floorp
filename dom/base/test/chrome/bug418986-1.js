@@ -35,7 +35,7 @@ var test = function (isContent) {
     ["screen.orientation.type", "'landscape-primary'"],
     ["screen.orientation.angle", 0],
     ["screen.mozOrientation", "'landscape-primary'"],
-    ["devicePixelRatio", 1],
+    ["devicePixelRatio", 2],
   ];
 
   // checkPair: tests if members of pair [a, b] are equal when evaluated.
