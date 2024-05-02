@@ -5837,18 +5837,7 @@ bool nsDisplayStickyPosition::UpdateScrollData(
 
 bool nsDisplayStickyPosition::ShouldGetStickyAnimationId() const {
 #if defined(MOZ_WIDGET_ANDROID)
-  if (HasDynamicToolbar()) {  // also implies being in the cross-process RCD
-    StickyScrollContainer* stickyScrollContainer =
-        const_cast<nsDisplayStickyPosition*>(this)->GetStickyScrollContainer();
-    if (stickyScrollContainer) {
-      ScrollableLayerGuid::ViewID scrollId =
-          nsLayoutUtils::FindOrCreateIDFor(stickyScrollContainer->ScrollFrame()
-                                               ->GetScrolledFrame()
-                                               ->GetContent());
-      return nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext()) ==
-             scrollId;
-    }
-  }
+  return HasDynamicToolbar();  // also implies being in the cross-process RCD
 #endif
   return false;
 }
