@@ -584,6 +584,8 @@
     <string name="preferences_account_sync_error">Eşitlemeye devam etmek için yeniden bağlayın</string>
     <!-- Preference for language -->
     <string name="preferences_language">Dil</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Çeviri</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Veri seçenekleri</string>
     <!-- Preference for data collection -->

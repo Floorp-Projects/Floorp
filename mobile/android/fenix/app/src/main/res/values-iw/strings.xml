@@ -577,6 +577,8 @@
     <string name="preferences_account_sync_error">יש להתחבר מחדש כדי להמשיך בסנכרון</string>
     <!-- Preference for language -->
     <string name="preferences_language">שפה</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">תרגום</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">בחירות נתונים</string>
     <!-- Preference for data collection -->

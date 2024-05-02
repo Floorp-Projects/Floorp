@@ -251,6 +251,12 @@
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
     <string name="browser_menu_sign_in">Hyni</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">Njëkohësoni fjalëkalime, skeda, etj</string>
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">Që të njëkohësohen, ribëni hyrjen</string>
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">Njëkohësimi i ndal</string>
     <!-- Browser menu label that creates a private tab -->
     <string name="browser_menu_new_private_tab">Skedë e re private</string>
     <!-- Browser menu label that navigates to the Password screen -->
@@ -645,6 +651,15 @@
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Opsionale</string>
 
+    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
+    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Të lexojë dhe ndryshojë të dhëna sajti</string>
+    <!-- The description of the icon that can delete one of the websites displayed  -->
+    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Fshije sajtin</string>
+    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
+    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Lejoje për krejt sajtet</string>
+    <!-- The subtitle for the allow for all sites preference toggle -->
+    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">Nëse i zini besë këtij zgjerimi, mund t’i jepni leje mbi çdo sajt.</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Koleksion vetjak shtesash</string>
@@ -660,6 +675,9 @@
     <string name="customize_addon_collection_user_hint">I zoti i koleksionit (ID Përdoruesi)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Koleksioni i shtesave u ndryshua. Po dilet nga aplikacioni, për të zbatuar ndryshimet…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Koleksioni i zgjerimeve u ndryshua. Po dilet nga aplikacioni, për të zbatuar ndryshimet…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -715,6 +733,8 @@
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
     <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Ka të gatshme shtesa të reja</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Ka të gatshme zgjerime të reja</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Shihni mbi 100 zgjerime të reja që ju lejojnë ta bëni Firefox-in si e doni.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
@@ -730,6 +750,10 @@
     <string name="extension_process_crash_dialog_title">Zgjerimet janë çaktivizuar përkohësisht</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
     <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Një ose më tepër shtesa reshtën së funksionuari, duke e bërë të paqëndrueshëm sistemin tuaj. %1$s-u u rrek, pa sukses, të rinisë shtesën(at).\n\nShtesat s’do të rinisen gjatë sesionit tuaj të tanishëm.\n\nHeqja, ose çaktivizimi i shtesave mund ta ndreqë këtë problem.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Një ose më tepër zgjerime reshtën së funksionuari, duke e bërë të paqëndrueshëm sistemin tuaj. %1$s-u u rrek, pa sukses, të rinisë zgjerimin(et).\n\nShtesat s’do të rinisen gjatë sesionit tuaj të tanishëm.\n\nHeqja, ose çaktivizimi i zgjerimeve mund ta ndreqë këtë problem.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Provoni të rinisni shtesa</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
@@ -2646,6 +2670,8 @@
     <string name="download_language_file_dialog_title">Të shkarkohet, edhe pse nën mënyrën ruajtje të dhënash (%1$s)?</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Për t’i mbajtur private përkthimet tuaja, shkarkojmë në fshehtinën tuaj gjuhë të pjesshme.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Për t’i mbajtur private përkthimet, shkarkojmë një pjesë gjuhësh.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Nën mënyrën ruajtje të dhënash, shkarko përherë</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
@@ -2686,6 +2712,29 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Shtoje te skeda private</string>
 
     <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Vazhdoni</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header">Plotësoni këtë pyetësor</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice">Shënim Mbi Privatësinë</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Parashtroje</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label">Mbylle</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Faleminderit për përshtypjet tuaja!</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">Shumë i Kënaqur</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">I kënaqur</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Asnjanës</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Jo i kënaqur</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">Shumë i Pakënaqur</string>
 
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->

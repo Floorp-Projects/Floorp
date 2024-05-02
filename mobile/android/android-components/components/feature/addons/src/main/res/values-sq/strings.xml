@@ -222,10 +222,16 @@
     <string name="mozac_feature_addons_extension_failed_to_install">S’u arrit të instalohet ky zgjerim.</string>
     <!-- Text shown when attempting to install an add-on and a network error happened. -->
     <string name="mozac_feature_addons_failed_to_install_network_error" moz:removedIn="126" tools:ignore="UnusedResources">Kjo shtesë s’u shkarkua dot, për shkak të një dështimi në lidhjen.</string>
+    <!-- Text shown when attempting to install an extension and a network error happened. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_network_error">Ky zgjerim s’u shkarkua dot, për shkak të një dështimi në lidhjen.</string>
     <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
     <string name="mozac_feature_addons_failed_to_install_corrupt_error" moz:removedIn="126" tools:ignore="UnusedResources">Kjo shtesë s’u instalua dot, ngaqë duket të jetë e dëmtuar.</string>
+    <!-- Text shown when attempting to install an extension and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_corrupt_error">Ky zgjerim s’u instalua dot, ngaqë duket të jetë e dëmtuar.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
     <string name="mozac_feature_addons_failed_to_install_not_signed_error" moz:removedIn="126" tools:ignore="UnusedResources">Kjo shtesë s’u instalua dot, ngaqë s’është verifikuar.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_not_signed_error">Ky zgjerim s’u instalua dot, ngaqë s’është verifikuar.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s s’u instalua dot, ngaqë s’është e përputhshme me %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
