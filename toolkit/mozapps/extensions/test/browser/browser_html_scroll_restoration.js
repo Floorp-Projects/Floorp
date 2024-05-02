@@ -91,11 +91,15 @@ async function waitForStableLayout(win) {
 }
 
 function isLayoutStable(win) {
-  // <message-bar> elements may affect the layout of a page, and therefore we
-  // should check whether its embedded style sheet has finished loading.
-  for (let bar of win.document.querySelectorAll("message-bar")) {
-    // Check for the existence of a CSS property from message-bar.css.
-    if (!win.getComputedStyle(bar).getPropertyValue("--message-bar-icon-url")) {
+  // <moz-message-bar> elements may affect the layout of a page, and therefore
+  // we should check whether its embedded style sheet has finished loading.
+  for (let bar of win.document.querySelectorAll("moz-message-bar")) {
+    // Check for the existence of a CSS property from moz-message-bar.css.
+    if (
+      !win
+        .getComputedStyle(bar)
+        .getPropertyValue("--message-bar-background-color")
+    ) {
       return false;
     }
   }
