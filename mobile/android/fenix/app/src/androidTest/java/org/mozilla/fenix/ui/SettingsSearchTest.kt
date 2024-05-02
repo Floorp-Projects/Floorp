@@ -597,12 +597,11 @@ class SettingsSearchTest : TestSetup() {
             verifySearchShortcutChecked(
                 EngineShortcut(name = "Google", checkboxIndex = 1, isChecked = true),
                 EngineShortcut(name = "Bing", checkboxIndex = 4, isChecked = true),
-                EngineShortcut(name = "Amazon.com", checkboxIndex = 7, isChecked = true),
-                EngineShortcut(name = "DuckDuckGo", checkboxIndex = 10, isChecked = true),
-                EngineShortcut(name = "eBay", checkboxIndex = 13, isChecked = true),
-                EngineShortcut(name = "Wikipedia", checkboxIndex = 16, isChecked = true),
-                EngineShortcut(name = "Reddit", checkboxIndex = 19, isChecked = false),
-                EngineShortcut(name = "YouTube", checkboxIndex = 22, isChecked = false),
+                EngineShortcut(name = "DuckDuckGo", checkboxIndex = 7, isChecked = true),
+                EngineShortcut(name = "eBay", checkboxIndex = 10, isChecked = true),
+                EngineShortcut(name = "Wikipedia", checkboxIndex = 13, isChecked = true),
+                EngineShortcut(name = "Reddit", checkboxIndex = 16, isChecked = false),
+                EngineShortcut(name = "YouTube", checkboxIndex = 19, isChecked = false),
             )
         }
     }
@@ -617,14 +616,13 @@ class SettingsSearchTest : TestSetup() {
         }.openSearchSubMenu {
             openManageShortcutsMenu()
             selectSearchShortcut(EngineShortcut(name = "Google", checkboxIndex = 1))
-            selectSearchShortcut(EngineShortcut(name = "Amazon.com", checkboxIndex = 7))
-            selectSearchShortcut(EngineShortcut(name = "Reddit", checkboxIndex = 19))
-            selectSearchShortcut(EngineShortcut(name = "YouTube", checkboxIndex = 22))
+            selectSearchShortcut(EngineShortcut(name = "Reddit", checkboxIndex = 16))
+            selectSearchShortcut(EngineShortcut(name = "YouTube", checkboxIndex = 19))
             exitMenu()
         }
         searchScreen {
             clickSearchSelectorButton()
-            verifySearchShortcutListContains("Google", "Amazon.com", shouldExist = false)
+            verifySearchShortcutListContains("Google", shouldExist = false)
             verifySearchShortcutListContains("YouTube", shouldExist = true)
             verifySearchShortcutListContains("Reddit", shouldExist = true)
         }

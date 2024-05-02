@@ -26,7 +26,7 @@ class BundledSearchEnginesStorageTest {
         val engines = storage.load(RegionState("US", "US"), Locale("en", "US"))
         val searchEngines = engines.list
 
-        assertEquals(6, searchEngines.size)
+        assertEquals(5, searchEngines.size)
     }
 
     @Test
@@ -50,7 +50,7 @@ class BundledSearchEnginesStorageTest {
             val engines = storage.load(RegionState.Default, Locale("de", "DE"))
             val searchEngines = engines.list
 
-            assertEquals(8, searchEngines.size)
+            assertEquals(7, searchEngines.size)
             assertContainsSearchEngine("google-b-m", searchEngines)
             assertContainsNotSearchEngine("google-2018", searchEngines)
         }
@@ -60,7 +60,7 @@ class BundledSearchEnginesStorageTest {
             val engines = storage.load(RegionState("US", "US"), Locale("de", "DE"))
             val searchEngines = engines.list
 
-            assertEquals(8, searchEngines.size)
+            assertEquals(7, searchEngines.size)
             assertContainsSearchEngine("google-b-1-m", searchEngines)
             assertContainsNotSearchEngine("google", searchEngines)
         }
@@ -75,7 +75,7 @@ class BundledSearchEnginesStorageTest {
             val searchEngines = engines.list
 
             println("searchEngines = $searchEngines")
-            assertEquals(6, searchEngines.size)
+            assertEquals(5, searchEngines.size)
             assertContainsNotSearchEngine("yandex-en", searchEngines)
         }
         // With region
@@ -85,7 +85,7 @@ class BundledSearchEnginesStorageTest {
             val searchEngines = engines.list
 
             println("searchEngines = $searchEngines")
-            assertEquals(5, searchEngines.size)
+            assertEquals(4, searchEngines.size)
             assertContainsSearchEngine("google-com-nocodes", searchEngines)
             assertContainsNotSearchEngine("yandex-en", searchEngines)
         }
@@ -134,11 +134,11 @@ class BundledSearchEnginesStorageTest {
         val engines = storage.load(RegionState.Default, Locale("trs", ""))
         val searchEngines = engines.list
 
-        // visibleDefaultEngines: ["google-b-m", "bing", "amazondotcom", "ddg", "wikipedia-es"]
+        // visibleDefaultEngines: ["google-b-m", "bing", "ddg", "wikipedia-es"]
         // searchOrder (default): ["Google", "Bing"]
 
         assertEquals(
-            listOf("google-b-m", "bing", "amazondotcom", "ddg", "wikipedia-es"),
+            listOf("google-b-m", "bing", "ddg", "wikipedia-es"),
             searchEngines.map { it.id },
         )
 
@@ -154,7 +154,7 @@ class BundledSearchEnginesStorageTest {
         val engines = storage.load(RegionState.Default, Locale("xx", "XX"))
         val searchEngines = engines.list
 
-        assertEquals(5, searchEngines.size)
+        assertEquals(4, searchEngines.size)
     }
 
     private fun assertContainsSearchEngine(identifier: String, searchEngines: List<SearchEngine>) {
@@ -181,7 +181,7 @@ class BundledSearchEnginesStorageTest {
         val engines = storage.load(RegionState("US", "US"), Locale("en", "US"))
         val searchEngines = engines.list
 
-        assertEquals(6, searchEngines.size)
+        assertEquals(5, searchEngines.size)
 
         val google = searchEngines.find { it.name == "Google" }
         assertNotNull(google!!)
