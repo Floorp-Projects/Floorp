@@ -134,35 +134,18 @@ using namespace mozilla::a11y;
 
 @end
 
-@implementation mozIncrementableAccessible
+@implementation mozRangeAccessible
 
 - (id)moxValue {
   return [NSNumber numberWithDouble:mGeckoAccessible->CurValue()];
 }
 
-- (NSString*)moxValueDescription {
-  nsAutoString valueDesc;
-  mGeckoAccessible->Value(valueDesc);
-  return nsCocoaUtils::ToNSString(valueDesc);
-}
 - (id)moxMinValue {
   return [NSNumber numberWithDouble:mGeckoAccessible->MinValue()];
 }
 
 - (id)moxMaxValue {
   return [NSNumber numberWithDouble:mGeckoAccessible->MaxValue()];
-}
-
-- (void)moxSetValue:(id)value {
-  [self setValue:([value doubleValue])];
-}
-
-- (void)moxPerformIncrement {
-  [self changeValueBySteps:1];
-}
-
-- (void)moxPerformDecrement {
-  [self changeValueBySteps:-1];
 }
 
 - (NSString*)moxOrientation {
@@ -190,6 +173,28 @@ using namespace mozilla::a11y;
       [super handleAccessibleEvent:eventType];
       break;
   }
+}
+
+@end
+
+@implementation mozIncrementableAccessible
+
+- (NSString*)moxValueDescription {
+  nsAutoString valueDesc;
+  mGeckoAccessible->Value(valueDesc);
+  return nsCocoaUtils::ToNSString(valueDesc);
+}
+
+- (void)moxSetValue:(id)value {
+  [self setValue:([value doubleValue])];
+}
+
+- (void)moxPerformIncrement {
+  [self changeValueBySteps:1];
+}
+
+- (void)moxPerformDecrement {
+  [self changeValueBySteps:-1];
 }
 
 /*
