@@ -48,11 +48,6 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
         return this.removeEventListeners();
       case "Screenshots:AddEventListeners":
         return this.addEventListeners();
-      case "Screenshots:MoveFocusToContent":
-        return this.focusOverlay();
-      case "Screenshots:ClearFocus":
-        Services.focus.clearFocus(this.contentWindow);
-        return null;
     }
     return null;
   }
@@ -104,8 +99,8 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
         this.requestDownloadScreenshot(event.detail.region);
         break;
       case "Screenshots:OverlaySelection": {
-        let { hasSelection, overlayState } = event.detail;
-        this.sendOverlaySelection({ hasSelection, overlayState });
+        let { hasSelection } = event.detail;
+        this.sendOverlaySelection({ hasSelection });
         break;
       }
       case "Screenshots:RecordEvent": {
@@ -114,13 +109,10 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
         break;
       }
       case "Screenshots:ShowPanel":
-        this.sendAsyncMessage("Screenshots:ShowPanel");
+        this.showPanel();
         break;
       case "Screenshots:HidePanel":
-        this.sendAsyncMessage("Screenshots:HidePanel");
-        break;
-      case "Screenshots:FocusPanel":
-        this.sendAsyncMessage("Screenshots:MoveFocusToParent", event.detail);
+        this.hidePanel();
         break;
     }
   }
@@ -159,6 +151,14 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     this.endScreenshotsOverlay({ doNotResetMethods: true });
   }
 
+  showPanel() {
+    this.sendAsyncMessage("Screenshots:ShowPanel");
+  }
+
+  hidePanel() {
+    this.sendAsyncMessage("Screenshots:HidePanel");
+  }
+
   getDocumentTitle() {
     return this.document.title;
   }
@@ -171,11 +171,6 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     let methodsUsed = this.#overlay.methodsUsed;
     this.#overlay.resetMethodsUsed();
     return methodsUsed;
-  }
-
-  focusOverlay() {
-    this.contentWindow.focus();
-    this.#overlay.focus();
   }
 
   /**

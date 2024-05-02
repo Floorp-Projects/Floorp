@@ -133,19 +133,19 @@ export class ScreenshotsOverlay {
               <div id="mover-topRight" class="mover-target direction-topRight" tabindex="0">
                 <div class="mover"></div>
               </div>
+              <div id="mover-left" class="mover-target direction-left">
+                <div class="mover"></div>
+              </div>
               <div id="mover-right" class="mover-target direction-right">
-                <div class="mover"></div>
-              </div>
-              <div id="mover-bottomRight" class="mover-target direction-bottomRight" tabindex="0">
-                <div class="mover"></div>
-              </div>
-              <div id="mover-bottom" class="mover-target direction-bottom">
                 <div class="mover"></div>
               </div>
               <div id="mover-bottomLeft" class="mover-target direction-bottomLeft" tabindex="0">
                 <div class="mover"></div>
               </div>
-              <div id="mover-left" class="mover-target direction-left">
+              <div id="mover-bottom" class="mover-target direction-bottom">
+                <div class="mover"></div>
+              </div>
+              <div id="mover-bottomRight" class="mover-target direction-bottomRight" tabindex="0">
                 <div class="mover"></div>
               </div>
               <div id="selection-size-container">
@@ -303,10 +303,6 @@ export class ScreenshotsOverlay {
       move: 0,
       resize: 0,
     };
-  }
-
-  focus() {
-    this.previewCancelButton.focus({ focusVisible: true });
   }
 
   /**
@@ -507,51 +503,35 @@ export class ScreenshotsOverlay {
    * @param {Event} event The keydown event
    */
   handleKeyDown(event) {
-    if (event.key === "Escape") {
-      this.maybeCancelScreenshots();
-      return;
-    }
-
-    switch (this.#state) {
-      case STATES.CROSSHAIRS:
-        this.crosshairsKeyDown(event);
+    switch (event.key) {
+      case "ArrowLeft":
+        this.handleArrowLeftKeyDown(event);
         break;
-      case STATES.DRAGGING:
-        this.draggingKeyDown(event);
+      case "ArrowUp":
+        this.handleArrowUpKeyDown(event);
         break;
-      case STATES.RESIZING:
-        this.resizingKeyDown(event);
+      case "ArrowRight":
+        this.handleArrowRightKeyDown(event);
         break;
-      case STATES.SELECTED:
-        this.selectedKeyDown(event);
+      case "ArrowDown":
+        this.handleArrowDownKeyDown(event);
         break;
-    }
-  }
-
-  /**
-   * Handles when a keyup occurs in the screenshots component.
-   * All we need to do on keyup is set the state to selected.
-   * @param {Event} event The keydown event
-   */
-  handleKeyUp(event) {
-    switch (this.#state) {
-      case STATES.RESIZING:
-        switch (event.key) {
-          case "ArrowLeft":
-          case "ArrowUp":
-          case "ArrowRight":
-          case "ArrowDown":
-            switch (event.originalTarget.id) {
-              case "highlight":
-              case "mover-bottomLeft":
-              case "mover-bottomRight":
-              case "mover-topLeft":
-              case "mover-topRight":
-                event.preventDefault();
-                this.#setState(STATES.SELECTED, { doNotMoveFocus: true });
-                break;
-            }
-            break;
+      case "Tab":
+        this.maybeLockFocus(event);
+        break;
+      case "Escape":
+        this.maybeCancelScreenshots();
+        break;
+      case this.copyKey.toLowerCase():
+        if (this.state === "selected" && this.getAccelKey(event)) {
+          event.preventDefault();
+          this.copySelectedRegion();
+        }
+        break;
+      case this.downloadKey.toLowerCase():
+        if (this.state === "selected" && this.getAccelKey(event)) {
+          event.preventDefault();
+          this.downloadSelectedRegion();
         }
         break;
     }
@@ -570,175 +550,6 @@ export class ScreenshotsOverlay {
     return event.ctrlKey;
   }
 
-  crosshairsKeyDown(event) {
-    switch (event.key) {
-      case "ArrowLeft":
-      case "ArrowUp":
-      case "ArrowRight":
-      case "ArrowDown":
-        // Do nothing so we can prevent default below
-        break;
-      case "Tab":
-        this.maybeLockFocus(event);
-        return;
-      case "Enter":
-        if (this.hoverElementRegion.isRegionValid) {
-          event.preventDefault();
-          this.draggingReadyStart();
-          this.draggingReadyDragEnd();
-          return;
-        }
-      // eslint-disable-next-line no-fallthrough
-      case " ": {
-        if (Services.appinfo.isWayland) {
-          return;
-        }
-
-        if (event.originalTarget === this.previewCancelButton) {
-          return;
-        }
-
-        event.preventDefault();
-        // The left and top coordinates from cursorRegion are relative to
-        // the client window so we need to add the scroll offset of the page to
-        // get the correct coordinates.
-        let x = {};
-        let y = {};
-        this.window.windowUtils.getLastOverWindowPointerLocationInCSSPixels(
-          x,
-          y
-        );
-        this.crosshairsDragStart(
-          x.value + this.windowDimensions.scrollX,
-          y.value + this.windowDimensions.scrollY
-        );
-        this.#setState(STATES.DRAGGING);
-        break;
-      }
-      default:
-        return;
-    }
-
-    // Prevent scrolling with arrow keys
-    event.preventDefault();
-  }
-
-  /**
-   * Handles a keydown event for the dragging state.
-   * @param {Event} event The keydown event
-   */
-  draggingKeyDown(event) {
-    switch (event.key) {
-      case "ArrowLeft":
-        this.handleArrowLeftKeyDown(event);
-        break;
-      case "ArrowUp":
-        this.handleArrowUpKeyDown(event);
-        break;
-      case "ArrowRight":
-        this.handleArrowRightKeyDown(event);
-        break;
-      case "ArrowDown":
-        this.handleArrowDownKeyDown(event);
-        break;
-      case "Enter":
-      case " ":
-        event.preventDefault();
-        this.#setState(STATES.SELECTED);
-        return;
-      default:
-        return;
-    }
-
-    this.drawSelectionContainer();
-  }
-
-  /**
-   * Handles a keydown event for the resizing state.
-   * @param {Event} event The keydown event
-   */
-  resizingKeyDown(event) {
-    switch (event.key) {
-      case "ArrowLeft":
-        this.resizingArrowLeftKeyDown(event);
-        break;
-      case "ArrowUp":
-        this.resizingArrowUpKeyDown(event);
-        break;
-      case "ArrowRight":
-        this.resizingArrowRightKeyDown(event);
-        break;
-      case "ArrowDown":
-        this.resizingArrowDownKeyDown(event);
-        break;
-    }
-  }
-
-  selectedKeyDown(event) {
-    let isSelectionElement = event.originalTarget.closest(
-      "#selection-container"
-    );
-    switch (event.key) {
-      case "ArrowLeft":
-        if (isSelectionElement) {
-          this.resizingArrowLeftKeyDown(event);
-        }
-        break;
-      case "ArrowUp":
-        if (isSelectionElement) {
-          this.resizingArrowUpKeyDown(event);
-        }
-        break;
-      case "ArrowRight":
-        if (isSelectionElement) {
-          this.resizingArrowRightKeyDown(event);
-        }
-        break;
-      case "ArrowDown":
-        if (isSelectionElement) {
-          this.resizingArrowDownKeyDown(event);
-        }
-        break;
-      case "Tab":
-        this.maybeLockFocus(event);
-        break;
-      case " ":
-        if (!event.originalTarget.closest("#buttons-container")) {
-          event.preventDefault();
-        }
-        break;
-      case this.copyKey.toLowerCase():
-        if (this.state === "selected" && this.getAccelKey(event)) {
-          event.preventDefault();
-          this.copySelectedRegion();
-        }
-        break;
-      case this.downloadKey.toLowerCase():
-        if (this.state === "selected" && this.getAccelKey(event)) {
-          event.preventDefault();
-          this.downloadSelectedRegion();
-        }
-        break;
-    }
-  }
-
-  /**
-   * Move the region or its left or right side to the left.
-   * Just the arrow key will move the region by 1px.
-   * Arrow key + shift will move the region by 10px.
-   * Arrow key + control/meta will move to the edge of the window.
-   * @param {Event} event The keydown event
-   */
-  resizingArrowLeftKeyDown(event) {
-    this.handleArrowLeftKeyDown(event);
-
-    if (this.#state !== STATES.RESIZING) {
-      this.#setState(STATES.RESIZING);
-    }
-
-    this.drawSelectionContainer();
-  }
-
   /**
    * Move the region or its left or right side to the left.
    * Just the arrow key will move the region by 1px.
@@ -747,7 +558,6 @@ export class ScreenshotsOverlay {
    * @param {Event} event The keydown event
    */
   handleArrowLeftKeyDown(event) {
-    let exponent = event.shiftKey ? 1 : 0;
     switch (event.originalTarget.id) {
       case "highlight":
         if (this.getAccelKey(event)) {
@@ -757,7 +567,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.right -= 10 ** exponent;
+        this.selectionRegion.right -= 10 ** event.shiftKey;
       // eslint-disable-next-line no-fallthrough
       case "mover-topLeft":
       case "mover-bottomLeft":
@@ -766,7 +576,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.left -= 10 ** exponent;
+        this.selectionRegion.left -= 10 ** event.shiftKey;
         this.scrollIfByEdge(
           this.selectionRegion.left,
           this.windowDimensions.scrollY + this.windowDimensions.clientHeight / 2
@@ -786,7 +596,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.right -= 10 ** exponent;
+        this.selectionRegion.right -= 10 ** event.shiftKey;
         if (this.selectionRegion.x1 >= this.selectionRegion.x2) {
           this.selectionRegion.sortCoords();
           if (event.originalTarget.id === "mover-topRight") {
@@ -800,23 +610,11 @@ export class ScreenshotsOverlay {
         return;
     }
 
-    event.preventDefault();
-  }
-
-  /**
-   * Move the region or its top or bottom side upward.
-   * Just the arrow key will move the region by 1px.
-   * Arrow key + shift will move the region by 10px.
-   * Arrow key + control/meta will move to the edge of the window.
-   * @param {Event} event The keydown event
-   */
-  resizingArrowUpKeyDown(event) {
-    this.handleArrowUpKeyDown(event);
-
     if (this.#state !== STATES.RESIZING) {
       this.#setState(STATES.RESIZING);
     }
 
+    event.preventDefault();
     this.drawSelectionContainer();
   }
 
@@ -828,7 +626,6 @@ export class ScreenshotsOverlay {
    * @param {Event} event The keydown event
    */
   handleArrowUpKeyDown(event) {
-    let exponent = event.shiftKey ? 1 : 0;
     switch (event.originalTarget.id) {
       case "highlight":
         if (this.getAccelKey(event)) {
@@ -838,7 +635,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.bottom -= 10 ** exponent;
+        this.selectionRegion.bottom -= 10 ** event.shiftKey;
       // eslint-disable-next-line no-fallthrough
       case "mover-topLeft":
       case "mover-topRight":
@@ -847,7 +644,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.top -= 10 ** exponent;
+        this.selectionRegion.top -= 10 ** event.shiftKey;
         this.scrollIfByEdge(
           this.windowDimensions.scrollX + this.windowDimensions.clientWidth / 2,
           this.selectionRegion.top
@@ -867,7 +664,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.bottom -= 10 ** exponent;
+        this.selectionRegion.bottom -= 10 ** event.shiftKey;
         if (this.selectionRegion.y1 >= this.selectionRegion.y2) {
           this.selectionRegion.sortCoords();
           if (event.originalTarget.id === "mover-bottomLeft") {
@@ -881,23 +678,11 @@ export class ScreenshotsOverlay {
         return;
     }
 
-    event.preventDefault();
-  }
-
-  /**
-   * Move the region or its left or right side to the right.
-   * Just the arrow key will move the region by 1px.
-   * Arrow key + shift will move the region by 10px.
-   * Arrow key + control/meta will move to the edge of the window.
-   * @param {Event} event The keydown event
-   */
-  resizingArrowRightKeyDown(event) {
-    this.handleArrowRightKeyDown(event);
-
     if (this.#state !== STATES.RESIZING) {
       this.#setState(STATES.RESIZING);
     }
 
+    event.preventDefault();
     this.drawSelectionContainer();
   }
 
@@ -909,7 +694,6 @@ export class ScreenshotsOverlay {
    * @param {Event} event The keydown event
    */
   handleArrowRightKeyDown(event) {
-    let exponent = event.shiftKey ? 1 : 0;
     switch (event.originalTarget.id) {
       case "highlight":
         if (this.getAccelKey(event)) {
@@ -920,7 +704,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.left += 10 ** exponent;
+        this.selectionRegion.left += 10 ** event.shiftKey;
       // eslint-disable-next-line no-fallthrough
       case "mover-topRight":
       case "mover-bottomRight":
@@ -930,7 +714,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.right += 10 ** exponent;
+        this.selectionRegion.right += 10 ** event.shiftKey;
         this.scrollIfByEdge(
           this.selectionRegion.right,
           this.windowDimensions.scrollY + this.windowDimensions.clientHeight / 2
@@ -951,7 +735,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.left += 10 ** exponent;
+        this.selectionRegion.left += 10 ** event.shiftKey;
         if (this.selectionRegion.x1 >= this.selectionRegion.x2) {
           this.selectionRegion.sortCoords();
           if (event.originalTarget.id === "mover-topLeft") {
@@ -965,7 +749,12 @@ export class ScreenshotsOverlay {
         return;
     }
 
+    if (this.#state !== STATES.RESIZING) {
+      this.#setState(STATES.RESIZING);
+    }
+
     event.preventDefault();
+    this.drawSelectionContainer();
   }
 
   /**
@@ -975,18 +764,7 @@ export class ScreenshotsOverlay {
    * Arrow key + control/meta will move to the edge of the window.
    * @param {Event} event The keydown event
    */
-  resizingArrowDownKeyDown(event) {
-    this.handleArrowDownKeyDown(event);
-
-    if (this.#state !== STATES.RESIZING) {
-      this.#setState(STATES.RESIZING);
-    }
-
-    this.drawSelectionContainer();
-  }
-
   handleArrowDownKeyDown(event) {
-    let exponent = event.shiftKey ? 1 : 0;
     switch (event.originalTarget.id) {
       case "highlight":
         if (this.getAccelKey(event)) {
@@ -997,7 +775,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.top += 10 ** exponent;
+        this.selectionRegion.top += 10 ** event.shiftKey;
       // eslint-disable-next-line no-fallthrough
       case "mover-bottomLeft":
       case "mover-bottomRight":
@@ -1007,7 +785,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.bottom += 10 ** exponent;
+        this.selectionRegion.bottom += 10 ** event.shiftKey;
         this.scrollIfByEdge(
           this.windowDimensions.scrollX + this.windowDimensions.clientWidth / 2,
           this.selectionRegion.bottom
@@ -1028,7 +806,7 @@ export class ScreenshotsOverlay {
           break;
         }
 
-        this.selectionRegion.top += 10 ** exponent;
+        this.selectionRegion.top += 10 ** event.shiftKey;
         if (this.selectionRegion.y1 >= this.selectionRegion.y2) {
           this.selectionRegion.sortCoords();
           if (event.originalTarget.id === "mover-topLeft") {
@@ -1042,7 +820,12 @@ export class ScreenshotsOverlay {
         return;
     }
 
+    if (this.#state !== STATES.RESIZING) {
+      this.#setState(STATES.RESIZING);
+    }
+
     event.preventDefault();
+    this.drawSelectionContainer();
   }
 
   /**
@@ -1051,39 +834,27 @@ export class ScreenshotsOverlay {
    * @param {Event} event The keydown event
    */
   maybeLockFocus(event) {
-    event.preventDefault();
+    if (this.#state !== STATES.SELECTED) {
+      return;
+    }
 
-    switch (this.#state) {
-      case STATES.CROSSHAIRS:
-        if (event.shiftKey) {
-          this.#dispatchEvent("Screenshots:FocusPanel", {
-            direction: "backward",
-          });
-        } else {
-          this.#dispatchEvent("Screenshots:FocusPanel", {
-            direction: "forward",
-          });
-        }
-        break;
-      case STATES.SELECTED:
-        if (event.originalTarget.id === "highlight" && event.shiftKey) {
-          this.downloadButton.focus({ focusVisible: true });
-        } else if (event.originalTarget.id === "download" && !event.shiftKey) {
-          this.highlightEl.focus({ focusVisible: true });
-        } else {
-          // The content document can listen for keydown events and prevent moving
-          // focus so we manually move focus to the next element here.
-          let direction = event.shiftKey
-            ? Services.focus.MOVEFOCUS_BACKWARD
-            : Services.focus.MOVEFOCUS_FORWARD;
-          Services.focus.moveFocus(
-            this.window,
-            null,
-            direction,
-            Services.focus.FLAG_BYKEY
-          );
-        }
-        break;
+    event.preventDefault();
+    if (event.originalTarget.id === "highlight" && event.shiftKey) {
+      this.downloadButton.focus({ focusVisible: true });
+    } else if (event.originalTarget.id === "download" && !event.shiftKey) {
+      this.highlightEl.focus({ focusVisible: true });
+    } else {
+      // The content document can listen for keydown events and prevent moving
+      // focus so we manually move focus to the next element here.
+      let direction = event.shiftKey
+        ? Services.focus.MOVEFOCUS_BACKWARD
+        : Services.focus.MOVEFOCUS_FORWARD;
+      Services.focus.moveFocus(
+        this.window,
+        null,
+        direction,
+        Services.focus.FLAG_BYKEY
+      );
     }
   }
 
@@ -1096,6 +867,31 @@ export class ScreenshotsOverlay {
       this.copyButton.focus({ focusVisible: true, preventScroll: true });
     } else {
       this.downloadButton.focus({ focusVisible: true, preventScroll: true });
+    }
+  }
+
+  /**
+   * Handles when a keydown occurs in the screenshots component.
+   * All we need to do on keyup is set the state to selected.
+   * @param {Event} event The keydown event
+   */
+  handleKeyUp(event) {
+    switch (event.key) {
+      case "ArrowLeft":
+      case "ArrowUp":
+      case "ArrowRight":
+      case "ArrowDown":
+        switch (event.originalTarget.id) {
+          case "highlight":
+          case "mover-bottomLeft":
+          case "mover-bottomRight":
+          case "mover-topLeft":
+          case "mover-topRight":
+            event.preventDefault();
+            this.#setState(STATES.SELECTED);
+            break;
+        }
+        break;
     }
   }
 
@@ -1130,9 +926,8 @@ export class ScreenshotsOverlay {
   /**
    * Set a new state for the overlay
    * @param {String} newState
-   * @param {Object} options (optional) Options for calling start of state method
    */
-  #setState(newState, options = {}) {
+  #setState(newState) {
     if (this.#state === STATES.SELECTED && newState === STATES.CROSSHAIRS) {
       this.#dispatchEvent("Screenshots:RecordEvent", {
         eventName: "started",
@@ -1141,13 +936,7 @@ export class ScreenshotsOverlay {
     }
     if (newState !== this.#state) {
       this.#dispatchEvent("Screenshots:OverlaySelection", {
-        hasSelection: [
-          STATES.DRAGGING_READY,
-          STATES.DRAGGING,
-          STATES.RESIZING,
-          STATES.SELECTED,
-        ].includes(newState),
-        overlayState: newState,
+        hasSelection: newState == STATES.SELECTED,
       });
     }
     this.#state = newState;
@@ -1166,7 +955,7 @@ export class ScreenshotsOverlay {
         break;
       }
       case STATES.SELECTED: {
-        this.selectedStart(options);
+        this.selectedStart();
         break;
       }
       case STATES.RESIZING: {
@@ -1226,16 +1015,11 @@ export class ScreenshotsOverlay {
    * Hide the preview and hover element containers.
    * Draw the selection and buttons containers.
    */
-  selectedStart(options) {
-    this.selectionRegion.sortCoords();
+  selectedStart() {
     this.hidePreviewContainer();
     this.hideHoverElementContainer();
     this.drawSelectionContainer();
     this.drawButtonsContainer();
-
-    if (!options.doNotMoveFocus) {
-      this.setFocusToActionButton();
-    }
   }
 
   /**
@@ -1462,6 +1246,7 @@ export class ScreenshotsOverlay {
     if (this.hoverElementRegion.isRegionValid) {
       this.selectionRegion.dimensions = this.hoverElementRegion.dimensions;
       this.#setState(STATES.SELECTED);
+      this.setFocusToActionButton();
       this.#dispatchEvent("Screenshots:RecordEvent", {
         eventName: "selected",
         reason: "element",
@@ -1482,9 +1267,11 @@ export class ScreenshotsOverlay {
       right: pageX,
       bottom: pageY,
     };
+    this.selectionRegion.sortCoords();
     this.#setState(STATES.SELECTED);
     this.maybeRecordRegionSelected();
     this.#methodsUsed.region += 1;
+    this.setFocusToActionButton();
   }
 
   /**
@@ -1495,7 +1282,9 @@ export class ScreenshotsOverlay {
    */
   resizingDragEnd(pageX, pageY) {
     this.resizingDrag(pageX, pageY);
+    this.selectionRegion.sortCoords();
     this.#setState(STATES.SELECTED);
+    this.setFocusToActionButton();
     this.maybeRecordRegionSelected();
     if (this.#moverId === "highlight") {
       this.#methodsUsed.move += 1;
@@ -1700,10 +1489,6 @@ export class ScreenshotsOverlay {
 
   hideButtonsContainer() {
     this.buttonsContainer.hidden = true;
-  }
-
-  updateCursorRegion(left, top) {
-    this.cursorRegion = { left, top, right: left, bottom: top };
   }
 
   /**
