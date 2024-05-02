@@ -1041,7 +1041,6 @@ impl<'a> SceneBuilder<'a> {
             info.vertical_offset_bounds,
             info.horizontal_offset_bounds,
             info.previously_applied_offset,
-            info.transform,
         );
 
         let index = self.spatial_tree.add_sticky_frame(
