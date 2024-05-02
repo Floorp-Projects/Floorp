@@ -16,15 +16,15 @@
 
 #include "modules/video_coding/codecs/h264/h264_decoder_impl.h"
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
+}  // extern "C"
+
 #include <algorithm>
 #include <limits>
 #include <memory>
-
-extern "C" {
-#include "third_party/ffmpeg/libavcodec/avcodec.h"
-#include "third_party/ffmpeg/libavformat/avformat.h"
-#include "third_party/ffmpeg/libavutil/imgutils.h"
-}  // extern "C"
 
 #include "api/video/color_space.h"
 #include "api/video/i010_buffer.h"
