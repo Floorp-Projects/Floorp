@@ -142,7 +142,7 @@ int32_t QualityAnalyzingVideoEncoder::Encode(
   {
     MutexLock lock(&mutex_);
     // Store id to be able to retrieve it in analyzing callback.
-    timestamp_to_frame_id_list_.push_back({frame.timestamp(), frame.id()});
+    timestamp_to_frame_id_list_.push_back({frame.rtp_timestamp(), frame.id()});
     // If this list is growing, it means that we are not receiving new encoded
     // images from encoder. So it should be a bug in setup on in the encoder.
     RTC_DCHECK_LT(timestamp_to_frame_id_list_.size(), kMaxFrameInPipelineCount);
@@ -159,7 +159,7 @@ int32_t QualityAnalyzingVideoEncoder::Encode(
       auto it = timestamp_to_frame_id_list_.end();
       while (it != timestamp_to_frame_id_list_.begin()) {
         --it;
-        if (it->first == frame.timestamp()) {
+        if (it->first == frame.rtp_timestamp()) {
           timestamp_to_frame_id_list_.erase(it);
           break;
         }

@@ -544,7 +544,7 @@ int main(int argc, char* argv[]) {
     webrtc::VideoFrame frame =
         webrtc::VideoFrame::Builder()
             .set_video_frame_buffer(frame_buffer_generator->NextFrame().buffer)
-            .set_timestamp_rtp(rtp_timestamp)
+            .set_rtp_timestamp(rtp_timestamp)
             .build();
     ret = video_encoder->Encode(frame, &frame_types);
     RTC_CHECK_EQ(ret, WEBRTC_VIDEO_CODEC_OK);

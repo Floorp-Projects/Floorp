@@ -108,7 +108,7 @@ class VideoSource {
     frame_num_[timestamp_rtp] = frame_num;
     return VideoFrame::Builder()
         .set_video_frame_buffer(buffer)
-        .set_timestamp_rtp(timestamp_rtp)
+        .set_rtp_timestamp(timestamp_rtp)
         .set_timestamp_us((timestamp_rtp / k90kHz).us())
         .build();
   }
@@ -125,7 +125,7 @@ class VideoSource {
         frame_reader_->ReadFrame(frame_num_.at(timestamp_rtp), resolution);
     return VideoFrame::Builder()
         .set_video_frame_buffer(buffer)
-        .set_timestamp_rtp(timestamp_rtp)
+        .set_rtp_timestamp(timestamp_rtp)
         .build();
   }
 
@@ -331,7 +331,7 @@ class VideoCodecAnalyzer : public VideoCodecTester::VideoCodecStats {
   void StartEncode(const VideoFrame& video_frame,
                    const EncodingSettings& encoding_settings) {
     int64_t encode_start_us = rtc::TimeMicros();
-    task_queue_.PostTask([this, timestamp_rtp = video_frame.timestamp(),
+    task_queue_.PostTask([this, timestamp_rtp = video_frame.rtp_timestamp(),
                           encoding_settings, encode_start_us]() {
       RTC_CHECK(frames_.find(timestamp_rtp) == frames_.end())
           << "Duplicate frame. Frame with timestamp " << timestamp_rtp
@@ -418,7 +418,7 @@ class VideoCodecAnalyzer : public VideoCodecTester::VideoCodecStats {
 
   void FinishDecode(const VideoFrame& decoded_frame, int spatial_idx) {
     int64_t decode_finished_us = rtc::TimeMicros();
-    task_queue_.PostTask([this, timestamp_rtp = decoded_frame.timestamp(),
+    task_queue_.PostTask([this, timestamp_rtp = decoded_frame.rtp_timestamp(),
                           spatial_idx, width = decoded_frame.width(),
                           height = decoded_frame.height(),
                           decode_finished_us]() {
@@ -439,7 +439,7 @@ class VideoCodecAnalyzer : public VideoCodecTester::VideoCodecStats {
           decoded_frame.video_frame_buffer()->ToI420();
 
       task_queue_.PostTask([this, decoded_buffer,
-                            timestamp_rtp = decoded_frame.timestamp(),
+                            timestamp_rtp = decoded_frame.rtp_timestamp(),
                             spatial_idx]() {
         VideoFrame ref_frame = video_source_->ReadFrame(
             timestamp_rtp, {.width = decoded_buffer->width(),
@@ -926,10 +926,11 @@ class Encoder : public EncodedImageCallback {
               EncodeCallback callback) {
     {
       MutexLock lock(&mutex_);
-      callbacks_[input_frame.timestamp()] = std::move(callback);
+      callbacks_[input_frame.rtp_timestamp()] = std::move(callback);
     }
 
-    Timestamp pts = Timestamp::Micros((input_frame.timestamp() / k90kHz).us());
+    Timestamp pts =
+        Timestamp::Micros((input_frame.rtp_timestamp() / k90kHz).us());
 
     task_queue_.PostScheduledTask(
         [this, input_frame, encoding_settings] {
@@ -943,8 +944,9 @@ class Encoder : public EncodedImageCallback {
 
           int error = encoder_->Encode(input_frame, /*frame_types=*/nullptr);
           if (error != 0) {
-            RTC_LOG(LS_WARNING) << "Encode failed with error code " << error
-                                << " RTP timestamp " << input_frame.timestamp();
+            RTC_LOG(LS_WARNING)
+                << "Encode failed with error code " << error
+                << " RTP timestamp " << input_frame.rtp_timestamp();
           }
         },
         pacer_.Schedule(pts));

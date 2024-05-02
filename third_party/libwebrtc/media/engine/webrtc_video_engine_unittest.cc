@@ -4270,7 +4270,7 @@ TEST_F(WebRtcVideoChannelTest, EstimatesNtpStartTimeCorrectly) {
   webrtc::VideoFrame video_frame =
       webrtc::VideoFrame::Builder()
           .set_video_frame_buffer(CreateBlackFrameBuffer(4, 4))
-          .set_timestamp_rtp(kInitialTimestamp)
+          .set_rtp_timestamp(kInitialTimestamp)
           .set_timestamp_us(0)
           .set_rotation(webrtc::kVideoRotation_0)
           .build();
@@ -4284,7 +4284,7 @@ TEST_F(WebRtcVideoChannelTest, EstimatesNtpStartTimeCorrectly) {
   // triggers a constant-overflow warning, hence we're calculating it explicitly
   // here.
   time_controller_.AdvanceTime(webrtc::TimeDelta::Millis(kFrameOffsetMs));
-  video_frame.set_timestamp(kFrameOffsetMs * 90 - 1);
+  video_frame.set_rtp_timestamp(kFrameOffsetMs * 90 - 1);
   video_frame.set_ntp_time_ms(kInitialNtpTimeMs + kFrameOffsetMs);
   stream->InjectFrame(video_frame);
 
@@ -7542,7 +7542,7 @@ TEST_F(WebRtcVideoChannelTest, ReceiveDifferentUnsignaledSsrc) {
   webrtc::VideoFrame video_frame =
       webrtc::VideoFrame::Builder()
           .set_video_frame_buffer(CreateBlackFrameBuffer(4, 4))
-          .set_timestamp_rtp(100)
+          .set_rtp_timestamp(100)
           .set_timestamp_us(0)
           .set_rotation(webrtc::kVideoRotation_0)
           .build();
@@ -7561,7 +7561,7 @@ TEST_F(WebRtcVideoChannelTest, ReceiveDifferentUnsignaledSsrc) {
   webrtc::VideoFrame video_frame2 =
       webrtc::VideoFrame::Builder()
           .set_video_frame_buffer(CreateBlackFrameBuffer(4, 4))
-          .set_timestamp_rtp(200)
+          .set_rtp_timestamp(200)
           .set_timestamp_us(0)
           .set_rotation(webrtc::kVideoRotation_0)
           .build();
@@ -7581,7 +7581,7 @@ TEST_F(WebRtcVideoChannelTest, ReceiveDifferentUnsignaledSsrc) {
   webrtc::VideoFrame video_frame3 =
       webrtc::VideoFrame::Builder()
           .set_video_frame_buffer(CreateBlackFrameBuffer(4, 4))
-          .set_timestamp_rtp(300)
+          .set_rtp_timestamp(300)
           .set_timestamp_us(0)
           .set_rotation(webrtc::kVideoRotation_0)
           .build();

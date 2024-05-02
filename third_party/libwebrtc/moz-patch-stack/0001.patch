@@ -1347,7 +1347,7 @@ index 563ef5abd2..e085ac2df8 100644
  
  VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 428253bf23..66fd0a0ebe 100644
+index 5588fae161..51282183f5 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
 @@ -77,7 +77,6 @@ VideoCaptureImpl::VideoCaptureImpl()
@@ -1454,7 +1454,7 @@ index 5ec1fd4a83..e46e050609 100644
  
    int64_t _lastProcessFrameTimeNanos RTC_GUARDED_BY(capture_checker_);
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-index 56267be98d..b2cf68e249 100644
+index 24d862c4c2..13c8b87c38 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 +++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 @@ -270,6 +270,7 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(std::unique_ptr<LibvpxInterface> interface,

@@ -534,7 +534,7 @@ int SimulcastEncoderAdapter::Encode(
 
     // Convert timestamp from RTP 90kHz clock.
     const Timestamp frame_timestamp =
-        Timestamp::Micros((1000 * input_image.timestamp()) / 90);
+        Timestamp::Micros((1000 * input_image.rtp_timestamp()) / 90);
 
     // If adapter is passed through and only one sw encoder does simulcast,
     // frame types for all streams should be passed to the encoder unchanged.
