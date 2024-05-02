@@ -134,6 +134,18 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    fandom: {
+      "https://*.fandom.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
+    fastcompany: {
+      "https://*.fastcompany.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
     frontendMasters: {
       "https://*.frontendmasters.com/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
@@ -143,6 +155,12 @@ let AVAILABLE_PIP_OVERRIDES;
     funimation: {
       "https://*.funimation.com/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
+      },
+    },
+
+    fuse: {
+      "https://*.fuse.tv/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
       },
     },
 
@@ -165,6 +183,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    imdb: {
+      "https://*.imdb.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
     indpendentuk: {
       "https://*.independent.co.uk/*": {
         videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
@@ -181,6 +205,12 @@ let AVAILABLE_PIP_OVERRIDES;
       "https://www.instagram.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
     },
 
+    internetArchive: {
+      "https://*.archive.org/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
     laracasts: {
       "https://*.laracasts.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
     },
@@ -188,6 +218,12 @@ let AVAILABLE_PIP_OVERRIDES;
     msn: {
       "https://*.msn.com/*": {
         visibilityThreshold: 0.7,
+      },
+    },
+
+    msnbc: {
+      "https://*.msnbc.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
       },
     },
 
@@ -199,6 +235,12 @@ let AVAILABLE_PIP_OVERRIDES;
 
     nbcnews: {
       "https://*.nbcnews.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
+    nbcUniversal: {
+      "https://*.nbcuni.com/*": {
         videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
       },
     },
@@ -245,6 +287,17 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    primeVideo: {
+      "https://*.primevideo.com/*": {
+        visibilityThreshold: 0.9,
+        videoWrapperScriptPath: "video-wrappers/primeVideo.js",
+      },
+      "https://*.amazon.com/*": {
+        visibilityThreshold: 0.9,
+        videoWrapperScriptPath: "video-wrappers/primeVideo.js",
+      },
+    },
+
     radiocanada: {
       "https://*.ici.radio-canada.ca/*": {
         videoWrapperScriptPath: "video-wrappers/radiocanada.js",
@@ -264,6 +317,12 @@ let AVAILABLE_PIP_OVERRIDES;
     sonyliv: {
       "https://*.sonyliv.com/*": {
         videoWrapperScriptPath: "video-wrappers/sonyliv.js",
+      },
+    },
+
+    syfy: {
+      "https://*.syfy.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
       },
     },
 
@@ -326,6 +385,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    univision: {
+      "https://*.univision.com/*": {
+        videoWrapperScriptPath: "video-wrappers/jwplayerWrapper.js",
+      },
+    },
+
     viki: {
       "https://*.viki.com/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
@@ -369,17 +434,6 @@ let AVAILABLE_PIP_OVERRIDES;
     washingtonpost: {
       "https://*.washingtonpost.com/*": {
         videoWrapperScriptPath: "video-wrappers/washingtonpost.js",
-      },
-    },
-
-    primeVideo: {
-      "https://*.primevideo.com/*": {
-        visibilityThreshold: 0.9,
-        videoWrapperScriptPath: "video-wrappers/primeVideo.js",
-      },
-      "https://*.amazon.com/*": {
-        visibilityThreshold: 0.9,
-        videoWrapperScriptPath: "video-wrappers/primeVideo.js",
       },
     },
   };
