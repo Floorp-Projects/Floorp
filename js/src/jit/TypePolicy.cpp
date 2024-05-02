@@ -229,7 +229,16 @@ bool ComparePolicy::adjustInputs(TempAllocator& alloc,
   switch (compare->compareType()) {
     case MCompare::Compare_Undefined:
     case MCompare::Compare_Null:
-      // Nothing to do for undefined and null, lowering handles all types.
+      MOZ_ASSERT(compare->rhs()->type() == MIRType::Undefined ||
+                 compare->rhs()->type() == MIRType::Null);
+      // IF the operand is float32, we must convert it to a double.
+      if (compare->lhs()->type() == MIRType::Float32) {
+        MInstruction* replace = MToDouble::New(alloc, compare->lhs());
+        def->block()->insertBefore(def, replace);
+        def->replaceOperand(0, replace);
+        return replace->typePolicy()->adjustInputs(alloc, replace);
+      }
+      // GVN and lowering handle all other types.
       return true;
     case MCompare::Compare_Int32:
       return convertOperand(0, MIRType::Int32) &&
