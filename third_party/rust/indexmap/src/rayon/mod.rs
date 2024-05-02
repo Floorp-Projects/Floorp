@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
+
 use rayon::prelude::*;
 
 use alloc::collections::LinkedList;

@@ -1,25 +1,24 @@
-//! Parallel iterator types for `IndexMap` with [rayon](https://docs.rs/rayon/1.0/rayon).
+//! Parallel iterator types for [`IndexMap`] with [`rayon`][::rayon].
 //!
 //! You will rarely need to interact with this module directly unless you need to name one of the
 //! iterator types.
-//!
-//! Requires crate feature `"rayon"`
 
 use super::collect;
 use rayon::iter::plumbing::{Consumer, ProducerCallback, UnindexedConsumer};
 use rayon::prelude::*;
 
 use crate::vec::Vec;
+use alloc::boxed::Box;
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{BuildHasher, Hash};
 use core::ops::RangeBounds;
 
+use crate::map::Slice;
 use crate::Bucket;
 use crate::Entries;
 use crate::IndexMap;
 
-/// Requires crate feature `"rayon"`.
 impl<K, V, S> IntoParallelIterator for IndexMap<K, V, S>
 where
     K: Send,
@@ -35,13 +34,25 @@ where
     }
 }
 
-/// A parallel owning iterator over the entries of a `IndexMap`.
+impl<K, V> IntoParallelIterator for Box<Slice<K, V>>
+where
+    K: Send,
+    V: Send,
+{
+    type Item = (K, V);
+    type Iter = IntoParIter<K, V>;
+
+    fn into_par_iter(self) -> Self::Iter {
+        IntoParIter {
+            entries: self.into_entries(),
+        }
+    }
+}
+
+/// A parallel owning iterator over the entries of an [`IndexMap`].
 ///
-/// This `struct` is created by the [`into_par_iter`] method on [`IndexMap`]
-/// (provided by rayon's `IntoParallelIterator` trait). See its documentation for more.
-///
-/// [`into_par_iter`]: ../struct.IndexMap.html#method.into_par_iter
-/// [`IndexMap`]: ../struct.IndexMap.html
+/// This `struct` is created by the [`IndexMap::into_par_iter`] method
+/// (provided by rayon's [`IntoParallelIterator`] trait). See its documentation for more.
 pub struct IntoParIter<K, V> {
     entries: Vec<Bucket<K, V>>,
 }
@@ -63,7 +74,6 @@ impl<K: Send, V: Send> IndexedParallelIterator for IntoParIter<K, V> {
     indexed_parallel_iterator_methods!(Bucket::key_value);
 }
 
-/// Requires crate feature `"rayon"`.
 impl<'a, K, V, S> IntoParallelIterator for &'a IndexMap<K, V, S>
 where
     K: Sync,
@@ -79,13 +89,27 @@ where
     }
 }
 
-/// A parallel iterator over the entries of a `IndexMap`.
+impl<'a, K, V> IntoParallelIterator for &'a Slice<K, V>
+where
+    K: Sync,
+    V: Sync,
+{
+    type Item = (&'a K, &'a V);
+    type Iter = ParIter<'a, K, V>;
+
+    fn into_par_iter(self) -> Self::Iter {
+        ParIter {
+            entries: &self.entries,
+        }
+    }
+}
+
+/// A parallel iterator over the entries of an [`IndexMap`].
 ///
-/// This `struct` is created by the [`par_iter`] method on [`IndexMap`]
-/// (provided by rayon's `IntoParallelRefIterator` trait). See its documentation for more.
+/// This `struct` is created by the [`IndexMap::par_iter`] method
+/// (provided by rayon's [`IntoParallelRefIterator`] trait). See its documentation for more.
 ///
-/// [`par_iter`]: ../struct.IndexMap.html#method.par_iter
-/// [`IndexMap`]: ../struct.IndexMap.html
+/// [`IndexMap::par_iter`]: ../struct.IndexMap.html#method.par_iter
 pub struct ParIter<'a, K, V> {
     entries: &'a [Bucket<K, V>],
 }
@@ -113,7 +137,6 @@ impl<K: Sync, V: Sync> IndexedParallelIterator for ParIter<'_, K, V> {
     indexed_parallel_iterator_methods!(Bucket::refs);
 }
 
-/// Requires crate feature `"rayon"`.
 impl<'a, K, V, S> IntoParallelIterator for &'a mut IndexMap<K, V, S>
 where
     K: Sync + Send,
@@ -129,13 +152,27 @@ where
     }
 }
 
-/// A parallel mutable iterator over the entries of a `IndexMap`.
+impl<'a, K, V> IntoParallelIterator for &'a mut Slice<K, V>
+where
+    K: Sync + Send,
+    V: Send,
+{
+    type Item = (&'a K, &'a mut V);
+    type Iter = ParIterMut<'a, K, V>;
+
+    fn into_par_iter(self) -> Self::Iter {
+        ParIterMut {
+            entries: &mut self.entries,
+        }
+    }
+}
+
+/// A parallel mutable iterator over the entries of an [`IndexMap`].
 ///
-/// This `struct` is created by the [`par_iter_mut`] method on [`IndexMap`]
-/// (provided by rayon's `IntoParallelRefMutIterator` trait). See its documentation for more.
+/// This `struct` is created by the [`IndexMap::par_iter_mut`] method
+/// (provided by rayon's [`IntoParallelRefMutIterator`] trait). See its documentation for more.
 ///
-/// [`par_iter_mut`]: ../struct.IndexMap.html#method.par_iter_mut
-/// [`IndexMap`]: ../struct.IndexMap.html
+/// [`IndexMap::par_iter_mut`]: ../struct.IndexMap.html#method.par_iter_mut
 pub struct ParIterMut<'a, K, V> {
     entries: &'a mut [Bucket<K, V>],
 }
@@ -157,7 +194,6 @@ impl<K: Sync + Send, V: Send> IndexedParallelIterator for ParIterMut<'_, K, V> {
     indexed_parallel_iterator_methods!(Bucket::ref_mut);
 }
 
-/// Requires crate feature `"rayon"`.
 impl<'a, K, V, S> ParallelDrainRange<usize> for &'a mut IndexMap<K, V, S>
 where
     K: Send,
@@ -173,13 +209,12 @@ where
     }
 }
 
-/// A parallel draining iterator over the entries of a `IndexMap`.
+/// A parallel draining iterator over the entries of an [`IndexMap`].
 ///
-/// This `struct` is created by the [`par_drain`] method on [`IndexMap`]
-/// (provided by rayon's `ParallelDrainRange` trait). See its documentation for more.
+/// This `struct` is created by the [`IndexMap::par_drain`] method
+/// (provided by rayon's [`ParallelDrainRange`] trait). See its documentation for more.
 ///
-/// [`par_drain`]: ../struct.IndexMap.html#method.par_drain
-/// [`IndexMap`]: ../struct.IndexMap.html
+/// [`IndexMap::par_drain`]: ../struct.IndexMap.html#method.par_drain
 pub struct ParDrain<'a, K: Send, V: Send> {
     entries: rayon::vec::Drain<'a, Bucket<K, V>>,
 }
@@ -225,6 +260,37 @@ where
     }
 }
 
+/// Parallel iterator methods and other parallel methods.
+///
+/// The following methods **require crate feature `"rayon"`**.
+///
+/// See also the `IntoParallelIterator` implementations.
+impl<K, V> Slice<K, V>
+where
+    K: Sync,
+    V: Sync,
+{
+    /// Return a parallel iterator over the keys of the map slice.
+    ///
+    /// While parallel iterators can process items in any order, their relative order
+    /// in the slice is still preserved for operations like `reduce` and `collect`.
+    pub fn par_keys(&self) -> ParKeys<'_, K, V> {
+        ParKeys {
+            entries: &self.entries,
+        }
+    }
+
+    /// Return a parallel iterator over the values of the map slice.
+    ///
+    /// While parallel iterators can process items in any order, their relative order
+    /// in the slice is still preserved for operations like `reduce` and `collect`.
+    pub fn par_values(&self) -> ParValues<'_, K, V> {
+        ParValues {
+            entries: &self.entries,
+        }
+    }
+}
+
 impl<K, V, S> IndexMap<K, V, S>
 where
     K: Hash + Eq + Sync,
@@ -246,13 +312,10 @@ where
     }
 }
 
-/// A parallel iterator over the keys of a `IndexMap`.
+/// A parallel iterator over the keys of an [`IndexMap`].
 ///
-/// This `struct` is created by the [`par_keys`] method on [`IndexMap`]. See its
-/// documentation for more.
-///
-/// [`par_keys`]: ../struct.IndexMap.html#method.par_keys
-/// [`IndexMap`]: ../struct.IndexMap.html
+/// This `struct` is created by the [`IndexMap::par_keys`] method.
+/// See its documentation for more.
 pub struct ParKeys<'a, K, V> {
     entries: &'a [Bucket<K, V>],
 }
@@ -280,13 +343,10 @@ impl<K: Sync, V: Sync> IndexedParallelIterator for ParKeys<'_, K, V> {
     indexed_parallel_iterator_methods!(Bucket::key_ref);
 }
 
-/// A parallel iterator over the values of a `IndexMap`.
+/// A parallel iterator over the values of an [`IndexMap`].
 ///
-/// This `struct` is created by the [`par_values`] method on [`IndexMap`]. See its
-/// documentation for more.
-///
-/// [`par_values`]: ../struct.IndexMap.html#method.par_values
-/// [`IndexMap`]: ../struct.IndexMap.html
+/// This `struct` is created by the [`IndexMap::par_values`] method.
+/// See its documentation for more.
 pub struct ParValues<'a, K, V> {
     entries: &'a [Bucket<K, V>],
 }
@@ -314,7 +374,6 @@ impl<K: Sync, V: Sync> IndexedParallelIterator for ParValues<'_, K, V> {
     indexed_parallel_iterator_methods!(Bucket::value_ref);
 }
 
-/// Requires crate feature `"rayon"`.
 impl<K, V, S> IndexMap<K, V, S>
 where
     K: Send,
@@ -331,11 +390,26 @@ where
     }
 }
 
+impl<K, V> Slice<K, V>
+where
+    K: Send,
+    V: Send,
+{
+    /// Return a parallel iterator over mutable references to the the values of the map slice.
+    ///
+    /// While parallel iterators can process items in any order, their relative order
+    /// in the slice is still preserved for operations like `reduce` and `collect`.
+    pub fn par_values_mut(&mut self) -> ParValuesMut<'_, K, V> {
+        ParValuesMut {
+            entries: &mut self.entries,
+        }
+    }
+}
+
 impl<K, V, S> IndexMap<K, V, S>
 where
-    K: Hash + Eq + Send,
+    K: Send,
     V: Send,
-    S: BuildHasher,
 {
     /// Sort the map’s key-value pairs in parallel, by the default ordering of the keys.
     pub fn par_sort_keys(&mut self)
@@ -406,15 +480,24 @@ where
         entries.par_sort_unstable_by(move |a, b| cmp(&a.key, &a.value, &b.key, &b.value));
         IntoParIter { entries }
     }
+
+    /// Sort the map’s key-value pairs in place and in parallel, using a sort-key extraction
+    /// function.
+    pub fn par_sort_by_cached_key<T, F>(&mut self, sort_key: F)
+    where
+        T: Ord + Send,
+        F: Fn(&K, &V) -> T + Sync,
+    {
+        self.with_entries(move |entries| {
+            entries.par_sort_by_cached_key(move |a| sort_key(&a.key, &a.value));
+        });
+    }
 }
 
-/// A parallel mutable iterator over the values of a `IndexMap`.
+/// A parallel mutable iterator over the values of an [`IndexMap`].
 ///
-/// This `struct` is created by the [`par_values_mut`] method on [`IndexMap`]. See its
-/// documentation for more.
-///
-/// [`par_values_mut`]: ../struct.IndexMap.html#method.par_values_mut
-/// [`IndexMap`]: ../struct.IndexMap.html
+/// This `struct` is created by the [`IndexMap::par_values_mut`] method.
+/// See its documentation for more.
 pub struct ParValuesMut<'a, K, V> {
     entries: &'a mut [Bucket<K, V>],
 }
@@ -436,7 +519,6 @@ impl<K: Send, V: Send> IndexedParallelIterator for ParValuesMut<'_, K, V> {
     indexed_parallel_iterator_methods!(Bucket::value_mut);
 }
 
-/// Requires crate feature `"rayon"`.
 impl<K, V, S> FromParallelIterator<(K, V)> for IndexMap<K, V, S>
 where
     K: Eq + Hash + Send,
@@ -457,7 +539,6 @@ where
     }
 }
 
-/// Requires crate feature `"rayon"`.
 impl<K, V, S> ParallelExtend<(K, V)> for IndexMap<K, V, S>
 where
     K: Eq + Hash + Send,
@@ -474,7 +555,6 @@ where
     }
 }
 
-/// Requires crate feature `"rayon"`.
 impl<'a, K: 'a, V: 'a, S> ParallelExtend<(&'a K, &'a V)> for IndexMap<K, V, S>
 where
     K: Copy + Eq + Hash + Send + Sync,
