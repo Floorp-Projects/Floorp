@@ -289,9 +289,8 @@ tps_result\.json$
 ^lextab\.py$
 
 # Ignore Visual Studio/Visual Studio Code workspace files.
-# (but the root .vscode directory)
 \.vs/
-.+/\.vscode/
+\.vscode/
 \.user$
 
 # Thunderbird source tree
