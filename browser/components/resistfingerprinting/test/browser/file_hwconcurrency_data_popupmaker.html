@@ -14,9 +14,7 @@ async function runTheTest(iframe_domain, cross_origin_domain) {
         window.opener.postMessage(["popup_ready"], "*");
     });
     window.addEventListener('message', async function listener(event) {
-      if (event.data[0] == 'popup_is_ready') {
-        window.opener.postMessage(["popup_ready"], "*");
-      } else if (event.data[0] == 'popup_request') {
+      if (event.data[0] == 'popup_request') {
         let result = give_result();
         window.opener.postMessage(['popup_response', result], '*');
       }
