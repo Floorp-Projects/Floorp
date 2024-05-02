@@ -126,11 +126,8 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
     this.systemTick = this.systemTick.bind(this);
     this.syncRemoteSettings = this.syncRemoteSettings.bind(this);
     this.onStoryToggle = this.onStoryToggle.bind(this);
-    this.handleWeatherSubmit = this.handleWeatherSubmit.bind(this);
-    this.handleWeatherUpdate = this.handleWeatherUpdate.bind(this);
     this.state = {
       toggledStories: {},
-      weatherQuery: "",
     };
   }
 
@@ -185,16 +182,6 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
     this.dispatchSimpleAction(at.DISCOVERY_STREAM_DEV_SYNC_RS);
   }
 
-  handleWeatherUpdate(e) {
-    this.setState({ weatherQuery: e.target.value || "" });
-  }
-
-  handleWeatherSubmit(e) {
-    e.preventDefault();
-    const { weatherQuery } = this.state;
-    this.props.dispatch(ac.SetPref("weather.query", weatherQuery));
-  }
-
   renderComponent(width, component) {
     return (
       <table>
@@ -211,46 +198,6 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
         </tbody>
       </table>
     );
-  }
-
-  renderWeatherData() {
-    const { suggestions } = this.props.state.Weather;
-    let weatherTable;
-    if (suggestions) {
-      weatherTable = (
-        <div className="weather-section">
-          <form onSubmit={this.handleWeatherSubmit}>
-            <label htmlFor="weather-query">Weather query</label>
-            <input
-              type="text"
-              min="3"
-              max="10"
-              id="weather-query"
-              onChange={this.handleWeatherUpdate}
-              value={this.weatherQuery}
-            />
-            <button type="submit">Submit</button>
-          </form>
-          <table>
-            <tbody>
-              {suggestions.map(suggestion => (
-                <tr className="message-item" key={suggestion.city_name}>
-                  <td className="message-id">
-                    <span>
-                      {suggestion.city_name} <br />
-                    </span>
-                  </td>
-                  <td className="message-summary">
-                    <pre>{JSON.stringify(suggestion, null, 2)}</pre>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    }
-    return weatherTable;
   }
 
   renderFeedData(url) {
@@ -429,8 +376,6 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
         {this.renderSpocs()}
         <h3>Feeds Data</h3>
         {this.renderFeedsData()}
-        <h3>Weather Data</h3>
-        {this.renderWeatherData()}
       </div>
     );
   }
@@ -467,7 +412,6 @@ export class DiscoveryStreamAdminInner extends React.PureComponent {
               state={{
                 DiscoveryStream: this.props.DiscoveryStream,
                 Personalization: this.props.Personalization,
-                Weather: this.props.Weather,
               }}
               otherPrefs={this.props.Prefs.values}
               dispatch={this.props.dispatch}
@@ -556,5 +500,4 @@ export const DiscoveryStreamAdmin = connect(state => ({
   DiscoveryStream: state.DiscoveryStream,
   Personalization: state.Personalization,
   Prefs: state.Prefs,
-  Weather: state.Weather,
 }))(_DiscoveryStreamAdmin);

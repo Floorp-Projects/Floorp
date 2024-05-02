@@ -67,9 +67,6 @@ describe("DiscoveryStreamAdmin", () => {
           otherPrefs={{}}
           state={{
             DiscoveryStream: state,
-            Weather: {
-              suggestions: [],
-            },
           }}
         />
       );
@@ -93,12 +90,7 @@ describe("DiscoveryStreamAdmin", () => {
       wrapper = shallow(
         <DiscoveryStreamAdminUI
           otherPrefs={{}}
-          state={{
-            DiscoveryStream: state,
-            Weather: {
-              suggestions: [],
-            },
-          }}
+          state={{ DiscoveryStream: state }}
         />
       );
       wrapper.instance().onStoryToggle({ id: 12345 });
