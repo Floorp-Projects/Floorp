@@ -28,28 +28,16 @@ this.storage = class extends ExtensionAPI {
   getLocalFileBackend(context, { deserialize, serialize }) {
     return {
       get(keys) {
-        return measureOp(
-          ExtensionTelemetry.storageLocalGetJson,
-          context.extension,
-          () => {
-            return context.childManager
-              .callParentAsyncFunction("storage.local.JSONFileBackend.get", [
-                serialize(keys),
-              ])
-              .then(deserialize);
-          }
-        );
+        return context.childManager
+          .callParentAsyncFunction("storage.local.JSONFileBackend.get", [
+            serialize(keys),
+          ])
+          .then(deserialize);
       },
       set(items) {
-        return measureOp(
-          ExtensionTelemetry.storageLocalSetJson,
-          context.extension,
-          () => {
-            return context.childManager.callParentAsyncFunction(
-              "storage.local.JSONFileBackend.set",
-              [serialize(items)]
-            );
-          }
+        return context.childManager.callParentAsyncFunction(
+          "storage.local.JSONFileBackend.set",
+          [serialize(items)]
         );
       },
       remove(keys) {

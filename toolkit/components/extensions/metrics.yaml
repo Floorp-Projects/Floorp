@@ -613,56 +613,6 @@ extensions.timing:
       data_sensitivity:
         - technical
 
-    storage_local_get_json:
-      type: timing_distribution
-      time_unit: millisecond
-      expires: 128
-      description: |
-        Amount of time it takes to perform a get via storage.local using the JSONFile backend.
-      notification_emails:
-        - addons-dev-internal@mozilla.com
-      bugs:
-        - https://bugzilla.mozilla.org/1371398
-        - https://bugzilla.mozilla.org/1513556
-        - https://bugzilla.mozilla.org/1578225
-        - https://bugzilla.mozilla.org/1623315
-        - https://bugzilla.mozilla.org/1666980
-        - https://bugzilla.mozilla.org/1706839
-        - https://bugzilla.mozilla.org/1745271
-        - https://bugzilla.mozilla.org/1777402
-        - https://bugzilla.mozilla.org/1811155
-        - https://bugzilla.mozilla.org/1861303
-        - https://bugzilla.mozilla.org/1820158
-      data_reviews:
-        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
-      data_sensitivity:
-        - technical
-
-    storage_local_set_json:
-      type: timing_distribution
-      time_unit: millisecond
-      expires: 128
-      description: |
-        Amount of time it takes to perform a set via storage.local using the JSONFile backend.
-      notification_emails:
-        - addons-dev-internal@mozilla.com
-      bugs:
-        - https://bugzilla.mozilla.org/1371398
-        - https://bugzilla.mozilla.org/1513556
-        - https://bugzilla.mozilla.org/1578225
-        - https://bugzilla.mozilla.org/1623315
-        - https://bugzilla.mozilla.org/1666980
-        - https://bugzilla.mozilla.org/1706839
-        - https://bugzilla.mozilla.org/1745271
-        - https://bugzilla.mozilla.org/1777402
-        - https://bugzilla.mozilla.org/1811155
-        - https://bugzilla.mozilla.org/1861303
-        - https://bugzilla.mozilla.org/1820158
-      data_reviews:
-        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
-      data_sensitivity:
-        - technical
-
     storage_local_get_idb:
       type: timing_distribution
       time_unit: millisecond
