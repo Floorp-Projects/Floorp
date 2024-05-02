@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     "TestLinkHeader.cpp",
     "TestMIMEInputStream.cpp",
     "TestMozURL.cpp",
+    "TestPACMan.cpp",
     "TestProtocolProxyService.cpp",
     "TestReadStreamToString.cpp",
     "TestServerTimingHeader.cpp",
@@ -30,23 +31,14 @@ UNIFIED_SOURCES += [
     "TestSSLTokensCache.cpp",
     "TestStandardURL.cpp",
     "TestUDPSocket.cpp",
+    "TestURIMutator.cpp",
 ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += [
         "TestNamedPipeService.cpp",
+        "TestNetworkLinkIdHashingWindows.cpp",
     ]
-
-# skip the test on windows10-aarch64
-if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["TARGET_CPU"] == "aarch64"):
-    UNIFIED_SOURCES += [
-        "TestPACMan.cpp",
-        "TestURIMutator.cpp",
-    ]
-
-# run the test on windows only
-if CONFIG["OS_TARGET"] == "WINNT":
-    UNIFIED_SOURCES += ["TestNetworkLinkIdHashingWindows.cpp"]
 
 # run the test on mac only
 if CONFIG["TARGET_OS"] == "OSX":

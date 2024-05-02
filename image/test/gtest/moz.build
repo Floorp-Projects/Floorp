@@ -12,29 +12,21 @@ UNIFIED_SOURCES = [
     "TestAnimationFrameBuffer.cpp",
     "TestBlendAnimationFilter.cpp",
     "TestCopyOnWrite.cpp",
+    "TestDecoders.cpp",
+    "TestDecodersPerf.cpp",
+    "TestDecodeToSurface.cpp",
     "TestDeinterlacingFilter.cpp",
+    "TestDownscalingFilter.cpp",
     "TestFrameAnimator.cpp",
     "TestLoader.cpp",
+    "TestMetadata.cpp",
     "TestRemoveFrameRectFilter.cpp",
+    "TestSourceBuffer.cpp",
     "TestStreamingLexer.cpp",
+    "TestSurfaceCache.cpp",
+    "TestSurfacePipeIntegration.cpp",
     "TestSurfaceSink.cpp",
     "TestSwizzleFilter.cpp",
-]
-
-# skip the test on windows10-aarch64, aarch64 due to 1544961
-if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["TARGET_CPU"] == "aarch64"):
-    UNIFIED_SOURCES += [
-        "TestDecoders.cpp",
-        "TestDecodersPerf.cpp",
-        "TestDecodeToSurface.cpp",
-        "TestMetadata.cpp",
-        "TestSourceBuffer.cpp",
-        "TestSurfaceCache.cpp",
-    ]
-
-UNIFIED_SOURCES += [
-    "TestDownscalingFilter.cpp",
-    "TestSurfacePipeIntegration.cpp",
 ]
 
 TEST_HARNESS_FILES.gtest += [
