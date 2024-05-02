@@ -5,5 +5,5 @@
 <!-- Strings in this file are not yet ready for localization. -->
 <resources>
     <!-- Text of the title of a dialog when a page is requesting to open a new window. -->
-    <string name="mozac_feature_prompts_popup_dialog_title">Prevent this site from opening a pop-up window?</string>
+    <string name="mozac_feature_prompts_popup_dialog_title">Allow this site to open?</string>
 </resources>
