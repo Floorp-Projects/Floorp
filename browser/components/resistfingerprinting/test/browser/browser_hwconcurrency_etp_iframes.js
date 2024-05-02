@@ -91,7 +91,7 @@ add_task(
 let extraPrefs = [
   ["privacy.resistFingerprinting.pbmode", true],
   ["privacy.fingerprintingProtection", true],
-  ["privacy.fingerprintingProtection.overrides", "+HardwareConcurrency"],
+  ["privacy.fingerprintingProtection.overrides", "+NavigatorHWConcurrency"],
 ];
 
 let this_extraData = structuredClone(extraData);

@@ -838,7 +838,7 @@ async function simplePBMFPPTest(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.fingerprintingProtection.pbmode", true],
-      ["privacy.fingerprintingProtection.overrides", "+HardwareConcurrency"],
+      ["privacy.fingerprintingProtection.overrides", "+NavigatorHWConcurrency"],
     ].concat(extraPrefs || []),
   });
 
@@ -867,7 +867,7 @@ async function simpleRFPPBMFPPTest(
       ["privacy.resistFingerprinting", false],
       ["privacy.resistFingerprinting.pbmode", true],
       ["privacy.fingerprintingProtection", true],
-      ["privacy.fingerprintingProtection.overrides", "-HardwareConcurrency"],
+      ["privacy.fingerprintingProtection.overrides", "-NavigatorHWConcurrency"],
     ].concat(extraPrefs || []),
   });
 
