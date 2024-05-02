@@ -12,7 +12,7 @@ cfg-if = "1.0"
 env_logger = { version = "0.10", default-features = false }
 fluent = "0.16.0"
 intl-memoizer = "0.5"
-libloading = "0.7"
+libloading = "0.8"
 log = "0.4.17"
 mozbuild = "0.1"
 mozilla-central-workspace-hack = { version = "0.1", features = ["crashreporter"], optional = true }

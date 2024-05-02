@@ -176,6 +176,9 @@ memoffset = { path = "build/rust/memoffset" }
 # Patch `hashbrown` 0.12.* to depend on 0.14.*
 hashbrown = { path = "build/rust/hashbrown" }
 
+# Patch `libloading` 0.7 to depend on 0.8, which moves from `winapi` to `windows-sys`.
+libloading = { path = "build/rust/libloading" }
+
 # The following overrides point to dummy projects, as a temporary measure until this is resolved:
 # https://github.com/rust-lang/cargo/issues/6179
 js-sys = { path = "build/rust/dummy-web/js-sys" }
