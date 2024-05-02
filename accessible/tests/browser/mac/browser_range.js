@@ -188,3 +188,57 @@ addAccessibleTask(
     is(slider.getAttributeValue("AXMaxValue"), 5, "Correct max value");
   }
 );
+
+/**
+ * Verify progress HTML elements expose their min, max, and value to VO.
+ * Progress elements should not expose a value description, and should not
+ * expose increment/decrement actions.
+ */
+addAccessibleTask(
+  `<progress id="progress" value="70" max="100"></progress>`,
+  async (browser, accDoc) => {
+    const progress = getNativeInterface(accDoc, "progress");
+    is(progress.getAttributeValue("AXValue"), 70, "Correct value");
+    is(progress.getAttributeValue("AXMaxValue"), 100, "Correct max value");
+    is(progress.getAttributeValue("AXMinValue"), 0, "Correct min value");
+    is(
+      progress.getAttributeValue("AXValueDescription"),
+      null,
+      "Progress elements should not expose a value description"
+    );
+    for (let action of progress.actionNames) {
+      isnot(
+        action,
+        "AXIncrement",
+        "Progress elements should not expose increment action"
+      );
+      isnot(
+        action,
+        "AXDecrement",
+        "Progress elements should not expose decrement action"
+      );
+    }
+  }
+);
+
+/**
+ * Verify progress HTML elements expose changes to their value.
+ */
+addAccessibleTask(
+  `<progress id="progress" value="70" max="100"></progress>`,
+  async (browser, accDoc) => {
+    const progress = getNativeInterface(accDoc, "progress");
+    is(progress.getAttributeValue("AXValue"), 70, "Correct value");
+    is(progress.getAttributeValue("AXMaxValue"), 100, "Correct max value");
+    is(progress.getAttributeValue("AXMinValue"), 0, "Correct min value");
+
+    const evt = waitForMacEvent("AXValueChanged");
+    await invokeContentTask(browser, [], () => {
+      const p = content.document.getElementById("progress");
+      p.setAttribute("value", "90");
+    });
+    await evt;
+
+    is(progress.getAttributeValue("AXValue"), 90, "Correct updated value");
+  }
+);

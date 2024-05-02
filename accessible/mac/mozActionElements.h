@@ -65,21 +65,36 @@
 @end
 
 /**
- * Base accessible for an incrementable
+ * Base accessible for a range, an acc with a min, max that cannot
+ * be modified by the user directly.
  */
-@interface mozIncrementableAccessible : mozAccessible
+
+@interface mozRangeAccessible : mozAccessible
 
 // override
 - (id)moxValue;
-
-// override
-- (NSString*)moxValueDescription;
 
 // override
 - (id)moxMinValue;
 
 // override
 - (id)moxMaxValue;
+
+// override
+- (NSString*)moxOrientation;
+
+// override
+- (void)handleAccessibleEvent:(uint32_t)eventType;
+
+@end
+
+/**
+ * Base accessible for an incrementable, a settable range
+ */
+@interface mozIncrementableAccessible : mozRangeAccessible
+
+// override
+- (NSString*)moxValueDescription;
 
 // override
 - (void)moxSetValue:(id)value;
@@ -89,12 +104,6 @@
 
 // override
 - (void)moxPerformDecrement;
-
-// override
-- (NSString*)moxOrientation;
-
-// override
-- (void)handleAccessibleEvent:(uint32_t)eventType;
 
 - (void)changeValueBySteps:(int)factor;
 
