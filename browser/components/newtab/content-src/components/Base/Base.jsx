@@ -410,5 +410,4 @@ export const Base = connect(state => ({
   DiscoveryStream: state.DiscoveryStream,
   Search: state.Search,
   Wallpapers: state.Wallpapers,
-  Weather: state.Weather,
 }))(_Base);
