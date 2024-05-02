@@ -147,7 +147,12 @@ class RTC_EXPORT Socket {
                                // This is specific to libjingle and will be used
                                // if SendTime option is needed at socket level.
     OPT_SEND_ECN,              // 2-bit ECN
-    OPT_RECV_ECN
+    OPT_RECV_ECN,
+    OPT_KEEPALIVE,         // Enable socket keep alive
+    OPT_TCP_KEEPCNT,       // Set TCP keep alive count
+    OPT_TCP_KEEPIDLE,      // Set TCP keep alive idle time in seconds
+    OPT_TCP_KEEPINTVL,     // Set TCP keep alive interval in seconds
+    OPT_TCP_USER_TIMEOUT,  // Set TCP user timeout
   };
   virtual int GetOption(Option opt, int* value) = 0;
   virtual int SetOption(Option opt, int value) = 0;

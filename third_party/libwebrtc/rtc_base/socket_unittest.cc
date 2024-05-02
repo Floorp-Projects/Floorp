@@ -1101,6 +1101,44 @@ void SocketTest::GetSetOptionsInternal(const IPAddress& loopback) {
   ASSERT_NE(-1, socket->GetOption(Socket::OPT_RECV_ECN, &current_recv_esn));
   ASSERT_EQ(current_recv_esn, desired_recv_esn);
 #endif
+
+  // Prepare on TCP specific options.
+  socket.reset(socket_factory_->CreateSocket(loopback.family(), SOCK_STREAM));
+  socket->Bind(SocketAddress(loopback, 0));
+
+  // Check that we can set NODELAY on a TCP socket.
+  ASSERT_NE(-1, socket->SetOption(Socket::OPT_NODELAY, desired_nd));
+  ASSERT_NE(-1, socket->GetOption(Socket::OPT_NODELAY, &current_nd));
+  ASSERT_NE(0, current_nd);
+
+  // Check TCP Keep Alive settings.
+  int current_kl, desired_kl = 1;
+  ASSERT_NE(-1, socket->SetOption(Socket::OPT_KEEPALIVE, desired_kl));
+  ASSERT_NE(-1, socket->GetOption(Socket::OPT_KEEPALIVE, &current_kl));
+  ASSERT_NE(0, current_kl);
+
+  int current_kl_cnt, desired_kl_cnt = 3;
+  ASSERT_NE(-1, socket->SetOption(Socket::OPT_TCP_KEEPCNT, desired_kl_cnt));
+  ASSERT_NE(-1, socket->GetOption(Socket::OPT_TCP_KEEPCNT, &current_kl_cnt));
+  ASSERT_EQ(desired_kl_cnt, current_kl_cnt);
+
+  int current_kl_idle, desired_kl_idle = 2;
+  ASSERT_NE(-1, socket->SetOption(Socket::OPT_TCP_KEEPIDLE, desired_kl_idle));
+  ASSERT_NE(-1, socket->GetOption(Socket::OPT_TCP_KEEPIDLE, &current_kl_idle));
+  ASSERT_EQ(desired_kl_idle, current_kl_idle);
+
+  int current_kl_intvl, desired_kl_intvl = 2;
+  ASSERT_NE(-1, socket->SetOption(Socket::OPT_TCP_KEEPINTVL, desired_kl_intvl));
+  ASSERT_NE(-1,
+            socket->GetOption(Socket::OPT_TCP_KEEPINTVL, &current_kl_intvl));
+  ASSERT_EQ(desired_kl_intvl, current_kl_intvl);
+
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
+  int current_ut, desired_ut = 10;
+  ASSERT_NE(-1, socket->SetOption(Socket::OPT_TCP_USER_TIMEOUT, desired_ut));
+  ASSERT_NE(-1, socket->GetOption(Socket::OPT_TCP_USER_TIMEOUT, &current_ut));
+  ASSERT_EQ(desired_ut, current_ut);
+#endif
 }
 
 void SocketTest::SocketRecvTimestamp(const IPAddress& loopback) {
