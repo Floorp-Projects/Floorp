@@ -553,22 +553,7 @@ nsresult nsSubDocumentFrame::GetFrameName(nsAString& aResult) const {
 
 /* virtual */
 nscoord nsSubDocumentFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result;
-
-  nsCOMPtr<nsIObjectLoadingContent> iolc = do_QueryInterface(mContent);
-  auto olc = static_cast<nsObjectLoadingContent*>(iolc.get());
-
-  if (olc && olc->GetSubdocumentIntrinsicSize()) {
-    // The subdocument is an SVG document, so technically we should call
-    // SVGOuterSVGFrame::GetMinISize() on its root frame.  That method always
-    // returns 0, though, so we can just do that & don't need to bother with
-    // the cross-doc communication.
-    result = 0;
-  } else {
-    result = GetIntrinsicISize();
-  }
-
-  return result;
+  return GetIntrinsicISize();
 }
 
 /* virtual */
