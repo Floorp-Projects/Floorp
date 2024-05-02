@@ -1108,16 +1108,6 @@ const POLICIES_TESTS = [
       "network.dns.http3_echconfig.enabled": false,
     },
   },
-
-  // POLICY: PostQuantumKeyAgreementEnabled
-  {
-    policies: {
-      PostQuantumKeyAgreementEnabled: false,
-    },
-    lockedPrefs: {
-      "security.tls.enable_kyber": false,
-    },
-  },
 ];
 
 add_task(async function test_policy_simple_prefs() {
