@@ -2066,6 +2066,7 @@ fn test_find_scroll_root_sticky() {
             horizontal_offset_bounds: api::StickyOffsetBounds::new(0.0, 0.0),
             previously_applied_offset: LayoutVector2D::zero(),
             current_offset: LayoutVector2D::zero(),
+            transform: None
         },
         PipelineId::dummy(),
         SpatialTreeItemKey::new(0, 2),

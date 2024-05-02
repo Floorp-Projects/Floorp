@@ -5743,7 +5743,8 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
         rightMargin.ptrOr(nullptr), bottomMargin.ptrOr(nullptr),
         leftMargin.ptrOr(nullptr), vBounds, hBounds, applied,
         wr::SpatialKey(uint64_t(mFrame), GetPerFrameKey(),
-                       wr::SpatialKeyKind::Sticky));
+                       wr::SpatialKeyKind::Sticky),
+        nullptr);
 
     saccHelper.emplace(aBuilder, spatialId);
     aManager->CommandBuilder().PushOverrideForASR(mContainerASR, spatialId);

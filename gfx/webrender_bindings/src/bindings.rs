@@ -2756,8 +2756,19 @@ pub extern "C" fn wr_dp_define_sticky_frame(
     horizontal_bounds: StickyOffsetBounds,
     applied_offset: LayoutVector2D,
     key: SpatialTreeItemKey,
+    animation: *const WrAnimationProperty
 ) -> WrSpatialId {
     assert!(unsafe { is_in_main_thread() });
+    let anim = unsafe { animation.as_ref() };
+    let transform = anim.map(|anim| {
+      debug_assert!(anim.id > 0);
+      match anim.effect_type {
+        WrAnimationType::Transform => {
+          PropertyBinding::Binding(PropertyBindingKey::new(anim.id), LayoutTransform::identity())
+        },
+        _ => unreachable!("sticky elements can only have a transform animated")
+      }
+    });
     let spatial_id = state.frame_builder.dl_builder.define_sticky_frame(
         parent_spatial_id.to_webrender(state.pipeline_id),
         content_rect,
@@ -2771,6 +2782,7 @@ pub extern "C" fn wr_dp_define_sticky_frame(
         horizontal_bounds,
         applied_offset,
         key,
+        transform
     );
 
     WrSpatialId { id: spatial_id.0 }
