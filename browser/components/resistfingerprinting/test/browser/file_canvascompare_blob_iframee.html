@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script type="text/javascript">
+window.onload = async () => {
+  parent.postMessage("ready", "*");
+}
+
+function give_result() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 100;
+  canvas.height = 100;
+
+  const context = canvas.getContext("2d");
+
+  context.fillStyle = "#EE2222";
+  context.fillRect(0, 0, 100, 100);
+  context.fillStyle = "#2222EE";
+  context.fillRect(20, 20, 100, 100);
+
+  // Add the canvas element to the document
+  document.body.appendChild(canvas);
+
+  const imageData = context.getImageData(0, 0, 100, 100);
+
+  return imageData.data;
+}
+
+window.addEventListener("message", async function listener(event) {
+//window.addEventListener("load", async function listener(event) {
+  if (event.data[0] == "gimme") {
+    // eslint-disable-next-line
+    var s = `<html><body><script>
+      function give_result() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 100;
+        canvas.height = 100;
+
+        const context = canvas.getContext("2d");
+
+        context.fillStyle = "#EE2222";
+        context.fillRect(0, 0, 100, 100);
+        context.fillStyle = "#2222EE";
+        context.fillRect(20, 20, 100, 100);
+
+        // Add the canvas element to the document
+        document.body.appendChild(canvas);
+
+        const imageData = context.getImageData(0, 0, 100, 100);
+
+        return imageData.data;
+      }
+      window.parent.document.querySelector('#result').textContent = JSON.stringify(give_result());
+      window.parent.postMessage(["frame_response"], "*");`;
+    // eslint-disable-next-line
+    s += `</` + `script></body></html>`;
+
+    let b = new Blob([s], { type: "text/html" });
+    let url = URL.createObjectURL(b);
+
+    var iframe = document.createElement("iframe");
+    iframe.src = url;
+    document.body.append(iframe);
+  } else if (event.data[0] == "frame_response") {
+    let myResult = give_result();
+    console.log("myResult", myResult)
+
+    let result = JSON.parse(document.querySelector("#result").textContent);
+    console.log("theirResult", result)
+    parent.postMessage({mine: myResult, theirs: result}, "*")
+  }
+});
+</script>
+<body>
+<output id="result" style="display:none"></output>
+</body>
