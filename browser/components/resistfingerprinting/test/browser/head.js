@@ -753,6 +753,30 @@ async function defaultsTest(
   }
 }
 
+async function defaultsPBMTest(
+  uri,
+  testFunction,
+  expectedResults,
+  extraData,
+  extraPrefs
+) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.private_window = true;
+  extraData.testDesc = extraData.testDesc || "default PBM window";
+  expectedResults.shouldRFPApply = false;
+  if (extraPrefs != undefined) {
+    await SpecialPowers.pushPrefEnv({
+      set: extraPrefs,
+    });
+  }
+  await runActualTest(uri, testFunction, expectedResults, extraData);
+  if (extraPrefs != undefined) {
+    await SpecialPowers.popPrefEnv();
+  }
+}
+
 async function simpleRFPTest(
   uri,
   testFunction,
