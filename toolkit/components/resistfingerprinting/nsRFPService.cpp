@@ -410,7 +410,7 @@ sec_per_extra_frame = 1 / (extra_frames_per_frame * 60) // 833.33
 min_per_extra_frame = sec_per_extra_frame / 60 // 13.89
 ```
 We expect an extra frame every ~14 minutes, which is enough to be smooth.
-16.67 would be ~1.4 minutes, which is OK, but is more noticable.
+16.67 would be ~1.4 minutes, which is OK, but is more noticeable.
 Put another way, if this is the only unacceptable hitch you have across 14
 minutes, I'm impressed, and we might revisit this.
 */
