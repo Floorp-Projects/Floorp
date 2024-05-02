@@ -48,9 +48,10 @@ class WebRenderImageProvider {
   }
 
   /**
-   * Invalidate if a blob recording, requiring it to be regenerated.
+   * Invalidate if a blob recording or simple surface provider (both are only
+   * used by vector images), requiring it to be regenerated.
    */
-  virtual void InvalidateRecording() {}
+  virtual void InvalidateSurface() {}
 
  protected:
   WebRenderImageProvider(const ImageResource* aImage);

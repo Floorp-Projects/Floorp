@@ -513,7 +513,7 @@ void VectorImage::SendInvalidationNotifications() {
   mHasPendingInvalidation = false;
 
   if (SurfaceCache::InvalidateImage(ImageKey(this))) {
-    // If we still have recordings in the cache, make sure we handle future
+    // If we had any surface providers in the cache, make sure we handle future
     // invalidations.
     MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
     mRenderingObserver->ResumeHonoringInvalidations();

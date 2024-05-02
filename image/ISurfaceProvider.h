@@ -314,6 +314,8 @@ class SimpleSurfaceProvider final : public ISurfaceProvider {
                      wr::IpcResourceUpdateQueue& aResources,
                      wr::ImageKey& aKey) override;
 
+  void InvalidateSurface() override;
+
  protected:
   DrawableFrameRef DrawableRef(size_t aFrame) override {
     MOZ_ASSERT(aFrame == 0,
@@ -338,6 +340,7 @@ class SimpleSurfaceProvider final : public ISurfaceProvider {
 
   NotNull<RefPtr<imgFrame>> mSurface;
   DrawableFrameRef mLockRef;
+  bool mDirty = false;
 };
 
 }  // namespace image

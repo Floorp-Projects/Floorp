@@ -222,6 +222,10 @@ nsresult DecodedSurfaceProvider::UpdateKey(
 nsresult SimpleSurfaceProvider::UpdateKey(
     layers::RenderRootStateManager* aManager,
     wr::IpcResourceUpdateQueue& aResources, wr::ImageKey& aKey) {
+  if (mDirty) {
+    return NS_ERROR_FAILURE;
+  }
+
   RefPtr<SourceSurface> surface = mSurface->GetSourceSurface();
   if (!surface) {
     return NS_ERROR_FAILURE;
@@ -229,6 +233,8 @@ nsresult SimpleSurfaceProvider::UpdateKey(
 
   return SharedSurfacesChild::Share(surface, aManager, aResources, aKey);
 }
+
+void SimpleSurfaceProvider::InvalidateSurface() { mDirty = true; }
 
 }  // namespace image
 }  // namespace mozilla

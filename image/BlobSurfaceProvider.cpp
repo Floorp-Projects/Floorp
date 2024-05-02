@@ -123,7 +123,7 @@ nsresult BlobSurfaceProvider::UpdateKey(
   return NS_ERROR_FAILURE;
 }
 
-void BlobSurfaceProvider::InvalidateRecording() {
+void BlobSurfaceProvider::InvalidateSurface() {
   MOZ_ASSERT(NS_IsMainThread());
 
   auto i = mKeys.Length();
