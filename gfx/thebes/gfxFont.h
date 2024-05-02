@@ -1527,9 +1527,7 @@ class gfxFont {
   // and therefore needs us to use a mask for text-shadow even when
   // we're not actually blurring.
   bool AlwaysNeedsMaskForShadow() const {
-    return mFontEntry->TryGetColorGlyphs() || mFontEntry->TryGetSVGData(this) ||
-           mFontEntry->HasFontTable(TRUETYPE_TAG('C', 'B', 'D', 'T')) ||
-           mFontEntry->HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'));
+    return mFontEntry->AlwaysNeedsMaskForShadow();
   }
 
   // whether a feature is supported by the font (limited to a small set
