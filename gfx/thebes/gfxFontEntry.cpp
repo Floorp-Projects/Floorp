@@ -79,6 +79,7 @@ gfxFontEntry::gfxFontEntry(const nsACString& aName, bool aIsStandardFace)
       mHasGraphiteTables(LazyFlag::Uninitialized),
       mHasGraphiteSpaceContextuals(LazyFlag::Uninitialized),
       mHasColorBitmapTable(LazyFlag::Uninitialized),
+      mNeedsMaskForShadow(LazyFlag::Uninitialized),
       mHasSpaceFeatures(SpaceFeatures::Uninitialized) {
   mTrakTable.exchange(kTrakTableUninitialized);
   memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
@@ -355,7 +356,7 @@ bool gfxFontEntry::TryGetSVGData(const gfxFont* aFont) {
     mSVGInitialized = true;
   }
 
-  if (GetSVGGlyphs()) {
+  if (GetSVGGlyphs() && aFont) {
     AutoWriteLock lock(mLock);
     if (!mFontsUsingSVGGlyphs.Contains(aFont)) {
       mFontsUsingSVGGlyphs.AppendElement(aFont);
