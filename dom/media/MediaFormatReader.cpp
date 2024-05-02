@@ -1770,7 +1770,13 @@ void MediaFormatReader::NotifyNewOutput(
       if (aTrack == TrackInfo::kAudioTrack) {
         decoder.mNumOfConsecutiveUtilityCrashes = 0;
       }
-      decoder.mDecodePerfRecorder->Record(sample->mTime.ToMicroseconds());
+      decoder.mDecodePerfRecorder->Record(
+          sample->mTime.ToMicroseconds(),
+          [startTime = sample->mTime.ToMicroseconds(),
+           endTime =
+               sample->GetEndTime().ToMicroseconds()](PlaybackStage& aStage) {
+            aStage.SetStartTimeAndEndTime(startTime, endTime);
+          });
     }
   }
   LOG("Done processing new %s samples", TrackTypeToStr(aTrack));
