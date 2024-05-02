@@ -38,12 +38,9 @@ group("pc") {
   deps = [ ":rtc_pc" ]
 }
 
-rtc_library("proxy") {
+rtc_source_set("proxy") {
   visibility = [ ":*" ]
-  sources = [
-    "proxy.cc",
-    "proxy.h",
-  ]
+  sources = [ "proxy.h" ]
   deps = [
     "../api:scoped_refptr",
     "../api/task_queue",
