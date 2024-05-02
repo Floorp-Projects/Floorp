@@ -352,6 +352,8 @@ Result<already_AddRefed<VideoData>, MediaResult> DAV1DDecoder::ConstructImage(
     aStage.SetYUVColorSpace(b.mYUVColorSpace);
     aStage.SetColorRange(b.mColorRange);
     aStage.SetColorDepth(b.mColorDepth);
+    aStage.SetStartTimeAndEndTime(aPicture.m.timestamp,
+                                  aPicture.m.timestamp + aPicture.m.duration);
   });
 
   return VideoData::CreateAndCopyData(

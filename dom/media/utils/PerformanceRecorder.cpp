@@ -320,4 +320,17 @@ ProfilerString8View DecodeStage::Name() const {
   return *mName;
 }
 
+void DecodeStage::AddMarker(MarkerOptions&& aOption) {
+  if (mStartAndEndTimeUs) {
+    auto& pair = *mStartAndEndTimeUs;
+    profiler_add_marker(Name(), Category(),
+                        std::forward<MarkerOptions&&>(aOption),
+                        geckoprofiler::markers::MediaSampleMarker{}, pair.first,
+                        pair.second, 1 /* queue length */);
+  } else {
+    profiler_add_marker(Name(), Category(),
+                        std::forward<MarkerOptions&&>(aOption));
+  }
+}
+
 }  // namespace mozilla

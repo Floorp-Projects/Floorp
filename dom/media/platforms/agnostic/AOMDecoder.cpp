@@ -284,6 +284,8 @@ RefPtr<MediaDataDecoder::DecodePromise> AOMDecoder::ProcessDecode(
           aStage.SetYUVColorSpace(b.mYUVColorSpace);
           aStage.SetColorRange(b.mColorRange);
           aStage.SetColorDepth(b.mColorDepth);
+          aStage.SetStartTimeAndEndTime(v->mTime.ToMicroseconds(),
+                                        v->GetEndTime().ToMicroseconds());
         });
     results.AppendElement(std::move(v));
   }

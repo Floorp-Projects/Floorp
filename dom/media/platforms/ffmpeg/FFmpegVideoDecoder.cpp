@@ -1221,6 +1221,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       aStage.SetColorDepth(GetColorDepth(mCodecContext->pix_fmt));
       aStage.SetYUVColorSpace(GetFrameColorSpace());
       aStage.SetColorRange(GetFrameColorRange());
+      aStage.SetStartTimeAndEndTime(aSample->mTime.ToMicroseconds(),
+                                    aSample->GetEndTime().ToMicroseconds());
     });
     if (aGotFrame) {
       *aGotFrame = true;
@@ -1323,6 +1325,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       aStage.SetColorDepth(GetColorDepth(mCodecContext->pix_fmt));
       aStage.SetYUVColorSpace(GetFrameColorSpace());
       aStage.SetColorRange(GetFrameColorRange());
+      aStage.SetStartTimeAndEndTime(aSample->mTime.ToMicroseconds(),
+                                    aSample->GetEndTime().ToMicroseconds());
     });
   });
 

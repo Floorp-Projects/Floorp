@@ -575,6 +575,8 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
         aStage.SetColorDepth(mColorDepth);
         aStage.SetYUVColorSpace(mColorSpace);
         aStage.SetColorRange(mColorRange);
+        aStage.SetStartTimeAndEndTime(data->mTime.ToMicroseconds(),
+                                      data->GetEndTime().ToMicroseconds());
       });
 
   // Frames come out in DTS order but we need to output them

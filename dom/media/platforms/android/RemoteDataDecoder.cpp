@@ -527,6 +527,8 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
         });
         aStage.SetResolution(v->mImage->GetSize().Width(),
                              v->mImage->GetSize().Height());
+        aStage.SetStartTimeAndEndTime(v->mTime.ToMicroseconds(),
+                                      v->GetEndTime().ToMicroseconds());
       });
 
       RemoteDataDecoder::UpdateOutputStatus(std::move(v));
