@@ -424,12 +424,14 @@ struct SurfaceCache {
 
   /**
    * Removes all rasterized cache entries (including placeholders) associated
-   * with the given image from the cache. Any blob recordings are marked as
-   * dirty and must be regenerated.
+   * with the given image from the cache and marks their surface providers as
+   * dirty and should not be drawn again. Any blob recordings are left in th
+   * cache but marked as dirty and must be regenerated.
    *
    * @param aImageKey  The image whose cache which should be regenerated.
    *
-   * @returns true if any recordings were invalidated, else false.
+   * @returns true if any surface providers were present in the cache, else
+   * false.
    */
   static bool InvalidateImage(const ImageKey aImageKey);
 

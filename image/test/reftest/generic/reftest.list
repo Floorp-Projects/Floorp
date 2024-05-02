@@ -4,3 +4,4 @@ skip-if(Android) != moz-icon-1.html about:blank
 skip-if(Android) != moz-icon-blank-1-ref.html moz-icon-blank-1-antiref.html
 skip-if(Android) != moz-icon-blank-1-ref.html moz-icon-blank-1-antiref2.html
 fuzzy-if(cocoaWidget,44-49,335-348) fuzzy-if(winWidget,64-140,45-191) == moz-icon-blank-1-almostref.html moz-icon-blank-1-ref.html
+pref(image.testing.decode-sync.enabled,false) == 1805599-1.html 1805599-1-ref.html

@@ -181,7 +181,7 @@ class CachedSurface {
     return aMallocSizeOf(this) + aMallocSizeOf(mProvider.get());
   }
 
-  void InvalidateRecording() { mProvider->InvalidateRecording(); }
+  void InvalidateSurface() { mProvider->InvalidateSurface(); }
 
   // A helper type used by SurfaceCacheImpl::CollectSizeOfSurfaces.
   struct MOZ_STACK_CLASS SurfaceMemoryReport {
@@ -543,13 +543,14 @@ class ImageSurfaceCache {
   bool Invalidate(Function&& aRemoveCallback) {
     // Remove all non-blob recordings from the cache. Invalidate any blob
     // recordings.
-    bool foundRecording = false;
+    bool found = false;
     for (auto iter = mSurfaces.Iter(); !iter.Done(); iter.Next()) {
       NotNull<CachedSurface*> current = WrapNotNull(iter.UserData());
 
+      found = true;
+      current->InvalidateSurface();
+
       if (current->GetSurfaceKey().Flags() & SurfaceFlags::RECORD_BLOB) {
-        foundRecording = true;
-        current->InvalidateRecording();
         continue;
       }
 
@@ -558,7 +559,7 @@ class ImageSurfaceCache {
     }
 
     AfterMaybeRemove();
-    return foundRecording;
+    return found;
   }
 
   IntSize SuggestedSize(const IntSize& aSize) const {

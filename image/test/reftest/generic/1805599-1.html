@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html class="reftest-no-flush reftest-wait" reftest-no-sync-layers>
+<!-- reftest-no-sync-layers so that the updateLayerTree call doesn't a sync decode paint which would hide the bug -->
+<script>
+async function loadimg() {
+  let theimg = document.createElement("img");
+  document.body.appendChild(theimg);
+  theimg.src = "1805599-1.svg";
+  let paintpromise = new Promise(resolve => {
+    window.addEventListener("MozAfterPaint", resolve, { once: true });
+  });
+  await theimg.decode();
+  await paintpromise;
+  setTimeout(finish, 0);
+}
+async function waitForPendingPaints() {
+  while (SpecialPowers.wrap(window).windowUtils.isMozAfterPaintPending) {
+    await new Promise(resolve => {
+      window.addEventListener("MozAfterPaint", resolve, { once: true });
+    });
+  }
+}
+// we have to do this when we use reftest-no-sync-layers to make sure the rendering is up to date
+async function finish() {
+  await waitForPendingPaints();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  await waitForPendingPaints();
+  document.documentElement.className = "";
+}
+window.addEventListener("MozReftestInvalidate", loadimg);
+</script>
+
+</html>
