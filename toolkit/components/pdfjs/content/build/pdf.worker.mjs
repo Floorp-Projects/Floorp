@@ -1221,6 +1221,9 @@ function readUint32(data, offset) {
 function isWhiteSpace(ch) {
   return ch === 0x20 || ch === 0x09 || ch === 0x0d || ch === 0x0a;
 }
+function isNumberArray(arr, len) {
+  return Array.isArray(arr) && (len === null || arr.length === len) && arr.every(x => typeof x === "number");
+}
 function parseXFAPath(path) {
   const positionPattern = /(.+)\[(\d+)\]$/;
   return path.split(".").map(component => {
@@ -17144,6 +17147,7 @@ class CFFFont {
 
 
 
+
 function getUint32(data, offset) {
   return (data[offset] << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3]) >>> 0;
 }
@@ -17781,7 +17785,7 @@ class Commands {
   cmds = [];
   add(cmd, args) {
     if (args) {
-      if (args.some(arg => typeof arg !== "number")) {
+      if (!isNumberArray(args, null)) {
         warn(`Commands.add - "${cmd}" has at least one non-number arg: "${args}".`);
         const newArgs = args.map(arg => typeof arg === "number" ? arg : 0);
         this.cmds.push(cmd, ...newArgs);
@@ -17807,20 +17811,20 @@ class CompiledFont {
       charCode,
       glyphId
     } = lookupCmap(this.cmap, unicode);
-    let fn = this.compiledGlyphs[glyphId];
+    let fn = this.compiledGlyphs[glyphId],
+      compileEx;
     if (!fn) {
       try {
-        fn = this.compiledGlyphs[glyphId] = this.compileGlyph(this.glyphs[glyphId], glyphId);
+        fn = this.compileGlyph(this.glyphs[glyphId], glyphId);
       } catch (ex) {
-        this.compiledGlyphs[glyphId] = NOOP;
-        if (this.compiledCharCodeToGlyphId[charCode] === undefined) {
-          this.compiledCharCodeToGlyphId[charCode] = glyphId;
-        }
-        throw ex;
+        fn = NOOP;
+        compileEx = ex;
       }
+      this.compiledGlyphs[glyphId] = fn;
     }
-    if (this.compiledCharCodeToGlyphId[charCode] === undefined) {
-      this.compiledCharCodeToGlyphId[charCode] = glyphId;
+    this.compiledCharCodeToGlyphId[charCode] ??= glyphId;
+    if (compileEx) {
+      throw compileEx;
     }
     return fn;
   }
@@ -26375,6 +26379,7 @@ class GlobalImageCache {
 
 
 
+
 class PDFFunctionFactory {
   constructor({
     xref,
@@ -26450,15 +26455,8 @@ function toNumberArray(arr) {
   if (!Array.isArray(arr)) {
     return null;
   }
-  const length = arr.length;
-  for (let i = 0; i < length; i++) {
-    if (typeof arr[i] !== "number") {
-      const result = new Array(length);
-      for (let j = 0; j < length; j++) {
-        result[j] = +arr[j];
-      }
-      return result;
-    }
+  if (!isNumberArray(arr, null)) {
+    return arr.map(x => +x);
   }
   return arr;
 }
@@ -29535,6 +29533,7 @@ class PDFImage {
 
 
 
+
 const DefaultPartialEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
   disableFontFace: false,
@@ -32213,56 +32212,85 @@ class PartialEvaluator {
     let defaultWidth = 0;
     const glyphsVMetrics = [];
     let defaultVMetrics;
-    let i, ii, j, jj, start, code, widths;
     if (properties.composite) {
-      defaultWidth = dict.has("DW") ? dict.get("DW") : 1000;
-      widths = dict.get("W");
-      if (widths) {
-        for (i = 0, ii = widths.length; i < ii; i++) {
-          start = xref.fetchIfRef(widths[i++]);
-          code = xref.fetchIfRef(widths[i]);
+      const dw = dict.get("DW");
+      defaultWidth = Number.isInteger(dw) ? dw : 1000;
+      const widths = dict.get("W");
+      if (Array.isArray(widths)) {
+        for (let i = 0, ii = widths.length; i < ii; i++) {
+          let start = xref.fetchIfRef(widths[i++]);
+          if (!Number.isInteger(start)) {
+            break;
+          }
+          const code = xref.fetchIfRef(widths[i]);
           if (Array.isArray(code)) {
-            for (j = 0, jj = code.length; j < jj; j++) {
-              glyphsWidths[start++] = xref.fetchIfRef(code[j]);
+            for (const c of code) {
+              const width = xref.fetchIfRef(c);
+              if (typeof width === "number") {
+                glyphsWidths[start] = width;
+              }
+              start++;
             }
-          } else {
+          } else if (Number.isInteger(code)) {
             const width = xref.fetchIfRef(widths[++i]);
-            for (j = start; j <= code; j++) {
+            if (typeof width !== "number") {
+              continue;
+            }
+            for (let j = start; j <= code; j++) {
               glyphsWidths[j] = width;
             }
+          } else {
+            break;
           }
         }
       }
       if (properties.vertical) {
-        let vmetrics = dict.getArray("DW2") || [880, -1000];
+        const dw2 = dict.getArray("DW2");
+        let vmetrics = isNumberArray(dw2, 2) ? dw2 : [880, -1000];
         defaultVMetrics = [vmetrics[1], defaultWidth * 0.5, vmetrics[0]];
         vmetrics = dict.get("W2");
-        if (vmetrics) {
-          for (i = 0, ii = vmetrics.length; i < ii; i++) {
-            start = xref.fetchIfRef(vmetrics[i++]);
-            code = xref.fetchIfRef(vmetrics[i]);
+        if (Array.isArray(vmetrics)) {
+          for (let i = 0, ii = vmetrics.length; i < ii; i++) {
+            let start = xref.fetchIfRef(vmetrics[i++]);
+            if (!Number.isInteger(start)) {
+              break;
+            }
+            const code = xref.fetchIfRef(vmetrics[i]);
             if (Array.isArray(code)) {
-              for (j = 0, jj = code.length; j < jj; j++) {
-                glyphsVMetrics[start++] = [xref.fetchIfRef(code[j++]), xref.fetchIfRef(code[j++]), xref.fetchIfRef(code[j])];
+              for (let j = 0, jj = code.length; j < jj; j++) {
+                const vmetric = [xref.fetchIfRef(code[j++]), xref.fetchIfRef(code[j++]), xref.fetchIfRef(code[j])];
+                if (isNumberArray(vmetric, null)) {
+                  glyphsVMetrics[start] = vmetric;
+                }
+                start++;
               }
-            } else {
+            } else if (Number.isInteger(code)) {
               const vmetric = [xref.fetchIfRef(vmetrics[++i]), xref.fetchIfRef(vmetrics[++i]), xref.fetchIfRef(vmetrics[++i])];
-              for (j = start; j <= code; j++) {
+              if (!isNumberArray(vmetric, null)) {
+                continue;
+              }
+              for (let j = start; j <= code; j++) {
                 glyphsVMetrics[j] = vmetric;
               }
+            } else {
+              break;
             }
           }
         }
       }
     } else {
-      const firstChar = properties.firstChar;
-      widths = dict.get("Widths");
-      if (widths) {
-        j = firstChar;
-        for (i = 0, ii = widths.length; i < ii; i++) {
-          glyphsWidths[j++] = xref.fetchIfRef(widths[i]);
+      const widths = dict.get("Widths");
+      if (Array.isArray(widths)) {
+        let j = properties.firstChar;
+        for (const w of widths) {
+          const width = xref.fetchIfRef(w);
+          if (typeof width === "number") {
+            glyphsWidths[j] = width;
+          }
+          j++;
         }
-        defaultWidth = parseFloat(descriptor.get("MissingWidth")) || 0;
+        const missingWidth = descriptor.get("MissingWidth");
+        defaultWidth = typeof missingWidth === "number" ? missingWidth : 0;
       } else {
         const baseFontName = dict.get("BaseFont");
         if (baseFontName instanceof Name) {
@@ -32364,8 +32392,14 @@ class PartialEvaluator {
       }
       composite = true;
     }
-    const firstChar = dict.get("FirstChar") || 0,
-      lastChar = dict.get("LastChar") || (composite ? 0xffff : 0xff);
+    let firstChar = dict.get("FirstChar");
+    if (!Number.isInteger(firstChar)) {
+      firstChar = 0;
+    }
+    let lastChar = dict.get("LastChar");
+    if (!Number.isInteger(lastChar)) {
+      lastChar = composite ? 0xffff : 0xff;
+    }
     const descriptor = dict.get("FontDescriptor");
     const toUnicode = dict.get("ToUnicode") || baseDict.get("ToUnicode");
     if (descriptor) {
@@ -32470,9 +32504,13 @@ class PartialEvaluator {
     const isType3Font = type === "Type3";
     if (!descriptor) {
       if (isType3Font) {
+        let bbox = dict.getArray("FontBBox");
+        if (!isNumberArray(bbox, 4)) {
+          bbox = [0, 0, 0, 0];
+        }
         descriptor = new Dict(null);
         descriptor.set("FontName", Name.get(type));
-        descriptor.set("FontBBox", dict.getArray("FontBBox") || [0, 0, 0, 0]);
+        descriptor.set("FontBBox", bbox);
       } else {
         let baseFontName = dict.get("BaseFont");
         if (!(baseFontName instanceof Name)) {
@@ -32510,11 +32548,15 @@ class PartialEvaluator {
           properties.systemFontInfo = getFontSubstitution(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, baseFontName, standardFontName, type);
         }
         const newProperties = await this.extractDataStructures(dict, properties);
-        if (widths) {
+        if (Array.isArray(widths)) {
           const glyphWidths = [];
           let j = firstChar;
-          for (const width of widths) {
-            glyphWidths[j++] = this.xref.fetchIfRef(width);
+          for (const w of widths) {
+            const width = this.xref.fetchIfRef(w);
+            if (typeof width === "number") {
+              glyphWidths[j] = width;
+            }
+            j++;
           }
           newProperties.widths = glyphWidths;
         } else {
@@ -32588,8 +32630,36 @@ class PartialEvaluator {
       }
     }
     let fontMatrix = dict.getArray("FontMatrix");
-    if (!Array.isArray(fontMatrix) || fontMatrix.length !== 6 || fontMatrix.some(x => typeof x !== "number")) {
+    if (!isNumberArray(fontMatrix, 6)) {
       fontMatrix = FONT_IDENTITY_MATRIX;
+    }
+    let bbox = descriptor.getArray("FontBBox") || dict.getArray("FontBBox");
+    if (!isNumberArray(bbox, 4)) {
+      bbox = undefined;
+    }
+    let ascent = descriptor.get("Ascent");
+    if (typeof ascent !== "number") {
+      ascent = undefined;
+    }
+    let descent = descriptor.get("Descent");
+    if (typeof descent !== "number") {
+      descent = undefined;
+    }
+    let xHeight = descriptor.get("XHeight");
+    if (typeof xHeight !== "number") {
+      xHeight = 0;
+    }
+    let capHeight = descriptor.get("CapHeight");
+    if (typeof capHeight !== "number") {
+      capHeight = 0;
+    }
+    let flags = descriptor.get("Flags");
+    if (!Number.isInteger(flags)) {
+      flags = 0;
+    }
+    let italicAngle = descriptor.get("ItalicAngle");
+    if (typeof italicAngle !== "number") {
+      italicAngle = 0;
     }
     const properties = {
       type,
@@ -32607,13 +32677,13 @@ class PartialEvaluator {
       firstChar,
       lastChar,
       toUnicode,
-      bbox: descriptor.getArray("FontBBox") || dict.getArray("FontBBox"),
-      ascent: descriptor.get("Ascent"),
-      descent: descriptor.get("Descent"),
-      xHeight: descriptor.get("XHeight") || 0,
-      capHeight: descriptor.get("CapHeight") || 0,
-      flags: descriptor.get("Flags"),
-      italicAngle: descriptor.get("ItalicAngle") || 0,
+      bbox,
+      ascent,
+      descent,
+      xHeight,
+      capHeight,
+      flags,
+      italicAngle,
       isType3Font,
       cssFontInfo,
       scaleFactors: glyphScaleFactors,
@@ -33932,7 +34002,6 @@ class FileSpec {
     if (root.has("FS")) {
       this.fs = root.get("FS");
     }
-    this.description = root.has("Desc") ? stringToPDFString(root.get("Desc")) : "";
     if (root.has("RF")) {
       warn("Related file specifications are not supported");
     }
@@ -33971,10 +34040,19 @@ class FileSpec {
     }
     return content;
   }
+  get description() {
+    let description = "";
+    const desc = this.root?.get("Desc");
+    if (desc && typeof desc === "string") {
+      description = stringToPDFString(desc);
+    }
+    return shadow(this, "description", description);
+  }
   get serializable() {
     return {
       filename: this.filename,
-      content: this.content
+      content: this.content,
+      description: this.description
     };
   }
 }
@@ -55361,7 +55439,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.2.55";
+    const workerVersion = "4.3.8";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -55578,6 +55656,7 @@ class WorkerMessageHandler {
           return {
             rotate,
             ref,
+            refStr: ref?.toString() ?? null,
             userUnit,
             view
           };
@@ -55923,8 +56002,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.2.55";
-const pdfjsBuild = "85e64b5c1";
+const pdfjsVersion = "4.3.8";
+const pdfjsBuild = "c419c8333";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };
