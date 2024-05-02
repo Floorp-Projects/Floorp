@@ -7650,23 +7650,16 @@
    mirror: always
    set_spidermonkey_pref: startup
 
-# Experimental support for ArrayBuffer.prototype.transfer{,ToFixedLength}() in JavaScript.
--   name: javascript.options.arraybuffer_transfer
-    type: bool
-    value: true
-    mirror: always
-    set_spidermonkey_pref: startup
-
-# Experimental support for New Set methods
--   name: javascript.options.experimental.new_set_methods
-    type: bool
-    value: true
-    mirror: always
-    set_spidermonkey_pref: startup
-
 #ifdef NIGHTLY_BUILD
   # Experimental support for Iterator Helpers in JavaScript.
 -   name: javascript.options.experimental.iterator_helpers
+    type: bool
+    value: false
+    mirror: always
+    set_spidermonkey_pref: startup
+
+  # Experimental support for New Set methods
+-   name: javascript.options.experimental.new_set_methods
     type: bool
     value: false
     mirror: always
@@ -7706,7 +7699,16 @@
     value: false
     mirror: always
     set_spidermonkey_pref: startup
+#endif  // NIGHTLY_BUILD
 
+# Experimental support for ArrayBuffer.prototype.transfer{,ToFixedLength}() in JavaScript.
+-   name: javascript.options.arraybuffer_transfer
+    type: bool
+    value: true
+    mirror: always
+    set_spidermonkey_pref: startup
+
+#ifdef NIGHTLY_BUILD
   # Experimental support for Import Assertions in JavaScript.
 -   name: javascript.options.experimental.import_attributes
     type: bool
