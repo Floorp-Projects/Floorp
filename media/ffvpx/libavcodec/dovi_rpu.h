@@ -17,13 +17,13 @@ typedef struct DOVICtx {
 typedef struct AVDOVICConfRecord {
 } AVDOVIDecoderConfigurationRecord;
 
-inline void ff_dovi_ctx_unref(DOVIContext* ctx) {}
-inline void ff_dovi_update_cfg(DOVIContext* ctx,
+static void ff_dovi_ctx_unref(DOVIContext* ctx) {}
+static void ff_dovi_update_cfg(DOVIContext* ctx,
                                AVDOVIDecoderConfigurationRecord* record) {}
-inline int ff_dovi_rpu_parse(DOVIContext* ctx, uint8_t* buf, size_t len,
+static int ff_dovi_rpu_parse(DOVIContext* ctx, uint8_t* buf, size_t len,
                              int err_recognition) {
   return 0;
 }
-inline int ff_dovi_attach_side_data(DOVIContext* ctx, AVFrame* frame) {
+static int ff_dovi_attach_side_data(DOVIContext* ctx, AVFrame* frame) {
   return 0;
 }
