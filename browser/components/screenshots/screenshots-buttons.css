@@ -14,15 +14,15 @@
   border-radius: var(--arrowpanel-border-radius);
 }
 
-.full-page {
+#full-page {
   background-image: url("chrome://browser/content/screenshots/menu-fullpage.svg");
 }
 
-.visible-page {
+#visible-page {
   background-image: url("chrome://browser/content/screenshots/menu-visible.svg");
 }
 
-.full-page, .visible-page {
+#full-page, #visible-page {
   -moz-context-properties: fill, stroke;
   fill: currentColor;
   /* stroke is the secondary fill color used to define the viewport shape in the SVGs */

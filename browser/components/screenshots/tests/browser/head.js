@@ -28,8 +28,8 @@ const { MAX_CAPTURE_DIMENSION, MAX_CAPTURE_AREA } = ChromeUtils.importESModule(
 
 const gScreenshotUISelectors = {
   panel: "#screenshotsPagePanel",
-  fullPageButton: "button.full-page",
-  visiblePageButton: "button.visible-page",
+  fullPageButton: "button#full-page",
+  visiblePageButton: "button#visible-page",
   copyButton: "button.#copy",
 };
 
