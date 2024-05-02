@@ -135,6 +135,7 @@ EXPORTS.mozilla += [
     "ScriptableContentIterator.h",
     "ScrollingMetrics.h",
     "SelectionChangeEventDispatcher.h",
+    "TabFocusModel.h",
     "TextInputProcessor.h",
     "UseCounter.h",
 ]

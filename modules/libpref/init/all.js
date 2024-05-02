@@ -472,20 +472,6 @@ pref("accessibility.warn_on_browsewithcaret", true);
 
 pref("accessibility.browsewithcaret_shortcut.enabled", true);
 
-#ifndef XP_MACOSX
-  // Tab focus model bit field:
-  // 1 focuses text controls, 2 focuses other form elements, 4 adds links.
-  // Most users will want 1, 3, or 7.
-  // On OS X, we use Full Keyboard Access system preference,
-  // unless accessibility.tabfocus is set by the user.
-  pref("accessibility.tabfocus", 7);
-  pref("accessibility.tabfocus_applies_to_xul", false);
-#else
-  // Only on mac tabfocus is expected to handle UI widgets as well as web
-  // content.
-  pref("accessibility.tabfocus_applies_to_xul", true);
-#endif
-
 // We follow the "Click in the scrollbar to:" system preference on OS X and
 // "gtk-primary-button-warps-slider" property with GTK (since 2.24 / 3.6),
 // unless this preference is explicitly set.
