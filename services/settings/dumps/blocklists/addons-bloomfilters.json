@@ -3,6 +3,36 @@
     {
       "stash": {
         "blocked": [
+          "superiorblock@addon:1.1",
+          "superiorblock@addon:1.0",
+          "{f350fb55-0f0f-433b-a220-84ecd4e9c1c4}:1.0.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1714394162589,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1714502105965,
+      "id": "80eb1f71-0a58-4413-979b-31174221e17f",
+      "last_modified": 1714502163258
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{f350fb55-0f0f-455b-a220-84ecd8e9c1c4}:1.0.0",
+          "{f350fb55-0f0f-455b-a220-84ecd8e9c1c4}:1.2.0",
+          "{f350fb55-0f0f-455b-a220-84ecd8e9c1c4}:3.0.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1714065172023,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1714394105741,
+      "id": "0debaf67-edcf-42d1-8ca6-5d1455a4c624",
+      "last_modified": 1714394162447
+    },
+    {
+      "stash": {
+        "blocked": [
           "{392032f8-b8b9-4729-8b85-5909a5fb7785}:1.0",
           "{e6ce6d79-9688-4609-8479-8fe5ce05fb94}:1.0"
         ],
@@ -606,5 +636,5 @@
       "last_modified": 1707395854769
     }
   ],
-  "timestamp": 1713897363017
+  "timestamp": 1714502163258
 }

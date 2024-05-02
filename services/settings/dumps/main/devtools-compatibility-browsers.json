@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "name": "Samsung Internet",
+      "schema": 1714521906708,
+      "status": "current",
+      "version": "25.0",
+      "browserid": "samsunginternet_android",
+      "id": "91fb10f8-ce37-4722-9eac-296c08d297c6",
+      "last_modified": 1714638388565
+    },
+    {
+      "name": "Edge",
+      "schema": 1714521906580,
+      "status": "current",
+      "version": "124",
+      "browserid": "edge",
+      "id": "3837dc37-38b7-483b-82b3-c5593e7a4c91",
+      "last_modified": 1714638388557
+    },
+    {
       "name": "Chrome",
       "schema": 1713917106736,
       "status": "beta",
@@ -191,30 +209,12 @@
     },
     {
       "name": "Edge",
-      "schema": 1712707507808,
-      "status": "beta",
-      "version": "124",
-      "browserid": "edge",
-      "id": "3837dc37-38b7-483b-82b3-c5593e7a4c91",
-      "last_modified": 1712840749668
-    },
-    {
-      "name": "Edge",
       "schema": 1712707507867,
       "status": "nightly",
       "version": "125",
       "browserid": "edge",
       "id": "f1147d5f-d690-43d0-879d-117c6ca24a16",
       "last_modified": 1712840749665
-    },
-    {
-      "name": "Edge",
-      "schema": 1711497907820,
-      "status": "current",
-      "version": "123",
-      "browserid": "edge",
-      "id": "d0c3d84f-8d27-455b-8746-7e25607e5b78",
-      "last_modified": 1711547229120
     },
     {
       "name": "Safari",
@@ -253,15 +253,6 @@
       "last_modified": 1701078578067
     },
     {
-      "name": "Samsung Internet",
-      "schema": 1700352303815,
-      "status": "current",
-      "version": "23.0",
-      "browserid": "samsunginternet_android",
-      "id": "b6194ce4-1588-4c83-9a7c-54081c540d01",
-      "last_modified": 1700557930484
-    },
-    {
       "name": "Firefox for Android",
       "schema": 1698797104411,
       "status": "esr",
@@ -298,5 +289,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1713943930239
+  "timestamp": 1714638388565
 }
