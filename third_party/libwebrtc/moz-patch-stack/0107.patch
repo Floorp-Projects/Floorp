@@ -1,52 +1,23 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 2 May 2024 00:47:00 -0700
-Subject: Bug 1892299 - fix-afaae4e38a - fix adapted_track_source build
- exclusion;r?mjf
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 19 Apr 2024 06:09:00 +0000
+Subject: Bug 1892221 - Initialize VideoCaptureModuleV4L2::_streaming in ctor.
+ r=webrtc-reviewers,dbaker
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/60304c5d8a86fdecfe7527e75629dbc65fc9cbc1
+Differential Revision: https://phabricator.services.mozilla.com/D207926
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/00c4bd7039dc8992dd93d4a5948a9260b72ec2a8
 ---
- media/BUILD.gn | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+ modules/video_capture/linux/video_capture_v4l2.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 4a715821cf..4989f5192f 100644
---- a/media/BUILD.gn
-+++ b/media/BUILD.gn
-@@ -58,6 +58,11 @@ rtc_library("rtc_media_base") {
-     "base/video_broadcaster.h",  # Used downstream
-     "base/video_common.h",  # Used downstream
-   ]
-+  if (build_with_mozilla) {
-+    sources -= [
-+      "base/adapted_video_track_source.h",
-+    ]
-+  }
-   deps = [
-     ":adapted_video_track_source",
-     ":codec",
-@@ -138,12 +143,6 @@ rtc_library("rtc_media_base") {
-     "//third_party/abseil-cpp/absl/strings",
-     "//third_party/abseil-cpp/absl/types:optional",
-   ]
--    if (build_with_mozilla) {
--    sources -= [
--      "base/adapted_video_track_source.cc",
--      "base/adapted_video_track_source.h",
--    ]
--  }
- }
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index e3bdcd5953..e3061556e8 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -62,6 +62,7 @@ VideoCaptureModuleV4L2::VideoCaptureModuleV4L2()
+       _deviceId(-1),
+       _deviceFd(-1),
+       _buffersAllocatedByDevice(-1),
++      _streaming(false),
+       _captureStarted(false),
+       _pool(NULL) {}
  
- rtc_library("adapted_video_track_source") {
-@@ -151,6 +150,12 @@ rtc_library("adapted_video_track_source") {
-     "base/adapted_video_track_source.cc",
-     "base/adapted_video_track_source.h",
-   ]
-+  if (build_with_mozilla) {
-+    sources -= [
-+      "base/adapted_video_track_source.cc",
-+      "base/adapted_video_track_source.h",
-+    ]
-+  }
-   deps = [
-     ":video_adapter",
-     ":video_broadcaster",
