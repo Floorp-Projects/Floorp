@@ -323,9 +323,6 @@ pub struct StickyFrameDescriptor {
 
     /// A unique (per-pipeline) key for this spatial that is stable across display lists.
     pub key: SpatialTreeItemKey,
-
-    /// A property binding that we use to store an animation ID for APZ
-    pub transform: Option<PropertyBinding<LayoutTransform>>,
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]

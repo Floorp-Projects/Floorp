@@ -518,46 +518,17 @@ impl SpatialNode {
                 self.viewport_transform = cs_scale_offset;
                 self.content_transform = cs_scale_offset;
             }
-            SpatialNodeType::StickyFrame(ref mut info) => {
-                let animated_offset = if let Some(transform_binding) = info.transform {
-                  let transform = scene_properties.resolve_layout_transform(&transform_binding);
-                  match ScaleOffset::from_transform(&transform) {
-                    Some(ref scale_offset) => {
-                      debug_assert!(scale_offset.scale == Vector2D::new(1.0, 1.0),
-                                    "Can only animate a translation on sticky elements");
-                      LayoutVector2D::from_untyped(scale_offset.offset)
-                    }
-                    None => {
-                      debug_assert!(false, "Can only animate a translation on sticky elements");
-                      LayoutVector2D::zero()
-                    }
-                  }
-                } else {
-                  LayoutVector2D::zero()
-                };
-
-                let sticky_offset = Self::calculate_sticky_offset(
+            _ => {
+                // We calculate this here to avoid a double-borrow later.
+                let sticky_offset = self.calculate_sticky_offset(
                     &state.nearest_scrolling_ancestor_offset,
                     &state.nearest_scrolling_ancestor_viewport,
-                    info,
                 );
 
                 // The transformation for the bounds of our viewport is the parent reference frame
                 // transform, plus any accumulated scroll offset from our parents, plus any offset
                 // provided by our own sticky positioning.
-                let accumulated_offset = state.parent_accumulated_scroll_offset + sticky_offset + animated_offset;
-                self.viewport_transform = state.coordinate_system_relative_scale_offset
-                    .offset(snap_offset(accumulated_offset, state.coordinate_system_relative_scale_offset.scale).to_untyped());
-                self.content_transform = self.viewport_transform;
-
-                info.current_offset = sticky_offset + animated_offset;
-
-                self.coordinate_system_id = state.current_coordinate_system_id;
-            }
-            SpatialNodeType::ScrollFrame(_) => {
-                // The transformation for the bounds of our viewport is the parent reference frame
-                // transform, plus any accumulated scroll offset from our parents.
-                let accumulated_offset = state.parent_accumulated_scroll_offset;
+                let accumulated_offset = state.parent_accumulated_scroll_offset + sticky_offset;
                 self.viewport_transform = state.coordinate_system_relative_scale_offset
                     .offset(snap_offset(accumulated_offset, state.coordinate_system_relative_scale_offset.scale).to_untyped());
 
@@ -567,8 +538,12 @@ impl SpatialNode {
                 self.content_transform = state.coordinate_system_relative_scale_offset
                     .offset(snap_offset(added_offset, state.coordinate_system_relative_scale_offset.scale).to_untyped());
 
+                if let SpatialNodeType::StickyFrame(ref mut info) = self.node_type {
+                    info.current_offset = sticky_offset;
+                }
+
                 self.coordinate_system_id = state.current_coordinate_system_id;
-          }
+            }
         }
 
         //TODO: remove the field entirely?
@@ -580,10 +555,15 @@ impl SpatialNode {
     }
 
     fn calculate_sticky_offset(
+        &self,
         viewport_scroll_offset: &LayoutVector2D,
         viewport_rect: &LayoutRect,
-        info: &StickyFrameInfo
     ) -> LayoutVector2D {
+        let info = match self.node_type {
+            SpatialNodeType::StickyFrame(ref info) => info,
+            _ => return LayoutVector2D::zero(),
+        };
+
         if info.margins.top.is_none() && info.margins.bottom.is_none() &&
             info.margins.left.is_none() && info.margins.right.is_none() {
             return LayoutVector2D::zero();
@@ -905,13 +885,12 @@ pub struct ReferenceFrameInfo {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct StickyFrameInfo {
-  pub margins: SideOffsets2D<Option<f32>, LayoutPixel>,
-  pub frame_rect: LayoutRect,
+    pub frame_rect: LayoutRect,
+    pub margins: SideOffsets2D<Option<f32>, LayoutPixel>,
     pub vertical_offset_bounds: StickyOffsetBounds,
     pub horizontal_offset_bounds: StickyOffsetBounds,
     pub previously_applied_offset: LayoutVector2D,
     pub current_offset: LayoutVector2D,
-    pub transform: Option<PropertyBinding<LayoutTransform>>,
 }
 
 impl StickyFrameInfo {
@@ -920,8 +899,7 @@ impl StickyFrameInfo {
         margins: SideOffsets2D<Option<f32>, LayoutPixel>,
         vertical_offset_bounds: StickyOffsetBounds,
         horizontal_offset_bounds: StickyOffsetBounds,
-        previously_applied_offset: LayoutVector2D,
-        transform: Option<PropertyBinding<LayoutTransform>>,
+        previously_applied_offset: LayoutVector2D
     ) -> StickyFrameInfo {
         StickyFrameInfo {
             frame_rect,
@@ -930,7 +908,6 @@ impl StickyFrameInfo {
             horizontal_offset_bounds,
             previously_applied_offset,
             current_offset: LayoutVector2D::zero(),
-            transform,
         }
     }
 }

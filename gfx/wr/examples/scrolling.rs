@@ -164,7 +164,6 @@ impl Example for App {
                 StickyOffsetBounds::new(0.0, 0.0),
                 LayoutVector2D::new(0.0, 0.0),
                 SpatialTreeItemKey::new(0, 2),
-                None,
             );
 
             let info = CommonItemProperties::new(
