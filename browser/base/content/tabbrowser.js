@@ -3193,7 +3193,7 @@
 
           if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
             let { WorkspacesService } = ChromeUtils.importESModule(
-              "chrome://browser/content/modules/workspaces/WorkspacesService.sys.mjs"
+              "chrome://browser/content/modules/workspaces/WorkspacesService.mjs"
             );      
 
             if (floorpWorkspaceId) {
@@ -3262,7 +3262,7 @@
 
           if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
             let { WorkspacesService } = ChromeUtils.importESModule(
-              "chrome://browser/content/modules/workspaces/WorkspacesService.sys.mjs"
+              "chrome://browser/content/modules/workspaces/WorkspacesService.mjs"
             );      
 
             if (floorpWorkspaceId) {
