@@ -1,24 +1,57 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Fri, 7 Apr 2023 20:28:00 +0000
-Subject: Bug 1819048: Remove this bad assertion. r=webrtc-reviewers,jib
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Tue, 6 Jun 2023 16:37:00 -0700
+Subject: Bug 1833237 - (fix-f0be3bee1f) remove reference to
+ portal:pipewire_base;r?pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D174978
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda82f0abea668699eb68098dc
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8ff886a4d366b4be35b329d1ef733a6df542067c
 ---
- video/task_queue_frame_decode_scheduler.cc | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ modules/video_capture/BUILD.gn                      | 4 ++++
+ modules/video_capture/linux/device_info_pipewire.cc | 4 ++--
+ modules/video_capture/linux/device_info_pipewire.h  | 3 ++-
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
-index cd109c2932..6dd7b47f17 100644
---- a/video/task_queue_frame_decode_scheduler.cc
-+++ b/video/task_queue_frame_decode_scheduler.cc
-@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
-     uint32_t rtp,
-     FrameDecodeTiming::FrameSchedule schedule,
-     FrameReleaseCallback cb) {
--  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
-+  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
-+  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
-   RTC_DCHECK(!scheduled_rtp_.has_value())
-       << "Can not schedule two frames for release at the same time.";
-   RTC_DCHECK(cb);
+diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
+index 58fdf8957b..d500a92c89 100644
+--- a/modules/video_capture/BUILD.gn
++++ b/modules/video_capture/BUILD.gn
+@@ -104,6 +104,10 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+           "../../media:rtc_media_base",
+           "../portal",
+         ]
++        if (build_with_mozilla) {
++          configs -= [ "../portal:pipewire_base" ]
++          public_deps = [ "//third_party/pipewire" ]
++        }
+       }
+     }
+     if (is_win) {
+diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
+index b608648194..ef1cf67d54 100644
+--- a/modules/video_capture/linux/device_info_pipewire.cc
++++ b/modules/video_capture/linux/device_info_pipewire.cc
+@@ -49,9 +49,9 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
+                                           char* deviceUniqueIdUTF8,
+                                           uint32_t deviceUniqueIdUTF8Length,
+                                           char* productUniqueIdUTF8,
+-                                          uint32_t productUniqueIdUTF8Length) {
++                                          uint32_t productUniqueIdUTF8Length,
++                                          pid_t* pid) {
+   RTC_CHECK(pipewire_session_);
+-
+   if (deviceNumber >= NumberOfDevices())
+     return -1;
+ 
+diff --git a/modules/video_capture/linux/device_info_pipewire.h b/modules/video_capture/linux/device_info_pipewire.h
+index 4da0c7a90b..8a33d75892 100644
+--- a/modules/video_capture/linux/device_info_pipewire.h
++++ b/modules/video_capture/linux/device_info_pipewire.h
+@@ -29,7 +29,8 @@ class DeviceInfoPipeWire : public DeviceInfoImpl {
+                         char* deviceUniqueIdUTF8,
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8 = nullptr,
+-                        uint32_t productUniqueIdUTF8Length = 0) override;
++                        uint32_t productUniqueIdUTF8Length = 0,
++                        pid_t* pid = 0) override;
+   /*
+    * Fills the membervariable _captureCapabilities with capabilites for the
+    * given device name.
