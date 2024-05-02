@@ -11200,6 +11200,10 @@ ltd.ua
 // 611coin : https://611project.org/
 611.to
 
+// AAA workspace : https://aaa.vodka
+// Submitted by Kirill Rezraf <admin@aaa.vodka>
+aaa.vodka
+
 // A2 Hosting
 // Submitted by Tyler Hall <sysadmin@a2hosting.com>
 a2hosted.com
@@ -11346,23 +11350,28 @@ cloudfront.net
 
 // Amazon Cognito
 // Submitted by AWS Security <psl-maintainers@amazon.com>
-// Reference: 7bee1013-f456-47df-bfe8-03c78d946d61
+// Reference: 09588633-91fe-49d8-b4e7-ec36496d11f3
 auth.af-south-1.amazoncognito.com
 auth.ap-northeast-1.amazoncognito.com
 auth.ap-northeast-2.amazoncognito.com
 auth.ap-northeast-3.amazoncognito.com
 auth.ap-south-1.amazoncognito.com
+auth.ap-south-2.amazoncognito.com
 auth.ap-southeast-1.amazoncognito.com
 auth.ap-southeast-2.amazoncognito.com
 auth.ap-southeast-3.amazoncognito.com
+auth.ap-southeast-4.amazoncognito.com
 auth.ca-central-1.amazoncognito.com
 auth.eu-central-1.amazoncognito.com
+auth.eu-central-2.amazoncognito.com
 auth.eu-north-1.amazoncognito.com
 auth.eu-south-1.amazoncognito.com
+auth.eu-south-2.amazoncognito.com
 auth.eu-west-1.amazoncognito.com
 auth.eu-west-2.amazoncognito.com
 auth.eu-west-3.amazoncognito.com
 auth.il-central-1.amazoncognito.com
+auth.me-central-1.amazoncognito.com
 auth.me-south-1.amazoncognito.com
 auth.sa-east-1.amazoncognito.com
 auth.us-east-1.amazoncognito.com
@@ -11385,7 +11394,7 @@ us-east-1.amazonaws.com
 
 // Amazon EMR
 // Submitted by AWS Security <psl-maintainers@amazon.com>
-// Reference: 597f3f8e-9283-4e48-8e32-7ee25a1ff6ab
+// Reference: 82f43f9f-bbb8-400e-8349-854f5a62f20d
 emrappui-prod.cn-north-1.amazonaws.com.cn
 emrnotebooks-prod.cn-north-1.amazonaws.com.cn
 emrstudio-prod.cn-north-1.amazonaws.com.cn
@@ -11410,6 +11419,9 @@ emrstudio-prod.ap-northeast-3.amazonaws.com
 emrappui-prod.ap-south-1.amazonaws.com
 emrnotebooks-prod.ap-south-1.amazonaws.com
 emrstudio-prod.ap-south-1.amazonaws.com
+emrappui-prod.ap-south-2.amazonaws.com
+emrnotebooks-prod.ap-south-2.amazonaws.com
+emrstudio-prod.ap-south-2.amazonaws.com
 emrappui-prod.ap-southeast-1.amazonaws.com
 emrnotebooks-prod.ap-southeast-1.amazonaws.com
 emrstudio-prod.ap-southeast-1.amazonaws.com
@@ -11419,18 +11431,30 @@ emrstudio-prod.ap-southeast-2.amazonaws.com
 emrappui-prod.ap-southeast-3.amazonaws.com
 emrnotebooks-prod.ap-southeast-3.amazonaws.com
 emrstudio-prod.ap-southeast-3.amazonaws.com
+emrappui-prod.ap-southeast-4.amazonaws.com
+emrnotebooks-prod.ap-southeast-4.amazonaws.com
+emrstudio-prod.ap-southeast-4.amazonaws.com
 emrappui-prod.ca-central-1.amazonaws.com
 emrnotebooks-prod.ca-central-1.amazonaws.com
 emrstudio-prod.ca-central-1.amazonaws.com
+emrappui-prod.ca-west-1.amazonaws.com
+emrnotebooks-prod.ca-west-1.amazonaws.com
+emrstudio-prod.ca-west-1.amazonaws.com
 emrappui-prod.eu-central-1.amazonaws.com
 emrnotebooks-prod.eu-central-1.amazonaws.com
 emrstudio-prod.eu-central-1.amazonaws.com
+emrappui-prod.eu-central-2.amazonaws.com
+emrnotebooks-prod.eu-central-2.amazonaws.com
+emrstudio-prod.eu-central-2.amazonaws.com
 emrappui-prod.eu-north-1.amazonaws.com
 emrnotebooks-prod.eu-north-1.amazonaws.com
 emrstudio-prod.eu-north-1.amazonaws.com
 emrappui-prod.eu-south-1.amazonaws.com
 emrnotebooks-prod.eu-south-1.amazonaws.com
 emrstudio-prod.eu-south-1.amazonaws.com
+emrappui-prod.eu-south-2.amazonaws.com
+emrnotebooks-prod.eu-south-2.amazonaws.com
+emrstudio-prod.eu-south-2.amazonaws.com
 emrappui-prod.eu-west-1.amazonaws.com
 emrnotebooks-prod.eu-west-1.amazonaws.com
 emrstudio-prod.eu-west-1.amazonaws.com
@@ -11440,6 +11464,9 @@ emrstudio-prod.eu-west-2.amazonaws.com
 emrappui-prod.eu-west-3.amazonaws.com
 emrnotebooks-prod.eu-west-3.amazonaws.com
 emrstudio-prod.eu-west-3.amazonaws.com
+emrappui-prod.il-central-1.amazonaws.com
+emrnotebooks-prod.il-central-1.amazonaws.com
+emrstudio-prod.il-central-1.amazonaws.com
 emrappui-prod.me-central-1.amazonaws.com
 emrnotebooks-prod.me-central-1.amazonaws.com
 emrstudio-prod.me-central-1.amazonaws.com
@@ -11470,9 +11497,11 @@ emrstudio-prod.us-west-2.amazonaws.com
 
 // Amazon Managed Workflows for Apache Airflow
 // Submitted by AWS Security <psl-maintainers@amazon.com>
-// Reference: 4ab55e6f-90c0-4a8d-b6a0-52ca5dbb1c2e
+// Reference: 87f24ece-a77e-40e8-bb4a-f6b74fe9f975
 *.cn-north-1.airflow.amazonaws.com.cn
 *.cn-northwest-1.airflow.amazonaws.com.cn
+*.af-south-1.airflow.amazonaws.com
+*.ap-east-1.airflow.amazonaws.com
 *.ap-northeast-1.airflow.amazonaws.com
 *.ap-northeast-2.airflow.amazonaws.com
 *.ap-south-1.airflow.amazonaws.com
@@ -11481,12 +11510,15 @@ emrstudio-prod.us-west-2.amazonaws.com
 *.ca-central-1.airflow.amazonaws.com
 *.eu-central-1.airflow.amazonaws.com
 *.eu-north-1.airflow.amazonaws.com
+*.eu-south-1.airflow.amazonaws.com
 *.eu-west-1.airflow.amazonaws.com
 *.eu-west-2.airflow.amazonaws.com
 *.eu-west-3.airflow.amazonaws.com
+*.me-south-1.airflow.amazonaws.com
 *.sa-east-1.airflow.amazonaws.com
 *.us-east-1.airflow.amazonaws.com
 *.us-east-2.airflow.amazonaws.com
+*.us-west-1.airflow.amazonaws.com
 *.us-west-2.airflow.amazonaws.com
 
 // Amazon S3
@@ -11780,9 +11812,25 @@ s3-fips.us-west-2.amazonaws.com
 s3-object-lambda.us-west-2.amazonaws.com
 s3-website.us-west-2.amazonaws.com
 
+// Amazon SageMaker Ground Truth
+// Submitted by AWS Security <psl-maintainers@amazon.com>
+// Reference: 98dbfde4-7802-48c3-8751-b60f204e0d9c
+labeling.ap-northeast-1.sagemaker.aws
+labeling.ap-northeast-2.sagemaker.aws
+labeling.ap-south-1.sagemaker.aws
+labeling.ap-southeast-1.sagemaker.aws
+labeling.ap-southeast-2.sagemaker.aws
+labeling.ca-central-1.sagemaker.aws
+labeling.eu-central-1.sagemaker.aws
+labeling.eu-west-1.sagemaker.aws
+labeling.eu-west-2.sagemaker.aws
+labeling.us-east-1.sagemaker.aws
+labeling.us-east-2.sagemaker.aws
+labeling.us-west-2.sagemaker.aws
+
 // Amazon SageMaker Notebook Instances
 // Submitted by AWS Security <psl-maintainers@amazon.com>
-// Reference: ce8ae0b1-0070-496d-be88-37c31837af9d
+// Reference: b5ea56df-669e-43cc-9537-14aa172f5dfc
 notebook.af-south-1.sagemaker.aws
 notebook.ap-east-1.sagemaker.aws
 notebook.ap-northeast-1.sagemaker.aws
@@ -11819,6 +11867,7 @@ notebook-fips.us-gov-east-1.sagemaker.aws
 notebook.us-gov-west-1.sagemaker.aws
 notebook-fips.us-gov-west-1.sagemaker.aws
 notebook.us-west-1.sagemaker.aws
+notebook-fips.us-west-1.sagemaker.aws
 notebook.us-west-2.sagemaker.aws
 notebook-fips.us-west-2.sagemaker.aws
 notebook.cn-north-1.sagemaker.com.cn
@@ -11826,7 +11875,7 @@ notebook.cn-northwest-1.sagemaker.com.cn
 
 // Amazon SageMaker Studio
 // Submitted by AWS Security <psl-maintainers@amazon.com>
-// Reference: 057ee397-6bf8-4f20-b807-d7bc145ac980
+// Reference: 69c723d9-6e1a-4bff-a203-48eecd203183
 studio.af-south-1.sagemaker.aws
 studio.ap-east-1.sagemaker.aws
 studio.ap-northeast-1.sagemaker.aws
@@ -11840,6 +11889,7 @@ studio.ca-central-1.sagemaker.aws
 studio.eu-central-1.sagemaker.aws
 studio.eu-north-1.sagemaker.aws
 studio.eu-south-1.sagemaker.aws
+studio.eu-south-2.sagemaker.aws
 studio.eu-west-1.sagemaker.aws
 studio.eu-west-2.sagemaker.aws
 studio.eu-west-3.sagemaker.aws
@@ -11950,6 +12000,11 @@ webview-assets.cloud9.us-west-1.amazonaws.com
 webview-assets.aws-cloud9.us-west-2.amazonaws.com
 vfs.cloud9.us-west-2.amazonaws.com
 webview-assets.cloud9.us-west-2.amazonaws.com
+
+// AWS Directory Service
+// Submitted by AWS Security <psl-maintainers@amazon.com>
+// Reference: a13203e8-42dc-4045-a0d2-2ee67bed1068
+awsapps.com
 
 // AWS Elastic Beanstalk
 // Submitted by AWS Security <psl-maintainers@amazon.com>
@@ -12144,6 +12199,10 @@ pages.gay
 // Submitted by Adrian <adrian@betainabox.com>
 betainabox.com
 
+// University of Bielsko-Biala regional domain: http://dns.bielsko.pl/
+// Submitted by Marcin <dns@ath.bielsko.pl>
+bielsko.pl
+
 // BinaryLane : http://www.binarylane.com
 // Submitted by Nathan O'Sullivan <nathan@mammoth.com.au>
 bnr.la
@@ -12190,7 +12249,8 @@ square7.net
 *.s.brave.io
 
 // Brendly : https://brendly.rs
-// Submitted by Dusan Radovanovic <dusan.radovanovic@brendly.rs>
+// Submitted by Dusan Radovanovic <administracija@brendly.rs>
+shop.brendly.hr
 shop.brendly.rs
 
 // BrowserSafetyMark
@@ -13391,10 +13451,6 @@ localcert.net
 localhostcert.net
 corpnet.work
 
-// Ghost Foundation : https://ghost.org
-// Submitted by Matt Hanley <security@ghost.org>
-ghost.io
-
 // GignoSystemJapan: http://gsj.bz
 // Submitted by GignoSystemJapan <kakutou-ec@gsj.bz>
 gsj.bz
@@ -14063,10 +14119,6 @@ co.network
 co.place
 co.technology
 
-// Lightmaker Property Manager, Inc. : https://app.lmpm.com/
-// Submitted by Greg Holland <greg.holland@lmpm.com>
-app.lmpm.com
-
 // linkyard ldt: https://www.linkyard.ch/
 // Submitted by Mario Siegenthaler <mario.siegenthaler@linkyard.ch>
 linkyard.cloud
@@ -14312,6 +14364,10 @@ netlify.app
 // Submitted by Trung Tran <Trung.Tran@neustar.biz>
 4u.com
 
+// NGO.US Registry : https://nic.ngo.us
+// Submitted by Alstra Solutions Ltd. Networking Team <admin@alstra.org>
+ngo.us
+
 // ngrok : https://ngrok.com/
 // Submitted by Alan Shreve <alan@ngrok.com>
 ngrok.app
@@ -14495,6 +14551,10 @@ pcloud.host
 // Submitted by Matthew Brown <mattbrown@nyc.mn>
 nyc.mn
 
+// O3O.Foundation : https://o3o.foundation/
+// Submitted by the prvcy.page Registry Team <psl@registry.prvcy.page>
+prvcy.page
+
 // Observable, Inc. : https://observablehq.com
 // Submitted by Mike Bostock <dns@observablehq.com>
 static.observableusercontent.com
@@ -14624,6 +14684,7 @@ pagexl.com
 // pcarrier.ca Software Inc: https://pcarrier.ca/
 // Submitted by Pierre Carrier <pc@rrier.ca>
 *.xmit.co
+xmit.dev
 srv.us
 gh.srv.us
 gl.srv.us
@@ -14713,10 +14774,6 @@ xen.prgmr.com
 // priv.at : http://www.nic.priv.at/
 // Submitted by registry <lendl@nic.at>
 priv.at
-
-// privacytools.io : https://www.privacytools.io/
-// Submitted by Jonah Aragon <jonah@privacytools.io>
-prvcy.page
 
 // Protocol Labs : https://protocol.ai/
 // Submitted by Michael Burns <noc@protocol.ai>

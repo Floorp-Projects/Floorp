@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1714427627443,
+      "derHash": "f1eunNLVdKEDdeXd1eIhbK+M9Qt1nMYiJKGEDLg7SCw=",
+      "subject": "CN=TUBITAK Kamu SM SSL Sertifika Hizmet Saglayicisi - Surum 2,O=TUBITAK Kamu Sertifikasyon Merkezi,ST=Kocaeli,C=TR",
+      "subjectDN": "MIGRMQswCQYDVQQGEwJUUjEQMA4GA1UECAwHS29jYWVsaTErMCkGA1UECgwiVFVCSVRBSyBLYW11IFNlcnRpZmlrYXN5b24gTWVya2V6aTFDMEEGA1UEAww6VFVCSVRBSyBLYW11IFNNIFNTTCBTZXJ0aWZpa2EgSGl6bWV0IFNhZ2xheWljaXNpIC0gU3VydW0gMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "75a728b640e676b8e595337af1762254cff720fd4ac8135ef117a393a44bd814",
+        "size": 1882,
+        "filename": "Ug8FXxQFGfGFLV5SAvBW4_SeEJGGTkYvNWRN0Kw9nsY=.pem",
+        "location": "security-state-staging/intermediates/39c5e4e0-1563-4742-8514-8f95fc550320.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Ug8FXxQFGfGFLV5SAvBW4/SeEJGGTkYvNWRN0Kw9nsY=",
+      "crlite_enrolled": false,
+      "id": "a8041685-8527-4f8b-b58f-159cf26d9259",
+      "last_modified": 1714427823465
+    },
+    {
       "schema": 1714384143635,
       "derHash": "NSWCzMhbOUTjzSUF2TGPIqvqQYv/KaD+TSwN8oDyAOM=",
       "subject": "CN=KeepTrust DV TLS RSA CA G2,O=Shanghai Huandu Info Tech Co. Ltd.,C=CN",
@@ -30781,5 +30799,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1714384623510
+  "timestamp": 1714427823465
 }
