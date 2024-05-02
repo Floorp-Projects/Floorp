@@ -680,7 +680,7 @@
 
 
   <!-- Checkbox menu item text to request desktop site -->
-    <string name="preference_performance_request_desktop_site">Yêu cầu trang web trên máy tính</string>
+    <string name="preference_performance_request_desktop_site">Yêu cầu trang web cho máy tính</string>
 
     <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site2">Trang web cho máy tính</string>

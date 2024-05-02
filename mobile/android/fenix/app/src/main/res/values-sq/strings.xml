@@ -142,8 +142,10 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Skedë e re private</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">Shkurtore fjalëkalimesh</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">Fjalëkalime</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Shkurtore fjalëkalimesh</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -185,11 +187,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Ndale</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Shtesa</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Shtesa</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Zgjerime</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Hollësi llogarie</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">S’ka shtesa këtu</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">S’ka shtesa këtu</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ndihmë</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -205,11 +209,13 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Shtoje te skena e Kreut</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Instaloje</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Instaloje</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Rinjëkohëso</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Gjej në faqe</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">Gjeni në faqe…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Përktheje faqen</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -242,6 +248,27 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Përshtatni faqe hyrëse</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in">Hyni</string>
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">Skedë e re private</string>
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">Fjalëkalime</string>
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">E re në %1$s</string>
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">Kaloni te sajti për desktop</string>
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">Mjete</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">Ruaje</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">S’ka zgjerime këtu</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -596,10 +623,14 @@
     <string name="quit_application">Po mbyllet aplikacioni, që të aplikohen ndryshimet…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Shtesa</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Shtesa</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Zgjerime</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Instaloni shtesë prej kartele</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Instaloni shtesë prej kartele</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Instaloni zgjerim prej kartele</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Njoftime</string>
 
@@ -608,9 +639,17 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Nuk lejohen</string>
 
+    <!-- Add-on Permissions -->
+    <!-- The title of the required permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">E domosdoshme</string>
+    <!-- The title of the optional permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Opsionale</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Koleksion vetjak shtesash</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Koleksion vetjak shtesash</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Koleksion vetjak Zgjerimesh</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -620,7 +659,7 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">I zoti i koleksionit (ID Përdoruesi)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Koleksioni i shtesave u ndryshua. Po dilet nga aplikacioni, për të zbatuar ndryshimet…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Koleksioni i shtesave u ndryshua. Po dilet nga aplikacioni, për të zbatuar ndryshimet…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -675,21 +714,31 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Ka të gatshme shtesa të reja</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Ka të gatshme shtesa të reja</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Shihni mbi 100 zgjerime të reja që ju lejojnë ta bëni Firefox-in si e doni.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Eksploroni shtesa</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Eksploroni shtesa</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Eksploroni zgjerime</string>
+
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Shtesat janë çaktivizuar përkohësisht</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Shtesat janë çaktivizuar përkohësisht</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Zgjerimet janë çaktivizuar përkohësisht</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Një ose më tepër shtesa reshtën së funksionuari, duke e bërë të paqëndrueshëm sistemin tuaj. %1$s-u u rrek, pa sukses, të rinisë shtesën(at).\n\nShtesat s’do të rinisen gjatë sesionit tuaj të tanishëm.\n\nHeqja, ose çaktivizimi i shtesave mund ta ndreqë këtë problem.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Një ose më tepër shtesa reshtën së funksionuari, duke e bërë të paqëndrueshëm sistemin tuaj. %1$s-u u rrek, pa sukses, të rinisë shtesën(at).\n\nShtesat s’do të rinisen gjatë sesionit tuaj të tanishëm.\n\nHeqja, ose çaktivizimi i shtesave mund ta ndreqë këtë problem.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Provoni të rinisni shtesa</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Provoni të rinisni shtesa</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Provoni të rinisni zgjerime</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Vazhdo me shtesat të çaktivizuara</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Vazhdo me shtesat të çaktivizuara</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Vazhdo me zgjerime të çaktivizuara</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2428,6 +2477,8 @@
     <string name="translations_bottom_sheet_translate_from">Përkthe nga</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">Përkthe në</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">Provoni një tjetër gjuhë burim</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Jo tani</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
@@ -2452,7 +2503,7 @@
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Na ndjeni, s’e mbulojmë ende %1$s.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more">Mësoni më tepër</string>
+    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Mësoni më tepër</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Po përkthehet…</string>
@@ -2465,7 +2516,9 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title">Mundësi Përkthimi</string>
+    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Mundësi Përkthimi</string>
+    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
+    <string name="translation_option_bottom_sheet_title_heading">Mundësi përkthimi</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Ofro përherë përkthim</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2482,6 +2535,9 @@
     <string name="translation_option_bottom_sheet_translation_settings">Rregullime përkthimi</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">Mbi përkthime në %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
+    <string name="translation_option_bottom_sheet_close_content_description">Mbylle fletën e Përkthimeve</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2604,6 +2660,8 @@
     <string name="debug_drawer_title">Mjete Diagnostikim</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Shko mbrapsht</string>
+
+    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Mjete Skedash</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2626,4 +2684,16 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Shtoje te skeda joaktive</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Shtoje te skeda private</string>
+
+    <!-- Micro survey -->
+
+    <!-- Debug drawer logins -->
+    <!-- The title of the Logins feature in the Debug Drawer. -->
+    <string name="debug_drawer_logins_title">Kredenciale Hyrjesh</string>
+    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
+    <string name="debug_drawer_logins_current_domain_label">Përkatësi e tanishme: %s</string>
+    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+    <string name="debug_drawer_logins_add_login_button">Shtoni për këtë përkatësi një palë kredenciale të rreme hyrjeje</string>
+    <!-- Content description for delete button where parameter will be the username of the login -->
+    <string name="debug_drawer_logins_delete_login_button_content_description">Fshi kredenciale hyrjeje me emër përdoruesi %s</string>
 </resources>
