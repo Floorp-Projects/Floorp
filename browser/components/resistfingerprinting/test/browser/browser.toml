@@ -62,6 +62,8 @@ lineno = "54"
 
 ["browser_canvascompare_iframes.js"]
 
+["browser_canvascompare_popups.js"]
+
 ["browser_cross_origin_isolated_animation_api.js"]
 lineno = "56"
 
