@@ -30,7 +30,8 @@ LOCAL_INCLUDES += [
     "/tools/profiler/lul",
 ]
 
-if CONFIG["OS_TARGET"] != "Android":
+# Bug 1885381 - Hangs/timeouts under TSAN
+if CONFIG["OS_TARGET"] != "Android" and not CONFIG["MOZ_TSAN"]:
     UNIFIED_SOURCES += [
         "GeckoProfiler.cpp",
         "ThreadProfileTest.cpp",
