@@ -1,4 +1,9 @@
 use crate::convert::*;
+#[allow(unused)]
+use zerocopy::transmute;
+
+///This constant comes from Kunth's prng (Empirically it works better than those from splitmix32).
+pub(crate) const MULTIPLE: u64 = 6364136223846793005;
 
 /// This is a constant with a lot of special properties found by automated search.
 /// See the unit tests below. (Below are alternative values)
@@ -8,11 +13,19 @@ const SHUFFLE_MASK: u128 = 0x020a0700_0c01030e_050f0d08_06090b04_u128;
 //const SHUFFLE_MASK: u128 = 0x040A0700_030E0106_0D050F08_020B0C09_u128;
 
 #[inline(always)]
+#[cfg(feature = "folded_multiply")]
 pub(crate) const fn folded_multiply(s: u64, by: u64) -> u64 {
     let result = (s as u128).wrapping_mul(by as u128);
     ((result & 0xffff_ffff_ffff_ffff) as u64) ^ ((result >> 64) as u64)
 }
 
+#[inline(always)]
+#[cfg(not(feature = "folded_multiply"))]
+pub(crate) const fn folded_multiply(s: u64, by: u64) -> u64 {
+    let b1 = s.wrapping_mul(by.swap_bytes());
+    let b2 = s.swap_bytes().wrapping_mul(!by);
+    b1 ^ b2.swap_bytes()
+}
 
 /// Given a small (less than 8 byte slice) returns the same data stored in two u32s.
 /// (order of and non-duplication of bytes is NOT guaranteed)
@@ -44,8 +57,7 @@ pub(crate) fn shuffle(a: u128) -> u128 {
         use core::arch::x86::*;
         #[cfg(target_arch = "x86_64")]
         use core::arch::x86_64::*;
-        use core::mem::transmute;
-        unsafe { transmute(_mm_shuffle_epi8(transmute(a), transmute(SHUFFLE_MASK))) }
+        unsafe { transmute!(_mm_shuffle_epi8(transmute!(a), transmute!(SHUFFLE_MASK))) }
     }
     #[cfg(not(all(target_feature = "ssse3", not(miri))))]
     {
@@ -60,7 +72,7 @@ pub(crate) fn add_and_shuffle(a: u128, b: u128) -> u128 {
     shuffle(sum.convert())
 }
 
-#[allow(unused)] //not used by fallbac
+#[allow(unused)] //not used by fallback
 #[inline(always)]
 pub(crate) fn shuffle_and_add(base: u128, to_add: u128) -> u128 {
     let shuffled: [u64; 2] = shuffle(base).convert();
@@ -70,13 +82,12 @@ pub(crate) fn shuffle_and_add(base: u128, to_add: u128) -> u128 {
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), target_feature = "sse2", not(miri)))]
 #[inline(always)]
 pub(crate) fn add_by_64s(a: [u64; 2], b: [u64; 2]) -> [u64; 2] {
-    use core::mem::transmute;
     unsafe {
         #[cfg(target_arch = "x86")]
         use core::arch::x86::*;
         #[cfg(target_arch = "x86_64")]
         use core::arch::x86_64::*;
-        transmute(_mm_add_epi64(transmute(a), transmute(b)))
+        transmute!(_mm_add_epi64(transmute!(a), transmute!(b)))
     }
 }
 
@@ -94,26 +105,26 @@ pub(crate) fn aesenc(value: u128, xor: u128) -> u128 {
     use core::arch::x86::*;
     #[cfg(target_arch = "x86_64")]
     use core::arch::x86_64::*;
-    use core::mem::transmute;
     unsafe {
-        let value = transmute(value);
-        transmute(_mm_aesenc_si128(value, transmute(xor)))
+        let value = transmute!(value);
+        transmute!(_mm_aesenc_si128(value, transmute!(xor)))
     }
 }
 
-#[cfg(all(any(target_arch = "arm", target_arch = "aarch64"), target_feature = "crypto", not(miri), feature = "stdsimd"))]
+#[cfg(any(
+    all(feature = "nightly-arm-aes", target_arch = "aarch64", target_feature = "aes", not(miri)),
+    all(feature = "nightly-arm-aes", target_arch = "arm", target_feature = "aes", not(miri)),
+))]
 #[allow(unused)]
 #[inline(always)]
 pub(crate) fn aesenc(value: u128, xor: u128) -> u128 {
-    #[cfg(target_arch = "arm")]
-    use core::arch::arm::*;
     #[cfg(target_arch = "aarch64")]
     use core::arch::aarch64::*;
-    use core::mem::transmute;
-    unsafe {
-        let value = transmute(value);
-        transmute(vaesmcq_u8(vaeseq_u8(value, transmute(xor))))
-    }
+    #[cfg(target_arch = "arm")]
+    use core::arch::arm::*;
+    let res = unsafe { vaesmcq_u8(vaeseq_u8(transmute!(value), transmute!(0u128))) };
+    let value: u128 = transmute!(res);
+    xor ^ value
 }
 
 #[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), target_feature = "aes", not(miri)))]
@@ -124,32 +135,55 @@ pub(crate) fn aesdec(value: u128, xor: u128) -> u128 {
     use core::arch::x86::*;
     #[cfg(target_arch = "x86_64")]
     use core::arch::x86_64::*;
-    use core::mem::transmute;
     unsafe {
-        let value = transmute(value);
-        transmute(_mm_aesdec_si128(value, transmute(xor)))
+        let value = transmute!(value);
+        transmute!(_mm_aesdec_si128(value, transmute!(xor)))
     }
 }
 
-#[cfg(all(any(target_arch = "arm", target_arch = "aarch64"), target_feature = "crypto", not(miri), feature = "stdsimd"))]
+#[cfg(any(
+    all(feature = "nightly-arm-aes", target_arch = "aarch64", target_feature = "aes", not(miri)),
+    all(feature = "nightly-arm-aes", target_arch = "arm", target_feature = "aes", not(miri)),
+))]
 #[allow(unused)]
 #[inline(always)]
 pub(crate) fn aesdec(value: u128, xor: u128) -> u128 {
-    #[cfg(target_arch = "arm")]
-    use core::arch::arm::*;
     #[cfg(target_arch = "aarch64")]
     use core::arch::aarch64::*;
-    use core::mem::transmute;
-    unsafe {
-        let value = transmute(value);
-        transmute(vaesimcq_u8(vaesdq_u8(value, transmute(xor))))
+    #[cfg(target_arch = "arm")]
+    use core::arch::arm::*;
+    let res = unsafe { vaesimcq_u8(vaesdq_u8(transmute!(value), transmute!(0u128))) };
+    let value: u128 = transmute!(res);
+    xor ^ value
+}
+
+#[allow(unused)]
+#[inline(always)]
+pub(crate) fn add_in_length(enc: &mut u128, len: u64) {
+    #[cfg(all(target_arch = "x86_64", target_feature = "sse2", not(miri)))]
+    {
+        #[cfg(target_arch = "x86_64")]
+        use core::arch::x86_64::*;
+
+        unsafe {
+            let enc = enc as *mut u128;
+            let len = _mm_cvtsi64_si128(len as i64);
+            let data = _mm_loadu_si128(enc.cast());
+            let sum = _mm_add_epi64(data, len);
+            _mm_storeu_si128(enc.cast(), sum);
+        }
+    }
+    #[cfg(not(all(target_arch = "x86_64", target_feature = "sse2", not(miri))))]
+    {
+        let mut t: [u64; 2] = enc.convert();
+        t[0] = t[0].wrapping_add(len);
+        *enc = t.convert();
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::convert::Convert;
 
     // This is code to search for the shuffle constant
     //
@@ -162,7 +196,7 @@ mod test {
     //     #[cfg(target_arch = "x86_64")]
     //     use core::arch::x86_64::*;
     //     MASK.with(|mask| {
-    //         unsafe { transmute(_mm_shuffle_epi8(transmute(a), transmute(mask.get()))) }
+    //         unsafe { transmute!(_mm_shuffle_epi8(transmute!(a), transmute!(mask.get()))) }
     //     })
     // }
     //
@@ -326,5 +360,13 @@ mod test {
             assert_ne!(numbered, shuffled, "Equal after {} vs {:x}", count, shuffled);
             shuffled = shuffle(shuffled);
         }
+    }
+
+    #[test]
+    fn test_add_length() {
+        let mut enc = (u64::MAX as u128) << 64 | 50;
+        add_in_length(&mut enc, u64::MAX);
+        assert_eq!(enc >> 64, u64::MAX as u128);
+        assert_eq!(enc as u64, 49);
     }
 }

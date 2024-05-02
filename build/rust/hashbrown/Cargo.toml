@@ -1,0 +1,19 @@
+[package]
+name = "hashbrown"
+version = "0.12.999"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[features]
+# N.B., not using `hashbrown/default` because it includes `hashbrown/allocator-api2`, which we want
+# to avoid.
+default = ["ahash", "inline-more"]
+ahash = ["hashbrown/ahash"]
+inline-more = ["hashbrown/inline-more"]
+raw = ["hashbrown/raw"]
+
+[dependencies.hashbrown]
+version = "0.14.3"
+default-features = false

@@ -7,17 +7,13 @@ macro_rules! convert {
         impl Convert<$b> for $a {
             #[inline(always)]
             fn convert(self) -> $b {
-                unsafe {
-                    core::mem::transmute::<$a, $b>(self)
-                }
+                zerocopy::transmute!(self)
             }
         }
         impl Convert<$a> for $b {
             #[inline(always)]
             fn convert(self) -> $a {
-                unsafe {
-                    core::mem::transmute::<$b, $a>(self)
-                }
+                zerocopy::transmute!(self)
             }
         }
     };
@@ -69,8 +65,7 @@ macro_rules! as_array {
         {
             #[inline(always)]
             fn as_array<T>(slice: &[T]) -> &[T; $len] {
-                assert_eq!(slice.len(), $len);
-                unsafe { &*(slice.as_ptr() as *const [_; $len]) }
+                core::convert::TryFrom::try_from(slice).unwrap()
             }
             as_array($input)
         }

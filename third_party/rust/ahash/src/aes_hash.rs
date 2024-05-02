@@ -1,10 +1,8 @@
 use crate::convert::*;
-#[cfg(feature = "specialize")]
-use crate::fallback_hash::MULTIPLE;
 use crate::operations::*;
+use crate::random_state::PI;
 use crate::RandomState;
 use core::hash::Hasher;
-use crate::random_state::PI;
 
 /// A `Hasher` for hashing an arbitrary stream of bytes.
 ///
@@ -50,7 +48,7 @@ impl AHasher {
     /// println!("Hash is {:x}!", hasher.finish());
     /// ```
     #[inline]
-    pub fn new_with_keys(key1: u128, key2: u128) -> Self {
+    pub(crate) fn new_with_keys(key1: u128, key2: u128) -> Self {
         let pi: [u128; 2] = PI.convert();
         let key1 = key1 ^ pi[0];
         let key2 = key2 ^ pi[1];
@@ -70,7 +68,6 @@ impl AHasher {
         }
     }
 
-
     #[inline]
     pub(crate) fn from_random_state(rand_state: &RandomState) -> Self {
         let key1 = [rand_state.k0, rand_state.k1].convert();
@@ -83,32 +80,24 @@ impl AHasher {
     }
 
     #[inline(always)]
-    fn add_in_length(&mut self, length: u64) {
-        //This will be scrambled by the next AES round.
-        let mut enc: [u64; 2] = self.enc.convert();
-        enc[0] = enc[0].wrapping_add(length);
-        self.enc = enc.convert();
-    }
-
-    #[inline(always)]
     fn hash_in(&mut self, new_value: u128) {
-        self.enc = aesenc(self.enc, new_value);
+        self.enc = aesdec(self.enc, new_value);
         self.sum = shuffle_and_add(self.sum, new_value);
     }
 
     #[inline(always)]
     fn hash_in_2(&mut self, v1: u128, v2: u128) {
-        self.enc = aesenc(self.enc, v1);
+        self.enc = aesdec(self.enc, v1);
         self.sum = shuffle_and_add(self.sum, v1);
-        self.enc = aesenc(self.enc, v2);
+        self.enc = aesdec(self.enc, v2);
         self.sum = shuffle_and_add(self.sum, v2);
     }
 
     #[inline]
     #[cfg(feature = "specialize")]
     fn short_finish(&self) -> u64 {
-        let combined = aesdec(self.sum, self.enc);
-        let result: [u64; 2] = aesenc(combined, combined).convert();
+        let combined = aesenc(self.sum, self.enc);
+        let result: [u64; 2] = aesdec(combined, combined).convert();
         result[0]
     }
 }
@@ -138,7 +127,11 @@ impl Hasher for AHasher {
     }
 
     #[inline]
-    #[cfg(any(target_pointer_width = "64", target_pointer_width = "32", target_pointer_width = "16"))]
+    #[cfg(any(
+        target_pointer_width = "64",
+        target_pointer_width = "32",
+        target_pointer_width = "16"
+    ))]
     fn write_usize(&mut self, i: usize) {
         self.write_u64(i as u64);
     }
@@ -159,7 +152,8 @@ impl Hasher for AHasher {
     fn write(&mut self, input: &[u8]) {
         let mut data = input;
         let length = data.len();
-        self.add_in_length(length as u64);
+        add_in_length(&mut self.enc, length as u64);
+
         //A 'binary search' on sizes reduces the number of comparisons.
         if data.len() <= 8 {
             let value = read_small(data);
@@ -180,10 +174,10 @@ impl Hasher for AHasher {
                     sum[1] = shuffle_and_add(sum[1], tail[3]);
                     while data.len() > 64 {
                         let (blocks, rest) = data.read_u128x4();
-                        current[0] = aesenc(current[0], blocks[0]);
-                        current[1] = aesenc(current[1], blocks[1]);
-                        current[2] = aesenc(current[2], blocks[2]);
-                        current[3] = aesenc(current[3], blocks[3]);
+                        current[0] = aesdec(current[0], blocks[0]);
+                        current[1] = aesdec(current[1], blocks[1]);
+                        current[2] = aesdec(current[2], blocks[2]);
+                        current[3] = aesdec(current[3], blocks[3]);
                         sum[0] = shuffle_and_add(sum[0], blocks[0]);
                         sum[1] = shuffle_and_add(sum[1], blocks[1]);
                         sum[0] = shuffle_and_add(sum[0], blocks[2]);
@@ -214,9 +208,9 @@ impl Hasher for AHasher {
     }
     #[inline]
     fn finish(&self) -> u64 {
-        let combined = aesdec(self.sum, self.enc);
-        let result: [u64; 2] = aesenc(aesenc(combined, self.key), combined).convert();
-        result[1]
+        let combined = aesenc(self.sum, self.enc);
+        let result: [u64; 2] = aesdec(aesdec(combined, self.key), combined).convert();
+        result[0]
     }
 }
 
@@ -231,8 +225,7 @@ pub(crate) struct AHasherU64 {
 impl Hasher for AHasherU64 {
     #[inline]
     fn finish(&self) -> u64 {
-        let rot = (self.pad & 63) as u32;
-        self.buffer.rotate_left(rot)
+        folded_multiply(self.buffer, self.pad)
     }
 
     #[inline]
@@ -327,7 +320,7 @@ pub(crate) struct AHasherStr(pub AHasher);
 impl Hasher for AHasherStr {
     #[inline]
     fn finish(&self) -> u64 {
-        let result : [u64; 2] = self.0.enc.convert();
+        let result: [u64; 2] = self.0.enc.convert();
         result[0]
     }
 
@@ -335,14 +328,15 @@ impl Hasher for AHasherStr {
     fn write(&mut self, bytes: &[u8]) {
         if bytes.len() > 8 {
             self.0.write(bytes);
-            self.0.enc = aesdec(self.0.sum, self.0.enc);
-            self.0.enc = aesenc(aesenc(self.0.enc, self.0.key), self.0.enc);
+            self.0.enc = aesenc(self.0.sum, self.0.enc);
+            self.0.enc = aesdec(aesdec(self.0.enc, self.0.key), self.0.enc);
         } else {
-            self.0.add_in_length(bytes.len() as u64);
+            add_in_length(&mut self.0.enc, bytes.len() as u64);
+
             let value = read_small(bytes).convert();
             self.0.sum = shuffle_and_add(self.0.sum, value);
-            self.0.enc = aesdec(self.0.sum, self.0.enc);
-            self.0.enc = aesenc(aesenc(self.0.enc, self.0.key), self.0.enc);
+            self.0.enc = aesenc(self.0.sum, self.0.enc);
+            self.0.enc = aesdec(aesdec(self.0.enc, self.0.key), self.0.enc);
         }
     }
 
@@ -437,4 +431,3 @@ mod tests {
         assert_eq!(bytes, 0x6464646464646464);
     }
 }
-

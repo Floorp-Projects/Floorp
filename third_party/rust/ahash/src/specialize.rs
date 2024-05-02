@@ -17,28 +17,7 @@ use alloc::vec::Vec;
 /// Provides a way to get an optimized hasher for a given data type.
 /// Rather than using a Hasher generically which can hash any value, this provides a way to get a specialized hash
 /// for a specific type. So this may be faster for primitive types.
-/// # Example
-/// ```
-/// use std::hash::BuildHasher;
-/// use ahash::RandomState;
-/// use ahash::CallHasher;
-///
-/// let hash_builder = RandomState::new();
-/// //...
-/// let value: u32 = 17;
-/// let hash = u32::get_hash(&value, &hash_builder);
-/// ```
-/// Note that the type used to invoke `get_hash` must be the same a the type of value passed.
-/// For example get a hasher specialized on `[u8]` can invoke:
-/// ```
-/// /// use std::hash::BuildHasher;
-/// # use ahash::RandomState;
-/// # use ahash::CallHasher;
-/// # let hash_builder = RandomState::new();
-/// let bytes: [u8; 4] = [1, 2, 3, 4];
-/// let hash = <[u8]>::get_hash(&bytes, &hash_builder);
-/// ```
-pub trait CallHasher {
+pub(crate) trait CallHasher {
     fn get_hash<H: Hash + ?Sized, B: BuildHasher>(value: &H, build_hasher: &B) -> u64;
 }
 

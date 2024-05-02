@@ -14,27 +14,49 @@ use serde::{
 /// A [`HashSet`](std::collections::HashSet) using [`RandomState`](crate::RandomState) to hash the items.
 /// (Requires the `std` feature to be enabled.)
 #[derive(Clone)]
-pub struct AHashSet<T, S = crate::RandomState>(HashSet<T, S>);
+pub struct AHashSet<T, S = RandomState>(HashSet<T, S>);
 
-impl<T> From<HashSet<T, crate::RandomState>> for AHashSet<T> {
-    fn from(item: HashSet<T, crate::RandomState>) -> Self {
+impl<T> From<HashSet<T, RandomState>> for AHashSet<T> {
+    fn from(item: HashSet<T, RandomState>) -> Self {
         AHashSet(item)
     }
 }
 
-impl<T> Into<HashSet<T, crate::RandomState>> for AHashSet<T> {
-    fn into(self) -> HashSet<T, crate::RandomState> {
+impl<T, const N: usize> From<[T; N]> for AHashSet<T>
+where
+    T: Eq + Hash,
+{
+    /// # Examples
+    ///
+    /// ```
+    /// use ahash::AHashSet;
+    ///
+    /// let set1 = AHashSet::from([1, 2, 3, 4]);
+    /// let set2: AHashSet<_> = [1, 2, 3, 4].into();
+    /// assert_eq!(set1, set2);
+    /// ```
+    fn from(arr: [T; N]) -> Self {
+        Self::from_iter(arr)
+    }
+}
+
+impl<T> Into<HashSet<T, RandomState>> for AHashSet<T> {
+    fn into(self) -> HashSet<T, RandomState> {
         self.0
     }
 }
 
 impl<T> AHashSet<T, RandomState> {
+    /// This crates a hashset using [RandomState::new].
+    /// See the documentation in [RandomSource] for notes about key strength.
     pub fn new() -> Self {
-        AHashSet(HashSet::with_hasher(RandomState::default()))
+        AHashSet(HashSet::with_hasher(RandomState::new()))
     }
 
+    /// This crates a hashset with the specified capacity using [RandomState::new].
+    /// See the documentation in [RandomSource] for notes about key strength.
     pub fn with_capacity(capacity: usize) -> Self {
-        AHashSet(HashSet::with_capacity_and_hasher(capacity, RandomState::default()))
+        AHashSet(HashSet::with_capacity_and_hasher(capacity, RandomState::new()))
     }
 }
 
@@ -219,14 +241,17 @@ where
     }
 }
 
-impl<T, S> FromIterator<T> for AHashSet<T, S>
+impl<T> FromIterator<T> for AHashSet<T, RandomState>
 where
     T: Eq + Hash,
-    S: BuildHasher + Default,
 {
+    /// This crates a hashset from the provided iterator using [RandomState::new].
+    /// See the documentation in [RandomSource] for notes about key strength.
     #[inline]
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> AHashSet<T, S> {
-        AHashSet(HashSet::from_iter(iter))
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> AHashSet<T> {
+        let mut inner = HashSet::with_hasher(RandomState::new());
+        inner.extend(iter);
+        AHashSet(inner)
     }
 }
 
@@ -268,6 +293,10 @@ where
     }
 }
 
+/// NOTE: For safety this trait impl is only available available if either of the flags `runtime-rng` (on by default) or
+/// `compile-time-rng` are enabled. This is to prevent weakly keyed maps from being accidentally created. Instead one of
+/// constructors for [RandomState] must be used.
+#[cfg(any(feature = "compile-time-rng", feature = "runtime-rng", feature = "no-rng"))]
 impl<T> Default for AHashSet<T, RandomState> {
     /// Creates an empty `AHashSet<T, S>` with the `Default` value for the hasher.
     #[inline]
@@ -295,6 +324,10 @@ where
         let hash_set = HashSet::deserialize(deserializer);
         hash_set.map(|hash_set| Self(hash_set))
     }
+
+    fn deserialize_in_place<D: Deserializer<'de>>(deserializer: D, place: &mut Self) -> Result<(), D::Error> {
+        HashSet::deserialize_in_place(deserializer, place)
+    }
 }
 
 #[cfg(all(test, feature = "serde"))]
@@ -306,8 +339,14 @@ mod test {
         let mut set = AHashSet::new();
         set.insert("for".to_string());
         set.insert("bar".to_string());
-        let serialization = serde_json::to_string(&set).unwrap();
-        let deserialization: AHashSet<String> = serde_json::from_str(&serialization).unwrap();
+        let mut serialization = serde_json::to_string(&set).unwrap();
+        let mut deserialization: AHashSet<String> = serde_json::from_str(&serialization).unwrap();
+        assert_eq!(deserialization, set);
+
+        set.insert("baz".to_string());
+        serialization = serde_json::to_string(&set).unwrap();
+        let mut deserializer = serde_json::Deserializer::from_str(&serialization);
+        AHashSet::deserialize_in_place(&mut deserializer, &mut deserialization).unwrap();
         assert_eq!(deserialization, set);
     }
 }

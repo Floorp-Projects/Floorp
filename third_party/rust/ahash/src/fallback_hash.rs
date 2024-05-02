@@ -1,12 +1,11 @@
 use crate::convert::*;
 use crate::operations::folded_multiply;
 use crate::operations::read_small;
+use crate::operations::MULTIPLE;
 use crate::random_state::PI;
 use crate::RandomState;
 use core::hash::Hasher;
 
-///This constant come from Kunth's prng (Empirically it works better than those from splitmix32).
-pub(crate) const MULTIPLE: u64 = 6364136223846793005;
 const ROT: u32 = 23; //17
 
 /// A `Hasher` for hashing an arbitrary stream of bytes.
@@ -31,7 +30,7 @@ impl AHasher {
     /// Creates a new hasher keyed to the provided key.
     #[inline]
     #[allow(dead_code)] // Is not called if non-fallback hash is used.
-    pub fn new_with_keys(key1: u128, key2: u128) -> AHasher {
+    pub(crate) fn new_with_keys(key1: u128, key2: u128) -> AHasher {
         let pi: [u128; 2] = PI.convert();
         let key1: [u64; 2] = (key1 ^ pi[0]).convert();
         let key2: [u64; 2] = (key2 ^ pi[1]).convert();
@@ -57,8 +56,8 @@ impl AHasher {
     #[allow(dead_code)] // Is not called if non-fallback hash is used.
     pub(crate) fn from_random_state(rand_state: &RandomState) -> AHasher {
         AHasher {
-            buffer: rand_state.k0,
-            pad: rand_state.k1,
+            buffer: rand_state.k1,
+            pad: rand_state.k0,
             extra_keys: [rand_state.k2, rand_state.k3],
         }
     }
@@ -93,17 +92,8 @@ impl AHasher {
     /// attacker somehow knew part of (but not all) the contents of the buffer before hand,
     /// they would not be able to predict any of the bits in the buffer at the end.
     #[inline(always)]
-    #[cfg(feature = "folded_multiply")]
     fn update(&mut self, new_data: u64) {
         self.buffer = folded_multiply(new_data ^ self.buffer, MULTIPLE);
-    }
-
-    #[inline(always)]
-    #[cfg(not(feature = "folded_multiply"))]
-    fn update(&mut self, new_data: u64) {
-        let d1 = (new_data ^ self.buffer).wrapping_mul(MULTIPLE);
-        self.pad = (self.pad ^ d1).rotate_left(8).wrapping_mul(MULTIPLE);
-        self.buffer = (self.buffer ^ self.pad).rotate_left(24);
     }
 
     /// Similar to the above this function performs an update using a "folded multiply".
@@ -118,25 +108,16 @@ impl AHasher {
     /// can't be changed by the same set of input bits. To cancel this sequence with subsequent input would require
     /// knowing the keys.
     #[inline(always)]
-    #[cfg(feature = "folded_multiply")]
     fn large_update(&mut self, new_data: u128) {
         let block: [u64; 2] = new_data.convert();
         let combined = folded_multiply(block[0] ^ self.extra_keys[0], block[1] ^ self.extra_keys[1]);
         self.buffer = (self.buffer.wrapping_add(self.pad) ^ combined).rotate_left(ROT);
     }
 
-    #[inline(always)]
-    #[cfg(not(feature = "folded_multiply"))]
-    fn large_update(&mut self, new_data: u128) {
-        let block: [u64; 2] = new_data.convert();
-        self.update(block[0] ^ self.extra_keys[0]);
-        self.update(block[1] ^ self.extra_keys[1]);
-    }
-
     #[inline]
     #[cfg(feature = "specialize")]
     fn short_finish(&self) -> u64 {
-        self.buffer.wrapping_add(self.pad)
+        folded_multiply(self.buffer, self.pad)
     }
 }
 
@@ -170,7 +151,11 @@ impl Hasher for AHasher {
     }
 
     #[inline]
-    #[cfg(any(target_pointer_width = "64", target_pointer_width = "32", target_pointer_width = "16"))]
+    #[cfg(any(
+        target_pointer_width = "64",
+        target_pointer_width = "32",
+        target_pointer_width = "16"
+    ))]
     fn write_usize(&mut self, i: usize) {
         self.write_u64(i as u64);
     }
@@ -208,17 +193,9 @@ impl Hasher for AHasher {
     }
 
     #[inline]
-    #[cfg(feature = "folded_multiply")]
     fn finish(&self) -> u64 {
         let rot = (self.buffer & 63) as u32;
         folded_multiply(self.buffer, self.pad).rotate_left(rot)
-    }
-
-    #[inline]
-    #[cfg(not(feature = "folded_multiply"))]
-    fn finish(&self) -> u64 {
-        let rot = (self.buffer & 63) as u32;
-        (self.buffer.wrapping_mul(MULTIPLE) ^ self.pad).rotate_left(rot)
     }
 }
 
@@ -233,8 +210,8 @@ pub(crate) struct AHasherU64 {
 impl Hasher for AHasherU64 {
     #[inline]
     fn finish(&self) -> u64 {
-        let rot = (self.pad & 63) as u32;
-        self.buffer.rotate_left(rot)
+        folded_multiply(self.buffer, self.pad)
+        //self.buffer
     }
 
     #[inline]
@@ -338,8 +315,7 @@ impl Hasher for AHasherStr {
             self.0.write(bytes)
         } else {
             let value = read_small(bytes);
-            self.0.buffer = folded_multiply(value[0] ^ self.0.buffer,
-                                           value[1] ^ self.0.extra_keys[1]);
+            self.0.buffer = folded_multiply(value[0] ^ self.0.buffer, value[1] ^ self.0.extra_keys[1]);
             self.0.pad = self.0.pad.wrapping_add(bytes.len() as u64);
         }
     }
@@ -365,7 +341,6 @@ impl Hasher for AHasherStr {
 
 #[cfg(test)]
 mod tests {
-    use crate::convert::Convert;
     use crate::fallback_hash::*;
 
     #[test]
