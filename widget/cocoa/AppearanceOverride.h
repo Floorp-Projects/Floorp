@@ -8,6 +8,12 @@
 
 #import <Cocoa/Cocoa.h>
 
+namespace mozilla {
+enum class ColorScheme: uint8_t;
+}
+
+void OverrideGlobalAppearance(mozilla::ColorScheme);
+
 // Implements support for the browser.theme.toolbar-theme pref.
 // Use MOZGlobalAppearance.sharedInstance.effectiveAppearance
 // in all places where you would like the global override to be respected. The
