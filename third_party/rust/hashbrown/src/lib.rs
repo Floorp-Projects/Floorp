@@ -20,9 +20,8 @@
         extend_one,
         allocator_api,
         slice_ptr_get,
-        nonnull_slice_from_raw_parts,
         maybe_uninit_array_assume_init,
-        build_hasher_simple_hash_one
+        strict_provenance
     )
 )]
 #![allow(
@@ -37,6 +36,7 @@
 )]
 #![warn(missing_docs)]
 #![warn(rust_2018_idioms)]
+#![cfg_attr(feature = "nightly", warn(fuzzy_provenance_casts))]
 
 #[cfg(test)]
 #[macro_use]
@@ -81,6 +81,7 @@ mod map;
 mod rustc_entry;
 mod scopeguard;
 mod set;
+mod table;
 
 pub mod hash_map {
     //! A hash map implemented with quadratic probing and SIMD lookup.
@@ -113,9 +114,63 @@ pub mod hash_set {
         pub use crate::external_trait_impls::rayon::set::*;
     }
 }
+pub mod hash_table {
+    //! A hash table implemented with quadratic probing and SIMD lookup.
+    pub use crate::table::*;
+
+    #[cfg(feature = "rayon")]
+    /// [rayon]-based parallel iterator types for hash tables.
+    /// You will rarely need to interact with it directly unless you have need
+    /// to name one of the iterator types.
+    ///
+    /// [rayon]: https://docs.rs/rayon/1.0/rayon
+    pub mod rayon {
+        pub use crate::external_trait_impls::rayon::table::*;
+    }
+}
 
 pub use crate::map::HashMap;
 pub use crate::set::HashSet;
+pub use crate::table::HashTable;
+
+#[cfg(feature = "equivalent")]
+pub use equivalent::Equivalent;
+
+// This is only used as a fallback when building as part of `std`.
+#[cfg(not(feature = "equivalent"))]
+/// Key equivalence trait.
+///
+/// This trait defines the function used to compare the input value with the
+/// map keys (or set values) during a lookup operation such as [`HashMap::get`]
+/// or [`HashSet::contains`].
+/// It is provided with a blanket implementation based on the
+/// [`Borrow`](core::borrow::Borrow) trait.
+///
+/// # Correctness
+///
+/// Equivalent values must hash to the same value.
+pub trait Equivalent<K: ?Sized> {
+    /// Checks if this value is equivalent to the given key.
+    ///
+    /// Returns `true` if both values are equivalent, and `false` otherwise.
+    ///
+    /// # Correctness
+    ///
+    /// When this function returns `true`, both `self` and `key` must hash to
+    /// the same value.
+    fn equivalent(&self, key: &K) -> bool;
+}
+
+#[cfg(not(feature = "equivalent"))]
+impl<Q: ?Sized, K: ?Sized> Equivalent<K> for Q
+where
+    Q: Eq,
+    K: core::borrow::Borrow<Q>,
+{
+    fn equivalent(&self, key: &K) -> bool {
+        self == key.borrow()
+    }
+}
 
 /// The error type for `try_reserve` methods.
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -129,22 +184,4 @@ pub enum TryReserveError {
         /// The layout of the allocation request that failed.
         layout: alloc::alloc::Layout,
     },
-}
-
-/// Wrapper around `Bump` which allows it to be used as an allocator for
-/// `HashMap`, `HashSet` and `RawTable`.
-///
-/// `Bump` can be used directly without this wrapper on nightly if you enable
-/// the `allocator-api` feature of the `bumpalo` crate.
-#[cfg(feature = "bumpalo")]
-#[derive(Clone, Copy, Debug)]
-pub struct BumpWrapper<'a>(pub &'a bumpalo::Bump);
-
-#[cfg(feature = "bumpalo")]
-#[test]
-fn test_bumpalo() {
-    use bumpalo::Bump;
-    let bump = Bump::new();
-    let mut map = HashMap::new_in(BumpWrapper(&bump));
-    map.insert(0, 1);
 }

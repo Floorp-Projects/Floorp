@@ -173,6 +173,9 @@ goblin = { path = "build/rust/goblin" }
 # Patch memoffset from 0.8.0 to 0.9.0 since it's compatible and it avoids duplication
 memoffset = { path = "build/rust/memoffset" }
 
+# Patch `hashbrown` 0.12.* to depend on 0.14.*
+hashbrown = { path = "build/rust/hashbrown" }
+
 # The following overrides point to dummy projects, as a temporary measure until this is resolved:
 # https://github.com/rust-lang/cargo/issues/6179
 js-sys = { path = "build/rust/dummy-web/js-sys" }

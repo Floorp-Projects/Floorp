@@ -1,4 +1,4 @@
-# aHash     ![Build Status](https://img.shields.io/github/workflow/status/tkaitchuck/ahash/Rust) ![Licence](https://img.shields.io/crates/l/ahash) ![Downloads](https://img.shields.io/crates/d/ahash) 
+# aHash     ![Build Status](https://img.shields.io/github/actions/workflow/status/tkaitchuck/aHash/rust.yml?branch=master) ![Licence](https://img.shields.io/crates/l/ahash) ![Downloads](https://img.shields.io/crates/d/ahash) 
 
 AHash is the [fastest](https://github.com/tkaitchuck/aHash/blob/master/compare/readme.md#Speed), 
 [DOS resistant hash](https://github.com/tkaitchuck/aHash/wiki/How-aHash-is-resists-DOS-attacks) currently available in Rust.
@@ -53,18 +53,17 @@ map.insert(56, 78);
 The aHash package has the following flags:
 * `std`: This enables features which require the standard library. (On by default) This includes providing the utility classes `AHashMap` and `AHashSet`.
 * `serde`: Enables `serde` support for the utility classes `AHashMap` and `AHashSet`.
-* `compile-time-rng`: Whenever possible aHash will seed hashers with random numbers using the [getrandom](https://github.com/rust-random/getrandom) crate. 
-This is possible for OS targets which provide a source of randomness. (see the [full list](https://docs.rs/getrandom/0.2.0/getrandom/#supported-targets).)
-For OS targets without access to a random number generator, `compile-time-rng` provides an alternative.
+* `runtime-rng`: To obtain a seed for Hashers will obtain randomness from the operating system. (On by default)
+This is done using the [getrandom](https://github.com/rust-random/getrandom) crate.
+* `compile-time-rng`: For OS targets without access to a random number generator, `compile-time-rng` provides an alternative.
 If `getrandom` is unavailable and `compile-time-rng` is enabled, aHash will generate random numbers at compile time and embed them in the binary.
+* `nightly-arm-aes`: To use AES instructions on 32-bit ARM, which requires nightly. This is not needed on AArch64.
 This allows for DOS resistance even if there is no random number generator available at runtime (assuming the compiled binary is not public).
-This makes the binary non-deterministic, unless `getrandom` is available for the target in which case the flag does nothing.
-(If non-determinism is a problem see [constrandom's documentation](https://github.com/tkaitchuck/constrandom#deterministic-builds))
+This makes the binary non-deterministic. (If non-determinism is a problem see [constrandom's documentation](https://github.com/tkaitchuck/constrandom#deterministic-builds))
 
-**NOTE:** If `getrandom` is unavailable and `compile-time-rng` is disabled aHash will fall back on using the numeric 
-value of memory addresses as a source of randomness. This is somewhat strong if ALSR is turned on (it is by default)
-but for embedded platforms this will result in weak keys. As a result, it is recommended to use `compile-time-rng` anytime
-random numbers will not be available at runtime.
+If both `runtime-rng` and `compile-time-rng` are enabled the `runtime-rng` will take precedence and `compile-time-rng` will do nothing.
+If neither flag is set, seeds can be supplied by the application. [Multiple apis](https://docs.rs/ahash/latest/ahash/random_state/struct.RandomState.html)
+are available to do this.
 
 ## Comparison with other hashers
 

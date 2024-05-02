@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+use std::collections::hash_map::{IntoKeys, IntoValues};
 use std::collections::{hash_map, HashMap};
 use std::fmt::{self, Debug};
 use std::hash::{BuildHasher, Hash};
@@ -25,6 +26,24 @@ impl<K, V> From<HashMap<K, V, crate::RandomState>> for AHashMap<K, V> {
     }
 }
 
+impl<K, V, const N: usize> From<[(K, V); N]> for AHashMap<K, V>
+where
+    K: Eq + Hash,
+{
+    /// # Examples
+    ///
+    /// ```
+    /// use ahash::AHashMap;
+    ///
+    /// let map1 = AHashMap::from([(1, 2), (3, 4)]);
+    /// let map2: AHashMap<_, _> = [(1, 2), (3, 4)].into();
+    /// assert_eq!(map1, map2);
+    /// ```
+    fn from(arr: [(K, V); N]) -> Self {
+        Self::from_iter(arr)
+    }
+}
+
 impl<K, V> Into<HashMap<K, V, crate::RandomState>> for AHashMap<K, V> {
     fn into(self) -> HashMap<K, V, crate::RandomState> {
         self.0
@@ -32,12 +51,16 @@ impl<K, V> Into<HashMap<K, V, crate::RandomState>> for AHashMap<K, V> {
 }
 
 impl<K, V> AHashMap<K, V, RandomState> {
+    /// This crates a hashmap using [RandomState::new] which obtains its keys from [RandomSource].
+    /// See the documentation in [RandomSource] for notes about key strength.
     pub fn new() -> Self {
-        AHashMap(HashMap::with_hasher(RandomState::default()))
+        AHashMap(HashMap::with_hasher(RandomState::new()))
     }
 
+    /// This crates a hashmap with the specified capacity using [RandomState::new].
+    /// See the documentation in [RandomSource] for notes about key strength.
     pub fn with_capacity(capacity: usize) -> Self {
-        AHashMap(HashMap::with_capacity_and_hasher(capacity, RandomState::default()))
+        AHashMap(HashMap::with_capacity_and_hasher(capacity, RandomState::new()))
     }
 }
 
@@ -145,8 +168,6 @@ where
     /// types that can be `==` without being identical. See the [module-level
     /// documentation] for more.
     ///
-    /// [module-level documentation]: crate::collections#insert-and-complex-keys
-    ///
     /// # Examples
     ///
     /// ```
@@ -163,6 +184,68 @@ where
     #[inline]
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
         self.0.insert(k, v)
+    }
+
+    /// Creates a consuming iterator visiting all the keys in arbitrary order.
+    /// The map cannot be used after calling this.
+    /// The iterator element type is `K`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashMap;
+    ///
+    /// let map = HashMap::from([
+    ///     ("a", 1),
+    ///     ("b", 2),
+    ///     ("c", 3),
+    /// ]);
+    ///
+    /// let mut vec: Vec<&str> = map.into_keys().collect();
+    /// // The `IntoKeys` iterator produces keys in arbitrary order, so the
+    /// // keys must be sorted to test them against a sorted array.
+    /// vec.sort_unstable();
+    /// assert_eq!(vec, ["a", "b", "c"]);
+    /// ```
+    ///
+    /// # Performance
+    ///
+    /// In the current implementation, iterating over keys takes O(capacity) time
+    /// instead of O(len) because it internally visits empty buckets too.
+    #[inline]
+    pub fn into_keys(self) -> IntoKeys<K, V> {
+        self.0.into_keys()
+    }
+
+    /// Creates a consuming iterator visiting all the values in arbitrary order.
+    /// The map cannot be used after calling this.
+    /// The iterator element type is `V`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashMap;
+    ///
+    /// let map = HashMap::from([
+    ///     ("a", 1),
+    ///     ("b", 2),
+    ///     ("c", 3),
+    /// ]);
+    ///
+    /// let mut vec: Vec<i32> = map.into_values().collect();
+    /// // The `IntoValues` iterator produces values in arbitrary order, so
+    /// // the values must be sorted to test them against a sorted array.
+    /// vec.sort_unstable();
+    /// assert_eq!(vec, [1, 2, 3]);
+    /// ```
+    ///
+    /// # Performance
+    ///
+    /// In the current implementation, iterating over values takes O(capacity) time
+    /// instead of O(len) because it internally visits empty buckets too.
+    #[inline]
+    pub fn into_values(self) -> IntoValues<K, V> {
+        self.0.into_values()
     }
 
     /// Removes a key from the map, returning the value at the key if the key
@@ -261,13 +344,16 @@ where
     }
 }
 
-impl<K, V, S> FromIterator<(K, V)> for AHashMap<K, V, S>
+impl<K, V> FromIterator<(K, V)> for AHashMap<K, V, RandomState>
 where
     K: Eq + Hash,
-    S: BuildHasher + Default,
 {
+    /// This crates a hashmap from the provided iterator using [RandomState::new].
+    /// See the documentation in [RandomSource] for notes about key strength.
     fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
-        AHashMap(HashMap::from_iter(iter))
+        let mut inner = HashMap::with_hasher(RandomState::new());
+        inner.extend(iter);
+        AHashMap(inner)
     }
 }
 
@@ -318,10 +404,14 @@ where
     }
 }
 
+/// NOTE: For safety this trait impl is only available available if either of the flags `runtime-rng` (on by default) or
+/// `compile-time-rng` are enabled. This is to prevent weakly keyed maps from being accidentally created. Instead one of
+/// constructors for [RandomState] must be used.
+#[cfg(any(feature = "compile-time-rng", feature = "runtime-rng", feature = "no-rng"))]
 impl<K, V> Default for AHashMap<K, V, RandomState> {
     #[inline]
     fn default() -> AHashMap<K, V, RandomState> {
-        AHashMap::new()
+        AHashMap(HashMap::default())
     }
 }
 
@@ -346,6 +436,40 @@ where
         let hash_map = HashMap::deserialize(deserializer);
         hash_map.map(|hash_map| Self(hash_map))
     }
+
+    fn deserialize_in_place<D: Deserializer<'de>>(deserializer: D, place: &mut Self) -> Result<(), D::Error> {
+        use serde::de::{MapAccess, Visitor};
+
+        struct MapInPlaceVisitor<'a, K: 'a, V: 'a>(&'a mut AHashMap<K, V>);
+
+        impl<'a, 'de, K, V> Visitor<'de> for MapInPlaceVisitor<'a, K, V>
+        where
+            K: Deserialize<'de> + Eq + Hash,
+            V: Deserialize<'de>,
+        {
+            type Value = ();
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a map")
+            }
+
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                self.0.clear();
+                self.0.reserve(map.size_hint().unwrap_or(0).min(4096));
+
+                while let Some((key, value)) = map.next_entry()? {
+                    self.0.insert(key, value);
+                }
+
+                Ok(())
+            }
+        }
+
+        deserializer.deserialize_map(MapInPlaceVisitor(place))
+    }
 }
 
 #[cfg(test)]
@@ -364,8 +488,14 @@ mod test {
         let mut map = AHashMap::new();
         map.insert("for".to_string(), 0);
         map.insert("bar".to_string(), 1);
-        let serialization = serde_json::to_string(&map).unwrap();
-        let deserialization: AHashMap<String, u64> = serde_json::from_str(&serialization).unwrap();
+        let mut serialization = serde_json::to_string(&map).unwrap();
+        let mut deserialization: AHashMap<String, u64> = serde_json::from_str(&serialization).unwrap();
+        assert_eq!(deserialization, map);
+
+        map.insert("baz".to_string(), 2);
+        serialization = serde_json::to_string(&map).unwrap();
+        let mut deserializer = serde_json::Deserializer::from_str(&serialization);
+        AHashMap::deserialize_in_place(&mut deserializer, &mut deserialization).unwrap();
         assert_eq!(deserialization, map);
     }
 }

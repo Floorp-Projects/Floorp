@@ -274,6 +274,13 @@ user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
 
+[[publisher.hashbrown]]
+version = "0.14.3"
+when = "2023-11-26"
+user-id = 2915
+user-login = "Amanieu"
+user-name = "Amanieu d'Antras"
+
 [[publisher.headers]]
 version = "0.3.9"
 when = "2023-08-31"

@@ -5,26 +5,29 @@ use core::{mem, ptr};
 // Use the native word size as the group size. Using a 64-bit group size on
 // a 32-bit architecture will just end up being more expensive because
 // shifts and multiplies will need to be emulated.
-#[cfg(any(
-    target_pointer_width = "64",
-    target_arch = "aarch64",
-    target_arch = "x86_64",
-    target_arch = "wasm32",
-))]
-type GroupWord = u64;
-#[cfg(all(
-    target_pointer_width = "32",
-    not(target_arch = "aarch64"),
-    not(target_arch = "x86_64"),
-    not(target_arch = "wasm32"),
-))]
-type GroupWord = u32;
 
-pub type BitMaskWord = GroupWord;
-pub const BITMASK_STRIDE: usize = 8;
+cfg_if! {
+    if #[cfg(any(
+        target_pointer_width = "64",
+        target_arch = "aarch64",
+        target_arch = "x86_64",
+        target_arch = "wasm32",
+    ))] {
+        type GroupWord = u64;
+        type NonZeroGroupWord = core::num::NonZeroU64;
+    } else {
+        type GroupWord = u32;
+        type NonZeroGroupWord = core::num::NonZeroU32;
+    }
+}
+
+pub(crate) type BitMaskWord = GroupWord;
+pub(crate) type NonZeroBitMaskWord = NonZeroGroupWord;
+pub(crate) const BITMASK_STRIDE: usize = 8;
 // We only care about the highest bit of each byte for the mask.
 #[allow(clippy::cast_possible_truncation, clippy::unnecessary_cast)]
-pub const BITMASK_MASK: BitMaskWord = 0x8080_8080_8080_8080_u64 as GroupWord;
+pub(crate) const BITMASK_MASK: BitMaskWord = 0x8080_8080_8080_8080_u64 as GroupWord;
+pub(crate) const BITMASK_ITER_MASK: BitMaskWord = !0;
 
 /// Helper function to replicate a byte across a `GroupWord`.
 #[inline]
@@ -37,7 +40,7 @@ fn repeat(byte: u8) -> GroupWord {
 ///
 /// This implementation uses a word-sized integer.
 #[derive(Copy, Clone)]
-pub struct Group(GroupWord);
+pub(crate) struct Group(GroupWord);
 
 // We perform all operations in the native endianness, and convert to
 // little-endian just before creating a BitMask. The can potentially
@@ -46,14 +49,14 @@ pub struct Group(GroupWord);
 #[allow(clippy::use_self)]
 impl Group {
     /// Number of bytes in the group.
-    pub const WIDTH: usize = mem::size_of::<Self>();
+    pub(crate) const WIDTH: usize = mem::size_of::<Self>();
 
     /// Returns a full group of empty bytes, suitable for use as the initial
     /// value for an empty hash table.
     ///
     /// This is guaranteed to be aligned to the group size.
     #[inline]
-    pub const fn static_empty() -> &'static [u8; Group::WIDTH] {
+    pub(crate) const fn static_empty() -> &'static [u8; Group::WIDTH] {
         #[repr(C)]
         struct AlignedBytes {
             _align: [Group; 0],
@@ -69,7 +72,7 @@ impl Group {
     /// Loads a group of bytes starting at the given address.
     #[inline]
     #[allow(clippy::cast_ptr_alignment)] // unaligned load
-    pub unsafe fn load(ptr: *const u8) -> Self {
+    pub(crate) unsafe fn load(ptr: *const u8) -> Self {
         Group(ptr::read_unaligned(ptr.cast()))
     }
 
@@ -77,7 +80,7 @@ impl Group {
     /// aligned to `mem::align_of::<Group>()`.
     #[inline]
     #[allow(clippy::cast_ptr_alignment)]
-    pub unsafe fn load_aligned(ptr: *const u8) -> Self {
+    pub(crate) unsafe fn load_aligned(ptr: *const u8) -> Self {
         // FIXME: use align_offset once it stabilizes
         debug_assert_eq!(ptr as usize & (mem::align_of::<Self>() - 1), 0);
         Group(ptr::read(ptr.cast()))
@@ -87,7 +90,7 @@ impl Group {
     /// aligned to `mem::align_of::<Group>()`.
     #[inline]
     #[allow(clippy::cast_ptr_alignment)]
-    pub unsafe fn store_aligned(self, ptr: *mut u8) {
+    pub(crate) unsafe fn store_aligned(self, ptr: *mut u8) {
         // FIXME: use align_offset once it stabilizes
         debug_assert_eq!(ptr as usize & (mem::align_of::<Self>() - 1), 0);
         ptr::write(ptr.cast(), self.0);
@@ -104,7 +107,7 @@ impl Group {
     /// - This only happens if there is at least 1 true match.
     /// - The chance of this happening is very low (< 1% chance per byte).
     #[inline]
-    pub fn match_byte(self, byte: u8) -> BitMask {
+    pub(crate) fn match_byte(self, byte: u8) -> BitMask {
         // This algorithm is derived from
         // https://graphics.stanford.edu/~seander/bithacks.html##ValueInWord
         let cmp = self.0 ^ repeat(byte);
@@ -114,7 +117,7 @@ impl Group {
     /// Returns a `BitMask` indicating all bytes in the group which are
     /// `EMPTY`.
     #[inline]
-    pub fn match_empty(self) -> BitMask {
+    pub(crate) fn match_empty(self) -> BitMask {
         // If the high bit is set, then the byte must be either:
         // 1111_1111 (EMPTY) or 1000_0000 (DELETED).
         // So we can just check if the top two bits are 1 by ANDing them.
@@ -124,14 +127,14 @@ impl Group {
     /// Returns a `BitMask` indicating all bytes in the group which are
     /// `EMPTY` or `DELETED`.
     #[inline]
-    pub fn match_empty_or_deleted(self) -> BitMask {
+    pub(crate) fn match_empty_or_deleted(self) -> BitMask {
         // A byte is EMPTY or DELETED iff the high bit is set
         BitMask((self.0 & repeat(0x80)).to_le())
     }
 
     /// Returns a `BitMask` indicating all bytes in the group which are full.
     #[inline]
-    pub fn match_full(self) -> BitMask {
+    pub(crate) fn match_full(self) -> BitMask {
         self.match_empty_or_deleted().invert()
     }
 
@@ -140,7 +143,7 @@ impl Group {
     /// - `DELETED => EMPTY`
     /// - `FULL => DELETED`
     #[inline]
-    pub fn convert_special_to_empty_and_full_to_deleted(self) -> Self {
+    pub(crate) fn convert_special_to_empty_and_full_to_deleted(self) -> Self {
         // Map high_bit = 1 (EMPTY or DELETED) to 1111_1111
         // and high_bit = 0 (FULL) to 1000_0000
         //
