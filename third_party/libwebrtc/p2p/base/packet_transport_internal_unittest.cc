@@ -41,4 +41,15 @@ TEST(PacketTransportInternal,
   packet_transport.DeregisterReceivedPacketCallback(&receiver);
 }
 
+TEST(PacketTransportInternal, NotifiesOnceOnClose) {
+  rtc::FakePacketTransport packet_transport("test");
+  int call_count = 0;
+  packet_transport.SetOnCloseCallback([&]() { ++call_count; });
+  ASSERT_EQ(call_count, 0);
+  packet_transport.NotifyOnClose();
+  EXPECT_EQ(call_count, 1);
+  packet_transport.NotifyOnClose();
+  EXPECT_EQ(call_count, 1);  // Call count should not have increased.
+}
+
 }  // namespace

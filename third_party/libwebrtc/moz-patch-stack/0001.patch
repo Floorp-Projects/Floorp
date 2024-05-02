@@ -48,7 +48,7 @@ index 27d7de6364..cdae6fee19 100644
  
  }  // namespace webrtc
 diff --git a/media/sctp/dcsctp_transport.cc b/media/sctp/dcsctp_transport.cc
-index bff9c29d17..013f48b550 100644
+index 52890b3bd2..dffaa43060 100644
 --- a/media/sctp/dcsctp_transport.cc
 +++ b/media/sctp/dcsctp_transport.cc
 @@ -375,12 +375,6 @@ absl::optional<int> DcSctpTransport::max_inbound_streams() const {
@@ -65,7 +65,7 @@ index bff9c29d17..013f48b550 100644
    debug_name_ = debug_name;
  }
 diff --git a/media/sctp/dcsctp_transport.h b/media/sctp/dcsctp_transport.h
-index aa301d8496..c021422615 100644
+index 21a6a9513f..36efc70ffe 100644
 --- a/media/sctp/dcsctp_transport.h
 +++ b/media/sctp/dcsctp_transport.h
 @@ -66,7 +66,6 @@ class DcSctpTransport : public cricket::SctpTransportInternal,
