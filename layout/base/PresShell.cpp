@@ -11847,10 +11847,9 @@ void PresShell::SyncWindowProperties(bool aSync) {
         canvas ? canvas : rootFrame, rootFrame);
     windowWidget->SetTransparencyMode(mode);
 
-    // For macOS, apply color scheme overrides to the top level window widget.
-    if (auto scheme = pc->GetOverriddenOrEmbedderColorScheme()) {
-      windowWidget->SetColorScheme(scheme);
-    }
+    // For macOS, apply color scheme to the top level window widget.
+    windowWidget->SetColorScheme(
+        Some(LookAndFeel::ColorSchemeForFrame(rootFrame)));
   }
 
   if (!weak.IsAlive()) {

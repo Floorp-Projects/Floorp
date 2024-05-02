@@ -22,10 +22,6 @@
 
 #define AVG2(a, b) (((a) + (b) + 1) >> 1)
 
-#ifdef XP_MACOSX
-void OverrideGlobalAppearance(mozilla::ColorScheme);
-#endif
-
 namespace mozilla {
 
 using dom::Document;
@@ -273,10 +269,6 @@ void PreferenceSheet::Initialize() {
       sPrintPrefs.mUseStandins = true;
     }
   }
-
-#ifdef XP_MACOSX
-  OverrideGlobalAppearance(sChromePrefs.mColorScheme);
-#endif
 
   nsAutoString useDocumentColorPref;
   switch (StaticPrefs::browser_display_document_color_use()) {
