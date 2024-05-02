@@ -1,274 +1,290 @@
 From: Nicolas Grunbaum <ngrunbaum@mozilla.com>
-Date: Thu, 2 May 2024 01:13:50 -0700
-Subject: (tmp-cherry-pick) Revert "dcsctp: Add per-stream-limit, refactor
- limits." (47ce449afa)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Date: Thu, 2 May 2024 01:17:48 -0700
+Subject: (tmp-cherry-pick) [M124] Revert "pc: Include SCTP queued bytes in
+ buffered_amount" (93e9ac6285)
 
-This reverts commit 4c990e2e56157175324e651f95f3d8c6a0e5c030.
+This breaks file transfers with Chrome Remote Desktop, as reported in
+the internal bug tracker.
 
-Reason for revert: Breaks downstream build.
+This reverts commit fea41f540c72d15c4f499fead611a0c5e65db8ec.
 
-Original change's description:
-> dcsctp: Add per-stream-limit, refactor limits.
->
-> The limits have been moved out from the Send Queue as they were enforced
-> outside the queue anyway (in the socket). That was a preparation for
-> adding even more limits; There is now also a per-stream limit, allowing
-> individual streams to have one (global) limit, and the entire socket to
-> have another limit.
->
-> These limits are very small in the default options. In Chrome, the limit
-> is 16MB per stream, so expect the defaults to be updated when the
-> additional buffering outside dcSCTP is removed.
->
-> Bug: chromium:41221056
-> Change-Id: I9f835be05d349cbfce3e9235d34b5ea0e2fe87d1
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/342481
-> Reviewed-by: Florent Castelli <orphis@webrtc.org>
-> Commit-Queue: Victor Boivie <boivie@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#41895}
-
-Bug: chromium:41221056
-Change-Id: Icd57fbfca87d6b512cfc7f7682ae709000c2bcad
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/343080
-Commit-Queue: Björn Terelius <terelius@webrtc.org>
-Reviewed-by: Victor Boivie <boivie@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/heads/main@{#41901}
+Bug: chromium:331346276
+Change-Id: Ib41351a474bc40e7688d14dc445f53e68b5833ae
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/344501
+Commit-Queue: Victor Boivie <boivie@webrtc.org>
+Reviewed-by: Florent Castelli <orphis@webrtc.org>
+Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6367@{#2}
+Cr-Branched-From: 802552a8030d82ad07b72aa738f814f3a0030810-refs/heads/main@{#41921}
 ---
- net/dcsctp/public/dcsctp_options.h      | 10 +++-----
- net/dcsctp/socket/dcsctp_socket.cc      |  5 ++--
- net/dcsctp/socket/dcsctp_socket_test.cc | 31 -------------------------
- net/dcsctp/tx/rr_send_queue.cc          |  6 +++++
- net/dcsctp/tx/rr_send_queue.h           |  2 ++
- net/dcsctp/tx/rr_send_queue_test.cc     | 21 ++++++++++-------
- 6 files changed, 25 insertions(+), 50 deletions(-)
+ api/transport/data_channel_transport_interface.h |  2 --
+ media/sctp/dcsctp_transport.cc                   |  6 ------
+ media/sctp/dcsctp_transport.h                    |  1 -
+ media/sctp/sctp_transport_internal.h             |  2 --
+ pc/data_channel_controller.cc                    |  8 --------
+ pc/data_channel_controller.h                     |  1 -
+ pc/data_channel_controller_unittest.cc           | 15 ---------------
+ pc/data_channel_integrationtest.cc               |  8 +++-----
+ pc/sctp_data_channel.cc                          |  6 +-----
+ pc/sctp_data_channel.h                           |  1 -
+ pc/sctp_transport.cc                             |  6 ------
+ pc/sctp_transport.h                              |  1 -
+ pc/sctp_transport_unittest.cc                    |  2 +-
+ pc/test/fake_data_channel_controller.h           |  2 --
+ test/pc/sctp/fake_sctp_transport.h               | 11 +++--------
+ 15 files changed, 8 insertions(+), 64 deletions(-)
 
-diff --git a/net/dcsctp/public/dcsctp_options.h b/net/dcsctp/public/dcsctp_options.h
-index 6a6a8cd193..600e8a362e 100644
---- a/net/dcsctp/public/dcsctp_options.h
-+++ b/net/dcsctp/public/dcsctp_options.h
-@@ -85,13 +85,9 @@ struct DcSctpOptions {
-   // buffer is fully utilized.
-   size_t max_receiver_window_buffer_size = 5 * 1024 * 1024;
- 
--  // Send queue total size limit. It will not be possible to queue more data if
--  // the queue size is larger than this number.
--  size_t total_send_queue_limit = 2'000'000;
+diff --git a/api/transport/data_channel_transport_interface.h b/api/transport/data_channel_transport_interface.h
+index 27d7de6364..cdae6fee19 100644
+--- a/api/transport/data_channel_transport_interface.h
++++ b/api/transport/data_channel_transport_interface.h
+@@ -118,8 +118,6 @@ class DataChannelTransportInterface {
+   // Note: the default implementation always returns false (as it assumes no one
+   // has implemented the interface).  This default implementation is temporary.
+   virtual bool IsReadyToSend() const = 0;
 -
--  // Per stream send queue size limit. Similar to `total_send_queue_limit`, but
--  // limiting the size of individual streams.
--  size_t per_stream_send_queue_limit = 2'000'000;
-+  // Maximum send buffer size. It will not be possible to queue more data than
-+  // this before sending it.
-+  size_t max_send_buffer_size = 2'000'000;
+-  virtual size_t buffered_amount(int channel_id) const = 0;
+ };
  
-   // A threshold that, when the amount of data in the send buffer goes below
-   // this value, will trigger `DcSctpCallbacks::OnTotalBufferedAmountLow`.
-diff --git a/net/dcsctp/socket/dcsctp_socket.cc b/net/dcsctp/socket/dcsctp_socket.cc
-index c92ec37b1c..0667e6f899 100644
---- a/net/dcsctp/socket/dcsctp_socket.cc
-+++ b/net/dcsctp/socket/dcsctp_socket.cc
-@@ -215,6 +215,7 @@ DcSctpSocket::DcSctpSocket(absl::string_view log_prefix,
-                      absl::bind_front(&DcSctpSocket::OnSentPacket, this)),
-       send_queue_(log_prefix_,
-                   &callbacks_,
-+                  options_.max_send_buffer_size,
-                   options_.mtu,
-                   options_.default_stream_priority,
-                   options_.total_buffered_amount_low_threshold) {}
-@@ -543,9 +544,7 @@ SendStatus DcSctpSocket::InternalSend(const DcSctpMessage& message,
-                        "Unable to send message as the socket is shutting down");
-     return SendStatus::kErrorShuttingDown;
-   }
--  if (send_queue_.total_buffered_amount() >= options_.total_send_queue_limit ||
--      send_queue_.buffered_amount(message.stream_id()) >=
--          options_.per_stream_send_queue_limit) {
-+  if (send_queue_.IsFull()) {
-     if (lifecycle_id.IsSet()) {
-       callbacks_.OnLifecycleEnd(lifecycle_id);
-     }
-diff --git a/net/dcsctp/socket/dcsctp_socket_test.cc b/net/dcsctp/socket/dcsctp_socket_test.cc
-index d64774b5d3..dfe8ba60fe 100644
---- a/net/dcsctp/socket/dcsctp_socket_test.cc
-+++ b/net/dcsctp/socket/dcsctp_socket_test.cc
-@@ -1694,37 +1694,6 @@ TEST_P(DcSctpSocketParametrizedTest,
-   MaybeHandoverSocketAndSendMessage(a, std::move(z));
+ }  // namespace webrtc
+diff --git a/media/sctp/dcsctp_transport.cc b/media/sctp/dcsctp_transport.cc
+index bff9c29d17..013f48b550 100644
+--- a/media/sctp/dcsctp_transport.cc
++++ b/media/sctp/dcsctp_transport.cc
+@@ -375,12 +375,6 @@ absl::optional<int> DcSctpTransport::max_inbound_streams() const {
+   return socket_->options().announced_maximum_incoming_streams;
  }
  
--TEST(DcSctpSocketTest, RespectsPerStreamQueueLimit) {
--  DcSctpOptions options = {.total_send_queue_limit = 4000,
--                           .per_stream_send_queue_limit = 1000};
--  SocketUnderTest a("A", options);
--  EXPECT_EQ(a.socket.Send(
--                DcSctpMessage(StreamID(1), PPID(53), std::vector<uint8_t>(600)),
--                kSendOptions),
--            SendStatus::kSuccess);
--  EXPECT_EQ(a.socket.Send(
--                DcSctpMessage(StreamID(1), PPID(53), std::vector<uint8_t>(600)),
--                kSendOptions),
--            SendStatus::kSuccess);
--  EXPECT_EQ(a.socket.Send(
--                DcSctpMessage(StreamID(1), PPID(53), std::vector<uint8_t>(600)),
--                kSendOptions),
--            SendStatus::kErrorResourceExhaustion);
--  // The per-stream limit for SID=1 is reached, but not SID=2.
--  EXPECT_EQ(a.socket.Send(
--                DcSctpMessage(StreamID(2), PPID(53), std::vector<uint8_t>(600)),
--                kSendOptions),
--            SendStatus::kSuccess);
--  EXPECT_EQ(a.socket.Send(
--                DcSctpMessage(StreamID(2), PPID(53), std::vector<uint8_t>(600)),
--                kSendOptions),
--            SendStatus::kSuccess);
--  EXPECT_EQ(a.socket.Send(
--                DcSctpMessage(StreamID(2), PPID(53), std::vector<uint8_t>(600)),
--                kSendOptions),
--            SendStatus::kErrorResourceExhaustion);
+-size_t DcSctpTransport::buffered_amount(int sid) const {
+-  if (!socket_)
+-    return 0;
+-  return socket_->buffered_amount(dcsctp::StreamID(sid));
 -}
 -
- TEST_P(DcSctpSocketParametrizedTest, HasReasonableBufferedAmountValues) {
-   SocketUnderTest a("A");
-   auto z = std::make_unique<SocketUnderTest>("Z");
-diff --git a/net/dcsctp/tx/rr_send_queue.cc b/net/dcsctp/tx/rr_send_queue.cc
-index 2193880acf..3e682fdca6 100644
---- a/net/dcsctp/tx/rr_send_queue.cc
-+++ b/net/dcsctp/tx/rr_send_queue.cc
-@@ -35,11 +35,13 @@ using ::webrtc::Timestamp;
+ void DcSctpTransport::set_debug_name_for_testing(const char* debug_name) {
+   debug_name_ = debug_name;
+ }
+diff --git a/media/sctp/dcsctp_transport.h b/media/sctp/dcsctp_transport.h
+index aa301d8496..c021422615 100644
+--- a/media/sctp/dcsctp_transport.h
++++ b/media/sctp/dcsctp_transport.h
+@@ -66,7 +66,6 @@ class DcSctpTransport : public cricket::SctpTransportInternal,
+   int max_message_size() const override;
+   absl::optional<int> max_outbound_streams() const override;
+   absl::optional<int> max_inbound_streams() const override;
+-  size_t buffered_amount(int sid) const override;
+   void set_debug_name_for_testing(const char* debug_name) override;
  
- RRSendQueue::RRSendQueue(absl::string_view log_prefix,
-                          DcSctpSocketCallbacks* callbacks,
-+                         size_t buffer_size,
-                          size_t mtu,
-                          StreamPriority default_priority,
-                          size_t total_buffered_amount_low_threshold)
-     : log_prefix_(log_prefix),
-       callbacks_(*callbacks),
-+      buffer_size_(buffer_size),
-       default_priority_(default_priority),
-       scheduler_(log_prefix_, mtu),
-       total_buffered_amount_(
-@@ -377,6 +379,10 @@ void RRSendQueue::Add(Timestamp now,
-   RTC_DCHECK(IsConsistent());
+  private:
+diff --git a/media/sctp/sctp_transport_internal.h b/media/sctp/sctp_transport_internal.h
+index 705f5bd3e6..8a7450f405 100644
+--- a/media/sctp/sctp_transport_internal.h
++++ b/media/sctp/sctp_transport_internal.h
+@@ -140,8 +140,6 @@ class SctpTransportInternal {
+   virtual absl::optional<int> max_outbound_streams() const = 0;
+   // Returns the current negotiated max # of inbound streams.
+   virtual absl::optional<int> max_inbound_streams() const = 0;
+-  // Returns the amount of buffered data in the send queue for a stream.
+-  virtual size_t buffered_amount(int sid) const = 0;
+ 
+   // Helper for debugging.
+   virtual void set_debug_name_for_testing(const char* debug_name) = 0;
+diff --git a/pc/data_channel_controller.cc b/pc/data_channel_controller.cc
+index fbe639f96b..208160e1c1 100644
+--- a/pc/data_channel_controller.cc
++++ b/pc/data_channel_controller.cc
+@@ -89,14 +89,6 @@ void DataChannelController::OnChannelStateChanged(
+       }));
  }
  
-+bool RRSendQueue::IsFull() const {
-+  return total_buffered_amount() >= buffer_size_;
-+}
-+
- bool RRSendQueue::IsEmpty() const {
-   return total_buffered_amount() == 0;
- }
-diff --git a/net/dcsctp/tx/rr_send_queue.h b/net/dcsctp/tx/rr_send_queue.h
-index 1a370a225c..b6c359dc1e 100644
---- a/net/dcsctp/tx/rr_send_queue.h
-+++ b/net/dcsctp/tx/rr_send_queue.h
-@@ -56,6 +56,7 @@ class RRSendQueue : public SendQueue {
-  public:
-   RRSendQueue(absl::string_view log_prefix,
-               DcSctpSocketCallbacks* callbacks,
-+              size_t buffer_size,
-               size_t mtu,
-               StreamPriority default_priority,
-               size_t total_buffered_amount_low_threshold);
-@@ -270,6 +271,7 @@ class RRSendQueue : public SendQueue {
- 
-   const absl::string_view log_prefix_;
-   DcSctpSocketCallbacks& callbacks_;
-+  const size_t buffer_size_;
-   const StreamPriority default_priority_;
-   OutgoingMessageId current_message_id = OutgoingMessageId(0);
-   StreamScheduler scheduler_;
-diff --git a/net/dcsctp/tx/rr_send_queue_test.cc b/net/dcsctp/tx/rr_send_queue_test.cc
-index 9beba950b6..632cd8fc19 100644
---- a/net/dcsctp/tx/rr_send_queue_test.cc
-+++ b/net/dcsctp/tx/rr_send_queue_test.cc
-@@ -35,6 +35,7 @@ using ::webrtc::Timestamp;
- constexpr Timestamp kNow = Timestamp::Zero();
- constexpr StreamID kStreamID(1);
- constexpr PPID kPPID(53);
-+constexpr size_t kMaxQueueSize = 1000;
- constexpr StreamPriority kDefaultPriority(10);
- constexpr size_t kBufferedAmountLowThreshold = 500;
- constexpr size_t kOneFragmentPacketSize = 100;
-@@ -46,7 +47,7 @@ class RRSendQueueTest : public testing::Test {
-   RRSendQueueTest()
-       : buf_("log: ",
-              &callbacks_,
+-size_t DataChannelController::buffered_amount(StreamId sid) const {
+-  RTC_DCHECK_RUN_ON(network_thread());
+-  if (!data_channel_transport_) {
+-    return 0;
+-  }
+-  return data_channel_transport_->buffered_amount(sid.stream_id_int());
+-}
 -
-+             kMaxQueueSize,
-              kMtu,
-              kDefaultPriority,
-              kBufferedAmountLowThreshold) {}
-@@ -59,12 +60,14 @@ class RRSendQueueTest : public testing::Test {
- TEST_F(RRSendQueueTest, EmptyBuffer) {
-   EXPECT_TRUE(buf_.IsEmpty());
-   EXPECT_FALSE(buf_.Produce(kNow, kOneFragmentPacketSize).has_value());
-+  EXPECT_FALSE(buf_.IsFull());
+ void DataChannelController::OnDataReceived(
+     int channel_id,
+     DataMessageType type,
+diff --git a/pc/data_channel_controller.h b/pc/data_channel_controller.h
+index d2a9a1a135..d7ac3706b0 100644
+--- a/pc/data_channel_controller.h
++++ b/pc/data_channel_controller.h
+@@ -54,7 +54,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
+   void RemoveSctpDataStream(StreamId sid) override;
+   void OnChannelStateChanged(SctpDataChannel* channel,
+                              DataChannelInterface::DataState state) override;
+-  size_t buffered_amount(StreamId sid) const override;
+ 
+   // Implements DataChannelSink.
+   void OnDataReceived(int channel_id,
+diff --git a/pc/data_channel_controller_unittest.cc b/pc/data_channel_controller_unittest.cc
+index caf9a76c41..7d4e60467e 100644
+--- a/pc/data_channel_controller_unittest.cc
++++ b/pc/data_channel_controller_unittest.cc
+@@ -41,7 +41,6 @@ class MockDataChannelTransport : public DataChannelTransportInterface {
+   MOCK_METHOD(RTCError, CloseChannel, (int channel_id), (override));
+   MOCK_METHOD(void, SetDataSink, (DataChannelSink * sink), (override));
+   MOCK_METHOD(bool, IsReadyToSend, (), (const, override));
+-  MOCK_METHOD(size_t, buffered_amount, (int channel_id), (const, override));
+ };
+ 
+ // Convenience class for tests to ensure that shutdown methods for DCC
+@@ -168,20 +167,6 @@ TEST_F(DataChannelControllerTest, MaxChannels) {
+   }
  }
  
- TEST_F(RRSendQueueTest, AddAndGetSingleChunk) {
-   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, {1, 2, 4, 5, 6}));
+-TEST_F(DataChannelControllerTest, BufferedAmountIncludesFromTransport) {
+-  NiceMock<MockDataChannelTransport> transport;
+-  EXPECT_CALL(transport, buffered_amount(0)).WillOnce(Return(4711));
+-  ON_CALL(*pc_, GetSctpSslRole_n).WillByDefault([&]() {
+-    return rtc::SSL_CLIENT;
+-  });
+-
+-  DataChannelControllerForTest dcc(pc_.get(), &transport);
+-  auto dc = dcc.InternalCreateDataChannelWithProxy(
+-                   "label", InternalDataChannelInit(DataChannelInit()))
+-                .MoveValue();
+-  EXPECT_EQ(dc->buffered_amount(), 4711u);
+-}
+-
+ // Test that while a data channel is in the `kClosing` state, its StreamId does
+ // not get re-used for new channels. Only once the state reaches `kClosed`
+ // should a StreamId be available again for allocation.
+diff --git a/pc/data_channel_integrationtest.cc b/pc/data_channel_integrationtest.cc
+index a31481d634..5a8004c72a 100644
+--- a/pc/data_channel_integrationtest.cc
++++ b/pc/data_channel_integrationtest.cc
+@@ -1042,16 +1042,14 @@ TEST_P(DataChannelIntegrationTest,
+                  kDefaultTimeout);
+   // Cause a temporary network outage
+   virtual_socket_server()->set_drop_probability(1.0);
+-  // Fill the SCTP socket buffer until queued data starts to build.
+-  constexpr size_t kBufferedDataInSctpSocket = 2'000'000;
++  // Fill the buffer until queued data starts to build
+   size_t packet_counter = 0;
+-  while (caller()->data_channel()->buffered_amount() <
+-             kBufferedDataInSctpSocket &&
++  while (caller()->data_channel()->buffered_amount() < 1 &&
+          packet_counter < 10000) {
+     packet_counter++;
+     caller()->data_channel()->Send(DataBuffer("Sent while blocked"));
+   }
+-  if (caller()->data_channel()->buffered_amount() > kBufferedDataInSctpSocket) {
++  if (caller()->data_channel()->buffered_amount()) {
+     RTC_LOG(LS_INFO) << "Buffered data after " << packet_counter << " packets";
+   } else {
+     RTC_LOG(LS_INFO) << "No buffered data after " << packet_counter
+diff --git a/pc/sctp_data_channel.cc b/pc/sctp_data_channel.cc
+index 7ec314d2f7..8aa5fbd974 100644
+--- a/pc/sctp_data_channel.cc
++++ b/pc/sctp_data_channel.cc
+@@ -485,11 +485,7 @@ Priority SctpDataChannel::priority() const {
  
-   EXPECT_FALSE(buf_.IsEmpty());
-+  EXPECT_FALSE(buf_.IsFull());
-   absl::optional<SendQueue::DataToSend> chunk_opt =
-       buf_.Produce(kNow, kOneFragmentPacketSize);
-   ASSERT_TRUE(chunk_opt.has_value());
-@@ -121,30 +124,30 @@ TEST_F(RRSendQueueTest, GetChunksFromTwoMessages) {
- 
- TEST_F(RRSendQueueTest, BufferBecomesFullAndEmptied) {
-   std::vector<uint8_t> payload(600);
--  EXPECT_LT(buf_.total_buffered_amount(), 1000u);
-+  EXPECT_FALSE(buf_.IsFull());
-   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
--  EXPECT_LT(buf_.total_buffered_amount(), 1000u);
-+  EXPECT_FALSE(buf_.IsFull());
-   buf_.Add(kNow, DcSctpMessage(StreamID(3), PPID(54), payload));
--  EXPECT_GE(buf_.total_buffered_amount(), 1000u);
-+  EXPECT_TRUE(buf_.IsFull());
-   // However, it's still possible to add messages. It's a soft limit, and it
-   // might be necessary to forcefully add messages due to e.g. external
-   // fragmentation.
-   buf_.Add(kNow, DcSctpMessage(StreamID(5), PPID(55), payload));
--  EXPECT_GE(buf_.total_buffered_amount(), 1000u);
-+  EXPECT_TRUE(buf_.IsFull());
- 
-   absl::optional<SendQueue::DataToSend> chunk_one = buf_.Produce(kNow, 1000);
-   ASSERT_TRUE(chunk_one.has_value());
-   EXPECT_EQ(chunk_one->data.stream_id, kStreamID);
-   EXPECT_EQ(chunk_one->data.ppid, kPPID);
- 
--  EXPECT_GE(buf_.total_buffered_amount(), 1000u);
-+  EXPECT_TRUE(buf_.IsFull());
- 
-   absl::optional<SendQueue::DataToSend> chunk_two = buf_.Produce(kNow, 1000);
-   ASSERT_TRUE(chunk_two.has_value());
-   EXPECT_EQ(chunk_two->data.stream_id, StreamID(3));
-   EXPECT_EQ(chunk_two->data.ppid, PPID(54));
- 
--  EXPECT_LT(buf_.total_buffered_amount(), 1000u);
-+  EXPECT_FALSE(buf_.IsFull());
-   EXPECT_FALSE(buf_.IsEmpty());
- 
-   absl::optional<SendQueue::DataToSend> chunk_three = buf_.Produce(kNow, 1000);
-@@ -152,7 +155,7 @@ TEST_F(RRSendQueueTest, BufferBecomesFullAndEmptied) {
-   EXPECT_EQ(chunk_three->data.stream_id, StreamID(5));
-   EXPECT_EQ(chunk_three->data.ppid, PPID(55));
- 
--  EXPECT_LT(buf_.total_buffered_amount(), 1000u);
-+  EXPECT_FALSE(buf_.IsFull());
-   EXPECT_TRUE(buf_.IsEmpty());
+ uint64_t SctpDataChannel::buffered_amount() const {
+   RTC_DCHECK_RUN_ON(network_thread_);
+-  uint64_t buffered_amount = queued_send_data_.byte_count();
+-  if (controller_ != nullptr && id_n_.has_value()) {
+-    buffered_amount += controller_->buffered_amount(*id_n_);
+-  }
+-  return buffered_amount;
++  return queued_send_data_.byte_count();
  }
  
-@@ -810,7 +813,7 @@ TEST_F(RRSendQueueTest, WillHandoverPriority) {
-   DcSctpSocketHandoverState state;
-   buf_.AddHandoverState(state);
+ void SctpDataChannel::Close() {
+diff --git a/pc/sctp_data_channel.h b/pc/sctp_data_channel.h
+index 0be234bd16..fdbf2053e3 100644
+--- a/pc/sctp_data_channel.h
++++ b/pc/sctp_data_channel.h
+@@ -55,7 +55,6 @@ class SctpDataChannelControllerInterface {
+   // Notifies the controller of state changes.
+   virtual void OnChannelStateChanged(SctpDataChannel* data_channel,
+                                      DataChannelInterface::DataState state) = 0;
+-  virtual size_t buffered_amount(StreamId sid) const = 0;
  
--  RRSendQueue q2("log: ", &callbacks_, kMtu, kDefaultPriority,
-+  RRSendQueue q2("log: ", &callbacks_, kMaxQueueSize, kMtu, kDefaultPriority,
-                  kBufferedAmountLowThreshold);
-   q2.RestoreFromState(state);
-   EXPECT_EQ(q2.GetStreamPriority(StreamID(1)), StreamPriority(42));
+  protected:
+   virtual ~SctpDataChannelControllerInterface() {}
+diff --git a/pc/sctp_transport.cc b/pc/sctp_transport.cc
+index 5f505e0296..7f55e39d9e 100644
+--- a/pc/sctp_transport.cc
++++ b/pc/sctp_transport.cc
+@@ -100,12 +100,6 @@ bool SctpTransport::IsReadyToSend() const {
+   return internal_sctp_transport_->ReadyToSendData();
+ }
+ 
+-size_t SctpTransport::buffered_amount(int channel_id) const {
+-  RTC_DCHECK_RUN_ON(owner_thread_);
+-  RTC_DCHECK(internal_sctp_transport_);
+-  return internal_sctp_transport_->buffered_amount(channel_id);
+-}
+-
+ rtc::scoped_refptr<DtlsTransportInterface> SctpTransport::dtls_transport()
+     const {
+   RTC_DCHECK_RUN_ON(owner_thread_);
+diff --git a/pc/sctp_transport.h b/pc/sctp_transport.h
+index 79cb3aed2c..076dee5318 100644
+--- a/pc/sctp_transport.h
++++ b/pc/sctp_transport.h
+@@ -52,7 +52,6 @@ class SctpTransport : public SctpTransportInterface,
+   RTCError CloseChannel(int channel_id) override;
+   void SetDataSink(DataChannelSink* sink) override;
+   bool IsReadyToSend() const override;
+-  size_t buffered_amount(int channel_id) const override;
+ 
+   // Internal functions
+   void Clear();
+diff --git a/pc/sctp_transport_unittest.cc b/pc/sctp_transport_unittest.cc
+index f0401c1b10..d18543f20c 100644
+--- a/pc/sctp_transport_unittest.cc
++++ b/pc/sctp_transport_unittest.cc
+@@ -63,7 +63,6 @@ class FakeCricketSctpTransport : public cricket::SctpTransportInternal {
+   absl::optional<int> max_inbound_streams() const override {
+     return max_inbound_streams_;
+   }
+-  size_t buffered_amount(int sid) const override { return 0; }
+ 
+   void SendSignalAssociationChangeCommunicationUp() {
+     ASSERT_TRUE(on_connected_callback_);
+@@ -213,4 +212,5 @@ TEST_F(SctpTransportTest, CloseWhenTransportCloses) {
+   ASSERT_EQ_WAIT(SctpTransportState::kClosed, observer_.State(),
+                  kDefaultTimeout);
+ }
++
+ }  // namespace webrtc
+diff --git a/pc/test/fake_data_channel_controller.h b/pc/test/fake_data_channel_controller.h
+index c65449b010..89cdce738d 100644
+--- a/pc/test/fake_data_channel_controller.h
++++ b/pc/test/fake_data_channel_controller.h
+@@ -128,8 +128,6 @@ class FakeDataChannelController
+     }
+   }
+ 
+-  size_t buffered_amount(webrtc::StreamId sid) const override { return 0; }
+-
+   // Set true to emulate the SCTP stream being blocked by congestion control.
+   void set_send_blocked(bool blocked) {
+     network_thread_->BlockingCall([&]() {
+diff --git a/test/pc/sctp/fake_sctp_transport.h b/test/pc/sctp/fake_sctp_transport.h
+index 6aef57a241..96c126640c 100644
+--- a/test/pc/sctp/fake_sctp_transport.h
++++ b/test/pc/sctp/fake_sctp_transport.h
+@@ -41,14 +41,9 @@ class FakeSctpTransport : public cricket::SctpTransportInternal {
+   bool ReadyToSendData() override { return true; }
+   void set_debug_name_for_testing(const char* debug_name) override {}
+ 
+-  int max_message_size() const override { return max_message_size_; }
+-  absl::optional<int> max_outbound_streams() const override {
+-    return absl::nullopt;
+-  }
+-  absl::optional<int> max_inbound_streams() const override {
+-    return absl::nullopt;
+-  }
+-  size_t buffered_amount(int sid) const override { return 0; }
++  int max_message_size() const { return max_message_size_; }
++  absl::optional<int> max_outbound_streams() const { return absl::nullopt; }
++  absl::optional<int> max_inbound_streams() const { return absl::nullopt; }
+   int local_port() const {
+     RTC_DCHECK(local_port_);
+     return *local_port_;

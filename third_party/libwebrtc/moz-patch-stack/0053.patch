@@ -1,88 +1,153 @@
-From: Landry Breuil <landry@openbsd.org>
-Date: Wed, 22 Dec 2021 00:09:00 +0000
-Subject: Bug 1654448 - P2 - readd partial support for BSD to webrtc
- build;r=mjf
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Tue, 2 Nov 2021 14:35:00 +0000
+Subject: Bug 1729455 - Inject RTCStatsTimestampMakerRealtimeClock into Call
+ instances. r=bwc
 
-only OpenBSD/amd64 is supported for now
+This patch makes libwebrtc use our clock for timestamps.
+It also makes sure there's no use of the libwebrtc realtime clock, other than
+for relative time tracking (like timeouts), and that future libwebrtc updates
+don't introduce unaudited use of it.
 
-Depends on D134432
-
-Differential Revision: https://phabricator.services.mozilla.com/D134433
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0300b32b7de70fb8976dc82d7d3bb3adb9685857
+Differential Revision: https://phabricator.services.mozilla.com/D127714
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e69945de4ac5c4ca71332e78ad8
 ---
- BUILD.gn                                       | 3 +++
- modules/video_capture/BUILD.gn                 | 2 +-
- modules/video_capture/linux/device_info_v4l2.h | 2 ++
- rtc_base/platform_thread_types.cc              | 4 +++-
- webrtc.gni                                     | 2 +-
- 5 files changed, 10 insertions(+), 3 deletions(-)
+ audio/channel_send.cc                       | 2 +-
+ call/degraded_call.cc                       | 2 ++
+ modules/audio_coding/acm2/acm_receiver.cc   | 2 +-
+ modules/rtp_rtcp/include/flexfec_receiver.h | 2 ++
+ modules/rtp_rtcp/source/flexfec_receiver.cc | 2 ++
+ rtc_base/task_utils/repeating_task.h        | 4 ++--
+ system_wrappers/include/clock.h             | 2 +-
+ system_wrappers/source/clock.cc             | 2 +-
+ 8 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/BUILD.gn b/BUILD.gn
-index d2ede84941..f595a2951a 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -221,6 +221,9 @@ config("common_inherited_config") {
-   if (is_linux || is_chromeos) {
-     defines += [ "WEBRTC_LINUX" ]
-   }
-+  if (is_bsd) {
-+    defines += [ "WEBRTC_BSD" ]
-+  }
-   if (is_mac) {
-     defines += [ "WEBRTC_MAC" ]
-   }
-diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index 7289dbe0a8..58fdf8957b 100644
---- a/modules/video_capture/BUILD.gn
-+++ b/modules/video_capture/BUILD.gn
-@@ -71,7 +71,7 @@ if (!build_with_chromium || is_linux || is_chromeos) {
-       "video_capture_options.h",
-     ]
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index 9e86ea3f7a..c04dc2ab20 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -443,7 +443,7 @@ ChannelSend::ChannelSend(
+       transport_controller->GetRtcpObserver();
+   configuration.transport_feedback_callback =
+       transport_controller->transport_feedback_observer();
+-  configuration.clock = (clock ? clock : Clock::GetRealTimeClock());
++  configuration.clock = clock;
+   configuration.audio = true;
+   configuration.outgoing_transport = rtp_transport;
  
--    if (is_linux || is_chromeos) {
-+    if (is_linux || is_bsd || is_chromeos) {
-       sources += [
-         "linux/device_info_linux.cc",
-         "linux/device_info_v4l2.cc",
-diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index e3c2395f49..119cb07ab8 100644
---- a/modules/video_capture/linux/device_info_v4l2.h
-+++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -16,7 +16,9 @@
- #include "modules/video_capture/device_info_impl.h"
- 
- #include "rtc_base/platform_thread.h"
-+#ifdef WEBRTC_LINUX
- #include <sys/inotify.h>
-+#endif
- 
- struct v4l2_capability;
- 
-diff --git a/rtc_base/platform_thread_types.cc b/rtc_base/platform_thread_types.cc
-index d64ea689bb..c3c6955a7b 100644
---- a/rtc_base/platform_thread_types.cc
-+++ b/rtc_base/platform_thread_types.cc
-@@ -50,7 +50,9 @@ PlatformThreadId CurrentThreadId() {
-   return static_cast<PlatformThreadId>(pthread_self());
- #else
-   // Default implementation for nacl and solaris.
--  return reinterpret_cast<PlatformThreadId>(pthread_self());
-+  // WEBRTC_BSD: pthread_t is a pointer, so cannot be casted to pid_t
-+  //             (aka int32_t) on 64-bit archs. Required on OpenBSD.
-+  return reinterpret_cast<long>(pthread_self());
- #endif
- #endif  // defined(WEBRTC_POSIX)
+diff --git a/call/degraded_call.cc b/call/degraded_call.cc
+index a511eda7bd..75a4a1cac0 100644
+--- a/call/degraded_call.cc
++++ b/call/degraded_call.cc
+@@ -126,6 +126,7 @@ bool DegradedCall::FakeNetworkPipeTransportAdapter::SendRtcp(
+   return true;
  }
-diff --git a/webrtc.gni b/webrtc.gni
-index ad69bf8f8e..e339ba25fe 100644
---- a/webrtc.gni
-+++ b/webrtc.gni
-@@ -360,7 +360,7 @@ rtc_opus_dir = "//third_party/opus"
  
- # Desktop capturer is supported only on Windows, OSX and Linux.
- rtc_desktop_capture_supported =
--    (is_win && current_os != "winuwp") || is_mac ||
-+    (is_win && current_os != "winuwp") || is_mac || is_bsd ||
-     ((is_linux || is_chromeos) && (rtc_use_x11_extensions || rtc_use_pipewire))
++/* Mozilla: Avoid this since it could use GetRealTimeClock().
+ DegradedCall::DegradedCall(
+     std::unique_ptr<Call> call,
+     const std::vector<TimeScopedNetworkConfig>& send_configs,
+@@ -162,6 +163,7 @@ DegradedCall::DegradedCall(
+     }
+   }
+ }
++*/
  
- ###############################################################################
+ DegradedCall::~DegradedCall() {
+   RTC_DCHECK_RUN_ON(call_->worker_thread());
+diff --git a/modules/audio_coding/acm2/acm_receiver.cc b/modules/audio_coding/acm2/acm_receiver.cc
+index 24a49024c8..4deabdf7ff 100644
+--- a/modules/audio_coding/acm2/acm_receiver.cc
++++ b/modules/audio_coding/acm2/acm_receiver.cc
+@@ -50,7 +50,7 @@ std::unique_ptr<NetEq> CreateNetEq(
+ 
+ AcmReceiver::Config::Config(
+     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory)
+-    : clock(*Clock::GetRealTimeClock()), decoder_factory(decoder_factory) {}
++    : clock(*Clock::GetRealTimeClockRaw()), decoder_factory(decoder_factory) {}
+ 
+ AcmReceiver::Config::Config(const Config&) = default;
+ AcmReceiver::Config::~Config() = default;
+diff --git a/modules/rtp_rtcp/include/flexfec_receiver.h b/modules/rtp_rtcp/include/flexfec_receiver.h
+index a869c8ad41..b6a33882d1 100644
+--- a/modules/rtp_rtcp/include/flexfec_receiver.h
++++ b/modules/rtp_rtcp/include/flexfec_receiver.h
+@@ -30,9 +30,11 @@ class Clock;
+ 
+ class FlexfecReceiver {
+  public:
++  /* Mozilla: Avoid this since it could use GetRealTimeClock().
+   FlexfecReceiver(uint32_t ssrc,
+                   uint32_t protected_media_ssrc,
+                   RecoveredPacketReceiver* recovered_packet_receiver);
++   */
+   FlexfecReceiver(Clock* clock,
+                   uint32_t ssrc,
+                   uint32_t protected_media_ssrc,
+diff --git a/modules/rtp_rtcp/source/flexfec_receiver.cc b/modules/rtp_rtcp/source/flexfec_receiver.cc
+index 7f2cc0cb3c..2ba85a2157 100644
+--- a/modules/rtp_rtcp/source/flexfec_receiver.cc
++++ b/modules/rtp_rtcp/source/flexfec_receiver.cc
+@@ -31,6 +31,7 @@ constexpr TimeDelta kPacketLogInterval = TimeDelta::Seconds(10);
+ 
+ }  // namespace
+ 
++/* Mozilla: Avoid this since it could use GetRealTimeClock().
+ FlexfecReceiver::FlexfecReceiver(
+     uint32_t ssrc,
+     uint32_t protected_media_ssrc,
+@@ -39,6 +40,7 @@ FlexfecReceiver::FlexfecReceiver(
+                       ssrc,
+                       protected_media_ssrc,
+                       recovered_packet_receiver) {}
++ */
+ 
+ FlexfecReceiver::FlexfecReceiver(
+     Clock* clock,
+diff --git a/rtc_base/task_utils/repeating_task.h b/rtc_base/task_utils/repeating_task.h
+index c45de95ecc..28c691c3de 100644
+--- a/rtc_base/task_utils/repeating_task.h
++++ b/rtc_base/task_utils/repeating_task.h
+@@ -57,7 +57,7 @@ class RepeatingTaskHandle {
+       absl::AnyInvocable<TimeDelta()> closure,
+       TaskQueueBase::DelayPrecision precision =
+           TaskQueueBase::DelayPrecision::kLow,
+-      Clock* clock = Clock::GetRealTimeClock(),
++      Clock* clock = Clock::GetRealTimeClockRaw(),
+       const Location& location = Location::Current());
+ 
+   // DelayedStart is equivalent to Start except that the first invocation of the
+@@ -68,7 +68,7 @@ class RepeatingTaskHandle {
+       absl::AnyInvocable<TimeDelta()> closure,
+       TaskQueueBase::DelayPrecision precision =
+           TaskQueueBase::DelayPrecision::kLow,
+-      Clock* clock = Clock::GetRealTimeClock(),
++      Clock* clock = Clock::GetRealTimeClockRaw(),
+       const Location& location = Location::Current());
+ 
+   // Stops future invocations of the repeating task closure. Can only be called
+diff --git a/system_wrappers/include/clock.h b/system_wrappers/include/clock.h
+index 60296070cc..214b34c970 100644
+--- a/system_wrappers/include/clock.h
++++ b/system_wrappers/include/clock.h
+@@ -49,7 +49,7 @@ class RTC_EXPORT Clock {
+   }
+ 
+   // Returns an instance of the real-time system clock implementation.
+-  static Clock* GetRealTimeClock();
++  static Clock* GetRealTimeClockRaw();
+ };
+ 
+ class SimulatedClock : public Clock {
+diff --git a/system_wrappers/source/clock.cc b/system_wrappers/source/clock.cc
+index 88c99d6a68..f7460b831c 100644
+--- a/system_wrappers/source/clock.cc
++++ b/system_wrappers/source/clock.cc
+@@ -57,7 +57,7 @@ class RealTimeClock : public Clock {
+   }
+ };
+ 
+-Clock* Clock::GetRealTimeClock() {
++Clock* Clock::GetRealTimeClockRaw() {
+   static Clock* const clock = new RealTimeClock();
+   return clock;
+ }

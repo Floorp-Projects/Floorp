@@ -1,41 +1,28 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 18 Oct 2023 17:21:00 +0000
-Subject: Bug 1859786 - Fix lock annotation warning in Mozilla-specific edit on
- top of video_capture_impl.cc. r=webrtc-reviewers,mjf
+Date: Wed, 18 Oct 2023 17:25:00 +0000
+Subject: Bug 1857862 - (fix-32a8169a65) Don't call non-constexpr
+ RTC_CHECK_NOTREACHED from constexpr VideoFrameTypeToString under gcc-8.
+ r=webrtc-reviewers,mjf
 
-The annotations were added in M116:
-https://hg.mozilla.org/mozilla-central/rev/9cd372df013948ad822ae936752d725d77474fb5
-
-Note that this was never unsafe, since _dataCallbacks is only written on the
-same thread that we are patching here. This patch however, adds helpful static
-analysis.
-
-Differential Revision: https://phabricator.services.mozilla.com/D191301
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56ff441b644400f09d2d0453dbd8991ea25db7b1
+Differential Revision: https://phabricator.services.mozilla.com/D191308
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8a4449ba24fa3192b44863ed8ba96f6f94a6e88d
 ---
- modules/video_capture/video_capture_impl.cc | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ api/video/video_frame_type.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 1a12020b64..dad8bee1f8 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -119,11 +119,14 @@ void VideoCaptureImpl::DeRegisterCaptureDataCallback(
- }
- 
- int32_t VideoCaptureImpl::StopCaptureIfAllClientsClose() {
--  if (_dataCallBacks.empty()) {
--    return StopCapture();
--  } else {
--    return 0;
-+  RTC_DCHECK_RUN_ON(&api_checker_);
-+  {
-+    MutexLock lock(&api_lock_);
-+    if (!_dataCallBacks.empty()) {
-+      return 0;
-+    }
+diff --git a/api/video/video_frame_type.h b/api/video/video_frame_type.h
+index 9079829ff8..3665a80cd8 100644
+--- a/api/video/video_frame_type.h
++++ b/api/video/video_frame_type.h
+@@ -34,7 +34,11 @@ inline constexpr absl::string_view VideoFrameTypeToString(
+     case VideoFrameType::kVideoFrameDelta:
+       return "delta";
    }
-+  return StopCapture();
++// Mozilla:
++//   gcc-8 complains about a constexpr function calling a non-constexpr ditto.
++#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 9)
+   RTC_CHECK_NOTREACHED();
++#endif
+   return "";
  }
  
- int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
