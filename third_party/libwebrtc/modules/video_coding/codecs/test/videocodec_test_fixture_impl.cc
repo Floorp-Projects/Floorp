@@ -178,7 +178,9 @@ SdpVideoFormat CreateSdpVideoFormat(
 
     return SdpVideoFormat(config.codec_name, codec_params);
   } else if (config.codec_settings.codecType == kVideoCodecVP9) {
-    return SdpVideoFormat(config.codec_name, {{"profile-id", "0"}});
+    return SdpVideoFormat::VP9Profile0();
+  } else if (config.codec_settings.codecType == kVideoCodecAV1) {
+    return SdpVideoFormat::AV1Profile0();
   }
 
   return SdpVideoFormat(config.codec_name);
