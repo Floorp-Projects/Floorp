@@ -564,10 +564,17 @@ export class DiscoveryStreamFeed {
   }
 
   generateFeedUrl(isBff) {
+    // check for experiment parameters
+    const hasParameters = lazy.NimbusFeatures.pocketNewtab.getVariable(
+      "pocketFeedParameters"
+    );
+
     if (isBff) {
       return `https://${Services.prefs.getStringPref(
         "extensions.pocket.bffApi"
-      )}/desktop/v1/recommendations?locale=$locale&region=$region&count=30`;
+      )}/desktop/v1/recommendations?locale=$locale&region=$region&count=30${
+        hasParameters || ""
+      }`;
     }
     return FEED_URL;
   }
