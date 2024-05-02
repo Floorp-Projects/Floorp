@@ -339,11 +339,7 @@ class WalkerActor extends Actor {
     return {
       actor: this.actorID,
       root: this.rootNode.form(),
-      traits: {
-        // @backward-compat { version 125 } Indicate to the client that it can use getIdrefNode.
-        // This trait can be removed once 125 hits release.
-        hasGetIdrefNode: true,
-      },
+      traits: {},
     };
   }
 
