@@ -1373,9 +1373,20 @@ GeckoDriver.prototype.switchToFrame = async function (cmd) {
     byFrame = el;
   }
 
-  const { browsingContext } = await this.getActor({ top }).switchToFrame(
-    byFrame || id
-  );
+  // If the current context changed during the switchToFrame call, attempt to
+  // call switchToFrame again until the browsing context remains stable.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1786640#c11
+  let browsingContext;
+  for (let i = 0; i < 5; i++) {
+    const currentBrowsingContext = this.currentSession.contentBrowsingContext;
+    ({ browsingContext } = await this.getActor({ top }).switchToFrame(
+      byFrame || id
+    ));
+
+    if (currentBrowsingContext == this.currentSession.contentBrowsingContext) {
+      break;
+    }
+  }
 
   this.currentSession.contentBrowsingContext = browsingContext;
 };
