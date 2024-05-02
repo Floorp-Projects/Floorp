@@ -29,6 +29,22 @@ performance.pageload:
       - perf-telemetry-alerts@mozilla.com
     expires: never
 
+  async_sheet_load:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time spent in milliseconds since a style sheet started loading async
+      until it finished.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892660
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892660
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - emilio@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    expires: 132
 
 performance.responsiveness:
   req_anim_frame_callback:

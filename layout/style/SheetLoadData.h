@@ -239,6 +239,9 @@ class SheetLoadData final
   // listening for the load.
   bool mIntentionallyDropped = false;
 
+  // The start timestamp for the load.
+  TimeStamp mLoadStart;
+
   const bool mRecordErrors;
 
   bool ShouldDefer() const { return mWasAlternate || !mMediaMatched; }
@@ -269,8 +272,9 @@ class SheetLoadData final
   bool IsLoading() const override { return mIsLoading; }
   bool IsCancelled() const override { return mIsCancelled; }
 
-  void StartLoading() override { mIsLoading = true; }
-  void SetLoadCompleted() override { mIsLoading = false; }
+  void StartLoading() override;
+  void SetLoadCompleted() override;
+
   void Cancel() override { mIsCancelled = true; }
 
  private:
