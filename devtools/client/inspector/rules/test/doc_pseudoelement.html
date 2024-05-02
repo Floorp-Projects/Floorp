@@ -110,7 +110,11 @@ p:first-letter {
     color: purple;
 }
 
-dialog::backdrop {
+:is(
+    dialog,
+    [popover],
+    :fullscreen,
+)::backdrop {
     background-color: transparent;
 }
 
@@ -171,7 +175,10 @@ input::slider-track {
         <li id="list" class="box">List element</li>
     </ol>
 
-    <dialog>In dialog</dialog>
+    <dialog>
+        In dialog
+        <div id="in-dialog" popover>hello</div>
+    </dialog>
 
     <label>Range <input type="range" class="slider"></label>
     <label>Not range <input type="text" class="slider"></label>
@@ -183,10 +190,13 @@ input::slider-track {
 
     <section class="url-fragment-text-directives">May the fox be with you</section>
 
+    <canvas></canvas>
+
     <script>
         "use strict";
         // This is the only way to have the ::backdrop style to be applied
         document.querySelector("dialog").showModal()
+        document.querySelector("#in-dialog").showPopover()
 
         // Register highlights for ::highlight pseudo elements
         const highlightsContainer = document.querySelector(".highlights-container");

@@ -13,6 +13,8 @@ add_task(async function () {
   await pushPref("dom.customHighlightAPI.enabled", true);
   await pushPref("dom.text_fragments.enabled", true);
   await pushPref("layout.css.modern-range-pseudos.enabled", true);
+  await pushPref("full-screen-api.transition-duration.enter", "0 0");
+  await pushPref("full-screen-api.transition-duration.leave", "0 0");
 
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
@@ -24,7 +26,7 @@ add_task(async function () {
   await testParagraph(inspector, view);
   await testBody(inspector, view);
   await testList(inspector, view);
-  await testDialogBackdrop(inspector, view);
+  await testBackdrop(inspector, view);
   await testCustomHighlight(inspector, view);
   await testSlider(inspector, view);
   await testUrlFragmentTextDirective(inspector, view);
@@ -290,13 +292,85 @@ async function testList(inspector, view) {
   assertGutters(view);
 }
 
-async function testDialogBackdrop(inspector, view) {
+async function testBackdrop(inspector, view) {
+  info("Test ::backdrop for dialog element");
   await assertPseudoElementRulesNumbers("dialog", inspector, view, {
     elementRulesNb: 3,
     backdropRules: 1,
   });
 
+  info("Test ::backdrop for popover element");
+  await assertPseudoElementRulesNumbers(
+    "#in-dialog[popover]",
+    inspector,
+    view,
+    {
+      elementRulesNb: 3,
+      backdropRules: 1,
+    }
+  );
+
   assertGutters(view);
+
+  info("Test ::backdrop rules are displayed when elements is fullscreen");
+
+  // Wait for the document being activated, so that
+  // fullscreen request won't be denied.
+  const onTabFocused = SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    return ContentTaskUtils.waitForCondition(
+      () => content.browsingContext.isActive && content.document.hasFocus(),
+      "document is active"
+    );
+  });
+  gBrowser.selectedBrowser.focus();
+  await onTabFocused;
+
+  const onFullscreen = new Promise(resolve => {
+    BrowserTestUtils.addContentEventListener(
+      gBrowser.selectedBrowser,
+      "fullscreenchange",
+      resolve,
+      { once: true }
+    );
+  });
+
+  info("Request fullscreen");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    const canvas = content.document.querySelector("canvas");
+    canvas.requestFullscreen();
+  });
+
+  await onFullscreen;
+  ok(true, "canvas is fullscreen");
+
+  await assertPseudoElementRulesNumbers("canvas", inspector, view, {
+    elementRulesNb: 3,
+    backdropRules: 1,
+  });
+
+  assertGutters(view);
+
+  info("Exit fullscreen");
+  const onFullscreenExit = new Promise(resolve => {
+    BrowserTestUtils.addContentEventListener(
+      gBrowser.selectedBrowser,
+      "fullscreenchange",
+      resolve,
+      { once: true }
+    );
+  });
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    content.document.exitFullscreen();
+  });
+  await onFullscreenExit;
+
+  info(
+    "Test ::backdrop rules are not displayed when elements are not fullscreen"
+  );
+  await assertPseudoElementRulesNumbers("canvas", inspector, view, {
+    elementRulesNb: 3,
+    backdropRules: 0,
+  });
 }
 
 async function testCustomHighlight(inspector, view) {
