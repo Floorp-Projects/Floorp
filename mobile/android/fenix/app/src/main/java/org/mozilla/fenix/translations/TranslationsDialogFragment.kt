@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
@@ -282,6 +283,8 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
         onSettingClicked: () -> Unit,
         onShowDownloadLanguageFileDialog: () -> Unit,
     ) {
+        val localView = LocalView.current
+
         TranslationsDialog(
             translationsDialogState = translationsDialogState,
             learnMoreUrl = learnMoreUrl,
@@ -297,6 +300,11 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
             },
             onNegativeButtonClicked = {
                 if (translationsDialogState.isTranslated) {
+                    localView.announceForAccessibility(
+                        requireContext().getString(
+                            R.string.translations_bottom_sheet_restore_accessibility_announcement,
+                        ),
+                    )
                     translationsDialogStore.dispatch(TranslationsDialogAction.RestoreTranslation)
                 }
                 dismiss()
@@ -393,6 +401,8 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
             state.translationEngine.offerTranslation
         }.value
 
+        val localView = LocalView.current
+
         TranslationsOptionsDialog(
             context = requireContext(),
             translationPageSettings = pageSettingsState,
@@ -409,6 +419,10 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                         checked,
                     ),
                 )
+
+                if (checked) {
+                    localView.announceForAccessibility(type.descriptionId?.let { getString(it) })
+                }
             },
             onBackClicked = onBackClicked,
             onTranslationSettingsClicked = {
