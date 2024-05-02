@@ -7,6 +7,7 @@
 add_task(async function () {
   await pushPref("dom.element.invokers.enabled", true);
   await pushPref("dom.element.popover.enabled", true);
+  await pushPref("dom.events.textevent.enabled", true);
 
   const dbg = await initDebugger(
     "doc-event-breakpoints.html",
@@ -150,6 +151,15 @@ add_task(async function () {
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, eventBreakpointsSource.id, 63);
   await resume(dbg);
+
+  info("Test textInput");
+  await toggleEventBreakpoint(dbg, "Keyboard", "event.keyboard.textInput");
+  invokeOnElement("#focus-text", "focus");
+  EventUtils.sendChar("N");
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, eventBreakpointsSource.id, 98);
+  await resume(dbg);
+  await toggleEventBreakpoint(dbg, "Keyboard", "event.keyboard.textInput");
 
   info(`Check that breakpoint can be set on "scrollend"`);
   await toggleEventBreakpoint(dbg, "Control", "event.control.scrollend");

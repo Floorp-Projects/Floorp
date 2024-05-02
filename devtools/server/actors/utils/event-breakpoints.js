@@ -200,6 +200,10 @@ const AVAILABLE_BREAKPOINTS = [
     items: [
       generalEvent("keyboard", "beforeinput"),
       generalEvent("keyboard", "input"),
+      generalEvent("keyboard", "textInput", () =>
+        // Services.prefs isn't available on worker targets
+        Services.prefs?.getBoolPref("dom.events.textevent.enabled")
+      ),
       generalEvent("keyboard", "keydown"),
       generalEvent("keyboard", "keyup"),
       generalEvent("keyboard", "keypress"),
