@@ -563,7 +563,7 @@ class FullPageTranslationsTestUtils {
    * @param {string} toLanguage - The BCP-47 language tag being translated into.
    * @param {ChromeWindow} win
    */
-  static async #assertLangTagIsShownOnTranslationsButton(
+  static async assertLangTagIsShownOnTranslationsButton(
     fromLanguage,
     toLanguage,
     win = window
@@ -623,7 +623,7 @@ class FullPageTranslationsTestUtils {
       );
     };
     await runInPage(callback, { fromLang: fromLanguage, toLang: toLanguage });
-    await FullPageTranslationsTestUtils.#assertLangTagIsShownOnTranslationsButton(
+    await FullPageTranslationsTestUtils.assertLangTagIsShownOnTranslationsButton(
       fromLanguage,
       toLanguage,
       win
