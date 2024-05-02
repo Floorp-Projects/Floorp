@@ -43,19 +43,29 @@ support-files = [
 ]
 
 ["browser_animationapi_iframes.js"]
+lineno = "45"
 
 ["browser_block_mozAddonManager.js"]
+lineno = "47"
 
 ["browser_bug1369357_site_specific_zoom_level.js"]
 https_first_disabled = true
+lineno = "49"
 
 ["browser_canvas_iframes.js"]
+lineno = "52"
+
+["browser_canvas_popups.js"]
+lineno = "54"
 
 ["browser_cross_origin_isolated_animation_api.js"]
+lineno = "56"
 
 ["browser_cross_origin_isolated_performance_api.js"]
+lineno = "58"
 
 ["browser_cross_origin_isolated_reduce_time_precision.js"]
+lineno = "60"
 
 ["browser_dynamical_window_rounding.js"]
 https_first_disabled = true
@@ -63,66 +73,96 @@ skip-if = [
   "os == 'mac'", # Bug 1570812
   "os == 'linux'", # Bug 1570812, Bug 1775698
 ]
+lineno = "62"
 
 ["browser_hwconcurrency_etp_iframes.js"]
+lineno = "69"
 
 ["browser_hwconcurrency_iframes.js"]
+lineno = "71"
 
 ["browser_hwconcurrency_iframes_aboutblank.js"]
+lineno = "73"
 
 ["browser_hwconcurrency_iframes_aboutsrcdoc.js"]
+lineno = "75"
 
 ["browser_hwconcurrency_iframes_blob.js"]
+lineno = "77"
 
 ["browser_hwconcurrency_iframes_blobcrossorigin.js"]
+lineno = "79"
 
 ["browser_hwconcurrency_iframes_data.js"]
+lineno = "81"
 
 ["browser_hwconcurrency_iframes_sandboxediframe.js"]
+lineno = "83"
 
 ["browser_hwconcurrency_popups.js"]
+lineno = "85"
 
 ["browser_hwconcurrency_popups_aboutblank.js"]
+lineno = "87"
 
 ["browser_hwconcurrency_popups_blob.js"]
+lineno = "89"
 
 ["browser_hwconcurrency_popups_blob_noopener.js"]
+lineno = "91"
 
 ["browser_hwconcurrency_popups_data.js"]
+lineno = "93"
 
 ["browser_hwconcurrency_popups_data_noopener.js"]
+lineno = "95"
 
 ["browser_hwconcurrency_popups_noopener.js"]
+lineno = "97"
 
 ["browser_math.js"]
+lineno = "99"
 
 ["browser_navigator.js"]
 https_first_disabled = true
+lineno = "101"
 
 ["browser_navigator_iframes.js"]
 https_first_disabled = true
+lineno = "104"
 
 ["browser_netInfo.js"]
 https_first_disabled = true
+lineno = "107"
 
 ["browser_performanceAPI.js"]
+lineno = "110"
 
 ["browser_performanceAPIWorkers.js"]
+lineno = "112"
 
 ["browser_reduceTimePrecision_iframes.js"]
 https_first_disabled = true
+lineno = "114"
 
 ["browser_roundedWindow_dialogWindow.js"]
+lineno = "117"
 
 ["browser_roundedWindow_newWindow.js"]
+lineno = "119"
 
 ["browser_roundedWindow_open_max_inner.js"]
+lineno = "121"
 
 ["browser_roundedWindow_open_mid_inner.js"]
+lineno = "123"
 
 ["browser_roundedWindow_open_min_inner.js"]
+lineno = "125"
 
 ["browser_spoofing_keyboard_event.js"]
 skip-if = ["(debug || asan) && os == 'linux' && bits == 64"] #Bug 1518179
+lineno = "127"
 
 ["browser_timezone.js"]
+lineno = "130"
