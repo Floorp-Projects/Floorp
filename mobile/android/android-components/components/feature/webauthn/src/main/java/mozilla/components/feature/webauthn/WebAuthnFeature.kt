@@ -20,6 +20,8 @@ import mozilla.components.support.base.log.logger.Logger
 class WebAuthnFeature(
     private val engine: Engine,
     private val activity: Activity,
+    private val exitFullScreen: (String?) -> Unit,
+    private val currentTab: () -> String?,
 ) : LifecycleAwareFeature, ActivityResultHandler, ActivityDelegate {
     private val logger = Logger("WebAuthnFeature")
     private var requestCodeCounter = ACTIVITY_REQUEST_CODE
@@ -53,6 +55,7 @@ class WebAuthnFeature(
 
     override fun startIntentSenderForResult(intent: IntentSender, onResult: (Intent?) -> Unit) {
         logger.info("Received activity delegate request with code: $requestCodeCounter")
+        exitFullScreen(currentTab())
         activity.startIntentSenderForResult(intent, requestCodeCounter, null, 0, 0, 0)
         callbackRef = onResult
     }
