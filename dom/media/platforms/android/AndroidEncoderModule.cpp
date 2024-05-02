@@ -29,6 +29,9 @@ bool AndroidEncoderModule::Supports(const EncoderConfig& aConfig) const {
   if (!CanLikelyEncode(aConfig)) {
     return false;
   }
+  if (aConfig.mScalabilityMode != ScalabilityMode::None) {
+    return false;
+  }
   return SupportsCodec(aConfig.mCodec);
 }
 
