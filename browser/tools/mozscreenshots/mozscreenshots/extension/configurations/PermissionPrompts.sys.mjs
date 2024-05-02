@@ -154,6 +154,11 @@ async function clickOn(selector, beforeContentFn) {
     await SpecialPowers.spawn(lastTab.linkedBrowser, [], beforeContentFn);
   }
 
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    browserWindow.PopupNotifications.panel,
+    "popupshown"
+  );
+
   await SpecialPowers.spawn(lastTab.linkedBrowser, [selector], arg => {
     /* eslint-env mozilla/chrome-script */
     let element = content.document.querySelector(arg);
@@ -161,8 +166,5 @@ async function clickOn(selector, beforeContentFn) {
   });
 
   // Wait for the popup to actually be shown before making the screenshot
-  await BrowserTestUtils.waitForEvent(
-    browserWindow.PopupNotifications.panel,
-    "popupshown"
-  );
+  await popupShownPromise;
 }
