@@ -464,19 +464,19 @@ nsresult BounceTrackingProtectionStorage::Init() {
                                nsresult rv = self->CreateDatabaseConnection();
                                if (NS_WARN_IF(NS_FAILED(rv))) {
                                  self->mErrored.Flip();
-                                 self->mMonitor.Notify();
+                                 self->mMonitor.NotifyAll();
                                  return;
                                }
 
                                rv = self->LoadMemoryStateFromDisk();
                                if (NS_WARN_IF(NS_FAILED(rv))) {
                                  self->mErrored.Flip();
-                                 self->mMonitor.Notify();
+                                 self->mMonitor.NotifyAll();
                                  return;
                                }
 
                                self->mInitialized.Flip();
-                               self->mMonitor.Notify();
+                               self->mMonitor.NotifyAll();
                              }),
       NS_DISPATCH_EVENT_MAY_BLOCK);
 
