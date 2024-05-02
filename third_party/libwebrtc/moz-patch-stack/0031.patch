@@ -1050,7 +1050,7 @@ index b8345841fa..7289dbe0a8 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 1cd0f3dba6..c44260a0fe 100644
+index abc8916e29..db3481e694 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -327,6 +327,7 @@ rtc_library("sample_counter") {
@@ -1240,7 +1240,7 @@ index 1cd0f3dba6..c44260a0fe 100644
  
  rtc_source_set("gtest_prod") {
    sources = [ "gtest_prod_util.h" ]
-@@ -2178,7 +2206,7 @@ if (rtc_include_tests) {
+@@ -2176,7 +2204,7 @@ if (rtc_include_tests) {
    }
  }
  
