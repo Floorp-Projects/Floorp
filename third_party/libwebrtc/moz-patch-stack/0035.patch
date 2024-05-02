@@ -1,38 +1,39 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Wed, 10 Feb 2021 12:24:00 -0800
-Subject: Bug 1654112 - Use newer thread run callback, and adapt
- PlatformUIThread; r=pehrsons
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 19 Feb 2021 13:45:00 +0100
+Subject: Bug 1654112 - libwebrtc: Add a REMB on/off switch to
+ VideoReceiveStream. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D107879
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bb6417a4cfac1416a8e2565bd68b66c40be4827b
+Differential Revision: https://phabricator.services.mozilla.com/D105774
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7330681cf4de6d8dd868cc661cbdd6679bbc07b3
 ---
- rtc_base/platform_thread.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ call/video_receive_stream.h         | 3 +++
+ video/rtp_video_stream_receiver2.cc | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/rtc_base/platform_thread.h b/rtc_base/platform_thread.h
-index befd61849d..5b7c6884fe 100644
---- a/rtc_base/platform_thread.h
-+++ b/rtc_base/platform_thread.h
-@@ -21,8 +21,13 @@
- #include "absl/types/optional.h"
- #include "rtc_base/platform_thread_types.h"
+diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
+index 95f1a47f4e..a1fc204e7c 100644
+--- a/call/video_receive_stream.h
++++ b/call/video_receive_stream.h
+@@ -210,6 +210,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+       // disabled.
+       KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
  
-+#include "rtc_base/deprecated/recursive_critical_section.h"
++      // See draft-alvestrand-rmcat-remb for information.
++      bool remb = false;
 +
- namespace rtc {
+       bool tmmbr = false;
  
-+// Bug 1691641
-+class PlatformUIThread;
-+
- enum class ThreadPriority {
-   kLow = 1,
-   kNormal,
-@@ -113,6 +118,8 @@ class PlatformThread final {
- 
-   absl::optional<Handle> handle_;
-   bool joinable_ = false;
-+  // Bug 1691641
-+  friend PlatformUIThread;
- };
- 
- }  // namespace rtc
+       // See LntfConfig for description.
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index 6b41acc1f2..ad366d367e 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -1258,7 +1258,7 @@ void RtpVideoStreamReceiver2::StartReceive() {
+     // Change REMB candidate egibility.
+     packet_router_->RemoveReceiveRtpModule(rtp_rtcp_.get());
+     packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(),
+-                                        /*remb_candidate=*/true);
++                                        /*remb_candidate=*/config_.rtp.remb);
+   }
+   receiving_ = true;
+ }

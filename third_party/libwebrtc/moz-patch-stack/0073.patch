@@ -1,25 +1,23 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 8 Feb 2023 08:01:00 +0000
-Subject: Bug 1814692 - Don't attempt realtime scheduling rtc::PlatformThreads.
- r=webrtc-reviewers,bwc
+Date: Wed, 11 Jan 2023 22:42:00 +0000
+Subject: Bug 1800942 - Add DCHECKs to
+ TimestampExtrapolator::ExtrapolateLocalTime. r=mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D169036
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9e64a965e26c8379261466e5273c3b383164b2c7
+Differential Revision: https://phabricator.services.mozilla.com/D166536
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c5df7f40392464ffc63f44a53ddcaab2091741e0
 ---
- rtc_base/platform_thread.cc | 3 +++
- 1 file changed, 3 insertions(+)
+ modules/video_coding/timing/timestamp_extrapolator.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
-index 71a9f1b224..bcbb784b97 100644
---- a/rtc_base/platform_thread.cc
-+++ b/rtc_base/platform_thread.cc
-@@ -50,6 +50,9 @@ bool SetPriority(ThreadPriority priority) {
-   // TODO(tommi): Switch to the same mechanism as Chromium uses for changing
-   // thread priorities.
-   return true;
-+#elif defined(WEBRTC_MOZILLA_BUILD) && defined(WEBRTC_LINUX)
-+  // Only realtime audio uses realtime scheduling in Firefox.
-+  return true;
- #else
-   const int policy = SCHED_FIFO;
-   const int min_prio = sched_get_priority_min(policy);
+diff --git a/modules/video_coding/timing/timestamp_extrapolator.cc b/modules/video_coding/timing/timestamp_extrapolator.cc
+index cc7eff97ba..cbe3754875 100644
+--- a/modules/video_coding/timing/timestamp_extrapolator.cc
++++ b/modules/video_coding/timing/timestamp_extrapolator.cc
+@@ -126,6 +126,7 @@ void TimestampExtrapolator::Update(Timestamp now, uint32_t ts90khz) {
+ absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
+     uint32_t timestamp90khz) const {
+   int64_t unwrapped_ts90khz = unwrapper_.PeekUnwrap(timestamp90khz);
++  RTC_DCHECK_GE(unwrapped_ts90khz, 0);
+ 
+   if (!first_unwrapped_timestamp_) {
+     return absl::nullopt;
