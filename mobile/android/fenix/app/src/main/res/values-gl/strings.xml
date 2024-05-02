@@ -213,7 +213,7 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Atopar na páxina</string>
     <!-- Browser menu button that opens the find in page menu -->
-    <string name="browser_menu_find_in_page_2">Busca na páxina...</string>
+    <string name="browser_menu_find_in_page_2">Busca na páxina…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Traducir a páxina</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -575,6 +575,8 @@
     <string name="preferences_account_sync_error">Reconectar para retomar a sincronización</string>
     <!-- Preference for language -->
     <string name="preferences_language">Idioma</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Tradución</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Escollas de datos</string>
     <!-- Preference for data collection -->

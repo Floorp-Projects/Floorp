@@ -583,6 +583,8 @@
     <string name="preferences_account_sync_error">Restabeleça a ligação para retomar a sincronização</string>
     <!-- Preference for language -->
     <string name="preferences_language">Idioma</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Tradução</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Opções de dados</string>
     <!-- Preference for data collection -->

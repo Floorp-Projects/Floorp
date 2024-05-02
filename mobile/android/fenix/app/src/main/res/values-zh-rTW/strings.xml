@@ -587,6 +587,8 @@
     <string name="preferences_account_sync_error">重新連線，以恢復同步</string>
     <!-- Preference for language -->
     <string name="preferences_language">語言</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">翻譯</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">回報資料</string>
     <!-- Preference for data collection -->

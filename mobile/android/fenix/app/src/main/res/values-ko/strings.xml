@@ -591,6 +591,8 @@
     <string name="preferences_account_sync_error">다시 연결하여 동기화를 계속하세요</string>
     <!-- Preference for language -->
     <string name="preferences_language">언어</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">번역</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">데이터 선택</string>
     <!-- Preference for data collection -->

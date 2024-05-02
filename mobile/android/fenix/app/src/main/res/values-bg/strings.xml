@@ -582,6 +582,8 @@
     <string name="preferences_account_sync_error">Свържете повторно, за да бъде възобновено синхронизирането</string>
     <!-- Preference for language -->
     <string name="preferences_language">Език</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Превод</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Избор на данни</string>
     <!-- Preference for data collection -->
