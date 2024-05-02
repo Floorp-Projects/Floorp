@@ -4,7 +4,6 @@
 
 from taskgraph.util.schema import Schema, optionally_keyed_by
 from voluptuous import Any, Optional, Required
-from voluptuous.validators import Length
 
 graph_config_schema = Schema(
     {
@@ -21,7 +20,7 @@ graph_config_schema = Schema(
         Required("product-dir"): str,
         Required("treeherder"): {
             # Mapping of treeherder group symbols to descriptive names
-            Required("group-names"): {str: Length(max=100)}
+            Required("group-names"): {str: str}
         },
         Required("index"): {Required("products"): [str]},
         Required("try"): {
