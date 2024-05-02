@@ -162,6 +162,8 @@
     <string name="mozac_feature_extensions_manager_notification_title_text">Éksténsi saheulanaan dipareuman</string>
     <!-- The content of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">Aya émboh nu mugen, ngabalukarkeun sistem anjeun teu stabil.</string>
+    <!-- The content of the "crash" notification in the extensions manager -->
+    <string name="mozac_feature_extensions_manager_notification_content_text">Aya émboh nu mugen, ngabalukarkeun sistem anjeun teu stabil.</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">Balikan deui émboh</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
