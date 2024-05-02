@@ -92,3 +92,8 @@ popover.addEventListener("toggle", onToggle);
 function onToggle(event) {
   console.log("toggle", event);
 }
+
+document.getElementById("focus-text").addEventListener("textInput", onTextInput);
+function onTextInput() {
+  console.log("textInput");
+}
