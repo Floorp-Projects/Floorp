@@ -1,26 +1,65 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 9 Oct 2019 20:12:00 +0000
-Subject: Bug 1587159 - Fix undefined shift in g722_encode.c; r=ng
+From: Wang Qing <wangqing-hf@loongson.cn>
+Date: Wed, 25 Sep 2019 14:15:00 +0000
+Subject: Bug 1579834 - [WebRTC] Add mips64 support; r=dminor
 
-Left shifting a negative value results in undefined behaviour. It is safer to
-multiply in this case.
-
-Differential Revision: https://phabricator.services.mozilla.com/D48751
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/385d660fac359c907986e08d1d89ab5a353f30b2
+Differential Revision: https://phabricator.services.mozilla.com/D45620
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1387b2c480b55ecca3fbdf62bd7649dafc62438d
 ---
- modules/third_party/g722/g722_encode.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc | 2 +-
+ modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc | 8 ++++++--
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/modules/third_party/g722/g722_encode.c b/modules/third_party/g722/g722_encode.c
-index 10a5bcfe7c..fedf9f5961 100644
---- a/modules/third_party/g722/g722_encode.c
-+++ b/modules/third_party/g722/g722_encode.c
-@@ -74,7 +74,7 @@ static void block4(G722EncoderState *s, int band, int d)
-     /* Block 4, UPPOL2 */
-     for (i = 0;  i < 3;  i++)
-         s->band[band].sg[i] = s->band[band].p[i] >> 15;
--    wd1 = saturate(s->band[band].a[1] << 2);
-+    wd1 = saturate(s->band[band].a[1] * 4);
+diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
+index 9a7a6f1498..86ec13fc1f 100644
+--- a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
++++ b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
+@@ -47,7 +47,7 @@ const char kVp8PostProcArmFieldTrial[] = "WebRTC-VP8-Postproc-Config-Arm";
+ const char kVp8PostProcFieldTrial[] = "WebRTC-VP8-Postproc-Config";
  
-     wd2 = (s->band[band].sg[0] == s->band[band].sg[1])  ?  -wd1  :  wd1;
-     if (wd2 > 32767)
+ #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+-    defined(WEBRTC_ANDROID)
++    defined(WEBRTC_ANDROID)  || defined(WEBRTC_ARCH_MIPS)
+ constexpr bool kIsArm = true;
+ #else
+ constexpr bool kIsArm = false;
+diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
+index a6befaf33b..6205ab74cf 100644
+--- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
++++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
+@@ -757,7 +757,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
+ }
+ 
+ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+-#ifdef MOBILE_ARM
++#if defined(MOBILE_ARM) || defined(WEBRTC_ARCH_MIPS)
+   // On mobile platform, use a lower speed setting for lower resolutions for
+   // CPUs with 4 or more cores.
+   RTC_DCHECK_GT(number_of_cores_, 0);
+@@ -792,6 +792,8 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+ int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
+ #if defined(WEBRTC_ANDROID)
+   if (android_specific_threading_settings_) {
++#endif
++#if defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+     if (width * height >= 320 * 180) {
+       if (cpus >= 4) {
+         // 3 threads for CPUs with 4 and more cores since most of times only 4
+@@ -804,7 +806,9 @@ int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
+       }
+     }
+     return 1;
++#if defined(WEBRTC_ANDROID)
+   }
++#endif
+ #elif defined(WEBRTC_IOS)
+   std::string trial_string =
+       field_trial::FindFullName(kVP8IosMaxNumberOfThreadFieldTrial);
+@@ -862,7 +866,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
+   // for getting the denoised frame from the encoder and using that
+   // when encoding lower resolution streams. Would it work with the
+   // multi-res encoding feature?
+-#ifdef MOBILE_ARM
++#if defined(MOBILE_ARM) || defined(WEBRTC_ARCH_MIPS)
+   denoiserState denoiser_state = kDenoiserOnYOnly;
+ #else
+   denoiserState denoiser_state = kDenoiserOnAdaptive;
