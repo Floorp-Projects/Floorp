@@ -1,0 +1,52 @@
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 2 May 2024 00:47:00 -0700
+Subject: Bug 1892299 - fix-afaae4e38a - fix adapted_track_source build
+ exclusion;r?mjf
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/60304c5d8a86fdecfe7527e75629dbc65fc9cbc1
+---
+ media/BUILD.gn | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index e9239c51a0..6a3aaa2041 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -58,6 +58,11 @@ rtc_library("rtc_media_base") {
+     "base/video_broadcaster.h",  # Used downstream
+     "base/video_common.h",  # Used downstream
+   ]
++  if (build_with_mozilla) {
++    sources -= [
++      "base/adapted_video_track_source.h",
++    ]
++  }
+   deps = [
+     ":adapted_video_track_source",
+     ":codec",
+@@ -138,12 +143,6 @@ rtc_library("rtc_media_base") {
+     "//third_party/abseil-cpp/absl/strings",
+     "//third_party/abseil-cpp/absl/types:optional",
+   ]
+-    if (build_with_mozilla) {
+-    sources -= [
+-      "base/adapted_video_track_source.cc",
+-      "base/adapted_video_track_source.h",
+-    ]
+-  }
+ }
+ 
+ rtc_library("adapted_video_track_source") {
+@@ -151,6 +150,12 @@ rtc_library("adapted_video_track_source") {
+     "base/adapted_video_track_source.cc",
+     "base/adapted_video_track_source.h",
+   ]
++  if (build_with_mozilla) {
++    sources -= [
++      "base/adapted_video_track_source.cc",
++      "base/adapted_video_track_source.h",
++    ]
++  }
+   deps = [
+     ":video_adapter",
+     ":video_broadcaster",
