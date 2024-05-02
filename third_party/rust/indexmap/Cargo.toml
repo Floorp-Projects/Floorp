@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.63"
 name = "indexmap"
-version = "1.9.3"
+version = "2.2.6"
 description = "A hash table with consistent order and fast iteration."
 documentation = "https://docs.rs/indexmap/"
 readme = "README.md"
@@ -26,22 +26,27 @@ categories = [
     "no-std",
 ]
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/bluss/indexmap"
-
-[package.metadata.release]
-no-dev-version = true
-tag-name = "{{version}}"
+repository = "https://github.com/indexmap-rs/indexmap"
 
 [package.metadata.docs.rs]
 features = [
     "arbitrary",
     "quickcheck",
-    "serde-1",
+    "serde",
+    "borsh",
     "rayon",
 ]
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
+
+[package.metadata.release]
+no-dev-version = true
+tag-name = "{{version}}"
 
 [profile.bench]
-debug = true
+debug = 2
 
 [lib]
 bench = false
@@ -51,8 +56,17 @@ version = "1.0"
 optional = true
 default-features = false
 
+[dependencies.borsh]
+version = "1.2"
+optional = true
+default-features = false
+
+[dependencies.equivalent]
+version = "1.0"
+default-features = false
+
 [dependencies.hashbrown]
-version = "0.12"
+version = "0.14.1"
 features = ["raw"]
 default-features = false
 
@@ -62,7 +76,7 @@ optional = true
 default-features = false
 
 [dependencies.rayon]
-version = "1.4.1"
+version = "1.5.3"
 optional = true
 
 [dependencies.rustc-rayon]
@@ -82,7 +96,7 @@ version = "1.0"
 version = "0.2.1"
 
 [dev-dependencies.itertools]
-version = "0.10"
+version = "0.12"
 
 [dev-dependencies.lazy_static]
 version = "1.3"
@@ -98,11 +112,10 @@ features = ["small_rng"]
 [dev-dependencies.serde_derive]
 version = "1.0"
 
-[build-dependencies.autocfg]
-version = "1"
-
 [features]
-serde-1 = ["serde"]
+default = ["std"]
 std = []
 test_debug = []
-test_low_transition_point = []
+
+[lints.clippy]
+style = "allow"

@@ -1653,6 +1653,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "equivalent"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
+
+[[package]]
 name = "errno"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2583,7 +2589,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "http",
- "indexmap 2.999.999",
+ "indexmap 2.2.6",
  "slab",
  "tokio",
  "tokio-util",
@@ -2931,20 +2937,20 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "1.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
+version = "1.999.999"
 dependencies = [
- "autocfg",
- "hashbrown 0.12.999",
- "serde",
+ "indexmap 2.2.6",
 ]
 
 [[package]]
 name = "indexmap"
-version = "2.999.999"
+version = "2.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "168fb715dda47215e360912c096649d23d58bf392ac62f73919e831745e40f26"
 dependencies = [
- "indexmap 1.9.3",
+ "equivalent",
+ "hashbrown 0.14.3",
+ "serde",
 ]
 
 [[package]]
@@ -3076,7 +3082,7 @@ version = "0.1.0"
 source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=61f399c53a641ebd3077c1f39f054f6d396a633c#61f399c53a641ebd3077c1f39f054f6d396a633c"
 dependencies = [
  "bumpalo",
- "indexmap 2.999.999",
+ "indexmap 2.2.6",
 ]
 
 [[package]]
@@ -3086,7 +3092,7 @@ source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=61f399c53a64
 dependencies = [
  "bumpalo",
  "byteorder",
- "indexmap 2.999.999",
+ "indexmap 2.2.6",
  "jsparagus-ast",
  "jsparagus-scope",
  "jsparagus-stencil",
@@ -3124,7 +3130,7 @@ name = "jsparagus-scope"
 version = "0.1.0"
 source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=61f399c53a641ebd3077c1f39f054f6d396a633c#61f399c53a641ebd3077c1f39f054f6d396a633c"
 dependencies = [
- "indexmap 2.999.999",
+ "indexmap 2.2.6",
  "jsparagus-ast",
  "jsparagus-stencil",
 ]
@@ -3835,7 +3841,7 @@ dependencies = [
  "getrandom",
  "hashbrown 0.12.999",
  "hyper",
- "indexmap 1.9.3",
+ "indexmap 1.999.999",
  "libc",
  "log",
  "memchr",
@@ -3963,7 +3969,7 @@ dependencies = [
  "bitflags 2.5.0",
  "codespan-reporting",
  "hexf-parse",
- "indexmap 2.999.999",
+ "indexmap 2.2.6",
  "log",
  "num-traits",
  "rustc-hash",
@@ -4037,7 +4043,7 @@ name = "neqo-transport"
 version = "0.7.5"
 source = "git+https://github.com/mozilla/neqo?tag=v0.7.5#c004359a817ffdea33394e94944d2f882e7e78af"
 dependencies = [
- "indexmap 1.9.3",
+ "indexmap 1.999.999",
  "log",
  "neqo-common",
  "neqo-crypto",
@@ -4525,7 +4531,7 @@ name = "plist"
 version = "1.3.1"
 dependencies = [
  "base64 0.13.999",
- "indexmap 2.999.999",
+ "indexmap 2.2.6",
  "line-wrap",
  "serde",
  "time 0.3.23",
@@ -5162,7 +5168,7 @@ version = "1.0.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cad406b69c91885b5107daf2c29572f6c8cdb3c66826821e286c533490c0bc76"
 dependencies = [
- "indexmap 1.9.3",
+ "indexmap 1.999.999",
  "itoa",
  "ryu",
  "serde",
@@ -5228,7 +5234,7 @@ version = "0.8.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "578a7433b776b56a35785ed5ce9a7e777ac0598aac5a6dd1b4b18a307c7fc71b"
 dependencies = [
- "indexmap 1.9.3",
+ "indexmap 1.999.999",
  "ryu",
  "serde",
  "yaml-rust",
@@ -5248,7 +5254,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4f1641177943b4e6faf7622463ae6dfe0f143eb88799e91e2e2e68ede568af5"
 dependencies = [
  "data-encoding",
- "indexmap 1.9.3",
+ "indexmap 1.999.999",
  "rust_decimal",
 ]
 
@@ -5462,7 +5468,7 @@ dependencies = [
  "fxhash",
  "gecko-profiler",
  "icu_segmenter",
- "indexmap 1.9.3",
+ "indexmap 1.999.999",
  "itertools",
  "itoa",
  "lazy_static",
@@ -6418,7 +6424,7 @@ dependencies = [
  "anyhow",
  "arbitrary",
  "flagset",
- "indexmap 2.999.999",
+ "indexmap 2.2.6",
  "leb128",
  "wasm-encoder",
 ]
@@ -6632,7 +6638,7 @@ dependencies = [
  "cfg_aliases",
  "codespan-reporting",
  "document-features",
- "indexmap 2.999.999",
+ "indexmap 2.2.6",
  "log",
  "naga",
  "once_cell",

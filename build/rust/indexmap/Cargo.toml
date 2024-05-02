@@ -1,6 +1,6 @@
 [package]
 name = "indexmap"
-version = "2.999.999"
+version = "1.999.999"
 edition = "2021"
 license = "MPL-2.0"
 
@@ -9,8 +9,9 @@ path = "lib.rs"
 
 [features]
 default = ["std"]
-serde = ["indexmap/serde-1"]
+serde = ["indexmap/serde"]
+serde-1 = ["indexmap/serde"]
 std = ["indexmap/std"]
 
 [dependencies.indexmap]
-version = "1.9.3"
+version = "2.2.6"
