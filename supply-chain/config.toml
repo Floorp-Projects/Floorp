@@ -27,6 +27,10 @@ notes = "This is the upstream code plus the ARM intrinsics workaround from qcms,
 audit-as-crates-io = true
 notes = "This is the upstream code plus a few local fixes, see bug 1685697."
 
+[policy."bindgen:0.69.4"]
+audit-as-crates-io = true
+notes = "This is the upstream code plus a fix for clang trunk. See bug 1894093."
+
 [policy.chardetng]
 audit-as-crates-io = true
 notes = "This is a crate Henri wrote which is also published. We should probably update Firefox to tip and certify that."
