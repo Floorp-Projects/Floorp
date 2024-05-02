@@ -55,7 +55,7 @@ gtest:
             1proc:
                 by-test-platform:
                     .*android.*: built-projects
-                    .*(devedition|tsan|wayland).*: []
+                    .*(devedition|wayland).*: []
                     linux1804-32-qr/opt: []  # try only, shippable on m-c
                     linux1804-32-qr/debug: ['mozilla-central']  # try and m-c
                     linux1804-32-shippable-qr/opt: ['mozilla-central']  # try and m-c
