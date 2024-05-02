@@ -2040,6 +2040,9 @@ impl DisplayListBuilder {
         horizontal_offset_bounds: di::StickyOffsetBounds,
         previously_applied_offset: LayoutVector2D,
         key: di::SpatialTreeItemKey,
+        // TODO: The caller only ever passes an identity transform.
+        // Could we pass just an (optional) animation id instead?
+        transform: Option<PropertyBinding<LayoutTransform>>
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
         let current_offset = self.current_offset(parent_spatial_id);
@@ -2059,6 +2062,7 @@ impl DisplayListBuilder {
             horizontal_offset_bounds,
             previously_applied_offset,
             key,
+            transform,
         });
 
         self.push_spatial_tree_item(&descriptor);
