@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+<script src="shared_test_funcs.js"></script>
+<script>
+async function runTheTest(iframe_domain, cross_origin_domain) {
+  var child_reference;
+  let url = `https://${iframe_domain}/browser/browser/components/resistfingerprinting/test/browser/file_canvascompare_iframee.html?mode=`
+  let params = new URLSearchParams(document.location.search);
+
+  if (params.get("mode") == 'iframe') {
+    const iframes = document.querySelectorAll("iframe");
+    iframes[0].src = url + 'iframe';
+    child_reference = iframes[0].contentWindow;
+  } else if (params.get("mode") == "popup") {
+    let options = "";
+    if (params.get("submode") == "noopener") {
+      options = "noopener";
+    }
+    const popup = window.open(url + 'popup', '', options);
+    if (params.get("submode") == "noopener") {
+      return {};
+    }
+    child_reference = popup;
+  } else {
+    throw new Error("Unknown page mode specified");
+  }
+
+  function give_result() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+
+    const context = canvas.getContext("2d");
+
+    context.fillStyle = "#EE2222";
+    context.fillRect(0, 0, 100, 100);
+    context.fillStyle = "#2222EE";
+    context.fillRect(20, 20, 100, 100);
+
+    // Add the canvas element to the document
+    document.body.appendChild(canvas);
+
+    const imageData = context.getImageData(0, 0, 100, 100);
+
+    return imageData.data;
+  }
+  let myResult = give_result();
+
+  await waitForMessage("ready", `https://${iframe_domain}`);
+
+  const promiseForRFPTest = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      if(event.origin != `https://${iframe_domain}`) {
+        throw new Error(`origin should be ${iframe_domain}`);
+      }
+
+      resolve({mine: myResult, theirs: event.data});
+    }, { once: true });
+  });
+  child_reference.postMessage(["gimme", cross_origin_domain], "*");
+  var result = await promiseForRFPTest;
+
+  if (params.get("mode") == "popup") {
+    child_reference.close();
+  }
+
+  return result;
+}
+</script>
+</head>
+<body>
+<iframe width=100></iframe>
+</body>
+</html>

@@ -10,6 +10,8 @@ support-files = [
   "file_workerNetInfo.js",
   "file_workerPerformance.js",
   "head.js",
+  "file_canvascompare_iframer.html",
+  "file_canvascompare_iframee.html",
   "file_canvas_iframer.html",
   "file_canvas_iframee.html",
   "file_navigator_header.sjs",
@@ -57,6 +59,8 @@ lineno = "52"
 
 ["browser_canvas_popups.js"]
 lineno = "54"
+
+["browser_canvascompare_iframes.js"]
 
 ["browser_cross_origin_isolated_animation_api.js"]
 lineno = "56"
