@@ -99,6 +99,7 @@ class FakePacketTransport : public PacketTransportInternal {
     SignalNetworkRouteChanged(network_route);
   }
 
+  using PacketTransportInternal::NotifyOnClose;
   using PacketTransportInternal::NotifyPacketReceived;
 
  private:
