@@ -158,6 +158,11 @@ add_task(
   defaultsTest.bind(null, uri, testCanvasRandomization, expectedResults)
 );
 
+expectedResults = structuredClone(fppRandomizedSameDomain);
+add_task(
+  defaultsPBMTest.bind(null, uri, testCanvasRandomization, expectedResults)
+);
+
 expectedResults = structuredClone(rfpFullyRandomized);
 add_task(
   simpleRFPTest.bind(null, uri, testCanvasRandomization, expectedResults)
