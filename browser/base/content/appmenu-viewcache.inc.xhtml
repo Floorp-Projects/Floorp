@@ -626,15 +626,9 @@
               hidden="true"/>
       </vbox>
       <!-- updateCTAPanel will control if we show this panel -->
-      <vbox id="PanelUI-fxa-cta-menu">
-        <toolbarbutton id="PanelUI-fxa-menu-sync-button" class="subviewbutton subviewbutton-iconic">
-          <vbox flex="1">
-            <label id="fxa-menu-header-title" crop="end" data-l10n-id="fxa-menu-sync-title" />
-            <label id="cta-menu-header-description" crop="end" data-l10n-id="fxa-menu-sync-description" />
-          </vbox>
-        </toolbarbutton>
+      <vbox id="PanelUI-fxa-cta-menu" hidden="true">
         <toolbarseparator id="PanelUI-products-separator" />
-        <toolbarbutton id="PanelUI-fxa-menu-monitor-button" class="subviewbutton subviewbutton-iconic">
+        <toolbarbutton id="PanelUI-fxa-menu-monitor-button" class="fxa-cta-button subviewbutton subviewbutton-iconic">
           <vbox flex="1">
             <hbox align="center">
               <image class="PanelUI-fxa-menu-monitor-button ctaMenuLogo" role="presentation" />
@@ -643,7 +637,7 @@
             <label id="cta-menu-header-description" crop="end" data-l10n-id="appmenuitem-monitor-description" />
           </vbox>
         </toolbarbutton>
-        <toolbarbutton id="PanelUI-fxa-menu-relay-button" class="subviewbutton subviewbutton-iconic">
+        <toolbarbutton id="PanelUI-fxa-menu-relay-button" class="fxa-cta-button subviewbutton subviewbutton-iconic">
           <vbox flex="1">
             <hbox align="center">
               <image class="PanelUI-fxa-menu-relay-button ctaMenuLogo" role="presentation" />
@@ -652,7 +646,7 @@
             <label id="cta-menu-header-description" crop="end" data-l10n-id="appmenuitem-relay-description" />
           </vbox>
         </toolbarbutton>
-        <toolbarbutton id="PanelUI-fxa-menu-vpn-button" class="subviewbutton subviewbutton-iconic">
+        <toolbarbutton id="PanelUI-fxa-menu-vpn-button" class="fxa-cta-button subviewbutton subviewbutton-iconic">
           <vbox flex="1">
             <hbox align="center">
               <image class="PanelUI-fxa-menu-vpn-button ctaMenuLogo" role="presentation" />

@@ -695,6 +695,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
   margin: 0;
 }
 
+#PanelUI-fxa-cta-menu .fxa-cta-button {
+  margin: var(--space-xsmall);
+}
+
 .PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {
   font-size: 11px;
 }
