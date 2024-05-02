@@ -12,6 +12,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "nsWindow.h"
 #include "mozilla/ScopeExit.h"
+#include "WidgetUtilsGtk.h"
 
 #ifdef MOZ_WAYLAND
 #  include "mozilla/StaticPrefs_widget.h"
