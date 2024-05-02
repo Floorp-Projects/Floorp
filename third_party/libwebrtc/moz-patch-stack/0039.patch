@@ -1,62 +1,34 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 16 Apr 2021 17:35:00 -0500
-Subject: Bug 1654112 - General build fixes for paths and naming changes. r=ng
+Date: Tue, 15 Jun 2021 12:18:00 -0500
+Subject: Bug 1654112 - suppress android lint warnings for WrongConstant in 2
+ libwebrtc java files. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D113438
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99b99cca6b7b2c2ebffb5472457a4f927bda11c4
+Differential Revision: https://phabricator.services.mozilla.com/D118050
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e60e2f295fb722f69a3a9fe9af34219880afe772
 ---
- modules/video_capture/video_capture_impl.h          | 6 ++++--
- rtc_base/system/warn_current_thread_is_deadlocked.h | 2 +-
- sdk/android/api/org/webrtc/VideoCodecInfo.java      | 2 +-
- 3 files changed, 6 insertions(+), 4 deletions(-)
+ sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index e46e050609..dcc93fd3a0 100644
---- a/modules/video_capture/video_capture_impl.h
-+++ b/modules/video_capture/video_capture_impl.h
-@@ -97,6 +97,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
-   rtc::RaceChecker capture_checker_;
-   // current Device unique name;
-   char* _deviceUniqueId RTC_GUARDED_BY(api_checker_);
-+
-+  // moved DeliverCapturedFrame to protected for VideoCaptureAndroid (mjf)
-+  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
-+      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
-   Mutex api_lock_;
-   // Should be set by platform dependent code in StartCapture.
-   VideoCaptureCapability _requestedCapability RTC_GUARDED_BY(api_checker_);
-@@ -104,8 +108,6 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
-  private:
-   void UpdateFrameCount();
-   uint32_t CalculateFrameRate(int64_t now_ns);
--  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
--      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
-   void DeliverRawFrame(uint8_t* videoFrame,
-                        size_t videoFrameLength,
-                        const VideoCaptureCapability& frameInfo,
-diff --git a/rtc_base/system/warn_current_thread_is_deadlocked.h b/rtc_base/system/warn_current_thread_is_deadlocked.h
-index 4a0ba9dc09..eac12022ed 100644
---- a/rtc_base/system/warn_current_thread_is_deadlocked.h
-+++ b/rtc_base/system/warn_current_thread_is_deadlocked.h
-@@ -13,7 +13,7 @@
+diff --git a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
+index 2d9e30902c..9546496f2d 100644
+--- a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
++++ b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
+@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
+ import static android.media.AudioManager.MODE_NORMAL;
+ import static android.media.AudioManager.MODE_RINGTONE;
  
- namespace webrtc {
- 
--#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
-+#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_ANDROID)
- void WarnThatTheCurrentThreadIsProbablyDeadlocked();
- #else
- inline void WarnThatTheCurrentThreadIsProbablyDeadlocked() {}
-diff --git a/sdk/android/api/org/webrtc/VideoCodecInfo.java b/sdk/android/api/org/webrtc/VideoCodecInfo.java
-index 4f97cf74cf..363be347b5 100644
---- a/sdk/android/api/org/webrtc/VideoCodecInfo.java
-+++ b/sdk/android/api/org/webrtc/VideoCodecInfo.java
-@@ -80,7 +80,7 @@ public class VideoCodecInfo {
++import android.annotation.SuppressLint;
+ import android.annotation.TargetApi;
+ import android.content.Context;
+ import android.content.pm.PackageManager;
+@@ -248,6 +249,10 @@ public final class WebRtcAudioUtils {
+     }
    }
  
-   @CalledByNative
--  Map getParams() {
-+  Map<String, String> getParams() {
-     return params;
-   }
- }
++  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
++  // listed in the docs here:
++  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
++  @SuppressLint("WrongConstant")
+   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
+     if (Build.VERSION.SDK_INT < VERSION_CODES.M) {
+       return;
