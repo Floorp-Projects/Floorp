@@ -28,6 +28,7 @@ inTimeZone("MST", () => {
 
     // 1-12 for first number should be month
     "1-09-12": new Date(2012, Month.January, 9),
+    "1-09-0012": new Date(2012, Month.January, 9),
     "1-09-2012": new Date(2012, Month.January, 9),
     "12-09-12": new Date(2012, Month.December, 9),
 
