@@ -1,38 +1,47 @@
 From: stransky <stransky@redhat.com>
 Date: Tue, 29 Aug 2023 12:43:00 +0000
-Subject: Bug 1821629 [DMABuf] Don't use DMABuf if it's disabled by Firefox gfx
- config r=ng,webrtc-reviewers
+Subject: Bug 1821629 [Pipewire/DMABuf] Don't create dmabuf backend if it's
+ disabled r=ng,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D172224
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/158a888cad8869a2f0026fa7cfaaa13ecbfcf2ed
+Depends on D172224
+
+Differential Revision: https://phabricator.services.mozilla.com/D172229
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/237d19fe96dd7d25b6a817415ee4e6854678d648
 ---
- .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 6998d655c2..1065adbc60 100644
+index 1065adbc60..473f913466 100644
 --- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
 +++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -27,6 +27,13 @@
- #include "rtc_base/synchronization/mutex.h"
- #include "rtc_base/time_utils.h"
+@@ -391,7 +391,9 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     RTC_LOG(LS_ERROR) << "Unable to open PipeWire library";
+     return false;
+   }
+-  egl_dmabuf_ = std::make_unique<EglDmaBuf>();
++  if (mozilla::gfx::IsDMABufEnabled()) {
++    egl_dmabuf_ = std::make_unique<EglDmaBuf>();
++  }
  
-+// Wrapper for gfxVars::UseDMABuf() as we can't include gfxVars here.
-+// We don't want to use dmabuf of known broken systems.
-+// See FEATURE_DMABUF for details.
-+namespace mozilla::gfx {
-+bool IsDMABufEnabled();
-+}
-+
- namespace webrtc {
+   pw_stream_node_id_ = stream_node_id;
  
- const int kBytesPerPixel = 4;
-@@ -266,7 +273,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
-   that->modifier_ =
-       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
-   std::vector<const spa_pod*> params;
--  const int buffer_types = has_modifier
-+  const int buffer_types = has_modifier && mozilla::gfx::IsDMABufEnabled()
-                                ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
-                                : (1 << SPA_DATA_MemFd);
+@@ -480,7 +482,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
+                             SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
+       // Modifiers can be used with PipeWire >= 0.3.33
+-      if (has_required_pw_client_version && has_required_pw_server_version) {
++      if (egl_dmabuf_ &&
++          has_required_pw_client_version && has_required_pw_server_version) {
+         modifiers_ = egl_dmabuf_->QueryDmaBufModifiers(format);
+ 
+         if (!modifiers_.empty()) {
+@@ -899,7 +902,7 @@ bool SharedScreenCastStreamPrivate::ProcessDMABuffer(
+ 
+   const uint n_planes = spa_buffer->n_datas;
+ 
+-  if (!n_planes) {
++  if (!n_planes || !egl_dmabuf_) {
+     return false;
+   }
  
