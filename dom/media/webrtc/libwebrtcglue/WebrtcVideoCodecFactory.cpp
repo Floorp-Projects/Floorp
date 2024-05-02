@@ -20,9 +20,8 @@
 
 namespace mozilla {
 
-std::unique_ptr<webrtc::VideoDecoder>
-WebrtcVideoDecoderFactory::CreateVideoDecoder(
-    const webrtc::SdpVideoFormat& aFormat) {
+std::unique_ptr<webrtc::VideoDecoder> WebrtcVideoDecoderFactory::Create(
+    const webrtc::Environment& aEnv, const webrtc::SdpVideoFormat& aFormat) {
   std::unique_ptr<webrtc::VideoDecoder> decoder;
   auto type = webrtc::PayloadStringToCodecType(aFormat.name);
 
@@ -46,7 +45,7 @@ WebrtcVideoDecoderFactory::CreateVideoDecoder(
     // Use libvpx decoders as fallbacks.
     case webrtc::VideoCodecType::kVideoCodecVP8:
       if (!decoder) {
-        decoder = webrtc::VP8Decoder::Create();
+        decoder = webrtc::CreateVp8Decoder(aEnv);
       }
       break;
     case webrtc::VideoCodecType::kVideoCodecVP9:
@@ -60,9 +59,8 @@ WebrtcVideoDecoderFactory::CreateVideoDecoder(
   return decoder;
 }
 
-std::unique_ptr<webrtc::VideoEncoder>
-WebrtcVideoEncoderFactory::CreateVideoEncoder(
-    const webrtc::SdpVideoFormat& aFormat) {
+std::unique_ptr<webrtc::VideoEncoder> WebrtcVideoEncoderFactory::Create(
+    const webrtc::Environment& aEnv, const webrtc::SdpVideoFormat& aFormat) {
   if (!mInternalFactory->Supports(aFormat)) {
     return nullptr;
   }
@@ -91,8 +89,8 @@ bool WebrtcVideoEncoderFactory::InternalFactory::Supports(
 }
 
 std::unique_ptr<webrtc::VideoEncoder>
-WebrtcVideoEncoderFactory::InternalFactory::CreateVideoEncoder(
-    const webrtc::SdpVideoFormat& aFormat) {
+WebrtcVideoEncoderFactory::InternalFactory::Create(
+    const webrtc::Environment& aEnv, const webrtc::SdpVideoFormat& aFormat) {
   MOZ_ASSERT(Supports(aFormat));
 
   std::unique_ptr<webrtc::VideoEncoder> platformEncoder;
