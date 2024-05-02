@@ -600,7 +600,8 @@ class DisplayListBuilder final {
       const float* aRightMargin, const float* aBottomMargin,
       const float* aLeftMargin, const StickyOffsetBounds& aVerticalBounds,
       const StickyOffsetBounds& aHorizontalBounds,
-      const wr::LayoutVector2D& aAppliedOffset, wr::SpatialTreeItemKey aKey);
+      const wr::LayoutVector2D& aAppliedOffset, wr::SpatialTreeItemKey aKey,
+      const WrAnimationProperty* aAnimation);
 
   Maybe<wr::WrSpatialId> GetScrollIdForDefinedScrollLayer(
       layers::ScrollableLayerGuid::ViewID aViewId) const;
