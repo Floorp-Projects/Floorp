@@ -1,20 +1,17 @@
 /**
- * This tests that the canvas is correctly randomized on the iframe (not the framer)
+ * This tests that the canvas is correctly randomized on a popup (not the starting page)
  *
  * Covers the following cases:
  *  - RFP/FPP is disabled entirely
  *  - RFP is enabled entirely, and only in PBM
  *  - FPP is enabled entirely, and only in PBM
  *  - A normal window when FPP is enabled globally and RFP is enabled in PBM, Protections Enabled and Disabled
+
  *
- *  - (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
- *  - (B) RFP is exempted on the framer and framee but is not on another (if needed) cross-origin domain
- *  - (C) RFP is exempted on the framer and (if needed) on another cross-origin domain, but not the framee
- *  - (D) RFP is exempted on the framer but not the framee nor another (if needed) cross-origin domain
- *  - (E) RFP is not exempted on the framer nor the framee but (if needed) is exempted on another cross-origin domain
- *  - (F) RFP is not exempted on the framer nor the framee nor another (if needed) cross-origin domain
- *  - (G) RFP is not exempted on the framer but is on the framee and (if needed) on another cross-origin domain
- *  - (H) RFP is not exempted on the framer nor another (if needed) cross-origin domain but is on the framee
+ *  - (A) RFP is exempted on the maker and popup
+ *  - (C) RFP is exempted on the maker but not the popup
+ *  - (E) RFP is not exempted on the maker nor the popup
+ *  - (G) RFP is not exempted on the maker but is on the popup
  *
  */
 
@@ -126,9 +123,9 @@ const rfpFullyRandomized = [10000, 999999999];
 const fppRandomized = [1, 260];
 const noRandom = [0, 0];
 
-// Note that the starting page and the iframe will be cross-domain from each other, but this test does not check that we inherit the randomizationkey,
-// only that the iframe is randomized.
-const uri = `https://${FRAMER_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_canvas_iframer.html?mode=iframe`;
+// Note that the starting page and the popup will be cross-domain from each other, but this test does not check that we inherit the randomizationkey,
+// only that the popup is randomized.
+const uri = `https://${FRAMER_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_canvas_iframer.html?mode=popup`;
 
 expectedResults = structuredClone(noRandom);
 add_task(
@@ -179,34 +176,18 @@ add_task(
   )
 );
 
-// (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
+// (A) RFP is exempted on the opener and openee
 expectedResults = structuredClone(noRandom);
 add_task(testA.bind(null, uri, testCanvasRandomization, expectedResults));
 
-// (B) RFP is exempted on the framer and framee but is not on another (if needed) cross-origin domain
-expectedResults = structuredClone(noRandom);
-add_task(testB.bind(null, uri, testCanvasRandomization, expectedResults));
-
-// (C) RFP is exempted on the framer and (if needed) on another cross-origin domain, but not the framee
+// (C) RFP is exempted on the opener but not the openee
 expectedResults = structuredClone(rfpFullyRandomized);
 add_task(testC.bind(null, uri, testCanvasRandomization, expectedResults));
 
-// (D) RFP is exempted on the framer but not the framee nor another (if needed) cross-origin domain
-expectedResults = structuredClone(rfpFullyRandomized);
-add_task(testD.bind(null, uri, testCanvasRandomization, expectedResults));
-
-// (E) RFP is not exempted on the framer nor the framee but (if needed) is exempted on another cross-origin domain
+// (E) RFP is not exempted on the opener nor the openee
 expectedResults = structuredClone(rfpFullyRandomized);
 add_task(testE.bind(null, uri, testCanvasRandomization, expectedResults));
 
-// (F) RFP is not exempted on the framer nor the framee nor another (if needed) cross-origin domain
-expectedResults = structuredClone(rfpFullyRandomized);
-add_task(testF.bind(null, uri, testCanvasRandomization, expectedResults));
-
-// (G) RFP is not exempted on the framer but is on the framee and (if needed) on another cross-origin domain
+// (G) RFP is not exempted on the opener but is on the openee
 expectedResults = structuredClone(rfpFullyRandomized);
 add_task(testG.bind(null, uri, testCanvasRandomization, expectedResults));
-
-// (H) RFP is not exempted on the framer nor another (if needed) cross-origin domain but is on the framee
-expectedResults = structuredClone(rfpFullyRandomized);
-add_task(testH.bind(null, uri, testCanvasRandomization, expectedResults));
