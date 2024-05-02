@@ -11,15 +11,18 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.inputmethod.EditorInfo.IME_NULL
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.inputmethod.EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
 import mozilla.components.feature.prompts.R
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 private const val KEY_USER_EDIT_TEXT = "KEY_USER_EDIT_TEXT"
 private const val KEY_LABEL_INPUT = "KEY_LABEL_INPUT"
 private const val KEY_DEFAULT_INPUT_VALUE = "KEY_DEFAULT_INPUT_VALUE"
+private const val KEY_PRIVATE = "KEY_PRIVATE"
 
 /**
  * [androidx.fragment.app.DialogFragment] implementation to display a
@@ -37,6 +40,11 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
      * value provided by this [sessionId].
      */
     internal val labelInput: String? by lazy { safeArguments.getString(KEY_LABEL_INPUT) }
+
+    /**
+     * Tells if the Dialog is shown from private browsing
+     */
+    internal val private: Boolean? by lazy { safeArguments.getBoolean(KEY_PRIVATE) }
 
     private var userSelectionEditText: String
         get() = safeArguments.getString(KEY_USER_EDIT_TEXT, defaultInputValue)
@@ -73,6 +81,7 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
         label.text = labelInput
         editText.setText(defaultInputValue)
         editText.addTextChangedListener(this)
+        editText.imeOptions = if (private == true) IME_FLAG_NO_PERSONALIZED_LEARNING else IME_NULL
 
         addCheckBoxIfNeeded(view)
 
@@ -100,7 +109,9 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
          * @param hasShownManyDialogs tells if this [sessionId] has shown many dialogs
          * in a short period of time, if is true a checkbox will be part of the dialog, for the user
          * to choose if wants to prevent this [sessionId] continuing showing dialogs.
+         * @param private tells if this dialog is triggered from private browsing
          */
+        @Suppress("complexity:LongParameterList")
         fun newInstance(
             sessionId: String,
             promptRequestUID: String,
@@ -109,6 +120,7 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
             inputLabel: String,
             defaultInputValue: String,
             hasShownManyDialogs: Boolean,
+            private: Boolean,
         ): TextPromptDialogFragment {
             val fragment = TextPromptDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
@@ -121,6 +133,7 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
                 putString(KEY_LABEL_INPUT, inputLabel)
                 putString(KEY_DEFAULT_INPUT_VALUE, defaultInputValue)
                 putBoolean(KEY_MANY_ALERTS, hasShownManyDialogs)
+                putBoolean(KEY_PRIVATE, private)
             }
 
             fragment.arguments = arguments

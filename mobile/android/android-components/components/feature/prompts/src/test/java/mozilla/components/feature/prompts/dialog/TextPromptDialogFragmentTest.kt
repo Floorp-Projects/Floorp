@@ -6,9 +6,11 @@ package mozilla.components.feature.prompts.dialog
 
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Looper.getMainLooper
+import android.view.inputmethod.EditorInfo.IME_NULL
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.prompts.R.id
@@ -41,7 +43,7 @@ class TextPromptDialogFragmentTest {
     @Test
     fun `build dialog`() {
         val fragment = spy(
-            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", true),
+            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", true, false),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -73,12 +75,14 @@ class TextPromptDialogFragmentTest {
 
         inputValue.text = "NewValue"
         assertEquals(inputValue.text.toString(), "NewValue")
+
+        assertEquals(IME_NULL, inputValue.imeOptions)
     }
 
     @Test
     fun `TextPrompt with hasShownManyDialogs equals false should not have a checkbox`() {
         val fragment = spy(
-            TextPromptDialogFragment.newInstance("sessionId", "uid", false, "title", "label", "defaultValue", false),
+            TextPromptDialogFragment.newInstance("sessionId", "uid", false, "title", "label", "defaultValue", false, false),
         )
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -95,7 +99,7 @@ class TextPromptDialogFragmentTest {
     @Test
     fun `Clicking on positive button notifies the feature`() {
         val fragment = spy(
-            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", false),
+            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", false, false),
         )
 
         fragment.feature = mockFeature
@@ -115,7 +119,7 @@ class TextPromptDialogFragmentTest {
     @Test
     fun `After checking no more dialogs checkbox feature onNoMoreDialogsChecked must be called`() {
         val fragment = spy(
-            TextPromptDialogFragment.newInstance("sessionId", "uid", false, "title", "label", "defaultValue", true),
+            TextPromptDialogFragment.newInstance("sessionId", "uid", false, "title", "label", "defaultValue", true, false),
         )
 
         fragment.feature = mockFeature
@@ -139,7 +143,7 @@ class TextPromptDialogFragmentTest {
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
         val fragment = spy(
-            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", true),
+            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", true, false),
         )
 
         fragment.feature = mockFeature
@@ -149,5 +153,20 @@ class TextPromptDialogFragmentTest {
         fragment.onCancel(mock())
 
         verify(mockFeature).onCancel("sessionId", "uid")
+    }
+
+    @Test
+    fun `when TextPromptDialogFragment is created in private mode then keyboard is in private mode`() {
+        val fragment = spy(
+            TextPromptDialogFragment.newInstance("sessionId", "uid", true, "title", "label", "defaultValue", true, true),
+        )
+
+        fragment.feature = mockFeature
+        doReturn(appCompatContext).`when`(fragment).requireContext()
+
+        val dialog = fragment.onCreateDialog(null).also { it.show() }
+        val editText = dialog.findViewById<TextView>(id.input_value)
+
+        assertEquals(EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING, editText.imeOptions)
     }
 }
