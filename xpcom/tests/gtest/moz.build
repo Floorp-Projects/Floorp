@@ -68,6 +68,7 @@ UNIFIED_SOURCES += [
     "TestThreadManager.cpp",
     "TestThreadPool.cpp",
     "TestThreadPoolListener.cpp",
+    "TestThreadUtils.cpp",
     "TestThrottledEventQueue.cpp",
     "TestTimeStamp.cpp",
     "TestTokenizer.cpp",
@@ -81,18 +82,12 @@ if CONFIG["OS_TARGET"] != "Android":
         "TestThreads.cpp",
     ]
 
-# skip the test on windows10-aarch64 due to perma-fail, bug 1422219
-if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["TARGET_CPU"] == "aarch64"):
-    UNIFIED_SOURCES += ["TestThreadUtils.cpp"]
-
 # skip the test on OSX due to frequent failures (bug 1571186)
 if CONFIG["OS_TARGET"] != "Darwin":
     UNIFIED_SOURCES += ["TestExpirationTracker.cpp"]
 
 # skip the test on windows10-aarch64 and Android, aarch64 due to bug 1545670
-if CONFIG["OS_TARGET"] != "Android" and not (
-    CONFIG["OS_TARGET"] == "WINNT" and CONFIG["TARGET_CPU"] == "aarch64"
-):
+if CONFIG["OS_TARGET"] != "Android":
     UNIFIED_SOURCES += ["TestTimers.cpp"]
 
 
