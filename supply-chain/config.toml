@@ -161,6 +161,10 @@ audit-as-crates-io = false
 [policy.peek-poke-derive]
 audit-as-crates-io = false
 
+[policy.plist]
+audit-as-crates-io = true
+notes = "This is the upstream code plus one local fix, see bug 1874167."
+
 [policy.pulse]
 audit-as-crates-io = false
 notes = "This is a first-party crate which is entirely unrelated to the crates.io package of the same name."

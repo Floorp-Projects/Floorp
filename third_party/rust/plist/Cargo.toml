@@ -24,7 +24,7 @@ repository = "https://github.com/ebarnard/rust-plist/"
 version = "0.13.0"
 
 [dependencies.indexmap]
-version = "1.0.2"
+version = "2.1.0"
 
 [dependencies.line-wrap]
 version = "0.1.1"

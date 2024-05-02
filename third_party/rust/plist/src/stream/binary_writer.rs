@@ -577,7 +577,7 @@ fn is_even(value: usize) -> bool {
 fn value_mut<'a>(
     values: &'a mut IndexMap<Value<'static>, ValueState>,
     value_index: usize,
-) -> (&'a mut Value<'static>, &'a mut ValueState) {
+) -> (&'a Value<'static>, &'a mut ValueState) {
     values
         .get_index_mut(value_index)
         .expect("internal consistency error")

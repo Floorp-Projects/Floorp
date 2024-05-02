@@ -72,6 +72,8 @@
 //! specify a tilde requirement e.g. `plist = "~1.0.3"` in you `Cargo.toml` so that the plist crate
 //! is not automatically updated to version 1.1.
 
+#![allow(warnings)] // Third-party
+
 pub mod dictionary;
 
 #[cfg(feature = "enable_unstable_features_that_may_break_with_minor_version_bumps")]
