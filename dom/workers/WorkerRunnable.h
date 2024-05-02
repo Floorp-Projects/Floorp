@@ -13,8 +13,10 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerStatus.h"
+#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIRunnable.h"
 #include "nsISupports.h"
@@ -33,8 +35,6 @@ class ErrorResult;
 namespace dom {
 
 class Worker;
-class WorkerParentRef;
-class WorkerPrivate;
 
 class WorkerRunnable : public nsIRunnable
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
@@ -225,6 +225,8 @@ class WorkerParentDebuggeeRunnable : public WorkerParentThreadRunnable {
 };
 
 class WorkerThreadRunnable : public WorkerRunnable {
+  friend class WorkerPrivate;
+
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(WorkerThreadRunnable, WorkerRunnable)
 
@@ -261,6 +263,18 @@ class WorkerThreadRunnable : public WorkerRunnable {
   // method. Avoids infinite recursion when a subclass calls Run() from inside
   // Cancel(). Only checked and modified on the target thread.
   bool mCallingCancelWithinRun;
+
+  // If dispatching a WorkerThreadRunnable before Worker initialization complete
+  // in worker thread, which are in WorkerPrivate::mPreStartRunnables, when
+  // GetCurrentThreadWorkerPrivate() might get an invalid WorkerPrivate for
+  // WorkerThreadRunnable::Run() because it is in Worker's shutdown.
+  //
+  // This is specific for cleanup these pre-start runnables if the shutdown
+  // starts before Worker executes its event loop.
+  // This member is only set when the runnable is dispatched to
+  // WorkerPrivate::mPreStartRunnables. Any other cases to use this
+  // WorkerPrivate is always wrong.
+  CheckedUnsafePtr<WorkerPrivate> mWorkerPrivateForPreStartCleaning;
 };
 
 // This runnable is used to send a message to a worker debugger.

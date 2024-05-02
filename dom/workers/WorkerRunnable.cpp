@@ -366,8 +366,12 @@ void WorkerThreadRunnable::PostRun(JSContext* aCx,
 NS_IMETHODIMP
 WorkerThreadRunnable::Run() {
   LOG(("WorkerThreadRunnable::Run [%p]", this));
-  MOZ_ASSERT(GetCurrentThreadWorkerPrivate());
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  if (!workerPrivate && mWorkerPrivateForPreStartCleaning) {
+    workerPrivate = mWorkerPrivateForPreStartCleaning;
+    mWorkerPrivateForPreStartCleaning = nullptr;
+  }
+  MOZ_ASSERT_DEBUG_OR_FUZZING(workerPrivate);
 #ifdef DEBUG
   workerPrivate->AssertIsOnWorkerThread();
 #endif
