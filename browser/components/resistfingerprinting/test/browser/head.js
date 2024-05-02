@@ -847,7 +847,7 @@ async function simplePBMFPPTest(
   await SpecialPowers.popPrefEnv();
 }
 
-async function simpleRFPPBMFPPTest(
+async function RFPPBMFPP_NormalMode_NoProtectionsTest(
   uri,
   testFunction,
   expectedResults,

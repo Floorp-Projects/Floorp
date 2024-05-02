@@ -115,7 +115,7 @@ add_task(testG.bind(null, uri, testHWConcurrency, expectedResults, extraData));
 // Test RFP Enabled in PBM and FPP enabled in Normal Browsing Mode
 expectedResults = structuredClone(allNotSpoofed);
 add_task(
-  simpleRFPPBMFPPTest.bind(
+  RFPPBMFPP_NormalMode_NoProtectionsTest.bind(
     null,
     uri,
     testHWConcurrency,
