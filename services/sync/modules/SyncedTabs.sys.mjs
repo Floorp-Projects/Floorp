@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -39,6 +41,21 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
   log.manageLevelFromPref("services.sync.log.logger.tabs");
   return log;
 });
+
+// We allow some test preferences to simulate many and inactive tabs.
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "NUM_FAKE_INACTIVE_TABS",
+  "services.sync.syncedTabs.numFakeInactiveTabs",
+  0
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "NUM_FAKE_ACTIVE_TABS",
+  "services.sync.syncedTabs.numFakeActiveTabs",
+  0
+);
 
 // A private singleton that does the work.
 let SyncedTabsInternal = {
@@ -143,7 +160,27 @@ let SyncedTabsInternal = {
       let clientRepr = await this._makeClient(client);
       lazy.log.debug("Processing client", clientRepr);
 
-      for (let tab of client.tabs) {
+      let tabs = Array.from(client.tabs); // avoid modifying in-place.
+      // For QA, UX, etc, we allow "fake tabs" to be added to each device.
+      for (let i = 0; i < lazy.NUM_FAKE_INACTIVE_TABS; i++) {
+        tabs.push({
+          icon: null,
+          lastUsed: 1000,
+          title: `Fake inactive tab ${i}`,
+          urlHistory: [`https://example.com/inactive/${i}`],
+          inactive: true,
+        });
+      }
+      for (let i = 0; i < lazy.NUM_FAKE_ACTIVE_TABS; i++) {
+        tabs.push({
+          icon: null,
+          lastUsed: Date.now() - 1000 + i,
+          title: `Fake tab ${i}`,
+          urlHistory: [`https://example.com/${i}`],
+        });
+      }
+
+      for (let tab of tabs) {
         let url = tab.urlHistory[0];
         lazy.log.trace("remote tab", url);
 
