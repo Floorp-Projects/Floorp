@@ -19,6 +19,7 @@
 #include "wasm/WasmBuiltins.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/ScopeExit.h"
 
 #include "fdlibm.h"
 #include "jslibmath.h"
@@ -667,12 +668,21 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
   // WasmFrameIter iterates down wasm frames in the activation starting at
   // JitActivation::wasmExitFP(). Calling WasmFrameIter::startUnwinding pops
   // JitActivation::wasmExitFP() once each time WasmFrameIter is incremented,
-  // ultimately leaving exit FP null when the WasmFrameIter is done().  This
-  // is necessary to prevent a DebugFrame from being observed again after we
-  // just called onLeaveFrame (which would lead to the frame being re-added
+  // ultimately leaving no wasm exit FP when the WasmFrameIter is done(). This
+  // is necessary to prevent a wasm::DebugFrame from being observed again after
+  // we just called onLeaveFrame (which would lead to the frame being re-added
   // to the map of live frames, right as it becomes trash).
 
   MOZ_ASSERT(CallingActivation(cx) == iter.activation());
+#ifdef DEBUG
+  auto onExit = mozilla::MakeScopeExit([cx] {
+    MOZ_ASSERT(!cx->activation()->asJit()->isWasmTrapping(),
+               "unwinding clears the trapping state");
+    MOZ_ASSERT(!cx->activation()->asJit()->hasWasmExitFP(),
+               "unwinding leaves no wasm exit fp");
+  });
+#endif
+
   MOZ_ASSERT(!iter.done());
   iter.setUnwind(WasmFrameIter::Unwind::True);
 
@@ -729,6 +739,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
         if (activation->isWasmTrapping()) {
           activation->finishWasmTrap();
         }
+        activation->setWasmExitFP(nullptr);
 
         return true;
       }
@@ -767,9 +778,6 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
     }
     frame->leave(cx);
   }
-
-  MOZ_ASSERT(!cx->activation()->asJit()->isWasmTrapping(),
-             "unwinding clears the trapping state");
 
   // Assert that any pending exception escaping to non-wasm code is not a
   // wrapper exception object
