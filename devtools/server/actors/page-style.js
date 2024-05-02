@@ -708,7 +708,7 @@ class PageStyleActor extends Actor {
       case "::marker":
         return this._nodeIsListItem(node);
       case "::backdrop":
-        return node.matches(":modal");
+        return node.matches(":modal, :popover-open");
       case "::cue":
         return node.nodeName == "VIDEO";
       case "::file-selector-button":
