@@ -13,6 +13,7 @@ use {
 
 bitflags::bitflags! {
     /// Flags to augment descriptor set allocation.
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
     pub struct DescriptorSetLayoutCreateFlags: u32 {
         /// Specified that descriptor set must be allocated from\
         /// pool with `DescriptorPoolCreateFlags::UPDATE_AFTER_BIND`.
@@ -107,7 +108,7 @@ struct DescriptorPool<P> {
 struct DescriptorBucket<P> {
     offset: u64,
     pools: VecDeque<DescriptorPool<P>>,
-    total: u64,
+    total: u32,
     update_after_bind: bool,
     size: DescriptorTotalCount,
 }
@@ -158,7 +159,7 @@ impl<P> DescriptorBucket<P> {
     fn new_pool_size(&self, minimal_set_count: u32) -> (DescriptorTotalCount, u32) {
         let mut max_sets = MIN_SETS // at least MIN_SETS
             .max(minimal_set_count) // at least enough for allocation
-            .max(self.total.min(MAX_SETS as u64) as u32) // at least as much as was allocated so far capped to MAX_SETS
+            .max(self.total.min(MAX_SETS)) // at least as much as was allocated so far capped to MAX_SETS
             .checked_next_power_of_two() // rounded up to nearest 2^N
             .unwrap_or(i32::MAX as u32);
 
@@ -259,7 +260,7 @@ impl<P> DescriptorBucket<P> {
             count -= allocate;
             pool.available -= allocate;
             pool.allocated += allocate;
-            self.total += u64::from(allocate);
+            self.total += allocate;
 
             if count == 0 {
                 return Ok(());
@@ -328,7 +329,7 @@ impl<P> DescriptorBucket<P> {
                 allocated: allocate,
                 available: max_sets - allocate,
             });
-            self.total += allocate as u64;
+            self.total += allocate;
         }
 
         Ok(())
@@ -356,7 +357,7 @@ impl<P> DescriptorBucket<P> {
 
         pool.available += count;
         pool.allocated -= count;
-        self.total -= u64::from(count);
+        self.total -= count;
         #[cfg(feature = "tracing")]
         tracing::trace!("Freed {} from descriptor bucket", count);
 
@@ -395,10 +396,11 @@ impl<P> DescriptorBucket<P> {
 #[derive(Debug)]
 pub struct DescriptorAllocator<P, S> {
     buckets: HashMap<(DescriptorTotalCount, bool), DescriptorBucket<P>>,
-    total: u64,
     sets_cache: Vec<DescriptorSet<S>>,
     raw_sets_cache: Vec<S>,
     max_update_after_bind_descriptors_in_all_pools: u32,
+    current_update_after_bind_descriptors_in_all_pools: u32,
+    total: u32,
 }
 
 impl<P, S> Drop for DescriptorAllocator<P, S> {
@@ -421,6 +423,7 @@ impl<P, S> DescriptorAllocator<P, S> {
             sets_cache: Vec::new(),
             raw_sets_cache: Vec::new(),
             max_update_after_bind_descriptors_in_all_pools,
+            current_update_after_bind_descriptors_in_all_pools: 0,
         }
     }
 
@@ -449,7 +452,17 @@ impl<P, S> DescriptorAllocator<P, S> {
             return Ok(Vec::new());
         }
 
+        let descriptor_count = count * layout_descriptor_count.total();
+
         let update_after_bind = flags.contains(DescriptorSetLayoutCreateFlags::UPDATE_AFTER_BIND);
+
+        if update_after_bind
+            && self.max_update_after_bind_descriptors_in_all_pools
+                - self.current_update_after_bind_descriptors_in_all_pools
+                < descriptor_count
+        {
+            return Err(AllocationError::Fragmentation);
+        }
 
         #[cfg(feature = "tracing")]
         tracing::trace!(
@@ -464,7 +477,14 @@ impl<P, S> DescriptorAllocator<P, S> {
             .entry((*layout_descriptor_count, update_after_bind))
             .or_insert_with(|| DescriptorBucket::new(update_after_bind, *layout_descriptor_count));
         match bucket.allocate(device, layout, count, &mut self.sets_cache) {
-            Ok(()) => Ok(core::mem::replace(&mut self.sets_cache, Vec::new())),
+            Ok(()) => {
+                self.total += descriptor_count;
+                if update_after_bind {
+                    self.current_update_after_bind_descriptors_in_all_pools += descriptor_count;
+                }
+
+                Ok(core::mem::take(&mut self.sets_cache))
+            }
             Err(err) => {
                 debug_assert!(self.raw_sets_cache.is_empty());
 
@@ -518,7 +538,7 @@ impl<P, S> DescriptorAllocator<P, S> {
                         .get_mut(&last_key)
                         .expect("Set must be allocated from this allocator");
 
-                    debug_assert!(u64::try_from(self.raw_sets_cache.len())
+                    debug_assert!(u32::try_from(self.raw_sets_cache.len())
                         .ok()
                         .map_or(false, |count| count <= bucket.total));
 
@@ -536,7 +556,7 @@ impl<P, S> DescriptorAllocator<P, S> {
                 .get_mut(&last_key)
                 .expect("Set must be allocated from this allocator");
 
-            debug_assert!(u64::try_from(self.raw_sets_cache.len())
+            debug_assert!(u32::try_from(self.raw_sets_cache.len())
                 .ok()
                 .map_or(false, |count| count <= bucket.total));
 

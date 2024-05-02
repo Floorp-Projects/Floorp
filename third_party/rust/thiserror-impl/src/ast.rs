@@ -82,7 +82,7 @@ impl<'a> Enum<'a> {
             .map(|node| {
                 let mut variant = Variant::from_syn(node, &scope, span)?;
                 if let display @ None = &mut variant.attrs.display {
-                    *display = attrs.display.clone();
+                    display.clone_from(&attrs.display);
                 }
                 if let Some(display) = &mut variant.attrs.display {
                     display.expand_shorthand(&variant.fields);

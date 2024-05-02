@@ -13,7 +13,6 @@ use crate::SwapChainId;
 use wgc::{id, identity::IdentityManager};
 use wgt::{Backend, TextureFormat};
 
-pub use wgc::command::{compute_ffi::*, render_ffi::*};
 use wgc::id::markers;
 
 use parking_lot::Mutex;
@@ -69,6 +68,7 @@ impl ProgrammableStageDescriptor {
             module: self.module,
             entry_point: cow_label(&self.entry_point),
             constants: Cow::Owned(constants),
+            zero_initialize_workgroup_memory: true,
         }
     }
 }

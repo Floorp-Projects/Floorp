@@ -13,6 +13,7 @@ mod layout;
 mod ray;
 mod recyclable;
 mod selection;
+mod subgroup;
 mod writer;
 
 pub use spirv::Capability;
@@ -456,7 +457,7 @@ impl recyclable::Recyclable for CachedExpressions {
 
 #[derive(Eq, Hash, PartialEq)]
 enum CachedConstant {
-    Literal(crate::Literal),
+    Literal(crate::proc::HashableLiteral),
     Composite {
         ty: LookupType,
         constituent_ids: Vec<Word>,

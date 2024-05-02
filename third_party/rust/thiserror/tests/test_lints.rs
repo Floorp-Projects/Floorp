@@ -1,3 +1,5 @@
+#![allow(clippy::mixed_attributes_style)]
+
 use thiserror::Error;
 
 pub use std::error::Error;

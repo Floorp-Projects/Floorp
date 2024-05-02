@@ -72,6 +72,12 @@ notes = "The dependencies on tokio-reactor and tokio-threadpools are just a hack
 criteria = "safe-to-run"
 notes = "Used for fuzzing."
 
+[policy.gpu-descriptor]
+audit-as-crates-io = true
+
+[policy.gpu-descriptor-types]
+audit-as-crates-io = true
+
 [policy.http3server]
 criteria = "safe-to-run"
 notes = "Used for testing."
