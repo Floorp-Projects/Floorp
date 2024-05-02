@@ -958,6 +958,12 @@ pocketNewtab:
       type: boolean
       fallbackPref: >-
         browser.topsites.contile.sov.enabled
+    pocketFeedParameters:
+      type: string
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.pocket-feed-parameters
+      description: >-
+        Add parameters to Pocket feed URL.
 
 saveToPocket:
   description: The save to Pocket feature
