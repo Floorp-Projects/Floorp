@@ -246,8 +246,13 @@ WorkerThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 
   WorkerPrivate* workerPrivate = nullptr;
   if (onWorkerThread) {
+    // If the mWorkerPrivate has already disconnected by
+    // WorkerPrivate::ResetWorkerPrivateInWorkerThread(), there is no chance
+    // that to execute this runnable. Return NS_ERROR_UNEXPECTED here.
+    if (!mWorkerPrivate) {
+      return NS_ERROR_UNEXPECTED;
+    }
     // No need to lock here because it is only modified on this thread.
-    MOZ_ASSERT(mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
 
     workerPrivate = mWorkerPrivate;
@@ -266,13 +271,7 @@ WorkerThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
   }
 
   nsresult rv;
-  if (runnable && onWorkerThread) {
-    RefPtr<WorkerRunnable> workerRunnable =
-        workerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());
-    rv = nsThread::Dispatch(workerRunnable.forget(), NS_DISPATCH_NORMAL);
-  } else {
-    rv = nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
-  }
+  rv = nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
 
   if (!onWorkerThread && workerPrivate) {
     // We need to wake the worker thread if we're not already on the right

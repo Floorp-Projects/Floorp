@@ -1615,7 +1615,10 @@ nsresult WorkerPrivate::DispatchLockHeld(
           ("WorkerPrivate::DispatchLockHeld [%p] runnable %p is queued in "
            "mPreStartRunnables",
            this, runnable.get()));
-      mPreStartRunnables.AppendElement(runnable);
+      RefPtr<WorkerThreadRunnable> workerThreadRunnable =
+          static_cast<WorkerThreadRunnable*>(runnable.get());
+      workerThreadRunnable->mWorkerPrivateForPreStartCleaning = this;
+      mPreStartRunnables.AppendElement(workerThreadRunnable);
       return NS_OK;
     }
 
