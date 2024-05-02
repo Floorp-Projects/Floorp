@@ -17,7 +17,14 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 /**
- * This singleton class controls the Translations popup panel.
+ * This singleton class controls the SelectTranslations panel.
+ *
+ * A global instance of this class is created once per top ChromeWindow and is initialized
+ * when the context menu is opened in that window.
+ *
+ * See the comment above TranslationsParent for more details.
+ *
+ * @see TranslationsParent
  */
 var SelectTranslationsPanel = new (class {
   /** @type {Console?} */
@@ -46,6 +53,8 @@ var SelectTranslationsPanel = new (class {
 
   /**
    * The textarea height for shorter text.
+   *
+   * @type {string}
    */
   #shortTextHeight = "8em";
 
@@ -60,6 +69,8 @@ var SelectTranslationsPanel = new (class {
 
   /**
    * The textarea height for shorter text.
+   *
+   * @type {string}
    */
   #longTextHeight = "16em";
 
@@ -75,6 +86,8 @@ var SelectTranslationsPanel = new (class {
   /**
    * The threshold used to determine when the panel should
    * use the short text-height vs. the long-text height.
+   *
+   * @type {number}
    */
   #textLengthThreshold = 800;
 
@@ -250,15 +263,7 @@ var SelectTranslationsPanel = new (class {
    * dropdowns have already been initialized.
    */
   async #ensureLangListsBuilt() {
-    try {
-      await TranslationsPanelShared.ensureLangListsBuilt(
-        document,
-        this.elements.panel,
-        gBrowser.selectedBrowser.innerWindowID
-      );
-    } catch (error) {
-      this.console?.error(error);
-    }
+    await TranslationsPanelShared.ensureLangListsBuilt(document, this);
   }
 
   /**

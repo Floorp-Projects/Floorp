@@ -188,12 +188,19 @@ class CheckboxPageAction {
 }
 
 /**
- * This singleton class controls the Translations popup panel.
+ * This singleton class controls the FullPageTranslations panel.
  *
  * This component is a `/browser` component, and the actor is a `/toolkit` actor, so care
  * must be taken to keep the presentation (this component) from the state management
  * (the Translations actor). This class reacts to state changes coming from the
  * Translations actor.
+ *
+ * A global instance of this class is created once per top ChromeWindow and is initialized
+ * when the new window is created.
+ *
+ * See the comment above TranslationsParent for more details.
+ *
+ * @see TranslationsParent
  */
 var FullPageTranslationsPanel = new (class {
   /** @type {Console?} */
@@ -407,11 +414,7 @@ var FullPageTranslationsPanel = new (class {
    */
   async #ensureLangListsBuilt() {
     try {
-      await TranslationsPanelShared.ensureLangListsBuilt(
-        document,
-        this.elements.panel,
-        gBrowser.selectedBrowser.innerWindowID
-      );
+      await TranslationsPanelShared.ensureLangListsBuilt(document, this);
     } catch (error) {
       this.console?.error(error);
     }
@@ -541,12 +544,7 @@ var FullPageTranslationsPanel = new (class {
     // Unconditionally hide the intro text in case the panel is re-shown.
     intro.hidden = true;
 
-    if (
-      TranslationsPanelShared.getLangListsInitState(
-        panel,
-        gBrowser.selectedBrowser.innerWindowID
-      ) === "error"
-    ) {
+    if (TranslationsPanelShared.getLangListsInitState(this) === "error") {
       // There was an error, display it in the view rather than the language
       // dropdowns.
       const { cancelButton, errorHintAction } = this.elements;
