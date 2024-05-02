@@ -7,4 +7,3 @@ prefs = [
 ]
 
 ["browser_permissionPrompts.js"]
-skip-if = ["os == 'mac'"] # times out on macosx1014, see 1570098
