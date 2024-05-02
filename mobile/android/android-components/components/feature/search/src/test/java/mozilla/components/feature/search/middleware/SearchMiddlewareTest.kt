@@ -222,14 +222,13 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals(5, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.co.uk", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
-        assertEquals("Wicipedia (cy)", store.state.search.regionSearchEngines[5].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Wicipedia (cy)", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -299,14 +298,13 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals(5, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.com.au", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Wikipedia", store.state.search.regionSearchEngines[4].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[3].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -338,15 +336,14 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(7, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.co.uk", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Qwant", store.state.search.regionSearchEngines[4].name)
-        assertEquals("Wikipedia", store.state.search.regionSearchEngines[5].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[6].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Qwant", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -378,15 +375,14 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(7, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.co.uk", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Qwant", store.state.search.regionSearchEngines[4].name)
-        assertEquals("Wikipedia", store.state.search.regionSearchEngines[5].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[6].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Qwant", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[4].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -457,14 +453,13 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals(5, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.ca", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Wikipédia (fr)", store.state.search.regionSearchEngines[4].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Wikipédia (fr)", store.state.search.regionSearchEngines[3].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -496,15 +491,14 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(7, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
         assertEquals("Qwant", store.state.search.regionSearchEngines[3].name)
         assertEquals("Wikipédia (fr)", store.state.search.regionSearchEngines[4].name)
-        assertEquals("Amazon.fr", store.state.search.regionSearchEngines[5].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[6].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -536,15 +530,15 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(8, store.state.search.regionSearchEngines.size)
+        assertEquals(7, store.state.search.regionSearchEngines.size)
+
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.de", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Ecosia", store.state.search.regionSearchEngines[4].name)
-        assertEquals("Qwant", store.state.search.regionSearchEngines[5].name)
-        assertEquals("Wikipedia (de)", store.state.search.regionSearchEngines[6].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[7].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Ecosia", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Qwant", store.state.search.regionSearchEngines[4].name)
+        assertEquals("Wikipedia (de)", store.state.search.regionSearchEngines[5].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[6].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -576,15 +570,15 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(8, store.state.search.regionSearchEngines.size)
+        assertEquals(7, store.state.search.regionSearchEngines.size)
+
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.de", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Ecosia", store.state.search.regionSearchEngines[4].name)
-        assertEquals("Qwant", store.state.search.regionSearchEngines[5].name)
-        assertEquals("Wikipedia (de)", store.state.search.regionSearchEngines[6].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[7].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Ecosia", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Qwant", store.state.search.regionSearchEngines[4].name)
+        assertEquals("Wikipedia (de)", store.state.search.regionSearchEngines[5].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[6].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -615,13 +609,14 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+
+        assertEquals(5, store.state.search.regionSearchEngines.size)
+
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.de", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Wikipedija (dsb)", store.state.search.regionSearchEngines[4].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Wikipedija (dsb)", store.state.search.regionSearchEngines[3].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -652,13 +647,14 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+
+        assertEquals(5, store.state.search.regionSearchEngines.size)
+
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.de", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Wikipedija (hsb)", store.state.search.regionSearchEngines[4].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Wikipedija (hsb)", store.state.search.regionSearchEngines[3].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -690,14 +686,13 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals(5, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
         assertEquals("Wikipedia (es)", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Amazon.es", store.state.search.regionSearchEngines[4].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -729,14 +724,13 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals(5, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
         assertEquals("Wikipedia (it)", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Amazon.it", store.state.search.regionSearchEngines[4].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -768,14 +762,13 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals(5, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.it", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("Wikipedia (lij)", store.state.search.regionSearchEngines[4].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("Wikipedia (lij)", store.state.search.regionSearchEngines[3].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -807,15 +800,14 @@ class SearchMiddlewareTest {
         assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
         assertTrue(store.state.search.additionalSearchEngines.isEmpty())
 
-        assertEquals(7, store.state.search.regionSearchEngines.size)
+        assertEquals(6, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
         assertEquals("Prisjakt", store.state.search.regionSearchEngines[2].name)
         assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
         assertEquals("Wikipedia (sv)", store.state.search.regionSearchEngines[4].name)
-        assertEquals("Amazon.se", store.state.search.regionSearchEngines[5].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[6].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[5].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }
@@ -1718,68 +1710,6 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `Migration - default search engine`() {
-        val customStorage = CustomSearchEngineStorage(testContext, dispatcher)
-        val metadataStorage = SearchMetadataStorage(testContext)
-
-        run {
-            val searchMiddleware = SearchMiddleware(
-                testContext,
-                ioDispatcher = dispatcher,
-                customStorage = customStorage,
-                metadataStorage = metadataStorage,
-                migration = object : SearchMiddleware.Migration {
-                    override fun getValuesToMigrate() = SearchMiddleware.Migration.MigrationValues(
-                        customSearchEngines = listOf(),
-                        defaultSearchEngineName = "Amazon.com",
-                    )
-                },
-            )
-
-            val store = BrowserStore(middleware = listOf(searchMiddleware))
-
-            store.dispatch(
-                SearchAction.SetRegionAction(
-                    RegionState("US", "US"),
-                ),
-            ).joinBlocking()
-
-            wait(store, dispatcher)
-
-            val selectedSearchEngine = store.state.search.selectedOrDefaultSearchEngine
-            assertNotNull(selectedSearchEngine!!)
-
-            assertEquals("Amazon.com", selectedSearchEngine.name)
-            assertTrue(selectedSearchEngine.resultUrls[0].startsWith("https://www.amazon.com/"))
-        }
-
-        run {
-            val searchMiddleware = SearchMiddleware(
-                testContext,
-                ioDispatcher = dispatcher,
-                customStorage = customStorage,
-                metadataStorage = metadataStorage,
-            )
-
-            val store = BrowserStore(middleware = listOf(searchMiddleware))
-
-            store.dispatch(
-                SearchAction.SetRegionAction(
-                    RegionState("US", "US"),
-                ),
-            ).joinBlocking()
-
-            wait(store, dispatcher)
-
-            val selectedSearchEngine = store.state.search.selectedOrDefaultSearchEngine
-            assertNotNull(selectedSearchEngine!!)
-
-            assertEquals("Amazon.com", selectedSearchEngine.name)
-            assertTrue(selectedSearchEngine.resultUrls[0].startsWith("https://www.amazon.com/"))
-        }
-    }
-
-    @Test
     fun `Reorders list of region search engines after adding previously removed search engines`() {
         val searchMiddleware = SearchMiddleware(
             testContext,
@@ -1805,14 +1735,13 @@ class SearchMiddlewareTest {
         // Verify initial state
         // ///////////////////////////////////////////////////////////////////////////////////////////
 
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals(5, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.com", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
-        assertEquals("Wikipedia", store.state.search.regionSearchEngines[5].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
 
@@ -1832,12 +1761,11 @@ class SearchMiddlewareTest {
         // Verify after hiding search engines
         // ///////////////////////////////////////////////////////////////////////////////////////////
 
-        assertEquals(4, store.state.search.regionSearchEngines.size)
+        assertEquals(3, store.state.search.regionSearchEngines.size)
 
         assertEquals("Bing", store.state.search.regionSearchEngines[0].name)
-        assertEquals("Amazon.com", store.state.search.regionSearchEngines[1].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[2].name)
-        assertEquals("Wikipedia", store.state.search.regionSearchEngines[3].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[1].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[2].name)
 
         assertEquals("Bing", store.state.search.selectedOrDefaultSearchEngine!!.name)
 
@@ -1855,14 +1783,13 @@ class SearchMiddlewareTest {
         // Verify state after adding search engines back
         // ///////////////////////////////////////////////////////////////////////////////////////////
 
-        assertEquals(6, store.state.search.regionSearchEngines.size)
+        assertEquals(5, store.state.search.regionSearchEngines.size)
 
         assertEquals("Google", store.state.search.regionSearchEngines[0].name)
         assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
-        assertEquals("Amazon.com", store.state.search.regionSearchEngines[2].name)
-        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
-        assertEquals("eBay", store.state.search.regionSearchEngines[4].name)
-        assertEquals("Wikipedia", store.state.search.regionSearchEngines[5].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[2].name)
+        assertEquals("eBay", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[4].name)
 
         assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
     }

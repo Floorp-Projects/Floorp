@@ -68,7 +68,7 @@ class SearchTest : TestSetup() {
     private lateinit var searchMockServer: MockWebServer
     private var queryString = "firefox"
     private val generalEnginesList = listOf("DuckDuckGo", "Google", "Bing")
-    private val topicEnginesList = listOf("Amazon.com", "Wikipedia", "eBay")
+    private val topicEnginesList = listOf("Wikipedia", "eBay")
 
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
@@ -123,7 +123,7 @@ class SearchTest : TestSetup() {
             verifySearchToolbar(isDisplayed = true)
             clickSearchSelectorButton()
             verifySearchShortcutListContains(
-                "DuckDuckGo", "Google", "Amazon.com", "Wikipedia", "Bing", "eBay",
+                "DuckDuckGo", "Google", "Wikipedia", "Bing", "eBay",
                 "Bookmarks", "Tabs", "History", "Search settings",
             )
         }
@@ -165,7 +165,7 @@ class SearchTest : TestSetup() {
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2154196
     @Test
     fun verifySearchPlaceholderForTopicSpecificSearchEnginesTest() {
-        val topicEnginesList = listOf("Amazon.com", "Wikipedia", "eBay")
+        val topicEnginesList = listOf("Wikipedia", "eBay")
 
         topicEnginesList.forEach {
             homeScreen {
@@ -241,7 +241,7 @@ class SearchTest : TestSetup() {
     @SmokeTest
     @Test
     fun searchEnginesCanBeChangedTemporarilyFromSearchSelectorMenuTest() {
-        val enginesList = listOf("DuckDuckGo", "Google", "Amazon.com", "Wikipedia", "Bing", "eBay")
+        val enginesList = listOf("DuckDuckGo", "Google", "Wikipedia", "Bing", "eBay")
 
         enginesList.forEach {
             homeScreen {
@@ -802,7 +802,6 @@ class SearchTest : TestSetup() {
                 verifySearchShortcutListContains(
                     "Google",
                     "Bing",
-                    "Amazon.com",
                     "DuckDuckGo",
                     "ويكيبيديا (ar)",
                 )

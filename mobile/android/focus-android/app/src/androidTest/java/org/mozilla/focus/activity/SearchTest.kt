@@ -22,7 +22,7 @@ import org.mozilla.focus.testAnnotations.SmokeTest
 // This test checks the search engine can be changed and that search suggestions appear
 class SearchTest {
     private lateinit var searchString: String
-    private val enginesList = listOf("DuckDuckGo", "Google", "Amazon.com", "Wikipedia")
+    private val enginesList = listOf("DuckDuckGo", "Google", "Wikipedia")
     private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get: Rule
