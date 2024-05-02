@@ -45,31 +45,46 @@ async function testCanvasRandomization(result, expectedResults, extraData) {
   let child = result.theirs;
 
   let differencesInRandom = countDifferencesInUint8Arrays(parent, child);
-  let differencesFromUnmodified = countDifferencesInUint8Arrays(
+  let differencesFromUnmodifiedParent = countDifferencesInUint8Arrays(
+    UNMODIFIED_CANVAS_DATA,
+    parent
+  );
+  let differencesFromUnmodifiedChild = countDifferencesInUint8Arrays(
     UNMODIFIED_CANVAS_DATA,
     child
   );
 
   Assert.greaterOrEqual(
-    differencesFromUnmodified,
+    differencesFromUnmodifiedParent,
     expectedResults[0],
-    `Checking ${testDesc} for canvas randomization - did not see enough random pixels.`
+    `Checking ${testDesc} for canvas randomization, comparing parent - lower bound for random pixels.`
   );
   Assert.lessOrEqual(
-    differencesFromUnmodified,
+    differencesFromUnmodifiedParent,
     expectedResults[1],
-    `Checking ${testDesc} for canvas randomization - saw too many random pixels.`
+    `Checking ${testDesc} for canvas randomization, comparing parent - upper bound for random pixels.`
+  );
+
+  Assert.greaterOrEqual(
+    differencesFromUnmodifiedChild,
+    expectedResults[0],
+    `Checking ${testDesc} for canvas randomization, comparing child - lower bound for random pixels.`
+  );
+  Assert.lessOrEqual(
+    differencesFromUnmodifiedChild,
+    expectedResults[1],
+    `Checking ${testDesc} for canvas randomization, comparing child - upper bound for random pixels.`
   );
 
   Assert.greaterOrEqual(
     differencesInRandom,
     expectedResults[2],
-    `Checking ${testDesc} and comparing randomization - did not see enough different random pixels.`
+    `Checking ${testDesc} and comparing randomization - lower bound for different random pixels.`
   );
   Assert.lessOrEqual(
     differencesInRandom,
     expectedResults[3],
-    `Checking ${testDesc} and comparing randomization - saw too many different random pixels.`
+    `Checking ${testDesc} and comparing randomization - upper bound for different random pixels.`
   );
 }
 
