@@ -202,10 +202,7 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
   }
 
   _appendSyncClient(client, container, labelId, paginationInfo) {
-    let {
-      maxTabs = SyncedTabsPanelList.sRemoteTabsPerPage,
-      showInactive = false,
-    } = paginationInfo;
+    let { maxTabs = SyncedTabsPanelList.sRemoteTabsPerPage } = paginationInfo;
     // Create the element for the remote client.
     let clientItem = document.createXULElement("label");
     clientItem.setAttribute("id", labelId);
@@ -227,11 +224,24 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
       );
       label.setAttribute("class", "PanelUI-remotetabs-notabsforclient-label");
     } else {
-      let tabs = client.tabs.filter(t => showInactive || !t.inactive);
-      let numInactive = client.tabs.length - tabs.length;
+      // We have the client obj but we need the FxA device obj so we use the clients
+      // engine to get us the FxA device
+      let device =
+        fxAccounts.device.recentDeviceList &&
+        fxAccounts.device.recentDeviceList.find(
+          d =>
+            d.id === Weave.Service.clientsEngine.getClientFxaDeviceId(client.id)
+        );
+      let remoteTabCloseAvailable =
+        device && fxAccounts.commands.closeTab.isDeviceCompatible(device);
 
-      // If this page will display all tabs, show no additional buttons.
-      // Otherwise, show a "Show More" button
+      let tabs = client.tabs.filter(t => !t.inactive);
+      let hasInactive = tabs.length != client.tabs.length;
+
+      if (hasInactive) {
+        container.append(this._createShowInactiveTabsElement(client, device));
+      }
+      // If this page isn't displaying all (regular, active) tabs, show a "Show More" button.
       let hasNextPage = tabs.length > maxTabs;
       let nextPageIsLastPage =
         hasNextPage &&
@@ -247,37 +257,14 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
       if (hasNextPage) {
         tabs = tabs.slice(0, maxTabs);
       }
-      // We have the client obj but we need the FxA device obj so we use the clients
-      // engine to get us the FxA device
-      let device =
-        fxAccounts.device.recentDeviceList &&
-        fxAccounts.device.recentDeviceList.find(
-          d =>
-            d.id === Weave.Service.clientsEngine.getClientFxaDeviceId(client.id)
-        );
-      let remoteTabCloseAvailable =
-        device && fxAccounts.commands.closeTab.isDeviceCompatible(device);
       for (let [index, tab] of tabs.entries()) {
-        let tabEntContainer = document.createXULElement("hbox");
-        tabEntContainer.setAttribute("class", "PanelUI-tabitem-container");
-
-        let tabEnt = this._createSyncedTabElement(tab, index);
-        tabEntContainer.appendChild(tabEnt);
-        // We should only add an X button next to tabs if the device
-        // is broadcasting that it can remotely close tabs
-        if (remoteTabCloseAvailable) {
-          tabEntContainer.appendChild(
-            this._createCloseTabElement(tab.url, device)
-          );
-        }
-        container.appendChild(tabEntContainer);
-      }
-      if (numInactive) {
-        let elt = this._createShowInactiveTabsElement(
-          paginationInfo,
-          numInactive
+        let tabEnt = this._createSyncedTabElement(
+          tab,
+          index,
+          device,
+          remoteTabCloseAvailable
         );
-        container.appendChild(elt);
+        container.appendChild(tabEnt);
       }
       if (hasNextPage) {
         let showAllEnt = this._createShowMoreSyncedTabsElement(paginationInfo);
@@ -286,7 +273,10 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     }
   }
 
-  _createSyncedTabElement(tabInfo, index) {
+  _createSyncedTabElement(tabInfo, index, device, canCloseTabs) {
+    let tabContainer = document.createXULElement("hbox");
+    tabContainer.setAttribute("class", "PanelUI-tabitem-container");
+
     let item = document.createXULElement("toolbarbutton");
     let tooltipText = (tabInfo.title ? tabInfo.title + "\n" : "") + tabInfo.url;
     item.setAttribute("itemtype", "tab");
@@ -324,18 +314,22 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
         CustomizableUI.hidePanelForNode(item);
       }
     });
-    return item;
+    tabContainer.appendChild(item);
+    // We should only add an X button next to tabs if the device
+    // is broadcasting that it can remotely close tabs
+    if (canCloseTabs) {
+      tabContainer.appendChild(
+        this._createCloseTabElement(tabInfo.url, device)
+      );
+    }
+    return tabContainer;
   }
 
   _createShowMoreSyncedTabsElement(paginationInfo) {
     let showMoreItem = document.createXULElement("toolbarbutton");
     showMoreItem.setAttribute("itemtype", "showmorebutton");
     showMoreItem.setAttribute("closemenu", "none");
-    showMoreItem.classList.add(
-      "subviewbutton",
-      "subviewbutton-nav",
-      "subviewbutton-nav-down"
-    );
+    showMoreItem.classList.add("subviewbutton", "subviewbutton-nav-down");
     document.l10n.setAttributes(showMoreItem, "appmenu-remote-tabs-showmore");
 
     paginationInfo.maxTabs = Infinity;
@@ -347,23 +341,38 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     return showMoreItem;
   }
 
-  _createShowInactiveTabsElement(paginationInfo, count) {
+  _createShowInactiveTabsElement(client, device) {
     let showItem = document.createXULElement("toolbarbutton");
-    showItem.setAttribute("itemtype", "showmorebutton");
     showItem.setAttribute("closemenu", "none");
-    showItem.classList.add(
-      "subviewbutton",
-      "subviewbutton-nav",
-      "subviewbutton-nav-down"
+    showItem.classList.add("subviewbutton", "subviewbutton-nav");
+    document.l10n.setAttributes(
+      showItem,
+      "appmenu-remote-tabs-show-inactive-tabs"
     );
-    document.l10n.setAttributes(showItem, "appmenu-remote-tabs-showinactive");
-    document.l10n.setArgs(showItem, { count });
 
-    paginationInfo.showInactive = true;
+    let canClose =
+      device && fxAccounts.commands.closeTab.isDeviceCompatible(device);
+
     showItem.addEventListener("click", e => {
-      e.preventDefault();
-      e.stopPropagation();
-      this._showSyncedTabs(paginationInfo);
+      let node = PanelMultiView.getViewNode(
+        document,
+        "PanelUI-fxa-menu-inactive-tabs"
+      );
+
+      // device name.
+      let label = node.querySelector("label[itemtype='client']");
+      label.textContent = client.name;
+
+      // Update the tab list.
+      let container = node.querySelector(".panel-subview-body");
+      container.replaceChildren(
+        ...client.tabs
+          .filter(t => t.inactive)
+          .map((tab, index) =>
+            this._createSyncedTabElement(tab, index, device, canClose)
+          )
+      );
+      PanelUI.showSubView("PanelUI-fxa-menu-inactive-tabs", showItem, e);
     });
     return showItem;
   }
