@@ -546,7 +546,7 @@ class BrowsingContextModule extends Module {
     // On Android there is only a single window allowed. As such fallback to
     // open a new tab instead.
     const type = lazy.AppInfo.isAndroid ? "tab" : typeHint;
-
+    let waitForVisibilityChangePromise;
     switch (type) {
       case "window": {
         const newWindow = await lazy.windowManager.openBrowserWindow({
@@ -573,8 +573,6 @@ class BrowsingContextModule extends Module {
           window = lazy.TabManager.getWindowForTab(referenceTab);
         }
 
-        const promises = [];
-
         if (!background && !lazy.AppInfo.isAndroid) {
           // When opening a new foreground tab we need to wait until the
           // "document.visibilityState" of the currently selected tab in this
@@ -582,32 +580,32 @@ class BrowsingContextModule extends Module {
           //
           // Bug 1884142: It's not supported on Android for the TestRunner package.
           const selectedTab = lazy.TabManager.getTabBrowser(window).selectedTab;
-          promises.push(
-            this.#waitForVisibilityChange(
-              lazy.TabManager.getBrowserForTab(selectedTab).browsingContext
-            )
+
+          // Create the promise immediately, but await it later in parallel with
+          // waitForInitialNavigationCompleted.
+          waitForVisibilityChangePromise = this.#waitForVisibilityChange(
+            lazy.TabManager.getBrowserForTab(selectedTab).browsingContext
           );
         }
 
-        promises.unshift(
-          lazy.TabManager.addTab({
-            focus: !background,
-            referenceTab,
-            userContextId: userContext,
-          })
-        );
-
-        const [tab] = await Promise.all(promises);
+        const tab = await lazy.TabManager.addTab({
+          focus: !background,
+          referenceTab,
+          userContextId: userContext,
+        });
         browser = lazy.TabManager.getBrowserForTab(tab);
       }
     }
 
-    await lazy.waitForInitialNavigationCompleted(
-      browser.browsingContext.webProgress,
-      {
-        unloadTimeout: 5000,
-      }
-    );
+    await Promise.all([
+      lazy.waitForInitialNavigationCompleted(
+        browser.browsingContext.webProgress,
+        {
+          unloadTimeout: 5000,
+        }
+      ),
+      waitForVisibilityChangePromise,
+    ]);
 
     // The tab on Android is always opened in the foreground,
     // so we need to select the previous tab,
