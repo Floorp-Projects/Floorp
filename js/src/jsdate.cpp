@@ -1060,7 +1060,11 @@ done:
 #undef NEED_NDIGITS
 }
 
-int FixupNonFullYear(int year) {
+/**
+ * Non-ISO years < 100 get fixed up, to allow 2-digit year formats.
+ * year < 50 becomes 2000-2049, 50-99 becomes 1950-1999.
+ */
+int FixupYear(int year) {
   if (year < 50) {
     year += 2000;
   } else if (year >= 50 && year < 100) {
@@ -1203,9 +1207,7 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
     return false;
   }
 
-  if (yearDigits < 4) {
-    year = FixupNonFullYear(year);
-  }
+  year = FixupYear(year);
 
   *indexOut = i;
   *yearOut = year;
@@ -1295,9 +1297,7 @@ static bool TryParseDashedNumericDatePrefix(const CharT* s, size_t length,
     return false;
   }
 
-  if (year < 100) {
-    year = FixupNonFullYear(year);
-  }
+  year = FixupYear(year);
 
   *indexOut = i;
   *yearOut = year;
@@ -1750,7 +1750,7 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
       // (again, for Chrome parity)
       year = 2001;
     } else {
-      year = FixupNonFullYear(mon);
+      year = FixupYear(mon);
       mon = 1;
     }
   }
@@ -1810,13 +1810,7 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
       }
     }
 
-    // If the year is greater than or equal to 50 and less than 100, it is
-    // considered to be the number of years after 1900. If the year is less
-    // than 50 it is considered to be the number of years after 2000,
-    // otherwise it is considered to be the number of years after 0.
-    if (!seenFullYear) {
-      year = FixupNonFullYear(year);
-    }
+    year = FixupYear(year);
 
     if (negativeYear) {
       year = -year;
