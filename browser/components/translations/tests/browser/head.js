@@ -1706,6 +1706,7 @@ class SelectTranslationsTestUtils {
       fromMenuList,
       settingsButton,
       toMenuList,
+      translationFailureMessageBar,
       tryAgainButton,
     } = SelectTranslationsPanel.elements;
     await SelectTranslationsTestUtils.waitForPanelState("translation-failure");
@@ -1726,6 +1727,11 @@ class SelectTranslationsTestUtils {
       document.activeElement,
       tryAgainButton,
       "The try-again button should have focus."
+    );
+    is(
+      translationFailureMessageBar.getAttribute("role"),
+      "alert",
+      "The translation failure message bar is an alert."
     );
     SharedTranslationsTestUtils._assertTabIndexOrder([
       tryAgainButton,

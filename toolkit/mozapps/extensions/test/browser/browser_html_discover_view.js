@@ -653,6 +653,11 @@ add_task(async function checkDiscopaneNotice() {
     "moz-message-bar.discopane-notice"
   );
   ok(messageBar, "Recommended notice should exist in extensions view");
+  is(
+    messageBar.getAttribute("role"),
+    "alert",
+    "Recommended notice is an alert"
+  );
   await switchToDiscoView(win);
   messageBar = win.document.querySelector("moz-message-bar.discopane-notice");
   ok(messageBar, "Recommended notice should exist in disco view");
