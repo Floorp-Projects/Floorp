@@ -5798,6 +5798,20 @@
       }
     },
 
+    getTabPids(tab) {
+      if (!tab.linkedBrowser) {
+        return [];
+      }
+
+      // Get the PIDs of the content process and remote subframe processes
+      let [contentPid, ...framePids] = E10SUtils.getBrowserPids(
+        tab.linkedBrowser,
+        gFissionBrowser
+      );
+      let pids = contentPid ? [contentPid] : [];
+      return pids.concat(framePids.sort());
+    },
+
     getTabTooltip(tab, includeLabel = true) {
       let labelArray = [];
       if (includeLabel) {
@@ -5809,24 +5823,14 @@
           false
         )
       ) {
-        if (tab.linkedBrowser) {
-          // Show the PIDs of the content process and remote subframe processes.
-          let [contentPid, ...framePids] = E10SUtils.getBrowserPids(
-            tab.linkedBrowser,
-            gFissionBrowser
-          );
-          if (contentPid) {
-            if (framePids && framePids.length) {
-              labelArray.push(
-                `(pids ${contentPid}, ${framePids.sort().join(", ")})`
-              );
-            } else {
-              labelArray.push(`(pid ${contentPid})`);
-            }
-          }
-          if (tab.linkedBrowser.docShellIsActive) {
-            labelArray.push("[A]");
-          }
+        const pids = this.getTabPids(tab);
+        if (pids.length) {
+          let pidLabel = pids.length > 1 ? "pids" : "pid";
+          labelArray.push(`(${pidLabel} ${pids.join(", ")})`);
+        }
+
+        if (tab.linkedBrowser.docShellIsActive) {
+          labelArray.push("[A]");
         }
       }
 
