@@ -2915,7 +2915,7 @@ TEST_F(VideoSendStreamTest, ReportsSentResolution) {
       auto buffer = EncodedImageBuffer::Create(16);
       memset(buffer->data(), 0, 16);
       encoded.SetEncodedData(buffer);
-      encoded.SetRtpTimestamp(input_image.timestamp());
+      encoded.SetRtpTimestamp(input_image.rtp_timestamp());
       encoded.capture_time_ms_ = input_image.render_time_ms();
 
       for (size_t i = 0; i < kNumStreams; ++i) {

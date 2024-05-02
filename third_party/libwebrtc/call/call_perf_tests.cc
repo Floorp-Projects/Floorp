@@ -456,7 +456,7 @@ void CallPerfTest::TestCaptureNtpTime(
       }
 
       FrameCaptureTimeList::iterator iter =
-          capture_time_list_.find(video_frame.timestamp());
+          capture_time_list_.find(video_frame.rtp_timestamp());
       EXPECT_TRUE(iter != capture_time_list_.end());
 
       // The real capture time has been wrapped to uint32_t before converted

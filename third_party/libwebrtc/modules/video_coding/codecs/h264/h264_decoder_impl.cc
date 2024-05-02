@@ -616,7 +616,7 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
 
   VideoFrame decoded_frame = VideoFrame::Builder()
                                  .set_video_frame_buffer(cropped_buffer)
-                                 .set_timestamp_rtp(input_image.RtpTimestamp())
+                                 .set_rtp_timestamp(input_image.RtpTimestamp())
                                  .set_color_space(color_space)
                                  .build();
 

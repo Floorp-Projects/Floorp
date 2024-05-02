@@ -125,7 +125,7 @@ class TestVideoEncoder : public MockVideoEncoder {
       encoded_frame.SetFrameType(frame.keyframe
                                      ? VideoFrameType::kVideoFrameKey
                                      : VideoFrameType::kVideoFrameDelta);
-      encoded_frame.SetRtpTimestamp(input_frame.timestamp());
+      encoded_frame.SetRtpTimestamp(input_frame.rtp_timestamp());
       encoded_frame.SetSpatialIndex(frame.layer_id.spatial_idx);
       encoded_frame.SetTemporalIndex(frame.layer_id.temporal_idx);
       encoded_frame.SetEncodedData(
@@ -161,7 +161,7 @@ class TestVideoDecoder : public MockVideoDecoder {
     VideoFrame decoded_frame =
         VideoFrame::Builder()
             .set_video_frame_buffer(frame_buffer)
-            .set_timestamp_rtp(encoded_frame.RtpTimestamp())
+            .set_rtp_timestamp(encoded_frame.RtpTimestamp())
             .build();
     callback_->Decoded(decoded_frame);
     frame_sizes_.push_back(DataSize::Bytes(encoded_frame.size()));
