@@ -6,7 +6,6 @@
 
 #include "nsCocoaWindow.h"
 
-#include "AppearanceOverride.h"
 #include "NativeKeyBindings.h"
 #include "ScreenHelperCocoa.h"
 #include "TextInputHandler.h"
@@ -524,10 +523,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect,
 
   [WindowDataMap.sharedWindowDataMap ensureDataForWindow:mWindow];
   mWindowMadeHere = true;
-
-  // Make the window respect the global appearance, which follows the
-  // browser.theme.toolbar-theme pref.
-  mWindow.appearanceSource = MOZGlobalAppearance.sharedInstance;
 
   return NS_OK;
 
@@ -2327,9 +2322,11 @@ void nsCocoaWindow::SetColorScheme(const Maybe<ColorScheme>& aScheme) {
   if (!mWindow) {
     return;
   }
-
-  mWindow.appearance = aScheme ? NSAppearanceForColorScheme(*aScheme) : nil;
-
+  NSAppearance* appearance =
+      aScheme ? NSAppearanceForColorScheme(*aScheme) : nil;
+  if (mWindow.appearance != appearance) {
+    mWindow.appearance = appearance;
+  }
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
