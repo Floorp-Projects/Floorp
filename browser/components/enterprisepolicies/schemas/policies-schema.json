@@ -962,6 +962,10 @@
       }
     },
 
+    "PostQuantumKeyAgreementEnabled": {
+      "type": "boolean"
+    },
+
     "PDFjs": {
       "type": "object",
       "properties": {
