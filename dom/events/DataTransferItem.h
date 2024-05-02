@@ -42,6 +42,7 @@ class DataTransferItem final : public nsISupports, public nsWrapperCache {
         mChromeOnly(false),
         mKind(aKind),
         mType(aType),
+        mDoNotAttemptToLoadData(false),
         mDataTransfer(aDataTransfer) {
     MOZ_ASSERT(mDataTransfer, "Must be associated with a DataTransfer");
   }
@@ -122,6 +123,7 @@ class DataTransferItem final : public nsISupports, public nsWrapperCache {
   eKind mKind;
   const nsString mType;
   nsCOMPtr<nsIVariant> mData;
+  bool mDoNotAttemptToLoadData;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   RefPtr<DataTransfer> mDataTransfer;
 

@@ -76,6 +76,7 @@ already_AddRefed<DataTransferItem> DataTransferItem::Clone(
   it->mData = mData;
   it->mPrincipal = mPrincipal;
   it->mChromeOnly = mChromeOnly;
+  it->mDoNotAttemptToLoadData = mDoNotAttemptToLoadData;
 
   return it.forget();
 }
@@ -144,7 +145,7 @@ void DataTransferItem::SetData(nsIVariant* aData) {
 }
 
 void DataTransferItem::FillInExternalData() {
-  if (mData) {
+  if (mData || mDoNotAttemptToLoadData) {
     return;
   }
 
@@ -183,6 +184,11 @@ void DataTransferItem::FillInExternalData() {
       nsresult rv = clipboard->GetData(trans, mDataTransfer->ClipboardType(),
                                        windowContext);
       if (NS_WARN_IF(NS_FAILED(rv))) {
+        if (rv == NS_ERROR_CONTENT_BLOCKED) {
+          // If the load of this content was blocked by Content Analysis,
+          // do not attempt to load it again.
+          mDoNotAttemptToLoadData = true;
+        }
         return;
       }
     } else {
