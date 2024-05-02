@@ -272,6 +272,8 @@ RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::ProcessDecode(
         aStage.SetYUVColorSpace(b.mYUVColorSpace);
         aStage.SetColorRange(b.mColorRange);
         aStage.SetColorDepth(b.mColorDepth);
+        aStage.SetStartTimeAndEndTime(v->mTime.ToMicroseconds(),
+                                      v->GetEndTime().ToMicroseconds());
       });
     });
 

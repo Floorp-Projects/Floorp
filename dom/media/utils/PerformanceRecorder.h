@@ -264,6 +264,11 @@ class DecodeStage : public StageBase {
   void SetColorDepth(gfx::ColorDepth aColorDepth) {
     mColorDepth = Some(aColorDepth);
   }
+  void SetStartTimeAndEndTime(uint64_t aStartTime, uint64_t aEndTime) {
+    mStartAndEndTimeUs =
+        Some(std::pair<uint64_t, uint64_t>{aStartTime, aEndTime});
+  }
+  void AddMarker(MarkerOptions&& aOption) override;
 
   // The name of the source that performs this stage.
   nsCString mSource;
@@ -278,6 +283,7 @@ class DecodeStage : public StageBase {
   Maybe<gfx::ColorRange> mColorRange;
   Maybe<gfx::ColorDepth> mColorDepth;
   mutable Maybe<nsCString> mName;
+  Maybe<std::pair<uint64_t, uint64_t>> mStartAndEndTimeUs;
 };
 
 class PerformanceRecorderBase {

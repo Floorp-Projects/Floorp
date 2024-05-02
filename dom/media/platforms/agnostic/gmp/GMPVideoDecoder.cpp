@@ -114,15 +114,17 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
 
   RefPtr<VideoData> v = r.unwrap();
   MOZ_ASSERT(v);
-  mPerformanceRecorder.Record(static_cast<int64_t>(decodedFrame->Timestamp()),
-                              [&](DecodeStage& aStage) {
-                                aStage.SetImageFormat(DecodeStage::YUV420P);
-                                aStage.SetResolution(decodedFrame->Width(),
-                                                     decodedFrame->Height());
-                                aStage.SetYUVColorSpace(b.mYUVColorSpace);
-                                aStage.SetColorDepth(b.mColorDepth);
-                                aStage.SetColorRange(b.mColorRange);
-                              });
+  mPerformanceRecorder.Record(
+      static_cast<int64_t>(decodedFrame->Timestamp()),
+      [&](DecodeStage& aStage) {
+        aStage.SetImageFormat(DecodeStage::YUV420P);
+        aStage.SetResolution(decodedFrame->Width(), decodedFrame->Height());
+        aStage.SetYUVColorSpace(b.mYUVColorSpace);
+        aStage.SetColorDepth(b.mColorDepth);
+        aStage.SetColorRange(b.mColorRange);
+        aStage.SetStartTimeAndEndTime(v->mTime.ToMicroseconds(),
+                                      v->GetEndTime().ToMicroseconds());
+      });
 
   if (mReorderFrames) {
     mReorderQueue.Push(std::move(v));

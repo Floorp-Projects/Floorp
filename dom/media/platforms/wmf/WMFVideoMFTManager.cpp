@@ -711,6 +711,8 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
       aStage.SetImageFormat(DecodeStage::P016);
     }
     aStage.SetResolution(videoWidth, videoHeight);
+    aStage.SetStartTimeAndEndTime(v->mTime.ToMicroseconds(),
+                                  v->GetEndTime().ToMicroseconds());
   });
 
   v.forget(aOutVideoData);
@@ -753,7 +755,6 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
       TimeUnit::FromMicroseconds(-1));
 
   NS_ENSURE_TRUE(v, E_FAIL);
-  v.forget(aOutVideoData);
 
   mPerformanceRecorder.Record(pts.ToMicroseconds(), [&](DecodeStage& aStage) {
     aStage.SetColorDepth(mVideoInfo.mColorDepth);
@@ -771,8 +772,11 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
       aStage.SetImageFormat(DecodeStage::P016);
     }
     aStage.SetResolution(size.width, size.height);
+    aStage.SetStartTimeAndEndTime(v->mTime.ToMicroseconds(),
+                                  v->GetEndTime().ToMicroseconds());
   });
 
+  v.forget(aOutVideoData);
   return S_OK;
 }
 
