@@ -39,6 +39,7 @@ pref("security.signed_app_signatures.policy", 2);
 
 pref("security.xfocsp.errorReporting.enabled", true);
 pref("security.xfocsp.errorReporting.automatic", false);
+pref("security.xfocsp.hideOpenInNewWindow", true);
 
 // Issuer we use to detect MitM proxies. Set to the issuer of the cert of the
 // Firefox update service. The string format is whatever NSS uses to print a DN.
