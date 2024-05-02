@@ -1640,7 +1640,9 @@ var gBrowserInit = {
     ).content;
     for (let area of CustomizableUI.areas) {
       let type = CustomizableUI.getAreaType(area);
-      if (type == CustomizableUI.TYPE_TOOLBAR) {
+      // Floorp Injections
+      if (type == CustomizableUI.TYPE_TOOLBAR && area !== "statusBar") {
+      // End Floorp InjectionsZ
         let node = document.getElementById(area);
         CustomizableUI.registerToolbarNode(node);
       }

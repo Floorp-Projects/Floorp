@@ -5341,7 +5341,7 @@ var SessionStoreInternal = {
   
       if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
         let { WorkspacesWindowUuidService } = ChromeUtils.importESModule(
-          "resource:///modules/WorkspacesService.sys.mjs"
+          "chrome://browser/content/modules/workspaces/WorkspacesService.sys.mjs"
         );
         
         // workspaces Window Id
