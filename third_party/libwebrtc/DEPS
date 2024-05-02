@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'b9338390dfcef481083d44d44c243c0c73196342',
+  'chromium_revision': '247e4de55550191706972861e586831a0d94d524',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -25,7 +25,7 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/core/',
-  'fuchsia_version': 'version:18.20240227.3.1',
+  'fuchsia_version': 'version:19.20240305.3.1',
   # By default, download the fuchsia images from the fuchsia GCS bucket.
   'fuchsia_images_bucket': 'fuchsia',
   'checkout_fuchsia': False,
@@ -40,7 +40,7 @@ vars = {
   # RBE instance to use for running remote builds
   'rbe_instance': 'projects/rbe-webrtc-developer/instances/default_instance',
   # reclient CIPD package version
-  'reclient_version': 're_client_version:0.132.0.1a8ff94-gomaip',
+  'reclient_version': 're_client_version:0.134.1.2c9285b-gomaip',
 
   # ninja CIPD package version
   # https://chrome-infra-packages.appspot.com/p/infra/3pp/tools/ninja
@@ -50,9 +50,9 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@57610ea6da3b24ad27a3006c5e6387fb1c9bf844',
+    'https://chromium.googlesource.com/chromium/src/base@4940a9ca2de61ea57704e7be6d466716988ce8ea',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@d48ea92a42e6227f2da4679038a27336ebdad079',
+    'https://chromium.googlesource.com/chromium/src/build@8a71ad60d1f8756faa424639cb99258d9ca377f2',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@9491ff1efcb98797b3989a454c3bb721272689e5',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -61,19 +61,19 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@e1f09315eec0b0c8abaa51a3050979b5f392f9cd',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@f7efd98ba0744796f765428a5822b4115c70623e',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@1ada31861fb107f9644375465da36468d8039445',
+    'https://chromium.googlesource.com/chromium/src/testing@b28e585180f9bed031eb0fbf3f893e5c2fd4c64d',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@3db9b0ba6dd6e1e410953e6ffb5c7cb01a45fe6d',
+    'https://chromium.googlesource.com/chromium/src/third_party@b23679094f119409e6edcba38f058fcb55920417',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-${{arch}}',
-        'version': 'git_revision:88e8054aff7bd0cb2295c7d9361d2be0b7355f27',
+        'version': 'git_revision:59c4bb920542ee903ee1df39097ae024e2e8226f',
       }
     ],
     'dep_type': 'cipd',
@@ -83,7 +83,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:88e8054aff7bd0cb2295c7d9361d2be0b7355f27',
+        'version': 'git_revision:59c4bb920542ee903ee1df39097ae024e2e8226f',
       }
     ],
     'dep_type': 'cipd',
@@ -93,7 +93,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:88e8054aff7bd0cb2295c7d9361d2be0b7355f27',
+        'version': 'git_revision:59c4bb920542ee903ee1df39097ae024e2e8226f',
       }
     ],
     'dep_type': 'cipd',
@@ -357,17 +357,6 @@ deps = {
   'src/tools':
     'https://chromium.googlesource.com/chromium/src/tools@fd6f55bb241c7f327a89808e0f00f1f6defc7fa7',
 
-  'src/third_party/accessibility_test_framework': {
-      'packages': [
-          {
-              'package': 'chromium/third_party/accessibility-test-framework',
-              'version': 'b5ec1e56e58e56bc1a0c77d43111c37f9b512c8a',
-          },
-      ],
-      'condition': 'checkout_android',
-      'dep_type': 'cipd',
-  },
-
   'src/third_party/espresso': {
       'packages': [
           {
@@ -416,7 +405,7 @@ deps = {
       'packages': [
           {
                'package': 'chromium/third_party/android_build_tools/manifest_merger',
-               'version': 'bmxKmBbioYv3d9nmRIo_xYGXwobb91K5RM7xU0RUQu4C',
+               'version': 'F0PdwwAdegLPfHzchRQ5Ec8_64ioPvucBKmei_kTraYC',
           },
       ],
       'condition': 'checkout_android',
@@ -893,7 +882,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_apps_common_testing_accessibility_framework_accessibility_test_framework',
-              'version': 'version:2@4.1.0.cr1',
+              'version': 'version:2@4.0.0.cr1',
           },
       ],
       'condition': 'checkout_android',
