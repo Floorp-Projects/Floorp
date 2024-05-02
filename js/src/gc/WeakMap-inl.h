@@ -402,7 +402,8 @@ void WeakMap<K, V>::checkAfterMovingGC() const {
     gc::Cell* value = gc::ToMarkable(r.front().value());
     CheckGCThingAfterMovingGC(key);
     if (!allowKeysInOtherZones()) {
-      MOZ_RELEASE_ASSERT(key->zone() == zone() || key->zone()->isAtomsZone());
+      Zone* keyZone = key->zoneFromAnyThread();
+      MOZ_RELEASE_ASSERT(keyZone == zone() || keyZone->isAtomsZone());
     }
     CheckGCThingAfterMovingGC(value, zone());
     auto ptr = lookupUnbarriered(r.front().key());
