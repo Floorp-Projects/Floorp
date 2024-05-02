@@ -1,29 +1,146 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Fri, 8 Apr 2022 11:36:36 -0500
-Subject: Bug 1766646 - (fix-b556b08668) avoid InlinedVector method that can
- throw exception
+Date: Mon, 4 Apr 2022 12:25:26 -0500
+Subject: Bug 1766646 - (fix) breakout Call::Stats and SharedModuleThread into
+ seperate files
 
 ---
- api/video_codecs/video_encoder.cc | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ call/BUILD.gn            |  6 ++++++
+ call/call.cc             | 13 -------------
+ call/call.h              | 12 ++----------
+ call/call_basic_stats.cc | 20 ++++++++++++++++++++
+ call/call_basic_stats.h  | 21 +++++++++++++++++++++
+ 5 files changed, 49 insertions(+), 23 deletions(-)
+ create mode 100644 call/call_basic_stats.cc
+ create mode 100644 call/call_basic_stats.h
 
-diff --git a/api/video_codecs/video_encoder.cc b/api/video_codecs/video_encoder.cc
-index b0fe078b37..d2de985d5c 100644
---- a/api/video_codecs/video_encoder.cc
-+++ b/api/video_codecs/video_encoder.cc
-@@ -180,7 +180,15 @@ std::string VideoEncoder::EncoderInfo::ToString() const {
-   for (size_t i = 0; i < preferred_pixel_formats.size(); ++i) {
-     if (i > 0)
-       oss << ", ";
-+#if defined(WEBRTC_MOZILLA_BUILD)
-+    // This could assert, as opposed to throw using the form in the
-+    // else, but since we're in a for loop that uses .size() we can
-+    // be fairly sure that this is safe without doing a further
-+    // check to make sure 'i' is in-range.
-+    oss << VideoFrameBufferTypeToString(preferred_pixel_formats[i]);
-+#else
-     oss << VideoFrameBufferTypeToString(preferred_pixel_formats.at(i));
-+#endif
-   }
-   oss << "]";
-   if (is_qp_trusted.has_value()) {
+diff --git a/call/BUILD.gn b/call/BUILD.gn
+index a9d69b93ef..6cf8891e16 100644
+--- a/call/BUILD.gn
++++ b/call/BUILD.gn
+@@ -33,6 +33,12 @@ rtc_library("call_interfaces") {
+     "syncable.cc",
+     "syncable.h",
+   ]
++  if (build_with_mozilla) {
++    sources += [
++      "call_basic_stats.cc",
++      "call_basic_stats.h",
++    ]
++  }
+ 
+   deps = [
+     ":audio_sender_interface",
+diff --git a/call/call.cc b/call/call.cc
+index cca344a5a8..1e76571bfe 100644
+--- a/call/call.cc
++++ b/call/call.cc
+@@ -454,19 +454,6 @@ class Call final : public webrtc::Call,
+ };
+ }  // namespace internal
+ 
+-std::string Call::Stats::ToString(int64_t time_ms) const {
+-  char buf[1024];
+-  rtc::SimpleStringBuilder ss(buf);
+-  ss << "Call stats: " << time_ms << ", {";
+-  ss << "send_bw_bps: " << send_bandwidth_bps << ", ";
+-  ss << "recv_bw_bps: " << recv_bandwidth_bps << ", ";
+-  ss << "max_pad_bps: " << max_padding_bitrate_bps << ", ";
+-  ss << "pacer_delay_ms: " << pacer_delay_ms << ", ";
+-  ss << "rtt_ms: " << rtt_ms;
+-  ss << '}';
+-  return ss.str();
+-}
+-
+ std::unique_ptr<Call> Call::Create(const CallConfig& config) {
+   std::unique_ptr<RtpTransportControllerSendInterface> transport_send;
+   if (config.rtp_transport_controller_send_factory != nullptr) {
+diff --git a/call/call.h b/call/call.h
+index a680335192..e7d37c0abd 100644
+--- a/call/call.h
++++ b/call/call.h
+@@ -21,6 +21,7 @@
+ #include "api/task_queue/task_queue_base.h"
+ #include "call/audio_receive_stream.h"
+ #include "call/audio_send_stream.h"
++#include "call/call_basic_stats.h"
+ #include "call/call_config.h"
+ #include "call/flexfec_receive_stream.h"
+ #include "call/packet_receiver.h"
+@@ -29,7 +30,6 @@
+ #include "rtc_base/copy_on_write_buffer.h"
+ #include "rtc_base/network/sent_packet.h"
+ #include "rtc_base/network_route.h"
+-#include "rtc_base/ref_count.h"
+ 
+ namespace webrtc {
+ 
+@@ -45,15 +45,7 @@ namespace webrtc {
+ 
+ class Call {
+  public:
+-  struct Stats {
+-    std::string ToString(int64_t time_ms) const;
+-
+-    int send_bandwidth_bps = 0;       // Estimated available send bandwidth.
+-    int max_padding_bitrate_bps = 0;  // Cumulative configured max padding.
+-    int recv_bandwidth_bps = 0;       // Estimated available receive bandwidth.
+-    int64_t pacer_delay_ms = 0;
+-    int64_t rtt_ms = -1;
+-  };
++  using Stats = CallBasicStats;
+ 
+   static std::unique_ptr<Call> Create(const CallConfig& config);
+ 
+diff --git a/call/call_basic_stats.cc b/call/call_basic_stats.cc
+new file mode 100644
+index 0000000000..74333a663b
+--- /dev/null
++++ b/call/call_basic_stats.cc
+@@ -0,0 +1,20 @@
++#include "call/call_basic_stats.h"
++
++#include "rtc_base/strings/string_builder.h"
++
++namespace webrtc {
++
++std::string CallBasicStats::ToString(int64_t time_ms) const {
++  char buf[1024];
++  rtc::SimpleStringBuilder ss(buf);
++  ss << "Call stats: " << time_ms << ", {";
++  ss << "send_bw_bps: " << send_bandwidth_bps << ", ";
++  ss << "recv_bw_bps: " << recv_bandwidth_bps << ", ";
++  ss << "max_pad_bps: " << max_padding_bitrate_bps << ", ";
++  ss << "pacer_delay_ms: " << pacer_delay_ms << ", ";
++  ss << "rtt_ms: " << rtt_ms;
++  ss << '}';
++  return ss.str();
++}
++
++}  // namespace webrtc
+diff --git a/call/call_basic_stats.h b/call/call_basic_stats.h
+new file mode 100644
+index 0000000000..98febe9405
+--- /dev/null
++++ b/call/call_basic_stats.h
+@@ -0,0 +1,21 @@
++#ifndef CALL_CALL_BASIC_STATS_H_
++#define CALL_CALL_BASIC_STATS_H_
++
++#include <string>
++
++namespace webrtc {
++
++// named to avoid conflicts with video/call_stats.h
++struct CallBasicStats {
++  std::string ToString(int64_t time_ms) const;
++
++  int send_bandwidth_bps = 0;       // Estimated available send bandwidth.
++  int max_padding_bitrate_bps = 0;  // Cumulative configured max padding.
++  int recv_bandwidth_bps = 0;       // Estimated available receive bandwidth.
++  int64_t pacer_delay_ms = 0;
++  int64_t rtt_ms = -1;
++};
++
++}  // namespace webrtc
++
++#endif  // CALL_CALL_BASIC_STATS_H_

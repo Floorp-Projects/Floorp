@@ -1,44 +1,34 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Fri, 29 Mar 2019 18:43:00 +0000
-Subject: Bug 1539220 - Prefer non-RGB24 capabilities when available;
- r=pehrsons
+Date: Thu, 31 Jan 2019 15:37:00 -0500
+Subject: Bug 1524208 - Calculate stride based upon target_width in
+ video_capture_impl.cc; r=pehrsons
 
-We've hit a number of problems with handling of RGB24 video capture on
-Windows. This adds a check that will ignore any RGB24 capture capabilities
-when determining a best match if there are other capabilities available to
-workaround the problems.
-
-Differential Revision: https://phabricator.services.mozilla.com/D25449
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c12307f3817bec87712ab5930493c3135c76b0a0
+Differential Revision: https://phabricator.services.mozilla.com/D18270
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/51d12094d825c4c4467cb132d03d4f3cad4b1b82
 ---
- modules/video_capture/device_info_impl.cc | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ modules/video_capture/video_capture_impl.cc | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
-index 7cccdb51a7..2a6afb3147 100644
---- a/modules/video_capture/device_info_impl.cc
-+++ b/modules/video_capture/device_info_impl.cc
-@@ -100,10 +100,23 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
-   const int32_t numberOfCapabilies =
-       static_cast<int32_t>(_captureCapabilities.size());
+diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
+index afd6ba4d0a..1a12020b64 100644
+--- a/modules/video_capture/video_capture_impl.cc
++++ b/modules/video_capture/video_capture_impl.cc
+@@ -180,8 +180,6 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+     }
+   }
  
-+  bool hasNonRGB24Capability = false;
-   for (int32_t tmp = 0; tmp < numberOfCapabilies;
-        ++tmp)  // Loop through all capabilities
-   {
-     VideoCaptureCapability& capability = _captureCapabilities[tmp];
-+    if (capability.videoType != VideoType::kRGB24) {
-+      hasNonRGB24Capability = true;
-+    }
-+  }
+-  int stride_y = width;
+-  int stride_uv = (width + 1) / 2;
+   int target_width = width;
+   int target_height = abs(height);
+ 
+@@ -194,6 +192,9 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+     }
+   }
+ 
++  int stride_y = target_width;
++  int stride_uv = (target_width + 1) / 2;
 +
-+  for (int32_t tmp = 0; tmp < numberOfCapabilies;
-+       ++tmp)  // Loop through all capabilities
-+  {
-+    VideoCaptureCapability& capability = _captureCapabilities[tmp];
-+    if (hasNonRGB24Capability && capability.videoType == VideoType::kRGB24) {
-+      continue;
-+    }
- 
-     const int32_t diffWidth = capability.width - requested.width;
-     const int32_t diffHeight = capability.height - requested.height;
+   // Setting absolute height (in case it was negative).
+   // In Windows, the image starts bottom left, instead of top left.
+   // Setting a negative source height, inverts the image (within LibYuv).

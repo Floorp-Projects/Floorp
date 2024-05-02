@@ -1,29 +1,57 @@
-From: Jan-Ivar Bruaroey <jib@mozilla.com>
-Date: Wed, 28 Jun 2023 20:45:00 -0400
-Subject: Bug 1839451 - (fix-0f43da2248) Keep mozilla's
- RTCPReceiver::RemoteRTCPSenderInfo function working.
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Tue, 6 Jun 2023 16:37:00 -0700
+Subject: Bug 1833237 - (fix-f0be3bee1f) remove reference to
+ portal:pipewire_base;r?pehrsons
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/154c9cdb386d0f50c5e1549270e1af6ab4969602
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8ff886a4d366b4be35b329d1ef733a6df542067c
 ---
- modules/rtp_rtcp/source/rtcp_receiver.cc | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ modules/video_capture/BUILD.gn                      | 4 ++++
+ modules/video_capture/linux/device_info_pipewire.cc | 4 ++--
+ modules/video_capture/linux/device_info_pipewire.h  | 3 ++-
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 30cc821299..d36feae260 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.cc
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -367,10 +367,10 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
-                                         int64_t* ntp_timestamp_ms,
-                                         int64_t* remote_ntp_timestamp_ms) const {
-   MutexLock lock(&rtcp_receiver_lock_);
--  *packet_count = remote_sender_packet_count_;
--  *octet_count = remote_sender_octet_count_;
--  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
--  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
-+  *packet_count = remote_sender_.packets_sent;
-+  *octet_count = remote_sender_.bytes_sent;
-+  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
-+  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
- }
+diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
+index 58fdf8957b..d500a92c89 100644
+--- a/modules/video_capture/BUILD.gn
++++ b/modules/video_capture/BUILD.gn
+@@ -104,6 +104,10 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+           "../../media:rtc_media_base",
+           "../portal",
+         ]
++        if (build_with_mozilla) {
++          configs -= [ "../portal:pipewire_base" ]
++          public_deps = [ "//third_party/pipewire" ]
++        }
+       }
+     }
+     if (is_win) {
+diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
+index b608648194..ef1cf67d54 100644
+--- a/modules/video_capture/linux/device_info_pipewire.cc
++++ b/modules/video_capture/linux/device_info_pipewire.cc
+@@ -49,9 +49,9 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
+                                           char* deviceUniqueIdUTF8,
+                                           uint32_t deviceUniqueIdUTF8Length,
+                                           char* productUniqueIdUTF8,
+-                                          uint32_t productUniqueIdUTF8Length) {
++                                          uint32_t productUniqueIdUTF8Length,
++                                          pid_t* pid) {
+   RTC_CHECK(pipewire_session_);
+-
+   if (deviceNumber >= NumberOfDevices())
+     return -1;
  
- std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
+diff --git a/modules/video_capture/linux/device_info_pipewire.h b/modules/video_capture/linux/device_info_pipewire.h
+index 4da0c7a90b..8a33d75892 100644
+--- a/modules/video_capture/linux/device_info_pipewire.h
++++ b/modules/video_capture/linux/device_info_pipewire.h
+@@ -29,7 +29,8 @@ class DeviceInfoPipeWire : public DeviceInfoImpl {
+                         char* deviceUniqueIdUTF8,
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8 = nullptr,
+-                        uint32_t productUniqueIdUTF8Length = 0) override;
++                        uint32_t productUniqueIdUTF8Length = 0,
++                        pid_t* pid = 0) override;
+   /*
+    * Fills the membervariable _captureCapabilities with capabilites for the
+    * given device name.
