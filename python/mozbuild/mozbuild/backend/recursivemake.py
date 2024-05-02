@@ -1366,10 +1366,8 @@ class RecursiveMakeBackend(MakeBackend):
         backend_file.write_once("LIBRARY_NAME := %s\n" % libdef.basename)
         backend_file.write("FORCE_SHARED_LIB := 1\n")
         backend_file.write("IMPORT_LIBRARY := %s\n" % libdef.import_name)
-        backend_file.write(
-            "SHARED_LIBRARY := %s\n"
-            % self._pretty_path(libdef.output_path, backend_file)
-        )
+        shared_lib = self._pretty_path(libdef.output_path, backend_file)
+        backend_file.write("SHARED_LIBRARY := %s\n" % shared_lib)
         if libdef.soname:
             backend_file.write("DSO_SONAME := %s\n" % libdef.soname)
         if libdef.symbols_file:
@@ -1378,7 +1376,7 @@ class RecursiveMakeBackend(MakeBackend):
         if not libdef.cxx_link:
             backend_file.write("LIB_IS_C_ONLY := 1\n")
         if libdef.output_category:
-            self._process_non_default_target(libdef, libdef.lib_name, backend_file)
+            self._process_non_default_target(libdef, shared_lib, backend_file)
 
     def _process_static_library(self, libdef, backend_file):
         backend_file.write_once("LIBRARY_NAME := %s\n" % libdef.basename)
