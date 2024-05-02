@@ -48,7 +48,6 @@ li:not(:last-of-type) {
 }
 
 h1 {
-  margin: 0;
   padding: 0;
   margin: var(--moz-vertical-spacing) 0;
   color: var(--header-color);
