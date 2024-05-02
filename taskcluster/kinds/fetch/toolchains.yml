@@ -674,4 +674,4 @@ mozilla-pdf.js:
     fetch:
         type: git
         repo: https://github.com/mozilla/pdf.js
-        revision: d64f334f98d4b7f1c2e09a731a63b68629c946f9
+        revision: 6c05f8b3818cb057f5224452d1c53b948c3fcceb
