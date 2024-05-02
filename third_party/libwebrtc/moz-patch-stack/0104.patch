@@ -1,39 +1,31 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 Apr 2024 21:54:00 +0000
-Subject: Bug 1888181 - (fix-52fec7d3) Limit scope of race checker in
- VideoCaptureModuleV4L2::StartCapture. r=mjf
+From: Randell Jesup <rjesup@mozilla.com>
+Date: Wed, 17 Apr 2024 21:10:00 +0000
+Subject: Bug 1892045: Quiet a thread-safety warning by taking a mutex in v4l2
+ capture r=webrtc-reviewers,pehrsons
 
-TSAN detects a race between destroying the scoped race checker in StartCapture
-and creating the scoped race checker in CaptureProcess, because once the capture
-thread has been created (and given its run function) there is no synchronization
-before the run function starts to run.
+Just to make the analyzer happy, no risk here
 
-This patch avoids the race by destroying the StartCapture scoped race checker
-before creating the capture thread.
-
-Differential Revision: https://phabricator.services.mozilla.com/D207203
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b046a1446cee5ab485d4868b3ca9784b16b2d02f
+Differential Revision: https://phabricator.services.mozilla.com/D207758
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0b54a6f17243e15da4609bc82afc92afcc4ac6de
 ---
- modules/video_capture/linux/video_capture_v4l2.cc | 2 ++
- 1 file changed, 2 insertions(+)
+ modules/video_capture/linux/video_capture_v4l2.cc | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index 6d8a5e463f..db2450a2c7 100644
+index db2450a2c7..e3bdcd5953 100644
 --- a/modules/video_capture/linux/video_capture_v4l2.cc
 +++ b/modules/video_capture/linux/video_capture_v4l2.cc
-@@ -129,6 +129,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
-     }
-   }
- 
-+  {
-   // We don't want members above to be guarded by capture_checker_ as
-   // it's meant to be for members that are accessed on the API thread
-   // only when we are not capturing. The code above can be called many
-@@ -298,6 +299,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
-   _requestedCapability = capability;
-   _captureStarted = true;
-   _streaming = true;
-+  }
+@@ -303,7 +303,12 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
  
    // start capture thread;
    if (_captureThread.empty()) {
+-    quit_ = false;
++    {
++      // Probably can't be accessed from another thread with
++      // _captureThread empty, but the analyzer doesn't know this
++      MutexLock lock(&capture_lock_);
++      quit_ = false;
++    }
+     _captureThread = rtc::PlatformThread::SpawnJoinable(
+         [self = scoped_refptr(this)] {
+           while (self->CaptureProcess()) {

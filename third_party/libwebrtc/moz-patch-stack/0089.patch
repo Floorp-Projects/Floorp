@@ -1,47 +1,56 @@
-From: stransky <stransky@redhat.com>
-Date: Tue, 29 Aug 2023 12:43:00 +0000
-Subject: Bug 1821629 [Pipewire/DMABuf] Don't create dmabuf backend if it's
- disabled r=ng,webrtc-reviewers
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 28 Sep 2023 14:12:00 +0000
+Subject: Bug 1832465 - remove libXtst usage from libwebrtc.
+ r=ng,webrtc-reviewers
 
-Depends on D172224
-
-Differential Revision: https://phabricator.services.mozilla.com/D172229
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/237d19fe96dd7d25b6a817415ee4e6854678d648
+Differential Revision: https://phabricator.services.mozilla.com/D189386
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0ec1b33b95dbb2d39355f28b2812fe25b4ad9f20
 ---
- .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ modules/desktop_capture/BUILD.gn                      | 3 +++
+ modules/desktop_capture/linux/x11/shared_x_display.cc | 4 ++++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 1065adbc60..473f913466 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -391,7 +391,9 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
-     RTC_LOG(LS_ERROR) << "Unable to open PipeWire library";
-     return false;
-   }
--  egl_dmabuf_ = std::make_unique<EglDmaBuf>();
-+  if (mozilla::gfx::IsDMABufEnabled()) {
-+    egl_dmabuf_ = std::make_unique<EglDmaBuf>();
-+  }
- 
-   pw_stream_node_id_ = stream_node_id;
- 
-@@ -480,7 +482,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
-     for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
-                             SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
-       // Modifiers can be used with PipeWire >= 0.3.33
--      if (has_required_pw_client_version && has_required_pw_server_version) {
-+      if (egl_dmabuf_ &&
-+          has_required_pw_client_version && has_required_pw_server_version) {
-         modifiers_ = egl_dmabuf_->QueryDmaBufModifiers(format);
- 
-         if (!modifiers_.empty()) {
-@@ -899,7 +902,7 @@ bool SharedScreenCastStreamPrivate::ProcessDMABuffer(
- 
-   const uint n_planes = spa_buffer->n_datas;
- 
--  if (!n_planes) {
-+  if (!n_planes || !egl_dmabuf_) {
-     return false;
+diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
+index dcc1b3c6ac..0634e0e9c4 100644
+--- a/modules/desktop_capture/BUILD.gn
++++ b/modules/desktop_capture/BUILD.gn
+@@ -384,6 +384,9 @@ rtc_library("desktop_capture") {
+       "Xrandr",
+       "Xtst",
+     ]
++    if (build_with_mozilla) {
++      libs -= [ "Xtst" ]
++    }
    }
  
+   if (!is_win && !is_mac && !rtc_use_x11_extensions && !rtc_use_pipewire &&
+diff --git a/modules/desktop_capture/linux/x11/shared_x_display.cc b/modules/desktop_capture/linux/x11/shared_x_display.cc
+index d690b0e2ba..3f3617b074 100644
+--- a/modules/desktop_capture/linux/x11/shared_x_display.cc
++++ b/modules/desktop_capture/linux/x11/shared_x_display.cc
+@@ -11,7 +11,9 @@
+ #include "modules/desktop_capture/linux/x11/shared_x_display.h"
+ 
+ #include <X11/Xlib.h>
++#if !defined(WEBRTC_MOZILLA_BUILD)
+ #include <X11/extensions/XTest.h>
++#endif
+ 
+ #include <algorithm>
+ 
+@@ -95,6 +97,7 @@ void SharedXDisplay::ProcessPendingXEvents() {
+ }
+ 
+ void SharedXDisplay::IgnoreXServerGrabs() {
++#if !defined(WEBRTC_MOZILLA_BUILD)
+   int test_event_base = 0;
+   int test_error_base = 0;
+   int major = 0;
+@@ -103,6 +106,7 @@ void SharedXDisplay::IgnoreXServerGrabs() {
+                           &minor)) {
+     XTestGrabControl(display(), true);
+   }
++#endif
+ }
+ 
+ }  // namespace webrtc
