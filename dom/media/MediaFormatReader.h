@@ -430,6 +430,7 @@ class MediaFormatReader final
     Maybe<TimeStamp> mWaitingForDataStartTime;
     bool mWaitingForKey;
     bool mReceivedNewData;
+    UniquePtr<PerformanceRecorderMulti<PlaybackStage>> mDecodePerfRecorder;
 
     // Pending seek.
     MozPromiseRequestHolder<MediaTrackDemuxer::SeekPromise> mSeekRequest;
@@ -473,6 +474,9 @@ class MediaFormatReader final
       MOZ_RELEASE_ASSERT(mDrainState == DrainState::None);
       mDrainState = DrainState::DrainRequested;
     }
+
+    void StartRecordDecodingPerf(const TrackType aTrack,
+                                 const MediaRawData* aSample);
 
     // Track decoding error and fail when we hit the limit.
     uint32_t mNumOfConsecutiveDecodingError;
