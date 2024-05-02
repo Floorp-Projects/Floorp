@@ -39,29 +39,7 @@ var TEST_CASES = [
 
       return [imageData.data, imageDataSecond.data];
     },
-    isDataRandomized(name, data1, data2, isCompareOriginal) {
-      let diffCnt = countDifferencesInUint8Arrays(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-
-      // The Canvas randomization adds at most 512 bits noise to the image data.
-      // We compare the image data arrays to see if they are different and the
-      // difference is within the range.
-
-      // If we are compare two randomized arrays, the difference can be doubled.
-      let expected = isCompareOriginal
-        ? NUM_RANDOMIZED_CANVAS_BITS
-        : NUM_RANDOMIZED_CANVAS_BITS * 2;
-
-      // The number of difference bits should never bigger than the expected
-      // number. It could be zero if the randomization is disabled.
-      Assert.lessOrEqual(
-        diffCnt,
-        expected,
-        "The number of noise bits is expected."
-      );
-
-      return diffCnt <= expected && diffCnt > 0;
-    },
+    isDataRandomized: isDataRandomizedFuzzy,
   },
   {
     name: "CanvasRenderingContext2D.getImageData().",
@@ -88,29 +66,7 @@ var TEST_CASES = [
 
       return [imageData.data, imageDataSecond.data];
     },
-    isDataRandomized(name, data1, data2, isCompareOriginal) {
-      let diffCnt = countDifferencesInUint8Arrays(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-
-      // The Canvas randomization adds at most 512 bits noise to the image data.
-      // We compare the image data arrays to see if they are different and the
-      // difference is within the range.
-
-      // If we are compare two randomized arrays, the difference can be doubled.
-      let expected = isCompareOriginal
-        ? NUM_RANDOMIZED_CANVAS_BITS
-        : NUM_RANDOMIZED_CANVAS_BITS * 2;
-
-      // The number of difference bits should never bigger than the expected
-      // number. It could be zero if the randomization is disabled.
-      Assert.lessOrEqual(
-        diffCnt,
-        expected,
-        "The number of noise bits is expected."
-      );
-
-      return diffCnt <= expected && diffCnt > 0;
-    },
+    isDataRandomized: isDataRandomizedFuzzy,
   },
   {
     name: "HTMLCanvasElement.toDataURL() with a 2d context",
@@ -137,9 +93,7 @@ var TEST_CASES = [
 
       return [dataURL, dataURLSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      return data1 !== data2;
-    },
+    isDataRandomized: isDataRandomizedNotEqual,
   },
   {
     name: "HTMLCanvasElement.toDataURL() with a webgl context",
@@ -170,9 +124,7 @@ var TEST_CASES = [
 
       return [dataURL, dataURLSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      return data1 !== data2;
-    },
+    isDataRandomized: isDataRandomizedNotEqual,
   },
   {
     name: "HTMLCanvasElement.toDataURL() with a bitmaprenderer context",
@@ -208,9 +160,7 @@ var TEST_CASES = [
 
       return [dataURL, dataURLSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      return data1 !== data2;
-    },
+    isDataRandomized: isDataRandomizedNotEqual,
   },
   {
     name: "HTMLCanvasElement.toBlob() with a 2d context",
@@ -253,11 +203,7 @@ var TEST_CASES = [
 
       return [data, dataSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-      return diffCnt > 0;
-    },
+    isDataRandomized: isDataRandomizedGreaterThanZero,
   },
   {
     name: "HTMLCanvasElement.toBlob() with a webgl context",
@@ -298,11 +244,7 @@ var TEST_CASES = [
 
       return [data, data];
     },
-    isDataRandomized(name, data1, data2) {
-      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-      return diffCnt > 0;
-    },
+    isDataRandomized: isDataRandomizedGreaterThanZero,
   },
   {
     name: "HTMLCanvasElement.toBlob() with a bitmaprenderer context",
@@ -354,11 +296,7 @@ var TEST_CASES = [
 
       return [data, dataSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-      return diffCnt > 0;
-    },
+    isDataRandomized: isDataRandomizedGreaterThanZero,
   },
   {
     name: "OffscreenCanvas.convertToBlob() with a 2d context",
@@ -382,11 +320,7 @@ var TEST_CASES = [
 
       return [data, dataSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-      return diffCnt > 0;
-    },
+    isDataRandomized: isDataRandomizedGreaterThanZero,
   },
   {
     name: "OffscreenCanvas.convertToBlob() with a webgl context",
@@ -416,11 +350,7 @@ var TEST_CASES = [
 
       return [data, dataSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-      return diffCnt > 0;
-    },
+    isDataRandomized: isDataRandomizedGreaterThanZero,
   },
   {
     name: "OffscreenCanvas.convertToBlob() with a bitmaprenderer context",
@@ -450,11 +380,7 @@ var TEST_CASES = [
 
       return [data, dataSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-      return diffCnt > 0;
-    },
+    isDataRandomized: isDataRandomizedGreaterThanZero,
   },
   {
     name: "CanvasRenderingContext2D.getImageData() with a offscreen canvas",
@@ -477,29 +403,7 @@ var TEST_CASES = [
 
       return [imageData.data, imageDataSecond.data];
     },
-    isDataRandomized(name, data1, data2, isCompareOriginal) {
-      let diffCnt = countDifferencesInUint8Arrays(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-
-      // The Canvas randomization adds at most 512 bits noise to the image data.
-      // We compare the image data arrays to see if they are different and the
-      // difference is within the range.
-
-      // If we are compare two randomized arrays, the difference can be doubled.
-      let expected = isCompareOriginal
-        ? NUM_RANDOMIZED_CANVAS_BITS
-        : NUM_RANDOMIZED_CANVAS_BITS * 2;
-
-      // The number of difference bits should never bigger than the expected
-      // number. It could be zero if the randomization is disabled.
-      Assert.lessOrEqual(
-        diffCnt,
-        expected,
-        "The number of noise bits is expected."
-      );
-
-      return diffCnt <= expected && diffCnt > 0;
-    },
+    isDataRandomized: isDataRandomizedFuzzy,
   },
 ];
 
