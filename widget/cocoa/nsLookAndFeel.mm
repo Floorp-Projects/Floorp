@@ -630,10 +630,6 @@ void nsLookAndFeel::RecordAccessibilityTelemetry() {
                   object:nil
       suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
 
-  [MOZGlobalAppearance.sharedInstance addObserver:self
-                                       forKeyPath:@"effectiveAppearance"
-                                          options:0
-                                          context:nil];
   [NSApp addObserver:self
           forKeyPath:@"effectiveAppearance"
              options:0
