@@ -71,16 +71,22 @@ elif CONFIG['TARGET_CPU'] == 'arm':
         LOCAL_INCLUDES += [
             '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK'],
         ]
-elif CONFIG['TARGET_CPU'] == 'aarch64' and CONFIG['OS_TARGET'] == 'WINNT':
-    EXPORTS.vpx += files['WIN_AARCH64_EXPORTS']
-    SOURCES += files['WIN_AARCH64_SOURCES']
-    ASFLAGS += [ '-I%s/media/libvpx/config/win/aarch64/' % TOPSRCDIR ]
-    LOCAL_INCLUDES += [ '/media/libvpx/config/win/aarch64/' ]
 elif CONFIG['TARGET_CPU'] == 'aarch64':
-    EXPORTS.vpx += files['LINUX_ARM64_EXPORTS']
-    SOURCES += files['LINUX_ARM64_SOURCES']
-    ASFLAGS += [ '-I%s/media/libvpx/config/linux/arm64/' % TOPSRCDIR ]
-    LOCAL_INCLUDES += [ '/media/libvpx/config/linux/arm64/' ]
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        EXPORTS.vpx += files['WIN_AARCH64_EXPORTS']
+        SOURCES += files['WIN_AARCH64_SOURCES']
+        ASFLAGS += [ '-I%s/media/libvpx/config/win/aarch64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/win/aarch64/' ]
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        EXPORTS.vpx += files['MAC_ARM64_EXPORTS']
+        SOURCES += files['MAC_ARM64_SOURCES']
+        ASFLAGS += [ '-I%s/media/libvpx/config/mac/arm64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/mac/arm64/' ]
+    else: # Android, Linux, BSDs, etc.
+        EXPORTS.vpx += files['LINUX_ARM64_EXPORTS']
+        SOURCES += files['LINUX_ARM64_SOURCES']
+        ASFLAGS += [ '-I%s/media/libvpx/config/linux/arm64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libvpx/config/linux/arm64/' ]
 else:
     # Generic C-only configuration
     EXPORTS.vpx += files['GENERIC_EXPORTS']

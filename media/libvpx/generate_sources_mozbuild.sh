@@ -178,6 +178,7 @@ function gen_rtcd_header {
 # $1 - Header file directory.
 # $2 - Config command line.
 function gen_config_files {
+  mkdir -p $BASE_DIR/$LIBVPX_CONFIG_DIR/$1
   ./configure $2 --log=$BASE_DIR/$LIBVPX_CONFIG_DIR/$1/config.log > /dev/null
   echo "Log file: $BASE_DIR/$LIBVPX_CONFIG_DIR/$1/config.log"
 
@@ -211,8 +212,8 @@ all_platforms="--enable-external-build --disable-examples --disable-install-docs
 all_platforms="${all_platforms} --enable-multi-res-encoding --size-limit=8192x4608 --enable-pic"
 all_platforms="${all_platforms} --disable-avx512"
 x86_platforms="--enable-postproc --enable-vp9-postproc --as=yasm"
-arm_platforms="--enable-runtime-cpu-detect --enable-realtime-only"
-arm64_platforms="--enable-realtime-only"
+runtime_cpu_detect="--enable-runtime-cpu-detect"
+realtime_only="--enable-realtime-only"
 disable_sve="--disable-sve" # Bug 1885585, Bug 1889813
 
 gen_config_files linux/x64 "--target=x86_64-linux-gcc ${all_platforms} ${x86_platforms}"
@@ -222,9 +223,10 @@ gen_config_files mac/ia32 "--target=x86-darwin9-gcc ${all_platforms} ${x86_platf
 gen_config_files win/x64 "--target=x86_64-win64-vs15 ${all_platforms} ${x86_platforms}"
 gen_config_files win/ia32 "--target=x86-win32-gcc ${all_platforms} ${x86_platforms}"
 
-gen_config_files linux/arm "--target=armv7-linux-gcc ${all_platforms} ${arm_platforms}"
-gen_config_files linux/arm64 "--target=arm64-linux-gcc ${all_platforms} ${arm64_platforms} ${disable_sve}" # Bug 1889813
-gen_config_files win/aarch64 "--target=arm64-win64-vs15 ${all_platforms} ${arm64_platforms} ${disable_sve}" # Bug 1885585
+gen_config_files linux/arm "--target=armv7-linux-gcc ${all_platforms} ${runtime_cpu_detect} ${realtime_only}"
+gen_config_files linux/arm64 "--target=arm64-linux-gcc ${all_platforms} ${realtime_only} ${disable_sve}" # Bug 1889813
+gen_config_files mac/arm64 "--target=arm64-darwin-gcc ${all_platforms}"
+gen_config_files win/aarch64 "--target=arm64-win64-vs15 ${all_platforms} ${realtime_only} ${disable_sve}" # Bug 1885585
 
 gen_config_files generic "--target=generic-gnu ${all_platforms}"
 
@@ -247,6 +249,7 @@ gen_rtcd_header win/ia32 x86
 
 gen_rtcd_header linux/arm armv7
 gen_rtcd_header linux/arm64 arm64 $disable_sve # Bug 1889813
+gen_rtcd_header mac/arm64 arm64
 gen_rtcd_header win/aarch64 arm64 $disable_sve # Bug 1885585
 
 gen_rtcd_header generic generic
@@ -310,6 +313,12 @@ config=$(print_config linux/arm64)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
 convert_srcs_to_project_files libvpx_srcs.txt LINUX_ARM64 linux/arm64
+
+echo "Generate ARM64 source list on Mac"
+config=$(print_config mac/arm64)
+make_clean
+make libvpx_srcs.txt target=libs $config > /dev/null
+convert_srcs_to_project_files libvpx_srcs.txt MAC_ARM64 mac/arm64
 
 echo "Generate AARCH64 source list on Windows."
 config=$(print_config win/aarch64)
