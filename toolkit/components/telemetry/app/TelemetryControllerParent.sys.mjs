@@ -256,6 +256,15 @@ export var TelemetryController = Object.freeze({
   promiseInitialized() {
     return Impl.promiseInitialized();
   },
+
+  /**
+   * Allows to trigger TelemetryControllers delayed initialization now and waiting for its completion.
+   * The returned promise is guaranteed to resolve before TelemetryController is shutting down.
+   * @return {Promise} Resolved when delayed TelemetryController initialization completed.
+   */
+  ensureInitialized() {
+    return Impl.ensureInitialized();
+  },
 });
 
 var Impl = {
@@ -1156,6 +1165,18 @@ var Impl = {
    */
   promiseInitialized() {
     return this._delayedInitTaskDeferred.promise;
+  },
+
+  /**
+   * Allows to trigger TelemetryControllers delayed initialization now and waiting for its completion.
+   * This will complete before TelemetryController is shutting down.
+   * @return {Promise} Resolved when delayed TelemetryController initialization completed.
+   */
+  ensureInitialized() {
+    if (this._delayedInitTask) {
+      return this._delayedInitTask.finalize();
+    }
+    return Promise.resolve();
   },
 
   getCurrentPingData(aSubsession) {

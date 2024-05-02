@@ -352,6 +352,12 @@ var PingPicker = {
   },
 
   _updateCurrentPingData() {
+    TelemetryController.ensureInitialized().then(() =>
+      this._doUpdateCurrentPingData()
+    );
+  },
+
+  _doUpdateCurrentPingData() {
     const subsession = document.getElementById("show-subsession-data").checked;
     let ping = TelemetryController.getCurrentPingData(subsession);
     if (!ping) {
