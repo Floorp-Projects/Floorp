@@ -15,7 +15,7 @@ Services.scriptloader.loadSubScript(
 add_task(async function () {
   Services.prefs.setBoolPref("devtools.webconsole.filter.net", true);
 
-  const { monitor, toolbox } = await initNetMonitor(SIMPLE_URL, {
+  const { monitor, toolbox } = await initNetMonitor(HTTPS_SIMPLE_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -43,7 +43,7 @@ add_task(async function () {
   await onWebConsole;
 
   info("Wait for request");
-  await waitFor(() => findMessageByType(hud, SIMPLE_URL, ".network"));
+  await waitFor(() => findMessageByType(hud, HTTPS_SIMPLE_URL, ".network"));
 
   info("Switch back the the netmonitor");
   await monitor.toolbox.selectTool("netmonitor");
@@ -63,7 +63,9 @@ add_task(async function () {
 
   info("Wait for network request to show and that its disabled");
 
-  await waitFor(() => findMessageByType(hud, SIMPLE_URL, ".network.disabled"));
+  await waitFor(() =>
+    findMessageByType(hud, HTTPS_SIMPLE_URL, ".network.disabled")
+  );
 
   // Switch back to the netmonitor.
   await monitor.toolbox.selectTool("netmonitor");
