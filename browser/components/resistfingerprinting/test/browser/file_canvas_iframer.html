@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+<script src="shared_test_funcs.js"></script>
+<script>
+async function runTheTest(iframe_domain, cross_origin_domain) {
+  var child_reference;
+  let url = `https://${iframe_domain}/browser/browser/components/resistfingerprinting/test/browser/file_canvas_iframee.html?mode=`
+  let params = new URLSearchParams(document.location.search);
+
+  if (params.get("mode") == 'iframe') {
+    const iframes = document.querySelectorAll("iframe");
+    iframes[0].src = url + 'iframe';
+    child_reference = iframes[0].contentWindow;
+  } else if (params.get("mode") == "popup") {
+    let options = "";
+    if (params.get("submode") == "noopener") {
+      options = "noopener";
+    }
+    const popup = window.open(url + 'popup', '', options);
+    if (params.get("submode") == "noopener") {
+      return {};
+    }
+    child_reference = popup;
+  } else {
+    throw new Error("Unknown page mode specified");
+  }
+
+  await waitForMessage("ready", `https://${iframe_domain}`);
+
+  const promiseForRFPTest = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      if(event.origin != `https://${iframe_domain}`) {
+        throw new Error(`origin should be ${iframe_domain}`);
+      }
+      resolve(event.data);
+    }, { once: true });
+  });
+  child_reference.postMessage(["gimme", cross_origin_domain], "*");
+  var result = await promiseForRFPTest;
+
+  if (params.get("mode") == "popup") {
+    child_reference.close();
+  }
+
+  return result;
+}
+</script>
+</head>
+<body>
+<iframe width=100></iframe>
+</body>
+</html>

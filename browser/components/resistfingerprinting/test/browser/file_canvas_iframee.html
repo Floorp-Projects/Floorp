@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script>
+var parent_window;
+let params = new URLSearchParams(document.location.search);
+if (params.get("mode") == "popup") {
+  parent_window = window.opener;
+} else {
+  parent_window = window.parent;
+}
+
+window.onload = async () => {
+  parent_window.postMessage("ready", "*");
+}
+
+window.addEventListener("message", async function listener(event) {
+  if (event.data[0] == "gimme") {
+    let result = give_result();
+    parent_window.postMessage(result, "*")
+  }
+});
+
+function give_result() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 100;
+  canvas.height = 100;
+
+  const context = canvas.getContext("2d");
+
+  context.fillStyle = "#EE2222";
+  context.fillRect(0, 0, 100, 100);
+  context.fillStyle = "#2222EE";
+  context.fillRect(20, 20, 100, 100);
+
+  // Add the canvas element to the document
+  document.body.appendChild(canvas);
+
+  const imageData = context.getImageData(0, 0, 100, 100);
+
+  return imageData.data;
+}
+</script>
+<output id="result"></output>
