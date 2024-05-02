@@ -22,7 +22,6 @@ def add_common_config(config, tasks):
         fetches["toolchain"] = [
             "android-sdk-linux",
             "android-gradle-dependencies",
-            "android-gradle-python-envs",
             "linux64-jdk",
         ]
         fetches["build-fat-aar"] = [

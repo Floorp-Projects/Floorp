@@ -10,7 +10,7 @@ set -v
 
 # Package everything up.
 pushd $WORKSPACE
-mkdir -p android-gradle-dependencies /builds/worker/artifacts
+mkdir -p /builds/worker/artifacts
 
 # NEXUS_WORK is exported by `before.sh`.
 cp -R ${NEXUS_WORK}/storage/mozilla android-gradle-dependencies
