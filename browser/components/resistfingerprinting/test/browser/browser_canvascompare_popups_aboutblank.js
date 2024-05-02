@@ -1,9 +1,10 @@
 /**
- * This test compares canvas randomization on a parent and a popup, and ensures that the canvas randomization key
+ * This test compares canvas randomization on a parent and an about:blank popup, and ensures that the canvas randomization key
  * is inherited correctly.  (e.g. that the canvases have the same random value)
  *
- * It runs all the tests twice - once for when the popup is cross-domain, and once when it is same-domain
- * We DO NOT inherit a randomization key across cross-domain popups, but we do for same-domain
+ * It runs all the tests twice. Development showed that there were two different code paths that might get taken for
+ * about:blank popup creation depending on when in the page lifecycle the popup is created.  I don't understand why
+ * that is, but at time of writing, the subtle difference in the test will hit both code paths.
  *
  * Covers the following cases:
  *  - RFP/FPP is disabled entirely
@@ -154,12 +155,12 @@ add_setup(async function () {
 // The fourth, the maximum number of differences between the canvases of the parent and child
 const rfpFullyRandomized = [10000, 999999999, 20000, 999999999];
 const fppRandomizedSameDomain = [1, 260, 0, 0];
-const fppRandomizedCrossDomain = [1, 260, 2, 520];
 const noRandom = [0, 0, 0, 0];
 
-// Note that we will be doing two sets of tests - one where the popup is on a cross-domain
-// and one where it is on the same domain.  First, we do same domain
-let uri = `https://${IFRAME_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_canvascompare_iframer.html?mode=popup`;
+// As detailed in file_canvascompare_aboutblank_popupmaker.html - there is a difference in code
+// paths for propagating information via LoadInfo when the popup is opened during onLoad vs
+// later in the page.  The two modes switch between these situations.
+let uri = `https://${IFRAME_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_canvascompare_aboutblank_popupmaker.html?mode=addOnLoadCallback`;
 
 expectedResults = structuredClone(noRandom);
 add_task(
@@ -210,8 +211,8 @@ add_task(
   )
 );
 
-// Now, cross-domain.
-uri = `https://${FRAMER_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_canvascompare_iframer.html?mode=popup`;
+// Technically mode=addOnLoadCallback adds the one relevant callback; so mode=<anything else> will omit the callback and result in the other scenario
+uri = `https://${IFRAME_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_canvascompare_aboutblank_popupmaker.html?mode=skipOnLoadCallback`;
 
 expectedResults = structuredClone(noRandom);
 add_task(
@@ -229,13 +230,13 @@ add_task(
   simplePBMRFPTest.bind(null, uri, testCanvasRandomization, expectedResults)
 );
 
-expectedResults = structuredClone(fppRandomizedCrossDomain);
+expectedResults = structuredClone(fppRandomizedSameDomain);
 add_task(
   simpleFPPTest.bind(null, uri, testCanvasRandomization, expectedResults)
 );
 
 // Test a Private Window with FPP Enabled in PBM
-expectedResults = structuredClone(fppRandomizedCrossDomain);
+expectedResults = structuredClone(fppRandomizedSameDomain);
 add_task(
   simplePBMFPPTest.bind(null, uri, testCanvasRandomization, expectedResults)
 );
@@ -252,7 +253,7 @@ add_task(
 );
 
 // Test RFP Enabled in PBM and FPP enabled in Normal Browsing Mode, Protections Enabled
-expectedResults = structuredClone(fppRandomizedCrossDomain);
+expectedResults = structuredClone(fppRandomizedSameDomain);
 add_task(
   RFPPBMFPP_NormalMode_ProtectionsTest.bind(
     null,

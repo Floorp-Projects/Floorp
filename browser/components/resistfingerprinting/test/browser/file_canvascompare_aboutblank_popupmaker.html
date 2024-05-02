@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script src="shared_test_funcs.js"></script>
+<script>
+var popup = undefined;
+function createPopup() {
+  if(popup === undefined) {
+    let s = `
+      function give_result() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 100;
+        canvas.height = 100;
+
+        const context = canvas.getContext("2d");
+
+        context.fillStyle = "#EE2222";
+        context.fillRect(0, 0, 100, 100);
+        context.fillStyle = "#2222EE";
+        context.fillRect(20, 20, 100, 100);
+
+        // Add the canvas element to the document
+        document.body.appendChild(canvas);
+
+        const imageData = context.getImageData(0, 0, 100, 100);
+
+        return imageData.data;
+      }
+
+      window.addEventListener('message', async function listener(event) {
+        if (event.data[0] == 'popup_is_ready') {
+          window.opener.postMessage(["popup_ready"], "*");
+        } else if (event.data[0] == 'popup_request') {
+          window.opener.postMessage(['popup_response', give_result()], '*');
+          window.close();
+        }
+      });
+      setInterval(function() {
+        if(!window.opener || window.opener.closed) {
+          window.close();
+        }
+      }, 50);`;
+
+    popup = window.open("about:blank", "");
+    popup.eval(s);
+  }
+}
+
+/*
+ * Believe it or not, when the popup is created alters the code paths for
+ * how the RandomKey is populated on the CJS of the popup.  It's a pretty
+ * drastic change, and the two changes in the substative (non-test) patch
+ * of this bug are the two different locations. I'll also note that it took
+ * probably 20 hours or more of work to figure out the LoadInfo ctor one,
+ * so I want to have test coverage of both paths, even if I don't understand
+ * _why_ there are two paths.
+ */
+let params = new URLSearchParams(document.location.search);
+if (params.get("mode") == 'addOnLoadCallback') {
+  window.addEventListener("load", createPopup);
+}
+
+async function runTheTest(iframe_domain, cross_origin_domain) {
+  await new Promise(r => setTimeout(r, 2000));
+
+   if (document.readyState !== 'complete') {
+      createPopup();
+  } else if(popup === undefined) {
+      createPopup();
+  }
+
+  function give_result() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+
+    const context = canvas.getContext("2d");
+
+    context.fillStyle = "#EE2222";
+    context.fillRect(0, 0, 100, 100);
+    context.fillStyle = "#2222EE";
+    context.fillRect(20, 20, 100, 100);
+
+    // Add the canvas element to the document
+    document.body.appendChild(canvas);
+
+    const imageData = context.getImageData(0, 0, 100, 100);
+
+    return imageData.data;
+  }
+  let myResult = give_result();
+
+  popup.postMessage(["popup_is_ready", cross_origin_domain], "*");
+  await waitForMessage("popup_ready", `*`);
+
+  const promiseForRFPTest = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      resolve({mine: myResult, theirs: event.data[1]});
+    }, { once: true });
+  });
+
+  popup.postMessage(["popup_request", cross_origin_domain], "*");
+  var result = await promiseForRFPTest;
+
+  popup.close();
+
+  return result;
+}
+
+</script>
+<output id="result"></output>
