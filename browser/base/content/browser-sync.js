@@ -419,6 +419,7 @@ var gSync = {
         "browser/accounts.ftl",
         "browser/appmenu.ftl",
         "browser/sync.ftl",
+        "browser/syncedTabs.ftl",
       ],
       true
     ));
@@ -479,7 +480,7 @@ var gSync = {
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
-      "PXI_TOOLBAR_ENABLED",
+      "FXA_CTA_MENU_ENABLED",
       "identity.fxaccounts.toolbar.pxiToolbarEnabled"
     );
   },
@@ -583,7 +584,7 @@ var gSync = {
 
     // If the experiment is enabled, we'll need to update the panels
     // to show some different text to the user
-    if (this.PXI_TOOLBAR_ENABLED) {
+    if (this.FXA_CTA_MENU_ENABLED) {
       this.updateFxAPanel(UIState.get());
       this.updateCTAPanel();
     }
@@ -736,7 +737,6 @@ var gSync = {
     this.updateSyncButtonsTooltip(state);
     this.updateSyncStatus(state);
     this.updateFxAPanel(state);
-    this.updateCTAPanel(state);
     // Ensure we have something in the device list in the background.
     this.ensureFxaDevices();
   },
@@ -919,12 +919,20 @@ var gSync = {
     let fxaStatus = document.documentElement.getAttribute("fxastatus");
 
     if (fxaStatus == "not_configured") {
+      // sign in button in app (hamburger) menu
+      // should take you straight to fxa sign in page
+      if (anchor.id == "appMenu-fxa-label2") {
+        this.openFxAEmailFirstPageFromFxaMenu(anchor);
+        PanelUI.hide();
+        return;
+      }
+
       // If we're signed out but have the PXI pref enabled
       // we should show the PXI panel instead of taking the user
       // straight to FxA sign-in
-      if (this.PXI_TOOLBAR_ENABLED) {
+      if (this.FXA_CTA_MENU_ENABLED) {
         this.updateFxAPanel(UIState.get());
-        this.updateCTAPanel();
+        this.updateCTAPanel(anchor);
         PanelUI.showSubView("PanelUI-fxa", anchor, aEvent);
       } else if (anchor == document.getElementById("fxa-toolbar-menu-button")) {
         // The fxa toolbar button doesn't have much context before the user
@@ -933,20 +941,13 @@ var gSync = {
         this.emitFxaToolbarTelemetry("toolbar_icon", anchor);
         openTrustedLinkIn("about:preferences#sync", "tab");
         PanelUI.hide();
-      } else {
-        let panel =
-          anchor.id == "appMenu-fxa-label2"
-            ? PanelMultiView.getViewNode(document, "PanelUI-fxa")
-            : undefined;
-        this.openFxAEmailFirstPageFromFxaMenu(panel);
-        PanelUI.hide();
       }
       return;
     }
     // If the user is signed in and we have the PXI pref enabled then add
     // the pxi panel to the existing toolbar
-    if (this.PXI_TOOLBAR_ENABLED) {
-      this.updateCTAPanel();
+    if (this.FXA_CTA_MENU_ENABLED) {
+      this.updateCTAPanel(anchor);
     }
 
     if (!gFxaToolbarAccessed) {
@@ -1021,21 +1022,16 @@ var gSync = {
     fxaMenuAccountButtonEl.removeAttribute("closemenu");
     syncSetupButtonEl.removeAttribute("hidden");
 
-    let headerTitleL10nId = this.PXI_TOOLBAR_ENABLED
-      ? "appmenuitem-sign-in-account"
-      : "appmenuitem-fxa-sign-in";
+    let headerTitleL10nId = this.FXA_CTA_MENU_ENABLED
+      ? "synced-tabs-fxa-sign-in"
+      : "appmenuitem-sign-in-account";
     let headerDescription;
     if (state.status === UIState.STATUS_NOT_CONFIGURED) {
       mainWindowEl.style.removeProperty("--avatar-image-url");
-      headerDescription = this.fluentStrings.formatValueSync(
-        "appmenu-fxa-signed-in-label"
-      );
-      // Signed out, expeirment enabled is the only state we want to hide the
-      // header description, so we make it empty and check for that when setting
-      // the value
-      if (this.PXI_TOOLBAR_ENABLED) {
-        headerDescription = "";
-      }
+      const headerDescString = this.FXA_CTA_MENU_ENABLED
+        ? "fxa-menu-sync-description"
+        : "appmenu-fxa-signed-in-label";
+      headerDescription = this.fluentStrings.formatValueSync(headerDescString);
     } else if (state.status === UIState.STATUS_LOGIN_FAILED) {
       stateValue = "login-failed";
       headerTitleL10nId = "account-disconnected2";
@@ -2141,26 +2137,23 @@ var gSync = {
 
   // This should only be shown if we have enabled the pxiPanel via
   // an experiment or explicitly through prefs
-  updateCTAPanel() {
+  updateCTAPanel(anchor) {
     const mainPanelEl = PanelMultiView.getViewNode(
       document,
       "PanelUI-fxa-cta-menu"
     );
 
-    const syncCtaEl = PanelMultiView.getViewNode(
-      document,
-      "PanelUI-fxa-menu-sync-button"
-    );
-    // If we're not in the experiment then we do not enable this at all
-    if (!this.PXI_TOOLBAR_ENABLED) {
+    // If we're not in the experiment or in the app menu (hamburger)
+    // do not show this CTA panel
+    if (
+      !this.FXA_CTA_MENU_ENABLED ||
+      (anchor && anchor.id === "appMenu-fxa-label2")
+    ) {
       // If we've previously shown this but got disabled
       // we should ensure we hide the panel
       mainPanelEl.hidden = true;
       return;
     }
-
-    // If we're already signed in an syncing, we shouldn't show the sync CTA
-    syncCtaEl.hidden = this.isSignedIn;
 
     // Monitor checks
     let monitorPanelEl = PanelMultiView.getViewNode(
