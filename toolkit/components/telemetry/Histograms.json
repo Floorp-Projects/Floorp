@@ -16070,68 +16070,6 @@
     "description": "The amount of time it takes for a PageAction popup to open, keyed by addon id.",
     "keyed": true
   },
-  "WEBEXT_STORAGE_LOCAL_GET_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
-    "bug_numbers": [
-      1371398, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
-      1811155, 1861303
-    ],
-    "expires_in_version": "132",
-    "kind": "exponential",
-    "releaseChannelCollection": "opt-out",
-    "high": 50000,
-    "n_buckets": 100,
-    "description": "The amount of time it takes to perform a get via storage.local using the JSONFile backend."
-  },
-  "WEBEXT_STORAGE_LOCAL_GET_MS_BY_ADDONID": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
-    "bug_numbers": [
-      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
-      1811155, 1861303
-    ],
-    "expires_in_version": "132",
-    "kind": "exponential",
-    "releaseChannelCollection": "opt-out",
-    "high": 50000,
-    "n_buckets": 100,
-    "description": "The amount of time it takes to perform a get via storage.local using the JSONFile backend, keyed by addon id.",
-    "keyed": true
-  },
-  "WEBEXT_STORAGE_LOCAL_SET_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
-    "bug_numbers": [
-      1371398, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
-      1811155, 1861303
-    ],
-    "expires_in_version": "132",
-    "kind": "exponential",
-    "releaseChannelCollection": "opt-out",
-    "high": 50000,
-    "n_buckets": 100,
-    "description": "The amount of time it takes to perform a set via storage.local using the JSONFile backend."
-  },
-  "WEBEXT_STORAGE_LOCAL_SET_MS_BY_ADDONID": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
-    "bug_numbers": [
-      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
-      1811155, 1861303
-    ],
-    "expires_in_version": "132",
-    "kind": "exponential",
-    "releaseChannelCollection": "opt-out",
-    "high": 50000,
-    "n_buckets": 100,
-    "description": "The amount of time it takes to perform a set via storage.local using the JSONFile backend, keyed by addon id.",
-    "keyed": true
-  },
   "WEBEXT_STORAGE_LOCAL_IDB_GET_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

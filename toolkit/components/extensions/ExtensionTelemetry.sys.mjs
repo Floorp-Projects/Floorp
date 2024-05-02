@@ -18,8 +18,6 @@ const HISTOGRAMS_IDS = {
   eventPageIdleResult: "WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT",
   extensionStartup: "WEBEXT_EXTENSION_STARTUP_MS",
   pageActionPopupOpen: "WEBEXT_PAGEACTION_POPUP_OPEN_MS",
-  storageLocalGetJson: "WEBEXT_STORAGE_LOCAL_GET_MS",
-  storageLocalSetJson: "WEBEXT_STORAGE_LOCAL_SET_MS",
   storageLocalGetIdb: "WEBEXT_STORAGE_LOCAL_IDB_GET_MS",
   storageLocalSetIdb: "WEBEXT_STORAGE_LOCAL_IDB_SET_MS",
 };
@@ -33,8 +31,6 @@ const GLEAN_METRICS_TYPES = {
   eventPageIdleResult: "labeled_counter",
   extensionStartup: "timing_distribution",
   pageActionPopupOpen: "timing_distribution",
-  storageLocalGetJson: "timing_distribution",
-  storageLocalSetJson: "timing_distribution",
   storageLocalGetIdb: "timing_distribution",
   storageLocalSetIdb: "timing_distribution",
 };
