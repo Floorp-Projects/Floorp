@@ -103,11 +103,13 @@ impl CryptoHash {
             Some(digest) => digest,
             None => return Err(NS_ERROR_NOT_INITIALIZED),
         };
-        // Safety: this is safe as long as xpcom gave us valid arguments.
-        let data = unsafe {
-            std::slice::from_raw_parts(data, len.try_into().map_err(|_| NS_ERROR_INVALID_ARG)?)
-        };
-        digest.update(data);
+        if len > 0 {
+            // Safety: this is safe as long as xpcom gave us valid arguments.
+            let data = unsafe {
+                std::slice::from_raw_parts(data, len.try_into().map_err(|_| NS_ERROR_INVALID_ARG)?)
+            };
+            digest.update(data);
+        }
         Ok(())
     }
 
