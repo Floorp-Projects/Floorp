@@ -53,7 +53,7 @@ treeherder:
         'M-condprof': "Mochitests with conditioned profile"
         'M-condprof-cf': "Mochitests confirm failure with conditioned profile"
         'M-fis-hv': "Mochitests that run on Fission with isolateHighValue isolation strategy (Android-specific)"
-        'M-fis-hv-cf': "Mochitests confirm failure that run on Fission with isolateHighValue isolation strategy (Android-specific)"
+        'M-fis-hv-cf': "Mochitests confirm failure with Fission and isolateHighValue isolation strategy (Android-specific)"
         'M-headless': 'Headless Mochitests'
         'M-headless-cf': 'Headless Mochitests confirm failure'
         'M-headless-spi-nw': 'Headless Mochitests with fission and socketprocess networking.'
@@ -77,7 +77,7 @@ treeherder:
         'M-nofis': 'Mochitests without fission enabled'
         'M-nofis-cf': 'Mochitests confirm failure without fission enabled'
         'M-nofis-ship': "Mochitests without fission and with SHIP (session history in parent) enabled (Android-specific)"
-        'M-nofis-ship-cf': "Mochitests confirm failure without fission and with SHIP (session history in parent) enabled (Android-specific)"
+        'M-nofis-ship-cf': "Mochitests confirm failure: no fission + with SHIP (session history in parent) on (Android-only)"
         'M-spi': 'Mochitests with socket process'
         'M-spi-cf': 'Mochitests confirm failure with socket process'
         'M-spi-nofis': 'Mochitests with socket process without fission enabled'
@@ -118,7 +118,7 @@ treeherder:
         'R-nofis': 'Reftests without fission enabled'
         'R-nofis-cf': 'Reftests confirm failure without fission enabled'
         'R-nofis-ship': 'Reftests without fission and with SHIP (session history in parent) enabled (Android specific)'
-        'R-nofis-ship-cf': 'Reftests confirm failure without fission and with SHIP (session history in parent) enabled (Android specific)'
+        'R-nofis-ship-cf': 'Reftests confirm failure: no fission + with SHIP (session history in parent) on (Android-only)'
         'R-swr': 'Reftests with software webrender enabled'
         'R-swr-cf': 'Reftests confirm failure with software webrender enabled'
         'R-swr-nofis': 'Reftests with software webrender enabled without fission enabled'
@@ -164,7 +164,7 @@ treeherder:
         'X-nofis': 'Xpcshell tests without fission enabled'
         'X-nofis-cf': 'Xpcshell tests confirm failure without fission enabled'
         'X-nofis-ship': 'Xpcshell tests without fission and with SHIP (session history in parent) enabled (Android specific)'
-        'X-nofis-ship-cf': 'Xpcshell tests confirm failure without fission and with SHIP (session history in parent) enabled (Android specific)'
+        'X-nofis-ship-cf': 'Xpcshell confirm failure: no fission + with SHIP (session history in parent) on (Android-only)'
         'X-spi-nw': 'Xpcshell tests with networking on socket process'
         'X-spi-nw-cf': 'Xpcshell tests confirm failure with networking on socket process'
         'X-spi-nw-nofis': 'Xpcshell tests with networking on socket process without fission enabled'
