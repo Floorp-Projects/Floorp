@@ -152,6 +152,8 @@ backtrace = { path = "build/rust/backtrace" }
 
 # Patch bindgen 0.63 to 0.69
 bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen-0.63" }
+# Locally patch bindgen for https://github.com/rust-lang/rust-bindgen/pull/2824
+bindgen = { path = "third_party/rust/bindgen" }
 
 # Patch nix 0.26 to 0.28
 nix = { path = "build/rust/nix" }
