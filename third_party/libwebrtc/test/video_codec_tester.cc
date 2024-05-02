@@ -1242,7 +1242,7 @@ void ConfigureSimulcast(VideoCodec* vc) {
       /*min_layer=*/1, num_spatial_layers, vc->width, vc->height,
       /*bitrate_priority=*/1.0, cricket::kDefaultVideoMaxQpVpx,
       /*is_screenshare=*/false, /*temporal_layers_supported=*/true,
-      field_trials);
+      field_trials, webrtc::kVideoCodecVP8);
 
   vc->numberOfSimulcastStreams = streams.size();
   RTC_CHECK_LE(vc->numberOfSimulcastStreams, num_spatial_layers);
