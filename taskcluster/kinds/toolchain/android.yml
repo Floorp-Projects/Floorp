@@ -218,7 +218,6 @@ linux64-android-gradle-dependencies:
             - linux64-android-sdk-linux-repack
             - linux64-jdk-repack
             - linux64-node
-            - android-gradle-python-envs
 
 linux64-android-gradle-dependencies-lite:
     description: "Android Lite Gradle dependencies toolchain task"
@@ -251,14 +250,3 @@ linux64-android-gradle-dependencies-lite:
             - linux64-android-sdk-linux-repack
             - linux64-jdk-repack
             - linux64-node
-            - android-gradle-python-envs
-
-android-gradle-python-envs:
-    description: "gradle-python-envs plugin toolchain task"
-    treeherder:
-        symbol: TL(gradle-python-envs)
-    run:
-        script: gradle-python-envs.sh
-        arguments: ['0.0.31']
-        sparse-profile: null
-        toolchain-artifact: public/build/gradle-python-envs-0.0.31.tar.zst
