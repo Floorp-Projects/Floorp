@@ -1,23 +1,42 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Mon, 13 Aug 2018 08:34:00 -0400
-Subject: Bug 1376873 - Allow single channel opus; r=padenot
+Date: Wed, 19 Sep 2018 15:06:00 -0400
+Subject: Bug 1376873 - Fix up rotation in video_capture_impl.cc; r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D7469
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92a7c3eee9f0c80ffbf79fdab8f8f2b8f6bd7701
+This fixes a bug in the upstream code introduced when they removed the
+ConvertToI420 helper method from webrtc_libyuv.cc. The buffer size is
+passed into libyuv::ConvertI420 incorrectly when rotation is applied, which
+causes bad rendering and instabilities.
+
+Differential Revision: https://phabricator.services.mozilla.com/D7478
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c56cb66f86518dfb046c642ebeb07cf51c23a3cb
 ---
- modules/audio_coding/codecs/opus/audio_encoder_opus.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/video_capture/video_capture_impl.cc | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-index 51b0fcd492..17e0e33b1d 100644
---- a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-+++ b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-@@ -240,7 +240,7 @@ std::unique_ptr<AudioEncoder> AudioEncoderOpusImpl::MakeAudioEncoder(
- absl::optional<AudioEncoderOpusConfig> AudioEncoderOpusImpl::SdpToConfig(
-     const SdpAudioFormat& format) {
-   if (!absl::EqualsIgnoreCase(format.name, "opus") ||
--      format.clockrate_hz != kRtpTimestampRateHz || format.num_channels != 2) {
-+      format.clockrate_hz != kRtpTimestampRateHz) {
-     return absl::nullopt;
+diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
+index 51282183f5..afd6ba4d0a 100644
+--- a/modules/video_capture/video_capture_impl.cc
++++ b/modules/video_capture/video_capture_impl.cc
+@@ -218,12 +218,21 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+     }
    }
  
++  int dst_width = buffer->width();
++  int dst_height = buffer->height();
++
++  // LibYuv expects pre-rotation_mode values for dst.
++  // Stride values should correspond to the destination values.
++  if (rotation_mode == libyuv::kRotate90 || rotation_mode == libyuv::kRotate270) {
++    std::swap(dst_width, dst_height);
++  }
++
+   const int conversionResult = libyuv::ConvertToI420(
+       videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
+       buffer.get()->StrideY(), buffer.get()->MutableDataU(),
+       buffer.get()->StrideU(), buffer.get()->MutableDataV(),
+       buffer.get()->StrideV(), 0, 0,  // No Cropping
+-      width, height, target_width, target_height, rotation_mode,
++      width, height, dst_width, dst_height, rotation_mode,
+       ConvertVideoType(frameInfo.videoType));
+   if (conversionResult != 0) {
+     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
