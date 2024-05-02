@@ -1,139 +1,49 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 7 Feb 2018 15:00:00 -0500
-Subject: Bug 1376873 - Fix GetRTCPSenderReport; r=ng
+Date: Tue, 27 Mar 2018 15:43:00 -0400
+Subject: Bug 1376873 - Disable Mid support in RtpDemuxer; r=mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D7431
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b55b0368d9f21849fa465fa9b3f028285c9ea6ae
+The only use of Mid in the current webrtc.org code is in the unit tests.
+RtpStreamReceiverController only allows adding sinks using SSRCs. Because
+of this, we'll end up dropping packets in the RtpDemuxer with the current
+code as none of our Mids will be recognized.
+
+Tip of webrtc.org fully supports using Mids, so we'll be able to enable this
+code again after the next update.
+
+Differential Revision: https://phabricator.services.mozilla.com/D7442
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b3ba8452e77105c72f6ddbc49cbe5a53dbea1507
 ---
- call/video_receive_stream.h                  | 3 +++
- modules/rtp_rtcp/source/rtcp_receiver.cc     | 7 +++++++
- modules/rtp_rtcp/source/rtcp_receiver.h      | 4 ++++
- modules/rtp_rtcp/source/rtp_rtcp_impl.cc     | 5 +++++
- modules/rtp_rtcp/source/rtp_rtcp_impl.h      | 3 +++
- modules/rtp_rtcp/source/rtp_rtcp_impl2.cc    | 5 +++++
- modules/rtp_rtcp/source/rtp_rtcp_impl2.h     | 3 +++
- modules/rtp_rtcp/source/rtp_rtcp_interface.h | 4 ++++
- 8 files changed, 34 insertions(+)
+ call/rtp_demuxer.cc | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 542067d30c..500ca1447f 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -151,6 +151,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-     RtcpPacketTypeCounter rtcp_packet_type_counts;
-     absl::optional<RtpReceiveStats> rtx_rtp_stats;
+diff --git a/call/rtp_demuxer.cc b/call/rtp_demuxer.cc
+index 841d7e3b94..f5c4186871 100644
+--- a/call/rtp_demuxer.cc
++++ b/call/rtp_demuxer.cc
+@@ -285,13 +285,17 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
+   // RSID and RRID are routed to the same sinks. If an RSID is specified on a
+   // repair packet, it should be ignored and the RRID should be used.
+   std::string packet_mid, packet_rsid;
+-  bool has_mid = use_mid_ && packet.GetExtension<RtpMid>(&packet_mid);
++  //bool has_mid = use_mid_ && packet.GetExtension<RtpMid>(&packet_mid);
+   bool has_rsid = packet.GetExtension<RepairedRtpStreamId>(&packet_rsid);
+   if (!has_rsid) {
+     has_rsid = packet.GetExtension<RtpStreamId>(&packet_rsid);
+   }
+   uint32_t ssrc = packet.Ssrc();
  
-+    uint32_t rtcp_sender_packets_sent;
-+    uint32_t rtcp_sender_octets_sent;
-+
-     // Timing frame info: all important timestamps for a full lifetime of a
-     // single 'timing frame'.
-     absl::optional<webrtc::TimingFrameInfo> timing_frame_info;
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 63f44fb144..15c97102bc 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.cc
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -360,6 +360,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
-   return last_xr_rtis;
- }
++  // Mid support is half-baked in branch 64. RtpStreamReceiverController only
++  // supports adding sinks by ssrc, so our mids will never show up in
++  // known_mids_, causing us to drop packets here.
++#if 0
+   // The BUNDLE spec says to drop any packets with unknown MIDs, even if the
+   // SSRC is known/latched.
+   if (has_mid && known_mids_.find(packet_mid) == known_mids_.end()) {
+@@ -365,6 +369,7 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
+     }
+   }
  
-+void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                                        uint32_t* octet_count) const {
-+  MutexLock lock(&rtcp_receiver_lock_);
-+  *packet_count = remote_sender_packet_count_;
-+  *octet_count = remote_sender_octet_count_;
-+}
-+
- std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
-   std::vector<ReportBlockData> result;
-   MutexLock lock(&rtcp_receiver_lock_);
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 20e314b01c..77d86f054d 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.h
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -117,6 +117,10 @@ class RTCPReceiver final {
- 
-   std::vector<rtcp::ReceiveTimeInfo> ConsumeReceivedXrReferenceTimeInfo();
- 
-+  // Get received sender packet and octet counts
-+  void RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                            uint32_t* octet_count) const;
-+
-   absl::optional<TimeDelta> AverageRtt() const;
-   absl::optional<TimeDelta> LastRtt() const;
- 
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index 20862e3c45..98c37c8d28 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -499,6 +499,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
- }
- 
- // Received RTCP report.
-+void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                                             uint32_t* octet_count) const {
-+  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count);
-+}
-+
- std::vector<ReportBlockData> ModuleRtpRtcpImpl::GetLatestReportBlockData()
-     const {
-   return rtcp_receiver_.GetLatestReportBlockData();
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index d298081432..dd706e569d 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-@@ -182,6 +182,9 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
-       StreamDataCounters* rtp_counters,
-       StreamDataCounters* rtx_counters) const override;
- 
-+  void RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                            uint32_t* octet_count) const override;
-+
-   // A snapshot of the most recent Report Block with additional data of
-   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-   // Within this list, the `ReportBlockData::source_ssrc()`, which is the SSRC
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index 3dbbc77086..1d73bc3d87 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -503,6 +503,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
- }
- 
- // Received RTCP report.
-+void ModuleRtpRtcpImpl2::RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                                              uint32_t* octet_count) const {
-+  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count);
-+}
-+
- std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
-     const {
-   return rtcp_receiver_.GetLatestReportBlockData();
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index 36e6deffba..663b28af3e 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-@@ -194,6 +194,9 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
-       StreamDataCounters* rtp_counters,
-       StreamDataCounters* rtx_counters) const override;
- 
-+  void RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                            uint32_t* octet_count) const override;
-+
-   // A snapshot of the most recent Report Block with additional data of
-   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-   // Within this list, the `ReportBlockData::source_ssrc()`, which is the SSRC
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 924c764ccd..8df810a95e 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -387,6 +387,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
-       StreamDataCounters* rtp_counters,
-       StreamDataCounters* rtx_counters) const = 0;
- 
-+
-+  // Returns packet count and octet count from RTCP sender report.
-+  virtual void RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                                    uint32_t* octet_count) const = 0;
-   // A snapshot of Report Blocks with additional data of interest to statistics.
-   // Within this list, the sender-source SSRC pair is unique and per-pair the
-   // ReportBlockData represents the latest Report Block that was received for
++#endif
+   // We trust signaled SSRC more than payload type which is likely to conflict
+   // between streams.
+   const auto ssrc_sink_it = sink_by_ssrc_.find(ssrc);
