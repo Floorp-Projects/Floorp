@@ -103,8 +103,13 @@ add_task(testG.bind(null, uri, testHWConcurrency, expectedResults));
 expectedResults = structuredClone(allSpoofed);
 add_task(testH.bind(null, uri, testHWConcurrency, expectedResults));
 
-// Test a Normal Window with RFP Enabled in PBM and FPP enabled in Normal Browsing Mode
+// Test a Normal Window with RFP Enabled in PBM and FPP enabled in Normal Browsing Mode - but FPP has no No Protections enabled in it (via .overrides pref)
 expectedResults = structuredClone(allNotSpoofed);
 add_task(
-  simpleRFPPBMFPPTest.bind(null, uri, testHWConcurrency, expectedResults)
+  RFPPBMFPP_NormalMode_NoProtectionsTest.bind(
+    null,
+    uri,
+    testHWConcurrency,
+    expectedResults
+  )
 );
