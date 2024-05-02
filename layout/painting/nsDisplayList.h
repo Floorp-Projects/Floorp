@@ -5475,7 +5475,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   bool IsFixedPositionLayer() const;
   bool IsStickyPositionLayer() const;
   bool HasDynamicToolbar() const;
-  virtual bool ShouldGetFixedOrStickyAnimationId() { return false; }
+  virtual bool ShouldGetFixedAnimationId() { return false; }
 
   bool CreatesStackingContextHelper() override { return true; }
 
@@ -5491,6 +5491,16 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
    */
   layers::ScrollbarData mScrollbarData;
   bool mForceActive;
+
+  // Used for APZ to animate this layer for purposes such as
+  // pinch-zooming or scrollbar thumb movement. Note that setting this
+  // creates a WebRender ReferenceFrame spatial node, and should only
+  // be used for display items that establish a Gecko reference frame
+  // as well (or leaf items like scrollbar thumb nodes where it does not
+  // matter).
+  // FIXME: This is currently also used for adjusting position:fixed items
+  // for dynamic toolbar movement. This may be a problem as position:fixed
+  // items do not establish Gecko reference frames.
   uint64_t mWrAnimationId;
 };
 
@@ -5550,7 +5560,8 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
       : nsDisplayOwnLayer(aBuilder, aOther),
         mContainerASR(aOther.mContainerASR),
         mClippedToDisplayPort(aOther.mClippedToDisplayPort),
-        mShouldFlatten(false) {
+        mShouldFlatten(false),
+        mWrStickyAnimationId(0) {
     MOZ_COUNT_CTOR(nsDisplayStickyPosition);
   }
 
@@ -5575,7 +5586,6 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
 
   bool UpdateScrollData(layers::WebRenderScrollData* aData,
                         layers::WebRenderLayerScrollData* aLayerData) override;
-  bool ShouldGetFixedOrStickyAnimationId() override;
 
   const ActiveScrolledRoot* GetContainerASR() const { return mContainerASR; }
 
@@ -5590,6 +5600,8 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) final {
     return mShouldFlatten;
   }
+
+  bool ShouldGetStickyAnimationId() const;
 
  private:
   NS_DISPLAY_ALLOW_CLONING()
@@ -5620,6 +5632,13 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
 
   // True if this item should be flattened away.
   bool mShouldFlatten;
+
+  // Used for APZ to animate the sticky element in the compositor
+  // for purposes such as dynamic toolbar movement and (in the future)
+  // overscroll-related adjustment. Unlike nsDisplayOwnLayer::mWrAnimationId,
+  // this does not create a WebRender ReferenceFrame, which is important
+  // because sticky elements do not establish Gecko reference frames either.
+  uint64_t mWrStickyAnimationId;
 };
 
 class nsDisplayFixedPosition : public nsDisplayOwnLayer {
@@ -5661,7 +5680,7 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool UpdateScrollData(layers::WebRenderScrollData* aData,
                         layers::WebRenderLayerScrollData* aLayerData) override;
-  bool ShouldGetFixedOrStickyAnimationId() override;
+  bool ShouldGetFixedAnimationId() override;
   void WriteDebugInfo(std::stringstream& aStream) override;
 
  protected:
