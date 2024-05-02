@@ -10,6 +10,8 @@ support-files = [
   "file_workerNetInfo.js",
   "file_workerPerformance.js",
   "head.js",
+  "file_canvas_iframer.html",
+  "file_canvas_iframee.html",
   "file_navigator_header.sjs",
   "file_navigator_iframer.html",
   "file_navigator_iframee.html",
@@ -46,6 +48,8 @@ support-files = [
 
 ["browser_bug1369357_site_specific_zoom_level.js"]
 https_first_disabled = true
+
+["browser_canvas_iframes.js"]
 
 ["browser_cross_origin_isolated_animation_api.js"]
 

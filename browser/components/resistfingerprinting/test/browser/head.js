@@ -813,7 +813,10 @@ async function simpleFPPTest(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.fingerprintingProtection", true],
-      ["privacy.fingerprintingProtection.overrides", "+NavigatorHWConcurrency"],
+      [
+        "privacy.fingerprintingProtection.overrides",
+        "+NavigatorHWConcurrency,+CanvasRandomization",
+      ],
     ].concat(extraPrefs || []),
   });
 
@@ -838,7 +841,10 @@ async function simplePBMFPPTest(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.fingerprintingProtection.pbmode", true],
-      ["privacy.fingerprintingProtection.overrides", "+NavigatorHWConcurrency"],
+      [
+        "privacy.fingerprintingProtection.overrides",
+        "+NavigatorHWConcurrency,+CanvasRandomization",
+      ],
     ].concat(extraPrefs || []),
   });
 
@@ -860,14 +866,17 @@ async function RFPPBMFPP_NormalMode_NoProtectionsTest(
   extraData.private_window = false;
   extraData.testDesc =
     extraData.testDesc ||
-    "RFP Enabled in PBM and FPP enabled in Normal Browsing Mode";
+    "RFP Enabled in PBM and FPP enabled in Normal Browsing Mode, Protections Disabled";
   expectedResults.shouldRFPApply = false;
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", false],
       ["privacy.resistFingerprinting.pbmode", true],
       ["privacy.fingerprintingProtection", true],
-      ["privacy.fingerprintingProtection.overrides", "-NavigatorHWConcurrency"],
+      [
+        "privacy.fingerprintingProtection.overrides",
+        "-NavigatorHWConcurrency,-CanvasRandomization",
+      ],
     ].concat(extraPrefs || []),
   });
 
