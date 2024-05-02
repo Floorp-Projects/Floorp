@@ -9177,6 +9177,10 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
       ClearTransparencyBitmap();
     }
   }
+
+  // Recompute the input region (which should generally be null, but this is
+  // enough to work around bug 1844497, which is probably a gtk bug).
+  SetInputRegion(mInputRegion);
 }
 
 GtkWindow* nsWindow::GetCurrentTopmostWindow() const {
