@@ -139,10 +139,7 @@ rtc_library("builtin_video_decoder_factory") {
 
 rtc_library("builtin_video_encoder_factory") {
   visibility = [ "*" ]
-  allow_poison = [
-    "audio_codecs",  # TODO(bugs.webrtc.org/8396): Remove.
-    "software_video_codecs",
-  ]
+  allow_poison = [ "software_video_codecs" ]
   sources = [
     "builtin_video_encoder_factory.cc",
     "builtin_video_encoder_factory.h",
@@ -150,13 +147,11 @@ rtc_library("builtin_video_encoder_factory") {
 
   deps = [
     ":video_codecs_api",
-    "../../api:scoped_refptr",
-    "../../media:codec",
-    "../../media:media_constants",
     "../../media:rtc_internal_video_codecs",
     "../../media:rtc_simulcast_encoder_adapter",
-    "../../rtc_base:checks",
     "../../rtc_base/system:rtc_export",
+    "../environment",
+    "../transport:field_trial_based_config",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings",

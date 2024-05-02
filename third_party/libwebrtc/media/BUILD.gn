@@ -494,6 +494,7 @@ rtc_library("rtc_simulcast_encoder_adapter") {
     "../api:field_trials_view",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api/environment",
     "../api/transport:field_trial_based_config",
     "../api/video:video_codec_constants",
     "../api/video:video_frame",
@@ -515,6 +516,7 @@ rtc_library("rtc_simulcast_encoder_adapter") {
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/base:nullability",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
@@ -849,6 +851,7 @@ if (rtc_include_tests) {
       "../api:fec_controller_api",
       "../api:rtp_parameters",
       "../api:scoped_refptr",
+      "../api/environment",
       "../api/task_queue",
       "../api/task_queue:pending_task_safety_flag",
       "../api/transport:field_trial_based_config",
