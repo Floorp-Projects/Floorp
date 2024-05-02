@@ -548,7 +548,6 @@ TEST(SimulcastTest, BitratesBasedOnCodec) {
   EXPECT_NE(streams_vp9[0].max_bitrate_bps, streams_vp8[0].max_bitrate_bps);
   EXPECT_NE(streams_vp9[0].target_bitrate_bps,
             streams_vp8[0].target_bitrate_bps);
-  EXPECT_NE(streams_vp9[0].min_bitrate_bps, streams_vp8[0].min_bitrate_bps);
 
   EXPECT_NE(streams_vp9[1].max_bitrate_bps, streams_vp8[1].max_bitrate_bps);
   EXPECT_NE(streams_vp9[1].target_bitrate_bps,

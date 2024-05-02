@@ -123,7 +123,7 @@ constexpr const SimulcastFormat kSimulcastFormatsVP9[] = {
      webrtc::DataRate::KilobitsPerSec(121)},
     {320, 180, 1, webrtc::DataRate::KilobitsPerSec(142),
      webrtc::DataRate::KilobitsPerSec(142),
-     webrtc::DataRate::KilobitsPerSec(49)},
+     webrtc::DataRate::KilobitsPerSec(30)},
     {240, 135, 1, webrtc::DataRate::KilobitsPerSec(101),
      webrtc::DataRate::KilobitsPerSec(101),
      webrtc::DataRate::KilobitsPerSec(30)},
