@@ -3541,13 +3541,25 @@ void QuotaManager::Shutdown() {
   ScopedLogExtraInfo scope{ScopedLogExtraInfo::kTagContext,
                            "dom::quota::QuotaManager::Shutdown"_ns};
 
+  // We always need to ensure that firefox does not shutdown with a private
+  // repository still on disk. They are ideally cleaned up on PBM session end
+  // but, in some cases like PBM autostart (i.e.
+  // browser.privatebrowsing.autostart), private repository could only be
+  // cleaned up on shutdown. ClearPrivateRepository below runs a async op and is
+  // better to do it before we run the ShutdownStorageOp since it expects all
+  // cleanup operations to be done by that point. We don't need to use the
+  // returned promise here because `ClearPrivateRepository` registers the
+  // underlying `ClearPrivateRepositoryOp` in `gNormalOriginOps`.
+  ClearPrivateRepository();
+
   // This must be called before `flagShutdownStarted`, it would fail otherwise.
   // `ShutdownStorageOp` needs to acquire an exclusive directory lock over
   // entire <profile>/storage which will abort any existing operations and wait
   // for all existing directory locks to be released. So the shutdown operation
   // will effectively run after all existing operations.
-  // We don't need to use the returned promise here because `ShutdownStorage`
-  // registers `ShudownStorageOp` in `gNormalOriginOps`.
+  // Similar, to ClearPrivateRepository operation above, ShutdownStorageOp also
+  // registers it's operation in `gNormalOriginOps` so we don't need to assign
+  // returned promise.
   ShutdownStorage();
 
   flagShutdownStarted();
