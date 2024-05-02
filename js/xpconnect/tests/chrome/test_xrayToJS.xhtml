@@ -313,8 +313,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     constructorProps(["groupBy", Symbol.species]);
 
   gPrototypeProperties.Set =
-    ["constructor", "size", Symbol.toStringTag, "has", "add", "delete",
-     "keys", "values", "clear", "forEach", "entries", Symbol.iterator];
+     [Symbol.toStringTag, Symbol.iterator, "add", "clear", "constructor", "delete",
+      "difference", "entries", "forEach", "has", "intersection", "isDisjointFrom",
+      "isSubsetOf", "isSupersetOf", "keys", "size", "symmetricDifference", "union",
+      "values"];
   gConstructorProperties.Set =
     constructorProps([Symbol.species]);
 
