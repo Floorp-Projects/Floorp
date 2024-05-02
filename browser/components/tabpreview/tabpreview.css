@@ -25,6 +25,12 @@
   text-overflow: ellipsis;
 }
 
+.tab-preview-pid-activeness {
+  color: var(--text-color-deemphasized);
+  display: flex;
+  justify-content: space-between;
+}
+
 .tab-preview-thumbnail-container {
   border-top: 1px solid var(--panel-border-color);
   &:empty {

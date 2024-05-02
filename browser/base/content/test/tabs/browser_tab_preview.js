@@ -34,6 +34,7 @@ add_setup(async function () {
     set: [
       ["browser.tabs.cardPreview.enabled", true],
       ["browser.tabs.cardPreview.showThumbnails", false],
+      ["browser.tabs.tooltipsShowPidAndActiveness", false],
       ["ui.tooltip.delay_ms", 0],
     ],
   });
@@ -74,6 +75,99 @@ add_task(async function hoverTests() {
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
+
+  // Move the mouse outside of the tab strip.
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mouseover",
+  });
+});
+
+/**
+ * Verify that the pid and activeness statuses are not shown
+ * when the flag is not enabled.
+ */
+add_task(async function pidAndActivenessHiddenByDefaultTests() {
+  const tabUrl1 =
+    "data:text/html,<html><head><title>First New Tab</title></head><body>Hello</body></html>";
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl1);
+  const previewContainer = document.getElementById("tab-preview-panel");
+
+  await openPreview(tab1);
+  Assert.equal(
+    previewContainer.querySelector(".tab-preview-pid").innerText,
+    "",
+    "Tab PID is not shown"
+  );
+  Assert.equal(
+    previewContainer.querySelector(".tab-preview-activeness").innerText,
+    "",
+    "Tab activeness is not shown"
+  );
+
+  await closePreviews();
+
+  BrowserTestUtils.removeTab(tab1);
+
+  // Move the mouse outside of the tab strip.
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mouseover",
+  });
+});
+
+add_task(async function pidAndActivenessTests() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.tooltipsShowPidAndActiveness", true]],
+  });
+
+  const tabUrl1 =
+    "data:text/html,<html><head><title>Single process tab</title></head><body>Hello</body></html>";
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl1);
+  const tabUrl2 = `data:text/html,<html>
+      <head>
+        <title>Multi-process tab</title>
+      </head>
+      <body>
+        <iframe
+          id="inlineFrameExample"
+          title="Inline Frame Example"
+          width="300"
+          height="200"
+          src="https://example.com">
+        </iframe>
+      </body>
+    </html>`;
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl2);
+  const previewContainer = document.getElementById("tab-preview-panel");
+
+  await openPreview(tab1);
+  Assert.stringMatches(
+    previewContainer.querySelector(".tab-preview-pid").innerText,
+    /^pid: \d+$/,
+    "Tab PID is shown on single process tab"
+  );
+  Assert.equal(
+    previewContainer.querySelector(".tab-preview-activeness").innerText,
+    "",
+    "Tab activeness is not shown on inactive tab"
+  );
+  await closePreviews();
+
+  await openPreview(tab2);
+  Assert.stringMatches(
+    previewContainer.querySelector(".tab-preview-pid").innerText,
+    /^pids: \d+, \d+$/,
+    "Tab PIDs are shown on multi-process tab"
+  );
+  Assert.equal(
+    previewContainer.querySelector(".tab-preview-activeness").innerText,
+    "[A]",
+    "Tab activeness is shown on active tab"
+  );
+  await closePreviews();
+
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  await SpecialPowers.popPrefEnv();
 
   // Move the mouse outside of the tab strip.
   EventUtils.synthesizeMouseAtCenter(document.documentElement, {

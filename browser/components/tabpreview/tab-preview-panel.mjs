@@ -38,6 +38,12 @@ export default class TabPreviewPanel {
       "browser.tabs.cardPreview.showThumbnails",
       false
     );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_prefShowPidAndActiveness",
+      "browser.tabs.tooltipsShowPidAndActiveness",
+      false
+    );
     this._timer = null;
   }
 
@@ -132,6 +138,17 @@ export default class TabPreviewPanel {
       this._displayTitle;
     this._panel.querySelector(".tab-preview-uri").textContent =
       this._displayURI;
+
+    if (this._prefShowPidAndActiveness) {
+      this._panel.querySelector(".tab-preview-pid").textContent =
+        this._displayPids;
+      this._panel.querySelector(".tab-preview-activeness").textContent =
+        this._displayActiveness;
+    } else {
+      this._panel.querySelector(".tab-preview-pid").textContent = "";
+      this._panel.querySelector(".tab-preview-activeness").textContent = "";
+    }
+
     let thumbnailContainer = this._panel.querySelector(
       ".tab-preview-thumbnail-container"
     );
@@ -170,5 +187,19 @@ export default class TabPreviewPanel {
       return "";
     }
     return this.getPrettyURI(this._tab.linkedBrowser.currentURI.spec);
+  }
+
+  get _displayPids() {
+    const pids = this._win.gBrowser.getTabPids(this._tab);
+    if (!pids.length) {
+      return "";
+    }
+
+    let pidLabel = pids.length > 1 ? "pids" : "pid";
+    return `${pidLabel}: ${pids.join(", ")}`;
+  }
+
+  get _displayActiveness() {
+    return this._tab.linkedBrowser.docShellIsActive ? "[A]" : "";
   }
 }
