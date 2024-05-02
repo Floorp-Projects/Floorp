@@ -288,6 +288,30 @@ where
     })
 }
 
+pub(crate) fn rename<P1, P2>(from: P1, to: P2) -> miette::Result<()>
+where
+    P1: AsRef<Path>,
+    P2: AsRef<Path>,
+{
+    fs::rename(&from, &to).into_diagnostic().wrap_err_with(|| {
+        format!(
+            "failed to rename {} to {}",
+            from.as_ref().display(),
+            to.as_ref().display()
+        )
+    })
+}
+
+pub(crate) fn try_exists<P>(path: P) -> miette::Result<bool>
+where
+    P: AsRef<Path>,
+{
+    let path = path.as_ref();
+    path.try_exists()
+        .into_diagnostic()
+        .wrap_err_with(|| format!("failed to check if path exists: {}", path.display()))
+}
+
 pub(crate) fn create_dir_all<P>(path: P) -> miette::Result<()>
 where
     P: AsRef<Path>,
