@@ -109,7 +109,7 @@ add_task(async function test_download_without_filepicker() {
       // click the visible page button in panel
       let visiblePageButton = panel
         .querySelector("screenshots-buttons")
-        .shadowRoot.querySelector("#visible-page");
+        .shadowRoot.querySelector(".visible-page");
       visiblePageButton.click();
 
       await screenshotReady;
