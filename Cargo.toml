@@ -231,6 +231,10 @@ webext-storage = { git = "https://github.com/mozilla/application-services", rev 
 # Patch mio 0.8.8 to use windows-sys 0.52 (backport https://github.com/tokio-rs/mio/commit/eea9e3e0c469480e5c59c01e6c3c7e5fd88f0848)
 mio_0_8 = { package = "mio", git = "https://github.com/glandium/mio", rev = "9a2ef335c366044ffe73b1c4acabe50a1daefe05" }
 
+# Patch `gpu-descriptor` 0.3.0 to remove unnecessary `allocator-api2` dep.:
+# Still waiting for the now-merged <https://github.com/zakarumych/gpu-descriptor/pull/40> to be released.
+gpu-descriptor = { git = "https://github.com/zakarumych/gpu-descriptor", rev = "7b71a4e47c81903ad75e2c53deb5ab1310f6ff4d" }
+
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
 [patch.crates-io.mio]

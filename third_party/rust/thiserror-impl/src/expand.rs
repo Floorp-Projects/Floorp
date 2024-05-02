@@ -155,7 +155,7 @@ fn impl_struct(input: Struct) -> TokenStream {
             ::core::fmt::Display::fmt(&self.#only_field, __formatter)
         })
     } else if let Some(display) = &input.attrs.display {
-        display_implied_bounds = display.implied_bounds.clone();
+        display_implied_bounds.clone_from(&display.implied_bounds);
         let use_as_display = use_as_display(display.has_bonus_display);
         let pat = fields_pat(&input.fields);
         Some(quote! {
@@ -399,7 +399,7 @@ fn impl_enum(input: Enum) -> TokenStream {
             let mut display_implied_bounds = Set::new();
             let display = match &variant.attrs.display {
                 Some(display) => {
-                    display_implied_bounds = display.implied_bounds.clone();
+                    display_implied_bounds.clone_from(&display.implied_bounds);
                     display.to_token_stream()
                 }
                 None => {

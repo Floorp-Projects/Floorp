@@ -3,18 +3,19 @@ mod bind;
 mod bundle;
 mod clear;
 mod compute;
+mod compute_command;
 mod draw;
 mod memory_init;
 mod query;
 mod render;
 mod transfer;
 
-use std::slice;
 use std::sync::Arc;
 
 pub(crate) use self::clear::clear_texture;
 pub use self::{
-    bundle::*, clear::ClearError, compute::*, draw::*, query::*, render::*, transfer::*,
+    bundle::*, clear::ClearError, compute::*, compute_command::ComputeCommand, draw::*, query::*,
+    render::*, transfer::*,
 };
 pub(crate) use allocator::CommandAllocator;
 
@@ -24,6 +25,7 @@ use crate::device::{Device, DeviceError};
 use crate::error::{ErrorFormatter, PrettyError};
 use crate::hub::Hub;
 use crate::id::CommandBufferId;
+use crate::lock::{rank, Mutex};
 use crate::snatch::SnatchGuard;
 
 use crate::init_tracker::BufferInitTrackerAction;
@@ -32,7 +34,6 @@ use crate::track::{Tracker, UsageScope};
 use crate::{api_log, global::Global, hal_api::HalApi, id, resource_log, Label};
 
 use hal::CommandEncoder as _;
-use parking_lot::Mutex;
 use thiserror::Error;
 
 #[cfg(feature = "trace")]
@@ -92,15 +93,17 @@ pub(crate) enum CommandEncoderStatus {
 /// Methods that take a command encoder id actually look up the command buffer,
 /// and then use its encoder.
 ///
-/// [rce]: wgpu_hal::Api::CommandEncoder
-/// [rcb]: wgpu_hal::Api::CommandBuffer
+/// [rce]: hal::Api::CommandEncoder
+/// [rcb]: hal::Api::CommandBuffer
+/// [`CommandEncoderId`]: crate::id::CommandEncoderId
 pub(crate) struct CommandEncoder<A: HalApi> {
     /// The underlying `wgpu_hal` [`CommandEncoder`].
     ///
     /// Successfully executed command buffers' encoders are saved in a
-    /// [`wgpu_hal::device::CommandAllocator`] for recycling.
+    /// [`CommandAllocator`] for recycling.
     ///
-    /// [`CommandEncoder`]: wgpu_hal::Api::CommandEncoder
+    /// [`CommandEncoder`]: hal::Api::CommandEncoder
+    /// [`CommandAllocator`]: crate::command::CommandAllocator
     raw: A::CommandEncoder,
 
     /// All the raw command buffers for our owning [`CommandBuffer`], in
@@ -112,13 +115,16 @@ pub(crate) struct CommandEncoder<A: HalApi> {
     /// [`raw.reset_all()`][CE::ra], so the encoder and its buffers travel
     /// together.
     ///
-    /// [CE::ra]: wgpu_hal::CommandEncoder::reset_all
+    /// [CE::ra]: hal::CommandEncoder::reset_all
+    /// [`wgpu_hal::CommandEncoder`]: hal::CommandEncoder
     list: Vec<A::CommandBuffer>,
 
     /// True if `raw` is in the "recording" state.
     ///
     /// See the documentation for [`wgpu_hal::CommandEncoder`] for
     /// details on the states `raw` can be in.
+    ///
+    /// [`wgpu_hal::CommandEncoder`]: hal::CommandEncoder
     is_open: bool,
 
     label: Option<String>,
@@ -149,6 +155,8 @@ impl<A: HalApi> CommandEncoder<A> {
     /// transitions' command buffer.
     ///
     /// [l]: CommandEncoder::list
+    /// [`transition_buffers`]: hal::CommandEncoder::transition_buffers
+    /// [`transition_textures`]: hal::CommandEncoder::transition_textures
     fn close_and_swap(&mut self) -> Result<(), DeviceError> {
         if self.is_open {
             self.is_open = false;
@@ -229,6 +237,8 @@ pub(crate) struct DestroyedTextureError(pub id::TextureId);
 pub struct CommandBufferMutable<A: HalApi> {
     /// The [`wgpu_hal::Api::CommandBuffer`]s we've built so far, and the encoder
     /// they belong to.
+    ///
+    /// [`wgpu_hal::Api::CommandBuffer`]: hal::Api::CommandBuffer
     pub(crate) encoder: CommandEncoder<A>,
 
     /// The current state of this command buffer's encoder.
@@ -330,25 +340,28 @@ impl<A: HalApi> CommandBuffer<A> {
                     .as_str(),
                 None,
             ),
-            data: Mutex::new(Some(CommandBufferMutable {
-                encoder: CommandEncoder {
-                    raw: encoder,
-                    is_open: false,
-                    list: Vec::new(),
-                    label,
-                },
-                status: CommandEncoderStatus::Recording,
-                trackers: Tracker::new(),
-                buffer_memory_init_actions: Default::default(),
-                texture_memory_actions: Default::default(),
-                pending_query_resets: QueryResetMap::new(),
-                #[cfg(feature = "trace")]
-                commands: if enable_tracing {
-                    Some(Vec::new())
-                } else {
-                    None
-                },
-            })),
+            data: Mutex::new(
+                rank::COMMAND_BUFFER_DATA,
+                Some(CommandBufferMutable {
+                    encoder: CommandEncoder {
+                        raw: encoder,
+                        is_open: false,
+                        list: Vec::new(),
+                        label,
+                    },
+                    status: CommandEncoderStatus::Recording,
+                    trackers: Tracker::new(),
+                    buffer_memory_init_actions: Default::default(),
+                    texture_memory_actions: Default::default(),
+                    pending_query_resets: QueryResetMap::new(),
+                    #[cfg(feature = "trace")]
+                    commands: if enable_tracing {
+                        Some(Vec::new())
+                    } else {
+                        None
+                    },
+                }),
+            ),
         }
     }
 
@@ -757,16 +770,15 @@ impl BindGroupStateChange {
         }
     }
 
-    unsafe fn set_and_check_redundant(
+    fn set_and_check_redundant(
         &mut self,
         bind_group_id: id::BindGroupId,
         index: u32,
         dynamic_offsets: &mut Vec<u32>,
-        offsets: *const wgt::DynamicOffset,
-        offset_length: usize,
+        offsets: &[wgt::DynamicOffset],
     ) -> bool {
         // For now never deduplicate bind groups with dynamic offsets.
-        if offset_length == 0 {
+        if offsets.is_empty() {
             // If this get returns None, that means we're well over the limit,
             // so let the call through to get a proper error
             if let Some(current_bind_group) = self.last_states.get_mut(index as usize) {
@@ -782,8 +794,7 @@ impl BindGroupStateChange {
             if let Some(current_bind_group) = self.last_states.get_mut(index as usize) {
                 current_bind_group.reset();
             }
-            dynamic_offsets
-                .extend_from_slice(unsafe { slice::from_raw_parts(offsets, offset_length) });
+            dynamic_offsets.extend_from_slice(offsets);
         }
         false
     }

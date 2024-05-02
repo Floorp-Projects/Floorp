@@ -31,6 +31,12 @@ pub enum DeviceAllocationError {
 
 /// Abstract device that can create pools of type `P` and allocate sets `S` with layout `L`.
 pub trait DescriptorDevice<L, P, S> {
+    /// Creates a new descriptor pool.
+    ///
+    /// # Safety
+    ///
+    /// Actually safe.
+    /// TODO: Remove `unsafe` with next breaking change.
     unsafe fn create_descriptor_pool(
         &self,
         descriptor_count: &DescriptorTotalCount,
@@ -38,8 +44,19 @@ pub trait DescriptorDevice<L, P, S> {
         flags: DescriptorPoolCreateFlags,
     ) -> Result<P, CreatePoolError>;
 
+    /// Destroys descriptor pool.
+    ///
+    /// # Safety
+    ///
+    /// Pool must be created from this device.
+    /// All descriptor sets allocated from this pool become invalid.
     unsafe fn destroy_descriptor_pool(&self, pool: P);
 
+    /// Allocates descriptor sets.
+    ///
+    /// # Safety
+    ///
+    /// Pool must be created from this device.
     unsafe fn alloc_descriptor_sets<'a>(
         &self,
         pool: &mut P,
@@ -49,5 +66,10 @@ pub trait DescriptorDevice<L, P, S> {
     where
         L: 'a;
 
-    unsafe fn dealloc_descriptor_sets<'a>(&self, pool: &mut P, sets: impl Iterator<Item = S>);
+    /// Deallocates descriptor sets.
+    ///
+    /// # Safety
+    ///
+    /// Sets must be allocated from specified pool and not deallocated before.
+    unsafe fn dealloc_descriptor_sets(&self, pool: &mut P, sets: impl Iterator<Item = S>);
 }

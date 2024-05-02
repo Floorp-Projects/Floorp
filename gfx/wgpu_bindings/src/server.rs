@@ -945,11 +945,13 @@ impl Global {
                 base,
                 timestamp_writes,
             } => {
-                if let Err(err) = self.command_encoder_run_compute_pass_impl::<A>(
-                    self_id,
-                    base.as_ref(),
-                    timestamp_writes.as_ref(),
-                ) {
+                if let Err(err) = self
+                    .command_encoder_run_compute_pass_with_unresolved_commands::<A>(
+                        self_id,
+                        base.as_ref(),
+                        timestamp_writes.as_ref(),
+                    )
+                {
                     error_buf.init(err);
                 }
             }
