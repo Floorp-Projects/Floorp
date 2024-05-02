@@ -2204,12 +2204,8 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
     originAttributes = std::move(aOriginAttributes.ref());
   } else if (aPrincipal) {
     originAttributes = aPrincipal->OriginAttributesRef();
-    StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
-        aURI, originAttributes);
   } else if (loadContext) {
     loadContext->GetOriginAttributes(originAttributes);
-    StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
-        aURI, originAttributes);
   }
 
   nsCOMPtr<nsIURI> clone;
@@ -2220,6 +2216,15 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
       // (NOTE: We better make sure |clone| stays alive until the end
       // of the function now, since our aURI arg now points to it!)
     }
+  }
+
+  if (!aOriginAttributes) {
+    // We must update the originAttributes with the network state first party
+    // domain **after** we upgrade aURI to https.
+    // Otherwise the speculative connection will be keyed by a http URL
+    // and end up not being used.
+    StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
+        aURI, originAttributes);
   }
 
   nsAutoCString scheme;
