@@ -9,6 +9,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
+  SessionStoreHelper:
+    "resource://gre/modules/sessionstore/SessionStoreHelper.sys.mjs",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewContentParent");
@@ -33,7 +35,7 @@ export class GeckoViewContentParent extends GeckoViewActorParent {
       // TODO Bug 1648158 this should include scroll, form history, etc
       return SessionStoreUtils.initializeRestore(
         browsingContext,
-        SessionStoreUtils.constructSessionStoreRestoreData()
+        lazy.SessionStoreHelper.buildRestoreData(formdata, scrolldata)
       );
     }
 

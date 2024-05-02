@@ -175,6 +175,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
   SessionSaver: "resource:///modules/sessionstore/SessionSaver.sys.mjs",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
+  SessionStoreHelper:
+    "resource://gre/modules/sessionstore/SessionStoreHelper.sys.mjs",
   TabAttributes: "resource:///modules/sessionstore/TabAttributes.sys.mjs",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.sys.mjs",
   TabState: "resource:///modules/sessionstore/TabState.sys.mjs",
@@ -6691,98 +6693,6 @@ var SessionStoreInternal = {
     return deferred;
   },
 
-  /**
-   * Builds a single nsISessionStoreRestoreData tree for the provided |formdata|
-   * and |scroll| trees.
-   */
-  buildRestoreData(formdata, scroll) {
-    function addFormEntries(root, fields, isXpath) {
-      for (let [key, value] of Object.entries(fields)) {
-        switch (typeof value) {
-          case "string":
-            root.addTextField(isXpath, key, value);
-            break;
-          case "boolean":
-            root.addCheckbox(isXpath, key, value);
-            break;
-          case "object": {
-            if (value === null) {
-              break;
-            }
-            if (
-              value.hasOwnProperty("type") &&
-              value.hasOwnProperty("fileList")
-            ) {
-              root.addFileList(isXpath, key, value.type, value.fileList);
-              break;
-            }
-            if (
-              value.hasOwnProperty("selectedIndex") &&
-              value.hasOwnProperty("value")
-            ) {
-              root.addSingleSelect(
-                isXpath,
-                key,
-                value.selectedIndex,
-                value.value
-              );
-              break;
-            }
-            if (
-              value.hasOwnProperty("value") &&
-              value.hasOwnProperty("state")
-            ) {
-              root.addCustomElement(isXpath, key, value.value, value.state);
-              break;
-            }
-            if (
-              key === "sessionData" &&
-              ["about:sessionrestore", "about:welcomeback"].includes(
-                formdata.url
-              )
-            ) {
-              root.addTextField(isXpath, key, JSON.stringify(value));
-              break;
-            }
-            if (Array.isArray(value)) {
-              root.addMultipleSelect(isXpath, key, value);
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    let root = SessionStoreUtils.constructSessionStoreRestoreData();
-    if (scroll?.hasOwnProperty("scroll")) {
-      root.scroll = scroll.scroll;
-    }
-    if (formdata?.hasOwnProperty("url")) {
-      root.url = formdata.url;
-      if (formdata.hasOwnProperty("innerHTML")) {
-        // eslint-disable-next-line no-unsanitized/property
-        root.innerHTML = formdata.innerHTML;
-      }
-      if (formdata.hasOwnProperty("xpath")) {
-        addFormEntries(root, formdata.xpath, /* isXpath */ true);
-      }
-      if (formdata.hasOwnProperty("id")) {
-        addFormEntries(root, formdata.id, /* isXpath */ false);
-      }
-    }
-    let childrenLength = Math.max(
-      scroll?.children?.length || 0,
-      formdata?.children?.length || 0
-    );
-    for (let i = 0; i < childrenLength; i++) {
-      root.addChild(
-        this.buildRestoreData(formdata?.children?.[i], scroll?.children?.[i]),
-        i
-      );
-    }
-    return root;
-  },
-
   _waitForStateStop(browser, expectedURL = null) {
     const deferred = Promise.withResolvers();
 
@@ -6956,7 +6866,10 @@ var SessionStoreInternal = {
     if (!haveUserTypedValue && tabData.entries.length) {
       return SessionStoreUtils.initializeRestore(
         browser.browsingContext,
-        this.buildRestoreData(tabData.formdata, tabData.scroll)
+        lazy.SessionStoreHelper.buildRestoreData(
+          tabData.formdata,
+          tabData.scroll
+        )
       );
     }
     // Here, we need to load user data or about:blank instead.
