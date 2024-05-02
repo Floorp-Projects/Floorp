@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::ffi::{CString, CStr};
 
 /// A `dlerror` error.
 pub struct DlDescription(pub(crate) CString);
@@ -6,6 +6,12 @@ pub struct DlDescription(pub(crate) CString);
 impl std::fmt::Debug for DlDescription {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         std::fmt::Debug::fmt(&self.0, f)
+    }
+}
+
+impl From<&CStr> for DlDescription {
+    fn from(value: &CStr) -> Self {
+        Self(value.into())
     }
 }
 

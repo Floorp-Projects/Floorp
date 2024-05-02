@@ -1,5 +1,50 @@
 //! The change log.
 
+/// Release 0.8.3 (2024-03-05)
+///
+/// ## Non-breaking changes
+///
+/// A `dev-dependency` on `windows-sys` that was unconditionally introduced in
+/// [0.8.2](r0_8_2) has been made conditional.
+pub mod r0_8_3 {}
+
+/// Release 0.8.2 (2024-03-01)
+///
+/// ## (Potentially) breaking changes
+///
+/// MSRV has been increased to 1.56.0. Since both rustc versions are ancient, this has been deemed
+/// to not be breaking enough to warrant a semver-breaking release of libloading. If you're stick
+/// with a version of rustc older than 1.56.0, lock `libloading` dependency to `0.8.1`.
+///
+/// ## Non-breaking changes
+///
+/// * The crate switches the dependency on `windows-sys` to a `windows-target` one for Windows
+/// bindings. In order to enable this `libloading` defines any bindings necessary for its operation
+/// internally, just like has been done for `unix` targets. This should result in leaner dependency
+/// trees.
+/// * `os::unix::with_dlerror` has been exposed for the users who need to invoke `dl*` family of
+/// functions manually.
+pub mod r0_8_2 {}
+
+/// Release 0.8.1 (2023-09-30)
+///
+/// ## Non-breaking changes
+///
+/// * Support for GNU Hurd.
+pub mod r0_8_1 {}
+
+/// Release 0.8.0 (2023-04-11)
+///
+/// ## (Potentially) breaking changes
+///
+/// * `winapi` dependency has been replaced with `windows-sys`.
+/// * As a result the MSRV has been increased to 1.48.
+///
+/// ## Non-breaking changes
+///
+/// * Support for the QNX Neutrino target has been added.
+pub mod r0_8_0 {}
+
 /// Release 0.7.4 (2022-11-07)
 ///
 /// This release has no functional changes.

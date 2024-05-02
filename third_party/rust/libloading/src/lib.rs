@@ -16,7 +16,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! libloading = "0.7"
+//! libloading = "0.8"
 //! ```
 //!
 //! # Usage
@@ -41,15 +41,13 @@
 pub mod changelog;
 pub mod os;
 mod util;
-
 mod error;
-pub use self::error::Error;
-
 #[cfg(any(unix, windows, libloading_docs))]
 mod safe;
+
+pub use self::error::Error;
 #[cfg(any(unix, windows, libloading_docs))]
 pub use self::safe::{Library, Symbol};
-
 use std::env::consts::{DLL_PREFIX, DLL_SUFFIX};
 use std::ffi::{OsStr, OsString};
 
