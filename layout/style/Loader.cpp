@@ -18,12 +18,11 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PreloadHashKey.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/SchedulerGroup.h"
 #include "mozilla/URLPreloader.h"
-#include "nsIChildChannel.h"
 #include "nsIPrincipal.h"
 #include "nsISupportsPriority.h"
 #include "nsITimedChannel.h"
@@ -47,8 +46,6 @@
 #include "nsMimeTypes.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsThreadUtils.h"
-#include "nsGkAtoms.h"
-#include "nsIThreadInternal.h"
 #include "nsINetworkPredictor.h"
 #include "nsQueryActor.h"
 #include "nsStringStream.h"
@@ -62,12 +59,9 @@
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/ConsoleReportCollector.h"
-#include "mozilla/ServoUtils.h"
 #include "mozilla/css/StreamLoader.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/StaticPrefs_network.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Try.h"
 #include "ReferrerInfo.h"
@@ -415,6 +409,23 @@ SheetLoadData::~SheetLoadData() {
   MOZ_RELEASE_ASSERT(mSheetCompleteCalled || mIntentionallyDropped,
                      "Should always call SheetComplete, except when "
                      "dropping the load");
+}
+
+void SheetLoadData::StartLoading() {
+  MOZ_ASSERT(!mIsLoading, "Already loading? How?");
+  mIsLoading = true;
+  mLoadStart = TimeStamp::Now();
+}
+
+void SheetLoadData::SetLoadCompleted() {
+  MOZ_ASSERT(mIsLoading, "Not loading?");
+  MOZ_ASSERT(!mLoadStart.IsNull());
+  mIsLoading = false;
+  // Belts and suspenders just in case.
+  if (MOZ_LIKELY(!mLoadStart.IsNull())) {
+    glean::performance_pageload::async_sheet_load.AccumulateRawDuration(
+        TimeStamp::Now() - mLoadStart);
+  }
 }
 
 RefPtr<StyleSheet> SheetLoadData::ValueForCache() const {
