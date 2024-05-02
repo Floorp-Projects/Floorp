@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.Choice
@@ -883,6 +884,7 @@ class PromptFeature private constructor(
                         inputLabel,
                         inputValue,
                         promptAbuserDetector.areDialogsBeingAbused(),
+                        store.state.selectedTab?.content?.private == true,
                     )
                 }
             }
