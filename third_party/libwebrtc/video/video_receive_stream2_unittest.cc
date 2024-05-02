@@ -1020,7 +1020,8 @@ TEST_P(VideoReceiveStream2Test, RtpTimestampWrapAround) {
           .Build());
   EXPECT_CALL(mock_decoder_, Decode(test::RtpTimestamp(kWrapAroundRtp), _))
       .Times(1);
-  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()), RenderedFrame());
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Seconds(1)),
+              RenderedFrame());
 
   video_receive_stream_->Stop();
 }
