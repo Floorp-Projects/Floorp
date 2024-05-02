@@ -343,25 +343,16 @@ static bool CanEncode(const RefPtr<VideoEncoderConfigInternal>& aConfig) {
   if (!IsSupportedVideoCodec(parsedCodecString)) {
     return false;
   }
-
-  // TODO (bug 1872879, bug 1872880): Support this on Windows and Mac.
   if (aConfig->mScalabilityMode.isSome()) {
-    // We only support L1T2 and L1T3 ScalabilityMode in VP8 and VP9 encoders on
-    // Linux.
-    bool supported = IsOnLinux() && (IsVP8CodecString(parsedCodecString) ||
-                                     IsVP9CodecString(parsedCodecString))
-                         ? aConfig->mScalabilityMode->EqualsLiteral("L1T2") ||
-                               aConfig->mScalabilityMode->EqualsLiteral("L1T3")
-                         : false;
-
-    if (!supported) {
+    // Check if ScalabilityMode string is valid.
+    if (!aConfig->mScalabilityMode->EqualsLiteral("L1T2") &&
+        !aConfig->mScalabilityMode->EqualsLiteral("L1T3")) {
       LOGE("Scalability mode %s not supported for codec: %s",
            NS_ConvertUTF16toUTF8(aConfig->mScalabilityMode.value()).get(),
            NS_ConvertUTF16toUTF8(parsedCodecString).get());
       return false;
     }
   }
-
   return EncoderSupport::Supports(aConfig);
 }
 

@@ -26,6 +26,9 @@ bool WMFEncoderModule::Supports(const EncoderConfig& aConfig) const {
   if (aConfig.IsAudio()) {
     return false;
   }
+  if (aConfig.mScalabilityMode != ScalabilityMode::None) {
+    return false;
+  }
   return SupportsCodec(aConfig.mCodec);
 }
 
