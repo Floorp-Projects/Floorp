@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+<script src="shared_test_funcs.js"></script>
+<script>
+async function runTheTest(iframe_domain, cross_origin_domain) {
+  const iframes = document.querySelectorAll("iframe");
+  iframes[0].src = `https://${iframe_domain}/browser/browser/components/resistfingerprinting/test/browser/file_canvascompare_aboutblank_iframee.html`;
+  await waitForMessage("ready", `https://${iframe_domain}`);
+
+  const promiseForRFPTest = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      if(event.origin != `https://${iframe_domain}`) {
+        throw new Error(`origin should be ${iframe_domain}`);
+      }
+      resolve(event.data);
+    }, { once: true });
+  });
+  iframes[0].contentWindow.postMessage(["gimme", cross_origin_domain], "*");
+  var result = await promiseForRFPTest;
+
+  return result;
+}
+</script>
+</head>
+<body>
+<iframe width=100></iframe>
+</body>
+</html>
