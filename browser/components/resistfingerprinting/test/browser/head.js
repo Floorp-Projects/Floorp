@@ -876,6 +876,38 @@ async function RFPPBMFPP_NormalMode_NoProtectionsTest(
   await SpecialPowers.popPrefEnv();
 }
 
+async function RFPPBMFPP_NormalMode_ProtectionsTest(
+  uri,
+  testFunction,
+  expectedResults,
+  extraData,
+  extraPrefs
+) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.private_window = false;
+  extraData.testDesc =
+    extraData.testDesc ||
+    "RFP Enabled in PBM and FPP enabled in Normal Browsing Mode, Protections Enabled";
+  expectedResults.shouldRFPApply = false;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", false],
+      ["privacy.resistFingerprinting.pbmode", true],
+      ["privacy.fingerprintingProtection", true],
+      [
+        "privacy.fingerprintingProtection.overrides",
+        "+NavigatorHWConcurrency,+CanvasRandomization",
+      ],
+    ].concat(extraPrefs || []),
+  });
+
+  await runActualTest(uri, testFunction, expectedResults, extraData);
+
+  await SpecialPowers.popPrefEnv();
+}
+
 // (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
 async function testA(
   uri,
