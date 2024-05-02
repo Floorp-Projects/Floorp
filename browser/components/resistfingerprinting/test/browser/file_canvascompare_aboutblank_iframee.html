@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<body>
+<output id="result"></output>
+<script>
+window.onload = async () => {
+  parent.postMessage("ready", "*");
+}
+
+window.addEventListener("message", async function listener(event) {
+  if (event.data[0] == "gimme") {
+  	var iframe = document.createElement("iframe");
+    iframe.src = "about:blank?foo";
+    document.body.append(iframe);
+
+    function test() {
+      function give_inner_result() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 100;
+        canvas.height = 100;
+
+        const context = canvas.getContext("2d");
+
+        context.fillStyle = "#EE2222";
+        context.fillRect(0, 0, 100, 100);
+        context.fillStyle = "#2222EE";
+        context.fillRect(20, 20, 100, 100);
+
+        // Add the canvas element to the document
+        document.body.appendChild(canvas);
+
+        const imageData = context.getImageData(0, 0, 100, 100);
+
+        return imageData.data;
+      }
+      window.parent.document.querySelector("#result").textContent = JSON.stringify(give_inner_result());
+    }
+
+    iframe.contentWindow.eval(`(${test})()`);
+
+
+    function give_result() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 100;
+      canvas.height = 100;
+
+      const context = canvas.getContext("2d");
+
+      context.fillStyle = "#EE2222";
+      context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
+
+      // Add the canvas element to the document
+      document.body.appendChild(canvas);
+
+      const imageData = context.getImageData(0, 0, 100, 100);
+
+      return imageData.data;
+    }
+    let myResult = give_result();
+
+    parent.postMessage({mine: myResult, theirs: JSON.parse(document.querySelector("#result").textContent)}, "*")
+
+    // Fun fact - without clearing the text content of the element, the test will hang on shutdown
+    // Guess how many hours it took to figure _that_ out?
+    document.querySelector("#result").textContent = '';
+  }
+});
+</script>
+</body>

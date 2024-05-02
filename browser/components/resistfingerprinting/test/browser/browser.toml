@@ -10,6 +10,8 @@ support-files = [
   "file_workerNetInfo.js",
   "file_workerPerformance.js",
   "head.js",
+  "file_canvascompare_aboutblank_iframee.html",
+  "file_canvascompare_aboutblank_iframer.html",
   "file_canvascompare_aboutblank_popupmaker.html",
   "file_canvascompare_blob_popupmaker.html",
   "file_canvascompare_data_popupmaker.html",
@@ -65,6 +67,8 @@ lineno = "61"
 
 ["browser_canvascompare_iframes.js"]
 lineno = "64"
+
+["browser_canvascompare_iframes_aboutblank.js"]
 
 ["browser_canvascompare_popups.js"]
 lineno = "66"
