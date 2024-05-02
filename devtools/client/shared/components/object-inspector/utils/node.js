@@ -283,10 +283,7 @@ function nodeHasEntries(item) {
     className === "MIDIInputMap" ||
     className === "MIDIOutputMap" ||
     className === "HighlightRegistry" ||
-    // @backward-compat { version 125 } Support for enumerate CustomStateSet items was
-    // added in 125. When connecting to older server, we don't want to show the <entries>
-    // node for them. The extra check can be removed once 125 hits release.
-    (className === "CustomStateSet" && Array.isArray(value.preview?.items))
+    className === "CustomStateSet"
   );
 }
 
