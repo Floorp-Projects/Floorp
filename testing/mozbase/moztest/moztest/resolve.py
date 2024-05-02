@@ -886,7 +886,6 @@ class TestResolver(MozbuildObject):
             self.topsrcdir,
             self.topobjdir,
             rebuild=False,
-            download=True,
             config_path=None,
             rewrite_config=True,
             update=True,
