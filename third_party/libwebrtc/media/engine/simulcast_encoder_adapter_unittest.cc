@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/field_trials_view.h"
 #include "api/test/create_simulcast_test_fixture.h"
 #include "api/test/simulcast_test_fixture.h"
@@ -56,9 +57,10 @@ std::unique_ptr<SimulcastTestFixture> CreateSpecificSimulcastTestFixture(
     VideoEncoderFactory* internal_encoder_factory) {
   std::unique_ptr<VideoEncoderFactory> encoder_factory =
       std::make_unique<FunctionVideoEncoderFactory>(
-          [internal_encoder_factory]() {
+          [internal_encoder_factory](const Environment& env,
+                                     const SdpVideoFormat& format) {
             return std::make_unique<SimulcastEncoderAdapter>(
-                internal_encoder_factory, SdpVideoFormat::VP8());
+                env, internal_encoder_factory, nullptr, SdpVideoFormat::VP8());
           });
   std::unique_ptr<VideoDecoderFactory> decoder_factory =
       std::make_unique<FunctionVideoDecoderFactory>(
@@ -403,33 +405,30 @@ void MockVideoEncoderFactory::set_init_encode_return_value(int32_t value) {
 class TestSimulcastEncoderAdapterFakeHelper {
  public:
   explicit TestSimulcastEncoderAdapterFakeHelper(
+      const Environment& env,
       bool use_fallback_factory,
-      const SdpVideoFormat& video_format,
-      const FieldTrialsView& field_trials)
-      : primary_factory_(new MockVideoEncoderFactory()),
-        fallback_factory_(use_fallback_factory ? new MockVideoEncoderFactory()
-                                               : nullptr),
-        video_format_(video_format),
-        field_trials_(field_trials) {}
+      const SdpVideoFormat& video_format)
+      : env_(env),
+        fallback_factory_(use_fallback_factory
+                              ? std::make_unique<MockVideoEncoderFactory>()
+                              : nullptr),
+        video_format_(video_format) {}
 
-  // Can only be called once as the SimulcastEncoderAdapter will take the
-  // ownership of `factory_`.
-  VideoEncoder* CreateMockEncoderAdapter() {
-    return new SimulcastEncoderAdapter(primary_factory_.get(),
-                                       fallback_factory_.get(), video_format_,
-                                       field_trials_);
+  std::unique_ptr<VideoEncoder> CreateMockEncoderAdapter() {
+    return std::make_unique<SimulcastEncoderAdapter>(
+        env_, &primary_factory_, fallback_factory_.get(), video_format_);
   }
 
-  MockVideoEncoderFactory* factory() { return primary_factory_.get(); }
+  MockVideoEncoderFactory* factory() { return &primary_factory_; }
   MockVideoEncoderFactory* fallback_factory() {
     return fallback_factory_.get();
   }
 
  private:
-  std::unique_ptr<MockVideoEncoderFactory> primary_factory_;
+  const Environment env_;
+  MockVideoEncoderFactory primary_factory_;
   std::unique_ptr<MockVideoEncoderFactory> fallback_factory_;
   SdpVideoFormat video_format_;
-  const FieldTrialsView& field_trials_;
 };
 
 static const int kTestTemporalLayerProfile[3] = {3, 2, 1};
@@ -446,10 +445,10 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
   }
 
   void SetUp() override {
-    helper_.reset(new TestSimulcastEncoderAdapterFakeHelper(
-        use_fallback_factory_, SdpVideoFormat("VP8", sdp_video_parameters_),
-        field_trials_));
-    adapter_.reset(helper_->CreateMockEncoderAdapter());
+    helper_ = std::make_unique<TestSimulcastEncoderAdapterFakeHelper>(
+        CreateEnvironment(&field_trials_), use_fallback_factory_,
+        SdpVideoFormat("VP8", sdp_video_parameters_));
+    adapter_ = helper_->CreateMockEncoderAdapter();
     last_encoded_image_width_ = absl::nullopt;
     last_encoded_image_height_ = absl::nullopt;
     last_encoded_image_simulcast_index_ = absl::nullopt;

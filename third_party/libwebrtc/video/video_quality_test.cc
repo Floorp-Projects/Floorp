@@ -317,8 +317,8 @@ std::unique_ptr<VideoEncoder> VideoQualityTest::CreateVideoEncoder(
     VideoAnalyzer* analyzer) {
   std::unique_ptr<VideoEncoder> encoder;
   if (format.name == "VP8") {
-    encoder = std::make_unique<SimulcastEncoderAdapter>(encoder_factory_.get(),
-                                                        format);
+    encoder = std::make_unique<SimulcastEncoderAdapter>(
+        env, encoder_factory_.get(), nullptr, format);
   } else if (format.name == "FakeCodec") {
     encoder = webrtc::FakeVideoEncoderFactory::CreateVideoEncoder();
   } else {
