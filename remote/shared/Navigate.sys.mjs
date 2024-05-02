@@ -91,9 +91,14 @@ export async function waitForInitialNavigationCompleted(
     isInitial = browsingContext.currentWindowGlobal.isInitialDocument;
   }
 
+  const isLoadingDocument = listener.isLoadingDocument;
+  lazy.logger.trace(
+    lazy.truncate`[${browsingContext.id}] Wait for initial navigation: isInitial=${isInitial}, isLoadingDocument=${isLoadingDocument}`
+  );
+
   // If the current document is not the initial "about:blank" and is also
   // no longer loading, assume the navigation is done and return.
-  if (!isInitial && !listener.isLoadingDocument) {
+  if (!isInitial && !isLoadingDocument) {
     lazy.logger.trace(
       lazy.truncate`[${browsingContext.id}] Document already finished loading: ${browsingContext.currentURI?.spec}`
     );
