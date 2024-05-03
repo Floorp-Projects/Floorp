@@ -219,3 +219,103 @@ addUiaTask(
   // The IA2 -> UIA proxy doesn't support ClassName.
   { uiaEnabled: true, uiaDisabled: false }
 );
+
+/**
+ * Test the AriaRole property.
+ */
+addUiaTask(
+  `
+<div id="button" role="button">button</div>
+<div id="main" role="main">main</div>
+<div id="unknown" role="unknown">unknown</div>
+<button id="computedButton">computedButton</button>
+<h1 id="computedHeading">computedHeading</h1>
+<main id="computedMain">computedMain</main>
+<div id="generic">generic</div>
+  `,
+  async function testAriaRole() {
+    await definePyVar("doc", `getDocUia()`);
+    is(
+      await runPython(`findUiaByDomId(doc, "button").CurrentAriaRole`),
+      "button",
+      "button has correct AriaRole"
+    );
+    is(
+      await runPython(`findUiaByDomId(doc, "main").CurrentAriaRole`),
+      "main",
+      "main has correct AriaRole"
+    );
+    is(
+      await runPython(`findUiaByDomId(doc, "unknown").CurrentAriaRole`),
+      "unknown",
+      "unknown has correct AriaRole"
+    );
+    // The IA2 -> UIA proxy doesn't compute ARIA roles.
+    if (gIsUiaEnabled) {
+      is(
+        await runPython(
+          `findUiaByDomId(doc, "computedButton").CurrentAriaRole`
+        ),
+        "button",
+        "computedButton has correct AriaRole"
+      );
+      is(
+        await runPython(`findUiaByDomId(doc, "computedMain").CurrentAriaRole`),
+        "main",
+        "computedMain has correct AriaRole"
+      );
+      is(
+        await runPython(
+          `findUiaByDomId(doc, "computedHeading").CurrentAriaRole`
+        ),
+        "heading",
+        "computedHeading has correct AriaRole"
+      );
+      is(
+        await runPython(`findUiaByDomId(doc, "generic").CurrentAriaRole`),
+        "generic",
+        "generic has correct AriaRole"
+      );
+    }
+  }
+);
+
+/**
+ * Test the LocalizedControlType property. We don't support this ourselves, but
+ * the system provides it based on ControlType and AriaRole.
+ */
+addUiaTask(
+  `
+<button id="button">button</button>
+<h1 id="h1">h1</h1>
+<main id="main">main</main>
+  `,
+  async function testLocalizedControlType() {
+    await definePyVar("doc", `getDocUia()`);
+    is(
+      await runPython(
+        `findUiaByDomId(doc, "button").CurrentLocalizedControlType`
+      ),
+      "button",
+      "button has correct LocalizedControlType"
+    );
+    // The IA2 -> UIA proxy doesn't compute ARIA roles, so it can't compute the
+    // correct LocalizedControlType for these either.
+    if (gIsUiaEnabled) {
+      is(
+        await runPython(
+          `findUiaByDomId(doc, "h1").CurrentLocalizedControlType`
+        ),
+        "heading",
+        "h1 has correct LocalizedControlType"
+      );
+      is(
+        await runPython(
+          `findUiaByDomId(doc, "main").CurrentLocalizedControlType`
+        ),
+        "main",
+        "main has correct LocalizedControlType"
+      );
+    }
+  }
+);
