@@ -623,11 +623,13 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
   if (NS_SUCCEEDED(rv)) {
     rv = CreateModuleScript(aRequest);
 
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
     // If a module script was created, it should either have a module record
     // object or a parse error.
     if (ModuleScript* ms = aRequest->mModuleScript) {
       MOZ_DIAGNOSTIC_ASSERT(bool(ms->ModuleRecord()) != ms->HasParseError());
     }
+#endif
 
     aRequest->ClearScriptSource();
 
@@ -1445,9 +1447,11 @@ void ModuleLoaderBase::RegisterImportMap(UniquePtr<ImportMap> aImportMap) {
           "Non-preload module loads should block import maps");
       MOZ_DIAGNOSTIC_ASSERT(!script->HadImportMap(),
                             "Only one import map can be registered");
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
       if (JSObject* module = script->ModuleRecord()) {
         MOZ_DIAGNOSTIC_ASSERT(!JS::ModuleIsLinked(module));
       }
+#endif
       script->Shutdown();
     }
   }
