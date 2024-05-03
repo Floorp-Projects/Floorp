@@ -56,7 +56,7 @@ add_task(async function test_download_shortcut() {
         "screenshots-preview-ready"
       );
 
-      let visibleButton = await helper.getPanelButton(".visible-page");
+      let visibleButton = await helper.getPanelButton("#visible-page");
       visibleButton.click();
 
       await screenshotReady;
@@ -108,7 +108,7 @@ add_task(async function test_copy_shortcut() {
         "screenshots-preview-ready"
       );
 
-      let visibleButton = await helper.getPanelButton(".visible-page");
+      let visibleButton = await helper.getPanelButton("#visible-page");
       visibleButton.click();
 
       await screenshotReady;

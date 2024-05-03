@@ -28,8 +28,8 @@ const { MAX_CAPTURE_DIMENSION, MAX_CAPTURE_AREA } = ChromeUtils.importESModule(
 
 const gScreenshotUISelectors = {
   panel: "#screenshotsPagePanel",
-  fullPageButton: "button.full-page",
-  visiblePageButton: "button.visible-page",
+  fullPageButton: "button#full-page",
+  visiblePageButton: "button#visible-page",
   copyButton: "button.#copy",
 };
 
@@ -239,7 +239,11 @@ class ScreenshotsHelper {
         let dimensions;
         await ContentTaskUtils.waitForCondition(() => {
           dimensions = screenshotsChild.overlay.hoverElementRegion.dimensions;
-          return dimensions.width === width && dimensions.height === height;
+          if (dimensions.width === width && dimensions.height === height) {
+            return true;
+          }
+          info(`Got: ${JSON.stringify(dimensions)}`);
+          return false;
         }, "The hover element region is the expected width and height");
         return dimensions;
       }
@@ -444,6 +448,32 @@ class ScreenshotsHelper {
       () => window.outerHeight === height && window.outerWidth === width,
       "Waiting for window to resize"
     );
+  }
+
+  waitForContentMousePosition(left, top) {
+    return ContentTask.spawn(this.browser, [left, top], async ([x, y]) => {
+      function isCloseEnough(a, b, diff) {
+        return Math.abs(a - b) <= diff;
+      }
+
+      let cursorX = {};
+      let cursorY = {};
+
+      await ContentTaskUtils.waitForCondition(() => {
+        content.window.windowUtils.getLastOverWindowPointerLocationInCSSPixels(
+          cursorX,
+          cursorY
+        );
+        if (
+          isCloseEnough(cursorX.value, x, 1) &&
+          isCloseEnough(cursorY.value, y, 1)
+        ) {
+          return true;
+        }
+        info(`Got: ${JSON.stringify({ cursorX, cursorY, x, y })}`);
+        return false;
+      }, `Wait for cursor to be ${x}, ${y}`);
+    });
   }
 
   async clickDownloadButton() {
@@ -676,6 +706,8 @@ class ScreenshotsHelper {
         scrollWidth: width,
         scrollX,
         scrollY,
+        scrollbarWidth: scrollbarWidth.value,
+        scrollbarHeight: scrollbarHeight.value,
       };
     });
   }
