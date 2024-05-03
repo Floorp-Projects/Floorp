@@ -50,6 +50,7 @@ browser.jar:
         content/browser/browser-fullScreenAndPointerLock.js (content/browser-fullScreenAndPointerLock.js)
         content/browser/browser-fullZoom.js                 (content/browser-fullZoom.js)
         content/browser/browser-gestureSupport.js           (content/browser-gestureSupport.js)
+        content/browser/browser-init.js                     (content/browser-init.js)
         content/browser/browser-pageActions.js              (content/browser-pageActions.js)
         content/browser/browser-pagestyle.js                (content/browser-pagestyle.js)
         content/browser/browser-places.js                   (content/browser-places.js)
