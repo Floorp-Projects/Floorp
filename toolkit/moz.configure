@@ -975,6 +975,19 @@ project_flag(
     set_as_define=True,
 )
 
+# Profile Management
+# ==============================================================
+# Selectable profiles are temporarily gated behind a build flag
+# while we build and stabilize the backend (bug 1893315).
+
+option(
+    env="MOZ_SELECTABLE_PROFILES",
+    help="Enable experimental and unstable profile groups",
+)
+
+
+set_define("MOZ_SELECTABLE_PROFILES", True, when="MOZ_SELECTABLE_PROFILES")
+
 project_flag(
     "MOZ_DEDICATED_PROFILES",
     help="Enable dedicated profiles per install",

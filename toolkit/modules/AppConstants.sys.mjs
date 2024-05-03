@@ -474,6 +474,13 @@ export var AppConstants = Object.freeze({
     false,
 #endif
 
+  MOZ_SELECTABLE_PROFILES:
+#ifdef MOZ_SELECTABLE_PROFILES
+    true,
+#else
+    false,
+#endif
+
   // Returns true for CN region build when distibution id set as 'MozillaOnline'
   isChinaRepack() {
     return (
