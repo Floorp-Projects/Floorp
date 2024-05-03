@@ -212,34 +212,66 @@ impl DocumentHandle {
 
 #[repr(C)]
 pub struct WrVecU8 {
+    /// `data` must always be valid for passing to Vec::from_raw_parts.
+    /// In particular, it must be non-null even if capacity is zero.
     data: *mut u8,
     length: usize,
     capacity: usize,
 }
 
 impl WrVecU8 {
-    fn into_vec(self) -> Vec<u8> {
-        unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) }
+    fn into_vec(mut self) -> Vec<u8> {
+        // Clear self and then drop self.
+        self.flush_into_vec()
     }
 
-    // Equivalent to `into_vec` but clears self instead of consuming the value.
+    // Clears self without consuming self.
     fn flush_into_vec(&mut self) -> Vec<u8> {
-        self.convert_into_vec::<u8>()
-    }
-
-    // Like flush_into_vec, but also does an unsafe conversion to the desired type.
-    fn convert_into_vec<T>(&mut self) -> Vec<T> {
+        // Create a Vec using Vec::from_raw_parts.
+        //
+        // Here are the safety requirements, verbatim from the documentation of `from_raw_parts`:
+        //
+        // > * `ptr` must have been allocated using the global allocator, such as via
+        // >   the [`alloc::alloc`] function.
+        // > * `T` needs to have the same alignment as what `ptr` was allocated with.
+        // >   (`T` having a less strict alignment is not sufficient, the alignment really
+        // >   needs to be equal to satisfy the [`dealloc`] requirement that memory must be
+        // >   allocated and deallocated with the same layout.)
+        // > * The size of `T` times the `capacity` (ie. the allocated size in bytes) needs
+        // >   to be the same size as the pointer was allocated with. (Because similar to
+        // >   alignment, [`dealloc`] must be called with the same layout `size`.)
+        // > * `length` needs to be less than or equal to `capacity`.
+        // > * The first `length` values must be properly initialized values of type `T`.
+        // > * `capacity` needs to be the capacity that the pointer was allocated with.
+        // > * The allocated size in bytes must be no larger than `isize::MAX`.
+        // >   See the safety documentation of [`pointer::offset`].
+        //
+        // These comments don't say what to do for zero-capacity vecs which don't have
+        // an allocation. In particular, the requirement "`ptr` must have been allocated"
+        // is not met for such vecs.
+        //
+        // However, the safety requirements of `slice::from_raw_parts` are more explicit
+        // about the empty case:
+        //
+        // > * `data` must be non-null and aligned even for zero-length slices. One
+        // >   reason for this is that enum layout optimizations may rely on references
+        // >   (including slices of any length) being aligned and non-null to distinguish
+        // >   them from other data. You can obtain a pointer that is usable as `data`
+        // >   for zero-length slices using [`NonNull::dangling()`].
+        //
+        // For the empty case we follow this requirement rather than the more stringent
+        // requirement from the `Vec::from_raw_parts` docs.
         let vec = unsafe {
-            Vec::from_raw_parts(
-                self.data as *mut T,
-                self.length / mem::size_of::<T>(),
-                self.capacity / mem::size_of::<T>(),
-            )
+            Vec::from_raw_parts(self.data, self.length, self.capacity)
         };
-        self.data = ptr::null_mut();
+        self.data = ptr::NonNull::dangling().as_ptr();
         self.length = 0;
         self.capacity = 0;
         vec
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe { core::slice::from_raw_parts(self.data, self.length) }
     }
 
     fn from_vec(mut v: Vec<u8>) -> WrVecU8 {
@@ -2373,13 +2405,24 @@ pub extern "C" fn wr_resource_updates_add_font_instance(
     platform_options: *const FontInstancePlatformOptions,
     variations: &mut WrVecU8,
 ) {
+    // Deserialize a sequence of FontVariation objects from the raw bytes.
+    // Every FontVariation is 8 bytes: one u32 and one f32.
+    // The code below would look better with slice::chunk_arrays:
+    // https://github.com/rust-lang/rust/issues/74985
+    let variations: Vec<FontVariation> =
+        variations.as_slice().chunks_exact(8).map(|c| {
+            assert_eq!(c.len(), 8);
+            let tag = u32::from_ne_bytes([c[0], c[1], c[2], c[3]]);
+            let value = f32::from_ne_bytes([c[4], c[5], c[6], c[7]]);
+            FontVariation { tag, value }
+        }).collect();
     txn.add_font_instance(
         key,
         font_key,
         glyph_size,
         unsafe { options.as_ref().cloned() },
         unsafe { platform_options.as_ref().cloned() },
-        variations.convert_into_vec::<FontVariation>(),
+        variations,
     );
 }
 
