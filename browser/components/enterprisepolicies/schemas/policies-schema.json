@@ -1187,6 +1187,10 @@
       }
     },
 
+    "PostQuantumKeyAgreementEnabled": {
+      "type": "boolean"
+    },
+
     "Preferences": {
       "type": ["object", "JSON"],
       "patternProperties": {

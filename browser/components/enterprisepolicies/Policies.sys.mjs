@@ -1812,6 +1812,12 @@ export var Policies = {
     },
   },
 
+  PostQuantumKeyAgreementEnabled: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("security.tls.enable_kyber", param);
+    },
+  },
+
   Preferences: {
     onBeforeAddons(manager, param) {
       let allowedPrefixes = [
