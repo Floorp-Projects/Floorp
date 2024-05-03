@@ -5,7 +5,9 @@
     clippy::derive_partial_eq_without_eq,
     clippy::excessive_precision,
     clippy::float_cmp,
+    clippy::incompatible_msrv, // https://github.com/rust-lang/rust-clippy/issues/12257
     clippy::items_after_statements,
+    clippy::let_underscore_untyped,
     clippy::shadow_unrelated,
     clippy::too_many_lines,
     clippy::unreadable_literal,
@@ -13,9 +15,6 @@
     clippy::vec_init_then_push,
     clippy::zero_sized_map_values
 )]
-#![cfg_attr(feature = "trace-macros", feature(trace_macros))]
-#[cfg(feature = "trace-macros")]
-trace_macros!(true);
 
 #[macro_use]
 mod macros;
@@ -32,27 +31,25 @@ use serde_json::{
     from_reader, from_slice, from_str, from_value, json, to_string, to_string_pretty, to_value,
     to_vec, Deserializer, Number, Value,
 };
-use std::collections::hash_map::DefaultHasher;
 use std::collections::BTreeMap;
 #[cfg(feature = "raw_value")]
 use std::collections::HashMap;
 use std::fmt::{self, Debug};
+use std::hash::BuildHasher;
+#[cfg(feature = "raw_value")]
 use std::hash::{Hash, Hasher};
 use std::io;
 use std::iter;
 use std::marker::PhantomData;
 use std::mem;
 use std::str::FromStr;
-use std::string::ToString;
 use std::{f32, f64};
-use std::{i16, i32, i64, i8};
-use std::{u16, u32, u64, u8};
 
 macro_rules! treemap {
     () => {
         BTreeMap::new()
     };
-    ($($k:expr => $v:expr),+) => {
+    ($($k:expr => $v:expr),+ $(,)?) => {
         {
             let mut m = BTreeMap::new();
             $(
@@ -159,16 +156,28 @@ fn test_write_f64() {
 
 #[test]
 fn test_encode_nonfinite_float_yields_null() {
-    let v = to_value(::std::f64::NAN).unwrap();
+    let v = to_value(f64::NAN.copysign(1.0)).unwrap();
     assert!(v.is_null());
 
-    let v = to_value(::std::f64::INFINITY).unwrap();
+    let v = to_value(f64::NAN.copysign(-1.0)).unwrap();
     assert!(v.is_null());
 
-    let v = to_value(::std::f32::NAN).unwrap();
+    let v = to_value(f64::INFINITY).unwrap();
     assert!(v.is_null());
 
-    let v = to_value(::std::f32::INFINITY).unwrap();
+    let v = to_value(-f64::INFINITY).unwrap();
+    assert!(v.is_null());
+
+    let v = to_value(f32::NAN.copysign(1.0)).unwrap();
+    assert!(v.is_null());
+
+    let v = to_value(f32::NAN.copysign(-1.0)).unwrap();
+    assert!(v.is_null());
+
+    let v = to_value(f32::INFINITY).unwrap();
+    assert!(v.is_null());
+
+    let v = to_value(-f32::INFINITY).unwrap();
     assert!(v.is_null());
 }
 
@@ -263,7 +272,7 @@ fn test_write_object() {
         (
             treemap!(
                 "a".to_string() => true,
-                "b".to_string() => false
+                "b".to_string() => false,
             ),
             "{\"a\":true,\"b\":false}",
         ),
@@ -274,7 +283,7 @@ fn test_write_object() {
             treemap![
                 "a".to_string() => treemap![],
                 "b".to_string() => treemap![],
-                "c".to_string() => treemap![]
+                "c".to_string() => treemap![],
             ],
             "{\"a\":{},\"b\":{},\"c\":{}}",
         ),
@@ -283,10 +292,10 @@ fn test_write_object() {
                 "a".to_string() => treemap![
                     "a".to_string() => treemap!["a" => vec![1,2,3]],
                     "b".to_string() => treemap![],
-                    "c".to_string() => treemap![]
+                    "c".to_string() => treemap![],
                 ],
                 "b".to_string() => treemap![],
-                "c".to_string() => treemap![]
+                "c".to_string() => treemap![],
             ],
             "{\"a\":{\"a\":{\"a\":[1,2,3]},\"b\":{},\"c\":{}},\"b\":{},\"c\":{}}",
         ),
@@ -296,9 +305,9 @@ fn test_write_object() {
                 "b".to_string() => treemap![
                     "a".to_string() => treemap!["a" => vec![1,2,3]],
                     "b".to_string() => treemap![],
-                    "c".to_string() => treemap![]
+                    "c".to_string() => treemap![],
                 ],
-                "c".to_string() => treemap![]
+                "c".to_string() => treemap![],
             ],
             "{\"a\":{},\"b\":{\"a\":{\"a\":[1,2,3]},\"b\":{},\"c\":{}},\"c\":{}}",
         ),
@@ -309,8 +318,8 @@ fn test_write_object() {
                 "c".to_string() => treemap![
                     "a".to_string() => treemap!["a" => vec![1,2,3]],
                     "b".to_string() => treemap![],
-                    "c".to_string() => treemap![]
-                ]
+                    "c".to_string() => treemap![],
+                ],
             ],
             "{\"a\":{},\"b\":{},\"c\":{\"a\":{\"a\":[1,2,3]},\"b\":{},\"c\":{}}}",
         ),
@@ -323,7 +332,7 @@ fn test_write_object() {
             treemap![
                 "a".to_string() => treemap![],
                 "b".to_string() => treemap![],
-                "c".to_string() => treemap![]
+                "c".to_string() => treemap![],
             ],
             pretty_str!({
                 "a": {},
@@ -336,10 +345,10 @@ fn test_write_object() {
                 "a".to_string() => treemap![
                     "a".to_string() => treemap!["a" => vec![1,2,3]],
                     "b".to_string() => treemap![],
-                    "c".to_string() => treemap![]
+                    "c".to_string() => treemap![],
                 ],
                 "b".to_string() => treemap![],
-                "c".to_string() => treemap![]
+                "c".to_string() => treemap![],
             ],
             pretty_str!({
                 "a": {
@@ -363,9 +372,9 @@ fn test_write_object() {
                 "b".to_string() => treemap![
                     "a".to_string() => treemap!["a" => vec![1,2,3]],
                     "b".to_string() => treemap![],
-                    "c".to_string() => treemap![]
+                    "c".to_string() => treemap![],
                 ],
-                "c".to_string() => treemap![]
+                "c".to_string() => treemap![],
             ],
             pretty_str!({
                 "a": {},
@@ -390,8 +399,8 @@ fn test_write_object() {
                 "c".to_string() => treemap![
                     "a".to_string() => treemap!["a" => vec![1,2,3]],
                     "b".to_string() => treemap![],
-                    "c".to_string() => treemap![]
-                ]
+                    "c".to_string() => treemap![],
+                ],
             ],
             pretty_str!({
                 "a": {},
@@ -422,7 +431,7 @@ fn test_write_object() {
         (
             treemap!(
                 "a".to_string() => true,
-                "b".to_string() => false
+                "b".to_string() => false,
             ),
             pretty_str!( {
                 "a": true,
@@ -1191,8 +1200,8 @@ fn test_parse_object() {
         treemap!(
             "a".to_string() => treemap!(
                 "b".to_string() => 3u64,
-                "c".to_string() => 4
-            )
+                "c".to_string() => 4,
+            ),
         ),
     )]);
 
@@ -1368,7 +1377,7 @@ fn test_parse_enum() {
         ),
         treemap!(
             "a".to_string() => Animal::Dog,
-            "b".to_string() => Animal::Frog("Henry".to_string(), vec![])
+            "b".to_string() => Animal::Frog("Henry".to_string(), vec![]),
         ),
     )]);
 }
@@ -1451,7 +1460,6 @@ fn test_serialize_seq_with_no_len() {
     where
         T: ser::Serialize,
     {
-        #[inline]
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: ser::Serializer,
@@ -1478,7 +1486,6 @@ fn test_serialize_seq_with_no_len() {
             formatter.write_str("array")
         }
 
-        #[inline]
         fn visit_unit<E>(self) -> Result<MyVec<T>, E>
         where
             E: de::Error,
@@ -1486,7 +1493,6 @@ fn test_serialize_seq_with_no_len() {
             Ok(MyVec(Vec::new()))
         }
 
-        #[inline]
         fn visit_seq<V>(self, mut visitor: V) -> Result<MyVec<T>, V::Error>
         where
             V: de::SeqAccess<'de>,
@@ -1537,7 +1543,6 @@ fn test_serialize_map_with_no_len() {
         K: ser::Serialize + Ord,
         V: ser::Serialize,
     {
-        #[inline]
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: ser::Serializer,
@@ -1565,7 +1570,6 @@ fn test_serialize_map_with_no_len() {
             formatter.write_str("map")
         }
 
-        #[inline]
         fn visit_unit<E>(self) -> Result<MyMap<K, V>, E>
         where
             E: de::Error,
@@ -1573,7 +1577,6 @@ fn test_serialize_map_with_no_len() {
             Ok(MyMap(BTreeMap::new()))
         }
 
-        #[inline]
         fn visit_map<Visitor>(self, mut visitor: Visitor) -> Result<MyMap<K, V>, Visitor::Error>
         where
             Visitor: de::MapAccess<'de>,
@@ -1660,22 +1663,11 @@ fn test_deserialize_from_stream() {
 }
 
 #[test]
-fn test_serialize_rejects_bool_keys() {
-    let map = treemap!(
-        true => 2,
-        false => 4
-    );
-
-    let err = to_vec(&map).unwrap_err();
-    assert_eq!(err.to_string(), "key must be a string");
-}
-
-#[test]
 fn test_serialize_rejects_adt_keys() {
     let map = treemap!(
         Some("a") => 2,
         Some("b") => 4,
-        None => 6
+        None => 6,
     );
 
     let err = to_vec(&map).unwrap_err();
@@ -1889,23 +1881,41 @@ fn test_integer_key() {
     // map with integer keys
     let map = treemap!(
         1 => 2,
-        -1 => 6
+        -1 => 6,
     );
     let j = r#"{"-1":6,"1":2}"#;
     test_encode_ok(&[(&map, j)]);
     test_parse_ok(vec![(j, map)]);
 
-    let j = r#"{"x":null}"#;
-    test_parse_err::<BTreeMap<i32, ()>>(&[(
-        j,
-        "invalid type: string \"x\", expected i32 at line 1 column 4",
-    )]);
+    test_parse_err::<BTreeMap<i32, ()>>(&[
+        (
+            r#"{"x":null}"#,
+            "invalid value: expected key to be a number in quotes at line 1 column 2",
+        ),
+        (
+            r#"{" 123":null}"#,
+            "invalid value: expected key to be a number in quotes at line 1 column 2",
+        ),
+        (r#"{"123 ":null}"#, "expected `\"` at line 1 column 6"),
+    ]);
+
+    let err = from_value::<BTreeMap<i32, ()>>(json!({" 123":null})).unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "invalid value: expected key to be a number in quotes",
+    );
+
+    let err = from_value::<BTreeMap<i32, ()>>(json!({"123 ":null})).unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "invalid value: expected key to be a number in quotes",
+    );
 }
 
 #[test]
 fn test_integer128_key() {
     let map = treemap! {
-        100000000000000000000000000000000000000u128 => ()
+        100000000000000000000000000000000000000u128 => (),
     };
     let j = r#"{"100000000000000000000000000000000000000":null}"#;
     assert_eq!(to_string(&map).unwrap(), j);
@@ -1913,21 +1923,104 @@ fn test_integer128_key() {
 }
 
 #[test]
-fn test_deny_float_key() {
-    #[derive(Eq, PartialEq, Ord, PartialOrd)]
+fn test_float_key() {
+    #[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone)]
     struct Float;
     impl Serialize for Float {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
         {
-            serializer.serialize_f32(1.0)
+            serializer.serialize_f32(1.23)
+        }
+    }
+    impl<'de> Deserialize<'de> for Float {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: de::Deserializer<'de>,
+        {
+            f32::deserialize(deserializer).map(|_| Float)
         }
     }
 
     // map with float key
-    let map = treemap!(Float => "x");
+    let map = treemap!(Float => "x".to_owned());
+    let j = r#"{"1.23":"x"}"#;
+
+    test_encode_ok(&[(&map, j)]);
+    test_parse_ok(vec![(j, map)]);
+
+    let j = r#"{"x": null}"#;
+    test_parse_err::<BTreeMap<Float, ()>>(&[(
+        j,
+        "invalid value: expected key to be a number in quotes at line 1 column 2",
+    )]);
+}
+
+#[test]
+fn test_deny_non_finite_f32_key() {
+    // We store float bits so that we can derive Ord, and other traits. In a
+    // real context the code might involve a crate like ordered-float.
+
+    #[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone)]
+    struct F32Bits(u32);
+    impl Serialize for F32Bits {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            serializer.serialize_f32(f32::from_bits(self.0))
+        }
+    }
+
+    let map = treemap!(F32Bits(f32::INFINITY.to_bits()) => "x".to_owned());
+    assert!(serde_json::to_string(&map).is_err());
     assert!(serde_json::to_value(map).is_err());
+
+    let map = treemap!(F32Bits(f32::NEG_INFINITY.to_bits()) => "x".to_owned());
+    assert!(serde_json::to_string(&map).is_err());
+    assert!(serde_json::to_value(map).is_err());
+
+    let map = treemap!(F32Bits(f32::NAN.to_bits()) => "x".to_owned());
+    assert!(serde_json::to_string(&map).is_err());
+    assert!(serde_json::to_value(map).is_err());
+}
+
+#[test]
+fn test_deny_non_finite_f64_key() {
+    // We store float bits so that we can derive Ord, and other traits. In a
+    // real context the code might involve a crate like ordered-float.
+
+    #[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone)]
+    struct F64Bits(u64);
+    impl Serialize for F64Bits {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            serializer.serialize_f64(f64::from_bits(self.0))
+        }
+    }
+
+    let map = treemap!(F64Bits(f64::INFINITY.to_bits()) => "x".to_owned());
+    assert!(serde_json::to_string(&map).is_err());
+    assert!(serde_json::to_value(map).is_err());
+
+    let map = treemap!(F64Bits(f64::NEG_INFINITY.to_bits()) => "x".to_owned());
+    assert!(serde_json::to_string(&map).is_err());
+    assert!(serde_json::to_value(map).is_err());
+
+    let map = treemap!(F64Bits(f64::NAN.to_bits()) => "x".to_owned());
+    assert!(serde_json::to_string(&map).is_err());
+    assert!(serde_json::to_value(map).is_err());
+}
+
+#[test]
+fn test_boolean_key() {
+    let map = treemap!(false => 0, true => 1);
+    let j = r#"{"false":0,"true":1}"#;
+    test_encode_ok(&[(&map, j)]);
+    test_parse_ok(vec![(j, map)]);
 }
 
 #[test]
@@ -1953,7 +2046,7 @@ fn test_effectively_string_keys() {
     }
     let map = treemap! {
         Enum::One => 1,
-        Enum::Two => 2
+        Enum::Two => 2,
     };
     let expected = r#"{"One":1,"Two":2}"#;
     test_encode_ok(&[(&map, expected)]);
@@ -1963,7 +2056,7 @@ fn test_effectively_string_keys() {
     struct Wrapper(String);
     let map = treemap! {
         Wrapper("zero".to_owned()) => 0,
-        Wrapper("one".to_owned()) => 1
+        Wrapper("one".to_owned()) => 1,
     };
     let expected = r#"{"one":1,"zero":0}"#;
     test_encode_ok(&[(&map, expected)]);
@@ -2145,8 +2238,8 @@ fn null_invalid_type() {
 
 #[test]
 fn test_integer128() {
-    let signed = &[i128::min_value(), -1, 0, 1, i128::max_value()];
-    let unsigned = &[0, 1, u128::max_value()];
+    let signed = &[i128::MIN, -1, 0, 1, i128::MAX];
+    let unsigned = &[0, 1, u128::MAX];
 
     for integer128 in signed {
         let expected = integer128.to_string();
@@ -2182,8 +2275,8 @@ fn test_integer128() {
 
 #[test]
 fn test_integer128_to_value() {
-    let signed = &[i128::from(i64::min_value()), i128::from(u64::max_value())];
-    let unsigned = &[0, u128::from(u64::max_value())];
+    let signed = &[i128::from(i64::MIN), i128::from(u64::MAX)];
+    let unsigned = &[0, u128::from(u64::MAX)];
 
     for integer128 in signed {
         let expected = integer128.to_string();
@@ -2196,7 +2289,7 @@ fn test_integer128_to_value() {
     }
 
     if !cfg!(feature = "arbitrary_precision") {
-        let err = to_value(u128::from(u64::max_value()) + 1).unwrap_err();
+        let err = to_value(u128::from(u64::MAX) + 1).unwrap_err();
         assert_eq!(err.to_string(), "number out of range");
     }
 }
@@ -2240,6 +2333,8 @@ fn test_raw_value_in_map_key() {
     #[repr(transparent)]
     struct RawMapKey(RawValue);
 
+    #[allow(unknown_lints)]
+    #[allow(non_local_definitions)] // false positive: https://github.com/rust-lang/rust/issues/121621
     impl<'de> Deserialize<'de> for &'de RawMapKey {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
@@ -2384,25 +2479,27 @@ fn test_value_into_deserializer() {
     let mut map = BTreeMap::new();
     map.insert("inner", json!({ "string": "Hello World" }));
 
+    let outer = Outer::deserialize(serde::de::value::MapDeserializer::new(
+        map.iter().map(|(k, v)| (*k, v)),
+    ))
+    .unwrap();
+    assert_eq!(outer.inner.string, "Hello World");
+
     let outer = Outer::deserialize(map.into_deserializer()).unwrap();
     assert_eq!(outer.inner.string, "Hello World");
 }
 
 #[test]
 fn hash_positive_and_negative_zero() {
-    fn hash(obj: impl Hash) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        obj.hash(&mut hasher);
-        hasher.finish()
-    }
+    let rand = std::hash::RandomState::new();
 
     let k1 = serde_json::from_str::<Number>("0.0").unwrap();
     let k2 = serde_json::from_str::<Number>("-0.0").unwrap();
     if cfg!(feature = "arbitrary_precision") {
         assert_ne!(k1, k2);
-        assert_ne!(hash(k1), hash(k2));
+        assert_ne!(rand.hash_one(k1), rand.hash_one(k2));
     } else {
         assert_eq!(k1, k2);
-        assert_eq!(hash(k1), hash(k2));
+        assert_eq!(rand.hash_one(k1), rand.hash_one(k2));
     }
 }

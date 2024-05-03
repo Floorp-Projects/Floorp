@@ -106,6 +106,7 @@ pub use crate::map::Map;
 pub use crate::number::Number;
 
 #[cfg(feature = "raw_value")]
+#[cfg_attr(docsrs, doc(cfg(feature = "raw_value")))]
 pub use crate::raw::{to_raw_value, RawValue};
 
 /// Represents any valid JSON value.
@@ -182,11 +183,11 @@ impl Debug for Value {
             Value::Number(number) => Debug::fmt(number, formatter),
             Value::String(string) => write!(formatter, "String({:?})", string),
             Value::Array(vec) => {
-                formatter.write_str("Array ")?;
+                tri!(formatter.write_str("Array "));
                 Debug::fmt(vec, formatter)
             }
             Value::Object(map) => {
-                formatter.write_str("Object ")?;
+                tri!(formatter.write_str("Object "));
                 Debug::fmt(map, formatter)
             }
         }
@@ -511,6 +512,28 @@ impl Value {
         match *self {
             Value::Number(_) => true,
             _ => false,
+        }
+    }
+
+    /// If the `Value` is a Number, returns the associated [`Number`]. Returns
+    /// None otherwise.
+    ///
+    /// ```
+    /// # use serde_json::{json, Number};
+    /// #
+    /// let v = json!({ "a": 1, "b": 2.2, "c": -3, "d": "4" });
+    ///
+    /// assert_eq!(v["a"].as_number(), Some(&Number::from(1u64)));
+    /// assert_eq!(v["b"].as_number(), Some(&Number::from_f64(2.2).unwrap()));
+    /// assert_eq!(v["c"].as_number(), Some(&Number::from(-3i64)));
+    ///
+    /// // The string `"4"` is not a number.
+    /// assert_eq!(v["d"].as_number(), None);
+    /// ```
+    pub fn as_number(&self) -> Option<&Number> {
+        match self {
+            Value::Number(number) => Some(number),
+            _ => None,
         }
     }
 
@@ -889,7 +912,6 @@ mod ser;
 /// ```
 /// use serde::Serialize;
 /// use serde_json::json;
-///
 /// use std::error::Error;
 ///
 /// #[derive(Serialize)]
@@ -898,7 +920,7 @@ mod ser;
 ///     location: String,
 /// }
 ///
-/// fn compare_json_values() -> Result<(), Box<Error>> {
+/// fn compare_json_values() -> Result<(), Box<dyn Error>> {
 ///     let u = User {
 ///         fingerprint: "0xF9BA143B95FF6D82".to_owned(),
 ///         location: "Menlo Park, CA".to_owned(),

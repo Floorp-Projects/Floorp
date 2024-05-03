@@ -82,7 +82,7 @@ impl Number {
     /// ```
     /// # use serde_json::json;
     /// #
-    /// let big = i64::max_value() as u64 + 10;
+    /// let big = i64::MAX as u64 + 10;
     /// let v = json!({ "a": 64, "b": big, "c": 256.0 });
     ///
     /// assert!(v["a"].is_i64());
@@ -97,7 +97,7 @@ impl Number {
     pub fn is_i64(&self) -> bool {
         #[cfg(not(feature = "arbitrary_precision"))]
         match self.n {
-            N::PosInt(v) => v <= i64::max_value() as u64,
+            N::PosInt(v) => v <= i64::MAX as u64,
             N::NegInt(_) => true,
             N::Float(_) => false,
         }
@@ -177,7 +177,7 @@ impl Number {
     /// ```
     /// # use serde_json::json;
     /// #
-    /// let big = i64::max_value() as u64 + 10;
+    /// let big = i64::MAX as u64 + 10;
     /// let v = json!({ "a": 64, "b": big, "c": 256.0 });
     ///
     /// assert_eq!(v["a"].as_i64(), Some(64));
@@ -189,7 +189,7 @@ impl Number {
         #[cfg(not(feature = "arbitrary_precision"))]
         match self.n {
             N::PosInt(n) => {
-                if n <= i64::max_value() as u64 {
+                if n <= i64::MAX as u64 {
                     Some(n as i64)
                 } else {
                     None
@@ -279,6 +279,62 @@ impl Number {
         }
     }
 
+    /// Returns the exact original JSON representation that this Number was
+    /// parsed from.
+    ///
+    /// For numbers constructed not via parsing, such as by `From<i32>`, returns
+    /// the JSON representation that serde\_json would serialize for this
+    /// number.
+    ///
+    /// ```
+    /// # use serde_json::Number;
+    /// for value in [
+    ///     "7",
+    ///     "12.34",
+    ///     "34e-56789",
+    ///     "0.0123456789000000012345678900000001234567890000123456789",
+    ///     "343412345678910111213141516171819202122232425262728293034",
+    ///     "-343412345678910111213141516171819202122232425262728293031",
+    /// ] {
+    ///     let number: Number = serde_json::from_str(value).unwrap();
+    ///     assert_eq!(number.as_str(), value);
+    /// }
+    /// ```
+    #[cfg(feature = "arbitrary_precision")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "arbitrary_precision")))]
+    pub fn as_str(&self) -> &str {
+        &self.n
+    }
+
+    pub(crate) fn as_f32(&self) -> Option<f32> {
+        #[cfg(not(feature = "arbitrary_precision"))]
+        match self.n {
+            N::PosInt(n) => Some(n as f32),
+            N::NegInt(n) => Some(n as f32),
+            N::Float(n) => Some(n as f32),
+        }
+        #[cfg(feature = "arbitrary_precision")]
+        self.n.parse::<f32>().ok().filter(|float| float.is_finite())
+    }
+
+    pub(crate) fn from_f32(f: f32) -> Option<Number> {
+        if f.is_finite() {
+            let n = {
+                #[cfg(not(feature = "arbitrary_precision"))]
+                {
+                    N::Float(f as f64)
+                }
+                #[cfg(feature = "arbitrary_precision")]
+                {
+                    ryu::Buffer::new().format_finite(f).to_owned()
+                }
+            };
+            Some(Number { n })
+        } else {
+            None
+        }
+    }
+
     #[cfg(feature = "arbitrary_precision")]
     /// Not public API. Only tests use this.
     #[doc(hidden)]
@@ -332,8 +388,8 @@ impl Serialize for Number {
     {
         use serde::ser::SerializeStruct;
 
-        let mut s = serializer.serialize_struct(TOKEN, 1)?;
-        s.serialize_field(TOKEN, &self.n)?;
+        let mut s = tri!(serializer.serialize_struct(TOKEN, 1));
+        tri!(s.serialize_field(TOKEN, &self.n));
         s.end()
     }
 }
@@ -377,11 +433,11 @@ impl<'de> Deserialize<'de> for Number {
             where
                 V: de::MapAccess<'de>,
             {
-                let value = visitor.next_key::<NumberKey>()?;
+                let value = tri!(visitor.next_key::<NumberKey>());
                 if value.is_none() {
                     return Err(de::Error::invalid_type(Unexpected::Map, &self));
                 }
-                let v: NumberFromString = visitor.next_value()?;
+                let v: NumberFromString = tri!(visitor.next_value());
                 Ok(v.value)
             }
         }
@@ -420,7 +476,7 @@ impl<'de> de::Deserialize<'de> for NumberKey {
             }
         }
 
-        deserializer.deserialize_identifier(FieldVisitor)?;
+        tri!(deserializer.deserialize_identifier(FieldVisitor));
         Ok(NumberKey)
     }
 }
@@ -523,7 +579,7 @@ macro_rules! deserialize_number {
         where
             V: de::Visitor<'de>,
         {
-            visitor.$visit(self.n.parse().map_err(|_| invalid_number())?)
+            visitor.$visit(tri!(self.n.parse().map_err(|_| invalid_number())))
         }
     };
 }
