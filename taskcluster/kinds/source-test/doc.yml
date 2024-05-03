@@ -11,7 +11,7 @@ generate:
         kind: test
         tier: 1
     run-on-projects: ['trunk']
-    worker-type: t-linux-xlarge-source
+    worker-type: b-linux-medium-gcp
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
@@ -47,7 +47,7 @@ upload:
         kind: test
         tier: 2
     run-on-projects: [mozilla-central-only]
-    worker-type: t-linux-xlarge-source
+    worker-type: b-linux-medium-gcp
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800

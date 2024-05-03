@@ -27,7 +27,7 @@ jobs:
         description: Upload generated source files from build
         from-deps:
             group-by: single-with-filters
-        worker-type: t-linux-xlarge
+        worker-type: b-linux-medium-gcp
         treeherder:
             symbol: Ugs
             kind: build
