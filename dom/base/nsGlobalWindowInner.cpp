@@ -3503,18 +3503,7 @@ double nsGlobalWindowInner::GetDevicePixelRatio(CallerType aCallerType,
 
   if (nsIGlobalObject::ShouldResistFingerprinting(
           aCallerType, RFPTarget::WindowDevicePixelRatio)) {
-    // Spoofing the DevicePixelRatio causes blurriness in some situations
-    // on HiDPI displays. pdf.js is a non-system caller; but it can't
-    // expose the fingerprintable information, so we can safely disable
-    // spoofing in this situation. It doesn't address the issue for
-    // web-rendered content (including pdf.js instances on the web.)
-    // In the future we hope to have a better solution to fix all HiDPI
-    // blurriness...
-    nsAutoCString origin;
-    nsresult rv = this->GetPrincipal()->GetOrigin(origin);
-    if (NS_FAILED(rv) || origin != "resource://pdf.js"_ns) {
-      return 2.0;
-    }
+    return 2.0;
   }
 
   if (aCallerType == CallerType::NonSystem) {
