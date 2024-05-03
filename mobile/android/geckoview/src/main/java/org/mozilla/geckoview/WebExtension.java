@@ -1442,7 +1442,7 @@ public class WebExtension {
               return;
             }
 
-            session.getSettings().setIsPopup(true);
+            session.getSettings().setIsExtensionPopup(true);
             session.loadUri(popupUri);
           });
     }

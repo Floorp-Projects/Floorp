@@ -6,6 +6,10 @@ import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs"
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+});
+
 ChromeUtils.defineLazyGetter(lazy, "MOBILE_USER_AGENT", function () {
   return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
     Ci.nsIHttpProtocolHandler
@@ -73,6 +77,18 @@ export class GeckoViewSettings extends GeckoViewModule {
     this.allowJavascript = settings.allowJavascript;
     this.viewportMode = settings.viewportMode;
     this.useTrackingProtection = !!settings.useTrackingProtection;
+
+    if (settings.isExtensionPopup) {
+      // NOTE: Only add the webextension-view-type and emit extension-browser-inserted
+      // once, an extension popup should never change webextension-view-type once set.
+      if (!this.browser.hasAttribute("webextension-view-type")) {
+        this.browser.setAttribute("webextension-view-type", "popup");
+        lazy.ExtensionParent.apiManager.emit(
+          "extension-browser-inserted",
+          this.browser
+        );
+      }
+    }
 
     // When the page is loading from the main process (e.g. from an extension
     // page) we won't be able to query the actor here.

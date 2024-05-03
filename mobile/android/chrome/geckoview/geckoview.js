@@ -239,7 +239,7 @@ var ModuleManager = {
     Object.assign(this._settings, aSettings);
     this._frozenSettings = Object.freeze(Object.assign({}, this._settings));
 
-    const windowType = aSettings.isPopup
+    const windowType = aSettings.isExtensionPopup
       ? "navigator:popup"
       : "navigator:geckoview";
     window.document.documentElement.setAttribute("windowtype", windowType);
