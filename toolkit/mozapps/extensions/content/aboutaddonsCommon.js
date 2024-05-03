@@ -150,13 +150,13 @@ function shouldShowPermissionsPrompt(addon) {
     return false;
   }
 
-  let perms = addon.userPermissions;
+  let perms = addon.installPermissions;
   return perms?.origins.length || perms?.permissions.length;
 }
 
 function showPermissionsPrompt(addon) {
   return new Promise(resolve => {
-    const permissions = addon.userPermissions;
+    const permissions = addon.installPermissions;
     const target = getBrowserElement();
 
     const onAddonEnabled = () => {

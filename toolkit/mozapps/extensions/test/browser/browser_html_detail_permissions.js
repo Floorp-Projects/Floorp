@@ -419,7 +419,11 @@ async function runTest(options) {
   }
 }
 
-async function testPermissionsView({ manifestV3enabled, manifest_version }) {
+async function testPermissionsView({
+  manifestV3enabled,
+  manifest_version,
+  expectGranted,
+}) {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.manifestV3.enabled", manifestV3enabled]],
   });
@@ -438,7 +442,16 @@ async function testPermissionsView({ manifestV3enabled, manifest_version }) {
       extension: extensions["addon1@mochi.test"],
       permissions: ["<all_urls>", "tabs", "webNavigation"],
     });
-  } else {
+  }
+  if (manifest_version >= 3 && expectGranted) {
+    await runTest({
+      extension: extensions["addon1@mochi.test"],
+      permissions: ["tabs", "webNavigation"],
+      optional_permissions: ["<all_urls>"],
+      optional_enabled: ["<all_urls>"],
+    });
+  }
+  if (manifest_version >= 3 && !expectGranted) {
     await runTest({
       extension: extensions["addon1@mochi.test"],
       permissions: ["tabs", "webNavigation"],
@@ -544,8 +557,28 @@ add_task(async function testPermissionsView_MV2_manifestV3enabled() {
   await testPermissionsView({ manifestV3enabled: true, manifest_version: 2 });
 });
 
+add_task(async function testPermissionsView_MV3_noInstallPrompt() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.originControls.grantByDefault", false]],
+  });
+  await testPermissionsView({
+    manifestV3enabled: true,
+    manifest_version: 3,
+    expectGranted: false,
+  });
+  await SpecialPowers.popPrefEnv();
+});
+
 add_task(async function testPermissionsView_MV3() {
-  await testPermissionsView({ manifestV3enabled: true, manifest_version: 3 });
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.originControls.grantByDefault", true]],
+  });
+  await testPermissionsView({
+    manifestV3enabled: true,
+    manifest_version: 3,
+    expectGranted: true,
+  });
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function testPermissionsViewStates() {
@@ -623,7 +656,10 @@ add_task(async function testPermissionsViewStates() {
 
 add_task(async function testAllUrlsNotGrantedUnconditionally_MV3() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.manifestV3.enabled", true]],
+    set: [
+      ["extensions.manifestV3.enabled", true],
+      ["extensions.originControls.grantByDefault", false],
+    ],
   });
 
   const extension = ExtensionTestUtils.loadExtension({

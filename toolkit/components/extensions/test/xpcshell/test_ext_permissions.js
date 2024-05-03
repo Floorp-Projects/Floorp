@@ -10,6 +10,11 @@ const { ExtensionPermissions } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );
 
+const WITH_INSTALL_PROMPT = [
+  ["extensions.originControls.grantByDefault", true],
+];
+const NO_INSTALL_PROMPT = [["extensions.originControls.grantByDefault", false]];
+
 Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 
 // ExtensionParent.sys.mjs is being imported lazily because when it is imported Services.appinfo will be
@@ -427,12 +432,24 @@ add_task(function test_normal_mv2() {
   });
 });
 
+add_task(function test_normal_mv3_noInstallPrompt() {
+  return runWithPrefs(NO_INSTALL_PROMPT, () =>
+    test_permissions({
+      manifest_version: 3,
+      useAddonManager: "permanent",
+      expectAllGranted: false,
+    })
+  );
+});
+
 add_task(function test_normal_mv3() {
-  return test_permissions({
-    manifest_version: 3,
-    useAddonManager: "permanent",
-    expectAllGranted: false,
-  });
+  return runWithPrefs(WITH_INSTALL_PROMPT, () =>
+    test_permissions({
+      manifest_version: 3,
+      useAddonManager: "permanent",
+      expectAllGranted: true,
+    })
+  );
 });
 
 add_task(function test_granted_for_temporary_mv3() {
@@ -444,28 +461,30 @@ add_task(function test_granted_for_temporary_mv3() {
   });
 });
 
-add_task(async function test_granted_only_for_privileged_mv3() {
-  try {
-    // For permanent non-privileged, granted_host_permissions does nothing.
-    await test_permissions({
-      manifest_version: 3,
-      granted_host_permissions: true,
-      useAddonManager: "permanent",
-      expectAllGranted: false,
-    });
+add_task(function test_granted_only_for_privileged_mv3() {
+  return runWithPrefs(NO_INSTALL_PROMPT, async () => {
+    try {
+      // For permanent non-privileged, granted_host_permissions does nothing.
+      await test_permissions({
+        manifest_version: 3,
+        granted_host_permissions: true,
+        useAddonManager: "permanent",
+        expectAllGranted: false,
+      });
 
-    // Make extensions loaded with addon manager privileged.
-    AddonTestUtils.usePrivilegedSignatures = true;
+      // Make extensions loaded with addon manager privileged.
+      AddonTestUtils.usePrivilegedSignatures = true;
 
-    await test_permissions({
-      manifest_version: 3,
-      granted_host_permissions: true,
-      useAddonManager: "permanent",
-      expectAllGranted: true,
-    });
-  } finally {
-    AddonTestUtils.usePrivilegedSignatures = false;
-  }
+      await test_permissions({
+        manifest_version: 3,
+        granted_host_permissions: true,
+        useAddonManager: "permanent",
+        expectAllGranted: true,
+      });
+    } finally {
+      AddonTestUtils.usePrivilegedSignatures = false;
+    }
+  });
 });
 
 add_task(async function test_startup() {
@@ -540,7 +559,7 @@ add_task(async function test_startup() {
 });
 
 // Test that we don't prompt for permissions an extension already has.
-async function test_alreadyGranted(manifest_version) {
+async function test_alreadyGranted({ manifest_version }) {
   const REQUIRED_PERMISSIONS = ["geolocation"];
   const REQUIRED_ORIGINS = [
     "*://required-host.com/",
@@ -671,10 +690,17 @@ async function test_alreadyGranted(manifest_version) {
   await extension.unload();
 }
 add_task(async function test_alreadyGranted_mv2() {
-  return test_alreadyGranted(2);
+  return test_alreadyGranted({ manifest_version: 2 });
 });
-add_task(async function test_alreadyGranted_mv3() {
-  return test_alreadyGranted(3);
+add_task(function test_alreadyGranted_mv3_noInstallPrompt() {
+  return runWithPrefs(NO_INSTALL_PROMPT, () =>
+    test_alreadyGranted({ manifest_version: 3 })
+  );
+});
+add_task(function test_alreadyGranted_mv3() {
+  return runWithPrefs(WITH_INSTALL_PROMPT, () =>
+    test_alreadyGranted({ manifest_version: 3 })
+  );
 });
 
 // IMPORTANT: Do not change this list without review from a Web Extensions peer!
@@ -779,7 +805,10 @@ add_task(async function test_optional_all_urls() {
 });
 
 // Check when content_script match patterns are treated as optional origins.
-async function test_content_script_is_optional(manifest_version) {
+async function test_content_script_is_optional({
+  manifest_version,
+  expectGranted,
+}) {
   function background() {
     browser.test.onMessage.addListener(async (msg, arg) => {
       if (msg == "request") {
@@ -816,7 +845,11 @@ async function test_content_script_is_optional(manifest_version) {
 
   extension.sendMessage("getAll");
   let initial = await extension.awaitMessage("granted");
-  deepEqual(initial.origins, [], "Nothing granted on install.");
+  if (manifest_version < 3 || !expectGranted) {
+    deepEqual(initial.origins, [], "Nothing granted on install.");
+  } else {
+    deepEqual(initial.origins, [CS_ORIGIN], "CS origin granted on install.");
+  }
 
   await withHandlingUserInput(extension, async () => {
     extension.sendMessage("request", {
@@ -845,11 +878,32 @@ async function test_content_script_is_optional(manifest_version) {
 
   await extension.unload();
 }
-add_task(() => test_content_script_is_optional(2));
-add_task(() => test_content_script_is_optional(3));
+
+add_task(async function test_content_script_is_optional_mv2() {
+  await test_content_script_is_optional({ manifest_version: 2 });
+});
+add_task(function test_content_script_is_optional_mv3_noInstallPrompt() {
+  return runWithPrefs(NO_INSTALL_PROMPT, () =>
+    test_content_script_is_optional({
+      manifest_version: 3,
+      expectGranted: false,
+    })
+  );
+});
+add_task(function test_content_script_is_optional_mv3() {
+  return runWithPrefs(WITH_INSTALL_PROMPT, () =>
+    test_content_script_is_optional({
+      manifest_version: 3,
+      expectGranted: true,
+    })
+  );
+});
 
 // Check that optional permissions are not included in update prompts
-async function test_permissions_prompt(manifest_version) {
+async function test_permissions_prompt({
+  manifest_version,
+  expectInitialGranted,
+}) {
   function background() {
     browser.test.onMessage.addListener(async (msg, arg) => {
       if (msg == "request") {
@@ -896,7 +950,7 @@ async function test_permissions_prompt(manifest_version) {
     equal(result, true, "request() for optional permissions succeeded");
   });
 
-  if (manifest_version >= 3) {
+  if (!expectInitialGranted) {
     await withHandlingUserInput(extension, async () => {
       extension.sendMessage("request", {
         origins: ["https://test1.example.com/*"],
@@ -964,10 +1018,26 @@ async function test_permissions_prompt(manifest_version) {
   await extension.unload();
 }
 add_task(async function test_permissions_prompt_mv2() {
-  return test_permissions_prompt(2);
+  return test_permissions_prompt({
+    manifest_version: 2,
+    expectInitialGranted: true,
+  });
+});
+add_task(function test_permissions_prompt_mv3_noInstallPrompt() {
+  return runWithPrefs(NO_INSTALL_PROMPT, () =>
+    test_permissions_prompt({
+      manifest_version: 3,
+      expectInitialGranted: false,
+    })
+  );
 });
 add_task(async function test_permissions_prompt_mv3() {
-  return test_permissions_prompt(3);
+  return runWithPrefs(WITH_INSTALL_PROMPT, () =>
+    test_permissions_prompt({
+      manifest_version: 3,
+      expectInitialGranted: true,
+    })
+  );
 });
 
 // Check that internal permissions can not be set and are not returned by the API.

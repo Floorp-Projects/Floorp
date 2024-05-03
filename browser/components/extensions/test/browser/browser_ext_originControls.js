@@ -20,6 +20,12 @@ const l10n = new Localization(
   true
 );
 
+add_setup(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.originControls.grantByDefault", false]],
+  });
+});
+
 async function makeExtension({
   useAddonManager = "temporary",
   manifest_version = 3,

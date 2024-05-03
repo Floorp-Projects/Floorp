@@ -542,8 +542,9 @@ async function loadManifestFromWebManifest(aPackage, aLocation) {
   // WebExtensions don't use iconURLs
   addon.iconURL = null;
   addon.icons = manifest.icons || {};
-  addon.userPermissions = extension.manifestPermissions;
+  addon.userPermissions = extension.getRequiredPermissions();
   addon.optionalPermissions = extension.manifestOptionalPermissions;
+  addon.requestedPermissions = extension.getRequestedPermissions();
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
   function getLocale(aLocale) {
