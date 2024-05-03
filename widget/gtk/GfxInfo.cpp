@@ -1042,30 +1042,14 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     ////////////////////////////////////
     // FEATURE_DMABUF_SURFACE_EXPORT
-    // Disabled due to:
+    // Disabled on all Mesa drivers due to various issue, among them:
     // https://gitlab.freedesktop.org/mesa/mesa/-/issues/6666
     // https://gitlab.freedesktop.org/mesa/mesa/-/issues/6796
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        WindowProtocol::All, DriverVendor::MesaAll, DeviceFamily::AtiAll,
-        nsIGfxInfo::FEATURE_DMABUF_SURFACE_EXPORT,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
-        V(0, 0, 0, 0), "FEATURE_FAILURE_BROKEN_DRIVER", "");
-
-    // Disabled due to:
     // https://gitlab.freedesktop.org/mesa/mesa/-/issues/6688
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        WindowProtocol::All, DriverVendor::MesaAll, DeviceFamily::IntelAll,
-        nsIGfxInfo::FEATURE_DMABUF_SURFACE_EXPORT,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
-        V(0, 0, 0, 0), "FEATURE_FAILURE_BROKEN_DRIVER", "");
-
-    // Disabled due to:
     // https://gitlab.freedesktop.org/mesa/mesa/-/issues/6988
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        WindowProtocol::All, DriverVendor::MesaAll, DeviceFamily::QualcommAll,
+        WindowProtocol::All, DriverVendor::MesaAll, DeviceFamily::All,
         nsIGfxInfo::FEATURE_DMABUF_SURFACE_EXPORT,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
         V(0, 0, 0, 0), "FEATURE_FAILURE_BROKEN_DRIVER", "");
