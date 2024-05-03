@@ -608,12 +608,15 @@ void Accessible::ApplyImplicitState(uint64_t& aState) const {
     }
   }
 
-  // If this is an ARIA item of the selectable widget and if it's focused and
-  // not marked unselected explicitly (i.e. aria-selected="false") then expose
-  // it as selected to make ARIA widget authors life easier.
+  // If this is an option, tab or treeitem and if it's focused and not marked
+  // unselected explicitly (i.e. aria-selected="false") then expose it as
+  // selected to make ARIA widget authors life easier.
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (roleMapEntry && !(aState & states::SELECTED) &&
-      ARIASelected().valueOr(true)) {
+  if (roleMapEntry &&
+      (roleMapEntry->Is(nsGkAtoms::option) ||
+       roleMapEntry->Is(nsGkAtoms::tab) ||
+       roleMapEntry->Is(nsGkAtoms::treeitem)) &&
+      !(aState & states::SELECTED) && ARIASelected().valueOr(true)) {
     // Special case for tabs: focused tab or focus inside related tab panel
     // implies selected state.
     if (roleMapEntry->role == roles::PAGETAB) {
