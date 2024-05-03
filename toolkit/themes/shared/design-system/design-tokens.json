@@ -681,7 +681,10 @@
         "value": "{focus.outline.width} solid {focus.outline.color}"
       },
       "color": {
-        "value": "{color.accent.primary.@base}"
+        "value": {
+          "default": "{color.accent.primary.@base}",
+          "forcedColors": "{text.color.@base}"
+        }
       },
       "inset": {
         "value": "calc(-1 * {focus.outline.width})"
