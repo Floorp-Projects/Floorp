@@ -674,6 +674,7 @@ addon-permissions-list > .addon-detail-row {
   background-position: 0 center;
   background-size: 1.6rem 1.6rem;
   background-repeat: no-repeat;
+  word-break: break-all;
 }
 
 .addon-permissions-list > li:dir(rtl) {
