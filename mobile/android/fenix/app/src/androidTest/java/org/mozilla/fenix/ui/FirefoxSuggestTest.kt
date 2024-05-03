@@ -51,7 +51,7 @@ class FirefoxSuggestTest : TestSetup() {
                 ),
             "Houzz" to listOf(
                 "Houzz.com - Official Site",
-                "houzz.com/products?m_refid=us-dsp-mpl-admp-219577_15416306_kwd-353208810&adcid=319104989&mfadid=adm&utm_source=admarketplace&utm_medium=cpc&utm_campaign=Privacy&utm_term=houzz&utm_content=319104989us1287${getSponsoredFxSuggestPlaceHolder()}",
+                "houzz.com/products?m_refid=us-dsp-mpl-admp-219577_15416306_kwd-353208810&adcid=319104989us1287${getSponsoredFxSuggestPlaceHolder()}&utm_source=admarketplace&utm_medium=cpc&utm_campaign=Privacy&utm_term=houzz&utm_content=319104989&mfadid=adm",
             ),
             "Spanx" to listOf(
                 "SPANX® -  Official Site",
