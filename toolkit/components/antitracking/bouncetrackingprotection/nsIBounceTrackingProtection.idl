@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIBounceTrackingMapEntry.idl"
 
 [scriptable, uuid(4866F748-29DA-4C10-8EAA-ED2F7851E6B1)]
 interface nsIBounceTrackingProtection : nsISupports {
@@ -37,10 +38,10 @@ interface nsIBounceTrackingProtection : nsISupports {
     // State is keyed by OriginAttributes.
 
     [implicit_jscontext]
-    Array<ACString> testGetBounceTrackerCandidateHosts(in jsval originAttributes);
+    Array<nsIBounceTrackingMapEntry> testGetBounceTrackerCandidateHosts(in jsval originAttributes);
 
     [implicit_jscontext]
-    Array<ACString> testGetUserActivationHosts(in jsval originAttributes);
+    Array<nsIBounceTrackingMapEntry> testGetUserActivationHosts(in jsval originAttributes);
 
     [implicit_jscontext]
     void testAddBounceTrackerCandidate(in jsval originAttributes, in ACString aSiteHost, in PRTime aBounceTime);
