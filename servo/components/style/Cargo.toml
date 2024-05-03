@@ -39,7 +39,7 @@ euclid = "0.22"
 fxhash = "0.2"
 html5ever = {version = "0.24", optional = true}
 icu_segmenter = { version = "1.4", default-features = false, features = ["auto", "compiled_data"] }
-indexmap = {version = "1.0", features = ["std"]}
+indexmap = {version = "2", features = ["std"]}
 itertools = "0.10"
 itoa = "1.0"
 lazy_static = "1"
