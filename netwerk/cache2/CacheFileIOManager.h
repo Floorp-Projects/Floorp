@@ -287,9 +287,17 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
                            CacheFileIOListener* aCallback);
   static nsresult Read(CacheFileHandle* aHandle, int64_t aOffset, char* aBuf,
                        int32_t aCount, CacheFileIOListener* aCallback);
+  // This function must be called with a callback. The caller is responsible for
+  // releasing |aBuf|.
   static nsresult Write(CacheFileHandle* aHandle, int64_t aOffset,
                         const char* aBuf, int32_t aCount, bool aValidate,
                         bool aTruncate, CacheFileIOListener* aCallback);
+  // Similar to the above, but without the callback. Note that |aBuf| will be
+  // released by CacheFileIOManager.
+  static nsresult WriteWithoutCallback(CacheFileHandle* aHandle,
+                                       int64_t aOffset, char* aBuf,
+                                       int32_t aCount, bool aValidate,
+                                       bool aTruncate);
   // PinningDoomRestriction:
   // NO_RESTRICTION
   //    no restriction is checked, the file is simply always doomed
