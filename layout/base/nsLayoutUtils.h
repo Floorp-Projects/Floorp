@@ -1257,16 +1257,19 @@ class nsLayoutUtils {
    * are taken into account.
    *
    * If aFlags includes one of 'UseContentBox', 'UsePaddingBox', 'UseMarginBox',
-   * the corresponding type of box is used. Otherwise (by default), the border
-   * box is used. Note that these "Box" flags are meant to be mutually
-   * exclusive, though we don't enforce that. If multiple "Box" flags are used,
-   * we'll gracefully just use the first one in the order of the enum.
+   * or 'UseMarginBoxWithAutoResolvedAsZero', the corresponding type of box is
+   * used. Otherwise (by default), the border box is used. Note that these "Box"
+   * flags are meant to be mutually exclusive, though we don't enforce that. If
+   * multiple "Box" flags are used, we'll gracefully just use the first one in
+   * the order of the enum.
    */
   enum class GetAllInFlowRectsFlag : uint8_t {
     AccountForTransforms,
     UseContentBox,
     UsePaddingBox,
     UseMarginBox,
+    // Similar to UseMarginBox, but the 'auto' margins are resolved as zero.
+    UseMarginBoxWithAutoResolvedAsZero,
   };
   using GetAllInFlowRectsFlags = mozilla::EnumSet<GetAllInFlowRectsFlag>;
   static void GetAllInFlowRects(nsIFrame* aFrame, const nsIFrame* aRelativeTo,
