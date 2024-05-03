@@ -5283,7 +5283,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
       aFlags.contains(ItemFlag::AllowPageBreak) &&
       aState.mPresContext->IsPaginated() &&
       !display.IsAbsolutelyPositionedStyle() &&
-      !(aParentFrame && aParentFrame->IsGridContainerFrame()) &&
+      !(aParentFrame && aParentFrame->IsFlexOrGridContainer()) &&
       !(bits & FCDATA_IS_TABLE_PART) && !(bits & FCDATA_IS_SVG_TEXT);
   if (canHavePageBreak && display.BreakBefore()) {
     AppendPageBreakItem(aContent, aItems);

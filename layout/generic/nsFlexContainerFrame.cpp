@@ -5527,14 +5527,19 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
 
   const bool isSingleLine =
       StyleFlexWrap::Nowrap == aReflowInput.mStylePosition->mFlexWrap;
-
-  // FINAL REFLOW: Give each child frame another chance to reflow, now that
-  // we know its final size and position.
   const FlexLine& startmostLine = StartmostLine(aFlr.mLines, aAxisTracker);
+  const FlexLine& endmostLine = EndmostLine(aFlr.mLines, aAxisTracker);
   const FlexItem* startmostItem =
       startmostLine.IsEmpty() ? nullptr
                               : &startmostLine.StartmostItem(aAxisTracker);
+  const FlexItem* endmostItem =
+      endmostLine.IsEmpty() ? nullptr : &endmostLine.EndmostItem(aAxisTracker);
 
+  bool endmostItemOrLineHasBreakAfter = false;
+  // If true, push all remaining flex items to the container's next-in-flow.
+  bool shouldPushRemainingItems = false;
+
+  // FINAL REFLOW: Give each child frame another chance to reflow.
   const size_t numLines = aFlr.mLines.Length();
   for (size_t lineIdx = 0; lineIdx < numLines; ++lineIdx) {
     // Iterate flex lines from the startmost to endmost (relative to flex
@@ -5544,6 +5549,11 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
                                                        : lineIdx];
     MOZ_ASSERT(lineIdx != 0 || &line == &startmostLine,
                "Logic for finding startmost line should be consistent!");
+
+    // These two variables can be set when we are a row-oriented flex container
+    // during fragmentation.
+    bool lineHasBreakBefore = false;
+    bool lineHasBreakAfter = false;
 
     const size_t numItems = line.Items().Length();
     for (size_t itemIdx = 0; itemIdx < numItems; ++itemIdx) {
@@ -5643,15 +5653,22 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
       // (i.e. its frame rect), instead of the container's content-box:
       framePos += containerContentBoxOrigin;
 
-      // Check if we actually need to reflow the item -- if the item's position
-      // is below the available space's block-end, push it to our next-in-flow;
-      // if it does need a reflow, and we already reflowed it with the right
-      // content-box size.
-      const bool childBPosExceedAvailableSpaceBEnd =
-          availableBSizeForItem != NS_UNCONSTRAINEDSIZE &&
-          availableBSizeForItem <= 0;
+      // Check if we can skip reflowing the item because it will be pushed to
+      // our next-in-flow -- i.e. if there was a forced break before it, or its
+      // position is beyond the available space's block-end.
       bool itemInPushedItems = false;
-      if (childBPosExceedAvailableSpaceBEnd) {
+      if (shouldPushRemainingItems) {
+        FLEX_ITEM_LOG(
+            item.Frame(),
+            "[frag] Item needed to be pushed to container's next-in-flow due "
+            "to a forced break before it");
+        pushedItems.Insert(item.Frame());
+        itemInPushedItems = true;
+      } else if (availableBSizeForItem != NS_UNCONSTRAINEDSIZE &&
+                 availableBSizeForItem <= 0) {
+        // The item's position is beyond the available space, so we have to push
+        // it.
+        //
         // Note: Even if all of our items are beyond the available space & get
         // pushed here, we'll be guaranteed to place at least one of them (and
         // make progress) in one of the flex container's *next* fragment. It's
@@ -5680,7 +5697,38 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
             ReflowFlexItem(aAxisTracker, aReflowInput, item, framePos,
                            isAdjacentWithBStart, availableSize, aContainerSize);
 
+        if (aReflowInput.IsInFragmentedContext()) {
+          const bool itemHasBreakBefore =
+              item.Frame()->ShouldBreakBefore(aReflowInput.mBreakType) ||
+              childStatus.IsInlineBreakBefore();
+          if (itemHasBreakBefore) {
+            if (aAxisTracker.IsRowOriented()) {
+              lineHasBreakBefore = true;
+            } else if (isSingleLine) {
+              if (&item == startmostItem) {
+                if (!GetPrevInFlow() && !aReflowInput.mFlags.mIsTopOfPage) {
+                  // If we are first-in-flow and not at top-of-page, early
+                  // return here to propagate forced break-before from the
+                  // startmost item to the flex container.
+                  nsReflowStatus childrenStatus;
+                  childrenStatus.SetInlineLineBreakBeforeAndReset();
+                  return {0, childrenStatus};
+                }
+              } else {
+                shouldPushRemainingItems = true;
+              }
+            } else {
+              // Bug 1806717: We haven't implemented fragmentation for
+              // multi-line column-oriented flex container, so we just ignore
+              // forced breaks for now.
+            }
+          }
+        }
+
         const bool shouldPushItem = [&]() {
+          if (shouldPushRemainingItems) {
+            return true;
+          }
           if (availableBSizeForItem == NS_UNCONSTRAINEDSIZE) {
             // If the available block-size is unconstrained, then we're not
             // fragmenting and we don't want to push the item.
@@ -5705,7 +5753,8 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
           FLEX_ITEM_LOG(
               item.Frame(),
               "[frag] Item needed to be pushed to container's next-in-flow "
-              "because its block-size is larger than the available space");
+              "because it encounters a forced break before it, or its "
+              "block-size is larger than the available space");
           pushedItems.Insert(item.Frame());
           itemInPushedItems = true;
         } else if (childStatus.IsIncomplete()) {
@@ -5713,7 +5762,29 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
         } else if (childStatus.IsOverflowIncomplete()) {
           overflowIncompleteItems.Insert(item.Frame());
         }
+
+        if (aReflowInput.IsInFragmentedContext()) {
+          const bool itemHasBreakAfter =
+              item.Frame()->ShouldBreakAfter(aReflowInput.mBreakType) ||
+              childStatus.IsInlineBreakAfter();
+          if (itemHasBreakAfter) {
+            if (aAxisTracker.IsRowOriented()) {
+              lineHasBreakAfter = true;
+            } else if (isSingleLine) {
+              shouldPushRemainingItems = true;
+              if (&item == endmostItem) {
+                endmostItemOrLineHasBreakAfter = true;
+              }
+            } else {
+              // Bug 1806717: We haven't implemented fragmentation for
+              // multi-line column-oriented flex container, so we just ignore
+              // forced breaks for now.
+            }
+          }
+        }
       } else {
+        // We already reflowed the item with the right content-box size, so we
+        // can simply move it into place.
         MoveFlexItemToFinalPosition(item, framePos, aContainerSize);
       }
 
@@ -5801,6 +5872,37 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
       }
     }
 
+    if (aReflowInput.IsInFragmentedContext() && aAxisTracker.IsRowOriented()) {
+      // Propagate forced break values from the flex items to its flex line.
+      if (lineHasBreakBefore) {
+        if (&line == &startmostLine) {
+          if (!GetPrevInFlow() && !aReflowInput.mFlags.mIsTopOfPage) {
+            // If we are first-in-flow and not at top-of-page, early return here
+            // to propagate forced break-before from the startmost line to the
+            // flex container.
+            nsReflowStatus childrenStatus;
+            childrenStatus.SetInlineLineBreakBeforeAndReset();
+            return {0, childrenStatus};
+          }
+        } else {
+          // Current non-startmost line has forced break-before, so push all the
+          // items in this line.
+          for (const FlexItem& item : line.Items()) {
+            pushedItems.Insert(item.Frame());
+            incompleteItems.Remove(item.Frame());
+            overflowIncompleteItems.Remove(item.Frame());
+          }
+          shouldPushRemainingItems = true;
+        }
+      }
+      if (lineHasBreakAfter) {
+        shouldPushRemainingItems = true;
+        if (&line == &endmostLine) {
+          endmostItemOrLineHasBreakAfter = true;
+        }
+      }
+    }
+
     // Now we've finished processing all the items in the startmost line.
     // Determine the amount by which the startmost line's block-end edge has
     // shifted, so we can apply the same shift for the remaining lines.
@@ -5822,6 +5924,8 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
     childrenStatus.SetIncomplete();
   } else if (!overflowIncompleteItems.IsEmpty()) {
     childrenStatus.SetOverflowIncomplete();
+  } else if (endmostItemOrLineHasBreakAfter) {
+    childrenStatus.SetInlineLineBreakAfter();
   }
   PushIncompleteChildren(pushedItems, incompleteItems, overflowIncompleteItems);
 
@@ -5964,6 +6068,14 @@ void nsFlexContainerFrame::PopulateReflowOutput(
       ShouldAvoidBreakInside(aReflowInput)) {
     aStatus.SetInlineLineBreakBeforeAndReset();
     return;
+  }
+
+  // Propagate forced break values from flex items or flex lines.
+  if (aChildrenStatus.IsInlineBreakBefore()) {
+    aStatus.SetInlineLineBreakBeforeAndReset();
+  }
+  if (aChildrenStatus.IsInlineBreakAfter()) {
+    aStatus.SetInlineLineBreakAfter();
   }
 
   // If we haven't established a baseline for the container yet, i.e. if we
