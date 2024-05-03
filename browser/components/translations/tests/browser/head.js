@@ -390,8 +390,6 @@ class SharedTranslationsTestUtils {
    * @param {Element[]} elements - The focusable elements.
    */
   static _assertTabIndexOrder(elements) {
-    const activeElementAtStart = document.activeElement;
-
     if (elements.length) {
       elements[0].focus();
       elements.push(elements[0]);
@@ -400,8 +398,6 @@ class SharedTranslationsTestUtils {
       SharedTranslationsTestUtils._assertHasFocus(element);
       EventUtils.synthesizeKey("KEY_Tab");
     }
-
-    activeElementAtStart.focus();
   }
 
   /**
@@ -1663,23 +1659,16 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertPanelHasTranslatedText();
     SelectTranslationsTestUtils.#assertPanelTextAreaHeight();
     await SelectTranslationsTestUtils.#assertPanelTextAreaOverflow();
-
-    let footerButtons;
-    if (sameLanguageSelected || isFullPageTranslationsRestrictedForPage) {
-      footerButtons = [copyButton, doneButton];
-    } else {
-      footerButtons =
-        AppConstants.platform === "win"
-          ? [copyButton, doneButton, translateFullPageButton]
-          : [copyButton, translateFullPageButton, doneButton];
-    }
-
     SharedTranslationsTestUtils._assertTabIndexOrder([
+      textArea,
+      copyButton,
+      ...(sameLanguageSelected || isFullPageTranslationsRestrictedForPage
+        ? []
+        : [translateFullPageButton]),
+      doneButton,
       settingsButton,
       fromMenuList,
       toMenuList,
-      textArea,
-      ...footerButtons,
     ]);
   }
 
@@ -1701,12 +1690,10 @@ class SelectTranslationsTestUtils {
       tryAgainButton: true,
     });
     SharedTranslationsTestUtils._assertTabIndexOrder([
+      tryAgainButton,
       settingsButton,
-      ...(AppConstants.platform === "win"
-        ? [tryAgainButton, cancelButton]
-        : [cancelButton, tryAgainButton]),
+      cancelButton,
     ]);
-    SharedTranslationsTestUtils._assertHasFocus(tryAgainButton);
   }
 
   /**
@@ -1747,14 +1734,12 @@ class SelectTranslationsTestUtils {
       "The translation failure message bar is an alert."
     );
     SharedTranslationsTestUtils._assertTabIndexOrder([
+      tryAgainButton,
       settingsButton,
       fromMenuList,
       toMenuList,
-      ...(AppConstants.platform === "win"
-        ? [tryAgainButton, cancelButton]
-        : [cancelButton, tryAgainButton]),
+      cancelButton,
     ]);
-    SharedTranslationsTestUtils._assertHasFocus(tryAgainButton);
   }
 
   static #assertPanelTextAreaDirection(langTag = null) {
@@ -1808,9 +1793,9 @@ class SelectTranslationsTestUtils {
     );
     SharedTranslationsTestUtils._assertHasFocus(tryAnotherSourceMenuList);
     SharedTranslationsTestUtils._assertTabIndexOrder([
-      settingsButton,
       tryAnotherSourceMenuList,
       doneButton,
+      settingsButton,
     ]);
   }
 
@@ -2119,11 +2104,10 @@ class SelectTranslationsTestUtils {
 
     ok(!translateButton.disabled, "The translate button should be enabled.");
     SharedTranslationsTestUtils._assertTabIndexOrder([
-      settingsButton,
       tryAnotherSourceMenuList,
-      ...(AppConstants.platform === "win"
-        ? [translateButton, doneButton]
-        : [doneButton, translateButton]),
+      doneButton,
+      translateButton,
+      settingsButton,
     ]);
 
     click(translateButton);
