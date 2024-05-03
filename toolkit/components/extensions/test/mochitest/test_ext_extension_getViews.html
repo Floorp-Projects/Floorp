@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>runtime.getContexts Test</title>
+  <title>extension.getViews Test</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
   <script type="text/javascript" src="head.js"></script>
@@ -18,38 +18,20 @@ function genericChecker() {
   const createdTabIds = [];
 
   browser.test.onMessage.addListener(async msg => {
-    if (msg == `${kind}-test-get-contexts`) {
+    if (msg == `${kind}-test-get-views`) {
       try {
-        const result = await browser.runtime.getContexts({});
-        browser.test.assertEq(3, result.length, "Expect 3 extension contexts to be found");
+        let result = browser.extension.getViews({});
+        browser.test.assertEq(3, result.length, "Expect 3 extension views to be found");
 
-        const bgContext = result.find(it => it.contextType === browser.runtime.ContextType.BACKGROUND);
-        const tabContext = result.find(it => it.documentUrl.endsWith("kind=tab"));
-        const popupContext = result.find(it => it.documentUrl.endsWith("kind=action"));
+        result = browser.extension.getViews({ type: "tab" });
+        browser.test.assertEq(1, result.length, "Expect 1 tab extension view to be found");
 
-        browser.test.assertEq(window.location.href, bgContext.documentUrl, "background context has the expected documentUrl");
-        browser.test.assertEq(-1, bgContext.windowId, "background context has the expected windowId");
-        browser.test.assertEq(-1, bgContext.tabId, "background context has the expected tabId");
-        browser.test.assertEq("TAB", tabContext.contextType, "Got expected tab context type");
-        browser.test.assertTrue(
-          typeof tabContext.windowId === "number" && tabContext.windowId > 0,
-          "Got expected windowId on tab context"
-        );
-        browser.test.assertTrue(
-          typeof tabContext.windowId === "number" && tabContext.tabId > 0,
-          "Got expected tabId on tab context"
-        );
-        browser.test.assertEq(
-          tabContext.windowId,
-          popupContext.windowId,
-          "Poup and tab expected to have the same windowId"
-        );
-        browser.test.assertEq(-1, popupContext.tabId, "popup context has the expected tabId");
-        browser.test.assertEq("POPUP", popupContext.contextType, "Got expected popup context type");
+        result = browser.extension.getViews({ type: "popup" });
+        browser.test.assertEq(1, result.length, "Expect 1 popup extension view to be found");
 
         browser.test.sendMessage(`${msg}:done`);
       } catch (err) {
-        browser.test.fail(`broser.runtime.getContexts call rejected: ${err}`);
+        browser.test.fail(`browser.extension.getViews exception: ${err}`);
         browser.test.sendMessage(`${msg}:done`);
       }
     } else if (msg == `${kind}-open-tab`) {
@@ -108,8 +90,8 @@ add_task(async function test_runtime_getContexts() {
   await AppTestDelegate.clickBrowserAction(window, extension);
   await extension.awaitMessage("action-loaded");
 
-  extension.sendMessage("background-test-get-contexts");
-  await extension.awaitMessage("background-test-get-contexts:done");
+  extension.sendMessage("background-test-get-views");
+  await extension.awaitMessage("background-test-get-views:done");
 
   // Close popup window.
   await AppTestDelegate.closeBrowserAction(window, extension);

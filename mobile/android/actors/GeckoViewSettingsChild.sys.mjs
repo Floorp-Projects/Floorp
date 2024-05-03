@@ -14,7 +14,7 @@ export class GeckoViewSettingsChild extends GeckoViewActorChild {
       case "SettingsUpdate": {
         const settings = message.data;
 
-        if (settings.isPopup) {
+        if (settings.isExtensionPopup) {
           // Allow web extensions to close their own action popups (bz1612363)
           this.contentWindow.windowUtils.allowScriptsToClose();
         }
