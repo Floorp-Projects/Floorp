@@ -257,14 +257,16 @@ nsresult CacheFileMetadata::WriteMetadata(
   char* writeBuffer = mWriteBuf;
   if (aListener) {
     mListener = aListener;
+    rv = CacheFileIOManager::Write(mHandle, aOffset, writeBuffer,
+                                   p - writeBuffer, true, true, this);
   } else {
     // We are not going to pass |this| as a callback so the buffer will be
     // released by CacheFileIOManager. Just null out mWriteBuf here.
     mWriteBuf = nullptr;
+    rv = CacheFileIOManager::WriteWithoutCallback(mHandle, aOffset, writeBuffer,
+                                                  p - writeBuffer, true, true);
   }
 
-  rv = CacheFileIOManager::Write(mHandle, aOffset, writeBuffer, p - writeBuffer,
-                                 true, true, aListener ? this : nullptr);
   if (NS_FAILED(rv)) {
     LOG(
         ("CacheFileMetadata::WriteMetadata() - CacheFileIOManager::Write() "
