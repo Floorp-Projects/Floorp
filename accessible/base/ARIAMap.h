@@ -305,6 +305,11 @@ uint8_t AttrCharacteristicsFor(nsAtom* aAtom);
 bool HasDefinedARIAHidden(nsIContent* aContent);
 
 /**
+ * Get the role map entry for a given ARIA role.
+ */
+const nsRoleMapEntry* GetRoleMap(const nsStaticAtom* aAriaRole);
+
+/**
  * Represents a simple enumerator for iterating through ARIA attributes
  * exposed as object attributes on a given accessible.
  */

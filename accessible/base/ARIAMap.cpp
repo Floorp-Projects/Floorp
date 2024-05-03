@@ -1609,6 +1609,19 @@ bool aria::HasDefinedARIAHidden(nsIContent* aContent) {
                                      eCaseMatters);
 }
 
+const nsRoleMapEntry* aria::GetRoleMap(const nsStaticAtom* aAriaRole) {
+  const nsDependentAtomString role(aAriaRole);
+  auto comparator = [&role](const nsRoleMapEntry& aEntry) {
+    return Compare(role, aEntry.ARIARoleString());
+  };
+  size_t idx;
+  if (BinarySearchIf(sWAIRoleMaps, 0, ArrayLength(sWAIRoleMaps), comparator,
+                     &idx)) {
+    return GetRoleMapFromIndex(idx);
+  }
+  return nullptr;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // AttrIterator class
 

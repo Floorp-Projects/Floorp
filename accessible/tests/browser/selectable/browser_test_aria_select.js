@@ -117,7 +117,8 @@ addAccessibleTask(
 // ////////////////////////////////////////////////////////////////////////
 // role="grid" aria-multiselectable, selectable children in subtree
 addAccessibleTask(
-  `<table tabindex="0" border="2" cellspacing="0" id="grid" role="grid"
+  `
+  <table tabindex="0" border="2" cellspacing="0" id="grid" role="grid"
       aria-multiselectable="true">
     <thead>
       <tr>
@@ -133,19 +134,29 @@ addAccessibleTask(
       <tr>
         <td tabindex="-1" role="rowheader" id="grid_rowhead"
             aria-readonly="true">1</td>
-        <td tabindex="-1" role="gridcell" id="grid_cell1"
+        <td tabindex="-1" id="grid_cell1"
             aria-selected="true">03/14/05</td>
-        <td tabindex="-1" role="gridcell" id="grid_cell2"
+        <td tabindex="-1" id="grid_cell2"
             aria-selected="false">Conference Fee</td>
       </tr>
-    </tobdy>
-  </table>`,
+    </tbody>
+  </table>
+  <table id="table">
+    <tr><th>a</th><td id="tableB" aria-selected="true">b</td></tr>
+  </table>
+  `,
   async function (browser, docAcc) {
     info('role="grid" aria-multiselectable, selectable children in subtree');
-    let grid = findAccessibleChildByID(docAcc, "grid", [
+    const grid = findAccessibleChildByID(docAcc, "grid", [
       nsIAccessibleSelectable,
     ]);
+    // grid_cell1 is a <td> with an implicit role of gridcell.
     testSelectableSelection(grid, ["grid_colhead1", "grid_cell1"]);
+    info("Verify aria-selected doesn't apply to <td> that isn't gridcell");
+    // We can't use testSelectableSelection here because table (rightly) isn't a
+    // selectable container.
+    const tableB = findAccessibleChildByID(docAcc, "tableB");
+    testStates(tableB, 0, 0, STATE_SELECTED, 0);
   },
   {
     chrome: true,
