@@ -1,4 +1,4 @@
-// |jit-test| --no-threads; --baseline-warmup-threshold=1; --ion-full-warmup-threshold=1
+// |jit-test| --no-threads; --baseline-warmup-threshold=1
 function g(obj, v) {
     obj.prop = v;
 }

@@ -1,4 +1,4 @@
-// |jit-test| --ion-offthread-compile=off; --ion-full-warmup-threshold=0; --baseline-eager; skip-if: !this.hasOwnProperty("ReadableStream")
+// |jit-test| --ion-offthread-compile=off; --baseline-eager; skip-if: !this.hasOwnProperty("ReadableStream")
 
 gczeal(9, 8);
 function s() { }
