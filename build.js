@@ -108,6 +108,7 @@ async function compile() {
 //import { remote } from "webdriverio";
 import puppeteer from "puppeteer-core";
 import { exit } from "node:process";
+import { Browser } from "puppeteer-core";
 
 const VERSION = "000";
 
@@ -153,6 +154,7 @@ async function run() {
     // 可能性はある、まだ必要はない
   } catch {}
 
+  /** @type Browser | null */
   let browser = null;
   let watch_running = false;
 
@@ -174,12 +176,14 @@ async function run() {
       watch_running = false;
     });
 
+  const isWin = process.platform === "win32";
+
   browser = await puppeteer.launch({
     headless: false,
     protocol: "webDriverBiDi",
     dumpio: true,
     product: "firefox",
-    executablePath: "dist/bin/firefox.exe",
+    executablePath: isWin ? "dist/bin/firefox.exe" : "dist/bin/firefox",
     args: ["--profile dist/profile/test"],
   });
 
