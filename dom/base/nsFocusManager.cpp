@@ -173,7 +173,6 @@ bool nsFocusManager::sTestMode = false;
 uint64_t nsFocusManager::sFocusActionCounter = 0;
 
 static const char* kObservedPrefs[] = {"accessibility.browsewithcaret",
-                                       "accessibility.tabfocus_applies_to_xul",
                                        "focusmanager.testmode", nullptr};
 
 nsFocusManager::nsFocusManager()
@@ -197,10 +196,6 @@ nsFocusManager::~nsFocusManager() {
 // static
 nsresult nsFocusManager::Init() {
   sInstance = new nsFocusManager();
-
-  nsIContent::sTabFocusModelAppliesToXUL =
-      Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
-                           nsIContent::sTabFocusModelAppliesToXUL);
 
   sTestMode = Preferences::GetBool("focusmanager.testmode", false);
 
@@ -229,10 +224,6 @@ void nsFocusManager::PrefChanged(const char* aPref) {
   nsDependentCString pref(aPref);
   if (pref.EqualsLiteral("accessibility.browsewithcaret")) {
     UpdateCaretForCaretBrowsingMode();
-  } else if (pref.EqualsLiteral("accessibility.tabfocus_applies_to_xul")) {
-    nsIContent::sTabFocusModelAppliesToXUL =
-        Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
-                             nsIContent::sTabFocusModelAppliesToXUL);
   } else if (pref.EqualsLiteral("focusmanager.testmode")) {
     sTestMode = Preferences::GetBool("focusmanager.testmode", false);
   }
@@ -3361,9 +3352,6 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
   else
     doc = aWindow->GetExtantDoc();
   if (!doc) return NS_OK;
-
-  LookAndFeel::GetInt(LookAndFeel::IntID::TabFocusModel,
-                      &nsIContent::sTabFocusModel);
 
   // True if we are navigating by document (F6/Shift+F6) or false if we are
   // navigating by element (Tab/Shift+Tab).

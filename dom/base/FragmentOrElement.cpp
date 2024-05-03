@@ -105,8 +105,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-int32_t nsIContent::sTabFocusModel = eTabFocus_any;
-bool nsIContent::sTabFocusModelAppliesToXUL = false;
 uint64_t nsMutationGuard::sGeneration = 0;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsIContent)

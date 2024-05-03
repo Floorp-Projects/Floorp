@@ -14,7 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
-#include "nsAttrValueOrString.h"
+#include "mozilla/TabFocusModel.h"
 #include "mozilla/dom/Document.h"
 #include "nsPresContext.h"
 #include "nsIURI.h"
@@ -119,7 +119,7 @@ bool HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
     }
   }
 
-  if ((sTabFocusModel & eTabFocus_linksMask) == 0) {
+  if (!TabFocusModel::IsTabFocusable(TabFocusableType::Links)) {
     *aTabIndex = -1;
   }
   *aIsFocusable = true;

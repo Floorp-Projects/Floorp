@@ -50,6 +50,7 @@
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TabFocusModel.h"
 #include "mozilla/TaskController.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/URLExtraData.h"
@@ -402,15 +403,12 @@ nsXULElement::XULFocusability nsXULElement::GetXULFocusability(
     result.mForcedFocusable.emplace(true);
     result.mForcedTabIndexIfFocusable.emplace(attrVal.value());
   }
-  if (xulControl && sTabFocusModelAppliesToXUL &&
-      !(sTabFocusModel & eTabFocus_formElementsMask) && IsNonList(mNodeInfo)) {
+  if (xulControl && TabFocusModel::AppliesToXUL() &&
+      !TabFocusModel::IsTabFocusable(TabFocusableType::FormElements) &&
+      IsNonList(mNodeInfo)) {
     // By default, the tab focus model doesn't apply to xul element on any
-    // system but OS X. on OS X we're following it for UI elements (XUL) as
-    // sTabFocusModel is based on "Full Keyboard Access" system setting (see
-    // mac/nsILookAndFeel). both textboxes and list elements (i.e. trees and
-    // list) should always be focusable (textboxes are handled as html:input)
-    // For compatibility, we only do this for controls, otherwise elements
-    // like <browser> cannot take this focus.
+    // system but OS X. For compatibility, we only do this for controls,
+    // otherwise elements like <browser> cannot take this focus.
     result.mForcedTabIndexIfFocusable = Some(-1);
   }
   return result;

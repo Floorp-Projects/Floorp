@@ -459,11 +459,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::AlertNotificationOrigin:
       aResult = NS_ALERT_TOP;
       break;
-    case IntID::TabFocusModel:
-      aResult = [NSApp isFullKeyboardAccessEnabled]
-                    ? nsIContent::eTabFocus_any
-                    : nsIContent::eTabFocus_textControlsMask;
-      break;
     case IntID::ScrollToClick: {
       aResult = [[NSUserDefaults standardUserDefaults]
           boolForKey:@"AppleScrollerPagingBehavior"];

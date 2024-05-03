@@ -37,7 +37,6 @@ function main() {
   var t = document.getElementById("t");
   var l1 = document.getElementById("l1");
   var l2 = document.getElementById("l2");
-  const isMac = ("nsILocalFileMac" in SpecialPowers.Ci);
 
   try {
     // Step 1: Checking by assigning tabIndex
@@ -74,20 +73,10 @@ function main() {
     is(document.activeElement.tabIndex, 3, "The active element tabindex is 3");
 
     synthesizeKey("KEY_Tab");
-    // On Mac, SVG link elements should not be focused.
-    if (isMac) {
-      is(document.activeElement.tabIndex, 6, "The active element tabindex is 6");
-    } else {
-      is(document.activeElement.tabIndex, 4, "The active element tabindex is 4");
-    }
+    is(document.activeElement.tabIndex, 4, "The active element tabindex is 4");
 
     synthesizeKey("KEY_Tab");
-    // On Mac, SVG link elements should not be focused.
-    if (isMac) {
-      is(document.activeElement.tabIndex, 7, "The active element tabindex is 7");
-    } else {
-      is(document.activeElement.tabIndex, 5, "The active element tabindex is 5");
-    }
+    is(document.activeElement.tabIndex, 5, "The active element tabindex is 5");
   } catch (e) {
     ok(false, "Got unexpected exception" + e);
   }

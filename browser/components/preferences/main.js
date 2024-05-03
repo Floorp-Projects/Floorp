@@ -2247,9 +2247,8 @@ var gMainPane = {
       // 1/2/4 values set via about:config should persist
       return this._storedFullKeyboardNavigation;
     }
-    // When the checkbox is unchecked, this pref shouldn't exist
-    // at all.
-    return undefined;
+    // When the checkbox is unchecked, default to just text controls.
+    return 1;
   },
 
   /**
