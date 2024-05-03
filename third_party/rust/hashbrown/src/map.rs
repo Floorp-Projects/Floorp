@@ -5,7 +5,7 @@ use crate::{Equivalent, TryReserveError};
 use core::borrow::Borrow;
 use core::fmt::{self, Debug};
 use core::hash::{BuildHasher, Hash};
-use core::iter::{FromIterator, FusedIterator};
+use core::iter::FusedIterator;
 use core::marker::PhantomData;
 use core::mem;
 use core::ops::Index;
@@ -184,7 +184,7 @@ pub enum DefaultHashBuilder {}
 /// use hashbrown::HashMap;
 ///
 /// let timber_resources: HashMap<&str, i32> = [("Norway", 100), ("Denmark", 50), ("Iceland", 10)]
-///     .iter().cloned().collect();
+///     .into_iter().collect();
 /// // use the values stored in map
 /// ```
 pub struct HashMap<K, V, S = DefaultHashBuilder, A: Allocator = Global> {
@@ -6805,7 +6805,7 @@ mod test_map {
         assert_eq!(m2.len(), 2);
     }
 
-    thread_local! { static DROP_VECTOR: RefCell<Vec<i32>> = RefCell::new(Vec::new()) }
+    thread_local! { static DROP_VECTOR: RefCell<Vec<i32>> = const { RefCell::new(Vec::new()) } }
 
     #[derive(Hash, PartialEq, Eq)]
     struct Droppable {
@@ -8524,7 +8524,7 @@ mod test_map {
     #[test]
     #[should_panic = "panic in clone"]
     fn test_clone_from_memory_leaks() {
-        use ::alloc::vec::Vec;
+        use alloc::vec::Vec;
 
         struct CheckedClone {
             panic_in_clone: bool,
