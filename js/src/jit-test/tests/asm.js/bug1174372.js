@@ -1,4 +1,4 @@
-// |jit-test| --no-baseline; --non-writable-jitcode
+// |jit-test| --no-baseline
 (function(stdlib, foreign, heap) {
     "use asm";
     function f() {}
