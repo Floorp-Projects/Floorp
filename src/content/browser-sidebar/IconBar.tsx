@@ -1,6 +1,7 @@
-import "../../components/solid-xul/jsx-runtime";
-import { For } from "solid-js";
+import "@solid-xul/jsx-runtime";
+import { For, onMount } from "solid-js";
 import { createSignal } from "solid-js";
+import Sortable from "sortablejs";
 
 const containerStyle = {
   border: "1px solid black",
@@ -11,6 +12,7 @@ const itemStyle = {
   border: "1px solid blue",
   padding: "0.3em",
   margin: "0.2em 0",
+  "font-size": "20px",
 };
 
 export function IconBar() {
@@ -20,20 +22,26 @@ export function IconBar() {
     { id: 3, title: "item 3" },
   ]);
 
-  function handleDndEvent(e) {
-    const { items: newItems } = e.detail;
-    setItems(newItems);
-  }
+  onMount(() => {
+    Sortable.create(document.getElementById("@nora:sidebar:iconbar")!, {
+      animation: 150,
+      store: {
+        set: (sortable) => {
+          console.log(sortable.toArray());
+        },
+      },
+    });
+  });
 
   return (
-    <section style={containerStyle} id="nyanrusIconBar">
+    <div style={containerStyle} id="@nora:sidebar:iconbar">
       <For each={items()}>
         {(item) => (
-          <div draggable="true" style={itemStyle}>
+          <div style={itemStyle} data-id={item.id}>
             {item.title}
           </div>
         )}
       </For>
-    </section>
+    </div>
   );
 }

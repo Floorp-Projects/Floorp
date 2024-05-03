@@ -18,6 +18,7 @@
     "@types/decompress": "^4.2.7",
     "@types/node": "^20.12.7",
     "@types/postcss-sorting": "^8.0.2",
+    "@typescript/lib-dom": "./@types/gecko/dom",
     "autoprefixer": "^10.4.19",
     "chokidar": "^3.6.0",
     "decompress": "^4.2.1",
@@ -34,14 +35,15 @@
     "puppeteer-core": "^22.6.5",
     "tsx": "^4.7.2",
     "typescript": "^5.4.5",
-    "unocss": "^0.59.4",
     "vite": "5.2.9",
     "vite-plugin-solid": "^2.10.2",
     "vite-tsconfig-paths": "^4.3.2",
     "zstddec": "^0.1.0"
   },
   "dependencies": {
+    "solid-element": "^1.8.0",
     "solid-js": "^1.8.16",
+    "sortablejs": "^1.15.2",
     "zod": "^3.22.5"
   }
 }

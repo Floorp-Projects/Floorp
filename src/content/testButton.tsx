@@ -1,4 +1,4 @@
-import { render } from "../components/solid-xul/solid-xul";
+import { render } from "@solid-xul/solid-xul";
 import { createSignal } from "solid-js";
 
 function Counter() {

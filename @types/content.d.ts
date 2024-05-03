@@ -1,5 +1,5 @@
 import "global";
-import "./gecko/lib.gecko.dom";
+import "./gecko/browser/lib.gecko.dom";
 
 import type { JSServices } from "./gecko/lib.gecko.services";
 

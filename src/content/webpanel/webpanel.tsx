@@ -1,5 +1,5 @@
-import type {} from "../../components/solid-xul/jsx-runtime";
-import { insertNode, render } from "../../components/solid-xul/solid-xul";
+import "@solid-xul/jsx-runtime";
+import { insertNode, render } from "@solid-xul/solid-xul";
 
 export function webpanel(webpanelId: string, src: string) {
   return (

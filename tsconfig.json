@@ -21,7 +21,7 @@
     "paths": {
       "@types/*": ["./@types/*"],
       "@solid-xul/*": ["./src/components/solid-xul/*"],
-      "@private/*": ["./src/private/src/content/*"],
+      "@private/*": ["./src/components/private/src/content/*"],
       "@content/*": ["./src/content/*"]
     }
   },

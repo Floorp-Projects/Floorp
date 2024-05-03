@@ -1,5 +1,5 @@
-import type {} from "../../components/solid-xul/jsx-runtime";
-import { render } from "../../components/solid-xul/solid-xul";
+import "@solid-xul/jsx-runtime";
+import { render } from "@solid-xul/solid-xul";
 
 const init = async () => {
   render(

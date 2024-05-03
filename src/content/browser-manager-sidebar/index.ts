@@ -1,5 +1,3 @@
-import { insert } from "../../components/solid-xul/solid-xul";
-
 import { BMSContextMenu } from "./context-menu";
 import { BMSControlFunctions } from "./control-functions";
 import { BMSMouseEvent } from "./mouse-event";
@@ -11,6 +9,7 @@ import { sidebarSelectBox } from "@content/browser-webpanel/browser-webpanel";
 
 import { Sidebar3Data } from "./SidebarData";
 import { PanelWindowUtils } from "@private/browser-manager-sidebar/PanelWindowUtils";
+import { render } from "@solid-xul/solid-xul";
 
 export class CBrowserManagerSidebar {
   private static instance: CBrowserManagerSidebar;
@@ -38,6 +37,7 @@ export class CBrowserManagerSidebar {
   }
 
   get BROWSER_SIDEBAR_DATA() {
+    ////
     return Sidebar3Data.parse(
       JSON.parse(
         Services.prefs.getStringPref("floorp.browser.sidebar2.data", undefined),
@@ -133,7 +133,7 @@ export class CBrowserManagerSidebar {
       case "back":
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
-          PanelWindowUtils.goBackPanel(window, webPanelId, true);
+          this.panelWindowUtils.goBackPanel(window, webPanelId, true);
         } else {
           webpanel.goBack();
         }
@@ -141,7 +141,7 @@ export class CBrowserManagerSidebar {
       case "forward":
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
-          PanelWindowUtils.goForwardPanel(window, webPanelId, true);
+          this.panelWindowUtils.goForwardPanel(window, webPanelId, true);
         } else {
           webpanel.goForward();
         }
@@ -149,7 +149,7 @@ export class CBrowserManagerSidebar {
       case "reload":
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
-          PanelWindowUtils.reloadPanel(window, webPanelId, true);
+          this.panelWindowUtils.reloadPanel(window, webPanelId, true);
         } else {
           webpanel.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
         }
@@ -157,7 +157,7 @@ export class CBrowserManagerSidebar {
       case "home":
         if (webpanel.src.startsWith("chrome://browser/content/browser.xhtml")) {
           const webPanelId = webpanel.id.replace("webpanel", "");
-          PanelWindowUtils.goIndexPagePanel(window, webPanelId, true);
+          this.panelWindowUtils.goIndexPagePanel(window, webPanelId, true);
         } else {
           webpanel.gotoIndex();
         }
@@ -221,22 +221,14 @@ export class CBrowserManagerSidebar {
 }
 
 function inject(bms: CBrowserManagerSidebar) {
-  console.log("browser");
-  insert(
-    document.getElementById("browser"),
-    sidebar(bms),
-    document.getElementById("appcontent"),
+  render(() => sidebar(bms), document.getElementById("@nora:appcontent"));
+  render(
+    () => sidebarSelectBox(bms),
+    document.getElementById("@nora:appcontent"),
   );
-  insert(
-    document.getElementById("browser"),
-    sidebarSelectBox(bms),
-    document.getElementById("appcontent"),
-  );
-  console.log("body");
-  insert(
-    document.body,
-    sidebarContext(bms),
-    document.getElementById("window-modal-dialog"),
+  render(
+    () => sidebarContext(bms),
+    document.getElementById("@nora:window-modal-dialog"),
   );
 }
 // function onDOMLoad() {}

@@ -44,6 +44,12 @@ export const {
         //so have to remove the `on`
         const evName = name.slice(2).toLowerCase();
         node.addEventListener(evName, value);
+      } else if (typeof value === "object" && name === "style") {
+        let tmp = "";
+        for (const [idx, v] of Object.entries(value)) {
+          tmp += `${idx}:${v};`;
+        }
+        node.setAttribute(name, tmp);
       } else if (typeof value === "string") {
         node.setAttribute(name, value);
       }

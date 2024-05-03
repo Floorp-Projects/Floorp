@@ -36612,9 +36612,6 @@ type DOMApplication = any;
 type UTF8String = string;
 type WindowProxy = Window;
 
-declare global {
-    const document: Document;
-    const window: Window;
-}
+declare var document: Document;
 
-export {}
+declare var window: Window;

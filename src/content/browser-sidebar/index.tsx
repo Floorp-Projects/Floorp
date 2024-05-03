@@ -1,19 +1,16 @@
-import { render } from "../../components/solid-xul/solid-xul";
+import { render } from "@solid-xul/solid-xul";
 import { IconBar } from "./IconBar";
+import { customElement } from "solid-element";
+import Sortable from "sortablejs";
 
-export class FloorpSidebar implements Hotswappable {
-  new = () => {
-    render(
-      () => (
-        <section id="SX:FloorpSidebar">
-          <IconBar />
-        </section>
-      ),
-      document.body,
-    );
-  };
-  destroy = () => {
-    //@ts-expect-error aaa
-    document.querySelector("SX:FloorpSidebar").remove();
-  };
+export function initSidebar() {
+  render(
+    () => (
+      <section id="@nora:tmp:sidebar:base">
+        <IconBar />
+      </section>
+    ),
+    document.getElementById("browser"),
+  );
+  Sortable.create(document.getElementById("nyanrusIconBar")!);
 }

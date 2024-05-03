@@ -10,9 +10,7 @@ import postcssSorting from "postcss-sorting";
 import chikodar from "chokidar";
 import { build } from "vite";
 import solidPlugin from "vite-plugin-solid";
-import unocssPlugin from "unocss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-import * as swc from "@swc/core";
 
 import { injectManifest } from "./scripts/injectmanifest.js";
 import { injectXHTML } from "./scripts/injectxhtml.js";
@@ -37,11 +35,8 @@ async function compile() {
         //https://github.com/vitejs/vite/discussions/14454
         preserveEntrySignatures: "allow-extension",
         input: {
-          index: "src/content/index.ts",
-          "webpanel-index": path.resolve(
-            import.meta.dirname,
-            "src/content/webpanel/index.html",
-          ),
+          //index: "src/content/index.ts",
+          startup: "src/components/startup/index.ts",
         },
         output: {
           esModule: true,
@@ -55,17 +50,19 @@ async function compile() {
 
     plugins: [
       tsconfigPaths(),
-      unocssPlugin(),
       solidPlugin({
         solid: {
           generate: "universal",
           moduleName: path.resolve(
             import.meta.dirname,
-            "./src/solid-xul/solid-xul.ts",
+            "./src/components/solid-xul/solid-xul.ts",
           ),
         },
       }),
     ],
+    resolve: {
+      alias: [{ find: "@content", replacement: r("src/content") }],
+    },
   });
   const entries = await fg("./src/skin/**/*");
 
@@ -104,91 +101,6 @@ async function compile() {
       }
     }
   }
-
-  //swc / compile modules
-  await fg.glob("src/modules/**/*", { onlyFiles: true }).then((paths) => {
-    const listPromise = [];
-    for (const filepath of paths) {
-      const promise = (async () => {
-        const output = await swc.transformFile(filepath, {
-          jsc: {
-            parser: {
-              syntax: "typescript",
-              decorators: true,
-              importAssertions: true,
-              dynamicImport: true,
-            },
-            target: "esnext",
-          },
-          sourceMaps: true,
-        });
-        const outpath = filepath
-          .replace("src/modules/", "dist/noraneko/resource/modules/")
-          .replace(".ts", ".js")
-          .replace(".mts", ".mjs");
-        const outdir = path.dirname(outpath);
-        try {
-          await fs.access(outdir);
-        } catch {
-          await fs.mkdir(outdir, { recursive: true });
-        }
-        await fs.writeFile(
-          outpath,
-          output.code +
-            "\n//# sourceMappingURL= " +
-            path.relative(path.dirname(outpath), outpath + ".map"),
-        );
-        await fs.writeFile(`${outpath}.map`, output.map);
-      })();
-      listPromise.push(promise);
-    }
-    return Promise.all(listPromise);
-  });
-
-  //swc / compile modules
-  await fg
-    .glob("src/private/browser/components/**/*", { onlyFiles: true })
-    .then((paths) => {
-      const listPromise = [];
-      for (const filepath of paths) {
-        const promise = (async () => {
-          const output = await swc.transformFile(filepath, {
-            jsc: {
-              parser: {
-                syntax: "typescript",
-                decorators: true,
-                importAssertions: true,
-                dynamicImport: true,
-              },
-              target: "esnext",
-            },
-            sourceMaps: true,
-          });
-          const outpath = filepath
-            .replace(
-              "src/private/browser/components/",
-              "dist/noraneko/private/resource/modules/",
-            )
-            .replace(".ts", ".js")
-            .replace(".mts", ".mjs");
-          const outdir = path.dirname(outpath);
-          try {
-            await fs.access(outdir);
-          } catch {
-            await fs.mkdir(outdir, { recursive: true });
-          }
-          await fs.writeFile(
-            outpath,
-            output.code +
-              "\n//# sourceMappingURL= " +
-              path.relative(path.dirname(outpath), outpath + ".map"),
-          );
-          await fs.writeFile(`${outpath}.map`, output.map);
-        })();
-        listPromise.push(promise);
-      }
-      return Promise.all(listPromise);
-    });
 
   // await fs.cp("public", "dist", { recursive: true });
 }
