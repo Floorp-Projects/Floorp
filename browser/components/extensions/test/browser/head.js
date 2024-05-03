@@ -476,10 +476,11 @@ async function openContextMenuInPopup(
 }
 
 async function openContextMenuInSidebar(selector = "body") {
-  let contentAreaContextMenu = SidebarUI.browser.contentDocument.getElementById(
-    "contentAreaContextMenu"
-  );
-  let browser = SidebarUI.browser.contentDocument.getElementById(
+  let contentAreaContextMenu =
+    SidebarController.browser.contentDocument.getElementById(
+      "contentAreaContextMenu"
+    );
+  let browser = SidebarController.browser.contentDocument.getElementById(
     "webext-panels-browser"
   );
   let popupShownPromise = BrowserTestUtils.waitForEvent(
@@ -491,7 +492,9 @@ async function openContextMenuInSidebar(selector = "body") {
   // fail intermittently if synthesizeMouseAtCenter is being called
   // while the sidebar is still opening and the browser window layout
   // being recomputed.
-  await SidebarUI.browser.contentWindow.promiseDocumentFlushed(() => {});
+  await SidebarController.browser.contentWindow.promiseDocumentFlushed(
+    () => {}
+  );
 
   info("Opening context menu in sidebarAction panel");
   await BrowserTestUtils.synthesizeMouseAtCenter(

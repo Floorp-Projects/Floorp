@@ -724,7 +724,7 @@ add_task(async function test_bookmark_sidebar_contextmenu() {
     await extension.startup();
     let bookmarkGuid = await extension.awaitMessage("bookmark-created");
 
-    let sidebar = window.SidebarUI.browser;
+    let sidebar = window.SidebarController.browser;
     let menu = sidebar.contentDocument.getElementById("placesContext");
     tree.selectItems([bookmarkGuid]);
     let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");

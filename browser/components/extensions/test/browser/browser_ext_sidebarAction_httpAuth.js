@@ -42,7 +42,7 @@ add_task(async function sidebar_httpAuthPrompt() {
 
   // Wait for the http auth prompt and close it with accept button.
   let promptPromise = PromptTestUtils.handleNextPrompt(
-    SidebarUI.browser.contentWindow,
+    SidebarController.browser.contentWindow,
     {
       modalType: Services.prompt.MODAL_TYPE_WINDOW,
       promptType: "promptUserAndPass",

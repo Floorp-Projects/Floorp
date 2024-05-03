@@ -17,7 +17,7 @@ async function test_sidebar_theme(theme, isBrightText) {
 
   const sidebarBox = document.getElementById("sidebar-box");
   const browserRoot = document.documentElement;
-  const content = SidebarUI.browser.contentWindow;
+  const content = SidebarController.browser.contentWindow;
   const root = content.document.documentElement;
 
   ok(
@@ -184,7 +184,7 @@ add_task(async function test_support_sidebar_colors() {
   for (let command of ["viewBookmarksSidebar", "viewHistorySidebar"]) {
     info("Executing command: " + command);
 
-    await SidebarUI.show(command);
+    await SidebarController.show(command);
 
     await test_sidebar_theme(
       {
@@ -263,7 +263,7 @@ add_task(async function test_support_sidebar_border_color() {
       "Sidebar splitter should be colored properly"
     );
 
-    SidebarUI.reversePosition();
+    SidebarController.reversePosition();
 
     is(
       sidebarSplitterCS.borderInlineStartColor,
@@ -271,7 +271,7 @@ add_task(async function test_support_sidebar_border_color() {
       "Sidebar splitter should be colored properly after switching sides"
     );
 
-    SidebarUI.reversePosition();
+    SidebarController.reversePosition();
   }
 
   await extension.unload();

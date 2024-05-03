@@ -82,8 +82,8 @@ this.sidebarAction = class extends ExtensionAPI {
     }
 
     for (let window of windowTracker.browserWindows()) {
-      let { SidebarUI } = window;
-      SidebarUI.removeExtension(this.id);
+      let { SidebarController } = window;
+      SidebarController.removeExtension(this.id);
     }
     windowTracker.removeOpenListener(this.windowOpenListener);
   }
@@ -91,9 +91,9 @@ this.sidebarAction = class extends ExtensionAPI {
   static onUninstall(id) {
     const sidebarId = `${makeWidgetId(id)}-sidebar-action`;
     for (let window of windowTracker.browserWindows()) {
-      let { SidebarUI } = window;
-      if (SidebarUI.lastOpenedId === sidebarId) {
-        SidebarUI.lastOpenedId = null;
+      let { SidebarController } = window;
+      if (SidebarController.lastOpenedId === sidebarId) {
+        SidebarController.lastOpenedId = null;
       }
     }
   }
@@ -107,12 +107,12 @@ this.sidebarAction = class extends ExtensionAPI {
     let install = this.extension.startupReason === "ADDON_INSTALL";
     for (let window of windowTracker.browserWindows()) {
       this.updateWindow(window);
-      let { SidebarUI } = window;
+      let { SidebarController } = window;
       if (
         (install && this.extension.manifest.sidebar_action.open_at_install) ||
-        SidebarUI.lastOpenedId == this.id
+        SidebarController.lastOpenedId == this.id
       ) {
-        SidebarUI.show(this.id);
+        SidebarController.show(this.id);
       }
     }
   }
@@ -122,14 +122,14 @@ this.sidebarAction = class extends ExtensionAPI {
       return;
     }
     this.panel = details.panel;
-    let { SidebarUI } = window;
-    SidebarUI.registerExtension(this.id, {
+    let { SidebarController } = window;
+    SidebarController.registerExtension(this.id, {
       icon: this.getMenuIcon(details),
       menuId: this.menuId,
       title: details.title,
       extensionId: this.extension.id,
       onload: () =>
-        SidebarUI.browser.contentWindow.loadPanel(
+        SidebarController.browser.contentWindow.loadPanel(
           this.extension.id,
           this.panel,
           this.browserStyle
@@ -155,7 +155,7 @@ this.sidebarAction = class extends ExtensionAPI {
    *        Tab specific sidebar configuration.
    */
   updateButton(window, tabData) {
-    let { document, SidebarUI } = window;
+    let { document, SidebarController } = window;
     let title = tabData.title || this.extension.name;
     if (!document.getElementById(this.menuId)) {
       // Menu items are added when new windows are opened, or from onReady (when
@@ -167,7 +167,7 @@ this.sidebarAction = class extends ExtensionAPI {
     if (urlChanged) {
       this.panel = tabData.panel;
     }
-    SidebarUI.setExtensionAttributes(
+    SidebarController.setExtensionAttributes(
       this.id,
       {
         icon: this.getMenuIcon(tabData),
@@ -315,9 +315,9 @@ this.sidebarAction = class extends ExtensionAPI {
    * @param {ChromeWindow} window
    */
   triggerAction(window) {
-    let { SidebarUI } = window;
-    if (SidebarUI && this.extension.canAccessWindow(window)) {
-      SidebarUI.toggle(this.id);
+    let { SidebarController } = window;
+    if (SidebarController && this.extension.canAccessWindow(window)) {
+      SidebarController.toggle(this.id);
     }
   }
 
@@ -327,9 +327,9 @@ this.sidebarAction = class extends ExtensionAPI {
    * @param {ChromeWindow} window
    */
   open(window) {
-    let { SidebarUI } = window;
-    if (SidebarUI && this.extension.canAccessWindow(window)) {
-      SidebarUI.show(this.id);
+    let { SidebarController } = window;
+    if (SidebarController && this.extension.canAccessWindow(window)) {
+      SidebarController.show(this.id);
     }
   }
 
@@ -340,7 +340,7 @@ this.sidebarAction = class extends ExtensionAPI {
    */
   close(window) {
     if (this.isOpen(window)) {
-      window.SidebarUI.hide();
+      window.SidebarController.hide();
     }
   }
 
@@ -350,15 +350,15 @@ this.sidebarAction = class extends ExtensionAPI {
    * @param {ChromeWindow} window
    */
   toggle(window) {
-    let { SidebarUI } = window;
-    if (!SidebarUI || !this.extension.canAccessWindow(window)) {
+    let { SidebarController } = window;
+    if (!SidebarController || !this.extension.canAccessWindow(window)) {
       return;
     }
 
     if (!this.isOpen(window)) {
-      SidebarUI.show(this.id);
+      SidebarController.show(this.id);
     } else {
-      SidebarUI.hide();
+      SidebarController.hide();
     }
   }
 
@@ -369,8 +369,8 @@ this.sidebarAction = class extends ExtensionAPI {
    * @returns {boolean}
    */
   isOpen(window) {
-    let { SidebarUI } = window;
-    return SidebarUI.isOpen && this.id == SidebarUI.currentID;
+    let { SidebarController } = window;
+    return SidebarController.isOpen && this.id == SidebarController.currentID;
   }
 
   getAPI(context) {

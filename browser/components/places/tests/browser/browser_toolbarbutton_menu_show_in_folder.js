@@ -11,7 +11,7 @@ const TEST_TITLE = "Test Bookmark";
 
 let appMenuButton = document.getElementById("PanelUI-menu-button");
 let bookmarksAppMenu = document.getElementById("PanelUI-bookmarks");
-let sidebarWasAlreadyOpen = SidebarUI.isOpen;
+let sidebarWasAlreadyOpen = SidebarController.isOpen;
 
 const { CustomizableUITestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/CustomizableUITestUtils.sys.mjs"
@@ -86,7 +86,7 @@ add_task(async function toolbarBookmarkShowInFolder() {
   // Cleanup
   await PlacesUtils.bookmarks.eraseEverything();
   if (!sidebarWasAlreadyOpen) {
-    SidebarUI.hide();
+    SidebarController.hide();
   }
   await gCUITestUtils.hideMainMenu();
 });

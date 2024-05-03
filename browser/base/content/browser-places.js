@@ -1377,7 +1377,7 @@ var BookmarkingUI = {
 
     this.updateLabel(
       "BMB_viewBookmarksSidebar",
-      SidebarUI.currentID == "viewBookmarksSidebar"
+      SidebarController.currentID == "viewBookmarksSidebar"
     );
     this.updateLabel("BMB_viewBookmarksToolbar", !this.toolbar.collapsed);
   },

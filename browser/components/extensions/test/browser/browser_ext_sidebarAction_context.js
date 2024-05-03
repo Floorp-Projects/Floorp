@@ -124,7 +124,7 @@ async function runTests(options) {
   });
 
   // Wait for initial sidebar load.
-  SidebarUI.browser.addEventListener(
+  SidebarController.browser.addEventListener(
     "load",
     async () => {
       // Wait for the background page listeners to be ready and

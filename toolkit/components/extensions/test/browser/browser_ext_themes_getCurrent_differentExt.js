@@ -139,7 +139,9 @@ add_task(async function test_getcurrent_privateBrowsing() {
     "resource://gre/modules/ExtensionCommon.sys.mjs"
   );
   const { makeWidgetId } = ExtensionCommon;
-  privateWin.SidebarUI.show(`${makeWidgetId(extension.id)}-sidebar-action`);
+  privateWin.SidebarController.show(
+    `${makeWidgetId(extension.id)}-sidebar-action`
+  );
 
   let imageLoaded = extension.awaitMessage("theme-image");
   Assert.deepEqual(await imageLoaded, { success: true }, "theme image loaded");

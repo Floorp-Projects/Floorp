@@ -30,9 +30,9 @@ add_setup(async function () {
 add_task(async function test_open_sidebar_and_customize() {
   await withSidebarTree("bookmarks", async tree => {
     async function checkTreeIsFunctional() {
-      Assert.ok(SidebarUI.isOpen, "Sidebar is open");
+      Assert.ok(SidebarController.isOpen, "Sidebar is open");
       Assert.ok(
-        BrowserTestUtils.isVisible(SidebarUI.browser),
+        BrowserTestUtils.isVisible(SidebarController.browser),
         "sidebar browser is visible"
       );
       Assert.ok(tree.view.result, "View result is defined");
@@ -49,7 +49,7 @@ add_task(async function test_open_sidebar_and_customize() {
     await promiseCustomizeStart();
 
     Assert.ok(
-      !BrowserTestUtils.isVisible(SidebarUI.browser),
+      !BrowserTestUtils.isVisible(SidebarController.browser),
       "sidebar browser is hidden"
     );
     Assert.ok(tree.view.result, "View result is defined");
