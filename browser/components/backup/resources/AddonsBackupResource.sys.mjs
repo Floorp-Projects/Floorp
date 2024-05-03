@@ -67,6 +67,22 @@ export class AddonsBackupResource extends BackupResource {
     return null;
   }
 
+  async recover(_manifestEntry, recoveryPath, destProfilePath) {
+    const files = [
+      "extensions.json",
+      "extension-settings.json",
+      "extension-preferences.json",
+      "addonStartup.json.lz4",
+      "browser-extension-data",
+      "extension-store-permissions",
+      "extensions",
+      "storage-sync-v2.sqlite",
+    ];
+    await BackupResource.copyFiles(recoveryPath, destProfilePath, files);
+
+    return null;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     // Report the total size of the extension json files.
     const jsonFiles = [
