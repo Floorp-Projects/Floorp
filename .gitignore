@@ -2,3 +2,5 @@
 /node_modules/
 
 *.tar.zst
+
+.idea/
