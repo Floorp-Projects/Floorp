@@ -45,6 +45,11 @@ class NonBlockingHttpIconLoaderTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
     private val scope = coroutinesTestRule.scope
+    private val defaultAvailMem: Long = 100000
+
+    class FakeMemoryInfoProvider(private val availMem: Long) : MemoryInfoProvider {
+        override fun getAvailMem(): Long = availMem
+    }
 
     @Test
     fun `Loader will return IconLoader#Result#NoResult for a load request and respond with the result through a callback`() = runTestOnMain {
@@ -71,7 +76,7 @@ class NonBlockingHttpIconLoaderTest {
                 var callbackIconRequest: IconRequest? = null
                 var callbackResource: IconRequest.Resource? = null
                 var callbackIcon: IconLoader.Result? = null
-                val loader = NonBlockingHttpIconLoader(client, scope) { request, resource, icon ->
+                val loader = NonBlockingHttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem), scope) { request, resource, icon ->
                     callbackIconRequest = request
                     callbackResource = resource
                     callbackIcon = icon
@@ -106,7 +111,7 @@ class NonBlockingHttpIconLoaderTest {
         var callbackIconRequest: IconRequest? = null
         var callbackResource: IconRequest.Resource? = null
         var callbackIcon: IconLoader.Result? = null
-        val loader = NonBlockingHttpIconLoader(client, scope) { request, resource, icon ->
+        val loader = NonBlockingHttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem), scope) { request, resource, icon ->
             callbackIconRequest = request
             callbackResource = resource
             callbackIcon = icon
@@ -132,7 +137,7 @@ class NonBlockingHttpIconLoaderTest {
     @Test
     fun `Request has timeouts applied`() = runTestOnMain {
         val client: Client = mock()
-        val loader = NonBlockingHttpIconLoader(client, scope) { _, _, _ -> }
+        val loader = NonBlockingHttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem), scope) { _, _, _ -> }
         doReturn(
             Response(
                 url = "https://www.example.org",
@@ -165,7 +170,7 @@ class NonBlockingHttpIconLoaderTest {
         var callbackIconRequest: IconRequest? = null
         var callbackResource: IconRequest.Resource? = null
         var callbackIcon: IconLoader.Result? = null
-        val loader = NonBlockingHttpIconLoader(client, scope) { request, resource, icon ->
+        val loader = NonBlockingHttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem), scope) { request, resource, icon ->
             callbackIconRequest = request
             callbackResource = resource
             callbackIcon = icon
@@ -198,7 +203,7 @@ class NonBlockingHttpIconLoaderTest {
     @Test
     fun `Loader will not try to load URL again that just recently failed`() = runTestOnMain {
         val client: Client = mock()
-        val loader = NonBlockingHttpIconLoader(client, scope) { _, _, _ -> }
+        val loader = NonBlockingHttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem), scope) { _, _, _ -> }
         doReturn(
             Response(
                 url = "https://www.example.org",
@@ -231,7 +236,7 @@ class NonBlockingHttpIconLoaderTest {
         var callbackIconRequest: IconRequest? = null
         var callbackResource: IconRequest.Resource? = null
         var callbackIcon: IconLoader.Result? = null
-        val loader = NonBlockingHttpIconLoader(client, scope) { request, resource, icon ->
+        val loader = NonBlockingHttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem), scope) { request, resource, icon ->
             callbackIconRequest = request
             callbackResource = resource
             callbackIcon = icon
@@ -256,7 +261,7 @@ class NonBlockingHttpIconLoaderTest {
         var callbackIconRequest: IconRequest? = null
         var callbackResource: IconRequest.Resource? = null
         var callbackIcon: IconLoader.Result? = null
-        val loader = NonBlockingHttpIconLoader(client, scope) { request, resource, icon ->
+        val loader = NonBlockingHttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem), scope) { request, resource, icon ->
             callbackIconRequest = request
             callbackResource = resource
             callbackIcon = icon
@@ -292,7 +297,7 @@ class NonBlockingHttpIconLoaderTest {
     fun `Loader will sanitize URL`() = runTestOnMain {
         val client: Client = mock()
         val captor = argumentCaptor<Request>()
-        val loader = NonBlockingHttpIconLoader(client, scope) { _, _, _ -> }
+        val loader = NonBlockingHttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem), scope) { _, _, _ -> }
         doReturn(
             Response(
                 url = "https://www.example.org",

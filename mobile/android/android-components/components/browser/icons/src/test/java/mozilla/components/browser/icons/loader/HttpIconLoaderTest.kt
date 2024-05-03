@@ -34,6 +34,11 @@ import java.io.InputStream
 
 @RunWith(AndroidJUnit4::class)
 class HttpIconLoaderTest {
+    private val defaultAvailMem: Long = 100000
+
+    class FakeMemoryInfoProvider(private val availMem: Long) : MemoryInfoProvider {
+        override fun getAvailMem(): Long = availMem
+    }
 
     @Test
     fun `Loader downloads data and uses appropriate headers`() {
@@ -56,7 +61,7 @@ class HttpIconLoaderTest {
             server.start()
 
             try {
-                val loader = HttpIconLoader(client)
+                val loader = HttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem))
                 val result = loader.load(
                     mock(),
                     mock(),
@@ -94,7 +99,7 @@ class HttpIconLoaderTest {
     fun `Loader will not perform any requests for data uris`() {
         val client: Client = mock()
 
-        val result = HttpIconLoader(client).load(
+        val result = HttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem)).load(
             mock(),
             mock(),
             IconRequest.Resource(
@@ -112,7 +117,7 @@ class HttpIconLoaderTest {
     fun `Request has timeouts applied`() {
         val client: Client = mock()
 
-        val loader = HttpIconLoader(client)
+        val loader = HttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem))
         doReturn(
             Response(
                 url = "https://www.example.org",
@@ -144,7 +149,7 @@ class HttpIconLoaderTest {
     fun `NoResult is returned for non-successful requests`() {
         val client: Client = mock()
 
-        val loader = HttpIconLoader(client)
+        val loader = HttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem))
         doReturn(
             Response(
                 url = "https://www.example.org",
@@ -170,7 +175,7 @@ class HttpIconLoaderTest {
     fun `Loader will not try to load URL again that just recently failed`() {
         val client: Client = mock()
 
-        val loader = HttpIconLoader(client)
+        val loader = HttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem))
         doReturn(
             Response(
                 url = "https://www.example.org",
@@ -203,7 +208,7 @@ class HttpIconLoaderTest {
         val client: Client = mock()
         doThrow(IOException("Mock")).`when`(client).fetch(any())
 
-        val loader = HttpIconLoader(client)
+        val loader = HttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem))
 
         val resource = IconRequest.Resource(
             url = "https://www.example.org",
@@ -223,7 +228,7 @@ class HttpIconLoaderTest {
             }
         }
 
-        val loader = HttpIconLoader(client)
+        val loader = HttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem))
         doReturn(
             Response(
                 url = "https://www.example.org",
@@ -242,10 +247,164 @@ class HttpIconLoaderTest {
     }
 
     @Test
+    fun `Loader will return NoResult for response with large Content-Length size`() {
+        val clients = listOf(
+            HttpURLConnectionClient(),
+            OkHttpClient(),
+        )
+
+        clients.forEach { client ->
+            val server = MockWebServer()
+
+            // Create a mock Response object with the Content-Length header set to a large size
+            server.enqueue(
+                MockResponse().setBody(
+                    javaClass.getResourceAsStream("/misc/test.txt")!!
+                        .bufferedReader()
+                        .use { it.readText() },
+                ).addHeader("Content-Length", "2048576"),
+            )
+
+            server.start()
+
+            try {
+                val loader = HttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem))
+                val result = loader.load(
+                    mock(),
+                    mock(),
+                    IconRequest.Resource(
+                        url = server.url("/some/path").toString(),
+                        type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+                    ),
+                )
+
+                assertTrue(result is IconLoader.Result.NoResult)
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Loader will return NoResult for valid Content-Length size and low available memory`() {
+        val clients = listOf(
+            HttpURLConnectionClient(),
+            OkHttpClient(),
+        )
+
+        clients.forEach { client ->
+            val server = MockWebServer()
+
+            server.enqueue(
+                MockResponse().setBody(
+                    javaClass.getResourceAsStream("/misc/test.txt")!!
+                        .bufferedReader()
+                        .use { it.readText() },
+                ).addHeader("Content-Length", "10000"),
+            )
+
+            server.start()
+
+            try {
+                val loader = HttpIconLoader(client, FakeMemoryInfoProvider(availMem = 0))
+                val result = loader.load(
+                    mock(),
+                    mock(),
+                    IconRequest.Resource(
+                        url = server.url("/some/path").toString(),
+                        type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+                    ),
+                )
+
+                assertTrue(result is IconLoader.Result.NoResult)
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Loader will return NoResult for null Content-Length header and low available memory`() {
+        val clients = listOf(
+            HttpURLConnectionClient(),
+            OkHttpClient(),
+        )
+
+        clients.forEach { client ->
+            val server = MockWebServer()
+
+            server.enqueue(
+                MockResponse().setBody(
+                    javaClass.getResourceAsStream("/misc/test.txt")!!
+                        .bufferedReader()
+                        .use { it.readText() },
+                ).removeHeader("Content-Length"),
+            )
+
+            server.start()
+
+            try {
+                val loader = HttpIconLoader(client, FakeMemoryInfoProvider(availMem = 0))
+                val result = loader.load(
+                    mock(),
+                    mock(),
+                    IconRequest.Resource(
+                        url = server.url("/some/path").toString(),
+                        type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+                    ),
+                )
+
+                assertTrue(result is IconLoader.Result.NoResult)
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Loader downloads data for null Content-Length header and response size within limits`() {
+        val clients = listOf(
+            HttpURLConnectionClient(),
+            OkHttpClient(),
+        )
+
+        clients.forEach { client ->
+            val server = MockWebServer()
+
+            server.enqueue(
+                MockResponse().setBody(
+                    javaClass.getResourceAsStream("/misc/test.txt")!!
+                        .bufferedReader()
+                        .use { it.readText() },
+                ).removeHeader("Content-Length"),
+            )
+
+            server.start()
+
+            try {
+                val loader = HttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem))
+                val result = loader.load(
+                    mock(),
+                    mock(),
+                    IconRequest.Resource(
+                        url = server.url("/some/path").toString(),
+                        type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
+                    ),
+                )
+                assertTrue("Result should match BytesResult", result is IconLoader.Result.BytesResult)
+                val data = (result as IconLoader.Result.BytesResult).bytes
+                assertTrue("Data should not be empty", data.isNotEmpty())
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
     fun `Loader will sanitize URL`() {
         val client: Client = mock()
 
-        val loader = HttpIconLoader(client)
+        val loader = HttpIconLoader(client, FakeMemoryInfoProvider(defaultAvailMem))
         doReturn(
             Response(
                 url = "https://www.example.org",
