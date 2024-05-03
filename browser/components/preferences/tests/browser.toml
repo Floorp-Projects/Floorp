@@ -201,8 +201,6 @@ skip-if = ["true"]
 
 ["browser_privacy_syncDataClearing.js"]
 
-["browser_privacy_syncDataClearing_v2.js"]
-
 ["browser_privacypane_2.js"]
 
 ["browser_privacypane_3.js"]
