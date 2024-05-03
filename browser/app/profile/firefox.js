@@ -938,7 +938,11 @@ pref("browser.tabs.tooltipsShowPidAndActiveness", true);
 pref("browser.tabs.tooltipsShowPidAndActiveness", false);
 #endif
 
+#ifdef NIGHTLY_BUILD
+pref("browser.tabs.cardPreview.enabled", true);
+#else
 pref("browser.tabs.cardPreview.enabled", false);
+#endif
 pref("browser.tabs.cardPreview.showThumbnails", true);
 
 pref("browser.tabs.firefox-view.logLevel", "Warn");
