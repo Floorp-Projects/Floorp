@@ -41,7 +41,9 @@ async function testInteractWithSite(origin, expectRecorded) {
   });
   if (expectRecorded) {
     Assert.deepEqual(
-      bounceTrackingProtection.testGetUserActivationHosts({}),
+      bounceTrackingProtection
+        .testGetUserActivationHosts({})
+        .map(entry => entry.siteHost),
       [baseDomain],
       `User activation should be recorded for ${scheme} scheme.`
     );

@@ -95,7 +95,9 @@ async function runTest(spawnWindowType) {
 
   // Check that the bounce tracker was detected.
   Assert.deepEqual(
-    bounceTrackingProtection.testGetBounceTrackerCandidateHosts({}),
+    bounceTrackingProtection
+      .testGetBounceTrackerCandidateHosts({})
+      .map(entry => entry.siteHost),
     [SITE_TRACKER],
     "Bounce tracker in popup detected."
   );

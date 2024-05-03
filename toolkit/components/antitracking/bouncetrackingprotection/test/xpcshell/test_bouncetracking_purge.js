@@ -250,12 +250,18 @@ add_task(async function test_purge() {
     "Check that bounce and user activation data has been correctly recorded."
   );
   Assert.deepEqual(
-    btp.testGetBounceTrackerCandidateHosts({}).sort(),
+    btp
+      .testGetBounceTrackerCandidateHosts({})
+      .map(entry => entry.siteHost)
+      .sort(),
     expectedBounceTrackerHosts.sort(),
     "Has added bounce tracker hosts."
   );
   Assert.deepEqual(
-    btp.testGetUserActivationHosts({}).sort(),
+    btp
+      .testGetUserActivationHosts({})
+      .map(entry => entry.siteHost)
+      .sort(),
     expectedUserActivationHosts.sort(),
     "Has added user activation hosts."
   );
@@ -273,13 +279,19 @@ add_task(async function test_purge() {
     .filter(host => !expectedPurgedHosts.includes(host))
     .sort();
   Assert.deepEqual(
-    btp.testGetBounceTrackerCandidateHosts({}).sort(),
+    btp
+      .testGetBounceTrackerCandidateHosts({})
+      .map(entry => entry.siteHost)
+      .sort(),
     expectedBounceTrackerHostsAfterPurge.sort(),
     "After purge the bounce tracker candidate host set should be updated correctly."
   );
 
   Assert.deepEqual(
-    btp.testGetUserActivationHosts({}).sort(),
+    btp
+      .testGetUserActivationHosts({})
+      .map(entry => entry.siteHost)
+      .sort(),
     expiredUserActivationHosts.sort(),
     "After purge any expired user activation records should have been removed"
   );
