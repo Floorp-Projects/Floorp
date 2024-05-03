@@ -113,6 +113,11 @@ function getRootEvent(aEvent) {
   return BrowserUtils.getRootEvent(aEvent);
 }
 
+// This is here for historical reasons. bug 1742889 covers cleaning this up.
+function whereToOpenLink(e, ignoreButton, ignoreAlt) {
+  return BrowserUtils.whereToOpenLink(e, ignoreButton, ignoreAlt);
+}
+
 function openTrustedLinkIn(url, where, params) {
   URILoadingHelper.openTrustedLinkIn(window, url, where, params);
 }

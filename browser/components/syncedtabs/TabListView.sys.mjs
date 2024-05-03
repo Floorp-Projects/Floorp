@@ -5,7 +5,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -291,7 +290,7 @@ TabListView.prototype = {
 
     // Middle click on a client
     if (itemNode.classList.contains("client")) {
-      let where = lazy.BrowserUtils.whereToOpenLink(event);
+      let where = getChromeWindow(this._window).whereToOpenLink(event);
       if (where != "current") {
         this._openAllClientTabs(itemNode, where);
       }
@@ -347,7 +346,7 @@ TabListView.prototype = {
   },
 
   onOpenSelected(url, event) {
-    let where = lazy.BrowserUtils.whereToOpenLink(event);
+    let where = getChromeWindow(this._window).whereToOpenLink(event);
     this.props.onOpenTab(url, where, {});
   },
 

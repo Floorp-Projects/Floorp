@@ -424,7 +424,7 @@ add_task(async function test_onAction_OPEN_LINK() {
     data: { url: "https://foo.com" },
     _target: {
       browser: {
-        ownerGlobal: { openTrustedLinkIn },
+        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: () => "current" },
       },
     },
   };
@@ -524,7 +524,7 @@ add_task(async function test_onAction_OPEN_LINK_pocket() {
     },
     _target: {
       browser: {
-        ownerGlobal: { openTrustedLinkIn },
+        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: () => "current" },
       },
     },
   };
@@ -551,7 +551,7 @@ add_task(async function test_onAction_OPEN_LINK_not_http() {
     data: { url: "file:///foo.com" },
     _target: {
       browser: {
-        ownerGlobal: { openTrustedLinkIn },
+        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: () => "current" },
       },
     },
   };

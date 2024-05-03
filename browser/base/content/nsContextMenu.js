@@ -1685,7 +1685,7 @@ class nsContextMenu {
 
   // Change current window to the URL of the image, video, or audio.
   viewMedia(e) {
-    let where = BrowserUtils.whereToOpenLink(e, false, false);
+    let where = whereToOpenLink(e, false, false);
     if (where == "current") {
       where = "tab";
     }
@@ -2499,7 +2499,7 @@ class nsContextMenu {
     let drmInfoURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "drm-content";
-    let dest = BrowserUtils.whereToOpenLink(aEvent);
+    let dest = whereToOpenLink(aEvent);
     // Don't ever want this to open in the same tab as it'll unload the
     // DRM'd video, which is going to be a bad idea in most cases.
     if (dest == "current") {
