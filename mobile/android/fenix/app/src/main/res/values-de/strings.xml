@@ -586,6 +586,8 @@
     <string name="preferences_account_sync_error">Stellen Sie die Verbindung erneut her, um die Synchronisierung fortzusetzen</string>
     <!-- Preference for language -->
     <string name="preferences_language">Sprache</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Übersetzung</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Datenübermittlung</string>
     <!-- Preference for data collection -->

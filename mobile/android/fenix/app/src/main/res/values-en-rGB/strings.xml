@@ -271,6 +271,10 @@
     <!-- Browser menu label that navigates to the page tools sub-menu -->
     <string name="browser_menu_tools">Tools</string>
 
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">Save</string>
+
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
     <string name="extensions_management_no_extensions">No extensions here</string>

@@ -585,6 +585,8 @@
     <string name="preferences_account_sync_error">Reconecte para retomar a sincronização</string>
     <!-- Preference for language -->
     <string name="preferences_language">Idioma</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Tradução</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Escolha de dados</string>
     <!-- Preference for data collection -->
@@ -1435,7 +1437,7 @@
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
     <string name="nimbus_survey_message_text">Ajude a melhorar o Firefox respondendo a uma breve pesquisa de opinião.</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey">Participar da pesquisa</string>
+    <string name="preferences_take_survey">Participar da pesquisa de opinião</string>
     <!-- Preference for not taking the short survey. -->
     <string name="preferences_not_take_survey">Não, obrigado</string>
 
@@ -2734,7 +2736,7 @@
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Avançar</string>
     <!-- The survey header -->
-    <string name="micro_survey_survey_header">Participe nesta pesquisa</string>
+    <string name="micro_survey_survey_header">Participe nesta pesquisa de opinião</string>
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">Aviso de privacidade</string>
     <!-- The submit button label text -->
