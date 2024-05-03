@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+prototype-no-code-events:
+  description: |
+    **Prototype-only ping not for general use!**
+    Transport for no-code Firefox Desktop frontend instrumentation,
+    should mostly contain no-code events in browser.ui.* categories.
+    Submitted whenever the next flow of events begins (including startup).
+  include_client_id: true
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1889111
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1889111
+  notification_emails:
+    - chutten@mozilla.com
+    - tlong@mozilla.com
+  enabled: false # To be enabled by Server Knobs for selected populations.

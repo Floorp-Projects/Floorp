@@ -118,3 +118,49 @@ performance.interaction:
       - mconley@mozilla.com
       - perf-telemetry-alerts@mozilla.com
     expires: never
+
+browser.usage:
+  interaction:
+    type: event
+    description: >
+      The user interacted with something in the Firefox Desktop frontend.
+      Could be via mouse or keyboard, could be a command or a UI element.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889111
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889111
+    expires: 132
+    data_sensitivity: [interaction]
+    notification_emails:
+      - chutten@mozilla.com
+    extra_keys:
+      flow_id:
+        type: string
+        description: >
+          An UUIDv4 used to group interaction events together under the
+          assumption that they're part of the same user activity.
+          See BrowserUsageTelemetry's FLOW_IDLE_TIME for details.
+      source:
+        type: string
+        description: >
+          The source of the interaction. Usually a UI section
+          (like `bookmarks_bar` or `content_context`), but can also be an input
+          method (like `keyboard`).
+          The full list of supported `source`s can be found in
+          `BrowserUsageTelemetry`'s `BROWSER_UI_CONTAINER_IDS. Plus `keyboard`
+          and panes from `about:preferences` listed in `PREFERENCES_PANES`.
+          See `_getWidgetContainer` for details.
+      widget_id:
+        type: string
+        description: >
+          The item interacted with.
+          Usually the `id` of the DOM Node that the user used,
+          sometimes the `id` of the parent or ancestor Node instead.
+          This node is then conjugated by obscuring any addon id in it
+          (turning it to the string `addonX` where `X` is a number stable
+          within a browsing session) and then replacing any underscore with a
+          hyphen.
+          See `BrowserUsageTelemetry#_getWidgetID` and `telemetryId`.
+          e.g. "Browser:Reload", "key-newNavigatorTab", "PanelUI-Bookmarks".
+    send_in_pings:
+      - prototype-no-code-events
