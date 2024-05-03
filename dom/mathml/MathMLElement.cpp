@@ -7,10 +7,10 @@
 #include "mozilla/dom/MathMLElement.h"
 
 #include "base/compiler_specific.h"
-#include "mozilla/TabFocusModel.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/TextUtils.h"
 #include "nsGkAtoms.h"
@@ -20,6 +20,7 @@
 #include "nsStyleConsts.h"
 #include "mozilla/dom/Document.h"
 #include "nsPresContext.h"
+#include "mozAutoDocUpdate.h"
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
@@ -636,7 +637,7 @@ Focusable MathMLElement::IsFocusableWithoutStyle(bool aWithMouse) {
     return {};
   }
 
-  if (!TabFocusModel::IsTabFocusable(TabFocusableType::Links)) {
+  if ((sTabFocusModel & eTabFocus_linksMask) == 0) {
     tabIndex = -1;
   }
 

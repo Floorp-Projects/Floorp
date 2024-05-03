@@ -92,6 +92,8 @@ class LookAndFeel {
     TreeScrollDelay,
     // the maximum number of lines to be scrolled at ones
     TreeScrollLinesMax,
+    // What type of tab-order to use
+    TabFocusModel,
     // Should menu items blink when they're chosen?
     ChosenMenuItemsShouldBlink,
 
