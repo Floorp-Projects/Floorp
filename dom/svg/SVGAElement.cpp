@@ -6,10 +6,11 @@
 
 #include "mozilla/dom/SVGAElement.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/SVGAElementBinding.h"
-#include "mozilla/TabFocusModel.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
@@ -181,7 +182,7 @@ Focusable SVGAElement::IsFocusableWithoutStyle(bool aWithMouse) {
       return {};
     }
   }
-  if (!TabFocusModel::IsTabFocusable(TabFocusableType::Links)) {
+  if ((sTabFocusModel & eTabFocus_linksMask) == 0) {
     result.mTabIndex = -1;
   }
   return result;

@@ -753,6 +753,21 @@ class nsIContent : public nsINode {
   virtual void DumpContent(FILE* out = stdout, int32_t aIndent = 0,
                            bool aDumpAll = true) const = 0;
 #endif
+
+  enum ETabFocusType {
+    eTabFocus_textControlsMask =
+        (1 << 0),  // textboxes and lists always tabbable
+    eTabFocus_formElementsMask = (1 << 1),   // non-text form elements
+    eTabFocus_linksMask = (1 << 2),          // links
+    eTabFocus_any = 1 + (1 << 1) + (1 << 2)  // everything that can be focused
+  };
+
+  // Tab focus model bit field:
+  static int32_t sTabFocusModel;
+
+  // accessibility.tabfocus_applies_to_xul pref - if it is set to true,
+  // the tabfocus bit field applies to xul elements.
+  static bool sTabFocusModelAppliesToXUL;
 };
 
 NON_VIRTUAL_ADDREF_RELEASE(nsIContent)

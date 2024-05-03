@@ -282,6 +282,9 @@ nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::TreeScrollLinesMax:
       aResult = 3;
       break;
+    case IntID::TabFocusModel:
+      aResult = 1;  // default to just textboxes
+      break;
     case IntID::ScrollToClick:
       aResult = 0;
       break;

@@ -84,6 +84,9 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::TreeScrollLinesMax:
       aResult = 3;
       break;
+    case IntID::TabFocusModel:
+      aResult = nsIContent::eTabFocus_textControlsMask;
+      break;
     case IntID::ChosenMenuItemsShouldBlink:
       aResult = 1;
       break;

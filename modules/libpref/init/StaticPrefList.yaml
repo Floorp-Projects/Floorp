@@ -200,22 +200,6 @@
 # Prefs starting with "accessibility."
 #---------------------------------------------------------------------------
 
-# Tab focus model bit field:
-# 1 focuses text controls, 2 focuses other form elements, 4 adds links.
-# Most users will want 1, 3, or 7. On macOS we expose a checkbox to alter
-# between 7 and 3.
-- name: accessibility.tabfocus
-  type: int32_t
-  value: 7
-  mirror: always
-
-# Only on mac tabfocus is expected to handle UI widgets as well as web content.
-# FIXME(emilio): This is weird now that we have a lot of HTML in our pages.
-- name: accessibility.tabfocus_applies_to_xul
-  type: bool
-  value: @IS_XP_MACOSX@
-  mirror: always
-
 - name: accessibility.accesskeycausesactivation
   type: bool
   value: true
