@@ -87,7 +87,11 @@
     <string name="share_dialog_title">හරහා බෙදාගන්න</string>
 
     <string name="notification_erase_title_android_14">පිරික්සුම් ඉතිහාසය මකන්නද?</string>
-    <string name="notification_erase_text_android_14">ඔබගේ පිරික්සුම් ඉතිහාසය ආරක්‍ෂිතව මැකීමට මෙම දැනුම්දීම මත තට්ටු කරන්න හෝ හිස් කරන්න.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">ඔබගේ පිරික්සුම් ඉතිහාසය ආරක්‍ෂිතව මැකීමට මෙම දැනුම්දීම මත තට්ටු කරන්න හෝ හිස් කරන්න.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">ඔබගේ පිරික්සුම් ඉතිහාසය ආරක්‍ෂිතව මැකීමට මෙම දැනුම්දීම මත තට්ටු කරන්න හෝ තල්ලු කරන්න.</string>
 
     <string name="notification_erase_text">පිරික්සුම් ඉතිහාසය මකන්න</string>
 

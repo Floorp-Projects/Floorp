@@ -2,11 +2,12 @@
 <resources>
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_toolbar_menu_button">වට්ටෝරුව</string>
+    <!-- Content description: For the clear URL text button. -->
     <string name="mozac_clear_button_description">මකන්න</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">ලුහුබැඳීමේ රැකවරණය සක්‍රියයි</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
-    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">ලුහුබැඳීමේ රැකවරණය ක්‍රියාත්මක වී ඇත</string>
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">ලුහුබැඳීමේ රැකවරණයෙන් අවහිරයි</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">අඩවිය සඳහා ලුහුබැඳීමේ රැකවරණය අබලයි</string>
     <!-- Content description: For the site security information icon (the site security icon).-->

@@ -159,7 +159,7 @@
     <!-- The title of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_title_text" moz:removedIn="126" tools:ignore="UnusedResources">Mae ychwanegion wedi’u hanalluogi dros dro</string>
     <!-- The title of the "crash" notification in the extensions manager -->
-    <string name="mozac_feature_extensions_manager_notification_title_text">Mae estyniadau wedi\'u hanalluogi dros dro</string>
+    <string name="mozac_feature_extensions_manager_notification_title_text">Mae\'r estyniadau wedi\'u hanalluogi dros dro</string>
     <!-- The content of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">Rhoddodd un neu fwy o ategion y gorau i weithio, gan wneud eich system yn ansefydlog.</string>
     <!-- The content of the "crash" notification in the extensions manager -->
