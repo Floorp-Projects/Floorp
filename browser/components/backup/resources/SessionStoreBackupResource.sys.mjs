@@ -45,6 +45,15 @@ export class SessionStoreBackupResource extends BackupResource {
     return null;
   }
 
+  async recover(_manifestEntry, recoveryPath, destProfilePath) {
+    await BackupResource.copyFiles(recoveryPath, destProfilePath, [
+      "sessionstore.jsonlz4",
+      "sessionstore-backups",
+    ]);
+
+    return null;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     // Get the current state of the session store JSON and
     // measure it's uncompressed size.

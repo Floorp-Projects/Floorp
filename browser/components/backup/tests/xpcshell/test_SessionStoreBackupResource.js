@@ -138,3 +138,72 @@ add_task(async function test_backup() {
 
   sandbox.restore();
 });
+
+/**
+ * Test that the recover method correctly copies items from the recovery
+ * directory into the destination profile directory.
+ */
+add_task(async function test_recover() {
+  let sessionStoreBackupResource = new SessionStoreBackupResource();
+  let recoveryPath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "SessionStoreBackupResource-recovery-test"
+  );
+  let destProfilePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "SessionStoreBackupResource-test-profile"
+  );
+
+  const simpleCopyFiles = [
+    { path: ["sessionstore-backups", "test-sessionstore-backup.jsonlz4"] },
+    { path: ["sessionstore-backups", "test-sessionstore-recovery.baklz4"] },
+  ];
+  await createTestFiles(recoveryPath, simpleCopyFiles);
+
+  // We backup a copy of sessionstore.jsonlz4, so ensure it exists in the recovery path
+  let sessionStoreState = SessionStore.getCurrentState(true);
+  let sessionStoreBackupPath = PathUtils.join(
+    recoveryPath,
+    "sessionstore.jsonlz4"
+  );
+  await IOUtils.writeJSON(sessionStoreBackupPath, sessionStoreState, {
+    compress: true,
+  });
+
+  // The backup method is expected to have returned a null ManifestEntry
+  let postRecoveryEntry = await sessionStoreBackupResource.recover(
+    null /* manifestEntry */,
+    recoveryPath,
+    destProfilePath
+  );
+  Assert.equal(
+    postRecoveryEntry,
+    null,
+    "SessionStoreBackupResource.recover should return null as its post recovery entry"
+  );
+
+  await assertFilesExist(destProfilePath, [
+    ...simpleCopyFiles,
+    { path: "sessionstore.jsonlz4" },
+  ]);
+
+  let sessionStateCopied = await IOUtils.readJSON(
+    PathUtils.join(destProfilePath, "sessionstore.jsonlz4"),
+    { decompress: true }
+  );
+
+  /**
+   * These timestamps might be slightly different from one another, so we'll exclude
+   * them from the comparison.
+   */
+  delete sessionStateCopied.session.lastUpdate;
+  delete sessionStoreState.session.lastUpdate;
+  Assert.deepEqual(
+    sessionStateCopied,
+    sessionStoreState,
+    "sessionstore.jsonlz4 in the destination profile folder matches the backed up session state"
+  );
+
+  await maybeRemovePath(recoveryPath);
+  await maybeRemovePath(destProfilePath);
+});
