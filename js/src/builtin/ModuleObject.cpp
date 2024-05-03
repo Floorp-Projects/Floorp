@@ -1589,39 +1589,39 @@ bool frontend::StencilModuleMetadata::createModuleRequestObjects(
 ModuleRequestObject* frontend::StencilModuleMetadata::createModuleRequestObject(
     JSContext* cx, CompilationAtomCache& atomCache,
     const StencilModuleRequest& request) const {
-  Rooted<ArrayObject*> assertionArray(cx);
-  uint32_t numberOfAssertions = request.assertions.length();
-  if (numberOfAssertions > 0) {
-    assertionArray = NewDenseFullyAllocatedArray(cx, numberOfAssertions);
-    if (!assertionArray) {
+  Rooted<ArrayObject*> attributeArray(cx);
+  uint32_t numberOfAttributes = request.attributes.length();
+  if (numberOfAttributes > 0) {
+    attributeArray = NewDenseFullyAllocatedArray(cx, numberOfAttributes);
+    if (!attributeArray) {
       return nullptr;
     }
-    assertionArray->ensureDenseInitializedLength(0, numberOfAssertions);
+    attributeArray->ensureDenseInitializedLength(0, numberOfAttributes);
 
-    Rooted<PlainObject*> assertionObject(cx);
-    RootedId assertionKey(cx);
-    RootedValue assertionValue(cx);
-    for (uint32_t j = 0; j < numberOfAssertions; ++j) {
-      assertionObject = NewPlainObject(cx);
-      if (!assertionObject) {
+    Rooted<PlainObject*> attributeObject(cx);
+    RootedId attributeKey(cx);
+    RootedValue attributeValue(cx);
+    for (uint32_t j = 0; j < numberOfAttributes; ++j) {
+      attributeObject = NewPlainObject(cx);
+      if (!attributeObject) {
         return nullptr;
       }
 
       JSAtom* jsatom =
-          atomCache.getExistingAtomAt(cx, request.assertions[j].key);
+          atomCache.getExistingAtomAt(cx, request.attributes[j].key);
       MOZ_ASSERT(jsatom);
-      assertionKey = AtomToId(jsatom);
+      attributeKey = AtomToId(jsatom);
 
-      jsatom = atomCache.getExistingAtomAt(cx, request.assertions[j].value);
+      jsatom = atomCache.getExistingAtomAt(cx, request.attributes[j].value);
       MOZ_ASSERT(jsatom);
-      assertionValue = StringValue(jsatom);
+      attributeValue = StringValue(jsatom);
 
-      if (!DefineDataProperty(cx, assertionObject, assertionKey, assertionValue,
+      if (!DefineDataProperty(cx, attributeObject, attributeKey, attributeValue,
                               JSPROP_ENUMERATE)) {
         return nullptr;
       }
 
-      assertionArray->initDenseElement(j, ObjectValue(*assertionObject));
+      attributeArray->initDenseElement(j, ObjectValue(*attributeObject));
     }
   }
 
@@ -1629,7 +1629,7 @@ ModuleRequestObject* frontend::StencilModuleMetadata::createModuleRequestObject(
                             atomCache.getExistingAtomAt(cx, request.specifier));
   MOZ_ASSERT(specifier);
 
-  return ModuleRequestObject::create(cx, specifier, assertionArray);
+  return ModuleRequestObject::create(cx, specifier, attributeArray);
 }
 
 bool frontend::StencilModuleMetadata::createImportEntries(
@@ -1796,7 +1796,7 @@ bool frontend::StencilModuleMetadata::initModule(
   return true;
 }
 
-bool ModuleBuilder::isAssertionSupported(frontend::TaggedParserAtomIndex key) {
+bool ModuleBuilder::isAttributeSupported(frontend::TaggedParserAtomIndex key) {
   if (!key.isWellKnownAtomId()) {
     return false;
   }
@@ -1804,23 +1804,23 @@ bool ModuleBuilder::isAssertionSupported(frontend::TaggedParserAtomIndex key) {
   return key.toWellKnownAtomId() == WellKnownAtomId::type;
 }
 
-bool ModuleBuilder::processAssertions(frontend::StencilModuleRequest& request,
-                                      frontend::ListNode* assertionList) {
+bool ModuleBuilder::processAttributes(frontend::StencilModuleRequest& request,
+                                      frontend::ListNode* attributeList) {
   using namespace js::frontend;
 
-  for (ParseNode* assertionItem : assertionList->contents()) {
-    BinaryNode* assertion = &assertionItem->as<BinaryNode>();
-    MOZ_ASSERT(assertion->isKind(ParseNodeKind::ImportAttribute));
+  for (ParseNode* attributeItem : attributeList->contents()) {
+    BinaryNode* attribute = &attributeItem->as<BinaryNode>();
+    MOZ_ASSERT(attribute->isKind(ParseNodeKind::ImportAttribute));
 
-    auto key = assertion->left()->as<NameNode>().atom();
-    auto value = assertion->right()->as<NameNode>().atom();
+    auto key = attribute->left()->as<NameNode>().atom();
+    auto value = attribute->right()->as<NameNode>().atom();
 
-    if (isAssertionSupported(key)) {
+    if (isAttributeSupported(key)) {
       markUsedByStencil(key);
       markUsedByStencil(value);
 
-      StencilModuleAssertion assertionStencil(key, value);
-      if (!request.assertions.append(assertionStencil)) {
+      StencilModuleImportAttribute attributeStencil(key, value);
+      if (!request.attributes.append(attributeStencil)) {
         js::ReportOutOfMemory(fc_);
         return false;
       }
@@ -1844,12 +1844,12 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
   auto* moduleSpec = &moduleRequest->left()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
-  auto* assertionList = &moduleRequest->right()->as<ListNode>();
-  MOZ_ASSERT(assertionList->isKind(ParseNodeKind::ImportAttributeList));
+  auto* attributeList = &moduleRequest->right()->as<ListNode>();
+  MOZ_ASSERT(attributeList->isKind(ParseNodeKind::ImportAttributeList));
 
   auto specifier = moduleSpec->atom();
   MaybeModuleRequestIndex moduleRequestIndex =
-      appendModuleRequest(specifier, assertionList);
+      appendModuleRequest(specifier, attributeList);
   if (!moduleRequestIndex.isSome()) {
     return false;
   }
@@ -2089,12 +2089,12 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
   auto* moduleSpec = &moduleRequest->left()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
-  auto* assertionList = &moduleRequest->right()->as<ListNode>();
-  MOZ_ASSERT(assertionList->isKind(ParseNodeKind::ImportAttributeList));
+  auto* attributeList = &moduleRequest->right()->as<ListNode>();
+  MOZ_ASSERT(attributeList->isKind(ParseNodeKind::ImportAttributeList));
 
   auto specifier = moduleSpec->atom();
   MaybeModuleRequestIndex moduleRequestIndex =
-      appendModuleRequest(specifier, assertionList);
+      appendModuleRequest(specifier, attributeList);
   if (!moduleRequestIndex.isSome()) {
     return false;
   }
@@ -2192,11 +2192,11 @@ bool ModuleBuilder::appendExportEntry(
 
 frontend::MaybeModuleRequestIndex ModuleBuilder::appendModuleRequest(
     frontend::TaggedParserAtomIndex specifier,
-    frontend::ListNode* assertionList) {
+    frontend::ListNode* attributeList) {
   markUsedByStencil(specifier);
   auto request = frontend::StencilModuleRequest(specifier);
 
-  if (!processAssertions(request, assertionList)) {
+  if (!processAttributes(request, attributeList)) {
     return MaybeModuleRequestIndex();
   }
 
@@ -2501,8 +2501,8 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
     return promise;
   }
 
-  Rooted<ArrayObject*> assertionArray(cx);
-  if (!EvaluateDynamicImportOptions(cx, optionsArg, &assertionArray)) {
+  Rooted<ArrayObject*> attributeArray(cx);
+  if (!EvaluateDynamicImportOptions(cx, optionsArg, &attributeArray)) {
     if (!RejectPromiseWithPendingError(cx, promise)) {
       return nullptr;
     }
@@ -2510,7 +2510,7 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
   }
 
   RootedObject moduleRequest(
-      cx, ModuleRequestObject::create(cx, specifierAtom, assertionArray));
+      cx, ModuleRequestObject::create(cx, specifierAtom, attributeArray));
   if (!moduleRequest) {
     if (!RejectPromiseWithPendingError(cx, promise)) {
       return nullptr;
