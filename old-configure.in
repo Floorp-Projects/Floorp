@@ -832,12 +832,6 @@ MOZ_EXPAND_LIBS
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl Check if we need the 32-bit Linux SSE2 error dialog
-dnl ========================================================
-
-AC_SUBST(MOZ_LINUX_32_SSE2_STARTUP_ERROR)
-
-dnl ========================================================
 dnl Check for cairo
 dnl ========================================================
 

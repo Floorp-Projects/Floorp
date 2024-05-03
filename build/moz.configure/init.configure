@@ -1271,6 +1271,19 @@ def enabled_in_nightly(milestone):
     return milestone.is_nightly
 
 
+# Check if we need the 32-bit Linux SSE2 error dialog
+# ===================================================
+option(
+    env="MOZ_LINUX_32_SSE2_STARTUP_ERROR",
+    help="Add code to perform startup checks to warn if SSE2 is not available",
+    default=depends("MOZ_AUTOMATION")(lambda x: bool(x)),
+    when=target_is_unix & depends(target)(lambda target: target.cpu == "x86"),
+)
+set_config(
+    "MOZ_LINUX_32_SSE2_STARTUP_ERROR", True, when="MOZ_LINUX_32_SSE2_STARTUP_ERROR"
+)
+
+
 # Branding
 # ==============================================================
 option(
