@@ -237,9 +237,7 @@ async function webdriverClickElement(el, a11y) {
 }
 
 async function chromeClick(el, a11y) {
-  const win = getWindow(el);
-
-  if (!(await lazy.atom.isElementEnabled(el, win))) {
+  if (!(await lazy.dom.isEnabled(el))) {
     throw new lazy.error.InvalidElementStateError("Element is not enabled");
   }
 
@@ -267,7 +265,7 @@ async function seleniumClickElement(el, a11y) {
     throw new lazy.error.ElementNotInteractableError();
   }
 
-  if (!(await lazy.atom.isElementEnabled(el, win))) {
+  if (!(await lazy.dom.isEnabled(el))) {
     throw new lazy.error.InvalidElementStateError("Element is not enabled");
   }
 
@@ -776,7 +774,7 @@ interaction.isElementEnabled = async function (el, strict = false) {
   ) {
     enabled = false;
   } else {
-    enabled = await lazy.atom.isElementEnabled(el, win);
+    enabled = await lazy.dom.isEnabled(el);
   }
 
   let a11y = lazy.accessibility.get(strict);

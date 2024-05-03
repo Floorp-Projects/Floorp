@@ -1054,6 +1054,16 @@ dom.isElement = function (obj) {
   return dom.isDOMElement(obj) || dom.isXULElement(obj);
 };
 
+dom.isEnabled = function (el) {
+  let enabled = false;
+
+  if (el.ownerDocument.contentType !== "text/xml") {
+    enabled = !dom.isDisabled(el);
+  }
+
+  return enabled;
+};
+
 /**
  * Returns the shadow root of an element.
  *
