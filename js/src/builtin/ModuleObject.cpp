@@ -2304,17 +2304,17 @@ bool ModuleObject::topLevelCapabilityReject(JSContext* cx,
   return AsyncFunctionThrown(cx, promise, error);
 }
 
-// https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
+// https://tc39.es/proposal-import-attributes/#sec-evaluate-import-call
 // NOTE: The caller needs to handle the promise.
 static bool EvaluateDynamicImportOptions(
     JSContext* cx, HandleValue optionsArg,
-    MutableHandle<ArrayObject*> assertionArrayArg) {
-  // Step 10. If options is not undefined, then.
+    MutableHandle<ArrayObject*> attributesArrayArg) {
+  // Step 11. If options is not undefined, then
   if (optionsArg.isUndefined()) {
     return true;
   }
 
-  // Step 10.a. If Type(options) is not Object,
+  // Step 11.a. If options is not an Object, then
   if (!optionsArg.isObject()) {
     JS_ReportErrorNumberASCII(
         cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE, "import",
@@ -2322,114 +2322,133 @@ static bool EvaluateDynamicImportOptions(
     return false;
   }
 
-  RootedObject assertWrapperObject(cx, &optionsArg.toObject());
-  RootedValue assertValue(cx);
+  RootedObject attributesWrapperObject(cx, &optionsArg.toObject());
+  RootedValue attributesValue(cx);
 
-  // Step 10.b. Let attributesObj be Completion(Get(options, "with")).
+  // Step 11.b. Let attributesObj be Completion(Get(options, "with")).
   RootedId withId(cx, NameToId(cx->names().with));
-  if (!GetProperty(cx, assertWrapperObject, assertWrapperObject, withId,
-                   &assertValue)) {
+  if (!GetProperty(cx, attributesWrapperObject, attributesWrapperObject, withId,
+                   &attributesValue)) {
     return false;
   }
 
-  if (assertValue.isUndefined() &&
+  // Step 11.d. If the host supports the deprecated assert keyword for import
+  // attributes and attributesObj is undefined, then
+  if (attributesValue.isUndefined() &&
       cx->options().importAttributesAssertSyntax()) {
-    // Step 10.b. Let assertionsObj be Get(options, "assert").
+    // Step 11.d.i. Set attributesObj to Completion(Get(options, "assert")).
     RootedId assertId(cx, NameToId(cx->names().assert_));
-    if (!GetProperty(cx, assertWrapperObject, assertWrapperObject, assertId,
-                     &assertValue)) {
+    if (!GetProperty(cx, attributesWrapperObject, attributesWrapperObject,
+                     assertId, &attributesValue)) {
       return false;
     }
   }
 
-  // Step 10.d. If assertionsObj is not undefined.
-  if (assertValue.isUndefined()) {
+  // Step 11.e. If attributesObj is not undefined, then
+  if (attributesValue.isUndefined()) {
     return true;
   }
 
-  // Step 10.d.i. If Type(assertionsObj) is not Object.
-  if (!assertValue.isObject()) {
+  // Step 11.e.i. If attributesObj is not an Object, then
+  if (!attributesValue.isObject()) {
     JS_ReportErrorNumberASCII(
         cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE, "import",
-        "object or undefined", InformalValueTypeName(assertValue));
+        "object or undefined", InformalValueTypeName(attributesValue));
     return false;
   }
 
-  // Step 10.d.i. Let keys be EnumerableOwnPropertyNames(assertionsObj, key).
-  RootedObject assertObject(cx, &assertValue.toObject());
-  RootedIdVector assertions(cx);
-  if (!GetPropertyKeys(cx, assertObject, JSITER_OWNONLY, &assertions)) {
+  // Step 11.e.ii. Let entries be
+  // Completion(EnumerableOwnProperties(attributesObj, key+value)).
+  RootedObject attributesObject(cx, &attributesValue.toObject());
+  RootedIdVector attributes(cx);
+  if (!GetPropertyKeys(cx, attributesObject, JSITER_OWNONLY, &attributes)) {
     return false;
   }
 
-  uint32_t numberOfAssertions = assertions.length();
-  if (numberOfAssertions == 0) {
+  uint32_t numberOfAttributes = attributes.length();
+  if (numberOfAttributes == 0) {
     return true;
   }
 
-  // Step 9 (reordered). Let assertions be a new empty List.
-  Rooted<ArrayObject*> assertionArray(
-      cx, NewDenseFullyAllocatedArray(cx, numberOfAssertions));
-  if (!assertionArray) {
+  // Step 10 (reordered). Let attributes be a new empty List.
+  Rooted<ArrayObject*> validAttributesArray(
+      cx, NewDenseFullyAllocatedArray(cx, numberOfAttributes));
+  if (!validAttributesArray) {
     return false;
   }
-  assertionArray->ensureDenseInitializedLength(0, numberOfAssertions);
+  validAttributesArray->ensureDenseInitializedLength(0, numberOfAttributes);
 
-  // Step 10.d.iv. Let supportedAssertions be
-  // !HostGetSupportedImportAssertions().
-  // Note: This should be driven by a host hook, howver the infrastructure of
-  //       said host hook is deeply unclear, and so right now embedders will
-  //       not have the ability to alter or extend the set of supported
-  //       assertion types.
-  //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1840723.
-  size_t numberOfValidAssertions = 0;
+  size_t numberOfValidAttributes = 0;
 
-  // Step 10.d.v. For each String key of keys,
+  // Step 11.e.iv. For each element entry of entries, do
   RootedId key(cx);
-  for (size_t i = 0; i < numberOfAssertions; i++) {
-    key = assertions[i];
+  for (size_t i = 0; i < numberOfAttributes; i++) {
+    // Step 11.e.ii.iv.1. Let key be ! Get(entry, "0").
+    key = attributes[i];
 
-    // Step 10.d.v.1. Let value be Get(assertionsObj, key).
+    // Step 11.e.ii.iv.2. Let value be ! Get(entry, "1").
     RootedValue value(cx);
-    if (!GetProperty(cx, assertObject, assertObject, key, &value)) {
+    if (!GetProperty(cx, attributesObject, attributesObject, key, &value)) {
       return false;
     }
 
-    // Step 10.d.v.3. If Type(value) is not String, then.
-    if (!value.isString()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_NOT_EXPECTED_TYPE, "import", "string",
-                                InformalValueTypeName(value));
-      return false;
-    }
-
-    // Step 10.d.v.4. If supportedAssertions contains key, then Append {
-    // [[Key]]: key, [[Value]]: value } to assertions.
-    // Note: We only currently support the "type" assertion; this will need
-    // extension
-    bool supported = key.isAtom() ? key.toAtom() == cx->names().type : false;
-    if (supported) {
-      Rooted<PlainObject*> assertionObj(cx, NewPlainObject(cx));
-      if (!assertionObj) {
+    // Step 11.e.ii.iv.3. If key is a String, then
+    if (key.isString()) {
+      // Step 11.f (reordered). If AllImportAttributesSupported(attributes) is
+      // false, then
+      //
+      // Note: This should be driven by a host hook
+      // (HostGetSupportedImportAttributes), however the infrastructure of said
+      // host hook is deeply unclear, and so right now embedders will not have
+      // the ability to alter or extend the set of supported attributes.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1840723.
+      bool supported = key.isAtom(cx->names().type);
+      if (!supported) {
+        UniqueChars printableKey = AtomToPrintableString(cx, key.toAtom());
+        if (!printableKey) {
+          return false;
+        }
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_IMPORT_ATTRIBUTES_UNSUPPORTED_ATTRIBUTE,
+                                  printableKey.get());
         return false;
       }
 
-      if (!DefineDataProperty(cx, assertionObj, key, value, JSPROP_ENUMERATE)) {
+      // Step 10.d.v.3.a. If value is not a String, then
+      if (!value.isString()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_NOT_EXPECTED_TYPE, "import", "string",
+                                  InformalValueTypeName(value));
         return false;
       }
 
-      assertionArray->initDenseElement(numberOfValidAssertions,
-                                       ObjectValue(*assertionObj));
-      ++numberOfValidAssertions;
+      // Step 10.d.v.3.b. Append the ImportAttribute Record { [[Key]]: key,
+      // [[Value]]: value } to attributes.
+      Rooted<PlainObject*> attributeObj(cx, NewPlainObject(cx));
+      if (!attributeObj) {
+        return false;
+      }
+      if (!DefineDataProperty(cx, attributeObj, key, value, JSPROP_ENUMERATE)) {
+        return false;
+      }
+      validAttributesArray->initDenseElement(numberOfValidAttributes,
+                                             ObjectValue(*attributeObj));
+      ++numberOfValidAttributes;
     }
   }
 
-  if (numberOfValidAssertions == 0) {
+  if (numberOfValidAttributes == 0) {
     return true;
   }
 
-  assertionArray->setLength(numberOfValidAssertions);
-  assertionArrayArg.set(assertionArray);
+  // Step 10.g (skipped). Sort attributes according to the lexicographic order
+  // of their [[Key]] fields, treating the value of each such field as a
+  // sequence of UTF-16 code unit values.
+  //
+  // We only support "type", so we can ignore this.
+
+  validAttributesArray->setLength(numberOfValidAttributes);
+  attributesArrayArg.set(validAttributesArray);
 
   return true;
 }
