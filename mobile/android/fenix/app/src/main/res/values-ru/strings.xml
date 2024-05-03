@@ -590,6 +590,8 @@
     <string name="preferences_account_sync_error">Подключитесь снова, чтобы возобновить синхронизацию</string>
     <!-- Preference for language -->
     <string name="preferences_language">Язык</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Перевод</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Выбор данных</string>
     <!-- Preference for data collection -->

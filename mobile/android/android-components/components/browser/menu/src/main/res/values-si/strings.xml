@@ -5,9 +5,13 @@
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">ත්‍රීවාලෝකිත</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons">එක්කහු</string>
+    <string name="mozac_browser_menu_addons" moz:removedIn="126" tools:ignore="UnusedResources">එක්කහු</string>
+    <!-- Label for extensions submenu section -->
+    <string name="mozac_browser_menu_extensions">දිගු</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager">එක්කහු කළමනාකරු</string>
+    <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">එක්කහු කළමනාකරු</string>
+    <!-- Label for extensions sub menu item for extensions manager -->
+    <string name="mozac_browser_menu_extensions_manager">දිගු කළමනාකරු</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">ඉහළට යාත්‍රණය</string>
     </resources>

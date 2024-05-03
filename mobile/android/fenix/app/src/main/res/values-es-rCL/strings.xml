@@ -580,6 +580,8 @@
     <string name="preferences_account_sync_error">Reconéctate para continuar la sincronización</string>
     <!-- Preference for language -->
     <string name="preferences_language">Idioma</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Traducción</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Elección de datos</string>
     <!-- Preference for data collection -->

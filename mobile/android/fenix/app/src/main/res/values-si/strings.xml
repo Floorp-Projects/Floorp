@@ -141,8 +141,10 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">නව පෞද්. පටිත්ත</string>
 
-    <!-- Shortcut action to open Passwords screens -->
-    <string name="home_screen_shortcut_open_password_screen">මුරපද වෙත කෙටිමඟ</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_passwords">මුරපද</string>
+    <!-- Shortcut action to open Passwords screen -->
+    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">මුරපද වෙත කෙටිමඟ</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -182,11 +184,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">නවතන්න</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">එක්කහු</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">එක්කහු</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">දිගු</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">ගිණුමේ තොරතුරු</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">මෙහි එක්කහු නැත</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">මෙහි එක්කහු නැත</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">උදව්</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -202,11 +206,13 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">මුල් තිරයට යොදන්න</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">ස්ථාපනය</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">ස්ථාපනය</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">යළි සමමුහූර්තය</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">පිටුවේ සොයන්න</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">පිටුවේ සොයන්න…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">පිටුව පරිවර්තනය</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -236,6 +242,16 @@
     <string name="browser_menu_edit">සංස්කරණය</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">මුල්පිටුව අභිරුචිකරණය</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in">පිවිසෙන්න</string>
+    <!-- Browser menu label that navigates to the Password screen -->
+    <string name="browser_menu_passwords">මුරපද</string>
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">මෙවලම්</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">සුරකින්න</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -326,7 +342,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">ෆයර්ෆොක්ස් රහස්‍යතා දැන්වීම</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">ඔබට ආරක්‍ෂාව සලසන්නෙමු</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -568,9 +583,9 @@
     <string name="quit_application">වෙනස්කම් යෙදීමට යෙදුමෙන් ඉවත් වෙමින්…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">එක්කහු</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">එක්කහු</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">ගොනුවකින් එක්කහුවක් ස්ථාපනය…</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">ගොනුවකින් එක්කහුවක් ස්ථාපනය…</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">දැනුම්දීම්</string>
 
@@ -581,7 +596,7 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">අභිරුචි එක්කහු එකතුව</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">අභිරුචි එක්කහු එකතුව</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">හරි</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -592,7 +607,7 @@
     <string name="customize_addon_collection_user_hint">එකතුවේ හිමිකරු (පරිශීලක හැඳු.)</string>
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">එක්කහු එකතුව වෙනස් වී ඇත. වෙනස්කම් යෙදීමට යෙදුමෙන් ඉවත් වෙමින්…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">එක්කහු එකතුව වෙනස් වී ඇත. වෙනස්කම් යෙදීමට යෙදුමෙන් ඉවත් වෙමින්…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -648,22 +663,22 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">දැන් නව එක්කහු තිබේ</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">දැන් නව එක්කහු තිබේ</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් අභිරුචිකරණයට උපකාරී වන නව දිගු 100 කට වඩා බලන්න.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">එක්කහු ගවේශනය</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">එක්කහු ගවේශනය</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">එක්කහු තාවකාලිකව අබල කර ඇත</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">එක්කහු තාවකාලිකව අබල කර ඇත</string>
 
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">ඔබගේ පද්ධතිය අස්ථායී කරමින් එක්කහුවක් හෝ කිහිපයක් නතර විය. එක්කහු(ව) නැවත ආරම්භයට %1$s දැරූ උත්සාහය අසාර්ථක විය.\n\nඔබගේ වත්මන් වාරය අතරතුර එක්කහු නැවත ආරම්භ නොවනු ඇත.\n\nඑක්කහු(ව) ඉවත් හෝ අබල කිරීමෙන් මෙම ගැටලුව විසඳීමට හැකිය.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">ඔබගේ පද්ධතිය අස්ථායී කරමින් එක්කහුවක් හෝ කිහිපයක් නතර විය. එක්කහු(ව) නැවත ආරම්භයට %1$s දැරූ උත්සාහය අසාර්ථක විය.\n\nඔබගේ වත්මන් වාරය අතරතුර එක්කහු නැවත ආරම්භ නොවනු ඇත.\n\nඑක්කහු(ව) ඉවත් හෝ අබල කිරීමෙන් මෙම ගැටලුව විසඳීමට හැකිය.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">එක්කහු යළි ආරම්භ කර බලන්න</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">එක්කහු යළි ආරම්භ කර බලන්න</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">එක්කහු අබල කර ඉදිරියට යන්න</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">එක්කහු අබල කර ඉදිරියට යන්න</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -679,9 +694,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">පොත්යොමු</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">පිවිසුම්</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසුම්</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">මුරපද</string>
+    <string name="preferences_sync_logins_2">මුරපද</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">පටිති අරින්න</string>
     <!-- Preference for signing out -->
@@ -705,9 +720,9 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%2$s %3$s හි %1$s</string>
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">ණය පත්</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ණය පත්</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">ගෙවීමේ ක්‍රම</string>
+    <string name="preferences_sync_credit_cards_2">ගෙවීමේ ක්‍රම</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">ලිපින</string>
 
@@ -1642,14 +1657,14 @@
     <string name="add_to_homescreen_description_2">ඔබට ක්‍ෂණික ප්‍රවේශයක් ලබා ගැනීමට සහ යෙදුමක වැනි අත්දැකීමක් සමඟින් වේගයෙන් පිරික්සීමට මෙම අඩවිය ඔබගේ උපාංගයේ මුල් තිරයට පහසුවෙන් එක් කළ හැකිය.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">පිවිසුම් සහ මුරපද</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසුම් සහ මුරපද</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">මුරපද</string>
+    <string name="preferences_passwords_logins_and_passwords_2">මුරපද</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">පිවිසුම් සහ මුරපද සුරකින්න</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසුම් සහ මුරපද සුරකින්න</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">මුරපද සුරකින්න</string>
+    <string name="preferences_passwords_save_logins_2">මුරපද සුරකින්න</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">සුරැකීමට අසන්න</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1663,39 +1678,39 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">ඔබගේ උපාංගයේ වෙනත් යෙදුම්වල පරිශීලක නාම සහ මුරපද පුරවන්න.</string>
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">පිවිසුම යොදන්න</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසුම යොදන්න</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">මුරපදය එක් කරන්න</string>
+    <string name="preferences_logins_add_login_2">මුරපදය එක් කරන්න</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">පිවිසුම් සමමුහූර්තය</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">මුරපද සමමුහූර්තය</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසුම් සමමුහූර්තය</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">මුරපද සමමුහූර්තය</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">උපාංගවල පිවිසුම් සමමුහූර්තය</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">උපාංගවල පිවිසුම් සමමුහූර්තය</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">උපාංග අතර මුරපද සමමුහූර්තය</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">උපාංග අතර මුරපද සමමුහූර්තය</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">සුරැකි පිවිසුම්</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">සුරැකි පිවිසුම්</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">සුරැකි මුරපද</string>
+    <string name="preferences_passwords_saved_logins_2">සුරැකි මුරපද</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">ඔබ සුරකින හෝ %s වෙත සමමුහූර්ත කරන පිවිසුම් මෙහි පෙන්වයි.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">ඔබ සුරකින හෝ %s වෙත සමමුහූර්ත කරන පිවිසුම් මෙහි පෙන්වයි.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">සමමුහූර්තය ගැන තව දැනගන්න.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">සමමුහූර්තය ගැන තව දැනගන්න.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">හැරදැමීම්</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">නොසුරැකි පිවිසුම් සහ මුරපද මෙහි පෙන්වනු ඇත.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">නොසුරැකි පිවිසුම් සහ මුරපද මෙහි පෙන්වනු ඇත.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">මෙම අඩවි සඳහා පිවිසුම් සහ මුරපද සුරැකෙන්නේ නැත.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">මෙම අඩවි සඳහා පිවිසුම් සහ මුරපද සුරැකෙන්නේ නැත.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">සියළු හැරදැමීම් මකන්න</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">පිවිසුම් සොයන්න</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසුම් සොයන්න</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">මුරපද සොයන්න</string>
+    <string name="preferences_passwords_saved_logins_search_2">මුරපද සොයන්න</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">අඩවිය</string>
     <!-- The header for the username for a login -->
@@ -1723,11 +1738,11 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">මුරපදය සඟවන්න</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">සුරැකි පිවිසුම් දැකීමට අගුළු හරින්න</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">සුරැකි පිවිසුම් දැකීමට අගුළු හරින්න</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">පිවිසුම් සහ මුරපද ආරක්‍ෂා කරන්න</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසුම් සහ මුරපද ආරක්‍ෂා කරන්න</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">වෙනත් අයෙක් අතට ඔබගේ උපාංගය පත්වේ නම්, ඔබගේ සුරැකි පිවිසුම් හා මුරපද වෙත ප්‍රවේශය ආරක්‍ෂා කර ගැනීමට උපාංග අගුළු රටාවක්, අංකයක්, හෝ මුරපදයක් සකසන්න.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">වෙනත් අයෙක් අතට ඔබගේ උපාංගය පත්වේ නම්, ඔබගේ සුරැකි පිවිසුම් හා මුරපද වෙත ප්‍රවේශය ආරක්‍ෂා කර ගැනීමට උපාංග අගුළු රටාවක්, අංකයක්, හෝ මුරපදයක් සකසන්න.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">පසුව</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1744,7 +1759,7 @@
     <string name="saved_logins_sort_strategy_last_used">අවසන් භාවිතය</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">පිවිසුම් වට්ටෝරුව වර්ගනය</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසුම් වට්ටෝරුව වර්ගනය</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1752,35 +1767,35 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">ලිපින</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">ණය පත්</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ණය පත්</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">ගෙවීමේ ක්‍රම</string>
+    <string name="preferences_credit_cards_2">ගෙවීමේ ක්‍රම</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">පත් සුරැකීම හා ස්වයං පිරවීම</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">පත් සුරැකීම හා ස්වයං පිරවීම</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">දත්ත සංකේතිතයි</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">දත්ත සංකේතිතයි</string>
 
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">උපාංග අතර පත් සමමුහූර්තය</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">පත් සමමුහූර්තය</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">ණය පත යොදන්න</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">ණය පත යොදන්න</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">සුරැකි පත් කළමනාකරණය</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">සුරැකි පත් කළමනාකරණය</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">ලිපිනය යොදන්න</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">ලිපින කළමනාකරණය</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">ලිපින සුරැකීම හා ස්වයං පිරවීම</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">ලිපින සුරැකීම හා ස්වයං පිරවීම</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">ලිපින සුරැකීම හා පිරවීම</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">ලිපින සුරැකීම හා පිරවීම</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">අංක, වි-තැපැල් සහ බාර දීමේ ලිපින වැනි තොරතුරු ඇතුළත් කරන්න</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">අංක, වි-තැපැල් සහ බාර දීමේ ලිපින වැනි තොරතුරු ඇතුළත් කරන්න</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">දුරකථන අංක සහ වි-තැපැල් ලිපින ඇතුළත් වේ</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">දුරකථන අංක සහ වි-තැපැල් ලිපින ඇතුළත් වේ</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">පත එක් කරන්න</string>
@@ -1801,7 +1816,7 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">පත මකන්න</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">ඔබට මෙම ණය පත මකා දැමීමට වුවමනා ද?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">ඔබට මෙම ණය පත මකා දැමීමට වුවමනා ද?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">මකන්න</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1813,15 +1828,15 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">සුරැකි පත්</string>
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">වලංගු ණයපත් අංකයක් යොදන්න</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">වලංගු ණයපත් අංකයක් යොදන්න</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">මෙම ක්‍ෂේත්‍රය පුරවන්න</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">මෙම ක්‍ෂේත්‍රය පුරවන්න</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">සුරැකි පත් බැලීමට අගුළු හරින්න</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">ණයපත් ආරක්‍ෂා කර ගන්න</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">ණයපත් ආරක්‍ෂා කර ගන්න</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">වෙනත් අයෙක් අතට ඔබගේ උපාංගය පත්වේ නම්, ඔබගේ සුරැකි ණයපත් වෙත ප්‍රවේශය ආරක්‍ෂා කර ගැනීමට උපාංග අගුළු රටාවක්, අංකයක්, හෝ මුරපදයක් සකසන්න.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">වෙනත් අයෙක් අතට ඔබගේ උපාංගය පත්වේ නම්, ඔබගේ සුරැකි ණයපත් වෙත ප්‍රවේශය ආරක්‍ෂා කර ගැනීමට උපාංග අගුළු රටාවක්, අංකයක්, හෝ මුරපදයක් සකසන්න.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">දැන් පිහිටුවන්න</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1829,7 +1844,7 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">උපාංගය අගුළු හරින්න</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">ගබඩා කළ ණයපත් තොරතුරු භාවිතයට අගුළු හරින්න</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ගබඩා කළ ණයපත් තොරතුරු භාවිතයට අගුළු හරින්න</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">ලිපිනය යොදන්න</string>
     <!-- Title of the "Edit address" screen -->
@@ -1837,11 +1852,11 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">ලිපින කළමනාකරණය</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">මුල් නම</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">මුල් නම</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">මැද නම</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">මැද නම</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">අග නම</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">අග නම</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">වීදියේ ලිපිනය</string>
     <!-- The header for the city of an address -->
@@ -1866,7 +1881,7 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">ලිපිනය මකන්න</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">ඔබට මෙම ලිපිනය මකා දැමීමට වුවමනා ද?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ඔබට මෙම ලිපිනය මකා දැමීමට වුවමනා ද?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">මකන්න</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1963,39 +1978,39 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">සංස්කරණය</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">ඔබට මෙම පිවිසුම මකා දැමීමට වුවමනා ද?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">ඔබට මෙම පිවිසුම මකා දැමීමට වුවමනා ද?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">මකන්න</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">අවලංගු</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">පිවිසුම් විකල්ප</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසුම් විකල්ප</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">පිවිසීමේ ලිපිනය සඳහා සංස්කරණය කළ හැකි පෙළ ක්‍ෂේත්‍රය.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසීමේ ලිපිනය සඳහා සංස්කරණය කළ හැකි පෙළ ක්‍ෂේත්‍රය.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">පිවිසීමේ පරිශීලක නාමය සඳහා සංස්කරණය කළ හැකි පෙළ ක්‍ෂේත්‍රය.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසීමේ පරිශීලක නාමය සඳහා සංස්කරණය කළ හැකි පෙළ ක්‍ෂේත්‍රය.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">පිවිසීමේ මුරපදය සඳහා සංස්කරණය කළ හැකි පෙළ ක්‍ෂේත්‍රය.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසීමේ මුරපදය සඳහා සංස්කරණය කළ හැකි පෙළ ක්‍ෂේත්‍රය.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">පිවිසීමට වෙනස්කම් සුරකින්න.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">පිවිසීමට වෙනස්කම් සුරකින්න.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">වෙනස්කම් සුරකින්න</string>
+    <string name="save_changes_to_login_2">වෙනස්කම් සුරකින්න</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">සංස්කරණය</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">සංස්කරණය</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">මුරපදය සංස්කරණය</string>
+    <string name="edit_2">මුරපදය සංස්කරණය</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">නව පිවිසුමක් යොදන්න</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">නව පිවිසුමක් යොදන්න</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">මුරපදය එක් කරන්න</string>
+    <string name="add_login_2">මුරපදය එක් කරන්න</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">මුරපදයක් අවශ්‍යයි</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">මුරපදයක් අවශ්‍යයි</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">මුරපදයක් යොදන්න</string>
+    <string name="saved_login_password_required_2">මුරපදයක් යොදන්න</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">පරිශීලක නාමය අවශ්‍යයි</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">පරිශීලක නාමය අවශ්‍යයි</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">පරිශ්‍රීලක නාමයක් යොදන්න</string>
+    <string name="saved_login_username_required_2">පරිශ්‍රීලක නාමයක් යොදන්න</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">සත්කාරක නාමය අවශ්‍යයි</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2086,7 +2101,7 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">%s සෙවුම</string>
 
-    <!-- Default browser experiment -->
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">ෆයර්ෆොක්ස් අතිරික්සුවේ ස්වයංක්‍රීයව විවෘත වීමට පණිවිඩ, වි-තැපැල් සහ අඩවිවල සබැඳි සකසන්න.</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -2096,7 +2111,7 @@
     <string name="radio_preference_info_content_description">වැඩි විස්තර සඳහා ඔබන්න</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">ඉහළට යාත්‍රණය</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">ඉහළට යාත්‍රණය</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">වසන්න</string>
@@ -2257,12 +2272,12 @@
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">පරිවර්තන ගැටලුවක් මතු විය. නැවත උත්සාහ කරන්න.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more">තව දැනගන්න</string>
+    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">තව දැනගන්න</string>
 
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title">පරිවර්තන විකල්ප</string>
+    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">පරිවර්තන විකල්ප</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">පරිවර්තන සැකසුම්</string>
 
@@ -2353,6 +2368,8 @@
     <string name="debug_drawer_title">නිදොස්කරණ මෙවලම්</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">ආපසු යාත්‍රණය</string>
+
+    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">පටිති මෙවලම්</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2375,4 +2392,7 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">අක්‍රිය පටිති වෙත දමන්න</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">පෞද්. පටිති වෙත දමන්න</string>
-</resources>
+
+    <!-- Micro survey -->
+
+    </resources>
