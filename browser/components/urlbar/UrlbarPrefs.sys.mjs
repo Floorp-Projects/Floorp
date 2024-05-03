@@ -65,7 +65,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["autoFill.stddevMultiplier", [0.0, "float"]],
 
   // Feature gate pref for clipboard suggestions in the urlbar.
-  ["clipboard.featureGate", true],
+  ["clipboard.featureGate", false],
 
   // Whether to show a link for using the search functionality provided by the
   // active view if the the view utilizes OpenSearch.
