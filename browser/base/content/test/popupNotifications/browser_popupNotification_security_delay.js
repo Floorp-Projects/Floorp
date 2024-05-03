@@ -44,28 +44,136 @@ add_setup(async function () {
   });
 });
 
+/**
+ * The security delay calculation in PopupNotification.sys.mjs is dependent on
+ * the monotonically increasing value of performance.now. This timestamp is
+ * not relative to a fixed date, but to runtime.
+ * We need to wait for the value performance.now() to be larger than the
+ * security delay in order to observe the bug. Only then does the
+ * timeSinceShown check in PopupNotifications.sys.mjs lead to a timeSinceShown
+ * value that is unconditionally greater than lazy.buttonDelay for
+ * notification.timeShown = null = 0.
+ * See: https://searchfox.org/mozilla-central/rev/f32d5f3949a3f4f185122142b29f2e3ab776836e/toolkit/modules/PopupNotifications.sys.mjs#1870-1872
+ *
+ * When running in automation as part of a larger test suite performance.now()
+ * should usually be already sufficiently high in which case this check should
+ * directly resolve.
+ */
 async function ensureSecurityDelayReady() {
-  /**
-   * The security delay calculation in PopupNotification.sys.mjs is dependent on
-   * the monotonically increasing value of performance.now. This timestamp is
-   * not relative to a fixed date, but to runtime.
-   * We need to wait for the value performance.now() to be larger than the
-   * security delay in order to observe the bug. Only then does the
-   * timeSinceShown check in PopupNotifications.sys.mjs lead to a timeSinceShown
-   * value that is unconditionally greater than lazy.buttonDelay for
-   * notification.timeShown = null = 0.
-   * See: https://searchfox.org/mozilla-central/rev/f32d5f3949a3f4f185122142b29f2e3ab776836e/toolkit/modules/PopupNotifications.sys.mjs#1870-1872
-   *
-   * When running in automation as part of a larger test suite performance.now()
-   * should usually be already sufficiently high in which case this check should
-   * directly resolve.
-   */
   await TestUtils.waitForCondition(
     () => performance.now() > TEST_SECURITY_DELAY,
     "Wait for performance.now() > SECURITY_DELAY",
     500,
     50
   );
+}
+
+/**
+ * Test helper for security delay tests which performs the following steps:
+ * 1. Shows a test notification.
+ * 2. Waits for the notification panel to be shown and checks that the initial
+ *    security delay blocks clicks.
+ * 3. Waits for the security delay to expire. Clicks should now be allowed.
+ * 4. Executes the provided onSecurityDelayExpired function. This function
+ *    should renew the security delay.
+ * 5. Tests that the security delay was renewed.
+ * 6. Ensures that after the security delay the notification can be closed.
+ *
+ * @param {*} options
+ * @param {function} options.onSecurityDelayExpired - Function to run after the
+ *  security delay has expired. This function should trigger a renew of the
+ *  security delay.
+ * @param {function} options.cleanupFn - Optional cleanup function to run after
+ * the test has completed.
+ * @returns {Promise<void>} - Resolves when the test has completed.
+ */
+async function runPopupNotificationSecurityDelayTest({
+  onSecurityDelayExpired,
+  cleanupFn = () => {},
+}) {
+  await ensureSecurityDelayReady();
+
+  info("Open a notification.");
+  let popupShownPromise = waitForNotificationPanel();
+  showNotification();
+  await popupShownPromise;
+  ok(
+    PopupNotifications.isPanelOpen,
+    "PopupNotification should be open after show call."
+  );
+
+  // Test that the initial security delay works.
+  info("Trigger main action via button click during the new security delay.");
+  triggerMainCommand(PopupNotifications.panel);
+
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
+  let notification = PopupNotifications.getNotification(
+    "foo",
+    gBrowser.selectedBrowser
+  );
+  ok(
+    notification,
+    "Notification should still be open because we clicked during the security delay."
+  );
+  // If the notification is no longer shown (test failure) skip the remaining
+  // checks.
+  if (!notification) {
+    await cleanupFn();
+    return;
+  }
+
+  info("Wait for security delay to expire.");
+  await new Promise(resolve =>
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    setTimeout(resolve, TEST_SECURITY_DELAY + 500)
+  );
+
+  info("Run test specific actions which restarts the security delay.");
+  await onSecurityDelayExpired();
+
+  info("Trigger main action via button click during the new security delay.");
+  triggerMainCommand(PopupNotifications.panel);
+
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
+  notification = PopupNotifications.getNotification(
+    "foo",
+    gBrowser.selectedBrowser
+  );
+  ok(
+    notification,
+    "Notification should still be open because we clicked during the security delay."
+  );
+  // If the notification is no longer shown (test failure) skip the remaining
+  // checks.
+  if (!notification) {
+    await cleanupFn();
+    return;
+  }
+
+  // Ensure that once the security delay has passed the notification can be
+  // closed again.
+  let fakeTimeShown = TEST_SECURITY_DELAY + 500;
+  info(`Manually set timeShown to ${fakeTimeShown}ms in the past.`);
+  notification.timeShown = performance.now() - fakeTimeShown;
+
+  info("Trigger main action via button click outside security delay");
+  let notificationHiddenPromise = waitForNotificationPanelHidden();
+  triggerMainCommand(PopupNotifications.panel);
+
+  info("Wait for panel to be hidden.");
+  await notificationHiddenPromise;
+
+  ok(
+    !PopupNotifications.getNotification("foo", gBrowser.selectedBrowser),
+    "Should no longer see the notification."
+  );
+
+  info("Cleanup.");
+  await cleanupFn();
 }
 
 /**
@@ -170,7 +278,7 @@ add_task(async function test_timeShownMultipleNotifications() {
 
   ok(
     !PopupNotifications.getNotification("foo", gBrowser.selectedBrowser),
-    "Should not longer see the notification."
+    "Should no longer see the notification."
   );
 });
 
@@ -179,127 +287,41 @@ add_task(async function test_timeShownMultipleNotifications() {
  * attribute is correctly reset and the security delay is enforced.
  */
 add_task(async function test_notificationReshowTabSwitch() {
-  await ensureSecurityDelayReady();
+  await runPopupNotificationSecurityDelayTest({
+    onSecurityDelayExpired: async () => {
+      let panelHiddenPromise = waitForNotificationPanelHidden();
+      let panelShownPromise;
 
-  ok(
-    !PopupNotifications.isPanelOpen,
-    "PopupNotification panel should not be open initially."
-  );
+      info("Open a new tab which hides the notification panel.");
+      await BrowserTestUtils.withNewTab("https://example.com", async () => {
+        info("Wait for panel to be hidden by tab switch.");
+        await panelHiddenPromise;
+        panelShownPromise = waitForNotificationPanel();
+      });
+      info(
+        "Wait for the panel to show again after the tab close. We're showing the original tab again."
+      );
+      await panelShownPromise;
 
-  info("Open the first notification.");
-  let popupShownPromise = waitForNotificationPanel();
-  showNotification();
-  await popupShownPromise;
-  ok(
-    PopupNotifications.isPanelOpen,
-    "PopupNotification should be open after first show call."
-  );
+      ok(
+        PopupNotifications.isPanelOpen,
+        "PopupNotification should be shown after tab close."
+      );
+      let notification = PopupNotifications.getNotification(
+        "foo",
+        gBrowser.selectedBrowser
+      );
+      is(
+        notification?.id,
+        "foo",
+        "There should still be a notification with id foo"
+      );
 
-  let notification = PopupNotifications.getNotification(
-    "foo",
-    gBrowser.selectedBrowser
-  );
-  is(notification?.id, "foo", "There should be a notification with id foo");
-  ok(notification.timeShown, "The notification should have timeShown set");
-
-  info("Trigger main action via button click during security delay");
-  triggerMainCommand(PopupNotifications.panel);
-
-  await new Promise(resolve => setTimeout(resolve, 0));
-
-  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
-  notification = PopupNotifications.getNotification(
-    "foo",
-    gBrowser.selectedBrowser
-  );
-  ok(
-    notification,
-    "Notification should still be open because we clicked during the security delay."
-  );
-
-  // If the notification is no longer shown (test failure) skip the remaining
-  // checks.
-  if (!notification) {
-    return;
-  }
-
-  let panelHiddenPromise = waitForNotificationPanelHidden();
-  let panelShownPromise;
-
-  info("Open a new tab which hides the notification panel.");
-  await BrowserTestUtils.withNewTab("https://example.com", async () => {
-    info("Wait for panel to be hidden by tab switch.");
-    await panelHiddenPromise;
-    info(
-      "Keep the tab open until the security delay for the original notification show has expired."
-    );
-    await new Promise(resolve =>
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      setTimeout(resolve, TEST_SECURITY_DELAY + 500)
-    );
-
-    panelShownPromise = waitForNotificationPanel();
+      info(
+        "Because we re-show the panel after tab close / switch the security delay should have reset."
+      );
+    },
   });
-  info(
-    "Wait for the panel to show again after the tab close. We're showing the original tab again."
-  );
-  await panelShownPromise;
-
-  ok(
-    PopupNotifications.isPanelOpen,
-    "PopupNotification should be shown after tab close."
-  );
-  notification = PopupNotifications.getNotification(
-    "foo",
-    gBrowser.selectedBrowser
-  );
-  is(
-    notification?.id,
-    "foo",
-    "There should still be a notification with id foo"
-  );
-
-  let notificationHiddenPromise = waitForNotificationPanelHidden();
-
-  info(
-    "Because we re-show the panel after tab close / switch the security delay should have reset."
-  );
-  info("Trigger main action via button click during the new security delay.");
-  triggerMainCommand(PopupNotifications.panel);
-
-  await new Promise(resolve => setTimeout(resolve, 0));
-
-  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
-  notification = PopupNotifications.getNotification(
-    "foo",
-    gBrowser.selectedBrowser
-  );
-  ok(
-    notification,
-    "Notification should still be open because we clicked during the security delay."
-  );
-  // If the notification is no longer shown (test failure) skip the remaining
-  // checks.
-  if (!notification) {
-    return;
-  }
-
-  // Ensure that once the security delay has passed the notification can be
-  // closed again.
-  let fakeTimeShown = TEST_SECURITY_DELAY + 500;
-  info(`Manually set timeShown to ${fakeTimeShown}ms in the past.`);
-  notification.timeShown = performance.now() - fakeTimeShown;
-
-  info("Trigger main action via button click outside security delay");
-  triggerMainCommand(PopupNotifications.panel);
-
-  info("Wait for panel to be hidden.");
-  await notificationHiddenPromise;
-
-  ok(
-    !PopupNotifications.getNotification("foo", gBrowser.selectedBrowser),
-    "Should not longer see the notification."
-  );
 });
 
 /**
@@ -307,100 +329,32 @@ add_task(async function test_notificationReshowTabSwitch() {
  * the PopupNotifications panel position is updated.
  */
 add_task(async function test_notificationWindowMove() {
-  await ensureSecurityDelayReady();
+  let screenX, screenY;
 
-  info("Open a notification.");
-  let popupShownPromise = waitForNotificationPanel();
-  showNotification();
-  await popupShownPromise;
-  ok(
-    PopupNotifications.isPanelOpen,
-    "PopupNotification should be open after show call."
-  );
+  await runPopupNotificationSecurityDelayTest({
+    onSecurityDelayExpired: async () => {
+      info("Reposition the window");
+      // Remember original window position.
+      screenX = window.screenX;
+      screenY = window.screenY;
 
-  // Test that the initial security delay works.
-  info("Trigger main action via button click during the new security delay.");
-  triggerMainCommand(PopupNotifications.panel);
+      let promisePopupPositioned = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuppositioned"
+      );
 
-  await new Promise(resolve => setTimeout(resolve, 0));
+      // Move the window.
+      window.moveTo(200, 200);
 
-  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
-  let notification = PopupNotifications.getNotification(
-    "foo",
-    gBrowser.selectedBrowser
-  );
-  ok(
-    notification,
-    "Notification should still be open because we clicked during the security delay."
-  );
-  // If the notification is no longer shown (test failure) skip the remaining
-  // checks.
-  if (!notification) {
-    return;
-  }
-
-  info("Wait for security delay to expire.");
-  await new Promise(resolve =>
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    setTimeout(resolve, TEST_SECURITY_DELAY + 500)
-  );
-
-  info("Reposition the window");
-  // Remember original window position.
-  let { screenX, screenY } = window;
-
-  let promisePopupPositioned = BrowserTestUtils.waitForEvent(
-    PopupNotifications.panel,
-    "popuppositioned"
-  );
-
-  // Move the window.
-  window.moveTo(200, 200);
-
-  // Wait for the panel to reposition and the PopupNotifications listener to run.
-  await promisePopupPositioned;
-  await new Promise(resolve => setTimeout(resolve, 0));
-
-  info("Trigger main action via button click during the new security delay.");
-  triggerMainCommand(PopupNotifications.panel);
-
-  await new Promise(resolve => setTimeout(resolve, 0));
-
-  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
-  notification = PopupNotifications.getNotification(
-    "foo",
-    gBrowser.selectedBrowser
-  );
-  ok(
-    notification,
-    "Notification should still be open because we clicked during the security delay."
-  );
-  // If the notification is no longer shown (test failure) skip the remaining
-  // checks.
-  if (!notification) {
-    return;
-  }
-
-  // Ensure that once the security delay has passed the notification can be
-  // closed again.
-  let fakeTimeShown = TEST_SECURITY_DELAY + 500;
-  info(`Manually set timeShown to ${fakeTimeShown}ms in the past.`);
-  notification.timeShown = performance.now() - fakeTimeShown;
-
-  info("Trigger main action via button click outside security delay");
-  let notificationHiddenPromise = waitForNotificationPanelHidden();
-  triggerMainCommand(PopupNotifications.panel);
-
-  info("Wait for panel to be hidden.");
-  await notificationHiddenPromise;
-
-  ok(
-    !PopupNotifications.getNotification("foo", gBrowser.selectedBrowser),
-    "Should not longer see the notification."
-  );
-
-  // Reset window position
-  window.moveTo(screenX, screenY);
+      // Wait for the panel to reposition and the PopupNotifications listener to run.
+      await promisePopupPositioned;
+      await new Promise(resolve => setTimeout(resolve, 0));
+    },
+    cleanupFn: async () => {
+      // Reset window position
+      window.moveTo(screenX, screenY);
+    },
+  });
 });
 
 /**
@@ -576,101 +530,32 @@ add_task(async function test_notificationPointerLock() {
     "https://example.com"
   );
 
-  await ensureSecurityDelayReady();
+  await runPopupNotificationSecurityDelayTest({
+    onSecurityDelayExpired: async () => {
+      info("Enter pointer lock");
+      let pointerLockEnterPromise = TestUtils.topicObserved(
+        "pointer-lock-entered"
+      );
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+        SpecialPowers.wrap(content.document).notifyUserGestureActivation();
+        await content.document.body.requestPointerLock();
+      });
 
-  info("Open a notification.");
-  let popupShownPromise = waitForNotificationPanel();
-  showNotification();
-  await popupShownPromise;
-  ok(
-    PopupNotifications.isPanelOpen,
-    "PopupNotification should be open after show call."
-  );
-
-  // Test that the initial security delay works.
-  info("Trigger main action via button click during the new security delay.");
-  triggerMainCommand(PopupNotifications.panel);
-
-  await new Promise(resolve => setTimeout(resolve, 0));
-
-  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
-  let notification = PopupNotifications.getNotification(
-    "foo",
-    gBrowser.selectedBrowser
-  );
-  ok(
-    notification,
-    "Notification should still be open because we clicked during the security delay."
-  );
-  // If the notification is no longer shown (test failure) skip the remaining
-  // checks.
-  if (!notification) {
-    return;
-  }
-
-  info("Wait for security delay to expire.");
-  await new Promise(resolve =>
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    setTimeout(resolve, TEST_SECURITY_DELAY + 500)
-  );
-
-  info("Enter pointer lock");
-  let pointerLockEnterPromise = TestUtils.topicObserved("pointer-lock-entered");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
-    SpecialPowers.wrap(content.document).notifyUserGestureActivation();
-    await content.document.body.requestPointerLock();
+      // Wait for pointer lock to be entered and the PopupNotifications listener to run.
+      await pointerLockEnterPromise;
+      await new Promise(resolve => setTimeout(resolve, 0));
+    },
+    cleanupFn: async () => {
+      // Cleanup.
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+        SpecialPowers.wrap(content.document).notifyUserGestureActivation();
+        await content.document.exitPointerLock();
+      });
+      await TestUtils.waitForCondition(
+        () => !window.PointerLock.isActive,
+        "Wait for pointer lock exit."
+      );
+      BrowserTestUtils.removeTab(tab);
+    },
   });
-
-  // Wait for pointer lock to be entered and the PopupNotifications listener to run.
-  await pointerLockEnterPromise;
-  await new Promise(resolve => setTimeout(resolve, 0));
-
-  info("Trigger main action via button click during the new security delay.");
-  triggerMainCommand(PopupNotifications.panel);
-
-  await new Promise(resolve => setTimeout(resolve, 0));
-
-  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
-  notification = PopupNotifications.getNotification(
-    "foo",
-    gBrowser.selectedBrowser
-  );
-  ok(
-    notification,
-    "Notification should still be open because we clicked during the security delay."
-  );
-  // If the notification is no longer shown (test failure) skip the remaining
-  // checks.
-  if (!notification) {
-    return;
-  }
-
-  // Ensure that once the security delay has passed the notification can be
-  // closed again.
-  let fakeTimeShown = TEST_SECURITY_DELAY + 500;
-  info(`Manually set timeShown to ${fakeTimeShown}ms in the past.`);
-  notification.timeShown = performance.now() - fakeTimeShown;
-
-  info("Trigger main action via button click outside security delay");
-  let notificationHiddenPromise = waitForNotificationPanelHidden();
-  triggerMainCommand(PopupNotifications.panel);
-
-  info("Wait for panel to be hidden.");
-  await notificationHiddenPromise;
-
-  ok(
-    !PopupNotifications.getNotification("foo", gBrowser.selectedBrowser),
-    "Should not longer see the notification."
-  );
-
-  // Cleanup.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
-    SpecialPowers.wrap(content.document).notifyUserGestureActivation();
-    await content.document.exitPointerLock();
-  });
-  await TestUtils.waitForCondition(
-    () => !window.PointerLock.isActive,
-    "Wait for pointer lock exit."
-  );
-  BrowserTestUtils.removeTab(tab);
 });
