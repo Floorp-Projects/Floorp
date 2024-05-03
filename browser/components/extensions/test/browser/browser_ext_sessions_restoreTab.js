@@ -15,7 +15,7 @@ ChromeUtils.defineESModuleGetters(this, {
 // Check that we can restore a tab modified by an extension.
 add_task(async function test_restoringModifiedTab() {
   function background() {
-    browser.tabs.create({ url: "http://example.com/" });
+    browser.tabs.create({ url: "https://example.com/" });
     browser.test.onMessage.addListener(msg => {
       if (msg == "change-tab") {
         browser.tabs.executeScript({ code: 'location.href += "?changedTab";' });
@@ -32,14 +32,14 @@ add_task(async function test_restoringModifiedTab() {
     background,
   });
 
-  const contentScriptTabURL = "http://example.com/?changedTab";
+  const contentScriptTabURL = "https://example.com/?changedTab";
 
   let win = await BrowserTestUtils.openNewBrowserWindow({});
 
   // Open and close a tabs.
   let tabPromise = BrowserTestUtils.waitForNewTab(
     win.gBrowser,
-    "http://example.com/",
+    "https://example.com/",
     true
   );
   await extension.startup();

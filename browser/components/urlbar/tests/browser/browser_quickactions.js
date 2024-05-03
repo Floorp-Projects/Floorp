@@ -15,7 +15,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 const DUMMY_PAGE =
-  "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
+  "https://example.com/browser/browser/base/content/test/general/dummy_page.html";
 
 let testActionCalled = 0;
 
@@ -95,7 +95,7 @@ add_task(async function test_viewsource() {
   info("Check the button status of when the page is not web content");
   const tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    opening: "http://example.com",
+    opening: "https://example.com",
     waitForLoad: true,
   });
 
@@ -107,7 +107,7 @@ add_task(async function test_viewsource() {
   info("Do view source action");
   const onLoad = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    "view-source:http://example.com/"
+    "view-source:https://example.com/"
   );
   EventUtils.synthesizeKey("KEY_Tab", {}, window);
   EventUtils.synthesizeKey("KEY_Enter", {}, window);
