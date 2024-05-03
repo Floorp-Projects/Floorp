@@ -260,7 +260,8 @@ gint moz_gtk_splitter_get_metrics(gint orientation, gint* size) {
 }
 
 static void CalculateToolbarButtonMetrics(WidgetNodeType aAppearance,
-                                          ToolbarButtonGTKMetrics* aMetrics) {
+                                          ToolbarButtonGTKMetrics* aMetrics,
+                                          gint* aMaxInlineMargin) {
   gint iconWidth, iconHeight;
   if (!gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &iconWidth, &iconHeight)) {
     NS_WARNING("Failed to get Gtk+ icon size for titlebar button!");
@@ -292,6 +293,11 @@ static void CalculateToolbarButtonMetrics(WidgetNodeType aAppearance,
   aMetrics->iconXPosition = (width - iconWidth) / 2;
   aMetrics->iconYPosition = (height - iconHeight) / 2;
   aMetrics->minSizeWithBorder = {width, height};
+
+  GtkBorder margin = {0};
+  gtk_style_context_get_margin(style, gtk_style_context_get_state(style),
+                               &margin);
+  *aMaxInlineMargin = std::max(*aMaxInlineMargin, margin.left + margin.right);
 }
 
 size_t GetGtkHeaderBarButtonLayout(Span<ButtonLayout> aButtonLayout,
@@ -353,8 +359,7 @@ static void EnsureToolbarMetrics() {
   if (sToolbarMetrics.initialized) {
     return;
   }
-  // Make sure we have clean cache after theme reset, etc.
-  memset(&sToolbarMetrics, 0, sizeof(sToolbarMetrics));
+  sToolbarMetrics = {};
 
   // Calculate titlebar button visibility and positions.
   ButtonLayout buttonLayout[TOOLBAR_BUTTONS];
@@ -364,9 +369,15 @@ static void EnsureToolbarMetrics() {
   for (const auto& layout : Span(buttonLayout, activeButtonNums)) {
     int buttonIndex = layout.mType - MOZ_GTK_HEADER_BAR_BUTTON_CLOSE;
     ToolbarButtonGTKMetrics* metrics = &sToolbarMetrics.button[buttonIndex];
-    CalculateToolbarButtonMetrics(layout.mType, metrics);
+    CalculateToolbarButtonMetrics(layout.mType, metrics,
+                                  &sToolbarMetrics.inlineSpacing);
   }
 
+  // Account for the spacing property in the header bar.
+  // Default to 6 pixels (gtk/gtkheaderbar.c)
+  gint spacing = 6;
+  g_object_get(GetWidget(MOZ_GTK_HEADER_BAR), "spacing", &spacing, nullptr);
+  sToolbarMetrics.inlineSpacing += spacing;
   sToolbarMetrics.initialized = true;
 }
 
@@ -378,6 +389,11 @@ const ToolbarButtonGTKMetrics* GetToolbarButtonMetrics(
   NS_ASSERTION(buttonIndex >= 0 && buttonIndex <= TOOLBAR_BUTTONS,
                "GetToolbarButtonMetrics(): Wrong titlebar button!");
   return sToolbarMetrics.button + buttonIndex;
+}
+
+gint moz_gtk_get_titlebar_button_spacing() {
+  EnsureToolbarMetrics();
+  return sToolbarMetrics.inlineSpacing;
 }
 
 static gint moz_gtk_window_decoration_paint(cairo_t* cr,

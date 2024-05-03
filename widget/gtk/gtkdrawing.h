@@ -69,38 +69,39 @@ struct MozGtkSize {
   }
 };
 
-typedef struct {
+struct ToggleGTKMetrics {
   bool initialized;
   MozGtkSize minSizeWithBorder;
   GtkBorder borderAndPadding;
-} ToggleGTKMetrics;
+};
 
-typedef struct {
-  MozGtkSize minSizeWithBorder;
-  gint iconXPosition;
-  gint iconYPosition;
-} ToolbarButtonGTKMetrics;
+struct ToolbarButtonGTKMetrics {
+  MozGtkSize minSizeWithBorder{};
+  gint iconXPosition = 0;
+  gint iconYPosition = 0;
+};
 
 #define TOOLBAR_BUTTONS 3
-typedef struct {
-  bool initialized;
+struct ToolbarGTKMetrics {
+  bool initialized = false;
+  gint inlineSpacing = 0;
   ToolbarButtonGTKMetrics button[TOOLBAR_BUTTONS];
-} ToolbarGTKMetrics;
+};
 
-typedef struct {
+struct CSDWindowDecorationSize {
   bool initialized;
   GtkBorder decorationSize;
-} CSDWindowDecorationSize;
+};
 
 /** flags for tab state **/
-typedef enum {
+enum GtkTabFlags {
   /* first eight bits are used to pass a margin */
   MOZ_GTK_TAB_MARGIN_MASK = 0xFF,
   /* the first tab in the group */
   MOZ_GTK_TAB_FIRST = 1 << 9,
   /* the selected tab */
   MOZ_GTK_TAB_SELECTED = 1 << 10
-} GtkTabFlags;
+};
 
 /*** result/error codes ***/
 #define MOZ_GTK_SUCCESS 0
@@ -492,6 +493,8 @@ gint moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
  */
 const ToolbarButtonGTKMetrics* GetToolbarButtonMetrics(
     WidgetNodeType aAppearance);
+
+gint moz_gtk_get_titlebar_button_spacing();
 
 /**
  * Get toolbar button layout.
