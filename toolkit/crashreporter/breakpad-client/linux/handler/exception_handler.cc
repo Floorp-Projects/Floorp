@@ -97,7 +97,6 @@
 #include "common/linux/eintr_wrapper.h"
 #include "third_party/lss/linux_syscall_support.h"
 #if defined(MOZ_OXIDIZED_BREAKPAD)
-#include "nsString.h"
 #include "mozilla/toolkit/crashreporter/rust_minidump_writer_linux_ffi_generated.h"
 #endif
 
@@ -854,9 +853,10 @@ bool ExceptionHandler::WriteMinidumpForChild(pid_t child,
   MinidumpDescriptor descriptor(dump_path);
   descriptor.UpdatePath();
 #if defined(MOZ_OXIDIZED_BREAKPAD)
-  nsCString error_msg;
-  if (!write_minidump_linux(descriptor.path(), child, child_blamed_thread, &error_msg))
+  char* error_msg;
+  if (!write_minidump_linux(descriptor.path(), child, child_blamed_thread, &error_msg)) {
       return false;
+  }
 #else
   if (!google_breakpad::WriteMinidump(descriptor.path(),
                                       child,

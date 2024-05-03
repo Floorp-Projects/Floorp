@@ -41,8 +41,6 @@
 
 #include <vector>
 
-#include "nsThreadUtils.h"
-
 #include "linux/crash_generation/crash_generation_server.h"
 #include "linux/crash_generation/client_info.h"
 #include "linux/handler/exception_handler.h"
@@ -54,7 +52,6 @@
 #if defined(MOZ_OXIDIZED_BREAKPAD)
 #  include "mozilla/toolkit/crashreporter/rust_minidump_writer_linux_ffi_generated.h"
 #  include <sys/signalfd.h>
-#  include "nsString.h"
 #endif
 
 static const char kCommandQuit = 'x';
@@ -275,7 +272,7 @@ CrashGenerationServer::ClientEvent(short revents)
 #if defined(MOZ_OXIDIZED_BREAKPAD)
   ExceptionHandler::CrashContext* breakpad_cc =
       reinterpret_cast<ExceptionHandler::CrashContext*>(crash_context);
-  nsCString error_msg;
+  char* error_msg = nullptr;
   siginfo_t& si = breakpad_cc->siginfo;
   signalfd_siginfo signalfd_si = {};
   signalfd_si.ssi_signo = si.si_signo;
@@ -330,6 +327,11 @@ CrashGenerationServer::ClientEvent(short revents)
     exit_callback_(exit_context_, info);
   }
 
+  info.set_error_msg(nullptr);
+  if (error_msg) {
+    free_minidump_error_msg(error_msg);
+  }
+
   return true;
 }
 
@@ -375,7 +377,6 @@ CrashGenerationServer::MakeMinidumpFilename(string& outFilename)
 void*
 CrashGenerationServer::ThreadMain(void *arg)
 {
-  NS_SetCurrentThreadName("Breakpad Server");
   reinterpret_cast<CrashGenerationServer*>(arg)->Run();
   return NULL;
 }
