@@ -667,6 +667,13 @@ struct Vec<uint8_t> final {
   }
 
   void SetEmpty() {
+    // We need to ensure that (data, capacity, length) always remain valid
+    // to be passed to Vec::from_raw_parts. In particular, this requires that
+    // inner.data is always non-null, even for zero-capacity Vecs.
+
+    // Set inner.data to the equivalent of ptr::NonNull::dangling().as_ptr(),
+    // i.e. a non-null value that is aligned with T's alignment, T being u8
+    // here.
     inner.data = (uint8_t*)1;
     inner.capacity = 0;
     inner.length = 0;
