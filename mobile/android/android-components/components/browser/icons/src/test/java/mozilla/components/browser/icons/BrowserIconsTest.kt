@@ -13,6 +13,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import mozilla.components.browser.icons.generator.IconGenerator
+import mozilla.components.browser.icons.loader.MemoryInfoProvider
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.test.any
@@ -46,6 +47,11 @@ import java.io.OutputStream
 @ExperimentalCoroutinesApi // for runTestOnMain
 @RunWith(AndroidJUnit4::class)
 class BrowserIconsTest {
+    private val defaultAvailMem: Long = 100000
+
+    class FakeMemoryInfoProvider(private val availMem: Long) : MemoryInfoProvider {
+        override fun getAvailMem(): Long = availMem
+    }
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -65,7 +71,12 @@ class BrowserIconsTest {
         `when`(generator.generate(any(), any())).thenReturn(mockedIcon)
 
         val request = IconRequest(url = "https://www.mozilla_test.org")
-        val icon = BrowserIcons(testContext, httpClient = mock(), generator = generator)
+        val icon = BrowserIcons(
+            context = testContext,
+            httpClient = mock(),
+            generator = generator,
+            memoryInfoProvider = FakeMemoryInfoProvider(defaultAvailMem),
+        )
             .loadIcon(request)
 
         assertEquals(mockedIcon, icon.await())
@@ -114,6 +125,7 @@ class BrowserIconsTest {
             val icon = BrowserIcons(
                 testContext,
                 httpClient = HttpURLConnectionClient(),
+                memoryInfoProvider = FakeMemoryInfoProvider(defaultAvailMem),
             ).loadIcon(request).await()
 
             assertNotNull(icon)
@@ -139,7 +151,11 @@ class BrowserIconsTest {
         server.start()
 
         try {
-            val icons = BrowserIcons(testContext, httpClient = HttpURLConnectionClient())
+            val icons = BrowserIcons(
+                context = testContext,
+                httpClient = HttpURLConnectionClient(),
+                memoryInfoProvider = FakeMemoryInfoProvider(defaultAvailMem),
+            )
 
             val request = IconRequest(
                 url = "https://www.mozilla.org",
@@ -182,7 +198,11 @@ class BrowserIconsTest {
         server.start()
 
         try {
-            val icons = BrowserIcons(testContext, httpClient = HttpURLConnectionClient())
+            val icons = BrowserIcons(
+                context = testContext,
+                httpClient = HttpURLConnectionClient(),
+                memoryInfoProvider = FakeMemoryInfoProvider(defaultAvailMem),
+            )
 
             val request = IconRequest(
                 url = "https://www.mozilla.org",

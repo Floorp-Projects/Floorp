@@ -38,10 +38,12 @@ import mozilla.components.browser.icons.extension.IconMessageHandler
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.generator.IconGenerator
 import mozilla.components.browser.icons.loader.DataUriIconLoader
+import mozilla.components.browser.icons.loader.DefaultMemoryInfoProvider
 import mozilla.components.browser.icons.loader.DiskIconLoader
 import mozilla.components.browser.icons.loader.HttpIconLoader
 import mozilla.components.browser.icons.loader.IconLoader
 import mozilla.components.browser.icons.loader.MemoryIconLoader
+import mozilla.components.browser.icons.loader.MemoryInfoProvider
 import mozilla.components.browser.icons.loader.NonBlockingHttpIconLoader
 import mozilla.components.browser.icons.pipeline.IconResourceComparator
 import mozilla.components.browser.icons.preparer.DiskIconPreparer
@@ -91,6 +93,7 @@ class BrowserIcons constructor(
     private val context: Context,
     httpClient: Client,
     private val generator: IconGenerator = DefaultIconGenerator(),
+    private val memoryInfoProvider: MemoryInfoProvider = DefaultMemoryInfoProvider(context),
     private val preparers: List<IconPreprarer> = listOf(
         TippyTopIconPreparer(context.assets),
         MemoryIconPreparer(sharedMemoryCache),
@@ -99,7 +102,10 @@ class BrowserIcons constructor(
     internal var loaders: List<IconLoader> = listOf(
         MemoryIconLoader(sharedMemoryCache),
         DiskIconLoader(sharedDiskCache),
-        HttpIconLoader(httpClient),
+        HttpIconLoader(
+            httpClient = httpClient,
+            memoryInfoProvider = memoryInfoProvider,
+        ),
         DataUriIconLoader(),
     ),
     private val decoders: List<ImageDecoder> = listOf(
@@ -120,7 +126,10 @@ class BrowserIcons constructor(
     private val maximumSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_icons_maximum_size)
     private val minimumSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_icons_minimum_size)
     private val scope = CoroutineScope(jobDispatcher)
-    private val backgroundHttpIconLoader = NonBlockingHttpIconLoader(httpClient) { request, resource, result ->
+    private val backgroundHttpIconLoader = NonBlockingHttpIconLoader(
+        httpClient = httpClient,
+        memoryInfoProvider = DefaultMemoryInfoProvider(context),
+    ) { request, resource, result ->
         val desiredSize = request.getDesiredSize(context, minimumSize, maximumSize)
 
         val icon = decodeIconLoaderResult(result, decoders, desiredSize)

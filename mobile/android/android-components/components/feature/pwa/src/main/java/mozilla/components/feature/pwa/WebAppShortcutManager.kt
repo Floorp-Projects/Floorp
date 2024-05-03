@@ -26,6 +26,7 @@ import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.extension.toIconRequest
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.loader.DataUriIconLoader
+import mozilla.components.browser.icons.loader.DefaultMemoryInfoProvider
 import mozilla.components.browser.icons.loader.HttpIconLoader
 import mozilla.components.browser.icons.loader.MemoryIconLoader
 import mozilla.components.browser.icons.preparer.MemoryIconPreparer
@@ -271,7 +272,7 @@ private fun webAppIcons(
     ),
     loaders = listOf(
         MemoryIconLoader(pwaIconMemoryCache),
-        HttpIconLoader(httpClient),
+        HttpIconLoader(httpClient, DefaultMemoryInfoProvider(context)),
         DataUriIconLoader(),
     ),
     decoders = listOf(
