@@ -12404,6 +12404,10 @@ bool InitOptionParser(OptionParser& op) {
   op.setArgTerminatesOptions("script", true);
   op.setArgCapturesRest("scriptArgs");
 
+  // If --fuzzing-safe is used, print a warning for unknown shell flags instead
+  // of aborting execution.
+  op.setIgnoresUnknownOptions("fuzzing-safe", true);
+
   return true;
 }
 
