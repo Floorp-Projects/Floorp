@@ -398,11 +398,16 @@ nsresult nsHttpTransaction::Init(
   }
 
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(eventsink);
-  RefPtr<WebTransportSessionEventListener> listener =
-      httpChannel ? httpChannel->GetWebTransportSessionEventListener()
-                  : nullptr;
-  if (listener) {
-    mWebTransportSessionEventListener = std::move(listener);
+  if (httpChannel) {
+    RefPtr<WebTransportSessionEventListener> listener =
+        httpChannel->GetWebTransportSessionEventListener();
+    if (listener) {
+      mWebTransportSessionEventListener = std::move(listener);
+    }
+    nsCOMPtr<nsIURI> uri;
+    if (NS_SUCCEEDED(httpChannel->GetURI(getter_AddRefs(uri)))) {
+      mUrl = uri->GetSpecOrDefault();
+    }
   }
 
   return NS_OK;

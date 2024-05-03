@@ -196,6 +196,10 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   bool IsForWebTransport() { return mIsForWebTransport; }
 
+  nsAutoCString GetUrl() { return mUrl; }
+
+  uint64_t ChannelId() { return mChannelId; }
+
  private:
   friend class DeleteHttpTransaction;
   virtual ~nsHttpTransaction();
@@ -593,6 +597,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsCString mHashKeyOfConnectionEntry;
 
   nsCOMPtr<WebTransportSessionEventListener> mWebTransportSessionEventListener;
+
+  nsAutoCString mUrl;
 };
 
 }  // namespace mozilla::net
