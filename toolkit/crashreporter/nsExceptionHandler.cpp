@@ -2771,7 +2771,8 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref) {
    * toolkit/crashreporter/client/app/src/{logic,settings}.rs
    */
   nsCOMPtr<nsIFile> reporterSettings;
-  rv = NS_GetSpecialDirectory("UAppData", getter_AddRefs(reporterSettings));
+  rv = NS_GetSpecialDirectory(XRE_USER_APP_DATA_DIR,
+                              getter_AddRefs(reporterSettings));
   NS_ENSURE_SUCCESS(rv, rv);
   reporterSettings->AppendNative("Crash Reports"_ns);
   reporterSettings->AppendNative("crashreporter_settings.json"_ns);
@@ -2913,7 +2914,7 @@ void UpdateCrashEventsDir() {
     return;
   }
 
-  rv = NS_GetSpecialDirectory("UAppData", getter_AddRefs(eventsDir));
+  rv = NS_GetSpecialDirectory(XRE_USER_APP_DATA_DIR, getter_AddRefs(eventsDir));
   if (NS_SUCCEEDED(rv)) {
     SetUserAppDataDirectory(eventsDir);
     return;
@@ -2975,7 +2976,8 @@ static void FindPendingDir() {
     return;
   }
   nsCOMPtr<nsIFile> pendingDir;
-  nsresult rv = NS_GetSpecialDirectory("UAppData", getter_AddRefs(pendingDir));
+  nsresult rv =
+      NS_GetSpecialDirectory(XRE_USER_APP_DATA_DIR, getter_AddRefs(pendingDir));
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "Couldn't get the user appdata directory, crash dumps will go in an "
