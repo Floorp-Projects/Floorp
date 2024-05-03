@@ -1466,7 +1466,7 @@ var SelectTranslationsPanel = new (class {
       addDefault: [tryAgainButton],
       removeDefault: [doneButton, translateButton],
     });
-    tryAgainButton.focus();
+    tryAgainButton.focus({ focusVisible: true });
   }
 
   /**
@@ -1505,7 +1505,7 @@ var SelectTranslationsPanel = new (class {
       addDefault: [tryAgainButton],
       removeDefault: [doneButton, translateButton],
     });
-    tryAgainButton.focus();
+    tryAgainButton.focus({ focusVisible: true });
   }
 
   /**
