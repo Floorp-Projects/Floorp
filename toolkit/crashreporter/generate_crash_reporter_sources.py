@@ -18,10 +18,16 @@ template_header = (
 )
 
 
+def sort_annotations(annotations):
+    """Return annotations in ascending alphabetical order ignoring case"""
+
+    return sorted(annotations.items(), key=lambda annotation: str.lower(annotation[0]))
+
+
 def validate_annotations(annotations):
     """Ensure that the annotations have all the required fields"""
 
-    for name, data in sorted(annotations.items()):
+    for name, data in annotations:
         if "description" not in data:
             print("Annotation " + name + " does not have a description\n")
             sys.exit(1)
@@ -48,7 +54,7 @@ def read_annotations(annotations_filename):
 
     try:
         with open(annotations_filename, "r") as annotations_file:
-            annotations = yaml.safe_load(annotations_file)
+            annotations = sort_annotations(yaml.safe_load(annotations_file))
     except (IOError, ValueError) as e:
         print("Error parsing " + annotations_filename + ":\n" + str(e) + "\n")
         sys.exit(1)
@@ -76,9 +82,7 @@ def extract_crash_ping_allowedlist(annotations):
     """Extract an array holding the names of the annotations allowed for
     inclusion in the crash ping."""
 
-    return [
-        name for (name, data) in sorted(annotations.items()) if data.get("ping", False)
-    ]
+    return [name for (name, data) in annotations if data.get("ping", False)]
 
 
 def extract_skiplist(annotations):
@@ -87,7 +91,7 @@ def extract_skiplist(annotations):
 
     return [
         (name, data.get("skip_if"))
-        for (name, data) in sorted(annotations.items())
+        for (name, data) in annotations
         if len(data.get("skip_if", "")) > 0
     ]
 
@@ -110,7 +114,7 @@ def type_to_enum(annotation_type):
 def extract_types(annotations):
     """Extract an array holding the type of each annotation."""
 
-    return [type_to_enum(data.get("type")) for (_, data) in sorted(annotations.items())]
+    return [type_to_enum(data.get("type")) for (_, data) in annotations]
 
 
 ###############################################################################
@@ -121,10 +125,7 @@ def extract_types(annotations):
 def generate_strings(annotations):
     """Generate strings corresponding to every annotation."""
 
-    names = [
-        '  "' + data.get("altname", name) + '"'
-        for (name, data) in sorted(annotations.items())
-    ]
+    names = ['  "' + data.get("altname", name) + '"' for (name, data) in annotations]
 
     return ",\n".join(names)
 
@@ -135,7 +136,7 @@ def generate_enum(annotations):
 
     enum = ""
 
-    for i, (name, _) in enumerate(sorted(annotations.items())):
+    for i, (name, _) in enumerate(annotations):
         enum += "  " + name + " = " + str(i) + ",\n"
 
     enum += "  Count = " + str(len(annotations))
