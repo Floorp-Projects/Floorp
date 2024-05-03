@@ -1258,6 +1258,36 @@ static bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module) {
   return true;
 }
 
+// https://tc39.es/proposal-import-attributes/#sec-AllImportAttributesSupported
+static bool AllImportAttributesSupported(
+    JSContext* cx, mozilla::Span<const ImportAttribute> attributes) {
+  // Step 1. Let supported be HostGetSupportedImportAttributes().
+  //
+  // Note: This should be driven by a host hook
+  // (HostGetSupportedImportAttributes), however the infrastructure of said host
+  // hook is deeply unclear, and so right now embedders will not have the
+  // ability to alter or extend the set of supported attributes. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1840723.
+
+  // Step 2. For each ImportAttribute Record attribute of attributes, do
+  for (const ImportAttribute& attribute : attributes) {
+    // Step 2.a. If supported does not contain attribute.[[Key]], return false.
+    if (attribute.key() != cx->names().type) {
+      UniqueChars printableKey = AtomToPrintableString(cx, attribute.key());
+      if (!printableKey) {
+        return false;
+      }
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_IMPORT_ATTRIBUTES_UNSUPPORTED_ATTRIBUTE,
+                                printableKey.get());
+      return false;
+    }
+  }
+
+  // Step 3. Return true.
+  return true;
+}
+
 // https://tc39.es/ecma262/#sec-InnerModuleLinking
 // ES2023 16.2.1.5.1.1 InnerModuleLinking
 static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
@@ -1313,6 +1343,13 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
   Rooted<ModuleObject*> requiredModule(cx);
   for (const RequestedModule& request : module->requestedModules()) {
     moduleRequest = request.moduleRequest();
+
+    // According to the spec, this should be in InnerModuleLoading, but
+    // currently, our module code is not aligned with the spec text.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1894729
+    if (!AllImportAttributesSupported(cx, moduleRequest->attributes())) {
+      return false;
+    }
 
     // Step 9.a. Let requiredModule be ? HostResolveImportedModule(module,
     //           required).

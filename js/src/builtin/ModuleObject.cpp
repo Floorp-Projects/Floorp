@@ -1793,14 +1793,6 @@ bool frontend::StencilModuleMetadata::initModule(
   return true;
 }
 
-bool ModuleBuilder::isAttributeSupported(frontend::TaggedParserAtomIndex key) {
-  if (!key.isWellKnownAtomId()) {
-    return false;
-  }
-
-  return key.toWellKnownAtomId() == WellKnownAtomId::type;
-}
-
 bool ModuleBuilder::processAttributes(frontend::StencilModuleRequest& request,
                                       frontend::ListNode* attributeList) {
   using namespace js::frontend;
@@ -1812,15 +1804,13 @@ bool ModuleBuilder::processAttributes(frontend::StencilModuleRequest& request,
     auto key = attribute->left()->as<NameNode>().atom();
     auto value = attribute->right()->as<NameNode>().atom();
 
-    if (isAttributeSupported(key)) {
-      markUsedByStencil(key);
-      markUsedByStencil(value);
+    markUsedByStencil(key);
+    markUsedByStencil(value);
 
-      StencilModuleImportAttribute attributeStencil(key, value);
-      if (!request.attributes.append(attributeStencil)) {
-        js::ReportOutOfMemory(fc_);
-        return false;
-      }
+    StencilModuleImportAttribute attributeStencil(key, value);
+    if (!request.attributes.append(attributeStencil)) {
+      js::ReportOutOfMemory(fc_);
+      return false;
     }
   }
 
