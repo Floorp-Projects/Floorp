@@ -15,7 +15,10 @@ function attributeEq(actual, expected) {
     }
 
     for (var i = 0; i < expectedAttributes.length; i++) {
-        if(expectedAttributes[i].type !== actualAttributes[i].type) {
+        if (
+            expectedAttributes[i]['key'] !== actualAttributes[i]['key'] ||
+            expectedAttributes[i]['value'] !== actualAttributes[i]['value']
+        ) {
             return false;
         }
     }
@@ -77,11 +80,11 @@ if (getRealmConfiguration("importAttributes")) {
                   [{moduleRequest: {specifier: 'mod', attributes: null}, importName: 'default', localName: 'v'}]);
 
     testImportEntries('import v from "mod" with { type: "js"};',
-        [{moduleRequest: {specifier: 'mod', attributes: [{ type: 'js'}]}, importName: 'default', localName: 'v'}]);
+        [{moduleRequest: {specifier: 'mod', attributes: [{ key: 'type', value: 'js'}]}, importName: 'default', localName: 'v'}]);
 
     testImportEntries('import {x} from "mod" with { type: "js"};',
-                  [{moduleRequest: {specifier: 'mod', attributes: [{ type: 'js'}]}, importName: 'x', localName: 'x'}]);
+                  [{moduleRequest: {specifier: 'mod', attributes: [{ key: 'type', value: 'js'}]}, importName: 'x', localName: 'x'}]);
 
     testImportEntries('import {x as v} from "mod" with { type: "js"};',
-                  [{moduleRequest: {specifier: 'mod', attributes: [{ type: 'js'}]}, importName: 'x', localName: 'v'}]);
+                  [{moduleRequest: {specifier: 'mod', attributes: [{ key: 'type', value: 'js'}]}, importName: 'x', localName: 'v'}]);
 }
