@@ -5004,7 +5004,6 @@ dependencies = [
  "crash-context",
  "libc",
  "minidump-writer",
- "nsstring",
 ]
 
 [[package]]

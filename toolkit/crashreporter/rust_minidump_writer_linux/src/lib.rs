@@ -6,10 +6,10 @@ extern crate minidump_writer;
 use libc::pid_t;
 use minidump_writer::crash_context::CrashContext;
 use minidump_writer::minidump_writer::MinidumpWriter;
-use nsstring::nsCString;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::mem::{self, MaybeUninit};
 use std::os::raw::c_char;
+use std::ptr::null_mut;
 
 // This function will be exposed to C++
 #[no_mangle]
@@ -17,17 +17,20 @@ pub unsafe extern "C" fn write_minidump_linux(
     dump_path: *const c_char,
     child: pid_t,
     child_blamed_thread: pid_t,
-    error_msg: &mut nsCString,
+    error_msg: *mut *mut c_char,
 ) -> bool {
     assert!(!dump_path.is_null());
     let c_path = CStr::from_ptr(dump_path);
     let path = match c_path.to_str() {
         Ok(s) => s,
         Err(x) => {
-            error_msg.assign(&format!(
-                "Wrapper error. Path not convertable: {:#}",
-                anyhow::Error::new(x)
-            ));
+            error_message_to_c(
+                error_msg,
+                format!(
+                    "Wrapper error. Path not convertable: {:#}",
+                    anyhow::Error::new(x)
+                ),
+            );
             return false;
         }
     };
@@ -39,11 +42,14 @@ pub unsafe extern "C" fn write_minidump_linux(
     {
         Ok(f) => f,
         Err(x) => {
-            error_msg.assign(&format!(
-                "Wrapper error when opening minidump destination at {:?}: {:#}",
-                path,
-                anyhow::Error::new(x)
-            ));
+            error_message_to_c(
+                error_msg,
+                format!(
+                    "Wrapper error when opening minidump destination at {:?}: {:#}",
+                    path,
+                    anyhow::Error::new(x)
+                ),
+            );
             return false;
         }
     };
@@ -53,7 +59,7 @@ pub unsafe extern "C" fn write_minidump_linux(
             return true;
         }
         Err(x) => {
-            error_msg.assign(&format!("{:#}", anyhow::Error::new(x)));
+            error_message_to_c(error_msg, format!("{:#}", anyhow::Error::new(x)));
             return false;
         }
     }
@@ -75,7 +81,7 @@ pub unsafe extern "C" fn write_minidump_linux_with_context(
     #[allow(unused)] float_state: *const fpregset_t,
     siginfo: *const libc::signalfd_siginfo,
     child_thread: libc::pid_t,
-    error_msg: &mut nsCString,
+    error_msg: *mut *mut c_char,
 ) -> bool {
     let c_path = CStr::from_ptr(dump_path);
 
@@ -97,10 +103,13 @@ pub unsafe extern "C" fn write_minidump_linux_with_context(
     let path = match c_path.to_str() {
         Ok(s) => s,
         Err(x) => {
-            error_msg.assign(&format!(
-                "Wrapper error. Path not convertable: {:#}",
-                anyhow::Error::new(x)
-            ));
+            error_message_to_c(
+                error_msg,
+                format!(
+                    "Wrapper error. Path not convertable: {:#}",
+                    anyhow::Error::new(x)
+                ),
+            );
             return false;
         }
     };
@@ -112,11 +121,14 @@ pub unsafe extern "C" fn write_minidump_linux_with_context(
     {
         Ok(f) => f,
         Err(x) => {
-            error_msg.assign(&format!(
-                "Wrapper error when opening minidump destination at {:?}: {:#}",
-                path,
-                anyhow::Error::new(x)
-            ));
+            error_message_to_c(
+                error_msg,
+                format!(
+                    "Wrapper error when opening minidump destination at {:?}: {:#}",
+                    path,
+                    anyhow::Error::new(x)
+                ),
+            );
             return false;
         }
     };
@@ -129,8 +141,22 @@ pub unsafe extern "C" fn write_minidump_linux_with_context(
             return true;
         }
         Err(x) => {
-            error_msg.assign(&format!("{:#}", anyhow::Error::new(x)));
+            error_message_to_c(error_msg, format!("{:#}", anyhow::Error::new(x)));
             return false;
         }
     }
+}
+
+fn error_message_to_c(c_string_pointer: *mut *mut c_char, error_message: String) {
+    if c_string_pointer != null_mut() {
+        let c_error_message = CString::new(error_message).unwrap_or_default();
+        unsafe { *c_string_pointer = c_error_message.into_raw() };
+    }
+}
+
+// This function will be exposed to C++
+#[no_mangle]
+pub unsafe extern "C" fn free_minidump_error_msg(c_string: *mut c_char) {
+    // Unused because we just need to drop it
+    let _c_string = unsafe { CString::from_raw(c_string) };
 }
