@@ -471,19 +471,19 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       break;
     }
 
-    // ARIA Role / shortcut
     case UIA_AriaRolePropertyId: {
-      nsAutoString xmlRoles;
-
-      RefPtr<AccAttributes> attributes = acc->Attributes();
-      attributes->GetAttribute(nsGkAtoms::xmlroles, xmlRoles);
-
-      if (!xmlRoles.IsEmpty()) {
+      nsAutoString role;
+      if (acc->HasARIARole()) {
+        RefPtr<AccAttributes> attributes = acc->Attributes();
+        attributes->GetAttribute(nsGkAtoms::xmlroles, role);
+      } else if (nsStaticAtom* computed = acc->ComputedARIARole()) {
+        computed->ToString(role);
+      }
+      if (!role.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;
-        aPropertyValue->bstrVal = ::SysAllocString(xmlRoles.get());
+        aPropertyValue->bstrVal = ::SysAllocString(role.get());
         return S_OK;
       }
-
       break;
     }
 
