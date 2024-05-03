@@ -85,7 +85,7 @@ def genmsgenum(ast):
 def writeifmodified(contents, file):
     contents = contents.encode("utf-8")
     dir = os.path.dirname(file)
-    os.path.exists(dir) or os.makedirs(dir)
+    os.makedirs(dir, exist_ok=True)
 
     oldcontents = None
     if os.path.exists(file):
