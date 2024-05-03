@@ -579,6 +579,8 @@
     <string name="preferences_account_sync_error">Zaso zwjazać, zo by ze synchronizaciju pokročowało</string>
     <!-- Preference for language -->
     <string name="preferences_language">Rěč</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Přełožk</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Datowe wuběry</string>
     <!-- Preference for data collection -->

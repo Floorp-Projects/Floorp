@@ -587,6 +587,8 @@
     <string name="preferences_account_sync_error">Riconnetti per riprendere la sincronizzazione</string>
     <!-- Preference for language -->
     <string name="preferences_language">Lingua</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Traduzione</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Condivisione dati</string>
     <!-- Preference for data collection -->

@@ -219,7 +219,7 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Hitta på sidan</string>
     <!-- Browser menu button that opens the find in page menu -->
-    <string name="browser_menu_find_in_page_2">Sök på sidan…</string>
+    <string name="browser_menu_find_in_page_2">Hitta på sidan…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Översätt sida</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -274,7 +274,7 @@
     <string name="browser_menu_new_in_firefox">Nytt i %1$s</string>
 
     <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
-    <string name="browser_menu_switch_to_desktop_site">Växla till vanliga webbplatsen</string>
+    <string name="browser_menu_switch_to_desktop_site">Växla till datorwebbplats</string>
     <!-- Browser menu label that navigates to the page tools sub-menu -->
     <string name="browser_menu_tools">Verktyg</string>
     <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
@@ -587,6 +587,8 @@
     <string name="preferences_account_sync_error">Anslut igen för att återuppta synkroniseringen</string>
     <!-- Preference for language -->
     <string name="preferences_language">Språk</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Översättning</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Dataalternativ</string>
     <!-- Preference for data collection -->

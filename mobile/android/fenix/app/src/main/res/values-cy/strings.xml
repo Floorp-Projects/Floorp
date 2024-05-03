@@ -580,6 +580,8 @@
     <string name="preferences_account_sync_error">Ailgysylltu i ailddechrau cydweddu</string>
     <!-- Preference for language -->
     <string name="preferences_language">Iaith</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Cyfieithu</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Dewisiadau data</string>
     <!-- Preference for data collection -->
