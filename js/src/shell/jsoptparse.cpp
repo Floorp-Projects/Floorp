@@ -44,6 +44,12 @@ void OptionParser::setArgTerminatesOptions(const char* name, bool enabled) {
   findArgument(name)->setTerminatesOptions(enabled);
 }
 
+void OptionParser::setIgnoresUnknownOptions(const char* name, bool enabled) {
+  auto* opt = findOption(name);
+  MOZ_ASSERT(opt);
+  opt->setIgnoresUnknownOptions(enabled);
+}
+
 void OptionParser::setArgCapturesRest(const char* name) {
   MOZ_ASSERT(restArgument == -1,
              "only one argument may be set to capture the rest");
@@ -349,9 +355,14 @@ OptionParser::Result OptionParser::handleArg(size_t argc, char** argv,
 OptionParser::Result OptionParser::parseArgs(int inputArgc, char** argv) {
   MOZ_ASSERT(inputArgc >= 0);
   size_t argc = inputArgc;
+
   // Permit a "no more options" capability, like |--| offers in many shell
   // interfaces.
   bool optionsAllowed = true;
+
+  // Whether unknown options should report a warning instead of an error. This
+  // is enabled by setIgnoresUnknownOptions and used for --fuzzing-safe.
+  bool ignoreUnknownOptions = false;
 
   for (size_t i = 1; i < argc; ++i) {
     char* arg = argv[i];
@@ -370,6 +381,11 @@ OptionParser::Result OptionParser::parseArgs(int inputArgc, char** argv) {
           /* Long option. */
           opt = findOption(arg + 2);
           if (!opt) {
+            if (ignoreUnknownOptions) {
+              fprintf(stderr, "Warning: Ignoring unknown shell flag: %s\n",
+                      arg);
+              continue;
+            }
             return error("Invalid long option: %s", arg);
           }
         }
@@ -382,6 +398,10 @@ OptionParser::Result OptionParser::parseArgs(int inputArgc, char** argv) {
         if (!opt) {
           return error("Invalid short option: %s", arg);
         }
+      }
+
+      if (opt->getIgnoresUnknownOptions()) {
+        ignoreUnknownOptions = true;
       }
 
       r = handleOption(opt, argc, argv, &i, &optionsAllowed);

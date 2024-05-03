@@ -69,20 +69,22 @@ struct Option {
   const char* help;
   OptionKind kind;
   char shortflag;
-  bool terminatesOptions;
+  bool terminatesOptions = false;
+  bool ignoresUnknownOptions = false;
 
   Option(OptionKind kind, char shortflag, const char* longflag,
          const char* help)
-      : longflag(longflag),
-        help(help),
-        kind(kind),
-        shortflag(shortflag),
-        terminatesOptions(false) {}
+      : longflag(longflag), help(help), kind(kind), shortflag(shortflag) {}
 
   virtual ~Option() = 0;
 
   void setTerminatesOptions(bool enabled) { terminatesOptions = enabled; }
   bool getTerminatesOptions() const { return terminatesOptions; }
+
+  void setIgnoresUnknownOptions(bool enabled) {
+    ignoresUnknownOptions = enabled;
+  }
+  bool getIgnoresUnknownOptions() const { return ignoresUnknownOptions; }
 
   virtual bool isValued() const { return false; }
 
@@ -293,6 +295,7 @@ class OptionParser {
   void setDescription(const char* description) { descr = description; }
   void setHelpOption(char shortflag, const char* longflag, const char* help);
   void setArgTerminatesOptions(const char* name, bool enabled);
+  void setIgnoresUnknownOptions(const char* name, bool enabled);
   void setArgCapturesRest(const char* name);
 
   /* Arguments: no further arguments may be added after a variadic argument. */
