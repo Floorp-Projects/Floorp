@@ -1642,10 +1642,10 @@ class Opera(Browser):
             return m.group(0)
 
 
-class EdgeChromium(Browser):
+class Edge(Browser):
     """Microsoft Edge Chromium Browser class."""
 
-    product = "edgechromium"
+    product = "edge"
     requirements = "requirements_chromium.txt"
     platform = {
         "Linux": "linux",
