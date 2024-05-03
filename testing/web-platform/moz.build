@@ -149,6 +149,9 @@ with Files("tests/apng/**"):
 with Files("tests/audio-output/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
+with Files("tests/avif/**"):
+    BUG_COMPONENT = ("Core", "Graphics: ImageLib")
+
 with Files("tests/background-fetch/**"):
     BUG_COMPONENT = ("Core", "DOM: Service Workers")
 
@@ -180,6 +183,9 @@ with Files("tests/common/**"):
 with Files("tests/compat/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
+with Files("tests/compression/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
 with Files("tests/conformance-checkers/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
@@ -188,6 +194,9 @@ with Files("tests/console/**"):
 
 with Files("tests/content-dpr/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/content-dpr/**"):
+    BUG_COMPONENT = ("Core", "DOM: Editor")
 
 with Files("tests/content-security-policy/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
@@ -499,6 +508,9 @@ with Files("tests/fetch/**"):
 with Files("tests/file-system-access/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
+with Files("tests/focus/**"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
 with Files("tests/fonts/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
@@ -630,6 +642,9 @@ with Files("tests/media/**"):
 with Files("tests/media-capabilities/**"):
     BUG_COMPONENT = ("Core", "WebRTC: Audio/Video")
 
+with Files("tests/media-playback-quality/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
 with Files("tests/mediasession/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
@@ -720,8 +735,14 @@ with Files("tests/secure-payment-confirmation/**"):
 with Files("tests/performance-timeline/**"):
     BUG_COMPONENT = ("Core", "DOM: Performance")
 
+with Files("tests/permissions/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
 with Files("tests/permissions-policy/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/permissions-revoke/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/picture-in-picture/**"):
     BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
@@ -904,6 +925,12 @@ with Files("tests/webdriver/tests/bidi/**"):
 with Files("tests/webgl/**"):
     BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
 
+with Files("tests/webgl/**"):
+    BUG_COMPONENT = ("Core", "Graphics: WebGPU")
+
+with Files("tests/webidl/ecmascript-binding/**"):
+    BUG_COMPONENT = ("Core", "DOM: Bindings (WebIDL)")
+
 with Files("tests/webmessaging/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
@@ -924,6 +951,9 @@ with Files("tests/webrtc-encoded-transform/**"):
 
 with Files("tests/webrtc-extensions/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-ice/**"):
+    BUG_COMPONENT = ("Core", "WebRTC: Networking")
 
 with Files("tests/webrtc-identity/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
