@@ -570,6 +570,10 @@ if use_minidump:
     for v in ("JSTESTS_EXTRA_ARGS", "JITTEST_EXTRA_ARGS"):
         env[v] = "--args='--dll %s' %s" % (injector_lib, env.get(v, ""))
 
+# Report longest running jit-tests in automation.
+env["JITTEST_EXTRA_ARGS"] = "--show-slow " + env.get("JITTEST_EXTRA_ARGS", "")
+env["JSTESTS_EXTRA_ARGS"] = "--show-slow " + env.get("JSTESTS_EXTRA_ARGS", "")
+
 # Always run all enabled tests, even if earlier ones failed. But return the
 # first failed status.
 results = [("(make-nonempty)", 0)]

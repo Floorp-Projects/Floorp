@@ -368,6 +368,18 @@ def main(argv):
     op.add_argument(
         "-z", "--gc-zeal", help="GC zeal mode to use when running the shell"
     )
+    op.add_argument(
+        "--show-slow",
+        action="store_true",
+        help="Show tests taking longer than a minimum time (in seconds).",
+    )
+    op.add_argument(
+        "--slow-test-threshold",
+        type=float,
+        default=5.0,
+        help="Time in seconds a test can take until it is considered slow "
+        "(default %(default)s).",
+    )
 
     options, test_args = op.parse_known_args(argv)
     js_shell = which(options.js_shell)

@@ -1,5 +1,5 @@
 # produce mozlog-compatible log messages, following the spec at
-# https://mozbase.readthedocs.io/en/latest/mozlog.html
+# https://firefox-source-docs.mozilla.org/mozbase/mozlog.html
 
 import json
 import os
@@ -54,3 +54,6 @@ class TestLogger(object):
         record["status"] = status
         record.update(**details)
         self._log_obj(record)
+
+    def log_info(self, message):
+        self._log(action="log", level="INFO", message=message)

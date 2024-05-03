@@ -372,6 +372,9 @@ class ResultsSink:
         else:
             self.list(completed)
 
+        if self.n != 0 and self.options.show_slow:
+            self.show_slow_tests()
+
         if self.wptreport is not None:
             self.wptreport.suite_end()
 
@@ -427,16 +430,28 @@ class ResultsSink:
         else:
             print("FAIL" + suffix)
 
-        if self.options.show_slow:
-            min_duration = self.options.slow_test_threshold
-            print("Slow tests (duration > {}s)".format(min_duration))
-            slow_tests = sorted(self.slow_tests, key=lambda x: x.duration, reverse=True)
-            any = False
-            for test in slow_tests:
-                print("{:>5} {}".format(round(test.duration, 2), test.test))
-                any = True
-            if not any:
-                print("None")
+    def show_slow_tests(self):
+        threshold = self.options.slow_test_threshold
+        fraction_fast = 1 - len(self.slow_tests) / self.n
+        self.log_info(
+            "{:5.2f}% of tests ran in under {}s".format(fraction_fast * 100, threshold)
+        )
+
+        self.log_info("Slowest tests that took longer than {}s:".format(threshold))
+        slow_tests = sorted(self.slow_tests, key=lambda x: x.duration, reverse=True)
+        any = False
+        for i in range(min(len(slow_tests), 20)):
+            test = slow_tests[i]
+            self.log_info("  {:6.2f} {}".format(test.duration, test.test))
+            any = True
+        if not any:
+            self.log_info("None")
+
+    def log_info(self, message):
+        if self.options.format == "automation":
+            self.slog.log_info(message)
+        else:
+            print(message)
 
     def all_passed(self):
         return "REGRESSIONS" not in self.groups and "TIMEOUTS" not in self.groups
