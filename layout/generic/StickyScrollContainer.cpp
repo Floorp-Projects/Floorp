@@ -206,7 +206,7 @@ void StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame,
 
   nsRect marginRect = nsLayoutUtils::GetAllInFlowRectsUnion(
       aFrame, aFrame->GetParent(),
-      nsLayoutUtils::GetAllInFlowRectsFlag::UseMarginBox);
+      nsLayoutUtils::GetAllInFlowRectsFlag::UseMarginBoxWithAutoResolvedAsZero);
 
   // Deflate aContain by the difference between the union of aFrame's
   // continuations' margin boxes and the union of their border boxes, so that
