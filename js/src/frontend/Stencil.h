@@ -502,13 +502,14 @@ class ScopeStencil {
   }
 };
 
-class StencilModuleAssertion {
+class StencilModuleImportAttribute {
  public:
   TaggedParserAtomIndex key;
   TaggedParserAtomIndex value;
 
-  StencilModuleAssertion() = default;
-  StencilModuleAssertion(TaggedParserAtomIndex key, TaggedParserAtomIndex value)
+  StencilModuleImportAttribute() = default;
+  StencilModuleImportAttribute(TaggedParserAtomIndex key,
+                               TaggedParserAtomIndex value)
       : key(key), value(value) {}
 };
 
@@ -516,9 +517,9 @@ class StencilModuleRequest {
  public:
   TaggedParserAtomIndex specifier;
 
-  using AssertionVector =
-      Vector<StencilModuleAssertion, 0, js::SystemAllocPolicy>;
-  AssertionVector assertions;
+  using ImportAttributeVector =
+      Vector<StencilModuleImportAttribute, 0, js::SystemAllocPolicy>;
+  ImportAttributeVector attributes;
 
   // For XDR only.
   StencilModuleRequest() = default;
@@ -531,23 +532,23 @@ class StencilModuleRequest {
   StencilModuleRequest(const StencilModuleRequest& other)
       : specifier(other.specifier) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!assertions.appendAll(other.assertions)) {
+    if (!attributes.appendAll(other.attributes)) {
       oomUnsafe.crash("StencilModuleRequest::StencilModuleRequest");
     }
   }
 
   StencilModuleRequest(StencilModuleRequest&& other) noexcept
-      : specifier(other.specifier), assertions(std::move(other.assertions)) {}
+      : specifier(other.specifier), attributes(std::move(other.attributes)) {}
 
   StencilModuleRequest& operator=(StencilModuleRequest& other) {
     specifier = other.specifier;
-    assertions = std::move(other.assertions);
+    attributes = std::move(other.attributes);
     return *this;
   }
 
   StencilModuleRequest& operator=(StencilModuleRequest&& other) noexcept {
     specifier = other.specifier;
-    assertions = std::move(other.assertions);
+    attributes = std::move(other.attributes);
     return *this;
   }
 };

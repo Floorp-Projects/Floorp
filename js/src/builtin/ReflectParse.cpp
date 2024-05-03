@@ -505,7 +505,7 @@ class NodeBuilder {
   [[nodiscard]] bool debuggerStatement(TokenPos* pos, MutableHandleValue dst);
 
   [[nodiscard]] bool moduleRequest(HandleValue moduleSpec,
-                                   NodeVector& assertions, TokenPos* pos,
+                                   NodeVector& attributes, TokenPos* pos,
                                    MutableHandleValue dst);
 
   [[nodiscard]] bool importAttribute(HandleValue key, HandleValue value,
@@ -1160,10 +1160,10 @@ bool NodeBuilder::yieldExpression(HandleValue arg, YieldKind kind,
                  dst);
 }
 
-bool NodeBuilder::moduleRequest(HandleValue moduleSpec, NodeVector& assertions,
+bool NodeBuilder::moduleRequest(HandleValue moduleSpec, NodeVector& attributes,
                                 TokenPos* pos, MutableHandleValue dst) {
   RootedValue array(cx);
-  if (!newArray(assertions, &array)) {
+  if (!newArray(attributes, &array)) {
     return false;
   }
 
@@ -1967,12 +1967,12 @@ bool ASTSerializer::exportDeclaration(ParseNode* exportNode,
         &moduleRequest->as<BinaryNode>().right()->as<ListNode>();
     MOZ_ASSERT(attributeList->isKind(ParseNodeKind::ImportAttributeList));
 
-    NodeVector assertions(cx);
-    if (!importAttributes(attributeList, assertions)) {
+    NodeVector attributes(cx);
+    if (!importAttributes(attributeList, attributes)) {
       return false;
     }
 
-    if (!builder.moduleRequest(moduleSpec, assertions, &exportNode->pn_pos,
+    if (!builder.moduleRequest(moduleSpec, attributes, &exportNode->pn_pos,
                                &moduleRequestValue)) {
       return false;
     }
@@ -2030,13 +2030,13 @@ bool ASTSerializer::importAttributes(ListNode* attributeList,
       return false;
     }
 
-    RootedValue assertion(cx);
+    RootedValue attribute(cx);
     if (!builder.importAttribute(key, value, &attributeNode->pn_pos,
-                                 &assertion)) {
+                                 &attribute)) {
       return false;
     }
 
-    if (!attributes.append(assertion)) {
+    if (!attributes.append(attribute)) {
       return false;
     }
   }

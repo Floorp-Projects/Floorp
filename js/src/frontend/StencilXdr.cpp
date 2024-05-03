@@ -577,7 +577,7 @@ template <XDRMode mode>
 /* static */ XDRResult StencilXDR::codeModuleRequest(
     XDRState<mode>* xdr, StencilModuleRequest& stencil) {
   MOZ_TRY(xdr->codeUint32(stencil.specifier.rawDataRef()));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.assertions));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.attributes));
 
   return Ok();
 }
