@@ -69,13 +69,19 @@ add_task(async function test() {
 
   // Assert that expired user activations have been cleared.
   Assert.deepEqual(
-    btp.testGetUserActivationHosts({}).sort(),
+    btp
+      .testGetUserActivationHosts({})
+      .map(entry => entry.siteHost)
+      .sort(),
     ["not-expired1.com", "not-expired2.com"],
     "Expired user activation flags have been cleared for normal browsing."
   );
 
   Assert.deepEqual(
-    btp.testGetUserActivationHosts({ privateBrowsingId: 1 }).sort(),
+    btp
+      .testGetUserActivationHosts({ privateBrowsingId: 1 })
+      .map(entry => entry.siteHost)
+      .sort(),
     ["pbm-not-expired.com"],
     "Expired user activation flags have been cleared for private browsing."
   );

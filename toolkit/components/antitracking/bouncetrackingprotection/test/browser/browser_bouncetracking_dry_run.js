@@ -36,7 +36,9 @@ async function runPurgeTest(expectPurge) {
       );
 
       Assert.deepEqual(
-        bounceTrackingProtection.testGetBounceTrackerCandidateHosts({}),
+        bounceTrackingProtection
+          .testGetBounceTrackerCandidateHosts({})
+          .map(entry => entry.siteHost),
         [TEST_BASE_DOMAIN],
         `Bounce tracker candidate '${TEST_BASE_DOMAIN}' added`
       );

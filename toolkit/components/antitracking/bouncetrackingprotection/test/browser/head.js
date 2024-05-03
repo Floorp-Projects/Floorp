@@ -320,9 +320,9 @@ async function runTestBounce(options = {}) {
   await promiseRecordBounces;
 
   Assert.deepEqual(
-    bounceTrackingProtection.testGetBounceTrackerCandidateHosts(
-      originAttributes
-    ),
+    bounceTrackingProtection
+      .testGetBounceTrackerCandidateHosts(originAttributes)
+      .map(entry => entry.siteHost),
     expectCandidate ? [SITE_TRACKER] : [],
     `Should ${
       expectCandidate ? "" : "not "
@@ -331,6 +331,7 @@ async function runTestBounce(options = {}) {
   Assert.deepEqual(
     bounceTrackingProtection
       .testGetUserActivationHosts(originAttributes)
+      .map(entry => entry.siteHost)
       .sort(),
     [SITE_A, SITE_B].sort(),
     "Should only have user activation for sites where we clicked links."

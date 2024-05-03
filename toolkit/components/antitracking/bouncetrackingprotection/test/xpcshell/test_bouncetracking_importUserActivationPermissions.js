@@ -119,12 +119,15 @@ add_task(async function test_user_activation_perm_migration() {
   btp.testMaybeMigrateUserInteractionPermissions();
 
   Assert.deepEqual(
-    btp.testGetUserActivationHosts({}).sort(),
+    btp
+      .testGetUserActivationHosts({})
+      .map(entry => entry.siteHost)
+      .sort(),
     [DOMAIN_A, DOMAIN_C].sort(),
     "Should have imported the correct user activation flags."
   );
   Assert.deepEqual(
-    btp.testGetUserActivationHosts(OA_PBM).sort(),
+    btp.testGetUserActivationHosts(OA_PBM).map(entry => entry.siteHost),
     [DOMAIN_C],
     "Should have imported the correct user activation flags for PBM."
   );
