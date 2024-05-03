@@ -61,6 +61,14 @@ signing_description_schema = Schema(
 )
 
 
+def get_locales_description(attributes, default):
+    """Returns the [list] of locales for task description usage"""
+    chunk_locales = attributes.get("chunk_locales")
+    if chunk_locales:
+        return ", ".join(chunk_locales)
+    return attributes.get("locale", default)
+
+
 @transforms.add
 def delete_name(config, jobs):
     """Delete the 'name' key if it exists, we don't use it."""
@@ -142,9 +150,9 @@ def make_task_description(config, jobs):
 
         label = job["label"]
         description = (
-            "Initial Signing for locale '{locale}' for build '"
+            "Signing of locale(s) '{locale}' for build '"
             "{build_platform}/{build_type}'".format(
-                locale=attributes.get("locale", "en-US"),
+                locale=get_locales_description(attributes, "en-US"),
                 build_platform=build_platform,
                 build_type=attributes.get("build_type"),
             )
@@ -193,6 +201,13 @@ def make_task_description(config, jobs):
             task["scopes"] = [
                 add_scope_prefix(config, "signing:cert:release-apple-notarization")
             ]
+            task[
+                "description"
+            ] = "Notarization of '{}' locales for build '{}/{}'".format(
+                get_locales_description(attributes, "en-US"),
+                build_platform,
+                attributes.get("build_type"),
+            )
         elif "macosx" in build_platform:
             # iscript overrides
             task["worker"]["mac-behavior"] = "mac_sign_and_pkg"
