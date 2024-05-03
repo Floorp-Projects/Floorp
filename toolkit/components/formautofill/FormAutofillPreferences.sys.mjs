@@ -16,7 +16,6 @@ const MANAGE_CREDITCARDS_URL =
 
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -25,13 +24,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
 ChromeUtils.defineLazyGetter(
   lazy,
   "l10n",
-  () => new Localization(["browser/preferences/preferences.ftl"], true)
+  () =>
+    new Localization(
+      ["branding/brand.ftl", "browser/preferences/preferences.ftl"],
+      true
+    )
 );
 
 const {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
   ENABLED_AUTOFILL_CREDITCARDS_PREF,
-  ENABLED_AUTOFILL_CREDITCARDS_REAUTH_PREF,
+  AUTOFILL_CREDITCARDS_REAUTH_PREF,
 } = FormAutofill;
 const {
   MANAGE_ADDRESSES_L10N_IDS,
@@ -267,18 +270,19 @@ FormAutofillPreferences.prototype = {
 
         reauthCheckbox.setAttribute(
           "label",
-          lazy.l10n.formatValueSync("autofill-reauth-checkbox")
+          lazy.l10n.formatValueSync("autofill-reauth-payment-methods-checkbox")
+        );
+
+        // If target.checked is checked, enable OSAuth. Otherwise, reset the pref value.
+        reauthCheckbox.setAttribute(
+          "checked",
+          FormAutofillUtils.getOSAuthEnabled(AUTOFILL_CREDITCARDS_REAUTH_PREF)
         );
 
         reauthLearnMore.setAttribute(
           "support-page",
           "credit-card-autofill#w_require-authentication-for-autofill"
         );
-
-        // Manually set the checked state
-        if (FormAutofillUtils._reauthEnabledByUser) {
-          reauthCheckbox.setAttribute("checked", true);
-        }
 
         reauthCheckboxGroup.setAttribute("align", "center");
         reauthCheckboxGroup.setAttribute("flex", "1");
@@ -321,36 +325,31 @@ FormAutofillPreferences.prototype = {
             break;
           }
 
-          let messageTextId = "autofillReauthOSDialog";
-          // We reuse the if/else order from wizard markup to increase
-          // odds of consistent behavior.
-          if (AppConstants.platform == "macosx") {
-            messageTextId += "Mac";
-          } else if (AppConstants.platform == "linux") {
-            messageTextId += "Lin";
-          } else {
-            messageTextId += "Win";
-          }
-
-          let messageText = this.bundle.GetStringFromName(messageTextId);
-
-          const brandBundle = Services.strings.createBundle(
-            "chrome://branding/locale/brand.properties"
+          let messageText = await lazy.l10n.formatValueSync(
+            "autofill-creditcard-os-dialog-message"
+          );
+          let captionText = await lazy.l10n.formatValueSync(
+            "autofill-creditcard-os-auth-dialog-caption"
           );
           let win = target.ownerGlobal.docShell.chromeEventHandler.ownerGlobal;
-          let loggedIn = await lazy.OSKeyStore.ensureLoggedIn(
-            messageText,
-            brandBundle.GetStringFromName("brandFullName"),
-            win,
-            false
-          );
-          if (!loggedIn.authenticated) {
+          // Calling OSKeyStore.ensureLoggedIn() instead of FormAutofillUtils.verifyOSAuth()
+          // since we want to authenticate user each time this stting is changed.
+          let isAuthorized = (
+            await lazy.OSKeyStore.ensureLoggedIn(
+              messageText,
+              captionText,
+              win,
+              false
+            )
+          ).authenticated;
+          if (!isAuthorized) {
             target.checked = !target.checked;
             break;
           }
 
-          Services.prefs.setBoolPref(
-            ENABLED_AUTOFILL_CREDITCARDS_REAUTH_PREF,
+          // If target.checked is checked, enable OSAuth. Otherwise, reset the pref value.
+          FormAutofillUtils.setOSAuthEnabled(
+            AUTOFILL_CREDITCARDS_REAUTH_PREF,
             target.checked
           );
         } else if (target == this.refs.savedAddressesBtn) {
