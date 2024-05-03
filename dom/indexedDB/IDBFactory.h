@@ -156,7 +156,7 @@ class IDBFactory final : public GlobalTeardownObserver, public nsWrapperCache {
                                                         CallerType aCallerType,
                                                         ErrorResult& aRv);
 
-  already_AddRefed<Promise> Databases(JSContext* aCx);
+  already_AddRefed<Promise> Databases(JSContext* aCx, ErrorResult& aRv);
 
   int16_t Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
               JS::Handle<JS::Value> aSecond, ErrorResult& aRv);
