@@ -401,22 +401,42 @@ bool CallImportOnMainThread(JSContext* cx, Instance* instance,
                   (SUSPENDABLE_SP_OFFSET) ==                                   \
                       SuspenderObjectData::offsetOfSuspendableSP());
 
-  // The following assembly code temporarily switches FP/SP pointers
-  // to be on main stack, while maintaining frames linking.
-  // After `CallImportData::Call` excution suspendable stack
-  // FP/SP will be restored.
+  // The following assembly code temporarily switches FP/SP pointers to be on
+  // main stack, while maintaining frames linking.  After
+  // `CallImportData::Call` execution suspendable stack FP/SP will be restored.
+  //
+  // Because the assembly sequences contain a call, the trashed-register list
+  // must contain all the caller saved registers.  They must also contain "cc"
+  // and "memory" since both of those state elements could be modified by the
+  // call.  They also need a "volatile" qualifier to ensure that the they don't
+  // get optimised out or otherwise messed with by clang/gcc.
+  //
+  // `Registers::VolatileMask` (in the assembler complex) is useful in that it
+  // lists the caller-saved registers.
+
   uintptr_t res;
+
   // clang-format off
 #if defined(_M_ARM64) || defined(__aarch64__)
+#    define CALLER_SAVED_REGS \
+      "x0", "x1", "x2", "x3","x4", "x5", "x6", "x7", "x8", "x9", "x10",   \
+      "x11", "x12", "x13", "x14", "x15", "x16", "x17", /* "x18", */       \
+      "x19", "x20", /* it's unclear who saves these two, so be safe */    \
+      /* claim that all the vector regs are caller-saved, for safety */   \
+      "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10",  \
+      "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19",      \
+      "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28",      \
+      "v29", "v30", "v31"
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
-      static_assert(MAIN_FP + sizeof(void*) == MAIN_SP);                  \
-      static_assert(SUSPENDABLE_FP + sizeof(void*) == SUSPENDABLE_SP);    \
       CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
-      asm("\n   mov     x0, %1"                                           \
+      asm volatile(                                                       \
+          "\n   mov     x0, %1"                                           \
           "\n   mov     x27, sp "                                         \
-          "\n   stp     x29, x27, [x0, #" #SUSPENDABLE_FP "] "            \
+          "\n   str     x29, [x0, #" #SUSPENDABLE_FP "] "                 \
+          "\n   str     x27, [x0, #" #SUSPENDABLE_SP "] "                 \
                                                                           \
-          "\n   ldp     x29, x27, [x0, #" #MAIN_FP "] "                   \
+          "\n   ldr     x29, [x0, #" #MAIN_FP "] "                        \
+          "\n   ldr     x27, [x0, #" #MAIN_SP "] "                        \
           "\n   mov     sp, x27 "                                         \
                                                                           \
           "\n   stp     x0, x27, [sp, #-16]! "                            \
@@ -427,15 +447,18 @@ bool CallImportOnMainThread(JSContext* cx, Instance* instance,
           "\n   ldp     x3, x27, [sp], #16 "                              \
                                                                           \
           "\n   mov     x27, sp "                                         \
-          "\n   stp     x29, x27, [x3, #" #MAIN_FP "] "                   \
+          "\n   str     x29, [x3, #" #MAIN_FP "] "                        \
+          "\n   str     x27, [x3, #" #MAIN_SP "] "                        \
                                                                           \
-          "\n   ldp     x29, x27, [x3, #" #SUSPENDABLE_FP "] "            \
+          "\n   ldr     x29, [x3, #" #SUSPENDABLE_FP "] "                 \
+          "\n   ldr     x27, [x3, #" #SUSPENDABLE_SP "] "                 \
           "\n   mov     sp, x27 "                                         \
           "\n   mov     %0, x0"                                           \
           : "=r"(res)                                                     \
-          : "r"(stacks), "r"(CallImportData::Call), "r"(&data)         \
-          : "x0", "x3")
+          : "r"(stacks), "r"(CallImportData::Call), "r"(&data)            \
+          : "x0", "x3", "x27", CALLER_SAVED_REGS, "cc", "memory")
   INLINED_ASM(24, 32, 40, 48);
+
 #  elif defined(_WIN64) && defined(_M_X64)
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
       CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
@@ -466,6 +489,7 @@ bool CallImportOnMainThread(JSContext* cx, Instance* instance,
           : "r"(stacks), "r"(CallImportData::Call), "r"(&data)         \
           : "rcx", "rax")
   INLINED_ASM(24, 32, 40, 48);
+
 #  elif defined(__x86_64__)
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
       CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
@@ -496,6 +520,7 @@ bool CallImportOnMainThread(JSContext* cx, Instance* instance,
           : "r"(stacks), "r"(CallImportData::Call), "r"(&data)         \
           : "rdi", "rax")
   INLINED_ASM(24, 32, 40, 48);
+
 #  else
   MOZ_CRASH("Not supported for this platform");
 #  endif
@@ -507,6 +532,7 @@ bool CallImportOnMainThread(JSContext* cx, Instance* instance,
 
 #  undef INLINED_ASM
 #  undef CHECK_OFFSETS
+#  undef CALLER_SAVED_REGS
 
   return ok;
 }
