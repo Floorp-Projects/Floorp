@@ -23,6 +23,7 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
+#include "Relation.h"
 #include "RootAccessible.h"
 
 using namespace mozilla;
@@ -522,10 +523,33 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       break;
     }
 
+    case UIA_ControllerForPropertyId:
+      aPropertyValue->vt = VT_UNKNOWN | VT_ARRAY;
+      aPropertyValue->parray = AccRelationsToUiaArray(
+          {RelationType::CONTROLLER_FOR, RelationType::ERRORMSG});
+      return S_OK;
+
     case UIA_ControlTypePropertyId:
       aPropertyValue->vt = VT_I4;
       aPropertyValue->lVal = GetControlType();
       break;
+
+    case UIA_DescribedByPropertyId:
+      aPropertyValue->vt = VT_UNKNOWN | VT_ARRAY;
+      aPropertyValue->parray = AccRelationsToUiaArray(
+          {RelationType::DESCRIBED_BY, RelationType::DETAILS});
+      return S_OK;
+
+    case UIA_FlowsFromPropertyId:
+      aPropertyValue->vt = VT_UNKNOWN | VT_ARRAY;
+      aPropertyValue->parray =
+          AccRelationsToUiaArray({RelationType::FLOWS_FROM});
+      return S_OK;
+
+    case UIA_FlowsToPropertyId:
+      aPropertyValue->vt = VT_UNKNOWN | VT_ARRAY;
+      aPropertyValue->parray = AccRelationsToUiaArray({RelationType::FLOWS_TO});
+      return S_OK;
 
     case UIA_FrameworkIdPropertyId:
       if (ApplicationAccessible* app = ApplicationAcc()) {
@@ -1222,6 +1246,20 @@ bool uiaRawElmProvider::HasSelectionItemPattern() {
   // In UIA, radio buttons and radio menu items are exposed as selected or
   // unselected.
   return acc->State() & states::SELECTABLE || IsRadio(acc);
+}
+
+SAFEARRAY* uiaRawElmProvider::AccRelationsToUiaArray(
+    std::initializer_list<RelationType> aTypes) const {
+  Accessible* acc = Acc();
+  MOZ_ASSERT(acc);
+  AutoTArray<Accessible*, 10> targets;
+  for (RelationType type : aTypes) {
+    Relation rel = acc->RelationByType(type);
+    while (Accessible* target = rel.Next()) {
+      targets.AppendElement(target);
+    }
+  }
+  return AccessibleArrayToUiaArray(targets);
 }
 
 SAFEARRAY* a11y::AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs) {
