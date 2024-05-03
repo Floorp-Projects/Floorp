@@ -652,6 +652,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   // Whether to enable code coverage on the Debuggee.
   bool collectCoverageInfo;
 
+  // Whether to ask avoid side-effects in the native code.
+  // See JS::dbg::ShouldAvoidSideEffects.
+  bool shouldAvoidSideEffects;
+
   template <typename T>
   struct DebuggerLinkAccess {
     static mozilla::DoublyLinkedListElement<T>& Get(T* aThis) {

@@ -142,6 +142,15 @@ NativeResumeMode DebugAPI::onNativeCall(JSContext* cx, const CallArgs& args,
 }
 
 /* static */
+bool DebugAPI::shouldAvoidSideEffects(JSContext* cx) {
+  if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
+    return slowPathShouldAvoidSideEffects(cx);
+  }
+
+  return false;
+}
+
+/* static */
 bool DebugAPI::onDebuggerStatement(JSContext* cx, AbstractFramePtr frame) {
   if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
     return slowPathOnDebuggerStatement(cx, frame);

@@ -87,6 +87,13 @@ access to browser-level features like the `alert` function, which this
 API's implementation does not, making it possible to present debugger
 errors to the developer in a way suited to the context.)
 
+### `shouldAvoidSideEffects`
+A boolean value used to ask a side-effectful native code to abort.
+
+If set to true, `JS::dbg::ShouldAvoidSideEffects(cx)` returns true.
+Native code can opt into this to support debugger who wants to perform
+side-effect-free evaluation.
+
 
 ## Debugger Handler Functions
 
