@@ -464,7 +464,10 @@ export class TranslationsParent extends JSWindowActorParent {
     if (!lazy.automaticallyPopupPref) {
       return;
     }
-    if (lazy.BrowserHandler?.kiosk) {
+
+    // On Android the BrowserHandler is intermittently not available (for unknown reasons).
+    // Check that the component is available before de-lazifying lazy.BrowserHandler.
+    if (Cc["@mozilla.org/browser/clh;1"] && lazy.BrowserHandler?.kiosk) {
       // Pop-ups should not be shown in kiosk mode.
       return;
     }
