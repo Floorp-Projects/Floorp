@@ -895,14 +895,6 @@ bool nsHttpConnection::IsAlive() {
   nsresult rv = mSocketTransport->IsAlive(&alive);
   if (NS_FAILED(rv)) alive = false;
 
-// #define TEST_RESTART_LOGIC
-#ifdef TEST_RESTART_LOGIC
-  if (!alive) {
-    LOG(("pretending socket is still alive to test restart logic\n"));
-    alive = true;
-  }
-#endif
-
   return alive;
 }
 
