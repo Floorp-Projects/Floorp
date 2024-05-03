@@ -373,7 +373,7 @@ class ImportRowProcessor {
     return this.summary;
   }
 }
-
+const OS_AUTH_FOR_PASSWORDS_PREF = "signon.management.page.os-auth.optout";
 /**
  * Contains functions shared by different Login Manager components.
  */
@@ -401,6 +401,7 @@ export const LoginHelper = {
   testOnlyUserHasInteractedWithDocument: null,
   userInputRequiredToCapture: null,
   captureInputChanges: null,
+  OS_AUTH_FOR_PASSWORDS_PREF,
 
   init() {
     // Watch for pref changes to update cached pref values.
@@ -1728,18 +1729,17 @@ export const LoginHelper = {
     }
     // Use the OS auth dialog if there is no primary password
     if (!token.hasPassword && OSReauthEnabled) {
-      let result = await lazy.OSKeyStore.ensureLoggedIn(
+      let isAuthorized = await this.verifyUserOSAuth(
+        OS_AUTH_FOR_PASSWORDS_PREF,
         messageText,
         captionText,
         browser.ownerGlobal,
         false
       );
-      isAuthorized = result.authenticated;
       telemetryEvent = {
         object: "os_auth",
         method: "reauthenticate",
-        value: result.auth_details,
-        extra: result.auth_details_extra,
+        value: isAuthorized ? "success" : "fail",
       };
       return {
         isAuthorized,
