@@ -63,17 +63,9 @@ h1.translations-panel-header-wrapper {
 
 /* The default styling is to dim the default, but here override it so that it still uses
    the primary color. */
-.translations-panel-button-group > button[default][disabled="true"] {
+.translations-panel-footer > button[default][disabled="true"] {
   color: var(--button-primary-color);
   background-color: var(--button-primary-bgcolor);
-}
-
-#select-translations-panel-footer {
-  display: flex;
-  flex: 1;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-small);
 }
 
 #full-page-translations-panel-translate-hint-action {
@@ -146,12 +138,24 @@ h1.translations-panel-header-wrapper {
   }
 }
 
-#select-translations-panel-copy-button {
+#select-translations-panel-footer-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: var(--space-xsmall);
+  justify-content: space-between;
+}
+
+#select-translations-panel-start-button-group,
+#select-translations-panel-end-button-group {
+  display: flex;
+  flex-grow: 1;
+}
+
+#select-translations-panel-start-button-group {
   justify-content: flex-start;
 }
 
-#select-translations-panel-footer-button-group {
-  flex: 1;
+#select-translations-panel-end-button-group {
   justify-content: flex-end;
 }
 
