@@ -14,8 +14,8 @@ function assertionEq(actual, expected) {
         return false;
     }
 
-    for (var i = 0; i < expected.length; i++) {
-        if(expected[i].type !== actual[i].type) {
+    for (var i = 0; i < expectedAssertions.length; i++) {
+        if(expectedAssertions[i].type !== actualAssertions[i].type) {
             return false;
         }
     }
