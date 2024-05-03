@@ -455,7 +455,8 @@ already_AddRefed<nsHostRecord> nsHostResolver::InitLoopbackRecord(
   return rec.forget();
 }
 
-static bool IsNativeHTTPSEnabled() {
+// static
+bool nsHostResolver::IsNativeHTTPSEnabled() {
   if (!StaticPrefs::network_dns_native_https_query()) {
     return false;
   }
@@ -527,6 +528,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
     bool excludedFromTRR = false;
     if (TRRService::Get() && TRRService::Get()->IsExcludedFromTRR(host)) {
       flags |= nsIDNSService::RESOLVE_DISABLE_TRR;
+      flags |= nsIDNSService::RESOLVE_DISABLE_NATIVE_HTTPS_QUERY;
       excludedFromTRR = true;
 
       if (!aTrrServer.IsEmpty()) {
@@ -1182,8 +1184,14 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
       (rec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&
        (rec->flags & nsIDNSService::RESOLVE_DISABLE_TRR || serviceNotReady ||
         NS_FAILED(rv)))) {
-    if (!IsNativeHTTPSEnabled() && !rec->IsAddrRecord()) {
-      return rv;
+    if (!rec->IsAddrRecord()) {
+      if (!IsNativeHTTPSEnabled()) {
+        return NS_ERROR_UNKNOWN_HOST;
+      }
+
+      if (rec->flags & nsIDNSService::RESOLVE_DISABLE_NATIVE_HTTPS_QUERY) {
+        return NS_ERROR_UNKNOWN_HOST;
+      }
     }
 
 #ifdef DEBUG

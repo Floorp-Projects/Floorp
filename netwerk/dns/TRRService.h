@@ -42,7 +42,7 @@ class TRRService : public TRRServiceBase,
 
   bool OnWritingThread() const override { return NS_IsMainThread(); }
 
-  nsresult Init();
+  nsresult Init(bool aNativeHTTPSQueryEnabled);
   nsresult Start();
   bool Enabled(nsIRequest::TRRMode aRequestMode = nsIRequest::TRR_DEFAULT_MODE);
   bool IsConfirmed() { return mConfirmation.State() == CONFIRM_OK; }
