@@ -63,11 +63,11 @@ if (getRealmConfiguration("importAttributes")) {
     ]);
 
     testRequestedModules("import a from 'foo' with { unsupported: 'test'}", [
-        { specifier: 'foo', attributes: null },
+        { specifier: 'foo', attributes: [ { key: 'unsupported', value: 'test'} ] },
     ]);
 
     testRequestedModules("import a from 'foo' with { unsupported: 'test', type: 'js', foo: 'bar' }", [
-        { specifier: 'foo', attributes: [ { key: 'type', value: 'js'} ] },
+        { specifier: 'foo', attributes: [ { key: 'unsupported', value: 'test'}, { key: 'type', value: 'js'}, { key: 'foo', value: 'bar'} ] },
     ]);
 
     testRequestedModules("import a from 'foo' with { type: 'js1'}; export {} from 'bar' with { type: 'js2'}; export * from 'baz' with { type: 'js3'}", [
