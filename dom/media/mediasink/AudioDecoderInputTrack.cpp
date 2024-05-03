@@ -621,6 +621,9 @@ void AudioDecoderInputTrack::EnsureTimeStretcher() {
   AssertOnGraphThread();
   if (!mTimeStretcher) {
     mTimeStretcher = new RLBoxSoundTouch();
+    MOZ_RELEASE_ASSERT(mTimeStretcher);
+    MOZ_RELEASE_ASSERT(mTimeStretcher->Init());
+
     mTimeStretcher->setSampleRate(Graph()->GraphRate());
     mTimeStretcher->setChannels(GetChannelCountForTimeStretcher());
     mTimeStretcher->setPitch(1.0);

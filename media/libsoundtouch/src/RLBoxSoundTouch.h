@@ -46,7 +46,7 @@ namespace mozilla {
 class RLBoxSoundTouch {
  public:
   RLBOX_SOUNDTOUCH_API
-  RLBoxSoundTouch();
+  bool Init();
   RLBOX_SOUNDTOUCH_API
   ~RLBoxSoundTouch();
 
@@ -76,6 +76,7 @@ class RLBoxSoundTouch {
   void flush();
 
  private:
+  bool mCreated{false};
   uint mChannels{0};
   rlbox_sandbox_soundtouch mSandbox;
   tainted_soundtouch<mozilla::AudioDataValue*> mSampleBuffer{nullptr};
