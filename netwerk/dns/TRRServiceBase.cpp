@@ -163,8 +163,9 @@ void TRRServiceBase::OnTRRModeChange() {
   }
 
   static bool readHosts = false;
+  // When native HTTPS query is enabled, we need to read etc/hosts.
   if ((mMode == nsIDNSService::MODE_TRRFIRST ||
-       mMode == nsIDNSService::MODE_TRRONLY) &&
+       mMode == nsIDNSService::MODE_TRRONLY || mNativeHTTPSQueryEnabled) &&
       !readHosts) {
     readHosts = true;
     ReadEtcHostsFile();

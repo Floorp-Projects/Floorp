@@ -82,6 +82,7 @@ class TRRServiceBase : public nsIProxyConfigChangedCallback {
   Atomic<bool, Relaxed> mURISetByDetection{false};
   Atomic<bool, Relaxed> mTRRConnectionInfoInited{false};
   DataMutex<RefPtr<nsHttpConnectionInfo>> mDefaultTRRConnectionInfo;
+  bool mNativeHTTPSQueryEnabled{false};
 };
 
 }  // namespace net

@@ -91,9 +91,11 @@ interface nsIDNSService : nsISupports
         // If set, the DNS service will pass a DNS record to
         // OnLookupComplete even when there was a resolution error.
         RESOLVE_WANT_RECORD_ON_ERROR = (1 << 16),
+        // If set, the native HTTPS query is not allowed.
+        RESOLVE_DISABLE_NATIVE_HTTPS_QUERY = (1 << 17),
 
         // Bitflag containing all possible flags.
-        ALL_DNSFLAGS_BITS = ((1 << 17) - 1),
+        ALL_DNSFLAGS_BITS = ((1 << 18) - 1),
     };
 
     cenum ConfirmationState : 8 {

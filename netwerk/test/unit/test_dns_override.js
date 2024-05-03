@@ -353,7 +353,10 @@ function hexToUint8Array(hex) {
 
 add_task(
   {
-    skip_if: () => mozinfo.os == "win" || mozinfo.os == "android",
+    skip_if: () =>
+      mozinfo.os == "win" ||
+      mozinfo.os == "android" ||
+      mozinfo.socketprocess_networking,
   },
   async function test_https_record_override() {
     let trrServer = new TRRServer();
@@ -414,6 +417,7 @@ add_task(
     Services.prefs.setBoolPref("network.dns.native_https_query", true);
     registerCleanupFunction(async () => {
       Services.prefs.clearUserPref("network.dns.native_https_query");
+      Services.prefs.clearUserPref("network.trr.excluded-domains");
     });
 
     let listener = new Listener();
@@ -511,5 +515,24 @@ add_task(
       "def...",
       "got correct answer"
     );
+
+    // Adding "service.com" into excluded-domains should fail
+    // native HTTPS query.
+    Services.prefs.setCharPref("network.trr.excluded-domains", "service.com");
+    listener = new Listener();
+    try {
+      Services.dns.asyncResolve(
+        "service.com",
+        Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
+        0,
+        null,
+        listener,
+        mainThread,
+        defaultOriginAttributes
+      );
+      Assert.ok(false, "asyncResolve should fail");
+    } catch (e) {
+      Assert.equal(e.result, Cr.NS_ERROR_UNKNOWN_HOST);
+    }
   }
 );

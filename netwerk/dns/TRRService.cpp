@@ -170,7 +170,7 @@ static void EventTelemetryPrefChanged(const char* aPref, void* aData) {
       StaticPrefs::network_trr_confirmation_telemetry_enabled());
 }
 
-nsresult TRRService::Init() {
+nsresult TRRService::Init(bool aNativeHTTPSQueryEnabled) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (mInitialized) {
     return NS_OK;
@@ -189,6 +189,7 @@ nsresult TRRService::Init() {
 
   sTRRServicePtr = this;
 
+  mNativeHTTPSQueryEnabled = aNativeHTTPSQueryEnabled;
   ReadPrefs(nullptr);
   mConfirmation.HandleEvent(ConfirmationEvent::Init);
 
@@ -1021,7 +1022,9 @@ bool TRRService::IsExcludedFromTRR_unlocked(const nsACString& aHost) {
       return true;
     }
     if (mDNSSuffixDomains.Contains(subdomain)) {
-      LOG(("Subdomain [%s] of host [%s] Is Excluded From TRR via pref\n",
+      LOG(
+          ("Subdomain [%s] of host [%s] Is Excluded From TRR via DNSSuffix "
+           "domains\n",
            subdomain.BeginReading(), aHost.BeginReading()));
       return true;
     }
