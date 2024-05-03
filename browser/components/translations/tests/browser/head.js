@@ -1706,6 +1706,7 @@ class SelectTranslationsTestUtils {
         ? [tryAgainButton, cancelButton]
         : [cancelButton, tryAgainButton]),
     ]);
+    SharedTranslationsTestUtils._assertHasFocus(tryAgainButton);
   }
 
   /**
@@ -1753,6 +1754,7 @@ class SelectTranslationsTestUtils {
         ? [tryAgainButton, cancelButton]
         : [cancelButton, tryAgainButton]),
     ]);
+    SharedTranslationsTestUtils._assertHasFocus(tryAgainButton);
   }
 
   static #assertPanelTextAreaDirection(langTag = null) {
