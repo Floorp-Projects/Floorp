@@ -191,6 +191,7 @@ class uiaRawElmProvider : public IAccessibleEx,
   bool HasSelectionItemPattern();
   SAFEARRAY* AccRelationsToUiaArray(
       std::initializer_list<RelationType> aTypes) const;
+  Accessible* GetLabeledBy() const;
 };
 
 SAFEARRAY* AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs);
