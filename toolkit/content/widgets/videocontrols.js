@@ -417,9 +417,10 @@ this.VideoControlsImplWidget = class {
           }
 
           // We have to check again if the media has audio here.
-          let noAudio = !this.isAudioOnly && !this.video.mozHasAudio;
-          this.muteButton.toggleAttribute("noAudio", noAudio);
-          this.muteButton.disabled = noAudio;
+          if (!this.isAudioOnly && !this.video.mozHasAudio) {
+            this.muteButton.setAttribute("noAudio", "true");
+            this.muteButton.disabled = true;
+          }
         }
 
         // The video itself might not be fullscreen, but part of the
@@ -754,7 +755,7 @@ this.VideoControlsImplWidget = class {
               );
             }
             break;
-          case "loadedmetadata": {
+          case "loadedmetadata":
             // If a <video> doesn't have any video data, treat it as <audio>
             // and show the controls (they won't fade back out)
             if (
@@ -770,13 +771,13 @@ this.VideoControlsImplWidget = class {
               Math.round(this.video.currentTime * 1000),
               Math.round(this.video.duration * 1000)
             );
-            let noAudio = !this.isAudioOnly && !this.video.mozHasAudio;
-            this.muteButton.toggleAttribute("noAudio", noAudio);
-            this.muteButton.disabled = noAudio;
+            if (!this.isAudioOnly && !this.video.mozHasAudio) {
+              this.muteButton.setAttribute("noAudio", "true");
+              this.muteButton.disabled = true;
+            }
             this.adjustControlSize();
             this.updatePictureInPictureToggleDisplay();
             break;
-          }
           case "durationchange":
             this.updatePictureInPictureToggleDisplay();
             break;
