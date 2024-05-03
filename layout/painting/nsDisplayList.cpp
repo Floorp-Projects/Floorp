@@ -5453,9 +5453,13 @@ bool nsDisplayFixedPosition::UpdateScrollData(
 }
 
 bool nsDisplayFixedPosition::ShouldGetFixedAnimationId() {
-  return HasDynamicToolbar() &&  // also implies being in the cross-process RCD
+#if defined(MOZ_WIDGET_ANDROID)
+  return mFrame->PresContext()->IsRootContentDocumentCrossProcess() &&
          nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext()) ==
              GetScrollTargetId();
+#else
+  return false;
+#endif
 }
 
 void nsDisplayFixedPosition::WriteDebugInfo(std::stringstream& aStream) {
@@ -5832,7 +5836,10 @@ bool nsDisplayStickyPosition::UpdateScrollData(
 }
 
 bool nsDisplayStickyPosition::ShouldGetStickyAnimationId() const {
+#if defined(MOZ_WIDGET_ANDROID)
   return HasDynamicToolbar();  // also implies being in the cross-process RCD
+#endif
+  return false;
 }
 
 nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(
