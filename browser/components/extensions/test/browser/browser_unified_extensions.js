@@ -44,6 +44,9 @@ add_setup(async function () {
   // panel, which could happen when a previous test file resizes the current
   // window.
   await ensureMaximizedWindow(window);
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.originControls.grantByDefault", false]],
+  });
 });
 
 add_task(async function test_button_enabled_by_pref() {

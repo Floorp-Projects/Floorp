@@ -134,7 +134,7 @@ export var ExtensionsUI = {
 
     let strings = this._buildStrings({
       addon,
-      permissions: addon.userPermissions,
+      permissions: addon.installPermissions,
       type: "sideload",
     });
 

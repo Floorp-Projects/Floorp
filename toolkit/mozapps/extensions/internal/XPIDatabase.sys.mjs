@@ -200,6 +200,7 @@ const PROP_JSON_FIELDS = [
   "incognito",
   "userPermissions",
   "optionalPermissions",
+  "requestedPermissions",
   "sitePermissions",
   "siteOrigin",
   "icons",
@@ -1426,12 +1427,42 @@ AddonWrapper = class {
     return addon.location.name == KEY_APP_PROFILE;
   }
 
+  /**
+   * Required permissions that extension has access to based on its manifest.
+   * In mv3 this doesn't include host_permissions.
+   */
   get userPermissions() {
     return addonFor(this).userPermissions;
   }
 
   get optionalPermissions() {
     return addonFor(this).optionalPermissions;
+  }
+
+  /**
+   * Additional permissions that extension is requesting in its manifest.
+   * Currently this is host_permissions in MV3.
+   */
+  get requestedPermissions() {
+    return addonFor(this).requestedPermissions;
+  }
+
+  /**
+   * A helper that returns all permissions for the install prompt.
+   */
+  get installPermissions() {
+    let required = this.userPermissions;
+    if (!required) {
+      return null;
+    }
+    let requested = this.requestedPermissions;
+    // Currently this can't result in duplicates, but if logic of what goes
+    // into these lists changes, make sure to check for dupes.
+    let perms = {
+      origins: required.origins.concat(requested?.origins ?? []),
+      permissions: required.permissions.concat(requested?.permissions ?? []),
+    };
+    return perms;
   }
 
   isCompatibleWith(aAppVersion, aPlatformVersion) {

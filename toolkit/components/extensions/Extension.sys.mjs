@@ -161,6 +161,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   30 * 1000
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "installIncludesOrigins",
+  "extensions.originControls.grantByDefault",
+  false
+);
+
 var {
   GlobalManager,
   IconDetails,
@@ -1196,8 +1203,10 @@ export class ExtensionData {
    * includes the contents of the "permissions" property as well as other
    * capabilities that are derived from manifest fields that users should
    * be informed of (e.g., origins where content scripts are injected).
+   *
+   * For MV3 extensions with origin controls, this does not include origins.
    */
-  get manifestPermissions() {
+  getRequiredPermissions() {
     if (this.type !== "extension") {
       return null;
     }
@@ -1238,6 +1247,20 @@ export class ExtensionData {
     }
 
     return Array.from(origins);
+  }
+
+  /**
+   * Returns additional permissions that extensions is requesting based on its
+   * manifest. For now, this is host_permissions (and content scripts) in mv3.
+   */
+  getRequestedPermissions() {
+    if (this.type !== "extension") {
+      return null;
+    }
+    if (this.originControls && lazy.installIncludesOrigins) {
+      return { permissions: [], origins: this.getManifestOrigins() };
+    }
+    return { permissions: [], origins: [] };
   }
 
   /**
@@ -3729,8 +3752,8 @@ export class Extension extends ExtensionData {
 
     if (
       this.originControls &&
-      this.manifest.granted_host_permissions &&
-      this.startupReason === "ADDON_INSTALL"
+      this.startupReason === "ADDON_INSTALL" &&
+      (this.manifest.granted_host_permissions || lazy.installIncludesOrigins)
     ) {
       let origins = this.getManifestOrigins();
       lazy.ExtensionPermissions.add(this.id, { permissions: [], origins });

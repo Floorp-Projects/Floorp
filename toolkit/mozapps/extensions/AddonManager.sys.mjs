@@ -3278,7 +3278,7 @@ var AddonManagerInternal = {
             // the customConfirmationUI preference and responding to the
             // "addon-install-confirmation" notification.  If the application
             // does not implement its own prompt, use the built-in xul dialog.
-            if (info.addon.userPermissions) {
+            if (info.addon.installPermissions) {
               let subject = {
                 wrappedJSObject: {
                   target: browser,
@@ -3286,7 +3286,7 @@ var AddonManagerInternal = {
                 },
               };
               subject.wrappedJSObject.info.permissions =
-                info.addon.userPermissions;
+                info.addon.installPermissions;
               Services.obs.notifyObservers(
                 subject,
                 "webextension-permission-prompt"
