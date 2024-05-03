@@ -8,6 +8,7 @@
 #include "StaticComponents.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ProfilerLabels.h"
+#include "js/Debug.h"               // JS::dbg::ShouldAvoidSideEffects
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "js/String.h"              // JS::LinearStringHasLatin1Chars
 #include "nsJSUtils.h"
@@ -136,6 +137,10 @@ static JSObject* GetService(JSContext* cx, const xpcom::JSServiceEntry& service,
 static bool Services_Resolve(JSContext* cx, HandleObject obj, HandleId id,
                              bool* resolvedp) {
   *resolvedp = false;
+  if (JS::dbg::ShouldAvoidSideEffects(cx)) {
+    return false;
+  }
+
   JSLinearString* name = GetNameIfLatin1(id);
   if (!name) {
     return true;
