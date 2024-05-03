@@ -25,7 +25,8 @@ class ScreenshotsPreview extends MozLitElement {
     cancelButtonEl: "#cancel",
     copyButtonEl: "#copy",
     downloadButtonEl: "#download",
-    previewImgEl: "#preview-image",
+    previewImg: "#preview-image",
+    buttons: { all: "moz-button" },
   };
 
   constructor() {
@@ -73,7 +74,7 @@ class ScreenshotsPreview extends MozLitElement {
 
   close() {
     window.removeEventListener("keydown", this, true);
-    URL.revokeObjectURL(this.previewImgEl.src);
+    URL.revokeObjectURL(this.previewImg.src);
     window.close();
   }
 
@@ -106,10 +107,10 @@ class ScreenshotsPreview extends MozLitElement {
         );
         break;
       case "copy":
-        this.saveToClipboard(this.previewImgEl.src);
+        this.saveToClipboard();
         break;
       case "download":
-        this.saveToFile(this.previewImgEl.src);
+        this.saveToFile();
         break;
     }
   }
@@ -120,17 +121,37 @@ class ScreenshotsPreview extends MozLitElement {
         if (this.getAccelKey(event)) {
           event.preventDefault();
           event.stopPropagation();
-          this.saveToClipboard(this.previewImgEl.src);
+          this.saveToClipboard();
         }
         break;
       case this.downloadKey.toLowerCase():
         if (this.getAccelKey(event)) {
           event.preventDefault();
           event.stopPropagation();
-          this.saveToFile(this.previewImgEl.src);
+          this.saveToFile();
         }
         break;
     }
+  }
+
+  /**
+   * If the image is complete and the height is greater than 0, we can resolve.
+   * Otherwise wait for a load event on the image and resolve then.
+   * @returns {Promise<String>} Resolves that resolves to the preview image src
+   *                            once the image is loaded.
+   */
+  async imageLoadedPromise() {
+    await this.updateComplete;
+    if (this.previewImg.complete && this.previewImg.height > 0) {
+      return Promise.resolve(this.previewImg.src);
+    }
+
+    return new Promise(resolve => {
+      function onImageLoaded(event) {
+        resolve(event.target.src);
+      }
+      this.previewImg.addEventListener("load", onImageLoaded, { once: true });
+    });
   }
 
   getAccelKey(event) {
@@ -140,18 +161,38 @@ class ScreenshotsPreview extends MozLitElement {
     return event.ctrlKey;
   }
 
-  async saveToFile(dataUrl) {
+  /**
+   * Disable all the buttons. After a button click, we will always close the
+   * window so there is no need to re-enable the buttons.
+   */
+  disableButtons() {
+    this.buttons.forEach(button => (button.disabled = true));
+  }
+
+  async saveToFile() {
+    // Disable buttons so they can't by clicked again while waiting for the
+    // image to load.
+    this.disableButtons();
+
+    // Wait for the image to be loaded before we save it
+    let imageSrc = await this.imageLoadedPromise();
     await lazy.ScreenshotsUtils.downloadScreenshot(
       null,
-      dataUrl,
+      imageSrc,
       this.openerBrowser,
       { object: "preview_download" }
     );
     this.close();
   }
 
-  async saveToClipboard(dataUrl) {
-    await lazy.ScreenshotsUtils.copyScreenshot(dataUrl, this.openerBrowser, {
+  async saveToClipboard() {
+    // Disable buttons so they can't by clicked again while waiting for the
+    // image to load
+    this.disableButtons();
+
+    // Wait for the image to be loaded before we copy it
+    let imageSrc = await this.imageLoadedPromise();
+    await lazy.ScreenshotsUtils.copyScreenshot(imageSrc, this.openerBrowser, {
       object: "preview_copy",
     });
     this.close();

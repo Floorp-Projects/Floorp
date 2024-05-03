@@ -657,7 +657,6 @@ export var ScreenshotsUtils = {
     let currTabDialogBox = browser.tabDialogBox;
     let browserContextId = browser.browsingContext.id;
     if (currTabDialogBox) {
-      currTabDialogBox.getTabDialogManager();
       let manager = currTabDialogBox.getTabDialogManager();
       let dialogs = manager.hasDialogs && manager.dialogs;
       if (dialogs.length) {
@@ -861,7 +860,7 @@ export var ScreenshotsUtils = {
       "screenshots-preview"
     );
 
-    screenshotsPreviewEl.previewImgEl.src = url;
+    screenshotsPreviewEl.previewImg.src = url;
 
     if (Cu.isInAutomation) {
       Services.obs.notifyObservers(null, "screenshots-preview-ready");
