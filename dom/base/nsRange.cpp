@@ -2891,7 +2891,8 @@ static void CollectClientRectsForSubtree(
     if (!aTextOnly || isText) {
       nsLayoutUtils::GetAllInFlowRectsAndTexts(
           frame, nsLayoutUtils::GetContainingBlockForClientRect(frame),
-          aCollector, aTextList, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+          aCollector, aTextList,
+          nsLayoutUtils::GetAllInFlowRectsFlag::AccountForTransforms);
       if (isText) {
         return;
       }

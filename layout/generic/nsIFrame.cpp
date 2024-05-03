@@ -7891,7 +7891,7 @@ nsRect nsIFrame::GetNormalRect() const {
 nsRect nsIFrame::GetBoundingClientRect() {
   return nsLayoutUtils::GetAllInFlowRectsUnion(
       this, nsLayoutUtils::GetContainingBlockForClientRect(this),
-      nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+      nsLayoutUtils::GetAllInFlowRectsFlag::AccountForTransforms);
 }
 
 nsPoint nsIFrame::GetPositionIgnoringScrolling() const {
