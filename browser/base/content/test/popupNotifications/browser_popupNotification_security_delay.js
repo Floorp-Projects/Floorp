@@ -565,3 +565,112 @@ add_task(async function test_notificationDuringFullScreenTransition() {
     info("Full screen transition end");
   });
 });
+
+/**
+ * Tests that the security delay gets extended when pointer lock is entered.
+ */
+add_task(async function test_notificationPointerLock() {
+  // We need a tab to enter pointer lock.
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
+
+  await ensureSecurityDelayReady();
+
+  info("Open a notification.");
+  let popupShownPromise = waitForNotificationPanel();
+  showNotification();
+  await popupShownPromise;
+  ok(
+    PopupNotifications.isPanelOpen,
+    "PopupNotification should be open after show call."
+  );
+
+  // Test that the initial security delay works.
+  info("Trigger main action via button click during the new security delay.");
+  triggerMainCommand(PopupNotifications.panel);
+
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
+  let notification = PopupNotifications.getNotification(
+    "foo",
+    gBrowser.selectedBrowser
+  );
+  ok(
+    notification,
+    "Notification should still be open because we clicked during the security delay."
+  );
+  // If the notification is no longer shown (test failure) skip the remaining
+  // checks.
+  if (!notification) {
+    return;
+  }
+
+  info("Wait for security delay to expire.");
+  await new Promise(resolve =>
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    setTimeout(resolve, TEST_SECURITY_DELAY + 500)
+  );
+
+  info("Enter pointer lock");
+  let pointerLockEnterPromise = TestUtils.topicObserved("pointer-lock-entered");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    SpecialPowers.wrap(content.document).notifyUserGestureActivation();
+    await content.document.body.requestPointerLock();
+  });
+
+  // Wait for pointer lock to be entered and the PopupNotifications listener to run.
+  await pointerLockEnterPromise;
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  info("Trigger main action via button click during the new security delay.");
+  triggerMainCommand(PopupNotifications.panel);
+
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
+  notification = PopupNotifications.getNotification(
+    "foo",
+    gBrowser.selectedBrowser
+  );
+  ok(
+    notification,
+    "Notification should still be open because we clicked during the security delay."
+  );
+  // If the notification is no longer shown (test failure) skip the remaining
+  // checks.
+  if (!notification) {
+    return;
+  }
+
+  // Ensure that once the security delay has passed the notification can be
+  // closed again.
+  let fakeTimeShown = TEST_SECURITY_DELAY + 500;
+  info(`Manually set timeShown to ${fakeTimeShown}ms in the past.`);
+  notification.timeShown = performance.now() - fakeTimeShown;
+
+  info("Trigger main action via button click outside security delay");
+  let notificationHiddenPromise = waitForNotificationPanelHidden();
+  triggerMainCommand(PopupNotifications.panel);
+
+  info("Wait for panel to be hidden.");
+  await notificationHiddenPromise;
+
+  ok(
+    !PopupNotifications.getNotification("foo", gBrowser.selectedBrowser),
+    "Should not longer see the notification."
+  );
+
+  // Cleanup.
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    SpecialPowers.wrap(content.document).notifyUserGestureActivation();
+    await content.document.exitPointerLock();
+  });
+  await TestUtils.waitForCondition(
+    () => !window.PointerLock.isActive,
+    "Wait for pointer lock exit."
+  );
+  BrowserTestUtils.removeTab(tab);
+});
