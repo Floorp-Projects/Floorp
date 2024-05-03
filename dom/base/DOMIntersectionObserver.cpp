@@ -323,7 +323,8 @@ static Maybe<nsRect> ComputeTheIntersection(
   //
   // `intersectionRect` is kept relative to `target` during the loop.
   auto inflowRect = nsLayoutUtils::GetAllInFlowRectsUnion(
-      target, target, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+      target, target,
+      nsLayoutUtils::GetAllInFlowRectsFlag::AccountForTransforms);
   // For content-visibility, we need to observe the overflow clip edge,
   // https://drafts.csswg.org/css-contain-2/#close-to-the-viewport
   if (aIsForProximityToViewport ==

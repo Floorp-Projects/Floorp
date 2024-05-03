@@ -2039,7 +2039,7 @@ nsDOMWindowUtils::GetBoundsWithoutFlushing(Element* aElement,
   if (frame) {
     nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(
         frame, nsLayoutUtils::GetContainingBlockForClientRect(frame),
-        nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+        nsLayoutUtils::GetAllInFlowRectsFlag::AccountForTransforms);
     rect->SetLayoutRect(r);
   }
 

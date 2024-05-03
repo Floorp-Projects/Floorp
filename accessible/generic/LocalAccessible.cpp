@@ -688,7 +688,8 @@ nsRect LocalAccessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
   if (frame && mContent) {
     *aBoundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
     nsRect unionRect = nsLayoutUtils::GetAllInFlowRectsUnion(
-        frame, *aBoundingFrame, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+        frame, *aBoundingFrame,
+        nsLayoutUtils::GetAllInFlowRectsFlag::AccountForTransforms);
 
     if (unionRect.IsEmpty()) {
       // If we end up with a 0x0 rect from above (or one with negative

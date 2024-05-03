@@ -1241,52 +1241,54 @@ class nsLayoutUtils {
 
   static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);
 
-  enum {
-    RECTS_ACCOUNT_FOR_TRANSFORMS = 0x01,
-    // Two bits for specifying which box type to use.
-    // With neither bit set (default), use the border box.
-    RECTS_USE_CONTENT_BOX = 0x02,
-    RECTS_USE_PADDING_BOX = 0x04,
-    RECTS_USE_MARGIN_BOX = 0x06,  // both bits set
-    RECTS_WHICH_BOX_MASK = 0x06   // bitmask for these two bits
-  };
   /**
    * Collect all CSS boxes (content, padding, border, or margin) associated
    * with aFrame and its continuations, "drilling down" through table wrapper
    * frames and some anonymous blocks since they're not real CSS boxes.
+   *
    * The boxes are positioned relative to aRelativeTo (taking scrolling
    * into account) and passed to the callback in frame-tree order.
    * If aFrame is null, no boxes are returned.
+   *
    * For SVG frames, returns one rectangle, the bounding box.
-   * If aFlags includes RECTS_ACCOUNT_FOR_TRANSFORMS, then when converting
-   * the boxes into aRelativeTo coordinates, transforms (including CSS
-   * and SVG transforms) are taken into account.
-   * If aFlags includes one of RECTS_USE_CONTENT_BOX, RECTS_USE_PADDING_BOX,
-   * or RECTS_USE_MARGIN_BOX, the corresponding type of box is used.
-   * Otherwise (by default), the border box is used.
+   *
+   * If aFlags includes 'AccountForTransforms', then when converting the boxes
+   * into aRelativeTo coordinates, transforms (including CSS and SVG transforms)
+   * are taken into account.
+   *
+   * If aFlags includes one of 'UseContentBox', 'UsePaddingBox', 'UseMarginBox',
+   * the corresponding type of box is used. Otherwise (by default), the border
+   * box is used. Note that these "Box" flags are meant to be mutually
+   * exclusive, though we don't enforce that. If multiple "Box" flags are used,
+   * we'll gracefully just use the first one in the order of the enum.
    */
+  enum class GetAllInFlowRectsFlag : uint8_t {
+    AccountForTransforms,
+    UseContentBox,
+    UsePaddingBox,
+    UseMarginBox,
+  };
+  using GetAllInFlowRectsFlags = mozilla::EnumSet<GetAllInFlowRectsFlag>;
   static void GetAllInFlowRects(nsIFrame* aFrame, const nsIFrame* aRelativeTo,
                                 mozilla::RectCallback* aCallback,
-                                uint32_t aFlags = 0);
+                                GetAllInFlowRectsFlags aFlags = {});
 
   static void GetAllInFlowRectsAndTexts(
       nsIFrame* aFrame, const nsIFrame* aRelativeTo,
       mozilla::RectCallback* aCallback,
-      mozilla::dom::Sequence<nsString>* aTextList, uint32_t aFlags = 0);
+      mozilla::dom::Sequence<nsString>* aTextList,
+      GetAllInFlowRectsFlags aFlags = {});
 
   /**
    * Computes the union of all rects returned by GetAllInFlowRects. If
    * the union is empty, returns the first rect.
-   * If aFlags includes RECTS_ACCOUNT_FOR_TRANSFORMS, then when converting
-   * the boxes into aRelativeTo coordinates, transforms (including CSS
-   * and SVG transforms) are taken into account.
-   * If aFlags includes one of RECTS_USE_CONTENT_BOX, RECTS_USE_PADDING_BOX,
-   * or RECTS_USE_MARGIN_BOX, the corresponding type of box is used.
-   * Otherwise (by default), the border box is used.
+   *
+   * See GetAllInFlowRects() documentation for the meaning of aRelativeTo and
+   * aFlags.
    */
   static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame,
                                        const nsIFrame* aRelativeTo,
-                                       uint32_t aFlags = 0);
+                                       GetAllInFlowRectsFlags aFlags = {});
 
   enum { EXCLUDE_BLUR_SHADOWS = 0x01 };
   /**

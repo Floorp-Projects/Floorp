@@ -3498,7 +3498,7 @@ nsIFrame* nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame) {
 struct BoxToRect : public nsLayoutUtils::BoxCallback {
   const nsIFrame* mRelativeTo;
   RectCallback* mCallback;
-  uint32_t mFlags;
+  nsLayoutUtils::GetAllInFlowRectsFlags mFlags;
   // If the frame we're measuring relative to is the root, we know all frames
   // are descendants of it, so we don't need to compute the common ancestor
   // between a frame and mRelativeTo.
@@ -3510,7 +3510,8 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
   bool mRelativeToIsTarget;
 
   BoxToRect(const nsIFrame* aTargetFrame, const nsIFrame* aRelativeTo,
-            RectCallback* aCallback, uint32_t aFlags)
+            RectCallback* aCallback,
+            nsLayoutUtils::GetAllInFlowRectsFlags aFlags)
       : mRelativeTo(aRelativeTo),
         mCallback(aCallback),
         mFlags(aFlags),
@@ -3523,21 +3524,22 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
     const bool usingSVGOuterFrame = !!outer;
     if (!outer) {
       outer = aFrame;
-      switch (mFlags & nsLayoutUtils::RECTS_WHICH_BOX_MASK) {
-        case nsLayoutUtils::RECTS_USE_CONTENT_BOX:
-          r = aFrame->GetContentRectRelativeToSelf();
-          break;
-        case nsLayoutUtils::RECTS_USE_PADDING_BOX:
-          r = aFrame->GetPaddingRectRelativeToSelf();
-          break;
-        case nsLayoutUtils::RECTS_USE_MARGIN_BOX:
-          r = aFrame->GetMarginRectRelativeToSelf();
-          break;
-        default:  // Use the border box
-          r = aFrame->GetRectRelativeToSelf();
+      if (mFlags.contains(
+              nsLayoutUtils::GetAllInFlowRectsFlag::UseContentBox)) {
+        r = aFrame->GetContentRectRelativeToSelf();
+      } else if (mFlags.contains(
+                     nsLayoutUtils::GetAllInFlowRectsFlag::UsePaddingBox)) {
+        r = aFrame->GetPaddingRectRelativeToSelf();
+      } else if (mFlags.contains(
+                     nsLayoutUtils::GetAllInFlowRectsFlag::UseMarginBox)) {
+        r = aFrame->GetMarginRectRelativeToSelf();
+      } else {
+        // Use the border-box.
+        r = aFrame->GetRectRelativeToSelf();
       }
     }
-    if (mFlags & nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS) {
+    if (mFlags.contains(
+            nsLayoutUtils::GetAllInFlowRectsFlag::AccountForTransforms)) {
       const bool isAncestorKnown = [&] {
         if (mRelativeToIsRoot) {
           return true;
@@ -3568,7 +3570,7 @@ struct MOZ_RAII BoxToRectAndText : public BoxToRect {
 
   BoxToRectAndText(const nsIFrame* aTargetFrame, const nsIFrame* aRelativeTo,
                    RectCallback* aCallback, Sequence<nsString>* aTextList,
-                   uint32_t aFlags)
+                   nsLayoutUtils::GetAllInFlowRectsFlags aFlags)
       : BoxToRect(aTargetFrame, aRelativeTo, aCallback, aFlags),
         mTextList(aTextList) {}
 
@@ -3609,7 +3611,7 @@ struct MOZ_RAII BoxToRectAndText : public BoxToRect {
 void nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame,
                                       const nsIFrame* aRelativeTo,
                                       RectCallback* aCallback,
-                                      uint32_t aFlags) {
+                                      GetAllInFlowRectsFlags aFlags) {
   BoxToRect converter(aFrame, aRelativeTo, aCallback, aFlags);
   GetAllInFlowBoxes(aFrame, &converter);
 }
@@ -3618,7 +3620,7 @@ void nsLayoutUtils::GetAllInFlowRectsAndTexts(nsIFrame* aFrame,
                                               const nsIFrame* aRelativeTo,
                                               RectCallback* aCallback,
                                               Sequence<nsString>* aTextList,
-                                              uint32_t aFlags) {
+                                              GetAllInFlowRectsFlags aFlags) {
   BoxToRectAndText converter(aFrame, aRelativeTo, aCallback, aTextList, aFlags);
   GetAllInFlowBoxes(aFrame, &converter);
 }
@@ -3649,7 +3651,7 @@ nsIFrame* nsLayoutUtils::GetContainingBlockForClientRect(nsIFrame* aFrame) {
 
 nsRect nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame,
                                              const nsIFrame* aRelativeTo,
-                                             uint32_t aFlags) {
+                                             GetAllInFlowRectsFlags aFlags) {
   RectAccumulator accumulator;
   GetAllInFlowRects(aFrame, aRelativeTo, &accumulator, aFlags);
   return accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect
@@ -9219,7 +9221,8 @@ CSSRect nsLayoutUtils::GetBoundingFrameRect(
   CSSRect result;
   nsIFrame* relativeTo = aRootScrollFrame->GetScrolledFrame();
   result = CSSRect::FromAppUnits(nsLayoutUtils::GetAllInFlowRectsUnion(
-      aFrame, relativeTo, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS));
+      aFrame, relativeTo,
+      nsLayoutUtils::GetAllInFlowRectsFlag::AccountForTransforms));
 
   // If the element is contained in a scrollable frame that is not
   // the root scroll frame, make sure to clip the result so that it is
