@@ -22,6 +22,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_widget.h"
 
 #include "mozilla/LookAndFeel.h"
@@ -175,6 +176,9 @@ void PopulatePrefs() {
 
   glean::characteristics::prefs_browser_display_use_document_fonts.Set(
       mozilla::StaticPrefs::browser_display_use_document_fonts());
+
+  glean::characteristics::prefs_network_cookie_cookiebehavior.Set(
+      StaticPrefs::network_cookie_cookieBehavior());
 }
 
 template <typename StringMetric, typename QuantityMetric>

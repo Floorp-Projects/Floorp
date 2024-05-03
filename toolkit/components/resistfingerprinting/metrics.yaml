@@ -1034,3 +1034,21 @@ characteristics:
     expires: never
     data_sensitivity:
       - interaction
+
+  prefs_network_cookie_cookiebehavior: # network.cookie.cookieBehavior
+    type: quantity
+    unit: int
+    description: >
+      Value of the network.cookie.cookieBehavior pref.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892474
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852340#c16
+    expires: never
+    data_sensitivity:
+      - interaction
