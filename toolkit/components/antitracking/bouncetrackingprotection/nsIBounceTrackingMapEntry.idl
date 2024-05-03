@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface represents an entry in the global bounce tracker or user activation map.
+ */
+[scriptable, uuid(51B0B5AE-0AC2-4A3C-8C7E-3523FA42881B)]
+interface nsIBounceTrackingMapEntry : nsISupports {
+    // The host of the site that has received user activation or is a bounce tracker candidate.
+    readonly attribute ACString siteHost;
+    // The time when the user activation or bounce tracker candidate was added.
+    // This is a PRTime, which is USEC since the epoch.
+    readonly attribute int64_t timeStamp;
+};

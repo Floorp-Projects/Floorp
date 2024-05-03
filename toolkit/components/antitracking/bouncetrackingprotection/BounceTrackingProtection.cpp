@@ -7,6 +7,7 @@
 #include "BounceTrackingProtectionStorage.h"
 #include "BounceTrackingState.h"
 #include "BounceTrackingRecord.h"
+#include "BounceTrackingMapEntry.h"
 
 #include "BounceTrackingStateGlobal.h"
 #include "ErrorList.h"
@@ -290,7 +291,7 @@ nsresult BounceTrackingProtection::RecordUserActivation(
 NS_IMETHODIMP
 BounceTrackingProtection::TestGetBounceTrackerCandidateHosts(
     JS::Handle<JS::Value> aOriginAttributes, JSContext* aCx,
-    nsTArray<nsCString>& aCandidates) {
+    nsTArray<RefPtr<nsIBounceTrackingMapEntry>>& aCandidates) {
   MOZ_ASSERT(aCx);
 
   OriginAttributes oa;
@@ -301,8 +302,11 @@ BounceTrackingProtection::TestGetBounceTrackerCandidateHosts(
   BounceTrackingStateGlobal* globalState = mStorage->GetOrCreateStateGlobal(oa);
   MOZ_ASSERT(globalState);
 
-  for (const nsACString& host : globalState->BounceTrackersMapRef().Keys()) {
-    aCandidates.AppendElement(host);
+  for (auto iter = globalState->BounceTrackersMapRef().ConstIter();
+       !iter.Done(); iter.Next()) {
+    RefPtr<nsIBounceTrackingMapEntry> candidate =
+        new BounceTrackingMapEntry(iter.Key(), iter.Data());
+    aCandidates.AppendElement(candidate);
   }
 
   return NS_OK;
@@ -311,7 +315,7 @@ BounceTrackingProtection::TestGetBounceTrackerCandidateHosts(
 NS_IMETHODIMP
 BounceTrackingProtection::TestGetUserActivationHosts(
     JS::Handle<JS::Value> aOriginAttributes, JSContext* aCx,
-    nsTArray<nsCString>& aHosts) {
+    nsTArray<RefPtr<nsIBounceTrackingMapEntry>>& aHosts) {
   MOZ_ASSERT(aCx);
 
   OriginAttributes oa;
@@ -322,8 +326,11 @@ BounceTrackingProtection::TestGetUserActivationHosts(
   BounceTrackingStateGlobal* globalState = mStorage->GetOrCreateStateGlobal(oa);
   MOZ_ASSERT(globalState);
 
-  for (const nsACString& host : globalState->UserActivationMapRef().Keys()) {
-    aHosts.AppendElement(host);
+  for (auto iter = globalState->UserActivationMapRef().ConstIter();
+       !iter.Done(); iter.Next()) {
+    RefPtr<nsIBounceTrackingMapEntry> candidate =
+        new BounceTrackingMapEntry(iter.Key(), iter.Data());
+    aHosts.AppendElement(candidate);
   }
 
   return NS_OK;
