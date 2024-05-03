@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-04-16T18:40:53.850307'
+updated_at: '2024-05-03T13:59:35.510857+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1744,9 +1744,9 @@ modules:
         - 'Core::Graphics: Layers'
         - 'Core::Graphics: Text'
         - 'Core::Graphics: WebRender'
-        - 'Core::GFX: Color Management'
-        - 'Core::Canvas: 2D'
-        - 'Core::Canvas: WebGL'
+        - 'Core::Graphics: Color Management'
+        - 'Core::Graphics: Canvas2D'
+        - 'Core::Graphics: CanvasWebGL'
     owners:
       - *jrmuizel
     peers:
@@ -2707,6 +2707,23 @@ modules:
       - *tlouw
       - *zrhoffman
     machine_name: core_style_system
+
+  - name: 'Core: Supply Chain'
+    description: Policy management for third-party Rust dependencies
+    includes:
+      - supply-chain/**/*
+    meta:
+      peers_emeritus:
+        - Aria Beingessner
+      group: dev-platform
+      components:
+        - Firefox Build System::General
+    owners:
+      - *bholley
+    peers:
+      - *nika
+      - *tjr
+    machine_name: core_supply_chain
 
   - name: 'Core: SVG'
     description: Scalable Vector Graphics
@@ -4324,5 +4341,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 873ff866130d201a05b73084be7730cbfcfa937f
-  export: 7350906d64a1ff615b2ebfb8f4a8a0af0defdb9c
+  config: 2d75dce7bde6fc0184e292f829003680daefc9ba
+  export: 68e239d26e479bb7788bf83f33e9c54e401e9f44
