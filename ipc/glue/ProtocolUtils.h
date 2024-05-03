@@ -238,8 +238,6 @@ class IProtocol : public HasResultCodes {
   friend class IPDLResolverInner;
   friend class UntypedManagedEndpoint;
 
-  void SetId(int32_t aId);
-
   // We have separate functions because the accessibility code and BrowserParent
   // manually calls SetManager.
   void SetManager(IRefCountedProtocol* aManager);
@@ -425,6 +423,7 @@ class IRefCountedProtocol : public IProtocol {
  * this protocol actor.
  */
 class IToplevelProtocol : public IRefCountedProtocol {
+  friend class IProtocol;
   template <class PFooSide>
   friend class Endpoint;
 
@@ -436,9 +435,6 @@ class IToplevelProtocol : public IRefCountedProtocol {
  public:
   // Shadows the method on IProtocol, which will forward to the top.
   IProtocol* Lookup(int32_t aId);
-
-  int32_t RegisterID(IProtocol* aRouted, int32_t aId);
-  void Unregister(int32_t aId);
 
   Shmem::SharedMemory* CreateSharedMemory(size_t aSize, bool aUnsafe,
                                           int32_t* aId);
