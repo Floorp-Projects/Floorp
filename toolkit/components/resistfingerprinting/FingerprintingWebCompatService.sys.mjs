@@ -49,11 +49,19 @@ const SCHEMA = `{
 const COLLECTION_NAME = "fingerprinting-protection-overrides";
 const PREF_GRANULAR_OVERRIDES =
   "privacy.fingerprintingProtection.granularOverrides";
+const PREF_REMOTE_OVERRIDES_ENABLED =
+  "privacy.fingerprintingProtection.remoteOverrides.enabled";
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "granularOverridesPref",
   PREF_GRANULAR_OVERRIDES
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "remoteOverridesEnabled",
+  PREF_REMOTE_OVERRIDES_ENABLED
 );
 
 /**
@@ -195,6 +203,12 @@ export class FingerprintingWebCompatService {
 
   #onRemoteUpdate(entries) {
     lazy.logConsole.debug("onUpdateEntries", { entries });
+
+    if (!lazy.remoteOverridesEnabled) {
+      lazy.logConsole.debug("Abort remote overrides");
+      return;
+    }
+
     // Clear all overrides before we update the overrides.
     this.#remoteOverrides.clear();
 

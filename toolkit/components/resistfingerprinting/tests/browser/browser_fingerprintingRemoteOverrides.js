@@ -323,6 +323,51 @@ add_task(async function test_remote_settings() {
   db.clear();
 });
 
+add_task(async function test_remote_settings_pref() {
+  // Add initial empty record.
+  let db = RemoteSettings(COLLECTION_NAME).db;
+  await db.importChanges({}, Date.now(), []);
+
+  for (let test of TEST_CASES) {
+    info(`Testing with entry ${JSON.stringify(test.entires)}`);
+
+    // Disable remote overrides
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["privacy.fingerprintingProtection.remoteOverrides.enabled", false],
+      ],
+    });
+
+    // Create a promise for waiting the overrides get updated.
+    let promise = promiseObserver("fpp-test:set-overrides-finishes");
+
+    // Trigger the fingerprinting overrides update by a remote settings sync.
+    await RemoteSettings(COLLECTION_NAME).emit("sync", {
+      data: {
+        current: test.entires,
+      },
+    });
+    await promise;
+
+    ok(true, "Got overrides update");
+
+    for (let expect of test.expects) {
+      try {
+        // Check for the existance of RFP overrides
+        Services.rfp.getFingerprintingOverrides(expect.domain);
+        ok(
+          false,
+          "This line should never run as the override should not exist and the previous line would throw an exception"
+        );
+      } catch (e) {
+        ok(true, "Received an exception as expected");
+      }
+    }
+  }
+
+  db.clear();
+});
+
 add_task(async function test_pref() {
   for (let test of TEST_CASES) {
     info(`Testing with entry ${JSON.stringify(test.entires)}`);
