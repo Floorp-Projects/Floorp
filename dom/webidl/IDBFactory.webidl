@@ -39,6 +39,7 @@ interface IDBFactory {
   deleteDatabase(DOMString name,
                  optional IDBOpenDBOptions options = {});
 
+  [Throws]
   Promise<sequence<IDBDatabaseInfo>> databases();
 
   [Throws]
