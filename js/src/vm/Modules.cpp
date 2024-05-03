@@ -310,7 +310,9 @@ JS_PUBLIC_API JSObject* JS::CreateModuleRequest(
     return nullptr;
   }
 
-  return ModuleRequestObject::create(cx, specifierAtom, nullptr);
+  Rooted<UniquePtr<ImportAttributeVector>> attributes(cx);
+
+  return ModuleRequestObject::create(cx, specifierAtom, &attributes);
 }
 
 JS_PUBLIC_API JSString* JS::GetModuleRequestSpecifier(

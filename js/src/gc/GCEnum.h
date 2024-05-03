@@ -122,6 +122,7 @@ enum class GCAbortReason {
   _(ModuleCyclicFields)                    \
   _(ModuleSyntheticFields)                 \
   _(ModuleExports)                         \
+  _(ModuleImportAttributes)                \
   _(BaselineScript)                        \
   _(IonScript)                             \
   _(ArgumentsData)                         \

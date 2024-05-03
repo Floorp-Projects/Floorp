@@ -16,7 +16,8 @@ function testRequestedModules(source, expected) {
             var actualAttributes = actual[i].moduleRequest.attributes;
             assertEq(actualAttributes.length, expectedAttributes.length);
             for (var j = 0; j < expectedAttributes.length; j++) {
-                assertEq(expectedAttributes[j].type, actualAttributes[j].type);
+                assertEq(expectedAttributes[j]['key'], actualAttributes[j]['key']);
+                assertEq(expectedAttributes[j]['value'], actualAttributes[j]['value']);
             }
         }
     }
@@ -58,7 +59,7 @@ if (getRealmConfiguration("importAttributes")) {
     ]);
 
     testRequestedModules("import a from 'foo' with { type: 'js'}", [
-        { specifier: 'foo', attributes: [ { type: 'js' } ] },
+        { specifier: 'foo', attributes: [ { key: 'type', value: 'js'} ] },
     ]);
 
     testRequestedModules("import a from 'foo' with { unsupported: 'test'}", [
@@ -66,30 +67,30 @@ if (getRealmConfiguration("importAttributes")) {
     ]);
 
     testRequestedModules("import a from 'foo' with { unsupported: 'test', type: 'js', foo: 'bar' }", [
-        { specifier: 'foo', attributes: [ { type: 'js' } ] },
+        { specifier: 'foo', attributes: [ { key: 'type', value: 'js'} ] },
     ]);
 
     testRequestedModules("import a from 'foo' with { type: 'js1'}; export {} from 'bar' with { type: 'js2'}; export * from 'baz' with { type: 'js3'}", [
-        { specifier: 'foo', attributes: [ { type: 'js1' } ] },
-        { specifier: 'bar', attributes: [ { type: 'js2' } ] },
-        { specifier: 'baz', attributes: [ { type: 'js3' } ] }
+        { specifier: 'foo', attributes: [ { key: 'type', value: 'js1'} ] },
+        { specifier: 'bar', attributes: [ { key: 'type', value: 'js2'} ] },
+        { specifier: 'baz', attributes: [ { key: 'type', value: 'js3'} ] }
     ]);
 
     testRequestedModules("export {} from 'foo' with { type: 'js'}", [
-        { specifier: 'foo', attributes:  [ { type: 'js' } ] }
+        { specifier: 'foo', attributes:  [ { key: 'type', value: 'js'} ] }
     ]);
 
     testRequestedModules("export * from 'bar' with { type: 'json'}",[
-        { specifier: 'bar', attributes:  [ { type: 'json' } ] }
+        { specifier: 'bar', attributes:  [ { key: 'type', value: 'json'} ] }
     ]);
 
     testRequestedModules("import a from 'foo'; import b from 'bar' with { type: 'json' };", [
         { specifier: 'foo', attributes: null },
-        { specifier: 'bar', attributes: [ { type: 'json' } ] },
+        { specifier: 'bar', attributes: [ { key: 'type', value: 'json'} ] },
     ]);
 
     testRequestedModules("import b from 'bar' with { type: 'json' }; import a from 'foo';", [
-        { specifier: 'bar', attributes: [ { type: 'json' } ] },
+        { specifier: 'bar', attributes: [ { key: 'type', value: 'json'} ] },
         { specifier: 'foo', attributes: null },
     ]);
 }

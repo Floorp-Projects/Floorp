@@ -177,6 +177,17 @@ ResolvedBindingObject* ResolvedBindingObject::create(
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// ImportAttribute
+
+ImportAttribute::ImportAttribute(Handle<JSAtom*> key, Handle<JSString*> value)
+    : key_(key), value_(value) {}
+
+void ImportAttribute::trace(JSTracer* trc) {
+  TraceNullableEdge(trc, &key_, "ImportAttribute::key_");
+  TraceNullableEdge(trc, &value_, "ImportAttribute::value_");
+}
+
+///////////////////////////////////////////////////////////////////////////
 // ModuleRequestObject
 /* static */ const JSClass ModuleRequestObject::class_ = {
     "ModuleRequest",
@@ -185,13 +196,15 @@ ResolvedBindingObject* ResolvedBindingObject::create(
 DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ModuleRequestObject, specifier,
                                     SpecifierSlot)
 
-ArrayObject* ModuleRequestObject::attributes() const {
-  JSObject* obj = getReservedSlot(AttributesSlot).toObjectOrNull();
-  if (!obj) {
-    return nullptr;
+Span<const ImportAttribute> ModuleRequestObject::attributes() const {
+  Value value = getReservedSlot(AttributesSlot);
+  if (value.isNullOrUndefined()) {
+    return Span<const ImportAttribute>();
   }
-
-  return &obj->as<ArrayObject>();
+  void* ptr = value.toPrivate();
+  MOZ_ASSERT(ptr);
+  auto* vector = static_cast<ImportAttributeVector*>(ptr);
+  return *vector;
 }
 
 bool ModuleRequestObject::hasAttributes() const {
@@ -208,32 +221,22 @@ bool ModuleRequestObject::getModuleType(
     return true;
   }
 
-  Rooted<ArrayObject*> attributesArray(cx, moduleRequest->attributes());
-  RootedObject attributeObject(cx);
-  RootedId typeId(cx, NameToId(cx->names().type));
-  RootedValue value(cx);
+  for (const ImportAttribute& importAttribute : moduleRequest->attributes()) {
+    if (importAttribute.key() == cx->names().type) {
+      int32_t isJsonString;
+      if (!js::CompareStrings(cx, cx->names().json, importAttribute.value(),
+                              &isJsonString)) {
+        return false;
+      }
 
-  uint32_t numberOfAttributes = attributesArray->length();
-  for (uint32_t i = 0; i < numberOfAttributes; i++) {
-    attributeObject = &attributesArray->getDenseElement(i).toObject();
+      if (isJsonString == 0) {
+        moduleType = JS::ModuleType::JSON;
+        return true;
+      }
 
-    if (!GetProperty(cx, attributeObject, attributeObject, typeId, &value)) {
-      continue;
-    }
-
-    int32_t isJsonString;
-    if (!js::CompareStrings(cx, cx->names().json, value.toString(),
-                            &isJsonString)) {
-      return false;
-    }
-
-    if (isJsonString == 0) {
-      moduleType = JS::ModuleType::JSON;
+      moduleType = JS::ModuleType::Unknown;
       return true;
     }
-
-    moduleType = JS::ModuleType::Unknown;
-    return true;
   }
 
   moduleType = JS::ModuleType::JavaScript;
@@ -248,7 +251,7 @@ bool ModuleRequestObject::isInstance(HandleValue value) {
 /* static */
 ModuleRequestObject* ModuleRequestObject::create(
     JSContext* cx, Handle<JSAtom*> specifier,
-    Handle<ArrayObject*> maybeAttributes) {
+    MutableHandle<UniquePtr<ImportAttributeVector>> maybeAttributes) {
   ModuleRequestObject* self =
       NewObjectWithGivenProto<ModuleRequestObject>(cx, nullptr);
   if (!self) {
@@ -256,7 +259,12 @@ ModuleRequestObject* ModuleRequestObject::create(
   }
 
   self->initReservedSlot(SpecifierSlot, StringOrNullValue(specifier));
-  self->initReservedSlot(AttributesSlot, ObjectOrNullValue(maybeAttributes));
+
+  if (maybeAttributes) {
+    InitReservedSlot(self, AttributesSlot, maybeAttributes.get().release(),
+                     MemoryUse::ModuleImportAttributes);
+  }
+
   return self;
 }
 
@@ -1589,39 +1597,28 @@ bool frontend::StencilModuleMetadata::createModuleRequestObjects(
 ModuleRequestObject* frontend::StencilModuleMetadata::createModuleRequestObject(
     JSContext* cx, CompilationAtomCache& atomCache,
     const StencilModuleRequest& request) const {
-  Rooted<ArrayObject*> attributeArray(cx);
   uint32_t numberOfAttributes = request.attributes.length();
+
+  Rooted<UniquePtr<ImportAttributeVector>> attributes(cx);
   if (numberOfAttributes > 0) {
-    attributeArray = NewDenseFullyAllocatedArray(cx, numberOfAttributes);
-    if (!attributeArray) {
+    attributes = cx->make_unique<ImportAttributeVector>();
+    if (!attributes) {
+      ReportOutOfMemory(cx);
       return nullptr;
     }
-    attributeArray->ensureDenseInitializedLength(0, numberOfAttributes);
 
-    Rooted<PlainObject*> attributeObject(cx);
-    RootedId attributeKey(cx);
-    RootedValue attributeValue(cx);
+    if (!attributes->reserve(numberOfAttributes)) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
+
+    Rooted<JSAtom*> attributeKey(cx);
+    Rooted<JSAtom*> attributeValue(cx);
     for (uint32_t j = 0; j < numberOfAttributes; ++j) {
-      attributeObject = NewPlainObject(cx);
-      if (!attributeObject) {
-        return nullptr;
-      }
-
-      JSAtom* jsatom =
-          atomCache.getExistingAtomAt(cx, request.attributes[j].key);
-      MOZ_ASSERT(jsatom);
-      attributeKey = AtomToId(jsatom);
-
-      jsatom = atomCache.getExistingAtomAt(cx, request.attributes[j].value);
-      MOZ_ASSERT(jsatom);
-      attributeValue = StringValue(jsatom);
-
-      if (!DefineDataProperty(cx, attributeObject, attributeKey, attributeValue,
-                              JSPROP_ENUMERATE)) {
-        return nullptr;
-      }
-
-      attributeArray->initDenseElement(j, ObjectValue(*attributeObject));
+      attributeKey = atomCache.getExistingAtomAt(cx, request.attributes[j].key);
+      attributeValue =
+          atomCache.getExistingAtomAt(cx, request.attributes[j].value);
+      attributes->infallibleEmplaceBack(attributeKey, attributeValue);
     }
   }
 
@@ -1629,7 +1626,7 @@ ModuleRequestObject* frontend::StencilModuleMetadata::createModuleRequestObject(
                             atomCache.getExistingAtomAt(cx, request.specifier));
   MOZ_ASSERT(specifier);
 
-  return ModuleRequestObject::create(cx, specifier, attributeArray);
+  return ModuleRequestObject::create(cx, specifier, &attributes);
 }
 
 bool frontend::StencilModuleMetadata::createImportEntries(
@@ -2308,7 +2305,7 @@ bool ModuleObject::topLevelCapabilityReject(JSContext* cx,
 // NOTE: The caller needs to handle the promise.
 static bool EvaluateDynamicImportOptions(
     JSContext* cx, HandleValue optionsArg,
-    MutableHandle<ArrayObject*> attributesArrayArg) {
+    MutableHandle<ImportAttributeVector> attributesArrayArg) {
   // Step 11. If options is not undefined, then
   if (optionsArg.isUndefined()) {
     return true;
@@ -2371,23 +2368,23 @@ static bool EvaluateDynamicImportOptions(
   }
 
   // Step 10 (reordered). Let attributes be a new empty List.
-  Rooted<ArrayObject*> validAttributesArray(
-      cx, NewDenseFullyAllocatedArray(cx, numberOfAttributes));
-  if (!validAttributesArray) {
+  if (!attributesArrayArg.reserve(numberOfAttributes)) {
+    ReportOutOfMemory(cx);
     return false;
   }
-  validAttributesArray->ensureDenseInitializedLength(0, numberOfAttributes);
 
   size_t numberOfValidAttributes = 0;
 
   // Step 11.e.iv. For each element entry of entries, do
   RootedId key(cx);
+  RootedValue value(cx);
+  Rooted<JSAtom*> keyAtom(cx);
+  Rooted<JSString*> valueString(cx);
   for (size_t i = 0; i < numberOfAttributes; i++) {
     // Step 11.e.ii.iv.1. Let key be ! Get(entry, "0").
     key = attributes[i];
 
     // Step 11.e.ii.iv.2. Let value be ! Get(entry, "1").
-    RootedValue value(cx);
     if (!GetProperty(cx, attributesObject, attributesObject, key, &value)) {
       return false;
     }
@@ -2424,15 +2421,9 @@ static bool EvaluateDynamicImportOptions(
 
       // Step 10.d.v.3.b. Append the ImportAttribute Record { [[Key]]: key,
       // [[Value]]: value } to attributes.
-      Rooted<PlainObject*> attributeObj(cx, NewPlainObject(cx));
-      if (!attributeObj) {
-        return false;
-      }
-      if (!DefineDataProperty(cx, attributeObj, key, value, JSPROP_ENUMERATE)) {
-        return false;
-      }
-      validAttributesArray->initDenseElement(numberOfValidAttributes,
-                                             ObjectValue(*attributeObj));
+      keyAtom = key.toAtom();
+      valueString = value.toString();
+      attributesArrayArg.infallibleEmplaceBack(keyAtom, valueString);
       ++numberOfValidAttributes;
     }
   }
@@ -2446,9 +2437,6 @@ static bool EvaluateDynamicImportOptions(
   // sequence of UTF-16 code unit values.
   //
   // We only support "type", so we can ignore this.
-
-  validAttributesArray->setLength(numberOfValidAttributes);
-  attributesArrayArg.set(validAttributesArray);
 
   return true;
 }
@@ -2501,16 +2489,32 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
     return promise;
   }
 
-  Rooted<ArrayObject*> attributeArray(cx);
-  if (!EvaluateDynamicImportOptions(cx, optionsArg, &attributeArray)) {
+  Rooted<ImportAttributeVector> tempAttributes(cx);
+  if (!EvaluateDynamicImportOptions(cx, optionsArg, &tempAttributes)) {
     if (!RejectPromiseWithPendingError(cx, promise)) {
       return nullptr;
     }
     return promise;
   }
 
+  Rooted<UniquePtr<ImportAttributeVector>> attributes(cx);
+  if (!tempAttributes.empty()) {
+    attributes = cx->make_unique<ImportAttributeVector>();
+    if (!attributes) {
+      return nullptr;
+    }
+    if (!attributes->reserve(tempAttributes.length())) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
+    if (!attributes->appendAll(tempAttributes)) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
+  }
+
   RootedObject moduleRequest(
-      cx, ModuleRequestObject::create(cx, specifierAtom, attributeArray));
+      cx, ModuleRequestObject::create(cx, specifierAtom, &attributes));
   if (!moduleRequest) {
     if (!RejectPromiseWithPendingError(cx, promise)) {
       return nullptr;
@@ -2688,8 +2692,9 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Rooted<PromiseObject*> promise(cx, TargetFromHandler<PromiseObject>(args));
+  Rooted<UniquePtr<ImportAttributeVector>> attributes(cx);
   RootedObject moduleRequest(
-      cx, ModuleRequestObject::create(cx, specifier, nullptr));
+      cx, ModuleRequestObject::create(cx, specifier, &attributes));
   if (!moduleRequest) {
     return RejectPromiseWithPendingError(cx, promise);
   }
