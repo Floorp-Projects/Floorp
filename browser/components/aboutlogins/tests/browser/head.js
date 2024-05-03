@@ -53,6 +53,15 @@ let TEST_LOGIN3 = new nsLoginInfo(
 );
 TEST_LOGIN3.QueryInterface(Ci.nsILoginMetaInfo).timePasswordChanged = 123456;
 
+const PASSWORDS_OS_REAUTH_PREF = "signon.management.page.os-auth.optout";
+const CryptoErrors = {
+  USER_CANCELED_PASSWORD: "User canceled primary password entry",
+  ENCRYPTION_FAILURE: "Couldn't encrypt string",
+  INVALID_ARG_ENCRYPT: "Need at least one plaintext to encrypt",
+  INVALID_ARG_DECRYPT: "Need at least one ciphertext to decrypt",
+  DECRYPTION_FAILURE: "Couldn't decrypt string",
+};
+
 async function addLogin(login) {
   const result = await Services.logins.addLoginAsync(login);
   registerCleanupFunction(() => {
@@ -151,6 +160,12 @@ add_setup(async function setup_head() {
       "NotFoundError: No such JSWindowActor 'MarionetteEvents'"
     ) {
       // Ignore MarionetteEvents error (Bug 1730837, Bug 1710079).
+      return;
+    }
+    if (msg.errorMessage.includes(CryptoErrors.DECRYPTION_FAILURE)) {
+      // Ignore decyption errors, we want to test if decryption failed
+      // But we cannot use try / catch in the test to catch this for some reason
+      // Bug 1403081 and Bug 1877720
       return;
     }
     Assert.ok(false, msg.message || msg.errorMessage);
