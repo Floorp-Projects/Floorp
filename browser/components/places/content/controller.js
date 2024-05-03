@@ -1436,7 +1436,7 @@ PlacesController.prototype = {
     let documentUrl = document.documentURI.toLowerCase();
     if (documentUrl.endsWith("browser.xhtml")) {
       // We're in a menu or a panel.
-      window.SidebarUI._show("viewBookmarksSidebar").then(() => {
+      window.SidebarController._show("viewBookmarksSidebar").then(() => {
         let theSidebar = document.getElementById("sidebar");
         theSidebar.contentDocument
           .getElementById("bookmarks-view")

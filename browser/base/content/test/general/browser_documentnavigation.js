@@ -229,7 +229,7 @@ add_task(async function () {
   let sidebar = document.getElementById("sidebar");
 
   let loadPromise = BrowserTestUtils.waitForEvent(sidebar, "load", true);
-  SidebarUI.toggle("viewBookmarksSidebar");
+  SidebarController.toggle("viewBookmarksSidebar");
   await loadPromise;
 
   gURLBar.focus();
@@ -278,7 +278,7 @@ add_task(async function () {
     "back focus with sidebar urlbar"
   );
 
-  SidebarUI.toggle("viewBookmarksSidebar");
+  SidebarController.toggle("viewBookmarksSidebar");
 });
 
 // Navigate when the downloads panel is open

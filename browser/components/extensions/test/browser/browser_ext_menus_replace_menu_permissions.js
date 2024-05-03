@@ -189,7 +189,9 @@ add_task(async function overrideContext_permissions() {
 
   // permissions.request requires user input, export helper.
   await SpecialPowers.spawn(
-    SidebarUI.browser.contentDocument.getElementById("webext-panels-browser"),
+    SidebarController.browser.contentDocument.getElementById(
+      "webext-panels-browser"
+    ),
     [],
     () => {
       const { ExtensionCommon } = ChromeUtils.importESModule(
@@ -212,7 +214,9 @@ add_task(async function overrideContext_permissions() {
     await BrowserTestUtils.synthesizeMouseAtCenter(
       "a",
       { type: "contextmenu" },
-      SidebarUI.browser.contentDocument.getElementById("webext-panels-browser")
+      SidebarController.browser.contentDocument.getElementById(
+        "webext-panels-browser"
+      )
     );
   } while (await extension.awaitMessage("continue_test"));
 

@@ -1,5 +1,5 @@
 registerCleanupFunction(() => {
-  SidebarUI.hide();
+  SidebarController.hide();
 });
 
 /**
@@ -9,14 +9,14 @@ registerCleanupFunction(() => {
  */
 function showSwitcherPanelPromise() {
   return new Promise(resolve => {
-    SidebarUI._switcherPanel.addEventListener(
+    SidebarController._switcherPanel.addEventListener(
       "popupshown",
       () => {
         resolve();
       },
       { once: true }
     );
-    SidebarUI.showSwitcherPanel();
+    SidebarController.showSwitcherPanel();
   });
 }
 
@@ -25,7 +25,10 @@ function showSwitcherPanelPromise() {
  * @returns Promise which resolves when the popup menu is opened
  */
 async function waitForSwitcherPopupShown() {
-  return BrowserTestUtils.waitForEvent(SidebarUI._switcherPanel, "popupshown");
+  return BrowserTestUtils.waitForEvent(
+    SidebarController._switcherPanel,
+    "popupshown"
+  );
 }
 
 /**
@@ -63,7 +66,7 @@ async function testSidebarMenuKeyToggle(key, sidebarTitle) {
   info(`Testing "${key}" key handling of sidebar menu popup items
   to access ${sidebarTitle} sidebar`);
 
-  Assert.ok(SidebarUI.isOpen, "Sidebar is open");
+  Assert.ok(SidebarController.isOpen, "Sidebar is open");
 
   let sidebarSwitcher = document.querySelector("#sidebar-switcher-target");
   let sidebar = document.getElementById("sidebar");
@@ -89,7 +92,7 @@ async function testSidebarMenuKeyToggle(key, sidebarTitle) {
     "The sidebar switcher target button is focused"
   );
   Assert.equal(
-    SidebarUI._switcherPanel.state,
+    SidebarController._switcherPanel.state,
     "closed",
     "Sidebar menu popup is closed"
   );
@@ -102,7 +105,7 @@ async function testSidebarMenuKeyToggle(key, sidebarTitle) {
   await promisePopupShown;
 
   Assert.equal(
-    SidebarUI._switcherPanel.state,
+    SidebarController._switcherPanel.state,
     "open",
     "Sidebar menu popup is open"
   );
@@ -111,7 +114,7 @@ async function testSidebarMenuKeyToggle(key, sidebarTitle) {
 
   let arrowDown = async (menuitemId, msg) => {
     let menuItemActive = BrowserTestUtils.waitForEvent(
-      SidebarUI._switcherPanel,
+      SidebarController._switcherPanel,
       "DOMMenuItemActive"
     );
     EventUtils.synthesizeKey("KEY_ArrowDown", {});
@@ -149,18 +152,18 @@ async function testSidebarMenuKeyToggle(key, sidebarTitle) {
   info("Testing keyboard navigation when a sidebar menu popup is closed");
 
   Assert.equal(
-    SidebarUI._switcherPanel.state,
+    SidebarController._switcherPanel.state,
     "closed",
     "Sidebar menu popup is closed"
   );
   // Test the sidebar panel is updated
   Assert.equal(
-    SidebarUI._box.getAttribute("sidebarcommand"),
+    SidebarController._box.getAttribute("sidebarcommand"),
     `view${sidebarTitle}Sidebar` /* e.g. "viewHistorySidebar" */,
     `${sidebarTitle} sidebar loaded`
   );
   Assert.equal(
-    SidebarUI.currentID,
+    SidebarController.currentID,
     `view${sidebarTitle}Sidebar` /* e.g. "viewHistorySidebar" */,
     `${sidebarTitle}'s current ID is updated to a target view`
   );
@@ -173,7 +176,7 @@ add_task(async function markup() {
       false,
       "Unexpected sidebar found - a previous test failed to cleanup correctly"
     );
-    SidebarUI.hide();
+    SidebarController.hide();
   }
 
   let sidebarPopup = document.querySelector("#sidebarMenu-popup");
@@ -205,7 +208,7 @@ add_task(async function markup() {
 
   info("Test dynamic changes in the markup of the sidebar switcher control");
 
-  await SidebarUI.show("viewBookmarksSidebar");
+  await SidebarController.show("viewBookmarksSidebar");
   await showSwitcherPanelPromise();
 
   Assert.equal(
@@ -229,25 +232,25 @@ add_task(async function markup() {
     "Sidebar switcher button is collapsed when a sidebar menu is dismissed"
   );
 
-  SidebarUI.hide();
+  SidebarController.hide();
 });
 
 add_task(async function keynav() {
   // If a sidebar is already open, close it.
-  if (SidebarUI.isOpen) {
+  if (SidebarController.isOpen) {
     Assert.ok(
       false,
       "Unexpected sidebar found - a previous test failed to cleanup correctly"
     );
-    SidebarUI.hide();
+    SidebarController.hide();
   }
 
-  await SidebarUI.show("viewBookmarksSidebar");
+  await SidebarController.show("viewBookmarksSidebar");
 
   await testSidebarMenuKeyToggle("KEY_Enter", "History");
   await testSidebarMenuKeyToggle(" ", "Tabs");
 
-  SidebarUI.hide();
+  SidebarController.hide();
 });
 
 add_task(async function mouse() {
@@ -257,11 +260,11 @@ add_task(async function mouse() {
       false,
       "Unexpected sidebar found - a previous test failed to cleanup correctly"
     );
-    SidebarUI.hide();
+    SidebarController.hide();
   }
 
   let sidebar = document.querySelector("#sidebar-box");
-  await SidebarUI.show("viewBookmarksSidebar");
+  await SidebarController.show("viewBookmarksSidebar");
 
   await showSwitcherPanelPromise();
   await pickSwitcherMenuitem("#sidebar-switcher-history");

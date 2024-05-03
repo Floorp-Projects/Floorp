@@ -280,7 +280,7 @@ export const CustomizableWidgets = [
     tooltiptext: "sidebar-button.tooltiptext2",
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
-      win.SidebarUI.toggle();
+      win.SidebarController.toggle();
     },
     onCreated(aNode) {
       // Add an observer so the button is checked while the sidebar is open

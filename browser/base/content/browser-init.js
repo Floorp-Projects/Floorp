@@ -213,7 +213,7 @@ var gBrowserInit = {
     gBrowser.addProgressListener(window.XULBrowserWindow);
     gBrowser.addTabsProgressListener(window.TabsProgressListener);
 
-    SidebarUI.init();
+    SidebarController.init();
 
     // We do this in onload because we want to ensure the button's state
     // doesn't flicker as the window is being shown.
@@ -484,7 +484,7 @@ var gBrowserInit = {
       // Enable the Restore Last Session command if needed
       RestoreLastSessionObserver.init();
 
-      SidebarUI.startDelayedLoad();
+      SidebarController.startDelayedLoad();
 
       PanicButtonNotifier.init();
     });
@@ -1021,7 +1021,7 @@ var gBrowserInit = {
 
     CaptivePortalWatcher.uninit();
 
-    SidebarUI.uninit();
+    SidebarController.uninit();
 
     DownloadsButton.uninit();
 

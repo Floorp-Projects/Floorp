@@ -449,7 +449,7 @@ export class ExtensionShortcuts {
     }
     doc.documentElement.appendChild(keyset);
     if (sidebarKey) {
-      window.SidebarUI.updateShortcut({ keyId: sidebarKey.id });
+      window.SidebarController.updateShortcut({ keyId: sidebarKey.id });
     }
     this.keysetsMap.set(window, keyset);
   }

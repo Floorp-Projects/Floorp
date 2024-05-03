@@ -11,11 +11,11 @@ async function testSidebarKeyToggle(key, options, expectedSidebarId) {
     expectedSidebarId
   );
   EventUtils.synthesizeKey(key, options);
-  Assert.ok(!SidebarUI.isOpen);
+  Assert.ok(!SidebarController.isOpen);
 }
 
 add_task(async function test_sidebar_keys() {
-  registerCleanupFunction(() => SidebarUI.hide());
+  registerCleanupFunction(() => SidebarController.hide());
 
   await testSidebarKeyToggle("b", { accelKey: true }, "viewBookmarksSidebar");
 
@@ -30,7 +30,7 @@ add_task(async function test_sidebar_in_customize_mode() {
   let { CustomizableUI } = ChromeUtils.importESModule(
     "resource:///modules/CustomizableUI.sys.mjs"
   );
-  registerCleanupFunction(() => SidebarUI.hide());
+  registerCleanupFunction(() => SidebarController.hide());
 
   let placement = CustomizableUI.getPlacementOfWidget("sidebar-button");
   if (!(placement?.area == CustomizableUI.AREA_NAVBAR)) {
@@ -55,7 +55,7 @@ add_task(async function test_sidebar_in_customize_mode() {
     ).a;
 
   let promiseShown = BrowserTestUtils.waitForEvent(window, "SidebarShown");
-  SidebarUI.show("viewBookmarksSidebar");
+  SidebarController.show("viewBookmarksSidebar");
   await promiseShown;
 
   Assert.greater(
@@ -80,8 +80,8 @@ add_task(async function test_sidebar_in_customize_mode() {
   );
 
   // Attempt toggle - should fail in customize mode.
-  await SidebarUI.toggle();
-  ok(SidebarUI.isOpen, "Sidebar is still open");
+  await SidebarController.toggle();
+  ok(SidebarController.isOpen, "Sidebar is still open");
 
   // Exit customize mode. This should re-enable the toggle and make the sidebar
   // toggle widget appear checked again, since toggle() didn't hide the sidebar.
@@ -98,8 +98,8 @@ add_task(async function test_sidebar_in_customize_mode() {
     "Sidebar widget background should appear checked again"
   );
 
-  await SidebarUI.toggle();
-  ok(!SidebarUI.isOpen, "Sidebar is closed");
+  await SidebarController.toggle();
+  ok(!SidebarController.isOpen, "Sidebar is closed");
   Assert.equal(
     getBGAlpha(),
     0,
