@@ -205,7 +205,7 @@ add_task(async function test_started_retry() {
       // click the visible page button in panel
       let visiblePageButton = panel
         .querySelector("screenshots-buttons")
-        .shadowRoot.querySelector(".visible-page");
+        .shadowRoot.querySelector("#visible-page");
       visiblePageButton.click();
       await screenshotReady;
 
@@ -242,7 +242,7 @@ add_task(async function test_canceled() {
       // click the full page button in panel
       let fullPageButton = panel
         .querySelector("screenshots-buttons")
-        .shadowRoot.querySelector(".full-page");
+        .shadowRoot.querySelector("#full-page");
       fullPageButton.click();
       await screenshotReady;
 
@@ -303,7 +303,7 @@ add_task(async function test_copy() {
       // click the visible page button in panel
       let visiblePageButton = panel
         .querySelector("screenshots-buttons")
-        .shadowRoot.querySelector(".visible-page");
+        .shadowRoot.querySelector("#visible-page");
       visiblePageButton.click();
       info("clicked visible page, waiting for screenshots-preview-ready");
       await screenshotReady;
@@ -413,7 +413,7 @@ add_task(async function test_extra_telemetry() {
       // click the visible page button in panel
       let visiblePageButton = panel
         .querySelector("screenshots-buttons")
-        .shadowRoot.querySelector(".visible-page");
+        .shadowRoot.querySelector("#visible-page");
       visiblePageButton.click();
       info("clicked visible page, waiting for screenshots-preview-ready");
       await screenshotReady;
@@ -429,7 +429,7 @@ add_task(async function test_extra_telemetry() {
       // click the full page button in panel
       let fullPageButton = panel
         .querySelector("screenshots-buttons")
-        .shadowRoot.querySelector(".full-page");
+        .shadowRoot.querySelector("#full-page");
       fullPageButton.click();
       await screenshotReady;
 

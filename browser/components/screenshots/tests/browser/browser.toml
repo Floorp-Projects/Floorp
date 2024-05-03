@@ -20,6 +20,12 @@ prefs = [
 skip-if = ["os == 'linux'"]
 
 ["browser_keyboard_shortcuts.js"]
+skip-if = [
+  "headless",
+  "display == 'wayland'" # sendNativeMouseEvent doesn't work on wayland
+]
+
+["browser_keyboard_tests.js"]
 
 ["browser_overlay_keyboard_test.js"]
 

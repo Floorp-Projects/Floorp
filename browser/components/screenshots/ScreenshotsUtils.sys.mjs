@@ -91,6 +91,7 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
       case "Screenshots:OverlaySelection":
         ScreenshotsUtils.setPerBrowserState(browser, {
           hasOverlaySelection: message.data.hasSelection,
+          overlayState: message.data.overlayState,
         });
         break;
       case "Screenshots:ShowPanel":
@@ -98,6 +99,9 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
         break;
       case "Screenshots:HidePanel":
         ScreenshotsUtils.closePanel(browser);
+        break;
+      case "Screenshots:MoveFocusToParent":
+        ScreenshotsUtils.focusPanel(browser, message.data);
         break;
     }
   }
@@ -191,11 +195,7 @@ export var ScreenshotsUtils = {
   handleEvent(event) {
     switch (event.type) {
       case "keydown":
-        if (event.key === "Escape") {
-          // Escape should cancel and exit
-          let browser = event.view.gBrowser.selectedBrowser;
-          this.cancel(browser, "escape");
-        }
+        this.handleKeyDownEvent(event);
         break;
       case "TabSelect":
         this.handleTabSelect(event);
@@ -205,6 +205,33 @@ export var ScreenshotsUtils = {
         break;
       case "EndSwapDocShells":
         this.handleEndDocShellSwapEvent(event);
+        break;
+    }
+  },
+
+  handleKeyDownEvent(event) {
+    let browser =
+      event.view.browsingContext.topChromeWindow.gBrowser.selectedBrowser;
+    if (!browser) {
+      return;
+    }
+
+    switch (event.key) {
+      case "Escape":
+        // The chromeEventHandler in the child actor will handle events that
+        // don't match this
+        if (event.target.parentElement === this.panelForBrowser(browser)) {
+          this.cancel(browser, "escape");
+        }
+        break;
+      case "ArrowLeft":
+      case "ArrowUp":
+      case "ArrowRight":
+      case "ArrowDown":
+        this.handleArrowKeyDown(event, browser);
+        break;
+      case "Tab":
+        this.maybeLockFocus(event);
         break;
     }
   },
@@ -273,6 +300,105 @@ export var ScreenshotsUtils = {
     }
   },
 
+  /**
+   * If the overlay state is crosshairs or dragging, move the native cursor
+   * respective to the arrow key pressed.
+   * @param {Event} event A keydown event
+   * @param {Browser} browser The selected browser
+   * @returns
+   */
+  handleArrowKeyDown(event, browser) {
+    // Wayland doesn't support `sendNativeMouseEvent` so just return
+    if (Services.appinfo.isWayland) {
+      return;
+    }
+
+    let { overlayState } = this.browserToScreenshotsState.get(browser);
+
+    if (!["crosshairs", "dragging"].includes(overlayState)) {
+      return;
+    }
+
+    let left = 0;
+    let top = 0;
+    let exponent = event.shiftKey ? 1 : 0;
+    switch (event.key) {
+      case "ArrowLeft":
+        left -= 10 ** exponent;
+        break;
+      case "ArrowUp":
+        top -= 10 ** exponent;
+        break;
+      case "ArrowRight":
+        left += 10 ** exponent;
+        break;
+      case "ArrowDown":
+        top += 10 ** exponent;
+        break;
+      default:
+        return;
+    }
+
+    // Clear and move focus to browser so the child actor can capture events
+    this.clearContentFocus(browser);
+    Services.focus.clearFocus(browser.ownerGlobal);
+    Services.focus.setFocus(browser, 0);
+
+    let x = {};
+    let y = {};
+    let win = browser.ownerGlobal;
+    win.windowUtils.getLastOverWindowPointerLocationInCSSPixels(x, y);
+
+    this.moveCursor(
+      {
+        left: (x.value + left) * win.devicePixelRatio,
+        top: (y.value + top) * win.devicePixelRatio,
+      },
+      browser
+    );
+  },
+
+  /**
+   * Move the native cursor to the given position. Clamp the position to the
+   * window just in case.
+   * @param {Object} position An object containing the left and top position
+   * @param {Browser} browser The selected browser
+   */
+  moveCursor(position, browser) {
+    let { left, top } = position;
+    let win = browser.ownerGlobal;
+
+    const windowLeft = win.mozInnerScreenX * win.devicePixelRatio;
+    const windowTop = win.mozInnerScreenY * win.devicePixelRatio;
+    const contentTop =
+      (win.mozInnerScreenY + (win.innerHeight - browser.clientHeight)) *
+      win.devicePixelRatio;
+    const windowRight =
+      (win.mozInnerScreenX + win.innerWidth) * win.devicePixelRatio;
+    const windowBottom =
+      (win.mozInnerScreenY + win.innerHeight) * win.devicePixelRatio;
+
+    left += windowLeft;
+    top += windowTop;
+
+    // Clamp left and top to content dimensions
+    let parsedLeft = Math.round(
+      Math.min(Math.max(left, windowLeft), windowRight)
+    );
+    let parsedTop = Math.round(
+      Math.min(Math.max(top, contentTop), windowBottom)
+    );
+
+    win.windowUtils.sendNativeMouseEvent(
+      parsedLeft,
+      parsedTop,
+      win.windowUtils.NATIVE_MOUSE_MESSAGE_MOVE,
+      0,
+      0,
+      win.document.documentElement
+    );
+  },
+
   observe(subj, topic, data) {
     let { gBrowser } = subj;
     let browser = gBrowser.selectedBrowser;
@@ -335,6 +461,7 @@ export var ScreenshotsUtils = {
         browser.addEventListener("SwapDocShells", this);
         let gBrowser = browser.getTabBrowser();
         gBrowser.tabContainer.addEventListener("TabSelect", this);
+        browser.ownerDocument.addEventListener("keydown", this);
         break;
       }
       case UIPhases.INITIAL:
@@ -364,6 +491,7 @@ export var ScreenshotsUtils = {
     browser.removeEventListener("SwapDocShells", this);
     const gBrowser = browser.getTabBrowser();
     gBrowser.tabContainer.removeEventListener("TabSelect", this);
+    browser.ownerDocument.removeEventListener("keydown", this);
 
     this.browserToScreenshotsState.delete(browser);
     if (Cu.isInAutomation) {
@@ -394,6 +522,53 @@ export var ScreenshotsUtils = {
     }
     let perBrowserState = this.browserToScreenshotsState.get(browser);
     Object.assign(perBrowserState, nameValues);
+  },
+
+  maybeLockFocus(event) {
+    let browser = event.view.gBrowser.selectedBrowser;
+
+    if (!Services.focus.focusedElement) {
+      event.preventDefault();
+      this.focusPanel(browser);
+      return;
+    }
+
+    let target = event.explicitOriginalTarget;
+
+    if (!target.closest("moz-button-group")) {
+      return;
+    }
+
+    let isElementFirst = !!target.nextElementSibling;
+
+    if (
+      (isElementFirst && event.shiftKey) ||
+      (!isElementFirst && !event.shiftKey)
+    ) {
+      event.preventDefault();
+      this.moveFocusToContent(browser);
+    }
+  },
+
+  focusPanel(browser, { direction } = {}) {
+    let buttonsPanel = this.panelForBrowser(browser);
+    if (direction) {
+      buttonsPanel
+        .querySelector("screenshots-buttons")
+        .focusButton(direction === "forward" ? "first" : "last");
+    } else {
+      buttonsPanel
+        .querySelector("screenshots-buttons")
+        .focusButton(lazy.SCREENSHOTS_LAST_SCREENSHOT_METHOD);
+    }
+  },
+
+  moveFocusToContent(browser) {
+    this.getActor(browser).sendAsyncMessage("Screenshots:MoveFocusToContent");
+  },
+
+  clearContentFocus(browser) {
+    this.getActor(browser).sendAsyncMessage("Screenshots:ClearFocus");
   },
 
   /**
@@ -589,7 +764,6 @@ export var ScreenshotsUtils = {
       return null;
     }
     buttonsPanel.hidden = false;
-    buttonsPanel.ownerDocument.addEventListener("keydown", this);
 
     return new Promise(resolve => {
       browser.ownerGlobal.requestAnimationFrame(() => {
@@ -611,7 +785,6 @@ export var ScreenshotsUtils = {
       return;
     }
     buttonsPanel.hidden = true;
-    buttonsPanel.ownerDocument.removeEventListener("keydown", this);
   },
 
   /**
