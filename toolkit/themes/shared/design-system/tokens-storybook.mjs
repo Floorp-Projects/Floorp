@@ -605,7 +605,13 @@ export const storybookTables = {
       value: "var(--focus-outline-width) solid var(--focus-outline-color)",
       name: "--focus-outline",
     },
-    { value: "var(--color-accent-primary)", name: "--focus-outline-color" },
+    {
+      value: {
+        default: "var(--color-accent-primary)",
+        forcedColors: "var(--text-color)",
+      },
+      name: "--focus-outline-color",
+    },
     {
       value: "calc(-1 * var(--focus-outline-width))",
       name: "--focus-outline-inset",
@@ -1055,7 +1061,10 @@ export const variableLookupTable = {
   },
   "focus-outline":
     "var(--focus-outline-width) solid var(--focus-outline-color)",
-  "focus-outline-color": "var(--color-accent-primary)",
+  "focus-outline-color": {
+    default: "var(--color-accent-primary)",
+    forcedColors: "var(--text-color)",
+  },
   "focus-outline-inset": "calc(-1 * var(--focus-outline-width))",
   "focus-outline-offset": "2px",
   "focus-outline-width": "2px",
