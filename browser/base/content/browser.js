@@ -2420,10 +2420,7 @@ var gBrowserInit = {
                 tab.setAttribute("floorpSSB", "true");
               });
               window.gBrowser.floorpSsbWindow = true;
-              Services.scriptloader.loadSubScript(
-                "chrome://browser/content/browser-ssb-support.js",
-                this
-              );
+              import("chrome://browser/content/browser-ssb-window.mjs")
             });
           }
         }
@@ -2437,7 +2434,7 @@ var gBrowserInit = {
       if (needSsbOpenWindow) {
         let id = Services.prefs.getStringPref(SsbPrefName);
         var { SiteSpecificBrowserIdUtils } = ChromeUtils.import(
-          "resource:///modules/SiteSpecificBrowserIdUtils.jsm"
+          "chrome://browser/content/modules/ssb/SiteSpecificBrowserIdUtils.mjs"
         );
 
         try {
