@@ -5253,12 +5253,12 @@ dependencies = [
 
 [[package]]
 name = "sfv"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4f1641177943b4e6faf7622463ae6dfe0f143eb88799e91e2e2e68ede568af5"
+checksum = "f27daf6ed3fc7ffd5ea3ce9f684fe351c47e50f2fdbb6236e2bad0b440dbe408"
 dependencies = [
  "data-encoding",
- "indexmap 1.999.999",
+ "indexmap 2.2.6",
  "rust_decimal",
 ]
 

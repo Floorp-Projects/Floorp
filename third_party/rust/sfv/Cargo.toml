@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "sfv"
-version = "0.9.3"
+version = "0.9.4"
 authors = ["Tania Batieva <yalyna.ts@gmail.com>"]
 exclude = [
     "tests/**",
@@ -38,7 +38,7 @@ harness = false
 version = "2.3.2"
 
 [dependencies.indexmap]
-version = "1.8.0"
+version = "2"
 
 [dependencies.rust_decimal]
 version = "1.20.0"
