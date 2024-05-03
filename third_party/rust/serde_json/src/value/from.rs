@@ -4,7 +4,6 @@ use crate::number::Number;
 use alloc::borrow::Cow;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
-use core::iter::FromIterator;
 
 macro_rules! from_integer {
     ($($ty:ident)*) => {
@@ -29,7 +28,8 @@ from_integer! {
 }
 
 impl From<f32> for Value {
-    /// Convert 32-bit floating point number to `Value`
+    /// Convert 32-bit floating point number to `Value::Number`, or
+    /// `Value::Null` if infinite or NaN.
     ///
     /// # Examples
     ///
@@ -40,12 +40,13 @@ impl From<f32> for Value {
     /// let x: Value = f.into();
     /// ```
     fn from(f: f32) -> Self {
-        From::from(f as f64)
+        Number::from_f32(f).map_or(Value::Null, Value::Number)
     }
 }
 
 impl From<f64> for Value {
-    /// Convert 64-bit floating point number to `Value`
+    /// Convert 64-bit floating point number to `Value::Number`, or
+    /// `Value::Null` if infinite or NaN.
     ///
     /// # Examples
     ///
@@ -61,7 +62,7 @@ impl From<f64> for Value {
 }
 
 impl From<bool> for Value {
-    /// Convert boolean to `Value`
+    /// Convert boolean to `Value::Bool`.
     ///
     /// # Examples
     ///
@@ -77,7 +78,7 @@ impl From<bool> for Value {
 }
 
 impl From<String> for Value {
-    /// Convert `String` to `Value`
+    /// Convert `String` to `Value::String`.
     ///
     /// # Examples
     ///
@@ -92,8 +93,8 @@ impl From<String> for Value {
     }
 }
 
-impl<'a> From<&'a str> for Value {
-    /// Convert string slice to `Value`
+impl From<&str> for Value {
+    /// Convert string slice to `Value::String`.
     ///
     /// # Examples
     ///
@@ -109,7 +110,7 @@ impl<'a> From<&'a str> for Value {
 }
 
 impl<'a> From<Cow<'a, str>> for Value {
-    /// Convert copy-on-write string to `Value`
+    /// Convert copy-on-write string to `Value::String`.
     ///
     /// # Examples
     ///
@@ -134,7 +135,7 @@ impl<'a> From<Cow<'a, str>> for Value {
 }
 
 impl From<Number> for Value {
-    /// Convert `Number` to `Value`
+    /// Convert `Number` to `Value::Number`.
     ///
     /// # Examples
     ///
@@ -150,7 +151,7 @@ impl From<Number> for Value {
 }
 
 impl From<Map<String, Value>> for Value {
-    /// Convert map (with string keys) to `Value`
+    /// Convert map (with string keys) to `Value::Object`.
     ///
     /// # Examples
     ///
@@ -167,7 +168,7 @@ impl From<Map<String, Value>> for Value {
 }
 
 impl<T: Into<Value>> From<Vec<T>> for Value {
-    /// Convert a `Vec` to `Value`
+    /// Convert a `Vec` to `Value::Array`.
     ///
     /// # Examples
     ///
@@ -182,8 +183,8 @@ impl<T: Into<Value>> From<Vec<T>> for Value {
     }
 }
 
-impl<'a, T: Clone + Into<Value>> From<&'a [T]> for Value {
-    /// Convert a slice to `Value`
+impl<T: Clone + Into<Value>> From<&[T]> for Value {
+    /// Convert a slice to `Value::Array`.
     ///
     /// # Examples
     ///
@@ -193,13 +194,13 @@ impl<'a, T: Clone + Into<Value>> From<&'a [T]> for Value {
     /// let v: &[&str] = &["lorem", "ipsum", "dolor"];
     /// let x: Value = v.into();
     /// ```
-    fn from(f: &'a [T]) -> Self {
+    fn from(f: &[T]) -> Self {
         Value::Array(f.iter().cloned().map(Into::into).collect())
     }
 }
 
 impl<T: Into<Value>> FromIterator<T> for Value {
-    /// Convert an iteratable type to a `Value`
+    /// Create a `Value::Array` by collecting an iterator of array elements.
     ///
     /// # Examples
     ///
@@ -229,7 +230,7 @@ impl<T: Into<Value>> FromIterator<T> for Value {
 }
 
 impl<K: Into<String>, V: Into<Value>> FromIterator<(K, V)> for Value {
-    /// Convert an iteratable type to a `Value`
+    /// Create a `Value::Object` by collecting an iterator of key-value pairs.
     ///
     /// # Examples
     ///
@@ -249,7 +250,7 @@ impl<K: Into<String>, V: Into<Value>> FromIterator<(K, V)> for Value {
 }
 
 impl From<()> for Value {
-    /// Convert `()` to `Value`
+    /// Convert `()` to `Value::Null`.
     ///
     /// # Examples
     ///

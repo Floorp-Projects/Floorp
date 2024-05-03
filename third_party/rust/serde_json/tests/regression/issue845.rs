@@ -1,7 +1,6 @@
 #![allow(clippy::trait_duplication_in_bounds)] // https://github.com/rust-lang/rust-clippy/issues/8757
 
 use serde::{Deserialize, Deserializer};
-use std::convert::TryFrom;
 use std::fmt::{self, Display};
 use std::marker::PhantomData;
 use std::str::FromStr;
@@ -61,6 +60,7 @@ where
 #[derive(Deserialize, Debug)]
 pub struct Struct {
     #[serde(deserialize_with = "deserialize_integer_or_string")]
+    #[allow(dead_code)]
     pub i: i64,
 }
 

@@ -11,7 +11,7 @@ use alloc::string::String;
 use core::borrow::Borrow;
 use core::fmt::{self, Debug};
 use core::hash::Hash;
-use core::iter::{FromIterator, FusedIterator};
+use core::iter::FusedIterator;
 #[cfg(feature = "preserve_order")]
 use core::mem;
 use core::ops;
@@ -20,7 +20,7 @@ use serde::de;
 #[cfg(not(feature = "preserve_order"))]
 use alloc::collections::{btree_map, BTreeMap};
 #[cfg(feature = "preserve_order")]
-use indexmap::{self, IndexMap};
+use indexmap::IndexMap;
 
 /// Represents a JSON key/value type.
 pub struct Map<K, V> {
@@ -106,7 +106,6 @@ impl Map<String, Value> {
     /// The key may be any borrowed form of the map's key type, but the ordering
     /// on the borrowed form *must* match the ordering on the key type.
     #[inline]
-    #[cfg(any(feature = "preserve_order", not(no_btreemap_get_key_value)))]
     pub fn get_key_value<Q>(&self, key: &Q) -> Option<(&String, &Value)>
     where
         String: Borrow<Q>,
@@ -131,6 +130,12 @@ impl Map<String, Value> {
     ///
     /// The key may be any borrowed form of the map's key type, but the ordering
     /// on the borrowed form *must* match the ordering on the key type.
+    ///
+    /// If serde_json's "preserve_order" is enabled, `.remove(key)` is
+    /// equivalent to [`.swap_remove(key)`][Self::swap_remove], replacing this
+    /// entry's position with the last element. If you need to preserve the
+    /// relative order of the keys in the map, use
+    /// [`.shift_remove(key)`][Self::shift_remove] instead.
     #[inline]
     pub fn remove<Q>(&mut self, key: &Q) -> Option<Value>
     where
@@ -138,7 +143,7 @@ impl Map<String, Value> {
         Q: ?Sized + Ord + Eq + Hash,
     {
         #[cfg(feature = "preserve_order")]
-        return self.map.swap_remove(key);
+        return self.swap_remove(key);
         #[cfg(not(feature = "preserve_order"))]
         return self.map.remove(key);
     }
@@ -148,49 +153,94 @@ impl Map<String, Value> {
     ///
     /// The key may be any borrowed form of the map's key type, but the ordering
     /// on the borrowed form *must* match the ordering on the key type.
+    ///
+    /// If serde_json's "preserve_order" is enabled, `.remove_entry(key)` is
+    /// equivalent to [`.swap_remove_entry(key)`][Self::swap_remove_entry],
+    /// replacing this entry's position with the last element. If you need to
+    /// preserve the relative order of the keys in the map, use
+    /// [`.shift_remove_entry(key)`][Self::shift_remove_entry] instead.
+    #[inline]
     pub fn remove_entry<Q>(&mut self, key: &Q) -> Option<(String, Value)>
     where
         String: Borrow<Q>,
         Q: ?Sized + Ord + Eq + Hash,
     {
-        #[cfg(any(feature = "preserve_order", not(no_btreemap_remove_entry)))]
+        #[cfg(feature = "preserve_order")]
+        return self.swap_remove_entry(key);
+        #[cfg(not(feature = "preserve_order"))]
         return self.map.remove_entry(key);
-        #[cfg(all(
-            not(feature = "preserve_order"),
-            no_btreemap_remove_entry,
-            not(no_btreemap_get_key_value),
-        ))]
-        {
-            let (key, _value) = self.map.get_key_value(key)?;
-            let key = key.clone();
-            let value = self.map.remove::<String>(&key)?;
-            Some((key, value))
-        }
-        #[cfg(all(
-            not(feature = "preserve_order"),
-            no_btreemap_remove_entry,
-            no_btreemap_get_key_value,
-        ))]
-        {
-            use core::ops::{Bound, RangeBounds};
+    }
 
-            struct Key<'a, Q: ?Sized>(&'a Q);
+    /// Removes and returns the value corresponding to the key from the map.
+    ///
+    /// Like [`Vec::swap_remove`], the entry is removed by swapping it with the
+    /// last element of the map and popping it off. This perturbs the position
+    /// of what used to be the last element!
+    ///
+    /// [`Vec::swap_remove`]: std::vec::Vec::swap_remove
+    #[cfg(feature = "preserve_order")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "preserve_order")))]
+    #[inline]
+    pub fn swap_remove<Q>(&mut self, key: &Q) -> Option<Value>
+    where
+        String: Borrow<Q>,
+        Q: ?Sized + Ord + Eq + Hash,
+    {
+        self.map.swap_remove(key)
+    }
 
-            impl<'a, Q: ?Sized> RangeBounds<Q> for Key<'a, Q> {
-                fn start_bound(&self) -> Bound<&Q> {
-                    Bound::Included(self.0)
-                }
-                fn end_bound(&self) -> Bound<&Q> {
-                    Bound::Included(self.0)
-                }
-            }
+    /// Remove and return the key-value pair.
+    ///
+    /// Like [`Vec::swap_remove`], the entry is removed by swapping it with the
+    /// last element of the map and popping it off. This perturbs the position
+    /// of what used to be the last element!
+    ///
+    /// [`Vec::swap_remove`]: std::vec::Vec::swap_remove
+    #[cfg(feature = "preserve_order")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "preserve_order")))]
+    #[inline]
+    pub fn swap_remove_entry<Q>(&mut self, key: &Q) -> Option<(String, Value)>
+    where
+        String: Borrow<Q>,
+        Q: ?Sized + Ord + Eq + Hash,
+    {
+        self.map.swap_remove_entry(key)
+    }
 
-            let mut range = self.map.range(Key(key));
-            let (key, _value) = range.next()?;
-            let key = key.clone();
-            let value = self.map.remove::<String>(&key)?;
-            Some((key, value))
-        }
+    /// Removes and returns the value corresponding to the key from the map.
+    ///
+    /// Like [`Vec::remove`], the entry is removed by shifting all of the
+    /// elements that follow it, preserving their relative order. This perturbs
+    /// the index of all of those elements!
+    ///
+    /// [`Vec::remove`]: std::vec::Vec::remove
+    #[cfg(feature = "preserve_order")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "preserve_order")))]
+    #[inline]
+    pub fn shift_remove<Q>(&mut self, key: &Q) -> Option<Value>
+    where
+        String: Borrow<Q>,
+        Q: ?Sized + Ord + Eq + Hash,
+    {
+        self.map.shift_remove(key)
+    }
+
+    /// Remove and return the key-value pair.
+    ///
+    /// Like [`Vec::remove`], the entry is removed by shifting all of the
+    /// elements that follow it, preserving their relative order. This perturbs
+    /// the index of all of those elements!
+    ///
+    /// [`Vec::remove`]: std::vec::Vec::remove
+    #[cfg(feature = "preserve_order")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "preserve_order")))]
+    #[inline]
+    pub fn shift_remove_entry<Q>(&mut self, key: &Q) -> Option<(String, Value)>
+    where
+        String: Borrow<Q>,
+        Q: ?Sized + Ord + Eq + Hash,
+    {
+        self.map.shift_remove_entry(key)
     }
 
     /// Moves all elements from other into self, leaving other empty.
@@ -276,7 +326,6 @@ impl Map<String, Value> {
     ///
     /// In other words, remove all pairs `(k, v)` such that `f(&k, &mut v)`
     /// returns `false`.
-    #[cfg(not(no_btreemap_retain))]
     #[inline]
     pub fn retain<F>(&mut self, f: F)
     where

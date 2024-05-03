@@ -10,10 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
-rust-version = "1.36"
+edition = "2021"
+rust-version = "1.56"
 name = "serde_json"
-version = "1.0.93"
+version = "1.0.116"
 authors = [
     "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
     "David Tolnay <dtolnay@gmail.com>",
@@ -36,14 +36,16 @@ repository = "https://github.com/serde-rs/json"
 
 [package.metadata.docs.rs]
 features = [
+    "preserve_order",
     "raw_value",
     "unbounded_depth",
 ]
-targets = ["x86_64-unknown-linux-gnu"]
 rustdoc-args = [
     "--cfg",
     "docsrs",
+    "--generate-link-to-definition",
 ]
+targets = ["x86_64-unknown-linux-gnu"]
 
 [package.metadata.playground]
 features = ["raw_value"]
@@ -52,8 +54,7 @@ features = ["raw_value"]
 doc-scrape-examples = false
 
 [dependencies.indexmap]
-version = "1.5.2"
-features = ["std"]
+version = "2.2.1"
 optional = true
 
 [dependencies.itoa]
@@ -63,36 +64,36 @@ version = "1.0"
 version = "1.0"
 
 [dependencies.serde]
-version = "1.0.100"
+version = "1.0.194"
 default-features = false
 
 [dev-dependencies.automod]
-version = "1.0"
+version = "1.0.11"
 
 [dev-dependencies.indoc]
-version = "2.0"
+version = "2.0.2"
 
 [dev-dependencies.ref-cast]
-version = "1.0"
+version = "1.0.18"
 
 [dev-dependencies.rustversion]
-version = "1.0"
+version = "1.0.13"
 
 [dev-dependencies.serde]
-version = "1.0.100"
+version = "1.0.194"
 features = ["derive"]
 
 [dev-dependencies.serde_bytes]
-version = "0.11"
+version = "0.11.10"
 
 [dev-dependencies.serde_derive]
-version = "1.0"
+version = "1.0.166"
 
 [dev-dependencies.serde_stacker]
-version = "0.1"
+version = "0.1.8"
 
 [dev-dependencies.trybuild]
-version = "1.0.49"
+version = "1.0.81"
 features = ["diff"]
 
 [features]

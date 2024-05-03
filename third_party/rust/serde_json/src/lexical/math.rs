@@ -336,7 +336,7 @@ mod small {
     pub fn imul(x: &mut Vec<Limb>, y: Limb) {
         // Multiply iteratively over all elements, adding the carry each time.
         let mut carry: Limb = 0;
-        for xi in x.iter_mut() {
+        for xi in &mut *x {
             carry = scalar::imul(xi, y, carry);
         }
 
@@ -482,7 +482,7 @@ mod small {
         let rshift = bits - n;
         let lshift = n;
         let mut prev: Limb = 0;
-        for xi in x.iter_mut() {
+        for xi in &mut *x {
             let tmp = *xi;
             *xi <<= lshift;
             *xi |= prev >> rshift;
