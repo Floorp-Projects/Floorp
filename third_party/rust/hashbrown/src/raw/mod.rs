@@ -910,7 +910,7 @@ impl<T, A: Allocator> RawTable<T, A> {
         &self.alloc
     }
 
-    /// Returns pointer to one past last `data` element in the the table as viewed from
+    /// Returns pointer to one past last `data` element in the table as viewed from
     /// the start point of the allocation.
     ///
     /// The caller must ensure that the `RawTable` outlives the returned [`NonNull<T>`],
@@ -919,9 +919,7 @@ impl<T, A: Allocator> RawTable<T, A> {
     /// [`undefined behavior`]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     #[inline]
     pub fn data_end(&self) -> NonNull<T> {
-        // SAFETY: `self.table.ctrl` is `NonNull`, so casting it is safe
-        //
-        //                        `self.table.ctrl.as_ptr().cast()` returns pointer that
+        //                        `self.table.ctrl.cast()` returns pointer that
         //                        points here (to the end of `T0`)
         //                          ∨
         // [Pad], T_n, ..., T1, T0, |CT0, CT1, ..., CT_n|, CTa_0, CTa_1, ..., CTa_m
@@ -938,7 +936,7 @@ impl<T, A: Allocator> RawTable<T, A> {
         //
         // P.S. `h1(hash) & self.bucket_mask` is the same as `hash as usize % self.buckets()` because the number
         // of buckets is a power of two, and `self.bucket_mask = self.buckets() - 1`.
-        unsafe { NonNull::new_unchecked(self.table.ctrl.as_ptr().cast()) }
+        self.table.ctrl.cast()
     }
 
     /// Returns pointer to start of data table.
@@ -2029,7 +2027,7 @@ impl RawTableInner {
     /// if this function returns an `index` it will be in the range `0..=self.buckets()`.
     ///
     /// This function does not make any changes to the `data` parts of the table,
-    /// or any changes to the the `items` or `growth_left` field of the table.
+    /// or any changes to the `items` or `growth_left` field of the table.
     ///
     /// # Safety
     ///
@@ -2213,7 +2211,7 @@ impl RawTableInner {
     /// - `FULL` control bytes    -> `DELETED`.
     ///
     /// This function does not make any changes to the `data` parts of the table,
-    /// or any changes to the the `items` or `growth_left` field of the table.
+    /// or any changes to the `items` or `growth_left` field of the table.
     ///
     /// # Safety
     ///
@@ -2558,7 +2556,7 @@ impl RawTableInner {
         base.sub((index + 1) * size_of)
     }
 
-    /// Returns pointer to one past last `data` element in the the table as viewed from
+    /// Returns pointer to one past last `data` element in the table as viewed from
     /// the start point of the allocation (convenience for `self.ctrl.cast()`).
     ///
     /// This function actually returns a pointer to the end of the `data element` at
@@ -2595,10 +2593,7 @@ impl RawTableInner {
     /// [`undefined behavior`]: https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     #[inline]
     fn data_end<T>(&self) -> NonNull<T> {
-        unsafe {
-            // SAFETY: `self.ctrl` is `NonNull`, so casting it is safe
-            NonNull::new_unchecked(self.ctrl.as_ptr().cast())
-        }
+        self.ctrl.cast()
     }
 
     /// Returns an iterator-like object for a probe sequence on the table.
@@ -2650,7 +2645,7 @@ impl RawTableInner {
     /// the end of the array.
     ///
     /// This function does not make any changes to the `data` parts of the table,
-    /// or any changes to the the `items` or `growth_left` field of the table.
+    /// or any changes to the `items` or `growth_left` field of the table.
     ///
     /// # Safety
     ///
@@ -2684,7 +2679,7 @@ impl RawTableInner {
     /// bytes, returning the old control byte.
     ///
     /// This function does not make any changes to the `data` parts of the table,
-    /// or any changes to the the `items` or `growth_left` field of the table.
+    /// or any changes to the `items` or `growth_left` field of the table.
     ///
     /// # Safety
     ///
@@ -2719,7 +2714,7 @@ impl RawTableInner {
     /// the end of the array.
     ///
     /// This function does not make any changes to the `data` parts of the table,
-    /// or any changes to the the `items` or `growth_left` field of the table.
+    /// or any changes to the `items` or `growth_left` field of the table.
     ///
     /// # Safety
     ///
@@ -3587,7 +3582,7 @@ impl<T: Clone, A: Allocator + Clone> RawTable<T, A> {
         // cloned so far.
         let mut guard = guard((0, &mut *self), |(index, self_)| {
             if T::NEEDS_DROP {
-                for i in 0..=*index {
+                for i in 0..*index {
                     if self_.is_bucket_full(i) {
                         self_.bucket(i).drop();
                     }
@@ -3601,7 +3596,7 @@ impl<T: Clone, A: Allocator + Clone> RawTable<T, A> {
             to.write(from.as_ref().clone());
 
             // Update the index in case we need to unwind.
-            guard.0 = index;
+            guard.0 = index + 1;
         }
 
         // Successfully cloned all items, no need to clean up.
@@ -3901,10 +3896,10 @@ impl<T> RawIterRange<T> {
             //    we will never end up in the given branch, since we should have already
             //    yielded all the elements of the table.
             //
-            // 2. For tables larger than the group width. The the number of buckets is a
-            //    power of two (2 ^ n), Group::WIDTH is also power of two (2 ^ k). Sinse
+            // 2. For tables larger than the group width. The number of buckets is a
+            //    power of two (2 ^ n), Group::WIDTH is also power of two (2 ^ k). Since
             //    `(2 ^ n) > (2 ^ k)`, than `(2 ^ n) % (2 ^ k) = 0`. As we start from the
-            //    the start of the array of control bytes, and never try to iterate after
+            //    start of the array of control bytes, and never try to iterate after
             //    getting all the elements, the last `self.current_group` will read bytes
             //    from the `self.buckets() - Group::WIDTH` index.  We know also that
             //    `self.current_group.next()` will always retun indices within the range
@@ -4224,8 +4219,8 @@ impl FullBucketsIndices {
             //    we will never end up in the given branch, since we should have already
             //    yielded all the elements of the table.
             //
-            // 2. For tables larger than the group width. The the number of buckets is a
-            //    power of two (2 ^ n), Group::WIDTH is also power of two (2 ^ k). Sinse
+            // 2. For tables larger than the group width. The number of buckets is a
+            //    power of two (2 ^ n), Group::WIDTH is also power of two (2 ^ k). Since
             //    `(2 ^ n) > (2 ^ k)`, than `(2 ^ n) % (2 ^ k) = 0`. As we start from the
             //    the start of the array of control bytes, and never try to iterate after
             //    getting all the elements, the last `self.ctrl` will be equal to
