@@ -160,6 +160,11 @@ const PLACES_OPEN_COMMANDS = [
   "placesCmd_open:tab",
 ];
 
+// How long of a delay between events means the start of a new flow?
+// Used by Browser UI Interaction event instrumentation.
+// Default: 5min.
+const FLOW_IDLE_TIME = 5 * 60 * 1000;
+
 function telemetryId(widgetId, obscureAddons = true) {
   // Add-on IDs need to be obscured.
   function addonId(id) {
@@ -872,6 +877,7 @@ export let BrowserUsageTelemetry = {
     let source = this._getWidgetContainer(node);
 
     if (item && source) {
+      this.recordInteractionEvent(item, source);
       let scalar = `browser.ui.interaction.${source.replace(/-/g, "_")}`;
       Services.telemetry.keyedScalarAdd(scalar, telemetryId(item), 1);
       if (SET_USAGECOUNT_PREF_BUTTONS.includes(item)) {
@@ -889,6 +895,7 @@ export let BrowserUsageTelemetry = {
         node.closest("menupopup")?.triggerNode
       );
       if (triggerContainer) {
+        this.recordInteractionEvent(item, contextMenu);
         let scalar = `browser.ui.interaction.${contextMenu.replace(/-/g, "_")}`;
         Services.telemetry.keyedScalarAdd(
           scalar,
@@ -897,6 +904,34 @@ export let BrowserUsageTelemetry = {
         );
       }
     }
+  },
+
+  _flowId: null,
+  _flowIdTS: 0,
+
+  recordInteractionEvent(widgetId, source) {
+    // A note on clocks. Cu.now() is monotonic, but its behaviour across
+    // computer sleeps is different per platform.
+    // We're okay with this for flows because we're looking at idle times
+    // on the order of minutes and within the same machine, so the weirdest
+    // thing we may expect is a flow that accidentally continues across a
+    // sleep. Until we have evidence that this is common, we're in the clear.
+    if (!this._flowId || this._flowIdTS + FLOW_IDLE_TIME < Cu.now()) {
+      // We submit the ping full o' events on every new flow,
+      // including at startup.
+      GleanPings.prototypeNoCodeEvents.submit();
+      // We use a GUID here because we need to identify events in a flow
+      // out of all events from all flows across all clients.
+      this._flowId = Services.uuid.generateUUID();
+    }
+    this._flowIdTS = Cu.now();
+
+    const extra = {
+      source,
+      widgetId: telemetryId(widgetId),
+      flowId: this._flowId,
+    };
+    Glean.browserUsage.interaction.record(extra);
   },
 
   /**

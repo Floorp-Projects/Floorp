@@ -6,6 +6,7 @@
 /* eslint-env mozilla/browser-window */
 
 ChromeUtils.defineESModuleGetters(this, {
+  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
   TabsPanel: "resource:///modules/TabsList.sys.mjs",
 });
 
@@ -148,6 +149,10 @@ var gTabsPanel = {
         "browser.ui.interaction.all_tabs_panel_entrypoint",
         entrypoint,
         1
+      );
+      BrowserUsageTelemetry.recordInteractionEvent(
+        entrypoint,
+        "all-tabs-panel-entrypoint"
       );
       PanelUI.showSubView(
         this.kElements.allTabsView,
