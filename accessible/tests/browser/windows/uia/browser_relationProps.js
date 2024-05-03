@@ -91,3 +91,53 @@ addUiaTask(
     await testUiaRelationArray("none", "FlowsTo", []);
   }
 );
+
+/**
+ * Test the LabeledBy property.
+ */
+addUiaTask(
+  `
+<label id="label">label</label>
+<input id="input" aria-labelledby="label">
+<label id="wrappingLabel">
+  <input id="wrappedInput" value="wrappedInput">
+  <p id="wrappingLabelP">wrappingLabel</p>
+</label>
+<button id="button" aria-labelledby="label">content</button>
+<button id="noLabel">noLabel</button>
+  `,
+  async function testLabeledBy() {
+    await definePyVar("doc", `getDocUia()`);
+    // input's LabeledBy should be label's text leaf.
+    let result = await runPython(`
+      input = findUiaByDomId(doc, "input")
+      label = findUiaByDomId(doc, "label")
+      labelLeaf = uiaClient.RawViewWalker.GetFirstChildElement(label)
+      return uiaClient.CompareElements(input.CurrentLabeledBy, labelLeaf)
+    `);
+    ok(result, "input has correct LabeledBy");
+    // wrappedInput's LabeledBy should be wrappingLabelP's text leaf.
+    result = await runPython(`
+      wrappedInput = findUiaByDomId(doc, "wrappedInput")
+      wrappingLabelP = findUiaByDomId(doc, "wrappingLabelP")
+      wrappingLabelLeaf = uiaClient.RawViewWalker.GetFirstChildElement(wrappingLabelP)
+      return uiaClient.CompareElements(wrappedInput.CurrentLabeledBy, wrappingLabelLeaf)
+    `);
+    ok(result, "wrappedInput has correct LabeledBy");
+    // button has aria-labelledby, but UIA prohibits LabeledBy on buttons.
+    ok(
+      !(await runPython(
+        `bool(findUiaByDomId(doc, "button").CurrentLabeledBy)`
+      )),
+      "button has no LabeledBy"
+    );
+    ok(
+      !(await runPython(
+        `bool(findUiaByDomId(doc, "noLabel").CurrentLabeledBy)`
+      )),
+      "noLabel has no LabeledBy"
+    );
+  },
+  // The IA2 -> UIA proxy doesn't expose LabeledBy properly.
+  { uiaEnabled: true, uiaDisabled: false }
+);
