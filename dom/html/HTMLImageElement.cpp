@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/TabFocusModel.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLImageElementBinding.h"
@@ -494,7 +495,8 @@ bool HTMLImageElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
 
   if (IsInComposedDoc() && FindImageMap()) {
     // Use tab index on individual map areas.
-    *aTabIndex = (sTabFocusModel & eTabFocus_linksMask) ? 0 : -1;
+    *aTabIndex =
+        TabFocusModel::IsTabFocusable(TabFocusableType::Links) ? 0 : -1;
     // Image map is not focusable itself, but flag as tabbable
     // so that image map areas get walked into.
     *aIsFocusable = false;
@@ -502,7 +504,9 @@ bool HTMLImageElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   }
 
   // Can be in tab order if tabindex >=0 and form controls are tabbable.
-  *aTabIndex = (sTabFocusModel & eTabFocus_formElementsMask) ? tabIndex : -1;
+  *aTabIndex = TabFocusModel::IsTabFocusable(TabFocusableType::FormElements)
+                   ? tabIndex
+                   : -1;
   *aIsFocusable = IsFormControlDefaultFocusable(aWithMouse) &&
                   (tabIndex >= 0 || GetTabIndexAttrValue().isSome());
 
