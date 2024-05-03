@@ -96,9 +96,15 @@ export var BackgroundUpdate = {
       taskVersion <= currentVersion;
       taskVersion++
     ) {
-      await lazy.TaskScheduler.deleteTask(this.taskId, {
-        nameVersion: taskNameVersion(taskVersion),
-      });
+      try {
+        await lazy.TaskScheduler.deleteTask(this.taskId, {
+          nameVersion: taskNameVersion(taskVersion),
+        });
+      } catch (e) {
+        lazy.log.error(
+          `deleteTasksInRange: Error deleting task ${taskVersion}: ${e}`
+        );
+      }
     }
   },
 
