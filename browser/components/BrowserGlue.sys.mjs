@@ -24,7 +24,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
@@ -1198,13 +1197,13 @@ BrowserGlue.prototype = {
       case "initial-migration-did-import-default-bookmarks":
         this._initPlaces(true);
         break;
-      case "handle-xul-text-link": {
+      case "handle-xul-text-link":
         let linkHandled = subject.QueryInterface(Ci.nsISupportsPRBool);
         if (!linkHandled.data) {
           let win = lazy.BrowserWindowTracker.getTopWindow();
           if (win) {
             data = JSON.parse(data);
-            let where = lazy.BrowserUtils.whereToOpenLink(data);
+            let where = win.whereToOpenLink(data);
             // Preserve legacy behavior of non-modifier left-clicks
             // opening in a new selected tab.
             if (where == "current") {
@@ -1215,14 +1214,13 @@ BrowserGlue.prototype = {
           }
         }
         break;
-      }
       case "profile-before-change":
         // Any component depending on Places should be finalized in
         // _onPlacesShutdown.  Any component that doesn't need to act after
         // the UI has gone should be finalized in _onQuitApplicationGranted.
         this._dispose();
         break;
-      case "keyword-search": {
+      case "keyword-search":
         // This notification is broadcast by the docshell when it "fixes up" a
         // URI that it's been asked to load into a keyword search.
         let engine = null;
@@ -1240,15 +1238,13 @@ BrowserGlue.prototype = {
           "urlbar"
         );
         break;
-      }
-      case "xpi-signature-changed": {
+      case "xpi-signature-changed":
         let disabledAddons = JSON.parse(data).disabled;
         let addons = await lazy.AddonManager.getAddonsByIDs(disabledAddons);
         if (addons.some(addon => addon)) {
           this._notifyUnsignedAddonsDisabled();
         }
         break;
-      }
       case "sync-ui-state:update":
         this._updateFxaBadges(lazy.BrowserWindowTracker.getTopWindow());
         break;
@@ -1266,7 +1262,7 @@ BrowserGlue.prototype = {
         lazy.DownloadsViewableInternally.register();
 
         break;
-      case "app-startup": {
+      case "app-startup":
         this._earlyBlankFirstPaint(subject);
         gThisInstanceIsTaskbarTab = subject.handleFlag("taskbar-tab", false);
         gThisInstanceIsLaunchOnLogin = subject.handleFlag(
@@ -1300,7 +1296,6 @@ BrowserGlue.prototype = {
           await lazy.WindowsLaunchOnLogin.removeLaunchOnLoginRegistryKey();
         }
         break;
-      }
     }
   },
 

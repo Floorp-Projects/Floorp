@@ -7,7 +7,6 @@
 // Wrap in a block to prevent leaking to window scope.
 {
   ChromeUtils.defineESModuleGetters(this, {
-    BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
     SearchOneOffs: "resource:///modules/SearchOneOffs.sys.mjs",
   });
 
@@ -195,7 +194,7 @@
       let search = this.input.controller.getValueAt(this.selectedIndex);
 
       // open the search results according to the clicking subtlety
-      let where = this.BrowserUtils.whereToOpenLink(aEvent, false, true);
+      let where = whereToOpenLink(aEvent, false, true);
       let params = {};
 
       // But open ctrl/cmd clicks on autocomplete items in a new background tab.

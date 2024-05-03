@@ -6,7 +6,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
-  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchSuggestionController:
@@ -217,7 +216,7 @@ export let ContentSearch = {
       // message and the time we handle it.
       return;
     }
-    let where = lazy.BrowserUtils.whereToOpenLink(data.originalEvent);
+    let where = win.whereToOpenLink(data.originalEvent);
 
     // There is a chance that by the time we receive the search message, the user
     // has switched away from the tab that triggered the search. If, based on the
@@ -511,11 +510,10 @@ export let ContentSearch = {
           lazy.UrlbarPrefs.get("shouldHandOffToSearchMode")
         );
         break;
-      default: {
+      default:
         let state = await this.currentStateObj();
         this._broadcast("CurrentState", state);
         break;
-      }
     }
   },
 
