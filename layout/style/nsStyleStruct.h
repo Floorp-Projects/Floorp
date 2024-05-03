@@ -1533,8 +1533,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     }
   }
 
+  // These two methods are deprecated since they do not differentiate paginated
+  // context and multi-column context. Use nsIFrame::ShouldBreakBefore() /
+  // nsIFrame::ShouldBreakAfter() instead.
   bool BreakBefore() const { return ShouldBreak(mBreakBefore); }
-
   bool BreakAfter() const { return ShouldBreak(mBreakAfter); }
 
   // These are defined in nsStyleStructInlines.h.

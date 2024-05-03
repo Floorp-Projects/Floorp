@@ -1386,7 +1386,25 @@ class nsIFrame : public nsQueryFrame {
 
   bool HasUnreflowedContainerQueryAncestor() const;
 
+  // Return True if this frame has a forced break value before it.
+  //
+  // Note: this method only checks 'break-before' property on *this* frame, and
+  // it doesn't handle forced break value propagation from its first child.
+  // Callers should handle the propagation in reflow.
+  bool ShouldBreakBefore(const ReflowInput::BreakType aBreakType) const;
+
+  // Return True if this frame has a forced break value after it.
+  //
+  // Note: this method only checks 'break-after' property on *this* frame, and
+  // it doesn't handle forced break value propagation from its last child.
+  // Callers should handle the propagation in reflow.
+  bool ShouldBreakAfter(const ReflowInput::BreakType aBreakType) const;
+
  private:
+  bool ShouldBreakBetween(const nsStyleDisplay* aDisplay,
+                          const mozilla::StyleBreakBetween aBreakBetween,
+                          const ReflowInput::BreakType aBreakType) const;
+
   // The value that the CSS page-name "auto" keyword resolves to for children
   // of this frame.
   //
