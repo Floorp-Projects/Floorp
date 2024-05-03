@@ -62,16 +62,23 @@ struct UrlMarker {
   }
   static void StreamJSONMarkerData(
       mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-      const mozilla::ProfilerString8View& aURL) {
+      const mozilla::ProfilerString8View& aURL, const TimeDuration& aDuration,
+      uint64_t aChannelId) {
     if (aURL.Length() != 0) {
       aWriter.StringProperty("url", aURL);
     }
+    if (!aDuration.IsZero()) {
+      aWriter.DoubleProperty("duration", aDuration.ToMilliseconds());
+    }
+    aWriter.IntProperty("channelId", static_cast<int64_t>(aChannelId));
   }
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema(MS::Location::MarkerChart, MS::Location::MarkerTable);
     schema.SetTableLabel("{marker.name} - {marker.data.url}");
-    schema.AddKeyFormat("url", MS::Format::Url);
+    schema.AddKeyFormatSearchable("url", MS::Format::Url,
+                                  MS::Searchable::Searchable);
+    schema.AddKeyLabelFormat("duration", "Duration", MS::Format::Duration);
     return schema;
   }
 };
@@ -505,9 +512,10 @@ nsresult nsHttpConnectionMgr::SpeculativeConnect(
     return NS_OK;
   }
 
-  nsCString url = ci->EndToEndSSL() ? "https://"_ns : "http://"_ns;
+  nsAutoCString url(ci->EndToEndSSL() ? "https://"_ns : "http://"_ns);
   url += ci->GetOrigin();
-  PROFILER_MARKER("SpeculativeConnect", NETWORK, {}, UrlMarker, url);
+  PROFILER_MARKER("SpeculativeConnect", NETWORK, {}, UrlMarker, url,
+                  TimeDuration::Zero(), 0);
 
   RefPtr<SpeculativeConnectArgs> args = new SpeculativeConnectArgs();
 
@@ -1649,9 +1657,9 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
   trans->CancelPacing(NS_OK);
 
   TimeStamp now = TimeStamp::Now();
+  TimeDuration elapsed = now - trans->GetPendingTime();
   auto recordPendingTimeForHTTPSRR = [&](nsCString& aKey) {
     uint32_t stage = trans->HTTPSSVCReceivedStage();
-    TimeDuration elapsed = now - trans->GetPendingTime();
     if (HTTPS_RR_IS_USED(stage)) {
       glean::networking::transaction_wait_time_https_rr.AccumulateRawDuration(
           elapsed);
@@ -1659,9 +1667,15 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
     } else {
       glean::networking::transaction_wait_time.AccumulateRawDuration(elapsed);
     }
-    PerfStats::RecordMeasurement(PerfStats::Metric::HttpTransactionWaitTime,
-                                 elapsed);
   };
+
+  PerfStats::RecordMeasurement(PerfStats::Metric::HttpTransactionWaitTime,
+                               elapsed);
+
+  PROFILER_MARKER(
+      "DispatchTransaction", NETWORK,
+      MarkerOptions(MarkerTiming::Interval(trans->GetPendingTime(), now)),
+      UrlMarker, trans->GetUrl(), elapsed, trans->ChannelId());
 
   nsAutoCString httpVersionkey("h1"_ns);
   if (conn->UsingSpdy() || conn->UsingHttp3()) {
@@ -1769,6 +1783,9 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
   CheckTransInPendingQueue(trans);
 
   trans->SetPendingTime();
+
+  PROFILER_MARKER("ProcessNewTransaction", NETWORK, {}, UrlMarker,
+                  trans->GetUrl(), TimeDuration::Zero(), trans->ChannelId());
 
   RefPtr<Http2PushedStreamWrapper> pushedStreamWrapper =
       trans->GetPushedStream();
