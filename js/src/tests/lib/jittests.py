@@ -399,8 +399,10 @@ class JitTest:
 
         # We may have specified '-a' or '-d' twice: once via --jitflags, once
         # via the "|jit-test|" line.  Remove dups because they are toggles.
+        # Note: |dict.fromkeys(flags)| is similar to |set(flags)| but it
+        # preserves order.
         cmd = prefix + []
-        cmd += list(set(self.jitflags))
+        cmd += list(dict.fromkeys(self.jitflags))
         # Handle selfhosted XDR file.
         if self.selfhosted_xdr_mode != "off":
             cmd += [
