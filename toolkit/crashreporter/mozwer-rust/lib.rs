@@ -9,7 +9,7 @@ use serde::Serialize;
 use serde_json::ser::to_writer;
 use std::convert::TryInto;
 use std::ffi::{c_void, OsString};
-use std::fs::{read_to_string, DirBuilder, File};
+use std::fs::{read_to_string, DirBuilder, File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::mem::{size_of, transmute, zeroed};
 use std::os::windows::ffi::{OsStrExt, OsStringExt};
@@ -525,8 +525,7 @@ impl ApplicationInformation {
         let install_time = ApplicationInformation::get_install_time(
             &crash_reports_dir,
             &application_data.build_id,
-        )
-        .unwrap_or("0".to_string());
+        );
 
         Ok(ApplicationInformation {
             install_path,
@@ -597,10 +596,29 @@ impl ApplicationInformation {
         }
     }
 
-    fn get_install_time(crash_reports_path: &Path, build_id: &str) -> Result<String> {
+    fn get_install_time(crash_reports_path: &Path, build_id: &str) -> String {
         let file_name = "InstallTime".to_owned() + build_id;
         let file_path = crash_reports_path.join(file_name);
-        read_to_string(file_path).map_err(|_e| ())
+
+        // If the file isn't present we'll attempt to atomically create it and
+        // populate it. This code essentially matches the corresponding code in
+        // nsExceptionHandler.cpp SetupExtraData().
+        if let Ok(mut file) = OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(&file_path)
+        {
+            // SAFETY: No risks in calling `time()` with a null pointer.
+            let _ = write!(&mut file, "{}", unsafe { time(null_mut()) }.to_string());
+        }
+
+        // As a last resort, if we can't read the file we fall back to the
+        // current time. This might cause us to overstate the number of users
+        // affected by a crash, but given it's very unlikely to hit this particular
+        // path it won't be a problem.
+        //
+        // SAFETY: No risks in calling `time()` with a null pointer.
+        read_to_string(&file_path).unwrap_or(unsafe { time(null_mut()) }.to_string())
     }
 }
 
