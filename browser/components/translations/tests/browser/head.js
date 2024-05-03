@@ -1561,7 +1561,8 @@ class SelectTranslationsTestUtils {
         betaIcon: false,
         cancelButton: false,
         copyButton: false,
-        doneButton: false,
+        doneButtonPrimary: false,
+        doneButtonSecondary: false,
         fromLabel: false,
         fromMenuList: false,
         fromMenuPopup: false,
@@ -1615,7 +1616,7 @@ class SelectTranslationsTestUtils {
   static async assertPanelViewTranslated() {
     const {
       copyButton,
-      doneButton,
+      doneButtonPrimary,
       fromMenuList,
       settingsButton,
       textArea,
@@ -1633,7 +1634,7 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       betaIcon: true,
       copyButton: true,
-      doneButton: true,
+      doneButtonPrimary: true,
       fromLabel: true,
       fromMenuList: true,
       header: true,
@@ -1646,7 +1647,7 @@ class SelectTranslationsTestUtils {
     });
     SelectTranslationsTestUtils.#assertConditionalUIEnabled({
       copyButton: true,
-      doneButton: true,
+      doneButtonPrimary: true,
       textArea: true,
       translateFullPageButton:
         !sameLanguageSelected && !isFullPageTranslationsRestrictedForPage,
@@ -1666,12 +1667,12 @@ class SelectTranslationsTestUtils {
 
     let footerButtons;
     if (sameLanguageSelected || isFullPageTranslationsRestrictedForPage) {
-      footerButtons = [copyButton, doneButton];
+      footerButtons = [copyButton, doneButtonPrimary];
     } else {
       footerButtons =
         AppConstants.platform === "win"
-          ? [copyButton, doneButton, translateFullPageButton]
-          : [copyButton, translateFullPageButton, doneButton];
+          ? [copyButton, doneButtonPrimary, translateFullPageButton]
+          : [copyButton, translateFullPageButton, doneButtonPrimary];
     }
 
     SharedTranslationsTestUtils._assertTabIndexOrder([
@@ -1778,7 +1779,7 @@ class SelectTranslationsTestUtils {
   static async assertPanelViewUnsupportedLanguage() {
     await SelectTranslationsTestUtils.waitForPanelState("unsupported");
     const {
-      doneButton,
+      doneButtonSecondary,
       settingsButton,
       translateButton,
       tryAnotherSourceMenuList,
@@ -1786,7 +1787,7 @@ class SelectTranslationsTestUtils {
     } = SelectTranslationsPanel.elements;
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       betaIcon: true,
-      doneButton: true,
+      doneButtonSecondary: true,
       header: true,
       settingsButton: true,
       translateButton: true,
@@ -1795,7 +1796,7 @@ class SelectTranslationsTestUtils {
       unsupportedLanguageMessageBar: true,
     });
     SelectTranslationsTestUtils.#assertConditionalUIEnabled({
-      doneButton: true,
+      doneButtonSecondary: true,
       translateButton: false,
     });
     ok(
@@ -1810,7 +1811,7 @@ class SelectTranslationsTestUtils {
     SharedTranslationsTestUtils._assertTabIndexOrder([
       settingsButton,
       tryAnotherSourceMenuList,
-      doneButton,
+      doneButtonSecondary,
     ]);
   }
 
@@ -1874,7 +1875,7 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       betaIcon: true,
       copyButton: true,
-      doneButton: true,
+      doneButtonPrimary: true,
       fromLabel: true,
       fromMenuList: true,
       header: true,
@@ -1909,7 +1910,7 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertConditionalUIEnabled({
       textArea: true,
       copyButton: false,
-      doneButton: true,
+      doneButtonPrimary: true,
       translateFullPageButton:
         fromMenuList.value !== toMenuList.value &&
         !isFullPageTranslationsRestrictedForPage,
@@ -1932,7 +1933,7 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertConditionalUIEnabled({
       textArea: true,
       copyButton: true,
-      doneButton: true,
+      doneButtonPrimary: true,
       translateFullPageButton:
         fromLanguage !== toLanguage && !isFullPageTranslationsRestrictedForPage,
     });
@@ -2030,12 +2031,29 @@ class SelectTranslationsTestUtils {
    */
   static async clickDoneButton() {
     logAction();
-    const { doneButton } = SelectTranslationsPanel.elements;
-    assertVisibility({ visible: { doneButton } });
+    const { doneButtonPrimary, doneButtonSecondary } =
+      SelectTranslationsPanel.elements;
+    let visibleDoneButton;
+    let hiddenDoneButton;
+    if (BrowserTestUtils.isVisible(doneButtonPrimary)) {
+      visibleDoneButton = doneButtonPrimary;
+      hiddenDoneButton = doneButtonSecondary;
+    } else if (BrowserTestUtils.isVisible(doneButtonSecondary)) {
+      visibleDoneButton = doneButtonSecondary;
+      hiddenDoneButton = doneButtonPrimary;
+    } else {
+      throw new Error(
+        "Expected either the primary or secondary done button to be visible."
+      );
+    }
+    assertVisibility({
+      visible: { visibleDoneButton },
+      hidden: { hiddenDoneButton },
+    });
     await SelectTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       () => {
-        click(doneButton, "Clicking the done button");
+        click(visibleDoneButton, "Clicking the done button");
       }
     );
   }
@@ -2110,20 +2128,20 @@ class SelectTranslationsTestUtils {
   }) {
     logAction();
     const {
-      doneButton,
+      doneButtonSecondary,
       settingsButton,
       translateButton,
       tryAnotherSourceMenuList,
     } = SelectTranslationsPanel.elements;
-    assertVisibility({ visible: { doneButton: translateButton } });
+    assertVisibility({ visible: { doneButtonPrimary: translateButton } });
 
     ok(!translateButton.disabled, "The translate button should be enabled.");
     SharedTranslationsTestUtils._assertTabIndexOrder([
       settingsButton,
       tryAnotherSourceMenuList,
       ...(AppConstants.platform === "win"
-        ? [translateButton, doneButton]
-        : [doneButton, translateButton]),
+        ? [translateButton, doneButtonSecondary]
+        : [doneButtonSecondary, translateButton]),
     ]);
 
     click(translateButton);

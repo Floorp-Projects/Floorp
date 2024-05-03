@@ -190,7 +190,8 @@ var SelectTranslationsPanel = new (class {
         betaIcon: "select-translations-panel-beta-icon",
         cancelButton: "select-translations-panel-cancel-button",
         copyButton: "select-translations-panel-copy-button",
-        doneButton: "select-translations-panel-done-button",
+        doneButtonPrimary: "select-translations-panel-done-button-primary",
+        doneButtonSecondary: "select-translations-panel-done-button-secondary",
         fromLabel: "select-translations-panel-from-label",
         fromMenuList: "select-translations-panel-from",
         fromMenuPopup: "select-translations-panel-from-menupopup",
@@ -589,7 +590,8 @@ var SelectTranslationsPanel = new (class {
     const {
       cancelButton,
       copyButton,
-      doneButton,
+      doneButtonPrimary,
+      doneButtonSecondary,
       fromMenuList,
       fromMenuPopup,
       settingsButton,
@@ -603,7 +605,8 @@ var SelectTranslationsPanel = new (class {
     } = this.elements;
     switch (target.id) {
       case cancelButton.id:
-      case doneButton.id: {
+      case doneButtonPrimary.id:
+      case doneButtonSecondary.id: {
         this.close();
         break;
       }
@@ -1307,26 +1310,13 @@ var SelectTranslationsPanel = new (class {
    * @param {object} options - Options of which attributes to set.
    * @param {Record<string, Element[]>} options.makeHidden - Make these elements hidden.
    * @param {Record<string, Element[]>} options.makeVisible - Make these elements visible.
-   * @param {Record<string, Element[]>} options.addDefault - Give these elements the default attribute.
-   * @param {Record<string, Element[]>} options.removeDefault - Remove the default attribute from these elements.
    */
-  #setPanelElementAttributes({
-    makeHidden = [],
-    makeVisible = [],
-    addDefault = [],
-    removeDefault = [],
-  }) {
+  #setPanelElementAttributes({ makeHidden = [], makeVisible = [] }) {
     for (const element of makeHidden) {
       element.hidden = true;
     }
     for (const element of makeVisible) {
       element.hidden = false;
-    }
-    for (const element of addDefault) {
-      element.setAttribute("default", "true");
-    }
-    for (const element of removeDefault) {
-      element.removeAttribute("default");
     }
   }
 
@@ -1372,7 +1362,8 @@ var SelectTranslationsPanel = new (class {
     const {
       cancelButton,
       copyButton,
-      doneButton,
+      doneButtonPrimary,
+      doneButtonSecondary,
       initFailureContent,
       mainContent,
       unsupportedLanguageContent,
@@ -1385,6 +1376,7 @@ var SelectTranslationsPanel = new (class {
     this.#setPanelElementAttributes({
       makeHidden: [
         cancelButton,
+        doneButtonSecondary,
         initFailureContent,
         translateButton,
         translationFailureMessageBar,
@@ -1397,14 +1389,12 @@ var SelectTranslationsPanel = new (class {
       makeVisible: [
         mainContent,
         copyButton,
-        doneButton,
+        doneButtonPrimary,
         textArea,
         ...(this.#isFullPageTranslationsRestrictedForPage
           ? []
           : [translateFullPageButton]),
       ],
-      addDefault: [doneButton],
-      removeDefault: [translateButton, tryAgainButton],
     });
   }
 
@@ -1415,7 +1405,8 @@ var SelectTranslationsPanel = new (class {
     const {
       cancelButton,
       copyButton,
-      doneButton,
+      doneButtonPrimary,
+      doneButtonSecondary,
       initFailureContent,
       mainContent,
       unsupportedLanguageContent,
@@ -1426,15 +1417,18 @@ var SelectTranslationsPanel = new (class {
     this.#setPanelElementAttributes({
       makeHidden: [
         cancelButton,
+        doneButtonPrimary,
         copyButton,
         initFailureContent,
         mainContent,
         translateFullPageButton,
         tryAgainButton,
       ],
-      makeVisible: [doneButton, translateButton, unsupportedLanguageContent],
-      addDefault: [translateButton],
-      removeDefault: [doneButton, tryAgainButton],
+      makeVisible: [
+        doneButtonSecondary,
+        translateButton,
+        unsupportedLanguageContent,
+      ],
     });
   }
 
@@ -1445,7 +1439,8 @@ var SelectTranslationsPanel = new (class {
     const {
       cancelButton,
       copyButton,
-      doneButton,
+      doneButtonPrimary,
+      doneButtonSecondary,
       initFailureContent,
       mainContent,
       unsupportedLanguageContent,
@@ -1455,7 +1450,8 @@ var SelectTranslationsPanel = new (class {
     } = this.elements;
     this.#setPanelElementAttributes({
       makeHidden: [
-        doneButton,
+        doneButtonPrimary,
+        doneButtonSecondary,
         copyButton,
         mainContent,
         translateButton,
@@ -1463,8 +1459,6 @@ var SelectTranslationsPanel = new (class {
         unsupportedLanguageContent,
       ],
       makeVisible: [initFailureContent, cancelButton, tryAgainButton],
-      addDefault: [tryAgainButton],
-      removeDefault: [doneButton, translateButton],
     });
     tryAgainButton.focus({ focusVisible: true });
   }
@@ -1476,7 +1470,8 @@ var SelectTranslationsPanel = new (class {
     const {
       cancelButton,
       copyButton,
-      doneButton,
+      doneButtonPrimary,
+      doneButtonSecondary,
       initFailureContent,
       mainContent,
       textArea,
@@ -1488,7 +1483,8 @@ var SelectTranslationsPanel = new (class {
     } = this.elements;
     this.#setPanelElementAttributes({
       makeHidden: [
-        doneButton,
+        doneButtonPrimary,
+        doneButtonSecondary,
         copyButton,
         initFailureContent,
         translateButton,
@@ -1502,8 +1498,6 @@ var SelectTranslationsPanel = new (class {
         translationFailureMessageBar,
         tryAgainButton,
       ],
-      addDefault: [tryAgainButton],
-      removeDefault: [doneButton, translateButton],
     });
     tryAgainButton.focus({ focusVisible: true });
   }
