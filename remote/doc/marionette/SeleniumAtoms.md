@@ -10,7 +10,6 @@ Currently the following atoms are in use:
 
 - `getElementText`
 - `isElementDisplayed`
-- `isElementEnabled`
 
 To use one of those atoms Javascript modules will have to import
 [atom.sys.mjs].
@@ -56,7 +55,6 @@ commands. Make sure to [install bazelisk] first.
 ```bash
 bazel build //javascript/atoms/fragments:get-text
 bazel build //javascript/atoms/fragments:is-displayed
-bazel build //javascript/atoms/fragments:is-enabled
 ```
 
 For each of the exported atoms a file can now be found in the folder
