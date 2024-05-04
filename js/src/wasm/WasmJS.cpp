@@ -5358,30 +5358,28 @@ static bool WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc,
 }
 
 #ifdef ENABLE_WASM_JSPI
-
-class WasmSuspendingObject : public NativeObject {
- public:
-  static const JSClass class_;
-  static const unsigned WRAPPED_FN_SLOT = 0;
-  static const unsigned RESERVED_SLOTS = 1;
-
-  JSObject* wrappedFunction() const {
-    return getReservedSlot(WRAPPED_FN_SLOT).toObjectOrNull();
-  }
-  void setWrappedFunction(HandleObject fn) {
-    return setReservedSlot(WRAPPED_FN_SLOT, ObjectValue(*fn));
-  }
-};
+const ClassSpec WasmSuspendingObject::classSpec_ = {
+    GenericCreateConstructor<construct, 1, gc::AllocKind::FUNCTION>,
+    GenericCreatePrototype<WasmSuspendingObject>,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    ClassSpec::DontDefineConstructor};
 
 const JSClass WasmSuspendingObject::class_ = {
     "Suspending",
     JSCLASS_HAS_RESERVED_SLOTS(WasmSuspendingObject::RESERVED_SLOTS),
-    JS_NULL_CLASS_OPS, JS_NULL_CLASS_SPEC};
+    JS_NULL_CLASS_OPS, &classSpec_};
 
-static bool WebAssembly_suspending(JSContext* cx, unsigned argc, Value* vp) {
+const JSClass& WasmSuspendingObject::protoClass_ = PlainObject::class_;
+
+/* static */
+bool WasmSuspendingObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (!args.requireAtLeast(cx, "WebAssembly.suspending", 1)) {
+  if (!args.requireAtLeast(cx, "WebAssembly.Suspending", 1)) {
     return false;
   }
 
@@ -5428,7 +5426,6 @@ static bool WebAssembly_promising(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static const JSFunctionSpec WebAssembly_jspi_methods[] = {
-    JS_FN("suspending", WebAssembly_suspending, 1, JSPROP_ENUMERATE),
     JS_FN("promising", WebAssembly_promising, 1, JSPROP_ENUMERATE), JS_FS_END};
 
 bool js::IsWasmSuspendingObject(JSObject* obj) {
@@ -5574,9 +5571,18 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
   }
 
 #ifdef ENABLE_WASM_JSPI
-  if (JSPromiseIntegrationAvailable(cx) &&
-      !JS_DefineFunctions(cx, wasm, WebAssembly_jspi_methods)) {
-    return false;
+  constexpr NameAndProtoKey jspiEntries[] = {
+      {"Suspending", JSProto_WasmSuspending},
+  };
+  if (JSPromiseIntegrationAvailable(cx)) {
+    if (!JS_DefineFunctions(cx, wasm, WebAssembly_jspi_methods)) {
+      return false;
+    }
+    for (const auto& entry : jspiEntries) {
+      if (!WebAssemblyDefineConstructor(cx, wasm, entry, &ctorValue, &id)) {
+        return false;
+      }
+    }
   }
 #endif
 

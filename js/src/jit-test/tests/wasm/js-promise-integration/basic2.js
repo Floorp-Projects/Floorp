@@ -3,7 +3,7 @@
 
 var compute_delta = async (i) => Promise.resolve(i / 100 || 1);
 
-var suspending_compute_delta = WebAssembly.suspending(
+var suspending_compute_delta = new WebAssembly.Suspending(
     compute_delta
 );
 var ins = wasmEvalText(`(module
@@ -48,7 +48,7 @@ async function test(c) {
   if (c == 1) compute_delta = async (i) => {throw "ff"};
   if (c == 2) compute_delta = () => {throw "ff";}
 
-  var suspending_compute_delta = WebAssembly.suspending(
+  var suspending_compute_delta = new WebAssembly.Suspending(
     compute_delta
   );
   var ins = wasmEvalText(`(module

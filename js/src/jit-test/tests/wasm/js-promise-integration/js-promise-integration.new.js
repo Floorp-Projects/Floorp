@@ -53,7 +53,7 @@ function ToPromising(wasm_export) {
 }
 
 promise_test(async () => {
-  let js_import = WebAssembly.suspending(
+  let js_import = new WebAssembly.Suspending(
       () => Promise.resolve(42)
   );
   let instance = wasmEvalText(`(module
@@ -73,7 +73,7 @@ promise_test(async () => {
   function js_import() {
     return Promise.resolve(++i);
   };
-  let wasm_js_import = WebAssembly.suspending(js_import);
+  let wasm_js_import = new WebAssembly.Suspending(js_import);
   // void test() {
   //   for (i = 0; i < 5; ++i) {
   //     g = g + await import();
@@ -112,7 +112,7 @@ promise_test(async () => {
   function js_import() {
     return 42
   };
-  let wasm_js_import = WebAssembly.suspending(js_import);
+  let wasm_js_import = new WebAssembly.Suspending(js_import);
   let instance = wasmEvalText(`(module
     (import "m" "import" (func $import (param externref) (result i32)))
     (global (export "g") (mut i32) (i32.const 0))
@@ -133,7 +133,7 @@ test(t => {
   function js_import() {
     return Promise.resolve();
   };
-  let wasm_js_import = WebAssembly.suspending(js_import);
+  let wasm_js_import = new WebAssembly.Suspending(js_import);
   function js_throw() {
     throw new Error();
   }
@@ -160,7 +160,7 @@ test(t => {
   function js_import() {
     return Promise.reject(new Error());
   };
-  let wasm_js_import = WebAssembly.suspending(js_import);
+  let wasm_js_import = new WebAssembly.Suspending(js_import);
 
   let instance = wasmEvalText(`(module
     (import "m" "import" (func $import (param externref) (result i32)))
@@ -186,12 +186,12 @@ async function TestNestedSuspenders(suspend) {
   // If 'suspend' is false, the inner and outer JS functions return a regular
   // value and no computation is suspended.
 
-  let inner = WebAssembly.suspending(
+  let inner = new WebAssembly.Suspending(
       () => suspend ? Promise.resolve(42) : 43,
   );
 
   let export_inner;
-  let outer = WebAssembly.suspending(
+  let outer = new WebAssembly.Suspending(
     () => suspend ? export_inner() : 42,
   );
 
@@ -248,7 +248,7 @@ test(t => {
   function import2() {
     return Promise.resolve(0);
   }
-  import2 = WebAssembly.suspending(import2);
+  import2 = new WebAssembly.Suspending(import2);
   instance = wasmEvalText(`(module
     (import "m" "import1" (func $import1 (result i32)))
     (import "m" "import2" (func $import2 (result i32)))
