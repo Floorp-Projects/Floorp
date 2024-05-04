@@ -5836,10 +5836,7 @@ bool nsDisplayStickyPosition::UpdateScrollData(
 }
 
 bool nsDisplayStickyPosition::ShouldGetStickyAnimationId() const {
-#if defined(MOZ_WIDGET_ANDROID)
   return HasDynamicToolbar();  // also implies being in the cross-process RCD
-#endif
-  return false;
 }
 
 nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(

@@ -106,9 +106,9 @@ skip-if(useDrawSnapshot||Android) pref(apz.overscroll.enabled,false) pref(apz.ov
 # for this test, apz.allow_zooming is needed to ensure we take the containerless scrolling codepath that creates
 # an async zoom container (since we are testing a regression in that codepath)
 skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) == dynamic-toolbar-fixed-bottom-1.html dynamic-toolbar-fixed-bottom-1-ref.html
-skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) == dynamic-toolbar-sticky-bottom-1.html dynamic-toolbar-sticky-bottom-1-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.top,50) == dynamic-toolbar-fixed-top-1.html dynamic-toolbar-fixed-top-1-ref.html
-skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.top,50) == dynamic-toolbar-sticky-top-1.html dynamic-toolbar-sticky-top-1-ref.html # bug 1627326 for geckoview&&!webrender
+pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) == dynamic-toolbar-sticky-bottom-1.html dynamic-toolbar-sticky-bottom-1-ref.html
+pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.top,50) == dynamic-toolbar-sticky-top-1.html dynamic-toolbar-sticky-top-1-ref.html
 
 # The next block of tests are based on a single test page which has three
 # sticky items (one sticky to the top, one sticky to the bottom, and one sticky
@@ -144,7 +144,7 @@ defaults
 # at the top. Only the -5 and -6 scroll offsets are impacted, so the
 # reference pages for first 4 scroll offsets are the same as the baseline
 # case.
-defaults skip-if(!geckoview) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.top,50) fuzzy(0-1,0-120000)
+defaults pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.top,50) fuzzy(0-1,0-120000)
                      == dynamic-toolbar-sticky-1a.html dynamic-toolbar-sticky-1-ref.html
                      == dynamic-toolbar-sticky-1b.html dynamic-toolbar-sticky-1-ref.html
                      == dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref.html
@@ -161,17 +161,17 @@ defaults skip-if(!geckoview) pref(apz.allow_zooming,true) test-pref(apz.fixed-ma
                      == dynamic-toolbar-sticky-5b.html dynamic-toolbar-sticky-5-ref-t.html
                      == dynamic-toolbar-sticky-5c.html dynamic-toolbar-sticky-5-ref-t.html
                      == dynamic-toolbar-sticky-6a.html dynamic-toolbar-sticky-6-ref-t.html
-== dynamic-toolbar-sticky-6b.html dynamic-toolbar-sticky-6-ref-t.html # bug 1630274 for non-WR
+                     == dynamic-toolbar-sticky-6b.html dynamic-toolbar-sticky-6-ref-t.html
                      == dynamic-toolbar-sticky-6c.html dynamic-toolbar-sticky-6-ref-t.html
 defaults
 
 # Same as above block of tests, except with the dynamic toolbar margin
 # at the bottom of the page. This time the -1 and -2 scroll offsets are
 # impacted.
-defaults skip-if(!geckoview) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) fuzzy(0-1,0-120000)
+defaults pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) fuzzy(0-1,0-120000)
                      == dynamic-toolbar-sticky-1a.html dynamic-toolbar-sticky-1-ref-b.html
                      == dynamic-toolbar-sticky-1b.html dynamic-toolbar-sticky-1-ref-b.html
-== dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref-b.html # bug 1630274 for non-WR
+                     == dynamic-toolbar-sticky-1c.html dynamic-toolbar-sticky-1-ref-b.html
                      == dynamic-toolbar-sticky-2a.html dynamic-toolbar-sticky-2-ref-b.html
                      == dynamic-toolbar-sticky-2b.html dynamic-toolbar-sticky-2-ref-b.html
                      == dynamic-toolbar-sticky-2c.html dynamic-toolbar-sticky-2-ref-b.html
