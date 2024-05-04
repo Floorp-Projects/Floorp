@@ -1,5 +1,5 @@
 import "@solid-xul/jsx-runtime";
-import { For, onMount } from "solid-js";
+import { createEffect, For, onMount } from "solid-js";
 import { createSignal } from "solid-js";
 import Sortable from "sortablejs";
 
@@ -14,9 +14,8 @@ const itemStyle = {
   margin: "0.2em 0",
   "font-size": "20px",
 };
-
 export function IconBar() {
-  const [items, setItems] = createSignal([
+  const [getItems, setItems] = createSignal([
     { id: 1, title: "item 1" },
     { id: 2, title: "item 2" },
     { id: 3, title: "item 3" },
@@ -26,16 +25,28 @@ export function IconBar() {
     Sortable.create(document.getElementById("@nora:sidebar:iconbar")!, {
       animation: 150,
       store: {
+        get: (sortable) => {
+          return Object.values(items).map((v) => v.id);
+        },
         set: (sortable) => {
-          console.log(sortable.toArray());
+          const tmp = [];
+          for (const idx of sortable.toArray()) {
+            const result = items.find((v) => v.id.toString() === idx);
+            if (result) tmp.push(result);
+          }
+          setItems(tmp);
+          console.log(getItems());
         },
       },
     });
   });
 
+  //? remove reactivity for SortableJS
+  const items = getItems();
+
   return (
     <div style={containerStyle} id="@nora:sidebar:iconbar">
-      <For each={items()}>
+      <For each={items}>
         {(item) => (
           <div style={itemStyle} data-id={item.id}>
             {item.title}

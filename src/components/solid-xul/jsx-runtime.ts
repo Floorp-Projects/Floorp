@@ -2,7 +2,10 @@ import type { JSX as SolidJSX } from "solid-js";
 
 declare module "solid-js" {
   namespace JSX {
-    interface XULBrowserElement extends SolidJSX.HTMLAttributes<HTMLElement> {
+    type XULElementBase = SolidJSX.HTMLAttributes<HTMLElement> & {
+      flex?: `${number}`;
+    };
+    interface XULBrowserElement extends XULElementBase {
       contextmenu?: string;
       message?: string;
       messagemanagergroup?: string;
@@ -13,7 +16,6 @@ declare module "solid-js" {
 
       autocompletepopup?: string;
       src?: string;
-      flex?: string;
       disablefullscreen?: `${boolean}`;
       disablehistory?: `${boolean}`;
       nodefaultsrc?: string;
@@ -26,7 +28,7 @@ declare module "solid-js" {
       changeuseragent?: `${boolean}`;
       context?: string;
     }
-    interface XULMenuitemElement extends SolidJSX.HTMLAttributes<HTMLElement> {
+    interface XULMenuitemElement extends XULElementBase {
       label?: string;
       accesskey?: string;
       oncommand?: string;
@@ -34,21 +36,21 @@ declare module "solid-js" {
     interface IntrinsicElements {
       "xul:browser": XULBrowserElement;
       "xul:menuitem": XULMenuitemElement;
-      "xul:window": SolidJSX.HTMLAttributes<HTMLElement>;
-      "xul:linkset";
-      "xul:commandset";
-      "xul:command";
-      "xul:popupset";
-      "xul:tooltip";
-      "xul:panel";
-      "xul:menupopup";
-      "xul:vbox";
-      "xul:box";
-      "xul:toolbarbutton";
-      "xul:spacer";
-      "xul:splitter";
-      "xul:menuseparator";
-      "xul:menu";
+      "xul:window": XULElementBase;
+      "xul:linkset": XULElementBase;
+      "xul:commandset": XULElementBase;
+      "xul:command": XULElementBase;
+      "xul:popupset": XULElementBase;
+      "xul:tooltip": XULElementBase;
+      "xul:panel": XULElementBase;
+      "xul:menupopup": XULElementBase;
+      "xul:vbox": XULElementBase;
+      "xul:box": XULElementBase;
+      "xul:toolbarbutton": XULElementBase;
+      "xul:spacer": XULElementBase;
+      "xul:splitter": XULElementBase;
+      "xul:menuseparator": XULElementBase;
+      "xul:menu": XULElementBase;
     }
 
     interface Directives {

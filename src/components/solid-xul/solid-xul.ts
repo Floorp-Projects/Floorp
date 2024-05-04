@@ -1,5 +1,19 @@
 import type { JSX } from "solid-js";
 import { createRenderer } from "solid-js/universal";
+import { z } from "zod";
+
+//TODO: test required
+const eventListener = z
+  .function()
+  .args(z.instanceof(Event))
+  .returns(z.void())
+  .or(
+    z.object({
+      handleEvent: z.function().args(z.instanceof(Event)).returns(z.void()),
+    }),
+  );
+
+const styleObject = z.record(z.string(), z.string());
 
 export const {
   render,
@@ -38,38 +52,64 @@ export const {
     value: T,
     prev?: T,
   ): void => {
+    const isEventListener = (
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      value: any,
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    ): value is (this: Element, ev: Event) => any => {
+      return value instanceof Function;
+    };
     if (node instanceof Element) {
-      if (value instanceof Function) {
+      const resultEvListener = eventListener.safeParse(value);
+      const resultStyleObject = styleObject.safeParse(value);
+      if (resultEvListener.success) {
         //the eventListener name is on~~~
         //so have to remove the `on`
         const evName = name.slice(2).toLowerCase();
-        node.addEventListener(evName, value);
-      } else if (typeof value === "object" && name === "style") {
+        node.addEventListener(evName, resultEvListener.data);
+      } else if (resultStyleObject.success) {
         let tmp = "";
-        for (const [idx, v] of Object.entries(value)) {
+        for (const [idx, v] of Object.entries(resultStyleObject.data)) {
           tmp += `${idx}:${v};`;
         }
         node.setAttribute(name, tmp);
       } else if (typeof value === "string") {
         node.setAttribute(name, value);
+      } else if (typeof value === "number" || typeof value === "boolean") {
+        node.setAttribute(name, value.toString());
+      } else {
+        throw Error(
+          `unreachable! @nora:solid-xul:setProperty the value is not EventListener, style object, string, number, nor boolean | is ${value}`,
+        );
       }
     } else {
-      node[name] = value;
+      throw Error(
+        `unreachable! @nora:solid-xul:setProperty the node is not Element | is ${node}`,
+      );
     }
   },
   insertNode: (parent: Node, node: JSX.Element, anchor?: Node): void => {
-    parent.insertBefore(node, anchor ?? null);
+    console.log(node);
+    if (node instanceof Node) {
+      parent.insertBefore(node, anchor ?? null);
+    } else {
+      throw Error("solid-xul insertNode `node` is not Node");
+    }
   },
   removeNode: (parent: Node, node: JSX.Element): void => {
-    parent.removeChild(node);
+    if (node instanceof Node) {
+      parent.removeChild(node);
+    } else {
+      throw Error("solid-xul insertNode `node` is not Element nor XULElement");
+    }
   },
-  getParentNode: (node: Node): ParentNode => {
+  getParentNode: (node: Node): JSX.Element => {
     return node.parentNode;
   },
-  getFirstChild: (node: Node): ChildNode => {
+  getFirstChild: (node: Node): JSX.Element => {
     return node.firstChild;
   },
-  getNextSibling: (node: Node): Node => {
+  getNextSibling: (node: Node): JSX.Element => {
     return node.nextSibling;
   },
 });

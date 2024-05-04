@@ -1,4 +1,4 @@
-import { insert } from "../../components/solid-xul/solid-xul";
+import { insert } from "@solid-xul/solid-xul";
 import type { CBrowserManagerSidebar } from ".";
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
@@ -11,6 +11,7 @@ export class BMSControlFunctions {
     // This runned on create of BMSInstance.
     this.bmsInstance = BMSInstance;
   }
+
   visiblePanelBrowserElem() {
     const modeValuePref = this.bmsInstance.currentPanel;
     const selectedwebpanel = document.getElementById(
