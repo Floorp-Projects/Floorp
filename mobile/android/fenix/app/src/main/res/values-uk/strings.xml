@@ -47,12 +47,20 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Недавно збережені</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Недавно збережені</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Показати всі збережені закладки</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Показати всі збережені закладки</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Вилучити</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Вилучити</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Закладки</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Показати всі закладки</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Вилучити</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s розроблено Mozilla.</string>
@@ -536,7 +544,7 @@
     <string name="cookie_banner_cfr_message">Менше відволікань і менше файлів cookie, які відстежують вас на цьому сайті.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preferences_https_only_summary">Намагатися автоматично доступатися до сайтів за допомогою протоколу шифрування HTTPS для поліпшення безпеки.</string>
+    <string name="preferences_https_only_summary">Намагатися автоматично встановлювати з’єднання з сайтами за допомогою протоколу шифрування HTTPS для поліпшення безпеки.</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Вимкнено</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -546,7 +554,7 @@
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Докладніше</string>
     <!-- Option for the https only setting -->
-    <string name="preferences_https_only_in_all_tabs">Увімкнути на всіх вкладках</string>
+    <string name="preferences_https_only_in_all_tabs">Увімкнути у всіх вкладках</string>
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_private_tabs">Увімкнути лише у приватних вкладках</string>
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
@@ -584,6 +592,8 @@
     <string name="preferences_account_sync_error">Повторно підключіться, щоб відновити синхронізацію</string>
     <!-- Preference for language -->
     <string name="preferences_language">Мова</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Переклад</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Вибір даних</string>
     <!-- Preference for data collection -->
@@ -691,7 +701,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Повернутися до</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Останні закладки</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Останні закладки</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Закладки</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Недавно відвідані</string>
@@ -727,11 +739,11 @@
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">Класичні %s</string>
     <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
-    <string name="wallpaper_artist_series_title">Серія Від художників</string>
+    <string name="wallpaper_artist_series_title">Художня серія</string>
     <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
-    <string name="wallpaper_artist_series_description_with_learn_more">Збірка Незалежні Голоси. %s</string>
+    <string name="wallpaper_artist_series_description_with_learn_more">Збірка &quot;Незалежні голоси&quot;. %s</string>
     <!-- Description text for the artist series wallpapers. "Independent voices" is the name of the wallpaper collection -->
-    <string name="wallpaper_artist_series_description">Збірка Незалежні Голоси.</string>
+    <string name="wallpaper_artist_series_description">Збірка &quot;Незалежні голоси&quot;.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Спробуйте сплеск кольорів</string>
     <!-- Wallpaper onboarding dialog body text. -->
@@ -846,7 +858,7 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Використання й технічні дані</string>
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">Надсилання в Mozilla даних про використання, швидкодію, апаратне забезпечення та налаштування браузера, щоб допомогти вдосконалити %1$s</string>
+    <string name="preferences_usage_data_description">Надсилати в Mozilla дані про використання, швидкодію, апаратне забезпечення та налаштування браузера, щоб допомогти вдосконалити %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Маркетингові дані</string>
     <!-- Preference description for marketing data collection -->
@@ -1585,7 +1597,7 @@
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[На комп’ютері відкрийте Firefox та перейдіть на <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">Готовий до сканування</string>
+    <string name="sign_in_ready_for_scan">Сканувати</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Увійти за допомогою камери</string>
     <!-- Text shown for settings option for sign with email -->

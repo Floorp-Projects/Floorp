@@ -582,6 +582,8 @@
     <string name="preferences_account_sync_error">Ferbyn opnij om de syngronisaasje te ferfetsjen</string>
     <!-- Preference for language -->
     <string name="preferences_language">Taal</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Oersetting</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Gegevenskarren</string>
     <!-- Preference for data collection -->
