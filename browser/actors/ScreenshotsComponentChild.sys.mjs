@@ -316,8 +316,8 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     let rect = {
       left: scrollMinX,
       top: scrollMinY,
-      right: scrollWidth,
-      bottom: scrollHeight,
+      right: scrollMinX + scrollWidth,
+      bottom: scrollMinY + scrollHeight,
       width: scrollWidth,
       height: scrollHeight,
       devicePixelRatio,
@@ -349,13 +349,18 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
    *        The height of the content window.
    */
   getVisibleBounds() {
-    let { scrollX, scrollY, clientWidth, clientHeight, devicePixelRatio } =
-      this.#overlay.windowDimensions.dimensions;
+    let {
+      pageScrollX,
+      pageScrollY,
+      clientWidth,
+      clientHeight,
+      devicePixelRatio,
+    } = this.#overlay.windowDimensions.dimensions;
     let rect = {
-      left: scrollX,
-      top: scrollY,
-      right: scrollX + clientWidth,
-      bottom: scrollY + clientHeight,
+      left: pageScrollX,
+      top: pageScrollY,
+      right: pageScrollX + clientWidth,
+      bottom: pageScrollY + clientHeight,
       width: clientWidth,
       height: clientHeight,
       devicePixelRatio,

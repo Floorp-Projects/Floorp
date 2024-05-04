@@ -10,7 +10,6 @@ add_task(async function test_element_picker() {
       url: TEST_PAGE,
     },
     async browser => {
-      await clearAllTelemetryEvents();
       let helper = new ScreenshotsHelper(browser);
 
       helper.triggerUIFromToolbar();
@@ -51,6 +50,40 @@ add_task(async function test_element_picker() {
 
       mouse.click(10, 10);
       await helper.waitForStateChange(["crosshairs"]);
+    }
+  );
+});
+
+add_task(async function test_element_pickerRTL() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: RTL_TEST_PAGE,
+    },
+    async browser => {
+      let helper = new ScreenshotsHelper(browser);
+
+      helper.triggerUIFromToolbar();
+      await helper.waitForOverlay();
+
+      await helper.clickTestPageElement();
+
+      let rect = await helper.getTestPageElementRect();
+      let region = await helper.getSelectionRegionDimensions();
+
+      info(`element rect: ${JSON.stringify(rect, null, 2)}`);
+      info(`selected region: ${JSON.stringify(region, null, 2)}`);
+
+      is(
+        region.width,
+        rect.width,
+        "The selected region width is the same as the element width"
+      );
+      is(
+        region.height,
+        rect.height,
+        "The selected region height is the same as the element height"
+      );
     }
   );
 });

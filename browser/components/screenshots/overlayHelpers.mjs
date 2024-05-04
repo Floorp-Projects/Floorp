@@ -436,15 +436,17 @@ export class WindowDimensions {
 
   get dimensions() {
     return {
-      clientHeight: this.#clientHeight,
-      clientWidth: this.#clientWidth,
-      scrollHeight: this.#scrollHeight,
-      scrollWidth: this.#scrollWidth,
-      scrollX: this.#scrollX,
-      scrollY: this.#scrollY,
-      scrollMinX: this.#scrollMinX,
-      scrollMinY: this.#scrollMinY,
-      devicePixelRatio: this.#devicePixelRatio,
+      clientHeight: this.clientHeight,
+      clientWidth: this.clientWidth,
+      scrollHeight: this.scrollHeight,
+      scrollWidth: this.scrollWidth,
+      scrollX: this.scrollX,
+      scrollY: this.scrollY,
+      pageScrollX: this.pageScrollX,
+      pageScrollY: this.pageScrollY,
+      scrollMinX: this.scrollMinX,
+      scrollMinY: this.scrollMinY,
+      devicePixelRatio: this.devicePixelRatio,
     };
   }
 
@@ -465,10 +467,18 @@ export class WindowDimensions {
   }
 
   get scrollX() {
+    return this.#scrollX - this.scrollMinX;
+  }
+
+  get pageScrollX() {
     return this.#scrollX;
   }
 
   get scrollY() {
+    return this.#scrollY - this.scrollMinY;
+  }
+
+  get pageScrollY() {
     return this.#scrollY;
   }
 
@@ -482,6 +492,21 @@ export class WindowDimensions {
 
   get devicePixelRatio() {
     return this.#devicePixelRatio;
+  }
+
+  isInViewport(rect) {
+    // eslint-disable-next-line no-shadow
+    let { left, top, right, bottom } = rect;
+
+    if (
+      left > this.scrollX + this.clientWidth ||
+      right < this.scrollX ||
+      top > this.scrollY + this.clientHeight ||
+      bottom < this.scrollY
+    ) {
+      return false;
+    }
+    return true;
   }
 
   reset() {

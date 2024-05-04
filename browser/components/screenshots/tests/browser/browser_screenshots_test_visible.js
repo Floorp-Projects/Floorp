@@ -394,3 +394,84 @@ add_task(async function test_visibleScreenshotScrolledXAndY() {
     }
   );
 });
+
+add_task(async function test_visibleScreenshotRTL() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: RTL_TEST_PAGE,
+    },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], () => {
+        content.scrollTo(-1000, 0);
+      });
+
+      let helper = new ScreenshotsHelper(browser);
+      let contentInfo = await helper.getContentDimensions();
+      ok(contentInfo, "Got dimensions back from the content");
+      let devicePixelRatio = await getContentDevicePixelRatio(browser);
+
+      let expectedWidth = Math.floor(
+        devicePixelRatio * contentInfo.clientWidth
+      );
+      let expectedHeight = Math.floor(
+        devicePixelRatio * contentInfo.clientHeight
+      );
+
+      // click toolbar button so panel shows
+      helper.triggerUIFromToolbar();
+
+      let panel = await helper.waitForPanel();
+
+      let screenshotReady = TestUtils.topicObserved(
+        "screenshots-preview-ready"
+      );
+
+      // click the full page button in panel
+      let visiblePage = panel
+        .querySelector("screenshots-buttons")
+        .shadowRoot.querySelector("#visible-page");
+      visiblePage.click();
+
+      await screenshotReady;
+
+      let copyButton = helper.getDialogButton("copy");
+      ok(copyButton, "Got the copy button");
+
+      info("contentInfo: " + JSON.stringify(contentInfo, null, 2));
+      info(
+        "expecting: " +
+          JSON.stringify({ expectedWidth, expectedHeight }, null, 2)
+      );
+      let clipboardChanged = helper.waitForRawClipboardChange(
+        expectedWidth,
+        expectedHeight
+      );
+
+      // click copy button on dialog box
+      copyButton.click();
+
+      info("Waiting for clipboard change");
+      let result = await clipboardChanged;
+
+      info("result: " + JSON.stringify(result, null, 2));
+      info("contentInfo: " + JSON.stringify(contentInfo, null, 2));
+
+      Assert.equal(result.width, expectedWidth, "Widths should be equal");
+      Assert.equal(result.height, expectedHeight, "Heights should be equal");
+
+      assertPixel(result.color.topLeft, [255, 255, 255], "Top left pixel");
+      assertPixel(result.color.topRight, [255, 255, 255], "Top right pixel");
+      assertPixel(
+        result.color.bottomLeft,
+        [255, 255, 255],
+        "Bottom left pixel"
+      );
+      assertPixel(
+        result.color.bottomRight,
+        [255, 255, 255],
+        "Bottom right pixel"
+      );
+    }
+  );
+});
