@@ -506,6 +506,24 @@ extern const JSClass WasmFunctionClass;
 bool IsWasmSuspendingObject(JSObject* obj);
 
 #ifdef ENABLE_WASM_JSPI
+
+class WasmSuspendingObject : public NativeObject {
+ public:
+  static const ClassSpec classSpec_;
+  static const JSClass class_;
+  static const JSClass& protoClass_;
+  static const unsigned WRAPPED_FN_SLOT = 0;
+  static const unsigned RESERVED_SLOTS = 1;
+  static bool construct(JSContext*, unsigned, Value*);
+
+  JSObject* wrappedFunction() const {
+    return getReservedSlot(WRAPPED_FN_SLOT).toObjectOrNull();
+  }
+  void setWrappedFunction(HandleObject fn) {
+    return setReservedSlot(WRAPPED_FN_SLOT, ObjectValue(*fn));
+  }
+};
+
 JSObject* MaybeUnwrapSuspendingObject(JSObject* wrapper);
 #endif
 

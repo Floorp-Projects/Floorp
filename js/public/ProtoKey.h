@@ -53,6 +53,12 @@
 #  define IF_WASM_TYPE(REAL, IMAGINARY) IMAGINARY
 #endif
 
+#ifdef ENABLE_WASM_JSPI
+#  define IF_WASM_JSPI(REAL, IMAGINARY) REAL
+#else
+#  define IF_WASM_JSPI(REAL, IMAGINARY) IMAGINARY
+#endif
+
 #ifdef NIGHTLY_BUILD
 #  define IF_NIGHTLY(REAL, IMAGINARY) REAL
 #else
@@ -60,7 +66,8 @@
 #endif
 
 #define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, REAL_IF_INTL, REAL_IF_TEMPORAL, \
-                           REAL_IF_WASM_TYPE, REAL_IF_NIGHTLY)              \
+                           REAL_IF_WASM_TYPE, REAL_IF_WASM_JSPI,            \
+                           REAL_IF_NIGHTLY)                                 \
   IMAGINARY(Null, dummy)                                                    \
   REAL(Object, OCLASP(Plain))                                               \
   REAL(Function, &FunctionClass)                                            \
@@ -135,6 +142,7 @@
   REAL(WasmGlobal, OCLASP(WasmGlobal))                                      \
   REAL(WasmTag, OCLASP(WasmTag))                                            \
   REAL_IF_WASM_TYPE(WasmFunction, CLASP(WasmFunction))                      \
+  REAL_IF_WASM_JSPI(WasmSuspending, OCLASP(WasmSuspending))                 \
   REAL(WasmException, OCLASP(WasmException))                                \
   REAL(FinalizationRegistry, OCLASP(FinalizationRegistry))                  \
   REAL(WeakRef, OCLASP(WeakRef))                                            \
@@ -158,7 +166,8 @@
 #define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                                     \
   JS_FOR_PROTOTYPES_(                                                          \
       REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), IF_TEMPORAL(REAL, IMAGINARY), \
-      IF_WASM_TYPE(REAL, IMAGINARY), IF_NIGHTLY(REAL, IMAGINARY))
+      IF_WASM_TYPE(REAL, IMAGINARY), IF_WASM_JSPI(REAL, IMAGINARY),            \
+      IF_NIGHTLY(REAL, IMAGINARY))
 
 #define JS_FOR_EACH_PROTOTYPE(MACRO) JS_FOR_PROTOTYPES(MACRO, MACRO)
 
