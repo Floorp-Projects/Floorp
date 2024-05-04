@@ -12,5 +12,7 @@ export function initSidebar() {
     ),
     document.getElementById("browser"),
   );
+  //@ts-expect-error
+  // biome-ignore lint/style/noNonNullAssertion: <explanation>
   Sortable.create(document.getElementById("nyanrusIconBar")!);
 }

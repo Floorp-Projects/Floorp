@@ -13,19 +13,23 @@ const itemStyle = {
   padding: "0.3em",
   margin: "0.2em 0",
   "font-size": "20px",
+  width: "20px",
+  height: "20px",
 };
 export function IconBar() {
   const [getItems, setItems] = createSignal([
-    { id: 1, title: "item 1" },
-    { id: 2, title: "item 2" },
-    { id: 3, title: "item 3" },
+    { id: 1, title: "1" },
+    { id: 2, title: "2" },
+    { id: 3, title: "3" },
   ]);
 
   onMount(() => {
+    //@ts-expect-error
+    // biome-ignore lint/style/noNonNullAssertion: <explanation>
     Sortable.create(document.getElementById("@nora:sidebar:iconbar")!, {
       animation: 150,
       store: {
-        get: (sortable) => {
+        get: (_sortable) => {
           return Object.values(items).map((v) => v.id);
         },
         set: (sortable) => {

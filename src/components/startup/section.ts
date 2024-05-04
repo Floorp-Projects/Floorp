@@ -6,7 +6,7 @@
 export function appendSectionBefore(targetId: string) {
   const target = document.getElementById(targetId);
   if (target === null) {
-    throw Error(`@nora:startup:appendSection | the ${target} not found`);
+    throw Error(`@nora:startup:appendSection | the #${targetId} not found`);
   }
 
   const section = document.createElement("section");
