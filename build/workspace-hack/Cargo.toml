@@ -28,7 +28,7 @@ futures-sink = { version = "0.3", optional = true }
 futures-core = { version = "0.3", optional = true }
 futures-util = { version = "0.3", features = ["channel", "io", "sink"], optional = true }
 getrandom = { version = "0.2", default-features = false, features = ["std"], optional = true }
-hashbrown = { version = "0.12", optional = true }
+hashbrown = { version = "0.13", optional = true }
 hyper = { version = "0.14", features = ["full"], optional = true }
 indexmap = { version = "1", default-features = false, features = ["serde-1", "std"], optional = true }
 libc = { version = "0.2", features = ["extra_traits"] }

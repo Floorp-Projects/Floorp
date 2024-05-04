@@ -64,19 +64,22 @@ impl<T> Deref for TryBox<T> {
 }
 
 fn alloc(layout: Layout) -> Result<NonNull<u8>, TryReserveError> {
-    #[cfg(feature = "unstable")] // requires allocator_api
+    #[cfg(all(feature = "unstable", not(feature = "rust_1_57")))] // requires allocator_api
     {
+        use alloc::collections::TryReserveErrorKind;
         use core::alloc::Allocator;
         alloc::alloc::Global
             .allocate(layout)
-            .map_err(|_e| TryReserveError::AllocError {
-                layout,
-                #[cfg(not(feature = "rust_1_57"))]
-                non_exhaustive: (),
+            .map_err(|_e| {
+                TryReserveErrorKind::AllocError {
+                    layout,
+                    non_exhaustive: (),
+                }
+                .into()
             })
             .map(|v| v.cast())
     }
-    #[cfg(not(feature = "unstable"))]
+    #[cfg(any(not(feature = "unstable"), feature = "rust_1_57"))]
     {
         match layout.size() {
             0 => {
