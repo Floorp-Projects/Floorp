@@ -7,7 +7,6 @@
 #ifndef debugger_DebugAPI_h
 #define debugger_DebugAPI_h
 
-#include "js/Debug.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
@@ -229,8 +228,6 @@ class DebugAPI {
                                               const CallArgs& args,
                                               CallReason reason);
 
-  static inline bool shouldAvoidSideEffects(JSContext* cx);
-
   /*
    * Announce to the debugger a |debugger;| statement on has been
    * encountered on the youngest JS frame on |cx|. Call whatever hooks have
@@ -388,7 +385,6 @@ class DebugAPI {
   static NativeResumeMode slowPathOnNativeCall(JSContext* cx,
                                                const CallArgs& args,
                                                CallReason reason);
-  static bool slowPathShouldAvoidSideEffects(JSContext* cx);
   [[nodiscard]] static bool slowPathOnDebuggerStatement(JSContext* cx,
                                                         AbstractFramePtr frame);
   [[nodiscard]] static bool slowPathOnExceptionUnwind(JSContext* cx,
