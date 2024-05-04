@@ -199,12 +199,7 @@ public:
 #endif
                                   StringRef SearchPath,
                                   StringRef RelativePath,
-#if CLANG_VERSION_MAJOR >= 19
-                                  const Module *SuggestedModule,
-                                  bool ModuleImported,
-#else
                                   const Module *Imported,
-#endif
                                   SrcMgr::CharacteristicKind FileType) override;
 
   virtual void MacroDefined(const Token &Tok,
@@ -2348,12 +2343,7 @@ void PreprocessorHook::InclusionDirective(SourceLocation HashLoc,
 #endif
                                           StringRef SearchPath,
                                           StringRef RelativePath,
-#if CLANG_VERSION_MAJOR >= 19
-                                          const Module *SuggestedModule,
-                                          bool ModuleImported,
-#else
                                           const Module *Imported,
-#endif
                                           SrcMgr::CharacteristicKind FileType) {
 #if CLANG_VERSION_MAJOR >= 15
   if (!File) {
