@@ -48,12 +48,20 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Đã lưu gần đây</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Đã lưu gần đây</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Hiển thị tất cả các dấu trang đã lưu</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Hiển thị tất cả các dấu trang đã lưu</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Xóa</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Xóa</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Dấu trang</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Xem tất cả dấu trang</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Xóa</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s - Một sản phẩm của Mozilla.</string>
@@ -580,6 +588,8 @@
     <string name="preferences_account_sync_error">Kết nối lại để tiếp tục đồng bộ hóa</string>
     <!-- Preference for language -->
     <string name="preferences_language">Ngôn ngữ</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Dịch</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Lựa chọn dữ liệu</string>
     <!-- Preference for data collection -->
@@ -684,7 +694,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Trang đã xem gần đây</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Dấu trang gần đây</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Dấu trang gần đây</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Dấu trang</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Đã xem gần đây</string>

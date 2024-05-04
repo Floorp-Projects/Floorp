@@ -49,12 +49,20 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Arregistrate pocu fà</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Arregistrate pocu fà</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Affissà tutte l’indette arregistrate</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Affissà tutte l’indette arregistrate</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Caccià</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Caccià</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Indette</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Affissà tutte l’indette</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Caccià</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s hè sviluppatu da Mozilla.</string>
@@ -220,6 +228,8 @@
     <string name="resync_button_content_description">Risincrunizà</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Circà in a pagina</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">Circà in a pagina…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Traduce a pagina</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -257,10 +267,25 @@
     <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
     <string name="browser_menu_sign_in_caption">Sincrunizà e parolle d’intesa, l’unghjette, è ancu di più</string>
 
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">Ricunnittitevi per lancià a sincrunizazione</string>
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">Sincrunizazione messa in pausa</string>
     <!-- Browser menu label that creates a private tab -->
     <string name="browser_menu_new_private_tab">Nova unghjetta privata</string>
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">Parolle d’intesa</string>
+
+    <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
+         The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="browser_menu_new_in_firefox">Nuvità in %1$s</string>
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">Passà à a versione per urdinatore</string>
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">Attrezzi</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">Arregistrà</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -569,6 +594,8 @@
     <string name="preferences_account_sync_error">Ricunnittitevi per cuntinuà a sincrunizazione</string>
     <!-- Preference for language -->
     <string name="preferences_language">Lingua</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Traduzzione</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Scelta di dati</string>
     <!-- Preference for data collection -->
@@ -596,10 +623,10 @@
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Compie autumaticamente l’indirizzi</string>
     <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
-    <string name="preferences_show_sponsored_suggestions">Suggestioni da i finanzieri</string>
+    <string name="preferences_show_sponsored_suggestions">Suggestioni da i spunsurizatori</string>
     <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
          The first parameter is the name of the application. -->
-    <string name="preferences_show_sponsored_suggestions_summary">Sustene %1$s cù suggestioni finanziare occasiunale</string>
+    <string name="preferences_show_sponsored_suggestions_summary">Sustene %1$s cù suggestioni occasiunale spunsurizate</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
     <string name="preferences_show_nonsponsored_suggestions">Suggestioni da %1$s</string>
@@ -644,10 +671,15 @@
     <!-- The title of the optional permissions section from addon's permissions screen -->
     <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Ozzionale</string>
 
+    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
+    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Fighjà è cambià i dati di i siti web</string>
     <!-- The description of the icon that can delete one of the websites displayed  -->
     <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Squassà u situ web</string>
     <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
     <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Permette per tutti i siti</string>
+
+    <!-- The subtitle for the allow for all sites preference toggle -->
+    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">S’è vo fate cunfidenza à st’estensione, pudete cuncede u permessu nant’à tutti i siti web.</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -673,7 +705,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Rivene à st’unghjetta</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Indette recente</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Indette recente</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Indette</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Visitati pocu fà</string>
@@ -683,11 +717,11 @@
     <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
     <string name="customize_toggle_pocket_summary">Articuli selezziunati da %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
-    <string name="customize_toggle_pocket_sponsored">Articuli finanziati</string>
+    <string name="customize_toggle_pocket_sponsored">Articuli spunsurizati</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Sfonduli di screnu</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
-    <string name="customize_toggle_contile">Accurtatoghji finanziati</string>
+    <string name="customize_toggle_contile">Accurtatoghji spunsurizati</string>
 
     <!-- Wallpapers -->
     <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
@@ -1501,7 +1535,7 @@
     <!-- Title for the cookies and site data items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_and_site_data">Canistrelli è dati di siti</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">Serete disghjuntu(a) di a maiò parte di i siti</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Serete discunnessu(a) di a maiò parte di i siti</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">Fiure è schedarii messi in impiatta</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
@@ -1580,7 +1614,7 @@
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s ùn si sincruniserà più cù u vostru contu, ma ùn squasserà alcunu datu di navigazione nant’à st’apparechju.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_disconnect">Disghjunghje</string>
+    <string name="sign_out_disconnect">Discunnette</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Abbandunà</string>
     <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
@@ -2225,9 +2259,9 @@
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Preferenze</string>
     <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
-    <string name="top_sites_menu_sponsor_privacy">I nostri finanzieri è a vostra vita privata</string>
+    <string name="top_sites_menu_sponsor_privacy">I nostri spunsurizatori è a vostra vita privata</string>
     <!-- Label text displayed for a sponsored top site. -->
-    <string name="top_sites_sponsored_label">Finanziati</string>
+    <string name="top_sites_sponsored_label">Spunsurizatu</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
@@ -2294,7 +2328,7 @@
     <string name="pocket_stories_feature_learn_more">Sapene di più</string>
 
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
-    <string name="pocket_stories_sponsor_indication">Finanziatu</string>
+    <string name="pocket_stories_sponsor_indication">Spunsurizatu</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Attivà a telemetria per mandà dati.</string>
@@ -2512,10 +2546,14 @@
     <string name="translations_bottom_sheet_translate_from">Traduce da</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">Traduce versu</string>
+    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">Pruvate un’altra lingua d’origine</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Micca subitu</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
     <string name="translations_bottom_sheet_negative_button_restore">Affissà a pagina d’origine</string>
+    <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
+    <string name="translations_bottom_sheet_restore_accessibility_announcement">Pagina originale micca tradutta caricata</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Compiu</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2570,6 +2608,9 @@
 
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">Apprupositu di e traduzzioni in %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
+    <string name="translation_option_bottom_sheet_close_content_description">Chjode u panellu di e traduzzioni</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2720,9 +2761,39 @@
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Aghjunghje à l’unghjette private</string>
 
+    <!-- Micro survey -->
+
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Cuntinuà</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header">Participà à l’inchiesta</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice">Pulitica di cunfidenzialità</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Mandà</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label">Chjode</string>
+
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Vi ringraziemu d’avè spartitu u vostru avisu !</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">Assai felice</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Felice</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Indifferente</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Infelice</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">Assai infelice</string>
+
     <!-- Debug drawer logins -->
     <!-- The title of the Logins feature in the Debug Drawer. -->
     <string name="debug_drawer_logins_title">Identificazioni di cunnessione</string>
     <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
     <string name="debug_drawer_logins_current_domain_label">Duminiu attuale : %s</string>
-    </resources>
+    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+    <string name="debug_drawer_logins_add_login_button">Aghjunghje un’identificazione di cunnessione falsa per stu duminiu</string>
+    <!-- Content description for delete button where parameter will be the username of the login -->
+    <string name="debug_drawer_logins_delete_login_button_content_description">Squassà l’identificazione di cunnessione cù u nome d’utilizatore %s</string>
+</resources>

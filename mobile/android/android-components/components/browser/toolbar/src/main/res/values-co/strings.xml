@@ -2,6 +2,7 @@
 <resources>
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_toolbar_menu_button">Interfaccia</string>
+    <!-- Content description: For the clear URL text button. -->
     <string name="mozac_clear_button_description">Squassà</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">A prutezzione contr’à u spiunagiu hè attivata</string>
@@ -14,5 +15,5 @@
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
     <string name="mozac_browser_toolbar_progress_loading">Caricamentu…</string>
     <!-- Content description: For the autoplay toolbar icon, it is set when the auto play permission is blocking content playing.-->
-    <string name="mozac_browser_toolbar_content_description_autoplay_blocked">Certi cuntenuti sò stati bluccati da e preferenze di lettura autumatica</string>
+    <string name="mozac_browser_toolbar_content_description_autoplay_blocked">Certi cuntenuti sò stati bluccati da a preferenza di lettura autumatica</string>
 </resources>
