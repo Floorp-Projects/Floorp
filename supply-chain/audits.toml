@@ -1688,6 +1688,12 @@ criteria = "safe-to-deploy"
 delta = "0.4.5 -> 0.4.6"
 notes = "The changes in this version are mine."
 
+[[audits.fallible_collections]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.4.6 -> 0.4.9"
+notes = "Mostly soundness fixes."
+
 [[audits.fastrand]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -2168,6 +2174,12 @@ notes = "This version is used in rust's libstd, so effectively we're already tru
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.7.0 -> 0.8.1"
+
+[[audits.hashlink]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.8.1 -> 0.8.2"
+notes = "Only dependency changes."
 
 [[audits.headers]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

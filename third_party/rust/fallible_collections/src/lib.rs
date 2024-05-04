@@ -22,16 +22,22 @@
 //! can't return a Result to indicate allocation failure.
 
 #![cfg_attr(not(test), no_std)]
-#![cfg_attr(all(feature = "unstable", not(feature = "rust_1_57")), feature(try_reserve))]
+#![cfg_attr(feature = "unstable", feature(try_reserve_kind))]
 #![cfg_attr(feature = "unstable", feature(min_specialization))]
 #![cfg_attr(feature = "unstable", feature(allocator_api))]
 #![cfg_attr(feature = "unstable", feature(dropck_eyepatch))]
 #![cfg_attr(feature = "unstable", feature(ptr_internals))]
 #![cfg_attr(feature = "unstable", feature(core_intrinsics))]
-#![cfg_attr(all(feature = "unstable", not(feature = "rust_1_57")), feature(maybe_uninit_ref))]
 #![cfg_attr(feature = "unstable", feature(maybe_uninit_slice))]
-#![cfg_attr(feature = "unstable", feature(maybe_uninit_extra))]
 #![cfg_attr(feature = "unstable", feature(maybe_uninit_uninit_array))]
+
+#[cfg(all(feature = "unstable", feature = "rust_1_57"))]
+compile_error!(
+    "The use of the 'unstable' feature combined with the \
+'rust_1_57' feature, which is related to the partial stabilization \
+of the allocator API since rustc version 1.57, does not make sense!"
+);
+
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
@@ -47,18 +53,16 @@ pub mod arc;
 pub use arc::*;
 #[cfg(feature = "unstable")]
 pub mod btree;
-#[cfg(not(feature = "unstable"))]
+#[cfg(all(feature = "hashmap", not(feature = "unstable")))]
 pub mod hashmap;
-#[cfg(not(feature = "unstable"))]
+#[cfg(all(feature = "hashmap", not(feature = "unstable")))]
 pub use hashmap::*;
 #[macro_use]
 pub mod format;
 pub mod try_clone;
 
-#[cfg(all(feature = "unstable", not(feature = "rust_1_57")))]
-pub use alloc::collections::TryReserveError;
-#[cfg(not(all(feature = "unstable", not(feature = "rust_1_57"))))]
-pub use hashbrown::TryReserveError;
+pub mod try_reserve_error;
+pub use try_reserve_error::TryReserveError;
 
 #[cfg(feature = "std_io")]
 pub use vec::std_io::*;
@@ -81,7 +85,7 @@ pub trait TryClone {
 }
 
 #[cfg(feature = "rust_1_57")]
-fn make_try_reserve_error(len: usize, additional: usize, elem_size: usize, align: usize) -> hashbrown::TryReserveError {
+fn make_try_reserve_error(len: usize, additional: usize, elem_size: usize, align: usize) -> TryReserveError {
     if let Some(size) = len.checked_add(additional).and_then(|l| l.checked_mul(elem_size)) {
         if let Ok(layout) = alloc::alloc::Layout::from_size_align(size, align) {
             return TryReserveError::AllocError { layout }

@@ -1,6 +1,6 @@
 [package]
 name = "hashbrown"
-version = "0.12.999"
+version = "0.13.999"
 edition = "2021"
 
 [lib]

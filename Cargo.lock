@@ -1745,11 +1745,11 @@ checksum = "7360491ce676a36bf9bb3c56c1aa791658183a54d2744120f27285738d90465a"
 
 [[package]]
 name = "fallible_collections"
-version = "0.4.6"
+version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f57ccc32870366ae684be48b32a1a2e196f98a42a9b4361fe77e13fd4a34755"
+checksum = "a88c69768c0a15262df21899142bc6df9b9b823546d4b4b9a7bc2d6c448ec6fd"
 dependencies = [
- "hashbrown 0.12.999",
+ "hashbrown 0.13.999",
 ]
 
 [[package]]
@@ -2602,7 +2602,7 @@ checksum = "eabb4a44450da02c90444cf74558da904edde8fb4e9035a9a6a4e15445af0bd7"
 
 [[package]]
 name = "hashbrown"
-version = "0.12.999"
+version = "0.13.999"
 dependencies = [
  "hashbrown 0.14.5",
 ]
@@ -2618,11 +2618,11 @@ dependencies = [
 
 [[package]]
 name = "hashlink"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69fe1fcf8b4278d860ad0548329f892a3631fb63f82574df68275f34cdbe0ffa"
+checksum = "0761a1b9491c4f2e3d66aa0f62d0fba0af9a0e2852e4d48ea506632a4b56e6aa"
 dependencies = [
- "hashbrown 0.12.999",
+ "hashbrown 0.13.999",
 ]
 
 [[package]]
@@ -3844,7 +3844,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "getrandom",
- "hashbrown 0.12.999",
+ "hashbrown 0.13.999",
  "hyper",
  "indexmap 1.999.999",
  "libc",

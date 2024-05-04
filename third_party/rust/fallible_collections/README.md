@@ -17,7 +17,8 @@ It is recommended to look there for the newest released version, as well as link
 At the point of the last update of this README, the latest published version could be used like this:
 
 Add the following dependency to your Cargo manifest...
-Add feature std and rust_1_57 to use the stabilized try_reserve api and the std HashMap type.
+Add feature std and rust_1_57 to use the stabilized try_reserve api and the std HashMap type. Obviously, you cannot combine it with the 'unstable' feature.
+Add integration tests that can be run with the tiny_integration_tester command.
 
 ```toml
 [dependencies]

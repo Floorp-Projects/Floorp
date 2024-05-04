@@ -515,7 +515,7 @@ impl<T> FallibleVec<T> for Vec<T> {
             self.try_reserve(additional)
         }
 
-        #[cfg(not(feature = "rust_1_57"))]
+        #[cfg(all(not(feature = "unstable"), not(feature = "rust_1_57")))]
         {
             vec_try_reserve(self, additional)
         }
@@ -624,7 +624,7 @@ impl<T> FallibleVec<T> for Vec<T> {
         let mut iterator = other.iter();
         while let Some(element) = iterator.next() {
             unsafe {
-                core::ptr::write(self.get_unchecked_mut(len), element.try_clone()?);
+                core::ptr::write(self.as_mut_ptr().add(len), element.try_clone()?);
                 // NB can't overflow since we would have had to alloc the address space
                 len += 1;
                 self.set_len(len);

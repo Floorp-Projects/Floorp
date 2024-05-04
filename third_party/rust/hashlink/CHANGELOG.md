@@ -1,3 +1,6 @@
+## [0.8.2]
+- bump hashbrown to 0.13
+
 ## [0.8.1]
 - Add `retain_with_order` methods, equivalent to `retain` but which iterate
   through the map in the proper linked list order
