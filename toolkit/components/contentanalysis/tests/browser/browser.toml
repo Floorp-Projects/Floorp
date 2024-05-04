@@ -4,6 +4,33 @@ support-files = [
   "head.js",
 ]
 
+["browser_clipboard_content_analysis.js"]
+
+["browser_clipboard_paste_file_content_analysis.js"]
+support-files = [
+  "clipboard_paste_file.html",
+]
+
+["browser_clipboard_paste_inputandtextarea_content_analysis.js"]
+support-files = [
+  "clipboard_paste_inputandtextarea.html",
+]
+
+["browser_clipboard_paste_noformatting_content_analysis.js"]
+support-files = [
+  "clipboard_paste_noformatting.html",
+]
+
+["browser_clipboard_paste_prompt_content_analysis.js"]
+support-files = [
+  "clipboard_paste_prompt.html",
+]
+
+["browser_clipboard_read_async_content_analysis.js"]
+support-files = [
+  "clipboard_read_async.html",
+]
+
 ["browser_content_analysis_policies.js"]
 
 ["browser_print_changing_page_content_analysis.js"]

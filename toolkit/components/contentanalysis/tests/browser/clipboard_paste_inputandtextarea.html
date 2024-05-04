@@ -1,0 +1,41 @@
+<html>
+<body>
+
+<div id="content">
+  <input
+    id="testInput"
+    type="text" onpaste="handlePaste(event)">
+  <textarea id="testTextArea" onpaste="handlePaste(event)"></textarea>
+
+  <label for="pasteAllowed">Paste allowed?</label><input id="pasteAllowed" type="checkbox">
+</div>
+<script class="testbody" type="application/javascript">
+function is(a, b, msg) {
+  if (!Object.is(a, b)) {
+    throw new Error(`FAIL: expected ${b} got ${a} - ${msg}`);
+  }
+}
+
+function checkPasteHelper(event) {
+  // Set by injected JS in the test
+  let filePasteAllowed = document.getElementById("pasteAllowed").checked;
+  is(event.clipboardData.getData('text/plain'), filePasteAllowed ? "Just some text" : "",  "getData(text/plain) should return plain text");
+  is(event.clipboardData.types.length, 1, "Correct number of types");
+}
+
+function handlePaste(e) {
+  let result = null;
+  try {
+    result = checkPasteHelper(e);
+  } catch (e) {
+    result = e.toString();
+  }
+
+  document.dispatchEvent(new CustomEvent('testresult', {
+    detail: { result }
+  }));
+}
+</script>
+
+</body>
+</html>
