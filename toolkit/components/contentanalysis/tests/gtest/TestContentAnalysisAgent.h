@@ -15,18 +15,10 @@
 struct MozAgentInfo {
   PROCESS_INFORMATION processInfo;
   std::unique_ptr<content_analysis::sdk::Client> client;
-  void TerminateProcess() {
-    BOOL terminateResult = ::TerminateProcess(processInfo.hProcess, 0);
-    ASSERT_NE(FALSE, terminateResult)
-        << "Failed to terminate content_analysis_sdk_agent process";
-  }
 };
 
 void GeneratePipeName(const wchar_t* prefix, nsString& pipeName);
 void LaunchAgentWithCommandLineArguments(const nsString& cmdLineArguments,
                                          const nsString& pipeName,
                                          MozAgentInfo& agentInfo);
-MozAgentInfo LaunchAgentNormal(const wchar_t* aToBlock);
-MozAgentInfo LaunchAgentNormal(const wchar_t* aToBlock,
-                               const nsString& pipeName);
 #endif

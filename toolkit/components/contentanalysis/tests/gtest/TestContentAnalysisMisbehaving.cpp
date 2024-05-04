@@ -8,7 +8,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "content_analysis/sdk/analysis_client.h"
-#include "TestContentAnalysisUtils.h"
+#include "TestContentAnalysisAgent.h"
 #include <processenv.h>
 #include <synchapi.h>
 #include <windows.h>
@@ -70,7 +70,10 @@ TEST(ContentAnalysisMisbehaving, InvalidUtf8StringStartByteIsContinuationByte)
   // or invalid memory access or something.
   ASSERT_STREQ("\x80\x41\x41\x41", response.request_token().c_str());
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving,
@@ -92,7 +95,10 @@ TEST(ContentAnalysisMisbehaving,
   // or invalid memory access or something.
   ASSERT_STREQ("\x41\xf0\x90\x8d", response.request_token().c_str());
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, InvalidUtf8StringMultibyteSequenceTooShort)
@@ -113,7 +119,10 @@ TEST(ContentAnalysisMisbehaving, InvalidUtf8StringMultibyteSequenceTooShort)
   // or invalid memory access or something.
   ASSERT_STREQ("\xf0\x90\x8d\x41", response.request_token().c_str());
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, InvalidUtf8StringDecodesToInvalidCodePoint)
@@ -134,7 +143,10 @@ TEST(ContentAnalysisMisbehaving, InvalidUtf8StringDecodesToInvalidCodePoint)
   // or invalid memory access or something.
   ASSERT_STREQ("\xf7\xbf\xbf\xbf", response.request_token().c_str());
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, InvalidUtf8StringOverlongEncoding)
@@ -155,7 +167,10 @@ TEST(ContentAnalysisMisbehaving, InvalidUtf8StringOverlongEncoding)
   // or invalid memory access or something.
   ASSERT_STREQ("\xf0\x82\x82\xac", response.request_token().c_str());
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, StringWithEmbeddedNull)
@@ -173,7 +188,10 @@ TEST(ContentAnalysisMisbehaving, StringWithEmbeddedNull)
   std::string expected("\x41\x00\x41");
   ASSERT_EQ(expected, response.request_token());
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, ZeroResults)
@@ -190,7 +208,10 @@ TEST(ContentAnalysisMisbehaving, ZeroResults)
   ASSERT_EQ(0, MozAgentInfo.client->Send(request, &response));
   ASSERT_EQ(0, response.results().size());
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, ResultWithInvalidStatus)
@@ -211,7 +232,10 @@ TEST(ContentAnalysisMisbehaving, ResultWithInvalidStatus)
   // just make sure we can get the value without throwing
   ASSERT_GE(static_cast<int>(response.results(0).status()), 0);
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, MessageTruncatedInMiddleOfString)
@@ -228,7 +252,10 @@ TEST(ContentAnalysisMisbehaving, MessageTruncatedInMiddleOfString)
   // The response is an invalid serialization of protobuf, so this should fail
   ASSERT_EQ(-1, MozAgentInfo.client->Send(request, &response));
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, MessageWithInvalidWireType)
@@ -244,7 +271,10 @@ TEST(ContentAnalysisMisbehaving, MessageWithInvalidWireType)
   // The response is an invalid serialization of protobuf, so this should fail
   ASSERT_EQ(-1, MozAgentInfo.client->Send(request, &response));
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, MessageWithUnusedFieldNumber)
@@ -262,7 +292,10 @@ TEST(ContentAnalysisMisbehaving, MessageWithUnusedFieldNumber)
   // just make sure we can get a value without throwing
   ASSERT_STREQ("", response.request_token().c_str());
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, MessageWithWrongStringWireType)
@@ -278,7 +311,10 @@ TEST(ContentAnalysisMisbehaving, MessageWithWrongStringWireType)
   // The response is an invalid serialization of protobuf, so this should fail
   ASSERT_EQ(-1, MozAgentInfo.client->Send(request, &response));
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, MessageWithZeroTag)
@@ -294,7 +330,10 @@ TEST(ContentAnalysisMisbehaving, MessageWithZeroTag)
   // The response is an invalid serialization of protobuf, so this should fail
   ASSERT_EQ(-1, MozAgentInfo.client->Send(request, &response));
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, MessageWithZeroFieldButNonzeroWireType)
@@ -311,7 +350,10 @@ TEST(ContentAnalysisMisbehaving, MessageWithZeroFieldButNonzeroWireType)
   // The response is an invalid serialization of protobuf, so this should fail
   ASSERT_EQ(-1, MozAgentInfo.client->Send(request, &response));
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, MessageWithGroupEnd)
@@ -328,7 +370,10 @@ TEST(ContentAnalysisMisbehaving, MessageWithGroupEnd)
   // The response is an invalid serialization of protobuf, so this should fail
   ASSERT_EQ(-1, MozAgentInfo.client->Send(request, &response));
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, MessageTruncatedInMiddleOfVarint)
@@ -345,7 +390,10 @@ TEST(ContentAnalysisMisbehaving, MessageTruncatedInMiddleOfVarint)
   // The response is an invalid serialization of protobuf, so this should fail
   ASSERT_EQ(-1, MozAgentInfo.client->Send(request, &response));
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
 TEST(ContentAnalysisMisbehaving, MessageTruncatedInMiddleOfTag)
@@ -361,5 +409,8 @@ TEST(ContentAnalysisMisbehaving, MessageTruncatedInMiddleOfTag)
   // The response is an invalid serialization of protobuf, so this should fail
   ASSERT_EQ(-1, MozAgentInfo.client->Send(request, &response));
 
-  MozAgentInfo.TerminateProcess();
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
