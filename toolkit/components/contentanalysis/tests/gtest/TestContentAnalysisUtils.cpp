@@ -3,12 +3,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "TestContentAnalysisAgent.h"
+#include "TestContentAnalysisUtils.h"
 #include <combaseapi.h>
 #include <pathcch.h>
 #include <shlwapi.h>
 #include <rpc.h>
 #include <windows.h>
+
+MozAgentInfo LaunchAgentNormal(const wchar_t* aToBlock) {
+  nsString pipeName;
+  GeneratePipeName(L"contentanalysissdk-gtest-", pipeName);
+  return LaunchAgentNormal(aToBlock, pipeName);
+}
+
+MozAgentInfo LaunchAgentNormal(const wchar_t* aToBlock,
+                               const nsString& pipeName) {
+  nsString cmdLineArguments;
+  if (aToBlock && aToBlock[0] != 0) {
+    cmdLineArguments.Append(L" --toblock=.*");
+    cmdLineArguments.Append(aToBlock);
+    cmdLineArguments.Append(L".*");
+  }
+  cmdLineArguments.Append(L" --user");
+  cmdLineArguments.Append(L" --path=");
+  cmdLineArguments.Append(pipeName);
+  MozAgentInfo agentInfo;
+  LaunchAgentWithCommandLineArguments(cmdLineArguments, pipeName, agentInfo);
+  return agentInfo;
+}
 
 void GeneratePipeName(const wchar_t* prefix, nsString& pipeName) {
   pipeName = u""_ns;
