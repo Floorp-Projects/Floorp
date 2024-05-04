@@ -1,0 +1,61 @@
+<html><body>
+<script>
+async function checkPaste(event) {
+  let result = null;
+  try {
+    result = await checkPasteHelper(event);
+  } catch (e) {
+    result = e.toString();
+  }
+
+  document.dispatchEvent(new CustomEvent('testresult', {
+    detail: { result }
+  }));
+}
+
+function is(a, b, msg) {
+  if (!Object.is(a, b)) {
+    throw new Error(`FAIL: expected ${b} got ${a} - ${msg}`);
+  }
+}
+
+async function checkPasteHelper(event) {
+  let dt = event.clipboardData;
+  // Set by injected JS in the test
+  let filePasteAllowed = document.getElementById("pasteAllowed").checked;
+
+  is(dt.types.length, 2, "Correct number of types");
+
+  // TODO: Remove application/x-moz-file from content.
+  is(dt.types[0], "application/x-moz-file", "First type")
+  is(dt.types[1], "Files", "Last type must be Files");
+
+  is(dt.getData("text/plain"), "", "text/plain found with getData");
+  is(dt.getData("application/x-moz-file"), "", "application/x-moz-file found with getData");
+
+  if (!filePasteAllowed) {
+    is(dt.files.length, 0, "No files");
+  } else {
+    is(dt.files.length, 1, "Correct number of files");
+    is(dt.files[0].type, "text/plain", "Correct file type");
+  }
+  is(dt.items.length, 1, "Correct number of items");
+  is(dt.items[0].kind, "file", "Correct item kind");
+  if (!filePasteAllowed) {
+    is(dt.items[0].type, "application/x-moz-file", "Correct item type");
+    return "";
+  }
+  is(dt.items[0].type, "text/plain", "Correct item type");
+
+  let file = dt.files[0];
+  is(await file.text(), "Hello World!", "Pasted file contains right text");
+
+  return file.name;
+}
+</script>
+
+<input id="input" onpaste="checkPaste(event)">
+
+<label for="pasteAllowed">Paste allowed?</label><input id="pasteAllowed" type="checkbox">
+
+</body></html>

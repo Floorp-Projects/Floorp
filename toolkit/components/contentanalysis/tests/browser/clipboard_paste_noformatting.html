@@ -1,0 +1,46 @@
+<html>
+<body>
+
+<script class="testbody" type="application/javascript">
+function is(a, b, msg) {
+  if (!Object.is(a, b)) {
+    throw new Error(`FAIL: expected ${b} got ${a} - ${msg}`);
+  }
+}
+
+function checkPasteHelper(event) {
+  is(event.clipboardData.types.indexOf('text/html'), -1, "clipboardData shouldn't have text/html");
+  // Set by injected JS in the test
+  let filePasteAllowed = document.getElementById("pasteAllowed").checked;
+  is(event.clipboardData.getData('text/plain'), filePasteAllowed ? "Some text" : "",  "getData(text/plain) should return plain text");
+  return true;
+}
+
+window.addEventListener("paste", e => {
+  let result = null;
+  try {
+    result = checkPasteHelper(e);
+  } catch (e) {
+    result = e.toString();
+  }
+
+  document.dispatchEvent(new CustomEvent('testresult', {
+    detail: { result }
+  }));
+});
+
+document.addEventListener("teststart", _e => {
+  let editable = document.getElementById("editable1");
+  editable.focus();
+
+  window.getSelection().selectAllChildren(editable);
+
+  SpecialPowers.doCommand(window, "cmd_pasteNoFormatting");
+});
+</script>
+
+<div contenteditable="true" id="editable1"><b>Formatted Text</b><br></div>
+
+<label for="pasteAllowed">Paste allowed?</label><input id="pasteAllowed" type="checkbox">
+</body>
+</html>

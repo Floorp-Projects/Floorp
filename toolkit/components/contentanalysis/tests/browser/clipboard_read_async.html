@@ -1,0 +1,95 @@
+<html>
+<body>
+
+<!--<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>-->
+<script class="testbody" type="application/javascript">
+function is(a, b, msg) {
+  if (!Object.is(a, b)) {
+    throw new Error(`FAIL: expected ${b} got ${a} - ${msg}`);
+  }
+}
+
+function isNotAllowedException(ex) {
+  return /NS_ERROR_CONTENT_BLOCKED/.test(ex.toString()) ||
+    /DataError/.test(ex.toString()) ||
+    /NotAllowedError/.test(ex.toString());
+}
+
+async function checkReadHelper(readResult, gotNotAllowedException, isReadTextTest) {
+  // Set by injected JS in the test
+  let filePasteAllowed = document.getElementById("pasteAllowed").checked;
+  let contentAnalysisReturnsError = document.getElementById("contentAnalysisReturnsError").checked;
+  filePasteAllowed = filePasteAllowed && !contentAnalysisReturnsError;
+  is(gotNotAllowedException, !filePasteAllowed && isReadTextTest, "Should get exception from readText() if not allowed");
+  if (isReadTextTest) {
+    is(readResult, filePasteAllowed ? "Some plain text" : null,  "Should get expected text from clipboard.readText()");
+  }
+  else {
+    is(readResult.length, 1, "check number of ClipboardItems in response");
+    is(readResult[0].types.length, 2, "check number of types in ClipboardItem");
+
+    {
+      let text = null;
+      let gotNotAllowedException = false;
+      try {
+        let textBlob = await readResult[0].getType("text/plain");
+        text = await textBlob.text();
+      } catch (ex) {
+        gotNotAllowedException = isNotAllowedException(ex);
+      }
+      is(gotNotAllowedException, !filePasteAllowed, "should get exception from reading text data when blocked");
+      if (filePasteAllowed) {
+        is(text, "Some plain text", "check text/plain data");
+      }
+    }
+
+    {
+      let html = null;
+      let gotNotAllowedException = false;
+      try {
+        let htmlBlob = await readResult[0].getType("text/html");
+        html = await htmlBlob.text();
+      } catch (ex) {
+        gotNotAllowedException = isNotAllowedException(ex);
+      }
+      is(gotNotAllowedException, !filePasteAllowed, "should get exception from reading html data when blocked");
+      if (filePasteAllowed) {
+        const CLIPBOARD_HTML_STRING = "<b>Some HTML</b>";
+        let expectedHtml = navigator.platform.includes("Win")
+          ? `<html><body>\n<!--StartFragment-->${CLIPBOARD_HTML_STRING}<!--EndFragment-->\n</body>\n</html>`
+          : CLIPBOARD_HTML_STRING;
+        is(html, expectedHtml, "check text/html data");
+      }
+    }
+  }
+  return true;
+}
+
+document.addEventListener("teststart", async e => {
+  let isReadTextTest = e.detail.testType == "readText";
+  let gotNotAllowedException = false;
+  let readResult = null;
+  try {
+    let readPromise = isReadTextTest ? navigator.clipboard.readText() : navigator.clipboard.read();
+    readResult = await readPromise;
+  } catch (ex) {
+    gotNotAllowedException = isNotAllowedException(ex);
+  }
+
+  let result = null;
+  try {
+    result = checkReadHelper(readResult, gotNotAllowedException, isReadTextTest);
+  } catch (ex) {
+    result = ex.toString();
+  }
+
+  document.dispatchEvent(new CustomEvent('testresult', {
+    detail: { result }
+  }));
+});
+</script>
+
+<label for="pasteAllowed">Paste allowed?</label><input id="pasteAllowed" type="checkbox">
+<label for="contentAnalysisReturnsError">Content Analysis returns error?</label><input id="contentAnalysisReturnsError" type="checkbox">
+</body>
+</html>

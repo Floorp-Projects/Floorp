@@ -112,3 +112,127 @@ async function waitForFileToAlmostMatchSize(filePath, expectedSize) {
     return Math.abs(fileStat.size - expectedSize) <= maxSizeDifference;
   }, "Sizes should (almost) match");
 }
+
+function makeMockContentAnalysis() {
+  return {
+    isActive: true,
+    mightBeActive: true,
+    errorValue: undefined,
+
+    setupForTest(shouldAllowRequest) {
+      this.shouldAllowRequest = shouldAllowRequest;
+      this.errorValue = undefined;
+      this.calls = [];
+    },
+
+    setupForTestWithError(errorValue) {
+      this.errorValue = errorValue;
+      this.calls = [];
+    },
+
+    clearCalls() {
+      this.calls = [];
+    },
+
+    getAction() {
+      if (this.shouldAllowRequest === undefined) {
+        this.shouldAllowRequest = true;
+      }
+      return this.shouldAllowRequest
+        ? Ci.nsIContentAnalysisResponse.eAllow
+        : Ci.nsIContentAnalysisResponse.eBlock;
+    },
+
+    // nsIContentAnalysis methods
+    async analyzeContentRequest(request, _autoAcknowledge) {
+      info(
+        "Mock ContentAnalysis service: analyzeContentRequest, this.shouldAllowRequest=" +
+          this.shouldAllowRequest +
+          ", this.errorValue=" +
+          this.errorValue
+      );
+      this.calls.push(request);
+      if (this.errorValue) {
+        throw this.errorValue;
+      }
+      // Use setTimeout to simulate an async activity
+      await new Promise(res => setTimeout(res, 0));
+      return makeContentAnalysisResponse(
+        this.getAction(),
+        request.requestToken
+      );
+    },
+
+    analyzeContentRequestCallback(request, autoAcknowledge, callback) {
+      info(
+        "Mock ContentAnalysis service: analyzeContentRequestCallback, this.shouldAllowRequest=" +
+          this.shouldAllowRequest +
+          ", this.errorValue=" +
+          this.errorValue
+      );
+      this.calls.push(request);
+      if (this.errorValue) {
+        throw this.errorValue;
+      }
+      let response = makeContentAnalysisResponse(
+        this.getAction(),
+        request.requestToken
+      );
+      // Use setTimeout to simulate an async activity
+      setTimeout(() => {
+        callback.contentResult(response);
+      }, 0);
+    },
+  };
+}
+
+function whenTabLoaded(aTab, aCallback) {
+  promiseTabLoadEvent(aTab).then(aCallback);
+}
+
+function promiseTabLoaded(aTab) {
+  return new Promise(resolve => {
+    whenTabLoaded(aTab, resolve);
+  });
+}
+
+/**
+ * Waits for a load (or custom) event to finish in a given tab. If provided
+ * load an uri into the tab.
+ *
+ * @param {object} tab
+ *        The tab to load into.
+ * @param {string} [url]
+ *        The url to load, or the current url.
+ * @returns {Promise<string>} resolved when the event is handled. Rejected if
+ *          a valid load event is not received within a meaningful interval
+ */
+function promiseTabLoadEvent(tab, url) {
+  info("Wait tab event: load");
+
+  function handle(loadedUrl) {
+    if (loadedUrl === "about:blank" || (url && loadedUrl !== url)) {
+      info(`Skipping spurious load event for ${loadedUrl}`);
+      return false;
+    }
+
+    info("Tab event received: load");
+    return true;
+  }
+
+  let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, handle);
+
+  if (url) {
+    BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, url);
+  }
+
+  return loaded;
+}
+
+function promisePopupShown(popup) {
+  return BrowserTestUtils.waitForPopupEvent(popup, "shown");
+}
+
+function promisePopupHidden(popup) {
+  return BrowserTestUtils.waitForPopupEvent(popup, "hidden");
+}
