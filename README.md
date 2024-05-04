@@ -29,7 +29,7 @@
   <h3 align="center">Floorp Browser </h3>
 
   <p align="center">
-       A Browser build for keeping the Open, Private and Sustainable Web alive. Based on Mozilla Firefox.
+       A Browser built for keeping the Open, Private and Sustainable Web alive. Based on Mozilla Firefox.
     <br />
     <br />
     <a href="https://floorp.app">Official Site</a>
