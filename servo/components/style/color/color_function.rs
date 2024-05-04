@@ -4,7 +4,7 @@
 
 //! Output of parsing a color function, e.g. rgb(..), hsl(..), color(..)
 
-use crate::values::normalize;
+use crate::{color::ColorFlags, values::normalize};
 use cssparser::color::{PredefinedColorSpace, OPAQUE};
 
 use super::{
@@ -30,6 +30,7 @@ pub enum ColorFunction {
         ColorComponent<NumberOrPercentage>, // saturation
         ColorComponent<NumberOrPercentage>, // lightness
         ColorComponent<NumberOrPercentage>, // alpha
+        bool,                               // is_legacy_syntax
     ),
     /// <https://drafts.csswg.org/css-color-4/#the-hwb-notation>
     Hwb(
@@ -37,6 +38,7 @@ pub enum ColorFunction {
         ColorComponent<NumberOrPercentage>, // whiteness
         ColorComponent<NumberOrPercentage>, // blackness
         ColorComponent<NumberOrPercentage>, // alpha
+        bool,                               // is_legacy_syntax
     ),
     /// <https://drafts.csswg.org/css-color-4/#specifying-lab-lch>
     Lab(
@@ -104,31 +106,43 @@ impl ColorFunction {
 
                 AbsoluteColor::srgb_legacy(r, g, b, alpha!(alpha).unwrap_or(0.0))
             },
-            ColorFunction::Hsl(h, s, l, alpha) => {
+            ColorFunction::Hsl(h, s, l, alpha, is_legacy_syntax) => {
                 // Percent reference range for S and L: 0% = 0.0, 100% = 100.0
                 const LIGHTNESS_RANGE: f32 = 100.0;
                 const SATURATION_RANGE: f32 = 100.0;
 
-                AbsoluteColor::new(
+                let mut result = AbsoluteColor::new(
                     ColorSpace::Hsl,
                     value!(h).map(|angle| normalize_hue(angle.degrees())),
                     value!(s).map(|s| s.to_number(SATURATION_RANGE).clamp(0.0, SATURATION_RANGE)),
                     value!(l).map(|l| l.to_number(LIGHTNESS_RANGE).clamp(0.0, LIGHTNESS_RANGE)),
                     alpha!(alpha),
-                )
+                );
+
+                if *is_legacy_syntax {
+                    result.flags.insert(ColorFlags::IS_LEGACY_SRGB);
+                }
+
+                result
             },
-            ColorFunction::Hwb(h, w, b, alpha) => {
+            ColorFunction::Hwb(h, w, b, alpha, is_legacy_syntax) => {
                 // Percent reference range for W and B: 0% = 0.0, 100% = 100.0
                 const WHITENESS_RANGE: f32 = 100.0;
                 const BLACKNESS_RANGE: f32 = 100.0;
 
-                AbsoluteColor::new(
+                let mut result = AbsoluteColor::new(
                     ColorSpace::Hwb,
                     value!(h).map(|angle| normalize_hue(angle.degrees())),
                     value!(w).map(|w| w.to_number(WHITENESS_RANGE).clamp(0.0, WHITENESS_RANGE)),
                     value!(b).map(|b| b.to_number(BLACKNESS_RANGE).clamp(0.0, BLACKNESS_RANGE)),
                     alpha!(alpha),
-                )
+                );
+
+                if *is_legacy_syntax {
+                    result.flags.insert(ColorFlags::IS_LEGACY_SRGB);
+                }
+
+                result
             },
             ColorFunction::Lab(l, a, b, alpha) => {
                 // for L: 0% = 0.0, 100% = 100.0

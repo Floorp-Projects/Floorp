@@ -60,7 +60,13 @@ impl ToCss for AbsoluteColor {
 
                 dest.write_char(')')
             },
-            ColorSpace::Hsl | ColorSpace::Hwb => self.into_srgb_legacy().to_css(dest),
+            ColorSpace::Hsl | ColorSpace::Hwb => {
+                if self.flags.contains(ColorFlags::IS_LEGACY_SRGB) {
+                    self.into_srgb_legacy().to_css(dest)
+                } else {
+                    self.to_color_space(ColorSpace::Srgb).to_css(dest)
+                }
+            },
             ColorSpace::Oklab | ColorSpace::Lab | ColorSpace::Oklch | ColorSpace::Lch => {
                 if let ColorSpace::Oklab | ColorSpace::Oklch = self.color_space {
                     dest.write_str("ok")?;

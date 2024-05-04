@@ -317,7 +317,13 @@ fn parse_hsl<'i, 't>(
         (saturation, lightness, alpha)
     };
 
-    Ok(ColorFunction::Hsl(hue, saturation, lightness, alpha))
+    Ok(ColorFunction::Hsl(
+        hue,
+        saturation,
+        lightness,
+        alpha,
+        component_parser.origin_color.is_none(),
+    ))
 }
 
 /// Parses hwb syntax.
@@ -341,7 +347,13 @@ fn parse_hwb<'i, 't>(
 
     let alpha = component_parser.parse_modern_alpha(arguments)?;
 
-    Ok(ColorFunction::Hwb(hue, whiteness, blackness, alpha))
+    Ok(ColorFunction::Hwb(
+        hue,
+        whiteness,
+        blackness,
+        alpha,
+        component_parser.origin_color.is_none(),
+    ))
 }
 
 type IntoLabFn<Output> = fn(
