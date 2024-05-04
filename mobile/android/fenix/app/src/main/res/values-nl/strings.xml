@@ -587,6 +587,8 @@
     <string name="preferences_account_sync_error">Verbind opnieuw om de synchronisatie te hervatten</string>
     <!-- Preference for language -->
     <string name="preferences_language">Taal</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Vertaling</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Gegevenskeuzes</string>
     <!-- Preference for data collection -->

@@ -49,12 +49,21 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Oñeñongaturamóva</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Oñeñongaturamóva</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Ehechaukapaite techaukaha ñongatupyre</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Ehechaukapaite techaukaha ñongatupyre</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Mboguete</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Mboguete</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Techaukaha</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Ehechaukapa techaukaha</string>
+
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Mboguete</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ojapókuri Mozilla.</string>
@@ -588,6 +597,8 @@
     <string name="preferences_account_sync_error">Eikejey eñepyrũjey hag̃ua ñembojuehe</string>
     <!-- Preference for language -->
     <string name="preferences_language">Ñe’ẽ</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Ñemoñe’ẽasa</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Mba’ekuaarã jeporavo</string>
     <!-- Preference for data collection -->
@@ -695,7 +706,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Eho tapykuépe</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Techaukaha ramoguáva</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Techaukaha ramoguáva</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Techaukaha</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Ojeikeramohague</string>

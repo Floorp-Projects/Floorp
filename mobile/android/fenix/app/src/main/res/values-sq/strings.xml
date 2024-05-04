@@ -577,6 +577,8 @@
     <string name="preferences_account_sync_error">Rilidhuni për të vazhduar njëkohësimin</string>
     <!-- Preference for language -->
     <string name="preferences_language">Gjuhë</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Përkthim</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Zgjedhje për të dhënat</string>
     <!-- Preference for data collection -->

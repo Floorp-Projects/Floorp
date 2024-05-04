@@ -48,12 +48,20 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Cadwyd yn ddiweddar</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Cadwyd yn ddiweddar</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Dangos pob nod tudalen wedi’u cadw</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Dangos pob nod tudalen wedi’u cadw</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Tynnu</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Tynnu</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Nodau Tudalen</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Dangos yr holl nodau tudalen</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Tynnu</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Mae %1$s yn cael ei greu gan Mozilla.</string>
@@ -687,7 +695,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Mynd nôl i</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Nodau tudalen diweddar</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Nodau tudalen diweddar</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Nodau Tudalen</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Ymwelwyd yn ddiweddar</string>
@@ -787,7 +797,7 @@
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2">Cyfrineiriau</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs_2">Tabiau agored</string>
+    <string name="preferences_sync_tabs_2">Agor tabiau</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Allgofnodi</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -1019,7 +1029,7 @@
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
-    <string name="tab_header_label">Tabiau agored</string>
+    <string name="tab_header_label">Agor tabiau</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Tabiau preifat</string>
     <!-- Title for the list of tabs in the synced tabs -->
@@ -1496,7 +1506,7 @@
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Dileu data pori</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title_2">Tabiau agored</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Agor tabiau</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tab</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -2515,7 +2525,7 @@
     <!-- Button text on the translations dialog to begin a translation of the website. -->
     <string name="translations_bottom_sheet_positive_button">Cyfieithu</string>
     <!-- Button text on the translations dialog when a translation error appears. -->
-    <string name="translations_bottom_sheet_positive_button_error">Ceisiwch Eto</string>
+    <string name="translations_bottom_sheet_positive_button_error">Ceisiwch eto</string>
     <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
     <string name="translations_bottom_sheet_translating_in_progress">Yn cyfieithu</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
