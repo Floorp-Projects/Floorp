@@ -21,6 +21,7 @@ const LARGE_TEST_PAGE = TEST_ROOT + "large-test-page.html";
 const IFRAME_TEST_PAGE = TEST_ROOT + "iframe-test-page.html";
 const RESIZE_TEST_PAGE = TEST_ROOT + "test-page-resize.html";
 const SELECTION_TEST_PAGE = TEST_ROOT + "test-selectionAPI-page.html";
+const RTL_TEST_PAGE = TEST_ROOT + "rtl-test-page.html";
 
 const { MAX_CAPTURE_DIMENSION, MAX_CAPTURE_AREA } = ChromeUtils.importESModule(
   "resource:///modules/ScreenshotsUtils.sys.mjs"
@@ -657,6 +658,7 @@ class ScreenshotsHelper {
         ) {
           return data;
         }
+        info(`Got from clipboard: ${JSON.stringify(data, null, 2)}`);
         return false;
       },
       "Waiting for screenshot to copy to clipboard",
@@ -683,9 +685,14 @@ class ScreenshotsHelper {
         scrollMaxY,
         scrollX,
         scrollY,
+        scrollMinX,
+        scrollMinY,
       } = content.window;
-      let width = innerWidth + scrollMaxX;
-      let height = innerHeight + scrollMaxY;
+
+      let scrollWidth = innerWidth + scrollMaxX - scrollMinX;
+      let scrollHeight = innerHeight + scrollMaxY - scrollMinY;
+      let clientHeight = innerHeight;
+      let clientWidth = innerWidth;
 
       const scrollbarHeight = {};
       const scrollbarWidth = {};
@@ -694,20 +701,22 @@ class ScreenshotsHelper {
         scrollbarWidth,
         scrollbarHeight
       );
-      width -= scrollbarWidth.value;
-      height -= scrollbarHeight.value;
-      innerWidth -= scrollbarWidth.value;
-      innerHeight -= scrollbarHeight.value;
+      scrollWidth -= scrollbarWidth.value;
+      scrollHeight -= scrollbarHeight.value;
+      clientWidth -= scrollbarWidth.value;
+      clientHeight -= scrollbarHeight.value;
 
       return {
-        clientHeight: innerHeight,
-        clientWidth: innerWidth,
-        scrollHeight: height,
-        scrollWidth: width,
+        clientWidth,
+        clientHeight,
+        scrollWidth,
+        scrollHeight,
         scrollX,
         scrollY,
         scrollbarWidth: scrollbarWidth.value,
         scrollbarHeight: scrollbarHeight.value,
+        scrollMinX,
+        scrollMinY,
       };
     });
   }

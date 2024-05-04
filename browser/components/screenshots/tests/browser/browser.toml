@@ -9,6 +9,7 @@ support-files = [
   "large-test-page.html",
   "test-page-resize.html",
   "test-selectionAPI-page.html",
+  "rtl-test-page.html",
 ]
 
 prefs = [

@@ -322,7 +322,9 @@ export class ScreenshotsOverlay {
    *  }
    */
   getCoordinatesFromEvent(event) {
-    const { clientX, clientY, pageX, pageY } = event;
+    let { clientX, clientY, pageX, pageY } = event;
+    pageX -= this.windowDimensions.scrollMinX;
+    pageY -= this.windowDimensions.scrollMinY;
 
     return { clientX, clientY, pageX, pageY };
   }
@@ -1554,8 +1556,9 @@ export class ScreenshotsOverlay {
    * Update the screenshots overlay container based on the window dimensions.
    */
   updateScreenshotsOverlayContainer() {
-    let { scrollWidth, scrollHeight } = this.windowDimensions.dimensions;
-    this.screenshotsContainer.style = `width:${scrollWidth}px;height:${scrollHeight}px;`;
+    let { scrollWidth, scrollHeight, scrollMinX } =
+      this.windowDimensions.dimensions;
+    this.screenshotsContainer.style = `left:${scrollMinX};width:${scrollWidth}px;height:${scrollHeight}px;`;
   }
 
   showScreenshotsOverlayContainer() {
@@ -1649,15 +1652,10 @@ export class ScreenshotsOverlay {
       right: boxRight,
       bottom: boxBottom,
     } = this.selectionRegion.dimensions;
-    let { clientWidth, clientHeight, scrollX, scrollY, scrollWidth } =
+    let { clientHeight, scrollY, scrollWidth } =
       this.windowDimensions.dimensions;
 
-    if (
-      boxTop > scrollY + clientHeight ||
-      boxBottom < scrollY ||
-      boxLeft > scrollX + clientWidth ||
-      boxRight < scrollX
-    ) {
+    if (!this.windowDimensions.isInViewport(this.selectionRegion.dimensions)) {
       // The box is offscreen so need to draw the buttons
       return;
     }
