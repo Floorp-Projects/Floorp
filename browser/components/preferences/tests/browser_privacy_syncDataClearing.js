@@ -6,12 +6,6 @@
  * the checkboxes "alwaysClear" and "deleteOnClose" should share the same state.
  * The state of the cleaning categories cookies, cache and offlineApps should be in the state of the "deleteOnClose" box.
  */
-add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [["privacy.sanitize.useOldClearHistoryDialog", true]],
-  });
-});
-
 add_task(async function test_syncWithoutCustomPrefs() {
   await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
     leaveOpen: true,
