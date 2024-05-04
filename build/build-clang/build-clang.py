@@ -446,7 +446,7 @@ def prune_final_dir_for_clang_tidy(final_dir, target):
         if is_darwin(target) and name in ["libLLVM.dylib", "libclang-cpp.dylib"]:
             continue
         if is_linux(target) and (
-            fnmatch.fnmatch(name, "libLLVM*.so")
+            fnmatch.fnmatch(name, "libLLVM*.so*")
             or fnmatch.fnmatch(name, "libclang-cpp.so*")
         ):
             continue
