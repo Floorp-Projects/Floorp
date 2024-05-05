@@ -11,9 +11,14 @@ import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
+import org.mozilla.fenix.components.bookmarks.BookmarksUseCase.AddBookmarksUseCase
 import org.mozilla.fenix.components.menu.fake.FakeBookmarksStorage
 import org.mozilla.fenix.components.menu.middleware.MenuDialogMiddleware
 import org.mozilla.fenix.components.menu.store.BrowserMenuState
@@ -28,6 +33,8 @@ class MenuDialogMiddlewareTest {
     private val scope = coroutinesTestRule.scope
 
     private val bookmarksStorage: BookmarksStorage = FakeBookmarksStorage()
+    private val addBookmarkUseCase: AddBookmarksUseCase =
+        spy(AddBookmarksUseCase(storage = bookmarksStorage))
 
     @Test
     fun `GIVEN selected tab is bookmarked WHEN init action is dispatched THEN initial bookmark state is updated`() = runTest {
@@ -85,6 +92,83 @@ class MenuDialogMiddlewareTest {
         assertFalse(store.state.browserMenuState!!.isBookmarked)
     }
 
+    @Test
+    fun `WHEN add bookmark action is dispatched THEN bookmark state is updated`() = runTest {
+        val url = "https://www.mozilla.org"
+        val title = "Mozilla"
+        val browserMenuState = BrowserMenuState(
+            selectedTab = createTab(
+                url = url,
+                title = title,
+            ),
+        )
+        val store = createStore(
+            menuState = MenuState(
+                browserMenuState = browserMenuState,
+            ),
+        )
+
+        assertFalse(store.state.browserMenuState!!.isBookmarked)
+
+        store.dispatch(MenuAction.AddBookmark).join()
+        store.waitUntilIdle()
+
+        assertTrue(store.state.browserMenuState!!.isBookmarked)
+    }
+
+    @Test
+    fun `GIVEN no browser state WHEN add bookmark action is dispatched THEN bookmark state is not updated`() = runTest {
+        val store = createStore(
+            menuState = MenuState(
+                browserMenuState = null,
+            ),
+        )
+
+        assertNull(store.state.browserMenuState)
+
+        store.dispatch(MenuAction.AddBookmark).join()
+        store.waitUntilIdle()
+
+        assertNull(store.state.browserMenuState)
+    }
+
+    @Test
+    fun `GIVEN selected tab is bookmarked WHEN add bookmark action is dispatched THEN bookmark state is not updated`() = runTest {
+        val url = "https://www.mozilla.org"
+        val title = "Mozilla"
+
+        bookmarksStorage.addItem(
+            parentGuid = BookmarkRoot.Mobile.id,
+            url = url,
+            title = title,
+            position = 5u,
+        )
+
+        val browserMenuState = BrowserMenuState(
+            selectedTab = createTab(
+                url = url,
+                title = title,
+            ),
+        )
+        val store = spy(
+            createStore(
+                menuState = MenuState(
+                    browserMenuState = browserMenuState,
+                ),
+            ),
+        )
+
+        assertTrue(store.state.browserMenuState!!.isBookmarked)
+
+        store.dispatch(MenuAction.AddBookmark).join()
+        store.waitUntilIdle()
+
+        verify(addBookmarkUseCase, never()).invoke(url = url, title = title)
+        verify(store, never()).dispatch(MenuAction.UpdateBookmarked(isBookmarked = true))
+
+        assertTrue(store.state.browserMenuState!!.isBookmarked)
+    }
+
     private fun createStore(
         menuState: MenuState = MenuState(),
     ) = MenuStore(
@@ -92,6 +176,7 @@ class MenuDialogMiddlewareTest {
         middleware = listOf(
             MenuDialogMiddleware(
                 bookmarksStorage = bookmarksStorage,
+                addBookmarkUseCase = addBookmarkUseCase,
                 scope = scope,
             ),
         ),

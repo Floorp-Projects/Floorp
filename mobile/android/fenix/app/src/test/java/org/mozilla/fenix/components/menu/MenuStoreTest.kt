@@ -81,6 +81,26 @@ class MenuStoreTest {
     }
 
     @Test
+    fun `WHEN add bookmark action is dispatched THEN state is not updated`() = runTest {
+        val initialState = MenuState(
+            browserMenuState = BrowserMenuState(
+                selectedTab = TabSessionState(
+                    id = "tabId",
+                    content = ContentState(
+                        url = "www.google.com",
+                    ),
+                ),
+                isBookmarked = false,
+            ),
+        )
+        val store = MenuStore(initialState = initialState)
+
+        store.dispatch(MenuAction.AddBookmark).join()
+
+        assertEquals(initialState, store.state)
+    }
+
+    @Test
     fun `WHEN update bookmarked action is dispatched THEN bookmarked state is updated`() = runTest {
         val initialState = MenuState(
             browserMenuState = BrowserMenuState(
