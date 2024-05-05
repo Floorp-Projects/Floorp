@@ -192,6 +192,10 @@
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Add-ons</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Extensions</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Manage extensions</string>
+    <!-- Browser menu button that opens AMO in a tab --> -->
+    <string name="browser_menu_discover_more_extensions">Discover more extensions</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Account info</string>
     <!-- Text displayed when there are no add-ons to be shown -->
