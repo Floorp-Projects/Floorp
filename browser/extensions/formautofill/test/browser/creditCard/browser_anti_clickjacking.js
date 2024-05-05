@@ -26,12 +26,11 @@ add_task(async function test_active_delay() {
   // gets opened and listen for it in this test before we check if the item
   // is disabled.
   await SpecialPowers.pushPrefEnv({
-    set: [["security.notification_enable_delay", 1000]],
+    set: [
+      ["security.notification_enable_delay", 1000],
+      ["extensions.formautofill.reauth.enabled", false],
+    ],
   });
-  FormAutofillUtils.setOSAuthEnabled(
-    FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-    false
-  );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CC_URL },
     async function (browser) {
@@ -83,20 +82,15 @@ add_task(async function test_active_delay() {
       await closePopup(browser);
     }
   );
-  FormAutofillUtils.setOSAuthEnabled(
-    FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-    true
-  );
 });
 
 add_task(async function test_no_delay() {
   await SpecialPowers.pushPrefEnv({
-    set: [["security.notification_enable_delay", 1000]],
+    set: [
+      ["security.notification_enable_delay", 1000],
+      ["extensions.formautofill.reauth.enabled", false],
+    ],
   });
-  FormAutofillUtils.setOSAuthEnabled(
-    FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-    false
-  );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_URL },
     async function (browser) {
@@ -129,9 +123,5 @@ add_task(async function test_no_delay() {
       // Clean up
       await closePopup(browser);
     }
-  );
-  FormAutofillUtils.setOSAuthEnabled(
-    FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-    true
   );
 });
