@@ -187,7 +187,11 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     printContentUseCase()
                                     dismiss()
                                 },
-                                onShareMenuClick = {},
+                                onShareMenuClick = {
+                                    selectedTab?.let {
+                                        store.dispatch(MenuAction.Navigate.Share)
+                                    }
+                                },
                                 onOpenInAppMenuClick = {},
                             )
                         }
