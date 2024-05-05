@@ -804,6 +804,7 @@ class Editor extends PureComponent {
     };
   }
 
+  // eslint-disable-next-line complexity
   renderItems() {
     const {
       selectedSource,
@@ -817,6 +818,10 @@ class Editor extends PureComponent {
       mapScopesEnabled,
     } = this.props;
     const { editor } = this.state;
+
+    if (!selectedSource || !editor) {
+      return null;
+    }
 
     if (features.codemirrorNext) {
       return React.createElement(
@@ -832,11 +837,21 @@ class Editor extends PureComponent {
               editor,
               selectedSource,
             })
+          : null,
+        isPaused &&
+          inlinePreviewEnabled &&
+          (!selectedSource.isOriginal ||
+            selectedSource.isPrettyPrinted ||
+            mapScopesEnabled)
+          ? React.createElement(InlinePreviews, {
+              editor,
+              selectedSource,
+            })
           : null
       );
     }
 
-    if (!selectedSource || !editor || !getDocument(selectedSource.id)) {
+    if (!getDocument(selectedSource.id)) {
       return null;
     }
     return div(
