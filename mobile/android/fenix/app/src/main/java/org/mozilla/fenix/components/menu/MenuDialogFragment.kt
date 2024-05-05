@@ -79,6 +79,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     val bookmarksStorage = components.core.bookmarksStorage
                     val addBookmarkUseCase = components.useCases.bookmarksUseCases.addBookmark
                     val printContentUseCase = components.useCases.sessionUseCases.printContent
+                    val saveToPdfUseCase = components.useCases.sessionUseCases.saveToPdf
                     val selectedTab = browserStore.state.selectedTab
 
                     val navHostController = rememberNavController()
@@ -211,7 +212,10 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 onAddToShortcutsMenuClick = {},
                                 onAddToHomeScreenMenuClick = {},
                                 onSaveToCollectionMenuClick = {},
-                                onSaveAsPDFMenuClick = {},
+                                onSaveAsPDFMenuClick = {
+                                    saveToPdfUseCase()
+                                    dismiss()
+                                },
                             )
                         }
                     }
