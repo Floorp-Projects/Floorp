@@ -455,7 +455,6 @@ abstract class BaseBrowserFragment :
             tabCollectionStorage = requireComponents.core.tabCollectionStorage,
             topSitesStorage = requireComponents.core.topSitesStorage,
             pinnedSiteStorage = requireComponents.core.pinnedSiteStorage,
-            browserStore = store,
             onShowPinVerification = { intent -> savedLoginsLauncher.launch(intent) },
             onBiometricAuthenticationSuccessful = { navigateToSavedLoginsFragment() },
         )
