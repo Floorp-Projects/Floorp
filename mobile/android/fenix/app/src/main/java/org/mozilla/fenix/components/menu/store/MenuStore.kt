@@ -31,8 +31,8 @@ private fun reducer(state: MenuState, action: MenuAction): MenuState {
         is MenuAction.Navigate,
         -> state
 
-        is MenuAction.UpdateBookmarked -> state.copyWithBrowserMenuState {
-            it.copy(isBookmarked = action.isBookmarked)
+        is MenuAction.UpdateBookmarkState -> state.copyWithBrowserMenuState {
+            it.copy(bookmarkState = action.bookmarkState)
         }
     }
 }

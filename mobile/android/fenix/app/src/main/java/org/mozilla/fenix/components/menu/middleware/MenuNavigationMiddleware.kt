@@ -17,6 +17,7 @@ import mozilla.components.service.fxa.manager.AccountState.Authenticating
 import mozilla.components.service.fxa.manager.AccountState.AuthenticationProblem
 import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.components.menu.BrowserNavigationParams
 import org.mozilla.fenix.components.menu.MenuDialogFragmentDirections
 import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
@@ -45,11 +46,18 @@ class MenuNavigationMiddleware(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : Middleware<MenuState, MenuAction> {
 
+    @Suppress("CyclomaticComplexMethod")
     override fun invoke(
         context: MiddlewareContext<MenuState, MenuAction>,
         next: (MenuAction) -> Unit,
         action: MenuAction,
     ) {
+        // Get the current state before further processing of the chain of actions.
+        // This is to ensure that any navigation action will be using correct
+        // state properties before they are modified due to other actions being
+        // dispatched and processes.
+        val currentState = context.state
+
         next(action)
 
         scope.launch {
@@ -118,6 +126,18 @@ class MenuNavigationMiddleware(
                 is MenuAction.Navigate.Save -> navHostController.navigate(route = SAVE_MENU_ROUTE)
 
                 is MenuAction.Navigate.Back -> navHostController.popBackStack()
+
+                is MenuAction.Navigate.EditBookmark -> {
+                    currentState.browserMenuState?.bookmarkState?.guid?.let { guidToEdit ->
+                        navController.nav(
+                            R.id.menuDialogFragment,
+                            BrowserFragmentDirections.actionGlobalBookmarkEditFragment(
+                                guidToEdit = guidToEdit,
+                                requiresSnackbarPaddingForToolbar = true,
+                            ),
+                        )
+                    }
+                }
 
                 else -> Unit
             }

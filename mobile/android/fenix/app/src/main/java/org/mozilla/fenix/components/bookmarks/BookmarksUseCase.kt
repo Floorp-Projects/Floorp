@@ -20,12 +20,17 @@ class BookmarksUseCase(
     historyStorage: HistoryStorage,
 ) {
 
+    /**
+     * Use case for adding a new bookmark.
+     *
+     * @param storage [BookmarksStorage] used to add and retrieve bookmark data.
+     */
     class AddBookmarksUseCase internal constructor(private val storage: BookmarksStorage) {
 
         /**
          * Adds a new bookmark with the provided [url] and [title].
          *
-         * @return The result if the operation was executed or not. A bookmark may not be added if
+         * @return The guid of the newly added bookmark or null. A bookmark may not be added if
          * one with the identical [url] already exists.
          */
         @WorkerThread
@@ -34,21 +39,22 @@ class BookmarksUseCase(
             title: String,
             position: UInt? = null,
             parentGuid: String? = null,
-        ): Boolean {
+        ): String? {
             return try {
                 val canAdd = storage.getBookmarksWithUrl(url).firstOrNull { it.url == url } == null
 
-                if (canAdd) {
+                return if (canAdd) {
                     storage.addItem(
                         parentGuid ?: BookmarkRoot.Mobile.id,
                         url = url,
                         title = title,
                         position = position,
                     )
+                } else {
+                    null
                 }
-                canAdd
             } catch (e: PlacesApiException.UrlParseFailed) {
-                false
+                null
             }
         }
     }

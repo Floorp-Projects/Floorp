@@ -13,6 +13,7 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
+import org.mozilla.fenix.components.menu.store.BookmarkState
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 
@@ -50,8 +51,17 @@ class MenuDialogMiddleware(
         store: Store<MenuState, MenuAction>,
     ) = scope.launch {
         val url = store.state.browserMenuState?.selectedTab?.content?.url ?: return@launch
-        val isBookmarked = bookmarksStorage.getBookmarksWithUrl(url).any { it.url == url }
-        store.dispatch(MenuAction.UpdateBookmarked(isBookmarked = isBookmarked))
+        val bookmark =
+            bookmarksStorage.getBookmarksWithUrl(url).firstOrNull { it.url == url } ?: return@launch
+
+        store.dispatch(
+            MenuAction.UpdateBookmarkState(
+                bookmarkState = BookmarkState(
+                    guid = bookmark.guid,
+                    isBookmarked = true,
+                ),
+            ),
+        )
     }
 
     private fun addBookmark(
@@ -59,18 +69,25 @@ class MenuDialogMiddleware(
     ) = scope.launch {
         val browserMenuState = store.state.browserMenuState ?: return@launch
 
-        if (browserMenuState.isBookmarked) {
+        if (browserMenuState.bookmarkState.isBookmarked) {
             return@launch
         }
 
         val selectedTab = browserMenuState.selectedTab
         val url = selectedTab.getUrl() ?: return@launch
 
-        val isBookmarked = addBookmarkUseCase(
+        val guid = addBookmarkUseCase(
             url = url,
             title = selectedTab.content.title,
         )
 
-        store.dispatch(MenuAction.UpdateBookmarked(isBookmarked = isBookmarked))
+        store.dispatch(
+            MenuAction.UpdateBookmarkState(
+                BookmarkState(
+                    guid = guid,
+                    isBookmarked = true,
+                ),
+            ),
+        )
     }
 }

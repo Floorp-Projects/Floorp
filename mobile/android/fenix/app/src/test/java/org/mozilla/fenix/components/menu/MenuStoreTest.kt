@@ -12,8 +12,10 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mozilla.fenix.components.menu.store.BookmarkState
 import org.mozilla.fenix.components.menu.store.BrowserMenuState
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
@@ -58,26 +60,29 @@ class MenuStoreTest {
         val state = MenuState(
             browserMenuState = BrowserMenuState(
                 selectedTab = selectedTab,
-                isBookmarked = false,
+                bookmarkState = BookmarkState(),
             ),
         )
 
         assertEquals(selectedTab, state.browserMenuState!!.selectedTab)
-        assertFalse(state.browserMenuState!!.isBookmarked)
+        assertNull(state.browserMenuState!!.bookmarkState.guid)
+        assertFalse(state.browserMenuState!!.bookmarkState.isBookmarked)
 
         var newState = state.copyWithBrowserMenuState {
             it.copy(selectedTab = firefoxTab)
         }
 
         assertEquals(firefoxTab, newState.browserMenuState!!.selectedTab)
-        assertFalse(newState.browserMenuState!!.isBookmarked)
+        assertNull(state.browserMenuState!!.bookmarkState.guid)
+        assertFalse(state.browserMenuState!!.bookmarkState.isBookmarked)
 
+        val bookmarkState = BookmarkState(guid = "id", isBookmarked = true)
         newState = newState.copyWithBrowserMenuState {
-            it.copy(isBookmarked = true)
+            it.copy(bookmarkState = bookmarkState)
         }
 
         assertEquals(firefoxTab, newState.browserMenuState!!.selectedTab)
-        assertTrue(newState.browserMenuState!!.isBookmarked)
+        assertEquals(bookmarkState, newState.browserMenuState!!.bookmarkState)
     }
 
     @Test
@@ -90,7 +95,7 @@ class MenuStoreTest {
                         url = "www.google.com",
                     ),
                 ),
-                isBookmarked = false,
+                bookmarkState = BookmarkState(),
             ),
         )
         val store = MenuStore(initialState = initialState)
@@ -101,7 +106,7 @@ class MenuStoreTest {
     }
 
     @Test
-    fun `WHEN update bookmarked action is dispatched THEN bookmarked state is updated`() = runTest {
+    fun `WHEN update bookmark state action is dispatched THEN bookmark state is updated`() = runTest {
         val initialState = MenuState(
             browserMenuState = BrowserMenuState(
                 selectedTab = TabSessionState(
@@ -110,18 +115,20 @@ class MenuStoreTest {
                         url = "www.google.com",
                     ),
                 ),
-                isBookmarked = false,
+                bookmarkState = BookmarkState(),
             ),
         )
         val store = MenuStore(initialState = initialState)
 
         assertNotNull(store.state.browserMenuState)
-        assertFalse(store.state.browserMenuState!!.isBookmarked)
+        assertNull(store.state.browserMenuState!!.bookmarkState.guid)
+        assertFalse(store.state.browserMenuState!!.bookmarkState.isBookmarked)
 
-        store.dispatch(MenuAction.UpdateBookmarked(isBookmarked = true)).join()
-        assertTrue(store.state.browserMenuState!!.isBookmarked)
-
-        store.dispatch(MenuAction.UpdateBookmarked(isBookmarked = false)).join()
-        assertFalse(store.state.browserMenuState!!.isBookmarked)
+        val newBookmarkState = BookmarkState(
+            guid = "id1",
+            isBookmarked = true,
+        )
+        store.dispatch(MenuAction.UpdateBookmarkState(bookmarkState = newBookmarkState)).join()
+        assertEquals(newBookmarkState, store.state.browserMenuState!!.bookmarkState)
     }
 }

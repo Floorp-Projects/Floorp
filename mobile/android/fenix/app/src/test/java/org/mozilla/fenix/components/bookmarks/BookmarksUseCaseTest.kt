@@ -19,7 +19,8 @@ import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.capture
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.home.bookmarks.Bookmark
@@ -39,7 +40,7 @@ class BookmarksUseCaseTest {
 
         val result = useCase.addBookmark("https://mozilla.org", "Mozilla")
 
-        assertFalse(result)
+        assertNull(result)
     }
 
     @Test
@@ -54,7 +55,7 @@ class BookmarksUseCaseTest {
 
         val result = useCase.addBookmark("https://mozilla.org", "Mozilla")
 
-        assertTrue(result)
+        assertNotNull(result)
 
         coVerify { bookmarksStorage.addItem(BookmarkRoot.Mobile.id, "https://mozilla.org", "Mozilla", null) }
     }
@@ -71,7 +72,7 @@ class BookmarksUseCaseTest {
 
         val result = useCase.addBookmark("https://mozilla.org", "Mozilla", parentGuid = "parentGuid")
 
-        assertTrue(result)
+        assertNotNull(result)
 
         coVerify { bookmarksStorage.addItem("parentGuid", "https://mozilla.org", "Mozilla", null) }
     }

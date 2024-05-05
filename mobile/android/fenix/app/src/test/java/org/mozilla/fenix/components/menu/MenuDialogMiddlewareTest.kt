@@ -10,7 +10,9 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -21,6 +23,7 @@ import org.mockito.Mockito.verify
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase.AddBookmarksUseCase
 import org.mozilla.fenix.components.menu.fake.FakeBookmarksStorage
 import org.mozilla.fenix.components.menu.middleware.MenuDialogMiddleware
+import org.mozilla.fenix.components.menu.store.BookmarkState
 import org.mozilla.fenix.components.menu.store.BrowserMenuState
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
@@ -41,7 +44,7 @@ class MenuDialogMiddlewareTest {
         val url = "https://www.mozilla.org"
         val title = "Mozilla"
 
-        bookmarksStorage.addItem(
+        val guid = bookmarksStorage.addItem(
             parentGuid = BookmarkRoot.Mobile.id,
             url = url,
             title = title,
@@ -60,12 +63,14 @@ class MenuDialogMiddlewareTest {
             ),
         )
 
-        assertFalse(store.state.browserMenuState!!.isBookmarked)
+        assertNull(store.state.browserMenuState!!.bookmarkState.guid)
+        assertFalse(store.state.browserMenuState!!.bookmarkState.isBookmarked)
 
         store.dispatch(MenuAction.InitAction).join()
         store.waitUntilIdle()
 
-        assertTrue(store.state.browserMenuState!!.isBookmarked)
+        assertEquals(guid, store.state.browserMenuState!!.bookmarkState.guid)
+        assertTrue(store.state.browserMenuState!!.bookmarkState.isBookmarked)
     }
 
     @Test
@@ -84,12 +89,14 @@ class MenuDialogMiddlewareTest {
             ),
         )
 
-        assertFalse(store.state.browserMenuState!!.isBookmarked)
+        assertNull(store.state.browserMenuState!!.bookmarkState.guid)
+        assertFalse(store.state.browserMenuState!!.bookmarkState.isBookmarked)
 
         store.dispatch(MenuAction.InitAction).join()
         store.waitUntilIdle()
 
-        assertFalse(store.state.browserMenuState!!.isBookmarked)
+        assertNull(store.state.browserMenuState!!.bookmarkState.guid)
+        assertFalse(store.state.browserMenuState!!.bookmarkState.isBookmarked)
     }
 
     @Test
@@ -108,12 +115,16 @@ class MenuDialogMiddlewareTest {
             ),
         )
 
-        assertFalse(store.state.browserMenuState!!.isBookmarked)
+        store.waitUntilIdle()
+
+        assertNull(store.state.browserMenuState!!.bookmarkState.guid)
+        assertFalse(store.state.browserMenuState!!.bookmarkState.isBookmarked)
 
         store.dispatch(MenuAction.AddBookmark).join()
         store.waitUntilIdle()
 
-        assertTrue(store.state.browserMenuState!!.isBookmarked)
+        assertNotNull(store.state.browserMenuState!!.bookmarkState.guid)
+        assertTrue(store.state.browserMenuState!!.bookmarkState.isBookmarked)
     }
 
     @Test
@@ -137,7 +148,7 @@ class MenuDialogMiddlewareTest {
         val url = "https://www.mozilla.org"
         val title = "Mozilla"
 
-        bookmarksStorage.addItem(
+        val guid = bookmarksStorage.addItem(
             parentGuid = BookmarkRoot.Mobile.id,
             url = url,
             title = title,
@@ -158,15 +169,26 @@ class MenuDialogMiddlewareTest {
             ),
         )
 
-        assertTrue(store.state.browserMenuState!!.isBookmarked)
+        store.waitUntilIdle()
+
+        assertNotNull(store.state.browserMenuState!!.bookmarkState.guid)
+        assertTrue(store.state.browserMenuState!!.bookmarkState.isBookmarked)
 
         store.dispatch(MenuAction.AddBookmark).join()
         store.waitUntilIdle()
 
         verify(addBookmarkUseCase, never()).invoke(url = url, title = title)
-        verify(store, never()).dispatch(MenuAction.UpdateBookmarked(isBookmarked = true))
+        verify(store, never()).dispatch(
+            MenuAction.UpdateBookmarkState(
+                bookmarkState = BookmarkState(
+                    guid = guid,
+                    isBookmarked = true,
+                ),
+            ),
+        )
 
-        assertTrue(store.state.browserMenuState!!.isBookmarked)
+        assertNotNull(store.state.browserMenuState!!.bookmarkState.guid)
+        assertTrue(store.state.browserMenuState!!.bookmarkState.isBookmarked)
     }
 
     private fun createStore(
