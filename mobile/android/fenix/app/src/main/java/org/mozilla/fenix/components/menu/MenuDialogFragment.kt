@@ -28,6 +28,8 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
+import org.mozilla.fenix.components.menu.compose.EXTENSIONS_MENU_ROUTE
+import org.mozilla.fenix.components.menu.compose.ExtensionsSubmenu
 import org.mozilla.fenix.components.menu.compose.MAIN_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.MainMenu
 import org.mozilla.fenix.components.menu.compose.MenuDialogBottomSheet
@@ -145,7 +147,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 onSaveMenuClick = {
                                     store.dispatch(MenuAction.Navigate.Save)
                                 },
-                                onExtensionsMenuClick = {},
+                                onExtensionsMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.Extensions)
+                                },
                                 onSettingsButtonClick = {
                                     store.dispatch(MenuAction.Navigate.Settings)
                                 },
@@ -216,6 +220,16 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     saveToPdfUseCase()
                                     dismiss()
                                 },
+                            )
+                        }
+
+                        composable(route = EXTENSIONS_MENU_ROUTE) {
+                            ExtensionsSubmenu(
+                                onBackButtonClick = {
+                                    store.dispatch(MenuAction.Navigate.Back)
+                                },
+                                onManageExtensionsMenuClick = {},
+                                onDiscoverMoreExtensionsMenuClick = {},
                             )
                         }
                     }

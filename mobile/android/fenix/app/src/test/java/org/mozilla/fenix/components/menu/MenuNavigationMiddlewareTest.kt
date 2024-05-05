@@ -22,6 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
+import org.mozilla.fenix.components.menu.compose.EXTENSIONS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.TOOLS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
@@ -232,6 +233,16 @@ class MenuNavigationMiddlewareTest {
 
         verify {
             navHostController.navigate(route = SAVE_MENU_ROUTE)
+        }
+    }
+
+    @Test
+    fun `WHEN navigate to extensions action is dispatched THEN navigate to extensions submenu route`() = runTest {
+        val store = createStore()
+        store.dispatch(MenuAction.Navigate.Extensions).join()
+
+        verify {
+            navHostController.navigate(route = EXTENSIONS_MENU_ROUTE)
         }
     }
 
