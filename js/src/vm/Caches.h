@@ -77,26 +77,17 @@ class MegamorphicCacheEntry {
   // This entry is valid iff the generation matches the cache's generation.
   uint16_t generation_ = 0;
 
-  // This encodes the number of hops on the prototype chain to get to the holder
-  // object, along with information about the kind of property. If the high bit
-  // is 0, the property is a data property. If the high bit is 1 and the value
-  // is <= MaxHopsForGetterProperty, the property is a getter. Otherwise, this
-  // is a sentinel value indicating a missing property lookup.
-  uint8_t hopsAndKind_ = 0;
+  // Number of hops on the proto chain to get to the holder object. If this is
+  // zero, the property exists on the receiver object. It can also be one of
+  // the sentinel values indicating a missing property lookup.
+  uint8_t numHops_ = 0;
 
   friend class MegamorphicCache;
 
  public:
-  // A simple flag for the JIT to check which, if false, lets it know that it's
-  // just a data property N hops up the prototype chain
-  static constexpr uint8_t NonDataPropertyFlag = 128;
-
-  static constexpr uint8_t MaxHopsForGetterProperty = 253;
-  static constexpr uint8_t NumHopsForMissingProperty = 254;
-  static constexpr uint8_t NumHopsForMissingOwnProperty = 255;
-
-  static constexpr uint8_t MaxHopsForDataProperty = 127;
-  static constexpr uint8_t MaxHopsForAccessorProperty = 125;
+  static constexpr uint8_t MaxHopsForDataProperty = UINT8_MAX - 2;
+  static constexpr uint8_t NumHopsForMissingProperty = UINT8_MAX - 1;
+  static constexpr uint8_t NumHopsForMissingOwnProperty = UINT8_MAX;
 
   void init(Shape* shape, PropertyKey key, uint16_t generation, uint8_t numHops,
             TaggedSlotOffset slotOffset) {
@@ -104,30 +95,22 @@ class MegamorphicCacheEntry {
     key_ = key;
     slotOffset_ = slotOffset;
     generation_ = generation;
-    hopsAndKind_ = numHops;
-    MOZ_ASSERT(hopsAndKind_ == numHops, "numHops must fit in hopsAndKind_");
+    numHops_ = numHops;
+    MOZ_ASSERT(numHops_ == numHops, "numHops must fit in numHops_");
   }
   bool isMissingProperty() const {
-    return hopsAndKind_ == NumHopsForMissingProperty;
+    return numHops_ == NumHopsForMissingProperty;
   }
   bool isMissingOwnProperty() const {
-    return hopsAndKind_ == NumHopsForMissingOwnProperty;
+    return numHops_ == NumHopsForMissingOwnProperty;
   }
-  bool isAccessorProperty() const {
-    return hopsAndKind_ >= NonDataPropertyFlag and
-           hopsAndKind_ <= MaxHopsForGetterProperty;
-  }
-  bool isDataProperty() const { return !(hopsAndKind_ & NonDataPropertyFlag); }
+  bool isDataProperty() const { return numHops_ <= MaxHopsForDataProperty; }
   uint16_t numHops() const {
-    if (isDataProperty()) {
-      return hopsAndKind_;
-    } else {
-      MOZ_ASSERT(isAccessorProperty());
-      return hopsAndKind_ & ~NonDataPropertyFlag;
-    }
+    MOZ_ASSERT(isDataProperty());
+    return numHops_;
   }
   TaggedSlotOffset slotOffset() const {
-    MOZ_ASSERT(hopsAndKind_ <= MaxHopsForGetterProperty);
+    MOZ_ASSERT(isDataProperty());
     return slotOffset_;
   }
 
@@ -147,8 +130,8 @@ class MegamorphicCacheEntry {
     return offsetof(MegamorphicCacheEntry, slotOffset_);
   }
 
-  static constexpr size_t offsetOfHopsAndKind() {
-    return offsetof(MegamorphicCacheEntry, hopsAndKind_);
+  static constexpr size_t offsetOfNumHops() {
+    return offsetof(MegamorphicCacheEntry, numHops_);
   }
 };
 
@@ -222,16 +205,12 @@ class MegamorphicCache {
       }
     }
   }
-  bool isValidForLookup(const Entry& entry, Shape* shape, PropertyKey key) {
-    return (entry.shape_ == shape && entry.key_ == key &&
-            entry.generation_ == generation_);
-  }
   bool lookup(Shape* shape, PropertyKey key, Entry** entryp) {
     Entry& entry = getEntry(shape, key);
     *entryp = &entry;
-    return isValidForLookup(entry, shape, key);
+    return (entry.shape_ == shape && entry.key_ == key &&
+            entry.generation_ == generation_);
   }
-
   void initEntryForMissingProperty(Entry* entry, Shape* shape,
                                    PropertyKey key) {
     entry->init(shape, key, generation_, Entry::NumHopsForMissingProperty,
@@ -247,15 +226,6 @@ class MegamorphicCache {
     if (numHops > Entry::MaxHopsForDataProperty) {
       return;
     }
-    entry->init(shape, key, generation_, numHops, slotOffset);
-  }
-  void initEntryForAccessorProperty(Entry* entry, Shape* shape, PropertyKey key,
-                                    size_t numHops,
-                                    TaggedSlotOffset slotOffset) {
-    if (numHops > Entry::MaxHopsForAccessorProperty) {
-      return;
-    }
-    numHops |= MegamorphicCacheEntry::NonDataPropertyFlag;
     entry->init(shape, key, generation_, numHops, slotOffset);
   }
 
