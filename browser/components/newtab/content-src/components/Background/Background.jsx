@@ -4,13 +4,13 @@ const imgLength = 100;
 
 export function Background(props) {
 
-  if(props.className == "random_image"){
+  if(props.className === "random_image"){
     let [imgSrc,setImgSrc] = useState({
-      "url":`chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
-    }) 
-    if(!imgSrc.url.startsWith("chrome://browser/skin/newtabbg-")){
+      "url":`chrome://browser/skin/newtabbg/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
+    })
+    if(!imgSrc.url.startsWith("chrome://browser/skin/newtabbg/newtabbg-")){
       setImgSrc({
-        "url":`chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
+        "url":`chrome://browser/skin/newtabbg/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
       })
     }
     return <div id="background_back" className={props.className} >
