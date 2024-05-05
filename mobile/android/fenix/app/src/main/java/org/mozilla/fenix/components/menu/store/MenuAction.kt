@@ -22,6 +22,11 @@ sealed class MenuAction : Action {
     data object InitAction : MenuAction()
 
     /**
+     * [MenuAction] dispatched when a bookmark is to be added.
+     */
+    data object AddBookmark : MenuAction()
+
+    /**
      * Updates whether or not the current selected tab is bookmarked.
      *
      * @property isBookmarked Whether or not the current selected is bookmarked.

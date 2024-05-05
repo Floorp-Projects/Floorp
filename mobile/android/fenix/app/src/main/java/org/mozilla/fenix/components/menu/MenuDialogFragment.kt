@@ -75,6 +75,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     val browserStore = components.core.store
                     val syncStore = components.backgroundServices.syncStore
                     val bookmarksStorage = components.core.bookmarksStorage
+                    val addBookmarkUseCase = components.useCases.bookmarksUseCases.addBookmark
                     val selectedTab = browserStore.state.selectedTab
 
                     val navHostController = rememberNavController()
@@ -91,6 +92,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                             middleware = listOf(
                                 MenuDialogMiddleware(
                                     bookmarksStorage = bookmarksStorage,
+                                    addBookmarkUseCase = addBookmarkUseCase,
                                     scope = coroutineScope,
                                 ),
                                 MenuNavigationMiddleware(
@@ -168,7 +170,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 onBackButtonClick = {
                                     store.dispatch(MenuAction.Navigate.Back)
                                 },
-                                onBookmarkPageMenuClick = {},
+                                onBookmarkPageMenuClick = {
+                                    store.dispatch(MenuAction.AddBookmark)
+                                },
                                 onEditBookmarkButtonClick = {},
                                 onAddToShortcutsMenuClick = {},
                                 onAddToHomeScreenMenuClick = {},
