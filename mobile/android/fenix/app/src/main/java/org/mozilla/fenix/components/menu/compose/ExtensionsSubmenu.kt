@@ -22,6 +22,8 @@ import org.mozilla.fenix.compose.list.TextListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
+internal const val EXTENSIONS_MENU_ROUTE = "extensions_menu"
+
 @Composable
 internal fun ExtensionsSubmenu(
     onBackButtonClick: () -> Unit,
@@ -57,8 +59,9 @@ internal fun ExtensionsSubmenu(
             MenuGroup {
                 TextListItem(
                     label = stringResource(id = R.string.browser_menu_discover_more_extensions),
-                    iconPainter = painterResource(R.drawable.mozac_ic_external_link_24),
                     onClick = onDiscoverMoreExtensionsMenuClick,
+                    iconPainter = painterResource(R.drawable.mozac_ic_external_link_24),
+                    iconTint = FirefoxTheme.colors.iconSecondary,
                 )
             }
         }

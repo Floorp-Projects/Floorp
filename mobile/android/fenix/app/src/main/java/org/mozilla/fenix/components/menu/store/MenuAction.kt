@@ -100,6 +100,11 @@ sealed class MenuAction : Action {
         data object Save : Navigate()
 
         /**
+         * [Navigate] action dispatched when navigating to the extensions submenu.
+         */
+        data object Extensions : Navigate()
+
+        /**
          * [Navigate] action dispatched when a back navigation event occurs.
          */
         data object Back : Navigate()
