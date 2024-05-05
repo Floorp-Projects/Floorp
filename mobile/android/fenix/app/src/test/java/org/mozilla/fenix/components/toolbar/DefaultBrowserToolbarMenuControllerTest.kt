@@ -871,7 +871,6 @@ class DefaultBrowserToolbarMenuControllerTest {
         sessionFeature = sessionFeatureWrapper,
         topSitesStorage = topSitesStorage,
         pinnedSiteStorage = pinnedSiteStorage,
-        browserStore = browserStore,
         onShowPinVerification = {},
         onBiometricAuthenticationSuccessful = {},
     ).apply {

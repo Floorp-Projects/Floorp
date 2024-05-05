@@ -9,6 +9,10 @@ permalink: /changelog/
 * **feature-prompts** **browser-storage-sync**
   * A new `isLoginAutofillEnabled` callback is available in `PromptFeature` and `GeckoLoginStorageDelegate` to allow clients controlling whether saved logins should be autofilled or not. Default is false
 
+* **browser-state**
+  * Added `TabSessionState.getUrl()` extension function that will return the URL that could be
+    used for various features such as bookmarks or share regardless of the mode the browser is in (e.g. Reader mode). [Bug 1885628](https://bugzilla.mozilla.org/show_bug.cgi?id=1885628).
+
 * **support-base**
   * Added `StartForegroundService` to safely start a foreground service, see [Bug 1839039](https://bugzilla.mozilla.org/show_bug.cgi?id=1839039) for crash reference.
   * Added `ProcessInfoProvider` and `BuildVersionProvider` to get information about the app process and the build version.

@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.toolbar
 
 import androidx.navigation.NavController
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.ext.getUrl
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
@@ -238,28 +239,21 @@ class DefaultBrowserToolbarController(
     }
 
     override fun onShareActionClicked() {
+        val sessionId = currentSession?.id
+        val url = sessionId?.let {
+            store.state.findTab(it)?.getUrl()
+        }
         val directions = NavGraphDirections.actionGlobalShareFragment(
-            sessionId = currentSession?.id,
+            sessionId = sessionId,
             data = arrayOf(
                 ShareData(
-                    url = getProperUrl(currentSession),
+                    url = url,
                     title = currentSession?.content?.title,
                 ),
             ),
             showPage = true,
         )
         navController.navigate(directions)
-    }
-
-    private fun getProperUrl(currentSession: SessionState?): String? {
-        return currentSession?.id?.let {
-            val currentTab = store.state.findTab(it)
-            if (currentTab?.readerState?.active == true) {
-                currentTab.readerState.activeUrl
-            } else {
-                currentSession.content.url
-            }
-        }
     }
 
     companion object {

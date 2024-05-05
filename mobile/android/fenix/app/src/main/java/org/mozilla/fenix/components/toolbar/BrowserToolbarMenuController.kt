@@ -17,10 +17,10 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.ext.getUrl
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
-import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.prompt.ShareData
@@ -82,7 +82,6 @@ class DefaultBrowserToolbarMenuController(
     private val tabCollectionStorage: TabCollectionStorage,
     private val topSitesStorage: DefaultTopSitesStorage,
     private val pinnedSiteStorage: PinnedSiteStorage,
-    private val browserStore: BrowserStore,
     private val onShowPinVerification: (Intent) -> Unit,
     private val onBiometricAuthenticationSuccessful: () -> Unit,
 ) : BrowserToolbarMenuController {
@@ -219,11 +218,15 @@ class DefaultBrowserToolbarMenuController(
                 }
             }
             is ToolbarMenu.Item.Share -> {
+                val sessionId = currentSession?.id
+                val url = sessionId?.let {
+                    store.state.findTab(it)?.getUrl()
+                }
                 val directions = NavGraphDirections.actionGlobalShareFragment(
-                    sessionId = currentSession?.id,
+                    sessionId = sessionId,
                     data = arrayOf(
                         ShareData(
-                            url = getProperUrl(currentSession),
+                            url = url,
                             title = currentSession?.content?.title,
                         ),
                     ),
@@ -262,9 +265,9 @@ class DefaultBrowserToolbarMenuController(
                 }
             }
             is ToolbarMenu.Item.OpenInRegularTab -> {
-                currentSession?.let { session ->
-                    getProperUrl(session)?.let { url ->
-                        tabsUseCases.migratePrivateTabUseCase.invoke(session.id, url)
+                currentSession?.id?.let { sessionId ->
+                    store.state.findTab(sessionId)?.getUrl()?.let { url ->
+                        tabsUseCases.migratePrivateTabUseCase.invoke(sessionId, url)
                     }
                 }
             }
@@ -355,7 +358,7 @@ class DefaultBrowserToolbarMenuController(
             }
             is ToolbarMenu.Item.Bookmark -> {
                 store.state.selectedTab?.let {
-                    getProperUrl(it)?.let { url -> bookmarkTapped(url, it.content.title) }
+                    it.getUrl()?.let { url -> bookmarkTapped(url, it.content.title) }
                 }
             }
             is ToolbarMenu.Item.Bookmarks -> browserAnimator.captureEngineViewAndDrawStatically {
@@ -426,17 +429,6 @@ class DefaultBrowserToolbarMenuController(
                 val directions =
                     BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment()
                 navController.navigateSafe(R.id.browserFragment, directions)
-            }
-        }
-    }
-
-    private fun getProperUrl(currentSession: SessionState?): String? {
-        return currentSession?.id?.let {
-            val currentTab = browserStore.state.findTab(it)
-            if (currentTab?.readerState?.active == true) {
-                currentTab.readerState.activeUrl
-            } else {
-                currentSession.content.url
             }
         }
     }
