@@ -110,7 +110,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         state.accountState
                     }
                     val isBookmarked by store.observeAsState(initialValue = false) { state ->
-                        state.browserMenuState != null && state.browserMenuState.isBookmarked
+                        state.browserMenuState != null && state.browserMenuState.bookmarkState.isBookmarked
                     }
 
                     NavHost(
@@ -173,7 +173,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 onBookmarkPageMenuClick = {
                                     store.dispatch(MenuAction.AddBookmark)
                                 },
-                                onEditBookmarkButtonClick = {},
+                                onEditBookmarkButtonClick = {
+                                    store.dispatch(MenuAction.Navigate.EditBookmark)
+                                },
                                 onAddToShortcutsMenuClick = {},
                                 onAddToHomeScreenMenuClick = {},
                                 onSaveToCollectionMenuClick = {},

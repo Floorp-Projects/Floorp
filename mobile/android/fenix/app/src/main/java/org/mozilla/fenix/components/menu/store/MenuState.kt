@@ -20,9 +20,20 @@ data class MenuState(
  * Value type that represents the state of the browser menu.
  *
  * @property selectedTab The current selected [TabSessionState].
- * @property isBookmarked Whether or not the selected tab is bookmarked.
+ * @property bookmarkState The [BookmarkState] of the selected tab.
  */
 data class BrowserMenuState(
     val selectedTab: TabSessionState,
+    val bookmarkState: BookmarkState = BookmarkState(),
+)
+
+/**
+ * Value type that represents the bookmark state of a tab.
+ *
+ * @property guid The id of the bookmark.
+ * @property isBookmarked Whether or not the selected tab is bookmarked.
+ */
+data class BookmarkState(
+    val guid: String? = null,
     val isBookmarked: Boolean = false,
 )

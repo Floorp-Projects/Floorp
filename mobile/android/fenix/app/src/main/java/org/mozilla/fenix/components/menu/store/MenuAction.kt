@@ -27,11 +27,11 @@ sealed class MenuAction : Action {
     data object AddBookmark : MenuAction()
 
     /**
-     * Updates whether or not the current selected tab is bookmarked.
+     * [MenuAction] dispatched when a bookmark state is updated.
      *
-     * @property isBookmarked Whether or not the current selected is bookmarked.
+     * @property bookmarkState The new [BookmarkState] to be updated.
      */
-    data class UpdateBookmarked(val isBookmarked: Boolean) : MenuAction()
+    data class UpdateBookmarkState(val bookmarkState: BookmarkState) : MenuAction()
 
     /**
      * [MenuAction] dispatched when a navigation event occurs for a specific destination.
@@ -98,5 +98,10 @@ sealed class MenuAction : Action {
          * [Navigate] action dispatched when a back navigation event occurs.
          */
         data object Back : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to edit the existing bookmark.
+         */
+        data object EditBookmark : Navigate()
     }
 }
