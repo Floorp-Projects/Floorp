@@ -35,9 +35,12 @@ internal const val MAIN_MENU_ROUTE = "main_menu"
  * @param accessPoint The [MenuAccessPoint] that was used to navigate to the menu dialog.
  * @param account [Account] information available for a synced account.
  * @param accountState The [AccountState] of a Mozilla account.
+ * @param isPrivate Whether or not the browsing mode is in private mode.
  * @param onMozillaAccountButtonClick Invoked when the user clicks on Mozilla account button.
  * @param onHelpButtonClick Invoked when the user clicks on the help button.
  * @param onSettingsButtonClick Invoked when the user clicks on the settings button.
+ * @param onNewTabMenuClick Invoked when the user clicks on the new tab menu item.
+ * @param onNewPrivateTabMenuClick Invoked when the user clicks on the new private tab menu item.
  * @param onSwitchToDesktopSiteMenuClick Invoked when the user clicks on the switch to desktop site
  * menu toggle.
  * @param onFindInPageMenuClick Invoked when the user clicks on the find in page menu item.
@@ -58,9 +61,12 @@ internal fun MainMenu(
     accessPoint: MenuAccessPoint,
     account: Account?,
     accountState: AccountState,
+    isPrivate: Boolean,
     onMozillaAccountButtonClick: () -> Unit,
     onHelpButtonClick: () -> Unit,
     onSettingsButtonClick: () -> Unit,
+    onNewTabMenuClick: () -> Unit,
+    onNewPrivateTabMenuClick: () -> Unit,
     onSwitchToDesktopSiteMenuClick: () -> Unit,
     onFindInPageMenuClick: () -> Unit,
     onToolsMenuClick: () -> Unit,
@@ -94,19 +100,12 @@ internal fun MainMenu(
                 ),
             verticalArrangement = Arrangement.spacedBy(32.dp),
         ) {
-            MenuGroup {
-                MenuItem(
-                    label = stringResource(id = R.string.library_new_tab),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_plus_24),
-                )
-
-                Divider(color = FirefoxTheme.colors.borderSecondary)
-
-                MenuItem(
-                    label = stringResource(id = R.string.browser_menu_new_private_tab),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_private_mode_circle_fill_24),
-                )
-            }
+            NewTabsMenuGroup(
+                accessPoint = accessPoint,
+                isPrivate = isPrivate,
+                onNewTabMenuClick = onNewTabMenuClick,
+                onNewPrivateTabMenuClick = onNewPrivateTabMenuClick,
+            )
 
             ToolsAndActionsMenuGroup(
                 accessPoint = accessPoint,
@@ -131,6 +130,49 @@ internal fun MainMenu(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun NewTabsMenuGroup(
+    accessPoint: MenuAccessPoint,
+    isPrivate: Boolean,
+    onNewTabMenuClick: () -> Unit,
+    onNewPrivateTabMenuClick: () -> Unit,
+) {
+    val isNewTabMenuEnabled: Boolean
+    val isNewPrivateTabMenuEnabled: Boolean
+
+    when (accessPoint) {
+        MenuAccessPoint.Browser,
+        MenuAccessPoint.External,
+        -> {
+            isNewTabMenuEnabled = true
+            isNewPrivateTabMenuEnabled = true
+        }
+
+        MenuAccessPoint.Home -> {
+            isNewTabMenuEnabled = isPrivate
+            isNewPrivateTabMenuEnabled = !isPrivate
+        }
+    }
+
+    MenuGroup {
+        MenuItem(
+            label = stringResource(id = R.string.library_new_tab),
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_plus_24),
+            state = if (isNewTabMenuEnabled) MenuItemState.ENABLED else MenuItemState.DISABLED,
+            onClick = onNewTabMenuClick,
+        )
+
+        Divider(color = FirefoxTheme.colors.borderSecondary)
+
+        MenuItem(
+            label = stringResource(id = R.string.browser_menu_new_private_tab),
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_private_mode_circle_fill_24),
+            state = if (isNewPrivateTabMenuEnabled) MenuItemState.ENABLED else MenuItemState.DISABLED,
+            onClick = onNewPrivateTabMenuClick,
+        )
     }
 }
 
@@ -266,9 +308,12 @@ private fun MenuDialogPreview() {
                 accessPoint = MenuAccessPoint.Home,
                 account = null,
                 accountState = NotAuthenticated,
+                isPrivate = false,
                 onMozillaAccountButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
+                onNewTabMenuClick = {},
+                onNewPrivateTabMenuClick = {},
                 onSwitchToDesktopSiteMenuClick = {},
                 onFindInPageMenuClick = {},
                 onToolsMenuClick = {},
@@ -297,9 +342,12 @@ private fun MenuDialogPrivatePreview() {
                 accessPoint = MenuAccessPoint.Home,
                 account = null,
                 accountState = NotAuthenticated,
+                isPrivate = false,
                 onMozillaAccountButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
+                onNewTabMenuClick = {},
+                onNewPrivateTabMenuClick = {},
                 onSwitchToDesktopSiteMenuClick = {},
                 onFindInPageMenuClick = {},
                 onToolsMenuClick = {},

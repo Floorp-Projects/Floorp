@@ -53,6 +53,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 class MenuDialogFragment : BottomSheetDialogFragment() {
 
     private val args by navArgs<MenuDialogFragmentArgs>()
+    private val browsingModeManager get() = (activity as HomeActivity).browsingModeManager
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
         super.onCreateDialog(savedInstanceState).apply {
@@ -104,6 +105,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 MenuNavigationMiddleware(
                                     navController = findNavController(),
                                     navHostController = navHostController,
+                                    browsingModeManager = browsingModeManager,
                                     openToBrowser = ::openToBrowser,
                                     scope = coroutineScope,
                                 ),
@@ -128,6 +130,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 accessPoint = args.accesspoint,
                                 account = account,
                                 accountState = accountState,
+                                isPrivate = browsingModeManager.mode.isPrivate,
                                 onMozillaAccountButtonClick = {
                                     store.dispatch(
                                         MenuAction.Navigate.MozillaAccount(
@@ -139,6 +142,15 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 onHelpButtonClick = {
                                     store.dispatch(MenuAction.Navigate.Help)
                                 },
+                                onSettingsButtonClick = {
+                                    store.dispatch(MenuAction.Navigate.Settings)
+                                },
+                                onNewTabMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.NewTab)
+                                },
+                                onNewPrivateTabMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.NewPrivateTab)
+                                },
                                 onSwitchToDesktopSiteMenuClick = {},
                                 onFindInPageMenuClick = {},
                                 onToolsMenuClick = {
@@ -149,9 +161,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 },
                                 onExtensionsMenuClick = {
                                     store.dispatch(MenuAction.Navigate.Extensions)
-                                },
-                                onSettingsButtonClick = {
-                                    store.dispatch(MenuAction.Navigate.Settings)
                                 },
                                 onBookmarksMenuClick = {
                                     store.dispatch(MenuAction.Navigate.Bookmarks)

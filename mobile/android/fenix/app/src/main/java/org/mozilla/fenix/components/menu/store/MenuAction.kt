@@ -128,5 +128,15 @@ sealed class MenuAction : Action {
          * [Navigate] action dispatched when navigating to the extensions manager.
          */
         data object ManageExtensions : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to the new tab.
+         */
+        data object NewTab : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to the new private tab.
+         */
+        data object NewPrivateTab : Navigate()
     }
 }
