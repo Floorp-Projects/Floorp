@@ -2520,6 +2520,8 @@
     <string name="translations_bottom_sheet_negative_button">Nid nawr</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
     <string name="translations_bottom_sheet_negative_button_restore">Dangos y gwreiddiol</string>
+    <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
+    <string name="translations_bottom_sheet_restore_accessibility_announcement">Tudalen wreiddiol heb ei chyfieithu wedi\'i llwytho</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Gorffen</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->

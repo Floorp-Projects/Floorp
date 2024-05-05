@@ -47,11 +47,19 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Zontâts di resint</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Zontâts di resint</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Mostre ducj i segnelibris salvâts</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Mostre ducj i segnelibris salvâts</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Gjave</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Gjave</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Segnelibris</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Mostre ducj i segnelibris</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Gjave</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s al è prodot di Mozilla.</string>
@@ -215,6 +223,8 @@
     <string name="resync_button_content_description">Torne sincronize</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Cjate te pagjine</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page_2">Cjate te pagjine…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Tradûs pagjine</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -264,6 +274,14 @@
     <!-- Browser menu label that navigates to the SUMO page for the Firefox for Android release notes.
          The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="browser_menu_new_in_firefox">Novitâts in %1$s</string>
+
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">Passe al sît par scritori</string>
+    <!-- Browser menu label that navigates to the page tools sub-menu -->
+    <string name="browser_menu_tools">Struments</string>
+    <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
+         bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
+    <string name="browser_menu_save">Salve</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -575,6 +593,8 @@
     <string name="preferences_language">Lenghe</string>
 
 
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Traduzion</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Sielte di dâts</string>
     <!-- Preference for data collection -->
@@ -679,7 +699,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Ripie di chi</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Segnelibris resints</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Segnelibris resints</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Segnelibris</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Visitâts di resint</string>
@@ -2714,13 +2736,13 @@
     <!-- The continue button label -->
     <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Continue</string>
     <!-- The survey header -->
-    <string name="micro_survey_survey_header" tools:ignore="UnusedResources">Complete chest sondaç</string>
+    <string name="micro_survey_survey_header">Complete chest sondaç</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice" tools:ignore="UnusedResources">Informative su la riservatece</string>
+    <string name="micro_survey_privacy_notice">Informative su la riservatece</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Invie</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Siere</string>
+    <string name="micro_survey_close_button_label">Siere</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Graciis di vê condividude la tô opinion.</string>
     <!-- Option for likert scale -->
