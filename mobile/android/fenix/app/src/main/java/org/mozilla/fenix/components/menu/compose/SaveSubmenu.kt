@@ -23,8 +23,11 @@ import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
+internal const val SAVE_MENU_ROUTE = "save_menu"
+
 @Composable
 internal fun SaveSubmenu(
+    onBackButtonClick: () -> Unit,
     onBookmarkPageMenuClick: () -> Unit,
     onAddToShortcutsMenuClick: () -> Unit,
     onAddToHomeScreenMenuClick: () -> Unit,
@@ -34,7 +37,7 @@ internal fun SaveSubmenu(
     Column {
         SubmenuHeader(
             header = stringResource(id = R.string.browser_menu_save),
-            onClick = {},
+            onClick = onBackButtonClick,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -100,6 +103,7 @@ private fun SaveSubmenuPreview() {
             modifier = Modifier.background(color = FirefoxTheme.colors.layer3),
         ) {
             SaveSubmenu(
+                onBackButtonClick = {},
                 onBookmarkPageMenuClick = {},
                 onAddToShortcutsMenuClick = {},
                 onAddToHomeScreenMenuClick = {},
@@ -118,6 +122,7 @@ private fun SaveSubmenuPrivatePreview() {
             modifier = Modifier.background(color = FirefoxTheme.colors.layer3),
         ) {
             SaveSubmenu(
+                onBackButtonClick = {},
                 onBookmarkPageMenuClick = {},
                 onAddToShortcutsMenuClick = {},
                 onAddToHomeScreenMenuClick = {},

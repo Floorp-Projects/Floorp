@@ -10,8 +10,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -22,9 +27,11 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
-import org.mozilla.fenix.components.lazyStore
-import org.mozilla.fenix.components.menu.compose.MenuDialog
+import org.mozilla.fenix.components.menu.compose.MAIN_MENU_ROUTE
+import org.mozilla.fenix.components.menu.compose.MainMenu
 import org.mozilla.fenix.components.menu.compose.MenuDialogBottomSheet
+import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
+import org.mozilla.fenix.components.menu.compose.SaveSubmenu
 import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
@@ -40,19 +47,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
     private val args by navArgs<MenuDialogFragmentArgs>()
 
-    private val store by lazyStore { viewModelScope ->
-        MenuStore(
-            initialState = MenuState(),
-            middleware = listOf(
-                MenuNavigationMiddleware(
-                    navController = findNavController(),
-                    openToBrowser = ::openToBrowser,
-                    scope = viewModelScope,
-                ),
-            ),
-        )
-    }
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
         super.onCreateDialog(savedInstanceState).apply {
             setOnShowListener {
@@ -64,6 +58,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
             }
         }
 
+    @Suppress("LongMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -74,54 +69,92 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
         setContent {
             FirefoxTheme {
                 MenuDialogBottomSheet(onRequestDismiss = {}) {
+                    val navHostController = rememberNavController()
+                    val coroutineScope = rememberCoroutineScope()
+                    val store = remember {
+                        MenuStore(
+                            initialState = MenuState(),
+                            middleware = listOf(
+                                MenuNavigationMiddleware(
+                                    navController = findNavController(),
+                                    navHostController = navHostController,
+                                    openToBrowser = ::openToBrowser,
+                                    scope = coroutineScope,
+                                ),
+                            ),
+                        )
+                    }
+
                     val syncStore = components.backgroundServices.syncStore
                     val account by syncStore.observeAsState(initialValue = null) { state -> state.account }
                     val accountState by syncStore.observeAsState(initialValue = NotAuthenticated) { state ->
                         state.accountState
                     }
 
-                    MenuDialog(
-                        accessPoint = args.accesspoint,
-                        account = account,
-                        accountState = accountState,
-                        onMozillaAccountButtonClick = {
-                            store.dispatch(
-                                MenuAction.Navigate.MozillaAccount(
-                                    accountState = accountState,
-                                    accesspoint = args.accesspoint,
-                                ),
+                    NavHost(
+                        navController = navHostController,
+                        startDestination = MAIN_MENU_ROUTE,
+                    ) {
+                        composable(route = MAIN_MENU_ROUTE) {
+                            MainMenu(
+                                accessPoint = args.accesspoint,
+                                account = account,
+                                accountState = accountState,
+                                onMozillaAccountButtonClick = {
+                                    store.dispatch(
+                                        MenuAction.Navigate.MozillaAccount(
+                                            accountState = accountState,
+                                            accesspoint = args.accesspoint,
+                                        ),
+                                    )
+                                },
+                                onHelpButtonClick = {
+                                    store.dispatch(MenuAction.Navigate.Help)
+                                },
+                                onSwitchToDesktopSiteMenuClick = {},
+                                onFindInPageMenuClick = {},
+                                onToolsMenuClick = {},
+                                onSaveMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.Save)
+                                },
+                                onExtensionsMenuClick = {},
+                                onSettingsButtonClick = {
+                                    store.dispatch(MenuAction.Navigate.Settings)
+                                },
+                                onBookmarksMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.Bookmarks)
+                                },
+                                onHistoryMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.History)
+                                },
+                                onDownloadsMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.Downloads)
+                                },
+                                onPasswordsMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.Passwords)
+                                },
+                                onCustomizeHomepageMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.CustomizeHomepage)
+                                },
+                                onNewInFirefoxMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.ReleaseNotes)
+                                },
                             )
-                        },
-                        onHelpButtonClick = {
-                            store.dispatch(MenuAction.Navigate.Help)
-                        },
-                        onSwitchToDesktopSiteMenuClick = {},
-                        onFindInPageMenuClick = {},
-                        onToolsMenuClick = {},
-                        onSaveMenuClick = {},
-                        onExtensionsMenuClick = {},
-                        onSettingsButtonClick = {
-                            store.dispatch(MenuAction.Navigate.Settings)
-                        },
-                        onBookmarksMenuClick = {
-                            store.dispatch(MenuAction.Navigate.Bookmarks)
-                        },
-                        onHistoryMenuClick = {
-                            store.dispatch(MenuAction.Navigate.History)
-                        },
-                        onDownloadsMenuClick = {
-                            store.dispatch(MenuAction.Navigate.Downloads)
-                        },
-                        onPasswordsMenuClick = {
-                            store.dispatch(MenuAction.Navigate.Passwords)
-                        },
-                        onCustomizeHomepageMenuClick = {
-                            store.dispatch(MenuAction.Navigate.CustomizeHomepage)
-                        },
-                        onNewInFirefoxMenuClick = {
-                            store.dispatch(MenuAction.Navigate.ReleaseNotes)
-                        },
-                    )
+                        }
+
+                        composable(route = SAVE_MENU_ROUTE) {
+                            SaveSubmenu(
+                                onBackButtonClick = {
+                                    store.dispatch(MenuAction.Navigate.Back)
+                                },
+                                onBookmarkPageMenuClick = {},
+                                onAddToShortcutsMenuClick = {},
+                                onAddToHomeScreenMenuClick = {},
+                                onSaveToCollectionMenuClick = {},
+                                onSaveAsPDFMenuClick = {},
+                            )
+                        }
+                    }
                 }
             }
         }

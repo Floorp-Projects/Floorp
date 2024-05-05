@@ -27,8 +27,10 @@ import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
+internal const val MAIN_MENU_ROUTE = "main_menu"
+
 /**
- * The menu bottom sheet dialog.
+ * Wrapper column containing the main menu items.
  *
  * @param accessPoint The [MenuAccessPoint] that was used to navigate to the menu dialog.
  * @param account [Account] information available for a synced account.
@@ -52,7 +54,7 @@ import org.mozilla.fenix.theme.Theme
  */
 @Suppress("LongParameterList")
 @Composable
-fun MenuDialog(
+internal fun MainMenu(
     accessPoint: MenuAccessPoint,
     account: Account?,
     accountState: AccountState,
@@ -82,87 +84,52 @@ fun MenuDialog(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        MainMenu(
-            accessPoint = accessPoint,
-            onSwitchToDesktopSiteMenuClick = onSwitchToDesktopSiteMenuClick,
-            onFindInPageMenuClick = onFindInPageMenuClick,
-            onToolsMenuClick = onToolsMenuClick,
-            onSaveMenuClick = onSaveMenuClick,
-            onExtensionsMenuClick = onExtensionsMenuClick,
-            onBookmarksMenuClick = onBookmarksMenuClick,
-            onHistoryMenuClick = onHistoryMenuClick,
-            onDownloadsMenuClick = onDownloadsMenuClick,
-            onPasswordsMenuClick = onPasswordsMenuClick,
-            onCustomizeHomepageMenuClick = onCustomizeHomepageMenuClick,
-            onNewInFirefoxMenuClick = onNewInFirefoxMenuClick,
-        )
-    }
-}
+        Column(
+            modifier = Modifier
+                .padding(
+                    start = 16.dp,
+                    top = 12.dp,
+                    end = 16.dp,
+                    bottom = 32.dp,
+                ),
+            verticalArrangement = Arrangement.spacedBy(32.dp),
+        ) {
+            MenuGroup {
+                MenuItem(
+                    label = stringResource(id = R.string.library_new_tab),
+                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_plus_24),
+                )
 
-/**
- * Wrapper column containing the main menu items.
- */
-@Suppress("LongParameterList")
-@Composable
-private fun MainMenu(
-    accessPoint: MenuAccessPoint,
-    onSwitchToDesktopSiteMenuClick: () -> Unit,
-    onFindInPageMenuClick: () -> Unit,
-    onToolsMenuClick: () -> Unit,
-    onSaveMenuClick: () -> Unit,
-    onExtensionsMenuClick: () -> Unit,
-    onBookmarksMenuClick: () -> Unit,
-    onHistoryMenuClick: () -> Unit,
-    onDownloadsMenuClick: () -> Unit,
-    onPasswordsMenuClick: () -> Unit,
-    onCustomizeHomepageMenuClick: () -> Unit,
-    onNewInFirefoxMenuClick: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .padding(
-                start = 16.dp,
-                top = 12.dp,
-                end = 16.dp,
-                bottom = 32.dp,
-            ),
-        verticalArrangement = Arrangement.spacedBy(32.dp),
-    ) {
-        MenuGroup {
-            MenuItem(
-                label = stringResource(id = R.string.library_new_tab),
-                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_plus_24),
+                Divider(color = FirefoxTheme.colors.borderSecondary)
+
+                MenuItem(
+                    label = stringResource(id = R.string.browser_menu_new_private_tab),
+                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_private_mode_circle_fill_24),
+                )
+            }
+
+            ToolsAndActionsMenuGroup(
+                accessPoint = accessPoint,
+                onSwitchToDesktopSiteMenuClick = onSwitchToDesktopSiteMenuClick,
+                onFindInPageMenuClick = onFindInPageMenuClick,
+                onToolsMenuClick = onToolsMenuClick,
+                onSaveMenuClick = onSaveMenuClick,
+                onExtensionsMenuClick = onExtensionsMenuClick,
             )
 
-            Divider(color = FirefoxTheme.colors.borderSecondary)
-
-            MenuItem(
-                label = stringResource(id = R.string.browser_menu_new_private_tab),
-                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_private_mode_circle_fill_24),
+            LibraryMenuGroup(
+                onBookmarksMenuClick = onBookmarksMenuClick,
+                onHistoryMenuClick = onHistoryMenuClick,
+                onDownloadsMenuClick = onDownloadsMenuClick,
+                onPasswordsMenuClick = onPasswordsMenuClick,
             )
-        }
 
-        ToolsAndActionsMenuGroup(
-            accessPoint = accessPoint,
-            onSwitchToDesktopSiteMenuClick = onSwitchToDesktopSiteMenuClick,
-            onFindInPageMenuClick = onFindInPageMenuClick,
-            onToolsMenuClick = onToolsMenuClick,
-            onSaveMenuClick = onSaveMenuClick,
-            onExtensionsMenuClick = onExtensionsMenuClick,
-        )
-
-        LibraryMenuGroup(
-            onBookmarksMenuClick = onBookmarksMenuClick,
-            onHistoryMenuClick = onHistoryMenuClick,
-            onDownloadsMenuClick = onDownloadsMenuClick,
-            onPasswordsMenuClick = onPasswordsMenuClick,
-        )
-
-        if (accessPoint == MenuAccessPoint.Home) {
-            HomepageMenuGroup(
-                onCustomizeHomepageMenuClick = onCustomizeHomepageMenuClick,
-                onNewInFirefoxMenuClick = onNewInFirefoxMenuClick,
-            )
+            if (accessPoint == MenuAccessPoint.Home) {
+                HomepageMenuGroup(
+                    onCustomizeHomepageMenuClick = onCustomizeHomepageMenuClick,
+                    onNewInFirefoxMenuClick = onNewInFirefoxMenuClick,
+                )
+            }
         }
     }
 }
@@ -295,7 +262,7 @@ private fun MenuDialogPreview() {
             modifier = Modifier
                 .background(color = FirefoxTheme.colors.layer3),
         ) {
-            MenuDialog(
+            MainMenu(
                 accessPoint = MenuAccessPoint.Home,
                 account = null,
                 accountState = NotAuthenticated,
@@ -326,7 +293,7 @@ private fun MenuDialogPrivatePreview() {
             modifier = Modifier
                 .background(color = FirefoxTheme.colors.layer3),
         ) {
-            MenuDialog(
+            MainMenu(
                 accessPoint = MenuAccessPoint.Home,
                 account = null,
                 accountState = NotAuthenticated,

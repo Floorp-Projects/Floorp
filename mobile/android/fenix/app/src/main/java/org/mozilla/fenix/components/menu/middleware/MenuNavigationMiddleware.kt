@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.menu.middleware
 
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,6 +19,7 @@ import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.BrowserNavigationParams
 import org.mozilla.fenix.components.menu.MenuDialogFragmentDirections
+import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
@@ -31,12 +33,14 @@ import org.mozilla.fenix.settings.SupportUtils.SumoTopic
  * dispatched to the [MenuStore].
  *
  * @param navController [NavController] used for navigation.
+ * @param navHostController [NavHostController] used for Compose navigation.
  * @param openToBrowser Callback to open the provided [BrowserNavigationParams]
  * in a new browser tab.
  * @param scope [CoroutineScope] used to launch coroutines.
  */
 class MenuNavigationMiddleware(
     private val navController: NavController,
+    private val navHostController: NavHostController,
     private val openToBrowser: (params: BrowserNavigationParams) -> Unit,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : Middleware<MenuState, MenuAction> {
@@ -110,6 +114,10 @@ class MenuNavigationMiddleware(
                 is MenuAction.Navigate.ReleaseNotes -> openToBrowser(
                     BrowserNavigationParams(url = SupportUtils.WHATS_NEW_URL),
                 )
+
+                is MenuAction.Navigate.Save -> navHostController.navigate(route = SAVE_MENU_ROUTE)
+
+                is MenuAction.Navigate.Back -> navHostController.popBackStack()
 
                 else -> Unit
             }
