@@ -104,9 +104,13 @@ add_task(async function test_added_login_shows_breach_warning() {
     return;
   }
 
-  let reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
-    loginResult: true,
-  });
+  let reauthObserved = Promise.resolve();
+  if (OSKeyStore.canReauth()) {
+    reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
+      loginResult: true,
+    });
+  }
+
   // Change the password on the breached login and check that the
   // login is no longer marked as breached. The vulnerable login
   // should still be marked as vulnerable afterwards.
