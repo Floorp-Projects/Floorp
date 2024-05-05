@@ -1036,6 +1036,9 @@ forms-saved-passwords =
 forms-primary-pw-use =
     .label = Use a Primary Password
     .accesskey = U
+# This operation requires the user to authenticate with the operating system (device sign-in)
+forms-os-reauth =
+    .label = Require device sign in to fill and manage passwords
 forms-primary-pw-learn-more-link = Learn more
 # This string uses the former name of the Primary Password feature
 # ("Master Password" in English) so that the preferences can be found
