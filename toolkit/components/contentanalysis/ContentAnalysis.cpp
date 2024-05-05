@@ -1220,6 +1220,22 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
       ConvertToProtobuf(aRequest, GetUserActionId(), aRequestCount, &pbRequest);
   NS_ENSURE_SUCCESS(rv, rv);
   LogRequest(&pbRequest);
+  nsCOMPtr<nsIObserverService> obsServ =
+      mozilla::services::GetObserverService();
+  // Avoid serializing the string here if no one is observing this message
+  if (obsServ->HasObservers("dlp-request-sent-raw")) {
+    std::string requestString = pbRequest.SerializeAsString();
+    nsTArray<char16_t> requestArray;
+    requestArray.SetLength(requestString.size() + 1);
+    for (size_t i = 0; i < requestString.size(); ++i) {
+      // Since NotifyObservers() expects a null-terminated string,
+      // make sure none of these values are 0.
+      requestArray[i] = requestString[i] + 0xFF00;
+    }
+    requestArray[requestString.size()] = 0;
+    obsServ->NotifyObservers(this, "dlp-request-sent-raw",
+                             requestArray.Elements());
+  }
 
   mCaClientPromise->Then(
       GetCurrentSerialEventTarget(), __func__,

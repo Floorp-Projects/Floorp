@@ -8,28 +8,11 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "content_analysis/sdk/analysis_client.h"
-#include "TestContentAnalysisAgent.h"
+#include "TestContentAnalysisUtils.h"
 #include <processenv.h>
 #include <synchapi.h>
 
 using namespace content_analysis::sdk;
-
-MozAgentInfo LaunchAgentNormal(const wchar_t* aToBlock) {
-  nsString cmdLineArguments;
-  if (aToBlock && aToBlock[0] != 0) {
-    cmdLineArguments.Append(L" --toblock=.*");
-    cmdLineArguments.Append(aToBlock);
-    cmdLineArguments.Append(L".*");
-  }
-  cmdLineArguments.Append(L" --user");
-  cmdLineArguments.Append(L" --path=");
-  nsString pipeName;
-  GeneratePipeName(L"contentanalysissdk-gtest-", pipeName);
-  cmdLineArguments.Append(pipeName);
-  MozAgentInfo agentInfo;
-  LaunchAgentWithCommandLineArguments(cmdLineArguments, pipeName, agentInfo);
-  return agentInfo;
-}
 
 TEST(ContentAnalysisAgent, TextShouldNotBeBlocked)
 {
@@ -49,10 +32,7 @@ TEST(ContentAnalysisAgent, TextShouldNotBeBlocked)
             response.results().Get(0).status());
   ASSERT_EQ(0, response.results().Get(0).triggered_rules_size());
 
-  BOOL terminateResult =
-      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
-  ASSERT_NE(FALSE, terminateResult)
-      << "Failed to terminate content_analysis_sdk_agent process";
+  MozAgentInfo.TerminateProcess();
 }
 
 TEST(ContentAnalysisAgent, TextShouldBeBlocked)
@@ -75,10 +55,7 @@ TEST(ContentAnalysisAgent, TextShouldBeBlocked)
   ASSERT_EQ(ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK,
             response.results().Get(0).triggered_rules(0).action());
 
-  BOOL terminateResult =
-      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
-  ASSERT_NE(FALSE, terminateResult)
-      << "Failed to terminate content_analysis_sdk_agent process";
+  MozAgentInfo.TerminateProcess();
 }
 
 TEST(ContentAnalysisAgent, FileShouldNotBeBlocked)
@@ -99,10 +76,7 @@ TEST(ContentAnalysisAgent, FileShouldNotBeBlocked)
             response.results().Get(0).status());
   ASSERT_EQ(0, response.results().Get(0).triggered_rules_size());
 
-  BOOL terminateResult =
-      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
-  ASSERT_NE(FALSE, terminateResult)
-      << "Failed to terminate content_analysis_sdk_agent process";
+  MozAgentInfo.TerminateProcess();
 }
 
 TEST(ContentAnalysisAgent, FileShouldBeBlocked)
@@ -125,8 +99,5 @@ TEST(ContentAnalysisAgent, FileShouldBeBlocked)
   ASSERT_EQ(ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK,
             response.results().Get(0).triggered_rules(0).action());
 
-  BOOL terminateResult =
-      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
-  ASSERT_NE(FALSE, terminateResult)
-      << "Failed to terminate content_analysis_sdk_agent process";
+  MozAgentInfo.TerminateProcess();
 }
