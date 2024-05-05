@@ -2,7 +2,6 @@
 prefs = [
   "extensions.formautofill.creditCards.supported=on",
   "extensions.formautofill.creditCards.enabled=true",
-  "extensions.formautofill.reauth.enabled=true",
 ]
 support-files = [
   "!/toolkit/components/satchel/test/satchel_common.js",
