@@ -108,5 +108,10 @@ sealed class MenuAction : Action {
          * [Navigate] action dispatched when navigating to edit the existing bookmark.
          */
         data object EditBookmark : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to translations dialog.
+         */
+        data object Translate : Navigate()
     }
 }

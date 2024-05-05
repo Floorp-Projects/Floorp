@@ -177,7 +177,11 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     store.dispatch(MenuAction.Navigate.Back)
                                 },
                                 onReaderViewMenuClick = {},
-                                onTranslatePageMenuClick = {},
+                                onTranslatePageMenuClick = {
+                                    selectedTab?.let {
+                                        store.dispatch(MenuAction.Navigate.Translate)
+                                    }
+                                },
                                 onReviewCheckerMenuClick = {},
                                 onPrintMenuClick = {
                                     printContentUseCase()
