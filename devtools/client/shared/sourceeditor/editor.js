@@ -712,9 +712,9 @@ class Editor extends EventEmitter {
     } = this.#CodeMirror6;
 
     class LineContentWidget extends WidgetType {
-      constructor(createElementNode) {
+      constructor(line, createElementNode) {
         super();
-        this.toDOM = createElementNode;
+        this.toDOM = () => createElementNode(line);
       }
     }
 
@@ -737,7 +737,10 @@ class Editor extends EventEmitter {
               }
               if (marker.createLineElementNode) {
                 const nodeDecoration = Decoration.widget({
-                  widget: new LineContentWidget(marker.createLineElementNode),
+                  widget: new LineContentWidget(
+                    line.number,
+                    marker.createLineElementNode
+                  ),
                 });
                 builder.add(line.to, line.to, nodeDecoration);
               }
@@ -813,7 +816,8 @@ class Editor extends EventEmitter {
    *   @property {function}   marker.condition - The condition that decides if the marker/class gets added or removed.
    *                                             The line is passed as an argument.
    *   @property {function}   marker.createLineElementNode - This should return the DOM element which
-   *                                            is used for the marker. This is optional.
+   *                                            is used for the marker. The line number is passed as a parameter.
+   *                                            This is optional.
    */
   setLineContentMarker(marker) {
     const cm = editors.get(this);
