@@ -10,7 +10,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.service.fxa.manager.AccountState.Authenticated
 import mozilla.components.service.fxa.manager.AccountState.AuthenticationProblem
 import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
@@ -258,6 +260,78 @@ class MenuNavigationMiddlewareTest {
             navController.nav(
                 R.id.menuDialogFragment,
                 MenuDialogFragmentDirections.actionMenuDialogFragmentToTranslationsDialogFragment(),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN reader view is active WHEN navigate to share action is dispatched THEN navigate to share sheet`() = runTest {
+        val title = "Mozilla"
+        val readerUrl = "moz-extension://1234"
+        val activeUrl = "https://mozilla.org"
+        val readerTab = createTab(
+            url = readerUrl,
+            readerState = ReaderState(active = true, activeUrl = activeUrl),
+            title = title,
+        )
+        val store = createStore(
+            menuState = MenuState(
+                browserMenuState = BrowserMenuState(
+                    selectedTab = readerTab,
+                ),
+            ),
+        )
+
+        store.dispatch(MenuAction.Navigate.Share).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalShareFragment(
+                    sessionId = readerTab.id,
+                    data = arrayOf(
+                        ShareData(
+                            url = activeUrl,
+                            title = title,
+                        ),
+                    ),
+                    showPage = true,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN reader view is inactive WHEN navigate to share action is dispatched THEN navigate to share sheet`() = runTest {
+        val url = "https://www.mozilla.org"
+        val title = "Mozilla"
+        val tab = createTab(
+            url = url,
+            title = title,
+        )
+        val store = createStore(
+            menuState = MenuState(
+                browserMenuState = BrowserMenuState(
+                    selectedTab = tab,
+                ),
+            ),
+        )
+
+        store.dispatch(MenuAction.Navigate.Share).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalShareFragment(
+                    sessionId = tab.id,
+                    data = arrayOf(
+                        ShareData(
+                            url = url,
+                            title = title,
+                        ),
+                    ),
+                    showPage = true,
+                ),
             )
         }
     }

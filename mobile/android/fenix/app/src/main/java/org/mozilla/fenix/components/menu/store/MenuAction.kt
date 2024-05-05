@@ -113,5 +113,10 @@ sealed class MenuAction : Action {
          * [Navigate] action dispatched when navigating to translations dialog.
          */
         data object Translate : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to the share sheet.
+         */
+        data object Share : Navigate()
     }
 }

@@ -10,6 +10,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.browser.state.ext.getUrl
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.service.fxa.manager.AccountState.Authenticated
@@ -146,6 +148,24 @@ class MenuNavigationMiddleware(
                     R.id.menuDialogFragment,
                     MenuDialogFragmentDirections.actionMenuDialogFragmentToTranslationsDialogFragment(),
                 )
+
+                is MenuAction.Navigate.Share -> {
+                    currentState.browserMenuState?.selectedTab?.let { selectedTab ->
+                        navController.nav(
+                            R.id.menuDialogFragment,
+                            MenuDialogFragmentDirections.actionGlobalShareFragment(
+                                sessionId = selectedTab.id,
+                                data = arrayOf(
+                                    ShareData(
+                                        url = selectedTab.getUrl(),
+                                        title = selectedTab.content.title,
+                                    ),
+                                ),
+                                showPage = true,
+                            ),
+                        )
+                    }
+                }
 
                 else -> Unit
             }
