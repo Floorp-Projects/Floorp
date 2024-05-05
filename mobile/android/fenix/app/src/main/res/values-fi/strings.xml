@@ -49,12 +49,20 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">Äskettäin tallennettu</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">Äskettäin tallennettu</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">Näytä kaikki tallennetut kirjanmerkit</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">Näytä kaikki tallennetut kirjanmerkit</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">Poista</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">Poista</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">Kirjanmerkit</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">Näytä kaikki kirjanmerkit</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">Poista</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s on Mozillan tuote.</string>
@@ -587,6 +595,8 @@
     <string name="preferences_account_sync_error">Yhdistä uudelleen jatkaaksesi synkronointia</string>
     <!-- Preference for language -->
     <string name="preferences_language">Kieli</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Käännös</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Tietovalinnat</string>
     <!-- Preference for data collection -->
@@ -692,7 +702,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Palaa takaisin</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">Viimeisimmät kirjanmerkit</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Viimeisimmät kirjanmerkit</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Kirjanmerkit</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Äskettäin vierailtu</string>
@@ -2512,6 +2524,8 @@
     <string name="translations_bottom_sheet_negative_button">Ei nyt</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
     <string name="translations_bottom_sheet_negative_button_restore">Näytä alkuperäinen</string>
+    <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
+    <string name="translations_bottom_sheet_restore_accessibility_announcement">Alkuperäinen kääntämätön sivu ladattu</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Valmis</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
