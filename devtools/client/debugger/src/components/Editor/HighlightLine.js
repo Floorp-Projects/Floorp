@@ -2,10 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+/**
+ * Uses of this panel are:-
+ * - Highlight line when source is opened using view source links from other panels
+ * - Highlight line with function or class from an Outline search result selection
+ * - Highlight line from a Quick open panel search result selection
+ * - Highlight the last selected line when a source is selected
+ * - Highlight the breakpoint line when the breakpoint is selected
+ */
+
 import { Component } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import {
   toEditorLine,
+  fromEditorLine,
   endOperation,
   startOperation,
 } from "../../utils/editor/index";
@@ -20,6 +30,7 @@ import {
   getCurrentThread,
   getShouldHighlightSelectedLocation,
 } from "../../selectors/index";
+import { features } from "../../utils/prefs";
 
 function isDebugLine(selectedFrame, selectedLocation) {
   if (!selectedFrame) {
@@ -29,14 +40,6 @@ function isDebugLine(selectedFrame, selectedLocation) {
   return (
     selectedFrame.location.source.id == selectedLocation.source.id &&
     selectedFrame.location.line == selectedLocation.line
-  );
-}
-
-function isDocumentReady(selectedLocation, selectedSourceTextContent) {
-  return (
-    selectedLocation &&
-    selectedSourceTextContent &&
-    hasDocument(selectedLocation.source.id)
   );
 }
 
@@ -56,30 +59,34 @@ export class HighlightLine extends Component {
       selectedFrame: PropTypes.object,
       selectedLocation: PropTypes.object.isRequired,
       selectedSourceTextContent: PropTypes.object.isRequired,
+      shouldHighlightSelectedLocation: PropTypes.func.isRequired,
+      editor: PropTypes.object,
     };
   }
 
   shouldComponentUpdate(nextProps) {
-    const { selectedLocation, selectedSourceTextContent } = nextProps;
-    return this.shouldSetHighlightLine(
-      selectedLocation,
-      selectedSourceTextContent
-    );
+    return this.shouldSetHighlightLine(nextProps);
   }
 
   componentDidUpdate(prevProps) {
-    this.completeHighlightLine(prevProps);
+    this.highlightLine(prevProps);
   }
 
   componentDidMount() {
-    this.completeHighlightLine(null);
+    this.highlightLine(null);
   }
 
-  shouldSetHighlightLine(selectedLocation, selectedSourceTextContent) {
-    const { line } = selectedLocation;
-    const editorLine = toEditorLine(selectedLocation.source.id, line);
+  shouldSetHighlightLine({ selectedLocation, selectedSourceTextContent }) {
+    const editorLine = toEditorLine(
+      selectedLocation.source.id,
+      selectedLocation.line
+    );
 
-    if (!isDocumentReady(selectedLocation, selectedSourceTextContent)) {
+    if (
+      !selectedLocation ||
+      !selectedSourceTextContent ||
+      (!features.codemirrorNext && !hasDocument(selectedLocation.source.id))
+    ) {
       return false;
     }
 
@@ -90,58 +97,61 @@ export class HighlightLine extends Component {
     return true;
   }
 
-  completeHighlightLine(prevProps) {
-    const {
-      pauseCommand,
-      selectedLocation,
-      selectedFrame,
-      selectedSourceTextContent,
-      shouldHighlightSelectedLocation,
-    } = this.props;
+  highlightLine(prevProps) {
+    const { pauseCommand, shouldHighlightSelectedLocation } = this.props;
     if (pauseCommand) {
       this.isStepping = true;
     }
 
-    startOperation();
+    if (!features.codemirrorNext) {
+      startOperation();
+    }
     if (prevProps) {
-      this.clearHighlightLine(
-        prevProps.selectedLocation,
-        prevProps.selectedSourceTextContent
-      );
+      this.clearHighlightLine(prevProps);
     }
     if (shouldHighlightSelectedLocation) {
-      this.setHighlightLine(
-        selectedLocation,
-        selectedFrame,
-        selectedSourceTextContent
-      );
+      this.setHighlightLine();
     }
-    endOperation();
+    if (!features.codemirrorNext) {
+      endOperation();
+    }
   }
 
-  setHighlightLine(selectedLocation, selectedFrame, selectedSourceTextContent) {
-    const { line } = selectedLocation;
-    if (
-      !this.shouldSetHighlightLine(selectedLocation, selectedSourceTextContent)
-    ) {
+  setHighlightLine() {
+    const { selectedLocation, selectedFrame, editor } = this.props;
+    if (!this.shouldSetHighlightLine(this.props)) {
       return;
     }
 
     this.isStepping = false;
     const sourceId = selectedLocation.source.id;
-    const editorLine = toEditorLine(sourceId, line);
+    const editorLine = toEditorLine(sourceId, selectedLocation.line);
     this.previousEditorLine = editorLine;
 
-    if (!line || isDebugLine(selectedFrame, selectedLocation)) {
+    if (
+      !selectedLocation.line ||
+      isDebugLine(selectedFrame, selectedLocation)
+    ) {
       return;
     }
 
-    const doc = getDocument(sourceId);
-    doc.addLineClass(editorLine, "wrap", "highlight-line");
-    this.resetHighlightLine(doc, editorLine);
+    if (features.codemirrorNext) {
+      editor.setLineContentMarker({
+        id: "highlight-line-marker",
+        lineClassName: "highlight-line",
+        condition(line) {
+          const lineNumber = fromEditorLine(sourceId, line);
+          return selectedLocation.line == lineNumber;
+        },
+      });
+    } else {
+      const doc = getDocument(sourceId);
+      doc.addLineClass(editorLine, "wrap", "highlight-line");
+    }
+    this.clearHighlightLineAfterDuration();
   }
 
-  resetHighlightLine(doc, editorLine) {
+  clearHighlightLineAfterDuration() {
     const editorWrapper = document.querySelector(".editor-wrapper");
 
     if (editorWrapper === null) {
@@ -155,20 +165,28 @@ export class HighlightLine extends Component {
       10
     );
 
-    setTimeout(
-      () => doc && doc.removeLineClass(editorLine, "wrap", "highlight-line"),
-      duration
-    );
+    setTimeout(() => this.clearHighlightLine(this.props), duration);
   }
 
-  clearHighlightLine(selectedLocation, selectedSourceTextContent) {
-    if (!isDocumentReady(selectedLocation, selectedSourceTextContent)) {
+  clearHighlightLine({ selectedLocation, selectedSourceTextContent }) {
+    if (!selectedLocation || !selectedSourceTextContent) {
       return;
     }
 
-    const { line } = selectedLocation;
+    if (features.codemirrorNext) {
+      const { editor } = this.props;
+      if (editor) {
+        editor.removeLineContentMarker("highlight-line-marker");
+      }
+      return;
+    }
+
+    if (!hasDocument(selectedLocation.source.id)) {
+      return;
+    }
+
     const sourceId = selectedLocation.source.id;
-    const editorLine = toEditorLine(sourceId, line);
+    const editorLine = toEditorLine(sourceId, selectedLocation.line);
     const doc = getDocument(sourceId);
     doc.removeLineClass(editorLine, "wrap", "highlight-line");
   }

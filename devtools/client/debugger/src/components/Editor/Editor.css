@@ -146,7 +146,9 @@ html[dir="rtl"] .editor-mount {
 .new-debug-line-error .CodeMirror-activeline-background {
   display: none;
 }
-.highlight-line .CodeMirror-line {
+.highlight-line .CodeMirror-line,
+/* For CM6 */
+.cm-editor .cm-line.highlight-line {
   animation-name: fade-highlight-out;
   animation-duration: var(--highlight-line-duration);
   animation-timing-function: ease-out;

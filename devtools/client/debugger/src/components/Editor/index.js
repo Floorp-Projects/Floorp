@@ -831,6 +831,7 @@ class Editor extends PureComponent {
           editor,
         }),
         React.createElement(DebugLine, { editor, selectedSource }),
+        React.createElement(HighlightLine, { editor }),
         React.createElement(Exceptions, { editor }),
         conditionalPanelLocation
           ? React.createElement(ConditionalPanel, {
