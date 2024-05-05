@@ -1,7 +1,6 @@
 [DEFAULT]
 prefs = [
   "extensions.formautofill.creditCards.enabled=true",
-  "extensions.formautofill.reauth.enabled=true",
   "toolkit.telemetry.ipcBatchTimeout=0", # lower the interval for event telemetry in the content process to update the parent process
 ]
 support-files = [
@@ -101,6 +100,9 @@ skip-if = ["apple_silicon && !debug"] # Bug 1714221
 
 ["browser_creditCard_heuristics_cc_type.js"]
 skip-if = ["apple_silicon && !debug"] # Bug 1714221
+
+["browser_creditCard_osAuth.js"]
+skip-if = ["os == 'linux'"]
 
 ["browser_creditCard_submission_autodetect_type.js"]
 skip-if = ["apple_silicon && !debug"]
