@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.menu
 
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
@@ -18,6 +19,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
+import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
 import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
@@ -33,6 +35,7 @@ class MenuNavigationMiddlewareTest {
     private val scope = coroutinesTestRule.scope
 
     private val navController: NavController = mockk(relaxed = true)
+    private val navHostController: NavHostController = mockk(relaxed = true)
 
     @Test
     fun `GIVEN account state is authenticated WHEN navigate to Mozilla account action is dispatched THEN dispatch navigate action to Mozilla account settings`() = runTest {
@@ -207,6 +210,24 @@ class MenuNavigationMiddlewareTest {
         assertEquals(SupportUtils.WHATS_NEW_URL, params?.url)
     }
 
+    @Test
+    fun `WHEN navigate to save action is dispatched THEN navigate to save submenu route`() = runTest {
+        val store = createStore()
+        store.dispatch(MenuAction.Navigate.Save).join()
+
+        verify {
+            navHostController.navigate(route = SAVE_MENU_ROUTE)
+        }
+    }
+
+    @Test
+    fun `WHEN navigate back action is dispatched THEN pop back stack`() = runTest {
+        val store = createStore()
+        store.dispatch(MenuAction.Navigate.Back).join()
+
+        verify { navHostController.popBackStack() }
+    }
+
     private fun createStore(
         openToBrowser: (params: BrowserNavigationParams) -> Unit = {},
     ) = MenuStore(
@@ -214,6 +235,7 @@ class MenuNavigationMiddlewareTest {
         middleware = listOf(
             MenuNavigationMiddleware(
                 navController = navController,
+                navHostController = navHostController,
                 openToBrowser = openToBrowser,
                 scope = scope,
             ),

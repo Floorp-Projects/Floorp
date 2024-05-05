@@ -75,5 +75,15 @@ sealed class MenuAction : Action {
          * [Navigate] action dispatched when navigating to release notes.
          */
         data object ReleaseNotes : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to the save submenu.
+         */
+        data object Save : Navigate()
+
+        /**
+         * [Navigate] action dispatched when a back navigation event occurs.
+         */
+        data object Back : Navigate()
     }
 }
