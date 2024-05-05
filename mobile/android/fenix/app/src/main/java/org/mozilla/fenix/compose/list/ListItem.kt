@@ -45,8 +45,8 @@ private val LIST_ITEM_HEIGHT = 56.dp
 private val ICON_SIZE = 24.dp
 
 /**
- * List item used to display a label with an optional description text and
- * an optional [IconButton] at the end.
+ * List item used to display a label with an optional description text and an optional
+ * [IconButton] or [Icon] at the end.
  *
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
@@ -54,9 +54,11 @@ private val ICON_SIZE = 24.dp
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param onClick Called when the user clicks on the item.
- * @param iconPainter [Painter] used to display an [IconButton] after the list item.
+ * @param iconPainter [Painter] used to display an icon after the list item.
  * @param iconDescription Content description of the icon.
- * @param onIconClick Called when the user clicks on the icon.
+ * @param iconTint Tint applied to [iconPainter].
+ * @param onIconClick Called when the user clicks on the icon. An [IconButton] will be
+ * displayed if this is provided. Otherwise, an [Icon] will be displayed.
  */
 @Composable
 fun TextListItem(
@@ -68,6 +70,7 @@ fun TextListItem(
     onClick: (() -> Unit)? = null,
     iconPainter: Painter? = null,
     iconDescription: String? = null,
+    iconTint: Color = FirefoxTheme.colors.iconPrimary,
     onIconClick: (() -> Unit)? = null,
 ) {
     ListItem(
@@ -89,9 +92,16 @@ fun TextListItem(
                 Icon(
                     painter = iconPainter,
                     contentDescription = iconDescription,
-                    tint = FirefoxTheme.colors.iconPrimary,
+                    tint = iconTint,
                 )
             }
+        } else if (iconPainter != null) {
+            Icon(
+                painter = iconPainter,
+                contentDescription = iconDescription,
+                modifier = Modifier.padding(end = 16.dp),
+                tint = iconTint,
+            )
         }
     }
 }
@@ -440,12 +450,20 @@ private fun TextListItemWithDescriptionPreview() {
 @Preview(name = "TextListItem with a right icon", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemWithIconPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
             TextListItem(
-                label = "Label + right icon",
+                label = "Label + right icon button",
+                onClick = {},
                 iconPainter = painterResource(R.drawable.mozac_ic_folder_24),
                 iconDescription = "click me",
                 onIconClick = { println("icon click") },
+            )
+
+            TextListItem(
+                label = "Label + right icon",
+                onClick = {},
+                iconPainter = painterResource(R.drawable.mozac_ic_folder_24),
+                iconDescription = "click me",
             )
         }
     }
