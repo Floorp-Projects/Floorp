@@ -33,6 +33,8 @@ import org.mozilla.fenix.components.menu.compose.MainMenu
 import org.mozilla.fenix.components.menu.compose.MenuDialogBottomSheet
 import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.SaveSubmenu
+import org.mozilla.fenix.components.menu.compose.TOOLS_MENU_ROUTE
+import org.mozilla.fenix.components.menu.compose.ToolsSubmenu
 import org.mozilla.fenix.components.menu.middleware.MenuDialogMiddleware
 import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
 import org.mozilla.fenix.components.menu.store.BrowserMenuState
@@ -135,7 +137,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 },
                                 onSwitchToDesktopSiteMenuClick = {},
                                 onFindInPageMenuClick = {},
-                                onToolsMenuClick = {},
+                                onToolsMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.Tools)
+                                },
                                 onSaveMenuClick = {
                                     store.dispatch(MenuAction.Navigate.Save)
                                 },
@@ -161,6 +165,22 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 onNewInFirefoxMenuClick = {
                                     store.dispatch(MenuAction.Navigate.ReleaseNotes)
                                 },
+                            )
+                        }
+
+                        composable(route = TOOLS_MENU_ROUTE) {
+                            ToolsSubmenu(
+                                isReaderViewActive = false,
+                                isTranslated = false,
+                                onBackButtonClick = {
+                                    store.dispatch(MenuAction.Navigate.Back)
+                                },
+                                onReaderViewMenuClick = {},
+                                onTranslatePageMenuClick = {},
+                                onReviewCheckerMenuClick = {},
+                                onPrintMenuClick = {},
+                                onShareMenuClick = {},
+                                onOpenInAppMenuClick = {},
                             )
                         }
 

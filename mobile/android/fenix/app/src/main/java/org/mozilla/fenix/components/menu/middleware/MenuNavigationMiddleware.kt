@@ -21,6 +21,7 @@ import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.components.menu.BrowserNavigationParams
 import org.mozilla.fenix.components.menu.MenuDialogFragmentDirections
 import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
+import org.mozilla.fenix.components.menu.compose.TOOLS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
@@ -122,6 +123,8 @@ class MenuNavigationMiddleware(
                 is MenuAction.Navigate.ReleaseNotes -> openToBrowser(
                     BrowserNavigationParams(url = SupportUtils.WHATS_NEW_URL),
                 )
+
+                is MenuAction.Navigate.Tools -> navHostController.navigate(route = TOOLS_MENU_ROUTE)
 
                 is MenuAction.Navigate.Save -> navHostController.navigate(route = SAVE_MENU_ROUTE)
 

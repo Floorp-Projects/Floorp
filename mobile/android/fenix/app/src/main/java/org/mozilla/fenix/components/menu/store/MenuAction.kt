@@ -90,6 +90,11 @@ sealed class MenuAction : Action {
         data object ReleaseNotes : Navigate()
 
         /**
+         * [Navigate] action dispatched when navigating to the tools submenu.
+         */
+        data object Tools : Navigate()
+
+        /**
          * [Navigate] action dispatched when navigating to the save submenu.
          */
         data object Save : Navigate()
