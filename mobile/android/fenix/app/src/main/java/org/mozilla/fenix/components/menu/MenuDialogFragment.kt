@@ -21,6 +21,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import org.mozilla.fenix.BrowserDirection
@@ -32,7 +33,9 @@ import org.mozilla.fenix.components.menu.compose.MainMenu
 import org.mozilla.fenix.components.menu.compose.MenuDialogBottomSheet
 import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.SaveSubmenu
+import org.mozilla.fenix.components.menu.middleware.MenuDialogMiddleware
 import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
+import org.mozilla.fenix.components.menu.store.BrowserMenuState
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
@@ -69,12 +72,27 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
         setContent {
             FirefoxTheme {
                 MenuDialogBottomSheet(onRequestDismiss = {}) {
+                    val browserStore = components.core.store
+                    val syncStore = components.backgroundServices.syncStore
+                    val bookmarksStorage = components.core.bookmarksStorage
+                    val selectedTab = browserStore.state.selectedTab
+
                     val navHostController = rememberNavController()
                     val coroutineScope = rememberCoroutineScope()
                     val store = remember {
                         MenuStore(
-                            initialState = MenuState(),
+                            initialState = MenuState(
+                                browserMenuState = if (selectedTab != null) {
+                                    BrowserMenuState(selectedTab = selectedTab)
+                                } else {
+                                    null
+                                },
+                            ),
                             middleware = listOf(
+                                MenuDialogMiddleware(
+                                    bookmarksStorage = bookmarksStorage,
+                                    scope = coroutineScope,
+                                ),
                                 MenuNavigationMiddleware(
                                     navController = findNavController(),
                                     navHostController = navHostController,
@@ -85,7 +103,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         )
                     }
 
-                    val syncStore = components.backgroundServices.syncStore
                     val account by syncStore.observeAsState(initialValue = null) { state -> state.account }
                     val accountState by syncStore.observeAsState(initialValue = NotAuthenticated) { state ->
                         state.accountState
