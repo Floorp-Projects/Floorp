@@ -21,6 +21,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.browser.browsingmode.SimpleBrowsingModeManager
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.menu.compose.EXTENSIONS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
@@ -360,8 +363,45 @@ class MenuNavigationMiddlewareTest {
         }
     }
 
+    @Test
+    fun `WHEN navigate to new tab action is dispatched THEN navigate to the home screen`() = runTest {
+        val browsingModeManager = SimpleBrowsingModeManager(BrowsingMode.Private)
+        val store = createStore(
+            browsingModeManager = browsingModeManager,
+        )
+        store.dispatch(MenuAction.Navigate.NewTab).join()
+
+        assertEquals(BrowsingMode.Normal, browsingModeManager.mode)
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN navigate to new private tab action is dispatched THEN navigate to the home screen in private mode`() = runTest {
+        val browsingModeManager = SimpleBrowsingModeManager(BrowsingMode.Normal)
+        val store = createStore(
+            browsingModeManager = browsingModeManager,
+        )
+        store.dispatch(MenuAction.Navigate.NewPrivateTab).join()
+
+        assertEquals(BrowsingMode.Private, browsingModeManager.mode)
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
+            )
+        }
+    }
+
     private fun createStore(
         menuState: MenuState = MenuState(),
+        browsingModeManager: BrowsingModeManager = mockk(relaxed = true),
         openToBrowser: (params: BrowserNavigationParams) -> Unit = {},
     ) = MenuStore(
         initialState = menuState,
@@ -369,6 +409,7 @@ class MenuNavigationMiddlewareTest {
             MenuNavigationMiddleware(
                 navController = navController,
                 navHostController = navHostController,
+                browsingModeManager = browsingModeManager,
                 openToBrowser = openToBrowser,
                 scope = scope,
             ),
