@@ -23,6 +23,8 @@ import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
+internal const val TOOLS_MENU_ROUTE = "tools_menu"
+
 @Suppress("LongParameterList")
 @Composable
 internal fun ToolsSubmenu(

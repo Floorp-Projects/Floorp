@@ -20,6 +20,7 @@ import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
+import org.mozilla.fenix.components.menu.compose.TOOLS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
@@ -208,6 +209,16 @@ class MenuNavigationMiddlewareTest {
         store.dispatch(MenuAction.Navigate.ReleaseNotes).join()
 
         assertEquals(SupportUtils.WHATS_NEW_URL, params?.url)
+    }
+
+    @Test
+    fun `WHEN navigate to tools action is dispatched THEN navigate to tools submenu route`() = runTest {
+        val store = createStore()
+        store.dispatch(MenuAction.Navigate.Tools).join()
+
+        verify {
+            navHostController.navigate(route = TOOLS_MENU_ROUTE)
+        }
     }
 
     @Test
