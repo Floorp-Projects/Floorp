@@ -78,6 +78,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     val syncStore = components.backgroundServices.syncStore
                     val bookmarksStorage = components.core.bookmarksStorage
                     val addBookmarkUseCase = components.useCases.bookmarksUseCases.addBookmark
+                    val printContentUseCase = components.useCases.sessionUseCases.printContent
                     val selectedTab = browserStore.state.selectedTab
 
                     val navHostController = rememberNavController()
@@ -178,7 +179,10 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 onReaderViewMenuClick = {},
                                 onTranslatePageMenuClick = {},
                                 onReviewCheckerMenuClick = {},
-                                onPrintMenuClick = {},
+                                onPrintMenuClick = {
+                                    printContentUseCase()
+                                    dismiss()
+                                },
                                 onShareMenuClick = {},
                                 onOpenInAppMenuClick = {},
                             )
