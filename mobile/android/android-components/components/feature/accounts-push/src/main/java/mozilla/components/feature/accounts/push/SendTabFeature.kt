@@ -24,7 +24,7 @@ import mozilla.components.support.base.log.logger.Logger
  *
  * See [SendTabUseCases] for the ability to send tabs to other devices.
  *
- * @param accountManager Firefox account manager.
+ * @param accountManager Account manager.
  * @param owner Android lifecycle owner for the observers. Defaults to the [ProcessLifecycleOwner]
  * so that we can always observe events throughout the application lifecycle.
  * @param autoPause whether or not the observer should automatically be
@@ -38,7 +38,7 @@ class SendTabFeature(
     onTabsReceived: (Device?, List<TabData>) -> Unit,
 ) {
     init {
-        val observer = EventsObserver(onTabsReceived)
+        val observer = TabReceivedEventsObserver(onTabsReceived)
 
         // Observe the account for all account events, although we'll ignore
         // non send-tab command events.
@@ -46,10 +46,10 @@ class SendTabFeature(
     }
 }
 
-internal class EventsObserver(
+internal class TabReceivedEventsObserver(
     private val onTabsReceived: (Device?, List<TabData>) -> Unit,
 ) : AccountEventsObserver {
-    private val logger = Logger("EventsObserver")
+    private val logger = Logger("TabReceivedEventsObserver")
 
     override fun onEvents(events: List<AccountEvent>) {
         events.asSequence()

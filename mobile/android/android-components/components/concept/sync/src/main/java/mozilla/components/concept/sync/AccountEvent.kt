@@ -46,6 +46,9 @@ sealed class AccountEvent {
 sealed class DeviceCommandIncoming {
     /** A command to open a list of tabs on the current device */
     class TabReceived(val from: Device?, val entries: List<TabData>) : DeviceCommandIncoming()
+
+    /** A command to close one or more tabs that are open on the current device */
+    class TabsClosed(val from: Device?, val urls: List<String>) : DeviceCommandIncoming()
 }
 
 /**
@@ -54,6 +57,9 @@ sealed class DeviceCommandIncoming {
 sealed class DeviceCommandOutgoing {
     /** A command to open a tab on another device */
     class SendTab(val title: String, val url: String) : DeviceCommandOutgoing()
+
+    /** A command to close one or more tabs that are open on another device */
+    class CloseTab(val urls: List<String>) : DeviceCommandOutgoing()
 }
 
 /**

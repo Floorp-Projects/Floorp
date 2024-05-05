@@ -307,6 +307,7 @@
     <ID>UndocumentedPublicFunction:Types.kt$fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun Device.into(): mozilla.components.concept.sync.Device</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun IncomingDeviceCommand.TabReceived.into(): mozilla.components.concept.sync.DeviceCommandIncoming.TabReceived</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun IncomingDeviceCommand.TabsClosed.into(): mozilla.components.concept.sync.DeviceCommandIncoming.TabsClosed</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun IncomingDeviceCommand.into(): mozilla.components.concept.sync.DeviceCommandIncoming</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun Profile.into(): mozilla.components.concept.sync.Profile</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun ScopedKey.into(): OAuthScopedKey</ID>

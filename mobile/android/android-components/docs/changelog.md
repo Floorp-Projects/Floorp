@@ -20,6 +20,15 @@ permalink: /changelog/
 * **browser-engine-gecko**
     * For screenshot capture, include exception in failure result rather than throwing.
 
+* **feature-accounts-push**
+    * 🆕 New `CloseTabsFeature` for closing tabs on this device from other devices that are signed to the same Mozilla account.
+    * 🆕 New `CloseTabsUseCase` for closing tabs on other devices from this device.
+
+* **concept-sync**
+    * 🆕 New `DeviceCapability.CLOSE_TABS` variant to indicate that a device supports closing synced tabs.
+    * 🆕 New `DeviceCommandIncoming.TabsClosed` variant to represent a "close synced tabs" command received from another device.
+    * 🆕 New `DeviceCommandOutgoing.CloseTab` variant to represent a "close synced tabs" sent to another device.
+
 # 126.0
 
 * **browser-menu**

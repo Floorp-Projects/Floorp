@@ -158,6 +158,7 @@ data class DeviceConfig(
  */
 enum class DeviceCapability {
     SEND_TAB,
+    CLOSE_TABS,
 }
 
 /**

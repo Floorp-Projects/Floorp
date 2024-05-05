@@ -15,11 +15,11 @@ import org.junit.Test
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
-class EventsObserverTest {
+class TabReceivedEventsObserverTest {
     @Test
     fun `events are delivered successfully`() {
         val callback: (Device?, List<TabData>) -> Unit = mock()
-        val observer = EventsObserver(callback)
+        val observer = TabReceivedEventsObserver(callback)
         val events = listOf(AccountEvent.DeviceCommandIncoming(command = DeviceCommandIncoming.TabReceived(mock(), mock())))
 
         observer.onEvents(events)
@@ -34,7 +34,7 @@ class EventsObserverTest {
     @Test
     fun `only TabReceived commands are delivered`() {
         val callback: (Device?, List<TabData>) -> Unit = mock()
-        val observer = EventsObserver(callback)
+        val observer = TabReceivedEventsObserver(callback)
         val events = listOf(
             AccountEvent.ProfileUpdated,
             AccountEvent.DeviceCommandIncoming(command = DeviceCommandIncoming.TabReceived(mock(), mock())),

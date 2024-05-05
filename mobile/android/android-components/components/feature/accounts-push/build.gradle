@@ -37,6 +37,7 @@ tasks.withType(KotlinCompile).configureEach {
 }
 
 dependencies {
+    implementation project(':browser-state')
     implementation project(':service-firefox-accounts')
     implementation project(':support-ktx')
     implementation project(':support-base')
@@ -47,7 +48,9 @@ dependencies {
     implementation ComponentsDependencies.androidx_lifecycle_process
     implementation ComponentsDependencies.kotlin_coroutines
 
+    testImplementation project(':concept-engine')
     testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
 
     testImplementation ComponentsDependencies.androidx_test_core
     testImplementation ComponentsDependencies.androidx_test_junit

@@ -154,6 +154,7 @@ fun DeviceType.into(): RustDeviceType {
 fun DeviceCapability.into(): RustDeviceCapability {
     return when (this) {
         DeviceCapability.SEND_TAB -> RustDeviceCapability.SEND_TAB
+        DeviceCapability.CLOSE_TABS -> RustDeviceCapability.CLOSE_TABS
     }
 }
 
@@ -164,6 +165,7 @@ fun DeviceCapability.into(): RustDeviceCapability {
 fun RustDeviceCapability.into(): DeviceCapability {
     return when (this) {
         RustDeviceCapability.SEND_TAB -> DeviceCapability.SEND_TAB
+        RustDeviceCapability.CLOSE_TABS -> DeviceCapability.CLOSE_TABS
     }
 }
 
@@ -255,6 +257,7 @@ fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent {
 fun IncomingDeviceCommand.into(): mozilla.components.concept.sync.DeviceCommandIncoming {
     return when (this) {
         is IncomingDeviceCommand.TabReceived -> this.into()
+        is IncomingDeviceCommand.TabsClosed -> this.into()
     }
 }
 
@@ -262,5 +265,12 @@ fun IncomingDeviceCommand.TabReceived.into(): mozilla.components.concept.sync.De
     return mozilla.components.concept.sync.DeviceCommandIncoming.TabReceived(
         from = this.sender?.into(),
         entries = this.payload.entries.map { it.into() },
+    )
+}
+
+fun IncomingDeviceCommand.TabsClosed.into(): mozilla.components.concept.sync.DeviceCommandIncoming.TabsClosed {
+    return mozilla.components.concept.sync.DeviceCommandIncoming.TabsClosed(
+        from = this.sender?.into(),
+        urls = this.payload.urls,
     )
 }
