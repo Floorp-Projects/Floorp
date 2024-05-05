@@ -48,10 +48,10 @@ class OpenTypeGLYF : public Table {
   bool ParseSimpleGlyph(Buffer &glyph,
                         unsigned gid,
                         int16_t num_contours,
-                        int16_t& xmin,
-                        int16_t& ymin,
-                        int16_t& xmax,
-                        int16_t& ymax,
+                        int16_t xmin,
+                        int16_t ymin,
+                        int16_t xmax,
+                        int16_t ymax,
                         bool is_tricky_font);
   bool ParseCompositeGlyph(
       Buffer &glyph,

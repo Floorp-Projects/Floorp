@@ -41,7 +41,7 @@ enum FONT_FORMAT {
 // see Appendix. A
 const size_t kNStdString = 390;
 
-typedef std::pair<uint32_t, DICT_OPERAND_TYPE> Operand;
+typedef std::pair<int32_t, DICT_OPERAND_TYPE> Operand;
 
 bool ReadOffset(ots::Buffer &table, uint8_t off_size, uint32_t *offset) {
   if (off_size > 4) {
@@ -172,7 +172,7 @@ bool CheckOffset(const Operand& operand, size_t table_length) {
   if (operand.second != DICT_OPERAND_INTEGER) {
     return OTS_FAILURE();
   }
-  if (operand.first >= table_length) {
+  if (operand.first >= static_cast<int32_t>(table_length) || operand.first < 0) {
     return OTS_FAILURE();
   }
   return true;
@@ -182,7 +182,7 @@ bool CheckSid(const Operand& operand, size_t sid_max) {
   if (operand.second != DICT_OPERAND_INTEGER) {
     return OTS_FAILURE();
   }
-  if (operand.first > sid_max) {
+  if (operand.first > static_cast<int32_t>(sid_max) || operand.first < 0) {
     return OTS_FAILURE();
   }
   return true;
@@ -202,15 +202,13 @@ bool ParseDictDataBcd(ots::Buffer &table, std::vector<Operand> &operands) {
       if ((nibble & 0xf) == 0xf) {
         // TODO(yusukes): would be better to store actual double value,
         // rather than the dummy integer.
-        operands.push_back(std::make_pair(static_cast<uint32_t>(0),
-                                           DICT_OPERAND_REAL));
+        operands.push_back(std::make_pair(0, DICT_OPERAND_REAL));
         return true;
       }
       return OTS_FAILURE();
     }
     if ((nibble & 0x0f) == 0x0f) {
-      operands.push_back(std::make_pair(static_cast<uint32_t>(0),
-                                         DICT_OPERAND_REAL));
+      operands.push_back(std::make_pair(0, DICT_OPERAND_REAL));
       return true;
     }
 
@@ -256,7 +254,7 @@ bool ParseDictDataEscapedOperator(ots::Buffer &table,
   if ((op <= 14) ||
       (op >= 17 && op <= 23) ||
       (op >= 30 && op <= 38)) {
-    operands.push_back(std::make_pair((12U << 8) + op, DICT_OPERATOR));
+    operands.push_back(std::make_pair((12 << 8) + op, DICT_OPERATOR));
     return true;
   }
 
@@ -277,8 +275,9 @@ bool ParseDictDataNumber(ots::Buffer &table, uint8_t b0,
           !table.ReadU8(&b2)) {
         return OTS_FAILURE();
       }
+      //the two-byte value needs to be casted to int16_t in order to get the right sign
       operands.push_back(std::make_pair(
-          static_cast<uint32_t>((b1 << 8) + b2), DICT_OPERAND_INTEGER));
+          static_cast<int16_t>((b1 << 8) + b2), DICT_OPERAND_INTEGER));
       return true;
 
     case 29:  // longint
@@ -289,7 +288,7 @@ bool ParseDictDataNumber(ots::Buffer &table, uint8_t b0,
         return OTS_FAILURE();
       }
       operands.push_back(std::make_pair(
-          static_cast<uint32_t>((b1 << 24) + (b2 << 16) + (b3 << 8) + b4),
+          (b1 << 24) + (b2 << 16) + (b3 << 8) + b4,
           DICT_OPERAND_INTEGER));
       return true;
 
@@ -300,7 +299,7 @@ bool ParseDictDataNumber(ots::Buffer &table, uint8_t b0,
       break;
   }
 
-  uint32_t result;
+  int32_t result;
   if (b0 >=32 && b0 <=246) {
     result = b0 - 139;
   } else if (b0 >=247 && b0 <= 250) {
@@ -332,7 +331,7 @@ bool ParseDictDataReadNext(ots::Buffer &table,
       return ParseDictDataEscapedOperator(table, operands);
     }
     operands.push_back(std::make_pair(
-        static_cast<uint32_t>(op), DICT_OPERATOR));
+        static_cast<int32_t>(op), DICT_OPERATOR));
     return true;
   } else if (op <= 27 || op == 31 || op == 255) {
     // reserved area.
@@ -367,13 +366,13 @@ bool ParseDictDataReadOperands(ots::Buffer& dict,
   return true;
 }
 
-bool ValidCFF2DictOp(uint32_t op, DICT_DATA_TYPE type) {
+bool ValidCFF2DictOp(int32_t op, DICT_DATA_TYPE type) {
   if (type == DICT_DATA_TOPLEVEL) {
     switch (op) {
-      case (12U << 8) + 7:  // FontMatrix
+      case (12 << 8) + 7:  // FontMatrix
       case 17:              // CharStrings
-      case (12U << 8) + 36: // FDArray
-      case (12U << 8) + 37: // FDSelect
+      case (12 << 8) + 36: // FDArray
+      case (12 << 8) + 37: // FDSelect
       case 24:              // vstore
         return true;
       default:
@@ -384,8 +383,8 @@ bool ValidCFF2DictOp(uint32_t op, DICT_DATA_TYPE type) {
       return true;
   } else if (type == DICT_DATA_PRIVATE) {
     switch (op) {
-      case (12U << 8) + 14: // ForceBold
-      case (12U << 8) + 19: // initialRandomSeed
+      case (12 << 8) + 14: // ForceBold
+      case (12 << 8) + 19: // initialRandomSeed
       case 20:              // defaultWidthX
       case 21:              // nominalWidthX
         return false;
@@ -426,7 +425,7 @@ bool ParsePrivateDictData(
     }
 
     // got operator
-    const uint32_t op = operands.back().first;
+    const int32_t op = operands.back().first;
     operands.pop_back();
 
     if (cff2 && !ValidCFF2DictOp(op, DICT_DATA_PRIVATE)) {
@@ -446,8 +445,8 @@ bool ParsePrivateDictData(
         break;
 
       // array
-      case (12U << 8) + 12:  // StemSnapH (delta)
-      case (12U << 8) + 13:  // StemSnapV (delta)
+      case (12 << 8) + 12:  // StemSnapH (delta)
+      case (12 << 8) + 13:  // StemSnapV (delta)
         if (operands.empty()) {
           return OTS_FAILURE();
         }
@@ -458,12 +457,12 @@ bool ParsePrivateDictData(
       case 11:  // StdVW
       case 20:  // defaultWidthX
       case 21:  // nominalWidthX
-      case (12U << 8) + 9:   // BlueScale
-      case (12U << 8) + 10:  // BlueShift
-      case (12U << 8) + 11:  // BlueFuzz
-      case (12U << 8) + 17:  // LanguageGroup
-      case (12U << 8) + 18:  // ExpansionFactor
-      case (12U << 8) + 19:  // initialRandomSeed
+      case (12 << 8) + 9:   // BlueScale
+      case (12 << 8) + 10:  // BlueShift
+      case (12 << 8) + 11:  // BlueFuzz
+      case (12 << 8) + 17:  // LanguageGroup
+      case (12 << 8) + 18:  // ExpansionFactor
+      case (12 << 8) + 19:  // initialRandomSeed
         if (operands.size() != 1) {
           return OTS_FAILURE();
         }
@@ -477,7 +476,14 @@ bool ParsePrivateDictData(
         if (operands.back().second != DICT_OPERAND_INTEGER) {
           return OTS_FAILURE();
         }
-        if (operands.back().first >= 1024 * 1024 * 1024) {
+        // In theory a negative operand could occur here, if the Local Subrs
+        // were stored before the Private dict, but this does not seem to be
+        // well supported by implementations, and mishandling of a negative
+        // offset (e.g. by using unsigned offset arithmetic) might become a
+        // vector for exploitation.  AFAIK no major font creation tool will
+        // generate such an offset, so to be on the safe side, we don't allow
+        // it here.
+        if (operands.back().first >= 1024 * 1024 * 1024 || operands.back().first < 0) {
           return OTS_FAILURE();
         }
         if (operands.back().first + offset >= table.length()) {
@@ -505,14 +511,14 @@ bool ParsePrivateDictData(
       }
 
       // boolean
-      case (12U << 8) + 14:  // ForceBold
+      case (12 << 8) + 14:  // ForceBold
         if (operands.size() != 1) {
           return OTS_FAILURE();
         }
         if (operands.back().second != DICT_OPERAND_INTEGER) {
           return OTS_FAILURE();
         }
-        if (operands.back().first >= 2) {
+        if (operands.back().first >= 2 || operands.back().first < 0) {
           return OTS_FAILURE();
         }
         break;
@@ -532,7 +538,7 @@ bool ParsePrivateDictData(
         }
         vsindex = operands.back().first;
         if (vsindex < 0 ||
-            vsindex >= (int32_t)out_cff->region_index_count.size()) {
+            vsindex >= static_cast<int32_t>(out_cff->region_index_count.size())) {
           return OTS_FAILURE();
         }
         out_cff->vsindex_per_font.back() = vsindex;
@@ -546,11 +552,15 @@ bool ParsePrivateDictData(
         if (operands.size() < 1) {
           return OTS_FAILURE();
         }
-        if (vsindex >= (int32_t)out_cff->region_index_count.size()) {
+        if (vsindex >= static_cast<int32_t>(out_cff->region_index_count.size())) {
           return OTS_FAILURE();
         }
         uint16_t k = out_cff->region_index_count.at(vsindex);
-        uint16_t n = operands.back().first;
+          
+        if (operands.back().first > static_cast<uint16_t>(0xffff) || operands.back().first < 0){
+          return OTS_FAILURE();
+        }
+        uint16_t n = static_cast<uint16_t>(operands.back().first);
         if (operands.size() < n * (k + 1) + 1) {
           return OTS_FAILURE();
         }
@@ -644,7 +654,7 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
       if (operands.back().second != DICT_OPERATOR) continue;
 
       // got operator
-      const uint32_t op = operands.back().first;
+      const int32_t op = operands.back().first;
       operands.pop_back();
 
       if (op == 18 && type == DICT_DATA_FDARRAY) {
@@ -686,7 +696,7 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
     if (operands.back().second != DICT_OPERATOR) continue;
 
     // got operator
-    const uint32_t op = operands.back().first;
+    const int32_t op = operands.back().first;
     operands.pop_back();
 
     if (cff2 && !ValidCFF2DictOp(op, type)) {
@@ -700,10 +710,10 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
       case 2:   // Copyright
       case 3:   // FullName
       case 4:   // FamilyName
-      case (12U << 8) + 0:   // Copyright
-      case (12U << 8) + 21:  // PostScript
-      case (12U << 8) + 22:  // BaseFontName
-      case (12U << 8) + 38:  // FontName
+      case (12 << 8) + 0:   // Copyright
+      case (12 << 8) + 21:  // PostScript
+      case (12 << 8) + 22:  // BaseFontName
+      case (12 << 8) + 38:  // FontName
         if (operands.size() != 1) {
           return OTS_FAILURE();
         }
@@ -715,8 +725,8 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
       // array
       case 5:   // FontBBox
       case 14:  // XUID
-      case (12U << 8) + 7:   // FontMatrix
-      case (12U << 8) + 23:  // BaseFontBlend (delta)
+      case (12 << 8) + 7:   // FontMatrix
+      case (12 << 8) + 23:  // BaseFontBlend (delta)
         if (operands.empty()) {
           return OTS_FAILURE();
         }
@@ -724,21 +734,21 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
 
       // number
       case 13:  // UniqueID
-      case (12U << 8) + 2:   // ItalicAngle
-      case (12U << 8) + 3:   // UnderlinePosition
-      case (12U << 8) + 4:   // UnderlineThickness
-      case (12U << 8) + 5:   // PaintType
-      case (12U << 8) + 8:   // StrokeWidth
-      case (12U << 8) + 20:  // SyntheticBase
+      case (12 << 8) + 2:   // ItalicAngle
+      case (12 << 8) + 3:   // UnderlinePosition
+      case (12 << 8) + 4:   // UnderlineThickness
+      case (12 << 8) + 5:   // PaintType
+      case (12 << 8) + 8:   // StrokeWidth
+      case (12 << 8) + 20:  // SyntheticBase
         if (operands.size() != 1) {
           return OTS_FAILURE();
         }
         break;
-      case (12U << 8) + 31:  // CIDFontVersion
-      case (12U << 8) + 32:  // CIDFontRevision
-      case (12U << 8) + 33:  // CIDFontType
-      case (12U << 8) + 34:  // CIDCount
-      case (12U << 8) + 35:  // UIDBase
+      case (12 << 8) + 31:  // CIDFontVersion
+      case (12 << 8) + 32:  // CIDFontRevision
+      case (12 << 8) + 33:  // CIDFontType
+      case (12 << 8) + 34:  // CIDCount
+      case (12 << 8) + 35:  // UIDBase
         if (operands.size() != 1) {
           return OTS_FAILURE();
         }
@@ -746,7 +756,7 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
           return OTS_FAILURE();
         }
         break;
-      case (12U << 8) + 6:   // CharstringType
+      case (12 << 8) + 6:   // CharstringType
         if (operands.size() != 1) {
           return OTS_FAILURE();
         }
@@ -761,14 +771,14 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
         break;
 
       // boolean
-      case (12U << 8) + 1:   // isFixedPitch
+      case (12 << 8) + 1:   // isFixedPitch
         if (operands.size() != 1) {
           return OTS_FAILURE();
         }
         if (operands.back().second != DICT_OPERAND_INTEGER) {
           return OTS_FAILURE();
         }
-        if (operands.back().first >= 2) {
+        if (operands.back().first >= 2 || operands.back().first < 0) {
           return OTS_FAILURE();
         }
         break;
@@ -778,7 +788,7 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
         if (operands.size() != 1) {
           return OTS_FAILURE();
         }
-        if (operands.back().first <= 2) {
+        if (operands.back().first <= 2 && operands.back().first >= 0) {
           // predefined charset, ISOAdobe, Expert or ExpertSubset, is used.
           break;
         }
@@ -795,7 +805,7 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
         if (operands.size() != 1) {
           return OTS_FAILURE();
         }
-        if (operands.back().first <= 1) {
+        if (operands.back().first <= 1 && operands.back().first >= 0) {
           break;  // predefined encoding, "Standard" or "Expert", is used.
         }
         if (!CheckOffset(operands.back(), table.length())) {
@@ -856,7 +866,7 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
         break;
       }
 
-      case (12U << 8) + 36: {  // FDArray
+      case (12 << 8) + 36: {  // FDArray
         if (type != DICT_DATA_TOPLEVEL) {
           return OTS_FAILURE();
         }
@@ -885,7 +895,7 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
         break;
       }
 
-      case (12U << 8) + 37: {  // FDSelect
+      case (12 << 8) + 37: {  // FDSelect
         if (type != DICT_DATA_TOPLEVEL) {
           return OTS_FAILURE();
         }
@@ -1043,19 +1053,19 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
         if (operands.back().second != DICT_OPERAND_INTEGER) {
           return OTS_FAILURE();
         }
-        const uint32_t private_offset = operands.back().first;
+        const int32_t private_offset = operands.back().first;
         operands.pop_back();
         if (operands.back().second != DICT_OPERAND_INTEGER) {
           return OTS_FAILURE();
         }
-        const uint32_t private_length = operands.back().first;
-        if (private_offset > table.length()) {
+        const int32_t private_length = operands.back().first;
+        if (private_offset > static_cast<int32_t>(table.length())) {
           return OTS_FAILURE();
         }
-        if (private_length >= table.length()) {
+        if (private_length >= static_cast<int32_t>(table.length()) || private_length < 0) {
           return OTS_FAILURE();
         }
-        if (private_length + private_offset > table.length()) {
+        if (private_length + private_offset > static_cast<int32_t>(table.length()) || private_length + private_offset < 0) {
           return OTS_FAILURE();
         }
         // parse "15. Private DICT data"
@@ -1067,7 +1077,7 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
       }
 
       // ROS
-      case (12U << 8) + 30:
+      case (12 << 8) + 30:
         if (font_format != FORMAT_UNKNOWN) {
           return OTS_FAILURE();
         }
