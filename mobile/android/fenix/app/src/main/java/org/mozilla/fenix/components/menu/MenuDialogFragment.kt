@@ -107,6 +107,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                     val accountState by syncStore.observeAsState(initialValue = NotAuthenticated) { state ->
                         state.accountState
                     }
+                    val isBookmarked by store.observeAsState(initialValue = false) { state ->
+                        state.browserMenuState != null && state.browserMenuState.isBookmarked
+                    }
 
                     NavHost(
                         navController = navHostController,
@@ -161,10 +164,12 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                         composable(route = SAVE_MENU_ROUTE) {
                             SaveSubmenu(
+                                isBookmarked = isBookmarked,
                                 onBackButtonClick = {
                                     store.dispatch(MenuAction.Navigate.Back)
                                 },
                                 onBookmarkPageMenuClick = {},
+                                onEditBookmarkButtonClick = {},
                                 onAddToShortcutsMenuClick = {},
                                 onAddToHomeScreenMenuClick = {},
                                 onSaveToCollectionMenuClick = {},
