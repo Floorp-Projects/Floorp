@@ -159,10 +159,7 @@ add_task(async function clear_distinct_section() {
 
   document.getElementById("form1").reset();
   await triggerPopupAndHoverItem("#cc-name", 0);
-  let osKeyStoreLoginShown = Promise.resolve();
-  if(OSKeyStore.canReauth()) {
-    osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
-  }
+  let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
   await triggerAutofillAndCheckProfile(MOCK_CC_STORAGE_EXPECTED_FILL[0]);
   await osKeyStoreLoginShown;
 
@@ -183,8 +180,6 @@ add_task(async function clear_distinct_section() {
   await triggerPopupAndHoverItem("#cc-name", 0);
   await confirmClear("#cc-name");
   await checkIsFormCleared();
-  // Enforcing this since it is unable to change back in chaos mode.
-  SpecialPowers.clearUserPref("toolkit.osKeyStore.unofficialBuildOnlyLogin");
 });
 
 </script>

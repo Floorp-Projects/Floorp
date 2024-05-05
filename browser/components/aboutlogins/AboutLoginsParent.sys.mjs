@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoginExport: "resource://gre/modules/LoginExport.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
+  OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
 });
 
@@ -34,6 +35,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "FXA_ENABLED",
   "identity.fxaccounts.enabled",
   false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "OS_AUTH_ENABLED",
+  "signon.management.page.os-auth.enabled",
+  true
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -259,15 +266,11 @@ export class AboutLoginsParent extends JSWindowActorParent {
     let messageText = { value: "NOT SUPPORTED" };
     let captionText = { value: "" };
 
-    const isOSAuthEnabled = lazy.LoginHelper.getOSAuthEnabled(
-      lazy.LoginHelper.OS_AUTH_FOR_PASSWORDS_PREF
-    );
-
     // This feature is only supported on Windows and macOS
     // but we still call in to OSKeyStore on Linux to get
     // the proper auth_details for Telemetry.
     // See bug 1614874 for Linux support.
-    if (isOSAuthEnabled) {
+    if (lazy.OS_AUTH_ENABLED && lazy.OSKeyStore.canReauth()) {
       messageId += "-" + AppConstants.platform;
       [messageText, captionText] = await lazy.AboutLoginsL10n.formatMessages([
         {
@@ -281,7 +284,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
 
     let { isAuthorized, telemetryEvent } = await lazy.LoginHelper.requestReauth(
       this.browsingContext.embedderElement,
-      isOSAuthEnabled,
+      lazy.OS_AUTH_ENABLED,
       AboutLogins._authExpirationTime,
       messageText.value,
       captionText.value
@@ -375,15 +378,11 @@ export class AboutLoginsParent extends JSWindowActorParent {
     let messageText = { value: "NOT SUPPORTED" };
     let captionText = { value: "" };
 
-    const isOSAuthEnabled = lazy.LoginHelper.getOSAuthEnabled(
-      lazy.LoginHelper.OS_AUTH_FOR_PASSWORDS_PREF
-    );
-
     // This feature is only supported on Windows and macOS
     // but we still call in to OSKeyStore on Linux to get
     // the proper auth_details for Telemetry.
     // See bug 1614874 for Linux support.
-    if (isOSAuthEnabled) {
+    if (lazy.OSKeyStore.canReauth()) {
       const messageId =
         EXPORT_PASSWORD_OS_AUTH_DIALOG_MESSAGE_IDS[AppConstants.platform];
       if (!messageId) {
