@@ -2,8 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+/**
+ * Uses of this panel are:-
+ * - Highlighting lines of a function selected to be copied using the "Copy function" context menu in the Outline panel
+ */
+
 import { Component } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
+import { fromEditorLine } from "../../utils/editor/index";
+import { features } from "../../utils/prefs";
 
 class HighlightLines extends Component {
   static get propTypes() {
@@ -33,9 +40,19 @@ class HighlightLines extends Component {
   clearHighlightRange() {
     const { range, editor } = this.props;
 
-    const { codeMirror } = editor;
+    if (!range) {
+      return;
+    }
 
-    if (!range || !codeMirror) {
+    if (features.codemirrorNext) {
+      if (editor) {
+        editor.removeLineContentMarker("multi-highlight-line-marker");
+      }
+      return;
+    }
+
+    const { codeMirror } = editor;
+    if (!codeMirror) {
       return;
     }
 
@@ -50,14 +67,31 @@ class HighlightLines extends Component {
   highlightLineRange = () => {
     const { range, editor } = this.props;
 
-    const { codeMirror } = editor;
+    if (!range) {
+      return;
+    }
 
-    if (!range || !codeMirror) {
+    if (features.codemirrorNext) {
+      // TODO: Fix scrolling into view if its out Bug 1894725
+      if (editor) {
+        editor.setLineContentMarker({
+          id: "multi-highlight-line-marker",
+          lineClassName: "highlight-lines",
+          condition(line) {
+            const lineNumber = fromEditorLine(null, line);
+            return lineNumber >= range.start && lineNumber <= range.end;
+          },
+        });
+      }
+      return;
+    }
+
+    const { codeMirror } = editor;
+    if (!codeMirror) {
       return;
     }
 
     const { start, end } = range;
-
     codeMirror.operation(() => {
       editor.alignLine(start);
       for (let line = start - 1; line < end; line++) {

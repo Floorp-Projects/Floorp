@@ -827,9 +827,7 @@ class Editor extends PureComponent {
       return React.createElement(
         React.Fragment,
         null,
-        React.createElement(Breakpoints, {
-          editor,
-        }),
+        React.createElement(Breakpoints, { editor }),
         React.createElement(DebugLine, { editor, selectedSource }),
         React.createElement(HighlightLine, { editor }),
         React.createElement(Exceptions, { editor }),
@@ -847,6 +845,12 @@ class Editor extends PureComponent {
           ? React.createElement(InlinePreviews, {
               editor,
               selectedSource,
+            })
+          : null,
+        highlightedLineRange
+          ? React.createElement(HighlightLines, {
+              editor,
+              range: highlightedLineRange,
             })
           : null
       );
