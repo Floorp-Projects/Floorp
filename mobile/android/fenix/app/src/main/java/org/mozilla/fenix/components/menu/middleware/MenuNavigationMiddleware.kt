@@ -47,7 +47,7 @@ class MenuNavigationMiddleware(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : Middleware<MenuState, MenuAction> {
 
-    @Suppress("CyclomaticComplexMethod")
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     override fun invoke(
         context: MiddlewareContext<MenuState, MenuAction>,
         next: (MenuAction) -> Unit,
@@ -141,6 +141,11 @@ class MenuNavigationMiddleware(
                         )
                     }
                 }
+
+                is MenuAction.Navigate.Translate -> navController.nav(
+                    R.id.menuDialogFragment,
+                    MenuDialogFragmentDirections.actionMenuDialogFragmentToTranslationsDialogFragment(),
+                )
 
                 else -> Unit
             }

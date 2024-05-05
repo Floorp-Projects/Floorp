@@ -10,6 +10,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.service.fxa.manager.AccountState.Authenticated
 import mozilla.components.service.fxa.manager.AccountState.AuthenticationProblem
 import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
@@ -22,6 +23,7 @@ import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.menu.compose.SAVE_MENU_ROUTE
 import org.mozilla.fenix.components.menu.compose.TOOLS_MENU_ROUTE
 import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
+import org.mozilla.fenix.components.menu.store.BrowserMenuState
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
@@ -237,6 +239,27 @@ class MenuNavigationMiddlewareTest {
         store.dispatch(MenuAction.Navigate.Back).join()
 
         verify { navHostController.popBackStack() }
+    }
+
+    @Test
+    fun `WHEN navigate to translate action is dispatched THEN navigate to translation dialog`() = runTest {
+        val tab = createTab(url = "https://www.mozilla.org")
+        val store = createStore(
+            menuState = MenuState(
+                browserMenuState = BrowserMenuState(
+                    selectedTab = tab,
+                ),
+            ),
+        )
+
+        store.dispatch(MenuAction.Navigate.Translate).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionMenuDialogFragmentToTranslationsDialogFragment(),
+            )
+        }
     }
 
     private fun createStore(
