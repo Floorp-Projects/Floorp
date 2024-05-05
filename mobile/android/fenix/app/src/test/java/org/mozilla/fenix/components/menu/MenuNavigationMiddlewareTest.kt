@@ -347,6 +347,19 @@ class MenuNavigationMiddlewareTest {
         }
     }
 
+    @Test
+    fun `WHEN navigate to manage extensions action is dispatched THEN navigate to the extensions management`() = runTest {
+        val store = createStore()
+        store.dispatch(MenuAction.Navigate.ManageExtensions).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalAddonsManagementFragment(),
+            )
+        }
+    }
+
     private fun createStore(
         menuState: MenuState = MenuState(),
         openToBrowser: (params: BrowserNavigationParams) -> Unit = {},

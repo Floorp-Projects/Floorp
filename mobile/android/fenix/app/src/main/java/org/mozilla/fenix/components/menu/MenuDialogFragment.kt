@@ -228,7 +228,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 onBackButtonClick = {
                                     store.dispatch(MenuAction.Navigate.Back)
                                 },
-                                onManageExtensionsMenuClick = {},
+                                onManageExtensionsMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.ManageExtensions)
+                                },
                                 onDiscoverMoreExtensionsMenuClick = {},
                             )
                         }
