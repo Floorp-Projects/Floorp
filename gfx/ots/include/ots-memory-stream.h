@@ -26,7 +26,7 @@ class MemoryStream : public OTSStream {
       return false;
     }
     std::memcpy(static_cast<char*>(ptr_) + off_, data, length);
-    off_ += length;
+    off_ += static_cast<off_t>(length);
     return true;
   }
 
@@ -82,7 +82,7 @@ class ExpandingMemoryStream : public OTSStream {
       return WriteRaw(data, length);
     }
     std::memcpy(static_cast<char*>(ptr_) + off_, data, length);
-    off_ += length;
+    off_ += static_cast<off_t>(length);
     return true;
   }
 

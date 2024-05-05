@@ -5,7 +5,7 @@
 #include "silf.h"
 
 #include "name.h"
-#include "mozilla/Compression.h"
+#include "lz4.h"
 #include <cmath>
 #include <memory>
 
@@ -50,15 +50,14 @@ bool OpenTypeSILF::Parse(const uint8_t* data, size_t length,
                               decompressed_size / (1024.0 * 1024.0));
         }
         std::unique_ptr<uint8_t> decompressed(new uint8_t[decompressed_size]());
-        size_t outputSize = 0;
-        bool ret = mozilla::Compression::LZ4::decompressPartial(
+        int ret = LZ4_decompress_safe_partial(
             reinterpret_cast<const char*>(data + table.offset()),
-            table.remaining(),  // input buffer size (input size + padding)
             reinterpret_cast<char*>(decompressed.get()),
+            table.remaining(),  // input buffer size (input size + padding)
             decompressed_size,  // target output size
-            &outputSize);   // return output size
-        if (!ret || outputSize != decompressed_size) {
-          return DropGraphite("Decompression failed");
+            decompressed_size);  // output buffer size
+        if (ret < 0 || unsigned(ret) != decompressed_size) {
+          return DropGraphite("Decompression failed with error code %d", ret);
         }
         return this->Parse(decompressed.get(), decompressed_size, true);
       }

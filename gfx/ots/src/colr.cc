@@ -193,7 +193,15 @@ bool ParsePaintColrLayers(const ots::Font* font,
                           colrState& state)
 {
   if (setContains(state.visited, data)) {
+#ifdef OTS_COLR_CYCLE_CHECK
+    // A cycle would imply an infinite loop during painting, unless the renderer
+    // detects and breaks it. To be safe, reject the table.
     return OTS_FAILURE_MSG("Cycle detected in PaintColrLayers");
+#else
+    // Just issue a warning and return (as we've already checked this subgraph).
+    OTS_WARNING("Cycle detected in COLRv1 glyph paint graph (PaintColrLayers)\n");
+    return true;
+#endif
   }
   state.visited.insert(data);
 
@@ -393,7 +401,12 @@ bool ParsePaintColrGlyph(const ots::Font* font,
                          colrState& state)
 {
   if (setContains(state.visited, data)) {
+#ifdef OTS_COLR_CYCLE_CHECK
     return OTS_FAILURE_MSG("Cycle detected in PaintColrGlyph");
+#else
+    OTS_WARNING("Cycle detected in COLRv1 glyph paint graph (PaintColrGlyph)\n");
+    return true;
+#endif
   }
   state.visited.insert(data);
 
