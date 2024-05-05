@@ -170,6 +170,11 @@ class MenuNavigationMiddleware(
                     }
                 }
 
+                is MenuAction.Navigate.ManageExtensions -> navController.nav(
+                    R.id.menuDialogFragment,
+                    MenuDialogFragmentDirections.actionGlobalAddonsManagementFragment(),
+                )
+
                 else -> Unit
             }
         }

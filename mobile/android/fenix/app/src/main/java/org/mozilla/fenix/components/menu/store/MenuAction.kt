@@ -123,5 +123,10 @@ sealed class MenuAction : Action {
          * [Navigate] action dispatched when navigating to the share sheet.
          */
         data object Share : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to the extensions manager.
+         */
+        data object ManageExtensions : Navigate()
     }
 }
