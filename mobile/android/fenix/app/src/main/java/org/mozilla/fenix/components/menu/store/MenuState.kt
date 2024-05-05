@@ -4,13 +4,25 @@
 
 package org.mozilla.fenix.components.menu.store
 
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.State
 
 /**
  * Value type that represents the state of the menu.
  *
- * @property isBookmarked Whether or not the current selected tab is bookmarked.
+ * @property browserMenuState The [BrowserMenuState] of the current browser session if any.
  */
 data class MenuState(
-    val isBookmarked: Boolean = false,
+    val browserMenuState: BrowserMenuState? = null,
 ) : State
+
+/**
+ * Value type that represents the state of the browser menu.
+ *
+ * @property selectedTab The current selected [TabSessionState].
+ * @property isBookmarked Whether or not the selected tab is bookmarked.
+ */
+data class BrowserMenuState(
+    val selectedTab: TabSessionState,
+    val isBookmarked: Boolean = false,
+)

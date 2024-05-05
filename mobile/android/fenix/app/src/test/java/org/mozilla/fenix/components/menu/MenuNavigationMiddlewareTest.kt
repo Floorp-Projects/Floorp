@@ -229,9 +229,10 @@ class MenuNavigationMiddlewareTest {
     }
 
     private fun createStore(
+        menuState: MenuState = MenuState(),
         openToBrowser: (params: BrowserNavigationParams) -> Unit = {},
     ) = MenuStore(
-        initialState = MenuState(),
+        initialState = menuState,
         middleware = listOf(
             MenuNavigationMiddleware(
                 navController = navController,

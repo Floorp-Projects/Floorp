@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.menu.store
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Store
 
@@ -13,16 +14,31 @@ import mozilla.components.lib.state.Store
 class MenuStore(
     initialState: MenuState,
     middleware: List<Middleware<MenuState, MenuAction>> = listOf(),
-) :
-    Store<MenuState, MenuAction>(
-        initialState = initialState,
-        reducer = ::reducer,
-        middleware = middleware,
-    )
+) : Store<MenuState, MenuAction>(
+    initialState = initialState,
+    reducer = ::reducer,
+    middleware = middleware,
+) {
+    init {
+        dispatch(MenuAction.InitAction)
+    }
+}
 
 private fun reducer(state: MenuState, action: MenuAction): MenuState {
     return when (action) {
-        is MenuAction.UpdateBookmarked -> state.copy(isBookmarked = action.isBookmarked)
-        is MenuAction.Navigate -> state
+        is MenuAction.InitAction,
+        is MenuAction.Navigate,
+        -> state
+
+        is MenuAction.UpdateBookmarked -> state.copyWithBrowserMenuState {
+            it.copy(isBookmarked = action.isBookmarked)
+        }
     }
+}
+
+@VisibleForTesting
+internal inline fun MenuState.copyWithBrowserMenuState(
+    crossinline update: (BrowserMenuState) -> BrowserMenuState,
+): MenuState {
+    return this.copy(browserMenuState = this.browserMenuState?.let { update(it) })
 }

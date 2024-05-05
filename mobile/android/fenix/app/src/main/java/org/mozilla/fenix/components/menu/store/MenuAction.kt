@@ -14,6 +14,14 @@ import org.mozilla.fenix.components.menu.MenuAccessPoint
 sealed class MenuAction : Action {
 
     /**
+     * [MenuAction] dispatched to indicate that the store is initialized and
+     * ready to use. This action is dispatched automatically before any other
+     * action is processed. Its main purpose is to trigger initialization logic
+     * in middlewares.
+     */
+    data object InitAction : MenuAction()
+
+    /**
      * Updates whether or not the current selected tab is bookmarked.
      *
      * @property isBookmarked Whether or not the current selected is bookmarked.
