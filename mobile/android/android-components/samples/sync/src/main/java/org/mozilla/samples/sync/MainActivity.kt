@@ -278,14 +278,19 @@ class MainActivity :
             events.forEach {
                 when (it) {
                     is AccountEvent.DeviceCommandIncoming -> {
-                        when (it.command) {
+                        val cmd = it.command
+                        when (cmd) {
                             is DeviceCommandIncoming.TabReceived -> {
-                                val cmd = it.command as DeviceCommandIncoming.TabReceived
                                 var tabsStringified = "Tab(s) from: ${cmd.from?.displayName}\n"
                                 cmd.entries.forEach { tab ->
                                     tabsStringified += "${tab.title}: ${tab.url}\n"
                                 }
                                 txtView.text = tabsStringified
+                            }
+                            is DeviceCommandIncoming.TabsClosed -> {
+                                var urlsStringified = "Tabs closed from: ${cmd.from?.displayName}\n"
+                                cmd.urls.forEach { url -> urlsStringified += "${url}\n" }
+                                txtView.text = urlsStringified
                             }
                         }
                     }
