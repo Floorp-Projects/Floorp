@@ -51,6 +51,9 @@ class CubebInputStream final {
   // Stop producing audio data.
   int Stop();
 
+  // Apply the given processing params.
+  int SetProcessingParams(cubeb_input_processing_params aParams);
+
   // Gets the approximate stream latency in frames.
   int Latency(uint32_t* aLatencyFrames);
 
