@@ -1652,13 +1652,11 @@ export class ScreenshotsOverlay {
       right: boxRight,
       bottom: boxBottom,
     } = this.selectionRegion.dimensions;
-
-    let { clientWidth, clientHeight, scrollX, scrollY } =
+    let { clientHeight, scrollY, scrollWidth } =
       this.windowDimensions.dimensions;
 
     if (!this.windowDimensions.isInViewport(this.selectionRegion.dimensions)) {
-      // The box is entirely offscreen so need to draw the buttons
-
+      // The box is offscreen so need to draw the buttons
       return;
     }
 
@@ -1674,31 +1672,23 @@ export class ScreenshotsOverlay {
       }
     }
 
-    if (!this.buttonsContainerRect) {
-      this.buttonsContainerRect = this.buttonsContainer.getBoundingClientRect();
-    }
-
-    let viewportLeft = scrollX;
-    let viewportRight = scrollX + clientWidth;
-
-    let left;
     let isLTR = !Services.locale.isAppLocaleRTL;
-    if (isLTR) {
-      left = Math.max(
-        Math.min(
-          viewportRight - this.buttonsContainerRect.width,
-          boxRight - this.buttonsContainerRect.width
-        ),
-        viewportLeft
-      );
-    } else {
-      left = Math.min(
-        Math.max(viewportLeft, boxLeft),
-        viewportRight - this.buttonsContainerRect.width
-      );
+    let availWidth = isLTR ? boxRight : scrollWidth - boxLeft;
+    // which edge of the selection box should we align the buttons to?
+    let alignEdge = isLTR ? "right" : "left";
+    if (availWidth < 300) {
+      // when there may not be enough space, rather than aligning to the end of edge
+      // of the selection box, we align to the start edge
+      alignEdge = isLTR ? "left" : "right";
     }
 
-    this.buttonsContainer.style.left = `${left}px`;
+    if (alignEdge == "right") {
+      this.buttonsContainer.style.right = `calc(100% - ${boxRight}px)`;
+      this.buttonsContainer.style.left = "";
+    } else {
+      this.buttonsContainer.style.left = `${boxLeft}px`;
+      this.buttonsContainer.style.right = "";
+    }
     this.buttonsContainer.style.top = `${top}px`;
   }
 
@@ -1845,10 +1835,8 @@ export class ScreenshotsOverlay {
    *     scrollHeight: The height of the entire page
    *     scrollX: The X scroll offset of the viewport
    *     scrollY: The Y scroll offest of the viewport
-   *     scrollMinX: The X minimum the viewport can scroll to
-   *     scrollMinY: The Y minimum the viewport can scroll to
-   *     scrollMaxX: The X maximum the viewport can scroll to
-   *     scrollMaxY: The Y maximum the viewport can scroll to
+   *     scrollMinX: The X mininmun the viewport can scroll to
+   *     scrollMinY: The Y mininmun the viewport can scroll to
    *   }
    */
   getDimensionsFromWindow() {
@@ -1889,8 +1877,6 @@ export class ScreenshotsOverlay {
       scrollY,
       scrollMinX,
       scrollMinY,
-      scrollMaxX,
-      scrollMaxY,
     };
   }
 
@@ -1919,8 +1905,6 @@ export class ScreenshotsOverlay {
       scrollY,
       scrollMinX,
       scrollMinY,
-      scrollMaxX,
-      scrollMaxY,
     } = this.getDimensionsFromWindow();
     this.screenshotsContainer.toggleAttribute("resizing", false);
 
@@ -1933,8 +1917,6 @@ export class ScreenshotsOverlay {
       scrollY,
       scrollMinX,
       scrollMinY,
-      scrollMaxX,
-      scrollMaxY,
       devicePixelRatio: this.window.devicePixelRatio,
     };
 
