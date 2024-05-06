@@ -122,6 +122,12 @@ support-files = ["clearSiteData.sjs"]
 ["browser_partitionedCookies.js"]
 support-files = ["cookies.sjs"]
 
+["browser_partitionedDedicatedWorker.js"]
+support-files = [
+  "cookies.sjs",
+  "dedicatedWorker.js",
+]
+
 ["browser_partitionedDOMCache.js"]
 
 ["browser_partitionedIndexedDB.js"]
