@@ -107,18 +107,20 @@ add_task(async function test_doorhanger_not_shown_when_autofill_untouched() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
+  let osKeyStoreLoginShown = null;
   let onUsed = waitForStorageChangedEvents("notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function (browser) {
-      let osKeyStoreLoginShown = Promise.resolve();
       if (OSKeyStore.canReauth()) {
         osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
       }
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      await osKeyStoreLoginShown;
+      if (osKeyStoreLoginShown) {
+        await osKeyStoreLoginShown;
+      }
       await waitForAutofill(browser, "#cc-name", "John Doe");
 
       await SpecialPowers.spawn(browser, [], async function () {
@@ -188,11 +190,11 @@ add_task(
     await setStorage(TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2);
     let creditCards = await getCreditCards();
     is(creditCards.length, 2, "2 credit card in storage");
+    let osKeyStoreLoginShown = null;
     let onUsed = waitForStorageChangedEvents("notifyUsed");
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function (browser) {
-        let osKeyStoreLoginShown = Promise.resolve();
         if (OSKeyStore.canReauth()) {
           osKeyStoreLoginShown =
             OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
@@ -219,7 +221,9 @@ add_task(
 
         await sleep(1000);
         is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
-        await osKeyStoreLoginShown;
+        if (osKeyStoreLoginShown) {
+          await osKeyStoreLoginShown;
+        }
       }
     );
     await onUsed;
@@ -247,11 +251,11 @@ add_task(
 
     let creditCards = await getCreditCards();
     is(creditCards.length, 2, "2 credit card in storage");
+    let osKeyStoreLoginShown = null;
     let onUsed = waitForStorageChangedEvents("notifyUsed");
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function (browser) {
-        let osKeyStoreLoginShown = Promise.resolve();
         if (OSKeyStore.canReauth()) {
           osKeyStoreLoginShown =
             OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
@@ -275,7 +279,9 @@ add_task(
 
         await sleep(1000);
         is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
-        await osKeyStoreLoginShown;
+        if (osKeyStoreLoginShown) {
+          await osKeyStoreLoginShown;
+        }
       }
     );
     await onUsed;
