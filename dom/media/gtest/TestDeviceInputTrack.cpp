@@ -127,12 +127,21 @@ TEST_F(TestDeviceInputTrack, DeviceInputConsumerTrack) {
       aGraph->AssertOnGraphThread();
       return mChannelCount;
     }
+    cubeb_input_processing_params RequestedInputProcessingParams(
+        MediaTrackGraph*) const override {
+      return CUBEB_INPUT_PROCESSING_PARAM_NONE;
+    }
     bool IsVoiceInput(MediaTrackGraph* aGraph) const override {
       return mIsVoice;
     };
     void DeviceChanged(MediaTrackGraph* aGraph) override { /* Ignored */
     }
     void Disconnect(MediaTrackGraph* aGraph) override{/* Ignored */};
+    void NotifySetRequestedInputProcessingParamsResult(
+        MediaTrackGraph* aGraph, cubeb_input_processing_params aRequestedParams,
+        const Result<cubeb_input_processing_params, int>& aResult) override {
+      /* Ignored */
+    }
 
    private:
     ~TestAudioDataListener() = default;

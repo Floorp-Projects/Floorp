@@ -116,9 +116,16 @@ class AudioDataListenerInterface {
       MediaTrackGraph* aGraph) const = 0;
 
   /**
+   * The input processing params this listener wants the platform to apply.
+   */
+  virtual cubeb_input_processing_params RequestedInputProcessingParams(
+      MediaTrackGraph* aGraph) const = 0;
+
+  /**
    * Whether the underlying audio device is used for voice input.
    */
   virtual bool IsVoiceInput(MediaTrackGraph* aGraph) const = 0;
+
   /**
    * Called when the underlying audio device has changed.
    */
@@ -128,6 +135,14 @@ class AudioDataListenerInterface {
    * Called when the underlying audio device is being closed.
    */
   virtual void Disconnect(MediaTrackGraph* aGraph) = 0;
+
+  /**
+   * Called after an attempt to set the input processing params on the
+   * underlying input track.
+   */
+  virtual void NotifySetRequestedInputProcessingParamsResult(
+      MediaTrackGraph* aGraph, cubeb_input_processing_params aRequestedParams,
+      const Result<cubeb_input_processing_params, int>& aResult) = 0;
 };
 
 class AudioDataListener : public AudioDataListenerInterface {
