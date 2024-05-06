@@ -129,7 +129,7 @@ CubebInputStream::CubebInputStream(
 
 void CubebInputStream::Init() {
   // cubeb_stream_register_device_changed_callback is only supported on macOS
-  // platform and MockCubebfor now.
+  // platform and MockCubeb for now.
   InvokeCubebWithLog(cubeb_stream_register_device_changed_callback,
                      CubebInputStream::DeviceChangedCallback_s);
 }
