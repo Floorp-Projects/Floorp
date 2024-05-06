@@ -148,7 +148,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
 }
 
 AudioProcessing::Config AudioInputProcessing::ConfigForPrefs(
-    const MediaEnginePrefs& aPrefs) {
+    const MediaEnginePrefs& aPrefs) const {
   AudioProcessing::Config config;
 
   config.pipeline.multi_channel_render = true;
@@ -206,6 +206,19 @@ AudioProcessing::Config AudioInputProcessing::ConfigForPrefs(
   config.transient_suppression.enabled = aPrefs.mTransientOn;
 
   config.high_pass_filter.enabled = aPrefs.mHPFOn;
+
+  if (mPlatformProcessingSetParams &
+      CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION) {
+    config.echo_canceller.enabled = false;
+  }
+  if (mPlatformProcessingSetParams &
+      CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL) {
+    config.gain_controller1.enabled = config.gain_controller2.enabled = false;
+  }
+  if (mPlatformProcessingSetParams &
+      CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION) {
+    config.noise_suppression.enabled = false;
+  }
 
   return config;
 }
@@ -416,14 +429,41 @@ void AudioInputProcessing::NotifySetRequestedInputProcessingParamsResult(
     MediaTrackGraph* aGraph, cubeb_input_processing_params aRequestedParams,
     const Result<cubeb_input_processing_params, int>& aResult) {
   aGraph->AssertOnGraphThread();
-  MOZ_ASSERT_UNREACHABLE("TODO: Implement");
+  if (aRequestedParams != RequestedInputProcessingParams(aGraph)) {
+    // This is a result from an old request, wait for a more recent one.
+    return;
+  }
+  if (aResult.isOk()) {
+    if (mPlatformProcessingSetParams == aResult.inspect()) {
+      // No change.
+      return;
+    }
+    mPlatformProcessingSetError = Nothing();
+    mPlatformProcessingSetParams = aResult.inspect();
+    LOG("AudioInputProcessing %p platform processing params are now %s.", this,
+        CubebUtils::ProcessingParamsToString(mPlatformProcessingSetParams)
+            .get());
+  } else {
+    mPlatformProcessingSetError = Some(aResult.inspectErr());
+    mPlatformProcessingSetParams = CUBEB_INPUT_PROCESSING_PARAM_NONE;
+    LOG("AudioInputProcessing %p platform processing params failed to apply. "
+        "Applying input processing config in libwebrtc.",
+        this);
+  }
+  ApplySettingsInternal(aGraph, mSettings);
 }
 
 bool AudioInputProcessing::IsPassThrough(MediaTrackGraph* aGraph) const {
   aGraph->AssertOnGraphThread();
   // The high-pass filter is not taken into account when activating the
   // pass through, since it's not controllable from content.
-  return !(mSettings.mAecOn || mSettings.mAgcOn || mSettings.mNoiseOn);
+  auto config = AppliedConfig(aGraph);
+  auto aec = [](const auto& config) { return config.echo_canceller.enabled; };
+  auto agc = [](const auto& config) {
+    return config.gain_controller1.enabled || config.gain_controller2.enabled;
+  };
+  auto ns = [](const auto& config) { return config.noise_suppression.enabled; };
+  return !(aec(config) || agc(config) || ns(config));
 }
 
 void AudioInputProcessing::PassThroughChanged(MediaTrackGraph* aGraph) {
@@ -973,8 +1013,23 @@ cubeb_input_processing_params
 AudioInputProcessing::RequestedInputProcessingParams(
     MediaTrackGraph* aGraph) const {
   aGraph->AssertOnGraphThread();
-  MOZ_ASSERT_UNREACHABLE("TODO: Implement");
-  return CUBEB_INPUT_PROCESSING_PARAM_NONE;
+  if (!mPlatformProcessingEnabled) {
+    return CUBEB_INPUT_PROCESSING_PARAM_NONE;
+  }
+  if (mPlatformProcessingSetError) {
+    return CUBEB_INPUT_PROCESSING_PARAM_NONE;
+  }
+  cubeb_input_processing_params params = CUBEB_INPUT_PROCESSING_PARAM_NONE;
+  if (mSettings.mAecOn) {
+    params |= CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION;
+  }
+  if (mSettings.mAgcOn) {
+    params |= CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL;
+  }
+  if (mSettings.mNoiseOn) {
+    params |= CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION;
+  }
+  return params;
 }
 
 void AudioInputProcessing::ApplySettings(MediaTrackGraph* aGraph,
@@ -983,8 +1038,32 @@ void AudioInputProcessing::ApplySettings(MediaTrackGraph* aGraph,
   TRACE("AudioInputProcessing::ApplySettings");
   aGraph->AssertOnGraphThread();
 
+  // CUBEB_ERROR_NOT_SUPPORTED means the backend does not support platform
+  // processing. In that case, leave the error in place so we don't request
+  // processing anew.
+  if (mPlatformProcessingSetError.valueOr(CUBEB_OK) !=
+      CUBEB_ERROR_NOT_SUPPORTED) {
+    mPlatformProcessingSetError = Nothing();
+  }
+
   // Read previous state from mSettings.
   uint32_t oldChannelCount = GetRequestedInputChannelCount();
+
+  ApplySettingsInternal(aGraph, aSettings);
+
+  if (oldChannelCount != GetRequestedInputChannelCount()) {
+    RequestedInputChannelCountChanged(aGraph, aDeviceID);
+  }
+}
+
+void AudioInputProcessing::ApplySettingsInternal(
+    MediaTrackGraph* aGraph, const MediaEnginePrefs& aSettings) {
+  TRACE("AudioInputProcessing::ApplySettingsInternal");
+  aGraph->AssertOnGraphThread();
+
+  mPlatformProcessingEnabled = aSettings.mUsePlatformProcessing;
+
+  // Read previous state from the applied config.
   bool wasPassThrough = IsPassThrough(aGraph);
 
   mSettings = aSettings;
@@ -992,12 +1071,18 @@ void AudioInputProcessing::ApplySettings(MediaTrackGraph* aGraph,
     mAudioProcessing->ApplyConfig(ConfigForPrefs(aSettings));
   }
 
-  if (oldChannelCount != GetRequestedInputChannelCount()) {
-    RequestedInputChannelCountChanged(aGraph, aDeviceID);
-  }
   if (wasPassThrough != IsPassThrough(aGraph)) {
     PassThroughChanged(aGraph);
   }
+}
+
+webrtc::AudioProcessing::Config AudioInputProcessing::AppliedConfig(
+    MediaTrackGraph* aGraph) const {
+  aGraph->AssertOnGraphThread();
+  if (mAudioProcessing) {
+    return mAudioProcessing->GetConfig();
+  }
+  return ConfigForPrefs(mSettings);
 }
 
 void AudioInputProcessing::End() {
