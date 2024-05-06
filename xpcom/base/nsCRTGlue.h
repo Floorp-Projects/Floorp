@@ -132,11 +132,11 @@ void NS_MakeRandomString(char* aBuf, int32_t aBufLen);
 #if defined(ANDROID)
 // On mobile devices, the file system may be very limited in what it
 // considers valid characters. To avoid errors, sanitize conservatively.
-#  define OS_FILE_ILLEGAL_CHARACTERS "/:*?\"<>|;,+=[]"
+#  define OS_FILE_ILLEGAL_CHARACTERS "/:*%?\"<>|;,+=[]"
 #else
 // Otherwise, we use the most restrictive filesystem as our default set of
 // illegal filename characters. This is currently Windows.
-#  define OS_FILE_ILLEGAL_CHARACTERS "/:*?\"<>|"
+#  define OS_FILE_ILLEGAL_CHARACTERS "/:*%?\"<>|"
 #endif
 
 // We also provide a list of all known file path separators for all filesystems.
