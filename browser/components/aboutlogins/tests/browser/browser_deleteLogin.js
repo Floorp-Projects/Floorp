@@ -71,7 +71,10 @@ add_task(async function test_login_item() {
       }, "Waiting for login item to get populated");
       Assert.ok(loginItemPopulated, "The login item should get populated");
     });
-    let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+    let reauthObserved = Promise.resolve();
+    if (OSKeyStore.canReauth()) {
+      reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+    }
     await SpecialPowers.spawn(browser, [], async () => {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")

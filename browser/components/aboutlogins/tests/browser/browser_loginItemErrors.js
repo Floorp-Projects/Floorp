@@ -107,7 +107,10 @@ add_task(async function test_showLoginItemErrors() {
     // The rest of the test uses Edit mode which causes an OS prompt in official builds.
     return;
   }
-  let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  let reauthObserved = Promise.resolve();
+  if (OSKeyStore.canReauth()) {
+    reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  }
   await SpecialPowers.spawn(
     browser,
     [[LoginHelper.loginToVanillaObject(LOGIN_TO_UPDATE), LOGIN_UPDATES]],
