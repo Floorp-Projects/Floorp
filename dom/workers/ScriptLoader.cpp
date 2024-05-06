@@ -1764,12 +1764,6 @@ void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
                       NS_ConvertUTF16toUTF8(aScriptURL).get());
 
   switch (aLoadResult) {
-    case NS_ERROR_FILE_NOT_FOUND:
-    case NS_ERROR_NOT_AVAILABLE:
-    case NS_ERROR_CORRUPTED_CONTENT:
-      aRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
-      break;
-
     case NS_ERROR_MALFORMED_URI:
     case NS_ERROR_DOM_SYNTAX_ERR:
       aRv.ThrowSyntaxError(err);
@@ -1785,7 +1779,7 @@ void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
       // make it impossible for consumers to realize that our error was
       // NS_BINDING_ABORTED.
       aRv.Throw(aLoadResult);
-      return;
+      break;
 
     case NS_ERROR_DOM_BAD_URI:
       // This is actually a security error.
@@ -1793,15 +1787,16 @@ void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
       aRv.ThrowSecurityError(err);
       break;
 
+    case NS_ERROR_FILE_NOT_FOUND:
+    case NS_ERROR_NOT_AVAILABLE:
+    case NS_ERROR_CORRUPTED_CONTENT:
+    case NS_ERROR_DOM_NETWORK_ERR:
+    // For lack of anything better, go ahead and throw a NetworkError here.
+    // We don't want to throw a JS exception, because for toplevel script
+    // loads that would get squelched.
     default:
-      // For lack of anything better, go ahead and throw a NetworkError here.
-      // We don't want to throw a JS exception, because for toplevel script
-      // loads that would get squelched.
-      aRv.ThrowNetworkError(nsPrintfCString(
-          "Failed to load worker script at %s (nsresult = 0x%" PRIx32 ")",
-          NS_ConvertUTF16toUTF8(aScriptURL).get(),
-          static_cast<uint32_t>(aLoadResult)));
-      return;
+      aRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
+      break;
   }
 }
 
