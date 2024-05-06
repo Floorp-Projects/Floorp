@@ -310,6 +310,7 @@ class BrowserFragment :
             SessionFeature(
                 components.store,
                 components.sessionUseCases.goBack,
+                components.sessionUseCases.goForward,
                 binding.engineView,
                 tab.id,
             ),

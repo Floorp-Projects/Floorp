@@ -157,6 +157,24 @@ class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
     }
 
     /**
+     * Convenience method for invoking [UserInteractionHandler.onForwardPressed] on a wrapped
+     * [LifecycleAwareFeature] that implements [UserInteractionHandler]. Returns false if
+     * the [LifecycleAwareFeature] was cleared already.
+     */
+    @Synchronized
+    fun onForwardPressed(): Boolean {
+        val feature = feature ?: return false
+
+        if (feature !is UserInteractionHandler) {
+            throw IllegalAccessError(
+                "Feature does not implement ${UserInteractionHandler::class.java.simpleName} interface",
+            )
+        }
+
+        return feature.onForwardPressed()
+    }
+
+    /**
      * Convenience method for invoking [ActivityResultHandler.onActivityResult] on a wrapped
      * [LifecycleAwareFeature] that implements [ActivityResultHandler]. Returns false if
      * the [LifecycleAwareFeature] was cleared already.

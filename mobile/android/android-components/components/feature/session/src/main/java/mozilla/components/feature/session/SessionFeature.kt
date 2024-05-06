@@ -17,6 +17,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 class SessionFeature(
     private val store: BrowserStore,
     private val goBackUseCase: SessionUseCases.GoBackUseCase,
+    private val goForwardUseCase: SessionUseCases.GoForwardUseCase,
     private val engineView: EngineView,
     private val tabId: String? = null,
 ) : LifecycleAwareFeature, UserInteractionHandler {
@@ -42,6 +43,22 @@ class SessionFeature(
             return true
         } else if (tab?.content?.canGoBack == true) {
             goBackUseCase(tab.id)
+            return true
+        }
+
+        return false
+    }
+
+    /**
+     * Handler for forward pressed events in activities that use this feature.
+     *
+     * @return true if the event was handled, otherwise false.
+     */
+    override fun onForwardPressed(): Boolean {
+        val tab = store.state.findTabOrCustomTabOrSelectedTab(tabId)
+
+        if (tab?.content?.canGoForward == true) {
+            goForwardUseCase(tab.id)
             return true
         }
 

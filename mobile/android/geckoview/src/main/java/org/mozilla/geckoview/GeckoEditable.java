@@ -2571,6 +2571,7 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
     switch (keyCode) {
       case KeyEvent.KEYCODE_MENU:
       case KeyEvent.KEYCODE_BACK:
+      case KeyEvent.KEYCODE_FORWARD:
       case KeyEvent.KEYCODE_VOLUME_UP:
       case KeyEvent.KEYCODE_VOLUME_DOWN:
       case KeyEvent.KEYCODE_SEARCH:
