@@ -202,14 +202,16 @@ cookie.banners:
       cookies.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154#c6
     data_sensitivity:
       - interaction
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
   google_gdpr_choice_cookie:
     type: labeled_string
     description: >
@@ -348,13 +350,15 @@ cookie.banners.click:
       content window.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1871200#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154#c6
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
   query_selector_run_count_per_window_frame:
     type: custom_distribution
     bucket_count: 20
@@ -365,13 +369,15 @@ cookie.banners.click:
       content window.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1871200#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154#c6
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
   query_selector_run_duration_per_window_top_level:
     type: custom_distribution
     bucket_count: 8
@@ -382,13 +388,15 @@ cookie.banners.click:
       lifetime of a top-level content window.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1871200#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154#c6
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
   query_selector_run_duration_per_window_frame:
     type: custom_distribution
     bucket_count: 8
@@ -399,13 +407,15 @@ cookie.banners.click:
       lifetime of a sub-frame content window.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855495#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1871200#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154#c6
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
 cookie.banners.cmp:
   ratio_handled_by_cmp_rule:
     type: rate
@@ -414,14 +424,16 @@ cookie.banners.cmp:
       number of cases handled, including those handled by site-specific rules.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154#c6
     data_sensitivity:
       - interaction
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
   detected_cmp:
     type: labeled_counter
     description: >
@@ -429,14 +441,16 @@ cookie.banners.cmp:
       handling.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154#c6
     data_sensitivity:
       - interaction
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
   result:
     type: labeled_counter
     description: >
@@ -446,14 +460,16 @@ cookie.banners.cmp:
       incremented after the content window has been destroyed.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154#c6
     data_sensitivity:
       - interaction
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
     labels:
       - success
       - success_dom_content_loaded
@@ -474,11 +490,13 @@ cookie.banners.cmp:
       cookieBanners.click.handle_duration.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892154#c6
     data_sensitivity:
       - interaction
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
