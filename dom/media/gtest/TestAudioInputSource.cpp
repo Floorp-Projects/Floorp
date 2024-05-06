@@ -63,7 +63,10 @@ TEST(TestAudioInputSource, StartAndStop)
 
   // Make sure start and stop works.
   {
-    DispatchFunction([&] { ais->Start(); });
+    DispatchFunction([&] {
+      ais->Init();
+      ais->Start();
+    });
     RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
     EXPECT_TRUE(stream->mHasInput);
     EXPECT_FALSE(stream->mHasOutput);
@@ -79,7 +82,10 @@ TEST(TestAudioInputSource, StartAndStop)
 
   // Make sure restart is ok.
   {
-    DispatchFunction([&] { ais->Start(); });
+    DispatchFunction([&] {
+      ais->Init();
+      ais->Start();
+    });
     RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
     EXPECT_TRUE(stream->mHasInput);
     EXPECT_FALSE(stream->mHasOutput);
@@ -133,7 +139,10 @@ TEST(TestAudioInputSource, DataOutputBeforeStartAndAfterStop)
     EXPECT_TRUE(data.IsNull());
   }
 
-  DispatchFunction([&] { ais->Start(); });
+  DispatchFunction([&] {
+    ais->Init();
+    ais->Start();
+  });
   RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
   EXPECT_TRUE(stream->mHasInput);
   EXPECT_FALSE(stream->mHasOutput);
@@ -206,7 +215,10 @@ TEST(TestAudioInputSource, ErrorCallback)
       sourceRate, targetRate);
   ASSERT_TRUE(ais);
 
-  DispatchFunction([&] { ais->Start(); });
+  DispatchFunction([&] {
+    ais->Init();
+    ais->Start();
+  });
   RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
   EXPECT_TRUE(stream->mHasInput);
   EXPECT_FALSE(stream->mHasOutput);
@@ -251,7 +263,10 @@ TEST(TestAudioInputSource, DeviceChangedCallback)
       sourceRate, targetRate);
   ASSERT_TRUE(ais);
 
-  DispatchFunction([&] { ais->Start(); });
+  DispatchFunction([&] {
+    ais->Init();
+    ais->Start();
+  });
   RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
   EXPECT_TRUE(stream->mHasInput);
   EXPECT_FALSE(stream->mHasOutput);
