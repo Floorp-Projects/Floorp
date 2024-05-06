@@ -101,6 +101,32 @@ add_task(async function testQueryParamIsNotStrippedForWrongSiteSpecific() {
   });
 });
 
+// Ensuring site specific parameters are stripped regardless
+// of capitalization in the URI
+add_task(async function testQueryParamIsStrippedWhenParamIsCapitalized() {
+  let originalUrl = "https://www.example.com/?TEST_1=1234";
+  let shortenedUrl = "https://www.example.com/";
+  await testMenuItemEnabled({
+    selectWholeUrl: true,
+    validUrl: originalUrl,
+    strippedUrl: shortenedUrl,
+    useTestList: true,
+  });
+});
+
+// Ensuring site specific parameters are stripped regardless
+// of capitalization in the URI
+add_task(async function testQueryParamIsStrippedWhenParamIsCapitalized() {
+  let originalUrl = "https://www.example.com/?test_5=1234";
+  let shortenedUrl = "https://www.example.com/";
+  await testMenuItemEnabled({
+    selectWholeUrl: true,
+    validUrl: originalUrl,
+    strippedUrl: shortenedUrl,
+    useTestList: true,
+  });
+});
+
 /**
  * Opens a new tab, opens the ulr bar context menu and checks that the strip-on-share menu item is not visible
  *
@@ -163,7 +189,7 @@ async function testMenuItemEnabled({
         topLevelSites: ["*"],
       },
       example: {
-        queryParams: ["test_2", "test_1"],
+        queryParams: ["test_2", "test_1", "TEST_5"],
         topLevelSites: ["www.example.com"],
       },
       exampleNet: {

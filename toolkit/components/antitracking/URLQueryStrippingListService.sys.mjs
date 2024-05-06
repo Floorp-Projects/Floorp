@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   PREF_STRIP_IS_TEST
 );
 
-async function fetchAndParseList(fileName) {
+async function fetchList(fileName) {
   let response = await fetch(
     "chrome://global/content/antitracking/" + fileName
   );
@@ -43,14 +43,14 @@ async function fetchAndParseList(fileName) {
       "Error fetching strip-on-share strip list" + response.status
     );
   }
-  return await response.json();
+  return response.json();
 }
 
 // Lazy getter for the strip-on-share strip list.
 ChromeUtils.defineLazyGetter(lazy, "StripOnShareList", async () => {
   let [stripOnShareList, stripOnShareLGPLParams] = await Promise.all([
-    fetchAndParseList("StripOnShare.json"),
-    fetchAndParseList("StripOnShareLGPL.json"),
+    fetchList("StripOnShare.json"),
+    fetchList("StripOnShareLGPL.json"),
   ]);
 
   if (!stripOnShareList || !stripOnShareLGPLParams) {
@@ -60,32 +60,40 @@ ChromeUtils.defineLazyGetter(lazy, "StripOnShareList", async () => {
 
   // Combines the mozilla licensed strip on share param
   // list and the LGPL licensed strip on share param list
-  for (const key in stripOnShareLGPLParams) {
-    if (Object.hasOwn(stripOnShareList, key)) {
-      stripOnShareList[key].queryParams.push(
-        ...stripOnShareLGPLParams[key].queryParams
-      );
+  return combineAndParseLists(stripOnShareList, [stripOnShareLGPLParams]);
+});
 
-      stripOnShareList[key].topLevelSites.push(
-        ...stripOnShareLGPLParams[key].topLevelSites
-      );
+function combineAndParseLists(mainList, arrOfLists) {
+  arrOfLists.forEach(additionalList => {
+    for (let key in additionalList) {
+      if (Object.hasOwn(mainList, key)) {
+        mainList[key].queryParams.push(...additionalList[key].queryParams);
 
-      // Removes duplicates topLevelSitres
-      stripOnShareList[key].topLevelSites = [
-        ...new Set(stripOnShareList[key].topLevelSites),
-      ];
-
-      // Removes duplicates queryParams
-      stripOnShareList[key].queryParams = [
-        ...new Set(stripOnShareList[key].queryParams),
-      ];
-    } else {
-      stripOnShareList[key] = stripOnShareLGPLParams[key];
+        mainList[key].topLevelSites.push(...additionalList[key].topLevelSites);
+      } else {
+        mainList[key] = additionalList[key];
+      }
     }
+  });
+
+  for (let key in mainList) {
+    mainList[key].queryParams = mainList[key].queryParams.map(param =>
+      param.toLowerCase()
+    );
+
+    mainList[key].topLevelSites = mainList[key].topLevelSites.map(param =>
+      param.toLowerCase()
+    );
+
+    // Removes duplicates topLevelSites
+    mainList[key].topLevelSites = [...new Set(mainList[key].topLevelSites)];
+
+    // Removes duplicates queryParams
+    mainList[key].queryParams = [...new Set(mainList[key].queryParams)];
   }
 
-  return stripOnShareList;
-});
+  return mainList;
+}
 
 export class URLQueryStrippingListService {
   classId = Components.ID("{afff16f0-3fd2-4153-9ccd-c6d9abd879e4}");
@@ -121,7 +129,7 @@ export class URLQueryStrippingListService {
   }
 
   async testSetList(testList) {
-    this.#stripOnShareTestList = testList;
+    this.#stripOnShareTestList = combineAndParseLists(testList, []);
     await this._notifyStripOnShareObservers();
   }
 
