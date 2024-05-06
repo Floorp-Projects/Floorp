@@ -114,6 +114,7 @@ cairo_sources = [
   'cairo-pdf-operators.c',
   'cairo-pdf-shading.c',
   'cairo-tag-attributes.c',
+  'cairo-tag-stack.c',
   'cairo-deflate-stream.c',
 ]
 
@@ -129,6 +130,8 @@ cairo_feature_sources = {
   ],
   'cairo-ft': [
     'cairo-ft-font.c',
+    'cairo-colr-glyph-render.c',
+    'cairo-svg-glyph-render.c'
   ],
 
   'cairo-xlib': [
@@ -155,9 +158,6 @@ cairo_feature_sources = {
     'cairo-xcb-surface-render.c',
     'cairo-xcb-resources.c',
   ],
-  'cairo-qt': [
-    'cairo-qt-surface.cpp',
-  ],
   'cairo-quartz': [
     'cairo-quartz-surface.c',
   ],
@@ -179,51 +179,8 @@ cairo_feature_sources = {
   'cairo-win32-font': [
     'win32/cairo-win32-font.c',
   ],
-  'cairo-drm': [
-    'drm/cairo-drm.c',
-    'drm/cairo-drm-bo.c',
-    'drm/cairo-drm-surface.c',
-    'drm/cairo-drm-intel.c',
-    'drm/cairo-drm-intel-debug.c',
-    'drm/cairo-drm-intel-surface.c',
-    'drm/cairo-drm-i915-surface.c',
-    'drm/cairo-drm-i915-glyphs.c',
-    'drm/cairo-drm-i915-shader.c',
-    'drm/cairo-drm-i915-spans.c',
-    'drm/cairo-drm-i965-surface.c',
-    'drm/cairo-drm-i965-glyphs.c',
-    'drm/cairo-drm-i965-shader.c',
-    'drm/cairo-drm-i965-spans.c',
-    'drm/cairo-drm-intel-brw-eu.c',
-    'drm/cairo-drm-intel-brw-eu-emit.c',
-    'drm/cairo-drm-intel-brw-eu-util.c',
-    'drm/cairo-drm-radeon.c',
-    'drm/cairo-drm-radeon-surface.c',
-  ],
-  'cairo-gl': [
-    'cairo-gl-composite.c',
-    'cairo-gl-device.c',
-    'cairo-gl-dispatch.c',
-    'cairo-gl-glyphs.c',
-    'cairo-gl-gradient.c',
-    'cairo-gl-info.c',
-    'cairo-gl-msaa-compositor.c',
-    'cairo-gl-operand.c',
-    'cairo-gl-shaders.c',
-    'cairo-gl-source.c',
-    'cairo-gl-spans-compositor.c',
-    'cairo-gl-surface.c',
-    'cairo-gl-traps-compositor.c',
-  ],
-  'cairo-cogl': [
-    'cairo-cogl-surface.c',
-    'cairo-cogl-gradient.c',
-  ],
-  'cairo-directfb': [
-    'cairo-directfb-surface.c',
-  ],
-  'cairo-vg': [
-    'cairo-vg-surface.c',
+  'cairo-dwrite-font': [
+    'win32/cairo-dwrite-font.cpp',
   ],
   'cairo-script': [
     'cairo-script-surface.c',
@@ -234,22 +191,9 @@ cairo_feature_sources = {
   'cairo-pdf': [
     'cairo-pdf-surface.c',
     'cairo-pdf-interchange.c',
-    'cairo-tag-stack.c',
   ],
   'cairo-svg': [
     'cairo-svg-surface.c',
-  ],
-  'cairo-egl': [
-    'cairo-egl-context.c',
-  ],
-  'cairo-glx': [
-    'cairo-glx-context.c',
-  ],
-  'cairo-wgl': [
-    'cairo-wgl-context.c',
-  ],
-  'cairo-xml': [
-    'cairo-xml-surface.c',
   ],
   'cairo-tee': [
     'cairo-tee-surface.c',
@@ -264,18 +208,14 @@ cairo_feature_headers = {
   'cairo-xlib': ['cairo-xlib.h'],
   'cairo-xlib-xrender': ['cairo-xlib-xrender.h'],
   'cairo-xcb': ['cairo-xcb.h'],
-  'cairo-qt': ['cairo-qt.h'],
   'cairo-quartz': ['cairo-quartz.h'],
   'cairo-quartz-image': ['cairo-quartz-image.h'],
   'cairo-win32': ['cairo-win32.h'],
+  'cairo-dwrite-font': ['cairo-dwrite.h'],
   'cairo-gl': ['cairo-gl.h'],
-  'cairo-directfb': ['cairo-directfb.h'],
-  'cairo-drm': ['cairo-drm.h'],
   'cairo-script': ['cairo-script.h'],
   'cairo-tee': ['cairo-tee.h'],
-  'cairo-xml': ['cairo-xml.h'],
   'cairo-vg': ['cairo-vg.h'],
-  'cairo-cogl': ['cairo-cogl.h'],
 }
 
 cairo_no_warn_c_args = cc.get_supported_arguments([
@@ -294,22 +234,32 @@ endforeach
 
 incsrc = include_directories('.')
 
+cairo_static_args = []
+if get_option('default_library') == 'static' and host_machine.system() == 'windows'
+  cairo_static_args += ['-DCAIRO_WIN32_STATIC_BUILD']
+  add_project_arguments('-DCAIRO_WIN32_STATIC_BUILD', language: 'c')
+endif
+
 libcairo = library('cairo', cairo_sources,
   dependencies: deps,
-  c_args: cairo_no_warn_c_args + pthread_c_args + ['-DHAVE_CONFIG_H'],
-  cpp_args: cairo_no_warn_c_args + pthread_c_args + ['-DHAVE_CONFIG_H'],
+  c_args: cairo_no_warn_c_args + pthread_c_args + ['-DCAIRO_COMPILATION'],
+  cpp_args: cairo_no_warn_c_args + pthread_c_args + ['-DCAIRO_COMPILATION'],
   link_args: extra_link_args,
+  gnu_symbol_visibility: 'hidden',
   soversion: cairo_version_sonum,
   version: cairo_libversion,
   install: true,
   include_directories: incbase,
 )
 
-cairo_headers += [configure_file(output: 'cairo-features.h', configuration: feature_conf)]
+cairo_features_file = configure_file(output: 'cairo-features.h', configuration: feature_conf)
+cairo_headers += [cairo_features_file]
 
 libcairo_dep = declare_dependency(link_with: libcairo,
   dependencies: deps,
-  include_directories: incsrc)
+  include_directories: incsrc,
+  compile_args: cairo_static_args,
+)
 
 pkgmod.generate(libcairo,
   description: 'Multi-platform 2D graphics library',
@@ -319,3 +269,19 @@ pkgmod.generate(libcairo,
 meson.override_dependency('cairo', libcairo_dep)
 
 install_headers(cairo_headers, subdir: 'cairo')
+
+shell = find_program('sh', required: false)
+if shell.found()
+  test_scripts = [
+    'check-doc-syntax.sh',
+    'check-headers.sh',
+    'check-preprocessor-syntax.sh',
+  ]
+
+  foreach test_script: test_scripts
+    test(test_script, shell,
+      args: [test_script],
+      suite: ['fast', 'lint'],
+      workdir: meson.current_source_dir())
+  endforeach
+endif

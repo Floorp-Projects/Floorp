@@ -214,6 +214,10 @@ cairo_bool_t
 _cairo_win32_surface_get_extents (void			  *abstract_surface,
 				  cairo_rectangle_int_t   *rectangle);
 
+cairo_surface_t *
+_cairo_compute_glyph_mask (cairo_surface_t *surface,
+			   int quality);
+
 uint32_t
 _cairo_win32_flags_for_dc (HDC dc, cairo_format_t format);
 
@@ -253,7 +257,10 @@ _cairo_win32_scaled_font_is_type1 (cairo_scaled_font_t *scaled_font);
 cairo_bool_t
 _cairo_win32_scaled_font_is_bitmap (cairo_scaled_font_t *scaled_font);
 
-#ifdef CAIRO_HAS_DWRITE_FONT
+cairo_public BYTE
+cairo_win32_get_system_text_quality (void);
+
+#if CAIRO_HAS_DWRITE_FONT
 
 cairo_int_status_t
 _cairo_dwrite_show_glyphs_on_surface (void *surface,

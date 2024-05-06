@@ -404,6 +404,14 @@ _cairo_default_context_set_line_width (void *abstract_cr,
 }
 
 static cairo_status_t
+_cairo_default_context_set_hairline (void *abstract_cr, cairo_bool_t set_hairline)
+{
+    cairo_default_context_t *cr = abstract_cr;
+
+    return _cairo_gstate_set_hairline (cr->gstate, set_hairline);
+}
+
+static cairo_status_t
 _cairo_default_context_set_line_cap (void *abstract_cr,
 				     cairo_line_cap_t line_cap)
 {
@@ -475,6 +483,14 @@ _cairo_default_context_get_line_width (void *abstract_cr)
     cairo_default_context_t *cr = abstract_cr;
 
     return _cairo_gstate_get_line_width (cr->gstate);
+}
+
+static cairo_bool_t
+_cairo_default_context_get_hairline (void *abstract_cr)
+{
+    cairo_default_context_t *cr = abstract_cr;
+
+    return _cairo_gstate_get_hairline (cr->gstate);
 }
 
 static cairo_line_cap_t
@@ -697,10 +713,12 @@ _cairo_default_context_move_to (void *abstract_cr, double x, double y)
 {
     cairo_default_context_t *cr = abstract_cr;
     cairo_fixed_t x_fixed, y_fixed;
+    double width;
 
     _cairo_gstate_user_to_backend (cr->gstate, &x, &y);
-    x_fixed = _cairo_fixed_from_double (x);
-    y_fixed = _cairo_fixed_from_double (y);
+    width = _cairo_gstate_get_line_width (cr->gstate);
+    x_fixed = _cairo_fixed_from_double_clamped (x, width);
+    y_fixed = _cairo_fixed_from_double_clamped (y, width);
 
     return _cairo_path_fixed_move_to (cr->path, x_fixed, y_fixed);
 }
@@ -710,10 +728,12 @@ _cairo_default_context_line_to (void *abstract_cr, double x, double y)
 {
     cairo_default_context_t *cr = abstract_cr;
     cairo_fixed_t x_fixed, y_fixed;
+    double width;
 
     _cairo_gstate_user_to_backend (cr->gstate, &x, &y);
-    x_fixed = _cairo_fixed_from_double (x);
-    y_fixed = _cairo_fixed_from_double (y);
+    width = _cairo_gstate_get_line_width (cr->gstate);
+    x_fixed = _cairo_fixed_from_double_clamped (x, width);
+    y_fixed = _cairo_fixed_from_double_clamped (y, width);
 
     return _cairo_path_fixed_line_to (cr->path, x_fixed, y_fixed);
 }
@@ -728,19 +748,21 @@ _cairo_default_context_curve_to (void *abstract_cr,
     cairo_fixed_t x1_fixed, y1_fixed;
     cairo_fixed_t x2_fixed, y2_fixed;
     cairo_fixed_t x3_fixed, y3_fixed;
+    double width;
 
     _cairo_gstate_user_to_backend (cr->gstate, &x1, &y1);
     _cairo_gstate_user_to_backend (cr->gstate, &x2, &y2);
     _cairo_gstate_user_to_backend (cr->gstate, &x3, &y3);
+    width = _cairo_gstate_get_line_width (cr->gstate);
 
-    x1_fixed = _cairo_fixed_from_double (x1);
-    y1_fixed = _cairo_fixed_from_double (y1);
+    x1_fixed = _cairo_fixed_from_double_clamped (x1, width);
+    y1_fixed = _cairo_fixed_from_double_clamped (y1, width);
 
-    x2_fixed = _cairo_fixed_from_double (x2);
-    y2_fixed = _cairo_fixed_from_double (y2);
+    x2_fixed = _cairo_fixed_from_double_clamped (x2, width);
+    y2_fixed = _cairo_fixed_from_double_clamped (y2, width);
 
-    x3_fixed = _cairo_fixed_from_double (x3);
-    y3_fixed = _cairo_fixed_from_double (y3);
+    x3_fixed = _cairo_fixed_from_double_clamped (x3, width);
+    y3_fixed = _cairo_fixed_from_double_clamped (y3, width);
 
     return _cairo_path_fixed_curve_to (cr->path,
 				       x1_fixed, y1_fixed,
@@ -1365,6 +1387,7 @@ static const cairo_backend_t _cairo_default_context_backend = {
     _cairo_default_context_set_line_cap,
     _cairo_default_context_set_line_join,
     _cairo_default_context_set_line_width,
+    _cairo_default_context_set_hairline,
     _cairo_default_context_set_miter_limit,
     _cairo_default_context_set_opacity,
     _cairo_default_context_set_operator,
@@ -1375,6 +1398,7 @@ static const cairo_backend_t _cairo_default_context_backend = {
     _cairo_default_context_get_line_cap,
     _cairo_default_context_get_line_join,
     _cairo_default_context_get_line_width,
+    _cairo_default_context_get_hairline,
     _cairo_default_context_get_miter_limit,
     _cairo_default_context_get_opacity,
     _cairo_default_context_get_operator,

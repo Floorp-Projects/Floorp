@@ -76,11 +76,4 @@ cairo_private cairo_status_t
 _cairo_device_set_error (cairo_device_t *device,
 		         cairo_status_t error);
 
-slim_hidden_proto_no_warn (cairo_device_reference);
-slim_hidden_proto (cairo_device_acquire);
-slim_hidden_proto (cairo_device_release);
-slim_hidden_proto (cairo_device_flush);
-slim_hidden_proto (cairo_device_finish);
-slim_hidden_proto (cairo_device_destroy);
-
 #endif /* _CAIRO_DEVICE_PRIVATE_H_ */

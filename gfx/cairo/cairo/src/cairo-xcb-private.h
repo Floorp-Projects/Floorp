@@ -226,9 +226,6 @@ struct _cairo_xcb_connection {
     const xcb_query_extension_reply_t *shm;
     xcb_render_sub_pixel_t *subpixel_orders;
 
-    cairo_list_t free_xids;
-    cairo_freepool_t xid_pool;
-
     cairo_mutex_t shm_mutex;
     cairo_list_t shm_pools;
     cairo_list_t shm_pending;
@@ -322,13 +319,6 @@ _cairo_xcb_connection_acquire (cairo_xcb_connection_t *connection)
 {
     return cairo_device_acquire (&connection->device);
 }
-
-cairo_private uint32_t
-_cairo_xcb_connection_get_xid (cairo_xcb_connection_t *connection);
-
-cairo_private void
-_cairo_xcb_connection_put_xid (cairo_xcb_connection_t *connection,
-			       uint32_t xid);
 
 static inline void
 _cairo_xcb_connection_release (cairo_xcb_connection_t *connection)
@@ -453,8 +443,7 @@ _cairo_xcb_render_compositor_glyphs (const cairo_compositor_t     *compositor,
 				     cairo_scaled_font_t          *scaled_font,
 				     cairo_glyph_t                *glyphs,
 				     int                           num_glyphs,
-				     cairo_bool_t                  overlap,
-				     cairo_bool_t                  permit_subpixel_antialiasing);
+				     cairo_bool_t                  overlap);
 cairo_private void
 _cairo_xcb_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font);
 
@@ -483,19 +472,11 @@ _cairo_xcb_connection_create_pixmap (cairo_xcb_connection_t *connection,
 				     uint16_t width,
 				     uint16_t height);
 
-cairo_private void
-_cairo_xcb_connection_free_pixmap (cairo_xcb_connection_t *connection,
-				   xcb_pixmap_t pixmap);
-
 cairo_private xcb_gcontext_t
 _cairo_xcb_connection_create_gc (cairo_xcb_connection_t *connection,
 				 xcb_drawable_t drawable,
 				 uint32_t value_mask,
 				 uint32_t *values);
-
-cairo_private void
-_cairo_xcb_connection_free_gc (cairo_xcb_connection_t *connection,
-			       xcb_gcontext_t gc);
 
 cairo_private void
 _cairo_xcb_connection_change_gc (cairo_xcb_connection_t *connection,
@@ -784,16 +765,6 @@ _cairo_xcb_connection_render_create_conical_gradient (cairo_xcb_connection_t    
 						      uint32_t                  num_stops,
 						      xcb_render_fixed_t *stops,
 						      xcb_render_color_t *colors);
-#if CAIRO_HAS_XLIB_XCB_FUNCTIONS
-slim_hidden_proto (cairo_xcb_surface_create);
-slim_hidden_proto (cairo_xcb_surface_create_for_bitmap);
-slim_hidden_proto (cairo_xcb_surface_create_with_xrender_format);
-slim_hidden_proto (cairo_xcb_surface_set_size);
-slim_hidden_proto (cairo_xcb_surface_set_drawable);
-slim_hidden_proto (cairo_xcb_device_debug_get_precision);
-slim_hidden_proto_no_warn (cairo_xcb_device_debug_set_precision);
-slim_hidden_proto_no_warn (cairo_xcb_device_debug_cap_xrender_version);
-#endif
 
 cairo_private void
 _cairo_xcb_resources_get (cairo_xcb_screen_t *screen,

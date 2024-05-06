@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -40,6 +41,7 @@
 
 #include "cairo-compiler-private.h"
 #include "cairo-error-private.h"
+#include "cairo-pattern-private.h"
 
 CAIRO_BEGIN_DECLS
 
@@ -124,14 +126,14 @@ struct _cairo_surface_backend {
     (*paint)			(void			*surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 const cairo_clip_t		*clip);
+				 const cairo_clip_t	*clip);
 
     cairo_warn cairo_int_status_t
     (*mask)			(void			*surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
 				 const cairo_pattern_t	*mask,
-				 const cairo_clip_t		*clip);
+				 const cairo_clip_t	*clip);
 
     cairo_warn cairo_int_status_t
     (*stroke)			(void			*surface,
@@ -143,7 +145,7 @@ struct _cairo_surface_backend {
 				 const cairo_matrix_t	*ctm_inverse,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
-				 const cairo_clip_t		*clip);
+				 const cairo_clip_t	*clip);
 
     cairo_warn cairo_int_status_t
     (*fill)			(void			*surface,
@@ -153,7 +155,7 @@ struct _cairo_surface_backend {
 				 cairo_fill_rule_t	 fill_rule,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
-				 const cairo_clip_t           *clip);
+				 const cairo_clip_t     *clip);
 
     cairo_warn cairo_int_status_t
     (*fill_stroke)		(void			*surface,
@@ -196,7 +198,7 @@ struct _cairo_surface_backend {
 				 int			     num_clusters,
 				 cairo_text_cluster_flags_t  cluster_flags,
 				 cairo_scaled_font_t	    *scaled_font,
-				 const cairo_clip_t               *clip);
+				 const cairo_clip_t         *clip);
 
     const char **
     (*get_supported_mime_types)	(void			    *surface);
@@ -206,6 +208,33 @@ struct _cairo_surface_backend {
 				 cairo_bool_t            begin,
 				 const char             *tag_name,
 				 const char             *attributes);
+
+    cairo_bool_t
+    (*supports_color_glyph) (void                       *surface,
+                             cairo_scaled_font_t        *scaled_font,
+                             unsigned long               glyph_index);
+
+    /* Paginated surfaces only. During the analysis stage, if any
+     * recording surfaces used as a source are to be replayed, this
+     * function will be called at the begining and end of the replay.
+     *
+     * @recording_surface - the recording surface used as a source
+     * @source_type - a type indicating the combination of drawing
+     * operation and source type
+     * @begin - TRUE when called before the replay, FALSE when called
+     * after the replay has finished.
+     */
+    cairo_warn cairo_int_status_t
+    (*analyze_recording_surface)(void	                       *surface,
+				 const cairo_surface_pattern_t *recording_surface_pattern,
+				 unsigned int                   region_id,
+                                 cairo_analysis_source_t        source_type,
+                                 cairo_bool_t                   begin);
+
+    cairo_warn cairo_int_status_t
+    (*command_id)		(void			*surface,
+				 unsigned int            recording_id,
+				 unsigned int            command_id);
 
 };
 

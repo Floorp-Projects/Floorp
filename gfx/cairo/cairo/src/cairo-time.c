@@ -61,36 +61,7 @@ _cairo_time_get (void)
     return mach_absolute_time ();
 }
 
-#elif defined(__OS2__)
-#define INCL_BASE
-#include <os2.h>
-
-static cairo_always_inline double
-_cairo_time_1s (void)
-{
-    ULONG freq;
-
-    DosTmrQueryFreq (&freq);
-
-    return freq;
-}
-
-cairo_time_t
-_cairo_time_get (void)
-{
-    QWORD t;
-    cairo_int64_t r;
-
-    DosTmrQueryTime (&t);
-
-    r = _cairo_int64_lsl (_cairo_int32_to_int64 (t.ulHi), 32);
-    r = _cairo_int64_add (r, _cairo_int32_to_int64 (t.ulLo));
-
-    return r;
-}
-
 #elif _WIN32
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 static cairo_always_inline double

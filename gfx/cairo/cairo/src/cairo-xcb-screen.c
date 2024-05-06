@@ -121,7 +121,7 @@ _cairo_xcb_init_screen_font_options (cairo_xcb_screen_t *screen)
     cairo_font_options_set_hint_style (&screen->font_options, hint_style);
     cairo_font_options_set_antialias (&screen->font_options, antialias);
     cairo_font_options_set_subpixel_order (&screen->font_options, subpixel_order);
-    cairo_font_options_set_lcd_filter (&screen->font_options, lcd_filter);
+    _cairo_font_options_set_lcd_filter (&screen->font_options, lcd_filter);
     cairo_font_options_set_hint_metrics (&screen->font_options, CAIRO_HINT_METRICS_ON);
 }
 
@@ -169,7 +169,7 @@ _cairo_xcb_screen_finish (cairo_xcb_screen_t *screen)
 
     for (i = 0; i < ARRAY_LENGTH (screen->gc); i++) {
 	if (screen->gc_depths[i] != 0)
-	    _cairo_xcb_connection_free_gc (screen->connection, screen->gc[i]);
+	    xcb_free_gc (screen->connection->xcb_connection, screen->gc[i]);
     }
 
     _cairo_cache_fini (&screen->linear_pattern_cache);
@@ -350,7 +350,7 @@ _cairo_xcb_screen_put_gc (cairo_xcb_screen_t *screen, int depth, xcb_gcontext_t 
     if (i == ARRAY_LENGTH (screen->gc)) {
 	/* perform random substitution to ensure fair caching over depths */
 	i = rand () % ARRAY_LENGTH (screen->gc);
-	_cairo_xcb_connection_free_gc (screen->connection, screen->gc[i]);
+	xcb_free_gc (screen->connection->xcb_connection, screen->gc[i]);
     }
 
     screen->gc[i] = gc;

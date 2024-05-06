@@ -39,6 +39,14 @@
 
 #include "cairo-list-private.h"
 
+/*< private >
+ * cairo_list_entry:
+ * @ptr: the pointer to the #cairo_list_t member.
+ * @type: the type of the struct.
+ * @member: the name of the list_head within the struct.
+ *
+ * Return value: the pointer the struct containing the @member that @ptr points to.
+ **/
 #define cairo_list_entry(ptr, type, member) \
 	cairo_container_of(ptr, type, member)
 
@@ -48,25 +56,91 @@
 #define cairo_list_last_entry(ptr, type, member) \
 	cairo_list_entry((ptr)->prev, type, member)
 
-#define cairo_list_foreach(pos, head)			\
+/*< private >
+ * cairo_list_foreach:
+ * @pos: a #cairo_list_t* to use as a loop variable.
+ * @head: the list.
+ *
+ * Iterate the list. @pos points to the #cairo_list_t member of the entry struct.
+ **/
+#define cairo_list_foreach(pos, head)                                   \
 	for (pos = (head)->next; pos != (head);	pos = pos->next)
 
+/*< private >
+ * cairo_list_foreach_entry:
+ * @pos: a variable of type T * to use as a loop variable.
+ * @type: the type of the entry struct
+ * @head: the list
+ * @member: the name of the #cairo_list_t member of the entry
+ *
+ * Iterate the list of type T.
+ **/
 #define cairo_list_foreach_entry(pos, type, head, member)		\
 	for (pos = cairo_list_entry((head)->next, type, member);\
 	     &pos->member != (head);					\
 	     pos = cairo_list_entry(pos->member.next, type, member))
 
+/*< private >
+ * cairo_list_foreach_entry_safe:
+ * @pos: a variable of type T * to use as a loop variable.
+ * @n: a variable of type T * that point to the next item after @pos.
+ * @type: the type of the entry struct
+ * @head: the list
+ * @member: the name of the #cairo_list_t member of the entry
+ *
+ * Iterate the list of type T. It is safe to remove items while
+ * iterating. @n is a temporary variable required to support safe
+ * iterating.
+ *
+ * |[<!-- language="C" -->
+ *      struct foo {
+ *          int a;
+ *          cairo_list_t list;
+ *      }
+ *
+ *      struct foo linked_list;
+ *      cairo_list_init (&linked_list);
+ *      ... calls to cairo_list_add (entry, &linked_list);
+ *
+ *      struct foo *pos, *next;
+ *      cairo_list_foreach_entry_safe(pos, next, struct foo, &linked_list, list) {
+ *          printf("%d\n", pos->a);
+ *          cairo_list_del (pos);
+ *      }
+ * ]|
+ **/
 #define cairo_list_foreach_entry_safe(pos, n, type, head, member)	\
 	for (pos = cairo_list_entry ((head)->next, type, member),\
 	     n = cairo_list_entry (pos->member.next, type, member);\
 	     &pos->member != (head);					\
 	     pos = n, n = cairo_list_entry (n->member.next, type, member))
 
+/*< private >
+ * cairo_list_foreach_entry:
+ * @pos: a variable of type T * to use as a loop variable.
+ * @type: the type of the entry struct
+ * @head: the list
+ * @member: the name of the #cairo_list_t member of the entry
+ *
+ * Iterate the list of type T in reverse direction.
+ **/
 #define cairo_list_foreach_entry_reverse(pos, type, head, member)	\
 	for (pos = cairo_list_entry((head)->prev, type, member);\
 	     &pos->member != (head);					\
 	     pos = cairo_list_entry(pos->member.prev, type, member))
 
+/*< private >
+ * cairo_list_foreach_entry_safe:
+ * @pos: a variable of type T * to use as a loop variable.
+ * @n: a variable of type T * that point to the next item after @pos.
+ * @type: the type of the entry struct
+ * @head: the list
+ * @member: the name of the #cairo_list_t member of the entry
+ *
+ * Iterate the list of type T in reverse direction. It is safe to
+ * remove items while iterating. @n is a temporary variable required
+ * to support safe iterating.
+ **/
 #define cairo_list_foreach_entry_reverse_safe(pos, n, type, head, member)	\
 	for (pos = cairo_list_entry((head)->prev, type, member),\
 	     n = cairo_list_entry (pos->member.prev, type, member);\
@@ -101,6 +175,13 @@ cairo_list_validate_is_empty (const cairo_list_t *head)
 #define cairo_list_validate_is_empty(head)
 #endif
 
+/*< private >
+ * cairo_list_init:
+ * @entry: list entry to initialize
+ *
+ * Initializes the list entry to point to itself. The result is an
+ * empty list.
+ **/
 static inline void
 cairo_list_init (cairo_list_t *entry)
 {
@@ -119,6 +200,13 @@ __cairo_list_add (cairo_list_t *entry,
     prev->next = entry;
 }
 
+/*< private >
+ * cairo_list_add:
+ * @entry: new entry
+ * @head: linked list head
+ *
+ * Insert a @entry at the start of the list.
+ **/
 static inline void
 cairo_list_add (cairo_list_t *entry, cairo_list_t *head)
 {
@@ -128,6 +216,13 @@ cairo_list_add (cairo_list_t *entry, cairo_list_t *head)
     cairo_list_validate (head);
 }
 
+/*< private >
+ * cairo_list_add_tail:
+ * @entry: new entry
+ * @head: linked list head
+ *
+ * Append a @entry to the end of the list.
+ **/
 static inline void
 cairo_list_add_tail (cairo_list_t *entry, cairo_list_t *head)
 {
@@ -150,6 +245,12 @@ _cairo_list_del (cairo_list_t *entry)
     __cairo_list_del (entry->prev, entry->next);
 }
 
+/*< private >
+ * cairo_list_del:
+ * @entry: entry to remove
+ *
+ * Remove @entry from the list it is in.
+ **/
 static inline void
 cairo_list_del (cairo_list_t *entry)
 {
@@ -157,6 +258,13 @@ cairo_list_del (cairo_list_t *entry)
     cairo_list_init (entry);
 }
 
+/*< private >
+ * cairo_list_move:
+ * @entry: entry to move
+ * @head: linked list to move @entry to
+ *
+ * Remove @entry from the list it is in and insert it at the start of @head list.
+ **/
 static inline void
 cairo_list_move (cairo_list_t *entry, cairo_list_t *head)
 {
@@ -166,6 +274,13 @@ cairo_list_move (cairo_list_t *entry, cairo_list_t *head)
     cairo_list_validate (head);
 }
 
+/*< private >
+ * cairo_list_move_tail:
+ * @entry: entry tp move
+ * @head: linked list to move @entry to
+ *
+ * Remove @entry from the list it is in and append it to the end of @head list.
+ **/
 static inline void
 cairo_list_move_tail (cairo_list_t *entry, cairo_list_t *head)
 {
@@ -175,13 +290,27 @@ cairo_list_move_tail (cairo_list_t *entry, cairo_list_t *head)
     cairo_list_validate (head);
 }
 
+/*< private >
+ * cairo_list_move_list:
+ * @old: List to move
+ * @new: List to move to. Should be empty,
+ *
+ * Move @old list to @new list, fixing up the references.
+ **/
 static inline void
-cairo_list_swap (cairo_list_t *entry, cairo_list_t *other)
+cairo_list_move_list (cairo_list_t *old, cairo_list_t *new)
 {
-    __cairo_list_add (entry, other->prev, other->next);
-    cairo_list_init (other);
+    __cairo_list_add (new, old->prev, old->next);
+    cairo_list_init (old);
 }
 
+/*< private >
+ * cairo_list_is_first:
+ * @entry: entry to check
+ * @head: linked list
+ *
+ * Return %TRUE if @entry is the first item in @head.
+ **/
 static inline cairo_bool_t
 cairo_list_is_first (const cairo_list_t *entry,
 	             const cairo_list_t *head)
@@ -190,6 +319,13 @@ cairo_list_is_first (const cairo_list_t *entry,
     return entry->prev == head;
 }
 
+/*< private >
+ * cairo_list_is_last:
+ * @entry: entry to check
+ * @head: linked list
+ *
+ * Return %TRUE if @entry is the last item in @head.
+ **/
 static inline cairo_bool_t
 cairo_list_is_last (const cairo_list_t *entry,
 	            const cairo_list_t *head)
@@ -198,6 +334,12 @@ cairo_list_is_last (const cairo_list_t *entry,
     return entry->next == head;
 }
 
+/*< private >
+ * cairo_list_is_empty:
+ * @head: linked list
+ *
+ * Return %TRUE if @head is empty.
+ **/
 static inline cairo_bool_t
 cairo_list_is_empty (const cairo_list_t *head)
 {
@@ -205,11 +347,17 @@ cairo_list_is_empty (const cairo_list_t *head)
     return head->next == head;
 }
 
+/*< private >
+ * cairo_list_is_singular:
+ * @head: linked list
+ *
+ * Return %TRUE if @head has only one entry.
+ **/
 static inline cairo_bool_t
 cairo_list_is_singular (const cairo_list_t *head)
 {
     cairo_list_validate (head);
-    return head->next == head || head->next == head->prev;
+    return head->next != head && head->next == head->prev;
 }
 
 #endif /* CAIRO_LIST_INLINE_H */

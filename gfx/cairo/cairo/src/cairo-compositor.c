@@ -122,18 +122,18 @@ _cairo_compositor_mask (const cairo_compositor_t	*compositor,
     return status;
 }
 
-cairo_int_status_t
-_cairo_compositor_stroke (const cairo_compositor_t	*compositor,
-			  cairo_surface_t		*surface,
-			  cairo_operator_t		 op,
-			  const cairo_pattern_t		*source,
-			  const cairo_path_fixed_t	*path,
-			  const cairo_stroke_style_t	*style,
-			  const cairo_matrix_t		*ctm,
-			  const cairo_matrix_t		*ctm_inverse,
-			  double			 tolerance,
-			  cairo_antialias_t		 antialias,
-			  const cairo_clip_t		*clip)
+static cairo_int_status_t
+_cairo_compositor_stroke_impl (const cairo_compositor_t	*compositor,
+			       cairo_surface_t		*surface,
+			       cairo_operator_t		 op,
+			       const cairo_pattern_t		*source,
+			       const cairo_path_fixed_t	*path,
+			       const cairo_stroke_style_t	*style,
+			       const cairo_matrix_t		*ctm,
+			       const cairo_matrix_t		*ctm_inverse,
+			       double			 tolerance,
+			       cairo_antialias_t		 antialias,
+			       const cairo_clip_t		*clip)
 {
     cairo_composite_rectangles_t extents;
     cairo_int_status_t status;
@@ -173,6 +173,48 @@ _cairo_compositor_stroke (const cairo_compositor_t	*compositor,
     _cairo_composite_rectangles_fini (&extents);
 
     return status;
+}
+
+cairo_int_status_t
+_cairo_compositor_stroke (const cairo_compositor_t	*compositor,
+			  cairo_surface_t		*surface,
+			  cairo_operator_t		 op,
+			  const cairo_pattern_t	*source,
+			  const cairo_path_fixed_t	*path,
+			  const cairo_stroke_style_t	*style,
+			  const cairo_matrix_t		*ctm,
+			  const cairo_matrix_t		*ctm_inverse,
+			  double			 tolerance,
+			  cairo_antialias_t		 antialias,
+			  const cairo_clip_t		*clip)
+{
+    if (!style->is_hairline)
+	return _cairo_compositor_stroke_impl (compositor, surface,
+				              op, source, path,
+					      style, ctm, ctm_inverse,
+					      tolerance, antialias, clip);
+    else {
+	cairo_stroke_style_t hairline_style;
+	cairo_status_t status;
+	cairo_matrix_t identity;
+
+	status = _cairo_stroke_style_init_copy (&hairline_style, style);
+	if (unlikely (status))
+	    return status;
+	
+	hairline_style.line_width = 1.0;
+
+	cairo_matrix_init_identity (&identity);
+
+	status = _cairo_compositor_stroke_impl (compositor, surface,
+					        op, source, path,
+					        &hairline_style, &identity, &identity,
+					        tolerance, antialias, clip);
+
+	_cairo_stroke_style_fini (&hairline_style);
+
+	return status;
+    }
 }
 
 cairo_int_status_t
@@ -248,8 +290,7 @@ _cairo_compositor_glyphs (const cairo_compositor_t		*compositor,
 	    compositor = compositor->delegate;
 
 	status = compositor->glyphs (compositor, &extents,
-				     scaled_font, glyphs, num_glyphs, overlap,
-				     surface->permit_subpixel_antialiasing);
+				     scaled_font, glyphs, num_glyphs, overlap);
 
 	compositor = compositor->delegate;
     } while (status == CAIRO_INT_STATUS_UNSUPPORTED);

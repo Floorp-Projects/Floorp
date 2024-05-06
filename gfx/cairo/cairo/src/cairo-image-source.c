@@ -1207,6 +1207,8 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 	    clone = _cairo_image_surface_create_with_content (source->content,
 							      limit.width,
 							      limit.height);
+	if (dst->base.foreground_source)
+	    clone->foreground_source = cairo_pattern_reference (dst->base.foreground_source);
     }
 
     m = NULL;
@@ -1224,6 +1226,8 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
     /* Handle recursion by returning future reads from the current image */
     proxy = attach_proxy (source, clone);
     status = _cairo_recording_surface_replay_with_clip (source, m, clone, NULL);
+    if (clone->foreground_used)
+	dst->base.foreground_used = clone->foreground_used;
     detach_proxy (source, proxy);
     if (unlikely (status)) {
 	cairo_surface_destroy (clone);

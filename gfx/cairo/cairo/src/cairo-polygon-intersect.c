@@ -1167,7 +1167,7 @@ active_edges (cairo_bo_edge_t		*left,
 	    } while (1);
 
 	    right = left->next;
-	    while (right) {
+	    do {
 		if unlikely ((right->deferred.other))
 		    edges_end (right, top, polygon);
 
@@ -1179,9 +1179,7 @@ active_edges (cairo_bo_edge_t		*left,
 		}
 
 		right = right->next;
-	    };
-	    if (! right)
-		return;
+	    } while (1);
 
 	    edges_start_or_continue (left, right, top, polygon);
 

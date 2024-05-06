@@ -49,6 +49,15 @@ typedef enum {
     TAG_LINK_FILE,
 } cairo_tag_link_type_t;
 
+typedef struct _cairo_content_attrs {
+    char *id;
+    char *tag_name;
+} cairo_content_attrs_t;
+
+typedef struct _cairo_content_ref_attrs {
+    char *ref;
+} cairo_content_ref_attrs_t;
+
 typedef struct _cairo_link_attrs {
     cairo_tag_link_type_t link_type;
     cairo_array_t rects;
@@ -58,6 +67,9 @@ typedef struct _cairo_link_attrs {
     int page;
     cairo_bool_t has_pos;
     cairo_point_double_t pos;
+    char *id;
+    char *ref;
+    int link_page;
 } cairo_link_attrs_t;
 
 typedef struct _cairo_dest_attrs {
@@ -91,9 +103,27 @@ cairo_private cairo_int_status_t
 _cairo_tag_parse_dest_attributes (const char *attributes, cairo_dest_attrs_t *dest_attrs);
 
 cairo_private cairo_int_status_t
+_cairo_tag_parse_content_attributes (const char *attributes, cairo_content_attrs_t *content_attrs);
+
+cairo_private cairo_int_status_t
+_cairo_tag_parse_content_ref_attributes (const char *attributes, cairo_content_ref_attrs_t *content_ref_attrs);
+
+cairo_private cairo_int_status_t
 _cairo_tag_parse_ccitt_params (const char *attributes, cairo_ccitt_params_t *dest_attrs);
 
 cairo_private cairo_int_status_t
 _cairo_tag_parse_eps_params (const char *attributes, cairo_eps_params_t *dest_attrs);
+
+cairo_private void
+_cairo_tag_free_link_attributes (cairo_link_attrs_t *link_attrs);
+
+cairo_private void
+_cairo_tag_free_dest_attributes (cairo_dest_attrs_t *link_attrs);
+
+cairo_private void
+_cairo_tag_free_content_attributes (cairo_content_attrs_t *link_attrs);
+
+cairo_private void
+_cairo_tag_free_content_ref_attributes (cairo_content_ref_attrs_t *link_attrs);
 
 #endif /* CAIRO_TAG_ATTRIBUTES_PRIVATE_H */

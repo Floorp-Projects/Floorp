@@ -52,19 +52,6 @@
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-region-private.h"
 
-static inline int
-pot (int v)
-{
-    v--;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    v++;
-    return v;
-}
-
 static cairo_bool_t
 _cairo_clip_contains_rectangle_box (const cairo_clip_t *clip,
 				    const cairo_rectangle_int_t *rect,

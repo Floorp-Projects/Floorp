@@ -372,7 +372,6 @@ cairo_path_destroy (cairo_path_t *path)
 
     free (path);
 }
-slim_hidden_def (cairo_path_destroy);
 
 /**
  * _cairo_path_create:

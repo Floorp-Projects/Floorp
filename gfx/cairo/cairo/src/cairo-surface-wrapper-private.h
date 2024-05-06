@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -41,6 +42,7 @@
 
 #include "cairoint.h"
 #include "cairo-types-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-surface-backend-private.h"
 
 CAIRO_BEGIN_DECLS
@@ -53,6 +55,9 @@ struct _cairo_surface_wrapper {
     cairo_bool_t has_extents;
     cairo_rectangle_int_t extents;
     const cairo_clip_t *clip;
+
+    unsigned int source_region_id;
+    unsigned int mask_region_id;
 
     cairo_bool_t needs_transform;
 };
@@ -95,60 +100,68 @@ _cairo_surface_wrapper_release_source_image (cairo_surface_wrapper_t *wrapper,
 
 cairo_private cairo_status_t
 _cairo_surface_wrapper_paint (cairo_surface_wrapper_t *wrapper,
-			      cairo_operator_t	 op,
-			      const cairo_pattern_t *source,
-			      const cairo_clip_t	    *clip);
+			      cairo_operator_t	       op,
+			      const cairo_pattern_t   *source,
+			      unsigned int             source_region_id,
+			      const cairo_clip_t      *clip);
 
 cairo_private cairo_status_t
 _cairo_surface_wrapper_mask (cairo_surface_wrapper_t *wrapper,
-			     cairo_operator_t	 op,
-			     const cairo_pattern_t *source,
-			     const cairo_pattern_t *mask,
-			     const cairo_clip_t	    *clip);
+			     cairo_operator_t	      op,
+			     const cairo_pattern_t   *source,
+			     unsigned int             source_region_id,
+			     const cairo_pattern_t   *mask,
+                             unsigned int             mask_region_id,
+			     const cairo_clip_t	     *clip);
 
 cairo_private cairo_status_t
-_cairo_surface_wrapper_stroke (cairo_surface_wrapper_t *wrapper,
-			       cairo_operator_t		 op,
-			       const cairo_pattern_t	*source,
-			       const cairo_path_fixed_t	*path,
-			       const cairo_stroke_style_t	*stroke_style,
-			       const cairo_matrix_t		*ctm,
-			       const cairo_matrix_t		*ctm_inverse,
-			       double			 tolerance,
-			       cairo_antialias_t	 antialias,
-			       const cairo_clip_t		*clip);
+_cairo_surface_wrapper_stroke (cairo_surface_wrapper_t    *wrapper,
+			       cairo_operator_t		   op,
+			       const cairo_pattern_t	  *source,
+			       unsigned int                source_region_id,
+			       const cairo_path_fixed_t	  *path,
+			       const cairo_stroke_style_t *stroke_style,
+			       const cairo_matrix_t	  *ctm,
+			       const cairo_matrix_t	  *ctm_inverse,
+			       double			   tolerance,
+			       cairo_antialias_t	   antialias,
+			       const cairo_clip_t	  *clip);
 
 cairo_private cairo_status_t
-_cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
-				    cairo_operator_t	     fill_op,
-				    const cairo_pattern_t   *fill_source,
-				    cairo_fill_rule_t	     fill_rule,
-				    double		     fill_tolerance,
-				    cairo_antialias_t	     fill_antialias,
-				    const cairo_path_fixed_t*path,
-				    cairo_operator_t	     stroke_op,
-				    const cairo_pattern_t   *stroke_source,
-				    const cairo_stroke_style_t    *stroke_style,
-				    const cairo_matrix_t	    *stroke_ctm,
-				    const cairo_matrix_t	    *stroke_ctm_inverse,
-				    double		     stroke_tolerance,
-				    cairo_antialias_t	     stroke_antialias,
-				    const cairo_clip_t	    *clip);
+_cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t    *wrapper,
+				    cairo_operator_t	        fill_op,
+				    const cairo_pattern_t      *fill_source,
+				    unsigned int                fill_region_id,
+				    cairo_fill_rule_t	        fill_rule,
+				    double		        fill_tolerance,
+				    cairo_antialias_t	        fill_antialias,
+				    const cairo_path_fixed_t   *path,
+				    cairo_operator_t	        stroke_op,
+				    const cairo_pattern_t      *stroke_source,
+				    unsigned int                stroke_region_id,
+				    const cairo_stroke_style_t *stroke_style,
+				    const cairo_matrix_t       *stroke_ctm,
+				    const cairo_matrix_t       *stroke_ctm_inverse,
+				    double		        stroke_tolerance,
+				    cairo_antialias_t	        stroke_antialias,
+				    const cairo_clip_t	       *clip);
 
 cairo_private cairo_status_t
-_cairo_surface_wrapper_fill (cairo_surface_wrapper_t *wrapper,
-			     cairo_operator_t	 op,
-			     const cairo_pattern_t *source,
-			     const cairo_path_fixed_t	*path,
-			     cairo_fill_rule_t	 fill_rule,
-			     double		 tolerance,
-			     cairo_antialias_t	 antialias,
-			     const cairo_clip_t	*clip);
+_cairo_surface_wrapper_fill (cairo_surface_wrapper_t  *wrapper,
+			     cairo_operator_t	       op,
+			     const cairo_pattern_t    *source,
+			     unsigned int              source_region_id,
+			     const cairo_path_fixed_t *path,
+			     cairo_fill_rule_t	       fill_rule,
+			     double		       tolerance,
+			     cairo_antialias_t	       antialias,
+			     const cairo_clip_t	      *clip);
 
 cairo_private cairo_status_t
-_cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
+_cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t     *wrapper,
 					 cairo_operator_t	     op,
 					 const cairo_pattern_t	    *source,
+					 unsigned int                source_region_id,
 					 const char		    *utf8,
 					 int			     utf8_len,
 					 const cairo_glyph_t	    *glyphs,

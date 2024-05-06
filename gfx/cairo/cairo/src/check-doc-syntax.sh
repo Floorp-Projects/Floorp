@@ -28,7 +28,7 @@ enum_regexp="\([^%@']\|^\)\<\(FALSE\|TRUE\|NULL\|CAIRO_[0-9A-Z_]*\)\($\|[^(A-Za-
 if test "x$SGML_DOCS" = x; then
 	enum_regexp='^[^:]*:[/ ][*]\(\|[ \t].*\)'$enum_regexp\($\|[^:]\)
 fi
-if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep "$enum_regexp" | grep -v '#####'; then
+if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/programlisting>/d' -e '/\|\[/,/\]\|/d' | grep "$enum_regexp" | grep -v '#####'; then
 	stat=1
 	echo Error: some macros in the docs are not prefixed by percent sign.
 	echo Fix this by searching for the following regexp in the above files:
@@ -42,7 +42,7 @@ else
 	type_regexp='\(.'$type_regexp'\)\|\('$type_regexp'.\)'
 fi
 
-if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep -v "@Title" | grep "$type_regexp" | grep -v '#####'; then
+if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/programlisting>/d' -e '/\|\[/,/\]\|/d' | grep -v "@Title" | grep "$type_regexp" | grep -v '#####'; then
 	stat=1
 	echo Error: some type names in the docs are not prefixed by hash sign,
 	echo neither are the only token in the doc line followed by colon.
@@ -56,7 +56,7 @@ if test "x$SGML_DOCS" = x; then
 fi
 
 # We need to filter out gtk-doc markup errors for program listings.
-if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep "$func_regexp" | grep -v '^[^:]*: [*] [a-z_0-9]*:$' | grep -v '#####'; then
+if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/programlisting>/d' -e '/\|\[/,/\]\|/d' | grep "$func_regexp" | grep -v '^[^:]*: [*] [a-z_0-9]*:$' | grep -v '#####'; then
 	stat=1
 	echo Error: some function names in the docs are not followed by parentheses.
 	echo Fix this by searching for the following regexp in the above files:

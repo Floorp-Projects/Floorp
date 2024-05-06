@@ -60,6 +60,25 @@ typedef struct _attribute_spec {
 } attribute_spec_t;
 
 /*
+ * id      [optional] content id
+ * content [optional] One or more content ids
+ */
+static const attribute_spec_t _content_attrib_spec[] = {
+    { "tag_name", ATTRIBUTE_STRING },
+    { "id",       ATTRIBUTE_STRING },
+    { NULL }
+};
+
+/*
+ * id      [optional] content id
+ * content [optional] One or more content ids
+ */
+static const attribute_spec_t _content_ref_attrib_spec[] = {
+    { "ref",       ATTRIBUTE_STRING },
+    { NULL }
+};
+
+/*
  * name [required] Unique name of this destination (UTF-8)
  * x    [optional] x coordinate of destination on page. Default is x coord of
  *                 extents of operations enclosed by the dest begin/end tags.
@@ -68,7 +87,7 @@ typedef struct _attribute_spec {
  * internal [optional] If true, the name may be optimized out of the PDF where
  *                     possible. Default false.
  */
-static attribute_spec_t _dest_attrib_spec[] = {
+static const attribute_spec_t _dest_attrib_spec[] = {
     { "name",     ATTRIBUTE_STRING },
     { "x",        ATTRIBUTE_FLOAT },
     { "y",        ATTRIBUTE_FLOAT },
@@ -103,7 +122,7 @@ static attribute_spec_t _dest_attrib_spec[] = {
  *     page - Page number in the PDF file to link to
  *     pos  - [optional] Position of destination on page. Default is 0,0.
  */
-static attribute_spec_t _link_attrib_spec[] =
+static const attribute_spec_t _link_attrib_spec[] =
 {
     { "rect", ATTRIBUTE_FLOAT, -1 },
     { "dest", ATTRIBUTE_STRING },
@@ -111,6 +130,9 @@ static attribute_spec_t _link_attrib_spec[] =
     { "file", ATTRIBUTE_STRING },
     { "page", ATTRIBUTE_INT },
     { "pos",  ATTRIBUTE_FLOAT, 2 },
+    { "id",   ATTRIBUTE_STRING },
+    { "ref",  ATTRIBUTE_STRING },
+    { "link_page", ATTRIBUTE_INT },
     { NULL }
 };
 
@@ -131,7 +153,7 @@ static attribute_spec_t _link_attrib_spec[] =
  *   DamagedRowsBeforeError - Number of damages rows tolerated before an error
  *                            occurs. Default: 0.
  */
-static attribute_spec_t _ccitt_params_spec[] =
+static const attribute_spec_t _ccitt_params_spec[] =
 {
     { "Columns",                ATTRIBUTE_INT },
     { "Rows",                   ATTRIBUTE_INT },
@@ -152,7 +174,7 @@ static attribute_spec_t _ccitt_params_spec[] =
  *          ury - upper right y xoordinate
  *        all coordinates are in PostScript coordinates.
  */
-static attribute_spec_t _eps_params_spec[] =
+static const attribute_spec_t _eps_params_spec[] =
 {
     { "bbox", ATTRIBUTE_FLOAT, 4 },
     { NULL }
@@ -362,16 +384,13 @@ parse_name (const char *attributes, const char *p, const char **end, char **s)
 	    attributes, p);
 
     p2 = p;
-    while (_cairo_isalpha (*p2) || _cairo_isdigit (*p2))
+    while (_cairo_isalpha (*p2) || _cairo_isdigit (*p2) || *p2  == '_')
 	p2++;
 
     len = p2 - p;
-    name = _cairo_malloc (len + 1);
+    name = _cairo_strndup (p, len);
     if (unlikely (name == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    memcpy (name, p, len);
-    name[len] = 0;
     *s = name;
     *end = p2;
 
@@ -379,9 +398,9 @@ parse_name (const char *attributes, const char *p, const char **end, char **s)
 }
 
 static cairo_int_status_t
-parse_attributes (const char *attributes, attribute_spec_t *attrib_def, cairo_list_t *list)
+parse_attributes (const char *attributes, const attribute_spec_t *attrib_def, cairo_list_t *list)
 {
-    attribute_spec_t *def;
+    const attribute_spec_t *def;
     attribute_t *attrib;
     char *name = NULL;
     cairo_int_status_t status;
@@ -493,13 +512,79 @@ free_attributes_list (cairo_list_t *list)
 }
 
 cairo_int_status_t
+_cairo_tag_parse_content_attributes (const char *attributes, cairo_content_attrs_t *content_attrs)
+{
+    cairo_list_t list;
+    cairo_int_status_t status;
+    attribute_t *attr;
+
+    cairo_list_init (&list);
+    status = parse_attributes (attributes, _content_attrib_spec, &list);
+    if (unlikely (status))
+	goto cleanup;
+
+    memset (content_attrs, 0, sizeof (cairo_content_attrs_t));
+    cairo_list_foreach_entry (attr, attribute_t, &list, link)
+    {
+	if (strcmp (attr->name, "tag_name") == 0) {
+	    content_attrs->tag_name = strdup (attr->scalar.s);
+	} else if (strcmp (attr->name, "id") == 0) {
+	    content_attrs->id = strdup (attr->scalar.s);
+	}
+    }
+
+    if (! content_attrs->tag_name) {
+	status = _cairo_tag_error ("CONTENT attributes: \"%s\" missing tag_name attribute",
+				   attributes);
+    } else if (! content_attrs->tag_name) {
+	status = _cairo_tag_error ("CONTENT attributes: \"%s\" missing id attribute",
+				   attributes);
+    }
+
+  cleanup:
+    free_attributes_list (&list);
+
+    return status;
+}
+
+cairo_int_status_t
+_cairo_tag_parse_content_ref_attributes (const char *attributes, cairo_content_ref_attrs_t *content_ref_attrs)
+{
+    cairo_list_t list;
+    cairo_int_status_t status;
+    attribute_t *attr;
+
+    cairo_list_init (&list);
+    status = parse_attributes (attributes, _content_ref_attrib_spec, &list);
+    if (unlikely (status))
+	goto cleanup;
+
+    memset (content_ref_attrs, 0, sizeof (cairo_content_ref_attrs_t));
+    cairo_list_foreach_entry (attr, attribute_t, &list, link)
+    {
+	if (strcmp (attr->name, "ref") == 0) {
+	    content_ref_attrs->ref = strdup (attr->scalar.s);
+	}
+    }
+
+    if (! content_ref_attrs->ref) {
+	status = _cairo_tag_error ("CONTENT_REF  attributes: \"%s\" missing ref attribute",
+				   attributes);
+    }
+
+  cleanup:
+    free_attributes_list (&list);
+
+    return status;
+}
+
+cairo_int_status_t
 _cairo_tag_parse_link_attributes (const char *attributes, cairo_link_attrs_t *link_attrs)
 {
     cairo_list_t list;
     cairo_int_status_t status;
     attribute_t *attr;
     attrib_val_t val;
-    cairo_bool_t has_rect = FALSE;
     cairo_bool_t invalid_combination = FALSE;
 
     cairo_list_init (&list);
@@ -557,7 +642,16 @@ _cairo_tag_parse_link_attributes (const char *attributes, cairo_link_attrs_t *li
 		if (unlikely (status))
 		    goto cleanup;
 	    }
-	    has_rect = TRUE;
+	} else if (strcmp (attr->name, "id") == 0) {
+	    link_attrs->id = strdup (attr->scalar.s);
+	} else if (strcmp (attr->name, "ref") == 0) {
+	    link_attrs->ref = strdup (attr->scalar.s);
+	} else if (strcmp (attr->name, "link_page") == 0) {
+	    link_attrs->link_page = attr->scalar.i;
+	    if (link_attrs->link_page < 1) {
+		status = _cairo_tag_error ("Link attributes: \"%s\" page must be >= 1", attributes);
+		goto cleanup;
+	    }
 	}
     }
 
@@ -725,4 +819,34 @@ _cairo_tag_parse_eps_params (const char *attributes, cairo_eps_params_t *eps_par
     free_attributes_list (&list);
 
     return status;
+}
+
+void
+_cairo_tag_free_link_attributes (cairo_link_attrs_t *link_attrs)
+{
+    _cairo_array_fini (&link_attrs->rects);
+    free (link_attrs->dest);
+    free (link_attrs->uri);
+    free (link_attrs->file);
+    free (link_attrs->id);
+    free (link_attrs->ref);
+}
+
+void
+_cairo_tag_free_dest_attributes (cairo_dest_attrs_t *dest_attrs)
+{
+    free (dest_attrs->name);
+}
+
+void
+_cairo_tag_free_content_attributes (cairo_content_attrs_t *content_attrs)
+{
+    free (content_attrs->id);
+    free (content_attrs->tag_name);
+}
+
+void
+_cairo_tag_free_content_ref_attributes (cairo_content_ref_attrs_t *content_ref_attrs)
+{
+    free (content_ref_attrs->ref);
 }

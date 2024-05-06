@@ -68,6 +68,7 @@ struct _cairo_backend {
     cairo_status_t (*set_line_cap) (void *cr, cairo_line_cap_t line_cap);
     cairo_status_t (*set_line_join) (void *cr, cairo_line_join_t line_join);
     cairo_status_t (*set_line_width) (void *cr, double line_width);
+    cairo_status_t (*set_hairline) (void *cr, cairo_bool_t set_hairline);
     cairo_status_t (*set_miter_limit) (void *cr, double limit);
     cairo_status_t (*set_opacity) (void *cr, double opacity);
     cairo_status_t (*set_operator) (void *cr, cairo_operator_t op);
@@ -79,6 +80,7 @@ struct _cairo_backend {
     cairo_line_cap_t (*get_line_cap) (void *cr);
     cairo_line_join_t (*get_line_join) (void *cr);
     double (*get_line_width) (void *cr);
+    cairo_bool_t (*get_hairline) (void *cr);
     double (*get_miter_limit) (void *cr);
     double (*get_opacity) (void *cr);
     cairo_operator_t (*get_operator) (void *cr);

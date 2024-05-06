@@ -47,6 +47,8 @@ CAIRO_BEGIN_DECLS
  * cairo_pdf_version_t:
  * @CAIRO_PDF_VERSION_1_4: The version 1.4 of the PDF specification. (Since 1.10)
  * @CAIRO_PDF_VERSION_1_5: The version 1.5 of the PDF specification. (Since 1.10)
+ * @CAIRO_PDF_VERSION_1_6: The version 1.6 of the PDF specification. (Since 1.18)
+ * @CAIRO_PDF_VERSION_1_7: The version 1.7 of the PDF specification. (Since 1.18)
  *
  * #cairo_pdf_version_t is used to describe the version number of the PDF
  * specification that a generated PDF file will conform to.
@@ -55,7 +57,9 @@ CAIRO_BEGIN_DECLS
  **/
 typedef enum _cairo_pdf_version {
     CAIRO_PDF_VERSION_1_4,
-    CAIRO_PDF_VERSION_1_5
+    CAIRO_PDF_VERSION_1_5,
+    CAIRO_PDF_VERSION_1_6,
+    CAIRO_PDF_VERSION_1_7
 } cairo_pdf_version_t;
 
 cairo_public cairo_surface_t *
@@ -142,6 +146,11 @@ cairo_public void
 cairo_pdf_surface_set_metadata (cairo_surface_t	     *surface,
 				cairo_pdf_metadata_t  metadata,
                                 const char           *utf8);
+
+cairo_public void
+cairo_pdf_surface_set_custom_metadata (cairo_surface_t	    *surface,
+                                       const char           *name,
+                                       const char           *value);
 
 cairo_public void
 cairo_pdf_surface_set_page_label (cairo_surface_t *surface,

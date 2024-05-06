@@ -79,7 +79,6 @@ _cairo_xcb_connection_render_free_picture (cairo_xcb_connection_t *connection,
 {
     assert (connection->flags & CAIRO_XCB_HAS_RENDER);
     xcb_render_free_picture (connection->xcb_connection, picture);
-    _cairo_xcb_connection_put_xid (connection, picture);
 }
 
 void
@@ -133,7 +132,6 @@ _cairo_xcb_connection_render_free_glyph_set (cairo_xcb_connection_t      *connec
 {
     assert (connection->flags & CAIRO_XCB_HAS_RENDER);
     xcb_render_free_glyph_set (connection->xcb_connection, glyphset);
-    _cairo_xcb_connection_put_xid (connection, glyphset);
 }
 
 void

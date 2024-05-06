@@ -177,7 +177,7 @@ _cairo_spline_error_squared (const cairo_spline_knots_t *knots)
     double bdx, bdy, berr;
     double cdx, cdy, cerr;
 
-    /* We are going to compute the distance (squared) between each of the the b
+    /* We are going to compute the distance (squared) between each of the b
      * and c control points and the segment a-b. The maximum of these two
      * distances will be our approximation error. */
 

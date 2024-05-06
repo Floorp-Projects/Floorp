@@ -41,7 +41,7 @@
 
 #if CAIRO_HAS_FT_FONT
 
-/* Fontconfig/Freetype platform-specific font interface */
+/* Fontconfig/FreeType platform-specific font interface */
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -54,9 +54,7 @@ CAIRO_BEGIN_DECLS
 
 cairo_public cairo_font_face_t *
 cairo_ft_font_face_create_for_ft_face (FT_Face         face,
-				       int             load_flags,
-				       unsigned int    synth_flags,
-				       void           *face_context);
+				       int             load_flags);
 
 /**
  * cairo_ft_synthesize_t:

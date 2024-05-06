@@ -36,6 +36,15 @@
 
 #include "cairoint.h"
 
+/**
+ * CAIRO_HAS_XCB_SHM_FUNCTIONS:
+ *
+ * Defined if Cairo has SHM functions for XCB.
+ * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.10
+ **/
+
 #if CAIRO_HAS_XCB_SHM_FUNCTIONS
 
 #include "cairo-xcb-private.h"

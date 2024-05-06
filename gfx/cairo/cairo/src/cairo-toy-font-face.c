@@ -135,7 +135,7 @@ _cairo_toy_font_face_init_key (cairo_toy_font_face_t *key,
 			       cairo_font_slant_t     slant,
 			       cairo_font_weight_t    weight)
 {
-    unsigned long hash;
+    uintptr_t hash;
 
     key->family = family;
     key->owns_family = FALSE;
@@ -145,8 +145,8 @@ _cairo_toy_font_face_init_key (cairo_toy_font_face_t *key,
 
     /* 1607 and 1451 are just a couple of arbitrary primes. */
     hash = _cairo_hash_string (family);
-    hash += ((unsigned long) slant) * 1607;
-    hash += ((unsigned long) weight) * 1451;
+    hash += ((uintptr_t) slant) * 1607;
+    hash += ((uintptr_t) weight) * 1451;
 
     key->base.hash_entry.hash = hash;
 }
@@ -235,7 +235,7 @@ _cairo_toy_font_face_keys_equal (const void *key_a,
  * @weight: the weight for the font
  *
  * Creates a font face from a triplet of family, slant, and weight.
- * These font faces are used in implementation of the the #cairo_t "toy"
+ * These font faces are used in implementation of the #cairo_t "toy"
  * font API.
  *
  * If @family is the zero-length string "", the platform-specific default
@@ -340,7 +340,6 @@ cairo_toy_font_face_create (const char          *family,
  UNWIND:
     return (cairo_font_face_t*) &_cairo_font_face_nil;
 }
-slim_hidden_def (cairo_toy_font_face_create);
 
 static cairo_bool_t
 _cairo_toy_font_face_destroy (void *abstract_face)
@@ -469,7 +468,6 @@ cairo_toy_font_face_get_slant (cairo_font_face_t *font_face)
     }
     return toy_font_face->slant;
 }
-slim_hidden_def (cairo_toy_font_face_get_slant);
 
 /**
  * cairo_toy_font_face_get_weight:
@@ -496,7 +494,6 @@ cairo_toy_font_face_get_weight (cairo_font_face_t *font_face)
     }
     return toy_font_face->weight;
 }
-slim_hidden_def (cairo_toy_font_face_get_weight);
 
 static const cairo_font_face_backend_t _cairo_toy_font_face_backend = {
     CAIRO_FONT_TYPE_TOY,

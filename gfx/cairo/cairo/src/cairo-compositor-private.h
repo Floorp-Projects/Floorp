@@ -85,8 +85,7 @@ struct cairo_compositor {
 				 cairo_scaled_font_t		*scaled_font,
 				 cairo_glyph_t			*glyphs,
 				 int				 num_glyphs,
-				 cairo_bool_t			 overlap,
-				 cairo_bool_t                    permit_subpixel_antialiasing);
+				 cairo_bool_t			 overlap);
 };
 
 struct cairo_mask_compositor {

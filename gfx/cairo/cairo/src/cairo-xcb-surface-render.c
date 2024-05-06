@@ -128,7 +128,7 @@ _cairo_xcb_picture_create (cairo_xcb_screen_t *screen,
     cairo_list_add (&surface->link, &screen->pictures);
 
     surface->screen = screen;
-    surface->picture = _cairo_xcb_connection_get_xid (screen->connection);
+    surface->picture = xcb_generate_id (screen->connection->xcb_connection);
     surface->pixman_format = pixman_format;
     surface->xrender_format = xrender_format;
 
@@ -308,7 +308,7 @@ _cairo_xcb_surface_ensure_picture (cairo_xcb_surface_t *surface)
 	    values[0] = surface->precision;
 	}
 
-	surface->picture = _cairo_xcb_connection_get_xid (surface->connection);
+	surface->picture = xcb_generate_id (surface->connection->xcb_connection);
 	_cairo_xcb_connection_render_create_picture (surface->connection,
 						     surface->picture,
 						     surface->drawable,
@@ -382,7 +382,7 @@ _picture_from_image (cairo_xcb_surface_t *target,
 						     0, 0);
     }
 
-    _cairo_xcb_connection_free_pixmap (target->connection, pixmap);
+    xcb_free_pixmap (target->connection->xcb_connection, pixmap);
 
     return picture;
 }
@@ -640,7 +640,7 @@ _solid_picture (cairo_xcb_surface_t *target,
 	    _cairo_xcb_screen_put_gc (target->screen, 32, gc);
 	}
 
-	_cairo_xcb_connection_free_pixmap (target->connection, pixmap);
+	xcb_free_pixmap (target->connection->xcb_connection, pixmap);
     }
 
     return picture;
@@ -1242,12 +1242,6 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	}
     }
 #endif
-#if CAIRO_HAS_GL_FUNCTIONS
-    else if (source->type == CAIRO_SURFACE_TYPE_GL)
-    {
-	/* pixmap from texture */
-    }
-#endif
     else if (source->type == CAIRO_SURFACE_TYPE_RECORDING)
     {
 	/* We have to skip the call to attach_snapshot() because we possibly
@@ -1266,7 +1260,8 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	if (unlikely (status))
 	    return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);
 
-	if (image->format != CAIRO_FORMAT_INVALID) {
+	if (image->format != CAIRO_FORMAT_INVALID &&
+	    image->format < ARRAY_LENGTH (target->screen->connection->standard_formats)) {
 	    xcb_render_pictformat_t format;
 
 	    format = target->screen->connection->standard_formats[image->format];
@@ -3994,6 +3989,7 @@ _can_composite_glyphs (cairo_xcb_surface_t *dst,
 	    status = _cairo_scaled_glyph_lookup (scaled_font,
 						 glyphs->index,
 						 CAIRO_SCALED_GLYPH_INFO_METRICS,
+                                                 NULL, /* foreground color */
 						 &glyph);
 	    if (unlikely (status))
 		break;
@@ -4232,7 +4228,7 @@ _cairo_xcb_scaled_font_get_glyphset_info_for_format (cairo_xcb_connection_t *c,
 
     info = &priv->glyphset_info[glyphset_index];
     if (info->glyphset == XCB_NONE) {
-	info->glyphset = _cairo_xcb_connection_get_xid (c);
+	info->glyphset = xcb_generate_id (c->xcb_connection);
 	info->xrender_format = c->standard_formats[info->format];
 
 	_cairo_xcb_connection_render_create_glyph_set (c,
@@ -4399,6 +4395,7 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
 					     glyph_index,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS |
 					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
+                                             NULL, /* foreground color */
 					     scaled_glyph_out);
 	if (unlikely (status))
 	    return status;
@@ -4692,6 +4689,7 @@ _composite_glyphs (void				*closure,
 	    status = _cairo_scaled_glyph_lookup (info->font,
 						 glyph_index,
 						 CAIRO_SCALED_GLYPH_INFO_METRICS,
+                                                 NULL, /* foreground color */
 						 &glyph);
 	    if (unlikely (status)) {
 		cairo_surface_destroy (&src->base);
@@ -4816,8 +4814,7 @@ _cairo_xcb_render_compositor_glyphs (const cairo_compositor_t     *compositor,
 				     cairo_scaled_font_t          *scaled_font,
 				     cairo_glyph_t                *glyphs,
 				     int                           num_glyphs,
-				     cairo_bool_t                  overlap,
-				     cairo_bool_t                  permit_subpixel_antialiasing)
+				     cairo_bool_t                  overlap)
 {
     cairo_xcb_surface_t *surface = (cairo_xcb_surface_t *) composite->surface;
     cairo_operator_t op = composite->op;

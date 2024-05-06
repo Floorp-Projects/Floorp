@@ -70,6 +70,14 @@ _cairo_filler_line_to (void *closure,
 }
 
 static cairo_status_t
+_cairo_filler_add_point (void *closure,
+			 const cairo_point_t *point,
+			 const cairo_slope_t *tangent)
+{
+    return _cairo_filler_line_to (closure, point);
+};
+
+static cairo_status_t
 _cairo_filler_close (void *closure)
 {
     cairo_filler_t *filler = closure;
@@ -113,7 +121,7 @@ _cairo_filler_curve_to (void		*closure,
     }
 
     if (! _cairo_spline_init (&spline,
-			      (cairo_spline_add_point_func_t)_cairo_filler_line_to, filler,
+			      _cairo_filler_add_point, filler,
 			      &filler->current_point, p1, p2, p3))
     {
 	return _cairo_filler_line_to (closure, p3);

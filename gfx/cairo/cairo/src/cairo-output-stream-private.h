@@ -58,7 +58,7 @@ struct _cairo_output_stream {
     cairo_output_stream_write_func_t write_func;
     cairo_output_stream_flush_func_t flush_func;
     cairo_output_stream_close_func_t close_func;
-    unsigned long		     position;
+    long long		             position;
     cairo_status_t		     status;
     cairo_bool_t		     closed;
 };
@@ -140,7 +140,7 @@ cairo_private void
 _cairo_output_stream_print_matrix (cairo_output_stream_t *stream,
 				   const cairo_matrix_t  *matrix);
 
-cairo_private long
+cairo_private long long
 _cairo_output_stream_get_position (cairo_output_stream_t *stream);
 
 cairo_private cairo_status_t
