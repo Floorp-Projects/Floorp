@@ -47,6 +47,8 @@ class SurfaceFactory_IOSurface : public SurfaceFactory {
 
   explicit SurfaceFactory_IOSurface(GLContext& gl);
 
+  bool SupportsCspaces() const override { return true; }
+
   virtual UniquePtr<SharedSurface> CreateSharedImpl(
       const SharedSurfaceDesc& desc) override {
     if (desc.size.width > mMaxDims.width ||

@@ -894,63 +894,62 @@ void WebGLContext::BlitBackbufferToCurDriverFB(
   if (mScissorTestEnabled) {
     gl->fDisable(LOCAL_GL_SCISSOR_TEST);
   }
-
-  [&]() {
-    // If a MozFramebuffer is supplied, ensure that a WebGLFramebuffer is not
-    // used since it might not have completeness info, while the MozFramebuffer
-    // can still supply the needed information.
-    MOZ_ASSERT(!(srcAsMozFb && srcAsWebglFb));
-    const auto* mozFb = srcAsMozFb ? srcAsMozFb : mDefaultFB.get();
-    GLuint fbo = 0;
-    gfx::IntSize size;
-    if (srcAsWebglFb) {
-      fbo = srcAsWebglFb->mGLName;
-      const auto* info = srcAsWebglFb->GetCompletenessInfo();
-      MOZ_ASSERT(info);
-      size = gfx::IntSize(info->width, info->height);
-    } else {
-      fbo = mozFb->mFB;
-      size = mozFb->mSize;
+  const auto cleanup = MakeScopeExit([&]() {
+    if (mScissorTestEnabled) {
+      gl->fEnable(LOCAL_GL_SCISSOR_TEST);
     }
+  });
 
-    // If no format conversion is necessary, then attempt to directly blit
-    // between framebuffers. Otherwise, if we need to convert to RGBA from
-    // the source format, then we will need to use the texture blit path
-    // below.
-    if (!srcIsBGRA) {
-      if (gl->IsSupported(gl::GLFeature::framebuffer_blit)) {
-        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
-        gl->fBlitFramebuffer(0, 0, size.width, size.height, 0, 0, size.width,
-                             size.height, LOCAL_GL_COLOR_BUFFER_BIT,
-                             LOCAL_GL_NEAREST);
-        return;
-      }
-      if (mDefaultFB->mSamples &&
-          gl->IsExtensionSupported(
-              gl::GLContext::APPLE_framebuffer_multisample)) {
-        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
-        gl->fResolveMultisampleFramebufferAPPLE();
-        return;
-      }
-    }
-
-    GLuint colorTex = 0;
-    if (srcAsWebglFb) {
-      const auto& attach = srcAsWebglFb->ColorAttachment0();
-      MOZ_ASSERT(attach.Texture());
-      colorTex = attach.Texture()->mGLName;
-    } else {
-      colorTex = mozFb->ColorTex();
-    }
-
-    // DrawBlit handles ColorMask itself.
-    gl->BlitHelper()->DrawBlitTextureToFramebuffer(
-        colorTex, size, size, LOCAL_GL_TEXTURE_2D, srcIsBGRA);
-  }();
-
-  if (mScissorTestEnabled) {
-    gl->fEnable(LOCAL_GL_SCISSOR_TEST);
+  // If a MozFramebuffer is supplied, ensure that a WebGLFramebuffer is not
+  // used since it might not have completeness info, while the MozFramebuffer
+  // can still supply the needed information.
+  MOZ_ASSERT(!(srcAsMozFb && srcAsWebglFb));
+  const auto* mozFb = srcAsMozFb ? srcAsMozFb : mDefaultFB.get();
+  GLuint fbo = 0;
+  gfx::IntSize size;
+  if (srcAsWebglFb) {
+    fbo = srcAsWebglFb->mGLName;
+    const auto* info = srcAsWebglFb->GetCompletenessInfo();
+    MOZ_ASSERT(info);
+    size = gfx::IntSize(info->width, info->height);
+  } else {
+    fbo = mozFb->mFB;
+    size = mozFb->mSize;
   }
+
+  // If no format conversion is necessary, then attempt to directly blit
+  // between framebuffers. Otherwise, if we need to convert to RGBA from
+  // the source format, then we will need to use the texture blit path
+  // below.
+  if (!srcIsBGRA) {
+    if (gl->IsSupported(gl::GLFeature::framebuffer_blit)) {
+      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
+      gl->fBlitFramebuffer(0, 0, size.width, size.height, 0, 0, size.width,
+                           size.height, LOCAL_GL_COLOR_BUFFER_BIT,
+                           LOCAL_GL_NEAREST);
+      return;
+    }
+    if (mDefaultFB->mSamples &&
+        gl->IsExtensionSupported(
+            gl::GLContext::APPLE_framebuffer_multisample)) {
+      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
+      gl->fResolveMultisampleFramebufferAPPLE();
+      return;
+    }
+  }
+
+  GLuint colorTex = 0;
+  if (srcAsWebglFb) {
+    const auto& attach = srcAsWebglFb->ColorAttachment0();
+    MOZ_ASSERT(attach.Texture());
+    colorTex = attach.Texture()->mGLName;
+  } else {
+    colorTex = mozFb->ColorTex();
+  }
+
+  // DrawBlit handles ColorMask itself.
+  gl->BlitHelper()->DrawBlitTextureToFramebuffer(
+      colorTex, size, size, LOCAL_GL_TEXTURE_2D, srcIsBGRA);
 }
 
 // -
@@ -960,18 +959,33 @@ constexpr auto MakeArray(Args... args) -> std::array<T, sizeof...(Args)> {
   return {{static_cast<T>(args)...}};
 }
 
-inline gfx::ColorSpace2 ToColorSpace2(const WebGLContextOptions& options) {
-  auto ret = gfx::ColorSpace2::UNKNOWN;
-  if (true) {
-    ret = gfx::ColorSpace2::SRGB;
+inline gfx::ColorSpace2 ToColorSpace2ForOutput(
+    const std::optional<dom::PredefinedColorSpace> chosenCspace) {
+  const auto cmsMode = GfxColorManagementMode();
+  switch (cmsMode) {
+    case CMSMode::Off:
+      return gfx::ColorSpace2::Display;
+    case CMSMode::TaggedOnly:
+      if (!chosenCspace) {
+        return gfx::ColorSpace2::Display;
+      }
+      break;
+    case CMSMode::All:
+      if (!chosenCspace) {
+        return gfx::ColorSpace2::SRGB;
+      }
+      break;
   }
-  if (!options.ignoreColorSpace) {
-    ret = gfx::ToColorSpace2(options.colorSpace);
-  }
-  return ret;
+  return gfx::ToColorSpace2(*chosenCspace);
 }
 
 // -
+
+template <class T>
+GLuint GLNameOrZero(const T& t) {
+  if (t) return t->mGLName;
+  return 0;
+}
 
 // For an overview of how WebGL compositing works, see:
 // https://wiki.mozilla.org/Platform/GFX/WebGL/Compositing
@@ -980,46 +994,100 @@ bool WebGLContext::PresentInto(gl::SwapChain& swapChain) {
 
   if (!ValidateAndInitFB(nullptr)) return false;
 
-  {
-    const auto colorSpace = ToColorSpace2(mOptions);
-    auto presenter = swapChain.Acquire(mDefaultFB->mSize, colorSpace);
+  const auto size = mDefaultFB->mSize;
+
+  const auto error = [&]() -> std::optional<std::string> {
+    const auto canvasCspace = ToColorSpace2ForOutput(mOptions.colorSpace);
+    auto presenter = swapChain.Acquire(size, canvasCspace);
     if (!presenter) {
-      GenerateWarning("Swap chain surface creation failed.");
-      LoseContext();
-      return false;
+      return "Swap chain surface creation failed.";
     }
-
+    const auto outputCspace = presenter->BackBuffer()->mDesc.colorSpace;
     const auto destFb = presenter->Fb();
-    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
 
-    BlitBackbufferToCurDriverFB();
+    // -
 
-    if (!mOptions.preserveDrawingBuffer) {
-      if (gl->IsSupported(gl::GLFeature::invalidate_framebuffer)) {
-        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, mDefaultFB->mFB);
-        constexpr auto attachments = MakeArray<GLenum>(
-            LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
-        gl->fInvalidateFramebuffer(LOCAL_GL_READ_FRAMEBUFFER,
-                                   attachments.size(), attachments.data());
-      }
-      mDefaultFB_IsInvalid = true;
+    bool colorManage = (canvasCspace != gfx::ColorSpace2::Display);
+    if (canvasCspace == outputCspace) {
+      colorManage = false;
+    }
+    if (!gl->IsSupported(gl::GLFeature::texture_3D)) {
+      NS_WARNING("Missing GLFeature::texture_3D => colorManage = false.");
+      colorManage = false;
     }
 
-#ifdef DEBUG
-    if (!mOptions.alpha) {
-      gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
-      gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
-      if (IsWebGL2()) {
-        gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, 0);
-        gl->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, 0);
-        gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, 0);
+    auto colorLut = std::shared_ptr<gl::Texture>{};
+    if (colorManage) {
+      MOZ_ASSERT(canvasCspace != gfx::ColorSpace2::Display);
+      colorLut = gl->BlitHelper()->GetColorLutTex(gl::GLBlitHelper::ColorLutKey{
+          .src = canvasCspace, .dst = outputCspace});
+      if (!colorLut) {
+        NS_WARNING("GetColorLutTex() -> nullptr => colorManage = false.");
+        colorManage = false;
       }
-      uint32_t pixel = 0xffbadbad;
-      gl->fReadPixels(0, 0, 1, 1, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
-                      &pixel);
-      MOZ_ASSERT((pixel & 0xff000000) == 0xff000000);
     }
-#endif
+
+    if (!colorManage) {
+      gl->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, destFb);
+      BlitBackbufferToCurDriverFB();
+      return {};
+    }
+
+    // -
+
+    const auto canvasFb = GetDefaultFBForRead({.endOfFrame = true});
+    if (!canvasFb) {
+      return "[WebGLContext::PresentInto] BindDefaultFBForRead failed.";
+    }
+
+    const auto& blitter = gl->BlitHelper()->GetDrawBlitProg({
+        .fragHeader = gl::kFragHeader_Tex2D,
+        .fragParts = {gl::kFragSample_OnePlane, gl::kFragConvert_ColorLut3d},
+    });
+
+    constexpr uint8_t texUnit_src = 0;
+    constexpr uint8_t texUnit_lut = 1;
+    gl->BindSamplerTexture(texUnit_src, SamplerLinear(), LOCAL_GL_TEXTURE_2D,
+                           canvasFb->ColorTex());
+    gl->BindSamplerTexture(texUnit_lut, SamplerLinear(), LOCAL_GL_TEXTURE_3D,
+                           colorLut->name);
+    const auto texCleanup = MakeScopeExit([&]() {
+      gl->BindSamplerTexture(
+          texUnit_src, GLNameOrZero(mBoundSamplers[texUnit_src]),
+          LOCAL_GL_TEXTURE_2D, GLNameOrZero(mBound2DTextures[texUnit_src]));
+      gl->BindSamplerTexture(
+          texUnit_lut, GLNameOrZero(mBoundSamplers[texUnit_lut]),
+          LOCAL_GL_TEXTURE_3D, GLNameOrZero(mBound3DTextures[texUnit_lut]));
+      gl->fActiveTexture(LOCAL_GL_TEXTURE0 + mActiveTexture);
+    });
+
+    gl->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, destFb);
+
+    gl->fUseProgram(blitter.mProg);
+    const auto cleanupProg = MakeScopeExit(
+        [&]() { gl->fUseProgram(GLNameOrZero(mCurrentProgram)); });
+
+    gl->fUniform1i(blitter.mLoc_uColorLut, texUnit_lut);
+
+    blitter.Draw({
+        .texMatrix0 = gl::Mat3::I(),
+        .yFlip = false,
+        .destSize = size,
+        .destRect = {},
+    });
+
+    gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, canvasFb->mFB);
+    return {};
+  }();
+  if (error) {
+    GenerateWarning("%s", error->c_str());
+    LoseContext();
+    return false;
+  }
+
+  if (!mOptions.preserveDrawingBuffer) {
+    gl->InvalidateFramebuffer(LOCAL_GL_READ_FRAMEBUFFER);
+    mDefaultFB_IsInvalid = true;
   }
 
   return true;
@@ -1029,7 +1097,7 @@ bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
                                  const gl::MozFramebuffer& fb) {
   OnEndOfFrame();
 
-  const auto colorSpace = ToColorSpace2(mOptions);
+  const auto colorSpace = ToColorSpace2ForOutput(mOptions.colorSpace);
   auto presenter = swapChain.Acquire(fb.mSize, colorSpace);
   if (!presenter) {
     GenerateWarning("Swap chain surface creation failed.");
@@ -1153,7 +1221,7 @@ bool WebGLContext::CopyToSwapChain(
 
   {
     // ColorSpace will need to be part of SwapChainOptions for DTWebgl.
-    const auto colorSpace = ToColorSpace2(mOptions);
+    const auto colorSpace = ToColorSpace2ForOutput(mOptions.colorSpace);
     auto presenter = srcFb->mSwapChain.Acquire(size, colorSpace);
     if (!presenter) {
       GenerateWarning("Swap chain surface creation failed.");
@@ -1697,12 +1765,12 @@ bool WebGLContext::BindCurFBForColorRead(
   return true;
 }
 
-bool WebGLContext::BindDefaultFBForRead() {
-  if (!ValidateAndInitFB(nullptr)) return false;
+const gl::MozFramebuffer* WebGLContext::GetDefaultFBForRead(
+    const GetDefaultFBForReadDesc& desc) {
+  if (!ValidateAndInitFB(nullptr)) return nullptr;
 
   if (!mDefaultFB->mSamples) {
-    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mDefaultFB->mFB);
-    return true;
+    return mDefaultFB.get();
   }
 
   if (!mResolvedDefaultFB) {
@@ -1710,14 +1778,24 @@ bool WebGLContext::BindDefaultFBForRead() {
         gl::MozFramebuffer::Create(gl, mDefaultFB->mSize, 0, false);
     if (!mResolvedDefaultFB) {
       gfxCriticalNote << FuncName() << ": Failed to create mResolvedDefaultFB.";
-      return false;
+      return nullptr;
     }
   }
 
-  gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mResolvedDefaultFB->mFB);
+  gl->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, mResolvedDefaultFB->mFB);
   BlitBackbufferToCurDriverFB();
 
-  gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mResolvedDefaultFB->mFB);
+  if (desc.endOfFrame && !mOptions.preserveDrawingBuffer) {
+    gl->InvalidateFramebuffer(LOCAL_GL_READ_FRAMEBUFFER);
+  }
+
+  return mResolvedDefaultFB.get();
+}
+
+bool WebGLContext::BindDefaultFBForRead() {
+  const auto fb = GetDefaultFBForRead();
+  if (!fb) return false;
+  gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fb->mFB);
   return true;
 }
 
@@ -2659,6 +2737,23 @@ webgl::ExplicitPixelPackingState::ForUseWith(
   // -
 
   return {{state, metrics}};
+}
+
+GLuint WebGLContext::SamplerLinear() const {
+  if (!mSamplerLinear) {
+    mSamplerLinear = std::make_unique<gl::Sampler>(*gl);
+    gl->fSamplerParameteri(mSamplerLinear->name, LOCAL_GL_TEXTURE_MAG_FILTER,
+                           LOCAL_GL_LINEAR);
+    gl->fSamplerParameteri(mSamplerLinear->name, LOCAL_GL_TEXTURE_MIN_FILTER,
+                           LOCAL_GL_LINEAR);
+    gl->fSamplerParameteri(mSamplerLinear->name, LOCAL_GL_TEXTURE_WRAP_S,
+                           LOCAL_GL_CLAMP_TO_EDGE);
+    gl->fSamplerParameteri(mSamplerLinear->name, LOCAL_GL_TEXTURE_WRAP_T,
+                           LOCAL_GL_CLAMP_TO_EDGE);
+    gl->fSamplerParameteri(mSamplerLinear->name, LOCAL_GL_TEXTURE_WRAP_R,
+                           LOCAL_GL_CLAMP_TO_EDGE);
+  }
+  return mSamplerLinear->name;
 }
 
 }  // namespace mozilla
