@@ -1746,16 +1746,6 @@ already_AddRefed<DrawTarget> DrawTargetCairo::CreateSimilarDrawTarget(
           GfxFormatToCairoFormat(aFormat), aSize.width, aSize.height);
       break;
 #endif
-#ifdef CAIRO_HAS_QUARTZ_SURFACE
-    case CAIRO_SURFACE_TYPE_QUARTZ:
-      if (StaticPrefs::gfx_cairo_quartz_cg_layer_enabled()) {
-        similar = cairo_quartz_surface_create_cg_layer(
-            mSurface, GfxFormatToCairoContent(aFormat), aSize.width,
-            aSize.height);
-        break;
-      }
-      [[fallthrough]];
-#endif
     default:
       similar = cairo_surface_create_similar(mSurface,
                                              GfxFormatToCairoContent(aFormat),
