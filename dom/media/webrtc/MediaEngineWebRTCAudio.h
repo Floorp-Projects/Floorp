@@ -129,7 +129,14 @@ class AudioInputProcessing : public AudioDataListener {
     return GetRequestedInputChannelCount();
   }
 
+  cubeb_input_processing_params RequestedInputProcessingParams(
+      MediaTrackGraph* aGraph) const override;
+
   void Disconnect(MediaTrackGraph* aGraph) override;
+
+  void NotifySetRequestedInputProcessingParamsResult(
+      MediaTrackGraph* aGraph, cubeb_input_processing_params aRequestedParams,
+      const Result<cubeb_input_processing_params, int>& aResult) override;
 
   void PacketizeAndProcess(AudioProcessingTrack* aTrack,
                            const AudioSegment& aSegment);
