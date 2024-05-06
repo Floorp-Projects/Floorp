@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
+const OS_REAUTH_PREF = "signon.management.page.os-auth.enabled";
+
 async function openRemoveAllDialog(browser) {
   await SimpleTest.promiseFocus(browser);
   await BrowserTestUtils.synthesizeMouseAtCenter("menu-button", {}, browser);
@@ -78,7 +80,9 @@ async function waitForRemoveAllLogins() {
 }
 
 add_setup(async function () {
-  LoginHelper.setOSAuthEnabled(PASSWORDS_OS_REAUTH_PREF, false);
+  await SpecialPowers.pushPrefEnv({
+    set: [[OS_REAUTH_PREF, false]],
+  });
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
@@ -86,7 +90,7 @@ add_setup(async function () {
   registerCleanupFunction(async () => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
     Services.logins.removeAllUserFacingLogins();
-    LoginHelper.setOSAuthEnabled(PASSWORDS_OS_REAUTH_PREF, true);
+    await SpecialPowers.popPrefEnv();
   });
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
 });

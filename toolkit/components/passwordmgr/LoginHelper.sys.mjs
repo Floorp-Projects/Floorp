@@ -18,13 +18,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "Crypto",
-  "@mozilla.org/login-manager/crypto/SDR;1",
-  "nsILoginManagerCrypto"
-);
-
 export class ParentAutocompleteOption {
   image;
   title;
@@ -373,7 +366,7 @@ class ImportRowProcessor {
     return this.summary;
   }
 }
-const OS_AUTH_FOR_PASSWORDS_PREF = "signon.management.page.os-auth.optout";
+
 /**
  * Contains functions shared by different Login Manager components.
  */
@@ -401,7 +394,6 @@ export const LoginHelper = {
   testOnlyUserHasInteractedWithDocument: null,
   userInputRequiredToCapture: null,
   captureInputChanges: null,
-  OS_AUTH_FOR_PASSWORDS_PREF,
 
   init() {
     // Watch for pref changes to update cached pref values.
@@ -1591,90 +1583,6 @@ export const LoginHelper = {
   },
 
   /**
-   * Get the decrypted value for a string pref.
-   *
-   * @param {string} prefName -> The pref whose value is needed.
-   * @param {string} safeDefaultValue -> Value to be returned incase the pref is not yet set.
-   * @returns {string}
-   */
-  getSecurePref(prefName, safeDefaultValue) {
-    try {
-      const encryptedValue = Services.prefs.getStringPref(prefName, "");
-      return encryptedValue === ""
-        ? safeDefaultValue
-        : lazy.Crypto.decrypt(encryptedValue);
-    } catch {
-      return safeDefaultValue;
-    }
-  },
-
-  /**
-   * Set the pref to the encrypted form of the value.
-   *
-   * @param {string} prefName -> The pref whose value is to be set.
-   * @param {string} value -> The value to be set in its encrypted form.
-   */
-  setSecurePref(prefName, value) {
-    if (value) {
-      const encryptedValue = lazy.Crypto.encrypt(value);
-      Services.prefs.setStringPref(prefName, encryptedValue);
-    } else {
-      Services.prefs.clearUserPref(prefName);
-    }
-  },
-
-  /**
-   * Get whether the OSAuth is enabled or not.
-   *
-   * @param {string} prefName -> The name of the pref (creditcards or addresses)
-   * @returns {boolean}
-   */
-  getOSAuthEnabled(prefName) {
-    return (
-      lazy.OSKeyStore.canReauth() &&
-      this.getSecurePref(prefName, "") !== "opt out"
-    );
-  },
-
-  /**
-   * Set whether the OSAuth is enabled or not.
-   *
-   * @param {string} prefName -> The pref to encrypt.
-   * @param {boolean} enable -> Whether the pref is to be enabled.
-   */
-  setOSAuthEnabled(prefName, enable) {
-    this.setSecurePref(prefName, enable ? null : "opt out");
-  },
-
-  async verifyUserOSAuth(
-    prefName,
-    promptMessage,
-    captionDialog = "",
-    parentWindow = null,
-    generateKeyIfNotAvailable = true
-  ) {
-    if (!this.getOSAuthEnabled(prefName)) {
-      promptMessage = false;
-    }
-    try {
-      return (
-        await lazy.OSKeyStore.ensureLoggedIn(
-          promptMessage,
-          captionDialog,
-          parentWindow,
-          generateKeyIfNotAvailable
-        )
-      ).authenticated;
-    } catch (ex) {
-      // Since Win throws an exception whereas Mac resolves to false upon cancelling.
-      if (ex.result !== Cr.NS_ERROR_FAILURE) {
-        throw ex;
-      }
-    }
-    return false;
-  },
-
-  /**
    * Shows the Primary Password prompt if enabled, or the
    * OS auth dialog otherwise.
    * @param {Element} browser
@@ -1729,21 +1637,18 @@ export const LoginHelper = {
     }
     // Use the OS auth dialog if there is no primary password
     if (!token.hasPassword && OSReauthEnabled) {
-      let isAuthorized = await this.verifyUserOSAuth(
-        OS_AUTH_FOR_PASSWORDS_PREF,
+      let result = await lazy.OSKeyStore.ensureLoggedIn(
         messageText,
         captionText,
         browser.ownerGlobal,
         false
       );
-      let value = lazy.OSKeyStore.canReauth()
-        ? "success"
-        : "success_unsupported_platform";
-
+      isAuthorized = result.authenticated;
       telemetryEvent = {
         object: "os_auth",
         method: "reauthenticate",
-        value: isAuthorized ? value : "fail",
+        value: result.auth_details,
+        extra: result.auth_details_extra,
       };
       return {
         isAuthorized,
