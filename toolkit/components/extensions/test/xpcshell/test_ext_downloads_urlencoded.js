@@ -83,7 +83,7 @@ add_task(async function test_decoded_filename_download() {
   const FILE_NAME_DECODED_2 = "file\u{0001F6B2}encoded.txt";
   const FILE_NAME_ENCODED_URL_2 = BASE + "/" + FILE_NAME_ENCODED_2;
   const FILE_NAME_ENCODED_3 = "file%X%20encode.txt";
-  const FILE_NAME_DECODED_3 = "file_X encode.txt";
+  const FILE_NAME_DECODED_3 = "file%X encode.txt";
   const FILE_NAME_ENCODED_URL_3 = BASE + "/" + FILE_NAME_ENCODED_3;
   const FILE_NAME_ENCODED_4 = "file%E3%80%82encode.txt";
   const FILE_NAME_DECODED_4 = "file\u3002encode.txt";
