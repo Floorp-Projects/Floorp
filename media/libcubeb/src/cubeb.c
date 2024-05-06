@@ -533,7 +533,7 @@ int
 cubeb_stream_set_input_processing_params(cubeb_stream * stream,
                                          cubeb_input_processing_params params)
 {
-  if (!stream) {
+  if (!stream || !params) {
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
 

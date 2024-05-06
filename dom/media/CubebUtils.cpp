@@ -187,43 +187,6 @@ static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
 static const uint32_t CUBEB_NORMAL_LATENCY_FRAMES = 1024;
 
 namespace CubebUtils {
-nsCString ProcessingParamsToString(cubeb_input_processing_params aParams) {
-  if (aParams == CUBEB_INPUT_PROCESSING_PARAM_NONE) {
-    return "NONE"_ns;
-  }
-  nsCString str;
-  for (auto p : {CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION,
-                 CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL,
-                 CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION,
-                 CUBEB_INPUT_PROCESSING_PARAM_VOICE_ISOLATION}) {
-    if (!(aParams & p)) {
-      continue;
-    }
-    if (!str.IsEmpty()) {
-      str.Append(" | ");
-    }
-    str.Append([&p] {
-      switch (p) {
-        case CUBEB_INPUT_PROCESSING_PARAM_NONE:
-          // Handled above.
-          MOZ_CRASH(
-              "NONE is the absence of a param, thus not for logging here.");
-        case CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION:
-          return "AEC";
-        case CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL:
-          return "AGC";
-        case CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION:
-          return "NS";
-        case CUBEB_INPUT_PROCESSING_PARAM_VOICE_ISOLATION:
-          return "VOICE";
-      }
-      MOZ_ASSERT_UNREACHABLE("Unexpected input processing param");
-      return "<Unknown input processing param>";
-    }());
-  }
-  return str;
-}
-
 RefPtr<CubebHandle> GetCubebUnlocked();
 
 void GetPrefAndSetString(const char* aPref, StaticAutoPtr<char>& aStorage) {

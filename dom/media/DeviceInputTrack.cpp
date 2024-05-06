@@ -316,20 +316,6 @@ bool DeviceInputTrack::HasVoiceInput() const {
   return false;
 }
 
-cubeb_input_processing_params DeviceInputTrack::RequestedProcessingParams()
-    const {
-  AssertOnGraphThreadOrNotRunning();
-  Maybe<cubeb_input_processing_params> params;
-  for (const auto& listener : mListeners) {
-    if (params) {
-      *params &= listener->RequestedInputProcessingParams(mGraph);
-    } else {
-      params = Some(listener->RequestedInputProcessingParams(mGraph));
-    }
-  }
-  return params.valueOr(CUBEB_INPUT_PROCESSING_PARAM_NONE);
-}
-
 void DeviceInputTrack::DeviceChanged(MediaTrackGraph* aGraph) const {
   AssertOnGraphThreadOrNotRunning();
   MOZ_ASSERT(aGraph == mGraph,
@@ -337,16 +323,6 @@ void DeviceInputTrack::DeviceChanged(MediaTrackGraph* aGraph) const {
   TRACK_GRAPH_LOG("DeviceChanged");
   for (const auto& listener : mListeners) {
     listener->DeviceChanged(aGraph);
-  }
-}
-
-void DeviceInputTrack::NotifySetRequestedProcessingParamsResult(
-    MediaTrackGraph* aGraph, cubeb_input_processing_params aRequestedParams,
-    const Result<cubeb_input_processing_params, int>& aResult) {
-  AssertOnGraphThread();
-  for (const auto& listener : mListeners) {
-    listener->NotifySetRequestedInputProcessingParamsResult(
-        mGraph, aRequestedParams, aResult);
   }
 }
 
@@ -515,8 +491,6 @@ void NonNativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   // GraphRunner keeps the same thread.
   MOZ_ASSERT(!HasGraphThreadChanged());
 
-  ReevaluateProcessingParams();
-
   AudioSegment data = mAudioSource->GetAudioSegment(delta, consumer);
   MOZ_ASSERT(data.GetDuration() == delta);
   GetData<AudioSegment>()->AppendFrom(&data);
@@ -538,8 +512,6 @@ void NonNativeInputTrack::StartAudio(
   mGraphThreadId = std::this_thread::get_id();
 #endif
   mAudioSource = std::move(aAudioInputSource);
-  mAudioSource->Init();
-  ReevaluateProcessingParams();
   mAudioSource->Start();
 }
 
@@ -597,35 +569,6 @@ void NonNativeInputTrack::NotifyInputStopped(uint32_t aSourceId) {
 AudioInputSource::Id NonNativeInputTrack::GenerateSourceId() {
   AssertOnGraphThread();
   return mSourceIdNumber++;
-}
-
-void NonNativeInputTrack::ReevaluateProcessingParams() {
-  AssertOnGraphThread();
-  MOZ_ASSERT(mAudioSource);
-  auto params = RequestedProcessingParams();
-  if (mRequestedProcessingParams == params) {
-    return;
-  }
-  mRequestedProcessingParams = params;
-  using Promise = AudioInputSource::SetRequestedProcessingParamsPromise;
-  mAudioSource->SetRequestedProcessingParams(params)->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [this, self = RefPtr(this),
-       params](Promise::ResolveOrRejectValue&& aValue) {
-        if (IsDestroyed()) {
-          return;
-        }
-        auto result = ([&]() -> Result<cubeb_input_processing_params, int> {
-          if (aValue.IsResolve()) {
-            return aValue.ResolveValue();
-          }
-          return Err(aValue.RejectValue());
-        })();
-        QueueControlMessageWithNoShutdown(
-            [this, self = RefPtr(this), params, result = std::move(result)] {
-              NotifySetRequestedProcessingParamsResult(Graph(), params, result);
-            });
-      });
 }
 
 #ifdef DEBUG

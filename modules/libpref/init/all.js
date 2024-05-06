@@ -291,7 +291,7 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
   pref("media.navigator.video.h264.max_mbps", 0);
   pref("media.peerconnection.video.vp9_enabled", true);
   pref("media.peerconnection.video.vp9_preferred", false);
-  pref("media.getusermedia.audio.max_channels", 0);
+  pref("media.getusermedia.channels", 0);
   #if defined(ANDROID)
     pref("media.getusermedia.camera.off_while_disabled.enabled", false);
     pref("media.getusermedia.microphone.off_while_disabled.enabled", false);
@@ -348,30 +348,25 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
   pref("media.peerconnection.dtls.version.min", 771);
   pref("media.peerconnection.dtls.version.max", 772);
 
-#if defined(XP_MACOSX)
-  pref("media.getusermedia.audio.processing.platform.enabled", true);
-#else
-  pref("media.getusermedia.audio.processing.platform.enabled", false);
-#endif
   // These values (aec, agc, and noise) are from:
   // third_party/libwebrtc/modules/audio_processing/include/audio_processing.h
-  pref("media.getusermedia.audio.processing.aec.enabled", true);
-  pref("media.getusermedia.audio.processing.aec", 1); // kModerateSuppression
-  pref("media.getusermedia.audio.processing.aec.mobile", false);
-  pref("media.getusermedia.audio.processing.noise.enabled", true);
-  pref("media.getusermedia.audio.processing.noise", 2); // kHigh
-  pref("media.getusermedia.audio.processing.agc.enabled", true);
-  pref("media.getusermedia.audio.processing.agc", 1); // kAdaptiveDigital
-  pref("media.getusermedia.audio.processing.agc2.forced", true);
-  pref("media.getusermedia.audio.processing.hpf.enabled", true);
-  pref("media.getusermedia.audio.processing.transient.enabled", true);
+  pref("media.getusermedia.aec_enabled", true);
+  pref("media.getusermedia.aec", 1); // kModerateSuppression
+  pref("media.getusermedia.use_aec_mobile", false);
+  pref("media.getusermedia.noise_enabled", true);
+  pref("media.getusermedia.noise", 2); // kHigh
+  pref("media.getusermedia.agc_enabled", true);
+  pref("media.getusermedia.agc", 1); // kAdaptiveDigital
+  pref("media.getusermedia.agc2_forced", true);
+  pref("media.getusermedia.hpf_enabled", true);
+  pref("media.getusermedia.transient_enabled", true);
 #endif // MOZ_WEBRTC
 
 #if !defined(ANDROID)
   pref("media.getusermedia.screensharing.enabled", true);
 #endif
 
-pref("media.getusermedia.audio.capture.enabled", false);
+pref("media.getusermedia.audiocapture.enabled", false);
 
 // WebVTT debug logging.
 pref("media.webvtt.debug.logging", false);
