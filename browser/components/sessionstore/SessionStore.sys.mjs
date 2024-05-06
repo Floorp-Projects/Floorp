@@ -1903,7 +1903,7 @@ var SessionStoreInternal = {
               windows: [closedWindowState],
             });
 
-          // These are our pinned tabs, which we should restore
+          // These are our pinned tabs and sidebar attributes, which we should restore
           if (appTabsState.windows.length) {
             newWindowState = appTabsState.windows[0];
             delete newWindowState.__lastSessionWindowID;
@@ -4528,12 +4528,16 @@ var SessionStoreInternal = {
     }
 
     let sidebarBox = aWindow.document.getElementById("sidebar-box");
-    let sidebar = sidebarBox.getAttribute("sidebarcommand");
-    if (sidebar && sidebarBox.getAttribute("checked") == "true") {
-      winData.sidebar = sidebar;
-    } else if (winData.sidebar) {
-      delete winData.sidebar;
+    let command = sidebarBox.getAttribute("sidebarcommand");
+    if (command && sidebarBox.getAttribute("checked") == "true") {
+      winData.sidebar = {
+        command,
+        positionEnd: sidebarBox.getAttribute("positionend"),
+      };
+    } else if (winData.sidebar?.command) {
+      delete winData.sidebar.command;
     }
+
     let workspaceID = aWindow.getWorkspaceID();
     if (workspaceID) {
       winData.workspaceID = workspaceID;
@@ -4800,6 +4804,8 @@ var SessionStoreInternal = {
   restoreWindow: function ssi_restoreWindow(aWindow, winData, aOptions = {}) {
     let overwriteTabs = aOptions && aOptions.overwriteTabs;
     let firstWindow = aOptions && aOptions.firstWindow;
+
+    this.restoreSidebar(aWindow, winData.sidebar);
 
     // initialize window if necessary
     if (aWindow && (!aWindow.__SSi || !this._windows[aWindow.__SSi])) {
@@ -5551,10 +5557,31 @@ var SessionStoreInternal = {
         "screenX" in aWinData ? +aWinData.screenX : NaN,
         "screenY" in aWinData ? +aWinData.screenY : NaN,
         aWinData.sizemode || "",
-        aWinData.sizemodeBeforeMinimized || "",
-        aWinData.sidebar || ""
+        aWinData.sizemodeBeforeMinimized || ""
       );
+      this.restoreSidebar(aWindow, aWinData.sidebar);
     }, 0);
+  },
+
+  /**
+   * @param aWindow
+   *        Window reference
+   * @param aSidebar
+   *        Object containing command (sidebarcommand/category) and
+   *        positionEnd (reflecting the sidebar.position_start pref)
+   */
+  restoreSidebar(aWindow, aSidebar) {
+    let sidebarBox = aWindow.document.getElementById("sidebar-box");
+    if (
+      aSidebar?.command &&
+      (sidebarBox.getAttribute("sidebarcommand") != aSidebar.command ||
+        !sidebarBox.getAttribute("checked"))
+    ) {
+      aWindow.SidebarController.showInitially(aSidebar.command);
+      if (aSidebar?.positionEnd) {
+        sidebarBox.setAttribute("positionend", "");
+      }
+    }
   },
 
   /**
@@ -5571,8 +5598,6 @@ var SessionStoreInternal = {
    *        Window size mode (eg: maximized)
    * @param aSizeModeBeforeMinimized
    *        Window size mode before window got minimized (eg: maximized)
-   * @param aSidebar
-   *        Sidebar command
    */
   restoreDimensions: function ssi_restoreDimensions(
     aWindow,
@@ -5581,8 +5606,7 @@ var SessionStoreInternal = {
     aLeft,
     aTop,
     aSizeMode,
-    aSizeModeBeforeMinimized,
-    aSidebar
+    aSizeModeBeforeMinimized
   ) {
     var win = aWindow;
     var _this = this;
@@ -5723,14 +5747,6 @@ var SessionStoreInternal = {
             aWindow.restore();
             break;
         }
-      }
-      let sidebarBox = aWindow.document.getElementById("sidebar-box");
-      if (
-        aSidebar &&
-        (sidebarBox.getAttribute("sidebarcommand") != aSidebar ||
-          !sidebarBox.getAttribute("checked"))
-      ) {
-        aWindow.SidebarController.showInitially(aSidebar);
       }
       // since resizing/moving a window brings it to the foreground,
       // we might want to re-focus the last focused window
@@ -6253,6 +6269,15 @@ var SessionStoreInternal = {
       if (PERSIST_SESSIONS) {
         newWindowState._closedTabs = Cu.cloneInto(window._closedTabs, {});
       }
+
+      // We want to preserve the sidebar if previously open in the window
+      if (window.sidebar?.command) {
+        newWindowState.sidebar = {
+          command: window.sidebar.command,
+          positionEnd: !!window.sidebar.positionEnd,
+        };
+      }
+
       for (let tIndex = 0; tIndex < window.tabs.length; ) {
         if (window.tabs[tIndex].pinned) {
           // Adjust window.selected

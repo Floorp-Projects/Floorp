@@ -9,7 +9,6 @@
       "sizemode": "normal"
     },
     "sidebar-box": {
-      "sidebarcommand": "viewBookmarksSidebar",
       "width": "323",
       "style": "width: 323px;"
     },

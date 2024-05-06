@@ -9,6 +9,10 @@ tags = "local"
 
 ["test_restore_manually_with_pinned_tabs.py"]
 
+["test_restore_sidebar_automatic.py"]
+
+["test_restore_sidebar.py"]
+
 ["test_restore_windows_after_close_last_tabs.py"]
 skip-if = ["os == 'mac'"]
 

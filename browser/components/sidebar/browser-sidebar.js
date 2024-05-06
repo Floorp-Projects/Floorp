@@ -187,22 +187,6 @@ var SidebarController = {
     let enumerator = Services.wm.getEnumerator("navigator:browser");
     if (!enumerator.hasMoreElements()) {
       let xulStore = Services.xulStore;
-      xulStore.persist(this._box, "sidebarcommand");
-
-      if (this._box.hasAttribute("positionend")) {
-        xulStore.persist(this._box, "positionend");
-      } else {
-        xulStore.removeValue(
-          document.documentURI,
-          "sidebar-box",
-          "positionend"
-        );
-      }
-      if (this._box.hasAttribute("checked")) {
-        xulStore.persist(this._box, "checked");
-      } else {
-        xulStore.removeValue(document.documentURI, "sidebar-box", "checked");
-      }
 
       xulStore.persist(this._box, "style");
       xulStore.persist(this._title, "value");
