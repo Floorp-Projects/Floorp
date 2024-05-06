@@ -336,18 +336,8 @@ perfdocs-verify:
             - type: file
               name: public/perfdocs.diff
               path: /builds/worker/diff.txt
-    when:
-        files-changed:
-            - 'devtools/perfdocs/**'
-            - 'taskcluster/**'
-            - '**/perftest.toml'
-            - 'python/mozperftest/**'
-            - 'testing/awsy/**'
-            - 'testing/raptor/**'
-            - 'testing/talos/**'
-            - 'testing/performance/**'
-            - 'testing/perfdocs/**'
-            - 'tools/lint/perfdocs.yml'
+    optimization:
+        skip-unless-mozlint: perfdocs.yml
 
 condprof-addons-verify:
     description: |

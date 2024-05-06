@@ -8000,7 +8000,6 @@ For the sample commands found below, note that the capitalization used is import
         repository, and this test pulls those in for testing locally through a toolchain artifact
         called talos-pdfs.
    * pdfpaint: True
-   * subtest_alerts: True
    * timeout: 1800
    * tpmanifest: ${talos}/tests/pdfpaint/pdfpaint.manifest
    * tppagecycles: 1

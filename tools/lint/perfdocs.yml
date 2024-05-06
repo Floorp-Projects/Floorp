@@ -12,7 +12,7 @@ perfdocs:
         'dom/indexedDB/test',
     ]
     exclude: []
-    extensions: []
+    extensions: ['rst', 'ini', 'yml']
     support-files: []
     type: structured_log
     payload: perfdocs:lint
