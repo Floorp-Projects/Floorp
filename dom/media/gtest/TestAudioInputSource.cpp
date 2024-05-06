@@ -17,7 +17,6 @@
 using namespace mozilla;
 using testing::ContainerEq;
 
-namespace {
 // Short-hand for DispatchToCurrentThread with a function.
 #define DispatchFunction(f) \
   NS_DispatchToCurrentThread(NS_NewRunnableFunction(__func__, f))
@@ -27,7 +26,6 @@ namespace {
 #define ProcessEventQueue()                     \
   while (NS_ProcessNextEvent(nullptr, false)) { \
   }
-}  // namespace
 
 class MockEventListener : public AudioInputSource::EventListener {
  public:
