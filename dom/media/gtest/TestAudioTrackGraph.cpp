@@ -21,6 +21,7 @@
 #include "WavDumper.h"
 
 using namespace mozilla;
+using testing::Eq;
 using testing::InSequence;
 using testing::Return;
 using testing::StrictMock;
@@ -2827,6 +2828,221 @@ TEST(TestAudioInputProcessing, ClockDriftExpectation)
   WaitFor(nonNativeInputStream->OutputVerificationEvent());
 }
 #endif  // MOZ_WEBRTC
+
+TEST(TestAudioTrackGraph, PlatformProcessing)
+{
+  constexpr cubeb_input_processing_params allParams =
+      CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION |
+      CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION |
+      CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL |
+      CUBEB_INPUT_PROCESSING_PARAM_VOICE_ISOLATION;
+  MockCubeb* cubeb = new MockCubeb(MockCubeb::RunningMode::Manual);
+  cubeb->SetSupportedInputProcessingParams(allParams, CUBEB_OK);
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  MediaTrackGraph* graph = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*Window ID*/ 1,
+      CubebUtils::PreferredSampleRate(/* aShouldResistFingerprinting */ false),
+      nullptr, GetMainThreadSerialEventTarget());
+
+  const CubebUtils::AudioDeviceID device = (CubebUtils::AudioDeviceID)1;
+
+  // Set up mock listener.
+  RefPtr<MockAudioDataListener> listener = MakeRefPtr<MockAudioDataListener>();
+  EXPECT_CALL(*listener, IsVoiceInput).WillRepeatedly(Return(true));
+  EXPECT_CALL(*listener, RequestedInputChannelCount).WillRepeatedly(Return(1));
+  EXPECT_CALL(*listener, RequestedInputProcessingParams)
+      .WillRepeatedly(Return(CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION));
+  EXPECT_CALL(*listener, Disconnect);
+
+  // Expectations.
+  const Result<cubeb_input_processing_params, int> notSupportedResult(
+      Err(CUBEB_ERROR_NOT_SUPPORTED));
+  const Result<cubeb_input_processing_params, int> errorResult(
+      Err(CUBEB_ERROR));
+  const Result<cubeb_input_processing_params, int> noneResult(
+      CUBEB_INPUT_PROCESSING_PARAM_NONE);
+  const Result<cubeb_input_processing_params, int> echoResult(
+      CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION);
+  const Result<cubeb_input_processing_params, int> noiseResult(
+      CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION);
+  Atomic<int> numProcessingParamsResults(0);
+  {
+    InSequence s;
+    // On first driver start.
+    EXPECT_CALL(*listener,
+                NotifySetRequestedInputProcessingParamsResult(
+                    graph, CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION,
+                    Eq(std::ref(echoResult))))
+        .WillOnce([&] { ++numProcessingParamsResults; });
+    // After requesting something else.
+    EXPECT_CALL(*listener,
+                NotifySetRequestedInputProcessingParamsResult(
+                    graph, CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION,
+                    Eq(std::ref(noiseResult))))
+        .WillOnce([&] { ++numProcessingParamsResults; });
+    // After error request.
+    EXPECT_CALL(*listener,
+                NotifySetRequestedInputProcessingParamsResult(
+                    graph, CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION,
+                    Eq(std::ref(errorResult))))
+        .WillOnce([&] { ++numProcessingParamsResults; });
+    // After requesting None.
+    EXPECT_CALL(*listener, NotifySetRequestedInputProcessingParamsResult(
+                               graph, CUBEB_INPUT_PROCESSING_PARAM_NONE,
+                               Eq(std::ref(noneResult))))
+        .WillOnce([&] { ++numProcessingParamsResults; });
+    // After driver switch.
+    EXPECT_CALL(*listener, NotifySetRequestedInputProcessingParamsResult(
+                               graph, CUBEB_INPUT_PROCESSING_PARAM_NONE,
+                               Eq(std::ref(noneResult))))
+        .WillOnce([&] { ++numProcessingParamsResults; });
+    // After requesting something not supported.
+    EXPECT_CALL(*listener,
+                NotifySetRequestedInputProcessingParamsResult(
+                    graph, CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION,
+                    Eq(std::ref(noneResult))))
+        .WillOnce([&] { ++numProcessingParamsResults; });
+    // After requesting something with backend not supporting processing params.
+    EXPECT_CALL(*listener,
+                NotifySetRequestedInputProcessingParamsResult(
+                    graph, CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION,
+                    Eq(std::ref(notSupportedResult))))
+        .WillOnce([&] { ++numProcessingParamsResults; });
+  }
+
+  // Open a device.
+  RefPtr<TestDeviceInputConsumerTrack> track;
+  RefPtr<OnFallbackListener> fallbackListener;
+  DispatchFunction([&] {
+    track = TestDeviceInputConsumerTrack::Create(graph);
+    track->ConnectDeviceInput(device, listener, PRINCIPAL_HANDLE_NONE);
+    fallbackListener = new OnFallbackListener(track);
+    track->AddListener(fallbackListener);
+  });
+
+  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream->mHasInput);
+  EXPECT_TRUE(stream->mHasOutput);
+  EXPECT_EQ(stream->InputChannels(), 1U);
+  EXPECT_EQ(stream->GetInputDeviceID(), device);
+
+  while (
+      stream->State()
+          .map([](cubeb_state aState) { return aState != CUBEB_STATE_STARTED; })
+          .valueOr(true)) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
+  const auto waitForResult = [&](int aNumResult) {
+    while (numProcessingParamsResults < aNumResult) {
+      EXPECT_EQ(stream->ManualDataCallback(0),
+                MockCubebStream::KeepProcessing::Yes);
+      NS_ProcessNextEvent();
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+  };
+
+  // Wait for the AudioCallbackDriver to come into effect.
+  while (fallbackListener->OnFallback()) {
+    EXPECT_EQ(stream->ManualDataCallback(0),
+              MockCubebStream::KeepProcessing::Yes);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
+  // Wait for the first result after driver creation.
+  waitForResult(1);
+
+  // Request new processing params.
+  EXPECT_CALL(*listener, RequestedInputProcessingParams)
+      .WillRepeatedly(Return(CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION));
+  waitForResult(2);
+
+  // Test with returning error on new request.
+  cubeb->SetInputProcessingApplyRv(CUBEB_ERROR);
+  EXPECT_CALL(*listener, RequestedInputProcessingParams)
+      .WillRepeatedly(Return(CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION));
+  waitForResult(3);
+
+  // Test unsetting all params.
+  cubeb->SetInputProcessingApplyRv(CUBEB_OK);
+  EXPECT_CALL(*listener, RequestedInputProcessingParams)
+      .WillRepeatedly(Return(CUBEB_INPUT_PROCESSING_PARAM_NONE));
+  waitForResult(4);
+
+  // Switch driver.
+  EXPECT_CALL(*listener, RequestedInputChannelCount).WillRepeatedly(Return(2));
+  DispatchFunction([&] {
+    track->QueueControlMessageWithNoShutdown(
+        [&] { graph->ReevaluateInputDevice(device); });
+  });
+  ProcessEventQueue();
+  // Process the reevaluation message.
+  EXPECT_EQ(stream->ManualDataCallback(0),
+            MockCubebStream::KeepProcessing::Yes);
+  // Perform the switch.
+  auto initPromise = TakeN(cubeb->StreamInitEvent(), 1);
+  EXPECT_EQ(stream->ManualDataCallback(0), MockCubebStream::KeepProcessing::No);
+  std::tie(stream) = WaitFor(initPromise).unwrap()[0];
+  EXPECT_TRUE(stream->mHasInput);
+  EXPECT_TRUE(stream->mHasOutput);
+  EXPECT_EQ(stream->InputChannels(), 2U);
+  EXPECT_EQ(stream->GetInputDeviceID(), device);
+
+  while (
+      stream->State()
+          .map([](cubeb_state aState) { return aState != CUBEB_STATE_STARTED; })
+          .valueOr(true)) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
+  // Wait for the new AudioCallbackDriver to come into effect.
+  fallbackListener->Reset();
+  while (fallbackListener->OnFallback()) {
+    EXPECT_EQ(stream->ManualDataCallback(0),
+              MockCubebStream::KeepProcessing::Yes);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
+  // Wait for the first result after driver creation.
+  waitForResult(5);
+
+  // Test requesting something not supported.
+  cubeb->SetSupportedInputProcessingParams(
+      CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION |
+          CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL |
+          CUBEB_INPUT_PROCESSING_PARAM_VOICE_ISOLATION,
+      CUBEB_OK);
+  EXPECT_CALL(*listener, RequestedInputProcessingParams)
+      .WillRepeatedly(Return(CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION));
+  waitForResult(6);
+
+  // Test requesting something when unsupported by backend.
+  cubeb->SetSupportedInputProcessingParams(CUBEB_INPUT_PROCESSING_PARAM_NONE,
+                                           CUBEB_ERROR_NOT_SUPPORTED);
+  EXPECT_CALL(*listener, RequestedInputProcessingParams)
+      .WillRepeatedly(Return(CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION));
+  waitForResult(7);
+
+  // Clean up.
+  DispatchFunction([&] {
+    track->RemoveListener(fallbackListener);
+    track->Destroy();
+  });
+  ProcessEventQueue();
+  // Process the destroy message.
+  EXPECT_EQ(stream->ManualDataCallback(0),
+            MockCubebStream::KeepProcessing::Yes);
+  // Shut down.
+  EXPECT_EQ(stream->ManualDataCallback(0), MockCubebStream::KeepProcessing::No);
+  RefPtr<SmartMockCubebStream> destroyedStream =
+      WaitFor(cubeb->StreamDestroyEvent());
+  EXPECT_EQ(destroyedStream.get(), stream.get());
+  {
+    NativeInputTrack* native = graph->GetNativeInputTrackMainThread();
+    ASSERT_TRUE(!native);
+  }
+}
 
 #undef Invoke
 #undef DispatchFunction
