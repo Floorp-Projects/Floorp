@@ -2344,6 +2344,7 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
   mPrefs.mWidth = 0;    // adaptive default
   mPrefs.mHeight = 0;   // adaptive default
   mPrefs.mFPS = MediaEnginePrefs::DEFAULT_VIDEO_FPS;
+  mPrefs.mUsePlatformProcessing = false;
   mPrefs.mAecOn = false;
   mPrefs.mUseAecMobile = false;
   mPrefs.mAgcOn = false;
@@ -3628,6 +3629,8 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPref(aBranch, "media.navigator.audio.fake_frequency", aData,
           &mPrefs.mFreq);
 #ifdef MOZ_WEBRTC
+  GetPrefBool(aBranch, "media.getusermedia.audio.processing.platform.enabled",
+              aData, &mPrefs.mUsePlatformProcessing);
   GetPrefBool(aBranch, "media.getusermedia.audio.processing.aec.enabled", aData,
               &mPrefs.mAecOn);
   GetPrefBool(aBranch, "media.getusermedia.audio.processing.agc.enabled", aData,
@@ -3653,10 +3656,12 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPref(aBranch, "media.getusermedia.audio.max_channels", aData,
           &mPrefs.mChannels);
 #endif
-  LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s, "
-      "agc: %s, hpf: %s, noise: %s, drift: %s, agc level: %d, agc version: %s, "
-      "noise level: %d, transient: %s, channels %d",
+  LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, platform processing: "
+      "%s, aec: %s, agc: %s, hpf: %s, noise: %s, drift: %s, agc level: %d, agc "
+      "version: "
+      "%s, noise level: %d, transient: %s, channels %d",
       __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mFreq,
+      mPrefs.mUsePlatformProcessing ? "on" : "off",
       mPrefs.mAecOn ? "on" : "off", mPrefs.mAgcOn ? "on" : "off",
       mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off",
       mPrefs.mExpectDrift < 0 ? "auto"
