@@ -163,6 +163,52 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
 }
 
 /**
+ * cairo_win32_get_dc_with_clip:
+ * (Mozilla addition)
+ */
+HDC
+cairo_win32_get_dc_with_clip(cairo_t* cr)
+{
+  cairo_surface_t* surface = cairo_get_target(cr);
+  if (cr->backend->type == CAIRO_TYPE_DEFAULT) {
+    cairo_default_context_t* c = (cairo_default_context_t*)cr;
+    cairo_clip_t* clip = _cairo_clip_copy(_cairo_gstate_get_clip(c->gstate));
+    if (_cairo_surface_is_win32(surface)) {
+      cairo_win32_display_surface_t* winsurf = (cairo_win32_display_surface_t*)surface;
+
+      _cairo_win32_display_surface_set_clip(winsurf, clip);
+
+      _cairo_clip_destroy(clip);
+      return winsurf->win32.dc;
+    }
+
+    if (_cairo_surface_is_paginated(surface)) {
+      cairo_surface_t* target;
+
+      target = _cairo_paginated_surface_get_target(surface);
+
+#ifndef CAIRO_OMIT_WIN32_PRINTING
+      if (_cairo_surface_is_win32_printing(target)) {
+        cairo_status_t status;
+        cairo_win32_printing_surface_t* psurf = (cairo_win32_printing_surface_t*)target;
+
+        status = _cairo_surface_clipper_set_clip(&psurf->clipper, clip);
+
+        _cairo_clip_destroy(clip);
+
+        if (status)
+          return NULL;
+
+        return psurf->win32.dc;
+      }
+#endif
+    }
+    _cairo_clip_destroy(clip);
+  }
+  return NULL;
+}
+
+/**
  * _cairo_surface_is_win32:
  * @surface: a #cairo_surface_t
  *
@@ -337,3 +383,17 @@ _cairo_win32_surface_emit_glyphs (cairo_win32_surface_t *dst,
 #endif
 }
 #undef STACK_GLYPH_SIZE
+
+cairo_status_t
+cairo_win32_surface_get_size(const cairo_surface_t* surface, int* width, int* height)
+{
+  if (!_cairo_surface_is_win32(surface))
+    return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+  const cairo_win32_surface_t* winsurface = (const cairo_win32_surface_t*)surface;
+
+  *width = winsurface->extents.width;
+  *height = winsurface->extents.height;
+
+  return CAIRO_STATUS_SUCCESS;
+}

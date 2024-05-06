@@ -72,6 +72,14 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface);
 cairo_public cairo_surface_t *
 cairo_win32_surface_get_image (cairo_surface_t *surface);
 
+cairo_public HDC
+cairo_win32_get_dc_with_clip(cairo_t* cr);
+
+cairo_public cairo_status_t
+cairo_win32_surface_get_size(const cairo_surface_t* surface,
+                             int* width,
+                             int* height);
+
 #if CAIRO_HAS_WIN32_FONT
 
 /*
