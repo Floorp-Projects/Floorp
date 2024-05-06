@@ -178,11 +178,12 @@ pub fn push_quad(
             );
 
             let rect = clipped_surface_rect.to_f32().cast_unit();
+            let is_masked = true;
             add_composite_prim(
                 pattern,
+                is_masked,
                 prim_instance_index,
                 rect,
-                pattern.is_opaque,
                 frame_state,
                 targets,
                 &[QuadSegment { rect, task_id }],
@@ -253,11 +254,12 @@ pub fn push_quad(
                 }
             }
 
+            let is_masked = true;
             add_composite_prim(
                 pattern,
+                is_masked,
                 prim_instance_index,
                 unclipped_surface_rect.cast_unit(),
-                pattern.is_opaque,
                 frame_state,
                 targets,
                 &scratch.quad_indirect_segments,
@@ -388,11 +390,12 @@ pub fn push_quad(
             }
 
             if !scratch.quad_indirect_segments.is_empty() {
+                let is_masked = true;
                 add_composite_prim(
                     pattern,
+                    is_masked,
                     prim_instance_index,
                     unclipped_surface_rect.cast_unit(),
-                    pattern.is_opaque,
                     frame_state,
                     targets,
                     &scratch.quad_indirect_segments,
@@ -565,9 +568,9 @@ fn add_pattern_prim(
 
 fn add_composite_prim(
     pattern: &Pattern,
+    is_masked: bool,
     prim_instance_index: PrimitiveInstanceIndex,
     rect: LayoutRect,
-    is_opaque: bool,
     frame_state: &mut FrameBuildingState,
     targets: &[CommandBufferIndex],
     segments: &[QuadSegment],
@@ -585,7 +588,7 @@ fn add_composite_prim(
     let mut quad_flags = QuadFlags::IGNORE_DEVICE_PIXEL_SCALE
         | QuadFlags::APPLY_DEVICE_CLIP;
 
-    if is_opaque {
+    if pattern.is_opaque && !is_masked {
         quad_flags |= QuadFlags::IS_OPAQUE;
     }
 
@@ -685,7 +688,7 @@ pub fn add_to_batch<F>(
         TextureSource::Invalid,
     );
 
-    let default_blend_mode = if quad_flags.contains(QuadFlags::IS_OPAQUE) && src_task_id == RenderTaskId::INVALID {
+    let default_blend_mode = if quad_flags.contains(QuadFlags::IS_OPAQUE) {
         BlendMode::None
     } else {
         BlendMode::PremultipliedAlpha
