@@ -111,6 +111,7 @@ void AudioInputSource::Start() {
               "stream is destroyed directly!",
               self.get());
           mStream = nullptr;
+          mConfiguredProcessingParams = CUBEB_INPUT_PROCESSING_PARAM_NONE;
         }
       })));
 }
@@ -137,7 +138,59 @@ void AudioInputSource::Stop() {
               self.get());
         }
         mStream = nullptr;
+        mConfiguredProcessingParams = CUBEB_INPUT_PROCESSING_PARAM_NONE;
       })));
+}
+
+auto AudioInputSource::SetRequestedProcessingParams(
+    cubeb_input_processing_params aParams)
+    -> RefPtr<SetRequestedProcessingParamsPromise> {
+  // This is called on MediaTrackGraph's graph thread, which can be the cubeb
+  // stream's callback thread. Running cubeb operations within cubeb stream
+  // callback thread can cause the deadlock on Linux, so we dispatch those
+  // operations to the task thread.
+  MOZ_ASSERT(mTaskThread);
+
+  LOG("AudioInputSource %p, SetProcessingParams(%s)", this,
+      CubebUtils::ProcessingParamsToString(aParams).get());
+  using ProcessingPromise = SetRequestedProcessingParamsPromise;
+  MozPromiseHolder<ProcessingPromise> holder;
+  RefPtr<ProcessingPromise> p = holder.Ensure(__func__);
+  MOZ_ALWAYS_SUCCEEDS(mTaskThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [this, self = RefPtr(this), holder = std::move(holder),
+                 aParams]() mutable {
+        if (!mStream) {
+          LOGE(
+              "AudioInputSource %p, has no audio input stream to set "
+              "processing params on!",
+              this);
+          holder.Reject(CUBEB_ERROR,
+                        "AudioInputSource::SetProcessingParams no stream");
+          return;
+        }
+        cubeb_input_processing_params supportedParams;
+        auto handle = CubebUtils::GetCubeb();
+        int r = cubeb_get_supported_input_processing_params(handle->Context(),
+                                                            &supportedParams);
+        if (r != CUBEB_OK) {
+          holder.Reject(CUBEB_ERROR_NOT_SUPPORTED,
+                        "AudioInputSource::SetProcessingParams");
+          return;
+        }
+        aParams &= supportedParams;
+        if (aParams == mConfiguredProcessingParams) {
+          holder.Resolve(aParams, "AudioInputSource::SetProcessingParams");
+          return;
+        }
+        mConfiguredProcessingParams = aParams;
+        r = mStream->SetProcessingParams(aParams);
+        if (r == CUBEB_OK) {
+          holder.Resolve(aParams, "AudioInputSource::SetProcessingParams");
+          return;
+        }
+        holder.Reject(r, "AudioInputSource::SetProcessingParams");
+      })));
+  return p;
 }
 
 AudioSegment AudioInputSource::GetAudioSegment(TrackTime aDuration,
