@@ -173,12 +173,12 @@ interface nsIFocusManager : nsISupports
   /*
    * Raise the window when switching focus
    */
-  const unsigned long FLAG_RAISE = 1;
+  const unsigned long FLAG_RAISE = 1 << 0;
 
   /**
    * Do not scroll the element to focus into view.
    */
-  const unsigned long FLAG_NOSCROLL = 2;
+  const unsigned long FLAG_NOSCROLL = 1 << 1;
 
   /**
    * If attempting to change focus in a window that is not focused, do not
@@ -187,7 +187,7 @@ interface nsIFocusManager : nsISupports
    * effect if a child window is focused and an attempt is made to adjust the
    * focus in an ancestor, as the frame must be switched in this case.
    */
-  const unsigned long FLAG_NOSWITCHFRAME = 4;
+  const unsigned long FLAG_NOSWITCHFRAME = 1 << 2;
 
   /**
    * This flag is only used when passed to moveFocus. If set, focus is never
@@ -195,26 +195,26 @@ interface nsIFocusManager : nsISupports
    * iterating around to the beginning of that document again. Child frames
    * are navigated as normal.
    */
-  const unsigned long FLAG_NOPARENTFRAME = 8;
+  const unsigned long FLAG_NOPARENTFRAME =  1 << 3;
 
   /**
    * This flag is used for window and element focus operations to signal
-   * wether the caller is system or non system.
+   * whether the caller is system or non system.
    */
-  const unsigned long FLAG_NONSYSTEMCALLER = 16;
+  const unsigned long FLAG_NONSYSTEMCALLER = 1 << 4;
 
   /**
    * Focus is changing due to a mouse operation, for instance the mouse was
    * clicked on an element.
    */
-  const unsigned long FLAG_BYMOUSE = 0x1000;
+  const unsigned long FLAG_BYMOUSE = 1 << 12;
 
   /**
    * Focus is changing due to a key operation, for instance pressing the tab
    * key. This flag would normally be passed when MOVEFOCUS_FORWARD or
    * MOVEFOCUS_BACKWARD is used.
    */
-  const unsigned long FLAG_BYKEY = 0x2000;
+  const unsigned long FLAG_BYKEY = 1 << 13;
 
   /**
    * Focus is changing due to a call to MoveFocus. This flag will be implied
@@ -222,31 +222,31 @@ interface nsIFocusManager : nsISupports
    * or key) is specified, or when the type is MOVEFOCUS_ROOT or
    * MOVEFOCUS_CARET.
    */
-  const unsigned long FLAG_BYMOVEFOCUS = 0x4000;
+  const unsigned long FLAG_BYMOVEFOCUS = 1 << 14;
 
   /**
    * Do not show a ring around the element to focus, if this is not a text
    * control, regardless of other state.
    */
-  const unsigned long FLAG_NOSHOWRING = 0x8000;
+  const unsigned long FLAG_NOSHOWRING = 1 << 15;
 
   /**
    * Always show the focus ring or other indicator of focus, regardless of
    * other state. Overrides FLAG_NOSHOWRING.
    */
-  const unsigned long FLAG_SHOWRING = 0x100000;
+  const unsigned long FLAG_SHOWRING = 1 << 16;
 
   /**
    * Focus is changing due to a touch operation that generated a mouse event.
    * Normally used in conjunction with FLAG_BYMOUSE.
    */
-  const unsigned long FLAG_BYTOUCH = 0x200000;
+  const unsigned long FLAG_BYTOUCH = 1 << 17;
 
   /** Focus is changing due to a JS focus() call or similar operation. */
-  const unsigned long FLAG_BYJS = 0x400000;
+  const unsigned long FLAG_BYJS = 1 << 18;
 
   /** Focus is changing due to a long press operation by touch or mouse. */
-  const unsigned long FLAG_BYLONGPRESS = 0x800000;
+  const unsigned long FLAG_BYLONGPRESS = 1 << 19;
 
   /** Mask with all the focus methods. */
   const unsigned long METHOD_MASK = FLAG_BYMOUSE | FLAG_BYKEY | FLAG_BYMOVEFOCUS | FLAG_BYTOUCH | FLAG_BYJS | FLAG_BYLONGPRESS;
