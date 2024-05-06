@@ -4460,14 +4460,6 @@ mozilla::ipc::IPCResult ContentChild::RecvDispatchBeforeUnloadToSubtree(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvDecoderSupportedMimeTypes(
-    nsTArray<nsCString>&& aSupportedTypes) {
-#ifdef MOZ_WIDGET_ANDROID
-  AndroidDecoderModule::SetSupportedMimeTypes(std::move(aSupportedTypes));
-#endif
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvInitNextGenLocalStorageEnabled(
     const bool& aEnabled) {
   mozilla::dom::RecvInitNextGenLocalStorageEnabled(aEnabled);

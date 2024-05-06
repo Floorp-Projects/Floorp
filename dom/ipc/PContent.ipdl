@@ -1044,9 +1044,6 @@ child:
     // Update the cached list of codec supported in the given process.
     async UpdateMediaCodecsSupported(RemoteDecodeIn aLocation, MediaCodecsSupported aSupported);
 
-    // Send the list of the supported mimetypes in the given process. GeckoView-specific
-    async DecoderSupportedMimeTypes(nsCString[] supportedTypes);
-
     // Used to initialize the global variable in content processes with the
     // latched value in the parent process. See dom/LocalStorageCommon.h for more
     // details.
