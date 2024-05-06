@@ -117,7 +117,8 @@ class AudioInputProcessing : public AudioDataListener {
     // If we're passing data directly without AEC or any other process, this
     // means that all voice-processing has been disabled intentionaly. In this
     // case, consider that the device is not used for voice input.
-    return !IsPassThrough(aGraph);
+    return !IsPassThrough(aGraph) ||
+           mPlatformProcessingSetParams != CUBEB_INPUT_PROCESSING_PARAM_NONE;
   }
 
   void Start(MediaTrackGraph* aGraph);
@@ -142,8 +143,10 @@ class AudioInputProcessing : public AudioDataListener {
                            const AudioSegment& aSegment);
 
   uint32_t GetRequestedInputChannelCount() const;
+
   // This is true when all processing is disabled, in which case we can skip
-  // packetization, resampling and other processing passes.
+  // packetization, resampling and other processing passes. Processing may still
+  // be applied by the platform on the underlying input track.
   bool IsPassThrough(MediaTrackGraph* aGraph) const;
 
   // This allow changing the APM options, enabling or disabling processing
@@ -152,6 +155,9 @@ class AudioInputProcessing : public AudioDataListener {
   void ApplySettings(MediaTrackGraph* aGraph,
                      CubebUtils::AudioDeviceID aDeviceID,
                      const MediaEnginePrefs& aSettings);
+
+  // The config currently applied to the audio processing module.
+  webrtc::AudioProcessing::Config AppliedConfig(MediaTrackGraph* aGraph) const;
 
   void End();
 
@@ -170,13 +176,15 @@ class AudioInputProcessing : public AudioDataListener {
  private:
   ~AudioInputProcessing() = default;
   webrtc::AudioProcessing::Config ConfigForPrefs(
-      const MediaEnginePrefs& aPrefs);
+      const MediaEnginePrefs& aPrefs) const;
   void PassThroughChanged(MediaTrackGraph* aGraph);
   void RequestedInputChannelCountChanged(MediaTrackGraph* aGraph,
                                          CubebUtils::AudioDeviceID aDeviceId);
   void EnsurePacketizer(AudioProcessingTrack* aTrack);
   void EnsureAudioProcessing(AudioProcessingTrack* aTrack);
   void ResetAudioProcessing(MediaTrackGraph* aGraph);
+  void ApplySettingsInternal(MediaTrackGraph* aGraph,
+                             const MediaEnginePrefs& aSettings);
   PrincipalHandle GetCheckedPrincipal(const AudioSegment& aSegment);
   // This implements the processing algoritm to apply to the input (e.g. a
   // microphone). If all algorithms are disabled, this class in not used. This
@@ -193,6 +201,17 @@ class AudioInputProcessing : public AudioDataListener {
   // The current settings from about:config preferences and content-provided
   // constraints.
   MediaEnginePrefs mSettings;
+  // When false, RequestedInputProcessingParams() returns no params, resulting
+  // in platform processing getting disabled in the platform.
+  bool mPlatformProcessingEnabled = false;
+  // The latest error notified to us through
+  // NotifySetRequestedInputProcessingParamsResult, or Nothing if the latest
+  // request was successful, or if a request is pending a result.
+  Maybe<int> mPlatformProcessingSetError;
+  // The processing params currently applied in the platform. This allows
+  // adapting the AudioProcessingConfig accordingly.
+  cubeb_input_processing_params mPlatformProcessingSetParams =
+      CUBEB_INPUT_PROCESSING_PARAM_NONE;
   // Buffer for up to one 10ms packet of planar mixed audio output for the
   // reverse-stream (speaker data) of mAudioProcessing AEC.
   // Length is packet size * channel count, regardless of how many frames are
