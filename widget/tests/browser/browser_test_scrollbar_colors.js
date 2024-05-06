@@ -27,15 +27,6 @@ add_task(async () => {
 
     // == Native theme ==
 
-    const WIN_REFERENCES = [
-      // Yellow background
-      ["255,255,0", 6889],
-      // Blue scrollbar face
-      ["0,0,255", 540],
-      // Cyan scrollbar track
-      ["0,255,255", 2487],
-    ];
-
     const MAC_REFERENCES = [
       // Yellow background
       ["255,255,0", 7225],
@@ -45,19 +36,9 @@ add_task(async () => {
       ["0,255,255", 1760],
     ];
 
-    // Values have been updated from 8100, 720, 1180 for linux1804
-    const LINUX_REFERENCES = [
-      // Yellow background
-      ["255,255,0", 7744],
-      // Blue scrollbar face
-      ["0,0,255", 1104],
-      // Cyan scrollbar track
-      ["0,255,255", 1152],
-    ];
-
     // == Non-native theme ==
 
-    const WIN10_NNT_REFERENCES = [
+    const WIN10_REFERENCES = [
       // Yellow background
       ["255,255,0", 6889],
       // Blue scrollbar face
@@ -66,7 +47,7 @@ add_task(async () => {
       ["0,255,255", 2355],
     ];
 
-    const WIN11_NNT_REFERENCES = [
+    const WIN11_REFERENCES = [
       // Yellow background
       ["255,255,0", 6889],
       // Blue scrollbar face
@@ -75,9 +56,7 @@ add_task(async () => {
       ["0,255,255", 2787],
     ];
 
-    const MAC_NNT_REFERENCES = MAC_REFERENCES;
-
-    const LINUX_NNT_REFERENCES = [
+    const LINUX_REFERENCES = [
       // Yellow background
       ["255,255,0", 7744],
       // Blue scrollbar face
@@ -116,23 +95,19 @@ add_task(async () => {
 
     let canvas = snapshotRect(content.window, outerRect);
     let stats = countPixels(canvas);
-    let isNNT = SpecialPowers.getBoolPref("widget.non-native-theme.enabled");
-
     let references;
     if (content.navigator.platform.startsWith("Win")) {
-      if (!isNNT) {
-        references = WIN_REFERENCES;
-      } else if (WindowsVersionInfo.get().buildNumber >= 22000) {
-        // Windows 11 NNT
-        references = WIN11_NNT_REFERENCES;
+      if (WindowsVersionInfo.get().buildNumber >= 22000) {
+        // Windows 11
+        references = WIN11_REFERENCES;
       } else {
-        // Windows 10 NNT
-        references = WIN10_NNT_REFERENCES;
+        // Windows 10
+        references = WIN10_REFERENCES;
       }
     } else if (content.navigator.platform.startsWith("Mac")) {
-      references = isNNT ? MAC_NNT_REFERENCES : MAC_REFERENCES;
+      references = MAC_REFERENCES;
     } else if (content.navigator.platform.startsWith("Linux")) {
-      references = isNNT ? LINUX_NNT_REFERENCES : LINUX_REFERENCES;
+      references = LINUX_REFERENCES;
     } else {
       ok(false, "Unsupported platform");
     }

@@ -51,7 +51,6 @@ support-files = [
 ]
 prefs = [
   "gfx.font_rendering.fallback.async=false",
-  "widget.non-native-theme.enabled=false",
 ]
 
 ["test_about_networking.html"]
