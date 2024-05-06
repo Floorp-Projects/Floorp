@@ -535,7 +535,7 @@ impl From<SplitCompositeInstance> for PrimitiveInstanceData {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct QuadInstance {
-    pub render_task_address: RenderTaskAddress,
+    pub dst_task_address: RenderTaskAddress,
     pub prim_address_i: GpuBufferAddress,
     pub prim_address_f: GpuBufferAddress,
     pub z_id: ZBufferId,
@@ -565,7 +565,7 @@ impl From<QuadInstance> for PrimitiveInstanceData {
                 ((instance.part_index as i32)    <<  8) |
                 ((instance.segment_index as i32) <<  0),
 
-                instance.render_task_address.0,
+                instance.dst_task_address.0,
             ],
         }
     }
