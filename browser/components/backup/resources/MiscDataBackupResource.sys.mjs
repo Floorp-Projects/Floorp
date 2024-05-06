@@ -8,6 +8,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ActivityStreamStorage:
     "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs",
+  ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
 });
 
 const SNIPPETS_TABLE_NAME = "snippets";
@@ -74,6 +75,25 @@ export class MiscDataBackupResource extends BackupResource {
       destProfilePath,
       FILES_FOR_BACKUP
     );
+
+    // The times.json file, the one that powers ProfileAge, works hand in hand
+    // with the Telemetry client ID. We don't want to accidentally _overwrite_
+    // a pre-existing times.json with data from a different profile, because
+    // then the client ID wouldn't match the times.json data anymore.
+    //
+    // The rule that we're following for backups and recoveries is that the
+    // recovered profile always inherits the client ID (and therefore the
+    // times.json) from the profile that _initiated recovery_.
+    //
+    // This means we want to copy the times.json file from the profile that's
+    // currently in use to the destProfilePath.
+    await BackupResource.copyFiles(PathUtils.profileDir, destProfilePath, [
+      "times.json",
+    ]);
+
+    // We also want to write the recoveredFromBackup timestamp now.
+    let profileAge = await lazy.ProfileAge(destProfilePath);
+    await profileAge.recordRecoveredFromBackup();
 
     // The activity-stream-snippets data will need to be written during the
     // postRecovery phase, so we'll stash the path to the JSON file in the
