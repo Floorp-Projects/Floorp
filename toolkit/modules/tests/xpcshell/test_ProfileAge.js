@@ -38,6 +38,7 @@ add_task(
   withDummyProfile(async profile => {
     const CREATED_TIME = Date.now() - 2000;
     const RESET_TIME = Date.now() - 1000;
+    const RECOVERY_TIME = Date.now() - 500;
 
     await IOUtils.writeJSON(PathUtils.join(profile, "times.json"), {
       created: CREATED_TIME,
@@ -66,12 +67,21 @@ add_task(
     );
     await promise;
 
+    let recoveryPromise = times.recordRecoveredFromBackup(RECOVERY_TIME);
+    Assert.equal(
+      await times2.recoveredFromBackup,
+      RECOVERY_TIME,
+      "Should have seen the right backup recovery time in the second instance immediately."
+    );
+    await recoveryPromise;
+
     let results = await IOUtils.readJSON(PathUtils.join(profile, "times.json"));
     Assert.deepEqual(
       results,
       {
         created: CREATED_TIME,
         reset: RESET_TIME,
+        recoveredFromBackup: RECOVERY_TIME,
       },
       "Should have seen the right results."
     );
@@ -115,6 +125,27 @@ add_task(
     Assert.ok(
       (await times.firstUse) <= Date.now(),
       "Should have initialised a first use time."
+    );
+  })
+);
+
+add_task(
+  withDummyProfile(async profile => {
+    const RECOVERY_TIME = Date.now() - 1000;
+    const RECOVERY_TIME2 = Date.now() - 2000;
+
+    // The last call to recordRecoveredFromBackup should always win.
+    let times = await ProfileAge(profile);
+    await Promise.all([
+      times.recordRecoveredFromBackup(RECOVERY_TIME),
+      times.recordRecoveredFromBackup(RECOVERY_TIME2),
+    ]);
+
+    let results = await IOUtils.readJSON(PathUtils.join(profile, "times.json"));
+    Assert.equal(
+      results.recoveredFromBackup,
+      RECOVERY_TIME2,
+      "Should have seen the right results."
     );
   })
 );
