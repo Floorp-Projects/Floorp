@@ -39,7 +39,10 @@ ID2D1DeviceContext1 : public ID2D1DeviceContext
   virtual void STDMETHODCALLTYPE CreateStrokedGeometryRealization() = 0;
   virtual void STDMETHODCALLTYPE DrawGeometryRealization() = 0;
 };
+#ifdef __CRT_UUID_DECL
 __CRT_UUID_DECL(ID2D1DeviceContext1, 0xd37f57e4, 0x6908, 0x459f, 0xa1, 0x99, 0xe7, 0x2f, 0x24, 0xf7, 0x99, 0x87)
+#endif
+
 
 DEFINE_GUID(IID_ID2D1DeviceContext2, 0x394ea6a3, 0x0c34, 0x4321, 0x95, 0x0b, 0x6c, 0xa2, 0x0f, 0x0b, 0xe6, 0xc7);
 MIDL_INTERFACE("394ea6a3-0c34-4321-950b-6ca20f0be6c7")
@@ -57,7 +60,9 @@ ID2D1DeviceContext2 : public ID2D1DeviceContext1
   virtual void STDMETHODCALLTYPE DrawGdiMetafile() = 0;
   virtual void STDMETHODCALLTYPE CreateTransformedImageSource() = 0;
 };
+#ifdef __CRT_UUID_DECL
 __CRT_UUID_DECL(ID2D1DeviceContext2, 0x394ea6a3, 0x0c34, 0x4321, 0x95, 0x0b, 0x6c, 0xa2, 0x0f, 0x0b, 0xe6, 0xc7)
+#endif
 
 
 DEFINE_GUID(IID_ID2D1DeviceContext3, 0x235a7496, 0x8351, 0x414c, 0xbc, 0xd4, 0x66, 0x72, 0xab, 0x2d, 0x8e, 0x00);
@@ -67,7 +72,9 @@ ID2D1DeviceContext3 : public ID2D1DeviceContext2
   virtual void STDMETHODCALLTYPE CreateSpriteBatch() = 0;
   virtual void STDMETHODCALLTYPE DrawSpriteBatch() = 0;
 };
+#ifdef __CRT_UUID_DECL
 __CRT_UUID_DECL(ID2D1DeviceContext3, 0x235a7496, 0x8351, 0x414c, 0xbc, 0xd4, 0x66, 0x72, 0xab, 0x2d, 0x8e, 0x00)
+#endif
 
 
 DEFINE_GUID(IID_ID2D1SvgGlyphStyle, 0xaf671749, 0xd241, 0x4db8, 0x8e, 0x41, 0xdc, 0xc2, 0xe5, 0xc1, 0xa4, 0x38);
@@ -80,7 +87,9 @@ ID2D1SvgGlyphStyle  : public ID2D1Resource
   virtual void STDMETHODCALLTYPE GetStrokeDashesCount() = 0;
   virtual void STDMETHODCALLTYPE GetStroke() = 0;
 };
+#ifdef __CRT_UUID_DECL
 __CRT_UUID_DECL(ID2D1SvgGlyphStyle, 0xaf671749, 0xd241, 0x4db8, 0x8e, 0x41, 0xdc, 0xc2, 0xe5, 0xc1, 0xa4, 0x38)
+#endif
 
 
 DEFINE_GUID(IID_ID2D1DeviceContext4, 0x8c427831, 0x3d90, 0x4476, 0xb6, 0x47, 0xc4, 0xfa, 0xe3, 0x49, 0xe4, 0xdb);
@@ -106,6 +115,8 @@ ID2D1DeviceContext4 : public ID2D1DeviceContext3
     DWRITE_MEASURING_MODE  measuringMode) = 0;
 
 };
+#ifdef __CRT_UUID_DECL
 __CRT_UUID_DECL(ID2D1DeviceContext4, 0x8c427831, 0x3d90, 0x4476, 0xb6, 0x47, 0xc4, 0xfa, 0xe3, 0x49, 0xe4, 0xdb)
+#endif
 
 #endif
