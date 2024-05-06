@@ -321,6 +321,67 @@ The accessibility tests could be run locally with the `--enable-a11y-checks` fla
 ./mach mochitest --enable-a11y-checks somePath/someTestFile.html
 ```
 
-On CI, a11y-checks only run on tier 2 Linux 18.04 x64 WebRender (Opt and Shippable) builds. If you'd like to run only a11y-checks on Try, you can run the ``./mach try fuzzy --full` command with the query `a11y-checks linux !wayland !tsan !asan !ccov !debug !devedition` for all checks. Alternatively, to exclude devtools chrome tests, pass the query `swr-a11y-checks` to `./mach try fuzzy --full`.
+On CI, a11y-checks only run on tier 2 Linux 18.04 x64 WebRender (Opt and Shippable) builds. If you'd like to run only a11y-checks on Try, you can run the `./mach try fuzzy --full` command with the query `a11y-checks linux !wayland !tsan !asan !ccov !debug !devedition` for all checks. Alternatively, to exclude devtools chrome tests, pass the query `swr-a11y-checks` to `./mach try fuzzy --full`.
 
 If you have questions on the results of a11y-checks and the ways to remediate any issues, reach out to the Accessibility team the [#accessibility room on Matrix](https://matrix.to/#/#accessibility:mozilla.org).
+
+## How to debug a failing accessibility test (a11y-checks)?
+
+First, review the failure log to learn which element may be not accessible. For example:
+
+```TEST-UNEXPECTED-FAIL | path/to/specific/test/browser_test.js | Node is not accessible via accessibility API: id: foo, tagName: div, className: bar```
+
+This failure reports that when the `browser_test.js` is running, an `<div id="foo" class="bar">` is clicked and this element may not be accessible.
+The next step is to review the code for this element in general to ensure it is built to be accessible:
+1. it [has an interactive role](https://searchfox.org/mozilla-central/rev/eb4700a6be8371fe07053bc066c2d48ba813ce3d/testing/mochitest/tests/SimpleTest/AccessibilityUtils.js#825-877)
+1. it [is enabled](https://searchfox.org/mozilla-central/rev/eb4700a6be8371fe07053bc066c2d48ba813ce3d/testing/mochitest/tests/SimpleTest/AccessibilityUtils.js#768-781)
+1. it [is focusable with the keyboard](https://searchfox.org/mozilla-central/rev/eb4700a6be8371fe07053bc066c2d48ba813ce3d/testing/mochitest/tests/SimpleTest/AccessibilityUtils.js#783-823)
+1. it [is labeled](https://searchfox.org/mozilla-central/rev/eb4700a6be8371fe07053bc066c2d48ba813ce3d/testing/mochitest/tests/SimpleTest/AccessibilityUtils.js#879-993)
+
+When all of the above is true, the element [can be clicked](https://searchfox.org/mozilla-central/rev/eb4700a6be8371fe07053bc066c2d48ba813ce3d/testing/mochitest/tests/SimpleTest/AccessibilityUtils.js#1150-1174).
+
+After that, check the element [is, in fact, visible](https://searchfox.org/mozilla-central/rev/eb4700a6be8371fe07053bc066c2d48ba813ce3d/testing/mochitest/tests/SimpleTest/AccessibilityUtils.js#995-1009) and accessible when the test is clicking it. For example, when dealing with a pop-up panel, sometimes we may need to wait for the panel to be shown before clicking a button inside it.
+
+If the issue is not clear, feel free to reach out to the Accessibility team to brainstorm together.
+
+## My patch is failing a11y-checks. Can I skip them for now?
+
+In general, we skip the a11y_checks only when there are unexplained intermittents or crashes ([example](https://searchfox.org/mozilla-central/rev/eb4700a6be8371fe07053bc066c2d48ba813ce3d/dom/midi/tests/browser.toml#12)). There are very few tests like that in our repository.
+
+If there is a failure and the resolution is not clear yet, or if troubleshooting would need a separate patch, ensure a follow-up bug is filed and refer to it while setting `fail-if` in the test manifest ([example](https://searchfox.org/mozilla-central/rev/eb4700a6be8371fe07053bc066c2d48ba813ce3d/browser/components/ion/test/browser/browser.toml#4)). This allows accessibility tests to still be running and reporting in the log on any new UI that might be added in the future, even without a Tier 2 failure flagged. Then, when the issue is fixed and the test is passing, you can remove the `fail-if` notation from the test manifest. If you forget to remove the `fail-if` notation, you would be notified about an (unexpectedly) passing test to remind you to update the manifest.
+
+## What are the exceptions from a11y_checks? When and how should I implement them?
+
+Sometimes, a test case is expected to fail the Accessibility Utils tests. An example is when a mochitest clicks a disabled button to confirm that, in fact, nothing happens. In these cases, you can intentionally modify the [default test environment object](https://searchfox.org/mozilla-central/rev/eb4700a6be8371fe07053bc066c2d48ba813ce3d/testing/mochitest/tests/SimpleTest/AccessibilityUtils.js#94-117) to disable specific checks. You can do this by calling `AccessibilityUtils.setEnv` right before the click and then reset it to the original state right after the click (to avoid unintentionally excluding further test cases).
+
+An `AccessibilityUtils.setEnv` call should generally be preceded by a descriptive comment. This helps to avoid unintentional copy-pasting of this code to a new test case, risking an accessibility regression. Refer to the examples linked in the most common exception cases below for example comments.
+
+### Clicking on a disabled control or other non-interactive UI to confirm the click event won't come through
+
+Failure reported as: `Node expected to be enabled but is disabled via the accessibility API`.
+
+These clicks are not meant to be interactive and their targets are not expected to be accessible or enabled via the Accessibility API. Thus, we add an a11y_checks exception for this test via `AccessibilityUtils.setEnv({ mustBeEnabled: false })` ([example](https://searchfox.org/mozilla-central/rev/eb4700a6be8371fe07053bc066c2d48ba813ce3d/browser/components/extensions/test/browser/browser_ext_menus_capture_secondary_click.js#126-131,133))
+
+### Clicking on a non-interactive UI to confirm nothing happens
+
+Failure reported as: `Node is not accessible via accessibility API`.
+
+These clicks are not meant to be interactive and their targets are not expected to be accessible or available via the Accessibility API. Thus, we add an a11y_checks exception for this test via `AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false })` ([example](https://searchfox.org/mozilla-central/rev/1f5e1875cbfd5d4b1bfa27ca54832f62dd19589e/toolkit/mozapps/extensions/test/browser/browser_sidebar_categories.js#85-89,91))
+
+### Clicking on arbitrary web content and remote documents
+
+Failure reported as: `Node is not accessible via accessibility API`.
+
+We do not want to test remote web content because we do not currently support remote documents with a11y_checks. In addition, we recognize that some arbitrary remote content is written to exercise a specific browser function and therefore doesn't need to be complete. Thus, we add an a11y-checks exception for this test via `AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false })` ([example](https://searchfox.org/mozilla-central/rev/1f5e1875cbfd5d4b1bfa27ca54832f62dd19589e/dom/tests/browser/browser_focus_steal_from_chrome_during_mousedown.js#28-32,36))
+
+### Clicking on non-interactive content to dismiss a dialog/menupopup/panel
+
+Failure reported as: `Node is not accessible via accessibility API`.
+
+Some tests send a click on a non-interactive element (e.g. on a container, on the `<body>` of the page, etc.) to close an opened dialog, menu popup or panel. While this method of interaction is inaccessible to some users, it is acceptable as long as there is an alternative, accessible way to dismiss the popup for users of keyboards and assistive technology; e.g. pressing the `Esc` key or a `X` Close button. In this case, we need to add an a11y_checks exception for this test via `AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false })` while explicitly mentioning in the comment that at least one other way to dismiss it exists which does not rely on a mouse ([example clicking on a <body>](https://searchfox.org/mozilla-central/rev/1f5e1875cbfd5d4b1bfa27ca54832f62dd19589e/dom/events/test/clipboard/head.js#104-110,128) and [example clicking on a spacer](https://searchfox.org/mozilla-central/rev/1f5e1875cbfd5d4b1bfa27ca54832f62dd19589e/toolkit/mozapps/extensions/test/browser/browser_menu_button_accessibility.js#32-37,39))
+
+### Non-user-facing test cases that are never expected to be done by an end user (e.g. telemetry, performance, crash tests)
+
+Failure reported as: `Node is not accessible via accessibility API`.
+
+Sometimes, we test a behavior that is never expected to be done by a real user; e.g. confirming a crash test patch is working, or clicking on an element to test a telemetry or performance action. As long as we have other tests checking the same UI for accessibility, you can add an a11y_checks exception for this test via `AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false })` while explicitly mentioning in the comment the reason for this exclusion ([example clicking on a <body> for a performance testing](https://searchfox.org/mozilla-central/rev/1f5e1875cbfd5d4b1bfa27ca54832f62dd19589e/devtools/client/debugger/test/mochitest/browser_dbg-javascript-tracer-next-interation.js#51-56,62), [example of a crashtest](https://searchfox.org/mozilla-central/rev/1f5e1875cbfd5d4b1bfa27ca54832f62dd19589e/layout/base/tests/browser_bug1701027-1.js#94-99), [example of a telemetry behavior test](https://searchfox.org/mozilla-central/rev/1f5e1875cbfd5d4b1bfa27ca54832f62dd19589e/browser/components/urlbar/tests/engagementTelemetry/browser/browser_glean_telemetry_abandonment_tips.js#56-62,64,73-79,81), and [example of clicking on a hidden panel to confirm its content was refreshed](https://searchfox.org/mozilla-central/rev/1f5e1875cbfd5d4b1bfa27ca54832f62dd19589e/browser/base/content/test/permissions/browser_site_scoped_permissions.js#49-56,58,99-106,108)).
