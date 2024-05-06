@@ -69,8 +69,13 @@ web-platform-tests:
             default: 7200
     variants:
         - no-fission
+        - geckoview-no-fission-ship
     run-on-projects:
         by-variant:
+            geckoview-no-fission-ship:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    default: []
             no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
