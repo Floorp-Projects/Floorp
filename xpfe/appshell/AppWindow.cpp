@@ -3021,6 +3021,9 @@ void AppWindow::FullscreenChanged(bool aInFullscreen) {
 
 void AppWindow::FinishFullscreenChange(bool aInFullscreen) {
   mFullscreenChangeState = FullscreenChangeState::NotChanging;
+  if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
+    pm->Rollup({});
+  }
   if (mDocShell) {
     if (nsCOMPtr<nsPIDOMWindowOuter> ourWindow = mDocShell->GetWindow()) {
       ourWindow->FinishFullscreenChange(aInFullscreen);
