@@ -16,6 +16,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.tabstray.ext.toComposeList
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
+import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListSupportedFeature
 
 class SyncedDeviceTabsTest {
     private val noTabDevice = SyncedDeviceTabs(
@@ -132,9 +133,9 @@ class SyncedDeviceTabsTest {
     }
 
     @Test
-    fun `GIVEN two synced devices AND one device supports closing synced tabs WHEN the compose list is generated THEN two device sections are returned`() {
+    fun `GIVEN two synced devices AND one device supports closing synced tabs AND closing synced tabs is enabled WHEN the compose list is generated THEN two device sections are returned`() {
         val syncedDeviceList = listOf(oneTabDeviceWithoutCapabilities, oneTabDeviceWithCapabilities)
-        val listData = syncedDeviceList.toComposeList()
+        val listData = syncedDeviceList.toComposeList(setOf(SyncedTabsListSupportedFeature.CLOSE_TABS))
         val deviceSections = listData.filterIsInstance<SyncedTabsListItem.DeviceSection>()
 
         assertEquals(2, listData.size)
@@ -142,5 +143,18 @@ class SyncedDeviceTabsTest {
 
         assertEquals(setOf(SyncedTabsListItem.Tab.Action.None), deviceSections[0].tabs.map { it.action }.toSet())
         assertEquals(setOf(SyncedTabsListItem.Tab.Action.Close(deviceId = "123456")), deviceSections[1].tabs.map { it.action }.toSet())
+    }
+
+    @Test
+    fun `GIVEN two synced devices AND one device supports closing synced tabs AND closing synced tabs is disabled WHEN the compose list is generated THEN two device sections are returned`() {
+        val syncedDeviceList = listOf(oneTabDeviceWithoutCapabilities, oneTabDeviceWithCapabilities)
+        val listData = syncedDeviceList.toComposeList(emptySet())
+        val deviceSections = listData.filterIsInstance<SyncedTabsListItem.DeviceSection>()
+
+        assertEquals(2, listData.size)
+        assertEquals(listData.size, deviceSections.size)
+
+        assertEquals(setOf(SyncedTabsListItem.Tab.Action.None), deviceSections[0].tabs.map { it.action }.toSet())
+        assertEquals(setOf(SyncedTabsListItem.Tab.Action.None), deviceSections[1].tabs.map { it.action }.toSet())
     }
 }

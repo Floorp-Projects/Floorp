@@ -15,6 +15,7 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabstray.FloatingActionButtonBinding
 import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayStore
@@ -91,7 +92,13 @@ class SyncedTabsIntegration(
     override fun displaySyncedTabs(syncedTabs: List<SyncedDeviceTabs>) {
         store.dispatch(
             TabsTrayAction.UpdateSyncedTabs(
-                syncedTabs.toComposeList(),
+                syncedTabs.toComposeList(
+                    buildSet {
+                        if (context.settings().enableCloseSyncedTabs) {
+                            add(SyncedTabsListSupportedFeature.CLOSE_TABS)
+                        }
+                    },
+                ),
             ),
         )
     }
