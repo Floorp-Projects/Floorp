@@ -457,7 +457,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   bool continued = false;
 
   // This marks the audio driver as running.
-  EXPECT_EQ(stream->ManualDataCallback(1),
+  EXPECT_EQ(stream->ManualDataCallback(0),
             MockCubebStream::KeepProcessing::Yes);
 
   // If a fallback driver callback happens between the audio callback
@@ -519,7 +519,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   NS_DispatchBackgroundTask(NS_NewRunnableFunction(
       "DeviceChangeAfterStop::postSwitchManualAudioCallback", [stream] {
         // An audio callback after switching must tell the stream to stop.
-        EXPECT_EQ(stream->ManualDataCallback(1),
+        EXPECT_EQ(stream->ManualDataCallback(0),
                   MockCubebStream::KeepProcessing::No);
       }));
 
@@ -546,7 +546,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
 #ifdef DEBUG
     AutoSetter as(threadInDriverIteration, std::thread::id());
 #endif
-    EXPECT_EQ(stream->ManualDataCallback(1),
+    EXPECT_EQ(stream->ManualDataCallback(0),
               MockCubebStream::KeepProcessing::No);
   }
 
