@@ -409,6 +409,7 @@ _cairo_quartz_cairo_operator_to_quartz_blend (cairo_operator_t op)
         default:
 	    ASSERT_NOT_REACHED;
     }
+    return kCGBlendModeNormal; /* unreached */
 }
 
 static cairo_int_status_t
@@ -998,7 +999,7 @@ _cairo_quartz_setup_pattern_source (cairo_quartz_drawing_state_t *state,
 	_cairo_surface_get_extents (&surface->base, &pattern_extents);
     }
 
-    if (source->extend == CAIRO_EXTEND_NONE) {
+    if (source->extend == CAIRO_EXTEND_NONE || source->extend == CAIRO_EXTEND_PAD) {
 	int x, y;
 
 	if (op == CAIRO_OPERATOR_SOURCE &&
@@ -1397,6 +1398,97 @@ _cairo_quartz_surface_unmap_image (void *abstract_surface,
     cairo_surface_finish (&image->base);
     cairo_surface_destroy (&image->base);
 
+    return CAIRO_STATUS_SUCCESS;
+}
+
+
+/*
+ * get source/dest image implementation
+ */
+
+/* Read the image from the surface's front buffer */
+static cairo_int_status_t
+_cairo_quartz_get_image (cairo_quartz_surface_t *surface,
+			 cairo_image_surface_t **image_out)
+{
+    unsigned char *imageData;
+    cairo_image_surface_t *isurf;
+
+    if (_cairo_quartz_is_zero_surface (&surface->base)) {
+	*image_out = (cairo_image_surface_t*) cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (_cairo_quartz_is_cgcontext_bitmap_context(surface->cgContext)) {
+	unsigned int stride;
+	unsigned int bitinfo;
+	unsigned int bpc, bpp;
+	CGColorSpaceRef colorspace;
+	unsigned int color_comps;
+
+	CGContextFlush(surface->cgContext);
+	imageData = (unsigned char *) CGBitmapContextGetData(surface->cgContext);
+
+#ifdef USE_10_3_WORKAROUNDS
+	bitinfo = CGBitmapContextGetAlphaInfo (surface->cgContext);
+#else
+	bitinfo = CGBitmapContextGetBitmapInfo (surface->cgContext);
+#endif
+	stride = CGBitmapContextGetBytesPerRow (surface->cgContext);
+	bpp = CGBitmapContextGetBitsPerPixel (surface->cgContext);
+	bpc = CGBitmapContextGetBitsPerComponent (surface->cgContext);
+
+	// let's hope they don't add YUV under us
+	colorspace = CGBitmapContextGetColorSpace (surface->cgContext);
+	color_comps = CGColorSpaceGetNumberOfComponents(colorspace);
+
+	// XXX TODO: We can handle all of these by converting to
+	// pixman masks, including non-native-endian masks
+	if (bpc != 8)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (bpp != 32 && bpp != 8)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (color_comps != 3 && color_comps != 1)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (bpp == 32 && color_comps == 3 &&
+	    (bitinfo & kCGBitmapAlphaInfoMask) == kCGImageAlphaPremultipliedFirst &&
+	    (bitinfo & kCGBitmapByteOrderMask) == kCGBitmapByteOrder32Host)
+	{
+	    isurf = (cairo_image_surface_t *)
+		cairo_image_surface_create_for_data (imageData,
+						     CAIRO_FORMAT_ARGB32,
+						     surface->extents.width,
+						     surface->extents.height,
+						     stride);
+	} else if (bpp == 32 && color_comps == 3 &&
+		   (bitinfo & kCGBitmapAlphaInfoMask) == kCGImageAlphaNoneSkipFirst &&
+		   (bitinfo & kCGBitmapByteOrderMask) == kCGBitmapByteOrder32Host)
+	{
+	    isurf = (cairo_image_surface_t *)
+		cairo_image_surface_create_for_data (imageData,
+						     CAIRO_FORMAT_RGB24,
+						     surface->extents.width,
+						     surface->extents.height,
+						     stride);
+	} else if (bpp == 8 && color_comps == 1)
+	{
+	    isurf = (cairo_image_surface_t *)
+		cairo_image_surface_create_for_data (imageData,
+						     CAIRO_FORMAT_A8,
+						     surface->extents.width,
+						     surface->extents.height,
+						     stride);
+	} else {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    } else {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    *image_out = isurf;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -2477,4 +2569,16 @@ _cairo_quartz_surface_to_png (cairo_surface_t *abstract_surface, const char *des
 
     CGImageRelease (image);
     return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_surface_t *
+cairo_quartz_surface_get_image (cairo_surface_t *surface)
+{
+    cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t *)surface;
+    cairo_image_surface_t *image;
+
+    if (_cairo_quartz_get_image(quartz, &image))
+        return NULL;
+
+    return (cairo_surface_t *)image;
 }
