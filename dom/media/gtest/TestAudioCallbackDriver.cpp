@@ -112,7 +112,7 @@ class MockGraphInterface : public GraphInterface {
 NS_IMPL_ISUPPORTS0(MockGraphInterface)
 
 TEST(TestAudioCallbackDriver, StartStop)
-MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   const TrackRate rate = 44100;
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
@@ -140,7 +140,7 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   EXPECT_FALSE(driver->IsStarted()) << "Verify thread is not started";
 }
 
-void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
+void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   std::cerr << "TestSlowStart with rate " << aRate << std::endl;
 
   MockCubeb* cubeb = new MockCubeb();
@@ -240,7 +240,7 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
 }
 
 TEST(TestAudioCallbackDriver, SlowStart)
-MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
+{
   TestSlowStart(1000);   // 10ms = 10 <<< 128 samples
   TestSlowStart(8000);   // 10ms = 80  <  128 samples
   TestSlowStart(44100);  // 10ms = 441 >  128 samples
