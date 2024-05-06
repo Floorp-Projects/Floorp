@@ -148,6 +148,8 @@ treeherder:
         'W-cf': 'Web platform tests confirm failure'
         'W-nofis': 'Web platform tests without fission enabled'
         'W-nofis-cf': 'Web platform tests confirm failure without fission enabled'
+        'W-nofis-ship': 'Web platform tests without fission and with SHIP enabled'
+        'W-nofis-ship-cf': 'Web platform tests confirm failure without fission and with SHIP enabled'
         'W-headless': 'Headless web platform tests'
         'W-headless-cf': 'Headless web platform tests confirm failure'
         'W-swr-nofis': 'Web platform tests with software webrender enabled without fission enabled'
