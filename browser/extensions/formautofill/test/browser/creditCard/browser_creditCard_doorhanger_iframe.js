@@ -30,8 +30,10 @@ add_task(async function test_iframe_submit_untouched_creditCard_form() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_IFRAME_URL },
     async function (browser) {
-      let osKeyStoreLoginShown =
-        OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+      let osKeyStoreLoginShown = Promise.resolve();
+      if (OSKeyStore.canReauth()) {
+        osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+      }
       let iframeBC = browser.browsingContext.children[0];
       await openPopupOnSubframe(browser, iframeBC, "form #cc-name");
 
