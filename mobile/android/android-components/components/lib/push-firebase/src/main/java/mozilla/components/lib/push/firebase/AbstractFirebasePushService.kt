@@ -5,9 +5,9 @@
 package mozilla.components.lib.push.firebase
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.android.gms.common.util.VisibleForTesting
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
