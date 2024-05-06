@@ -635,13 +635,13 @@ pub fn write_prim_blocks(
 pub fn add_to_batch<F>(
     kind: PatternKind,
     pattern_input: PatternShaderInput,
-    render_task_address: RenderTaskAddress,
+    dst_task_address: RenderTaskAddress,
     transform_id: TransformPaletteId,
     prim_address_f: GpuBufferAddress,
     quad_flags: QuadFlags,
     edge_flags: EdgeAaSegmentMask,
     segment_index: u8,
-    task_id: RenderTaskId,
+    src_task_id: RenderTaskId,
     z_id: ZBufferId,
     render_tasks: &RenderTaskGraph,
     gpu_buffer_builder: &mut GpuBufferBuilder,
@@ -669,13 +669,11 @@ pub fn add_to_batch<F>(
     ]);
     let prim_address_i = writer.finish();
 
-    let texture = match task_id {
-        RenderTaskId::INVALID => {
-            TextureSource::Invalid
-        }
+    let texture = match src_task_id {
+        RenderTaskId::INVALID => TextureSource::Invalid,
         _ => {
             let texture = render_tasks
-                .resolve_texture(task_id)
+                .resolve_texture(src_task_id)
                 .expect("bug: valid task id must be resolvable");
 
             texture
@@ -687,7 +685,7 @@ pub fn add_to_batch<F>(
         TextureSource::Invalid,
     );
 
-    let default_blend_mode = if quad_flags.contains(QuadFlags::IS_OPAQUE) && task_id == RenderTaskId::INVALID {
+    let default_blend_mode = if quad_flags.contains(QuadFlags::IS_OPAQUE) && src_task_id == RenderTaskId::INVALID {
         BlendMode::None
     } else {
         BlendMode::PremultipliedAlpha
@@ -708,7 +706,7 @@ pub fn add_to_batch<F>(
     };
 
     let mut instance = QuadInstance {
-        render_task_address,
+        dst_task_address,
         prim_address_i,
         prim_address_f,
         z_id,
