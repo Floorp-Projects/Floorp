@@ -3418,4 +3418,12 @@ NS_IMETHODIMP HttpChannelChild::SetWebTransportSessionEventListener(
   return NS_OK;
 }
 
+void HttpChannelChild::ExplicitSetUploadStreamLength(
+    uint64_t aContentLength, bool aSetContentLengthHeader) {
+  // SetRequestHeader propagates headers to chrome if HttpChannelChild
+  MOZ_ASSERT(!LoadWasOpened());
+  HttpBaseChannel::ExplicitSetUploadStreamLength(aContentLength,
+                                                 aSetContentLengthHeader);
+}
+
 }  // namespace mozilla::net
