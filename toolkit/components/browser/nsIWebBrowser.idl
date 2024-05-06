@@ -38,7 +38,6 @@ interface nsIWebBrowser : nsISupports
      * window via the browser's <CODE>nsIBaseWindow</CODE> interface.
      *
      * The chrome may optionally implement <CODE>nsIInterfaceRequestor</CODE>,
-     * <CODE>nsIWebBrowserChromeFocus</CODE>,
      * <CODE>nsIContextMenuListener</CODE> and
      * <CODE>nsITooltipListener</CODE> to receive additional notifications
      * from the browser object.
@@ -57,7 +56,6 @@ interface nsIWebBrowser : nsISupports
      * @see nsIBaseWindow
      * @see nsIWebBrowserChrome
      * @see nsIInterfaceRequestor
-     * @see nsIWebBrowserChromeFocus
      * @see nsIContextMenuListener
      * @see nsITooltipListener
      * @see nsIWeakReference

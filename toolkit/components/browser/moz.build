@@ -12,7 +12,6 @@ DIRS += ["build"]
 XPIDL_SOURCES += [
     "nsIWebBrowser.idl",
     "nsIWebBrowserChrome.idl",
-    "nsIWebBrowserChromeFocus.idl",
 ]
 
 XPIDL_SOURCES += [

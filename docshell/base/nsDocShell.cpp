@@ -167,7 +167,6 @@
 #include "nsIURILoader.h"
 #include "nsIViewSourceChannel.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebBrowserChromeFocus.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebProgress.h"
 #include "nsIWidget.h"
@@ -2095,27 +2094,6 @@ nsDocShell::GetBusyFlags(BusyFlags* aBusyFlags) {
   NS_ENSURE_ARG_POINTER(aBusyFlags);
 
   *aBusyFlags = mBusyFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::TabToTreeOwner(bool aForward, bool aForDocumentNavigation,
-                           bool* aTookFocus) {
-  NS_ENSURE_ARG_POINTER(aTookFocus);
-
-  nsCOMPtr<nsIWebBrowserChromeFocus> chromeFocus = do_GetInterface(mTreeOwner);
-  if (chromeFocus) {
-    if (aForward) {
-      *aTookFocus =
-          NS_SUCCEEDED(chromeFocus->FocusNextElement(aForDocumentNavigation));
-    } else {
-      *aTookFocus =
-          NS_SUCCEEDED(chromeFocus->FocusPrevElement(aForDocumentNavigation));
-    }
-  } else {
-    *aTookFocus = false;
-  }
-
   return NS_OK;
 }
 

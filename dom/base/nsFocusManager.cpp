@@ -3662,12 +3662,10 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
       }
     } else {
       if (aNavigateByKey) {
-        // There is no parent, so call the tree owner. This will tell the
-        // embedder or parent process that it should take the focus.
-        bool tookFocus;
-        docShell->TabToTreeOwner(forward, forDocumentNavigation, &tookFocus);
-        // If the tree owner took the focus, blur the current element.
-        if (tookFocus) {
+        // There is no parent, so move the focus to the parent process.
+        if (auto* child = BrowserChild::GetFrom(docShell)) {
+          child->SendMoveFocus(forward, forDocumentNavigation);
+          // Blur the current element.
           RefPtr<BrowsingContext> focusedBC = GetFocusedBrowsingContext();
           if (focusedBC && focusedBC->IsInProcess()) {
             Blur(focusedBC, nullptr, true, true, false,
