@@ -1,0 +1,51 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1713898119 -3600
+#      Tue Apr 23 19:48:39 2024 +0100
+# Node ID 2e47d112a6cf17da455d80727fdd7c96d02e48d0
+# Parent  c4a8e2e58b280f250a5741e35f986957a4db3f86
+Bug 1892913 - patch 17 - Add missing #include FT_COLOR_H to cairo-ft-font.c
+
+diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-font.c
+--- a/gfx/cairo/cairo/src/cairo-ft-font.c
++++ b/gfx/cairo/cairo/src/cairo-ft-font.c
+@@ -66,6 +66,10 @@
+ #include FT_SYNTHESIS_H
+ #endif
+ 
++#ifdef FT_COLOR_H
++#include FT_COLOR_H
++#endif
++
+ #if HAVE_FT_LIBRARY_SETLCDFILTER
+ #include FT_LCD_FILTER_H
+ #endif
+@@ -2597,6 +2601,7 @@ static void
+ }
+ 
+ 
++#ifdef FT_COLOR_H
+ static void
+ _cairo_ft_scaled_glyph_set_palette (cairo_ft_scaled_font_t  *scaled_font,
+ 				    FT_Face                  face,
+@@ -2637,6 +2642,20 @@ static void
+     if (entries_ret)
+ 	*entries_ret = entries;
+ }
++#else
++static void
++_cairo_ft_scaled_glyph_set_palette (cairo_ft_scaled_font_t  *scaled_font,
++				    FT_Face                  face,
++				    unsigned int            *num_entries_ret,
++				    void                   **entries_ret)
++{
++    if (num_entries_ret)
++	*num_entries_ret = 0;
++
++    if (entries_ret)
++	*entries_ret = NULL;
++}
++#endif
+ 
+ /* returns TRUE if foreground color used */
+ static cairo_bool_t
