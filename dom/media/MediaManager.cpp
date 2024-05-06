@@ -2396,14 +2396,14 @@ static void ForeachObservedPref(const Function& aFunction) {
   aFunction("media.video_loopback_dev"_ns);
   aFunction("media.getusermedia.fake-camera-name"_ns);
 #ifdef MOZ_WEBRTC
-  aFunction("media.getusermedia.aec_enabled"_ns);
-  aFunction("media.getusermedia.aec"_ns);
-  aFunction("media.getusermedia.agc_enabled"_ns);
-  aFunction("media.getusermedia.agc"_ns);
-  aFunction("media.getusermedia.hpf_enabled"_ns);
-  aFunction("media.getusermedia.noise_enabled"_ns);
-  aFunction("media.getusermedia.noise"_ns);
-  aFunction("media.getusermedia.channels"_ns);
+  aFunction("media.getusermedia.audio.processing.aec.enabled"_ns);
+  aFunction("media.getusermedia.audio.processing.aec"_ns);
+  aFunction("media.getusermedia.audio.processing.agc.enabled"_ns);
+  aFunction("media.getusermedia.audio.processing.agc"_ns);
+  aFunction("media.getusermedia.audio.processing.hpf.enabled"_ns);
+  aFunction("media.getusermedia.audio.processing.noise.enabled"_ns);
+  aFunction("media.getusermedia.audio.processing.noise"_ns);
+  aFunction("media.getusermedia.audio.max_channels"_ns);
   aFunction("media.navigator.streams.fake"_ns);
 #endif
 }
@@ -2975,7 +2975,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
       case MediaSourceEnum::AudioCapture:
         // Only enable AudioCapture if the pref is enabled. If it's not, we can
         // deny right away.
-        if (!Preferences::GetBool("media.getusermedia.audiocapture.enabled")) {
+        if (!Preferences::GetBool("media.getusermedia.audio.capture.enabled")) {
           return StreamPromise::CreateAndReject(
               MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
               __func__);
@@ -3628,14 +3628,17 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPref(aBranch, "media.navigator.audio.fake_frequency", aData,
           &mPrefs.mFreq);
 #ifdef MOZ_WEBRTC
-  GetPrefBool(aBranch, "media.getusermedia.aec_enabled", aData, &mPrefs.mAecOn);
-  GetPrefBool(aBranch, "media.getusermedia.agc_enabled", aData, &mPrefs.mAgcOn);
-  GetPrefBool(aBranch, "media.getusermedia.hpf_enabled", aData, &mPrefs.mHPFOn);
-  GetPrefBool(aBranch, "media.getusermedia.noise_enabled", aData,
-              &mPrefs.mNoiseOn);
-  GetPrefBool(aBranch, "media.getusermedia.transient_enabled", aData,
-              &mPrefs.mTransientOn);
-  GetPrefBool(aBranch, "media.getusermedia.agc2_forced", aData,
+  GetPrefBool(aBranch, "media.getusermedia.audio.processing.aec.enabled", aData,
+              &mPrefs.mAecOn);
+  GetPrefBool(aBranch, "media.getusermedia.audio.processing.agc.enabled", aData,
+              &mPrefs.mAgcOn);
+  GetPrefBool(aBranch, "media.getusermedia.audio.processing.hpf.enabled", aData,
+              &mPrefs.mHPFOn);
+  GetPrefBool(aBranch, "media.getusermedia.audio.processing.noise.enabled",
+              aData, &mPrefs.mNoiseOn);
+  GetPrefBool(aBranch, "media.getusermedia.audio.processing.transient.enabled",
+              aData, &mPrefs.mTransientOn);
+  GetPrefBool(aBranch, "media.getusermedia.audio.processing.agc2.forced", aData,
               &mPrefs.mAgc2Forced);
   // Use 0 or 1 to force to false or true
   // EchoCanceller3Config::echo_removal_control.has_clock_drift.
@@ -3643,9 +3646,12 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   // deemed appropriate.
   GetPref(aBranch, "media.getusermedia.audio.processing.aec.expect_drift",
           aData, &mPrefs.mExpectDrift);
-  GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
-  GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
-  GetPref(aBranch, "media.getusermedia.channels", aData, &mPrefs.mChannels);
+  GetPref(aBranch, "media.getusermedia.audio.processing.agc", aData,
+          &mPrefs.mAgc);
+  GetPref(aBranch, "media.getusermedia.audio.processing.noise", aData,
+          &mPrefs.mNoise);
+  GetPref(aBranch, "media.getusermedia.audio.max_channels", aData,
+          &mPrefs.mChannels);
 #endif
   LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s, "
       "agc: %s, hpf: %s, noise: %s, drift: %s, agc level: %d, agc version: %s, "
