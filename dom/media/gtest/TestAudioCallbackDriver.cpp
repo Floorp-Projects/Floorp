@@ -31,12 +31,12 @@ class MockGraphInterface : public GraphInterface {
   NS_DECL_THREADSAFE_ISUPPORTS
   explicit MockGraphInterface(TrackRate aSampleRate)
       : mSampleRate(aSampleRate) {}
-  MOCK_METHOD0(NotifyInputStopped, void());
-  MOCK_METHOD5(NotifyInputData, void(const AudioDataValue*, size_t, TrackRate,
-                                     uint32_t, uint32_t));
-  MOCK_METHOD0(DeviceChanged, void());
+  MOCK_METHOD(void, NotifyInputStopped, ());
+  MOCK_METHOD(void, NotifyInputData,
+              (const AudioDataValue*, size_t, TrackRate, uint32_t, uint32_t));
+  MOCK_METHOD(void, DeviceChanged, ());
 #ifdef DEBUG
-  MOCK_CONST_METHOD1(InDriverIteration, bool(const GraphDriver*));
+  MOCK_METHOD(bool, InDriverIteration, (const GraphDriver*), (const));
 #endif
   /* OneIteration cannot be mocked because IterationResult is non-memmovable and
    * cannot be passed as a parameter, which GMock does internally. */
