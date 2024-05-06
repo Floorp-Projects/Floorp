@@ -9,14 +9,12 @@
 #include "GraphDriver.h"
 
 #include "gmock/gmock.h"
-#include "gtest/gtest-printers.h"
 #include "gtest/gtest.h"
 
 #include "MediaTrackGraphImpl.h"
 #include "mozilla/gtest/WaitFor.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
 #include "MockCubeb.h"
