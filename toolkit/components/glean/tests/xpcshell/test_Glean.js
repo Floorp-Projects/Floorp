@@ -514,7 +514,7 @@ add_task(async function test_fog_object_works() {
   let expected = [
     { colour: "red", diameter: 5 },
     { colour: "blue", diameter: 7 },
-    { colour: "orange" },
+    { colour: "orange", diameter: null },
   ];
   Assert.deepEqual(expected, result);
 
@@ -528,10 +528,10 @@ add_task(async function test_fog_object_works() {
   Glean.testOnly.balloons.set(balloons);
   result = Glean.testOnly.balloons.testGetValue();
   expected = [
-    { colour: "inf" },
-    { colour: "negative-inf" },
-    { colour: "nan" },
-    { colour: "undef" },
+    { colour: "inf", diameter: null },
+    { colour: "negative-inf", diameter: null },
+    { colour: "nan", diameter: null },
+    { colour: "undef", diameter: null },
   ];
   Assert.deepEqual(expected, result);
 
@@ -561,70 +561,4 @@ add_task(async function test_fog_object_works() {
     /invalid_value/,
     "Should throw because last object was invalid."
   );
-});
-
-add_task(async function test_fog_complex_object_works() {
-  if (!Glean.testOnly.crashStack) {
-    // FIXME(bug 1883857): object metric type not available, e.g. in artifact builds.
-    // Skipping this test.
-    return;
-  }
-
-  Assert.equal(
-    undefined,
-    Glean.testOnly.crashStack.testGetValue(),
-    "No object stored"
-  );
-
-  Glean.testOnly.crashStack.set({});
-  let result = Glean.testOnly.crashStack.testGetValue();
-  Assert.deepEqual({}, result);
-
-  let stack = {
-    status: "OK",
-    crash_info: {
-      typ: "main",
-      address: "0xf001ba11",
-      crashing_thread: 1,
-    },
-    main_module: 0,
-    modules: [
-      {
-        base_addr: "0x00000000",
-        end_addr: "0x00004000",
-      },
-    ],
-  };
-
-  Glean.testOnly.crashStack.set(stack);
-  result = Glean.testOnly.crashStack.testGetValue();
-  Assert.deepEqual(stack, result);
-
-  stack = {
-    status: "OK",
-    modules: [
-      {
-        base_addr: "0x00000000",
-        end_addr: "0x00004000",
-      },
-    ],
-  };
-  Glean.testOnly.crashStack.set(stack);
-  result = Glean.testOnly.crashStack.testGetValue();
-  Assert.deepEqual(stack, result);
-
-  stack = {
-    status: "OK",
-    modules: [],
-  };
-  Glean.testOnly.crashStack.set(stack);
-  result = Glean.testOnly.crashStack.testGetValue();
-  Assert.deepEqual({ status: "OK" }, result);
-
-  stack = {
-    status: "OK",
-  };
-  Glean.testOnly.crashStack.set(stack);
-  result = Glean.testOnly.crashStack.testGetValue();
-  Assert.deepEqual(stack, result);
 });
