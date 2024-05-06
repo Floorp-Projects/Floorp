@@ -1318,6 +1318,7 @@ class WheelScrollAction extends WheelAction {
       this.duration ?? tickDuration,
       deltaTarget =>
         this.performOneWheelScroll(
+          state,
           scrollCoordinates,
           deltaPosition,
           deltaTarget,
@@ -1329,12 +1330,19 @@ class WheelScrollAction extends WheelAction {
   /**
    * Perform one part of a wheel scroll corresponding to a specific emitted event.
    *
+   * @param {State} state - Actions state.
    * @param {Array<number>} scrollCoordinates - [x, y] viewport coordinates of the scroll.
    * @param {Array<number>} deltaPosition - [deltaX, deltaY] coordinates of the scroll before this event.
    * @param {Array<Array<number>>} deltaTargets - Array of [deltaX, deltaY] coordinates to scroll to.
    * @param {WindowProxy} win - Current window global.
    */
-  performOneWheelScroll(scrollCoordinates, deltaPosition, deltaTargets, win) {
+  performOneWheelScroll(
+    state,
+    scrollCoordinates,
+    deltaPosition,
+    deltaTargets,
+    win
+  ) {
     if (deltaTargets.length !== 1) {
       throw new Error("Can only scroll one wheel at a time");
     }
@@ -1350,6 +1358,7 @@ class WheelScrollAction extends WheelAction {
       deltaY,
       deltaZ: 0,
     });
+    eventData.update(state);
 
     lazy.event.synthesizeWheelAtPoint(
       scrollCoordinates[0],
@@ -2237,6 +2246,22 @@ class WheelEventData extends InputEventData {
     this.deltaY = deltaY;
     this.deltaZ = deltaZ;
     this.deltaMode = deltaMode;
+
+    this.altKey = false;
+    this.ctrlKey = false;
+    this.metaKey = false;
+    this.shiftKey = false;
+  }
+
+  update(state) {
+    // set modifier properties based on whether any corresponding keys are
+    // pressed on any key input source
+    for (const [, otherInputSource] of state.inputSourcesByType("key")) {
+      this.altKey = otherInputSource.alt || this.altKey;
+      this.ctrlKey = otherInputSource.ctrl || this.ctrlKey;
+      this.metaKey = otherInputSource.meta || this.metaKey;
+      this.shiftKey = otherInputSource.shift || this.shiftKey;
+    }
   }
 }
 
