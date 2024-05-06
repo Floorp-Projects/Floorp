@@ -26,7 +26,7 @@ class SVGSymbolElement final : public SVGSymbolElementBase {
   ~SVGSymbolElement() = default;
   JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
-  Focusable IsFocusableWithoutStyle(bool aWithMouse) override;
+  Focusable IsFocusableWithoutStyle(IsFocusableFlags) override;
 
  public:
   // interfaces:

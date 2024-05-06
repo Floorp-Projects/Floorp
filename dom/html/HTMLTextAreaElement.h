@@ -122,7 +122,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   nsresult PreHandleEvent(EventChainVisitor& aVisitor) override;
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
-  bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+  bool IsHTMLFocusable(IsFocusableFlags, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
 
   void DoneAddingChildren(bool aHaveNotified) override;

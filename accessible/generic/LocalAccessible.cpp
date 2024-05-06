@@ -14,6 +14,7 @@
 #include "mozilla/a11y/AccAttributes.h"
 #include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/a11y/Platform.h"
+#include "mozilla/FocusModel.h"
 #include "nsAccUtils.h"
 #include "nsAccessibilityService.h"
 #include "ApplicationAccessible.h"
@@ -407,6 +408,7 @@ uint64_t LocalAccessible::NativeInteractiveState() const {
   if (NativelyUnavailable()) return states::UNAVAILABLE;
 
   nsIFrame* frame = GetFrame();
+  auto flags = IsFocusableFlags(0);
   // If we're caching this remote document in the parent process, we
   // need to cache focusability irrespective of visibility. Otherwise,
   // if this document is invisible when it first loads, we'll cache that
@@ -417,13 +419,12 @@ uint64_t LocalAccessible::NativeInteractiveState() const {
   // Although ignoring visibility means IsFocusable will return true for
   // visibility: hidden, etc., this isn't a problem because we don't include
   // those hidden elements in the a11y tree anyway.
-  const bool ignoreVisibility = mDoc->IPCDoc();
-  if (frame && frame->IsFocusable(
-                   /* aWithMouse */ false,
-                   /* aCheckVisibility */ !ignoreVisibility)) {
+  if (mDoc->IPCDoc()) {
+    flags |= IsFocusableFlags::IgnoreVisibility;
+  }
+  if (frame && frame->IsFocusable(flags)) {
     return states::FOCUSABLE;
   }
-
   return 0;
 }
 

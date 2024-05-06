@@ -2,12 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_TabFocusModel_h
-#define mozilla_TabFocusModel_h
+#ifndef mozilla_FocusModel_h
+#define mozilla_FocusModel_h
 
 #include "mozilla/StaticPrefs_accessibility.h"
+#include "mozilla/TypedEnumBits.h"
 
 namespace mozilla {
+
+enum class IsFocusableFlags : uint8_t {
+  WithMouse = 1 << 0,
+  // Whether to treat an invisible frame as not focusable
+  IgnoreVisibility = 1 << 1,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(IsFocusableFlags);
 
 enum class TabFocusableType : uint8_t {
   TextControls = 1,       // Textboxes and lists always tabbable
@@ -16,7 +25,7 @@ enum class TabFocusableType : uint8_t {
   Any = TextControls | FormElements | Links,
 };
 
-class TabFocusModel final {
+class FocusModel final {
  public:
   static bool AppliesToXUL() {
     return StaticPrefs::accessibility_tabfocus_applies_to_xul();

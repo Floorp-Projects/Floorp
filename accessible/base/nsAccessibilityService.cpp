@@ -12,6 +12,7 @@
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
 #include "FocusManager.h"
+#include "mozilla/FocusModel.h"
 #include "HTMLCanvasAccessible.h"
 #include "HTMLElementAccessibles.h"
 #include "HTMLImageMapAccessible.h"
@@ -188,8 +189,7 @@ static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
     // not create Accessibles for some focusable elements; e.g. a span with only
     // a tabindex. Elements that are invisible within this document are excluded
     // earlier in CreateAccessible.
-    if (frame->IsFocusable(/* aWithMouse */ false,
-                           /* aCheckVisibility */ false)) {
+    if (frame->IsFocusable(IsFocusableFlags::IgnoreVisibility)) {
       return true;
     }
   }

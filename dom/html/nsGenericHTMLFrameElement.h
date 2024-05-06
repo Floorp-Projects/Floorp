@@ -50,15 +50,15 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_GENERICHTMLFRAMEELEMENT_IID)
 
   // nsIContent
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
-                               int32_t* aTabIndex) override;
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(UnbindContext&) override;
-  virtual void DestroyContent() override;
+  bool IsHTMLFocusable(mozilla::IsFocusableFlags, bool* aIsFocusable,
+                       int32_t* aTabIndex) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(UnbindContext&) override;
+  void DestroyContent() override;
 
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
-  virtual int32_t TabIndexDefault() override;
+  int32_t TabIndexDefault() override;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGenericHTMLFrameElement,
                                            nsGenericHTMLElement)

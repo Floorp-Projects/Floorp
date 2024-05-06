@@ -164,7 +164,7 @@ bool SVGGraphicsElement::IsSVGFocusable(bool* aIsFocusable,
   return false;
 }
 
-Focusable SVGGraphicsElement::IsFocusableWithoutStyle(bool aWithMouse) {
+Focusable SVGGraphicsElement::IsFocusableWithoutStyle(IsFocusableFlags) {
   Focusable result;
   IsSVGFocusable(&result.mFocusable, &result.mTabIndex);
   return result;

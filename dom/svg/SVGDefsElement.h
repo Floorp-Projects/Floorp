@@ -25,7 +25,7 @@ class SVGDefsElement final : public SVGGraphicsElement {
 
  public:
   // defs elements are not focusable.
-  Focusable IsFocusableWithoutStyle(bool aWithMouse) override { return {}; }
+  Focusable IsFocusableWithoutStyle(IsFocusableFlags) override { return {}; }
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 

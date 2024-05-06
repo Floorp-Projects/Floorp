@@ -68,10 +68,11 @@ nsresult HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return rv;
 }
 
-bool HTMLSummaryElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+bool HTMLSummaryElement::IsHTMLFocusable(IsFocusableFlags aFlags,
+                                         bool* aIsFocusable,
                                          int32_t* aTabIndex) {
-  bool disallowOverridingFocusability = nsGenericHTMLElement::IsHTMLFocusable(
-      aWithMouse, aIsFocusable, aTabIndex);
+  bool disallowOverridingFocusability =
+      nsGenericHTMLElement::IsHTMLFocusable(aFlags, aIsFocusable, aTabIndex);
 
   if (disallowOverridingFocusability || !IsMainSummary()) {
     return disallowOverridingFocusability;

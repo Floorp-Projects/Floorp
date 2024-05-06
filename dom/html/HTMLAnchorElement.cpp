@@ -14,7 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
-#include "mozilla/TabFocusModel.h"
+#include "mozilla/FocusModel.h"
 #include "mozilla/dom/Document.h"
 #include "nsPresContext.h"
 #include "nsIURI.h"
@@ -86,10 +86,10 @@ void HTMLAnchorElement::UnbindFromTree(UnbindContext& aContext) {
   Link::UnbindFromTree();
 }
 
-bool HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+bool HTMLAnchorElement::IsHTMLFocusable(IsFocusableFlags aFlags,
+                                        bool* aIsFocusable,
                                         int32_t* aTabIndex) {
-  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable,
-                                            aTabIndex)) {
+  if (nsGenericHTMLElement::IsHTMLFocusable(aFlags, aIsFocusable, aTabIndex)) {
     return true;
   }
 
@@ -119,7 +119,7 @@ bool HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
     }
   }
 
-  if (!TabFocusModel::IsTabFocusable(TabFocusableType::Links)) {
+  if (!FocusModel::IsTabFocusable(TabFocusableType::Links)) {
     *aTabIndex = -1;
   }
   *aIsFocusable = true;

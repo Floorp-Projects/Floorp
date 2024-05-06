@@ -162,7 +162,7 @@ class HTMLInputElement final : public TextControlElement,
   void FieldSetDisabledChanged(bool aNotify) override;
 
   // nsIContent
-  bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+  bool IsHTMLFocusable(IsFocusableFlags, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
 
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,

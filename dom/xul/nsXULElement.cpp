@@ -37,6 +37,7 @@
 #include "mozilla/EventQueue.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/FlushType.h"
+#include "mozilla/FocusModel.h"
 #include "mozilla/GlobalKeyListener.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/MacroForEach.h"
@@ -50,7 +51,7 @@
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/TabFocusModel.h"
+#include "mozilla/FocusModel.h"
 #include "mozilla/TaskController.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/URLExtraData.h"
@@ -374,12 +375,12 @@ static bool IsNonList(mozilla::dom::NodeInfo* aNodeInfo) {
 }
 
 nsXULElement::XULFocusability nsXULElement::GetXULFocusability(
-    bool aWithMouse) {
+    IsFocusableFlags aFlags) {
 #ifdef XP_MACOSX
   // On Mac, mouse interactions only focus the element if it's a list,
   // or if it's a remote target, since the remote target must handle
   // the focus.
-  if (aWithMouse && IsNonList(mNodeInfo) &&
+  if ((aFlags & IsFocusableFlags::WithMouse) && IsNonList(mNodeInfo) &&
       !EventStateManager::IsTopLevelRemoteTarget(this)) {
     return XULFocusability::NeverFocusable();
   }
@@ -403,8 +404,8 @@ nsXULElement::XULFocusability nsXULElement::GetXULFocusability(
     result.mForcedFocusable.emplace(true);
     result.mForcedTabIndexIfFocusable.emplace(attrVal.value());
   }
-  if (xulControl && TabFocusModel::AppliesToXUL() &&
-      !TabFocusModel::IsTabFocusable(TabFocusableType::FormElements) &&
+  if (xulControl && FocusModel::AppliesToXUL() &&
+      !FocusModel::IsTabFocusable(TabFocusableType::FormElements) &&
       IsNonList(mNodeInfo)) {
     // By default, the tab focus model doesn't apply to xul element on any
     // system but OS X. For compatibility, we only do this for controls,
@@ -416,8 +417,8 @@ nsXULElement::XULFocusability nsXULElement::GetXULFocusability(
 
 // XUL elements are not focusable unless explicitly opted-into it with
 // -moz-user-focus: normal, or the tabindex attribute.
-Focusable nsXULElement::IsFocusableWithoutStyle(bool aWithMouse) {
-  const auto focusability = GetXULFocusability(aWithMouse);
+Focusable nsXULElement::IsFocusableWithoutStyle(IsFocusableFlags aFlags) {
+  const auto focusability = GetXULFocusability(aFlags);
   const bool focusable = focusability.mDefaultFocusable;
   return {focusable,
           focusable ? focusability.mForcedTabIndexIfFocusable.valueOr(-1) : -1};

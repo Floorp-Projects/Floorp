@@ -87,7 +87,7 @@ class HTMLButtonElement final : public nsGenericHTMLFormControlElementWithState,
                       nsAttrValue& aResult) override;
 
   // nsGenericHTMLElement
-  bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+  bool IsHTMLFocusable(IsFocusableFlags, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
   bool IsDisabledForEvents(WidgetEvent* aEvent) override;
 

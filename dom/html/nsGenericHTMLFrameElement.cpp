@@ -311,11 +311,10 @@ nsresult nsGenericHTMLFrameElement::CopyInnerTo(Element* aDest) {
   return rv;
 }
 
-bool nsGenericHTMLFrameElement::IsHTMLFocusable(bool aWithMouse,
+bool nsGenericHTMLFrameElement::IsHTMLFocusable(IsFocusableFlags aFlags,
                                                 bool* aIsFocusable,
                                                 int32_t* aTabIndex) {
-  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable,
-                                            aTabIndex)) {
+  if (nsGenericHTMLElement::IsHTMLFocusable(aFlags, aIsFocusable, aTabIndex)) {
     return true;
   }
 
