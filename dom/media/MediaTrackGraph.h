@@ -112,7 +112,8 @@ class AudioDataListenerInterface {
   /**
    * Number of audio input channels.
    */
-  virtual uint32_t RequestedInputChannelCount(MediaTrackGraph* aGraph) = 0;
+  virtual uint32_t RequestedInputChannelCount(
+      MediaTrackGraph* aGraph) const = 0;
 
   /**
    * Whether the underlying audio device is used for voice input.
