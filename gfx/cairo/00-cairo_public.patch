@@ -1,0 +1,21 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1713882230 -3600
+#      Tue Apr 23 15:23:50 2024 +0100
+# Node ID 18ffa0ace007ca3b1acb66c9081089ea2d2e0917
+# Parent  8f822dbadb73fcfb8765937ea6bdfbaed5bd0c2c
+Avoid redefinition of cairo_public
+
+diff --git a/gfx/cairo/cairo/src/cairo.h b/gfx/cairo/cairo/src/cairo.h
+--- a/gfx/cairo/cairo/src/cairo.h
++++ b/gfx/cairo/cairo/src/cairo.h
+@@ -67,7 +67,9 @@
+ # define _cairo_api _cairo_import
+ #endif
+ 
++#ifndef cairo_public
+ #define cairo_public _cairo_api extern
++#endif
+ 
+ CAIRO_BEGIN_DECLS
+ 

@@ -67,7 +67,9 @@
 # define _cairo_api _cairo_import
 #endif
 
+#ifndef cairo_public
 #define cairo_public _cairo_api extern
+#endif
 
 CAIRO_BEGIN_DECLS
 
