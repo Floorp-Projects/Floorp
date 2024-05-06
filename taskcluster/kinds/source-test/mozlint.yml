@@ -20,6 +20,11 @@ job-defaults:
               path: /builds/worker/mozlint.json
     run:
         using: mach
+    when:
+        files-changed:
+            # Other misc lint related files.
+            - 'python/mozlint/**'
+            - 'tools/lint/**'
 
 codespell:
     description: Checks for misspellings in text files
@@ -30,8 +35,24 @@ codespell:
         tier: 2
     run:
         mach: lint -v -l codespell -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: codespell.yml
+    when:
+        files-changed:
+            - '**/*.js'
+            - '**/*.jsm'
+            - '**/*.jxs'
+            - '**/*.mjs'
+            - '**/*.xml'
+            - '**/*.html'
+            - '**/*.xhtml'
+            - '**/*.cpp'
+            - '**/*.c'
+            - '**/*.h'
+            - '**/*.configure'
+            - '**/*.py'
+            - '**/*.properties'
+            - '**/*.rst'
+            - '**/*.ftl'
+            - 'tools/lint/codespell.yml'
 
 
 rejected-words:
@@ -43,8 +64,28 @@ rejected-words:
         tier: 2
     run:
         mach: lint -v -l rejected-words -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: rejected-words.yml
+    when:
+        files-changed:
+            - '**/*.js'
+            - '**/*.jsm'
+            - '**/*.jxs'
+            - '**/*.mjs'
+            - '**/*.xml'
+            - '**/*.html'
+            - '**/*.xhtml'
+            - '**/*.cpp'
+            - '**/*.c'
+            - '**/*.h'
+            - '**/*.idl'
+            - '**/*.webidl'
+            - '**/*.configure'
+            - '**/*.py'
+            - '**/*.properties'
+            - '**/*.rst'
+            - '**/*.ftl'
+            - '**/*.java'
+            - '**/*.kt'
+            - 'tools/lint/rejected-words.yml'
 
 eslint:
     description: JS lint check
@@ -59,8 +100,25 @@ eslint:
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
             ./mach lint -v -l eslint -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: eslint.yml
+    when:
+        files-changed:
+            # Files that are likely audited.
+            - '**/*.js'
+            - '**/*.jsm'
+            - '**/*.json'
+            - '**/*.jsx'
+            - '**/*.mjs'
+            - '**/*.sjs'
+            - '**/*.html'
+            - '**/*.xhtml'
+            - '**/*.xml'
+            - 'tools/lint/eslint.yml'
+            # Run when eslint policies change.
+            - '**/.eslintignore'
+            - '**/*eslintrc*'
+            # The plugin implementing custom checks.
+            - 'tools/lint/eslint/eslint-plugin-mozilla/**'
+            - 'tools/lint/eslint/eslint-plugin-spidermonkey-js/**'
 
 eslint-build:
     description: ESLint checks with build data
@@ -104,8 +162,14 @@ stylelint:
         command: >
             cp -r /build/node_modules_eslint node_modules &&
             ./mach lint -v -l stylelint -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: stylelint.yml
+    when:
+        files-changed:
+            # Files that are likely audited.
+            - '**/*.css'
+            - 'tools/lint/styleint.yml'
+            # Run when stylelint policies change.
+            - '**/.stylelintignore'
+            - '**/*stylelintrc*'
 
 license:
     description: Check for license blocks in source files.
@@ -113,8 +177,31 @@ license:
         symbol: pedantic(license)
     run:
         mach: lint -v -l license -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: license.yml
+    when:
+        files-changed:
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.cpp'
+            - '**/*.css'
+            - '**/*.dtd'
+            - '**/*.ftl'
+            - '**/*.h'
+            - '**/*.html'
+            - '**/*.idl'
+            - '**/*.js'
+            - '**/*.jsm'
+            - '**/*.jsx'
+            - '**/*.m'
+            - '**/*.mjs'
+            - '**/*.mm'
+            - '**/*.properties'
+            - '**/*.py'
+            - '**/*.rs'
+            - '**/*.svg'
+            - '**/*.webidl'
+            - '**/*.xhtml'
+            - '**/*.xml'
+            - 'tools/lint/license.yml'
 
 lintpref:
     description: Check for duplicates between all.js and StaticPrefList.yaml.
@@ -122,8 +209,21 @@ lintpref:
         symbol: misc(pref)
     run:
         mach: lint -v -l lintpref -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: lintpref.yml
+    when:
+        files-changed:
+            - 'modules/libpref/init/all.js'
+            - 'modules/libpref/init/StaticPrefList.yaml'
+            - 'browser/app/profile/firefox.js'
+            - 'devtools/client/preferences/debugger.js'
+            - 'mobile/android/app/geckoview-prefs.js'
+            - 'browser/branding/official/pref/firefox-branding.js'
+            - 'browser/branding/nightly/pref/firefox-branding.js'
+            - 'browser/branding/unofficial/pref/firefox-branding.js'
+            - 'browser/branding/aurora/pref/firefox-branding.js'
+            - 'browser/app/profile/channel-prefs.js'
+            - 'mobile/android/installer/mobile-l10n.js'
+            - 'mobile/android/locales/en-US/mobile-l10n.js'
+            - 'tools/lint/lintpref.yml'
 
 mingw-cap:
     description: lint for MinGW Capitalization issues
@@ -131,8 +231,13 @@ mingw-cap:
         symbol: misc(mingw)
     run:
         mach: lint -v -l mingw-capitalization -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: mingw-capitalization.yml
+    when:
+        files-changed:
+            - '**/*.cpp'
+            - '**/*.cc'
+            - '**/*.c'
+            - '**/*.h'
+            - 'tools/lint/mingw-capitalization.yml'
 
 updatebot:
     description: Ensure moz.yaml files are valid per schema
@@ -140,8 +245,9 @@ updatebot:
         symbol: misc(mozyaml)
     run:
         mach: lint -v -l updatebot -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: updatebot.yml
+    when:
+        files-changed:
+            - '**/moz.yaml'
 
 mscom-init:
     description: Lint for Microsoft COM initialization
@@ -149,8 +255,13 @@ mscom-init:
         symbol: misc(mscom)
     run:
         mach: lint -v -l mscom-init -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: mscom-init.yml
+    when:
+        files-changed:
+            - '**/*.cpp'
+            - '**/*.cc'
+            - '**/*.c'
+            - '**/*.h'
+            - 'tools/lint/mscom-init.yml'
 
 py-black:
     description: black run over the gecko codebase
@@ -158,8 +269,15 @@ py-black:
         symbol: py(black)
     run:
         mach: lint -v -l black -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: black.yml
+    when:
+        files-changed:
+            # The list of extensions should match tools/lint/black.yml
+            - '**/*.py'
+            - '**/moz.build'
+            - '**/*.configure'
+            - '**/*.mozbuild'
+            - 'pyproject.toml'
+            - 'tools/lint/black.yml'
 
 py-ruff:
     description: Run ruff over the gecko codebase
@@ -167,8 +285,15 @@ py-ruff:
         symbol: py(ruff)
     run:
         mach: lint -v -l ruff -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: ruff.yml
+    when:
+        files-changed:
+            - '**/*.py'
+            - '**/*.configure'
+            - '**/.ruff.toml'
+            - 'pyproject.toml'
+            - 'tools/lint/ruff.yml'
+            - 'tools/lint/python/ruff.py'
+            - 'tools/lint/python/ruff_requirements.txt'
 
 test-manifest:
     description: lint test manifests
@@ -176,11 +301,12 @@ test-manifest:
         symbol: misc(tm)
     run:
         mach: lint -v -l test-manifest-alpha -l test-manifest-disable -l test-manifest-skip-if -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint:
-            - test-manifest-alpha.yml
-            - test-manifest-disable.yml
-            - test-manifest-skip-if.yml
+    when:
+        files-changed:
+            - '**/*.toml'
+            - 'python/mozlint/**'
+            - 'tools/lint/**'
+            - 'tools/lint/test-disable.yml'
 
 wptlint-gecko:
     description: web-platform-tests linter
@@ -188,8 +314,11 @@ wptlint-gecko:
         symbol: misc(W)
     run:
         mach: lint -v -l wpt -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: wpt.yml
+    when:
+        files-changed:
+            - 'testing/web-platform/tests/**'
+            - 'testing/web-platform/mozilla/tests/**'
+            - 'tools/lint/wpt.yml'
 
 yaml:
     description: yamllint run over the gecko codebase
@@ -197,8 +326,11 @@ yaml:
         symbol: pedantic(yaml)
     run:
         mach: lint -v -l yaml -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: yaml.yml
+    when:
+        files-changed:
+            - '**/*.yml'
+            - '**/*.yaml'
+            - '**/.ymllint'
 
 rst:
     description: rst lint run over the gecko codebase
@@ -206,8 +338,10 @@ rst:
         symbol: text(rst)
     run:
         mach: lint -v -l rst -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: rst.yml
+    when:
+        files-changed:
+            - '**/*.rst'
+            - 'tools/lint/rst.yml'
 
 shellcheck:
     description: shellcheck run over the gecko codebase
@@ -215,8 +349,10 @@ shellcheck:
         symbol: misc(shell)
     run:
         mach: lint -v -l shellcheck -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: shellcheck.yml
+    when:
+        files-changed:
+            - '**/*.sh'
+            - 'tools/lint/shellcheck.yml'
 
 
 localization:
@@ -227,8 +363,13 @@ localization:
         mach: lint -v -l l10n -f treeherder *
     attributes:
         code-review: false
-    optimization:
-        skip-unless-mozlint: l10n.yml
+    when:
+        files-changed:
+            - '**/locales/en-US/**'
+            - '**/l10n.toml'
+            - 'third_party/python/compare-locales/**'
+            - 'third_party/python/fluent/**'
+            - 'tools/lint/l10n.yml'
 
 
 l10n-conflicts:
@@ -239,8 +380,14 @@ l10n-conflicts:
     run-on-projects: []
     run:
         mach: lint -W -l l10n -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: l10n.yml
+    when:
+        files-changed:
+            - '**/locales/en-US/**'
+            - '**/l10n.toml'
+            - 'third_party/python/compare-locales/**'
+            - 'third_party/python/fluent/**'
+            - 'tools/lint/l10n.yml'
+
 
 clang-format:
     description: clang-format on the C/C++ code
@@ -248,8 +395,15 @@ clang-format:
         symbol: cpp(clang-format)
     run:
         mach: lint -v -l clang-format -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: clang-format.yml
+    when:
+        files-changed:
+            - '**/*.cpp'
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.h'
+            - '**/*.m'
+            - '**/*.mm'
+            - 'tools/lint/clang-format.yml'
     dependencies:
         linux64-clang-tidy: toolchain-linux64-clang-tidy
     fetches:
@@ -264,8 +418,10 @@ rustfmt:
         symbol: rust(rustfmt)
     run:
         mach: lint -v -l rustfmt -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: rustfmt.yml
+    when:
+        files-changed:
+            - '**/*.rs'
+            - 'tools/lint/rustfmt.yml'
     fetches:
         toolchain:
             - linux64-rust
@@ -277,8 +433,11 @@ clippy:
         symbol: rust(clippy)
     run:
         mach: lint -v -l clippy -f treeherder -f json:/builds/worker/mozlint.json -j 1 .
-    optimization:
-        skip-unless-mozlint: clippy.yml
+    when:
+        files-changed:
+            - '**/*.rs'
+            - '**/Cargo.toml'
+            - 'tools/lint/clippy.yml'
     fetches:
         toolchain:
             - linux64-clang
@@ -304,8 +463,29 @@ file-whitespace:
         tier: 2
     run:
         mach: lint -v -l file-whitespace -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: file-whitespace.yml
+    when:
+        files-changed:
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.cpp'
+            - '**/*.css'
+            - '**/*.dtd'
+            - '**/*.idl'
+            - '**/*.ftl'
+            - '**/*.h'
+            - '**/*.html'
+            - '**/*.json'
+            - '**/*.md'
+            - '**/*.mn'
+            - '**/*.properties'
+            - '**/*.py'
+            - '**/*.rs'
+            - '**/*.rst'
+            - '**/*.toml'
+            - '**/*.webidl'
+            - '**/*.yaml'
+            - '**/*.yml'
+            - '**/*.xhtml'
 
 
 file-perm:
@@ -318,8 +498,40 @@ file-perm:
         tier: 2
     run:
         mach: lint -v -l file-perm -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: file-perm.yml
+    when:
+        files-changed:
+            - '**/*.build'
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.cpp'
+            - '**/*.flac'
+            - '**/*.h'
+            - '**/*.html'
+            - '**/*.idl'
+            - '**/*.js'
+            - '**/*.jsm'
+            - '**/*.json'
+            - '**/*.jsx'
+            - '**/*.m'
+            - '**/*.m4s'
+            - '**/*.md'
+            - '**/*.mjs'
+            - '**/*.mm'
+            - '**/*.mn'
+            - '**/*.mozbuild'
+            - '**/*.mp4'
+            - '**/*.png'
+            - '**/*.rs'
+            - '**/*.rst'
+            - '**/*.svg'
+            - '**/*.toml'
+            - '**/*.ttf'
+            - '**/*.wasm'
+            - '**/*.webidl'
+            - '**/*.xhtml'
+            - '**/*.xml'
+            - '**/*.yaml'
+            - '**/*.yml'
 
 
 perfdocs-verify:
@@ -336,8 +548,18 @@ perfdocs-verify:
             - type: file
               name: public/perfdocs.diff
               path: /builds/worker/diff.txt
-    optimization:
-        skip-unless-mozlint: perfdocs.yml
+    when:
+        files-changed:
+            - 'devtools/perfdocs/**'
+            - 'taskcluster/**'
+            - '**/perftest.toml'
+            - 'python/mozperftest/**'
+            - 'testing/awsy/**'
+            - 'testing/raptor/**'
+            - 'testing/talos/**'
+            - 'testing/performance/**'
+            - 'testing/perfdocs/**'
+            - 'tools/lint/perfdocs.yml'
 
 condprof-addons-verify:
     description: |
@@ -351,8 +573,10 @@ condprof-addons-verify:
     fetches:
         fetch:
             - firefox-addons
-    optimization:
-        skip-unless-mozlint: condprof-addons.yml
+    when:
+        files-changed:
+            - 'testing/condprofile/condprof/customization/*.json'
+            - 'taskcluster/ci/fetch/browsertime.yml'
 
 fluent-lint:
     description: Check for problems with Fluent files.
@@ -361,8 +585,11 @@ fluent-lint:
         symbol: l10n(fluent)
     run:
         mach: lint --linter fluent-lint -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: fluent-lint.yml
+    when:
+        files-changed:
+            - '**/*.ftl'
+            - 'tools/lint/fluent-lint.yml'
+            - 'tools/lint/fluent-lint/exclusions.yml'
 
 trojan-source:
     description: Trojan Source attack - CVE-2021-42572
@@ -371,8 +598,15 @@ trojan-source:
         symbol: misc(trojan-source)
     run:
         mach: lint -v -l trojan-source --include-third-party -f treeherder -f json:/builds/worker/mozlint.json .
-    optimization:
-        skip-unless-mozlint: trojan-source.yml
+    when:
+        files-changed:
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.cpp'
+            - '**/*.h'
+            - '**/*.py'
+            - '**/*.rs'
+            - 'tools/lint/trojan-source.yml'
 
 ignorefile-test:
     description: .gitignore vs .hgignore consistency check
@@ -381,5 +615,7 @@ ignorefile-test:
         symbol: ignorefile
     run:
         mach: lint -v -l ignorefile .gitignore .hgignore
-    optimization:
-        skip-unless-mozlint: ignorefile.yml
+    when:
+        files-changed:
+            - '.gitignore'
+            - '.hgignore'
