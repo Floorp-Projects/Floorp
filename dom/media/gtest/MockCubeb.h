@@ -198,6 +198,7 @@ class MockCubebStream {
   uint32_t OutputChannels() const MOZ_EXCLUDES(mMutex);
   uint32_t SampleRate() const MOZ_EXCLUDES(mMutex);
   uint32_t InputFrequency() const MOZ_EXCLUDES(mMutex);
+  Maybe<cubeb_state> State() const MOZ_EXCLUDES(mMutex);
 
   void SetDriftFactor(float aDriftFactor) MOZ_EXCLUDES(mMutex);
   void ForceError() MOZ_EXCLUDES(mMutex);
@@ -266,7 +267,7 @@ class MockCubebStream {
   // The stream's most recently issued state change, if any has occurred.
   // Used to abort a frozen start if cubeb_stream_start() is called currently
   // with a blocked cubeb_stream_start() call.
-  bool mStreamStop MOZ_GUARDED_BY(mMutex) = true;
+  Maybe<cubeb_state> mState MOZ_GUARDED_BY(mMutex);
   // Whether or not the output-side of this stream (what is written from the
   // callback output buffer) is recorded in an internal buffer. The data is then
   // available via `GetRecordedOutput`.

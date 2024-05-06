@@ -2379,6 +2379,13 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
 
   RefPtr<SmartMockCubebStream> inputStream = WaitFor(cubeb->StreamInitEvent());
 
+  while (
+      inputStream->State()
+          .map([](cubeb_state aState) { return aState != CUBEB_STATE_STARTED; })
+          .valueOr(true)) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
   // Wait for the primary AudioCallbackDriver to come into effect.
   while (primaryFallbackListener->OnFallback()) {
     EXPECT_EQ(inputStream->ManualDataCallback(0),
@@ -2410,6 +2417,13 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
 
   RefPtr<SmartMockCubebStream> partnerStream =
       WaitFor(cubeb->StreamInitEvent());
+
+  while (
+      partnerStream->State()
+          .map([](cubeb_state aState) { return aState != CUBEB_STATE_STARTED; })
+          .valueOr(true)) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
 
   // Process the CrossGraphTransmitter on the primary graph.
   EXPECT_EQ(inputStream->ManualDataCallback(0),
