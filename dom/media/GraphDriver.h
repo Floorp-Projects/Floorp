@@ -620,9 +620,6 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
 
   std::thread::id ThreadId() const { return mAudioThreadIdInCb.load(); }
 
-  /* Called when the thread servicing the callback has changed. This can be
-   * fairly expensive */
-  void OnThreadIdChanged();
   /* Called at the beginning of the audio callback to check if the thread id has
    * changed. */
   bool CheckThreadIdChanged();
