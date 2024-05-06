@@ -6,6 +6,7 @@
 
 #include <string>
 #include <unordered_set>
+#include <utility>
 
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
@@ -42,6 +43,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_security.h"
+#include "mozilla/Variant.h"
 #include "mozilla/dom/CSPReportBinding.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -965,7 +967,7 @@ void StripURIForReporting(nsIURI* aSelfURI, nsIURI* aURI,
 }
 
 nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
-    nsIURI* aBlockedURI, const nsACString& aBlockedString, nsIURI* aOriginalURI,
+    Resource& aResource, nsIURI* aOriginalURI,
     const nsAString& aEffectiveDirective, uint32_t aViolatedPolicyIndex,
     const nsAString& aSourceFile, const nsAString& aScriptSample,
     uint32_t aLineNum, uint32_t aColumnNum,
@@ -990,13 +992,17 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
   // blocked-uri
   // Corresponds to
   // <https://w3c.github.io/webappsec-csp/#obtain-violation-blocked-uri>.
-  if (aBlockedURI) {
+  if (aResource.is<nsIURI*>()) {
     nsAutoCString reportBlockedURI;
-    StripURIForReporting(mSelfURI, aOriginalURI ? aOriginalURI : aBlockedURI,
+    StripURIForReporting(mSelfURI,
+                         aOriginalURI ? aOriginalURI : aResource.as<nsIURI*>(),
                          aEffectiveDirective, reportBlockedURI);
     CopyUTF8toUTF16(reportBlockedURI, aViolationEventInit.mBlockedURI);
   } else {
-    CopyUTF8toUTF16(aBlockedString, aViolationEventInit.mBlockedURI);
+    nsAutoCString blockedContentSource;
+    BlockedContentSourceToString(aResource.as<BlockedContentSource>(),
+                                 blockedContentSource);
+    CopyUTF8toUTF16(blockedContentSource, aViolationEventInit.mBlockedURI);
   }
 
   // effective-directive
@@ -1441,18 +1447,19 @@ class CSPReportSenderRunnable final : public Runnable {
     // 0) prepare violation data
     mozilla::dom::SecurityPolicyViolationEventInit init;
 
-    nsAutoCString blockedContentSource;
-    BlockedContentSourceToString(mBlockedContentSource, blockedContentSource);
-
     nsAutoString effectiveDirective;
     effectiveDirective.AssignASCII(
         CSP_CSPDirectiveToString(mEffectiveDirective));
 
+    using Resource = nsCSPContext::Resource;
+
+    Resource resource = mBlockedURI ? Resource(mBlockedURI.get())
+                                    : Resource(mBlockedContentSource);
+
     nsresult rv = mCSPContext->GatherSecurityPolicyViolationEventData(
-        mBlockedURI, blockedContentSource, mOriginalURI, effectiveDirective,
-        mViolatedPolicyIndex, mSourceFile,
-        mReportSample ? mScriptSample : EmptyString(), mLineNum, mColumnNum,
-        init);
+        resource, mOriginalURI, effectiveDirective, mViolatedPolicyIndex,
+        mSourceFile, mReportSample ? mScriptSample : EmptyString(), mLineNum,
+        mColumnNum, init);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // 1) notify observers
