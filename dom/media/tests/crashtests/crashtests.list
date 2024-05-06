@@ -31,8 +31,8 @@ load 1511130.html
 load 1510848.html
 load 1516292.html
 load 1576938.html
-skip-if(Android) pref(media.getusermedia.audiocapture.enabled,true) load 1573536.html
-skip-if(!Android) pref(media.getusermedia.audiocapture.enabled,true) pref(media.navigator.permission.device,false) load 1573536.html # media.navigator.permission.device is mobile-only, so other platforms fail to set it (Bug 1350948)
+skip-if(Android) pref(media.getusermedia.audio.capture.enabled,true) load 1573536.html
+skip-if(!Android) pref(media.getusermedia.audio.capture.enabled,true) pref(media.navigator.permission.device,false) load 1573536.html # media.navigator.permission.device is mobile-only, so other platforms fail to set it (Bug 1350948)
 load 1594136.html
 load 1749308.html
 load 1764915.html
