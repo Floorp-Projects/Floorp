@@ -1871,7 +1871,8 @@ _cairo_quartz_cg_glyphs (const cairo_compositor_t *compositor,
 			 cairo_scaled_font_t *scaled_font,
 			 cairo_glyph_t *glyphs,
 			 int num_glyphs,
-			 cairo_bool_t overlap)
+			 cairo_bool_t overlap,
+			 cairo_bool_t permit_subpixel_antialiasing)
 {
     CGAffineTransform textTransform, invTextTransform;
     CGGlyph glyphs_static[CAIRO_STACK_ARRAY_LENGTH (CGPoint)];
@@ -1885,6 +1886,7 @@ _cairo_quartz_cg_glyphs (const cairo_compositor_t *compositor,
     CTFontRef ctFont = NULL;
 
     cairo_bool_t didForceFontSmoothing = FALSE;
+    cairo_antialias_t effective_antialiasing;
 
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_QUARTZ)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1903,6 +1905,14 @@ _cairo_quartz_cg_glyphs (const cairo_compositor_t *compositor,
     /* this doesn't addref */
     ctFont = _cairo_quartz_scaled_font_get_ct_font (scaled_font);
     _cairo_quartz_set_antialiasing (state.cgMaskContext, scaled_font->options.antialias);
+
+    effective_antialiasing = scaled_font->options.antialias;
+    if (effective_antialiasing == CAIRO_ANTIALIAS_SUBPIXEL &&
+        !permit_subpixel_antialiasing) {
+        effective_antialiasing = CAIRO_ANTIALIAS_GRAY;
+    }
+
+    _cairo_quartz_set_antialiasing (state.cgMaskContext, effective_antialiasing);
 
     if (num_glyphs > ARRAY_LENGTH (glyphs_static)) {
 	cg_glyphs = (CGGlyph*) _cairo_malloc_ab (num_glyphs, sizeof (CGGlyph) + sizeof (CGPoint));

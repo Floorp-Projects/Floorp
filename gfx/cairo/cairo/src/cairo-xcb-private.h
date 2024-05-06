@@ -443,7 +443,8 @@ _cairo_xcb_render_compositor_glyphs (const cairo_compositor_t     *compositor,
 				     cairo_scaled_font_t          *scaled_font,
 				     cairo_glyph_t                *glyphs,
 				     int                           num_glyphs,
-				     cairo_bool_t                  overlap);
+				     cairo_bool_t                  overlap,
+				     cairo_bool_t                  permit_subpixel_antialiasing);
 cairo_private void
 _cairo_xcb_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font);
 

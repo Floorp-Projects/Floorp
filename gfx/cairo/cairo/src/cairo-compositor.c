@@ -290,7 +290,8 @@ _cairo_compositor_glyphs (const cairo_compositor_t		*compositor,
 	    compositor = compositor->delegate;
 
 	status = compositor->glyphs (compositor, &extents,
-				     scaled_font, glyphs, num_glyphs, overlap);
+				     scaled_font, glyphs, num_glyphs, overlap,
+				     surface->permit_subpixel_antialiasing);
 
 	compositor = compositor->delegate;
     } while (status == CAIRO_INT_STATUS_UNSUPPORTED);
