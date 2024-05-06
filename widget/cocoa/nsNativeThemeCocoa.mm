@@ -458,8 +458,6 @@ nsNativeThemeCocoa::nsNativeThemeCocoa() : ThemeCocoa(ScrollbarStyle()) {
   mMeterBarCell = [[NSLevelIndicatorCell alloc]
       initWithLevelIndicatorStyle:NSLevelIndicatorStyleContinuousCapacity];
 
-  mTreeHeaderCell = [[NSTableHeaderCell alloc] init];
-
   mCellDrawView = [[MOZCellDrawView alloc] init];
 
   if (XRE_IsParentProcess()) {
@@ -498,7 +496,6 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa() {
   [mSearchFieldCell release];
   [mDropdownCell release];
   [mComboBoxCell release];
-  [mTreeHeaderCell release];
   [mCellDrawWindow release];
   [mCellDrawView release];
 
@@ -1317,17 +1314,6 @@ static void RenderButton(CGContextRef cgContext, const HIRect& aRenderRect,
                     NULL);
 }
 
-static ThemeDrawState ToThemeDrawState(
-    const nsNativeThemeCocoa::ControlParams& aParams) {
-  if (aParams.disabled) {
-    return kThemeStateUnavailable;
-  }
-  if (aParams.pressed) {
-    return kThemeStatePressed;
-  }
-  return kThemeStateActive;
-}
-
 void nsNativeThemeCocoa::DrawHIThemeButton(
     CGContextRef cgContext, const HIRect& aRect, ThemeButtonKind aKind,
     ThemeButtonValue aValue, ThemeDrawState aState,
@@ -1377,16 +1363,6 @@ void nsNativeThemeCocoa::DrawButton(CGContextRef cgContext,
     case ButtonType::eHelpButton:
       DrawHelpButton(cgContext, inBoxRect, controlParams);
       return;
-    case ButtonType::eTreeTwistyPointingRight:
-      DrawHIThemeButton(cgContext, inBoxRect, kThemeDisclosureButton,
-                        kThemeDisclosureRight, ToThemeDrawState(controlParams),
-                        kThemeAdornmentNone, controlParams);
-      return;
-    case ButtonType::eTreeTwistyPointingDown:
-      DrawHIThemeButton(cgContext, inBoxRect, kThemeDisclosureButton,
-                        kThemeDisclosureDown, ToThemeDrawState(controlParams),
-                        kThemeAdornmentNone, controlParams);
-      return;
     case ButtonType::eDisclosureButtonClosed:
       DrawDisclosureButton(cgContext, inBoxRect, controlParams,
                            NSControlStateValueOff);
@@ -1396,87 +1372,6 @@ void nsNativeThemeCocoa::DrawButton(CGContextRef cgContext,
                            NSControlStateValueOn);
       return;
   }
-}
-
-nsNativeThemeCocoa::TreeHeaderCellParams
-nsNativeThemeCocoa::ComputeTreeHeaderCellParams(nsIFrame* aFrame,
-                                                ElementState aEventState) {
-  TreeHeaderCellParams params;
-  params.controlParams = ComputeControlParams(aFrame, aEventState);
-  params.sortDirection = GetTreeSortDirection(aFrame);
-  params.lastTreeHeaderCell = IsLastTreeHeaderCell(aFrame);
-  return params;
-}
-
-@interface NSTableHeaderCell (NSTableHeaderCell_setSortable)
-// This method has been present in the same form since at least macOS 10.4.
-- (void)_setSortable:(BOOL)arg1
-    showSortIndicator:(BOOL)arg2
-            ascending:(BOOL)arg3
-             priority:(NSInteger)arg4
-     highlightForSort:(BOOL)arg5;
-@end
-
-void nsNativeThemeCocoa::DrawTreeHeaderCell(
-    CGContextRef cgContext, const HIRect& inBoxRect,
-    const TreeHeaderCellParams& aParams) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  // Without clearing the cell's title, it takes on a default value of "Field",
-  // which is displayed underneath the title set in the front-end.
-  NSCell* cell = (NSCell*)mTreeHeaderCell;
-  cell.title = @"";
-
-  if ([mTreeHeaderCell
-          respondsToSelector:@selector
-          (_setSortable:
-              showSortIndicator:ascending:priority:highlightForSort:)]) {
-    switch (aParams.sortDirection) {
-      case eTreeSortDirection_Ascending:
-        [mTreeHeaderCell _setSortable:YES
-                    showSortIndicator:YES
-                            ascending:YES
-                             priority:0
-                     highlightForSort:YES];
-        break;
-      case eTreeSortDirection_Descending:
-        [mTreeHeaderCell _setSortable:YES
-                    showSortIndicator:YES
-                            ascending:NO
-                             priority:0
-                     highlightForSort:YES];
-        break;
-      default:
-        // eTreeSortDirection_Natural
-        [mTreeHeaderCell _setSortable:YES
-                    showSortIndicator:NO
-                            ascending:YES
-                             priority:0
-                     highlightForSort:NO];
-        break;
-    }
-  }
-
-  mTreeHeaderCell.enabled = !aParams.controlParams.disabled;
-  mTreeHeaderCell.state =
-      (mTreeHeaderCell.enabled && aParams.controlParams.pressed)
-          ? NSControlStateValueOn
-          : NSControlStateValueOff;
-
-  mCellDrawView._drawingEndSeparator = !aParams.lastTreeHeaderCell;
-
-  NSGraphicsContext* savedContext = NSGraphicsContext.currentContext;
-  NSGraphicsContext.currentContext =
-      [NSGraphicsContext graphicsContextWithCGContext:cgContext flipped:YES];
-  DrawCellIncludingFocusRing(mTreeHeaderCell, inBoxRect, mCellDrawView);
-  NSGraphicsContext.currentContext = savedContext;
-
-#if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
-  CGContextFillRect(cgContext, inBoxRect);
-#endif
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 static const CellRenderSettings dropdownSettings = {
@@ -2348,30 +2243,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       // Do nothing: progress and meter bars cases will draw chunks.
       break;
 
-    case StyleAppearance::Treetwisty:
-      return Some(WidgetInfo::Button(
-          ButtonParams{ComputeControlParams(aFrame, elementState),
-                       ButtonType::eTreeTwistyPointingRight}));
-
-    case StyleAppearance::Treetwistyopen:
-      return Some(WidgetInfo::Button(
-          ButtonParams{ComputeControlParams(aFrame, elementState),
-                       ButtonType::eTreeTwistyPointingDown}));
-
-    case StyleAppearance::Treeheadercell:
-      return Some(WidgetInfo::TreeHeaderCell(
-          ComputeTreeHeaderCellParams(aFrame, elementState)));
-
-    case StyleAppearance::Treeitem:
-    case StyleAppearance::Treeview:
-      return Some(WidgetInfo::ColorFill(sRGBColor(1.0, 1.0, 1.0, 1.0)));
-
-    case StyleAppearance::Treeheader:
-      // do nothing, taken care of by individual header cells
-    case StyleAppearance::Treeline:
-      // do nothing, these lines don't exist on macos
-      break;
-
     case StyleAppearance::Range: {
       Maybe<ScaleParams> params = ComputeHTMLScaleParams(aFrame, elementState);
       if (params) {
@@ -2581,12 +2452,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo,
           DrawMeter(cgContext, macRect, params);
           break;
         }
-        case Widget::eTreeHeaderCell: {
-          TreeHeaderCellParams params =
-              aWidgetInfo.Params<TreeHeaderCellParams>();
-          DrawTreeHeaderCell(cgContext, macRect, params);
-          break;
-        }
         case Widget::eScale: {
           ScaleParams params = aWidgetInfo.Params<ScaleParams>();
           DrawScale(cgContext, macRect, params);
@@ -2672,11 +2537,6 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
     case StyleAppearance::Searchfield:
     case StyleAppearance::ProgressBar:
     case StyleAppearance::Meter:
-    case StyleAppearance::Treeheadercell:
-    case StyleAppearance::Treetwisty:
-    case StyleAppearance::Treetwistyopen:
-    case StyleAppearance::Treeitem:
-    case StyleAppearance::Treeview:
     case StyleAppearance::Range:
       return false;
 
@@ -2989,23 +2849,6 @@ LayoutDeviceIntSize nsNativeThemeCocoa::GetMinimumWidgetSize(
       break;
     }
 
-    case StyleAppearance::Treetwisty:
-    case StyleAppearance::Treetwistyopen: {
-      SInt32 twistyHeight = 0, twistyWidth = 0;
-      ::GetThemeMetric(kThemeMetricDisclosureButtonWidth, &twistyWidth);
-      ::GetThemeMetric(kThemeMetricDisclosureButtonHeight, &twistyHeight);
-      result.SizeTo(twistyWidth, twistyHeight);
-      break;
-    }
-
-    case StyleAppearance::Treeheader:
-    case StyleAppearance::Treeheadercell: {
-      SInt32 headerHeight = 0;
-      ::GetThemeMetric(kThemeMetricListHeaderHeight, &headerHeight);
-      result.SizeTo(0, headerHeight);
-      break;
-    }
-
     case StyleAppearance::Tab: {
       result.SizeTo(0, tabHeights[miniControlSize]);
       break;
@@ -3145,14 +2988,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Tabpanels:
     case StyleAppearance::Tab:
 
-    case StyleAppearance::Treetwisty:
-    case StyleAppearance::Treetwistyopen:
-    case StyleAppearance::Treeview:
-    case StyleAppearance::Treeheader:
-    case StyleAppearance::Treeheadercell:
-    case StyleAppearance::Treeitem:
-    case StyleAppearance::Treeline:
-
     case StyleAppearance::Range:
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
 
@@ -3220,8 +3055,6 @@ bool nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(
     case StyleAppearance::NumberInput:
     case StyleAppearance::PasswordInput:
     case StyleAppearance::Textfield:
-    case StyleAppearance::Treeview:
-    case StyleAppearance::Treeline:
     case StyleAppearance::Textarea:
     case StyleAppearance::Listbox:
       return false;

@@ -46,7 +46,7 @@
   skin/classic/global/popupnotification.css                (../../shared/popupnotification.css)
   skin/classic/global/splitter.css                         (../../shared/splitter.css)
   skin/classic/global/toolbarbutton.css                    (../../shared/toolbarbutton.css)
-  skin/classic/global/tree.css                             (../../shared/tree.css)
+  skin/classic/global/tree/tree.css                        (../../shared/tree/tree.css)
   skin/classic/global/dirListing/dirListing.css            (../../shared/dirListing/dirListing.css)
 #ifdef XP_MACOSX
   skin/classic/global/dirListing/folder.png                (../../shared/dirListing/folder-osx.png)
@@ -160,3 +160,5 @@
   skin/classic/global/reader/character-spacing-20.svg      (../../shared/reader/character-spacing-20.svg)
   skin/classic/global/reader/line-spacing-20.svg           (../../shared/reader/line-spacing-20.svg)
   skin/classic/global/reader/content-width-20.svg          (../../shared/reader/content-width-20.svg)
+  skin/classic/global/tree/sort-asc.svg                    (../../shared/tree/sort-asc.svg)
+  skin/classic/global/tree/sort-dsc.svg                    (../../shared/tree/sort-dsc.svg)
