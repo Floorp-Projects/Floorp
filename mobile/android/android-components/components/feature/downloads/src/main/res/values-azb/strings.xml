@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_downloads_notification_channel">یئندیرنلر</string>
+    <string name="mozac_feature_downloads_notification_channel">یئندیریلن‌لر</string>
 
     <!-- Text shown on the second row of a paused download notification. -->
     <string name="mozac_feature_downloads_paused_notification_text">یئندیرمه دایاندیریلدی</string>
@@ -17,8 +17,6 @@
     <string name="mozac_feature_downloads_dialog_download">یئندیر</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">لغو</string>
-    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
-    <string name="mozac_feature_downloads_file_not_supported2">%1$s بو فایل نوعونو یئندیره بیلمیر</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">فایل آچیلانمادی.</string>
