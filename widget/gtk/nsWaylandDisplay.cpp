@@ -150,7 +150,6 @@ static void global_registry_handler(void* data, wl_registry* registry,
             registry, id, &xdg_dbus_annotation_manager_v1_interface, 1);
     display->SetXdgDbusAnnotationManager(annotationManager);
   } else if (iface.EqualsLiteral("wl_seat")) {
-    // Install keyboard handlers for main thread only
     auto* seat =
         WaylandRegistryBind<wl_seat>(registry, id, &wl_seat_interface, 1);
     KeymapWrapper::SetSeat(seat, id);
@@ -172,7 +171,7 @@ static void global_registry_remover(void* data, wl_registry* registry,
 static const struct wl_registry_listener registry_listener = {
     global_registry_handler, global_registry_remover};
 
-nsWaylandDisplay::~nsWaylandDisplay() {}
+nsWaylandDisplay::~nsWaylandDisplay() = default;
 
 static void WlLogHandler(const char* format, va_list args) {
   char error[1000];

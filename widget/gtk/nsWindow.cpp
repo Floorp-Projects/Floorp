@@ -586,6 +586,7 @@ void nsWindow::Destroy() {
     mWaylandVsyncSource = nullptr;
   }
   mWaylandVsyncDispatcher = nullptr;
+  UnlockNativePointer();
 #endif
 
   // dragService will be null after shutdown of the service manager.
@@ -3211,9 +3212,7 @@ LayoutDeviceIntRect nsWindow::GetScreenBounds() {
   return rect;
 }
 
-LayoutDeviceIntSize nsWindow::GetClientSize() {
-  return LayoutDeviceIntSize(mBounds.width, mBounds.height);
-}
+LayoutDeviceIntSize nsWindow::GetClientSize() { return mBounds.Size(); }
 
 LayoutDeviceIntRect nsWindow::GetClientBounds() {
   // GetBounds returns a rect whose top left represents the top left of the
@@ -9851,9 +9850,7 @@ void nsWindow::LockNativePointer() {
     return;
   }
 
-  if (mLockedPointer || mRelativePointer) {
-    UnlockNativePointer();
-  }
+  UnlockNativePointer();
 
   mLockedPointer = zwp_pointer_constraints_v1_lock_pointer(
       pointerConstraints, surface, pointer, nullptr,
@@ -9877,9 +9874,6 @@ void nsWindow::LockNativePointer() {
 }
 
 void nsWindow::UnlockNativePointer() {
-  if (!GdkIsWaylandDisplay()) {
-    return;
-  }
   if (mRelativePointer) {
     zwp_relative_pointer_v1_destroy(mRelativePointer);
     mRelativePointer = nullptr;
