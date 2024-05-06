@@ -432,12 +432,21 @@ function parseContent(window, input, mode) {
   while ((t = nextToken()) !== null) {
     if (t[0] === '<') {
       if (t[1] === "/") {
+        const endTag = t.slice(2, -1);
+        const stackEnd = tagStack.at(-1);
+
         // If the closing tag matches, move back up to the parent node.
-        if (tagStack.length &&
-            tagStack[tagStack.length - 1] === t.substr(2).replace(">", "")) {
+        if (stackEnd == endTag) {
           tagStack.pop();
           current = current.parentNode;
+
+        // If the closing tag is <ruby> and we're at an <rt>, move back up to
+        // the <ruby>'s parent node.
+        } else if (endTag == "ruby" && current.nodeName == "RT") {
+          tagStack.pop();
+          current = current.parentNode.parentNode;
         }
+
         // Otherwise just ignore the end tag.
         continue;
       }
