@@ -775,6 +775,7 @@ struct ParamTraits<mozilla::net::LinkHeader> {
     WriteParam(aWriter, aParam.mSizes);
     WriteParam(aWriter, aParam.mType);
     WriteParam(aWriter, aParam.mMedia);
+    WriteParam(aWriter, aParam.mAnchor);
     WriteParam(aWriter, aParam.mCrossOrigin);
     WriteParam(aWriter, aParam.mReferrerPolicy);
     WriteParam(aWriter, aParam.mAs);
@@ -810,6 +811,9 @@ struct ParamTraits<mozilla::net::LinkHeader> {
       return false;
     }
     if (!ReadParam(aReader, &aResult->mMedia)) {
+      return false;
+    }
+    if (!ReadParam(aReader, &aResult->mAnchor)) {
       return false;
     }
     if (!ReadParam(aReader, &aResult->mCrossOrigin)) {
