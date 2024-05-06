@@ -243,6 +243,10 @@ export class GeckoViewStartup {
         });
 
         ChromeUtils.importESModule(
+          "resource://gre/modules/MemoryNotificationDB.sys.mjs"
+        );
+
+        ChromeUtils.importESModule(
           "resource://gre/modules/NotificationDB.sys.mjs"
         );
 

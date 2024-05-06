@@ -21,12 +21,6 @@ const NOTIFICATION_STORE_PATH = PathUtils.join(
   "notificationstore.json"
 );
 
-const kMessages = [
-  "Notification:Save",
-  "Notification:Delete",
-  "Notification:GetAll",
-];
-
 export class NotificationDB {
   // Ensure we won't call init() while xpcom-shutdown is performed
   #shutdownInProgress = false;
@@ -41,6 +35,26 @@ export class NotificationDB {
   #loaded = false;
   #tasks = [];
   #runningTask = null;
+
+  storageQualifier() {
+    return "Notification";
+  }
+
+  prefixStorageQualifier(message) {
+    return `${this.storageQualifier()}:${message}`;
+  }
+
+  formatMessageType(message) {
+    return this.prefixStorageQualifier(message);
+  }
+
+  supportedMessageTypes() {
+    return [
+      this.formatMessageType("Save"),
+      this.formatMessageType("Delete"),
+      this.formatMessageType("GetAll"),
+    ];
+  }
 
   constructor() {
     if (this.#shutdownInProgress) {
@@ -66,13 +80,13 @@ export class NotificationDB {
   }
 
   registerListeners() {
-    for (let message of kMessages) {
+    for (let message of this.supportedMessageTypes()) {
       Services.ppmm.addMessageListener(message, this);
     }
   }
 
   unregisterListeners() {
-    for (let message of kMessages) {
+    for (let message of this.supportedMessageTypes()) {
       Services.ppmm.removeMessageListener(message, this);
     }
   }
@@ -190,17 +204,17 @@ export class NotificationDB {
     }
 
     switch (message.name) {
-      case "Notification:GetAll":
+      case this.formatMessageType("GetAll"):
         this.queueTask("getall", message.data)
-          .then(function (notifications) {
-            returnMessage("Notification:GetAll:Return:OK", {
+          .then(notifications => {
+            returnMessage(this.formatMessageType("GetAll:Return:OK"), {
               requestID: message.data.requestID,
               origin: message.data.origin,
               notifications,
             });
           })
-          .catch(function (error) {
-            returnMessage("Notification:GetAll:Return:KO", {
+          .catch(error => {
+            returnMessage(this.formatMessageType("GetAll:Return:KO"), {
               requestID: message.data.requestID,
               origin: message.data.origin,
               errorMsg: error,
@@ -208,30 +222,30 @@ export class NotificationDB {
           });
         break;
 
-      case "Notification:Save":
+      case this.formatMessageType("Save"):
         this.queueTask("save", message.data)
-          .then(function () {
-            returnMessage("Notification:Save:Return:OK", {
+          .then(() => {
+            returnMessage(this.formatMessageType("Save:Return:OK"), {
               requestID: message.data.requestID,
             });
           })
-          .catch(function (error) {
-            returnMessage("Notification:Save:Return:KO", {
+          .catch(error => {
+            returnMessage(this.formatMessageType("Save:Return:KO"), {
               requestID: message.data.requestID,
               errorMsg: error,
             });
           });
         break;
 
-      case "Notification:Delete":
+      case this.formatMessageType("Delete"):
         this.queueTask("delete", message.data)
-          .then(function () {
-            returnMessage("Notification:Delete:Return:OK", {
+          .then(() => {
+            returnMessage(this.formatMessageType("Delete:Return:OK"), {
               requestID: message.data.requestID,
             });
           })
-          .catch(function (error) {
-            returnMessage("Notification:Delete:Return:KO", {
+          .catch(error => {
+            returnMessage(this.formatMessageType("Delete:Return:KO"), {
               requestID: message.data.requestID,
               errorMsg: error,
             });
@@ -256,7 +270,7 @@ export class NotificationDB {
       defer,
     });
 
-    var promise = new Promise(function (resolve, reject) {
+    var promise = new Promise((resolve, reject) => {
       defer.resolve = resolve;
       defer.reject = reject;
     });

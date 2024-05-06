@@ -11,17 +11,10 @@ ChromeUtils.defineLazyGetter(lazy, "console", () => {
   });
 });
 
-const kMessageNotificationGetAllOk = "Notification:GetAll:Return:OK";
-const kMessageNotificationGetAllKo = "Notification:GetAll:Return:KO";
-const kMessageNotificationSaveKo = "Notification:Save:Return:KO";
-const kMessageNotificationDeleteKo = "Notification:Delete:Return:KO";
-
-const kMessages = [
-  kMessageNotificationGetAllOk,
-  kMessageNotificationGetAllKo,
-  kMessageNotificationSaveKo,
-  kMessageNotificationDeleteKo,
-];
+const kMessageGetAllOk = "GetAll:Return:OK";
+const kMessageGetAllKo = "GetAll:Return:KO";
+const kMessageSaveKo = "Save:Return:KO";
+const kMessageDeleteKo = "Delete:Return:KO";
 
 export class NotificationStorage {
   #requests = {};
@@ -34,14 +27,35 @@ export class NotificationStorage {
     this.registerListeners();
   }
 
+  storageQualifier() {
+    return "Notification";
+  }
+
+  prefixStorageQualifier(message) {
+    return `${this.storageQualifier()}:${message}`;
+  }
+
+  formatMessageType(message) {
+    return this.prefixStorageQualifier(message);
+  }
+
+  supportedMessages() {
+    return [
+      this.formatMessageType(kMessageGetAllOk),
+      this.formatMessageType(kMessageGetAllKo),
+      this.formatMessageType(kMessageSaveKo),
+      this.formatMessageType(kMessageDeleteKo),
+    ];
+  }
+
   registerListeners() {
-    for (let message of kMessages) {
+    for (let message of this.supportedMessages()) {
       Services.cpmm.addMessageListener(message, this);
     }
   }
 
   unregisterListeners() {
-    for (let message of kMessages) {
+    for (let message of this.supportedMessages()) {
       Services.cpmm.removeMessageListener(message, this);
     }
   }
@@ -85,7 +99,7 @@ export class NotificationStorage {
       serviceWorkerRegistrationScope,
     };
 
-    Services.cpmm.sendAsyncMessage("Notification:Save", {
+    Services.cpmm.sendAsyncMessage(this.formatMessageType("Save"), {
       origin,
       notification,
     });
@@ -98,7 +112,7 @@ export class NotificationStorage {
 
   delete(origin, id) {
     lazy.console.debug(`DELETE: ${id}`);
-    Services.cpmm.sendAsyncMessage("Notification:Delete", {
+    Services.cpmm.sendAsyncMessage(this.formatMessageType("Delete"), {
       origin,
       id,
     });
@@ -108,12 +122,12 @@ export class NotificationStorage {
     var request = this.#requests[message.data.requestID];
 
     switch (message.name) {
-      case kMessageNotificationGetAllOk:
+      case this.formatMessageType(kMessageGetAllOk):
         delete this.#requests[message.data.requestID];
         this.#returnNotifications(message.data.notifications, request.callback);
         break;
 
-      case kMessageNotificationGetAllKo:
+      case this.formatMessageType(kMessageGetAllKo):
         delete this.#requests[message.data.requestID];
         try {
           request.callback.done();
@@ -121,8 +135,8 @@ export class NotificationStorage {
           lazy.console.debug(`Error calling callback done: ${e}`);
         }
         break;
-      case kMessageNotificationSaveKo:
-      case kMessageNotificationDeleteKo:
+      case this.formatMessageType(kMessageSaveKo):
+      case this.formatMessageType(kMessageDeleteKo):
         lazy.console.debug(
           `Error received when treating: '${message.name}': ${message.data.errorMsg}`
         );
@@ -149,7 +163,7 @@ export class NotificationStorage {
     };
     var requestID = this.#getUniqueRequestID();
     this.#requests[requestID] = request;
-    Services.cpmm.sendAsyncMessage("Notification:GetAll", {
+    Services.cpmm.sendAsyncMessage(this.formatMessageType("GetAll"), {
       origin,
       tag,
       requestID,
@@ -189,4 +203,10 @@ export class NotificationStorage {
   }
 
   QueryInterface = ChromeUtils.generateQI(["nsINotificationStorage"]);
+}
+
+export class MemoryNotificationStorage extends NotificationStorage {
+  storageQualifier() {
+    return "MemoryNotification";
+  }
 }

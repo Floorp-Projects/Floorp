@@ -103,3 +103,7 @@ interface nsINotificationStorage : nsISupports
 %{C++
 #define NS_NOTIFICATION_STORAGE_CONTRACTID "@mozilla.org/notificationStorage;1"
 %}
+
+%{C++
+#define NS_MEMORY_NOTIFICATION_STORAGE_CONTRACTID "@mozilla.org/memoryNotificationStorage;1"
+%}
