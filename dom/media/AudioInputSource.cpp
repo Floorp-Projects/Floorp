@@ -62,6 +62,27 @@ AudioInputSource::AudioInputSource(RefPtr<EventListener>&& aListener,
   MOZ_ASSERT(mEventListener);
 }
 
+void AudioInputSource::Init() {
+  // This is called on MediaTrackGraph's graph thread, which can be the cubeb
+  // stream's callback thread. Running cubeb operations within cubeb stream
+  // callback thread can cause the deadlock on Linux, so we dispatch those
+  // operations to the task thread.
+  MOZ_ASSERT(mTaskThread);
+
+  LOG("AudioInputSource %p, init", this);
+  MOZ_ALWAYS_SUCCEEDS(mTaskThread->Dispatch(
+      NS_NewRunnableFunction(__func__, [this, self = RefPtr(this)]() mutable {
+        mStream = CubebInputStream::Create(mDeviceId, mChannelCount,
+                                           static_cast<uint32_t>(mRate),
+                                           mIsVoice, this);
+        if (!mStream) {
+          LOGE("AudioInputSource %p, cannot create an audio input stream!",
+               self.get());
+          return;
+        }
+      })));
+}
+
 void AudioInputSource::Start() {
   // This is called on MediaTrackGraph's graph thread, which can be the cubeb
   // stream's callback thread. Running cubeb operations within cubeb stream
@@ -71,30 +92,25 @@ void AudioInputSource::Start() {
 
   LOG("AudioInputSource %p, start", this);
   MOZ_ALWAYS_SUCCEEDS(mTaskThread->Dispatch(
-      NS_NewRunnableFunction(__func__, [self = RefPtr(this)]() mutable {
-        self->mStream = CubebInputStream::Create(
-            self->mDeviceId, self->mChannelCount,
-            static_cast<uint32_t>(self->mRate), self->mIsVoice, self.get());
-        if (!self->mStream) {
-          LOGE("AudioInputSource %p, cannot create an audio input stream!",
-               self.get());
+      NS_NewRunnableFunction(__func__, [this, self = RefPtr(this)]() mutable {
+        if (!mStream) {
+          LOGE("AudioInputSource %p, no audio input stream!", self.get());
           return;
         }
 
-        if (uint32_t latency = 0;
-            self->mStream->Latency(&latency) == CUBEB_OK) {
-          Data data(LatencyChangeData{media::TimeUnit(latency, self->mRate)});
-          if (self->mSPSCQueue.Enqueue(data) == 0) {
+        if (uint32_t latency = 0; mStream->Latency(&latency) == CUBEB_OK) {
+          Data data(LatencyChangeData{media::TimeUnit(latency, mRate)});
+          if (mSPSCQueue.Enqueue(data) == 0) {
             LOGE("AudioInputSource %p, failed to enqueue latency change",
                  self.get());
           }
         }
-        if (int r = self->mStream->Start(); r != CUBEB_OK) {
+        if (int r = mStream->Start(); r != CUBEB_OK) {
           LOGE(
               "AudioInputSource %p, cannot start its audio input stream! The "
               "stream is destroyed directly!",
               self.get());
-          self->mStream = nullptr;
+          mStream = nullptr;
         }
       })));
 }
@@ -108,19 +124,19 @@ void AudioInputSource::Stop() {
 
   LOG("AudioInputSource %p, stop", this);
   MOZ_ALWAYS_SUCCEEDS(mTaskThread->Dispatch(
-      NS_NewRunnableFunction(__func__, [self = RefPtr(this)]() mutable {
-        if (!self->mStream) {
+      NS_NewRunnableFunction(__func__, [this, self = RefPtr(this)]() mutable {
+        if (!mStream) {
           LOGE("AudioInputSource %p, has no audio input stream to stop!",
                self.get());
           return;
         }
-        if (int r = self->mStream->Stop(); r != CUBEB_OK) {
+        if (int r = mStream->Stop(); r != CUBEB_OK) {
           LOGE(
               "AudioInputSource %p, cannot stop its audio input stream! The "
               "stream is going to be destroyed forcefully",
               self.get());
         }
-        self->mStream = nullptr;
+        mStream = nullptr;
       })));
 }
 

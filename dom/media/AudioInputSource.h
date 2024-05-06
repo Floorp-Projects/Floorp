@@ -54,6 +54,8 @@ class AudioInputSource : public CubebInputStream::Listener {
 
   // The following functions should always be called in the same thread: They
   // are always run on MediaTrackGraph's graph thread.
+  // Sets up mStream.
+  void Init();
   // Starts producing audio data.
   void Start();
   // Stops producing audio data.
