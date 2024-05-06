@@ -300,7 +300,6 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
   _requestedCapability = capability;
   _captureStarted = true;
   _streaming = true;
-  }
 
   // start capture thread;
   if (!_captureThread.empty()) {
@@ -308,6 +307,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
   }
 
   quit_ = false;
+  }
 
   _captureThread = rtc::PlatformThread::SpawnJoinable(
       [self = scoped_refptr(this)] {
