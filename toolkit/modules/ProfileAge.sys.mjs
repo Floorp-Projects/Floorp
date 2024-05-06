@@ -161,6 +161,27 @@ class ProfileAgeImpl {
     }
     return Promise.resolve(undefined);
   }
+
+  /**
+   * Record (and persist) when a backup recovery happened.  We just store a
+   * single value - the timestamp at the time of recovery.
+   *
+   * Returns a promise that is resolved once the file has been written.
+   */
+  recordRecoveredFromBackup(time = Date.now()) {
+    this._times.recoveredFromBackup = time;
+    return this.writeTimes();
+  }
+
+  /* Returns a promise that resolves to the time the profile was recovered from
+   * a backup or undefined if not recorded.
+   */
+  get recoveredFromBackup() {
+    if ("recoveredFromBackup" in this._times) {
+      return Promise.resolve(this._times.recoveredFromBackup);
+    }
+    return Promise.resolve(undefined);
+  }
 }
 
 // A Map from profile directory to a promise that resolves to the ProfileAgeImpl.
