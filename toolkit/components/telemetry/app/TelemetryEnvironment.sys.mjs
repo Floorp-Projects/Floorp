@@ -1672,7 +1672,6 @@ EnvironmentCache.prototype = {
     let creationDate = await profileAccessor.created;
     let resetDate = await profileAccessor.reset;
     let firstUseDate = await profileAccessor.firstUse;
-    let recoveredFromBackup = await profileAccessor.recoveredFromBackup;
 
     this._currentEnvironment.profile.creationDate =
       Utils.millisecondsToDays(creationDate);
@@ -1683,10 +1682,6 @@ EnvironmentCache.prototype = {
     if (firstUseDate) {
       this._currentEnvironment.profile.firstUseDate =
         Utils.millisecondsToDays(firstUseDate);
-    }
-    if (recoveredFromBackup) {
-      this._currentEnvironment.profile.recoveredFromBackup =
-        Utils.millisecondsToDays(recoveredFromBackup);
     }
   },
 
