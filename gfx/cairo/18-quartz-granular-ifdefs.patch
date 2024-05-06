@@ -1,30 +1,35 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1713891373 -3600
+#      Tue Apr 23 17:56:13 2024 +0100
+# Node ID a7bd4153d6421d17cb2991435ceb5a5fff06dba6
+# Parent  c0c2246d28b91b5e933f42d903b06d575d943e6e
+Bug 1892913 - patch 16 - Apply 18-quartz-granular-ifdefs.patch
+
 diff --git a/gfx/cairo/cairo/src/cairo-quartz-font.c b/gfx/cairo/cairo/src/cairo-quartz-font.c
-index 48f79d1680920..740ca108e7d19 100644
 --- a/gfx/cairo/cairo/src/cairo-quartz-font.c
 +++ b/gfx/cairo/cairo/src/cairo-quartz-font.c
-@@ -102,8 +102,10 @@ static int (*CGFontGetAscentPtr) (CGFontRef fontRef) = NULL;
- static int (*CGFontGetDescentPtr) (CGFontRef fontRef) = NULL;
- static int (*CGFontGetLeadingPtr) (CGFontRef fontRef) = NULL;
+@@ -65,7 +65,9 @@
  
+ /* These are private functions */
+ static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
 +#ifdef CAIRO_HAS_QUARTZ_ATSUFONTID
- /* Not public anymore in 64-bits nor in 10.7 */
--static ATSFontRef (*FMGetATSFontRefFromFontPtr) (FMFont iFont) = NULL;
-+static ATSFontRef (*FMGetATSFontRefFromFontPtr) (ATSUFontID iFont) = NULL;
+ static ATSFontRef (*FMGetATSFontRefFromFontPtr) (FMFont iFont) = NULL;
 +#endif /* CAIRO_HAS_QUARTZ_ATSUFONTID */
  
  static cairo_bool_t _cairo_quartz_font_symbol_lookup_done = FALSE;
- static cairo_bool_t _cairo_quartz_font_symbols_present = FALSE;
-@@ -164,7 +166,9 @@ quartz_font_ensure_symbols(void)
-     CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
-     CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
+ /* Cairo's transformations assume a unit-scaled font. */
+@@ -92,7 +94,9 @@ quartz_font_ensure_symbols(void)
+     CGContextGetAllowsFontSmoothingPtr =
+ 	dlsym (RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
  
 +#ifdef CAIRO_HAS_QUARTZ_ATSUFONTID
      FMGetATSFontRefFromFontPtr = dlsym(RTLD_DEFAULT, "FMGetATSFontRefFromFont");
 +#endif /* CAIRO_HAS_QUARTZ_ATSUFONTID */
  
-     if ((CGFontCreateWithFontNamePtr || CGFontCreateWithNamePtr) &&
- 	CGFontGetGlyphBBoxesPtr &&
-@@ -870,6 +874,7 @@ _cairo_quartz_scaled_font_get_ct_font_ref (cairo_scaled_font_t *abstract_font)
+     _cairo_quartz_font_symbol_lookup_done = TRUE;
+ }
+@@ -795,6 +799,7 @@ CTFontRef
  /*
   * compat with old ATSUI backend
   */
@@ -32,14 +37,13 @@ index 48f79d1680920..740ca108e7d19 100644
  
  /**
   * cairo_quartz_font_face_create_for_atsu_font_id:
-@@ -913,3 +918,5 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
+@@ -838,3 +843,5 @@ cairo_atsui_font_face_create_for_atsu_fo
  {
      return cairo_quartz_font_face_create_for_atsu_font_id (font_id);
  }
 +
 +#endif /* CAIRO_HAS_QUARTZ_ATSUFONTID */
 diff --git a/gfx/cairo/cairo/src/cairo-quartz-image.h b/gfx/cairo/cairo/src/cairo-quartz-image.h
-index 0dd5abb4fd2d2..9e8409c1169b3 100644
 --- a/gfx/cairo/cairo/src/cairo-quartz-image.h
 +++ b/gfx/cairo/cairo/src/cairo-quartz-image.h
 @@ -40,8 +40,6 @@
@@ -52,7 +56,6 @@ index 0dd5abb4fd2d2..9e8409c1169b3 100644
  
  cairo_public cairo_surface_t *
 diff --git a/gfx/cairo/cairo/src/cairo-quartz.h b/gfx/cairo/cairo/src/cairo-quartz.h
-index 20c86423b25de..2118d8ff9c842 100644
 --- a/gfx/cairo/cairo/src/cairo-quartz.h
 +++ b/gfx/cairo/cairo/src/cairo-quartz.h
 @@ -40,7 +40,14 @@
@@ -70,7 +73,7 @@ index 20c86423b25de..2118d8ff9c842 100644
  
  CAIRO_BEGIN_DECLS
  
-@@ -75,8 +82,10 @@ cairo_quartz_surface_get_image (cairo_surface_t *surface);
+@@ -69,8 +76,10 @@ cairo_quartz_surface_get_image (cairo_su
  cairo_public cairo_font_face_t *
  cairo_quartz_font_face_create_for_cgfont (CGFontRef font);
  
