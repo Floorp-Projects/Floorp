@@ -175,50 +175,54 @@ class MockCubebStream {
 
   ~MockCubebStream();
 
-  int Start();
-  int Stop();
-  uint64_t Position();
-  void Destroy();
-  int SetName(char const* aName);
+  int Start() MOZ_EXCLUDES(mMutex);
+  int Stop() MOZ_EXCLUDES(mMutex);
+  uint64_t Position() MOZ_EXCLUDES(mMutex);
+  void Destroy() MOZ_EXCLUDES(mMutex);
+  int SetName(char const* aName) MOZ_EXCLUDES(mMutex);
   int RegisterDeviceChangedCallback(
-      cubeb_device_changed_callback aDeviceChangedCallback);
+      cubeb_device_changed_callback aDeviceChangedCallback)
+      MOZ_EXCLUDES(mMutex);
 
-  cubeb_stream* AsCubebStream();
+  cubeb_stream* AsCubebStream() MOZ_EXCLUDES(mMutex);
   static MockCubebStream* AsMock(cubeb_stream* aStream);
 
-  char const* StreamName() const { return mName.get(); }
+  char const* StreamName() const MOZ_EXCLUDES(mMutex) {
+    MutexAutoLock l(mMutex);
+    return mName.get();
+  }
   cubeb_devid GetInputDeviceID() const;
   cubeb_devid GetOutputDeviceID() const;
 
-  uint32_t InputChannels() const;
-  uint32_t OutputChannels() const;
-  uint32_t SampleRate() const;
-  uint32_t InputFrequency() const;
+  uint32_t InputChannels() const MOZ_EXCLUDES(mMutex);
+  uint32_t OutputChannels() const MOZ_EXCLUDES(mMutex);
+  uint32_t SampleRate() const MOZ_EXCLUDES(mMutex);
+  uint32_t InputFrequency() const MOZ_EXCLUDES(mMutex);
 
-  void SetDriftFactor(float aDriftFactor);
-  void ForceError();
-  void ForceDeviceChanged();
-  void Thaw();
+  void SetDriftFactor(float aDriftFactor) MOZ_EXCLUDES(mMutex);
+  void ForceError() MOZ_EXCLUDES(mMutex);
+  void ForceDeviceChanged() MOZ_EXCLUDES(mMutex);
+  void Thaw() MOZ_EXCLUDES(mMutex);
 
   // For RunningMode::Manual, drive this MockCubebStream forward.
-  KeepProcessing ManualDataCallback(long aNrFrames);
+  KeepProcessing ManualDataCallback(long aNrFrames) MOZ_EXCLUDES(mMutex);
 
   // For RunningMode::Manual, notify the client of a DeviceChanged event
   // synchronously.
-  void NotifyDeviceChangedNow();
+  void NotifyDeviceChangedNow() MOZ_EXCLUDES(mMutex);
 
   // Enable input recording for this driver. This is best called before
   // the thread is running, but is safe to call whenever.
-  void SetOutputRecordingEnabled(bool aEnabled);
+  void SetOutputRecordingEnabled(bool aEnabled) MOZ_EXCLUDES(mMutex);
   // Enable input recording for this driver. This is best called before
   // the thread is running, but is safe to call whenever.
-  void SetInputRecordingEnabled(bool aEnabled);
+  void SetInputRecordingEnabled(bool aEnabled) MOZ_EXCLUDES(mMutex);
   // Get the recorded output from this stream. This doesn't copy, and therefore
   // only works once.
-  nsTArray<AudioDataValue>&& TakeRecordedOutput();
+  nsTArray<AudioDataValue>&& TakeRecordedOutput() MOZ_EXCLUDES(mMutex);
   // Get the recorded input from this stream. This doesn't copy, and therefore
   // only works once.
-  nsTArray<AudioDataValue>&& TakeRecordedInput();
+  nsTArray<AudioDataValue>&& TakeRecordedInput() MOZ_EXCLUDES(mMutex);
 
   MediaEventSource<nsCString>& NameSetEvent();
   MediaEventSource<cubeb_state>& StateEvent();
@@ -232,7 +236,13 @@ class MockCubebStream {
   MediaEventSource<void>& DeviceChangeForcedEvent();
 
  private:
-  KeepProcessing Process(long aNrFrames);
+  cubeb_stream* AsCubebStreamLocked() MOZ_REQUIRES(mMutex);
+  static MockCubebStream* AsMockLocked(cubeb_stream* aStream);
+  uint32_t InputChannelsLocked() const MOZ_REQUIRES(mMutex);
+  uint32_t OutputChannelsLocked() const MOZ_REQUIRES(mMutex);
+  uint32_t SampleRateLocked() const MOZ_REQUIRES(mMutex);
+  uint32_t InputFrequencyLocked() const MOZ_REQUIRES(mMutex);
+  KeepProcessing Process(long aNrFrames) MOZ_REQUIRES(mMutex);
   KeepProcessing Process10Ms();
 
  public:
@@ -242,52 +252,58 @@ class MockCubebStream {
   SmartMockCubebStream* const mSelf;
 
  private:
-  void NotifyState(cubeb_state aState);
-  void NotifyDeviceChanged();
+  void NotifyState(cubeb_state aState) MOZ_REQUIRES(mMutex);
+  void NotifyDeviceChanged() MOZ_EXCLUDES(mMutex);
 
   static constexpr long kMaxNrFrames = 1920;
+  // Mutex guarding most members to ensure state is in sync.
+  mutable Mutex mMutex{"MockCubebStream::mMutex"};
   // Monitor used to block start until mFrozenStart is false.
-  Monitor mFrozenStartMonitor MOZ_UNANNOTATED;
+  Monitor mFrozenStartMonitor MOZ_ACQUIRED_BEFORE(mMutex);
   // Whether this stream should wait for an explicit start request before
-  // starting. Protected by FrozenStartMonitor.
-  bool mFrozenStart;
+  // starting.
+  bool mFrozenStart MOZ_GUARDED_BY(mFrozenStartMonitor);
+  // The stream's most recently issued state change, if any has occurred.
   // Used to abort a frozen start if cubeb_stream_start() is called currently
   // with a blocked cubeb_stream_start() call.
-  std::atomic_bool mStreamStop{true};
+  bool mStreamStop MOZ_GUARDED_BY(mMutex) = true;
   // Whether or not the output-side of this stream (what is written from the
   // callback output buffer) is recorded in an internal buffer. The data is then
   // available via `GetRecordedOutput`.
-  std::atomic_bool mOutputRecordingEnabled{false};
+  bool mOutputRecordingEnabled MOZ_GUARDED_BY(mMutex) = false;
   // Whether or not the input-side of this stream (what is written from the
   // callback input buffer) is recorded in an internal buffer. The data is then
   // available via `TakeRecordedInput`.
-  std::atomic_bool mInputRecordingEnabled{false};
+  bool mInputRecordingEnabled MOZ_GUARDED_BY(mMutex) = false;
   // The audio buffer used on data callback.
-  AudioDataValue mOutputBuffer[MAX_OUTPUT_CHANNELS * kMaxNrFrames] = {};
-  AudioDataValue mInputBuffer[MAX_INPUT_CHANNELS * kMaxNrFrames] = {};
+  AudioDataValue mOutputBuffer[MAX_OUTPUT_CHANNELS *
+                               kMaxNrFrames] MOZ_GUARDED_BY(mMutex) = {};
+  AudioDataValue mInputBuffer[MAX_INPUT_CHANNELS * kMaxNrFrames] MOZ_GUARDED_BY(
+      mMutex) = {};
   // The audio callback
-  cubeb_data_callback mDataCallback = nullptr;
+  const cubeb_data_callback mDataCallback = nullptr;
   // The stream state callback
-  cubeb_state_callback mStateCallback = nullptr;
+  const cubeb_state_callback mStateCallback = nullptr;
   // The device changed callback
-  cubeb_device_changed_callback mDeviceChangedCallback = nullptr;
+  cubeb_device_changed_callback mDeviceChangedCallback MOZ_GUARDED_BY(mMutex) =
+      nullptr;
   // A name for this stream
-  nsCString mName;
+  nsCString mName MOZ_GUARDED_BY(mMutex);
   // The stream params
-  cubeb_stream_params mOutputParams = {};
-  cubeb_stream_params mInputParams = {};
+  cubeb_stream_params mOutputParams MOZ_GUARDED_BY(mMutex) = {};
+  cubeb_stream_params mInputParams MOZ_GUARDED_BY(mMutex) = {};
   /* Device IDs */
-  cubeb_devid mInputDeviceID;
-  cubeb_devid mOutputDeviceID;
+  const cubeb_devid mInputDeviceID;
+  const cubeb_devid mOutputDeviceID;
 
-  std::atomic<float> mDriftFactor{1.0};
-  std::atomic_bool mFastMode{false};
-  std::atomic_bool mForceErrorState{false};
-  std::atomic_bool mForceDeviceChanged{false};
-  std::atomic_bool mDestroyed{false};
-  std::atomic<uint64_t> mPosition{0};
-  AudioGenerator<AudioDataValue> mAudioGenerator;
-  AudioVerifier<AudioDataValue> mAudioVerifier;
+  float mDriftFactor MOZ_GUARDED_BY(mMutex) = 1.0;
+  bool mFastMode MOZ_GUARDED_BY(mMutex) = false;
+  bool mForceErrorState MOZ_GUARDED_BY(mMutex) = false;
+  bool mForceDeviceChanged MOZ_GUARDED_BY(mMutex) = false;
+  bool mDestroyed MOZ_GUARDED_BY(mMutex) = false;
+  uint64_t mPosition MOZ_GUARDED_BY(mMutex) = 0;
+  AudioGenerator<AudioDataValue> mAudioGenerator MOZ_GUARDED_BY(mMutex);
+  AudioVerifier<AudioDataValue> mAudioVerifier MOZ_GUARDED_BY(mMutex);
 
   MediaEventProducer<nsCString> mNameSetEvent;
   MediaEventProducer<cubeb_state> mStateEvent;
@@ -299,10 +315,10 @@ class MockCubebStream {
   MediaEventProducer<void> mDeviceChangedForcedEvent;
   // The recorded data, copied from the output_buffer of the callback.
   // Interleaved.
-  nsTArray<AudioDataValue> mRecordedOutput;
+  nsTArray<AudioDataValue> mRecordedOutput MOZ_GUARDED_BY(mMutex);
   // The recorded data, copied from the input buffer of the callback.
   // Interleaved.
-  nsTArray<AudioDataValue> mRecordedInput;
+  nsTArray<AudioDataValue> mRecordedInput MOZ_GUARDED_BY(mMutex);
 };
 
 inline std::ostream& operator<<(std::ostream& aStream,
