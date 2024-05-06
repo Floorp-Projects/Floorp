@@ -1813,7 +1813,7 @@ void Nursery::requestMinorGC(JS::GCReason reason) {
   } else if (heapState == JS::HeapState::MajorCollecting) {
     // The GC runs sweeping tasks that may access the storebuffer in parallel
     // and these require taking the store buffer lock.
-    MOZ_ASSERT(CurrentThreadIsGCSweeping());
+    MOZ_ASSERT(!CurrentThreadIsGCMarking());
     runtime()->gc.assertCurrentThreadHasLockedStoreBuffer();
   } else {
     MOZ_CRASH("Unexpected heap state");
