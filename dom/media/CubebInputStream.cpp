@@ -129,7 +129,7 @@ CubebInputStream::CubebInputStream(
 
 void CubebInputStream::Init() {
   // cubeb_stream_register_device_changed_callback is only supported on macOS
-  // platform and MockCubeb for now.
+  // platform and MockCubebfor now.
   InvokeCubebWithLog(cubeb_stream_register_device_changed_callback,
                      CubebInputStream::DeviceChangedCallback_s);
 }
@@ -137,11 +137,6 @@ void CubebInputStream::Init() {
 int CubebInputStream::Start() { return InvokeCubebWithLog(cubeb_stream_start); }
 
 int CubebInputStream::Stop() { return InvokeCubebWithLog(cubeb_stream_stop); }
-
-int CubebInputStream::SetProcessingParams(
-    cubeb_input_processing_params aParams) {
-  return InvokeCubebWithLog(cubeb_stream_set_input_processing_params, aParams);
-}
 
 int CubebInputStream::Latency(uint32_t* aLatencyFrames) {
   return InvokeCubebWithLog(cubeb_stream_get_input_latency, aLatencyFrames);

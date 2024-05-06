@@ -172,19 +172,11 @@ class DeviceInputTrack : public ProcessedMediaTrack {
 
   // Main thread API:
   const nsTArray<RefPtr<DeviceInputConsumerTrack>>& GetConsumerTracks() const;
-  // Handle the result of an async operation to set processing params on a cubeb
-  // stream. If the operation failed, signal this to listeners and then disable
-  // processing. If the operation succeeded, directly signal this to listeners.
-  void NotifySetRequestedProcessingParamsResult(
-      MediaTrackGraph* aGraph, cubeb_input_processing_params aRequestedParams,
-      const Result<cubeb_input_processing_params, int>& aResult);
 
   // Graph thread APIs:
   // Query audio settings from its users.
   uint32_t MaxRequestedInputChannels() const;
   bool HasVoiceInput() const;
-  // Query for the aggregate processing params from all users.
-  cubeb_input_processing_params RequestedProcessingParams() const;
   // Deliver notification to its users.
   void DeviceChanged(MediaTrackGraph* aGraph) const;
 
@@ -273,7 +265,6 @@ class NonNativeInputTrack final : public DeviceInputTrack {
   void NotifyDeviceChanged(AudioInputSource::Id aSourceId);
   void NotifyInputStopped(AudioInputSource::Id aSourceId);
   AudioInputSource::Id GenerateSourceId();
-  void ReevaluateProcessingParams();
 
  private:
   ~NonNativeInputTrack() = default;
@@ -281,8 +272,6 @@ class NonNativeInputTrack final : public DeviceInputTrack {
   // Graph thread only.
   RefPtr<AudioInputSource> mAudioSource;
   AudioInputSource::Id mSourceIdNumber;
-  cubeb_input_processing_params mRequestedProcessingParams =
-      CUBEB_INPUT_PROCESSING_PARAM_NONE;
 
 #ifdef DEBUG
   // Graph thread only.
