@@ -162,7 +162,6 @@
       TO_END: 3,
       MULTI_SELECTED: 4,
       DUPLICATES: 6,
-      ALL_DUPLICATES: 7,
     },
 
     _lastRelatedTabMap: new WeakMap(),
@@ -400,37 +399,6 @@
         }
       }
 
-      return duplicateTabs;
-    },
-
-    getAllDuplicateTabsToClose() {
-      let lastSeenTabs = this.tabs.sort(
-        (a, b) => b.lastSeenActive - a.lastSeenActive
-      );
-      let duplicateTabs = [];
-      let keys = [];
-      for (let tab of lastSeenTabs) {
-        const uri = tab.linkedBrowser?.currentURI;
-        if (!uri) {
-          // Can't tell if it's a duplicate without a URI.
-          // Safest to leave it be.
-          continue;
-        }
-
-        const key = {
-          uri,
-          userContextId: tab.userContextId,
-        };
-        if (
-          !tab.pinned &&
-          keys.some(
-            k => k.userContextId == key.userContextId && k.uri.equals(key.uri)
-          )
-        ) {
-          duplicateTabs.push(tab);
-        }
-        keys.push(key);
-      }
       return duplicateTabs;
     },
 
@@ -3343,24 +3311,6 @@
         return true;
       }
 
-      const shownDupeDialogPref =
-        "browser.tabs.haveShownCloseAllDuplicateTabsWarning";
-      if (
-        aCloseTabs == this.closingTabsEnum.ALL_DUPLICATES &&
-        !Services.prefs.getBoolPref(shownDupeDialogPref, false)
-      ) {
-        // The first time a user closes all duplicate tabs, tell them what will
-        // happen and give them a chance to back away.
-        Services.prefs.setBoolPref(shownDupeDialogPref, true);
-
-        window.focus();
-        const [title, text] = this.tabLocalization.formatValuesSync([
-          { id: "tabbrowser-confirm-close-duplicate-tabs-title" },
-          { id: "tabbrowser-confirm-close-duplicate-tabs-text" },
-        ]);
-        return Services.prompt.confirm(window, title, text);
-      }
-
       const pref =
         aCloseTabs == this.closingTabsEnum.ALL
           ? "browser.tabs.warnOnClose"
@@ -3601,39 +3551,25 @@
     },
 
     removeDuplicateTabs(aTab) {
-      this._removeDuplicateTabs(
-        aTab,
-        this.getDuplicateTabsToClose(aTab),
-        this.closingTabsEnum.DUPLICATES
-      );
-    },
-
-    _removeDuplicateTabs(aConfirmationAnchor, tabs, aCloseTabs) {
+      let tabs = this.getDuplicateTabsToClose(aTab);
       if (!tabs.length) {
         return;
       }
 
-      if (!this.warnAboutClosingTabs(tabs.length, aCloseTabs)) {
+      if (
+        !this.warnAboutClosingTabs(tabs.length, this.closingTabsEnum.DUPLICATES)
+      ) {
         return;
       }
 
       this.removeTabs(tabs);
-      ConfirmationHint.show(
-        aConfirmationAnchor,
-        "confirmation-hint-duplicate-tabs-closed",
-        { l10nArgs: { tabCount: tabs.length } }
-      );
-    },
-
-    removeAllDuplicateTabs() {
-      // I would like to have the caller provide this target,
-      // but the caller lives in a different document.
-      let alltabsButton = document.getElementById("alltabs-button");
-      this._removeDuplicateTabs(
-        alltabsButton,
-        this.getAllDuplicateTabsToClose(),
-        this.closingTabsEnum.ALL_DUPLICATES
-      );
+      if (tabs.length) {
+        ConfirmationHint.show(aTab, "confirmation-hint-duplicate-tabs-closed", {
+          l10nArgs: {
+            tabCount: tabs.length,
+          },
+        });
+      }
     },
 
     /**
