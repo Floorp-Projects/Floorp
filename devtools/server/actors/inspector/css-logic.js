@@ -253,19 +253,28 @@ class CssLogic {
     if (cssSheet._passId != this._passId) {
       cssSheet._passId = this._passId;
 
-      // Find import and keyframes rules.
-      for (const aDomRule of cssSheet.getCssRules()) {
-        const ruleClassName = ChromeUtils.getClassName(aDomRule);
-        if (
-          ruleClassName === "CSSImportRule" &&
-          aDomRule.styleSheet &&
-          this.mediaMatches(aDomRule)
-        ) {
-          this._cacheSheet(aDomRule.styleSheet);
-        } else if (ruleClassName === "CSSKeyframesRule") {
-          this._keyframesRules.push(aDomRule);
+      // Find import and keyframes rules. We loop through all the stylesheet recursively,
+      // so we can go through nested rules.
+      const traverseRules = ruleList => {
+        for (const aDomRule of ruleList) {
+          const ruleClassName = ChromeUtils.getClassName(aDomRule);
+          if (
+            ruleClassName === "CSSImportRule" &&
+            aDomRule.styleSheet &&
+            this.mediaMatches(aDomRule)
+          ) {
+            this._cacheSheet(aDomRule.styleSheet);
+          } else if (ruleClassName === "CSSKeyframesRule") {
+            this._keyframesRules.push(aDomRule);
+          }
+
+          if (aDomRule.cssRules) {
+            traverseRules(aDomRule.cssRules);
+          }
         }
-      }
+      };
+
+      traverseRules(cssSheet.getCssRules());
     }
   }
 

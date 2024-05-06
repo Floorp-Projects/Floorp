@@ -896,13 +896,15 @@ class PageStyleActor extends Actor {
         // Traverse through all the available keyframes rule and add
         // the keyframes rule that matches the computed animation name
         for (const keyframesRule of this.cssLogic.keyframesRules) {
-          if (animationNames.indexOf(keyframesRule.name) > -1) {
-            for (const rule of keyframesRule.cssRules) {
-              entries.push({
-                rule: this._styleRef(rule),
-                keyframes: this._styleRef(keyframesRule),
-              });
-            }
+          if (!animationNames.includes(keyframesRule.name)) {
+            continue;
+          }
+
+          for (const rule of keyframesRule.cssRules) {
+            entries.push({
+              rule: this._styleRef(rule),
+              keyframes: this._styleRef(keyframesRule),
+            });
           }
         }
       }
