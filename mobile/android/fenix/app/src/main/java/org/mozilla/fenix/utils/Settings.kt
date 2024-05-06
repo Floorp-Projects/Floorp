@@ -2000,6 +2000,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the feature to close synced tabs is enabled.
+     */
+    val enableCloseSyncedTabs: Boolean
+        get() = FxNimbus.features.remoteTabManagement.value().closeTabsEnabled
+
+    /**
      * Returns the height of the bottom toolbar.
      *
      * The bottom toolbar can consist of a navigation bar,
