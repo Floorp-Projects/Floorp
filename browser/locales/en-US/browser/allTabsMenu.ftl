@@ -11,6 +11,3 @@ all-tabs-menu-new-user-context =
 
 all-tabs-menu-hidden-tabs =
   .label = Hidden tabs
-
-all-tabs-menu-close-duplicate-tabs =
-  .label = Close duplicate tabs
