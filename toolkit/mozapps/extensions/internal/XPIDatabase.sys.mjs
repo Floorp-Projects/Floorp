@@ -1465,6 +1465,20 @@ AddonWrapper = class {
     return perms;
   }
 
+  get optionalOriginsNormalized() {
+    const { permissions } = this.userPermissions;
+    const { origins } = this.optionalPermissions;
+
+    const { patterns } = new MatchPatternSet(origins, {
+      restrictSchemes: !(
+        this.isPrivileged && permissions?.includes("mozillaAddons")
+      ),
+      ignorePath: true,
+    });
+
+    return patterns ? patterns.map(matcher => matcher.pattern) : [];
+  }
+
   isCompatibleWith(aAppVersion, aPlatformVersion) {
     return addonFor(this).isCompatibleWith(aAppVersion, aPlatformVersion);
   }

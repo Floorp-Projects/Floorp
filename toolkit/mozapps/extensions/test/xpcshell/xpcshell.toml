@@ -518,7 +518,6 @@ skip-if = ["os == 'android'"]
 
 ["test_webextension_install.js"]
 tags = "webextensions"
-skip-if = ["os == 'android'"]
 
 ["test_webextension_install_syntax_error.js"]
 tags = "webextensions"
