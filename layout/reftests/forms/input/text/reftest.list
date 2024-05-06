@@ -22,5 +22,7 @@ fuzzy(0-1,0-500) needs-focus == select.html select-ref.html
 
 == pseudo-class-lock.html pseudo-class-lock-ref.html
 
+pref(layout.forms.reveal-password-button.enabled,true) != suppress-password-button.html suppress-password-button-notref.html
+
 needs-focus == focus-on-anchor.html#anchor focus-on-anchor-ref.html
 needs-focus == select-overflow.html select-overflow-ref.html
