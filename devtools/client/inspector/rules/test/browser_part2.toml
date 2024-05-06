@@ -181,6 +181,8 @@ skip-if = [
 
 ["browser_rules_keyframeLineNumbers.js"]
 
+["browser_rules_keyframes-rule-nested.js"]
+
 ["browser_rules_keyframes-rule-shadowdom.js"]
 
 ["browser_rules_keyframes-rule_01.js"]

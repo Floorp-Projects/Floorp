@@ -504,6 +504,12 @@ class StyleRuleActor extends Actor {
     // Flag that will be set to true if the rule has a non-at-rule parent rule
     let computeDesugaredSelector = false;
 
+    // We don't want to compute ancestor rules for keyframe rule, as they can only be
+    // in @keyframes rules.
+    if (this.ruleClassName === "CSSKeyframeRule") {
+      return { ancestorData, computeDesugaredSelector };
+    }
+
     // Go through all ancestor so we can build an array of all the media queries and
     // layers this rule is in.
     for (const ancestorRule of this.ancestorRules) {
