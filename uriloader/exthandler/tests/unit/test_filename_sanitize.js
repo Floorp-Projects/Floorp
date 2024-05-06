@@ -31,9 +31,8 @@ add_task(async function validate_filename_method() {
   Assert.equal(checkFilename("\\path.png", 0), "_path.png");
   Assert.equal(
     checkFilename("\\path*and/$?~file.png", 0),
-    "_path_and_$_~file.png"
+    "_path and_$ ~file.png"
   );
-
   Assert.equal(
     checkFilename(" \u180e whit\u180ee.png \u180e", 0),
     "whit\u180ee.png"
@@ -104,12 +103,12 @@ add_task(async function validate_filename_method() {
   // For whatever reason, the Android mime handler accepts the .jpeg
   // extension for image/png, so skip this test there.
   if (AppConstants.platform != "android") {
-    Assert.equal(checkFilename("thi/*rd.jpeg", 0), "thi__rd.png");
+    Assert.equal(checkFilename("thi/*rd.jpeg", 0), "thi_ rd.png");
   }
 
   Assert.equal(
     checkFilename("f*\\ourth  file.jpg", mimeService.VALIDATE_SANITIZE_ONLY),
-    "f__ourth file.jpg"
+    "f _ourth file.jpg"
   );
   Assert.equal(
     checkFilename(
@@ -117,7 +116,7 @@ add_task(async function validate_filename_method() {
       mimeService.VALIDATE_SANITIZE_ONLY |
         mimeService.VALIDATE_DONT_COLLAPSE_WHITESPACE
     ),
-    "f__ift  h.jpe__g"
+    "f _ift  h.jpe _g"
   );
   Assert.equal(checkFilename("sixth.j  pe/*g", 0), "sixth.png");
 
@@ -158,25 +157,25 @@ add_task(async function validate_filename_method() {
     repeatStr.substring(0, 254 - ext.length) + ext
   );
 
-  ext = "lo#?n/ginvalid? ch\\ars";
+  ext = "lo%?n/ginvalid? ch\\ars";
   Assert.equal(
     checkFilename(repeatStr + ext, mimeService.VALIDATE_SANITIZE_ONLY),
-    repeatStr + "lo#_n_"
+    repeatStr + "lo% n_"
   );
 
-  ext = ".long/invalid#? ch\\ars";
+  ext = ".long/invalid%? ch\\ars";
   Assert.equal(
     checkFilename(repeatStr + ext, mimeService.VALIDATE_SANITIZE_ONLY),
-    repeatStr.substring(0, 232) + ".long_invalid#_ch_ars"
+    repeatStr.substring(0, 233) + ".long_invalid% ch_ars"
   );
 
   Assert.equal(
     checkFilename("test_ﾃｽﾄ_T\x83E\\S\x83T.png", 0),
-    "test_ﾃｽﾄ_T_E_S_T.png"
+    "test_ﾃｽﾄ_T E_S T.png"
   );
   Assert.equal(
     checkFilename("test_ﾃｽﾄ_T\x83E\\S\x83T.pﾃ\x83ng", 0),
-    "test_ﾃｽﾄ_T_E_S_T.png"
+    "test_ﾃｽﾄ_T E_S T.png"
   );
 
   // Check we don't invalidate surrogate pairs when trimming.
@@ -249,11 +248,11 @@ add_task(async function validate_filename_method() {
   // cropped to fit into 255 bytes.
   Assert.equal(
     mimeService.validateFileNameForSaving(
-      "라이브9.9만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장24%102 000원 브랜드데이 앵콜 🎁 1.등-유산균-컬처렐-특가!",
+      "라이브9.9만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장24%102 000원 브랜드데이 앵콜 🎁 1.등 유산균 컬처렐 특가!",
       "text/unknown",
       mimeService.VALIDATE_SANITIZE_ONLY
     ),
-    "라이브9.9만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 .등-유산균-컬처렐-특가!",
+    "라이브9.9만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 .등 유산균 컬처렐 특가!",
     "very long filename with extension"
   );
 
@@ -271,11 +270,11 @@ add_task(async function validate_filename_method() {
   // This filename is cropped at 254 bytes.
   Assert.equal(
     mimeService.validateFileNameForSaving(
-      ".라이브99만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장24_102 000원 브랜드데이 앵콜 🎁 1등 유산균 컬처렐 특가!",
+      ".라이브99만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장24%102 000원 브랜드데이 앵콜 🎁 1등 유산균 컬처렐 특가!",
       "text/unknown",
       mimeService.VALIDATE_SANITIZE_ONLY
     ),
-    "라이브99만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장24_102 000원 브랜드데",
+    "라이브99만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장24%102 000원 브랜드데",
     "very filename with extension only"
   );
 
@@ -312,7 +311,7 @@ add_task(async function validate_filename_method() {
 
   Assert.equal(
     mimeService.validateFileNameForSaving("filename.lnk\n", "text/unknown", 0),
-    "filename.lnk_",
+    "filename.lnk.download",
     "filename.lnk with newline"
   );
 
@@ -322,7 +321,7 @@ add_task(async function validate_filename_method() {
       "text/unknown",
       0
     ),
-    "filename.lnk_",
+    "filename.lnk.download",
     "filename.lnk with newline"
   );
 
@@ -332,7 +331,7 @@ add_task(async function validate_filename_method() {
       "text/unknown",
       0
     ),
-    "filename.__lnk",
+    "filename. lnk",
     "filename.lnk with space and newline"
   );
 
@@ -362,7 +361,7 @@ add_task(async function validate_filename_method() {
       "text/unknown",
       mimeService.VALIDATE_ALLOW_INVALID_FILENAMES
     ),
-    "filename.LNK_",
+    "filename.LNK",
     "filename.LNK allow invalid"
   );
 
@@ -373,7 +372,7 @@ add_task(async function validate_filename_method() {
       mimeService.VALIDATE_SANITIZE_ONLY |
         mimeService.VALIDATE_ALLOW_INVALID_FILENAMES
     ),
-    "filename.URL_",
+    "filename.URL",
     "filename.URL allow invalid, sanitize only"
   );
 
@@ -393,7 +392,7 @@ add_task(async function validate_filename_method() {
       mimeService.VALIDATE_SANITIZE_ONLY |
         mimeService.VALIDATE_ALLOW_INVALID_FILENAMES
     ),
-    "filename.DESKTOP_",
+    "filename.DESKTOP",
     "filename.DESKTOP allow invalid, sanitize only"
   );
 });
