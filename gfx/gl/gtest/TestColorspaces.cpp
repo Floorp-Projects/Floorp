@@ -650,7 +650,7 @@ TEST(Colorspaces, ColorProfileConversionDesc_SrgbFromRec709)
         .dst = srgb,
     });
     auto src = vec3(16.0);
-    auto dst = conv.Apply(src / 255) * 255;
+    auto dst = conv.DstFromSrc(src / 255) * 255;
 
     const auto tfa = PiecewiseGammaDesc::Srgb();
     const auto tfb = PiecewiseGammaDesc::Srgb();
@@ -667,7 +667,7 @@ TEST(Colorspaces, ColorProfileConversionDesc_SrgbFromRec709)
         .dst = rec709,
     });
     auto src = vec3(16.0);
-    auto dst = conv.Apply(src / 255) * 255;
+    auto dst = conv.DstFromSrc(src / 255) * 255;
 
     const auto tfa = PiecewiseGammaDesc::Rec709();
     const auto tfb = PiecewiseGammaDesc::Rec709();
@@ -684,7 +684,7 @@ TEST(Colorspaces, ColorProfileConversionDesc_SrgbFromRec709)
         .dst = srgb,
     });
     auto src = vec3(16.0);
-    auto dst = conv.Apply(src / 255) * 255;
+    auto dst = conv.DstFromSrc(src / 255) * 255;
 
     const auto tfa = PiecewiseGammaDesc::Rec709();
     const auto tfb = PiecewiseGammaDesc::Srgb();
@@ -695,4 +695,10 @@ TEST(Colorspaces, ColorProfileConversionDesc_SrgbFromRec709)
     printf("%f %f %f\n", dst.x(), dst.y(), dst.z());
     EXPECT_LT(Stats::Diff(dst.data, vec3(expected).data), (Stats::Error{0.12}));
   }
+}
+
+TEST(Colorspaces, SampleOutByIn_NegativeInputs)
+{
+  const auto tf = MakeGamma(1.0 / 2.2, 256);
+  EXPECT_LT(SampleOutByIn(tf, -0.1f), 0.0f);
 }

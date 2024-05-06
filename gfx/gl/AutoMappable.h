@@ -8,38 +8,13 @@
 // Here be dragons.
 
 #include <functional>
+#include <tuple>
 
-namespace mozilla::gfx {
-
-template <class T>
-size_t Hash(const T&);
+namespace mozilla {
 
 template <class T>
-struct StaticStdHasher {
-  static auto HashImpl(const T& v) { return std::hash<T>()(v); }
-};
-
-template <class T>
-struct StaticHasher {
-  static auto HashImpl(const T& v) { return v.hash(); }
-};
-template <class T>
-struct StaticHasher<std::optional<T>> {
-  static size_t HashImpl(const std::optional<T>& v) {
-    if (!v) return 0;
-    return Hash(*v);
-  }
-};
-template <>
-struct StaticHasher<int> : public StaticStdHasher<int> {};
-template <>
-struct StaticHasher<bool> : public StaticStdHasher<bool> {};
-template <>
-struct StaticHasher<float> : public StaticStdHasher<float> {};
-
-template <class T>
-size_t Hash(const T& v) {
-  return StaticHasher<T>::HashImpl(v);
+size_t StdHash(const T& t) {
+  return std::hash<T>()(t);
 }
 
 //-
@@ -52,97 +27,59 @@ inline size_t HashCombine(size_t seed, const size_t hash) {
 }
 
 // -
-// See
-// https://codereview.stackexchange.com/questions/136770/hashing-a-tuple-in-c17
 
+namespace detail {
 template <class... Args, size_t... Ids>
-size_t HashTupleN(const std::tuple<Args...>& tup,
-                  const std::index_sequence<Ids...>&) {
+size_t StdHashTupleN(const std::tuple<Args...>& tup,
+                     const std::index_sequence<Ids...>&) {
   size_t seed = 0;
-  for (const auto& hash : {Hash(std::get<Ids>(tup))...}) {
+  for (const auto& hash : {StdHash(std::get<Ids>(tup))...}) {
     seed = HashCombine(seed, hash);
   }
   return seed;
 }
+}  // namespace detail
+
+// -
+
+template <class T>
+struct StdHashMembers {
+  size_t operator()(const T& t) const {
+    const auto members = t.Members();
+    return StdHash(members);
+  }
+};
+
+// -
+
+#define MOZ_MIXIN_DERIVE_CMP_OP_BY_MEMBERS(OP, T) \
+  bool operator OP(const T& rhs) const { return Members() OP rhs.Members(); }
+
+#define MOZ_MIXIN_DERIVE_CMP_OPS_BY_MEMBERS(T) \
+  MOZ_MIXIN_DERIVE_CMP_OP_BY_MEMBERS(==, T)    \
+  MOZ_MIXIN_DERIVE_CMP_OP_BY_MEMBERS(!=, T)    \
+  MOZ_MIXIN_DERIVE_CMP_OP_BY_MEMBERS(<, T)     \
+  MOZ_MIXIN_DERIVE_CMP_OP_BY_MEMBERS(<=, T)    \
+  MOZ_MIXIN_DERIVE_CMP_OP_BY_MEMBERS(>, T)     \
+  MOZ_MIXIN_DERIVE_CMP_OP_BY_MEMBERS(>=, T)
+
+template <class T>
+struct DeriveCmpOpMembers {
+ private:
+  auto Members() const { return reinterpret_cast<const T*>(this)->Members(); }
+
+ public:
+  MOZ_MIXIN_DERIVE_CMP_OPS_BY_MEMBERS(T)
+};
+
+}  // namespace mozilla
 
 template <class... Args>
-size_t HashTuple(const std::tuple<Args...>& tup) {
-  return HashTupleN(tup, std::make_index_sequence<sizeof...(Args)>());
-}
-
-// -
-
-template <class T>
-auto MembersEq(const T& a, const T& b) {
-  const auto atup = a.Members();
-  const auto btup = b.Members();
-  return atup == btup;
-}
-
-template <class T>
-auto MembersLt(const T& a, const T& b) {
-  const auto atup = a.Members();
-  const auto btup = b.Members();
-  return atup == btup;
-}
-
-template <class T>
-auto MembersHash(const T& a) {
-  const auto atup = a.Members();
-  return HashTuple(atup);
-}
-
-template <class T>
-struct MembersHasher final {
-  auto operator()(const T& v) const { return v.hash(); }
+struct std::hash<std::tuple<Args...>> {
+  size_t operator()(const std::tuple<Args...>& t) const {
+    return mozilla::detail::StdHashTupleN(
+        t, std::make_index_sequence<sizeof...(Args)>());
+  }
 };
-
-/** E.g.:
-struct Foo {
-    int i;
-    bool b;
-
-   auto Members() const { return std::tie(i, b); }
-    INLINE_AUTO_MAPPABLE(Foo)
-};
-std::unordered_set<T, T::Hasher> easy;
-**/
-#define INLINE_DERIVE_MEMBERS_EQ(T)                \
-  friend bool operator==(const T& a, const T& b) { \
-    return mozilla::gfx::MembersEq(a, b);          \
-  }                                                \
-  friend bool operator!=(const T& a, const T& b) { return !operator==(a, b); }
-#define INLINE_AUTO_MAPPABLE(T)                                          \
-  friend bool operator<(const T& a, const T& b) {                        \
-    return mozilla::gfx::MembersLt(a, b);                                \
-  }                                                                      \
-  INLINE_DERIVE_MEMBERS_EQ(T)                                            \
-  size_t hash() const {                                                  \
-    return mozilla::gfx::MembersHash(*reinterpret_cast<const T*>(this)); \
-  }                                                                      \
-  using Hasher = mozilla::gfx::MembersHasher<T>;
-
-// -
-
-/** E.g.:
-```
-struct Foo : public AutoMappable<Foo> {
-    int i;
-    bool b;
-
-    auto Members() const { return std::tie(i, b); }
-};
-std::unordered_set<T, T::Hasher> easy;
-```
-`easy.insert({{}, 2, true});`
-The initial {} is needed for aggregate initialization of AutoMappable<Foo>.
-Use INLINE_AUTO_MAPPABLE if this is too annoying.
-**/
-template <class T>
-struct AutoMappable {
-  INLINE_AUTO_MAPPABLE(T)
-};
-
-}  // namespace mozilla::gfx
 
 #endif  // MOZILLA_AUTO_MAPPABLE_H

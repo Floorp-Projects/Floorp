@@ -1052,6 +1052,20 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
     const FuncScope funcScope(*this, "drawingBufferHeight");
     return AutoAssertCast(DrawingBufferSize().y);
   }
+
+  // -
+
+ private:
+  dom::PredefinedColorSpace mDrawingBufferColorSpace =
+      dom::PredefinedColorSpace::Srgb;
+
+ public:
+  auto DrawingBufferColorSpace() const { return mDrawingBufferColorSpace; }
+
+  void SetDrawingBufferColorSpace(dom::PredefinedColorSpace);
+
+  // -
+
   void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
  private:

@@ -82,7 +82,7 @@ enum class CMSMode : int32_t {
   Off = 0,         // No color management
   All = 1,         // Color manage everything
   TaggedOnly = 2,  // Color manage tagged Images Only
-  AllCount = 3
+  _ENUM_MAX = TaggedOnly
 };
 
 enum eGfxLog {

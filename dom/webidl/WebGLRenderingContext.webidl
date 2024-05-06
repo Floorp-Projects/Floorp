@@ -546,6 +546,11 @@ interface mixin WebGLRenderingContextBase {
     readonly attribute GLsizei drawingBufferWidth;
     readonly attribute GLsizei drawingBufferHeight;
 
+    /* Upon context creation, drawingBufferColorSpace and unpackColorSpace both
+       default to the value "srgb". */
+    attribute PredefinedColorSpace drawingBufferColorSpace;
+    //attribute PredefinedColorSpace unpackColorSpace;
+
     [WebGLHandlesContextLoss] WebGLContextAttributes? getContextAttributes();
     [WebGLHandlesContextLoss] boolean isContextLost();
 
