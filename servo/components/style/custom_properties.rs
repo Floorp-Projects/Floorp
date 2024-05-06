@@ -274,6 +274,11 @@ impl ComputedCustomProperties {
         name: &Name,
         value: ComputedRegisteredValue,
     ) {
+        // Broadening the assert to
+        // registration.syntax.is_universal() ^ value.as_universal().is_none() would require
+        // rewriting the cascade to not temporarily store unparsed custom properties with references
+        // as universal in the custom properties map.
+        debug_assert!(!registration.syntax.is_universal() || value.as_universal().is_some());
         self.map_mut(registration).insert(name, value)
     }
 
@@ -1925,13 +1930,13 @@ fn do_substitute_chunk<'a>(
             computed_context,
             references,
         )?;
+        let substitution = substitution.into_universal();
 
         // Optimize the property: var(--...) case to avoid allocating at all.
         if reference.start == start && reference.end == end && registration.syntax.is_universal() {
-            return Ok(substitution);
+            return Ok(Substitution::Universal(substitution));
         }
 
-        let substitution = substitution.into_universal();
         substituted.push(
             &substitution.css,
             substitution.first_token_type,
