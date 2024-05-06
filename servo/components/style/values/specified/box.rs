@@ -1495,6 +1495,9 @@ pub enum Appearance {
     /// For HTML's <input type=number>
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     NumberInput,
+    /// For HTML's <input type=password>
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    PasswordInput,
     /// The progress bar's progress indicator
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Progresschunk,

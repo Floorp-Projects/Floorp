@@ -418,7 +418,8 @@ nsresult nsTextControlFrame::CreateAnonymousContent(
   aElements.AppendElement(mRootNode);
 
   if (StaticPrefs::layout_forms_reveal_password_button_enabled() &&
-      IsPasswordTextControl()) {
+      IsPasswordTextControl() &&
+      StyleDisplay()->EffectiveAppearance() != StyleAppearance::Textfield) {
     mRevealButton =
         MakeAnonElement(PseudoStyleType::mozReveal, nullptr, nsGkAtoms::button);
     mRevealButton->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,

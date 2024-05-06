@@ -192,6 +192,10 @@ input::-moz-text-control-preview {
   line-height: -moz-block-height !important;
 }
 
+input[type=password] {
+  -moz-default-appearance: password-input;
+}
+
 input[type=password]::-moz-text-control-editing-root,
 input[type=password]::-moz-text-control-preview {
   /*
@@ -838,7 +842,6 @@ input[type=range]::slider-thumb {
 }
 
 input[type=number] {
-  appearance: auto;
   -moz-default-appearance: number-input;
 }
 

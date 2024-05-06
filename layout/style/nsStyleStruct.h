@@ -1356,17 +1356,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
         return mDefaultAppearance;
       case mozilla::StyleAppearance::Textfield:
         // `appearance: textfield` should behave like `auto` on all elements
-        // except <input type=search> elements, which we identify using the
-        // internal -moz-default-appearance property.  (In the browser chrome
-        // we have some other elements that set `-moz-default-appearance:
-        // searchfield`, but not in content documents.)
-        if (mDefaultAppearance == mozilla::StyleAppearance::Searchfield) {
-          return mAppearance;
-        }
-        // We also need to support `appearance: textfield` on <input
-        // type=number>, since that is the only way in Gecko to disable the
-        // spinners.
-        if (mDefaultAppearance == mozilla::StyleAppearance::NumberInput) {
+        // except <input type=search/number/password> elements, which we
+        // identify using the internal -moz-default-appearance property.
+        if (mDefaultAppearance == mozilla::StyleAppearance::Searchfield ||
+            mDefaultAppearance == mozilla::StyleAppearance::NumberInput ||
+            mDefaultAppearance == mozilla::StyleAppearance::PasswordInput) {
           return mAppearance;
         }
         return mDefaultAppearance;
