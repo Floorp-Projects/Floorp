@@ -24,6 +24,7 @@ android {
 
 dependencies {
     implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.play_services_base
 
     implementation project(':concept-push')
     implementation project(':support-base')

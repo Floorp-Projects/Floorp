@@ -92,6 +92,8 @@ object Versions {
     object Firebase {
         const val messaging = "24.0.0"
     }
+
+    const val play_services = "18.4.0"
 }
 
 // Synchronized dependencies used by (some) modules
@@ -215,4 +217,6 @@ object ComponentsDependencies {
     const val thirdparty_androidsvg = "com.caverock:androidsvg-aar:${Versions.androidsvg}"
 
     const val firebase_messaging = "com.google.firebase:firebase-messaging:${Versions.Firebase.messaging}"
+
+    const val play_services_base = "com.google.android.gms:play-services-base:${Versions.play_services}"
 }
