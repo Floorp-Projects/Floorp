@@ -1030,21 +1030,21 @@ void nsCSPRequireTrustedTypesForDirectiveValue::toString(
   aOutStr.Append(mValue);
 }
 
-/* =============== nsCSPTrustedTypesDirectiveExpression =============== */
+/* =============== nsCSPTrustedTypesDirectivePolicyName =============== */
 
-nsCSPTrustedTypesDirectiveExpression::nsCSPTrustedTypesDirectiveExpression(
-    const nsAString& aExpression)
-    : mExpression{aExpression} {}
+nsCSPTrustedTypesDirectivePolicyName::nsCSPTrustedTypesDirectivePolicyName(
+    const nsAString& aName)
+    : mName{aName} {}
 
-bool nsCSPTrustedTypesDirectiveExpression::visit(
+bool nsCSPTrustedTypesDirectivePolicyName::visit(
     nsCSPSrcVisitor* aVisitor) const {
   MOZ_ASSERT_UNREACHABLE(
       "Should only be called for other overloads of this method.");
   return false;
 }
 
-void nsCSPTrustedTypesDirectiveExpression::toString(nsAString& aOutStr) const {
-  aOutStr.Append(mExpression);
+void nsCSPTrustedTypesDirectivePolicyName::toString(nsAString& aOutStr) const {
+  aOutStr.Append(mName);
 }
 
 /* ===== nsCSPDirective ====================== */

@@ -940,7 +940,7 @@ void nsCSPParser::handleTrustedTypesDirective(nsCSPDirective* aDir) {
     }
 
     trustedTypesExpressions.AppendElement(
-        new nsCSPTrustedTypesDirectiveExpression(mCurToken));
+        new nsCSPTrustedTypesDirectivePolicyName(mCurToken));
   }
 
   if (trustedTypesExpressions.IsEmpty()) {
