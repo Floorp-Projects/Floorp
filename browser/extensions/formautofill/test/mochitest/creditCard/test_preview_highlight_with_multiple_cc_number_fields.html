@@ -143,7 +143,11 @@ add_task(async function check_filled_highlight() {
     return;
   }
   await triggerPopupAndHoverItem("#cc-name", 0);
-  let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+  let osKeyStoreLoginShown = Promise.resolve();
+
+if (OSKeyStore.canReauth()) {
+  osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+}
   // filled 1st credit card option
   synthesizeKey("KEY_Enter");
   await osKeyStoreLoginShown;
@@ -151,6 +155,8 @@ add_task(async function check_filled_highlight() {
   let profile = MOCK_STORAGE_EXPECTED_FILL[0];
   await setupListeners(elements, profile);
   await checkMultipleCCNumberFormStyle(profile, false);
+  // Enforcing this since it is unable to change back in chaos mode.
+  SpecialPowers.clearUserPref("toolkit.osKeyStore.unofficialBuildOnlyLogin");
 });
 </script>
 <p id="display"></p>

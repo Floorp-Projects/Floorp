@@ -127,7 +127,10 @@ add_task(async function clear_distinct_section() {
     todo(false, "Cannot test OS key store login on official builds.");
     return;
   }
-  let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+  let osKeyStoreLoginShown = Promise.resolve();
+  if(OSKeyStore.canReauth()) {
+    osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+  }
   await triggerPopupAndHoverItem("#cc-name", 0);
   await triggerAutofillAndCheckProfile(MOCK_CC_STORAGE[0]);
   await osKeyStoreLoginShown;
@@ -147,6 +150,8 @@ add_task(async function clear_distinct_section() {
     "cc-exp-month": "MM",
     "cc-exp-year": "YY"
   });
+  // Enforcing this since it is unable to change back in chaos mode.
+  SpecialPowers.clearUserPref("toolkit.osKeyStore.unofficialBuildOnlyLogin");
 });
 
 </script>

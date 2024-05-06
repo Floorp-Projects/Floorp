@@ -87,11 +87,17 @@ add_task(async function check_filled_highlight() {
     return;
   }
   await triggerPopupAndHoverItem("#cc-number", 0);
-  let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+
+  let osKeyStoreLoginShown = Promise.resolve();
+  if(OSKeyStore.canReauth()) {
+    osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+  }
   // filled 1st credit card option
   await triggerAutofillAndCheckProfile(MOCK_STORAGE_EXPECTED_FILL[0]);
   await osKeyStoreLoginShown;
   await checkFormFieldsStyle(MOCK_STORAGE_EXPECTED_FILL[0], false);
+  // Enforcing this since it is unable to change back in chaos mode.
+  SpecialPowers.clearUserPref("toolkit.osKeyStore.unofficialBuildOnlyLogin");
 });
 </script>
 <p id="display"></p>
