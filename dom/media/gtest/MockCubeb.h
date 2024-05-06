@@ -160,7 +160,7 @@ class MockCubebStream {
   void* mUserPtr;
 
  public:
-  enum class KeepProcessing { No, Yes };
+  enum class KeepProcessing { No, Yes, InvalidState };
   enum class RunningMode { Automatic, Manual };
 
   MockCubebStream(cubeb* aContext, char const* aStreamName,
@@ -304,6 +304,23 @@ class MockCubebStream {
   // Interleaved.
   nsTArray<AudioDataValue> mRecordedInput;
 };
+
+inline std::ostream& operator<<(std::ostream& aStream,
+                                const MockCubebStream::KeepProcessing& aVal) {
+  switch (aVal) {
+    case MockCubebStream::KeepProcessing::Yes:
+      aStream << "KeepProcessing::Yes";
+      return aStream;
+    case MockCubebStream::KeepProcessing::No:
+      aStream << "KeepProcessing::No";
+      return aStream;
+    case MockCubebStream::KeepProcessing::InvalidState:
+      aStream << "KeepProcessing::InvalidState";
+      return aStream;
+  }
+  aStream << "KeepProcessing(invalid " << static_cast<uint32_t>(aVal) << ")";
+  return aStream;
+}
 
 class SmartMockCubebStream
     : public MockCubebStream,
