@@ -403,16 +403,16 @@ class nsCSPRequireTrustedTypesForDirectiveValue : public nsCSPBaseSrc {
 
 /* =============== nsCSPTrustedTypesDirectiveExpression =============== */
 
-class nsCSPTrustedTypesDirectiveExpression : public nsCSPBaseSrc {
+class nsCSPTrustedTypesDirectivePolicyName : public nsCSPBaseSrc {
  public:
-  explicit nsCSPTrustedTypesDirectiveExpression(const nsAString& aExpression);
-  virtual ~nsCSPTrustedTypesDirectiveExpression() = default;
+  explicit nsCSPTrustedTypesDirectivePolicyName(const nsAString& aName);
+  virtual ~nsCSPTrustedTypesDirectivePolicyName() = default;
 
   bool visit(nsCSPSrcVisitor* aVisitor) const override;
   void toString(nsAString& aOutStr) const override;
 
  private:
-  const nsString mExpression;
+  const nsString mName;
 };
 
 /* =============== nsCSPSrcVisitor ================== */
