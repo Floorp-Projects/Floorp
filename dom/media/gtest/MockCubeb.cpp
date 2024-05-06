@@ -459,21 +459,24 @@ KeepProcessing MockCubebStream::Process(long aNrFrames) {
       mDataCallback(stream, mUserPtr, mHasInput ? mInputBuffer : nullptr,
                     mHasOutput ? mOutputBuffer : nullptr, aNrFrames);
 
-  if (mInputRecordingEnabled && mHasInput) {
-    mRecordedInput.AppendElements(mInputBuffer,
-                                  outframes * InputChannelsLocked());
-  }
-  if (mOutputRecordingEnabled && mHasOutput) {
-    mRecordedOutput.AppendElements(mOutputBuffer,
-                                   outframes * OutputChannelsLocked());
-  }
-  mAudioVerifier.AppendDataInterleaved(mOutputBuffer, outframes,
-                                       MAX_OUTPUT_CHANNELS);
-  mPosition += outframes;
+  if (outframes > 0) {
+    if (mInputRecordingEnabled && mHasInput) {
+      mRecordedInput.AppendElements(mInputBuffer,
+                                    outframes * InputChannelsLocked());
+    }
+    if (mOutputRecordingEnabled && mHasOutput) {
+      mRecordedOutput.AppendElements(mOutputBuffer,
 
-  mFramesProcessedEvent.Notify(outframes);
-  if (mAudioVerifier.PreSilenceEnded()) {
-    mFramesVerifiedEvent.Notify(outframes);
+                                     outframes * OutputChannelsLocked());
+    }
+    mAudioVerifier.AppendDataInterleaved(mOutputBuffer, outframes,
+                                         MAX_OUTPUT_CHANNELS);
+    mPosition += outframes;
+
+    mFramesProcessedEvent.Notify(outframes);
+    if (mAudioVerifier.PreSilenceEnded()) {
+      mFramesVerifiedEvent.Notify(outframes);
+    }
   }
 
   if (outframes < aNrFrames) {
