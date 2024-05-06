@@ -24,10 +24,6 @@ const { FormAutofillNameUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs"
 );
 
-const { FormAutofillUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
-);
-
 const MANAGE_ADDRESSES_DIALOG_URL =
   "chrome://formautofill/content/manageAddresses.xhtml";
 const MANAGE_CREDIT_CARDS_DIALOG_URL =
