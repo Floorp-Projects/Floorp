@@ -65,7 +65,9 @@
 
 /* These are private functions */
 static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
+#ifdef CAIRO_HAS_QUARTZ_ATSUFONTID
 static ATSFontRef (*FMGetATSFontRefFromFontPtr) (FMFont iFont) = NULL;
+#endif /* CAIRO_HAS_QUARTZ_ATSUFONTID */
 
 static cairo_bool_t _cairo_quartz_font_symbol_lookup_done = FALSE;
 /* Cairo's transformations assume a unit-scaled font. */
@@ -92,7 +94,9 @@ quartz_font_ensure_symbols(void)
     CGContextGetAllowsFontSmoothingPtr =
 	dlsym (RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
 
+#ifdef CAIRO_HAS_QUARTZ_ATSUFONTID
     FMGetATSFontRefFromFontPtr = dlsym(RTLD_DEFAULT, "FMGetATSFontRefFromFont");
+#endif /* CAIRO_HAS_QUARTZ_ATSUFONTID */
 
     _cairo_quartz_font_symbol_lookup_done = TRUE;
 }
@@ -795,6 +799,7 @@ _cairo_quartz_scaled_font_get_ct_font (cairo_scaled_font_t *abstract_font)
 /*
  * compat with old ATSUI backend
  */
+#ifdef CAIRO_HAS_QUARTZ_ATSUFONTID
 
 /**
  * cairo_quartz_font_face_create_for_atsu_font_id:
@@ -838,3 +843,5 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
 {
     return cairo_quartz_font_face_create_for_atsu_font_id (font_id);
 }
+
+#endif /* CAIRO_HAS_QUARTZ_ATSUFONTID */
