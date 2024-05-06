@@ -17,11 +17,15 @@ import android.os.Build.VERSION.SDK_INT
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
+import androidx.core.os.bundleOf
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
+import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.home.intent.OpenRecentlyClosedIntentProcessor
 import org.mozilla.fenix.utils.IntentUtils
 
 /**
@@ -29,6 +33,9 @@ import org.mozilla.fenix.utils.IntentUtils
  */
 class NotificationManager(private val context: Context) {
     companion object {
+        const val TABS_CLOSED_TAG = "TabsClosed"
+        const val TOTAL_TABS_CLOSED_EXTRA = "org.mozilla.fenix.TOTAL_TABS_CLOSED_EXTRA"
+        const val TABS_CLOSED_NOTIFICATION_TAG = "org.mozilla.fenix.TABS_CLOSED_NOTIFICATION_TAG"
         const val RECEIVE_TABS_TAG = "ReceivedTabs"
         const val RECEIVE_TABS_CHANNEL_ID = "ReceivedTabsChannel"
     }
@@ -50,6 +57,77 @@ class NotificationManager(private val context: Context) {
     }
 
     private val logger = Logger("NotificationManager")
+
+    /**
+     * Notifies the user that one or more tabs on this device were closed from another device.
+     *
+     * @param context The Android application context.
+     * @param count The number of tabs that were closed.
+     */
+    fun showSyncedTabsClosed(context: Context, count: Int) {
+        if (count <= 0) {
+            return
+        }
+        val notificationManagerCompat = NotificationManagerCompat.from(context)
+        val (notificationId, totalCount) = if (SDK_INT >= Build.VERSION_CODES.M) {
+            // On Android M (released in 2015) and later, we can retrieve
+            // the last notification from `allNotifications`. If one exists,
+            // we'll update its contents in-place with the new total number of
+            // closed tabs.
+            val notificationId = SharedIdsHelper.getIdForTag(context, TABS_CLOSED_NOTIFICATION_TAG)
+            val lastNotification = notificationManagerCompat.activeNotifications.find {
+                it.tag == TABS_CLOSED_TAG && it.id == notificationId
+            }
+            val lastTotalCount = lastNotification?.notification?.extras?.getInt(TOTAL_TABS_CLOSED_EXTRA) ?: 0
+            Pair(notificationId, lastTotalCount + count)
+        } else {
+            // Pre-M doesn't have `activeNotifications`, so we'll show
+            // a new notification for each call to `showSyncedTabsClosed`.
+            val notificationId = SharedIdsHelper.getNextIdForTag(context, TABS_CLOSED_NOTIFICATION_TAG)
+            Pair(notificationId, count)
+        }
+
+        val notification = NotificationCompat.Builder(context, RECEIVE_TABS_CHANNEL_ID).apply {
+            val title = context.resources.getString(
+                if (totalCount == 1) {
+                    R.string.fxa_tab_closed_notification_title
+                } else {
+                    R.string.fxa_tabs_closed_notification_title
+                },
+                totalCount,
+                context.resources.getString(R.string.app_name),
+            )
+            setContentTitle(title)
+
+            val text = context.resources.getString(R.string.fxa_tabs_closed_text)
+            setContentText(text)
+
+            val intent = Intent(context, HomeActivity::class.java).apply {
+                action = OpenRecentlyClosedIntentProcessor.ACTION_OPEN_RECENTLY_CLOSED
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                intent,
+                IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+            setContentIntent(pendingIntent)
+
+            val extras = bundleOf(TOTAL_TABS_CLOSED_EXTRA to totalCount)
+            addExtras(extras)
+
+            setSmallIcon(R.drawable.ic_status_logo)
+            setWhen(System.currentTimeMillis())
+            setAutoCancel(true)
+            setDefaults(Notification.DEFAULT_VIBRATE or Notification.DEFAULT_SOUND)
+
+            if (SDK_INT >= Build.VERSION_CODES.M) {
+                setCategory(Notification.CATEGORY_STATUS)
+            }
+        }.build()
+
+        notificationManagerCompat.notify(TABS_CLOSED_TAG, notificationId, notification)
+    }
 
     fun showReceivedTabs(context: Context, device: Device?, tabs: List<TabData>) {
         // In the future, experiment with displaying multiple tabs from the same device as as Notification Groups.

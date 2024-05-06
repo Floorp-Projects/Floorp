@@ -21,6 +21,7 @@ import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.mediasession.MediaSession.PlaybackState
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.feature.accounts.push.CloseTabsUseCases
 import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.DelicateAction
@@ -185,7 +186,8 @@ interface TabsTrayController : SyncedTabsController, InactiveTabsController, Tab
  * @param navigationInteractor [NavigationInteractor] used to perform navigation actions with side effects.
  * @param tabsUseCases Use case wrapper for interacting with tabs.
  * @param bookmarksUseCase Use case wrapper for interacting with bookmarks.
- * @param ioDispatcher [CoroutineContext] used to handle saving tabs as bookmarks.
+ * @param closeSyncedTabsUseCases Use cases for closing synced tabs.
+ * @param ioDispatcher [CoroutineContext] used for storage and network operations.
  * @param collectionStorage Storage layer for interacting with collections.
  * @param selectTabPosition Lambda used to scroll the tabs tray to the desired position.
  * @param dismissTray Lambda used to dismiss/minimize the tabs tray.
@@ -210,6 +212,7 @@ class DefaultTabsTrayController(
     private val navigationInteractor: NavigationInteractor,
     private val tabsUseCases: TabsUseCases,
     private val bookmarksUseCase: BookmarksUseCase,
+    private val closeSyncedTabsUseCases: CloseTabsUseCases,
     private val ioDispatcher: CoroutineContext,
     private val collectionStorage: TabCollectionStorage,
     private val selectTabPosition: (Int, Boolean) -> Unit,
@@ -518,6 +521,12 @@ class DefaultTabsTrayController(
             newTab = true,
             from = BrowserDirection.FromTabsTray,
         )
+    }
+
+    override fun handleSyncedTabClosed(deviceId: String, tab: Tab) {
+        CoroutineScope(ioDispatcher).launch {
+            closeSyncedTabsUseCases.close(deviceId, tab.active().url)
+        }
     }
 
     override fun handleTabLongClick(tab: TabSessionState): Boolean {

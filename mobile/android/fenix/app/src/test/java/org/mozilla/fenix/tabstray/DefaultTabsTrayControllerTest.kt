@@ -31,6 +31,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.base.profiler.Profiler
+import mozilla.components.feature.accounts.push.CloseTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.ext.joinBlocking
@@ -103,6 +104,7 @@ class DefaultTabsTrayControllerTest {
     private val settings: Settings = mockk(relaxed = true)
 
     private val bookmarksUseCase: BookmarksUseCase = mockk(relaxed = true)
+    private val closeSyncedTabsUseCases: CloseTabsUseCases = mockk(relaxed = true)
     private val collectionStorage: TabCollectionStorage = mockk(relaxed = true)
 
     private val bookmarksSharedViewModel: BookmarksSharedViewModel = mockk(relaxed = true)
@@ -567,6 +569,19 @@ class DefaultTabsTrayControllerTest {
                 from = BrowserDirection.FromTabsTray,
             )
         }
+    }
+
+    @Test
+    fun `WHEN a synced tab is closed THEN a command to close the tab is sent`() {
+        val tab = mockk<Tab>()
+        val entry = mockk<TabEntry>()
+
+        every { tab.active() }.answers { entry }
+        every { entry.url }.answers { "https://mozilla.org" }
+
+        createController().handleSyncedTabClosed(deviceId = "1234", tab)
+
+        coVerify(exactly = 1) { closeSyncedTabsUseCases.close("1234", any()) }
     }
 
     @Test
@@ -1153,6 +1168,7 @@ class DefaultTabsTrayControllerTest {
             navigationInteractor = navigationInteractor,
             tabsUseCases = tabsUseCases,
             bookmarksUseCase = bookmarksUseCase,
+            closeSyncedTabsUseCases = closeSyncedTabsUseCases,
             collectionStorage = collectionStorage,
             ioDispatcher = testDispatcher,
             selectTabPosition = selectTabPosition,

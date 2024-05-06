@@ -16,4 +16,9 @@ interface SyncedTabsInteractor {
      * @param tab The synced [Tab] that was clicked.
      */
     fun onSyncedTabClicked(tab: Tab)
+
+    /**
+     * Invoked when the user closes a synced [Tab].
+     */
+    fun onSyncedTabClosed(deviceId: String, tab: Tab)
 }

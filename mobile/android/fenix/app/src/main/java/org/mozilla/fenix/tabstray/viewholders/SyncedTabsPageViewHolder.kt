@@ -35,6 +35,7 @@ class SyncedTabsPageViewHolder(
                 SyncedTabsList(
                     syncedTabs = tabs ?: emptyList(),
                     onTabClick = interactor::onSyncedTabClicked,
+                    onTabCloseClick = interactor::onSyncedTabClosed,
                 )
             }
         }
