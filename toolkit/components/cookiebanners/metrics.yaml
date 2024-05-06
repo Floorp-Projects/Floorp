@@ -75,17 +75,19 @@ cookie.banners:
       - https://bugzilla.mozilla.org/1827765
       - https://bugzilla.mozilla.org/1850874
       - https://bugzilla.mozilla.org/1861317
+      - https://bugzilla.mozilla.org/1892152
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797073#c6
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1827765#c9
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1850874#c7
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861317#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892152#c6
     data_sensitivity:
       - interaction
     notification_emails:
       - tihuang@mozilla.com
       - pbz@mozilla.com
-    expires: 128
+    expires: 134
     labels:
       - top_hit
       - top_hit_opt_in
@@ -126,17 +128,19 @@ cookie.banners:
       - https://bugzilla.mozilla.org/1827765
       - https://bugzilla.mozilla.org/1850874
       - https://bugzilla.mozilla.org/1861317
+      - https://bugzilla.mozilla.org/1892152
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797073#c6
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1827765#c9
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1850874#c7
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861317#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892152#c6
     data_sensitivity:
       - interaction
     notification_emails:
       - tihuang@mozilla.com
       - pbz@mozilla.com
-    expires: 128
+    expires: 134
     labels:
       - top_hit
       - top_hit_opt_in
@@ -173,15 +177,17 @@ cookie.banners:
       - https://bugzilla.mozilla.org/1827765
       - https://bugzilla.mozilla.org/1850874
       - https://bugzilla.mozilla.org/1861317
+      - https://bugzilla.mozilla.org/1892152
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797079#c6
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1827765#c9
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1850874#c7
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861317#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892152#c6
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
     data_sensitivity:
       - interaction
     extra_keys:
@@ -291,15 +297,17 @@ cookie.banners.click:
       - https://bugzilla.mozilla.org/1827765
       - https://bugzilla.mozilla.org/1850874
       - https://bugzilla.mozilla.org/1861317
+      - https://bugzilla.mozilla.org/1892152
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797078#c6
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1827765#c9
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1850874#c7
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861317#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892152#c6
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
     telemetry_mirror: COOKIE_BANNERS_CLICK_HANDLE_DURATION_MS
   # TODO: consider moving this out of "click". It also records cookie injection.
   result:
@@ -318,15 +326,17 @@ cookie.banners.click:
       - https://bugzilla.mozilla.org/1827765
       - https://bugzilla.mozilla.org/1850874
       - https://bugzilla.mozilla.org/1861317
+      - https://bugzilla.mozilla.org/1892152
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797078#c6
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1827765#c9
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1850874#c7
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1861317#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892152#c6
     notification_emails:
       - pbz@mozilla.com
       - tihuang@mozilla.com
-    expires: 128
+    expires: 134
     labels:
       - success
       - success_cookie_injected
