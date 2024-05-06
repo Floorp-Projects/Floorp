@@ -1,0 +1,166 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1628081557 0
+#      Wed Aug 04 12:52:37 2021 +0000
+# Node ID 2635200eb5ec6f6eff1ecd0fad1ef029f0b994af
+# Parent  99c4916f4a924ede94aee9044fe3f753d2e2be2d
+Bug 1892913 - patch 14 - Add cairo-quartz-surface named-destination support from bug 1722300 patch 3.
+
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -2192,24 +2192,13 @@ static cairo_status_t
+ }
+ 
+ static cairo_int_status_t
+-_cairo_quartz_surface_tag (void			       *abstract_surface,
+-			   cairo_bool_t                 begin,
+-			   const char                  *tag_name,
+-			   const char                  *attributes,
+-			   const cairo_pattern_t       *source,
+-			   const cairo_stroke_style_t  *style,
+-			   const cairo_matrix_t	       *ctm,
+-			   const cairo_matrix_t	       *ctm_inverse,
+-			   const cairo_clip_t	       *clip)
++_cairo_quartz_surface_link (cairo_quartz_surface_t *surface,
++                            cairo_bool_t            begin,
++                            const char             *attributes)
+ {
+     cairo_link_attrs_t link_attrs;
+     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
+     int i, num_rects;
+-    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
+-
+-    /* Currently the only tag we support is "Link" */
+-    if (strcmp (tag_name, "Link"))
+-        return CAIRO_INT_STATUS_UNSUPPORTED;
+ 
+     /* We only process the 'begin' tag, and expect a rect attribute;
+        using the extents of the drawing operations enclosed by the begin/end
+@@ -2223,11 +2212,24 @@ static cairo_int_status_t
+ 
+     num_rects = _cairo_array_num_elements (&link_attrs.rects);
+     if (num_rects > 0) {
+-        CFURLRef url = CFURLCreateWithBytes (NULL,
+-                                             (const UInt8 *) link_attrs.uri,
+-                                             strlen (link_attrs.uri),
+-                                             kCFStringEncodingUTF8,
+-                                             NULL);
++        /* Create either a named destination or a URL, depending which is present
++           in the link attributes. */
++        CFURLRef url = NULL;
++        CFStringRef name = NULL;
++        if (link_attrs.uri && *link_attrs.uri)
++            url = CFURLCreateWithBytes (NULL,
++                                        (const UInt8 *) link_attrs.uri,
++                                        strlen (link_attrs.uri),
++                                        kCFStringEncodingUTF8,
++                                        NULL);
++        else if (link_attrs.dest && *link_attrs.dest)
++            name = CFStringCreateWithBytes (kCFAllocatorDefault,
++                                            (const UInt8 *) link_attrs.dest,
++                                            strlen (link_attrs.dest),
++                                            kCFStringEncodingUTF8,
++                                            FALSE);
++        else /* silently ignore link that doesn't have a usable target */
++            goto cleanup;
+ 
+         for (i = 0; i < num_rects; i++) {
+             CGRect link_rect;
+@@ -2241,12 +2243,19 @@ static cairo_int_status_t
+                             rectf.width,
+                             rectf.height);
+ 
+-            CGPDFContextSetURLForRect (surface->cgContext, url, link_rect);
++            if (url)
++                CGPDFContextSetURLForRect (surface->cgContext, url, link_rect);
++            else
++                CGPDFContextSetDestinationForRect (surface->cgContext, name, link_rect);
+         }
+ 
+-        CFRelease (url);
++        if (url)
++            CFRelease (url);
++        else
++            CFRelease (name);
+     }
+ 
++cleanup:
+     _cairo_array_fini (&link_attrs.rects);
+     free (link_attrs.dest);
+     free (link_attrs.uri);
+@@ -2255,6 +2264,74 @@ static cairo_int_status_t
+     return status;
+ }
+ 
++static cairo_int_status_t
++_cairo_quartz_surface_dest (cairo_quartz_surface_t *surface,
++                            cairo_bool_t            begin,
++                            const char             *attributes)
++{
++    cairo_dest_attrs_t dest_attrs;
++    cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
++    double x = 0, y = 0;
++
++    /* We only process the 'begin' tag, and expect 'x' and 'y' attributes. */
++    if (!begin)
++        return status;
++
++    status = _cairo_tag_parse_dest_attributes (attributes, &dest_attrs);
++    if (unlikely (status))
++	return status;
++
++    if (unlikely (!dest_attrs.name || !strlen (dest_attrs.name)))
++        goto cleanup;
++
++    CFStringRef name = CFStringCreateWithBytes (kCFAllocatorDefault,
++                                                (const UInt8 *) dest_attrs.name,
++                                                strlen (dest_attrs.name),
++                                                kCFStringEncodingUTF8,
++                                                FALSE);
++
++    if (dest_attrs.x_valid)
++        x = dest_attrs.x;
++    if (dest_attrs.y_valid)
++        y = dest_attrs.y;
++
++    CGPDFContextAddDestinationAtPoint (surface->cgContext,
++                                       name,
++                                       CGPointMake (x, surface->extents.height - y));
++    CFRelease (name);
++
++cleanup:
++    free (dest_attrs.name);
++
++    return status;
++}
++
++static cairo_int_status_t
++_cairo_quartz_surface_tag (void			       *abstract_surface,
++			   cairo_bool_t                 begin,
++			   const char                  *tag_name,
++			   const char                  *attributes,
++			   const cairo_pattern_t       *source,
++			   const cairo_stroke_style_t  *style,
++			   const cairo_matrix_t	       *ctm,
++			   const cairo_matrix_t	       *ctm_inverse,
++			   const cairo_clip_t	       *clip)
++{
++    cairo_link_attrs_t link_attrs;
++    int i, num_rects;
++    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
++
++    /* Currently the only tags we support are CAIRO_TAG_LINK and CAIRO_TAG_DEST */
++    if (!strcmp (tag_name, CAIRO_TAG_LINK))
++        return _cairo_quartz_surface_link (surface, begin, attributes);
++
++    if (!strcmp (tag_name, CAIRO_TAG_DEST))
++        return _cairo_quartz_surface_dest (surface, begin, attributes);
++
++    /* Unknown tag names are silently ignored here. */
++    return CAIRO_INT_STATUS_SUCCESS;
++}
++
+ // XXXtodo implement show_page; need to figure out how to handle begin/end
+ 
+ static const cairo_surface_backend_t cairo_quartz_surface_backend = {
