@@ -672,8 +672,8 @@ class nsCSPPolicy {
   void getReportURIs(nsTArray<nsString>& outReportURIs) const;
 
   void getViolatedDirectiveInformation(CSPDirective aDirective,
-                                       nsAString& outDirective,
-                                       nsAString& outDirectiveString,
+                                       nsAString& aDirectiveName,
+                                       nsAString& aDirectiveNameAndValue,
                                        bool* aReportSample) const;
 
   uint32_t getSandboxFlags() const;
