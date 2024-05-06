@@ -766,8 +766,20 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
 
   RefPtr<BrowsingContext> targetBC;
   rv = loadInfo->GetTargetBrowsingContext(getter_AddRefs(targetBC));
-  if (!targetBC || NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to get the channel's target browsing context"));
+    return false;
+  }
+
+  // If we cannot get the target browsing context from the loadInfo, the channel
+  // could be a fetch request from a worker scope. In this case, we get the
+  // target browsing context from the worker associated browsing context
+  // instead.
+  if (!targetBC) {
+    rv = loadInfo->GetWorkerAssociatedBrowsingContext(getter_AddRefs(targetBC));
+  }
+  if (!targetBC || NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("No browsing context is available for the channel."));
     return false;
   }
 
