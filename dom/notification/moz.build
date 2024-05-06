@@ -44,5 +44,6 @@ if CONFIG["MOZ_NEW_NOTIFICATION_STORE"]:
     ]
 else:
     EXTRA_JS_MODULES += [
+        "old/MemoryNotificationDB.sys.mjs",
         "old/NotificationDB.sys.mjs",
     ]
