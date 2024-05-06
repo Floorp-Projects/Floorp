@@ -104,7 +104,6 @@ Structure:
         creationDate: <integer>, // integer days since UNIX epoch, e.g. 16446
         resetDate: <integer>, // integer days since UNIX epoch, e.g. 16446 - optional
         firstUseDate: <integer>, // integer days since UNIX epoch, e.g. 16446 - optional
-        recoveredFromBackup: <integer>, // integer days since UNIX epoch, e.g. 16446 - optional
       },
       partner: { // This section may not be immediately available on startup
         distributionId: <string>, // pref "distribution.id", null on failure
@@ -546,13 +545,6 @@ firstUseDate
 
 The time of the first use of profile. If this is an old profile where we can't
 determine this this field will not be present.
-It's read from a file-stored timestamp from the client's profile directory.
-
-recoveredFromBackup
-~~~~~~~~~~~~
-
-The time that this profile was recovered from a backup. If the profile was never
-recovered from a backup, this field will not be present.
 It's read from a file-stored timestamp from the client's profile directory.
 
 partner

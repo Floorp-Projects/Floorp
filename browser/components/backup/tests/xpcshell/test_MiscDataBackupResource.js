@@ -11,23 +11,20 @@ const { ActivityStreamStorage } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs"
 );
 
-const { ProfileAge } = ChromeUtils.importESModule(
-  "resource://gre/modules/ProfileAge.sys.mjs"
-);
-
 /**
  * Tests that we can measure miscellaneous files in the profile directory.
  */
 add_task(async function test_measure() {
   Services.fog.testResetFOG();
 
-  const EXPECTED_MISC_KILOBYTES_SIZE = 231;
+  const EXPECTED_MISC_KILOBYTES_SIZE = 241;
   const tempDir = await IOUtils.createUniqueDirectory(
     PathUtils.tempDir,
     "MiscDataBackupResource-measurement-test"
   );
 
   const mockFiles = [
+    { path: "times.json", sizeInKB: 5 },
     { path: "enumerate_devices.txt", sizeInKB: 1 },
     { path: "protections.sqlite", sizeInKB: 100 },
     { path: "SiteSecurityServiceState.bin", sizeInKB: 10 },
@@ -76,6 +73,7 @@ add_task(async function test_backup() {
   );
 
   const simpleCopyFiles = [
+    { path: "times.json" },
     { path: "enumerate_devices.txt" },
     { path: "SiteSecurityServiceState.bin" },
   ];
@@ -176,15 +174,8 @@ add_task(async function test_recover() {
     "MiscDataBackupResource-test-profile"
   );
 
-  // Write a dummy times.json into the xpcshell test profile directory. We
-  // expect it to be copied into the destination profile.
-  let originalProfileAge = await ProfileAge(PathUtils.profileDir);
-  await originalProfileAge.computeAndPersistCreated();
-  Assert.ok(
-    await IOUtils.exists(PathUtils.join(PathUtils.profileDir, "times.json"))
-  );
-
   const simpleCopyFiles = [
+    { path: "times.json" },
     { path: "enumerate_devices.txt" },
     { path: "protections.sqlite" },
     { path: "SiteSecurityServiceState.bin" },
@@ -222,27 +213,6 @@ add_task(async function test_recover() {
       PathUtils.join(destProfilePath, SNIPPETS_BACKUP_FILE)
     )),
     "Snippets backup data should not have gone into the profile directory"
-  );
-
-  // The times.json file should have been copied over and a backup recovery
-  // time written into it.
-  Assert.ok(
-    await IOUtils.exists(PathUtils.join(destProfilePath, "times.json"))
-  );
-  let copiedProfileAge = await ProfileAge(destProfilePath);
-  Assert.equal(
-    await originalProfileAge.created,
-    await copiedProfileAge.created,
-    "Created timestamp should match."
-  );
-  Assert.equal(
-    await originalProfileAge.firstUse,
-    await copiedProfileAge.firstUse,
-    "First use timestamp should match."
-  );
-  Assert.ok(
-    await copiedProfileAge.recoveredFromBackup,
-    "Backup recovery timestamp should have been set."
   );
 
   await maybeRemovePath(recoveryPath);
