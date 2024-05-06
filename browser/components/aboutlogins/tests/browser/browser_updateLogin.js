@@ -124,7 +124,10 @@ add_task(async function test_login_item() {
   }
 
   let browser = gBrowser.selectedBrowser;
-  let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  let reauthObserved = Promise.resolve();
+  if (OSKeyStore.canReauth()) {
+    reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  }
   await SpecialPowers.spawn(
     browser,
     [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
@@ -163,9 +166,11 @@ add_task(async function test_login_item() {
     ],
     test_discard_dialog
   );
-  reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
-    loginResult: true,
-  });
+  if (OSKeyStore.canReauth()) {
+    reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
+      loginResult: true,
+    });
+  }
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let editButton = loginItem.shadowRoot
@@ -184,9 +189,11 @@ add_task(async function test_login_item() {
     ],
     test_discard_dialog
   );
-  reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
-    loginResult: true,
-  });
+  if (OSKeyStore.canReauth()) {
+    reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
+      loginResult: true,
+    });
+  }
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let editButton = loginItem.shadowRoot
@@ -289,9 +296,11 @@ add_task(async function test_login_item() {
       );
     }
   );
-  reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
-    loginResult: true,
-  });
+  if (OSKeyStore.canReauth()) {
+    reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
+      loginResult: true,
+    });
+  }
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let editButton = loginItem.shadowRoot
@@ -360,9 +369,11 @@ add_task(async function test_login_item() {
       "Password field width should be correctly updated"
     );
   });
-  reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
-    loginResult: true,
-  });
+  if (OSKeyStore.canReauth()) {
+    reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
+      loginResult: true,
+    });
+  }
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let editButton = loginItem.shadowRoot

@@ -2,7 +2,6 @@
 support-files = ["head.js"]
 prefs = [
   "signon.management.page.vulnerable-passwords.enabled=true",
-  "signon.management.page.os-auth.enabled=true",
   "toolkit.telemetry.ipcBatchTimeout=10", # lower the interval for event telemetry in the content process to update the parent process
 ]
 # Run first so content events from previous tests won't trickle in.
