@@ -1183,7 +1183,6 @@ void AudioInputProcessing::EnsureAudioProcessing(AudioProcessingTrack* aTrack) {
 void AudioInputProcessing::ResetAudioProcessing(MediaTrackGraph* aGraph) {
   aGraph->AssertOnGraphThread();
   MOZ_ASSERT(IsPassThrough(aGraph) || !mEnabled);
-  MOZ_ASSERT(mPacketizerInput);
 
   LOG_FRAME(
       "(Graph %p, Driver %p) AudioInputProcessing %p Resetting audio "
@@ -1196,9 +1195,10 @@ void AudioInputProcessing::ResetAudioProcessing(MediaTrackGraph* aGraph) {
     mAudioProcessing->Initialize();
   }
 
-  MOZ_ASSERT(static_cast<uint32_t>(mSegment.GetDuration()) +
-                 mPacketizerInput->FramesAvailable() ==
-             mPacketizerInput->mPacketSize);
+  MOZ_ASSERT_IF(mPacketizerInput,
+                static_cast<uint32_t>(mSegment.GetDuration()) +
+                        mPacketizerInput->FramesAvailable() ==
+                    mPacketizerInput->mPacketSize);
 
   // It's ok to clear all the internal buffer here since we won't use mSegment
   // in pass-through mode or when audio processing is disabled.
