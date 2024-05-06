@@ -34,7 +34,7 @@ class SVGGraphicsElement : public SVGGraphicsElementBase, public SVGTests {
   already_AddRefed<SVGMatrix> GetCTM();
   already_AddRefed<SVGMatrix> GetScreenCTM();
 
-  Focusable IsFocusableWithoutStyle(bool aWithMouse) override;
+  Focusable IsFocusableWithoutStyle(IsFocusableFlags) override;
   bool IsSVGGraphicsElement() const final { return true; }
 
   using nsINode::Clone;

@@ -9,7 +9,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/SVGAElementBinding.h"
-#include "mozilla/TabFocusModel.h"
+#include "mozilla/FocusModel.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
@@ -157,7 +157,7 @@ void SVGAElement::UnbindFromTree(UnbindContext& aContext) {
 
 int32_t SVGAElement::TabIndexDefault() { return 0; }
 
-Focusable SVGAElement::IsFocusableWithoutStyle(bool aWithMouse) {
+Focusable SVGAElement::IsFocusableWithoutStyle(IsFocusableFlags) {
   Focusable result;
   if (IsSVGFocusable(&result.mFocusable, &result.mTabIndex)) {
     return result;
@@ -181,7 +181,7 @@ Focusable SVGAElement::IsFocusableWithoutStyle(bool aWithMouse) {
       return {};
     }
   }
-  if (!TabFocusModel::IsTabFocusable(TabFocusableType::Links)) {
+  if (!FocusModel::IsTabFocusable(TabFocusableType::Links)) {
     result.mTabIndex = -1;
   }
   return result;

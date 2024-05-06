@@ -127,6 +127,7 @@ struct CharacterDataChangeInfo;
 namespace mozilla {
 
 enum class CaretAssociationHint;
+enum class IsFocusableFlags : uint8_t;
 enum class PeekOffsetOption : uint16_t;
 enum class PseudoStyleType : uint8_t;
 enum class TableSelectionMode : uint32_t;
@@ -4387,13 +4388,10 @@ class nsIFrame : public nsQueryFrame {
    * Also, depending on the pref accessibility.tabfocus some widgets may be
    * focusable but removed from the tab order. This is the default on
    * Mac OS X, where fewer items are focusable.
-   * @param  [in, optional] aWithMouse, is this focus query for mouse clicking
-   * @param  [in, optional] aCheckVisibility, whether to treat an invisible
-   *   frame as not focusable
    * @return whether the frame is focusable via mouse, kbd or script.
    */
-  [[nodiscard]] Focusable IsFocusable(bool aWithMouse = false,
-                                      bool aCheckVisibility = true);
+  [[nodiscard]] Focusable IsFocusable(
+      mozilla::IsFocusableFlags = mozilla::IsFocusableFlags(0));
 
  protected:
   // Helper for IsFocusable.

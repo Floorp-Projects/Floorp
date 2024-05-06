@@ -9,6 +9,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/FocusModel.h"
 #include "mozilla/IMEContentObserver.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MappedDeclarationsBuilder.h"
@@ -1766,8 +1767,8 @@ bool nsGenericHTMLElement::LegacyTouchAPIEnabled(JSContext* aCx,
 }
 
 bool nsGenericHTMLElement::IsFormControlDefaultFocusable(
-    bool aWithMouse) const {
-  if (!aWithMouse) {
+    IsFocusableFlags aFlags) const {
+  if (!(aFlags & IsFocusableFlags::WithMouse)) {
     return true;
   }
   switch (StaticPrefs::accessibility_mouse_focuses_formcontrol()) {
@@ -2312,7 +2313,8 @@ void nsGenericHTMLElement::Click(CallerType aCallerType) {
   ClearHandlingClick();
 }
 
-bool nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+bool nsGenericHTMLElement::IsHTMLFocusable(IsFocusableFlags aFlags,
+                                           bool* aIsFocusable,
                                            int32_t* aTabIndex) {
   MOZ_ASSERT(aIsFocusable);
   MOZ_ASSERT(aTabIndex);
@@ -2598,15 +2600,15 @@ void nsGenericHTMLFormControlElement::GetAutocapitalize(
   }
 }
 
-bool nsGenericHTMLFormControlElement::IsHTMLFocusable(bool aWithMouse,
+bool nsGenericHTMLFormControlElement::IsHTMLFocusable(IsFocusableFlags aFlags,
                                                       bool* aIsFocusable,
                                                       int32_t* aTabIndex) {
-  if (nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable,
+  if (nsGenericHTMLFormElement::IsHTMLFocusable(aFlags, aIsFocusable,
                                                 aTabIndex)) {
     return true;
   }
 
-  *aIsFocusable = *aIsFocusable && IsFormControlDefaultFocusable(aWithMouse);
+  *aIsFocusable = *aIsFocusable && IsFormControlDefaultFocusable(aFlags);
   return false;
 }
 
@@ -3561,8 +3563,7 @@ void nsGenericHTMLElement::FocusPopover() {
 
   RefPtr<Element> control = GetBoolAttr(nsGkAtoms::autofocus)
                                 ? this
-                                : GetAutofocusDelegate(false /* aWithMouse */);
-
+                                : GetAutofocusDelegate(IsFocusableFlags(0));
   if (!control) {
     return;
   }

@@ -401,8 +401,8 @@ class nsXULElement : public nsStyledElement {
       return {false, mozilla::Some(false), mozilla::Some(-1)};
     }
   };
-  XULFocusability GetXULFocusability(bool aWithMouse);
-  Focusable IsFocusableWithoutStyle(bool aWithMouse) override;
+  XULFocusability GetXULFocusability(mozilla::IsFocusableFlags);
+  Focusable IsFocusableWithoutStyle(mozilla::IsFocusableFlags) override;
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 

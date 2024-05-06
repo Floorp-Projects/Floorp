@@ -6423,10 +6423,10 @@ void HTMLInputElement::RemoveFromRadioGroup() {
   mRadioGroupContainer = nullptr;
 }
 
-bool HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
-                                       int32_t* aTabIndex) {
+bool HTMLInputElement::IsHTMLFocusable(IsFocusableFlags aFlags,
+                                       bool* aIsFocusable, int32_t* aTabIndex) {
   if (nsGenericHTMLFormControlElementWithState::IsHTMLFocusable(
-          aWithMouse, aIsFocusable, aTabIndex)) {
+          aFlags, aIsFocusable, aTabIndex)) {
     return true;
   }
 
@@ -6440,7 +6440,7 @@ bool HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
     return false;
   }
 
-  const bool defaultFocusable = IsFormControlDefaultFocusable(aWithMouse);
+  const bool defaultFocusable = IsFormControlDefaultFocusable(aFlags);
   if (CreatesDateTimeWidget()) {
     if (aTabIndex) {
       // We only want our native anonymous child to be tabable to, not ourself.

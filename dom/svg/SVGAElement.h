@@ -50,7 +50,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
   void UnbindFromTree(UnbindContext&) override;
 
   int32_t TabIndexDefault() override;
-  Focusable IsFocusableWithoutStyle(bool aWithMouse) override;
+  Focusable IsFocusableWithoutStyle(IsFocusableFlags) override;
 
   void GetLinkTarget(nsAString& aTarget) override;
   already_AddRefed<nsIURI> GetHrefURI() const override;

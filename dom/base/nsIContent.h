@@ -16,6 +16,7 @@ class nsTextFragment;
 class nsIFrame;
 
 namespace mozilla {
+enum class IsFocusableFlags : uint8_t;
 class EventChainPreVisitor;
 class HTMLEditor;
 struct URLExtraData;
@@ -274,13 +275,14 @@ class nsIContent : public nsINode {
    * some widgets may be focusable but removed from the tab order.
    * @return whether the content is focusable via mouse, kbd or script.
    */
-  virtual Focusable IsFocusableWithoutStyle(bool aWithMouse = false);
+  virtual Focusable IsFocusableWithoutStyle(
+      mozilla::IsFocusableFlags = mozilla::IsFocusableFlags(0));
 
   // https://html.spec.whatwg.org/multipage/interaction.html#focus-delegate
-  mozilla::dom::Element* GetFocusDelegate(bool aWithMouse) const;
+  mozilla::dom::Element* GetFocusDelegate(mozilla::IsFocusableFlags) const;
 
   // https://html.spec.whatwg.org/multipage/interaction.html#autofocus-delegate
-  mozilla::dom::Element* GetAutofocusDelegate(bool aWithMouse) const;
+  mozilla::dom::Element* GetAutofocusDelegate(mozilla::IsFocusableFlags) const;
 
   /*
    * Get desired IME state for the content.

@@ -157,7 +157,7 @@ void HTMLDialogElement::FocusDialog() {
 
   RefPtr<Element> control = HasAttr(nsGkAtoms::autofocus)
                                 ? this
-                                : GetFocusDelegate(false /* aWithMouse */);
+                                : GetFocusDelegate(IsFocusableFlags(0));
 
   // If there isn't one of those either, then let control be subject.
   if (!control) {

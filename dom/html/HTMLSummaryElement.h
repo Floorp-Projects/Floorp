@@ -30,7 +30,7 @@ class HTMLSummaryElement final : public nsGenericHTMLElement {
 
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
-  bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+  bool IsHTMLFocusable(IsFocusableFlags, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
 
   int32_t TabIndexDefault() override;

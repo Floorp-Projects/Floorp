@@ -15,6 +15,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/Likely.h"
+#include "mozilla/FocusModel.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MouseEvents.h"
@@ -3728,14 +3729,14 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             break;
           }
 
-          if (frame->IsFocusable(/* aWithMouse = */ true)) {
+          auto flags = IsFocusableFlags::WithMouse;
+          if (frame->IsFocusable(flags)) {
             break;
           }
 
           if (ShadowRoot* root = newFocus->GetShadowRoot()) {
             if (root->DelegatesFocus()) {
-              if (Element* firstFocusable =
-                      root->GetFocusDelegate(/* aWithMouse */ true)) {
+              if (Element* firstFocusable = root->GetFocusDelegate(flags)) {
                 newFocus = firstFocusable;
                 break;
               }

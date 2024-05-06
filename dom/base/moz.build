@@ -126,6 +126,7 @@ EXPORTS.mozilla += [
     "ContentIterator.h",
     "CORSMode.h",
     "FlushType.h",
+    "FocusModel.h",
     "FullscreenChange.h",
     "GlobalTeardownObserver.h",
     "IdentifierMapEntry.h",
@@ -135,7 +136,6 @@ EXPORTS.mozilla += [
     "ScriptableContentIterator.h",
     "ScrollingMetrics.h",
     "SelectionChangeEventDispatcher.h",
-    "TabFocusModel.h",
     "TextInputProcessor.h",
     "UseCounter.h",
 ]

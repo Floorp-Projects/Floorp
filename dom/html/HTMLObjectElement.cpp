@@ -135,7 +135,8 @@ void HTMLObjectElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
       }));
 }
 
-bool HTMLObjectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+bool HTMLObjectElement::IsHTMLFocusable(IsFocusableFlags aFlags,
+                                        bool* aIsFocusable,
                                         int32_t* aTabIndex) {
   // TODO: this should probably be managed directly by IsHTMLFocusable.
   // See bug 597242.

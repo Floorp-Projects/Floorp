@@ -7,7 +7,7 @@
 #include "mozilla/dom/MathMLElement.h"
 
 #include "base/compiler_specific.h"
-#include "mozilla/TabFocusModel.h"
+#include "mozilla/FocusModel.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EventListenerManager.h"
@@ -611,7 +611,7 @@ void MathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
 int32_t MathMLElement::TabIndexDefault() { return IsLink() ? 0 : -1; }
 
 // XXX Bug 1586011: Share logic with other element classes.
-Focusable MathMLElement::IsFocusableWithoutStyle(bool aWithMouse) {
+Focusable MathMLElement::IsFocusableWithoutStyle(IsFocusableFlags) {
   if (!IsInComposedDoc() || IsInDesignMode()) {
     // In designMode documents we only allow focusing the document.
     return {};
@@ -636,7 +636,7 @@ Focusable MathMLElement::IsFocusableWithoutStyle(bool aWithMouse) {
     return {};
   }
 
-  if (!TabFocusModel::IsTabFocusable(TabFocusableType::Links)) {
+  if (!FocusModel::IsTabFocusable(TabFocusableType::Links)) {
     tabIndex = -1;
   }
 

@@ -19,6 +19,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/FocusModel.h"
 #include "mozilla/dom/CSSAnimation.h"
 #include "mozilla/dom/CSSTransition.h"
 #include "mozilla/dom/ContentVisibilityAutoStateChangeEvent.h"
@@ -10808,7 +10809,7 @@ bool nsIFrame::IsFocusableDueToScrollFrame() {
   return true;
 }
 
-Focusable nsIFrame::IsFocusable(bool aWithMouse, bool aCheckVisibility) {
+Focusable nsIFrame::IsFocusable(IsFocusableFlags aFlags) {
   // cannot focus content in print preview mode. Only the root can be focused,
   // but that's handled elsewhere.
   if (PresContext()->Type() == nsPresContext::eContext_PrintPreview) {
@@ -10819,7 +10820,8 @@ Focusable nsIFrame::IsFocusable(bool aWithMouse, bool aCheckVisibility) {
     return {};
   }
 
-  if (aCheckVisibility && !IsVisibleConsideringAncestors()) {
+  if (!(aFlags & IsFocusableFlags::IgnoreVisibility) &&
+      !IsVisibleConsideringAncestors()) {
     return {};
   }
 
@@ -10839,14 +10841,14 @@ Focusable nsIFrame::IsFocusable(bool aWithMouse, bool aCheckVisibility) {
     // As a legacy special-case, -moz-user-focus controls focusability and
     // tabability of XUL elements in some circumstances (which default to
     // -moz-user-focus: ignore).
-    auto focusability = xul->GetXULFocusability(aWithMouse);
+    auto focusability = xul->GetXULFocusability(aFlags);
     focusable.mFocusable =
         focusability.mForcedFocusable.valueOr(uf == StyleUserFocus::Normal);
     if (focusable) {
       focusable.mTabIndex = focusability.mForcedTabIndexIfFocusable.valueOr(0);
     }
   } else {
-    focusable = mContent->IsFocusableWithoutStyle(aWithMouse);
+    focusable = mContent->IsFocusableWithoutStyle(aFlags);
   }
 
   if (focusable) {
@@ -10854,7 +10856,8 @@ Focusable nsIFrame::IsFocusable(bool aWithMouse, bool aCheckVisibility) {
   }
 
   // If we're focusing with the mouse we never focus scroll areas.
-  if (!aWithMouse && IsFocusableDueToScrollFrame()) {
+  if (!(aFlags & IsFocusableFlags::WithMouse) &&
+      IsFocusableDueToScrollFrame()) {
     return {true, 0};
   }
 

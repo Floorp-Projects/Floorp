@@ -29,11 +29,11 @@ SVGSymbolElement::SVGSymbolElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGSymbolElementBase(std::move(aNodeInfo)) {}
 
-Focusable SVGSymbolElement::IsFocusableWithoutStyle(bool aWithMouse) {
+Focusable SVGSymbolElement::IsFocusableWithoutStyle(IsFocusableFlags aFlags) {
   if (!CouldBeRendered()) {
     return {};
   }
-  return SVGSymbolElementBase::IsFocusableWithoutStyle(aWithMouse);
+  return SVGSymbolElementBase::IsFocusableWithoutStyle(aFlags);
 }
 
 bool SVGSymbolElement::CouldBeRendered() const {

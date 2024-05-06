@@ -1026,10 +1026,11 @@ void HTMLSelectElement::SetValue(const nsAString& aValue) {
 
 int32_t HTMLSelectElement::TabIndexDefault() { return 0; }
 
-bool HTMLSelectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+bool HTMLSelectElement::IsHTMLFocusable(IsFocusableFlags aFlags,
+                                        bool* aIsFocusable,
                                         int32_t* aTabIndex) {
   if (nsGenericHTMLFormControlElementWithState::IsHTMLFocusable(
-          aWithMouse, aIsFocusable, aTabIndex)) {
+          aFlags, aIsFocusable, aTabIndex)) {
     return true;
   }
 

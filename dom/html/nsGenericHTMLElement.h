@@ -198,7 +198,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   }
 
   /** Returns whether a form control should be default-focusable. */
-  bool IsFormControlDefaultFocusable(bool aWithMouse) const;
+  bool IsFormControlDefaultFocusable(mozilla::IsFocusableFlags) const;
 
   /**
    * Returns the count of descendants (inclusive of this node) in
@@ -333,16 +333,17 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(UnbindContext&) override;
 
-  Focusable IsFocusableWithoutStyle(bool aWithMouse) override {
+  Focusable IsFocusableWithoutStyle(mozilla::IsFocusableFlags aFlags =
+                                        mozilla::IsFocusableFlags(0)) override {
     Focusable result;
-    IsHTMLFocusable(aWithMouse, &result.mFocusable, &result.mTabIndex);
+    IsHTMLFocusable(aFlags, &result.mFocusable, &result.mTabIndex);
     return result;
   }
   /**
    * Returns true if a subclass is not allowed to override the value returned
    * in aIsFocusable.
    */
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+  virtual bool IsHTMLFocusable(mozilla::IsFocusableFlags, bool* aIsFocusable,
                                int32_t* aTabIndex);
   MOZ_CAN_RUN_SCRIPT
   mozilla::Result<bool, nsresult> PerformAccesskey(
@@ -1176,7 +1177,7 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   // nsGenericHTMLElement
   // autocapitalize attribute support
   void GetAutocapitalize(nsAString& aValue) const override;
-  bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+  bool IsHTMLFocusable(mozilla::IsFocusableFlags, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
 
   // EventTarget

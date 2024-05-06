@@ -1631,7 +1631,7 @@ MOZ_CAN_RUN_SCRIPT static bool IsNextFocusableElementTextControl(
 
   // FIXME: Should probably use nsIFrame::IsFocusable if possible, to account
   // for things like visibility: hidden or so.
-  if (!nextElement->IsFocusableWithoutStyle(false)) {
+  if (!nextElement->IsFocusableWithoutStyle()) {
     return false;
   }
 
