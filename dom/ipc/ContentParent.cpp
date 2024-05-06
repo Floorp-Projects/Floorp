@@ -4,10 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_WIDGET_ANDROID
-#  include "AndroidDecoderModule.h"
-#endif
-
 #include "mozilla/AppShutdown.h"
 #include "mozilla/DebugOnly.h"
 
@@ -3064,14 +3060,6 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   for (auto const& [location, supported] : sCodecsSupported) {
     Unused << SendUpdateMediaCodecsSupported(location, supported);
   }
-
-#ifdef MOZ_WIDGET_ANDROID
-  if (!(StaticPrefs::media_utility_process_enabled() &&
-        StaticPrefs::media_utility_android_media_codec_enabled())) {
-    Unused << SendDecoderSupportedMimeTypes(
-        AndroidDecoderModule::GetSupportedMimeTypesPrefixed());
-  }
-#endif
 
   // Must send screen info before send initialData
   ScreenManager& screenManager = ScreenManager::GetSingleton();
