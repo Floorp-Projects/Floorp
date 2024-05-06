@@ -97,6 +97,18 @@ add_task(async function testQueryParamIsNotStrippedForWrongSiteSpecific() {
   });
 });
 
+// Ensuring clean copy works with magnet links. We don't strip anything but copying the original URI should still work.
+add_task(async function testMagneticLinks() {
+  let originalUrl = "magnet:?xt=urn:btih:somesha1hash";
+  let shortenedUrl = "magnet:?xt=urn:btih:somesha1hash";
+  await testStripOnShare({
+    selectWholeUrl: true,
+    validUrl: originalUrl,
+    strippedUrl: shortenedUrl,
+    useTestList: true,
+  });
+});
+
 /**
  * Opens a new tab, opens the context menu and checks that the strip-on-share menu item is visible.
  * Checks that the stripped version of the url is copied to the clipboard.

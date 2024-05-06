@@ -2336,8 +2336,8 @@ class nsContextMenu {
     try {
       strippedLinkURI = QueryStringStripper.stripForCopyOrShare(this.linkURI);
     } catch (e) {
-      console.warn(`isLinkURIStrippable: ${e.message}`);
-      return null;
+      console.warn(`stripForCopyOrShare: ${e.message}`);
+      return this.linkURI;
     }
 
     // If nothing can be stripped, we return the original URI
