@@ -502,7 +502,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserChild)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
   NS_INTERFACE_MAP_ENTRY(nsIBrowserChild)
@@ -626,18 +625,6 @@ BrowserChild::GetDimensions(DimensionKind aDimensionKind, int32_t* aX,
 
 NS_IMETHODIMP
 BrowserChild::Blur() { return NS_ERROR_NOT_IMPLEMENTED; }
-
-NS_IMETHODIMP
-BrowserChild::FocusNextElement(bool aForDocumentNavigation) {
-  SendMoveFocus(true, aForDocumentNavigation);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserChild::FocusPrevElement(bool aForDocumentNavigation) {
-  SendMoveFocus(false, aForDocumentNavigation);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 BrowserChild::GetInterface(const nsIID& aIID, void** aSink) {

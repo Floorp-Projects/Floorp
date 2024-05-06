@@ -39,7 +39,6 @@
 #include "nsIRemoteTab.h"
 #include "nsIBrowserChild.h"
 #include "nsRect.h"
-#include "nsIWebBrowserChromeFocus.h"
 #include "nsIContent.h"
 #include "nsServiceManagerUtils.h"
 #include "nsViewManager.h"
@@ -194,13 +193,6 @@ nsDocShellTreeOwner::GetInterface(const nsIID& aIID, void** aSink) {
 
   if (NS_SUCCEEDED(QueryInterface(aIID, aSink))) {
     return NS_OK;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIWebBrowserChromeFocus))) {
-    if (mWebBrowserChromeWeak != nullptr) {
-      return mWebBrowserChromeWeak->QueryReferent(aIID, aSink);
-    }
-    return mOwnerWin->QueryInterface(aIID, aSink);
   }
 
   if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
