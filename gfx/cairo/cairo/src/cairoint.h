@@ -184,7 +184,11 @@ _cairo_popcount (uint32_t mask)
 #if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
     return __builtin_popcount (mask);
 #else
+#ifdef __cplusplus
+    int y;
+#else
     register int y;
+#endif
 
     y = (mask >> 1) &033333333333;
     y = mask - y - ((y >>1) & 033333333333);
