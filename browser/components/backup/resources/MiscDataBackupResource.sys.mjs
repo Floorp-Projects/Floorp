@@ -12,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const SNIPPETS_TABLE_NAME = "snippets";
 const FILES_FOR_BACKUP = [
-  "times.json",
   "enumerate_devices.txt",
   "protections.sqlite",
   "SiteSecurityServiceState.bin",
@@ -33,11 +32,7 @@ export class MiscDataBackupResource extends BackupResource {
   }
 
   async backup(stagingPath, profilePath = PathUtils.profileDir) {
-    const files = [
-      "times.json",
-      "enumerate_devices.txt",
-      "SiteSecurityServiceState.bin",
-    ];
+    const files = ["enumerate_devices.txt", "SiteSecurityServiceState.bin"];
     await BackupResource.copyFiles(profilePath, stagingPath, files);
 
     const sqliteDatabases = ["protections.sqlite"];

@@ -17,14 +17,13 @@ const { ActivityStreamStorage } = ChromeUtils.importESModule(
 add_task(async function test_measure() {
   Services.fog.testResetFOG();
 
-  const EXPECTED_MISC_KILOBYTES_SIZE = 241;
+  const EXPECTED_MISC_KILOBYTES_SIZE = 231;
   const tempDir = await IOUtils.createUniqueDirectory(
     PathUtils.tempDir,
     "MiscDataBackupResource-measurement-test"
   );
 
   const mockFiles = [
-    { path: "times.json", sizeInKB: 5 },
     { path: "enumerate_devices.txt", sizeInKB: 1 },
     { path: "protections.sqlite", sizeInKB: 100 },
     { path: "SiteSecurityServiceState.bin", sizeInKB: 10 },
@@ -73,7 +72,6 @@ add_task(async function test_backup() {
   );
 
   const simpleCopyFiles = [
-    { path: "times.json" },
     { path: "enumerate_devices.txt" },
     { path: "SiteSecurityServiceState.bin" },
   ];
@@ -175,7 +173,6 @@ add_task(async function test_recover() {
   );
 
   const simpleCopyFiles = [
-    { path: "times.json" },
     { path: "enumerate_devices.txt" },
     { path: "protections.sqlite" },
     { path: "SiteSecurityServiceState.bin" },
