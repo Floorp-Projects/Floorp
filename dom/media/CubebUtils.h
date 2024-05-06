@@ -16,6 +16,7 @@
 class AudioDeviceInfo;
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(cubeb_stream_prefs)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(cubeb_input_processing_params)
 
 namespace mozilla {
 
