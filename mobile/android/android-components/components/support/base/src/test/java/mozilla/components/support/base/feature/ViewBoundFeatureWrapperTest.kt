@@ -61,6 +61,34 @@ class ViewBoundFeatureWrapperTest {
     }
 
     @Test
+    fun `Calling onForwardPressed on an empty wrapper returns false`() {
+        val wrapper = ViewBoundFeatureWrapper<MockFeature>()
+        assertFalse(wrapper.onForwardPressed())
+    }
+
+    @Test
+    fun `onForwardPressed is forwarded to feature`() {
+        val feature = MockFeatureWithUserInteractionHandler(onForwardPressed = true)
+
+        val wrapper = ViewBoundFeatureWrapper(
+            feature = feature,
+            owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
+            view = mock(),
+        )
+
+        assertTrue(wrapper.onForwardPressed())
+        assertTrue(feature.onForwardPressedInvoked)
+
+        assertFalse(
+            ViewBoundFeatureWrapper(
+                feature = MockFeatureWithUserInteractionHandler(onForwardPressed = false),
+                owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
+                view = mock(),
+            ).onForwardPressed(),
+        )
+    }
+
+    @Test
     fun `Calling onActivityResult on an empty wrapper returns false`() {
         val wrapper = ViewBoundFeatureWrapper<MockFeature>()
         assertFalse(wrapper.onActivityResult(0, mock(), RESULT_OK))
@@ -350,6 +378,19 @@ class ViewBoundFeatureWrapperTest {
         wrapper.onBackPressed()
     }
 
+    @Test(expected = IllegalAccessError::class)
+    fun `onForwardPressed throws if feature does not implement ForwardHandler`() {
+        val feature = MockFeature()
+
+        val wrapper = ViewBoundFeatureWrapper(
+            feature = feature,
+            owner = MockedLifecycleOwner(MockedLifecycle(Lifecycle.State.CREATED)),
+            view = mock(),
+        )
+
+        wrapper.onForwardPressed()
+    }
+
     @Test
     fun `Setting a feature clears a previously existing feature`() {
         val feature = MockFeature()
@@ -434,6 +475,7 @@ private open class MockFeature : LifecycleAwareFeature {
 
 private class MockFeatureWithUserInteractionHandler(
     private val onBackPressed: Boolean = false,
+    private val onForwardPressed: Boolean = false,
 ) : MockFeature(), UserInteractionHandler {
     var onBackPressedInvoked = false
         private set
@@ -441,6 +483,14 @@ private class MockFeatureWithUserInteractionHandler(
     override fun onBackPressed(): Boolean {
         onBackPressedInvoked = true
         return onBackPressed
+    }
+
+    var onForwardPressedInvoked = false
+        private set
+
+    override fun onForwardPressed(): Boolean {
+        onForwardPressedInvoked = true
+        return onForwardPressed
     }
 }
 

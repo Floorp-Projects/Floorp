@@ -54,7 +54,7 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession)).joinBlocking()
 
-        val feature = SessionFeature(store, mock(), view)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         feature.start()
@@ -74,7 +74,7 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("C", engineSession)).joinBlocking()
 
-        val feature = SessionFeature(store, mock(), view, tabId = "C")
+        val feature = SessionFeature(store, mock(), mock(), view, tabId = "C")
         verify(view, never()).render(any())
 
         feature.start()
@@ -95,7 +95,7 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("D", engineSession)).joinBlocking()
 
-        val feature = SessionFeature(store, mock(), view, tabId = "D")
+        val feature = SessionFeature(store, mock(), mock(), view, tabId = "D")
         verify(view, never()).render(any())
         feature.start()
 
@@ -117,7 +117,7 @@ class SessionFeatureTest {
         store.dispatch(EngineAction.LinkEngineSessionAction("A", engineSessionA)).joinBlocking()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSessionB)).joinBlocking()
 
-        val feature = SessionFeature(store, mock(), view)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         feature.start()
@@ -136,7 +136,7 @@ class SessionFeatureTest {
         val view: EngineView = mock()
         doReturn(actualView).`when`(view).asView()
 
-        val feature = SessionFeature(store, mock(), view)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         feature.start()
@@ -157,7 +157,7 @@ class SessionFeatureTest {
         store.dispatch(EngineAction.LinkEngineSessionAction("A", engineSessionA)).joinBlocking()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSessionB)).joinBlocking()
 
-        val feature = SessionFeature(store, mock(), view)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         feature.start()
@@ -181,7 +181,7 @@ class SessionFeatureTest {
 
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession)).joinBlocking()
-        val feature = SessionFeature(store, mock(), view)
+        val feature = SessionFeature(store, mock(), mock(), view)
 
         feature.start()
 
@@ -205,7 +205,7 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession)).joinBlocking()
 
-        val feature = SessionFeature(store, mock(), view)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         feature.start()
@@ -233,7 +233,7 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("D", engineSession)).joinBlocking()
 
-        val feature = SessionFeature(store, mock(), view, tabId = "D")
+        val feature = SessionFeature(store, mock(), mock(), view, tabId = "D")
         verify(view, never()).render(any())
 
         feature.start()
@@ -253,7 +253,7 @@ class SessionFeatureTest {
             val view: EngineView = mock()
             doReturn(false).`when`(view).canClearSelection()
 
-            val feature = SessionFeature(BrowserStore(), mock(), view)
+            val feature = SessionFeature(BrowserStore(), mock(), mock(), view)
             assertFalse(feature.onBackPressed())
 
             verify(view, never()).clearSelection()
@@ -263,7 +263,7 @@ class SessionFeatureTest {
             val view: EngineView = mock()
             doReturn(true).`when`(view).canClearSelection()
 
-            val feature = SessionFeature(BrowserStore(), mock(), view)
+            val feature = SessionFeature(BrowserStore(), mock(), mock(), view)
             assertTrue(feature.onBackPressed())
 
             verify(view).clearSelection()
@@ -282,7 +282,7 @@ class SessionFeatureTest {
 
             val useCase: SessionUseCases.GoBackUseCase = mock()
 
-            val feature = SessionFeature(store, useCase, mock())
+            val feature = SessionFeature(store, useCase, mock(), mock())
 
             assertFalse(feature.onBackPressed())
             verify(useCase, never()).invoke("A")
@@ -305,10 +305,52 @@ class SessionFeatureTest {
 
             val useCase: SessionUseCases.GoBackUseCase = mock()
 
-            val feature = SessionFeature(store, useCase, mock())
+            val feature = SessionFeature(store, useCase, mock(), mock())
 
             assertTrue(feature.onBackPressed())
             verify(useCase).invoke("A")
+        }
+    }
+
+    @Test
+    fun `onForwardPressed() invokes GoForwardUseCase if forward navigation is possible`() {
+        run {
+            val store = BrowserStore(
+                BrowserState(
+                    tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
+                    selectedTabId = "A",
+                ),
+            )
+
+            val forwardUseCase: SessionUseCases.GoForwardUseCase = mock()
+
+            val feature = SessionFeature(store, mock(), forwardUseCase, mock())
+
+            assertFalse(feature.onForwardPressed())
+            verify(forwardUseCase, never()).invoke("A")
+        }
+
+        run {
+            val store = BrowserStore(
+                BrowserState(
+                    tabs = listOf(createTab("https://www.mozilla.org", id = "A")),
+                    selectedTabId = "A",
+                ),
+            )
+
+            store.dispatch(
+                ContentAction.UpdateForwardNavigationStateAction(
+                    "A",
+                    canGoForward = true,
+                ),
+            ).joinBlocking()
+
+            val forwardUseCase: SessionUseCases.GoForwardUseCase = mock()
+
+            val feature = SessionFeature(store, mock(), forwardUseCase, mock())
+
+            assertTrue(feature.onForwardPressed())
+            verify(forwardUseCase).invoke("A")
         }
     }
 
@@ -323,7 +365,7 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("D", engineSession)).joinBlocking()
 
-        val feature = SessionFeature(store, mock(), view, tabId = "D")
+        val feature = SessionFeature(store, mock(), mock(), view, tabId = "D")
         verify(view, never()).render(any())
         feature.start()
 
@@ -347,7 +389,7 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("A", engineSession)).joinBlocking()
 
-        val feature = SessionFeature(store, mock(), view, tabId = "A")
+        val feature = SessionFeature(store, mock(), mock(), view, tabId = "A")
         verify(view, never()).render(any())
         feature.start()
 
@@ -368,7 +410,7 @@ class SessionFeatureTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession)).joinBlocking()
 
-        val feature = SessionFeature(store, mock(), view)
+        val feature = SessionFeature(store, mock(), mock(), view)
         verify(view, never()).render(any())
 
         assertEquals(0L, store.state.findTab("B")?.lastAccess)

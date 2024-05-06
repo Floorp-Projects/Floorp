@@ -127,7 +127,7 @@ import org.mozilla.fenix.GleanMetrics.PullToRefreshInBrowser
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.NavGraphDirections
-import org.mozilla.fenix.OnBackLongPressedListener
+import org.mozilla.fenix.OnLongPressedListener
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
@@ -207,7 +207,7 @@ abstract class BaseBrowserFragment :
     Fragment(),
     UserInteractionHandler,
     ActivityResultHandler,
-    OnBackLongPressedListener,
+    OnLongPressedListener,
     AccessibilityManager.AccessibilityStateChangeListener {
 
     private var _binding: FragmentBrowserBinding? = null
@@ -860,6 +860,7 @@ abstract class BaseBrowserFragment :
             feature = SessionFeature(
                 requireComponents.core.store,
                 requireComponents.useCases.sessionUseCases.goBack,
+                requireComponents.useCases.sessionUseCases.goForward,
                 binding.engineView,
                 customTabSessionId,
             ),
@@ -1541,6 +1542,11 @@ abstract class BaseBrowserFragment :
             removeSessionIfNeeded()
     }
 
+    @CallSuper
+    override fun onForwardPressed(): Boolean {
+        return sessionFeature.onForwardPressed()
+    }
+
     /**
      * Forwards activity results to the [ActivityResultHandler] features.
      */
@@ -1551,12 +1557,24 @@ abstract class BaseBrowserFragment :
         ).any { it.onActivityResult(requestCode, data, resultCode) }
     }
 
-    override fun onBackLongPressed(): Boolean {
+    /**
+     * Navigate to GlobalTabHistoryDialogFragment.
+     */
+    private fun navigateToGlobalTabHistoryDialogFragment() {
         findNavController().navigate(
             NavGraphDirections.actionGlobalTabHistoryDialogFragment(
                 activeSessionId = customTabSessionId,
             ),
         )
+    }
+
+    override fun onBackLongPressed(): Boolean {
+        navigateToGlobalTabHistoryDialogFragment()
+        return true
+    }
+
+    override fun onForwardLongPressed(): Boolean {
+        navigateToGlobalTabHistoryDialogFragment()
         return true
     }
 

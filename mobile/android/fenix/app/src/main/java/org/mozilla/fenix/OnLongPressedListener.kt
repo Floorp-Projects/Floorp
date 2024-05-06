@@ -5,9 +5,9 @@
 package org.mozilla.fenix
 
 /**
- * Interface for features and fragments that want to handle long presses of the system back button
+ * Interface for features and fragments that want to handle long presses of the system back/forward button
  */
-interface OnBackLongPressedListener {
+interface OnLongPressedListener {
 
     /**
      * Called when the system back button is long pressed.
@@ -18,4 +18,11 @@ interface OnBackLongPressedListener {
      * @return true if the event was handled
      */
     fun onBackLongPressed(): Boolean
+
+    /**
+     * Called when the system forward button is long pressed.
+     *
+     * @return true if the event was handled
+     */
+    fun onForwardLongPressed(): Boolean
 }
