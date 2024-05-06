@@ -1761,24 +1761,23 @@ bool nsCSPPolicy::allowsAllInlineBehavior(CSPDirective aDir) const {
 /*
  * Use this function only after ::allows() returned 'false'. Most and
  * foremost it's used to get the violated directive before sending reports.
- * The parameter outDirective is the equivalent of 'outViolatedDirective'
+ * The parameter aDirectiveName is the equivalent of 'outViolatedDirective'
  * for the ::permits() function family.
  */
-void nsCSPPolicy::getViolatedDirectiveInformation(CSPDirective aDirective,
-                                                  nsAString& outDirective,
-                                                  nsAString& outDirectiveString,
-                                                  bool* aReportSample) const {
+void nsCSPPolicy::getViolatedDirectiveInformation(
+    CSPDirective aDirective, nsAString& aDirectiveName,
+    nsAString& aDirectiveNameAndValue, bool* aReportSample) const {
   *aReportSample = false;
   nsCSPDirective* directive = matchingOrDefaultDirective(aDirective);
   if (!directive) {
     MOZ_ASSERT_UNREACHABLE("Can not query violated directive");
-    outDirective.AppendLiteral("couldNotQueryViolatedDirective");
-    outDirective.Truncate();
+    aDirectiveName.Truncate();
+    aDirectiveNameAndValue.Truncate();
     return;
   }
 
-  directive->getDirName(outDirective);
-  directive->toString(outDirectiveString);
+  directive->getDirName(aDirectiveName);
+  directive->toString(aDirectiveNameAndValue);
   *aReportSample = directive->hasReportSampleKeyword();
 }
 
