@@ -17,8 +17,10 @@ add_task(async function test_update_autofill_name_field() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function (browser) {
-      let osKeyStoreLoginShown =
-        OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+      let osKeyStoreLoginShown = Promise.resolve();
+      if (OSKeyStore.canReauth()) {
+        osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+      }
       let onPopupShown = waitForPopupShown();
 
       await openPopupOn(browser, "form #cc-name");
@@ -67,8 +69,10 @@ add_task(async function test_update_autofill_exp_date_field() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function (browser) {
-      let osKeyStoreLoginShown =
-        OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+      let osKeyStoreLoginShown = Promise.resolve();
+      if (OSKeyStore.canReauth()) {
+        osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+      }
       let onPopupShown = waitForPopupShown();
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);

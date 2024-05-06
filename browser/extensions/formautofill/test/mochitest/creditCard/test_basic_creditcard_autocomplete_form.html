@@ -197,10 +197,15 @@ add_task(async function check_fields_after_form_autofill() {
   })));
 
   synthesizeKey("KEY_ArrowDown");
-  let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+  let osKeyStoreLoginShown = Promise.resolve();
+  if(OSKeyStore.canReauth()) {
+    osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+  }
   await new Promise(resolve => SimpleTest.executeSoon(resolve));
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[1].cc);
   await osKeyStoreLoginShown;
+  // Enforcing this since it is unable to change back in chaos mode.
+  SpecialPowers.clearUserPref("toolkit.osKeyStore.unofficialBuildOnlyLogin");
 });
 
 // Fallback to history search after autofill values (for non-empty fields).
