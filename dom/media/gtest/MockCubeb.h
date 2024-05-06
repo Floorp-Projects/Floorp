@@ -11,12 +11,15 @@
 #include "MediaEventSource.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "nsTArray.h"
 
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <utility>
 
 namespace mozilla {
 const uint32_t MAX_OUTPUT_CHANNELS = 2;
@@ -68,6 +71,8 @@ struct cubeb_ops {
 // Keep those and the struct definition in sync with cubeb.h and
 // cubeb-internal.h
 void cubeb_mock_destroy(cubeb* context);
+static int cubeb_mock_get_supported_input_processing_params(
+    cubeb* context, cubeb_input_processing_params* params);
 static int cubeb_mock_enumerate_devices(cubeb* context, cubeb_device_type type,
                                         cubeb_device_collection* out);
 
@@ -101,6 +106,9 @@ static int cubeb_mock_stream_set_volume(cubeb_stream* stream, float volume);
 static int cubeb_mock_stream_set_name(cubeb_stream* stream,
                                       char const* stream_name);
 
+static int cubeb_mock_stream_set_input_processing_params(
+    cubeb_stream* stream, cubeb_input_processing_params);
+
 static int cubeb_mock_stream_register_device_changed_callback(
     cubeb_stream* stream,
     cubeb_device_changed_callback device_changed_callback);
@@ -122,7 +130,7 @@ cubeb_ops const mock_ops = {
     /*.get_min_latency =*/cubeb_mock_get_min_latency,
     /*.get_preferred_sample_rate =*/cubeb_mock_get_preferred_sample_rate,
     /*.get_supported_input_processing_params =*/
-    NULL,
+    cubeb_mock_get_supported_input_processing_params,
     /*.enumerate_devices =*/cubeb_mock_enumerate_devices,
     /*.device_collection_destroy =*/cubeb_mock_device_collection_destroy,
     /*.destroy =*/cubeb_mock_destroy,
@@ -139,7 +147,7 @@ cubeb_ops const mock_ops = {
 
     /*.stream_set_input_mute =*/NULL,
     /*.stream_set_input_processing_params =*/
-    NULL,
+    cubeb_mock_stream_set_input_processing_params,
     /*.stream_device_destroy =*/NULL,
     /*.stream_register_device_changed_callback =*/
     cubeb_mock_stream_register_device_changed_callback,
@@ -183,6 +191,7 @@ class MockCubebStream {
   int RegisterDeviceChangedCallback(
       cubeb_device_changed_callback aDeviceChangedCallback)
       MOZ_EXCLUDES(mMutex);
+  int SetInputProcessingParams(cubeb_input_processing_params aParams);
 
   cubeb_stream* AsCubebStream() MOZ_EXCLUDES(mMutex);
   static MockCubebStream* AsMock(cubeb_stream* aStream);
@@ -396,6 +405,16 @@ class MockCubeb {
       cubeb_device_type aDevType,
       cubeb_device_collection_changed_callback aCallback, void* aUserPtr);
 
+  Result<cubeb_input_processing_params, int> SupportedInputProcessingParams()
+      const;
+  void SetSupportedInputProcessingParams(cubeb_input_processing_params aParams,
+                                         int aRv);
+  // Set the rv to be returned when SetInputProcessingParams for any stream of
+  // this context would apply the params to the stream, i.e. after passing the
+  // supported-params check.
+  void SetInputProcessingApplyRv(int aRv);
+  int InputProcessingApplyRv() const;
+
   // Control API
 
   // Add an input or output device to this backend. This calls the device
@@ -489,6 +508,10 @@ class MockCubeb {
   // notification via a system callback. If not, Gecko is expected to re-query
   // the list every time.
   bool mSupportsDeviceCollectionChangedCallback = true;
+  std::pair<cubeb_input_processing_params, int>
+      mSupportedInputProcessingParams = std::make_pair(
+          CUBEB_INPUT_PROCESSING_PARAM_NONE, CUBEB_ERROR_NOT_SUPPORTED);
+  int mInputProcessingParamsApplyRv = CUBEB_OK;
   const RunningMode mRunningMode;
   Atomic<bool> mStreamInitErrorState;
   // Whether new MockCubebStreams should be frozen on start.
@@ -534,6 +557,18 @@ int cubeb_mock_register_device_collection_changed(
     cubeb_device_collection_changed_callback callback, void* user_ptr) {
   return MockCubeb::AsMock(context)->RegisterDeviceCollectionChangeCallback(
       devtype, callback, user_ptr);
+}
+
+int cubeb_mock_get_supported_input_processing_params(
+    cubeb* context, cubeb_input_processing_params* params) {
+  Result<cubeb_input_processing_params, int> res =
+      MockCubeb::AsMock(context)->SupportedInputProcessingParams();
+  if (res.isErr()) {
+    *params = CUBEB_INPUT_PROCESSING_PARAM_NONE;
+    return res.unwrapErr();
+  }
+  *params = res.unwrap();
+  return CUBEB_OK;
 }
 
 int cubeb_mock_stream_init(
@@ -594,6 +629,11 @@ int cubeb_mock_stream_register_device_changed_callback(
     cubeb_device_changed_callback device_changed_callback) {
   return MockCubebStream::AsMock(stream)->RegisterDeviceChangedCallback(
       device_changed_callback);
+}
+
+static int cubeb_mock_stream_set_input_processing_params(
+    cubeb_stream* stream, cubeb_input_processing_params params) {
+  return MockCubebStream::AsMock(stream)->SetInputProcessingParams(params);
 }
 
 int cubeb_mock_get_min_latency(cubeb* context, cubeb_stream_params params,

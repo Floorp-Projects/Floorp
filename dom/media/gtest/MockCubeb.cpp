@@ -286,6 +286,20 @@ int MockCubebStream::RegisterDeviceChangedCallback(
   return CUBEB_OK;
 }
 
+int MockCubebStream::SetInputProcessingParams(
+    cubeb_input_processing_params aParams) {
+  MockCubeb* mock = MockCubeb::AsMock(context);
+  auto res = mock->SupportedInputProcessingParams();
+  if (res.isErr()) {
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+  cubeb_input_processing_params supported = res.unwrap();
+  if ((supported & aParams) != aParams) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+  return mock->InputProcessingApplyRv();
+}
+
 cubeb_stream* MockCubebStream::AsCubebStream() {
   MutexAutoLock l(mMutex);
   return AsCubebStreamLocked();
@@ -610,6 +624,28 @@ int MockCubeb::RegisterDeviceCollectionChangeCallback(
   }
 
   return CUBEB_OK;
+}
+
+Result<cubeb_input_processing_params, int>
+MockCubeb::SupportedInputProcessingParams() const {
+  const auto& [params, rv] = mSupportedInputProcessingParams;
+  if (rv != CUBEB_OK) {
+    return Err(rv);
+  }
+  return params;
+}
+
+void MockCubeb::SetSupportedInputProcessingParams(
+    cubeb_input_processing_params aParams, int aRv) {
+  mSupportedInputProcessingParams = std::make_pair(aParams, aRv);
+}
+
+void MockCubeb::SetInputProcessingApplyRv(int aRv) {
+  mInputProcessingParamsApplyRv = aRv;
+}
+
+int MockCubeb::InputProcessingApplyRv() const {
+  return mInputProcessingParamsApplyRv;
 }
 
 void MockCubeb::AddDevice(cubeb_device_info aDevice) {
