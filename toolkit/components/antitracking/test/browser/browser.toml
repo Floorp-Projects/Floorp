@@ -322,6 +322,10 @@ tags = "remote-settings"
 skip-if = ["os == 'linux' && asan"]  # Bug 1713909 - new Fission platform triage
 support-files = ["file_stripping.html"]
 
+["browser_urlQueryStringStrippingWithEncoding.js"]
+skip-if = ["os == 'linux' && asan"]
+support-files = ["file_stripping.html"]
+
 ["browser_urlQueryStringStripping_allowList.js"]
 support-files = ["file_stripping.html"]
 
