@@ -157,6 +157,13 @@ void nsCocoaWindow::DestroyNativeWindow() {
   // we clear our delegate.
   EndOurNativeTransition();
 
+  // We are about to destroy mWindow. Before we do that, make sure that we
+  // hide the window using the Show() method, because it has several side
+  // effects that our parent and listeners might be expecting. If we don't
+  // do this now, then these side effects will never execute, though the
+  // window will definitely no longer be shown.
+  Show(false);
+
   [mWindow releaseJSObjects];
   // We want to unhook the delegate here because we don't want events
   // sent to it after this object has been destroyed.
