@@ -181,24 +181,39 @@ class StringTest {
 
     @Test
     fun sanitizeFileName() {
-        var file = "/../../../../../../../../../../directory/file.......txt"
-        val fileName = "file.txt"
+        val testCases = listOf(
+            "/../../../../../../../../../../directory/file.......txt" to "file.txt",
+            "/root/directory/file.txt" to "file.txt",
+            "file" to "file",
+            "file.." to "file",
+            "file." to "file",
+            ".file" to "file",
+            "test.2020.12.01.txt" to "test.2020.12.01.txt",
+            "\u0000filename" to "_filename",
+            "file\u0001name" to "file_name",
+            "data\u0002stream" to "data_stream",
+            "end\u0003text" to "end_text",
+            "trans\u0004mission" to "trans_mission",
+            "query\u0005result" to "query_result",
+            "acknowledge\u0006signal" to "acknowledge_signal",
+            "bell\u0007sound" to "bell_sound",
+            "back\u0008space" to "back_space",
+            "horizontal\u0009tab" to "horizontal_tab",
+            "new\u000Aline" to "new_line",
+            "vertical\u000Btab" to "vertical_tab",
+            "form\u000Cfeed" to "form_feed",
+            "return\u000Dcarriage" to "return_carriage",
+            "shift\u000Eout" to "shift_out",
+            "shift\u000Fin" to "shift_in",
+            "escape\u0010data" to "escape_data",
+            "device\u0011control1" to "device_control1",
+            "device\u0012control2" to "device_control2",
+            "device\u0013control3" to "device_control3",
+        )
 
-        assertEquals(fileName, file.sanitizeFileName())
-
-        file = "/root/directory/file.txt"
-
-        assertEquals(fileName, file.sanitizeFileName())
-
-        assertEquals("file", "file".sanitizeFileName())
-
-        assertEquals("file", "file..".sanitizeFileName())
-
-        assertEquals("file", "file.".sanitizeFileName())
-
-        assertEquals("file", ".file".sanitizeFileName())
-
-        assertEquals("test.2020.12.01.txt", "test.2020.12.01.txt".sanitizeFileName())
+        testCases.forEach { (raw, escaped) ->
+            assertEquals(escaped, raw.sanitizeFileName())
+        }
     }
 
     @Test
