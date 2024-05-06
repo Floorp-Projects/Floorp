@@ -42,11 +42,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FeatureGate: "resource://featuregates/FeatureGate.sys.mjs",
   FirefoxBridgeExtensionUtils:
     "resource:///modules/FirefoxBridgeExtensionUtils.sys.mjs",
+  FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
   Integration: "resource://gre/modules/Integration.sys.mjs",
   Interactions: "resource:///modules/Interactions.sys.mjs",
   LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
@@ -4434,6 +4436,36 @@ BrowserGlue.prototype = {
         Services.prefs.clearUserPref("browser.shell.customProtocolsRegistered");
       }
     }
+
+    if (currentUIVersion < 146) {
+      // We're securing the boolean prefs for OS Authentication.
+      // This is achieved by converting them into a string pref and encrypting the values
+      // stored inside it.
+
+      if (!AppConstants.NIGHTLY_BUILD) {
+        // We only perform pref migration for Beta and Release since for nightly we are
+        // enabling OSAuth (exiting functionality) for creditcards and passwords as defualt.
+        let ccReauthPrefValue = Services.prefs.getBoolPref(
+          "extensions.formautofill.reauth.enabled"
+        );
+        let pwdReauthPrefValue = Services.prefs.getBoolPref(
+          "signon.management.page.os-auth.enabled"
+        );
+
+        lazy.FormAutofillUtils.setOSAuthEnabled(
+          "extensions.formautofill.creditcards.reauth.optout",
+          ccReauthPrefValue
+        );
+
+        lazy.LoginHelper.setOSAuthEnabled(
+          "signon.management.page.os-auth.optout",
+          pwdReauthPrefValue
+        );
+      }
+      Services.prefs.clearUserPref("extensions.formautofill.reauth.enabled");
+      Services.prefs.clearUserPref("signon.management.page.os-auth.enabled");
+    }
+
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
