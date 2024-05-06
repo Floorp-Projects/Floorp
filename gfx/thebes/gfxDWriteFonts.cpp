@@ -276,12 +276,14 @@ void gfxDWriteFont::UpdateClearTypeVars() {
     gfxVars::SetSystemTextRenderingMode(renderingMode);
   }
 
+#if 0
   // Set cairo dwrite params in the parent process where it might still be
   // needed for printing. We use the validated pref int directly for rendering
   // mode, because a negative (i.e. not set) rendering mode is also used for
   // deciding on forcing GDI in cairo.
   cairo_dwrite_set_cleartype_params(gamma, enhancedContrast, clearTypeLevel,
                                     pixelGeometry, renderingModePref);
+#endif
 }
 
 gfxFont* gfxDWriteFont::CopyWithAntialiasOption(
