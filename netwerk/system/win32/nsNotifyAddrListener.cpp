@@ -600,7 +600,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
       list.StripWhitespace();
       for (const nsACString& suffix : list.Split(',')) {
         LOG(("  appending DNS suffix from registry: %s\n",
-             suffix.BeginReading()));
+             PromiseFlatCString(suffix).get()));
         if (!suffix.IsEmpty()) {
           dnsSuffixList.AppendElement(suffix);
         }
