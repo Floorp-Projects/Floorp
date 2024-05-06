@@ -808,6 +808,12 @@ bool nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(nsIURI* aHTTPSSchemeURI,
   return uriEquals;
 }
 
+/* static */
+uint32_t nsHTTPSOnlyUtils::GetStatusForSubresourceLoad(
+    uint32_t aHttpsOnlyStatus) {
+  return aHttpsOnlyStatus & ~nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST;
+}
+
 /*static*/
 void nsHTTPSOnlyUtils::PotentiallyClearExemptFlag(nsILoadInfo* aLoadInfo) {
   // if neither HTTPS-Only nor HTTPS-First mode is enabled, then there is

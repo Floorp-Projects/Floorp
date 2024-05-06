@@ -196,6 +196,7 @@
 #include "mozilla/dom/NetErrorInfoBinding.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/NodeIterator.h"
+#include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/PWindowGlobalChild.h"
 #include "mozilla/dom/PageTransitionEvent.h"
