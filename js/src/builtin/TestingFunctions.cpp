@@ -6259,7 +6259,7 @@ void ShapeSnapshot::check(JSContext* cx, const ShapeSnapshot& later) const {
     if (object_->is<NativeObject>()) {
       NativeObject* nobj = &object_->as<NativeObject>();
       if (nobj->inDictionaryMode()) {
-        MOZ_RELEASE_ASSERT(shape_ != later.shape_);
+        MOZ_RELEASE_ASSERT(nobj->shape() != later.shape_);
       }
     }
     return;
