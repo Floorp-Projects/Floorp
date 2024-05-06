@@ -13,23 +13,18 @@ add_task(async function test_update_autofill_name_field() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
-  let osKeyStoreLoginShown = null;
   let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function (browser) {
-      if (OSKeyStore.canReauth()) {
-        osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-      }
+      let osKeyStoreLoginShown =
+        OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
       let onPopupShown = waitForPopupShown();
 
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      if (osKeyStoreLoginShown) {
-        await osKeyStoreLoginShown;
-        ok(osKeyStoreLoginShown, "OS Auth Dialog shown and authenticated");
-      }
+      await osKeyStoreLoginShown;
       await waitForAutofill(browser, "#cc-name", "John Doe");
 
       await focusUpdateSubmitForm(browser, {
@@ -68,22 +63,17 @@ add_task(async function test_update_autofill_exp_date_field() {
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
-  let osKeyStoreLoginShown = null;
   let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function (browser) {
-      if (OSKeyStore.canReauth()) {
-        osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-      }
+      let osKeyStoreLoginShown =
+        OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
       let onPopupShown = waitForPopupShown();
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-      if (osKeyStoreLoginShown) {
-        await osKeyStoreLoginShown;
-        ok(osKeyStoreLoginShown, "OS Auth Dialog shown and authenticated");
-      }
+      await osKeyStoreLoginShown;
       await waitForAutofill(browser, "#cc-name", "John Doe");
 
       await focusUpdateSubmitForm(browser, {

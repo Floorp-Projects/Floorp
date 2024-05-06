@@ -379,14 +379,14 @@ export class ManageCreditCards extends ManageRecords {
         "autofill-edit-payment-method-os-prompt-other"
       );
 
-      const verified = await lazy.FormAutofillUtils.verifyUserOSAuth(
-        FormAutofill.AUTOFILL_CREDITCARDS_REAUTH_PREF,
+      const loggedIn = await lazy.FormAutofillUtils.ensureLoggedIn(
         promptMessage
       );
-      if (!verified) {
+      if (!loggedIn.authenticated) {
         return;
       }
     }
+
     let decryptedCCNumObj = {};
     if (creditCard && creditCard["cc-number-encrypted"]) {
       try {

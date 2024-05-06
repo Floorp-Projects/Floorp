@@ -132,14 +132,12 @@ add_task(async function test_update_doorhanger_click_save() {
   await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
-  let osKeyStoreLoginShown = null;
   let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function (browser) {
-      if (OSKeyStore.canReauth()) {
-        osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-      }
+      let osKeyStoreLoginShown =
+        OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
       let onPopupShown = waitForPopupShown();
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -155,10 +153,7 @@ add_task(async function test_update_doorhanger_click_save() {
 
       await onPopupShown;
       await clickDoorhangerButton(SECONDARY_BUTTON);
-      if (osKeyStoreLoginShown) {
-        await osKeyStoreLoginShown;
-        ok(osKeyStoreLoginShown, "OS re-auth promise Complete");
-      }
+      await osKeyStoreLoginShown;
     }
   );
   await onChanged;
