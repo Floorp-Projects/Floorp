@@ -1,8 +1,13 @@
 const PREF_WARN_ON_CLOSE = "browser.tabs.warnOnCloseOtherTabs";
+const PREF_SHOWN_DUPE_DIALOG =
+  "browser.tabs.haveShownCloseAllDuplicateTabsWarning";
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF_WARN_ON_CLOSE, false]],
+    set: [
+      [PREF_WARN_ON_CLOSE, false],
+      [PREF_SHOWN_DUPE_DIALOG, true],
+    ],
   });
 });
 
@@ -117,6 +122,57 @@ add_task(async function withNotAMultiSelectedTab() {
   is(gBrowser.selectedTab, tab3, "tab3 is the active tab now");
 
   for (let tab of [tab3, tab4, tab5, tab6]) {
+    BrowserTestUtils.removeTab(tab);
+  }
+});
+
+add_task(async function closeAllDuplicateTabs() {
+  let initialTab = gBrowser.selectedTab;
+  let tab1 = await addTab("http://mochi.test:8888/one");
+  let tab2 = await addTab("http://mochi.test:8888/two", { userContextId: 1 });
+  let tab3 = await addTab("http://mochi.test:8888/one");
+  let tab4 = await addTab("http://mochi.test:8888/two");
+  let tab5 = await addTab("http://mochi.test:8888/one");
+  let tab6 = await addTab("http://mochi.test:8888/two");
+
+  let tab1Pinned = BrowserTestUtils.waitForEvent(tab1, "TabPinned");
+  gBrowser.pinTab(tab1);
+  await tab1Pinned;
+
+  // So we have 1p,2c,1,2,1,2
+  // We expect 1p,2c,X,2,X,X because the pinned 1 will dupe the other two 1,
+  // but the 2c's userContextId makes it unique against the other two 2,
+  // but one of the other two 2 will close.
+
+  // Ensure tab4 remains by making it active more recently than tab6.
+  tab4._lastSeenActive = Date.now(); // as recent as it gets.
+
+  // Assert some preconditions:
+  ok(tab1.pinned, "Tab1 is pinned");
+  Assert.greater(tab4.lastSeenActive, tab6.lastSeenActive);
+
+  let closingTabs = [tab3, tab5, tab6];
+  let tabClosingPromises = [];
+  for (let tab of closingTabs) {
+    tabClosingPromises.push(BrowserTestUtils.waitForTabClosing(tab));
+  }
+
+  await BrowserTestUtils.switchTab(
+    gBrowser,
+    gBrowser.removeAllDuplicateTabs(initialTab)
+  );
+
+  await Promise.all(tabClosingPromises);
+
+  ok(!initialTab.closing, "InitialTab is not closing");
+  ok(!tab1.closing, "Tab1 is not closing");
+  ok(!tab2.closing, "Tab2 is not closing");
+  ok(tab3.closing, "Tab3 is closing");
+  ok(!tab4.closing, "Tab4 is not closing");
+  ok(tab5.closing, "Tab5 is closing");
+  ok(tab6.closing, "Tab6 is closing");
+
+  for (let tab of [tab1, tab2, tab4]) {
     BrowserTestUtils.removeTab(tab);
   }
 });
