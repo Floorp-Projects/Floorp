@@ -114,6 +114,7 @@ const cairo_surface_t name = {					\
     FALSE,				/* has_font_options */	\
     FALSE,				/* owns_device */ \
     FALSE,                              /* is_vector */ \
+    FALSE,                              /* permit_subpixel_antialiasing */ \
     { 0, 0, 0, NULL, },			/* user_data */		\
     { 0, 0, 0, NULL, },			/* mime_data */         \
     { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 },   /* device_transform */	\
@@ -426,6 +427,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->serial = 0;
     surface->damage = NULL;
     surface->owns_device = (device != NULL);
+    surface->permit_subpixel_antialiasing = TRUE;
 
     _cairo_user_data_array_init (&surface->user_data);
     _cairo_user_data_array_init (&surface->mime_data);
@@ -460,6 +462,8 @@ _cairo_surface_copy_similar_properties (cairo_surface_t *surface,
 	_cairo_surface_set_font_options (surface, &options);
 	_cairo_font_options_fini (&options);
     }
+
+    surface->permit_subpixel_antialiasing = other->permit_subpixel_antialiasing;
 
     cairo_surface_set_fallback_resolution (surface,
 					   other->x_fallback_resolution,
@@ -1624,6 +1628,51 @@ cairo_surface_get_font_options (cairo_surface_t       *surface,
     }
 
     _cairo_font_options_init_copy (options, &surface->font_options);
+}
+
+/**
+ * cairo_surface_set_subpixel_antialiasing:
+ * @surface: a #cairo_surface_t
+ *
+ * Sets whether the surface permits subpixel antialiasing. By default,
+ * surfaces permit subpixel antialiasing.
+ *
+ * Enabling subpixel antialiasing for CONTENT_COLOR_ALPHA surfaces generally
+ * requires that the pixels in the areas under a subpixel antialiasing
+ * operation already be opaque.
+ **/
+void
+cairo_surface_set_subpixel_antialiasing (cairo_surface_t *surface,
+                                         cairo_subpixel_antialiasing_t enabled)
+{
+    if (surface->status)
+        return;
+
+    if (surface->finished) {
+        _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+        return;
+    }
+
+    surface->permit_subpixel_antialiasing =
+        enabled == CAIRO_SUBPIXEL_ANTIALIASING_ENABLED;
+}
+
+/**
+ * cairo_surface_get_subpixel_antialiasing:
+ * @surface: a #cairo_surface_t
+ *
+ * Gets whether the surface supports subpixel antialiasing. By default,
+ * CAIRO_CONTENT_COLOR surfaces support subpixel antialiasing but other
+ * surfaces do not.
+ **/
+cairo_subpixel_antialiasing_t
+cairo_surface_get_subpixel_antialiasing (cairo_surface_t *surface)
+{
+    if (surface->status)
+        return CAIRO_SUBPIXEL_ANTIALIASING_DISABLED;
+
+    return surface->permit_subpixel_antialiasing ?
+        CAIRO_SUBPIXEL_ANTIALIASING_ENABLED : CAIRO_SUBPIXEL_ANTIALIASING_DISABLED;
 }
 
 cairo_status_t

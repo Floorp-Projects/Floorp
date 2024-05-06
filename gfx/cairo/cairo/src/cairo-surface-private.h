@@ -71,6 +71,7 @@ struct _cairo_surface {
     unsigned has_font_options : 1;
     unsigned owns_device : 1;
     unsigned is_vector : 1;
+    unsigned permit_subpixel_antialiasing : 1;
 
     cairo_user_data_array_t user_data;
     cairo_user_data_array_t mime_data;

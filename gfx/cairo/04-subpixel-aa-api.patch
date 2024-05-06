@@ -1,3 +1,11 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1713886888 -3600
+#      Tue Apr 23 16:41:28 2024 +0100
+# Node ID 5795122842a66df4f6217e4b5e9aac0e20b4389e
+# Parent  a0271c8e8524b6a3a11f76fe5854b402c71926a3
+Apply cairo/04-subpixel-aa-api.patch (with modification in cairo-quartz-surface.c)
+
 diff --git a/gfx/cairo/cairo/src/cairo-compositor-private.h b/gfx/cairo/cairo/src/cairo-compositor-private.h
 --- a/gfx/cairo/cairo/src/cairo-compositor-private.h
 +++ b/gfx/cairo/cairo/src/cairo-compositor-private.h
@@ -14,7 +22,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-compositor-private.h b/gfx/cairo/cairo/sr
 diff --git a/gfx/cairo/cairo/src/cairo-compositor.c b/gfx/cairo/cairo/src/cairo-compositor.c
 --- a/gfx/cairo/cairo/src/cairo-compositor.c
 +++ b/gfx/cairo/cairo/src/cairo-compositor.c
-@@ -248,7 +248,8 @@ cairo_int_status_t
+@@ -290,7 +290,8 @@ cairo_int_status_t
  	    compositor = compositor->delegate;
  
  	status = compositor->glyphs (compositor, &extents,
@@ -40,7 +48,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-no-compositor.c b/gfx/cairo/cairo/src/cai
 diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
 --- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
 +++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
-@@ -1947,7 +1947,8 @@ static cairo_int_status_t
+@@ -1871,7 +1871,8 @@ static cairo_int_status_t
  			 cairo_scaled_font_t *scaled_font,
  			 cairo_glyph_t *glyphs,
  			 int num_glyphs,
@@ -49,29 +57,30 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
 +			 cairo_bool_t permit_subpixel_antialiasing)
  {
      CGAffineTransform textTransform, invTextTransform;
-     CGGlyph glyphs_static[CAIRO_STACK_ARRAY_LENGTH (CGSize)];
-@@ -1963,6 +1964,7 @@ static cairo_int_status_t
-     CGFontRef cgfref = NULL;
+     CGGlyph glyphs_static[CAIRO_STACK_ARRAY_LENGTH (CGPoint)];
+@@ -1885,6 +1886,7 @@ static cairo_int_status_t
+     CTFontRef ctFont = NULL;
  
      cairo_bool_t didForceFontSmoothing = FALSE;
 +    cairo_antialias_t effective_antialiasing;
  
      if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_QUARTZ)
  	return CAIRO_INT_STATUS_UNSUPPORTED;
-@@ -1983,7 +1985,12 @@ static cairo_int_status_t
-     CGContextSetFont (state.cgMaskContext, cgfref);
-     CGContextSetFontSize (state.cgMaskContext, 1.0);
+@@ -1904,6 +1906,14 @@ static cairo_int_status_t
+     ctFont = _cairo_quartz_scaled_font_get_ct_font (scaled_font);
+     _cairo_quartz_set_antialiasing (state.cgMaskContext, scaled_font->options.antialias);
  
--    switch (scaled_font->options.antialias) {
 +    effective_antialiasing = scaled_font->options.antialias;
 +    if (effective_antialiasing == CAIRO_ANTIALIAS_SUBPIXEL &&
 +        !permit_subpixel_antialiasing) {
 +        effective_antialiasing = CAIRO_ANTIALIAS_GRAY;
 +    }
-+    switch (effective_antialiasing) {
- 	case CAIRO_ANTIALIAS_SUBPIXEL:
- 	case CAIRO_ANTIALIAS_BEST:
- 	    CGContextSetShouldAntialias (state.cgMaskContext, TRUE);
++
++    _cairo_quartz_set_antialiasing (state.cgMaskContext, effective_antialiasing);
++
+     if (num_glyphs > ARRAY_LENGTH (glyphs_static)) {
+ 	cg_glyphs = (CGGlyph*) _cairo_malloc_ab (num_glyphs, sizeof (CGGlyph) + sizeof (CGPoint));
+ 	if (unlikely (cg_glyphs == NULL)) {
 diff --git a/gfx/cairo/cairo/src/cairo-surface-private.h b/gfx/cairo/cairo/src/cairo-surface-private.h
 --- a/gfx/cairo/cairo/src/cairo-surface-private.h
 +++ b/gfx/cairo/cairo/src/cairo-surface-private.h
@@ -86,7 +95,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-surface-private.h b/gfx/cairo/cairo/src/c
 diff --git a/gfx/cairo/cairo/src/cairo-surface.c b/gfx/cairo/cairo/src/cairo-surface.c
 --- a/gfx/cairo/cairo/src/cairo-surface.c
 +++ b/gfx/cairo/cairo/src/cairo-surface.c
-@@ -115,6 +115,7 @@ const cairo_surface_t name = {					\
+@@ -114,6 +114,7 @@ const cairo_surface_t name = {					\
      FALSE,				/* has_font_options */	\
      FALSE,				/* owns_device */ \
      FALSE,                              /* is_vector */ \
@@ -94,7 +103,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-surface.c b/gfx/cairo/cairo/src/cairo-sur
      { 0, 0, 0, NULL, },			/* user_data */		\
      { 0, 0, 0, NULL, },			/* mime_data */         \
      { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 },   /* device_transform */	\
-@@ -421,6 +422,7 @@ void
+@@ -426,6 +427,7 @@ void
      surface->serial = 0;
      surface->damage = NULL;
      surface->owns_device = (device != NULL);
@@ -102,8 +111,8 @@ diff --git a/gfx/cairo/cairo/src/cairo-surface.c b/gfx/cairo/cairo/src/cairo-sur
  
      _cairo_user_data_array_init (&surface->user_data);
      _cairo_user_data_array_init (&surface->mime_data);
-@@ -452,6 +454,8 @@ static void
- 	_cairo_surface_set_font_options (surface, &options);
+@@ -461,6 +463,8 @@ static void
+ 	_cairo_font_options_fini (&options);
      }
  
 +    surface->permit_subpixel_antialiasing = other->permit_subpixel_antialiasing;
@@ -111,9 +120,9 @@ diff --git a/gfx/cairo/cairo/src/cairo-surface.c b/gfx/cairo/cairo/src/cairo-sur
      cairo_surface_set_fallback_resolution (surface,
  					   other->x_fallback_resolution,
  					   other->y_fallback_resolution);
-@@ -1619,6 +1623,51 @@ cairo_surface_get_font_options (cairo_su
+@@ -1626,6 +1630,51 @@ cairo_surface_get_font_options (cairo_su
+     _cairo_font_options_init_copy (options, &surface->font_options);
  }
- slim_hidden_def (cairo_surface_get_font_options);
  
 +/**
 + * cairo_surface_set_subpixel_antialiasing:
@@ -166,7 +175,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-surface.c b/gfx/cairo/cairo/src/cairo-sur
 diff --git a/gfx/cairo/cairo/src/cairo-xcb-private.h b/gfx/cairo/cairo/src/cairo-xcb-private.h
 --- a/gfx/cairo/cairo/src/cairo-xcb-private.h
 +++ b/gfx/cairo/cairo/src/cairo-xcb-private.h
-@@ -453,7 +453,8 @@ cairo_private cairo_int_status_t
+@@ -443,7 +443,8 @@ cairo_private cairo_int_status_t
  				     cairo_scaled_font_t          *scaled_font,
  				     cairo_glyph_t                *glyphs,
  				     int                           num_glyphs,
@@ -179,7 +188,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-xcb-private.h b/gfx/cairo/cairo/src/cairo
 diff --git a/gfx/cairo/cairo/src/cairo-xcb-surface-render.c b/gfx/cairo/cairo/src/cairo-xcb-surface-render.c
 --- a/gfx/cairo/cairo/src/cairo-xcb-surface-render.c
 +++ b/gfx/cairo/cairo/src/cairo-xcb-surface-render.c
-@@ -4816,7 +4816,8 @@ cairo_int_status_t
+@@ -4814,7 +4814,8 @@ cairo_int_status_t
  				     cairo_scaled_font_t          *scaled_font,
  				     cairo_glyph_t                *glyphs,
  				     int                           num_glyphs,
@@ -192,7 +201,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-xcb-surface-render.c b/gfx/cairo/cairo/sr
 diff --git a/gfx/cairo/cairo/src/cairo-xcb-surface.c b/gfx/cairo/cairo/src/cairo-xcb-surface.c
 --- a/gfx/cairo/cairo/src/cairo-xcb-surface.c
 +++ b/gfx/cairo/cairo/src/cairo-xcb-surface.c
-@@ -912,7 +912,8 @@ static cairo_int_status_t
+@@ -906,7 +906,8 @@ static cairo_int_status_t
  				       cairo_scaled_font_t          *scaled_font,
  				       cairo_glyph_t                *glyphs,
  				       int                           num_glyphs,
@@ -205,7 +214,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-xcb-surface.c b/gfx/cairo/cairo/src/cairo
 diff --git a/gfx/cairo/cairo/src/cairo.h b/gfx/cairo/cairo/src/cairo.h
 --- a/gfx/cairo/cairo/src/cairo.h
 +++ b/gfx/cairo/cairo/src/cairo.h
-@@ -2573,6 +2573,26 @@ cairo_surface_show_page (cairo_surface_t
+@@ -2737,6 +2737,26 @@ cairo_surface_show_page (cairo_surface_t
  cairo_public cairo_bool_t
  cairo_surface_has_show_text_glyphs (cairo_surface_t *surface);
  
