@@ -307,7 +307,16 @@ fun String.sanitizeFileName(): String {
         file.name.replace("\\.\\.+".toRegex(), ".")
     } else {
         file.name.replace(".", "")
-    }
+    }.replaceEscapedCharacters()
+}
+
+/**
+ * Replaces control characters from ASCII 0 to ASCII 19 with '_' so the file name is valid
+ * and is correctly displayed.
+ */
+private fun String.replaceEscapedCharacters(): String {
+    val controlCharactersRegex = "[\\x00-\\x13]".toRegex()
+    return replace(controlCharactersRegex, "_")
 }
 
 /**
