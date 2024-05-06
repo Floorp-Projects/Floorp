@@ -16215,12 +16215,6 @@
 #endif
   mirror: always
 
-# Whether we should try to use WebRender to render widgets.
-- name: widget.non-native-theme.webrender
-  type: bool
-  value: true
-  mirror: always
-
 # Whether the outline style should be one big stroke or two contrasting strokes
 - name: widget.non-native-theme.solid-outline-style
   type: bool
