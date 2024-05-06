@@ -14615,7 +14615,6 @@
   # Run content processes in headless mode and disallow
   # connections to the X server.  Requires:
   # * `webgl.out-of-process` (or else WebGL breaks)
-  # * `widget.non-native-theme.enabled` (scrollbars & form controls)
   # Changing it requires a restart because sandbox policy information
   # dependent on it is cached.  See bug 1640345 for details.
 - name: security.sandbox.content.headless
@@ -16114,15 +16113,6 @@
 #---------------------------------------------------------------------------
 # Prefs starting with "widget."
 #---------------------------------------------------------------------------
-
-# Global user preference for disabling native theme in content processes.
-#
-# NOTE(emilio): When changing this make sure to update the non_native_theme
-# entry in python/mozbuild/mozbuild/mozinfo.py and test_fission_autostart.py
-- name: widget.non-native-theme.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
 
 # Whether the non-native theme should always use system colors. Useful mostly
 # for testing forced colors mode.
