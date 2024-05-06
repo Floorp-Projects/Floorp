@@ -1343,6 +1343,13 @@ void nsHtml5TreeOpExecutor::SetSpeculationBase(const nsAString& aURL) {
     return;
   }
 
+  // See
+  // https://html.spec.whatwg.org/multipage/semantics.html#set-the-frozen-base-url
+  // data: and javascript: base URLs are not allowed.
+  if (newBaseURI->SchemeIs("data") || newBaseURI->SchemeIs("javascript")) {
+    return;
+  }
+
   // Check the document's CSP usually delivered via the CSP header.
   if (nsCOMPtr<nsIContentSecurityPolicy> csp = mDocument->GetCsp()) {
     // base-uri should not fallback to the default-src and preloads should not
