@@ -342,6 +342,13 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
                        uint32_t aAlreadyBuffered) override {
     MOZ_CRASH("Unexpected NotifyInputData from fallback SystemClockDriver");
   }
+  void NotifySetRequestedInputProcessingParamsResult(
+      AudioCallbackDriver* aDriver,
+      cubeb_input_processing_params aRequestedParams,
+      Result<cubeb_input_processing_params, int>&& aResult) override {
+    MOZ_CRASH(
+        "Unexpected processing params result from fallback SystemClockDriver");
+  }
   void DeviceChanged() override {
     MOZ_CRASH("Unexpected DeviceChanged from fallback SystemClockDriver");
   }
@@ -457,7 +464,8 @@ AudioCallbackDriver::AudioCallbackDriver(
     GraphInterface* aGraphInterface, GraphDriver* aPreviousDriver,
     uint32_t aSampleRate, uint32_t aOutputChannelCount,
     uint32_t aInputChannelCount, CubebUtils::AudioDeviceID aOutputDeviceID,
-    CubebUtils::AudioDeviceID aInputDeviceID, AudioInputType aAudioInputType)
+    CubebUtils::AudioDeviceID aInputDeviceID, AudioInputType aAudioInputType,
+    cubeb_input_processing_params aRequestedInputProcessingParams)
     : GraphDriver(aGraphInterface, aPreviousDriver, aSampleRate),
       mOutputChannelCount(aOutputChannelCount),
       mInputChannelCount(aInputChannelCount),
@@ -465,6 +473,7 @@ AudioCallbackDriver::AudioCallbackDriver(
       mInputDeviceID(aInputDeviceID),
       mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS),
       mCubebOperationThread(CreateTaskQueue()),
+      mRequestedInputProcessingParams(aRequestedInputProcessingParams),
       mAudioThreadId(ProfilerThreadId{}),
       mAudioThreadIdInCb(std::thread::id()),
       mFallback("AudioCallbackDriver::mFallback"),
@@ -481,7 +490,12 @@ AudioCallbackDriver::AudioCallbackDriver(
   if (aAudioInputType == AudioInputType::Voice &&
       StaticPrefs::
           media_getusermedia_microphone_prefer_voice_stream_with_processing_enabled()) {
-    LOG(LogLevel::Debug, ("VOICE."));
+    LOG(LogLevel::Debug,
+        ("%p: AudioCallbackDriver %p ctor - using VOICE and requesting input "
+         "processing params %s.",
+         Graph(), this,
+         CubebUtils::ProcessingParamsToString(aRequestedInputProcessingParams)
+             .get()));
     mInputDevicePreference = CUBEB_DEVICE_PREF_VOICE;
     CubebUtils::SetInCommunication(true);
   } else {
@@ -665,6 +679,10 @@ void AudioCallbackDriver::Init(const nsCString& aStreamName) {
 #ifdef XP_MACOSX
   PanOutputIfNeeded(inputWanted);
 #endif
+
+  if (inputWanted && InputDevicePreference() == AudioInputType::Voice) {
+    SetInputProcessingParams(mRequestedInputProcessingParams);
+  }
 
   cubeb_stream_register_device_changed_callback(
       mAudioStream, AudioCallbackDriver::DeviceChangedCallback_s);
@@ -1366,6 +1384,107 @@ void AudioCallbackDriver::MaybeStartAudioStream() {
                    StaticPrefs::media_audio_device_retry_ms()));
   mNextReInitAttempt = now + mNextReInitBackoffStep;
   Start();
+}
+
+cubeb_input_processing_params
+AudioCallbackDriver::RequestedInputProcessingParams() const {
+  MOZ_ASSERT(InIteration());
+  return mRequestedInputProcessingParams;
+}
+
+void AudioCallbackDriver::SetRequestedInputProcessingParams(
+    cubeb_input_processing_params aParams) {
+  MOZ_ASSERT(InIteration());
+  if (mRequestedInputProcessingParams == aParams) {
+    return;
+  }
+  LOG(LogLevel::Info,
+      ("AudioCallbackDriver %p, Input processing params %s requested.", this,
+       CubebUtils::ProcessingParamsToString(aParams).get()));
+  mRequestedInputProcessingParams = aParams;
+  MOZ_ALWAYS_SUCCEEDS(mCubebOperationThread->Dispatch(
+      NS_NewRunnableFunction(__func__, [this, self = RefPtr(this), aParams] {
+        SetInputProcessingParams(aParams);
+      })));
+}
+
+void AudioCallbackDriver::SetInputProcessingParams(
+    cubeb_input_processing_params aParams) {
+  MOZ_ASSERT(OnCubebOperationThread());
+  auto requested = aParams;
+  auto result = ([&]() -> Maybe<Result<cubeb_input_processing_params, int>> {
+    // This function decides how to handle the request.
+    // Returning Nothing() does nothing, because either
+    //   1) there is no update since the previous state, or
+    //   2) handling is deferred to a later time.
+    // Returning Some() result will forward that result to
+    // AudioDataListener::OnInputProcessingParamsResult on the callback
+    // thread.
+    if (!mAudioStream) {
+      // No Init yet.
+      LOG(LogLevel::Debug, ("AudioCallbackDriver %p, has no cubeb stream to "
+                            "set processing params on!",
+                            this));
+      return Nothing();
+    }
+    if (mAudioStreamState == AudioStreamState::None) {
+      // Driver (and cubeb stream) was stopped.
+      return Nothing();
+    }
+    cubeb_input_processing_params supported;
+    auto handle = CubebUtils::GetCubeb();
+    int r = cubeb_get_supported_input_processing_params(handle->Context(),
+                                                        &supported);
+    if (r != CUBEB_OK) {
+      LOG(LogLevel::Debug,
+          ("AudioCallbackDriver %p, no supported processing params", this));
+      return Some(Err(CUBEB_ERROR_NOT_SUPPORTED));
+    }
+    aParams &= supported;
+    LOG(LogLevel::Debug,
+        ("AudioCallbackDriver %p, requested processing params %s reduced to %s "
+         "by supported params %s",
+         this, CubebUtils::ProcessingParamsToString(requested).get(),
+         CubebUtils::ProcessingParamsToString(aParams).get(),
+         CubebUtils::ProcessingParamsToString(supported).get()));
+    if (aParams == mConfiguredInputProcessingParams) {
+      LOG(LogLevel::Debug,
+          ("AudioCallbackDriver %p, no change in processing params %s. Not "
+           "attempting reconfiguration.",
+           this, CubebUtils::ProcessingParamsToString(aParams).get()));
+      return Some(aParams);
+    }
+    mConfiguredInputProcessingParams = aParams;
+    r = cubeb_stream_set_input_processing_params(mAudioStream, aParams);
+    if (r == CUBEB_OK) {
+      LOG(LogLevel::Info,
+          ("AudioCallbackDriver %p, input processing params set to %s", this,
+           CubebUtils::ProcessingParamsToString(aParams).get()));
+      return Some(aParams);
+    }
+    LOG(LogLevel::Info,
+        ("AudioCallbackDriver %p, failed setting input processing params to "
+         "%s. r=%d",
+         this, CubebUtils::ProcessingParamsToString(aParams).get(), r));
+    return Some(Err(r));
+  })();
+  if (!result) {
+    return;
+  }
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
+      NS_NewRunnableFunction(__func__, [this, self = RefPtr(this), requested,
+                                        result = result.extract()]() mutable {
+        LOG(LogLevel::Debug,
+            ("AudioCallbackDriver %p, Notifying of input processing params %s. "
+             "r=%d",
+             this,
+             CubebUtils::ProcessingParamsToString(
+                 result.unwrapOr(CUBEB_INPUT_PROCESSING_PARAM_NONE))
+                 .get(),
+             result.isErr() ? result.inspectErr() : CUBEB_OK));
+        mGraphInterface->NotifySetRequestedInputProcessingParamsResult(
+            this, requested, std::move(result));
+      })));
 }
 
 }  // namespace mozilla
