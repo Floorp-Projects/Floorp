@@ -834,6 +834,15 @@ class [[nodiscard]] Result final {
   constexpr auto andThen(F f) -> std::invoke_result_t<F, V&&> {
     return MOZ_LIKELY(isOk()) ? f(unwrap()) : propagateErr();
   }
+
+  bool operator==(const Result<V, E>& aOther) const {
+    return (isOk() && aOther.isOk() && inspect() == aOther.inspect()) ||
+           (isErr() && aOther.isErr() && inspectErr() == aOther.inspectErr());
+  }
+
+  bool operator!=(const Result<V, E>& aOther) const {
+    return !(*this == aOther);
+  }
 };
 
 /**
