@@ -3114,7 +3114,12 @@ export class UrlbarInput {
 
     // Error check occurs during isClipboardURIValid
     uri = Services.io.newURI(copyString);
-    strippedURI = lazy.QueryStringStripper.stripForCopyOrShare(uri);
+    try {
+      strippedURI = lazy.QueryStringStripper.stripForCopyOrShare(uri);
+    } catch (e) {
+      console.warn(`stripForCopyOrShare: ${e.message}`);
+      return uri;
+    }
 
     if (strippedURI) {
       return this.makeURIReadable(strippedURI);
