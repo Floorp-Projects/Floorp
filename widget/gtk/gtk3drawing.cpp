@@ -953,54 +953,7 @@ static gint moz_gtk_treeview_paint(cairo_t* cr, GdkRectangle* rect,
   return MOZ_GTK_SUCCESS;
 }
 
-static gint moz_gtk_tree_header_cell_paint(cairo_t* cr,
-                                           const GdkRectangle* aRect,
-                                           GtkWidgetState* state,
-                                           gboolean isSorted,
-                                           GtkTextDirection direction) {
-  moz_gtk_button_paint(cr, aRect, state, GTK_RELIEF_NORMAL,
-                       GetWidget(MOZ_GTK_TREE_HEADER_CELL), direction);
-  return MOZ_GTK_SUCCESS;
-}
-
-/* See gtk_expander_paint() for reference.
- */
-static gint moz_gtk_treeview_expander_paint(cairo_t* cr, GdkRectangle* rect,
-                                            GtkWidgetState* state,
-                                            GtkExpanderStyle expander_state,
-                                            GtkTextDirection direction) {
-  /* Because the frame we get is of the entire treeview, we can't get the
-   * precise event state of one expander, thus rendering hover and active
-   * feedback useless. */
-  GtkStateFlags state_flags =
-      state->disabled ? GTK_STATE_FLAG_INSENSITIVE : GTK_STATE_FLAG_NORMAL;
-
-  if (state->inHover)
-    state_flags =
-        static_cast<GtkStateFlags>(state_flags | GTK_STATE_FLAG_PRELIGHT);
-  if (state->selected)
-    state_flags =
-        static_cast<GtkStateFlags>(state_flags | GTK_STATE_FLAG_SELECTED);
-
-  /* GTK_STATE_FLAG_ACTIVE controls expanded/colapsed state rendering
-   * in gtk_render_expander()
-   */
-  if (expander_state == GTK_EXPANDER_EXPANDED)
-    state_flags =
-        static_cast<GtkStateFlags>(state_flags | checkbox_check_state);
-  else
-    state_flags =
-        static_cast<GtkStateFlags>(state_flags & ~(checkbox_check_state));
-
-  GtkStyleContext* style = GetStyleContext(
-      MOZ_GTK_TREEVIEW_EXPANDER, state->image_scale, direction, state_flags);
-  gtk_render_expander(style, cr, rect->x, rect->y, rect->width, rect->height);
-
-  return MOZ_GTK_SUCCESS;
-}
-
-/* See gtk_separator_draw() for reference.
- */
+/* See gtk_separator_draw() for reference. */
 static gint moz_gtk_combo_box_paint(cairo_t* cr, const GdkRectangle* aRect,
                                     GtkWidgetState* state,
                                     GtkTextDirection direction) {
@@ -1588,18 +1541,6 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
       moz_gtk_add_style_border(style, left, top, right, bottom);
       return MOZ_GTK_SUCCESS;
     }
-    case MOZ_GTK_TREE_HEADER_CELL: {
-      /* A Tree Header in GTK is just a different styled button
-       * It must be placed in a TreeView for getting the correct style
-       * assigned.
-       * That is why the following code is the same as for MOZ_GTK_BUTTON.
-       * */
-      *left = *top = *right = *bottom = gtk_container_get_border_width(
-          GTK_CONTAINER(GetWidget(MOZ_GTK_TREE_HEADER_CELL)));
-      style = GetStyleContext(MOZ_GTK_TREE_HEADER_CELL);
-      moz_gtk_add_border_padding(style, left, top, right, bottom);
-      return MOZ_GTK_SUCCESS;
-    }
     case MOZ_GTK_DROPDOWN: {
       /* We need to account for the arrow on the dropdown, so text
        * doesn't come too close to the arrow, or in some cases spill
@@ -1685,7 +1626,6 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_PROGRESS_CHUNK:
     case MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE:
     case MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE:
-    case MOZ_GTK_TREEVIEW_EXPANDER:
     case MOZ_GTK_HEADER_BAR:
     case MOZ_GTK_HEADER_BAR_MAXIMIZED:
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
@@ -1791,18 +1731,6 @@ void moz_gtk_get_arrow_size(WidgetNodeType widgetType, gint* width,
     *width = 0;
     *height = 0;
   }
-}
-
-gint moz_gtk_get_expander_size(gint* size) {
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_EXPANDER);
-  gtk_style_context_get_style(style, "expander-size", size, NULL);
-  return MOZ_GTK_SUCCESS;
-}
-
-gint moz_gtk_get_treeview_expander_size(gint* size) {
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_TREEVIEW);
-  gtk_style_context_get_style(style, "expander-size", size, NULL);
-  return MOZ_GTK_SUCCESS;
 }
 
 void moz_gtk_get_entry_min_height(gint* min_content_height,
@@ -2073,11 +2001,6 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
     }
     case MOZ_GTK_TREEVIEW:
       return moz_gtk_treeview_paint(cr, rect, state, direction);
-    case MOZ_GTK_TREE_HEADER_CELL:
-      return moz_gtk_tree_header_cell_paint(cr, rect, state, flags, direction);
-    case MOZ_GTK_TREEVIEW_EXPANDER:
-      return moz_gtk_treeview_expander_paint(
-          cr, rect, state, (GtkExpanderStyle)flags, direction);
     case MOZ_GTK_ENTRY:
     case MOZ_GTK_DROPDOWN_ENTRY: {
       GtkStyleContext* style =

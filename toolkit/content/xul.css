@@ -600,20 +600,6 @@ menulist[popuponly] {
   padding: 0 !important;
 }
 
-/********** splitter **********/
-
-.tree-splitter {
-  margin-inline: -4px;
-  width: 8px;
-  max-width: 8px;
-  min-width: 8px;
-  appearance: none !important;
-  border: none !important;
-  background: none !important;
-  order: 2147483646;
-  z-index: 2147483646;
-}
-
 /******** scrollbar ********/
 
 slider {

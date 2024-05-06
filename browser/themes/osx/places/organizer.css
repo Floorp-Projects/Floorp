@@ -184,15 +184,21 @@
 #placeContent {
   appearance: none;
   border: none;
-}
 
-#placeContent > treechildren::-moz-tree-cell,
-#placeContent > treechildren::-moz-tree-column {
-  border-inline-end: 1px solid color-mix(in srgb, FieldText 30%, transparent);
-}
+  > treechildren::-moz-tree-cell,
+  > treechildren::-moz-tree-column {
+    border-inline-start: 1px solid color-mix(in srgb, FieldText 30%, transparent);
+  }
 
-#placeContent > treechildren::-moz-tree-cell(separator) {
-  border-color: transparent;
+  > treechildren::-moz-tree-column(first-column),
+  > treechildren::-moz-tree-cell(first-column) {
+    /* This matches the treecol separator in tree.css */
+    border-inline-start: none;
+  }
+
+  > treechildren::-moz-tree-cell(separator) {
+    border-color: transparent;
+  }
 }
 
 /**

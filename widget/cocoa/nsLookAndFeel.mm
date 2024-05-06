@@ -238,9 +238,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::MozButtonhoverface:
     case ColorID::MozButtonactiveface:
     case ColorID::MozButtondisabledface:
-    case ColorID::MozColheader:
-    case ColorID::MozColheaderhover:
-    case ColorID::MozColheaderactive:
       color = GetColorFromNSColor(NSColor.controlColor);
       if (!NS_GET_A(color)) {
         color = GetColorFromNSColor(NSColor.controlBackgroundColor);
@@ -300,9 +297,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::Menutext:
     case ColorID::Infotext:
     case ColorID::MozCellhighlighttext:
-    case ColorID::MozColheadertext:
-    case ColorID::MozColheaderhovertext:
-    case ColorID::MozColheaderactivetext:
     case ColorID::MozSidebartext:
       color = GetColorFromNSColor(NSColor.controlTextColor);
       break;
@@ -318,6 +312,17 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       // For inactive list selection
       color = GetColorFromNSColor(NSColor.secondarySelectedControlColor);
       break;
+    case ColorID::MozColheadertext:
+    case ColorID::MozColheaderhovertext:
+    case ColorID::MozColheaderactivetext:
+      color = GetColorFromNSColor(NSColor.headerTextColor);
+      break;
+    case ColorID::MozColheaderactive:
+      color = GetColorFromNSColor(
+          NSColor.unemphasizedSelectedContentBackgroundColor);
+      break;
+    case ColorID::MozColheader:
+    case ColorID::MozColheaderhover:
     case ColorID::MozEventreerow:
       // Background color of even list rows.
       color =

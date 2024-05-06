@@ -23,6 +23,21 @@ tree {
   }
 }
 
+/********** splitter **********/
+
+.tree-splitter {
+  margin-inline: -4px;
+  width: 8px;
+  max-width: 8px;
+  min-width: 8px;
+  appearance: none !important;
+  border: none !important;
+  background: none !important;
+  order: 2147483646;
+  z-index: 2147483646;
+}
+
+
 /* ::::: tree rows ::::: */
 
 treechildren::-moz-tree-row {
@@ -123,20 +138,15 @@ treechildren::-moz-tree-drop-feedback {
 
 treecol,
 .tree-columnpicker-button {
-  appearance: auto;
-  -moz-default-appearance: treeheadercell;
   background-color: -moz-ColHeader;
   color: -moz-ColHeaderText;
   align-items: center;
   justify-content: center;
   padding: 0 4px;
   margin: 0;
-  border-inline-start: 1px solid ThreeDLightShadow;
 
-  @media (-moz-platform: linux) or ((-moz-platform: windows) and (prefers-color-scheme: dark)) {
-    appearance: none;
-    box-shadow: inset 0 -1px ThreeDLightShadow;
-  }
+  border-inline-start: 1px solid ThreeDLightShadow;
+  box-shadow: inset 0 -1px ThreeDLightShadow;
 
   &:where(:hover) {
     background-color: -moz-ColHeaderHover;
@@ -250,22 +260,20 @@ html|input.tree-input {
   z-index: 2147483647;
 }
 
-@media not (-moz-platform: macos) {
-  /* ::::: sort direction indicator :::::  */
-  .treecol-sortdirection {
-    list-style-image: url("chrome://global/skin/tree/sort-asc.svg");
-    -moz-context-properties: fill;
-    fill: currentColor;
-    visibility: hidden;
+/* ::::: sort direction indicator :::::  */
+.treecol-sortdirection {
+  list-style-image: url("chrome://global/skin/tree/sort-asc.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  visibility: hidden;
 
-    treecol[sortDirection="ascending"]:not([hideheader="true"]) > & {
-      visibility: inherit;
-    }
+  treecol[sortDirection="ascending"]:not([hideheader="true"]) > & {
+    visibility: inherit;
+  }
 
-    treecol[sortDirection="descending"]:not([hideheader="true"]) > & {
-      visibility: inherit;
-      list-style-image: url("chrome://global/skin/tree/sort-dsc.svg");
-    }
+  treecol[sortDirection="descending"]:not([hideheader="true"]) > & {
+    visibility: inherit;
+    list-style-image: url("chrome://global/skin/tree/sort-dsc.svg");
   }
 }
 
