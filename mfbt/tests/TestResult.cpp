@@ -852,6 +852,50 @@ void UpcastTest() {
   }
 }
 
+void EqualityTest() {
+  {
+    Result<int, bool> result(1);
+    Result<int, bool> other(1);
+
+    MOZ_RELEASE_ASSERT(result == other);
+  }
+
+  {
+    Result<int, bool> result(true);
+    Result<int, bool> other(true);
+
+    MOZ_RELEASE_ASSERT(result == other);
+  }
+
+  {
+    Result<int, bool> result(1);
+    Result<int, bool> other(2);
+
+    MOZ_RELEASE_ASSERT(result != other);
+  }
+
+  {
+    Result<int, bool> result(true);
+    Result<int, bool> other(false);
+
+    MOZ_RELEASE_ASSERT(result != other);
+  }
+
+  {
+    Result<int, bool> result(0);
+    Result<int, bool> other(false);
+
+    MOZ_RELEASE_ASSERT(result != other);
+  }
+
+  {
+    Result<int, unsigned int> result(1);
+    Result<int, unsigned int> other(1u);
+
+    MOZ_RELEASE_ASSERT(result != other);
+  }
+}
+
 /* * */
 
 int main() {
@@ -866,5 +910,6 @@ int main() {
   UniquePtrTest();
   ZeroIsEmptyErrorTest();
   UpcastTest();
+  EqualityTest();
   return 0;
 }
