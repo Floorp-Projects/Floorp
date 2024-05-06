@@ -40,6 +40,8 @@ const PROFILE_RESET_DATE_MS = Date.now();
 // The profile creation date, in milliseconds (Yesterday).
 const PROFILE_FIRST_USE_MS = PROFILE_RESET_DATE_MS - MILLISECONDS_PER_DAY;
 const PROFILE_CREATION_DATE_MS = PROFILE_FIRST_USE_MS - MILLISECONDS_PER_DAY;
+const PROFILE_RECOVERED_FROM_BACKUP =
+  PROFILE_RESET_DATE_MS - MILLISECONDS_PER_HOUR;
 
 const GFX_VENDOR_ID = "0xabcd";
 const GFX_DEVICE_ID = "0x1234";
@@ -126,6 +128,7 @@ export var TelemetryEnvironmentTesting = {
         created: PROFILE_CREATION_DATE_MS,
         reset: PROFILE_RESET_DATE_MS,
         firstUse: PROFILE_FIRST_USE_MS,
+        recoveredFromBackup: PROFILE_RECOVERED_FROM_BACKUP,
       }
     );
   },
@@ -391,6 +394,10 @@ export var TelemetryEnvironmentTesting = {
     lazy.Assert.equal(
       data.profile.firstUseDate,
       truncateToDays(PROFILE_FIRST_USE_MS)
+    );
+    lazy.Assert.equal(
+      data.profile.recoveredFromBackup,
+      truncateToDays(PROFILE_RECOVERED_FROM_BACKUP)
     );
   },
 
