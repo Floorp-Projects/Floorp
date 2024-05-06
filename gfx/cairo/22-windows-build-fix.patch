@@ -1,0 +1,64 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1714037079 -3600
+#      Thu Apr 25 10:24:39 2024 +0100
+# Node ID 796a9cf6d3d64e08056fe7583e7de11066729130
+# Parent  c150548d5702cdf69be21a30407b4ce75d5b662d
+Bug 1892913 - patch 20 - Add #ifdef guards around mingw-specific __CRT_UUID_DECL lines in d2d1-extra.h
+
+To fix the Gecko build on Windows, as this is a mingw-ism that isn't
+supported or needed.
+
+diff --git a/gfx/cairo/cairo/src/win32/d2d1-extra.h b/gfx/cairo/cairo/src/win32/d2d1-extra.h
+--- a/gfx/cairo/cairo/src/win32/d2d1-extra.h
++++ b/gfx/cairo/cairo/src/win32/d2d1-extra.h
+@@ -39,7 +39,10 @@ ID2D1DeviceContext1 : public ID2D1Device
+   virtual void STDMETHODCALLTYPE CreateStrokedGeometryRealization() = 0;
+   virtual void STDMETHODCALLTYPE DrawGeometryRealization() = 0;
+ };
++#ifdef __CRT_UUID_DECL
+ __CRT_UUID_DECL(ID2D1DeviceContext1, 0xd37f57e4, 0x6908, 0x459f, 0xa1, 0x99, 0xe7, 0x2f, 0x24, 0xf7, 0x99, 0x87)
++#endif
++
+ 
+ DEFINE_GUID(IID_ID2D1DeviceContext2, 0x394ea6a3, 0x0c34, 0x4321, 0x95, 0x0b, 0x6c, 0xa2, 0x0f, 0x0b, 0xe6, 0xc7);
+ MIDL_INTERFACE("394ea6a3-0c34-4321-950b-6ca20f0be6c7")
+@@ -57,7 +60,9 @@ ID2D1DeviceContext2 : public ID2D1Device
+   virtual void STDMETHODCALLTYPE DrawGdiMetafile() = 0;
+   virtual void STDMETHODCALLTYPE CreateTransformedImageSource() = 0;
+ };
++#ifdef __CRT_UUID_DECL
+ __CRT_UUID_DECL(ID2D1DeviceContext2, 0x394ea6a3, 0x0c34, 0x4321, 0x95, 0x0b, 0x6c, 0xa2, 0x0f, 0x0b, 0xe6, 0xc7)
++#endif
+ 
+ 
+ DEFINE_GUID(IID_ID2D1DeviceContext3, 0x235a7496, 0x8351, 0x414c, 0xbc, 0xd4, 0x66, 0x72, 0xab, 0x2d, 0x8e, 0x00);
+@@ -67,7 +72,9 @@ ID2D1DeviceContext3 : public ID2D1Device
+   virtual void STDMETHODCALLTYPE CreateSpriteBatch() = 0;
+   virtual void STDMETHODCALLTYPE DrawSpriteBatch() = 0;
+ };
++#ifdef __CRT_UUID_DECL
+ __CRT_UUID_DECL(ID2D1DeviceContext3, 0x235a7496, 0x8351, 0x414c, 0xbc, 0xd4, 0x66, 0x72, 0xab, 0x2d, 0x8e, 0x00)
++#endif
+ 
+ 
+ DEFINE_GUID(IID_ID2D1SvgGlyphStyle, 0xaf671749, 0xd241, 0x4db8, 0x8e, 0x41, 0xdc, 0xc2, 0xe5, 0xc1, 0xa4, 0x38);
+@@ -80,7 +87,9 @@ ID2D1SvgGlyphStyle  : public ID2D1Resour
+   virtual void STDMETHODCALLTYPE GetStrokeDashesCount() = 0;
+   virtual void STDMETHODCALLTYPE GetStroke() = 0;
+ };
++#ifdef __CRT_UUID_DECL
+ __CRT_UUID_DECL(ID2D1SvgGlyphStyle, 0xaf671749, 0xd241, 0x4db8, 0x8e, 0x41, 0xdc, 0xc2, 0xe5, 0xc1, 0xa4, 0x38)
++#endif
+ 
+ 
+ DEFINE_GUID(IID_ID2D1DeviceContext4, 0x8c427831, 0x3d90, 0x4476, 0xb6, 0x47, 0xc4, 0xfa, 0xe3, 0x49, 0xe4, 0xdb);
+@@ -106,6 +115,8 @@ ID2D1DeviceContext4 : public ID2D1Device
+     DWRITE_MEASURING_MODE  measuringMode) = 0;
+ 
+ };
++#ifdef __CRT_UUID_DECL
+ __CRT_UUID_DECL(ID2D1DeviceContext4, 0x8c427831, 0x3d90, 0x4476, 0xb6, 0x47, 0xc4, 0xfa, 0xe3, 0x49, 0xe4, 0xdb)
++#endif
+ 
+ #endif
