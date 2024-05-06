@@ -20,10 +20,13 @@ Jinja2 template is not. Please file bugs! #}
     pub struct {{ name }} {
         {% for itemname, val in struct.properties.items() %}
           {% if val.type == "object" %}
-          pub {{itemname|snake_case}}: {{ name ~ "Item" ~ itemname|Camelize ~ "Object" }},
+          #[serde(skip_serializing_if = "Option::is_none")]
+          pub {{itemname|snake_case}}: Option<{{ name ~ "Item" ~ itemname|Camelize ~ "Object" }}>,
           {% elif val.type == "array" %}
+          #[serde(skip_serializing_if = "Vec::is_empty", default = "Vec::new")]
           pub {{itemname|snake_case}}: {{ name ~ "Item" ~ itemname|Camelize }},
           {% else %}
+          #[serde(skip_serializing_if = "Option::is_none")]
           pub {{itemname|snake_case}}: Option<{{val.type|structure_type_name}}>,
           {% endif %}
         {% endfor %}
