@@ -1,3 +1,11 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1713889788 -3600
+#      Tue Apr 23 17:29:48 2024 +0100
+# Node ID 0421354d816b993767e2409c425aaa95a5291a26
+# Parent  2a04d0b05957b4db2cd9e97f29d28565badca201
+Bug 1892913 - patch 13 - Apply 11-quartz-surface-tags.patch
+
 diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
 --- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
 +++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
@@ -9,7 +17,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
  
  #include <dlfcn.h>
  
-@@ -2313,6 +2314,70 @@ static cairo_status_t
+@@ -2190,6 +2191,70 @@ static cairo_status_t
      return CAIRO_STATUS_SUCCESS;
  }
  
@@ -79,15 +87,12 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
 +
  // XXXtodo implement show_page; need to figure out how to handle begin/end
  
- static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
-@@ -2346,6 +2411,11 @@ static const struct _cairo_surface_backe
-     _cairo_quartz_surface_fill,
-     NULL,  /* fill-stroke */
-     _cairo_quartz_surface_glyphs,
-+
-+    NULL,  /* has_show_text_glyphs */
-+    NULL,  /* show_text_glyphs */
-+    NULL,  /* get_supported_mime_types */
+ static const cairo_surface_backend_t cairo_quartz_surface_backend = {
+@@ -2226,7 +2291,7 @@ static const cairo_surface_backend_t cai
+     NULL, /* has_show_text_glyphs */
+     NULL, /* show_text_glyphs */
+     NULL, /* get_supported_mime_types */
+-    NULL, /* tag */
 +    _cairo_quartz_surface_tag   /* tag */
  };
  
