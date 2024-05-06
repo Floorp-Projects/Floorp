@@ -122,7 +122,8 @@ TEST_F(TestDeviceInputTrack, DeviceInputConsumerTrack) {
     TestAudioDataListener(uint32_t aChannelCount, bool aIsVoice)
         : mChannelCount(aChannelCount), mIsVoice(aIsVoice) {}
     // Graph thread APIs: AudioDataListenerInterface implementations.
-    uint32_t RequestedInputChannelCount(MediaTrackGraph* aGraph) override {
+    uint32_t RequestedInputChannelCount(
+        MediaTrackGraph* aGraph) const override {
       aGraph->AssertOnGraphThread();
       return mChannelCount;
     }

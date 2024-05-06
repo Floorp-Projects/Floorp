@@ -438,7 +438,7 @@ void AudioInputProcessing::PassThroughChanged(MediaTrackGraph* aGraph) {
   }
 }
 
-uint32_t AudioInputProcessing::GetRequestedInputChannelCount() {
+uint32_t AudioInputProcessing::GetRequestedInputChannelCount() const {
   return mSettings.mChannels;
 }
 
