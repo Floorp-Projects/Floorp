@@ -1,0 +1,65 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1714124453 -3600
+#      Fri Apr 26 10:40:53 2024 +0100
+# Node ID 6d9a0fd66f0a4e02df968ea479d890a41031db15
+# Parent  e606a18e8d85eb481139530055d38f125665fb50
+Bug 1892913 - patch 18 - Cairo fixes for iOS build.
+
+diff --git a/gfx/cairo/cairo/src/cairo-features.h b/gfx/cairo/cairo/src/cairo-features.h
+--- a/gfx/cairo/cairo/src/cairo-features.h
++++ b/gfx/cairo/cairo/src/cairo-features.h
+@@ -75,6 +75,10 @@
+ #define CAIRO_HAS_QUARTZ_APPLICATION_SERVICES 1
+ #endif
+ 
++#if defined(MOZ_WIDGET_UIKIT)
++#define CAIRO_HAS_IMAGE_IO 1
++#endif
++
+ #ifdef XP_WIN
+ #define CAIRO_HAS_DWRITE_FONT 1
+ #define CAIRO_HAS_WIN32_FONT 1
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-image-surface.c b/gfx/cairo/cairo/src/cairo-quartz-image-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-image-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-image-surface.c
+@@ -307,7 +307,11 @@ cairo_quartz_image_surface_create (cairo
+ 	colorspace = _cairo_quartz_create_color_space (context);
+     }
+     else {
++#if CAIRO_HAS_QUARTZ_APPLICATION_SERVICES /* available on macOS but not iOS */
+ 	colorspace = CGDisplayCopyColorSpace (CGMainDisplayID ());
++#else
++	colorspace = CGColorSpaceCreateDeviceRGB ();
++#endif
+     }
+ 
+     bitinfo |= format == CAIRO_FORMAT_ARGB32 ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -201,8 +201,10 @@ CGColorSpaceRef
+         if (color_space)
+             return color_space;
+     }
++#if CAIRO_HAS_QUARTZ_APPLICATION_SERVICES /* available on macOS but not iOS */
+     if (!color_space)
+         color_space =  CGDisplayCopyColorSpace (CGMainDisplayID ());
++#endif
+ 
+     if (!color_space)
+         color_space = CGColorSpaceCreateDeviceRGB ();
+diff --git a/gfx/cairo/cairo/src/cairo-quartz.h b/gfx/cairo/cairo/src/cairo-quartz.h
+--- a/gfx/cairo/cairo/src/cairo-quartz.h
++++ b/gfx/cairo/cairo/src/cairo-quartz.h
+@@ -49,6 +49,10 @@
+ #include <ApplicationServices/ApplicationServices.h>
+ #endif
+ 
++#if CAIRO_HAS_IMAGE_IO
++#include <ImageIO/ImageIO.h>
++#endif
++
+ CAIRO_BEGIN_DECLS
+ 
+ cairo_public cairo_surface_t *

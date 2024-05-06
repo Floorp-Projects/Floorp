@@ -75,6 +75,10 @@
 #define CAIRO_HAS_QUARTZ_APPLICATION_SERVICES 1
 #endif
 
+#if defined(MOZ_WIDGET_UIKIT)
+#define CAIRO_HAS_IMAGE_IO 1
+#endif
+
 #ifdef XP_WIN
 #define CAIRO_HAS_DWRITE_FONT 1
 #define CAIRO_HAS_WIN32_FONT 1
