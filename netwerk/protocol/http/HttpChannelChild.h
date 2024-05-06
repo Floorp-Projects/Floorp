@@ -187,6 +187,9 @@ class HttpChannelChild final : public PHttpChannelChild,
                                  const nsAString& aURL,
                                  const nsAString& aContentType) override;
 
+  virtual void ExplicitSetUploadStreamLength(
+      uint64_t aContentLength, bool aSetContentLengthHeader) override;
+
  private:
   // We want to handle failure result of AsyncOpen, hence AsyncOpen calls the
   // Internal method

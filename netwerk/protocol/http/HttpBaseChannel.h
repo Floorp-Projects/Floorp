@@ -692,6 +692,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   void SetChannelBlockedByOpaqueResponse();
   bool Http3Allowed() const;
 
+  virtual void ExplicitSetUploadStreamLength(uint64_t aContentLength,
+                                             bool aSetContentLengthHeader);
+
   friend class OpaqueResponseBlocker;
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
@@ -722,9 +725,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
  private:
   // Proxy release all members above on main thread.
   void ReleaseMainThreadOnlyReferences();
-
-  void ExplicitSetUploadStreamLength(uint64_t aContentLength,
-                                     bool aSetContentLengthHeader);
 
   void MaybeResumeAsyncOpen();
 

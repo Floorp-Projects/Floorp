@@ -1319,8 +1319,6 @@ void HttpBaseChannel::ExplicitSetUploadStreamLength(
     return;
   }
 
-  // SetRequestHeader propagates headers to chrome if HttpChannelChild
-  MOZ_ASSERT(!LoadWasOpened());
   nsAutoCString contentLengthStr;
   contentLengthStr.AppendInt(aContentLength);
   SetRequestHeader(header, contentLengthStr, false);
