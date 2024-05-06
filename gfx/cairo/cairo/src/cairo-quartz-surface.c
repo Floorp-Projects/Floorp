@@ -759,7 +759,12 @@ _cairo_surface_to_cgimage (cairo_surface_t       *source,
 
     if (acquired) {
 	_cairo_surface_release_source_image (source, image_surface->imageSurface, image_extra);
-	image_surface->imageSurface = NULL;
+	/* If source itself is an image surface, _cairo_surface_release_source_image
+	   does not release it, and image_surface->imageSurface still owns a reference
+	   to it. So we don't clear that field here; _cairo_quartz_image_surface_finish
+	   will take care of it. */
+	if (source->type != CAIRO_SURFACE_TYPE_IMAGE)
+	    image_surface->imageSurface = NULL;
     }
     cairo_surface_destroy (&image_surface->base);
 
