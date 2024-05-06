@@ -66,6 +66,10 @@
 #include FT_SYNTHESIS_H
 #endif
 
+#ifdef FT_COLOR_H
+#include FT_COLOR_H
+#endif
+
 #if HAVE_FT_LIBRARY_SETLCDFILTER
 #include FT_LCD_FILTER_H
 #endif
@@ -2597,6 +2601,7 @@ _cairo_ft_glyph_fini (cairo_scaled_glyph_private_t *glyph_private,
 }
 
 
+#ifdef FT_COLOR_H
 static void
 _cairo_ft_scaled_glyph_set_palette (cairo_ft_scaled_font_t  *scaled_font,
 				    FT_Face                  face,
@@ -2637,6 +2642,20 @@ _cairo_ft_scaled_glyph_set_palette (cairo_ft_scaled_font_t  *scaled_font,
     if (entries_ret)
 	*entries_ret = entries;
 }
+#else
+static void
+_cairo_ft_scaled_glyph_set_palette (cairo_ft_scaled_font_t  *scaled_font,
+				    FT_Face                  face,
+				    unsigned int            *num_entries_ret,
+				    void                   **entries_ret)
+{
+    if (num_entries_ret)
+	*num_entries_ret = 0;
+
+    if (entries_ret)
+	*entries_ret = NULL;
+}
+#endif
 
 /* returns TRUE if foreground color used */
 static cairo_bool_t
