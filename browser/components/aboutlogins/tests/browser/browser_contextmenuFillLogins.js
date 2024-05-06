@@ -32,8 +32,10 @@ if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
   gTests[gTests.length] = {
     name: "test contextmenu on password field in edit login view",
     async setup(browser) {
-      let osAuthDialogShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-
+      let osAuthDialogShown = Promise.resolve();
+      if (OSKeyStore.canReauth()) {
+        osAuthDialogShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+      }
       // load up the edit login view
       await SpecialPowers.spawn(
         browser,

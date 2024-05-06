@@ -72,7 +72,10 @@ add_task(async function test_telemetry_events() {
   await LoginTestUtils.telemetry.waitForEventCount(3);
 
   if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+    let reauthObserved = Promise.resolve();
+    if (OSKeyStore.canReauth()) {
+      reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+    }
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       let loginItem = content.document.querySelector("login-item");
       let copyButton = loginItem.shadowRoot.querySelector(
@@ -106,9 +109,12 @@ add_task(async function test_telemetry_events() {
 
   // Show the password
   if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-    let reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
-      loginResult: true,
-    });
+    let reauthObserved = Promise.resolve();
+    if (OSKeyStore.canReauth()) {
+      reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
+        loginResult: true,
+      });
+    }
     nextTelemetryEventCount++; // An extra event is observed for the reauth event.
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       let loginItem = content.document.querySelector("login-item");
