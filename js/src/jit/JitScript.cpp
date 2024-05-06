@@ -703,9 +703,12 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
 }
 #endif
 
+using StubHashMap = HashMap<ICCacheIRStub*, ICCacheIRStub*,
+                            DefaultHasher<ICCacheIRStub*>, SystemAllocPolicy>;
+
 static void MarkActiveICScriptsAndCopyStubs(
     JSContext* cx, const JitActivationIterator& activation,
-    ICStubSpace& newStubSpace) {
+    ICStubSpace& newStubSpace, StubHashMap& alreadyClonedStubs) {
   for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
     const JSJitFrameIter& frame = iter.frame();
     switch (frame.type()) {
@@ -721,8 +724,15 @@ static void MarkActiveICScriptsAndCopyStubs(
         auto* layout = reinterpret_cast<BaselineStubFrameLayout*>(frame.fp());
         if (layout->maybeStubPtr() && !layout->maybeStubPtr()->isFallback()) {
           ICCacheIRStub* stub = layout->maybeStubPtr()->toCacheIRStub();
-          ICCacheIRStub* newStub = stub->clone(cx->runtime(), newStubSpace);
-          layout->setStubPtr(newStub);
+          auto lookup = alreadyClonedStubs.lookupForAdd(stub);
+          if (!lookup) {
+            ICCacheIRStub* newStub = stub->clone(cx->runtime(), newStubSpace);
+            AutoEnterOOMUnsafeRegion oomUnsafe;
+            if (!alreadyClonedStubs.add(lookup, stub, newStub)) {
+              oomUnsafe.crash("MarkActiveICScriptsAndCopyStubs");
+            }
+          }
+          layout->setStubPtr(lookup->value());
 
           // If this is a trial-inlining call site, also preserve the callee
           // ICScript. Inlined constructor calls invoke CreateThisFromIC (which
@@ -772,10 +782,12 @@ void jit::MarkActiveICScriptsAndCopyStubs(Zone* zone,
   if (zone->isAtomsZone()) {
     return;
   }
+  StubHashMap alreadyClonedStubs;
   JSContext* cx = TlsContext.get();
   for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
     if (iter->compartment()->zone() == zone) {
-      MarkActiveICScriptsAndCopyStubs(cx, iter, newStubSpace);
+      MarkActiveICScriptsAndCopyStubs(cx, iter, newStubSpace,
+                                      alreadyClonedStubs);
     }
   }
 }
