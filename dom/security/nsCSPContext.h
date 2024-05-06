@@ -32,6 +32,8 @@ class nsIEventTarget;
 struct ConsoleMsgQueueElem;
 
 namespace mozilla {
+template <typename... Ts>
+class Variant;
 namespace dom {
 class Element;
 }
@@ -77,11 +79,23 @@ class nsCSPContext : public nsIContentSecurityPolicy {
                     uint32_t aLineNumber, uint32_t aColumnNumber,
                     uint32_t aSeverityFlag);
 
+  enum BlockedContentSource {
+    eUnknown,
+    eInline,
+    eEval,
+    eSelf,
+    eWasmEval,
+  };
+
+  // Roughly implements a violation's resource
+  // (https://w3c.github.io/webappsec-csp/#framework-violation).
+  using Resource = mozilla::Variant<nsIURI*, BlockedContentSource>;
+
   /**
    * Construct SecurityPolicyViolationEventInit structure.
    *
-   * @param aBlockedURI
-   *        A nsIURI: the source of the violation.
+   * @param aResource
+   *        The source of the violation.
    * @param aOriginalUri
    *        The original URI if the blocked content is a redirect, else null
    * @param aViolatedDirective
@@ -98,10 +112,10 @@ class nsCSPContext : public nsIContentSecurityPolicy {
    *        The output
    */
   nsresult GatherSecurityPolicyViolationEventData(
-      nsIURI* aBlockedURI, const nsACString& aBlockedString,
-      nsIURI* aOriginalURI, const nsAString& aViolatedDirective,
-      uint32_t aViolatedPolicyIndex, const nsAString& aSourceFile,
-      const nsAString& aScriptSample, uint32_t aLineNum, uint32_t aColumnNum,
+      Resource& aResource, nsIURI* aOriginalURI,
+      const nsAString& aViolatedDirective, uint32_t aViolatedPolicyIndex,
+      const nsAString& aSourceFile, const nsAString& aScriptSample,
+      uint32_t aLineNum, uint32_t aColumnNum,
       mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit);
 
   nsresult SendReports(
@@ -113,14 +127,6 @@ class nsCSPContext : public nsIContentSecurityPolicy {
       nsICSPEventListener* aCSPEventListener,
       const mozilla::dom::SecurityPolicyViolationEventInit&
           aViolationEventInit);
-
-  enum BlockedContentSource {
-    eUnknown,
-    eInline,
-    eEval,
-    eSelf,
-    eWasmEval,
-  };
 
   nsresult AsyncReportViolation(
       mozilla::dom::Element* aTriggeringElement,
