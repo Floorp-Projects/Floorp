@@ -117,8 +117,8 @@ struct _cairo_observer {
  *
  * A #cairo_hash_entry_t contains both a key and a value for
  * #cairo_hash_table_t. User-derived types for #cairo_hash_entry_t must
- * be type-compatible with this structure (eg. they must have an
- * unsigned long as the first parameter. The easiest way to get this
+ * be type-compatible with this structure (eg. they must have a
+ * uintptr_t as the first parameter. The easiest way to get this
  * is to use:
  *
  * 	typedef _my_entry {
@@ -147,7 +147,7 @@ struct _cairo_observer {
  * the entry need not be initialized if so desired.
  **/
 struct _cairo_hash_entry {
-    unsigned long hash;
+    uintptr_t hash;
 };
 
 struct _cairo_array {
@@ -157,11 +157,40 @@ struct _cairo_array {
     char *elements;
 };
 
+/**
+ * _cairo_lcd_filter:
+ * @CAIRO_LCD_FILTER_DEFAULT: Use the default LCD filter for
+ *   font backend and target device
+ * @CAIRO_LCD_FILTER_NONE: Do not perform LCD filtering
+ * @CAIRO_LCD_FILTER_INTRA_PIXEL: Intra-pixel filter
+ * @CAIRO_LCD_FILTER_FIR3: FIR filter with a 3x3 kernel
+ * @CAIRO_LCD_FILTER_FIR5: FIR filter with a 5x5 kernel
+ *
+ * The LCD filter specifies the low-pass filter applied to LCD-optimized
+ * bitmaps generated with an antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
+ *
+ * Note: This API was temporarily made available in the public
+ * interface during the 1.7.x development series, but was made private
+ * before 1.8.
+ **/
+typedef enum _cairo_lcd_filter {
+    CAIRO_LCD_FILTER_DEFAULT,
+    CAIRO_LCD_FILTER_NONE,
+    CAIRO_LCD_FILTER_INTRA_PIXEL,
+    CAIRO_LCD_FILTER_FIR3,
+    CAIRO_LCD_FILTER_FIR5
+} cairo_lcd_filter_t;
+
 typedef enum _cairo_round_glyph_positions {
     CAIRO_ROUND_GLYPH_POS_DEFAULT,
     CAIRO_ROUND_GLYPH_POS_ON,
     CAIRO_ROUND_GLYPH_POS_OFF
 } cairo_round_glyph_positions_t;
+
+typedef struct {
+    unsigned int index;
+    double red, green, blue, alpha;
+} cairo_palette_color_t;
 
 struct _cairo_font_options {
     cairo_antialias_t antialias;
@@ -171,6 +200,10 @@ struct _cairo_font_options {
     cairo_hint_metrics_t hint_metrics;
     cairo_round_glyph_positions_t round_glyph_positions;
     char *variations;
+    cairo_color_mode_t color_mode;
+    unsigned int palette_index;
+    cairo_palette_color_t *custom_palette;
+    unsigned int custom_palette_size;
 };
 
 struct _cairo_glyph_text_info {
@@ -230,7 +263,8 @@ typedef enum _cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_WRAPPING,
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
-    CAIRO_INTERNAL_SURFACE_TYPE_TYPE3_GLYPH
+    CAIRO_INTERNAL_SURFACE_TYPE_TYPE3_GLYPH,
+    CAIRO_INTERNAL_SURFACE_TYPE_QUARTZ_SNAPSHOT
 } cairo_internal_surface_type_t;
 
 typedef enum _cairo_internal_device_type {
@@ -352,6 +386,8 @@ typedef struct _cairo_stroke_style {
     double		*dash;
     unsigned int	 num_dashes;
     double		 dash_offset;
+    cairo_bool_t	 is_hairline;
+    double      pre_hairline_line_width;
 } cairo_stroke_style_t;
 
 typedef struct _cairo_format_masks {
@@ -401,6 +437,17 @@ typedef struct _cairo_unscaled_font {
     cairo_reference_count_t		 ref_count;
     const cairo_unscaled_font_backend_t	*backend;
 } cairo_unscaled_font_t;
+
+typedef enum _cairo_analysis_source {
+    CAIRO_ANALYSIS_SOURCE_PAINT,
+    CAIRO_ANALYSIS_SOURCE_MASK,
+    CAIRO_ANALYSIS_MASK_MASK,
+    CAIRO_ANALYSIS_SOURCE_FILL,
+    CAIRO_ANALYSIS_SOURCE_STROKE,
+    CAIRO_ANALYSIS_SOURCE_SHOW_GLYPHS,
+    CAIRO_ANALYSIS_SOURCE_NONE /* Used when analysis_source is not applicable. */
+} cairo_analysis_source_t;
+
 CAIRO_END_DECLS
 
 #endif /* CAIRO_TYPES_PRIVATE_H */

@@ -53,7 +53,7 @@ cairo_private void _cairo_mutex_finalize (void);
 #endif
 /* only if using static initializer and/or finalizer define the boolean */
 #if _CAIRO_MUTEX_IMPL_USE_STATIC_INITIALIZER || _CAIRO_MUTEX_IMPL_USE_STATIC_FINALIZER
-  cairo_private extern cairo_bool_t _cairo_mutex_initialized;
+  cairo_private extern int _cairo_mutex_initialized;
 #endif
 
 /* Finally, extern the static mutexes and undef */

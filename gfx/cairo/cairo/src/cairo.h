@@ -50,13 +50,24 @@
 # define CAIRO_END_DECLS
 #endif
 
-#ifndef cairo_public
-# if defined (_MSC_VER) && ! defined (CAIRO_WIN32_STATIC_BUILD)
-#  define cairo_public __declspec(dllimport)
-# else
-#  define cairo_public
-# endif
+#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(CAIRO_WIN32_STATIC_BUILD)
+# define _cairo_export __declspec(dllexport)
+# define _cairo_import __declspec(dllimport)
+#elif defined(__GNUC__) && (__GNUC__ >= 4)
+# define _cairo_export __attribute__((__visibility__("default")))
+# define _cairo_import
+#else
+# define _cairo_export
+# define _cairo_import
 #endif
+
+#ifdef CAIRO_COMPILATION
+# define _cairo_api _cairo_export
+#else
+# define _cairo_api _cairo_import
+#endif
+
+#define cairo_public _cairo_api extern
 
 CAIRO_BEGIN_DECLS
 
@@ -157,9 +168,7 @@ typedef struct _cairo_surface cairo_surface_t;
  *
  * A #cairo_device_t represents the driver interface for drawing
  * operations to a #cairo_surface_t.  There are different subtypes of
- * #cairo_device_t for different drawing backends; for example,
- * cairo_egl_device_create() creates a device that wraps an EGL display and
- * context.
+ * #cairo_device_t for different drawing backends.
  *
  * The type of a device can be queried with cairo_device_get_type().
  *
@@ -296,6 +305,8 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_FREETYPE_ERROR: error occurred in libfreetype (Since 1.16)
  * @CAIRO_STATUS_WIN32_GDI_ERROR: error occurred in the Windows Graphics Device Interface (Since 1.16)
  * @CAIRO_STATUS_TAG_ERROR: invalid tag name, attributes, or nesting (Since 1.16)
+ * @CAIRO_STATUS_DWRITE_ERROR: error occurred in the Windows Direct Write API (Since 1.18)
+ * @CAIRO_STATUS_SVG_FONT_ERROR: error occurred in OpenType-SVG font rendering (Since 1.18)
  * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
  *   status values defined in this enumeration.  When using this value, note
  *   that the version of cairo at run-time may have additional status values
@@ -356,6 +367,8 @@ typedef enum _cairo_status {
     CAIRO_STATUS_FREETYPE_ERROR,
     CAIRO_STATUS_WIN32_GDI_ERROR,
     CAIRO_STATUS_TAG_ERROR,
+    CAIRO_STATUS_DWRITE_ERROR,
+    CAIRO_STATUS_SVG_FONT_ERROR,
 
     CAIRO_STATUS_LAST_STATUS
 } cairo_status_t;
@@ -427,6 +440,38 @@ typedef enum _cairo_format {
     CAIRO_FORMAT_RGBA128F  = 7
 } cairo_format_t;
 
+/**
+ * cairo_dither_t:
+ * @CAIRO_DITHER_NONE: No dithering.
+ * @CAIRO_DITHER_DEFAULT: Default choice at cairo compile time. Currently NONE.
+ * @CAIRO_DITHER_FAST: Fastest dithering algorithm supported by the backend
+ * @CAIRO_DITHER_GOOD: An algorithm with smoother dithering than FAST
+ * @CAIRO_DITHER_BEST: Best algorithm available in the backend
+ *
+ * Dither is an intentionally applied form of noise used to randomize
+ * quantization error, preventing large-scale patterns such as color banding
+ * in images (e.g. for gradients). Ordered dithering applies a precomputed
+ * threshold matrix to spread the errors smoothly.
+ *
+ *  #cairo_dither_t is modeled on pixman dithering algorithm choice.
+ * As of Pixman 0.40, FAST corresponds to a 8x8 ordered bayer noise and GOOD
+ * and BEST use an ordered 64x64 precomputed blue noise.
+ *
+ * Since: 1.18
+ **/
+typedef enum _cairo_dither {
+    CAIRO_DITHER_NONE,
+    CAIRO_DITHER_DEFAULT,
+    CAIRO_DITHER_FAST,
+    CAIRO_DITHER_GOOD,
+    CAIRO_DITHER_BEST
+} cairo_dither_t;
+
+cairo_public void
+cairo_pattern_set_dither (cairo_pattern_t *pattern, cairo_dither_t dither);
+
+cairo_public cairo_dither_t
+cairo_pattern_get_dither (cairo_pattern_t *pattern);
 
 /**
  * cairo_write_func_t:
@@ -475,7 +520,7 @@ typedef cairo_status_t (*cairo_read_func_t) (void		*closure,
 /**
  * cairo_rectangle_int_t:
  * @x: X coordinate of the left side of the rectangle
- * @y: Y coordinate of the the top side of the rectangle
+ * @y: Y coordinate of the top side of the rectangle
  * @width: width of the rectangle
  * @height: height of the rectangle
  *
@@ -765,6 +810,9 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule);
 cairo_public void
 cairo_set_line_width (cairo_t *cr, double width);
 
+cairo_public void
+cairo_set_hairline (cairo_t *cr, cairo_bool_t set_hairline);
+
 /**
  * cairo_line_cap_t:
  * @CAIRO_LINE_CAP_BUTT: start(stop) the line exactly at the start(end) point (Since 1.0)
@@ -995,7 +1043,7 @@ cairo_clip_extents (cairo_t *cr,
 /**
  * cairo_rectangle_t:
  * @x: X coordinate of the left side of the rectangle
- * @y: Y coordinate of the the top side of the rectangle
+ * @y: Y coordinate of the top side of the rectangle
  * @width: width of the rectangle
  * @height: height of the rectangle
  *
@@ -1034,6 +1082,8 @@ cairo_rectangle_list_destroy (cairo_rectangle_list_t *rectangle_list);
 
 #define CAIRO_TAG_DEST "cairo.dest"
 #define CAIRO_TAG_LINK "Link"
+#define CAIRO_TAG_CONTENT "cairo.content"
+#define CAIRO_TAG_CONTENT_REF "cairo.content_ref"
 
 cairo_public void
 cairo_tag_begin (cairo_t *cr, const char *tag_name, const char *attributes);
@@ -1365,28 +1415,27 @@ typedef enum _cairo_hint_metrics {
 } cairo_hint_metrics_t;
 
 /**
- * _cairo_lcd_filter:
- * @CAIRO_LCD_FILTER_DEFAULT: Use the default LCD filter for
- *   font backend and target device
- * @CAIRO_LCD_FILTER_NONE: Do not perform LCD filtering
- * @CAIRO_LCD_FILTER_INTRA_PIXEL: Intra-pixel filter
- * @CAIRO_LCD_FILTER_FIR3: FIR filter with a 3x3 kernel
- * @CAIRO_LCD_FILTER_FIR5: FIR filter with a 5x5 kernel
+ * cairo_color_mode_t:
+ * @CAIRO_COLOR_MODE_DEFAULT: Use the default color mode for
+ * font backend and target device, since 1.18.
+ * @CAIRO_COLOR_MODE_NO_COLOR: Disable rendering color glyphs. Glyphs are
+ * always rendered as outline glyphs, since 1.18.
+ * @CAIRO_COLOR_MODE_COLOR: Enable rendering color glyphs. If the font
+ * contains a color presentation for a glyph, and when supported by
+ * the font backend, the glyph will be rendered in color, since 1.18.
  *
- * The LCD filter specifies the low-pass filter applied to LCD-optimized
- * bitmaps generated with an antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
+ * Specifies if color fonts are to be rendered using the color
+ * glyphs or outline glyphs. Glyphs that do not have a color
+ * presentation, and non-color fonts are not affected by this font
+ * option.
  *
- * Note: This API was temporarily made available in the public
- * interface during the 1.7.x development series, but was made private
- * before 1.8.
+ * Since: 1.18
  **/
-typedef enum _cairo_lcd_filter {
-    CAIRO_LCD_FILTER_DEFAULT,
-    CAIRO_LCD_FILTER_NONE,
-    CAIRO_LCD_FILTER_INTRA_PIXEL,
-    CAIRO_LCD_FILTER_FIR3,
-    CAIRO_LCD_FILTER_FIR5
-} cairo_lcd_filter_t;
+typedef enum _cairo_color_mode {
+    CAIRO_COLOR_MODE_DEFAULT,
+    CAIRO_COLOR_MODE_NO_COLOR,
+    CAIRO_COLOR_MODE_COLOR
+} cairo_color_mode_t;
 
 /**
  * cairo_font_options_t:
@@ -1465,8 +1514,36 @@ cairo_public void
 cairo_font_options_set_variations (cairo_font_options_t *options,
                                    const char           *variations);
 
+#define CAIRO_COLOR_PALETTE_DEFAULT 0
+
+cairo_public void
+cairo_font_options_set_color_mode (cairo_font_options_t *options,
+                                   cairo_color_mode_t    color_mode);
+
+cairo_public cairo_color_mode_t
+cairo_font_options_get_color_mode (const cairo_font_options_t *options);
+
+cairo_public unsigned int
+cairo_font_options_get_color_palette (const cairo_font_options_t *options);
+
+cairo_public void
+cairo_font_options_set_color_palette (cairo_font_options_t *options,
+                                      unsigned int          palette_index);
+
+cairo_public void
+cairo_font_options_set_custom_palette_color (cairo_font_options_t *options,
+                                             unsigned int index,
+                                             double red, double green,
+                                             double blue, double alpha);
+
+cairo_public cairo_status_t
+cairo_font_options_get_custom_palette_color (cairo_font_options_t *options,
+                                             unsigned int index,
+                                             double *red, double *green,
+                                             double *blue, double *alpha);
+
 /* This interface is for dealing with text as text, not caring about the
-   font object inside the the cairo_t. */
+   font object inside the cairo_t. */
 
 cairo_public void
 cairo_select_font_face (cairo_t              *cr,
@@ -1492,13 +1569,6 @@ cairo_set_font_options (cairo_t                    *cr,
 cairo_public void
 cairo_get_font_options (cairo_t              *cr,
 			cairo_font_options_t *options);
-
-cairo_public void
-cairo_font_options_set_lcd_filter (cairo_font_options_t   *options,
-                                  cairo_lcd_filter_t  lcd_filter);
-
-cairo_public cairo_lcd_filter_t
-cairo_font_options_get_lcd_filter (const cairo_font_options_t *options);
 
 cairo_public void
 cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face);
@@ -1573,6 +1643,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  * @CAIRO_FONT_TYPE_QUARTZ: The font is of type Quartz (Since: 1.6, in 1.2 and
  * 1.4 it was named CAIRO_FONT_TYPE_ATSUI)
  * @CAIRO_FONT_TYPE_USER: The font was create using cairo's user font api (Since: 1.8)
+ * @CAIRO_FONT_TYPE_DWRITE: The font is of type Win32 DWrite (Since: 1.18)
  *
  * #cairo_font_type_t is used to describe the type of a given font
  * face or scaled font. The font types are also known as "font
@@ -1778,13 +1849,24 @@ typedef cairo_status_t (*cairo_user_scaled_font_init_func_t) (cairo_scaled_font_
  *
  * The callback is mandatory, and expected to draw the glyph with code @glyph to
  * the cairo context @cr.  @cr is prepared such that the glyph drawing is done in
- * font space.  That is, the matrix set on @cr is the scale matrix of @scaled_font,
+ * font space.  That is, the matrix set on @cr is the scale matrix of @scaled_font.
  * The @extents argument is where the user font sets the font extents for
  * @scaled_font.  However, if user prefers to draw in user space, they can
- * achieve that by changing the matrix on @cr.  All cairo rendering operations
- * to @cr are permitted, however, the result is undefined if any source other
- * than the default source on @cr is used.  That means, glyph bitmaps should
- * be rendered using cairo_mask() instead of cairo_paint().
+ * achieve that by changing the matrix on @cr.
+ *
+ * All cairo rendering operations to @cr are permitted. However, when
+ * this callback is set with
+ * cairo_user_font_face_set_render_glyph_func(), the result is
+ * undefined if any source other than the default source on @cr is
+ * used.  That means, glyph bitmaps should be rendered using
+ * cairo_mask() instead of cairo_paint().
+ *
+ * When this callback is set with
+ * cairo_user_font_face_set_render_color_glyph_func(), the default
+ * source is black. Setting the source is a valid
+ * operation. cairo_user_scaled_font_get_foreground_marker() or
+ * cairo_user_scaled_font_get_foreground_source() may be called to
+ * obtain the current source at the time the glyph is rendered.
  *
  * Other non-default settings on @cr include a font size of 1.0 (given that
  * it is set up to be in font space), and font options corresponding to
@@ -1804,8 +1886,20 @@ typedef cairo_status_t (*cairo_user_scaled_font_init_func_t) (cairo_scaled_font_
  * extents, it must be ink extents, and include the extents of all drawing
  * done to @cr in the callback.
  *
- * Returns: %CAIRO_STATUS_SUCCESS upon success, or
- * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ * Where both color and non-color callbacks has been set using
+ * cairo_user_font_face_set_render_color_glyph_func(), and
+ * cairo_user_font_face_set_render_glyph_func(), the color glyph
+ * callback will be called first. If the color glyph callback returns
+ * %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED, any drawing operations are
+ * discarded and the non-color callback will be called. This is the
+ * only case in which the %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED may
+ * be returned from a render callback. This fallback sequence allows a
+ * user font face to contain a combination of both color and non-color
+ * glyphs.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success,
+ * %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED if fallback options should be tried,
+ * or %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
  *
  * Since: 1.8
  **/
@@ -1941,6 +2035,10 @@ cairo_user_font_face_set_render_glyph_func (cairo_font_face_t                   
 					    cairo_user_scaled_font_render_glyph_func_t  render_glyph_func);
 
 cairo_public void
+cairo_user_font_face_set_render_color_glyph_func (cairo_font_face_t                          *font_face,
+                                                  cairo_user_scaled_font_render_glyph_func_t  render_glyph_func);
+
+cairo_public void
 cairo_user_font_face_set_text_to_glyphs_func (cairo_font_face_t                            *font_face,
 					      cairo_user_scaled_font_text_to_glyphs_func_t  text_to_glyphs_func);
 
@@ -1956,12 +2054,20 @@ cairo_user_font_face_get_init_func (cairo_font_face_t *font_face);
 cairo_public cairo_user_scaled_font_render_glyph_func_t
 cairo_user_font_face_get_render_glyph_func (cairo_font_face_t *font_face);
 
+cairo_public cairo_user_scaled_font_render_glyph_func_t
+cairo_user_font_face_get_render_color_glyph_func (cairo_font_face_t *font_face);
+
 cairo_public cairo_user_scaled_font_text_to_glyphs_func_t
 cairo_user_font_face_get_text_to_glyphs_func (cairo_font_face_t *font_face);
 
 cairo_public cairo_user_scaled_font_unicode_to_glyph_func_t
 cairo_user_font_face_get_unicode_to_glyph_func (cairo_font_face_t *font_face);
 
+cairo_public cairo_pattern_t *
+cairo_user_scaled_font_get_foreground_marker (cairo_scaled_font_t *scaled_font);
+
+cairo_public cairo_pattern_t *
+cairo_user_scaled_font_get_foreground_source (cairo_scaled_font_t *scaled_font);
 
 /* Query functions */
 
@@ -1988,6 +2094,9 @@ cairo_get_fill_rule (cairo_t *cr);
 
 cairo_public double
 cairo_get_line_width (cairo_t *cr);
+
+cairo_public cairo_bool_t
+cairo_get_hairline (cairo_t *cr);
 
 cairo_public cairo_line_cap_t
 cairo_get_line_cap (cairo_t *cr);
@@ -2291,6 +2400,16 @@ cairo_public cairo_surface_t *
 cairo_surface_create_observer (cairo_surface_t *target,
 			       cairo_surface_observer_mode_t mode);
 
+/**
+ * cairo_surface_observer_callback_t:
+ * @observer: the #cairo_surface_observer_t
+ * @target: the observed surface
+ * @data: closure used when adding the callback
+ *
+ * A generic callback function for surface operations.
+ *
+ * Since: 1.12
+ **/
 typedef void (*cairo_surface_observer_callback_t) (cairo_surface_t *observer,
 						   cairo_surface_t *target,
 						   void *data);
@@ -2331,34 +2450,34 @@ cairo_surface_observer_add_finish_callback (cairo_surface_t *abstract_surface,
 					    void *data);
 
 cairo_public cairo_status_t
-cairo_surface_observer_print (cairo_surface_t *surface,
+cairo_surface_observer_print (cairo_surface_t *abstract_surface,
 			      cairo_write_func_t write_func,
 			      void *closure);
 cairo_public double
-cairo_surface_observer_elapsed (cairo_surface_t *surface);
+cairo_surface_observer_elapsed (cairo_surface_t *abstract_surface);
 
 cairo_public cairo_status_t
-cairo_device_observer_print (cairo_device_t *device,
+cairo_device_observer_print (cairo_device_t *abstract_device,
 			     cairo_write_func_t write_func,
 			     void *closure);
 
 cairo_public double
-cairo_device_observer_elapsed (cairo_device_t *device);
+cairo_device_observer_elapsed (cairo_device_t *abstract_device);
 
 cairo_public double
-cairo_device_observer_paint_elapsed (cairo_device_t *device);
+cairo_device_observer_paint_elapsed (cairo_device_t *abstract_device);
 
 cairo_public double
-cairo_device_observer_mask_elapsed (cairo_device_t *device);
+cairo_device_observer_mask_elapsed (cairo_device_t *abstract_device);
 
 cairo_public double
-cairo_device_observer_fill_elapsed (cairo_device_t *device);
+cairo_device_observer_fill_elapsed (cairo_device_t *abstract_device);
 
 cairo_public double
-cairo_device_observer_stroke_elapsed (cairo_device_t *device);
+cairo_device_observer_stroke_elapsed (cairo_device_t *abstract_device);
 
 cairo_public double
-cairo_device_observer_glyphs_elapsed (cairo_device_t *device);
+cairo_device_observer_glyphs_elapsed (cairo_device_t *abstract_device);
 
 cairo_public cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface);
@@ -2385,26 +2504,37 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_PS: The surface is of type ps, since 1.2
  * @CAIRO_SURFACE_TYPE_XLIB: The surface is of type xlib, since 1.2
  * @CAIRO_SURFACE_TYPE_XCB: The surface is of type xcb, since 1.2
- * @CAIRO_SURFACE_TYPE_GLITZ: The surface is of type glitz, since 1.2
+ * @CAIRO_SURFACE_TYPE_GLITZ: The surface is of type glitz, since 1.2, deprecated 1.18
+ *   (glitz support have been removed, this surface type will never be set by cairo)
  * @CAIRO_SURFACE_TYPE_QUARTZ: The surface is of type quartz, since 1.2
  * @CAIRO_SURFACE_TYPE_WIN32: The surface is of type win32, since 1.2
- * @CAIRO_SURFACE_TYPE_BEOS: The surface is of type beos, since 1.2
- * @CAIRO_SURFACE_TYPE_DIRECTFB: The surface is of type directfb, since 1.2
+ * @CAIRO_SURFACE_TYPE_BEOS: The surface is of type beos, since 1.2, deprecated 1.18
+ *   (beos support have been removed, this surface type will never be set by cairo)
+ * @CAIRO_SURFACE_TYPE_DIRECTFB: The surface is of type directfb, since 1.2, deprecated 1.18
+ *   (directfb support have been removed, this surface type will never be set by cairo)
  * @CAIRO_SURFACE_TYPE_SVG: The surface is of type svg, since 1.2
- * @CAIRO_SURFACE_TYPE_OS2: The surface is of type os2, since 1.4
+ * @CAIRO_SURFACE_TYPE_OS2: The surface is of type os2, since 1.4, deprecated 1.18
+ *   (os2 support have been removed, this surface type will never be set by cairo)
  * @CAIRO_SURFACE_TYPE_WIN32_PRINTING: The surface is a win32 printing surface, since 1.6
  * @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image, since 1.6
  * @CAIRO_SURFACE_TYPE_SCRIPT: The surface is of type script, since 1.10
- * @CAIRO_SURFACE_TYPE_QT: The surface is of type Qt, since 1.10
+ * @CAIRO_SURFACE_TYPE_QT: The surface is of type Qt, since 1.10, deprecated 1.18
+ *   (Ot support have been removed, this surface type will never be set by cairo)
  * @CAIRO_SURFACE_TYPE_RECORDING: The surface is of type recording, since 1.10
- * @CAIRO_SURFACE_TYPE_VG: The surface is a OpenVG surface, since 1.10
- * @CAIRO_SURFACE_TYPE_GL: The surface is of type OpenGL, since 1.10
- * @CAIRO_SURFACE_TYPE_DRM: The surface is of type Direct Render Manager, since 1.10
+ * @CAIRO_SURFACE_TYPE_VG: The surface is a OpenVG surface, since 1.10, deprecated 1.18
+ *   (OpenVG support have been removed, this surface type will never be set by cairo)
+ * @CAIRO_SURFACE_TYPE_GL: The surface is of type OpenGL, since 1.10, deprecated 1.18
+ *   (OpenGL support have been removed, this surface type will never be set by cairo)
+ * @CAIRO_SURFACE_TYPE_DRM: The surface is of type Direct Render Manager, since 1.10, deprecated 1.18
+ *   (DRM support have been removed, this surface type will never be set by cairo)
  * @CAIRO_SURFACE_TYPE_TEE: The surface is of type 'tee' (a multiplexing surface), since 1.10
  * @CAIRO_SURFACE_TYPE_XML: The surface is of type XML (for debugging), since 1.10
+ * @CAIRO_SURFACE_TYPE_SKIA: The surface is of type Skia, since 1.10, deprecated 1.18
+ *   (Skia support have been removed, this surface type will never be set by cairo)
  * @CAIRO_SURFACE_TYPE_SUBSURFACE: The surface is a subsurface created with
  *   cairo_surface_create_for_rectangle(), since 1.10
- * @CAIRO_SURFACE_TYPE_COGL: This surface is of type Cogl, since 1.12
+ * @CAIRO_SURFACE_TYPE_COGL: This surface is of type Cogl, since 1.12, deprecated 1.18
+ *   (Cogl support have been removed, this surface type will never be set by cairo)
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -2573,26 +2703,6 @@ cairo_surface_show_page (cairo_surface_t *surface);
 
 cairo_public cairo_bool_t
 cairo_surface_has_show_text_glyphs (cairo_surface_t *surface);
-
-/**
- * _cairo_subpixel_antialiasing_t:
- * @CAIRO_SUBPIXEL_ANTIALIASING_ENABLED: subpixel antialiasing is enabled
- * for this surface.
- * @CAIRO_SUBPIXEL_ANTIALIASING_DISABLED: subpixel antialiasing is disabled
- * for this surface.
- */
-typedef enum _cairo_subpixel_antialiasing_t {
-    CAIRO_SUBPIXEL_ANTIALIASING_ENABLED,
-    CAIRO_SUBPIXEL_ANTIALIASING_DISABLED
-} cairo_subpixel_antialiasing_t;
-
-cairo_public void
-cairo_surface_set_subpixel_antialiasing (cairo_surface_t *surface,
-                                         cairo_subpixel_antialiasing_t enabled);
-
-cairo_public cairo_subpixel_antialiasing_t
-cairo_surface_get_subpixel_antialiasing (cairo_surface_t *surface);
-
 
 /* Image-surface functions */
 

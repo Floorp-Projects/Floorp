@@ -66,7 +66,7 @@ _cairo_xcb_pixmap_finish (void *abstract_surface)
 	if (unlikely (status))
 	    return status;
 
-	_cairo_xcb_connection_free_pixmap (surface->connection,
+	xcb_free_pixmap (surface->connection->xcb_connection,
 					   surface->pixmap);
 	_cairo_xcb_connection_release (surface->connection);
     }

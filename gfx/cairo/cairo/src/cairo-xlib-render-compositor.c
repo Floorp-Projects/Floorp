@@ -1204,6 +1204,7 @@ _cairo_xlib_surface_add_glyph (cairo_xlib_display_t *display,
 					     glyph_index,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS |
 					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
+                                             NULL, /* foreground color */
 					     pscaled_glyph);
 	if (unlikely (status))
 	    return status;
@@ -1619,6 +1620,7 @@ composite_glyphs (void				*surface,
 	status = _cairo_scaled_glyph_lookup (info->font,
 					     glyphs[i].index,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
+                                             NULL, /* foreground color */
 					     &glyph);
 	if (unlikely (status))
 	    return status;

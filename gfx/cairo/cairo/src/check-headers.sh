@@ -11,7 +11,7 @@ echo Checking public headers for missing cairo_public decorators
 cd "$srcdir"
 FILES=$all_cairo_headers
 if test "x$FILES" = x; then
-	FILES=`find . -name 'cairo*.h' ! -name '*-private.h' ! -name 'cairoint.h'`
+	FILES=`find . -name 'cairo*.h' ! -name '*-private.h' ! -name 'cairoint.h' ! -name '*-inline.h'`
 fi
 
 grep -B 1 '^cairo_.*[ 	]\+(' /dev/null $FILES |

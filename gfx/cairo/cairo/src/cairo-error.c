@@ -44,7 +44,7 @@
 
 #include <assert.h>
 
-/**
+/*< private >
  * _cairo_error:
  * @status: a status value indicating an error, (eg. not
  * %CAIRO_STATUS_SUCCESS)

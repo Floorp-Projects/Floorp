@@ -74,6 +74,10 @@ typedef struct _cairo_pdf_source_surface_entry {
     unsigned char *unique_id;
     unsigned long unique_id_length;
     cairo_operator_t operator;
+
+    /* If not 0, this is the recording surface region id of the source surface. */
+    int          region_id;
+
     cairo_bool_t interpolate;
     cairo_bool_t stencil_mask;
     cairo_bool_t smask;
@@ -95,6 +99,7 @@ typedef struct _cairo_pdf_source_surface_entry {
 typedef struct _cairo_pdf_source_surface {
     cairo_pattern_type_t type;
     cairo_surface_t *surface;
+    unsigned int region_id;
     cairo_pattern_t *raster_pattern;
     cairo_pdf_source_surface_entry_t *hash_entry;
 } cairo_pdf_source_surface_t;
@@ -108,6 +113,9 @@ typedef struct _cairo_pdf_pattern {
     cairo_pdf_resource_t gstate_res;
     cairo_operator_t operator;
     cairo_bool_t is_shading;
+
+    /* Index into nodes array in cairo_pdf_surface_node_entry_t or -1 if not used */
+    int          region_id;
 
     /* PDF pattern space is the pattern matrix concatenated with the
      * initial space of the parent object. If the parent object is the
@@ -160,38 +168,87 @@ typedef struct _cairo_pdf_jbig2_global {
     cairo_bool_t emitted;
 } cairo_pdf_jbig2_global_t;
 
+typedef struct _cairo_pdf_page_info {
+    double width;
+    double height;
+    cairo_pdf_resource_t page_res;
+    cairo_pdf_resource_t content;
+    cairo_pdf_resource_t resources;
+    cairo_pdf_resource_t thumbnail;
+    cairo_array_t annots; /* <cairo_pdf_resource_t> */
+    int struct_parents;
+} cairo_pdf_page_info_t;
+
+
 /* cairo-pdf-interchange.c types */
 
-struct page_mcid {
-    int page;
-    int mcid;
-};
-
-struct tag_extents {
+typedef struct _pdf_tag_extents {
     cairo_rectangle_int_t extents;
     cairo_bool_t valid;
-    cairo_list_t link;
-};
+} cairo_pdf_tag_extents_t;
+
+typedef struct _pdf_page_mcid {
+    int order;
+    int page;
+    cairo_pdf_resource_t xobject_res; /* 0 if not in an XObject */
+    int mcid;
+    struct _cairo_pdf_struct_tree_node *child_node;
+} cairo_pdf_page_mcid_t;
+
+/* The non PDF_NODE_STRUCT types are excluded from the struct tree embedded in
+ * the PDF. */
+typedef enum _cairo_pdf_tree_node_type {
+    PDF_NODE_STRUCT,
+    PDF_NODE_CONTENT,
+    PDF_NODE_CONTENT_REF,
+    PDF_NODE_ARTIFACT,
+} cairo_pdf_tree_node_type_t;
 
 typedef struct _cairo_pdf_struct_tree_node {
+    cairo_hash_entry_t hash;
+    cairo_pdf_tree_node_type_t type;
     char *name;
     cairo_pdf_resource_t res;
     struct _cairo_pdf_struct_tree_node *parent;
     cairo_list_t children;
-    cairo_array_t mcid; /* array of struct page_mcid */
-    cairo_pdf_resource_t annot_res; /* 0 if no annot */
-    struct tag_extents extents;
-    cairo_list_t link;
+    cairo_array_t mcid; /* array of cairo_pdf_page_mcid_t */
+    struct _cairo_pdf_annotation *annot;
+    cairo_pdf_tag_extents_t extents;
+
+    union {
+	cairo_content_attrs_t content; /* type == PDF_NODE_CONTENT */
+	cairo_content_ref_attrs_t content_ref; /* type == PDF_NODE_CONTENT_REF */
+    } attributes;
+
+    cairo_list_t link; /* linked list of parent's children */
 } cairo_pdf_struct_tree_node_t;
+
+typedef struct _cairo_pdf_command_entry {
+    cairo_hash_entry_t base;
+    unsigned int recording_id;
+    unsigned int command_id;
+    cairo_pdf_struct_tree_node_t *node;
+} cairo_pdf_command_entry_t;
+
+typedef struct _cairo_recording_surface_stack_entry {
+    cairo_bool_t ignore_surface;
+    cairo_pdf_struct_tree_node_t *current_node;
+} cairo_recording_surface_stack_entry_t;
+
+typedef struct _cairo_pdf_content_tag {
+    cairo_hash_entry_t base;
+    cairo_pdf_struct_tree_node_t *node;
+} cairo_pdf_content_tag_t;
 
 typedef struct _cairo_pdf_annotation {
     cairo_pdf_struct_tree_node_t *node; /* node containing the annotation */
     cairo_link_attrs_t link_attrs;
+    cairo_pdf_resource_t res;
 } cairo_pdf_annotation_t;
 
 typedef struct _cairo_pdf_named_dest {
     cairo_hash_entry_t base;
-    struct tag_extents extents;
+    cairo_pdf_tag_extents_t extents;
     cairo_dest_attrs_t attrs;
     int page;
 } cairo_pdf_named_dest_t;
@@ -227,19 +284,70 @@ struct docinfo {
     char *mod_date;
 };
 
+struct metadata {
+    char *name;
+    char *value;
+};
+
+typedef enum _cairo_pdf_operation_flags_t {
+    PDF_NONE = 0,
+    PDF_CONTENT,
+    PDF_BEGIN,
+    PDF_END,
+    PDF_GROUP,
+} cairo_pdf_operation_flags_t;
+
+typedef struct _pdf_command_list {
+    cairo_array_t commands;
+    struct _pdf_command_list *parent;
+} cairo_pdf_command_list_t;
+
+typedef struct _pdf_operation {
+    cairo_pdf_command_list_t *group;
+    cairo_pdf_struct_tree_node_t *node;
+    unsigned int command_id;
+    int mcid_index;
+    cairo_pdf_operation_flags_t flags;
+} cairo_pdf_command_t;
+
+typedef struct _pdf_recording_surface_commands {
+    cairo_surface_t *recording_surface;
+    cairo_pdf_command_list_t *command_list;
+    unsigned int region_id;
+} cairo_pdf_recording_surface_commands_t;
+
 typedef struct _cairo_pdf_interchange {
     cairo_tag_stack_t analysis_tag_stack;
     cairo_tag_stack_t render_tag_stack;
-    cairo_array_t push_data; /* records analysis_tag_stack data field for each push */
-    int push_data_index;
     cairo_pdf_struct_tree_node_t *struct_root;
-    cairo_pdf_struct_tree_node_t *current_node;
-    cairo_pdf_struct_tree_node_t *begin_page_node;
-    cairo_pdf_struct_tree_node_t *end_page_node;
-    cairo_array_t parent_tree; /* parent tree resources */
-    cairo_array_t mcid_to_tree; /* mcid to tree node mapping for current page */
+
+    /* Current position in the tree during the analysis stage and across
+     * pages as each page adds to the tree */
+    cairo_pdf_struct_tree_node_t *current_analyze_node;
+
+    /* Currently open tag content containing content. NULL if no content tag open.
+     * A content containg tag may be open across pages */
+    cairo_pdf_struct_tree_node_t *current_render_node;
+    cairo_pdf_struct_tree_node_t *next_page_render_node;
+
+    cairo_array_t recording_surface_stack; /* cairo_recording_surface_stack_entry_t */
+    cairo_pdf_resource_t current_recording_surface_res;
+    cairo_hash_table_t *command_to_node_map; /* <cairo_pdf_surface_node_entry_t> */
+    cairo_bool_t ignore_current_surface;
+    cairo_hash_table_t *content_tag_map; /* <char*,cairo_pdf_content_tag_t> */
+
+    cairo_array_t parent_tree; /* <cairo_pdf_resource_t> */
     cairo_array_t annots; /* array of pointers to cairo_pdf_annotation_t */
+    cairo_pdf_resource_t content_parent_res;
     cairo_pdf_resource_t parent_tree_res;
+
+    /* mcid to tree node for current page or group */
+    cairo_array_t mcid_to_tree; /* <cairo_pdf_struct_tree_node_t *> */
+
+    cairo_array_t page_commands; /* <cairo_pdf_command_list_t> */
+    cairo_pdf_command_list_t *current_commands; /* <cairo_pdf_command_list_t> */
+    cairo_array_t recording_surface_commands;  /* <cairo_pdf_recording_surface_commands_t> */
+
     cairo_list_t extents_list;
     cairo_hash_table_t *named_dests;
     int num_dests;
@@ -248,8 +356,22 @@ typedef struct _cairo_pdf_interchange {
     int annot_page;
     cairo_array_t outline; /* array of pointers to cairo_pdf_outline_entry_t; */
     struct docinfo docinfo;
+    cairo_array_t custom_metadata; /* array of struct metadata */
+    cairo_bool_t content_emitted;
+    cairo_bool_t marked_content_open;
+    unsigned int recording_id;
+    unsigned int command_id;
+    cairo_bool_t render_next_command_has_content;
+    int mcid_order;
 
 } cairo_pdf_interchange_t;
+
+typedef struct _cairo_pdf_color_glyph {
+    cairo_hash_entry_t   base;
+    cairo_scaled_font_t *scaled_font;
+    unsigned long        glyph_index;
+    cairo_bool_t         supported;
+} cairo_pdf_color_glyph_t;
 
 /* pdf surface data */
 
@@ -269,18 +391,19 @@ struct _cairo_pdf_surface {
     cairo_matrix_t cairo_to_pdf;
     cairo_bool_t in_xobject;
 
-    cairo_array_t objects;
-    cairo_array_t pages;
+    cairo_array_t objects; /* cairo_pdf_resource_t - list of every resource in the PDF */
+    cairo_array_t pages; /* <cairo_pdf_page_info_t> */
     cairo_array_t rgb_linear_functions;
     cairo_array_t alpha_linear_functions;
-    cairo_array_t page_patterns;
-    cairo_array_t page_surfaces;
-    cairo_array_t doc_surfaces;
-    cairo_hash_table_t *all_surfaces;
+    cairo_array_t page_patterns; /* cairo_pdf_pattern_t */
+    cairo_array_t page_surfaces; /* cairo_pdf_source_surface_t */
+    cairo_array_t doc_surfaces; /* cairo_pdf_source_surface_t */
+    cairo_hash_table_t *all_surfaces; /* cairo_pdf_source_surface_entry_t* */
+    int           duplicate_surface_number;
     cairo_array_t smask_groups;
     cairo_array_t knockout_group;
     cairo_array_t jbig2_global;
-    cairo_array_t page_heights;
+    cairo_hash_table_t *color_glyphs;
 
     cairo_scaled_font_subsets_t *font_subsets;
     cairo_array_t fonts;
@@ -302,7 +425,7 @@ struct _cairo_pdf_surface {
 	cairo_bool_t active;
 	cairo_pdf_resource_t self;
 	cairo_pdf_resource_t length;
-	long start_offset;
+	long long start_offset;
 	cairo_bool_t compressed;
 	cairo_output_stream_t *old_output;
     } pdf_stream;
@@ -328,11 +451,13 @@ struct _cairo_pdf_surface {
 
     cairo_pdf_operators_t pdf_operators;
     cairo_paginated_mode_t paginated_mode;
+    cairo_bool_t type3_replay;
     cairo_bool_t select_pattern_gstate_saved;
 
     cairo_bool_t force_fallbacks;
 
     cairo_operator_t current_operator;
+    cairo_bool_t reset_gs_required;
     cairo_bool_t current_pattern_is_solid_color;
     cairo_bool_t current_color_is_stroke;
     double current_color_red;
@@ -357,6 +482,8 @@ struct _cairo_pdf_surface {
     cairo_image_surface_t *thumbnail_image;
 
     cairo_surface_t *paginated_surface;
+
+    cairo_bool_t debug;
 };
 
 cairo_private cairo_pdf_resource_t
@@ -393,13 +520,54 @@ _cairo_pdf_surface_object_begin (cairo_pdf_surface_t *surface,
 cairo_private void
 _cairo_pdf_surface_object_end (cairo_pdf_surface_t *surface);
 
+cairo_private cairo_bool_t
+_cairo_pdf_interchange_struct_tree_requires_recording_surface (
+    cairo_pdf_surface_t           *surface,
+    const cairo_surface_pattern_t *recording_surface,
+    cairo_analysis_source_t        source_type);
+
+cairo_private cairo_int_status_t
+_cairo_pdf_interchange_recording_source_surface_begin (
+    cairo_pdf_surface_t           *surface,
+    const cairo_surface_pattern_t *recording_surface_pattern,
+    unsigned int                   region_id,
+    cairo_analysis_source_t        source_type);
+
+cairo_private cairo_int_status_t
+_cairo_pdf_interchange_recording_source_surface_end (
+    cairo_pdf_surface_t           *surface,
+    const cairo_surface_pattern_t *recording_surface_pattern,
+    unsigned int                   region_id,
+    cairo_analysis_source_t        source_type);
+
+cairo_private cairo_int_status_t
+_cairo_pdf_interchange_emit_recording_surface_begin (
+    cairo_pdf_surface_t     *surface,
+    cairo_surface_t         *recording_surface,
+    int                      region_id,
+    cairo_pdf_resource_t     surface_resource,
+    int                     *struct_parents);
+
+cairo_private cairo_int_status_t
+_cairo_pdf_interchange_emit_recording_surface_end (
+    cairo_pdf_surface_t     *surface,
+    cairo_surface_t         *recording_surface);
+
 cairo_private cairo_int_status_t
 _cairo_pdf_interchange_tag_end (cairo_pdf_surface_t *surface,
 				const char          *name);
 
 cairo_private cairo_int_status_t
+_cairo_pdf_interchange_command_id (cairo_pdf_surface_t  *surface,
+				   unsigned int          recording_id,
+				   unsigned int          command_id);
+
+cairo_private cairo_int_status_t
 _cairo_pdf_interchange_add_operation_extents (cairo_pdf_surface_t         *surface,
 					      const cairo_rectangle_int_t *extents);
+
+cairo_private cairo_int_status_t
+_cairo_pdf_interchange_add_content (cairo_pdf_surface_t         *surface);
 
 cairo_private cairo_int_status_t
 _cairo_pdf_interchange_write_page_objects (cairo_pdf_surface_t *surface);
@@ -419,5 +587,10 @@ cairo_private cairo_int_status_t
 _cairo_pdf_interchange_set_metadata (cairo_pdf_surface_t  *surface,
 				     cairo_pdf_metadata_t  metadata,
 				     const char           *utf8);
+
+cairo_private cairo_int_status_t
+_cairo_pdf_interchange_set_custom_metadata (cairo_pdf_surface_t  *surface,
+					const char           *name,
+					const char           *value);
 
 #endif /* CAIRO_PDF_SURFACE_PRIVATE_H */

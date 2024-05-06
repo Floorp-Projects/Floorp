@@ -623,16 +623,6 @@ cell_list_rewind (struct cell_list *cells)
 }
 
 inline static void
-cell_list_maybe_rewind (struct cell_list *cells, int x)
-{
-    if (x < cells->cursor->x) {
-	cells->cursor = cells->rewind;
-	if (x < cells->cursor->x)
-	    cells->cursor = &cells->head;
-    }
-}
-
-inline static void
 cell_list_set_rewind (struct cell_list *cells)
 {
     cells->rewind = cells->cursor;

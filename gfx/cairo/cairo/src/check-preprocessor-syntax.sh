@@ -49,7 +49,7 @@ grep . >&2 && stat=1
 
 
 echo 'Checking that there is no #include <cairo.*.h>'
-grep '#.*\<include\>.*<.*cairo' $ALL >&2 && stat=1
+grep '^[^*]#.*\<include\>.*<.*cairo' $ALL >&2 && stat=1
 
 
 echo 'Checking that feature conditionals are used with #if only (not #ifdef)'

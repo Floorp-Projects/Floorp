@@ -49,6 +49,8 @@ _cairo_stroke_style_init (cairo_stroke_style_t *style)
     style->dash = NULL;
     style->num_dashes = 0;
     style->dash_offset = 0.0;
+
+    style->is_hairline = FALSE;
 }
 
 cairo_status_t
@@ -79,6 +81,8 @@ _cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
     }
 
     style->dash_offset = other->dash_offset;
+
+    style->is_hairline = other->is_hairline;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -199,7 +203,7 @@ _cairo_stroke_style_dash_period (const cairo_stroke_style_t *style)
  * respect to c:
  *   solve ( diff (integrate ((f(w,d) - c*d)^2, d, 0, w), c), c)
  * Which leads to c = 9/32*pi*w
- * Since we're not interested in the true area, but just in a coverage extimate,
+ * Since we're not interested in the true area, but just in a coverage estimate,
  * we always divide the real area by the line width (w).
  * The same computation for square caps would be
  *   f(w,d) = 2 * integrate(w/2, x, -d/2, d/2)

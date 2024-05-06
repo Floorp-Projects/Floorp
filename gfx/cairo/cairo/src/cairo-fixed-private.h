@@ -53,6 +53,11 @@
 #define CAIRO_FIXED_ONE_DOUBLE ((double)(1 << CAIRO_FIXED_FRAC_BITS))
 #define CAIRO_FIXED_EPSILON    ((cairo_fixed_t)(1))
 
+#define CAIRO_FIXED_MAX        INT32_MAX /* Maximum fixed point value */
+#define CAIRO_FIXED_MIN        INT32_MIN /* Minimum fixed point value */
+#define CAIRO_FIXED_MAX_DOUBLE (((double) CAIRO_FIXED_MAX) / CAIRO_FIXED_ONE_DOUBLE)
+#define CAIRO_FIXED_MIN_DOUBLE (((double) CAIRO_FIXED_MIN) / CAIRO_FIXED_ONE_DOUBLE)
+
 #define CAIRO_FIXED_ERROR_DOUBLE (1. / (2 * CAIRO_FIXED_ONE_DOUBLE))
 
 #define CAIRO_FIXED_FRAC_MASK  ((cairo_fixed_t)(((cairo_fixed_unsigned_t)(-1)) >> (CAIRO_FIXED_BITS - CAIRO_FIXED_FRAC_BITS)))
@@ -61,7 +66,7 @@
 static inline cairo_fixed_t
 _cairo_fixed_from_int (int i)
 {
-    return i << CAIRO_FIXED_FRAC_BITS;
+    return (cairo_fixed_unsigned_t)i << CAIRO_FIXED_FRAC_BITS;
 }
 
 /* This is the "magic number" approach to converting a double into fixed
@@ -127,6 +132,17 @@ _cairo_fixed_from_double (double d)
 # error Please define a magic number for your fixed point type!
 # error See cairo-fixed-private.h for details.
 #endif
+
+static inline cairo_fixed_t
+_cairo_fixed_from_double_clamped (double d, double tolerance)
+{
+    if (d > CAIRO_FIXED_MAX_DOUBLE - tolerance)
+       d = CAIRO_FIXED_MAX_DOUBLE - tolerance;
+    else if (d < CAIRO_FIXED_MIN_DOUBLE + tolerance)
+       d = CAIRO_FIXED_MIN_DOUBLE + tolerance;
+
+    return _cairo_fixed_from_double (d);
+}
 
 static inline cairo_fixed_t
 _cairo_fixed_from_26_6 (uint32_t i)

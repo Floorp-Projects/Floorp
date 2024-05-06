@@ -184,6 +184,14 @@ _cairo_in_fill_line_to (void *closure,
 }
 
 static cairo_status_t
+_cairo_in_fill_add_point (void *closure,
+                          const cairo_point_t *point,
+                          const cairo_slope_t *tangent)
+{
+    return _cairo_in_fill_line_to (closure, point);
+};
+
+static cairo_status_t
 _cairo_in_fill_curve_to (void *closure,
 			 const cairo_point_t *b,
 			 const cairo_point_t *c,
@@ -217,7 +225,7 @@ _cairo_in_fill_curve_to (void *closure,
 
     /* XXX Investigate direct inspection of the inflections? */
     if (! _cairo_spline_init (&spline,
-			      (cairo_spline_add_point_func_t)_cairo_in_fill_line_to,
+			      _cairo_in_fill_add_point,
 			      in_fill,
 			      &in_fill->current_point, b, c, d))
     {

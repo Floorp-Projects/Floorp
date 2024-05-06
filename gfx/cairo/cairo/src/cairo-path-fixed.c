@@ -172,10 +172,10 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
     return CAIRO_STATUS_SUCCESS;
 }
 
-unsigned long
+uintptr_t
 _cairo_path_fixed_hash (const cairo_path_fixed_t *path)
 {
-    unsigned long hash = _CAIRO_HASH_INIT_VALUE;
+    uintptr_t hash = _CAIRO_HASH_INIT_VALUE;
     const cairo_path_buf_t *buf;
     unsigned int count;
 
@@ -1135,6 +1135,14 @@ _cpf_line_to (void *closure,
 }
 
 static cairo_status_t
+_cpf_add_point (void *closure,
+		const cairo_point_t *point,
+		const cairo_slope_t *tangent)
+{
+    return _cpf_line_to (closure, point);
+};
+
+static cairo_status_t
 _cpf_curve_to (void		*closure,
 	       const cairo_point_t	*p1,
 	       const cairo_point_t	*p2,
@@ -1146,8 +1154,8 @@ _cpf_curve_to (void		*closure,
     cairo_point_t *p0 = &cpf->current_point;
 
     if (! _cairo_spline_init (&spline,
-			      (cairo_spline_add_point_func_t)cpf->line_to,
-			      cpf->closure,
+			      _cpf_add_point,
+			      cpf,
 			      p0, p1, p2, p3))
     {
 	return _cpf_line_to (closure, p3);

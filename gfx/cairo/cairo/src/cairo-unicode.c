@@ -99,9 +99,7 @@
 
 #define UNICODE_VALID(Char)                   \
     ((Char) < 0x110000 &&                     \
-     (((Char) & 0xFFFFF800) != 0xD800) &&     \
-     ((Char) < 0xFDD0 || (Char) > 0xFDEF) &&  \
-     ((Char) & 0xFFFE) != 0xFFFE)
+     (((Char) & 0xFFFFF800) != 0xD800))
 
 static const char utf8_skip_data[256] = {
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,

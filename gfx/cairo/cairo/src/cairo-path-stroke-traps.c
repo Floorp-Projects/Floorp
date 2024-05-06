@@ -102,17 +102,29 @@ stroker_init (struct stroker		*stroker,
     stroker->tolerance = tolerance;
     stroker->traps = traps;
 
-    /* To test whether we need to join two segments of a spline using
-     * a round-join or a bevel-join, we can inspect the angle between the
-     * two segments. If the difference between the chord distance
-     * (half-line-width times the cosine of the bisection angle) and the
-     * half-line-width itself is greater than tolerance then we need to
-     * inject a point.
+    /* If `CAIRO_LINE_JOIN_ROUND` is selected and a joint's `arc height`
+     * is greater than `tolerance` then two segments are joined with
+     * round-join, otherwise bevel-join is used.
+     *
+     * `Arc height` is the difference of the "half of a line width" and
+     * the "half of a line width" times `cos(half the angle between segment vectors)`.
+     *
+     * See detailed description in the `_cairo_path_fixed_stroke_to_polygon()`
+     * function in the `cairo-path-stroke-polygon.c` file or follow the
+     * https://gitlab.freedesktop.org/cairo/cairo/-/merge_requests/372#note_1698225
+     * link to see the detailed description with an illustration.
      */
-    stroker->spline_cusp_tolerance = 1 - tolerance / stroker->half_line_width;
-    stroker->spline_cusp_tolerance *= stroker->spline_cusp_tolerance;
-    stroker->spline_cusp_tolerance *= 2;
-    stroker->spline_cusp_tolerance -= 1;
+    double scaled_hlw = hypot(stroker->half_line_width * ctm->xx,
+			      stroker->half_line_width * ctm->yx);
+
+    if (scaled_hlw <= tolerance) {
+	stroker->spline_cusp_tolerance = -1.0;
+    } else {
+	stroker->spline_cusp_tolerance = 1 - tolerance / scaled_hlw;
+	stroker->spline_cusp_tolerance *= stroker->spline_cusp_tolerance;
+	stroker->spline_cusp_tolerance *= 2;
+	stroker->spline_cusp_tolerance -= 1;
+    }
 
     stroker->ctm_determinant = _cairo_matrix_compute_determinant (stroker->ctm);
     stroker->ctm_det_positive = stroker->ctm_determinant >= 0.0;
@@ -931,6 +943,14 @@ line_to_dashed (void *closure, const cairo_point_t *point)
 }
 
 static cairo_status_t
+add_point (void *closure,
+	   const cairo_point_t *point,
+	   const cairo_slope_t *tangent)
+{
+    return line_to_dashed (closure, point);
+};
+
+static cairo_status_t
 spline_to (void *closure,
 	   const cairo_point_t *point,
 	   const cairo_slope_t *tangent)
@@ -1042,7 +1062,7 @@ curve_to_dashed (void *closure,
     cairo_spline_add_point_func_t func;
     cairo_status_t status;
 
-    func = (cairo_spline_add_point_func_t)line_to_dashed;
+    func = add_point;
 
     if (stroker->has_bounds &&
 	! _cairo_spline_intersects (&stroker->current_face.point, b, c, d,

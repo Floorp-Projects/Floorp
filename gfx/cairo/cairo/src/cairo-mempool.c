@@ -78,14 +78,14 @@ free_bits (cairo_mempool_t *pool, size_t start, int bits, cairo_bool_t clear)
     struct _cairo_memblock *block;
 
     if (clear)
-	clear_bits (pool, start, start + (1 << bits));
+	clear_bits (pool, start, start + (((size_t) 1) << bits));
 
     block = pool->blocks + start;
     block->bits = bits;
 
     cairo_list_add (&block->link, &pool->free[bits]);
 
-    pool->free_bytes += 1 << (bits + pool->min_bits);
+    pool->free_bytes += ((size_t) 1) << (bits + pool->min_bits);
     if (bits > pool->max_free_bits)
 	pool->max_free_bits = bits;
 }
@@ -157,10 +157,10 @@ get_buddy (cairo_mempool_t *pool, size_t offset, int bits)
 {
     struct _cairo_memblock *block;
 
-    if (offset + (1 << bits) >= pool->num_blocks)
+    if (offset + (((size_t) 1) << bits) >= pool->num_blocks)
 	return NULL; /* invalid */
 
-    if (BITTEST (pool, offset + (1 << bits) - 1))
+    if (BITTEST (pool, offset + (((size_t) 1) << bits) - 1))
 	return NULL; /* buddy is allocated */
 
     block = pool->blocks + offset;
@@ -180,7 +180,7 @@ merge_buddies (cairo_mempool_t *pool,
 
     while (bits < max_bits - 1) {
 	/* while you can, merge two blocks and get a legal block size */
-	size_t buddy_offset = block_offset ^ (1 << bits);
+	size_t buddy_offset = block_offset ^ (((size_t) 1) << bits);
 
 	block = get_buddy (pool, buddy_offset, bits);
 	if (block == NULL)
@@ -216,7 +216,7 @@ merge_bits (cairo_mempool_t *pool, int max_bits)
 				       &pool->free[bits],
 				       link)
 	{
-	    size_t buddy_offset = (block - pool->blocks) ^ (1 << bits);
+	    size_t buddy_offset = (block - pool->blocks) ^ (((size_t) 1) << bits);
 
 	    buddy = get_buddy (pool, buddy_offset, bits);
 	    if (buddy == NULL)
@@ -268,13 +268,13 @@ buddy_malloc (cairo_mempool_t *pool, int bits)
 
     /* Mark end of allocated area */
     offset = block - pool->blocks;
-    past = offset + (1 << bits);
+    past = offset + (((size_t) 1) << bits);
     BITSET (pool, past - 1);
     block->bits = bits;
 
     /* If we used a larger free block than we needed, free the rest */
-    pool->free_bytes -= 1 << (b + pool->min_bits);
-    free_blocks (pool, past, offset + (1 << b), 0);
+    pool->free_bytes -= ((size_t) 1) << (b + pool->min_bits);
+    free_blocks (pool, past, offset + (((size_t) 1) << b), 0);
 
     return pool->base + ((block - pool->blocks) << pool->min_bits);
 }
@@ -284,19 +284,19 @@ _cairo_mempool_init (cairo_mempool_t *pool,
 		      void *base, size_t bytes,
 		      int min_bits, int num_sizes)
 {
-    unsigned long tmp;
+    uintptr_t tmp;
     int num_blocks;
     int i;
 
     /* Align the start to an integral chunk */
-    tmp = ((unsigned long) base) & ((1 << min_bits) - 1);
+    tmp = ((uintptr_t) base) & ((((size_t) 1) << min_bits) - 1);
     if (tmp) {
-	tmp = (1 << min_bits) - tmp;
+	tmp = (((size_t) 1) << min_bits) - tmp;
 	base = (char *)base + tmp;
 	bytes -= tmp;
     }
 
-    assert ((((unsigned long) base) & ((1 << min_bits) - 1)) == 0);
+    assert ((((uintptr_t) base) & ((((size_t) 1) << min_bits) - 1)) == 0);
     assert (num_sizes < ARRAY_LENGTH (pool->free));
 
     pool->base = base;
@@ -337,7 +337,7 @@ _cairo_mempool_alloc (cairo_mempool_t *pool, size_t bytes)
     size_t size;
     int bits;
 
-    size = 1 << pool->min_bits;
+    size = ((size_t) 1) << pool->min_bits;
     for (bits = 0; size < bytes; bits++)
 	size <<= 1;
     if (bits >= pool->num_sizes)
@@ -355,8 +355,8 @@ _cairo_mempool_free (cairo_mempool_t *pool, void *storage)
     block_offset = ((char *)storage - pool->base) >> pool->min_bits;
     block = pool->blocks + block_offset;
 
-    BITCLEAR (pool, block_offset + ((1 << block->bits) - 1));
-    pool->free_bytes += 1 << (block->bits + pool->min_bits);
+    BITCLEAR (pool, block_offset + ((((size_t) 1) << block->bits) - 1));
+    pool->free_bytes += ((size_t) 1) << (block->bits + pool->min_bits);
 
     merge_buddies (pool, block, pool->num_sizes);
 }

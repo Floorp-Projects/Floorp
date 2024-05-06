@@ -133,7 +133,6 @@ cairo_font_face_reference (cairo_font_face_t *font_face)
 
     return font_face;
 }
-slim_hidden_def (cairo_font_face_reference);
 
 static inline cairo_bool_t
 __put(cairo_reference_count_t *v)
@@ -190,7 +189,6 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
 
     free (font_face);
 }
-slim_hidden_def (cairo_font_face_destroy);
 
 /**
  * cairo_font_face_get_type:
@@ -272,7 +270,6 @@ cairo_font_face_get_user_data (cairo_font_face_t	   *font_face,
     return _cairo_user_data_array_get_data (&font_face->user_data,
 					    key);
 }
-slim_hidden_def (cairo_font_face_get_user_data);
 
 /**
  * cairo_font_face_set_user_data:
@@ -304,7 +301,6 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
     return _cairo_user_data_array_set_data (&font_face->user_data,
 					    key, user_data, destroy);
 }
-slim_hidden_def (cairo_font_face_set_user_data);
 
 void
 _cairo_unscaled_font_init (cairo_unscaled_font_t               *unscaled_font,

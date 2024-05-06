@@ -1,3 +1,129 @@
+Release 1.18.0 (2023-09-20 Emmanuele Bassi <ebassi@gnome.org>)
+==============================================================
+
+The first stable cairo release in five years should be cause for celebration.
+
+All the API added in the 1.17 development cycle is now considered stable, and
+will not change.
+
+Many thanks to all the contributors for this release.
+
+The cairo-sphinx tool has been removed; we could not find any instruction on
+how to use it, and no user answered our call for help. If you were using
+cairo-sphinx, please reach out to the cairo maintainers.
+
+Cairo now implements Type 3 color fonts for PDF. Thanks to Adrian Johnson for
+his work on this feature.
+
+Khaled Hosny contributed multiple documentation fixes, to ensure that the
+cairo API reference is up to date. Khaled also fixed multiple compiler
+warnings generated when building cairo.
+
+The XML surface has been removed; it was disabled by default when building
+cairo, and we could not find any downstream distributor that would enable
+it.
+
+The Tee surface is now automatically enabled. Downstream distributors of
+cairo have been enabling for years it in order to build Firefox.
+
+Fujii Hironori and Adrian Johnson fixed multiple issues with the DWrite
+font backend.
+
+John Ralls improved the Quartz surface; mainly, Quartz surfaces now use
+the main display ColorSpace, speeding up rendering operations.
+
+Cairo now hides all private symbols by default on every platform; the old
+"slim" symbols hack to alias internally used symbols has been dropped, in
+favor of using `-Bsymbolic-functions` with toolchains that support it.
+
+Uli Schlachter fixed multiple memory leaks in the code base and test suite,
+and helped with many reviews and general maintenance.
+
+Marc Jeanmougin added new API to expose the Pixman dithering filter to cairo
+patterns; this is currently implemented only for image surfaces.
+
+Release 1.17.8 (2023-01-30 Emmanuele Bassi <ebassi@gnome.org>)
+==============================================================
+
+A new cairo snapshot! And it only took less than one year, this time!
+
+Many thanks to everyone who contributed to cairo, and especially
+to (in no particular order):
+
+- Adrian Johnson
+- Khaled Hosny
+- Behdad Esfahbod
+- Matthias Clasen
+- Uli Schlachter
+- Manuel Stoeckl
+- Fujii Hironori
+- Tim-Philipp Müller
+- Luca Bacci
+- Caolán McNamara
+- John Ralls
+
+In a continuing effort to reduce the amount of legacy code, and increase
+the long-term maintainability of cairo, the following backends have been
+removed:
+
+- GL and GLES drawing
+
+Additionally, cairo's Autotools build system has been removed; from now on,
+cairo will only support the Meson build system. While the end result should
+be identical, further testing is appreciated.
+
+In this snapshot, cairo gained support for rendering COLRv1 fonts, and
+rendering SVG and COLRv1 fonts with custom palettes.
+
+Support for macOS and Windows has been improved, with lots of build and bug
+fixes.
+
+Lots of safety issues have been fixed, with array bounds checking and
+plugging memory leaks, as well as fixes for bugs identified via fuzzying.
+
+This is going to be the last snapshot of the 1.17 development cycle; we only
+expect minor bug fixing and improvements until the 1.18.0 release.
+
+Release 1.17.6 (2022-03-18 Emmanuele Bassi <ebassi@gnome.org>)
+==============================================================
+
+I spy with my little eye… a cairo snapshot!
+
+First of all, many, many thanks to everyone who contributed to cairo
+during this development cycle. A special thank you goes to:
+
+- Adrian Johnson
+- Uli Schlachter
+
+for their tireless efforts in ensuring that the lights are still on
+in the cairo project.
+
+This snapshot sees the removal of the following backends and platform
+support:
+
+- Qt4
+- BeOS
+- OS/2
+- DirectFB
+- DRM
+- Cogl
+- OpenVG
+
+Thanks to all past contributors for their work on them. If you were using
+any of these backends then you will need to stick to cairo 1.16.
+
+To offset the removal of the backends above, Adrian Johnson landed the
+DWrite font rendering backend on Windows.
+
+There have been multiple improvements in the Quartz backend, courtesy of
+John Ralls.
+
+Tim-Philipp Müller has kept the Meson build in top shape.
+
+This snapshot is going to be the **last** release of cairo with the
+Autotools build system. The Meson build has seen many improvements and
+it is considerably easier to maintain and faster to build.
+
 Release 1.17.4 (2020-11-27 Bryce Harrington <bryce@bryceharrington.org>)
 ========================================================================
 
@@ -26,7 +152,7 @@ includes implementation of core functionality, performance
 optimizations, and stabilization.
 
 Subpixel positioning support allows improved glyph outlines with the
-Freetype font backend.
+FreeType font backend.
 
 For a complete log of changes, please see
 
@@ -8141,7 +8267,7 @@ the PNG generation in the demos. These have now been resolved.
 2003-10
 =======
 Graydon Hoare <graydon@redhat.com> implemented the first real text
-support using Freetype/fontconfig, (previous versions of cairo used
+support using FreeType/fontconfig, (previous versions of cairo used
 Xft and could only draw text when using an X backend).
 
 2003-09

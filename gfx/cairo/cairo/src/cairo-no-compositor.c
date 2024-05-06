@@ -91,8 +91,7 @@ _cairo_no_compositor_glyphs (const cairo_compositor_t *compositor,
 			     cairo_scaled_font_t	*scaled_font,
 			     cairo_glyph_t		*glyphs,
 			     int			 num_glyphs,
-			     cairo_bool_t overlap,
-			     cairo_bool_t permit_subpixel_antialiasing)
+			     cairo_bool_t overlap)
 {
     ASSERT_NOT_REACHED;
     return CAIRO_INT_STATUS_NOTHING_TO_DO;

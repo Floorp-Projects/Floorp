@@ -142,17 +142,6 @@ slope_compare_sgn (double dx1, double dy1, double dx2, double dy2)
     return 0;
 }
 
-static inline int
-range_step (int i, int step, int max)
-{
-    i += step;
-    if (i < 0)
-	i = max - 1;
-    if (i >= max)
-	i = 0;
-    return i;
-}
-
 /*
  * Construct a fan around the midpoint using the vertices from pen between
  * inpt and outpt.
@@ -399,16 +388,16 @@ outer_close (struct stroker *stroker,
 
     switch (stroker->style.line_join) {
     case CAIRO_LINE_JOIN_ROUND:
-	/* construct a fan around the common midpoint */
 	if ((in->dev_slope.x * out->dev_slope.x +
 	     in->dev_slope.y * out->dev_slope.y) < stroker->spline_cusp_tolerance)
 	{
+	    /* construct a fan around the common midpoint */
 	    add_fan (stroker,
 		     &in->dev_vector, &out->dev_vector, &in->point,
 		     clockwise, outer);
-	    break;
-	}
-	/* else fall through */
+	} /* else: bevel join */
+	break;
+
     case CAIRO_LINE_JOIN_MITER:
     default: {
 	/* dot product of incoming slope vector with outgoing slope vector */
@@ -587,10 +576,14 @@ outer_join (struct stroker *stroker,
 
     switch (stroker->style.line_join) {
     case CAIRO_LINE_JOIN_ROUND:
-	/* construct a fan around the common midpoint */
-	add_fan (stroker,
-		 &in->dev_vector, &out->dev_vector, &in->point,
-		 clockwise, outer);
+	if ((in->dev_slope.x * out->dev_slope.x +
+	     in->dev_slope.y * out->dev_slope.y) < stroker->spline_cusp_tolerance)
+	{
+	    /* construct a fan around the common midpoint */
+	    add_fan (stroker,
+		     &in->dev_vector, &out->dev_vector, &in->point,
+		     clockwise, outer);
+	} /* else: bevel join */
 	break;
 
     case CAIRO_LINE_JOIN_MITER:
@@ -1291,17 +1284,72 @@ _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
     stroker.ctm_inverse = ctm_inverse;
     stroker.tolerance = tolerance;
     stroker.half_line_width = style->line_width / 2.;
-    /* To test whether we need to join two segments of a spline using
-     * a round-join or a bevel-join, we can inspect the angle between the
-     * two segments. If the difference between the chord distance
-     * (half-line-width times the cosine of the bisection angle) and the
-     * half-line-width itself is greater than tolerance then we need to
-     * inject a point.
+
+    /* If `CAIRO_LINE_JOIN_ROUND` is selected and a joint's `arc height`
+     * is greater than `tolerance` then two segments are joined with
+     * round-join, otherwise bevel-join is used.
+     *
+     * (See https://gitlab.freedesktop.org/cairo/cairo/-/merge_requests/372#note_1698225
+     *  for an illustration.)
+     *
+     * `Arc height` is the distance from the center of arc's chord to
+     * the center of the arc. It is also the difference of arc's radius
+     * and the "distance from a point where segments are joined to the
+     * chord" (distance to the chord). Arc's radius is the half of a line
+     * width and the "distance to the chord" is equal to "half of a line width"
+     * times `cos(half the angle between segment vectors)`. So
+     *
+     *     arc_height = w/2 - w/2 * cos(phi/2),
+     *
+     * where `w/2` is the "half of a line width".
+     *
+     * Using the double angle cosine formula we can express the `cos(phi/2)`
+     * with just `cos(phi)` which is also the dot product of segments'
+     * unit vectors.
+     *
+     *     cos(phi/2) = sqrt ( (1 + cos(phi)) / 2 );
+     *     cos(phi/2) is in [0; 1] range, cannot be negative;
+     *
+     *     cos(phi) = a . b  = (ax * bx + ay * by),
+     *
+     * where `a` and `b` are unit vectors of the segments to be joined.
+     *
+     * Since `arc height` should be greater than the `tolerance` to produce
+     * a round-join we can write
+     *
+     *     w/2 * (1 - cos(phi/2))  >  tolerance;
+     *     1 - tolerance / (w/2)  >  cos(phi/2);    [!]
+     *
+     * which can be rewritten with the above double angle formula to
+     *
+     *     cos(phi)  <  2 * ( 1 - tolerance / (w/2) )^2 - 1,
+     *
+     * [!] Note that `w/2` is in [tolerance; +inf] range, since `cos(phi/2)`
+     * cannot be negative. The left part of the above inequality is the
+     * dot product and the right part is the `spline_cusp_tolerance`:
+     *
+     *     (ax * bx + ay * by) < spline_cusp_tolerance.
+     *
+     * In the code below only the `spline_cusp_tolerance` is calculated.
+     * The dot product is calculated later, in the condition expression
+     * itself. "Half of a line width" must be scaled with CTM for tolerance
+     * condition to be properly met. Also, since `arch height` cannot exceed
+     * the "half of a line width" and since `cos(phi/2)` cannot be negative,
+     * when `tolerance` is greater than the "half of a line width" the
+     * bevel-join should be produced.
      */
-    stroker.spline_cusp_tolerance = 1 - tolerance / stroker.half_line_width;
-    stroker.spline_cusp_tolerance *= stroker.spline_cusp_tolerance;
-    stroker.spline_cusp_tolerance *= 2;
-    stroker.spline_cusp_tolerance -= 1;
+    double scaled_hlw = hypot(stroker.half_line_width * ctm->xx,
+			      stroker.half_line_width * ctm->yx);
+
+    if (scaled_hlw <= tolerance) {
+	stroker.spline_cusp_tolerance = -1.0;
+    } else {
+	stroker.spline_cusp_tolerance = 1 - tolerance / scaled_hlw;
+	stroker.spline_cusp_tolerance *= stroker.spline_cusp_tolerance;
+	stroker.spline_cusp_tolerance *= 2;
+	stroker.spline_cusp_tolerance -= 1;
+    }
+
     stroker.ctm_det_positive =
 	_cairo_matrix_compute_determinant (ctm) >= 0.0;
 

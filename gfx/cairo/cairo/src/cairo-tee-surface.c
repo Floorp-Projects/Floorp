@@ -35,8 +35,22 @@
  *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-/* This surface supports redirecting all its input to multiple surfaces.
- */
+/**
+ * SECTION:cairo-tee
+ * @Title: Tee surface
+ * @Short_Description: Redirect input to multiple surfaces
+ * @See_Also: #cairo_surface_t
+ *
+ * The "tee" surface supports redirecting all its input to multiple surfaces.
+ **/
+
+/**
+ * CAIRO_HAS_TEE_SURFACE:
+ *
+ * Defined if the tee surface backend is available.
+ *
+ * Since: 1.10
+ **/
 
 #include "cairoint.h"
 
@@ -44,7 +58,6 @@
 
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
-#include "cairo-tee-surface-private.h"
 #include "cairo-recording-surface-inline.h"
 #include "cairo-surface-wrapper-private.h"
 #include "cairo-array-private.h"
@@ -53,12 +66,9 @@
 typedef struct _cairo_tee_surface {
     cairo_surface_t base;
 
-    cairo_surface_wrapper_t master;
-    cairo_array_t slaves;
+    cairo_surface_wrapper_t primary;
+    cairo_array_t replicas;
 } cairo_tee_surface_t;
-
-slim_hidden_proto (cairo_tee_surface_create);
-slim_hidden_proto (cairo_tee_surface_add);
 
 static cairo_surface_t *
 _cairo_tee_surface_create_similar (void			*abstract_surface,
@@ -70,21 +80,21 @@ _cairo_tee_surface_create_similar (void			*abstract_surface,
     cairo_tee_surface_t *other = abstract_surface;
     cairo_surface_t *similar;
     cairo_surface_t *surface;
-    cairo_surface_wrapper_t *slaves;
-    int n, num_slaves;
+    cairo_surface_wrapper_t *replicas;
+    int n, num_replicas;
 
-    similar = _cairo_surface_wrapper_create_similar (&other->master,
+    similar = _cairo_surface_wrapper_create_similar (&other->primary,
 						     content, width, height);
     surface = cairo_tee_surface_create (similar);
     cairo_surface_destroy (similar);
     if (unlikely (surface->status))
 	return surface;
 
-    num_slaves = _cairo_array_num_elements (&other->slaves);
-    slaves = _cairo_array_index (&other->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
+    num_replicas = _cairo_array_num_elements (&other->replicas);
+    replicas = _cairo_array_index (&other->replicas, 0);
+    for (n = 0; n < num_replicas; n++) {
 
-	similar = _cairo_surface_wrapper_create_similar (&slaves[n],
+	similar = _cairo_surface_wrapper_create_similar (&replicas[n],
 							 content,
 							 width, height);
 	cairo_tee_surface_add (surface, similar);
@@ -104,17 +114,17 @@ static cairo_status_t
 _cairo_tee_surface_finish (void *abstract_surface)
 {
     cairo_tee_surface_t *surface = abstract_surface;
-    cairo_surface_wrapper_t *slaves;
-    int n, num_slaves;
+    cairo_surface_wrapper_t *replicas;
+    int n, num_replicas;
 
-    _cairo_surface_wrapper_fini (&surface->master);
+    _cairo_surface_wrapper_fini (&surface->primary);
 
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++)
-	_cairo_surface_wrapper_fini (&slaves[n]);
+    num_replicas = _cairo_array_num_elements (&surface->replicas);
+    replicas = _cairo_array_index (&surface->replicas, 0);
+    for (n = 0; n < num_replicas; n++)
+	_cairo_surface_wrapper_fini (&replicas[n]);
 
-    _cairo_array_fini (&surface->slaves);
+    _cairo_array_fini (&surface->replicas);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -124,7 +134,7 @@ _cairo_tee_surface_source (void	     *abstract_surface,
 			   cairo_rectangle_int_t *extents)
 {
     cairo_tee_surface_t *surface = abstract_surface;
-    return _cairo_surface_get_source (surface->master.target, extents);
+    return _cairo_surface_get_source (surface->primary.target, extents);
 }
 
 static cairo_status_t
@@ -133,26 +143,26 @@ _cairo_tee_surface_acquire_source_image (void	     *abstract_surface,
 					 void		 **image_extra)
 {
     cairo_tee_surface_t *surface = abstract_surface;
-    cairo_surface_wrapper_t *slaves;
-    int num_slaves, n;
+    cairo_surface_wrapper_t *replicas;
+    int num_replicas, n;
 
     /* we prefer to use a real image surface if available */
-    if (_cairo_surface_is_image (surface->master.target)) {
-	return _cairo_surface_wrapper_acquire_source_image (&surface->master,
+    if (_cairo_surface_is_image (surface->primary.target)) {
+	return _cairo_surface_wrapper_acquire_source_image (&surface->primary,
 							    image_out, image_extra);
     }
 
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
-	if (_cairo_surface_is_image (slaves[n].target)) {
-	    return _cairo_surface_wrapper_acquire_source_image (&slaves[n],
+    num_replicas = _cairo_array_num_elements (&surface->replicas);
+    replicas = _cairo_array_index (&surface->replicas, 0);
+    for (n = 0; n < num_replicas; n++) {
+	if (_cairo_surface_is_image (replicas[n].target)) {
+	    return _cairo_surface_wrapper_acquire_source_image (&replicas[n],
 								image_out,
 								image_extra);
 	}
     }
 
-    return _cairo_surface_wrapper_acquire_source_image (&surface->master,
+    return _cairo_surface_wrapper_acquire_source_image (&surface->primary,
 							image_out, image_extra);
 }
 
@@ -163,7 +173,7 @@ _cairo_tee_surface_release_source_image (void	     *abstract_surface,
 {
     cairo_tee_surface_t *surface = abstract_surface;
 
-    _cairo_surface_wrapper_release_source_image (&surface->master,
+    _cairo_surface_wrapper_release_source_image (&surface->primary,
 						 image, image_extra);
 }
 
@@ -171,21 +181,21 @@ static cairo_surface_t *
 _cairo_tee_surface_snapshot (void *abstract_surface)
 {
     cairo_tee_surface_t *surface = abstract_surface;
-    cairo_surface_wrapper_t *slaves;
-    int num_slaves, n;
+    cairo_surface_wrapper_t *replicas;
+    int num_replicas, n;
 
     /* we prefer to use a recording surface for our snapshots */
-    if (_cairo_surface_is_recording (surface->master.target))
-	return _cairo_surface_wrapper_snapshot (&surface->master);
+    if (_cairo_surface_is_recording (surface->primary.target))
+	return _cairo_surface_wrapper_snapshot (&surface->primary);
 
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
-	if (_cairo_surface_is_recording (slaves[n].target))
-	    return _cairo_surface_wrapper_snapshot (&slaves[n]);
+    num_replicas = _cairo_array_num_elements (&surface->replicas);
+    replicas = _cairo_array_index (&surface->replicas, 0);
+    for (n = 0; n < num_replicas; n++) {
+	if (_cairo_surface_is_recording (replicas[n].target))
+	    return _cairo_surface_wrapper_snapshot (&replicas[n]);
     }
 
-    return _cairo_surface_wrapper_snapshot (&surface->master);
+    return _cairo_surface_wrapper_snapshot (&surface->primary);
 }
 
 static cairo_bool_t
@@ -194,7 +204,7 @@ _cairo_tee_surface_get_extents (void			*abstract_surface,
 {
     cairo_tee_surface_t *surface = abstract_surface;
 
-    return _cairo_surface_wrapper_get_extents (&surface->master, rectangle);
+    return _cairo_surface_wrapper_get_extents (&surface->primary, rectangle);
 }
 
 static void
@@ -203,7 +213,7 @@ _cairo_tee_surface_get_font_options (void                  *abstract_surface,
 {
     cairo_tee_surface_t *surface = abstract_surface;
 
-    _cairo_surface_wrapper_get_font_options (&surface->master, options);
+    _cairo_surface_wrapper_get_font_options (&surface->primary, options);
 }
 
 static cairo_int_status_t
@@ -213,19 +223,19 @@ _cairo_tee_surface_paint (void			*abstract_surface,
 			  const cairo_clip_t	*clip)
 {
     cairo_tee_surface_t *surface = abstract_surface;
-    cairo_surface_wrapper_t *slaves;
-    int n, num_slaves;
+    cairo_surface_wrapper_t *replicas;
+    int n, num_replicas;
     cairo_int_status_t status;
 
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
-	status = _cairo_surface_wrapper_paint (&slaves[n], op, source, clip);
+    num_replicas = _cairo_array_num_elements (&surface->replicas);
+    replicas = _cairo_array_index (&surface->replicas, 0);
+    for (n = 0; n < num_replicas; n++) {
+	status = _cairo_surface_wrapper_paint (&replicas[n], op, source, 0, clip);
 	if (unlikely (status))
 	    return status;
     }
 
-    return _cairo_surface_wrapper_paint (&surface->master, op, source, clip);
+    return _cairo_surface_wrapper_paint (&surface->primary, op, source, 0, clip);
 }
 
 static cairo_int_status_t
@@ -236,21 +246,25 @@ _cairo_tee_surface_mask (void			*abstract_surface,
 			 const cairo_clip_t	*clip)
 {
     cairo_tee_surface_t *surface = abstract_surface;
-    cairo_surface_wrapper_t *slaves;
+    cairo_surface_wrapper_t *replicas;
     cairo_int_status_t status;
-    int n, num_slaves;
+    int n, num_replicas;
 
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
-	status = _cairo_surface_wrapper_mask (&slaves[n],
-					      op, source, mask, clip);
+    num_replicas = _cairo_array_num_elements (&surface->replicas);
+    replicas = _cairo_array_index (&surface->replicas, 0);
+    for (n = 0; n < num_replicas; n++) {
+	status = _cairo_surface_wrapper_mask (&replicas[n],
+					      op, source, 0,
+                                              mask, 0,
+                                              clip);
 	if (unlikely (status))
 	    return status;
     }
 
-    return _cairo_surface_wrapper_mask (&surface->master,
-					op, source, mask, clip);
+    return _cairo_surface_wrapper_mask (&surface->primary,
+					op, source, 0,
+                                        mask, 0,
+                                        clip);
 }
 
 static cairo_int_status_t
@@ -266,15 +280,15 @@ _cairo_tee_surface_stroke (void				*abstract_surface,
 			   const cairo_clip_t		*clip)
 {
     cairo_tee_surface_t *surface = abstract_surface;
-    cairo_surface_wrapper_t *slaves;
+    cairo_surface_wrapper_t *replicas;
     cairo_int_status_t status;
-    int n, num_slaves;
+    int n, num_replicas;
 
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
-	status = _cairo_surface_wrapper_stroke (&slaves[n],
-						op, source,
+    num_replicas = _cairo_array_num_elements (&surface->replicas);
+    replicas = _cairo_array_index (&surface->replicas, 0);
+    for (n = 0; n < num_replicas; n++) {
+	status = _cairo_surface_wrapper_stroke (&replicas[n],
+						op, source, 0,
 						path, style,
 						ctm, ctm_inverse,
 						tolerance, antialias,
@@ -283,8 +297,8 @@ _cairo_tee_surface_stroke (void				*abstract_surface,
 	    return status;
     }
 
-    return _cairo_surface_wrapper_stroke (&surface->master,
-					  op, source,
+    return _cairo_surface_wrapper_stroke (&surface->primary,
+					  op, source, 0,
 					  path, style,
 					  ctm, ctm_inverse,
 					  tolerance, antialias,
@@ -302,15 +316,15 @@ _cairo_tee_surface_fill (void				*abstract_surface,
 			 const cairo_clip_t		*clip)
 {
     cairo_tee_surface_t *surface = abstract_surface;
-    cairo_surface_wrapper_t *slaves;
+    cairo_surface_wrapper_t *replicas;
     cairo_int_status_t status;
-    int n, num_slaves;
+    int n, num_replicas;
 
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
-	status = _cairo_surface_wrapper_fill (&slaves[n],
-					      op, source,
+    num_replicas = _cairo_array_num_elements (&surface->replicas);
+    replicas = _cairo_array_index (&surface->replicas, 0);
+    for (n = 0; n < num_replicas; n++) {
+	status = _cairo_surface_wrapper_fill (&replicas[n],
+					      op, source, 0,
 					      path, fill_rule,
 					      tolerance, antialias,
 					      clip);
@@ -318,8 +332,8 @@ _cairo_tee_surface_fill (void				*abstract_surface,
 	    return status;
     }
 
-    return _cairo_surface_wrapper_fill (&surface->master,
-					op, source,
+    return _cairo_surface_wrapper_fill (&surface->primary,
+					op, source, 0,
 					path, fill_rule,
 					tolerance, antialias,
 					clip);
@@ -346,9 +360,9 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
 				     const cairo_clip_t	    *clip)
 {
     cairo_tee_surface_t *surface = abstract_surface;
-    cairo_surface_wrapper_t *slaves;
+    cairo_surface_wrapper_t *replicas;
     cairo_int_status_t status;
-    int n, num_slaves;
+    int n, num_replicas;
     cairo_glyph_t *glyphs_copy;
 
     /* XXX: This copying is ugly. */
@@ -356,12 +370,12 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
     if (unlikely (glyphs_copy == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
+    num_replicas = _cairo_array_num_elements (&surface->replicas);
+    replicas = _cairo_array_index (&surface->replicas, 0);
+    for (n = 0; n < num_replicas; n++) {
 	memcpy (glyphs_copy, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
-	status = _cairo_surface_wrapper_show_text_glyphs (&slaves[n], op,
-							  source,
+	status = _cairo_surface_wrapper_show_text_glyphs (&replicas[n], op,
+							  source, 0,
 							  utf8, utf8_len,
 							  glyphs_copy, num_glyphs,
 							  clusters, num_clusters,
@@ -373,8 +387,8 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
     }
 
     memcpy (glyphs_copy, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
-    status = _cairo_surface_wrapper_show_text_glyphs (&surface->master, op,
-						      source,
+    status = _cairo_surface_wrapper_show_text_glyphs (&surface->primary, op,
+						      source, 0,
 						      utf8, utf8_len,
 						      glyphs_copy, num_glyphs,
 						      clusters, num_clusters,
@@ -420,13 +434,29 @@ static const cairo_surface_backend_t cairo_tee_surface_backend = {
     _cairo_tee_surface_show_text_glyphs
 };
 
+/**
+ * cairo_tee_surface_create:
+ * @primary: the primary #cairo_surface_t
+ *
+ * Creates a new "tee" surface.
+ *
+ * The @primary surface is used when querying surface options, like
+ * font options and extents.
+ *
+ * Operations performed on the tee surface will be replayed on any
+ * surface added to it.
+ *
+ * Returns: the newly created surface
+ *
+ * Since: 1.10
+ **/
 cairo_surface_t *
-cairo_tee_surface_create (cairo_surface_t *master)
+cairo_tee_surface_create (cairo_surface_t *primary)
 {
     cairo_tee_surface_t *surface;
 
-    if (unlikely (master->status))
-	return _cairo_surface_create_in_error (master->status);
+    if (unlikely (primary->status))
+	return _cairo_surface_create_in_error (primary->status);
 
     surface = _cairo_malloc (sizeof (cairo_tee_surface_t));
     if (unlikely (surface == NULL))
@@ -434,24 +464,33 @@ cairo_tee_surface_create (cairo_surface_t *master)
 
     _cairo_surface_init (&surface->base,
 			 &cairo_tee_surface_backend,
-			 master->device,
-			 master->content,
+			 primary->device,
+			 primary->content,
 			 TRUE); /* is_vector */
 
-    _cairo_surface_wrapper_init (&surface->master, master);
+    _cairo_surface_wrapper_init (&surface->primary, primary);
 
-    _cairo_array_init (&surface->slaves, sizeof (cairo_surface_wrapper_t));
+    _cairo_array_init (&surface->replicas, sizeof (cairo_surface_wrapper_t));
 
     return &surface->base;
 }
-slim_hidden_def (cairo_tee_surface_create);
 
+/**
+ * cairo_tee_surface_add:
+ * @abstract_surface: a #cairo_tee_surface_t
+ * @target: the surface to add
+ *
+ * Adds a new target surface to the list of replicas of a
+ * tee surface.
+ *
+ * Since: 1.10
+ **/
 void
 cairo_tee_surface_add (cairo_surface_t *abstract_surface,
 		       cairo_surface_t *target)
 {
     cairo_tee_surface_t *surface;
-    cairo_surface_wrapper_t slave;
+    cairo_surface_wrapper_t replica;
     cairo_status_t status;
 
     if (unlikely (abstract_surface->status))
@@ -475,22 +514,31 @@ cairo_tee_surface_add (cairo_surface_t *abstract_surface,
 
     surface = (cairo_tee_surface_t *) abstract_surface;
 
-    _cairo_surface_wrapper_init (&slave, target);
-    status = _cairo_array_append (&surface->slaves, &slave);
+    _cairo_surface_wrapper_init (&replica, target);
+    status = _cairo_array_append (&surface->replicas, &replica);
     if (unlikely (status)) {
-	_cairo_surface_wrapper_fini (&slave);
+	_cairo_surface_wrapper_fini (&replica);
 	status = _cairo_surface_set_error (&surface->base, status);
     }
 }
-slim_hidden_def (cairo_tee_surface_add);
 
+/**
+ * cairo_tee_surface_remove:
+ * @abstract_surface: a #cairo_tee_surface_t
+ * @target: the surface to remove
+ *
+ * Removes the given surface from the list of replicas of a
+ * tee surface.
+ *
+ * Since: 1.10
+ **/
 void
 cairo_tee_surface_remove (cairo_surface_t *abstract_surface,
 			  cairo_surface_t *target)
 {
     cairo_tee_surface_t *surface;
-    cairo_surface_wrapper_t *slaves;
-    int n, num_slaves;
+    cairo_surface_wrapper_t *replicas;
+    int n, num_replicas;
 
     if (unlikely (abstract_surface->status))
 	return;
@@ -507,31 +555,45 @@ cairo_tee_surface_remove (cairo_surface_t *abstract_surface,
     }
 
     surface = (cairo_tee_surface_t *) abstract_surface;
-    if (target == surface->master.target) {
+    if (target == surface->primary.target) {
 	_cairo_surface_set_error (abstract_surface,
 				  _cairo_error (CAIRO_STATUS_INVALID_INDEX));
 	return;
     }
 
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
-	if (slaves[n].target == target)
+    num_replicas = _cairo_array_num_elements (&surface->replicas);
+    replicas = _cairo_array_index (&surface->replicas, 0);
+    for (n = 0; n < num_replicas; n++) {
+	if (replicas[n].target == target)
 	    break;
     }
 
-    if (n == num_slaves) {
+    if (n == num_replicas) {
 	_cairo_surface_set_error (abstract_surface,
 				  _cairo_error (CAIRO_STATUS_INVALID_INDEX));
 	return;
     }
 
-    _cairo_surface_wrapper_fini (&slaves[n]);
-    for (n++; n < num_slaves; n++)
-	slaves[n-1] = slaves[n];
-    surface->slaves.num_elements--; /* XXX: cairo_array_remove()? */
+    _cairo_surface_wrapper_fini (&replicas[n]);
+    for (n++; n < num_replicas; n++)
+	replicas[n-1] = replicas[n];
+    surface->replicas.num_elements--; /* XXX: cairo_array_remove()? */
 }
 
+/**
+ * cairo_tee_surface_index:
+ * @abstract_surface: a #cairo_tee_surface_t
+ * @index: the index of the replica to retrieve
+ *
+ * Retrieves the replica surface at the given index.
+ *
+ * The primary surface used to create the #cairo_tee_surface_t is
+ * always set at the zero index.
+ *
+ * Returns: the surface at the given index
+ *
+ * Since: 1.10
+ **/
 cairo_surface_t *
 cairo_tee_surface_index (cairo_surface_t *abstract_surface,
 			 unsigned int index)
@@ -548,56 +610,16 @@ cairo_tee_surface_index (cairo_surface_t *abstract_surface,
 
     surface = (cairo_tee_surface_t *) abstract_surface;
     if (index == 0) {
-	return surface->master.target;
+	return surface->primary.target;
     } else {
-	cairo_surface_wrapper_t *slave;
+	cairo_surface_wrapper_t *replica;
 
 	index--;
 
-	if (index >= _cairo_array_num_elements (&surface->slaves))
+	if (index >= _cairo_array_num_elements (&surface->replicas))
 	    return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_INDEX));
 
-	slave = _cairo_array_index (&surface->slaves, index);
-	return slave->target;
+	replica = _cairo_array_index (&surface->replicas, index);
+	return replica->target;
     }
-}
-
-cairo_surface_t *
-_cairo_tee_surface_find_match (void *abstract_surface,
-			       const cairo_surface_backend_t *backend,
-			       cairo_content_t content)
-{
-    cairo_tee_surface_t *surface = abstract_surface;
-    cairo_surface_wrapper_t *slaves;
-    int num_slaves, n;
-
-    /* exact match first */
-    if (surface->master.target->backend == backend &&
-	surface->master.target->content == content)
-    {
-	return surface->master.target;
-    }
-
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
-	if (slaves[n].target->backend == backend &&
-	    slaves[n].target->content == content)
-	{
-	    return slaves[n].target;
-	}
-    }
-
-    /* matching backend? */
-    if (surface->master.target->backend == backend)
-	return surface->master.target;
-
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
-	if (slaves[n].target->backend == backend)
-	    return slaves[n].target;
-    }
-
-    return NULL;
 }

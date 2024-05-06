@@ -602,7 +602,8 @@ static cairo_bool_t check_glyphs (cairo_composite_rectangles_t *composite,
     if (! _cairo_clip_is_region (composite->clip))
 	return FALSE;
 
-    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_WIN32)
+    cairo_font_type_t type = cairo_scaled_font_get_type (scaled_font);
+    if (type != CAIRO_FONT_TYPE_WIN32 && type != CAIRO_FONT_TYPE_DWRITE)
 	return FALSE;
 
     if (! _cairo_pattern_is_opaque_solid (&composite->source_pattern.base))

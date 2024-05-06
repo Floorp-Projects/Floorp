@@ -48,6 +48,9 @@
 #ifndef CAIRO_MUTEX_IMPL_LOCK
 # error "CAIRO_MUTEX_IMPL_LOCK not defined.  Check cairo-mutex-impl-private.h."
 #endif
+#ifndef CAIRO_MUTEX_IMPL_TRY_LOCK
+# error "CAIRO_MUTEX_IMPL_TRY_LOCK not defined.  Check cairo-mutex-impl-private.h."
+#endif
 #ifndef CAIRO_MUTEX_IMPL_UNLOCK
 # error "CAIRO_MUTEX_IMPL_UNLOCK not defined.  Check cairo-mutex-impl-private.h."
 #endif
@@ -138,6 +141,9 @@
 #ifndef CAIRO_MUTEX_IMPL_LOCK
 # error "CAIRO_MUTEX_IMPL_LOCK not defined"
 #endif
+#ifndef CAIRO_MUTEX_IMPL_TRY_LOCK
+# error "CAIRO_MUTEX_IMPL_TRY_LOCK not defined"
+#endif
 #ifndef CAIRO_MUTEX_IMPL_UNLOCK
 # error "CAIRO_MUTEX_IMPL_UNLOCK not defined"
 #endif
@@ -167,6 +173,7 @@ typedef cairo_recursive_mutex_impl_t cairo_recursive_mutex_t;
 #define CAIRO_MUTEX_INITIALIZE		CAIRO_MUTEX_IMPL_INITIALIZE
 #define CAIRO_MUTEX_FINALIZE		CAIRO_MUTEX_IMPL_FINALIZE
 #define CAIRO_MUTEX_LOCK		CAIRO_MUTEX_IMPL_LOCK
+#define CAIRO_MUTEX_TRY_LOCK		CAIRO_MUTEX_IMPL_TRY_LOCK
 #define CAIRO_MUTEX_UNLOCK		CAIRO_MUTEX_IMPL_UNLOCK
 #define CAIRO_MUTEX_INIT		CAIRO_MUTEX_IMPL_INIT
 #define CAIRO_MUTEX_FINI		CAIRO_MUTEX_IMPL_FINI

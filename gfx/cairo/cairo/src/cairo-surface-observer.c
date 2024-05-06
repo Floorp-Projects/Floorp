@@ -54,6 +54,24 @@
 #include "cairo-script-private.h"
 #endif
 
+/**
+ * SECTION:cairo-surface-observer
+ * @Title: Surface Observer
+ * @Short_Description: Observing other surfaces
+ * @See_Also: #cairo_surface_t
+ *
+ * A surface that exists solely to watch what another surface is doing.
+ **/
+
+/**
+ * CAIRO_HAS_OBSERVER_SURFACE:
+ *
+ * Defined if the observer surface backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.12
+ **/
+
 static const cairo_surface_backend_t _cairo_surface_observer_backend;
 
 /* observation/stats */
@@ -1373,8 +1391,8 @@ static const cairo_surface_backend_t _cairo_surface_observer_backend = {
  * the process it will log operations and times, which are fast, which are
  * slow, which are frequent, etc.
  *
- * The @mode parameter can be set to either CAIRO_SURFACE_OBSERVER_NORMAL
- * or CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS, to control whether or not
+ * The @mode parameter can be set to either %CAIRO_SURFACE_OBSERVER_NORMAL
+ * or %CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS, to control whether or not
  * the internal observer should record operations.
  *
  * Return value: a pointer to the newly allocated surface. The caller
@@ -1429,6 +1447,18 @@ _cairo_surface_observer_add_callback (cairo_list_t *head,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/**
+ * cairo_surface_observer_add_paint_callback:
+ * @abstract_surface: a #cairo_surface_observer_t
+ * @func: callback function for paint operations
+ * @data: closure to pass to the callback
+ *
+ * Adds a callback for paint operations on the observed surface.
+ *
+ * Returns: the status of the surface
+ *
+ * Since: 1.12
+ **/
 cairo_status_t
 cairo_surface_observer_add_paint_callback (cairo_surface_t *abstract_surface,
 					    cairo_surface_observer_callback_t func,
@@ -1447,6 +1477,18 @@ cairo_surface_observer_add_paint_callback (cairo_surface_t *abstract_surface,
 						 func, data);
 }
 
+/**
+ * cairo_surface_observer_add_mask_callback:
+ * @abstract_surface: a #cairo_surface_observer_t
+ * @func: callback function for mask operations
+ * @data: closure to pass to the callback
+ *
+ * Adds a callback for mask operations on the observed surface.
+ *
+ * Returns: the status of the surface
+ *
+ * Since: 1.12
+ **/
 cairo_status_t
 cairo_surface_observer_add_mask_callback (cairo_surface_t *abstract_surface,
 					  cairo_surface_observer_callback_t func,
@@ -1465,6 +1507,18 @@ cairo_surface_observer_add_mask_callback (cairo_surface_t *abstract_surface,
 						 func, data);
 }
 
+/**
+ * cairo_surface_observer_add_fill_callback:
+ * @abstract_surface: a #cairo_surface_observer_t
+ * @func: callback function for fill operations
+ * @data: closure to pass to the callback
+ *
+ * Adds a callback for fill operations on the observed surface.
+ *
+ * Returns: the status of the surface
+ *
+ * Since: 1.12
+ **/
 cairo_status_t
 cairo_surface_observer_add_fill_callback (cairo_surface_t *abstract_surface,
 					  cairo_surface_observer_callback_t func,
@@ -1483,6 +1537,18 @@ cairo_surface_observer_add_fill_callback (cairo_surface_t *abstract_surface,
 						 func, data);
 }
 
+/**
+ * cairo_surface_observer_add_stroke_callback:
+ * @abstract_surface: a #cairo_surface_observer_t
+ * @func: callback function for stroke operations
+ * @data: closure to pass to the callback
+ *
+ * Adds a callback for stroke operations on the observed surface.
+ *
+ * Returns: the status of the surface
+ *
+ * Since: 1.12
+ **/
 cairo_status_t
 cairo_surface_observer_add_stroke_callback (cairo_surface_t *abstract_surface,
 					    cairo_surface_observer_callback_t func,
@@ -1501,6 +1567,18 @@ cairo_surface_observer_add_stroke_callback (cairo_surface_t *abstract_surface,
 						 func, data);
 }
 
+/**
+ * cairo_surface_observer_add_glyphs_callback:
+ * @abstract_surface: a #cairo_surface_observer_t
+ * @func: callback function for glyph operations
+ * @data: closure to pass to the callback
+ *
+ * Adds a callback for glyph operations on the observed surface.
+ *
+ * Returns: the status of the surface
+ *
+ * Since: 1.10
+ **/
 cairo_status_t
 cairo_surface_observer_add_glyphs_callback (cairo_surface_t *abstract_surface,
 					    cairo_surface_observer_callback_t func,
@@ -1519,6 +1597,18 @@ cairo_surface_observer_add_glyphs_callback (cairo_surface_t *abstract_surface,
 						 func, data);
 }
 
+/**
+ * cairo_surface_observer_add_flush_callback:
+ * @abstract_surface: a #cairo_surface_observer_t
+ * @func: callback for flush operations
+ * @data: closure to pass to the callback
+ *
+ * Adds a callback for flush operations on the observed surface.
+ *
+ * Returns: the status of the surface
+ *
+ * Since: 1.10
+ **/
 cairo_status_t
 cairo_surface_observer_add_flush_callback (cairo_surface_t *abstract_surface,
 					   cairo_surface_observer_callback_t func,
@@ -1537,6 +1627,18 @@ cairo_surface_observer_add_flush_callback (cairo_surface_t *abstract_surface,
 						 func, data);
 }
 
+/**
+ * cairo_surface_observer_add_finish_callback:
+ * @abstract_surface: a #cairo_surface_observer_t
+ * @func: callback function for the finish operation
+ * @data: closure to pass to the callback
+ *
+ * Adds a callback for finish operations on the observed surface.
+ *
+ * Returns: the status of the surface
+ *
+ * Since: 1.10
+ **/
 cairo_status_t
 cairo_surface_observer_add_finish_callback (cairo_surface_t *abstract_surface,
 					    cairo_surface_observer_callback_t func,
@@ -1957,6 +2059,18 @@ _cairo_observation_print (cairo_output_stream_t *stream,
     cairo_device_destroy (script);
 }
 
+/**
+ * cairo_surface_observer_print:
+ * @abstract_surface: a #cairo_surface_observer_t
+ * @write_func: callback for writing on a stream
+ * @closure: data to pass to @write_func
+ *
+ * Prints the observer log using the given callback.
+ *
+ * Returns: the status of the print operation
+ *
+ * Since: 1.12
+ **/
 cairo_status_t
 cairo_surface_observer_print (cairo_surface_t *abstract_surface,
 			      cairo_write_func_t write_func,
@@ -1978,6 +2092,16 @@ cairo_surface_observer_print (cairo_surface_t *abstract_surface,
     return _cairo_output_stream_destroy (stream);
 }
 
+/**
+ * cairo_surface_observer_elapsed:
+ * @abstract_surface: a #cairo_surface_observer_t
+ *
+ * Returns the total observation time.
+ *
+ * Returns: the elapsed time, in nanoseconds
+ *
+ * Since: 1.12
+ **/
 double
 cairo_surface_observer_elapsed (cairo_surface_t *abstract_surface)
 {
@@ -1993,6 +2117,18 @@ cairo_surface_observer_elapsed (cairo_surface_t *abstract_surface)
     return _cairo_time_to_ns (_cairo_observation_total_elapsed (&surface->log));
 }
 
+/**
+ * cairo_device_observer_print:
+ * @abstract_device: the observed #cairo_device_t
+ * @write_func: the write function
+ * @closure: data to pass to the @write_func
+ *
+ * Prints the device log using the given function.
+ *
+ * Returns: the status after the operation
+ *
+ * Since: 1.12
+ **/
 cairo_status_t
 cairo_device_observer_print (cairo_device_t *abstract_device,
 			     cairo_write_func_t write_func,
@@ -2014,6 +2150,16 @@ cairo_device_observer_print (cairo_device_t *abstract_device,
     return _cairo_output_stream_destroy (stream);
 }
 
+/**
+ * cairo_device_observer_elapsed:
+ * @abstract_device: the observed #cairo_device_t
+ *
+ * Returns the total elapsed time of the observation.
+ *
+ * Returns: the elapsed time, in nanoseconds.
+ *
+ * Since: 1.12
+ **/
 double
 cairo_device_observer_elapsed (cairo_device_t *abstract_device)
 {
@@ -2029,6 +2175,16 @@ cairo_device_observer_elapsed (cairo_device_t *abstract_device)
     return _cairo_time_to_ns (_cairo_observation_total_elapsed (&device->log));
 }
 
+/**
+ * cairo_device_observer_paint_elapsed:
+ * @abstract_device: the observed #cairo_device_t
+ *
+ * Returns the elapsed time of the paint operations.
+ *
+ * Returns: the elapsed time, in nanoseconds.
+ *
+ * Since: 1.12
+ **/
 double
 cairo_device_observer_paint_elapsed (cairo_device_t *abstract_device)
 {
@@ -2044,6 +2200,16 @@ cairo_device_observer_paint_elapsed (cairo_device_t *abstract_device)
     return _cairo_time_to_ns (device->log.paint.elapsed);
 }
 
+/**
+ * cairo_device_observer_mask_elapsed:
+ * @abstract_device: the observed #cairo_device_t
+ *
+ * Returns the elapsed time of the mask operations.
+ *
+ * Returns: the elapsed time, in nanoseconds
+ *
+ * Since: 1.12
+ **/
 double
 cairo_device_observer_mask_elapsed (cairo_device_t *abstract_device)
 {
@@ -2059,6 +2225,16 @@ cairo_device_observer_mask_elapsed (cairo_device_t *abstract_device)
     return _cairo_time_to_ns (device->log.mask.elapsed);
 }
 
+/**
+ * cairo_device_observer_fill_elapsed:
+ * @abstract_device: the observed #cairo_device_t
+ *
+ * Returns the elapsed time of the fill operations.
+ *
+ * Returns: the elapsed time, in nanoseconds.
+ *
+ * Since: 1.12
+ **/
 double
 cairo_device_observer_fill_elapsed (cairo_device_t *abstract_device)
 {
@@ -2074,6 +2250,16 @@ cairo_device_observer_fill_elapsed (cairo_device_t *abstract_device)
     return _cairo_time_to_ns (device->log.fill.elapsed);
 }
 
+/**
+ * cairo_device_observer_stroke_elapsed:
+ * @abstract_device: the observed #cairo_device_t
+ *
+ * Returns the elapsed time of the stroke operations.
+ *
+ * Returns: the elapsed time, in nanoseconds.
+ *
+ * Since: 1.12
+ **/
 double
 cairo_device_observer_stroke_elapsed (cairo_device_t *abstract_device)
 {
@@ -2089,6 +2275,16 @@ cairo_device_observer_stroke_elapsed (cairo_device_t *abstract_device)
     return _cairo_time_to_ns (device->log.stroke.elapsed);
 }
 
+/**
+ * cairo_device_observer_glyphs_elapsed:
+ * @abstract_device: the observed #cairo_device_t
+ *
+ * Returns the elapsed time of the glyph operations.
+ *
+ * Returns: the elapsed time, in nanoseconds.
+ *
+ * Since: 1.12
+ **/
 double
 cairo_device_observer_glyphs_elapsed (cairo_device_t *abstract_device)
 {

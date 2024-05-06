@@ -214,17 +214,6 @@ _cairo_slope_compare_sgn (double dx1, double dy1, double dx2, double dy2)
     return 0;
 }
 
-static inline int
-_range_step (int i, int step, int max)
-{
-    i += step;
-    if (i < 0)
-	i = max - 1;
-    if (i >= max)
-	i = 0;
-    return i;
-}
-
 /*
  * Construct a fan around the midpoint using the vertices from pen between
  * inpt and outpt.
@@ -996,6 +985,14 @@ _cairo_stroker_line_to (void *closure,
 }
 
 static cairo_status_t
+_cairo_stroker_add_point_line_to (void *closure,
+				  const cairo_point_t *point,
+				  const cairo_slope_t *tangent)
+{
+    return _cairo_stroker_line_to (closure, point);
+};
+
+static cairo_status_t
 _cairo_stroker_spline_to (void *closure,
 			  const cairo_point_t *point,
 			  const cairo_slope_t *tangent)
@@ -1226,6 +1223,14 @@ _cairo_stroker_line_to_dashed (void *closure,
 }
 
 static cairo_status_t
+_cairo_stroker_add_point_line_to_dashed (void *closure,
+					 const cairo_point_t *point,
+					 const cairo_slope_t *tangent)
+{
+    return _cairo_stroker_line_to_dashed (closure, point);
+};
+
+static cairo_status_t
 _cairo_stroker_curve_to (void *closure,
 			 const cairo_point_t *b,
 			 const cairo_point_t *c,
@@ -1241,13 +1246,13 @@ _cairo_stroker_curve_to (void *closure,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     line_to = stroker->dash.dashed ?
-	(cairo_spline_add_point_func_t) _cairo_stroker_line_to_dashed :
-	(cairo_spline_add_point_func_t) _cairo_stroker_line_to;
+	_cairo_stroker_add_point_line_to_dashed :
+	_cairo_stroker_add_point_line_to;
 
     /* spline_to is only capable of rendering non-degenerate splines. */
     spline_to = stroker->dash.dashed ?
-	(cairo_spline_add_point_func_t) _cairo_stroker_line_to_dashed :
-	(cairo_spline_add_point_func_t) _cairo_stroker_spline_to;
+	_cairo_stroker_add_point_line_to_dashed :
+	_cairo_stroker_spline_to;
 
     if (! _cairo_spline_init (&spline,
 			      spline_to,

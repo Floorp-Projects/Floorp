@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -87,6 +88,12 @@ _cairo_array_size (const cairo_array_t *array);
 
 cairo_private void
 _cairo_array_sort (const cairo_array_t *array, int (*compar)(const void *, const void *));
+
+cairo_private cairo_bool_t
+_cairo_array_pop_element (cairo_array_t *array, void *dst);
+
+cairo_private void *
+_cairo_array_last_element (cairo_array_t *array);
 
 CAIRO_END_DECLS
 
