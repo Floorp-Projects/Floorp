@@ -1328,6 +1328,9 @@ void AudioCallbackDriver::FallbackToSystemClockDriver() {
 void AudioCallbackDriver::FallbackDriverStopped(GraphTime aIterationEnd,
                                                 GraphTime aStateComputedTime,
                                                 FallbackDriverState aState) {
+  LOG(LogLevel::Debug,
+      ("%p: AudioCallbackDriver %p Fallback driver has stopped.", Graph(),
+       this));
   mIterationEnd = aIterationEnd;
   mStateComputedTime = aStateComputedTime;
   mNextReInitAttempt = TimeStamp();
