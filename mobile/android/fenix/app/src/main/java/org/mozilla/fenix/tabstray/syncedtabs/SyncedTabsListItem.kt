@@ -31,13 +31,29 @@ sealed class SyncedTabsListItem {
      *
      * @property displayTitle The title of the tab's web page.
      * @property displayURL The tab's URL up to BrowserToolbar.MAX_URI_LENGTH characters long.
+     * @property action The action button to show for this tab.
      * @property tab The underlying SyncTab object passed when the tab is clicked.
      */
     data class Tab(
         val displayTitle: String,
         val displayURL: String,
+        val action: Action,
         val tab: SyncTab,
-    ) : SyncedTabsListItem()
+    ) : SyncedTabsListItem() {
+        /** An action button to show for a [Tab]. */
+        sealed class Action {
+            /**
+             * An action button to close the [Tab] on the synced device.
+             *
+             * @property deviceId The ID of the device on which the [Tab] is
+             * currently open.
+             */
+            data class Close(val deviceId: String) : Action()
+
+            /** A placeholder for a [Tab] without an action button. */
+            data object None : Action()
+        }
+    }
 
     /**
      * A placeholder for a device that has no tabs synced.

@@ -157,6 +157,10 @@ class DefaultTabsTrayInteractor(
         controller.handleSyncedTabClicked(tab)
     }
 
+    override fun onSyncedTabClosed(deviceId: String, tab: Tab) {
+        controller.handleSyncedTabClosed(deviceId, tab)
+    }
+
     override fun onBackPressed(): Boolean = controller.handleBackPressed()
 
     override fun onTabClosed(tab: TabSessionState, source: String?) {

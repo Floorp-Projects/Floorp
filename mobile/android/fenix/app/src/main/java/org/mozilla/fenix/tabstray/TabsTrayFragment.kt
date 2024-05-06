@@ -30,6 +30,7 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.feature.accounts.push.CloseTabsUseCases
 import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -181,6 +182,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             navigationInteractor = navigationInteractor,
             profiler = requireComponents.core.engine.profiler,
             tabsUseCases = requireComponents.useCases.tabsUseCases,
+            closeSyncedTabsUseCases = CloseTabsUseCases(requireComponents.backgroundServices.accountManager),
             bookmarksUseCase = requireComponents.useCases.bookmarksUseCases,
             ioDispatcher = Dispatchers.IO,
             collectionStorage = requireComponents.core.tabCollectionStorage,
@@ -275,6 +277,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                         onInactiveTabClick = tabsTrayInteractor::onInactiveTabClicked,
                         onInactiveTabClose = tabsTrayInteractor::onInactiveTabClosed,
                         onSyncedTabClick = tabsTrayInteractor::onSyncedTabClicked,
+                        onSyncedTabClose = tabsTrayInteractor::onSyncedTabClosed,
                         onSaveToCollectionClick = tabsTrayInteractor::onAddSelectedTabsToCollectionClicked,
                         onShareSelectedTabsClick = tabsTrayInteractor::onShareSelectedTabs,
                         onShareAllTabsClick = {

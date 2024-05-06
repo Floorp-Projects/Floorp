@@ -827,6 +827,18 @@
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Tab from %s</string>
 
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes one tab that's currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$d is a placeholder for the number of tabs closed; %2$s is for the app name. -->
+    <string name="fxa_tab_closed_notification_title">%1$s %2$s tab closed</string>
+    <!-- The title for a notification shown when the user closes two or more tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$d is a placeholder for the number of tabs closed; %2$s is for the app name.  -->
+    <string name="fxa_tabs_closed_notification_title">%1$d %2$s tabs closed</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">View recently closed tabs</string>
+
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Exceptions</string>
