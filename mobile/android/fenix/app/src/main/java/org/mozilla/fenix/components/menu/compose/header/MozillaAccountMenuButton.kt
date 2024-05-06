@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -31,12 +33,15 @@ import mozilla.components.service.fxa.manager.AccountState.AuthenticationProblem
 import mozilla.components.service.fxa.manager.AccountState.NotAuthenticated
 import mozilla.components.service.fxa.store.Account
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
 private val BUTTON_HEIGHT = 56.dp
 private val BUTTON_SHAPE = RoundedCornerShape(size = 8.dp)
+private val ICON_SHAPE = RoundedCornerShape(size = 24.dp)
+private val AVATAR_SIZE = 24.dp
 
 @Composable
 internal fun MozillaAccountMenuButton(
@@ -58,7 +63,7 @@ internal fun MozillaAccountMenuButton(
     ) {
         Spacer(modifier = Modifier.width(4.dp))
 
-        AvatarIcon()
+        AvatarIcon(account)
 
         Column(
             modifier = Modifier
@@ -125,18 +130,42 @@ internal fun MozillaAccountMenuButton(
 }
 
 @Composable
-private fun AvatarIcon() {
+private fun FallbackAvatarIcon() {
     Icon(
         painter = painterResource(id = R.drawable.mozac_ic_avatar_circle_24),
         contentDescription = null,
         modifier = Modifier
             .background(
                 color = FirefoxTheme.colors.layer2,
-                shape = RoundedCornerShape(size = 24.dp),
+                shape = ICON_SHAPE,
             )
             .padding(all = 4.dp),
         tint = FirefoxTheme.colors.iconSecondary,
     )
+}
+
+@Composable
+private fun AvatarIcon(account: Account?) {
+    val avatarUrl = account?.avatar?.url
+
+    if (avatarUrl != null) {
+        Image(
+            url = avatarUrl,
+            modifier = Modifier
+                .background(
+                    color = FirefoxTheme.colors.layer2,
+                    shape = ICON_SHAPE,
+                )
+                .padding(all = 4.dp)
+                .size(AVATAR_SIZE)
+                .clip(CircleShape),
+            targetSize = AVATAR_SIZE,
+            placeholder = { FallbackAvatarIcon() },
+            fallback = { FallbackAvatarIcon() },
+        )
+    } else {
+        FallbackAvatarIcon()
+    }
 }
 
 @Composable
