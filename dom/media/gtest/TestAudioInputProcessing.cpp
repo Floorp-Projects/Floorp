@@ -428,3 +428,178 @@ TEST(TestAudioInputProcessing, Downmixing)
   aip->Stop(graph);
   track->Destroy();
 }
+
+TEST(TestAudioInputProcessing, DisabledPlatformProcessing)
+{
+  const TrackRate rate = 44100;
+  const uint32_t channels = 1;
+  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate);
+  graph->Init(channels);
+
+  auto aip = MakeRefPtr<AudioInputProcessing>(channels);
+
+  MediaEnginePrefs settings;
+  settings.mUsePlatformProcessing = false;
+  settings.mAecOn = true;
+  aip->ApplySettings(graph, nullptr, settings);
+  aip->Start(graph);
+
+  EXPECT_EQ(aip->RequestedInputProcessingParams(graph),
+            CUBEB_INPUT_PROCESSING_PARAM_NONE);
+
+  aip->Stop(graph);
+  graph->Destroy();
+}
+
+TEST(TestAudioInputProcessing, EnabledPlatformProcessing)
+{
+  const TrackRate rate = 44100;
+  const uint32_t channels = 1;
+  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate);
+  graph->Init(channels);
+
+  auto aip = MakeRefPtr<AudioInputProcessing>(channels);
+
+  MediaEnginePrefs settings;
+  settings.mUsePlatformProcessing = true;
+  settings.mAecOn = true;
+  aip->ApplySettings(graph, nullptr, settings);
+  aip->Start(graph);
+
+  EXPECT_EQ(aip->RequestedInputProcessingParams(graph),
+            CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION);
+
+  aip->Stop(graph);
+  graph->Destroy();
+}
+
+namespace webrtc {
+bool operator==(const AudioProcessing::Config& aLhs,
+                const AudioProcessing::Config& aRhs) {
+  return aLhs.echo_canceller.enabled == aRhs.echo_canceller.enabled &&
+         (aLhs.gain_controller1.enabled == aRhs.gain_controller1.enabled ||
+          aLhs.gain_controller2.enabled == aRhs.gain_controller2.enabled) &&
+         aLhs.noise_suppression.enabled == aRhs.noise_suppression.enabled;
+}
+
+static std::ostream& operator<<(
+    std::ostream& aStream, const webrtc::AudioProcessing::Config& aConfig) {
+  aStream << "webrtc::AudioProcessing::Config[";
+  bool hadPrior = false;
+  if (aConfig.echo_canceller.enabled) {
+    aStream << "AEC";
+    hadPrior = true;
+  }
+  if (aConfig.gain_controller1.enabled || aConfig.gain_controller2.enabled) {
+    if (hadPrior) {
+      aStream << ", ";
+    }
+    aStream << "AGC";
+  }
+  if (aConfig.noise_suppression.enabled) {
+    if (hadPrior) {
+      aStream << ", ";
+    }
+    aStream << "NS";
+  }
+  aStream << "]";
+  return aStream;
+}
+}  // namespace webrtc
+
+TEST(TestAudioInputProcessing, PlatformProcessing)
+{
+  const TrackRate rate = 44100;
+  const uint32_t channels = 1;
+  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate);
+  graph->Init(channels);
+
+  auto aip = MakeRefPtr<AudioInputProcessing>(channels);
+
+  MediaEnginePrefs settings;
+  settings.mUsePlatformProcessing = true;
+  settings.mAecOn = true;
+  aip->ApplySettings(graph, nullptr, settings);
+  aip->Start(graph);
+
+  webrtc::AudioProcessing::Config echoOnlyConfig;
+  echoOnlyConfig.echo_canceller.enabled = true;
+  webrtc::AudioProcessing::Config echoNoiseConfig = echoOnlyConfig;
+  echoNoiseConfig.noise_suppression.enabled = true;
+
+  // Config is applied, and platform processing requested.
+  EXPECT_EQ(aip->RequestedInputProcessingParams(graph),
+            CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION);
+  EXPECT_EQ(aip->AppliedConfig(graph), echoOnlyConfig);
+  EXPECT_FALSE(aip->IsPassThrough(graph));
+
+  // Platform processing params successfully applied.
+  aip->NotifySetRequestedInputProcessingParamsResult(
+      graph, CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION,
+      CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION);
+  // Turns off the equivalent APM config.
+  EXPECT_EQ(aip->AppliedConfig(graph), webrtc::AudioProcessing::Config());
+  EXPECT_TRUE(aip->IsPassThrough(graph));
+
+  // Simulate an error after a driver switch.
+  aip->NotifySetRequestedInputProcessingParamsResult(
+      graph, CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION, Err(CUBEB_ERROR));
+  // The APM config is turned back on, and platform processing is requested to
+  // be turned off.
+  EXPECT_EQ(aip->RequestedInputProcessingParams(graph),
+            CUBEB_INPUT_PROCESSING_PARAM_NONE);
+  EXPECT_EQ(aip->AppliedConfig(graph), echoOnlyConfig);
+  EXPECT_FALSE(aip->IsPassThrough(graph));
+
+  // Pretend there was a response for an old request.
+  aip->NotifySetRequestedInputProcessingParamsResult(
+      graph, CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION,
+      CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION);
+  // It does nothing since we are requesting NONE now.
+  EXPECT_EQ(aip->RequestedInputProcessingParams(graph),
+            CUBEB_INPUT_PROCESSING_PARAM_NONE);
+  EXPECT_EQ(aip->AppliedConfig(graph), echoOnlyConfig);
+  EXPECT_FALSE(aip->IsPassThrough(graph));
+
+  // Turn it off as requested.
+  aip->NotifySetRequestedInputProcessingParamsResult(
+      graph, CUBEB_INPUT_PROCESSING_PARAM_NONE,
+      CUBEB_INPUT_PROCESSING_PARAM_NONE);
+  EXPECT_EQ(aip->RequestedInputProcessingParams(graph),
+            CUBEB_INPUT_PROCESSING_PARAM_NONE);
+  EXPECT_EQ(aip->AppliedConfig(graph), echoOnlyConfig);
+  EXPECT_FALSE(aip->IsPassThrough(graph));
+
+  // Test partial support for the requested params.
+  settings.mNoiseOn = true;
+  aip->ApplySettings(graph, nullptr, settings);
+  EXPECT_EQ(aip->RequestedInputProcessingParams(graph),
+            CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION |
+                CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION);
+  EXPECT_EQ(aip->AppliedConfig(graph), echoNoiseConfig);
+  EXPECT_FALSE(aip->IsPassThrough(graph));
+  // Only noise suppression was supported in the platform.
+  aip->NotifySetRequestedInputProcessingParamsResult(
+      graph,
+      CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION |
+          CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION,
+      CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION);
+  // In the APM only echo cancellation is applied.
+  EXPECT_EQ(aip->AppliedConfig(graph), echoOnlyConfig);
+  EXPECT_FALSE(aip->IsPassThrough(graph));
+
+  // Test error for partial support.
+  aip->NotifySetRequestedInputProcessingParamsResult(
+      graph,
+      CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION |
+          CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION,
+      Err(CUBEB_ERROR));
+  // The full config is applied in the APM, and NONE is requested.
+  EXPECT_EQ(aip->RequestedInputProcessingParams(graph),
+            CUBEB_INPUT_PROCESSING_PARAM_NONE);
+  EXPECT_EQ(aip->AppliedConfig(graph), echoNoiseConfig);
+  EXPECT_FALSE(aip->IsPassThrough(graph));
+
+  aip->Stop(graph);
+  graph->Destroy();
+}
