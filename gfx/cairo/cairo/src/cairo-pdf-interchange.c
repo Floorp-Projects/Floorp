@@ -52,6 +52,7 @@
 #include "cairo-array-private.h"
 #include "cairo-error-private.h"
 #include "cairo-output-stream-private.h"
+#include "cairo-recording-surface-inline.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-snapshot-inline.h"
 
@@ -2071,7 +2072,9 @@ _cairo_pdf_interchange_struct_tree_requires_recording_surface (
     if (_cairo_surface_is_snapshot (recording_surface))
 	free_me = recording_surface = _cairo_surface_snapshot_get_target (recording_surface);
 
-    if (_cairo_recording_surface_has_tags (recording_surface)) {
+    if (_cairo_surface_is_recording(recording_surface) &&
+        _cairo_recording_surface_has_tags(recording_surface))
+    {
 	/* Check if tags are to be ignored in this source */
 	switch (source_type) {
 	    case CAIRO_ANALYSIS_SOURCE_PAINT:
