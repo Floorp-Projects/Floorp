@@ -631,6 +631,9 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   // Returns the output latency for the current audio output stream.
   TimeDuration AudioOutputLatency();
 
+  /* Returns true if this driver has a fallback driver and handover to the audio
+   * callback has not been completed. */
+  bool HasFallback() const;
   /* Returns true if this driver is currently driven by the fallback driver. */
   bool OnFallback() const;
 

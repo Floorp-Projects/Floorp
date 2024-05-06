@@ -1252,6 +1252,11 @@ TimeDuration AudioCallbackDriver::AudioOutputLatency() {
                                    mSampleRate);
 }
 
+bool AudioCallbackDriver::HasFallback() const {
+  MOZ_ASSERT(InIteration());
+  return mFallbackDriverState != FallbackDriverState::None;
+}
+
 bool AudioCallbackDriver::OnFallback() const {
   MOZ_ASSERT(InIteration());
   return mFallbackDriverState == FallbackDriverState::Running;

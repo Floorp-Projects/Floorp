@@ -411,13 +411,14 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   });
 #endif
   EXPECT_CALL(*graph, NotifyInputData(_, 0, rate, 1, _)).Times(AnyNumber());
-  EXPECT_CALL(*graph, DeviceChanged);
 
   graph->SetCurrentDriver(driver);
   graph->SetEnsureNextIteration(true);
+  auto initPromise = TakeN(cubeb->StreamInitEvent(), 1);
   // This starts the fallback driver.
   driver->Start();
-  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
+  RefPtr<SmartMockCubebStream> stream;
+  std::tie(stream) = WaitFor(initPromise).unwrap()[0];
 
   // Wait for the audio driver to have started or the DeviceChanged event will
   // be ignored. driver->Start() does a dispatch to the cubeb operation thread
@@ -427,43 +428,91 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   MOZ_ALWAYS_SUCCEEDS(SyncRunnable::DispatchToThread(
       cubebOpThread, NS_NewRunnableFunction(__func__, [] {})));
 
-#ifdef DEBUG
-  AutoSetter as(threadInDriverIteration, std::this_thread::get_id());
-#endif
+  initPromise = TakeN(cubeb->StreamInitEvent(), 1);
+  Monitor mon(__func__);
+  MonitorAutoLock lock(mon);
+  bool canContinueToStartNextDriver = false;
+  bool continued = false;
 
   // This marks the audio driver as running.
-  EXPECT_EQ(stream->ManualDataCallback(0),
+  EXPECT_EQ(stream->ManualDataCallback(1),
             MockCubebStream::KeepProcessing::Yes);
 
-  // If a fallback driver callback happens between the audio callback above, and
-  // the SwitchTo below, the audio driver will perform the switch instead of the
-  // fallback since the fallback will have stopped. This test may therefore
-  // intermittently take different code paths.
+  // If a fallback driver callback happens between the audio callback
+  // above, and the SwitchTo below, the driver will enter
+  // `FallbackDriverState::None`, relying on the audio driver to
+  // iterate the graph, including performing the driver switch. This
+  // test may therefore intermittently take different code paths.
+  // Note however that the fallback driver runs every ~10ms while the
+  // time from the manual callback above to telling the mock graph to
+  // switch drivers below is much much shorter. The vast majority of
+  // test runs will exercise the intended code path.
 
-  // Stop the fallback driver by switching audio driver in the graph.
-  {
-    Monitor mon(__func__);
-    MonitorAutoLock lock(mon);
-    bool switched = false;
-    graph->SwitchTo(newDriver, NS_NewRunnableFunction(__func__, [&] {
-                      MonitorAutoLock lock(mon);
-                      switched = true;
-                      lock.Notify();
-                    }));
-    while (!switched) {
-      lock.Wait();
-    }
+  // Make the fallback driver enter FallbackDriverState::Stopped by
+  // switching audio driver in the graph.
+  graph->SwitchTo(newDriver, NS_NewRunnableFunction(__func__, [&] {
+                    MonitorAutoLock lock(mon);
+                    // Block the fallback driver on its thread until
+                    // the test on main thread has finished testing
+                    // what it needs.
+                    while (!canContinueToStartNextDriver) {
+                      lock.Wait();
+                    }
+                    // Notify the test that it can take these
+                    // variables off the stack now.
+                    continued = true;
+                    lock.Notify();
+                  }));
+
+  // Wait for the fallback driver to stop running.
+  while (driver->OnFallback()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 
-  {
+  if (driver->HasFallback()) {
+    // Driver entered FallbackDriverState::Stopped as desired.
+    // Proceed with a DeviceChangedCallback.
+
+    EXPECT_CALL(*graph, DeviceChanged);
+
+    {
 #ifdef DEBUG
-    AutoSetter as(threadInDriverIteration, std::thread::id());
+      AutoSetter as(threadInDriverIteration, std::thread::id());
 #endif
-    // After stopping the fallback driver, but before newDriver has stopped the
-    // old audio driver, fire a DeviceChanged event to ensure it is handled
-    // properly.
-    AudioCallbackDriver::DeviceChangedCallback_s(driver);
+      // After stopping the fallback driver, but before newDriver has
+      // stopped the old audio driver, fire a DeviceChanged event to
+      // ensure it is handled properly.
+      AudioCallbackDriver::DeviceChangedCallback_s(driver);
+    }
+
+    EXPECT_FALSE(driver->OnFallback())
+        << "DeviceChangedCallback after stopping must not start the "
+           "fallback driver again";
   }
+
+  // Iterate the audio driver on a background thread in case the fallback
+  // driver completed the handover to the audio driver before the switch
+  // above. Doing the switch would deadlock as the switch runnable waits on
+  // mon.
+  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+      "DeviceChangeAfterStop::postSwitchManualAudioCallback", [stream] {
+        // An audio callback after switching must tell the stream to stop.
+        EXPECT_EQ(stream->ManualDataCallback(1),
+                  MockCubebStream::KeepProcessing::No);
+      }));
+
+  // Unblock the fallback driver.
+  canContinueToStartNextDriver = true;
+  lock.Notify();
+
+  // Wait for the fallback driver to continue, so we can clear the
+  // stack.
+  while (!continued) {
+    lock.Wait();
+  }
+
+  // Wait for newDriver's cubeb stream to init.
+  std::tie(stream) = WaitFor(initPromise).unwrap()[0];
 
   graph->StopIterating();
   newDriver->EnsureNextIteration();
@@ -471,9 +520,14 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 
-  // This will block until all events have been queued.
-  MOZ_KnownLive(driver)->Shutdown();
-  MOZ_KnownLive(newDriver)->Shutdown();
+  {
+#ifdef DEBUG
+    AutoSetter as(threadInDriverIteration, std::thread::id());
+#endif
+    EXPECT_EQ(stream->ManualDataCallback(1),
+              MockCubebStream::KeepProcessing::No);
+  }
+
   // Drain the event queue.
   NS_ProcessPendingEvents(nullptr);
 }
