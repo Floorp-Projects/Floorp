@@ -190,8 +190,9 @@ void TestSlowStart(const TrackRate aRate) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   graph->SetCurrentDriver(driver);
   graph->SetEnsureNextIteration(true);
 
+  auto initPromise = TakeN(cubeb->StreamInitEvent(), 1);
   driver->Start();
-  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
+  auto [stream] = WaitFor(initPromise).unwrap()[0];
   cubeb->SetStreamStartFreezeEnabled(false);
 
   const size_t fallbackIterations = 3;
@@ -295,8 +296,9 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   graph->SetCurrentDriver(driver);
   graph->SetEnsureNextIteration(true);
   // This starts the fallback driver.
+  auto initPromise = TakeN(cubeb->StreamInitEvent(), 1);
   driver->Start();
-  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
+  auto [stream] = WaitFor(initPromise).unwrap()[0];
 
   // Wait for the audio driver to have started the stream before running data
   // callbacks. driver->Start() does a dispatch to the cubeb operation thread
@@ -580,8 +582,9 @@ void TestInputProcessingOnStart(
       .WillOnce([&] { notified = true; });
 
   graph->SetCurrentDriver(driver);
+  auto initPromise = TakeN(aCubeb->StreamInitEvent(), 1);
   driver->Start();
-  RefPtr<SmartMockCubebStream> stream = WaitFor(aCubeb->StreamInitEvent());
+  auto [stream] = WaitFor(initPromise).unwrap()[0];
 
   // Wait for the audio driver to have started the stream before running data
   // callbacks. driver->Start() does a dispatch to the cubeb operation thread
@@ -748,8 +751,9 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   };
 
   graph->SetCurrentDriver(driver);
+  auto initPromise = TakeN(cubeb->StreamInitEvent(), 1);
   driver->Start();
-  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
+  auto [stream] = WaitFor(initPromise).unwrap()[0];
 
   // Wait for the audio driver to have started the stream before running data
   // callbacks. driver->Start() does a dispatch to the cubeb operation thread
