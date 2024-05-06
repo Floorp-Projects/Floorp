@@ -46,11 +46,19 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_title">මෑතදී සුරැකි</string>
+    <string name="recently_saved_title" moz:removedIn="127" tools:ignore="UnusedResources">මෑතදී සුරැකි</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description_2">සුරැකි සියළු පොත්යොමු පෙන්වන්න</string>
+    <string name="recently_saved_show_all_content_description_2" moz:removedIn="127" tools:ignore="UnusedResources">සුරැකි සියළු පොත්යොමු පෙන්වන්න</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
-    <string name="recently_saved_menu_item_remove">ඉවත් කරන්න</string>
+    <string name="recently_saved_menu_item_remove" moz:removedIn="127" tools:ignore="UnusedResources">ඉවත් කරන්න</string>
+
+    <!-- Home - Bookmarks -->
+    <!-- Title for the home screen section with bookmarks. -->
+    <string name="home_bookmarks_title">පොත්යොමු</string>
+    <!-- Content description for the button which navigates the user to show all of their bookmarks. -->
+    <string name="home_bookmarks_show_all_content_description">සියලුම පොත්යොමු පෙන්වන්න</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="home_bookmarks_menu_item_remove">ඉවත් කරන්න</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">මොසිල්ලා හරහා %1$s නිෂ්පාදනය කෙරේ.</string>
@@ -245,13 +253,27 @@
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
     <string name="browser_menu_sign_in">පිවිසෙන්න</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+    <string name="browser_menu_sign_in_caption">මුරපද, පටිති සහ තවත් දෑ සමමුහූර්ත කරන්න</string>
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">සමමුහූර්තයට පිවිසෙන්න</string>
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">සමමුහූර්ත විරාමයකි</string>
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">නව පෞද්. පටිත්ත</string>
     <!-- Browser menu label that navigates to the Password screen -->
     <string name="browser_menu_passwords">මුරපද</string>
+    <!-- Browser menu label that toggles the request for the desktop site of the currently visited page -->
+    <string name="browser_menu_switch_to_desktop_site">වැඩතල අඩවිය</string>
     <!-- Browser menu label that navigates to the page tools sub-menu -->
     <string name="browser_menu_tools">මෙවලම්</string>
     <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
          bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
     <string name="browser_menu_save">සුරකින්න</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">මෙතැන දිගු නැත</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -263,6 +285,11 @@
 
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">පිටුව පරිවර්තනය</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">%1$s වෙතින් %2$s වෙත පිටුව පරිවර්තනය වී ඇත.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -342,6 +369,8 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">ෆයර්ෆොක්ස් රහස්‍යතා දැන්වීම</string>
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">රහස්‍යතා දැන්වීම ගැන තව දැනගන්න</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">ඔබට ආරක්‍ෂාව සලසන්නෙමු</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -533,6 +562,8 @@
     <string name="preferences_account_sync_error">සමමුහූර්තය යළි ඇරඹීමට නැවත සබඳින්න</string>
     <!-- Preference for language -->
     <string name="preferences_language">භාෂාව</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">පරිවර්තනය</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">දත්ත තේරීම්</string>
     <!-- Preference for data collection -->
@@ -584,8 +615,12 @@
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">එක්කහු</string>
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">දිගු</string>
     <!-- Preference for installing a local add-on -->
     <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">ගොනුවකින් එක්කහුවක් ස්ථාපනය…</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">ගොනුවකින් දිගුවක් ස්ථාපනය</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">දැනුම්දීම්</string>
 
@@ -594,9 +629,22 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">ඉඩ නොදේ</string>
 
+    <!-- Add-on Permissions -->
+    <!-- The title of the required permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">වුවමනාය</string>
+    <!-- The title of the optional permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">විකල්පයකි</string>
+    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
+    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">අඩවියේ දත්ත කියවා වෙනස් කිරීම</string>
+
+    <!-- The description of the icon that can delete one of the websites displayed  -->
+    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">අඩවිය මකන්න</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">අභිරුචි එක්කහු එකතුව</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">අභිරුචි දිගු එකතුව</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">හරි</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -613,7 +661,9 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">ආපසු පනින්න</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recent_bookmarks">මෑත පොත්යොමු</string>
+    <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">මෑත පොත්යොමු</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">පොත්යොමු</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">මෑතදී ගොඩවැදුණු</string>
@@ -664,6 +714,8 @@
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
     <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">දැන් නව එක්කහු තිබේ</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">දැන් නව දිගු තිබේ</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් අභිරුචිකරණයට උපකාරී වන නව දිගු 100 කට වඩා බලන්න.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
