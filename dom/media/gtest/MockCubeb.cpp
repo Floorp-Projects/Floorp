@@ -378,6 +378,9 @@ KeepProcessing MockCubebStream::ManualDataCallback(long aNrFrames) {
 }
 
 KeepProcessing MockCubebStream::Process(long aNrFrames) {
+  if (mStreamStop) {
+    return KeepProcessing::InvalidState;
+  }
   if (mInputParams.rate) {
     mAudioGenerator.GenerateInterleaved(mInputBuffer, aNrFrames);
   }
