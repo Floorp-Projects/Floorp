@@ -483,6 +483,40 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
+    fun optionalOriginsNormalized() {
+        var extension = sessionRule.waitForResult(
+            controller.ensureBuiltIn(
+                "resource://android/assets/web_extensions/optional-permission-all-urls/",
+                "optional-permission-all-urls@example.com",
+            ),
+        )
+
+        assertEquals("optional-permission-all-urls@example.com", extension.id)
+
+        var grantedOptionalOrigins = extension.metaData.grantedOptionalOrigins
+
+        assertThat("grantedOptionalOrigins must be 0.", grantedOptionalOrigins.size, equalTo(0))
+
+        extension = sessionRule.waitForResult(
+            controller.addOptionalPermissions(
+                extension.id,
+                arrayOf(),
+                arrayOf("http://*/", "https://*/", "file://*/*"),
+            ),
+        )
+
+        grantedOptionalOrigins = extension.metaData.grantedOptionalOrigins
+
+        assertArrayEquals(
+            "grantedOptionalPermissions must be [http://*/*, https://*/*, file://*/*]",
+            arrayOf("http://*/*", "https://*/*", "file://*/*"),
+            grantedOptionalOrigins,
+        )
+
+        sessionRule.waitForResult(controller.uninstall(extension))
+    }
+
+    @Test
     fun onOptionalPermissionsChanged() {
         var extension = sessionRule.waitForResult(
             controller.ensureBuiltIn(

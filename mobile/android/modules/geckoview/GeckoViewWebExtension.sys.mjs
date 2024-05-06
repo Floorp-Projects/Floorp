@@ -283,6 +283,16 @@ function exportFlags(aPolicy) {
   return flags;
 }
 
+function normalizePermissions(perms) {
+  if (perms?.permissions) {
+    perms = { ...perms };
+    perms.permissions = perms.permissions.filter(
+      perm => !perm.startsWith("internal:")
+    );
+  }
+  return perms;
+}
+
 async function exportExtension(aAddon, aPermissions, aSourceURI) {
   // First, let's make sure the policy is ready if present
   let policy = WebExtensionPolicy.getByID(aAddon.id);
@@ -360,22 +370,12 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     updateDate = null;
   }
 
-  const normalizePermissions = perms => {
-    if (perms?.permissions) {
-      perms = { ...perms };
-      perms.permissions = perms.permissions.filter(
-        perm => !perm.startsWith("internal:")
-      );
-    }
-    return perms;
-  };
-
   const optionalPermissions = aAddon.optionalPermissions?.permissions ?? [];
-  const optionalOrigins = aAddon.optionalPermissions?.origins ?? [];
+  const optionalOrigins = aAddon.optionalOriginsNormalized;
   const grantedPermissions =
-    normalizePermissions(await lazy.ExtensionPermissions.get(id)) ?? [];
-  const grantedOptionalPermissions = grantedPermissions?.permissions ?? [];
-  const grantedOptionalOrigins = grantedPermissions?.origins ?? [];
+    normalizePermissions(await lazy.ExtensionPermissions.get(id)) ?? {};
+  const grantedOptionalPermissions = grantedPermissions.permissions ?? [];
+  const grantedOptionalOrigins = grantedPermissions.origins ?? [];
 
   return {
     webExtensionId: id,
