@@ -915,6 +915,7 @@ void AudioInputProcessing::PacketizeAndProcess(AudioProcessingTrack* aTrack,
         !(mPacketCount % 50)) {
       AudioProcessingStats stats = mAudioProcessing->GetStatistics();
       char msg[1024];
+      msg[0] = '\0';
       size_t offset = 0;
 #define AddIfValue(format, member)                                       \
   if (stats.member.has_value()) {                                        \
