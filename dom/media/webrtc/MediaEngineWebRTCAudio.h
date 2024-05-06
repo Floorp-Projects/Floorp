@@ -125,7 +125,7 @@ class AudioInputProcessing : public AudioDataListener {
 
   void DeviceChanged(MediaTrackGraph* aGraph) override;
 
-  uint32_t RequestedInputChannelCount(MediaTrackGraph*) override {
+  uint32_t RequestedInputChannelCount(MediaTrackGraph*) const override {
     return GetRequestedInputChannelCount();
   }
 
@@ -134,7 +134,7 @@ class AudioInputProcessing : public AudioDataListener {
   void PacketizeAndProcess(AudioProcessingTrack* aTrack,
                            const AudioSegment& aSegment);
 
-  uint32_t GetRequestedInputChannelCount();
+  uint32_t GetRequestedInputChannelCount() const;
   // This is true when all processing is disabled, in which case we can skip
   // packetization, resampling and other processing passes.
   bool IsPassThrough(MediaTrackGraph* aGraph) const;

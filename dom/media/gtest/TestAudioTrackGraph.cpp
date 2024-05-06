@@ -581,7 +581,8 @@ TEST(TestAudioTrackGraph, DeviceChangedCallback)
           mIsVoice(aIsVoice),
           mDeviceChangedCount(0) {}
 
-    uint32_t RequestedInputChannelCount(MediaTrackGraph* aGraph) override {
+    uint32_t RequestedInputChannelCount(
+        MediaTrackGraph* aGraph) const override {
       return mChannelCount;
     }
     bool IsVoiceInput(MediaTrackGraph* aGraph) const override {
@@ -725,7 +726,8 @@ TEST(TestAudioTrackGraph, RestartAudioIfMaxChannelCountChanged)
           MakeUnique<Message>(aGraph, this, aDevice, aChannelCount));
     }
     // Graph thread APIs: AudioDataListenerInterface implementations.
-    uint32_t RequestedInputChannelCount(MediaTrackGraph* aGraph) override {
+    uint32_t RequestedInputChannelCount(
+        MediaTrackGraph* aGraph) const override {
       aGraph->AssertOnGraphThread();
       return mChannelCount;
     }
@@ -954,7 +956,8 @@ TEST(TestAudioTrackGraph, SwitchNativeInputDevice)
           mIsVoice(aIsVoice),
           mDeviceChangedCount(0) {}
 
-    uint32_t RequestedInputChannelCount(MediaTrackGraph* aGraph) override {
+    uint32_t RequestedInputChannelCount(
+        MediaTrackGraph* aGraph) const override {
       return mChannelCount;
     }
     bool IsVoiceInput(MediaTrackGraph* aGraph) const override {
