@@ -138,6 +138,11 @@ int CubebInputStream::Start() { return InvokeCubebWithLog(cubeb_stream_start); }
 
 int CubebInputStream::Stop() { return InvokeCubebWithLog(cubeb_stream_stop); }
 
+int CubebInputStream::SetProcessingParams(
+    cubeb_input_processing_params aParams) {
+  return InvokeCubebWithLog(cubeb_stream_set_input_processing_params, aParams);
+}
+
 int CubebInputStream::Latency(uint32_t* aLatencyFrames) {
   return InvokeCubebWithLog(cubeb_stream_get_input_latency, aLatencyFrames);
 }

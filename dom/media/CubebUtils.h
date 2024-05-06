@@ -37,6 +37,8 @@ struct ToCubebFormat<AUDIO_FORMAT_S16> {
   static const cubeb_sample_format value = CUBEB_SAMPLE_S16NE;
 };
 
+nsCString ProcessingParamsToString(cubeb_input_processing_params aParams);
+
 class CubebHandle {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CubebHandle)
