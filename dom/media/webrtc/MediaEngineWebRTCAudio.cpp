@@ -412,6 +412,13 @@ void AudioInputProcessing::Disconnect(MediaTrackGraph* aGraph) {
   aGraph->AssertOnGraphThread();
 }
 
+void AudioInputProcessing::NotifySetRequestedInputProcessingParamsResult(
+    MediaTrackGraph* aGraph, cubeb_input_processing_params aRequestedParams,
+    const Result<cubeb_input_processing_params, int>& aResult) {
+  aGraph->AssertOnGraphThread();
+  MOZ_ASSERT_UNREACHABLE("TODO: Implement");
+}
+
 bool AudioInputProcessing::IsPassThrough(MediaTrackGraph* aGraph) const {
   aGraph->AssertOnGraphThread();
   // The high-pass filter is not taken into account when activating the
@@ -960,6 +967,14 @@ void AudioInputProcessing::DeviceChanged(MediaTrackGraph* aGraph) {
       "(Graph %p, Driver %p) AudioInputProcessing %p Reinitializing audio "
       "processing",
       aGraph, aGraph->CurrentDriver(), this);
+}
+
+cubeb_input_processing_params
+AudioInputProcessing::RequestedInputProcessingParams(
+    MediaTrackGraph* aGraph) const {
+  aGraph->AssertOnGraphThread();
+  MOZ_ASSERT_UNREACHABLE("TODO: Implement");
+  return CUBEB_INPUT_PROCESSING_PARAM_NONE;
 }
 
 void AudioInputProcessing::ApplySettings(MediaTrackGraph* aGraph,
