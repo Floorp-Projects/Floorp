@@ -18,7 +18,7 @@
 <img id="i1" src="http://localhost:8000/save_filename.sjs?type=png&filename=simple.png" data-filename="simple.png">
 
 <!-- invalid characters in the filename -->
-<img id="i2" src="http://localhost:8000/save_filename.sjs?type=png&filename=invalidfilename/a:b*c%63d.png" data-filename="invalidfilename_a b ccd.png">
+<img id="i2" src="http://localhost:8000/save_filename.sjs?type=png&filename=invalidfilename/a:b*c%63d.png" data-filename="invalidfilename_a_b_ccd.png">
 
 <!-- invalid extension for a png image -->
 <img id="i3" src="http://localhost:8000/save_filename.sjs?type=png&filename=invalidextension.pang" data-filename="invalidextension.png">
@@ -329,11 +329,11 @@
 
 <!-- filename which is changed to an invalid filename within the file picker -->
 <a id="mod1" href="http://localhost:8000/save_filename.sjs?type=png&filename=orange.png"
-     data-pickedfilename='"peach".png' data-filename='peach .png'>
+     data-pickedfilename='"peach".png' data-filename='_peach_.png'>
 
 <!-- an invalid filename which is changed to another invalid filename within the file picker -->
 <a id="mod2" href="http://localhost:8000/save_filename.sjs?type=png&filename=%maroon%34.png"
-     data-pickedfilename='"violet".png' data-filename="violet .png">
+     data-pickedfilename='"violet".png' data-filename="_violet_.png">
 
 </span>
 
