@@ -440,11 +440,8 @@ void MediaTrackGraphImpl::CheckDriver() {
   NativeInputTrack* native =
       mDeviceInputTrackManagerGraphThread.GetNativeInputTrack();
   CubebUtils::AudioDeviceID inputDevice = native ? native->mDeviceId : nullptr;
-  uint32_t inputChannelCount =
-      native ? AudioInputChannelCount(native->mDeviceId) : 0;
-  AudioInputType inputPreference =
-      native ? AudioInputDevicePreference(native->mDeviceId)
-             : AudioInputType::Unknown;
+  uint32_t inputChannelCount = AudioInputChannelCount(inputDevice);
+  AudioInputType inputPreference = AudioInputDevicePreference(inputDevice);
 
   uint32_t primaryOutputChannelCount = PrimaryOutputChannelCount();
   if (!audioCallbackDriver) {
