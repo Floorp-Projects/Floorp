@@ -22,7 +22,12 @@ work directly top-down)
   fuzzers as well that the feature is ready for fuzzing.
 -  ☐ Send an Intent to Ship Email to `dev-platform`.  This is also part of the
   [Exposure Guidelines](https://wiki.mozilla.org/ExposureGuidelines) process.
--  ☐ Ship the feature; default the preference to true.
+-  ☐ Ship the feature:
+    -  ☐ default the preference to true.
+    -  ☐ Double check for any code that is currently `NIGHTLY_BUILD` that should now be built unconditionally, e.g. in `js/src/vm/JSObject.cpp`.
+    -  ☐ Update `	js/xpconnect/tests/chrome/test_xrayToJS.xhtml` for any changes to existing global objects.
+    -  ☐ For new globals, the following tests also need updates:
+          `dom/serviceworkers/test/test_serviceworker_interfaces.js`, `tests/mochitest/general/test_interfaces.js`, and `dom/workers/test/test_worker_interfaces.js`
 -  ☐ Open a followup bug to later remove the preference.
 
 
