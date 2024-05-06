@@ -277,7 +277,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   EXPECT_FALSE(driver->IsStarted()) << "Verify thread is not started";
 
 #ifdef DEBUG
-  std::atomic<std::thread::id> threadInDriverIteration((std::thread::id()));
+  std::atomic<std::thread::id> threadInDriverIteration{std::thread::id()};
   EXPECT_CALL(*graph, InDriverIteration(driver.get())).WillRepeatedly([&] {
     return std::this_thread::get_id() == threadInDriverIteration;
   });
@@ -418,8 +418,8 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   EXPECT_FALSE(newDriver->IsStarted()) << "Verify thread is not started";
 
 #ifdef DEBUG
-  std::atomic<std::thread::id> threadInDriverIteration(
-      (std::this_thread::get_id()));
+  std::atomic<std::thread::id> threadInDriverIteration{
+      std::this_thread::get_id()};
   EXPECT_CALL(*graph, InDriverIteration(_)).WillRepeatedly([&] {
     return std::this_thread::get_id() == threadInDriverIteration;
   });
