@@ -351,15 +351,44 @@ function parseContent(window, input, mode) {
     return consume(m[1] ? m[1] : m[2]);
   }
 
-  // Unescape a string 's'.
-  function unescape1(e) {
-    return ESCAPE[e];
-  }
-  function unescape(s) {
-    let m;
-    while ((m = s.match(/&(amp|lt|gt|lrm|rlm|nbsp);/))) {
-      s = s.replace(m[0], unescape1);
-    }
+  const unescapeHelper = window.document.createElement("div");
+  function unescapeEntities(s) {
+    let match;
+
+    // Decimal numeric character reference
+    s = s.replace(/&#(\d+);?/g, (candidate, number) => {
+      try {
+        const codepoint = parseInt(number);
+        return String.fromCodePoint(codepoint);
+      } catch (_) {
+        return candidate;
+      }
+    });
+
+    // Hexadecimal numeric character reference
+    s = s.replace(/&#x([\dA-Fa-f]+);?/g, (candidate, number) => {
+      try {
+        const codepoint = parseInt(number, 16);
+        return String.fromCodePoint(codepoint);
+      } catch (_) {
+        return candidate;
+      }
+    });
+
+    // Named character references
+    s = s.replace(/&\w[\w\d]*;?/g, candidate => {
+      // The list of entities is huge, so we use innerHTML instead.
+      // We should probably use setHTML instead once that is available (bug 1650370).
+      // Ideally we would be able to use a faster/simpler variant of setHTML (bug 1731215).
+      unescapeHelper.innerHTML = candidate;
+      const unescaped = unescapeHelper.innerText;
+      if (unescaped == candidate) { // not a valid entity
+        return candidate;
+      }
+      return unescaped;
+    });
+    unescapeHelper.innerHTML = "";
+
     return s;
   }
 
@@ -486,7 +515,7 @@ function parseContent(window, input, mode) {
     }
 
     // Text nodes are leaf nodes.
-    current.appendChild(window.document.createTextNode(unescape(t)));
+    current.appendChild(window.document.createTextNode(unescapeEntities(t)));
   }
 
   return root;
