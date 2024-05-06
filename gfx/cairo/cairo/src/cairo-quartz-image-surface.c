@@ -307,7 +307,11 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 	colorspace = _cairo_quartz_create_color_space (context);
     }
     else {
+#if CAIRO_HAS_QUARTZ_APPLICATION_SERVICES /* available on macOS but not iOS */
 	colorspace = CGDisplayCopyColorSpace (CGMainDisplayID ());
+#else
+	colorspace = CGColorSpaceCreateDeviceRGB ();
+#endif
     }
 
     bitinfo |= format == CAIRO_FORMAT_ARGB32 ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;

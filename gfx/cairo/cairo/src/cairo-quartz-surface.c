@@ -201,8 +201,10 @@ _cairo_quartz_create_color_space (CGContextRef context)
         if (color_space)
             return color_space;
     }
+#if CAIRO_HAS_QUARTZ_APPLICATION_SERVICES /* available on macOS but not iOS */
     if (!color_space)
         color_space =  CGDisplayCopyColorSpace (CGMainDisplayID ());
+#endif
 
     if (!color_space)
         color_space = CGColorSpaceCreateDeviceRGB ();

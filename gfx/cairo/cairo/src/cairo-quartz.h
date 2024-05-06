@@ -49,6 +49,10 @@
 #include <ApplicationServices/ApplicationServices.h>
 #endif
 
+#if CAIRO_HAS_IMAGE_IO
+#include <ImageIO/ImageIO.h>
+#endif
+
 CAIRO_BEGIN_DECLS
 
 cairo_public cairo_surface_t *
