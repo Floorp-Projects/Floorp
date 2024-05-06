@@ -1,7 +1,15 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1713888724 -3600
+#      Tue Apr 23 17:12:04 2024 +0100
+# Node ID 575933bf80efb0d5f1f9c1cb257837b62c75c64e
+# Parent  ccbfe29b41b8479213bb9f22f6eb22e01879ad7c
+Apply cairo/06-shared-ft-face.patch (with update in cairo-ft-font.c)
+
 diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-font.c
 --- a/gfx/cairo/cairo/src/cairo-ft-font.c
 +++ b/gfx/cairo/cairo/src/cairo-ft-font.c
-@@ -101,6 +101,24 @@
+@@ -113,6 +113,24 @@
   */
  #define MAX_OPEN_FACES 10
  
@@ -26,7 +34,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  /**
   * SECTION:cairo-ft
   * @Title: FreeType Fonts
-@@ -154,6 +172,7 @@ struct _cairo_ft_unscaled_font {
+@@ -166,6 +184,7 @@ struct _cairo_ft_unscaled_font {
  
      cairo_bool_t from_face; /* was the FT_Face provided by user? */
      FT_Face face;	    /* provided or cached face */
@@ -34,7 +42,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  
      /* only set if from_face is false */
      char *filename;
-@@ -336,7 +355,9 @@ static void
+@@ -351,7 +370,9 @@ static void
      _cairo_hash_table_remove (font_map->hash_table,
  			      &unscaled->base.hash_entry);
  
@@ -45,7 +53,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  	_font_map_release_face_lock_held (font_map, unscaled);
  
      _cairo_ft_unscaled_font_fini (unscaled);
-@@ -395,7 +416,8 @@ static void
+@@ -410,7 +431,8 @@ static void
  				  cairo_bool_t              from_face,
  				  char			   *filename,
  				  int			    id,
@@ -53,9 +61,9 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
 +				  FT_Face		    face,
 +				  void                     *face_context)
  {
-     unsigned long hash;
+     uintptr_t hash;
  
-@@ -403,6 +425,7 @@ static void
+@@ -418,6 +440,7 @@ static void
      key->filename = filename;
      key->id = id;
      key->face = face;
@@ -63,7 +71,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  
      hash = _cairo_hash_string (filename);
      /* the constants are just arbitrary primes */
-@@ -438,7 +461,8 @@ static cairo_status_t
+@@ -453,7 +476,8 @@ static cairo_status_t
  			      cairo_bool_t              from_face,
  			      const char	       *filename,
  			      int			id,
@@ -73,7 +81,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  {
      _cairo_unscaled_font_init (&unscaled->base,
  			       &cairo_ft_unscaled_font_backend);
-@@ -447,7 +471,7 @@ static cairo_status_t
+@@ -462,7 +486,7 @@ static cairo_status_t
  
      if (from_face) {
  	unscaled->from_face = TRUE;
@@ -82,7 +90,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  
  
          unscaled->have_color = FT_HAS_COLOR (face) != 0;
-@@ -474,12 +498,13 @@ static cairo_status_t
+@@ -489,12 +513,13 @@ static cairo_status_t
  
  	unscaled->from_face = FALSE;
  	unscaled->face = NULL;
@@ -97,7 +105,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  
  	unscaled->have_color_set = FALSE;
      }
-@@ -528,7 +553,8 @@ static int
+@@ -543,7 +568,8 @@ static int
  	unscaled_a->from_face == unscaled_b->from_face)
       {
          if (unscaled_a->from_face)
@@ -107,7 +115,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  
  	if (unscaled_a->filename == NULL && unscaled_b->filename == NULL)
  	    return TRUE;
-@@ -549,6 +575,7 @@ static cairo_status_t
+@@ -564,6 +590,7 @@ static cairo_status_t
  					 char *filename,
  					 int id,
  					 FT_Face font_face,
@@ -115,7 +123,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  					 cairo_ft_unscaled_font_t **out)
  {
      cairo_ft_unscaled_font_t key, *unscaled;
-@@ -559,7 +586,7 @@ static cairo_status_t
+@@ -574,7 +601,7 @@ static cairo_status_t
      if (unlikely (font_map == NULL))
  	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
  
@@ -124,7 +132,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  
      /* Return existing unscaled font if it exists in the hash table. */
      unscaled = _cairo_hash_table_lookup (font_map->hash_table,
-@@ -576,7 +603,7 @@ static cairo_status_t
+@@ -591,7 +618,7 @@ static cairo_status_t
  	goto UNWIND_FONT_MAP_LOCK;
      }
  
@@ -133,7 +141,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
      if (unlikely (status))
  	goto UNWIND_UNSCALED_MALLOC;
  
-@@ -586,6 +613,8 @@ static cairo_status_t
+@@ -601,6 +628,8 @@ static cairo_status_t
      if (unlikely (status))
  	goto UNWIND_UNSCALED_FONT_INIT;
  
@@ -142,7 +150,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  DONE:
      _cairo_ft_unscaled_font_map_unlock ();
      *out = unscaled;
-@@ -638,16 +667,17 @@ static cairo_status_t
+@@ -653,16 +682,17 @@ static cairo_status_t
  
  DONE:
      return _cairo_ft_unscaled_font_create_internal (font_face != NULL,
@@ -162,7 +170,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  }
  
  static cairo_bool_t
-@@ -675,12 +705,16 @@ static cairo_bool_t
+@@ -690,12 +720,16 @@ static cairo_bool_t
  	 */
  	if (unscaled->faces && unscaled->faces->unscaled == NULL) {
  	    assert (unscaled->faces->next == NULL);
@@ -179,7 +187,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  
      _cairo_ft_unscaled_font_map_unlock ();
  
-@@ -709,7 +743,13 @@ static cairo_warn FT_Face
+@@ -724,7 +758,13 @@ static cairo_warn FT_Face
      FT_Face face = NULL;
      FT_Error error;
  
@@ -194,16 +202,16 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
      unscaled->lock_count++;
  
      if (unscaled->face)
-@@ -744,7 +784,7 @@ static cairo_warn FT_Face
+@@ -759,7 +799,7 @@ static cairo_warn FT_Face
      if (error)
      {
  	unscaled->lock_count--;
 -	CAIRO_MUTEX_UNLOCK (unscaled->mutex);
 +	CAIRO_FT_UNLOCK (unscaled);
- 	_cairo_error_throw (_ft_to_cairo_error (error));
+ 	_cairo_error_throw (_cairo_ft_to_cairo_error (error));
  	return NULL;
      }
-@@ -769,7 +809,7 @@ static void
+@@ -784,7 +824,7 @@ static void
  
      unscaled->lock_count--;
  
@@ -212,7 +220,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  }
  
  
-@@ -3164,19 +3204,21 @@ static cairo_bool_t
+@@ -3997,19 +4037,21 @@ static cairo_bool_t
       *    font_face <------- unscaled
       */
  
@@ -246,7 +254,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  	cairo_ft_font_face_t *tmp_face = NULL;
  	cairo_ft_font_face_t *last_face = NULL;
  
-@@ -3195,6 +3237,7 @@ static cairo_bool_t
+@@ -4028,6 +4070,7 @@ static cairo_bool_t
  	    last_face = tmp_face;
  	}
  
@@ -254,7 +262,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  	_cairo_unscaled_font_destroy (&font_face->unscaled->base);
  	font_face->unscaled = NULL;
      }
-@@ -3268,6 +3311,24 @@ static cairo_font_face_t *
+@@ -4101,6 +4144,24 @@ static cairo_font_face_t *
      return abstract_face;
  }
  
@@ -279,7 +287,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  const cairo_font_face_backend_t _cairo_ft_font_face_backend = {
      CAIRO_FONT_TYPE_FT,
  #if CAIRO_HAS_FC_FONT
-@@ -3277,7 +3338,11 @@ const cairo_font_face_backend_t _cairo_f
+@@ -4110,7 +4171,11 @@ const cairo_font_face_backend_t _cairo_f
  #endif
      _cairo_ft_font_face_destroy,
      _cairo_ft_font_face_scaled_font_create,
@@ -292,7 +300,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  };
  
  #if CAIRO_HAS_FC_FONT
-@@ -3320,6 +3385,8 @@ static cairo_font_face_t *
+@@ -4153,6 +4218,8 @@ static cairo_font_face_t *
  {
      cairo_ft_font_face_t *font_face, **prev_font_face;
  
@@ -301,7 +309,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
      /* Looked for an existing matching font face */
      for (font_face = unscaled->faces, prev_font_face = &unscaled->faces;
  	 font_face;
-@@ -3341,15 +3408,19 @@ static cairo_font_face_t *
+@@ -4174,15 +4241,19 @@ static cairo_font_face_t *
  		 * from owner to ownee. */
  		font_face->unscaled = unscaled;
  		_cairo_unscaled_font_reference (&unscaled->base);
@@ -324,7 +332,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
  	return (cairo_font_face_t *)&_cairo_font_face_nil;
      }
-@@ -3376,6 +3447,7 @@ static cairo_font_face_t *
+@@ -4209,6 +4280,7 @@ static cairo_font_face_t *
  
      _cairo_font_face_init (&font_face->base, &_cairo_ft_font_face_backend);
  
@@ -332,7 +340,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
      return &font_face->base;
  }
  
-@@ -3737,14 +3809,16 @@ cairo_ft_font_face_create_for_pattern (F
+@@ -4570,14 +4642,16 @@ cairo_ft_font_face_create_for_pattern (F
  cairo_font_face_t *
  cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  				       int             load_flags,
@@ -351,7 +359,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
      if (unlikely (status))
  	return (cairo_font_face_t *)&_cairo_font_face_nil;
  
-@@ -3896,7 +3970,7 @@ cairo_ft_scaled_font_lock_face (cairo_sc
+@@ -4729,7 +4803,7 @@ cairo_ft_scaled_font_lock_face (cairo_sc
       * opportunity for creating deadlock. This is obviously unsafe,
       * but as documented, the user must add manual locking when using
       * this function. */
@@ -360,7 +368,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
  
      return face;
  }
-@@ -3929,7 +4003,7 @@ cairo_ft_scaled_font_unlock_face (cairo_
+@@ -4762,7 +4836,7 @@ cairo_ft_scaled_font_unlock_face (cairo_
       * cairo_ft_scaled_font_lock_face, so we have to acquire it again
       * as _cairo_ft_unscaled_font_unlock_face expects it to be held
       * when we call into it. */
