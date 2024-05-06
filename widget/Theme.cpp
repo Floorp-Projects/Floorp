@@ -1099,9 +1099,6 @@ bool Theme::CreateWebRenderCommandsForWidget(
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
     StyleAppearance aAppearance, const nsRect& aRect) {
-  if (!StaticPrefs::widget_non_native_theme_webrender()) {
-    return false;
-  }
   WebRenderBackendData data{aBuilder, aResources, aSc, aManager};
   return DoDrawWidgetBackground(data, aFrame, aAppearance, aRect,
                                 DrawOverflow::Yes);
