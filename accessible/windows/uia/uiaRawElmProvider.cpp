@@ -636,6 +636,14 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       }
       break;
 
+    case UIA_LandmarkTypePropertyId:
+      if (long type = GetLandmarkType()) {
+        aPropertyValue->vt = VT_I4;
+        aPropertyValue->lVal = type;
+        return S_OK;
+      }
+      break;
+
     case UIA_LevelPropertyId:
       aPropertyValue->vt = VT_I4;
       aPropertyValue->lVal = acc->GroupPosition().level;
@@ -1334,6 +1342,28 @@ Accessible* uiaRawElmProvider::GetLabeledBy() const {
     }
   }
   return nullptr;
+}
+
+long uiaRawElmProvider::GetLandmarkType() const {
+  Accessible* acc = Acc();
+  MOZ_ASSERT(acc);
+  nsStaticAtom* landmark = acc->LandmarkRole();
+  if (!landmark) {
+    return 0;
+  }
+  if (landmark == nsGkAtoms::form) {
+    return UIA_FormLandmarkTypeId;
+  }
+  if (landmark == nsGkAtoms::main) {
+    return UIA_MainLandmarkTypeId;
+  }
+  if (landmark == nsGkAtoms::navigation) {
+    return UIA_NavigationLandmarkTypeId;
+  }
+  if (landmark == nsGkAtoms::search) {
+    return UIA_SearchLandmarkTypeId;
+  }
+  return UIA_CustomLandmarkTypeId;
 }
 
 SAFEARRAY* a11y::AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs) {
