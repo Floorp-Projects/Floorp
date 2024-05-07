@@ -21,10 +21,12 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * Firefox Automatic Translation Options preference screen.
  *
  * @param selectedOption Selected option that will come from the translations engine.
+ * @param onItemClick Invoked when the user clicks on a [AutomaticTranslationOptionPreference] from the list.
  */
 @Composable
 fun AutomaticTranslationOptionsPreference(
     selectedOption: AutomaticTranslationOptionPreference,
+    onItemClick: (AutomaticTranslationOptionPreference) -> Unit,
 ) {
     val optionsList = arrayListOf(
         AutomaticTranslationOptionPreference.OfferToTranslate(),
@@ -50,6 +52,7 @@ fun AutomaticTranslationOptionsPreference(
                     maxDescriptionLines = Int.MAX_VALUE,
                     onClick = {
                         selected.value = item
+                        onItemClick(item)
                     },
                 )
             }
@@ -63,6 +66,7 @@ private fun AutomaticTranslationOptionsPreview() {
     FirefoxTheme {
         AutomaticTranslationOptionsPreference(
             selectedOption = AutomaticTranslationOptionPreference.AlwaysTranslate(),
+            onItemClick = {},
         )
     }
 }

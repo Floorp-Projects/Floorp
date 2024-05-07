@@ -11,7 +11,13 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.translate.LanguageSetting
+import mozilla.components.concept.engine.translate.TranslationSupport
+import mozilla.components.concept.engine.translate.findLanguage
+import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -19,6 +25,8 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * A fragment displaying the Firefox Automatic Translation list screen.
  */
 class AutomaticTranslationPreferenceFragment : Fragment() {
+    private val browserStore: BrowserStore by lazy { requireComponents.core.store }
+
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.automatic_translation_toolbar_title_preference))
@@ -31,8 +39,18 @@ class AutomaticTranslationPreferenceFragment : Fragment() {
     ): View = ComposeView(requireContext()).apply {
         setContent {
             FirefoxTheme {
+                val languageSettings = browserStore.observeAsComposableState { state ->
+                    state.translationEngine.languageSettings
+                }.value
+                val translationSupport = browserStore.observeAsComposableState { state ->
+                    state.translationEngine.supportedLanguages
+                }.value
+
                 AutomaticTranslationPreference(
-                    automaticTranslationListPreferences = getAutomaticTranslationListPreferences(),
+                    automaticTranslationListPreferences = getAutomaticTranslationListPreferences(
+                        languageSettings = languageSettings,
+                        translationSupport = translationSupport,
+                    ),
                     onItemClick = {
                         findNavController().navigate(
                             AutomaticTranslationPreferenceFragmentDirections
@@ -44,5 +62,29 @@ class AutomaticTranslationPreferenceFragment : Fragment() {
                 )
             }
         }
+    }
+
+    private fun getAutomaticTranslationListPreferences(
+        languageSettings: Map<String, LanguageSetting>? = null,
+        translationSupport: TranslationSupport? = null,
+    ): List<AutomaticTranslationItemPreference> {
+        val automaticTranslationListPreferences =
+            mutableListOf<AutomaticTranslationItemPreference>()
+
+        if (translationSupport != null && languageSettings != null) {
+            languageSettings.forEach { entry ->
+                translationSupport.findLanguage(entry.key)?.let {
+                    automaticTranslationListPreferences.add(
+                        AutomaticTranslationItemPreference(
+                            language = it,
+                            automaticTranslationOptionPreference = getAutomaticTranslationOptionPreference(
+                                entry.value,
+                            ),
+                        ),
+                    )
+                }
+            }
+        }
+        return automaticTranslationListPreferences
     }
 }

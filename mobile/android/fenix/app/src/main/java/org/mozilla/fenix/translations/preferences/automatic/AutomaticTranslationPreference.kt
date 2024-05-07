@@ -16,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import mozilla.components.concept.engine.translate.Language
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.list.TextListItem
@@ -58,16 +59,18 @@ fun AutomaticTranslationPreference(
                 ) {
                     description = stringResource(item.automaticTranslationOptionPreference.titleId)
                 }
-                TextListItem(
-                    label = item.displayName,
-                    description = description,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 56.dp),
-                    onClick = {
-                        onItemClick(item)
-                    },
-                )
+                item.language.localizedDisplayName?.let {
+                    TextListItem(
+                        label = it,
+                        description = description,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 56.dp),
+                        onClick = {
+                            onItemClick(item)
+                        },
+                    )
+                }
             }
         }
     }
@@ -78,25 +81,25 @@ internal fun getAutomaticTranslationListPreferences(): List<AutomaticTranslation
     return mutableListOf<AutomaticTranslationItemPreference>().apply {
         add(
             AutomaticTranslationItemPreference(
-                displayName = Locale.ENGLISH.displayLanguage,
+                language = Language(Locale.ENGLISH.toLanguageTag(), Locale.ENGLISH.displayLanguage),
                 automaticTranslationOptionPreference = AutomaticTranslationOptionPreference.AlwaysTranslate(),
             ),
         )
         add(
             AutomaticTranslationItemPreference(
-                displayName = Locale.FRENCH.displayLanguage,
+                language = Language(Locale.FRANCE.toLanguageTag(), Locale.FRANCE.displayLanguage),
                 automaticTranslationOptionPreference = AutomaticTranslationOptionPreference.OfferToTranslate(),
             ),
         )
         add(
             AutomaticTranslationItemPreference(
-                displayName = Locale.GERMAN.displayLanguage,
+                language = Language(Locale.GERMAN.toLanguageTag(), Locale.GERMAN.displayLanguage),
                 automaticTranslationOptionPreference = AutomaticTranslationOptionPreference.NeverTranslate(),
             ),
         )
         add(
             AutomaticTranslationItemPreference(
-                displayName = Locale.ITALIAN.displayLanguage,
+                language = Language(Locale.ITALIAN.toLanguageTag(), Locale.ITALIAN.displayLanguage),
                 automaticTranslationOptionPreference = AutomaticTranslationOptionPreference.AlwaysTranslate(),
             ),
         )
