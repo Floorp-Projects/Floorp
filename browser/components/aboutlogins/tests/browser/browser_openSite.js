@@ -44,7 +44,10 @@ add_task(async function test_launch_login_item() {
     gBrowser,
     TEST_LOGIN1.origin + "/"
   );
-  let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  let reauthObserved = Promise.resolve();
+  if (OSKeyStore.canReauth()) {
+    reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  }
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     loginItem._editButton.click();
