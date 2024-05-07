@@ -1,0 +1,25 @@
+diff --git a/gfx/cairo/libpixman/src/pixman-arm-asm.h b/gfx/cairo/libpixman/src/pixman-arm-asm.h
+--- a/gfx/cairo/libpixman/src/pixman-arm-asm.h
++++ b/gfx/cairo/libpixman/src/pixman-arm-asm.h
+@@ -20,19 +20,19 @@
+  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+  * SOFTWARE.
+  *
+  * Author:  Jeff Muizelaar (jeff@infidigm.net)
+  *
+  */
+ 
+-
++#ifdef HAVE_CONFIG_H
+ #include "pixman-config.h"
+-
++#endif
+ 
+ /* Supplementary macro for setting function attributes */
+ .macro pixman_asm_function_impl fname
+ #ifdef ASM_HAVE_FUNC_DIRECTIVE
+ 	.func \fname
+ #endif
+ 	.global \fname
+ #ifdef __ELF__
