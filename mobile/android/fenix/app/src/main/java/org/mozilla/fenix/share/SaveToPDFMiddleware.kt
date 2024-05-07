@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import org.mozilla.experiments.nimbus.NimbusEventStore
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.StandardSnackbarError
@@ -35,10 +36,12 @@ import java.io.IOException
  *
  * @param context An Application context.
  * @param mainScope Coroutine scope to launch coroutines.
+ * @param nimbusEventStore Nimbus event store for recording events.
  */
 class SaveToPDFMiddleware(
     private val context: Context,
     private val mainScope: CoroutineScope = CoroutineScope(Dispatchers.Main),
+    private val nimbusEventStore: NimbusEventStore = context.components.nimbus.events,
 ) : Middleware<BrowserState, BrowserAction> {
 
     override fun invoke(
@@ -151,6 +154,7 @@ class SaveToPDFMiddleware(
                                 source = telemetrySource(isPdf),
                             ),
                         )
+                        nimbusEventStore.recordEvent("print_tapped")
                     } else {
                         Events.saveToPdfTapped.record(
                             Events.SaveToPdfTappedExtra(
