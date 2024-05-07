@@ -1365,16 +1365,11 @@ var SessionStoreInternal = {
         }
         break;
       case "browsing-context-did-set-embedder":
-        if (
-          aSubject &&
-          aSubject === aSubject.top &&
-          aSubject.isContent &&
-          aSubject.embedderElement &&
-          aSubject.embedderElement.permanentKey
-        ) {
-          let permanentKey = aSubject.embedderElement.permanentKey;
-          this._browserSHistoryListener.get(permanentKey)?.unregister();
-          this.getOrCreateSHistoryListener(permanentKey, aSubject, true);
+        if (aSubject === aSubject.top && aSubject.isContent) {
+          const permanentKey = aSubject.embedderElement?.permanentKey;
+          if (permanentKey) {
+            this.maybeRecreateSHistoryListener(permanentKey, aSubject);
+          }
         }
         break;
       case "browsing-context-discarded":
@@ -1390,11 +1385,28 @@ var SessionStoreInternal = {
     }
   },
 
-  getOrCreateSHistoryListener(
-    permanentKey,
-    browsingContext,
-    collectImmediately = false
-  ) {
+  getOrCreateSHistoryListener(permanentKey, browsingContext) {
+    if (!permanentKey || browsingContext !== browsingContext.top) {
+      return null;
+    }
+
+    const listener = this._browserSHistoryListener.get(permanentKey);
+    if (listener) {
+      return listener;
+    }
+
+    return this.createSHistoryListener(permanentKey, browsingContext, false);
+  },
+
+  maybeRecreateSHistoryListener(permanentKey, browsingContext) {
+    const listener = this._browserSHistoryListener.get(permanentKey);
+    if (!listener || listener._browserId != browsingContext.browserId) {
+      listener?.unregister(permanentKey);
+      this.createSHistoryListener(permanentKey, browsingContext, true);
+    }
+  },
+
+  createSHistoryListener(permanentKey, browsingContext, collectImmediately) {
     class SHistoryListener {
       constructor() {
         this.QueryInterface = ChromeUtils.generateQI([
@@ -1497,21 +1509,12 @@ var SessionStoreInternal = {
       }
     }
 
-    if (!permanentKey || browsingContext !== browsingContext.top) {
-      return null;
-    }
-
     let sessionHistory = browsingContext.sessionHistory;
     if (!sessionHistory) {
       return null;
     }
 
-    let listener = this._browserSHistoryListener.get(permanentKey);
-    if (listener) {
-      return listener;
-    }
-
-    listener = new SHistoryListener();
+    const listener = new SHistoryListener();
     sessionHistory.addSHistoryListener(listener);
     this._browserSHistoryListener.set(permanentKey, listener);
 
