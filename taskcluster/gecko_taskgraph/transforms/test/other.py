@@ -576,6 +576,8 @@ def enable_code_coverage(config, tasks):
                 continue
             task["mozharness"].setdefault("extra-options", []).append("--code-coverage")
             task["instance-size"] = "xlarge-noscratch"
+            if "jittest" in task["test-name"]:
+                task["instance-size"] = "xlarge"
 
             # Temporarily disable Mac tests on mozilla-central
             if "mac" in task["build-platform"]:
