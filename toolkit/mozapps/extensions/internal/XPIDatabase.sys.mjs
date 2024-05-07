@@ -1476,7 +1476,10 @@ AddonWrapper = class {
       ignorePath: true,
     });
 
-    return patterns ? patterns.map(matcher => matcher.pattern) : [];
+    // De-dup the normalized host permission patterns.
+    return patterns
+      ? [...new Set(patterns.map(matcher => matcher.pattern))]
+      : [];
   }
 
   isCompatibleWith(aAppVersion, aPlatformVersion) {

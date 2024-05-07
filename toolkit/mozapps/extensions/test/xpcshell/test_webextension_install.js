@@ -612,7 +612,7 @@ add_task(async function test_permissions_prompt() {
 });
 
 // Check normalized optional origins.
-add_task(async function test_normalized_optional_origins_mv2() {
+add_task(async function test_normalized_optional_origins() {
   const assertAddonWrapperPermissionsProperties = async (
     manifest,
     expected
@@ -689,9 +689,12 @@ add_task(async function test_normalized_optional_origins_mv2() {
     // Include a permission that would trigger an install time prompt.
     permissions: ["tabs"],
     // Include optional origins to be normalized.
+    // NOTE: we expect the normalized origins to be deduplicated.
     optional_permissions: [
       "http://*.example.com/",
+      "http://*.example.com/somepath/",
       "*://example.org/*",
+      "*://example.org/another-path/*",
       "file://*/*",
     ],
   };
@@ -718,6 +721,20 @@ add_task(async function test_normalized_optional_origins_mv2() {
     manifest_version: 3,
     // Include a permission that would trigger an install time prompt.
     permissions: ["tabs"],
+
+    // Content Scripts match patterns are also expected to be part
+    // of the optional host permissions (and to be deduplicated).
+    content_scripts: [
+      {
+        matches: ["*://*/*"],
+        js: ["script.js"],
+      },
+      {
+        matches: ["*://example.org/*"],
+        js: ["script2.js"],
+      },
+    ],
+
     // Include optional origins to be normalized.
     host_permissions: [
       "http://*.example.com/",
@@ -731,12 +748,13 @@ add_task(async function test_normalized_optional_origins_mv2() {
     userPermissions: { permissions: manifestV3.permissions, origins: [] },
     optionalPermissions: {
       permissions: [],
-      origins: manifestV3.host_permissions,
+      origins: [...manifestV3.host_permissions, "*://*/*"],
     },
     optionalOriginsNormalized: [
       "http://*.example.com/*",
       "*://example.org/*",
       "file://*/*",
+      "*://*/*",
     ],
   });
 
