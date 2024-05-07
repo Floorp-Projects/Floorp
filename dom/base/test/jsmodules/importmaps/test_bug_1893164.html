@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test module cancel</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var module2_loaded = false, result;
+
+  SimpleTest.waitForExplicitFinish();
+
+  function testLoaded() {
+    ok(module2_loaded, 'module_2.mjs should be loaded');
+    ok(result == 3, "result should be 3 from module_3.mjs");
+    SimpleTest.finish();
+  }
+</script>
+
+<script src="./bug_1893164_module_1.mjs" type="module"></script>
+<script src="./bug_1893164_module_2.mjs" type="module"></script>
+
+<body onload='testLoaded()'></body>

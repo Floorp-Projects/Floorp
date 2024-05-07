@@ -3,6 +3,9 @@ support-files = [
   "bug_1865410_module_a.mjs",
   "bug_1865410_module_b.mjs",
   "bug_1873417.mjs",
+  "bug_1893164_module_1.mjs",
+  "bug_1893164_module_2.mjs",
+  "bug_1893164_module_3.mjs",
   "classic_script.js",
   "module_chain_1.mjs",
   "module_chain_2.mjs",
@@ -33,6 +36,8 @@ support-files = [
 ["test_bug_1865410.html"]
 
 ["test_bug_1873417.html"]
+
+["test_bug_1893164.html"]
 
 ["test_importMap_with_external_script.html"]
 ["test_importMap_with_nonexisting_module.html"]
