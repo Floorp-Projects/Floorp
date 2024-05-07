@@ -866,10 +866,7 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   }
 
   if (aSandboxLevel > 4) {
-    // Alternate winstation breaks native theming.
-    bool useAlternateWinstation =
-        StaticPrefs::widget_non_native_theme_enabled();
-    result = mPolicy->SetAlternateDesktop(useAlternateWinstation);
+    result = mPolicy->SetAlternateDesktop(true);
     if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
       LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
             ::GetLastError());
