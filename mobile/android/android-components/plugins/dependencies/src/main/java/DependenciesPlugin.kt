@@ -51,7 +51,7 @@ object Versions {
 
     // see https://android-developers.googleblog.com/2022/06/independent-versioning-of-Jetpack-Compose-libraries.html
     // for Jetpack Compose libraries versioning
-    const val compose_compiler = "1.5.12"
+    const val compose_compiler = "1.5.13"
 
     object AndroidX {
         const val activityCompose = "1.7.2"
