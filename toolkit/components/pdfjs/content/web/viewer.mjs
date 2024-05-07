@@ -2568,6 +2568,7 @@ class BaseTreeViewer {
 ;// CONCATENATED MODULE: ./web/pdf_attachment_viewer.js
 
 
+
 class PDFAttachmentViewer extends BaseTreeViewer {
   constructor(options) {
     super(options);
@@ -2630,18 +2631,29 @@ class PDFAttachmentViewer extends BaseTreeViewer {
     let attachmentsCount = 0;
     for (const name in attachments) {
       const item = attachments[name];
+      const content = item.content,
+        description = item.description,
+        filename = getFilenameFromUrl(item.filename, true);
       const div = document.createElement("div");
       div.className = "treeItem";
       const element = document.createElement("a");
-      this._bindLink(element, item);
-      element.textContent = this._normalizeTextContent(item.filename);
+      this._bindLink(element, {
+        content,
+        description,
+        filename
+      });
+      element.textContent = this._normalizeTextContent(filename);
       div.append(element);
       fragment.append(div);
       attachmentsCount++;
     }
     this._finishRendering(fragment, attachmentsCount);
   }
-  #appendAttachment(item) {
+  #appendAttachment({
+    filename,
+    content,
+    description
+  }) {
     const renderedPromise = this._renderedCapability.promise;
     renderedPromise.then(() => {
       if (renderedPromise !== this._renderedCapability.promise) {
@@ -2649,11 +2661,15 @@ class PDFAttachmentViewer extends BaseTreeViewer {
       }
       const attachments = this._attachments || Object.create(null);
       for (const name in attachments) {
-        if (item.filename === name) {
+        if (filename === name) {
           return;
         }
       }
-      attachments[item.filename] = item;
+      attachments[filename] = {
+        filename,
+        content,
+        description
+      };
       this.render({
         attachments,
         keepRenderedCapability: true
@@ -8162,6 +8178,7 @@ class PDFPageView {
     this.renderingState = RenderingStates.RUNNING;
     const canvasWrapper = document.createElement("div");
     canvasWrapper.classList.add("canvasWrapper");
+    canvasWrapper.setAttribute("aria-hidden", true);
     this.#addLayer(canvasWrapper, "canvasWrapper");
     if (!this.textLayer && this.#textLayerMode !== TextLayerMode.DISABLE && !pdfPage.isPureXfa) {
       this._accessibilityManager ||= new TextAccessibilityManager();
@@ -8437,7 +8454,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.3.18";
+    const viewerVersion = "4.3.8";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12647,8 +12664,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.3.18";
-const pdfjsBuild = "14e87469d";
+const pdfjsVersion = "4.3.8";
+const pdfjsBuild = "c419c8333";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
