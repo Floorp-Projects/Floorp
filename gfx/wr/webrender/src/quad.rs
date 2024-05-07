@@ -88,6 +88,7 @@ pub fn push_quad(
         frame_state.clip_store,
         interned_clips,
         prim_is_2d_scale_translation,
+        pattern,
         frame_context.spatial_tree,
     );
 
@@ -411,6 +412,7 @@ fn get_prim_render_strategy(
     clip_store: &ClipStore,
     interned_clips: &DataStore<ClipIntern>,
     can_use_nine_patch: bool,
+    pattern: &Pattern,
     spatial_tree: &SpatialTree,
 ) -> QuadRenderStrategy {
     if !clip_chain.needs_mask {
@@ -427,6 +429,10 @@ fn get_prim_render_strategy(
     let try_split_prim = x_tiles > 1 || y_tiles > 1;
 
     if !try_split_prim {
+        return QuadRenderStrategy::Indirect;
+    }
+
+    if !pattern.supports_segmented_rendering() {
         return QuadRenderStrategy::Indirect;
     }
 
