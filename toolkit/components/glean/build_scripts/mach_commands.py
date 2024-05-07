@@ -15,56 +15,39 @@ GENERATED_HEADER = """
 """
 
 
+DATA_REVIEW_HELP = """
+Beginning 2024-05-07[1], data reviews for projects in mozilla-central are now
+conducted on Phabricator. Simply duplicate your bug URL from the `bugs` list to
+the `data_reviews` list in your metrics and pings definitions, and push for code
+review in the normal way[2].
+
+More details about this process can be found in the in-tree docs[3] and wiki[4].
+
+If you'd like to generate a Data Review Request template anyway (if, for
+instance, you can't use Phabricator for your data review or you need a Data
+Review Request to aid in a Sensitive Data Review process. Or you're just
+curious), you can invoke glean_parser directly:
+
+./mach python -m glean_parser data-review
+
+[1]: https://groups.google.com/a/mozilla.org/g/firefox-dev/c/7z-i6UhPoKY
+[2]: https://firefox-source-docs.mozilla.org/contributing/index.html
+[3]: https://firefox-source-docs.mozilla.org/contributing/data-review.html
+[4]: https://wiki.mozilla.org/Data_Collection
+"""
+
+
 @Command(
     "data-review",
     category="misc",
-    description="Generate a skeleton data review request form for a given bug's data",
+    description="Describe how Data Review works in mozilla-central",
 )
-@CommandArgument(
-    "bug", default=None, nargs="?", type=str, help="bug number or search pattern"
-)
-def data_review(command_context, bug=None):
-    # Get the metrics_index's list of metrics indices
-    # by loading the index as a module.
-    import sys
-    from os import path
+def data_review(command_context):
+    # Data Review happens in Phabricator now
+    # (https://groups.google.com/a/mozilla.org/g/firefox-dev/c/7z-i6UhPoKY)
+    # so explain how to do it.
 
-    sys.path.append(path.join(path.dirname(__file__), path.pardir))
-    from pathlib import Path
-
-    from glean_parser import data_review
-    from metrics_index import metrics_yamls
-
-    return data_review.generate(
-        bug, [Path(command_context.topsrcdir) / x for x in metrics_yamls]
-    )
-
-
-@Command(
-    "perf-data-review",
-    category="misc",
-    description="Generate a skeleton performance data review request form for a given bug's data",
-)
-@CommandArgument(
-    "bug", default=None, nargs="?", type=str, help="bug number or search pattern"
-)
-def perf_data_review(command_context, bug=None):
-    # Get the metrics_index's list of metrics indices
-    # by loading the index as a module.
-    import sys
-    from os import path
-
-    sys.path.append(path.join(path.dirname(__file__), path.pardir))
-    from metrics_index import metrics_yamls
-
-    sys.path.append(path.dirname(__file__))
-    from pathlib import Path
-
-    import perf_data_review
-
-    return perf_data_review.generate(
-        bug, [Path(command_context.topsrcdir) / x for x in metrics_yamls]
-    )
+    print(DATA_REVIEW_HELP)
 
 
 @Command(
