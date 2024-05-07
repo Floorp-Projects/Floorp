@@ -154,15 +154,15 @@ async function openTabAndUseCreditCard(
   creditCard,
   { closeTab = true, submitForm = true } = {}
 ) {
-  let osKeyStoreLoginShown = Promise.resolve();
-  if (OSKeyStore.canReauth()) {
-    osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-  }
+  let osKeyStoreLoginShown = null;
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     CREDITCARD_FORM_URL
   );
+  if (OSKeyStore.canReauth()) {
+    osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  }
   let browser = tab.linkedBrowser;
 
   await openPopupOn(browser, "form #cc-name");
@@ -170,7 +170,9 @@ async function openTabAndUseCreditCard(
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
   }
   await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-  await osKeyStoreLoginShown;
+  if (osKeyStoreLoginShown) {
+    await osKeyStoreLoginShown;
+  }
   await waitForAutofill(browser, "#cc-number", creditCard["cc-number"]);
   await focusUpdateSubmitForm(
     browser,
@@ -695,13 +697,14 @@ add_task(async function test_submit_creditCard_update() {
     let creditCards = await getCreditCards();
     Assert.equal(creditCards.length, 1, "1 credit card in storage");
 
-    let osKeyStoreLoginShown = Promise.resolve();
-    if (OSKeyStore.canReauth()) {
-      osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-    }
+    let osKeyStoreLoginShown = null;
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function (browser) {
+        if (OSKeyStore.canReauth()) {
+          osKeyStoreLoginShown =
+            OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+        }
         let onPopupShown = waitForPopupShown();
         let onChanged;
         if (expectChanged !== undefined) {
@@ -711,7 +714,9 @@ add_task(async function test_submit_creditCard_update() {
         await openPopupOn(browser, "form #cc-name");
         await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
         await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-        await osKeyStoreLoginShown;
+        if (osKeyStoreLoginShown) {
+          await osKeyStoreLoginShown;
+        }
 
         await waitForAutofill(browser, "#cc-name", "John Doe");
         await focusUpdateSubmitForm(browser, {
