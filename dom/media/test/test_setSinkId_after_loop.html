@@ -41,9 +41,7 @@ add_task(async () => {
   ]});
   let loopbackInputLabel =
       SpecialPowers.getCharPref("media.audio_loopback_dev", "");
-  const desktopLinux = navigator.userAgent.includes("Linux") &&
-      !navigator.userAgent.includes("Android");
-  if (!desktopLinux) {
+  if (!navigator.userAgent.includes("Linux")) {
     todo_isnot(loopbackInputLabel, "", "audio_loopback_dev");
     return;
   }
