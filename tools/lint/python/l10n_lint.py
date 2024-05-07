@@ -40,15 +40,14 @@ def lint_strings(name, paths, lintconfig, **lintargs):
     extensions = lintconfig.get("extensions")
 
     # Load l10n.toml configs
-    l10nconfigs = load_configs(lintconfig, root, l10n_base, name)
+    l10nconfigs = load_configs(lintconfig["l10n_configs"], root, l10n_base, name)
 
-    # Check include paths in l10n.yml if it's in our given paths
-    # Only the l10n.yml will show up here, but if the l10n.toml files
-    # change, we also get the l10n.yml as the toml files are listed as
-    # support files.
+    # If l10n.yml is included in the provided paths, validate it against the
+    # TOML files, then remove it to avoid parsing it as a localizable resource.
     if lintconfig["path"] in paths:
         results = validate_linter_includes(lintconfig, l10nconfigs, lintargs)
         paths.remove(lintconfig["path"])
+        lintconfig["include"].remove(mozpath.relpath(lintconfig["path"], root))
     else:
         results = []
 
@@ -60,8 +59,7 @@ def lint_strings(name, paths, lintconfig, **lintargs):
                 all_files.append(fileobj.path)
         if fp.isfile:
             all_files.append(p)
-    # Filter again, our directories might have picked up files the
-    # explicitly excluded in the l10n.yml configuration.
+    # Filter out files explicitly excluded in the l10n.yml configuration.
     # `browser/locales/en-US/firefox-l10n.js` is a good example.
     all_files, _ = pathutils.filterpaths(
         lintargs["root"],
@@ -70,7 +68,8 @@ def lint_strings(name, paths, lintconfig, **lintargs):
         exclude=exclude,
         extensions=extensions,
     )
-    # These should be excluded in l10n.yml
+    # Filter again, our directories might have picked up files that should be
+    # excluded in l10n.yml
     skips = {p for p in all_files if not parser.hasParser(p)}
     results.extend(
         result.from_config(
@@ -142,11 +141,11 @@ def strings_repo_setup(repo: str, name: str):
         fh.flush()
 
 
-def load_configs(lintconfig, root, l10n_base, locale):
+def load_configs(l10n_configs, root, l10n_base, locale):
     """Load l10n configuration files specified in the linter configuration."""
     configs = []
     env = {"l10n_base": l10n_base}
-    for toml in lintconfig["l10n_configs"]:
+    for toml in l10n_configs:
         cfg = TOMLParser().parse(
             mozpath.join(root, toml), env=env, ignore_missing_includes=True
         )
