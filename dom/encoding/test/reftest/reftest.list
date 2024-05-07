@@ -1,5 +1,5 @@
 == bug863728-1.html bug863728-1-ref.html
-fuzzy(0-128,0-281) fuzzy-if(winWidget&&fission,47-137,211-251) == bug863728-2.html bug863728-2-ref.html # fission: bug 1717838
+fuzzy(0-128,0-281) fuzzy-if(winWidget,47-137,211-251) == bug863728-2.html bug863728-2-ref.html # win/fission: bug 1717838
 == bug863728-3.html bug863728-3-ref.html
 == bug945215-1.html bug945215-1-ref.html
-fuzzy(0-128,0-281) fuzzy-if(winWidget&&fission,47-137,211-251) == bug945215-2.html bug945215-2-ref.html # fission: bug 1717838
+fuzzy(0-128,0-281) fuzzy-if(winWidget,47-137,211-251) == bug945215-2.html bug945215-2-ref.html # win/fission: bug 1717838
