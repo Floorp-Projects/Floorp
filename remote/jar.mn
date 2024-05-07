@@ -26,6 +26,7 @@ remote.jar:
   content/shared/NetworkRequest.sys.mjs (shared/NetworkRequest.sys.mjs)
   content/shared/NetworkResponse.sys.mjs (shared/NetworkResponse.sys.mjs)
   content/shared/PDF.sys.mjs (shared/PDF.sys.mjs)
+  content/shared/Permissions.sys.mjs (shared/Permissions.sys.mjs)
   content/shared/Prompt.sys.mjs (shared/Prompt.sys.mjs)
   content/shared/Realm.sys.mjs (shared/Realm.sys.mjs)
   content/shared/RecommendedPreferences.sys.mjs (shared/RecommendedPreferences.sys.mjs)
