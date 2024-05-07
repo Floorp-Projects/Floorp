@@ -1384,7 +1384,6 @@ const JSFunctionSpec SetObject::methods[] = {
     JS_FN("entries", entries, 0, 0),
     JS_FN("clear", clear, 0, 0),
     JS_SELF_HOSTED_FN("forEach", "SetForEach", 2, 0),
-#ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("union", "SetUnion", 1, 0),
     JS_SELF_HOSTED_FN("difference", "SetDifference", 1, 0),
     JS_SELF_HOSTED_FN("intersection", "SetIntersection", 1, 0),
@@ -1392,7 +1391,6 @@ const JSFunctionSpec SetObject::methods[] = {
     JS_SELF_HOSTED_FN("isSubsetOf", "SetIsSubsetOf", 1, 0),
     JS_SELF_HOSTED_FN("isSupersetOf", "SetIsSupersetOf", 1, 0),
     JS_SELF_HOSTED_FN("isDisjointFrom", "SetIsDisjointFrom", 1, 0),
-#endif
     JS_FN("values", values, 0, 0),
     // @@iterator and |keys| re-defined in finishInit so that they have the
     // same identity as |values|.
