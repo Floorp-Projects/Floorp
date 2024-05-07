@@ -21,7 +21,7 @@ object FocusVersions {
     object AndroidX {
         const val constraint_layout_compose = "1.0.1"
         const val splashscreen = "1.0.1"
-        const val transition = "1.4.1"
+        const val transition = "1.5.0"
     }
 
     object Google {
