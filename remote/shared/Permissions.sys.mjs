@@ -6,71 +6,52 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
-  MarionettePrefs: "chrome://remote/content/marionette/prefs.sys.mjs",
 });
 
 /** @namespace */
 export const permissions = {};
 
-function mapToInternalPermissionParameters(browsingContext, permissionType) {
-  const currentURI = browsingContext.currentWindowGlobal.documentURI;
-
-  // storage-access is quite special...
-  if (permissionType === "storage-access") {
-    const thirdPartyPrincipalSite = Services.eTLD.getSite(currentURI);
-
-    const topLevelURI = browsingContext.top.currentWindowGlobal.documentURI;
-    const topLevelPrincipal =
-      Services.scriptSecurityManager.createContentPrincipal(topLevelURI, {});
-
-    return {
-      name: "3rdPartyFrameStorage^" + thirdPartyPrincipalSite,
-      principal: topLevelPrincipal,
-    };
-  }
-
-  const currentPrincipal =
-    Services.scriptSecurityManager.createContentPrincipal(currentURI, {});
-
-  return {
-    name: permissionType,
-    principal: currentPrincipal,
-  };
-}
+/**
+ * Get a permission type for the "storage-access" permission.
+ *
+ * @param {nsIURI} uri
+ *     The URI to use for building the permission type.
+ *
+ * @returns {string} permissionType
+ *    The permission type for the "storage-access" permission.
+ */
+permissions.getStorageAccessPermissionsType = function (uri) {
+  const thirdPartyPrincipalSite = Services.eTLD.getSite(uri);
+  return "3rdPartyFrameStorage^" + thirdPartyPrincipalSite;
+};
 
 /**
- * Set a permission's state.
- * Note: Currently just a shim to support testdriver's set_permission.
+ * Set a permission given a permission descriptor, a permission state,
+ * an origin.
  *
- * @param {object} permissionType
- *     The Gecko internal permission type
+ * @param {PermissionDescriptor} descriptor
+ *     The descriptor of the permission which will be updated.
  * @param {string} state
  *     State of the permission. It can be `granted`, `denied` or `prompt`.
- * @param {boolean} oneRealm
- *     Currently ignored
- * @param {browsingContext=} browsingContext
- *     Current browsing context object
+ * @param {string} origin
+ *     The origin which is used as a target for permission update.
+ * @param {nsIURI=} topLevelOrigin
+ *     The top-level origin which is used as a target for permission update.
+ *     Required to set "storage-access" permission.
+ *
  * @throws {UnsupportedOperationError}
- *     If `marionette.setpermission.enabled` is not set or
- *     an unsupported permission is used.
+ *     If <var>state</var> has unsupported value.
  */
-permissions.set = function (permissionType, state, oneRealm, browsingContext) {
-  if (!lazy.MarionettePrefs.setPermissionEnabled) {
-    throw new lazy.error.UnsupportedOperationError(
-      "'Set Permission' is not available"
-    );
-  }
-
-  const { name, principal } = mapToInternalPermissionParameters(
-    browsingContext,
-    permissionType
-  );
+permissions.set = function (descriptor, state, origin, topLevelOrigin) {
+  const principal = topLevelOrigin
+    ? Services.scriptSecurityManager.createContentPrincipal(topLevelOrigin, {})
+    : Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
 
   switch (state) {
     case "granted": {
       Services.perms.addFromPrincipal(
         principal,
-        name,
+        descriptor.type,
         Services.perms.ALLOW_ACTION
       );
       return;
@@ -78,18 +59,47 @@ permissions.set = function (permissionType, state, oneRealm, browsingContext) {
     case "denied": {
       Services.perms.addFromPrincipal(
         principal,
-        name,
+        descriptor.type,
         Services.perms.DENY_ACTION
       );
       return;
     }
     case "prompt": {
-      Services.perms.removeFromPrincipal(principal, name);
+      Services.perms.removeFromPrincipal(principal, descriptor.type);
       return;
     }
     default:
       throw new lazy.error.UnsupportedOperationError(
         "Unrecognized permission keyword for 'Set Permission' operation"
       );
+  }
+};
+
+/**
+ * Validate the permission.
+ *
+ * @param {string} permissionName
+ *     The name of the permission which will be validated.
+ *
+ * @throws {UnsupportedOperationError}
+ *     If <var>permissionName</var> is not supported.
+ */
+permissions.validatePermission = function (permissionName) {
+  // Bug 1609427: PermissionDescriptor for "camera" and "microphone" are not yet implemented.
+  if (["camera", "microphone"].includes(permissionName)) {
+    throw new lazy.error.UnsupportedOperationError(
+      `"descriptor.name" "${permissionName}" is currently unsupported`
+    );
+  }
+
+  // Bug 1878741: Allowing this permission causes timing related Android crash.
+  if (permissionName === "notifications") {
+    if (Services.prefs.getBoolPref("notification.prompt.testing", false)) {
+      // Okay, do nothing. The notifications module will work without permission.
+      return;
+    }
+    throw new lazy.error.UnsupportedOperationError(
+      `Setting "descriptor.name" "notifications" expected "notification.prompt.testing" preference to be set`
+    );
   }
 };

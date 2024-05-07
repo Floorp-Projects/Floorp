@@ -21,6 +21,7 @@ remote.jar:
   content/webdriver-bidi/modules/root/input.sys.mjs (modules/root/input.sys.mjs)
   content/webdriver-bidi/modules/root/log.sys.mjs (modules/root/log.sys.mjs)
   content/webdriver-bidi/modules/root/network.sys.mjs (modules/root/network.sys.mjs)
+  content/webdriver-bidi/modules/root/permissions.sys.mjs (modules/root/permissions.sys.mjs)
   content/webdriver-bidi/modules/root/script.sys.mjs (modules/root/script.sys.mjs)
   content/webdriver-bidi/modules/root/session.sys.mjs (modules/root/session.sys.mjs)
   content/webdriver-bidi/modules/root/storage.sys.mjs (modules/root/storage.sys.mjs)
