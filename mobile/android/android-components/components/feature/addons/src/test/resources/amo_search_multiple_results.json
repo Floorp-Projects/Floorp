@@ -17,12 +17,8 @@
       ],
       "average_daily_users": 6229783,
       "categories": {
-        "android": [
-          "security-privacy"
-        ],
-        "firefox": [
-          "privacy-security"
-        ]
+        "android": ["security-privacy"],
+        "firefox": ["privacy-security"]
       },
       "contributions_url": "",
       "created": "2015-04-25T07:26:22Z",
@@ -192,15 +188,9 @@
           "caption": {
             "en-US": "The popup panel: default mode"
           },
-          "image_size": [
-            1011,
-            758
-          ],
+          "image_size": [1011, 758],
           "image_url": "https://addons.mozilla.org/user-media/previews/full/238/238546.png?modified=1622132421",
-          "thumbnail_size": [
-            533,
-            400
-          ],
+          "thumbnail_size": [533, 400],
           "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/238/238546.jpg?modified=1622132421"
         },
         {
@@ -208,15 +198,9 @@
           "caption": {
             "en-US": "The dashboard: stock filter lists"
           },
-          "image_size": [
-            1011,
-            758
-          ],
+          "image_size": [1011, 758],
           "image_url": "https://addons.mozilla.org/user-media/previews/full/238/238548.png?modified=1622132423",
-          "thumbnail_size": [
-            533,
-            400
-          ],
+          "thumbnail_size": [533, 400],
           "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/238/238548.jpg?modified=1622132423"
         },
         {
@@ -224,15 +208,9 @@
           "caption": {
             "en-US": "The popup panel: default-deny mode"
           },
-          "image_size": [
-            1011,
-            758
-          ],
+          "image_size": [1011, 758],
           "image_url": "https://addons.mozilla.org/user-media/previews/full/238/238547.png?modified=1622132425",
-          "thumbnail_size": [
-            533,
-            400
-          ],
+          "thumbnail_size": [533, 400],
           "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/238/238547.jpg?modified=1622132425"
         },
         {
@@ -240,15 +218,9 @@
           "caption": {
             "en-US": "The dashboard: settings"
           },
-          "image_size": [
-            1011,
-            758
-          ],
+          "image_size": [1011, 758],
           "image_url": "https://addons.mozilla.org/user-media/previews/full/238/238549.png?modified=1622132426",
-          "thumbnail_size": [
-            533,
-            400
-          ],
+          "thumbnail_size": [533, 400],
           "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/238/238549.jpg?modified=1622132426"
         },
         {
@@ -256,15 +228,9 @@
           "caption": {
             "en-US": "The popup panel in Firefox Preview: default mode with more blocking options revealed"
           },
-          "image_size": [
-            970,
-            1800
-          ],
+          "image_size": [970, 1800],
           "image_url": "https://addons.mozilla.org/user-media/previews/full/238/238552.png?modified=1622132430",
-          "thumbnail_size": [
-            216,
-            400
-          ],
+          "thumbnail_size": [216, 400],
           "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/238/238552.jpg?modified=1622132430"
         },
         {
@@ -272,23 +238,14 @@
           "caption": {
             "en-US": "The unified logger tells you all that uBO is seeing and doing"
           },
-          "image_size": [
-            800,
-            600
-          ],
+          "image_size": [800, 600],
           "image_url": "https://addons.mozilla.org/user-media/previews/full/230/230370.png?modified=1622132432",
-          "thumbnail_size": [
-            533,
-            400
-          ],
+          "thumbnail_size": [533, 400],
           "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/230/230370.jpg?modified=1622132432"
         }
       ],
       "promoted": {
-        "apps": [
-          "firefox",
-          "android"
-        ],
+        "apps": ["firefox", "android"],
         "category": "recommended"
       },
       "ratings": {
@@ -378,12 +335,8 @@
       ],
       "average_daily_users": 111124,
       "categories": {
-        "android": [
-          "other"
-        ],
-        "firefox": [
-          "search-tools"
-        ]
+        "android": ["other"],
+        "firefox": ["search-tools"]
       },
       "contributions_url": "",
       "created": "2017-10-31T15:35:56Z",
@@ -653,9 +606,7 @@
       },
       "previews": [],
       "promoted": {
-        "apps": [
-          "android"
-        ],
+        "apps": ["android"],
         "category": "recommended"
       },
       "ratings": {

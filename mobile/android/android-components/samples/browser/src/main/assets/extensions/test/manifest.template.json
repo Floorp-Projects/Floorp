@@ -16,7 +16,5 @@
     "default_title": "Test",
     "default_popup": "popup.html"
   },
-  "permissions": [
-    "tabs"
-  ]
+  "permissions": ["tabs"]
 }

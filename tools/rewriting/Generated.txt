@@ -23,8 +23,6 @@ dom/tests/ajax/mochikit/
 intl/components/src/UnicodeScriptCodes.h
 intl/unicharutil/util/nsSpecialCasingData.cpp
 intl/unicharutil/util/nsUnicodePropertyData.cpp
-mobile/locales/l10n-changesets.json
-mobile/locales/l10n-onchange-changesets.json
 mobile/android/**/.build-cache
 mobile/android/**/.gradle
 mobile/android/**/build
@@ -32,6 +30,12 @@ mobile/android/**/bin
 mobile/android/**/generated
 mobile/android/**\/local.properties
 mobile/android/**\/manifest.json
+mobile/android/android-components/components/feature/search/src/main/assets/search/search_telemetry_v2.json
+mobile/android/android-components/samples/glean/src/main/res/raw/initial_experiments.json
+mobile/android/fenix/app/src/debug/res/raw/initial_experiments.json
+mobile/android/fenix/app/src/main/res/raw/initial_experiments.json
+mobile/locales/l10n-changesets.json
+mobile/locales/l10n-onchange-changesets.json
 node_modules/
 python/mozperftest/mozperftest/tests/data/
 security/manager/tools/KnownRootHashes.json

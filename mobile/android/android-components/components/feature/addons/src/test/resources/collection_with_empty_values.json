@@ -162,15 +162,9 @@
             "caption": {
               "en-US": "Default mode"
             },
-            "image_size": [
-              640,
-              480
-            ],
+            "image_size": [640, 480],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/157/157572.png?modified=1543520531",
-            "thumbnail_size": [
-              640,
-              480
-            ],
+            "thumbnail_size": [640, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/157/157572.png?modified=1543520531"
           },
           {
@@ -178,15 +172,9 @@
             "caption": {
               "en-US": "The dashboard: stock filter lists"
             },
-            "image_size": [
-              640,
-              480
-            ],
+            "image_size": [640, 480],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/157/157576.png?modified=1543520531",
-            "thumbnail_size": [
-              640,
-              480
-            ],
+            "thumbnail_size": [640, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/157/157576.png?modified=1543520531"
           },
           {
@@ -194,15 +182,9 @@
             "caption": {
               "en-US": "Dynamic filtering allows default-deny mode"
             },
-            "image_size": [
-              640,
-              480
-            ],
+            "image_size": [640, 480],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/157/157592.png?modified=1543520532",
-            "thumbnail_size": [
-              640,
-              480
-            ],
+            "thumbnail_size": [640, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/157/157592.png?modified=1543520532"
           },
           {
@@ -210,15 +192,9 @@
             "caption": {
               "en-US": "The dashboard: settings"
             },
-            "image_size": [
-              640,
-              480
-            ],
+            "image_size": [640, 480],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/159/159634.png?modified=1543520533",
-            "thumbnail_size": [
-              640,
-              480
-            ],
+            "thumbnail_size": [640, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/159/159634.png?modified=1543520533"
           },
           {
@@ -226,15 +202,9 @@
             "caption": {
               "en-US": "Unified logger"
             },
-            "image_size": [
-              700,
-              525
-            ],
+            "image_size": [700, 525],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/158/158734.png?modified=1543520534",
-            "thumbnail_size": [
-              640,
-              480
-            ],
+            "thumbnail_size": [640, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/158/158734.png?modified=1543520534"
           }
         ],

@@ -7,16 +7,16 @@
 
 browser.runtime.onMessage.addListener(message => {
   switch (message.action) {
-     case 'addSerializedDoc':
-        browser.storage.session.set({ [message.id]: message.doc });
-        return Promise.resolve();
-     case 'getSerializedDoc':
-        return (async () => {
-          let doc = await browser.storage.session.get(message.id);
-          browser.storage.session.remove(message.id);
-          return doc[message.id];
-        })();
-     default:
-       console.error(`Received unsupported action ${message.action}`);
-   }
+    case "addSerializedDoc":
+      browser.storage.session.set({ [message.id]: message.doc });
+      return Promise.resolve();
+    case "getSerializedDoc":
+      return (async () => {
+        let doc = await browser.storage.session.get(message.id);
+        browser.storage.session.remove(message.id);
+        return doc[message.id];
+      })();
+    default:
+      console.error(`Received unsupported action ${message.action}`);
+  }
 });

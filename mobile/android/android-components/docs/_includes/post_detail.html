@@ -1,16 +1,16 @@
 <h1 class="entry-title">
-    <!--<a href="{{ root_url }}{{ page.url }}">{{ page.title }}</a>-->
+  <!--<a href="{{ root_url }}{{ page.url }}">{{ page.title }}</a>-->
 </h1>
 <ul>
-    {% if post.title %}
-    <li>
-        {{ post.date | date: '%B %d, %Y' }}
-        <br/>
-        {% if post.external_url %}
-          <a href="{{ post.external_url }}">{{ post.title | escape }}</a>
-        {% else %}
-          <a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
-        {% endif %}
-    </li>
+  {% if post.title %}
+  <li>
+    {{ post.date | date: '%B %d, %Y' }}
+    <br />
+    {% if post.external_url %}
+    <a href="{{ post.external_url }}">{{ post.title | escape }}</a>
+    {% else %}
+    <a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
     {% endif %}
+  </li>
+  {% endif %}
 </ul>

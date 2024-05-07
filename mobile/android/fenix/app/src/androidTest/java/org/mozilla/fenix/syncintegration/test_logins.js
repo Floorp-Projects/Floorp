@@ -8,11 +8,11 @@
  */
 EnableEngines(["passwords"]);
 
-var phases = { "phase1": "profile1" };
-
+var phases = { phase1: "profile1" };
 
 // expected tabs state
-var password_list = [{ 
+var password_list = [
+  {
     hostname: "https://accounts.google.com",
     submitURL: "https://accounts.google.com/signin/challenge/sl/password",
     realm: null,
@@ -20,11 +20,8 @@ var password_list = [{
     password: "test15mz",
     usernameField: "Email",
     passwordField: "Passwd",
-  }];
+  },
+];
 
 // sync and verify tabs
-Phase("phase1", [
-  [Sync],
-  [Passwords.add, password_list],
-  [Sync]
-]);
+Phase("phase1", [[Sync], [Passwords.add, password_list], [Sync]]);

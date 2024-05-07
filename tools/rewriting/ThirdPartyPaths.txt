@@ -135,6 +135,9 @@ media/openmax_il/
 media/webrtc/signaling/gtest/MockCall.h
 mfbt/double-conversion/double-conversion/
 mfbt/lz4/.*
+mobile/android/android-components/components/feature/readerview/src/main/assets/extensions/readerview/readability/JSDOMParser-0.4.2.js
+mobile/android/android-components/components/feature/readerview/src/main/assets/extensions/readerview/readability/readability-0.4.2.js
+mobile/android/android-components/components/feature/readerview/src/main/assets/extensions/readerview/readability/readability-readerable-0.4.2.js
 mobile/android/exoplayer2/
 modules/brotli/
 modules/fdlibm/
