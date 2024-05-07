@@ -157,7 +157,9 @@ export class FxAccountsKeys {
       if (!kid.includes("-")) {
         return false;
       }
-      const [keyRotationTimestamp, fingerprint] = kid.split("-");
+      const dashIndex = kid.indexOf("-");
+      const keyRotationTimestamp = kid.substring(0, dashIndex);
+      const fingerprint = kid.substring(dashIndex + 1);
       // We then verify that the timestamp is a valid timestamp
       const keyRotationTimestampNum = Number(keyRotationTimestamp);
       // If the value we got back is falsy it's not a valid timestamp
