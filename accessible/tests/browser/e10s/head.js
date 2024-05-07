@@ -170,6 +170,11 @@ async function testRelated(
       expected: [null, host, dependant2],
     },
     {
+      desc: "Change attribute to multiple targets",
+      attrs: [{ key: attr, value: "dependant1 dependant2" }],
+      expected: [host, host, [dependant1, dependant2]],
+    },
+    {
       desc: "Remove attribute",
       attrs: [{ key: attr }],
       expected: [null, null, null],
