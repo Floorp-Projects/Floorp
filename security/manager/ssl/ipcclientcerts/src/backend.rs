@@ -282,7 +282,9 @@ impl Sign for Key {
 unsafe extern "C" fn sign_callback(data_len: usize, data: *const u8, ctx: *mut c_void) {
     let signature: &mut Vec<u8> = std::mem::transmute(ctx);
     signature.clear();
-    signature.extend_from_slice(std::slice::from_raw_parts(data, data_len));
+    if data_len != 0 {
+        signature.extend_from_slice(std::slice::from_raw_parts(data, data_len));
+    }
 }
 
 unsafe extern "C" fn find_objects_callback(
@@ -294,8 +296,16 @@ unsafe extern "C" fn find_objects_callback(
     slot_type: u32,
     ctx: *mut c_void,
 ) {
-    let data = std::slice::from_raw_parts(data, data_len);
-    let extra = std::slice::from_raw_parts(extra, extra_len);
+    let data = if data_len == 0 {
+        &[]
+    } else {
+        std::slice::from_raw_parts(data, data_len)
+    };
+    let extra = if extra_len == 0 {
+        &[]
+    } else {
+        std::slice::from_raw_parts(extra, extra_len)
+    };
     let slot_type = match slot_type {
         1 => SlotType::Modern,
         2 => SlotType::Legacy,
