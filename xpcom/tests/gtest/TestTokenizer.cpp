@@ -1421,6 +1421,66 @@ TEST(Tokenizer, ReadIntegers)
   EXPECT_TRUE(t.CheckEOF());
 }
 
+TEST(Tokenizer, ReadHexadecimals)
+{
+  Tokenizer t("0x100,0x0a,0xFe02dXXX,0a,0xX,0xffffffff,0x7fffffff,0x100000000");
+
+  uint32_t value32;
+  int32_t signed_value32;
+  uint64_t value64;
+
+  // "0x100,"
+  EXPECT_TRUE(t.ReadHexadecimal(&value32));
+  EXPECT_TRUE(value32 == 0x100);
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "0x0a,"
+  EXPECT_TRUE(t.ReadHexadecimal(&value32));
+  EXPECT_TRUE(value32 == 0xa);
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "0xFe02dX,"
+  EXPECT_TRUE(t.ReadHexadecimal(&value32));
+  EXPECT_TRUE(value32 == 0xfe02d);
+  EXPECT_TRUE(t.CheckWord("XXX"));
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "0a,"
+  EXPECT_FALSE(t.ReadHexadecimal(&value32));
+  EXPECT_TRUE(t.ReadHexadecimal(&value32, /* aPrefixed = */ false));
+  EXPECT_TRUE(value32 == 0xa);
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "0xX,"
+  EXPECT_FALSE(t.ReadHexadecimal(&value32));
+  EXPECT_TRUE(t.Check(Tokenizer::Token::Number(0)));
+  EXPECT_TRUE(t.CheckWord("xX"));
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "0xffffffff,"
+  // there is a case to be made that maybe this should be parsed as -1,
+  // but for now, this is not supported.
+  EXPECT_FALSE(t.ReadHexadecimal(&signed_value32));
+  EXPECT_FALSE(t.CheckChar(','));
+
+  EXPECT_TRUE(t.ReadHexadecimal(&value32));
+  EXPECT_TRUE(value32 == std::numeric_limits<uint32_t>::max());
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "0x7fffffff,"
+  EXPECT_TRUE(t.ReadHexadecimal(&signed_value32));
+  EXPECT_TRUE(signed_value32 == std::numeric_limits<int32_t>::max());
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "0x100000000,"
+  EXPECT_FALSE(t.ReadHexadecimal(&value32));
+  EXPECT_FALSE(t.CheckEOF());
+  EXPECT_FALSE(t.CheckChar(','));
+
+  EXPECT_TRUE(t.ReadHexadecimal(&value64));
+  EXPECT_TRUE(t.CheckEOF());
+}
+
 TEST(Tokenizer, CheckPhrase)
 {
   Tokenizer t("foo bar baz");
