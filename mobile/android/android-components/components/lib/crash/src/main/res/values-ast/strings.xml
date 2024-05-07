@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_dialog_title">Sentímoslo, %1$s tuvo un problema ya cascó.</string>
+    <string name="mozac_lib_crash_dialog_title">%1$s tuvo un problema y cascó.</string>
 
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_crash_dialog_checkbox">Unviar l\'informe del error a %1$s</string>
@@ -16,7 +16,7 @@
     <string name="mozac_lib_crash_channel">Casques</string>
 
     <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_background_process_notification_title">Sentímoslo, prodúxose un problema en %1$s.</string>
+    <string name="mozac_lib_crash_background_process_notification_title">Prodúxose un problema en %1$s.</string>
 
     <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
     <string name="mozac_lib_crash_notification_action_report">Informar</string>
@@ -34,7 +34,7 @@
     <string name="mozac_lib_crash_activity_title">Informes de casques</string>
 
     <!-- Text shown instead of crash list if no crashes have been submitted yet -->
-    <string name="mozac_lib_crash_no_crashes">Nun s\'unvió nengún informe de casques.</string>
+    <string name="mozac_lib_crash_no_crashes">Nun s\'unvió nengún informe de casque.</string>
 
     <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
     <string name="mozac_lib_crash_share">Compartir</string>
