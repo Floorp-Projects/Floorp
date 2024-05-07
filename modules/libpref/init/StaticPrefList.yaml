@@ -13720,11 +13720,9 @@
   mirror: always
 
 # Whether we attempt to generate and use document-internal PDF destinations.
-# This currently sometimes results in an internal cairo error, see bug 1725743;
-# disabled by default until that is resolved.
 - name: print.save_as_pdf.internal_destinations.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Whether we use the CSS @page size as the paper size in PDF output.
