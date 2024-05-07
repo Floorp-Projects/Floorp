@@ -365,7 +365,6 @@ export class GeckoViewNavigation extends GeckoViewModule {
     return [
       Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
       Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND,
-      Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_FOREGROUND,
     ].includes(aWhere);
   }
 
