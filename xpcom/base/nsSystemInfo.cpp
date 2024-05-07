@@ -16,6 +16,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Try.h"
+#include "mozilla/Vector.h"
 #include "jsapi.h"
 #include "js/PropertyAndElement.h"  // JS_SetProperty
 #include "mozilla/dom/Promise.h"
@@ -1139,9 +1140,6 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
 
     // cpuStepping from "stepping"
     (void)Tokenizer(keyValuePairs["stepping"_ns]).ReadInteger(&cpuStepping);
-
-    // physicalCPUs from "cpu cores"
-    (void)Tokenizer(keyValuePairs["cpu cores"_ns]).ReadInteger(&physicalCPUs);
 #  endif
   }
 
@@ -1175,6 +1173,106 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
   }
 
   info.cpuCount = PR_GetNumberOfProcessors();
+  int max_cpu_bits = [&] {
+    // PR_GetNumberOfProcessors gets the value from
+    // /sys/devices/system/cpu/present, but the number of bits in the CPU masks
+    // we're going to read below can be larger (for instance, on the 32-core
+    // 64-threads Threadripper 3970X, PR_GetNumberOfProcessors returns 64, but
+    // the number of bits in the CPU masks is 128). That number of bits is
+    // correlated with the number of CPUs possible (which is different from the
+    // number of CPUs present).
+    std::ifstream input("/sys/devices/system/cpu/possible");
+    std::string line;
+    if (getline(input, line)) {
+      int num;
+      Tokenizer p(line.c_str());
+      // The expected format is `0-n` where n is the number of CPUs possible
+      // - 1.
+      if (p.ReadInteger(&num) && num == 0 && p.CheckChar('-') &&
+          p.ReadInteger(&num) && p.CheckEOF()) {
+        return num + 1;
+      }
+    }
+    // If we weren't able to get the value from /sys/devices/system/cpu/possible
+    // from some reason, fallback to cpuCount, it might work.
+    return info.cpuCount;
+  }();
+
+  // /proc/cpuinfo doesn't have a cross-architecture way of counting physical
+  // cores. On x86, one could look at the number of unique combinations of
+  // `physical id` and `core id` or `cpu cores`, but those are not present on
+  // e.g. aarch64. (and that might not even be enough for NUMA nodes, but
+  // realistically, there probably aren't a lot of people running this code
+  // on such machines)
+  // As a shortcut on x86, you'd think you could just multiply the last
+  // physical id + 1 with the last core id + 1, but at least core ids are not
+  // even necessarily adjacent. (notably, on 13th or 14th generation Intel
+  // CPUs, they go in increments of 4 for performance cores, and then 1 after
+  // hitting the first efficiency core)
+  // /sys/devices/system/cpu/cpu*/topology/core_cpus does show which logical
+  // cores are associated together, such that running the command:
+  //   sort -u /sys/devices/system/cpu/cpu*/topology/core_cpus | wc -l
+  // gives a count of physical cores.
+  // There are cpuCount /sys/devices/system/cpu/cpu* directories, and they
+  // are monotonically increasing.
+  // We're going to kind of do that, but reading the actual bitmasks contained
+  // in those files.
+  constexpr int mask_bits = sizeof(uint32_t) * 8;
+
+  Vector<uint32_t> cpumasks;
+  physicalCPUs = [&] {
+    int cores = 0;
+    if (!cpumasks.appendN(0, (max_cpu_bits + mask_bits - 1) / mask_bits)) {
+      return -1;
+    }
+    for (int32_t cpu = 0; cpu < info.cpuCount; ++cpu) {
+      nsPrintfCString core_cpus(
+          "/sys/devices/system/cpu/cpu%d/topology/core_cpus", cpu);
+      std::ifstream input(core_cpus.Data());
+      // Kernel versions before 5.3 didn't have core_cpus, they had
+      // thread_siblings instead, with the same content. As of writing, kernel
+      // version 6.9 still has both, but thread_siblings has been deprecated
+      // since the introduction of core_cpus.
+      if (input.fail()) {
+        core_cpus.Truncate(core_cpus.Length() - sizeof("core_cpus") + 1);
+        core_cpus.AppendLiteral("thread_siblings");
+        input.open(core_cpus.Data());
+      }
+      std::string line;
+      if (!getline(input, line)) {
+        return -1;
+      }
+      Tokenizer p(line.c_str());
+      bool unknown_core = false;
+      // The format of the file is `bitmask0,bitmask1,..,bitmaskn`
+      // where each bitmask is 32-bits wide, and there are as many as
+      // necessary to print max_cpu_bits bits.
+      for (auto& mask : cpumasks) {
+        uint32_t m;
+        if (NS_WARN_IF(!p.ReadHexadecimal(&m, /* aPrefixed = */ false))) {
+          return -1;
+        }
+        if (!p.CheckEOF() && !p.CheckChar(',')) {
+          return -1;
+        }
+        // We're keeping track of all the CPU bits we've seen so far.
+        // If we're now seeing one that has never been set, it means
+        // we're seeing a new physical core (as opposed to a logical
+        // core). We don't want to end the loop now, though, because
+        // we also want to track all the bits we're seeing, in case
+        // subsequent masks have new bits as well.
+        if ((mask & m) != m) {
+          unknown_core = true;
+        }
+        mask |= m;
+      }
+      if (unknown_core) {
+        cores++;
+      }
+    }
+    return cores;
+  }();
+
 #else
   info.cpuCount = PR_GetNumberOfProcessors();
 #endif
