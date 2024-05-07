@@ -34,11 +34,19 @@ class DOMRectList;
 class InspectorFontFace;
 class Selection;
 
-enum class CollapsePolicy : uint8_t {
-  No,                                       // Don't need to collapse
-  DefaultRange,                             // Collapse the default range
-  DefaultRangeAndCrossShadowBoundaryRanges  // Collapse both the default range
-                                            // and the cross boundary range
+enum class RangeBehaviour : uint8_t {
+  // Keep both ranges
+  KeepDefaultRangeAndCrossShadowBoundaryRanges,
+  // Merge both ranges; This is the case where the range boundaries was in
+  // different roots initially, and becoming in the same roots now. Since
+  // they start to be in the same root, using normal range is good enough
+  // to represent it
+  MergeDefaultRangeAndCrossShadowBoundaryRanges,
+  // Collapse the default range
+  CollapseDefaultRange,
+  // Collapse both the default range and the cross-shadow-boundary range
+  CollapseDefaultRangeAndCrossShadowBoundaryRanges
+
 };
 }  // namespace dom
 }  // namespace mozilla
@@ -491,8 +499,8 @@ class nsRange final : public mozilla::dom::AbstractRange,
       const mozilla::RangeBoundaryBase<SPT, SRT>& aStartBoundary,
       const mozilla::RangeBoundaryBase<EPT, ERT>& aEndBoundary,
       nsINode* aRootNode, bool aNotInsertedYet = false,
-      mozilla::dom::CollapsePolicy aCollapsePolicy = mozilla::dom::
-          CollapsePolicy::DefaultRangeAndCrossShadowBoundaryRanges);
+      mozilla::dom::RangeBehaviour aRangeBehaviour = mozilla::dom::
+          RangeBehaviour::CollapseDefaultRangeAndCrossShadowBoundaryRanges);
 
   // Assume that this is guaranteed that this is held by the caller when
   // this is used.  (Note that we cannot use AutoRestore for mCalledByJS
