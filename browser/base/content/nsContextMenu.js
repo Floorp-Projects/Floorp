@@ -1347,8 +1347,6 @@ class nsContextMenu {
       !this.onTextInput &&
       !this.onLink &&
       !this.onPlainTextLink &&
-      !this.onImage &&
-      !this.onVideo &&
       !this.onAudio &&
       !this.onEditable &&
       !this.onPassword;
