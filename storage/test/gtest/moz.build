@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
     "test_asyncStatementExecution_transaction.cpp",
     "test_binding_params.cpp",
     "test_file_perms.cpp",
+    "test_interruptSynchronousConnection.cpp",
     "test_mutex.cpp",
     "test_spinningSynchronousClose.cpp",
     "test_statement_scoper.cpp",
@@ -20,12 +21,6 @@ UNIFIED_SOURCES += [
     "test_true_async.cpp",
     "test_unlock_notify.cpp",
 ]
-
-# Bug 1894261 - Fails under TSAN
-if not CONFIG["MOZ_TSAN"]:
-    UNIFIED_SOURCES += [
-        "test_interruptSynchronousConnection.cpp",
-    ]
 
 if (
     CONFIG["MOZ_DEBUG"]
