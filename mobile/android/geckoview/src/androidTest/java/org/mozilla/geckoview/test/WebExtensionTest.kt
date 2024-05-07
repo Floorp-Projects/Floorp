@@ -2847,7 +2847,7 @@ class WebExtensionTest : BaseSessionTest() {
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false,
                 "extensions.getAddons.cache.enabled" to true,
-                "extensions.getAddons.cache.lastUpdate" to 0,
+                "extensions.getAddons.cache.lastUpdate" to 1,
             ),
         )
         mainSession.loadUri("https://example.com")
