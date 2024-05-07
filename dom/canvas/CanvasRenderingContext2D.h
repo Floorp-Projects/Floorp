@@ -1051,6 +1051,8 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
     gfx::Float letterSpacing = 0.0f;
     gfx::Float wordSpacing = 0.0f;
+    mozilla::StyleLineHeight fontLineHeight =
+        mozilla::StyleLineHeight::Normal();
     nsCString letterSpacingStr;
     nsCString wordSpacingStr;
 

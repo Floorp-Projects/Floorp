@@ -2744,14 +2744,15 @@ static nscoord GetNormalLineHeight(nsFontMetrics* aFontMetrics) {
 }
 
 static inline nscoord ComputeLineHeight(const StyleLineHeight& aLh,
-                                        const nsStyleFont& aRelativeToFont,
+                                        const nsFont& aFont, nsAtom* aLanguage,
+                                        bool aExplicitLanguage,
                                         nsPresContext* aPresContext,
                                         bool aIsVertical, nscoord aBlockBSize,
                                         float aFontSizeInflation) {
   if (aLh.IsLength()) {
     nscoord result = aLh.AsLength().ToAppUnits();
     if (aFontSizeInflation != 1.0f) {
-      result = NSToCoordRound(result * aFontSizeInflation);
+      result = NSToCoordRound(static_cast<float>(result) * aFontSizeInflation);
     }
     return result;
   }
@@ -2760,8 +2761,7 @@ static inline nscoord ComputeLineHeight(const StyleLineHeight& aLh,
     // For factor units the computed value of the line-height property
     // is found by multiplying the factor by the font's computed size
     // (adjusted for min-size prefs and text zoom).
-    return aRelativeToFont.mFont.size
-        .ScaledBy(aLh.AsNumber() * aFontSizeInflation)
+    return aFont.size.ScaledBy(aLh.AsNumber() * aFontSizeInflation)
         .ToAppUnits();
   }
 
@@ -2770,13 +2770,21 @@ static inline nscoord ComputeLineHeight(const StyleLineHeight& aLh,
     return aBlockBSize;
   }
 
-  auto size = aRelativeToFont.mFont.size;
+  auto size = aFont.size;
   size.ScaleBy(aFontSizeInflation);
 
   if (aPresContext) {
-    RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetMetricsFor(
-        aPresContext, aIsVertical, &aRelativeToFont, size,
-        /* aUseUserFontSet = */ true);
+    nsFont font = aFont;
+    font.size = size;
+    nsFontMetrics::Params params;
+    params.language = aLanguage;
+    params.explicitLanguage = aExplicitLanguage;
+    params.orientation =
+        aIsVertical ? nsFontMetrics::eVertical : nsFontMetrics::eHorizontal;
+    params.userFontSet = aPresContext->GetUserFontSet();
+    params.textPerf = aPresContext->GetTextPerfMetrics();
+    params.featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
+    RefPtr<nsFontMetrics> fm = aPresContext->GetMetricsFor(font, params);
     return GetNormalLineHeight(fm);
   }
   // If we don't have a pres context, use a 1.2em fallback.
@@ -2828,8 +2836,9 @@ nscoord ReflowInput::CalcLineHeight(
     nsPresContext* aPresContext, bool aIsVertical, const nsIContent* aContent,
     nscoord aBlockBSize, float aFontSizeInflation) {
   nscoord lineHeight =
-      ComputeLineHeight(aLh, aRelativeToFont, aPresContext, aIsVertical,
-                        aBlockBSize, aFontSizeInflation);
+      ComputeLineHeight(aLh, aRelativeToFont.mFont, aRelativeToFont.mLanguage,
+                        aRelativeToFont.mExplicitLanguage, aPresContext,
+                        aIsVertical, aBlockBSize, aFontSizeInflation);
 
   NS_ASSERTION(lineHeight >= 0, "ComputeLineHeight screwed up");
 
@@ -2839,8 +2848,9 @@ nscoord ReflowInput::CalcLineHeight(
     // have a line-height smaller than 'normal'.
     if (!aLh.IsNormal()) {
       nscoord normal = ComputeLineHeight(
-          StyleLineHeight::Normal(), aRelativeToFont, aPresContext, aIsVertical,
-          aBlockBSize, aFontSizeInflation);
+          StyleLineHeight::Normal(), aRelativeToFont.mFont,
+          aRelativeToFont.mLanguage, aRelativeToFont.mExplicitLanguage,
+          aPresContext, aIsVertical, aBlockBSize, aFontSizeInflation);
       if (lineHeight < normal) {
         lineHeight = normal;
       }
@@ -2848,6 +2858,17 @@ nscoord ReflowInput::CalcLineHeight(
   }
 
   return lineHeight;
+}
+
+nscoord ReflowInput::CalcLineHeightForCanvas(const StyleLineHeight& aLh,
+                                             const nsFont& aRelativeToFont,
+                                             nsAtom* aLanguage,
+                                             bool aExplicitLanguage,
+                                             nsPresContext* aPresContext,
+                                             mozilla::WritingMode aWM) {
+  return ComputeLineHeight(aLh, aRelativeToFont, aLanguage, aExplicitLanguage,
+                           aPresContext, aWM.IsVertical() && !aWM.IsSideways(),
+                           NS_UNCONSTRAINEDSIZE, 1.0f);
 }
 
 bool SizeComputationInput::ComputeMargin(WritingMode aCBWM,
