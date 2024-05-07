@@ -1081,14 +1081,20 @@ public class TranslationsController {
       /** If the translation engine is ready for use or will need to be loaded. */
       public final @NonNull Boolean isEngineReady;
 
+      /** If the DOM has began visibly changing to the translated text. */
+      public final @NonNull Boolean hasVisibleChange;
+
       /**
-       * Translation State constructor.
+       * This constructor is deprecated, please use the [TranslationState] with [hasVisibleChange]
+       * parameter. This constructor will be removed in bug 1895275. Translation State constructor.
        *
        * @param requestedTranslationPair the language pair to translate
        * @param error if an error occurred
        * @param detectedLanguages detected language
        * @param isEngineReady if the engine is ready for translations
        */
+      @Deprecated
+      @DeprecationSchedule(version = 130, id = "translation-state-deprecated-constructor")
       public TranslationState(
           final @Nullable TranslationPair requestedTranslationPair,
           final @Nullable String error,
@@ -1098,6 +1104,29 @@ public class TranslationsController {
         this.error = error;
         this.detectedLanguages = detectedLanguages;
         this.isEngineReady = isEngineReady;
+        this.hasVisibleChange = false;
+      }
+
+      /**
+       * Translation State constructor.
+       *
+       * @param requestedTranslationPair the language pair to translate
+       * @param error if an error occurred
+       * @param detectedLanguages detected language
+       * @param isEngineReady if the engine is ready for translations
+       * @param hasVisibleChange if the DOM has began to visibly change to translated text
+       */
+      public TranslationState(
+          final @Nullable TranslationPair requestedTranslationPair,
+          final @Nullable String error,
+          final @Nullable DetectedLanguages detectedLanguages,
+          final @NonNull Boolean isEngineReady,
+          final @NonNull Boolean hasVisibleChange) {
+        this.requestedTranslationPair = requestedTranslationPair;
+        this.error = error;
+        this.detectedLanguages = detectedLanguages;
+        this.isEngineReady = isEngineReady;
+        this.hasVisibleChange = hasVisibleChange;
       }
 
       @Override
@@ -1112,6 +1141,8 @@ public class TranslationsController {
             + detectedLanguages
             + ", isEngineReady="
             + isEngineReady
+            + ", hasVisibleChange="
+            + hasVisibleChange
             + '}';
       }
 
@@ -1130,7 +1161,8 @@ public class TranslationsController {
             TranslationPair.fromBundle(bundle.getBundle("requestedTranslationPair")),
             bundle.getString("error"),
             DetectedLanguages.fromBundle(bundle.getBundle("detectedLanguages")),
-            bundle.getBoolean("isEngineReady", false));
+            bundle.getBoolean("isEngineReady", false),
+            bundle.getBoolean("hasVisibleChange", false));
       }
     }
 
@@ -1168,7 +1200,7 @@ public class TranslationsController {
           final GeckoBundle data = message.getBundle("data");
           final TranslationState translationState = TranslationState.fromBundle(data);
           if (DEBUG) {
-            Log.d(LOGTAG, "received translation state: " + translationState);
+            Log.d(LOGTAG, "Received translation state: " + translationState);
           }
           delegate.onTranslationStateChange(mSession, translationState);
           if (translationState != null
