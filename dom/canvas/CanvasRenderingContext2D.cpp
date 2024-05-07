@@ -2909,6 +2909,13 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
     return GetCSSViewportSizeFromContext(mPresContext);
   }
 
+  float GetLineHeight(Type aType) const override {
+    // This is used if a filter is added through `url()`, and if the SVG
+    // filter being referred to is using line-height units.
+    // TODO(dshin): Implement
+    return 1.0f;
+  }
+
  private:
   GeckoFontMetrics GetFontMetricsForType(Type aType) const override {
     switch (aType) {

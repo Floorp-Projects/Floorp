@@ -433,6 +433,26 @@ float SVGContentUtils::GetFontXHeight(const ComputedStyle* aComputedStyle,
   return nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
          aPresContext->TextZoom();
 }
+
+float SVGContentUtils::GetLineHeight(const Element* aElement) {
+  float result = 16.0f * ReflowInput::kNormalLineHeightFactor;
+  if (!aElement) {
+    return result;
+  }
+  SVGGeometryProperty::DoForComputedStyle(
+      aElement, [&](const ComputedStyle* style) {
+        auto* context = nsContentUtils::GetContextForContent(aElement);
+        if (!context) {
+          return;
+        }
+        const auto lineHeightAu = ReflowInput::CalcLineHeight(
+            *style, context, aElement, NS_UNCONSTRAINEDSIZE, 1.0f);
+        result = CSSPixel::FromAppUnits(lineHeightAu);
+      });
+
+  return result;
+}
+
 nsresult SVGContentUtils::ReportToConsole(const Document* doc,
                                           const char* aWarning,
                                           const nsTArray<nsString>& aParams) {

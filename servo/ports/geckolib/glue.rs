@@ -5565,6 +5565,12 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
         structs::nsCSSUnit::eCSSUnit_CapHeight => {
             NoCalcLength::FontRelative(FontRelativeLength::Cap(value))
         },
+        structs::nsCSSUnit::eCSSUnit_LineHeight => {
+            NoCalcLength::FontRelative(FontRelativeLength::Lh(value))
+        },
+        structs::nsCSSUnit::eCSSUnit_RootLineHeight => {
+            NoCalcLength::FontRelative(FontRelativeLength::Rlh(value))
+        },
         structs::nsCSSUnit::eCSSUnit_Pixel => NoCalcLength::Absolute(AbsoluteLength::Px(value)),
         structs::nsCSSUnit::eCSSUnit_Inch => NoCalcLength::Absolute(AbsoluteLength::In(value)),
         structs::nsCSSUnit::eCSSUnit_Centimeter => {

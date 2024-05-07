@@ -225,6 +225,10 @@ CSSSize SVGElementMetrics::GetCSSViewportSize() const {
   return GetCSSViewportSizeFromContext(context);
 }
 
+float SVGElementMetrics::GetLineHeight(Type aType) const {
+  return SVGContentUtils::GetLineHeight(GetElementForType(aType));
+}
+
 bool SVGElementMetrics::EnsureCtx() const {
   if (!mCtx && mSVGElement) {
     mCtx = mSVGElement->GetCtx();
@@ -296,6 +300,23 @@ gfx::Size NonSVGFrameUserSpaceMetrics::GetSize() const {
 
 CSSSize NonSVGFrameUserSpaceMetrics::GetCSSViewportSize() const {
   return GetCSSViewportSizeFromContext(mFrame->PresContext());
+}
+
+float NonSVGFrameUserSpaceMetrics::GetLineHeight(Type aType) const {
+  auto* context = mFrame->PresContext();
+  switch (aType) {
+    case Type::This: {
+      const auto lineHeightAu = ReflowInput::CalcLineHeight(
+          *mFrame->Style(), context, mFrame->GetContent(), NS_UNCONSTRAINEDSIZE,
+          1.0f);
+      return CSSPixel::FromAppUnits(lineHeightAu);
+    }
+    case Type::Root:
+      return SVGContentUtils::GetLineHeight(
+          context->Document()->GetRootElement());
+  }
+  MOZ_ASSERT_UNREACHABLE("Was a new value added to the enumeration?");
+  return 1.0f;
 }
 
 float UserSpaceMetricsWithSize::GetAxisLength(uint8_t aCtxType) const {

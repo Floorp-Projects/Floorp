@@ -180,6 +180,15 @@ class SVGContentUtils {
   static float GetFontXHeight(const ComputedStyle*, nsPresContext*);
 
   /*
+   * Get the number of CSS px (user units) per lh (i.e. the line-height in
+   * user units) for an nsIContent.
+   *
+   * Requires the element be styled - if not, a default value assuming
+   * the font-size of 16px and line-height of 1.2 is returned.
+   */
+  static float GetLineHeight(const mozilla::dom::Element* aElement);
+
+  /*
    * Report a localized error message to the error console.
    */
   static nsresult ReportToConsole(const dom::Document* doc,
