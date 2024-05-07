@@ -902,8 +902,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   mResizable = aInitData->mResizable;
 
   Styles desiredStyles{
-      .style = WindowStyle(),
-      .ex = WindowExStyle(),
+      .style = static_cast<LONG_PTR>(WindowStyle()),
+      .ex = static_cast<LONG_PTR>(WindowExStyle()),
   };
 
   if (mWindowType == WindowType::Popup) {
