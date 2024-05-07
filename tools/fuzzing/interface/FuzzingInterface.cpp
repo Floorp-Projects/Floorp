@@ -33,14 +33,35 @@ LazyLogModule gFuzzingLog("nsFuzzing");
 __AFL_FUZZ_INIT();
 
 int afl_interface_raw(FuzzingTestFuncRaw testFunc) {
-#  ifdef __AFL_HAVE_MANUAL_CONTROL
   __AFL_INIT();
-#  endif
-  uint8_t* buf = __AFL_FUZZ_TESTCASE_BUF;
+  char* testFilePtr = getenv("MOZ_FUZZ_TESTFILE");
+  uint8_t* buf = NULL;
 
-  while (__AFL_LOOP(1000)) {
-    size_t len = __AFL_FUZZ_TESTCASE_LEN;
-    testFunc(buf, len);
+  if (testFilePtr) {
+    std::string testFile(testFilePtr);
+    while (__AFL_LOOP(1000)) {
+      std::ifstream is;
+      is.open(testFile, std::ios::binary);
+      is.seekg(0, std::ios::end);
+      size_t len = is.tellg();
+      is.seekg(0, std::ios::beg);
+      MOZ_RELEASE_ASSERT(len >= 0);
+      if (!len) {
+        is.close();
+        continue;
+      }
+      buf = reinterpret_cast<uint8_t*>(realloc(buf, len));
+      MOZ_RELEASE_ASSERT(buf);
+      is.read(reinterpret_cast<char*>(buf), len);
+      is.close();
+      testFunc(buf, len);
+    }
+  } else {
+    buf = __AFL_FUZZ_TESTCASE_BUF;
+    while (__AFL_LOOP(1000)) {
+      size_t len = __AFL_FUZZ_TESTCASE_LEN;
+      testFunc(buf, len);
+    }
   }
 
   return 0;
