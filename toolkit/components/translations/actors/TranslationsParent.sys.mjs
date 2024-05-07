@@ -911,6 +911,9 @@ export class TranslationsParent extends JSWindowActorParent {
 
         return undefined;
       }
+      case "Translations:ReportFirstVisibleChange": {
+        this.languageState.hasVisibleChange = true;
+      }
     }
     return undefined;
   }
@@ -2139,6 +2142,7 @@ export class TranslationsParent extends JSWindowActorParent {
     // Skip auto-translate for one page load.
     const windowState = this.getWindowState();
     windowState.isPageRestored = true;
+    this.languageState.hasVisibleChange = false;
     this.languageState.requestedTranslationPair = null;
     windowState.previousDetectedLanguages =
       this.languageState.detectedLanguages;
@@ -2764,6 +2768,9 @@ class TranslationsLanguageState {
   /** @type {LangTags | null} */
   #detectedLanguages = null;
 
+  /** @type {boolean} */
+  #hasVisibleChange = false;
+
   /** @type {null | TranslationErrors} */
   #error = null;
 
@@ -2825,6 +2832,24 @@ class TranslationsLanguageState {
     }
 
     this.#detectedLanguages = detectedLanguages;
+    this.dispatch();
+  }
+
+  /**
+   * A visual translation change occurred on the DOM.
+   *
+   * @returns {boolean}
+   */
+  get hasVisibleChange() {
+    return this.#hasVisibleChange;
+  }
+
+  set hasVisibleChange(hasVisibleChange) {
+    if (this.#hasVisibleChange === hasVisibleChange) {
+      return;
+    }
+
+    this.#hasVisibleChange = hasVisibleChange;
     this.dispatch();
   }
 

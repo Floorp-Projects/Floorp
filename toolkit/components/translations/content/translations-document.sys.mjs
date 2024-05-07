@@ -332,6 +332,13 @@ export class TranslationsDocument {
   isDestroyed = false;
 
   /**
+   * This boolean indicates whether the first visible DOM translation change is about to occur.
+   *
+   * @type {boolean}
+   */
+  hasFirstVisibleChange = false;
+
+  /**
    * Construct a new TranslationsDocument. It is tied to a specific Document and cannot
    * be re-used. The translation functions are injected since this class shouldn't
    * manage the life cycle of the translations engines.
@@ -343,6 +350,8 @@ export class TranslationsDocument {
    * @param {MessagePort} port - The port to the translations engine.
    * @param {() => void} requestNewPort - Used when an engine times out and a new
    *                                      translation request comes in.
+   * @param {() => void} reportVisibleChange - Used to report to the actor that the first visible change
+   *                                          for a translation is about to occur.
    * @param {number} translationsStart
    * @param {() => number} now
    * @param {LRUCache} translationsCache
@@ -354,6 +363,7 @@ export class TranslationsDocument {
     innerWindowId,
     port,
     requestNewPort,
+    reportVisibleChange,
     translationsStart,
     now,
     translationsCache
@@ -379,7 +389,11 @@ export class TranslationsDocument {
     }
 
     /** @type {QueuedTranslator} */
-    this.translator = new QueuedTranslator(port, requestNewPort);
+    this.translator = new QueuedTranslator(
+      port,
+      requestNewPort,
+      reportVisibleChange
+    );
 
     /** @type {number} */
     this.innerWindowId = innerWindowId;
@@ -392,6 +406,9 @@ export class TranslationsDocument {
 
     /** @type {LRUCache} */
     this.translationsCache = translationsCache;
+
+    /** @type {() => void} */
+    this.actorReportFirstVisibleChange = reportVisibleChange;
 
     /**
      * This selector runs to find child nodes that should be excluded. It should be
@@ -1143,8 +1160,10 @@ export class TranslationsDocument {
       if (translation === undefined) {
         translation = await this.translator.translate(node, text, isHTML);
         this.translationsCache.set(text, translation, isHTML);
+      } else if (!this.hasFirstVisibleChange) {
+        this.hasFirstVisibleChange = true;
+        this.actorReportFirstVisibleChange();
       }
-
       return translation;
     } catch (error) {
       lazy.console.log("Translation failed", error);
@@ -1841,6 +1860,13 @@ class QueuedTranslator {
   #actorRequestNewPort;
 
   /**
+   * Send a message to the actor that the first visible DOM translation change is about to occur.
+   *
+   * @type {() => void}
+   */
+  #actorReportFirstVisibleChange;
+
+  /**
    * An id for each message sent. This is used to match up the request and response.
    */
   #nextMessageId = 0;
@@ -1868,9 +1894,11 @@ class QueuedTranslator {
   /**
    * @param {MessagePort} port
    * @param {() => void} actorRequestNewPort
+   * @param {() => void} actorReportFirstVisibleChange
    */
-  constructor(port, actorRequestNewPort) {
+  constructor(port, actorRequestNewPort, actorReportFirstVisibleChange) {
     this.#actorRequestNewPort = actorRequestNewPort;
+    this.#actorReportFirstVisibleChange = actorReportFirstVisibleChange;
 
     this.acquirePort(port);
   }
@@ -2092,6 +2120,10 @@ class QueuedTranslator {
     port.onmessage = ({ data }) => {
       switch (data.type) {
         case "TranslationsPort:TranslationResponse": {
+          if (!this.hasFirstVisibleChange) {
+            this.hasFirstVisibleChange = true;
+            this.#actorReportFirstVisibleChange();
+          }
           const { targetText, messageId } = data;
           // A request may not match match a messageId if there is a race during the pausing
           // and discarding of the queue.

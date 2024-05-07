@@ -81,6 +81,7 @@ export class TranslationsChild extends JSWindowActorChild {
           this.contentWindow.windowGlobalChild.innerWindowId,
           port,
           () => this.sendAsyncMessage("Translations:RequestPort"),
+          () => this.sendAsyncMessage("Translations:ReportFirstVisibleChange"),
           translationsStart,
           () => this.docShell.now(),
           TranslationsChild.#translationsCache

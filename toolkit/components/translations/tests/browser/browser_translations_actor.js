@@ -232,3 +232,29 @@ add_task(async function test_translating_to_and_from_app_language() {
 
   return cleanup();
 });
+
+add_task(async function test_firstVisualChange() {
+  const { cleanup } = await setupActorTest({
+    languagePairs: [{ fromLang: "en", toLang: "es" }],
+  });
+
+  const parent = getTranslationsParent();
+
+  Assert.equal(
+    parent.languageState.hasVisibleChange,
+    false,
+    "No visual translation change has occurred yet"
+  );
+
+  parent.receiveMessage({
+    name: "Translations:ReportFirstVisibleChange",
+  });
+
+  Assert.equal(
+    parent.languageState.hasVisibleChange,
+    true,
+    "A change occurred."
+  );
+
+  return cleanup();
+});
