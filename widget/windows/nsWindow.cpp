@@ -1284,7 +1284,7 @@ DWORD nsWindow::WindowStyle() {
       break;
 
     case WindowType::Dialog:
-      style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK |
+      style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU |
               DS_MODALFRAME | WS_CLIPCHILDREN;
       if (mBorderStyle != BorderStyle::Default) {
         style |= WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
