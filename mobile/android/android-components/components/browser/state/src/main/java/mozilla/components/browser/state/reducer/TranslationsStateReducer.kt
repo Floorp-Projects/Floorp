@@ -62,11 +62,8 @@ internal object TranslationsStateReducer {
             }
 
             // Checking for if the translations engine is in the fully translated state or not based
-            // on the values of the translation pair.
-            if (action.translationEngineState.requestedTranslationPair == null ||
-                action.translationEngineState.requestedTranslationPair?.fromLanguage == null ||
-                action.translationEngineState.requestedTranslationPair?.toLanguage == null
-            ) {
+            // on if a visual change has occurred on the browser.
+            if (action.translationEngineState.hasVisibleChange != true) {
                 // In an untranslated state
                 var translationsError: TranslationError? = null
                 if (action.translationEngineState.detectedLanguages?.supportedDocumentLang == false) {
@@ -111,9 +108,9 @@ internal object TranslationsStateReducer {
         is TranslationsAction.TranslateSuccessAction -> {
             when (action.operation) {
                 TranslationOperation.TRANSLATE -> {
+                    // The isTranslated state will be identified on a translation state change.
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
-                            isTranslated = true,
                             isTranslateProcessing = false,
                             translationError = null,
                         )

@@ -71,6 +71,7 @@ class TranslationsBindingTest {
                 detectedLanguages = detectedLanguages,
                 error = null,
                 isEngineReady = true,
+                hasVisibleChange = true,
                 requestedTranslationPair = TranslationPair(
                     fromLanguage = englishLanguage.code,
                     toLanguage = spanishLanguage.code,

@@ -69,13 +69,14 @@ class GeckoTranslateSessionDelegateTest {
         val gecko = GeckoTranslateSessionDelegate(mockSession)
 
         // Mock state parameters to check Gecko to AC mapping is correctly occurring
-        var userLangTag = "en"
-        var isDocLangTagSupported = true
-        var docLangTag = "es"
-        var fromLanguage = "de"
-        var toLanguage = "bg"
-        var error = "Error!"
-        var isEngineReady = false
+        val userLangTag = "en"
+        val isDocLangTagSupported = true
+        val docLangTag = "es"
+        val fromLanguage = "de"
+        val toLanguage = "bg"
+        val error = "Error!"
+        val isEngineReady = false
+        val hasVisibleChange = true
 
         mockSession.register(
             object : EngineSession.Observer {
@@ -88,14 +89,15 @@ class GeckoTranslateSessionDelegateTest {
                     assertTrue(state.requestedTranslationPair?.toLanguage == toLanguage)
                     assertTrue(state.error == error)
                     assertTrue(state.isEngineReady == isEngineReady)
+                    assertTrue(state.hasVisibleChange == hasVisibleChange)
                 }
             },
         )
 
         // Mock states
-        var mockDetectedLanguages = TranslationsController.SessionTranslation.DetectedLanguages(userLangTag, isDocLangTagSupported, docLangTag)
-        var mockTranslationsPair = TranslationsController.SessionTranslation.TranslationPair(fromLanguage, toLanguage)
-        var mockGeckoState = TranslationsController.SessionTranslation.TranslationState(mockTranslationsPair, error, mockDetectedLanguages, isEngineReady)
+        val mockDetectedLanguages = TranslationsController.SessionTranslation.DetectedLanguages(userLangTag, isDocLangTagSupported, docLangTag)
+        val mockTranslationsPair = TranslationsController.SessionTranslation.TranslationPair(fromLanguage, toLanguage)
+        val mockGeckoState = TranslationsController.SessionTranslation.TranslationState(mockTranslationsPair, error, mockDetectedLanguages, isEngineReady, hasVisibleChange)
         gecko.onTranslationStateChange(mock(), mockGeckoState)
 
         assertTrue(onTranslateStateChangeWasCalled)

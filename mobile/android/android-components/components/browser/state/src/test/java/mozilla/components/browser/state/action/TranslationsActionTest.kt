@@ -95,6 +95,7 @@ class TranslationsActionTest {
             error = null,
             isEngineReady = true,
             requestedTranslationPair = TranslationPair(fromLanguage = "es", toLanguage = "en"),
+            hasVisibleChange = true,
         )
 
         store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, translationEngineState = translatedEngineState))
@@ -110,6 +111,7 @@ class TranslationsActionTest {
             error = null,
             isEngineReady = true,
             requestedTranslationPair = TranslationPair(fromLanguage = null, toLanguage = null),
+            hasVisibleChange = false,
         )
 
         store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, nonTranslatedEngineState))
@@ -264,7 +266,6 @@ class TranslationsActionTest {
         store.dispatch(TranslationsAction.TranslateSuccessAction(tabId = tab.id, operation = TranslationOperation.TRANSLATE))
             .joinBlocking()
         assertEquals(false, tabState().translationsState.isTranslateProcessing)
-        assertEquals(true, tabState().translationsState.isTranslated)
         assertEquals(null, tabState().translationsState.translationError)
     }
 
@@ -448,7 +449,6 @@ class TranslationsActionTest {
             ),
         ).joinBlocking()
         assertEquals(null, tabState().translationsState.translationError)
-        assertEquals(true, tabState().translationsState.isTranslated)
         assertEquals(false, tabState().translationsState.isTranslateProcessing)
 
         // RESTORE usage

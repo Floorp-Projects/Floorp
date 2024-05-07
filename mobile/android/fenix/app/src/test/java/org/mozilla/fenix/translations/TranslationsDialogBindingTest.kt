@@ -245,6 +245,31 @@ class TranslationsDialogBindingTest {
                 ),
             ).joinBlocking()
 
+            // Simulate success response post-translate
+            val detectedLanguages = DetectedLanguages(
+                documentLangTag = "en",
+                supportedDocumentLang = true,
+                userPreferredLangTag = "es",
+            )
+
+            val translationEngineState = TranslationEngineState(
+                detectedLanguages = detectedLanguages,
+                error = null,
+                isEngineReady = true,
+                hasVisibleChange = true,
+                requestedTranslationPair = TranslationPair(
+                    fromLanguage = "en",
+                    toLanguage = "es",
+                ),
+            )
+
+            browserStore.dispatch(
+                TranslationsAction.TranslateStateChangeAction(
+                    tabId = tabId,
+                    translationEngineState = translationEngineState,
+                ),
+            ).joinBlocking()
+
             verify(translationsDialogStore).dispatch(
                 TranslationsDialogAction.UpdateTranslated(
                     true,
