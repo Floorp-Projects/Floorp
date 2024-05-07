@@ -373,7 +373,9 @@ pub mod test_nested {
         #[derive(Debug, Hash, Eq, PartialEq, ::glean::traits::__serde::Serialize, ::glean::traits::__serde::Deserialize)]
     #[serde(deny_unknown_fields)]
     pub struct AnObjectObjectItem {
+          #[serde(skip_serializing_if = "Option::is_none")]
           pub colour: Option<String>,
+          #[serde(skip_serializing_if = "Option::is_none")]
           pub diameter: Option<i64>,
     }
 

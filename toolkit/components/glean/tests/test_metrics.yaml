@@ -423,6 +423,42 @@ test_only:
           diameter:
             type: number
 
+  crash_stack:
+    type: object
+    description: A not-real crash stack
+    bugs:
+      - https://bugzilla.mozilla.org/1839640
+    data_reviews:
+      - http://example.com/reviews
+    notification_emails:
+      - CHANGE-ME@example.com
+    expires: never
+    structure:
+      type: object
+      properties:
+        status:
+          type: string
+        main_module:
+          type: number
+        crash_info:
+          type: object
+          properties:
+            typ:
+              type: string
+            address:
+              type: string
+            crashing_thread:
+              type: number
+        modules:
+          type: array
+          items:
+            type: object
+            properties:
+              base_addr:
+                type: string
+              end_addr:
+                type: string
+
 test_only.ipc:
   a_counter:
     type: counter
