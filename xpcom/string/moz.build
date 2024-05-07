@@ -56,7 +56,4 @@ UNIFIED_SOURCES += [
     "RustStringAPI.cpp",
 ]
 
-if CONFIG["MOZ_DEBUG"]:
-    UNIFIED_SOURCES += ["nsStringStats.cpp"]
-
 FINAL_LIBRARY = "xul"
