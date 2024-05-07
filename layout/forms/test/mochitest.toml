@@ -75,8 +75,6 @@ skip-if = ["os == 'android'"] # Bug 1635771
 
 ["test_bug717878_input_scroll.html"]
 
-["test_bug869314.html"]
-
 ["test_bug903715.html"]
 skip-if = ["true"]
 

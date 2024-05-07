@@ -295,13 +295,10 @@ const kBoldFontWeight = function equalsToBold(aWeight) {
   return aWeight > 400;
 };
 
-let isNNT = SpecialPowers.getBoolPref("widget.non-native-theme.enabled");
 // The pt font size of the input element can vary by Linux distro.
 const kInputFontSize =
-  WIN || (MAC && isNNT)
+  WIN || MAC
     ? "10pt"
-    : MAC
-    ? "8pt"
     : function () {
         return true;
       };
