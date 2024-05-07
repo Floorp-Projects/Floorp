@@ -86,7 +86,7 @@ object Versions {
         const val uiautomator = "2.3.0"
         const val localbroadcastmanager = "1.0.0"
         const val swiperefreshlayout = "1.1.0"
-        const val datastore="1.1.0"
+        const val datastore="1.1.1"
     }
 
     object Firebase {
