@@ -105,17 +105,17 @@ simple commit message should look like this:
 
    Bug 123456 - Change this thing to work better by doing something. r=reviewers
 
-The ``r=reviewers`` part is optional; if you are using Phabricator,
-Lando will add it automatically based on who actually granted review,
-and in any case the person who does the final check-in of the patch will
-make sure it's added.
-
 The text of the message should be what you did to fix the bug, not a
 description of what the bug was. If it is not obvious why this change is
 appropriate, then `explain why in the commit
 message <https://mozilla-version-control-tools.readthedocs.io/en/latest/mozreview/commits.html#write-detailed-commit-messages>`__.
 If this does not fit on one line, then leave a blank line and add
 further lines for more detail and/or reasoning.
+
+The ``r=reviewers`` part specifies that ``reviewers`` should review the patch
+and provide feedback before it is integrated into the Firefox codebase. For
+choosing reviewers, and the full reviewer syntax, please see
+:ref:`Getting reviews`.
 
 You can edit the message of the current commit at any time using
 ``hg commit --amend`` or ``hg histedit``.
