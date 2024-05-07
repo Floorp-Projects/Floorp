@@ -480,6 +480,8 @@ class ModuleLoaderBase : public nsISupports {
 
   nsresult CreateModuleScript(ModuleLoadRequest* aRequest);
 
+  bool IsFetchingAndHasWaitingRequest(ModuleLoadRequest* aRequest);
+
   // The slot stored in ImportMetaResolve function.
   enum { ModulePrivateSlot = 0, SlotCount };
 

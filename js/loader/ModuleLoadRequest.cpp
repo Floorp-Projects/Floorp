@@ -108,8 +108,6 @@ void ModuleLoadRequest::SetReady() {
   // dependencies have had their source loaded, parsed as a module and the
   // modules instantiated.
 
-  AssertAllImportsFinished();
-
   ScriptLoadRequest::SetReady();
 
   if (mWaitingParentRequest) {
@@ -195,6 +193,7 @@ void ModuleLoadRequest::DependenciesLoaded() {
   MOZ_ASSERT(!IsErrored());
 
   CheckModuleDependenciesLoaded();
+  AssertAllImportsFinished();
   SetReady();
   LoadFinished();
 }
@@ -224,6 +223,11 @@ void ModuleLoadRequest::CheckModuleDependenciesLoaded() {
 
 void ModuleLoadRequest::CancelImports() {
   for (size_t i = 0; i < mImports.Length(); i++) {
+    if (mLoader->IsFetchingAndHasWaitingRequest(mImports[i])) {
+      LOG(("CancelImports import %p is fetching and has waiting\n",
+           mImports[i].get()));
+      continue;
+    }
     mImports[i]->Cancel();
   }
 }

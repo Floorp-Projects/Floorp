@@ -1494,6 +1494,17 @@ void ModuleLoaderBase::MoveModulesTo(ModuleLoaderBase* aDest) {
   mFetchedModules.Clear();
 }
 
+bool ModuleLoaderBase::IsFetchingAndHasWaitingRequest(
+    ModuleLoadRequest* aRequest) {
+  auto entry = mFetchingModules.Lookup(aRequest->mURI);
+  if (!entry) {
+    return false;
+  }
+
+  RefPtr<LoadingRequest> loadingRequest = entry.Data();
+  return !loadingRequest->mWaiting.IsEmpty();
+}
+
 #undef LOG
 #undef LOG_ENABLED
 
