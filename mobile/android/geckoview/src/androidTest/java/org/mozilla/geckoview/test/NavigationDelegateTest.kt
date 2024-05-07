@@ -122,11 +122,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         if (errorPageUrl != null) {
             sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
                 @AssertCalled(count = 1, order = [1])
+                @Suppress("OVERRIDE_DEPRECATION")
                 override fun onLocationChange(
                     session: GeckoSession,
                     url: String?,
                     perms: MutableList<PermissionDelegate.ContentPermission>,
-                    hasUserGesture: Boolean,
                 ) {
                     assertThat("URL should match", url, equalTo(testLoader.getUri()))
                 }
@@ -591,11 +591,11 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onLocationChange(
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, equalTo(httpsUri))
             }
@@ -644,11 +644,11 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         // No good way to wait for loading about:blank error page. Use onLocaitonChange etc.
         sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onLocationChange(
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, equalTo(httpsUri))
             }
@@ -1536,11 +1536,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Test that if we unset the navigation delegate during a load, the load still proceeds.
         var onLocationCount = 0
         mainSession.navigationDelegate = object : NavigationDelegate {
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onLocationChange(
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 onLocationCount++
             }
@@ -3205,11 +3205,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         var lastTitle: String? = ""
         sessionRule.delegateDuringNextWait(object : NavigationDelegate, ContentDelegate {
             @AssertCalled(count = 1)
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onLocationChange(
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
