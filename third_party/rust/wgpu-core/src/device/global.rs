@@ -11,6 +11,7 @@ use crate::{
     id::{self, AdapterId, DeviceId, QueueId, SurfaceId},
     init_tracker::TextureInitTracker,
     instance::{self, Adapter, Surface},
+    lock::{rank, RwLock},
     pipeline, present,
     resource::{self, BufferAccessResult},
     resource::{BufferAccessError, BufferMapOperation, CreateBufferError, Resource},
@@ -20,7 +21,6 @@ use crate::{
 
 use arrayvec::ArrayVec;
 use hal::Device as _;
-use parking_lot::RwLock;
 
 use wgt::{BufferAddress, TextureFormat};
 
@@ -643,8 +643,10 @@ impl Global {
                 texture.hal_usage |= hal::TextureUses::COPY_DST;
             }
 
-            texture.initialization_status =
-                RwLock::new(TextureInitTracker::new(desc.mip_level_count, 0));
+            texture.initialization_status = RwLock::new(
+                rank::TEXTURE_INITIALIZATION_STATUS,
+                TextureInitTracker::new(desc.mip_level_count, 0),
+            );
 
             let (id, resource) = fid.assign(Arc::new(texture));
             api_log!("Device::create_texture({desc:?}) -> {id:?}");
@@ -2031,7 +2033,6 @@ impl Global {
                 // Wait for all work to finish before configuring the surface.
                 let snatch_guard = device.snatchable_lock.read();
                 let fence = device.fence.read();
-                let fence = fence.as_ref().unwrap();
                 match device.maintain(fence, wgt::Maintain::Wait, snatch_guard) {
                     Ok((closures, _)) => {
                         user_callbacks = closures;
@@ -2144,7 +2145,6 @@ impl Global {
     ) -> Result<DevicePoll, WaitIdleError> {
         let snatch_guard = device.snatchable_lock.read();
         let fence = device.fence.read();
-        let fence = fence.as_ref().unwrap();
         let (closures, queue_empty) = device.maintain(fence, maintain, snatch_guard)?;
 
         // Some deferred destroys are scheduled in maintain so run this right after

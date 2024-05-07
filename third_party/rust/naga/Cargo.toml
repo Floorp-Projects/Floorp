@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.74"
 name = "naga"
-version = "0.19.2"
+version = "0.20.0"
 authors = ["gfx-rs developers"]
 exclude = [
     "bin/**/*",
