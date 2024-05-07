@@ -120,7 +120,6 @@ function SetIteratorNext() {
   return retVal;
 }
 
-#ifdef NIGHTLY_BUILD
 // GetSetRecord ( obj )
 //
 // https://tc39.es/proposal-set-methods/#sec-getsetrecord
@@ -564,4 +563,3 @@ function SetIsDisjointFrom(other) {
   // Step 7.
   return true;
 }
-#endif
