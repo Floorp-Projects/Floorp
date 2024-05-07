@@ -137,6 +137,7 @@ class PreferenceBackedRadioButtonTest {
     fun `WHEN the button gets enabled THEN set isChecked based on the value from the backing preference`() {
         every { testContext.settings().preferences.getBoolean(any(), any()) } returns true
         val button = spyk(PreferenceBackedRadioButton(testContext))
+        every { button.isChecked = any() } returns Unit
 
         button.isEnabled = true
 
