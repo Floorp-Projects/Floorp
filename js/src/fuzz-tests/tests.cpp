@@ -12,6 +12,7 @@
 #include "js/GlobalObject.h"
 #include "js/Initialization.h"
 #include "js/Prefs.h"
+#include "js/RealmOptions.h"
 #include "js/RootingAPI.h"
 #include "js/Stack.h"
 #include "vm/JSContext.h"

@@ -39,7 +39,7 @@ static void CrashOnPendingException() {
 }
 
 int FuzzXPCRuntimeStart(AutoJSAPI* jsapi, int* argc, char*** argv,
-                        LibFuzzerDriver fuzzerDriver) {
+                        const XREShellData* aShellData) {
   gFuzzModuleName = getenv("FUZZER");
   gJsapi = jsapi;
 
@@ -49,7 +49,11 @@ int FuzzXPCRuntimeStart(AutoJSAPI* jsapi, int* argc, char*** argv,
     return ret;
   }
 
-  ret = fuzzerDriver(argc, argv, FuzzXPCRuntimeFuzz);
+#ifdef AFLFUZZ
+  ret = aShellData->fuzzerDriver(FuzzXPCRuntimeFuzz);
+#else
+  ret = aShellData->fuzzerDriver(argc, argv, FuzzXPCRuntimeFuzz);
+#endif
   if (!ret) {
     fprintf(stdout, "Trying to shutdown!\n");
     int shutdown = FuzzXPCRuntimeShutdown();
