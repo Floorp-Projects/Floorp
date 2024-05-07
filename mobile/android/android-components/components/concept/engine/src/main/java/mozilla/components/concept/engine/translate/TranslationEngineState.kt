@@ -10,6 +10,7 @@ package mozilla.components.concept.engine.translate
 * @property detectedLanguages Detected information about preferences and page information.
 * @property error If an error state occurred or an error was reported.
 * @property isEngineReady If the translation engine is primed for use or will need to be loaded.
+* @property hasVisibleChange If the browser has visibly started showing the translation.
 * @property requestedTranslationPair The language pair to translate. Usually populated after first request.
 */
 
@@ -17,6 +18,7 @@ data class TranslationEngineState(
     val detectedLanguages: DetectedLanguages? = null,
     val error: String? = null,
     val isEngineReady: Boolean? = false,
+    val hasVisibleChange: Boolean? = false,
     val requestedTranslationPair: TranslationPair? = null,
 )
 

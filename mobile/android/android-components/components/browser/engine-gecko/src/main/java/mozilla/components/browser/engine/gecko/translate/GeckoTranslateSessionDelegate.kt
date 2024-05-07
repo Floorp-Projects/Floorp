@@ -66,10 +66,11 @@ internal class GeckoTranslateSessionDelegate(
             state?.requestedTranslationPair?.toLanguage,
         )
         val translationsState = TranslationEngineState(
-            detectedLanguages,
-            state?.error,
-            state?.isEngineReady,
-            pair,
+            detectedLanguages = detectedLanguages,
+            error = state?.error,
+            isEngineReady = state?.isEngineReady,
+            hasVisibleChange = state?.hasVisibleChange,
+            requestedTranslationPair = pair,
         )
 
         engineSession.notifyObservers {
