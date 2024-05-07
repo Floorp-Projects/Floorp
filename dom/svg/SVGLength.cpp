@@ -20,15 +20,19 @@ using namespace mozilla::dom::SVGLength_Binding;
 
 namespace mozilla {
 
+// These types are numbered so that different length categories are in
+// contiguous ranges - See `SVGLength::Is[..]Unit()`.
 const unsigned short SVG_LENGTHTYPE_Q = 11;
 const unsigned short SVG_LENGTHTYPE_CH = 12;
 const unsigned short SVG_LENGTHTYPE_REM = 13;
 const unsigned short SVG_LENGTHTYPE_IC = 14;
 const unsigned short SVG_LENGTHTYPE_CAP = 15;
-const unsigned short SVG_LENGTHTYPE_VW = 16;
-const unsigned short SVG_LENGTHTYPE_VH = 17;
-const unsigned short SVG_LENGTHTYPE_VMIN = 18;
-const unsigned short SVG_LENGTHTYPE_VMAX = 19;
+const unsigned short SVG_LENGTHTYPE_LH = 16;
+const unsigned short SVG_LENGTHTYPE_RLH = 17;
+const unsigned short SVG_LENGTHTYPE_VW = 18;
+const unsigned short SVG_LENGTHTYPE_VH = 19;
+const unsigned short SVG_LENGTHTYPE_VMIN = 20;
+const unsigned short SVG_LENGTHTYPE_VMAX = 21;
 
 void SVGLength::GetValueAsString(nsAString& aValue) const {
   nsTextFormatter::ssprintf(aValue, u"%g", (double)mValue);
@@ -74,7 +78,7 @@ bool SVGLength::IsAbsoluteUnit(uint8_t aUnit) {
 /*static*/
 bool SVGLength::IsFontRelativeUnit(uint8_t aUnit) {
   return aUnit == SVG_LENGTHTYPE_EMS || aUnit == SVG_LENGTHTYPE_EXS ||
-         (aUnit >= SVG_LENGTHTYPE_CH && aUnit <= SVG_LENGTHTYPE_CAP);
+         (aUnit >= SVG_LENGTHTYPE_CH && aUnit <= SVG_LENGTHTYPE_RLH);
 }
 
 /**
@@ -192,6 +196,10 @@ float SVGLength::GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
       auto sz = aMetrics.GetCSSViewportSize();
       return std::max(sz.width, sz.height) / 100.f;
     }
+    case SVG_LENGTHTYPE_LH:
+      return aMetrics.GetLineHeight(UserSpaceMetrics::Type::This);
+    case SVG_LENGTHTYPE_RLH:
+      return aMetrics.GetLineHeight(UserSpaceMetrics::Type::Root);
     default:
       MOZ_ASSERT(IsAbsoluteUnit(aUnitType));
       return GetAbsUnitsPerAbsUnit(SVG_LENGTHTYPE_PX, aUnitType);
@@ -255,6 +263,12 @@ nsCSSUnit SVGLength::SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit) {
 
     case SVG_LENGTHTYPE_VMAX:
       return nsCSSUnit::eCSSUnit_VMax;
+
+    case SVG_LENGTHTYPE_LH:
+      return nsCSSUnit::eCSSUnit_LineHeight;
+
+    case SVG_LENGTHTYPE_RLH:
+      return nsCSSUnit::eCSSUnit_RootLineHeight;
 
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown unit type");
@@ -322,6 +336,12 @@ void SVGLength::GetUnitString(nsAString& aUnit, uint16_t aUnitType) {
     case SVG_LENGTHTYPE_VMAX:
       aUnit.AssignLiteral("vmax");
       return;
+    case SVG_LENGTHTYPE_LH:
+      aUnit.AssignLiteral("lh");
+      return;
+    case SVG_LENGTHTYPE_RLH:
+      aUnit.AssignLiteral("rlh");
+      return;
   }
   MOZ_ASSERT_UNREACHABLE(
       "Unknown unit type! Someone's using an SVGLength "
@@ -386,6 +406,12 @@ uint16_t SVGLength::GetUnitTypeForString(const nsAString& aUnit) {
   }
   if (aUnit.LowerCaseEqualsLiteral("vmax")) {
     return SVG_LENGTHTYPE_VMAX;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("lh")) {
+    return SVG_LENGTHTYPE_LH;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("rlh")) {
+    return SVG_LENGTHTYPE_RLH;
   }
   return SVG_LENGTHTYPE_UNKNOWN;
 }

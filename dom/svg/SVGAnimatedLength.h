@@ -53,6 +53,7 @@ class UserSpaceMetrics {
   float GetCapHeight(Type aType) const;
   virtual float GetAxisLength(uint8_t aCtxType) const = 0;
   virtual CSSSize GetCSSViewportSize() const = 0;
+  virtual float GetLineHeight(Type aType) const = 0;
 
  protected:
   virtual GeckoFontMetrics GetFontMetricsForType(Type aType) const = 0;
@@ -75,6 +76,7 @@ class SVGElementMetrics : public UserSpaceMetrics {
   }
   float GetAxisLength(uint8_t aCtxType) const override;
   CSSSize GetCSSViewportSize() const override;
+  float GetLineHeight(Type aType) const override;
 
  private:
   bool EnsureCtx() const;
@@ -93,6 +95,7 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
   float GetEmLength(Type aType) const override;
   gfx::Size GetSize() const override;
   CSSSize GetCSSViewportSize() const override;
+  float GetLineHeight(Type aType) const override;
 
  private:
   GeckoFontMetrics GetFontMetricsForType(Type aType) const override;

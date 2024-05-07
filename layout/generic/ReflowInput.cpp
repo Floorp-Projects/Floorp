@@ -2731,14 +2731,14 @@ void ReflowInput::CalculateBlockSideMargins() {
 // zeros, we should compensate this by creating extra (external) leading.
 // This is necessary because without this compensation, normal line height might
 // look too tight.
-constexpr float kNormalLineHeightFactor = 1.2f;
 static nscoord GetNormalLineHeight(nsFontMetrics* aFontMetrics) {
   MOZ_ASSERT(aFontMetrics, "no font metrics");
   nscoord externalLeading = aFontMetrics->ExternalLeading();
   nscoord internalLeading = aFontMetrics->InternalLeading();
   nscoord emHeight = aFontMetrics->EmHeight();
   if (!internalLeading && !externalLeading) {
-    return NSToCoordRound(emHeight * kNormalLineHeightFactor);
+    return NSToCoordRound(static_cast<float>(emHeight) *
+                          ReflowInput::kNormalLineHeightFactor);
   }
   return emHeight + internalLeading + externalLeading;
 }
@@ -2780,7 +2780,7 @@ static inline nscoord ComputeLineHeight(const StyleLineHeight& aLh,
     return GetNormalLineHeight(fm);
   }
   // If we don't have a pres context, use a 1.2em fallback.
-  size.ScaleBy(kNormalLineHeightFactor);
+  size.ScaleBy(ReflowInput::kNormalLineHeightFactor);
   return size.ToAppUnits();
 }
 
