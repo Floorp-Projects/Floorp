@@ -123,7 +123,8 @@ xpcAccessibilityService::GetAccessibleFor(nsINode* aNode,
 
   DocAccessible* document = accService->GetDocAccessible(aNode->OwnerDoc());
   if (document) {
-    NS_IF_ADDREF(*aAccessible = ToXPC(document->GetAccessible(aNode)));
+    NS_IF_ADDREF(*aAccessible =
+                     ToXPC(document->GetAccessibleEvenIfNotInMap(aNode)));
   }
 
   return NS_OK;
