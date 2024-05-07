@@ -649,6 +649,17 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       aPropertyValue->lVal = acc->GroupPosition().level;
       return S_OK;
 
+    case UIA_LocalizedLandmarkTypePropertyId: {
+      nsAutoString landmark;
+      GetLocalizedLandmarkType(landmark);
+      if (!landmark.IsEmpty()) {
+        aPropertyValue->vt = VT_BSTR;
+        aPropertyValue->bstrVal = ::SysAllocString(landmark.get());
+        return S_OK;
+      }
+      break;
+    }
+
     case UIA_NamePropertyId: {
       nsAutoString name;
       acc->Name(name);
@@ -1364,6 +1375,23 @@ long uiaRawElmProvider::GetLandmarkType() const {
     return UIA_SearchLandmarkTypeId;
   }
   return UIA_CustomLandmarkTypeId;
+}
+
+void uiaRawElmProvider::GetLocalizedLandmarkType(nsAString& aLocalized) const {
+  Accessible* acc = Acc();
+  MOZ_ASSERT(acc);
+  nsStaticAtom* landmark = acc->LandmarkRole();
+  // The system provides strings for landmarks explicitly supported by the UIA
+  // LandmarkType property; i.e. form, main, navigation and search. We must
+  // provide strings for landmarks considered custom by UIA. For now, we only
+  // support landmarks in the core ARIA specification, not other ARIA modules
+  // such as DPub.
+  if (landmark == nsGkAtoms::banner || landmark == nsGkAtoms::complementary ||
+      landmark == nsGkAtoms::contentinfo || landmark == nsGkAtoms::region) {
+    nsAutoString unlocalized;
+    landmark->ToString(unlocalized);
+    Accessible::TranslateString(unlocalized, aLocalized);
+  }
 }
 
 SAFEARRAY* a11y::AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs) {

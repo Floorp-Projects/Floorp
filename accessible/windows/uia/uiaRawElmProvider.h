@@ -13,6 +13,8 @@
 
 #include <initializer_list>
 
+#include "nsString.h"
+
 template <class T>
 class nsTArray;
 template <class T>
@@ -193,6 +195,7 @@ class uiaRawElmProvider : public IAccessibleEx,
       std::initializer_list<RelationType> aTypes) const;
   Accessible* GetLabeledBy() const;
   long GetLandmarkType() const;
+  void GetLocalizedLandmarkType(nsAString& aLocalized) const;
 };
 
 SAFEARRAY* AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs);
