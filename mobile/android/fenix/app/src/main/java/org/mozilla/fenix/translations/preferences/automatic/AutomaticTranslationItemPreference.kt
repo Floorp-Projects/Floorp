@@ -6,17 +6,20 @@ package org.mozilla.fenix.translations.preferences.automatic
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.RawValue
+import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.LanguageSetting
 import org.mozilla.fenix.R
 
 /**
  * AutomaticTranslationItem that will appear on Automatic Translation screen.
  *
- * @property displayName The text that will appear in the list.
+ * @property language The text that will appear in the list.
  * @property automaticTranslationOptionPreference The option that the user selected.
  */
 @Parcelize
 data class AutomaticTranslationItemPreference(
-    val displayName: String,
+    val language: @RawValue Language,
     val automaticTranslationOptionPreference: AutomaticTranslationOptionPreference,
 ) : Parcelable
 
@@ -64,4 +67,24 @@ sealed class AutomaticTranslationOptionPreference(
             R.string.firefox,
         ),
     ) : AutomaticTranslationOptionPreference(titleId = titleId, summaryId = summaryId)
+}
+
+internal fun getAutomaticTranslationOptionPreference(
+    languageSetting: LanguageSetting,
+): AutomaticTranslationOptionPreference {
+    return when (languageSetting) {
+        LanguageSetting.ALWAYS -> AutomaticTranslationOptionPreference.AlwaysTranslate()
+        LanguageSetting.OFFER -> AutomaticTranslationOptionPreference.OfferToTranslate()
+        LanguageSetting.NEVER -> AutomaticTranslationOptionPreference.NeverTranslate()
+    }
+}
+
+internal fun getLanguageSetting(
+    automaticTranslationItemPreference: AutomaticTranslationOptionPreference,
+): LanguageSetting {
+    return when (automaticTranslationItemPreference) {
+        is AutomaticTranslationOptionPreference.AlwaysTranslate -> LanguageSetting.ALWAYS
+        is AutomaticTranslationOptionPreference.NeverTranslate -> LanguageSetting.NEVER
+        is AutomaticTranslationOptionPreference.OfferToTranslate -> LanguageSetting.OFFER
+    }
 }

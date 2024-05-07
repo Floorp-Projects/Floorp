@@ -11,6 +11,9 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
+import mozilla.components.browser.state.action.TranslationsAction
+import mozilla.components.browser.state.store.BrowserStore
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -19,10 +22,11 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 class AutomaticTranslationOptionsPreferenceFragment : Fragment() {
     private val args by navArgs<AutomaticTranslationOptionsPreferenceFragmentArgs>()
+    private val browserStore: BrowserStore by lazy { requireComponents.core.store }
 
     override fun onResume() {
         super.onResume()
-        showToolbar(args.selectedTranslationOptionPreference.displayName)
+        args.selectedTranslationOptionPreference.language.localizedDisplayName?.let { showToolbar(it) }
     }
 
     override fun onCreateView(
@@ -34,6 +38,14 @@ class AutomaticTranslationOptionsPreferenceFragment : Fragment() {
             FirefoxTheme {
                 AutomaticTranslationOptionsPreference(
                     selectedOption = args.selectedTranslationOptionPreference.automaticTranslationOptionPreference,
+                    onItemClick = {
+                        browserStore.dispatch(
+                            TranslationsAction.UpdateLanguageSettingsAction(
+                                languageCode = args.selectedTranslationOptionPreference.language.code,
+                                setting = getLanguageSetting(it),
+                            ),
+                        )
+                    },
                 )
             }
         }
