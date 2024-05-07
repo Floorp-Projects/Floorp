@@ -8,6 +8,7 @@
 
 use std::time::Duration;
 
+use neqo_common::IpTosEcn;
 use test_fixture::now;
 
 use crate::{
@@ -44,59 +45,66 @@ fn issue_876() {
     let sent_packets = &[
         SentPacket::new(
             PacketType::Short,
-            1,                     // pn
-            time_before,           // time sent
-            true,                  // ack eliciting
-            Vec::new(),            // tokens
-            MAX_DATAGRAM_SIZE - 1, // size
+            1,
+            IpTosEcn::default(),
+            time_before,
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE - 1,
         ),
         SentPacket::new(
             PacketType::Short,
-            2,                     // pn
-            time_before,           // time sent
-            true,                  // ack eliciting
-            Vec::new(),            // tokens
-            MAX_DATAGRAM_SIZE - 2, // size
+            2,
+            IpTosEcn::default(),
+            time_before,
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE - 2,
         ),
         SentPacket::new(
             PacketType::Short,
-            3,                 // pn
-            time_before,       // time sent
-            true,              // ack eliciting
-            Vec::new(),        // tokens
-            MAX_DATAGRAM_SIZE, // size
+            3,
+            IpTosEcn::default(),
+            time_before,
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE,
         ),
         SentPacket::new(
             PacketType::Short,
-            4,                 // pn
-            time_before,       // time sent
-            true,              // ack eliciting
-            Vec::new(),        // tokens
-            MAX_DATAGRAM_SIZE, // size
+            4,
+            IpTosEcn::default(),
+            time_before,
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE,
         ),
         SentPacket::new(
             PacketType::Short,
-            5,                 // pn
-            time_before,       // time sent
-            true,              // ack eliciting
-            Vec::new(),        // tokens
-            MAX_DATAGRAM_SIZE, // size
+            5,
+            IpTosEcn::default(),
+            time_before,
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE,
         ),
         SentPacket::new(
             PacketType::Short,
-            6,                 // pn
-            time_before,       // time sent
-            true,              // ack eliciting
-            Vec::new(),        // tokens
-            MAX_DATAGRAM_SIZE, // size
+            6,
+            IpTosEcn::default(),
+            time_before,
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE,
         ),
         SentPacket::new(
             PacketType::Short,
-            7,                     // pn
-            time_after,            // time sent
-            true,                  // ack eliciting
-            Vec::new(),            // tokens
-            MAX_DATAGRAM_SIZE - 3, // size
+            7,
+            IpTosEcn::default(),
+            time_after,
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE - 3,
         ),
     ];
 
@@ -146,11 +154,12 @@ fn issue_1465() {
     let mut next_packet = |now| {
         let p = SentPacket::new(
             PacketType::Short,
-            pn,                // pn
-            now,               // time_sent
-            true,              // ack eliciting
-            Vec::new(),        // tokens
-            MAX_DATAGRAM_SIZE, // size
+            pn,
+            IpTosEcn::default(),
+            now,
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE,
         );
         pn += 1;
         p

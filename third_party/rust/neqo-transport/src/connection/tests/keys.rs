@@ -11,7 +11,7 @@ use test_fixture::now;
 
 use super::{
     super::{
-        super::{ConnectionError, ERROR_AEAD_LIMIT_REACHED},
+        super::{CloseReason, ERROR_AEAD_LIMIT_REACHED},
         Connection, ConnectionParameters, Error, Output, State, StreamType,
     },
     connect, connect_force_idle, default_client, default_server, maybe_authenticate,
@@ -269,7 +269,7 @@ fn exhaust_write_keys() {
     assert!(dgram.is_none());
     assert!(matches!(
         client.state(),
-        State::Closed(ConnectionError::Transport(Error::KeysExhausted))
+        State::Closed(CloseReason::Transport(Error::KeysExhausted))
     ));
 }
 
@@ -285,14 +285,14 @@ fn exhaust_read_keys() {
     let dgram = server.process(Some(&dgram), now()).dgram();
     assert!(matches!(
         server.state(),
-        State::Closed(ConnectionError::Transport(Error::KeysExhausted))
+        State::Closed(CloseReason::Transport(Error::KeysExhausted))
     ));
 
     client.process_input(&dgram.unwrap(), now());
     assert!(matches!(
         client.state(),
         State::Draining {
-            error: ConnectionError::Transport(Error::PeerError(ERROR_AEAD_LIMIT_REACHED)),
+            error: CloseReason::Transport(Error::PeerError(ERROR_AEAD_LIMIT_REACHED)),
             ..
         }
     ));
@@ -341,6 +341,6 @@ fn automatic_update_write_keys_blocked() {
     assert!(dgram.is_none());
     assert!(matches!(
         client.state(),
-        State::Closed(ConnectionError::Transport(Error::KeysExhausted))
+        State::Closed(CloseReason::Transport(Error::KeysExhausted))
     ));
 }

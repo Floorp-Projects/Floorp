@@ -9,16 +9,16 @@ license = "MPL-2.0"
 name = "neqo_glue"
 
 [dependencies]
-neqo-http3 = { tag = "v0.7.5", git = "https://github.com/mozilla/neqo" }
-neqo-transport = { tag = "v0.7.5", git = "https://github.com/mozilla/neqo" }
-neqo-common = { tag = "v0.7.5", git = "https://github.com/mozilla/neqo" }
-neqo-qpack = { tag = "v0.7.5", git = "https://github.com/mozilla/neqo" }
+neqo-http3 = { tag = "v0.7.7", git = "https://github.com/mozilla/neqo" }
+neqo-transport = { tag = "v0.7.7", git = "https://github.com/mozilla/neqo" }
+neqo-common = { tag = "v0.7.7", git = "https://github.com/mozilla/neqo" }
+neqo-qpack = { tag = "v0.7.7", git = "https://github.com/mozilla/neqo" }
 nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 log = "0.4.0"
-qlog = "0.12"
+qlog = "0.13"
 libc = "0.2.0"
 static_prefs = { path = "../../../modules/libpref/init/static_prefs"}
 uuid = { version = "1.0", features = ["v4"] }
@@ -27,7 +27,7 @@ uuid = { version = "1.0", features = ["v4"] }
 winapi = {version = "0.3", features = ["ws2def"] }
 
 [dependencies.neqo-crypto]
-tag = "v0.7.5"
+tag = "v0.7.7"
 git = "https://github.com/mozilla/neqo"
 default-features = false
 features = ["gecko"]

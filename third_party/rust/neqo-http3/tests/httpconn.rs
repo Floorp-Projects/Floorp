@@ -17,7 +17,7 @@ use neqo_http3::{
     Header, Http3Client, Http3ClientEvent, Http3OrWebTransportStream, Http3Parameters, Http3Server,
     Http3ServerEvent, Http3State, Priority,
 };
-use neqo_transport::{ConnectionError, ConnectionParameters, Error, Output, StreamType};
+use neqo_transport::{CloseReason, ConnectionParameters, Error, Output, StreamType};
 use test_fixture::*;
 
 const RESPONSE_DATA: &[u8] = &[0x61, 0x62, 0x63];
@@ -448,7 +448,7 @@ fn fetch_noresponse_will_idletimeout() {
             if let Http3ClientEvent::StateChange(state) = event {
                 match state {
                     Http3State::Closing(error_code) | Http3State::Closed(error_code) => {
-                        assert_eq!(error_code, ConnectionError::Transport(Error::IdleTimeout));
+                        assert_eq!(error_code, CloseReason::Transport(Error::IdleTimeout));
                         done = true;
                     }
                     _ => {}

@@ -323,7 +323,7 @@ mod tests {
     use neqo_crypto::{AuthenticationStatus, ZeroRttCheckResult, ZeroRttChecker};
     use neqo_qpack::{encoder::QPackEncoder, QpackSettings};
     use neqo_transport::{
-        Connection, ConnectionError, ConnectionEvent, State, StreamId, StreamType, ZeroRttState,
+        CloseReason, Connection, ConnectionEvent, State, StreamId, StreamType, ZeroRttState,
     };
     use test_fixture::{
         anti_replay, default_client, fixture_init, now, CountingConnectionIdGenerator,
@@ -366,7 +366,7 @@ mod tests {
     }
 
     fn assert_closed(hconn: &mut Http3Server, expected: &Error) {
-        let err = ConnectionError::Application(expected.code());
+        let err = CloseReason::Application(expected.code());
         let closed = |e| matches!(e, Http3ServerEvent::StateChange{ state: Http3State::Closing(e) | Http3State::Closed(e), .. } if e == err);
         assert!(hconn.events().any(closed));
     }

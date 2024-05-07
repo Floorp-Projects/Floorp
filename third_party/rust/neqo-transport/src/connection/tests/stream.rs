@@ -19,9 +19,9 @@ use crate::{
     send_stream::{OrderGroup, SendStreamState, SEND_BUFFER_SIZE},
     streams::{SendOrder, StreamOrder},
     tparams::{self, TransportParameter},
+    CloseReason,
     // tracking::DEFAULT_ACK_PACKET_TOLERANCE,
     Connection,
-    ConnectionError,
     ConnectionParameters,
     Error,
     StreamId,
@@ -494,12 +494,9 @@ fn exceed_max_data() {
 
     assert_error(
         &client,
-        &ConnectionError::Transport(Error::PeerError(Error::FlowControlError.code())),
+        &CloseReason::Transport(Error::PeerError(Error::FlowControlError.code())),
     );
-    assert_error(
-        &server,
-        &ConnectionError::Transport(Error::FlowControlError),
-    );
+    assert_error(&server, &CloseReason::Transport(Error::FlowControlError));
 }
 
 #[test]

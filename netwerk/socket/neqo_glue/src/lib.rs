@@ -671,11 +671,11 @@ impl From<TransportError> for CloseError {
     }
 }
 
-impl From<neqo_transport::ConnectionError> for CloseError {
-    fn from(error: neqo_transport::ConnectionError) -> CloseError {
+impl From<neqo_transport::CloseReason> for CloseError {
+    fn from(error: neqo_transport::CloseReason) -> CloseError {
         match error {
-            neqo_transport::ConnectionError::Transport(c) => c.into(),
-            neqo_transport::ConnectionError::Application(c) => CloseError::AppError(c),
+            neqo_transport::CloseReason::Transport(c) => c.into(),
+            neqo_transport::CloseReason::Application(c) => CloseError::AppError(c),
         }
     }
 }
@@ -1056,12 +1056,11 @@ pub extern "C" fn neqo_http3conn_event(
                 Http3State::Connected => Http3Event::ConnectionConnected,
                 Http3State::Closing(error_code) => {
                     match error_code {
-                        neqo_transport::ConnectionError::Transport(
-                            TransportError::CryptoError(neqo_crypto::Error::EchRetry(ref c)),
-                        )
-                        | neqo_transport::ConnectionError::Transport(TransportError::EchRetry(
-                            ref c,
-                        )) => {
+                        neqo_transport::CloseReason::Transport(TransportError::CryptoError(
+                            neqo_crypto::Error::EchRetry(ref c),
+                        ))
+                        | neqo_transport::CloseReason::Transport(TransportError::EchRetry(ref c)) =>
+                        {
                             data.extend_from_slice(c.as_ref());
                         }
                         _ => {}
@@ -1072,12 +1071,11 @@ pub extern "C" fn neqo_http3conn_event(
                 }
                 Http3State::Closed(error_code) => {
                     match error_code {
-                        neqo_transport::ConnectionError::Transport(
-                            TransportError::CryptoError(neqo_crypto::Error::EchRetry(ref c)),
-                        )
-                        | neqo_transport::ConnectionError::Transport(TransportError::EchRetry(
-                            ref c,
-                        )) => {
+                        neqo_transport::CloseReason::Transport(TransportError::CryptoError(
+                            neqo_crypto::Error::EchRetry(ref c),
+                        ))
+                        | neqo_transport::CloseReason::Transport(TransportError::EchRetry(ref c)) =>
+                        {
                             data.extend_from_slice(c.as_ref());
                         }
                         _ => {}

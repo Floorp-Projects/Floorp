@@ -30,7 +30,7 @@ use crate::{
     packet::PacketBuilder,
     path::{PATH_MTU_V4, PATH_MTU_V6},
     tparams::{self, PreferredAddress, TransportParameter},
-    ConnectionError, ConnectionId, ConnectionIdDecoder, ConnectionIdGenerator, ConnectionIdRef,
+    CloseReason, ConnectionId, ConnectionIdDecoder, ConnectionIdGenerator, ConnectionIdRef,
     ConnectionParameters, EmptyConnectionIdGenerator, Error,
 };
 
@@ -357,13 +357,13 @@ fn migrate_same_fail() {
     assert!(matches!(res, Output::None));
     assert!(matches!(
         client.state(),
-        State::Closed(ConnectionError::Transport(Error::NoAvailablePath))
+        State::Closed(CloseReason::Transport(Error::NoAvailablePath))
     ));
 }
 
 /// This gets the connection ID from a datagram using the default
 /// connection ID generator/decoder.
-fn get_cid(d: &Datagram) -> ConnectionIdRef {
+pub fn get_cid(d: &Datagram) -> ConnectionIdRef {
     let gen = CountingConnectionIdGenerator::default();
     assert_eq!(d[0] & 0x80, 0); // Only support short packets for now.
     gen.decode_cid(&mut Decoder::from(&d[1..])).unwrap()
@@ -894,7 +894,7 @@ fn retire_prior_to_migration_failure() {
     assert!(matches!(
         client.state(),
         State::Closing {
-            error: ConnectionError::Transport(Error::InvalidMigration),
+            error: CloseReason::Transport(Error::InvalidMigration),
             ..
         }
     ));

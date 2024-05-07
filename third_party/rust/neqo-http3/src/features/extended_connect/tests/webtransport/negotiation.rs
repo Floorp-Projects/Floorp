@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use neqo_common::{event::Provider, Encoder};
 use neqo_crypto::AuthenticationStatus;
-use neqo_transport::{Connection, ConnectionError, StreamType};
+use neqo_transport::{CloseReason, Connection, StreamType};
 use test_fixture::{default_server_h3, now};
 
 use super::{connect, default_http3_client, default_http3_server, exchange_packets};
@@ -270,10 +270,7 @@ fn wrong_setting_value() {
     exchange_packets2(&mut client, &mut server);
     match client.state() {
         Http3State::Closing(err) | Http3State::Closed(err) => {
-            assert_eq!(
-                err,
-                ConnectionError::Application(Error::HttpSettings.code())
-            );
+            assert_eq!(err, CloseReason::Application(Error::HttpSettings.code()));
         }
         _ => panic!("Wrong state {:?}", client.state()),
     };

@@ -19,7 +19,7 @@ use crate::{
     packet::PacketBuilder,
     quic_datagrams::MAX_QUIC_DATAGRAM,
     send_stream::{RetransmissionPriority, TransmissionPriority},
-    Connection, ConnectionError, ConnectionParameters, Error, StreamType,
+    CloseReason, Connection, ConnectionParameters, Error, StreamType,
 };
 
 const DATAGRAM_LEN_MTU: u64 = 1310;
@@ -362,10 +362,7 @@ fn dgram_no_allowed() {
 
     client.process_input(&out, now());
 
-    assert_error(
-        &client,
-        &ConnectionError::Transport(Error::ProtocolViolation),
-    );
+    assert_error(&client, &CloseReason::Transport(Error::ProtocolViolation));
 }
 
 #[test]
@@ -383,10 +380,7 @@ fn dgram_too_big() {
 
     client.process_input(&out, now());
 
-    assert_error(
-        &client,
-        &ConnectionError::Transport(Error::ProtocolViolation),
-    );
+    assert_error(&client, &CloseReason::Transport(Error::ProtocolViolation));
 }
 
 #[test]
@@ -587,7 +581,7 @@ fn datagram_fill() {
 
     // Work out how much space we have for a datagram.
     let space = {
-        let p = client.paths.primary();
+        let p = client.paths.primary().unwrap();
         let path = p.borrow();
         // Minimum overhead is connection ID length, 1 byte short header, 1 byte packet number,
         // 1 byte for the DATAGRAM frame type, and 16 bytes for the AEAD.

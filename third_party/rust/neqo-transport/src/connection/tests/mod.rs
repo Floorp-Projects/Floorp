@@ -17,7 +17,7 @@ use neqo_common::{event::Provider, qdebug, qtrace, Datagram, Decoder, Role};
 use neqo_crypto::{random, AllowZeroRtt, AuthenticationStatus, ResumptionToken};
 use test_fixture::{fixture_init, new_neqo_qlog, now, DEFAULT_ADDR};
 
-use super::{Connection, ConnectionError, ConnectionId, Output, State};
+use super::{CloseReason, Connection, ConnectionId, Output, State};
 use crate::{
     addr_valid::{AddressValidation, ValidateAddress},
     cc::{CWND_INITIAL_PKTS, CWND_MIN},
@@ -37,6 +37,7 @@ mod ackrate;
 mod cc;
 mod close;
 mod datagram;
+mod ecn;
 mod handshake;
 mod idle;
 mod keys;
@@ -170,17 +171,13 @@ impl crate::connection::test_internal::FrameWriter for PingWriter {
     }
 }
 
-trait DatagramModifier: FnMut(Datagram) -> Option<Datagram> {}
-
-impl<T> DatagramModifier for T where T: FnMut(Datagram) -> Option<Datagram> {}
-
 /// Drive the handshake between the client and server.
 fn handshake_with_modifier(
     client: &mut Connection,
     server: &mut Connection,
     now: Instant,
     rtt: Duration,
-    mut modifier: impl DatagramModifier,
+    modifier: fn(Datagram) -> Option<Datagram>,
 ) -> Instant {
     let mut a = client;
     let mut b = server;
@@ -248,8 +245,8 @@ fn connect_fail(
     server_error: Error,
 ) {
     handshake(client, server, now(), Duration::new(0, 0));
-    assert_error(client, &ConnectionError::Transport(client_error));
-    assert_error(server, &ConnectionError::Transport(server_error));
+    assert_error(client, &CloseReason::Transport(client_error));
+    assert_error(server, &CloseReason::Transport(server_error));
 }
 
 fn connect_with_rtt_and_modifier(
@@ -257,7 +254,7 @@ fn connect_with_rtt_and_modifier(
     server: &mut Connection,
     now: Instant,
     rtt: Duration,
-    modifier: impl DatagramModifier,
+    modifier: fn(Datagram) -> Option<Datagram>,
 ) -> Instant {
     fn check_rtt(stats: &Stats, rtt: Duration) {
         assert_eq!(stats.rtt, rtt);
@@ -287,7 +284,7 @@ fn connect(client: &mut Connection, server: &mut Connection) {
     connect_with_rtt(client, server, now(), Duration::new(0, 0));
 }
 
-fn assert_error(c: &Connection, expected: &ConnectionError) {
+fn assert_error(c: &Connection, expected: &CloseReason) {
     match c.state() {
         State::Closing { error, .. } | State::Draining { error, .. } | State::Closed(error) => {
             assert_eq!(*error, *expected, "{c} error mismatch");
@@ -333,7 +330,7 @@ fn connect_rtt_idle_with_modifier(
     client: &mut Connection,
     server: &mut Connection,
     rtt: Duration,
-    modifier: impl DatagramModifier,
+    modifier: fn(Datagram) -> Option<Datagram>,
 ) -> Instant {
     let now = connect_with_rtt_and_modifier(client, server, now(), rtt, modifier);
     assert_idle(client, server, rtt, now);
@@ -351,7 +348,7 @@ fn connect_rtt_idle(client: &mut Connection, server: &mut Connection, rtt: Durat
 fn connect_force_idle_with_modifier(
     client: &mut Connection,
     server: &mut Connection,
-    modifier: impl DatagramModifier,
+    modifier: fn(Datagram) -> Option<Datagram>,
 ) {
     connect_rtt_idle_with_modifier(client, server, Duration::new(0, 0), modifier);
 }
@@ -380,7 +377,7 @@ fn fill_stream(c: &mut Connection, stream: StreamId) {
 fn fill_cwnd(c: &mut Connection, stream: StreamId, mut now: Instant) -> (Vec<Datagram>, Instant) {
     // Train wreck function to get the remaining congestion window on the primary path.
     fn cwnd(c: &Connection) -> usize {
-        c.paths.primary().borrow().sender().cwnd_avail()
+        c.paths.primary().unwrap().borrow().sender().cwnd_avail()
     }
 
     qtrace!("fill_cwnd starting cwnd: {}", cwnd(c));
@@ -478,10 +475,10 @@ where
 
 // Get the current congestion window for the connection.
 fn cwnd(c: &Connection) -> usize {
-    c.paths.primary().borrow().sender().cwnd()
+    c.paths.primary().unwrap().borrow().sender().cwnd()
 }
 fn cwnd_avail(c: &Connection) -> usize {
-    c.paths.primary().borrow().sender().cwnd_avail()
+    c.paths.primary().unwrap().borrow().sender().cwnd_avail()
 }
 
 fn induce_persistent_congestion(
@@ -576,7 +573,7 @@ fn send_something_paced_with_modifier(
     sender: &mut Connection,
     mut now: Instant,
     allow_pacing: bool,
-    mut modifier: impl DatagramModifier,
+    modifier: fn(Datagram) -> Option<Datagram>,
 ) -> (Datagram, Instant) {
     let stream_id = sender.stream_create(StreamType::UniDi).unwrap();
     assert!(sender.stream_send(stream_id, DEFAULT_STREAM_DATA).is_ok());
@@ -608,7 +605,7 @@ fn send_something_paced(
 fn send_something_with_modifier(
     sender: &mut Connection,
     now: Instant,
-    modifier: impl DatagramModifier,
+    modifier: fn(Datagram) -> Option<Datagram>,
 ) -> Datagram {
     send_something_paced_with_modifier(sender, now, false, modifier).0
 }

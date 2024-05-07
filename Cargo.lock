@@ -3988,8 +3988,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.7.5"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.5#c004359a817ffdea33394e94944d2f882e7e78af"
+version = "0.7.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.7#343df5cc0d02e0b0953de4a0a390ae8980d89081"
 dependencies = [
  "enum-map",
  "env_logger",
@@ -4001,8 +4001,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.7.5"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.5#c004359a817ffdea33394e94944d2f882e7e78af"
+version = "0.7.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.7#343df5cc0d02e0b0953de4a0a390ae8980d89081"
 dependencies = [
  "bindgen 0.69.4",
  "log",
@@ -4016,8 +4016,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.7.5"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.5#c004359a817ffdea33394e94944d2f882e7e78af"
+version = "0.7.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.7#343df5cc0d02e0b0953de4a0a390ae8980d89081"
 dependencies = [
  "enumset",
  "log",
@@ -4033,8 +4033,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.7.5"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.5#c004359a817ffdea33394e94944d2f882e7e78af"
+version = "0.7.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.7#343df5cc0d02e0b0953de4a0a390ae8980d89081"
 dependencies = [
  "log",
  "neqo-common",
@@ -4046,10 +4046,11 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.7.5"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.5#c004359a817ffdea33394e94944d2f882e7e78af"
+version = "0.7.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.7#343df5cc0d02e0b0953de4a0a390ae8980d89081"
 dependencies = [
- "indexmap 1.999.999",
+ "enum-map",
+ "indexmap 2.2.6",
  "log",
  "neqo-common",
  "neqo-crypto",
@@ -4698,9 +4699,9 @@ dependencies = [
 
 [[package]]
 name = "qlog"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c0407438c69b3d99714a796a135cbfb2d60744e4747fb2b46a87acd1c1fcd0e"
+checksum = "9b5f65b920fa913ce92267bb3c4ed3b9c2f81d05f8e1376c3bbc95455eedb7df"
 dependencies = [
  "serde",
  "serde_derive",

@@ -52,6 +52,16 @@ impl From<IpTos> for IpTosEcn {
     }
 }
 
+impl IpTosEcn {
+    #[must_use]
+    pub fn is_ecn_marked(&self) -> bool {
+        match self {
+            IpTosEcn::Ect0 | IpTosEcn::Ect1 | IpTosEcn::Ce => true,
+            IpTosEcn::NotEct => false,
+        }
+    }
+}
+
 /// Diffserv Codepoints, mapped to the upper six bits of the TOS field.
 /// <https://www.iana.org/assignments/dscp-registry/dscp-registry.xhtml>
 #[derive(Copy, Clone, PartialEq, Eq, Enum, Default, Debug)]
@@ -228,6 +238,11 @@ impl IpTos {
     pub fn set_dscp(&mut self, dscp: IpTosDscp) {
         self.0 = u8::from(IpTosEcn::from(*self)) | u8::from(dscp);
     }
+
+    #[must_use]
+    pub fn is_ecn_marked(&self) -> bool {
+        IpTosEcn::from(*self).is_ecn_marked()
+    }
 }
 
 #[cfg(test)]
@@ -345,5 +360,17 @@ mod tests {
         let mut iptos: IpTos = (IpTosDscp::Af41, IpTosEcn::Ect1).into();
         iptos.set_dscp(IpTosDscp::Le);
         assert_eq!(u8::from(iptos), 0b0000_0101);
+    }
+
+    #[test]
+    fn iptos_is_ecn_marked() {
+        let iptos: IpTos = (IpTosDscp::Af41, IpTosEcn::Ce).into();
+        assert!(iptos.is_ecn_marked());
+    }
+
+    #[test]
+    fn iptosecn_is_ecn_marked() {
+        assert!(IpTosEcn::Ce.is_ecn_marked());
+        assert!(!IpTosEcn::NotEct.is_ecn_marked());
     }
 }

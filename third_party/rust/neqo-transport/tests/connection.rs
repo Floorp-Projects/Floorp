@@ -6,12 +6,16 @@
 
 mod common;
 
-use common::{
-    apply_header_protection, decode_initial_header, initial_aead_and_hp, remove_header_protection,
-};
 use neqo_common::{Datagram, Decoder, Encoder, Role};
-use neqo_transport::{ConnectionError, ConnectionParameters, Error, State, Version};
-use test_fixture::{default_client, default_server, new_client, now, split_datagram};
+use neqo_transport::{CloseReason, ConnectionParameters, Error, State, Version};
+use test_fixture::{
+    default_client, default_server,
+    header_protection::{
+        apply_header_protection, decode_initial_header, initial_aead_and_hp,
+        remove_header_protection,
+    },
+    new_client, now, split_datagram,
+};
 
 #[test]
 fn connect() {
@@ -58,8 +62,8 @@ fn truncate_long_packet() {
 /// Test that reordering parts of the server Initial doesn't change things.
 #[test]
 fn reorder_server_initial() {
-    // A simple ACK frame for a single packet with packet number 0.
-    const ACK_FRAME: &[u8] = &[0x02, 0x00, 0x00, 0x00, 0x00];
+    // A simple ACK_ECN frame for a single packet with packet number 0 with a single ECT(0) mark.
+    const ACK_FRAME: &[u8] = &[0x03, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00];
 
     let mut client = new_client(
         ConnectionParameters::default().versions(Version::Version1, vec![Version::Version1]),
@@ -68,12 +72,13 @@ fn reorder_server_initial() {
 
     let client_initial = client.process_output(now());
     let (_, client_dcid, _, _) =
-        decode_initial_header(client_initial.as_dgram_ref().unwrap(), Role::Client);
+        decode_initial_header(client_initial.as_dgram_ref().unwrap(), Role::Client).unwrap();
     let client_dcid = client_dcid.to_owned();
 
     let server_packet = server.process(client_initial.as_dgram_ref(), now()).dgram();
     let (server_initial, server_hs) = split_datagram(server_packet.as_ref().unwrap());
-    let (protected_header, _, _, payload) = decode_initial_header(&server_initial, Role::Server);
+    let (protected_header, _, _, payload) =
+        decode_initial_header(&server_initial, Role::Server).unwrap();
 
     // Now decrypt the packet.
     let (aead, hp) = initial_aead_and_hp(&client_dcid, Role::Server);
@@ -130,7 +135,7 @@ fn reorder_server_initial() {
 fn set_payload(server_packet: &Option<Datagram>, client_dcid: &[u8], payload: &[u8]) -> Datagram {
     let (server_initial, _server_hs) = split_datagram(server_packet.as_ref().unwrap());
     let (protected_header, _, _, orig_payload) =
-        decode_initial_header(&server_initial, Role::Server);
+        decode_initial_header(&server_initial, Role::Server).unwrap();
 
     // Now decrypt the packet.
     let (aead, hp) = initial_aead_and_hp(client_dcid, Role::Server);
@@ -168,14 +173,14 @@ fn packet_without_frames() {
 
     let client_initial = client.process_output(now());
     let (_, client_dcid, _, _) =
-        decode_initial_header(client_initial.as_dgram_ref().unwrap(), Role::Client);
+        decode_initial_header(client_initial.as_dgram_ref().unwrap(), Role::Client).unwrap();
 
     let server_packet = server.process(client_initial.as_dgram_ref(), now()).dgram();
     let modified = set_payload(&server_packet, client_dcid, &[]);
     client.process_input(&modified, now());
     assert_eq!(
         client.state(),
-        &State::Closed(ConnectionError::Transport(Error::ProtocolViolation))
+        &State::Closed(CloseReason::Transport(Error::ProtocolViolation))
     );
 }
 
@@ -189,7 +194,7 @@ fn packet_with_only_padding() {
 
     let client_initial = client.process_output(now());
     let (_, client_dcid, _, _) =
-        decode_initial_header(client_initial.as_dgram_ref().unwrap(), Role::Client);
+        decode_initial_header(client_initial.as_dgram_ref().unwrap(), Role::Client).unwrap();
 
     let server_packet = server.process(client_initial.as_dgram_ref(), now()).dgram();
     let modified = set_payload(&server_packet, client_dcid, &[0]);
@@ -208,7 +213,7 @@ fn overflow_crypto() {
 
     let client_initial = client.process_output(now()).dgram();
     let (_, client_dcid, _, _) =
-        decode_initial_header(client_initial.as_ref().unwrap(), Role::Client);
+        decode_initial_header(client_initial.as_ref().unwrap(), Role::Client).unwrap();
     let client_dcid = client_dcid.to_owned();
 
     let server_packet = server.process(client_initial.as_ref(), now()).dgram();
@@ -217,7 +222,8 @@ fn overflow_crypto() {
     // Now decrypt the server packet to get AEAD and HP instances.
     // We won't be using the packet, but making new ones.
     let (aead, hp) = initial_aead_and_hp(&client_dcid, Role::Server);
-    let (_, server_dcid, server_scid, _) = decode_initial_header(&server_initial, Role::Server);
+    let (_, server_dcid, server_scid, _) =
+        decode_initial_header(&server_initial, Role::Server).unwrap();
 
     // Send in 100 packets, each with 1000 bytes of crypto frame data each,
     // eventually this will overrun the buffer we keep for crypto data.
@@ -260,10 +266,7 @@ fn overflow_crypto() {
         client.process_input(&dgram, now());
         if let State::Closing { error, .. } = client.state() {
             assert!(
-                matches!(
-                    error,
-                    ConnectionError::Transport(Error::CryptoBufferExceeded),
-                ),
+                matches!(error, CloseReason::Transport(Error::CryptoBufferExceeded),),
                 "the connection need to abort on crypto buffer"
             );
             assert!(pn > 64, "at least 64000 bytes of data is buffered");

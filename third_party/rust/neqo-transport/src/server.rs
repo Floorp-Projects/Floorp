@@ -689,6 +689,13 @@ impl Server {
         mem::take(&mut self.active).into_iter().collect()
     }
 
+    /// Whether any connections have received new events as a result of calling
+    /// `process()`.
+    #[must_use]
+    pub fn has_active_connections(&self) -> bool {
+        !self.active.is_empty()
+    }
+
     pub fn add_to_waiting(&mut self, c: &ActiveConnectionRef) {
         self.waiting.push_back(c.connection());
     }

@@ -256,7 +256,7 @@ impl EventProvider for ConnectionEvents {
 mod tests {
     use neqo_common::event::Provider;
 
-    use crate::{ConnectionError, ConnectionEvent, ConnectionEvents, Error, State, StreamId};
+    use crate::{CloseReason, ConnectionEvent, ConnectionEvents, Error, State, StreamId};
 
     #[test]
     fn event_culling() {
@@ -314,7 +314,7 @@ mod tests {
 
         evts.send_stream_writable(9.into());
         evts.send_stream_stop_sending(10.into(), 55);
-        evts.connection_state_change(State::Closed(ConnectionError::Transport(
+        evts.connection_state_change(State::Closed(CloseReason::Transport(
             Error::StreamStateError,
         )));
         assert_eq!(evts.events().count(), 1);

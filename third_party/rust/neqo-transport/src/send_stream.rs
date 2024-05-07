@@ -1269,7 +1269,7 @@ impl SendStream {
             return Err(Error::FinalSizeError);
         }
 
-        let buf = if buf.is_empty() || (self.avail() == 0) {
+        let buf = if self.avail() == 0 {
             return Ok(0);
         } else if self.avail() < buf.len() {
             if atomic {
@@ -1634,20 +1634,16 @@ impl SendStreams {
     }
 
     pub fn remove_terminal(&mut self) {
-        let map: &mut IndexMap<StreamId, SendStream> = &mut self.map;
-        let regular: &mut OrderGroup = &mut self.regular;
-        let sendordered: &mut BTreeMap<SendOrder, OrderGroup> = &mut self.sendordered;
-
-        // Take refs to all the items we need to modify instead of &mut
-        // self to keep the compiler happy (if we use self.map.retain it
-        // gets upset due to borrows)
-        map.retain(|stream_id, stream| {
+        self.map.retain(|stream_id, stream| {
             if stream.is_terminal() {
                 if stream.is_fair() {
                     match stream.sendorder() {
-                        None => regular.remove(*stream_id),
+                        None => self.regular.remove(*stream_id),
                         Some(sendorder) => {
-                            sendordered.get_mut(&sendorder).unwrap().remove(*stream_id);
+                            self.sendordered
+                                .get_mut(&sendorder)
+                                .unwrap()
+                                .remove(*stream_id);
                         }
                     };
                 }
