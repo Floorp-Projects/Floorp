@@ -27,18 +27,11 @@
     "96": "icons/lightbulb.svg",
     "128": "icons/lightbulb.svg"
   },
-  "permissions": [
-    "geckoViewAddons",
-    "nativeMessaging",
-    "tabs",
-    "<all_urls>"
-  ],
+  "permissions": ["geckoViewAddons", "nativeMessaging", "tabs", "<all_urls>"],
   "background": {
     "persistent": false,
     "type": "module",
-    "scripts": [
-      "background.js"
-    ]
+    "scripts": ["background.js"]
   },
   "page_action": {
     "browser_style": true,

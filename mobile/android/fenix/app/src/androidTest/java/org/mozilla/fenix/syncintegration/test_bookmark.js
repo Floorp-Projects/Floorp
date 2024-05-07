@@ -8,19 +8,17 @@
  */
 EnableEngines(["bookmarks"]);
 
-var phases = { "phase1": "profile1" };
-
+var phases = { phase1: "profile1" };
 
 // expected bookmark state
 var bookmarksCreated = {
-"mobile": [{
-  uri: "http://www.example.com/",
-  title: "Example Domain"}]
+  mobile: [
+    {
+      uri: "http://www.example.com/",
+      title: "Example Domain",
+    },
+  ],
 };
 
 // sync and verify bookmarks
-Phase("phase1", [
-  [Sync],
-  [Bookmarks.add, bookmarksCreated],
-  [Sync]
-]);
+Phase("phase1", [[Sync], [Bookmarks.add, bookmarksCreated], [Sync]]);

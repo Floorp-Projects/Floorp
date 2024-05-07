@@ -8,21 +8,12 @@
  */
 EnableEngines(["history"]);
 
-var phases = { "phase1": "profile1" };
-
+var phases = { phase1: "profile1" };
 
 // expected history state
 var historyExpected = [
-    { uri: "http://www.example.com/",
-      visits: [
-        { type: 1 },
-        { type: 2 }
-      ]
-    }
+  { uri: "http://www.example.com/", visits: [{ type: 1 }, { type: 2 }] },
 ];
 
 // sync and verify history
-Phase("phase1", [
-  [Sync],
-  [History.verify, historyExpected]
-]);
+Phase("phase1", [[Sync], [History.verify, historyExpected]]);

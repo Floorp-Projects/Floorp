@@ -19,12 +19,8 @@
         ],
         "average_daily_users": 5060298,
         "categories": {
-          "android": [
-            "security-privacy"
-          ],
-          "firefox": [
-            "privacy-security"
-          ]
+          "android": ["security-privacy"],
+          "firefox": ["privacy-security"]
         },
         "contributions_url": "",
         "created": "2015-04-25T07:26:22Z",
@@ -110,93 +106,54 @@
           {
             "id": 238546,
             "caption": "The popup panel: default mode",
-            "image_size": [
-              1011,
-              758
-            ],
+            "image_size": [1011, 758],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/238/238546.png?modified=1590420038",
-            "thumbnail_size": [
-              640,
-              480
-            ],
+            "thumbnail_size": [640, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/238/238546.png?modified=1590420038"
           },
           {
             "id": 238548,
             "caption": "The dashboard: stock filter lists",
-            "image_size": [
-              1011,
-              758
-            ],
+            "image_size": [1011, 758],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/238/238548.png?modified=1590420038",
-            "thumbnail_size": [
-              640,
-              480
-            ],
+            "thumbnail_size": [640, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/238/238548.png?modified=1590420038"
           },
           {
             "id": 238547,
             "caption": "The popup panel: default-deny mode",
-            "image_size": [
-              1011,
-              758
-            ],
+            "image_size": [1011, 758],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/238/238547.png?modified=1590420038",
-            "thumbnail_size": [
-              640,
-              480
-            ],
+            "thumbnail_size": [640, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/238/238547.png?modified=1590420038"
           },
           {
             "id": 238549,
             "caption": "The dashboard: settings",
-            "image_size": [
-              1011,
-              758
-            ],
+            "image_size": [1011, 758],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/238/238549.png?modified=1590420038",
-            "thumbnail_size": [
-              640,
-              480
-            ],
+            "thumbnail_size": [640, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/238/238549.png?modified=1590420038"
           },
           {
             "id": 238552,
             "caption": "The popup panel in Firefox Preview: default mode with more blocking options revealed",
-            "image_size": [
-              970,
-              1800
-            ],
+            "image_size": [970, 1800],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/238/238552.png?modified=1590420044",
-            "thumbnail_size": [
-              259,
-              480
-            ],
+            "thumbnail_size": [259, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/238/238552.png?modified=1590420044"
           },
           {
             "id": 230370,
             "caption": "The unified logger tells you all that uBO is seeing and doing",
-            "image_size": [
-              800,
-              600
-            ],
+            "image_size": [800, 600],
             "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/230/230370.png?modified=1590420038",
-            "thumbnail_size": [
-              640,
-              480
-            ],
+            "thumbnail_size": [640, 480],
             "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/230/230370.png?modified=1590420038"
           }
         ],
         "promoted": {
-          "apps": [
-            "firefox",
-            "android"
-          ],
+          "apps": ["firefox", "android"],
           "category": "recommended"
         },
         "ratings": {

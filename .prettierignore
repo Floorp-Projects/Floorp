@@ -905,7 +905,12 @@ layout/style/test/test_mql_event_listener_leaks.html
 layout/style/test/test_pointer-events.html
 layout/style/test/test_reframe_image_loading.html
 layout/tables/test/test_bug337124.html
+mobile/android/android-components/docs/_includes/footer.html
+mobile/android/android-components/docs/_includes/head.html
+mobile/android/android-components/docs/_layouts/home.html
 mobile/android/components/extensions/test/mochitest/file_dummy.html
+mobile/android/fenix/app/src/androidTest/assets/pages/htmlControls.html
+mobile/android/fenix/app/src/androidTest/assets/pages/trackingPage.html
 mobile/android/geckoview/src/androidTest/assets/www/accessibility/test-headings.html
 mobile/android/geckoview/src/androidTest/assets/www/autoplay.html
 mobile/android/geckoview/src/androidTest/assets/www/badVideoPath.html
@@ -1149,14 +1154,6 @@ mobile/android/docs/geckoview/assets/js/search-data.json
 # Uses `#filter substitution`
 mobile/android/app/geckoview-prefs.js
 
-# TODO - Bug 1881094: temporarily ignored for firefox-android migration
-mobile/android/android-components/
-mobile/android/fenix/
-mobile/android/focus-android/
-mobile/android/docs/_includes/
-mobile/android/docs/_layouts/
-mobile/android/docs/assets/js/icon-js.js
-
 # Not much JS to lint and non-standard at that
 mobile/android/installer/
 mobile/android/locales/
@@ -1385,6 +1382,9 @@ media/openmax_il/
 media/webrtc/signaling/gtest/MockCall.h
 mfbt/double-conversion/double-conversion/
 mfbt/lz4/.*
+mobile/android/android-components/components/feature/readerview/src/main/assets/extensions/readerview/readability/JSDOMParser-0.4.2.js
+mobile/android/android-components/components/feature/readerview/src/main/assets/extensions/readerview/readability/readability-0.4.2.js
+mobile/android/android-components/components/feature/readerview/src/main/assets/extensions/readerview/readability/readability-readerable-0.4.2.js
 mobile/android/exoplayer2/
 modules/brotli/
 modules/fdlibm/
@@ -1484,8 +1484,6 @@ dom/tests/ajax/mochikit/
 intl/components/src/UnicodeScriptCodes.h
 intl/unicharutil/util/nsSpecialCasingData.cpp
 intl/unicharutil/util/nsUnicodePropertyData.cpp
-mobile/locales/l10n-changesets.json
-mobile/locales/l10n-onchange-changesets.json
 mobile/android/**/.build-cache
 mobile/android/**/.gradle
 mobile/android/**/build
@@ -1493,6 +1491,12 @@ mobile/android/**/bin
 mobile/android/**/generated
 mobile/android/**\/local.properties
 mobile/android/**\/manifest.json
+mobile/android/android-components/components/feature/search/src/main/assets/search/search_telemetry_v2.json
+mobile/android/android-components/samples/glean/src/main/res/raw/initial_experiments.json
+mobile/android/fenix/app/src/debug/res/raw/initial_experiments.json
+mobile/android/fenix/app/src/main/res/raw/initial_experiments.json
+mobile/locales/l10n-changesets.json
+mobile/locales/l10n-onchange-changesets.json
 node_modules/
 python/mozperftest/mozperftest/tests/data/
 security/manager/tools/KnownRootHashes.json

@@ -8,7 +8,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width; user-scalable=false;" />
-    <meta http-equiv="Content-Security-Policy" content="default-src resource:; object-src 'none'" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src resource:; object-src 'none'"
+    />
     <link rel="stylesheet" type="text/css" href="shared_error_style.css" />
     <link
       rel="stylesheet"
@@ -37,10 +40,7 @@
       <button id="errorTryAgain"></button>
 
       <!-- Advanced Button -->
-      <button
-        id="advancedButton"
-        class="buttonSecondary hidden"
-      ></button>
+      <button id="advancedButton" class="buttonSecondary hidden"></button>
 
       <!-- "Go back" Button (For HTTPS-Only error page only) -->
       <button id="backFromHttp"></button>
@@ -56,9 +56,7 @@
             id="advancedPanelBackButtonContainer"
             class="advancedPanelButtonContainer"
           >
-            <button
-              id="advancedPanelBackButton"
-            ></button>
+            <button id="advancedPanelBackButton"></button>
           </div>
           <div
             id="advancedPanelAcceptButtonContainer"
@@ -76,7 +74,7 @@
 
   <script type="text/javascript">
     if (window.history.length == 1) {
-        document.getElementById('advancedPanelBackButton').style.display = 'none';
+      document.getElementById("advancedPanelBackButton").style.display = "none";
     }
 
     function toggleAdvancedAndScroll() {
@@ -104,5 +102,5 @@
     }
   </script>
 
-    <script src="./lowMediumErrorPages.js"></script>
+  <script src="./lowMediumErrorPages.js"></script>
 </html>

@@ -10,16 +10,18 @@ let port = browser.runtime.connectNative("mozacWebchannel");
 /*
 Handle messages from native application, dispatch them to FxA via an event.
 */
-port.onMessage.addListener((event) => {
-  window.dispatchEvent(new CustomEvent('WebChannelMessageToContent', {
-    detail: JSON.stringify(event)
-  }));
+port.onMessage.addListener(event => {
+  window.dispatchEvent(
+    new CustomEvent("WebChannelMessageToContent", {
+      detail: JSON.stringify(event),
+    })
+  );
 });
 
 /*
 Handle messages from FxA. Messages are posted to the native application for processing.
 */
-window.addEventListener('WebChannelMessageToChrome', function (e) {
+window.addEventListener("WebChannelMessageToChrome", function (e) {
   const detail = JSON.parse(e.detail);
   port.postMessage(detail);
 });

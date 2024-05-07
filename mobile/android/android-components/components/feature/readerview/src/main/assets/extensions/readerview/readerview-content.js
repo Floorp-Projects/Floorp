@@ -17,43 +17,53 @@ const blockedHosts = [
   "pinterest.com",
   "reddit.com",
   "twitter.com",
-  "youtube.com"
+  "youtube.com",
 ];
 
 function isReaderable() {
-    if (!supportedProtocols.includes(location.protocol)) {
-      return false;
-    }
+  if (!supportedProtocols.includes(location.protocol)) {
+    return false;
+  }
 
-    if (blockedHosts.some(blockedHost => location.hostname.endsWith(blockedHost))) {
-      return false;
-    }
+  if (
+    blockedHosts.some(blockedHost => location.hostname.endsWith(blockedHost))
+  ) {
+    return false;
+  }
 
-    if (location.pathname == "/") {
-      return false;
-    }
+  if (location.pathname == "/") {
+    return false;
+  }
 
-    return isProbablyReaderable(document, _isNodeVisible);
+  return isProbablyReaderable(document, _isNodeVisible);
 }
 
 function _isNodeVisible(node) {
-    return node.clientHeight > 0 && node.clientWidth > 0;
+  return node.clientHeight > 0 && node.clientWidth > 0;
 }
 
 function connectNativePort() {
   let port = browser.runtime.connectNative("mozacReaderview");
-  port.onMessage.addListener((message) => {
-     switch (message.action) {
-       case 'cachePage':
-         let serializedDoc = new XMLSerializer().serializeToString(document);
-         browser.runtime.sendMessage({action: "addSerializedDoc", doc: serializedDoc, id: message.id});
-         break;
-       case 'checkReaderState':
-         port.postMessage({type: 'checkReaderState', baseUrl: browser.runtime.getURL("/"), readerable: isReaderable()});
-         break;
-       default:
-         console.error(`Received unsupported action ${message.action}`);
-     }
+  port.onMessage.addListener(message => {
+    switch (message.action) {
+      case "cachePage":
+        let serializedDoc = new XMLSerializer().serializeToString(document);
+        browser.runtime.sendMessage({
+          action: "addSerializedDoc",
+          doc: serializedDoc,
+          id: message.id,
+        });
+        break;
+      case "checkReaderState":
+        port.postMessage({
+          type: "checkReaderState",
+          baseUrl: browser.runtime.getURL("/"),
+          readerable: isReaderable(),
+        });
+        break;
+      default:
+        console.error(`Received unsupported action ${message.action}`);
+    }
   });
 
   return port;
@@ -65,11 +75,11 @@ let port = connectNativePort();
 // do want to connect a new native port to trigger a new readerable check and
 // apply the same logic (as on page load) in our feature class (e.g. updating the
 // toolbar etc.)
-window.addEventListener("pageshow", (event) => {
-  port = (port != null)? port : connectNativePort();
+window.addEventListener("pageshow", event => {
+  port = port != null ? port : connectNativePort();
 });
 
-window.addEventListener("pagehide", (event) => {
+window.addEventListener("pagehide", event => {
   port.disconnect();
   port = null;
 });
