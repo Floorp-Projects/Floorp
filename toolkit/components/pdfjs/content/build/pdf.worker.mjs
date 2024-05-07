@@ -7508,7 +7508,7 @@ class JpegStream extends DecodeStream {
 
 ;// CONCATENATED MODULE: ./external/openjpeg/openjpeg.js
 var OpenJPEG = (() => {
-  var _scriptDir = "file:///builds/worker/pdf.js/external/openjpeg/openjpeg.js";
+  var _scriptDir = "file:///home/calixte/dev/mozilla/pdf.js.release/external/openjpeg/openjpeg.js";
   return function (moduleArg = {}) {
     var Module = moduleArg;
     var readyPromiseResolve, readyPromiseReject;
@@ -33978,9 +33978,6 @@ function clearGlobalCaches() {
 
 
 function pickPlatformItem(dict) {
-  if (!(dict instanceof Dict)) {
-    return null;
-  }
   if (dict.has("UF")) {
     return dict.get("UF");
   } else if (dict.has("F")) {
@@ -33993,9 +33990,6 @@ function pickPlatformItem(dict) {
     return dict.get("DOS");
   }
   return null;
-}
-function stripPath(str) {
-  return str.substring(str.lastIndexOf("/") + 1);
 }
 class FileSpec {
   #contentAvailable = false;
@@ -34020,28 +34014,29 @@ class FileSpec {
     }
   }
   get filename() {
-    let filename = "";
-    const item = pickPlatformItem(this.root);
-    if (item && typeof item === "string") {
-      filename = stringToPDFString(item).replaceAll("\\\\", "\\").replaceAll("\\/", "/").replaceAll("\\", "/");
+    if (!this._filename && this.root) {
+      const filename = pickPlatformItem(this.root) || "unnamed";
+      this._filename = stringToPDFString(filename).replaceAll("\\\\", "\\").replaceAll("\\/", "/").replaceAll("\\", "/");
     }
-    return shadow(this, "filename", filename || "unnamed");
+    return this._filename;
   }
   get content() {
     if (!this.#contentAvailable) {
       return null;
     }
-    this._contentRef ||= pickPlatformItem(this.root?.get("EF"));
+    if (!this.contentRef && this.root) {
+      this.contentRef = pickPlatformItem(this.root.get("EF"));
+    }
     let content = null;
-    if (this._contentRef) {
-      const fileObj = this.xref.fetchIfRef(this._contentRef);
+    if (this.contentRef) {
+      const fileObj = this.xref.fetchIfRef(this.contentRef);
       if (fileObj instanceof BaseStream) {
         content = fileObj.getBytes();
       } else {
         warn("Embedded file specification points to non-existing/invalid content");
       }
     } else {
-      warn("Embedded file specification does not have any content");
+      warn("Embedded file specification does not have a content");
     }
     return content;
   }
@@ -34055,8 +34050,7 @@ class FileSpec {
   }
   get serializable() {
     return {
-      rawFilename: this.filename,
-      filename: stripPath(this.filename),
+      filename: this.filename,
       content: this.content,
       description: this.description
     };
@@ -38298,9 +38292,9 @@ class Catalog {
           if (urlDict instanceof Dict) {
             const fs = new FileSpec(urlDict, null, true);
             const {
-              rawFilename
+              filename
             } = fs.serializable;
-            url = rawFilename;
+            url = filename;
           } else if (typeof urlDict === "string") {
             url = urlDict;
           }
@@ -55445,7 +55439,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.3.18";
+    const workerVersion = "4.3.8";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -56008,8 +56002,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.3.18";
-const pdfjsBuild = "14e87469d";
+const pdfjsVersion = "4.3.8";
+const pdfjsBuild = "c419c8333";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };
