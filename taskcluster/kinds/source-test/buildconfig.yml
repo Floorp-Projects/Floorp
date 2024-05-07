@@ -4,6 +4,7 @@
 ---
 job-defaults:
     description: Make sure the content of .buildconfig.yml matches what gradle knows about its projects
+    always-target: true
     run:
         using: run-task
         cwd: '{checkout}'
