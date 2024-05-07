@@ -289,7 +289,10 @@ export class SuggestBackendRust extends BaseFeature {
     if (instance != this.#ingestInstance) {
       return;
     }
-    await (this.#ingestPromise = this.#ingestHelper());
+    this.#ingestPromise = new Promise(resolve => {
+      ChromeUtils.idleDispatch(() => this.#ingestHelper().finally(resolve));
+    });
+    await this.#ingestPromise;
   }
 
   async #ingestHelper() {
