@@ -44,6 +44,9 @@ import:
               INACTIVE_4_DAYS: "'app_launched'|eventLastSeen('Days', 0) >= 4"
               INACTIVE_5_DAYS: "'app_launched'|eventLastSeen('Days', 0) >= 5"
 
+              # Behavioral Targeting Events
+              RECENTLY_PRINTED:  "'print_tapped'|eventLastSeen('Hours') <= 24"
+
               # Has the user signed in the last 4 years
               FXA_SIGNED_IN: "'sync_auth.sign_in'|eventLastSeen('Years', 0) <= 4"
               FXA_NOT_SIGNED_IN: "'sync_auth.sign_in'|eventLastSeen('Years', 0) > 4"
