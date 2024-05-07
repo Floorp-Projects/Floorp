@@ -154,7 +154,10 @@ async function openTabAndUseCreditCard(
   creditCard,
   { closeTab = true, submitForm = true } = {}
 ) {
-  let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  let osKeyStoreLoginShown = Promise.resolve();
+  if (OSKeyStore.canReauth()) {
+    osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+  }
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -692,7 +695,10 @@ add_task(async function test_submit_creditCard_update() {
     let creditCards = await getCreditCards();
     Assert.equal(creditCards.length, 1, "1 credit card in storage");
 
-    let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+    let osKeyStoreLoginShown = Promise.resolve();
+    if (OSKeyStore.canReauth()) {
+      osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+    }
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function (browser) {
