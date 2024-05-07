@@ -120,7 +120,7 @@ something 'interesting' with the page in return?  What about nested
 frames or nested scrollbars?  What if we scroll so much that we go
 past the boundaries of the Scene that we know about?
 
-See AsyncPanZoom.rst for all that and more.
+See :ref:`apz` for all that and more.
 
 A Few More Details
 ~~~~~~~~~~~~~~~~~~
