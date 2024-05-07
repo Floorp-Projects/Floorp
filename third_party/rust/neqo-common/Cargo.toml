@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.74.0"
+rust-version = "1.76.0"
 name = "neqo-common"
-version = "0.7.5"
+version = "0.7.7"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 build = "build.rs"
 homepage = "https://github.com/mozilla/neqo/"
@@ -35,12 +35,18 @@ default-features = false
 version = "0.10"
 default-features = false
 
+[dependencies.hex]
+version = "0.4"
+features = ["alloc"]
+optional = true
+default-features = false
+
 [dependencies.log]
 version = "0.4"
 default-features = false
 
 [dependencies.qlog]
-version = "0.12"
+version = "0.13"
 default-features = false
 
 [dependencies.time]
@@ -57,6 +63,7 @@ default-features = false
 path = "../test-fixture"
 
 [features]
+build-fuzzing-corpus = ["hex"]
 ci = []
 
 [target."cfg(windows)".dependencies.winapi]

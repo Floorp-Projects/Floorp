@@ -53,6 +53,9 @@ pub trait CongestionControl: Display + Debug {
         lost_packets: &[SentPacket],
     ) -> bool;
 
+    /// Returns true if the congestion window was reduced.
+    fn on_ecn_ce_received(&mut self, largest_acked_pkt: &SentPacket) -> bool;
+
     #[must_use]
     fn recovery_packet(&self) -> bool;
 

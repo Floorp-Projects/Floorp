@@ -8,21 +8,22 @@ mod common;
 
 use std::{cell::RefCell, mem, net::SocketAddr, rc::Rc, time::Duration};
 
-use common::{
-    apply_header_protection, connect, connected_server, decode_initial_header, default_server,
-    find_ticket, generate_ticket, initial_aead_and_hp, new_server, remove_header_protection,
-};
+use common::{connect, connected_server, default_server, find_ticket, generate_ticket, new_server};
 use neqo_common::{qtrace, Datagram, Decoder, Encoder, Role};
 use neqo_crypto::{
     generate_ech_keys, AllowZeroRtt, AuthenticationStatus, ZeroRttCheckResult, ZeroRttChecker,
 };
 use neqo_transport::{
     server::{ActiveConnectionRef, Server, ValidateAddress},
-    Connection, ConnectionError, ConnectionParameters, Error, Output, State, StreamType, Version,
+    CloseReason, Connection, ConnectionParameters, Error, Output, State, StreamType, Version,
 };
 use test_fixture::{
-    assertions, datagram, default_client, new_client, now, split_datagram,
-    CountingConnectionIdGenerator,
+    assertions, datagram, default_client,
+    header_protection::{
+        apply_header_protection, decode_initial_header, initial_aead_and_hp,
+        remove_header_protection,
+    },
+    new_client, now, split_datagram, CountingConnectionIdGenerator,
 };
 
 /// Take a pair of connections in any state and complete the handshake.
@@ -389,7 +390,7 @@ fn bad_client_initial() {
     let mut server = default_server();
 
     let dgram = client.process(None, now()).dgram().expect("a datagram");
-    let (header, d_cid, s_cid, payload) = decode_initial_header(&dgram, Role::Client);
+    let (header, d_cid, s_cid, payload) = decode_initial_header(&dgram, Role::Client).unwrap();
     let (aead, hp) = initial_aead_and_hp(d_cid, Role::Client);
     let (fixed_header, pn) = remove_header_protection(&hp, header, payload);
     let payload = &payload[(fixed_header.len() - header.len())..];
@@ -462,19 +463,78 @@ fn bad_client_initial() {
     assert_ne!(delay, Duration::from_secs(0));
     assert!(matches!(
         *client.state(),
-        State::Draining { error: ConnectionError::Transport(Error::PeerError(code)), .. } if code == Error::ProtocolViolation.code()
+        State::Draining { error: CloseReason::Transport(Error::PeerError(code)), .. } if code == Error::ProtocolViolation.code()
     ));
 
     for server in server.active_connections() {
         assert_eq!(
             *server.borrow().state(),
-            State::Closed(ConnectionError::Transport(Error::ProtocolViolation))
+            State::Closed(CloseReason::Transport(Error::ProtocolViolation))
         );
     }
 
     // After sending the CONNECTION_CLOSE, the server goes idle.
     let res = server.process(None, now());
     assert_eq!(res, Output::None);
+}
+
+#[test]
+fn bad_client_initial_connection_close() {
+    let mut client = default_client();
+    let mut server = default_server();
+
+    let dgram = client.process(None, now()).dgram().expect("a datagram");
+    let (header, d_cid, s_cid, payload) = decode_initial_header(&dgram, Role::Client).unwrap();
+    let (aead, hp) = initial_aead_and_hp(d_cid, Role::Client);
+    let (_, pn) = remove_header_protection(&hp, header, payload);
+
+    let mut payload_enc = Encoder::with_capacity(1200);
+    payload_enc.encode(&[0x1c, 0x01, 0x00, 0x00]); // Add a CONNECTION_CLOSE frame.
+
+    // Make a new header with a 1 byte packet number length.
+    let mut header_enc = Encoder::new();
+    header_enc
+        .encode_byte(0xc0) // Initial with 1 byte packet number.
+        .encode_uint(4, Version::default().wire_version())
+        .encode_vec(1, d_cid)
+        .encode_vec(1, s_cid)
+        .encode_vvec(&[])
+        .encode_varint(u64::try_from(payload_enc.len() + aead.expansion() + 1).unwrap())
+        .encode_byte(u8::try_from(pn).unwrap());
+
+    let mut ciphertext = header_enc.as_ref().to_vec();
+    ciphertext.resize(header_enc.len() + payload_enc.len() + aead.expansion(), 0);
+    let v = aead
+        .encrypt(
+            pn,
+            header_enc.as_ref(),
+            payload_enc.as_ref(),
+            &mut ciphertext[header_enc.len()..],
+        )
+        .unwrap();
+    assert_eq!(header_enc.len() + v.len(), ciphertext.len());
+    // Pad with zero to get up to 1200.
+    ciphertext.resize(1200, 0);
+
+    apply_header_protection(
+        &hp,
+        &mut ciphertext,
+        (header_enc.len() - 1)..header_enc.len(),
+    );
+    let bad_dgram = Datagram::new(
+        dgram.source(),
+        dgram.destination(),
+        dgram.tos(),
+        dgram.ttl(),
+        ciphertext,
+    );
+
+    // The server should ignore this and go to Draining.
+    let mut now = now();
+    let response = server.process(Some(&bad_dgram), now);
+    now += response.callback();
+    let response = server.process(None, now);
+    assert_eq!(response, Output::None);
 }
 
 #[test]
@@ -773,4 +833,17 @@ fn ech() {
         .unwrap()
         .ech_accepted()
         .unwrap());
+}
+
+#[test]
+fn has_active_connections() {
+    let mut server = default_server();
+    let mut client = default_client();
+
+    assert!(!server.has_active_connections());
+
+    let initial = client.process(None, now());
+    let _ = server.process(initial.as_dgram_ref(), now()).dgram();
+
+    assert!(server.has_active_connections());
 }

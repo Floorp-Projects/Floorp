@@ -14,14 +14,18 @@ use std::{
     time::Duration,
 };
 
-use common::{
-    apply_header_protection, connected_server, decode_initial_header, default_server,
-    generate_ticket, initial_aead_and_hp, remove_header_protection,
-};
+use common::{connected_server, default_server, generate_ticket};
 use neqo_common::{hex_with_len, qdebug, qtrace, Datagram, Encoder, Role};
 use neqo_crypto::AuthenticationStatus;
-use neqo_transport::{server::ValidateAddress, ConnectionError, Error, State, StreamType};
-use test_fixture::{assertions, datagram, default_client, now, split_datagram};
+use neqo_transport::{server::ValidateAddress, CloseReason, Error, State, StreamType};
+use test_fixture::{
+    assertions, datagram, default_client,
+    header_protection::{
+        apply_header_protection, decode_initial_header, initial_aead_and_hp,
+        remove_header_protection,
+    },
+    now, split_datagram,
+};
 
 #[test]
 fn retry_basic() {
@@ -400,7 +404,7 @@ fn mitm_retry() {
     // rewriting the header to remove the token, and then re-encrypting.
     let client_initial2 = client_initial2.unwrap();
     let (protected_header, d_cid, s_cid, payload) =
-        decode_initial_header(&client_initial2, Role::Client);
+        decode_initial_header(&client_initial2, Role::Client).unwrap();
 
     // Now we have enough information to make keys.
     let (aead, hp) = initial_aead_and_hp(d_cid, Role::Client);
@@ -465,7 +469,7 @@ fn mitm_retry() {
     assert!(matches!(
         *client.state(),
         State::Closing {
-            error: ConnectionError::Transport(Error::ProtocolViolation),
+            error: CloseReason::Transport(Error::ProtocolViolation),
             ..
         }
     ));

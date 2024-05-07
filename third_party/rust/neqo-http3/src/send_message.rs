@@ -13,7 +13,7 @@ use neqo_transport::{Connection, StreamId};
 use crate::{
     frames::HFrame,
     headers_checks::{headers_valid, is_interim, trailers_valid},
-    qlog, BufferedStream, CloseType, Error, Http3StreamInfo, Http3StreamType, HttpSendStream, Res,
+    BufferedStream, CloseType, Error, Http3StreamInfo, Http3StreamType, HttpSendStream, Res,
     SendStream, SendStreamEvents, Stream,
 };
 
@@ -216,7 +216,6 @@ impl SendStream for SendMessage {
             .send_atomic(conn, &buf[..to_send])
             .map_err(|e| Error::map_stream_send_errors(&e))?;
         debug_assert!(sent);
-        qlog::h3_data_moved_down(conn.qlog_mut(), self.stream_id(), to_send);
         Ok(to_send)
     }
 
@@ -243,7 +242,6 @@ impl SendStream for SendMessage {
     /// info that the stream has been closed.)
     fn send(&mut self, conn: &mut Connection) -> Res<()> {
         let sent = Error::map_error(self.stream.send_buffer(conn), Error::HttpInternal(5))?;
-        qlog::h3_data_moved_down(conn.qlog_mut(), self.stream_id(), sent);
 
         qtrace!([self], "{} bytes sent", sent);
         if !self.stream.has_buffered_data() {

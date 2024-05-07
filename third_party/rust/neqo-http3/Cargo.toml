@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.74.0"
+rust-version = "1.76.0"
 name = "neqo-http3"
-version = "0.7.5"
+version = "0.7.7"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 homepage = "https://github.com/mozilla/neqo/"
 license = "MIT OR Apache-2.0"
@@ -43,7 +43,7 @@ path = "./../neqo-qpack"
 path = "./../neqo-transport"
 
 [dependencies.qlog]
-version = "0.12"
+version = "0.13"
 default-features = false
 
 [dependencies.sfv]

@@ -298,6 +298,14 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
         congestion || persistent_congestion
     }
 
+    /// Report received ECN CE mark(s) to the congestion controller as a
+    /// congestion event.
+    ///
+    /// See <https://datatracker.ietf.org/doc/html/rfc9002#section-b.7>.
+    fn on_ecn_ce_received(&mut self, largest_acked_pkt: &SentPacket) -> bool {
+        self.on_congestion_event(largest_acked_pkt)
+    }
+
     fn discard(&mut self, pkt: &SentPacket) {
         if pkt.cc_outstanding() {
             assert!(self.bytes_in_flight >= pkt.size);
@@ -488,8 +496,8 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
     /// Handle a congestion event.
     /// Returns true if this was a true congestion event.
     fn on_congestion_event(&mut self, last_packet: &SentPacket) -> bool {
-        // Start a new congestion event if lost packet was sent after the start
-        // of the previous congestion recovery period.
+        // Start a new congestion event if lost or ECN CE marked packet was sent
+        // after the start of the previous congestion recovery period.
         if !self.after_recovery_start(last_packet) {
             return false;
         }
@@ -538,7 +546,7 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
 mod tests {
     use std::time::{Duration, Instant};
 
-    use neqo_common::qinfo;
+    use neqo_common::{qinfo, IpTosEcn};
     use test_fixture::now;
 
     use super::{
@@ -582,6 +590,7 @@ mod tests {
         SentPacket::new(
             PacketType::Short,
             pn,
+            IpTosEcn::default(),
             now() + t,
             ack_eliciting,
             Vec::new(),
@@ -795,6 +804,7 @@ mod tests {
                 SentPacket::new(
                     PacketType::Short,
                     u64::try_from(i).unwrap(),
+                    IpTosEcn::default(),
                     by_pto(t),
                     true,
                     Vec::new(),
@@ -915,6 +925,7 @@ mod tests {
         lost[0] = SentPacket::new(
             lost[0].pt,
             lost[0].pn,
+            lost[0].ecn_mark,
             lost[0].time_sent,
             false,
             Vec::new(),
@@ -1015,11 +1026,12 @@ mod tests {
             for _ in 0..packet_burst_size {
                 let p = SentPacket::new(
                     PacketType::Short,
-                    next_pn,           // pn
-                    now,               // time sent
-                    true,              // ack eliciting
-                    Vec::new(),        // tokens
-                    MAX_DATAGRAM_SIZE, // size
+                    next_pn,
+                    IpTosEcn::default(),
+                    now,
+                    true,
+                    Vec::new(),
+                    MAX_DATAGRAM_SIZE,
                 );
                 next_pn += 1;
                 cc.on_packet_sent(&p);
@@ -1039,11 +1051,12 @@ mod tests {
         for _ in 0..ABOVE_APP_LIMIT_PKTS {
             let p = SentPacket::new(
                 PacketType::Short,
-                next_pn,           // pn
-                now,               // time sent
-                true,              // ack eliciting
-                Vec::new(),        // tokens
-                MAX_DATAGRAM_SIZE, // size
+                next_pn,
+                IpTosEcn::default(),
+                now,
+                true,
+                Vec::new(),
+                MAX_DATAGRAM_SIZE,
             );
             next_pn += 1;
             cc.on_packet_sent(&p);
@@ -1082,11 +1095,12 @@ mod tests {
 
         let p_lost = SentPacket::new(
             PacketType::Short,
-            1,                 // pn
-            now,               // time sent
-            true,              // ack eliciting
-            Vec::new(),        // tokens
-            MAX_DATAGRAM_SIZE, // size
+            1,
+            IpTosEcn::default(),
+            now,
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE,
         );
         cc.on_packet_sent(&p_lost);
         cwnd_is_default(&cc);
@@ -1095,11 +1109,12 @@ mod tests {
         cwnd_is_halved(&cc);
         let p_not_lost = SentPacket::new(
             PacketType::Short,
-            2,                 // pn
-            now,               // time sent
-            true,              // ack eliciting
-            Vec::new(),        // tokens
-            MAX_DATAGRAM_SIZE, // size
+            2,
+            IpTosEcn::default(),
+            now,
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE,
         );
         cc.on_packet_sent(&p_not_lost);
         now += RTT;
@@ -1118,11 +1133,12 @@ mod tests {
             for _ in 0..packet_burst_size {
                 let p = SentPacket::new(
                     PacketType::Short,
-                    next_pn,           // pn
-                    now,               // time sent
-                    true,              // ack eliciting
-                    Vec::new(),        // tokens
-                    MAX_DATAGRAM_SIZE, // size
+                    next_pn,
+                    IpTosEcn::default(),
+                    now,
+                    true,
+                    Vec::new(),
+                    MAX_DATAGRAM_SIZE,
                 );
                 next_pn += 1;
                 cc.on_packet_sent(&p);
@@ -1148,11 +1164,12 @@ mod tests {
         for _ in 0..ABOVE_APP_LIMIT_PKTS {
             let p = SentPacket::new(
                 PacketType::Short,
-                next_pn,           // pn
-                now,               // time sent
-                true,              // ack eliciting
-                Vec::new(),        // tokens
-                MAX_DATAGRAM_SIZE, // size
+                next_pn,
+                IpTosEcn::default(),
+                now,
+                true,
+                Vec::new(),
+                MAX_DATAGRAM_SIZE,
             );
             next_pn += 1;
             cc.on_packet_sent(&p);
@@ -1179,5 +1196,27 @@ mod tests {
             assert_ne!(cc.acked_bytes, last_acked_bytes);
             last_acked_bytes = cc.acked_bytes;
         }
+    }
+
+    #[test]
+    fn ecn_ce() {
+        let mut cc = ClassicCongestionControl::new(NewReno::default());
+        let p_ce = SentPacket::new(
+            PacketType::Short,
+            1,
+            IpTosEcn::default(),
+            now(),
+            true,
+            Vec::new(),
+            MAX_DATAGRAM_SIZE,
+        );
+        cc.on_packet_sent(&p_ce);
+        cwnd_is_default(&cc);
+        assert_eq!(cc.state, State::SlowStart);
+
+        // Signal congestion (ECN CE) and thus change state to recovery start.
+        cc.on_ecn_ce_received(&p_ce);
+        cwnd_is_halved(&cc);
+        assert_eq!(cc.state, State::RecoveryStart);
     }
 }

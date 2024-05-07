@@ -10,7 +10,7 @@ use neqo_common::{event::Provider, Decoder, Encoder};
 use test_fixture::{assertions, datagram, now};
 
 use super::{
-    super::{ConnectionError, ConnectionEvent, Output, State, ZeroRttState},
+    super::{CloseReason, ConnectionEvent, Output, State, ZeroRttState},
     connect, connect_fail, default_client, default_server, exchange_ticket, new_client, new_server,
     send_something,
 };
@@ -124,7 +124,7 @@ fn version_negotiation_only_reserved() {
     assert_eq!(client.process(Some(&dgram), now()), Output::None);
     match client.state() {
         State::Closed(err) => {
-            assert_eq!(*err, ConnectionError::Transport(Error::VersionNegotiation));
+            assert_eq!(*err, CloseReason::Transport(Error::VersionNegotiation));
         }
         _ => panic!("Invalid client state"),
     }
@@ -183,7 +183,7 @@ fn version_negotiation_not_supported() {
     assert_eq!(client.process(Some(&dgram), now()), Output::None);
     match client.state() {
         State::Closed(err) => {
-            assert_eq!(*err, ConnectionError::Transport(Error::VersionNegotiation));
+            assert_eq!(*err, CloseReason::Transport(Error::VersionNegotiation));
         }
         _ => panic!("Invalid client state"),
     }
@@ -338,7 +338,7 @@ fn invalid_server_version() {
     // The server effectively hasn't reacted here.
     match server.state() {
         State::Closed(err) => {
-            assert_eq!(*err, ConnectionError::Transport(Error::CryptoAlert(47)));
+            assert_eq!(*err, CloseReason::Transport(Error::CryptoAlert(47)));
         }
         _ => panic!("invalid server state"),
     }

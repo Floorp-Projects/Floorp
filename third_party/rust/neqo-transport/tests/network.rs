@@ -6,7 +6,7 @@
 
 use std::{ops::Range, time::Duration};
 
-use neqo_transport::{ConnectionError, ConnectionParameters, Error, State};
+use neqo_transport::{CloseReason, ConnectionParameters, Error, State};
 use test_fixture::{
     boxed,
     sim::{
@@ -48,10 +48,10 @@ simulate!(
     idle_timeout,
     [
         ConnectionNode::default_client(boxed![ReachState::new(State::Closed(
-            ConnectionError::Transport(Error::IdleTimeout)
+            CloseReason::Transport(Error::IdleTimeout)
         ))]),
         ConnectionNode::default_server(boxed![ReachState::new(State::Closed(
-            ConnectionError::Transport(Error::IdleTimeout)
+            CloseReason::Transport(Error::IdleTimeout)
         ))]),
     ]
 );
@@ -62,7 +62,7 @@ simulate!(
         ConnectionNode::new_client(
             ConnectionParameters::default().idle_timeout(weeks(1000)),
             boxed![ReachState::new(State::Confirmed),],
-            boxed![ReachState::new(State::Closed(ConnectionError::Transport(
+            boxed![ReachState::new(State::Closed(CloseReason::Transport(
                 Error::IdleTimeout
             )))]
         ),
@@ -71,7 +71,7 @@ simulate!(
         ConnectionNode::new_server(
             ConnectionParameters::default().idle_timeout(weeks(1000)),
             boxed![ReachState::new(State::Confirmed),],
-            boxed![ReachState::new(State::Closed(ConnectionError::Transport(
+            boxed![ReachState::new(State::Closed(CloseReason::Transport(
                 Error::IdleTimeout
             )))]
         ),

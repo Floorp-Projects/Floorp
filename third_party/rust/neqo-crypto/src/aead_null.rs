@@ -4,8 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg(feature = "disable-encryption")]
-
 use std::fmt;
 
 use crate::{

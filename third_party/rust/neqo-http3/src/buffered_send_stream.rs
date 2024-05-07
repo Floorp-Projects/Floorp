@@ -7,7 +7,7 @@
 use neqo_common::qtrace;
 use neqo_transport::{Connection, StreamId};
 
-use crate::Res;
+use crate::{qlog, Res};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum BufferedStream {
@@ -38,7 +38,7 @@ impl BufferedStream {
 
     /// # Panics
     ///
-    /// If the `BufferedStream` is initialized more than one it will panic.
+    /// If the `BufferedStream` is initialized more than once, it will panic.
     pub fn init(&mut self, stream_id: StreamId) {
         debug_assert!(&Self::Uninitialized == self);
         *self = Self::Initialized {
@@ -63,19 +63,23 @@ impl BufferedStream {
     /// Returns `neqo_transport` errors.
     pub fn send_buffer(&mut self, conn: &mut Connection) -> Res<usize> {
         let label = ::neqo_common::log_subject!(::log::Level::Debug, self);
-        let mut sent = 0;
-        if let Self::Initialized { stream_id, buf } = self {
-            if !buf.is_empty() {
-                qtrace!([label], "sending data.");
-                sent = conn.stream_send(*stream_id, &buf[..])?;
-                if sent == buf.len() {
-                    buf.clear();
-                } else {
-                    let b = buf.split_off(sent);
-                    *buf = b;
-                }
-            }
+        let Self::Initialized { stream_id, buf } = self else {
+            return Ok(0);
+        };
+        if buf.is_empty() {
+            return Ok(0);
         }
+        qtrace!([label], "sending data.");
+        let sent = conn.stream_send(*stream_id, &buf[..])?;
+        if sent == 0 {
+            return Ok(0);
+        } else if sent == buf.len() {
+            buf.clear();
+        } else {
+            let b = buf.split_off(sent);
+            *buf = b;
+        }
+        qlog::h3_data_moved_down(conn.qlog_mut(), *stream_id, sent);
         Ok(sent)
     }
 
@@ -85,16 +89,17 @@ impl BufferedStream {
     pub fn send_atomic(&mut self, conn: &mut Connection, to_send: &[u8]) -> Res<bool> {
         // First try to send anything that is in the buffer.
         self.send_buffer(conn)?;
-        if let Self::Initialized { stream_id, buf } = self {
-            if buf.is_empty() {
-                let res = conn.stream_send_atomic(*stream_id, to_send)?;
-                Ok(res)
-            } else {
-                Ok(false)
-            }
-        } else {
-            Ok(false)
+        let Self::Initialized { stream_id, buf } = self else {
+            return Ok(false);
+        };
+        if !buf.is_empty() {
+            return Ok(false);
         }
+        let res = conn.stream_send_atomic(*stream_id, to_send)?;
+        if res {
+            qlog::h3_data_moved_down(conn.qlog_mut(), *stream_id, to_send.len());
+        }
+        Ok(res)
     }
 
     #[must_use]

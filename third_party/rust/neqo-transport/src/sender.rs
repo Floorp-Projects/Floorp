@@ -97,6 +97,11 @@ impl PacketSender {
         )
     }
 
+    /// Called when ECN CE mark received.  Returns true if the congestion window was reduced.
+    pub fn on_ecn_ce_received(&mut self, largest_acked_pkt: &SentPacket) -> bool {
+        self.cc.on_ecn_ce_received(largest_acked_pkt)
+    }
+
     pub fn discard(&mut self, pkt: &SentPacket) {
         self.cc.discard(pkt);
     }

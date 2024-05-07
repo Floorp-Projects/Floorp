@@ -8,13 +8,14 @@
 
 use std::ops::RangeInclusive;
 
-use neqo_common::{qtrace, Decoder};
+use neqo_common::{qtrace, Decoder, Encoder};
 
 use crate::{
     cid::MAX_CONNECTION_ID_LEN,
+    ecn::EcnCount,
     packet::PacketType,
     stream_id::{StreamId, StreamType},
-    AppError, ConnectionError, Error, Res, TransportError,
+    AppError, CloseReason, Error, Res, TransportError,
 };
 
 #[allow(clippy::module_name_repetitions)]
@@ -23,7 +24,7 @@ pub type FrameType = u64;
 pub const FRAME_TYPE_PADDING: FrameType = 0x0;
 pub const FRAME_TYPE_PING: FrameType = 0x1;
 pub const FRAME_TYPE_ACK: FrameType = 0x2;
-const FRAME_TYPE_ACK_ECN: FrameType = 0x3;
+pub const FRAME_TYPE_ACK_ECN: FrameType = 0x3;
 pub const FRAME_TYPE_RESET_STREAM: FrameType = 0x4;
 pub const FRAME_TYPE_STOP_SENDING: FrameType = 0x5;
 pub const FRAME_TYPE_CRYPTO: FrameType = 0x6;
@@ -86,11 +87,11 @@ impl CloseError {
     }
 }
 
-impl From<ConnectionError> for CloseError {
-    fn from(err: ConnectionError) -> Self {
+impl From<CloseReason> for CloseError {
+    fn from(err: CloseReason) -> Self {
         match err {
-            ConnectionError::Transport(c) => Self::Transport(c.code()),
-            ConnectionError::Application(c) => Self::Application(c),
+            CloseReason::Transport(c) => Self::Transport(c.code()),
+            CloseReason::Application(c) => Self::Application(c),
         }
     }
 }
@@ -116,6 +117,7 @@ pub enum Frame<'a> {
         ack_delay: u64,
         first_ack_range: u64,
         ack_ranges: Vec<AckRange>,
+        ecn_count: Option<EcnCount>,
     },
     ResetStream {
         stream_id: StreamId,
@@ -182,7 +184,7 @@ pub enum Frame<'a> {
         frame_type: u64,
         // Not a reference as we use this to hold the value.
         // This is not used in optimized builds anyway.
-        reason_phrase: Vec<u8>,
+        reason_phrase: String,
     },
     HandshakeDone,
     AckFrequency {
@@ -224,7 +226,7 @@ impl<'a> Frame<'a> {
         match self {
             Self::Padding { .. } => FRAME_TYPE_PADDING,
             Self::Ping => FRAME_TYPE_PING,
-            Self::Ack { .. } => FRAME_TYPE_ACK, // We don't do ACK ECN.
+            Self::Ack { .. } => FRAME_TYPE_ACK,
             Self::ResetStream { .. } => FRAME_TYPE_RESET_STREAM,
             Self::StopSending { .. } => FRAME_TYPE_STOP_SENDING,
             Self::Crypto { .. } => FRAME_TYPE_CRYPTO,
@@ -426,8 +428,54 @@ impl<'a> Frame<'a> {
             d(dec.decode_varint())
         }
 
-        // TODO(ekr@rtfm.com): check for minimal encoding
+        fn decode_ack<'a>(dec: &mut Decoder<'a>, ecn: bool) -> Res<Frame<'a>> {
+            let la = dv(dec)?;
+            let ad = dv(dec)?;
+            let nr = dv(dec).and_then(|nr| {
+                if nr < MAX_ACK_RANGE_COUNT {
+                    Ok(nr)
+                } else {
+                    Err(Error::TooMuchData)
+                }
+            })?;
+            let fa = dv(dec)?;
+            let mut arr: Vec<AckRange> = Vec::with_capacity(usize::try_from(nr)?);
+            for _ in 0..nr {
+                let ar = AckRange {
+                    gap: dv(dec)?,
+                    range: dv(dec)?,
+                };
+                arr.push(ar);
+            }
+
+            // Now check for the values for ACK_ECN.
+            let ecn_count = if ecn {
+                Some(EcnCount::new(0, dv(dec)?, dv(dec)?, dv(dec)?))
+            } else {
+                None
+            };
+
+            Ok(Frame::Ack {
+                largest_acknowledged: la,
+                ack_delay: ad,
+                first_ack_range: fa,
+                ack_ranges: arr,
+                ecn_count,
+            })
+        }
+
+        // Check for minimal encoding of frame type.
+        let pos = dec.offset();
         let t = dv(dec)?;
+        // RFC 9000, Section 12.4:
+        //
+        // The Frame Type field uses a variable-length integer encoding [...],
+        // with one exception. To ensure simple and efficient implementations of
+        // frame parsing, a frame type MUST use the shortest possible encoding.
+        if Encoder::varint_len(t) != dec.offset() - pos {
+            return Err(Error::ProtocolViolation);
+        }
+
         match t {
             FRAME_TYPE_PADDING => {
                 let mut length: u16 = 1;
@@ -449,40 +497,8 @@ impl<'a> Frame<'a> {
                     _ => return Err(Error::NoMoreData),
                 },
             }),
-            FRAME_TYPE_ACK | FRAME_TYPE_ACK_ECN => {
-                let la = dv(dec)?;
-                let ad = dv(dec)?;
-                let nr = dv(dec).and_then(|nr| {
-                    if nr < MAX_ACK_RANGE_COUNT {
-                        Ok(nr)
-                    } else {
-                        Err(Error::TooMuchData)
-                    }
-                })?;
-                let fa = dv(dec)?;
-                let mut arr: Vec<AckRange> = Vec::with_capacity(usize::try_from(nr)?);
-                for _ in 0..nr {
-                    let ar = AckRange {
-                        gap: dv(dec)?,
-                        range: dv(dec)?,
-                    };
-                    arr.push(ar);
-                }
-
-                // Now check for the values for ACK_ECN.
-                if t == FRAME_TYPE_ACK_ECN {
-                    dv(dec)?;
-                    dv(dec)?;
-                    dv(dec)?;
-                }
-
-                Ok(Self::Ack {
-                    largest_acknowledged: la,
-                    ack_delay: ad,
-                    first_ack_range: fa,
-                    ack_ranges: arr,
-                })
-            }
+            FRAME_TYPE_ACK => decode_ack(dec, false),
+            FRAME_TYPE_ACK_ECN => decode_ack(dec, true),
             FRAME_TYPE_STOP_SENDING => Ok(Self::StopSending {
                 stream_id: StreamId::from(dv(dec)?),
                 application_error_code: dv(dec)?,
@@ -598,7 +614,7 @@ impl<'a> Frame<'a> {
                     0
                 };
                 // We can tolerate this copy for now.
-                let reason_phrase = d(dec.decode_vvec())?.to_vec();
+                let reason_phrase = String::from_utf8_lossy(d(dec.decode_vvec())?).to_string();
                 Ok(Self::ConnectionClose {
                     error_code,
                     frame_type,
@@ -647,13 +663,14 @@ mod tests {
 
     use crate::{
         cid::MAX_CONNECTION_ID_LEN,
+        ecn::EcnCount,
         frame::{AckRange, Frame, FRAME_TYPE_ACK},
         CloseError, Error, StreamId, StreamType,
     };
 
     fn just_dec(f: &Frame, s: &str) {
         let encoded = Encoder::from_hex(s);
-        let decoded = Frame::decode(&mut encoded.as_decoder()).unwrap();
+        let decoded = Frame::decode(&mut encoded.as_decoder()).expect("Failed to decode frame");
         assert_eq!(*f, decoded);
     }
 
@@ -679,7 +696,8 @@ mod tests {
             largest_acknowledged: 0x1234,
             ack_delay: 0x1235,
             first_ack_range: 0x1236,
-            ack_ranges: ar,
+            ack_ranges: ar.clone(),
+            ecn_count: None,
         };
 
         just_dec(&f, "025234523502523601020304");
@@ -689,10 +707,18 @@ mod tests {
         let mut dec = enc.as_decoder();
         assert_eq!(Frame::decode(&mut dec).unwrap_err(), Error::NoMoreData);
 
-        // Try to parse ACK_ECN without ECN values
+        // Try to parse ACK_ECN with ECN values
+        let ecn_count = Some(EcnCount::new(0, 1, 2, 3));
+        let fe = Frame::Ack {
+            largest_acknowledged: 0x1234,
+            ack_delay: 0x1235,
+            first_ack_range: 0x1236,
+            ack_ranges: ar,
+            ecn_count,
+        };
         let enc = Encoder::from_hex("035234523502523601020304010203");
         let mut dec = enc.as_decoder();
-        assert_eq!(Frame::decode(&mut dec).unwrap(), f);
+        assert_eq!(Frame::decode(&mut dec).unwrap(), fe);
     }
 
     #[test]
@@ -899,7 +925,7 @@ mod tests {
         let f = Frame::ConnectionClose {
             error_code: CloseError::Transport(0x5678),
             frame_type: 0x1234,
-            reason_phrase: vec![0x01, 0x02, 0x03],
+            reason_phrase: String::from("\x01\x02\x03"),
         };
 
         just_dec(&f, "1c80005678523403010203");
@@ -910,7 +936,7 @@ mod tests {
         let f = Frame::ConnectionClose {
             error_code: CloseError::Application(0x5678),
             frame_type: 0,
-            reason_phrase: vec![0x01, 0x02, 0x03],
+            reason_phrase: String::from("\x01\x02\x03"),
         };
 
         just_dec(&f, "1d8000567803010203");
@@ -989,14 +1015,14 @@ mod tests {
             fill: true,
         };
 
-        just_dec(&f, "4030010203");
+        just_dec(&f, "30010203");
 
         // With the length bit.
         let f = Frame::Datagram {
             data: &[1, 2, 3],
             fill: false,
         };
-        just_dec(&f, "403103010203");
+        just_dec(&f, "3103010203");
     }
 
     #[test]
@@ -1009,5 +1035,16 @@ mod tests {
         e.encode_varint(u32::MAX); // ACK range count = huge, but maybe available for allocation
 
         assert_eq!(Err(Error::TooMuchData), Frame::decode(&mut e.as_decoder()));
+    }
+
+    #[test]
+    #[should_panic(expected = "Failed to decode frame")]
+    fn invalid_frame_type_len() {
+        let f = Frame::Datagram {
+            data: &[1, 2, 3],
+            fill: true,
+        };
+
+        just_dec(&f, "4030010203");
     }
 }

@@ -6,7 +6,7 @@
 
 use std::{mem, time::Duration};
 
-use neqo_common::{qdebug, qinfo, Datagram};
+use neqo_common::{qdebug, qinfo, Datagram, IpTosEcn};
 
 use super::{
     super::Output, ack_bytes, assert_full_cwnd, connect_rtt_idle, cwnd, cwnd_avail, cwnd_packets,
@@ -36,9 +36,13 @@ fn cc_slow_start() {
     assert!(cwnd_avail(&client) < ACK_ONLY_SIZE_LIMIT);
 }
 
-#[test]
-/// Verify that CC moves to cong avoidance when a packet is marked lost.
-fn cc_slow_start_to_cong_avoidance_recovery_period() {
+#[derive(PartialEq, Eq, Clone, Copy)]
+enum CongestionSignal {
+    PacketLoss,
+    EcnCe,
+}
+
+fn cc_slow_start_to_cong_avoidance_recovery_period(congestion_signal: CongestionSignal) {
     let mut client = default_client();
     let mut server = default_server();
     let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
@@ -78,9 +82,17 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
     assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND * 2);
     let flight2_largest = flight1_largest + u64::try_from(c_tx_dgrams.len()).unwrap();
 
-    // Server: Receive and generate ack again, but drop first packet
+    // Server: Receive and generate ack again, but this time add congestion
+    // signal first.
     now += DEFAULT_RTT / 2;
-    c_tx_dgrams.remove(0);
+    match congestion_signal {
+        CongestionSignal::PacketLoss => {
+            c_tx_dgrams.remove(0);
+        }
+        CongestionSignal::EcnCe => {
+            c_tx_dgrams.last_mut().unwrap().set_tos(IpTosEcn::Ce.into());
+        }
+    }
     let s_ack = ack_bytes(&mut server, stream_id, c_tx_dgrams, now);
     assert_eq!(
         server.stats().frame_tx.largest_acknowledged,
@@ -95,6 +107,18 @@ fn cc_slow_start_to_cong_avoidance_recovery_period() {
         flight2_largest
     );
     assert!(cwnd(&client) < cwnd_before_cong);
+}
+
+#[test]
+/// Verify that CC moves to cong avoidance when a packet is marked lost.
+fn cc_slow_start_to_cong_avoidance_recovery_period_due_to_packet_loss() {
+    cc_slow_start_to_cong_avoidance_recovery_period(CongestionSignal::PacketLoss);
+}
+
+/// Verify that CC moves to cong avoidance when ACK is marked with ECN CE.
+#[test]
+fn cc_slow_start_to_cong_avoidance_recovery_period_due_to_ecn_ce() {
+    cc_slow_start_to_cong_avoidance_recovery_period(CongestionSignal::EcnCe);
 }
 
 #[test]

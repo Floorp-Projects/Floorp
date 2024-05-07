@@ -35,7 +35,7 @@ use crate::{
     server::ValidateAddress,
     tparams::{TransportParameter, MIN_ACK_DELAY},
     tracking::DEFAULT_ACK_DELAY,
-    ConnectionError, ConnectionParameters, EmptyConnectionIdGenerator, Error, StreamType, Version,
+    CloseReason, ConnectionParameters, EmptyConnectionIdGenerator, Error, StreamType, Version,
 };
 
 const ECH_CONFIG_ID: u8 = 7;
@@ -111,8 +111,8 @@ fn handshake_failed_authentication() {
     qdebug!("---- server: Alert(certificate_revoked)");
     let out = server.process(out.as_dgram_ref(), now());
     assert!(out.as_dgram_ref().is_some());
-    assert_error(&client, &ConnectionError::Transport(Error::CryptoAlert(44)));
-    assert_error(&server, &ConnectionError::Transport(Error::PeerError(300)));
+    assert_error(&client, &CloseReason::Transport(Error::CryptoAlert(44)));
+    assert_error(&server, &CloseReason::Transport(Error::PeerError(300)));
 }
 
 #[test]
@@ -133,11 +133,8 @@ fn no_alpn() {
     handshake(&mut client, &mut server, now(), Duration::new(0, 0));
     // TODO (mt): errors are immediate, which means that we never send CONNECTION_CLOSE
     // and the client never sees the server's rejection of its handshake.
-    // assert_error(&client, ConnectionError::Transport(Error::CryptoAlert(120)));
-    assert_error(
-        &server,
-        &ConnectionError::Transport(Error::CryptoAlert(120)),
-    );
+    // assert_error(&client, CloseReason::Transport(Error::CryptoAlert(120)));
+    assert_error(&server, &CloseReason::Transport(Error::CryptoAlert(120)));
 }
 
 #[test]
@@ -934,10 +931,10 @@ fn ech_retry() {
     server.process_input(&dgram.unwrap(), now());
     assert_eq!(
         server.state().error(),
-        Some(&ConnectionError::Transport(Error::PeerError(0x100 + 121)))
+        Some(&CloseReason::Transport(Error::PeerError(0x100 + 121)))
     );
 
-    let Some(ConnectionError::Transport(Error::EchRetry(updated_config))) = client.state().error()
+    let Some(CloseReason::Transport(Error::EchRetry(updated_config))) = client.state().error()
     else {
         panic!(
             "Client state should be failed with EchRetry, is {:?}",
@@ -984,7 +981,7 @@ fn ech_retry_fallback_rejected() {
     client.authenticated(AuthenticationStatus::PolicyRejection, now());
     assert!(client.state().error().is_some());
 
-    if let Some(ConnectionError::Transport(Error::EchRetry(_))) = client.state().error() {
+    if let Some(CloseReason::Transport(Error::EchRetry(_))) = client.state().error() {
         panic!("Client should not get EchRetry error");
     }
 
@@ -993,14 +990,13 @@ fn ech_retry_fallback_rejected() {
     server.process_input(&dgram.unwrap(), now());
     assert_eq!(
         server.state().error(),
-        Some(&ConnectionError::Transport(Error::PeerError(298)))
+        Some(&CloseReason::Transport(Error::PeerError(298)))
     ); // A bad_certificate alert.
 }
 
 #[test]
 fn bad_min_ack_delay() {
-    const EXPECTED_ERROR: ConnectionError =
-        ConnectionError::Transport(Error::TransportParameterError);
+    const EXPECTED_ERROR: CloseReason = CloseReason::Transport(Error::TransportParameterError);
     let mut server = default_server();
     let max_ad = u64::try_from(DEFAULT_ACK_DELAY.as_micros()).unwrap();
     server
@@ -1018,7 +1014,7 @@ fn bad_min_ack_delay() {
     server.process_input(&dgram.unwrap(), now());
     assert_eq!(
         server.state().error(),
-        Some(&ConnectionError::Transport(Error::PeerError(
+        Some(&CloseReason::Transport(Error::PeerError(
             Error::TransportParameterError.code()
         )))
     );

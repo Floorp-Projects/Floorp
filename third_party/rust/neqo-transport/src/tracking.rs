@@ -13,18 +13,21 @@ use std::{
     time::{Duration, Instant},
 };
 
-use neqo_common::{qdebug, qinfo, qtrace, qwarn};
+use enum_map::Enum;
+use neqo_common::{qdebug, qinfo, qtrace, qwarn, IpTosEcn};
 use neqo_crypto::{Epoch, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL};
 use smallvec::{smallvec, SmallVec};
 
 use crate::{
+    ecn::EcnCount,
+    frame::{FRAME_TYPE_ACK, FRAME_TYPE_ACK_ECN},
     packet::{PacketBuilder, PacketNumber, PacketType},
     recovery::RecoveryToken,
     stats::FrameStats,
 };
 
 // TODO(mt) look at enabling EnumMap for this: https://stackoverflow.com/a/44905797/1375574
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Ord, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Ord, Eq, Enum)]
 pub enum PacketNumberSpace {
     Initial,
     Handshake,
@@ -134,6 +137,7 @@ impl std::fmt::Debug for PacketNumberSpaceSet {
 pub struct SentPacket {
     pub pt: PacketType,
     pub pn: PacketNumber,
+    pub ecn_mark: IpTosEcn,
     ack_eliciting: bool,
     pub time_sent: Instant,
     primary_path: bool,
@@ -150,6 +154,7 @@ impl SentPacket {
     pub fn new(
         pt: PacketType,
         pn: PacketNumber,
+        ecn_mark: IpTosEcn,
         time_sent: Instant,
         ack_eliciting: bool,
         tokens: Vec<RecoveryToken>,
@@ -158,6 +163,7 @@ impl SentPacket {
         Self {
             pt,
             pn,
+            ecn_mark,
             time_sent,
             ack_eliciting,
             primary_path: true,
@@ -377,6 +383,8 @@ pub struct RecvdPackets {
     /// Whether we are ignoring packets that arrive out of order
     /// for the purposes of generating immediate acknowledgment.
     ignore_order: bool,
+    // The counts of different ECN marks that have been received.
+    ecn_count: EcnCount,
 }
 
 impl RecvdPackets {
@@ -394,7 +402,13 @@ impl RecvdPackets {
             unacknowledged_count: 0,
             unacknowledged_tolerance: DEFAULT_ACK_PACKET_TOLERANCE,
             ignore_order: false,
+            ecn_count: EcnCount::default(),
         }
+    }
+
+    /// Get the ECN counts.
+    pub fn ecn_marks(&mut self) -> &mut EcnCount {
+        &mut self.ecn_count
     }
 
     /// Get the time at which the next ACK should be sent.
@@ -545,6 +559,10 @@ impl RecvdPackets {
         }
     }
 
+    /// Length of the worst possible ACK frame, assuming only one range and ECN counts.
+    /// Note that this assumes one byte for the type and count of extra ranges.
+    pub const USEFUL_ACK_LEN: usize = 1 + 8 + 8 + 1 + 8 + 3 * 8;
+
     /// Generate an ACK frame for this packet number space.
     ///
     /// Unlike other frame generators this doesn't modify the underlying instance
@@ -563,10 +581,6 @@ impl RecvdPackets {
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
     ) {
-        // The worst possible ACK frame, assuming only one range.
-        // Note that this assumes one byte for the type and count of extra ranges.
-        const LONGEST_ACK_HEADER: usize = 1 + 8 + 8 + 1 + 8;
-
         // Check that we aren't delaying ACKs.
         if !self.ack_now(now, rtt) {
             return;
@@ -578,7 +592,10 @@ impl RecvdPackets {
         // When congestion limited, ACK-only packets are 255 bytes at most
         // (`recovery::ACK_ONLY_SIZE_LIMIT - 1`).  This results in limiting the
         // ranges to 13 here.
-        let max_ranges = if let Some(avail) = builder.remaining().checked_sub(LONGEST_ACK_HEADER) {
+        let max_ranges = if let Some(avail) = builder
+            .remaining()
+            .checked_sub(RecvdPackets::USEFUL_ACK_LEN)
+        {
             // Apply a hard maximum to keep plenty of space for other stuff.
             min(1 + (avail / 16), MAX_ACKS_PER_FRAME)
         } else {
@@ -593,7 +610,11 @@ impl RecvdPackets {
             .cloned()
             .collect::<Vec<_>>();
 
-        builder.encode_varint(crate::frame::FRAME_TYPE_ACK);
+        builder.encode_varint(if self.ecn_count.is_some() {
+            FRAME_TYPE_ACK_ECN
+        } else {
+            FRAME_TYPE_ACK
+        });
         let mut iter = ranges.iter();
         let Some(first) = iter.next() else { return };
         builder.encode_varint(first.largest);
@@ -615,6 +636,12 @@ impl RecvdPackets {
             builder.encode_varint(last - r.largest - 2); // Gap
             builder.encode_varint(r.len() - 1); // Range
             last = r.smallest;
+        }
+
+        if self.ecn_count.is_some() {
+            builder.encode_varint(self.ecn_count[IpTosEcn::Ect0]);
+            builder.encode_varint(self.ecn_count[IpTosEcn::Ect1]);
+            builder.encode_varint(self.ecn_count[IpTosEcn::Ce]);
         }
 
         // We've sent an ACK, reset the timer.
@@ -1134,7 +1161,9 @@ mod tests {
             .is_some());
 
         let mut builder = PacketBuilder::short(Encoder::new(), false, []);
-        builder.set_limit(32);
+        // The code pessimistically assumes that each range needs 16 bytes to express.
+        // So this won't be enough for a second range.
+        builder.set_limit(RecvdPackets::USEFUL_ACK_LEN + 8);
 
         let mut stats = FrameStats::default();
         tracker.write_frame(

@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.74.0"
+rust-version = "1.76.0"
 name = "neqo-transport"
-version = "0.7.5"
+version = "0.7.7"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 homepage = "https://github.com/mozilla/neqo/"
 license = "MIT OR Apache-2.0"
@@ -37,8 +37,12 @@ name = "range_tracker"
 harness = false
 required-features = ["bench"]
 
+[dependencies.enum-map]
+version = "2.7"
+default-features = false
+
 [dependencies.indexmap]
-version = "1.9"
+version = "2.2"
 default-features = false
 
 [dependencies.log]
@@ -52,7 +56,7 @@ path = "../neqo-common"
 path = "../neqo-crypto"
 
 [dependencies.qlog]
-version = "0.12"
+version = "0.13"
 default-features = false
 
 [dependencies.smallvec]
@@ -64,15 +68,17 @@ version = "0.5"
 features = ["html_reports"]
 default-features = false
 
-[dev-dependencies.enum-map]
-version = "2.7"
-default-features = false
-
 [dev-dependencies.test-fixture]
 path = "../test-fixture"
 
 [features]
 bench = []
+build-fuzzing-corpus = [
+    "neqo-common/build-fuzzing-corpus",
+    "neqo-crypto/disable-encryption",
+    "neqo-crypto/disable-random",
+    "test-fixture/disable-random",
+]
 disable-encryption = ["neqo-crypto/disable-encryption"]
 
 [lints.clippy.pedantic]
