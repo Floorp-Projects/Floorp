@@ -153,6 +153,39 @@ add_task(async function test_open_new_window_after_install() {
     "Extension is shown in new browser window."
   );
 
+  await BrowserTestUtils.withNewTab(
+    { gBrowser: win.gBrowser, url: "about:addons" },
+    async browser => {
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "categories-box button[name=extension]",
+        {},
+        browser
+      );
+      const extensionToggle = await TestUtils.waitForCondition(
+        () =>
+          browser.contentDocument.querySelector(
+            `addon-card[addon-id="${extension.id}"] moz-toggle`
+          ),
+        "Toggle button for extension is shown."
+      );
+
+      let promiseEvent = BrowserTestUtils.waitForEvent(
+        win,
+        "SidebarItemRemoved"
+      );
+      extensionToggle.click();
+      await promiseEvent;
+      await sidebar.updateComplete;
+      is(sidebar.extensionButtons.length, 0, "The extension is disabled.");
+
+      promiseEvent = BrowserTestUtils.waitForEvent(win, "SidebarItemAdded");
+      extensionToggle.click();
+      await promiseEvent;
+      await sidebar.updateComplete;
+      is(sidebar.extensionButtons.length, 1, "The extension is enabled.");
+    }
+  );
+
   await extension.unload();
   await sidebar.updateComplete;
   is(

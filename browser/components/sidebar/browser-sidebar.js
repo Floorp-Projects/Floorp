@@ -131,8 +131,11 @@ var SidebarController = {
 
     const menubar = document.getElementById("viewSidebarMenu");
     for (const [commandID, sidebar] of this.sidebars.entries()) {
-      const menuitem = this.createMenuItem(commandID, sidebar);
-      menubar.appendChild(menuitem);
+      if (!Object.hasOwn(sidebar, "extensionId")) {
+        // registerExtension() already creates menu items for extensions.
+        const menuitem = this.createMenuItem(commandID, sidebar);
+        menubar.appendChild(menuitem);
+      }
     }
 
     if (this.sidebarRevampEnabled) {
