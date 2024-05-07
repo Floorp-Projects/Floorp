@@ -30,6 +30,9 @@ add_task(async function () {
     isPrimaryPasswordSet() {
       return primaryPasswordSet;
     },
+    getOSAuthEnabled() {
+      return true; // Since enabled by default.
+    },
   };
 
   let checkbox = doc.querySelector("#useMasterPassword");
