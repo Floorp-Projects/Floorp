@@ -17,9 +17,9 @@
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">Geslo</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">Ne shrani</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">Ne shrani</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Ne zdaj</string>
+    <string name="mozac_feature_prompt_dont_save_2">Ne zdaj</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Nikoli ne shranjuj</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -27,23 +27,27 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Shrani</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">Ne posodobi</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">Ne posodobi</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Ne zdaj</string>
+    <string name="mozac_feature_prompt_dont_update_2">Ne zdaj</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Posodobi</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">Polje za geslo ne sme biti prazno</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">Polje za geslo ne sme biti prazno</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Vnesite geslo</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">Vnesite geslo</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">Ni mogoče shraniti povezave</string>
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">Ni mogoče shraniti povezave</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Gesla ni mogoče shraniti</string>
+    <string name="mozac_feature_prompt_error_unknown_cause_2">Gesla ni mogoče shraniti</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">Shranim to prijavo?</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">Shranim to prijavo?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
+    <string name="mozac_feature_prompt_login_save_headline_2">Shranim geslo?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">Posodobim to prijavo?</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">Posodobim to prijavo?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
+    <string name="mozac_feature_prompt_login_update_headline_2">Posodobim geslo?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Dodaj shranjenemu geslu uporabniško ime?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -92,22 +96,22 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">Nastavi čas</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Upravljanje prijav</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">Upravljanje prijav</string>
     <!-- Option in expanded select password prompt that links to password settings -->
-    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Upravljanje gesel</string>
+    <string name="mozac_feature_prompts_manage_logins_2">Upravljanje gesel</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">Razširi predlagane prijave</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Razširi predlagane prijave</string>
     <!-- Content description for expanding the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Prikaži shranjena gesla</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">Prikaži shranjena gesla</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Strni predlagane prijave</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Strni predlagane prijave</string>
     <!-- Content description for collapsing the saved passwords options in the select password prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Skrij shranjena gesla</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">Skrij shranjena gesla</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">Predlagane prijave</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">Predlagane prijave</string>
 
     <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
-    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Shranjena gesla</string>
+    <string name="mozac_feature_prompts_saved_logins_2">Shranjena gesla</string>
 
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">Predlagaj močno geslo</string>
@@ -126,42 +130,42 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">Izberite kreditno kartico</string>
+    <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">Izberite kreditno kartico</string>
     <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
-    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">Uporabi shranjeno kartico</string>
+    <string name="mozac_feature_prompts_select_credit_card_2">Uporabi shranjeno kartico</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Razširi predlagane kreditne kartice</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Razširi predlagane kreditne kartice</string>
     <!-- Content description for expanding the saved card options in the select card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Prikaži shranjene kartice</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">Prikaži shranjene kartice</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Strni predlagane kreditne kartice</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Strni predlagane kreditne kartice</string>
     <!-- Content description for collapsing the saved card options in the select prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Skrij shranjene kartice</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">Skrij shranjene kartice</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards">Upravljanje kreditnih kartic</string>
+    <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">Upravljanje kreditnih kartic</string>
     <!-- Option in the expanded select card prompt that links to cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Upravljanje kartic</string>
+    <string name="mozac_feature_prompts_manage_credit_cards_2">Upravljanje kartic</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">Želite varno shraniti to kartico?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Posodobi datum poteka veljavnosti kartice?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Številka kartice bo šifrirana. Varnostna koda ne bo shranjena.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">Številka kartice bo šifrirana. Varnostna koda ne bo shranjena.</string>
 
     <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s šifrira številko vaše kartice. Varnostna koda se ne bo shranila.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2">%s šifrira številko vaše kartice. Varnostna koda se ne bo shranila.</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Izbira naslova</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description">Razširi predlagane naslove</string>
+    <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Razširi predlagane naslove</string>
     <!-- Content description for expanding the saved addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Prikaži shranjene naslove</string>
+    <string name="mozac_feature_prompts_expand_address_content_description_2">Prikaži shranjene naslove</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description">Strni predlagane naslove</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">Strni predlagane naslove</string>
     <!-- Content description for collapsing the saved address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Skrij shranjene naslove</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">Skrij shranjene naslove</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Upravljanje naslovov</string>
 

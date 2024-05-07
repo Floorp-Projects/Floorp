@@ -88,6 +88,8 @@
     <string name="mozac_feature_addons_rating">Ацэнка</string>
     <!-- A link that points to the detail page of the add-on. -->
     <string name="mozac_feature_addons_more_info_link" moz:removedIn="126" tools:ignore="UnusedResources">Падрабязней аб гэтым дадатку</string>
+    <!-- A link that points to the detail page of the extension. -->
+    <string name="mozac_feature_addons_more_info_link_2">Падрабязней аб гэтым пашырэнні</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Налады</string>
     <!-- Indicates the add-on is enabled. -->
@@ -148,16 +150,24 @@
     <string name="mozac_feature_addons_user_rating_count_2">Водгукі: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description" moz:removedIn="124" tools:ignore="UnusedResources">%1$.02f/5</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars. -->
+    <string name="mozac_feature_addons_rating_content_description_2">Ацэнка: %1$.02f з 5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Дадаткі</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Менеджар дадаткаў</string>
     <!-- The title of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_title_text" moz:removedIn="126" tools:ignore="UnusedResources">Дадаткі часова адключаны</string>
+    <!-- The title of the "crash" notification in the extensions manager -->
+    <string name="mozac_feature_extensions_manager_notification_title_text">Пашырэнні часова адключаны</string>
     <!-- The content of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">Адзін або некалькі дадатковых кампанентаў перасталі працаваць, што зрабіла вашу сістэму нестабільнай.</string>
+    <!-- The content of the "crash" notification in the extensions manager -->
+    <string name="mozac_feature_extensions_manager_notification_content_text">Адно або некалькі пашырэнняў перасталі працаваць, што зрабіла вашу сістэму нестабільнай.</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">Перазапусціць дадаткі</string>
+    <!-- Button to re-enable the extensions in the "crash" notification -->
+    <string name="mozac_feature_extensions_manager_notification_restart_button">Перазапусціць пашырэнні</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Знайсці больш дадаткаў</string>
     <!-- Button in the extensions manager that opens AMO in a tab -->
@@ -238,6 +248,8 @@
     <string name="mozac_feature_addons_unsupported_caption_2">1 пашырэнне</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
     <string name="mozac_feature_addons_unsupported_caption_plural" moz:removedIn="126" tools:ignore="UnusedResources">Дадаткаў: %1$s</string>
+    <!-- Text shown in not yet supported add-ons section - plural. %1$s is the number of unsupported extensions. -->
+    <string name="mozac_feature_addons_unsupported_caption_plural_2">%1$s пашырэнняў</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Даведацца больш</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
@@ -256,6 +268,8 @@
     <string name="mozac_feature_addons_installed_dialog_title">%1$s было дададзена ў %2$s</string>
     <!-- Text shown in the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">Адкрыць яго ў меню</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_description_2">Доступ да %1$s з меню %2$s.</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">Добра, зразумела</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
