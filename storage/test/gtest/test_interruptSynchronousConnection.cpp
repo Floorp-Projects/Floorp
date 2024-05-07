@@ -8,6 +8,7 @@
 
 #include "storage_test_harness.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/SpinEventLoopUntil.h"
 
 class SynchronousConnectionInterruptionTest : public ::testing::Test {
@@ -31,7 +32,9 @@ class SynchronousConnectionInterruptionTest : public ::testing::Test {
 
   nsCOMPtr<nsIThread> mThread;
 
-  bool mDone = false;
+  mozilla::Atomic<nsresult> mRv = mozilla::Atomic<nsresult>(NS_ERROR_FAILURE);
+
+  mozilla::Atomic<bool> mDone{false};
 };
 
 TEST_F(SynchronousConnectionInterruptionTest,
@@ -41,12 +44,11 @@ TEST_F(SynchronousConnectionInterruptionTest,
   const uint32_t delayMs = 500;
 
   ASSERT_EQ(NS_OK, mThread->DelayedDispatch(
-                       NS_NewRunnableFunction(
-                           "InterruptRunnable",
-                           [this]() {
-                             ASSERT_EQ(NS_OK, mConnection->Interrupt());
-                             mDone = true;
-                           }),
+                       NS_NewRunnableFunction("InterruptRunnable",
+                                              [this]() {
+                                                mRv = mConnection->Interrupt();
+                                                mDone = true;
+                                              }),
                        delayMs));
 
   const nsCString infiniteQuery =
@@ -56,10 +58,12 @@ TEST_F(SynchronousConnectionInterruptionTest,
   nsCOMPtr<mozIStorageStatement> stmt;
   ASSERT_EQ(NS_OK,
             mConnection->CreateStatement(infiniteQuery, getter_AddRefs(stmt)));
+
   ASSERT_EQ(NS_ERROR_ABORT, stmt->Execute());
   ASSERT_EQ(NS_OK, stmt->Finalize());
 
   ASSERT_TRUE(mDone);
+  ASSERT_EQ(NS_OK, mRv);
 
   ASSERT_EQ(NS_OK, mConnection->Close());
 }
@@ -67,15 +71,16 @@ TEST_F(SynchronousConnectionInterruptionTest,
 TEST_F(SynchronousConnectionInterruptionTest, interruptAfterCloseWillFail) {
   ASSERT_EQ(NS_OK, mConnection->Close());
 
-  ASSERT_EQ(
-      NS_OK,
-      mThread->Dispatch(NS_NewRunnableFunction("InterruptRunnable", [this]() {
-        ASSERT_EQ(NS_ERROR_NOT_INITIALIZED, mConnection->Interrupt());
-        mDone = true;
-      })));
+  ASSERT_EQ(NS_OK, mThread->Dispatch(
+                       NS_NewRunnableFunction("InterruptRunnable", [this]() {
+                         mRv = mConnection->Interrupt();
+                         mDone = true;
+                       })));
 
   ASSERT_TRUE(mozilla::SpinEventLoopUntil("interruptAfterCloseWillFail"_ns,
-                                          [this]() { return mDone; }));
+                                          [this]() -> bool { return mDone; }));
+
+  ASSERT_EQ(NS_ERROR_NOT_INITIALIZED, mRv);
 
   ASSERT_EQ(NS_ERROR_NOT_INITIALIZED, mConnection->Close());
 }
