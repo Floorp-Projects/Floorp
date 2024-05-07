@@ -1115,12 +1115,9 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @NullDelegate(NavigationDelegate::class)
     fun delegateDuringNextWait_throwOnNullDelegate() {
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
-            override fun onLocationChange(
-                session: GeckoSession,
-                url: String?,
-                perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
-            ) {}
+            @Suppress("OVERRIDE_DEPRECATION")
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>) {
+            }
         })
     }
 
