@@ -1275,9 +1275,9 @@ static const wchar_t* ChooseWindowClass(WindowType aWindowType) {
  **************************************************************/
 
 const DWORD kTitlebarItemsWindowStyles =
-    WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+    WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION;
 const DWORD kAllBorderStyles =
-    kTitlebarItemsWindowStyles | WS_THICKFRAME | WS_DLGFRAME;
+    kTitlebarItemsWindowStyles | WS_THICKFRAME | WS_DLGFRAME | DS_MODALFRAME;
 
 static DWORD WindowStylesRemovedForBorderStyle(BorderStyle aStyle) {
   if (aStyle == BorderStyle::Default || aStyle == BorderStyle::All) {
@@ -1291,7 +1291,7 @@ static DWORD WindowStylesRemovedForBorderStyle(BorderStyle aStyle) {
     toRemove |= WS_BORDER;
   }
   if (!(aStyle & BorderStyle::Title)) {
-    toRemove |= WS_DLGFRAME;
+    toRemove |= kTitlebarItemsWindowStyles;
   }
   if (!(aStyle & (BorderStyle::Menu | BorderStyle::Close))) {
     // Looks like getting rid of the system menu also does away with the close
