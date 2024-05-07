@@ -50,6 +50,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(Blob)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Blob)
 
 void Blob::MakeValidBlobType(nsAString& aType) {
+  // Ensure non-null content type by default
+  aType.SetIsVoid(false);
+
   char16_t* iter = aType.BeginWriting();
   char16_t* end = aType.EndWriting();
 
