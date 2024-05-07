@@ -8,7 +8,6 @@
   },
   "version": "1.0",
   "description": "Request optional extension origins for all urls.",
-  "granted_host_permissions": true,
   "optional_permissions": ["geolocation", "activeTab"],
   "host_permissions": ["http://*/", "https://*/", "file://*/*"]
 }
