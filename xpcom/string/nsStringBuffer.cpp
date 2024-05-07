@@ -9,7 +9,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
-#include "nsStringStats.h"
 
 void nsStringBuffer::AddRef() {
   // Memory synchronization is not required when incrementing a
@@ -28,7 +27,6 @@ void nsStringBuffer::AddRef() {
       + 1
 #endif
       ;
-  STRING_STAT_INCREMENT(Share);
   NS_LOG_ADDREF(this, count, "nsStringBuffer", sizeof(*this));
 }
 
@@ -46,7 +44,6 @@ void nsStringBuffer::Release() {
     // writes prior to that release are now visible on this thread.
     count = mRefCount.load(std::memory_order_acquire);
 
-    STRING_STAT_INCREMENT(Free);
     free(this);  // we were allocated with |malloc|
   }
 }
@@ -62,8 +59,6 @@ already_AddRefed<nsStringBuffer> nsStringBuffer::Alloc(size_t aSize) {
 
   auto* hdr = (nsStringBuffer*)malloc(sizeof(nsStringBuffer) + aSize);
   if (hdr) {
-    STRING_STAT_INCREMENT(Alloc);
-
     hdr->mRefCount = 1;
     hdr->mStorageSize = aSize;
     NS_LOG_ADDREF(hdr, 1, "nsStringBuffer", sizeof(*hdr));
@@ -96,8 +91,6 @@ already_AddRefed<nsStringBuffer> nsStringBuffer::Create(const char16_t* aData,
 }
 
 nsStringBuffer* nsStringBuffer::Realloc(nsStringBuffer* aHdr, size_t aSize) {
-  STRING_STAT_INCREMENT(Realloc);
-
   NS_ASSERTION(aSize != 0, "zero capacity allocation not allowed");
   NS_ASSERTION(sizeof(nsStringBuffer) + aSize <= size_t(uint32_t(-1)) &&
                    sizeof(nsStringBuffer) + aSize > aSize,

@@ -16,7 +16,6 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsStringStats.h"
 
 // It's not worthwhile to reallocate the buffer and memcpy the
 // contents over when the size difference isn't large. With
@@ -58,7 +57,6 @@ static void ReleaseData(void* aData, nsAString::DataFlags aFlags) {
     MOZ_LOG_DTOR(aData, "StringAdopt", 1);
 
     free(aData);
-    STRING_STAT_INCREMENT(AdoptFree);
   }
   // otherwise, nothing to do.
 }
@@ -74,7 +72,6 @@ nsTSubstring<T>::nsTSubstring(char_type* aData, size_type aLength,
   AssertValid();
 
   if (aDataFlags & DataFlags::OWNED) {
-    STRING_STAT_INCREMENT(Adopt);
     MOZ_LOG_CTOR(this->mData, "StringAdopt", 1);
   }
 }
@@ -626,7 +623,6 @@ void nsTSubstring<T>::Adopt(char_type* aData, size_type aLength) {
 
     SetData(aData, aLength, DataFlags::TERMINATED | DataFlags::OWNED);
 
-    STRING_STAT_INCREMENT(Adopt);
     // Treat this as construction of a "StringAdopt" object for leak
     // tracking purposes.
     MOZ_LOG_CTOR(this->mData, "StringAdopt", 1);
