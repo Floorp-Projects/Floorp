@@ -65,7 +65,7 @@ object Versions {
         const val compose_bom = "2024.05.00"
         const val constraintlayout = "2.1.4"
         const val coordinatorlayout = "1.2.0"
-        const val core = "1.13.0"
+        const val core = "1.13.1"
         const val drawerlayout = "1.2.0"
         const val fragment = "1.6.2"
         const val recyclerview = "1.3.2"
