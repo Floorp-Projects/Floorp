@@ -6,4 +6,4 @@ load 664925.xhtml
 pref(apz.allow_zooming,true) pref(ui.useOverlayScrollbars,0) skip-if(!cocoaWidget) != scaled-scrollbar.html about:blank
 
 # Test that scrollbar buttons are inhibited on Linux using the non-native theme.
-skip-if(!gtkWidget) test-pref(ui.scrollArrowStyle,4097) ref-pref(ui.scrollArrowStyle,0) == scrollbar-buttons.html scrollbar-buttons.html
+skip-if(!gtkWidget) pref(widget.non-native-theme.enabled,true) test-pref(ui.scrollArrowStyle,4097) ref-pref(ui.scrollArrowStyle,0) == scrollbar-buttons.html scrollbar-buttons.html

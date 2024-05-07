@@ -25,6 +25,7 @@ reftest.jar:
   content/xul (../../reftests/xul/*)
   content/xul/reftest (../../xul/reftest/*)
   content/toolkit/reftests (../../../toolkit/content/tests/reftests/*)
+  content/osx-theme (../../../toolkit/themes/osx/reftests/*)
   content/reftest.xhtml (reftest.xhtml)
 
 # Crash tests
