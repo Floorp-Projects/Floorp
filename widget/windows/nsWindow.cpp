@@ -836,6 +836,28 @@ void nsWindow::DestroyDirectManipulation() {
   }
 }
 
+namespace mozilla::widget {
+
+// A mask specifying the window-styles associated with window-chrome.
+constexpr static const WindowStyles kChromeStylesMask{
+    .style = WS_CAPTION | WS_THICKFRAME,
+    .ex = WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE |
+          WS_EX_STATICEDGE,
+};
+
+WindowStyles WindowStyles::FromHWND(HWND aWnd) {
+  return {.style = ::GetWindowLongPtrW(aWnd, GWL_STYLE),
+          .ex = ::GetWindowLongPtrW(aWnd, GWL_EXSTYLE)};
+}
+
+void SetWindowStyles(HWND aWnd, const WindowStyles& aStyles) {
+  VERIFY_WINDOW_STYLE(aStyles.style);
+  ::SetWindowLongPtrW(aWnd, GWL_STYLE, aStyles.style);
+  ::SetWindowLongPtrW(aWnd, GWL_EXSTYLE, aStyles.ex);
+}
+
+}  // namespace mozilla::widget
+
 // Create the proper widget
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                           const LayoutDeviceIntRect& aRect,
@@ -879,8 +901,10 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   mIsAlert = aInitData->mIsAlert;
   mResizable = aInitData->mResizable;
 
-  DWORD style = WindowStyle();
-  DWORD extendedStyle = WindowExStyle();
+  Styles desiredStyles{
+      .style = WindowStyle(),
+      .ex = WindowExStyle(),
+  };
 
   if (mWindowType == WindowType::Popup) {
     if (!aParent) {
@@ -888,16 +912,16 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
   } else if (mWindowType == WindowType::Invisible) {
     // Make sure CreateWindowEx succeeds at creating a toplevel window
-    style &= ~0x40000000;  // WS_CHILDWINDOW
+    desiredStyles.style &= ~WS_CHILDWINDOW;
   } else {
     // See if the caller wants to explictly set clip children and clip siblings
     if (aInitData->mClipChildren) {
-      style |= WS_CLIPCHILDREN;
+      desiredStyles.style |= WS_CLIPCHILDREN;
     } else {
-      style &= ~WS_CLIPCHILDREN;
+      desiredStyles.style &= ~WS_CLIPCHILDREN;
     }
     if (aInitData->mClipSiblings) {
-      style |= WS_CLIPSIBLINGS;
+      desiredStyles.style |= WS_CLIPSIBLINGS;
     }
   }
 
@@ -918,10 +942,10 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
           errorString);
     }
     if (mWnd) {
-      MOZ_ASSERT(style == kPreXULSkeletonUIWindowStyle,
+      MOZ_ASSERT(desiredStyles.style == kPreXULSkeletonUIWindowStyle,
                  "The skeleton UI window style should match the expected "
                  "style for the first window created");
-      MOZ_ASSERT(extendedStyle == kPreXULSkeletonUIWindowStyleEx,
+      MOZ_ASSERT(desiredStyles.ex == kPreXULSkeletonUIWindowStyleEx,
                  "The skeleton UI window extended style should match the "
                  "expected extended style for the first window created");
       MOZ_ASSERT(
@@ -953,15 +977,28 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   }
 
   if (!mWnd) {
-    mWnd =
-        ::CreateWindowExW(extendedStyle, className, L"", style, aRect.X(),
-                          aRect.Y(), aRect.Width(), GetHeight(aRect.Height()),
-                          parent, nullptr, nsToolkit::mDllInstance, nullptr);
+    mWnd = ::CreateWindowExW(desiredStyles.ex, className, L"",
+                             desiredStyles.style, aRect.X(), aRect.Y(),
+                             aRect.Width(), GetHeight(aRect.Height()), parent,
+                             nullptr, nsToolkit::mDllInstance, nullptr);
+    if (!mWnd) {
+      NS_WARNING("nsWindow CreateWindowEx failed.");
+      return NS_ERROR_FAILURE;
+    }
   }
 
-  if (!mWnd) {
-    NS_WARNING("nsWindow CreateWindowEx failed.");
-    return NS_ERROR_FAILURE;
+  {
+    // Some of the chrome mask window styles can be added implicitly by
+    // CreateWindowEx, but we really don't want that.
+    // To be safe, only deal with those bits for now, instead of just
+    // overriding with extendedStyle or style.
+    // This can happen with non-native alert windows for example.
+    const auto actualStyles = Styles::FromHWND(mWnd);
+    auto newStyles = (actualStyles & ~kChromeStylesMask) |
+                     (desiredStyles & kChromeStylesMask);
+    if (newStyles != actualStyles) {
+      SetWindowStyles(mWnd, newStyles);
+    }
   }
 
   if (!sWinCloakEventHook) {
@@ -3002,87 +3039,34 @@ void nsWindow::HideWindowChrome(bool aShouldHide) {
     return;
   }
 
-  if (mHideChrome == aShouldHide) return;
-
-  // Data manipulation: styles + ex-styles, and bitmasking operations thereupon.
-  struct Styles {
-    LONG_PTR style, ex;
-    constexpr Styles operator|(Styles const& that) const {
-      return Styles{.style = style | that.style, .ex = ex | that.ex};
-    }
-    constexpr Styles operator&(Styles const& that) const {
-      return Styles{.style = style & that.style, .ex = ex & that.ex};
-    }
-    constexpr Styles operator~() const {
-      return Styles{.style = ~style, .ex = ~ex};
-    }
-
-    // Compute a style-set which matches `zero` where the bits of `this` are 0
-    // and `one` where the bits of `this` are 1.
-    constexpr Styles merge(Styles zero, Styles one) const {
-      Styles const& mask = *this;
-      return (~mask & zero) | (mask & one);
-    }
-
-    // The dual of `merge`, above: returns a pair [zero, one] satisfying
-    // `a.merge(a.split(b)...) == b`. (Or its equivalent in valid C++.)
-    constexpr std::tuple<Styles, Styles> split(Styles data) const {
-      Styles const& mask = *this;
-      return {~mask & data, mask & data};
-    }
-  };
-
-  // Get styles from an HWND.
-  constexpr auto const GetStyles = [](HWND hwnd) {
-    return Styles{.style = ::GetWindowLongPtrW(hwnd, GWL_STYLE),
-                  .ex = ::GetWindowLongPtrW(hwnd, GWL_EXSTYLE)};
-  };
-  constexpr auto const SetStyles = [](HWND hwnd, Styles styles) {
-    VERIFY_WINDOW_STYLE(styles.style);
-    ::SetWindowLongPtrW(hwnd, GWL_STYLE, styles.style);
-    ::SetWindowLongPtrW(hwnd, GWL_EXSTYLE, styles.ex);
-  };
-
-  // Get styles from *this.
-  auto const GetCachedStyles = [&]() {
-    return mOldStyles.map([](auto const& m) {
-      return Styles{.style = m.style, .ex = m.exStyle};
-    });
-  };
-  auto const SetCachedStyles = [&](Styles styles) {
-    using WStyles = nsWindow::WindowStyles;
-    mOldStyles = Some(WStyles{.style = styles.style, .exStyle = styles.ex});
-  };
-
-  // The mask describing the "chrome" which this function is supposed to remove
-  // (or restore, as the case may be). Other style-flags will be left untouched.
-  constexpr static const Styles kChromeMask{
-      .style = WS_CAPTION | WS_THICKFRAME,
-      .ex = WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE |
-            WS_EX_STATICEDGE};
+  if (mHideChrome == aShouldHide) {
+    return;
+  }
 
   // The desired style-flagset for fullscreen windows. (This happens to be all
   // zeroes, but we don't need to rely on that.)
-  constexpr static const Styles kFullscreenChrome{.style = 0, .ex = 0};
+  constexpr static const WindowStyles kFullscreenChromeStyles{.style = 0,
+                                                              .ex = 0};
 
-  auto const [chromeless, currentChrome] = kChromeMask.split(GetStyles(hwnd));
+  auto const [chromeless, currentChrome] =
+      kChromeStylesMask.split(Styles::FromHWND(hwnd));
   Styles newChrome{}, oldChrome{};
 
   mHideChrome = aShouldHide;
   if (aShouldHide) {
-    newChrome = kFullscreenChrome;
+    newChrome = kFullscreenChromeStyles;
     oldChrome = currentChrome;
   } else {
     // if there's nothing to "restore" it to, just use what's there now
-    oldChrome = GetCachedStyles().refOr(currentChrome);
+    oldChrome = mOldStyles.refOr(currentChrome);
     newChrome = oldChrome;
     if (mFutureMarginsToUse) {
       SetNonClientMargins(mFutureMarginsOnceChromeShows);
     }
   }
 
-  SetCachedStyles(oldChrome);
-  SetStyles(hwnd, kChromeMask.merge(chromeless, newChrome));
+  mOldStyles = Some(oldChrome);
+  SetWindowStyles(hwnd, kChromeStylesMask.merge(chromeless, newChrome));
 }
 
 /**************************************************************
