@@ -27,7 +27,7 @@
  * Based on work by Owen Taylor and Søren Sandmann
  */
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <pixman-config.h>
 #endif
 
 /* PSHUFD is slow on a lot of old processors, and new processors have SSSE3 */
@@ -373,30 +373,12 @@ load_128_unaligned (const __m128i* src)
     return _mm_loadu_si128 (src);
 }
 
-/* save 4 pixels using Write Combining memory on a 16-byte
- * boundary aligned address
- */
-static force_inline void
-save_128_write_combining (__m128i* dst,
-                          __m128i  data)
-{
-    _mm_stream_si128 (dst, data);
-}
-
 /* save 4 pixels on a 16-byte boundary aligned address */
 static force_inline void
 save_128_aligned (__m128i* dst,
                   __m128i  data)
 {
     _mm_store_si128 (dst, data);
-}
-
-/* save 4 pixels on a unaligned address */
-static force_inline void
-save_128_unaligned (__m128i* dst,
-                    __m128i  data)
-{
-    _mm_storeu_si128 (dst, data);
 }
 
 static force_inline __m128i

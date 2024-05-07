@@ -25,10 +25,6 @@
  *
  */
 
-#ifdef __clang__
-#define subpls subspl
-#endif
-
 /* Prevent the stack from becoming executable */
 #if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits
@@ -42,6 +38,8 @@
 	.p2align 2
 
 #include "pixman-arm-asm.h"
+
+	pixman_syntax_unified
 
 /*
  * Note: This code is only using armv5te instructions (not even armv6),
@@ -89,21 +87,21 @@ pixman_asm_function \fname
 		and	TMP2, VXMASK, VX, asr #(16 - \bpp_shift)
 		adds	VX, VX, UNIT_X
 		str\()\t	TMP1, [DST], #(1 << \bpp_shift)
-9:		subpls	VX, VX, SRC_WIDTH_FIXED
+9:		subspl	VX, VX, SRC_WIDTH_FIXED
 		bpl	9b
 
 		ldr\()\t	TMP2, [SRC, TMP2]
 		and	TMP1, VXMASK, VX, asr #(16 - \bpp_shift)
 		adds	VX, VX, UNIT_X
 		str\()\t	TMP2, [DST], #(1 << \bpp_shift)
-9:		subpls	VX, VX, SRC_WIDTH_FIXED
+9:		subspl	VX, VX, SRC_WIDTH_FIXED
 		bpl	9b
 	.endm
 
 	/* now do the scaling */
 	and	TMP1, VXMASK, VX, asr #(16 - \bpp_shift)
 	adds	VX, VX, UNIT_X
-9:	subpls	VX, VX, SRC_WIDTH_FIXED
+9:	subspl	VX, VX, SRC_WIDTH_FIXED
 	bpl	9b
 	subs	W, W, #(8 + \prefetch_braking_distance)
 	blt	2f
@@ -112,7 +110,7 @@ pixman_asm_function \fname
 	mla	PF_OFFS, UNIT_X, PF_OFFS, VX
 1:	/* main loop, process 8 pixels per iteration with prefetch */
 	pld	[SRC, PF_OFFS, asr #(16 - \bpp_shift)]
-	add	PF_OFFS, UNIT_X, lsl #3
+	add	PF_OFFS, PF_OFFS, UNIT_X, lsl #3
 	scale_2_pixels
 	scale_2_pixels
 	scale_2_pixels
@@ -133,13 +131,8 @@ pixman_asm_function \fname
 	scale_2_pixels
 2:
 	tst	W, #1
-#ifdef __clang__
 	ldr\()\t\()ne	TMP1, [SRC, TMP1]
 	str\()\t\()ne	TMP1, [DST]
-#else
-	ldrne\()\t	TMP1, [SRC, TMP1]
-	strne\()\t	TMP1, [DST]
-#endif
 	/* cleanup helper macro */
 	.purgem	scale_2_pixels
 	.unreq	DST
@@ -155,7 +148,7 @@ pixman_asm_function \fname
 	/* return */
 	pop	{r4, r5, r6, r7, r8, r10}
 	bx	lr
-pixman_end_asm_function
+	pixman_end_asm_function
 .endm
 
 generate_nearest_scanline_func \

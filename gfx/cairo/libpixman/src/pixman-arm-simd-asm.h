@@ -119,37 +119,21 @@
         \op\()r\()\cond    WK\()\reg2, [\base], #4
         \op\()r\()\cond    WK\()\reg3, [\base], #4
   .else
-#ifdef __clang__
         \op\()mia\()\cond  \base!, {WK\()\reg0,WK\()\reg1,WK\()\reg2,WK\()\reg3}
-#else
-        \op\()m\()\cond\()ia  \base!, {WK\()\reg0,WK\()\reg1,WK\()\reg2,WK\()\reg3}
-#endif
   .endif
  .elseif \numbytes == 8
   .if \unaligned == 1
         \op\()r\()\cond    WK\()\reg0, [\base], #4
         \op\()r\()\cond    WK\()\reg1, [\base], #4
   .else
-#ifdef __clang__
         \op\()mia\()\cond  \base!, {WK\()\reg0,WK\()\reg1}
-#else
-        \op\()m\()\cond\()ia  \base!, {WK\()\reg0,WK\()\reg1}
-#endif
   .endif
  .elseif \numbytes == 4
         \op\()r\()\cond    WK\()\reg0, [\base], #4
  .elseif \numbytes == 2
-#ifdef __clang__
         \op\()rh\()\cond   WK\()\reg0, [\base], #2
-#else
-        \op\()r\()\cond\()h   WK\()\reg0, [\base], #2
-#endif
  .elseif \numbytes == 1
-#ifdef __clang__
         \op\()rb\()\cond   WK\()\reg0, [\base], #1
-#else
-        \op\()r\()\cond\()b   WK\()\reg0, [\base], #1
-#endif
  .else
   .error "unsupported size: \numbytes"
  .endif
@@ -157,31 +141,15 @@
 
 .macro pixst_baseupdated cond, numbytes, reg0, reg1, reg2, reg3, base
  .if \numbytes == 16
-#ifdef __clang__
         stm\()\cond\()db \base, {WK\()\reg0,WK\()\reg1,WK\()\reg2,WK\()\reg3}
-#else
-        stmdb\()\cond \base, {WK\()\reg0,WK\()\reg1,WK\()\reg2,WK\()\reg3}
-#endif
  .elseif \numbytes == 8
-#ifdef __clang__
         stmdb\()\cond \base, {WK\()\reg0,WK\()\reg1}
-#else
-        stm\()\cond\()db \base, {WK\()\reg0,WK\()\reg1}
-#endif
  .elseif \numbytes == 4
         str\()\cond    WK\()\reg0, [\base, #-4]
  .elseif \numbytes == 2
-#ifdef __clang__
         strh\()\cond   WK\()\reg0, [\base, #-2]
-#else
-        str\()\cond\()h   WK\()\reg0, [\base, #-2]
-#endif
  .elseif \numbytes == 1
-#ifdef __clang__
         strb\()\cond   WK\()\reg0, [\base, #-1]
-#else
-        str\()\cond\()b   WK\()\reg0, [\base, #-1]
-#endif
  .else
   .error "unsupported size: \numbytes"
  .endif
@@ -291,7 +259,7 @@
         /* If exactly one fetch per block, then we need either 0, 1 or 2 extra preloads */
         PF  mov,    SCRATCH, \base, lsl #32-5
         PF  adds,   SCRATCH, SCRATCH, X, lsl #32-5+\bpp_shift
-        PF  adceqs, SCRATCH, SCRATCH, #0
+        PF  adcseq, SCRATCH, SCRATCH, #0
         /* The instruction above has two effects: ensures Z is only
          * set if C was clear (so Z indicates that both shifted quantities
          * were 0), and clears C if Z was set (so C indicates that the sum

@@ -213,24 +213,24 @@
 .if \elem_size == 16
     mov     TMP1, VX, asr #16
     adds    VX, VX, UNIT_X
-5:  subpls  VX, VX, SRC_WIDTH_FIXED
+5:  subspl  VX, VX, SRC_WIDTH_FIXED
     bpl     5b
     add     TMP1, \mem_operand, TMP1, asl #1
     mov     TMP2, VX, asr #16
     adds    VX, VX, UNIT_X
-5:  subpls  VX, VX, SRC_WIDTH_FIXED
+5:  subspl  VX, VX, SRC_WIDTH_FIXED
     bpl     5b
     add     TMP2, \mem_operand, TMP2, asl #1
     vld1.16 {d\()\reg1\()[0]}, [TMP1, :16]
     mov     TMP1, VX, asr #16
     adds    VX, VX, UNIT_X
-5:  subpls  VX, VX, SRC_WIDTH_FIXED
+5:  subspl  VX, VX, SRC_WIDTH_FIXED
     bpl     5b
     add     TMP1, \mem_operand, TMP1, asl #1
     vld1.16 {d\()\reg1\()[1]}, [TMP2, :16]
     mov     TMP2, VX, asr #16
     adds    VX, VX, UNIT_X
-5:  subpls  VX, VX, SRC_WIDTH_FIXED
+5:  subspl  VX, VX, SRC_WIDTH_FIXED
     bpl     5b
     add     TMP2, \mem_operand, TMP2, asl #1
     vld1.16 {d\()\reg1\()[2]}, [TMP1, :16]
@@ -238,12 +238,12 @@
 .elseif \elem_size == 32
     mov     TMP1, VX, asr #16
     adds    VX, VX, UNIT_X
-5:  subpls  VX, VX, SRC_WIDTH_FIXED
+5:  subspl  VX, VX, SRC_WIDTH_FIXED
     bpl     5b
     add     TMP1, \mem_operand, TMP1, asl #2
     mov     TMP2, VX, asr #16
     adds    VX, VX, UNIT_X
-5:  subpls  VX, VX, SRC_WIDTH_FIXED
+5:  subspl  VX, VX, SRC_WIDTH_FIXED
     bpl     5b
     add     TMP2, \mem_operand, TMP2, asl #2
     vld1.32 {d\()\reg1\()[0]}, [TMP1, :32]
@@ -281,14 +281,14 @@
 .if \elem_size == 16
     mov     TMP1, VX, asr #16
     adds    VX, VX, UNIT_X
-5:  subpls  VX, VX, SRC_WIDTH_FIXED
+5:  subspl  VX, VX, SRC_WIDTH_FIXED
     bpl     5b
     add     TMP1, \mem_operand, TMP1, asl #1
     vld1.16 {d\()\reg1\()[\idx]}, [TMP1, :16]
 .elseif \elem_size == 32
     mov     TMP1, VX, asr #16
     adds    VX, VX, UNIT_X
-5:  subpls  VX, VX, SRC_WIDTH_FIXED
+5:  subspl  VX, VX, SRC_WIDTH_FIXED
     bpl     5b
     add     TMP1, \mem_operand, TMP1, asl #2
     vld1.32 {d\()\reg1\()[\idx]}, [TMP1, :32]
@@ -420,15 +420,15 @@
     PF pld, [PF_MASK, PF_X, lsl #mask_bpp_shift]
 .endif
     PF subge, PF_X, PF_X, ORIG_W
-    PF subges, PF_CTL, PF_CTL, #0x10
+    PF subsge, PF_CTL, PF_CTL, #0x10
 .if src_bpp_shift >= 0
-    PF ldrgeb, DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
+    PF ldrbge, DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
 .endif
 .if dst_r_bpp != 0
-    PF ldrgeb, DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+    PF ldrbge, DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
 .endif
 .if mask_bpp_shift >= 0
-    PF ldrgeb, DUMMY, [PF_MASK, MASK_STRIDE, lsl #mask_bpp_shift]!
+    PF ldrbge, DUMMY, [PF_MASK, MASK_STRIDE, lsl #mask_bpp_shift]!
 .endif
 .endif
 .endm
@@ -465,9 +465,6 @@
     beq         2f
 
 .irp lowbit, 1, 2, 4, 8, 16
-#ifndef __clang__
-local skip1
-#endif
 .if (dst_w_bpp <= (\lowbit * 8)) && ((\lowbit * 8) < (pixblock_size * dst_w_bpp))
 .if \lowbit < 16 /* we don't need more than 16-byte alignment */
     tst         DST_R, #\lowbit
