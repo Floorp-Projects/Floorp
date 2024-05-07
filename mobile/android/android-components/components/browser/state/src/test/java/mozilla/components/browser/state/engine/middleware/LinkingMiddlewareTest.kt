@@ -96,7 +96,9 @@ class LinkingMiddlewareTest {
         store.dispatch(EngineAction.LinkEngineSessionAction(parent.id, parentEngineSession)).joinBlocking()
 
         val childEngineSession: EngineSession = mock()
-        store.dispatch(EngineAction.LinkEngineSessionAction(child.id, childEngineSession)).joinBlocking()
+        store.dispatch(
+            EngineAction.LinkEngineSessionAction(child.id, childEngineSession, includeParent = true),
+        ).joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
 
