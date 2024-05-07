@@ -512,12 +512,12 @@
            customizable="true">
     <toolbartabstop skipintoolbarset="true"/>
 
-    <hbox id="personal-toolbar-empty" skipintoolbarset="true" removable="false" hidden="true">
+    <hbox id="personal-toolbar-empty" skipintoolbarset="true" removable="false" hidden="true" role="alert">
       <description id="personal-toolbar-empty-description"
                    data-l10n-id="bookmarks-toolbar-empty-message"
                    onclick="BookmarkingUI.openLibraryIfLinkClicked(event);"
                    onkeydown="BookmarkingUI.openLibraryIfLinkClicked(event);">
-        <html:a data-l10n-name="manage-bookmarks" class="text-link" tabindex="0"/>
+        <html:a data-l10n-name="manage-bookmarks" class="text-link" tabindex="0" role="link"/>
       </description>
     </hbox>
 
