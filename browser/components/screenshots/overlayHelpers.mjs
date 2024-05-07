@@ -402,8 +402,6 @@ export class WindowDimensions {
   #scrollY = null;
   #scrollMinX = null;
   #scrollMinY = null;
-  #scrollMaxX = null;
-  #scrollMaxY = null;
   #devicePixelRatio = null;
 
   set dimensions(dimensions) {
@@ -431,12 +429,6 @@ export class WindowDimensions {
     if (dimensions.scrollMinY != null) {
       this.#scrollMinY = dimensions.scrollMinY;
     }
-    if (dimensions.scrollMaxX != null) {
-      this.#scrollMaxX = dimensions.scrollMaxX;
-    }
-    if (dimensions.scrollMaxY != null) {
-      this.#scrollMaxY = dimensions.scrollMaxY;
-    }
     if (dimensions.devicePixelRatio != null) {
       this.#devicePixelRatio = dimensions.devicePixelRatio;
     }
@@ -454,8 +446,6 @@ export class WindowDimensions {
       pageScrollY: this.pageScrollY,
       scrollMinX: this.scrollMinX,
       scrollMinY: this.scrollMinY,
-      scrollMaxX: this.scrollMaxX,
-      scrollMaxY: this.scrollMaxY,
       devicePixelRatio: this.devicePixelRatio,
     };
   }
@@ -500,14 +490,6 @@ export class WindowDimensions {
     return this.#scrollMinY;
   }
 
-  get scrollMaxX() {
-    return this.#scrollMaxX;
-  }
-
-  get scrollMaxY() {
-    return this.#scrollMaxY;
-  }
-
   get devicePixelRatio() {
     return this.#devicePixelRatio;
   }
@@ -536,7 +518,5 @@ export class WindowDimensions {
     this.#scrollY = 0;
     this.#scrollMinX = 0;
     this.#scrollMinY = 0;
-    this.#scrollMaxX = 0;
-    this.#scrollMaxY = 0;
   }
 }
