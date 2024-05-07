@@ -122,12 +122,23 @@ class BackupTest(MarionetteTestCase):
             resourceStagingDir = os.path.join(stagingPath, resourceKey)
             self.assertTrue(os.path.exists(resourceStagingDir))
 
-        # Recover the created backup into a new profile directory
+        # Start a brand new profile, one without any of the data we created or
+        # backed up. This is the one that we'll be starting recovery from.
+        self.marionette.quit()
+        self.marionette.instance.profile = None
+        self.marionette.start_session()
+        self.marionette.set_context("chrome")
+
+        # Recover the created backup into a new profile directory. Also get out
+        # the client ID of this profile, because we're going to want to make
+        # sure that this client ID is inherited by the recovered profile.
         [
             newProfileName,
             newProfilePath,
+            expectedClientID,
         ] = self.marionette.execute_async_script(
             """
+          const { ClientID } = ChromeUtils.importESModule("resource://gre/modules/ClientID.sys.mjs");
           const { BackupService } = ChromeUtils.importESModule("resource:///modules/backup/BackupService.sys.mjs");
           let bs = BackupService.get();
           if (!bs) {
@@ -144,7 +155,10 @@ class BackupTest(MarionetteTestCase):
             if (!newProfile) {
               throw new Error("Could not create recovery profile.");
             }
-            return [newProfile.name, newProfile.rootDir.path];
+
+            let expectedClientID = await ClientID.getClientID();
+
+            return [newProfile.name, newProfile.rootDir.path, expectedClientID];
           })().then(outerResolve);
         """,
             script_args=[stagingPath],
@@ -152,6 +166,8 @@ class BackupTest(MarionetteTestCase):
 
         print("Recovery name: %s" % newProfileName)
         print("Recovery path: %s" % newProfilePath)
+        print("Expected clientID: %s" % expectedClientID)
+
         self.marionette.quit()
         originalProfile = self.marionette.instance.profile
         self.marionette.instance.profile = newProfilePath
@@ -186,6 +202,19 @@ class BackupTest(MarionetteTestCase):
         self.verify_recovered_history()
         self.verify_recovered_preferences()
         self.verify_recovered_permissions()
+
+        # Now also ensure that the recovered profile inherited the client ID
+        # from the profile that initiated recovery.
+        recoveredClientID = self.marionette.execute_async_script(
+            """
+          const { ClientID } = ChromeUtils.importESModule("resource://gre/modules/ClientID.sys.mjs");
+          let [outerResolve] = arguments;
+          (async () => {
+            return ClientID.getClientID();
+          })().then(outerResolve);
+        """
+        )
+        self.assertEqual(recoveredClientID, expectedClientID)
 
         # Try not to pollute the profile list by getting rid of the one we just
         # created.
