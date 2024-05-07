@@ -21,7 +21,10 @@ class MessagingFeatureTest {
     @Test
     fun `WHEN start is called THEN evaluate messages`() {
         val appStore: AppStore = spyk(AppStore())
-        val binding = MessagingFeature(appStore)
+        val binding = MessagingFeature(
+            appStore = appStore,
+            surface = FenixMessageSurfaceId.HOMESCREEN,
+        )
 
         binding.start()
 

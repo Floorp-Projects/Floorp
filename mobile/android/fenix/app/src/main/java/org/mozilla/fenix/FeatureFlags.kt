@@ -87,4 +87,9 @@ object FeatureFlags {
      * Enables the menu redesign.
      */
     const val menuRedesignEnabled = false
+
+    /**
+     * Enables microsurveys.
+     */
+    const val microsurveysEnabled = false
 }

@@ -35,6 +35,7 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.utils.ext.isLandscape
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.AddressToolbar
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.Shopping
@@ -53,6 +54,8 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragment
+import org.mozilla.fenix.messaging.FenixMessageSurfaceId
+import org.mozilla.fenix.messaging.MessagingFeature
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 import org.mozilla.fenix.shopping.DefaultShoppingExperienceFeature
@@ -73,6 +76,9 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         ViewBoundFeatureWrapper<StandardSnackbarErrorBinding>()
     private val reviewQualityCheckFeature = ViewBoundFeatureWrapper<ReviewQualityCheckFeature>()
     private val translationsBinding = ViewBoundFeatureWrapper<TranslationsBinding>()
+
+    @VisibleForTesting
+    internal val messagingFeature = ViewBoundFeatureWrapper<MessagingFeature>()
 
     private var readerModeAvailable = false
     private var reviewQualityCheckAvailable = false
@@ -212,6 +218,22 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         )
 
         setTranslationFragmentResultListener()
+
+        setupMicrosurvey()
+    }
+
+    @VisibleForTesting
+    internal fun setupMicrosurvey(isMicrosurveyEnabled: Boolean = FeatureFlags.microsurveysEnabled) {
+        if (requireContext().settings().isExperimentationEnabled && isMicrosurveyEnabled) {
+            messagingFeature.set(
+                feature = MessagingFeature(
+                    appStore = requireComponents.appStore,
+                    surface = FenixMessageSurfaceId.MICROSURVEY,
+                ),
+                owner = viewLifecycleOwner,
+                view = binding.root,
+            )
+        }
     }
 
     private fun setTranslationFragmentResultListener() {
