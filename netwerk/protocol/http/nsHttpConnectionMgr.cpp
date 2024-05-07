@@ -808,6 +808,11 @@ HttpConnectionBase* nsHttpConnectionMgr::FindCoalescableConnection(
   MOZ_ASSERT(ent->mConnInfo);
   nsHttpConnectionInfo* ci = ent->mConnInfo;
   LOG(("FindCoalescableConnection %s\n", ci->HashKey().get()));
+
+  if (ci->GetWebTransport()) {
+    LOG(("Don't coalesce a WebTransport conn "));
+    return nullptr;
+  }
   // First try and look it up by origin frame
   nsCString newKey;
   BuildOriginFrameHashKey(newKey, ci, ci->GetOrigin(), ci->OriginPort());
