@@ -61,7 +61,6 @@ import {
   lineAtHeight,
   toSourceLine,
   getDocument,
-  scrollToPosition,
   toEditorPosition,
   getSourceLocationFromMouseEvent,
   hasDocument,
@@ -149,14 +148,14 @@ class Editor extends PureComponent {
         this.props.selectedSourceTextContent?.value ||
       nextProps.symbols !== this.props.symbols;
 
+    const shouldScroll =
+      nextProps.selectedLocation &&
+      this.shouldScrollToLocation(nextProps, editor);
+
     if (!features.codemirrorNext) {
       const shouldUpdateSize =
         nextProps.startPanelSize !== this.props.startPanelSize ||
         nextProps.endPanelSize !== this.props.endPanelSize;
-
-      const shouldScroll =
-        nextProps.selectedLocation &&
-        this.shouldScrollToLocation(nextProps, editor);
 
       if (shouldUpdateText || shouldUpdateSize || shouldScroll) {
         startOperation();
@@ -182,6 +181,10 @@ class Editor extends PureComponent {
       // eslint-disable-next-line no-lonely-if
       if (shouldUpdateText) {
         this.setText(nextProps, editor);
+      }
+
+      if (shouldScroll) {
+        this.scrollToLocation(nextProps, editor);
       }
     }
   }
@@ -694,8 +697,7 @@ class Editor extends PureComponent {
       const lineText = doc.getLine(line);
       column = Math.max(column, getIndentation(lineText));
     }
-
-    scrollToPosition(editor.codeMirror, line, column);
+    editor.scrollTo(line, column);
   }
 
   setText(props, editor) {

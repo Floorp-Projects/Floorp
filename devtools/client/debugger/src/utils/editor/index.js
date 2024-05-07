@@ -106,50 +106,6 @@ export function toSourceLine(sourceId, line) {
   return line + 1;
 }
 
-export function scrollToPosition(codeMirror, line, column) {
-  // For all cases where these are on the first line and column,
-  // avoid the possibly slow computation of cursor location on large bundles.
-  if (!line && !column) {
-    codeMirror.scrollTo(0, 0);
-    return;
-  }
-
-  const { top, left } = codeMirror.charCoords({ line, ch: column }, "local");
-
-  if (!isVisible(codeMirror, top, left)) {
-    const scroller = codeMirror.getScrollerElement();
-    const centeredX = Math.max(left - scroller.offsetWidth / 2, 0);
-    const centeredY = Math.max(top - scroller.offsetHeight / 2, 0);
-
-    codeMirror.scrollTo(centeredX, centeredY);
-  }
-}
-
-function isVisible(codeMirror, top, left) {
-  function withinBounds(x, min, max) {
-    return x >= min && x <= max;
-  }
-
-  const scrollArea = codeMirror.getScrollInfo();
-  const charWidth = codeMirror.defaultCharWidth();
-  const fontHeight = codeMirror.defaultTextHeight();
-  const { scrollTop, scrollLeft } = codeMirror.doc;
-
-  const inXView = withinBounds(
-    left,
-    scrollLeft,
-    scrollLeft + (scrollArea.clientWidth - 30) - charWidth
-  );
-
-  const inYView = withinBounds(
-    top,
-    scrollTop,
-    scrollTop + scrollArea.clientHeight - fontHeight
-  );
-
-  return inXView && inYView;
-}
-
 export function getLocationsInViewport(
   { codeMirror },
   // Offset represents an allowance of characters or lines offscreen to improve

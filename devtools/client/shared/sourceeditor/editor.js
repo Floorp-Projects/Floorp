@@ -1979,6 +1979,119 @@ class Editor extends EventEmitter {
   }
 
   /**
+   * This checks if the specified position (top/left) is within the current viewpport
+   * bounds. it helps determine is scrolling should happen.
+   * @param {Object} cm - The codemirror instance
+   * @param {Number} line - The line in the source
+   * @param {Number} column - The column in the source
+   * @returns {Boolean}
+   */
+  #isVisible(cm, line, column) {
+    let inXView, inYView;
+
+    function withinBounds(x, min, max) {
+      return x >= min && x <= max;
+    }
+
+    if (this.config.cm6) {
+      const pos = this.#posToOffset(cm.state.doc, line, column);
+      const coords = pos && cm.coordsAtPos(pos);
+      if (!coords) {
+        return false;
+      }
+      const { scrollTop, scrollLeft, clientHeight, clientWidth } = cm.scrollDOM;
+
+      inXView = withinBounds(coords.left, scrollLeft, scrollLeft + clientWidth);
+      inYView = withinBounds(coords.top, scrollTop, scrollTop + clientHeight);
+    } else {
+      const { top, left } = cm.charCoords({ line, ch: column }, "local");
+      const scrollArea = cm.getScrollInfo();
+      const charWidth = cm.defaultCharWidth();
+      const fontHeight = cm.defaultTextHeight();
+      const { scrollTop, scrollLeft } = cm.doc;
+
+      inXView = withinBounds(
+        left,
+        scrollLeft,
+        // Note: 30 might relate to the margin on one of the scroll bar elements.
+        // See comment https://github.com/firefox-devtools/debugger/pull/5182#discussion_r163439209
+        scrollLeft + (scrollArea.clientWidth - 30) - charWidth
+      );
+      inYView = withinBounds(
+        top,
+        scrollTop,
+        scrollTop + scrollArea.clientHeight - fontHeight
+      );
+    }
+    return inXView && inYView;
+  }
+
+  /**
+   * Converts  line/col to CM6 offset position
+   * @param {Object} doc - the codemirror document
+   * @param {Number} line - The line in the source
+   * @param {Number} col - The column in the source
+   * @returns {Number}
+   */
+  #posToOffset(doc, line, col) {
+    if (!this.config.cm6) {
+      throw new Error("This function is only compatible with CM6");
+    }
+    try {
+      const offset = doc.line(line);
+      return offset.from + col;
+    } catch (e) {
+      // Line likey does not exist in viewport yet
+      console.warn(e.message);
+    }
+    return null;
+  }
+
+  /**
+   * Scrolls the editor to the specified line and column
+   * @param {Number} line - The line in the source
+   * @param {Number} column - The column in the source
+   */
+  scrollTo(line, column) {
+    const cm = editors.get(this);
+    if (this.config.cm6) {
+      const {
+        codemirrorView: { EditorView },
+      } = this.#CodeMirror6;
+
+      if (!this.#isVisible(cm, line, column)) {
+        const offset = this.#posToOffset(cm.state.doc, line, column);
+        if (!offset) {
+          return;
+        }
+        cm.dispatch({
+          effects: EditorView.scrollIntoView(offset, {
+            x: "nearest",
+            y: "center",
+          }),
+        });
+      }
+    } else {
+      // For all cases where these are on the first line and column,
+      // avoid the possibly slow computation of cursor location on large bundles.
+      if (!line && !column) {
+        cm.scrollTo(0, 0);
+        return;
+      }
+
+      const { top, left } = cm.charCoords({ line, ch: column }, "local");
+
+      if (!this.#isVisible(cm, line, column)) {
+        const scroller = cm.getScrollerElement();
+        const centeredX = Math.max(left - scroller.offsetWidth / 2, 0);
+        const centeredY = Math.max(top - scroller.offsetHeight / 2, 0);
+
+        cm.scrollTo(centeredX, centeredY);
+      }
+    }
+  }
+
+  /**
    * Extends an instance of the Editor object with additional
    * functions. Each function will be called with context as
    * the first argument. Context is a {ed, cm} object where
