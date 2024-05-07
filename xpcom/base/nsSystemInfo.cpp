@@ -805,45 +805,17 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
     // cpuName from "model name"
     info.cpuName.Assign(keyValuePairs["model name"_ns]);
 
-    {
-      // cpuFamily from "cpu family"
-      Tokenizer::Token t;
-      Tokenizer p(keyValuePairs["cpu family"_ns]);
-      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
-          t.AsInteger() <= INT32_MAX) {
-        cpuFamily = static_cast<int32_t>(t.AsInteger());
-      }
-    }
+    // cpuFamily from "cpu family"
+    (void)Tokenizer(keyValuePairs["cpu family"_ns]).ReadInteger(&cpuFamily);
 
-    {
-      // cpuModel from "model"
-      Tokenizer::Token t;
-      Tokenizer p(keyValuePairs["model"_ns]);
-      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
-          t.AsInteger() <= INT32_MAX) {
-        cpuModel = static_cast<int32_t>(t.AsInteger());
-      }
-    }
+    // cpuModel from "model"
+    (void)Tokenizer(keyValuePairs["model"_ns]).ReadInteger(&cpuModel);
 
-    {
-      // cpuStepping from "stepping"
-      Tokenizer::Token t;
-      Tokenizer p(keyValuePairs["stepping"_ns]);
-      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
-          t.AsInteger() <= INT32_MAX) {
-        cpuStepping = static_cast<int32_t>(t.AsInteger());
-      }
-    }
+    // cpuStepping from "stepping"
+    (void)Tokenizer(keyValuePairs["stepping"_ns]).ReadInteger(&cpuStepping);
 
-    {
-      // physicalCPUs from "cpu cores"
-      Tokenizer::Token t;
-      Tokenizer p(keyValuePairs["cpu cores"_ns]);
-      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
-          t.AsInteger() <= INT32_MAX) {
-        physicalCPUs = static_cast<int32_t>(t.AsInteger());
-      }
-    }
+    // physicalCPUs from "cpu cores"
+    (void)Tokenizer(keyValuePairs["cpu cores"_ns]).ReadInteger(&physicalCPUs);
   }
 
   {
@@ -852,12 +824,8 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
         "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
     std::string line;
     if (getline(input, line)) {
-      Tokenizer::Token t;
-      Tokenizer p(line.c_str());
-      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
-          t.AsInteger() <= INT32_MAX) {
-        cpuSpeed = static_cast<int32_t>(t.AsInteger() / 1000);
-      }
+      (void)Tokenizer(line.c_str()).ReadInteger(&cpuSpeed);
+      cpuSpeed /= 1000;
     }
   }
 
@@ -866,12 +834,7 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
     std::ifstream input("/sys/devices/system/cpu/cpu0/cache/index2/size");
     std::string line;
     if (getline(input, line)) {
-      Tokenizer::Token t;
-      Tokenizer p(line.c_str(), nullptr, "K");
-      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
-          t.AsInteger() <= INT32_MAX) {
-        cacheSizeL2 = static_cast<int32_t>(t.AsInteger());
-      }
+      (void)Tokenizer(line.c_str(), nullptr, "K").ReadInteger(&cacheSizeL2);
     }
   }
 
@@ -880,12 +843,7 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
     std::ifstream input("/sys/devices/system/cpu/cpu0/cache/index3/size");
     std::string line;
     if (getline(input, line)) {
-      Tokenizer::Token t;
-      Tokenizer p(line.c_str(), nullptr, "K");
-      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
-          t.AsInteger() <= INT32_MAX) {
-        cacheSizeL3 = static_cast<int32_t>(t.AsInteger());
-      }
+      (void)Tokenizer(line.c_str(), nullptr, "K").ReadInteger(&cacheSizeL3);
     }
   }
 
