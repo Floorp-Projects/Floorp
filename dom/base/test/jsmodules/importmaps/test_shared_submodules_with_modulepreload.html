@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test module cancel won't trigger an assert</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="modulepreload" href="./bug_1894631_module_2.mjs" />
+<link rel="modulepreload" href="./bug_1894631_module_3.mjs" />
+<link rel="modulepreload" href="./non_existing.mjs" />
+
+<script src="./bug_1894631_module_1.mjs" type="module" id="module_1"></script>
+<script>
+  var module1_loaded = false;
+  var module1_error = false;
+
+  SimpleTest.waitForExplicitFinish();
+
+  const module1 = document.getElementById("module_1");
+  module1.addEventListener("error", (event) => {
+    info("error event");
+    module1_error = true;
+  });
+
+  function testLoaded() {
+    ok(module1_error, "module_1.mjs should fire an error event");
+    ok(!module1_loaded, "module_1.mjs should not be loaded");
+    SimpleTest.finish();
+  }
+</script>
+
+<body onload='testLoaded()'>
+</body>
