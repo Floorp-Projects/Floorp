@@ -35,6 +35,7 @@ import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.SupportUtils.AMO_HOMEPAGE_FOR_ANDROID
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic
 
 class MenuNavigationMiddlewareTest {
@@ -361,6 +362,20 @@ class MenuNavigationMiddlewareTest {
                 MenuDialogFragmentDirections.actionGlobalAddonsManagementFragment(),
             )
         }
+    }
+
+    @Test
+    fun `WHEN navigate to discover more extensions action is dispatched THEN navigate to the AMO page`() = runTest {
+        var params: BrowserNavigationParams? = null
+        val store = createStore(
+            openToBrowser = {
+                params = it
+            },
+        )
+
+        store.dispatch(MenuAction.Navigate.DiscoverMoreExtensions).join()
+
+        assertEquals(AMO_HOMEPAGE_FOR_ANDROID, params?.url)
     }
 
     @Test

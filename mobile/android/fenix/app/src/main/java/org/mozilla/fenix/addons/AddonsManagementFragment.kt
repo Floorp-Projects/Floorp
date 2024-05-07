@@ -40,6 +40,7 @@ import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.SupportUtils.AMO_HOMEPAGE_FOR_ANDROID
 import org.mozilla.fenix.theme.ThemeManager
 
 /**
@@ -263,12 +264,5 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
             newTab = true,
             from = BrowserDirection.FromAddonsManagementFragment,
         )
-    }
-
-    companion object {
-        // This is locale-less on purpose so that the content negotiation happens on the AMO side because the current
-        // user language might not be supported by AMO and/or the language might not be exactly what AMO is expecting
-        // (e.g. `en` instead of `en-US`).
-        private const val AMO_HOMEPAGE_FOR_ANDROID = "${BuildConfig.AMO_BASE_URL}/android/"
     }
 }

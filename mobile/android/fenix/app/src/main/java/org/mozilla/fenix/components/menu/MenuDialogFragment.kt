@@ -239,7 +239,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 onManageExtensionsMenuClick = {
                                     store.dispatch(MenuAction.Navigate.ManageExtensions)
                                 },
-                                onDiscoverMoreExtensionsMenuClick = {},
+                                onDiscoverMoreExtensionsMenuClick = {
+                                    store.dispatch(MenuAction.Navigate.DiscoverMoreExtensions)
+                                },
                             )
                         }
                     }
