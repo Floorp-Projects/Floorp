@@ -53,6 +53,10 @@
         "accountEmail": {
           "type": "string",
           "description": "The email address for the account that the user profile was signed into when backing up. Optional."
+        },
+        "legacyClientID": {
+          "type": "string",
+          "description": "The legacy telemetry client ID for the profile that the backup was created on."
         }
       },
       "required": [
@@ -63,7 +67,8 @@
         "profileName",
         "machineName",
         "osName",
-        "osVersion"
+        "osVersion",
+        "legacyClientID"
       ]
     },
     "resources": {
