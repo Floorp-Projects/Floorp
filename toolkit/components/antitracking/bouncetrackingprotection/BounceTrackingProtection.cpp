@@ -650,6 +650,10 @@ nsresult BounceTrackingProtection::PurgeBounceTrackersForStateGlobal(
                  __FUNCTION__, PromiseFlatCString(host).get(),
                  originAttributeSuffix.get()));
       }
+      // Remove allow-listed host so we don't need to check in again next purge
+      // run. If it gets classified again and the allow-list entry gets removed
+      // it will be purged in the next run.
+      bounceTrackerCandidatesToRemove.AppendElement(host);
       continue;
     }
 

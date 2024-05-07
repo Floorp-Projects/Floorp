@@ -6,6 +6,9 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const { SiteDataTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SiteDataTestUtils.sys.mjs"
 );
+const { PermissionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PermissionTestUtils.sys.mjs"
+);
 
 let btp;
 let bounceTrackingGracePeriodSec;
@@ -138,6 +141,14 @@ add_task(async function test_purge() {
       message: "Should purge after grace period.",
       shouldPurge: true,
     },
+    // Don't purge if the site is allowlisted.
+    "example2.net": {
+      bounceTime: timestampOutsideGracePeriodFiveSeconds,
+      userActivationTime: null,
+      isAllowListed: true,
+      message: "Should not purge after grace period if allowlisted.",
+      shouldPurge: false,
+    },
     // Also ensure that clear data calls with IP sites succeed.
     "1.2.3.4": {
       bounceTime: timestampOutsideGracePeriodThreeDays,
@@ -191,15 +202,29 @@ add_task(async function test_purge() {
 
   let expectedBounceTrackerHosts = [];
   let expectedUserActivationHosts = [];
+  let allowListedHosts = [];
 
   let expiredUserActivationHosts = [];
   let expectedPurgedHosts = [];
 
   // This would normally happen over time while browsing.
   let initPromises = Object.entries(TEST_TRACKERS).map(
-    async ([siteHost, { bounceTime, userActivationTime, shouldPurge }]) => {
+    async ([
+      siteHost,
+      { bounceTime, userActivationTime, isAllowListed, shouldPurge },
+    ]) => {
       // Add site state so we can later assert it has been purged.
       await addStateForHost(siteHost);
+
+      // Add allowlist entry if needed.
+      if (isAllowListed) {
+        PermissionTestUtils.add(
+          `https://${siteHost}`,
+          "trackingprotection",
+          Services.perms.ALLOW_ACTION
+        );
+        allowListedHosts.push(siteHost);
+      }
 
       if (bounceTime != null) {
         if (userActivationTime != null) {
@@ -210,7 +235,7 @@ add_task(async function test_purge() {
 
         expectedBounceTrackerHosts.push(siteHost);
 
-        // Convert bounceTime timestamp to nanoseconds (PRTime).
+        // Convert bounceTime timestamp to microseconds (PRTime).
         info(
           `Adding bounce. siteHost: ${siteHost}, bounceTime: ${bounceTime} ms`
         );
@@ -232,7 +257,7 @@ add_task(async function test_purge() {
           expiredUserActivationHosts.push(siteHost);
         }
 
-        // Convert userActivationTime timestamp to nanoseconds (PRTime).
+        // Convert userActivationTime timestamp to microseconds (PRTime).
         info(
           `Adding user interaction. siteHost: ${siteHost}, userActivationTime: ${userActivationTime} ms`
         );
@@ -275,8 +300,14 @@ add_task(async function test_purge() {
     "Should have purged all expected hosts."
   );
 
+  // After the purge only the bounce trackers that have not been purged should
+  // remain in the candidate map. Additionally the allowlisted hosts should be
+  // removed from the candidate map.
   let expectedBounceTrackerHostsAfterPurge = expectedBounceTrackerHosts
-    .filter(host => !expectedPurgedHosts.includes(host))
+    .filter(
+      host =>
+        !expectedPurgedHosts.includes(host) && !allowListedHosts.includes(host)
+    )
     .sort();
   Assert.deepEqual(
     btp
@@ -314,6 +345,7 @@ add_task(async function test_purge() {
   btp.clearAll();
   assertEmpty();
 
-  info("Clean up site data.");
+  info("Clean up site data and permissions.");
   await SiteDataTestUtils.clear();
+  Services.perms.removeAll();
 });
