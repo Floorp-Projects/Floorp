@@ -83,20 +83,12 @@ add_task(async function test_active_delay() {
       await closePopup(browser);
     }
   );
-  FormAutofillUtils.setOSAuthEnabled(
-    FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-    true
-  );
 });
 
 add_task(async function test_no_delay() {
   await SpecialPowers.pushPrefEnv({
     set: [["security.notification_enable_delay", 1000]],
   });
-  FormAutofillUtils.setOSAuthEnabled(
-    FormAutofillUtils.AUTOFILL_CREDITCARDS_REAUTH_PREF,
-    false
-  );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_URL },
     async function (browser) {
