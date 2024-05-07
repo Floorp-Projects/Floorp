@@ -96,7 +96,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 // for the flattened children of aNode.
 void UpdateDescendantsInFlattenedTree(const nsIContent& aNode,
                                       bool aMarkDesendants) {
-  if (!aNode.IsElement() || aNode.IsHTMLElement(nsGkAtoms::slot)) {
+  if (!aNode.IsElement()) {
     return;
   }
 
@@ -119,14 +119,14 @@ void AbstractRange::MarkDescendants(const nsINode& aNode) {
   // ancestor or a descendant of one, in which case all of our descendants have
   // the bit set already.
   if (!aNode.IsMaybeSelected()) {
-    // don't set the Descendant bit on |aNode| itself
-    nsINode* node = aNode.GetNextNode(&aNode);
-    if (!node) {
-      if (aNode.GetShadowRootForSelection()) {
-        UpdateDescendantsInFlattenedTree(*aNode.AsContent(), true);
-      }
+    // If aNode has a web-exposed shadow root, use this shadow tree and ignore
+    // the children of aNode.
+    if (aNode.GetShadowRootForSelection()) {
+      UpdateDescendantsInFlattenedTree(*aNode.AsContent(), true);
       return;
     }
+    // don't set the Descendant bit on |aNode| itself
+    nsINode* node = aNode.GetNextNode(&aNode);
     while (node) {
       node->SetDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
       if (!node->IsClosestCommonInclusiveAncestorForRangeInSelection()) {
@@ -152,14 +152,14 @@ void AbstractRange::UnmarkDescendants(const nsINode& aNode) {
   // common ancestor itself).
   if (!aNode
            .IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
-    // we know |aNode| doesn't have any bit set
-    nsINode* node = aNode.GetNextNode(&aNode);
-    if (!node) {
-      if (aNode.GetShadowRootForSelection()) {
-        UpdateDescendantsInFlattenedTree(*aNode.AsContent(), false);
-      }
+    // If aNode has a web-exposed shadow root, use this shadow tree and ignore
+    // the children of aNode.
+    if (aNode.GetShadowRootForSelection()) {
+      UpdateDescendantsInFlattenedTree(*aNode.AsContent(), false);
       return;
     }
+    // we know |aNode| doesn't have any bit set
+    nsINode* node = aNode.GetNextNode(&aNode);
     while (node) {
       node->ClearDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
       if (!node->IsClosestCommonInclusiveAncestorForRangeInSelection()) {
