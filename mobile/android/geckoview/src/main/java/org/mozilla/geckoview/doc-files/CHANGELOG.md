@@ -16,10 +16,13 @@ exclude: true
 ## v127
 - ⚠️ Removed deprecated [`RuntimeTelemetry`][125.5], [`GeckoRuntimeSettings.getTelemetryDelegate`][125.6] and [`GeckoRuntimeSettings.telemetryDelegate`][125.7].
 - Added [FINDER_FIND_FORWARD][127.1]
-- Added [`WebExtensionController.AddonManagerDelegate.onOptionalPermissionsChanged`][126.2] ([bug 1892302]({{bugzilla}}1892302).
+- Added [`WebExtensionController.AddonManagerDelegate.onOptionalPermissionsChanged`][127.2] ([bug 1892302]({{bugzilla}}1892302).
+- Added a new [`TranslationState`][127.3] constructor to add `hasVisibleChange` and deprecated the prior [`TranslationsState`][127.4] constructor to be removed in v130.
 
 [127.1]: {{javadoc_uri}}/GeckoSession.html#FINDER_FIND_FORWARD
-[126.2]: {{javadoc_uri}}/WebExtensionController.AddonManagerDelegate.html#onOptionalPermissionsChanged
+[127.2]: {{javadoc_uri}}/WebExtensionController.AddonManagerDelegate.html#onOptionalPermissionsChanged
+[127.3]: {{javadoc_uri}}/TranslationsController.SessionTranslation.TranslationState.html#%3Cinit%3E(org.mozilla.geckoview.TranslationsController.SessionTranslation.TranslationPair,java.lang.String,org.mozilla.geckoview.TranslationsController.SessionTranslation.DetectedLanguages,java.lang.Boolean,java.lang.Boolean)
+[127.4]: {{javadoc_uri}}/TranslationsController.SessionTranslation.TranslationState.html#<init>(org.mozilla.geckoview.TranslationsController.SessionTranslation.TranslationPair,java.lang.String,org.mozilla.geckoview.TranslationsController.SessionTranslation.DetectedLanguages,java.lang.Boolean)
 
 ## v125
 - ⚠️ Deprecated [`GeckoSession.NavigationDelegate.onLocationChange`][125.1], to be removed in v127.
@@ -1555,4 +1558,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: bd57d2b224e3e875a711e88c4b4a927e07d9d890
+[api-version]: 0b9d0f241805fab7e71d3d745170a237f6ac113d
