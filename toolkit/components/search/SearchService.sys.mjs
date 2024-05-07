@@ -1801,9 +1801,9 @@ export class SearchService {
         this.#addEngineToStore(engine);
       } catch (ex) {
         console.error(
-          `Could not load engine ${
-            "webExtension" in config ? config.webExtension.id : "unknown"
-          }: ${ex}`
+          "Could not load engine",
+          "webExtension" in config ? config.webExtension.id : "unknown",
+          ex
         );
       }
     }
@@ -1839,7 +1839,8 @@ export class SearchService {
         });
       } catch (ex) {
         lazy.logConsole.error(
-          `#createAndAddAddonEngine failed for ${extension.id}`,
+          "#createAndAddAddonEngine failed for",
+          extension.id,
           ex
         );
       }
