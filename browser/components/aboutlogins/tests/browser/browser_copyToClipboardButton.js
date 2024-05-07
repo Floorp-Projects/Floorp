@@ -49,9 +49,11 @@ add_task(async function test() {
         info(
           "waiting for " + testObj.expectedValue + " to be placed on clipboard"
         );
-        let reauthObserved = true;
+        let reauthObserved = Promise.resolve();
         if (testObj.copyButtonSelector.includes("password")) {
-          reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+          if (OSKeyStore.canReauth()) {
+            reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+          }
         }
 
         await SimpleTest.promiseClipboardChange(
