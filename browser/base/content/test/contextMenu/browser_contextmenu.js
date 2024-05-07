@@ -281,6 +281,10 @@ add_task(async function test_image() {
         null,
         "context-setDesktopBackground",
         true,
+        "---",
+        null,
+        "context-take-screenshot",
+        true,
       ],
       {
         onContextMenuShown() {
@@ -364,6 +368,10 @@ add_task(async function test_video_ok() {
     true,
     "context-sendvideo",
     true,
+    "---",
+    null,
+    "context-take-screenshot",
+    true,
   ]);
 
   await SpecialPowers.popPrefEnv();
@@ -411,6 +419,10 @@ add_task(async function test_video_ok() {
     "context-copyvideourl",
     true,
     "context-sendvideo",
+    true,
+    "---",
+    null,
+    "context-take-screenshot",
     true,
   ]);
 
@@ -498,6 +510,10 @@ add_task(async function test_video_bad() {
     true,
     "context-sendvideo",
     true,
+    "---",
+    null,
+    "context-take-screenshot",
+    true,
   ]);
 
   await SpecialPowers.popPrefEnv();
@@ -545,6 +561,10 @@ add_task(async function test_video_bad() {
     "context-copyvideourl",
     true,
     "context-sendvideo",
+    true,
+    "---",
+    null,
+    "context-take-screenshot",
     true,
   ]);
 
@@ -596,6 +616,10 @@ add_task(async function test_video_bad2() {
     false,
     "context-sendvideo",
     false,
+    "---",
+    null,
+    "context-take-screenshot",
+    true,
   ]);
 
   await SpecialPowers.popPrefEnv();
@@ -644,6 +668,10 @@ add_task(async function test_video_bad2() {
     false,
     "context-sendvideo",
     false,
+    "---",
+    null,
+    "context-take-screenshot",
+    true,
   ]);
 
   await SpecialPowers.popPrefEnv();
@@ -775,6 +803,10 @@ add_task(async function test_video_in_iframe() {
       true,
       "---",
       null,
+      "context-take-frame-screenshot",
+      true,
+      "---",
+      null,
       "context-viewframeinfo",
       true,
     ]),
@@ -851,6 +883,10 @@ add_task(async function test_video_in_iframe() {
       "---",
       null,
       "context-printframe",
+      true,
+      "---",
+      null,
+      "context-take-frame-screenshot",
       true,
       "---",
       null,
@@ -972,6 +1008,10 @@ add_task(async function test_image_in_iframe() {
       "---",
       null,
       "context-printframe",
+      true,
+      "---",
+      null,
+      "context-take-frame-screenshot",
       true,
       "---",
       null,
@@ -1606,6 +1646,10 @@ add_task(async function test_longdesc() {
     "---",
     null,
     "context-setDesktopBackground",
+    true,
+    "---",
+    null,
+    "context-take-screenshot",
     true,
   ]);
 });
