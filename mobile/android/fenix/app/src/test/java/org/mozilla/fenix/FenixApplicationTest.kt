@@ -39,6 +39,7 @@ import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -218,12 +219,30 @@ class FenixApplicationTest {
     }
 
     @Test
+    @Config(sdk = [28])
+    fun `GIVEN the current etp mode is custom WHEN tracking the etp metric THEN track also the cookies option on SDK 28`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { shouldUseTrackingProtection } returns true
+            every { useCustomTrackingProtection } returns true
+            every { blockCookiesSelectionInCustomTrackingProtection } returns "Test"
+        }
+
+        application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
+
+        assertEquals("Test", Preferences.etpCustomCookiesSelection.testGetValue())
+    }
+
+    @Test
     fun `GIVEN the current etp mode is custom WHEN tracking the etp metric THEN track also the cookies option`() {
         val settings: Settings = mockk(relaxed = true) {
             every { shouldUseTrackingProtection } returns true
             every { useCustomTrackingProtection } returns true
             every { blockCookiesSelectionInCustomTrackingProtection } returns "Test"
         }
+
+        val packageManager: PackageManager = testContext.packageManager
+        shadowOf(packageManager)
+            .setInstallSourceInfo(testContext.packageName, "initiating.package", "installing.package")
 
         application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
 
