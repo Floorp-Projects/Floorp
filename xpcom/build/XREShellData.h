@@ -10,6 +10,9 @@
 #if defined(LIBFUZZER)
 #  include "FuzzerRegistry.h"  // LibFuzzerDriver
 #endif
+#if defined(AFLFUZZ)
+#  include "FuzzingInterface.h"  // FuzzingTestFuncRaw
+#endif
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
 namespace sandbox {
@@ -33,6 +36,9 @@ struct XREShellData {
 #endif
 #if defined(LIBFUZZER)
   LibFuzzerDriver fuzzerDriver;
+#endif
+#if defined(AFLFUZZ)
+  int (*fuzzerDriver)(FuzzingTestFuncRaw);
 #endif
 };
 

@@ -192,6 +192,9 @@ static int do_main(int argc, char* argv[], char* envp[]) {
 #ifdef LIBFUZZER
     shellData.fuzzerDriver = fuzzer::FuzzerDriver;
 #endif
+#ifdef AFLFUZZ
+    shellData.fuzzerDriver = afl_interface_raw;
+#endif
 
     return gBootstrap->XRE_XPCShellMain(--argc, argv, envp, &shellData);
   }

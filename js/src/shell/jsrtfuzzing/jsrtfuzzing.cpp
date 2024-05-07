@@ -14,6 +14,9 @@
 #ifdef LIBFUZZER
 #  include "FuzzerDefs.h"
 #endif
+#ifdef AFLFUZZ
+#  include "FuzzingInterface.h"
+#endif
 
 #include "jsapi.h"  // JS_ClearPendingException, JS_IsExceptionPending
 
@@ -71,7 +74,7 @@ int js::shell::FuzzJSRuntimeStart(JSContext* cx, int* argc, char*** argv) {
 #ifdef LIBFUZZER
   fuzzer::FuzzerDriver(&shell::sArgc, &shell::sArgv, FuzzJSRuntimeFuzz);
 #elif AFLFUZZ
-  MOZ_CRASH("AFL is unsupported for JS runtime fuzzing integration");
+  afl_interface_raw(FuzzJSRuntimeFuzz);
 #endif
   return 0;
 }

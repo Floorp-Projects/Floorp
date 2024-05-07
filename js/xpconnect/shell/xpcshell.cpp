@@ -77,6 +77,9 @@ int main(int argc, char** argv, char** envp) {
 #ifdef LIBFUZZER
   shellData.fuzzerDriver = fuzzer::FuzzerDriver;
 #endif
+#ifdef AFLFUZZ
+  shellData.fuzzerDriver = afl_interface_raw;
+#endif
 
   int result = bootstrap->XRE_XPCShellMain(argc, argv, envp, &shellData);
 
