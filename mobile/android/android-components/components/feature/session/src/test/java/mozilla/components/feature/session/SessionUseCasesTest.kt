@@ -132,7 +132,6 @@ class SessionUseCasesTest {
         middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
         verify(childEngineSession).loadUrl(
             url = "https://www.mozilla.org/en-CA/firefox/browsers/mobile/",
-            parent = engineSession,
         )
         middleware.assertLastAction(EngineAction.OptimizedLoadUrlTriggeredAction::class) { action ->
             assertEquals("bugzilla", action.tabId)

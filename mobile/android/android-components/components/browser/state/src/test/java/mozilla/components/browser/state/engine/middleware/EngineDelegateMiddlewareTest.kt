@@ -263,6 +263,7 @@ class EngineDelegateMiddlewareTest {
             EngineAction.LoadUrlAction(
                 "test-tab",
                 "https://www.firefox.com",
+                includeParent = true,
             ),
         ).joinBlocking()
 
