@@ -219,6 +219,18 @@ add_task(function test_check_valid_scoped_keys() {
     };
     Assert.equal(keys.validScopedKeys(scopedKeys), true);
   });
+  add_task(function test_valid_kid_with_dash() {
+    const scopedKeys = {
+      "https://identity.mozilla.com/apps/oldsync": {
+        kty: "oct",
+        // kid contains another dash. The fingerprint must not be truncated.
+        kid: "1510726318123-I-Qv4onc7VcVE1kTQkyyOw",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
+    };
+    Assert.equal(keys.validScopedKeys(scopedKeys), true);
+  });
 });
 
 add_task(async function test_rejects_bad_scoped_key_data() {
