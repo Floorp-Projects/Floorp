@@ -33,6 +33,7 @@ import org.mozilla.fenix.components.menu.store.MenuStore
 import org.mozilla.fenix.components.menu.toFenixFxAEntryPoint
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.SupportUtils.AMO_HOMEPAGE_FOR_ANDROID
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic
 
 /**
@@ -177,6 +178,10 @@ class MenuNavigationMiddleware(
                 is MenuAction.Navigate.ManageExtensions -> navController.nav(
                     R.id.menuDialogFragment,
                     MenuDialogFragmentDirections.actionGlobalAddonsManagementFragment(),
+                )
+
+                is MenuAction.Navigate.DiscoverMoreExtensions -> openToBrowser(
+                    BrowserNavigationParams(url = AMO_HOMEPAGE_FOR_ANDROID),
                 )
 
                 is MenuAction.Navigate.NewTab -> openNewTab(isPrivate = false)

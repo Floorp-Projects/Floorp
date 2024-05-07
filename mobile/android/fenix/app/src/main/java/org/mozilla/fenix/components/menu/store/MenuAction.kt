@@ -130,6 +130,11 @@ sealed class MenuAction : Action {
         data object ManageExtensions : Navigate()
 
         /**
+         * [Navigate] action dispatched when navigating to the AMO page.
+         */
+        data object DiscoverMoreExtensions : Navigate()
+
+        /**
          * [Navigate] action dispatched when navigating to the new tab.
          */
         data object NewTab : Navigate()
