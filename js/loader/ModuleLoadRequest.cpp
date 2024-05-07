@@ -160,7 +160,7 @@ void ModuleLoadRequest::ModuleErrored() {
 
   LOG(("ScriptLoadRequest (%p): Module errored", this));
 
-  if (IsCanceled()) {
+  if (IsCanceled() || IsCancelingImports()) {
     return;
   }
 
@@ -222,6 +222,12 @@ void ModuleLoadRequest::CheckModuleDependenciesLoaded() {
 }
 
 void ModuleLoadRequest::CancelImports() {
+  State origState = mState;
+
+  // To prevent reentering ModuleErrored() for this request via mImports[i]'s
+  // ChildLoadComplete().
+  mState = State::CancelingImports;
+
   for (size_t i = 0; i < mImports.Length(); i++) {
     if (mLoader->IsFetchingAndHasWaitingRequest(mImports[i])) {
       LOG(("CancelImports import %p is fetching and has waiting\n",
@@ -230,6 +236,8 @@ void ModuleLoadRequest::CancelImports() {
     }
     mImports[i]->Cancel();
   }
+
+  mState = origState;
 }
 
 void ModuleLoadRequest::LoadFinished() {
