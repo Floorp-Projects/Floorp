@@ -87,56 +87,8 @@ const CLSID CLSID_ImmersiveShell = {
  * Native WIN32 window wrapper.
  */
 
-namespace mozilla::widget {
-
-// Data manipulation: styles + ex-styles, and bitmasking operations thereupon.
-struct WindowStyles {
-  LONG_PTR style = 0;
-  LONG_PTR ex = 0;
-
-  static WindowStyles FromHWND(HWND);
-
-  constexpr bool operator==(WindowStyles const& that) const {
-    return style == that.style && ex == that.ex;
-  }
-  constexpr bool operator!=(WindowStyles const& that) const {
-    return !(*this == that);
-  }
-  constexpr WindowStyles operator|(WindowStyles const& that) const {
-    return WindowStyles{.style = style | that.style, .ex = ex | that.ex};
-  }
-  constexpr WindowStyles operator&(WindowStyles const& that) const {
-    return WindowStyles{.style = style & that.style, .ex = ex & that.ex};
-  }
-  constexpr WindowStyles operator~() const {
-    return WindowStyles{.style = ~style, .ex = ~ex};
-  }
-
-  explicit constexpr operator bool() const { return style || ex; }
-
-  // Compute a style-set which matches `zero` where the bits of `this` are 0
-  // and `one` where the bits of `this` are 1.
-  constexpr WindowStyles merge(WindowStyles zero, WindowStyles one) const {
-    WindowStyles const& mask = *this;
-    return (~mask & zero) | (mask & one);
-  }
-
-  // The dual of `merge`, above: returns a pair [zero, one] satisfying
-  // `a.merge(a.split(b)...) == b`. (Or its equivalent in valid C++.)
-  constexpr std::tuple<WindowStyles, WindowStyles> split(
-      WindowStyles data) const {
-    WindowStyles const& mask = *this;
-    return {~mask & data, mask & data};
-  }
-};
-
-void SetWindowStyles(HWND, const WindowStyles&);
-
-}  // namespace mozilla::widget
-
 class nsWindow final : public nsBaseWidget {
  public:
-  using Styles = mozilla::widget::WindowStyles;
   using WindowHook = mozilla::widget::WindowHook;
   using IMEContext = mozilla::widget::IMEContext;
   using WidgetEventTime = mozilla::WidgetEventTime;
@@ -798,7 +750,12 @@ class nsWindow final : public nsBaseWidget {
   bool mIsAlert = false;
   bool mIsPerformingDwmFlushHack = false;
   bool mDraggingWindowWithMouse = false;
-  mozilla::Maybe<Styles> mOldStyles;
+  // Partial cached window-styles, for when going fullscreen. (Only window-
+  // decoration-related flags are saved here.)
+  struct WindowStyles {
+    LONG_PTR style, exStyle;
+  };
+  mozilla::Maybe<WindowStyles> mOldStyles;
   nsNativeDragTarget* mNativeDragTarget = nullptr;
   HKL mLastKeyboardLayout = 0;
   mozilla::CheckInvariantWrapper<FrameState> mFrameState;
