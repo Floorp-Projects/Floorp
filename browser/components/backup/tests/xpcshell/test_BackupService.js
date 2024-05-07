@@ -321,6 +321,14 @@ add_task(async function test_recoverFromBackup() {
 
   let { stagingPath } = await bs.createBackup({ profilePath: oldProfilePath });
 
+  let testTelemetryStateObject = {
+    clientID: "ed209123-04a1-04a1-04a1-c0ffeec0ffee",
+  };
+  await IOUtils.writeJSON(
+    PathUtils.join(PathUtils.profileDir, "datareporting", "state.json"),
+    testTelemetryStateObject
+  );
+
   let profile = await bs.recoverFromBackup(
     stagingPath,
     false /* shouldLaunch */,
@@ -362,6 +370,16 @@ add_task(async function test_recoverFromBackup() {
       "The post recovery data is as expected"
     );
   }
+
+  let newProfileTelemetryStateObject = await IOUtils.readJSON(
+    PathUtils.join(newProfileRootPath, "datareporting", "state.json")
+  );
+  Assert.deepEqual(
+    testTelemetryStateObject,
+    newProfileTelemetryStateObject,
+    "Recovered profile inherited telemetry state from the profile that " +
+      "initiated recovery"
+  );
 
   await IOUtils.remove(oldProfilePath, { recursive: true });
   await IOUtils.remove(newProfileRootPath, { recursive: true });

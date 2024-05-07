@@ -590,6 +590,33 @@ export class BackupService {
         }
       }
 
+      // Make sure that a legacy telemetry client ID exists and is written to
+      // disk.
+      let clientID = await lazy.ClientID.getClientID();
+      lazy.logConsole.debug("Current client ID: ", clientID);
+      // Next, copy over the legacy telemetry client ID state from the currently
+      // running profile. The newly created profile that we're recovering into
+      // should inherit this client ID.
+      const TELEMETRY_STATE_FILENAME = "state.json";
+      const TELEMETRY_STATE_FOLDER = "datareporting";
+      await IOUtils.makeDirectory(
+        PathUtils.join(profile.rootDir.path, TELEMETRY_STATE_FOLDER)
+      );
+      await IOUtils.copy(
+        /* source */
+        PathUtils.join(
+          PathUtils.profileDir,
+          TELEMETRY_STATE_FOLDER,
+          TELEMETRY_STATE_FILENAME
+        ),
+        /* destination */
+        PathUtils.join(
+          profile.rootDir.path,
+          TELEMETRY_STATE_FOLDER,
+          TELEMETRY_STATE_FILENAME
+        )
+      );
+
       let postRecoveryPath = PathUtils.join(
         profile.rootDir.path,
         BackupService.POST_RECOVERY_FILE_NAME
