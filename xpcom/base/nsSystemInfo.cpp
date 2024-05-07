@@ -1452,11 +1452,13 @@ nsresult nsSystemInfo::Init() {
     return rv;
   }
 
-  nsString pointerExplanation;
-  widget::WinUtils::GetPointerExplanation(&pointerExplanation);
-  rv = SetPropertyAsAString(u"pointingDevices"_ns, pointerExplanation);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (XRE_IsParentProcess()) {
+    nsString pointerExplanation;
+    widget::WinUtils::GetPointerExplanation(&pointerExplanation);
+    rv = SetPropertyAsAString(u"pointingDevices"_ns, pointerExplanation);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
 #endif
