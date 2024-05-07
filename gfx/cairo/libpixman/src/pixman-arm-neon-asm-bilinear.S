@@ -68,6 +68,8 @@
 #include "pixman-arm-asm.h"
 #include "pixman-arm-neon-asm.h"
 
+pixman_syntax_unified
+
 /*
  * Bilinear macros from pixman-arm-neon-asm.S
  */

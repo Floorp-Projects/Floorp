@@ -2387,6 +2387,14 @@ PREFIX (_contains_point) (const region_type_t * region,
 }
 
 PIXMAN_EXPORT int
+PREFIX (_empty) (const region_type_t * region)
+{
+    GOOD (region);
+
+    return(PIXREGION_NIL (region));
+}
+
+PIXMAN_EXPORT int
 PREFIX (_not_empty) (const region_type_t * region)
 {
     GOOD (region);

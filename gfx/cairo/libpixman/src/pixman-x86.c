@@ -20,7 +20,7 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <pixman-config.h>
 #endif
 
 #include "pixman-private.h"
@@ -74,40 +74,9 @@ detect_cpu_features (void)
 
 #else
 
-#define _PIXMAN_X86_64							\
-    (defined(__amd64__) || defined(__x86_64__) || defined(_M_AMD64))
-
-static pixman_bool_t
-have_cpuid (void)
-{
-#if _PIXMAN_X86_64 || defined (_MSC_VER)
-
-    return TRUE;
-
-#elif defined (__GNUC__)
-    uint32_t result;
-
-    __asm__ volatile (
-        "pushf"				"\n\t"
-        "pop %%eax"			"\n\t"
-        "mov %%eax, %%ecx"		"\n\t"
-        "xor $0x00200000, %%eax"	"\n\t"
-        "push %%eax"			"\n\t"
-        "popf"				"\n\t"
-        "pushf"				"\n\t"
-        "pop %%eax"			"\n\t"
-        "xor %%ecx, %%eax"		"\n\t"
-	"mov %%eax, %0"			"\n\t"
-	: "=r" (result)
-	:
-	: "%eax", "%ecx");
-
-    return !!result;
-
-#else
-#error "Unknown compiler"
+#if defined (__GNUC__)
+#include <cpuid.h>
 #endif
-}
 
 #ifdef _MSC_VER
 #include <intrin.h> /* for __cpuid */
@@ -118,29 +87,8 @@ pixman_cpuid (uint32_t feature,
 	      uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
 {
 #if defined (__GNUC__)
-
-#if _PIXMAN_X86_64
-    __asm__ volatile (
-        "cpuid"				"\n\t"
-	: "=a" (*a), "=b" (*b), "=c" (*c), "=d" (*d)
-	: "a" (feature));
-#else
-    /* On x86-32 we need to be careful about the handling of %ebx
-     * and %esp. We can't declare either one as clobbered
-     * since they are special registers (%ebx is the "PIC
-     * register" holding an offset to global data, %esp the
-     * stack pointer), so we need to make sure that %ebx is
-     * preserved, and that %esp has its original value when
-     * accessing the output operands.
-     */
-    __asm__ volatile (
-	"xchg %%ebx, %1"		"\n\t"
-	"cpuid"				"\n\t"
-	"xchg %%ebx, %1"		"\n\t"
-	: "=a" (*a), "=r" (*b), "=c" (*c), "=d" (*d)
-	: "a" (feature));
-#endif
-
+    *a = *b = *c = *d = 0;
+    __get_cpuid(feature, a, b, c, d);
 #elif defined (_MSC_VER)
     int info[4];
 
@@ -160,9 +108,6 @@ detect_cpu_features (void)
 {
     uint32_t a, b, c, d;
     cpu_features_t features = 0;
-
-    if (!have_cpuid())
-	return features;
 
     /* Get feature bits */
     pixman_cpuid (0x01, &a, &b, &c, &d);

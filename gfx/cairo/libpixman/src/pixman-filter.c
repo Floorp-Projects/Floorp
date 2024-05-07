@@ -29,7 +29,7 @@
 #include <math.h>
 #include <assert.h>
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <pixman-config.h>
 #endif
 #include "pixman-private.h"
 
@@ -237,11 +237,14 @@ create_1d_filter (int              width,
 		  pixman_kernel_t  sample,
 		  double           scale,
 		  int              n_phases,
-		  pixman_fixed_t *p)
+		  pixman_fixed_t *pstart,
+		  pixman_fixed_t *pend
+		  )
 {
+    pixman_fixed_t *p = pstart;
     double step;
     int i;
-
+    if(width <= 0) return;
     step = 1.0 / n_phases;
 
     for (i = 0; i < n_phases; ++i)
@@ -258,7 +261,7 @@ create_1d_filter (int              width,
 
 	x1 = ceil (frac - width / 2.0 - 0.5);
 	x2 = x1 + width;
-
+    assert( p >= pstart && p + (x2 - x1) <= pend ); /* assert validity of the following loop */
 	total = 0;
         for (x = x1; x < x2; ++x)
         {
@@ -287,8 +290,10 @@ create_1d_filter (int              width,
 
 	/* Normalize, with error diffusion */
 	p -= width;
-        total = 65536.0 / total;
-        new_total = 0;
+	assert(p >= pstart && p + (x2 - x1) <= pend); /* assert validity of the following loop */
+
+    total = 65536.0 / total;
+    new_total = 0;
 	e = 0.0;
 	for (x = x1; x < x2; ++x)
 	{
@@ -304,6 +309,8 @@ create_1d_filter (int              width,
 	 * at the first sample, since that is the only one that
 	 * hasn't had any error diffused into it.
 	 */
+
+	assert(p - width >= pstart && p - width < pend); /* assert... */
 	*(p - width) += pixman_fixed_1 - new_total;
     }
 }
@@ -465,10 +472,16 @@ pixman_filter_create_separable_convolution (int             *n_values,
     params[2] = pixman_int_to_fixed (subsample_bits_x);
     params[3] = pixman_int_to_fixed (subsample_bits_y);
 
-    create_1d_filter (width, reconstruct_x, sample_x, sx, subsample_x,
-		      params + 4);
-    create_1d_filter (height, reconstruct_y, sample_y, sy, subsample_y,
-		      params + 4 + width * subsample_x);
+    {
+        pixman_fixed_t
+            *xparams = params+4,
+            *yparams = xparams + width*subsample_x,
+            *endparams = params + *n_values;
+        create_1d_filter(width, reconstruct_x, sample_x, sx, subsample_x,
+                         xparams, yparams);
+        create_1d_filter(height, reconstruct_y, sample_y, sy, subsample_y,
+                         yparams, endparams);
+    }
 
 #ifdef PIXMAN_GNUPLOT
     gnuplot_filter(width, subsample_x, params + 4);

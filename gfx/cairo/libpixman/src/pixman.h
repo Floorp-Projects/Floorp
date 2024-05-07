@@ -586,6 +586,9 @@ pixman_region_overlap_t pixman_region_contains_rectangle (const pixman_region16_
 							  const pixman_box16_t    *prect);
 
 PIXMAN_API
+pixman_bool_t           pixman_region_empty              (const pixman_region16_t *region);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_not_empty          (const pixman_region16_t *region);
 
 PIXMAN_API
@@ -725,6 +728,9 @@ pixman_bool_t           pixman_region32_contains_point     (const pixman_region3
 PIXMAN_API
 pixman_region_overlap_t pixman_region32_contains_rectangle (const pixman_region32_t *region,
 							    const pixman_box32_t    *prect);
+
+PIXMAN_API
+pixman_bool_t           pixman_region32_empty              (const pixman_region32_t *region);
 
 PIXMAN_API
 pixman_bool_t           pixman_region32_not_empty          (const pixman_region32_t *region);
@@ -895,6 +901,7 @@ typedef enum {
 
 /* sRGB formats */
     PIXMAN_a8r8g8b8_sRGB = PIXMAN_FORMAT(32,PIXMAN_TYPE_ARGB_SRGB,8,8,8,8),
+    PIXMAN_r8g8b8_sRGB = PIXMAN_FORMAT(24,PIXMAN_TYPE_ARGB_SRGB,0,8,8,8),
 
 /* 24bpp formats */
     PIXMAN_r8g8b8 =	 PIXMAN_FORMAT(24,PIXMAN_TYPE_ARGB,0,8,8,8),
@@ -1012,11 +1019,11 @@ void *		pixman_image_get_destroy_data        (pixman_image_t		   *image);
 /* Set properties */
 PIXMAN_API
 pixman_bool_t   pixman_image_set_clip_region         (pixman_image_t               *image,
-						      pixman_region16_t            *region);
+						      const pixman_region16_t            *region);
 
 PIXMAN_API
 pixman_bool_t   pixman_image_set_clip_region32       (pixman_image_t               *image,
-						      pixman_region32_t            *region);
+						      const pixman_region32_t            *region);
 
 PIXMAN_API
 void		pixman_image_set_has_client_clip     (pixman_image_t               *image,

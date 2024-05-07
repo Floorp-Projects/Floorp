@@ -25,6 +25,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "pixman-config.h"
+#endif
+
 /* Supplementary macro for setting function attributes */
 .macro pixman_asm_function_impl fname
 #ifdef ASM_HAVE_FUNC_DIRECTIVE
@@ -43,6 +47,12 @@
 	pixman_asm_function_impl _\fname
 #else
 	pixman_asm_function_impl \fname
+#endif
+.endm
+
+.macro pixman_syntax_unified
+#ifdef ASM_HAVE_SYNTAX_UNIFIED
+	.syntax unified
 #endif
 .endm
 

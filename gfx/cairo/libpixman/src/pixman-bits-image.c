@@ -27,7 +27,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <pixman-config.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -209,15 +209,15 @@ static force_inline void reduce_32(unsigned int satot, unsigned int srtot,
 {
     uint32_t *ret = p;
 
-    satot = (satot + 0x8000) >> 16;
-    srtot = (srtot + 0x8000) >> 16;
-    sgtot = (sgtot + 0x8000) >> 16;
-    sbtot = (sbtot + 0x8000) >> 16;
+    satot = (int32_t)(satot + 0x8000) / 65536;
+    srtot = (int32_t)(srtot + 0x8000) / 65536;
+    sgtot = (int32_t)(sgtot + 0x8000) / 65536;
+    sbtot = (int32_t)(sbtot + 0x8000) / 65536;
 
-    satot = CLIP (satot, 0, 0xff);
-    srtot = CLIP (srtot, 0, 0xff);
-    sgtot = CLIP (sgtot, 0, 0xff);
-    sbtot = CLIP (sbtot, 0, 0xff);
+    satot = CLIP ((int32_t)satot, 0, 0xff);
+    srtot = CLIP ((int32_t)srtot, 0, 0xff);
+    sgtot = CLIP ((int32_t)sgtot, 0, 0xff);
+    sbtot = CLIP ((int32_t)sbtot, 0, 0xff);
 
     *ret = ((satot << 24) | (srtot << 16) | (sgtot <<  8) | (sbtot));
 }
@@ -240,10 +240,10 @@ static force_inline void reduce_float(unsigned int satot, unsigned int srtot,
 {
     argb_t *ret = p;
 
-    ret->a = CLIP (satot / 65536.f, 0.f, 1.f);
-    ret->r = CLIP (srtot / 65536.f, 0.f, 1.f);
-    ret->g = CLIP (sgtot / 65536.f, 0.f, 1.f);
-    ret->b = CLIP (sbtot / 65536.f, 0.f, 1.f);
+    ret->a = CLIP ((int32_t)satot / 65536.f, 0.f, 1.f);
+    ret->r = CLIP ((int32_t)srtot / 65536.f, 0.f, 1.f);
+    ret->g = CLIP ((int32_t)sgtot / 65536.f, 0.f, 1.f);
+    ret->b = CLIP ((int32_t)sbtot / 65536.f, 0.f, 1.f);
 }
 
 typedef void (* accumulate_pixel_t) (unsigned int *satot, unsigned int *srtot,
@@ -1270,7 +1270,7 @@ create_bits (pixman_format_code_t format,
 	*rowstride_bytes = stride;
 
     if (clear)
-	return calloc (buf_size, 1);
+	return calloc (1, buf_size);
     else
 	return malloc (buf_size);
 }

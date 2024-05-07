@@ -97,13 +97,7 @@ following guidelines:
 
    You can run the test suite with 
 
-        make check
-
-   if you built pixman with autotools or
-
        meson test -C builddir
-
-   if you built pixman with meson.
 
    It will take around two minutes to run on a modern PC.
 
