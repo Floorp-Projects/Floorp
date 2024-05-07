@@ -1379,7 +1379,17 @@ who = [
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.7.0 -> 0.19.0@git:d00a69615b74ef75aeb428a7c00fa1a91eb13e97"
+delta = "0.7.0 -> 0.19.0"
+
+[[audits.d3d12]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.19.0 -> 0.20.0"
+
+[[audits.d3d12]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.20.0 -> 0.20.0@git:d5d683d3c491ec8cd2f5cdb43ac61e526cb7c231"
 importable = false
 
 [[audits.darling]]
@@ -2639,6 +2649,12 @@ who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.27.0 -> 0.27.0@git:ff8fd3d6dc7792852f8a015458d7e6d42d7fb352"
 
+[[audits.metal]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.27.0 -> 0.28.0"
+notes = "No significantly changed functionality. Some warnings resolved, bumped `core-graphics-types`, newer versions of Metal supported."
+
 [[audits.midir]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
@@ -2794,7 +2810,12 @@ who = [
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.19.2 -> 0.19.2@git:d00a69615b74ef75aeb428a7c00fa1a91eb13e97"
+delta = "0.19.2 -> 0.20.0"
+
+[[audits.naga]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.20.0 -> 0.20.0@git:d5d683d3c491ec8cd2f5cdb43ac61e526cb7c231"
 importable = false
 
 [[audits.net2]]
@@ -4633,7 +4654,12 @@ who = [
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.19.3 -> 0.19.3@git:d00a69615b74ef75aeb428a7c00fa1a91eb13e97"
+delta = "0.19.3 -> 0.20.0"
+
+[[audits.wgpu-core]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.20.0 -> 0.20.0@git:d5d683d3c491ec8cd2f5cdb43ac61e526cb7c231"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -4692,7 +4718,12 @@ who = [
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.19.3 -> 0.19.3@git:d00a69615b74ef75aeb428a7c00fa1a91eb13e97"
+delta = "0.19.3 -> 0.20.0"
+
+[[audits.wgpu-hal]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.20.0 -> 0.20.0@git:d5d683d3c491ec8cd2f5cdb43ac61e526cb7c231"
 importable = false
 
 [[audits.wgpu-types]]
@@ -4751,7 +4782,12 @@ who = [
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.19.2 -> 0.19.2@git:d00a69615b74ef75aeb428a7c00fa1a91eb13e97"
+delta = "0.19.2 -> 0.20.0"
+
+[[audits.wgpu-types]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.20.0 -> 0.20.0@git:d5d683d3c491ec8cd2f5cdb43ac61e526cb7c231"
 importable = false
 
 [[audits.whatsys]]
