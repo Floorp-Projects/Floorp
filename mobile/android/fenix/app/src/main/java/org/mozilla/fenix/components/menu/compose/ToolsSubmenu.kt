@@ -33,7 +33,6 @@ internal fun ToolsSubmenu(
     onBackButtonClick: () -> Unit,
     onReaderViewMenuClick: () -> Unit,
     onTranslatePageMenuClick: () -> Unit,
-    onReviewCheckerMenuClick: () -> Unit,
     onPrintMenuClick: () -> Unit,
     onShareMenuClick: () -> Unit,
     onOpenInAppMenuClick: () -> Unit,
@@ -67,14 +66,6 @@ internal fun ToolsSubmenu(
                 TranslationMenuItem(
                     isTranslated = isTranslated,
                     onClick = onTranslatePageMenuClick,
-                )
-
-                Divider(color = FirefoxTheme.colors.borderSecondary)
-
-                MenuItem(
-                    label = stringResource(id = R.string.browser_menu_review_checker),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_shopping_24),
-                    onClick = onReviewCheckerMenuClick,
                 )
             }
 
@@ -163,7 +154,6 @@ private fun ToolsSubmenuPreview() {
                 onBackButtonClick = {},
                 onReaderViewMenuClick = {},
                 onTranslatePageMenuClick = {},
-                onReviewCheckerMenuClick = {},
                 onPrintMenuClick = {},
                 onShareMenuClick = {},
                 onOpenInAppMenuClick = {},
@@ -185,7 +175,6 @@ private fun ToolsSubmenuPrivatePreview() {
                 onBackButtonClick = {},
                 onReaderViewMenuClick = {},
                 onTranslatePageMenuClick = {},
-                onReviewCheckerMenuClick = {},
                 onPrintMenuClick = {},
                 onShareMenuClick = {},
                 onOpenInAppMenuClick = {},

@@ -194,7 +194,7 @@
     <string name="browser_menu_extensions">Extensions</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_manage_extensions">Manage extensions</string>
-    <!-- Browser menu button that opens AMO in a tab --> -->
+    <!-- Browser menu button that opens AMO in a tab -->
     <string name="browser_menu_discover_more_extensions">Discover more extensions</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Account info</string>
@@ -294,8 +294,6 @@
     <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
          The first parameter is the name of the language that page was translated to (e.g. English). -->
     <string name="browser_menu_translated_to">Translated to %1$s</string>
-    <!-- Browser menu label for toggling the review quality check feature -->
-    <string name="browser_menu_review_checker">Review Checker</string>
     <!-- Browser menu label for the print feature -->
     <string name="browser_menu_print">Print…</string>
 
