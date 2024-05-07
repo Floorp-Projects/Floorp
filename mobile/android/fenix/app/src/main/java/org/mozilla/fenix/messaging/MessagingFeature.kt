@@ -4,17 +4,18 @@
 
 package org.mozilla.fenix.messaging
 
+import mozilla.components.service.nimbus.messaging.MessageSurfaceId
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction
 
 /**
- * A message observer that updates the provided.
+ * A [LifecycleAwareFeature] which tries to evaluate if message is available for the provided [surface].
  */
-class MessagingFeature(val appStore: AppStore) : LifecycleAwareFeature {
+class MessagingFeature(val appStore: AppStore, val surface: MessageSurfaceId) : LifecycleAwareFeature {
 
     override fun start() {
-        appStore.dispatch(MessagingAction.Evaluate(FenixMessageSurfaceId.HOMESCREEN))
+        appStore.dispatch(MessagingAction.Evaluate(surface))
     }
 
     override fun stop() = Unit

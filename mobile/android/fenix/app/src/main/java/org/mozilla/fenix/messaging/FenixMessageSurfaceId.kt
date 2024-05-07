@@ -22,4 +22,9 @@ object FenixMessageSurfaceId {
      * A survey dialog that is intended to be disruptive.
      */
     const val SURVEY = "survey"
+
+    /**
+     * A microsurvey UI for a specific feature.
+     */
+    const val MICROSURVEY = "microsurvey"
 }
