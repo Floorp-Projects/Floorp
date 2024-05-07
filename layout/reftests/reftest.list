@@ -361,6 +361,9 @@ include text-svgglyphs/reftest.list
 # text-transform/
 include text-transform/reftest.list
 
+# theme (osx)
+include ../../toolkit/themes/osx/reftests/reftest.list
+
 include ../../toolkit/content/tests/reftests/reftest.list
 
 # transform/

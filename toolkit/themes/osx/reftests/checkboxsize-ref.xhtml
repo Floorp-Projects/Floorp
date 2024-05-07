@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window title="Reference for mini, small and regular checkbox sizes"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <style xmlns="http://www.w3.org/1999/xhtml">
+    vbox { height: 50px; }
+    box {
+      appearance: auto;
+      -moz-default-appearance: checkbox;
+      margin-left: 2px;
+      margin-top: 1px;
+    }
+  </style>
+  <vbox>
+    <hbox><box style="width: 11px; height: 11px"/></hbox>
+  </vbox>
+  <vbox>
+    <hbox><box style="width: 13px; height: 13px"/></hbox>
+  </vbox>
+  <vbox>
+    <hbox><box style="width: 16px; height: 16px"/></hbox>
+  </vbox>
+  <vbox>
+    <hbox checked="true"><box style="width: 11px; height: 11px"/></hbox>
+  </vbox>
+  <vbox>
+    <hbox checked="true"><box style="width: 13px; height: 13px"/></hbox>
+  </vbox>
+  <vbox>
+    <hbox checked="true"><box style="width: 16px; height: 16px"/></hbox>
+  </vbox>
+</window>

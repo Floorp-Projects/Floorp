@@ -116,7 +116,10 @@ bool ScrollbarDrawingGTK::PaintScrollbarThumb(
 }
 
 bool ScrollbarDrawingGTK::ShouldDrawScrollbarButtons() {
-  return StaticPrefs::widget_non_native_theme_gtk_scrollbar_allow_buttons();
+  if (StaticPrefs::widget_non_native_theme_enabled()) {
+    return StaticPrefs::widget_non_native_theme_gtk_scrollbar_allow_buttons();
+  }
+  return true;
 }
 
 void ScrollbarDrawingGTK::RecomputeScrollbarParams() {
