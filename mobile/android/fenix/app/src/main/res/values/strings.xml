@@ -589,7 +589,9 @@
     <!-- Preference for language -->
     <string name="preferences_language">Language</string>
     <!-- Preference for translation -->
-    <string name="preferences_translation">Translation</string>
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Translation</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Translations</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Data choices</string>
     <!-- Preference for data collection -->
