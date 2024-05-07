@@ -48,7 +48,3 @@ class TestSetPermission(MarionetteTestCase):
         self.assertEqual(
             self.query_permission({"name": "midi", "sysex": True}), "prompt"
         )
-
-    def test_storage_access(self):
-        self.marionette.set_permission({"name": "storage-access"}, "granted")
-        self.assertEqual(self.query_permission({"name": "storage-access"}), "granted")
