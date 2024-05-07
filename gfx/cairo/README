@@ -52,6 +52,8 @@ cff-font-creation.patch: make cairo_cff_font_t allocation consistent
 
 ==== pixman patches ====
 
+pixman-armasm.patch: add an ifdef guard around pixman-config.h include
+
 pixman-clangcl.patch: clang-cl compilation fix
 
 pixman-export.patch: make sure pixman symbols are not exported in libxul
@@ -60,10 +62,4 @@ pixman-interp.patch: use lower quality interpolation by default on mobile
 
 pixman-intrin.patch: include intrin.h on Windows to fix bustage
 
-pixman-mingw32.patch: include xmmintrin.h on MINGW32 builds to avoid redefinition
-
 pixman-rename.patch: include pixman-rename.h for renaming of external symbols
-
-pixman-arm32-clang.patch: don't use -no-integrated-as for arm32
-
-pixman-arm64-clang.patch: don't use -no-integrated-as for aarch64
