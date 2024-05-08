@@ -33,7 +33,7 @@ class NetworkConnectivityService : public nsINetworkConnectivityService,
   static already_AddRefed<NetworkConnectivityService> GetSingleton();
 
  private:
-  NetworkConnectivityService();
+  NetworkConnectivityService() = default;
   virtual ~NetworkConnectivityService() = default;
 
   nsresult Init();
@@ -47,18 +47,20 @@ class NetworkConnectivityService : public nsINetworkConnectivityService,
   // Will be set to OK if the DNS request returned in IP of this type,
   //                NOT_AVAILABLE if that type of resolution is not available
   //                UNKNOWN if the check wasn't performed
-  Atomic<ConnectivityState, Relaxed> mDNSv4;
-  Atomic<ConnectivityState, Relaxed> mDNSv6;
+  Atomic<ConnectivityState, Relaxed> mDNSv4{ConnectivityState::UNKNOWN};
+  Atomic<ConnectivityState, Relaxed> mDNSv6{ConnectivityState::UNKNOWN};
+  Atomic<ConnectivityState, Relaxed> mDNS_HTTPS{ConnectivityState::UNKNOWN};
 
-  Atomic<ConnectivityState, Relaxed> mIPv4;
-  Atomic<ConnectivityState, Relaxed> mIPv6;
+  Atomic<ConnectivityState, Relaxed> mIPv4{ConnectivityState::UNKNOWN};
+  Atomic<ConnectivityState, Relaxed> mIPv6{ConnectivityState::UNKNOWN};
 
-  Atomic<ConnectivityState, Relaxed> mNAT64;
+  Atomic<ConnectivityState, Relaxed> mNAT64{ConnectivityState::UNKNOWN};
 
-  nsTArray<NetAddr> mNAT64Prefixes;
+  nsTArray<NetAddr> mNAT64Prefixes{ConnectivityState::UNKNOWN};
 
   nsCOMPtr<nsICancelable> mDNSv4Request;
   nsCOMPtr<nsICancelable> mDNSv6Request;
+  nsCOMPtr<nsICancelable> mDNS_HTTPSRequest;
   nsCOMPtr<nsICancelable> mNAT64Request;
 
   nsCOMPtr<nsIChannel> mIPv4Channel;
@@ -67,7 +69,7 @@ class NetworkConnectivityService : public nsINetworkConnectivityService,
   bool mCheckedNetworkId = false;
   bool mHasNetworkId = false;
 
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock MOZ_UNANNOTATED{"nat64prefixes"};
 };
 
 }  // namespace net
