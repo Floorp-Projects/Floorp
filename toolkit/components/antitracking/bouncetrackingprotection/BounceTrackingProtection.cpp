@@ -299,12 +299,9 @@ nsresult BounceTrackingProtection::RecordUserActivation(
       mStorage->GetOrCreateStateGlobal(aPrincipal);
   MOZ_ASSERT(globalState);
 
-  // Default to current time if not timestamp is provided.
-  if (aActivationTime.isNothing()) {
-    aActivationTime = Some(PR_Now());
-  }
-
-  return globalState->RecordUserActivation(siteHost, aActivationTime.extract());
+  // aActivationTime defaults to current time if no value is provided.
+  return globalState->RecordUserActivation(siteHost,
+                                           aActivationTime.valueOr(PR_Now()));
 }
 
 NS_IMETHODIMP
