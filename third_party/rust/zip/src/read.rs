@@ -334,13 +334,10 @@ impl<R: Read + io::Seek> ZipArchive<R> {
                 // offsets all being too small. Get the amount of error by comparing
                 // the actual file position we found the CDE at with the offset
                 // recorded in the CDE.
-                let archive_offset = cde_start_pos
-                    .checked_sub(footer.central_directory_size as u64)
-                    .and_then(|x| x.checked_sub(footer.central_directory_offset as u64))
-                    .ok_or(ZipError::InvalidArchive(
-                        "Invalid central directory size or offset",
-                    ))?;
 
+                // Bug 1895599: omnijars nor other zips we read have data prepended to them; trust
+                // the offsets!
+                let archive_offset = 0;
                 let directory_start = footer.central_directory_offset as u64 + archive_offset;
                 let number_of_files = footer.number_of_files_on_this_disk as usize;
                 Ok((archive_offset, directory_start, number_of_files))

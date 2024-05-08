@@ -7,6 +7,7 @@ use crate::spec;
 use crate::types::{AtomicU64, DateTime, System, ZipFileData, DEFAULT_VERSION};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use crc32fast::Hasher;
+#[cfg(feature = "time")]
 use std::convert::TryInto;
 use std::default::Default;
 use std::io;
