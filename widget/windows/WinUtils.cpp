@@ -1189,15 +1189,6 @@ LayoutDeviceIntRect WinUtils::ToIntRect(const RECT& aRect) {
                              aRect.bottom - aRect.top);
 }
 
-RECT WinUtils::ToWinRect(const LayoutDeviceIntRect& aRect) {
-  return {
-      .left = aRect.x,
-      .top = aRect.y,
-      .right = aRect.XMost(),
-      .bottom = aRect.YMost(),
-  };
-}
-
 /* static */
 bool WinUtils::IsIMEEnabled(const InputContext& aInputContext) {
   return IsIMEEnabled(aInputContext.mIMEState.mEnabled);
