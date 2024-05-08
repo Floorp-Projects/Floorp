@@ -21,6 +21,8 @@ enum class ScalarID : uint32_t;
 
 namespace mozilla::glean {
 
+typedef uint64_t TimerId;
+
 class GleanMetric : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS;
