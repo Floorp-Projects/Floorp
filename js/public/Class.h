@@ -272,6 +272,9 @@ typedef JSString* (*JSFunToStringOp)(JSContext* cx, JS::HandleObject obj,
  * JS looks for a property in an object, and if not found, tries to resolve
  * the given id. *resolvedp should be set to true iff the property was defined
  * on |obj|.
+ *
+ * See JS::dbg::ShouldAvoidSideEffects in Debug.h if this function has any
+ * other side-effect than just resolving the property.
  */
 typedef bool (*JSResolveOp)(JSContext* cx, JS::HandleObject obj,
                             JS::HandleId id, bool* resolvedp);
