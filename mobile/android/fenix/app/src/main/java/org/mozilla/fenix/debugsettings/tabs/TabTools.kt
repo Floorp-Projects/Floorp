@@ -152,7 +152,7 @@ private fun TabCounter(
         Spacer(modifier = Modifier.height(16.dp))
 
         TabCountRow(
-            tabType = stringResource(R.string.debug_drawer_tab_tools_tab_count_normal),
+            tabType = stringResource(R.string.debug_drawer_tab_tools_tab_count_active),
             count = activeTabCount,
         )
 
