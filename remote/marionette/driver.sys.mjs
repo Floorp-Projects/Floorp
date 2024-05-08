@@ -3357,22 +3357,16 @@ GeckoDriver.prototype.setPermission = async function (cmd) {
   const { descriptor, state, oneRealm = false } = cmd.parameters;
   const browsingContext = lazy.assert.open(this.getBrowsingContext());
 
-  // XXX: We currently depend on camera/microphone tests throwing UnsupportedOperationError,
-  // the fix is ongoing in bug 1609427.
-  if (["camera", "microphone"].includes(descriptor.name)) {
-    throw new lazy.error.UnsupportedOperationError(
-      "setPermission: camera and microphone permissions are currently unsupported"
-    );
-  }
+  lazy.permissions.validatePermission(descriptor.name);
 
-  // XXX: Allowing this permission causes timing related Android crash, see also bug 1878741
+  // Bug 1878741: Allowing this permission causes timing related Android crash.
   if (descriptor.name === "notifications") {
     if (Services.prefs.getBoolPref("notification.prompt.testing", false)) {
       // Okay, do nothing. The notifications module will work without permission.
       return;
     }
     throw new lazy.error.UnsupportedOperationError(
-      "setPermission: expected notification.prompt.testing to be set"
+      `Setting "descriptor.name" "notifications" expected "notification.prompt.testing" preference to be set`
     );
   }
 
@@ -3389,7 +3383,26 @@ GeckoDriver.prototype.setPermission = async function (cmd) {
 
   lazy.assert.boolean(oneRealm);
 
-  lazy.permissions.set(params.type, params.state, oneRealm, browsingContext);
+  if (!lazy.MarionettePrefs.setPermissionEnabled) {
+    throw new lazy.error.UnsupportedOperationError(
+      "'Set Permission' is not available"
+    );
+  }
+
+  let origin = browsingContext.currentURI.prePath;
+
+  // storage-access is a special case.
+  if (descriptor.name === "storage-access") {
+    origin = browsingContext.top.currentURI.prePath;
+
+    params = {
+      type: lazy.permissions.getStorageAccessPermissionsType(
+        browsingContext.currentWindowGlobal.documentURI
+      ),
+    };
+  }
+
+  lazy.permissions.set(params, state, origin);
 };
 
 /**
