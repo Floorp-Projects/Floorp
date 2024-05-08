@@ -1,8 +1,8 @@
 import logging
 from datetime import datetime
 
-from taskgraph import files_changed
 from taskgraph.optimize.base import OptimizationStrategy, register_strategy
+from taskgraph.util.path import match as match_path
 from taskgraph.util.taskcluster import find_task_id, status_task
 
 logger = logging.getLogger(__name__)
@@ -48,12 +48,20 @@ class IndexSearch(OptimizationStrategy):
 
 @register_strategy("skip-unless-changed")
 class SkipUnlessChanged(OptimizationStrategy):
+
+    def check(self, files_changed, patterns):
+        for pattern in patterns:
+            for path in files_changed:
+                if match_path(path, pattern):
+                    return True
+        return False
+
     def should_remove_task(self, task, params, file_patterns):
         # pushlog_id == -1 - this is the case when run from a cron.yml job or on a git repository
         if params.get("repository_type") == "hg" and params.get("pushlog_id") == -1:
             return False
 
-        changed = files_changed.check(params, file_patterns)
+        changed = self.check(params["files_changed"], file_patterns)
         if not changed:
             logger.debug(
                 f'no files found matching a pattern in `skip-unless-changed` for "{task.label}"'

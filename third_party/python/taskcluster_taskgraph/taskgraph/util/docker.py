@@ -7,6 +7,7 @@ import hashlib
 import io
 import os
 import re
+from typing import Optional
 
 from taskgraph.util.archive import create_tar_gz_from_files
 from taskgraph.util.memoize import memoize
@@ -16,17 +17,27 @@ IMAGE_DIR = os.path.join(".", "taskcluster", "docker")
 from .yaml import load_yaml
 
 
-def docker_image(name, by_tag=False):
+def docker_image(name: str, by_tag: bool = False) -> Optional[str]:
     """
     Resolve in-tree prebuilt docker image to ``<registry>/<repository>@sha256:<digest>``,
     or ``<registry>/<repository>:<tag>`` if `by_tag` is `True`.
+
+    Args:
+        name (str): The image to build.
+        by_tag (bool): If True, will apply a tag based on VERSION file.
+            Otherwise will apply a hash based on HASH file.
+    Returns:
+        Optional[str]: Image if it can be resolved, otherwise None.
     """
     try:
         with open(os.path.join(IMAGE_DIR, name, "REGISTRY")) as f:
             registry = f.read().strip()
     except OSError:
-        with open(os.path.join(IMAGE_DIR, "REGISTRY")) as f:
-            registry = f.read().strip()
+        try:
+            with open(os.path.join(IMAGE_DIR, "REGISTRY")) as f:
+                registry = f.read().strip()
+        except OSError:
+            return None
 
     if not by_tag:
         hashfile = os.path.join(IMAGE_DIR, name, "HASH")
@@ -34,7 +45,7 @@ def docker_image(name, by_tag=False):
             with open(hashfile) as f:
                 return f"{registry}/{name}@{f.read().strip()}"
         except OSError:
-            raise Exception(f"Failed to read HASH file {hashfile}")
+            return None
 
     try:
         with open(os.path.join(IMAGE_DIR, name, "VERSION")) as f:

@@ -20,6 +20,7 @@ from taskgraph.transforms.run import fetches_schema
 from taskgraph.util.attributes import attrmatch
 from taskgraph.util.dependencies import GROUP_BY_MAP, get_dependencies
 from taskgraph.util.schema import Schema, validate_schema
+from taskgraph.util.set_name import SET_NAME_MAP
 
 FROM_DEPS_SCHEMA = Schema(
     {
@@ -41,12 +42,14 @@ FROM_DEPS_SCHEMA = Schema(
                 "set-name",
                 description=dedent(
                     """
-                When True, `from_deps` will derive a name for the generated
-                tasks from the name of the primary dependency. Defaults to
-                True.
+                UPDATE ME AND DOCS
                 """.lstrip()
                 ),
-            ): bool,
+            ): Any(
+                None,
+                *SET_NAME_MAP,
+                {Any(*SET_NAME_MAP): object},
+            ),
             Optional(
                 "with-attributes",
                 description=dedent(
@@ -170,7 +173,7 @@ def from_deps(config, tasks):
             groups = func(config, deps)
 
         # Split the task, one per group.
-        set_name = from_deps.get("set-name", True)
+        set_name = from_deps.get("set-name", "strip-kind")
         copy_attributes = from_deps.get("copy-attributes", False)
         unique_kinds = from_deps.get("unique-kinds", True)
         fetches = from_deps.get("fetches", [])
@@ -203,10 +206,8 @@ def from_deps(config, tasks):
             primary_dep = [dep for dep in group if dep.kind == primary_kind][0]
 
             if set_name:
-                if primary_dep.label.startswith(primary_kind):
-                    new_task["name"] = primary_dep.label[len(primary_kind) + 1 :]
-                else:
-                    new_task["name"] = primary_dep.label
+                func = SET_NAME_MAP[set_name]
+                new_task["name"] = func(config, deps, primary_dep, primary_kind)
 
             if copy_attributes:
                 attrs = new_task.setdefault("attributes", {})

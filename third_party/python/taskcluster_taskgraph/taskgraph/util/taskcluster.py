@@ -140,22 +140,9 @@ def _handle_artifact(path, response):
 
 def get_artifact_url(task_id, path, use_proxy=False):
     artifact_tmpl = liburls.api(
-        get_root_url(False), "queue", "v1", "task/{}/artifacts/{}"
+        get_root_url(use_proxy), "queue", "v1", "task/{}/artifacts/{}"
     )
-    data = artifact_tmpl.format(task_id, path)
-    if use_proxy:
-        # Until Bug 1405889 is deployed, we can't download directly
-        # from the taskcluster-proxy.  Work around by using the /bewit
-        # endpoint instead.
-        # The bewit URL is the body of a 303 redirect, which we don't
-        # want to follow (which fetches a potentially large resource).
-        response = _do_request(
-            os.environ["TASKCLUSTER_PROXY_URL"] + "/bewit",
-            data=data,
-            allow_redirects=False,
-        )
-        return response.text
-    return data
+    return artifact_tmpl.format(task_id, path)
 
 
 def get_artifact(task_id, path, use_proxy=False):

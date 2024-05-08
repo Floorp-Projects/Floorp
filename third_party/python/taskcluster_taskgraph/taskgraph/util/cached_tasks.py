@@ -7,9 +7,7 @@ import hashlib
 import time
 
 TARGET_CACHE_INDEX = "{cache_prefix}.cache.level-{level}.{type}.{name}.hash.{digest}"
-TARGET_PR_CACHE_INDEX = (
-    "{cache_prefix}.cache.head.{head_ref}.{type}.{name}.hash.{digest}"
-)
+TARGET_PR_CACHE_INDEX = "{cache_prefix}.cache.pr.{type}.{name}.hash.{digest}"
 EXTRA_CACHE_INDEXES = [
     "{cache_prefix}.cache.level-{level}.{type}.{name}.latest",
     "{cache_prefix}.cache.level-{level}.{type}.{name}.pushdate.{build_date_long}",
