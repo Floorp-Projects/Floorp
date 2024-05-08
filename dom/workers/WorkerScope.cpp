@@ -736,25 +736,28 @@ already_AddRefed<IDBFactory> WorkerGlobalScope::GetIndexedDB(
   if (!indexedDB) {
     StorageAccess access = mWorkerPrivate->StorageAccess();
 
+    bool allowed = true;
     if (access == StorageAccess::eDeny) {
       NS_WARNING("IndexedDB is not allowed in this worker!");
-      aErrorResult = NS_ERROR_DOM_SECURITY_ERR;
-      return nullptr;
+      allowed = false;
     }
 
     if (ShouldPartitionStorage(access) &&
         !StoragePartitioningEnabled(access,
                                     mWorkerPrivate->CookieJarSettings())) {
       NS_WARNING("IndexedDB is not allowed in this worker!");
-      aErrorResult = NS_ERROR_DOM_SECURITY_ERR;
-      return nullptr;
+      allowed = false;
     }
 
-    const PrincipalInfo& principalInfo =
-        mWorkerPrivate->GetEffectiveStoragePrincipalInfo();
+    auto windowID = mWorkerPrivate->WindowID();
 
-    auto res = IDBFactory::CreateForWorker(this, principalInfo,
-                                           mWorkerPrivate->WindowID());
+    auto principalInfoPtr =
+        allowed ? MakeUnique<PrincipalInfo>(
+                      mWorkerPrivate->GetEffectiveStoragePrincipalInfo())
+                : nullptr;
+    auto res = IDBFactory::CreateForWorker(this, std::move(principalInfoPtr),
+                                           windowID);
+
     if (NS_WARN_IF(res.isErr())) {
       aErrorResult = res.unwrapErr();
       return nullptr;
