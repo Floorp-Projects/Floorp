@@ -3,14 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import json
-import os
 import unittest
 
 from mozunit import main
 
 from gecko_taskgraph import files_changed
-from gecko_taskgraph.util import hg
 
 PARAMS = {
     "head_repository": "https://hg.mozilla.org/mozilla-central",
@@ -31,40 +28,17 @@ FILES_CHANGED = [
 ]
 
 
-class FakeResponse:
-    def json(self):
-        with open(
-            os.path.join(os.path.dirname(__file__), "automationrelevance.json")
-        ) as f:
-            return json.load(f)
-
-
-class TestGetChangedFiles(unittest.TestCase):
-    def setUp(self):
-        files_changed.get_changed_files.clear()
-        self.old_get = hg.requests.get
-
-        def fake_get(url, **kwargs):
-            return FakeResponse()
-
-        hg.requests.get = fake_get
-
-    def tearDown(self):
-        hg.requests.get = self.old_get
-        files_changed.get_changed_files.clear()
-
-    def test_get_changed_files(self):
-        """Get_changed_files correctly gets the list of changed files in a push.
-        This tests against the production hg.mozilla.org so that it will detect
-        any changes in the format of the returned data."""
-        self.assertEqual(
-            sorted(
-                files_changed.get_changed_files(
-                    PARAMS["head_repository"], PARAMS["head_rev"]
-                )
-            ),
-            FILES_CHANGED,
+def test_get_changed_files(responses):
+    url = f"{PARAMS['head_repository']}/json-pushchangedfiles/{PARAMS['head_rev']}"
+    responses.add(responses.GET, url, status=200, json={"files": FILES_CHANGED})
+    assert (
+        sorted(
+            files_changed.get_changed_files(
+                PARAMS["head_repository"], PARAMS["head_rev"]
+            )
         )
+        == FILES_CHANGED
+    )
 
 
 class TestCheck(unittest.TestCase):

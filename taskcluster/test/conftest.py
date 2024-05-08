@@ -45,10 +45,10 @@ def create_tgg(responses, datadir):
         mock_requests[url] = "bugbug-push-schedules.json"
 
         # files changed
-        url = "{head_repository}/json-automationrelevance/{head_rev}".format(
+        url = "{head_repository}/json-pushfileschanged/{head_rev}".format(
             **tgg.parameters
         )
-        mock_requests[url] = "automationrelevance.json"
+        mock_requests[url] = "pushfileschanged.json"
 
         url = PUSHLOG_PUSHES_TMPL.format(
             repository=tgg.parameters["head_repository"],

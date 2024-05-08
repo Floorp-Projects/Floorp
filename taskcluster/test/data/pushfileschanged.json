@@ -1,0 +1,25 @@
+{
+  "files": [
+    "devtools/client/responsive/browser/swap.js",
+    "devtools/client/responsive/browser/tunnel.js",
+    "docshell/base/BrowsingContextWebProgress.cpp",
+    "dom/ipc/BrowserChild.cpp",
+    "dom/ipc/BrowserParent.cpp",
+    "dom/ipc/PBrowser.ipdl",
+    "dom/ipc/RemoteWebProgressRequest.cpp",
+    "dom/ipc/RemoteWebProgressRequest.h",
+    "dom/ipc/components.conf",
+    "dom/ipc/moz.build",
+    "dom/ipc/nsIRemoteWebProgressRequest.idl",
+    "dom/ipc/tests/browser.ini",
+    "dom/ipc/tests/browser_ElapsedTime.js",
+    "dom/ipc/tests/elapsed_time.sjs",
+    "netwerk/ipc/DocumentLoadListener.cpp",
+    "netwerk/ipc/DocumentLoadListener.h",
+    "security/manager/ssl/nsSecureBrowserUI.cpp",
+    "tools/lint/eslint/modules.json",
+    "toolkit/content/widgets/browser-custom-element.js",
+    "toolkit/modules/RemoteWebProgress.jsm",
+    "toolkit/modules/moz.build"
+  ]
+}
