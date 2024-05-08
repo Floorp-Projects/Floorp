@@ -125,23 +125,14 @@
         this.tabbox.tabpanels.setAttribute("async", "true");
       }
 
-      this.configureTooltip = () => {
-        // fall back to original tooltip behavior if pref is not set
-        if (this._showCardPreviews) {
-          this.tooltip = null;
-        } else {
-          this.tooltip = "tabbrowser-tab-tooltip";
-          this._previewPanel = null;
-        }
-      };
       XPCOMUtils.defineLazyPreferenceGetter(
         this,
         "_showCardPreviews",
         TAB_PREVIEW_PREF,
-        false,
-        () => this.configureTooltip()
+        false
       );
-      this.configureTooltip();
+      this.tooltip = "tabbrowser-tab-tooltip";
+      this._previewPanel = null;
     }
 
     on_TabSelect() {
