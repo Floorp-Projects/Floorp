@@ -1,0 +1,216 @@
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Tue, 7 May 2024 15:11:00 -0700
+Subject: Bug 1895602 - Cherry-pick upstream libwebrtc commit c03827db1b
+ r?mjf,pehrsons
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Upstream commit: https://webrtc.googlesource.com/src/+/c03827db1bdbf55b2e3daa0898530626d988c403
+       Cleanup SimulcastEncoderAdapter - require webrtc::Environment at construction time
+
+       Bug: webrtc:15860
+       Change-Id: I1a786fb4b04112197e49c883884fc4b30f8d13f4
+       Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/343182
+       Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+       Reviewed-by: Philip Eliasson <philipel@webrtc.org>
+       Reviewed-by: Erik Språng <sprang@webrtc.org>
+       Cr-Commit-Position: refs/heads/main@{#41937}
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2ebdede1f90fc98f08ebe0c5c501931801cc323f
+---
+ api/video_codecs/BUILD.gn                     |  1 -
+ .../builtin_video_encoder_factory.cc          | 17 -------
+ media/BUILD.gn                                |  1 -
+ media/engine/simulcast_encoder_adapter.cc     | 49 +++----------------
+ media/engine/simulcast_encoder_adapter.h      | 19 +------
+ 5 files changed, 7 insertions(+), 80 deletions(-)
+
+diff --git a/api/video_codecs/BUILD.gn b/api/video_codecs/BUILD.gn
+index ddfdc376a3..dbdc23ad54 100644
+--- a/api/video_codecs/BUILD.gn
++++ b/api/video_codecs/BUILD.gn
+@@ -151,7 +151,6 @@ rtc_library("builtin_video_encoder_factory") {
+     "../../media:rtc_simulcast_encoder_adapter",
+     "../../rtc_base/system:rtc_export",
+     "../environment",
+-    "../transport:field_trial_based_config",
+   ]
+   absl_deps = [
+     "//third_party/abseil-cpp/absl/strings",
+diff --git a/api/video_codecs/builtin_video_encoder_factory.cc b/api/video_codecs/builtin_video_encoder_factory.cc
+index 77a6d65c5d..bbd52221f5 100644
+--- a/api/video_codecs/builtin_video_encoder_factory.cc
++++ b/api/video_codecs/builtin_video_encoder_factory.cc
+@@ -16,7 +16,6 @@
+ 
+ #include "absl/types/optional.h"
+ #include "api/environment/environment.h"
+-#include "api/transport/field_trial_based_config.h"
+ #include "api/video_codecs/sdp_video_format.h"
+ #include "api/video_codecs/video_encoder.h"
+ #include "api/video_codecs/video_encoder_factory.h"
+@@ -33,22 +32,6 @@ class BuiltinVideoEncoderFactory : public VideoEncoderFactory {
+   BuiltinVideoEncoderFactory()
+       : internal_encoder_factory_(new InternalEncoderFactory()) {}
+ 
+-  std::unique_ptr<VideoEncoder> CreateVideoEncoder(
+-      const SdpVideoFormat& format) override {
+-    // Try creating an InternalEncoderFactory-backed SimulcastEncoderAdapter.
+-    // The adapter has a passthrough mode for the case that simulcast is not
+-    // used, so all responsibility can be delegated to it.
+-    std::unique_ptr<VideoEncoder> encoder;
+-    if (format.IsCodecInList(
+-            internal_encoder_factory_->GetSupportedFormats())) {
+-      encoder = std::make_unique<SimulcastEncoderAdapter>(
+-          /*primary_factory=*/internal_encoder_factory_.get(),
+-          /*fallback_factory=*/nullptr, format, FieldTrialBasedConfig());
+-    }
+-
+-    return encoder;
+-  }
+-
+   std::unique_ptr<VideoEncoder> Create(const Environment& env,
+                                        const SdpVideoFormat& format) override {
+     // Try creating an InternalEncoderFactory-backed SimulcastEncoderAdapter.
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index 4989f5192f..68d476133b 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -495,7 +495,6 @@ rtc_library("rtc_simulcast_encoder_adapter") {
+     "../api:scoped_refptr",
+     "../api:sequence_checker",
+     "../api/environment",
+-    "../api/transport:field_trial_based_config",
+     "../api/video:video_codec_constants",
+     "../api/video:video_frame",
+     "../api/video:video_rtp_headers",
+diff --git a/media/engine/simulcast_encoder_adapter.cc b/media/engine/simulcast_encoder_adapter.cc
+index d274c85f3b..f95ccb052a 100644
+--- a/media/engine/simulcast_encoder_adapter.cc
++++ b/media/engine/simulcast_encoder_adapter.cc
+@@ -22,7 +22,6 @@
+ #include "absl/types/optional.h"
+ #include "api/field_trials_view.h"
+ #include "api/scoped_refptr.h"
+-#include "api/transport/field_trial_based_config.h"
+ #include "api/video/i420_buffer.h"
+ #include "api/video/video_codec_constants.h"
+ #include "api/video/video_frame_buffer.h"
+@@ -251,38 +250,7 @@ SimulcastEncoderAdapter::SimulcastEncoderAdapter(
+     absl::Nonnull<VideoEncoderFactory*> primary_factory,
+     absl::Nullable<VideoEncoderFactory*> fallback_factory,
+     const SdpVideoFormat& format)
+-    : SimulcastEncoderAdapter(&env,
+-                              primary_factory,
+-                              fallback_factory,
+-                              format,
+-                              env.field_trials()) {}
+-
+-SimulcastEncoderAdapter::SimulcastEncoderAdapter(VideoEncoderFactory* factory,
+-                                                 const SdpVideoFormat& format)
+-    : SimulcastEncoderAdapter(/*env=*/nullptr,
+-                              /*primary_factory=*/factory,
+-                              /*fallback_factory=*/nullptr,
+-                              format,
+-                              FieldTrialBasedConfig()) {}
+-
+-SimulcastEncoderAdapter::SimulcastEncoderAdapter(
+-    VideoEncoderFactory* primary_factory,
+-    VideoEncoderFactory* fallback_factory,
+-    const SdpVideoFormat& format,
+-    const FieldTrialsView& field_trials)
+-    : SimulcastEncoderAdapter(/*env=*/nullptr,
+-                              primary_factory,
+-                              fallback_factory,
+-                              format,
+-                              field_trials) {}
+-
+-SimulcastEncoderAdapter::SimulcastEncoderAdapter(
+-    absl::Nullable<const Environment*> env,
+-    absl::Nonnull<VideoEncoderFactory*> primary_factory,
+-    absl::Nullable<VideoEncoderFactory*> fallback_factory,
+-    const SdpVideoFormat& format,
+-    const FieldTrialsView& field_trials)
+-    : env_(env != nullptr ? absl::make_optional(*env) : absl::nullopt),
++    : env_(env),
+       inited_(0),
+       primary_encoder_factory_(primary_factory),
+       fallback_encoder_factory_(fallback_factory),
+@@ -291,11 +259,11 @@ SimulcastEncoderAdapter::SimulcastEncoderAdapter(
+       bypass_mode_(false),
+       encoded_complete_callback_(nullptr),
+       experimental_boosted_screenshare_qp_(
+-          GetScreenshareBoostedQpValue(field_trials)),
++          GetScreenshareBoostedQpValue(env_.field_trials())),
+       boost_base_layer_quality_(
+-          RateControlSettings::ParseFromKeyValueConfig(&field_trials)
++          RateControlSettings::ParseFromKeyValueConfig(&env_.field_trials())
+               .Vp8BoostBaseLayerQuality()),
+-      prefer_temporal_support_on_base_layer_(field_trials.IsEnabled(
++      prefer_temporal_support_on_base_layer_(env_.field_trials().IsEnabled(
+           "WebRTC-Video-PreferTemporalSupportOnBaseLayer")),
+       per_layer_pli_(SupportsPerLayerPictureLossIndication(format.parameters)) {
+   RTC_DCHECK(primary_factory);
+@@ -769,16 +737,11 @@ SimulcastEncoderAdapter::FetchOrCreateEncoderContext(
+     cached_encoder_contexts_.erase(encoder_context_iter);
+   } else {
+     std::unique_ptr<VideoEncoder> primary_encoder =
+-        env_.has_value()
+-            ? primary_encoder_factory_->Create(*env_, video_format_)
+-            : primary_encoder_factory_->CreateVideoEncoder(video_format_);
++        primary_encoder_factory_->Create(env_, video_format_);
+ 
+     std::unique_ptr<VideoEncoder> fallback_encoder;
+     if (fallback_encoder_factory_ != nullptr) {
+-      fallback_encoder =
+-          env_.has_value()
+-              ? fallback_encoder_factory_->Create(*env_, video_format_)
+-              : fallback_encoder_factory_->CreateVideoEncoder(video_format_);
++      fallback_encoder = fallback_encoder_factory_->Create(env_, video_format_);
+     }
+ 
+     std::unique_ptr<VideoEncoder> encoder;
+diff --git a/media/engine/simulcast_encoder_adapter.h b/media/engine/simulcast_encoder_adapter.h
+index 8732270135..951eb85726 100644
+--- a/media/engine/simulcast_encoder_adapter.h
++++ b/media/engine/simulcast_encoder_adapter.h
+@@ -51,15 +51,6 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
+                           absl::Nullable<VideoEncoderFactory*> fallback_factory,
+                           const SdpVideoFormat& format);
+ 
+-  [[deprecated("bugs.webrtc.org/15860")]] SimulcastEncoderAdapter(
+-      VideoEncoderFactory* primarty_factory,
+-      const SdpVideoFormat& format);
+-
+-  // TODO: bugs.webrtc.org/15860 - Deprecate or delete when not used by chromium
+-  SimulcastEncoderAdapter(VideoEncoderFactory* primary_factory,
+-                          VideoEncoderFactory* fallback_factory,
+-                          const SdpVideoFormat& format,
+-                          const FieldTrialsView& field_trials);
+   ~SimulcastEncoderAdapter() override;
+ 
+   // Implements VideoEncoder.
+@@ -153,12 +144,6 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
+     bool is_paused_;
+   };
+ 
+-  SimulcastEncoderAdapter(absl::Nullable<const Environment*> env,
+-                          absl::Nonnull<VideoEncoderFactory*> primary_factory,
+-                          absl::Nullable<VideoEncoderFactory*> fallback_factory,
+-                          const SdpVideoFormat& format,
+-                          const FieldTrialsView& field_trials);
+-
+   bool Initialized() const;
+ 
+   void DestroyStoredEncoders();
+@@ -184,9 +169,7 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
+ 
+   void OverrideFromFieldTrial(VideoEncoder::EncoderInfo* info) const;
+ 
+-  // TODO: bugs.webrtc.org/15860 - Make env_ non optional when deprecated
+-  // constructors are deleted.
+-  const absl::optional<Environment> env_;
++  const Environment env_;
+   std::atomic<int> inited_;
+   VideoEncoderFactory* const primary_encoder_factory_;
+   VideoEncoderFactory* const fallback_encoder_factory_;
