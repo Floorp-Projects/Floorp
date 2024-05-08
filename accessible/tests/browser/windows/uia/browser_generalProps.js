@@ -4,6 +4,12 @@
 
 "use strict";
 
+/* eslint-disable camelcase */
+// From https://learn.microsoft.com/en-us/windows/win32/winauto/landmark-type-identifiers
+const UIA_CustomLandmarkTypeId = 80000;
+const UIA_MainLandmarkTypeId = 80002;
+/* eslint-enable camelcase */
+
 /**
  * Test the Name property.
  */
@@ -317,5 +323,67 @@ addUiaTask(
         "main has correct LocalizedControlType"
       );
     }
+  }
+);
+
+/**
+ * Test the LandmarkType property.
+ */
+addUiaTask(
+  `
+<div id="main" role="main">main</div>
+<main id="htmlMain">htmlMain</main>
+<div id="banner" role="banner">banner</div>
+<header id="header">header</header>
+<div id="region" role="region" aria-label="region">region</div>
+<div id="unnamedRegion" role="region">unnamedRegion</div>
+<main id="mainBanner" role="banner">mainBanner</main>
+<div id="none">none</div>
+  `,
+  async function testLandmarkType() {
+    await definePyVar("doc", `getDocUia()`);
+    is(
+      await runPython(`findUiaByDomId(doc, "main").CurrentLandmarkType`),
+      UIA_MainLandmarkTypeId,
+      "main has correct LandmarkType"
+    );
+    is(
+      await runPython(`findUiaByDomId(doc, "htmlMain").CurrentLandmarkType`),
+      UIA_MainLandmarkTypeId,
+      "htmlMain has correct LandmarkType"
+    );
+    is(
+      await runPython(`findUiaByDomId(doc, "banner").CurrentLandmarkType`),
+      UIA_CustomLandmarkTypeId,
+      "banner has correct LandmarkType"
+    );
+    is(
+      await runPython(`findUiaByDomId(doc, "header").CurrentLandmarkType`),
+      UIA_CustomLandmarkTypeId,
+      "header has correct LandmarkType"
+    );
+    is(
+      await runPython(`findUiaByDomId(doc, "region").CurrentLandmarkType`),
+      UIA_CustomLandmarkTypeId,
+      "region has correct LandmarkType"
+    );
+    is(
+      await runPython(
+        `findUiaByDomId(doc, "unnamedRegion").CurrentLandmarkType`
+      ),
+      0,
+      "unnamedRegion has correct LandmarkType"
+    );
+    // ARIA role takes precedence.
+    is(
+      await runPython(`findUiaByDomId(doc, "mainBanner").CurrentLandmarkType`),
+      UIA_CustomLandmarkTypeId,
+      "mainBanner has correct LandmarkType"
+    );
+    is(
+      await runPython(`findUiaByDomId(doc, "none").CurrentLandmarkType`),
+      0,
+      "none has correct LandmarkType"
+    );
   }
 );

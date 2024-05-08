@@ -192,6 +192,7 @@ class uiaRawElmProvider : public IAccessibleEx,
   SAFEARRAY* AccRelationsToUiaArray(
       std::initializer_list<RelationType> aTypes) const;
   Accessible* GetLabeledBy() const;
+  long GetLandmarkType() const;
 };
 
 SAFEARRAY* AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs);
