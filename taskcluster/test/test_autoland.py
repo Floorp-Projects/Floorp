@@ -16,6 +16,34 @@ PARAMS = {
 }
 
 
+def test_tasks_have_optimization(full_task_graph, filter_tasks):
+    kinds = (
+        "artifact_build",
+        "build-fat-aar",
+        "build",
+        "generate-profile",
+        "hazard",
+        "instrumented-build",
+        "spidermonkey",
+        "static-analysis-autotest",
+        "test",
+        "valgrind",
+    )
+    errors = []
+    for task in filter_tasks(
+        full_task_graph, lambda t: t.kind in kinds and "ccov" not in t.label
+    ):
+        if not task.optimization:
+            errors.append(task.label)
+
+    if errors:
+        label_str = "\n  ".join(errors)
+        s_are = " is" if len(errors) == 1 else "s are"
+        pytest.fail(
+            f"The following task{s_are} missing an optimization:\n  {label_str}"
+        )
+
+
 def test_generate_graph(optimized_task_graph):
     """Simply tests that generating the graph does not fail."""
     assert len(optimized_task_graph.tasks) > 0
