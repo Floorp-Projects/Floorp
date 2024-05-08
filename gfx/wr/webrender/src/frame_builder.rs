@@ -453,7 +453,6 @@ impl FrameBuilder {
                     SubpixelMode::Allow,
                     &mut frame_state,
                     &frame_context,
-                    data_stores,
                     &mut scratch.primitive,
                     tile_caches,
                 )

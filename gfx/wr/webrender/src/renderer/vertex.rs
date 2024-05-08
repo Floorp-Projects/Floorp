@@ -567,56 +567,6 @@ pub mod desc {
         ],
     };
 
-    pub const SVG_FILTER_NODE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[VertexAttribute {
-            name: "aPosition",
-            count: 2,
-            kind: VertexAttributeKind::U8Norm,
-        }],
-        instance_attributes: &[
-            VertexAttribute {
-                name: "aFilterTargetRect",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-            VertexAttribute {
-                name: "aFilterInput1ContentScaleAndOffset",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-            VertexAttribute {
-                name: "aFilterInput2ContentScaleAndOffset",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-            VertexAttribute {
-                name: "aFilterInput1TaskAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aFilterInput2TaskAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aFilterKind",
-                count: 1,
-                kind: VertexAttributeKind::U16,
-            },
-            VertexAttribute {
-                name: "aFilterInputCount",
-                count: 1,
-                kind: VertexAttributeKind::U16,
-            },
-            VertexAttribute {
-                name: "aFilterExtraDataAddress",
-                count: 2,
-                kind: VertexAttributeKind::U16,
-            },
-        ],
-    };
-
     pub const MASK: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
@@ -830,7 +780,6 @@ pub enum VertexArrayKind {
     ConicGradient,
     Resolve,
     SvgFilter,
-    SvgFilterNode,
     Composite,
     Clear,
     Copy,
@@ -1055,7 +1004,6 @@ pub struct RendererVAOs {
     conic_gradient_vao: VAO,
     resolve_vao: VAO,
     svg_filter_vao: VAO,
-    svg_filter_node_vao: VAO,
     composite_vao: VAO,
     clear_vao: VAO,
     copy_vao: VAO,
@@ -1103,7 +1051,6 @@ impl RendererVAOs {
             conic_gradient_vao: device.create_vao_with_new_instances(&desc::CONIC_GRADIENT, &prim_vao),
             resolve_vao: device.create_vao_with_new_instances(&desc::RESOLVE, &prim_vao),
             svg_filter_vao: device.create_vao_with_new_instances(&desc::SVG_FILTER, &prim_vao),
-            svg_filter_node_vao: device.create_vao_with_new_instances(&desc::SVG_FILTER_NODE, &prim_vao),
             composite_vao: device.create_vao_with_new_instances(&desc::COMPOSITE, &prim_vao),
             clear_vao: device.create_vao_with_new_instances(&desc::CLEAR, &prim_vao),
             copy_vao: device.create_vao_with_new_instances(&desc::COPY, &prim_vao),
@@ -1126,7 +1073,6 @@ impl RendererVAOs {
         device.delete_vao(self.border_vao);
         device.delete_vao(self.scale_vao);
         device.delete_vao(self.svg_filter_vao);
-        device.delete_vao(self.svg_filter_node_vao);
         device.delete_vao(self.composite_vao);
         device.delete_vao(self.clear_vao);
         device.delete_vao(self.copy_vao);
@@ -1152,7 +1098,6 @@ impl ops::Index<VertexArrayKind> for RendererVAOs {
             VertexArrayKind::ConicGradient => &self.conic_gradient_vao,
             VertexArrayKind::Resolve => &self.resolve_vao,
             VertexArrayKind::SvgFilter => &self.svg_filter_vao,
-            VertexArrayKind::SvgFilterNode => &self.svg_filter_node_vao,
             VertexArrayKind::Composite => &self.composite_vao,
             VertexArrayKind::Clear => &self.clear_vao,
             VertexArrayKind::Copy => &self.copy_vao,

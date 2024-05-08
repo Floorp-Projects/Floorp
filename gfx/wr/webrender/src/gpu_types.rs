@@ -129,21 +129,6 @@ pub struct SvgFilterInstance {
     pub extra_data_address: GpuCacheAddress,
 }
 
-#[derive(Clone, Debug)]
-#[repr(C)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct SVGFEFilterInstance {
-    pub target_rect: DeviceRect,
-    pub input_1_content_scale_and_offset: [f32; 4],
-    pub input_2_content_scale_and_offset: [f32; 4],
-    pub input_1_task_address: RenderTaskAddress,
-    pub input_2_task_address: RenderTaskAddress,
-    pub kind: u16,
-    pub input_count: u16,
-    pub extra_data_address: GpuCacheAddress,
-}
-
 #[derive(Copy, Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
