@@ -35,7 +35,7 @@ task(async function() {
     await runIFrame(thirdparty + "frameStorageChrome.html?allowed=no&blockSessionStorage=yes");
 
     // Workers should be unable to access storage
-    await runWorker("workerStoragePrevented.js");
+    await runWorker("workerStoragePrevented.js#outer");
   });
 });
 

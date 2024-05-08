@@ -17,7 +17,7 @@
         return new Promise((resolve, reject) => {
           var w;
           try {
-            w = new Worker("workerStoragePrevented.js");
+            w = new Worker("workerStoragePrevented.js#outer");
           } catch (e) {
             ok(true, "Running workers was prevented");
             resolve();
@@ -35,7 +35,7 @@
     }
 
     // Try to run a worker, which shouldn't be able to access storage
-    await runWorker("workerStoragePrevented.js");
+    await runWorker("workerStoragePrevented.js#outer");
   });
 
 </script>

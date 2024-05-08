@@ -38,7 +38,11 @@ function runIFrame(url) {
         return;
       }
 
-      ok(!e.data.match(/^FAILURE/), e.data + " (IFRAME = " + url + ")");
+      const isFail = e.data.match(/^FAILURE/);
+      ok(!isFail, e.data + " (IFRAME = " + url + ")");
+      if (isFail) {
+        reject(e);
+      }
     }
     window.addEventListener("message", onMessage);
 
@@ -56,6 +60,11 @@ function runWorker(url) {
       }
 
       ok(!e.data.match(/^FAILURE/), e.data + " (WORKER = " + url + ")");
+    });
+
+    worker.addEventListener("error", function (e) {
+      ok(false, e.data + " (WORKER = " + url + ")");
+      reject(e);
     });
   });
 }
@@ -130,24 +139,59 @@ function storageAllowed() {
     ok(false, "getting indexedDB should not throw");
   }
 
+  const dbName = "db";
+
   try {
     var promise = caches.keys();
     ok(true, "getting caches didn't throw");
 
     return new Promise((resolve, reject) => {
-      promise.then(
-        function () {
-          ok(location.protocol == "https:", "The promise was not rejected");
-          resolve();
-        },
-        function () {
-          ok(
-            location.protocol !== "https:",
-            "The promise should not have been rejected"
-          );
-          resolve();
-        }
-      );
+      const checkCacheKeys = () => {
+        promise.then(
+          () => {
+            ok(location.protocol == "https:", "The promise was not rejected");
+            resolve();
+          },
+          () => {
+            ok(
+              location.protocol !== "https:",
+              "The promise should not have been rejected"
+            );
+            resolve();
+          }
+        );
+      };
+
+      const checkDeleteDbAndTheRest = dbs => {
+        ok(
+          dbs.some(elem => elem.name === dbName),
+          "Expected database should be found"
+        );
+
+        const end = indexedDB.deleteDatabase(dbName);
+        end.onsuccess = checkCacheKeys;
+        end.onerror = err => {
+          ok(false, "querying indexedDB databases should not throw");
+          reject(err);
+        };
+      };
+
+      const checkDatabasesAndTheRest = () => {
+        indexedDB
+          .databases()
+          .then(checkDeleteDbAndTheRest)
+          .catch(err => {
+            ok(false, "deleting an indexedDB database should not throw");
+            reject(err);
+          });
+      };
+
+      const begin = indexedDB.open(dbName);
+      begin.onsuccess = checkDatabasesAndTheRest;
+      begin.onerror = err => {
+        ok(false, "opening an indexedDB database should not throw");
+        reject(err);
+      };
     });
   } catch (e) {
     ok(location.protocol !== "https:", "getting caches should not have thrown");
@@ -184,9 +228,47 @@ function storagePrevented() {
 
   try {
     indexedDB;
-    ok(false, "getting indexedDB should have thrown");
+    ok(true, "getting indexedDB didn't throw");
   } catch (e) {
-    ok(true, "getting indexedDB threw");
+    ok(false, "getting indexedDB should not have thrown");
+  }
+
+  const dbName = "album";
+
+  try {
+    indexedDB.open(dbName);
+    ok(false, "opening an indexedDB database didn't throw");
+  } catch (e) {
+    ok(true, "opening an indexedDB database threw");
+    ok(
+      e.name == "SecurityError",
+      "opening indexedDB database emitted a security error"
+    );
+  }
+
+  // Note: Security error is expected to be thrown synchronously.
+  indexedDB.databases().then(
+    () => {
+      ok(false, "querying indexedDB databases didn't reject");
+    },
+    e => {
+      ok(true, "querying indexedDB databases rejected");
+      ok(
+        e.name == "SecurityError",
+        "querying indexedDB databases emitted a security error"
+      );
+    }
+  );
+
+  try {
+    indexedDB.deleteDatabase(dbName);
+    ok(false, "deleting an indexedDB database didn't throw");
+  } catch (e) {
+    ok(true, "deleting an indexedDB database threw");
+    ok(
+      e.name == "SecurityError",
+      "deleting indexedDB database emitted a security error"
+    );
   }
 
   try {
@@ -260,8 +342,15 @@ async function runTestInWindow(test) {
     };
   });
 
-  await new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     onmessage = e => {
+      if (!e.data.type) {
+        w.postMessage("FAILURE: " + e.data, document.referrer);
+        ok(false, "No error data type");
+        reject(e);
+        return;
+      }
+
       if (e.data.type == "finish") {
         w.close();
         resolve();
@@ -269,7 +358,15 @@ async function runTestInWindow(test) {
       }
 
       if (e.data.type == "check") {
-        ok(e.data.test, e.data.msg);
+        const payload = e.data.msg ? e.data.msg : e.data;
+        ok(e.data.test, payload);
+        const isFail = payload.match(/^FAILURE/) || !e.data.test;
+        if (isFail) {
+          w.postMessage("FAILURE: " + e.data, document.referrer);
+          ok(false, payload);
+          w.close();
+          reject(e);
+        }
         return;
       }
 

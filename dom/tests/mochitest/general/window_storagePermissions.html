@@ -25,6 +25,8 @@ onmessage = e => {
     let runnable = eval(runnableStr); // eslint-disable-line no-eval
     runnable.call(this).then(_ => {
       opener.postMessage({ type: "finish" }, "*");
+    }).catch(e => {
+      ok(false, e.data);
     });
 
     return;
