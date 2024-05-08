@@ -10,6 +10,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
+ChromeUtils.defineLazyGetter(lazy, "console", () => lazy.Utils.log);
+
 class DownloadError extends Error {
   constructor(url, resp) {
     super(`Could not download ${url}`);
@@ -210,6 +212,15 @@ export class Downloader {
       throw new Error(
         "download() was called without attachmentId or `record.id`"
       );
+    }
+
+    if (!lazy.Utils.LOAD_DUMPS) {
+      if (fallbackToDump) {
+        lazy.console.warn(
+          "#fetchAttachment: Forcing fallbackToDump to false due to Utils.LOAD_DUMPS being false"
+        );
+      }
+      fallbackToDump = false;
     }
 
     const dumpInfo = new LazyRecordAndBuffer(() =>

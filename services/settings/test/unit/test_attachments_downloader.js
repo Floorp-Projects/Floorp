@@ -45,6 +45,11 @@ add_setup(() => {
     "/cdn/main-workspace/some-collection/",
     do_get_file("test_attachments_downloader")
   );
+
+  // For this test, we are using a server other than production. Force
+  // LOAD_DUMPS to true so that we can still load attachments from dumps.
+  delete Utils.LOAD_DUMPS;
+  Utils.LOAD_DUMPS = true;
 });
 
 async function clear_state() {
@@ -607,6 +612,80 @@ add_task(async function test_download_from_dump() {
 // Not really needed because the last test doesn't modify the main collection,
 // but added for consistency with other tests tasks around here.
 add_task(clear_state);
+
+add_task(
+  async function test_download_from_dump_fails_when_load_dumps_is_false() {
+    const client = RemoteSettings("dump-collection", {
+      bucketName: "dump-bucket",
+    });
+
+    // Temporarily replace the resource:-URL with another resource:-URL.
+    const orig_RESOURCE_BASE_URL = Downloader._RESOURCE_BASE_URL;
+    Downloader._RESOURCE_BASE_URL = "resource://rs-downloader-test";
+    const resProto = Services.io
+      .getProtocolHandler("resource")
+      .QueryInterface(Ci.nsIResProtocolHandler);
+    resProto.setSubstitution(
+      "rs-downloader-test",
+      Services.io.newFileURI(do_get_file("test_attachments_downloader"))
+    );
+
+    function checkInfo(
+      result,
+      expectedSource,
+      expectedRecord = RECORD_OF_DUMP
+    ) {
+      Assert.equal(
+        new TextDecoder().decode(new Uint8Array(result.buffer)),
+        "This would be a RS dump.\n",
+        "expected content from dump"
+      );
+      Assert.deepEqual(
+        result.record,
+        expectedRecord,
+        "expected record for dump"
+      );
+      Assert.equal(result._source, expectedSource, "expected source of dump");
+    }
+
+    // Download the dump so that we can use it to fill the cache.
+    const dump1 = await client.attachments.download(RECORD_OF_DUMP, {
+      // Note: attachmentId not set, so should fall back to record.id.
+      fallbackToDump: true,
+    });
+    checkInfo(dump1, "dump_match");
+
+    // Fill the cache with the same data as the dump for the next part.
+    await client.db.saveAttachment(RECORD_OF_DUMP.id, {
+      record: RECORD_OF_DUMP,
+      blob: new Blob([dump1.buffer]),
+    });
+
+    // Now turn off loading dumps, and check we no longer load from the dump,
+    // but use the cache instead.
+    Utils.LOAD_DUMPS = false;
+
+    const dump2 = await client.attachments.download(RECORD_OF_DUMP, {
+      // Note: attachmentId not set, so should fall back to record.id.
+      fallbackToDump: true,
+    });
+    checkInfo(dump2, "cache_match");
+
+    // When the record is not given, the dump would take precedence over the
+    // cache but we have disabled dumps, so we should load from the cache.
+    const dump4 = await client.attachments.download(null, {
+      attachmentId: RECORD_OF_DUMP.id,
+      fallbackToCache: true,
+      fallbackToDump: true,
+    });
+    checkInfo(dump4, "cache_fallback");
+
+    // Restore, just in case.
+    Utils.LOAD_DUMPS = true;
+    Downloader._RESOURCE_BASE_URL = orig_RESOURCE_BASE_URL;
+    resProto.setSubstitution("rs-downloader-test", null);
+  }
+);
 
 add_task(async function test_attachment_get() {
   // Since get() is largely a wrapper around the same code as download(),
