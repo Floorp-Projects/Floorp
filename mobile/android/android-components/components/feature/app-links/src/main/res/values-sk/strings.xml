@@ -8,7 +8,7 @@
     <string name="mozac_feature_applinks_normal_confirm_dialog_title">Otvoriť v inej aplikácii</string>
     <!-- The message of the prompt to confirm with users that they want to open the link in another app
     %s is a placeholder that will be replaced by the app name -->
-    <string name="mozac_feature_applinks_normal_confirm_dialog_message">Chcete tento obsah zobraziť v aplikácii %s?</string>
+    <string name="mozac_feature_applinks_normal_confirm_dialog_message">Chcete opustiť %s a zobraziť tento obsah v aplikácii?</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">Otvoriť</string>
     <!-- Cancels the prompt -->
