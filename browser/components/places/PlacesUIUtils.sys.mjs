@@ -12,6 +12,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CLIENT_NOT_CONFIGURED: "resource://services-sync/constants.sys.mjs",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
@@ -467,7 +468,7 @@ class BookmarkState {
             })
           );
           break;
-        case "tags":
+        case "tags": {
           const newTags = value.filter(
             tag => !this._originalState.tags.includes(tag)
           );
@@ -491,6 +492,7 @@ class BookmarkState {
             );
           }
           break;
+        }
         case "keyword":
           transactions.push(
             lazy.PlacesTransactions.EditKeyword({
@@ -985,7 +987,7 @@ export var PlacesUIUtils = {
     // whereToOpenLink doesn't return "window" when there's no browser window
     // open (Bug 630255).
     var where = browserWindow
-      ? browserWindow.whereToOpenLink(aEvent, false, true)
+      ? lazy.BrowserUtils.whereToOpenLink(aEvent, false, true)
       : "window";
     if (where == "window") {
       // There is no browser window open, thus open a new one.
@@ -1076,7 +1078,7 @@ export var PlacesUIUtils = {
   openNodeWithEvent: function PUIU_openNodeWithEvent(aNode, aEvent) {
     let window = aEvent.target.ownerGlobal;
 
-    let where = window.whereToOpenLink(aEvent, false, true);
+    let where = lazy.BrowserUtils.whereToOpenLink(aEvent, false, true);
     if (this.loadBookmarksInTabs && lazy.PlacesUtils.nodeIsBookmark(aNode)) {
       if (where == "current" && !aNode.uri.startsWith("javascript:")) {
         where = "tab";
@@ -1690,7 +1692,7 @@ export var PlacesUIUtils = {
     doCommand(command) {
       let window = this.triggerNode.ownerGlobal;
       switch (command) {
-        case "placesCmd_copy":
+        case "placesCmd_copy": {
           // This is a little hacky, but there is a lot of code in Places that handles
           // clipboard stuff, so it's easier to reuse.
           let node = {};
@@ -1735,6 +1737,7 @@ export var PlacesUIUtils = {
             Ci.nsIClipboard.kGlobalClipboard
           );
           break;
+        }
         case "placesCmd_open:privatewindow":
           window.openTrustedLinkIn(this.triggerNode.link, "window", {
             private: true,

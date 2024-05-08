@@ -141,7 +141,7 @@ HistoryDownloadElementShell.prototype = {
       // be opened.
       let browserWin = BrowserWindowTracker.getTopWindow();
       let openWhere = browserWin
-        ? browserWin.whereToOpenLink(event, false, true)
+        ? BrowserUtils.whereToOpenLink(event, false, true)
         : "window";
       if (["window", "tabshifted", "tab"].includes(openWhere)) {
         command += ":" + openWhere;

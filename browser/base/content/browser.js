@@ -2526,7 +2526,7 @@ const BrowserSearch = {
     event
   ) {
     event = getRootEvent(event);
-    let where = whereToOpenLink(event);
+    let where = BrowserUtils.whereToOpenLink(event);
     if (where == "current") {
       // override: historically search opens in new tab
       where = "tab";
@@ -4540,7 +4540,7 @@ nsBrowserAccess.prototype = {
       : PrivateBrowsingUtils.isWindowPrivate(window);
 
     switch (aWhere) {
-      case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW:
+      case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW: {
         // FIXME: Bug 408379. So how come this doesn't send the
         // referrer like the other loads do?
         var url = aURI && aURI.spec;
@@ -4584,6 +4584,7 @@ nsBrowserAccess.prototype = {
           console.error(ex);
         }
         break;
+      }
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB:
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND: {
         // If we have an opener, that means that the caller is expecting access
@@ -4994,7 +4995,7 @@ function setToolbarVisibility(
         document.documentElement.toggleAttribute(overlapAttr, false);
         break;
       case "newtab":
-      default:
+      default: {
         let currentURI = gBrowser?.currentURI;
         if (!gBrowserInit.domContentLoaded) {
           let uriToLoad = gBrowserInit.uriToLoadPromise;
@@ -5011,6 +5012,7 @@ function setToolbarVisibility(
         isVisible = BookmarkingUI.isOnNewTabPage(currentURI);
         document.documentElement.toggleAttribute(overlapAttr, isVisible);
         break;
+      }
     }
   }
 
@@ -5423,7 +5425,7 @@ function handleLinkClick(event, href, linkNode) {
     return false;
   }
 
-  var where = whereToOpenLink(event);
+  var where = BrowserUtils.whereToOpenLink(event);
   if (where == "current") {
     return false;
   }
@@ -5496,7 +5498,7 @@ function middleMousePaste(event) {
 
   // if it's not the current tab, we don't need to do anything because the
   // browser doesn't exist.
-  let where = whereToOpenLink(event, true, false);
+  let where = BrowserUtils.whereToOpenLink(event, true, false);
   let lastLocationChange;
   if (where == "current") {
     lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
@@ -7054,7 +7056,7 @@ function safeModeRestart() {
  */
 function duplicateTabIn(aTab, where, delta) {
   switch (where) {
-    case "window":
+    case "window": {
       let otherWin = OpenBrowserWindow({
         private: PrivateBrowsingUtils.isBrowserPrivate(aTab.linkedBrowser),
       });
@@ -7076,6 +7078,7 @@ function duplicateTabIn(aTab, where, delta) {
         "browser-delayed-startup-finished"
       );
       break;
+    }
     case "tabshifted":
       SessionStore.duplicateTab(window, aTab, delta);
       // A background tab has been opened, nothing else to do here.
@@ -8088,7 +8091,7 @@ var FirefoxViewHandler = {
   },
   handleEvent(e) {
     switch (e.type) {
-      case "TabSelect":
+      case "TabSelect": {
         const selected = e.target == this.tab;
         this.button?.toggleAttribute("open", selected);
         this.button?.setAttribute("aria-pressed", selected);
@@ -8099,6 +8102,7 @@ var FirefoxViewHandler = {
         gBrowser.visibleTabs[0].style.MozUserFocus =
           e.target == this.tab ? "normal" : "";
         break;
+      }
       case "TabClose":
         this.tab = null;
         gBrowser.tabContainer.removeEventListener("TabSelect", this);

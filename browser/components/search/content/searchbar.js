@@ -12,6 +12,7 @@
   const lazy = {};
 
   ChromeUtils.defineESModuleGetters(lazy, {
+    BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
     FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
     SearchSuggestionController:
       "resource://gre/modules/SearchSuggestionController.sys.mjs",
@@ -317,7 +318,7 @@
         if (aEvent.button == 2) {
           return;
         }
-        where = whereToOpenLink(aEvent, false, true);
+        where = lazy.BrowserUtils.whereToOpenLink(aEvent, false, true);
         if (
           newTabPref &&
           !aEvent.altKey &&
@@ -885,12 +886,13 @@
             goDoCommand("cmd_paste");
             this.handleSearchCommand(event);
             break;
-          case clearHistoryItem:
+          case clearHistoryItem: {
             let param = this.textbox.getAttribute("autocompletesearchparam");
             lazy.FormHistory.update({ op: "remove", fieldname: param });
             this.textbox.value = "";
             break;
-          default:
+          }
+          default: {
             let cmd = event.originalTarget.getAttribute("cmd");
             if (cmd) {
               let controller =
@@ -898,6 +900,7 @@
               controller.doCommand(cmd);
             }
             break;
+          }
         }
       });
     }

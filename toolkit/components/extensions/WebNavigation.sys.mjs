@@ -8,6 +8,7 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   ClickHandlerParent: "resource:///actors/ClickHandlerParent.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -249,8 +250,7 @@ export var WebNavigationManager = {
   onContentClick(target, data) {
     // We are interested only on clicks to links which are not "add to bookmark" commands
     if (data.href && !data.bookmark) {
-      let ownerWin = target.ownerGlobal;
-      let where = ownerWin.whereToOpenLink(data);
+      let where = lazy.BrowserUtils.whereToOpenLink(data);
       if (where == "current") {
         this.setRecentTabTransitionData({ link: true });
       }

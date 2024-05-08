@@ -11,6 +11,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   ExtensionSearchHandler:
     "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
@@ -3048,7 +3049,7 @@ export class UrlbarInput {
       // pressed, open in current tab to allow ctrl-enter to canonize URL.
       where = "current";
     } else {
-      where = this.window.whereToOpenLink(event, false, false);
+      where = lazy.BrowserUtils.whereToOpenLink(event, false, false);
     }
     if (lazy.UrlbarPrefs.get("openintab")) {
       if (where == "current") {

@@ -29,6 +29,10 @@ export default class MozSupportLink extends HTMLAnchorElement {
    */
   #register() {
     if (window.document.nodePrincipal?.isSystemPrincipal) {
+      ChromeUtils.defineESModuleGetters(MozSupportLink, {
+        BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+      });
+
       // eslint-disable-next-line no-shadow
       let { XPCOMUtils } = window.XPCOMUtils
         ? window
@@ -72,7 +76,7 @@ export default class MozSupportLink extends HTMLAnchorElement {
   handleEvent(e) {
     if (e.type == "click") {
       if (window.openTrustedLinkIn) {
-        let where = whereToOpenLink(e, false, true);
+        let where = MozSupportLink.BrowserUtils.whereToOpenLink(e, false, true);
         if (where == "current") {
           where = "tab";
         }
