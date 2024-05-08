@@ -127,7 +127,7 @@ To test your changes on another macOS system (or to keep that particular Firefox
 
    ./mach package
 
-Copy the resulting ``.dmg`` file from ``obj-*/dist/`` to the target system, then double-click it as usual to find an ``.app`` bundle containing all dependencies.
+Copy the resulting ``.dmg`` file from ``obj-*/dist/`` to the target system, then double-click it as usual to find an ``.app`` bundle containing all dependencies. In newer versions of MacOS you will need to sign the package for this to work using :ref:`Signing Local macOS Builds`.
 
 Now the fun starts
 ------------------
