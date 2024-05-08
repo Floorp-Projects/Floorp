@@ -328,13 +328,13 @@ template <typename char_type>
 template <typename char_type>
 void TMimeType<char_type>::Serialize(nsTSubstring<char_type>& aOutput) const {
   aOutput.Assign(mType);
-  aOutput.AppendLiteral("/");
+  aOutput.Append('/');
   aOutput.Append(mSubtype);
   for (uint32_t i = 0; i < mParameterNames.Length(); i++) {
     auto name = mParameterNames[i];
-    aOutput.AppendLiteral(";");
+    aOutput.Append(';');
     aOutput.Append(name);
-    aOutput.AppendLiteral("=");
+    aOutput.Append('=');
     GetParameterValue(name, aOutput, true);
   }
 }
@@ -342,7 +342,7 @@ void TMimeType<char_type>::Serialize(nsTSubstring<char_type>& aOutput) const {
 template <typename char_type>
 void TMimeType<char_type>::GetEssence(nsTSubstring<char_type>& aOutput) const {
   aOutput.Assign(mType);
-  aOutput.AppendLiteral("/");
+  aOutput.Append('/');
   aOutput.Append(mSubtype);
 }
 
@@ -366,17 +366,17 @@ bool TMimeType<char_type>::GetParameterValue(
   }
 
   if (aWithQuotes && (value.mRequiresQuoting || value.IsEmpty())) {
-    aOutput.AppendLiteral("\"");
+    aOutput.Append('"');
     const char_type* vcur = value.BeginReading();
     const char_type* vend = value.EndReading();
     while (vcur < vend) {
       if (*vcur == '"' || *vcur == '\\') {
-        aOutput.AppendLiteral("\\");
+        aOutput.Append('\\');
       }
       aOutput.Append(*vcur);
       vcur++;
     }
-    aOutput.AppendLiteral("\"");
+    aOutput.Append('"');
   } else {
     aOutput.Append(value);
   }
