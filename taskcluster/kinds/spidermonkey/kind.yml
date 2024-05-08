@@ -10,6 +10,7 @@ kind-dependencies:
 transforms:
     - gecko_taskgraph.transforms.spidermonkey:transforms
     - gecko_taskgraph.transforms.build_attrs:transforms
+    - gecko_taskgraph.transforms.build_schedules:transforms
     - gecko_taskgraph.transforms.build_lints:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
