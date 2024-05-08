@@ -7980,7 +7980,7 @@ bool nsBlockFrame::MarkerIsEmpty() const {
   const nsStyleList* list = marker->StyleList();
   return marker->StyleContent()->mContent.IsNone() ||
          (list->mCounterStyle.IsNone() && list->mListStyleImage.IsNone() &&
-          marker->StyleContent()->ContentCount() == 0);
+          marker->StyleContent()->NonAltContentItems().IsEmpty());
 }
 
 void nsBlockFrame::ReflowOutsideMarker(nsIFrame* aMarkerFrame,

@@ -8623,6 +8623,13 @@
   mirror: always
   rust: true
 
+# Whether alt text in content is enabled.
+- name: layout.css.content.alt-text.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Should stray control characters be rendered visibly?
 - name: layout.css.control-characters.visible
   type: RelaxedAtomicBool

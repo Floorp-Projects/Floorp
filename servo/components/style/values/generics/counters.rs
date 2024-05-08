@@ -203,6 +203,41 @@ fn is_decimal(counter_type: &CounterStyleType) -> bool {
     *counter_type == CounterStyle::decimal()
 }
 
+/// The non-normal, non-none values of the content property.
+#[derive(
+    Clone, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToShmem,
+)]
+#[repr(C)]
+pub struct GenericContentItems<Image> {
+    /// The actual content items. Note that, past the alt marker, only some subset (strings,
+    /// attr(), counter())
+    pub items: thin_vec::ThinVec<GenericContentItem<Image>>,
+    /// The index at which alt text starts, always non-zero. If equal to items.len(), no alt text
+    /// exists.
+    pub alt_start: usize,
+}
+
+impl<Image> ToCss for GenericContentItems<Image>
+where
+    Image: ToCss,
+{
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        for (i, item) in self.items.iter().enumerate() {
+            if i == self.alt_start {
+                dest.write_str(" /")?;
+            }
+            if i != 0 {
+                dest.write_str(" ")?;
+            }
+            item.to_css(dest)?;
+        }
+        Ok(())
+    }
+}
+
 /// The specified value for the `content` property.
 ///
 /// https://drafts.csswg.org/css-content/#propdef-content
@@ -216,7 +251,7 @@ pub enum GenericContent<Image> {
     /// `none` reserved keyword.
     None,
     /// Content items.
-    Items(#[css(iterable)] crate::OwnedSlice<GenericContentItem<Image>>),
+    Items(GenericContentItems<Image>),
 }
 
 pub use self::GenericContent as Content;

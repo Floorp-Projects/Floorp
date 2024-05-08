@@ -1603,12 +1603,22 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent {
 
   using CounterPair = mozilla::StyleGenericCounterPair<int32_t>;
 
-  size_t ContentCount() const {
-    return mContent.IsItems() ? mContent.AsItems().Length() : 0;
+  /// Returns the content items that aren't alternative content.
+  mozilla::Span<const mozilla::StyleContentItem> NonAltContentItems() const {
+    if (!mContent.IsItems()) {
+      return {};
+    }
+    const auto& items = mContent.AsItems();
+    return mozilla::Span(items.items).To(items.alt_start);
   }
 
-  const mozilla::StyleContentItem& ContentAt(size_t aIndex) const {
-    return mContent.AsItems().AsSpan()[aIndex];
+  /// Returns the content items that /are/ alternative content.
+  mozilla::Span<const mozilla::StyleContentItem> AltContentItems() const {
+    if (!mContent.IsItems()) {
+      return {};
+    }
+    const auto& items = mContent.AsItems();
+    return mozilla::Span(items.items).From(items.alt_start);
   }
 
   mozilla::StyleContent mContent;

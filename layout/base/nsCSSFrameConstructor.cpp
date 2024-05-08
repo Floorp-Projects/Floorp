@@ -1537,12 +1537,11 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGenConTextNode(
 
 void nsCSSFrameConstructor::CreateGeneratedContent(
     nsFrameConstructorState& aState, Element& aOriginatingElement,
-    ComputedStyle& aPseudoStyle, uint32_t aContentIndex,
-    const FunctionRef<void(nsIContent*)> aAddChild) {
+    ComputedStyle& aPseudoStyle, const StyleContentItem& aItem,
+    size_t aContentIndex, const FunctionRef<void(nsIContent*)> aAddChild) {
   using Type = StyleContentItem::Tag;
   // Get the content value
-  const auto& item = aPseudoStyle.StyleContent()->ContentAt(aContentIndex);
-  const Type type = item.tag;
+  const Type type = aItem.tag;
 
   switch (type) {
     case Type::Image: {
@@ -1552,7 +1551,7 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
     }
 
     case Type::String: {
-      const auto string = item.AsString().AsString();
+      const auto string = aItem.AsString().AsString();
       if (string.IsEmpty()) {
         return;
       }
@@ -1563,7 +1562,7 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
     }
 
     case Type::Attr: {
-      const auto& attr = item.AsAttr();
+      const auto& attr = aItem.AsAttr();
       RefPtr<nsAtom> attrName = attr.attribute.AsAtom();
       int32_t attrNameSpace = kNameSpaceID_None;
       RefPtr<nsAtom> ns = attr.namespace_url.AsAtom();
@@ -1592,11 +1591,11 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
       CounterStylePtr ptr;
       nsString separator;
       if (type == Type::Counter) {
-        auto& counter = item.AsCounter();
+        auto& counter = aItem.AsCounter();
         name = counter._0.AsAtom();
         ptr = CounterStylePtr::FromStyle(counter._1);
       } else {
-        auto& counters = item.AsCounters();
+        auto& counters = aItem.AsCounters();
         name = counters._0.AsAtom();
         CopyUTF8toUTF16(counters._1.AsString(), separator);
         ptr = CounterStylePtr::FromStyle(counters._2);
@@ -1947,13 +1946,14 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
       mPresShell->StyleSet()->StyleNewSubtree(childElement);
     }
   };
-  const uint32_t contentCount = pseudoStyle->StyleContent()->ContentCount();
-  for (uint32_t contentIndex = 0; contentIndex < contentCount; contentIndex++) {
-    CreateGeneratedContent(aState, aOriginatingElement, *pseudoStyle,
-                           contentIndex, AppendChild);
+  auto items = pseudoStyle->StyleContent()->NonAltContentItems();
+  size_t index = 0;
+  for (const auto& item : items) {
+    CreateGeneratedContent(aState, aOriginatingElement, *pseudoStyle, item,
+                           index++, AppendChild);
   }
   // If a ::marker has no 'content' then generate it from its 'list-style-*'.
-  if (contentCount == 0 && aPseudoElement == PseudoStyleType::marker) {
+  if (index == 0 && aPseudoElement == PseudoStyleType::marker) {
     CreateGeneratedContentFromListStyle(aState, aOriginatingElement,
                                         *pseudoStyle, AppendChild);
   }
