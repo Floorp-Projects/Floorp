@@ -226,9 +226,6 @@ class Key {
 
   Result<Ok, nsresult> EncodeNumber(double aFloat, uint8_t aType);
 
-  Result<Ok, nsresult> EncodeBinary(JSObject* aObject, bool aIsViewObject,
-                                    uint8_t aTypeOffset);
-
   // Decoding functions. aPos points into mBuffer and is adjusted to point
   // past the consumed value. (Note: this may be beyond aEnd).
   static nsresult DecodeJSVal(const EncodedDataType*& aPos,
@@ -241,8 +238,9 @@ class Key {
   static double DecodeNumber(const EncodedDataType*& aPos,
                              const EncodedDataType* aEnd);
 
-  static JSObject* DecodeBinary(const EncodedDataType*& aPos,
-                                const EncodedDataType* aEnd, JSContext* aCx);
+  static JSObject* GetArrayBufferObjectFromDataRange(
+      const EncodedDataType*& aPos, const EncodedDataType* aEnd,
+      JSContext* aCx);
 
   // Returns the size of the decoded data for stringy (string or binary),
   // excluding a null terminator.
