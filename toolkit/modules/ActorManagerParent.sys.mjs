@@ -325,10 +325,13 @@ let JSWINDOWACTORS = {
   },
 
   FormHandler: {
+    parent: {
+      esModuleURI: "resource://gre/actors/FormHandlerParent.sys.mjs",
+    },
     child: {
       esModuleURI: "resource://gre/actors/FormHandlerChild.sys.mjs",
       events: {
-        DOMFormBeforeSubmit: {},
+        DOMFormBeforeSubmit: { createActor: false },
       },
     },
 
@@ -366,7 +369,7 @@ let JSWINDOWACTORS = {
     child: {
       esModuleURI: "resource://gre/modules/LoginManagerChild.sys.mjs",
       events: {
-        "form-submission-detected": {},
+        "form-submission-detected": { createActor: false },
         DOMFormHasPassword: {},
         DOMFormHasPossibleUsername: {},
         DOMInputPasswordAdded: {},
