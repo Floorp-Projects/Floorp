@@ -69,6 +69,8 @@ extern crate static_assertions;
 #[macro_use]
 extern crate style_derive;
 #[macro_use]
+extern crate thin_vec;
+#[macro_use]
 extern crate to_shmem_derive;
 
 #[macro_use]

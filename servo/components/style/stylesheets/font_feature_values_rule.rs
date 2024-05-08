@@ -10,7 +10,7 @@ use crate::error_reporting::ContextualParseError;
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::bindings::Gecko_AppendFeatureValueHashEntry;
 #[cfg(feature = "gecko")]
-use crate::gecko_bindings::structs::{self, gfxFontFeatureValueSet, nsTArray};
+use crate::gecko_bindings::structs::{self, gfxFontFeatureValueSet};
 use crate::parser::{Parse, ParserContext};
 use crate::shared_lock::{SharedRwLockReadGuard, ToCssWithGuard};
 use crate::str::CssStringWriter;
@@ -24,6 +24,7 @@ use cssparser::{
 };
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
+use thin_vec::ThinVec;
 
 /// A @font-feature-values block declaration.
 /// It is `<ident>: <integer>+`.
@@ -54,8 +55,8 @@ impl<T: ToCss> ToCss for FFVDeclaration<T> {
 /// A trait for @font-feature-values rule to gecko values conversion.
 #[cfg(feature = "gecko")]
 pub trait ToGeckoFontFeatureValues {
-    /// Sets the equivalent of declaration to gecko `nsTArray<u32>` array.
-    fn to_gecko_font_feature_values(&self, array: &mut nsTArray<u32>);
+    /// Sets the equivalent of declaration to gecko `ThinVec<u32>` array.
+    fn to_gecko_font_feature_values(&self) -> ThinVec<u32>;
 }
 
 /// A @font-feature-values block declaration value that keeps one value.
@@ -79,11 +80,8 @@ impl Parse for SingleValue {
 
 #[cfg(feature = "gecko")]
 impl ToGeckoFontFeatureValues for SingleValue {
-    fn to_gecko_font_feature_values(&self, array: &mut nsTArray<u32>) {
-        unsafe {
-            array.set_len_pod(1);
-        }
-        array[0] = self.0 as u32;
+    fn to_gecko_font_feature_values(&self) -> ThinVec<u32> {
+        thin_vec::thin_vec![self.0 as u32]
     }
 }
 
@@ -118,16 +116,12 @@ impl Parse for PairValues {
 
 #[cfg(feature = "gecko")]
 impl ToGeckoFontFeatureValues for PairValues {
-    fn to_gecko_font_feature_values(&self, array: &mut nsTArray<u32>) {
-        let len = if self.1.is_some() { 2 } else { 1 };
-
-        unsafe {
-            array.set_len_pod(len);
-        }
-        array[0] = self.0 as u32;
+    fn to_gecko_font_feature_values(&self) -> ThinVec<u32> {
+        let mut result = thin_vec::thin_vec![self.0 as u32];
         if let Some(second) = self.1 {
-            array[1] = second as u32;
-        };
+            result.push(second as u32);
+        }
+        result
     }
 }
 
@@ -165,8 +159,8 @@ impl Parse for VectorValues {
 
 #[cfg(feature = "gecko")]
 impl ToGeckoFontFeatureValues for VectorValues {
-    fn to_gecko_font_feature_values(&self, array: &mut nsTArray<u32>) {
-        array.assign_from_iter_pod(self.0.iter().map(|v| *v));
+    fn to_gecko_font_feature_values(&self) -> ThinVec<u32> {
+        self.0.iter().copied().collect()
     }
 }
 
@@ -338,7 +332,7 @@ macro_rules! font_feature_values_blocks {
                                     )
                                 };
                                 unsafe {
-                                    val.value.to_gecko_font_feature_values(&mut *array);
+                                    *array = val.value.to_gecko_font_feature_values();
                                 }
                             }
                         }

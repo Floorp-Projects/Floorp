@@ -649,6 +649,25 @@ where
     }
 }
 
+impl<T> ToComputedValue for thin_vec::ThinVec<T>
+where
+    T: ToComputedValue,
+{
+    type ComputedValue = thin_vec::ThinVec<<T as ToComputedValue>::ComputedValue>;
+
+    #[inline]
+    fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
+        self.iter()
+            .map(|item| item.to_computed_value(context))
+            .collect()
+    }
+
+    #[inline]
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        computed.iter().map(T::from_computed_value).collect()
+    }
+}
+
 // NOTE(emilio): This is implementable more generically, but it's unlikely
 // what you want there, as it forces you to have an extra allocation.
 //

@@ -580,26 +580,18 @@ impl Clone for ${style_struct.gecko_struct_name} {
 </%def>
 
 <%def name="impl_font_settings(ident, gecko_type, tag_type, value_type, gecko_value_type)">
-    <%
-    gecko_ffi_name = to_camel_case_lower(ident)
-    %>
+    <% gecko_ffi_name = to_camel_case_lower(ident) %>
 
     pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
         let iter = v.0.iter().map(|other| structs::${gecko_type} {
             mTag: other.tag.0,
             mValue: other.value as ${gecko_value_type},
         });
-        self.mFont.${gecko_ffi_name}.assign_from_iter_pod(iter);
+        self.mFont.${gecko_ffi_name}.clear();
+        self.mFont.${gecko_ffi_name}.extend(iter);
     }
 
-    pub fn copy_${ident}_from(&mut self, other: &Self) {
-        let iter = other.mFont.${gecko_ffi_name}.iter().map(|s| *s);
-        self.mFont.${gecko_ffi_name}.assign_from_iter_pod(iter);
-    }
-
-    pub fn reset_${ident}(&mut self, other: &Self) {
-        self.copy_${ident}_from(other)
-    }
+    <% impl_simple_copy(ident, "mFont." + gecko_ffi_name) %>
 
     pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
         use crate::values::generics::font::{FontSettings, FontTag, ${tag_type}};

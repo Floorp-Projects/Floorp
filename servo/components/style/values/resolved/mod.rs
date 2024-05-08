@@ -180,6 +180,25 @@ where
     }
 }
 
+impl<T> ToResolvedValue for thin_vec::ThinVec<T>
+where
+    T: ToResolvedValue,
+{
+    type ResolvedValue = thin_vec::ThinVec<<T as ToResolvedValue>::ResolvedValue>;
+
+    #[inline]
+    fn to_resolved_value(self, context: &Context) -> Self::ResolvedValue {
+        self.into_iter()
+            .map(|item| item.to_resolved_value(context))
+            .collect()
+    }
+
+    #[inline]
+    fn from_resolved_value(resolved: Self::ResolvedValue) -> Self {
+        resolved.into_iter().map(T::from_resolved_value).collect()
+    }
+}
+
 impl<T> ToResolvedValue for Box<T>
 where
     T: ToResolvedValue,
