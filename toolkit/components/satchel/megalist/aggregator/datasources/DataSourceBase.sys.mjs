@@ -162,6 +162,9 @@ export class DataSourceBase {
     refreshOnScreen() {
       this.source.refreshSingleLineOnScreen(this);
     },
+    setLayout(data) {
+      this.source.setLayout(data);
+    },
   };
 
   /**
