@@ -155,7 +155,7 @@ def is_subset(subset, superset):
 def test_extract_applicable_action(
     responses, monkeypatch, actions_json, task_def, expected
 ):
-    actions.util.get_task_definition.clear()
+    actions.util.get_task_definition.cache_clear()
     base_url = "https://taskcluster"
     decision_task_id = "dddd"
     task_id = "tttt"
