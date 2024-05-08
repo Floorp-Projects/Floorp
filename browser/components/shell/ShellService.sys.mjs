@@ -327,9 +327,7 @@ let ShellServiceInternal = {
     // On Windows, our best chance is to set UserChoice, so try that first.
     if (
       AppConstants.platform == "win" &&
-      lazy.NimbusFeatures.shellService.getVariable(
-        "setDefaultBrowserUserChoice"
-      )
+      Services.prefs.getBoolPref("browser.shell.setDefaultBrowserUserChoice")
     ) {
       try {
         await this.setAsDefaultUserChoice();
