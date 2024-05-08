@@ -317,7 +317,7 @@ let JSWINDOWACTORS = {
     child: {
       esModuleURI: "resource://gre/actors/FormHistoryChild.sys.mjs",
       events: {
-        "form-submission-detected": {},
+        DOMFormBeforeSubmit: {},
       },
     },
 
