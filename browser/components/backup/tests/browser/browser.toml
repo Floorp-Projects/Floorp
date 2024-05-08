@@ -1,7 +1,0 @@
-[DEFAULT]
-prefs = [
-  "browser.backup.enabled=true",
-  "browser.backup.preferences.ui.enabled=true",
-]
-
-["browser_preferences.js"]
