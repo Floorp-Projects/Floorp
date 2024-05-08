@@ -853,7 +853,7 @@ void nsHttpHandler::InitUserAgentComponents() {
   // Gather platform.
   mPlatform.AssignLiteral(
 #if defined(ANDROID)
-      "Linux; Android"
+      "Android"
 #elif defined(XP_WIN)
       "Windows"
 #elif defined(XP_MACOSX)
