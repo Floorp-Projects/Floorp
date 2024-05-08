@@ -571,17 +571,15 @@ class PromptFeature private constructor(
                     if (!isLoginAutofillEnabled()) {
                         return
                     }
-                    if (promptRequest.logins.isEmpty()) {
-                        if (isSuggestStrongPasswordEnabled) {
-                            val currentUrl =
-                                store.state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.url
-                            if (currentUrl != null) {
-                                strongPasswordPromptViewListener?.handleSuggestStrongPasswordRequest(
-                                    promptRequest,
-                                    currentUrl,
-                                    onSaveLoginWithStrongPassword,
-                                )
-                            }
+                    if (promptRequest.generatedPassword != null && isSuggestStrongPasswordEnabled) {
+                        val currentUrl =
+                            store.state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.url
+                        if (currentUrl != null) {
+                            strongPasswordPromptViewListener?.handleSuggestStrongPasswordRequest(
+                                promptRequest,
+                                currentUrl,
+                                onSaveLoginWithStrongPassword,
+                            )
                         }
                     } else {
                         loginPicker?.handleSelectLoginRequest(promptRequest)
