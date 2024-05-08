@@ -4608,6 +4608,11 @@ GlobalObject* Debugger::unwrapDebuggeeArgument(JSContext* cx, const Value& v) {
     return nullptr;
   }
 
+  if (JS_IsDeadWrapper(obj)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+    return nullptr;
+  }
+
   // If that didn't produce a global object, it's an error.
   if (!obj->is<GlobalObject>()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
