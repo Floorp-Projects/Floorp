@@ -1039,6 +1039,8 @@ aaudio_stream_destroy_locked(cubeb_stream * stm, lock_guard<mutex> & lock)
     stm->istream = nullptr;
   }
 
+  stm->timing_info.invalidate();
+
   if (stm->resampler) {
     cubeb_resampler_destroy(stm->resampler);
     stm->resampler = nullptr;
