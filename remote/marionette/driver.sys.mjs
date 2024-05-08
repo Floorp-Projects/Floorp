@@ -29,7 +29,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MarionettePrefs: "chrome://remote/content/marionette/prefs.sys.mjs",
   modal: "chrome://remote/content/shared/Prompt.sys.mjs",
   navigate: "chrome://remote/content/marionette/navigate.sys.mjs",
-  permissions: "chrome://remote/content/marionette/permissions.sys.mjs",
+  permissions: "chrome://remote/content/shared/Permissions.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
   PromptListener:
