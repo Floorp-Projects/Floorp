@@ -15382,6 +15382,20 @@
   value: 3
   mirror: always
 
+# The maximum overlap between pages when scrolling with
+# page-up/page-down/spacebar, as a percentage of scrollport size.
+- name: toolkit.scrollbox.pagescroll.maxOverlapPercent
+  type: RelaxedAtomicInt32
+  value: 10
+  mirror: always
+
+# The maximum overlap between pages when scrolling with
+# page-up/page-down/spacebar, in lines.
+- name: toolkit.scrollbox.pagescroll.maxOverlapLines
+  type: RelaxedAtomicInt32
+  value: 2
+  mirror: always
+
 # The lateWriteChecksStage and fastShutdownStage below represent the stage
 # of shutdown after which we (for lateWriteChecksStage) crash / gather
 # telemetry data on file writes, or (for fastShutdownStage) we call _exit(0).
