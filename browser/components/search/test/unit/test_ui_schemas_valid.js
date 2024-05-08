@@ -7,7 +7,7 @@ let schemas = [
   ["search-telemetry-v2-schema.json", "search-telemetry-v2-ui-schema.json"],
 ];
 
-async function checkUISchemaValid(configSchema, uiSchema) {
+function checkUISchemaValid(configSchema, uiSchema) {
   for (let key of Object.keys(configSchema.properties)) {
     Assert.ok(
       uiSchema["ui:order"].includes(key),
@@ -26,6 +26,6 @@ add_task(async function test_ui_schemas_valid() {
       PathUtils.join(do_get_cwd().path, uiSchema)
     );
 
-    await checkUISchemaValid(schemaData, uiSchemaData);
+    checkUISchemaValid(schemaData, uiSchemaData);
   }
 });
