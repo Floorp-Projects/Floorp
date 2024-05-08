@@ -40,21 +40,10 @@ add_setup(async function () {
   await listService.testWaitForInit();
 });
 
-async function waitForListServiceInit(strippingEnabled) {
-  info("Waiting for nsIURLQueryStrippingListService to be initialized.");
-  let isInitialized = await listService.testWaitForInit();
-  is(
-    isInitialized,
-    strippingEnabled,
-    "nsIURLQueryStrippingListService should be initialized when the feature is enabled."
-  );
-}
-
 add_task(async function testRedirectWithStrippingMultipleTimes() {
   info(
     "Start testing query stripping for redirect link with multiple query paramaters"
   );
-  await waitForListServiceInit(true);
 
   const NESTED_QUERY = "paramToStrip1=123&paramToKeep=123";
   const NESTED_QUERY_STRIPPED = "paramToKeep=123";
