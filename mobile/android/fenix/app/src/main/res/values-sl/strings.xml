@@ -264,6 +264,10 @@
     <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
     <string name="browser_menu_sign_in_caption">Sinhronizirajte gesla, zavihke in druge podatke</string>
 
+    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
+    <string name="browser_menu_sign_back_in_to_sync">Znova se prijavite za sinhronizacijo</string>
+    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
+    <string name="browser_menu_syncing_paused_caption">Sinhroniziranje ustavljeno</string>
     <!-- Browser menu label that creates a private tab -->
     <string name="browser_menu_new_private_tab">Nov zasebni zavihek</string>
 
