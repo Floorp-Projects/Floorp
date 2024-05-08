@@ -367,6 +367,9 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
   } else if (inAtom == nsGkAtoms::DirectoryService_OS_DesktopDirectory) {
     rv = GetSpecialSystemDirectory(Mac_UserDesktopDirectory,
                                    getter_AddRefs(localFile));
+  } else if (inAtom == nsGkAtoms::DirectoryService_OS_DocumentsDirectory) {
+    rv = GetSpecialSystemDirectory(Mac_UserDocumentsDirectory,
+                                   getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::DirectoryService_LocalApplicationsDirectory) {
     rv = GetSpecialSystemDirectory(Mac_LocalApplicationsDirectory,
                                    getter_AddRefs(localFile));
@@ -399,6 +402,8 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
   } else if (inAtom == nsGkAtoms::DirectoryService_OS_DesktopDirectory) {
     rv = GetSpecialSystemDirectory(Win_Desktopdirectory,
                                    getter_AddRefs(localFile));
+  } else if (inAtom == nsGkAtoms::DirectoryService_OS_DocumentsDirectory) {
+    rv = GetSpecialSystemDirectory(Win_Documents, getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::DirectoryService_Appdata) {
     rv = GetSpecialSystemDirectory(Win_Appdata, getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::DirectoryService_LocalAppdata) {
@@ -421,6 +426,9 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
     *aPersistent = false;
   } else if (inAtom == nsGkAtoms::DirectoryService_OS_SystemConfigDir) {
     rv = GetSpecialSystemDirectory(Unix_SystemConfigDirectory,
+                                   getter_AddRefs(localFile));
+  } else if (inAtom == nsGkAtoms::DirectoryService_OS_DocumentsDirectory) {
+    rv = GetSpecialSystemDirectory(Unix_XDG_Documents,
                                    getter_AddRefs(localFile));
   }
 #endif
