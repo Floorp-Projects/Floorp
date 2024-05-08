@@ -1040,15 +1040,14 @@ shellService:
   description: "Interface with OS, e.g., pinning and set default"
   owner: desktop-integrations@mozilla.com
   hasExposure: false
+  isEarlyStartup: true
   variables:
     disablePin:
       type: boolean
       description: Disable pin to taskbar feature
     setDefaultBrowserUserChoice:
       type: boolean
-      setPref:
-        branch: user
-        pref: browser.shell.setDefaultBrowserUserChoice
+      fallbackPref: browser.shell.setDefaultBrowserUserChoice
       description: Should it set as default browser
     setDefaultPDFHandler:
       type: boolean

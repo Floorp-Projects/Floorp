@@ -28,6 +28,7 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "newtab",
     "pocketNewtab",
     "searchConfiguration",
+    "shellService",
     "testFeature",
     "upgradeDialog",
 }
