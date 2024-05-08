@@ -537,12 +537,26 @@ nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(
 
   // We're only downgrading if it's possible that the error was
   // caused by the upgrade.
-  if (HttpsUpgradeUnrelatedErrorCode(status)) {
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(
+      do_QueryInterface(channel));
+  if (!httpChannelInternal) {
+    return nullptr;
+  }
+  bool proxyUsed = false;
+  nsresult rv = httpChannelInternal->GetIsProxyUsed(&proxyUsed);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (!(proxyUsed && status == nsresult::NS_ERROR_UNKNOWN_HOST)
+      // When a proxy returns an error code it is converted by
+      // HttpProxyResponseToErrorCode. We do want to downgrade in
+      // that case. If the host is actually unreachable this will
+      // show the same error page, but technically for the HTTP
+      // site not the HTTPS site.
+      && HttpsUpgradeUnrelatedErrorCode(status)) {
     return nullptr;
   }
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = channel->GetURI(getter_AddRefs(uri));
+  rv = channel->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsAutoCString spec;
