@@ -35,9 +35,6 @@ job-defaults:
         options: []
         tooltool-downloads: public
     run-on-projects: []
-    # The build_attrs transform defaults to setting a `skip-unlles-schedules'
-    # optimization based on the task label. The tasks here don't have corresponding
-    # schedules defined in mozbuild.
     optimization: null
 
 jobs:

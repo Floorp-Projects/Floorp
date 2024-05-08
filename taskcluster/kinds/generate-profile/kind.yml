@@ -10,6 +10,7 @@ kind-dependencies:
 
 transforms:
     - gecko_taskgraph.transforms.build_attrs:transforms
+    - gecko_taskgraph.transforms.build_schedules:transforms
     - gecko_taskgraph.transforms.release_deps:transforms
     - gecko_taskgraph.transforms.run_pgo_profile:transforms
     - gecko_taskgraph.transforms.job:transforms

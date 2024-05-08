@@ -19,15 +19,7 @@ def set_build_schedules_optimization(config, tasks):
             continue
 
         schedules = []
-        if config.kind == "build":
-            family = platform_family(task["attributes"]["build_platform"])
-            schedules = [family]
-
-            if "android" not in family:
-                # These are not GeckoView builds, so are associated with Firefox.
-                schedules.append("firefox")
-
-        elif config.kind in (
+        if config.kind in (
             "build-components",
             "build-samples-browser",
             "test-components",
@@ -43,6 +35,14 @@ def set_build_schedules_optimization(config, tasks):
                 schedules.append("fenix")
             elif "focus" in task["name"] or "klar" in task["name"]:
                 schedules.append("focus-android")
+
+        else:
+            family = platform_family(task["attributes"]["build_platform"])
+            schedules = [family]
+
+            if "android" not in family:
+                # These are not GeckoView builds, so are associated with Firefox.
+                schedules.append("firefox")
 
         task["optimization"] = {"build": schedules}
         yield task
