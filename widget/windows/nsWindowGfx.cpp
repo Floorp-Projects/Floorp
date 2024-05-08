@@ -99,20 +99,27 @@ static IconMetrics sIconMetrics[] = {
  **************************************************************/
 
 // GetRegionToPaint returns the invalidated region that needs to be painted
-LayoutDeviceIntRegion nsWindow::GetRegionToPaint(const PAINTSTRUCT& ps,
-                                                 HDC aDC) const {
-  LayoutDeviceIntRegion fullRegion(WinUtils::ToIntRect(ps.rcPaint));
+LayoutDeviceIntRegion nsWindow::GetRegionToPaint(bool aForceFullRepaint,
+                                                 PAINTSTRUCT ps, HDC aDC) {
+  if (aForceFullRepaint) {
+    RECT paintRect;
+    ::GetClientRect(mWnd, &paintRect);
+    return LayoutDeviceIntRegion(WinUtils::ToIntRect(paintRect));
+  }
+
   HRGN paintRgn = ::CreateRectRgn(0, 0, 0, 0);
-  if (paintRgn) {
-    if (GetRandomRgn(aDC, paintRgn, SYSRGN) == 1) {
+  if (paintRgn != nullptr) {
+    int result = GetRandomRgn(aDC, paintRgn, SYSRGN);
+    if (result == 1) {
       POINT pt = {0, 0};
       ::MapWindowPoints(nullptr, mWnd, &pt, 1);
       ::OffsetRgn(paintRgn, pt.x, pt.y);
-      fullRegion.AndWith(WinUtils::ConvertHRGNToRegion(paintRgn));
     }
+    LayoutDeviceIntRegion rgn(WinUtils::ConvertHRGNToRegion(paintRgn));
     ::DeleteObject(paintRgn);
+    return rgn;
   }
-  return fullRegion;
+  return LayoutDeviceIntRegion(WinUtils::ToIntRect(ps.rcPaint));
 }
 
 nsIWidgetListener* nsWindow::GetPaintListener() {
@@ -168,9 +175,39 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
   KnowsCompositor* knowsCompositor = renderer->AsKnowsCompositor();
   WebRenderLayerManager* layerManager = renderer->AsWebRender();
 
-  const bool didResize = !mBounds.IsEqualEdges(mLastPaintBounds);
+  if (mClearNCEdge) {
+    // We need to clear this edge of the non-client region to black (once).
+    HDC hdc;
+    RECT rect;
+    hdc = ::GetWindowDC(mWnd);
+    ::GetWindowRect(mWnd, &rect);
+    ::MapWindowPoints(nullptr, mWnd, (LPPOINT)&rect, 2);
+    switch (mClearNCEdge.value()) {
+      case ABE_TOP:
+        rect.bottom = rect.top + kHiddenTaskbarSize;
+        break;
+      case ABE_LEFT:
+        rect.right = rect.left + kHiddenTaskbarSize;
+        break;
+      case ABE_BOTTOM:
+        rect.top = rect.bottom - kHiddenTaskbarSize;
+        break;
+      case ABE_RIGHT:
+        rect.left = rect.right - kHiddenTaskbarSize;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid edge value");
+        break;
+    }
+    ::FillRect(hdc, &rect,
+               reinterpret_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
+    ::ReleaseDC(mWnd, hdc);
 
-  if (didResize && knowsCompositor && layerManager) {
+    mClearNCEdge.reset();
+  }
+
+  if (knowsCompositor && layerManager &&
+      !mBounds.IsEqualEdges(mLastPaintBounds)) {
     // Do an early async composite so that we at least have something on the
     // screen in the right place, even if the content is out of date.
     layerManager->ScheduleComposite(wr::RenderReasons::WIDGET);
@@ -186,7 +223,6 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
       mTransparencyMode == TransparencyMode::Transparent;
 
   HDC hDC = nullptr;
-  LayoutDeviceIntRegion region;
   if (usingMemoryDC) {
     // BeginPaint/EndPaint must be called to make Windows think that invalid
     // area is painted. Otherwise it will continue sending the same message
@@ -197,58 +233,41 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
     // We're guaranteed to have a widget proxy since we called
     // GetLayerManager().
     hDC = mBasicLayersSurface->GetTransparentDC();
-    RECT paintRect;
-    ::GetClientRect(mWnd, &paintRect);
-    region = LayoutDeviceIntRegion{WinUtils::ToIntRect(paintRect)};
   } else {
     hDC = ::BeginPaint(mWnd, &ps);
-    region = GetRegionToPaint(ps, hDC);
+  }
+
+  const bool forceRepaint = mTransparencyMode == TransparencyMode::Transparent;
+  const LayoutDeviceIntRegion region = GetRegionToPaint(forceRepaint, ps, hDC);
+
+  if (knowsCompositor && layerManager) {
+    // We need to paint to the screen even if nothing changed, since if we
+    // don't have a compositing window manager, our pixels could be stale.
+    layerManager->SetNeedsComposite(true);
+    layerManager->SendInvalidRegion(region.ToUnknownRegion());
   }
 
   RefPtr<nsWindow> strongThis(this);
-  if (nsIWidgetListener* listener = GetPaintListener()) {
+
+  nsIWidgetListener* listener = GetPaintListener();
+  if (listener) {
     listener->WillPaintWindow(this);
   }
-
-  if (mNeedsNCAreaClear || didResize) {
-    // We need to clear the non-client-area region, and the transparent parts
-    // of the window to black (once). WillPaintWindow updates the opaque region.
-    HDC hdc = ::GetWindowDC(mWnd);
-    auto black = reinterpret_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH));
-    {
-      HRGN ncRegion = ComputeNonClientHRGN();
-      ::FillRgn(hdc, ncRegion, black);
-      ::DeleteObject(ncRegion);
-    }
-    if (mTransparencyMode == TransparencyMode::Transparent) {
-      RECT winRect;
-      GetWindowRect(mWnd, &winRect);
-      MapWindowPoints(nullptr, mWnd, (LPPOINT)&winRect, 2);
-      LayoutDeviceIntRegion translucent(WinUtils::ToIntRect(winRect));
-      translucent.SubOut(mOpaqueRegion);
-      for (auto iter = translucent.RectIter(); !iter.Done(); iter.Next()) {
-        RECT rect = WinUtils::ToWinRect(iter.Get());
-        ::FillRect(hdc, &rect, black);
-      }
-    }
-    ::ReleaseDC(mWnd, hdc);
-    mNeedsNCAreaClear = false;
-  }
-
   // Re-get the listener since the will paint notification may have killed it.
-  nsIWidgetListener* listener = GetPaintListener();
+  listener = GetPaintListener();
   if (!listener) {
     return false;
   }
 
+  if (knowsCompositor && layerManager && layerManager->NeedsComposite()) {
+    layerManager->ScheduleComposite(wr::RenderReasons::WIDGET);
+    layerManager->SetNeedsComposite(false);
+  }
+
   bool result = true;
   if (!region.IsEmpty() && listener) {
-    if (knowsCompositor && layerManager) {
-      layerManager->SendInvalidRegion(region.ToUnknownRegion());
-      layerManager->ScheduleComposite(wr::RenderReasons::WIDGET);
-    }
     // Should probably pass in a real region here, using GetRandomRgn
-    // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getrandomrgn
+    // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/clipping_4q0e.asp
 
 #ifdef WIDGET_DEBUG_OUTPUT
     debug_DumpPaintEvent(stdout, this, region.ToUnknownRegion(), "noname",
@@ -260,7 +279,7 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
         RefPtr<gfxASurface> targetSurface;
 
         // don't support transparency for non-GDI rendering, for now
-        if (mTransparencyMode == TransparencyMode::Transparent) {
+        if (TransparencyMode::Transparent == mTransparencyMode) {
           // This mutex needs to be held when EnsureTransparentSurface is
           // called.
           MutexAutoLock lock(mBasicLayersSurface->GetTransparentSurfaceLock());
@@ -269,7 +288,7 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
 
         RefPtr<gfxWindowsSurface> targetSurfaceWin;
         if (!targetSurface) {
-          uint32_t flags = mTransparencyMode == TransparencyMode::Opaque
+          uint32_t flags = (mTransparencyMode == TransparencyMode::Opaque)
                                ? 0
                                : gfxWindowsSurface::FLAG_IS_TRANSPARENT;
           targetSurfaceWin = new gfxWindowsSurface(hDC, flags);
@@ -298,7 +317,8 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
           case TransparencyMode::Transparent:
             // If we're rendering with translucency, we're going to be
             // rendering the whole window; make sure we clear it first
-            dt->ClearRect(Rect(Point(0, 0), Size(dt->GetSize())));
+            dt->ClearRect(
+                Rect(0.f, 0.f, dt->GetSize().width, dt->GetSize().height));
             break;
           default:
             // If we're not doing translucency, then double buffer
@@ -314,7 +334,7 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
           result = listener->PaintWindow(this, region);
         }
 
-        if (mTransparencyMode == TransparencyMode::Transparent) {
+        if (TransparencyMode::Transparent == mTransparencyMode) {
           // Data from offscreen drawing surface was copied to memory bitmap of
           // transparent bitmap. Now it can be read from memory bitmap to apply
           // alpha channel and after that displayed on the screen.

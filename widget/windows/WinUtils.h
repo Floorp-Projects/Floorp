@@ -424,10 +424,6 @@ class WinUtils {
    * returns the LayoutDeviceIntRect.
    */
   static LayoutDeviceIntRect ToIntRect(const RECT& aRect);
-  /**
-   * Performs the inverse conversion of ToIntRect
-   */
-  static RECT ToWinRect(const LayoutDeviceIntRect& aRect);
 
   /**
    * Returns true if the context or IME state is enabled.  Otherwise, false.
