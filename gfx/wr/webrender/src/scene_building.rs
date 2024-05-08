@@ -45,10 +45,8 @@ use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDescriptor, ReferenceF
 use api::{APZScrollGeneration, HasScrollLinkedEffect, Shadow, SpatialId, StickyFrameDescriptor, ImageMask, ItemTag};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::{ReferenceTransformBinding, Rotation, FillRule, SpatialTreeItem, ReferenceFrameDescriptor};
-use api::FilterOpGraphPictureBufferId;
 use api::units::*;
 use crate::image_tiling::simplify_repeated_primitive;
-use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::clip::{ClipItemKey, ClipStore, ClipItemKeyKind, ClipIntern};
 use crate::clip::{ClipInternData, ClipNodeId, ClipLeafId};
 use crate::clip::{PolygonDataHandle, ClipTreeBuilder};
@@ -58,7 +56,7 @@ use crate::frame_builder::{FrameBuilderConfig};
 use glyph_rasterizer::{FontInstance, SharedFontResources};
 use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
-use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, FilterGraphNode, FilterGraphOp, FilterGraphPictureReference, PlaneSplitterIndex, PipelineInstanceId};
+use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitterIndex, PipelineInstanceId};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, SurfaceInfo, PictureFlags};
 use crate::picture_graph::PictureGraph;
@@ -92,7 +90,6 @@ use std::collections::vec_deque::VecDeque;
 use std::sync::Arc;
 use crate::util::{VecHelper, MaxRect};
 use crate::filterdata::{SFilterDataComponent, SFilterData, SFilterDataKey};
-use log::Level;
 
 /// Offsets primitives (and clips) by the external scroll offset
 /// supplied to scroll nodes.
@@ -195,7 +192,6 @@ impl CompositeOps {
                         return true;
                     }
                 }
-                Filter::SVGGraphNode(..) => {return true;}
                 _ => {
                     if filter.is_noop() {
                         continue;
@@ -728,7 +724,6 @@ impl<'a> SceneBuilder<'a> {
             Some(PictureCompositeMode::Filter(Filter::Blur { .. })) => true,
             Some(PictureCompositeMode::Filter(Filter::DropShadows { .. })) => true,
             Some(PictureCompositeMode::SvgFilter( .. )) => true,
-            Some(PictureCompositeMode::SVGFEGraph( .. )) => true,
             _ => false,
         };
 
@@ -904,11 +899,7 @@ impl<'a> SceneBuilder<'a> {
                         let spatial_node_index = self.get_space(info.spatial_id);
                         let mut subtraversal = item.sub_iter();
                         // Avoid doing unnecessary work for empty stacking contexts.
-                        // We still have to process it if it has filters, they
-                        // may be things like SVGFEFlood or various specific
-                        // ways to use ComponentTransfer, ColorMatrix, Composite
-                        // which are still visible on an empty stacking context
-                        if subtraversal.current_stacking_context_empty() && item.filters().is_empty() {
+                        if subtraversal.current_stacking_context_empty() {
                             subtraversal.skip_current_stacking_context();
                             traversal = subtraversal;
                             continue;
@@ -991,8 +982,8 @@ impl<'a> SceneBuilder<'a> {
             match bc.kind {
                 ContextKind::Root => {}
                 ContextKind::StackingContext { sc_info } => {
-                    self.pop_stacking_context(sc_info);
                     self.rf_mapper.pop_offset();
+                    self.pop_stacking_context(sc_info);
                 }
                 ContextKind::ReferenceFrame => {
                     self.rf_mapper.pop_scope();
@@ -2536,7 +2527,6 @@ impl<'a> SceneBuilder<'a> {
 
         let has_filters = stacking_context.composite_ops.has_valid_filters();
 
-        let spatial_node_context_offset = self.current_offset(stacking_context.spatial_node_index);
         source = self.wrap_prim_with_filters(
             source,
             stacking_context.clip_node_id,
@@ -2544,7 +2534,6 @@ impl<'a> SceneBuilder<'a> {
             stacking_context.composite_ops.filter_primitives,
             stacking_context.composite_ops.filter_datas,
             None,
-            spatial_node_context_offset,
         );
 
         // Same for mix-blend-mode, except we can skip if this primitive is the first in the parent
@@ -3681,7 +3670,6 @@ impl<'a> SceneBuilder<'a> {
             filter_primitives,
             filter_datas,
             Some(false),
-            LayoutVector2D::zero(),
         );
 
         // If all the filters were no-ops (e.g. opacity(0)) then we don't get a picture here
@@ -3780,7 +3768,6 @@ impl<'a> SceneBuilder<'a> {
         mut filter_primitives: Vec<FilterPrimitive>,
         filter_datas: Vec<FilterData>,
         should_inflate_override: Option<bool>,
-        context_offset: LayoutVector2D,
     ) -> PictureChainBuilder {
         // TODO(cbrewster): Currently CSS and SVG filters live side by side in WebRender, but unexpected results will
         // happen if they are used simulataneously. Gecko only provides either filter ops or filter primitives.
@@ -3790,495 +3777,6 @@ impl<'a> SceneBuilder<'a> {
 
         // For each filter, create a new image with that composite mode.
         let mut current_filter_data_index = 0;
-        // Check if the filter chain is actually an SVGFE filter graph DAG
-        if let Some(Filter::SVGGraphNode(..)) = filter_ops.first() {
-            // The interesting parts of the handling of SVG filters are:
-            // * scene_building.rs : wrap_prim_with_filters (you are here)
-            // * picture.rs : get_coverage_svgfe
-            // * render_task.rs : new_svg_filter_graph
-            // * render_target.rs : add_svg_filter_node_instances
-
-            // The SVG spec allows us to drop the entire filter graph if it is
-            // unreasonable, so we limit the number of filters in a graph
-            const BUFFER_LIMIT: usize = 256;
-            // Easily tunable for debugging proper handling of inflated rects,
-            // this should normally be 1
-            const SVGFE_INFLATE: i16 = 1;
-            // Easily tunable for debugging proper handling of inflated rects,
-            // this should normally be 0
-            const SVGFE_INFLATE_OUTPUT: i16 = 0;
-
-            // Validate inputs to all filters.
-            //
-            // Several assumptions can be made about the DAG:
-            // * All filters take a specific number of inputs (feMerge is not
-            //   supported, the code that built the display items had to convert
-            //   any feMerge ops to SVGFECompositeOver already).
-            // * All input buffer ids are < the output buffer id of the node.
-            // * If SourceGraphic or SourceAlpha are used, they are standalone
-            //   nodes with no inputs.
-            // * Whenever subregion of a node is smaller than the subregion
-            //   of the inputs, it is a deliberate clip of those inputs to the
-            //   new rect, this can occur before/after blur and dropshadow for
-            //   example, so we must explicitly handle subregion correctly, but
-            //   we do not have to allocate the unused pixels as the transparent
-            //   black has no efect on any of the filters, only certain filters
-            //   like feFlood can generate something from nothing.
-            // * Coordinate basis of the graph has to be adjusted by
-            //   context_offset to put the subregions in the same space that the
-            //   primitives are in, as they do that offset as well.
-            let mut reference_for_buffer_id: [FilterGraphPictureReference; BUFFER_LIMIT] = [
-                FilterGraphPictureReference{
-                    // This value is deliberately invalid, but not a magic
-                    // number, it's just this way to guarantee an assertion
-                    // failure if something goes wrong.
-                    buffer_id: FilterOpGraphPictureBufferId::BufferId(-1),
-                    subregion: LayoutRect::zero(), // Always overridden
-                    offset: LayoutVector2D::zero(),
-                    inflate: 0,
-                    source_padding: LayoutRect::zero(),
-                    target_padding: LayoutRect::zero(),
-                }; BUFFER_LIMIT];
-            let mut filters: Vec<(FilterGraphNode, FilterGraphOp)> = Vec::new();
-            filters.reserve(BUFFER_LIMIT);
-            for (original_id, parsefilter) in filter_ops.iter().enumerate() {
-                match parsefilter {
-                    Filter::SVGGraphNode(parsenode, op) => {
-                        if filters.len() >= BUFFER_LIMIT {
-                            // If the DAG is too large we drop it entirely, the spec
-                            // allows this.
-                            return source;
-                        }
-
-                        // We need to offset the subregion by the stacking context
-                        // offset or we'd be in the wrong coordinate system, prims
-                        // are already offset by this same amount.
-                        let clip_region = parsenode.subregion
-                            .translate(context_offset);
-
-                        let mut newnode = FilterGraphNode {
-                            kept_by_optimizer: false,
-                            linear: parsenode.linear,
-                            inflate: SVGFE_INFLATE,
-                            inputs: Vec::new(),
-                            subregion: clip_region,
-                        };
-
-                        // Initialize remapped versions of the inputs, this is
-                        // done here to share code between the enum variants.
-                        let mut remapped_inputs: Vec<FilterGraphPictureReference> = Vec::new();
-                        remapped_inputs.reserve_exact(parsenode.inputs.len());
-                        for input in &parsenode.inputs {
-                            match input.buffer_id {
-                                FilterOpGraphPictureBufferId::BufferId(buffer_id) => {
-                                    // Reference to earlier node output, if this
-                                    // is None, it's a bug
-                                    let pic = *reference_for_buffer_id
-                                        .get(buffer_id as usize)
-                                        .expect("BufferId not valid?");
-                                    // We have to adjust the subregion and
-                                    // padding based on the input offset for
-                                    // feOffset ops, the padding may be inflated
-                                    // further by other ops such as blurs below.
-                                    let offset = input.offset;
-                                    let subregion = pic.subregion
-                                        .translate(offset);
-                                    let source_padding = LayoutRect::zero()
-                                        .translate(-offset);
-                                    let target_padding = LayoutRect::zero()
-                                        .translate(offset);
-                                    remapped_inputs.push(
-                                        FilterGraphPictureReference {
-                                            buffer_id: pic.buffer_id,
-                                            subregion,
-                                            offset,
-                                            inflate: pic.inflate,
-                                            source_padding,
-                                            target_padding,
-                                        });
-                                }
-                                FilterOpGraphPictureBufferId::None => panic!("Unsupported FilterOpGraphPictureBufferId"),
-                            }
-                        }
-
-                        fn union_unchecked(a: LayoutRect, b: LayoutRect) -> LayoutRect {
-                            let mut r = a;
-                            if r.min.x > b.min.x {r.min.x = b.min.x}
-                            if r.min.y > b.min.y {r.min.y = b.min.y}
-                            if r.max.x < b.max.x {r.max.x = b.max.x}
-                            if r.max.y < b.max.y {r.max.y = b.max.y}
-                            r
-                        }
-
-                        match op {
-                            FilterGraphOp::SVGFEFlood{..} |
-                            FilterGraphOp::SVGFESourceAlpha |
-                            FilterGraphOp::SVGFESourceGraphic |
-                            FilterGraphOp::SVGFETurbulenceWithFractalNoiseWithNoStitching{..} |
-                            FilterGraphOp::SVGFETurbulenceWithFractalNoiseWithStitching{..} |
-                            FilterGraphOp::SVGFETurbulenceWithTurbulenceNoiseWithNoStitching{..} |
-                            FilterGraphOp::SVGFETurbulenceWithTurbulenceNoiseWithStitching{..} => {
-                                assert!(remapped_inputs.len() == 0);
-                                filters.push((newnode.clone(), op.clone()));
-                            }
-                            FilterGraphOp::SVGFEColorMatrix{..} |
-                            FilterGraphOp::SVGFEIdentity |
-                            FilterGraphOp::SVGFEImage{..} |
-                            FilterGraphOp::SVGFEOpacity{..} |
-                            FilterGraphOp::SVGFEToAlpha => {
-                                assert!(remapped_inputs.len() == 1);
-                                newnode.inputs = remapped_inputs;
-                                filters.push((newnode.clone(), op.clone()));
-                            }
-                            FilterGraphOp::SVGFEComponentTransfer => {
-                                assert!(remapped_inputs.len() == 1);
-                                // Convert to SVGFEComponentTransferInterned
-                                let filter_data =
-                                    &filter_datas[current_filter_data_index];
-                                let filter_data = filter_data.sanitize();
-                                current_filter_data_index = current_filter_data_index + 1;
-
-                                // filter data is 4KiB of gamma ramps used
-                                // only by SVGFEComponentTransferWithHandle.
-                                //
-                                // The gamma ramps are interleaved as RGBA32F
-                                // pixels (unlike in regular ComponentTransfer,
-                                // where the values are not interleaved), so
-                                // r_values[3] is the alpha of the first color,
-                                // not the 4th red value.  This layout makes the
-                                // shader more compatible with buggy compilers that
-                                // do not like indexing components on a vec4.
-                                let creates_pixels =
-                                    if let Some(a) = filter_data.r_values.get(3) {
-                                        *a != 0.0
-                                    } else {
-                                        false
-                                    };
-                                let filter_data_key = SFilterDataKey {
-                                    data:
-                                        SFilterData {
-                                            r_func: SFilterDataComponent::from_functype_values(
-                                                filter_data.func_r_type, &filter_data.r_values),
-                                            g_func: SFilterDataComponent::from_functype_values(
-                                                filter_data.func_g_type, &filter_data.g_values),
-                                            b_func: SFilterDataComponent::from_functype_values(
-                                                filter_data.func_b_type, &filter_data.b_values),
-                                            a_func: SFilterDataComponent::from_functype_values(
-                                                filter_data.func_a_type, &filter_data.a_values),
-                                        },
-                                };
-
-                                let handle = self.interners
-                                    .filter_data
-                                    .intern(&filter_data_key, || ());
-
-                                newnode.inputs = remapped_inputs;
-                                filters.push((newnode.clone(), FilterGraphOp::SVGFEComponentTransferInterned{handle, creates_pixels}));
-                            }
-                            FilterGraphOp::SVGFEComponentTransferInterned{..} => unreachable!(),
-                            FilterGraphOp::SVGFETile => {
-                                assert!(remapped_inputs.len() == 1);
-                                // feTile usually uses every pixel of input
-                                remapped_inputs[0].source_padding =
-                                    LayoutRect::max_rect();
-                                remapped_inputs[0].target_padding =
-                                    LayoutRect::max_rect();
-                                newnode.inputs = remapped_inputs;
-                                filters.push((newnode.clone(), op.clone()));
-                            }
-                            FilterGraphOp::SVGFEConvolveMatrixEdgeModeDuplicate{kernel_unit_length_x, kernel_unit_length_y, ..} |
-                            FilterGraphOp::SVGFEConvolveMatrixEdgeModeNone{kernel_unit_length_x, kernel_unit_length_y, ..} |
-                            FilterGraphOp::SVGFEConvolveMatrixEdgeModeWrap{kernel_unit_length_x, kernel_unit_length_y, ..} |
-                            FilterGraphOp::SVGFEMorphologyDilate{radius_x: kernel_unit_length_x, radius_y: kernel_unit_length_y} => {
-                                assert!(remapped_inputs.len() == 1);
-                                let padding = LayoutSize::new(
-                                    kernel_unit_length_x.ceil(),
-                                    kernel_unit_length_y.ceil(),
-                                );
-                                // Add source padding to represent the kernel pixels
-                                // needed relative to target pixels
-                                remapped_inputs[0].source_padding =
-                                    remapped_inputs[0].source_padding
-                                    .inflate(padding.width, padding.height);
-                                // Add target padding to represent the area affected
-                                // by a source pixel
-                                remapped_inputs[0].target_padding =
-                                    remapped_inputs[0].target_padding
-                                    .inflate(padding.width, padding.height);
-                                newnode.inputs = remapped_inputs;
-                                filters.push((newnode.clone(), op.clone()));
-                            },
-                            FilterGraphOp::SVGFEDiffuseLightingDistant{kernel_unit_length_x, kernel_unit_length_y, ..} |
-                            FilterGraphOp::SVGFEDiffuseLightingPoint{kernel_unit_length_x, kernel_unit_length_y, ..} |
-                            FilterGraphOp::SVGFEDiffuseLightingSpot{kernel_unit_length_x, kernel_unit_length_y, ..} |
-                            FilterGraphOp::SVGFESpecularLightingDistant{kernel_unit_length_x, kernel_unit_length_y, ..} |
-                            FilterGraphOp::SVGFESpecularLightingPoint{kernel_unit_length_x, kernel_unit_length_y, ..} |
-                            FilterGraphOp::SVGFESpecularLightingSpot{kernel_unit_length_x, kernel_unit_length_y, ..} |
-                            FilterGraphOp::SVGFEMorphologyErode{radius_x: kernel_unit_length_x, radius_y: kernel_unit_length_y} => {
-                                assert!(remapped_inputs.len() == 1);
-                                let padding = LayoutSize::new(
-                                    kernel_unit_length_x.ceil(),
-                                    kernel_unit_length_y.ceil(),
-                                );
-                                // Add source padding to represent the kernel pixels
-                                // needed relative to target pixels
-                                remapped_inputs[0].source_padding =
-                                    remapped_inputs[0].source_padding
-                                    .inflate(padding.width, padding.height);
-                                // Add target padding to represent the area affected
-                                // by a source pixel
-                                remapped_inputs[0].target_padding =
-                                    remapped_inputs[0].target_padding
-                                    .inflate(padding.width, padding.height);
-                                newnode.inputs = remapped_inputs;
-                                filters.push((newnode.clone(), op.clone()));
-                            },
-                            FilterGraphOp::SVGFEDisplacementMap { scale, .. } => {
-                                assert!(remapped_inputs.len() == 2);
-                                let padding = LayoutSize::new(
-                                    scale.ceil(),
-                                    scale.ceil(),
-                                );
-                                // Add padding to both inputs for source and target
-                                // rects, we might be able to skip some of these,
-                                // but it's not that important to optimize here, a
-                                // loose fit is fine.
-                                remapped_inputs[0].source_padding =
-                                    remapped_inputs[0].source_padding
-                                    .inflate(padding.width, padding.height);
-                                remapped_inputs[1].source_padding =
-                                    remapped_inputs[1].source_padding
-                                    .inflate(padding.width, padding.height);
-                                remapped_inputs[0].target_padding =
-                                    remapped_inputs[0].target_padding
-                                    .inflate(padding.width, padding.height);
-                                remapped_inputs[1].target_padding =
-                                    remapped_inputs[1].target_padding
-                                    .inflate(padding.width, padding.height);
-                                newnode.inputs = remapped_inputs;
-                                filters.push((newnode.clone(), op.clone()));
-                            },
-                            FilterGraphOp::SVGFEDropShadow{ dx, dy, std_deviation_x, std_deviation_y, .. } => {
-                                assert!(remapped_inputs.len() == 1);
-                                let padding = LayoutSize::new(
-                                    std_deviation_x.ceil() * BLUR_SAMPLE_SCALE,
-                                    std_deviation_y.ceil() * BLUR_SAMPLE_SCALE,
-                                );
-                                // Add source padding to represent the shadow
-                                remapped_inputs[0].source_padding =
-                                    union_unchecked(
-                                        remapped_inputs[0].source_padding,
-                                        remapped_inputs[0].source_padding
-                                            .inflate(padding.width, padding.height)
-                                            .translate(
-                                                LayoutVector2D::new(-dx, -dy)
-                                            )
-                                    );
-                                // Add target padding to represent the area needed
-                                // to calculate pixels of the shadow
-                                remapped_inputs[0].target_padding =
-                                    union_unchecked(
-                                        remapped_inputs[0].target_padding,
-                                        remapped_inputs[0].target_padding
-                                            .inflate(padding.width, padding.height)
-                                            .translate(
-                                                LayoutVector2D::new(*dx, *dy)
-                                            )
-                                    );
-                                newnode.inputs = remapped_inputs;
-                                filters.push((newnode.clone(), op.clone()));
-                            },
-                            FilterGraphOp::SVGFEGaussianBlur{std_deviation_x, std_deviation_y} => {
-                                assert!(remapped_inputs.len() == 1);
-                                let padding = LayoutSize::new(
-                                    std_deviation_x.ceil() * BLUR_SAMPLE_SCALE,
-                                    std_deviation_y.ceil() * BLUR_SAMPLE_SCALE,
-                                );
-                                // Add source padding to represent the blur
-                                remapped_inputs[0].source_padding =
-                                    remapped_inputs[0].source_padding
-                                    .inflate(padding.width, padding.height);
-                                // Add target padding to represent the blur
-                                remapped_inputs[0].target_padding =
-                                    remapped_inputs[0].target_padding
-                                    .inflate(padding.width, padding.height);
-                                newnode.inputs = remapped_inputs;
-                                filters.push((newnode.clone(), op.clone()));
-                            }
-                            FilterGraphOp::SVGFEBlendColor |
-                            FilterGraphOp::SVGFEBlendColorBurn |
-                            FilterGraphOp::SVGFEBlendColorDodge |
-                            FilterGraphOp::SVGFEBlendDarken |
-                            FilterGraphOp::SVGFEBlendDifference |
-                            FilterGraphOp::SVGFEBlendExclusion |
-                            FilterGraphOp::SVGFEBlendHardLight |
-                            FilterGraphOp::SVGFEBlendHue |
-                            FilterGraphOp::SVGFEBlendLighten |
-                            FilterGraphOp::SVGFEBlendLuminosity|
-                            FilterGraphOp::SVGFEBlendMultiply |
-                            FilterGraphOp::SVGFEBlendNormal |
-                            FilterGraphOp::SVGFEBlendOverlay |
-                            FilterGraphOp::SVGFEBlendSaturation |
-                            FilterGraphOp::SVGFEBlendScreen |
-                            FilterGraphOp::SVGFEBlendSoftLight |
-                            FilterGraphOp::SVGFECompositeArithmetic{..} |
-                            FilterGraphOp::SVGFECompositeATop |
-                            FilterGraphOp::SVGFECompositeIn |
-                            FilterGraphOp::SVGFECompositeLighter |
-                            FilterGraphOp::SVGFECompositeOut |
-                            FilterGraphOp::SVGFECompositeOver |
-                            FilterGraphOp::SVGFECompositeXOR => {
-                                assert!(remapped_inputs.len() == 2);
-                                newnode.inputs = remapped_inputs;
-                                filters.push((newnode.clone(), op.clone()));
-                            }
-                        }
-
-                        // Set the reference remapping for the last (or only) node
-                        // that we just pushed
-                        let id = (filters.len() - 1) as i16;
-                        if let Some(pic) = reference_for_buffer_id.get_mut(original_id as usize) {
-                            *pic = FilterGraphPictureReference {
-                                buffer_id: FilterOpGraphPictureBufferId::BufferId(id),
-                                subregion: newnode.subregion,
-                                offset: LayoutVector2D::zero(),
-                                inflate: newnode.inflate,
-                                source_padding: LayoutRect::zero(),
-                                target_padding: LayoutRect::zero(),
-                            };
-                        }
-                    }
-                    _ => {
-                        panic!("wrap_prim_with_filters: Mixed SVG and CSS filters?")
-                    }
-                }
-            }
-
-            // Push a special output node at the end, this will correctly handle
-            // the final subregion, which may not have the same bounds as the
-            // surface it is being blitted into, so it needs to properly handle
-            // the cropping and UvRectKind, it also has no inflate.
-            if filters.len() >= BUFFER_LIMIT {
-                // If the DAG is too large we drop it entirely
-                return source;
-            }
-            let mut outputnode = FilterGraphNode {
-                kept_by_optimizer: true,
-                linear: false,
-                inflate: SVGFE_INFLATE_OUTPUT,
-                inputs: Vec::new(),
-                subregion: LayoutRect::max_rect(),
-            };
-            outputnode.inputs.push(reference_for_buffer_id[filter_ops.len() - 1]);
-            filters.push((
-                outputnode,
-                FilterGraphOp::SVGFEIdentity,
-            ));
-
-            // We want to optimize the filter DAG and then wrap it in a single
-            // picture, we will use a custom RenderTask method to process the
-            // DAG later, there's not really an easy way to keep it as a series
-            // of pictures like CSS filters use.
-            //
-            // The main optimization we can do here is looking for feOffset
-            // filters we can merge away - because all of the node inputs
-            // support offset capability implicitly.  We can also remove no-op
-            // filters (identity) if Gecko produced any.
-            //
-            // TODO: optimize the graph here
-
-            // Mark used graph nodes, starting at the last graph node, since
-            // this is a DAG in sorted order we can just iterate backwards and
-            // know we will find children before parents in order.
-            //
-            // Per SVG spec the last node (which is the first we encounter this
-            // way) is the final output, so its dependencies are what we want to
-            // mark as kept_by_optimizer
-            let mut kept_node_by_buffer_id = [false; BUFFER_LIMIT];
-            kept_node_by_buffer_id[filters.len() - 1] = true;
-            for (index, (node, _op)) in filters.iter_mut().enumerate().rev() {
-                let mut keep = false;
-                // Check if this node's output was marked to be kept
-                if let Some(k) = kept_node_by_buffer_id.get(index) {
-                    if *k {
-                        keep = true;
-                    }
-                }
-                if keep {
-                    // If this node contributes to the final output we need
-                    // to mark its inputs as also contributing when they are
-                    // encountered later
-                    node.kept_by_optimizer = true;
-                    for input in &node.inputs {
-                        if let FilterOpGraphPictureBufferId::BufferId(id) = input.buffer_id {
-                            if let Some(k) = kept_node_by_buffer_id.get_mut(id as usize) {
-                                *k = true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Validate the DAG nature of the graph again - if we find anything
-            // wrong here it means the above code is bugged.
-            let mut invalid_dag = false;
-            for (id, (node, _op)) in filters.iter().enumerate() {
-                for input in &node.inputs {
-                    if let FilterOpGraphPictureBufferId::BufferId(buffer_id) = input.buffer_id {
-                        if buffer_id < 0 || buffer_id as usize >= id {
-                            invalid_dag = true;
-                        }
-                    }
-                }
-            }
-
-            if invalid_dag {
-                log!(Level::Warn, "List of FilterOp::SVGGraphNode filter primitives appears to be invalid!");
-                for (id, (node, op)) in filters.iter().enumerate() {
-                    log!(Level::Warn, " node:     buffer=BufferId({}) op={} inflate={} subregion {:?} linear={} kept={}",
-                         id, op.kind(), node.inflate,
-                         node.subregion,
-                         node.linear,
-                         node.kept_by_optimizer,
-                    );
-                    for input in &node.inputs {
-                        log!(Level::Warn, "input: buffer={} inflate={} subregion {:?} offset {:?} target_padding={:?} source_padding={:?}",
-                            match input.buffer_id {
-                                FilterOpGraphPictureBufferId::BufferId(id) => format!("BufferId({})", id),
-                                FilterOpGraphPictureBufferId::None => "None".into(),
-                            },
-                            input.inflate,
-                            input.subregion,
-                            input.offset,
-                            input.target_padding,
-                            input.source_padding,
-                        );
-                    }
-                }
-            }
-            if invalid_dag {
-                // if the DAG is invalid, we can't render it
-                return source;
-            }
-
-            let composite_mode = PictureCompositeMode::SVGFEGraph(
-                filters,
-            );
-
-            source = source.add_picture(
-                composite_mode,
-                clip_node_id,
-                Picture3DContext::Out,
-                &mut self.interners,
-                &mut self.prim_store,
-                &mut self.prim_instances,
-                &mut self.clip_tree_builder,
-            );
-
-            return source;
-        }
-
-        // Handle regular CSS filter chains
         for filter in &mut filter_ops {
             let composite_mode = match filter {
                 Filter::ComponentTransfer => {
@@ -4308,10 +3806,6 @@ impl<'a> SceneBuilder<'a> {
                             .intern(&filter_data_key, || ());
                         PictureCompositeMode::ComponentTransferFilter(handle)
                     }
-                }
-                Filter::SVGGraphNode(_, _) => {
-                    // SVG filter graphs were handled above
-                    panic!("SVGGraphNode encountered in regular CSS filter chain?");
                 }
                 _ => {
                     if filter.is_noop() {

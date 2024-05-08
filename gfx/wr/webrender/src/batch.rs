@@ -1745,8 +1745,7 @@ impl BatchBuilder {
                                             Filter::ComponentTransfer |
                                             Filter::Blur { .. } |
                                             Filter::DropShadows(..) |
-                                            Filter::Opacity(..) |
-                                            Filter::SVGGraphNode(..) => unreachable!(),
+                                            Filter::Opacity(..) => unreachable!(),
                                         };
 
                                         // Other filters that may introduce opacity are handled via different
@@ -2141,53 +2140,6 @@ impl BatchBuilder {
                                 }
                             }
                             PictureCompositeMode::SvgFilter(..) => {
-                                let (clip_task_address, clip_mask_texture_id) = ctx.get_prim_clip_task_and_texture(
-                                    prim_info.clip_task_index,
-                                    render_tasks,
-                                ).unwrap();
-
-                                let kind = BatchKind::Brush(
-                                    BrushBatchKind::Image(ImageBufferKind::Texture2D)
-                                );
-                                let (uv_rect_address, texture) = render_tasks.resolve_location(
-                                    pic_task_id,
-                                    gpu_cache,
-                                ).unwrap();
-                                let textures = BatchTextures::prim_textured(
-                                    texture,
-                                    clip_mask_texture_id,
-                                );
-                                let key = BatchKey::new(
-                                    kind,
-                                    blend_mode,
-                                    textures,
-                                );
-                                let prim_header_index = prim_headers.push(
-                                    &prim_header,
-                                    z_id,
-                                    self.batcher.render_task_address,
-                                    ImageBrushData {
-                                        color_mode: ShaderColorMode::Image,
-                                        alpha_type: AlphaType::PremultipliedAlpha,
-                                        raster_space: RasterizationSpace::Screen,
-                                        opacity: 1.0,
-                                    }.encode(),
-                                );
-
-                                self.add_brush_instance_to_batches(
-                                    key,
-                                    batch_features,
-                                    bounding_rect,
-                                    z_id,
-                                    INVALID_SEGMENT_INDEX,
-                                    EdgeAaSegmentMask::all(),
-                                    clip_task_address,
-                                    brush_flags,
-                                    prim_header_index,
-                                    uv_rect_address.as_int(),
-                                );
-                            }
-                            PictureCompositeMode::SVGFEGraph(..) => {
                                 let (clip_task_address, clip_mask_texture_id) = ctx.get_prim_clip_task_and_texture(
                                     prim_info.clip_task_index,
                                     render_tasks,

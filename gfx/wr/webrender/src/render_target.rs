@@ -14,10 +14,10 @@ use crate::spatial_tree::SpatialTree;
 use crate::clip::{ClipStore, ClipItemKind};
 use crate::frame_builder::{FrameGlobalResources};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress};
-use crate::gpu_types::{BorderInstance, SvgFilterInstance, SVGFEFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
+use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
 use crate::gpu_types::{TransformPalette, ZBufferIdGenerator, MaskInstance, ClipSpace};
 use crate::gpu_types::{ZBufferId, QuadSegment, PrimitiveInstanceData, TransformPaletteId};
-use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId, FilterGraphOp};
+use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
 use crate::quad;
 use crate::prim_store::{PrimitiveInstance, PrimitiveStore, PrimitiveScratchBuffer};
@@ -28,7 +28,7 @@ use crate::prim_store::gradient::{
 use crate::renderer::{GpuBufferAddress, GpuBufferBuilder};
 use crate::render_backend::DataStores;
 use crate::render_task::{RenderTaskKind, RenderTaskAddress, SubPass};
-use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo, MaskSubPass, SVGFEFilterTask};
+use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo, MaskSubPass};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::resource_cache::ResourceCache;
 use crate::spatial_tree::{SpatialNodeIndex};
@@ -226,7 +226,6 @@ pub struct ColorRenderTarget {
     pub horizontal_blurs: FastHashMap<TextureSource, Vec<BlurInstance>>,
     pub scalings: FastHashMap<TextureSource, Vec<ScalingInstance>>,
     pub svg_filters: Vec<(BatchTextures, Vec<SvgFilterInstance>)>,
-    pub svg_nodes: Vec<(BatchTextures, Vec<SVGFEFilterInstance>)>,
     pub blits: Vec<BlitJob>,
     alpha_tasks: Vec<RenderTaskId>,
     screen_size: DeviceIntSize,
@@ -257,7 +256,6 @@ impl RenderTarget for ColorRenderTarget {
             horizontal_blurs: FastHashMap::default(),
             scalings: FastHashMap::default(),
             svg_filters: Vec::new(),
-            svg_nodes: Vec::new(),
             blits: Vec::new(),
             alpha_tasks: Vec::new(),
             screen_size,
@@ -440,17 +438,6 @@ impl RenderTarget for ColorRenderTarget {
                     task_info.extra_gpu_cache_handle.map(|handle| gpu_cache.get_address(&handle)),
                 )
             }
-            RenderTaskKind::SVGFENode(ref task_info) => {
-                add_svg_filter_node_instances(
-                    &mut self.svg_nodes,
-                    render_tasks,
-                    &task_info,
-                    task,
-                    task.children.get(0).cloned(),
-                    task.children.get(1).cloned(),
-                    task_info.extra_gpu_cache_handle.map(|handle| gpu_cache.get_address(&handle)),
-                )
-            }
             RenderTaskKind::Image(..) |
             RenderTaskKind::Cached(..) |
             RenderTaskKind::ClipRegion(..) |
@@ -572,8 +559,7 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::TileComposite(..) |
             RenderTaskKind::Prim(..) |
-            RenderTaskKind::SvgFilter(..) |
-            RenderTaskKind::SVGFENode(..) => {
+            RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: should not be added to alpha target!");
             }
             RenderTaskKind::Empty(..) => {
@@ -813,8 +799,7 @@ impl TextureCacheRenderTarget {
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::TileComposite(..) |
             RenderTaskKind::Empty(..) |
-            RenderTaskKind::SvgFilter(..) |
-            RenderTaskKind::SVGFENode(..) => {
+            RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: unexpected task kind for texture cache target");
             }
             #[cfg(test)]
@@ -953,175 +938,6 @@ fn add_svg_filter_instances(
             batch.push(instance);
             // Update the batch textures to the newly combined batch textures
             *batch_textures = combined_textures;
-            return;
-        }
-    }
-
-    instances.push((textures, vec![instance]));
-}
-
-/// Generates SVGFEFilterInstances from a single SVGFEFilterTask, this is what
-/// prepares vertex data for the shader, and adds it to the appropriate batch.
-///
-/// The interesting parts of the handling of SVG filters are:
-/// * scene_building.rs : wrap_prim_with_filters
-/// * picture.rs : get_coverage_svgfe
-/// * render_task.rs : new_svg_filter_graph
-/// * render_target.rs : add_svg_filter_node_instances (you are here)
-fn add_svg_filter_node_instances(
-    instances: &mut Vec<(BatchTextures, Vec<SVGFEFilterInstance>)>,
-    render_tasks: &RenderTaskGraph,
-    task_info: &SVGFEFilterTask,
-    target_task: &RenderTask,
-    input_1_task: Option<RenderTaskId>,
-    input_2_task: Option<RenderTaskId>,
-    extra_data_address: Option<GpuCacheAddress>,
-) {
-    let node = &task_info.node;
-    let op = &task_info.op;
-    let mut textures = BatchTextures::empty();
-
-    // We have to undo the inflate here as the inflated target rect is meant to
-    // have a blank border
-    let target_rect = target_task
-        .get_target_rect()
-        .inner_box(DeviceIntSideOffsets::new(node.inflate as i32, node.inflate as i32, node.inflate as i32, node.inflate as i32))
-        .to_f32();
-
-    let mut instance = SVGFEFilterInstance {
-        target_rect,
-        input_1_content_scale_and_offset: [0.0; 4],
-        input_2_content_scale_and_offset: [0.0; 4],
-        input_1_task_address: RenderTaskId::INVALID.into(),
-        input_2_task_address: RenderTaskId::INVALID.into(),
-        kind: 0,
-        input_count: node.inputs.len() as u16,
-        extra_data_address: extra_data_address.unwrap_or(GpuCacheAddress::INVALID),
-    };
-
-    // Must match FILTER_* in cs_svg_filter_node.glsl
-    instance.kind = match op {
-        // Identity does not modify color, no linear case
-        FilterGraphOp::SVGFEIdentity => 0,
-        // SourceGraphic does not have its own shader mode, it uses Identity.
-        FilterGraphOp::SVGFESourceGraphic => 0,
-        // SourceAlpha does not have its own shader mode, it uses ToAlpha.
-        FilterGraphOp::SVGFESourceAlpha => 4,
-        // Opacity scales the entire rgba color, so it does not need a linear
-        // case as the rgb / a ratio does not change (sRGB is a curve on the RGB
-        // before alpha multiply, not after)
-        FilterGraphOp::SVGFEOpacity{..} => 2,
-        FilterGraphOp::SVGFEToAlpha => 4,
-        FilterGraphOp::SVGFEBlendColor => {match node.linear {false => 6, true => 7}},
-        FilterGraphOp::SVGFEBlendColorBurn => {match node.linear {false => 8, true => 9}},
-        FilterGraphOp::SVGFEBlendColorDodge => {match node.linear {false => 10, true => 11}},
-        FilterGraphOp::SVGFEBlendDarken => {match node.linear {false => 12, true => 13}},
-        FilterGraphOp::SVGFEBlendDifference => {match node.linear {false => 14, true => 15}},
-        FilterGraphOp::SVGFEBlendExclusion => {match node.linear {false => 16, true => 17}},
-        FilterGraphOp::SVGFEBlendHardLight => {match node.linear {false => 18, true => 19}},
-        FilterGraphOp::SVGFEBlendHue => {match node.linear {false => 20, true => 21}},
-        FilterGraphOp::SVGFEBlendLighten => {match node.linear {false => 22, true => 23}},
-        FilterGraphOp::SVGFEBlendLuminosity => {match node.linear {false => 24, true => 25}},
-        FilterGraphOp::SVGFEBlendMultiply => {match node.linear {false => 26, true => 27}},
-        FilterGraphOp::SVGFEBlendNormal => {match node.linear {false => 28, true => 29}},
-        FilterGraphOp::SVGFEBlendOverlay => {match node.linear {false => 30, true => 31}},
-        FilterGraphOp::SVGFEBlendSaturation => {match node.linear {false => 32, true => 33}},
-        FilterGraphOp::SVGFEBlendScreen => {match node.linear {false => 34, true => 35}},
-        FilterGraphOp::SVGFEBlendSoftLight => {match node.linear {false => 36, true => 37}},
-        FilterGraphOp::SVGFEColorMatrix{..} => {match node.linear {false => 38, true => 39}},
-        FilterGraphOp::SVGFEComponentTransfer => unreachable!(),
-        FilterGraphOp::SVGFEComponentTransferInterned{..} => {match node.linear {false => 40, true => 41}},
-        FilterGraphOp::SVGFECompositeArithmetic{..} => {match node.linear {false => 42, true => 43}},
-        FilterGraphOp::SVGFECompositeATop => {match node.linear {false => 44, true => 45}},
-        FilterGraphOp::SVGFECompositeIn => {match node.linear {false => 46, true => 47}},
-        FilterGraphOp::SVGFECompositeLighter => {match node.linear {false => 48, true => 49}},
-        FilterGraphOp::SVGFECompositeOut => {match node.linear {false => 50, true => 51}},
-        FilterGraphOp::SVGFECompositeOver => {match node.linear {false => 52, true => 53}},
-        FilterGraphOp::SVGFECompositeXOR => {match node.linear {false => 54, true => 55}},
-        FilterGraphOp::SVGFEConvolveMatrixEdgeModeDuplicate{..} => {match node.linear {false => 56, true => 57}},
-        FilterGraphOp::SVGFEConvolveMatrixEdgeModeNone{..} => {match node.linear {false => 58, true => 59}},
-        FilterGraphOp::SVGFEConvolveMatrixEdgeModeWrap{..} => {match node.linear {false => 60, true => 61}},
-        FilterGraphOp::SVGFEDiffuseLightingDistant{..} => {match node.linear {false => 62, true => 63}},
-        FilterGraphOp::SVGFEDiffuseLightingPoint{..} => {match node.linear {false => 64, true => 65}},
-        FilterGraphOp::SVGFEDiffuseLightingSpot{..} => {match node.linear {false => 66, true => 67}},
-        FilterGraphOp::SVGFEDisplacementMap{..} => {match node.linear {false => 68, true => 69}},
-        FilterGraphOp::SVGFEDropShadow{..} => {match node.linear {false => 70, true => 71}},
-        // feFlood takes an sRGB color and does no math on it, no linear case
-        FilterGraphOp::SVGFEFlood{..} => 72,
-        FilterGraphOp::SVGFEGaussianBlur{..} => {match node.linear {false => 74, true => 75}},
-        // feImage does not meaningfully modify the color of its input, though a
-        // case could be made for gamma-correct image scaling, that's a bit out
-        // of scope for now
-        FilterGraphOp::SVGFEImage{..} => 76,
-        FilterGraphOp::SVGFEMorphologyDilate{..} => {match node.linear {false => 80, true => 81}},
-        FilterGraphOp::SVGFEMorphologyErode{..} => {match node.linear {false => 82, true => 83}},
-        FilterGraphOp::SVGFESpecularLightingDistant{..} => {match node.linear {false => 86, true => 87}},
-        FilterGraphOp::SVGFESpecularLightingPoint{..} => {match node.linear {false => 88, true => 89}},
-        FilterGraphOp::SVGFESpecularLightingSpot{..} => {match node.linear {false => 90, true => 91}},
-        // feTile does not modify color, no linear case
-        FilterGraphOp::SVGFETile => 92,
-        FilterGraphOp::SVGFETurbulenceWithFractalNoiseWithNoStitching{..} => {match node.linear {false => 94, true => 95}},
-        FilterGraphOp::SVGFETurbulenceWithFractalNoiseWithStitching{..} => {match node.linear {false => 96, true => 97}},
-        FilterGraphOp::SVGFETurbulenceWithTurbulenceNoiseWithNoStitching{..} => {match node.linear {false => 98, true => 99}},
-        FilterGraphOp::SVGFETurbulenceWithTurbulenceNoiseWithStitching{..} => {match node.linear {false => 100, true => 101}},
-    };
-
-    // This is a bit of an ugly way to do this, but avoids code duplication.
-    let mut resolve_input = |index: usize, src_task: Option<RenderTaskId>| -> (RenderTaskAddress, [f32; 4]) {
-        let mut src_task_id = RenderTaskId::INVALID;
-        let mut resolved_scale_and_offset: [f32; 4] = [0.0; 4];
-        if let Some(input) = node.inputs.get(index) {
-            src_task_id = src_task.unwrap();
-            let src_task = &render_tasks[src_task_id];
-
-            textures.input.colors[index] = src_task.get_texture_source();
-            let src_task_size = src_task.location.size();
-            let src_scale_x = (src_task_size.width as f32 - input.inflate as f32 * 2.0) / input.subregion.width();
-            let src_scale_y = (src_task_size.height as f32 - input.inflate as f32 * 2.0) / input.subregion.height();
-            let scale_x = src_scale_x * node.subregion.width();
-            let scale_y = src_scale_y * node.subregion.height();
-            let offset_x = src_scale_x * (node.subregion.min.x - input.subregion.min.x) + input.inflate as f32;
-            let offset_y = src_scale_y * (node.subregion.min.y - input.subregion.min.y) + input.inflate as f32;
-            resolved_scale_and_offset = [
-                scale_x,
-                scale_y,
-                offset_x,
-                offset_y];
-        }
-        let address: RenderTaskAddress = src_task_id.into();
-        (address, resolved_scale_and_offset)
-    };
-    (instance.input_1_task_address, instance.input_1_content_scale_and_offset) = resolve_input(0, input_1_task);
-    (instance.input_2_task_address, instance.input_2_content_scale_and_offset) = resolve_input(1, input_2_task);
-
-    // Additional instance modifications for certain filters
-    match op {
-        FilterGraphOp::SVGFEOpacity { valuebinding: _, value } => {
-            // opacity only has one input so we can use the other
-            // components to store the opacity value
-            instance.input_2_content_scale_and_offset = [*value, 0.0, 0.0, 0.0];
-        },
-        FilterGraphOp::SVGFEMorphologyDilate { radius_x, radius_y } |
-        FilterGraphOp::SVGFEMorphologyErode { radius_x, radius_y } => {
-            // morphology filters only use one input, so we use the
-            // second offset coord to store the radius values.
-            instance.input_2_content_scale_and_offset = [*radius_x, *radius_y, 0.0, 0.0];
-        },
-        FilterGraphOp::SVGFEFlood { color } => {
-            // flood filters don't use inputs, so we store color here.
-            // We can't do the same trick on DropShadow because it does have two
-            // inputs.
-            instance.input_2_content_scale_and_offset = [color.r, color.g, color.b, color.a];
-        },
-        _ => {},
-    }
-
-    for (ref mut batch_textures, ref mut batch) in instances.iter_mut() {
-        if let Some(combined_textures) = batch_textures.combine_textures(textures) {
-            batch.push(instance);
-            // Update the batch textures to the newly combined batch textures
-            *batch_textures = combined_textures;
-            // is this really the intended behavior?
             return;
         }
     }
