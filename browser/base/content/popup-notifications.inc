@@ -35,7 +35,7 @@
         <description id="webRTC-all-windows-shared" hidden="true" data-l10n-id="popup-all-windows-shared"></description>
       </popupnotificationcontent>
 
-      <popupnotificationcontent id="webRTC-preview" hidden="true">
+      <popupnotificationcontent id="webRTC-preview" orient="vertical" hidden="true">
         <html:video id="webRTC-previewVideo" tabindex="-1"/>
         <vbox id="webRTC-previewWarningBox">
           <description id="webRTC-previewWarning"/>

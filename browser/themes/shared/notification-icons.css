@@ -11,13 +11,15 @@
   fill-opacity: var(--urlbar-icon-fill-opacity);
   color: inherit;
   border-radius: var(--urlbar-icon-border-radius);
-}
-#notification-popup-box:hover {
-  background-color: hsla(0,0%,70%,.2);
-}
-#notification-popup-box:hover:active,
-#notification-popup-box[open] {
-  background-color: hsla(0,0%,70%,.3);
+
+  &:hover {
+    background-color: hsla(0,0%,70%,.2);
+  }
+
+  &:hover:active,
+  &[open] {
+    background-color: hsla(0,0%,70%,.3);
+  }
 }
 
 .popup-notification-icon,
@@ -26,24 +28,24 @@
   fill: currentColor;
 }
 
-.notification-anchor-icon:focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-inset);
-  border-radius: var(--urlbar-icon-border-radius);
-}
-
-.blocked-permission-icon:focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: calc(var(--urlbar-icon-padding) + var(--focus-outline-inset));
-  border-radius: 1px;
-}
-
 /* This class can be used alone or in combination with the class defining the
    type of icon displayed. This rule must be defined before the others in order
    for its list-style-image to be overridden. */
 .notification-anchor-icon {
   list-style-image: url(chrome://global/skin/icons/info-filled.svg);
   padding: var(--urlbar-icon-padding);
+
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-outline-inset);
+    border-radius: var(--urlbar-icon-border-radius);
+  }
+}
+
+.blocked-permission-icon:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: calc(var(--urlbar-icon-padding) + var(--focus-outline-inset));
+  border-radius: 1px;
 }
 
 /* INDIVIDUAL NOTIFICATIONS */
@@ -58,68 +60,50 @@
 
 .persistent-storage-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/persistent-storage.svg);
-}
 
-.persistent-storage-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/persistent-storage-blocked.svg);
+  &.blocked-permission-icon {
+    list-style-image: url(chrome://browser/skin/notification-icons/persistent-storage-blocked.svg);
+  }
 }
 
 .desktop-notification-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification.svg);
-}
 
-.desktop-notification-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification-blocked.svg);
+  &.blocked-permission-icon {
+    list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification-blocked.svg);
+  }
 }
 
 .geo-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/geo.svg);
-}
 
-.geo-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/geo-blocked.svg);
+  &.blocked-permission-icon {
+    list-style-image: url(chrome://browser/skin/notification-icons/geo-blocked.svg);
+  }
 }
 
 .open-protocol-handler-icon {
   list-style-image: url(chrome://global/skin/icons/open-in-new.svg);
-}
 
-.open-protocol-handler-icon:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
+  &:-moz-locale-dir(rtl) {
+    transform: scaleX(-1);
+  }
 }
 
 .xr-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/xr.svg);
-}
 
-.xr-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/xr-blocked.svg);
+  &.blocked-permission-icon {
+    list-style-image: url(chrome://browser/skin/notification-icons/xr-blocked.svg);
+  }
 }
 
 .autoplay-media-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media.svg);
-}
 
-.autoplay-media-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media-blocked.svg);
-}
-
-.storage-access-notification-content {
-  color: var(--panel-disabled-color);
-  font-style: italic;
-  margin-top: 15px;
-}
-
-.storage-access-notification-content .text-link {
-  color: LinkText;
-}
-
-.storage-access-notification-content .text-link:hover {
-  text-decoration: underline;
-}
-
-#storage-access-notification .popup-notification-body-container {
-  padding: 20px;
+  &.blocked-permission-icon {
+    list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media-blocked.svg);
+  }
 }
 
 .indexedDB-icon {
@@ -128,59 +112,59 @@
 
 #password-notification-icon {
   list-style-image: url(chrome://browser/skin/login.svg);
-}
 
-#password-notification-icon[extraAttr="attention"] {
-  fill: var(--toolbarbutton-icon-fill-attention);
-  fill-opacity: 1;
+  &[extraAttr="attention"] {
+    fill: var(--toolbarbutton-icon-fill-attention);
+    fill-opacity: 1;
+  }
 }
 
 .camera-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/camera.svg);
-}
 
-.camera-icon.in-use {
-  list-style-image: url(chrome://browser/skin/notification-icons/camera.svg);
-}
+  &.in-use {
+    list-style-image: url(chrome://browser/skin/notification-icons/camera.svg);
+  }
 
-.camera-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/camera-blocked.svg);
+  &.blocked-permission-icon {
+    list-style-image: url(chrome://browser/skin/notification-icons/camera-blocked.svg);
+  }
 }
 
 .microphone-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
+
+  &.in-use {
+    list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
+  }
+
+  &.blocked-permission-icon {
+    list-style-image: url(chrome://browser/skin/notification-icons/microphone-blocked.svg);
+  }
+
+  &.popup-notification-icon {
+    list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
+  }
 }
 
-.microphone-icon.in-use {
-  list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
-}
-
-.microphone-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/microphone-blocked.svg);
-}
-
-.popup-notification-icon.microphone-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
-}
 
 .screen-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/screen.svg);
-}
 
-.screen-icon.in-use {
-  list-style-image: url(chrome://browser/skin/notification-icons/screen.svg);
-}
+  &.in-use {
+    list-style-image: url(chrome://browser/skin/notification-icons/screen.svg);
+  }
 
-.screen-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/screen-blocked.svg);
+  &.blocked-permission-icon {
+    list-style-image: url(chrome://browser/skin/notification-icons/screen-blocked.svg);
+  }
 }
 
 .speaker-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/speaker.svg);
 }
 
-.midi-icon,
-.midi-sysex-icon {
+.midi-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/midi.svg);
 }
 
@@ -202,16 +186,8 @@
   list-style-image: url(chrome://browser/skin/login.svg);
 }
 
-#permission-popup-menulist {
-  margin-inline-end: 0;
-}
-
-#webRTC-preview:not([hidden]) {
-  flex-direction: column;
-}
-
 #webRTC-previewVideo {
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   border: 1px solid var(--panel-separator-color);
   min-width: 0;
   min-height: 10em;
@@ -221,17 +197,14 @@
 #webRTC-all-windows-shared,
 #webRTC-previewWarning {
   font-size: 0.8em;
-}
 
-@media not (prefers-contrast) {
-  #webRTC-all-windows-shared,
-  #webRTC-previewWarning {
+  @media not (prefers-contrast) {
     opacity: 0.6;
   }
 }
 
 #webRTC-previewWarning {
-  margin-block-start: 14px;
+  margin-block-start: var(--space-large);
 }
 
 /**
@@ -242,14 +215,6 @@
 #webRTC-previewWarning-learnMore {
   margin-top: 0 !important;
   font-size: 0.75em;
-}
-
-#webRTC-previewWarningBox:-moz-locale-dir(rtl) {
-  background-position: calc(100% - .75em) .75em;
-}
-
-#webRTC-previewWarning > .text-link {
-  margin-inline-start: 0;
 }
 
 /* This icon has a block sign in it, so we don't need a blocked version. */
@@ -265,11 +230,6 @@
  */
 #blocked-permissions-container > .popup-icon {
   transform: translateY(1px);
-}
-
-#permission-popup-menulist,
-#permission-popup-menulist > menupopup {
-  min-width: 6.5em;
 }
 
 /* EME */
@@ -294,13 +254,14 @@
 
 .install-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extension.svg);
-}
 
-.install-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-blocked.svg);
+  &.blocked-permission-icon {
+    list-style-image: url(chrome://browser/skin/addons/addon-install-blocked.svg);
+  }
 }
 
 /* UPDATE */
+
 .popup-notification-icon[popupid="update-available"],
 .popup-notification-icon[popupid="update-manual"],
 .popup-notification-icon[popupid="update-other-instance"],
