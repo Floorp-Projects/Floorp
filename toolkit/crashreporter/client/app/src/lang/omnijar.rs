@@ -31,10 +31,9 @@ pub fn read() -> anyhow::Result<LanguageInfo> {
             .ok_or(anyhow::anyhow!("multilocale file was empty"))?
             .context("failed to read first line of multilocale file")?
     };
-
     let mut file = zip
         .by_name(&format!(
-            "localization/{locale}/crashreporter/crashreporter.ftl"
+            "localization/{locale}/toolkit/crashreporter/crashreporter.ftl"
         ))
         .with_context(|| format!("failed to locate localization file for {locale}"))?;
 
