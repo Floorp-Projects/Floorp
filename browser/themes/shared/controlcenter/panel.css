@@ -642,6 +642,12 @@
 
 #permission-popup-menulist {
   padding-inline: 12px 6px;
+  margin: 0;
+
+  &,
+  > menupopup {
+    min-width: 6.5em;
+  }
 }
 
 .protections-popup-section-header,
