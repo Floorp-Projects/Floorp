@@ -3288,6 +3288,7 @@ pref("network.captive-portal-service.enabled", false);
 pref("network.connectivity-service.enabled", true);
 pref("network.connectivity-service.DNSv4.domain", "example.org");
 pref("network.connectivity-service.DNSv6.domain", "example.org");
+pref("network.connectivity-service.DNS_HTTPS.domain", "cloudflare-dns.com");
 pref("network.connectivity-service.IPv4.url", "http://detectportal.firefox.com/success.txt?ipv4");
 pref("network.connectivity-service.IPv6.url", "http://detectportal.firefox.com/success.txt?ipv6");
 

@@ -30,14 +30,6 @@ NS_IMPL_ISUPPORTS(NetworkConnectivityService, nsIDNSListener, nsIObserver,
 
 static StaticRefPtr<NetworkConnectivityService> gConnService;
 
-NetworkConnectivityService::NetworkConnectivityService()
-    : mDNSv4(UNKNOWN),
-      mDNSv6(UNKNOWN),
-      mIPv4(UNKNOWN),
-      mIPv6(UNKNOWN),
-      mNAT64(UNKNOWN),
-      mLock("nat64prefixes") {}
-
 // static
 already_AddRefed<NetworkConnectivityService>
 NetworkConnectivityService::GetSingleton() {
@@ -75,6 +67,13 @@ NS_IMETHODIMP
 NetworkConnectivityService::GetDNSv6(ConnectivityState* aState) {
   NS_ENSURE_ARG(aState);
   *aState = mDNSv6;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NetworkConnectivityService::GetDNS_HTTPS(ConnectivityState* aState) {
+  NS_ENSURE_ARG(aState);
+  *aState = mDNS_HTTPS;
   return NS_OK;
 }
 
@@ -154,6 +153,7 @@ static inline bool NAT64PrefixCompare(const NetAddr& prefix1,
 void NetworkConnectivityService::PerformChecks() {
   mDNSv4 = UNKNOWN;
   mDNSv6 = UNKNOWN;
+  mDNS_HTTPS = UNKNOWN;
 
   mIPv4 = UNKNOWN;
   mIPv6 = UNKNOWN;
@@ -281,12 +281,16 @@ NetworkConnectivityService::OnLookupComplete(nsICancelable* aRequest,
   } else if (aRequest == mDNSv6Request) {
     mDNSv6 = state;
     mDNSv6Request = nullptr;
+  } else if (aRequest == mDNS_HTTPSRequest) {
+    mDNS_HTTPS = state;
+    mDNS_HTTPSRequest = nullptr;
   } else if (aRequest == mNAT64Request) {
     mNAT64Request = nullptr;
     SaveNAT64Prefixes(aRecord);
   }
 
-  if (!mDNSv4Request && !mDNSv6Request && !mNAT64Request) {
+  if (!mDNSv4Request && !mDNSv6Request && !mDNS_HTTPSRequest &&
+      !mNAT64Request) {
     NotifyObservers("network:connectivity-service:dns-checks-complete");
   }
   return NS_OK;
@@ -328,6 +332,16 @@ NetworkConnectivityService::RecheckDNS() {
                                getter_AddRefs(mDNSv6Request));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  Preferences::GetCString("network.connectivity-service.DNS_HTTPS.domain",
+                          host);
+  rv = dns->AsyncResolveNative(host, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
+                               nsIDNSService::RESOLVE_TRR_DISABLED_MODE,
+                               nullptr, this, NS_GetCurrentThread(), attrs,
+                               getter_AddRefs(mDNS_HTTPSRequest));
+  if (NS_FAILED(rv)) {
+    mDNS_HTTPSRequest = nullptr;
+  }
+
   if (StaticPrefs::network_connectivity_service_nat64_check()) {
     rv = dns->AsyncResolveNative("ipv4only.arpa"_ns,
                                  nsIDNSService::RESOLVE_TYPE_DEFAULT,
@@ -354,6 +368,10 @@ NetworkConnectivityService::Observe(nsISupports* aSubject, const char* aTopic,
     if (mDNSv6Request) {
       mDNSv6Request->Cancel(NS_ERROR_ABORT);
       mDNSv6Request = nullptr;
+    }
+    if (mDNS_HTTPSRequest) {
+      mDNS_HTTPSRequest->Cancel(NS_ERROR_ABORT);
+      mDNS_HTTPSRequest = nullptr;
     }
     if (mNAT64Request) {
       mNAT64Request->Cancel(NS_ERROR_ABORT);
