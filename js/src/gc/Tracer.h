@@ -122,10 +122,12 @@ bool TraceWeakMapKeyInternal(JSTracer* trc, Zone* zone, T* thingp,
 
 #ifdef DEBUG
 void AssertRootMarkingPhase(JSTracer* trc);
-void AssertShouldMarkInZone(GCMarker* marker, gc::Cell* thing);
+template <typename T>
+void AssertShouldMarkInZone(GCMarker* marker, T* thing);
 #else
 inline void AssertRootMarkingPhase(JSTracer* trc) {}
-inline void AssertShouldMarkInZone(GCMarker* marker, gc::Cell* thing) {}
+template <typename T>
+void AssertShouldMarkInZone(GCMarker* marker, T* thing) {}
 #endif
 
 }  // namespace gc
