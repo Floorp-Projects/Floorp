@@ -267,17 +267,23 @@ ProfileChunkedBuffer& profiler_get_core_buffer() {
 #if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
 // Control character to start the profiler ('g' for "go"!)
 static const char sAsyncSignalControlCharStart = 'g';
+// Control character to stop the profiler ('s' for "stop"!)
+static const char sAsyncSignalControlCharStop = 's';
 
 // This is a file descriptor that is the "write" end of the POSIX pipe that we
 // use to start the profiler. It is written to in profiler_start_signal_handler
 // and read from in AsyncSignalControlThread
 static mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed>
-    sAsyncStartProfilerWriteFd(-1);
+    sAsyncSignalControlWriteFd(-1);
 
 // Atomic flag to stop the profiler from within the sampling loop
 mozilla::Atomic<bool, mozilla::MemoryOrdering::Relaxed> gStopAndDumpFromSignal(
     false);
 #endif
+
+// Forward declare the function to call when we need to dump + stop from within
+// the async control thread
+void profiler_dump_and_stop();
 
 mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed> gSkipSampling;
 
@@ -555,7 +561,7 @@ class AsyncSignalControlThread {
 
     // Write the reading side to mFd, and the writing side to the global atomic
     mFd = pipeFds[0];
-    sAsyncStartProfilerWriteFd = pipeFds[1];
+    sAsyncSignalControlWriteFd = pipeFds[1];
 
     // We don't really care about stack size, as it should be minimal, so
     // leave the pthread attributes as a nullptr, i.e. choose the default.
@@ -568,16 +574,16 @@ class AsyncSignalControlThread {
 
   ~AsyncSignalControlThread() {
     // Derived from code in nsDumpUtils.cpp. Comment reproduced here for
-    // poisterity: Close sAsyncStartProfilerWriteFd /after/ setting the fd to
+    // poisterity: Close sAsyncSignalControlWriteFd /after/ setting the fd to
     // -1. Otherwise we have the (admittedly far-fetched) race where we
     //
-    //  1) close sAsyncStartProfilerWriteFd
-    //  2) open a new fd with the same number as sAsyncStartProfilerWriteFd
+    //  1) close sAsyncSignalControlWriteFd
+    //  2) open a new fd with the same number as sAsyncSignalControlWriteFd
     //     had.
     //  3) receive a signal, then write to the fd.
-    int asyncStartProfilerWriteFd = sAsyncStartProfilerWriteFd.exchange(-1);
+    int asyncSignalControlWriteFd = sAsyncSignalControlWriteFd.exchange(-1);
     // This will unblock the "read" in StartWatching.
-    close(asyncStartProfilerWriteFd);
+    close(asyncSignalControlWriteFd);
     // Finally, exit the thread.
     pthread_join(mThread, nullptr);
   };
@@ -632,6 +638,17 @@ class AsyncSignalControlThread {
         profiler_start(PROFILER_DEFAULT_SIGHANDLE_ENTRIES,
                        PROFILER_DEFAULT_INTERVAL, features, filters,
                        MOZ_ARRAY_LENGTH(filters), 0);
+      } else if (msg[0] == sAsyncSignalControlCharStop) {
+        // Check to see whether the profiler is even running before trying to
+        // stop the profiler. Most other methods of stopping the profiler (i.e.
+        // those through nsProfiler etc) already know whether or not the
+        // profiler is running, so don't try and stop it if it's already
+        // running. Signal-stopping doesn't have this constraint, so we should
+        // check just in case there is a codepath followed by
+        // `profiler_dump_and_stop` that breaks if we stop while stopped.
+        if (profiler_is_active()) {
+          profiler_dump_and_stop();
+        }
       } else {
         LOG("AsyncSignalControlThread recieved unknown control signal: %c",
             msg[0]);
@@ -4283,10 +4300,6 @@ static SamplerThread* NewSamplerThread(PSLockRef aLock, uint32_t aGeneration,
   return new SamplerThread(aLock, aGeneration, aInterval, aFeatures);
 }
 
-// Forward declare the function to call when we need to dump + stop from within
-// the sampler thread
-void profiler_dump_and_stop();
-
 // This function is the sampler thread.  This implementation is used for all
 // targets.
 void SamplerThread::Run() {
@@ -4942,29 +4955,6 @@ void SamplerThread::Run() {
       scheduledSampleStart = beforeSleep + sampleInterval;
       SleepMicro(static_cast<uint32_t>(sampleInterval.ToMicroseconds()));
     }
-
-#if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
-    // Check to see if the hard-reset flag has been set to stop the profiler.
-    // This should only be used on the worst occasions when we need to stop the
-    // profiler from within the sampling thread (e.g. if the main thread is
-    // stuck) We need to do this here as it is outside of the scope of the lock.
-    // Otherwise we'll encounter a race condition where `profiler_stop` tries to
-    // get the lock that we already hold. We also need to wait until after we
-    // have carried out post sampling callbacks, as otherwise we may reach a
-    // situation where another part of the program is waiting for us to finish
-    // sampling, but we have ended early!
-    if (gStopAndDumpFromSignal) {
-      // Reset the flag in case we restart the profiler at a later point
-      gStopAndDumpFromSignal = false;
-      // dump the profile, and stop the profiler
-      profiler_dump_and_stop();
-      // profiler_stop will try to destroy the active sampling thread. This will
-      // also destroy some data structures that are used further down this
-      // function, leading to invalid accesses. We therefore exit the function
-      // directly, rather than breaking from the loop.
-      return;
-    }
-#endif
   }
 
   // End of `while` loop. We can only be here from a `break` inside the loop.
@@ -5474,17 +5464,6 @@ static const char* get_size_suffix(const char* str) {
 }
 
 #if defined(GECKO_PROFILER_ASYNC_POSIX_SIGNAL_CONTROL)
-static void profiler_stop_signal_handler(int signal, siginfo_t* info,
-                                         void* context) {
-  // We cannot really do any logging here, as this is a signal handler.
-  // Signal handlers are limited in what functions they can call, for more
-  // details see: https://man7.org/linux/man-pages/man7/signal-safety.7.html
-  // Writing to a file is allowed, but as signal handlers are also limited in
-  // how long they can run, we instead set an atomic variable to true to trigger
-  // the sampling thread to stop and dump the data in the profiler.
-  gStopAndDumpFromSignal = true;
-}
-
 static void profiler_start_signal_handler(int signal, siginfo_t* info,
                                           void* context) {
   // Starting the profiler from a signal handler is a risky business: Both of
@@ -5498,9 +5477,25 @@ static void profiler_start_signal_handler(int signal, siginfo_t* info,
   // Note that `write` is async-signal safe (see signal-safety(7)):
   // https://www.man7.org/linux/man-pages/man7/signal-safety.7.html
   // This means that it's safe for us to call within a signal handler.
-  if (sAsyncStartProfilerWriteFd != -1) {
+  if (sAsyncSignalControlWriteFd != -1) {
     char signalControlCharacter = sAsyncSignalControlCharStart;
-    Unused << write(sAsyncStartProfilerWriteFd, &signalControlCharacter,
+    Unused << write(sAsyncSignalControlWriteFd, &signalControlCharacter,
+                    sizeof(signalControlCharacter));
+  }
+}
+
+static void profiler_stop_signal_handler(int signal, siginfo_t* info,
+                                         void* context) {
+  // Signal handlers are limited in what functions they can call, for more
+  // details see: https://man7.org/linux/man-pages/man7/signal-safety.7.html
+  // As we have a background thread already running for checking whether or
+  // not we want to start the profiler, we can re-use the same machinery to
+  // stop the profiler. We use the same mechanism of writing to a pipe/file
+  // descriptor, but with a different control character. Note that `write` is
+  // signal safe.
+  if (sAsyncSignalControlWriteFd != -1) {
+    char signalControlCharacter = sAsyncSignalControlCharStop;
+    Unused << write(sAsyncSignalControlWriteFd, &signalControlCharacter,
                     sizeof(signalControlCharacter));
   }
 }
