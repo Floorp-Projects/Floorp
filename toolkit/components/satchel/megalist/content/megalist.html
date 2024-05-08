@@ -15,6 +15,10 @@
       src="chrome://global/content/megalist/MegalistView.mjs"
     ></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
+    <link
+      rel="stylesheet"
+      href="chrome://global/content/megalist/megalist.css"
+    />
     <link rel="localization" href="preview/megalist.ftl" />
     <link rel="localization" href="browser/aboutLogins.ftl" />
   </head>
@@ -74,6 +78,174 @@
         </div>
         <div class="stickers"></div>
       </div>
+    </template>
+
+    <template id="dialog-template">
+      <div class="dialog-overlay">
+        <div class="dialog-container">
+          <moz-button
+            data-l10n-id="confirmation-dialog-dismiss-button"
+            iconSrc="chrome://global/skin/icons/close.svg"
+            size="small"
+            type="icon ghost"
+            class="dismiss-button"
+            close-dialog
+          >
+          </moz-button>
+          <div class="dialog-wrapper"></div>
+        </div>
+      </div>
+    </template>
+
+    <template id="remove-logins-dialog-template">
+      <h2
+        class="dialog-title"
+        data-l10n-id="about-logins-confirm-remove-all-sync-dialog-title2"
+        localizable
+      ></h2>
+      <div class="dialog-content" slot="dialog-content">
+        <p data-l10n-id="about-logins-confirm-export-dialog-message2"></p>
+        <label>
+          <input type="checkbox" class="confirm-checkbox checkbox" autofocus />
+          <span
+            class="checkbox-text"
+            data-l10n-id="about-logins-confirm-remove-all-dialog-checkbox-label2"
+          ></span>
+        </label>
+      </div>
+      <moz-button-group>
+        <button
+          class="primary danger-button"
+          data-l10n-id="about-logins-confirm-remove-all-dialog-confirm-button-label"
+          data-command="LoginDataSource.confirmRemoveAll"
+        ></button>
+        <button
+          close-dialog
+          data-l10n-id="confirmation-dialog-cancel-button"
+        ></button>
+      </moz-button-group>
+    </template>
+
+    <template id="remove-login-dialog-template">
+      <h2
+        class="dialog-title"
+        data-l10n-id="about-logins-confirm-delete-dialog-title"
+      ></h2>
+      <div class="dialog-content" slot="dialog-content">
+        <p data-l10n-id="about-logins-confirm-delete-dialog-message"></p>
+      </div>
+      <moz-button-group>
+        <button
+          class="primary danger-button"
+          data-l10n-id="about-logins-confirm-remove-dialog-confirm-button"
+          data-command="LoginDataSource.confirmRemoveLogin"
+        ></button>
+        <button
+          close-dialog
+          data-l10n-id="confirmation-dialog-cancel-button"
+        ></button>
+      </moz-button-group>
+    </template>
+    <template id="export-logins-dialog-template">
+      <h2
+        class="dialog-title"
+        data-l10n-id="about-logins-confirm-export-dialog-title2"
+      ></h2>
+      <div class="dialog-content" slot="dialog-content">
+        <p data-l10n-id="about-logins-confirm-export-dialog-message2"></p>
+      </div>
+      <moz-button-group>
+        <button
+          class="primary danger-button"
+          data-l10n-id="about-logins-confirm-export-dialog-confirm-button2"
+          data-command="LoginDataSource.confirmExportLogins"
+        ></button>
+        <button
+          close-dialog
+          data-l10n-id="confirmation-dialog-cancel-button"
+        ></button>
+      </moz-button-group>
+    </template>
+
+    <template id="import-logins-dialog-template">
+      <h2
+        class="dialog-title"
+        data-l10n-id="about-logins-import-dialog-title"
+      ></h2>
+      <div class="dialog-content">
+        <div data-l10n-id="about-logins-import-dialog-items-added2" localizable>
+          <span></span>
+          <span data-l10n-name="count"></span>
+        </div>
+        <div
+          data-l10n-id="about-logins-import-dialog-items-modified2"
+          localizable
+        >
+          <span></span>
+          <span data-l10n-name="count"></span>
+        </div>
+        <div
+          data-l10n-id="about-logins-import-dialog-items-no-change2"
+          data-l10n-name="no-change"
+          localizable
+        >
+          <span></span>
+          <span data-l10n-name="count"></span>
+          <span data-l10n-name="meta"></span>
+        </div>
+        <div data-l10n-id="about-logins-import-dialog-items-error" localizable>
+          <span></span>
+          <span data-l10n-name="count"></span>
+          <span data-l10n-name="meta"></span>
+        </div>
+        <a
+          class="open-detailed-report"
+          href="about:loginsimportreport"
+          target="_blank"
+          data-l10n-id="about-logins-alert-import-message"
+        ></a>
+      </div>
+      <button
+        class="primary"
+        data-l10n-id="about-logins-import-dialog-done"
+        close-dialog
+      ></button>
+    </template>
+
+    <template id="import-error-dialog-template">
+      <h2
+        class="dialog-title"
+        data-l10n-id="about-logins-import-dialog-error-title"
+      ></h2>
+      <div class="dialog-content">
+        <p
+          data-l10n-id="about-logins-import-dialog-error-file-format-title"
+        ></p>
+        <p
+          data-l10n-id="about-logins-import-dialog-error-file-format-description"
+        ></p>
+        <p
+          data-l10n-id="about-logins-import-dialog-error-no-logins-imported"
+        ></p>
+        <a
+          class="error-learn-more-link"
+          href="https://support.mozilla.org/kb/import-login-data-file"
+          data-l10n-id="about-logins-import-dialog-error-learn-more"
+          target="_blank"
+          rel="noreferrer"
+        ></a>
+      </div>
+      <moz-button-group>
+        <button
+          class="primary"
+          data-l10n-id="about-logins-import-dialog-error-try-import-again"
+          data-command="LoginDataSource.confirmRetryImport"
+        ></button>
+        <button
+          close-dialog
+          data-l10n-id="confirmation-dialog-cancel-button"
+        ></button>
+      </moz-button-group>
     </template>
   </body>
 </html>

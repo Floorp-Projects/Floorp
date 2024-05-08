@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
+  content/global/megalist/Dialog.mjs          (megalist/content/Dialog.mjs)
   content/global/megalist/megalist.css        (megalist/content/megalist.css)
   content/global/megalist/megalist.html       (megalist/content/megalist.html)
   content/global/megalist/MegalistView.mjs    (megalist/content/MegalistView.mjs)
-  content/global/megalist/RemoveLogins.mjs    (megalist/content/RemoveLogins.mjs)
   content/global/megalist/VirtualizedList.mjs (megalist/content/VirtualizedList.mjs)
