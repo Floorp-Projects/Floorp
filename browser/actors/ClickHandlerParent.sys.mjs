@@ -6,6 +6,7 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -99,7 +100,7 @@ export class ClickHandlerParent extends JSWindowActorParent {
     }
 
     // This part is based on handleLinkClick.
-    var where = window.whereToOpenLink(data);
+    var where = lazy.BrowserUtils.whereToOpenLink(data);
     if (where == "current") {
       return;
     }

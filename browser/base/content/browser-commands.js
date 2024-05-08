@@ -295,7 +295,7 @@ var BrowserCommands = {
     let where = "tab";
 
     if (event) {
-      where = whereToOpenLink(event, false, true);
+      where = BrowserUtils.whereToOpenLink(event, false, true);
 
       switch (where) {
         case "tab":

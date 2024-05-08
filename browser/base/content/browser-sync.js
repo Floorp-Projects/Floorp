@@ -307,7 +307,7 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
           {}
         ),
       });
-      if (document.defaultView.whereToOpenLink(e) != "current") {
+      if (BrowserUtils.whereToOpenLink(e) != "current") {
         e.preventDefault();
         e.stopPropagation();
       } else {

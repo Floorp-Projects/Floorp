@@ -29,6 +29,10 @@ describe("Downloads Manager", () => {
       showDownloadedFile: sinon.stub(),
     });
 
+    globals.set("BrowserUtils", {
+      whereToOpenLink: sinon.stub().returns("current"),
+    });
+
     downloadsManager = new DownloadsManager();
     downloadsManager.init({ dispatch() {} });
     downloadsManager.onDownloadAdded({
