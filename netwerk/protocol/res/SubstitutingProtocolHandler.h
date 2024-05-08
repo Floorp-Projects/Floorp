@@ -58,9 +58,8 @@ class SubstitutingProtocolHandler {
   // Override this in the subclass to try additional lookups after checking
   // mSubstitutions.
   [[nodiscard]] virtual nsresult GetSubstitutionInternal(
-      const nsACString& aRoot, nsIURI** aResult, uint32_t* aFlags) {
+      const nsACString& aRoot, nsIURI** aResult) {
     *aResult = nullptr;
-    *aFlags = 0;
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -73,10 +72,11 @@ class SubstitutingProtocolHandler {
     return false;
   }
 
-  // This method should only return true if GetSubstitutionInternal would
-  // return the RESOLVE_JAR_URI flag.
-  [[nodiscard]] virtual bool MustResolveJAR(const nsACString& aRoot) {
-    return false;
+  // This method should only return RESOLVE_JAR_URI when
+  // GetSubstitutionalInternal will return nsIJARURI instead of a nsIFileURL.
+  // Currently, this only happens on Android.
+  [[nodiscard]] virtual uint32_t GetJARFlags(const nsACString& aRoot) {
+    return 0;
   }
 
   // Override this in the subclass to check for special case when opening

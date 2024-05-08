@@ -48,19 +48,15 @@ class nsResProtocolHandler final
   }
 
  protected:
+  [[nodiscard]] uint32_t GetJARFlags(const nsACString& aRoot) override;
   [[nodiscard]] nsresult GetSubstitutionInternal(const nsACString& aRoot,
-                                                 nsIURI** aResult,
-                                                 uint32_t* aFlags) override;
+                                                 nsIURI** aResult) override;
   virtual ~nsResProtocolHandler() = default;
 
   [[nodiscard]] bool ResolveSpecialCases(const nsACString& aHost,
                                          const nsACString& aPath,
                                          const nsACString& aPathname,
                                          nsACString& aResult) override;
-
-  [[nodiscard]] virtual bool MustResolveJAR(const nsACString& aRoot) override {
-    return aRoot.EqualsLiteral("android");
-  }
 
  private:
   [[nodiscard]] nsresult Init();

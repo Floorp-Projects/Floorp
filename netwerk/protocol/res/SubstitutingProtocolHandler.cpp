@@ -437,7 +437,7 @@ nsresult SubstitutingProtocolHandler::NewURI(const nsACString& aSpec,
 
   // "android" is the only root that would return the RESOLVE_JAR_URI flag
   // see nsResProtocolHandler::GetSubstitutionInternal
-  if (MustResolveJAR(host)) {
+  if (GetJARFlags(host) & nsISubstitutingProtocolHandler::RESOLVE_JAR_URI) {
     return ResolveJARURI(uri, aResult);
   }
 
@@ -599,8 +599,7 @@ nsresult SubstitutingProtocolHandler::GetSubstitution(
     }
   }
 
-  uint32_t flags;
-  return GetSubstitutionInternal(root, result, &flags);
+  return GetSubstitutionInternal(root, result);
 }
 
 nsresult SubstitutingProtocolHandler::GetSubstitutionFlags(
@@ -625,7 +624,8 @@ nsresult SubstitutingProtocolHandler::GetSubstitutionFlags(
   }
 
   nsCOMPtr<nsIURI> baseURI;
-  return GetSubstitutionInternal(root, getter_AddRefs(baseURI), flags);
+  *flags = GetJARFlags(root);
+  return GetSubstitutionInternal(root, getter_AddRefs(baseURI));
 }
 
 nsresult SubstitutingProtocolHandler::HasSubstitution(
