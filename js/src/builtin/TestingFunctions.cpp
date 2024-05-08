@@ -2121,7 +2121,12 @@ static bool WasmDumpIon(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  args.rval().set(StringValue(out.release(cx)));
+  JSString* str = out.release(cx);
+  if (!str) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  args.rval().set(StringValue(str));
   return true;
 }
 
