@@ -2392,8 +2392,11 @@ nsMargin nsTableFrame::GetUsedMargin() const {
   return nsMargin(0, 0, 0, 0);
 }
 
-// TODO(TYLin): Should this property only be set on the first-in-flow of
-// nsTableFrame?
+// TODO(TYLin, dshin): This ideally should be set only in first-in-flow.
+// However, the current implementation of border-collapsed table does not
+// handle continuation gracefully. One concrete issue is shown in bug 1881157
+// comment 3. It is also unclear if the damage area, current included in this
+// property, should be stored separately per-continuation.
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(TableBCDataProperty, TableBCData)
 
 TableBCData* nsTableFrame::GetTableBCData() const {
@@ -3799,24 +3802,29 @@ class BCMapCellIterator;
 
 /*****************************************************************
  *  BCMapCellInfo
- * This structure stores information about the cellmap and all involved
- * table related frames that are used during the computation of winning borders
- * in CalcBCBorders so that they do need to be looked up again and again when
- * iterating over the cells.
+ * This structure stores information during the computation of winning borders
+ * in CalcBCBorders, so that they don't need to be looked up repeatedly.
  ****************************************************************/
-struct BCMapCellInfo {
+struct BCMapCellInfo final {
   explicit BCMapCellInfo(nsTableFrame* aTableFrame);
   void ResetCellInfo();
   void SetInfo(nsTableRowFrame* aNewRow, int32_t aColIndex,
                BCCellData* aCellData, BCMapCellIterator* aIter,
                nsCellMap* aCellMap = nullptr);
 
-  // functions to set the border widths on the table related frames, where the
-  // knowledge about the current position in the table is used.
-  void SetTableBStartBorderWidth(BCPixelSize aWidth);
-  void SetTableIStartBorderWidth(int32_t aRowB, BCPixelSize aWidth);
-  void SetTableIEndBorderWidth(int32_t aRowB, BCPixelSize aWidth);
-  void SetTableBEndBorderWidth(BCPixelSize aWidth);
+  // Functions to (re)set the border widths on the table related cell frames,
+  // where the knowledge about the current position in the table is used.
+  // For most "normal" cells that have row/colspan of 1, these functions
+  // are called once at most during the reflow, setting the value as given
+  // (Discarding the value from the previous reflow, which is now irrelevant).
+  // However, for cells spanning multiple rows/coluns, the maximum border
+  // width seen is stored. This is controlled by calling the reset functions
+  // before the cell's border is computed the first time.
+  void ResetIStartBorderWidths();
+  void ResetIEndBorderWidths();
+  void ResetBStartBorderWidths();
+  void ResetBEndBorderWidths();
+
   void SetIStartBorderWidths(BCPixelSize aWidth);
   void SetIEndBorderWidths(BCPixelSize aWidth);
   void SetBStartBorderWidths(BCPixelSize aWidth);
@@ -3844,12 +3852,12 @@ struct BCMapCellInfo {
   int32_t GetCellEndRowIndex() const;
   int32_t GetCellEndColIndex() const;
 
-  // storage of table information
+  // Storage of table information required to compute individual cell
+  // information.
   nsTableFrame* mTableFrame;
   nsTableFrame* mTableFirstInFlow;
   int32_t mNumTableRows;
   int32_t mNumTableCols;
-  TableBCData* mTableBCData;
   WritingMode mTableWM;
 
   // a cell can only belong to one rowgroup
@@ -3892,7 +3900,6 @@ BCMapCellInfo::BCMapCellInfo(nsTableFrame* aTableFrame)
       mTableFirstInFlow(static_cast<nsTableFrame*>(aTableFrame->FirstInFlow())),
       mNumTableRows(aTableFrame->GetRowCount()),
       mNumTableCols(aTableFrame->GetColCount()),
-      mTableBCData(mTableFirstInFlow->GetTableBCData()),
       mTableWM(aTableFrame->Style()),
       mCurrentRowFrame(nullptr),
       mCurrentColGroupFrame(nullptr),
@@ -3920,6 +3927,36 @@ inline int32_t BCMapCellInfo::GetCellEndRowIndex() const {
 inline int32_t BCMapCellInfo::GetCellEndColIndex() const {
   return mColIndex + mColSpan - 1;
 }
+
+static TableBCData* GetTableBCData(nsTableFrame* aTableFrame) {
+  auto* firstInFlow = static_cast<nsTableFrame*>(aTableFrame->FirstInFlow());
+  return firstInFlow->GetTableBCData();
+}
+
+/*****************************************************************
+ *  BCMapTableInfo
+ * This structure stores controls border information global to the
+ * table computed during the border-collapsed border calcuation.
+ ****************************************************************/
+struct BCMapTableInfo final {
+  explicit BCMapTableInfo(nsTableFrame* aTableFrame)
+      : mTableBCData{GetTableBCData(aTableFrame)} {}
+
+  void ResetTableIStartBorderWidth() { mTableBCData->mIStartBorderWidth = 0; }
+
+  void ResetTableIEndBorderWidth() { mTableBCData->mIEndBorderWidth = 0; }
+
+  void ResetTableBStartBorderWidth() { mTableBCData->mBStartBorderWidth = 0; }
+
+  void ResetTableBEndBorderWidth() { mTableBCData->mBEndBorderWidth = 0; }
+
+  void SetTableIStartBorderWidth(int32_t aRowB, BCPixelSize aWidth);
+  void SetTableIEndBorderWidth(int32_t aRowB, BCPixelSize aWidth);
+  void SetTableBStartBorderWidth(BCPixelSize aWidth);
+  void SetTableBEndBorderWidth(BCPixelSize aWidth);
+
+  TableBCData* mTableBCData;
+};
 
 class BCMapCellIterator {
  public:
@@ -4858,13 +4895,8 @@ void nsTableFrame::ExpandBCDamageArea(TableArea& aArea) const {
 #define ADJACENT true
 #define INLINE_DIR true
 
-void BCMapCellInfo::SetTableBStartBorderWidth(BCPixelSize aWidth) {
-  mTableBCData->mBStartBorderWidth =
-      std::max(mTableBCData->mBStartBorderWidth, aWidth);
-}
-
-void BCMapCellInfo::SetTableIStartBorderWidth(int32_t aRowB,
-                                              BCPixelSize aWidth) {
+void BCMapTableInfo::SetTableIStartBorderWidth(int32_t aRowB,
+                                               BCPixelSize aWidth) {
   // update the iStart first cell border
   if (aRowB == 0) {
     mTableBCData->mIStartCellBorderWidth = aWidth;
@@ -4873,7 +4905,8 @@ void BCMapCellInfo::SetTableIStartBorderWidth(int32_t aRowB,
       std::max(mTableBCData->mIStartBorderWidth, aWidth);
 }
 
-void BCMapCellInfo::SetTableIEndBorderWidth(int32_t aRowB, BCPixelSize aWidth) {
+void BCMapTableInfo::SetTableIEndBorderWidth(int32_t aRowB,
+                                             BCPixelSize aWidth) {
   // update the iEnd first cell border
   if (aRowB == 0) {
     mTableBCData->mIEndCellBorderWidth = aWidth;
@@ -4882,43 +4915,49 @@ void BCMapCellInfo::SetTableIEndBorderWidth(int32_t aRowB, BCPixelSize aWidth) {
       std::max(mTableBCData->mIEndBorderWidth, aWidth);
 }
 
-void BCMapCellInfo::SetIEndBorderWidths(BCPixelSize aWidth) {
-  // update the borders of the cells and cols affected
+void BCMapTableInfo::SetTableBStartBorderWidth(BCPixelSize aWidth) {
+  mTableBCData->mBStartBorderWidth =
+      std::max(mTableBCData->mBStartBorderWidth, aWidth);
+}
+
+void BCMapTableInfo::SetTableBEndBorderWidth(BCPixelSize aWidth) {
+  mTableBCData->mBEndBorderWidth =
+      std::max(mTableBCData->mBEndBorderWidth, aWidth);
+}
+
+void BCMapCellInfo::ResetIStartBorderWidths() {
   if (mCell) {
-    mCell->SetBorderWidth(
-        LogicalSide::IEnd,
-        std::max(aWidth, mCell->GetBorderWidth(LogicalSide::IEnd)));
+    mCell->SetBorderWidth(LogicalSide::IStart, 0);
+  }
+  if (mStartCol) {
+    mStartCol->SetIStartBorderWidth(0);
+  }
+}
+
+void BCMapCellInfo::ResetIEndBorderWidths() {
+  if (mCell) {
+    mCell->SetBorderWidth(LogicalSide::IEnd, 0);
   }
   if (mEndCol) {
-    BCPixelSize half = BC_BORDER_START_HALF(aWidth);
-    mEndCol->SetIEndBorderWidth(std::max(half, mEndCol->GetIEndBorderWidth()));
+    mEndCol->SetIEndBorderWidth(0);
   }
 }
 
-void BCMapCellInfo::SetBEndBorderWidths(BCPixelSize aWidth) {
-  // update the borders of the affected cells and rows
+void BCMapCellInfo::ResetBStartBorderWidths() {
   if (mCell) {
-    mCell->SetBorderWidth(
-        LogicalSide::BEnd,
-        std::max(aWidth, mCell->GetBorderWidth(LogicalSide::BEnd)));
-  }
-  if (mEndRow) {
-    BCPixelSize half = BC_BORDER_START_HALF(aWidth);
-    mEndRow->SetBEndBCBorderWidth(
-        std::max(half, mEndRow->GetBEndBCBorderWidth()));
-  }
-}
-
-void BCMapCellInfo::SetBStartBorderWidths(BCPixelSize aWidth) {
-  if (mCell) {
-    mCell->SetBorderWidth(
-        LogicalSide::BStart,
-        std::max(aWidth, mCell->GetBorderWidth(LogicalSide::BStart)));
+    mCell->SetBorderWidth(LogicalSide::BStart, 0);
   }
   if (mStartRow) {
-    BCPixelSize half = BC_BORDER_END_HALF(aWidth);
-    mStartRow->SetBStartBCBorderWidth(
-        std::max(half, mStartRow->GetBStartBCBorderWidth()));
+    mStartRow->SetBStartBCBorderWidth(0);
+  }
+}
+
+void BCMapCellInfo::ResetBEndBorderWidths() {
+  if (mCell) {
+    mCell->SetBorderWidth(LogicalSide::BEnd, 0);
+  }
+  if (mEndRow) {
+    mEndRow->SetBEndBCBorderWidth(0);
   }
 }
 
@@ -4935,9 +4974,44 @@ void BCMapCellInfo::SetIStartBorderWidths(BCPixelSize aWidth) {
   }
 }
 
-void BCMapCellInfo::SetTableBEndBorderWidth(BCPixelSize aWidth) {
-  mTableBCData->mBEndBorderWidth =
-      std::max(mTableBCData->mBEndBorderWidth, aWidth);
+void BCMapCellInfo::SetIEndBorderWidths(BCPixelSize aWidth) {
+  // update the borders of the cells and cols affected
+  if (mCell) {
+    mCell->SetBorderWidth(
+        LogicalSide::IEnd,
+        std::max(aWidth, mCell->GetBorderWidth(LogicalSide::IEnd)));
+  }
+  if (mEndCol) {
+    BCPixelSize half = BC_BORDER_START_HALF(aWidth);
+    mEndCol->SetIEndBorderWidth(std::max(half, mEndCol->GetIEndBorderWidth()));
+  }
+}
+
+void BCMapCellInfo::SetBStartBorderWidths(BCPixelSize aWidth) {
+  if (mCell) {
+    mCell->SetBorderWidth(
+        LogicalSide::BStart,
+        std::max(aWidth, mCell->GetBorderWidth(LogicalSide::BStart)));
+  }
+  if (mStartRow) {
+    BCPixelSize half = BC_BORDER_END_HALF(aWidth);
+    mStartRow->SetBStartBCBorderWidth(
+        std::max(half, mStartRow->GetBStartBCBorderWidth()));
+  }
+}
+
+void BCMapCellInfo::SetBEndBorderWidths(BCPixelSize aWidth) {
+  // update the borders of the affected cells and rows
+  if (mCell) {
+    mCell->SetBorderWidth(
+        LogicalSide::BEnd,
+        std::max(aWidth, mCell->GetBorderWidth(LogicalSide::BEnd)));
+  }
+  if (mEndRow) {
+    BCPixelSize half = BC_BORDER_START_HALF(aWidth);
+    mEndRow->SetBEndBCBorderWidth(
+        std::max(half, mEndRow->GetBEndBCBorderWidth()));
+  }
 }
 
 void BCMapCellInfo::SetColumn(int32_t aColX) {
@@ -5115,6 +5189,10 @@ void nsTableFrame::CalcBCBorders() {
   if (!lastBEndBorders.borders) ABORT0();
 
   BCMapCellInfo info(this);
+  // TODO(dshin): This is basically propData, except it uses first-in-flow's
+  // data. Consult the definition of `TableBCDataProperty` regarding
+  // using the first-in-flow only.
+  BCMapTableInfo tableInfo(this);
 
   // Block-start corners of the cell being traversed, indexed by columns.
   BCCorners bStartCorners(damageArea.ColCount() + 1, damageArea.StartCol());
@@ -5166,9 +5244,10 @@ void nsTableFrame::CalcBCBorders() {
     if (0 == info.mRowIndex) {
       uint8_t idxBStart = static_cast<uint8_t>(LogicalSide::BStart);
       if (!tableBorderReset[idxBStart]) {
-        propData->mBStartBorderWidth = 0;
+        tableInfo.ResetTableBStartBorderWidth();
         tableBorderReset[idxBStart] = true;
       }
+      bool reset = false;
       for (int32_t colIdx = info.mColIndex; colIdx <= info.GetCellEndColIndex();
            colIdx++) {
         info.SetColumn(colIdx);
@@ -5203,7 +5282,11 @@ void nsTableFrame::CalcBCBorders() {
 
         // Set border width at block-start (table-wide and for the cell), but
         // only if it's the largest we've encountered.
-        info.SetTableBStartBorderWidth(currentBorder.width);
+        tableInfo.SetTableBStartBorderWidth(currentBorder.width);
+        if (!reset) {
+          info.ResetBStartBorderWidths();
+          reset = true;
+        }
         info.SetBStartBorderWidths(currentBorder.width);
       }
     } else {
@@ -5228,10 +5311,11 @@ void nsTableFrame::CalcBCBorders() {
     if (0 == info.mColIndex) {
       uint8_t idxIStart = static_cast<uint8_t>(LogicalSide::IStart);
       if (!tableBorderReset[idxIStart]) {
-        propData->mIStartBorderWidth = 0;
+        tableInfo.ResetTableIStartBorderWidth();
         tableBorderReset[idxIStart] = true;
       }
       info.mCurrentRowFrame = nullptr;
+      bool reset = false;
       for (int32_t rowB = info.mRowIndex; rowB <= info.GetCellEndRowIndex();
            rowB++) {
         info.IncrementRow(rowB == info.mRowIndex);
@@ -5254,7 +5338,11 @@ void nsTableFrame::CalcBCBorders() {
                                       currentBorder.width, startSeg);
         // Set border width at inline-start (table-wide and for the cell), but
         // only if it's the largest we've encountered.
-        info.SetTableIStartBorderWidth(rowB, currentBorder.width);
+        tableInfo.SetTableIStartBorderWidth(rowB, currentBorder.width);
+        if (!reset) {
+          info.ResetIStartBorderWidths();
+          reset = true;
+        }
         info.SetIStartBorderWidths(currentBorder.width);
       }
     }
@@ -5265,10 +5353,11 @@ void nsTableFrame::CalcBCBorders() {
       // touches iEnd edge of table
       uint8_t idxIEnd = static_cast<uint8_t>(LogicalSide::IEnd);
       if (!tableBorderReset[idxIEnd]) {
-        propData->mIEndBorderWidth = 0;
+        tableInfo.ResetTableIEndBorderWidth();
         tableBorderReset[idxIEnd] = true;
       }
       info.mCurrentRowFrame = nullptr;
+      bool reset = false;
       for (int32_t rowB = info.mRowIndex; rowB <= info.GetCellEndRowIndex();
            rowB++) {
         info.IncrementRow(rowB == info.mRowIndex);
@@ -5301,7 +5390,11 @@ void nsTableFrame::CalcBCBorders() {
             currentBorder.width, startSeg);
         // Set border width at inline-end (table-wide and for the cell), but
         // only if it's the largest we've encountered.
-        info.SetTableIEndBorderWidth(rowB, currentBorder.width);
+        tableInfo.SetTableIEndBorderWidth(rowB, currentBorder.width);
+        if (!reset) {
+          info.ResetIEndBorderWidths();
+          reset = true;
+        }
         info.SetIEndBorderWidths(currentBorder.width);
       }
     } else {
@@ -5309,6 +5402,7 @@ void nsTableFrame::CalcBCBorders() {
       int32_t segLength = 0;
       BCMapCellInfo ajaInfo(this);
       BCMapCellInfo priorAjaInfo(this);
+      bool reset = false;
       for (int32_t rowB = info.mRowIndex; rowB <= info.GetCellEndRowIndex();
            rowB += segLength) {
         // Grab the cell adjacent to our inline-end.
@@ -5331,6 +5425,11 @@ void nsTableFrame::CalcBCBorders() {
               LogicalSide::IEnd, *iter.mCellMap, iter.mRowGroupStart, rowB,
               info.GetCellEndColIndex(), segLength, currentBorder.owner,
               currentBorder.width, startSeg);
+          if (!reset) {
+            info.ResetIEndBorderWidths();
+            ajaInfo.ResetIStartBorderWidths();
+            reset = true;
+          }
           info.SetIEndBorderWidths(currentBorder.width);
           ajaInfo.SetIStartBorderWidths(currentBorder.width);
         }
@@ -5405,9 +5504,10 @@ void nsTableFrame::CalcBCBorders() {
       // touches bEnd edge of table
       uint8_t idxBEnd = static_cast<uint8_t>(LogicalSide::BEnd);
       if (!tableBorderReset[idxBEnd]) {
-        propData->mBEndBorderWidth = 0;
+        tableInfo.ResetTableBEndBorderWidth();
         tableBorderReset[idxBEnd] = true;
       }
+      bool reset = false;
       for (int32_t colIdx = info.mColIndex; colIdx <= info.GetCellEndColIndex();
            colIdx++) {
         info.SetColumn(colIdx);
@@ -5453,12 +5553,17 @@ void nsTableFrame::CalcBCBorders() {
 
         // Set border width at block-end (table-wide and for the cell), but
         // only if it's the largest we've encountered.
+        if (!reset) {
+          info.ResetBEndBorderWidths();
+          reset = true;
+        }
         info.SetBEndBorderWidths(currentBorder.width);
-        info.SetTableBEndBorderWidth(currentBorder.width);
+        tableInfo.SetTableBEndBorderWidth(currentBorder.width);
       }
     } else {
       int32_t segLength = 0;
       BCMapCellInfo ajaInfo(this);
+      bool reset = false;
       for (int32_t colIdx = info.mColIndex; colIdx <= info.GetCellEndColIndex();
            colIdx += segLength) {
         // Grab the cell adjacent to our block-end.
@@ -5540,6 +5645,12 @@ void nsTableFrame::CalcBCBorders() {
               LogicalSide::BEnd, *iter.mCellMap, iter.mRowGroupStart,
               info.GetCellEndRowIndex(), colIdx, segLength, currentBorder.owner,
               currentBorder.width, startSeg);
+
+          if (!reset) {
+            info.ResetBEndBorderWidths();
+            ajaInfo.ResetBStartBorderWidths();
+            reset = true;
+          }
           info.SetBEndBorderWidths(currentBorder.width);
           ajaInfo.SetBStartBorderWidths(currentBorder.width);
         }
