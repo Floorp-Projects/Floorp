@@ -33,6 +33,7 @@
  * if there is one, otherwise it's just the same as "Home"
  */
 #define NS_OS_DESKTOP_DIR "Desk"
+#define NS_OS_DOCUMENTS_DIR "Docs"
 
 #define NS_OS_DEFAULT_DOWNLOAD_DIR "DfltDwnld"
 
