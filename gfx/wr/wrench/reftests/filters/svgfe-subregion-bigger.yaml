@@ -1,0 +1,35 @@
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [0, 50, 800, 800]
+      filters:
+        - svgfe: SourceGraphic
+        - svgfe: SourceAlpha
+        - svgfe: flood
+          linear: false
+          # this is expected to be at 10,60
+          subregion: [10, 10, 80, 100]
+          color: [255, 0, 0, 0.7]
+        - svgfe: flood
+          linear: false
+          # this is expected to be at 50,60
+          subregion: [50, 10, 80, 100]
+          color: [0, 255, 0, 0.7]
+        - svgfe: blendnormal
+          linear: false
+          # this is expected to be at 10,60
+          subregion: [10, 10, 160, 100]
+          in: 3
+          in2: 2
+        - svgfe: blendnormal
+          linear: false
+          # this is expected to be at 10,60
+          subregion: [10, 10, 160, 100]
+          in: 0
+          in2: 4
+      items:
+        - type: rect
+          # this is expected to be at 90,60
+          bounds: [90, 10, 80, 100]
+          color: [0, 0, 255, 0.7]

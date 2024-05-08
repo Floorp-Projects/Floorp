@@ -1,0 +1,10 @@
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [0, 0, 120, 120]
+      items:
+        - type: rect
+          bounds: [10, 10, 100, 100]
+          # note: this is sRGB converted to match linear result of sRGB 64*2,32*2,16*2
+          color: [90, 47, 26, 1]
