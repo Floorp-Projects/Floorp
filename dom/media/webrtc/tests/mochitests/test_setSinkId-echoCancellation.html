@@ -46,9 +46,7 @@ runTest(async () => {
   // The loopback device is currenly only available on Linux.
   let loopbackInputLabel =
       SpecialPowers.getCharPref("media.audio_loopback_dev", "");
-  const desktopLinux = navigator.userAgent.includes("Linux") &&
-      !navigator.userAgent.includes("Android");
-  if (!desktopLinux) {
+  if (!navigator.userAgent.includes("Linux")) {
     todo_isnot(loopbackInputLabel, "", "audio_loopback_dev");
     return;
   }
