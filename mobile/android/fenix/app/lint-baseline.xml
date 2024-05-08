@@ -1326,4 +1326,9 @@
             column="21"/>
     </issue>
 
+    <issue id="UnusedResources"
+        message="The resource R.drawable.microsurvey_success appears to be unused">
+        <location file="src/main/res/drawable/microsurvey_success.xml" />
+    </issue>
+
 </issues>
