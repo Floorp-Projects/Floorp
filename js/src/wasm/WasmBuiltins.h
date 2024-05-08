@@ -142,13 +142,15 @@ enum class SymbolicAddress {
   ArrayInitData,
   ArrayInitElem,
   ArrayCopy,
-  UpdateSuspenderState,
   SlotsToAllocKindBytesTable,
 #define VISIT_BUILTIN_FUNC(op, export, sa_name, ...) sa_name,
   FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
 #undef VISIT_BUILTIN_FUNC
+#ifdef ENABLE_WASM_JSPI
+      UpdateSuspenderState,
+#endif
 #ifdef WASM_CODEGEN_DEBUG
-      PrintI32,
+  PrintI32,
   PrintPtr,
   PrintF32,
   PrintF64,

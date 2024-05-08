@@ -24,7 +24,11 @@
 #include "js/TypeDecls.h"
 #include "wasm/WasmTypeDef.h"
 
-namespace js::wasm {
+namespace js {
+
+class WasmStructObject;
+
+namespace wasm {
 
 class SuspenderObject;
 
@@ -129,8 +133,6 @@ bool CallImportOnMainThread(JSContext* cx, Instance* instance,
                             int32_t funcImportIndex, int32_t argc,
                             uint64_t* argv);
 
-bool IsAllowedOnSuspendableStack(HandleFunction fn);
-
 void UnwindStackSwitch(JSContext* cx);
 
 JSFunction* WasmSuspendingFunctionCreate(JSContext* cx, HandleObject func,
@@ -146,11 +148,23 @@ JSFunction* WasmPromisingFunctionCreate(JSContext* cx, HandleObject func,
                                         wasm::ValTypeVector&& results,
                                         SuspenderArgPosition argPosition);
 
-#endif  // ENABLE_WASM_JSPI
+SuspenderObject* CurrentSuspender(Instance* instance, int reserved);
+
+SuspenderObject* CheckSuspender(Instance* instance, JSObject* maybeSuspender);
+
+JSObject* GetSuspendingPromiseResult(Instance* instance,
+                                     SuspenderObject* suspender);
+
+int32_t SetPromisingPromiseResults(Instance* instance,
+                                   SuspenderObject* suspender,
+                                   WasmStructObject* results);
 
 void UpdateSuspenderState(Instance* instance, SuspenderObject* suspender,
                           UpdateSuspenderStateAction action);
 
-}  // namespace js::wasm
+#endif  // ENABLE_WASM_JSPI
+
+}  // namespace wasm
+}  // namespace js
 
 #endif  // wasm_pi_h

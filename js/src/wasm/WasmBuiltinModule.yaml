@@ -401,3 +401,55 @@
   uses_memory: false
 
 #endif // ENABLE_WASM_JS_STRING_BUILTINS
+
+#if defined(ENABLE_WASM_JSPI)
+
+- op: CheckSuspender
+  symbolic_address:
+    name: CheckSuspender
+    type: Args_General2
+  entry: CheckSuspender
+  export: suspenderCheck
+  params:
+    - 'externref'
+  result: 'externref'
+  fail_mode: FailOnNullPtr
+  uses_memory: false
+
+- op: CurrentSuspender
+  symbolic_address:
+    name: CurrentSuspender
+    type: Args_General_GeneralInt32
+  entry: CurrentSuspender
+  export: currentSuspender
+  params:
+    - 'i32'
+  result: 'externref'
+  fail_mode: FailOnNullPtr
+  uses_memory: false
+
+- op: GetSuspendingPromiseResult
+  symbolic_address:
+    name: GetSuspendingPromiseResult
+    type: Args_General2
+  entry: GetSuspendingPromiseResult
+  export: getSuspendingPromiseResult
+  params:
+    - 'externref'
+  result: 'anyref'
+  fail_mode: FailOnNullPtr
+  uses_memory: false
+
+- op: SetPromisingPromiseResults
+  symbolic_address:
+    name: SetPromisingPromiseResults
+    type: Args_Int32_GeneralGeneralGeneral
+  entry: SetPromisingPromiseResults
+  export: setPromisingPromiseResults
+  params:
+    - 'externref'
+    - 'anyref'
+  fail_mode: FailOnNegI32
+  uses_memory: false
+
+#endif // ENABLE_WASM_JSPI
