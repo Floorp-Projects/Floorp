@@ -395,12 +395,6 @@ const SymbolicAddressSignature SASigArrayCopy = {
     _FailOnNegI32,
     7,
     {_PTR, _RoN, _I32, _RoN, _I32, _I32, _I32, _END}};
-const SymbolicAddressSignature SASigUpdateSuspenderState = {
-    SymbolicAddress::UpdateSuspenderState,
-    _VOID,
-    _Infallible,
-    3,
-    {_PTR, _PTR, _I32, _END}};
 
 #define VISIT_BUILTIN_FUNC(op, export, sa_name, ...)   \
   const SymbolicAddressSignature SASig##sa_name = {    \
@@ -411,6 +405,15 @@ const SymbolicAddressSignature SASigUpdateSuspenderState = {
 
 FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
 #undef VISIT_BUILTIN_FUNC
+
+#ifdef ENABLE_WASM_JSPI
+const SymbolicAddressSignature SASigUpdateSuspenderState = {
+    SymbolicAddress::UpdateSuspenderState,
+    _VOID,
+    _Infallible,
+    3,
+    {_PTR, _PTR, _I32, _END}};
+#endif
 
 }  // namespace wasm
 }  // namespace js
@@ -1518,10 +1521,13 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigThrowException));
       return FuncCast(Instance::throwException, *abiType);
+
+#ifdef ENABLE_WASM_JSPI
     case SymbolicAddress::UpdateSuspenderState:
       *abiType = Args_Int32_GeneralGeneralInt32;
       MOZ_ASSERT(*abiType == ToABIType(SASigUpdateSuspenderState));
       return FuncCast(UpdateSuspenderState, *abiType);
+#endif
 
 #ifdef WASM_CODEGEN_DEBUG
     case SymbolicAddress::PrintI32:
@@ -1706,11 +1712,13 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ArrayInitData:
     case SymbolicAddress::ArrayInitElem:
     case SymbolicAddress::ArrayCopy:
-    case SymbolicAddress::UpdateSuspenderState:
 #define VISIT_BUILTIN_FUNC(op, export, sa_name, ...) \
   case SymbolicAddress::sa_name:
       FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
 #undef VISIT_BUILTIN_FUNC
+#ifdef ENABLE_WASM_JSPI
+    case SymbolicAddress::UpdateSuspenderState:
+#endif
       return true;
 
     case SymbolicAddress::Limit:

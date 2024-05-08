@@ -351,30 +351,16 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   return true;
 }
 
-#ifdef ENABLE_WASM_JSPI
-bool Instance::isImportAllowedOnSuspendableStack(JSContext* cx,
-                                                 int32_t funcImportIndex) {
-  Tier tier = code().bestTier();
-  const FuncImport& fi = metadata(tier).funcImports[funcImportIndex];
-  FuncImportInstanceData& import = funcImportInstanceData(fi);
-  Rooted<JSFunction*> fn(cx, &import.callable->as<JSFunction>());
-  return IsAllowedOnSuspendableStack(fn);
-}
-#endif
-
 /* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_general(Instance* instance, int32_t funcImportIndex,
                              int32_t argc, uint64_t* argv) {
   JSContext* cx = instance->cx();
-#ifndef ENABLE_WASM_JSPI
-  return instance->callImport(cx, funcImportIndex, argc, argv);
-#else
-  if (!IsSuspendableStackActive(cx) ||
-      instance->isImportAllowedOnSuspendableStack(cx, funcImportIndex)) {
-    return instance->callImport(cx, funcImportIndex, argc, argv);
+#ifdef ENABLE_WASM_JSPI
+  if (IsSuspendableStackActive(cx)) {
+    return CallImportOnMainThread(cx, instance, funcImportIndex, argc, argv);
   }
-  return CallImportOnMainThread(cx, instance, funcImportIndex, argc, argv);
 #endif
+  return instance->callImport(cx, funcImportIndex, argc, argv);
 }
 
 //////////////////////////////////////////////////////////////////////////////
