@@ -24,6 +24,7 @@ namespace mozilla {
 using IterationResult = GraphInterface::IterationResult;
 using ::testing::_;
 using ::testing::AnyNumber;
+using ::testing::AtMost;
 using ::testing::Eq;
 using ::testing::InSequence;
 using ::testing::NiceMock;
@@ -427,6 +428,10 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   });
 #endif
   EXPECT_CALL(*graph, NotifyInputData(_, 0, rate, 1, _)).Times(AnyNumber());
+  // This only happens if the first fallback driver is stopped by the audio
+  // driver handover rather than the driver switch. It happens when the
+  // subsequent audio callback performs the switch.
+  EXPECT_CALL(*graph, NotifyInputStopped()).Times(AtMost(1));
   Result<cubeb_input_processing_params, int> expected =
       Err(CUBEB_ERROR_NOT_SUPPORTED);
   EXPECT_CALL(*graph, NotifySetRequestedInputProcessingParamsResult(
