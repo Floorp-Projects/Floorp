@@ -404,7 +404,7 @@
     },
 
     getAllDuplicateTabsToClose() {
-      let lastSeenTabs = this.tabs.sort(
+      let lastSeenTabs = this.tabs.toSorted(
         (a, b) => b.lastSeenActive - a.lastSeenActive
       );
       let duplicateTabs = [];
