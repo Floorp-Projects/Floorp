@@ -1,0 +1,20 @@
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [0, 0, 120, 120]
+      items:
+        - type: stacking-context
+          bounds: [10, 10, 100, 100]
+          filters:
+            - svgfe: SourceGraphic
+            - svgfe: SourceAlpha
+            - svgfe: opacity
+              linear: true,
+              subregion: [0, 0, 400, 400]
+              in: 0
+              value: 0.5
+          items:
+            - type: rect
+              bounds: [0, 0, 100, 100]
+              color: [128, 64, 32, 1]

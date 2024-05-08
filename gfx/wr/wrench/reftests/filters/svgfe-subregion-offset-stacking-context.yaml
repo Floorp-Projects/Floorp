@@ -1,0 +1,51 @@
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [0, 0, 800, 800]
+      items:
+        - type: stacking-context
+          bounds: [0, 200, 800, 800]
+          items:
+            - type: stacking-context
+              bounds: [0, 0, 800, 800]
+              filters:
+                - svgfe: SourceGraphic
+                - svgfe: SourceAlpha
+                - svgfe: flood
+                  color: [64, 64, 64, 1]
+                  # this is expected to show up at 0,200
+                  subregion: [0, 0, 800, 5]
+                - svgfe: flood
+                  color: [127, 127, 127, 1]
+                  # this is expected to show up at 100,500 and be completely
+                  # hidden by the blue rect (SourceGraphic)
+                  subregion: [100, 300, 90, 100]
+                - svgfe: compositeover
+                  linear: false
+                  subregion: [0, 0, 800, 800]
+                  in: 3
+                  in2: 2
+                - svgfe: compositeover
+                  linear: false
+                  subregion: [0, 0, 800, 800]
+                  in: 0
+                  in2: 4
+              items:
+                - type: rect
+                  # blue rect is expected to show up at 100,500, this should
+                  # hide the gray rect
+                  bounds: [100, 300, 100, 100]
+                  color: [0, 0, 255, 1]
+            - type: rect
+              # this is expected to show up at 0,500
+              bounds: [0, 300, 90, 5]
+              color: [0, 0, 255, 1]
+        - type: rect
+          # this is expected to show up at 0,0
+          bounds: [0, 0, 90, 5]
+          color: [255, 0, 0, 1]
+        - type: rect
+          # this is expected to show up at 0,300
+          bounds: [0, 300, 90, 5]
+          color: [0, 255, 0, 1]

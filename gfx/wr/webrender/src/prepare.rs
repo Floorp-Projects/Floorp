@@ -174,6 +174,7 @@ fn prepare_prim_for_render(
             pic_context.subpixel_mode,
             frame_state,
             frame_context,
+            data_stores,
             scratch,
             tile_caches,
         ) {
@@ -961,7 +962,8 @@ fn prepare_interned_prim_for_render(
                     // may have changed due to downscaling. We could handle this separate
                     // case as a follow up.
                     Some(PictureCompositeMode::Filter(Filter::Blur { .. })) |
-                    Some(PictureCompositeMode::Filter(Filter::DropShadows { .. })) => {
+                    Some(PictureCompositeMode::Filter(Filter::DropShadows { .. })) |
+                    Some(PictureCompositeMode::SVGFEGraph( .. )) => {
                         true
                     }
                     _ => {

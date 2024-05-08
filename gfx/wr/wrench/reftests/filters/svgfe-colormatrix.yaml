@@ -1,0 +1,18 @@
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [0, 0, 120, 120]
+      filters:
+        - svgfe: SourceGraphic
+        - svgfe: SourceAlpha
+        - svgfe: colormatrix
+          linear: true,
+          subregion: [0, 0, 120, 120]
+          in: 0
+          # note this is transposed to be suitable for shader, not SVG order
+          matrix: [2,0,0,0, 0,2,0,0, 0,0,2,0, 0,0,0,1, 0,0,0,0]
+      items:
+        - type: rect
+          bounds: [10, 10, 100, 100]
+          color: [64, 32, 16, 1]

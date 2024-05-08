@@ -1,0 +1,21 @@
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [0, 0, 120, 120]
+      filters:
+        - svgfe: SourceGraphic
+        - svgfe: SourceAlpha
+        - svgfe: flood
+          linear: true
+          subregion: [10, 10, 100, 100]
+          color: [192, 96, 128, 1]
+        - svgfe: blendmultiply
+          linear: true
+          subregion: [10, 10, 100, 100]
+          in: 0
+          in2: 2
+      items:
+        - type: rect
+          bounds: [10, 10, 100, 100]
+          color: [128, 64, 32, 0.5]

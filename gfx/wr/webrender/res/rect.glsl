@@ -38,3 +38,12 @@ vec2 rect_clamp(RectWithEndpoint rect, vec2 pt) {
 vec2 rect_size(RectWithEndpoint rect) {
     return rect.p1 - rect.p0;
 }
+
+// this is similar to rect_clamp but repeats the image for coordinates outside
+// the rect, used in SVG feTile filter
+vec2 rect_repeat(vec2 p, vec2 p0, vec2 p1) {
+    vec2 r = p - p0;
+    vec2 s = p1 - p0;
+    vec2 is = 1.0 / max(s, vec2(0.000001));
+    return p0 + s * fract(is * r);
+}

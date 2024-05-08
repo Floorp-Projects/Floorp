@@ -69,7 +69,7 @@ use crate::frame_builder::Frame;
 use glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
-use crate::gpu_types::{ScalingInstance, SvgFilterInstance, CopyInstance, PrimitiveInstanceData};
+use crate::gpu_types::{ScalingInstance, SvgFilterInstance, SVGFEFilterInstance, CopyInstance, PrimitiveInstanceData};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, CompositorTransform};
 use crate::internal_types::{TextureSource, TextureCacheCategory, FrameId};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -255,6 +255,10 @@ const GPU_SAMPLER_TAG_TRANSPARENT: GpuProfileTag = GpuProfileTag {
 };
 const GPU_TAG_SVG_FILTER: GpuProfileTag = GpuProfileTag {
     label: "SvgFilter",
+    color: debug_colors::LEMONCHIFFON,
+};
+const GPU_TAG_SVG_FILTER_NODES: GpuProfileTag = GpuProfileTag {
+    label: "SvgFilterNodes",
     color: debug_colors::LEMONCHIFFON,
 };
 const GPU_TAG_COMPOSITE: GpuProfileTag = GpuProfileTag {
@@ -2529,6 +2533,35 @@ impl Renderer {
         );
     }
 
+    fn handle_svg_nodes(
+        &mut self,
+        textures: &BatchTextures,
+        svg_filters: &[SVGFEFilterInstance],
+        projection: &default::Transform3D<f32>,
+        stats: &mut RendererStats,
+    ) {
+        if svg_filters.is_empty() {
+            return;
+        }
+
+        let _timer = self.gpu_profiler.start_timer(GPU_TAG_SVG_FILTER_NODES);
+
+        self.shaders.borrow_mut().cs_svg_filter_node.bind(
+            &mut self.device,
+            &projection,
+            None,
+            &mut self.renderer_errors,
+            &mut self.profile,
+        );
+
+        self.draw_instanced_batch(
+            &svg_filters,
+            VertexArrayKind::SvgFilterNode,
+            textures,
+            stats,
+        );
+    }
+
     fn handle_resolve(
         &mut self,
         resolve_op: &ResolveOp,
@@ -3576,6 +3609,10 @@ impl Renderer {
                 projection,
                 stats,
             );
+        }
+
+        for (ref textures, ref filters) in &target.svg_nodes {
+            self.handle_svg_nodes(textures, filters, projection, stats);
         }
 
         for alpha_batch_container in &target.alpha_batch_containers {
