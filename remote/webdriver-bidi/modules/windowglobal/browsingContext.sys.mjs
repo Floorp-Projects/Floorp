@@ -68,19 +68,23 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
     for (const contextNode of contextNodes) {
       let match = true;
 
-      if ("role" in selector) {
-        const role = await lazy.accessibility.getComputedRole(contextNode);
+      if (contextNode.nodeType === ELEMENT_NODE) {
+        if ("role" in selector) {
+          const role = await lazy.accessibility.getComputedRole(contextNode);
 
-        if (selector.role !== role) {
-          match = false;
+          if (selector.role !== role) {
+            match = false;
+          }
         }
-      }
 
-      if ("name" in selector) {
-        const name = await lazy.accessibility.getAccessibleName(contextNode);
-        if (selector.name !== name) {
-          match = false;
+        if ("name" in selector) {
+          const name = await lazy.accessibility.getAccessibleName(contextNode);
+          if (selector.name !== name) {
+            match = false;
+          }
         }
+      } else {
+        match = false;
       }
 
       if (match) {
