@@ -414,7 +414,7 @@ nsresult nsIOService::InitializeCaptivePortalService() {
 
   mCaptivePortalService = do_GetService(NS_CAPTIVEPORTAL_CID);
   if (mCaptivePortalService) {
-    return static_cast<CaptivePortalService*>(mCaptivePortalService.get())
+    static_cast<CaptivePortalService*>(mCaptivePortalService.get())
         ->Initialize();
   }
 
