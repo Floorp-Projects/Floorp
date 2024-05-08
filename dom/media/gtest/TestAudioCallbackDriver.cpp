@@ -454,13 +454,17 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
 
   initPromise = TakeN(cubeb->StreamInitEvent(), 1);
   Monitor mon(__func__);
-  MonitorAutoLock lock(mon);
   bool canContinueToStartNextDriver = false;
   bool continued = false;
 
   // This marks the audio driver as running.
   EXPECT_EQ(stream->ManualDataCallback(0),
             MockCubebStream::KeepProcessing::Yes);
+
+  // To satisfy TSAN's lock-order-inversion checking we avoid locking stream's
+  // mMutex (by calling ManualDataCallback) under mon. The SwitchTo runnable
+  // below already locks mon under stream's mMutex.
+  MonitorAutoLock lock(mon);
 
   // If a fallback driver callback happens between the audio callback
   // above, and the SwitchTo below, the driver will enter
