@@ -40,6 +40,7 @@ base_schema = Schema(
         Required("do_not_optimize"): [str],
         Required("enable_always_target"): Any(bool, [str]),
         Required("existing_tasks"): {str: str},
+        Required("files_changed"): [str],
         Required("filters"): [str],
         Required("head_ref"): str,
         Required("head_repository"): str,
@@ -86,6 +87,7 @@ def _get_defaults(repo_root=None):
         # Use fake values if no repo is detected.
         repo = Mock(branch="", head_rev="", tool="git")
         repo.get_url.return_value = ""
+        repo.get_changed_files.return_value = []
 
     try:
         repo_url = repo.get_url()
@@ -108,6 +110,7 @@ def _get_defaults(repo_root=None):
         "do_not_optimize": [],
         "enable_always_target": True,
         "existing_tasks": {},
+        "files_changed": repo.get_changed_files("AM"),
         "filters": ["target_tasks_method"],
         "head_ref": repo.branch or repo.head_rev,
         "head_repository": repo_url,

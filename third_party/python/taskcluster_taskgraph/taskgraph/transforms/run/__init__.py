@@ -167,7 +167,8 @@ def add_resource_monitor(config, tasks):
                 config.graph_config, task["worker-type"]
             )
             # Normalise worker os so that linux-bitbar and similar use linux tools.
-            worker_os = worker_os.split("-")[0]
+            if worker_os:
+                worker_os = worker_os.split("-")[0]
             if "win7" in task["worker-type"]:
                 arch = "32"
             else:

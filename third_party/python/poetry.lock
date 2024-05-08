@@ -1375,14 +1375,14 @@ test = ["aiofiles", "coverage", "flake8", "httmock", "httptest", "hypothesis", "
 
 [[package]]
 name = "taskcluster-taskgraph"
-version = "7.4.0"
+version = "8.0.1"
 description = "Build taskcluster taskgraphs"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "taskcluster-taskgraph-7.4.0.tar.gz", hash = "sha256:457bcf5bcef0202435cdf01b8cbc67a97fc755d647e6d5c4f4ae69f00d9e98ad"},
-    {file = "taskcluster_taskgraph-7.4.0-py3-none-any.whl", hash = "sha256:2dd814ca94d64d2663facbcb55bda18e9748ed142ef551803bba71a3e793f2ee"},
+    {file = "taskcluster-taskgraph-8.0.1.tar.gz", hash = "sha256:21387537bbebab2a7b1890d03e20e49379bdda65efd45ca7fb8d01f5c29e1797"},
+    {file = "taskcluster_taskgraph-8.0.1-py3-none-any.whl", hash = "sha256:14500bc703f64eb002c0cd505caaf2d34ffc0ae66d109b108e738661da1ae09c"},
 ]
 
 [package.dependencies]
@@ -1624,4 +1624,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "8ccca3a41d674b8232b9784d558be138ff3feb306796e898f80e383f47f2e26c"
+content-hash = "8e72dc9ba9b4f08d27d90f99666459a814d1bb293c68de222614ea57db5b70ef"
