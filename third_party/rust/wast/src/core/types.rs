@@ -2,6 +2,7 @@ use crate::core::*;
 use crate::kw;
 use crate::parser::{Cursor, Parse, Parser, Peek, Result};
 use crate::token::{Id, Index, LParen, NameAnnotation, Span};
+use crate::Error;
 use std::mem;
 
 /// The value types for a wasm module.
@@ -86,6 +87,8 @@ pub enum HeapType<'a> {
     NoExtern,
     /// The bottom type of the anyref hierarchy. Part of the GC proposal.
     None,
+    /// The bottom type of the exnref hierarchy. Part of the exceptions proposal.
+    NoExn,
     /// A reference to a concrete function, struct, or array type defined by
     /// Wasm: `ref T`. This is part of the function references and GC proposals.
     Concrete(Index<'a>),
@@ -124,6 +127,9 @@ impl<'a> Parse<'a> for HeapType<'a> {
         } else if l.peek::<kw::noextern>()? {
             parser.parse::<kw::noextern>()?;
             Ok(HeapType::NoExtern)
+        } else if l.peek::<kw::noexn>()? {
+            parser.parse::<kw::noexn>()?;
+            Ok(HeapType::NoExn)
         } else if l.peek::<kw::none>()? {
             parser.parse::<kw::none>()?;
             Ok(HeapType::None)
@@ -147,6 +153,7 @@ impl<'a> Peek for HeapType<'a> {
             || kw::i31::peek(cursor)?
             || kw::nofunc::peek(cursor)?
             || kw::noextern::peek(cursor)?
+            || kw::noexn::peek(cursor)?
             || kw::none::peek(cursor)?
             || (LParen::peek(cursor)? && kw::r#type::peek2(cursor)?))
     }
@@ -251,6 +258,14 @@ impl<'a> RefType<'a> {
             heap: HeapType::None,
         }
     }
+
+    /// A `nullexnref` as an abbreviation for `(ref null noexn)`.
+    pub fn nullexnref() -> Self {
+        RefType {
+            nullable: true,
+            heap: HeapType::NoExn,
+        }
+    }
 }
 
 impl<'a> Parse<'a> for RefType<'a> {
@@ -286,6 +301,9 @@ impl<'a> Parse<'a> for RefType<'a> {
         } else if l.peek::<kw::nullexternref>()? {
             parser.parse::<kw::nullexternref>()?;
             Ok(RefType::nullexternref())
+        } else if l.peek::<kw::nullexnref>()? {
+            parser.parse::<kw::nullexnref>()?;
+            Ok(RefType::nullexnref())
         } else if l.peek::<kw::nullref>()? {
             parser.parse::<kw::nullref>()?;
             Ok(RefType::nullref())
@@ -327,6 +345,7 @@ impl<'a> Peek for RefType<'a> {
             || kw::i31ref::peek(cursor)?
             || kw::nullfuncref::peek(cursor)?
             || kw::nullexternref::peek(cursor)?
+            || kw::nullexnref::peek(cursor)?
             || kw::nullref::peek(cursor)?
             || (LParen::peek(cursor)? && kw::r#ref::peek2(cursor)?))
     }
@@ -368,22 +387,35 @@ pub struct GlobalType<'a> {
     pub ty: ValType<'a>,
     /// Whether or not the global is mutable or not.
     pub mutable: bool,
+    /// Whether or not the global is shared.
+    pub shared: bool,
 }
 
 impl<'a> Parse<'a> for GlobalType<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek2::<kw::r#mut>()? {
+        if parser.peek2::<kw::shared>()? || parser.peek2::<kw::r#mut>()? {
             parser.parens(|p| {
-                p.parse::<kw::r#mut>()?;
+                let mut shared = false;
+                let mut mutable = false;
+                if p.peek::<kw::shared>()? {
+                    p.parse::<kw::shared>()?;
+                    shared = true;
+                }
+                if p.peek::<kw::r#mut>()? {
+                    p.parse::<kw::r#mut>()?;
+                    mutable = true;
+                }
                 Ok(GlobalType {
-                    ty: parser.parse()?,
-                    mutable: true,
+                    ty: p.parse()?,
+                    mutable,
+                    shared,
                 })
             })
         } else {
             Ok(GlobalType {
                 ty: parser.parse()?,
                 mutable: false,
+                shared: false,
             })
         }
     }
@@ -458,6 +490,8 @@ pub enum MemoryType {
         limits: Limits,
         /// Whether or not this is a shared (atomic) memory type
         shared: bool,
+        /// The custom page size for this memory, if any.
+        page_size_log2: Option<u32>,
     },
     /// A 64-bit memory
     B64 {
@@ -465,7 +499,29 @@ pub enum MemoryType {
         limits: Limits64,
         /// Whether or not this is a shared (atomic) memory type
         shared: bool,
+        /// The custom page size for this memory, if any.
+        page_size_log2: Option<u32>,
     },
+}
+
+fn page_size(parser: Parser<'_>) -> Result<Option<u32>> {
+    if parser.peek::<LParen>()? {
+        Ok(Some(parser.parens(|parser| {
+            parser.parse::<kw::pagesize>()?;
+            let span = parser.cur_span();
+            let size = parser.parse::<u32>()?;
+            if size.is_power_of_two() {
+                Ok(size.ilog2())
+            } else {
+                Err(Error::new(
+                    span,
+                    format!("invalid custom page size: {size}"),
+                ))
+            }
+        })?))
+    } else {
+        Ok(None)
+    }
 }
 
 impl<'a> Parse<'a> for MemoryType {
@@ -474,12 +530,22 @@ impl<'a> Parse<'a> for MemoryType {
             parser.parse::<kw::i64>()?;
             let limits = parser.parse()?;
             let shared = parser.parse::<Option<kw::shared>>()?.is_some();
-            Ok(MemoryType::B64 { limits, shared })
+            let page_size = page_size(parser)?;
+            Ok(MemoryType::B64 {
+                limits,
+                shared,
+                page_size_log2: page_size,
+            })
         } else {
             parser.parse::<Option<kw::i32>>()?;
             let limits = parser.parse()?;
             let shared = parser.parse::<Option<kw::shared>>()?.is_some();
-            Ok(MemoryType::B32 { limits, shared })
+            let page_size = page_size(parser)?;
+            Ok(MemoryType::B32 {
+                limits,
+                shared,
+                page_size_log2: page_size,
+            })
         }
     }
 }

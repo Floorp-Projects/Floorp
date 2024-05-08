@@ -230,8 +230,8 @@ pub enum PrimitiveValType {
     U32,
     S64,
     U64,
-    Float32,
-    Float64,
+    F32,
+    F64,
     Char,
     String,
 }
@@ -266,12 +266,18 @@ impl<'a> Parse<'a> for PrimitiveValType {
         } else if l.peek::<kw::u64>()? {
             parser.parse::<kw::u64>()?;
             Ok(Self::U64)
+        } else if l.peek::<kw::f32>()? {
+            parser.parse::<kw::f32>()?;
+            Ok(Self::F32)
+        } else if l.peek::<kw::f64>()? {
+            parser.parse::<kw::f64>()?;
+            Ok(Self::F64)
         } else if l.peek::<kw::float32>()? {
             parser.parse::<kw::float32>()?;
-            Ok(Self::Float32)
+            Ok(Self::F32)
         } else if l.peek::<kw::float64>()? {
             parser.parse::<kw::float64>()?;
-            Ok(Self::Float64)
+            Ok(Self::F64)
         } else if l.peek::<kw::char>()? {
             parser.parse::<kw::char>()?;
             Ok(Self::Char)
@@ -297,6 +303,8 @@ impl Peek for PrimitiveValType {
                 | Some(("u32", _))
                 | Some(("s64", _))
                 | Some(("u64", _))
+                | Some(("f32", _))
+                | Some(("f64", _))
                 | Some(("float32", _))
                 | Some(("float64", _))
                 | Some(("char", _))

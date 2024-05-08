@@ -32,6 +32,14 @@ impl Wat<'_> {
             Wat::Component(c) => c.encode(),
         }
     }
+
+    /// Returns the defining span of this file.
+    pub fn span(&self) -> Span {
+        match self {
+            Wat::Module(m) => m.span,
+            Wat::Component(c) => c.span,
+        }
+    }
 }
 
 impl<'a> Parse<'a> for Wat<'a> {

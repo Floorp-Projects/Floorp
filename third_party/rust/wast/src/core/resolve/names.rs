@@ -457,6 +457,10 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 self.resolver.resolve(i, Ns::Global)?;
             }
 
+            GlobalAtomicSet(i) | GlobalAtomicGet(i) => {
+                self.resolver.resolve(&mut i.index, Ns::Global)?;
+            }
+
             LocalSet(i) | LocalGet(i) | LocalTee(i) => {
                 assert!(self.scopes.len() > 0);
                 // Resolve a local by iterating over scopes from most recent
@@ -488,30 +492,6 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
 
             CallRef(i) | ReturnCallRef(i) => {
                 self.resolver.resolve(i, Ns::Type)?;
-            }
-
-            FuncBind(b) => {
-                self.resolver.resolve_type_use(&mut b.ty)?;
-            }
-
-            Let(t) => {
-                // Resolve (ref T) in locals
-                for local in t.locals.iter_mut() {
-                    self.resolver.resolve_valtype(&mut local.ty)?;
-                }
-
-                // Register all locals defined in this let
-                let mut scope = Namespace::default();
-                for local in t.locals.iter() {
-                    scope.register(local.id, "local")?;
-                }
-                self.scopes.push(scope);
-                self.blocks.push(ExprBlock {
-                    label: t.block.label,
-                    pushed_scope: true,
-                });
-
-                self.resolve_block_type(&mut t.block)?;
             }
 
             Block(bt) | If(bt) | Loop(bt) | Try(bt) => {

@@ -18,11 +18,9 @@ fn smoke_test_component() {
             ok_count += 1;
             let component = component.to_bytes();
 
-            let mut validator =
-                wasmparser::Validator::new_with_features(wasmparser::WasmFeatures {
-                    component_model: true,
-                    ..Default::default()
-                });
+            let mut validator = wasmparser::Validator::new_with_features(
+                wasmparser::WasmFeatures::default() | wasmparser::WasmFeatures::COMPONENT_MODEL,
+            );
             if let Err(e) = validator.validate_all(&component) {
                 std::fs::write("component.wasm", &component).unwrap();
                 panic!(

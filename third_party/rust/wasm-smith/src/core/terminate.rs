@@ -23,6 +23,7 @@ impl Module {
         self.globals.push(GlobalType {
             val_type: ValType::I32,
             mutable: true,
+            shared: false,
         });
         self.defined_globals
             .push((fuel_global, ConstExpr::i32_const(default_fuel as i32)));

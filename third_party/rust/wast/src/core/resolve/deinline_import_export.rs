@@ -50,7 +50,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                     // field here instead, switching this to a `Normal` memory.
                     MemoryKind::Inline { is_32, ref data } => {
                         let len = data.iter().map(|l| l.len()).sum::<usize>() as u32;
-                        let pages = (len + page_size() - 1) / page_size();
+                        let pages = (len + default_page_size() - 1) / default_page_size();
                         let kind = MemoryKind::Normal(if is_32 {
                             MemoryType::B32 {
                                 limits: Limits {
@@ -58,6 +58,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                                     max: Some(pages),
                                 },
                                 shared: false,
+                                page_size_log2: None,
                             }
                         } else {
                             MemoryType::B64 {
@@ -66,6 +67,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                                     max: Some(u64::from(pages)),
                                 },
                                 shared: false,
+                                page_size_log2: None,
                             }
                         });
                         let data = match mem::replace(&mut m.kind, kind) {
@@ -212,7 +214,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
         fields.push(item);
     }
 
-    fn page_size() -> u32 {
+    fn default_page_size() -> u32 {
         1 << 16
     }
 }

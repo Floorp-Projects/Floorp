@@ -139,7 +139,6 @@ impl<'a> Expander<'a> {
             Instruction::Block(bt)
             | Instruction::If(bt)
             | Instruction::Loop(bt)
-            | Instruction::Let(LetType { block: bt, .. })
             | Instruction::Try(bt)
             | Instruction::TryTable(TryTable { block: bt, .. }) => {
                 // No expansion necessary, a type reference is already here.
@@ -173,9 +172,6 @@ impl<'a> Expander<'a> {
                     }
                 }
                 self.expand_type_use(&mut bt.ty);
-            }
-            Instruction::FuncBind(b) => {
-                self.expand_type_use(&mut b.ty);
             }
             Instruction::CallIndirect(c) | Instruction::ReturnCallIndirect(c) => {
                 self.expand_type_use(&mut c.ty);

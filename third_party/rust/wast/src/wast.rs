@@ -113,8 +113,7 @@ impl WastDirective<'_> {
     /// Returns the location in the source that this directive was defined at
     pub fn span(&self) -> Span {
         match self {
-            WastDirective::Wat(QuoteWat::Wat(Wat::Module(m))) => m.span,
-            WastDirective::Wat(QuoteWat::Wat(Wat::Component(c))) => c.span,
+            WastDirective::Wat(QuoteWat::Wat(w)) => w.span(),
             WastDirective::Wat(QuoteWat::QuoteModule(span, _)) => *span,
             WastDirective::Wat(QuoteWat::QuoteComponent(span, _)) => *span,
             WastDirective::AssertMalformed { span, .. }
@@ -219,9 +218,21 @@ pub enum WastExecute<'a> {
     Invoke(WastInvoke<'a>),
     Wat(Wat<'a>),
     Get {
+        span: Span,
         module: Option<Id<'a>>,
         global: &'a str,
     },
+}
+
+impl<'a> WastExecute<'a> {
+    /// Returns the first span for this execute statement.
+    pub fn span(&self) -> Span {
+        match self {
+            WastExecute::Invoke(i) => i.span,
+            WastExecute::Wat(i) => i.span(),
+            WastExecute::Get { span, .. } => *span,
+        }
+    }
 }
 
 impl<'a> Parse<'a> for WastExecute<'a> {
@@ -232,8 +243,9 @@ impl<'a> Parse<'a> for WastExecute<'a> {
         } else if l.peek::<kw::module>()? || l.peek::<kw::component>()? {
             Ok(WastExecute::Wat(parse_wat(parser)?))
         } else if l.peek::<kw::get>()? {
-            parser.parse::<kw::get>()?;
+            let span = parser.parse::<kw::get>()?.0;
             Ok(WastExecute::Get {
+                span,
                 module: parser.parse()?,
                 global: parser.parse()?,
             })
@@ -296,28 +308,47 @@ impl QuoteWat<'_> {
     /// Encodes this module to bytes, either by encoding the module directly or
     /// parsing the contents and then encoding it.
     pub fn encode(&mut self) -> Result<Vec<u8>, Error> {
+        match self.to_test()? {
+            QuoteWatTest::Binary(bytes) => Ok(bytes),
+            QuoteWatTest::Text(text) => {
+                let text = std::str::from_utf8(&text).map_err(|_| {
+                    let span = self.span();
+                    Error::new(span, "malformed UTF-8 encoding".to_string())
+                })?;
+                let buf = ParseBuffer::new(&text)?;
+                let mut wat = parser::parse::<Wat<'_>>(&buf)?;
+                wat.encode()
+            }
+        }
+    }
+
+    /// Converts this to either a `QuoteWatTest::Binary` or
+    /// `QuoteWatTest::Text` depending on what it is internally.
+    pub fn to_test(&mut self) -> Result<QuoteWatTest, Error> {
         let (source, prefix) = match self {
-            QuoteWat::Wat(m) => return m.encode(),
+            QuoteWat::Wat(m) => return m.encode().map(QuoteWatTest::Binary),
             QuoteWat::QuoteModule(_, source) => (source, None),
             QuoteWat::QuoteComponent(_, source) => (source, Some("(component")),
         };
-        let mut ret = String::new();
-        for (span, src) in source {
-            match std::str::from_utf8(src) {
-                Ok(s) => ret.push_str(s),
-                Err(_) => {
-                    return Err(Error::new(*span, "malformed UTF-8 encoding".to_string()));
-                }
-            }
-            ret.push(' ');
+        let mut ret = Vec::new();
+        for (_, src) in source {
+            ret.extend_from_slice(src);
+            ret.push(b' ');
         }
         if let Some(prefix) = prefix {
-            ret.insert_str(0, prefix);
-            ret.push(')');
+            ret.splice(0..0, prefix.as_bytes().iter().copied());
+            ret.push(b')');
         }
-        let buf = ParseBuffer::new(&ret)?;
-        let mut wat = parser::parse::<Wat<'_>>(&buf)?;
-        wat.encode()
+        Ok(QuoteWatTest::Text(ret))
+    }
+
+    /// Returns the defining span of this module.
+    pub fn span(&self) -> Span {
+        match self {
+            QuoteWat::Wat(w) => w.span(),
+            QuoteWat::QuoteModule(span, _) => *span,
+            QuoteWat::QuoteComponent(span, _) => *span,
+        }
     }
 }
 
@@ -343,6 +374,14 @@ impl<'a> Parse<'a> for QuoteWat<'a> {
             Ok(QuoteWat::Wat(parse_wat(parser)?))
         }
     }
+}
+
+/// Returned from [`QuoteWat::to_test`].
+#[allow(missing_docs)]
+#[derive(Debug)]
+pub enum QuoteWatTest {
+    Binary(Vec<u8>),
+    Text(Vec<u8>),
 }
 
 #[derive(Debug)]
