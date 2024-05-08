@@ -110,7 +110,9 @@ class TabPreview @JvmOverloads constructor(
                 },
             )
 
-            removeView(binding.fakeToolbar)
+            if (!isToolbarAtTop) {
+                removeView(binding.fakeToolbar)
+            }
         }
 
         // Change view properties to avoid confusing the UI tests
