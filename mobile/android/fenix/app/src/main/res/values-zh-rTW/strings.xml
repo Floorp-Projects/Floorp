@@ -2424,7 +2424,7 @@
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title">感謝您回報！</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
-    <string name="review_quality_check_analysis_requested_info_body">我們將在 24 小時內提供更新過的評論分析資訊，請稍候再回來。</string>
+    <string name="review_quality_check_analysis_requested_info_body">我們將在 24 小時內提供更新過的評論分析資訊，請稍後再回來。</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">我們無法檢查這些評論</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->

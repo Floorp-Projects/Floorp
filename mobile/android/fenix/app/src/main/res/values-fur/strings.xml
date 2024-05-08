@@ -2524,6 +2524,8 @@
     <string name="translations_bottom_sheet_negative_button">No cumò</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
     <string name="translations_bottom_sheet_negative_button_restore">Mostre origjinâl</string>
+    <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
+    <string name="translations_bottom_sheet_restore_accessibility_announcement">Cjariade pagjine origjinâl no tradote</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Fat</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
