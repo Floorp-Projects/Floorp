@@ -32,6 +32,12 @@ add_task(async function test_tokenizer() {
       ],
     },
     {
+      desc: "do not separate restriction char at beginning in search mode",
+      searchMode: { engineName: "testEngine" },
+      searchString: `${UrlbarTokenizer.RESTRICT.SEARCH}test`,
+      expectedTokens: [{ value: "?test", type: UrlbarTokenizer.TYPE.TEXT }],
+    },
+    {
       desc: "separate restriction char at end",
       searchString: `test ${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
       expectedTokens: [

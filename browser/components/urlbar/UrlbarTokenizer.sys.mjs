@@ -246,7 +246,7 @@ export var UrlbarTokenizer = {
       queryContext.tokens = [];
       return queryContext;
     }
-    let unfiltered = splitString(queryContext.searchString);
+    let unfiltered = splitString(queryContext);
     let tokens = filterTokens(unfiltered);
     queryContext.tokens = tokens;
     return queryContext;
@@ -276,13 +276,17 @@ const CHAR_TO_TYPE_MAP = new Map(
 );
 
 /**
- * Given a search string, splits it into string tokens.
+ * Given a queryContext object, splits its searchString into string tokens.
  *
- * @param {string} searchString
- *        The search string to split
+ * @param {UrlbarQueryContext} queryContext
+ *        The query context object to tokenize.
+ * @param {string} queryContext.searchString
+ *        The search string to split.
+ * @param {object} queryContext.searchMode
+ *        A search mode object.
  * @returns {Array} An array of string tokens.
  */
-function splitString(searchString) {
+function splitString({ searchString, searchMode }) {
   // The first step is splitting on unicode whitespaces. We ignore whitespaces
   // if the search string starts with "data:", to better support Web developers
   // and compatiblity with other browsers.
@@ -327,7 +331,8 @@ function splitString(searchString) {
   // allow for a typed question to yield only search results.
   if (
     CHAR_TO_TYPE_MAP.has(firstToken[0]) &&
-    !UrlbarTokenizer.REGEXP_PERCENT_ENCODED_START.test(firstToken)
+    !UrlbarTokenizer.REGEXP_PERCENT_ENCODED_START.test(firstToken) &&
+    !searchMode
   ) {
     tokens[0] = firstToken.substring(1);
     tokens.splice(0, 0, firstToken[0]);
