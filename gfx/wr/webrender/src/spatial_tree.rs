@@ -338,7 +338,6 @@ impl SceneSpatialTree {
     ) -> SpatialNodeIndex {
         let mut real_scroll_root = self.root_reference_frame_index;
         let mut outermost_scroll_root = self.root_reference_frame_index;
-        let mut current_scroll_root_is_sticky = false;
         let mut node_index = spatial_node_index;
 
         while node_index != self.root_reference_frame_index {
@@ -355,19 +354,10 @@ impl SceneSpatialTree {
                             // we have encountered, as they may end up with a non-axis-aligned transform.
                             real_scroll_root = self.root_reference_frame_index;
                             outermost_scroll_root = self.root_reference_frame_index;
-                            current_scroll_root_is_sticky = false;
                         }
                     }
                 }
-                SpatialNodeType::StickyFrame(..) => {
-                    // Though not a scroll frame, we treat sticky frames as scroll roots to ensure they
-                    // are given a separate picture cache slice.
-                    outermost_scroll_root = node_index;
-                    real_scroll_root = node_index;
-                    // Set this true so that we don't select an ancestor scroll frame as the scroll root
-                    // on a subsequent iteration.
-                    current_scroll_root_is_sticky = true;
-                }
+                SpatialNodeType::StickyFrame(..) => {}
                 SpatialNodeType::ScrollFrame(ref info) => {
                     match info.frame_kind {
                         ScrollFrameKind::PipelineRoot { is_root_pipeline } => {
@@ -381,29 +371,24 @@ impl SceneSpatialTree {
                             // later on, even if it's not actually scrollable.
                             outermost_scroll_root = node_index;
 
-                            // If the previously identified scroll root is sticky then we don't
-                            // want to choose an ancestor scroll root, as we want the sticky item
-                            // to have its own picture cache slice.
-                            if !current_scroll_root_is_sticky {
-                                // If the scroll root has no scrollable area, we don't want to
-                                // consider it. This helps pages that have a nested scroll root
-                                // within a redundant scroll root to avoid selecting the wrong
-                                // reference spatial node for a picture cache.
-                                if info.scrollable_size.width > MIN_SCROLLABLE_AMOUNT ||
-                                   info.scrollable_size.height > MIN_SCROLLABLE_AMOUNT {
-                                    // Since we are skipping redundant scroll roots, we may end up
-                                    // selecting inner scroll roots that are very small. There is
-                                    // no performance benefit to creating a slice for these roots,
-                                    // as they are cheap to rasterize. The size comparison is in
-                                    // local-space, but makes for a reasonable estimate. The value
-                                    // is arbitrary, but is generally small enough to ignore things
-                                    // like scroll roots around text input elements.
-                                    if info.viewport_rect.width() > MIN_SCROLL_ROOT_SIZE &&
-                                       info.viewport_rect.height() > MIN_SCROLL_ROOT_SIZE {
-                                        // If we've found a root that is scrollable, and a reasonable
-                                        // size, select that as the current root for this node
-                                        real_scroll_root = node_index;
-                                    }
+                            // If the scroll root has no scrollable area, we don't want to
+                            // consider it. This helps pages that have a nested scroll root
+                            // within a redundant scroll root to avoid selecting the wrong
+                            // reference spatial node for a picture cache.
+                            if info.scrollable_size.width > MIN_SCROLLABLE_AMOUNT ||
+                               info.scrollable_size.height > MIN_SCROLLABLE_AMOUNT {
+                                // Since we are skipping redundant scroll roots, we may end up
+                                // selecting inner scroll roots that are very small. There is
+                                // no performance benefit to creating a slice for these roots,
+                                // as they are cheap to rasterize. The size comparison is in
+                                // local-space, but makes for a reasonable estimate. The value
+                                // is arbitrary, but is generally small enough to ignore things
+                                // like scroll roots around text input elements.
+                                if info.viewport_rect.width() > MIN_SCROLL_ROOT_SIZE &&
+                                   info.viewport_rect.height() > MIN_SCROLL_ROOT_SIZE {
+                                    // If we've found a root that is scrollable, and a reasonable
+                                    // size, select that as the current root for this node
+                                    real_scroll_root = node_index;
                                 }
                             }
                         }
@@ -2021,58 +2006,6 @@ fn test_find_scroll_root_2d_scale() {
     );
 
     assert_eq!(st.find_scroll_root(sub_scroll), sub_scroll);
-}
-
-/// Tests that a sticky spatial node is chosen as the scroll root rather than
-/// its parent scroll frame
-#[test]
-fn test_find_scroll_root_sticky() {
-    let mut st = SceneSpatialTree::new();
-    let pid = PipelineInstanceId::new(0);
-
-    let root = st.add_reference_frame(
-        st.root_reference_frame_index(),
-        TransformStyle::Flat,
-        PropertyBinding::Value(LayoutTransform::identity()),
-        ReferenceFrameKind::Transform {
-            is_2d_scale_translation: true,
-            should_snap: true,
-            paired_with_perspective: false,
-        },
-        LayoutVector2D::new(0.0, 0.0),
-        PipelineId::dummy(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0), PipelineId::dummy(), pid),
-    );
-
-    let scroll = st.add_scroll_frame(
-        root,
-        ExternalScrollId(1, PipelineId::dummy()),
-        PipelineId::dummy(),
-        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
-        &LayoutSize::new(400.0, 800.0),
-        ScrollFrameKind::Explicit,
-        LayoutVector2D::new(0.0, 0.0),
-        APZScrollGeneration::default(),
-        HasScrollLinkedEffect::No,
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1), PipelineId::dummy(), pid),
-    );
-
-    let sticky = st.add_sticky_frame(
-        scroll,
-        StickyFrameInfo {
-            frame_rect: LayoutRect::from_size(LayoutSize::new(400.0, 100.0)),
-            margins: euclid::SideOffsets2D::new(Some(0.0), None, None, None),
-            vertical_offset_bounds: api::StickyOffsetBounds::new(0.0, 0.0),
-            horizontal_offset_bounds: api::StickyOffsetBounds::new(0.0, 0.0),
-            previously_applied_offset: LayoutVector2D::zero(),
-            current_offset: LayoutVector2D::zero(),
-        },
-        PipelineId::dummy(),
-        SpatialTreeItemKey::new(0, 2),
-        pid,
-    );
-
-    assert_eq!(st.find_scroll_root(sticky), sticky);
 }
 
 #[test]
