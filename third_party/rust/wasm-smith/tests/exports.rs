@@ -1,3 +1,5 @@
+#![cfg(feature = "wasmparser")]
+
 use arbitrary::{Arbitrary, Unstructured};
 use rand::{rngs::SmallRng, RngCore, SeedableRng};
 use wasm_smith::{Config, Module};
@@ -18,9 +20,9 @@ enum ExportType {
 fn smoke_test_single_export() {
     let test = r#"
         (module
-        	(func (export "foo") (param i32) (result i64)
-        		unreachable
-        	)
+            (func (export "foo") (param i32) (result i64)
+                unreachable
+            )
         )
         "#;
     smoke_test_exports(test, 11)
@@ -30,15 +32,15 @@ fn smoke_test_single_export() {
 fn smoke_test_multiple_exports() {
     let test = r#"
         (module
-        	(func (export "a") (param i32) (result i64)
-        		unreachable
-        	)
-        	(func (export "b")
-        		unreachable
-        	)
-        	(func (export "c")
-        		unreachable
-        	)
+            (func (export "a") (param i32) (result i64)
+                unreachable
+            )
+            (func (export "b")
+                unreachable
+            )
+            (func (export "c")
+                unreachable
+            )
         )
         "#;
     smoke_test_exports(test, 12)
@@ -48,9 +50,9 @@ fn smoke_test_multiple_exports() {
 fn smoke_test_exported_global() {
     let test = r#"
         (module
-        	(func (export "a") (param i32 i32 f32 f64) (result f32)
-        		unreachable
-        	)
+            (func (export "a") (param i32 i32 f32 f64) (result f32)
+                unreachable
+            )
             (global (export "glob") f64 f64.const 0)
         )
         "#;

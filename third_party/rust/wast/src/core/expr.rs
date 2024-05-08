@@ -184,7 +184,6 @@ impl<'a> ExpressionParser<'a> {
                         // seen
                         i @ Instruction::Block(_)
                         | i @ Instruction::Loop(_)
-                        | i @ Instruction::Let(_)
                         | i @ Instruction::TryTable(_) => {
                             self.instrs.push(i);
                             self.stack.push(Level::EndWith(Instruction::End(None)));
@@ -350,7 +349,7 @@ macro_rules! instructions {
     }) => (
         /// A listing of all WebAssembly instructions that can be in a module
         /// that this crate currently parses.
-        #[derive(Debug)]
+        #[derive(Debug, Clone)]
         #[allow(missing_docs)]
         pub enum Instruction<'a> {
             $(
@@ -468,8 +467,6 @@ instructions! {
         // function-references proposal
         CallRef(Index<'a>) : [0x14] : "call_ref",
         ReturnCallRef(Index<'a>) : [0x15] : "return_call_ref",
-        FuncBind(FuncBindType<'a>) : [0x16] : "func.bind",
-        Let(LetType<'a>) : [0x17] : "let",
 
         Drop : [0x1a] : "drop",
         Select(SelectTypes<'a>) : [] : "select",
@@ -574,8 +571,8 @@ instructions! {
 
         I32Const(i32) : [0x41] : "i32.const",
         I64Const(i64) : [0x42] : "i64.const",
-        F32Const(Float32) : [0x43] : "f32.const",
-        F64Const(Float64) : [0x44] : "f64.const",
+        F32Const(F32) : [0x43] : "f32.const",
+        F64Const(F64) : [0x44] : "f64.const",
 
         I32Clz : [0x67] : "i32.clz",
         I32Ctz : [0x68] : "i32.ctz",
@@ -802,6 +799,10 @@ instructions! {
         I64AtomicRmw8CmpxchgU(MemArg<1>) : [0xfe, 0x4c] : "i64.atomic.rmw8.cmpxchg_u",
         I64AtomicRmw16CmpxchgU(MemArg<2>) : [0xfe, 0x4d] : "i64.atomic.rmw16.cmpxchg_u",
         I64AtomicRmw32CmpxchgU(MemArg<4>) : [0xfe, 0x4e] : "i64.atomic.rmw32.cmpxchg_u",
+
+        // proposal: shared-everything-threads
+        GlobalAtomicGet(OrderedAccess<'a>) : [0xfe, 0x4f] : "global.atomic.get",
+        GlobalAtomicSet(OrderedAccess<'a>) : [0xfe, 0x50] : "global.atomic.set",
 
         // proposal: simd
         //
@@ -1123,7 +1124,7 @@ impl<'a> Instruction<'a> {
 ///
 /// This is used to label blocks and also annotate what types are expected for
 /// the block.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(missing_docs)]
 pub struct BlockType<'a> {
     pub label: Option<Id<'a>>,
@@ -1143,7 +1144,7 @@ impl<'a> Parse<'a> for BlockType<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(missing_docs)]
 pub struct TryTable<'a> {
     pub block: Box<BlockType<'a>>,
@@ -1187,7 +1188,7 @@ impl<'a> Parse<'a> for TryTable<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(missing_docs)]
 pub enum TryTableCatchKind<'a> {
     // Catch a tagged exception, do not capture an exnref.
@@ -1210,50 +1211,16 @@ impl<'a> TryTableCatchKind<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(missing_docs)]
 pub struct TryTableCatch<'a> {
     pub kind: TryTableCatchKind<'a>,
     pub label: Index<'a>,
 }
 
-/// Extra information associated with the func.bind instruction.
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub struct FuncBindType<'a> {
-    pub ty: TypeUse<'a, FunctionType<'a>>,
-}
-
-impl<'a> Parse<'a> for FuncBindType<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        Ok(FuncBindType {
-            ty: parser
-                .parse::<TypeUse<'a, FunctionTypeNoNames<'a>>>()?
-                .into(),
-        })
-    }
-}
-
-/// Extra information associated with the let instruction.
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub struct LetType<'a> {
-    pub block: Box<BlockType<'a>>,
-    pub locals: Box<[Local<'a>]>,
-}
-
-impl<'a> Parse<'a> for LetType<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        Ok(LetType {
-            block: parser.parse()?,
-            locals: Local::parse_remainder(parser)?.into(),
-        })
-    }
-}
-
 /// Extra information associated with the `br_table` instruction.
 #[allow(missing_docs)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BrTableIndices<'a> {
     pub labels: Vec<Index<'a>>,
     pub default: Index<'a>,
@@ -1271,7 +1238,7 @@ impl<'a> Parse<'a> for BrTableIndices<'a> {
 }
 
 /// Payload for lane-related instructions. Unsigned with no + prefix.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LaneArg {
     /// The lane argument.
     pub lane: u8,
@@ -1299,7 +1266,7 @@ impl<'a> Parse<'a> for LaneArg {
 
 /// Payload for memory-related instructions indicating offset/alignment of
 /// memory accesses.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MemArg<'a> {
     /// The alignment of this access.
     ///
@@ -1374,7 +1341,7 @@ impl<'a> MemArg<'a> {
 }
 
 /// Extra data associated with the `loadN_lane` and `storeN_lane` instructions.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LoadOrStoreLane<'a> {
     /// The memory argument for this instruction.
     pub memarg: MemArg<'a>,
@@ -1428,7 +1395,7 @@ impl<'a> LoadOrStoreLane<'a> {
 }
 
 /// Extra data associated with the `call_indirect` instruction.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CallIndirect<'a> {
     /// The table that this call is going to be indexing.
     pub table: Index<'a>,
@@ -1449,7 +1416,7 @@ impl<'a> Parse<'a> for CallIndirect<'a> {
 }
 
 /// Extra data associated with the `table.init` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TableInit<'a> {
     /// The index of the table we're copying into.
     pub table: Index<'a>,
@@ -1471,7 +1438,7 @@ impl<'a> Parse<'a> for TableInit<'a> {
 }
 
 /// Extra data associated with the `table.copy` instruction.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TableCopy<'a> {
     /// The index of the destination table to copy into.
     pub dst: Index<'a>,
@@ -1493,7 +1460,7 @@ impl<'a> Parse<'a> for TableCopy<'a> {
 }
 
 /// Extra data associated with unary table instructions.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TableArg<'a> {
     /// The index of the table argument.
     pub dst: Index<'a>,
@@ -1511,7 +1478,7 @@ impl<'a> Parse<'a> for TableArg<'a> {
 }
 
 /// Extra data associated with unary memory instructions.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MemoryArg<'a> {
     /// The index of the memory space.
     pub mem: Index<'a>,
@@ -1529,7 +1496,7 @@ impl<'a> Parse<'a> for MemoryArg<'a> {
 }
 
 /// Extra data associated with the `memory.init` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MemoryInit<'a> {
     /// The index of the data segment we're copying into memory.
     pub data: Index<'a>,
@@ -1551,7 +1518,7 @@ impl<'a> Parse<'a> for MemoryInit<'a> {
 }
 
 /// Extra data associated with the `memory.copy` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MemoryCopy<'a> {
     /// The index of the memory we're copying from.
     pub src: Index<'a>,
@@ -1573,7 +1540,7 @@ impl<'a> Parse<'a> for MemoryCopy<'a> {
 }
 
 /// Extra data associated with the `struct.get/set` instructions
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StructAccess<'a> {
     /// The index of the struct type we're accessing.
     pub r#struct: Index<'a>,
@@ -1591,7 +1558,7 @@ impl<'a> Parse<'a> for StructAccess<'a> {
 }
 
 /// Extra data associated with the `array.fill` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ArrayFill<'a> {
     /// The index of the array type we're filling.
     pub array: Index<'a>,
@@ -1606,7 +1573,7 @@ impl<'a> Parse<'a> for ArrayFill<'a> {
 }
 
 /// Extra data associated with the `array.copy` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ArrayCopy<'a> {
     /// The index of the array type we're copying to.
     pub dest_array: Index<'a>,
@@ -1624,7 +1591,7 @@ impl<'a> Parse<'a> for ArrayCopy<'a> {
 }
 
 /// Extra data associated with the `array.init_[data/elem]` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ArrayInit<'a> {
     /// The index of the array type we're initializing.
     pub array: Index<'a>,
@@ -1642,7 +1609,7 @@ impl<'a> Parse<'a> for ArrayInit<'a> {
 }
 
 /// Extra data associated with the `array.new_fixed` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ArrayNewFixed<'a> {
     /// The index of the array type we're accessing.
     pub array: Index<'a>,
@@ -1660,7 +1627,7 @@ impl<'a> Parse<'a> for ArrayNewFixed<'a> {
 }
 
 /// Extra data associated with the `array.new_data` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ArrayNewData<'a> {
     /// The index of the array type we're accessing.
     pub array: Index<'a>,
@@ -1678,7 +1645,7 @@ impl<'a> Parse<'a> for ArrayNewData<'a> {
 }
 
 /// Extra data associated with the `array.new_elem` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ArrayNewElem<'a> {
     /// The index of the array type we're accessing.
     pub array: Index<'a>,
@@ -1696,7 +1663,7 @@ impl<'a> Parse<'a> for ArrayNewElem<'a> {
 }
 
 /// Extra data associated with the `ref.cast` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RefCast<'a> {
     /// The type to cast to.
     pub r#type: RefType<'a>,
@@ -1711,7 +1678,7 @@ impl<'a> Parse<'a> for RefCast<'a> {
 }
 
 /// Extra data associated with the `ref.test` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RefTest<'a> {
     /// The type to test for.
     pub r#type: RefType<'a>,
@@ -1726,7 +1693,7 @@ impl<'a> Parse<'a> for RefTest<'a> {
 }
 
 /// Extra data associated with the `br_on_cast` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BrOnCast<'a> {
     /// The label to branch to.
     pub label: Index<'a>,
@@ -1747,7 +1714,7 @@ impl<'a> Parse<'a> for BrOnCast<'a> {
 }
 
 /// Extra data associated with the `br_on_cast_fail` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BrOnCastFail<'a> {
     /// The label to branch to.
     pub label: Index<'a>,
@@ -1767,16 +1734,65 @@ impl<'a> Parse<'a> for BrOnCastFail<'a> {
     }
 }
 
+/// The memory ordering for atomic instructions.
+///
+/// For an in-depth explanation of memory orderings, see the C++ documentation
+/// for [`memory_order`] or the Rust documentation for [`atomic::Ordering`].
+///
+/// [`memory_order`]: https://en.cppreference.com/w/cpp/atomic/memory_order
+/// [`atomic::Ordering`]: https://doc.rust-lang.org/std/sync/atomic/enum.Ordering.html
+#[derive(Clone, Debug)]
+pub enum Ordering {
+    /// Like `AcqRel` but all threads see all sequentially consistent operations
+    /// in the same order.
+    AcqRel,
+    /// For a load, it acquires; this orders all operations before the last
+    /// "releasing" store. For a store, it releases; this orders all operations
+    /// before it at the next "acquiring" load.
+    SeqCst,
+}
+
+impl<'a> Parse<'a> for Ordering {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        if parser.peek::<kw::seq_cst>()? {
+            parser.parse::<kw::seq_cst>()?;
+            Ok(Ordering::SeqCst)
+        } else if parser.peek::<kw::acq_rel>()? {
+            parser.parse::<kw::acq_rel>()?;
+            Ok(Ordering::AcqRel)
+        } else {
+            Err(parser.error("expected a memory ordering: `seq_cst` or `acq_rel`"))
+        }
+    }
+}
+
+/// Extra data associated with the `global.atomic.*` instructions.
+#[derive(Clone, Debug)]
+pub struct OrderedAccess<'a> {
+    /// The memory ordering for this atomic instruction.
+    pub ordering: Ordering,
+    /// The index of the global to access.
+    pub index: Index<'a>,
+}
+
+impl<'a> Parse<'a> for OrderedAccess<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        let ordering = parser.parse()?;
+        let index = parser.parse()?;
+        Ok(OrderedAccess { ordering, index })
+    }
+}
+
 /// Different ways to specify a `v128.const` instruction
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[allow(missing_docs)]
 pub enum V128Const {
     I8x16([i8; 16]),
     I16x8([i16; 8]),
     I32x4([i32; 4]),
     I64x2([i64; 2]),
-    F32x4([Float32; 4]),
-    F64x2([Float64; 2]),
+    F32x4([F32; 4]),
+    F64x2([F64; 2]),
 }
 
 impl V128Const {
@@ -1934,7 +1950,7 @@ impl<'a> Parse<'a> for V128Const {
 }
 
 /// Lanes being shuffled in the `i8x16.shuffle` instruction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct I8x16Shuffle {
     #[allow(missing_docs)]
     pub lanes: [u8; 16],
@@ -1966,7 +1982,7 @@ impl<'a> Parse<'a> for I8x16Shuffle {
 }
 
 /// Payload of the `select` instructions
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SelectTypes<'a> {
     #[allow(missing_docs)]
     pub tys: Option<Vec<ValType<'a>>>,

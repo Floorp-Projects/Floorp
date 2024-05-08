@@ -1,6 +1,6 @@
 use crate::kw;
 use crate::parser::{Cursor, Parse, Parser, Peek, Result};
-use crate::token::{Float32, Float64};
+use crate::token::{F32, F64};
 
 /// Expression that can be used inside of `invoke` expressions for core wasm
 /// functions.
@@ -16,8 +16,8 @@ pub enum WastVal<'a> {
     S32(i32),
     U64(u64),
     S64(i64),
-    Float32(Float32),
-    Float64(Float64),
+    F32(F32),
+    F64(F64),
     Char(char),
     String(&'a str),
     List(Vec<WastVal<'a>>),
@@ -53,8 +53,8 @@ static CASES: &[(&str, fn(Parser<'_>) -> Result<WastVal<'_>>)] = {
         ("s32.const", |p| Ok(S32(p.parse()?))),
         ("u64.const", |p| Ok(U64(p.parse()?))),
         ("s64.const", |p| Ok(S64(p.parse()?))),
-        ("f32.const", |p| Ok(Float32(p.parse()?))),
-        ("f64.const", |p| Ok(Float64(p.parse()?))),
+        ("f32.const", |p| Ok(F32(p.parse()?))),
+        ("f64.const", |p| Ok(F64(p.parse()?))),
         ("char.const", |p| {
             let s = p.parse::<&str>()?;
             let mut ch = s.chars();

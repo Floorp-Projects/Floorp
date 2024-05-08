@@ -295,6 +295,7 @@ impl<'a> Encode for HeapType<'a> {
             HeapType::I31 => e.push(0x6c),
             HeapType::NoFunc => e.push(0x73),
             HeapType::NoExtern => e.push(0x72),
+            HeapType::NoExn => e.push(0x74),
             HeapType::None => e.push(0x71),
             // Note that this is encoded as a signed leb128 so be sure to cast
             // to an i64 first
@@ -349,6 +350,11 @@ impl<'a> Encode for RefType<'a> {
                 nullable: true,
                 heap: HeapType::NoExtern,
             } => e.push(0x72),
+            // The 'nullexnref' binary abbreviation
+            RefType {
+                nullable: true,
+                heap: HeapType::NoExn,
+            } => e.push(0x74),
             // The 'nullref' binary abbreviation
             RefType {
                 nullable: true,
@@ -466,24 +472,44 @@ impl Encode for Limits {
 impl Encode for MemoryType {
     fn encode(&self, e: &mut Vec<u8>) {
         match self {
-            MemoryType::B32 { limits, shared } => {
+            MemoryType::B32 {
+                limits,
+                shared,
+                page_size_log2,
+            } => {
                 let flag_max = limits.max.is_some() as u8;
                 let flag_shared = *shared as u8;
-                let flags = flag_max | (flag_shared << 1);
+                let flag_page_size = page_size_log2.is_some() as u8;
+                let flags = flag_max | (flag_shared << 1) | (flag_page_size << 3);
                 e.push(flags);
                 limits.min.encode(e);
                 if let Some(max) = limits.max {
                     max.encode(e);
                 }
+                if let Some(p) = page_size_log2 {
+                    p.encode(e);
+                }
             }
-            MemoryType::B64 { limits, shared } => {
-                let flag_max = limits.max.is_some() as u8;
-                let flag_shared = *shared as u8;
-                let flags = flag_max | (flag_shared << 1) | 0x04;
+            MemoryType::B64 {
+                limits,
+                shared,
+                page_size_log2,
+            } => {
+                let flag_max = limits.max.is_some();
+                let flag_shared = *shared;
+                let flag_mem64 = true;
+                let flag_page_size = page_size_log2.is_some();
+                let flags = ((flag_max as u8) << 0)
+                    | ((flag_shared as u8) << 1)
+                    | ((flag_mem64 as u8) << 2)
+                    | ((flag_page_size as u8) << 3);
                 e.push(flags);
                 limits.min.encode(e);
                 if let Some(max) = limits.max {
                     max.encode(e);
+                }
+                if let Some(p) = page_size_log2 {
+                    p.encode(e);
                 }
             }
         }
@@ -493,11 +519,14 @@ impl Encode for MemoryType {
 impl<'a> Encode for GlobalType<'a> {
     fn encode(&self, e: &mut Vec<u8>) {
         self.ty.encode(e);
+        let mut flags = 0;
         if self.mutable {
-            e.push(0x01);
-        } else {
-            e.push(0x00);
+            flags |= 0b01;
         }
+        if self.shared {
+            flags |= 0b10;
+        }
+        e.push(flags);
     }
 }
 
@@ -749,19 +778,6 @@ impl Encode for BlockType<'_> {
     }
 }
 
-impl Encode for FuncBindType<'_> {
-    fn encode(&self, e: &mut Vec<u8>) {
-        self.ty.encode(e);
-    }
-}
-
-impl Encode for LetType<'_> {
-    fn encode(&self, e: &mut Vec<u8>) {
-        self.block.encode(e);
-        self.locals.encode(e);
-    }
-}
-
 impl Encode for LaneArg {
     fn encode(&self, e: &mut Vec<u8>) {
         self.lane.encode(e);
@@ -781,6 +797,23 @@ impl Encode for MemArg<'_> {
                 self.offset.encode(e);
             }
         }
+    }
+}
+
+impl Encode for Ordering {
+    fn encode(&self, buf: &mut Vec<u8>) {
+        let flag: u8 = match self {
+            Ordering::SeqCst => 0,
+            Ordering::AcqRel => 1,
+        };
+        flag.encode(buf);
+    }
+}
+
+impl Encode for OrderedAccess<'_> {
+    fn encode(&self, buf: &mut Vec<u8>) {
+        self.ordering.encode(buf);
+        self.index.encode(buf);
     }
 }
 
@@ -845,13 +878,13 @@ impl Encode for BrTableIndices<'_> {
     }
 }
 
-impl Encode for Float32 {
+impl Encode for F32 {
     fn encode(&self, e: &mut Vec<u8>) {
         e.extend_from_slice(&self.bits.to_le_bytes());
     }
 }
 
-impl Encode for Float64 {
+impl Encode for F64 {
     fn encode(&self, e: &mut Vec<u8>) {
         e.extend_from_slice(&self.bits.to_le_bytes());
     }
@@ -994,8 +1027,7 @@ fn find_names<'a>(
                         | Instruction::Block(block)
                         | Instruction::Loop(block)
                         | Instruction::Try(block)
-                        | Instruction::TryTable(TryTable { block, .. })
-                        | Instruction::Let(LetType { block, .. }) => {
+                        | Instruction::TryTable(TryTable { block, .. }) => {
                             if let Some(name) = get_name(&block.label, &block.label_name) {
                                 label_names.push((label_idx, name));
                             }

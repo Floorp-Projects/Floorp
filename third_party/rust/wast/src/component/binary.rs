@@ -597,7 +597,7 @@ impl From<core::HeapType<'_>> for wasm_encoder::HeapType {
         match r {
             core::HeapType::Func => Self::Func,
             core::HeapType::Extern => Self::Extern,
-            core::HeapType::Exn => {
+            core::HeapType::Exn | core::HeapType::NoExn => {
                 todo!("encoding of exceptions proposal types not yet implemented")
             }
             core::HeapType::Concrete(Index::Num(i, _)) => Self::Concrete(i),
@@ -640,11 +640,23 @@ impl From<core::TableType<'_>> for wasm_encoder::TableType {
 
 impl From<core::MemoryType> for wasm_encoder::MemoryType {
     fn from(ty: core::MemoryType) -> Self {
-        let (minimum, maximum, memory64, shared) = match ty {
-            core::MemoryType::B32 { limits, shared } => {
-                (limits.min.into(), limits.max.map(Into::into), false, shared)
-            }
-            core::MemoryType::B64 { limits, shared } => (limits.min, limits.max, true, shared),
+        let (minimum, maximum, memory64, shared, page_size_log2) = match ty {
+            core::MemoryType::B32 {
+                limits,
+                shared,
+                page_size_log2,
+            } => (
+                limits.min.into(),
+                limits.max.map(Into::into),
+                false,
+                shared,
+                page_size_log2,
+            ),
+            core::MemoryType::B64 {
+                limits,
+                shared,
+                page_size_log2,
+            } => (limits.min, limits.max, true, shared, page_size_log2),
         };
 
         Self {
@@ -652,6 +664,7 @@ impl From<core::MemoryType> for wasm_encoder::MemoryType {
             maximum,
             memory64,
             shared,
+            page_size_log2,
         }
     }
 }
@@ -661,6 +674,7 @@ impl From<core::GlobalType<'_>> for wasm_encoder::GlobalType {
         Self {
             val_type: ty.ty.into(),
             mutable: ty.mutable,
+            shared: ty.shared,
         }
     }
 }
@@ -780,8 +794,8 @@ impl From<PrimitiveValType> for wasm_encoder::PrimitiveValType {
             PrimitiveValType::U32 => Self::U32,
             PrimitiveValType::S64 => Self::S64,
             PrimitiveValType::U64 => Self::U64,
-            PrimitiveValType::Float32 => Self::Float32,
-            PrimitiveValType::Float64 => Self::Float64,
+            PrimitiveValType::F32 => Self::F32,
+            PrimitiveValType::F64 => Self::F64,
             PrimitiveValType::Char => Self::Char,
             PrimitiveValType::String => Self::String,
         }

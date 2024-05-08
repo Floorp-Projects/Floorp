@@ -146,6 +146,11 @@ pub struct Module {
 
     /// What the maximum type index that can be referenced is.
     max_type_limit: MaxTypeLimit,
+
+    /// Some known-interesting values, such as powers of two, values just before
+    /// or just after a memory size, etc...
+    interesting_values32: Vec<u32>,
+    interesting_values64: Vec<u64>,
 }
 
 impl<'a> Arbitrary<'a> for Module {
@@ -232,13 +237,10 @@ impl Module {
             export_names: HashSet::new(),
             const_expr_choices: Vec::new(),
             max_type_limit: MaxTypeLimit::ModuleTypes,
+            interesting_values32: Vec::new(),
+            interesting_values64: Vec::new(),
         }
     }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct RecGroup {
-    pub(crate) types: Vec<SubType>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -494,6 +496,8 @@ impl Module {
                 matches!(self.ty(b).composite_type, CompositeType::Func(_))
             }
 
+            (HT::NoExn, HT::Exn) => true,
+
             // Nothing else matches. (Avoid full wildcard matches so that
             // adding/modifying variants is easier in the future.)
             (HT::Concrete(_), _)
@@ -506,11 +510,9 @@ impl Module {
             | (HT::Eq, _)
             | (HT::Struct, _)
             | (HT::Array, _)
-            | (HT::I31, _) => false,
-
-            // TODO: `exn` probably will be its own type hierarchy and will
-            // probably get `noexn` as well.
-            (HT::Exn, _) => false,
+            | (HT::I31, _)
+            | (HT::Exn, _)
+            | (HT::NoExn, _) => false,
         }
     }
 
@@ -779,7 +781,7 @@ impl Module {
             HT::Extern => {
                 choices.push(HT::NoExtern);
             }
-            HT::Exn | HT::None | HT::NoExtern | HT::NoFunc => {}
+            HT::Exn | HT::NoExn | HT::None | HT::NoExtern | HT::NoFunc => {}
         }
         Ok(*u.choose(&choices)?)
     }
@@ -857,6 +859,9 @@ impl Module {
             HT::NoFunc => {
                 choices.extend(self.func_types.iter().copied().map(HT::Concrete));
                 choices.push(HT::Func);
+            }
+            HT::NoExn => {
+                choices.push(HT::Exn);
             }
             HT::Concrete(mut idx) => {
                 match &self
@@ -1422,6 +1427,7 @@ impl Module {
         Ok(GlobalType {
             val_type: self.arbitrary_valtype(u)?,
             mutable: u.arbitrary()?,
+            shared: false,
         })
     }
 
@@ -1645,6 +1651,7 @@ impl Module {
                 wasmparser::HeapType::Array => HeapType::Array,
                 wasmparser::HeapType::I31 => HeapType::I31,
                 wasmparser::HeapType::Exn => HeapType::Exn,
+                wasmparser::HeapType::NoExn => HeapType::NoExn,
             }
         }
 
@@ -1754,6 +1761,7 @@ impl Module {
                         GlobalType {
                             val_type: convert_val_type(&global_type.content_type),
                             mutable: global_type.mutable,
+                            shared: global_type.shared,
                         },
                         u,
                     )?,
@@ -2039,6 +2047,8 @@ impl Module {
     }
 
     fn arbitrary_code(&mut self, u: &mut Unstructured) -> Result<()> {
+        self.compute_interesting_values();
+
         self.code.reserve(self.num_defined_funcs);
         let mut allocs = CodeBuilderAllocations::new(self, self.config.exports.is_some());
         for (_, ty) in self.funcs[self.funcs.len() - self.num_defined_funcs..].iter() {
@@ -2224,6 +2234,170 @@ impl Module {
                 }
             })
     }
+
+    fn compute_interesting_values(&mut self) {
+        debug_assert!(self.interesting_values32.is_empty());
+        debug_assert!(self.interesting_values64.is_empty());
+
+        let mut interesting_values32 = HashSet::new();
+        let mut interesting_values64 = HashSet::new();
+
+        let mut interesting = |val: u64| {
+            interesting_values32.insert(val as u32);
+            interesting_values64.insert(val);
+        };
+
+        // Zero is always interesting.
+        interesting(0);
+
+        // Max values are always interesting.
+        interesting(u8::MAX as _);
+        interesting(u16::MAX as _);
+        interesting(u32::MAX as _);
+        interesting(u64::MAX);
+
+        // Min values are always interesting.
+        interesting(i8::MIN as _);
+        interesting(i16::MIN as _);
+        interesting(i32::MIN as _);
+        interesting(i64::MIN as _);
+
+        for i in 0..64 {
+            // Powers of two.
+            interesting(1 << i);
+
+            // Inverted powers of two.
+            interesting(!(1 << i));
+
+            // Powers of two minus one, AKA high bits unset and low bits set.
+            interesting((1 << i) - 1);
+
+            // Negative powers of two, AKA high bits set and low bits unset.
+            interesting(((1_i64 << 63) >> i) as _);
+        }
+
+        // Some repeating bit patterns.
+        for pattern in [0b01010101, 0b00010001, 0b00010001, 0b00000001] {
+            for b in [pattern, !pattern] {
+                interesting(u64::from_ne_bytes([b, b, b, b, b, b, b, b]));
+            }
+        }
+
+        // Interesting float values.
+        let mut interesting_f64 = |x: f64| interesting(x.to_bits());
+        interesting_f64(0.0);
+        interesting_f64(-0.0);
+        interesting_f64(f64::INFINITY);
+        interesting_f64(f64::NEG_INFINITY);
+        interesting_f64(f64::EPSILON);
+        interesting_f64(-f64::EPSILON);
+        interesting_f64(f64::MIN);
+        interesting_f64(f64::MIN_POSITIVE);
+        interesting_f64(f64::MAX);
+        interesting_f64(f64::NAN);
+        let mut interesting_f32 = |x: f32| interesting(x.to_bits() as _);
+        interesting_f32(0.0);
+        interesting_f32(-0.0);
+        interesting_f32(f32::INFINITY);
+        interesting_f32(f32::NEG_INFINITY);
+        interesting_f32(f32::EPSILON);
+        interesting_f32(-f32::EPSILON);
+        interesting_f32(f32::MIN);
+        interesting_f32(f32::MIN_POSITIVE);
+        interesting_f32(f32::MAX);
+        interesting_f32(f32::NAN);
+
+        // Interesting values related to table bounds.
+        for t in self.tables.iter() {
+            interesting(t.minimum as _);
+            if let Some(x) = t.minimum.checked_add(1) {
+                interesting(x as _);
+            }
+
+            if let Some(x) = t.maximum {
+                interesting(x as _);
+                if let Some(y) = x.checked_add(1) {
+                    interesting(y as _);
+                }
+            }
+        }
+
+        // Interesting values related to memory bounds.
+        for m in self.memories.iter() {
+            let min = m.minimum.saturating_mul(crate::page_size(m).into());
+            interesting(min);
+            for i in 0..5 {
+                if let Some(x) = min.checked_add(1 << i) {
+                    interesting(x);
+                }
+                if let Some(x) = min.checked_sub(1 << i) {
+                    interesting(x);
+                }
+            }
+
+            if let Some(max) = m.maximum {
+                let max = max.saturating_mul(crate::page_size(m).into());
+                interesting(max);
+                for i in 0..5 {
+                    if let Some(x) = max.checked_add(1 << i) {
+                        interesting(x);
+                    }
+                    if let Some(x) = max.checked_sub(1 << i) {
+                        interesting(x);
+                    }
+                }
+            }
+        }
+
+        self.interesting_values32.extend(interesting_values32);
+        self.interesting_values64.extend(interesting_values64);
+
+        // Sort for determinism.
+        self.interesting_values32.sort();
+        self.interesting_values64.sort();
+    }
+
+    fn arbitrary_const_instruction(
+        &self,
+        ty: ValType,
+        u: &mut Unstructured<'_>,
+    ) -> Result<Instruction> {
+        debug_assert!(self.interesting_values32.len() > 0);
+        debug_assert!(self.interesting_values64.len() > 0);
+        match ty {
+            ValType::I32 => Ok(Instruction::I32Const(if u.arbitrary()? {
+                *u.choose(&self.interesting_values32)? as i32
+            } else {
+                u.arbitrary()?
+            })),
+            ValType::I64 => Ok(Instruction::I64Const(if u.arbitrary()? {
+                *u.choose(&self.interesting_values64)? as i64
+            } else {
+                u.arbitrary()?
+            })),
+            ValType::F32 => Ok(Instruction::F32Const(if u.arbitrary()? {
+                f32::from_bits(*u.choose(&self.interesting_values32)?)
+            } else {
+                u.arbitrary()?
+            })),
+            ValType::F64 => Ok(Instruction::F64Const(if u.arbitrary()? {
+                f64::from_bits(*u.choose(&self.interesting_values64)?)
+            } else {
+                u.arbitrary()?
+            })),
+            ValType::V128 => Ok(Instruction::V128Const(if u.arbitrary()? {
+                let upper = (*u.choose(&self.interesting_values64)? as i128) << 64;
+                let lower = *u.choose(&self.interesting_values64)? as i128;
+                upper | lower
+            } else {
+                u.arbitrary()?
+            })),
+            ValType::Ref(ty) => {
+                assert!(ty.nullable);
+                Ok(Instruction::RefNull(ty.heap_type))
+            }
+        }
+    }
 }
 
 pub(crate) fn arbitrary_limits32(
@@ -2344,6 +2518,11 @@ pub(crate) fn arbitrary_memtype(u: &mut Unstructured, config: &Config) -> Result
     // We want to favor memories <= 1gb in size, allocate at most 16k pages,
     // depending on the maximum number of memories.
     let memory64 = config.memory64_enabled && u.arbitrary()?;
+    let page_size = if config.custom_page_sizes_enabled && u.arbitrary()? {
+        Some(1 << u.int_in_range(0..=16)?)
+    } else {
+        None
+    };
     let max_inbounds = 16 * 1024 / u64::try_from(config.max_memories).unwrap();
     let min_pages = if config.disallow_traps { Some(1) } else { None };
     let max_pages = min_pages.unwrap_or(0).max(if memory64 {
@@ -2363,6 +2542,7 @@ pub(crate) fn arbitrary_memtype(u: &mut Unstructured, config: &Config) -> Result
         maximum,
         memory64,
         shared,
+        page_size_log2: page_size,
     })
 }
 

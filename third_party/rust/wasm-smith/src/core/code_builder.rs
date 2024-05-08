@@ -870,6 +870,7 @@ impl CodeBuilderAllocations {
             module.globals.push(GlobalType {
                 val_type: ty,
                 mutable: true,
+                shared: false,
             });
             module.defined_globals.push((global_idx, init));
 
@@ -1435,7 +1436,7 @@ impl CodeBuilder<'_> {
                 }
                 operands = &[];
             }
-            instructions.push(arbitrary_val(*expected, u));
+            instructions.push(module.arbitrary_const_instruction(*expected, u)?);
         }
         Ok(())
     }
@@ -1544,20 +1545,6 @@ impl CodeBuilder<'_> {
     }
 }
 
-fn arbitrary_val(ty: ValType, u: &mut Unstructured<'_>) -> Instruction {
-    match ty {
-        ValType::I32 => Instruction::I32Const(u.arbitrary().unwrap_or(0)),
-        ValType::I64 => Instruction::I64Const(u.arbitrary().unwrap_or(0)),
-        ValType::F32 => Instruction::F32Const(u.arbitrary().unwrap_or(0.0)),
-        ValType::F64 => Instruction::F64Const(u.arbitrary().unwrap_or(0.0)),
-        ValType::V128 => Instruction::V128Const(u.arbitrary().unwrap_or(0)),
-        ValType::Ref(ty) => {
-            assert!(ty.nullable);
-            Instruction::RefNull(ty.heap_type)
-        }
-    }
-}
-
 #[inline]
 fn unreachable_valid(module: &Module, _: &mut CodeBuilder) -> bool {
     !module.config.disallow_traps
@@ -1617,13 +1604,24 @@ fn try_table(
         let i = i as u32;
 
         let label_types = ctrl.label_types();
+
+        // Empty labels are candidates for a `catch_all` since nothing is
+        // pushed in that case.
         if label_types.is_empty() {
             catch_options.push(Box::new(move |_, _| Ok(Catch::All { label: i })));
         }
+
+        // Labels with just an `externref` are suitable for `catch_all_refs`,
+        // which first pushes nothing since there's no tag and then pushes
+        // the caught exception value.
         if label_types == [ValType::EXNREF] {
             catch_options.push(Box::new(move |_, _| Ok(Catch::AllRef { label: i })));
         }
 
+        // If there is a tag which exactly matches the types of the label we're
+        // looking at then that tag can be used as part of a `catch` branch.
+        // That tag's parameters, which are the except values, are pushed
+        // for the label.
         if builder.allocs.tags.contains_key(label_types) {
             let label_types = label_types.to_vec();
             catch_options.push(Box::new(move |u, builder| {
@@ -1634,15 +1632,20 @@ fn try_table(
             }));
         }
 
-        let mut label_types_with_exnref = label_types.to_vec();
-        label_types_with_exnref.push(ValType::EXNREF);
-        if builder.allocs.tags.contains_key(&label_types_with_exnref) {
-            catch_options.push(Box::new(move |u, builder| {
-                Ok(Catch::OneRef {
-                    tag: *u.choose(&builder.allocs.tags[&label_types_with_exnref])?,
-                    label: i,
-                })
-            }));
+        // And finally the last type of catch label, `catch_ref`. If the label
+        // ends with `exnref`, then use everything except the last `exnref` to
+        // see if there's a matching tag. If so then `catch_ref` can be used
+        // with that tag when branching to this label.
+        if let Some((&ValType::EXNREF, rest)) = label_types.split_last() {
+            if builder.allocs.tags.contains_key(rest) {
+                let rest = rest.to_vec();
+                catch_options.push(Box::new(move |u, builder| {
+                    Ok(Catch::OneRef {
+                        tag: *u.choose(&builder.allocs.tags[&rest])?,
+                        label: i,
+                    })
+                }));
+            }
         }
     }
 
@@ -3403,49 +3406,45 @@ fn data_drop(
 
 fn i32_const(
     u: &mut Unstructured,
-    _module: &Module,
+    module: &Module,
     builder: &mut CodeBuilder,
     instructions: &mut Vec<Instruction>,
 ) -> Result<()> {
-    let x = u.arbitrary()?;
     builder.push_operands(&[ValType::I32]);
-    instructions.push(Instruction::I32Const(x));
+    instructions.push(module.arbitrary_const_instruction(ValType::I32, u)?);
     Ok(())
 }
 
 fn i64_const(
     u: &mut Unstructured,
-    _module: &Module,
+    module: &Module,
     builder: &mut CodeBuilder,
     instructions: &mut Vec<Instruction>,
 ) -> Result<()> {
-    let x = u.arbitrary()?;
     builder.push_operands(&[ValType::I64]);
-    instructions.push(Instruction::I64Const(x));
+    instructions.push(module.arbitrary_const_instruction(ValType::I64, u)?);
     Ok(())
 }
 
 fn f32_const(
     u: &mut Unstructured,
-    _module: &Module,
+    module: &Module,
     builder: &mut CodeBuilder,
     instructions: &mut Vec<Instruction>,
 ) -> Result<()> {
-    let x = u.arbitrary()?;
     builder.push_operands(&[ValType::F32]);
-    instructions.push(Instruction::F32Const(x));
+    instructions.push(module.arbitrary_const_instruction(ValType::F32, u)?);
     Ok(())
 }
 
 fn f64_const(
     u: &mut Unstructured,
-    _module: &Module,
+    module: &Module,
     builder: &mut CodeBuilder,
     instructions: &mut Vec<Instruction>,
 ) -> Result<()> {
-    let x = u.arbitrary()?;
     builder.push_operands(&[ValType::F64]);
-    instructions.push(Instruction::F64Const(x));
+    instructions.push(module.arbitrary_const_instruction(ValType::F64, u)?);
     Ok(())
 }
 
@@ -5204,10 +5203,12 @@ fn memory_offset(u: &mut Unstructured, module: &Module, memory_index: u32) -> Re
     assert!(a + b + c != 0);
 
     let memory_type = &module.memories[memory_index as usize];
-    let min = memory_type.minimum.saturating_mul(65536);
+    let min = memory_type
+        .minimum
+        .saturating_mul(crate::page_size(memory_type).into());
     let max = memory_type
         .maximum
-        .map(|max| max.saturating_mul(65536))
+        .map(|max| max.saturating_mul(crate::page_size(memory_type).into()))
         .unwrap_or(u64::MAX);
 
     let (min, max, true_max) = match (memory_type.memory64, module.config.disallow_traps) {

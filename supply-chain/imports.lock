@@ -795,15 +795,33 @@ when = "2024-02-27"
 user-id = 73222
 user-login = "wasmtime-publish"
 
+[[publisher.wasm-encoder]]
+version = "0.205.0"
+when = "2024-04-18"
+user-id = 73222
+user-login = "wasmtime-publish"
+
 [[publisher.wasm-smith]]
 version = "0.201.0"
 when = "2024-02-27"
 user-id = 73222
 user-login = "wasmtime-publish"
 
+[[publisher.wasm-smith]]
+version = "0.205.0"
+when = "2024-04-18"
+user-id = 73222
+user-login = "wasmtime-publish"
+
 [[publisher.wast]]
 version = "201.0.0"
 when = "2024-02-27"
+user-id = 73222
+user-login = "wasmtime-publish"
+
+[[publisher.wast]]
+version = "205.0.0"
+when = "2024-04-18"
 user-id = 73222
 user-login = "wasmtime-publish"
 

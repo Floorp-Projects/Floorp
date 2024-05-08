@@ -1,7 +1,7 @@
 use crate::core::{HeapType, V128Const};
 use crate::kw;
 use crate::parser::{Cursor, Parse, Parser, Peek, Result};
-use crate::token::{Float32, Float64, Index};
+use crate::token::{Index, F32, F64};
 
 /// Expression that can be used inside of `invoke` expressions for core wasm
 /// functions.
@@ -10,8 +10,8 @@ use crate::token::{Float32, Float64, Index};
 pub enum WastArgCore<'a> {
     I32(i32),
     I64(i64),
-    F32(Float32),
-    F64(Float64),
+    F32(F32),
+    F64(F64),
     V128(V128Const),
     RefNull(HeapType<'a>),
     RefExtern(u32),
@@ -67,8 +67,8 @@ impl Peek for WastArgCore<'_> {
 pub enum WastRetCore<'a> {
     I32(i32),
     I64(i64),
-    F32(NanPattern<Float32>),
-    F64(NanPattern<Float64>),
+    F32(NanPattern<F32>),
+    F64(NanPattern<F64>),
     V128(V128Pattern),
 
     /// A null reference is expected, optionally with a specified type.
@@ -151,7 +151,7 @@ impl Peek for WastRetCore<'_> {
 }
 
 /// Either a NaN pattern (`nan:canonical`, `nan:arithmetic`) or a value of type `T`.
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[allow(missing_docs)]
 pub enum NanPattern<T> {
     CanonicalNan,
@@ -181,15 +181,15 @@ where
 ///
 /// This implementation is necessary because only float types can include NaN patterns; otherwise
 /// it is largely similar to the implementation of `V128Const`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[allow(missing_docs)]
 pub enum V128Pattern {
     I8x16([i8; 16]),
     I16x8([i16; 8]),
     I32x4([i32; 4]),
     I64x2([i64; 2]),
-    F32x4([NanPattern<Float32>; 4]),
-    F64x2([NanPattern<Float64>; 2]),
+    F32x4([NanPattern<F32>; 4]),
+    F64x2([NanPattern<F64>; 2]),
 }
 
 impl<'a> Parse<'a> for V128Pattern {

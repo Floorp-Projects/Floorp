@@ -18,6 +18,7 @@ use crate::{encode_section, encoding_size, ConstExpr, Encode, Section, SectionId
 ///     maximum: None,
 ///     memory64: false,
 ///     shared: false,
+///     page_size_log2: None,
 /// });
 ///
 /// let mut data = DataSection::new();

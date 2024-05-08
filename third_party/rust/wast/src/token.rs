@@ -639,13 +639,13 @@ macro_rules! float {
 }
 
 float! {
-    Float32 => {
+    F32 => {
         bits: u32,
         float: f32,
         exponent_bits: 8,
         name: strtof,
     }
-    Float64 => {
+    F64 => {
         bits: u64,
         float: f64,
         exponent_bits: 11,
@@ -674,6 +674,22 @@ impl Peek for LParen {
 
     fn display() -> &'static str {
         "left paren"
+    }
+}
+
+/// A convenience type to use with [`Parser::peek`](crate::parser::Parser::peek)
+/// to see if the next token is the end of an s-expression.
+pub struct RParen {
+    _priv: (),
+}
+
+impl Peek for RParen {
+    fn peek(cursor: Cursor<'_>) -> Result<bool> {
+        cursor.peek_rparen()
+    }
+
+    fn display() -> &'static str {
+        "right paren"
     }
 }
 

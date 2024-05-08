@@ -59,7 +59,10 @@ impl<'a> Parse<'a> for Memory<'a> {
                 import,
                 ty: parser.parse()?,
             }
-        } else if l.peek::<LParen>()? || parser.peek2::<LParen>()? {
+        } else if l.peek::<LParen>()?
+            || ((parser.peek::<kw::i32>()? || parser.peek::<kw::i64>()?)
+                && parser.peek2::<LParen>()?)
+        {
             let is_32 = if parser.parse::<Option<kw::i32>>()?.is_some() {
                 true
             } else {
@@ -133,7 +136,7 @@ impl<'a> Parse<'a> for Data<'a> {
         let id = parser.parse()?;
         let name = parser.parse()?;
 
-        let kind = if parser.peek::<&[u8]>()? {
+        let kind = if parser.peek::<&[u8]>()? || parser.peek::<RParen>()? {
             DataKind::Passive
 
         // ... and otherwise we must be attached to a particular memory as well
@@ -248,8 +251,8 @@ impl<'a> Parse<'a> for DataVal<'a> {
                 || consume::<kw::i16, i16, _>(p, l, r, |u, v| v.extend(&u.to_le_bytes()))?
                 || consume::<kw::i32, i32, _>(p, l, r, |u, v| v.extend(&u.to_le_bytes()))?
                 || consume::<kw::i64, i64, _>(p, l, r, |u, v| v.extend(&u.to_le_bytes()))?
-                || consume::<kw::f32, Float32, _>(p, l, r, |u, v| v.extend(&u.bits.to_le_bytes()))?
-                || consume::<kw::f64, Float64, _>(p, l, r, |u, v| v.extend(&u.bits.to_le_bytes()))?
+                || consume::<kw::f32, F32, _>(p, l, r, |u, v| v.extend(&u.bits.to_le_bytes()))?
+                || consume::<kw::f64, F64, _>(p, l, r, |u, v| v.extend(&u.bits.to_le_bytes()))?
                 || consume::<kw::v128, V128Const, _>(p, l, r, |u, v| v.extend(&u.to_le_bytes()))?
             {
                 Ok(DataVal::Integral(result))

@@ -450,8 +450,11 @@ pub enum HeapType {
     /// The unboxed `i31` heap type.
     I31,
 
-    /// The abstract` exception` heap type.
+    /// The abstract `exception` heap type.
     Exn,
+
+    /// The abstract `noexn` heap type.
+    NoExn,
 
     /// A concrete Wasm-defined type at the given index.
     Concrete(u32),
@@ -471,6 +474,7 @@ impl Encode for HeapType {
             HeapType::Array => sink.push(0x6A),
             HeapType::I31 => sink.push(0x6C),
             HeapType::Exn => sink.push(0x69),
+            HeapType::NoExn => sink.push(0x74),
             // Note that this is encoded as a signed type rather than unsigned
             // as it's decoded as an s33
             HeapType::Concrete(i) => i64::from(*i).encode(sink),
@@ -496,6 +500,7 @@ impl TryFrom<wasmparser::HeapType> for HeapType {
             wasmparser::HeapType::Array => HeapType::Array,
             wasmparser::HeapType::I31 => HeapType::I31,
             wasmparser::HeapType::Exn => HeapType::Exn,
+            wasmparser::HeapType::NoExn => HeapType::NoExn,
         })
     }
 }
@@ -645,6 +650,8 @@ impl Section for TypeSection {
 
 #[cfg(test)]
 mod tests {
+    use wasmparser::WasmFeatures;
+
     use super::*;
     use crate::Module;
 
@@ -661,10 +668,8 @@ mod tests {
         module.section(&types);
         let wasm_bytes = module.finish();
 
-        let mut validator = wasmparser::Validator::new_with_features(wasmparser::WasmFeatures {
-            gc: false,
-            ..Default::default()
-        });
+        let mut validator =
+            wasmparser::Validator::new_with_features(WasmFeatures::default() & !WasmFeatures::GC);
 
         validator.validate_all(&wasm_bytes).expect(
             "Encoding pre Wasm GC type should not accidentally use Wasm GC specific encoding",

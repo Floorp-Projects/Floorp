@@ -2,30 +2,34 @@ use wasm_smith::Config;
 use wasmparser::{types::Types, Validator, WasmFeatures};
 
 pub fn parser_features_from_config(config: &Config) -> WasmFeatures {
-    WasmFeatures {
-        mutable_global: true,
-        saturating_float_to_int: config.saturating_float_to_int_enabled,
-        sign_extension: config.sign_extension_ops_enabled,
-        reference_types: config.reference_types_enabled,
-        multi_value: config.multi_value_enabled,
-        bulk_memory: config.bulk_memory_enabled,
-        simd: config.simd_enabled,
-        relaxed_simd: config.relaxed_simd_enabled,
-        multi_memory: config.max_memories > 1,
-        exceptions: config.exceptions_enabled,
-        memory64: config.memory64_enabled,
-        tail_call: config.tail_call_enabled,
-        function_references: config.gc_enabled,
-        gc: config.gc_enabled,
-
-        threads: false,
-        floats: true,
-        extended_const: false,
-        component_model: false,
-        memory_control: false,
-        component_model_values: false,
-        component_model_nested_names: false,
-    }
+    let mut features = WasmFeatures::MUTABLE_GLOBAL | WasmFeatures::FLOATS;
+    features.set(
+        WasmFeatures::SATURATING_FLOAT_TO_INT,
+        config.saturating_float_to_int_enabled,
+    );
+    features.set(
+        WasmFeatures::SIGN_EXTENSION,
+        config.sign_extension_ops_enabled,
+    );
+    features.set(
+        WasmFeatures::REFERENCE_TYPES,
+        config.reference_types_enabled,
+    );
+    features.set(WasmFeatures::MULTI_VALUE, config.multi_value_enabled);
+    features.set(WasmFeatures::BULK_MEMORY, config.bulk_memory_enabled);
+    features.set(WasmFeatures::SIMD, config.simd_enabled);
+    features.set(WasmFeatures::RELAXED_SIMD, config.relaxed_simd_enabled);
+    features.set(WasmFeatures::MULTI_MEMORY, config.max_memories > 1);
+    features.set(WasmFeatures::EXCEPTIONS, config.exceptions_enabled);
+    features.set(WasmFeatures::MEMORY64, config.memory64_enabled);
+    features.set(WasmFeatures::TAIL_CALL, config.tail_call_enabled);
+    features.set(WasmFeatures::FUNCTION_REFERENCES, config.gc_enabled);
+    features.set(WasmFeatures::GC, config.gc_enabled);
+    features.set(
+        WasmFeatures::CUSTOM_PAGE_SIZES,
+        config.custom_page_sizes_enabled,
+    );
+    features
 }
 
 pub fn validate(validator: &mut Validator, bytes: &[u8]) -> Types {
