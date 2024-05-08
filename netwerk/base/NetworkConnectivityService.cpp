@@ -4,6 +4,7 @@
 
 #include "DNSUtils.h"
 #include "NetworkConnectivityService.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/Preferences.h"
@@ -37,6 +38,10 @@ NetworkConnectivityService::GetSingleton() {
     return do_AddRef(gConnService);
   }
 
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return nullptr;
+  }
+
   RefPtr<NetworkConnectivityService> service = new NetworkConnectivityService();
   service->Init();
 
@@ -51,6 +56,8 @@ nsresult NetworkConnectivityService::Init() {
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
   observerService->AddObserver(this, "network:captive-portal-connectivity",
+                               false);
+  observerService->AddObserver(this, "browser-idle-startup-tasks-finished",
                                false);
 
   return NS_OK;
@@ -387,6 +394,8 @@ NetworkConnectivityService::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC) &&
              !NS_LITERAL_STRING_FROM_CSTRING(NS_NETWORK_LINK_DATA_UNKNOWN)
                   .Equals(aData)) {
+    PerformChecks();
+  } else if (!strcmp(aTopic, "browser-idle-startup-tasks-finished")) {
     PerformChecks();
   }
 
