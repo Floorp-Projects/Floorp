@@ -189,12 +189,15 @@ private fun InactiveTabsHeader(
                 )
             }
         },
-        action = {
+        action = { dismissCFR ->
             FirefoxTheme {
                 Text(
                     text = stringResource(R.string.tab_tray_inactive_onboarding_button_text),
                     color = FirefoxTheme.colors.textOnColorPrimary,
-                    modifier = Modifier.clickable(onClick = onCFRClick),
+                    modifier = Modifier.clickable {
+                        dismissCFR()
+                        onCFRClick()
+                    },
                     style = FirefoxTheme.typography.body2.copy(
                         textDecoration = TextDecoration.Underline,
                     ),

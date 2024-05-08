@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+
+typealias DismissAction = () -> Unit
 
 /**
  * A layout for displaying a [CFRPopup] anchored by [anchorContent].
@@ -38,7 +41,8 @@ import androidx.compose.ui.viewinterop.AndroidView
  * @param onDismiss Invoked when the CFR is dismissed. Returns true if the dismissal was
  * explicit (e.g. clicked via the "X" button).
  * @param text [Text] block containing the CFR's message.
- * @param action Optional Composable displayed below [text].
+ * @param action Optional Composable displayed below [text]. Provides a [DismissAction] if the CFR needs
+ * to be dismissed after the action is invoked.
  * @param anchorContent The Composable to anchor the CFR to.
  */
 @Composable
@@ -48,18 +52,28 @@ fun CFRPopupLayout(
     onCFRShown: () -> Unit,
     onDismiss: (Boolean) -> Unit,
     text: @Composable () -> Unit,
-    action: @Composable () -> Unit = {},
+    action: @Composable (dismissCFR: DismissAction) -> Unit = {},
     anchorContent: @Composable () -> Unit,
 ) {
+    var hasDismissedCFR by rememberSaveable { mutableStateOf(false) }
+
     Box(
         modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min),
     ) {
-        if (showCFR) {
+        if (showCFR && !hasDismissedCFR) {
             LaunchedEffect(Unit) {
                 onCFRShown()
             }
 
             var popup: CFRPopup? = null
+
+            val invokeDismiss: DismissAction = {
+                if (!hasDismissedCFR) {
+                    popup?.dismiss()
+                }
+                popup = null
+            }
+
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { context ->
@@ -67,15 +81,19 @@ fun CFRPopupLayout(
                         popup = CFRPopup(
                             anchor = it,
                             properties = properties,
-                            onDismiss = onDismiss,
+                            onDismiss = { dismissFromButton ->
+                                onDismiss(dismissFromButton)
+                                hasDismissedCFR = true
+                            },
                             text = text,
-                            action = action,
+                            action = {
+                                action(invokeDismiss)
+                            },
                         )
                     }
                 },
                 onRelease = {
-                    popup?.dismiss()
-                    popup = null
+                    invokeDismiss()
                 },
                 update = {
                     popup?.dismiss()

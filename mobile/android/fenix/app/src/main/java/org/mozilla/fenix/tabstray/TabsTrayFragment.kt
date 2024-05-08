@@ -321,6 +321,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                             requireContext().settings().shouldShowInactiveTabsOnboardingPopup = false
                             navigationInteractor.onTabSettingsClicked()
                             TabsTray.inactiveTabsCfrSettings.record(NoExtras())
+                            onTabsTrayDismissed()
                         },
                         onInactiveTabsCFRDismiss = {
                             requireContext().settings().shouldShowInactiveTabsOnboardingPopup = false
