@@ -9,6 +9,7 @@ use crate::owned_slice::OwnedSlice;
 use servo_arc::Arc;
 use std::ops::Range;
 use std::sync::Arc as StdArc;
+use thin_vec::ThinVec;
 
 /// Type of value that a property supports. This is used by Gecko's
 /// devtools to make sense about value it parses, and types listed
@@ -119,6 +120,7 @@ macro_rules! impl_generic_specified_value_info {
 impl_generic_specified_value_info!(Option<T>);
 impl_generic_specified_value_info!(OwnedSlice<T>);
 impl_generic_specified_value_info!(Vec<T>);
+impl_generic_specified_value_info!(ThinVec<T>);
 impl_generic_specified_value_info!(Arc<T>);
 impl_generic_specified_value_info!(StdArc<T>);
 impl_generic_specified_value_info!(ArcSlice<T>);

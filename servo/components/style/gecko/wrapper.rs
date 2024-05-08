@@ -577,14 +577,14 @@ pub enum GeckoChildrenIterator<'a> {
     /// replaces it with the next sibling when requested.
     Current(Option<GeckoNode<'a>>),
     /// A Gecko-implemented iterator we need to drop appropriately.
-    GeckoIterator(structs::StyleChildrenIterator),
+    GeckoIterator(std::mem::ManuallyDrop<structs::StyleChildrenIterator>),
 }
 
 impl<'a> Drop for GeckoChildrenIterator<'a> {
     fn drop(&mut self) {
         if let GeckoChildrenIterator::GeckoIterator(ref mut it) = *self {
             unsafe {
-                bindings::Gecko_DestroyStyleChildrenIterator(it);
+                bindings::Gecko_DestroyStyleChildrenIterator(&mut **it);
             }
         }
     }
@@ -605,7 +605,7 @@ impl<'a> Iterator for GeckoChildrenIterator<'a> {
                 // however we can't express this easily with bindgen, and it would
                 // introduce functions with two input lifetimes into bindgen,
                 // which would be out of scope for elision.
-                bindings::Gecko_GetNextStyleChild(&mut *(it as *mut _))
+                bindings::Gecko_GetNextStyleChild(&mut **it)
                     .as_ref()
                     .map(GeckoNode)
             },
@@ -1015,9 +1015,9 @@ impl<'le> TElement for GeckoElement<'le> {
             self.may_have_anonymous_children()
         {
             unsafe {
-                let mut iter: structs::StyleChildrenIterator = ::std::mem::zeroed();
-                bindings::Gecko_ConstructStyleChildrenIterator(self.0, &mut iter);
-                return LayoutIterator(GeckoChildrenIterator::GeckoIterator(iter));
+                let mut iter = std::mem::MaybeUninit::<structs::StyleChildrenIterator>::uninit();
+                bindings::Gecko_ConstructStyleChildrenIterator(self.0, iter.as_mut_ptr());
+                return LayoutIterator(GeckoChildrenIterator::GeckoIterator(std::mem::ManuallyDrop::new(iter.assume_init())));
             }
         }
 

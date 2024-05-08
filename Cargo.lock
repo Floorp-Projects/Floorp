@@ -5542,6 +5542,7 @@ dependencies = [
  "selectors",
  "serde",
  "servo_arc",
+ "thin-vec",
  "to_shmem",
  "to_shmem_derive",
 ]

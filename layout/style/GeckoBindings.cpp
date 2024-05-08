@@ -988,34 +988,6 @@ const AnonymousCounterStyle* Gecko_CounterStyle_GetAnonymous(
   return aPtr->AsAnonymous();
 }
 
-void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity,
-                                size_t aElemSize) {
-  auto base =
-      reinterpret_cast<nsTArray_base<nsTArrayInfallibleAllocator,
-                                     nsTArray_RelocateUsingMemutils>*>(aArray);
-
-  base->EnsureCapacity<nsTArrayInfallibleAllocator>(aCapacity, aElemSize);
-}
-
-void Gecko_ClearPODTArray(void* aArray, size_t aElementSize,
-                          size_t aElementAlign) {
-  auto base =
-      reinterpret_cast<nsTArray_base<nsTArrayInfallibleAllocator,
-                                     nsTArray_RelocateUsingMemutils>*>(aArray);
-
-  base->template ShiftData<nsTArrayInfallibleAllocator>(
-      0, base->Length(), 0, aElementSize, aElementAlign);
-}
-
-void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* aArray,
-                                  uint32_t aLength) {
-  aArray->SetLength(aLength);
-}
-
-void Gecko_ResizeAtomArray(nsTArray<RefPtr<nsAtom>>* aArray, uint32_t aLength) {
-  aArray->SetLength(aLength);
-}
-
 void Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen,
                                    nsStyleImageLayers::LayerType aLayerType) {
   size_t oldLength = aLayers->mLayers.Length();
@@ -1133,16 +1105,6 @@ Keyframe* Gecko_GetOrCreateFinalKeyframe(
   return GetOrCreateKeyframe(aKeyframes, 1., aTimingFunction, aComposition,
                              KeyframeSearchDirection::Backwards,
                              KeyframeInsertPosition::LastForOffset);
-}
-
-PropertyValuePair* Gecko_AppendPropertyValuePair(
-    nsTArray<PropertyValuePair>* aProperties,
-    const mozilla::AnimatedPropertyID* aProperty) {
-  MOZ_ASSERT(aProperties);
-  MOZ_ASSERT(
-      aProperty->IsCustom() ||
-      !nsCSSProps::PropHasFlags(aProperty->mID, CSSPropFlags::IsLogical));
-  return aProperties->AppendElement(PropertyValuePair{*aProperty});
 }
 
 void Gecko_GetComputedURLSpec(const StyleComputedUrl* aURL, nsCString* aOut) {
