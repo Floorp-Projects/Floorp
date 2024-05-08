@@ -61,16 +61,33 @@ function assertCookiesForHost(url, cookiesCount, message) {
 // Test that the indexedDB and localStorage are allowed in an extension page
 // and that the indexedDB is allowed in a extension worker.
 add_task(async function test_ext_page_allowed_storage() {
-  function testWebStorages() {
+  async function testWebStorages() {
     const url = window.location.href;
 
     try {
       // In a webpage accessing indexedDB throws on cookiesBehavior reject,
       // here we verify that doesn't happen for an extension page.
+
+      await new Promise((resolve, reject) => {
+        const begin = indexedDB.open("door");
+        begin.onsuccess = resolve;
+        begin.onerror = err => reject(err.target);
+      });
+
+      const dbs = await indexedDB.databases();
       browser.test.assertTrue(
-        indexedDB,
-        "IndexedDB global should be accessible"
+        dbs.some(elem => elem.name === "door"),
+        "Just created database should be found"
       );
+
+      await new Promise((resolve, reject) => {
+        const end = indexedDB.deleteDatabase("door");
+        end.onsuccess = () => {
+          browser.test.log(`IndexedDB is accessible`);
+          resolve();
+        };
+        end.onerror = reject;
+      });
 
       // In a webpage localStorage is undefined on cookiesBehavior reject,
       // here we verify that doesn't happen for an extension page.
@@ -97,9 +114,23 @@ add_task(async function test_ext_page_allowed_storage() {
   }
 
   function testWorker() {
-    this.onmessage = () => {
+    this.onmessage = async () => {
       try {
         void indexedDB;
+        await new Promise((resolve, reject) => {
+          const begin = indexedDB.open("door");
+          begin.onerror = err => reject(err.target);
+          begin.onsuccess = () => {
+            indexedDB
+              .databases()
+              .then(() => {
+                const end = indexedDB.deleteDatabase("door");
+                end.onerror = err => reject(err.target);
+                end.onsuccess = resolve;
+              })
+              .catch(reject);
+          };
+        });
         postMessage({ pass: true });
       } catch (err) {
         postMessage({ pass: false });
@@ -448,9 +479,43 @@ add_task(
       let extFrame = this.content.document.querySelector("iframe#ext");
       let webFrame = this.content.document.querySelector("iframe#web");
 
-      function testIDB(win) {
+      async function testIDB(win) {
         try {
-          void win.indexedDB;
+          if (!win.indexedDB) {
+            Assert.ok(false, "IndexedDB global should be accessible");
+            return;
+          }
+
+          await new Promise((resolve, reject) => {
+            const req = win.indexedDB.open("door");
+            req.onerror = err => {
+              reject(err.target);
+              Assert.ok(
+                false,
+                "IDB open should be accessible: " + err.target.message
+              );
+            };
+            req.onsuccess = resolve;
+          });
+
+          const dbs = await win.indexedDB.databases();
+          Assert.ok(
+            dbs.some(elem => elem.name === "door"),
+            "Just created database should be found"
+          );
+
+          await new Promise((resolve, reject) => {
+            const req = win.indexedDB.deleteDatabase("door");
+            req.onerror = err => {
+              reject(err.target);
+              Assert.ok(
+                false,
+                "IDB deleteDatabase should be accessible: " + err.target.message
+              );
+            };
+            req.onsuccess = resolve;
+          });
+
           return { success: true };
         } catch (err) {
           return { error: `${err}` };
@@ -467,10 +532,10 @@ add_task(
       }
 
       return {
-        extTopLevel: testIDB(this.content),
+        extTopLevel: await testIDB(this.content),
         // TODO bug 1762638: Execute the following in their own tasks.
-        extSubFrame: testIDB(extFrame.contentWindow),
-        webSubFrame: testIDB(webFrame.contentWindow),
+        extSubFrame: await testIDB(extFrame.contentWindow),
+        webSubFrame: await testIDB(webFrame.contentWindow),
         webServiceWorker: await testServiceWorker(webFrame.contentWindow),
       };
     });
@@ -485,9 +550,30 @@ add_task(
         return new Promise(resolve => {
           let frame = this.content.document.createElement("iframe");
           frame.setAttribute("src", `moz-extension://${uuid}/subframe.html`);
-          frame.onload = () => {
+          frame.onload = async () => {
             try {
-              void frame.contentWindow.indexedDB;
+              if (!frame.contentWindow.indexedDB) {
+                throw Error("IndexedDB global should be accessible");
+              }
+              const indexedDB = frame.contentWindow.indexedDB;
+
+              await new Promise((success, failure) => {
+                const begin = indexedDB.open("door");
+                begin.onsuccess = success;
+                begin.onerror = err => failure(err.target);
+              });
+
+              const dbs = await indexedDB.databases();
+              if (!dbs.some(elem => elem.name === "door")) {
+                throw Error("Just created database should be found");
+              }
+
+              await new Promise((success, failure) => {
+                const end = indexedDB.deleteDatabase("door");
+                end.onsuccess = success;
+                end.onerror = err => failure(err.target);
+              });
+
               resolve({ success: true });
             } catch (err) {
               resolve({ error: `${err}` });
@@ -512,7 +598,7 @@ add_task(
 
     Assert.deepEqual(
       results.webSubFrame,
-      { error: "SecurityError: The operation is insecure." },
+      { error: "SecurityError: IDBFactory.open: The operation is insecure" },
       "IndexedDB not allowed in a subframe webpage with a top level extension page"
     );
     Assert.deepEqual(
@@ -544,8 +630,14 @@ add_task(async function test_content_script_on_cookieBehaviorReject() {
   function contentScript() {
     // Ensure that when the current cookieBehavior doesn't allow a webpage to use indexedDB
     // or localStorage, then a WebExtension content script is not allowed to use it as well.
+    browser.test.assertTrue(indexedDB, "IndexedDB handle should be accessible");
+
     browser.test.assertThrows(
-      () => indexedDB,
+      () => {
+        indexedDB.open("door").onsuccess = () => {
+          browser.test.fail(`Unreached function`);
+        };
+      },
       /The operation is insecure/,
       "a content script can't use indexedDB from a page where it is disallowed"
     );
