@@ -57,7 +57,6 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_TARGET_FILES.actors += [
     "FormHandlerChild.sys.mjs",
-    "FormHandlerParent.sys.mjs",
     "FormHistoryChild.sys.mjs",
     "FormHistoryParent.sys.mjs",
 ]

@@ -631,7 +631,5 @@ add_task(async function test_countrySpecificFieldsGetRequiredness() {
       "address-level1 is not rendered "
     );
     doc.querySelector("#cancel").click();
-
-    Region._setHomeRegion("US", false);
   });
 });
