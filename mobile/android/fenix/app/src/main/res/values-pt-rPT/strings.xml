@@ -774,7 +774,7 @@
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Experimente reiniciar as extensões</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
-    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Tente reiniciar as extensões</string>
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Experimentar reiniciar as extensões</string>
     <!-- The user will continue with all add-ons disabled -->
     <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Continuar com as extensões desativadas</string>
 
@@ -2525,13 +2525,13 @@
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">Traduzir para</string>
     <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
-    <string name="translations_bottom_sheet_translate_from_unsupported_language">Tente outro idioma fonte</string>
+    <string name="translations_bottom_sheet_translate_from_unsupported_language">Tentar outro idioma fonte</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Agora não</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
     <string name="translations_bottom_sheet_negative_button_restore">Mostrar original</string>
     <!-- Accessibility announcement (not visible, for screen readers etc.) for the translations dialog after restore button was pressed that indicates the original untranslated page was loaded. -->
-    <string name="translations_bottom_sheet_restore_accessibility_announcement">Carregada página original não traduzida</string>
+    <string name="translations_bottom_sheet_restore_accessibility_announcement">Carregada a página original não traduzida</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Feito</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2740,7 +2740,7 @@
     <!-- The survey header -->
     <string name="micro_survey_survey_header">Concluir este questionário</string>
     <!-- The privacy notice link -->
-    <string name="micro_survey_privacy_notice">Política de privacidade</string>
+    <string name="micro_survey_privacy_notice">Informação de privacidade</string>
     <!-- The submit button label text -->
     <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Submeter</string>
     <!-- The close button label text -->
