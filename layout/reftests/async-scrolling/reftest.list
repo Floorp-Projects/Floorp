@@ -68,7 +68,7 @@ fuzzy-if(Android,0-13,0-465) fuzzy-if(gtkWidget,17-28,24-60) fuzzy-if(cocoaWidge
 fuzzy-if(Android,0-13,0-465) fuzzy-if(gtkWidget,17-29,24-60) fuzzy-if(cocoaWidget,15-19,40-75) skip-if(useDrawSnapshot) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html # Bug 1604338
 skip-if(useDrawSnapshot) == fixed-pos-scrolled-clip-5.html fixed-pos-scrolled-clip-5-ref.html
 skip-if(useDrawSnapshot) == position-sticky-bug1434250.html position-sticky-bug1434250-ref.html
-fuzzy-if(Android,0-12,0-45) fuzzy-if(gtkWidget,16-25,12-32) fuzzy-if(cocoaWidget,13-16,20-44) skip-if(useDrawSnapshot) == position-sticky-scrolled-clip-1.html position-sticky-scrolled-clip-1-ref.html # Bug 1604338
+fuzzy-if(Android,0-12,0-11) fuzzy-if(gtkWidget,16-25,12-32) fuzzy-if(cocoaWidget,13-16,20-44) skip-if(useDrawSnapshot) == position-sticky-scrolled-clip-1.html position-sticky-scrolled-clip-1-ref.html # Bug 1604338
 fuzzy-if(Android,0-6,0-4) skip == position-sticky-scrolled-clip-2.html position-sticky-scrolled-clip-2-ref.html # bug ?????? - incorrectly applying clip to sticky contents
 fuzzy-if(Android,0-8,0-27) fuzzy-if(cocoaWidget,9-11,20-44) skip-if(useDrawSnapshot) == curtain-effect-1.html curtain-effect-1-ref.html
 fuzzy-if(Android,0-7,0-9) fuzzy-if(gtkWidget,10-15,12-32) fuzzy-if(cocoaWidget,5-9,20-42) skip-if(useDrawSnapshot) == transformed-1.html transformed-1-ref.html # Bug 1604338
