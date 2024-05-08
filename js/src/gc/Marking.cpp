@@ -331,12 +331,20 @@ static bool ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src,
 
 #ifdef DEBUG
 
-inline void js::gc::AssertShouldMarkInZone(GCMarker* marker, Cell* thing) {
-  if (!thing->isMarkedBlack()) {
-    Zone* zone = thing->zone();
-    MOZ_ASSERT(zone->isAtomsZone() ||
-               zone->shouldMarkInZone(marker->markColor()));
+template <typename T>
+void js::gc::AssertShouldMarkInZone(GCMarker* marker, T* thing) {
+  if (thing->isMarkedBlack()) {
+    return;
   }
+
+  // Allow marking marking atoms if we're not collected the atoms zone, except
+  // for symbols which may entrain other GC things if they're used as weakmap
+  // keys.
+  bool allowAtoms = !std::is_same_v<T, JS::Symbol>;
+
+  Zone* zone = thing->zone();
+  MOZ_ASSERT(zone->shouldMarkInZone(marker->markColor()) ||
+             (allowAtoms && zone->isAtomsZone()));
 }
 
 void js::gc::AssertRootMarkingPhase(JSTracer* trc) {
@@ -878,6 +886,9 @@ static void TraceEdgeForBarrier(GCMarker* gcmarker, TenuredCell* thing,
     MOZ_ASSERT(ShouldMark(gcmarker, thing));
     CheckTracedThing(gcmarker->tracer(), thing);
     AutoClearTracingSource acts(gcmarker->tracer());
+#ifdef DEBUG
+    AutoSetThreadIsMarking threadIsMarking;
+#endif  // DEBUG
     gcmarker->markAndTraverse<NormalMarkingOptions>(thing);
   });
 }
@@ -1175,6 +1186,13 @@ template <uint32_t opts, typename T>
 bool js::GCMarker::mark(T* thing) {
   if (!thing->isTenured()) {
     return false;
+  }
+
+  // Don't mark symbols if we're not collecting the atoms zone.
+  if constexpr (std::is_same_v<T, JS::Symbol>) {
+    if (!thing->zone()->isGCMarkingOrVerifyingPreBarriers()) {
+      return false;
+    }
   }
 
   AssertShouldMarkInZone(this, thing);
