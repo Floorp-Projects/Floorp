@@ -16,7 +16,7 @@ from mozpack.path import match as mozpackmatch
 from mozversioncontrol import InvalidRepoPath, get_repository_object
 
 from gecko_taskgraph import GECKO
-from gecko_taskgraph.util.hg import get_json_automationrelevance
+from gecko_taskgraph.util.hg import get_json_pushchangedfiles
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +27,8 @@ def get_changed_files(repository, revision):
     Get the set of files changed in the push headed by the given revision.
     Responses are cached, so multiple calls with the same arguments are OK.
     """
-    contents = get_json_automationrelevance(repository, revision)
     try:
-        changesets = contents["changesets"]
+        return get_json_pushchangedfiles(repository, revision)["files"]
     except KeyError:
         # We shouldn't hit this error in CI.
         if os.environ.get("MOZ_AUTOMATION"):
@@ -38,17 +37,6 @@ def get_changed_files(repository, revision):
         # We're likely on an unpublished commit, grab changed files from
         # version control.
         return get_locally_changed_files(GECKO)
-
-    logger.debug("{} commits influencing task scheduling:".format(len(changesets)))
-    changed_files = set()
-    for c in changesets:
-        desc = ""  # Support empty desc
-        if c["desc"]:
-            desc = c["desc"].splitlines()[0].encode("ascii", "ignore")
-        logger.debug(" {cset} {desc}".format(cset=c["node"][0:12], desc=desc))
-        changed_files |= set(c["files"])
-
-    return changed_files
 
 
 def check(params, file_patterns):
