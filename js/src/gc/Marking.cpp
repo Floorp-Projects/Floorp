@@ -1559,10 +1559,7 @@ scan_value_range:
         goto scan_obj;
       }
     } else if (v.isSymbol()) {
-      JS::Symbol* symbol = v.toSymbol();
-      if (symbol->zone()->isGCMarking()) {
-        markAndTraverseEdge<opts>(obj, v.toSymbol());
-      }
+      markAndTraverseEdge<opts>(obj, v.toSymbol());
     } else if (v.isBigInt()) {
       markAndTraverseEdge<opts>(obj, v.toBigInt());
     } else {
