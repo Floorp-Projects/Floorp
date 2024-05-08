@@ -2728,6 +2728,14 @@ backupService:
       description: >-
         When true, the profile backup service will be initialized soon after
         startup.
+    prefsUIEnabled:
+      type: boolean
+      setPref:
+        branch: default
+        pref: browser.backup.preferences.ui.enabled
+      description: >-
+        When true, the section in about:preferences to control the backup
+        feature is visible.
     sqlitePagesPerStep:
       description: >-
         The number of database pages to backup per step when backing up an

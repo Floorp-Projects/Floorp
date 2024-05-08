@@ -13,6 +13,7 @@ SPHINX_TREES["docs"] = "docs"
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 MARIONETTE_MANIFESTS += ["tests/marionette/manifest.toml"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 EXTRA_JS_MODULES.backup += [
     "BackupResources.sys.mjs",
