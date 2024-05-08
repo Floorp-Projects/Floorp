@@ -2698,12 +2698,11 @@ void nsStyleContent::TriggerImageLoads(Document& aDoc,
   }
 
   Span<const StyleContentItem> oldItems;
-  if (aOld && aOld->mContent.IsItems()) {
-    oldItems = aOld->mContent.AsItems().AsSpan();
+  if (aOld) {
+    oldItems = aOld->NonAltContentItems();
   }
 
-  auto items = mContent.AsItems().AsSpan();
-
+  auto items = NonAltContentItems();
   for (size_t i = 0; i < items.Length(); ++i) {
     const auto& item = items[i];
     if (!item.IsImage()) {

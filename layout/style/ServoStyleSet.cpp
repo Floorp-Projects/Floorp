@@ -767,7 +767,7 @@ bool ServoStyleSet::GeneratedContentPseudoExists(
     if (!aPseudoStyle.StyleContent()->mContent.IsItems()) {
       return false;
     }
-    MOZ_ASSERT(aPseudoStyle.StyleContent()->ContentCount() > 0,
+    MOZ_ASSERT(!aPseudoStyle.StyleContent()->NonAltContentItems().IsEmpty(),
                "IsItems() implies we have at least one item");
     // display:none is equivalent to not having a pseudo at all.
     if (aPseudoStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {

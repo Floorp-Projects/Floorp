@@ -900,7 +900,7 @@ void nsLayoutUtils::GetMarkerSpokenText(const nsIContent* aContent,
     return;
   }
 
-  if (frame->StyleContent()->ContentCount() > 0) {
+  if (!frame->StyleContent()->NonAltContentItems().IsEmpty()) {
     for (nsIFrame* child : frame->PrincipalChildList()) {
       nsIFrame::RenderedText text = child->GetRenderedText();
       aText += text.mString;

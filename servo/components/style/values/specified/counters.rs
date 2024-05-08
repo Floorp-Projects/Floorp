@@ -192,29 +192,33 @@ impl Parse for Content {
             return Ok(generics::Content::None);
         }
 
-        let mut content = vec![];
-        let mut has_alt_content = false;
+        let mut items = thin_vec::ThinVec::new();
+        let mut alt_start = None;
         loop {
-            {
+            if alt_start.is_none() {
                 if let Ok(image) = input.try_parse(|i| Image::parse_forbid_none(context, i)) {
-                    content.push(generics::ContentItem::Image(image));
+                    items.push(generics::ContentItem::Image(image));
                     continue;
                 }
             }
-            match input.next() {
-                Ok(&Token::QuotedString(ref value)) => {
-                    content.push(generics::ContentItem::String(
+            let Ok(t) = input.next() else { break };
+            match *t {
+                Token::QuotedString(ref value) => {
+                    items.push(generics::ContentItem::String(
                         value.as_ref().to_owned().into(),
                     ));
                 },
-                Ok(&Token::Function(ref name)) => {
+                Token::Function(ref name) => {
+                    // FIXME(emilio): counter() / counters() should be valid per spec past
+                    // the alt marker, but it's likely non-trivial to support and other
+                    // browsers don't support it either, so restricting it for now.
                     let result = match_ignore_ascii_case! { &name,
-                        "counter" => input.parse_nested_block(|input| {
+                        "counter" if alt_start.is_none() => input.parse_nested_block(|input| {
                             let name = CustomIdent::parse(input, &[])?;
                             let style = Content::parse_counter_style(context, input);
                             Ok(generics::ContentItem::Counter(name, style))
                         }),
-                        "counters" => input.parse_nested_block(|input| {
+                        "counters" if alt_start.is_none() => input.parse_nested_block(|input| {
                             let name = CustomIdent::parse(input, &[])?;
                             input.expect_comma()?;
                             let separator = input.expect_string()?.as_ref().to_owned().into();
@@ -232,17 +236,16 @@ impl Parse for Content {
                             ))
                         }
                     }?;
-                    content.push(result);
+                    items.push(result);
                 },
-                Ok(&Token::Ident(ref ident)) => {
-                    content.push(match_ignore_ascii_case! { &ident,
+                Token::Ident(ref ident) if alt_start.is_none() => {
+                    items.push(match_ignore_ascii_case! { &ident,
                         "open-quote" => generics::ContentItem::OpenQuote,
                         "close-quote" => generics::ContentItem::CloseQuote,
                         "no-open-quote" => generics::ContentItem::NoOpenQuote,
                         "no-close-quote" => generics::ContentItem::NoCloseQuote,
                         #[cfg(feature = "gecko")]
-                        "-moz-alt-content" => {
-                            has_alt_content = true;
+                        "-moz-alt-content" if context.in_ua_sheet() => {
                             generics::ContentItem::MozAltContent
                         },
                         "-moz-label-content" if context.chrome_rules_enabled() => {
@@ -256,17 +259,26 @@ impl Parse for Content {
                         }
                     });
                 },
-                Err(_) => break,
-                Ok(t) => {
+                Token::Delim('/')
+                    if alt_start.is_none() &&
+                        !items.is_empty() &&
+                        static_prefs::pref!("layout.css.content.alt-text.enabled") =>
+                {
+                    alt_start = Some(items.len());
+                },
+                ref t => {
                     let t = t.clone();
                     return Err(input.new_unexpected_token_error(t));
                 },
             }
         }
-        // We don't allow to parse `-moz-alt-content` in multiple positions.
-        if content.is_empty() || (has_alt_content && content.len() != 1) {
+        if items.is_empty() {
             return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
         }
-        Ok(generics::Content::Items(content.into()))
+        let alt_start = alt_start.unwrap_or(items.len());
+        Ok(generics::Content::Items(generics::GenericContentItems {
+            items,
+            alt_start,
+        }))
     }
 }

@@ -477,7 +477,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    */
   void CreateGeneratedContent(
       nsFrameConstructorState& aState, Element& aOriginatingElement,
-      ComputedStyle& aPseudoStyle, uint32_t aContentIndex,
+      ComputedStyle& aPseudoStyle, const mozilla::StyleContentItem& aItem,
+      size_t aContentIndex,
       const mozilla::FunctionRef<void(nsIContent*)> aAddChild);
 
   /**
