@@ -35,6 +35,64 @@ const formFillController = Cc[
   "@mozilla.org/satchel/form-fill-controller;1"
 ].getService(Ci.nsIFormFillController);
 
+const observer = {
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIWebProgressListener",
+    "nsISupportsWeakReference",
+  ]),
+
+  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+    // Only handle pushState/replaceState here.
+    if (
+      !(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) ||
+      !(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE)
+    ) {
+      return;
+    }
+    const window = aWebProgress.DOMWindow;
+    const formAutofillChild = window.windowGlobalChild.getActor("FormAutofill");
+    formAutofillChild.onPageNavigation();
+  },
+
+  onStateChange(aWebProgress, aRequest, aStateFlags, _aStatus) {
+    if (
+      // if restoring a previously-rendered presentation (bfcache)
+      aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING &&
+      aStateFlags & Ci.nsIWebProgressListener.STATE_STOP
+    ) {
+      return;
+    }
+
+    if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_START)) {
+      return;
+    }
+
+    // We only care about when a page triggered a load, not the user. For example:
+    // clicking refresh/back/forward, typing a URL and hitting enter, and loading a bookmark aren't
+    // likely to be when a user wants to save a formautofill data.
+    let channel = aRequest.QueryInterface(Ci.nsIChannel);
+    let triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
+    if (
+      triggeringPrincipal.isNullPrincipal ||
+      triggeringPrincipal.equals(
+        Services.scriptSecurityManager.getSystemPrincipal()
+      )
+    ) {
+      return;
+    }
+
+    // Don't handle history navigation, reload, or pushState not triggered via chrome UI.
+    // e.g. history.go(-1), location.reload(), history.replaceState()
+    if (!(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_NORMAL)) {
+      return;
+    }
+
+    const window = aWebProgress.DOMWindow;
+    const formAutofillChild = window.windowGlobalChild.getActor("FormAutofill");
+    formAutofillChild.onPageNavigation();
+  },
+};
+
 /**
  * Handles content's interactions for the frame.
  */
@@ -61,12 +119,6 @@ export class FormAutofillChild extends JSWindowActorChild {
     );
 
     lazy.AutoCompleteChild.addPopupStateListener(this);
-
-    /**
-     * Tracks whether the last form submission was triggered by a form submit event,
-     * if so we'll ignore the page navigation that follows
-     */
-    this.isFollowingSubmitEvent = false;
   }
 
   didDestroy() {
@@ -128,8 +180,9 @@ export class FormAutofillChild extends JSWindowActorChild {
         if (lazy.FormAutofill.captureOnFormRemoval) {
           this.registerDOMDocFetchSuccessEventListener();
         }
-
-        this.manager.getActor("FormHandler").registerFormSubmissionInterest();
+        if (lazy.FormAutofill.captureOnPageNavigation) {
+          this.registerProgressListener();
+        }
       }
 
       this._hasPendingTask = false;
@@ -142,30 +195,108 @@ export class FormAutofillChild extends JSWindowActorChild {
   }
 
   /**
-   * We received a form-submission-detected event because
-   * the page was navigated.
+   * Gets the highest accessible docShell
+   *
+   * @returns {DocShell} highest accessible docShell
+   */
+  getHighestDocShell() {
+    const window = this.document.defaultView;
+
+    let docShell;
+    for (
+      let browsingContext = BrowsingContext.getFromWindow(window);
+      browsingContext?.docShell;
+      browsingContext = browsingContext.parent
+    ) {
+      docShell = browsingContext.docShell;
+    }
+
+    return docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+  }
+
+  /**
+   * After being notified of a page navigation, we check whether
+   * the navigated window is the active window or one of its parents
+   * (active window = activeHandler.window)
+   *
+   * @returns {boolean} whether the navigation affects the active window
+   */
+  isActiveWindowNavigation() {
+    const activeWindow = lazy.FormAutofillContent.activeHandler?.window;
+    const navigatedWindow = this.document.defaultView;
+
+    if (!activeWindow || !navigatedWindow) {
+      return false;
+    }
+
+    const navigatedBrowsingContext =
+      BrowsingContext.getFromWindow(navigatedWindow);
+
+    for (
+      let browsingContext = BrowsingContext.getFromWindow(activeWindow);
+      browsingContext?.docShell;
+      browsingContext = browsingContext.parent
+    ) {
+      if (navigatedBrowsingContext === browsingContext) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Infer a form submission after document is navigated
    */
   onPageNavigation() {
-    if (!lazy.FormAutofill.captureOnPageNavigation) {
+    if (!this.isActiveWindowNavigation()) {
       return;
     }
 
-    if (this.isFollowingSubmitEvent) {
-      // The next page navigation should be handled as form submission again
-      this.isFollowingSubmitEvent = false;
+    // TODO: We should not use FormAutofillContent and let the
+    //       parent decides which child to notify
+    const activeChild = lazy.FormAutofillContent.activeAutofillChild;
+    const activeElement = activeChild.activeFieldDetail?.elementWeakRef.deref();
+    if (!activeElement) {
       return;
     }
-    let weakIdentifiedForms = ChromeUtils.nondeterministicGetWeakMapKeys(
-      this._fieldDetailsManager._formsDetails
-    );
+
     const formSubmissionReason = lazy.FORM_SUBMISSION_REASON.PAGE_NAVIGATION;
 
-    for (const form of weakIdentifiedForms) {
-      // Disconnected forms are captured by the form removal heuristic
-      if (!form.isConnected) {
-        continue;
-      }
-      this.formSubmitted(form, formSubmissionReason);
+    // We only capture the form of the active field right now,
+    // this means that we might miss some fields (see bug 1871356)
+    activeChild.formSubmitted(activeElement, formSubmissionReason);
+  }
+
+  /**
+   * After a form submission we unregister the
+   * nsIWebProgressListener from the top level doc shell
+   */
+  unregisterProgressListener() {
+    const docShell = this.getHighestDocShell();
+    try {
+      docShell.removeProgressListener(observer);
+    } catch (ex) {
+      // Ignore NS_ERROR_FAILURE if the progress listener was not registered
+    }
+  }
+
+  /**
+   * After a focusin event and after we identified formautofill fields,
+   * we set up a nsIWebProgressListener that notifies of a request state
+   * change or window location change in the top level doc shell
+   */
+  registerProgressListener() {
+    const docShell = this.getHighestDocShell();
+
+    const flags =
+      Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT |
+      Ci.nsIWebProgress.NOTIFY_LOCATION;
+    try {
+      docShell.addProgressListener(observer, flags);
+    } catch (ex) {
+      // Ignore NS_ERROR_FAILURE if the progress listener was already added
     }
   }
 
@@ -258,9 +389,7 @@ export class FormAutofillChild extends JSWindowActorChild {
       }
       case "form-submission-detected": {
         if (lazy.FormAutofill.isAutofillEnabled) {
-          const formElement = evt.detail.form;
-          const formSubmissionReason = evt.detail.reason;
-          this.onFormSubmission(formElement, formSubmissionReason);
+          this.onFormSubmission(evt);
         }
         break;
       }
@@ -301,24 +430,13 @@ export class FormAutofillChild extends JSWindowActorChild {
   /**
    * Handle form-submission-detected event (dispatched by FormHandlerChild)
    *
-   * Depending on the heuristic that detected the form submission,
-   * the form that is submitted is retrieved differently
-   *
-   * @param {HTMLFormElement} form that is being submitted
-   * @param {string} reason heuristic that detected the form submission
-   *                        (see FormHandlerChild.FORM_SUBMISSION_REASON)
+   * @param {CustomEvent} evt form-submission-detected event
    */
-  onFormSubmission(form, reason) {
-    switch (reason) {
-      case lazy.FORM_SUBMISSION_REASON.PAGE_NAVIGATION:
-        this.onPageNavigation();
-        break;
-      case lazy.FORM_SUBMISSION_REASON.FORM_SUBMIT_EVENT:
-        this.formSubmitted(form, reason);
-        break;
-      default:
-        throw new Error("Unknown submission reason");
-    }
+  onFormSubmission(evt) {
+    const formElement = evt.detail.form;
+    const formSubmissionReason = evt.detail.reason;
+
+    this.formSubmitted(formElement, formSubmissionReason);
   }
 
   /**
@@ -346,6 +464,16 @@ export class FormAutofillChild extends JSWindowActorChild {
     this.registerDOMFormRemovedEventListener();
 
     this.unregisterDOMDocFetchSuccessEventListener();
+  }
+
+  /**
+   * Unregister all listeners that notify of a form submission,
+   * because we just detected and acted on a form submission
+   */
+  unregisterFormSubmissionListeners() {
+    this.unregisterDOMDocFetchSuccessEventListener();
+    this.unregisterDOMFormRemovedEventListener();
+    this.unregisterProgressListener();
   }
 
   async receiveMessage(message) {
@@ -435,14 +563,7 @@ export class FormAutofillChild extends JSWindowActorChild {
 
     // Unregister the form submission listeners after handling a form submission
     this.debug("Unregistering form submission listeners");
-    this.unregisterDOMDocFetchSuccessEventListener();
-    this.unregisterDOMFormRemovedEventListener();
-
-    // After a form submit event follows (most likely) a page navigation, so we set this flag
-    // to not handle the following one as form submission in order to avoid re-submitting the same form.
-    // Ideally, we should keep a record of the last submitted form details and based on that we
-    // should decide if we want to submit a form (bug 1895437)
-    this.isFollowingSubmitEvent = true;
+    this.unregisterFormSubmissionListeners();
 
     [records.address, records.creditCard].forEach((rs, idx) => {
       lazy.AutofillTelemetry.recordSubmittedSectionCount(
