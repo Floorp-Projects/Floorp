@@ -8,7 +8,6 @@ import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.filters.SdkSuppress
 import mozilla.components.concept.engine.mediasession.MediaSession
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -146,7 +145,6 @@ class SettingsSitePermissionsTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2286807
-    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1827599")
     @SmokeTest
     @Test
     fun verifyAutoplayBlockAudioOnlySettingOnMutedVideoTest() {
@@ -210,7 +208,6 @@ class SettingsSitePermissionsTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2286806
-    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1827599")
     @Test
     fun verifyAutoplayAllowAudioVideoSettingOnMutedVideoTest() {
         val mutedVideoTestPage = getMutedVideoPageAsset(mockWebServer)
