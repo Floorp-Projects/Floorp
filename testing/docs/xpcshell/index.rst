@@ -22,13 +22,13 @@ Creating a new test directory
 
 If you need to create a new test directory, then follow the steps here.
 The test runner needs to know about the existence of the tests and how
-to configure them through the use of the ``xpcshell.ini`` manifest file.
+to configure them through the use of the ``xpcshell.toml`` manifest file.
 
-First add a ``XPCSHELL_TESTS_MANIFESTS += ['xpcshell.ini']`` declaration
-(with the correct relative ``xpcshell.ini`` path) to the ``moz.build``
+First add a ``XPCSHELL_TESTS_MANIFESTS += ['xpcshell.toml']`` declaration
+(with the correct relative ``xpcshell.toml`` path) to the ``moz.build``
 file located in or above the directory.
 
-Then create an empty ``xpcshell.ini`` file to tell the build system
+Then create an empty ``xpcshell.toml`` file to tell the build system
 about the individual tests, and provide any additional configuration
 options.
 
@@ -44,7 +44,7 @@ run:
    $ hg add path/to/test/test_example.js
 
 This will automatically create the test file and add it to
-``xpcshell.ini``, the second line adds it to your commit.
+``xpcshell.toml``, the second line adds it to your commit.
 
 The test file contains an empty test which will give you an idea of how
 to write a test. There are plenty more examples throughout
@@ -282,8 +282,8 @@ Multiprocess communication
    **optionalCallback** or the value to which the promise resolves.
 
 
-xpcshell.ini manifest
----------------------
+xpcshell.toml manifest
+----------------------
 
 The manifest controls what tests are included in a test suite, and the
 configuration of the tests. It is loaded via the \`moz.build\` property
@@ -306,7 +306,7 @@ listed under the ``[DEFAULT]`` section of the manifest.
    browser/ directory (e.g. additional XPCOM services that live there)
 ``skip-if`` ``run-if`` ``fail-if``
    For this entire test suite, run the tests only if they meet certain
-   conditions. See `Adding conditions in the xpcshell.ini
+   conditions. See `Adding conditions in the xpcshell.toml
    manifest <#adding-conditions-through-the-add-task-or-add-test-function>`__ for how
    to use these properties.
 ``support-files``
@@ -320,19 +320,19 @@ listed under the ``[DEFAULT]`` section of the manifest.
    brackets
 
 
-Creating a new xpcshell.ini file
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating a new xpcshell.toml file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When creating a new directory and new xpcshell.ini manifest file, the
+When creating a new directory and new xpcshell.toml manifest file, the
 following must be added to a moz.build file near that file in the
 directory hierarchy:
 
 .. code:: bash
 
-   XPCSHELL_TESTS_MANIFESTS += ['path/to/xpcshell.ini']
+   XPCSHELL_TESTS_MANIFESTS += ['path/to/xpcshell.toml']
 
 Typically, the moz.build containing *XPCSHELL_TESTS_MANIFESTS* is not in
-the same directory as *xpcshell.ini*, but rather in a parent directory.
+the same directory as *xpcshell.toml*, but rather in a parent directory.
 Common directory structures look like:
 
 .. code:: bash
@@ -340,7 +340,7 @@ Common directory structures look like:
    feature
    ├──moz.build
    └──tests/xpcshell
-      └──xpcshell.ini
+      └──xpcshell.toml
 
    # or
 
@@ -349,7 +349,7 @@ Common directory structures look like:
    └──tests
       ├──moz.build
       └──xpcshell
-         └──xpcshell.ini
+         └──xpcshell.toml
 
 
 Test head and support files
@@ -357,13 +357,13 @@ Test head and support files
 
 Typically in a test suite, similar setup code and dependencies will need
 to be loaded in across each test. This can be done through the test
-head, which is the file declared in the ``xpcshell.ini`` manifest file
+head, which is the file declared in the ``xpcshell.toml`` manifest file
 under the ``head`` property. The file itself is typically called
 ``head.js``. Any variable declared in the test head will be in the
 global scope of each test in that test suite.
 
 In addition to the test head, other support files can be declared in the
-``xpcshell.ini`` manifest file. This is done through the
+``xpcshell.toml`` manifest file. This is done through the
 ``support-files`` declaration. These files will be made available
 through the url ``resource://test`` plus the name of the file. These
 files can then be loaded in using the
@@ -380,11 +380,11 @@ well, and they will be made available by their filename.
    ├──module.mjs
    ├──moz.build
    ├──test_example.js
-   └──xpcshell.ini
+   └──xpcshell.toml
 
-.. code:: ini
+.. code:: toml
 
-   # xpcshell.ini
+   # xpcshell.toml
    [DEFAULT]
    head = head.js
    support-files =
@@ -586,8 +586,8 @@ on Mac OS X, the test will be skipped on all other platforms.
    specifics of what the condition is.
 
 
-Adding conditions in the xpcshell.ini manifest
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding conditions in the xpcshell.toml manifest
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sometimes you may want to add conditions to specify that a test should
 be skipped in certain configurations, or that a test is known to fail on
@@ -749,13 +749,13 @@ If you get a message such as:
     0:00.62 ERROR Failed to initialize debugging: Error: resource://devtools appears to be inaccessible from the xpcshell environment.
    This can usually be resolved by adding:
      firefox-appdir = browser
-   to the xpcshell.ini manifest.
+   to the xpcshell.toml manifest.
    It is possible for this to alter test behevior by triggering additional browser code to run, so check test behavior after making this change.
 
 This is typically a test in core code. You can attempt to add that to
-the xpcshell.ini, however as it says, it might affect how the test runs
+the xpcshell.toml, however as it says, it might affect how the test runs
 and cause failures. Generally the firefox-appdir should only be left in
-xpcshell.ini for tests that are in the browser/ directory, or are
+xpcshell.toml for tests that are in the browser/ directory, or are
 Firefox-only.
 
 

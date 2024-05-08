@@ -413,7 +413,7 @@ function _setupDevToolsServer(breakpointFiles, callback) {
         "xpcshell environment.\n" +
         "This can usually be resolved by adding:\n" +
         "  firefox-appdir = browser\n" +
-        "to the xpcshell.ini manifest.\n" +
+        "to the xpcshell.toml manifest.\n" +
         "It is possible for this to alter test behevior by " +
         "triggering additional browser code to run, so check " +
         "test behavior after making this change.\n" +
