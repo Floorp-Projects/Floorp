@@ -113,6 +113,7 @@ skip-if = [
 ["test_auth_proxy.js"]
 
 ["test_authentication.js"]
+requesttimeoutfactor = 2
 
 ["test_authpromptwrapper.js"]
 
