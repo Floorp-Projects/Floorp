@@ -18,21 +18,45 @@ import "chrome://global/content/elements/moz-button.mjs";
  */
 export default class SidebarMain extends MozLitElement {
   static properties = {
+    topActions: { type: Array },
+    extensionActions: { type: Array },
     bottomActions: { type: Array },
     selectedView: { type: String },
-    sidebarItems: { type: Array },
     open: { type: Boolean },
   };
 
   static queries = {
-    extensionButtons: { all: ".tools-and-extensions > moz-button[extension]" },
-    toolButtons: { all: ".tools-and-extensions > moz-button:not([extension])" },
-    customizeButton: ".bottom-actions > moz-button[view=viewCustomizeSidebar]",
+    extensionButtons: { all: ".extension-actions > moz-button" },
   };
 
   constructor() {
     super();
-    this.bottomActions = [];
+    this.topActions = [
+      {
+        icon: `url("chrome://browser/skin/insights.svg")`,
+        view: null,
+        l10nId: "sidebar-main-insights",
+      },
+    ];
+    this.extensionActions = [];
+    this.bottomActions = [
+      {
+        l10nId: "sidebar-menu-history",
+        icon: `url("chrome://browser/content/firefoxview/view-history.svg")`,
+        view: "viewHistorySidebar",
+      },
+      {
+        l10nId: "sidebar-menu-bookmarks",
+        icon: `url("chrome://browser/skin/bookmark-hollow.svg")`,
+        view: "viewBookmarksSidebar",
+      },
+      {
+        l10nId: "sidebar-menu-synced-tabs",
+        icon: `url("chrome://browser/skin/device-phone.svg")`,
+        view: "viewTabsSidebar",
+      },
+    ];
+
     this.selectedView = window.SidebarController.currentID;
     this.open = window.SidebarController.isOpen;
   }
@@ -47,7 +71,7 @@ export default class SidebarMain extends MozLitElement {
     window.addEventListener("SidebarItemChanged", this);
     window.addEventListener("SidebarItemRemoved", this);
 
-    this.setCustomize();
+    this.setExtensionItems();
   }
 
   disconnectedCallback() {
@@ -80,19 +104,13 @@ export default class SidebarMain extends MozLitElement {
     return icon;
   }
 
-  getToolsAndExtensions() {
-    return window.SidebarController.toolsAndExtensions;
-  }
-
-  setCustomize() {
-    this.bottomActions.push(
-      ...window.SidebarController.getSidebarPanels([
-        "viewCustomizeSidebar",
-      ]).map(({ commandID, icon, revampL10nId }) => ({
-        l10nId: revampL10nId,
+  setExtensionItems() {
+    this.extensionActions = window.SidebarController.getExtensions().map(
+      ({ commandID, icon, label }) => ({
+        tooltiptext: label,
         icon,
         view: commandID,
-      }))
+      })
     );
   }
 
@@ -108,7 +126,7 @@ export default class SidebarMain extends MozLitElement {
       case "SidebarItemAdded":
       case "SidebarItemChanged":
       case "SidebarItemRemoved":
-        this.requestUpdate();
+        this.setExtensionItems();
         break;
     }
   }
@@ -133,25 +151,24 @@ export default class SidebarMain extends MozLitElement {
       title=${ifDefined(action.tooltiptext)}
       data-l10n-id=${ifDefined(action.l10nId)}
       style=${styleMap({ "--action-icon": action.icon })}
-      ?extension=${action.view?.includes("-sidebar-action")}
     >
     </moz-button>`;
   }
 
   render() {
-    let toolsAndExtensions = this.getToolsAndExtensions()
-      ? this.getToolsAndExtensions()
-      : new Map();
     return html`
       <link
         rel="stylesheet"
         href="chrome://browser/content/sidebar/sidebar-main.css"
       />
       <div class="wrapper">
-        <div class="tools-and-extensions actions-list">
-          ${[...toolsAndExtensions.values()]
-            .filter(toolOrExtension => !toolOrExtension.disabled)
-            .map(action => this.entrypointTemplate(action))}
+        <div class="top-actions actions-list">
+          ${this.topActions.map(action => this.entrypointTemplate(action))}
+        </div>
+        <div class="extension-actions actions-list">
+          ${this.extensionActions.map(action =>
+            this.entrypointTemplate(action)
+          )}
         </div>
         <div class="bottom-actions actions-list">
           ${this.bottomActions.map(action => this.entrypointTemplate(action))}
