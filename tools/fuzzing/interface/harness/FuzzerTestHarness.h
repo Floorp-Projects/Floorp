@@ -14,6 +14,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 #include "prenv.h"
 #include "nsComponentManagerUtils.h"
