@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  max-height: 100vh;
+  height: 100vh;
 
   > .beforeList {
     margin: 20px;
@@ -27,6 +27,7 @@ virtualized-list {
   position: relative;
   overflow: auto;
   margin: 20px;
+  flex-grow: 1;
 
   .lines-container {
     padding-inline-start: unset;
