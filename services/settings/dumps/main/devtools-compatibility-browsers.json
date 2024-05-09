@@ -1,6 +1,33 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1714867506498,
+      "status": "planned",
+      "version": "127",
+      "browserid": "edge",
+      "id": "9e227c6c-b6ca-4c69-868c-e133a0ee9dbd",
+      "last_modified": 1715003394961
+    },
+    {
+      "name": "Edge",
+      "schema": 1714638388703,
+      "status": "beta",
+      "version": "125",
+      "browserid": "edge",
+      "id": "f1147d5f-d690-43d0-879d-117c6ca24a16",
+      "last_modified": 1715003394958
+    },
+    {
+      "name": "Edge",
+      "schema": 1714867506401,
+      "status": "nightly",
+      "version": "126",
+      "browserid": "edge",
+      "id": "c8bf4918-03b7-4be2-bf75-4d6139dbd7c9",
+      "last_modified": 1715003394956
+    },
+    {
       "name": "Samsung Internet",
       "schema": 1714521906708,
       "status": "current",
@@ -181,15 +208,6 @@
       "last_modified": 1712840749681
     },
     {
-      "name": "Edge",
-      "schema": 1712707507922,
-      "status": "planned",
-      "version": "126",
-      "browserid": "edge",
-      "id": "c8bf4918-03b7-4be2-bf75-4d6139dbd7c9",
-      "last_modified": 1712840749678
-    },
-    {
       "name": "Safari",
       "schema": 1712707507975,
       "status": "beta",
@@ -206,15 +224,6 @@
       "browserid": "safari_ios",
       "id": "4375a82d-f2f1-4883-8da7-0aedfb05b8f9",
       "last_modified": 1712840749673
-    },
-    {
-      "name": "Edge",
-      "schema": 1712707507867,
-      "status": "nightly",
-      "version": "125",
-      "browserid": "edge",
-      "id": "f1147d5f-d690-43d0-879d-117c6ca24a16",
-      "last_modified": 1712840749665
     },
     {
       "name": "Safari",
@@ -289,5 +298,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1714638388565
+  "timestamp": 1715003394961
 }
