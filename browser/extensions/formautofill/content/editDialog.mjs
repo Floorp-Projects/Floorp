@@ -2,21 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* exported EditAddressDialog, EditCreditCardDialog */
 /* eslint-disable mozilla/balanced-listeners */ // Not relevant since the document gets unloaded.
 
-/* import-globals-from addressFormLayout.js */
+import {
+  getCurrentFormData,
+  canSubmitForm,
+} from "chrome://formautofill/content/addressFormLayout.mjs";
 
-"use strict";
-
-ChromeUtils.defineESModuleGetters(this, {
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
   AutofillTelemetry: "resource://gre/modules/shared/AutofillTelemetry.sys.mjs",
   formAutofillStorage: "resource://autofill/FormAutofillStorage.sys.mjs",
 });
 
 class AutofillEditDialog {
   constructor(subStorageName, elements, record) {
-    this._storageInitPromise = formAutofillStorage.initialize();
+    this._storageInitPromise = lazy.formAutofillStorage.initialize();
     this._subStorageName = subStorageName;
     this._elements = elements;
     this._record = record;
@@ -40,7 +41,7 @@ class AutofillEditDialog {
    */
   async getStorage() {
     await this._storageInitPromise;
-    return formAutofillStorage[this._subStorageName];
+    return lazy.formAutofillStorage[this._subStorageName];
   }
 
   /**
@@ -151,17 +152,20 @@ class AutofillEditDialog {
 
   recordFormSubmit() {
     let method = this._record?.guid ? "edit" : "add";
-    AutofillTelemetry.recordManageEvent(this.telemetryType, method);
+    lazy.AutofillTelemetry.recordManageEvent(this.telemetryType, method);
   }
 }
 
-class EditAddressDialog extends AutofillEditDialog {
-  telemetryType = AutofillTelemetry.ADDRESS;
+export class EditAddressDialog extends AutofillEditDialog {
+  telemetryType = lazy.AutofillTelemetry.ADDRESS;
 
   constructor(elements, record) {
     super("addresses", elements, record);
     if (record) {
-      AutofillTelemetry.recordManageEvent(this.telemetryType, "show_entry");
+      lazy.AutofillTelemetry.recordManageEvent(
+        this.telemetryType,
+        "show_entry"
+      );
     }
   }
 
@@ -195,8 +199,8 @@ class EditAddressDialog extends AutofillEditDialog {
   }
 }
 
-class EditCreditCardDialog extends AutofillEditDialog {
-  telemetryType = AutofillTelemetry.CREDIT_CARD;
+export class EditCreditCardDialog extends AutofillEditDialog {
+  telemetryType = lazy.AutofillTelemetry.CREDIT_CARD;
 
   constructor(elements, record) {
     elements.fieldContainer._elements.billingAddress.disabled = true;
@@ -206,7 +210,10 @@ class EditCreditCardDialog extends AutofillEditDialog {
       this._onCCNumberFieldBlur.bind(this)
     );
     if (record) {
-      AutofillTelemetry.recordManageEvent(this.telemetryType, "show_entry");
+      lazy.AutofillTelemetry.recordManageEvent(
+        this.telemetryType,
+        "show_entry"
+      );
     }
   }
 

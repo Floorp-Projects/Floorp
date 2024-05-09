@@ -2,17 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* exported EditAddress, EditCreditCard */
 /* eslint-disable mozilla/balanced-listeners */ // Not relevant since the document gets unloaded.
 
-"use strict";
-
-const { FormAutofill } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofill.sys.mjs"
-);
-const { FormAutofillUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
-);
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
+});
 
 class EditAutofillForm {
   constructor(elements) {
@@ -143,7 +138,7 @@ class EditAutofillForm {
   updateCustomValidity(_field) {}
 }
 
-class EditCreditCard extends EditAutofillForm {
+export class EditCreditCard extends EditAutofillForm {
   /**
    * @param {HTMLElement[]} elements
    * @param {object} record with a decrypted cc-number
@@ -250,7 +245,7 @@ class EditCreditCard extends EditAutofillForm {
       hasAddresses = true;
       let selected = guid == billingAddressGUID;
       let option = new Option(
-        FormAutofillUtils.getAddressLabel(address),
+        lazy.FormAutofillUtils.getAddressLabel(address),
         guid,
         selected,
         selected
@@ -270,7 +265,7 @@ class EditCreditCard extends EditAutofillForm {
     // Clear the error message if cc-number is valid
     if (
       event.target == this._elements.ccNumber &&
-      FormAutofillUtils.isCCNumber(this._elements.ccNumber.value)
+      lazy.FormAutofillUtils.isCCNumber(this._elements.ccNumber.value)
     ) {
       this._elements.ccNumber.setCustomValidity("");
     }
@@ -283,7 +278,7 @@ class EditCreditCard extends EditAutofillForm {
     // Mark the cc-number field as invalid if the number is empty or invalid.
     if (
       field == this._elements.ccNumber &&
-      !FormAutofillUtils.isCCNumber(field.value)
+      !lazy.FormAutofillUtils.isCCNumber(field.value)
     ) {
       let invalidCardNumberString =
         this._elements.invalidCardNumberStringElement.textContent;

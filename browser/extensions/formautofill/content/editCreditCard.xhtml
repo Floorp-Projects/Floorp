@@ -19,8 +19,6 @@
       rel="stylesheet"
       href="chrome://formautofill/content/skin/editDialog.css"
     />
-    <script src="chrome://formautofill/content/editDialog.js"></script>
-    <script src="chrome://formautofill/content/autofillEditForms.js"></script>
   </head>
   <body>
     <form id="form" class="editCreditCardForm contentPane" autocomplete="off">
@@ -87,37 +85,32 @@
       <button id="cancel" data-l10n-id="autofill-cancel-button" />
       <button id="save" class="primary" data-l10n-id="autofill-save-button" />
     </div>
-    <script>
-      <![CDATA[
-          "use strict";
 
-          /* import-globals-from editDialog.js */
+    <!-- eslint-disable -->
+    <script type="module">
+      import { EditCreditCardDialog } from "chrome://formautofill/content/editDialog.mjs";
+      import { EditCreditCard } from "chrome://formautofill/content/autofillEditForms.mjs";
+      const { record } = window.arguments?.[0] ?? {};
 
-          (async () => {
-            const {
-              record,
-            } = window.arguments?.[0] ?? {};
+      const fieldContainer = new EditCreditCard(
+        {
+          form: document.getElementById("form"),
+        },
+        record,
+        []
+      );
 
-            await formAutofillStorage.initialize();
-            const addresses = {};
-            for (let address of await formAutofillStorage.addresses.getAll()) {
-              addresses[address.guid] = address;
-            }
-
-            /* import-globals-from autofillEditForms.js */
-            const fieldContainer = new EditCreditCard({
-              form: document.getElementById("form"),
-            }, record, addresses);
-
-            new EditCreditCardDialog({
-              title: document.querySelector("title"),
-              fieldContainer,
-              controlsContainer: document.getElementById("controls-container"),
-              cancel: document.getElementById("cancel"),
-              save: document.getElementById("save"),
-            }, record);
-          })();
-        ]]>
+      new EditCreditCardDialog(
+        {
+          title: document.querySelector("title"),
+          fieldContainer,
+          controlsContainer: document.getElementById("controls-container"),
+          cancel: document.getElementById("cancel"),
+          save: document.getElementById("save"),
+        },
+        record
+      );
     </script>
+    <!-- eslint-enable -->
   </body>
 </html>
