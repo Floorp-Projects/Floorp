@@ -180,6 +180,7 @@ tags = "remotesettings searchmain"
 ["test_migrateWebExtensionEngine.js"]
 
 ["test_missing_engine.js"]
+prefs = ["browser.search.newSearchConfig.enabled=false"]
 
 ["test_nodb_pluschanges.js"]
 
