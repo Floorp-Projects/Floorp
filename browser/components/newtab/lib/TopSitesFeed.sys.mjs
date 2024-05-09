@@ -73,7 +73,7 @@ const ROWS_PREF = "topSitesRows";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 // The default total number of sponsored top sites to fetch from Contile
 // and Pocket.
-const MAX_NUM_SPONSORED = 2;
+const MAX_NUM_SPONSORED = 3;
 // Nimbus variable for the total number of sponsored top sites including
 // both Contile and Pocket sources.
 // The default will be `MAX_NUM_SPONSORED` if this variable is unspecified.
@@ -112,7 +112,7 @@ const NIMBUS_VARIABLE_CONTILE_POSITIONS = "contileTopsitesPositions";
 const CONTILE_ENDPOINT_PREF = "browser.topsites.contile.endpoint";
 const CONTILE_UPDATE_INTERVAL = 15 * 60 * 1000; // 15 minutes
 // The maximum number of sponsored top sites to fetch from Contile.
-const CONTILE_MAX_NUM_SPONSORED = 2;
+const CONTILE_MAX_NUM_SPONSORED = 3;
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 const CONTILE_CACHE_PREF = "browser.topsites.contile.cachedTiles";
 const CONTILE_CACHE_VALID_FOR_PREF = "browser.topsites.contile.cacheValidFor";

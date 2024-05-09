@@ -2970,9 +2970,10 @@ add_task(async function test_ContileIntegration() {
 
     Assert.ok(fetched);
     // Both "foo" and "bar" should be filtered
-    Assert.equal(feed._contile.sites.length, 2);
+    Assert.equal(feed._contile.sites.length, 3);
     Assert.equal(feed._contile.sites[0].url, "https://www.test.com");
     Assert.equal(feed._contile.sites[1].url, "https://test1.com");
+    Assert.equal(feed._contile.sites[2].url, "https://test2.com");
   }
 
   {
