@@ -168,5 +168,89 @@ gradle.projectsLoaded { ->
                 expand(values)
             }
         }
+
+        // Allow local appservices substitution in each project.
+        if (gradle.hasProperty("localProperties.autoPublish.application-services.dir")) {
+            def appServicesSrcDir = gradle."localProperties.autoPublish.application-services.dir"
+            apply from: "${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+        }
+
+        // Allow local Glean substitution in each project.
+        if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
+            def gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
+            apply from: "${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
+        }
+
+        if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
+            if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
+                ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
+            }
+            ext.topsrcdir = gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir"
+            apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
+        }
     }
+}
+
+def runCmd(cmd, workingDir, successMessage, captureStdout = true) {
+    def proc = cmd.execute(null, new File(workingDir))
+    def standardOutput = captureStdout ? new ByteArrayOutputStream() : System.out
+    proc.consumeProcessOutput(standardOutput, System.err)
+    proc.waitFor()
+
+    if (proc.exitValue() != 0) {
+        throw new GradleException("Process '${cmd}' finished with non-zero exit value ${proc.exitValue()}");
+    } else {
+        logger.lifecycle("settings.gradle> ${successMessage}")
+    }
+    return captureStdout ? standardOutput : null
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Local Development overrides
+//////////////////////////////////////////////////////////////////////////
+
+def localPropertiesFile = new File(gradle.mozconfig.topsrcdir, "local.properties")
+if (localPropertiesFile.canRead()) {
+    def localProperties = new Properties()
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+
+    [
+        "autoPublish.application-services.dir",
+        "autoPublish.glean.dir",
+    ].each { key ->
+        def relativeOrAbsolutePath = localProperties."$key"
+        if (relativeOrAbsolutePath != null) {
+            def autoPublishDir = new File(gradle.mozconfig.topsrcdir).toPath().resolve(relativeOrAbsolutePath)
+            gradle.ext."localProperties.$key" = autoPublishDir.toString()
+        }
+    }
+}
+
+if (gradle.hasProperty("localProperties.autoPublish.application-services.dir")) {
+    def appServicesLocalPath = gradle."localProperties.autoPublish.application-services.dir"
+    logger.lifecycle("settings.gradle> Enabling automatic publication of application-services from: $appServicesLocalPath")
+    // Windows can't execute .py files directly, so we assume a "manually installed" python,
+    // which comes with a "py" launcher and respects the shebang line to specify the version.
+    def publishAppServicesCmd = [];
+    if (System.properties["os.name"].toLowerCase().contains("windows")) {
+        publishAppServicesCmd << "py";
+    }
+    publishAppServicesCmd << "./automation/publish_to_maven_local_if_modified.py";
+    runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.", false)
+} else {
+    logger.lifecycle("settings.gradle> Disabled auto-publication of application-services. Enable it by settings 'autoPublish.application-services.dir' in local.properties")
+}
+
+if (gradle.hasProperty("localProperties.autoPublish.glean.dir")) {
+    def gleanLocalPath = gradle."localProperties.autoPublish.glean.dir"
+    logger.lifecycle("settings.gradle> Enabling automatic publication of Glean from: $gleanLocalPath")
+    // As above, hacks to execute .py files on Windows.
+    def publishGleanCmd = [];
+    if (System.properties["os.name"].toLowerCase().contains("windows")) {
+        publishGleanCmd << "py";
+    }
+    publishGleanCmd << "./build-scripts/publish_to_maven_local_if_modified.py";
+    runCmd(publishGleanCmd, gleanLocalPath, "Published Glean for local development.", false)
+} else {
+    logger.lifecycle("settings.gradle> Disabled auto-publication of Glean. Enable it by settings 'autoPublish.glean.dir' in local.properties")
 }

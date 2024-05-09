@@ -27,7 +27,6 @@ plugins {
 ext.topsrcdir = rootProject.projectDir.absolutePath.minus("mobile/android/android-components")
 
 apply from: file('../shared-settings.gradle')
-apply from: file('../autopublish-settings.gradle')
 
 buildCache {
     local {
@@ -36,17 +35,67 @@ buildCache {
     }
 }
 
+def runCmd(cmd, workingDir, successMessage) {
+    def proc = cmd.execute(null, new File(workingDir))
+    proc.consumeProcessOutput(System.out, System.err)
+    proc.waitFor()
+    if (proc.exitValue() != 0) {
+        throw new GradleException("Process '${cmd}' finished with non-zero exit value ${proc.exitValue()}")
+    } else {
+        logger.lifecycle(successMessage)
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Local Development overrides
 //////////////////////////////////////////////////////////////////////////
 
-def projectLocalProperties = file("local.properties").with { localPropertiesFile ->
-    def localProperties = new Properties()
-    if (localPropertiesFile.canRead()) {
-        localPropertiesFile.withInputStream { localProperties.load(it) }
-    }
-    localProperties
+Properties localProperties = null;
+String settingAppServicesPath = "autoPublish.application-services.dir"
+String settingGleanPath = "autoPublish.glean.dir";
+
+if (file('local.properties').canRead()) {
+    localProperties = new Properties()
+    localProperties.load(file('local.properties').newDataInputStream())
+    logger.lifecycle('Local configuration: loaded local.properties')
+} else {
+    logger.lifecycle('Local configuration: absent local.properties; proceeding as normal.')
 }
-projectLocalProperties.each { prop ->
-    gradle.ext."localProperties.${prop.key}" = prop.value
+
+if (localProperties != null) {
+    localProperties.each { prop ->
+        gradle.ext.set("localProperties.${prop.key}", prop.value)
+    }
+
+    String appServicesLocalPath = localProperties.getProperty(settingAppServicesPath);
+
+    if (appServicesLocalPath != null) {
+        logger.lifecycle("Enabling automatic publication of application-services from: $appServicesLocalPath")
+        // Windows can't execute .py files directly, so we assume a "manually installed" python,
+        // which comes with a "py" launcher and respects the shebang line to specify the version.
+        def publishAppServicesCmd = [];
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            publishAppServicesCmd << "py";
+        }
+        publishAppServicesCmd << "./automation/publish_to_maven_local_if_modified.py";
+        runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.")
+    } else {
+        logger.lifecycle("Disabled auto-publication of application-services. Enable it by settings '$settingAppServicesPath' in local.properties")
+    }
+
+    String gleanLocalPath = localProperties.getProperty(settingGleanPath);
+
+    if (gleanLocalPath != null) {
+        logger.lifecycle("Enabling automatic publication of Glean from: $gleanLocalPath")
+        // Windows can't execute .py files directly, so we assume a "manually installed" python,
+        // which comes with a "py" launcher and respects the shebang line to specify the version.
+        def publishGleanCmd = [];
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            publishGleanCmd << "py";
+        }
+        publishGleanCmd << "./build-scripts/publish_to_maven_local_if_modified.py";
+        runCmd(publishGleanCmd, gleanLocalPath, "Published Glean for local development.")
+    } else {
+        logger.lifecycle("Disabled auto-publication of Glean. Enable it by settings '$settingGleanPath' in local.properties")
+    }
 }
