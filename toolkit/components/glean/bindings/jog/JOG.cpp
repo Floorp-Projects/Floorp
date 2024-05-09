@@ -12,6 +12,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/glean/bindings/jog/jog_ffi_generated.h"
 #include "mozilla/Logging.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/StaticPrefs_telemetry.h"
 #include "mozilla/AppShutdown.h"
 #include "nsDirectoryServiceDefs.h"
@@ -22,8 +23,7 @@
 
 namespace mozilla::glean {
 
-using mozilla::LogLevel;
-static mozilla::LazyLogModule sLog("jog");
+static LazyLogModule sLog("jog");
 
 // Storage
 // Thread Safety: Only used on the main thread.

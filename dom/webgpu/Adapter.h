@@ -11,6 +11,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "ObjectModel.h"

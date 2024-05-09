@@ -15,17 +15,12 @@
 #include "nsIFile.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "prtime.h"
-#include "mozilla/StaticPrefs_storage.h"
 
 #include "mozStorageConnection.h"
 #include "mozStoragePrivateHelpers.h"
-#include "mozIStorageStatement.h"
 #include "mozIStorageCompletionCallback.h"
-#include "mozIStorageAsyncStatement.h"
-#include "mozIStoragePendingStatement.h"
-#include "mozIStorageError.h"
-#include "mozStorageHelper.h"
 #include "nsXULAppAPI.h"
 #include "xpcpublic.h"
 

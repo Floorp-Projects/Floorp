@@ -1183,11 +1183,9 @@ TEST_F(Strings, stringbuffer) {
   memcpy(data, kData, sizeof(kData));
 
   nsCString str;
-  buf->ToString(sizeof(kData) - 1, str);
+  str.Assign(buf, sizeof(kData) - 1);
 
-  nsStringBuffer* buf2;
-  buf2 = nsStringBuffer::FromString(str);
-
+  nsStringBuffer* buf2 = str.GetStringBuffer();
   EXPECT_EQ(buf, buf2);
 }
 

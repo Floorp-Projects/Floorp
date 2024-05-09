@@ -108,7 +108,9 @@ const uintptr_t NS_ATTRVALUE_BASETYPE_MASK = 3;
 class nsCheapString : public nsString {
  public:
   explicit nsCheapString(nsStringBuffer* aBuf) {
-    if (aBuf) aBuf->ToString(aBuf->StorageSize() / sizeof(char16_t) - 1, *this);
+    if (aBuf) {
+      Assign(aBuf, aBuf->StorageSize() / sizeof(char16_t) - 1);
+    }
   }
 };
 

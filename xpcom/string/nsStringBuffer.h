@@ -9,10 +9,9 @@
 
 #include <atomic>
 #include "mozilla/MemoryReporting.h"
-#include "nsStringFwd.h"
-
-template <class T>
-struct already_AddRefed;
+#include "mozilla/Assertions.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/RefCounted.h"
 
 /**
  * This structure precedes the string buffers "we" allocate.  It may be the
@@ -25,12 +24,12 @@ struct already_AddRefed;
  */
 class nsStringBuffer {
  private:
-  friend class CheckStaticAtomSizes;
-
   std::atomic<uint32_t> mRefCount;
   uint32_t mStorageSize;
 
  public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(nsStringBuffer)
+
   /**
    * Allocates a new string buffer, with given size in bytes and a
    * reference count of one.  When the string buffer is no longer needed,
@@ -43,12 +42,25 @@ class nsStringBuffer {
    * (i.e., it is not required that the null terminator appear in the last
    * storage unit of the string buffer's data).
    *
-   * This guarantees that StorageSize() returns aStorageSize if the returned
+   * This guarantees that StorageSize() returns aSize if the returned
    * buffer is non-null. Some callers like nsAttrValue rely on it.
    *
    * @return new string buffer or null if out of memory.
    */
-  static already_AddRefed<nsStringBuffer> Alloc(size_t aStorageSize);
+  static already_AddRefed<nsStringBuffer> Alloc(size_t aSize) {
+    MOZ_ASSERT(aSize != 0, "zero capacity allocation not allowed");
+    MOZ_ASSERT(sizeof(nsStringBuffer) + aSize <= size_t(uint32_t(-1)) &&
+                   sizeof(nsStringBuffer) + aSize > aSize,
+               "mStorageSize will truncate");
+
+    auto* hdr = (nsStringBuffer*)malloc(sizeof(nsStringBuffer) + aSize);
+    if (hdr) {
+      hdr->mRefCount = 1;
+      hdr->mStorageSize = aSize;
+      mozilla::detail::RefCountLogger::logAddRef(hdr, 1);
+    }
+    return already_AddRefed(hdr);
+  }
 
   /**
    * Returns a string buffer initialized with the given string on it, or null on
@@ -74,16 +86,35 @@ class nsStringBuffer {
    */
   static nsStringBuffer* Realloc(nsStringBuffer* aBuf, size_t aStorageSize);
 
-  /**
-   * Increment the reference count on this string buffer.
-   */
-  void NS_FASTCALL AddRef();
+  void AddRef() {
+    // Memory synchronization is not required when incrementing a
+    // reference count.  The first increment of a reference count on a
+    // thread is not important, since the first use of the object on a
+    // thread can happen before it.  What is important is the transfer
+    // of the pointer to that thread, which may happen prior to the
+    // first increment on that thread.  The necessary memory
+    // synchronization is done by the mechanism that transfers the
+    // pointer between threads.
+    uint32_t count = mRefCount.fetch_add(1, std::memory_order_relaxed) + 1;
+    mozilla::detail::RefCountLogger::logAddRef(this, count);
+  }
 
-  /**
-   * Decrement the reference count on this string buffer.  The string
-   * buffer will be destroyed when its reference count reaches zero.
-   */
-  void NS_FASTCALL Release();
+  void Release() {
+    // Since this may be the last release on this thread, we need release
+    // semantics so that prior writes on this thread are visible to the thread
+    // that destroys the object when it reads mValue with acquire semantics.
+    mozilla::detail::RefCountLogger::ReleaseLogger logger(this);
+    uint32_t count = mRefCount.fetch_sub(1, std::memory_order_release) - 1;
+    logger.logRelease(count);
+    if (count == 0) {
+      // We're going to destroy the object on this thread, so we need acquire
+      // semantics to synchronize with the memory released by the last release
+      // on other threads, that is, to ensure that writes prior to that release
+      // are now visible on this thread.
+      count = mRefCount.load(std::memory_order_acquire);
+      free(this);  // We were allocated with malloc.
+    }
+  }
 
   /**
    * This method returns the string buffer corresponding to the given data
@@ -147,34 +178,6 @@ class nsStringBuffer {
     return mRefCount.load(std::memory_order_relaxed) > 1;
 #endif
   }
-
-  /**
-   * The FromString methods return a string buffer for the given string
-   * object or null if the string object does not have a string buffer.
-   * The reference count of the string buffer is NOT incremented by these
-   * methods.  If the caller wishes to hold onto the returned value, then
-   * the returned string buffer must have its reference count incremented
-   * via a call to the AddRef method.
-   */
-  static nsStringBuffer* FromString(const nsAString& aStr);
-  static nsStringBuffer* FromString(const nsACString& aStr);
-
-  /**
-   * The ToString methods assign this string buffer to a given string
-   * object.  If the string object does not support sharable string
-   * buffers, then its value will be set to a copy of the given string
-   * buffer.  Otherwise, these methods increment the reference count of the
-   * given string buffer.  It is important to specify the length (in
-   * storage units) of the string contained in the string buffer since the
-   * length of the string may be less than its storage size.  The string
-   * must have a null terminator at the offset specified by |len|.
-   *
-   * NOTE: storage size is measured in bytes even for wide strings;
-   *       however, string length is always measured in storage units
-   *       (2-byte units for wide strings).
-   */
-  void ToString(uint32_t aLen, nsAString& aStr, bool aMoveOwnership = false);
-  void ToString(uint32_t aLen, nsACString& aStr, bool aMoveOwnership = false);
 
   /**
    * This measures the size only if the StringBuffer is unshared.

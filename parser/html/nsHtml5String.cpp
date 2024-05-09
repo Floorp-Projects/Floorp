@@ -5,12 +5,11 @@
 #include "nsHtml5String.h"
 #include "nsCharTraits.h"
 #include "nsHtml5TreeBuilder.h"
-#include "nsUTF8Utils.h"
 
 void nsHtml5String::ToString(nsAString& aString) {
   switch (GetKind()) {
     case eStringBuffer:
-      return AsStringBuffer()->ToString(Length(), aString);
+      return aString.Assign(AsStringBuffer(), Length());
     case eAtom:
       return AsAtom()->ToString(aString);
     case eEmpty:
@@ -157,12 +156,14 @@ nsHtml5String nsHtml5String::FromString(const nsAString& aString) {
   if (!length) {
     return nsHtml5String(eEmpty);
   }
-  RefPtr<nsStringBuffer> buffer = nsStringBuffer::FromString(aString);
-  if (buffer && (length == buffer->StorageSize() / sizeof(char16_t) - 1)) {
-    return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) |
-                         eStringBuffer);
+  if (nsStringBuffer* buffer = aString.GetStringBuffer()) {
+    if (length == buffer->StorageSize() / sizeof(char16_t) - 1) {
+      buffer->AddRef();
+      return nsHtml5String(reinterpret_cast<uintptr_t>(buffer) | eStringBuffer);
+    }
   }
-  buffer = nsStringBuffer::Alloc((length + 1) * sizeof(char16_t));
+  RefPtr<nsStringBuffer> buffer =
+      nsStringBuffer::Alloc((length + 1) * sizeof(char16_t));
   if (!buffer) {
     MOZ_CRASH("Out of memory.");
   }

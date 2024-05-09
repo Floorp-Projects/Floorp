@@ -9,7 +9,7 @@
 
 #include "nsString.h"  // Required before 'mozilla/ErrorNames.h'!?
 #include "mozilla/ErrorNames.h"
-#include "mozilla/TimeStamp.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "nsError.h"
 #include "nsPrintfCString.h"
 

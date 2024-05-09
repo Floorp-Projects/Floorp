@@ -8,6 +8,7 @@
 #include "CacheFile.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include <algorithm>
 
 namespace mozilla::net {

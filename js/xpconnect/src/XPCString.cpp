@@ -104,8 +104,7 @@ bool XPCStringConvert::ReadableToJSVal(JSContext* cx, const nsAString& readable,
     return StringLiteralToJSVal(cx, readable.BeginReading(), length, vp);
   }
 
-  nsStringBuffer* buf = nsStringBuffer::FromString(readable);
-  if (buf) {
+  if (nsStringBuffer* buf = readable.GetStringBuffer()) {
     bool shared;
     if (!UCStringBufferToJSVal(cx, buf, length, vp, &shared)) {
       return false;
@@ -138,8 +137,7 @@ bool XPCStringConvert::Latin1ToJSVal(JSContext* cx, const nsACString& latin1,
         length, vp);
   }
 
-  nsStringBuffer* buf = nsStringBuffer::FromString(latin1);
-  if (buf) {
+  if (nsStringBuffer* buf = latin1.GetStringBuffer()) {
     bool shared;
     if (!Latin1StringBufferToJSVal(cx, buf, length, vp, &shared)) {
       return false;
@@ -170,8 +168,7 @@ bool XPCStringConvert::UTF8ToJSVal(JSContext* cx, const nsACString& utf8,
         cx, JS::UTF8Chars(utf8.BeginReading(), length), vp);
   }
 
-  nsStringBuffer* buf = nsStringBuffer::FromString(utf8);
-  if (buf) {
+  if (nsStringBuffer* buf = utf8.GetStringBuffer()) {
     bool shared;
     if (!UTF8StringBufferToJSVal(cx, buf, length, vp, &shared)) {
       return false;

@@ -169,8 +169,7 @@ class MOZ_STACK_CLASS DOMString {
     if (MOZ_UNLIKELY(aString.IsVoid())) {
       SetNull();
     } else if (!aString.IsEmpty()) {
-      nsStringBuffer* buf = nsStringBuffer::FromString(aString);
-      if (buf) {
+      if (nsStringBuffer* buf = aString.GetStringBuffer()) {
         SetKnownLiveStringBuffer(buf, aString.Length());
       } else if (aString.IsLiteral()) {
         SetLiteralInternal(aString.BeginReading(), aString.Length());
@@ -236,7 +235,7 @@ class MOZ_STACK_CLASS DOMString {
       auto chars = static_cast<char16_t*>(buf->Data());
       if (chars[len] == '\0') {
         // Safe to share the buffer.
-        buf->ToString(len, aString);
+        aString.Assign(buf, len);
       } else {
         // We need to copy, unfortunately.
         aString.Assign(chars, len);

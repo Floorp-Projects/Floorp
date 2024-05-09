@@ -23,6 +23,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "nsIDirectoryService.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"

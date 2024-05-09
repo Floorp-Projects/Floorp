@@ -238,11 +238,11 @@ extern JS::UniqueChars xpc_PrintJSStack(JSContext* cx, bool showArgs,
 
 inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
                                    nsAString& dest) {
-  buffer->ToString(len, dest);
+  dest.Assign(buffer, len);
 }
 inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
                                    nsACString& dest) {
-  buffer->ToString(len, dest);
+  dest.Assign(buffer, len);
 }
 
 // readable string conversions, static methods and members only
