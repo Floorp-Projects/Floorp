@@ -12,9 +12,36 @@
 #include <type_traits>
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
+#include "Coord.h"
 
 namespace mozilla {
 namespace gfx {
+
+template <class T, typename EnableT = void>
+struct FloatType;
+
+template <typename T>
+struct FloatType<T, typename std::enable_if_t<std::is_integral_v<T>>> {
+  using type = float;
+};
+
+template <typename T>
+struct FloatType<T, typename std::enable_if_t<std::is_floating_point_v<T>>> {
+  using type = T;
+};
+
+template <typename Units, typename Rep>
+struct FloatType<IntCoordTyped<Units, Rep>> {
+  using type = CoordTyped<Units, float>;
+};
+
+template <typename Units, typename Rep>
+struct FloatType<CoordTyped<Units, Rep>> {
+  using type = CoordTyped<Units, Rep>;
+};
+
+template <typename T>
+using FloatType_t = typename FloatType<T>::type;
 
 /**
  * Do not use this class directly. Subclass it, pass that subclass as the
@@ -82,9 +109,8 @@ struct BasePoint {
     return x.value * aPoint.x.value + y.value * aPoint.y.value;
   }
 
-  // FIXME: Maybe Length() should return a float Coord event for integer Points?
-  Coord Length() const {
-    return static_cast<decltype(x.value)>(hypot(x.value, y.value));
+  FloatType_t<Coord> Length() const {
+    return FloatType_t<Coord>(hypot(x.value, y.value));
   }
 
   T LengthSquare() const { return x.value * x.value + y.value * y.value; }
