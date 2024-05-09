@@ -19,8 +19,6 @@
       rel="stylesheet"
       href="chrome://formautofill/content/skin/editDialog.css"
     />
-    <script src="chrome://formautofill/content/addressFormLayout.js"></script>
-    <script src="chrome://formautofill/content/editDialog.js"></script>
     <script
       type="module"
       src="chrome://global/content/elements/moz-button-group.mjs"
@@ -38,14 +36,16 @@
         <button id="save" class="primary" data-l10n-id="autofill-save-button" />
       </moz-button-group>
     </div>
-    <script>
+    <!-- eslint-disable -->
+    <script type="module">
+      import { createFormLayoutFromRecord } from "chrome://formautofill/content/addressFormLayout.mjs";
+      import { EditAddressDialog } from "chrome://formautofill/content/editDialog.mjs";
+
       const { record, noValidate, l10nStrings } = window.arguments?.[0] ?? {};
       const formElement = document.querySelector("form");
       formElement.noValidate = !!noValidate;
-      /* import-globals-from addressFormLayout.js */
       createFormLayoutFromRecord(formElement, record, l10nStrings);
 
-      /* import-globals-from editDialog.js */
       new EditAddressDialog(
         {
           title: document.querySelector("title"),
@@ -55,5 +55,6 @@
         record
       );
     </script>
+    <!-- eslint-enable -->
   </body>
 </html>
