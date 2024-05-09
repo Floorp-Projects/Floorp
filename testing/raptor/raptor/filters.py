@@ -4,7 +4,6 @@
 
 # originally taken from /testing/talos/talos/filter.py
 
-import math
 
 """
 data filters:
@@ -175,11 +174,10 @@ def geometric_mean(series):
     """
     geometric_mean: http://en.wikipedia.org/wiki/Geometric_mean
     """
-    total = 0
-    for i in series:
-        total += math.log(i + 1)
-    # pylint --py3k W1619
-    return math.exp(total / len(series)) - 1
+
+    from scipy.stats.mstats import gmean
+
+    return gmean(series)
 
 
 # filters that return a list
