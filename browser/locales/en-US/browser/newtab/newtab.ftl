@@ -270,6 +270,9 @@ newtab-custom-pocket-show-recent-saves = Show recent saves
 newtab-custom-recent-toggle =
   .label = Recent activity
   .description = A selection of recent sites and content
+newtab-custom-weather-toggle =
+  .label = Weather
+  .description = Today’s forecast at a glance
 newtab-custom-close-button = Close
 newtab-custom-settings = Manage more settings
 
@@ -294,3 +297,32 @@ newtab-wallpaper-dark-city = Purple city landscape
 #   $author_string (String) - The name of the creator of the photo.
 #   $webpage_string (String) - The name of the webpage where the photo is located.
 newtab-wallpaper-attribution = Photo by <a data-l10n-name="name-link">{ $author_string }</a> on <a data-l10n-name="webpage-link">{ $webpage_string }</a>
+
+## New Tab Weather
+
+# Variables:
+#   $provider (string) - Service provider for weather data
+newtab-weather-see-forecast =
+    .title = See forecast in { $provider }
+# Variables:
+#   $provider (string) - Service provider for weather data
+newtab-weather-sponsored = { $provider } ∙ Sponsored
+newtab-weather-menu-change-location = Change location
+newtab-weather-change-location-search-input = Search location
+newtab-weather-menu-weather-display = Weather display
+# Display options are:
+# - Simple: Displays a current weather condition icon and the current temperature
+# - Detailed: Include simple information plus a short text summary: e.g. "Mostly cloudy"
+newtab-weather-menu-weather-display-option-simple = Simple
+newtab-weather-menu-change-weather-display-simple = Switch to simple view
+newtab-weather-menu-weather-display-option-detailed = Detailed
+newtab-weather-menu-change-weather-display-detailed = Switch to detailed view
+newtab-weather-menu-temperature-units = Temperature units
+newtab-weather-menu-temperature-option-fahrenheit = Fahrenheit
+newtab-weather-menu-temperature-option-celsius = Celsius
+newtab-weather-menu-change-temperature-units-fahrenheit = Switch to Fahrenheit
+newtab-weather-menu-change-temperature-units-celsius = Switch to Celsius
+newtab-weather-menu-hide-weather = Hide weather on New Tab
+newtab-weather-menu-learn-more = Learn more
+# This message is shown if user is working offline
+newtab-weather-error-not-available = Weather data is not available right now.

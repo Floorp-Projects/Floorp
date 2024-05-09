@@ -126,8 +126,9 @@ describe("AboutPreferences Feed", () => {
       const [, structure] = stub.firstCall.args;
       assert.equal(structure[0].id, "search");
       assert.equal(structure[1].id, "topsites");
-      assert.equal(structure[2].id, "topstories");
-      assert.isEmpty(structure[2].rowsPref);
+      assert.equal(structure[2].id, "weather");
+      assert.equal(structure[3].id, "topstories");
+      assert.isEmpty(structure[3].rowsPref);
     });
   });
   describe("#renderPreferences", () => {

@@ -10,6 +10,7 @@ const DEFAULT_PROPS = {
   },
   mayHaveSponsoredTopSites: true,
   mayHaveSponsoredStories: true,
+  mayHaveWeather: true,
   pocketRegion: true,
   dispatch: sinon.stub(),
   setPref: sinon.stub(),
@@ -67,6 +68,10 @@ describe("ContentSection", () => {
     assert.equal(
       wrapper.find("#highlights-toggle").prop("data-eventSource"),
       "HIGHLIGHTS"
+    );
+    assert.equal(
+      wrapper.find("#weather-toggle").prop("data-eventSource"),
+      "WEATHER"
     );
   });
 });

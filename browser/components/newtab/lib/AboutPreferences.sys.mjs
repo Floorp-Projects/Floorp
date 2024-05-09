@@ -50,6 +50,26 @@ const PREFS_BEFORE_SECTIONS = () => [
     rowsPref: "topSitesRows",
     eventSource: "TOP_SITES",
   },
+  {
+    id: "weather",
+    icon: "chrome://browser/skin/weather/sunny.svg",
+    pref: {
+      feed: "showWeather",
+      titleString: "home-prefs-weather-header",
+      descString: "home-prefs-weather-description",
+      learnMore: {
+        link: {
+          href: "https://support.mozilla.org/kb/customize-items-on-firefox-new-tab-page",
+          id: "home-prefs-weather-learn-more-link",
+        },
+      },
+    },
+    eventSource: "WEATHER",
+    shouldHidePref: !Services.prefs.getBoolPref(
+      "browser.newtabpage.activity-stream.system.showWeather",
+      false
+    ),
+  },
 ];
 
 export class AboutPreferences {
@@ -213,15 +233,13 @@ export class AboutPreferences {
 
       linkPref(checkbox, name, "bool");
 
-      // Specially add a link for stories
-      if (id === "topstories") {
-        const sponsoredHbox = createAppend("hbox", sectionVbox);
-        sponsoredHbox.setAttribute("align", "center");
-        sponsoredHbox.appendChild(checkbox);
+      // Specially add a link for Recommended stories and Weather
+      if (id === "topstories" || id === "weather") {
+        const hboxWithLink = createAppend("hbox", sectionVbox);
+        hboxWithLink.appendChild(checkbox);
         checkbox.classList.add("tail-with-learn-more");
 
-        const link = createAppend("label", sponsoredHbox, { is: "text-link" });
-        link.classList.add("learn-sponsored");
+        const link = createAppend("label", hboxWithLink, { is: "text-link" });
         link.setAttribute("href", sectionData.pref.learnMore.link.href);
         document.l10n.setAttributes(link, sectionData.pref.learnMore.link.id);
       }
