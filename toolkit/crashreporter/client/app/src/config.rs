@@ -81,13 +81,6 @@ impl Config {
     /// Load a configuration from the application environment.
     #[cfg_attr(mock, allow(unused))]
     pub fn read_from_environment(&mut self) -> anyhow::Result<()> {
-        /// Most environment variables are prefixed with `MOZ_CRASHREPORTER_`.
-        macro_rules! ekey {
-            ( $name:literal ) => {
-                concat!("MOZ_CRASHREPORTER_", $name)
-            };
-        }
-
         self.auto_submit = env_bool(ekey!("AUTO_SUBMIT"));
         self.dump_all_threads = env_bool(ekey!("DUMP_ALL_THREADS"));
         self.delete_dump = !env_bool(ekey!("NO_DELETE_DUMP"));
