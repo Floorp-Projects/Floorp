@@ -34,7 +34,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * backups. It also does most of the heavy lifting for the restoration of a
  * profile backup.
  */
-export class BackupService {
+export class BackupService extends EventTarget {
   /**
    * The BackupService singleton instance.
    *
@@ -51,11 +51,46 @@ export class BackupService {
   #resources = new Map();
 
   /**
+   * Set to true if a backup is currently in progress. Causes stateUpdate()
+   * to be called.
+   *
+   * @see BackupService.stateUpdate()
+   * @param {boolean} val
+   *   True if a backup is in progress.
+   */
+  set #backupInProgress(val) {
+    if (this.#_state.backupInProgress != val) {
+      this.#_state.backupInProgress = val;
+      this.stateUpdate();
+    }
+  }
+
+  /**
    * True if a backup is currently in progress.
    *
    * @type {boolean}
    */
-  #backupInProgress = false;
+  get #backupInProgress() {
+    return this.#_state.backupInProgress;
+  }
+
+  /**
+   * Dispatches an event to let listeners know that the BackupService state
+   * object has been updated.
+   */
+  stateUpdate() {
+    this.dispatchEvent(new CustomEvent("BackupService:StateUpdate"));
+  }
+
+  /**
+   * An object holding the current state of the BackupService instance, for
+   * the purposes of representing it in the user interface. Ideally, this would
+   * be named #state instead of #_state, but sphinx-js seems to be fairly
+   * unhappy with that coupled with the ``state`` getter.
+   *
+   * @type {object}
+   */
+  #_state = { backupInProgress: false };
 
   /**
    * A Promise that will resolve once the postRecovery steps are done. It will
@@ -190,6 +225,7 @@ export class BackupService {
    * @param {object} [backupResources=DefaultBackupResources] - Object containing BackupResource classes to associate with this service.
    */
   constructor(backupResources = DefaultBackupResources) {
+    super();
     lazy.logConsole.debug("Instantiated");
 
     for (const resourceName in backupResources) {
@@ -212,6 +248,17 @@ export class BackupService {
    */
   get postRecoveryComplete() {
     return this.#postRecoveryPromise;
+  }
+
+  /**
+   * Returns a state object describing the state of the BackupService for the
+   * purposes of representing it in the user interface. The returned state
+   * object is immutable.
+   *
+   * @type {object}
+   */
+  get state() {
+    return Object.freeze(structuredClone(this.#_state));
   }
 
   /**

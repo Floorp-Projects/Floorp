@@ -425,6 +425,20 @@ let JSWINDOWACTORS = {
     enablePreference: "browser.aboutwelcome.enabled",
   },
 
+  BackupUI: {
+    parent: {
+      esModuleURI: "resource:///actors/BackupUIParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource:///actors/BackupUIChild.sys.mjs",
+      events: {
+        "BackupUI:InitWidget": { wantUntrusted: true },
+      },
+    },
+    matches: ["about:preferences*", "about:settings*"],
+    enablePreference: "browser.backup.preferences.ui.enabled",
+  },
+
   BlockedSite: {
     parent: {
       esModuleURI: "resource:///actors/BlockedSiteParent.sys.mjs",
