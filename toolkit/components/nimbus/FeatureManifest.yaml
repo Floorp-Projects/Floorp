@@ -2701,6 +2701,10 @@ contentRelevancy:
       setPref:
         branch: user
         pref: toolkit.contentRelevancy.timerInterval
+    ingestEnabled:
+      description: Enable the ingestion through the Rust component
+      type: boolean
+      fallbackPref: toolkit.contentRelevancy.ingestEnabled
 
 tabPreview:
   description: Prefs to control Tab Previews

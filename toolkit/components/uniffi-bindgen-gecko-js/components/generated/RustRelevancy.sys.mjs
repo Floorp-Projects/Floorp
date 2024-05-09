@@ -322,7 +322,7 @@ export class RelevancyStore {
      */
     static init(dbpath) {
         const liftResult = (result) => FfiConverterTypeRelevancyStore.lift(result);
-        const liftError = (data) => FfiConverterTypeRelevancyApiError.lift(data);
+        const liftError = null;
         const functionCall = () => {
             try {
                 FfiConverterString.checkType(dbpath)
@@ -368,7 +368,7 @@ export class RelevancyStore {
     }
 
     ingest(topUrls) {
-        const liftResult = (result) => undefined;
+        const liftResult = (result) => FfiConverterTypeInterestVector.lift(result);
         const liftError = (data) => FfiConverterTypeRelevancyApiError.lift(data);
         const functionCall = () => {
             try {

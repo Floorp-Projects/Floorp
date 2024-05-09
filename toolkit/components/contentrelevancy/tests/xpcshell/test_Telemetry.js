@@ -7,10 +7,6 @@ const { ContentRelevancyManager } = ChromeUtils.importESModule(
   "resource://gre/modules/ContentRelevancyManager.sys.mjs"
 );
 
-const { TestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TestUtils.sys.mjs"
-);
-
 const PREF_CONTENT_RELEVANCY_ENABLED = "toolkit.contentRelevancy.enabled";
 
 add_setup(async function setup() {
@@ -82,40 +78,4 @@ add_task(async function test_classify_fail_case1() {
     Glean.relevancyClassify.duration.testGetValue(),
     "Should not record the duration"
   );
-});
-
-/**
- * Test classification metrics - fail - store-not-ready.
- */
-add_task(async function test_classify_fail_case2() {
-  Services.fog.testResetFOG();
-
-  // Toggle the pref to disable the manager and nullify the store.
-  Services.prefs.setBoolPref(PREF_CONTENT_RELEVANCY_ENABLED, false);
-  await TestUtils.waitForTick();
-
-  await TestUtils.waitForCondition(
-    () => !ContentRelevancyManager.shouldEnable,
-    "Should be disabled via pref"
-  );
-
-  Assert.equal(null, Glean.relevancyClassify.fail.testGetValue());
-  Assert.equal(null, Glean.relevancyClassify.duration.testGetValue());
-
-  await ContentRelevancyManager._test_doClassification();
-
-  Assert.deepEqual(
-    {
-      reason: "store-not-ready",
-    },
-    Glean.relevancyClassify.fail.testGetValue()[0].extra,
-    "Should record the fail event"
-  );
-  Assert.equal(
-    null,
-    Glean.relevancyClassify.duration.testGetValue(),
-    "Should not record the duration"
-  );
-
-  Services.prefs.setBoolPref(PREF_CONTENT_RELEVANCY_ENABLED, true);
 });

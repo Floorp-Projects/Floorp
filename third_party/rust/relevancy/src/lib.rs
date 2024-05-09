@@ -11,8 +11,9 @@
 
 mod db;
 mod error;
+mod ingest;
 mod interest;
-mod populate_interests;
+mod rs;
 mod schema;
 pub mod url_hash;
 
@@ -28,11 +29,10 @@ pub struct RelevancyStore {
 
 /// Top-level API for the Relevancy component
 impl RelevancyStore {
-    #[handle_error(Error)]
-    pub fn new(db_path: String) -> ApiResult<Self> {
-        Ok(Self {
-            db: RelevancyDb::new(db_path)?,
-        })
+    pub fn new(db_path: String) -> Self {
+        Self {
+            db: RelevancyDb::new(db_path),
+        }
     }
 
     pub fn close(&self) {
@@ -55,9 +55,21 @@ impl RelevancyStore {
     ///
     ///  This method may execute for a long time and should only be called from a worker thread.
     #[handle_error(Error)]
-    pub fn ingest(&self, _top_urls_by_frecency: Vec<String>) -> ApiResult<()> {
-        populate_interests::ensure_interest_data_populated(&self.db)?;
-        todo!()
+    pub fn ingest(&self, top_urls_by_frecency: Vec<String>) -> ApiResult<InterestVector> {
+        ingest::ensure_interest_data_populated(&self.db)?;
+        self.classify(top_urls_by_frecency)
+    }
+
+    pub fn classify(&self, top_urls_by_frecency: Vec<String>) -> Result<InterestVector> {
+        // For experimentation purposes we are going to return an interest vector.
+        // Eventually we would want to store this data in the DB and incrementally update it.
+        let mut interest_vector = InterestVector::default();
+        for url in top_urls_by_frecency {
+            let interest_count = self.db.read(|dao| dao.get_url_interest_vector(&url))?;
+            interest_vector = interest_vector + interest_count;
+        }
+
+        Ok(interest_vector)
     }
 
     /// Calculate metrics for the validation phase
@@ -87,3 +99,45 @@ pub struct InterestMetrics {
 }
 
 uniffi::include_scaffolding!("relevancy");
+
+#[cfg(test)]
+mod test {
+    use crate::url_hash::hash_url;
+
+    use super::*;
+
+    #[test]
+    fn test_ingest() {
+        let top_urls = vec![
+            "https://food.com/".to_string(),
+            "https://hello.com".to_string(),
+            "https://pasta.com".to_string(),
+            "https://dog.com".to_string(),
+        ];
+        let relevancy_store =
+            RelevancyStore::new("file:test_store_data?mode=memory&cache=shared".to_owned());
+        relevancy_store
+            .db
+            .read_write(|dao| {
+                dao.add_url_interest(hash_url("https://food.com").unwrap(), Interest::Food)?;
+                dao.add_url_interest(
+                    hash_url("https://hello.com").unwrap(),
+                    Interest::Inconclusive,
+                )?;
+                dao.add_url_interest(hash_url("https://pasta.com").unwrap(), Interest::Food)?;
+                dao.add_url_interest(hash_url("https://dog.com").unwrap(), Interest::Animals)?;
+                Ok(())
+            })
+            .expect("Insert should succeed");
+
+        assert_eq!(
+            relevancy_store.ingest(top_urls).unwrap(),
+            InterestVector {
+                inconclusive: 1,
+                animals: 1,
+                food: 2,
+                ..InterestVector::default()
+            }
+        );
+    }
+}

@@ -3047,3 +3047,5 @@ pref("startup.homepage_override_nimbus_maxVersion", "");
 
 // Pref to enable the content relevancy feature.
 pref("toolkit.contentRelevancy.enabled", false);
+// Pref to enable the ingestion through the Rust component.
+pref("toolkit.contentRelevancy.ingestEnabled", false);

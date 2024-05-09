@@ -275,6 +275,8 @@ pub struct SuggestIngestionConstraints {
     /// soft limit, and the store might ingest more than requested.
     pub max_suggestions: Option<u64>,
     pub providers: Option<Vec<SuggestionProvider>>,
+    /// Only run ingestion if the table `suggestions` is empty
+    pub empty_only: bool,
 }
 
 /// The implementation of the store. This is generic over the Remote Settings
@@ -356,6 +358,10 @@ where
 {
     pub fn ingest(&self, constraints: SuggestIngestionConstraints) -> Result<()> {
         let writer = &self.dbs()?.writer;
+
+        if constraints.empty_only && !writer.read(|dao| dao.suggestions_table_empty())? {
+            return Ok(());
+        }
 
         if let Some(unparsable_records) =
             writer.read(|dao| dao.get_meta::<UnparsableRecords>(UNPARSABLE_RECORDS_META_KEY))?
@@ -888,6 +894,12 @@ mod tests {
 
         let store = unique_test_store(SnapshotSettingsClient::with_snapshot(snapshot));
 
+        // suggestions_table_empty returns true before the ingestion is complete
+        assert!(store
+            .dbs()?
+            .reader
+            .read(|dao| dao.suggestions_table_empty())?);
+
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
@@ -920,6 +932,153 @@ mod tests {
             "#]]
             .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
                 keyword: "lo".into(),
+                providers: vec![SuggestionProvider::Amp],
+                limit: None,
+            })?);
+
+            Ok(())
+        })?;
+
+        // suggestions_table_empty returns false after the ingestion is complete
+        assert!(!store
+            .dbs()?
+            .reader
+            .read(|dao| dao.suggestions_table_empty())?);
+
+        Ok(())
+    }
+
+    /// Tests ingesting suggestions into an empty database.
+    #[test]
+    fn ingest_empty_only() -> anyhow::Result<()> {
+        before_each();
+
+        // This ingestion should run, since the DB is empty
+        let snapshot = Snapshot::with_records(json!([{
+            "id": "1234",
+            "type": "data",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-1.json",
+                "mimetype": "application/json",
+                "location": "data-1.json",
+                "hash": "",
+                "size": 0,
+            },
+        }]))?
+        .with_data(
+            "data-1.json",
+            json!([{
+                "id": 0,
+                "advertiser": "Los Pollos Hermanos",
+                "iab_category": "8 - Food & Drink",
+                "keywords": ["lo", "los", "los p", "los pollos", "los pollos h", "los pollos hermanos"],
+                "title": "Los Pollos Hermanos - Albuquerque",
+                "url": "https://www.lph-nm.biz",
+                "icon": "5678",
+                "impression_url": "https://example.com/impression_url",
+                "click_url": "https://example.com/click_url",
+                "score": 0.3
+            }]),
+        )?;
+        let mut store = unique_test_store(SnapshotSettingsClient::with_snapshot(snapshot));
+        store.ingest(SuggestIngestionConstraints {
+            empty_only: true,
+            ..SuggestIngestionConstraints::default()
+        })?;
+
+        store.dbs()?.reader.read(|dao| {
+            expect![[r#"
+                [
+                    Amp {
+                        title: "Los Pollos Hermanos - Albuquerque",
+                        url: "https://www.lph-nm.biz",
+                        raw_url: "https://www.lph-nm.biz",
+                        icon: None,
+                        icon_mimetype: None,
+                        full_keyword: "los",
+                        block_id: 0,
+                        advertiser: "Los Pollos Hermanos",
+                        iab_category: "8 - Food & Drink",
+                        impression_url: "https://example.com/impression_url",
+                        click_url: "https://example.com/click_url",
+                        raw_click_url: "https://example.com/click_url",
+                        score: 0.3,
+                    },
+                ]
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "lo".into(),
+                providers: vec![SuggestionProvider::Amp],
+                limit: None,
+            })?);
+
+            Ok(())
+        })?;
+
+        // ingestion should run with SuggestIngestionConstraints::empty_only = true, since the DB
+        // is empty
+        store.settings_client = SnapshotSettingsClient::with_snapshot(Snapshot::with_records(json!([{
+            "id": "1234",
+            "type": "data",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-1.json",
+                "mimetype": "application/json",
+                "location": "data-1.json",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
+            "id": "12345",
+            "type": "data",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-2.json",
+                "mimetype": "application/json",
+                "location": "data-2.json",
+                "hash": "",
+                "size": 0,
+            },
+        }]))?
+        .with_data(
+            "data-1.json",
+            json!([{
+                "id": 0,
+                "advertiser": "Los Pollos Hermanos",
+                "iab_category": "8 - Food & Drink",
+                "keywords": ["lo", "los", "los p", "los pollos", "los pollos h", "los pollos hermanos"],
+                "title": "Los Pollos Hermanos - Albuquerque",
+                "url": "https://www.lph-nm.biz",
+                "icon": "5678",
+                "impression_url": "https://example.com/impression_url",
+                "click_url": "https://example.com/click_url",
+                "score": 0.3
+            }])
+        )?
+        .with_data("data-2.json", json!([{
+                "id": 1,
+                "advertiser": "Good Place Eats",
+                "iab_category": "8 - Food & Drink",
+                "keywords": ["la", "las", "lasa", "lasagna", "lasagna come out tomorrow"],
+                "title": "Lasagna Come Out Tomorrow",
+                "url": "https://www.lasagna.restaurant",
+                "icon": "2",
+                "impression_url": "https://example.com/impression_url",
+                "click_url": "https://example.com/click_url"
+            }]),
+        )?);
+        store.ingest(SuggestIngestionConstraints {
+            empty_only: true,
+            ..SuggestIngestionConstraints::default()
+        })?;
+
+        store.dbs()?.reader.read(|dao| {
+            expect![[r#"
+                []
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "la".into(),
                 providers: vec![SuggestionProvider::Amp],
                 limit: None,
             })?);
@@ -2212,6 +2371,7 @@ mod tests {
             store.ingest(SuggestIngestionConstraints {
                 max_suggestions: Some(max_suggestions),
                 providers: Some(vec![SuggestionProvider::Amp]),
+                ..SuggestIngestionConstraints::default()
             })?;
             let actual_limit = store
                 .settings_client
@@ -5201,6 +5361,7 @@ mod tests {
         let constraints = SuggestIngestionConstraints {
             max_suggestions: Some(100),
             providers: Some(vec![SuggestionProvider::Amp, SuggestionProvider::Pocket]),
+            ..SuggestIngestionConstraints::default()
         };
         store.ingest(constraints)?;
 

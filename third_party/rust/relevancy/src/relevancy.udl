@@ -10,7 +10,6 @@ interface RelevancyStore {
     // Construct a new RelevancyStore
     //
     // This is non-blocking since databases and other resources are lazily opened.
-    [Throws=RelevancyApiError]
     constructor(string dbpath);
 
     // Close any open resources (for example databases)
@@ -23,7 +22,7 @@ interface RelevancyStore {
 
     // Ingest the top URLs by frequency to build up the user's interest vector
     [Throws=RelevancyApiError]
-    void ingest(sequence<string> top_urls);
+    InterestVector ingest(sequence<string> top_urls);
 
     // Calculate metrics for the user's interest vector in order to measure how strongly we're
     // identifying interests.  See the `InterestMetrics` struct for details.
