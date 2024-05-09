@@ -1988,6 +1988,10 @@ ParentLayerPoint AsyncPanZoomController::GetScrollWheelDelta(
   // Apply user-set multipliers.
   delta.x *= aMultiplierX;
   delta.y *= aMultiplierY;
+  APZC_LOGV(
+      "user-multiplied delta is %s (deltaType %d, line size %s, page size %s)",
+      ToString(delta).c_str(), (int)aEvent.mDeltaType,
+      ToString(scrollAmount).c_str(), ToString(pageScrollSize).c_str());
 
   // For the conditions under which we allow system scroll overrides, see
   // WidgetWheelEvent::OverriddenDelta{X,Y}.
@@ -1999,6 +2003,7 @@ ParentLayerPoint AsyncPanZoomController::GetScrollWheelDelta(
       aEvent.mAllowToOverrideSystemScrollSpeed) {
     delta.x = WidgetWheelEvent::ComputeOverriddenDelta(delta.x, false);
     delta.y = WidgetWheelEvent::ComputeOverriddenDelta(delta.y, true);
+    APZC_LOGV("overridden delta is %s", ToString(delta).c_str());
   }
 
   // If this is a line scroll, and this event was part of a scroll series, then
@@ -2258,6 +2263,8 @@ bool AsyncPanZoomController::AllowOneTouchPinch() const {
 // Return whether or not the underlying layer can be scrolled on either axis.
 bool AsyncPanZoomController::CanScroll(const InputData& aEvent) const {
   ParentLayerPoint delta = GetDeltaForEvent(aEvent);
+  APZC_LOGV_DETAIL("CanScroll: event delta is %s", this,
+                   ToString(delta).c_str());
   if (!delta.x && !delta.y) {
     return false;
   }
@@ -2330,6 +2337,9 @@ bool AsyncPanZoomController::CanScrollWithWheel(
       disregardedDirection != Some(ScrollDirection::eVertical)) {
     return true;
   }
+  APZC_LOGV_FM(Metrics(),
+               "cannot scroll with wheel (disregarded direction is %s)",
+               ToString(disregardedDirection).c_str());
   return false;
 }
 
