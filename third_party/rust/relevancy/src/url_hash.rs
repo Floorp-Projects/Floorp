@@ -8,11 +8,10 @@ use url::{Host, Url};
 pub type UrlHash = [u8; 16];
 
 /// Given a URL, extract the part of it that we want to use to identify it.
-///
-/// We currently use the final 3 components of the URL domain.
-///
-/// TODO: decide if this should be 3 or 3 components.
 pub fn url_hash_source(url: &str) -> Option<String> {
+    // We currently use the final 2 components of the URL domain.
+    const URL_COMPONENTS_TO_USE: usize = 2;
+
     let url = Url::parse(url).ok()?;
     let domain = match url.host() {
         Some(Host::Domain(d)) => d,
@@ -20,7 +19,7 @@ pub fn url_hash_source(url: &str) -> Option<String> {
     };
     // This will store indexes of `.` chars as we search backwards.
     let mut pos = domain.len();
-    for _ in 0..3 {
+    for _ in 0..URL_COMPONENTS_TO_USE {
         match domain[0..pos].rfind('.') {
             Some(p) => pos = p,
             // The domain has less than 3 dots, return it all
@@ -47,12 +46,12 @@ mod test {
     fn test_url_hash_source() {
         let table = [
             ("http://example.com/some-path", Some("example.com")),
-            ("http://foo.example.com/some-path", Some("foo.example.com")),
+            ("http://foo.example.com/some-path", Some("example.com")),
             (
                 "http://foo.bar.baz.example.com/some-path",
-                Some("baz.example.com"),
+                Some("example.com"),
             ),
-            ("http://foo.com.uk/some-path", Some("foo.com.uk")),
+            ("http://foo.com.uk/some-path", Some("com.uk")),
             ("http://amazon.com/some-path", Some("amazon.com")),
             ("http://192.168.0.1/some-path", None),
         ];

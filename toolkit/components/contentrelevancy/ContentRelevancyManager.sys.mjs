@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/contentrelevancy/private/InputUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   RelevancyStore: "resource://gre/modules/RustRelevancy.sys.mjs",
+  InterestVector: "resource://gre/modules/RustRelevancy.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -40,6 +41,7 @@ const NIMBUS_VARIABLE_ENABLED = "enabled";
 const NIMBUS_VARIABLE_MAX_INPUT_URLS = "maxInputUrls";
 const NIMBUS_VARIABLE_MIN_INPUT_URLS = "minInputUrls";
 const NIMBUS_VARIABLE_TIMER_INTERVAL = "timerInterval";
+const NIMBUS_VARIABLE_INGEST_ENABLED = "ingestEnabled";
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
   return console.createInstance({
@@ -243,18 +245,21 @@ class RelevancyManager {
       lazy.log.info("Starting interest classification");
       timerId = Glean.relevancyClassify.duration.start();
 
-      await this.#doClassificationHelper(urls);
+      const interestVector = await this.#doClassificationHelper(urls);
+      const sortedVector = Object.entries(interestVector).sort(
+        ([, a], [, b]) => b - a // descending
+      );
+      lazy.log.info(`Classification results: ${JSON.stringify(sortedVector)}`);
 
       Glean.relevancyClassify.duration.stopAndAccumulate(timerId);
       Glean.relevancyClassify.succeed.record({
         input_size: urls.length,
-        // TODO(nanj): Fill out the actual counters once the classification is enabled.
-        input_classified_size: 0,
-        input_inconclusive_size: 0,
-        output_interest_size: 0,
-        interest_top_1_hits: 0,
-        interest_top_2_hits: 0,
-        interest_top_3_hits: 0,
+        input_classified_size: sortedVector.reduce((acc, [, v]) => acc + v, 0),
+        input_inconclusive_size: interestVector.inconclusive,
+        output_interest_size: sortedVector.filter(([, v]) => v != 0).length,
+        interest_top_1_hits: sortedVector[0][1],
+        interest_top_2_hits: sortedVector[1][1],
+        interest_top_3_hits: sortedVector[2][1],
       });
     } catch (error) {
       let reason;
@@ -290,28 +295,48 @@ class RelevancyManager {
    *
    * @param {Array} urls
    *   An array of URLs.
+   * @returns {InterestVector}
+   *   An interest vector.
    * @throws {StoreNotAvailableError}
    *   Thrown when the store became unavailable (i.e. set to null elsewhere).
    * @throws {RelevancyAPIError}
    *   Thrown for other API errors on the store.
    */
   async #doClassificationHelper(urls) {
-    // The following logs are unnecessary, only used to suppress the linting error.
-    // TODO(nanj): delete me once the following TODO is done.
-    if (!this.#store) {
-      lazy.log.error("#store became null, aborting interest classification");
-    }
     lazy.log.info("Classification input: " + urls);
 
-    // TODO(nanj): uncomment the following once `ingest()` is implemented.
-    // await this.#store.ingest(urls);
-  }
+    let interestVector = new lazy.InterestVector({
+      animals: 0,
+      arts: 0,
+      autos: 0,
+      business: 0,
+      career: 0,
+      education: 0,
+      fashion: 0,
+      finance: 0,
+      food: 0,
+      government: 0,
+      hobbies: 0,
+      home: 0,
+      news: 0,
+      realEstate: 0,
+      society: 0,
+      sports: 0,
+      tech: 0,
+      travel: 0,
+      inconclusive: 0,
+    });
 
-  /**
-   * Exposed for testing.
-   */
-  async _test_doClassificationHelper(urls) {
-    await this.#doClassificationHelper(urls);
+    if (
+      lazy.NimbusFeatures.contentRelevancy.getVariable(
+        NIMBUS_VARIABLE_INGEST_ENABLED
+      ) ??
+      false
+    ) {
+      interestVector = await this.#store.ingest(urls);
+    }
+
+    return interestVector;
   }
 
   /**

@@ -2,33 +2,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use crate::Error;
+
 /// List of possible interests for a domain.  Domains can have be associated with one or multiple
 /// interests.  `Inconclusive` is used for domains in the user's top sites that we can't classify
 /// because there's no corresponding entry in the interest database.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum Interest {
-    Inconclusive,
-    Animals,
-    Arts,
-    Autos,
-    Business,
-    Career,
-    Education,
-    Fashion,
-    Finance,
-    Food,
-    Government,
+    // Note: if you change these codes, make sure to update the `TryFrom<u32>` implementation and
+    // the `test_interest_code_conversion` test.
+    Inconclusive = 0,
+    Animals = 1,
+    Arts = 2,
+    Autos = 3,
+    Business = 4,
+    Career = 5,
+    Education = 6,
+    Fashion = 7,
+    Finance = 8,
+    Food = 9,
+    Government = 10,
     //Disable this per policy consultation
-    // Health,
-    Hobbies,
-    Home,
-    News,
-    RealEstate,
-    Society,
-    Sports,
-    Tech,
-    Travel,
+    // Health = 11,
+    Hobbies = 12,
+    Home = 13,
+    News = 14,
+    RealEstate = 15,
+    Society = 16,
+    Sports = 17,
+    Tech = 18,
+    Travel = 19,
 }
 
 impl From<Interest> for u32 {
@@ -43,14 +47,35 @@ impl From<Interest> for usize {
     }
 }
 
-impl From<u32> for Interest {
-    fn from(code: u32) -> Self {
-        if code as usize > Self::COUNT {
-            panic!("Invalid interest code: {code}")
+impl TryFrom<u32> for Interest {
+    // On error, return the invalid code back
+    type Error = Error;
+
+    fn try_from(code: u32) -> Result<Self, Self::Error> {
+        match code {
+            0 => Ok(Self::Inconclusive),
+            1 => Ok(Self::Animals),
+            2 => Ok(Self::Arts),
+            3 => Ok(Self::Autos),
+            4 => Ok(Self::Business),
+            5 => Ok(Self::Career),
+            6 => Ok(Self::Education),
+            7 => Ok(Self::Fashion),
+            8 => Ok(Self::Finance),
+            9 => Ok(Self::Food),
+            10 => Ok(Self::Government),
+            //Disable this per policy consultation
+            // 11 => Ok(Self::Health),
+            12 => Ok(Self::Hobbies),
+            13 => Ok(Self::Home),
+            14 => Ok(Self::News),
+            15 => Ok(Self::RealEstate),
+            16 => Ok(Self::Society),
+            17 => Ok(Self::Sports),
+            18 => Ok(Self::Tech),
+            19 => Ok(Self::Travel),
+            n => Err(Error::InvalidInterestCode(n)),
         }
-        // Safety: This is safe since Interest has a u32 representation and we've done a bounds
-        // check
-        unsafe { std::mem::transmute(code) }
     }
 }
 
@@ -111,6 +136,34 @@ pub struct InterestVector {
     pub travel: u32,
 }
 
+impl std::ops::Add for InterestVector {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self {
+            inconclusive: self.inconclusive + other.inconclusive,
+            animals: self.animals + other.animals,
+            arts: self.arts + other.arts,
+            autos: self.autos + other.autos,
+            business: self.business + other.business,
+            career: self.career + other.career,
+            education: self.education + other.education,
+            fashion: self.fashion + other.fashion,
+            finance: self.finance + other.finance,
+            food: self.food + other.food,
+            government: self.government + other.government,
+            hobbies: self.hobbies + other.hobbies,
+            home: self.home + other.home,
+            news: self.news + other.news,
+            real_estate: self.real_estate + other.real_estate,
+            society: self.society + other.society,
+            sports: self.sports + other.sports,
+            tech: self.tech + other.tech,
+            travel: self.travel + other.travel,
+        }
+    }
+}
+
 impl std::ops::Index<Interest> for InterestVector {
     type Output = u32;
 
@@ -164,5 +217,31 @@ impl std::ops::IndexMut<Interest> for InterestVector {
             Interest::Tech => &mut self.tech,
             Interest::Travel => &mut self.travel,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_interest_code_conversion() {
+        for interest in Interest::all() {
+            assert_eq!(Interest::try_from(u32::from(interest)).unwrap(), interest)
+        }
+        // try_from() for out of bounds codes should return an error
+        assert!(matches!(
+            Interest::try_from(20),
+            Err(Error::InvalidInterestCode(20))
+        ));
+        assert!(matches!(
+            Interest::try_from(100),
+            Err(Error::InvalidInterestCode(100))
+        ));
+        // Health is currently disabled, so it's code should return None for now
+        assert!(matches!(
+            Interest::try_from(11),
+            Err(Error::InvalidInterestCode(11))
+        ));
     }
 }

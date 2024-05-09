@@ -25,9 +25,12 @@ license = "MPL-2.0"
 name = "generate-test-data"
 
 [dependencies]
+anyhow = "1.0"
+base64 = "0.21.2"
 log = "0.4"
 md-5 = "0.10"
 parking_lot = ">=0.11,<=0.12"
+serde_json = "1"
 thiserror = "1.0"
 uniffi = "0.27.1"
 url = "2.5"
@@ -38,9 +41,16 @@ path = "../support/error"
 [dependencies.interrupt-support]
 path = "../support/interrupt"
 
+[dependencies.remote_settings]
+path = "../remote_settings"
+
 [dependencies.rusqlite]
 version = "0.30.0"
 features = ["bundled"]
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
 
 [dependencies.sql-support]
 path = "../support/sql"

@@ -100,24 +100,6 @@ add_task(async function test_call_disable_twice() {
   Services.prefs.clearUserPref(PREF_CONTENT_RELEVANCY_ENABLED);
 });
 
-add_task(async function test_doClassificationHelper() {
-  Services.prefs.setBoolPref(PREF_CONTENT_RELEVANCY_ENABLED, true);
-  await TestUtils.waitForCondition(() => ContentRelevancyManager._isStoreReady);
-  await ContentRelevancyManager._test_doClassificationHelper([]);
-
-  // Disable it to reset the store.
-  Services.prefs.setBoolPref(PREF_CONTENT_RELEVANCY_ENABLED, false);
-  await TestUtils.waitForTick();
-
-  await Assert.rejects(
-    ContentRelevancyManager._test_doClassificationHelper([]),
-    /Store is not available/,
-    "Should throw with an unset store"
-  );
-
-  Services.prefs.clearUserPref(PREF_CONTENT_RELEVANCY_ENABLED);
-});
-
 /**
  * Sets up the update timer manager for testing: makes it fire more often,
  * removes all existing timers, and initializes it for testing. The body of this

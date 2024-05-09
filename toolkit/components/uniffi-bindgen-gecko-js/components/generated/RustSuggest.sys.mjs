@@ -915,7 +915,7 @@ export class FfiConverterTypeSuggestGlobalConfig extends FfiConverterArrayBuffer
 }
 
 export class SuggestIngestionConstraints {
-    constructor({ maxSuggestions = null, providers = null } = {}) {
+    constructor({ maxSuggestions = null, providers = null, emptyOnly = false } = {}) {
         try {
             FfiConverterOptionalu64.checkType(maxSuggestions)
         } catch (e) {
@@ -932,13 +932,23 @@ export class SuggestIngestionConstraints {
             }
             throw e;
         }
+        try {
+            FfiConverterBool.checkType(emptyOnly)
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("emptyOnly");
+            }
+            throw e;
+        }
         this.maxSuggestions = maxSuggestions;
         this.providers = providers;
+        this.emptyOnly = emptyOnly;
     }
     equals(other) {
         return (
             this.maxSuggestions == other.maxSuggestions &&
-            this.providers == other.providers
+            this.providers == other.providers &&
+            this.emptyOnly == other.emptyOnly
         )
     }
 }
@@ -949,17 +959,20 @@ export class FfiConverterTypeSuggestIngestionConstraints extends FfiConverterArr
         return new SuggestIngestionConstraints({
             maxSuggestions: FfiConverterOptionalu64.read(dataStream),
             providers: FfiConverterOptionalSequenceTypeSuggestionProvider.read(dataStream),
+            emptyOnly: FfiConverterBool.read(dataStream),
         });
     }
     static write(dataStream, value) {
         FfiConverterOptionalu64.write(dataStream, value.maxSuggestions);
         FfiConverterOptionalSequenceTypeSuggestionProvider.write(dataStream, value.providers);
+        FfiConverterBool.write(dataStream, value.emptyOnly);
     }
 
     static computeSize(value) {
         let totalSize = 0;
         totalSize += FfiConverterOptionalu64.computeSize(value.maxSuggestions);
         totalSize += FfiConverterOptionalSequenceTypeSuggestionProvider.computeSize(value.providers);
+        totalSize += FfiConverterBool.computeSize(value.emptyOnly);
         return totalSize
     }
 
@@ -981,6 +994,14 @@ export class FfiConverterTypeSuggestIngestionConstraints extends FfiConverterArr
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".providers");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterBool.checkType(value.emptyOnly);
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".emptyOnly");
             }
             throw e;
         }

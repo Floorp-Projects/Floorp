@@ -29,7 +29,7 @@ extern "C" {
   void * uniffi_relevancy_fn_constructor_relevancystore_new(RustBuffer, RustCallStatus*);
   RustBuffer uniffi_relevancy_fn_method_relevancystore_calculate_metrics(void *, RustCallStatus*);
   void uniffi_relevancy_fn_method_relevancystore_close(void *, RustCallStatus*);
-  void uniffi_relevancy_fn_method_relevancystore_ingest(void *, RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_relevancy_fn_method_relevancystore_ingest(void *, RustBuffer, RustCallStatus*);
   void uniffi_relevancy_fn_method_relevancystore_interrupt(void *, RustCallStatus*);
   RustBuffer uniffi_relevancy_fn_method_relevancystore_user_interest_vector(void *, RustCallStatus*);
   void * uniffi_remote_settings_fn_clone_remotesettings(void *, RustCallStatus*);
@@ -144,7 +144,7 @@ Maybe<already_AddRefed<Promise>> UniFFICallAsync(const GlobalObject& aGlobal, ui
       return Some(CallHandler::CallAsync(uniffi_relevancy_fn_method_relevancystore_close, aGlobal, aArgs, "uniffi_relevancy_fn_method_relevancystore_close: "_ns, aError));
     }
     case 4: { // relevancy:uniffi_relevancy_fn_method_relevancystore_ingest
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kRelevancyRelevancyStorePointerType>, ScaffoldingConverter<RustBuffer>>;
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRelevancyRelevancyStorePointerType>, ScaffoldingConverter<RustBuffer>>;
       return Some(CallHandler::CallAsync(uniffi_relevancy_fn_method_relevancystore_ingest, aGlobal, aArgs, "uniffi_relevancy_fn_method_relevancystore_ingest: "_ns, aError));
     }
     case 5: { // relevancy:uniffi_relevancy_fn_method_relevancystore_interrupt
@@ -354,7 +354,7 @@ bool UniFFICallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<Un
       return true;
     }
     case 4: { // relevancy:uniffi_relevancy_fn_method_relevancystore_ingest
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kRelevancyRelevancyStorePointerType>, ScaffoldingConverter<RustBuffer>>;
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRelevancyRelevancyStorePointerType>, ScaffoldingConverter<RustBuffer>>;
       CallHandler::CallSync(uniffi_relevancy_fn_method_relevancystore_ingest, aGlobal, aArgs, aReturnValue, "uniffi_relevancy_fn_method_relevancystore_ingest: "_ns, aError);
       return true;
     }
