@@ -4,7 +4,7 @@
 
 .wrapper {
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto 1fr;
   box-sizing: border-box;
   height: 100%;
   padding: var(--space-medium);
@@ -21,6 +21,7 @@
   display: flex;
   flex-direction: column;
   justify-content: end;
+  gap: var(--space-xsmall);
 }
 
 .icon-button::part(button) {
