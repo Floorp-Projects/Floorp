@@ -34,6 +34,16 @@ add_task(async function () {
       30,
       "Should have at least 30 page load events"
     );
+
+    // Ensure the events in the pageload ping are reasonable.
+    record.forEach(entry => {
+      Assert.equal(entry.name, "page_load");
+      Assert.greater(parseInt(entry.extra.load_time), 0);
+      Assert.ok(
+        entry.extra.using_webdriver,
+        "Webdriver field should be set to true."
+      );
+    });
   });
 
   // Perform page load 30 times to trigger the ping being sent
