@@ -1,4 +1,4 @@
-// |jit-test| --enable-symbols-as-weakmap-keys
+// |jit-test| --enable-symbols-as-weakmap-keys; skip-if: getBuildConfiguration("release_or_beta")
 
 gczeal(0);
 let wm = new WeakMap();
