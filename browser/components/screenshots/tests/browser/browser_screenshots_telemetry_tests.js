@@ -95,22 +95,27 @@ add_task(async function test_started_and_canceled_events() {
       let helper = new ScreenshotsHelper(browser);
       let screenshotExit;
 
+      info("Open screenshots via toolbar button");
       helper.triggerUIFromToolbar();
       await helper.waitForOverlay();
 
       screenshotExit = TestUtils.topicObserved("screenshots-exit");
+      info("Close screenshots via toolbar button");
       helper.triggerUIFromToolbar();
       await helper.waitForOverlayClosed();
       await screenshotExit;
 
+      info("Open screenshots via keyboard shortcut");
       EventUtils.synthesizeKey("s", { shiftKey: true, accelKey: true });
       await helper.waitForOverlay();
 
       screenshotExit = TestUtils.topicObserved("screenshots-exit");
+      info("Close screenshots via keyboard shortcut");
       EventUtils.synthesizeKey("s", { shiftKey: true, accelKey: true });
       await helper.waitForOverlayClosed();
       await screenshotExit;
 
+      info("Open screenshots via context menu");
       let contextMenu = document.getElementById("contentAreaContextMenu");
       let popupShownPromise = BrowserTestUtils.waitForEvent(
         contextMenu,
@@ -148,19 +153,20 @@ add_task(async function test_started_and_canceled_events() {
       await popupShownPromise;
 
       screenshotExit = TestUtils.topicObserved("screenshots-exit");
+      info("Close screenshots via context menu");
       contextMenu.activateItem(
         contextMenu.querySelector("#context-take-screenshot")
       );
       await helper.waitForOverlayClosed();
       await screenshotExit;
 
+      info("Open screenshots via quickactions");
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
         value: "screenshot",
         waitForFocus: SimpleTest.waitForFocus,
       });
 
-      info("Trigger the screenshot mode");
       EventUtils.synthesizeKey("KEY_Tab", {}, window);
       EventUtils.synthesizeKey("KEY_Enter", {}, window);
       await helper.waitForOverlay();
@@ -171,7 +177,7 @@ add_task(async function test_started_and_canceled_events() {
         waitForFocus: SimpleTest.waitForFocus,
       });
 
-      info("Trigger the screenshot mode");
+      info("Close screenshots via quickactions");
       screenshotExit = TestUtils.topicObserved("screenshots-exit");
       EventUtils.synthesizeKey("KEY_Tab", {}, window);
       EventUtils.synthesizeKey("KEY_Enter", {}, window);

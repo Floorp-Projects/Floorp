@@ -142,6 +142,8 @@ class ScreenshotsHelper {
       let init = await this.isOverlayInitialized();
       return init;
     });
+
+    await new Promise(r => window.requestAnimationFrame(r));
     info("Overlay is visible");
   }
 
@@ -174,6 +176,8 @@ class ScreenshotsHelper {
       info("Is overlay initialized: " + !init);
       return init;
     });
+
+    await new Promise(r => window.requestAnimationFrame(r));
     info("Overlay is not visible");
   }
 
