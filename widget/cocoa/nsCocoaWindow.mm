@@ -1971,7 +1971,6 @@ void nsCocoaWindow::BackingScaleFactorChanged() {
   if (PresShell* presShell = mWidgetListener->GetPresShell()) {
     presShell->BackingScaleFactorChanged();
   }
-  mWidgetListener->UIResolutionChanged();
 }
 
 int32_t nsCocoaWindow::RoundsWidgetCoordinatesTo() {

@@ -36,8 +36,6 @@ void nsIWidgetListener::SizeModeChanged(nsSizeMode aSizeMode) {}
 void nsIWidgetListener::SafeAreaInsetsChanged(const mozilla::ScreenIntMargin&) {
 }
 
-void nsIWidgetListener::UIResolutionChanged() {}
-
 #if defined(MOZ_WIDGET_ANDROID)
 void nsIWidgetListener::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
 }

@@ -5383,7 +5383,6 @@ void nsWindow::OnDPIChanged() {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       presShell->BackingScaleFactorChanged();
     }
-    mWidgetListener->UIResolutionChanged();
   }
   NotifyAPZOfDPIChange();
 }
