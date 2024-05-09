@@ -8,10 +8,14 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 const { AddonManager } = ChromeUtils.importESModule(
   "resource://gre/modules/AddonManager.sys.mjs"
 );
+const { ExtensionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ExtensionXPCShellUtils.sys.mjs"
+);
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.appInfo = getAppInfo();
+ExtensionTestUtils.init(this);
 
 const server = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 const BASE_URL = `http://example.com/data`;
@@ -20,6 +24,33 @@ let addonID = "policytest2@mozilla.com";
 let themeID = "policytheme@mozilla.com";
 
 let fileURL;
+
+async function assertManagementAPIInstallType(addonId, expectedInstallType) {
+  const addon = await AddonManager.getAddonByID(addonId);
+  const expectInstalledByPolicy = expectedInstallType === "admin";
+  equal(
+    addon.isInstalledByEnterprisePolicy,
+    expectInstalledByPolicy,
+    `Addon should ${
+      expectInstalledByPolicy ? "be" : "NOT be"
+    } marked as installed by enterprise policy`
+  );
+  const policy = WebExtensionPolicy.getByID(addonId);
+  const pageURL = policy.extension.baseURI.resolve(
+    "_generated_background_page.html"
+  );
+  const page = await ExtensionTestUtils.loadContentPage(pageURL);
+  const { id, installType } = await page.spawn([], async () => {
+    const res = await this.content.wrappedJSObject.browser.management.getSelf();
+    return { id: res.id, installType: res.installType };
+  });
+  Assert.equal(id, addonId, "Got results for the expected addon id");
+  Assert.equal(
+    installType,
+    expectedInstallType,
+    "Got the expected installType on policy installed extension"
+  );
+}
 
 add_setup(async function setup() {
   await AddonTestUtils.promiseStartupManager();
@@ -115,7 +146,14 @@ add_task(async function test_addon_allowed() {
   );
   await install.install();
   notEqual(install.addon, null, "Addon should not be null");
+  await assertManagementAPIInstallType(install.addon.id, "normal");
   equal(install.addon.appDisabled, false, "Addon should not be disabled");
+  equal(
+    install.addon.isInstalledByEnterprisePolicy,
+    false,
+    "Addon should NOT be marked as installed by enterprise policy"
+  );
+
   await install.addon.uninstall();
 });
 
@@ -169,6 +207,8 @@ add_task(async function test_addon_forceinstalled() {
     0,
     "Addon should not be able to be disabled."
   );
+  await assertManagementAPIInstallType(addon.id, "admin");
+
   await addon.uninstall();
 });
 
@@ -199,6 +239,8 @@ add_task(async function test_addon_normalinstalled() {
     0,
     "Addon should be able to be disabled."
   );
+  await assertManagementAPIInstallType(addon.id, "admin");
+
   await addon.uninstall();
 });
 
@@ -290,6 +332,7 @@ add_task(async function test_addon_normalinstalled_file() {
     0,
     "Addon should be able to be disabled."
   );
+  await assertManagementAPIInstallType(addon.id, "admin");
 
   await addon.uninstall();
 });
