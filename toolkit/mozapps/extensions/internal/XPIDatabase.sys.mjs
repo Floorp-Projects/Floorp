@@ -1428,17 +1428,6 @@ AddonWrapper = class {
   }
 
   /**
-   * Returns true if the addon is configured to be installed
-   * by enterprise policy.
-   */
-  get isInstalledByEnterprisePolicy() {
-    const policySettings = Services.policies?.getExtensionSettings(this.id);
-    return ["force_installed", "normal_installed"].includes(
-      policySettings?.installation_mode
-    );
-  }
-
-  /**
    * Required permissions that extension has access to based on its manifest.
    * In mv3 this doesn't include host_permissions.
    */
