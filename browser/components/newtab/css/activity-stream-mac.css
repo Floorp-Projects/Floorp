@@ -159,6 +159,9 @@ input {
 .icon.icon-info {
   background-image: url("chrome://global/skin/icons/info.svg");
 }
+.icon.icon-info-critical {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-info-critical-16.svg");
+}
 .icon.icon-help {
   background-image: url("chrome://global/skin/icons/help.svg");
 }
@@ -238,6 +241,9 @@ input {
 }
 .icon.icon-webextension {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg");
+}
+.icon.icon-weather {
+  background-image: url("chrome://browser/skin/weather/sunny.svg");
 }
 .icon.icon-highlights {
   background-image: url("chrome://global/skin/icons/highlights.svg");
@@ -2011,6 +2017,333 @@ main section {
 }
 .wallpapers-reset:hover {
   text-decoration: none;
+}
+
+:root {
+  --newtab-weather-content-font-size: 11px;
+  --newtab-weather-sponsor-font-size: 8px;
+}
+
+.weather {
+  font-size: var(--font-size-root);
+  position: absolute;
+  left: var(--space-xlarge);
+  top: var(--space-xlarge);
+  z-index: 1;
+}
+
+.weatherNotAvailable {
+  font-size: var(--newtab-weather-content-font-size);
+  color: var(--text-color-error);
+  display: flex;
+  align-items: center;
+}
+.weatherNotAvailable .icon {
+  fill: var(--icon-color-critical);
+  -moz-context-properties: fill;
+}
+
+.weatherCard {
+  margin-block-end: var(--space-xsmall);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  border-radius: var(--border-radius-medium);
+  overflow: hidden;
+}
+.weatherCard:hover ~ .weatherSponsorText, .weatherCard:focus-within ~ .weatherSponsorText {
+  visibility: visible;
+}
+.weatherCard:focus-within {
+  overflow: visible;
+}
+.weatherCard:hover {
+  box-shadow: var(--box-shadow-10);
+  background: var(--background-color-box);
+}
+.weatherCard a {
+  color: var(--text-color);
+}
+
+.weatherSponsorText {
+  visibility: hidden;
+  font-size: var(--newtab-weather-sponsor-font-size);
+  color: var(--text-color-deemphasized);
+}
+
+.weatherInfoLink, .weatherButtonContextMenuWrapper {
+  appearance: none;
+  background-color: var(--background-color-ghost);
+  border: 0;
+  padding: var(--space-small);
+  cursor: pointer;
+}
+.weatherInfoLink:hover, .weatherButtonContextMenuWrapper:hover {
+  background-color: var(--button-background-color-ghost-hover);
+}
+.weatherInfoLink:hover::after, .weatherButtonContextMenuWrapper:hover::after {
+  background-color: transparent;
+}
+.weatherInfoLink:hover:active, .weatherButtonContextMenuWrapper:hover:active {
+  background-color: var(--button-background-color-ghost-active);
+}
+.weatherInfoLink:focus-visible, .weatherButtonContextMenuWrapper:focus-visible {
+  outline: var(--focus-outline);
+}
+@media (prefers-color-scheme: dark) {
+  .hasWallpaperDark .weatherInfoLink, .hasWallpaperDark .weatherButtonContextMenuWrapper {
+    background-color: rgba(35, 34, 43, 0.7);
+  }
+  .hasWallpaperDark .weatherInfoLink:hover, .hasWallpaperDark .weatherButtonContextMenuWrapper:hover {
+    background-color: var(--newtab-button-static-hover-background);
+  }
+  .hasWallpaperDark .weatherInfoLink:hover:active, .hasWallpaperDark .weatherButtonContextMenuWrapper:hover:active {
+    background-color: var(--newtab-button-static-active-background);
+  }
+}
+@media (prefers-contrast) and (prefers-color-scheme: dark) {
+  .hasWallpaperDark .weatherInfoLink, .hasWallpaperDark .weatherButtonContextMenuWrapper {
+    background-color: var(--background-color-box);
+  }
+}
+@media (prefers-color-scheme: light) {
+  .hasWallpaperLight .weatherInfoLink, .hasWallpaperLight .weatherButtonContextMenuWrapper {
+    background-color: rgba(255, 255, 255, 0.7);
+  }
+  .hasWallpaperLight .weatherInfoLink:hover, .hasWallpaperLight .weatherButtonContextMenuWrapper:hover {
+    background-color: var(--newtab-button-static-hover-background);
+  }
+  .hasWallpaperLight .weatherInfoLink:hover:active, .hasWallpaperLight .weatherButtonContextMenuWrapper:hover:active {
+    background-color: var(--newtab-button-static-active-background);
+  }
+}
+@media (prefers-contrast) and (prefers-color-scheme: light) {
+  .hasWallpaperLight .weatherInfoLink, .hasWallpaperLight .weatherButtonContextMenuWrapper {
+    background-color: var(--background-color-box);
+  }
+}
+
+.weatherInfoLink {
+  display: flex;
+  gap: var(--space-medium);
+  padding: var(--space-small) var(--space-medium);
+  border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
+  text-decoration: none;
+  color: var(--text-color);
+  min-width: 130px;
+  max-width: 190px;
+  text-overflow: ellipsis;
+}
+@media (min-width: 610px) {
+  .weatherInfoLink {
+    min-width: unset;
+  }
+}
+.weatherInfoLink:hover ~ .weatherButtonContextMenuWrapper::after {
+  background-color: transparent;
+}
+.weatherInfoLink:focus-visible {
+  border-radius: var(--border-radius-medium);
+}
+.weatherInfoLink:focus-visible ~ .weatherButtonContextMenuWrapper::after {
+  background-color: transparent;
+}
+
+.weatherButtonContextMenuWrapper {
+  position: relative;
+  cursor: pointer;
+  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
+  display: flex;
+  align-items: stretch;
+  width: 50px;
+  padding: 0;
+}
+.weatherButtonContextMenuWrapper::after {
+  content: "";
+  left: 0;
+  top: 10px;
+  height: calc(100% - 20px);
+  width: 1px;
+  background-color: var(--newtab-button-static-background);
+  display: block;
+  position: absolute;
+  z-index: 0;
+}
+@media (prefers-color-scheme: dark) {
+  .weatherButtonContextMenuWrapper::after {
+    background-color: var(--color-gray-70);
+  }
+}
+.weatherButtonContextMenuWrapper:hover::after {
+  background-color: transparent;
+}
+.weatherButtonContextMenuWrapper:focus-visible {
+  border-radius: var(--border-radius-medium);
+}
+.weatherButtonContextMenuWrapper:focus-visible::after {
+  background-color: transparent;
+}
+
+.weatherButtonContextMenu {
+  background-image: url("chrome://global/skin/icons/more.svg");
+  background-repeat: no-repeat;
+  background-size: var(--size-item-small) auto;
+  background-position: center;
+  background-color: transparent;
+  cursor: pointer;
+  fill: var(--icon-color);
+  -moz-context-properties: fill;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  appearance: none;
+  min-width: var(--size-item-large);
+}
+
+.weatherText {
+  height: min-content;
+}
+
+.weatherCityRow, .weatherForecastRow, .weatherDetailedSummaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-small);
+}
+
+.weatherForecastRow {
+  text-transform: uppercase;
+  font-weight: var(--font-weight-bold);
+}
+
+.weatherCityRow {
+  color: var(--text-color-deemphasized);
+}
+
+.weatherCity {
+  text-overflow: ellipsis;
+  font-size: var(--font-size-small);
+}
+
+.weatherCityRow + .weatherDetailedSummaryRow {
+  margin-block-start: var(--space-xsmall);
+}
+
+.weatherDetailedSummaryRow {
+  font-size: var(--newtab-weather-content-font-size);
+  gap: var(--space-large);
+}
+
+.weatherHighLowTemps {
+  display: flex;
+  gap: var(--space-xxsmall);
+  text-transform: uppercase;
+  word-spacing: var(--space-xxsmall);
+}
+
+.weatherTextSummary {
+  text-align: center;
+  max-width: 90px;
+}
+
+.weatherTemperature {
+  font-size: var(--font-size-large);
+}
+
+.weatherIconCol {
+  width: var(--size-item-large);
+  height: var(--size-item-large);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+}
+
+.weatherIcon {
+  width: var(--size-item-large);
+  height: auto;
+  vertical-align: middle;
+}
+@media (prefers-contrast) {
+  .weatherIcon {
+    -moz-context-properties: fill, stroke;
+    fill: currentColor;
+    stroke: currentColor;
+  }
+}
+.weatherIcon.iconId1 {
+  content: url("chrome://browser/skin/weather/sunny.svg");
+}
+.weatherIcon.iconId2 {
+  content: url("chrome://browser/skin/weather/mostly-sunny.svg");
+}
+.weatherIcon:is(.iconId3, .iconId4, .iconId6) {
+  content: url("chrome://browser/skin/weather/partly-sunny.svg");
+}
+.weatherIcon.iconId5 {
+  content: url("chrome://browser/skin/weather/hazy-sunshine.svg");
+}
+.weatherIcon:is(.iconId7, .iconId8) {
+  content: url("chrome://browser/skin/weather/cloudy.svg");
+}
+.weatherIcon.iconId11 {
+  content: url("chrome://browser/skin/weather/fog.svg");
+}
+.weatherIcon.iconId12 {
+  content: url("chrome://browser/skin/weather/showers.svg");
+}
+.weatherIcon:is(.iconId13, .iconId14) {
+  content: url("chrome://browser/skin/weather/mostly-cloudy-with-showers.svg");
+}
+.weatherIcon.iconId15 {
+  content: url("chrome://browser/skin/weather/thunderstorms.svg");
+}
+.weatherIcon:is(.iconId16, .iconId17) {
+  content: url("chrome://browser/skin/weather/mostly-cloudy-with-thunderstorms.svg");
+}
+.weatherIcon.iconId18 {
+  content: url("chrome://browser/skin/weather/rain.svg");
+}
+.weatherIcon:is(.iconId19, .iconId20, .iconId25) {
+  content: url("chrome://browser/skin/weather/flurries.svg");
+}
+.weatherIcon.iconId21 {
+  content: url("chrome://browser/skin/weather/partly-sunny-with-flurries.svg");
+}
+.weatherIcon:is(.iconId22, .iconId23) {
+  content: url("chrome://browser/skin/weather/snow.svg");
+}
+.weatherIcon:is(.iconId24, .iconId31) {
+  content: url("chrome://browser/skin/weather/ice.svg");
+}
+.weatherIcon:is(.iconId26, .iconId29) {
+  content: url("chrome://browser/skin/weather/freezing-rain.svg");
+}
+.weatherIcon.iconId30 {
+  content: url("chrome://browser/skin/weather/hot.svg");
+}
+.weatherIcon.iconId32 {
+  content: url("chrome://browser/skin/weather/windy.svg");
+}
+.weatherIcon.iconId33 {
+  content: url("chrome://browser/skin/weather/night-clear.svg");
+}
+.weatherIcon:is(.iconId34, .iconId35, .iconId36, .iconId38) {
+  content: url("chrome://browser/skin/weather/night-mostly-clear.svg");
+}
+.weatherIcon.iconId37 {
+  content: url("chrome://browser/skin/weather/night-hazy-moonlight.svg");
+}
+.weatherIcon:is(.iconId39, .iconId40) {
+  content: url("chrome://browser/skin/weather/night-partly-cloudy-with-showers.svg");
+  height: var(--size-item-large);
+}
+.weatherIcon:is(.iconId41, .iconId42) {
+  content: url("chrome://browser/skin/weather/night-partly-cloudy-with-thunderstorms.svg");
+}
+.weatherIcon:is(.iconId43, .iconId44) {
+  content: url("chrome://browser/skin/weather/night-mostly-cloudy-with-flurries.svg");
 }
 
 /* stylelint-disable max-nesting-depth */
