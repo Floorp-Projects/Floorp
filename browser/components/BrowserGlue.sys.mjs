@@ -8,7 +8,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 try {
-  ChromeUtils.importESModule("resource:///modules/FloorpStartup.sys.mjs");
+  ChromeUtils.importESModule("resource://floorp/FloorpStartup.sys.mjs");
 } catch (e) { console.error(e) }
 
 // Ignore unused lazy property for PluginManager.
@@ -780,20 +780,6 @@ let JSWINDOWACTORS = {
   SwitchDocumentDirection: {
     child: {
       esModuleURI: "resource:///actors/SwitchDocumentDirectionChild.sys.mjs",
-    },
-
-    allFrames: true,
-  },
-
-  // The older translations feature backed by external services.
-  // This is being replaced by a newer ML-backed translation service. See Bug 971044.
-  // Floorp Injections
-  SiteSpecificBrowser: {
-    parent: {
-      esModuleURI: "resource:///actors/SiteSpecificBrowserParent.sys.mjs",
-    },
-    child: {
-      esModuleURI: "resource:///actors/SiteSpecificBrowserChild.sys.mjs",
     },
 
     allFrames: true,

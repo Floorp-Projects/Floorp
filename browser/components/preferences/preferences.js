@@ -227,7 +227,7 @@ function init_all() {
   register_module("paneUserjs", gUserjsPane);
 
   var { FloorpAppConstants } = ChromeUtils.importESModule(
-    "resource:///modules/FloorpAppConstants.sys.mjs"
+    "resource://floorp/FloorpAppConstants.sys.mjs"
   );
 
 

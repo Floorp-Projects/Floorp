@@ -4090,7 +4090,7 @@ var SessionStoreInternal = {
 
     // Floorp Injections
     var { FloorpAppConstants } = ChromeUtils.importESModule(
-      "resource:///modules/FloorpAppConstants.sys.mjs"
+      "resource://floorp/FloorpAppConstants.sys.mjs"
     );
     if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
       let windowUuid = aWindow.workspacesWindowId;
@@ -5336,20 +5336,20 @@ var SessionStoreInternal = {
       }
 
       var { FloorpAppConstants } = ChromeUtils.importESModule(
-        "resource:///modules/FloorpAppConstants.sys.mjs"
+        "resource://floorp/FloorpAppConstants.sys.mjs"
       );
-  
+
       if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
         let { WorkspacesWindowUuidService } = ChromeUtils.importESModule(
-          "chrome://browser/content/modules/workspaces/WorkspacesService.mjs"
+          "resource://floorp/WorkspacesService.mjs"
         );
-        
+
         // workspaces Window Id
         if (aWindowId) {
           aWindow.workspacesWindowId = aWindowId;
         } else {
           aWindow.workspacesWindowId = WorkspacesWindowUuidService.getGeneratedUuid();
-        }  
+        }
       }
 
       // since resizing/moving a window brings it to the foreground,

@@ -3162,13 +3162,13 @@
           continue;
         }
 
-        
+
         let floorpWorkspaceId, floorpLastShowWorkspaceId, floorpWorkspace, floorpSSB;
 
         var { FloorpAppConstants } = ChromeUtils.importESModule(
-          "resource:///modules/FloorpAppConstants.sys.mjs"
+          "resource://floorp/FloorpAppConstants.sys.mjs"
         );
- 
+
         if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
           floorpWorkspaceId = tabData.floorpWorkspaceId;
           floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
@@ -3193,13 +3193,13 @@
 
           if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
             let { WorkspacesService } = ChromeUtils.importESModule(
-              "chrome://browser/content/modules/workspaces/WorkspacesService.mjs"
-            );      
+              "resource://floorp/WorkspacesService.mjs"
+            );
 
             if (floorpWorkspaceId) {
               tab.setAttribute(WorkspacesService.workspacesTabAttributionId, floorpWorkspaceId);
             }
-  
+
             if (floorpLastShowWorkspaceId) {
               tab.setAttribute(WorkspacesService.workspaceLastShowId, floorpLastShowWorkspaceId);
             }
@@ -3262,8 +3262,8 @@
 
           if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
             let { WorkspacesService } = ChromeUtils.importESModule(
-              "chrome://browser/content/modules/workspaces/WorkspacesService.mjs"
-            );      
+              "resource://floorp/WorkspacesService.mjs"
+            );
 
             if (floorpWorkspaceId) {
               tab.setAttribute(WorkspacesService.workspacesTabAttributionId, floorpWorkspaceId);

@@ -101,22 +101,15 @@ var TabStateInternal = {
 
     /*****Floorp Injections*****/
 
-    // Workspaces
-    tabData.floorpWorkspace = tab.getAttribute("floorpWorkspace");
-    if (!tabData.floorpWorkspace) {
-      tabData.floorpWorkspace = Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
-    }
-
     var { FloorpAppConstants } = ChromeUtils.importESModule(
-      "resource:///modules/FloorpAppConstants.sys.mjs"
+      "resource://floorp/FloorpAppConstants.sys.mjs"
     );
 
     if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
       let { WorkspacesService } = ChromeUtils.importESModule(
-        "chrome://browser/content/modules/workspaces/WorkspacesService.mjs"
+        "resource://floorp/WorkspacesService.mjs"
       );
 
-      // Workspaces
       // WorkspaceId
       tabData.floorpWorkspaceId = tab.getAttribute(WorkspacesService.workspacesTabAttributionId);
       // lastShowWorkspaceId
