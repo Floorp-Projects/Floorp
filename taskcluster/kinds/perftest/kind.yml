@@ -7,6 +7,8 @@ loader: gecko_taskgraph.loader.transform:loader
 kind-dependencies:
     - toolchain
     - build
+    - build-apk
+    - signing-apk
 
 transforms:
     - gecko_taskgraph.transforms.perftest:transforms
