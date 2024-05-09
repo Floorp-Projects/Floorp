@@ -17,10 +17,18 @@
 }
 </style>
   <script>
+    const { AddonManager } = ChromeUtils.importESModule(
+      "resource://gre/modules/AddonManager.sys.mjs"
+    );
     // Always run tests with the light theme for consistency and to avoid from false
     // test passes arising from the fact that --icon-color and --button-text-color
     // have the same value in the dark theme.
     add_setup(async function () {
+      // Developer Edition enables the wrong theme by default. Make sure
+      // the ordinary default theme is enabled.
+      let theme = await AddonManager.getAddonByID("default-theme@mozilla.org");
+      await theme.enable();
+
       await SpecialPowers.pushPrefEnv({
         set: [
           ["ui.systemUsesDarkTheme", 0],
@@ -28,7 +36,7 @@
       });
       // Triggers a refresh to ensure new theme applied.
       await new Promise(resolve => requestAnimationFrame(resolve));
-      ok(window.matchMedia("(prefers-color-scheme: light)").matches);
+      ok(window.matchMedia("(prefers-color-scheme: light)").matches, "Light theme is active.");
 
       // Move mouse to the bottom of the test frame to prevent hover on buttons.
       let mouseTrap = document.getElementById("mouse-trap");
