@@ -233,6 +233,10 @@ notes = "Local override of the crates.io crate that uses a non-vendored local co
 [policy.wr_malloc_size_of]
 audit-as-crates-io = false
 
+[policy.zip]
+audit-as-crates-io = true
+notes = "Locally patched version of the zip crate to allow for reading omnijars."
+
 [[exemptions.ahash]]
 version = "0.7.6"
 criteria = "safe-to-deploy"
