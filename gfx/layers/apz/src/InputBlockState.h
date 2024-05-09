@@ -501,9 +501,9 @@ class TouchBlockState : public CancelableBlockState {
     mIsWaitingLongTapResult = false;
   }
 
-  void SetWaitingLongTapResult(bool aResult) {
+  void SetWaitingLongTapResult() {
     MOZ_ASSERT(!mForLongTap);
-    mIsWaitingLongTapResult = aResult;
+    mIsWaitingLongTapResult = true;
   }
   bool IsWaitingLongTapResult() const { return mIsWaitingLongTapResult; }
 
