@@ -14,11 +14,11 @@
 #include "nsITransferable.h"
 #include "nsCOMPtr.h"
 
-extern mozilla::LazyLogModule gWidgetClipboardLog;
+static mozilla::LazyLogModule sWidgetClipboardLog("WidgetClipboard");
 #define MOZ_CLIPBOARD_LOG(...) \
-  MOZ_LOG(gWidgetClipboardLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+  MOZ_LOG(sWidgetClipboardLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 #define MOZ_CLIPBOARD_LOG_ENABLED() \
-  MOZ_LOG_TEST(gWidgetClipboardLog, mozilla::LogLevel::Debug)
+  MOZ_LOG_TEST(sWidgetClipboardLog, mozilla::LogLevel::Debug)
 
 class nsITransferable;
 class nsIClipboardOwner;

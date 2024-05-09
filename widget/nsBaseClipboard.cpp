@@ -35,8 +35,6 @@ using mozilla::dom::CanonicalBrowsingContext;
 using mozilla::dom::ClipboardCapabilities;
 using mozilla::dom::Document;
 
-mozilla::LazyLogModule gWidgetClipboardLog("WidgetClipboard");
-
 static const int32_t kGetAvailableFlavorsRetryCount = 5;
 
 namespace {
