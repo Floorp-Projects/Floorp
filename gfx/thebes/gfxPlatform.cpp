@@ -874,8 +874,7 @@ void gfxPlatform::Init() {
     // Prefs that don't fit into any of the other sections
     forcedPrefs.AppendPrintf("-T%d%d%d) ",
                              StaticPrefs::gfx_android_rgb16_force_AtStartup(),
-                             StaticPrefs::gfx_canvas_accelerated(),
-                             StaticPrefs::layers_force_shmem_tiles_AtStartup());
+                             StaticPrefs::gfx_canvas_accelerated());
     ScopedGfxFeatureReporter::AppNote(forcedPrefs);
   }
 

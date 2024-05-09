@@ -8126,11 +8126,6 @@
   value: false
   mirror: always
 
-- name: layers.force-shmem-tiles
-  type: bool
-  value: false
-  mirror: once
-
 - name: layers.draw-mask-debug
   type: RelaxedAtomicBool
   value: false
