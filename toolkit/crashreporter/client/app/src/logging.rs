@@ -19,8 +19,8 @@ pub fn init() -> LogTarget {
     env_logger::builder()
         .parse_env(
             env_logger::Env::new()
-                .filter(ekey!("LOG"))
-                .write_style(ekey!("LOG_STYLE")),
+                .filter("MOZ_CRASHEREPORTER")
+                .write_style("MOZ_CRASHREPORTER_STYLE"),
         )
         .target(env_logger::fmt::Target::Pipe(Box::new(
             log_target_inner.clone(),
