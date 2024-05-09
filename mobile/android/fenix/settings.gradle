@@ -54,3 +54,18 @@ gradle.projectsLoaded { ->
         }
     }
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Local Development overrides
+//////////////////////////////////////////////////////////////////////////
+
+def projectLocalProperties = file("local.properties").with { localPropertiesFile ->
+    def localProperties = new Properties()
+    if (localPropertiesFile.canRead()) {
+        localPropertiesFile.withInputStream { localProperties.load(it) }
+    }
+    localProperties
+}
+projectLocalProperties.each { prop ->
+    gradle.ext."localProperties.${prop.key}" = prop.value
+}

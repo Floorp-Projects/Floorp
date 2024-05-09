@@ -180,14 +180,6 @@ gradle.projectsLoaded { ->
             def gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
             apply from: "${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
         }
-
-        if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
-            if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
-                ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
-            }
-            ext.topsrcdir = gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir"
-            apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
-        }
     }
 }
 
