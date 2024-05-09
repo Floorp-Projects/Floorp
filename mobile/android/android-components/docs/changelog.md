@@ -17,6 +17,9 @@ permalink: /changelog/
   * Added `StartForegroundService` to safely start a foreground service, see [Bug 1839039](https://bugzilla.mozilla.org/show_bug.cgi?id=1839039) for crash reference.
   * Added `ProcessInfoProvider` and `BuildVersionProvider` to get information about the app process and the build version.
 
+* **support-utils**
+  * Added `DebouncedQueue`, a queue that manages function execution with a debounce mechanism.
+
 * **browser-engine-gecko**
     * For screenshot capture, include exception in failure result rather than throwing.
 

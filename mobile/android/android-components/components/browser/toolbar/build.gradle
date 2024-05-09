@@ -35,6 +35,7 @@ dependencies {
     implementation project(':ui-colors')
     implementation project(':ui-widgets')
     implementation project(':support-ktx')
+    implementation project(':support-utils')
 
     implementation ComponentsDependencies.androidx_appcompat
     implementation ComponentsDependencies.androidx_constraintlayout

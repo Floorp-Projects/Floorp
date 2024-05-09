@@ -5,7 +5,10 @@
 package mozilla.components.browser.toolbar.internal
 
 import android.content.Context
+import android.transition.ChangeBounds
+import android.transition.Fade
 import android.transition.TransitionManager
+import android.transition.TransitionSet
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
@@ -14,6 +17,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.utils.DebouncedQueue
 
 /**
  * A container [View] for displaying [Toolbar.Action] objects.
@@ -25,6 +29,7 @@ internal class ActionContainer @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyleAttr) {
     private val actions = mutableListOf<ActionWrapper>()
     private var actionSize: Int? = null
+    private val debouncingQueue = DebouncedQueue(delayMillis = 50L)
 
     init {
         gravity = Gravity.CENTER_VERTICAL
@@ -93,7 +98,28 @@ internal class ActionContainer @JvmOverloads constructor(
     }
 
     fun invalidateActions() {
-        TransitionManager.beginDelayedTransition(this)
+        // Adding a debouncing is a workaround that solves multiple visual glitches.
+        // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1895645
+        debouncingQueue.enqueue {
+            updateView()
+        }
+    }
+
+    /**
+     * An alternative to [android.transition.AutoTransition] to be used with [TransitionManager.beginDelayedTransition].
+     * In comparison to the original, it disables the [Fade.OUT] animation and plays out animations all together.
+     */
+    private class CustomTransition : TransitionSet() {
+        init {
+            setOrdering(ORDERING_TOGETHER)
+            addTransition(ChangeBounds())
+            addTransition(Fade(Fade.IN))
+        }
+    }
+
+    @VisibleForTesting
+    internal fun updateView() {
+        TransitionManager.beginDelayedTransition(this, CustomTransition())
         var updatedVisibility = View.GONE
 
         for (action in actions) {
