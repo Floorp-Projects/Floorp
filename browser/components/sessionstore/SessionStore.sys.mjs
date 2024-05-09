@@ -169,6 +169,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
+  sessionStoreLogger: "resource:///modules/sessionstore/SessionLogger.sys.mjs",
   RunState: "resource:///modules/sessionstore/RunState.sys.mjs",
   SessionCookies: "resource:///modules/sessionstore/SessionCookies.sys.mjs",
   SessionFile: "resource:///modules/sessionstore/SessionFile.sys.mjs",
@@ -207,6 +208,9 @@ var gResistFingerprintingEnabled = false;
  * @namespace SessionStore
  */
 export var SessionStore = {
+  get logger() {
+    return SessionStoreInternal._log;
+  },
   get promiseInitialized() {
     return SessionStoreInternal.promiseInitialized;
   },
@@ -1048,6 +1052,10 @@ var SessionStoreInternal = {
     Services.telemetry
       .getHistogramById("FX_SESSION_RESTORE_PRIVACY_LEVEL")
       .add(Services.prefs.getIntPref("browser.sessionstore.privacy_level"));
+
+    this.promiseAllWindowsRestored.finally(() => () => {
+      this._log.debug("promiseAllWindowsRestored finalized");
+    });
   },
 
   /**
@@ -1057,10 +1065,13 @@ var SessionStoreInternal = {
     TelemetryStopwatch.start("FX_SESSION_RESTORE_STARTUP_INIT_SESSION_MS");
     let state;
     let ss = lazy.SessionStartup;
-
-    if (ss.willRestore() || ss.sessionType == ss.DEFER_SESSION) {
+    let willRestore = ss.willRestore();
+    if (willRestore || ss.sessionType == ss.DEFER_SESSION) {
       state = ss.state;
     }
+    this._log.debug(
+      `initSession willRestore: ${willRestore}, SessionStartup.sessionType: ${ss.sessionType}`
+    );
 
     if (state) {
       try {
@@ -1076,6 +1087,9 @@ var SessionStoreInternal = {
           } else {
             state = null;
           }
+          this._log.debug(
+            `initSession deferred restore with ${iniState.windows.length} initial windows, ${remainingState.windows.length} remaining windows`
+          );
 
           if (remainingState.windows.length) {
             LastSession.setState(remainingState);
@@ -1094,6 +1108,9 @@ var SessionStoreInternal = {
           if (restoreAsCrashed) {
             this._recentCrashes =
               ((state.session && state.session.recentCrashes) || 0) + 1;
+            this._log.debug(
+              `initSession, restoreAsCrashed, crashes: ${this._recentCrashes}`
+            );
 
             // _needsRestorePage will record sessionrestore_interstitial,
             // including the specific reason we decided we needed to show
@@ -1108,9 +1125,11 @@ var SessionStoreInternal = {
                   lazy.E10SUtils.SERIALIZED_SYSTEMPRINCIPAL,
               };
               state = { windows: [{ tabs: [{ entries: [entry], formdata }] }] };
+              this._log.debug("initSession, will show about:sessionrestore");
             } else if (
               this._hasSingleTabWithURL(state.windows, "about:welcomeback")
             ) {
+              this._log.debug("initSession, will show about:welcomeback");
               Services.telemetry.keyedScalarAdd(
                 "browser.engagement.sessionrestore_interstitial",
                 "shown_only_about_welcomeback",
@@ -1133,7 +1152,7 @@ var SessionStoreInternal = {
               "autorestore",
               1
             );
-
+            this._log.debug("initSession, will autorestore");
             this._removeExplicitlyClosedTabs(state);
           }
 
@@ -1161,7 +1180,7 @@ var SessionStoreInternal = {
         state?.windows?.forEach(win => delete win._maybeDontRestoreTabs);
         state?._closedWindows?.forEach(win => delete win._maybeDontRestoreTabs);
       } catch (ex) {
-        this._log.error("The session file is invalid: " + ex);
+        this._log.error("The session file is invalid: ", ex);
       }
     }
 
@@ -1245,10 +1264,7 @@ var SessionStoreInternal = {
       gDebuggingEnabled = this._prefBranch.getBoolPref("sessionstore.debug");
     });
 
-    this._log = console.createInstance({
-      prefix: "SessionStore",
-      maxLogLevel: gDebuggingEnabled ? "Debug" : "Warn",
-    });
+    this._log = lazy.sessionStoreLogger;
 
     this._max_tabs_undo = this._prefBranch.getIntPref(
       "sessionstore.max_tabs_undo"
@@ -1809,6 +1825,9 @@ var SessionStoreInternal = {
         lazy.SessionSaver.updateLastSaveTime();
 
         if (isPrivateWindow) {
+          this._log.debug(
+            "initializeWindow, the window is private. Saving SessionStartup.state for possibly restoring later"
+          );
           // We're starting with a single private window. Save the state we
           // actually wanted to restore so that we can do it later in case
           // the user opens another, non-private window.
@@ -1966,6 +1985,9 @@ var SessionStoreInternal = {
 
     // Just call initializeWindow() directly if we're initialized already.
     if (this._sessionInitialized) {
+      this._log.debug(
+        "onBeforeBrowserWindowShown, session already initialized, initializing window"
+      );
       this.initializeWindow(aWindow);
       return;
     }
@@ -2001,6 +2023,9 @@ var SessionStoreInternal = {
     this._promiseReadyForInitialization
       .then(() => {
         if (aWindow.closed) {
+          this._log.debug(
+            "When _promiseReadyForInitialization resolved, the window was closed"
+          );
           return;
         }
 
@@ -2025,7 +2050,12 @@ var SessionStoreInternal = {
           this._deferredInitialized.resolve();
         }
       })
-      .catch(console.error);
+      .catch(ex => {
+        this._log.error(
+          "Exception when handling _promiseReadyForInitialization resolution:",
+          ex
+        );
+      });
   },
 
   /**
@@ -4764,6 +4794,7 @@ var SessionStoreInternal = {
     let windowsOpened = [];
     for (let winData of root.windows) {
       if (!winData || !winData.tabs || !winData.tabs[0]) {
+        this._log.debug(`_openWindows, skipping window with no tabs data`);
         this._restoreCount--;
         continue;
       }
@@ -4823,6 +4854,7 @@ var SessionStoreInternal = {
     this._setWindowStateBusy(aWindow);
 
     if (winData.workspaceID) {
+      this._log.debug(`Moving window to workspace: ${winData.workspaceID}`);
       aWindow.moveToWorkspace(winData.workspaceID);
     }
 
@@ -4875,11 +4907,17 @@ var SessionStoreInternal = {
       this._prefBranch.getBoolPref("sessionstore.restore_tabs_lazily") &&
       this._restore_on_demand;
 
+    this._log.debug(
+      `restoreWindow, will restore ${winData.tabs.length} tabs, restoreTabsLazily: ${restoreTabsLazily}`
+    );
     if (winData.tabs.length) {
       var tabs = tabbrowser.createTabsForSessionRestore(
         restoreTabsLazily,
         selectTab,
         winData.tabs
+      );
+      this._log.debug(
+        `restoreWindow, createTabsForSessionRestore returned {tabs.length} tabs`
       );
     }
 
@@ -5102,6 +5140,7 @@ var SessionStoreInternal = {
       root = typeof aState == "string" ? JSON.parse(aState) : aState;
     } catch (ex) {
       // invalid state object - don't restore anything
+      this._log.debug(`restoreWindows failed to parse ${typeof aState} state`);
       this._log.error(ex);
       this._sendRestoreCompletedNotifications();
       return;
@@ -5120,9 +5159,13 @@ var SessionStoreInternal = {
           );
         }
       }
+      this._log.debug(`Restored ${this._closedWindows.length} closed windows`);
       this._closedObjectsChanged = true;
     }
 
+    this._log.debug(
+      `restoreWindows will restore ${root.windows?.length} windows`
+    );
     // We're done here if there are no windows.
     if (!root.windows || !root.windows.length) {
       this._sendRestoreCompletedNotifications();
@@ -5245,7 +5288,7 @@ var SessionStoreInternal = {
     let browser = tab.linkedBrowser;
 
     if (TAB_STATE_FOR_BROWSER.has(browser)) {
-      console.error("Must reset tab before calling restoreTab.");
+      this._log.warn("Must reset tab before calling restoreTab.");
       return;
     }
 
@@ -5993,6 +6036,11 @@ var SessionStoreInternal = {
       features.push("private");
     }
 
+    this._log.debug(
+      `Opening window with features: ${features.join(
+        ","
+      )}, argString: ${argString}.`
+    );
     var window = Services.ww.openWindow(
       null,
       AppConstants.BROWSER_CHROME_URL,
@@ -6413,6 +6461,7 @@ var SessionStoreInternal = {
       // This was the last window restored at startup, notify observers.
       if (!this._browserSetState) {
         Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED);
+        this._log.debug(`All ${this._restoreCount} windows restored`);
         this._deferredAllWindowsRestored.resolve();
       } else {
         // _browserSetState is used only by tests, and it uses an alternate
