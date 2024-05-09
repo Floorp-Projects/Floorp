@@ -58,8 +58,7 @@ class XMLHttpRequestStringBuffer final {
 
     // XXX: Bug 1408793 suggests encapsulating the following sequence within
     //      DOMString.
-    nsStringBuffer* buf = nsStringBuffer::FromString(mData);
-    if (buf) {
+    if (nsStringBuffer* buf = mData.GetStringBuffer()) {
       // We have to use SetStringBuffer, because once we release our mutex mData
       // can get mutated from some other thread while the DOMString is still
       // alive.

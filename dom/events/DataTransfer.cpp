@@ -1083,7 +1083,7 @@ already_AddRefed<nsITransferable> DataTransfer::GetTransferable(
               static_cast<char*>(stringBuffer->Data())[amountRead] = 0;
 
               nsCString str;
-              stringBuffer->ToString(totalCustomLength, str);
+              str.Assign(stringBuffer, totalCustomLength);
               nsCOMPtr<nsISupportsCString> strSupports(
                   do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
               strSupports->SetData(str);

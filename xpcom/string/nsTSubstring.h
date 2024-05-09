@@ -8,20 +8,17 @@
 #ifndef nsTSubstring_h
 #define nsTSubstring_h
 
-#include <iterator>
 #include <type_traits>
 
-#include "mozilla/Casting.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "mozilla/Try.h"
 #include "mozilla/Unused.h"
+#include "nsStringBuffer.h"
 
 #include "nsTStringRepr.h"
 
@@ -421,6 +418,13 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   void NS_FASTCALL Assign(const substring_tuple_type&);
   [[nodiscard]] bool NS_FASTCALL Assign(const substring_tuple_type&,
                                         const fallible_t&);
+
+  void Assign(nsStringBuffer* aBuffer, size_type aLength) {
+    aBuffer->AddRef();
+    Assign(already_AddRefed<nsStringBuffer>(aBuffer), aLength);
+  }
+  void NS_FASTCALL Assign(already_AddRefed<nsStringBuffer> aBuffer,
+                          size_type aLength);
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
@@ -1142,9 +1146,20 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    * clears the pointer without releasing the buffer.
    */
   void ForgetSharedBuffer() {
-    if (base_string_type::mDataFlags & DataFlags::REFCOUNTED) {
+    if (this->mDataFlags & DataFlags::REFCOUNTED) {
       SetToEmptyBuffer();
     }
+  }
+
+  /**
+   * If the string uses a reference-counted buffer, this method returns a
+   * pointer to it without incrementing the buffer's refcount.
+   */
+  nsStringBuffer* GetStringBuffer() const {
+    if (this->mDataFlags & DataFlags::REFCOUNTED) {
+      return nsStringBuffer::FromData(this->mData);
+    }
+    return nullptr;
   }
 
  protected:

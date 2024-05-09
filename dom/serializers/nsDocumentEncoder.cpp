@@ -341,7 +341,7 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   // argument of nsIContentSerializer::Init().
   bool mNeedsPreformatScanning;
   bool mIsCopying;  // Set to true only while copying
-  nsStringBuffer* mCachedBuffer;
+  RefPtr<nsStringBuffer> mCachedBuffer;
 
   class NodeSerializer {
    public:
@@ -701,11 +701,7 @@ nsresult nsDocumentEncoder::SerializeWholeDocument(uint32_t aMaxLength) {
   return rv;
 }
 
-nsDocumentEncoder::~nsDocumentEncoder() {
-  if (mCachedBuffer) {
-    mCachedBuffer->Release();
-  }
-}
+nsDocumentEncoder::~nsDocumentEncoder() = default;
 
 NS_IMETHODIMP
 nsDocumentEncoder::Init(Document* aDocument, const nsAString& aMimeType,
@@ -1372,7 +1368,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
   nsString output;
   static const size_t kStringBufferSizeInBytes = 2048;
   if (!mCachedBuffer) {
-    mCachedBuffer = nsStringBuffer::Alloc(kStringBufferSizeInBytes).take();
+    mCachedBuffer = nsStringBuffer::Alloc(kStringBufferSizeInBytes);
     if (NS_WARN_IF(!mCachedBuffer)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1381,9 +1377,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
       !mCachedBuffer->IsReadonly(),
       "nsIDocumentEncoder shouldn't keep reference to non-readonly buffer!");
   static_cast<char16_t*>(mCachedBuffer->Data())[0] = char16_t(0);
-  mCachedBuffer->ToString(0, output, true);
-  // output owns the buffer now!
-  mCachedBuffer = nullptr;
+  output.Assign(mCachedBuffer.forget(), 0);
 
   if (!mSerializer) {
     nsAutoCString progId(NS_CONTENTSERIALIZER_CONTRACTID_PREFIX);
@@ -1407,21 +1401,18 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
 
   rv = mSerializer->FlushAndFinish();
 
-  mCachedBuffer = nsStringBuffer::FromString(output);
   // We have to be careful how we set aOutputString, because we don't
   // want it to end up sharing mCachedBuffer if we plan to reuse it.
   bool setOutput = false;
+  MOZ_ASSERT(!mCachedBuffer);
   // Try to cache the buffer.
-  if (mCachedBuffer) {
-    if ((mCachedBuffer->StorageSize() == kStringBufferSizeInBytes) &&
-        !mCachedBuffer->IsReadonly()) {
-      mCachedBuffer->AddRef();
-    } else {
-      if (NS_SUCCEEDED(rv)) {
-        mCachedBuffer->ToString(output.Length(), aOutputString);
-        setOutput = true;
-      }
-      mCachedBuffer = nullptr;
+  if (nsStringBuffer* outputBuffer = output.GetStringBuffer()) {
+    if (outputBuffer->StorageSize() == kStringBufferSizeInBytes &&
+        !outputBuffer->IsReadonly()) {
+      mCachedBuffer = outputBuffer;
+    } else if (NS_SUCCEEDED(rv)) {
+      aOutputString.Assign(outputBuffer, output.Length());
+      setOutput = true;
     }
   }
 

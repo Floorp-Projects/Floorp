@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 #ifdef ANDROID
 #  include <stdio.h>

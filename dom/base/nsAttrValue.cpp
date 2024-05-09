@@ -141,7 +141,7 @@ bool MiscContainer::GetString(nsAString& aString) const {
   }
   if (isString) {
     auto* buffer = static_cast<nsStringBuffer*>(ptr);
-    buffer->ToString(buffer->StorageSize() / sizeof(char16_t) - 1, aString);
+    aString.Assign(buffer, buffer->StorageSize() / sizeof(char16_t) - 1);
   } else {
     static_cast<nsAtom*>(ptr)->ToString(aString);
   }
@@ -280,11 +280,9 @@ void nsAttrValue::Shutdown() {
 void nsAttrValue::Reset() {
   switch (BaseType()) {
     case eStringBase: {
-      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
-      if (str) {
+      if (auto* str = static_cast<nsStringBuffer*>(GetPtr())) {
         str->Release();
       }
-
       break;
     }
     case eOtherBase: {
@@ -320,8 +318,7 @@ void nsAttrValue::SetTo(const nsAttrValue& aOther) {
   switch (aOther.BaseType()) {
     case eStringBase: {
       ResetIfSet();
-      nsStringBuffer* str = static_cast<nsStringBuffer*>(aOther.GetPtr());
-      if (str) {
+      if (auto* str = static_cast<nsStringBuffer*>(aOther.GetPtr())) {
         str->AddRef();
         SetPtrValueAndType(str, eStringBase);
       }
@@ -623,18 +620,16 @@ void nsAttrValue::ToString(nsAString& aResult) const {
 
   switch (Type()) {
     case eString: {
-      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
-      if (str) {
-        str->ToString(str->StorageSize() / sizeof(char16_t) - 1, aResult);
+      if (auto* str = static_cast<nsStringBuffer*>(GetPtr())) {
+        aResult.Assign(str, str->StorageSize() / sizeof(char16_t) - 1);
       } else {
         aResult.Truncate();
       }
       break;
     }
     case eAtom: {
-      nsAtom* atom = static_cast<nsAtom*>(GetPtr());
+      auto* atom = static_cast<nsAtom*>(GetPtr());
       atom->ToString(aResult);
-
       break;
     }
     case eInteger: {
@@ -895,8 +890,7 @@ nsAtom* nsAttrValue::AtomAt(int32_t aIndex) const {
 uint32_t nsAttrValue::HashValue() const {
   switch (BaseType()) {
     case eStringBase: {
-      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
-      if (str) {
+      if (auto* str = static_cast<nsStringBuffer*>(GetPtr())) {
         uint32_t len = str->StorageSize() / sizeof(char16_t) - 1;
         return HashString(static_cast<char16_t*>(str->Data()), len);
       }
@@ -1208,8 +1202,7 @@ bool nsAttrValue::SubstringCheck(const nsAString& aValue,
                                  nsCaseTreatment aCaseSensitive) const {
   switch (BaseType()) {
     case eStringBase: {
-      auto str = static_cast<nsStringBuffer*>(GetPtr());
-      if (str) {
+      if (auto* str = static_cast<nsStringBuffer*>(GetPtr())) {
         return F::Check(static_cast<char16_t*>(str->Data()),
                         str->StorageSize() / sizeof(char16_t) - 1, aValue,
                         aCaseSensitive);
@@ -1217,7 +1210,7 @@ bool nsAttrValue::SubstringCheck(const nsAString& aValue,
       return aValue.IsEmpty();
     }
     case eAtomBase: {
-      auto atom = static_cast<nsAtom*>(GetPtr());
+      auto* atom = static_cast<nsAtom*>(GetPtr());
       return F::Check(atom->GetUTF16String(), atom->GetLength(), aValue,
                       aCaseSensitive);
     }
@@ -2107,12 +2100,11 @@ already_AddRefed<nsStringBuffer> nsAttrValue::GetStringBuffer(
   if (!len) {
     return nullptr;
   }
-
-  RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aValue);
-  if (buf && (buf->StorageSize() / sizeof(char16_t) - 1) == len) {
+  if (nsStringBuffer* buf = aValue.GetStringBuffer();
+      buf && (buf->StorageSize() / sizeof(char16_t) - 1) == len) {
     // We can only reuse the buffer if it's exactly sized, since we rely on
     // StorageSize() to get the string length in ToString().
-    return buf.forget();
+    return do_AddRef(buf);
   }
   return nsStringBuffer::Create(aValue.Data(), aValue.Length());
 }

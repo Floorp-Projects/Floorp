@@ -6,7 +6,7 @@
 #include "CDMStorageIdProvider.h"
 #include "GMPLog.h"
 #include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "nsICryptoHash.h"
 
 #ifdef SUPPORT_STORAGE_ID

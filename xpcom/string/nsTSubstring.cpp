@@ -404,6 +404,17 @@ void nsTSubstring<T>::Assign(const char_type* aData, size_type aLength) {
 }
 
 template <typename T>
+void nsTSubstring<T>::Assign(already_AddRefed<nsStringBuffer> aBuffer,
+                             size_type aLength) {
+  nsStringBuffer* buffer = aBuffer.take();
+  auto* data = reinterpret_cast<char_type*>(buffer->Data());
+  MOZ_DIAGNOSTIC_ASSERT(data[aLength] == char_type(0),
+                        "data should be null terminated");
+  Finalize();
+  SetData(data, aLength, DataFlags::REFCOUNTED | DataFlags::TERMINATED);
+}
+
+template <typename T>
 bool nsTSubstring<T>::Assign(const char_type* aData,
                              const fallible_t& aFallible) {
   return Assign(aData, size_type(-1), aFallible);

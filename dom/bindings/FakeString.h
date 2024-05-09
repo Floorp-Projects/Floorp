@@ -51,7 +51,7 @@ struct FakeString {
   // depend upon aString's data.  aString should outlive this instance of
   // FakeString.
   void ShareOrDependUpon(const AString& aString) {
-    RefPtr<nsStringBuffer> sharedBuffer = nsStringBuffer::FromString(aString);
+    RefPtr<nsStringBuffer> sharedBuffer = aString.GetStringBuffer();
     if (!sharedBuffer) {
       InitData(aString.BeginReading(), aString.Length());
       if (!aString.IsTerminated()) {
