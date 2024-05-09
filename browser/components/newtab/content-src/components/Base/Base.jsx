@@ -322,10 +322,12 @@ export class BaseContent extends React.PureComponent {
       showSponsoredPocketEnabled: prefs.showSponsored,
       showRecentSavesEnabled: prefs.showRecentSaves,
       topSitesRowsCount: prefs.topSitesRows,
+      weatherEnabled: prefs.showWeather,
     };
 
     const pocketRegion = prefs["feeds.system.topstories"];
     const mayHaveSponsoredStories = prefs["system.showSponsored"];
+    const mayHaveWeather = prefs["system.showWeather"];
     const { mayHaveSponsoredTopSites } = prefs;
 
     const outerClassName = [
@@ -358,6 +360,7 @@ export class BaseContent extends React.PureComponent {
           pocketRegion={pocketRegion}
           mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
           mayHaveSponsoredStories={mayHaveSponsoredStories}
+          mayHaveWeather={mayHaveWeather}
           spocMessageVariant={spocMessageVariant}
           showing={customizeMenuVisible}
         />

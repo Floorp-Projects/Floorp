@@ -9009,7 +9009,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }));
   }
   onPreferenceSelect(e) {
-    // eventSource: TOP_SITES | TOP_STORIES | HIGHLIGHTS
+    // eventSource: TOP_SITES | TOP_STORIES | HIGHLIGHTS | WEATHER
     const {
       preference,
       eventSource
@@ -9066,6 +9066,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       pocketRegion,
       mayHaveSponsoredStories,
       mayHaveRecentSaves,
+      mayHaveWeather,
       openPreferences,
       spocMessageVariant,
       wallpapersEnabled,
@@ -9076,6 +9077,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       topSitesEnabled,
       pocketEnabled,
       highlightsEnabled,
+      weatherEnabled,
       showSponsoredTopSitesEnabled,
       showSponsoredPocketEnabled,
       showRecentSavesEnabled,
@@ -9211,6 +9213,19 @@ class ContentSection extends (external_React_default()).PureComponent {
       "data-eventSource": "HIGHLIGHTS",
       "data-l10n-id": "newtab-custom-recent-toggle",
       "data-l10n-attrs": "label, description"
+    }))), mayHaveWeather && /*#__PURE__*/external_React_default().createElement("div", {
+      id: "weather-section",
+      className: "section"
+    }, /*#__PURE__*/external_React_default().createElement("label", {
+      className: "switch"
+    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+      id: "weather-toggle",
+      pressed: weatherEnabled || null,
+      onToggle: this.onPreferenceSelect,
+      "data-preference": "showWeather",
+      "data-eventSource": "WEATHER",
+      "data-l10n-id": "newtab-custom-weather-toggle",
+      "data-l10n-attrs": "label, description"
     }))), pocketRegion && mayHaveSponsoredStories && spocMessageVariant === "variant-c" && /*#__PURE__*/external_React_default().createElement("div", {
       className: "sponsored-content-info"
     }, /*#__PURE__*/external_React_default().createElement("div", {
@@ -9293,6 +9308,7 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites,
       mayHaveSponsoredStories: this.props.mayHaveSponsoredStories,
       mayHaveRecentSaves: this.props.DiscoveryStream.recentSavesEnabled,
+      mayHaveWeather: this.props.mayHaveWeather,
       spocMessageVariant: this.props.spocMessageVariant,
       dispatch: this.props.dispatch
     }))));
@@ -9780,10 +9796,12 @@ class BaseContent extends (external_React_default()).PureComponent {
       showSponsoredTopSitesEnabled: prefs.showSponsoredTopSites,
       showSponsoredPocketEnabled: prefs.showSponsored,
       showRecentSavesEnabled: prefs.showRecentSaves,
-      topSitesRowsCount: prefs.topSitesRows
+      topSitesRowsCount: prefs.topSitesRows,
+      weatherEnabled: prefs.showWeather
     };
     const pocketRegion = prefs["feeds.system.topstories"];
     const mayHaveSponsoredStories = prefs["system.showSponsored"];
+    const mayHaveWeather = prefs["system.showWeather"];
     const {
       mayHaveSponsoredTopSites
     } = prefs;
@@ -9802,6 +9820,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       pocketRegion: pocketRegion,
       mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
       mayHaveSponsoredStories: mayHaveSponsoredStories,
+      mayHaveWeather: mayHaveWeather,
       spocMessageVariant: spocMessageVariant,
       showing: customizeMenuVisible
     }), /*#__PURE__*/external_React_default().createElement("div", {

@@ -474,16 +474,21 @@ richlistitem[selected] .actionsMenu:focus-visible {
   width: 16px;
 }
 
-#homeContentsGroup [data-subcategory] {
+#homeContentsGroup > [data-subcategory] {
   margin-top: 14px;
 }
 
-#homeContentsGroup [data-subcategory] .section-checkbox {
+#homeContentsGroup > [data-subcategory] .section-checkbox {
   font-weight: var(--font-weight-bold);
 }
 
-#homeContentsGroup [data-subcategory] > vbox menulist {
+#homeContentsGroup > [data-subcategory] > vbox menulist {
   margin-block: 0;
+}
+
+/* Align fix for prefs that have a text link in the headline */
+#homeContentsGroup > [data-subcategory] > hbox {
+  align-items: last baseline;
 }
 
 #homeContentsGroup .checkbox-label {

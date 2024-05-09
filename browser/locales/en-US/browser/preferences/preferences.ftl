@@ -734,6 +734,10 @@ home-prefs-highlights-option-saved-to-pocket =
 home-prefs-recent-activity-header =
     .label = Recent activity
 home-prefs-recent-activity-description = A selection of recent sites and content
+home-prefs-weather-header =
+  .label = Weather
+home-prefs-weather-description = Today’s forecast at a glance
+home-prefs-weather-learn-more-link = Learn more
 
 # Variables:
 #   $num (number) - Number of rows displayed

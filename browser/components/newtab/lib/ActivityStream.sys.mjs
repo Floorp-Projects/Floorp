@@ -162,6 +162,28 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "weather.locationSearchEnabled",
+    {
+      title: "Enable the option to search for a specific city",
+      value: false,
+    },
+  ],
+  [
+    "weather.temperatureUnits",
+    {
+      title: "Switch the temperature between Celsius and Fahrenheit",
+      value: "f",
+    },
+  ],
+  [
+    "weather.display",
+    {
+      title:
+        "Toggle the weather widget to include a text summary of the current conditions",
+      value: "simple",
+    },
+  ],
+  [
     "pocketCta",
     {
       title: "Pocket cta and button for logged out users.",
