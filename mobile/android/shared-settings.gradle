@@ -172,13 +172,13 @@ gradle.projectsLoaded { ->
         // Allow local appservices substitution in each project.
         if (gradle.hasProperty("localProperties.autoPublish.application-services.dir")) {
             def appServicesSrcDir = gradle."localProperties.autoPublish.application-services.dir"
-            apply from: "${rootProject.projectDir}/${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+            apply from: "${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
         }
 
         // Allow local Glean substitution in each project.
         if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
             def gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
-            apply from: "${rootProject.projectDir}/${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
+            apply from: "${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
         }
 
         if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
@@ -214,24 +214,14 @@ if (localPropertiesFile.canRead()) {
     def localProperties = new Properties()
     localPropertiesFile.withInputStream { localProperties.load(it) }
 
-    // Adjust the paths in `local.properties` so that they're relative to
-    // the current project directory. If we're building from `topsrcdir`,
-    // the paths are already correct; if we're building from an
-    // Android subproject directory (`mobile/android/...`),
-    // they'll need to be relativized.
     [
         "autoPublish.application-services.dir",
         "autoPublish.glean.dir",
     ].each { key ->
-        def value = localProperties."$key"
-        if (value != null) {
-            if (value.startsWith("/")) {
-                // Our various tools and build scripts assume relative paths,
-                // so catch absolute paths now to avoid build errors later.
-                throw new GradleException("'${key}' must be relative to the top source directory")
-            }
-            def autoPublishDir = new File(gradle.mozconfig.topsrcdir, value)
-            gradle.ext."localProperties.$key" = rootDir.relativePath(autoPublishDir)
+        def relativeOrAbsolutePath = localProperties."$key"
+        if (relativeOrAbsolutePath != null) {
+            def autoPublishDir = new File(gradle.mozconfig.topsrcdir).toPath().resolve(relativeOrAbsolutePath)
+            gradle.ext."localProperties.$key" = autoPublishDir.toString()
         }
     }
 }
