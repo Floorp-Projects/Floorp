@@ -1038,9 +1038,9 @@
       },
       "id": "336d7fa9-7579-4981-bfb0-024c6c5f977d",
       "identifier": "ebay-ca",
-      "last_modified": 1702906502438,
+      "last_modified": 1715090108516,
       "recordType": "engine",
-      "schema": 1702901797167,
+      "schema": 1714065170548,
       "variants": [
         {
           "environment": {
@@ -1057,6 +1057,9 @@
         },
         {
           "environment": {
+            "excludedRegions": [
+              "pl"
+            ],
             "locales": [
               "en-CA"
             ]
@@ -1117,9 +1120,9 @@
       },
       "id": "8d8484a2-b856-4edd-93d7-c53a7aaca6e1",
       "identifier": "ebay-ch",
-      "last_modified": 1702906502435,
+      "last_modified": 1715090108518,
       "recordType": "engine",
-      "schema": 1702901797777,
+      "schema": 1714498577167,
       "variants": [
         {
           "environment": {
@@ -1139,6 +1142,9 @@
         },
         {
           "environment": {
+            "excludedRegions": [
+              "pl"
+            ],
             "locales": [
               "rm"
             ]
@@ -1199,15 +1205,16 @@
       },
       "id": "e991a5f7-616e-43b0-b349-7995b837a520",
       "identifier": "ebay-de",
-      "last_modified": 1702906502424,
+      "last_modified": 1715090108527,
       "recordType": "engine",
-      "schema": 1702901800234,
+      "schema": 1714498578625,
       "variants": [
         {
           "environment": {
             "excludedRegions": [
               "at",
-              "ch"
+              "ch",
+              "pl"
             ],
             "locales": [
               "de",
@@ -1271,12 +1278,15 @@
       },
       "id": "0592aedc-f4e5-4873-a8d4-da9482071613",
       "identifier": "ebay-es",
-      "last_modified": 1702906502448,
+      "last_modified": 1715090108511,
       "recordType": "engine",
-      "schema": 1702901795317,
+      "schema": 1714498579838,
       "variants": [
         {
           "environment": {
+            "excludedRegions": [
+              "pl"
+            ],
             "locales": [
               "an",
               "ast",
@@ -1343,16 +1353,17 @@
       },
       "id": "d327156c-dfc4-47f6-a620-3846a21144d9",
       "identifier": "ebay-fr",
-      "last_modified": 1702906502445,
+      "last_modified": 1715090108513,
       "recordType": "engine",
-      "schema": 1702901795929,
+      "schema": 1714498580858,
       "variants": [
         {
           "environment": {
             "excludedRegions": [
               "be",
               "ca",
-              "ch"
+              "ch",
+              "pl"
             ],
             "locales": [
               "br",
@@ -1416,9 +1427,9 @@
       },
       "id": "0a9fed24-cd33-4293-bac8-eb26a285c9f1",
       "identifier": "ebay-ie",
-      "last_modified": 1702906502427,
+      "last_modified": 1715090108524,
       "recordType": "engine",
-      "schema": 1702901799624,
+      "schema": 1714498581865,
       "variants": [
         {
           "environment": {
@@ -1435,6 +1446,9 @@
         },
         {
           "environment": {
+            "excludedRegions": [
+              "pl"
+            ],
             "locales": [
               "ga-IE"
             ]
@@ -1495,12 +1509,15 @@
       },
       "id": "f36dd44c-ba5f-44e5-8b19-672eb1ed62fd",
       "identifier": "ebay-it",
-      "last_modified": 1702906502415,
+      "last_modified": 1715090108532,
       "recordType": "engine",
-      "schema": 1702901802076,
+      "schema": 1714498582844,
       "variants": [
         {
           "environment": {
+            "excludedRegions": [
+              "pl"
+            ],
             "locales": [
               "fur",
               "it",
@@ -1564,14 +1581,15 @@
       },
       "id": "670475c3-d56f-4f87-9834-ddb12d0e8cbd",
       "identifier": "ebay-nl",
-      "last_modified": 1702906502418,
+      "last_modified": 1715090108529,
       "recordType": "engine",
-      "schema": 1702901801464,
+      "schema": 1714498583851,
       "variants": [
         {
           "environment": {
             "excludedRegions": [
-              "be"
+              "be",
+              "pl"
             ],
             "locales": [
               "fy-NL",
@@ -1586,6 +1604,72 @@
             ],
             "regions": [
               "nl"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "base": {
+        "aliases": [
+          "ebay"
+        ],
+        "classification": "unknown",
+        "name": "eBay",
+        "partnerCode": "5338192028",
+        "urls": {
+          "search": {
+            "base": "https://www.ebay.pl/sch/",
+            "params": [
+              {
+                "name": "toolid",
+                "value": "20004"
+              },
+              {
+                "name": "campid",
+                "value": "{partnerCode}"
+              },
+              {
+                "name": "mkevt",
+                "value": "1"
+              },
+              {
+                "name": "mkcid",
+                "value": "1"
+              },
+              {
+                "name": "mkrid",
+                "value": "4908-226936-19255-0"
+              }
+            ],
+            "searchTermParamName": "kw"
+          },
+          "suggestions": {
+            "base": "https://autosug.ebay.com/autosug",
+            "params": [
+              {
+                "name": "sId",
+                "value": "212"
+              },
+              {
+                "name": "fmt",
+                "value": "osr"
+              }
+            ],
+            "searchTermParamName": "kwd"
+          }
+        }
+      },
+      "id": "37f83917-8d6e-46d6-9d15-8e7779339d08",
+      "identifier": "ebay-pl",
+      "last_modified": 1715090108535,
+      "recordType": "engine",
+      "schema": 1714498585934,
+      "variants": [
+        {
+          "environment": {
+            "regions": [
+              "pl"
             ]
           }
         }
@@ -1644,15 +1728,16 @@
       },
       "id": "37f83917-8d6e-46d6-9d15-8e7779339d18",
       "identifier": "ebay-uk",
-      "last_modified": 1702906502432,
+      "last_modified": 1715090108522,
       "recordType": "engine",
-      "schema": 1702901798395,
+      "schema": 1714498584991,
       "variants": [
         {
           "environment": {
             "excludedRegions": [
               "au",
-              "ie"
+              "ie",
+              "pl"
             ],
             "locales": [
               "cy",
@@ -7335,5 +7420,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1713282817053
+  "timestamp": 1715090108535
 }
