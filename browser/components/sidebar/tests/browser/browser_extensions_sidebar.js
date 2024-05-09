@@ -92,7 +92,7 @@ add_task(async function test_extension_sidebar_actions() {
   await extension.awaitMessage("sidebar");
   is(sidebar.extensionButtons.length, 1, "Extension is shown in the sidebar.");
 
-  // Default icon and title matches.
+  // Deafult icon and title matches.
   const button = sidebar.extensionButtons[0];
   let iconUrl = `moz-extension://${extension.uuid}/default.png`;
   is(
