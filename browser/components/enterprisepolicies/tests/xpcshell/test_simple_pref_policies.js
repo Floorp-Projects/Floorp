@@ -1118,6 +1118,34 @@ const POLICIES_TESTS = [
       "security.tls.enable_kyber": false,
     },
   },
+
+  // POLICY: HttpsOnlyMode
+  {
+    policies: {
+      HttpsOnlyMode: "enabled",
+    },
+    unlockedPrefs: {
+      "dom.security.https_only_mode": true,
+    },
+  },
+
+  {
+    policies: {
+      HttpsOnlyMode: "disallowed",
+    },
+    lockedPrefs: {
+      "dom.security.https_only_mode": false,
+    },
+  },
+
+  {
+    policies: {
+      HttpsOnlyMode: "force_enabled",
+    },
+    lockedPrefs: {
+      "dom.security.https_only_mode": true,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {

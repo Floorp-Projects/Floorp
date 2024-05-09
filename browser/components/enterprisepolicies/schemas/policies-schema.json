@@ -839,6 +839,19 @@
       }
     },
 
+    "HttpAllowlist": {
+      "type": "array",
+      "strict": false,
+      "items": {
+        "type": "origin"
+      }
+    },
+
+    "HttpsOnlyMode": {
+      "type": "string",
+      "enum": ["allowed", "disallowed", "enabled", "force_enabled"]
+    },
+
     "InstallAddonsPermission": {
       "type": "object",
       "properties": {

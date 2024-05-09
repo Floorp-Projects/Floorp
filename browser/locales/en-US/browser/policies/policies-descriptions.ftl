@@ -146,6 +146,10 @@ policy-HardwareAcceleration = If false, turn off hardware acceleration.
 # “lock” means that the user won’t be able to change this setting
 policy-Homepage = Set and optionally lock the homepage.
 
+policy-HttpAllowlist = Origins that will not be upgraded to HTTPS.
+
+policy-HttpsOnlyMode = Allow HTTPS-Only Mode to be enabled.
+
 policy-InstallAddonsPermission = Allow certain websites to install add-ons.
 
 policy-LegacyProfiles = Disable the feature enforcing a separate profile for each installation.

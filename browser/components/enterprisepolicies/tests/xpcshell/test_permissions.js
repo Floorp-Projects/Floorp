@@ -315,7 +315,7 @@ add_task(async function test_cookie_allow_session() {
   );
 });
 
-// This again seems out of places, but AutoLaunchProtocolsFromOrigins
+// This again seems out of place, but AutoLaunchProtocolsFromOrigins
 // is all permissions.
 add_task(async function test_autolaunchprotocolsfromorigins() {
   await setupPolicyEngineWithJson({
@@ -337,7 +337,7 @@ add_task(async function test_autolaunchprotocolsfromorigins() {
   );
 });
 
-// This again seems out of places, but PasswordManagerExceptions
+// This again seems out of place, but PasswordManagerExceptions
 // is all permissions.
 add_task(async function test_passwordmanagerexceptions() {
   await setupPolicyEngineWithJson({
@@ -351,5 +351,22 @@ add_task(async function test_passwordmanagerexceptions() {
       "login-saving"
     ),
     Ci.nsIPermissionManager.DENY_ACTION
+  );
+});
+
+// This again seems out of place, but HttpAllowlist
+// is all permissions.
+add_task(async function test_httpsonly_exceptions() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      HttpAllowlist: ["https://http.example.com"],
+    },
+  });
+  equal(
+    PermissionTestUtils.testPermission(
+      URI("https://http.example.com"),
+      "https-only-load-insecure"
+    ),
+    Ci.nsIPermissionManager.ALLOW_ACTION
   );
 });
