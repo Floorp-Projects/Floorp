@@ -6,7 +6,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
@@ -17,6 +16,8 @@ import {
 
 const MERINO_PROVIDER = "accuweather";
 const WEATHER_ENABLED = "browser.newtabpage.activity-stream.showWeather";
+const WEATHER_ENABLED_SYS =
+  "browser.newtabpage.activity-stream.system.showWeather";
 
 const WEATHER_QUERY = "browser.newtabpage.activity-stream.weather.query";
 
@@ -38,9 +39,8 @@ export class WeatherFeed {
 
   isEnabled() {
     return (
-      (Services.prefs.getBoolPref(WEATHER_ENABLED) &&
-        lazy.NimbusFeatures.pocketNewtab.getVariable("newtabWeatherEnabled")) ||
-      false
+      Services.prefs.getBoolPref(WEATHER_ENABLED) &&
+      Services.prefs.getBoolPref(WEATHER_ENABLED_SYS)
     );
   }
 
@@ -133,6 +133,12 @@ export class WeatherFeed {
         break;
       case at.PREF_CHANGED:
         if (action.data.name === "weather.query") {
+          await this.fetch();
+        } else if (
+          action.data.name === "showWeather" &&
+          action.data.value &&
+          this.isEnabled()
+        ) {
           await this.fetch();
         }
         break;

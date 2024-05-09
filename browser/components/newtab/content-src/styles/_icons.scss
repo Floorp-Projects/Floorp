@@ -70,6 +70,10 @@
     background-image: url('chrome://global/skin/icons/info.svg');
   }
 
+  &.icon-info-critical {
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-info-critical-16.svg');
+  }
+
   &.icon-help {
     background-image: url('chrome://global/skin/icons/help.svg');
   }
@@ -165,6 +169,10 @@
 
   &.icon-webextension {
     background-image: url('chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg');
+  }
+
+  &.icon-weather {
+    background-image: url('chrome://browser/skin/weather/sunny.svg');
   }
 
   &.icon-highlights {

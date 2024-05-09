@@ -12,6 +12,7 @@ import { CustomizeMenu } from "content-src/components/CustomizeMenu/CustomizeMen
 import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
+import { Weather } from "content-src/components/Weather/Weather";
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
@@ -278,6 +279,15 @@ export class BaseContent extends React.PureComponent {
         `--newtab-wallpaper-dark`,
         `url(${darkWallpaper?.wallpaperUrl || ""})`
       );
+
+      // Add helper class to body if user has a wallpaper selected
+      if (lightWallpaper) {
+        global.document?.body.classList.add("hasWallpaperLight");
+      }
+
+      if (darkWallpaper) {
+        global.document?.body.classList.add("hasWallpaperDark");
+      }
     }
   }
 
@@ -290,6 +300,7 @@ export class BaseContent extends React.PureComponent {
     const activeWallpaper =
       prefs[`newtabWallpapers.wallpaper-${this.state.colorMode}`];
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
+    const weatherEnabled = prefs.showWeather;
 
     const { pocketConfig } = prefs;
 
@@ -396,6 +407,13 @@ export class BaseContent extends React.PureComponent {
             <ConfirmDialog />
             {wallpapersEnabled && this.renderWallpaperAttribution()}
           </main>
+          <aside>
+            {weatherEnabled && (
+              <ErrorBoundary>
+                <Weather />
+              </ErrorBoundary>
+            )}
+          </aside>
         </div>
       </div>
     );

@@ -1,0 +1,393 @@
+// Custom font sizing for weather widget
+:root {
+  --newtab-weather-content-font-size: 11px;
+  --newtab-weather-sponsor-font-size: 8px;
+}
+
+.weather {
+  font-size: var(--font-size-root);
+  position: absolute;
+  left: var(--space-xlarge);
+  top: var(--space-xlarge);
+  z-index: 1;
+}
+
+// Unavailable / Error State
+.weatherNotAvailable {
+  font-size: var(--newtab-weather-content-font-size);
+  color: var(--text-color-error);
+  display: flex;
+  align-items: center;
+
+  .icon {
+    fill: var(--icon-color-critical);
+    -moz-context-properties: fill;
+  }
+}
+
+.weatherCard {
+  margin-block-end: var(--space-xsmall);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  border-radius: var(--border-radius-medium);
+  overflow: hidden;
+
+  &:hover, &:focus-within {
+    ~ .weatherSponsorText {
+      visibility: visible;
+    }
+  }
+
+  &:focus-within {
+    overflow: visible;
+  }
+
+  &:hover {
+    box-shadow: var(--box-shadow-10);
+    background: var(--background-color-box);
+  }
+
+  a {
+    color: var(--text-color);
+  }
+
+}
+
+.weatherSponsorText {
+  visibility: hidden;
+  font-size: var(--newtab-weather-sponsor-font-size);
+  color: var(--text-color-deemphasized);
+}
+
+.weatherInfoLink, .weatherButtonContextMenuWrapper {
+  appearance: none;
+  background-color: var(--background-color-ghost);
+  border: 0;
+  padding: var(--space-small);
+  cursor: pointer;
+
+  &:hover {
+    // TODO: Add Wallpaper Background Color Fix
+    background-color: var(--button-background-color-ghost-hover);
+
+    &::after {
+      background-color: transparent
+    }
+
+    &:active {
+      // TODO: Add Wallpaper Background Color Fix
+      background-color: var(--button-background-color-ghost-active);
+    }
+  }
+
+  &:focus-visible {
+    outline: var(--focus-outline);
+  }
+
+  // Contrast fix for users who have wallpapers set
+  .hasWallpaperDark & {
+    @media (prefers-color-scheme: dark) {
+      // TODO: Replace with token
+      background-color: rgba(35, 34, 43, 70%);
+
+      &:hover {
+        background-color: var(--newtab-button-static-hover-background);
+      }
+
+      &:hover:active {
+        background-color: var(--newtab-button-static-active-background);
+      }
+    }
+
+    @media (prefers-contrast) and (prefers-color-scheme: dark) {
+      background-color: var(--background-color-box);
+    }
+  }
+
+  .hasWallpaperLight & {
+    @media (prefers-color-scheme: light) {
+      // TODO: Replace with token
+      background-color: rgba(255, 255, 255, 70%);
+
+      &:hover {
+        background-color: var(--newtab-button-static-hover-background);
+      }
+
+      &:hover:active {
+        background-color: var(--newtab-button-static-active-background);
+      }
+    }
+
+    @media (prefers-contrast) and (prefers-color-scheme: light) {
+      background-color: var(--background-color-box);
+    }
+  }
+
+}
+
+.weatherInfoLink {
+  display: flex;
+  gap: var(--space-medium);
+  padding: var(--space-small) var(--space-medium);
+  border-radius: var(--border-radius-medium) 0 0 var(--border-radius-medium);
+  text-decoration: none;
+  color: var(--text-color);;
+  min-width: 130px;
+  max-width: 190px;
+  text-overflow: ellipsis;
+
+  @media(min-width: $break-point-medium) {
+    min-width: unset;
+  }
+
+  &:hover ~.weatherButtonContextMenuWrapper {
+    &::after {
+      background-color: transparent
+    }
+  }
+
+  &:focus-visible {
+    border-radius: var(--border-radius-medium);
+
+    ~ .weatherButtonContextMenuWrapper {
+      &::after {
+        background-color: transparent
+      }
+    }
+  }
+}
+
+.weatherButtonContextMenuWrapper {
+  position: relative;
+  cursor: pointer;
+  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
+  display: flex;
+  align-items: stretch;
+  width: 50px;
+  padding: 0;
+
+  &::after {
+    content: '';
+    left: 0;
+    top: 10px;
+    height: calc(100% - 20px);
+    width: 1px;
+    background-color: var(--newtab-button-static-background);
+    display: block;
+    position: absolute;
+    z-index: 0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &::after {
+      background-color: var(--color-gray-70);
+    }
+  }
+
+  &:hover {
+    &::after {
+      background-color: transparent
+    }
+  }
+
+  &:focus-visible {
+    border-radius: var(--border-radius-medium);
+
+    &::after {
+      background-color: transparent
+    }
+  }
+}
+
+.weatherButtonContextMenu {
+  background-image: url('chrome://global/skin/icons/more.svg');
+  background-repeat: no-repeat;
+  background-size: var(--size-item-small) auto;
+  background-position: center;
+  background-color: transparent;
+  cursor: pointer;
+  fill: var(--icon-color);
+  -moz-context-properties: fill;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  appearance: none;
+  min-width: var(--size-item-large);
+}
+
+.weatherText {
+  height: min-content;
+}
+
+.weatherCityRow, .weatherForecastRow, .weatherDetailedSummaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-small);
+}
+
+.weatherForecastRow {
+  text-transform: uppercase;
+  font-weight: var(--font-weight-bold);
+}
+
+.weatherCityRow {
+  color: var(--text-color-deemphasized);
+}
+
+.weatherCity {
+  text-overflow: ellipsis;
+  font-size: var(--font-size-small);
+}
+
+// Add additional margin if detailed summary is in view
+.weatherCityRow + .weatherDetailedSummaryRow {
+  margin-block-start: var(--space-xsmall);
+}
+
+.weatherDetailedSummaryRow {
+  font-size: var(--newtab-weather-content-font-size);
+  gap: var(--space-large);
+}
+
+.weatherHighLowTemps {
+  display: flex;
+  gap: var(--space-xxsmall);
+  text-transform: uppercase;
+  word-spacing: var(--space-xxsmall);
+}
+
+.weatherTextSummary {
+  text-align: center;
+  max-width: 90px;
+}
+
+.weatherTemperature {
+  font-size: var(--font-size-large);
+}
+
+// Weather Symbol Icons
+.weatherIconCol {
+  width: var(--size-item-large);
+  height: var(--size-item-large);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+}
+
+.weatherIcon {
+  width: var(--size-item-large);
+  height: auto;
+  vertical-align: middle;
+
+  @media (prefers-contrast) {
+    -moz-context-properties: fill, stroke;
+    fill: currentColor;
+    stroke: currentColor;
+  }
+
+  &.iconId1 {
+    content: url('chrome://browser/skin/weather/sunny.svg');
+    // height: var(--size-item-large);
+  }
+
+  &.iconId2 {
+    content: url('chrome://browser/skin/weather/mostly-sunny.svg');
+    // height: var(--size-item-large);
+  }
+
+  &:is(.iconId3, .iconId4, .iconId6) {
+    content: url('chrome://browser/skin/weather/partly-sunny.svg');
+    // height: var(--size-item-large);
+  }
+
+  &.iconId5 {
+    content: url('chrome://browser/skin/weather/hazy-sunshine.svg');
+    // height: var(--size-item-large);
+  }
+
+  &:is(.iconId7, .iconId8) {
+    content: url('chrome://browser/skin/weather/cloudy.svg');
+  }
+
+  &.iconId11 {
+    content: url('chrome://browser/skin/weather/fog.svg');
+  }
+
+  &.iconId12 {
+    content: url('chrome://browser/skin/weather/showers.svg');
+  }
+
+  &:is(.iconId13, .iconId14) {
+    content: url('chrome://browser/skin/weather/mostly-cloudy-with-showers.svg');
+    // height: var(--size-item-large);
+  }
+
+  &.iconId15 {
+    content: url('chrome://browser/skin/weather/thunderstorms.svg');
+  }
+
+  &:is(.iconId16, .iconId17) {
+    content: url('chrome://browser/skin/weather/mostly-cloudy-with-thunderstorms.svg');
+  }
+
+  &.iconId18 {
+    content: url('chrome://browser/skin/weather/rain.svg');
+  }
+
+  &:is(.iconId19, .iconId20, .iconId25) {
+    content: url('chrome://browser/skin/weather/flurries.svg');
+  }
+
+  &.iconId21 {
+    content: url('chrome://browser/skin/weather/partly-sunny-with-flurries.svg');
+  }
+
+  &:is(.iconId22, .iconId23) {
+    content: url('chrome://browser/skin/weather/snow.svg');
+  }
+
+  &:is(.iconId24, .iconId31) {
+    content: url('chrome://browser/skin/weather/ice.svg');
+  }
+
+  &:is(.iconId26, .iconId29) {
+    content: url('chrome://browser/skin/weather/freezing-rain.svg');
+  }
+
+  &.iconId30 {
+    content: url('chrome://browser/skin/weather/hot.svg');
+  }
+
+  &.iconId32 {
+    content: url('chrome://browser/skin/weather/windy.svg');
+  }
+
+  &.iconId33 {
+    content: url('chrome://browser/skin/weather/night-clear.svg');
+  }
+
+  &:is(.iconId34, .iconId35, .iconId36, .iconId38) {
+    content: url('chrome://browser/skin/weather/night-mostly-clear.svg');
+  }
+
+  &.iconId37 {
+    content: url('chrome://browser/skin/weather/night-hazy-moonlight.svg');
+  }
+
+  &:is(.iconId39, .iconId40) {
+    content: url('chrome://browser/skin/weather/night-partly-cloudy-with-showers.svg');
+    height: var(--size-item-large);
+  }
+
+  &:is(.iconId41, .iconId42) {
+    content: url('chrome://browser/skin/weather/night-partly-cloudy-with-thunderstorms.svg');
+  }
+
+  &:is(.iconId43, .iconId44) {
+    content: url('chrome://browser/skin/weather/night-mostly-cloudy-with-flurries.svg');
+  }
+}
