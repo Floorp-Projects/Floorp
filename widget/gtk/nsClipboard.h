@@ -17,20 +17,6 @@
 #include "GUniquePtr.h"
 #include <gtk/gtk.h>
 
-#ifdef MOZ_LOGGING
-#  include "mozilla/Logging.h"
-#  include "nsTArray.h"
-#  include "Units.h"
-extern mozilla::LazyLogModule gClipboardLog;
-#  define LOGCLIP(...) \
-    MOZ_LOG(gClipboardLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
-#  define LOGCLIP_ENABLED() \
-    MOZ_LOG_TEST(gClipboardLog, mozilla::LogLevel::Debug)
-#else
-#  define LOGCLIP(...)
-#  define LOGCLIP_ENABLED() false
-#endif /* MOZ_LOGGING */
-
 class ClipboardTargets {
   friend class ClipboardData;
 

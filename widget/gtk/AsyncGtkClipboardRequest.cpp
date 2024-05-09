@@ -17,17 +17,17 @@ AsyncGtkClipboardRequest::AsyncGtkClipboardRequest(ClipboardDataType aDataType,
 
   switch (aDataType) {
     case ClipboardDataType::Data:
-      LOGCLIP("  getting DATA MIME %s\n", aMimeType);
+      MOZ_CLIPBOARD_LOG("  getting DATA MIME %s\n", aMimeType);
       gtk_clipboard_request_contents(clipboard,
                                      gdk_atom_intern(aMimeType, FALSE),
                                      OnDataReceived, mRequest.get());
       break;
     case ClipboardDataType::Text:
-      LOGCLIP("  getting TEXT\n");
+      MOZ_CLIPBOARD_LOG("  getting TEXT\n");
       gtk_clipboard_request_text(clipboard, OnTextReceived, mRequest.get());
       break;
     case ClipboardDataType::Targets:
-      LOGCLIP("  getting TARGETS\n");
+      MOZ_CLIPBOARD_LOG("  getting TARGETS\n");
       gtk_clipboard_request_contents(clipboard,
                                      gdk_atom_intern("TARGETS", FALSE),
                                      OnDataReceived, mRequest.get());
@@ -39,9 +39,10 @@ void AsyncGtkClipboardRequest::OnDataReceived(GtkClipboard* clipboard,
                                               GtkSelectionData* selection_data,
                                               gpointer data) {
   int whichClipboard = GetGeckoClipboardType(clipboard);
-  LOGCLIP("OnDataReceived(%s) callback\n",
-          whichClipboard == nsClipboard::kSelectionClipboard ? "primary"
-                                                             : "clipboard");
+  MOZ_CLIPBOARD_LOG("OnDataReceived(%s) callback\n",
+                    whichClipboard == nsClipboard::kSelectionClipboard
+                        ? "primary"
+                        : "clipboard");
   static_cast<Request*>(data)->Complete(selection_data);
 }
 
@@ -49,14 +50,16 @@ void AsyncGtkClipboardRequest::OnTextReceived(GtkClipboard* clipboard,
                                               const gchar* text,
                                               gpointer data) {
   int whichClipboard = GetGeckoClipboardType(clipboard);
-  LOGCLIP("OnTextReceived(%s) callback\n",
-          whichClipboard == nsClipboard::kSelectionClipboard ? "primary"
-                                                             : "clipboard");
+  MOZ_CLIPBOARD_LOG("OnTextReceived(%s) callback\n",
+                    whichClipboard == nsClipboard::kSelectionClipboard
+                        ? "primary"
+                        : "clipboard");
   static_cast<Request*>(data)->Complete(text);
 }
 
 void AsyncGtkClipboardRequest::Request::Complete(const void* aData) {
-  LOGCLIP("Request::Complete(), aData = %p, timedOut = %d\n", aData, mTimedOut);
+  MOZ_CLIPBOARD_LOG("Request::Complete(), aData = %p, timedOut = %d\n", aData,
+                    mTimedOut);
 
   if (mTimedOut) {
     delete this;
@@ -75,13 +78,14 @@ void AsyncGtkClipboardRequest::Request::Complete(const void* aData) {
 
   // Negative size means no data or data error.
   if (dataLength <= 0) {
-    LOGCLIP("    zero dataLength, quit.\n");
+    MOZ_CLIPBOARD_LOG("    zero dataLength, quit.\n");
     return;
   }
 
   switch (mDataType) {
     case ClipboardDataType::Targets: {
-      LOGCLIP("    getting %d bytes of clipboard targets.\n", dataLength);
+      MOZ_CLIPBOARD_LOG("    getting %d bytes of clipboard targets.\n",
+                        dataLength);
       gint n_targets = 0;
       GdkAtom* targets = nullptr;
       if (!gtk_selection_data_get_targets((GtkSelectionData*)aData, &targets,
@@ -95,16 +99,18 @@ void AsyncGtkClipboardRequest::Request::Complete(const void* aData) {
       break;
     }
     case ClipboardDataType::Text: {
-      LOGCLIP("    getting %d bytes of text.\n", dataLength);
+      MOZ_CLIPBOARD_LOG("    getting %d bytes of text.\n", dataLength);
       mData->SetText(Span(static_cast<const char*>(aData), dataLength));
-      LOGCLIP("    done, mClipboardData = %p\n", mData->AsSpan().data());
+      MOZ_CLIPBOARD_LOG("    done, mClipboardData = %p\n",
+                        mData->AsSpan().data());
       break;
     }
     case ClipboardDataType::Data: {
-      LOGCLIP("    getting %d bytes of data.\n", dataLength);
+      MOZ_CLIPBOARD_LOG("    getting %d bytes of data.\n", dataLength);
       mData->SetData(Span(gtk_selection_data_get_data((GtkSelectionData*)aData),
                           dataLength));
-      LOGCLIP("    done, mClipboardData = %p\n", mData->AsSpan().data());
+      MOZ_CLIPBOARD_LOG("    done, mClipboardData = %p\n",
+                        mData->AsSpan().data());
       break;
     }
   }
