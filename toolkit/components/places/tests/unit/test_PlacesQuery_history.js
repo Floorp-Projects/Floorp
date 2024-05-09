@@ -3,6 +3,10 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
 const { PlacesQuery } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesQuery.sys.mjs"
 );
@@ -242,4 +246,33 @@ add_task(async function test_search_visits() {
   Assert.equal(results.length, 0, "Neither visit matches the search query.");
 
   await PlacesUtils.history.clear();
+});
+
+add_task(async function test_search_interrupt() {
+  const { promise, reject } = Promise.withResolvers();
+  const mockDatabase = {
+    executeCached: async (_, { query }) => {
+      if (query === "First Query") {
+        // Simulate a slow-running query which runs long enough to be
+        // interrupted by the next one.
+        await promise;
+      }
+      return [];
+    },
+    interrupt: () => reject("interrupt() was called."),
+  };
+  const stub = sinon
+    .stub(PlacesUtils, "promiseLargeCacheDBConnection")
+    .resolves(mockDatabase);
+
+  const promiseFirstQuery = placesQuery.searchHistory("First Query");
+  const promiseSecondQuery = placesQuery.searchHistory("Second Query");
+  await Assert.rejects(
+    promiseFirstQuery,
+    /interrupt/,
+    "The first query was interrupted."
+  );
+  ok(await promiseSecondQuery, "The second query resolved normally.");
+
+  stub.restore();
 });
