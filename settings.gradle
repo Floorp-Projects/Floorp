@@ -33,7 +33,6 @@ plugins {
 ext.topsrcdir = rootProject.projectDir.absolutePath
 
 apply from: "${topsrcdir}/mobile/android/shared-settings.gradle"
-apply from: "${topsrcdir}/mobile/android/autopublish-settings.gradle"
 
 // Set the Android SDK location.  This is the *least specific* mechanism, which
 // is unfortunate: we'd prefer to use the *most specific* mechanism.  That is,
