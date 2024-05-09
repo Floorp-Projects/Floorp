@@ -17,6 +17,7 @@ UNIFIED_SOURCES += [
     "TestGfxWidgets.cpp",
     "TestMatrix.cpp",
     "TestMoz2D.cpp",
+    "TestPoint.cpp",
     "TestPolygon.cpp",
     "TestQcms.cpp",
     "TestRegion.cpp",
@@ -38,7 +39,6 @@ UNIFIED_SOURCES += [
         "TestBase.cpp",
         "TestBugs.cpp",
         "TestCairo.cpp",
-        "TestPoint.cpp",
         "TestScaling.cpp",
     ]
 ]
@@ -65,6 +65,7 @@ LOCAL_INCLUDES += [
     "/gfx/layers",
     "/gfx/ots/src",
     "/gfx/qcms",
+    "/layout/base",
 ]
 
 FINAL_LIBRARY = "xul-gtest"
