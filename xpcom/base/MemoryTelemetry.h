@@ -57,7 +57,7 @@ class MemoryTelemetry final : public nsIObserver,
   static Result<uint32_t, nsresult> GetOpenTabsCount();
 
   void GatherTotalMemory();
-  nsresult FinishGatheringTotalMemory(Maybe<int64_t> aTotalMemory,
+  nsresult FinishGatheringTotalMemory(int64_t aTotalMemory,
                                       const nsTArray<int64_t>& aChildSizes);
 
   nsCOMPtr<nsIEventTarget> mThreadPool;

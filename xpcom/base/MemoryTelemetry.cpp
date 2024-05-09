@@ -385,22 +385,17 @@ void MemoryTelemetry::GatherTotalMemory() {
 
         // Use our handle for the remote process to collect resident unique set
         // size information for that process.
-        bool success = true;
         for (const auto& info : infos) {
 #ifdef XP_MACOSX
           int64_t memory =
               nsMemoryReporterManager::PhysicalFootprint(info.mHandle);
 #else
-          int64_t memory =
-              nsMemoryReporterManager::ResidentUnique(info.mHandle);
+	  int64_t memory =
+	      nsMemoryReporterManager::ResidentUnique(info.mHandle);
 #endif
           if (memory > 0) {
             childSizes.AppendElement(memory);
             totalMemory += memory;
-          } else {
-            // We don't break out of the loop otherwise the cleanup code
-            // wouldn't run.
-            success = false;
           }
 
 #if defined(XP_WIN)
@@ -410,22 +405,17 @@ void MemoryTelemetry::GatherTotalMemory() {
 #endif
         }
 
-        Maybe<int64_t> mbTotal;
-        if (success) {
-          mbTotal = Some(totalMemory);
-        }
-
         NS_DispatchToMainThread(NS_NewRunnableFunction(
             "MemoryTelemetry::FinishGatheringTotalMemory",
-            [mbTotal, childSizes = std::move(childSizes)] {
-              MemoryTelemetry::Get().FinishGatheringTotalMemory(mbTotal,
+            [totalMemory, childSizes = std::move(childSizes)] {
+              MemoryTelemetry::Get().FinishGatheringTotalMemory(totalMemory,
                                                                 childSizes);
             }));
       }));
 }
 
 nsresult MemoryTelemetry::FinishGatheringTotalMemory(
-    Maybe<int64_t> aTotalMemory, const nsTArray<int64_t>& aChildSizes) {
+    int64_t aTotalMemory, const nsTArray<int64_t>& aChildSizes) {
   mGatheringTotalMemory = false;
 
   // Total memory usage can be difficult to measure both accurately and fast
@@ -434,10 +424,8 @@ nsresult MemoryTelemetry::FinishGatheringTotalMemory(
   // especially on MacOS where it double-counts shared memory.  For a more
   // detailed explaination see:
   // https://groups.google.com/a/mozilla.org/g/dev-platform/c/WGNOtjHdsdA
-  if (aTotalMemory) {
-    HandleMemoryReport(Telemetry::MEMORY_TOTAL, nsIMemoryReporter::UNITS_BYTES,
-                       aTotalMemory.value());
-  }
+  HandleMemoryReport(Telemetry::MEMORY_TOTAL, nsIMemoryReporter::UNITS_BYTES,
+                     aTotalMemory);
 
   if (aChildSizes.Length() > 1) {
     int32_t tabsCount;
