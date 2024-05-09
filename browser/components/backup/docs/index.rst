@@ -12,3 +12,4 @@ into a single file that can be easily restored from.
 
    backup-service
    backup-resources
+   backup-ui-actors

@@ -14,6 +14,12 @@ SPHINX_TREES["docs"] = "docs"
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 MARIONETTE_MANIFESTS += ["tests/marionette/manifest.toml"]
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
+
+FINAL_TARGET_FILES.actors += [
+    "actors/BackupUIChild.sys.mjs",
+    "actors/BackupUIParent.sys.mjs",
+]
 
 EXTRA_JS_MODULES.backup += [
     "BackupResources.sys.mjs",

@@ -23,6 +23,8 @@ module.exports = {
     `${projectRoot}/toolkit/content/widgets/**/*.stories.@(js|jsx|mjs|ts|tsx|md)`,
     // about:logins components stories
     `${projectRoot}/browser/components/aboutlogins/content/components/**/*.stories.mjs`,
+    // Backup components stories
+    `${projectRoot}/browser/components/backup/content/**/*.stories.mjs`,
     // Reader View components stories
     `${projectRoot}/toolkit/components/reader/**/*.stories.mjs`,
     // Everything else

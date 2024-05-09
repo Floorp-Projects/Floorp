@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for the BackupSettings component</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script
+  src="chrome://browser/content/backup/backup-settings.mjs"
+  type="module"
+></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script>
+
+    const { BrowserTestUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/BrowserTestUtils.sys.mjs"
+    );
+
+    /**
+     * Tests that adding a backup-settings element to the DOM causes it to
+     * fire a BackupUI:InitWidget event.
+     */
+    add_task(async function test_initWidget() {
+      let settings = document.createElement("backup-settings");
+      let content = document.getElementById("content");
+
+      let sawInitWidget = BrowserTestUtils.waitForEvent(content, "BackupUI:InitWidget");
+      content.appendChild(settings);
+      await sawInitWidget;
+      ok(true, "Saw BackupUI:InitWidget");
+
+      settings.remove();
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <backup-settings id="test-backup-settings"></backup-settings>
+</div>
+<pre id="test"></pre>
+</body>
+</html>

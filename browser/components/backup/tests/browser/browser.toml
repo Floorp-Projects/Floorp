@@ -4,4 +4,4 @@ prefs = [
   "browser.backup.preferences.ui.enabled=true",
 ]
 
-["browser_preferences.js"]
+["browser_settings.js"]
