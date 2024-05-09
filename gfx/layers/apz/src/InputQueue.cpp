@@ -204,8 +204,8 @@ APZEventResult InputQueue::ReceiveTouchInput(
     } else {
       // If all following conditions are met, we need to wait for a content
       // response (again);
-      //  1) this is the first touch-move event bailing out from in-slop state
-      //     after a long-tap event has been fired
+      //  1) this is the first event bailing out from in-slop state after a
+      //     long-tap event has been fired
       //  2) there's any APZ-aware event listeners
       //  3) the event block hasn't yet been prevented
       //
@@ -216,7 +216,7 @@ APZEventResult InputQueue::ReceiveTouchInput(
       //  until a long-tap event happens, then if the user started moving their
       // finger, we have to wait for a content response twice, one is for
       // `touchstart` and one is for `touchmove`.
-      if (wasInSlop && aEvent.mType == MultiTouchInput::MULTITOUCH_MOVE &&
+      if (wasInSlop &&
           (block->WasLongTapProcessed() || block->IsWaitingLongTapResult()) &&
           !block->IsTargetOriginallyConfirmed() && !block->ShouldDropEvents()) {
         INPQ_LOG(
@@ -637,12 +637,6 @@ uint64_t InputQueue::InjectNewTouchBlock(AsyncPanZoomController* aTarget) {
 TouchBlockState* InputQueue::StartNewTouchBlock(
     const RefPtr<AsyncPanZoomController>& aTarget,
     TargetConfirmationFlags aFlags) {
-  if (mPrevActiveTouchBlock && mActiveTouchBlock &&
-      mActiveTouchBlock->ForLongTap()) {
-    mPrevActiveTouchBlock->SetWaitingLongTapResult(false);
-    mPrevActiveTouchBlock = nullptr;
-  }
-
   TouchBlockState* newBlock =
       new TouchBlockState(aTarget, aFlags, mTouchCounter);
 
@@ -670,7 +664,7 @@ TouchBlockState* InputQueue::StartNewTouchBlockForLongTap(
   // touch block because if the long-tap event response prevents us from
   // scrolling we must stop processing any subsequent touch-move events in the
   // same block.
-  currentBlock->SetWaitingLongTapResult(true);
+  currentBlock->SetWaitingLongTapResult();
 
   // We need to keep the current block alive, it will be used once after this
   // new touch block for long-tap was processed.

@@ -10,7 +10,6 @@
 #include "APZCBasicTester.h"
 #include "APZTestCommon.h"
 #include "InputUtils.h"
-#include "apz/src/InputBlockState.h"
 #include "mozilla/StaticPrefs_apz.h"
 
 // Note: There are additional tests that test gesture detection behaviour
@@ -554,77 +553,6 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
 
     apzc->AssertStateIsReset();
   }
-
-  // Tests a scenario that after a long-press event happened the original touch
-  // block initiated by a touch-start event and the touch block initiated by a
-  // long-tap event have been discarded when a new touch-start event happens.
-  void DoLongPressDiscardTouchBlockTest(bool aWithTouchMove) {
-    // Set apz.content_response_timeout > ui.click_hold_context_menus.delay to
-    // match Android preferences.
-    SCOPED_GFX_PREF_INT("apz.content_response_timeout", 60);
-    SCOPED_GFX_PREF_INT("ui.click_hold_context_menus.delay", 30);
-
-    MockFunction<void(std::string checkPointName)> check;
-    {
-      InSequence s;
-      EXPECT_CALL(check, Call("pre long-tap dispatch"));
-      EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, LayoutDevicePoint(10, 10),
-                                  0, apzc->GetGuid(), _, _))
-          .Times(1);
-      EXPECT_CALL(check, Call("post long-tap dispatch"));
-      EXPECT_CALL(*mcc,
-                  HandleTap(TapType::eLongTapUp, LayoutDevicePoint(10, 20), 0,
-                            apzc->GetGuid(), _, _))
-          .Times(1);
-      EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, LayoutDevicePoint(10, 10),
-                                  0, apzc->GetGuid(), _, _))
-          .Times(1);
-    }
-
-    // Keep touching for a while to trigger a long tap event.
-    uint64_t firstTouchBlockId =
-        TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time()).mInputBlockId;
-    TouchBlockState* firstTouchBlock =
-        tm->GetInputQueue()->GetCurrentTouchBlock();
-    EXPECT_NE(firstTouchBlock, nullptr);
-    EXPECT_EQ(tm->GetInputQueue()->GetBlockForId(firstTouchBlockId),
-              firstTouchBlock);
-
-    // Wait for a long tap.
-    check.Call("pre long-tap dispatch");
-    mcc->AdvanceByMillis(30);
-    check.Call("post long-tap dispatch");
-
-    // Now the current touch block is not the first touch block, it should be
-    // a new touch block for the long tap event.
-    TouchBlockState* secondTouchBlock =
-        tm->GetInputQueue()->GetCurrentTouchBlock();
-    EXPECT_NE(secondTouchBlock, firstTouchBlock);
-    EXPECT_TRUE(secondTouchBlock->ForLongTap());
-    uint64_t secondTouchBlockId = secondTouchBlock->GetBlockId();
-
-    if (aWithTouchMove) {
-      mcc->AdvanceByMillis(10);
-      TouchMove(apzc, ScreenIntPoint(10, 20), mcc->Time());
-    }
-
-    // Finish the first touch block.
-    mcc->AdvanceByMillis(10);
-    TouchUp(apzc, ScreenIntPoint(10, 20), mcc->Time());
-
-    // And start a new touch block.
-    mcc->AdvanceByMillis(10);
-    uint64_t newTouchBlockId =
-        TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time()).mInputBlockId;
-
-    mcc->AdvanceByMillis(10);
-    // Now the original touch block and the touch block for long-tap should have
-    // been discarded from the input queue.
-    EXPECT_EQ(tm->GetInputQueue()->GetBlockForId(firstTouchBlockId), nullptr);
-    EXPECT_EQ(tm->GetInputQueue()->GetBlockForId(secondTouchBlockId), nullptr);
-    EXPECT_EQ(tm->GetInputQueue()->GetBlockForId(newTouchBlockId),
-              tm->GetInputQueue()->GetCurrentBlock());
-  }
 };
 
 TEST_F(APZCLongPressTester, LongPress) {
@@ -633,28 +561,6 @@ TEST_F(APZCLongPressTester, LongPress) {
 
 TEST_F(APZCLongPressTester, LongPressPreventDefault) {
   DoLongPressPreventDefaultTest(kDefaultTouchBehavior);
-}
-
-TEST_F(APZCLongPressTester, LongPressDiscardBlock) {
-  DoLongPressDiscardTouchBlockTest(true /* with touch-move */);
-}
-
-// Similar to above LongPressDiscardBlock but APZ is waiting for responses from
-// the content.
-TEST_F(APZCLongPressTester, LongPressDiscardBlock2) {
-  MakeApzcWaitForMainThread();
-  DoLongPressDiscardTouchBlockTest(true /* with touch-move */);
-}
-
-// Similar to above LongPressDiscardBlock/LongPressDiscardBlock2 without
-// touch-move events.
-TEST_F(APZCLongPressTester, LongPressDiscardBlock3) {
-  DoLongPressDiscardTouchBlockTest(false /* without touch-move */);
-}
-
-TEST_F(APZCLongPressTester, LongPressDiscardBlock4) {
-  MakeApzcWaitForMainThread();
-  DoLongPressDiscardTouchBlockTest(false /* without touch-move */);
 }
 
 TEST_F(APZCGestureDetectorTester, DoubleTap) {
