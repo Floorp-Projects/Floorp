@@ -1081,6 +1081,21 @@ void nsClipboard::AsyncHasNativeClipboardDataMatchingFlavors(
         gint targetsNum = 0;
         if (gtk_selection_data_get_length(aSelection) > 0) {
           gtk_selection_data_get_targets(aSelection, &targets, &targetsNum);
+
+#ifdef MOZ_LOGGING
+          if (MOZ_CLIPBOARD_LOG_ENABLED()) {
+            MOZ_CLIPBOARD_LOG("  Clipboard content (target nums %zu):\n",
+                              targetsNum);
+            for (int i = 0; i < targetsNum; i++) {
+              GUniquePtr<gchar> atom_name(gdk_atom_name(targets[i]));
+              if (!atom_name) {
+                MOZ_CLIPBOARD_LOG("    failed to get MIME\n");
+                continue;
+              }
+              MOZ_CLIPBOARD_LOG("    MIME %s\n", atom_name.get());
+            }
+          }
+#endif
         }
         nsTArray<nsCString> results;
         if (targetsNum) {
