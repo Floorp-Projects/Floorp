@@ -1780,7 +1780,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.region-spocs-config", "
 pref("browser.newtabpage.activity-stream.discoverystream.region-basic-config", "");
 
 // Add parameters to Pocket feed URL.
-pref("browser.newtabpage.activity-stream.discoverystream.pocket-feed-parameters", "&enableRankingByRegion=1");
+pref("browser.newtabpage.activity-stream.discoverystream.pocket-feed-parameters", "");
 
 // Allows Pocket story collections to be dismissed.
 pref("browser.newtabpage.activity-stream.discoverystream.isCollectionDismissible", true);
