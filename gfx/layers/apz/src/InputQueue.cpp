@@ -204,8 +204,8 @@ APZEventResult InputQueue::ReceiveTouchInput(
     } else {
       // If all following conditions are met, we need to wait for a content
       // response (again);
-      //  1) this is the first event bailing out from in-slop state after a
-      //     long-tap event has been fired
+      //  1) this is the first touch-move event bailing out from in-slop state
+      //     after a long-tap event has been fired
       //  2) there's any APZ-aware event listeners
       //  3) the event block hasn't yet been prevented
       //
@@ -216,7 +216,7 @@ APZEventResult InputQueue::ReceiveTouchInput(
       //  until a long-tap event happens, then if the user started moving their
       // finger, we have to wait for a content response twice, one is for
       // `touchstart` and one is for `touchmove`.
-      if (wasInSlop &&
+      if (wasInSlop && aEvent.mType == MultiTouchInput::MULTITOUCH_MOVE &&
           (block->WasLongTapProcessed() || block->IsWaitingLongTapResult()) &&
           !block->IsTargetOriginallyConfirmed() && !block->ShouldDropEvents()) {
         INPQ_LOG(

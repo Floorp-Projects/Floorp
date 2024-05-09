@@ -558,7 +558,7 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
   // Tests a scenario that after a long-press event happened the original touch
   // block initiated by a touch-start event and the touch block initiated by a
   // long-tap event have been discarded when a new touch-start event happens.
-  void DoLongPressDiscardTouchBlockTest() {
+  void DoLongPressDiscardTouchBlockTest(bool aWithTouchMove) {
     // Set apz.content_response_timeout > ui.click_hold_context_menus.delay to
     // match Android preferences.
     SCOPED_GFX_PREF_INT("apz.content_response_timeout", 60);
@@ -603,8 +603,10 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
     EXPECT_TRUE(secondTouchBlock->ForLongTap());
     uint64_t secondTouchBlockId = secondTouchBlock->GetBlockId();
 
-    mcc->AdvanceByMillis(10);
-    TouchMove(apzc, ScreenIntPoint(10, 20), mcc->Time());
+    if (aWithTouchMove) {
+      mcc->AdvanceByMillis(10);
+      TouchMove(apzc, ScreenIntPoint(10, 20), mcc->Time());
+    }
 
     // Finish the first touch block.
     mcc->AdvanceByMillis(10);
@@ -634,14 +636,25 @@ TEST_F(APZCLongPressTester, LongPressPreventDefault) {
 }
 
 TEST_F(APZCLongPressTester, LongPressDiscardBlock) {
-  DoLongPressDiscardTouchBlockTest();
+  DoLongPressDiscardTouchBlockTest(true /* with touch-move */);
 }
 
 // Similar to above LongPressDiscardBlock but APZ is waiting for responses from
 // the content.
 TEST_F(APZCLongPressTester, LongPressDiscardBlock2) {
   MakeApzcWaitForMainThread();
-  DoLongPressDiscardTouchBlockTest();
+  DoLongPressDiscardTouchBlockTest(true /* with touch-move */);
+}
+
+// Similar to above LongPressDiscardBlock/LongPressDiscardBlock2 without
+// touch-move events.
+TEST_F(APZCLongPressTester, LongPressDiscardBlock3) {
+  DoLongPressDiscardTouchBlockTest(false /* without touch-move */);
+}
+
+TEST_F(APZCLongPressTester, LongPressDiscardBlock4) {
+  MakeApzcWaitForMainThread();
+  DoLongPressDiscardTouchBlockTest(false /* without touch-move */);
 }
 
 TEST_F(APZCGestureDetectorTester, DoubleTap) {
