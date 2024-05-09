@@ -460,11 +460,13 @@ class DisplayToolbarTest {
 
         shouldActionBeDisplayed = false
         displayToolbar.invalidateActions()
+        displayToolbar.views.navigationActions.updateView()
 
         assertEquals(0, displayToolbar.views.navigationActions.childCount)
 
         shouldActionBeDisplayed = true
         displayToolbar.invalidateActions()
+        displayToolbar.views.navigationActions.updateView()
 
         assertEquals(1, displayToolbar.views.navigationActions.childCount)
     }
@@ -483,6 +485,7 @@ class DisplayToolbarTest {
         verify(action, never()).bind(view!!)
 
         displayToolbar.invalidateActions()
+        displayToolbar.views.pageActions.updateView()
 
         verify(action).bind(view)
     }
