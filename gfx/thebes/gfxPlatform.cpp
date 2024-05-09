@@ -872,10 +872,9 @@ void gfxPlatform::Init() {
         StaticPrefs::webgl_disable_angle(), StaticPrefs::webgl_dxgl_enabled(),
         StaticPrefs::webgl_force_enabled(), StaticPrefs::webgl_msaa_force());
     // Prefs that don't fit into any of the other sections
-    forcedPrefs.AppendPrintf("-T%d%d%d) ",
+    forcedPrefs.AppendPrintf("-T%d%d) ",
                              StaticPrefs::gfx_android_rgb16_force_AtStartup(),
-                             StaticPrefs::gfx_canvas_accelerated(),
-                             StaticPrefs::layers_force_shmem_tiles_AtStartup());
+                             StaticPrefs::gfx_canvas_accelerated());
     ScopedGfxFeatureReporter::AppNote(forcedPrefs);
   }
 
