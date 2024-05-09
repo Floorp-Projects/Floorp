@@ -44,7 +44,6 @@ UNIFIED_SOURCES += [
 #]
 
 CFLAGS += [
-     '-Wall',
      '-Wextra',
      '-Wcast-qual',
      '-Wcast-align',
