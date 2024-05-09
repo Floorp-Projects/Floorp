@@ -1,0 +1,27 @@
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [10, 10, 510, 510]
+      filters:
+        - svgfe: SourceGraphic
+        - svgfe: SourceAlpha
+        - svgfe: dropshadow
+          linear: false
+          subregion: [-20, -20, 320, 320]
+          color: red
+          dx: 20
+          dy: 20
+          std_deviation_x: 10
+          std_deviation_y: 10
+          in: 0
+      items:
+        - type: stacking-context
+          bounds: [10, 10, 150, 110]
+          items:
+            - type: rect
+              bounds: [10, 10, 100, 100]
+              color: [127, 127, 127, 1]
+            - type: rect
+              bounds: [50, 30, 100, 60]
+              color: [192, 192, 192, 1]

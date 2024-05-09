@@ -106,6 +106,7 @@ float force_scalar(Float f) { return f[0]; }
 
 int32_t force_scalar(I32 i) { return i[0]; }
 
+struct vec3;
 struct vec4;
 struct ivec2;
 
@@ -2285,6 +2286,12 @@ bvec2 notEqual(vec2 x, vec2 y) {
 
 bvec2_scalar notEqual(vec2_scalar x, vec2_scalar y) {
   return bvec2_scalar(notEqual(x.x, y.x), notEqual(x.y, y.y));
+}
+
+vec3 floor(vec3 v) { return vec3(floor(v.x), floor(v.y), floor(v.z)); }
+
+vec4 floor(vec4 v) {
+  return vec4(floor(v.x), floor(v.y), floor(v.z), floor(v.w));
 }
 
 struct mat4_scalar;

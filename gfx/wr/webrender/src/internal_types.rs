@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, DocumentId, ExternalImageId, PrimitiveFlags, Parameter, RenderReasons};
-use api::{ImageFormat, NotificationRequest, Shadow, FilterOp, ImageBufferKind};
+use api::{ImageFormat, NotificationRequest, Shadow, FilterOpGraphPictureBufferId, FilterOpGraphPictureReference, FilterOpGraphNode, FilterOp, ImageBufferKind};
 use api::FramePublishId;
 use api::units::*;
 use crate::render_api::DebugCommand;
@@ -15,6 +15,7 @@ use crate::frame_builder::Frame;
 use crate::profiler::TransactionProfile;
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::prim_store::PrimitiveInstanceIndex;
+use crate::filterdata::FilterDataHandle;
 use fxhash::FxHasher;
 use plane_split::BspSplitter;
 use smallvec::SmallVec;
@@ -208,8 +209,557 @@ pub struct PlaneSplitterIndex(pub usize);
 /// An arbitrary number which we assume opacity is invisible below.
 const OPACITY_EPSILON: f32 = 0.001;
 
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct FilterGraphPictureReference {
+    /// Id of the picture in question in a namespace unique to this filter DAG,
+    /// some are special values like
+    /// FilterPrimitiveDescription::kPrimitiveIndexSourceGraphic.
+    pub buffer_id: FilterOpGraphPictureBufferId,
+    /// Set by wrap_prim_with_filters to the subregion of the input node, may
+    /// also have been offset for feDropShadow or feOffset
+    pub subregion: LayoutRect,
+    /// During scene build this is the offset to apply to the input subregion
+    /// for feOffset, which can be optimized away by pushing its offset and
+    /// subregion crop to downstream nodes.  This is always zero in render tasks
+    /// where it has already been applied to subregion by that point.  Not used
+    /// in get_coverage_svgfe because source_padding/target_padding represent
+    /// the offset there.
+    pub offset: LayoutVector2D,
+    /// Equal to the inflate value of the referenced buffer, or 0
+    pub inflate: i16,
+    /// Padding on each side to represent how this input is read relative to the
+    /// node's output subregion, this represents what the operation needs to
+    /// read from ths input, which may be blurred or offset.
+    pub source_padding: LayoutRect,
+    /// Padding on each side to represent how this input affects the node's
+    /// subregion, this can be used to calculate target subregion based on
+    /// SourceGraphic subregion.  This is usually equal to source_padding except
+    /// offset in the opposite direction, inflates typically do the same thing
+    /// to both types of padding.
+    pub target_padding: LayoutRect,
+}
+
+impl From<FilterOpGraphPictureReference> for FilterGraphPictureReference {
+    fn from(pic: FilterOpGraphPictureReference) -> Self {
+        FilterGraphPictureReference{
+            buffer_id: pic.buffer_id,
+            // All of these are set by wrap_prim_with_filters
+            subregion: LayoutRect::zero(),
+            offset: LayoutVector2D::zero(),
+            inflate: 0,
+            source_padding: LayoutRect::zero(),
+            target_padding: LayoutRect::zero(),
+        }
+    }
+}
+
+pub const SVGFE_CONVOLVE_DIAMETER_LIMIT: usize = 5;
+pub const SVGFE_CONVOLVE_VALUES_LIMIT: usize = SVGFE_CONVOLVE_DIAMETER_LIMIT *
+    SVGFE_CONVOLVE_DIAMETER_LIMIT;
+
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum FilterGraphOp {
+    /// Filter that copies the SourceGraphic image into the specified subregion,
+    /// This is intentionally the only way to get SourceGraphic into the graph,
+    /// as the filter region must be applied before it is used.
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - no inputs, no linear
+    SVGFESourceGraphic,
+    /// Filter that copies the SourceAlpha image into the specified subregion,
+    /// This is intentionally the only way to get SourceAlpha into the graph,
+    /// as the filter region must be applied before it is used.
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - no inputs, no linear
+    SVGFESourceAlpha,
+    /// Filter that does no transformation of the colors, used to implement a
+    /// few things like SVGFEOffset, and this is the default value in
+    /// impl_default_for_enums.
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input with offset
+    SVGFEIdentity,
+    /// represents CSS opacity property as a graph node like the rest of the
+    /// SVGFE* filters
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    SVGFEOpacity{valuebinding: api::PropertyBinding<f32>, value: f32},
+    /// convert a color image to an alpha channel - internal use; generated by
+    /// SVGFilterInstance::GetOrCreateSourceAlphaIndex().
+    SVGFEToAlpha,
+    /// combine 2 images with SVG_FEBLEND_MODE_DARKEN
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feBlendElement
+    SVGFEBlendDarken,
+    /// combine 2 images with SVG_FEBLEND_MODE_LIGHTEN
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feBlendElement
+    SVGFEBlendLighten,
+    /// combine 2 images with SVG_FEBLEND_MODE_MULTIPLY
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feBlendElement
+    SVGFEBlendMultiply,
+    /// combine 2 images with SVG_FEBLEND_MODE_NORMAL
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feBlendElement
+    SVGFEBlendNormal,
+    /// combine 2 images with SVG_FEBLEND_MODE_SCREEN
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feBlendElement
+    SVGFEBlendScreen,
+    /// combine 2 images with SVG_FEBLEND_MODE_OVERLAY
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendOverlay,
+    /// combine 2 images with SVG_FEBLEND_MODE_COLOR_DODGE
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendColorDodge,
+    /// combine 2 images with SVG_FEBLEND_MODE_COLOR_BURN
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendColorBurn,
+    /// combine 2 images with SVG_FEBLEND_MODE_HARD_LIGHT
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendHardLight,
+    /// combine 2 images with SVG_FEBLEND_MODE_SOFT_LIGHT
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendSoftLight,
+    /// combine 2 images with SVG_FEBLEND_MODE_DIFFERENCE
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendDifference,
+    /// combine 2 images with SVG_FEBLEND_MODE_EXCLUSION
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendExclusion,
+    /// combine 2 images with SVG_FEBLEND_MODE_HUE
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendHue,
+    /// combine 2 images with SVG_FEBLEND_MODE_SATURATION
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendSaturation,
+    /// combine 2 images with SVG_FEBLEND_MODE_COLOR
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendColor,
+    /// combine 2 images with SVG_FEBLEND_MODE_LUMINOSITY
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Source: https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
+    SVGFEBlendLuminosity,
+    /// transform colors of image through 5x4 color matrix (transposed for
+    /// efficiency)
+    /// parameters: FilterGraphNode, matrix[5][4]
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feColorMatrixElement
+    SVGFEColorMatrix{values: [f32; 20]},
+    /// transform colors of image through configurable gradients with component
+    /// swizzle
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feComponentTransferElement
+    SVGFEComponentTransfer,
+    /// Processed version of SVGFEComponentTransfer with the FilterData
+    /// replaced by an interned handle, this is made in wrap_prim_with_filters.
+    /// Aside from the interned handle, creates_pixels indicates if the transfer
+    /// parameters will probably fill the entire subregion with non-zero alpha.
+    SVGFEComponentTransferInterned{handle: FilterDataHandle, creates_pixels: bool},
+    /// composite 2 images with chosen composite mode with parameters for that
+    /// mode
+    /// parameters: FilterGraphNode, k1, k2, k3, k4
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feCompositeElement
+    SVGFECompositeArithmetic{k1: f32, k2: f32, k3: f32, k4: f32},
+    /// composite 2 images with chosen composite mode with parameters for that
+    /// mode
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feCompositeElement
+    SVGFECompositeATop,
+    /// composite 2 images with chosen composite mode with parameters for that
+    /// mode
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feCompositeElement
+    SVGFECompositeIn,
+    /// composite 2 images with chosen composite mode with parameters for that
+    /// mode
+    /// parameters: FilterOpGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Docs: https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feComposite
+    SVGFECompositeLighter,
+    /// composite 2 images with chosen composite mode with parameters for that
+    /// mode
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feCompositeElement
+    SVGFECompositeOut,
+    /// composite 2 images with chosen composite mode with parameters for that
+    /// mode
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feCompositeElement
+    SVGFECompositeOver,
+    /// composite 2 images with chosen composite mode with parameters for that
+    /// mode
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feCompositeElement
+    SVGFECompositeXOR,
+    /// transform image through convolution matrix of up to 25 values (spec
+    /// allows more but for performance reasons we do not)
+    /// parameters: FilterGraphNode, orderX, orderY, kernelValues[25], divisor,
+    ///  bias, targetX, targetY, kernelUnitLengthX, kernelUnitLengthY,
+    ///  preserveAlpha
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feConvolveMatrixElement
+    SVGFEConvolveMatrixEdgeModeDuplicate{order_x: i32, order_y: i32,
+        kernel: [f32; SVGFE_CONVOLVE_VALUES_LIMIT], divisor: f32, bias: f32,
+        target_x: i32, target_y: i32, kernel_unit_length_x: f32,
+        kernel_unit_length_y: f32, preserve_alpha: i32},
+    /// transform image through convolution matrix of up to 25 values (spec
+    /// allows more but for performance reasons we do not)
+    /// parameters: FilterGraphNode, orderX, orderY, kernelValues[25], divisor,
+    ///  bias, targetX, targetY, kernelUnitLengthX, kernelUnitLengthY,
+    ///  preserveAlpha
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feConvolveMatrixElement
+    SVGFEConvolveMatrixEdgeModeNone{order_x: i32, order_y: i32,
+        kernel: [f32; SVGFE_CONVOLVE_VALUES_LIMIT], divisor: f32, bias: f32,
+        target_x: i32, target_y: i32, kernel_unit_length_x: f32,
+        kernel_unit_length_y: f32, preserve_alpha: i32},
+    /// transform image through convolution matrix of up to 25 values (spec
+    /// allows more but for performance reasons we do not)
+    /// parameters: FilterGraphNode, orderX, orderY, kernelValues[25], divisor,
+    ///  bias, targetX, targetY, kernelUnitLengthX, kernelUnitLengthY,
+    ///  preserveAlpha
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#feConvolveMatrixElement
+    SVGFEConvolveMatrixEdgeModeWrap{order_x: i32, order_y: i32,
+        kernel: [f32; SVGFE_CONVOLVE_VALUES_LIMIT], divisor: f32, bias: f32,
+        target_x: i32, target_y: i32, kernel_unit_length_x: f32,
+        kernel_unit_length_y: f32, preserve_alpha: i32},
+    /// calculate lighting based on heightmap image with provided values for a
+    /// distant light source with specified direction
+    /// parameters: FilterGraphNode, surfaceScale, diffuseConstant,
+    ///  kernelUnitLengthX, kernelUnitLengthY, azimuth, elevation
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEDiffuseLightingElement
+    ///  https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEDistantLightElement
+    SVGFEDiffuseLightingDistant{surface_scale: f32, diffuse_constant: f32,
+        kernel_unit_length_x: f32, kernel_unit_length_y: f32, azimuth: f32,
+        elevation: f32},
+    /// calculate lighting based on heightmap image with provided values for a
+    /// point light source at specified location
+    /// parameters: FilterGraphNode, surfaceScale, diffuseConstant,
+    ///  kernelUnitLengthX, kernelUnitLengthY, x, y, z
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEDiffuseLightingElement
+    ///  https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEPointLightElement
+    SVGFEDiffuseLightingPoint{surface_scale: f32, diffuse_constant: f32,
+        kernel_unit_length_x: f32, kernel_unit_length_y: f32, x: f32, y: f32,
+        z: f32},
+    /// calculate lighting based on heightmap image with provided values for a
+    /// spot light source at specified location pointing at specified target
+    /// location with specified hotspot sharpness and cone angle
+    /// parameters: FilterGraphNode, surfaceScale, diffuseConstant,
+    ///  kernelUnitLengthX, kernelUnitLengthY, x, y, z, pointsAtX, pointsAtY,
+    ///  pointsAtZ, specularExponent, limitingConeAngle
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEDiffuseLightingElement
+    ///  https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFESpotLightElement
+    SVGFEDiffuseLightingSpot{surface_scale: f32, diffuse_constant: f32,
+        kernel_unit_length_x: f32, kernel_unit_length_y: f32, x: f32, y: f32,
+        z: f32, points_at_x: f32, points_at_y: f32, points_at_z: f32,
+        cone_exponent: f32, limiting_cone_angle: f32},
+    /// calculate a distorted version of first input image using offset values
+    /// from second input image at specified intensity
+    /// parameters: FilterGraphNode, scale, xChannelSelector, yChannelSelector
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEDisplacementMapElement
+    SVGFEDisplacementMap{scale: f32, x_channel_selector: u32,
+        y_channel_selector: u32},
+    /// create and merge a dropshadow version of the specified image's alpha
+    /// channel with specified offset and blur radius
+    /// parameters: FilterGraphNode, flood_color, flood_opacity, dx, dy,
+    ///  stdDeviationX, stdDeviationY
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEDropShadowElement
+    SVGFEDropShadow{color: ColorF, dx: f32, dy: f32, std_deviation_x: f32,
+        std_deviation_y: f32},
+    /// synthesize a new image of specified size containing a solid color
+    /// parameters: FilterGraphNode, color
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEFloodElement
+    SVGFEFlood{color: ColorF},
+    /// create a blurred version of the input image
+    /// parameters: FilterGraphNode, stdDeviationX, stdDeviationY
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEGaussianBlurElement
+    SVGFEGaussianBlur{std_deviation_x: f32, std_deviation_y: f32},
+    /// synthesize a new image based on a url (i.e. blob image source)
+    /// parameters: FilterGraphNode,
+    ///  samplingFilter (see SamplingFilter in Types.h), transform
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEImageElement
+    SVGFEImage{sampling_filter: u32, matrix: [f32; 6]},
+    /// create a new image based on the input image with the contour stretched
+    /// outward (dilate operator)
+    /// parameters: FilterGraphNode, radiusX, radiusY
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEMorphologyElement
+    SVGFEMorphologyDilate{radius_x: f32, radius_y: f32},
+    /// create a new image based on the input image with the contour shrunken
+    /// inward (erode operator)
+    /// parameters: FilterGraphNode, radiusX, radiusY
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEMorphologyElement
+    SVGFEMorphologyErode{radius_x: f32, radius_y: f32},
+    /// calculate lighting based on heightmap image with provided values for a
+    /// distant light source with specified direction
+    /// parameters: FilerData, surfaceScale, specularConstant, specularExponent,
+    ///  kernelUnitLengthX, kernelUnitLengthY, azimuth, elevation
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFESpecularLightingElement
+    ///  https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEDistantLightElement
+    SVGFESpecularLightingDistant{surface_scale: f32, specular_constant: f32,
+        specular_exponent: f32, kernel_unit_length_x: f32,
+        kernel_unit_length_y: f32, azimuth: f32, elevation: f32},
+    /// calculate lighting based on heightmap image with provided values for a
+    /// point light source at specified location
+    /// parameters: FilterGraphNode, surfaceScale, specularConstant,
+    ///  specularExponent, kernelUnitLengthX, kernelUnitLengthY, x, y, z
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFESpecularLightingElement
+    ///  https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFEPointLightElement
+    SVGFESpecularLightingPoint{surface_scale: f32, specular_constant: f32,
+        specular_exponent: f32, kernel_unit_length_x: f32,
+        kernel_unit_length_y: f32, x: f32, y: f32, z: f32},
+    /// calculate lighting based on heightmap image with provided values for a
+    /// spot light source at specified location pointing at specified target
+    /// location with specified hotspot sharpness and cone angle
+    /// parameters: FilterGraphNode, surfaceScale, specularConstant,
+    ///  specularExponent, kernelUnitLengthX, kernelUnitLengthY, x, y, z,
+    ///  pointsAtX, pointsAtY, pointsAtZ, specularExponent, limitingConeAngle
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFESpecularLightingElement
+    ///  https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFESpotLightElement
+    SVGFESpecularLightingSpot{surface_scale: f32, specular_constant: f32,
+        specular_exponent: f32, kernel_unit_length_x: f32,
+        kernel_unit_length_y: f32, x: f32, y: f32, z: f32, points_at_x: f32,
+        points_at_y: f32, points_at_z: f32, cone_exponent: f32,
+        limiting_cone_angle: f32},
+    /// create a new image based on the input image, repeated throughout the
+    /// output rectangle
+    /// parameters: FilterGraphNode
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFETileElement
+    SVGFETile,
+    /// synthesize a new image based on Fractal Noise (Perlin) with the chosen
+    /// stitching mode
+    /// parameters: FilterGraphNode, baseFrequencyX, baseFrequencyY, numOctaves,
+    ///  seed
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFETurbulenceElement
+    SVGFETurbulenceWithFractalNoiseWithNoStitching{base_frequency_x: f32,
+        base_frequency_y: f32, num_octaves: u32, seed: u32},
+    /// synthesize a new image based on Fractal Noise (Perlin) with the chosen
+    /// stitching mode
+    /// parameters: FilterGraphNode, baseFrequencyX, baseFrequencyY, numOctaves,
+    ///  seed
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFETurbulenceElement
+    SVGFETurbulenceWithFractalNoiseWithStitching{base_frequency_x: f32,
+        base_frequency_y: f32, num_octaves: u32, seed: u32},
+    /// synthesize a new image based on Turbulence Noise (offset vectors)
+    /// parameters: FilterGraphNode, baseFrequencyX, baseFrequencyY, numOctaves,
+    ///  seed
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFETurbulenceElement
+    SVGFETurbulenceWithTurbulenceNoiseWithNoStitching{base_frequency_x: f32,
+        base_frequency_y: f32, num_octaves: u32, seed: u32},
+    /// synthesize a new image based on Turbulence Noise (offset vectors)
+    /// parameters: FilterGraphNode, baseFrequencyX, baseFrequencyY, numOctaves,
+    ///  seed
+    /// SVG filter semantics - selectable input(s), selectable between linear
+    /// (default) and sRGB color space for calculations
+    /// Spec: https://www.w3.org/TR/filter-effects-1/#InterfaceSVGFETurbulenceElement
+    SVGFETurbulenceWithTurbulenceNoiseWithStitching{base_frequency_x: f32,
+        base_frequency_y: f32, num_octaves: u32, seed: u32},
+}
+
+impl FilterGraphOp {
+    pub fn kind(&self) -> &'static str {
+        match *self {
+            FilterGraphOp::SVGFEBlendColor => "SVGFEBlendColor",
+            FilterGraphOp::SVGFEBlendColorBurn => "SVGFEBlendColorBurn",
+            FilterGraphOp::SVGFEBlendColorDodge => "SVGFEBlendColorDodge",
+            FilterGraphOp::SVGFEBlendDarken => "SVGFEBlendDarken",
+            FilterGraphOp::SVGFEBlendDifference => "SVGFEBlendDifference",
+            FilterGraphOp::SVGFEBlendExclusion => "SVGFEBlendExclusion",
+            FilterGraphOp::SVGFEBlendHardLight => "SVGFEBlendHardLight",
+            FilterGraphOp::SVGFEBlendHue => "SVGFEBlendHue",
+            FilterGraphOp::SVGFEBlendLighten => "SVGFEBlendLighten",
+            FilterGraphOp::SVGFEBlendLuminosity => "SVGFEBlendLuminosity",
+            FilterGraphOp::SVGFEBlendMultiply => "SVGFEBlendMultiply",
+            FilterGraphOp::SVGFEBlendNormal => "SVGFEBlendNormal",
+            FilterGraphOp::SVGFEBlendOverlay => "SVGFEBlendOverlay",
+            FilterGraphOp::SVGFEBlendSaturation => "SVGFEBlendSaturation",
+            FilterGraphOp::SVGFEBlendScreen => "SVGFEBlendScreen",
+            FilterGraphOp::SVGFEBlendSoftLight => "SVGFEBlendSoftLight",
+            FilterGraphOp::SVGFEColorMatrix{..} => "SVGFEColorMatrix",
+            FilterGraphOp::SVGFEComponentTransfer => "SVGFEComponentTransfer",
+            FilterGraphOp::SVGFEComponentTransferInterned{..} => "SVGFEComponentTransferInterned",
+            FilterGraphOp::SVGFECompositeArithmetic{..} => "SVGFECompositeArithmetic",
+            FilterGraphOp::SVGFECompositeATop => "SVGFECompositeATop",
+            FilterGraphOp::SVGFECompositeIn => "SVGFECompositeIn",
+            FilterGraphOp::SVGFECompositeLighter => "SVGFECompositeLighter",
+            FilterGraphOp::SVGFECompositeOut => "SVGFECompositeOut",
+            FilterGraphOp::SVGFECompositeOver => "SVGFECompositeOver",
+            FilterGraphOp::SVGFECompositeXOR => "SVGFECompositeXOR",
+            FilterGraphOp::SVGFEConvolveMatrixEdgeModeDuplicate{..} => "SVGFEConvolveMatrixEdgeModeDuplicate",
+            FilterGraphOp::SVGFEConvolveMatrixEdgeModeNone{..} => "SVGFEConvolveMatrixEdgeModeNone",
+            FilterGraphOp::SVGFEConvolveMatrixEdgeModeWrap{..} => "SVGFEConvolveMatrixEdgeModeWrap",
+            FilterGraphOp::SVGFEDiffuseLightingDistant{..} => "SVGFEDiffuseLightingDistant",
+            FilterGraphOp::SVGFEDiffuseLightingPoint{..} => "SVGFEDiffuseLightingPoint",
+            FilterGraphOp::SVGFEDiffuseLightingSpot{..} => "SVGFEDiffuseLightingSpot",
+            FilterGraphOp::SVGFEDisplacementMap{..} => "SVGFEDisplacementMap",
+            FilterGraphOp::SVGFEDropShadow{..} => "SVGFEDropShadow",
+            FilterGraphOp::SVGFEFlood{..} => "SVGFEFlood",
+            FilterGraphOp::SVGFEGaussianBlur{..} => "SVGFEGaussianBlur",
+            FilterGraphOp::SVGFEIdentity => "SVGFEIdentity",
+            FilterGraphOp::SVGFEImage{..} => "SVGFEImage",
+            FilterGraphOp::SVGFEMorphologyDilate{..} => "SVGFEMorphologyDilate",
+            FilterGraphOp::SVGFEMorphologyErode{..} => "SVGFEMorphologyErode",
+            FilterGraphOp::SVGFEOpacity{..} => "SVGFEOpacity",
+            FilterGraphOp::SVGFESourceAlpha => "SVGFESourceAlpha",
+            FilterGraphOp::SVGFESourceGraphic => "SVGFESourceGraphic",
+            FilterGraphOp::SVGFESpecularLightingDistant{..} => "SVGFESpecularLightingDistant",
+            FilterGraphOp::SVGFESpecularLightingPoint{..} => "SVGFESpecularLightingPoint",
+            FilterGraphOp::SVGFESpecularLightingSpot{..} => "SVGFESpecularLightingSpot",
+            FilterGraphOp::SVGFETile => "SVGFETile",
+            FilterGraphOp::SVGFEToAlpha => "SVGFEToAlpha",
+            FilterGraphOp::SVGFETurbulenceWithFractalNoiseWithNoStitching{..} => "SVGFETurbulenceWithFractalNoiseWithNoStitching",
+            FilterGraphOp::SVGFETurbulenceWithFractalNoiseWithStitching{..} => "SVGFETurbulenceWithFractalNoiseWithStitching",
+            FilterGraphOp::SVGFETurbulenceWithTurbulenceNoiseWithNoStitching{..} => "SVGFETurbulenceWithTurbulenceNoiseWithNoStitching",
+            FilterGraphOp::SVGFETurbulenceWithTurbulenceNoiseWithStitching{..} => "SVGFETurbulenceWithTurbulenceNoiseWithStitching",
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct FilterGraphNode {
+    /// Indicates this graph node was marked as necessary by the DAG optimizer
+    pub kept_by_optimizer: bool,
+    /// true if color_interpolation_filter == LinearRgb; shader will convert
+    /// sRGB texture pixel colors on load and convert back on store, for correct
+    /// interpolation
+    pub linear: bool,
+    /// padding for output rect if we need a border to get correct clamping, or
+    /// to account for larger final subregion than source rect (see bug 1869672)
+    pub inflate: i16,
+    /// virtualized picture input bindings, these refer to other filter outputs
+    /// by number within the graph, usually there is one element
+    pub inputs: Vec<FilterGraphPictureReference>,
+    /// clipping rect for filter node output
+    pub subregion: LayoutRect,
+}
+
+impl From<FilterOpGraphNode> for FilterGraphNode {
+    fn from(node: FilterOpGraphNode) -> Self {
+        let mut inputs: Vec<FilterGraphPictureReference> = Vec::new();
+        if node.input.buffer_id != FilterOpGraphPictureBufferId::None {
+            inputs.push(node.input.into());
+        }
+        if node.input2.buffer_id != FilterOpGraphPictureBufferId::None {
+            inputs.push(node.input2.into());
+        }
+        // If the op used by this node is a feMerge, it will add more inputs
+        // after this invocation.
+        FilterGraphNode{
+            linear: node.linear,
+            inputs,
+            subregion: node.subregion,
+            // These are computed later in scene_building
+            kept_by_optimizer: true,
+            inflate: 0,
+        }
+    }
+}
+
+
 /// Equivalent to api::FilterOp with added internal information
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum Filter {
@@ -233,6 +783,7 @@ pub enum Filter {
     LinearToSrgb,
     ComponentTransfer,
     Flood(ColorF),
+    SVGGraphNode(FilterGraphNode, FilterGraphOp),
 }
 
 impl Filter {
@@ -258,6 +809,7 @@ impl Filter {
             Filter::Flood(color) => {
                 color.a > OPACITY_EPSILON
             }
+            Filter::SVGGraphNode(..) => true,
         }
     }
 
@@ -296,6 +848,7 @@ impl Filter {
             Filter::LinearToSrgb |
             Filter::ComponentTransfer |
             Filter::Flood(..) => false,
+            Filter::SVGGraphNode(..) => false,
         }
     }
 
@@ -319,6 +872,7 @@ impl Filter {
             Filter::Blur { .. } => 12,
             Filter::DropShadows(..) => 13,
             Filter::Opacity(..) => 14,
+            Filter::SVGGraphNode(..) => unreachable!("SVGGraphNode handled elsewhere"),
         }
     }
 }
@@ -342,6 +896,76 @@ impl From<FilterOp> for Filter {
             FilterOp::ComponentTransfer => Filter::ComponentTransfer,
             FilterOp::DropShadow(shadow) => Filter::DropShadows(smallvec![shadow]),
             FilterOp::Flood(color) => Filter::Flood(color),
+            FilterOp::SVGFEBlendColor{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendColor),
+            FilterOp::SVGFEBlendColorBurn{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendColorBurn),
+            FilterOp::SVGFEBlendColorDodge{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendColorDodge),
+            FilterOp::SVGFEBlendDarken{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendDarken),
+            FilterOp::SVGFEBlendDifference{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendDifference),
+            FilterOp::SVGFEBlendExclusion{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendExclusion),
+            FilterOp::SVGFEBlendHardLight{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendHardLight),
+            FilterOp::SVGFEBlendHue{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendHue),
+            FilterOp::SVGFEBlendLighten{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendLighten),
+            FilterOp::SVGFEBlendLuminosity{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendLuminosity),
+            FilterOp::SVGFEBlendMultiply{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendMultiply),
+            FilterOp::SVGFEBlendNormal{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendNormal),
+            FilterOp::SVGFEBlendOverlay{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendOverlay),
+            FilterOp::SVGFEBlendSaturation{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendSaturation),
+            FilterOp::SVGFEBlendScreen{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendScreen),
+            FilterOp::SVGFEBlendSoftLight{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEBlendSoftLight),
+            FilterOp::SVGFEColorMatrix{node, values} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEColorMatrix{values}),
+            FilterOp::SVGFEComponentTransfer{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEComponentTransfer),
+            FilterOp::SVGFECompositeArithmetic{node, k1, k2, k3, k4} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFECompositeArithmetic{k1, k2, k3, k4}),
+            FilterOp::SVGFECompositeATop{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFECompositeATop),
+            FilterOp::SVGFECompositeIn{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFECompositeIn),
+            FilterOp::SVGFECompositeLighter{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFECompositeLighter),
+            FilterOp::SVGFECompositeOut{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFECompositeOut),
+            FilterOp::SVGFECompositeOver{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFECompositeOver),
+            FilterOp::SVGFECompositeXOR{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFECompositeXOR),
+            FilterOp::SVGFEConvolveMatrixEdgeModeDuplicate{node, order_x, order_y, kernel, divisor, bias, target_x, target_y, kernel_unit_length_x, kernel_unit_length_y, preserve_alpha} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEConvolveMatrixEdgeModeDuplicate{order_x, order_y, kernel, divisor, bias, target_x, target_y, kernel_unit_length_x, kernel_unit_length_y, preserve_alpha}),
+            FilterOp::SVGFEConvolveMatrixEdgeModeNone{node, order_x, order_y, kernel, divisor, bias, target_x, target_y, kernel_unit_length_x, kernel_unit_length_y, preserve_alpha} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEConvolveMatrixEdgeModeNone{order_x, order_y, kernel, divisor, bias, target_x, target_y, kernel_unit_length_x, kernel_unit_length_y, preserve_alpha}),
+            FilterOp::SVGFEConvolveMatrixEdgeModeWrap{node, order_x, order_y, kernel, divisor, bias, target_x, target_y, kernel_unit_length_x, kernel_unit_length_y, preserve_alpha} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEConvolveMatrixEdgeModeWrap{order_x, order_y, kernel, divisor, bias, target_x, target_y, kernel_unit_length_x, kernel_unit_length_y, preserve_alpha}),
+            FilterOp::SVGFEDiffuseLightingDistant{node, surface_scale, diffuse_constant, kernel_unit_length_x, kernel_unit_length_y, azimuth, elevation} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEDiffuseLightingDistant{surface_scale, diffuse_constant, kernel_unit_length_x, kernel_unit_length_y, azimuth, elevation}),
+            FilterOp::SVGFEDiffuseLightingPoint{node, surface_scale, diffuse_constant, kernel_unit_length_x, kernel_unit_length_y, x, y, z} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEDiffuseLightingPoint{surface_scale, diffuse_constant, kernel_unit_length_x, kernel_unit_length_y, x, y, z}),
+            FilterOp::SVGFEDiffuseLightingSpot{node, surface_scale, diffuse_constant, kernel_unit_length_x, kernel_unit_length_y, x, y, z, points_at_x, points_at_y, points_at_z, cone_exponent, limiting_cone_angle} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEDiffuseLightingSpot{surface_scale, diffuse_constant, kernel_unit_length_x, kernel_unit_length_y, x, y, z, points_at_x, points_at_y, points_at_z, cone_exponent, limiting_cone_angle}),
+            FilterOp::SVGFEDisplacementMap{node, scale, x_channel_selector, y_channel_selector} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEDisplacementMap{scale, x_channel_selector, y_channel_selector}),
+            FilterOp::SVGFEDropShadow{node, color, dx, dy, std_deviation_x, std_deviation_y} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEDropShadow{color, dx, dy, std_deviation_x, std_deviation_y}),
+            FilterOp::SVGFEFlood{node, color} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEFlood{color}),
+            FilterOp::SVGFEGaussianBlur{node, std_deviation_x, std_deviation_y} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEGaussianBlur{std_deviation_x, std_deviation_y}),
+            FilterOp::SVGFEIdentity{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEIdentity),
+            FilterOp::SVGFEImage{node, sampling_filter, matrix} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEImage{sampling_filter, matrix}),
+            FilterOp::SVGFEMorphologyDilate{node, radius_x, radius_y} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEMorphologyDilate{radius_x, radius_y}),
+            FilterOp::SVGFEMorphologyErode{node, radius_x, radius_y} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEMorphologyErode{radius_x, radius_y}),
+            FilterOp::SVGFEOffset{node, offset_x, offset_y} => {
+                Filter::SVGGraphNode(
+                    FilterGraphNode {
+                        kept_by_optimizer: true, // computed later in scene_building
+                        linear: node.linear,
+                        inflate: 0, // computed later in scene_building
+                        inputs: [FilterGraphPictureReference {
+                            buffer_id: node.input.buffer_id,
+                            offset: LayoutVector2D::new(offset_x, offset_y),
+                            subregion: LayoutRect::zero(),
+                            inflate: 0,
+                            source_padding: LayoutRect::zero(),
+                            target_padding: LayoutRect::zero(),
+                        }].to_vec(),
+                        subregion: node.subregion,
+                    },
+                    FilterGraphOp::SVGFEIdentity,
+                )
+            },
+            FilterOp::SVGFEOpacity{node, valuebinding, value} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEOpacity{valuebinding, value}),
+            FilterOp::SVGFESourceAlpha{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFESourceAlpha),
+            FilterOp::SVGFESourceGraphic{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFESourceGraphic),
+            FilterOp::SVGFESpecularLightingDistant{node, surface_scale, specular_constant, specular_exponent, kernel_unit_length_x, kernel_unit_length_y, azimuth, elevation} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFESpecularLightingDistant{surface_scale, specular_constant, specular_exponent, kernel_unit_length_x, kernel_unit_length_y, azimuth, elevation}),
+            FilterOp::SVGFESpecularLightingPoint{node, surface_scale, specular_constant, specular_exponent, kernel_unit_length_x, kernel_unit_length_y, x, y, z} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFESpecularLightingPoint{surface_scale, specular_constant, specular_exponent, kernel_unit_length_x, kernel_unit_length_y, x, y, z}),
+            FilterOp::SVGFESpecularLightingSpot{node, surface_scale, specular_constant, specular_exponent, kernel_unit_length_x, kernel_unit_length_y, x, y, z, points_at_x, points_at_y, points_at_z, cone_exponent, limiting_cone_angle} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFESpecularLightingSpot{surface_scale, specular_constant, specular_exponent, kernel_unit_length_x, kernel_unit_length_y, x, y, z, points_at_x, points_at_y, points_at_z, cone_exponent, limiting_cone_angle}),
+            FilterOp::SVGFETile{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFETile),
+            FilterOp::SVGFEToAlpha{node} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFEToAlpha),
+            FilterOp::SVGFETurbulenceWithFractalNoiseWithNoStitching{node, base_frequency_x, base_frequency_y, num_octaves, seed} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFETurbulenceWithFractalNoiseWithNoStitching{base_frequency_x, base_frequency_y, num_octaves, seed}),
+            FilterOp::SVGFETurbulenceWithFractalNoiseWithStitching{node, base_frequency_x, base_frequency_y, num_octaves, seed} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFETurbulenceWithFractalNoiseWithStitching{base_frequency_x, base_frequency_y, num_octaves, seed}),
+            FilterOp::SVGFETurbulenceWithTurbulenceNoiseWithNoStitching{node, base_frequency_x, base_frequency_y, num_octaves, seed} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFETurbulenceWithTurbulenceNoiseWithNoStitching{base_frequency_x, base_frequency_y, num_octaves, seed}),
+            FilterOp::SVGFETurbulenceWithTurbulenceNoiseWithStitching{node, base_frequency_x, base_frequency_y, num_octaves, seed} => Filter::SVGGraphNode(node.into(), FilterGraphOp::SVGFETurbulenceWithTurbulenceNoiseWithStitching{base_frequency_x, base_frequency_y, num_octaves, seed}),
         }
     }
 }

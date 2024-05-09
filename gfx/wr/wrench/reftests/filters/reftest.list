@@ -1,3 +1,12 @@
+fuzzy(2,10000) == svgfe-blenddarken-linear.yaml svgfe-blenddarken-linear-ref.yaml
+fuzzy(2,10000) == svgfe-blendmultiply-linear.yaml svgfe-blendmultiply-linear-ref.yaml
+fuzzy(2,10000) == svgfe-blendnormal-linear.yaml svgfe-blendnormal-linear-ref.yaml
+fuzzy(2,10000) == svgfe-colormatrix.yaml svgfe-colormatrix-ref.yaml
+fuzzy(4,10000) == svgfe-dropshadow.yaml svgfe-dropshadow-ref.yaml
+fuzzy(2,10000) == svgfe-opacity-linear.yaml svgfe-opacity-linear-ref.yaml
+fuzzy(2,10000) == svgfe-opacity.yaml svgfe-opacity-ref.yaml
+fuzzy(12,10000) == svgfe-subregion-bigger.yaml svgfe-subregion-bigger-ref.yaml
+fuzzy(12,10000) == svgfe-subregion-offset-stacking-context.yaml svgfe-subregion-offset-stacking-context-ref.yaml
 == filter-grayscale.yaml filter-grayscale-ref.yaml
 platform(linux,mac) == draw_calls(7) color_targets(7) alpha_targets(0) filter-blur.yaml filter-blur.png
 platform(linux,mac) == filter-blur-downscale-fractional.yaml filter-blur-downscale-fractional.png

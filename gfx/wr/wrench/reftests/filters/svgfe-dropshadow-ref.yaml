@@ -1,0 +1,16 @@
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [10, 10, 200, 200]
+      filters: drop-shadow([20, 20], 10, red)
+      items:
+        - type: stacking-context
+          bounds: [10, 10, 200, 200]
+          items:
+            - type: rect
+              bounds: [10, 10, 100, 100]
+              color: [127, 127, 127, 1]
+            - type: rect
+              bounds: [50, 30, 100, 60]
+              color: [192, 192, 192, 1]

@@ -1,0 +1,15 @@
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [0, 50, 200, 100]
+      items:
+        - type: rect
+          bounds: [10, 10, 80, 100]
+          color: [255, 0, 0, 0.7]
+        - type: rect
+          bounds: [50, 10, 80, 100]
+          color: [0, 255, 0, 0.7]
+        - type: rect
+          bounds: [90, 10, 80, 100]
+          color: [0, 0, 255, 0.7]
