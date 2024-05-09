@@ -53,7 +53,7 @@ for (var i = 0; i < coltest.length; ++i) {
   img.setAttribute("src","support/lime-24x2.png");
   img.setAttribute("style",coltest[i]);
   grid.appendChild(img);
-  document.body.appendChild(document.createTextNode("24x2.png -- "+coltest[i]+'\n'));
+  document.body.appendChild(document.createTextNode(`Test ${i+1}: 24x2.png -- ${coltest[i]}`));
   document.body.appendChild(document.createElement('br'));
   document.body.appendChild(grid);
   document.body.appendChild(document.createElement('br'));

@@ -51,7 +51,7 @@ for (var i = 0; i < rowtest.length; ++i) {
   img.setAttribute("src","support/lime-2x24.png");
   img.setAttribute("style",rowtest[i]);
   grid.appendChild(img);
-  document.body.appendChild(document.createTextNode("2x24.png -- "+rowtest[i]+'\n'));
+  document.body.appendChild(document.createTextNode(`Test ${i+1}: 24x2.png -- ${rowtest[i]}`));
   document.body.appendChild(document.createElement('br'));
   document.body.appendChild(grid);
   document.body.appendChild(document.createElement('br'));
