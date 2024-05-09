@@ -49,3 +49,13 @@ gradle.projectsLoaded { ->
         }
     }
 }
+
+def projectLocalProperties = new Properties().apply { localProperties ->
+    def localPropertiesFile = file("local.properties")
+    if (localPropertiesFile.canRead()) {
+        localPropertiesFile.withInputStream { localProperties.load(it) }
+    }
+}
+projectLocalProperties.each { prop ->
+    gradle.ext."localProperties.${prop.key}" = prop.value
+}
