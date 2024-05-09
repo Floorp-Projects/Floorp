@@ -659,26 +659,47 @@ void JumpListBuilder::RemoveIconCacheAndGetJumplistShortcutURIs(
 
     if (FAILED(aObjArray->GetAt(idx, IID_IShellLinkW,
                                 static_cast<void**>(getter_AddRefs(pLink))))) {
+      NS_WARNING("Could not get a IShellLink from the IObjectArray");
       continue;
     }
 
-    wchar_t buf[MAX_PATH];
-    HRESULT hres = pLink->GetArguments(buf, MAX_PATH);
-    if (SUCCEEDED(hres)) {
-      LPWSTR* arglist;
-      int32_t numArgs;
+    RefPtr<IPropertyStore> pPropStore = nullptr;
+    if (NS_WARN_IF(FAILED(pLink->QueryInterface(
+            IID_IPropertyStore,
+            static_cast<void**>(getter_AddRefs(pPropStore)))))) {
+      NS_WARNING("Could not get IPropertyStore from IShellLink");
+      continue;
+    }
 
-      arglist = ::CommandLineToArgvW(buf, &numArgs);
-      if (arglist && numArgs > 0) {
-        nsString spec(arglist[0]);
-        aURISpecs.AppendElement(std::move(spec));
-        ::LocalFree(arglist);
-      }
+    PROPVARIANT pv;
+    PropVariantInit(&pv);
+    auto cleanupPropVariant = MakeScopeExit([&] { PropVariantClear(&pv); });
+    if (NS_WARN_IF(FAILED(pPropStore->GetValue(PKEY_Link_Arguments, &pv)))) {
+      NS_WARNING("Could not get PKEY_Link_Arguments from IPropertyStore");
+      continue;
+    }
+
+    if (pv.vt != VT_LPWSTR) {
+      NS_WARNING("Unexpected type returned for PKEY_Link_Arguments");
+      continue;
+    }
+
+    LPCWSTR args(char16ptr_t(pv.pwszVal));
+    LPWSTR* arglist;
+    int32_t numArgs;
+
+    arglist = ::CommandLineToArgvW(args, &numArgs);
+    if (arglist && numArgs > 0) {
+      nsString spec(arglist[0]);
+      aURISpecs.AppendElement(std::move(spec));
+      ::LocalFree(arglist);
     }
 
     int iconIdx = 0;
-    hres = pLink->GetIconLocation(buf, MAX_PATH, &iconIdx);
+    wchar_t buf[MAX_PATH + 1];
+    HRESULT hres = pLink->GetIconLocation(buf, MAX_PATH, &iconIdx);
     if (SUCCEEDED(hres)) {
+      buf[MAX_PATH] = '\0';
       nsDependentString spec(buf);
       DeleteIconFromDisk(spec);
     }

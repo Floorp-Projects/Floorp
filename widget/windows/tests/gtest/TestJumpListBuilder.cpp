@@ -478,6 +478,115 @@ TEST(JumpListBuilder, CheckForRemovals)
 }
 
 /**
+ * Tests calling CheckForRemovals and receiving a jump list entry with a very
+ * long URL doesn't result in JumpListBuilder truncating the URL before handing
+ * it back to the caller. Expects the following calls in order:
+ *
+ * - SetAppID
+ * - AbortList
+ * - BeginList
+ * - AbortList
+ */
+TEST(JumpListBuilder, CheckForRemovalsLongURL)
+{
+  RefPtr<StrictMock<TestingJumpListBackend>> testBackend =
+      new StrictMock<TestingJumpListBackend>();
+  nsAutoString aumid(u"TestApplicationID");
+  // We set up this expectation here because SetAppID will be called soon
+  // after construction of the JumpListBuilder via the background thread.
+  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
+
+  nsCOMPtr<nsIJumpListBuilder> builder =
+      new JumpListBuilder(aumid, testBackend);
+  ASSERT_TRUE(builder);
+
+  EXPECT_CALL(*testBackend, AbortList()).Times(2);
+
+  constexpr static const nsLiteralString veryLongHref(
+      u"https://example.verylongurl.test/first/second/third/fourth/fifth/"
+      "sixth/seventh/eighth/ninth/tenth/eleventh/twelfth/thirteenth/"
+      "fourteenth/fifteenth-path-item/some/more/junk/after/that/more/more/"
+      "more/more/more/more/more/more/more/more/more/more/more/more/more/more/"
+      "more/more/more/more/more/more/more/more/more/more/more"_ns);
+  // This test ensures that URLs longer than MAX_PATH do not get truncated by
+  // JumpListBuilder or one of its utilities, so we must ensure that the static
+  // URL we just defined is actually longer than MAX_PATH.
+  static_assert(veryLongHref.Length() > MAX_PATH);
+
+  // Let's prepare BeginList to return a one entry collection of IShellLinks.
+  // The IShellLink will have the URL be very long - over MAX_PATH characters.
+  EXPECT_CALL(*testBackend, BeginList)
+      .WillOnce([](UINT* pcMinSlots, REFIID riid, void** ppv) {
+        RefPtr<IObjectCollection> collection;
+        HRESULT hr = CoCreateInstance(
+            CLSID_EnumerableObjectCollection, nullptr, CLSCTX_INPROC_SERVER,
+            IID_IObjectCollection, getter_AddRefs(collection));
+        MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
+
+        RefPtr<IShellLinkW> link;
+        hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
+                              IID_IShellLinkW, getter_AddRefs(link));
+        MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
+
+        link->SetArguments(veryLongHref.get());
+
+        nsAutoString appPath(u"C:\\Tmp\\firefox.exe"_ns);
+        link->SetIconLocation(appPath.get(), 0);
+
+        collection->AddObject(link);
+
+        RefPtr<IObjectArray> pArray;
+        hr = collection->QueryInterface(IID_IObjectArray,
+                                        getter_AddRefs(pArray));
+        MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
+
+        *ppv = static_cast<IObjectArray*>(pArray);
+        (static_cast<IUnknown*>(*ppv))->AddRef();
+
+        // This is the default value to return, according to
+        // https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-icustomdestinationlist-beginlist
+        *pcMinSlots = 10;
+
+        return S_OK;
+      });
+
+  AutoJSAPI jsapi;
+  MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
+  JSContext* cx = jsapi.cx();
+  RefPtr<Promise> promise;
+  nsresult rv = builder->CheckForRemovals(cx, getter_AddRefs(promise));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_TRUE(promise);
+
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
+  promise->AppendNativeHandler(resolver);
+  JS::Rooted<JS::Value> result(cx);
+  resolver->SpinUntilResolvedWithResult(&result);
+
+  ASSERT_TRUE(result.isObject());
+  JS::Rooted<JSObject*> obj(cx, result.toObjectOrNull());
+
+  bool isArray;
+  ASSERT_TRUE(JS::IsArrayObject(cx, obj, &isArray));
+  ASSERT_TRUE(isArray);
+
+  // We should expect to see 1 URL string returned in the array.
+  uint32_t length = 0;
+  ASSERT_TRUE(JS::GetArrayLength(cx, obj, &length));
+  ASSERT_EQ(length, 1U);
+
+  // The URL should match veryLongHref
+  JS::Rooted<JS::Value> returnedURLValue(cx);
+  ASSERT_TRUE(JS_GetElement(cx, obj, 0, &returnedURLValue));
+  JS::Rooted<JSString*> returnedURLValueJSString(cx,
+                                                 returnedURLValue.toString());
+  nsAutoJSString returnedURLValueAutoString;
+  ASSERT_TRUE(returnedURLValueAutoString.init(cx, returnedURLValueJSString));
+
+  ASSERT_TRUE(returnedURLValueAutoString.Equals(veryLongHref));
+}
+
+/**
  * Tests calling PopulateJumpList with empty arguments, which should call the
  * following methods on the backend, in order:
  *
