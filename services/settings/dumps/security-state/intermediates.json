@@ -1,24 +1,6 @@
 {
   "data": [
     {
-      "schema": 1714791238190,
-      "derHash": "xGZ4sRrZuLnkaVPDjm8OPgySR5BwwVErihVQcOfk5Po=",
-      "subject": "CN=TrustID Enterprise TLS CA 3,O=IdenTrust,C=US",
-      "subjectDN": "MEcxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJZGVuVHJ1c3QxJDAiBgNVBAMTG1RydXN0SUQgRW50ZXJwcmlzZSBUTFMgQ0EgMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "edddf3ae74e9954872390160d49e0914a4987cbf9cc79487644d9b4e418cb358",
-        "size": 2714,
-        "filename": "B-hU8mp8vTiZJ6oEG_7xts0h3RQ4GK2UfcZVqeWH_og=.pem",
-        "location": "security-state-staging/intermediates/42e8a4d9-5352-4096-863f-ede4c78a7cc0.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "B+hU8mp8vTiZJ6oEG/7xts0h3RQ4GK2UfcZVqeWH/og=",
-      "crlite_enrolled": false,
-      "id": "12580234-174e-49d0-ad36-6b5f47fe7676",
-      "last_modified": 1714791423313
-    },
-    {
       "schema": 1714791237816,
       "derHash": "GH49Z7oIe5+b7zzWIUXn+cJ0esNiZk6YzFWsQmpBkCg=",
       "subject": "CN=TrustID Enterprise TLS CA 3,O=IdenTrust,C=US",
@@ -30961,5 +30943,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1714791423313
+  "timestamp": 1715137023171
 }
