@@ -6,6 +6,9 @@
 .visHidden {
   visibility: hidden;
 }
+.dispNone {
+  display: none;
+}
 </style>
 <button id="before">before</button>
 <fieldset>
@@ -44,6 +47,13 @@
   <label><input id="f3" type="radio" name="f" class="visHidden">f3</label>
   <label><input id="f4" type="radio" name="f">f4</label>
 </fieldset>
+<fieldset>
+  <legend>g</legend>
+  <label><input id="g1" type="radio" name="g" class="dispNone">g1</label>
+  <label><input id="g2" type="radio" name="g">g2</label>
+  <label><input id="g3" type="radio" name="g" class="dispNone">g3</label>
+  <label><input id="g4" type="radio" name="g">g4</label>
+</fieldset>
 <button id="after">after</button>
 
 <script>
@@ -73,8 +83,11 @@
     expectFocusAfterKey("Tab", "e2");
     // f1 is hidden, so f2 should get focus.
     expectFocusAfterKey("Tab", "f2");
+    // g1 is hidden, so g2 should get focus.
+    expectFocusAfterKey("Tab", "g2");
     expectFocusAfterKey("Tab", "after");
 
+    expectFocusAfterKey("Shift+Tab", "g2");
     expectFocusAfterKey("Shift+Tab", "f2");
     expectFocusAfterKey("Shift+Tab", "e2");
     expectFocusAfterKey("Shift+Tab", "d2");
@@ -128,6 +141,16 @@
     expectFocusAfterKey("ArrowDown", "f2");
     // Up arrow should wrap at the top.
     expectFocusAfterKey("ArrowUp", "f4");
+
+    expectFocusAfterKey("Tab", "g2");
+    // g3 is hidden, so down arrow should focus g4.
+    expectFocusAfterKey("ArrowDown", "g4");
+    expectFocusAfterKey("ArrowUp", "g2");
+    expectFocusAfterKey("ArrowDown", "g4");
+    // Down arrow should wrap at the bottom, skipping hidden.
+    expectFocusAfterKey("ArrowDown", "g2");
+    // Up arrow should wrap at the top.
+    expectFocusAfterKey("ArrowUp", "g4");
 
     SimpleTest.finish();
   });
