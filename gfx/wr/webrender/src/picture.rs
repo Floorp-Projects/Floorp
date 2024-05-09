@@ -95,7 +95,7 @@
 //! improved as a follow up).
 
 use api::{MixBlendMode, PremultipliedColorF, FilterPrimitiveKind};
-use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, RasterSpace};
+use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FilterOpGraphPictureBufferId, RasterSpace};
 use api::{DebugFlags, ImageKey, ColorF, ColorU, PrimitiveFlags};
 use api::{ImageRendering, ColorDepth, YuvRangedColorSpace, YuvFormat, AlphaType};
 use api::units::*;
@@ -111,7 +111,7 @@ use euclid::{vec3, Point2D, Scale, Vector2D, Box2D};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::intern::ItemUid;
-use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter, FrameId};
+use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, FilterGraphOp, FilterGraphNode, Filter, FrameId};
 use crate::internal_types::{PlaneSplitterIndex, PlaneSplitAnchor, TextureSource};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
@@ -281,9 +281,10 @@ pub const TILE_SIZE_SCROLLBAR_VERTICAL: DeviceIntSize = DeviceIntSize {
     _unit: marker::PhantomData,
 };
 
-/// The maximum size per axis of a surface,
-///  in WorldPixel coordinates.
-const MAX_SURFACE_SIZE: usize = 4096;
+/// The maximum size per axis of a surface, in DevicePixel coordinates.
+/// Render tasks larger than this size are scaled down to fit, which may cause
+/// some blurriness.
+pub const MAX_SURFACE_SIZE: usize = 4096;
 /// Maximum size of a compositor surface.
 const MAX_COMPOSITOR_SURFACES_SIZE: f32 = 8192.0;
 
@@ -3821,7 +3822,7 @@ pub struct SurfaceIndex(pub usize);
 /// frames and display lists.
 pub struct SurfaceInfo {
     /// A local rect defining the size of this surface, in the
-    /// coordinate system of the surface itself. This contains
+    /// coordinate system of the parent surface. This contains
     /// the unclipped bounding rect of child primitives.
     pub unclipped_local_rect: PictureRect,
     /// The local space coverage of child primitives after they are
@@ -4048,6 +4049,8 @@ pub enum PictureCompositeMode {
     },
     /// Apply an SVG filter
     SvgFilter(Vec<FilterPrimitive>, Vec<SFilterData>),
+    /// Apply an SVG filter graph
+    SVGFEGraph(Vec<(FilterGraphNode, FilterGraphOp)>),
     /// A surface that is used as an input to another primitive
     IntermediateSurface,
 }
@@ -4136,6 +4139,9 @@ impl PictureCompositeMode {
                     result_rect = result_rect.union(&output_rect);
                 }
                 result_rect
+            }
+            PictureCompositeMode::SVGFEGraph(ref filters) => {
+                self.get_coverage_svgfe(filters, surface_rect.cast_unit(), true, false).0
             }
             _ => {
                 surface_rect
@@ -4232,10 +4238,337 @@ impl PictureCompositeMode {
                 }
                 result_rect
             }
+            PictureCompositeMode::SVGFEGraph(ref filters) => {
+                let mut rect = self.get_coverage_svgfe(filters, surface_rect.cast_unit(), true, true).0;
+                // Inflate a bit for invalidation purposes, but we don't do this in get_surface_rects or get_surface_rect.'
+                if !rect.is_empty() {
+                    rect = rect.inflate(1.0, 1.0);
+                }
+                rect
+            }
             _ => {
                 surface_rect
             }
         }
+    }
+
+    /// Returns a static str describing the type of PictureCompositeMode (and
+    /// filter type if applicable)
+    pub fn kind(&self) -> &'static str {
+        match *self {
+            PictureCompositeMode::Blit(..) => "Blit",
+            PictureCompositeMode::ComponentTransferFilter(..) => "ComponentTransferFilter",
+            PictureCompositeMode::IntermediateSurface => "IntermediateSurface",
+            PictureCompositeMode::MixBlend(..) => "MixBlend",
+            PictureCompositeMode::SVGFEGraph(..) => "SVGFEGraph",
+            PictureCompositeMode::SvgFilter(..) => "SvgFilter",
+            PictureCompositeMode::TileCache{..} => "TileCache",
+            PictureCompositeMode::Filter(Filter::Blur{..}) => "Filter::Blur",
+            PictureCompositeMode::Filter(Filter::Brightness(..)) => "Filter::Brightness",
+            PictureCompositeMode::Filter(Filter::ColorMatrix(..)) => "Filter::ColorMatrix",
+            PictureCompositeMode::Filter(Filter::ComponentTransfer) => "Filter::ComponentTransfer",
+            PictureCompositeMode::Filter(Filter::Contrast(..)) => "Filter::Contrast",
+            PictureCompositeMode::Filter(Filter::DropShadows(..)) => "Filter::DropShadows",
+            PictureCompositeMode::Filter(Filter::Flood(..)) => "Filter::Flood",
+            PictureCompositeMode::Filter(Filter::Grayscale(..)) => "Filter::Grayscale",
+            PictureCompositeMode::Filter(Filter::HueRotate(..)) => "Filter::HueRotate",
+            PictureCompositeMode::Filter(Filter::Identity) => "Filter::Identity",
+            PictureCompositeMode::Filter(Filter::Invert(..)) => "Filter::Invert",
+            PictureCompositeMode::Filter(Filter::LinearToSrgb) => "Filter::LinearToSrgb",
+            PictureCompositeMode::Filter(Filter::Opacity(..)) => "Filter::Opacity",
+            PictureCompositeMode::Filter(Filter::Saturate(..)) => "Filter::Saturate",
+            PictureCompositeMode::Filter(Filter::Sepia(..)) => "Filter::Sepia",
+            PictureCompositeMode::Filter(Filter::SrgbToLinear) => "Filter::SrgbToLinear",
+            PictureCompositeMode::Filter(Filter::SVGGraphNode(..)) => "Filter::SVGGraphNode",
+        }
+    }
+
+    /// Here we compute the source and target rects for SVGFEGraph by walking
+    /// the whole graph and propagating subregions based on the provided
+    /// invalidation rect (in either source or target space), and we want it to
+    /// be a tight fit so we don't waste time applying multiple filters to
+    /// pixels that do not contribute to the invalidated rect.
+    ///
+    /// The interesting parts of the handling of SVG filters are:
+    /// * scene_building.rs : wrap_prim_with_filters
+    /// * picture.rs : get_coverage_svgfe (you are here)
+    /// * render_task.rs : new_svg_filter_graph
+    /// * render_target.rs : add_svg_filter_node_instances
+    pub fn get_coverage_svgfe(
+        &self,
+        filters: &[(FilterGraphNode, FilterGraphOp)],
+        surface_rect: LayoutRect,
+        surface_rect_is_source: bool,
+        skip_subregion_clips: bool,
+    ) -> (LayoutRect, LayoutRect, LayoutRect) {
+
+        // The value of BUFFER_LIMIT here must be the same as in
+        // scene_building.rs, or we'll hit asserts here.
+        const BUFFER_LIMIT: usize = 256;
+
+        fn calc_target_from_source(
+            source_rect: LayoutRect,
+            filters: &[(FilterGraphNode, FilterGraphOp)],
+            skip_subregion_clips: bool,
+        ) -> LayoutRect {
+            // We need to evaluate the subregions based on the proposed
+            // SourceGraphic rect as it isn't known at scene build time.
+            let mut subregion_by_buffer_id: [LayoutRect; BUFFER_LIMIT] = [LayoutRect::zero(); BUFFER_LIMIT];
+            for (id, (node, op)) in filters.iter().enumerate() {
+                let full_subregion = node.subregion;
+                let mut used_subregion = LayoutRect::zero();
+                for input in &node.inputs {
+                    match input.buffer_id {
+                        FilterOpGraphPictureBufferId::BufferId(id) => {
+                            assert!((id as usize) < BUFFER_LIMIT, "BUFFER_LIMIT must be the same in frame building and scene building");
+                            // This id lookup should always succeed.
+                            let input_subregion = subregion_by_buffer_id[id as usize];
+                            // Now add the padding that transforms from
+                            // source to target, this was determined during
+                            // scene build based on the operation.
+                            let input_subregion =
+                                LayoutRect::new(
+                                    LayoutPoint::new(
+                                        input_subregion.min.x + input.target_padding.min.x,
+                                        input_subregion.min.y + input.target_padding.min.y,
+                                    ),
+                                    LayoutPoint::new(
+                                        input_subregion.max.x + input.target_padding.max.x,
+                                        input_subregion.max.y + input.target_padding.max.y,
+                                    ),
+                                );
+                            used_subregion = used_subregion
+                                .union(&input_subregion);
+                        }
+                        FilterOpGraphPictureBufferId::None => {
+                            panic!("Unsupported BufferId type");
+                        }
+                    }
+                }
+                // We can clip the used subregion.
+                if !skip_subregion_clips {
+                    used_subregion = used_subregion
+                        .intersection(&full_subregion)
+                        .unwrap_or(LayoutRect::zero());
+                }
+                match op {
+                    FilterGraphOp::SVGFEBlendColor => {}
+                    FilterGraphOp::SVGFEBlendColorBurn => {}
+                    FilterGraphOp::SVGFEBlendColorDodge => {}
+                    FilterGraphOp::SVGFEBlendDarken => {}
+                    FilterGraphOp::SVGFEBlendDifference => {}
+                    FilterGraphOp::SVGFEBlendExclusion => {}
+                    FilterGraphOp::SVGFEBlendHardLight => {}
+                    FilterGraphOp::SVGFEBlendHue => {}
+                    FilterGraphOp::SVGFEBlendLighten => {}
+                    FilterGraphOp::SVGFEBlendLuminosity => {}
+                    FilterGraphOp::SVGFEBlendMultiply => {}
+                    FilterGraphOp::SVGFEBlendNormal => {}
+                    FilterGraphOp::SVGFEBlendOverlay => {}
+                    FilterGraphOp::SVGFEBlendSaturation => {}
+                    FilterGraphOp::SVGFEBlendScreen => {}
+                    FilterGraphOp::SVGFEBlendSoftLight => {}
+                    FilterGraphOp::SVGFEColorMatrix { values } => {
+                        if values[3] != 0.0 ||
+                            values[7] != 0.0 ||
+                            values[11] != 0.0 ||
+                            values[19] != 0.0 {
+                            // Manipulating alpha can easily create new
+                            // pixels outside of input subregions
+                            used_subregion = full_subregion;
+                        }
+                    }
+                    FilterGraphOp::SVGFEComponentTransfer => unreachable!(),
+                    FilterGraphOp::SVGFEComponentTransferInterned{handle: _, creates_pixels} => {
+                        // Check if the value of alpha[0] is modified, if so
+                        // the whole subregion is used because it will be
+                        // creating new pixels outside of input subregions
+                        if *creates_pixels {
+                            used_subregion = full_subregion;
+                        }
+                    }
+                    FilterGraphOp::SVGFECompositeArithmetic { k1, k2, k3, k4 } => {
+                        // Optimization opportunity - some inputs may be
+                        // smaller subregions due to the way the math works,
+                        // k1 is the intersection of the two inputs, k2 is
+                        // the first input only, k3 is the second input
+                        // only, and k4 changes the whole subregion.
+                        //
+                        // See logic for SVG_FECOMPOSITE_OPERATOR_ARITHMETIC
+                        // in FilterSupport.cpp
+                        //
+                        // We can at least ignore the entire node if
+                        // everything is zero.
+                        if *k1 <= 0.0 &&
+                            *k2 <= 0.0 &&
+                            *k3 <= 0.0 {
+                            used_subregion = LayoutRect::zero();
+                        }
+                        // Check if alpha is added to pixels as it means it
+                        // can fill pixels outside input subregions
+                        if *k4 > 0.0 {
+                            used_subregion = full_subregion;
+                        }
+                    }
+                    FilterGraphOp::SVGFECompositeATop => {}
+                    FilterGraphOp::SVGFECompositeIn => {}
+                    FilterGraphOp::SVGFECompositeLighter => {}
+                    FilterGraphOp::SVGFECompositeOut => {}
+                    FilterGraphOp::SVGFECompositeOver => {}
+                    FilterGraphOp::SVGFECompositeXOR => {}
+                    FilterGraphOp::SVGFEConvolveMatrixEdgeModeDuplicate{..} => {}
+                    FilterGraphOp::SVGFEConvolveMatrixEdgeModeNone{..} => {}
+                    FilterGraphOp::SVGFEConvolveMatrixEdgeModeWrap{..} => {}
+                    FilterGraphOp::SVGFEDiffuseLightingDistant{..} => {}
+                    FilterGraphOp::SVGFEDiffuseLightingPoint{..} => {}
+                    FilterGraphOp::SVGFEDiffuseLightingSpot{..} => {}
+                    FilterGraphOp::SVGFEDisplacementMap{..} => {}
+                    FilterGraphOp::SVGFEDropShadow{..} => {}
+                    FilterGraphOp::SVGFEFlood { color } => {
+                        // Subregion needs to be set to the full node
+                        // subregion for fills (unless the fill is a no-op)
+                        if color.a > 0.0 {
+                            used_subregion = full_subregion;
+                        }
+                    }
+                    FilterGraphOp::SVGFEGaussianBlur{..} => {}
+                    FilterGraphOp::SVGFEIdentity => {}
+                    FilterGraphOp::SVGFEImage { sampling_filter: _sampling_filter, matrix: _matrix } => {
+                        // TODO: calculate the actual subregion
+                        used_subregion = full_subregion;
+                    }
+                    FilterGraphOp::SVGFEMorphologyDilate{..} => {}
+                    FilterGraphOp::SVGFEMorphologyErode{..} => {}
+                    FilterGraphOp::SVGFEOpacity { valuebinding: _valuebinding, value } => {
+                        // If fully transparent, we can ignore this node
+                        if *value <= 0.0 {
+                            used_subregion = LayoutRect::zero();
+                        }
+                    }
+                    FilterGraphOp::SVGFESourceAlpha |
+                    FilterGraphOp::SVGFESourceGraphic => {
+                        used_subregion = source_rect;
+                    }
+                    FilterGraphOp::SVGFESpecularLightingDistant{..} => {}
+                    FilterGraphOp::SVGFESpecularLightingPoint{..} => {}
+                    FilterGraphOp::SVGFESpecularLightingSpot{..} => {}
+                    FilterGraphOp::SVGFETile => {
+                        // feTile fills the entire output with
+                        // source pixels, so it's effectively a flood.
+                        used_subregion = full_subregion;
+                    }
+                    FilterGraphOp::SVGFEToAlpha => {}
+                    FilterGraphOp::SVGFETurbulenceWithFractalNoiseWithNoStitching{..} |
+                    FilterGraphOp::SVGFETurbulenceWithFractalNoiseWithStitching{..} |
+                    FilterGraphOp::SVGFETurbulenceWithTurbulenceNoiseWithNoStitching{..} |
+                    FilterGraphOp::SVGFETurbulenceWithTurbulenceNoiseWithStitching{..} => {
+                        // Turbulence produces pixel values throughout the
+                        // node subregion.
+                        used_subregion = full_subregion;
+                    }
+                }
+                // Store the subregion so later nodes can refer back
+                // to this and propagate rects properly
+                assert!((id as usize) < BUFFER_LIMIT, "BUFFER_LIMIT must be the same in frame building and scene building");
+                subregion_by_buffer_id[id] = used_subregion;
+            }
+            subregion_by_buffer_id[filters.len() - 1]
+        }
+
+        fn calc_source_from_target(
+            target_rect: LayoutRect,
+            filters: &[(FilterGraphNode, FilterGraphOp)],
+            skip_subregion_clips: bool,
+        ) -> LayoutRect {
+            // We're solving the source rect from target rect (e.g. due
+            // to invalidation of a region, we need to know how much of
+            // SourceGraphic is needed to draw that region accurately),
+            // so we need to walk the DAG in reverse and accumulate the source
+            // subregion for each input onto the referenced node, which can then
+            // propagate that to its inputs when it is iterated.
+            let mut source_subregion = LayoutRect::zero();
+            let mut subregion_by_buffer_id: [LayoutRect; BUFFER_LIMIT] =
+                [LayoutRect::zero(); BUFFER_LIMIT];
+            let final_buffer_id = filters.len() - 1;
+            assert!(final_buffer_id < BUFFER_LIMIT, "BUFFER_LIMIT must be the same in frame building and scene building");
+            subregion_by_buffer_id[final_buffer_id] = target_rect;
+            for (node_buffer_id, (node, op)) in filters.iter().enumerate().rev() {
+                // This is the subregion this node outputs, we can clip
+                // the inputs based on source_padding relative to this,
+                // and accumulate a new subregion for them.
+                assert!(node_buffer_id < BUFFER_LIMIT, "BUFFER_LIMIT must be the same in frame building and scene building");
+                let full_subregion = node.subregion;
+                let mut used_subregion =
+                    subregion_by_buffer_id[node_buffer_id];
+                // We can clip the used subregion.
+                if !skip_subregion_clips {
+                    used_subregion = used_subregion
+                        .intersection(&full_subregion)
+                        .unwrap_or(LayoutRect::zero());
+                }
+                if !used_subregion.is_empty() {
+                    for input in &node.inputs {
+                        let input_subregion = LayoutRect::new(
+                            LayoutPoint::new(
+                                used_subregion.min.x + input.source_padding.min.x,
+                                used_subregion.min.y + input.source_padding.min.y,
+                            ),
+                            LayoutPoint::new(
+                                used_subregion.max.x + input.source_padding.max.x,
+                                used_subregion.max.y + input.source_padding.max.y,
+                            ),
+                        );
+                        match input.buffer_id {
+                            FilterOpGraphPictureBufferId::BufferId(id) => {
+                                // Add the used area to the input, later when
+                                // the referneced node is iterated as a node it
+                                // will propagate the used bounds.
+                                subregion_by_buffer_id[id as usize] =
+                                    subregion_by_buffer_id[id as usize]
+                                    .union(&input_subregion);
+                            }
+                            FilterOpGraphPictureBufferId::None => {}
+                        }
+                    }
+                }
+                // If this is the SourceGraphic, we now have the subregion.
+                match op {
+                    FilterGraphOp::SVGFESourceAlpha |
+                    FilterGraphOp::SVGFESourceGraphic => {
+                        source_subregion = used_subregion;
+                    }
+                    _ => {}
+                }
+            }
+
+            // Note that this can be zero if SourceGraphic is not in the graph.
+            source_subregion
+        }
+
+        let (source, target) = match surface_rect_is_source {
+            true => {
+                // If we have a surface_rect for SourceGraphic, transform
+                // it to a target rect, and then transform the target
+                // rect back to a source rect (because blurs need the
+                // source to be enlarged).
+                let target = calc_target_from_source(surface_rect, filters, skip_subregion_clips);
+                let source = calc_source_from_target(target, filters, skip_subregion_clips);
+                (source, target)
+            }
+            false => {
+                // If we have a surface_rect for invalidation of target,
+                // we want to calculate the source rect from it
+                let target = surface_rect;
+                let source = calc_source_from_target(target, filters, skip_subregion_clips);
+                (source, target)
+            }
+        };
+
+        // Combine the source and target rect because other code assumes just
+        // a single rect expanded for blurs
+        let combined = source.union(&target);
+
+        (combined, source, target)
     }
 }
 
@@ -4500,6 +4833,7 @@ pub struct PicturePrimitive {
     /// it will be considered invisible.
     pub is_backface_visible: bool,
 
+    /// All render tasks have 0-2 input tasks.
     pub primary_render_task_id: Option<RenderTaskId>,
     /// If a mix-blend-mode, contains the render task for
     /// the readback of the framebuffer that we use to sample
@@ -4507,6 +4841,8 @@ pub struct PicturePrimitive {
     /// For drop-shadow filter, this will store the original
     /// picture task which would be rendered on screen after
     /// blur pass.
+    /// This is also used by SVGFEBlend, SVGFEComposite and
+    /// SVGFEDisplacementMap filters.
     pub secondary_render_task_id: Option<RenderTaskId>,
     /// How this picture should be composited.
     /// If None, don't composite - just draw directly on parent surface.
@@ -4646,6 +4982,7 @@ impl PicturePrimitive {
         parent_subpixel_mode: SubpixelMode,
         frame_state: &mut FrameBuildingState,
         frame_context: &FrameBuildingContext,
+        data_stores: &mut DataStores,
         scratch: &mut PrimitiveScratchBuffer,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     ) -> Option<(PictureContext, PictureState, PrimitiveList)> {
@@ -5746,6 +6083,47 @@ impl PicturePrimitive {
                             surface_rects.clipped_local,
                         );
                     }
+                    PictureCompositeMode::SVGFEGraph(ref filters) => {
+                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
+
+                        let picture_task_id = frame_state.rg_builder.add().init(
+                            RenderTask::new_dynamic(
+                                surface_rects.task_size,
+                                RenderTaskKind::new_picture(
+                                    surface_rects.task_size,
+                                    surface_rects.needs_scissor_rect,
+                                    surface_rects.clipped.min,
+                                    surface_spatial_node_index,
+                                    raster_spatial_node_index,
+                                    device_pixel_scale,
+                                    None,
+                                    None,
+                                    None,
+                                    cmd_buffer_index,
+                                    can_use_shared_surface,
+                                )
+                            ).with_uv_rect_kind(surface_rects.uv_rect_kind)
+                        );
+
+                        let filter_task_id = RenderTask::new_svg_filter_graph(
+                            filters,
+                            frame_state,
+                            data_stores,
+                            surface_rects.uv_rect_kind,
+                            picture_task_id,
+                            surface_rects.task_size,
+                            surface_rects.clipped,
+                            surface_rects.clipped_local,
+                        );
+
+                        primary_render_task_id = filter_task_id;
+
+                        surface_descriptor = SurfaceDescriptor::new_chained(
+                            picture_task_id,
+                            filter_task_id,
+                            surface_rects.clipped_local,
+                        );
+                    }
                 }
 
                 let is_sub_graph = self.flags.contains(PictureFlags::IS_SUB_GRAPH);
@@ -5792,7 +6170,8 @@ impl PicturePrimitive {
                     PictureCompositeMode::Filter(..) |
                     PictureCompositeMode::MixBlend(..) |
                     PictureCompositeMode::IntermediateSurface |
-                    PictureCompositeMode::SvgFilter(..) => {
+                    PictureCompositeMode::SvgFilter(..) |
+                    PictureCompositeMode::SVGFEGraph(..) => {
                         // TODO(gw): We can take advantage of the same logic that
                         //           exists in the opaque rect detection for tile
                         //           caches, to allow subpixel text on other surfaces
@@ -6425,6 +6804,18 @@ impl PicturePrimitive {
             PictureCompositeMode::Blit(_) |
             PictureCompositeMode::IntermediateSurface |
             PictureCompositeMode::SvgFilter(..) => {}
+            PictureCompositeMode::SVGFEGraph(ref filters) => {
+                // Update interned filter data
+                for (_node, op) in filters {
+                    match op {
+                        FilterGraphOp::SVGFEComponentTransferInterned { handle, creates_pixels: _ } => {
+                            let filter_data = &mut data_stores.filter_data[*handle];
+                            filter_data.update(frame_state);
+                        }
+                        _ => {}
+                    }
+                }
+            }
         }
 
         true
@@ -7109,6 +7500,38 @@ fn get_surface_rects(
     let surface = &mut surfaces[surface_index.0];
 
     let (clipped_local, unclipped_local) = match composite_mode {
+        PictureCompositeMode::SVGFEGraph(ref filters) => {
+            // We need to get the primitive rect, and get_coverage for
+            // SVGFEGraph requires the provided rect is in user space (defined
+            // in SVG spec) for subregion calculations to work properly
+            let clipped: LayoutRect = surface.clipped_local_rect
+                .cast_unit();
+            let unclipped: LayoutRect = surface.unclipped_local_rect
+                .cast_unit();
+
+            // Get the rects of SourceGraphic and target based on the local rect
+            // and clip rect.
+            let (coverage, _source, target) = composite_mode.get_coverage_svgfe(
+                filters, clipped, true, false);
+
+            // If no part of the source rect contributes to target pixels, we're
+            // done here; this is the hot path for quick culling of composited
+            // pictures, where the view doesn't overlap the target.
+            //
+            // Note that the filter may contain fill regions such as feFlood
+            // which do not depend on the source at all, so the source rect is
+            // largely irrelevant to our decision here as it may be empty.
+            if target.is_empty() {
+                return None;
+            }
+
+            // Since the design of WebRender PictureCompositeMode does not
+            // actually permit source and target rects as separate concepts, we
+            // have to use the combined coverage rect.
+            let clipped = coverage;
+
+            (clipped.cast_unit(), unclipped)
+        }
         PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
             let local_prim_rect = surface.clipped_local_rect;
 
