@@ -98,8 +98,6 @@ class AppWindow final : public nsIBaseWindow,
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual void SizeModeChanged(nsSizeMode sizeMode) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual void UIResolutionChanged() override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual void MacFullscreenMenubarOverlapChanged(
         mozilla::DesktopCoord aOverlapAmount) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -158,7 +156,6 @@ class AppWindow final : public nsIBaseWindow,
   bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight);
   MOZ_CAN_RUN_SCRIPT bool RequestWindowClose(nsIWidget* aWidget);
   MOZ_CAN_RUN_SCRIPT void SizeModeChanged(nsSizeMode aSizeMode);
-  MOZ_CAN_RUN_SCRIPT void UIResolutionChanged();
   MOZ_CAN_RUN_SCRIPT void FullscreenWillChange(bool aInFullscreen);
   MOZ_CAN_RUN_SCRIPT void FullscreenChanged(bool aInFullscreen);
   MOZ_CAN_RUN_SCRIPT void MacFullscreenMenubarOverlapChanged(

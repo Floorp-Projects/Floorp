@@ -81,12 +81,6 @@ class nsIWidgetListener {
    */
   virtual void SizeModeChanged(nsSizeMode aSizeMode);
 
-  /**
-   * Called when the DPI (device resolution scaling factor) is changed,
-   * such that UI elements may need to be rescaled.
-   */
-  virtual void UIResolutionChanged();
-
 #if defined(MOZ_WIDGET_ANDROID)
   virtual void DynamicToolbarMaxHeightChanged(mozilla::ScreenIntCoord aHeight);
   virtual void DynamicToolbarOffsetChanged(mozilla::ScreenIntCoord aOffset);

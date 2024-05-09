@@ -2957,15 +2957,6 @@ void AppWindow::SizeModeChanged(nsSizeMode aSizeMode) {
   // then need to be different.
 }
 
-void AppWindow::UIResolutionChanged() {
-  nsCOMPtr<nsPIDOMWindowOuter> ourWindow =
-      mDocShell ? mDocShell->GetWindow() : nullptr;
-  if (ourWindow) {
-    ourWindow->DispatchCustomEvent(u"resolutionchange"_ns,
-                                   ChromeOnlyDispatch::eYes);
-  }
-}
-
 void AppWindow::FullscreenWillChange(bool aInFullscreen) {
   if (mDocShell) {
     if (nsCOMPtr<nsPIDOMWindowOuter> ourWindow = mDocShell->GetWindow()) {
@@ -3454,11 +3445,6 @@ bool AppWindow::WidgetListenerDelegate::RequestWindowClose(nsIWidget* aWidget) {
 void AppWindow::WidgetListenerDelegate::SizeModeChanged(nsSizeMode aSizeMode) {
   RefPtr<AppWindow> holder = mAppWindow;
   holder->SizeModeChanged(aSizeMode);
-}
-
-void AppWindow::WidgetListenerDelegate::UIResolutionChanged() {
-  RefPtr<AppWindow> holder = mAppWindow;
-  holder->UIResolutionChanged();
 }
 
 void AppWindow::WidgetListenerDelegate::MacFullscreenMenubarOverlapChanged(
