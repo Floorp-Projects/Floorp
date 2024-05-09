@@ -42,8 +42,6 @@ const installType = addon => {
     return "sideload";
   } else if (addon.isSystem) {
     return "other";
-  } else if (addon.isInstalledByEnterprisePolicy) {
-    return "admin";
   }
   return "normal";
 };
