@@ -16,6 +16,7 @@ EXTRA_JS_MODULES.sessionstore = [
     "RunState.sys.mjs",
     "SessionCookies.sys.mjs",
     "SessionFile.sys.mjs",
+    "SessionLogger.sys.mjs",
     "SessionMigration.sys.mjs",
     "SessionSaver.sys.mjs",
     "SessionStartup.sys.mjs",

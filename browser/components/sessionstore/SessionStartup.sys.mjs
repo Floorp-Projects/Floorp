@@ -38,6 +38,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SessionFile: "resource:///modules/sessionstore/SessionFile.sys.mjs",
   StartupPerformance:
     "resource:///modules/sessionstore/StartupPerformance.sys.mjs",
+  sessionStoreLogger: "resource:///modules/sessionstore/SessionLogger.sys.mjs",
 });
 
 const STATE_RUNNING_STR = "running";
@@ -49,22 +50,6 @@ const TYPE_DEFER_SESSION = 3;
 
 // 'browser.startup.page' preference value to resume the previous session.
 const BROWSER_STARTUP_RESUME_SESSION = 3;
-
-function warning(msg, exception) {
-  let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(
-    Ci.nsIScriptError
-  );
-  consoleMsg.init(
-    msg,
-    exception.fileName,
-    null,
-    exception.lineNumber,
-    0,
-    Ci.nsIScriptError.warningFlag,
-    "component javascript"
-  );
-  Services.console.logMessage(consoleMsg);
-}
 
 var gOnceInitializedDeferred = Promise.withResolvers();
 
@@ -110,6 +95,7 @@ export var SessionStartup = {
         "browser.sessionstore.resuming_after_os_restart"
       )
     ) {
+      lazy.sessionStoreLogger.debug("resuming_after_os_restart");
       if (!Services.appinfo.restartedByOS) {
         // We had set resume_session_once in order to resume after an OS restart,
         // but we aren't automatically started by the OS (or else appinfo.restartedByOS
@@ -127,8 +113,17 @@ export var SessionStartup = {
     }
 
     lazy.SessionFile.read().then(
-      this._onSessionFileRead.bind(this),
-      console.error
+      result => {
+        lazy.sessionStoreLogger.debug(
+          `Completed SessionFile.read() with result.origin: ${result.origin}`
+        );
+        return this._onSessionFileRead(result);
+      },
+      err => {
+        // SessionFile.read catches most expected failures,
+        // so a promise rejection here should be logged as an error
+        lazy.sessionStoreLogger.error("Failure from _onSessionFileRead", err);
+      }
     );
   },
 
@@ -165,12 +160,18 @@ export var SessionStartup = {
 
     if (stateString != source) {
       // The session has been modified by an add-on, reparse.
+      lazy.sessionStoreLogger.debug(
+        "After sessionstore-state-read, session has been modified"
+      );
       try {
         this._initialState = JSON.parse(stateString);
       } catch (ex) {
         // That's not very good, an add-on has rewritten the initial
         // state to something that won't parse.
-        warning("Observer rewrote the state to something that won't parse", ex);
+        lazy.sessionStoreLogger.error(
+          "'sessionstore-state-read' observer rewrote the state to something that won't parse",
+          ex
+        );
       }
     } else {
       // No need to reparse
@@ -180,6 +181,7 @@ export var SessionStartup = {
     if (this._initialState == null) {
       // No valid session found.
       this._sessionType = this.NO_SESSION;
+      lazy.sessionStoreLogger.debug("No valid session found");
       Services.obs.notifyObservers(null, "sessionstore-state-finalized");
       gOnceInitializedDeferred.resolve();
       return;
@@ -195,14 +197,24 @@ export var SessionStartup = {
           }, 0)
         );
       }, 0);
+      lazy.sessionStoreLogger.debug(
+        `initialState contains ${pinnedTabCount} pinned tabs`
+      );
       Services.telemetry.scalarSetMaximum(
         "browser.engagement.max_concurrent_tab_pinned_count",
         pinnedTabCount
       );
     }, 60000);
 
+    let isAutomaticRestoreEnabled = this.isAutomaticRestoreEnabled();
+    lazy.sessionStoreLogger.debug(
+      `isAutomaticRestoreEnabled: ${isAutomaticRestoreEnabled}`
+    );
     // If this is a normal restore then throw away any previous session.
-    if (!this.isAutomaticRestoreEnabled() && this._initialState) {
+    if (!isAutomaticRestoreEnabled && this._initialState) {
+      lazy.sessionStoreLogger.debug(
+        "Discarding previous session as we have initialState"
+      );
       delete this._initialState.lastSessionState;
     }
 
@@ -267,10 +279,14 @@ export var SessionStartup = {
           shutdown_reason: previousSessionCrashedReason,
         }
       );
+      lazy.sessionStoreLogger.debug(
+        `Previous shutdown ok? ${this._previousSessionCrashed}, reason: ${previousSessionCrashedReason}`
+      );
 
       Services.obs.addObserver(this, "sessionstore-windows-restored", true);
 
       if (this.sessionType == this.NO_SESSION) {
+        lazy.sessionStoreLogger.debug("Will restore no session");
         this._initialState = null; // Reset the state.
       } else {
         Services.obs.addObserver(this, "browser:purge-session-history", true);
@@ -290,6 +306,7 @@ export var SessionStartup = {
     switch (topic) {
       case "sessionstore-windows-restored":
         Services.obs.removeObserver(this, "sessionstore-windows-restored");
+        lazy.sessionStoreLogger.debug(`sessionstore-windows-restored`);
         // Free _initialState after nsSessionStore is done with it.
         this._initialState = null;
         this._didRestore = true;
