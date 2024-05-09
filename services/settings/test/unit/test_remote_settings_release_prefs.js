@@ -13,9 +13,6 @@ function getNewUtils() {
 const TEST_BUCKET = "main";
 const TEST_COLLECTION = "password-recipes";
 
-let client;
-let DUMP_LAST_MODIFIED;
-
 async function importData(records) {
   await RemoteSettingsWorker._execute("_test_only_import", [
     TEST_BUCKET,
@@ -29,7 +26,6 @@ async function clear_state() {
   Services.env.set("MOZ_REMOTE_SETTINGS_DEVTOOLS", "0");
   Services.prefs.clearUserPref("services.settings.server");
   Services.prefs.clearUserPref("services.settings.preview_enabled");
-  await client.db.clear();
 }
 
 add_setup(async function () {
@@ -38,15 +34,6 @@ add_setup(async function () {
   // See `isRunningTests` in `services/settings/Utils.sys.mjs`.
   const before = Services.env.get("MOZ_DISABLE_NONLOCAL_CONNECTIONS");
   Services.env.set("MOZ_DISABLE_NONLOCAL_CONNECTIONS", "0");
-
-  // "services.settings.server" pref is not set.
-  // Test defaults to an unreachable server,
-  // and will only load from the dump if any.
-
-  client = new RemoteSettingsClient(TEST_COLLECTION);
-
-  const dump = await SharedUtils.loadJSONDump(TEST_BUCKET, TEST_COLLECTION);
-  DUMP_LAST_MODIFIED = dump.timestamp;
 
   registerCleanupFunction(() => {
     clear_state();
@@ -210,6 +197,18 @@ add_task(
     const Utils = getNewUtils();
     Assert.ok(!Utils.LOAD_DUMPS, "Dumps won't be loaded");
 
+    // The section below ensures that the LOAD_DUMPS flag properly takes effect.
+    // The client is set up here rather than add_setup to avoid triggering the
+    // lazy getters that are behind the global Utils.LOAD_DUMPS. If they are
+    // triggered too early, then they will potentially cache different values
+    // for the server urls and environment variables and this test then won't be
+    // testing what we expect it to.
+
+    let client = new RemoteSettingsClient(TEST_COLLECTION);
+
+    const dump = await SharedUtils.loadJSONDump(TEST_BUCKET, TEST_COLLECTION);
+    let DUMP_LAST_MODIFIED = dump.timestamp;
+
     // Dump is updated regularly, verify that the dump matches our expectations
     // before running the test.
     Assert.greater(
@@ -218,6 +217,7 @@ add_task(
       "Assuming dump to be newer than dummy 1234"
     );
 
+    await client.db.clear();
     await importData([{ last_modified: 1234, id: "dummy" }]);
 
     const after = await client.get();
@@ -231,6 +231,7 @@ add_task(
       1234,
       "Should have kept the import's timestamp"
     );
+    await client.db.clear();
   }
 );
 add_task(clear_state);
