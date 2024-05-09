@@ -16,6 +16,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
 
 export class SidebarHistory extends SidebarPage {
+  static queries = {
+    lists: { all: "fxview-tab-list" },
+    searchTextbox: "fxview-search-textbox",
+  };
+
   constructor() {
     super();
     this._started = false;

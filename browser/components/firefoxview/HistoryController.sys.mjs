@@ -131,6 +131,10 @@ export class HistoryController {
     const entries = searchQuery
       ? await this.#getVisitsForSearchQuery(searchQuery)
       : await this.#getVisitsForSortOption(sortOption, historyMap);
+    if (this.searchQuery !== searchQuery || this.sortOption !== sortOption) {
+      // This query is stale, discard results and do not update the cache / UI.
+      return;
+    }
     for (const { items } of entries) {
       for (const item of items) {
         this.#normalizeVisit(item);

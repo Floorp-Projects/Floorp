@@ -470,7 +470,7 @@ add_task(async function test_search_history() {
     EventUtils.sendString("Bogus Query", content);
     await TestUtils.waitForCondition(() => {
       const tabList = historyComponent.lists[0];
-      return tabList?.shadowRoot.querySelector("fxview-empty-state");
+      return tabList?.emptyState;
     }, "There are no matching search results.");
 
     info("Clear the search query.");
@@ -489,7 +489,7 @@ add_task(async function test_search_history() {
     EventUtils.sendString("Bogus Query", content);
     await TestUtils.waitForCondition(() => {
       const tabList = historyComponent.lists[0];
-      return tabList?.shadowRoot.querySelector("fxview-empty-state");
+      return tabList?.emptyState;
     }, "There are no matching search results.");
 
     info("Clear the search query with keyboard.");
@@ -512,6 +512,64 @@ add_task(async function test_search_history() {
         historyComponent.controller.historyVisits.length
     );
   });
+});
+
+add_task(async function test_search_ignores_stale_queries() {
+  await PlacesUtils.history.clear();
+  const historyEntries = createHistoryEntries();
+  await PlacesUtils.history.insertMany(historyEntries);
+
+  let bogusQueryInProgress = false;
+  const searchDeferred = Promise.withResolvers();
+  const realDatabase = await PlacesUtils.promiseLargeCacheDBConnection();
+  const mockDatabase = {
+    executeCached: async (sql, options) => {
+      if (options.query === "Bogus Query") {
+        bogusQueryInProgress = true;
+        await searchDeferred.promise;
+      }
+      return realDatabase.executeCached(sql, options);
+    },
+    interrupt: () => searchDeferred.reject(),
+  };
+  const stub = sinon
+    .stub(PlacesUtils, "promiseLargeCacheDBConnection")
+    .resolves(mockDatabase);
+
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    await navigateToViewAndWait(document, "history");
+    const historyComponent = document.querySelector("view-history");
+    historyComponent.profileAge = 8;
+    await historyComponentReady(historyComponent, historyEntries.length);
+    const searchTextbox = await TestUtils.waitForCondition(
+      () => historyComponent.searchTextbox,
+      "The search textbox is displayed."
+    );
+
+    info("Input a bogus search query.");
+    EventUtils.synthesizeMouseAtCenter(searchTextbox, {}, content);
+    EventUtils.sendString("Bogus Query", content);
+    await TestUtils.waitForCondition(() => bogusQueryInProgress);
+
+    info("Clear the bogus query.");
+    EventUtils.synthesizeMouseAtCenter(searchTextbox.clearButton, {}, content);
+    await searchTextbox.updateComplete;
+
+    info("Input a real search query.");
+    EventUtils.synthesizeMouseAtCenter(searchTextbox, {}, content);
+    EventUtils.sendString("Example Domain 1", content);
+    await TestUtils.waitForCondition(() => {
+      const { rowEls } = historyComponent.lists[0];
+      return rowEls.length === 1 && rowEls[0].mainEl.href === URLs[1];
+    }, "There is one matching search result.");
+    searchDeferred.resolve();
+    await TestUtils.waitForTick();
+    const tabList = historyComponent.lists[0];
+    ok(!tabList.emptyState, "Empty state should not be shown.");
+  });
+
+  stub.restore();
 });
 
 add_task(async function test_persist_collapse_card_after_view_change() {
