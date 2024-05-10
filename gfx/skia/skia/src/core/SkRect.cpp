@@ -9,7 +9,6 @@
 
 #include "include/core/SkM44.h"
 #include "include/private/base/SkDebug.h"
-#include "include/private/base/SkTPin.h"
 #include "src/core/SkRectPriv.h"
 
 class SkMatrix;
@@ -99,15 +98,15 @@ bool SkRect::setBoundsCheck(const SkPoint pts[], int count) {
 
 void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) {
     if (!this->setBoundsCheck(pts, count)) {
-        this->setLTRB(SK_FloatNaN, SK_FloatNaN, SK_FloatNaN, SK_FloatNaN);
+        this->setLTRB(SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN);
     }
 }
 
 #define CHECK_INTERSECT(al, at, ar, ab, bl, bt, br, bb) \
-    float L = std::max(al, bl);                         \
-    float R = std::min(ar, br);                         \
-    float T = std::max(at, bt);                         \
-    float B = std::min(ab, bb);                         \
+    SkScalar L = std::max(al, bl);                   \
+    SkScalar R = std::min(ar, br);                   \
+    SkScalar T = std::max(at, bt);                   \
+    SkScalar B = std::min(ab, bb);                   \
     do { if (!(L < R && T < B)) return false; } while (0)
     // do the !(opposite) check so we return false if either arg is NaN
 
@@ -143,7 +142,7 @@ void SkRect::join(const SkRect& r) {
 #include "include/core/SkString.h"
 #include "src/core/SkStringUtils.h"
 
-static const char* set_scalar(SkString* storage, float value, SkScalarAsStringType asType) {
+static const char* set_scalar(SkString* storage, SkScalar value, SkScalarAsStringType asType) {
     storage->reset();
     SkAppendScalar(storage, value, asType);
     return storage->c_str();
@@ -258,21 +257,11 @@ bool SkRectPriv::Subtract(const SkIRect& a, const SkIRect& b, SkIRect* out) {
 }
 
 
-bool SkRectPriv::QuadContainsRect(const SkMatrix& m,
-                                  const SkIRect& a,
-                                  const SkIRect& b,
-                                  float tol) {
-    return QuadContainsRect(SkM44(m), SkRect::Make(a), SkRect::Make(b), tol);
+bool SkRectPriv::QuadContainsRect(const SkMatrix& m, const SkIRect& a, const SkIRect& b) {
+    return QuadContainsRect(SkM44(m), SkRect::Make(a), SkRect::Make(b));
 }
 
-bool SkRectPriv::QuadContainsRect(const SkM44& m, const SkRect& a, const SkRect& b, float tol) {
-    return all(QuadContainsRectMask(m, a, b, tol));
-}
-
-skvx::int4 SkRectPriv::QuadContainsRectMask(const SkM44& m,
-                                            const SkRect& a,
-                                            const SkRect& b,
-                                            float tol) {
+bool SkRectPriv::QuadContainsRect(const SkM44& m, const SkRect& a, const SkRect& b) {
     SkDEBUGCODE(SkM44 inverse;)
     SkASSERT(m.invert(&inverse));
     // With empty rectangles, the calculated edges could give surprising results. If 'a' were not
@@ -280,7 +269,7 @@ skvx::int4 SkRectPriv::QuadContainsRectMask(const SkM44& m,
     // would be seen as "contained". If 'a' is all 0s, its edge equations are also (0,0,0) so every
     // point has a distance of 0, and would be interpreted as inside.
     if (a.isEmpty()) {
-        return skvx::int4(0); // all "false"
+        return false;
     }
     // However, 'b' is only used to define its 4 corners to check against the transformed edges.
     // This is valid regardless of b's emptiness or sortedness.
@@ -296,7 +285,7 @@ skvx::int4 SkRectPriv::QuadContainsRectMask(const SkM44& m,
     if (all(maw < 0.f)) {
         // If all points of A are mapped to w < 0, then the edge equations end up representing the
         // convex hull of projected points when A should in fact be considered empty.
-        return skvx::int4(0); // all "false"
+        return false;
     }
 
     // Cross product of adjacent vertices provides homogenous lines for the 4 sides of the quad
@@ -310,47 +299,11 @@ skvx::int4 SkRectPriv::QuadContainsRectMask(const SkM44& m,
 
     // Calculate distance from 'b' to each edge. Since 'b' has presumably been transformed by 'm'
     // *and* projected, this assumes W = 1.
-    SkRect bInset = b.makeInset(tol, tol);
-    auto d0 = sign * (lA*bInset.fLeft  + lB*bInset.fTop    + lC);
-    auto d1 = sign * (lA*bInset.fRight + lB*bInset.fTop    + lC);
-    auto d2 = sign * (lA*bInset.fRight + lB*bInset.fBottom + lC);
-    auto d3 = sign * (lA*bInset.fLeft  + lB*bInset.fBottom + lC);
+    auto d0 = sign * (lA*b.fLeft  + lB*b.fTop    + lC);
+    auto d1 = sign * (lA*b.fRight + lB*b.fTop    + lC);
+    auto d2 = sign * (lA*b.fRight + lB*b.fBottom + lC);
+    auto d3 = sign * (lA*b.fLeft  + lB*b.fBottom + lC);
 
     // 'b' is contained in the mapped rectangle if all distances are >= 0
-    return (d0 >= 0.f) & (d1 >= 0.f) & (d2 >= 0.f) & (d3 >= 0.f);
-}
-
-SkIRect SkRectPriv::ClosestDisjointEdge(const SkIRect& src, const SkIRect& dst) {
-    if (src.isEmpty() || dst.isEmpty()) {
-        return SkIRect::MakeEmpty();
-    }
-
-    int l = src.fLeft;
-    int r = src.fRight;
-    if (r <= dst.fLeft) {
-        // Select right column of pixels in crop
-        l = r - 1;
-    } else if (l >= dst.fRight) {
-        // Left column of 'crop'
-        r = l + 1;
-    } else {
-        // Regular intersection along X axis.
-        l = SkTPin(l, dst.fLeft, dst.fRight);
-        r = SkTPin(r, dst.fLeft, dst.fRight);
-    }
-
-    int t = src.fTop;
-    int b = src.fBottom;
-    if (b <= dst.fTop) {
-        // Select bottom row of pixels in crop
-        t = b - 1;
-    } else if (t >= dst.fBottom) {
-        // Top row of 'crop'
-        b = t + 1;
-    } else {
-        t = SkTPin(t, dst.fTop, dst.fBottom);
-        b = SkTPin(b, dst.fTop, dst.fBottom);
-    }
-
-    return SkIRect::MakeLTRB(l,t,r,b);
+    return all((d0 >= 0.f) & (d1 >= 0.f) & (d2 >= 0.f) & (d3 >= 0.f));
 }

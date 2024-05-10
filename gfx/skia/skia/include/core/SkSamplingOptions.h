@@ -74,13 +74,11 @@ struct SK_API SkSamplingOptions {
         : filter(fm)
         , mipmap(mm) {}
 
-    // These are intentionally implicit because the single parameter clearly conveys what the
-    // implicitly created SkSamplingOptions will be.
-    constexpr SkSamplingOptions(SkFilterMode fm)
+    explicit constexpr SkSamplingOptions(SkFilterMode fm)
         : filter(fm)
         , mipmap(SkMipmapMode::kNone) {}
 
-    constexpr SkSamplingOptions(const SkCubicResampler& c)
+    explicit constexpr SkSamplingOptions(const SkCubicResampler& c)
         : useCubic(true)
         , cubic(c) {}
 

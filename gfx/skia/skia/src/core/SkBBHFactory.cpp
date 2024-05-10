@@ -6,8 +6,6 @@
  */
 
 #include "include/core/SkBBHFactory.h"
-
-#include "include/core/SkRect.h"
 #include "src/core/SkRTree.h"
 
 sk_sp<SkBBoxHierarchy> SkRTreeFactory::operator()() const {

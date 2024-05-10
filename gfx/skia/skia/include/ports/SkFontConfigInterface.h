@@ -95,10 +95,13 @@ public:
      *  Return an SkTypeface for the given FontIdentity.
      *
      *  The default implementation simply returns a new typeface built using data obtained from
-     *  openStream() using the provided SkFontMgr, but derived classes may implement more
-     *  complex caching schemes.
+     *  openStream(), but derived classes may implement more complex caching schemes.
      */
-    virtual sk_sp<SkTypeface> makeTypeface(const FontIdentity& identity, sk_sp<SkFontMgr> mgr);
+    virtual sk_sp<SkTypeface> makeTypeface(const FontIdentity& identity) {
+        return SkTypeface::MakeFromStream(std::unique_ptr<SkStreamAsset>(this->openStream(identity)),
+                                          identity.fTTCIndex);
+
+    }
 
     /**
      *  Return a singleton instance of a direct subclass that calls into

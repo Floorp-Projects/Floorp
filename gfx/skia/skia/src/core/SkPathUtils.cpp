@@ -72,22 +72,16 @@ bool FillPathWithPaint(const SkPath& src, const SkPaint& paint, SkPath* dst,
 
 } // namespace skpathutils
 
-bool FillPathWithPaint(const SkPath& src,
-                       const SkPaint& paint,
-                       SkPath* dst,
-                       const SkRect* cullRect,
-                       SkScalar resScale) {
+SK_API bool FillPathWithPaint(const SkPath &src, const SkPaint &paint, SkPath *dst,
+                              const SkRect *cullRect, SkScalar resScale) {
     return skpathutils::FillPathWithPaint(src, paint, dst, cullRect, resScale);
 }
 
-bool FillPathWithPaint(const SkPath& src,
-                       const SkPaint& paint,
-                       SkPath* dst,
-                       const SkRect* cullRect,
-                       const SkMatrix& ctm) {
+SK_API bool FillPathWithPaint(const SkPath &src, const SkPaint &paint, SkPath *dst,
+                              const SkRect *cullRect, const SkMatrix &ctm) {
     return skpathutils::FillPathWithPaint(src, paint, dst, cullRect, ctm);
 }
 
-bool FillPathWithPaint(const SkPath& src, const SkPaint& paint, SkPath* dst) {
+SK_API bool FillPathWithPaint(const SkPath &src, const SkPaint &paint, SkPath *dst) {
     return skpathutils::FillPathWithPaint(src, paint, dst);
 }

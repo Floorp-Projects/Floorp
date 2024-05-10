@@ -18,7 +18,6 @@ typedef void(*GrGLFuncPtr)();
 struct GrGLInterface;
 
 
-#if !defined(SK_DISABLE_LEGACY_GL_MAKE_NATIVE_INTERFACE)
 /**
  * Rather than depend on platform-specific GL headers and libraries, we require
  * the client to provide a struct of GL function pointers. This struct can be
@@ -32,7 +31,6 @@ struct GrGLInterface;
  * appropriate one to build.
  */
 SK_API sk_sp<const GrGLInterface> GrGLMakeNativeInterface();
-#endif
 
 /**
  * GrContext uses the following interface to make all calls into OpenGL. When a
@@ -70,7 +68,7 @@ public:
     void suppressErrorLogging();
 #endif
 
-#if defined(GR_TEST_UTILS)
+#if GR_TEST_UTILS
     GrGLInterface(const GrGLInterface& that)
             : fStandard(that.fStandard)
             , fExtensions(that.fExtensions)
@@ -78,7 +76,11 @@ public:
 #endif
 
     // Indicates the type of GL implementation
-    GrGLStandard fStandard;
+    union {
+        GrGLStandard fStandard;
+        GrGLStandard fBindingsExported; // Legacy name, will be remove when Chromium is updated.
+    };
+
     GrGLExtensions fExtensions;
 
     bool hasExtension(const char ext[]) const { return fExtensions.has(ext); }
@@ -329,7 +331,7 @@ public:
         GrGLFunction<GrGLEndTilingFn> fEndTiling;
     } fFunctions;
 
-#if defined(GR_TEST_UTILS)
+#if GR_TEST_UTILS
     // This exists for internal testing.
     virtual void abandon() const;
 #endif

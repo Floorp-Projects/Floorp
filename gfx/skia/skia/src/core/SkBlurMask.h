@@ -8,27 +8,21 @@
 #ifndef SkBlurMask_DEFINED
 #define SkBlurMask_DEFINED
 
-#include "include/core/SkScalar.h"
-#include "include/core/SkTypes.h"
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkShader.h"
 #include "src/core/SkMask.h"
-
-#include <cstdint>
-
-class SkRRect;
-enum SkBlurStyle : int;
-struct SkIPoint;
-struct SkRect;
 
 class SkBlurMask {
 public:
-    [[nodiscard]] static bool BlurRect(SkScalar sigma, SkMaskBuilder *dst, const SkRect &src,
-                                       SkBlurStyle, SkIPoint *margin = nullptr,
-                                       SkMaskBuilder::CreateMode createMode =
-                                           SkMaskBuilder::kComputeBoundsAndRenderImage_CreateMode);
-    [[nodiscard]] static bool BlurRRect(SkScalar sigma, SkMaskBuilder *dst, const SkRRect &src,
-                                        SkBlurStyle, SkIPoint *margin = nullptr,
-                                        SkMaskBuilder::CreateMode createMode =
-                                            SkMaskBuilder::kComputeBoundsAndRenderImage_CreateMode);
+    static bool SK_WARN_UNUSED_RESULT BlurRect(SkScalar sigma, SkMask *dst, const SkRect &src,
+                                               SkBlurStyle, SkIPoint *margin = nullptr,
+                                               SkMask::CreateMode createMode =
+                                                  SkMask::kComputeBoundsAndRenderImage_CreateMode);
+    static bool SK_WARN_UNUSED_RESULT BlurRRect(SkScalar sigma, SkMask *dst, const SkRRect &src,
+                                                SkBlurStyle, SkIPoint *margin = nullptr,
+                                                SkMask::CreateMode createMode =
+                                                  SkMask::kComputeBoundsAndRenderImage_CreateMode);
 
     // forceQuality will prevent BoxBlur from falling back to the low quality approach when sigma
     // is very small -- this can be used predict the margin bump ahead of time without completely
@@ -41,15 +35,15 @@ public:
     // * failure          - if src.fImage is not null, failure is signal with dst->fImage being
     //                      null.
 
-    [[nodiscard]] static bool BoxBlur(SkMaskBuilder* dst, const SkMask& src,
-                                      SkScalar sigma, SkBlurStyle style,
-                                      SkIPoint* margin = nullptr);
+    static bool SK_WARN_UNUSED_RESULT BoxBlur(SkMask* dst, const SkMask& src,
+                                              SkScalar sigma, SkBlurStyle style,
+                                              SkIPoint* margin = nullptr);
 
     // the "ground truth" blur does a gaussian convolution; it's slow
     // but useful for comparison purposes.
-    [[nodiscard]] static bool BlurGroundTruth(SkScalar sigma, SkMaskBuilder* dst,
-                                              const SkMask& src,
-                                              SkBlurStyle, SkIPoint* margin = nullptr);
+    static bool SK_WARN_UNUSED_RESULT BlurGroundTruth(SkScalar sigma, SkMask* dst,
+                                                      const SkMask& src,
+                                                      SkBlurStyle, SkIPoint* margin = nullptr);
 
     // If radius > 0, return the corresponding sigma, else return 0
     static SkScalar SK_SPI ConvertRadiusToSigma(SkScalar radius);
@@ -85,6 +79,9 @@ public:
 
     static void ComputeBlurredScanline(uint8_t* pixels, const uint8_t* profile,
                                        unsigned int width, SkScalar sigma);
+
+
+
 };
 
 #endif

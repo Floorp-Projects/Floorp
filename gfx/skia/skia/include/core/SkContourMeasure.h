@@ -8,16 +8,11 @@
 #ifndef SkContourMeasure_DEFINED
 #define SkContourMeasure_DEFINED
 
-#include "include/core/SkPoint.h"
+#include "include/core/SkPath.h"
 #include "include/core/SkRefCnt.h"
-#include "include/core/SkScalar.h"
-#include "include/private/base/SkAPI.h"
 #include "include/private/base/SkTDArray.h"
 
-#include <memory>
-
-class SkMatrix;
-class SkPath;
+struct SkConic;
 
 class SK_API SkContourMeasure : public SkRefCnt {
 public:
@@ -28,7 +23,8 @@ public:
     /** Pins distance to 0 <= distance <= length(), and then computes the corresponding
      *  position and tangent.
      */
-    [[nodiscard]] bool getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) const;
+    bool SK_WARN_UNUSED_RESULT getPosTan(SkScalar distance, SkPoint* position,
+                                         SkVector* tangent) const;
 
     enum MatrixFlags {
         kGetPosition_MatrixFlag     = 0x01,
@@ -41,8 +37,8 @@ public:
      Returns false if there is no path, or a zero-length path was specified, in which case
      matrix is unchanged.
      */
-    [[nodiscard]] bool getMatrix(SkScalar distance, SkMatrix* matrix,
-                                 MatrixFlags flags = kGetPosAndTan_MatrixFlag) const;
+    bool SK_WARN_UNUSED_RESULT getMatrix(SkScalar distance, SkMatrix* matrix,
+                                         MatrixFlags flags = kGetPosAndTan_MatrixFlag) const;
 
     /** Given a start and stop distance, return in dst the intervening segment(s).
      If the segment is zero-length, return false, else return true.
@@ -50,8 +46,8 @@ public:
      then return false (and leave dst untouched).
      Begin the segment with a moveTo if startWithMoveTo is true
      */
-    [[nodiscard]] bool getSegment(SkScalar startD, SkScalar stopD, SkPath* dst,
-                                  bool startWithMoveTo) const;
+    bool SK_WARN_UNUSED_RESULT getSegment(SkScalar startD, SkScalar stopD, SkPath* dst,
+                                          bool startWithMoveTo) const;
 
     /** Return true if the contour is closed()
      */
@@ -90,7 +86,6 @@ private:
     const Segment* distanceToSegment(SkScalar distance, SkScalar* t) const;
 
     friend class SkContourMeasureIter;
-    friend class SkPathMeasurePriv;
 };
 
 class SK_API SkContourMeasureIter {
@@ -106,9 +101,6 @@ public:
      */
     SkContourMeasureIter(const SkPath& path, bool forceClosed, SkScalar resScale = 1);
     ~SkContourMeasureIter();
-
-    SkContourMeasureIter(SkContourMeasureIter&&);
-    SkContourMeasureIter& operator=(SkContourMeasureIter&&);
 
     /**
      *  Reset the Iter with a path.

@@ -37,6 +37,7 @@
 #include "mozilla/TimeStamp.h"
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Scale.h"
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsIConsoleService.h"

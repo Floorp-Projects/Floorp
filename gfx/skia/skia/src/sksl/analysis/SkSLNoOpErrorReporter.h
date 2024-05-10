@@ -8,8 +8,7 @@
 #ifndef SkSLNoOpErrorReporter_DEFINED
 #define SkSLNoOpErrorReporter_DEFINED
 
-#include "src/sksl/SkSLErrorReporter.h"
-#include "src/sksl/SkSLPosition.h"
+#include "include/sksl/SkSLErrorReporter.h"
 
 namespace SkSL {
 

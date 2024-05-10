@@ -102,7 +102,7 @@ public:
     bool resolve(SkPath* result);
 
 private:
-    skia_private::TArray<SkPath> fPathRefs;
+    SkTArray<SkPath> fPathRefs;
     SkTDArray<SkPathOp> fOps;
 
     static bool FixWinding(SkPath* path);

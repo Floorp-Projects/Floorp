@@ -106,7 +106,7 @@ AntialiasMode ScaledFontWin::GetDefaultAAMode() {
 }
 
 SkTypeface* ScaledFontWin::CreateSkTypeface() {
-  return SkCreateTypefaceFromLOGFONT(mLogFont).release();
+  return SkCreateTypefaceFromLOGFONT(mLogFont);
 }
 
 cairo_font_face_t* ScaledFontWin::CreateCairoFontFace(

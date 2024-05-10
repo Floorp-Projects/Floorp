@@ -25,8 +25,6 @@
 
 #include <memory>
 
-using namespace skia_private;
-
 #define LMP_SYSTEM_FONTS_FILE "/system/etc/fonts.xml"
 #define OLD_SYSTEM_FONTS_FILE "/system/etc/system_fonts.xml"
 #define FALLBACK_FONTS_FILE "/system/etc/fallback_fonts.xml"
@@ -155,7 +153,7 @@ static void trim_string(SkString* s) {
 }
 
 static void parse_space_separated_languages(const char* value, size_t valueLen,
-                                            TArray<SkLanguage, true>& languages)
+                                            SkTArray<SkLanguage, true>& languages)
 {
     size_t i = 0;
     while (true) {

@@ -5,9 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkPictureFlat.h"
-
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkShader.h"
 #include "include/core/SkTypeface.h"
+#include "include/private/SkChecksum.h"
+#include "src/core/SkPictureFlat.h"
 
 #include <memory>
 

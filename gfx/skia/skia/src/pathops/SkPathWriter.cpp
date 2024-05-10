@@ -14,8 +14,6 @@
 #include "src/pathops/SkPathOpsDebug.h"
 #include "src/pathops/SkPathOpsTypes.h"
 
-using namespace skia_private;
-
 // wrap path to keep track of whether the contour is initialized and non-empty
 SkPathWriter::SkPathWriter(SkPath& path)
     : fPathPtr(&path)
@@ -252,7 +250,7 @@ void SkPathWriter::assemble() {
             *runsPtr = opPtT;
         } while (true);
         partWriter.finishContour();
-        const TArray<SkPath>& partPartials = partWriter.partials();
+        const SkTArray<SkPath>& partPartials = partWriter.partials();
         if (partPartials.empty()) {
             continue;
         }
@@ -277,9 +275,9 @@ void SkPathWriter::assemble() {
         sLink[rIndex] = eLink[rIndex] = SK_MaxS32;
     }
     const int entries = endCount * (endCount - 1) / 2;  // folded triangle
-    STArray<8, double, true> distances(entries);
-    STArray<8, int, true> sortedDist(entries);
-    STArray<8, int, true> distLookup(entries);
+    SkSTArray<8, double, true> distances(entries);
+    SkSTArray<8, int, true> sortedDist(entries);
+    SkSTArray<8, int, true> distLookup(entries);
     int rRow = 0;
     int dIndex = 0;
     for (rIndex = 0; rIndex < endCount - 1; ++rIndex) {
@@ -432,4 +430,5 @@ void SkPathWriter::assemble() {
        SkASSERT(eLink[rIndex] == SK_MaxS32);
     }
 #endif
+    return;
 }

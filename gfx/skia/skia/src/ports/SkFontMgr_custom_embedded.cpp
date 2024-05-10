@@ -5,17 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkRefCnt.h"
 #include "include/core/SkStream.h"
 #include "include/ports/SkFontMgr_data.h"
 #include "src/core/SkFontDescriptor.h"
-#include "src/core/SkFontScanner.h"
 #include "src/ports/SkFontMgr_custom.h"
 
 struct SkEmbeddedResource { const uint8_t* data; size_t size; };
 struct SkEmbeddedResourceHeader { const SkEmbeddedResource* entries; int count; };
 
-static void load_font_from_data(const SkFontScanner* scanner,
+static void load_font_from_data(const SkTypeface_FreeType::Scanner& scanner,
                                 std::unique_ptr<SkMemoryStream> stream, int index,
                                 SkFontMgr_Custom::Families* families);
 
@@ -23,7 +21,7 @@ class EmbeddedSystemFontLoader : public SkFontMgr_Custom::SystemFontLoader {
 public:
     EmbeddedSystemFontLoader(const SkEmbeddedResourceHeader* header) : fHeader(header) { }
 
-    void loadSystemFonts(const SkFontScanner* scanner,
+    void loadSystemFonts(const SkTypeface_FreeType::Scanner& scanner,
                          SkFontMgr_Custom::Families* families) const override
     {
         for (int i = 0; i < fHeader->count; ++i) {
@@ -46,7 +44,7 @@ class DataFontLoader : public SkFontMgr_Custom::SystemFontLoader {
 public:
     DataFontLoader(sk_sp<SkData>* datas, int n) : fDatas(datas), fNum(n) { }
 
-    void loadSystemFonts(const SkFontScanner* scanner,
+    void loadSystemFonts(const SkTypeface_FreeType::Scanner& scanner,
                          SkFontMgr_Custom::Families* families) const override
     {
         for (int i = 0; i < fNum; ++i) {
@@ -76,50 +74,36 @@ static SkFontStyleSet_Custom* find_family(SkFontMgr_Custom::Families& families,
     return nullptr;
 }
 
-static void load_font_from_data(const SkFontScanner* scanner,
-                                std::unique_ptr<SkMemoryStream> stream,
-                                int index,
-                                SkFontMgr_Custom::Families* families) {
+static void load_font_from_data(const SkTypeface_FreeType::Scanner& scanner,
+                                std::unique_ptr<SkMemoryStream> stream, int index,
+                                SkFontMgr_Custom::Families* families)
+{
     int numFaces;
-    if (!scanner->scanFile(stream.get(), &numFaces)) {
+    if (!scanner.recognizedFont(stream.get(), &numFaces)) {
         SkDebugf("---- failed to open <%d> as a font\n", index);
         return;
     }
+
     for (int faceIndex = 0; faceIndex < numFaces; ++faceIndex) {
-        int numInstances;
-        if (!scanner->scanFace(stream.get(), faceIndex, &numInstances)) {
-            SkDebugf("---- failed to open <%d> <%d> as a face\n", index, faceIndex);
-            continue;
+        bool isFixedPitch;
+        SkString realname;
+        SkFontStyle style = SkFontStyle(); // avoid uninitialized warning
+        if (!scanner.scanFont(stream.get(), faceIndex,
+                              &realname, &style, &isFixedPitch, nullptr))
+        {
+            SkDebugf("---- failed to open <%d> <%d> as a font\n", index, faceIndex);
+            return;
         }
 
-        for (int instanceIndex = 0; instanceIndex <= numInstances; ++instanceIndex) {
-            bool isFixedPitch;
-            SkString realname;
-            SkFontStyle style = SkFontStyle();  // avoid uninitialized warning
-            if (!scanner->scanInstance(stream.get(),
-                                      faceIndex,
-                                      instanceIndex,
-                                      &realname,
-                                      &style,
-                                      &isFixedPitch,
-                                      nullptr)) {
-                SkDebugf("---- failed to open <%d> <%d> <%d> as an instance\n",
-                         index,
-                         faceIndex,
-                         instanceIndex);
-                return;
-            }
-
-            SkFontStyleSet_Custom* addTo = find_family(*families, realname.c_str());
-            if (nullptr == addTo) {
-                addTo = new SkFontStyleSet_Custom(realname);
-                families->push_back().reset(addTo);
-            }
-            auto data = std::make_unique<SkFontData>(
-                    stream->duplicate(), faceIndex, 0, nullptr, 0, nullptr, 0);
-            addTo->appendTypeface(sk_make_sp<SkTypeface_FreeTypeStream>(
-                    std::move(data), realname, style, isFixedPitch));
+        SkFontStyleSet_Custom* addTo = find_family(*families, realname.c_str());
+        if (nullptr == addTo) {
+            addTo = new SkFontStyleSet_Custom(realname);
+            families->push_back().reset(addTo);
         }
+        auto data = std::make_unique<SkFontData>(stream->duplicate(), faceIndex, 0,
+                                                 nullptr, 0, nullptr, 0);
+        addTo->appendTypeface(sk_make_sp<SkTypeface_FreeTypeStream>(
+            std::move(data), realname, style, isFixedPitch));
     }
 }
 

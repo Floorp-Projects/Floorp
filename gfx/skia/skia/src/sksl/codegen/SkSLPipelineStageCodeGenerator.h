@@ -10,6 +10,8 @@
 
 #include "include/core/SkTypes.h"
 
+#if defined(SKSL_STANDALONE) || defined(SK_GANESH) || defined(SK_GRAPHITE)
+
 #include <string>
 
 namespace SkSL {
@@ -62,5 +64,7 @@ namespace PipelineStage {
 }  // namespace PipelineStage
 
 }  // namespace SkSL
+
+#endif
 
 #endif

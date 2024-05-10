@@ -42,7 +42,7 @@ void SkOrderedFontMgr::onGetFamilyName(int index, SkString* familyName) const {
     }
 }
 
-sk_sp<SkFontStyleSet> SkOrderedFontMgr::onCreateStyleSet(int index) const {
+SkFontStyleSet* SkOrderedFontMgr::onCreateStyleSet(int index) const {
     for (const auto& fm : fList) {
         const int count = fm->countFamilies();
         if (index < count) {
@@ -53,7 +53,7 @@ sk_sp<SkFontStyleSet> SkOrderedFontMgr::onCreateStyleSet(int index) const {
     return nullptr;
 }
 
-sk_sp<SkFontStyleSet> SkOrderedFontMgr::onMatchFamily(const char familyName[]) const {
+SkFontStyleSet* SkOrderedFontMgr::onMatchFamily(const char familyName[]) const {
     for (const auto& fm : fList) {
         if (auto fs = fm->matchFamily(familyName)) {
             return fs;
@@ -62,8 +62,8 @@ sk_sp<SkFontStyleSet> SkOrderedFontMgr::onMatchFamily(const char familyName[]) c
     return nullptr;
 }
 
-sk_sp<SkTypeface> SkOrderedFontMgr::onMatchFamilyStyle(const char family[],
-                                                       const SkFontStyle& style) const {
+SkTypeface* SkOrderedFontMgr::onMatchFamilyStyle(const char family[],
+                                                 const SkFontStyle& style) const {
     for (const auto& fm : fList) {
         if (auto tf = fm->matchFamilyStyle(family, style)) {
             return tf;
@@ -72,11 +72,10 @@ sk_sp<SkTypeface> SkOrderedFontMgr::onMatchFamilyStyle(const char family[],
     return nullptr;
 }
 
-sk_sp<SkTypeface> SkOrderedFontMgr::onMatchFamilyStyleCharacter(
-    const char familyName[], const SkFontStyle& style,
-    const char* bcp47[], int bcp47Count,
-    SkUnichar uni) const
-{
+SkTypeface* SkOrderedFontMgr::onMatchFamilyStyleCharacter(const char familyName[],
+                                                          const SkFontStyle& style,
+                                                          const char* bcp47[], int bcp47Count,
+                                                          SkUnichar uni) const {
     for (const auto& fm : fList) {
         if (auto tf = fm->matchFamilyStyleCharacter(familyName, style, bcp47, bcp47Count, uni)) {
             return tf;

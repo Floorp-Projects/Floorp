@@ -10,10 +10,7 @@
 
 #include "include/core/SkTextureCompressionType.h"
 #include "include/gpu/GpuTypes.h"
-#include "include/private/base/SkAssert.h"
 #include "include/private/gpu/ganesh/GrTypesPriv.h"
-
-#include <cstdint>
 
 class GrBackendFormat;
 
@@ -25,12 +22,10 @@ struct GrMockTextureInfo {
 
     GrMockTextureInfo(GrColorType colorType,
                       SkTextureCompressionType compressionType,
-                      int id,
-                      skgpu::Protected isProtected = skgpu::Protected::kNo)
+                      int id)
             : fColorType(colorType)
             , fCompressionType(compressionType)
-            , fID(id)
-            , fProtected(isProtected) {
+            , fID(id) {
         SkASSERT(fID);
         if (fCompressionType != SkTextureCompressionType::kNone) {
             SkASSERT(colorType == GrColorType::kUnknown);
@@ -40,8 +35,7 @@ struct GrMockTextureInfo {
     bool operator==(const GrMockTextureInfo& that) const {
         return fColorType == that.fColorType &&
                fCompressionType == that.fCompressionType &&
-               fID == that.fID &&
-               fProtected == that.fProtected;
+               fID == that.fID;
     }
 
     GrBackendFormat getBackendFormat() const;
@@ -55,14 +49,10 @@ struct GrMockTextureInfo {
 
     int id() const { return fID; }
 
-    skgpu::Protected getProtected() const { return fProtected; }
-    bool isProtected() const { return fProtected == skgpu::Protected::kYes; }
-
 private:
     GrColorType              fColorType;
     SkTextureCompressionType fCompressionType;
     int                      fID;
-    skgpu::Protected         fProtected = skgpu::Protected::kNo;
 };
 
 struct GrMockRenderTargetInfo {
@@ -70,32 +60,24 @@ struct GrMockRenderTargetInfo {
             : fColorType(GrColorType::kUnknown)
             , fID(0) {}
 
-    GrMockRenderTargetInfo(GrColorType colorType,
-                           int id,
-                           skgpu::Protected isProtected = skgpu::Protected::kNo)
+    GrMockRenderTargetInfo(GrColorType colorType, int id)
             : fColorType(colorType)
-            , fID(id)
-            , fProtected(isProtected) {
+            , fID(id) {
         SkASSERT(fID);
     }
 
     bool operator==(const GrMockRenderTargetInfo& that) const {
         return fColorType == that.fColorType &&
-               fID == that.fID &&
-               fProtected == that.fProtected;
+               fID == that.fID;
     }
 
     GrBackendFormat getBackendFormat() const;
 
     GrColorType colorType() const { return fColorType; }
 
-    skgpu::Protected getProtected() const { return fProtected; }
-    bool isProtected() const { return fProtected == skgpu::Protected::kYes; }
-
 private:
-    GrColorType      fColorType;
-    int              fID;
-    skgpu::Protected fProtected = skgpu::Protected::kNo;
+    GrColorType   fColorType;
+    int           fID;
 };
 
 struct GrMockSurfaceInfo {
@@ -107,8 +89,7 @@ struct GrMockSurfaceInfo {
     SkTextureCompressionType fCompressionType = SkTextureCompressionType::kNone;
 };
 
-static constexpr int kSkTextureCompressionTypeCount =
-        static_cast<int>(SkTextureCompressionType::kLast) + 1;
+static constexpr int kSkTextureCompressionTypeCount = static_cast<int>(SkTextureCompressionType::kLast) + 1;
 
 /**
  * A pointer to this type is used as the GrBackendContext when creating a Mock GrContext. It can be
@@ -124,7 +105,6 @@ struct GrMockOptions {
         fConfigOptions[(int)GrColorType::kRGBA_8888].fTexturable = true;
         fConfigOptions[(int)GrColorType::kAlpha_8].fTexturable = true;
         fConfigOptions[(int)GrColorType::kBGR_565].fTexturable = true;
-        fConfigOptions[(int)GrColorType::kRGB_565].fTexturable = true;
 
         fConfigOptions[(int)GrColorType::kBGRA_8888] = fConfigOptions[(int)GrColorType::kRGBA_8888];
 

@@ -382,4 +382,5 @@ constexpr SkPMColor4f SK_PMColor4fILLEGAL = { SK_FloatNegativeInfinity,
                                               SK_FloatNegativeInfinity,
                                               SK_FloatNegativeInfinity,
                                               SK_FloatNegativeInfinity };
-#endif  // SkColorData_DEFINED
+
+#endif

@@ -47,17 +47,16 @@ public:
 
     /** Inlines any eligible functions that are found. Returns true if any changes are made. */
     bool analyze(const std::vector<std::unique_ptr<ProgramElement>>& elements,
-                 SymbolTable* symbols,
+                 std::shared_ptr<SymbolTable> symbols,
                  ProgramUsage* usage);
 
 private:
-    using VariableRewriteMap = skia_private::THashMap<const Variable*, std::unique_ptr<Expression>>;
+    using VariableRewriteMap = SkTHashMap<const Variable*, std::unique_ptr<Expression>>;
 
     const ProgramSettings& settings() const { return fContext->fConfig->fSettings; }
 
     void buildCandidateList(const std::vector<std::unique_ptr<ProgramElement>>& elements,
-                            SymbolTable* symbols,
-                            ProgramUsage* usage,
+                            std::shared_ptr<SymbolTable> symbols, ProgramUsage* usage,
                             InlineCandidateList* candidateList);
 
     std::unique_ptr<Expression> inlineExpression(Position pos,
@@ -80,16 +79,12 @@ private:
     static const Variable* RemapVariable(const Variable* variable,
                                          const VariableRewriteMap* varMap);
 
-    using InlinabilityCache = skia_private::THashMap<const FunctionDeclaration*, bool>;
+    using InlinabilityCache = SkTHashMap<const FunctionDeclaration*, bool>;
     bool candidateCanBeInlined(const InlineCandidate& candidate,
                                const ProgramUsage& usage,
                                InlinabilityCache* cache);
 
-    bool functionCanBeInlined(const FunctionDeclaration& funcDecl,
-                              const ProgramUsage& usage,
-                              InlinabilityCache* cache);
-
-    using FunctionSizeCache = skia_private::THashMap<const FunctionDeclaration*, int>;
+    using FunctionSizeCache = SkTHashMap<const FunctionDeclaration*, int>;
     int getFunctionSize(const FunctionDeclaration& fnDecl, FunctionSizeCache* cache);
 
     /**
@@ -102,7 +97,7 @@ private:
         std::unique_ptr<Expression> fReplacementExpr;
     };
     InlinedCall inlineCall(const FunctionCall&,
-                           SymbolTable*,
+                           std::shared_ptr<SymbolTable>,
                            const ProgramUsage&,
                            const FunctionDeclaration* caller);
 

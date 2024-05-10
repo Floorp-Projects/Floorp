@@ -12,9 +12,6 @@
 #include "include/core/SkString.h"
 #include "include/private/base/SkTArray.h"
 
-#include <cstddef>
-#include <cstdint>
-
 enum SkScalarAsStringType {
     kDec_SkScalarAsStringType,
     kHex_SkScalarAsStringType,
@@ -56,10 +53,9 @@ enum SkStrSplitMode {
 void SkStrSplit(const char* str,
                 const char* delimiters,
                 SkStrSplitMode splitMode,
-                skia_private::TArray<SkString>* out);
+                SkTArray<SkString>* out);
 
-inline void SkStrSplit(
-        const char* str, const char* delimiters, skia_private::TArray<SkString>* out) {
+inline void SkStrSplit(const char* str, const char* delimiters, SkTArray<SkString>* out) {
     SkStrSplit(str, delimiters, kCoalesce_SkStrSplitMode, out);
 }
 

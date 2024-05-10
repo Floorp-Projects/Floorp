@@ -253,33 +253,45 @@ public:
     }
 
 protected:
-    GlyphMetrics generateMetrics(const SkGlyph& glyph, SkArenaAlloc*) override {
-        GlyphMetrics mx(glyph.maskFormat());
-
+    bool generateAdvance(SkGlyph* glyph) override {
         const SkUserTypeface* tf = this->userTF();
-        mx.advance = fMatrix.mapXY(tf->fGlyphRecs[glyph.getGlyphID()].fAdvance, 0);
+        auto advance = fMatrix.mapXY(tf->fGlyphRecs[glyph->getGlyphID()].fAdvance, 0);
 
-        const auto& rec = tf->fGlyphRecs[glyph.getGlyphID()];
-        if (rec.isDrawable()) {
-            mx.maskFormat = SkMask::kARGB32_Format;
-
-            SkRect bounds = fMatrix.mapRect(rec.fBounds);
-            bounds.offset(SkFixedToScalar(glyph.getSubXFixed()),
-                          SkFixedToScalar(glyph.getSubYFixed()));
-            bounds.roundOut(&mx.bounds);
-
-            // These do not have an outline path.
-            mx.neverRequestPath = true;
-        }
-        return mx;
+        glyph->fAdvanceX = advance.fX;
+        glyph->fAdvanceY = advance.fY;
+        return true;
     }
 
-    void generateImage(const SkGlyph& glyph, void* imageBuffer) override {
+    void generateMetrics(SkGlyph* glyph, SkArenaAlloc* alloc) override {
+        glyph->zeroMetrics();
+        this->generateAdvance(glyph);
+
+        const auto& rec = this->userTF()->fGlyphRecs[glyph->getGlyphID()];
+        if (rec.isDrawable()) {
+            glyph->fMaskFormat = SkMask::kARGB32_Format;
+
+            SkRect bounds = fMatrix.mapRect(rec.fBounds);
+            bounds.offset(SkFixedToScalar(glyph->getSubXFixed()),
+                          SkFixedToScalar(glyph->getSubYFixed()));
+
+            SkIRect ibounds;
+            bounds.roundOut(&ibounds);
+            glyph->fLeft   = ibounds.fLeft;
+            glyph->fTop    = ibounds.fTop;
+            glyph->fWidth  = ibounds.width();
+            glyph->fHeight = ibounds.height();
+
+            // These do not have an outline path.
+            glyph->setPath(alloc, nullptr, false);
+        }
+    }
+
+    void generateImage(const SkGlyph& glyph) override {
         const auto& rec = this->userTF()->fGlyphRecs[glyph.getGlyphID()];
         SkASSERTF(rec.isDrawable(), "Only drawable-backed glyphs should reach generateImage.");
 
-        auto canvas = SkCanvas::MakeRasterDirectN32(glyph.width(), glyph.height(),
-                                                    static_cast<SkPMColor*>(imageBuffer),
+        auto canvas = SkCanvas::MakeRasterDirectN32(glyph.fWidth, glyph.fHeight,
+                                                    static_cast<SkPMColor*>(glyph.fImage),
                                                     glyph.rowBytes());
         if constexpr (kSkShowTextBlitCoverage) {
             canvas->clear(0x33FF0000);
@@ -287,7 +299,7 @@ protected:
             canvas->clear(SK_ColorTRANSPARENT);
         }
 
-        canvas->translate(-glyph.left(), -glyph.top());
+        canvas->translate(-glyph.fLeft, -glyph.fTop);
         canvas->translate(SkFixedToScalar(glyph.getSubXFixed()),
                           SkFixedToScalar(glyph.getSubYFixed()));
         canvas->drawDrawable(rec.fDrawable.get(), &fMatrix);

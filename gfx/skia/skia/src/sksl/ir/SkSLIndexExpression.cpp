@@ -8,19 +8,19 @@
 #include "src/sksl/ir/SkSLIndexExpression.h"
 
 #include "include/core/SkTypes.h"
+#include "include/private/SkSLDefines.h"
 #include "include/private/base/SkTArray.h"
+#include "include/sksl/SkSLErrorReporter.h"
+#include "include/sksl/SkSLOperator.h"
 #include "src/sksl/SkSLAnalysis.h"
 #include "src/sksl/SkSLBuiltinTypes.h"
 #include "src/sksl/SkSLConstantFolder.h"
 #include "src/sksl/SkSLContext.h"
-#include "src/sksl/SkSLDefines.h"
-#include "src/sksl/SkSLErrorReporter.h"
-#include "src/sksl/SkSLOperator.h"
 #include "src/sksl/ir/SkSLConstructorArray.h"
 #include "src/sksl/ir/SkSLConstructorCompound.h"
 #include "src/sksl/ir/SkSLLiteral.h"
 #include "src/sksl/ir/SkSLSwizzle.h"
-#include "src/sksl/ir/SkSLSymbolTable.h"  // IWYU pragma: keep
+#include "src/sksl/ir/SkSLSymbolTable.h"
 #include "src/sksl/ir/SkSLType.h"
 #include "src/sksl/ir/SkSLTypeReference.h"
 
@@ -39,7 +39,7 @@ static bool index_out_of_range(const Context& context, Position pos, SKSL_INT in
         }
     }
     context.fErrors->error(pos, "index " + std::to_string(index) + " out of range for '" +
-                                base.type().displayName() + "'");
+            base.type().displayName() + "'");
     return true;
 }
 
@@ -65,6 +65,7 @@ const Type& IndexExpression::IndexType(const Context& context, const Type& type)
 }
 
 std::unique_ptr<Expression> IndexExpression::Convert(const Context& context,
+                                                     SymbolTable& symbolTable,
                                                      Position pos,
                                                      std::unique_ptr<Expression> base,
                                                      std::unique_ptr<Expression> index) {
@@ -75,10 +76,8 @@ std::unique_ptr<Expression> IndexExpression::Convert(const Context& context,
         if (!arraySize) {
             return nullptr;
         }
-        return TypeReference::Convert(
-                context,
-                pos,
-                context.fSymbolTable->addArrayDimension(context, &baseType, arraySize));
+        return TypeReference::Convert(context, pos,
+                                      symbolTable.addArrayDimension(&baseType, arraySize));
     }
     // Convert an index expression with an expression inside of it: `arr[a * 3]`.
     const Type& baseType = base->type();
@@ -144,23 +143,25 @@ std::unique_ptr<Expression> IndexExpression::Make(const Context& context,
                 // we're not obligated to simplify anything.
                 const Expression* baseExpr = ConstantFolder::GetConstantValueForVariable(*base);
                 int vecWidth = baseType.rows();
-                const Type& vecType = baseType.columnType(context);
+                const Type& scalarType = baseType.componentType();
+                const Type& vecType = scalarType.toCompound(context, vecWidth, /*rows=*/1);
                 indexValue *= vecWidth;
 
-                double ctorArgs[4];
-                bool allConstant = true;
+                ExpressionArray ctorArgs;
+                ctorArgs.reserve_back(vecWidth);
                 for (int slot = 0; slot < vecWidth; ++slot) {
                     std::optional<double> slotVal = baseExpr->getConstantValue(indexValue + slot);
                     if (slotVal.has_value()) {
-                        ctorArgs[slot] = *slotVal;
+                        ctorArgs.push_back(Literal::Make(baseExpr->fPosition, *slotVal,
+                                &scalarType));
                     } else {
-                        allConstant = false;
+                        ctorArgs.clear();
                         break;
                     }
                 }
 
-                if (allConstant) {
-                    return ConstructorCompound::MakeFromConstants(context, pos, vecType, ctorArgs);
+                if (!ctorArgs.empty()) {
+                    return ConstructorCompound::Make(context, pos, vecType, std::move(ctorArgs));
                 }
             }
         }
@@ -171,7 +172,7 @@ std::unique_ptr<Expression> IndexExpression::Make(const Context& context,
 
 std::string IndexExpression::description(OperatorPrecedence) const {
     return this->base()->description(OperatorPrecedence::kPostfix) + "[" +
-           this->index()->description(OperatorPrecedence::kExpression) + "]";
+           this->index()->description(OperatorPrecedence::kTopLevel) + "]";
 }
 
 }  // namespace SkSL

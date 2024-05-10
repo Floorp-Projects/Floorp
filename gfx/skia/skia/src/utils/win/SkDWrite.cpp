@@ -28,16 +28,9 @@ static void release_dwrite_factory() {
 }
 
 static void create_dwrite_factory(IDWriteFactory** factory) {
-    using DWriteCreateFactoryProc = decltype(DWriteCreateFactory)*;
-    DWriteCreateFactoryProc dWriteCreateFactoryProc;
-
-    dWriteCreateFactoryProc = reinterpret_cast<DWriteCreateFactoryProc>(
-        GetProcAddress(LoadLibraryW(L"DWriteCore.dll"), "DWriteCoreCreateFactory"));
-
-    if (!dWriteCreateFactoryProc) {
-        dWriteCreateFactoryProc = reinterpret_cast<DWriteCreateFactoryProc>(
-            GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory"));
-    }
+    typedef decltype(DWriteCreateFactory)* DWriteCreateFactoryProc;
+    DWriteCreateFactoryProc dWriteCreateFactoryProc = reinterpret_cast<DWriteCreateFactoryProc>(
+        GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory"));
 
     if (!dWriteCreateFactoryProc) {
         HRESULT hr = HRESULT_FROM_WIN32(GetLastError());

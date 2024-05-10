@@ -8,17 +8,14 @@
 #ifndef SkMultiPictureDocumentPriv_DEFINED
 #define SkMultiPictureDocumentPriv_DEFINED
 
-#include "include/docs/SkMultiPictureDocument.h"
+#include "src/utils/SkMultiPictureDocument.h"
 
-namespace SkMultiPictureDocument {
 /**
  *  Additional API allows one to read the array of page-sizes without parsing
  *  the entire file.  Used by DM.
  */
-bool ReadPageSizes(SkStreamSeekable* src,
-                   SkDocumentPage* dstArray,
-                   int dstArrayCount);
-
-}  // namespace SkMultiPictureDocument
+bool SkMultiPictureDocumentReadPageSizes(SkStreamSeekable* src,
+                                         SkDocumentPage* dstArray,
+                                         int dstArrayCount);
 
 #endif  // SkMultiPictureDocumentPriv_DEFINED

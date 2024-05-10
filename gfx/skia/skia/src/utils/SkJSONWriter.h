@@ -412,8 +412,8 @@ private:
     SkWStream* fStream;
     Mode fMode;
     State fState;
-    skia_private::STArray<16, Scope, true> fScopeStack;
-    skia_private::STArray<16, bool, true> fNewlineStack;
+    SkSTArray<16, Scope, true> fScopeStack;
+    SkSTArray<16, bool, true> fNewlineStack;
 };
 
 #endif

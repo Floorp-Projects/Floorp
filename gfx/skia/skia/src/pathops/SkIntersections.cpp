@@ -7,7 +7,7 @@
 
 #include "src/pathops/SkIntersections.h"
 
-#include <cstring>
+#include <string>
 
 int SkIntersections::closestTo(double rangeStart, double rangeEnd, const SkDPoint& testPt,
         double* closestDist) const {

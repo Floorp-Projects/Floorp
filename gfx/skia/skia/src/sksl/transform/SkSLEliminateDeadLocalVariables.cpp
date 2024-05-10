@@ -7,6 +7,8 @@
 
 #include "include/core/SkSpan.h"
 #include "include/core/SkTypes.h"
+#include "include/private/SkSLProgramElement.h"
+#include "include/private/SkSLStatement.h"
 #include "src/core/SkTHash.h"
 #include "src/sksl/SkSLAnalysis.h"
 #include "src/sksl/SkSLCompiler.h"
@@ -18,8 +20,6 @@
 #include "src/sksl/ir/SkSLFunctionDefinition.h"
 #include "src/sksl/ir/SkSLNop.h"
 #include "src/sksl/ir/SkSLProgram.h"
-#include "src/sksl/ir/SkSLProgramElement.h"
-#include "src/sksl/ir/SkSLStatement.h"
 #include "src/sksl/ir/SkSLVarDeclarations.h"
 #include "src/sksl/ir/SkSLVariable.h"
 #include "src/sksl/ir/SkSLVariableReference.h"
@@ -29,8 +29,6 @@
 #include <memory>
 #include <utility>
 #include <vector>
-
-using namespace skia_private;
 
 namespace SkSL {
 
@@ -54,9 +52,8 @@ static bool eliminate_dead_local_variables(const Context& context,
                 if (VariableReference* assignedVar = binary.isAssignmentIntoVariable()) {
                     if (fDeadVariables.contains(assignedVar->variable())) {
                         // Replace `deadVar = anyExpression` with `anyExpression`.
-                        fUsage->remove(expr.get());
+                        fUsage->remove(binary.left().get());
                         expr = std::move(binary.right());
-                        fUsage->add(expr.get());
 
                         // If `anyExpression` is now a lone ExpressionStatement, it's highly likely
                         // that we can eliminate it entirely. This flag will let us know to check.
@@ -131,7 +128,7 @@ static bool eliminate_dead_local_variables(const Context& context,
         bool fMadeChanges = false;
         const Context& fContext;
         ProgramUsage* fUsage;
-        THashSet<const Variable*> fDeadVariables;
+        SkTHashSet<const Variable*> fDeadVariables;
         bool fAssignmentWasEliminated = false;
 
         using INHERITED = ProgramWriter;

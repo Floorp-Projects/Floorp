@@ -32,7 +32,6 @@ class SkRRect;
 class SkWStream;
 enum class SkPathConvexity;
 enum class SkPathFirstDirection;
-struct SkPathVerbAnalysis;
 
 // WIP -- define this locally, and fix call-sites to use SkPathBuilder (skbug.com/9000)
 //#define SK_HIDE_PATH_EDIT_METHODS
@@ -330,10 +329,10 @@ public:
 
     /** Specifies whether SkPath is volatile; whether it will be altered or discarded
         by the caller after it is drawn. SkPath by default have volatile set false, allowing
-        Skia to attach a cache of data which speeds repeated drawing.
+        SkBaseDevice to attach a cache of data which speeds repeated drawing.
 
         Mark temporary paths, discarded or modified after use, as volatile
-        to inform Skia that the path need not be cached.
+        to inform SkBaseDevice that the path need not be cached.
 
         Mark animating SkPath volatile to improve performance.
         Mark unchanging SkPath non-volatile to improve repeated rendering.
@@ -537,17 +536,15 @@ public:
     */
     bool conservativelyContainsRect(const SkRect& rect) const;
 
-    /** Grows SkPath verb array, SkPoint array, and conics to contain additional space.
+    /** Grows SkPath verb array and SkPoint array to contain extraPtCount additional SkPoint.
         May improve performance and use less memory by
         reducing the number and size of allocations when creating SkPath.
 
         @param extraPtCount  number of additional SkPoint to allocate
-        @param extraVerbCount  number of additional verbs
-        @param extraConicCount  number of additional conics
 
         example: https://fiddle.skia.org/c/@Path_incReserve
     */
-    void incReserve(int extraPtCount, int extraVerbCount = 0, int extraConicCount = 0);
+    void incReserve(int extraPtCount);
 
 #ifdef SK_HIDE_PATH_EDIT_METHODS
 private:
@@ -1250,16 +1247,8 @@ public:
         the last contour or start a new contour.
     */
     enum AddPathMode {
-        /** Contours are appended to the destination path as new contours.
-        */
-        kAppend_AddPathMode,
-        /** Extends the last contour of the destination path with the first countour
-            of the source path, connecting them with a line.  If the last contour is
-            closed, a new empty contour starting at its start point is extended instead.
-            If the destination path is empty, the result is the source path.
-            The last path of the result is closed only if the last path of the source is.
-        */
-        kExtend_AddPathMode,
+        kAppend_AddPathMode, //!< appended to destination unaltered
+        kExtend_AddPathMode, //!< add line if prior contour is not closed
     };
 
     /** Appends src to SkPath, offset by (dx, dy).
@@ -1792,6 +1781,7 @@ private:
 
     /** Resets all fields other than fPathRef to their initial 'empty' values.
      *  Assumes the caller has already emptied fPathRef.
+     *  On Android increments fGenerationID without reseting it.
      */
     void resetFields();
 
@@ -1883,16 +1873,6 @@ private:
      *        this path should be discarded after calling shrinkToFit().
      */
     void shrinkToFit();
-
-    // Creates a new Path after the supplied arguments have been validated by
-    // sk_path_analyze_verbs().
-    static SkPath MakeInternal(const SkPathVerbAnalysis& analsis,
-                               const SkPoint points[],
-                               const uint8_t verbs[],
-                               int verbCount,
-                               const SkScalar conics[],
-                               SkPathFillType fillType,
-                               bool isVolatile);
 
     friend class SkAutoPathBoundsUpdate;
     friend class SkAutoDisableOvalCheck;

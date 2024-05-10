@@ -325,11 +325,14 @@ enum SkRotationDirection {
 struct SkConic {
     SkConic() {}
     SkConic(const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w) {
-        this->set(p0, p1, p2, w);
+        fPts[0] = p0;
+        fPts[1] = p1;
+        fPts[2] = p2;
+        fW = w;
     }
-
     SkConic(const SkPoint pts[3], SkScalar w) {
-        this->set(pts, w);
+        memcpy(fPts, pts, sizeof(fPts));
+        fW = w;
     }
 
     SkPoint  fPts[3];
@@ -337,23 +340,14 @@ struct SkConic {
 
     void set(const SkPoint pts[3], SkScalar w) {
         memcpy(fPts, pts, 3 * sizeof(SkPoint));
-        this->setW(w);
+        fW = w;
     }
 
     void set(const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w) {
         fPts[0] = p0;
         fPts[1] = p1;
         fPts[2] = p2;
-        this->setW(w);
-    }
-
-    void setW(SkScalar w) {
-        if (SkScalarIsFinite(w)) {
-            SkASSERT(w > 0);
-        }
-
-        // Guard against bad weights by forcing them to 1.
-        fW = w > 0 && SkScalarIsFinite(w) ? w : 1;
+        fW = w;
     }
 
     /**
@@ -364,7 +358,7 @@ struct SkConic {
      *  be used.
      */
     void evalAt(SkScalar t, SkPoint* pos, SkVector* tangent = nullptr) const;
-    [[nodiscard]] bool chopAt(SkScalar t, SkConic dst[2]) const;
+    bool SK_WARN_UNUSED_RESULT chopAt(SkScalar t, SkConic dst[2]) const;
     void chopAt(SkScalar t1, SkScalar t2, SkConic* dst) const;
     void chop(SkConic dst[2]) const;
 
@@ -384,7 +378,7 @@ struct SkConic {
      *  Chop this conic into N quads, stored continguously in pts[], where
      *  N = 1 << pow2. The amount of storage needed is (1 + 2 * N)
      */
-    [[nodiscard]] int SK_SPI chopIntoQuadsPOW2(SkPoint pts[], int pow2) const;
+    int SK_SPI SK_WARN_UNUSED_RESULT chopIntoQuadsPOW2(SkPoint pts[], int pow2) const;
 
     float findMidTangent() const;
     bool findXExtrema(SkScalar* t) const;

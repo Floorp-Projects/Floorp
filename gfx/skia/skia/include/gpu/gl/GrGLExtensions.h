@@ -72,7 +72,7 @@ public:
 
 private:
     bool fInitialized = false;
-    skia_private::TArray<SkString> fStrings;
+    SkTArray<SkString> fStrings;
 };
 
 #endif

@@ -12,6 +12,7 @@
 #include "include/core/SkImage.h"
 #include "include/core/SkPixelRef.h"
 #include "include/core/SkRefCnt.h"
+#include "include/core/SkSamplingOptions.h"
 #include "include/core/SkTypes.h"
 #include "include/private/base/SkTo.h"
 #include "src/core/SkImagePriv.h"
@@ -20,18 +21,40 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
+#include <tuple>
 #include <utility>
 
 class GrDirectContext;
+class GrFragmentProcessor;
 class GrRecordingContext;
+class GrSurfaceProxyView;
 class SkColorSpace;
 class SkData;
+class SkMatrix;
 class SkPixmap;
 enum SkColorType : int;
+enum class GrColorType;
+enum class GrImageTexGenPolicy : int;
+enum class SkTileMode;
 struct SkIRect;
 struct SkImageInfo;
+struct SkRect;
 
-namespace skgpu { namespace graphite { class Recorder; } }
+#if defined(SK_GANESH)
+#include "include/gpu/GrTypes.h"
+#endif
+
+#if defined(SK_GRAPHITE)
+#include "include/gpu/graphite/GraphiteTypes.h"
+#include "include/gpu/graphite/Recorder.h"
+#include "src/gpu/graphite/Buffer.h"
+#include "src/gpu/graphite/Caps.h"
+#include "src/gpu/graphite/CommandBuffer.h"
+#include "src/gpu/graphite/RecorderPriv.h"
+#include "src/gpu/graphite/TextureUtils.h"
+#include "src/gpu/graphite/UploadTask.h"
+#endif
 
 class SkImage_Raster : public SkImage_Base {
 public:
@@ -40,20 +63,18 @@ public:
     SkImage_Raster(const SkBitmap& bm, bool bitmapMayBeMutable = false);
     ~SkImage_Raster() override;
 
-    // From SkImage.h
-    bool isValid(GrRecordingContext* context) const override { return true; }
-
-    // From SkImage_Base.h
     bool onReadPixels(GrDirectContext*, const SkImageInfo&, void*, size_t, int srcX, int srcY,
                       CachingHint) const override;
     bool onPeekPixels(SkPixmap*) const override;
     const SkBitmap* onPeekBitmap() const override { return &fBitmap; }
 
     bool getROPixels(GrDirectContext*, SkBitmap*, CachingHint) const override;
-    sk_sp<SkImage> onMakeSubset(GrDirectContext*, const SkIRect&) const override;
-    sk_sp<SkImage> onMakeSubset(skgpu::graphite::Recorder*,
-                                const SkIRect&,
-                                RequiredProperties) const override;
+    sk_sp<SkImage> onMakeSubset(const SkIRect&, GrDirectContext*) const override;
+#if defined(SK_GRAPHITE)
+    sk_sp<SkImage> onMakeSubset(const SkIRect&,
+                                skgpu::graphite::Recorder*,
+                                RequiredImageProperties) const override;
+#endif
 
     SkPixelRef* getPixelRef() const { return fBitmap.pixelRef(); }
 
@@ -64,6 +85,7 @@ public:
 
     sk_sp<SkImage> onReinterpretColorSpace(sk_sp<SkColorSpace>) const override;
 
+    bool onIsValid(GrRecordingContext* context) const override { return true; }
     void notifyAddedToRasterCache() const override {
         // We explicitly DON'T want to call INHERITED::notifyAddedToRasterCache. That ties the
         // lifetime of derived/cached resources to the image. In this case, we only want cached
@@ -72,8 +94,9 @@ public:
         fBitmap.pixelRef()->notifyAddedToCache();
     }
 
+    SkImage_Base::Type type() const override { return SkImage_Base::Type::kRaster; }
+
     bool onHasMipmaps() const override { return SkToBool(fBitmap.fMips); }
-    bool onIsProtected() const override { return false; }
 
     SkMipmap* onPeekMips() const override { return fBitmap.fMips.get(); }
 
@@ -94,14 +117,31 @@ public:
         return img;
     }
 
-    SkImage_Base::Type type() const override { return SkImage_Base::Type::kRaster; }
-
-    SkBitmap bitmap() const { return fBitmap; }
+protected:
+    SkBitmap fBitmap;
 
 private:
-    SkBitmap fBitmap;
-};
+#if defined(SK_GANESH)
+    std::tuple<GrSurfaceProxyView, GrColorType> onAsView(GrRecordingContext*,
+                                                         GrMipmapped,
+                                                         GrImageTexGenPolicy) const override;
 
-sk_sp<SkImage> MakeRasterCopyPriv(const SkPixmap& pmap, uint32_t id);
+    std::unique_ptr<GrFragmentProcessor> onAsFragmentProcessor(GrRecordingContext*,
+                                                               SkSamplingOptions,
+                                                               const SkTileMode[2],
+                                                               const SkMatrix&,
+                                                               const SkRect*,
+                                                               const SkRect*) const override;
+#endif
+#if defined(SK_GRAPHITE)
+    sk_sp<SkImage> onMakeTextureImage(skgpu::graphite::Recorder*,
+                                      RequiredImageProperties) const override;
+    sk_sp<SkImage> onMakeColorTypeAndColorSpace(SkColorType targetCT,
+                                                sk_sp<SkColorSpace> targetCS,
+                                                skgpu::graphite::Recorder*,
+                                                RequiredImageProperties) const override;
+#endif
+
+};
 
 #endif // SkImage_Raster_DEFINED

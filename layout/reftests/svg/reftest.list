@@ -292,7 +292,7 @@ fuzzy(0-65,0-570) == marker-orientation-01.svg marker-orientation-01-ref.svg
 fuzzy(0-65,0-570) == marker-orientation-02.svg marker-orientation-02-ref.svg
 == marker-orientation-03.svg pass.svg
 == marker-orientation-04.svg pass.svg
-fuzzy(0-1,0-2) == marker-orientation-05.svg pass.svg
+== marker-orientation-05.svg pass.svg
 
 fuzzy(0-28,0-28) == mask-and-clipPath.html mask-and-clipPath-ref.html
 == mask-and-clipPath-2.svg pass.svg
@@ -510,8 +510,8 @@ fuzzy(0-2,0-1000) == text-scale-02.svg text-scale-02-ref.svg
 == text-style-01e.svg text-style-01-ref.svg
 
 == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
-fuzzy(0-16,0-11) == text-stroke-scaling-02a.html text-stroke-scaling-02-ref.html # antialiasing
-fuzzy(0-16,0-11) == text-stroke-scaling-02b.html text-stroke-scaling-02-ref.html # antialiasing
+fuzzy(0-16,0-3) == text-stroke-scaling-02a.html text-stroke-scaling-02-ref.html # antialiasing
+fuzzy(0-16,0-3) == text-stroke-scaling-02b.html text-stroke-scaling-02-ref.html # antialiasing
 == text-stroke-scaling-02a.html text-stroke-scaling-02b.html
 == textPath-01.svg textPath-01-ref.svg
 == textPath-02.svg pass.svg

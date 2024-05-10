@@ -5,10 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkSpan.h"
 #include "include/core/SkTypes.h"
+#include "include/private/SkSLModifiers.h"
+#include "include/private/SkSLProgramElement.h"
+#include "include/private/SkSLStatement.h"
 #include "include/private/base/SkDebug.h"
-#include "src/base/SkEnumBitMask.h"
 #include "src/core/SkTHash.h"
 #include "src/sksl/SkSLAnalysis.h"
 #include "src/sksl/SkSLCompiler.h"
@@ -19,12 +20,6 @@
 #include "src/sksl/ir/SkSLFunctionDeclaration.h"
 #include "src/sksl/ir/SkSLFunctionDefinition.h"
 #include "src/sksl/ir/SkSLInterfaceBlock.h"
-#include "src/sksl/ir/SkSLModifierFlags.h"
-#include "src/sksl/ir/SkSLProgramElement.h"
-#include "src/sksl/ir/SkSLStatement.h"
-#include "src/sksl/ir/SkSLStructDefinition.h"
-#include "src/sksl/ir/SkSLSymbol.h"
-#include "src/sksl/ir/SkSLType.h"
 #include "src/sksl/ir/SkSLVarDeclarations.h"
 #include "src/sksl/ir/SkSLVariable.h"
 #include "src/sksl/ir/SkSLVariableReference.h"
@@ -50,20 +45,11 @@ public:
                 // Ensure function-parameter variables exist in the variable usage map. They aren't
                 // otherwise declared, but ProgramUsage::get() should be able to find them, even if
                 // they are unread and unwritten.
-                ProgramUsage::VariableCounts& counts = fUsage->fVariableCounts[param];
-                counts.fVarExists += fDelta;
-
-                this->visitType(param->type());
+                fUsage->fVariableCounts[param];
             }
         } else if (pe.is<InterfaceBlock>()) {
             // Ensure interface-block variables exist in the variable usage map.
-            const Variable* var = pe.as<InterfaceBlock>().var();
-            fUsage->fVariableCounts[var];
-
-            this->visitType(var->type());
-        } else if (pe.is<StructDefinition>()) {
-            // Ensure that structs referenced as nested types in other structs are counted as used.
-            this->visitStructFields(pe.as<StructDefinition>().type());
+            fUsage->fVariableCounts[pe.as<InterfaceBlock>().var()];
         }
         return INHERITED::visitProgramElement(pe);
     }
@@ -72,21 +58,18 @@ public:
         if (s.is<VarDeclaration>()) {
             // Add all declared variables to the usage map (even if never otherwise accessed).
             const VarDeclaration& vd = s.as<VarDeclaration>();
-            const Variable* var = vd.var();
-            ProgramUsage::VariableCounts& counts = fUsage->fVariableCounts[var];
+            ProgramUsage::VariableCounts& counts = fUsage->fVariableCounts[vd.var()];
             counts.fVarExists += fDelta;
             SkASSERT(counts.fVarExists >= 0 && counts.fVarExists <= 1);
             if (vd.value()) {
                 // The initial-value expression, when present, counts as a write.
                 counts.fWrite += fDelta;
             }
-            this->visitType(var->type());
         }
         return INHERITED::visitStatement(s);
     }
 
     bool visitExpression(const Expression& e) override {
-        this->visitType(e.type());
         if (e.is<FunctionCall>()) {
             const FunctionDeclaration* f = &e.as<FunctionCall>().function();
             fUsage->fCallCounts[f] += fDelta;
@@ -110,26 +93,6 @@ public:
             SkASSERT(counts.fRead >= 0 && counts.fWrite >= 0);
         }
         return INHERITED::visitExpression(e);
-    }
-
-    void visitType(const Type& t) {
-        if (t.isArray()) {
-            this->visitType(t.componentType());
-            return;
-        }
-        if (t.isStruct()) {
-            int& structCount = fUsage->fStructCounts[&t];
-            structCount += fDelta;
-            SkASSERT(structCount >= 0);
-
-            this->visitStructFields(t);
-        }
-    }
-
-    void visitStructFields(const Type& t) {
-        for (const Field& f : t.fields()) {
-            this->visitType(*f.fType);
-        }
     }
 
     using ProgramVisitor::visitProgramElement;
@@ -168,14 +131,11 @@ ProgramUsage::VariableCounts ProgramUsage::get(const Variable& v) const {
 }
 
 bool ProgramUsage::isDead(const Variable& v) const {
-    ModifierFlags flags = v.modifierFlags();
+    const Modifiers& modifiers = v.modifiers();
     VariableCounts counts = this->get(v);
-    if (flags & (ModifierFlag::kIn | ModifierFlag::kOut | ModifierFlag::kUniform)) {
-        // Never eliminate ins, outs, or uniforms.
-        return false;
-    }
-    if (v.type().componentType().isOpaque()) {
-        // Never eliminate samplers, runtime-effect children, or atomics.
+    if ((v.storage() != Variable::Storage::kLocal && counts.fRead) ||
+        (modifiers.fFlags &
+         (Modifiers::kIn_Flag | Modifiers::kOut_Flag | Modifiers::kUniform_Flag))) {
         return false;
     }
     // Consider the variable dead if it's never read and never written (besides the initial-value).
@@ -255,24 +215,6 @@ static bool contains_matching_data(const ProgramUsage& a, const ProgramUsage& b)
                          (int)callA->name().size(), callA->name().data(),
                          callCountA,
                          callCountB ? *callCountB : 0);
-            }
-            return false;
-        }
-    }
-
-    for (const auto& [structA, structCountA] : a.fStructCounts) {
-        // Skip struct entries with zero reported usage.
-        if (!structCountA) {
-            continue;
-        }
-        // Find the matching struct in the other map and ensure that its usage-count matches.
-        const int* structCountB = b.fStructCounts.find(structA);
-        if (!structCountB || structCountA != *structCountB) {
-            if constexpr (kReportMismatch) {
-                SkDebugf("StructCounts mismatch: '%.*s' (%d != %d)\n",
-                         (int)structA->name().size(), structA->name().data(),
-                         structCountA,
-                         structCountB ? *structCountB : 0);
             }
             return false;
         }

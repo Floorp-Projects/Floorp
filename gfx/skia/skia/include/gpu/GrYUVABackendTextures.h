@@ -28,12 +28,12 @@ public:
      * planes indicated by the SkYUVAInfo. The texture dimensions are taken from the SkYUVAInfo's
      * plane dimensions. All the described textures share a common origin. The planar image this
      * describes will be mip mapped if all the textures are individually mip mapped as indicated
-     * by skgpu::Mipmapped. This will produce an invalid result (return false from isValid()) if the
+     * by GrMipmapped. This will produce an invalid result (return false from isValid()) if the
      * passed formats' channels don't agree with SkYUVAInfo.
      */
     GrYUVABackendTextureInfo(const SkYUVAInfo&,
                              const GrBackendFormat[kMaxPlanes],
-                             skgpu::Mipmapped,
+                             GrMipmapped,
                              GrSurfaceOrigin);
 
     GrYUVABackendTextureInfo(const GrYUVABackendTextureInfo&) = default;
@@ -47,7 +47,7 @@ public:
 
     SkYUVColorSpace yuvColorSpace() const { return fYUVAInfo.yuvColorSpace(); }
 
-    skgpu::Mipmapped mipmapped() const { return fMipmapped; }
+    GrMipmapped mipmapped() const { return fMipmapped; }
 
     GrSurfaceOrigin textureOrigin() const { return fTextureOrigin; }
 
@@ -72,7 +72,7 @@ public:
 private:
     SkYUVAInfo fYUVAInfo;
     GrBackendFormat fPlaneFormats[kMaxPlanes];
-    skgpu::Mipmapped fMipmapped = skgpu::Mipmapped::kNo;
+    GrMipmapped fMipmapped = GrMipmapped::kNo;
     GrSurfaceOrigin fTextureOrigin = kTopLeft_GrSurfaceOrigin;
 };
 

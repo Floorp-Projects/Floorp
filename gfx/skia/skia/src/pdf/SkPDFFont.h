@@ -49,8 +49,7 @@ public:
 
     static bool IsMultiByte(SkAdvancedTypefaceMetrics::FontType type) {
         return type == SkAdvancedTypefaceMetrics::kType1CID_Font ||
-               type == SkAdvancedTypefaceMetrics::kTrueType_Font ||
-               type == SkAdvancedTypefaceMetrics::kCFF_Font;
+               type == SkAdvancedTypefaceMetrics::kTrueType_Font;
     }
 
     /** Returns true if this font encoding supports glyph IDs above 255.

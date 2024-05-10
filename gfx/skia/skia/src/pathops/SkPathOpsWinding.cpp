@@ -43,8 +43,6 @@
 #include <cmath>
 #include <utility>
 
-using namespace skia_private;
-
 enum class SkOpRayDir {
     kLeft,
     kTop,
@@ -275,7 +273,7 @@ bool SkOpSpan::sortableTop(SkOpContour* contourHead) {
         contour->rayCheck(hitBase, dir, &hitHead, &allocator);
     } while ((contour = contour->next()));
     // sort hits
-    STArray<1, SkOpRayHit*> sorted;
+    SkSTArray<1, SkOpRayHit*> sorted;
     SkOpRayHit* hit = hitHead;
     while (hit) {
         sorted.push_back(hit);

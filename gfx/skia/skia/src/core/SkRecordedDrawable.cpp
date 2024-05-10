@@ -5,20 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkRecordedDrawable.h"
-
-#include "include/core/SkPicture.h"
+#include "include/core/SkMatrix.h"
 #include "include/core/SkPictureRecorder.h"
-#include "include/core/SkSize.h"
-#include "src/core/SkBigPicture.h"
 #include "src/core/SkPictureData.h"
 #include "src/core/SkPicturePlayback.h"
 #include "src/core/SkPictureRecord.h"
-#include "src/core/SkReadBuffer.h"
 #include "src/core/SkRecordDraw.h"
-#include "src/core/SkWriteBuffer.h"
+#include "src/core/SkRecordedDrawable.h"
 
-class SkCanvas;
+#if defined(SK_GANESH)
+#include "include/private/chromium/Slug.h"
+#endif
 
 size_t SkRecordedDrawable::onApproximateBytesUsed() {
     size_t drawablesSize = 0;
@@ -43,7 +40,7 @@ void SkRecordedDrawable::onDraw(SkCanvas* canvas) {
     SkRecordDraw(*fRecord, canvas, nullptr, drawables, drawableCount, fBBH.get(), nullptr);
 }
 
-sk_sp<SkPicture> SkRecordedDrawable::onMakePictureSnapshot() {
+SkPicture* SkRecordedDrawable::onNewPictureSnapshot() {
     // TODO: should we plumb-down the BBHFactory and recordFlags from our host
     //       PictureRecorder?
     std::unique_ptr<SkBigPicture::SnapshotArray> pictList{
@@ -54,7 +51,7 @@ sk_sp<SkPicture> SkRecordedDrawable::onMakePictureSnapshot() {
     for (int i = 0; pictList && i < pictList->count(); i++) {
         subPictureBytes += pictList->begin()[i]->approximateBytesUsed();
     }
-    return sk_make_sp<SkBigPicture>(fBounds, fRecord, std::move(pictList), fBBH, subPictureBytes);
+    return new SkBigPicture(fBounds, fRecord, std::move(pictList), fBBH, subPictureBytes);
 }
 
 void SkRecordedDrawable::flatten(SkWriteBuffer& buffer) const {

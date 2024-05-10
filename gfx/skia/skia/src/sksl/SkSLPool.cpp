@@ -5,11 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkTypes.h"
-#include "src/sksl/SkSLMemoryPool.h"
 #include "src/sksl/SkSLPool.h"
 
-#define SkVLOG(...) // SkDEBUGF(__VA_ARGS__)
+#include "include/core/SkTypes.h"
+
+#if defined(SK_GANESH)
+// With GPU support, SkSL::MemoryPool is really GrMemoryPool
+#include "src/gpu/ganesh/GrMemoryPool.h"
+#endif
+
+#define VLOG(...) // printf(__VA_ARGS__)
 
 namespace SkSL {
 
@@ -23,21 +28,22 @@ static void set_thread_local_memory_pool(MemoryPool* memPool) {
     sMemPool = memPool;
 }
 
-Pool::Pool() = default;
-
 Pool::~Pool() {
     if (get_thread_local_memory_pool() == fMemPool.get()) {
         SkDEBUGFAIL("SkSL pool is being destroyed while it is still attached to the thread");
         set_thread_local_memory_pool(nullptr);
     }
 
-    SkVLOG("DELETE Pool:0x%016llX\n", (uint64_t)fMemPool.get());
+    fMemPool->reportLeaks();
+    SkASSERT(fMemPool->isEmpty());
+
+    VLOG("DELETE Pool:0x%016llX\n", (uint64_t)fMemPool.get());
 }
 
 std::unique_ptr<Pool> Pool::Create() {
     auto pool = std::unique_ptr<Pool>(new Pool);
-    pool->fMemPool = MemoryPool::Make();
-    SkVLOG("CREATE Pool:0x%016llX\n", (uint64_t)pool->fMemPool.get());
+    pool->fMemPool = MemoryPool::Make(/*preallocSize=*/65536, /*minAllocSize=*/32768);
+    VLOG("CREATE Pool:0x%016llX\n", (uint64_t)pool->fMemPool.get());
     return pool;
 }
 
@@ -46,14 +52,16 @@ bool Pool::IsAttached() {
 }
 
 void Pool::attachToThread() {
-    SkVLOG("ATTACH Pool:0x%016llX\n", (uint64_t)fMemPool.get());
+    VLOG("ATTACH Pool:0x%016llX\n", (uint64_t)fMemPool.get());
     SkASSERT(get_thread_local_memory_pool() == nullptr);
     set_thread_local_memory_pool(fMemPool.get());
 }
 
 void Pool::detachFromThread() {
-    SkVLOG("DETACH Pool:0x%016llX\n", (uint64_t)memPool);
-    SkASSERT(get_thread_local_memory_pool() == fMemPool.get());
+    MemoryPool* memPool = get_thread_local_memory_pool();
+    VLOG("DETACH Pool:0x%016llX\n", (uint64_t)memPool);
+    SkASSERT(memPool == fMemPool.get());
+    memPool->resetScratchSpace();
     set_thread_local_memory_pool(nullptr);
 }
 
@@ -62,13 +70,13 @@ void* Pool::AllocMemory(size_t size) {
     MemoryPool* memPool = get_thread_local_memory_pool();
     if (memPool) {
         void* ptr = memPool->allocate(size);
-        SkVLOG("ALLOC  Pool:0x%016llX  0x%016llX\n", (uint64_t)memPool, (uint64_t)ptr);
+        VLOG("ALLOC  Pool:0x%016llX  0x%016llX\n", (uint64_t)memPool, (uint64_t)ptr);
         return ptr;
     }
 
     // There's no pool attached. Allocate memory using the system allocator.
     void* ptr = ::operator new(size);
-    SkVLOG("ALLOC  Pool:__________________  0x%016llX\n", (uint64_t)ptr);
+    VLOG("ALLOC  Pool:__________________  0x%016llX\n", (uint64_t)ptr);
     return ptr;
 }
 
@@ -76,13 +84,13 @@ void Pool::FreeMemory(void* ptr) {
     // Is a pool attached?
     MemoryPool* memPool = get_thread_local_memory_pool();
     if (memPool) {
-        SkVLOG("FREE   Pool:0x%016llX  0x%016llX\n", (uint64_t)memPool, (uint64_t)ptr);
+        VLOG("FREE   Pool:0x%016llX  0x%016llX\n", (uint64_t)memPool, (uint64_t)ptr);
         memPool->release(ptr);
         return;
     }
 
     // There's no pool attached. Free it using the system allocator.
-    SkVLOG("FREE   Pool:__________________  0x%016llX\n", (uint64_t)ptr);
+    VLOG("FREE   Pool:__________________  0x%016llX\n", (uint64_t)ptr);
     ::operator delete(ptr);
 }
 

@@ -8,19 +8,13 @@
 #ifndef SKSL_STRUCTDEFINITION
 #define SKSL_STRUCTDEFINITION
 
-#include "include/private/base/SkTArray.h"
-#include "src/sksl/SkSLPosition.h"
-#include "src/sksl/ir/SkSLIRNode.h"
-#include "src/sksl/ir/SkSLProgramElement.h"
-#include "src/sksl/ir/SkSLType.h"  // IWYU pragma: keep
-
 #include <memory>
-#include <string>
-#include <string_view>
+
+#include "include/private/SkSLProgramElement.h"
+#include "src/sksl/ir/SkSLSymbolTable.h"
+#include "src/sksl/ir/SkSLType.h"
 
 namespace SkSL {
-
-class Context;
 
 /**
  * A struct at global scope, as in:
@@ -35,21 +29,31 @@ public:
     inline static constexpr Kind kIRNodeKind = Kind::kStructDefinition;
 
     StructDefinition(Position pos, const Type& type)
-            : INHERITED(pos, kIRNodeKind)
-            , fType(&type) {}
-
-    static std::unique_ptr<StructDefinition> Convert(const Context& context,
-                                                     Position pos,
-                                                     std::string_view name,
-                                                     skia_private::TArray<Field> fields);
-
-    static std::unique_ptr<StructDefinition> Make(Position pos, const Type& type);
+    : INHERITED(pos, kIRNodeKind)
+    , fType(&type) {}
 
     const Type& type() const {
         return *fType;
     }
 
-    std::string description() const override;
+    std::unique_ptr<ProgramElement> clone() const override {
+        return std::make_unique<StructDefinition>(fPosition, this->type());
+    }
+
+    std::string description() const override {
+        std::string s = "struct ";
+        s += this->type().name();
+        s += " { ";
+        for (const auto& f : this->type().fields()) {
+            s += f.fModifiers.description();
+            s += f.fType->description();
+            s += " ";
+            s += f.fName;
+            s += "; ";
+        }
+        s += "};";
+        return s;
+    }
 
 private:
     const Type* fType = nullptr;

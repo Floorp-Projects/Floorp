@@ -24,8 +24,8 @@
 #include "include/core/SkSurfaceProps.h"
 #include "include/core/SkTypes.h"
 #include "include/docs/SkPDFDocument.h"
+#include "include/private/SkBitmaskEnum.h"
 #include "include/private/base/SkTo.h"
-#include "src/base/SkBitmaskEnum.h"
 #include "src/base/SkUTF.h"
 #include "src/core/SkGlyph.h"
 #include "src/core/SkImagePriv.h"
@@ -211,7 +211,7 @@ SkPDFFont* SkPDFFont::GetFontResource(SkPDFDocument* doc,
     bool multibyte = SkPDFFont::IsMultiByte(type);
     SkGlyphID subsetCode =
             multibyte ? 0 : first_nonzero_glyph_for_single_byte_encoding(glyph->getGlyphID());
-    uint64_t typefaceID = (static_cast<uint64_t>(face->uniqueID()) << 16) | subsetCode;
+    uint64_t typefaceID = (static_cast<uint64_t>(SkTypeface::UniqueID(face)) << 16) | subsetCode;
 
     if (SkPDFFont* found = doc->fFontMap.find(typefaceID)) {
         SkASSERT(multibyte == found->multiByteGlyphs());
@@ -320,15 +320,14 @@ static void emit_subset_type0(const SkPDFFont& font, SkPDFDocument* doc) {
                  "or kTrueType_Font.\n", face, fontAsset.get());
     } else {
         switch (type) {
-            case SkAdvancedTypefaceMetrics::kTrueType_Font:
-            case SkAdvancedTypefaceMetrics::kCFF_Font: {
+            case SkAdvancedTypefaceMetrics::kTrueType_Font: {
                 if (!SkToBool(metrics.fFlags &
                               SkAdvancedTypefaceMetrics::kNotSubsettable_FontFlag)) {
                     SkASSERT(font.firstGlyphID() == 1);
                     sk_sp<SkData> subsetFontData = SkPDFSubsetFont(
                             stream_to_data(std::move(fontAsset)), font.glyphUsage(),
                             doc->metadata().fSubsetter,
-                            ttcIndex);
+                            metrics.fFontName.c_str(), ttcIndex);
                     if (subsetFontData) {
                         std::unique_ptr<SkPDFDict> tmp = SkPDFMakeDict();
                         tmp->insertInt("Length1", SkToInt(subsetFontData->size()));
@@ -374,7 +373,6 @@ static void emit_subset_type0(const SkPDFFont& font, SkPDFDocument* doc) {
             newCIDFont->insertName("Subtype", "CIDFontType0");
             break;
         case SkAdvancedTypefaceMetrics::kTrueType_Font:
-        case SkAdvancedTypefaceMetrics::kCFF_Font:
             newCIDFont->insertName("Subtype", "CIDFontType2");
             newCIDFont->insertName("CIDToGIDMap", "Identity");
             break;
@@ -388,15 +386,14 @@ static void emit_subset_type0(const SkPDFFont& font, SkPDFDocument* doc) {
     sysInfo->insertInt("Supplement", 0);
     newCIDFont->insertObject("CIDSystemInfo", std::move(sysInfo));
 
-    // Unfortunately, poppler enforces DW (default width) must be an integer.
-    int32_t defaultWidth = 0;
+    SkScalar defaultWidth = 0;
     {
         std::unique_ptr<SkPDFArray> widths = SkPDFMakeCIDGlyphWidthsArray(
                 *face, font.glyphUsage(), &defaultWidth);
         if (widths && widths->size() > 0) {
             newCIDFont->insertObject("W", std::move(widths));
         }
-        newCIDFont->insertInt("DW", defaultWidth);
+        newCIDFont->insertScalar("DW", defaultWidth);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -484,16 +481,14 @@ static ImageAndOffset to_image(SkGlyphID gid, SkBulkGlyphMetricsAndImages* small
             bm.setImmutable();
             return {bm.asImage(), {bounds.x(), bounds.y()}};
         case SkMask::kA8_Format:
-            return {SkImages::RasterFromData(
-                        SkImageInfo::MakeA8(bounds.width(), bounds.height()),
-                        SkData::MakeWithCopy(mask.fImage, mask.computeTotalImageSize()),
-                        mask.fRowBytes),
+            bm.installPixels(SkImageInfo::MakeA8(bounds.width(), bounds.height()),
+                             mask.fImage, mask.fRowBytes);
+            return {SkMakeImageFromRasterBitmap(bm, kAlways_SkCopyPixelsMode),
                     {bounds.x(), bounds.y()}};
         case SkMask::kARGB32_Format:
-            return {SkImages::RasterFromData(
-                        SkImageInfo::MakeN32Premul(bounds.width(), bounds.height()),
-                        SkData::MakeWithCopy(mask.fImage, mask.computeTotalImageSize()),
-                        mask.fRowBytes),
+            bm.installPixels(SkImageInfo::MakeN32Premul(bounds.width(), bounds.height()),
+                             mask.fImage, mask.fRowBytes);
+            return {SkMakeImageFromRasterBitmap(bm, kAlways_SkCopyPixelsMode),
                     {bounds.x(), bounds.y()}};
         case SkMask::k3D_Format:
         case SkMask::kLCD16_Format:
@@ -543,7 +538,7 @@ SkStrikeSpec make_small_strike(const SkTypeface& typeface) {
     font.setEdging(SkFont::Edging::kAlias);
     return SkStrikeSpec::MakeMask(font,
                                   SkPaint(),
-                                  SkSurfaceProps(),
+                                  SkSurfaceProps(0, kUnknown_SkPixelGeometry),
                                   SkScalerContextFlags::kFakeGammaAndBoostContrast,
                                   SkMatrix::I());
 }
@@ -710,7 +705,6 @@ void SkPDFFont::emitSubset(SkPDFDocument* doc) const {
     switch (fFontType) {
         case SkAdvancedTypefaceMetrics::kType1CID_Font:
         case SkAdvancedTypefaceMetrics::kTrueType_Font:
-        case SkAdvancedTypefaceMetrics::kCFF_Font:
             return emit_subset_type0(*this, doc);
 #ifndef SK_PDF_DO_NOT_SUPPORT_TYPE_1_FONTS
         case SkAdvancedTypefaceMetrics::kType1_Font:

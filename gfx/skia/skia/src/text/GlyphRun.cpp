@@ -8,19 +8,16 @@
 #include "src/text/GlyphRun.h"
 
 #include "include/core/SkFont.h"
-#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
 #include "include/core/SkRSXform.h"
-#include "include/core/SkScalar.h"
-#include "include/private/base/SkTLogic.h"
+#include "include/core/SkTextBlob.h"
+#include "src/base/SkUtils.h"
+#include "src/core/SkDevice.h"
 #include "src/core/SkFontPriv.h"
-#include "src/core/SkGlyph.h"
+#include "src/core/SkStrike.h"
+#include "src/core/SkStrikeCache.h"
 #include "src/core/SkStrikeSpec.h"
 #include "src/core/SkTextBlobPriv.h"
-
-#include <cstring>
-#include <initializer_list>
-
-class SkPaint;
 
 namespace sktext {
 // -- GlyphRun -------------------------------------------------------------------------------------
@@ -78,11 +75,9 @@ bool GlyphRunList::anyRunsLCD() const {
     return false;
 }
 
-void GlyphRunList::temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID,
-                                                        SkTextBlob::PurgeDelegate pd) const {
+void GlyphRunList::temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID) const {
     SkASSERT(fOriginalTextBlob != nullptr);
-    SkASSERT(pd != nullptr);
-    fOriginalTextBlob->notifyAddedToCache(cacheID, pd);
+    fOriginalTextBlob->notifyAddedToCache(cacheID);
 }
 
 sk_sp<SkTextBlob> GlyphRunList::makeBlob() const {
@@ -121,7 +116,7 @@ static SkRect glyphrun_source_bounds(
         const SkPaint& paint,
         SkZip<const SkGlyphID, const SkPoint> source,
         SkSpan<const SkVector> scaledRotations) {
-    SkASSERT(!source.empty());
+    SkASSERT(source.size() > 0);
     const SkRect fontBounds = SkFontPriv::GetFontBounds(font);
 
     SkSpan<const SkGlyphID> glyphIDs = source.get<0>();

@@ -209,7 +209,8 @@ void* SkTDStorage::insert(int index, int count, const void* src) {
 }
 
 bool operator==(const SkTDStorage& a, const SkTDStorage& b) {
-    return a.size() == b.size() && (a.empty() || !memcmp(a.data(), b.data(), a.bytes(a.size())));
+    return a.size() == b.size() &&
+           (a.size() == 0 || !memcmp(a.data(), b.data(), a.bytes(a.size())));
 }
 
 int SkTDStorage::calculateSizeOrDie(int delta) {
