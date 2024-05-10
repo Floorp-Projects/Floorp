@@ -28,7 +28,14 @@ requesttimeoutfactor = 2
 
 ["test_duckduckgo.js"]
 
+# The test_ebay needs newSearchConfig.enabled=true because there
+# are changes to ebay and locale pl for search-config-v2.
+# We have rolled out search-config-v2 100% to Beta 126 and the next Beta 127
+# will pick up newSearchConfig.enabled=true from Nimbus Settings but not
+# immediately, we need to turn the PREF on for this test to prevent failures
+# in the merge from central to Beta 127.
 ["test_ebay.js"]
+prefs = ["browser.search.newSearchConfig.enabled=true"]
 
 ["test_ecosia.js"]
 
