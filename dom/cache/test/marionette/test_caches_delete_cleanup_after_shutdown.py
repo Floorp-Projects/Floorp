@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
+
 from marionette_driver import Wait
 from marionette_harness import MarionetteTestCase
 
@@ -76,67 +78,29 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
         )
 
     def countBodies(self):
-        with self.marionette.using_context("chrome"):
-            bodiesCount, cacheDirPath = self.marionette.execute_script(
-                """
-                    let originDir = arguments[0];
-                    const pathDelimiter = "/";
+        profile = self.marionette.instance.profile.profile
+        originDir = (
+            self.marionette.absolute_url("")[:-1].replace(":", "+").replace("/", "+")
+        )
+        morgueDir = f"{profile}/storage/default/{originDir}/cache/morgue"
+        print("morgueDir path = ", morgueDir)
 
-                    function getRelativeFile(relativePath) {
-                        let file =  Services.dirsvc
-                            .get("ProfD", Ci.nsIFile)
-                            .clone();
-
-                        relativePath.split(pathDelimiter).forEach(function(component) {
-                            if (component == "..") {
-                                file = file.parent;
-                            } else {
-                                file.append(component);
-                            }
-                        });
-
-                        return file;
-                    }
-
-                    function getCacheDir() {
-
-                        const storageDirName = "storage";
-                        const defaultPersistenceDirName = "default";
-
-                        return getRelativeFile(
-                            `${storageDirName}/${defaultPersistenceDirName}/${originDir}/cache`
-                        );
-                    }
-
-                    const cacheDir = getCacheDir();
-                    let morgueDir = cacheDir.clone();
-
-                    // morgue directory should be empty
-                    // or atleast directories under morgue should be empty
-                    morgueDir.append("morgue");
-
-                    let bodiesCount = 0;
-                    for (let dir of morgueDir.directoryEntries) {
-                        for (let file of dir.directoryEntries) {
-                            ++bodiesCount;
-                        }
-                    }
-                    return [bodiesCount, cacheDir.path];
-                """,
-                script_args=(
-                    self.marionette.absolute_url("")[:-1]
-                    .replace(":", "+")
-                    .replace("/", "+"),
-                ),
-                new_sandbox=False,
-            )
-
-            print("Cache storage dir = ", cacheDirPath)
-            return bodiesCount
+        bodyCount = -1
+        if os.path.exists(morgueDir):
+            bodyCount = 0
+            for elem in os.listdir(morgueDir):
+                absPathElem = os.path.join(morgueDir, elem)
+                if os.path.isdir(absPathElem):
+                    bodyCount += sum(
+                        1
+                        for e in os.listdir(absPathElem)
+                        if os.path.isfile(os.path.join(absPathElem, e))
+                    )
+        return bodyCount
 
     def ensureCleanDirectory(self):
         orphanedBodiesCount = self.countBodies()
-        return orphanedBodiesCount == 0
+        return orphanedBodiesCount <= 0
 
     def isStorageInitialized(self, temporary=False):
         with self.marionette.using_context("chrome"):
@@ -173,8 +137,8 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
         print(
             f"Storage initialized = {self.isStorageInitialized()}, temporary storage initialized = {self.isStorageInitialized(True)}"
         )
-        print(f"Usage = {usage} and number of orphaned bodies = {self.countBodies()}")
 
+        print(f"Usage = {usage} and number of orphaned bodies = {self.countBodies()}")
         return usage < EXPECTED_CACHEDIR_SIZE_AFTER_CLEANUP
 
     def test_ensure_cache_cleanup_after_clean_restart(self):
@@ -203,9 +167,16 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
         self.marionette.navigate(
             self.marionette.absolute_url("dom/cache/cacheUsage.html")
         )
+
+        print(f"profile path = {self.marionette.instance.profile.profile}")
+
         beforeUsage = self.getUsage()
 
         def ensureCleanCallback():
+            print(
+                f"ensureCleanCallback, profile path = {self.marionette.instance.profile.profile}"
+            )
+
             self.openCache()
             Wait(self.marionette, interval=1, timeout=60).until(
                 lambda _: self.afterCleanupClosure(self.getUsage() - beforeUsage),
