@@ -1023,7 +1023,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "fe6001f2d8add3865039e03a820ed29c180b3620"
+        "revision": "bd5be42e3844be88ea00079523c61fbb7e474c42"
     },
     "ja": {
         "pin": false,
