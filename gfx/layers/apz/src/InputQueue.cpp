@@ -637,6 +637,12 @@ uint64_t InputQueue::InjectNewTouchBlock(AsyncPanZoomController* aTarget) {
 TouchBlockState* InputQueue::StartNewTouchBlock(
     const RefPtr<AsyncPanZoomController>& aTarget,
     TargetConfirmationFlags aFlags) {
+  if (mPrevActiveTouchBlock && mActiveTouchBlock &&
+      mActiveTouchBlock->ForLongTap()) {
+    mPrevActiveTouchBlock->SetWaitingLongTapResult(false);
+    mPrevActiveTouchBlock = nullptr;
+  }
+
   TouchBlockState* newBlock =
       new TouchBlockState(aTarget, aFlags, mTouchCounter);
 
@@ -664,7 +670,7 @@ TouchBlockState* InputQueue::StartNewTouchBlockForLongTap(
   // touch block because if the long-tap event response prevents us from
   // scrolling we must stop processing any subsequent touch-move events in the
   // same block.
-  currentBlock->SetWaitingLongTapResult();
+  currentBlock->SetWaitingLongTapResult(true);
 
   // We need to keep the current block alive, it will be used once after this
   // new touch block for long-tap was processed.
