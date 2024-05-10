@@ -40,3 +40,4 @@ Specific documentation on a few topics is available at:
    Substituting Local GeckoView <substituting-local-gv.md>
    Sync Integration Tests <syncIntegrationTests.md>
    Telemetry <telemetry.md>
+   UI Tests <UI-Tests.md>
