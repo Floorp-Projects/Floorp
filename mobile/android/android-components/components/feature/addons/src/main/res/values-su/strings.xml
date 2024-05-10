@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
-    <string name="mozac_feature_addons_permissions_privacy_description">Bca jeung ropéa setélan pripasi</string>
+    <string name="mozac_feature_addons_permissions_privacy_description">Baca jeung ropéa setélan pripasi</string>
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">Aksés data anjeun pikeun sakabéh raramatloka</string>
     <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
@@ -83,7 +83,7 @@
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">Tepas</string>
     <!-- A link where users can find more information about add-ons permissions. -->
-    <string name="mozac_feature_addons_learn_more">Leuwih jéntré ngeunaan idin</string>
+    <string name="mozac_feature_addons_learn_more">Leuwih jéntré ngeunaan pedaran idin</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Peunteun</string>
     <!-- A link that points to the detail page of the add-on. -->

@@ -409,6 +409,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Asup</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Moal waka</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">Iber mantuan anjeun tetep aman jeung Firefox</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Hurungkeun iber</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -512,8 +515,15 @@
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Rekés dukungan dikirim</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Kiwari loka teu didukung </string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Hurungkeun Pameungpeuk Spanduk Réréméh pikeun %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Pareuman Pameungpeuk Spanduk Réréméh pikeun %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s teu bisa otomatis nolak rekés réréméh dina ieu loka. Anjeun bisa ngirim rekés pikeun ngadukung ieu loka jaga.</string>
+
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s cikénéh nampik réréméh pikeun anjeun</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Otomatis nyoba nyambung ka loka maké protokol énkripsi HTTPS pikeun ngaronjatkeun kaamanan.</string>
@@ -532,11 +542,13 @@
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
     <string name="errorpage_httpsonly_title">Situs aman teu sayaga</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
-    <string name="errorpage_httpsonly_message_title">Sigana, raramatlokana teu ngarojong HTTPs.</string>
+    <string name="errorpage_httpsonly_message_title">Sigana, raramatlokana teu ngarojong HTTPS.</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
     <string name="errorpage_httpsonly_message_summary">Nanging, bisa waé aya panyerang kalibet. Upama diteruskeun asup kana raramatlokana, anjeun ulah ngasupkeun émbaran sénsitip. Upama diteruskeun, mode Ngan-HTTPS bakal dipareuman samentawis pikeun éta loka.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Aksésibilitas</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Serper akun Mozilal kustom</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Serper Sync kustom</string>
     <!-- Preference category for account information -->
@@ -559,6 +571,8 @@
     <string name="preferences_account_sync_error">Sambungkeun deui pikeun neruskeun nyingkronkeun</string>
     <!-- Preference for language -->
     <string name="preferences_language">Basa</string>
+    <!-- Preference for translation -->
+    <string name="preferences_translation">Tarjamah</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Pilihan data</string>
     <!-- Preference for data collection -->
@@ -586,6 +600,11 @@
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Otokumplit URLs</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Saran ti sponsor</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Pangrojong %1$s kalawan saran anu disponsoran</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
     <string name="preferences_show_nonsponsored_suggestions">Saran ti %1$s</string>
@@ -608,6 +627,12 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Émbohan</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Éksténsi</string>
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Pasang panambah tina berkas</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Pasang pangémboh tina berkas</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Iber</string>
 
@@ -616,9 +641,23 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Teu diidinan</string>
 
+    <!-- Add-on Permissions -->
+    <!-- The title of the required permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Dibutuhkeun</string>
+    <!-- The title of the optional permissions section from addon's permissions screen -->
+    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Pilihan</string>
+    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
+    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Baca jeung robah data ramatloka</string>
+    <!-- The description of the icon that can delete one of the websites displayed  -->
+    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Pupus situs wéb</string>
+    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
+    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Idinan pikeun sakabéh situs</string>
+
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Koléksi Émboh sakahayang</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Koléksi Émboh sakahayang</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">Heug</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -636,6 +675,8 @@
     <string name="customize_toggle_jump_back_in">Asup deui</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks" moz:removedIn="127" tools:ignore="UnusedResources">Markah anyar</string>
+    <!-- Title for the customize home screen section with bookmarks. -->
+    <string name="customize_toggle_bookmarks">Markah</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Anyar dianjangan</string>
@@ -684,6 +725,10 @@
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Langlang latar lianna</string>
 
+    <!-- Add-ons general availability nimbus message-->
+    <!-- Title of the Nimbus message for add-ons general availability-->
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Aya add-on anyar</string>
+
     <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
     <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Add-on tumpur saheulaanan</string>
@@ -708,6 +753,8 @@
 
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Login</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2">Kecap sandi</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Buka tab</string>
     <!-- Preference for signing out -->
@@ -1590,7 +1637,7 @@
     <string name="etp_cookies_description">Meungpeuk réréméh anu dipaké ku maskapé jaringan iklan jeung analitika pikeun ngumpulkeun data langlangan anjeun di loka anu kaanjangan.</string>
 
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description_2">Total Cookie Protection ngerem réréméh dina loka anu keur dibuka sangkan teu bisa dipaké ku palacak kayaning jaringan iklan pikeun nunutur anjeun meuntas-loa.</string>
+    <string name="etp_cookies_description_2">Total Cookie Protection ngerem réréméh dina loka anu keur dibuka ku anjeun sangkan teu bisa dipaké ku palacak kayaning jaringan iklan pikeun nunutur anjeun meuntas-loa.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Gurandil kripto</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1789,16 +1836,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Tambah kartu kiridit</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2">Tambahan kartu</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kokolakeun kartu anu diteundeun</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2">Atur kartu</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Tambah alamat</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Kokolakeun alamat</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Simpen jeung otongeusi alamat</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Simpen jeung eusian alamat</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Kaasup émbaran sarupaning nomer, surélék, jeung alamat kirim</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Sartakeun nomer telepon jeung alamat surélék</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Tambah kartu</string>
@@ -1820,6 +1876,8 @@
     <string name="credit_cards_delete_card_button">Hapus kartu</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Yakin anjeun rék mupus ieu kartu kiridit?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2">Pupus kartu?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Hapus</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1833,12 +1891,18 @@
 
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Mangga lebetkeun nomer kartu kiridit anu sah</string>
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2">Asupkeun nomer kartu anu sah</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Mangga eusian kolom ieu</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2">Tambahan ngaran</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Buka konci pikeun nempo kartu anu diteundeun</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Amankeun kartu kiridit anjeun</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2">Amankeun metode mayar anjeun anu disimpen</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Jieun pola konci paranti, PIN, atawa kecap sandi pikeun ngajaga kartu kiridit anu diteundeun bisi paranti anjeun dipaké batur.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1862,6 +1926,8 @@
     <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Ngaran Tengah</string>
     <!-- The header for the last name of an address -->
     <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Ngaran Tukang</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Ngaran</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Alamat Jalan</string>
     <!-- The header for the city of an address -->
@@ -1887,6 +1953,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Yakin rék mupus ieu alamat?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2">Pupus alamat ieu?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Hapus</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1986,12 +2054,16 @@
     <string name="login_menu_edit_button">Édit</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Yakin rék mupus ieu login?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2">Yakin anjeun rék mupus ieu sandi?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Pupus</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Bolay</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Pilihan asup log</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2">Pilihan sandi</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Widang téks éditeun pikeun alamat raramat login.</string>
     <!--  The editable text field for a login's username. -->
@@ -2000,16 +2072,28 @@
     <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Widang téks éditeun pikeun kecap sandi login.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Teundeun parobahan login.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2">Simpen parobahan.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Édit</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2">Ropéa sandi</string>
     <!--  The page title for adding new login. -->
     <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Tambahkeun login anyar</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2">Tambahan sandi</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Butuh kecap sandi</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2">Asupkeun sandi</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Kudu ngeusian sandiasma</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2">Asupkeun ngaran pamaké</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Kudu ngeusian ngaran host</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required_2" tools:ignore="UnusedResources">Asupkeun kaca raramat</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Sungsi sora</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -2104,6 +2188,9 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Pamaluruhan %s</string>
 
+    <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Alihkeun panyungsi baku anjeun</string>
     <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Setél tutumbu ti raramatloka, surélék, jeung surat pikeun muka otomatis dina Firefox.</string>
 
@@ -2141,6 +2228,13 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Buka setélan</string>
 
+    <!-- Review quality check feature-->
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Pamariksa repiu</string>
+    <!-- Summary for grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_a_b_description">Repiu andelan</string>
+    <!-- Title for when the rating has been updated by the review checker -->
+    <string name="review_quality_check_adjusted_rating_title">Peunteun disaluyukeun</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Iklan ku %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2181,6 +2275,81 @@
     <!-- Translations feature-->
 
 
+    <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
+    <string name="delete_language_file_dialog_positive_button_text">Pupus</string>
+    <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
+    <string name="delete_language_file_dialog_negative_button_text">Bolay</string>
+
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
+    <string name="download_language_file_dialog_positive_button_text">Undeur</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
+    <string name="download_language_file_dialog_positive_button_text_all_languages">Undeur jeung tarjamahkeun</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
+    <string name="download_language_file_dialog_negative_button_text">Bolay</string>
+
+    <!-- Debug drawer -->
+    <!-- The user-facing title of the Debug Drawer feature. -->
+    <string name="debug_drawer_title">Parabot Debug</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
+    <string name="debug_drawer_back_button_content_description">Mundur</string>
+
+    <!-- Debug drawer tabs tools -->
+    <!-- The title of the Tab Tools feature in the Debug Drawer. -->
+    <string name="debug_drawer_tab_tools_title">Pakakas Tab</string>
+    <!-- The title of the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_title">Jumlah tab</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_normal">Aktip</string>
+    <!-- The inactive tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_inactive">Teu aktif</string>
+    <!-- The private tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_private">Salindungan</string>
+    <!-- The total tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_total">Jumlah</string>
+    <!-- The title of the tab creation tool section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_title">Alat nyieun tab</string>
+    <!-- The label of the text field in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Tab kuantitas pikeun nyieun</string>
+    <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Tambahkeun kana tab aktip</string>
+    <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Tambahkeun kana tab teu aktip</string>
+    <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Tambahkeun kana tab nyamuni</string>
+
     <!-- Micro survey -->
 
-    </resources>
+    <!-- The continue button label -->
+    <string name="micro_survey_continue_button_label" tools:ignore="UnusedResources">Tuluykeun</string>
+    <!-- The survey header -->
+    <string name="micro_survey_survey_header">Lengkepan survéy ieu</string>
+    <!-- The privacy notice link -->
+    <string name="micro_survey_privacy_notice">Wawar Privasi</string>
+    <!-- The submit button label text -->
+    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Kirimkeun</string>
+    <!-- The close button label text -->
+    <string name="micro_survey_close_button_label">Tutup</string>
+    <!-- The survey completion confirmation text -->
+    <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Hatur nuhun pikeun jawaban anjeun!</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_1" tools:ignore="UnusedResources">Puas pisan</string>
+
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Sugema</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Nétral</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Teu sugema</string>
+    <!-- Option for likert scale -->
+    <string name="likert_scale_option_5" tools:ignore="UnusedResources">Kacida teu sugema</string>
+
+    <!-- Debug drawer logins -->
+    <!-- The title of the Logins feature in the Debug Drawer. -->
+    <string name="debug_drawer_logins_title">Asup log</string>
+    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
+    <string name="debug_drawer_logins_current_domain_label">Domain ayeuna: %s</string>
+    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
+    <string name="debug_drawer_logins_add_login_button">Tambahan asup log palsu pikeun domain ieu</string>
+    <!-- Content description for delete button where parameter will be the username of the login -->
+    <string name="debug_drawer_logins_delete_login_button_content_description">Pupus asup log maké ngaran pamaké %s</string>
+</resources>
