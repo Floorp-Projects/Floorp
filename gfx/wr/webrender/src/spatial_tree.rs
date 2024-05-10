@@ -335,6 +335,7 @@ impl SceneSpatialTree {
     pub fn find_scroll_root(
         &self,
         spatial_node_index: SpatialNodeIndex,
+        allow_sticky_frames: bool,
     ) -> SpatialNodeIndex {
         let mut real_scroll_root = self.root_reference_frame_index;
         let mut outermost_scroll_root = self.root_reference_frame_index;
@@ -360,13 +361,15 @@ impl SceneSpatialTree {
                     }
                 }
                 SpatialNodeType::StickyFrame(..) => {
-                    // Though not a scroll frame, we treat sticky frames as scroll roots to ensure they
-                    // are given a separate picture cache slice.
-                    outermost_scroll_root = node_index;
-                    real_scroll_root = node_index;
-                    // Set this true so that we don't select an ancestor scroll frame as the scroll root
-                    // on a subsequent iteration.
-                    current_scroll_root_is_sticky = true;
+                    // Though not a scroll frame, we optionally treat sticky frames as scroll roots
+                    // to ensure they are given a separate picture cache slice.
+                    if allow_sticky_frames {
+                        outermost_scroll_root = node_index;
+                        real_scroll_root = node_index;
+                        // Set this true so that we don't select an ancestor scroll frame as the scroll root
+                        // on a subsequent iteration.
+                        current_scroll_root_is_sticky = true;
+                    }
                 }
                 SpatialNodeType::ScrollFrame(ref info) => {
                     match info.frame_kind {
@@ -1747,7 +1750,7 @@ fn test_find_scroll_root_simple() {
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1), PipelineId::dummy(), pid),
     );
 
-    assert_eq!(st.find_scroll_root(scroll), scroll);
+    assert_eq!(st.find_scroll_root(scroll, true), scroll);
 }
 
 /// Tests that we select the root scroll frame rather than the subframe if both are scrollable.
@@ -1796,7 +1799,7 @@ fn test_find_scroll_root_sub_scroll_frame() {
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2), PipelineId::dummy(), pid),
     );
 
-    assert_eq!(st.find_scroll_root(sub_scroll), root_scroll);
+    assert_eq!(st.find_scroll_root(sub_scroll, true), root_scroll);
 }
 
 /// Tests that we select the sub scroll frame when the root scroll frame is not scrollable.
@@ -1845,7 +1848,7 @@ fn test_find_scroll_root_not_scrollable() {
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2), PipelineId::dummy(), pid),
     );
 
-    assert_eq!(st.find_scroll_root(sub_scroll), sub_scroll);
+    assert_eq!(st.find_scroll_root(sub_scroll, true), sub_scroll);
 }
 
 /// Tests that we select the sub scroll frame when the root scroll frame is too small.
@@ -1894,7 +1897,7 @@ fn test_find_scroll_root_too_small() {
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2), PipelineId::dummy(), pid),
     );
 
-    assert_eq!(st.find_scroll_root(sub_scroll), sub_scroll);
+    assert_eq!(st.find_scroll_root(sub_scroll, true), sub_scroll);
 }
 
 /// Tests that we select the root scroll node, even if it is not scrollable,
@@ -1956,7 +1959,7 @@ fn test_find_scroll_root_perspective() {
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3), PipelineId::dummy(), pid),
     );
 
-    assert_eq!(st.find_scroll_root(sub_scroll), root_scroll);
+    assert_eq!(st.find_scroll_root(sub_scroll, true), root_scroll);
 }
 
 /// Tests that encountering a 2D scale or translation transform does not prevent
@@ -2020,7 +2023,7 @@ fn test_find_scroll_root_2d_scale() {
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3), PipelineId::dummy(), pid),
     );
 
-    assert_eq!(st.find_scroll_root(sub_scroll), sub_scroll);
+    assert_eq!(st.find_scroll_root(sub_scroll, true), sub_scroll);
 }
 
 /// Tests that a sticky spatial node is chosen as the scroll root rather than
@@ -2073,7 +2076,8 @@ fn test_find_scroll_root_sticky() {
         pid,
     );
 
-    assert_eq!(st.find_scroll_root(sticky), sticky);
+    assert_eq!(st.find_scroll_root(sticky, true), sticky);
+    assert_eq!(st.find_scroll_root(sticky, false), scroll);
 }
 
 #[test]
