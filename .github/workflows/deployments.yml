@@ -292,7 +292,7 @@ jobs:
 
     - name: Deploy to GitHub Releases for Stable Version 🚀
       id: create_release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: |
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar
