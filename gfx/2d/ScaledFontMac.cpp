@@ -11,6 +11,8 @@
 #  include "nsCocoaFeatures.h"
 #endif
 #include "PathSkia.h"
+#include "skia/include/core/SkFont.h"
+#include "skia/include/core/SkFontTypes.h"
 #include "skia/include/core/SkPaint.h"
 #include "skia/include/core/SkPath.h"
 #include "skia/include/ports/SkTypeface_mac.h"
