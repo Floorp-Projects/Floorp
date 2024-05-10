@@ -10,19 +10,24 @@
 
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
-#include "include/core/SkSamplingOptions.h"
-#include "include/core/SkShader.h"
-#include "include/core/SkTileMode.h"
+#include "include/core/SkShader.h"  // IWYU pragma: keep
 #include "include/core/SkTypes.h"
+
+#include <atomic>
+#include <cstddef>
+#include <cstdint>
 
 class SkCanvas;
 class SkData;
-struct SkDeserialProcs;
-class SkImage;
 class SkMatrix;
-struct SkSerialProcs;
 class SkStream;
 class SkWStream;
+enum class SkFilterMode;
+struct SkDeserialProcs;
+struct SkSerialProcs;
+
+// TODO(kjlubick) Remove this after cleaning up clients
+#include "include/core/SkTileMode.h"  // IWYU pragma: keep
 
 /** \class SkPicture
     SkPicture records drawing commands made to SkCanvas. The command stream may be
@@ -157,6 +162,10 @@ public:
         may be used to provide user context to procs->fPictureProc; procs->fPictureProc
         is called with a pointer to SkPicture and user context.
 
+        The default behavior for serializing SkImages is to encode a nullptr. Should
+        clients want to, for example, encode these SkImages as PNGs so they can be
+        deserialized, they must provide SkSerialProcs with the fImageProc set to do so.
+
         @param procs  custom serial data encoders; may be nullptr
         @return       storage containing serialized SkPicture
 
@@ -170,6 +179,10 @@ public:
         If procs->fPictureProc is nullptr, default encoding is used. procs->fPictureCtx
         may be used to provide user context to procs->fPictureProc; procs->fPictureProc
         is called with a pointer to SkPicture and user context.
+
+        The default behavior for serializing SkImages is to encode a nullptr. Should
+        clients want to, for example, encode these SkImages as PNGs so they can be
+        deserialized, they must provide SkSerialProcs with the fImageProc set to do so.
 
         @param stream  writable serial data stream
         @param procs   custom serial data encoders; may be nullptr
@@ -220,11 +233,11 @@ public:
      *  @param tmy  The tiling mode to use when sampling in the y-direction.
      *  @param mode How to filter the tiles
      *  @param localMatrix Optional matrix used when sampling
-     *  @param tile The tile rectangle in picture coordinates: this represents the subset
-     *              (or superset) of the picture used when building a tile. It is not
-     *              affected by localMatrix and does not imply scaling (only translation
-     *              and cropping). If null, the tile rect is considered equal to the picture
-     *              bounds.
+     *  @param tileRect The tile rectangle in picture coordinates: this represents the subset
+     *                  (or superset) of the picture used when building a tile. It is not
+     *                  affected by localMatrix and does not imply scaling (only translation
+     *                  and cropping). If null, the tile rect is considered equal to the picture
+     *                  bounds.
      *  @return     Returns a new shader object. Note: this function never returns null.
      */
     sk_sp<SkShader> makeShader(SkTileMode tmx, SkTileMode tmy, SkFilterMode mode,

@@ -55,9 +55,6 @@ struct CTFontVariation {
     OpszVariation opsz;
 };
 
-SkUniqueCFRef<CTFontRef> SkCTFontCreateExactCopy(CTFontRef baseFont, CGFloat textSize,
-                                                 OpszVariation opsz);
-
 SkFontStyle SkCTFontDescriptorGetSkFontStyle(CTFontDescriptorRef desc, bool fromDataProvider);
 
 CGFloat SkCTFontCTWeightForCSSWeight(int fontstyleWeight);
@@ -86,7 +83,8 @@ public:
                                   std::unique_ptr<SkStreamAsset> providedData);
 
     static constexpr SkTypeface::FactoryId FactoryId = SkSetFourByteTag('c','t','x','t');
-    static sk_sp<SkTypeface> MakeFromStream(std::unique_ptr<SkStreamAsset>, const SkFontArguments&);
+    static sk_sp<SkTypeface> SK_SPI MakeFromStream(std::unique_ptr<SkStreamAsset>,
+                                                   const SkFontArguments&);
 
     SkUniqueCFRef<CTFontRef> fFontRef;
     const OpszVariation fOpszVariation;

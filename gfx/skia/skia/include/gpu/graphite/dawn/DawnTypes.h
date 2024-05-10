@@ -9,7 +9,7 @@
 #define skgpu_graphite_DawnTypes_DEFINED
 
 #include "include/gpu/graphite/GraphiteTypes.h"
-#include "webgpu/webgpu_cpp.h"
+#include "webgpu/webgpu_cpp.h"  // NO_G3_REWRITE
 
 namespace skgpu::graphite {
 
@@ -19,18 +19,40 @@ struct DawnTextureInfo {
 
     // wgpu::TextureDescriptor properties
     wgpu::TextureFormat fFormat = wgpu::TextureFormat::Undefined;
-    wgpu::TextureUsage  fUsage = wgpu::TextureUsage::None;
+    // `fViewFormat` for multiplanar formats corresponds to the plane TextureView's format.
+    wgpu::TextureFormat fViewFormat = wgpu::TextureFormat::Undefined;
+    wgpu::TextureUsage fUsage = wgpu::TextureUsage::None;
+    // TODO(b/308944094): Migrate aspect information to BackendTextureViews.
+    wgpu::TextureAspect fAspect = wgpu::TextureAspect::All;
+
+    wgpu::TextureFormat getViewFormat() const {
+        return fViewFormat != wgpu::TextureFormat::Undefined ? fViewFormat : fFormat;
+    }
 
     DawnTextureInfo() = default;
-    DawnTextureInfo(const wgpu::Texture& texture);
     DawnTextureInfo(uint32_t sampleCount,
                     Mipmapped mipmapped,
                     wgpu::TextureFormat format,
-                    wgpu::TextureUsage usage)
+                    wgpu::TextureUsage usage,
+                    wgpu::TextureAspect aspect)
+            : DawnTextureInfo(sampleCount,
+                              mipmapped,
+                              /*format=*/format,
+                              /*viewFormat=*/format,
+                              usage,
+                              aspect) {}
+    DawnTextureInfo(uint32_t sampleCount,
+                    Mipmapped mipmapped,
+                    wgpu::TextureFormat format,
+                    wgpu::TextureFormat viewFormat,
+                    wgpu::TextureUsage usage,
+                    wgpu::TextureAspect aspect)
             : fSampleCount(sampleCount)
             , fMipmapped(mipmapped)
             , fFormat(format)
-            , fUsage(usage) {}
+            , fViewFormat(viewFormat)
+            , fUsage(usage)
+            , fAspect(aspect) {}
 };
 
 } // namespace skgpu::graphite

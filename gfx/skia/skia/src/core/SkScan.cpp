@@ -4,14 +4,11 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
-
-#include "src/core/SkBlitter.h"
-#include "src/core/SkRasterClip.h"
 #include "src/core/SkScan.h"
 
-std::atomic<bool> gSkUseAnalyticAA{true};
-std::atomic<bool> gSkForceAnalyticAA{false};
+#include "include/core/SkRegion.h"
+#include "src/core/SkBlitter.h"
+#include "src/core/SkRasterClip.h"
 
 static inline void blitrect(SkBlitter* blitter, const SkIRect& r) {
     blitter->blitRect(r.fLeft, r.fTop, r.width(), r.height());

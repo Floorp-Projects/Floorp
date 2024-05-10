@@ -8,8 +8,8 @@
 #ifndef SKSL_CONTINUESTATEMENT
 #define SKSL_CONTINUESTATEMENT
 
-#include "include/private/SkSLStatement.h"
 #include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLStatement.h"
 
 namespace SkSL {
 
@@ -25,10 +25,6 @@ public:
 
     static std::unique_ptr<Statement> Make(Position pos) {
         return std::make_unique<ContinueStatement>(pos);
-    }
-
-    std::unique_ptr<Statement> clone() const override {
-        return std::make_unique<ContinueStatement>(fPosition);
     }
 
     std::string description() const override {

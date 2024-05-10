@@ -8,10 +8,13 @@
 #ifndef SKSL_CODEGENERATOR
 #define SKSL_CODEGENERATOR
 
+#include "src/sksl/SkSLContext.h"
 #include "src/sksl/SkSLOutputStream.h"
 #include "src/sksl/ir/SkSLProgram.h"
 
 namespace SkSL {
+
+struct ShaderCaps;
 
 /**
  * Abstract superclass of all code generators, which take a Program as input and produce code as
@@ -19,12 +22,20 @@ namespace SkSL {
  */
 class CodeGenerator {
 public:
-    CodeGenerator(const Context* context, const Program* program, OutputStream* out)
-    : fContext(*context)
-    , fProgram(*program)
-    , fOut(out) {}
+    CodeGenerator(const Context* context,
+                  const ShaderCaps* caps,
+                  const Program* program,
+                  OutputStream* stream)
+            : fProgram(*program)
+            , fContext(fProgram.fContext->fTypes, *fProgram.fContext->fErrors)
+            , fCaps(*caps)
+            , fOut(stream) {
+        fContext.fConfig = fProgram.fConfig.get();
+        fContext.fModule = fProgram.fContext->fModule;
+        fContext.fSymbolTable = fProgram.fSymbols.get();
+    }
 
-    virtual ~CodeGenerator() {}
+    virtual ~CodeGenerator() = default;
 
     virtual bool generateCode() = 0;
 
@@ -48,8 +59,9 @@ protected:
     static constexpr float kSharpenTexturesBias = -.475f;
 #endif
 
-    const Context& fContext;
     const Program& fProgram;
+    Context fContext;
+    const ShaderCaps& fCaps;
     OutputStream* fOut;
 };
 

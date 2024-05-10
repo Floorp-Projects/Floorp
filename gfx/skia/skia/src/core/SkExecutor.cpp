@@ -6,12 +6,14 @@
  */
 
 #include "include/core/SkExecutor.h"
-#include "include/private/SkSpinlock.h"
 #include "include/private/base/SkMutex.h"
 #include "include/private/base/SkSemaphore.h"
 #include "include/private/base/SkTArray.h"
+#include "src/base/SkNoDestructor.h"
+
 #include <deque>
 #include <thread>
+#include <utility>
 
 using namespace skia_private;
 
@@ -39,7 +41,7 @@ class SkTrivialExecutor final : public SkExecutor {
 };
 
 static SkExecutor& trivial_executor() {
-    static auto* executor = new SkTrivialExecutor();
+    static SkNoDestructor<SkTrivialExecutor> executor;
     return *executor;
 }
 

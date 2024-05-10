@@ -16,8 +16,13 @@
 
 class SkSurface;
 
+namespace skgpu {
+class MutableTextureState;
+}
+
 namespace skgpu::graphite {
 
+class BackendSemaphore;
 class Recording;
 class Task;
 
@@ -38,12 +43,31 @@ using GpuFinishedProc = void (*)(GpuFinishedContext finishedContext, CallbackRes
  * TextureInfo must match the info provided to the Recorder when making the deferred canvas.
  *
  * fTargetTranslation is an additional translation applied to draws targeting fTargetSurface.
+ *
+ * The client may pass in two arrays of initialized BackendSemaphores to be included in the
+ * command stream. At some time before issuing commands in the Recording, the fWaitSemaphores will
+ * be waited on by the gpu. We only guarantee these wait semaphores block transfer and fragment
+ * shader work. Similarly, at some time after issuing the Recording's commands, the
+ * fSignalSemaphores will be signaled by the gpu. Depending on the platform, the timing of the wait
+ * and signal operations will either be immediately before or after the given Recording's command
+ * stream, respectively, or before and after the entire CommandBuffer's command stream. The
+ * semaphores are not sent to the GPU until the next Context::submit call is made.
+ *
+ * The client will own and be responsible for deleting the underlying semaphore objects after the
+ * submission completes, however the BackendSemaphore objects themselves can be deleted as soon
+ * as this function returns.
  */
 struct InsertRecordingInfo {
     Recording* fRecording = nullptr;
 
     SkSurface* fTargetSurface = nullptr;
     SkIVector fTargetTranslation = {0, 0};
+    MutableTextureState* fTargetTextureState = nullptr;
+
+    size_t fNumWaitSemaphores = 0;
+    BackendSemaphore* fWaitSemaphores = nullptr;
+    size_t fNumSignalSemaphores = 0;
+    BackendSemaphore* fSignalSemaphores = nullptr;
 
     GpuFinishedContext fFinishedContext = nullptr;
     GpuFinishedProc fFinishedProc = nullptr;
@@ -85,19 +109,29 @@ enum class Volatile : bool {
  */
 enum DrawTypeFlags : uint8_t {
 
-    kNone         = 0b000,
+    kNone           = 0b0000,
 
     // SkCanvas:: drawSimpleText, drawString, drawGlyphs, drawTextBlob, drawSlug
-    kText         = 0b001,
+    kText           = 0b0001,
 
     // SkCanvas::drawVertices
-    kDrawVertices = 0b010,
+    kDrawVertices   = 0b0010,
 
-    // All other canvas draw calls
-    kShape        = 0b100,
+    // SkCanvas::experimental_DrawEdgeAAQuad, experimental_DrawEdgeAAImageSet
+    // SkCanvas:: drawRect, drawRRect, drawLine for:
+    //    regular filled and hairline [r]rects,
+    //    stroked rects,
+    //    stroked and hairline lines,
+    //    stroked circular rrects
+    // Note: clipping can bump a draw out of the simple shape path
+    kSimpleShape    = 0b0100,
+    // All other shapes (e.g., any strokeAndFill shape, non-circular-stroked RRects, SkPaths, ...)
+    kNonSimpleShape = 0b1000,
 
-    kMostCommon = kText | kShape,
-    kAll = kText | kDrawVertices | kShape
+    kShape          = kSimpleShape | kNonSimpleShape,
+
+    kMostCommon     = kText | kShape,
+    kAll            = kText | kDrawVertices | kShape
 };
 
 } // namespace skgpu::graphite

@@ -9,22 +9,21 @@
 #define SKSL_INTERFACEBLOCK
 
 #include "include/core/SkTypes.h"
-#include "include/private/SkSLIRNode.h"
-#include "include/private/SkSLProgramElement.h"
-#include "include/sksl/SkSLPosition.h"
+#include "include/private/base/SkTArray.h"
+#include "src/sksl/SkSLPosition.h"
+#include "src/sksl/ir/SkSLIRNode.h"
+#include "src/sksl/ir/SkSLProgramElement.h"
 #include "src/sksl/ir/SkSLType.h"
 #include "src/sksl/ir/SkSLVariable.h"
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <string_view>
-#include <utility>
 
 namespace SkSL {
 
 class Context;
-class SymbolTable;
+struct Modifiers;
 
 /**
  * An interface block, as in:
@@ -40,12 +39,9 @@ class InterfaceBlock final : public ProgramElement {
 public:
     inline static constexpr Kind kIRNodeKind = Kind::kInterfaceBlock;
 
-    InterfaceBlock(Position pos,
-                   Variable* var,
-                   std::shared_ptr<SymbolTable> typeOwner)
+    InterfaceBlock(Position pos, Variable* var)
             : INHERITED(pos, kIRNodeKind)
-            , fVariable(var)
-            , fTypeOwner(std::move(typeOwner)) {
+            , fVariable(var) {
         SkASSERT(fVariable->type().componentType().isInterfaceBlock());
         fVariable->setInterfaceBlock(this);
     }
@@ -59,20 +55,19 @@ public:
     // (if it is named) or each of the interface block fields (if it is anonymous).
     static std::unique_ptr<InterfaceBlock> Convert(const Context& context,
                                                    Position pos,
-                                                   Variable* variable,
-                                                   std::shared_ptr<SymbolTable> symbols);
+                                                   const Modifiers& modifiers,
+                                                   std::string_view typeName,
+                                                   skia_private::TArray<Field> fields,
+                                                   std::string_view varName,
+                                                   int arraySize);
 
     // Returns an InterfaceBlock; errors are reported via SkASSERT.
     // The caller is responsible for adding the InterfaceBlock to the program elements.
-    // If the InterfaceBlock contains sk_RTAdjust, the caller is responsible for passing its field
-    // index in `rtAdjustIndex`.
     // The passed-in symbol table will be updated with a reference to the interface block variable
     // (if it is named) or each of the interface block fields (if it is anonymous).
     static std::unique_ptr<InterfaceBlock> Make(const Context& context,
                                                 Position pos,
-                                                Variable* variable,
-                                                std::optional<int> rtAdjustIndex,
-                                                std::shared_ptr<SymbolTable> symbols);
+                                                Variable* variable);
 
     Variable* var() const {
         return fVariable;
@@ -90,21 +85,14 @@ public:
         return fVariable->name();
     }
 
-    const std::shared_ptr<SymbolTable>& typeOwner() const {
-        return fTypeOwner;
-    }
-
     int arraySize() const {
         return fVariable->type().isArray() ? fVariable->type().columns() : 0;
     }
-
-    std::unique_ptr<ProgramElement> clone() const override;
 
     std::string description() const override;
 
 private:
     Variable* fVariable;
-    std::shared_ptr<SymbolTable> fTypeOwner;
 
     using INHERITED = ProgramElement;
 };

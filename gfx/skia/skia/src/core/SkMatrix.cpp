@@ -10,6 +10,7 @@
 #include "include/core/SkPath.h"
 #include "include/core/SkPoint3.h"
 #include "include/core/SkRSXform.h"
+#include "include/core/SkSamplingOptions.h"
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/private/base/SkDebug.h"
@@ -25,8 +26,6 @@
 
 #include <algorithm>
 #include <cmath>
-
-struct SkSamplingOptions;
 
 void SkMatrix::doNormalizePerspective() {
     // If the bottom row of the matrix is [0, 0, not_one], we will treat the matrix as if it
@@ -547,8 +546,8 @@ bool SkMatrix::setRectToRect(const SkRect& src, const SkRect& dst, ScaleToFit al
         fMat[kMPersp2] = 1;
         this->setTypeMask(kScale_Mask);
     } else {
-        SkScalar    tx, sx = dst.width() / src.width();
-        SkScalar    ty, sy = dst.height() / src.height();
+        SkScalar    tx, sx = sk_ieee_float_divide(dst.width(), src.width());
+        SkScalar    ty, sy = sk_ieee_float_divide(dst.height(), src.height());
         bool        xLarger = false;
 
         if (align != kFill_ScaleToFit) {
@@ -820,13 +819,13 @@ bool SkMatrix::invertNonIdentity(SkMatrix* inv) const {
         bool invertible = true;
         if (inv) {
             if (mask & kScale_Mask) {
-                SkScalar invX = fMat[kMScaleX];
-                SkScalar invY = fMat[kMScaleY];
-                if (0 == invX || 0 == invY) {
+                SkScalar invX = sk_ieee_float_divide(1.f, fMat[kMScaleX]);
+                SkScalar invY = sk_ieee_float_divide(1.f, fMat[kMScaleY]);
+                // Denormalized (non-zero) scale factors will overflow when inverted, in which case
+                // the inverse matrix would not be finite, so return false.
+                if (!SkScalarsAreFinite(invX, invY)) {
                     return false;
                 }
-                invX = SkScalarInvert(invX);
-                invY = SkScalarInvert(invY);
 
                 // Must be careful when writing to inv, since it may be the
                 // same memory as this.
@@ -1630,6 +1629,15 @@ bool SkTreatAsSprite(const SkMatrix& mat, const SkISize& size, const SkSamplingO
         return false;
     }
 
+    // We don't want to snap to pixels if we're asking for linear filtering with
+    // a subpixel translation. (b/41322892).
+    // This mirrors `tweak_sampling` in SkImageShader.cpp
+    if (sampling.filter == SkFilterMode::kLinear &&
+        (mat.getTranslateX() != (int)mat.getTranslateX() ||
+         mat.getTranslateY() != (int)mat.getTranslateY())) {
+        return false;
+    }
+
     // quick success check
     if (!subpixelBits && !(mat.getType() & ~SkMatrix::kTranslate_Mask)) {
         return true;
@@ -1873,8 +1881,7 @@ SkScalar SkMatrixPriv::ComputeResScaleForStroking(const SkMatrix& matrix) {
     if (SkScalarsAreFinite(sx, sy)) {
         SkScalar scale = std::max(sx, sy);
         if (scale > 0) {
-            static const SkScalar kMaxStrokeScale = 1e5f;
-            return std::min(scale, kMaxStrokeScale);
+            return scale;
         }
     }
     return 1;

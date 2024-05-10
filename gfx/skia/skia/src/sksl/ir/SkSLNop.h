@@ -8,7 +8,7 @@
 #ifndef SKSL_NOP
 #define SKSL_NOP
 
-#include "include/private/SkSLStatement.h"
+#include "src/sksl/ir/SkSLStatement.h"
 #include "src/sksl/ir/SkSLSymbolTable.h"
 
 namespace SkSL {
@@ -33,10 +33,6 @@ public:
 
     std::string description() const override {
         return ";";
-    }
-
-    std::unique_ptr<Statement> clone() const override {
-        return std::make_unique<Nop>();
     }
 
 private:

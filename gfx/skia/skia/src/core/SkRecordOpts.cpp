@@ -7,10 +7,19 @@
 
 #include "src/core/SkRecordOpts.h"
 
-#include "include/private/base/SkTDArray.h"
-#include "src/core/SkCanvasPriv.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/base/SkMath.h"
+#include "include/private/base/SkTemplates.h"
+#include "src/core/SkRecord.h"
 #include "src/core/SkRecordPattern.h"
 #include "src/core/SkRecords.h"
+
+#include <cstdint>
+#include <optional>
 
 using namespace SkRecords;
 
@@ -33,43 +42,6 @@ static bool apply(Pass* pass, SkRecord* record) {
     }
     return changed;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-static void multiple_set_matrices(SkRecord* record) {
-    struct {
-        typedef Pattern<Is<SetMatrix>,
-                        Greedy<Is<NoOp>>,
-                        Is<SetMatrix> >
-            Match;
-
-        bool onMatch(SkRecord* record, Match* pattern, int begin, int end) {
-            record->replace<NoOp>(begin);  // first SetMatrix
-            return true;
-        }
-    } pass;
-    while (apply(&pass, record));
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-#if 0   // experimental, but needs knowledge of previous matrix to operate correctly
-static void apply_matrix_to_draw_params(SkRecord* record) {
-    struct {
-        typedef Pattern<Is<SetMatrix>,
-                        Greedy<Is<NoOp>>,
-                        Is<SetMatrix> >
-            Pattern;
-
-        bool onMatch(SkRecord* record, Pattern* pattern, int begin, int end) {
-            record->replace<NoOp>(begin);  // first SetMatrix
-            return true;
-        }
-    } pass;
-    // No need to loop, as we never "open up" opportunities for more of this type of optimization.
-    apply(&pass, record);
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -182,11 +154,19 @@ static bool effectively_srcover(const SkPaint* paint) {
 // For some SaveLayer-[drawing command]-Restore patterns, merge the SaveLayer's alpha into the
 // draw, and no-op the SaveLayer and Restore.
 struct SaveLayerDrawRestoreNooper {
-    typedef Pattern<Is<SaveLayer>, IsDraw, Is<Restore>> Match;
+    // Note that we use IsSingleDraw here, to avoid matching drawAtlas, drawVertices, etc...
+    // Those operations (can) draw multiple, overlapping primitives that blend with each other.
+    // Applying this operation to them changes their behavior. (skbug.com/14554)
+    typedef Pattern<Is<SaveLayer>, IsSingleDraw, Is<Restore>> Match;
 
     bool onMatch(SkRecord* record, Match* match, int begin, int end) {
         if (match->first<SaveLayer>()->backdrop) {
             // can't throw away the layer if we have a backdrop
+            return false;
+        }
+
+        if (!match->first<SaveLayer>()->filters.empty()) {
+            // Our optimizations don't handle the filter list correctly - don't bother trying
             return false;
         }
 
@@ -243,6 +223,12 @@ struct SvgOpacityAndFilterLayerMergePass {
             return false;
         }
 
+        if (!match->first<SaveLayer>()->filters.empty() ||
+            !match->fourth<SaveLayer>()->filters.empty()) {
+            // Our optimizations don't handle the filter list correctly - don't bother trying
+            return false;
+        }
+
         SkPaint* opacityPaint = match->first<SaveLayer>()->paint;
         if (nullptr == opacityPaint) {
             // There wasn't really any point to this SaveLayer at all.
@@ -293,18 +279,6 @@ void SkRecordOptimize(SkRecord* record) {
     // Turn off this optimization completely for Android framework
     // because it makes the following Android CTS test fail:
     // android.uirendering.cts.testclasses.LayerTests#testSaveLayerClippedWithAlpha
-#ifndef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    SkRecordNoopSaveLayerDrawRestores(record);
-#endif
-    SkRecordMergeSvgOpacityAndFilterLayers(record);
-
-    record->defrag();
-}
-
-void SkRecordOptimize2(SkRecord* record) {
-    multiple_set_matrices(record);
-    SkRecordNoopSaveRestores(record);
-    // See why we turn this off in SkRecordOptimize above.
 #ifndef SK_BUILD_FOR_ANDROID_FRAMEWORK
     SkRecordNoopSaveLayerDrawRestores(record);
 #endif

@@ -32,7 +32,7 @@ struct SkFontArguments {
      */
     struct Palette {
         struct Override {
-            int index;
+            uint16_t index;
             SkColor color;
         };
         int index;

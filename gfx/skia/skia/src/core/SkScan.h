@@ -9,24 +9,19 @@
 #ifndef SkScan_DEFINED
 #define SkScan_DEFINED
 
+#include "include/core/SkPoint.h"
 #include "include/core/SkRect.h"
 #include "include/private/base/SkFixed.h"
-#include <atomic>
 
-class SkRasterClip;
-class SkRegion;
 class SkBlitter;
 class SkPath;
+class SkRasterClip;
+class SkRegion;
 
 /** Defines a fixed-point rectangle, identical to the integer SkIRect, but its
     coordinates are treated as SkFixed rather than int32_t.
 */
 typedef SkIRect SkXRect;
-
-extern std::atomic<bool> gSkUseAnalyticAA;
-extern std::atomic<bool> gSkForceAnalyticAA;
-
-class AdditiveBlitter;
 
 class SkScan {
 public:
@@ -93,8 +88,6 @@ private:
     static void HairLineRgn(const SkPoint[], int count, const SkRegion*, SkBlitter*);
     static void AntiHairLineRgn(const SkPoint[], int count, const SkRegion*, SkBlitter*);
     static void AAAFillPath(const SkPath& path, SkBlitter* blitter, const SkIRect& pathIR,
-                            const SkIRect& clipBounds, bool forceRLE);
-    static void SAAFillPath(const SkPath& path, SkBlitter* blitter, const SkIRect& pathIR,
                             const SkIRect& clipBounds, bool forceRLE);
 };
 

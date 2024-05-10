@@ -8,10 +8,10 @@
 #include "src/sksl/ir/SkSLDoStatement.h"
 
 #include "include/core/SkTypes.h"
-#include "include/sksl/SkSLErrorReporter.h"
 #include "src/sksl/SkSLAnalysis.h"
 #include "src/sksl/SkSLBuiltinTypes.h"
 #include "src/sksl/SkSLContext.h"
+#include "src/sksl/SkSLErrorReporter.h"
 #include "src/sksl/SkSLProgramSettings.h"
 #include "src/sksl/ir/SkSLType.h"
 
@@ -43,11 +43,6 @@ std::unique_ptr<Statement> DoStatement::Make(const Context& context,
     SkASSERT(test->type().matches(*context.fTypes.fBool));
     SkASSERT(!Analysis::DetectVarDeclarationWithoutScope(*stmt));
     return std::make_unique<DoStatement>(pos, std::move(stmt), std::move(test));
-}
-
-std::unique_ptr<Statement> DoStatement::clone() const {
-    return std::make_unique<DoStatement>(fPosition, this->statement()->clone(),
-                                         this->test()->clone());
 }
 
 std::string DoStatement::description() const {

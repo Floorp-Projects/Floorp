@@ -4,12 +4,12 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+#include "include/ports/SkImageGeneratorCG.h"
 
 #include "include/codec/SkEncodedOrigin.h"
-#include "include/ports/SkImageGeneratorCG.h"
 #include "include/private/base/SkTemplates.h"
 #include "include/utils/mac/SkCGUtils.h"
-#include "src/codec/SkPixmapUtils.h"
+#include "src/codec/SkPixmapUtilsPriv.h"
 #include "src/utils/mac/SkUniqueCFRef.h"
 
 #ifdef SK_BUILD_FOR_MAC

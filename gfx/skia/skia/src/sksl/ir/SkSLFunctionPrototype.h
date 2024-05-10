@@ -8,9 +8,9 @@
 #ifndef SKSL_FUNCTIONPROTOTYPE
 #define SKSL_FUNCTIONPROTOTYPE
 
-#include "include/private/SkSLProgramElement.h"
 #include "src/sksl/ir/SkSLBlock.h"
 #include "src/sksl/ir/SkSLFunctionDeclaration.h"
+#include "src/sksl/ir/SkSLProgramElement.h"
 
 namespace SkSL {
 
@@ -32,11 +32,6 @@ public:
 
     bool isBuiltin() const {
         return fBuiltin;
-    }
-
-    std::unique_ptr<ProgramElement> clone() const override {
-        return std::make_unique<FunctionPrototype>(fPosition, &this->declaration(),
-                /*builtin=*/false);
     }
 
     std::string description() const override {

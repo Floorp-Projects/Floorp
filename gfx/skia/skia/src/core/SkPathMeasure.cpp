@@ -5,8 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkContourMeasure.h"
 #include "include/core/SkPathMeasure.h"
+
+#include "include/core/SkContourMeasure.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/private/base/SkTDArray.h"
+#include "src/core/SkPathMeasurePriv.h"
+
+#include <cstddef>
+
+class SkMatrix;
 
 SkPathMeasure::SkPathMeasure() {}
 
@@ -51,3 +61,12 @@ bool SkPathMeasure::nextContour() {
 #ifdef SK_DEBUG
 void SkPathMeasure::dump() {}
 #endif
+
+/////
+
+size_t SkPathMeasurePriv::CountSegments(const SkPathMeasure& meas) {
+    if (auto cntr = meas.currentMeasure()) {
+        return cntr->fSegments.size();
+    }
+    return 0;
+}
