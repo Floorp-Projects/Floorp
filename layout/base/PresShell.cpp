@@ -3931,11 +3931,9 @@ void PresShell::ScheduleViewManagerFlush() {
     return;
   }
 
-  nsPresContext* presContext = GetPresContext();
-  if (presContext) {
+  if (nsPresContext* presContext = GetPresContext()) {
     presContext->RefreshDriver()->ScheduleViewManagerFlush();
   }
-  SetNeedLayoutFlush();
 }
 
 void PresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent) {
