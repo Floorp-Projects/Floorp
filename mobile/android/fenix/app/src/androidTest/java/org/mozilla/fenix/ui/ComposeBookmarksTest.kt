@@ -233,11 +233,6 @@ class ComposeBookmarksTest : TestSetup() {
             createBookmark(webPages[1].url, "root")
             createBookmark(webPages[2].url, "root")
             createBookmark(webPages[3].url, "sub")
-        }.openComposeTabDrawer(activityTestRule) {
-            closeTab()
-        }
-
-        browserScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
         }.openThreeDotMenu("root") {
@@ -272,11 +267,6 @@ class ComposeBookmarksTest : TestSetup() {
         browserScreen {
             createBookmark(webPages[0].url, "root")
             createBookmark(webPages[1].url, "sub")
-        }.openComposeTabDrawer(activityTestRule) {
-            closeTab()
-        }
-
-        browserScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
         }.openThreeDotMenu("root") {
