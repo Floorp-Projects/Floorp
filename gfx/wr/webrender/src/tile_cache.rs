@@ -226,6 +226,7 @@ impl TileCacheBuilder {
                 cluster.spatial_node_index,
                 &mut self.prev_scroll_root_cache,
                 spatial_tree,
+                true,
             );
 
             *scroll_root_occurrences.entry(scroll_root).or_insert(0) += 1;
@@ -324,6 +325,9 @@ impl TileCacheBuilder {
                     spatial_node_index,
                     &mut self.prev_scroll_root_cache,
                     spatial_tree,
+                    // Allow sticky frames as scroll roots, unless our quality settings prefer
+                    // subpixel AA over performance.
+                    !quality_settings.force_subpixel_aa_where_possible,
                 );
 
                 let current_scroll_root = secondary_slices
@@ -369,6 +373,7 @@ impl TileCacheBuilder {
                                         clip_node_data.key.spatial_node_index,
                                         &mut self.prev_scroll_root_cache,
                                         spatial_tree,
+                                        true,
                                     );
 
                                     if spatial_root != self.root_spatial_node_index {
@@ -509,12 +514,13 @@ fn find_scroll_root(
     spatial_node_index: SpatialNodeIndex,
     prev_scroll_root_cache: &mut (SpatialNodeIndex, SpatialNodeIndex),
     spatial_tree: &SceneSpatialTree,
+    allow_sticky_frames: bool,
 ) -> SpatialNodeIndex {
     if prev_scroll_root_cache.0 == spatial_node_index {
         return prev_scroll_root_cache.1;
     }
 
-    let scroll_root = spatial_tree.find_scroll_root(spatial_node_index);
+    let scroll_root = spatial_tree.find_scroll_root(spatial_node_index, allow_sticky_frames);
     *prev_scroll_root_cache = (spatial_node_index, scroll_root);
 
     scroll_root
