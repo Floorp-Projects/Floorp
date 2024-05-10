@@ -29,14 +29,8 @@ var subtests = [
   {"file": "helper_doubletap_zoom_large_overflow.html", "prefs": doubletap_prefs},
   {"file": "helper_doubletap_zoom_fixedpos.html", "prefs": logging_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_tallwide.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_textarea.html", "prefs": doubletap_prefs},
 ];
-
-// Bug 1893742: helper_doubletap_zoom_textarea.html is flaky on Mac.
-if (getPlatform() != "mac") {
-  subtests.push(
-    {"file": "helper_doubletap_zoom_textarea.html", "prefs": doubletap_prefs}
-  );
-}
 
 if (getPlatform() == "mac") {
   subtests.push(
