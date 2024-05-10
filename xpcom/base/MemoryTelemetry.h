@@ -8,6 +8,7 @@
 #define mozilla_MemoryTelemetry_h
 
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -61,7 +62,7 @@ class MemoryTelemetry final : public nsIObserver,
   static Result<uint32_t, nsresult> GetOpenTabsCount();
 
   void GatherTotalMemory();
-  nsresult FinishGatheringTotalMemory(int64_t aTotalMemory,
+  nsresult FinishGatheringTotalMemory(Maybe<int64_t> aTotalMemory,
                                       const nsTArray<int64_t>& aChildSizes);
 
   nsCOMPtr<nsIEventTarget> mThreadPool;
