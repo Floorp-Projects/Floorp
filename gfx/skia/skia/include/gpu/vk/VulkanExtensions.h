@@ -57,9 +57,9 @@ public:
 #endif
 
 private:
-    void getSpecVersions(const VulkanGetProc& getProc, VkInstance, VkPhysicalDevice);
+    void getSpecVersions(VulkanGetProc getProc, VkInstance, VkPhysicalDevice);
 
-    skia_private::TArray<Info> fExtensions;
+    SkTArray<Info> fExtensions;
 };
 
 } // namespace skgpu

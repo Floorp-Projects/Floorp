@@ -8,15 +8,12 @@
 #ifndef SkMaskCache_DEFINED
 #define SkMaskCache_DEFINED
 
-#include "include/core/SkScalar.h"
-
-class SkCachedData;
-class SkRRect;
-class SkResourceCache;
-enum SkBlurStyle : int;
-struct SkMask;
-struct SkRect;
-template <typename T> class SkTLazy;
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "src/core/SkCachedData.h"
+#include "src/core/SkMask.h"
+#include "src/core/SkResourceCache.h"
 
 class SkMaskCache {
 public:
@@ -27,10 +24,10 @@ public:
      * On failure, return nullptr.
      */
     static SkCachedData* FindAndRef(SkScalar sigma, SkBlurStyle style,
-                                    const SkRRect& rrect, SkTLazy<SkMask>* mask,
+                                    const SkRRect& rrect, SkMask* mask,
                                     SkResourceCache* localCache = nullptr);
     static SkCachedData* FindAndRef(SkScalar sigma, SkBlurStyle style,
-                                    const SkRect rects[], int count, SkTLazy<SkMask>* mask,
+                                    const SkRect rects[], int count, SkMask* mask,
                                     SkResourceCache* localCache = nullptr);
 
     /**

@@ -8,22 +8,20 @@
 #ifndef SkChromeRemoteGlyphCache_DEFINED
 #define SkChromeRemoteGlyphCache_DEFINED
 
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkTypeface.h"
-#include "include/private/base/SkAPI.h"
-
-#include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <vector>
 
+#include "include/core/SkData.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkTypeface.h"
+#include "include/utils/SkNoDrawCanvas.h"
+
+struct SkPackedGlyphID;
 class SkAutoDescriptor;
-class SkCanvas;
-class SkColorSpace;
 class SkStrikeCache;
 class SkStrikeClientImpl;
+class SkStrikeServer;
 class SkStrikeServerImpl;
-class SkSurfaceProps;
 namespace sktext::gpu { class Slug; }
 
 using SkDiscardableHandleId = uint32_t;

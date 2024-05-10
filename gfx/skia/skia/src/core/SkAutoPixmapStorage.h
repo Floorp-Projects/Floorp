@@ -9,14 +9,9 @@
 #define SkAutoPixmapStorage_DEFINED
 
 #include "include/core/SkPixmap.h"
-#include "include/core/SkRefCnt.h"
 #include "include/private/base/SkMalloc.h"
 
-#include <cstddef>
-
 class SkData;
-struct SkImageInfo;
-struct SkMask;
 
 class SkAutoPixmapStorage : public SkPixmap {
 public:
@@ -59,13 +54,13 @@ public:
     * been allocated, the result is NULL. The caller is responsible for calling sk_free to free
     * the returned memory.
     */
-    [[nodiscard]] void* detachPixels();
+    void* SK_WARN_UNUSED_RESULT detachPixels();
 
     /**
     *  Returns an SkData object wrapping the allocated pixels memory, and resets the pixmap.
     *  If the storage hasn't been allocated, the result is NULL.
     */
-    [[nodiscard]] sk_sp<SkData> detachPixelsAsData();
+    sk_sp<SkData> SK_WARN_UNUSED_RESULT detachPixelsAsData();
 
     // We wrap these so we can clear our internal storage
 
@@ -78,7 +73,7 @@ public:
         this->INHERITED::reset(info, addr, rb);
     }
 
-    [[nodiscard]] bool reset(const SkMask& mask) {
+    bool SK_WARN_UNUSED_RESULT reset(const SkMask& mask) {
         this->freeStorage();
         return this->INHERITED::reset(mask);
     }

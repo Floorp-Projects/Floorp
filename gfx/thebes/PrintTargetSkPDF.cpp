@@ -9,8 +9,6 @@
 #include "nsString.h"
 #include <vector>
 
-#include "skia/src/pdf/SkPDFUtils.h"
-
 namespace mozilla::gfx {
 
 PrintTargetSkPDF::PrintTargetSkPDF(const IntSize& aSize,
@@ -45,8 +43,8 @@ nsresult PrintTargetSkPDF::BeginPrinting(const nsAString& aTitle,
   SkPDF::Metadata metadata;
   metadata.fTitle = NS_ConvertUTF16toUTF8(aTitle).get();
   metadata.fCreator = "Firefox";
-  SkPDF::DateTime now = {0};
-  SkPDFUtils::GetDateTime(&now);
+  SkTime::DateTime now;
+  SkTime::GetDateTime(&now);
   metadata.fCreation = now;
   metadata.fModified = now;
 

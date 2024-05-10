@@ -8,20 +8,15 @@
 #ifndef SkBlitter_A8_DEFINED
 #define SkBlitter_A8_DEFINED
 
-#include "include/core/SkColor.h"
 #include "include/core/SkPixmap.h"
 #include "include/core/SkRefCnt.h"
 #include "src/core/SkBlitter.h"
 
-#include <cstdint>
-
-class SkArenaAlloc;
-class SkMatrix;
 class SkPaint;
+class SkMatrix;
+class SkArenaAlloc;
 class SkShader;
 class SkSurfaceProps;
-struct SkIRect;
-struct SkMask;
 
 class SkA8_Coverage_Blitter : public SkBlitter {
 public:
@@ -31,6 +26,7 @@ public:
     void blitV(int x, int y, int height, SkAlpha alpha) override;
     void blitRect(int x, int y, int width, int height) override;
     void blitMask(const SkMask&, const SkIRect&) override;
+    const SkPixmap* justAnOpaqueColor(uint32_t*) override;
 
 private:
     const SkPixmap fDevice;

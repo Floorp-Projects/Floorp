@@ -21,9 +21,12 @@
 #include "include/core/SkTypes.h"
 #include "include/core/SkVertices.h"
 #include "include/private/base/SkTArray.h"
-#include "include/private/chromium/Slug.h"
 #include "src/core/SkPictureFlat.h"
 #include "src/core/SkReadBuffer.h"
+
+#if defined(SK_GANESH)
+#include "include/private/chromium/Slug.h"
+#endif
 
 #include <cstdint>
 #include <memory>
@@ -142,9 +145,11 @@ public:
         return read_index_base_1_or_null(reader, fTextBlobs);
     }
 
+#if defined(SK_GANESH)
     const sktext::gpu::Slug* getSlug(SkReadBuffer* reader) const {
         return read_index_base_1_or_null(reader, fSlugs);
     }
+#endif
 
     const SkVertices* getVertices(SkReadBuffer* reader) const {
         return read_index_base_1_or_null(reader, fVertices);
@@ -172,7 +177,10 @@ private:
     skia_private::TArray<sk_sp<const SkTextBlob>>  fTextBlobs;
     skia_private::TArray<sk_sp<const SkVertices>>  fVertices;
     skia_private::TArray<sk_sp<const SkImage>>     fImages;
+#if defined(SK_GANESH)
     skia_private::TArray<sk_sp<const sktext::gpu::Slug>> fSlugs;
+#endif
+
 
     SkTypefacePlayback                 fTFPlayback;
     std::unique_ptr<SkFactoryPlayback> fFactoryPlayback;

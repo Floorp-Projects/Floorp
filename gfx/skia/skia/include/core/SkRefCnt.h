@@ -321,7 +321,7 @@ public:
      *  The caller must assume ownership of the object, and manage its reference count directly.
      *  No call to unref() will be made.
      */
-    [[nodiscard]] T* release() {
+    T* SK_WARN_UNUSED_RESULT release() {
         T* ptr = fPtr;
         fPtr = nullptr;
         return ptr;

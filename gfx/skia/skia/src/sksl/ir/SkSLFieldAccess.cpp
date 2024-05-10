@@ -9,20 +9,20 @@
 
 #include "include/core/SkSpan.h"
 #include "include/core/SkTypes.h"
+#include "include/private/SkSLDefines.h"
+#include "include/private/SkSLSymbol.h"
 #include "include/private/base/SkTArray.h"
+#include "include/sksl/SkSLErrorReporter.h"
+#include "include/sksl/SkSLOperator.h"
 #include "src/sksl/SkSLAnalysis.h"
 #include "src/sksl/SkSLBuiltinTypes.h"
 #include "src/sksl/SkSLConstantFolder.h"
 #include "src/sksl/SkSLContext.h"
-#include "src/sksl/SkSLDefines.h"
-#include "src/sksl/SkSLErrorReporter.h"
-#include "src/sksl/SkSLOperator.h"
 #include "src/sksl/ir/SkSLConstructorStruct.h"
 #include "src/sksl/ir/SkSLFunctionDeclaration.h"
 #include "src/sksl/ir/SkSLMethodReference.h"
 #include "src/sksl/ir/SkSLSetting.h"
-#include "src/sksl/ir/SkSLSymbol.h"
-#include "src/sksl/ir/SkSLSymbolTable.h"  // IWYU pragma: keep
+#include "src/sksl/ir/SkSLSymbolTable.h"
 
 #include <cstddef>
 
@@ -30,13 +30,14 @@ namespace SkSL {
 
 std::unique_ptr<Expression> FieldAccess::Convert(const Context& context,
                                                  Position pos,
+                                                 SymbolTable& symbolTable,
                                                  std::unique_ptr<Expression> base,
                                                  std::string_view field) {
     const Type& baseType = base->type();
     if (baseType.isEffectChild()) {
         // Turn the field name into a free function name, prefixed with '$':
         std::string methodName = "$" + std::string(field);
-        const Symbol* result = context.fSymbolTable->find(methodName);
+        const Symbol* result = symbolTable.find(methodName);
         if (result && result->is<FunctionDeclaration>()) {
             return std::make_unique<MethodReference>(context, pos, std::move(base),
                                                      &result->as<FunctionDeclaration>());
@@ -46,10 +47,10 @@ std::unique_ptr<Expression> FieldAccess::Convert(const Context& context,
         return nullptr;
     }
     if (baseType.isStruct()) {
-        SkSpan<const Field> fields = baseType.fields();
+        const std::vector<Type::Field>& fields = baseType.fields();
         for (size_t i = 0; i < fields.size(); i++) {
             if (fields[i].fName == field) {
-                return FieldAccess::Make(context, pos, std::move(base), (int)i);
+                return FieldAccess::Make(context, pos, std::move(base), (int) i);
             }
         }
     }
@@ -103,7 +104,7 @@ std::unique_ptr<Expression> FieldAccess::Make(const Context& context,
 }
 
 size_t FieldAccess::initialSlot() const {
-    SkSpan<const Field> fields = this->base()->type().fields();
+    SkSpan<const Type::Field> fields = this->base()->type().fields();
     const int fieldIndex = this->fieldIndex();
 
     size_t slot = 0;

@@ -8,16 +8,20 @@
 #ifndef SkPixelRef_DEFINED
 #define SkPixelRef_DEFINED
 
+#include "include/core/SkBitmap.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPixmap.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkSize.h"
 #include "include/private/SkIDChangeListener.h"
-#include "include/private/base/SkAPI.h"
-#include "include/private/base/SkTo.h"
+#include "include/private/base/SkMutex.h"
+#include "include/private/base/SkTDArray.h"
 
 #include <atomic>
-#include <cstddef>
-#include <cstdint>
 
+struct SkIRect;
+
+class GrTexture;
 class SkDiscardableMemory;
 
 /** \class SkPixelRef

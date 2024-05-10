@@ -5,5 +5,9 @@
  * found in the LICENSE file.
  */
 
-// TODO(kjlubick) remove this empty file after updating Chromium
+#include "include/core/SkImageGenerator.h"
 
+std::unique_ptr<SkImageGenerator> SkImageGenerator::MakeFromEncodedImpl(
+        sk_sp<SkData>, std::optional<SkAlphaType>) {
+    return nullptr;
+}

@@ -24,13 +24,11 @@ if CONFIG['MOZ_OPTIMIZE']:
 
 UNIFIED_SOURCES += [
     'skia/src/base/SkArenaAlloc.cpp',
-    'skia/src/base/SkBase64.cpp',
     'skia/src/base/SkBezierCurves.cpp',
     'skia/src/base/SkBlockAllocator.cpp',
     'skia/src/base/SkBuffer.cpp',
     'skia/src/base/SkContainers.cpp',
     'skia/src/base/SkCubics.cpp',
-    'skia/src/base/SkDebug.cpp',
     'skia/src/base/SkDeque.cpp',
     'skia/src/base/SkFloatingPoint.cpp',
     'skia/src/base/SkHalf.cpp',
@@ -39,14 +37,12 @@ UNIFIED_SOURCES += [
     'skia/src/base/SkQuads.cpp',
     'skia/src/base/SkSafeMath.cpp',
     'skia/src/base/SkSemaphore.cpp',
-    'skia/src/base/SkSharedMutex.cpp',
-    'skia/src/base/SkSpinlock.cpp',
     'skia/src/base/SkTDArray.cpp',
     'skia/src/base/SkThreadID.cpp',
-    'skia/src/base/SkTime.cpp',
     'skia/src/base/SkTSearch.cpp',
     'skia/src/base/SkUTF.cpp',
     'skia/src/base/SkUtils.cpp',
+    'skia/src/codec/SkMasks.cpp',
     'skia/src/core/SkAAClip.cpp',
     'skia/src/core/SkAlphaRuns.cpp',
     'skia/src/core/SkAnalyticEdge.cpp',
@@ -61,18 +57,18 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkBlendMode.cpp',
     'skia/src/core/SkBlendModeBlender.cpp',
     'skia/src/core/SkBlurMask.cpp',
-    'skia/src/core/SkBlurMaskFilterImpl.cpp',
+    'skia/src/core/SkBlurMF.cpp',
     'skia/src/core/SkCachedData.cpp',
     'skia/src/core/SkCanvas.cpp',
     'skia/src/core/SkCanvas_Raster.cpp',
     'skia/src/core/SkCanvasPriv.cpp',
     'skia/src/core/SkCapabilities.cpp',
-    'skia/src/core/SkChecksum.cpp',
+    'skia/src/core/SkChromeRemoteGlyphCache.cpp',
     'skia/src/core/SkClipStack.cpp',
     'skia/src/core/SkClipStackDevice.cpp',
     'skia/src/core/SkColor.cpp',
     'skia/src/core/SkColorFilter.cpp',
-    'skia/src/core/SkColorTable.cpp',
+    'skia/src/core/SkColorFilter_Matrix.cpp',
     'skia/src/core/SkCompressedDataUtils.cpp',
     'skia/src/core/SkContourMeasure.cpp',
     'skia/src/core/SkConvertPixels.cpp',
@@ -80,6 +76,9 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkCubicMap.cpp',
     'skia/src/core/SkData.cpp',
     'skia/src/core/SkDataTable.cpp',
+    'skia/src/core/SkDebug.cpp',
+    'skia/src/core/SkDeferredDisplayList.cpp',
+    'skia/src/core/SkDeferredDisplayListRecorder.cpp',
     'skia/src/core/SkDescriptor.cpp',
     'skia/src/core/SkDevice.cpp',
     'skia/src/core/SkDistanceFieldGen.cpp',
@@ -90,6 +89,7 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkDraw_vertices.cpp',
     'skia/src/core/SkDrawable.cpp',
     'skia/src/core/SkDrawBase.cpp',
+    'skia/src/core/SkDrawLooper.cpp',
     'skia/src/core/SkDrawShadowInfo.cpp',
     'skia/src/core/SkEdge.cpp',
     'skia/src/core/SkEdgeBuilder.cpp',
@@ -107,6 +107,7 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkGlobalInitialization_core.cpp',
     'skia/src/core/SkGlyph.cpp',
     'skia/src/core/SkGlyphRunPainter.cpp',
+    'skia/src/core/SkGpuBlurUtils.cpp',
     'skia/src/core/SkGraphics.cpp',
     'skia/src/core/SkIDChangeListener.cpp',
     'skia/src/core/SkImageFilter.cpp',
@@ -114,7 +115,6 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkImageFilterTypes.cpp',
     'skia/src/core/SkImageGenerator.cpp',
     'skia/src/core/SkImageInfo.cpp',
-    'skia/src/core/SkKnownRuntimeEffects.cpp',
     'skia/src/core/SkLatticeIter.cpp',
     'skia/src/core/SkLineClipper.cpp',
     'skia/src/core/SkLocalMatrixImageFilter.cpp',
@@ -125,15 +125,13 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkMaskCache.cpp',
     'skia/src/core/SkMaskFilter.cpp',
     'skia/src/core/SkMaskGamma.cpp',
-    'skia/src/core/SkMasks.cpp',
     'skia/src/core/SkMatrixInvert.cpp',
     'skia/src/core/SkMD5.cpp',
     'skia/src/core/SkMesh.cpp',
     'skia/src/core/SkMipmap.cpp',
     'skia/src/core/SkMipmapAccessor.cpp',
     'skia/src/core/SkMipmapBuilder.cpp',
-    'skia/src/core/SkMipmapDrawDownSampler.cpp',
-    'skia/src/core/SkMipmapHQDownSampler.cpp',
+    'skia/src/core/SkModeColorFilter.cpp',
     'skia/src/core/SkPaint.cpp',
     'skia/src/core/SkPaintPriv.cpp',
     'skia/src/core/SkPath_serial.cpp',
@@ -144,6 +142,7 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkPathUtils.cpp',
     'skia/src/core/SkPicture.cpp',
     'skia/src/core/SkPictureFlat.cpp',
+    'skia/src/core/SkPictureImageGenerator.cpp',
     'skia/src/core/SkPicturePlayback.cpp',
     'skia/src/core/SkPictureRecord.cpp',
     'skia/src/core/SkPictureRecorder.cpp',
@@ -152,6 +151,7 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkPixmapDraw.cpp',
     'skia/src/core/SkPoint.cpp',
     'skia/src/core/SkPoint3.cpp',
+    'skia/src/core/SkPromiseImageTexture.cpp',
     'skia/src/core/SkPtrRecorder.cpp',
     'skia/src/core/SkQuadClipper.cpp',
     'skia/src/core/SkRasterClip.cpp',
@@ -170,7 +170,6 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkResourceCache.cpp',
     'skia/src/core/SkRRect.cpp',
     'skia/src/core/SkRSXform.cpp',
-    'skia/src/core/SkRuntimeBlender.cpp',
     'skia/src/core/SkRuntimeEffect.cpp',
     'skia/src/core/SkScalar.cpp',
     'skia/src/core/SkScalerContext.cpp',
@@ -178,8 +177,12 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkScan_AAAPath.cpp',
     'skia/src/core/SkScan_Hairline.cpp',
     'skia/src/core/SkScan_Path.cpp',
+    'skia/src/core/SkScan_SAAPath.cpp',
+    'skia/src/core/SkSharedMutex.cpp',
     'skia/src/core/SkSLTypeShared.cpp',
     'skia/src/core/SkSpecialImage.cpp',
+    'skia/src/core/SkSpecialSurface.cpp',
+    'skia/src/core/SkSpinlock.cpp',
     'skia/src/core/SkStream.cpp',
     'skia/src/core/SkStrike.cpp',
     'skia/src/core/SkStrikeCache.cpp',
@@ -189,14 +192,19 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkStroke.cpp',
     'skia/src/core/SkStrokeRec.cpp',
     'skia/src/core/SkStrokerPriv.cpp',
+    'skia/src/core/SkSurfaceCharacterization.cpp',
     'skia/src/core/SkSwizzle.cpp',
     'skia/src/core/SkTaskGroup.cpp',
     'skia/src/core/SkTextBlob.cpp',
+    'skia/src/core/SkTextBlobTrace.cpp',
+    'skia/src/core/SkTime.cpp',
     'skia/src/core/SkTypeface.cpp',
     'skia/src/core/SkTypeface_remote.cpp',
     'skia/src/core/SkTypefaceCache.cpp',
     'skia/src/core/SkUnPreMultiply.cpp',
     'skia/src/core/SkVertState.cpp',
+    'skia/src/core/SkVM.cpp',
+    'skia/src/core/SkVMBlitter.cpp',
     'skia/src/core/SkWriteBuffer.cpp',
     'skia/src/core/SkWritePixelsRec.cpp',
     'skia/src/core/SkWriter32.cpp',
@@ -204,40 +212,20 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkYUVAPixmaps.cpp',
     'skia/src/core/SkYUVMath.cpp',
     'skia/src/core/SkYUVPlanesCache.cpp',
-    'skia/src/effects/colorfilters/SkBlendModeColorFilter.cpp',
-    'skia/src/effects/colorfilters/SkColorFilterBase.cpp',
-    'skia/src/effects/colorfilters/SkColorSpaceXformColorFilter.cpp',
-    'skia/src/effects/colorfilters/SkComposeColorFilter.cpp',
-    'skia/src/effects/colorfilters/SkGaussianColorFilter.cpp',
-    'skia/src/effects/colorfilters/SkMatrixColorFilter.cpp',
-    'skia/src/effects/colorfilters/SkRuntimeColorFilter.cpp',
-    'skia/src/effects/colorfilters/SkTableColorFilter.cpp',
-    'skia/src/effects/colorfilters/SkWorkingFormatColorFilter.cpp',
-    'skia/src/effects/imagefilters/SkBlendImageFilter.cpp',
     'skia/src/effects/imagefilters/SkBlurImageFilter.cpp',
     'skia/src/effects/imagefilters/SkComposeImageFilter.cpp',
-    'skia/src/effects/imagefilters/SkCropImageFilter.cpp',
-    'skia/src/effects/SkBlenders.cpp',
     'skia/src/effects/SkDashPathEffect.cpp',
     'skia/src/encode/SkEncoder.cpp',
-    'skia/src/encode/SkICC.cpp',
-    'skia/src/encode/SkJpegEncoder_none.cpp',
-    'skia/src/encode/SkPngEncoder_none.cpp',
-    'skia/src/encode/SkWebpEncoder_none.cpp',
+    'skia/src/encode/SkImageEncoder.cpp',
     'skia/src/image/SkImage.cpp',
     'skia/src/image/SkImage_Base.cpp',
     'skia/src/image/SkImage_Lazy.cpp',
-    'skia/src/image/SkImage_LazyFactories.cpp',
-    'skia/src/image/SkImage_Picture.cpp',
     'skia/src/image/SkImage_Raster.cpp',
-    'skia/src/image/SkImage_RasterFactories.cpp',
-    'skia/src/image/SkPictureImageGenerator.cpp',
     'skia/src/image/SkRescaleAndReadPixels.cpp',
     'skia/src/image/SkSurface.cpp',
     'skia/src/image/SkSurface_Base.cpp',
     'skia/src/image/SkSurface_Null.cpp',
     'skia/src/image/SkSurface_Raster.cpp',
-    'skia/src/image/SkTiledImageUtils.cpp',
     'skia/src/lazy/SkDiscardableMemoryPool.cpp',
     'skia/src/pathops/SkAddIntersections.cpp',
     'skia/src/pathops/SkDConicLineIntersection.cpp',
@@ -271,36 +259,34 @@ UNIFIED_SOURCES += [
     'skia/src/pathops/SkPathWriter.cpp',
     'skia/src/pathops/SkReduceOrder.cpp',
     'skia/src/ports/SkDiscardableMemory_none.cpp',
+    'skia/src/ports/SkFontMgr_empty_factory.cpp',
     'skia/src/ports/SkGlobalInitialization_default.cpp',
     'skia/src/ports/SkImageGenerator_none.cpp',
     'skia/src/ports/SkMemory_mozalloc.cpp',
     'skia/src/ports/SkOSFile_stdio.cpp',
     'skia/src/sfnt/SkOTTable_name.cpp',
     'skia/src/sfnt/SkOTUtils.cpp',
-    'skia/src/shaders/gradients/SkConicalGradient.cpp',
-    'skia/src/shaders/gradients/SkGradientBaseShader.cpp',
+    'skia/src/shaders/gradients/SkGradientShader.cpp',
+    'skia/src/shaders/gradients/SkGradientShaderBase.cpp',
     'skia/src/shaders/gradients/SkLinearGradient.cpp',
     'skia/src/shaders/gradients/SkRadialGradient.cpp',
     'skia/src/shaders/gradients/SkSweepGradient.cpp',
+    'skia/src/shaders/gradients/SkTwoPointConicalGradient.cpp',
     'skia/src/shaders/SkBitmapProcShader.cpp',
-    'skia/src/shaders/SkBlendShader.cpp',
     'skia/src/shaders/SkColorFilterShader.cpp',
     'skia/src/shaders/SkColorShader.cpp',
+    'skia/src/shaders/SkComposeShader.cpp',
     'skia/src/shaders/SkCoordClampShader.cpp',
     'skia/src/shaders/SkEmptyShader.cpp',
+    'skia/src/shaders/SkGainmapShader.cpp',
     'skia/src/shaders/SkImageShader.cpp',
     'skia/src/shaders/SkLocalMatrixShader.cpp',
-    'skia/src/shaders/SkPerlinNoiseShaderImpl.cpp',
+    'skia/src/shaders/SkPerlinNoiseShader.cpp',
     'skia/src/shaders/SkPictureShader.cpp',
-    'skia/src/shaders/SkRuntimeShader.cpp',
     'skia/src/shaders/SkShader.cpp',
-    'skia/src/shaders/SkShaderBase.cpp',
     'skia/src/shaders/SkTransformShader.cpp',
-    'skia/src/shaders/SkTriColorShader.cpp',
-    'skia/src/shaders/SkWorkingColorSpaceShader.cpp',
     'skia/src/sksl/analysis/SkSLCanExitWithoutReturningValue.cpp',
     'skia/src/sksl/analysis/SkSLCheckProgramStructure.cpp',
-    'skia/src/sksl/analysis/SkSLCheckSymbolTableCorrectness.cpp',
     'skia/src/sksl/analysis/SkSLFinalizationChecks.cpp',
     'skia/src/sksl/analysis/SkSLGetLoopControlFlowInfo.cpp',
     'skia/src/sksl/analysis/SkSLGetLoopUnrollInfo.cpp',
@@ -311,11 +297,21 @@ UNIFIED_SOURCES += [
     'skia/src/sksl/analysis/SkSLIsSameExpressionTree.cpp',
     'skia/src/sksl/analysis/SkSLIsTrivialExpression.cpp',
     'skia/src/sksl/analysis/SkSLProgramUsage.cpp',
-    'skia/src/sksl/analysis/SkSLReturnsInputAlpha.cpp',
     'skia/src/sksl/analysis/SkSLSwitchCaseContainsExit.cpp',
     'skia/src/sksl/analysis/SkSLSymbolTableStackBuilder.cpp',
     'skia/src/sksl/codegen/SkSLRasterPipelineBuilder.cpp',
     'skia/src/sksl/codegen/SkSLRasterPipelineCodeGenerator.cpp',
+    'skia/src/sksl/codegen/SkSLVMCodeGenerator.cpp',
+    'skia/src/sksl/dsl/DSLBlock.cpp',
+    'skia/src/sksl/dsl/DSLCase.cpp',
+    'skia/src/sksl/dsl/DSLCore.cpp',
+    'skia/src/sksl/dsl/DSLExpression.cpp',
+    'skia/src/sksl/dsl/DSLFunction.cpp',
+    'skia/src/sksl/dsl/DSLLayout.cpp',
+    'skia/src/sksl/dsl/DSLStatement.cpp',
+    'skia/src/sksl/dsl/DSLType.cpp',
+    'skia/src/sksl/dsl/DSLVar.cpp',
+    'skia/src/sksl/dsl/priv/DSLWriter.cpp',
     'skia/src/sksl/ir/SkSLBinaryExpression.cpp',
     'skia/src/sksl/ir/SkSLBlock.cpp',
     'skia/src/sksl/ir/SkSLChildCall.cpp',
@@ -333,7 +329,6 @@ UNIFIED_SOURCES += [
     'skia/src/sksl/ir/SkSLDoStatement.cpp',
     'skia/src/sksl/ir/SkSLExpression.cpp',
     'skia/src/sksl/ir/SkSLExpressionStatement.cpp',
-    'skia/src/sksl/ir/SkSLExtension.cpp',
     'skia/src/sksl/ir/SkSLFieldAccess.cpp',
     'skia/src/sksl/ir/SkSLForStatement.cpp',
     'skia/src/sksl/ir/SkSLFunctionCall.cpp',
@@ -344,17 +339,13 @@ UNIFIED_SOURCES += [
     'skia/src/sksl/ir/SkSLInterfaceBlock.cpp',
     'skia/src/sksl/ir/SkSLLayout.cpp',
     'skia/src/sksl/ir/SkSLLiteral.cpp',
-    'skia/src/sksl/ir/SkSLModifierFlags.cpp',
-    'skia/src/sksl/ir/SkSLModifiersDeclaration.cpp',
+    'skia/src/sksl/ir/SkSLModifiers.cpp',
     'skia/src/sksl/ir/SkSLPostfixExpression.cpp',
     'skia/src/sksl/ir/SkSLPrefixExpression.cpp',
     'skia/src/sksl/ir/SkSLProgram.cpp',
     'skia/src/sksl/ir/SkSLSetting.cpp',
-    'skia/src/sksl/ir/SkSLStructDefinition.cpp',
-    'skia/src/sksl/ir/SkSLSwitchCase.cpp',
     'skia/src/sksl/ir/SkSLSwitchStatement.cpp',
     'skia/src/sksl/ir/SkSLSwizzle.cpp',
-    'skia/src/sksl/ir/SkSLSymbol.cpp',
     'skia/src/sksl/ir/SkSLSymbolTable.cpp',
     'skia/src/sksl/ir/SkSLTernaryExpression.cpp',
     'skia/src/sksl/ir/SkSLType.cpp',
@@ -379,37 +370,34 @@ UNIFIED_SOURCES += [
     'skia/src/sksl/SkSLPosition.cpp',
     'skia/src/sksl/SkSLSampleUsage.cpp',
     'skia/src/sksl/SkSLString.cpp',
+    'skia/src/sksl/SkSLThreadContext.cpp',
     'skia/src/sksl/SkSLUtil.cpp',
-    'skia/src/sksl/tracing/SkSLDebugTracePlayer.cpp',
-    'skia/src/sksl/tracing/SkSLDebugTracePriv.cpp',
+    'skia/src/sksl/tracing/SkRPDebugTrace.cpp',
     'skia/src/sksl/tracing/SkSLTraceHook.cpp',
+    'skia/src/sksl/tracing/SkVMDebugTrace.cpp',
+    'skia/src/sksl/tracing/SkVMDebugTracePlayer.cpp',
     'skia/src/sksl/transform/SkSLAddConstToVarModifiers.cpp',
     'skia/src/sksl/transform/SkSLEliminateDeadFunctions.cpp',
     'skia/src/sksl/transform/SkSLEliminateDeadGlobalVariables.cpp',
     'skia/src/sksl/transform/SkSLEliminateDeadLocalVariables.cpp',
     'skia/src/sksl/transform/SkSLEliminateEmptyStatements.cpp',
-    'skia/src/sksl/transform/SkSLEliminateUnnecessaryBraces.cpp',
     'skia/src/sksl/transform/SkSLEliminateUnreachableCode.cpp',
     'skia/src/sksl/transform/SkSLFindAndDeclareBuiltinFunctions.cpp',
-    'skia/src/sksl/transform/SkSLFindAndDeclareBuiltinStructs.cpp',
     'skia/src/sksl/transform/SkSLFindAndDeclareBuiltinVariables.cpp',
-    'skia/src/sksl/transform/SkSLHoistSwitchVarDeclarationsAtTopLevel.cpp',
     'skia/src/sksl/transform/SkSLRenamePrivateSymbols.cpp',
     'skia/src/sksl/transform/SkSLReplaceConstVarsWithLiterals.cpp',
     'skia/src/sksl/transform/SkSLRewriteIndexedSwizzle.cpp',
     'skia/src/text/GlyphRun.cpp',
-    'skia/src/text/SlugFromBuffer.cpp',
     'skia/src/text/StrikeForGPU.cpp',
     'skia/src/utils/mac/SkCTFont.cpp',
-    'skia/src/utils/mac/SkCTFontCreateExactCopy.cpp',
+    'skia/src/utils/SkBase64.cpp',
     'skia/src/utils/SkCharToGlyphCache.cpp',
     'skia/src/utils/SkClipStackUtils.cpp',
     'skia/src/utils/SkCustomTypeface.cpp',
     'skia/src/utils/SkDashPath.cpp',
     'skia/src/utils/SkEventTracer.cpp',
     'skia/src/utils/SkFloatToDecimal.cpp',
-    'skia/src/utils/SkJSON.cpp',
-    'skia/src/utils/SkJSONWriter.cpp',
+    'skia/src/utils/SkGaussianColorFilter.cpp',
     'skia/src/utils/SkMatrix22.cpp',
     'skia/src/utils/SkOrderedFontMgr.cpp',
     'skia/src/utils/SkOSPath.cpp',
@@ -419,6 +407,7 @@ UNIFIED_SOURCES += [
     'skia/src/utils/SkShadowTessellator.cpp',
     'skia/src/utils/SkShadowUtils.cpp',
     'skia/src/utils/SkTextUtils.cpp',
+    'skia/src/utils/SkVMVisualizer.cpp',
     'skia/src/utils/win/SkAutoCoInitialize.cpp',
     'skia/src/utils/win/SkDWrite.cpp',
     'skia/src/utils/win/SkDWriteFontFileStream.cpp',
@@ -428,16 +417,9 @@ UNIFIED_SOURCES += [
 ]
 SOURCES += [
     'skia/modules/skcms/skcms.cc',
-    'skia/modules/skcms/src/skcms_TransformBaseline.cc',
     'skia/src/core/SkBitmapProcState.cpp',
     'skia/src/core/SkBitmapProcState_matrixProcs.cpp',
-    'skia/src/core/SkBitmapProcState_opts.cpp',
-    'skia/src/core/SkBitmapProcState_opts_ssse3.cpp',
-    'skia/src/core/SkBlitMask_opts.cpp',
-    'skia/src/core/SkBlitMask_opts_ssse3.cpp',
     'skia/src/core/SkBlitRow_D32.cpp',
-    'skia/src/core/SkBlitRow_opts.cpp',
-    'skia/src/core/SkBlitRow_opts_hsw.cpp',
     'skia/src/core/SkBlitter.cpp',
     'skia/src/core/SkBlitter_A8.cpp',
     'skia/src/core/SkBlitter_ARGB32.cpp',
@@ -446,10 +428,8 @@ SOURCES += [
     'skia/src/core/SkColorSpaceXformSteps.cpp',
     'skia/src/core/SkCpu.cpp',
     'skia/src/core/SkMatrix.cpp',
-    'skia/src/core/SkMemset_opts.cpp',
-    'skia/src/core/SkMemset_opts_avx.cpp',
-    'skia/src/core/SkMemset_opts_erms.cpp',
     'skia/src/core/SkOpts.cpp',
+    'skia/src/core/SkOpts_erms.cpp',
     'skia/src/core/SkPath.cpp',
     'skia/src/core/SkPictureData.cpp',
     'skia/src/core/SkRecorder.cpp',
@@ -457,10 +437,9 @@ SOURCES += [
     'skia/src/core/SkScan_Antihair.cpp',
     'skia/src/core/SkScan_AntiPath.cpp',
     'skia/src/core/SkSpriteBlitter_ARGB32.cpp',
-    'skia/src/core/SkSwizzler_opts.cpp',
-    'skia/src/core/SkSwizzler_opts_hsw.cpp',
-    'skia/src/core/SkSwizzler_opts_ssse3.cpp',
     'skia/src/core/SkVertices.cpp',
+    'skia/src/core/SkXfermode.cpp',
+    'skia/src/core/SkXfermodeInterpretation.cpp',
     'skia/src/pathops/SkPathOpsDebug.cpp',
     'skia/src/sksl/SkSLLexer.cpp',
     'skia/src/utils/SkParse.cpp',
@@ -469,30 +448,20 @@ SOURCES += [
 SOURCES['skia/modules/skcms/skcms.cc'].flags += skia_opt_flags
 SOURCES['skia/src/core/SkBitmapProcState.cpp'].flags += skia_opt_flags
 SOURCES['skia/src/core/SkBitmapProcState_matrixProcs.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkBitmapProcState_opts.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkBitmapProcState_opts_ssse3.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkBlitMask_opts.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkBlitMask_opts_ssse3.cpp'].flags += skia_opt_flags
 SOURCES['skia/src/core/SkBlitRow_D32.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkBlitRow_opts.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkBlitRow_opts_hsw.cpp'].flags += skia_opt_flags
 SOURCES['skia/src/core/SkBlitter.cpp'].flags += skia_opt_flags
 SOURCES['skia/src/core/SkBlitter_A8.cpp'].flags += skia_opt_flags
 SOURCES['skia/src/core/SkBlitter_ARGB32.cpp'].flags += skia_opt_flags
 SOURCES['skia/src/core/SkBlitter_Sprite.cpp'].flags += skia_opt_flags
 SOURCES['skia/src/core/SkMatrix.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkMemset_opts.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkMemset_opts_avx.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkMemset_opts_erms.cpp'].flags += skia_opt_flags
 SOURCES['skia/src/core/SkOpts.cpp'].flags += skia_opt_flags
+SOURCES['skia/src/core/SkOpts_erms.cpp'].flags += skia_opt_flags
 SOURCES['skia/src/core/SkSpriteBlitter_ARGB32.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkSwizzler_opts.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkSwizzler_opts_hsw.cpp'].flags += skia_opt_flags
-SOURCES['skia/src/core/SkSwizzler_opts_ssse3.cpp'].flags += skia_opt_flags
 if CONFIG['MOZ_ENABLE_SKIA_PDF']:
     UNIFIED_SOURCES += [
         'skia/src/pdf/SkClusterator.cpp',
         'skia/src/pdf/SkDeflate.cpp',
+        'skia/src/pdf/SkJpegInfo.cpp',
         'skia/src/pdf/SkKeyedImage.cpp',
         'skia/src/pdf/SkPDFBitmap.cpp',
         'skia/src/pdf/SkPDFDocument.cpp',
@@ -556,15 +525,22 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
 if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += [
-        'skia/modules/skcms/src/skcms_TransformHsw.cc',
-        'skia/modules/skcms/src/skcms_TransformSkx.cc',
+        'skia/src/opts/SkOpts_avx.cpp',
         'skia/src/opts/SkOpts_hsw.cpp',
         'skia/src/opts/SkOpts_skx.cpp',
+        'skia/src/opts/SkOpts_sse42.cpp',
+        'skia/src/opts/SkOpts_ssse3.cpp',
     ]
-    SOURCES['skia/modules/skcms/src/skcms_TransformHsw.cc'].flags += skia_opt_flags
-    SOURCES['skia/modules/skcms/src/skcms_TransformSkx.cc'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += skia_opt_flags
+    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += skia_opt_flags
+elif CONFIG['TARGET_CPU'] == 'aarch64':
+    SOURCES += [
+        'skia/src/opts/SkOpts_crc32.cpp',
+    ]
+    SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += skia_opt_flags
 
 
 # We allow warnings for third-party code that can be updated from upstream.
@@ -586,21 +562,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 # We should autogenerate these SSE related flags.
 
 if CONFIG['INTEL_ARCHITECTURE']:
-    skia_ssse3_flags = ['-Dskvx=skvx_ssse3', '-mssse3']
-    skia_avx_flags = ['-Dskvx=skvx_avx', '-mavx']
-    skia_hsw_flags = ['-Dskvx=skvx_hsw', '-mavx2', '-mf16c', '-mfma']
-    skia_skx_flags = ['-Dskvx=skvx_skx', '-mavx512f', '-mavx512dq', '-mavx512cd', '-mavx512bw', '-mavx512vl']
-    SOURCES['skia/src/core/SkBitmapProcState_opts_ssse3.cpp'].flags += skia_ssse3_flags
-    SOURCES['skia/src/core/SkBlitMask_opts_ssse3.cpp'].flags += skia_ssse3_flags
-    SOURCES['skia/src/core/SkSwizzler_opts_ssse3.cpp'].flags += ['-Dskvx=skvx_ssse3']
-    SOURCES['skia/src/core/SkMemset_opts_avx.cpp'].flags += skia_avx_flags
-    SOURCES['skia/src/core/SkBlitRow_opts_hsw.cpp'].flags += skia_hsw_flags
-    SOURCES['skia/src/core/SkSwizzler_opts_hsw.cpp'].flags += ['-Dskvx=skvx_hsw']
-    SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += skia_hsw_flags
-    SOURCES['skia/modules/skcms/src/skcms_TransformHsw.cc'].flags += skia_hsw_flags
+    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-Dskvx=skvx_ssse3', '-mssse3']
+    SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-Dskvx=skvx_sse42', '-msse4.2']
+    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-Dskvx=skvx_avx', '-mavx']
+    SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-Dskvx=skvx_hsw', '-mavx2', '-mf16c', '-mfma']
     if not CONFIG["MOZ_CODE_COVERAGE"]:
-        SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += skia_skx_flags
-        SOURCES['skia/modules/skcms/src/skcms_TransformSkx.cc'].flags += skia_skx_flags
+        SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += ['-Dskvx=skvx_skx', '-mavx512f', '-mavx512dq', '-mavx512cd', '-mavx512bw', '-mavx512vl']
+elif CONFIG['TARGET_CPU'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-Dskvx=skvx_crc32', '-march=armv8-a+crc']
 
 DEFINES['MOZ_SKIA'] = True
 

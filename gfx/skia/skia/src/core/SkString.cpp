@@ -276,11 +276,6 @@ const SkString& SkString::validate() const {
     }
     return *this;
 }
-
-SkString& SkString::validate() {
-    const_cast<const SkString*>(this)->validate();
-    return *this;
-}
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

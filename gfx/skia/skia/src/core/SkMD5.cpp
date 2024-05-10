@@ -13,11 +13,9 @@
 //SK_CPU_LENDIAN allows 32 bit <=> 8 bit conversions without copies (if alligned).
 //SK_CPU_FAST_UNALIGNED_ACCESS allows 32 bit <=> 8 bit conversions without copies if SK_CPU_LENDIAN.
 
-#include "src/base/SkUtils.h"
 #include "src/core/SkMD5.h"
 
 #include "include/private/base/SkFeatures.h"
-#include "include/private/base/SkMalloc.h"
 
 /** MD5 basic transformation. Transforms state based on block. */
 static void transform(uint32_t state[4], const uint8_t block[64]);
@@ -47,7 +45,7 @@ bool SkMD5::write(const void* buf, size_t inputLength) {
     unsigned int inputIndex;
     if (inputLength >= bufferAvailable) {
         if (bufferIndex) {
-            sk_careful_memcpy(&this->buffer[bufferIndex], input, bufferAvailable);
+            memcpy(&this->buffer[bufferIndex], input, bufferAvailable);
             transform(this->state, this->buffer);
             inputIndex = bufferAvailable;
         } else {
@@ -63,7 +61,7 @@ bool SkMD5::write(const void* buf, size_t inputLength) {
         inputIndex = 0;
     }
 
-    sk_careful_memcpy(&this->buffer[bufferIndex], &input[inputIndex], inputLength - inputIndex);
+    memcpy(&this->buffer[bufferIndex], &input[inputIndex], inputLength - inputIndex);
 
     this->byteCount += inputLength;
     return true;
@@ -97,24 +95,6 @@ SkMD5::Digest SkMD5::finish() {
     memset(this, 0, sizeof(*this));
 #endif
     return digest;
-}
-
-static SkString to_hex_string(const uint8_t* data, const char* hexDigits) {
-    SkString hexString(2 * sizeof(SkMD5::Digest::data));
-    for (size_t i = 0; i < sizeof(SkMD5::Digest::data); ++i) {
-        uint8_t byte = data[i];
-        hexString[2 * i + 0] = hexDigits[byte >> 4];
-        hexString[2 * i + 1] = hexDigits[byte & 0xF];
-    }
-    return hexString;
-}
-
-SkString SkMD5::Digest::toHexString() const {
-    return to_hex_string(data, SkHexadecimalDigits::gUpper);
-}
-
-SkString SkMD5::Digest::toLowercaseHexString() const {
-    return to_hex_string(data, SkHexadecimalDigits::gLower);
 }
 
 struct F { uint32_t operator()(uint32_t x, uint32_t y, uint32_t z) {

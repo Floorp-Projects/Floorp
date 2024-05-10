@@ -9,7 +9,6 @@
 #define SkMD5_DEFINED
 
 #include "include/core/SkStream.h"
-#include "include/core/SkString.h"
 #include "include/private/base/SkTo.h"
 
 #include <cstdint>
@@ -27,16 +26,11 @@ public:
     size_t bytesWritten() const final { return SkToSizeT(this->byteCount); }
 
     struct Digest {
-        SkString toHexString() const;
-        SkString toLowercaseHexString() const;
-        bool operator==(Digest const& other) const {
+        uint8_t data[16];
+        bool operator ==(Digest const& other) const {
             return 0 == memcmp(data, other.data, sizeof(data));
         }
-        bool operator!=(Digest const& other) const {
-            return !(*this == other);
-        }
-
-        uint8_t data[16];
+        bool operator !=(Digest const& other) const { return !(*this == other); }
     };
 
     /** Computes and returns the digest. */

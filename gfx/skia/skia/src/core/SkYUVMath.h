@@ -8,7 +8,7 @@
 #ifndef SkYUVMath_DEFINED
 #define SkYUVMath_DEFINED
 
-enum SkYUVColorSpace : int;
+#include "include/core/SkImageInfo.h"
 
 void SkColorMatrix_RGB2YUV(SkYUVColorSpace, float m[20]);
 void SkColorMatrix_YUV2RGB(SkYUVColorSpace, float m[20]);

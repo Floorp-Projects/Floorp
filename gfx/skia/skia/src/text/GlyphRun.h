@@ -8,30 +8,28 @@
 #ifndef SkGlyphRun_DEFINED
 #define SkGlyphRun_DEFINED
 
+#include <functional>
+#include <optional>
+#include <vector>
+
 #include "include/core/SkFont.h"
-#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
 #include "include/core/SkPoint.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkRefCnt.h"
+#include "include/core/SkRSXform.h"
 #include "include/core/SkSpan.h"
-#include "include/core/SkTextBlob.h"
 #include "include/core/SkTypes.h"
 #include "include/private/base/SkTemplates.h"
 #include "src/base/SkZip.h"
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
-#include <iterator>
-#include <optional>
-#include <tuple>
-#include <vector>
-
-class SkPaint;
-struct SkRSXform;
+class SkBaseDevice;
+class SkCanvas;
+class SkGlyph;
+class SkTextBlob;
+class SkTextBlobRunIterator;
 
 namespace sktext {
 class GlyphRunBuilder;
+class GlyphRunList;
 
 class GlyphRun {
 public:
@@ -83,7 +81,7 @@ public:
                  GlyphRunBuilder* builder);
     uint64_t uniqueID() const;
     bool anyRunsLCD() const;
-    void temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID, SkTextBlob::PurgeDelegate) const;
+    void temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID) const;
 
     bool canCache() const { return fOriginalTextBlob != nullptr; }
     size_t runCount() const { return fGlyphRuns.size(); }

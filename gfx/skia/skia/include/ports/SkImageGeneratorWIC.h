@@ -5,17 +5,12 @@
  * found in the LICENSE file.
  */
 
-#ifndef SkImageGeneratorWIC_DEFINED
-#define SkImageGeneratorWIC_DEFINED
-
-#include "include/private/base/SkFeatures.h"
+#include "include/core/SkTypes.h"
 
 #if defined(SK_BUILD_FOR_WIN)
 
 #include "include/core/SkData.h"
 #include "include/core/SkImageGenerator.h"
-#include "include/core/SkRefCnt.h"
-#include "include/private/base/SkAPI.h"
 
 #include <memory>
 
@@ -37,5 +32,4 @@ namespace SkImageGeneratorWIC {
 SK_API std::unique_ptr<SkImageGenerator> MakeFromEncodedWIC(sk_sp<SkData>);
 }
 
-#endif  // SK_BUILD_FOR_WIN
-#endif  // SkImageGeneratorWIC_DEFINED
+#endif // SK_BUILD_FOR_WIN

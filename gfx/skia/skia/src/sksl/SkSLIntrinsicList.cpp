@@ -5,19 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "src/base/SkNoDestructor.h"
 #include "src/base/SkStringView.h"
 #include "src/sksl/SkSLIntrinsicList.h"
-
-using namespace skia_private;
 
 namespace SkSL {
 
 const IntrinsicMap& GetIntrinsicMap() {
     #define SKSL_INTRINSIC(name) {#name, k_##name##_IntrinsicKind},
-    static const SkNoDestructor<IntrinsicMap> kAllIntrinsics(IntrinsicMap{
+    static const auto* kAllIntrinsics = new SkTHashMap<std::string_view, IntrinsicKind>{
         SKSL_INTRINSIC_LIST
-    });
+    };
     #undef SKSL_INTRINSIC
 
     return *kAllIntrinsics;

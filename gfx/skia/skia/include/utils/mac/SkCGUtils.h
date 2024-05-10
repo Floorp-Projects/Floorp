@@ -24,7 +24,6 @@
 #endif
 
 class SkBitmap;
-class SkColorSpace;
 class SkData;
 class SkPixmap;
 class SkStreamRewindable;
@@ -43,12 +42,6 @@ SK_API bool SkCreateBitmapFromCGImage(SkBitmap* dst, CGImageRef src);
 SK_API sk_sp<SkImage> SkMakeImageFromCGImage(CGImageRef);
 
 /**
- *  Given a CGColorSpace, return the closest matching SkColorSpace. If no conversion is possible
- *  or if the input CGColorSpace is nullptr then return nullptr.
- */
-SK_API sk_sp<SkColorSpace> SkMakeColorSpaceFromCGColorSpace(CGColorSpaceRef);
-
-/**
  *  Copy the pixels from src into the memory specified by info/rowBytes/dstPixels. On failure,
  *  return false (e.g. ImageInfo incompatible with src).
  */
@@ -59,30 +52,25 @@ static inline bool SkCopyPixelsFromCGImage(const SkPixmap& dst, CGImageRef src) 
 }
 
 /**
- *  Create an imageref from the specified bitmap. The color space parameter is ignored.
+ *  Create an imageref from the specified bitmap using the specified colorspace.
+ *  If space is NULL, then CGColorSpaceCreateDeviceRGB() is used.
  */
 SK_API CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
                                                    CGColorSpaceRef space);
 
 /**
- *  Create an imageref from the specified bitmap.
+ *  Create an imageref from the specified bitmap using the colorspace returned
+ *  by CGColorSpaceCreateDeviceRGB()
  */
-SK_API CGImageRef SkCreateCGImageRef(const SkBitmap& bm);
+static inline CGImageRef SkCreateCGImageRef(const SkBitmap& bm) {
+    return SkCreateCGImageRefWithColorspace(bm, nil);
+}
 
 /**
- *  Given an SkColorSpace, create a CGColorSpace. This will return sRGB if the specified
- *  SkColorSpace is nullptr or on failure. This will not retain the specified SkColorSpace.
- */
-SK_API CGColorSpaceRef SkCreateCGColorSpace(const SkColorSpace*);
-
-/**
- *  Given an SkData, create a CGDataProviderRef that refers to the and retains the specified data.
- */
-SK_API CGDataProviderRef SkCreateCGDataProvider(sk_sp<SkData>);
-
-/**
- *  Draw the bitmap into the specified CG context. (x,y) specifies the position of the top-left
- *  corner of the bitmap.
+ *  Draw the bitmap into the specified CG context. The bitmap will be converted
+ *  to a CGImage using the generic RGB colorspace. (x,y) specifies the position
+ *  of the top-left corner of the bitmap. The bitmap is converted using the
+ *  colorspace returned by CGColorSpaceCreateDeviceRGB()
  */
 void SkCGDrawBitmap(CGContextRef, const SkBitmap&, float x, float y);
 

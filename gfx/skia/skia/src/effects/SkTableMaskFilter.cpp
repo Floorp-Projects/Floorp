@@ -34,8 +34,7 @@ public:
     explicit SkTableMaskFilterImpl(const uint8_t table[256]);
 
     SkMask::Format getFormat() const override;
-    bool filterMask(SkMaskBuilder*, const SkMask&, const SkMatrix&, SkIPoint*) const override;
-    SkMaskFilterBase::Type type() const override { return SkMaskFilterBase::Type::kTable; }
+    bool filterMask(SkMask*, const SkMask&, const SkMatrix&, SkIPoint*) const override;
 
 protected:
     ~SkTableMaskFilterImpl() override;
@@ -64,22 +63,22 @@ SkTableMaskFilterImpl::SkTableMaskFilterImpl(const uint8_t table[256]) {
 
 SkTableMaskFilterImpl::~SkTableMaskFilterImpl() {}
 
-bool SkTableMaskFilterImpl::filterMask(SkMaskBuilder* dst, const SkMask& src,
-                                       const SkMatrix&, SkIPoint* margin) const {
+bool SkTableMaskFilterImpl::filterMask(SkMask* dst, const SkMask& src,
+                                 const SkMatrix&, SkIPoint* margin) const {
     if (src.fFormat != SkMask::kA8_Format) {
         return false;
     }
 
-    dst->bounds() = src.fBounds;
-    dst->rowBytes() = SkAlign4(dst->fBounds.width());
-    dst->format() = SkMask::kA8_Format;
-    dst->image() = nullptr;
+    dst->fBounds = src.fBounds;
+    dst->fRowBytes = SkAlign4(dst->fBounds.width());
+    dst->fFormat = SkMask::kA8_Format;
+    dst->fImage = nullptr;
 
     if (src.fImage) {
-        dst->image() = SkMaskBuilder::AllocImage(dst->computeImageSize());
+        dst->fImage = SkMask::AllocImage(dst->computeImageSize());
 
         const uint8_t* srcP = src.fImage;
-        uint8_t* dstP = dst->image();
+        uint8_t* dstP = dst->fImage;
         const uint8_t* table = fTable;
         int dstWidth = dst->fBounds.width();
         int extraZeros = dst->fRowBytes - dstWidth;

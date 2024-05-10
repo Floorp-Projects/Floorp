@@ -5,17 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkClipStack.h"
-
-#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
 #include "include/core/SkPath.h"
-#include "include/core/SkPathTypes.h"
-#include "include/core/SkScalar.h"
-#include "include/private/base/SkDebug.h"
+#include "src/core/SkClipStack.h"
 #include "src/core/SkRectPriv.h"
 #include "src/shaders/SkShaderBase.h"
 
-#include <array>
 #include <atomic>
 #include <new>
 
@@ -617,7 +612,7 @@ void SkClipStack::getBounds(SkRect* canvFiniteBound,
                             bool* isIntersectionOfRects) const {
     SkASSERT(canvFiniteBound && boundType);
 
-    const Element* element = (const Element*)fDeque.back();
+    Element* element = (Element*)fDeque.back();
 
     if (nullptr == element) {
         // the clip is wide open - the infinite plane w/ no pixels un-writeable

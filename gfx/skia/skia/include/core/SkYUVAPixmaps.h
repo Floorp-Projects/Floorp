@@ -8,20 +8,16 @@
 #ifndef SkYUVAPixmaps_DEFINED
 #define SkYUVAPixmaps_DEFINED
 
-#include "include/core/SkColorType.h"
 #include "include/core/SkData.h"
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkPixmap.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkSize.h"
-#include "include/core/SkTypes.h"
 #include "include/core/SkYUVAInfo.h"
 #include "include/private/base/SkTo.h"
 
 #include <array>
 #include <bitset>
-#include <cstddef>
-#include <tuple>
+
+class GrImageContext;
 
 /**
  * SkYUVAInfo combined with per-plane SkColorTypes and row bytes. Fully specifies the SkPixmaps
@@ -52,6 +48,9 @@ public:
     public:
         /** Defaults to nothing supported. */
         constexpr SupportedDataTypes() = default;
+
+        /** Init based on texture formats supported by the context. */
+        SupportedDataTypes(const GrImageContext&);
 
         /** All legal combinations of PlaneConfig and DataType are supported. */
         static constexpr SupportedDataTypes All();

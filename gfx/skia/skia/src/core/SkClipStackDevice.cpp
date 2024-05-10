@@ -6,22 +6,10 @@
  */
 
 #include "src/core/SkClipStackDevice.h"
+#include "src/core/SkDraw.h"
+#include "src/core/SkRasterClip.h"
 
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkPath.h"
-#include "include/core/SkPoint.h"
-#include "include/core/SkRegion.h"
-#include "include/core/SkShader.h"
-#include "include/private/base/SkAssert.h"
-#include "src/core/SkMatrixPriv.h"
-
-#include <utility>
-
-class SkRRect;
-enum class SkClipOp;
-
-SkIRect SkClipStackDevice::devClipBounds() const {
+SkIRect SkClipStackDevice::onDevClipBounds() const {
     SkIRect r = fClipStack.bounds(this->imageInfo().bounds()).roundOut();
     if (!r.isEmpty()) {
         SkASSERT(this->imageInfo().bounds().contains(r));
@@ -31,23 +19,23 @@ SkIRect SkClipStackDevice::devClipBounds() const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SkClipStackDevice::pushClipStack() {
+void SkClipStackDevice::onSave() {
     fClipStack.save();
 }
 
-void SkClipStackDevice::popClipStack() {
+void SkClipStackDevice::onRestore() {
     fClipStack.restore();
 }
 
-void SkClipStackDevice::clipRect(const SkRect& rect, SkClipOp op, bool aa) {
+void SkClipStackDevice::onClipRect(const SkRect& rect, SkClipOp op, bool aa) {
     fClipStack.clipRect(rect, this->localToDevice(), op, aa);
 }
 
-void SkClipStackDevice::clipRRect(const SkRRect& rrect, SkClipOp op, bool aa) {
+void SkClipStackDevice::onClipRRect(const SkRRect& rrect, SkClipOp op, bool aa) {
     fClipStack.clipRRect(rrect, this->localToDevice(), op, aa);
 }
 
-void SkClipStackDevice::clipPath(const SkPath& path, SkClipOp op, bool aa) {
+void SkClipStackDevice::onClipPath(const SkPath& path, SkClipOp op, bool aa) {
     fClipStack.clipPath(path, this->localToDevice(), op, aa);
 }
 
@@ -55,7 +43,7 @@ void SkClipStackDevice::onClipShader(sk_sp<SkShader> shader) {
     fClipStack.clipShader(std::move(shader));
 }
 
-void SkClipStackDevice::clipRegion(const SkRegion& rgn, SkClipOp op) {
+void SkClipStackDevice::onClipRegion(const SkRegion& rgn, SkClipOp op) {
     SkIPoint origin = this->getOrigin();
     SkRegion tmp;
     SkPath path;
@@ -64,12 +52,12 @@ void SkClipStackDevice::clipRegion(const SkRegion& rgn, SkClipOp op) {
     fClipStack.clipPath(path, SkMatrix::I(), op, false);
 }
 
-void SkClipStackDevice::replaceClip(const SkIRect& rect) {
+void SkClipStackDevice::onReplaceClip(const SkIRect& rect) {
     SkRect deviceRect = SkMatrixPriv::MapRect(this->globalToDevice(), SkRect::Make(rect));
     fClipStack.replaceClip(deviceRect, /*doAA=*/false);
 }
 
-bool SkClipStackDevice::isClipAntiAliased() const {
+bool SkClipStackDevice::onClipIsAA() const {
     SkClipStack::B2TIter        iter(fClipStack);
     const SkClipStack::Element* element;
 
@@ -81,29 +69,11 @@ bool SkClipStackDevice::isClipAntiAliased() const {
     return false;
 }
 
-bool SkClipStackDevice::isClipWideOpen() const {
+bool SkClipStackDevice::onClipIsWideOpen() const {
     return fClipStack.quickContains(SkRect::MakeIWH(this->width(), this->height()));
 }
 
-bool SkClipStackDevice::isClipEmpty() const {
-    return fClipStack.isEmpty(SkIRect::MakeWH(this->width(), this->height()));
-}
-
-bool SkClipStackDevice::isClipRect() const {
-    if (this->isClipWideOpen()) {
-        return true;
-    } else if (this->isClipEmpty()) {
-        return false;
-    }
-
-    SkClipStack::BoundsType boundType;
-    bool isIntersectionOfRects;
-    SkRect bounds;
-    fClipStack.getBounds(&bounds, &boundType, &isIntersectionOfRects);
-    return isIntersectionOfRects && boundType == SkClipStack::kNormal_BoundsType;
-}
-
-void SkClipStackDevice::android_utils_clipAsRgn(SkRegion* rgn) const {
+void SkClipStackDevice::onAsRgnClip(SkRegion* rgn) const {
     SkClipStack::BoundsType boundType;
     bool isIntersectionOfRects;
     SkRect bounds;
@@ -130,6 +100,25 @@ void SkClipStackDevice::android_utils_clipAsRgn(SkRegion* rgn) const {
             } else {
                 rgn->op(tmpRgn, static_cast<SkRegion::Op>(elem->getOp()));
             }
+        }
+    }
+}
+
+SkBaseDevice::ClipType SkClipStackDevice::onGetClipType() const {
+    if (fClipStack.isWideOpen()) {
+        return ClipType::kRect;
+    }
+    if (fClipStack.isEmpty(SkIRect::MakeWH(this->width(), this->height()))) {
+        return ClipType::kEmpty;
+    } else {
+        SkClipStack::BoundsType boundType;
+        bool isIntersectionOfRects;
+        SkRect bounds;
+        fClipStack.getBounds(&bounds, &boundType, &isIntersectionOfRects);
+        if (isIntersectionOfRects && SkClipStack::kNormal_BoundsType == boundType) {
+            return ClipType::kRect;
+        } else {
+            return ClipType::kComplex;
         }
     }
 }

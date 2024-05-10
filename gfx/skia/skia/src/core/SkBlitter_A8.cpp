@@ -5,20 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkBlitter_A8.h"
-
-#include "include/core/SkBlendMode.h"
-#include "include/core/SkColorType.h"
 #include "include/core/SkPaint.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkShader.h" // IWYU pragma: keep
 #include "include/core/SkTypes.h"
-#include "include/private/base/SkDebug.h"
 #include "src/base/SkArenaAlloc.h"
-#include "src/core/SkMask.h"
-
-#include <cstring>
-#include <optional>
+#include "src/core/SkBlitter_A8.h"
 
 SkA8_Coverage_Blitter::SkA8_Coverage_Blitter(const SkPixmap& device, const SkPaint& paint)
     : fDevice(device)
@@ -99,6 +89,10 @@ void SkA8_Coverage_Blitter::blitMask(const SkMask& mask, const SkIRect& clip) {
     }
 }
 
+const SkPixmap* SkA8_Coverage_Blitter::justAnOpaqueColor(uint32_t*) {
+    return nullptr;
+}
+
 //////////////
 
 static inline uint8_t div255(unsigned prod) {
@@ -173,6 +167,7 @@ public:
     void blitV(int x, int y, int height, SkAlpha alpha) override;
     void blitRect(int x, int y, int width, int height) override;
     void blitMask(const SkMask&, const SkIRect&) override;
+    const SkPixmap* justAnOpaqueColor(uint32_t*) override;
 
 private:
     const SkPixmap  fDevice;
@@ -279,6 +274,10 @@ void SkA8_Blitter::blitMask(const SkMask& mask, const SkIRect& clip) {
         dst += dstRB;
         src += srcRB;
     }
+}
+
+const SkPixmap* SkA8_Blitter::justAnOpaqueColor(uint32_t*) {
+    return nullptr;
 }
 
 //////////////////

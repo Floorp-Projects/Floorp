@@ -10,8 +10,6 @@
 
 #include "include/core/SkTypes.h"
 
-#include <cstdint>
-
 struct SkCpu {
     enum {
         SSE1       = 1 << 0,
@@ -43,10 +41,12 @@ struct SkCpu {
 
         ERMS       = 1 << 20,
     };
-
     enum {
-        LOONGARCH_SX = 1 << 0,
-        LOONGARCH_ASX = 1 << 1,
+        NEON     = 1 << 0,
+        NEON_FMA = 1 << 1,
+        VFP_FP16 = 1 << 2,
+        CRC32    = 1 << 3,
+        ASIMDHP  = 1 << 4,
     };
 
     static void CacheRuntimeFeatures();
@@ -101,12 +101,17 @@ inline bool SkCpu::Supports(uint32_t mask) {
     features &= (SSE1 | SSE2);
     #endif
 
-#elif SK_CPU_LOONGARCH
-    #if SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
-    features |= LOONGARCH_SX;
+#else
+    #if defined(SK_ARM_HAS_NEON)
+    features |= NEON;
     #endif
-    #if SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LASX
-    features |= LOONGARCH_ASX;
+
+    #if defined(SK_CPU_ARM64)
+    features |= NEON|NEON_FMA|VFP_FP16;
+    #endif
+
+    #if defined(SK_ARM_HAS_CRC32)
+    features |= CRC32;
     #endif
 
 #endif

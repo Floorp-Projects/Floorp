@@ -6,42 +6,30 @@
  */
 
 #include "include/core/SkDataTable.h"
-#include "include/core/SkFontArguments.h"
 #include "include/core/SkFontMgr.h"
 #include "include/core/SkFontStyle.h"
-#include "include/core/SkMatrix.h"
 #include "include/core/SkRefCnt.h"
-#include "include/core/SkScalar.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
-#include "include/private/base/SkDebug.h"
+#include "include/private/base/SkFixed.h"
+#include "include/private/base/SkMath.h"
 #include "include/private/base/SkMutex.h"
-#include "include/private/base/SkTArray.h"
 #include "include/private/base/SkTDArray.h"
 #include "include/private/base/SkTemplates.h"
-#include "include/private/base/SkThreadAnnotations.h"
-#include "src/base/SkTSort.h"
 #include "src/core/SkAdvancedTypefaceMetrics.h"
 #include "src/core/SkFontDescriptor.h"
 #include "src/core/SkOSFile.h"
-#include "src/core/SkScalerContext.h"
 #include "src/core/SkTypefaceCache.h"
-#include "src/ports/SkTypeface_FreeType.h"
+#include "src/ports/SkFontHost_FreeType_common.h"
 
 #include <fontconfig/fontconfig.h>
-
 #include <string.h>
-#include <array>
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <utility>
-
-class SkData;
 
 using namespace skia_private;
+
+class SkData;
 
 // FC_POSTSCRIPT_NAME was added with b561ff20 which ended up in 2.10.92
 // Ubuntu 14.04 is on 2.11.0
@@ -535,12 +523,12 @@ class SkFontMgr_fontconfig : public SkFontMgr {
     mutable SkAutoFcConfig fFC;  // Only mutable to avoid const cast when passed to FontConfig API.
     const SkString fSysroot;
     const sk_sp<SkDataTable> fFamilyNames;
+    const SkTypeface_FreeType::Scanner fScanner;
 
     class StyleSet : public SkFontStyleSet {
     public:
         StyleSet(sk_sp<SkFontMgr_fontconfig> parent, SkAutoFcFontSet fontSet)
-            : fFontMgr(std::move(parent))
-            , fFontSet(std::move(fontSet))
+            : fFontMgr(std::move(parent)), fFontSet(std::move(fontSet))
         { }
 
         ~StyleSet() override {
@@ -565,7 +553,7 @@ class SkFontMgr_fontconfig : public SkFontMgr {
             }
         }
 
-        sk_sp<SkTypeface> createTypeface(int index) override {
+        SkTypeface* createTypeface(int index) override {
             if (index < 0 || fFontSet->nfont <= index) {
                 return nullptr;
             }
@@ -574,10 +562,10 @@ class SkFontMgr_fontconfig : public SkFontMgr {
                 FcPatternReference(fFontSet->fonts[index]);
                 return fFontSet->fonts[index];
             }());
-            return fFontMgr->createTypefaceFromFcPattern(std::move(match));
+            return fFontMgr->createTypefaceFromFcPattern(std::move(match)).release();
         }
 
-        sk_sp<SkTypeface> matchStyle(const SkFontStyle& style) override {
+        SkTypeface* matchStyle(const SkFontStyle& style) override {
             SkAutoFcPattern match([this, &style]() {
                 FCLocker lock;
 
@@ -593,7 +581,7 @@ class SkFontMgr_fontconfig : public SkFontMgr {
                                       pattern, &result);
 
             }());
-            return fFontMgr->createTypefaceFromFcPattern(std::move(match));
+            return fFontMgr->createTypefaceFromFcPattern(std::move(match)).release();
         }
 
     private:
@@ -707,50 +695,39 @@ protected:
         familyName->set(fFamilyNames->atStr(index));
     }
 
-    sk_sp<SkFontStyleSet> onCreateStyleSet(int index) const override {
+    SkFontStyleSet* onCreateStyleSet(int index) const override {
         return this->onMatchFamily(fFamilyNames->atStr(index));
     }
 
     /** True if any string object value in the font is the same
      *         as a string object value in the pattern.
      */
-    static bool AnyStringMatching(FcPattern* font, FcPattern* pattern, const char* object) {
-        auto getStrings = [](FcPattern* p, const char* object, STArray<32, FcChar8*>& strings) {
-            // Set an arbitrary (but high) limit on the number of pattern object values to consider.
-            static constexpr const int maxId = 65536;
-            for (int patternId = 0; patternId < maxId; ++patternId) {
-                FcChar8* patternString;
-                FcResult result = FcPatternGetString(p, object, patternId, &patternString);
-                if (result == FcResultNoId) {
+    static bool AnyMatching(FcPattern* font, FcPattern* pattern, const char* object) {
+        FcChar8* fontString;
+        FcChar8* patternString;
+        FcResult result;
+        // Set an arbitrary limit on the number of pattern object values to consider.
+        // TODO: re-write this to avoid N*M
+        static const int maxId = 16;
+        for (int patternId = 0; patternId < maxId; ++patternId) {
+            result = FcPatternGetString(pattern, object, patternId, &patternString);
+            if (FcResultNoId == result) {
+                break;
+            }
+            if (FcResultMatch != result) {
+                continue;
+            }
+            for (int fontId = 0; fontId < maxId; ++fontId) {
+                result = FcPatternGetString(font, object, fontId, &fontString);
+                if (FcResultNoId == result) {
                     break;
                 }
-                if (result == FcResultMatch) {
-                    strings.push_back(patternString);
+                if (FcResultMatch != result) {
+                    continue;
                 }
-            }
-        };
-        auto compareStrings = [](FcChar8* a, FcChar8* b) -> bool {
-            return FcStrCmpIgnoreCase(a, b) < 0;
-        };
-
-        STArray<32, FcChar8*> fontStrings;
-        STArray<32, FcChar8*> patternStrings;
-        getStrings(font, object, fontStrings);
-        getStrings(pattern, object, patternStrings);
-
-        SkTQSort(fontStrings.begin(), fontStrings.end(), compareStrings);
-        SkTQSort(patternStrings.begin(), patternStrings.end(), compareStrings);
-
-        FcChar8** fontString = fontStrings.begin();
-        FcChar8** patternString = patternStrings.begin();
-        while (fontString != fontStrings.end() && patternString != patternStrings.end()) {
-            int cmp = FcStrCmpIgnoreCase(*fontString, *patternString);
-            if (cmp < 0) {
-                ++fontString;
-            } else if (cmp > 0) {
-                ++patternString;
-            } else {
-                return true;
+                if (0 == FcStrCmpIgnoreCase(patternString, fontString)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -784,7 +761,7 @@ protected:
     }
 
     static bool FontFamilyNameMatches(FcPattern* font, FcPattern* pattern) {
-        return AnyStringMatching(font, pattern, FC_FAMILY);
+        return AnyMatching(font, pattern, FC_FAMILY);
     }
 
     static bool FontContainsCharacter(FcPattern* font, uint32_t character) {
@@ -805,14 +782,14 @@ protected:
         return false;
     }
 
-    sk_sp<SkFontStyleSet> onMatchFamily(const char familyName[]) const override {
+    SkFontStyleSet* onMatchFamily(const char familyName[]) const override {
         if (!familyName) {
             return nullptr;
         }
         FCLocker lock;
 
         SkAutoFcPattern pattern;
-        FcPatternAddString(pattern, FC_FAMILY, (const FcChar8*)familyName);
+        FcPatternAddString(pattern, FC_FAMILY, (FcChar8*)familyName);
         FcConfigSubstitute(fFC, pattern, FcMatchPattern);
         FcDefaultSubstitute(pattern);
 
@@ -846,17 +823,17 @@ protected:
             }
         }
 
-        return sk_sp<SkFontStyleSet>(new StyleSet(sk_ref_sp(this), std::move(matches)));
+        return new StyleSet(sk_ref_sp(this), std::move(matches));
     }
 
-    sk_sp<SkTypeface> onMatchFamilyStyle(const char familyName[],
-                                         const SkFontStyle& style) const override
+    SkTypeface* onMatchFamilyStyle(const char familyName[],
+                                   const SkFontStyle& style) const override
     {
         SkAutoFcPattern font([this, &familyName, &style]() {
             FCLocker lock;
 
             SkAutoFcPattern pattern;
-            FcPatternAddString(pattern, FC_FAMILY, (const FcChar8*)familyName);
+            FcPatternAddString(pattern, FC_FAMILY, (FcChar8*)familyName);
             fcpattern_from_skfontstyle(style, pattern);
             FcConfigSubstitute(fFC, pattern, FcMatchPattern);
             FcDefaultSubstitute(pattern);
@@ -886,14 +863,14 @@ protected:
             }
             return font;
         }());
-        return createTypefaceFromFcPattern(std::move(font));
+        return createTypefaceFromFcPattern(std::move(font)).release();
     }
 
-    sk_sp<SkTypeface> onMatchFamilyStyleCharacter(const char familyName[],
-                                                  const SkFontStyle& style,
-                                                  const char* bcp47[],
-                                                  int bcp47Count,
-                                                  SkUnichar character) const override
+    SkTypeface* onMatchFamilyStyleCharacter(const char familyName[],
+                                            const SkFontStyle& style,
+                                            const char* bcp47[],
+                                            int bcp47Count,
+                                            SkUnichar character) const override
     {
         SkAutoFcPattern font([&](){
             FCLocker lock;
@@ -930,7 +907,7 @@ protected:
             }
             return font;
         }());
-        return createTypefaceFromFcPattern(std::move(font));
+        return createTypefaceFromFcPattern(std::move(font)).release();
     }
 
     sk_sp<SkTypeface> onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset> stream,
@@ -966,6 +943,6 @@ protected:
     }
 };
 
-sk_sp<SkFontMgr> SkFontMgr_New_FontConfig(FcConfig* fc) {
+SK_API sk_sp<SkFontMgr> SkFontMgr_New_FontConfig(FcConfig* fc) {
     return sk_make_sp<SkFontMgr_fontconfig>(fc);
 }

@@ -54,7 +54,6 @@ struct Token {
         TK_ES3,
         TK_EXPORT,
         TK_WORKGROUP,
-        TK_PIXELLOCAL,
         TK_RESERVED,
         TK_PRIVATE_IDENTIFIER,
         TK_IDENTIFIER,

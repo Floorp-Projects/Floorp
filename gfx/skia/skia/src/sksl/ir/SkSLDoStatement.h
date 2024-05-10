@@ -8,10 +8,10 @@
 #ifndef SKSL_DOSTATEMENT
 #define SKSL_DOSTATEMENT
 
-#include "src/sksl/SkSLPosition.h"
+#include "include/private/SkSLIRNode.h"
+#include "include/private/SkSLStatement.h"
+#include "include/sksl/SkSLPosition.h"
 #include "src/sksl/ir/SkSLExpression.h"
-#include "src/sksl/ir/SkSLIRNode.h"
-#include "src/sksl/ir/SkSLStatement.h"
 
 #include <memory>
 #include <string>
@@ -61,6 +61,8 @@ public:
     const std::unique_ptr<Expression>& test() const {
         return fTest;
     }
+
+    std::unique_ptr<Statement> clone() const override;
 
     std::string description() const override;
 

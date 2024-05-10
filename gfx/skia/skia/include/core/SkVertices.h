@@ -9,15 +9,13 @@
 #define SkVertices_DEFINED
 
 #include "include/core/SkColor.h"
-#include "include/core/SkPoint.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
-#include "include/private/base/SkAPI.h"
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
 
+class SkData;
+struct SkPoint;
 class SkVerticesPriv;
 
 /**
@@ -63,7 +61,7 @@ public:
         kHasTexCoords_BuilderFlag   = 1 << 0,
         kHasColors_BuilderFlag      = 1 << 1,
     };
-    class SK_API Builder {
+    class Builder {
     public:
         Builder(VertexMode mode, int vertexCount, int indexCount, uint32_t flags);
 

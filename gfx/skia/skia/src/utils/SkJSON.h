@@ -102,13 +102,6 @@ public:
      */
     SkString toString() const;
 
-    /**
-     * Helper for fluent key lookup: v["foo"]["bar"]["baz"]
-     *
-     * @return    The lookup result value on success, otherwise NullValue.
-     */
-    const Value& operator[](const char* key) const;
-
 protected:
     /*
       Value implementation notes:
@@ -294,7 +287,6 @@ public:
     inline static constexpr Type kType = Type::kString;
 
     StringValue();
-    StringValue(const char* src, SkArenaAlloc& alloc);
     StringValue(const char* src, size_t size, SkArenaAlloc& alloc);
 
     size_t size() const {
@@ -338,21 +330,11 @@ class ObjectValue final : public VectorValue<Member, Value::Type::kObject> {
 public:
     ObjectValue(const Member* src, size_t size, SkArenaAlloc& alloc);
 
-    const Value& operator[](const char* key) const {
-        static const Value gNullValue = NullValue();
+    const  Value& operator[](const char*) const;
 
-        const auto* member = this->find(key);
-        return member
-            ? member->fValue
-            : gNullValue;
+    const Member& operator[](size_t i) const {
+        return this->VectorValue::operator[](i);
     }
-
-    // Writable access to the value associated with the given key.
-    // If the key is not present, it is added with a default NullValue.
-    Value& writable(const char* key, SkArenaAlloc&) const;
-
-private:
-    const Member* find(const char*) const;
 };
 
 class DOM final : public SkNoncopyable {
@@ -384,14 +366,7 @@ inline Value::Type Value::getType() const {
     return Type::kNull;
 }
 
-inline const Value& Value::operator[](const char* key) const {
-    static const Value gNullValue = NullValue();
-
-    return this->is<ObjectValue>()
-        ? this->as<ObjectValue>()[key]
-        : gNullValue;
-}
-
 } // namespace skjson
 
 #endif // SkJSON_DEFINED
+

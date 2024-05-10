@@ -7,32 +7,22 @@
 
 #include "src/core/SkPictureRecord.h"
 
-#include "include/core/SkBlendMode.h"
-#include "include/core/SkImageFilter.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkPoint3.h"
 #include "include/core/SkRRect.h"
 #include "include/core/SkRSXform.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkRegion.h"
-#include "include/core/SkShader.h"
 #include "include/core/SkSurface.h"
 #include "include/core/SkTextBlob.h"
-#include "include/private/base/SkPoint_impl.h"
 #include "include/private/base/SkTo.h"
-#include "include/private/chromium/Slug.h"
+#include "src/base/SkTSearch.h"
 #include "src/core/SkCanvasPriv.h"
 #include "src/core/SkDrawShadowInfo.h"
 #include "src/core/SkMatrixPriv.h"
 #include "src/core/SkSamplingPriv.h"
+#include "src/image/SkImage_Base.h"
 #include "src/utils/SkPatchUtils.h"
 
-#include <utility>
-
-class SkSurfaceProps;
-enum class SkClipOp;
-struct SkISize;
-struct SkImageInfo;
+#if defined(SK_GANESH)
+#include "include/private/chromium/Slug.h"
+#endif
 
 using namespace skia_private;
 
@@ -47,7 +37,7 @@ enum {
 static int const kUInt32Size = 4;
 
 SkPictureRecord::SkPictureRecord(const SkIRect& dimensions, uint32_t flags)
-    : SkCanvasVirtualEnforcer<SkCanvas>(dimensions)
+    : INHERITED(dimensions)
     , fRecordFlags(flags)
     , fInitialSaveCount(kNoInitialSave) {
 }
@@ -55,13 +45,21 @@ SkPictureRecord::SkPictureRecord(const SkIRect& dimensions, uint32_t flags)
 SkPictureRecord::SkPictureRecord(const SkISize& dimensions, uint32_t flags)
     : SkPictureRecord(SkIRect::MakeSize(dimensions), flags) {}
 
+///////////////////////////////////////////////////////////////////////////////
+
+void SkPictureRecord::onFlush() {
+    size_t size = sizeof(kUInt32Size);
+    size_t initialOffset = this->addDraw(FLUSH, &size);
+    this->validate(initialOffset, size);
+}
+
 void SkPictureRecord::willSave() {
     // record the offset to us, making it non-positive to distinguish a save
     // from a clip entry.
     fRestoreOffsetStack.push_back(-(int32_t)fWriter.bytesWritten());
     this->recordSave();
 
-    this->SkCanvasVirtualEnforcer<SkCanvas>::willSave();
+    this->INHERITED::willSave();
 }
 
 void SkPictureRecord::recordSave() {
@@ -78,7 +76,7 @@ SkCanvas::SaveLayerStrategy SkPictureRecord::getSaveLayerStrategy(const SaveLaye
     fRestoreOffsetStack.push_back(-(int32_t)fWriter.bytesWritten());
     this->recordSaveLayer(rec);
 
-    (void)this->SkCanvasVirtualEnforcer<SkCanvas>::getSaveLayerStrategy(rec);
+    (void)this->INHERITED::getSaveLayerStrategy(rec);
     /*  No need for a (potentially very big) layer which we don't actually need
         at this time (and may not be able to afford since during record our
         clip starts out the size of the picture, which is often much larger
@@ -111,7 +109,6 @@ void SkPictureRecord::recordSaveLayer(const SaveLayerRec& rec) {
     // op + flatflags
     size_t size = 2 * kUInt32Size;
     uint32_t flatFlags = 0;
-    uint32_t filterCount = SkToU32(rec.fFilters.size());
 
     if (rec.fBounds) {
         flatFlags |= SAVELAYERREC_HAS_BOUNDS;
@@ -133,11 +130,6 @@ void SkPictureRecord::recordSaveLayer(const SaveLayerRec& rec) {
         flatFlags |= SAVELAYERREC_HAS_BACKDROP_SCALE;
         size += sizeof(SkScalar);
     }
-    if (filterCount) {
-        flatFlags |= SAVELAYERREC_HAS_MULTIPLE_FILTERS;
-        size += sizeof(uint32_t);  // count
-        size += sizeof(uint32_t) * filterCount;  // N (paint) indices
-    }
 
     const size_t initialOffset = this->addDraw(SAVE_LAYER_SAVELAYERREC, &size);
     this->addInt(flatFlags);
@@ -158,15 +150,6 @@ void SkPictureRecord::recordSaveLayer(const SaveLayerRec& rec) {
     }
     if (flatFlags & SAVELAYERREC_HAS_BACKDROP_SCALE) {
         this->addScalar(SkCanvasPriv::GetBackdropScaleFactor(rec));
-    }
-    if (flatFlags & SAVELAYERREC_HAS_MULTIPLE_FILTERS) {
-        this->addInt(filterCount);
-        for (uint32_t i = 0; i < filterCount; ++i) {
-            // overkill to store a paint, oh well.
-            SkPaint paint;
-            paint.setImageFilter(rec.fFilters[i]);
-            this->addPaint(paint);
-        }
     }
     this->validate(initialOffset, size);
 }
@@ -202,7 +185,7 @@ void SkPictureRecord::willRestore() {
 
     fRestoreOffsetStack.pop_back();
 
-    this->SkCanvasVirtualEnforcer<SkCanvas>::willRestore();
+    this->INHERITED::willRestore();
 }
 
 void SkPictureRecord::recordRestore(bool fillInSkips) {
@@ -244,7 +227,7 @@ void SkPictureRecord::didConcat44(const SkM44& m) {
     fWriter.write(SkMatrixPriv::M44ColMajor(m), 16 * sizeof(SkScalar));
     this->validate(initialOffset, size);
 
-    this->SkCanvasVirtualEnforcer<SkCanvas>::didConcat44(m);
+    this->INHERITED::didConcat44(m);
 }
 
 void SkPictureRecord::didSetM44(const SkM44& m) {
@@ -254,7 +237,7 @@ void SkPictureRecord::didSetM44(const SkM44& m) {
     size_t initialOffset = this->addDraw(SET_M44, &size);
     fWriter.write(SkMatrixPriv::M44ColMajor(m), 16 * sizeof(SkScalar));
     this->validate(initialOffset, size);
-    this->SkCanvasVirtualEnforcer<SkCanvas>::didSetM44(m);
+    this->INHERITED::didSetM44(m);
 }
 
 void SkPictureRecord::didScale(SkScalar x, SkScalar y) {
@@ -325,7 +308,7 @@ size_t SkPictureRecord::recordRestoreOffsetPlaceholder() {
 
 void SkPictureRecord::onClipRect(const SkRect& rect, SkClipOp op, ClipEdgeStyle edgeStyle) {
     this->recordClipRect(rect, op, kSoft_ClipEdgeStyle == edgeStyle);
-    this->SkCanvasVirtualEnforcer<SkCanvas>::onClipRect(rect, op, edgeStyle);
+    this->INHERITED::onClipRect(rect, op, edgeStyle);
 }
 
 size_t SkPictureRecord::recordClipRect(const SkRect& rect, SkClipOp op, bool doAA) {
@@ -347,7 +330,7 @@ size_t SkPictureRecord::recordClipRect(const SkRect& rect, SkClipOp op, bool doA
 
 void SkPictureRecord::onClipRRect(const SkRRect& rrect, SkClipOp op, ClipEdgeStyle edgeStyle) {
     this->recordClipRRect(rrect, op, kSoft_ClipEdgeStyle == edgeStyle);
-    this->SkCanvasVirtualEnforcer<SkCanvas>::onClipRRect(rrect, op, edgeStyle);
+    this->INHERITED::onClipRRect(rrect, op, edgeStyle);
 }
 
 size_t SkPictureRecord::recordClipRRect(const SkRRect& rrect, SkClipOp op, bool doAA) {
@@ -369,7 +352,7 @@ size_t SkPictureRecord::recordClipRRect(const SkRRect& rrect, SkClipOp op, bool 
 void SkPictureRecord::onClipPath(const SkPath& path, SkClipOp op, ClipEdgeStyle edgeStyle) {
     int pathID = this->addPathToHeap(path);
     this->recordClipPath(pathID, op, kSoft_ClipEdgeStyle == edgeStyle);
-    this->SkCanvasVirtualEnforcer<SkCanvas>::onClipPath(path, op, edgeStyle);
+    this->INHERITED::onClipPath(path, op, edgeStyle);
 }
 
 size_t SkPictureRecord::recordClipPath(int pathID, SkClipOp op, bool doAA) {
@@ -401,12 +384,12 @@ void SkPictureRecord::onClipShader(sk_sp<SkShader> cs, SkClipOp op) {
     this->addInt((int)op);
     this->validate(initialOffset, size);
 
-    this->SkCanvasVirtualEnforcer<SkCanvas>::onClipShader(std::move(cs), op);
+    this->INHERITED::onClipShader(std::move(cs), op);
 }
 
 void SkPictureRecord::onClipRegion(const SkRegion& region, SkClipOp op) {
     this->recordClipRegion(region, op);
-    this->SkCanvasVirtualEnforcer<SkCanvas>::onClipRegion(region, op);
+    this->INHERITED::onClipRegion(region, op);
 }
 
 size_t SkPictureRecord::recordClipRegion(const SkRegion& region, SkClipOp op) {
@@ -436,7 +419,7 @@ void SkPictureRecord::onResetClip() {
     size_t size = sizeof(kUInt32Size);
     size_t initialOffset = this->addDraw(RESET_CLIP, &size);
     this->validate(initialOffset, size);
-    this->SkCanvasVirtualEnforcer<SkCanvas>::onResetClip();
+    this->INHERITED::onResetClip();
 }
 
 void SkPictureRecord::onDrawPaint(const SkPaint& paint) {
@@ -600,15 +583,16 @@ void SkPictureRecord::onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScala
     this->validate(initialOffset, size);
 }
 
-void SkPictureRecord::onDrawSlug(const sktext::gpu::Slug* slug, const SkPaint& paint) {
-    // op + paint index + slug id
-    size_t size = 3 * kUInt32Size;
+#if defined(SK_GANESH)
+void SkPictureRecord::onDrawSlug(const sktext::gpu::Slug* slug) {
+    // op + slug id
+    size_t size = 2 * kUInt32Size;
     size_t initialOffset = this->addDraw(DRAW_SLUG, &size);
 
-    this->addPaint(paint);
     this->addSlug(slug);
     this->validate(initialOffset, size);
 }
+#endif
 
 void SkPictureRecord::onDrawPicture(const SkPicture* picture, const SkMatrix* matrix,
                                     const SkPaint* paint) {
@@ -954,12 +938,16 @@ void SkPictureRecord::addTextBlob(const SkTextBlob* blob) {
     this->addInt(find_or_append(fTextBlobs, blob) + 1);
 }
 
+#if defined(SK_GANESH)
 void SkPictureRecord::addSlug(const sktext::gpu::Slug* slug) {
     // follow the convention of recording a 1-based index
     this->addInt(find_or_append(fSlugs, slug) + 1);
 }
+#endif
 
 void SkPictureRecord::addVertices(const SkVertices* vertices) {
     // follow the convention of recording a 1-based index
     this->addInt(find_or_append(fVertices, vertices) + 1);
 }
+
+///////////////////////////////////////////////////////////////////////////////

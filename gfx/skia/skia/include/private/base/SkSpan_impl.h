@@ -9,7 +9,6 @@
 #define SkSpan_DEFINED
 
 #include "include/private/base/SkAssert.h"
-#include "include/private/base/SkDebug.h"
 #include "include/private/base/SkTo.h"
 
 #include <cstddef>
@@ -76,17 +75,18 @@ public:
     constexpr SkSpan(const SkSpan& o) = default;
     template<size_t N> constexpr SkSpan(T(&a)[N]) : SkSpan(a, N) { }
     template<typename Container>
-    constexpr SkSpan(Container&& c) : SkSpan(std::data(c), std::size(c)) { }
+    constexpr SkSpan(Container& c) : SkSpan(std::data(c), std::size(c)) { }
     SkSpan(std::initializer_list<T> il SK_CHECK_IL_LIFETIME)
             : SkSpan(std::data(il), std::size(il)) {}
 
     constexpr SkSpan& operator=(const SkSpan& that) = default;
 
     constexpr T& operator [] (size_t i) const {
-        return fPtr[sk_collection_check_bounds(i, this->size())];
+        SkASSERT(i < this->size());
+        return fPtr[i];
     }
-    constexpr T& front() const { sk_collection_not_empty(this->empty()); return fPtr[0]; }
-    constexpr T& back()  const { sk_collection_not_empty(this->empty()); return fPtr[fSize - 1]; }
+    constexpr T& front() const { return fPtr[0]; }
+    constexpr T& back()  const { return fPtr[fSize - 1]; }
     constexpr T* begin() const { return fPtr; }
     constexpr T* end() const { return fPtr + fSize; }
     constexpr auto rbegin() const { return std::make_reverse_iterator(this->end()); }
@@ -96,36 +96,34 @@ public:
     constexpr bool empty() const { return fSize == 0; }
     constexpr size_t size_bytes() const { return fSize * sizeof(T); }
     constexpr SkSpan<T> first(size_t prefixLen) const {
-        return SkSpan{fPtr, sk_collection_check_length(prefixLen, fSize)};
+        SkASSERT(prefixLen <= this->size());
+        return SkSpan{fPtr, prefixLen};
     }
     constexpr SkSpan<T> last(size_t postfixLen) const {
-        return SkSpan{fPtr + (this->size() - postfixLen),
-                      sk_collection_check_length(postfixLen, fSize)};
+        SkASSERT(postfixLen <= this->size());
+        return SkSpan{fPtr + (this->size() - postfixLen), postfixLen};
     }
     constexpr SkSpan<T> subspan(size_t offset) const {
         return this->subspan(offset, this->size() - offset);
     }
     constexpr SkSpan<T> subspan(size_t offset, size_t count) const {
-        const size_t safeOffset = sk_collection_check_length(offset, fSize);
-
-        // Should read offset + count > size(), but that could overflow. We know that safeOffset
-        // is <= size, therefore the subtraction will not overflow.
-        if (count > this->size() - safeOffset) SK_UNLIKELY {
-            // The count is too large.
-            SkUNREACHABLE;
-        }
-        return SkSpan{fPtr + safeOffset, count};
+        SkASSERT(offset <= this->size());
+        SkASSERT(count <= this->size() - offset);
+        return SkSpan{fPtr + offset, count};
     }
 
 private:
-    static constexpr size_t kMaxSize = std::numeric_limits<size_t>::max() / sizeof(T);
-
+    static const constexpr size_t kMaxSize = std::numeric_limits<size_t>::max() / sizeof(T);
     T* fPtr;
     size_t fSize;
 };
 
 template <typename Container>
-SkSpan(Container&&) ->
-        SkSpan<std::remove_pointer_t<decltype(std::data(std::declval<Container>()))>>;
+SkSpan(Container&) ->
+        SkSpan<std::remove_pointer_t<decltype(std::data(std::declval<Container&>()))>>;
+
+template <typename T>
+SkSpan(std::initializer_list<T>) ->
+    SkSpan<std::remove_pointer_t<decltype(std::data(std::declval<std::initializer_list<T>>()))>>;
 
 #endif  // SkSpan_DEFINED

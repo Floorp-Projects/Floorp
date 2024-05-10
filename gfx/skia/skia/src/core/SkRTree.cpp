@@ -7,9 +7,6 @@
 
 #include "src/core/SkRTree.h"
 
-#include "include/private/base/SkAssert.h"
-#include "include/private/base/SkDebug.h"
-
 SkRTree::SkRTree() : fCount(0) {}
 
 void SkRTree::insert(const SkRect boundsArray[], int N) {

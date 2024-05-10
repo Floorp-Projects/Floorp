@@ -88,18 +88,14 @@ public:
                        const SkSamplingOptions&,
                        const SkPaint&,
                        SkCanvas::SrcRectConstraint) override;
-
+    void onDrawGlyphRunList(SkCanvas*,
+                            const sktext::GlyphRunList&,
+                            const SkPaint& initialPaint,
+                            const SkPaint& drawingPaint) override;
     void drawVertices(const SkVertices*, sk_sp<SkBlender>, const SkPaint&, bool) override;
+#ifdef SK_ENABLE_SKSL
     void drawMesh(const SkMesh&, sk_sp<SkBlender>, const SkPaint&) override;
-
-    void drawAnnotation(const SkRect&, const char key[], SkData* value) override;
-
-    void drawDevice(SkDevice*, const SkSamplingOptions&, const SkPaint&) override;
-    void drawSpecial(SkSpecialImage*, const SkMatrix&, const SkSamplingOptions&,
-                     const SkPaint&, SkCanvas::SrcRectConstraint) override;
-
-    sk_sp<SkSurface> makeSurface(const SkImageInfo&, const SkSurfaceProps&) override;
-    sk_sp<SkDevice> createDevice(const CreateInfo&, const SkPaint*) override;
+#endif
 
     // PDF specific methods.
     void drawSprite(const SkBitmap& bitmap, int x, int y,
@@ -112,11 +108,23 @@ public:
      */
     std::unique_ptr<SkStreamAsset> content();
 
+    SkISize size() const { return this->imageInfo().dimensions(); }
+    SkIRect bounds() const { return this->imageInfo().bounds(); }
+
     const SkMatrix& initialTransform() const { return fInitialTransform; }
 
 protected:
+    sk_sp<SkSurface> makeSurface(const SkImageInfo&, const SkSurfaceProps&) override;
+
+    void drawAnnotation(const SkRect&, const char key[], SkData* value) override;
+
+    void drawDevice(SkBaseDevice*, const SkSamplingOptions&, const SkPaint&) override;
+    void drawSpecial(SkSpecialImage*, const SkMatrix&, const SkSamplingOptions&,
+                     const SkPaint&) override;
+
     sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
+    SkImageFilterCache* getImageFilterCache() override;
 
 private:
     // TODO(vandebo): push most of SkPDFDevice's state into a core object in
@@ -125,10 +133,10 @@ private:
 
     SkMatrix fInitialTransform;
 
-    skia_private::THashSet<SkPDFIndirectReference> fGraphicStateResources;
-    skia_private::THashSet<SkPDFIndirectReference> fXObjectResources;
-    skia_private::THashSet<SkPDFIndirectReference> fShaderResources;
-    skia_private::THashSet<SkPDFIndirectReference> fFontResources;
+    SkTHashSet<SkPDFIndirectReference> fGraphicStateResources;
+    SkTHashSet<SkPDFIndirectReference> fXObjectResources;
+    SkTHashSet<SkPDFIndirectReference> fShaderResources;
+    SkTHashSet<SkPDFIndirectReference> fFontResources;
     int fNodeId;
 
     SkDynamicMemoryWStream fContent;
@@ -139,7 +147,7 @@ private:
 
     ////////////////////////////////////////////////////////////////////////////
 
-    void onDrawGlyphRunList(SkCanvas*, const sktext::GlyphRunList&, const SkPaint& paint) override;
+    SkBaseDevice* onCreateDevice(const CreateInfo&, const SkPaint*) override;
 
     // Set alpha to true if making a transparency group form x-objects.
     SkPDFIndirectReference makeFormXObjectFromDevice(bool alpha = false);
@@ -189,11 +197,13 @@ private:
 
     void clearMaskOnGraphicState(SkDynamicMemoryWStream*);
     void setGraphicState(SkPDFIndirectReference gs, SkDynamicMemoryWStream*);
-    void drawFormXObject(SkPDFIndirectReference xObject, SkDynamicMemoryWStream*, SkPath* shape);
+    void drawFormXObject(SkPDFIndirectReference xObject, SkDynamicMemoryWStream*);
 
     bool hasEmptyClip() const { return this->cs().isEmpty(this->bounds()); }
 
     void reset();
+
+    using INHERITED = SkClipStackDevice;
 };
 
 #endif

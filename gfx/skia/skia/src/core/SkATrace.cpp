@@ -7,7 +7,8 @@
 
 #include "src/core/SkATrace.h"
 
-#include "include/utils/SkTraceEventPhase.h"
+#include "src/core/SkTraceEvent.h"
+#include "src/core/SkTraceEventCommon.h"
 
 #ifdef SK_BUILD_FOR_ANDROID
     #include <dlfcn.h>
@@ -15,7 +16,6 @@
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
     #include <cutils/trace.h>
-    #include "src/core/SkTraceEventCommon.h" // for SkAndroidFrameworkTraceUtil
 #endif
 
 SkATrace::SkATrace() : fBeginSection(nullptr), fEndSection(nullptr), fIsEnabled(nullptr) {

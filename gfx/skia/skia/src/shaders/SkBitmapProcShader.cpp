@@ -7,17 +7,10 @@
 
 #include "src/shaders/SkBitmapProcShader.h"
 
-#include "include/core/SkColor.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkPixmap.h"
-#include "include/private/base/SkAssert.h"
 #include "src/base/SkArenaAlloc.h"
 #include "src/core/SkBitmapProcState.h"
-
-#include <algorithm>
-#include <cstdint>
-
-enum class SkTileMode;
+#include "src/core/SkPaintPriv.h"
+#include "src/core/SkXfermodePriv.h"
 
 class BitmapProcShaderContext : public SkShaderBase::Context {
 public:
@@ -29,6 +22,15 @@ public:
     {
         if (fState->fPixmap.isOpaque() && (255 == this->getPaintAlpha())) {
             fFlags |= SkShaderBase::kOpaqueAlpha_Flag;
+        }
+
+        auto only_scale_and_translate = [](const SkMatrix& matrix) {
+            unsigned mask = SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask;
+            return (matrix.getType() & ~mask) == 0;
+        };
+
+        if (1 == fState->fPixmap.height() && only_scale_and_translate(this->getTotalInverse())) {
+            fFlags |= SkShaderBase::kConstInY32_Flag;
         }
     }
 
@@ -79,7 +81,7 @@ SkShaderBase::Context* SkBitmapProcLegacyShader::MakeContext(
 {
     SkMatrix totalInverse;
     // Do this first, so we know the matrix can be inverted.
-    if (!rec.fMatrixRec.totalInverse(&totalInverse)) {
+    if (!shader.computeTotalInverse(*rec.fMatrix, rec.fLocalMatrix, &totalInverse)) {
         return nullptr;
     }
 

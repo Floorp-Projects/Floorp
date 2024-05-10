@@ -8,7 +8,6 @@
 #ifndef SkFontMgr_android_parser_DEFINED
 #define SkFontMgr_android_parser_DEFINED
 
-#include "include/core/SkFontArguments.h"
 #include "include/core/SkFontMgr.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
@@ -31,8 +30,7 @@ public:
     SkLanguage(const SkString& tag) : fTag(tag) { }
     SkLanguage(const char* tag) : fTag(tag) { }
     SkLanguage(const char* tag, size_t len) : fTag(tag, len) { }
-    SkLanguage(const SkLanguage&) = default;
-    SkLanguage& operator=(const SkLanguage&) = default;
+    SkLanguage(const SkLanguage& b) : fTag(b.fTag) { }
 
     /** Gets a BCP 47 language identifier for this SkLanguage.
         @return a BCP 47 language identifier representing this language
@@ -49,6 +47,10 @@ public:
     }
     bool operator!=(const SkLanguage& b) const {
         return fTag != b.fTag;
+    }
+    SkLanguage& operator=(const SkLanguage& b) {
+        fTag = b.fTag;
+        return *this;
     }
 
 private:
@@ -72,8 +74,7 @@ struct FontFileInfo {
     int fIndex;
     int fWeight;
     enum class Style { kAuto, kNormal, kItalic } fStyle;
-    skia_private::TArray<SkFontArguments::VariationPosition::Coordinate, true>
-            fVariationDesignPosition;
+    SkTArray<SkFontArguments::VariationPosition::Coordinate, true> fVariationDesignPosition;
 };
 
 /**
@@ -91,10 +92,10 @@ struct FontFamily {
         , fBasePath(basePath)
     { }
 
-    skia_private::TArray<SkString, true> fNames;
-    skia_private::TArray<FontFileInfo, true> fFonts;
-    skia_private::TArray<SkLanguage, true> fLanguages;
-    skia_private::THashMap<SkString, std::unique_ptr<FontFamily>> fallbackFamilies;
+    SkTArray<SkString, true> fNames;
+    SkTArray<FontFileInfo, true> fFonts;
+    SkTArray<SkLanguage, true> fLanguages;
+    SkTHashMap<SkString, std::unique_ptr<FontFamily>> fallbackFamilies;
     FontVariant fVariant;
     int fOrder; // internal to the parser, not useful to users.
     bool fIsFallbackFont;

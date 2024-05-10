@@ -40,7 +40,7 @@ struct SkRect;
 
 class SkWriteBuffer {
 public:
-    SkWriteBuffer(const SkSerialProcs& p): fProcs(p) {}
+    SkWriteBuffer() {}
     virtual ~SkWriteBuffer() {}
 
     virtual void writePad32(const void* buffer, size_t bytes) = 0;
@@ -85,10 +85,12 @@ public:
     virtual void writeTypeface(SkTypeface* typeface) = 0;
     virtual void writePaint(const SkPaint& paint) = 0;
 
-    const SkSerialProcs& serialProcs() const { return fProcs; }
+    void setSerialProcs(const SkSerialProcs& procs) { fProcs = procs; }
 
 protected:
     SkSerialProcs   fProcs;
+
+    friend class SkPicturePriv; // fProcs
 };
 
 /**
@@ -96,8 +98,8 @@ protected:
  */
 class SkBinaryWriteBuffer : public SkWriteBuffer {
 public:
-    SkBinaryWriteBuffer(const SkSerialProcs&);
-    SkBinaryWriteBuffer(void* initialStorage, size_t storageSize, const SkSerialProcs&);
+    SkBinaryWriteBuffer();
+    SkBinaryWriteBuffer(void* initialStorage, size_t storageSize);
     ~SkBinaryWriteBuffer() override;
 
     void write(const void* buffer, size_t bytes) {
@@ -160,7 +162,7 @@ private:
     SkWriter32 fWriter;
 
     // Only used if we do not have an fFactorySet
-    skia_private::THashMap<const char*, uint32_t> fFlattenableDict;
+    SkTHashMap<const char*, uint32_t> fFlattenableDict;
 };
 
 enum SkWriteBufferImageFlags {

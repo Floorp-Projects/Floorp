@@ -93,6 +93,7 @@ public:
         return SkDEBUGRELEASE(fDebugIndent, 0);
     }
 
+
     const SkOpAngle* debugAngle(int id) const {
         return SkDEBUGRELEASE(this->globalState()->debugAngle(id), nullptr);
     }
@@ -393,8 +394,8 @@ protected:
     bool fReverse;  // true if contour should be reverse written to path (used only by fix winding)
     bool fXor;  // set if original path had even-odd fill
     bool fOppXor;  // set if opposite path had even-odd fill
-    SkDEBUGCODE(int fID;)
-    SkDEBUGCODE(mutable int fDebugIndent;)
+    SkDEBUGCODE(int fID);
+    SkDEBUGCODE(mutable int fDebugIndent);
 };
 
 class SkOpContourHead : public SkOpContour {
@@ -436,6 +437,7 @@ public:
         SkASSERT(prev);
         prev->setNext(nullptr);
     }
+
 };
 
 class SkOpContourBuilder {

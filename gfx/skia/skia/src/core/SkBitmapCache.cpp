@@ -5,26 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkBitmapCache.h"
-
-#include "include/core/SkBitmap.h"
 #include "include/core/SkImage.h"
-#include "include/core/SkImageInfo.h"
 #include "include/core/SkPixelRef.h"
-#include "include/core/SkPixmap.h"
 #include "include/core/SkRect.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkTypes.h"
-#include "include/private/base/SkMalloc.h"
-#include "include/private/base/SkMutex.h"
-#include "include/private/chromium/SkDiscardableMemory.h"
+#include "src/core/SkBitmapCache.h"
 #include "src/core/SkMipmap.h"
-#include "src/core/SkNextID.h"
 #include "src/core/SkResourceCache.h"
 #include "src/image/SkImage_Base.h"
-
-#include <cstddef>
-#include <utility>
 
 /**
  *  Use this for bitmapcache and mipmapcache entries.
@@ -66,6 +53,8 @@ public:
 }  // namespace
 
 //////////////////////
+#include "include/private/chromium/SkDiscardableMemory.h"
+#include "src/core/SkNextID.h"
 
 void SkBitmapCache_setImmutableWithID(SkPixelRef* pr, uint32_t id) {
     pr->setImmutableWithID(id);
@@ -158,7 +147,7 @@ public:
     }
 
     static bool Finder(const SkResourceCache::Rec& baseRec, void* contextBitmap) {
-        Rec* rec = const_cast<Rec*>(static_cast<const Rec*>(&baseRec));
+        Rec* rec = (Rec*)&baseRec;
         SkBitmap* result = (SkBitmap*)contextBitmap;
         return rec->install(result);
     }

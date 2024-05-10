@@ -10,7 +10,6 @@
 
 #include "include/private/base/SkAPI.h"
 #include "include/private/base/SkAssert.h"
-#include "include/private/base/SkDebug.h"
 #include "include/private/base/SkTo.h"
 
 #include <algorithm>
@@ -153,18 +152,20 @@ public:
     const T* end() const { return this->data() + this->size(); }
 
     T& operator[](int index) {
-        return this->data()[sk_collection_check_bounds(index, this->size())];
+        SkASSERT(index < this->size());
+        return this->data()[index];
     }
     const T& operator[](int index) const {
-        return this->data()[sk_collection_check_bounds(index, this->size())];
+        SkASSERT(index < this->size());
+        return this->data()[index];
     }
 
     const T& back() const {
-        sk_collection_not_empty(this->empty());
+        SkASSERT(this->size() > 0);
         return this->data()[this->size() - 1];
     }
     T& back() {
-        sk_collection_not_empty(this->empty());
+        SkASSERT(this->size() > 0);
         return this->data()[this->size() - 1];
     }
 

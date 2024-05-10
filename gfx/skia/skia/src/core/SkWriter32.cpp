@@ -11,10 +11,6 @@
 #include "include/private/base/SkTo.h"
 #include "src/core/SkMatrixPriv.h"
 
-#include <algorithm>
-
-class SkMatrix;
-
 void SkWriter32::writeMatrix(const SkMatrix& matrix) {
     size_t size = SkMatrixPriv::WriteToMemory(matrix, nullptr);
     SkASSERT(SkAlign4(size) == size);

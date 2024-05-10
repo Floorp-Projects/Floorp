@@ -8,11 +8,13 @@
 #ifndef SkConvertPixels_DEFINED
 #define SkConvertPixels_DEFINED
 
+#include "include/private/base/SkAttributes.h"
+
 #include <cstddef>
 
 struct SkImageInfo;
 
-[[nodiscard]] bool SkConvertPixels(
+bool SK_WARN_UNUSED_RESULT SkConvertPixels(
         const SkImageInfo& dstInfo,       void* dstPixels, size_t dstRowBytes,
         const SkImageInfo& srcInfo, const void* srcPixels, size_t srcRowBytes);
 

@@ -9,18 +9,22 @@
 
 #include "include/core/SkSpan.h"
 #include "include/core/SkTypes.h"
+#include "include/private/SkSLDefines.h"
+#include "include/private/SkSLIRNode.h"
+#include "include/private/SkSLLayout.h"
+#include "include/private/SkSLModifiers.h"
+#include "include/private/SkSLProgramElement.h"
 #include "include/private/SkSLSampleUsage.h"
+#include "include/private/SkSLStatement.h"
 #include "include/private/base/SkTArray.h"
-#include "src/base/SkEnumBitMask.h"
+#include "include/sksl/SkSLErrorReporter.h"
+#include "include/sksl/SkSLOperator.h"
 #include "src/core/SkTHash.h"
 #include "src/sksl/SkSLBuiltinTypes.h"
 #include "src/sksl/SkSLCompiler.h"
 #include "src/sksl/SkSLConstantFolder.h"
 #include "src/sksl/SkSLContext.h"
-#include "src/sksl/SkSLDefines.h"
-#include "src/sksl/SkSLErrorReporter.h"
 #include "src/sksl/SkSLIntrinsicList.h"
-#include "src/sksl/SkSLOperator.h"
 #include "src/sksl/analysis/SkSLNoOpErrorReporter.h"
 #include "src/sksl/analysis/SkSLProgramUsage.h"
 #include "src/sksl/analysis/SkSLProgramVisitor.h"
@@ -36,21 +40,15 @@
 #include "src/sksl/ir/SkSLFunctionCall.h"
 #include "src/sksl/ir/SkSLFunctionDeclaration.h"
 #include "src/sksl/ir/SkSLFunctionDefinition.h"
-#include "src/sksl/ir/SkSLIRNode.h"
 #include "src/sksl/ir/SkSLIfStatement.h"
 #include "src/sksl/ir/SkSLIndexExpression.h"
-#include "src/sksl/ir/SkSLLayout.h"
-#include "src/sksl/ir/SkSLModifierFlags.h"
 #include "src/sksl/ir/SkSLPostfixExpression.h"
 #include "src/sksl/ir/SkSLPrefixExpression.h"
 #include "src/sksl/ir/SkSLProgram.h"
-#include "src/sksl/ir/SkSLProgramElement.h"
 #include "src/sksl/ir/SkSLReturnStatement.h"
-#include "src/sksl/ir/SkSLStatement.h"
 #include "src/sksl/ir/SkSLSwitchCase.h"
 #include "src/sksl/ir/SkSLSwitchStatement.h"
 #include "src/sksl/ir/SkSLSwizzle.h"
-#include "src/sksl/ir/SkSLSymbol.h"
 #include "src/sksl/ir/SkSLTernaryExpression.h"
 #include "src/sksl/ir/SkSLType.h"
 #include "src/sksl/ir/SkSLVarDeclarations.h"
@@ -85,24 +83,16 @@ public:
 protected:
     const Context& fContext;
     const Variable& fChild;
-    const Variable* fMainCoordsParam = nullptr;
     const bool fWritesToSampleCoords;
     SampleUsage fUsage;
     int fElidedSampleCoordCount = 0;
-
-    bool visitProgramElement(const ProgramElement& pe) override {
-        fMainCoordsParam = pe.is<FunctionDefinition>()
-                               ? pe.as<FunctionDefinition>().declaration().getMainCoordsParameter()
-                               : nullptr;
-        return INHERITED::visitProgramElement(pe);
-    }
 
     bool visitExpression(const Expression& e) override {
         // Looking for child(...)
         if (e.is<ChildCall>() && &e.as<ChildCall>().child() == &fChild) {
             // Determine the type of call at this site, and merge it with the accumulated state
             const ExpressionArray& arguments = e.as<ChildCall>().arguments();
-            SkASSERT(!arguments.empty());
+            SkASSERT(arguments.size() >= 1);
 
             const Expression* maybeCoords = arguments[0].get();
             if (maybeCoords->type().matches(*fContext.fTypes.fFloat2)) {
@@ -110,7 +100,8 @@ protected:
                 // coords are never modified, we can conservatively turn this into PassThrough
                 // sampling. In all other cases, we consider it Explicit.
                 if (!fWritesToSampleCoords && maybeCoords->is<VariableReference>() &&
-                    maybeCoords->as<VariableReference>().variable() == fMainCoordsParam) {
+                    maybeCoords->as<VariableReference>().variable()->modifiers().fLayout.fBuiltin ==
+                            SK_MAIN_COORDS_BUILTIN) {
                     fUsage.merge(SampleUsage::PassThrough());
                     ++fElidedSampleCoordCount;
                 } else {
@@ -256,14 +247,14 @@ public:
                 VariableReference& varRef = expr.as<VariableReference>();
                 const Variable* var = varRef.variable();
                 auto fieldName = [&] {
-                    return fieldAccess ? fieldAccess->description(OperatorPrecedence::kExpression)
+                    return fieldAccess ? fieldAccess->description(OperatorPrecedence::kTopLevel)
                                        : std::string(var->name());
                 };
-                if (var->modifierFlags().isConst() || var->modifierFlags().isUniform()) {
+                if (var->modifiers().fFlags & (Modifiers::kConst_Flag | Modifiers::kUniform_Flag)) {
                     fErrors->error(expr.fPosition,
                                    "cannot modify immutable variable '" + fieldName() + "'");
                 } else if (var->storage() == Variable::Storage::kGlobal &&
-                           (var->modifierFlags() & ModifierFlag::kIn)) {
+                           (var->modifiers().fFlags & Modifiers::kIn_Flag)) {
                     fErrors->error(expr.fPosition,
                                    "cannot modify pipeline input variable '" + fieldName() + "'");
                 } else {
@@ -337,7 +328,7 @@ SampleUsage Analysis::GetSampleUsage(const Program& program,
 bool Analysis::ReferencesBuiltin(const Program& program, int builtin) {
     SkASSERT(program.fUsage);
     for (const auto& [variable, counts] : program.fUsage->fVariableCounts) {
-        if (counts.fRead > 0 && variable->layout().fBuiltin == builtin) {
+        if (counts.fRead > 0 && variable->modifiers().fLayout.fBuiltin == builtin) {
             return true;
         }
     }
@@ -345,21 +336,7 @@ bool Analysis::ReferencesBuiltin(const Program& program, int builtin) {
 }
 
 bool Analysis::ReferencesSampleCoords(const Program& program) {
-    // Look for main().
-    for (const std::unique_ptr<ProgramElement>& pe : program.fOwnedElements) {
-        if (pe->is<FunctionDefinition>()) {
-            const FunctionDeclaration& func = pe->as<FunctionDefinition>().declaration();
-            if (func.isMain()) {
-                // See if main() has a coords parameter that is read from anywhere.
-                if (const Variable* coords = func.getMainCoordsParameter()) {
-                    ProgramUsage::VariableCounts counts = program.fUsage->get(*coords);
-                    return counts.fRead > 0;
-                }
-            }
-        }
-    }
-    // The program is missing a main().
-    return false;
+    return Analysis::ReferencesBuiltin(program, SK_MAIN_COORDS_BUILTIN);
 }
 
 bool Analysis::ReferencesFragCoords(const Program& program) {
@@ -372,10 +349,9 @@ bool Analysis::CallsSampleOutsideMain(const Program& program) {
 }
 
 bool Analysis::CallsColorTransformIntrinsics(const Program& program) {
-    for (auto [symbol, count] : program.usage()->fCallCounts) {
-        const FunctionDeclaration& fn = symbol->as<FunctionDeclaration>();
-        if (count != 0 && (fn.intrinsicKind() == k_toLinearSrgb_IntrinsicKind ||
-                           fn.intrinsicKind() == k_fromLinearSrgb_IntrinsicKind)) {
+    for (auto [fn, count] : program.usage()->fCallCounts) {
+        if (count != 0 && (fn->intrinsicKind() == k_toLinearSrgb_IntrinsicKind ||
+                           fn->intrinsicKind() == k_fromLinearSrgb_IntrinsicKind)) {
             return true;
         }
     }
@@ -402,27 +378,6 @@ bool Analysis::ContainsRTAdjust(const Expression& expr) {
     };
 
     ContainsRTAdjustVisitor visitor;
-    return visitor.visitExpression(expr);
-}
-
-bool Analysis::ContainsVariable(const Expression& expr, const Variable& var) {
-    class ContainsVariableVisitor : public ProgramVisitor {
-    public:
-        ContainsVariableVisitor(const Variable* v) : fVariable(v) {}
-
-        bool visitExpression(const Expression& expr) override {
-            if (expr.is<VariableReference>() &&
-                expr.as<VariableReference>().variable() == fVariable) {
-                return true;
-            }
-            return INHERITED::visitExpression(expr);
-        }
-
-        using INHERITED = ProgramVisitor;
-        const Variable* fVariable;
-    };
-
-    ContainsVariableVisitor visitor{&var};
     return visitor.visitExpression(expr);
 }
 
@@ -527,6 +482,48 @@ bool Analysis::UpdateVariableRefKind(Expression* expr,
     return true;
 }
 
+class ES2IndexingVisitor : public ProgramVisitor {
+public:
+    ES2IndexingVisitor(ErrorReporter& errors) : fErrors(errors) {}
+
+    bool visitStatement(const Statement& s) override {
+        if (s.is<ForStatement>()) {
+            const ForStatement& f = s.as<ForStatement>();
+            SkASSERT(f.initializer() && f.initializer()->is<VarDeclaration>());
+            const Variable* var = f.initializer()->as<VarDeclaration>().var();
+            auto [iter, inserted] = fLoopIndices.insert(var);
+            SkASSERT(inserted);
+            bool result = this->visitStatement(*f.statement());
+            fLoopIndices.erase(iter);
+            return result;
+        }
+        return INHERITED::visitStatement(s);
+    }
+
+    bool visitExpression(const Expression& e) override {
+        if (e.is<IndexExpression>()) {
+            const IndexExpression& i = e.as<IndexExpression>();
+            if (!Analysis::IsConstantIndexExpression(*i.index(), &fLoopIndices)) {
+                fErrors.error(i.fPosition, "index expression must be constant");
+                return true;
+            }
+        }
+        return INHERITED::visitExpression(e);
+    }
+
+    using ProgramVisitor::visitProgramElement;
+
+private:
+    ErrorReporter& fErrors;
+    std::set<const Variable*> fLoopIndices;
+    using INHERITED = ProgramVisitor;
+};
+
+void Analysis::ValidateIndexingForES2(const ProgramElement& pe, ErrorReporter& errors) {
+    ES2IndexingVisitor visitor(errors);
+    visitor.visitProgramElement(pe);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // ProgramVisitor
 
@@ -541,7 +538,6 @@ bool ProgramVisitor::visit(const Program& program) {
 
 template <typename T> bool TProgramVisitor<T>::visitExpression(typename T::Expression& e) {
     switch (e.kind()) {
-        case Expression::Kind::kEmpty:
         case Expression::Kind::kFunctionReference:
         case Expression::Kind::kLiteral:
         case Expression::Kind::kMethodReference:
@@ -663,7 +659,15 @@ template <typename T> bool TProgramVisitor<T>::visitStatement(typename T::Statem
         }
         case Statement::Kind::kSwitch: {
             auto& sw = s.template as<SwitchStatement>();
-            return this->visitExpressionPtr(sw.value()) || this->visitStatementPtr(sw.caseBlock());
+            if (this->visitExpressionPtr(sw.value())) {
+                return true;
+            }
+            for (auto& c : sw.cases()) {
+                if (this->visitStatementPtr(c)) {
+                    return true;
+                }
+            }
+            return false;
         }
         case Statement::Kind::kVarDeclaration: {
             auto& v = s.template as<VarDeclaration>();

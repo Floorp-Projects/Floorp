@@ -11,11 +11,8 @@
 #include "include/core/SkExecutor.h"
 #include "include/core/SkTypes.h"
 #include "include/private/base/SkNoncopyable.h"
-
 #include <atomic>
-#include <cstdint>
 #include <functional>
-#include <memory>
 
 class SkTaskGroup : SkNoncopyable {
 public:

@@ -7,25 +7,15 @@
 
 #include "src/shaders/gradients/SkLinearGradient.h"
 
-#include "include/core/SkColor.h"
-#include "include/core/SkColorSpace.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkScalar.h"
-#include "include/core/SkShader.h"
-#include "include/effects/SkGradientShader.h"
-#include "include/private/base/SkTArray.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/shaders/SkLocalMatrixShader.h"
-#include "src/shaders/SkShaderBase.h"
 
-#include <cstdint>
-#include <utility>
-
-class SkArenaAlloc;
-class SkRasterPipeline;
-enum class SkTileMode;
+#if defined(SK_GRAPHITE)
+#include "src/gpu/graphite/KeyContext.h"
+#include "src/gpu/graphite/KeyHelpers.h"
+#include "src/gpu/graphite/PaintParamsKey.h"
+#endif
 
 static SkMatrix pts_to_unit_matrix(const SkPoint pts[2]) {
     SkVector    vec = pts[1] - pts[0];
@@ -43,7 +33,10 @@ static SkMatrix pts_to_unit_matrix(const SkPoint pts[2]) {
 ///////////////////////////////////////////////////////////////////////////////
 
 SkLinearGradient::SkLinearGradient(const SkPoint pts[2], const Descriptor& desc)
-        : SkGradientBaseShader(desc, pts_to_unit_matrix(pts)), fStart(pts[0]), fEnd(pts[1]) {}
+    : SkGradientShaderBase(desc, pts_to_unit_matrix(pts))
+    , fStart(pts[0])
+    , fEnd(pts[1]) {
+}
 
 sk_sp<SkFlattenable> SkLinearGradient::CreateProc(SkReadBuffer& buffer) {
     DescriptorScope desc;
@@ -75,6 +68,12 @@ void SkLinearGradient::appendGradientStages(SkArenaAlloc*, SkRasterPipeline*,
     // No extra stage needed for linear gradients.
 }
 
+skvm::F32 SkLinearGradient::transformT(skvm::Builder* p, skvm::Uniforms*,
+                                       skvm::Coord coord, skvm::I32* mask) const {
+    // We've baked getting t in x into the matrix, so this is pretty trivial.
+    return coord.x;
+}
+
 SkShaderBase::GradientType SkLinearGradient::asGradient(GradientInfo* info,
                                                         SkMatrix* localMatrix) const {
     if (info) {
@@ -88,6 +87,44 @@ SkShaderBase::GradientType SkLinearGradient::asGradient(GradientInfo* info,
     return GradientType::kLinear;
 }
 
+/////////////////////////////////////////////////////////////////////
+
+#if defined(SK_GANESH)
+
+#include "src/gpu/ganesh/gradients/GrGradientShader.h"
+
+std::unique_ptr<GrFragmentProcessor> SkLinearGradient::asFragmentProcessor(
+        const GrFPArgs& args, const MatrixRec& mRec) const {
+    return GrGradientShader::MakeLinear(*this, args, mRec);
+}
+
+#endif
+
+#if defined(SK_GRAPHITE)
+void SkLinearGradient::addToKey(const skgpu::graphite::KeyContext& keyContext,
+                                skgpu::graphite::PaintParamsKeyBuilder* builder,
+                                skgpu::graphite::PipelineDataGatherer* gatherer) const {
+    using namespace skgpu::graphite;
+
+    SkColor4fXformer xformedColors(this, keyContext.dstColorInfo().colorSpace());
+    const SkPMColor4f* colors = xformedColors.fColors.begin();
+
+    GradientShaderBlocks::GradientData data(GradientType::kLinear,
+                                            fStart, fEnd,
+                                            0.0f, 0.0f,
+                                            0.0f, 0.0f,
+                                            fTileMode,
+                                            fColorCount,
+                                            colors,
+                                            fPositions,
+                                            fInterpolation);
+
+    MakeInterpolatedToDst(keyContext, builder, gatherer,
+                          data, fInterpolation,
+                          xformedColors.fIntermediateColorSpace.get());
+}
+#endif
+
 sk_sp<SkShader> SkGradientShader::MakeLinear(const SkPoint pts[2],
                                              const SkColor4f colors[],
                                              sk_sp<SkColorSpace> colorSpace,
@@ -99,7 +136,7 @@ sk_sp<SkShader> SkGradientShader::MakeLinear(const SkPoint pts[2],
     if (!pts || !SkScalarIsFinite((pts[1] - pts[0]).length())) {
         return nullptr;
     }
-    if (!SkGradientBaseShader::ValidGradient(colors, colorCount, mode, interpolation)) {
+    if (!SkGradientShaderBase::ValidGradient(colors, colorCount, mode, interpolation)) {
         return nullptr;
     }
     if (1 == colorCount) {
@@ -110,17 +147,19 @@ sk_sp<SkShader> SkGradientShader::MakeLinear(const SkPoint pts[2],
     }
 
     if (SkScalarNearlyZero((pts[1] - pts[0]).length(),
-                           SkGradientBaseShader::kDegenerateThreshold)) {
+                           SkGradientShaderBase::kDegenerateThreshold)) {
         // Degenerate gradient, the only tricky complication is when in clamp mode, the limit of
         // the gradient approaches two half planes of solid color (first and last). However, they
         // are divided by the line perpendicular to the start and end point, which becomes undefined
         // once start and end are exactly the same, so just use the end color for a stable solution.
-        return SkGradientBaseShader::MakeDegenerateGradient(
-                colors, pos, colorCount, std::move(colorSpace), mode);
+        return SkGradientShaderBase::MakeDegenerateGradient(colors, pos, colorCount,
+                                                            std::move(colorSpace), mode);
     }
 
-    SkGradientBaseShader::Descriptor desc(
-            colors, std::move(colorSpace), pos, colorCount, mode, interpolation);
+    SkGradientShaderBase::ColorStopOptimizer opt(colors, pos, colorCount, mode);
+
+    SkGradientShaderBase::Descriptor desc(opt.fColors, std::move(colorSpace), opt.fPos,
+                                          opt.fCount, mode, interpolation);
     return SkLocalMatrixShader::MakeWrapped<SkLinearGradient>(localMatrix, pts, desc);
 }
 

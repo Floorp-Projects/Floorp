@@ -9,14 +9,15 @@
 #include "src/encode/SkJPEGWriteUtility.h"
 
 #include "include/core/SkStream.h"
+#include "include/private/base/SkTArray.h"
 #include "src/codec/SkJpegPriv.h"
 
 #include <csetjmp>
 #include <cstddef>
 
 extern "C" {
-    #include "jerror.h"    // NO_G3_REWRITE
-    #include "jpeglib.h"   // NO_G3_REWRITE
+    #include "jerror.h"
+    #include "jmorecfg.h"
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,8 +72,8 @@ void skjpeg_error_exit(j_common_ptr cinfo) {
     /* Let the memory manager delete any temp files before we die */
     jpeg_destroy(cinfo);
 
-    if (error->fStack[0] == nullptr) {
+    if (error->fJmpBufStack.empty()) {
         SK_ABORT("JPEG error with no jmp_buf set.");
     }
-    longjmp(*error->fStack[0], -1);
+    longjmp(*error->fJmpBufStack.back(), -1);
 }

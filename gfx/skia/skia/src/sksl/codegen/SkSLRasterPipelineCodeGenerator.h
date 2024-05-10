@@ -15,7 +15,7 @@ namespace SkSL {
 
 class FunctionDefinition;
 struct Program;
-class DebugTracePriv;
+class SkRPDebugTrace;
 namespace RP { class Program; }
 
 // Convert 'function' to Raster Pipeline stages, for use by blends, shaders, and color filters.
@@ -25,8 +25,7 @@ namespace RP { class Program; }
 //   -- src/dst in src.rgba and dst.rgba for blenders
 std::unique_ptr<RP::Program> MakeRasterPipelineProgram(const Program& program,
                                                        const FunctionDefinition& function,
-                                                       DebugTracePriv* debugTrace = nullptr,
-                                                       bool writeTraceOps = false);
+                                                       SkRPDebugTrace* debugTrace = nullptr);
 
 }  // namespace SkSL
 

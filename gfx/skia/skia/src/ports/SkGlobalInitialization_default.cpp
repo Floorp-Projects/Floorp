@@ -15,10 +15,10 @@
 #else
 
     #include "include/core/SkMaskFilter.h"
+    #include "src/core/SkColorFilterBase.h"
     #include "src/core/SkImageFilter_Base.h"
-    #include "src/effects/colorfilters/SkColorFilterBase.h"
     #include "src/effects/SkDashImpl.h"
-    #include "src/shaders/gradients/SkGradientBaseShader.h"
+    #include "src/shaders/gradients/SkGradientShaderBase.h"
 
     /**
      *  Register most effects for deserialization.
@@ -32,12 +32,12 @@
         SkRegisterLinearGradientShaderFlattenable();
         SkRegisterRadialGradientShaderFlattenable();
         SkRegisterSweepGradientShaderFlattenable();
-        SkRegisterConicalGradientShaderFlattenable();
+        SkRegisterTwoPointConicalGradientShaderFlattenable();
 
         // Color filters.
         SkRegisterComposeColorFilterFlattenable();
         SkRegisterModeColorFilterFlattenable();
-        SkRegisterSkColorSpaceXformColorFilterFlattenable();
+        SkRegisterColorSpaceXformColorFilterFlattenable();
         SkRegisterWorkingFormatColorFilterFlattenable();
 
         // Mask filters.
@@ -55,10 +55,8 @@
      *  SK_DISABLE_EFFECT_SERIALIZATION, or modify/replace this file as needed.
      */
     void SkFlattenable::PrivateInitializer::InitImageFilters() {
-        SkRegisterBlendImageFilterFlattenable();
         SkRegisterBlurImageFilterFlattenable();
         SkRegisterComposeImageFilterFlattenable();
-        SkRegisterCropImageFilterFlattenable();
     }
 
 #endif

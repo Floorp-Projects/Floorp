@@ -5,7 +5,6 @@
 // This file is auto-generated from build_workaround_header.py
 // DO NOT EDIT!
 
-#ifndef GPU_DRIVER_BUG_WORKAROUNDS
 #define GPU_DRIVER_BUG_WORKAROUNDS(GPU_OP)              \
   GPU_OP(ADD_AND_TRUE_TO_LOOP_CONDITION,                \
          add_and_true_to_loop_condition)                \
@@ -41,5 +40,4 @@
          unbind_attachments_on_bound_render_fbo_delete) \
   GPU_OP(UNFOLD_SHORT_CIRCUIT_AS_TERNARY_OPERATION,     \
          unfold_short_circuit_as_ternary_operation)     \
-
-#endif  // GPU_DRIVER_BUG_WORKAROUNDS
+// The End

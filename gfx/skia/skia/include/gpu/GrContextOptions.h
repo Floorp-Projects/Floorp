@@ -20,6 +20,7 @@
 
 class SkExecutor;
 
+#if defined(SK_GANESH)
 struct SK_API GrContextOptions {
     enum class Enable {
         /** Forces an option to be disabled. */
@@ -95,12 +96,6 @@ struct SK_API GrContextOptions {
         buffers to CPU memory in order to update them.  A value of -1 means the GrContext should
         deduce the optimal value for this platform. */
     int  fBufferMapThreshold = -1;
-
-    /** Default minimum size to use when allocating buffers for uploading data to textures. The
-        larger the value the more uploads can be packed into one buffer, but at the cost of
-        more gpu memory allocated that may not be used. Uploads larger than the minimum will still
-        work by allocating a dedicated buffer. */
-    size_t fMinimumStagingBufferSize = 64 * 1024;
 
     /**
      * Executor to handle threaded work within Ganesh. If this is nullptr, then all work will be
@@ -297,7 +292,7 @@ struct SK_API GrContextOptions {
     GrDirectContextDestroyedContext fContextDeleteContext = nullptr;
     GrDirectContextDestroyedProc fContextDeleteProc = nullptr;
 
-#if defined(GR_TEST_UTILS)
+#if GR_TEST_UTILS
     /**
      * Private options that are only meant for testing within Skia's tools.
      */
@@ -370,5 +365,10 @@ struct SK_API GrContextOptions {
 
     GrDriverBugWorkarounds fDriverBugWorkarounds;
 };
+#else
+struct GrContextOptions {
+    struct PersistentCache {};
+};
+#endif
 
 #endif

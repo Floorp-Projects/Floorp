@@ -48,5 +48,5 @@ SkCTFontWeightMapping& SkCTFontGetNSFontWeightMapping();
  */
 SkCTFontWeightMapping& SkCTFontGetDataFontWeightMapping();
 
-#endif  // defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
-#endif  // SkCTFont_DEFINED
+#endif
+#endif // SkCTFontSmoothBehavior_DEFINED
