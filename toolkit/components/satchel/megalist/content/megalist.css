@@ -26,9 +26,9 @@
 virtualized-list {
   position: relative;
   overflow: auto;
-  margin: 20px;
+  margin-block: 20px;
+  padding-inline: 20px;
   flex-grow: 1;
-
   .lines-container {
     padding-inline-start: unset;
   }
@@ -38,7 +38,7 @@ virtualized-list {
   display: flex;
   align-items: stretch;
   position: absolute;
-  width: 100%;
+  width: calc(100% - 40px);
   user-select: none;
   box-sizing: border-box;
   height: 64px;
