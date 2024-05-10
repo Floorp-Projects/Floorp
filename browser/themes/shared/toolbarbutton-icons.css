@@ -114,13 +114,9 @@
   position: relative;
 }
 
-#nav-bar-customization-target :where(#reload-button, #stop-button) > .toolbarbutton-icon {
-  padding: calc(var(--toolbarbutton-inner-padding) + 1px) var(--toolbarbutton-inner-padding) calc(var(--toolbarbutton-inner-padding) - 1px ) !important; /* The animation is 18px but the other icons are 16px, lower it by 1px so it is vertically centered */
-}
-
 #reload-button > .toolbarbutton-animatable-box,
 #stop-button > .toolbarbutton-animatable-box {
-  top: calc(50% - 9px); /* Vertically center the 20px tall animatable image, which is 1px higher than other icons */
+  top: calc(50% - 10px); /* Vertically center the 20px tall animatable image */
   width: 20px; /* Width of each frame within the SVG sprite */
   height: 20px; /* Height of each frame within the SVG sprite */
 }
