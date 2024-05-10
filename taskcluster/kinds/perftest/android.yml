@@ -48,12 +48,6 @@ hw-a51-startup-fenix-cold-main-first-frame:
     platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
         cron: true
-    fetches:
-        build:
-            - artifact: target.arm64-v8a.apk
-              extract: false
-    require-build:
-        android-hw-a51-11-0-aarch64-shippable/opt: signing-apk-fenix-nightly-simulation
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
@@ -65,7 +59,10 @@ hw-a51-startup-fenix-cold-main-first-frame:
             --browsertime-cycles=0
             --AndroidStartUp-test-name=cold_main_first_frame
             --perfherder
+            --hooks
+            testing/performance/hooks_android_startup.py
             --AndroidStartUp-product=fenix
+            --AndroidStartUp-release-channel=nightly
 
 hw-a51-startup-fenix-cold-view-nav-start:
     worker-type: t-bitbar-gw-perf-a51
@@ -76,12 +73,6 @@ hw-a51-startup-fenix-cold-view-nav-start:
     platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
         cron: true
-    fetches:
-        build:
-            - artifact: target.arm64-v8a.apk
-              extract: false
-    require-build:
-        android-hw-a51-11-0-aarch64-shippable/opt: signing-apk-fenix-nightly-simulation
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
@@ -93,7 +84,10 @@ hw-a51-startup-fenix-cold-view-nav-start:
             --browsertime-cycles=0
             --AndroidStartUp-test-name=cold_view_nav_start
             --perfherder
+            --hooks
+            testing/performance/hooks_android_startup.py
             --AndroidStartUp-product=fenix
+            --AndroidStartUp-release-channel=nightly
 
 hw-a51-startup-focus-cold-main-first-frame:
     worker-type: t-bitbar-gw-perf-a51
@@ -104,12 +98,6 @@ hw-a51-startup-focus-cold-main-first-frame:
     platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
         cron: true
-    fetches:
-        build:
-            - artifact: target.arm64-v8a.apk
-              extract: false
-    require-build:
-        android-hw-a51-11-0-aarch64-shippable/opt: signing-apk-focus-nightly
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
@@ -121,7 +109,10 @@ hw-a51-startup-focus-cold-main-first-frame:
             --browsertime-cycles=0
             --AndroidStartUp-test-name=cold_main_first_frame
             --perfherder
+            --hooks
+            testing/performance/hooks_android_startup.py
             --AndroidStartUp-product=focus
+            --AndroidStartUp-release-channel=nightly
 
 hw-a51-startup-focus-cold-view-nav-start:
     worker-type: t-bitbar-gw-perf-a51
@@ -132,12 +123,6 @@ hw-a51-startup-focus-cold-view-nav-start:
     platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
         cron: true
-    fetches:
-        build:
-            - artifact: target.arm64-v8a.apk
-              extract: false
-    require-build:
-        android-hw-a51-11-0-aarch64-shippable/opt: signing-apk-focus-nightly
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
@@ -149,7 +134,10 @@ hw-a51-startup-focus-cold-view-nav-start:
             --browsertime-cycles=0
             --AndroidStartUp-test-name=cold_view_nav_start
             --perfherder
+            --hooks
+            testing/performance/hooks_android_startup.py
             --AndroidStartUp-product=focus
+            --AndroidStartUp-release-channel=nightly
 
 hw-a51-startup-geckoview-cold-main-first-frame:
     worker-type: t-bitbar-gw-perf-a51
@@ -160,12 +148,6 @@ hw-a51-startup-geckoview-cold-main-first-frame:
     platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
         cron: true
-    fetches:
-        build:
-            - artifact: geckoview_example.apk
-              extract: false
-    require-build:
-        android-hw-a51-11-0-aarch64-shippable/opt: build-android-aarch64-shippable/opt
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
@@ -177,7 +159,10 @@ hw-a51-startup-geckoview-cold-main-first-frame:
             --browsertime-cycles=0
             --AndroidStartUp-test-name=cold_main_first_frame
             --perfherder
+            --hooks
+            testing/performance/hooks_android_startup.py
             --AndroidStartUp-product=geckoview_example
+            --AndroidStartUp-release-channel=nightly
 
 hw-a51-startup-geckoview-cold-view-nav-start:
     worker-type: t-bitbar-gw-perf-a51
@@ -188,12 +173,6 @@ hw-a51-startup-geckoview-cold-view-nav-start:
     platform: android-hw-a51-11-0-aarch64-shippable/opt
     attributes:
         cron: true
-    fetches:
-        build:
-            - artifact: geckoview_example.apk
-              extract: false
-    require-build:
-        android-hw-a51-11-0-aarch64-shippable/opt: build-android-aarch64-shippable/opt
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
@@ -205,7 +184,10 @@ hw-a51-startup-geckoview-cold-view-nav-start:
             --browsertime-cycles=0
             --AndroidStartUp-test-name=cold_view_nav_start
             --perfherder
+            --hooks
+            testing/performance/hooks_android_startup.py
             --AndroidStartUp-product=geckoview_example
+            --AndroidStartUp-release-channel=nightly
 
 hw-a51-startup-chrome-m-cold-main-first-frame:
     worker-type: t-bitbar-gw-perf-a51
@@ -227,7 +209,10 @@ hw-a51-startup-chrome-m-cold-main-first-frame:
             --browsertime-cycles=0
             --AndroidStartUp-test-name=cold_main_first_frame
             --perfherder
+            --hooks
+            testing/performance/hooks_android_startup.py
             --AndroidStartUp-product=chrome-m
+            --AndroidStartUp-release-channel=release
 
 hw-a51-perfstats-gv:
     worker-type: t-bitbar-gw-perf-a51

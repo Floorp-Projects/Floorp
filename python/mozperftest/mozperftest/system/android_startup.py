@@ -1,16 +1,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import os
-import pathlib
 import re
 import statistics
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import mozdevice
-
-from mozperftest.utils import ON_TRY
 
 from .android import AndroidDevice
 
@@ -22,6 +18,13 @@ PROD_FOCUS = "focus"
 PROD_GVEX = "geckoview_example"
 PROD_CHRM = "chrome-m"
 MOZILLA_PRODUCTS = [PROD_FENIX, PROD_FOCUS, PROD_GVEX]
+
+KEY_NAME = "name"
+KEY_PRODUCT = "product"
+KEY_DATETIME = "date"
+KEY_COMMIT = "commit"
+KEY_ARCHITECTURE = "architecture"
+KEY_TEST_NAME = "test_name"
 
 MEASUREMENT_DATA = ["mean", "median", "standard_deviation"]
 OLD_VERSION_FOCUS_PAGE_START_LINE_COUNT = 3
@@ -96,10 +99,8 @@ PROD_TO_CHANNEL_TO_PKGID = {
     },
     PROD_GVEX: {
         "nightly": "org.mozilla.geckoview_example",
-        "release": "org.mozilla.geckoview_example",
     },
     PROD_CHRM: {
-        "nightly": "com.android.chrome",
         "release": "com.android.chrome",
     },
 }
@@ -166,12 +167,22 @@ class AndroidStartUp(AndroidDevice):
         "test-name": {
             "type": str,
             "default": "",
-            "help": "This is the startup android test that will be run on the mobile device",
+            "help": "This is the startup android test that will be run on the a51",
+        },
+        "apk_metadata": {
+            "type": str,
+            "default": "",
+            "help": "This is the startup android test that will be run on the a51",
         },
         "product": {
             "type": str,
             "default": "",
-            "help": "This is the product that you are testing the startup of(ex. chrome, fenix, focus)",
+            "help": "This is the startup android test that will be run on the a51",
+        },
+        "release-channel": {
+            "type": str,
+            "default": "",
+            "help": "This is the startup android test that will be run on the a51",
         },
     }
 
@@ -184,9 +195,9 @@ class AndroidStartUp(AndroidDevice):
     def run(self, metadata):
         options = metadata.script["options"]
         self.test_name = self.get_arg("test-name")
+        self.apk_metadata = self.get_arg("apk-metadata")
         self.product = self.get_arg("product")
-        self.release_channel = options["test_parameters"]["release_channel"]
-        self.architecture = options["test_parameters"]["architecture"]
+        self.release_channel = self.get_arg("release_channel")
         self.single_date = options["test_parameters"]["single_date"]
         self.date_range = options["test_parameters"]["date_range"]
         self.startup_cache = options["test_parameters"]["startup_cache"]
@@ -195,18 +206,27 @@ class AndroidStartUp(AndroidDevice):
         self.proc_start = re.compile(
             rf"ActivityManager: Start proc \d+:{self.package_id}/"
         )
-        self.key_name = f"{self.product}_nightly_{self.architecture}.apk"
 
-        self.get_measurements(metadata)
+        apk_metadata = self.apk_metadata
+        self.get_measurements(apk_metadata, metadata)
 
         # Cleanup
-        self.device.shell(f"rm {self.key_name}")
+        self.device.shell(f"rm {apk_metadata[KEY_NAME]}")
 
         return metadata
 
-    def get_measurements(self, metadata):
-        measurements = self.install_apk_onto_device_and_run()
+    def get_measurements(self, apk_metadata, metadata):
+        measurements = self.run_performance_analysis(apk_metadata)
         self.add_to_metadata(measurements, metadata)
+
+    def get_date_array_for_range(self, start, end):
+        startdate = datetime.strptime(start, DATETIME_FORMAT)
+        enddate = datetime.strptime(end, DATETIME_FORMAT)
+        delta_dates = (enddate - startdate).days + 1
+        return [
+            (startdate + timedelta(days=i)).strftime("%Y.%m.%d")
+            for i in range(delta_dates)
+        ]
 
     def add_to_metadata(self, measurements, metadata):
         if measurements is not None:
@@ -227,13 +247,14 @@ class AndroidStartUp(AndroidDevice):
                     }
                 )
 
-    def install_apk_onto_device_and_run(self):
-        if self.product in MOZILLA_PRODUCTS and ON_TRY:
-            # Installing the application on the device and getting ready to run the tests
-            if self.custom_apk_exists():
-                install_path = self.custom_apk_path
-            else:
-                install_path = str(self.get_install_path())
+    def run_performance_analysis(self, apk_metadata):
+        # Installing the application on the device and getting ready to run the tests
+        install_path = apk_metadata[KEY_NAME]
+        self.apk_name = apk_metadata[KEY_NAME].split(".")[0]
+        if self.custom_apk_exists():
+            install_path = self.custom_apk_path
+
+        if self.product in MOZILLA_PRODUCTS:
             self.device.uninstall_app(self.package_id)
             self.info(f"Installing {install_path}...")
             app_name = self.device.install_app(install_path)
@@ -241,27 +262,14 @@ class AndroidStartUp(AndroidDevice):
                 self.info(f"Successfully installed {app_name}")
             else:
                 raise AndroidStartUpInstallError("The android app was not installed")
-        if not self.device.is_app_installed(self.package_id):
-            raise AndroidStartUpInstallError("Please verify your app is installed")
         return self.run_tests()
-
-    def get_install_path(self):
-        prefix = pathlib.Path(os.getenv("MOZ_FETCHES_DIR", ""))
-        if self.product == "fenix":
-            return prefix / "target.arm64-v8a.apk"
-        elif self.product == "geckoview_example":
-            return prefix / "geckoview_example.apk"
-        elif self.product == "focus":
-            return prefix / "target.arm64-v8a.apk"
-        else:
-            raise AndroidStartUpInstallError("Unknown product")
 
     def run_tests(self):
         measurements = {}
         # Iterate through the tests in the test list
-        self.info(f"Running {self.test_name} on {self.package_id}...")
-        time.sleep(self.get_warmup_delay_seconds())
+        self.info(f"Running {self.test_name} on {self.apk_name}...")
         self.skip_onboarding(self.test_name)
+        time.sleep(self.get_warmup_delay_seconds())
         test_measurements = []
 
         for i in range(self.test_cycles):
@@ -274,7 +282,6 @@ class AndroidStartUp(AndroidDevice):
             process = self.device.shell_output(start_cmd_args).splitlines()
             test_measurements.append(self.get_measurement(self.test_name, process))
 
-        self.device.stop_application(self.package_id)
         self.info(f"{self.test_name}: {str(test_measurements)}")
         measurements[f"{self.test_name}.{MEASUREMENT_DATA[0]}"] = statistics.mean(
             test_measurements
@@ -410,8 +417,6 @@ class AndroidStartUp(AndroidDevice):
         result_output = self.device.shell_output(resolve_component_args)
         stdout = result_output.splitlines()
         if len(stdout) != STDOUT_LINE_COUNT:  # Should be 2
-            if "No activity found" in stdout:
-                raise AndroidStartUpInstallError("Please verify your apk is installed")
             raise AndroidStartUpMatchingError(f"expected 2 lines. Got: {stdout}")
         return stdout[1]
 
@@ -420,22 +425,13 @@ class AndroidStartUp(AndroidDevice):
         We skip onboarding for focus in measure_start_up.py because it's stateful
         and needs to be called for every cold start intent.
         Onboarding only visibly gets in the way of our MAIN test results.
-
-        Additionally, the code block with pm grant enables notifications for the app,
-        otherwise during testing a request to enable/disable notifications will persist
-        through app shutdowns.
         """
-        self.device.shell(
-            f"pm grant {self.package_id} android.permission.POST_NOTIFICATIONS"
-        )
-
         if self.product == PROD_FOCUS or test_name not in {
             TEST_COLD_MAIN_FF,
             TEST_COLD_MAIN_RESTORE,
         }:
             return
-
-        if self.product in MOZILLA_PRODUCTS:
+        if self.product == MOZILLA_PRODUCTS:
             # This sets mutable state so we only need to pass this flag once, before we start the test
             self.device.shell(
                 f"am start-activity -W -a android.intent.action.MAIN --ez "
