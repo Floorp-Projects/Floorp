@@ -46,6 +46,7 @@ static constexpr uint32_t kTelemetryInterval = 60 * 1000;
 
 static constexpr const char* kTopicCycleCollectorBegin =
     "cycle-collector-begin";
+static constexpr const char* kTopicShutdown = "content-child-shutdown";
 
 namespace {
 
@@ -101,7 +102,7 @@ void MemoryTelemetry::Init() {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     MOZ_RELEASE_ASSERT(obs);
 
-    obs->AddObserver(this, "content-child-shutdown", true);
+    obs->AddObserver(this, kTopicShutdown, true);
   }
 }
 
@@ -516,7 +517,7 @@ nsresult MemoryTelemetry::Observe(nsISupports* aSubject, const char* aTopic,
             "MemoryTelemetry::GatherReports", this,
             &MemoryTelemetry::GatherReports, nullptr),
         EventQueuePriority::Idle);
-  } else if (strcmp(aTopic, "content-child-shutdown") == 0) {
+  } else if (strcmp(aTopic, kTopicShutdown) == 0) {
     if (nsCOMPtr<nsITelemetry> telemetry =
             do_GetService("@mozilla.org/base/telemetry;1")) {
       telemetry->FlushBatchedChildTelemetry();
