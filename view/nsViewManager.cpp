@@ -455,6 +455,7 @@ void nsViewManager::PostPendingUpdate() {
   nsViewManager* rootVM = RootViewManager();
   rootVM->mHasPendingWidgetGeometryChanges = true;
   if (rootVM->mPresShell) {
+    rootVM->mPresShell->SetNeedLayoutFlush();
     rootVM->mPresShell->ScheduleViewManagerFlush();
   }
 }

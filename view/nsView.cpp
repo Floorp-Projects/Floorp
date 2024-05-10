@@ -1081,8 +1081,7 @@ void nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
 }
 
 void nsView::RequestRepaint() {
-  PresShell* presShell = mViewManager->GetPresShell();
-  if (presShell) {
+  if (PresShell* presShell = mViewManager->GetPresShell()) {
     presShell->ScheduleViewManagerFlush();
   }
 }
