@@ -22,7 +22,7 @@ nsRetrievalContextWayland::nsRetrievalContextWayland() = default;
 
 ClipboardTargets nsRetrievalContextWayland::GetTargetsImpl(
     int32_t aWhichClipboard) {
-  LOGCLIP("nsRetrievalContextWayland::GetTargetsImpl()\n");
+  MOZ_CLIPBOARD_LOG("nsRetrievalContextWayland::GetTargetsImpl()\n");
 
   return WaitForClipboardData(ClipboardDataType::Targets, aWhichClipboard)
       .ExtractTargets();
@@ -30,7 +30,8 @@ ClipboardTargets nsRetrievalContextWayland::GetTargetsImpl(
 
 ClipboardData nsRetrievalContextWayland::GetClipboardData(
     const char* aMimeType, int32_t aWhichClipboard) {
-  LOGCLIP("nsRetrievalContextWayland::GetClipboardData() mime %s\n", aMimeType);
+  MOZ_CLIPBOARD_LOG("nsRetrievalContextWayland::GetClipboardData() mime %s\n",
+                    aMimeType);
 
   return WaitForClipboardData(ClipboardDataType::Data, aWhichClipboard,
                               aMimeType);
@@ -40,8 +41,9 @@ GUniquePtr<char> nsRetrievalContextWayland::GetClipboardText(
     int32_t aWhichClipboard) {
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
 
-  LOGCLIP("nsRetrievalContextWayland::GetClipboardText(), clipboard %s\n",
-          (selection == GDK_SELECTION_PRIMARY) ? "Primary" : "Selection");
+  MOZ_CLIPBOARD_LOG(
+      "nsRetrievalContextWayland::GetClipboardText(), clipboard %s\n",
+      (selection == GDK_SELECTION_PRIMARY) ? "Primary" : "Selection");
 
   return WaitForClipboardData(ClipboardDataType::Text, aWhichClipboard)
       .ExtractText();
@@ -50,8 +52,8 @@ GUniquePtr<char> nsRetrievalContextWayland::GetClipboardText(
 ClipboardData nsRetrievalContextWayland::WaitForClipboardData(
     ClipboardDataType aDataType, int32_t aWhichClipboard,
     const char* aMimeType) {
-  LOGCLIP("nsRetrievalContextWayland::WaitForClipboardData, MIME %s\n",
-          aMimeType);
+  MOZ_CLIPBOARD_LOG(
+      "nsRetrievalContextWayland::WaitForClipboardData, MIME %s\n", aMimeType);
 
   AsyncGtkClipboardRequest request(aDataType, aWhichClipboard, aMimeType);
   int iteration = 1;
@@ -62,12 +64,13 @@ ClipboardData nsRetrievalContextWayland::WaitForClipboardData(
       /* sleep for 10 ms/iteration */
       PR_Sleep(PR_MillisecondsToInterval(10));
       if (PR_Now() - entryTime > kClipboardTimeout) {
-        LOGCLIP("  failed to get async clipboard data in time limit\n");
+        MOZ_CLIPBOARD_LOG(
+            "  failed to get async clipboard data in time limit\n");
         break;
       }
     }
-    LOGCLIP("doing iteration %d msec %ld ...\n", (iteration - 1),
-            (long)((PR_Now() - entryTime) / 1000));
+    MOZ_CLIPBOARD_LOG("doing iteration %d msec %ld ...\n", (iteration - 1),
+                      (long)((PR_Now() - entryTime) / 1000));
     gtk_main_iteration();
   }
 

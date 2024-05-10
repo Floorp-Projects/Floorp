@@ -138,25 +138,27 @@ ClipboardData nsRetrievalContextX11::WaitForClipboardData(
              (poll_result == -1 && errno == EINTR));
   }
 
-  LOGCLIP("exceeded clipboard timeout");
+  MOZ_CLIPBOARD_LOG("exceeded clipboard timeout");
   return {};
 }
 
 ClipboardTargets nsRetrievalContextX11::GetTargetsImpl(
     int32_t aWhichClipboard) {
-  LOGCLIP("nsRetrievalContextX11::GetTargetsImpl(%s)\n",
-          aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
-                                                              : "clipboard");
+  MOZ_CLIPBOARD_LOG("nsRetrievalContextX11::GetTargetsImpl(%s)\n",
+                    aWhichClipboard == nsClipboard::kSelectionClipboard
+                        ? "primary"
+                        : "clipboard");
   return WaitForClipboardData(ClipboardDataType::Targets, aWhichClipboard)
       .ExtractTargets();
 }
 
 ClipboardData nsRetrievalContextX11::GetClipboardData(const char* aMimeType,
                                                       int32_t aWhichClipboard) {
-  LOGCLIP("nsRetrievalContextX11::GetClipboardData(%s) MIME %s\n",
-          aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
-                                                              : "clipboard",
-          aMimeType);
+  MOZ_CLIPBOARD_LOG("nsRetrievalContextX11::GetClipboardData(%s) MIME %s\n",
+                    aWhichClipboard == nsClipboard::kSelectionClipboard
+                        ? "primary"
+                        : "clipboard",
+                    aMimeType);
 
   return WaitForClipboardData(ClipboardDataType::Data, aWhichClipboard,
                               aMimeType);
@@ -164,9 +166,10 @@ ClipboardData nsRetrievalContextX11::GetClipboardData(const char* aMimeType,
 
 GUniquePtr<char> nsRetrievalContextX11::GetClipboardText(
     int32_t aWhichClipboard) {
-  LOGCLIP("nsRetrievalContextX11::GetClipboardText(%s)\n",
-          aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
-                                                              : "clipboard");
+  MOZ_CLIPBOARD_LOG("nsRetrievalContextX11::GetClipboardText(%s)\n",
+                    aWhichClipboard == nsClipboard::kSelectionClipboard
+                        ? "primary"
+                        : "clipboard");
 
   return WaitForClipboardData(ClipboardDataType::Text, aWhichClipboard)
       .ExtractText();
