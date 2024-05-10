@@ -7,9 +7,11 @@
 
 #include "include/core/SkPicture.h"
 
-#include "include/core/SkImageGenerator.h"
+#include "include/core/SkData.h"
 #include "include/core/SkPictureRecorder.h"
 #include "include/core/SkSerialProcs.h"
+#include "include/core/SkStream.h"
+#include "include/private/base/SkTFitsIn.h"
 #include "include/private/base/SkTo.h"
 #include "src/base/SkMathPriv.h"
 #include "src/core/SkCanvasPriv.h"
@@ -17,14 +19,14 @@
 #include "src/core/SkPicturePlayback.h"
 #include "src/core/SkPicturePriv.h"
 #include "src/core/SkPictureRecord.h"
+#include "src/core/SkReadBuffer.h"
 #include "src/core/SkResourceCache.h"
 #include "src/core/SkStreamPriv.h"
+#include "src/core/SkWriteBuffer.h"
 
 #include <atomic>
-
-#if defined(SK_GANESH)
-#include "include/private/chromium/Slug.h"
-#endif
+#include <cstring>
+#include <memory>
 
 // When we read/write the SkPictInfo via a stream, we have a sentinel byte right after the info.
 // Note: in the read/write buffer versions, we have a slightly different convention:
@@ -276,7 +278,7 @@ static bool write_pad32(SkWStream* stream, const void* data, size_t size) {
 }
 
 // Private serialize.
-// SkPictureData::serialize makes a first pass on all subpictures, indicatewd by textBlobsOnly=true,
+// SkPictureData::serialize makes a first pass on all subpictures, indicated by textBlobsOnly=true,
 // to fill typefaceSet.
 void SkPicture::serialize(SkWStream* stream, const SkSerialProcs* procsPtr,
                           SkRefCntSet* typefaceSet, bool textBlobsOnly) const {
@@ -317,7 +319,7 @@ void SkPicturePriv::Flatten(const sk_sp<const SkPicture> picture, SkWriteBuffer&
     buffer.writeUInt(info.getVersion());
     buffer.writeRect(info.fCullRect);
 
-    if (auto custom = custom_serialize(picture.get(), buffer.fProcs)) {
+    if (auto custom = custom_serialize(picture.get(), buffer.serialProcs())) {
         int32_t size = SkToS32(custom->size());
         buffer.write32(-size);    // negative for custom format
         buffer.writePad32(custom->data(), size);

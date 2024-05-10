@@ -6,8 +6,8 @@
  */
 
 #include "include/core/SkTypes.h"
-#include "include/sksl/SkSLErrorReporter.h"
 #include "src/sksl/SkSLContext.h"
+#include "src/sksl/SkSLErrorReporter.h"
 #include "src/sksl/SkSLProgramSettings.h"
 #include "src/sksl/ir/SkSLDiscardStatement.h"
 
@@ -24,10 +24,6 @@ std::unique_ptr<Statement> DiscardStatement::Convert(const Context& context, Pos
 std::unique_ptr<Statement> DiscardStatement::Make(const Context& context, Position pos) {
     SkASSERT(ProgramConfig::IsFragment(context.fConfig->fKind));
     return std::make_unique<DiscardStatement>(pos);
-}
-
-std::unique_ptr<Statement> DiscardStatement::clone() const {
-    return std::make_unique<DiscardStatement>(fPosition);
 }
 
 }  // namespace SkSL

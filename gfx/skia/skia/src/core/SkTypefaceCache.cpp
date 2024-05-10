@@ -5,21 +5,30 @@
  * found in the LICENSE file.
  */
 
-#include "include/private/base/SkMutex.h"
 #include "src/core/SkTypefaceCache.h"
-#include <atomic>
 
-#define TYPEFACE_CACHE_LIMIT    1024
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkString.h"
+#include "include/private/base/SkDebug.h"
+#include "include/private/base/SkMutex.h"
+
+#include <atomic>
+#include <cstdint>
+#include <utility>
 
 SkTypefaceCache::SkTypefaceCache() {}
 
 void SkTypefaceCache::add(sk_sp<SkTypeface> face) {
 #ifndef SK_DISABLE_TYPEFACE_CACHE
-    if (fTypefaces.size() >= TYPEFACE_CACHE_LIMIT) {
-        this->purge(TYPEFACE_CACHE_LIMIT >> 2);
-    }
+    const auto limit = SkGraphics::GetTypefaceCacheCountLimit();
 
-    fTypefaces.emplace_back(std::move(face));
+    if (fTypefaces.size() >= limit) {
+        this->purge(limit >> 2);
+    }
+    if (limit > 0) {
+        fTypefaces.emplace_back(std::move(face));
+    }
 #endif
 }
 

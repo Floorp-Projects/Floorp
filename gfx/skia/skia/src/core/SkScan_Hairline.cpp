@@ -6,15 +6,30 @@
  */
 
 #include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkScalar.h"
+#include "include/private/base/SkAssert.h"
+#include "include/private/base/SkFixed.h"
+#include "include/private/base/SkMath.h"
+#include "include/private/base/SkSafe32.h"
 #include "src/base/SkMathPriv.h"
+#include "src/base/SkUtils.h"
+#include "src/base/SkVx.h"
 #include "src/core/SkBlitter.h"
 #include "src/core/SkFDot6.h"
+#include "src/core/SkGeometry.h"
 #include "src/core/SkLineClipper.h"
 #include "src/core/SkPathPriv.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkScan.h"
 
-#include <utility>
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <cstring>
 
 static void horiline(int x, int stopx, SkFixed fy, SkFixed dy,
                      SkBlitter* blitter) {
@@ -211,10 +226,6 @@ void SkScan::HairRect(const SkRect& rect, const SkRasterClip& clip, SkBlitter* b
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "include/core/SkPath.h"
-#include "src/base/SkVx.h"
-#include "src/core/SkGeometry.h"
-
 #define kMaxCubicSubdivideLevel 9
 #define kMaxQuadSubdivideLevel  5
 
@@ -360,7 +371,7 @@ using mask2 = skvx::Vec<2, uint32_t>;
 
 static inline mask2 float2_is_finite(const float2& x) {
     const mask2 exp_mask = mask2(0xFF << 23);
-    return (skvx::bit_pun<mask2>(x) & exp_mask) != exp_mask;
+    return (sk_bit_cast<mask2>(x) & exp_mask) != exp_mask;
 }
 
 static void hair_cubic(const SkPoint pts[4], const SkRegion* clip, SkBlitter* blitter,

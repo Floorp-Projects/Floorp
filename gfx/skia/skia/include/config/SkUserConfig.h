@@ -94,13 +94,14 @@
 //#define SK_HISTOGRAM_EXACT_LINEAR(name, sample, value_max)
 //#define SK_HISTOGRAM_MEMORY_KB(name, sample)
 
+// To use smaller but slower mipmap builder
+//#define SK_USE_DRAWING_MIPMAP_DOWNSAMPLER
+
 /* Skia tries to make use of some non-standard C++ language extensions.
    By default, Skia provides msvc and clang/gcc versions of these macros.
    Skia consumers can provide their own definitions of these macros to
    integrate with their own compilers and build system.
 */
-//#define SK_UNUSED [[maybe_unused]]
-//#define SK_WARN_UNUSED_RESULT [[nodiscard]]
 //#define SK_ALWAYS_INLINE inline __attribute__((always_inline))
 //#define SK_NEVER_INLINE __attribute__((noinline))
 //#define SK_PRINTF_LIKE(A, B) __attribute__((format(printf, (A), (B))))
@@ -140,6 +141,8 @@
 #define SK_USE_FREETYPE_EMBOLDEN
 
 #define SK_IGNORE_MAC_BLENDING_MATCH_FIX
+
+#define SK_DISABLE_LEGACY_IMAGE_READBUFFER
 
 #ifndef MOZ_IMPLICIT
 #  ifdef MOZ_CLANG_PLUGIN

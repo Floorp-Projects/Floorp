@@ -9,8 +9,8 @@
 #include "include/private/base/SkTo.h"
 #include "src/utils/SkCallableTraits.h"
 
-#include "hb.h"
-#include "hb-subset.h"
+#include "hb.h"  // NO_G3_REWRITE
+#include "hb-subset.h"  // NO_G3_REWRITE
 
 using HBBlob = std::unique_ptr<hb_blob_t, SkFunctionObject<hb_blob_destroy>>;
 using HBFace = std::unique_ptr<hb_face_t, SkFunctionObject<hb_face_destroy>>;
@@ -43,40 +43,16 @@ static sk_sp<SkData> to_data(HBBlob blob) {
                                 blob.release());
 }
 
-template<typename...> using void_t = void;
-template<typename T, typename = void>
-struct SkPDFHarfBuzzSubset {
-    // This is the HarfBuzz 3.0 interface.
-    // hb_subset_flags_t does not exist in 2.0. It isn't dependent on T, so inline the value of
-    // HB_SUBSET_FLAGS_RETAIN_GIDS until 2.0 is no longer supported.
-    static HBFace Make(T input, hb_face_t* face, bool retainZeroGlyph) {
-        // TODO: When possible, check if a font is 'tricky' with FT_IS_TRICKY.
-        // If it isn't known if a font is 'tricky', retain the hints.
-        unsigned int flags = 0x2u/*HB_SUBSET_FLAGS_RETAIN_GIDS*/;
-        if (retainZeroGlyph) {
-            flags |= 0x40u/*HB_SUBSET_FLAGS_NOTDEF_OUTLINE*/;
-        }
-        hb_subset_input_set_flags(input, flags);
-        return HBFace(hb_subset_or_fail(face, input));
+static HBFace make_subset(hb_subset_input_t* input, hb_face_t* face, bool retainZeroGlyph) {
+    // TODO: When possible, check if a font is 'tricky' with FT_IS_TRICKY.
+    // If it isn't known if a font is 'tricky', retain the hints.
+    unsigned int flags = HB_SUBSET_FLAGS_RETAIN_GIDS;
+    if (retainZeroGlyph) {
+        flags |= HB_SUBSET_FLAGS_NOTDEF_OUTLINE;
     }
-};
-template<typename T>
-struct SkPDFHarfBuzzSubset<T, void_t<
-    decltype(hb_subset_input_set_retain_gids(std::declval<T>(), std::declval<bool>())),
-    decltype(hb_subset_input_set_drop_hints(std::declval<T>(), std::declval<bool>())),
-    decltype(hb_subset(std::declval<hb_face_t*>(), std::declval<T>()))
-    >>
-{
-    // This is the HarfBuzz 2.0 (non-public) interface, used if it exists.
-    // This code should be removed as soon as all users are migrated to the newer API.
-    static HBFace Make(T input, hb_face_t* face, bool) {
-        hb_subset_input_set_retain_gids(input, true);
-        // TODO: When possible, check if a font is 'tricky' with FT_IS_TRICKY.
-        // If it isn't known if a font is 'tricky', retain the hints.
-        hb_subset_input_set_drop_hints(input, false);
-        return HBFace(hb_subset(face, input));
-    }
-};
+    hb_subset_input_set_flags(input, flags);
+    return HBFace(hb_subset_or_fail(face, input));
+}
 
 static sk_sp<SkData> subset_harfbuzz(sk_sp<SkData> fontData,
                                      const SkPDFGlyphUse& glyphUsage,
@@ -95,8 +71,7 @@ static sk_sp<SkData> subset_harfbuzz(sk_sp<SkData> fontData,
     hb_set_t* glyphs = hb_subset_input_glyph_set(input.get());
     glyphUsage.getSetValues([&glyphs](unsigned gid) { hb_set_add(glyphs, gid);});
 
-    HBFace subset = SkPDFHarfBuzzSubset<hb_subset_input_t*>::Make(input.get(), face.get(),
-                                                                  glyphUsage.has(0));
+    HBFace subset = make_subset(input.get(), face.get(), glyphUsage.has(0));
     if (!subset) {
         return nullptr;
     }
@@ -104,105 +79,16 @@ static sk_sp<SkData> subset_harfbuzz(sk_sp<SkData> fontData,
     return to_data(std::move(result));
 }
 
-#endif  // defined(SK_PDF_USE_HARFBUZZ_SUBSET)
-
-////////////////////////////////////////////////////////////////////////////////
-
-#if defined(SK_PDF_USE_SFNTLY)
-
-#include "sample/chromium/font_subsetter.h"
-#include <vector>
-
-#if defined(SK_USING_THIRD_PARTY_ICU)
-#include "third_party/icu/SkLoadICU.h"
-#endif
-
-static sk_sp<SkData> subset_sfntly(sk_sp<SkData> fontData,
-                                   const SkPDFGlyphUse& glyphUsage,
-                                   const char* fontName,
-                                   int ttcIndex) {
-#if defined(SK_USING_THIRD_PARTY_ICU)
-    if (!SkLoadICU()) {
-        return nullptr;
-    }
-#endif
-    // Generate glyph id array in format needed by sfntly.
-    // TODO(halcanary): sfntly should take a more compact format.
-    std::vector<unsigned> subset;
-    glyphUsage.getSetValues([&subset](unsigned v) { subset.push_back(v); });
-
-    unsigned char* subsetFont{nullptr};
-#if defined(SK_BUILD_FOR_GOOGLE3)
-    // TODO(halcanary): update SK_BUILD_FOR_GOOGLE3 to newest version of Sfntly.
-    (void)ttcIndex;
-    int subsetFontSize = SfntlyWrapper::SubsetFont(fontName,
-                                                   fontData->bytes(),
-                                                   fontData->size(),
-                                                   subset.data(),
-                                                   subset.size(),
-                                                   &subsetFont);
-#else  // defined(SK_BUILD_FOR_GOOGLE3)
-    (void)fontName;
-    int subsetFontSize = SfntlyWrapper::SubsetFont(ttcIndex,
-                                                   fontData->bytes(),
-                                                   fontData->size(),
-                                                   subset.data(),
-                                                   subset.size(),
-                                                   &subsetFont);
-#endif  // defined(SK_BUILD_FOR_GOOGLE3)
-    SkASSERT(subsetFontSize > 0 || subsetFont == nullptr);
-    if (subsetFontSize < 1 || subsetFont == nullptr) {
-        return nullptr;
-    }
-    return SkData::MakeWithProc(subsetFont, subsetFontSize,
-                                [](const void* p, void*) { delete[] (unsigned char*)p; },
-                                nullptr);
-}
-
-#endif  // defined(SK_PDF_USE_SFNTLY)
-
-////////////////////////////////////////////////////////////////////////////////
-
-#if defined(SK_PDF_USE_SFNTLY) && defined(SK_PDF_USE_HARFBUZZ_SUBSET)
-
-sk_sp<SkData> SkPDFSubsetFont(sk_sp<SkData> fontData,
-                              const SkPDFGlyphUse& glyphUsage,
-                              SkPDF::Metadata::Subsetter subsetter,
-                              const char* fontName,
-                              int ttcIndex) {
-    switch (subsetter) {
-        case SkPDF::Metadata::kHarfbuzz_Subsetter:
-            return subset_harfbuzz(std::move(fontData), glyphUsage, ttcIndex);
-        case SkPDF::Metadata::kSfntly_Subsetter:
-            return subset_sfntly(std::move(fontData), glyphUsage, fontName, ttcIndex);
-    }
-    return nullptr;
-}
-
-#elif defined(SK_PDF_USE_SFNTLY)
-
 sk_sp<SkData> SkPDFSubsetFont(sk_sp<SkData> fontData,
                               const SkPDFGlyphUse& glyphUsage,
                               SkPDF::Metadata::Subsetter,
-                              const char* fontName,
-                              int ttcIndex) {
-    return subset_sfntly(std::move(fontData), glyphUsage, fontName, ttcIndex);
-}
-
-#elif defined(SK_PDF_USE_HARFBUZZ_SUBSET)
-
-sk_sp<SkData> SkPDFSubsetFont(sk_sp<SkData> fontData,
-                              const SkPDFGlyphUse& glyphUsage,
-                              SkPDF::Metadata::Subsetter,
-                              const char*,
                               int ttcIndex) {
     return subset_harfbuzz(std::move(fontData), glyphUsage, ttcIndex);
 }
 
 #else
 
-sk_sp<SkData> SkPDFSubsetFont(sk_sp<SkData>, const SkPDFGlyphUse&, SkPDF::Metadata::Subsetter,
-                              const char*, int) {
+sk_sp<SkData> SkPDFSubsetFont(sk_sp<SkData>, const SkPDFGlyphUse&, SkPDF::Metadata::Subsetter, int){
     return nullptr;
 }
-#endif  // defined(SK_PDF_USE_SFNTLY)
+#endif  // defined(SK_PDF_USE_HARFBUZZ_SUBSET)

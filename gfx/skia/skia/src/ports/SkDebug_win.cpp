@@ -5,7 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkTypes.h"
+#include "include/private/base/SkDebug.h"
+#include "include/private/base/SkFeatures.h"
 
 #if defined(SK_BUILD_FOR_WIN)
 
@@ -31,4 +32,4 @@ void SkDebugf(const char format[], ...) {
 
     OutputDebugStringA(buffer);
 }
-#endif//defined(SK_BUILD_FOR_WIN)
+#endif  // defined(SK_BUILD_FOR_WIN)

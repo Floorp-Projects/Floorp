@@ -19,9 +19,9 @@
 #include <TargetConditionals.h>
 
 #if TARGET_OS_SIMULATOR
-#define SK_API_AVAILABLE_CA_METAL_LAYER SK_API_AVAILABLE(macos(10.11), ios(13.0))
+#define SK_API_AVAILABLE_CA_METAL_LAYER SK_API_AVAILABLE(macos(10.11), ios(13.0), tvos(13.0))
 #else  // TARGET_OS_SIMULATOR
-#define SK_API_AVAILABLE_CA_METAL_LAYER SK_API_AVAILABLE(macos(10.11), ios(8.0))
+#define SK_API_AVAILABLE_CA_METAL_LAYER SK_API_AVAILABLE(macos(10.11), ios(8.0), tvos(9.0))
 #endif  // TARGET_OS_SIMULATOR
 
 #endif // __APPLE__
@@ -35,7 +35,6 @@ namespace skgpu::graphite {
 using MtlPixelFormat = unsigned int;
 using MtlTextureUsage = unsigned int;
 using MtlStorageMode = unsigned int;
-using MtlHandle = const void*;
 
 struct MtlTextureInfo {
     uint32_t fSampleCount = 1;
@@ -49,7 +48,7 @@ struct MtlTextureInfo {
     bool fFramebufferOnly = false;
 
     MtlTextureInfo() = default;
-    MtlTextureInfo(MtlHandle mtlTexture);
+    MtlTextureInfo(CFTypeRef mtlTexture);
     MtlTextureInfo(uint32_t sampleCount,
                    skgpu::Mipmapped mipmapped,
                    MtlPixelFormat format,

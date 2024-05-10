@@ -5,31 +5,29 @@
  * found in the LICENSE file.
  */
 
+#include "include/core/SkColor.h"
 #include "include/core/SkPath.h"
-#include "include/core/SkRegion.h"
-#include "include/private/base/SkTemplates.h"
+#include "include/core/SkPathTypes.h"
+#include "include/core/SkRect.h"
+#include "include/private/base/SkAlign.h"
+#include "include/private/base/SkAssert.h"
+#include "include/private/base/SkFixed.h"
+#include "include/private/base/SkMath.h"
+#include "include/private/base/SkSafe32.h"
 #include "include/private/base/SkTo.h"
-#include "src/base/SkAutoMalloc.h"
 #include "src/base/SkTSort.h"
+#include "src/core/SkAlphaRuns.h"
 #include "src/core/SkAnalyticEdge.h"
-#include "src/core/SkAntiRun.h"
 #include "src/core/SkBlitter.h"
 #include "src/core/SkEdge.h"
 #include "src/core/SkEdgeBuilder.h"
-#include "src/core/SkGeometry.h"
-#include "src/core/SkQuadClipper.h"
-#include "src/core/SkRasterClip.h"
+#include "src/core/SkMask.h"
 #include "src/core/SkScan.h"
 #include "src/core/SkScanPriv.h"
 
-#include <utility>
-
-#if defined(SK_DISABLE_AAA)
-void SkScan::AAAFillPath(const SkPath&, SkBlitter*, const SkIRect&, const SkIRect&, bool) {
-    SkDEBUGFAIL("AAA Disabled");
-    return;
-}
-#else
+#include <algorithm>
+#include <cstdint>
+#include <cstring>
 
 /*
 
@@ -186,7 +184,7 @@ public:
     uint8_t* getRow(int y) {
         if (y != fY) {
             fY   = y;
-            fRow = fMask.fImage + (y - fMask.fBounds.fTop) * fMask.fRowBytes - fMask.fBounds.fLeft;
+            fRow = fMask.image() + (y - fMask.fBounds.fTop) * fMask.fRowBytes - fMask.fBounds.fLeft;
         }
         return fRow;
     }
@@ -197,7 +195,7 @@ private:
     static const int kMAX_STORAGE = 1024;
 
     SkBlitter* fRealBlitter;
-    SkMask     fMask;
+    SkMaskBuilder fMask;
     SkIRect    fClipRect;
     // we add 2 because we can write 1 extra byte at either end due to precision error
     uint32_t fStorage[(kMAX_STORAGE >> 2) + 2];
@@ -209,19 +207,14 @@ private:
 MaskAdditiveBlitter::MaskAdditiveBlitter(SkBlitter*     realBlitter,
                                          const SkIRect& ir,
                                          const SkIRect& clipBounds,
-                                         bool           isInverse) {
+                                         bool           isInverse)
+    : fRealBlitter(realBlitter)
+    , fMask((uint8_t*)fStorage + 1, ir, ir.width(), SkMask::kA8_Format)
+    , fRow(nullptr)
+    , fY(ir.fTop - 1)
+    {
     SkASSERT(CanHandleRect(ir));
     SkASSERT(!isInverse);
-
-    fRealBlitter = realBlitter;
-
-    fMask.fImage    = (uint8_t*)fStorage + 1;  // There's 1 extra byte at either end of fStorage
-    fMask.fBounds   = ir;
-    fMask.fRowBytes = ir.width();
-    fMask.fFormat   = SkMask::kA8_Format;
-
-    fY   = ir.fTop - 1;
-    fRow = nullptr;
 
     fClipRect = ir;
     if (!fClipRect.intersect(clipBounds)) {
@@ -758,7 +751,7 @@ static void blit_aaa_trapezoid_row(AdditiveBlitter* blitter,
     }
 
     const int kQuickLen = 31;
-    char      quickMemory[(sizeof(SkAlpha) * 2 + sizeof(int16_t)) * (kQuickLen + 1)];
+    alignas(2) char quickMemory[(sizeof(SkAlpha) * 2 + sizeof(int16_t)) * (kQuickLen + 1)];
     SkAlpha*  alphas;
 
     if (len <= kQuickLen) {
@@ -2030,4 +2023,3 @@ void SkScan::AAAFillPath(const SkPath&  path,
                       forceRLE);
     }
 }
-#endif  // defined(SK_DISABLE_AAA)

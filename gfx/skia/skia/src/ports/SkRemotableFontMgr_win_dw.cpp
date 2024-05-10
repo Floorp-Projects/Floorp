@@ -25,7 +25,9 @@
 
 #include <dwrite.h>
 
-class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
+using namespace skia_private;
+
+class SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
 private:
     struct DataId {
         IUnknown* fLoader;  // In COM only IUnknown pointers may be safely used for identity.
@@ -48,7 +50,7 @@ private:
         }
     };
 
-    mutable SkTArray<DataId> fDataIdCache;
+    mutable TArray<DataId> fDataIdCache;
     mutable SkMutex fDataIdCacheMutex;
 
     int FindOrAdd(IDWriteFontFileLoader* fontFileLoader,

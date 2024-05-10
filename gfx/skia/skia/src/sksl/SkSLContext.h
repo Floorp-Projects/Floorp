@@ -8,31 +8,26 @@
 #ifndef SKSL_CONTEXT
 #define SKSL_CONTEXT
 
+#include "include/private/base/SkAssert.h"
+
 namespace SkSL {
 
 class BuiltinTypes;
 class ErrorReporter;
-class ModifiersPool;
 struct Module;
 struct ProgramConfig;
-struct ShaderCaps;
+class SymbolTable;
 
 /**
- * Contains compiler-wide objects, which currently means the core types.
+ * Contains compiler-wide objects and state.
  */
 class Context {
 public:
-    Context(const BuiltinTypes& types, const ShaderCaps* caps, ErrorReporter& errors);
+    Context(const BuiltinTypes& types, ErrorReporter& errors);
     ~Context();
 
     // The Context holds a reference to all of the built-in types.
     const BuiltinTypes& fTypes;
-
-    // The Context holds a reference to our shader caps bits.
-    const ShaderCaps* fCaps;
-
-    // The Context holds a pointer to our pool of modifiers.
-    ModifiersPool* fModifiersPool = nullptr;
 
     // The Context holds a pointer to the configuration of the program being compiled.
     ProgramConfig* fConfig = nullptr;
@@ -40,8 +35,17 @@ public:
     // The Context holds a pointer to our error reporter.
     ErrorReporter* fErrors;
 
+    void setErrorReporter(ErrorReporter* e) {
+        SkASSERT(e);
+        fErrors = e;
+    }
+
     // The Context holds a pointer to our module with built-in declarations.
     const Module* fModule = nullptr;
+
+    // This is the current symbol table of the code we are processing, and therefore changes during
+    // compilation.
+    SymbolTable* fSymbolTable = nullptr;
 };
 
 }  // namespace SkSL

@@ -25,8 +25,6 @@ $pure $genIType findLSB($genUType value);
 $pure $genIType findMSB($genIType value);
 $pure $genIType findMSB($genUType value);
 
-$pure sampler2D makeSampler2D(texture2D texture, sampler s);
-
 $pure half4 sample(sampler2D s, float2 P);
 $pure half4 sample(sampler2D s, float3 P);
 $pure half4 sample(sampler2D s, float3 P, float bias);
@@ -164,7 +162,7 @@ $pure half $color_dodge_component(half2 s, half2 d) {
     } else {
         half delta = s.y - s.x;
         if (delta == 0) {
-             return s.y*d.y + s.x*(1 - d.y) + d.x*(1 - s.y);
+            return s.y*d.y + s.x*(1 - d.y) + d.x*(1 - s.y);
         } else {
             delta = min(d.y, $guarded_divide(d.x*s.y, delta));
             return delta*s.y + s.x*(1 - d.y) + d.x*(1 - s.y);
