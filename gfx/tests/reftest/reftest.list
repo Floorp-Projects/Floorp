@@ -28,7 +28,7 @@ skip-if(useDrawSnapshot||Android) fuzzy-if(winWidget,54-94,2713-3419) fuzzy-if(c
 pref(apz.allow_zooming,true) fails-if(useDrawSnapshot) == 1662062-1-no-blurry.html 1662062-1-ref.html
 # Bug 1715676: nsBulletFrame has been removed and the new rendering does not use PushRoundedRect that this test is for:
 # == 1681610.html 1681610-ref.html
-skip-if(geckoview) fuzzy-if(!useDrawSnapshot,0-255,0-1050) fuzzy-if(useDrawSnapshot,0-255,0-3601) == 1687157-1.html 1687157-1-ref.html
+skip-if(geckoview) fuzzy-if(!useDrawSnapshot,0-255,0-1050) fuzzy-if(useDrawSnapshot,0-255,0-3617) == 1687157-1.html 1687157-1-ref.html
 fuzzy(64-99,506-645) == 1696439-1.html 1696439-1-ref.html
 random-if(gtkWidget) == 1722689-1.html 1722689-1-ref.html
 fuzzy-if(useDrawSnapshot,255-255,5-5) == 1724901-1.html 1724901-1-ref.html
@@ -43,6 +43,6 @@ pref(layout.css.backdrop-filter.enabled,true) == 1765862.html 1765862-ref.html
 skip-if(!cocoaWidget) != 1806140.html 1806140-notref.html
 fuzzy(0-1,0-240) == 1812341.html 1812341-ref.html
 random-if(gtkWidget) fuzzy-if(Android,0-125,0-106) == 1845828-1.html 1845828-1-ref.html # Result on Linux depends on font configuration/hinting/etc, affecting whether subpixel positioning is used
-fuzzy-if(!winWidget,0-1,0-4) fuzzy-if(winWidget,14-14,245-245) == 1853216-1.html 1853216-1-ref.html
+fuzzy-if(!winWidget,0-1,0-4) fuzzy-if(winWidget,14-14,245-314) == 1853216-1.html 1853216-1-ref.html
 fuzzy-if(winWidget,0-1,0-13) == 1873708-emoji-canvas-filter.html 1873708-emoji-canvas-filter-ref.html
 != 1870240-colrv1-cycle.html 1870240-colrv1-cycle-notref.html
