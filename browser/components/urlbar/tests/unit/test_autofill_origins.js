@@ -1039,3 +1039,68 @@ async function doTitleTest({ visits, input, expected }) {
 
   await cleanup();
 }
+
+/* Tests sorting order when only unvisited bookmarks are available (e.g. in
+  permanent private browsing mode), then the only information we have is the
+  number of bookmarks per origin, and we're going to use that. */
+add_task(async function just_multiple_unvisited_bookmarks() {
+  // These are sorted to avoid confusion with natural sorting, so the one with
+  // the highest score is added in the middle.
+  let filledUrl = "https://www.tld2.com/";
+  let urls = [
+    {
+      url: "https://tld1.com/",
+      count: 1,
+    },
+    {
+      url: "https://tld2.com/",
+      count: 2,
+    },
+    {
+      url: filledUrl,
+      count: 2,
+    },
+    {
+      url: "https://tld3.com/",
+      count: 3,
+    },
+  ];
+
+  await PlacesUtils.history.clear();
+  for (let { url, count } of urls) {
+    while (count--) {
+      await PlacesTestUtils.addBookmarkWithDetails({
+        uri: url,
+      });
+    }
+  }
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+
+  let context = createContext("tld", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "tld2.com/",
+    completed: filledUrl,
+    matches: [
+      makeVisitResult(context, {
+        uri: filledUrl,
+        title: "A bookmark",
+        heuristic: true,
+      }),
+      makeBookmarkResult(context, {
+        uri: "https://tld3.com/",
+        title: "A bookmark",
+      }),
+      makeBookmarkResult(context, {
+        uri: "https://tld2.com/",
+        title: "A bookmark",
+      }),
+      makeBookmarkResult(context, {
+        uri: "https://tld1.com/",
+        title: "A bookmark",
+      }),
+    ],
+  });
+
+  await cleanup();
+});
