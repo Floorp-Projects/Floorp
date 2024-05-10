@@ -137,6 +137,7 @@ nsresult MemoryTelemetry::Shutdown() {
   MOZ_RELEASE_ASSERT(obs);
 
   obs->RemoveObserver(this, kTopicCycleCollectorBegin);
+  obs->RemoveObserver(this, kTopicShutdown);
 
   return NS_OK;
 }
