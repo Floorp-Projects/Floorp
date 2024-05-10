@@ -89,13 +89,9 @@ class NotificationManager(private val context: Context) {
 
         val notification = NotificationCompat.Builder(context, RECEIVE_TABS_CHANNEL_ID).apply {
             val title = context.resources.getString(
-                if (totalCount == 1) {
-                    R.string.fxa_tab_closed_notification_title
-                } else {
-                    R.string.fxa_tabs_closed_notification_title
-                },
-                totalCount,
+                R.string.fxa_tabs_closed_notification_title,
                 context.resources.getString(R.string.app_name),
+                totalCount,
             )
             setContentTitle(title)
 
