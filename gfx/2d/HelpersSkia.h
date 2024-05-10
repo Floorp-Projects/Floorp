@@ -9,9 +9,11 @@
 
 #include "2D.h"
 #include "skia/include/core/SkCanvas.h"
+#include "skia/include/core/SkFontTypes.h"
 #include "skia/include/core/SkPathEffect.h"
 #include "skia/include/core/SkPathTypes.h"
 #include "skia/include/core/SkShader.h"
+#include "skia/include/core/SkTileMode.h"
 #include "skia/include/effects/SkDashPathEffect.h"
 #include "mozilla/Assertions.h"
 #include <cmath>
