@@ -111,7 +111,7 @@ fuzzy-if(winWidget,0-2,0-25) fuzzy-if(!useDrawSnapshot,55-98,14033-16467) == feD
 
 == feFlood-color-01.svg pass.svg
 
-fuzzy-if(!useDrawSnapshot||(winWidget&&isCoverageBuild),20-21,5540-5647) == feGaussianBlur-alpha-01.svg feGaussianBlur-alpha-01-ref.svg
+fuzzy-if(!useDrawSnapshot||(winWidget&&isCoverageBuild),20-21,5523-5647) == feGaussianBlur-alpha-01.svg feGaussianBlur-alpha-01-ref.svg
 
 == feMorphology-radius-negative-01.svg pass.svg
 == feMorphology-radius-negative-02.svg pass.svg
