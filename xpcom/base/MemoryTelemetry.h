@@ -40,10 +40,14 @@ class MemoryTelemetry final : public nsIObserver,
       const std::function<void()>& aCompletionCallback = nullptr);
 
   /**
-   * Does expensive initialization, which should happen only after startup has
-   * completed, and the event loop is idle.
+   * Called to signal that we can begin collecting telemetry.
    */
-  nsresult DelayedInit();
+  void DelayedInit();
+
+  /**
+   * Notify that the browser is active and telemetry should be recorded soon.
+   */
+  void Poke();
 
   nsresult Shutdown();
 
@@ -64,7 +68,12 @@ class MemoryTelemetry final : public nsIObserver,
 
   bool mGatheringTotalMemory = false;
 
-  TimeStamp mLastPoll{};
+  TimeStamp mLastRun{};
+  TimeStamp mLastPoke{};
+  nsCOMPtr<nsITimer> mTimer;
+
+  // True if startup is finished and it's okay to start gathering telemetry.
+  bool mCanRun = false;
 };
 
 }  // namespace mozilla

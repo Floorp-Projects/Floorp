@@ -42,10 +42,12 @@ using mozilla::dom::AutoJSAPI;
 using mozilla::dom::ContentParent;
 
 // Do not gather data more than once a minute (ms)
-static constexpr uint32_t kTelemetryInterval = 60 * 1000;
+static constexpr uint32_t kTelemetryIntervalMS = 60 * 1000;
 
-static constexpr const char* kTopicCycleCollectorBegin =
-    "cycle-collector-begin";
+// Do not create a timer for telemetry this many seconds after the previous one
+// fires.  This exists so that we don't respond to our own timer.
+static constexpr uint32_t kTelemetryCooldownS = 10;
+
 static constexpr const char* kTopicShutdown = "content-child-shutdown";
 
 namespace {
@@ -119,24 +121,65 @@ void MemoryTelemetry::Init() {
   return *sInstance;
 }
 
-nsresult MemoryTelemetry::DelayedInit() {
-  if (Telemetry::CanRecordExtended()) {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    MOZ_RELEASE_ASSERT(obs);
+void MemoryTelemetry::DelayedInit() {
+  mCanRun = true;
+  Poke();
+}
 
-    obs->AddObserver(this, kTopicCycleCollectorBegin, true);
+void MemoryTelemetry::Poke() {
+  // Don't do anything that might delay process startup
+  if (!mCanRun) {
+    return;
   }
 
-  GatherReports();
+  if (XRE_IsContentProcess() && !Telemetry::CanRecordReleaseData()) {
+    // All memory telemetry produced by content processes is release data, so if
+    // we're not recording release data then don't setup the timers on content
+    // processes.
+    return;
+  }
 
-  return NS_OK;
+  TimeStamp now = TimeStamp::Now();
+
+  if (mLastRun && mLastRun + TimeDuration::FromSeconds(10) < now) {
+    // If we last gathered telemetry less than ten seconds ago then Poke() does
+    // nothing.  This is to prevent our own timer waking us up.
+    return;
+  }
+
+  mLastPoke = now;
+  if (!mTimer) {
+    uint32_t delay = kTelemetryIntervalMS;
+    if (mLastRun) {
+      delay = uint32_t(
+          std::min(
+              TimeDuration::FromMilliseconds(kTelemetryIntervalMS),
+              std::max(TimeDuration::FromSeconds(kTelemetryCooldownS),
+                       TimeDuration::FromMilliseconds(kTelemetryIntervalMS) -
+                           (now - mLastRun)))
+              .ToMilliseconds());
+    }
+    RefPtr<MemoryTelemetry> self(this);
+    auto res = NS_NewTimerWithCallback(
+        [self](nsITimer* aTimer) { self->GatherReports(); }, delay,
+        nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "MemoryTelemetry::GatherReports");
+
+    if (res.isOk()) {
+      // Errors are ignored, if there was an error then we just don't get
+      // telemetry.
+      mTimer = res.unwrap();
+    }
+  }
 }
 
 nsresult MemoryTelemetry::Shutdown() {
+  if (mTimer) {
+    mTimer->Cancel();
+  }
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   MOZ_RELEASE_ASSERT(obs);
 
-  obs->RemoveObserver(this, kTopicCycleCollectorBegin);
   obs->RemoveObserver(this, kTopicShutdown);
 
   return NS_OK;
@@ -200,6 +243,9 @@ nsresult MemoryTelemetry::GatherReports(
       aCompletionCallback();
     }
   });
+
+  mLastRun = TimeStamp::Now();
+  mTimer = nullptr;
 
   RefPtr<nsMemoryReporterManager> mgr = nsMemoryReporterManager::GetOrCreate();
   MOZ_DIAGNOSTIC_ASSERT(mgr);
@@ -504,21 +550,7 @@ nsresult MemoryTelemetry::FinishGatheringTotalMemory(
 
 nsresult MemoryTelemetry::Observe(nsISupports* aSubject, const char* aTopic,
                                   const char16_t* aData) {
-  if (strcmp(aTopic, kTopicCycleCollectorBegin) == 0) {
-    auto now = TimeStamp::Now();
-    if (!mLastPoll.IsNull() &&
-        (now - mLastPoll).ToMilliseconds() < kTelemetryInterval) {
-      return NS_OK;
-    }
-
-    mLastPoll = now;
-
-    NS_DispatchToCurrentThreadQueue(
-        NewRunnableMethod<std::function<void()>>(
-            "MemoryTelemetry::GatherReports", this,
-            &MemoryTelemetry::GatherReports, nullptr),
-        EventQueuePriority::Idle);
-  } else if (strcmp(aTopic, kTopicShutdown) == 0) {
+  if (strcmp(aTopic, kTopicShutdown) == 0) {
     if (nsCOMPtr<nsITelemetry> telemetry =
             do_GetService("@mozilla.org/base/telemetry;1")) {
       telemetry->FlushBatchedChildTelemetry();

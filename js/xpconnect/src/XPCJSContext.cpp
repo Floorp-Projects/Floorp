@@ -25,6 +25,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/MemoryTelemetry.h"
 #include "mozilla/Services.h"
 #ifdef FUZZING
 #  include "mozilla/StaticPrefs_fuzzing.h"
@@ -1432,6 +1433,11 @@ void XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth) {
   MOZ_ASSERT(NS_IsMainThread());
   nsJSContext::MaybePokeCC();
   CycleCollectedJSContext::AfterProcessTask(aNewRecursionDepth);
+
+  // Poke the memory telemetry reporter
+  if (AppShutdown::GetCurrentShutdownPhase() == ShutdownPhase::NotInShutdown) {
+    MemoryTelemetry::Get().Poke();
+  }
 
   // This exception might have been set if we called an XPCWrappedJS that threw,
   // but now we're returning to the event loop, so nothing is going to look at
