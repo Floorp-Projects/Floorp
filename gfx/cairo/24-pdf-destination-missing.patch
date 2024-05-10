@@ -1,0 +1,21 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1715329864 -3600
+#      Fri May 10 09:31:04 2024 +0100
+# Node ID 0e12f0bc1e445c0afb23e620aa0321ccf7d7c4a8
+# Parent  8f49349eeb0ec5df0e1dd3ddd98423138921a029
+Bug 1895872 - Avoid generating a broken PDF when a link destination is missing. r=#gfx-reviewers
+
+diff --git a/gfx/cairo/cairo/src/cairo-pdf-interchange.c b/gfx/cairo/cairo/src/cairo-pdf-interchange.c
+--- a/gfx/cairo/cairo/src/cairo-pdf-interchange.c
++++ b/gfx/cairo/cairo/src/cairo-pdf-interchange.c
+@@ -1506,7 +1506,8 @@ cairo_pdf_interchange_write_forward_link
+ 								    TRUE,
+ 								    x, y);
+ 	    } else {
+-		return _cairo_tag_error ("Link to dest=\"%s\" not found", link->dest);
++		// Destination is missing: just give the link an empty dest string.
++		_cairo_output_stream_printf(surface->object_stream.stream, "<>\n");
+ 	    }
+ 	} else {
+ 	    cairo_pdf_interchange_write_explicit_dest (surface,

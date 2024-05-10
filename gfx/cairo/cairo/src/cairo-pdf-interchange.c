@@ -1506,7 +1506,8 @@ cairo_pdf_interchange_write_forward_links (cairo_pdf_surface_t *surface)
 								    TRUE,
 								    x, y);
 	    } else {
-		return _cairo_tag_error ("Link to dest=\"%s\" not found", link->dest);
+		// Destination is missing: just give the link an empty dest string.
+		_cairo_output_stream_printf(surface->object_stream.stream, "<>\n");
 	    }
 	} else {
 	    cairo_pdf_interchange_write_explicit_dest (surface,
