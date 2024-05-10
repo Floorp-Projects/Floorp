@@ -68,7 +68,7 @@ const SQL_AUTOFILL_FRECENCY_THRESHOLD = `host_frecency >= (
   )`;
 
 function originQuery(where) {
-  // `frecency`, `bookmarked` and `visited` are partitioned by the fixed host,
+  // `frecency`, `n_bookmarks` and `visited` are partitioned by the fixed host,
   // without `www.`. `host_prefix` instead is partitioned by full host, because
   // we assume a prefix may not work regardless of `www.`.
   let selectVisited = where.includes("visited")
@@ -78,7 +78,7 @@ function originQuery(where) {
     : "0";
   let selectTitle;
   let joinBookmarks;
-  if (where.includes("bookmarked")) {
+  if (where.includes("n_bookmarks")) {
     selectTitle = "ifnull(b.title, iif(h.frecency <> 0, h.title, NULL))";
     joinBookmarks = "LEFT JOIN moz_bookmarks b ON b.fk = h.id";
   } else {
@@ -87,7 +87,7 @@ function originQuery(where) {
   }
   return `/* do not warn (bug no): cannot use an index to sort */
     ${SQL_AUTOFILL_WITH},
-    origins(id, prefix, host_prefix, host, fixed, host_frecency, frecency, bookmarked, visited) AS (
+    origins(id, prefix, host_prefix, host, fixed, host_frecency, frecency, n_bookmarks, visited) AS (
       SELECT
       id,
       prefix,
@@ -96,11 +96,11 @@ function originQuery(where) {
       ),
       host,
       fixup_url(host),
-      IFNULL(total(${ORIGIN_FRECENCY_FIELD}) OVER (PARTITION BY fixup_url(host)), 0.0),
+      total(${ORIGIN_FRECENCY_FIELD}) OVER (PARTITION BY fixup_url(host)),
       ${ORIGIN_FRECENCY_FIELD},
-      MAX(EXISTS(
-        SELECT 1 FROM moz_places WHERE origin_id = o.id AND foreign_count > 0
-      )) OVER (PARTITION BY fixup_url(host)),
+      total(
+        (SELECT total(foreign_count) FROM moz_places WHERE origin_id = o.id)
+      ) OVER (PARTITION BY fixup_url(host)),
       ${selectVisited}
       FROM moz_origins o
       WHERE prefix NOT IN ('about:', 'place:')
@@ -112,7 +112,7 @@ function originQuery(where) {
              ifnull(:prefix, host_prefix) || host || '/'
       FROM origins
       ${where}
-      ORDER BY frecency DESC, prefix = "https://" DESC, id DESC
+      ORDER BY frecency DESC, n_bookmarks DESC, prefix = "https://" DESC, id DESC
       LIMIT 1
     ),
     matched_place(host_fixed, url, id, title, frecency) AS (
@@ -157,11 +157,11 @@ function urlQuery(where1, where2, isBookmarkContained) {
     joinBookmarks = "";
   }
   return `/* do not warn (bug no): cannot use an index to sort */
-    WITH matched_url(url, title, frecency, bookmarked, visited, stripped_url, is_exact_match, id) AS (
+    WITH matched_url(url, title, frecency, n_bookmarks, visited, stripped_url, is_exact_match, id) AS (
       SELECT url,
              title,
              frecency,
-             foreign_count > 0 AS bookmarked,
+             foreign_count AS n_bookmarks,
              visit_count > 0 AS visited,
              strip_prefix_and_userinfo(url) AS stripped_url,
              strip_prefix_and_userinfo(url) = strip_prefix_and_userinfo(:strippedURL) AS is_exact_match,
@@ -173,7 +173,7 @@ function urlQuery(where1, where2, isBookmarkContained) {
       SELECT url,
              title,
              frecency,
-             foreign_count > 0 AS bookmarked,
+             foreign_count AS n_bookmarks,
              visit_count > 0 AS visited,
              strip_prefix_and_userinfo(url) AS stripped_url,
              strip_prefix_and_userinfo(url) = 'www.' || strip_prefix_and_userinfo(:strippedURL) AS is_exact_match,
@@ -196,12 +196,12 @@ function urlQuery(where1, where2, isBookmarkContained) {
 
 // Queries
 const QUERY_ORIGIN_HISTORY_BOOKMARK = originQuery(
-  `WHERE bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`
+  `WHERE n_bookmarks > 0 OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`
 );
 
 const QUERY_ORIGIN_PREFIX_HISTORY_BOOKMARK = originQuery(
   `WHERE prefix BETWEEN :prefix AND :prefix || X'FFFF'
-     AND (bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD})`
+     AND (n_bookmarks > 0 OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD})`
 );
 
 const QUERY_ORIGIN_HISTORY = originQuery(
@@ -213,38 +213,38 @@ const QUERY_ORIGIN_PREFIX_HISTORY = originQuery(
      AND visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`
 );
 
-const QUERY_ORIGIN_BOOKMARK = originQuery(`WHERE bookmarked`);
+const QUERY_ORIGIN_BOOKMARK = originQuery(`WHERE n_bookmarks > 0`);
 
 const QUERY_ORIGIN_PREFIX_BOOKMARK = originQuery(
-  `WHERE prefix BETWEEN :prefix AND :prefix || X'FFFF' AND bookmarked`
+  `WHERE prefix BETWEEN :prefix AND :prefix || X'FFFF' AND n_bookmarks > 0`
 );
 
 const QUERY_URL_HISTORY_BOOKMARK = urlQuery(
-  `AND (bookmarked OR frecency > 20)
+  `AND (n_bookmarks > 0 OR frecency > 20)
      AND stripped_url COLLATE NOCASE
        BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
-  `AND (bookmarked OR frecency > 20)
+  `AND (n_bookmarks > 0 OR frecency > 20)
      AND stripped_url COLLATE NOCASE
        BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`,
   true
 );
 
 const QUERY_URL_PREFIX_HISTORY_BOOKMARK = urlQuery(
-  `AND (bookmarked OR frecency > 20)
+  `AND (n_bookmarks > 0 OR frecency > 20)
      AND url COLLATE NOCASE
        BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
-  `AND (bookmarked OR frecency > 20)
+  `AND (n_bookmarks > 0 OR frecency > 20)
      AND url COLLATE NOCASE
        BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`,
   true
 );
 
 const QUERY_URL_HISTORY = urlQuery(
-  `AND (visited OR NOT bookmarked)
+  `AND (visited OR n_bookmarks = 0)
      AND frecency > 20
      AND stripped_url COLLATE NOCASE
        BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
-  `AND (visited OR NOT bookmarked)
+  `AND (visited OR n_bookmarks = 0)
      AND frecency > 20
      AND stripped_url COLLATE NOCASE
        BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`,
@@ -252,11 +252,11 @@ const QUERY_URL_HISTORY = urlQuery(
 );
 
 const QUERY_URL_PREFIX_HISTORY = urlQuery(
-  `AND (visited OR NOT bookmarked)
+  `AND (visited OR n_bookmarks = 0)
      AND frecency > 20
      AND url COLLATE NOCASE
        BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
-  `AND (visited OR NOT bookmarked)
+  `AND (visited OR n_bookmarks = 0)
      AND frecency > 20
      AND url COLLATE NOCASE
        BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`,
@@ -264,20 +264,20 @@ const QUERY_URL_PREFIX_HISTORY = urlQuery(
 );
 
 const QUERY_URL_BOOKMARK = urlQuery(
-  `AND bookmarked
+  `AND n_bookmarks > 0
      AND stripped_url COLLATE NOCASE
        BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
-  `AND bookmarked
+  `AND n_bookmarks > 0
      AND stripped_url COLLATE NOCASE
        BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`,
   true
 );
 
 const QUERY_URL_PREFIX_BOOKMARK = urlQuery(
-  `AND bookmarked
+  `AND n_bookmarks > 0
      AND url COLLATE NOCASE
        BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
-  `AND bookmarked
+  `AND n_bookmarks > 0
      AND url COLLATE NOCASE
        BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`,
   true
@@ -452,17 +452,19 @@ class ProviderAutofill extends UrlbarProvider {
       sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY) &&
       sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)
     ) {
-      conditions.push(`(bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD})`);
+      conditions.push(
+        `(n_bookmarks > 0 OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD})`
+      );
     } else if (sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY)) {
       conditions.push(`visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`);
     } else if (sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)) {
-      conditions.push("bookmarked");
+      conditions.push("n_bookmarks > 0");
     }
 
     let rows = await db.executeCached(
       `
         ${SQL_AUTOFILL_WITH},
-        origins(id, prefix, host_prefix, host, fixed, host_frecency, frecency, bookmarked, visited) AS (
+        origins(id, prefix, host_prefix, host, fixed, host_frecency, frecency, n_bookmarks, visited) AS (
           SELECT
           id,
           prefix,
@@ -471,11 +473,11 @@ class ProviderAutofill extends UrlbarProvider {
           ),
           host,
           fixup_url(host),
-          IFNULL(total(${ORIGIN_FRECENCY_FIELD}) OVER (PARTITION BY fixup_url(host)), 0.0),
+          total(${ORIGIN_FRECENCY_FIELD}) OVER (PARTITION BY fixup_url(host)),
           ${ORIGIN_FRECENCY_FIELD},
-          MAX(EXISTS(
-            SELECT 1 FROM moz_places WHERE origin_id = o.id AND foreign_count > 0
-          )) OVER (PARTITION BY fixup_url(host)),
+          total(
+            (SELECT total(foreign_count) FROM moz_places WHERE origin_id = o.id)
+          ) OVER (PARTITION BY fixup_url(host)),
           MAX(EXISTS(
             SELECT 1 FROM moz_places WHERE origin_id = o.id AND visit_count > 0
           )) OVER (PARTITION BY fixup_url(host))
