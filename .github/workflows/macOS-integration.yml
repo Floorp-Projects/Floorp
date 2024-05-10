@@ -152,7 +152,7 @@ jobs:
             ./mach python "./toolkit/mozapps/installer/unify.py" "./obj-x86_64-apple-darwin/dist/floorp/${APP_NAME}.app" "./obj-aarch64-apple-darwin/dist/floorp/${APP_NAME}.app"
 
         - name: import APPLE DEVELOPER ID CERTIFICATE for .app 🔑
-          uses: apple-actions/import-codesign-certs@v2
+          uses: apple-actions/import-codesign-certs@v3
           with:
             p12-file-base64: ${{ secrets.macOS_CERTIFICATES_P12_For_App_BASE64 }}
             p12-password: ${{ secrets.macOS_CERTIFICATES_P12_PASSWORD }}
