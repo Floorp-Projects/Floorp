@@ -396,8 +396,10 @@ nsLineLayout::PerSpanData* nsLineLayout::NewPerSpanData() {
   psd->mFrame = nullptr;
   psd->mFirstFrame = nullptr;
   psd->mLastFrame = nullptr;
+  psd->mReflowInput = nullptr;
   psd->mContainsFloat = false;
   psd->mHasNonemptyContent = false;
+  psd->mBaseline = nullptr;
 
 #ifdef DEBUG
   outerLineLayout->mSpansAllocated++;
