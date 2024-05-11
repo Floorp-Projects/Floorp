@@ -26,7 +26,7 @@ export function IconBar() {
   onMount(() => {
     //@ts-expect-error
     // biome-ignore lint/style/noNonNullAssertion: <explanation>
-    Sortable.create(document.getElementById("@nora:sidebar:iconbar")!, {
+    Sortable.create(document.getElementById("nora-sidebar-iconbar")!, {
       animation: 150,
       store: {
         get: (_sortable) => {
@@ -49,7 +49,7 @@ export function IconBar() {
   const items = getItems();
 
   return (
-    <div style={containerStyle} id="@nora:sidebar:iconbar">
+    <div style={containerStyle} id="nora-sidebar-iconbar">
       <For each={items}>
         {(item) => (
           <div

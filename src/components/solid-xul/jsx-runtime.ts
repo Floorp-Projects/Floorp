@@ -70,7 +70,7 @@ declare module "solid-js" {
       };
       "xul:command": {
         id: string;
-        onCommand: () => void;
+        oncommand: string | (() => void);
       };
     }
 

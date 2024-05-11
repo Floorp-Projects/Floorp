@@ -52,13 +52,6 @@ export const {
     value: T,
     prev?: T,
   ): void => {
-    const isEventListener = (
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      value: any,
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    ): value is (this: Element, ev: Event) => any => {
-      return value instanceof Function;
-    };
     if (node instanceof Element) {
       const resultEvListener = eventListener.safeParse(value);
       const resultStyleObject = styleObject.safeParse(value);
