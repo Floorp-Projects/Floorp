@@ -10,6 +10,12 @@
     <string name="mozac_browser_menu_extensions">Пашырэнні</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
     <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">Менеджар дадаткаў</string>
+    <!-- Label for extensions sub menu item for extensions manager -->
+    <string name="mozac_browser_menu_extensions_manager">Менеджар пашырэнняў</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Перайсці ўверх</string>
-    </resources>
+    <!-- Content description for the action bar "up" button of the add-ons sub menu item -->
+    <string name="mozac_browser_menu_addons_description" moz:removedIn="126" tools:ignore="UnusedResources">Дадаткі, перайсці ўніз</string>
+    <!-- Content description for the action bar "up" button of the extensions sub menu item -->
+    <string name="mozac_browser_menu_extensions_content_description">Пашырэнні, перайсці ўверх</string>
+</resources>

@@ -115,7 +115,7 @@
     <string name="mozac_browser_errorpages_offline_title">Mode Oplén</string>
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Panyungsi keur leumpang dina mode luring na jeung teu tiasa nyambung ka barang anu dipénta.</p>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Panyungsi keur leumpang dina modeu luring na jeung teu tiasa nyambung ka barang anu dipénta.</p>
       <ul>
         <li>Ieu parangkat nyambung ka jaringan aktip heunteu?</li>
         <li>Pencét "Cobi deui" pikeun ngalih ka modeu daring sareng ngamuat deui ieu kaca.</li>
@@ -125,7 +125,7 @@
     <string name="mozac_browser_errorpages_port_blocked_title">Port diwates pikeun kaamanan</string>
 
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
-    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Alamat anu dipénta nyebutkeun port (contona <q>mozilla.org:80</q> pikeun port 80 di mozilla.org) galibna dipaké <em>lain</em> pikeun nyungsi Raramat. Panyungsi geus ngabolaykeun paménta pikeun kaamanan anjeun.</p>]]></string>
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Alamat anu dipénta nyebutkeun port (contona <q>mozilla.org:80</q> pikeun port 80 di mozilla.org) umumna dipaké <em>lain</em> pikeun nyungsi Raramat. Panyungsi geus ngabolaykeun paménta pikeun kaamanan anjeun.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Sambunganana dirését</string>
@@ -206,7 +206,7 @@
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_unknown_protocol_title">Protokol Teu Dipikawanoh</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Protokol Teu Dipiwanoh</string>
 
     <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Alamatna méré protocol (e.g., <q>wxyz://</q>) anu teu dipikawanoh ku pamaluruh, ku kituna pamaluruhna teu bisa nyambung kalawan bener ka lokana.</p>
       <ul>
@@ -273,7 +273,7 @@
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">Situs Aman Teu Sayaga</string>
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
-    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Anjeun ngahurungkeun Mode Ukur-HTTPS pikeun kaamanan lanjutan, anapon pérsi HTTPS <em>%1$s</em> teu sayaga.]]></string>
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Anjeun ngahurungkeun Mode Ukur-HTTPS pikeun kaamanan terusan, anapon pérsi HTTPS <em>%1$s</em> teu sayaga.]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">Teruskeun ka Situs HTTP</string>
 </resources>
