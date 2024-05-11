@@ -33,13 +33,13 @@ declare module "solid-js" {
       accesskey?: string;
       oncommand?: string;
     }
+
     interface IntrinsicElements {
       "xul:browser": XULBrowserElement;
       "xul:menuitem": XULMenuitemElement;
       "xul:window": XULElementBase;
       "xul:linkset": XULElementBase;
-      "xul:commandset": XULElementBase;
-      "xul:command": XULElementBase;
+
       "xul:popupset": XULElementBase;
       "xul:tooltip": XULElementBase;
       "xul:panel": XULElementBase;
@@ -51,6 +51,27 @@ declare module "solid-js" {
       "xul:splitter": XULElementBase;
       "xul:menuseparator": XULElementBase;
       "xul:menu": XULElementBase;
+      "xul:keyset": {
+        id?: string;
+        children: Element;
+      };
+      "xul:key": {
+        id?: string;
+        "data-l10n-id"?: string;
+        "data-l10n-attrs"?: string;
+        modifiers?: string;
+        keycode?: string;
+        key?: string;
+        command: string;
+      };
+      "xul:commandset": {
+        id?: string;
+        children: Element;
+      };
+      "xul:command": {
+        id: string;
+        onCommand: () => void;
+      };
     }
 
     interface Directives {

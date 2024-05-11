@@ -52,7 +52,11 @@ export function IconBar() {
     <div style={containerStyle} id="@nora:sidebar:iconbar">
       <For each={items}>
         {(item) => (
-          <div style={itemStyle} data-id={item.id}>
+          <div
+            style={itemStyle}
+            data-id={item.id}
+            onClick={() => console.log(item.title)}
+          >
             {item.title}
           </div>
         )}

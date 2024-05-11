@@ -1,2 +1,2 @@
 // @ts-ignore
-import("chrome://noraneko/content/startup.js");
+import("chrome://noraneko/content/startupBrowser.js");

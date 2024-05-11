@@ -1,7 +1,7 @@
 {
   "typeAcquisition": {
     "enable": true,
-    "include": ["./@types/content.d.ts"]
+    "include": ["./@types/content.d.ts", "vite/client.d.ts"]
   },
   "compilerOptions": {
     "useDefineForClassFields": true,
@@ -22,7 +22,8 @@
       "@types/*": ["./@types/*"],
       "@solid-xul/*": ["./src/components/solid-xul/*"],
       "@private/*": ["./src/components/private/src/content/*"],
-      "@content/*": ["./src/content/*"]
+      "@content/*": ["./src/content/*"],
+      "@skin/*": ["./src/skin/*"]
     }
   },
   "exclude": ["dist/**"]

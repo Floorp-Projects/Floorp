@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import {ZSTDDecoder} from "zstddec";
+import { ZSTDDecoder } from "zstddec";
 import decompress from "decompress";
 import fg from "fast-glob";
 import autoprefixer from "autoprefixer";
@@ -8,15 +8,15 @@ import postcss from "postcss";
 import postcssNested from "postcss-nested";
 import postcssSorting from "postcss-sorting";
 import chokidar from "chokidar";
-import {build} from "vite";
+import { build } from "vite";
 import solidPlugin from "vite-plugin-solid";
 import tsconfigPaths from "vite-tsconfig-paths";
 //import { remote } from "webdriverio";
-import {injectManifest} from "./scripts/injectmanifest.js";
-import {injectXHTML} from "./scripts/injectxhtml.js";
+import { injectManifest } from "./scripts/injectmanifest.js";
+import { injectXHTML } from "./scripts/injectxhtml.js";
 import puppeteer from "puppeteer-core";
-import {exit} from "node:process";
-import {Browser} from "puppeteer-core";
+import { exit } from "node:process";
+import { Browser } from "puppeteer-core";
 
 const VERSION = "000";
 
@@ -25,8 +25,11 @@ const r = (/** @type {string} */ dir) => {
 };
 
 const isExists = async (/** @type {string} */ path) => {
-  return (await fs.access(path).then(() => true).catch(() => false));
-}
+  return await fs
+    .access(path)
+    .then(() => true)
+    .catch(() => false);
+};
 
 const binTar = "bin.tar.zst";
 const binDir = "dist/bin";
@@ -43,9 +46,7 @@ async function decompressBin() {
     }
     const decoder = new ZSTDDecoder();
     await decoder.init();
-    const archive = Buffer.from(
-      decoder.decode(await fs.readFile(binTar)),
-    );
+    const archive = Buffer.from(decoder.decode(await fs.readFile(binTar)));
     await decompress(archive, binDir);
     console.log("decompress complete!");
     await fs.writeFile(binVersion, VERSION);
@@ -58,12 +59,12 @@ async function decompressBin() {
 async function initBin() {
   const hasVersion = await isExists(binVersion);
   if (hasVersion) {
-    const version = (await fs.readFile(binVersion)).toString()
+    const version = (await fs.readFile(binVersion)).toString();
     const mismatch = VERSION !== version;
     if (mismatch) {
       console.log(`version mismatch ${version} !== ${VERSION}`);
-      await fs.rm(binDir, {recursive: true});
-      await fs.mkdir(binDir, {recursive: true});
+      await fs.rm(binDir, { recursive: true });
+      await fs.mkdir(binDir, { recursive: true });
       await decompressBin();
     }
     return;
@@ -78,7 +79,6 @@ async function initBin() {
   console.log(`bin exists, but version file not found, writing ${VERSION}`);
   await fs.writeFile(binVersion, VERSION);
 }
-
 
 async function compile() {
   await build({
@@ -97,7 +97,8 @@ async function compile() {
         preserveEntrySignatures: "allow-extension",
         input: {
           //index: "src/content/index.ts",
-          startup: "src/components/startup/index.ts",
+          startupBrowser: "src/components/startup/browser/index.ts",
+          startupPreferences: "src/components/startup/preferences/index.ts",
         },
         output: {
           esModule: true,
@@ -122,7 +123,7 @@ async function compile() {
       }),
     ],
     resolve: {
-      alias: [{find: "@content", replacement: r("src/content")}],
+      alias: [{ find: "@content", replacement: r("src/content") }],
     },
   });
   const entries = await fg("./src/skin/**/*");
@@ -180,12 +181,10 @@ async function run() {
     try {
       await fs.access("dist/profile/test");
       await fs.rm("dist/profile/test");
-    } catch {
-    }
+    } catch {}
     // https://searchfox.org/mozilla-central/rev/b4a96f411074560c4f9479765835fa81938d341c/toolkit/xre/nsAppRunner.cpp#1514
     // 可能性はある、まだ必要はない
-  } catch {
-  }
+  } catch {}
 
   /** @type Browser | null */
   let browser = null;
@@ -194,7 +193,7 @@ async function run() {
   let intended_close = false;
 
   const watcher = chokidar
-    .watch("src", {persistent: true})
+    .watch("src", { persistent: true })
     .on("all", async () => {
       if (watch_running) return;
       watch_running = true;

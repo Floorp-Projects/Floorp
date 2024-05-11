@@ -5,7 +5,7 @@ import { BMSUtils } from "./BrowserManagerSidebar";
 
 import { sidebar } from "./browser-manager-sidebar";
 import { sidebarContext } from "./browser-manager-sidebar-context";
-import { sidebarSelectBox } from "@content/browser-webpanel/browser-webpanel";
+import { sidebarSelectBox } from "@content/browser/browser-webpanel/browser-webpanel";
 
 import { Sidebar3Data } from "./SidebarData";
 import { PanelWindowUtils } from "@private/browser-manager-sidebar/PanelWindowUtils";
@@ -37,7 +37,6 @@ export class CBrowserManagerSidebar {
   }
 
   get BROWSER_SIDEBAR_DATA() {
-    ////
     return Sidebar3Data.parse(
       JSON.parse(
         Services.prefs.getStringPref("floorp.browser.sidebar2.data", undefined),
