@@ -100,9 +100,9 @@ interface nsIJumpListBuilder : nsISupports
    */
   [implicit_jscontext]
   Promise populateJumpList(
-    in Array<jsval> aTaskDescriptions,
+    in jsval aTaskDescriptions,
     in AString aCustomTitle,
-    in Array<jsval> aCustomDescriptions
+    in jsval aCustomDescriptions
   );
 
   /**

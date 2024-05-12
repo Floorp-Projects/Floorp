@@ -291,15 +291,41 @@ JumpListBuilder::CheckForRemovals(JSContext* aCx, Promise** aPromise) {
 }
 
 NS_IMETHODIMP
-JumpListBuilder::PopulateJumpList(
-    const nsTArray<JS::Value>& aTaskDescriptions, const nsAString& aCustomTitle,
-    const nsTArray<JS::Value>& aCustomDescriptions, JSContext* aCx,
-    Promise** aPromise) {
+JumpListBuilder::PopulateJumpList(JS::Handle<JS::Value> aTaskDescriptions,
+                                  const nsAString& aCustomTitle,
+                                  JS::Handle<JS::Value> aCustomDescriptions,
+                                  JSContext* aCx, Promise** aPromise) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPromise);
   MOZ_ASSERT(mIOThread);
 
-  if (aCustomDescriptions.Length() && aCustomTitle.IsEmpty()) {
+  if (!aTaskDescriptions.isObject() || !aCustomDescriptions.isObject()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  bool isArray;
+  if (!JS::IsArrayObject(aCx, aTaskDescriptions, &isArray) ||
+      !JS::IsArrayObject(aCx, aCustomDescriptions, &isArray)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  JS::Rooted<JSObject*> taskDescriptionsObj(aCx, &aTaskDescriptions.toObject());
+  JS::Rooted<JSObject*> customDescriptionsObj(aCx,
+                                              &aCustomDescriptions.toObject());
+
+  uint32_t taskDescriptionsLength = 0;
+  uint32_t customDescriptionsLength = 0;
+  if (NS_WARN_IF(!JS::GetArrayLength(aCx, taskDescriptionsObj,
+                                     &taskDescriptionsLength))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (NS_WARN_IF(!JS::GetArrayLength(aCx, customDescriptionsObj,
+                                     &customDescriptionsLength))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (customDescriptionsLength && aCustomTitle.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -309,9 +335,16 @@ JumpListBuilder::PopulateJumpList(
   mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
   nsTArray<WindowsJumpListShortcutDescription> taskDescs;
-  for (auto& jsval : aTaskDescriptions) {
+  for (uint32_t arrayIndex = 0; arrayIndex < taskDescriptionsLength;
+       arrayIndex++) {
+    JS::Rooted<JS::PropertyKey> indexId(aCx);
+    if (NS_WARN_IF(!JS_IndexToId(aCx, arrayIndex, &indexId))) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
     JS::Rooted<JS::Value> rootedVal(aCx);
-    if (NS_WARN_IF(!dom::ToJSValue(aCx, jsval, &rootedVal))) {
+    if (NS_WARN_IF(!JS_GetPropertyById(aCx, taskDescriptionsObj, indexId,
+                                       &rootedVal))) {
       return NS_ERROR_INVALID_ARG;
     }
 
@@ -324,9 +357,16 @@ JumpListBuilder::PopulateJumpList(
   }
 
   nsTArray<WindowsJumpListShortcutDescription> customDescs;
-  for (auto& jsval : aCustomDescriptions) {
+  for (uint32_t arrayIndex = 0; arrayIndex < customDescriptionsLength;
+       arrayIndex++) {
+    JS::Rooted<JS::PropertyKey> indexId(aCx);
+    if (NS_WARN_IF(!JS_IndexToId(aCx, arrayIndex, &indexId))) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
     JS::Rooted<JS::Value> rootedVal(aCx);
-    if (NS_WARN_IF(!dom::ToJSValue(aCx, jsval, &rootedVal))) {
+    if (NS_WARN_IF(!JS_GetPropertyById(aCx, customDescriptionsObj, indexId,
+                                       &rootedVal))) {
       return NS_ERROR_INVALID_ARG;
     }
 
