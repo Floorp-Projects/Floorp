@@ -616,7 +616,14 @@ void JumpListBuilder::DoPopulateJumpList(
         reinterpret_cast<const wchar_t*>(aCustomTitle.BeginReading()),
         pCustomArray);
 
-    if (FAILED(hr)) {
+    // E_ACCESSDENIED might be returned if Windows is configured not to show
+    // recently opened items in the start menu or jump lists. In that case, we
+    // still want to populate the tasks, so we ignore the error and commit
+    // the list.
+    //
+    // See
+    // https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-icustomdestinationlist-appendcategory
+    if (FAILED(hr) && hr != E_ACCESSDENIED) {
       rv = NS_ERROR_UNEXPECTED;
       return;
     }

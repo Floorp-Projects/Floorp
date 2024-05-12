@@ -836,6 +836,76 @@ TEST(JumpListBuilder, PopulateJumpList)
 }
 
 /**
+ * Tests calling PopulateJumpList with tasks and custom items, but makes it so
+ * that AppendCategory returns E_ACCESSDENIED, which can occur if Windows is
+ * configured to not show recently opened items. The PopulateJumpList Promise
+ * should still resolve.
+ *
+ * - SetAppID
+ * - AbortList
+ * - BeginList
+ * - AddUserTasks
+ * - AppendCategory
+ * - CommitList
+ *
+ * This should result in a jump list with just built-in tasks.
+ */
+TEST(JumpListBuilder, PopulateJumpListNoOpenedItems)
+{
+  RefPtr<StrictMock<TestingJumpListBackend>> testBackend =
+      new StrictMock<TestingJumpListBackend>();
+  nsAutoString aumid(u"TestApplicationID");
+  // We set up this expectation here because SetAppID will be called soon
+  // after construction of the JumpListBuilder via the background thread.
+  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
+
+  nsCOMPtr<nsIJumpListBuilder> builder =
+      new JumpListBuilder(aumid, testBackend);
+  ASSERT_TRUE(builder);
+
+  AutoJSAPI jsapi;
+  MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
+  JSContext* cx = jsapi.cx();
+  RefPtr<Promise> promise;
+
+  JS::Rooted<JSObject*> taskDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> taskDescsJSVal(cx, JS::ObjectValue(*taskDescsObj));
+  nsTArray<WindowsJumpListShortcutDescription> taskDescs;
+  GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, taskDescs,
+                                              taskDescsObj);
+
+  nsAutoString customTitle(u"My custom title");
+
+  JS::Rooted<JSObject*> customDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> customDescsJSVal(cx, JS::ObjectValue(*customDescsObj));
+  nsTArray<WindowsJumpListShortcutDescription> customDescs;
+  GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, customDescs,
+                                              customDescsObj);
+
+  EXPECT_CALL(*testBackend, AbortList()).Times(1);
+  EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
+  EXPECT_CALL(*testBackend, AddUserTasks(ShellLinksEq(&taskDescs))).Times(1);
+
+  EXPECT_CALL(*testBackend, AppendCategory(LPCWSTREq(customTitle.get()),
+                                           ShellLinksEq(&customDescs)))
+      .WillOnce([] { return E_ACCESSDENIED; });
+
+  EXPECT_CALL(*testBackend, CommitList()).Times(1);
+  EXPECT_CALL(*testBackend, DeleteList(_)).Times(0);
+
+  nsresult rv =
+      builder->PopulateJumpList(taskDescsJSVal, customTitle, customDescsJSVal,
+                                cx, getter_AddRefs(promise));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_TRUE(promise);
+
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
+  promise->AppendNativeHandler(resolver);
+  JS::Rooted<JS::Value> result(cx);
+  resolver->SpinUntilResolved();
+}
+
+/**
  * Tests calling ClearJumpList calls the following:
  *
  * - SetAppID
