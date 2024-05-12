@@ -206,6 +206,10 @@
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Дополнения</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Расширения</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Управление расширениями</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Откройте для себя больше расширений</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Ваш аккаунт</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -224,6 +228,8 @@
     <string name="browser_menu_open_in_regular_tab">Открыть в обычной вкладке</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">На домашний экран</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Добавить на домашний экран…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Установить</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -235,9 +241,13 @@
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Перевести страницу</string>
     <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Сохранить в коллекцию…</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">В сборник</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Поделиться</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">Поделиться…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Открыть в %1$s</string>
@@ -291,6 +301,24 @@
     <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
          bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
     <string name="browser_menu_save">Сохранить</string>
+
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">Добавить страницу в закладки</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">Изменить закладку</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">Сохранить как PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Включить Вид для чтения</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Отключить Вид для чтения</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">Перевести страницу…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">Переведено на %1$s</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">Печать…</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -599,7 +627,9 @@
     <!-- Preference for language -->
     <string name="preferences_language">Язык</string>
     <!-- Preference for translation -->
-    <string name="preferences_translation">Перевод</string>
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Перевод</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Переводы</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Выбор данных</string>
     <!-- Preference for data collection -->
@@ -847,6 +877,14 @@
     <string name="fxa_tab_received_notification_name">Полученная вкладка</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Вкладка с %s</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">Закрыто %1$s вкладок: %2$d</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Просмотр недавно закрытых вкладок</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -2732,13 +2770,18 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Перейти назад</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
+    <string name="debug_drawer_fab_content_description">Открыть панель отладки</string>
+
     <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Инструменты вкладок</string>
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Число вкладок</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Активных</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Активных</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Активные</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Неактивных</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->

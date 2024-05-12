@@ -302,7 +302,7 @@
     <!-- Browser menu label that the saves the currently visited page as a PDF -->
     <string name="browser_menu_save_as_pdf">Guardar como PDF…</string>
     <!-- Browser menu label for turning ON reader view of the current visited page -->
-    <string name="browser_menu_turn_on_reader_view">Ativar vista de leitura</string>
+    <string name="browser_menu_turn_on_reader_view">Ativar Vista de leitura</string>
     <!-- Browser menu label for turning OFF reader view of the current visited page -->
     <string name="browser_menu_turn_off_reader_view">Desativar a Vista de leitura</string>
     <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
@@ -2793,11 +2793,11 @@
     <!-- Option for likert scale -->
     <string name="likert_scale_option_1" tools:ignore="UnusedResources">Muito satisfeito(a)</string>
     <!-- Option for likert scale -->
-    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Satisfeito</string>
+    <string name="likert_scale_option_2" tools:ignore="UnusedResources">Satisfeito(a)</string>
     <!-- Option for likert scale -->
-    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Neutro</string>
+    <string name="likert_scale_option_3" tools:ignore="UnusedResources">Neutro(a)</string>
     <!-- Option for likert scale -->
-    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Insatisfeito</string>
+    <string name="likert_scale_option_4" tools:ignore="UnusedResources">Insatisfeito(a)</string>
     <!-- Option for likert scale -->
     <string name="likert_scale_option_5" tools:ignore="UnusedResources">Muito insatisfeito(a)</string>
 
