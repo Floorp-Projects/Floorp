@@ -595,7 +595,9 @@
     <!-- Preference for language -->
     <string name="preferences_language">Lingua</string>
     <!-- Preference for translation -->
-    <string name="preferences_translation">Traduzzione</string>
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Traduzzione</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Traduzzioni</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Scelta di dati</string>
     <!-- Preference for data collection -->
@@ -2743,7 +2745,7 @@
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Numeru d’unghjette</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Attive</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Attive</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Inattive</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
