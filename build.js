@@ -17,6 +17,7 @@ import { injectXHTML } from "./scripts/injectxhtml.js";
 import puppeteer from "puppeteer-core";
 import { exit } from "node:process";
 import { Browser } from "puppeteer-core";
+import { $ } from "execa";
 
 const VERSION = "000";
 
@@ -91,6 +92,7 @@ async function compile() {
       cssMinify: false,
       emptyOutDir: true,
       assetsInlineLimit: 0,
+      modulePreload: false,
 
       rollupOptions: {
         //https://github.com/vitejs/vite/discussions/14454
@@ -208,13 +210,15 @@ async function run() {
       watch_running = false;
     });
 
+  //https://github.com/puppeteer/puppeteer/blob/c229fc8f9750a4c87d0ed3c7b541c31c8da5eaab/packages/puppeteer-core/src/node/FirefoxLauncher.ts#L123
+  await fs.mkdir("./dist/profile/test", { recursive: true });
   browser = await puppeteer.launch({
     headless: false,
     protocol: "webDriverBiDi",
     dumpio: true,
     product: "firefox",
     executablePath: binPathExe,
-    args: ["--profile dist/profile/test"],
+    userDataDir: "./dist/profile/test",
   });
 
   browser.on("disconnected", () => {

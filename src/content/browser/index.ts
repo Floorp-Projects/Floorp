@@ -1,5 +1,5 @@
 import { setBrowserDesign } from "./setBrowserDesign";
-import { initSidebar } from "./browser-sidebar/index";
+import { initSidebar } from "./browser-sidebar";
 import { CustomShortcutKey } from "./custom-shortcut-key";
 
 export function initContentScripts() {

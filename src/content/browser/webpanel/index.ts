@@ -1,1 +1,0 @@
-import "./webpanels-ext";

@@ -55,37 +55,40 @@ export class CustomShortcutKey {
         //@ts-expect-error
         if (ev.key === "Delete" || ev.key === "Backspace") {
           // Avoid triggering back-navigation.
-          ev.preventDefault();
+          //ev.preventDefault();
           //TODO: reset key input
           return;
         }
       }
 
-      ev.preventDefault();
+      // on register
+      //ev.preventDefault();
 
       if (
         //@ts-expect-error
         ["Control", "Alt", "Meta", "Shift"].filter((k) => ev.key.includes(k))
           .length === 0
       ) {
-        if (!checkIsSystemShortcut(ev)) {
-          //console.log(ev.key);
-          for (const shortcutDatum of this.cskData) {
-            const { alt, ctrl, meta, shift } = shortcutDatum.modifiers;
-            if (
-              //@ts-expect-error
-              ev.altKey === alt &&
-              //@ts-expect-error
-              ev.ctrlKey === ctrl &&
-              //@ts-expect-error
-              ev.metaKey === meta &&
-              //@ts-expect-error
-              ev.shiftKey === shift &&
-              //@ts-expect-error
-              ev.key === shortcutDatum.key
-            ) {
-              commands[shortcutDatum.command].command();
-            }
+        if (checkIsSystemShortcut(ev)) {
+          console.warn(`This Event is registered in System: ${ev}`);
+          return;
+        }
+
+        for (const shortcutDatum of this.cskData) {
+          const { alt, ctrl, meta, shift } = shortcutDatum.modifiers;
+          if (
+            //@ts-expect-error
+            ev.altKey === alt &&
+            //@ts-expect-error
+            ev.ctrlKey === ctrl &&
+            //@ts-expect-error
+            ev.metaKey === meta &&
+            //@ts-expect-error
+            ev.shiftKey === shift &&
+            //@ts-expect-error
+            ev.key === shortcutDatum.key
+          ) {
+            commands[shortcutDatum.command].command(ev);
           }
         }
       }

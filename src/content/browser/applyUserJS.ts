@@ -14,7 +14,7 @@ export async function applyUserJS() {
         //console.log(prefName);
         Services.prefs
           .getDefaultBranch("")
-          .setBoolPref(prefName, value as unknown as boolean);
+          .setBoolPref(prefName, value === "true");
       } else if (value.includes('"')) {
         Services.prefs
           .getDefaultBranch("")

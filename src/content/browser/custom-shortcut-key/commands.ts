@@ -15,7 +15,8 @@ type Commands = {
       | "workspaces-action"
       | "bms-action"
       | "custom-action"
-      | "downloads-action";
+      | "downloads-action"
+      | "split-view-action";
   };
 };
 

@@ -24,6 +24,7 @@ export function IconBar() {
   ]);
 
   onMount(() => {
+    console.log(document.getElementById("nora-sidebar-iconbar"));
     //@ts-expect-error
     // biome-ignore lint/style/noNonNullAssertion: <explanation>
     Sortable.create(document.getElementById("nora-sidebar-iconbar")!, {
