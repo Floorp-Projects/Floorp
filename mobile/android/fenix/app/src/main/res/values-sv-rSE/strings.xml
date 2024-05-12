@@ -880,7 +880,7 @@
     <!-- The title for a notification shown when the user closes tabs that are currently
     open on this device from another device that's signed in to the same Mozilla account.
     %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
-    <string name="fxa_tabs_closed_notification_title">%1$s stängda flikar: %2$d</string>
+    <string name="fxa_tabs_closed_notification_title">%1$s stängde %2$d flikar</string>
     <!-- The body for a "closed synced tabs" notification. -->
     <string name="fxa_tabs_closed_text">Visa nyligen stängda flikar</string>
 
