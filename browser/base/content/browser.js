@@ -2420,7 +2420,7 @@ var gBrowserInit = {
                 tab.setAttribute("floorpSSB", "true");
               });
               window.gBrowser.floorpSsbWindow = true;
-              import("chrome://browser/content/browser-ssb-window.mjs")
+              import("chrome://floorp/content/browser-ssb-window.mjs")
             });
           }
         }

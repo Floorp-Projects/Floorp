@@ -14761,12 +14761,12 @@ function Background(props) {
 
   if (props.className == "random_image") {
     let [imgSrc, setImgSrc] = (0,external_React_namespaceObject.useState)({
-      "url": `chrome://browser/skin/newtabbg/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
+      "url": `chrome://floorp/skin/newtabbg/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
     });
 
-    if (!imgSrc.url.startsWith("chrome://browser/skin/newtabbg/newtabbg-")) {
+    if (!imgSrc.url.startsWith("chrome://floorp/skin/newtabbg/newtabbg-")) {
       setImgSrc({
-        "url": `chrome://browser/skin/newtabbg/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
+        "url": `chrome://floorp/skin/newtabbg/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
       });
     }
 
