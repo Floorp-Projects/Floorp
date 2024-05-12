@@ -256,7 +256,7 @@
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
 @RESPATH@/browser/@PREF_DIR@/firefox.js
-@RESPATH@/defaults/pref/000-floorp.js
+@RESPATH@/browser/@PREF_DIR@/000-floorp.js
 @RESPATH@/browser/@PREF_DIR@/firefox-branding.js
 @RESPATH@/greprefs.js
 @RESPATH@/defaults/autoconfig/prefcalls.js
