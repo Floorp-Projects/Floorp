@@ -303,12 +303,6 @@ JumpListBuilder::PopulateJumpList(JS::Handle<JS::Value> aTaskDescriptions,
     return NS_ERROR_INVALID_ARG;
   }
 
-  bool isArray;
-  if (!JS::IsArrayObject(aCx, aTaskDescriptions, &isArray) ||
-      !JS::IsArrayObject(aCx, aCustomDescriptions, &isArray)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   JS::Rooted<JSObject*> taskDescriptionsObj(aCx, &aTaskDescriptions.toObject());
   JS::Rooted<JSObject*> customDescriptionsObj(aCx,
                                               &aCustomDescriptions.toObject());
@@ -337,14 +331,9 @@ JumpListBuilder::PopulateJumpList(JS::Handle<JS::Value> aTaskDescriptions,
   nsTArray<WindowsJumpListShortcutDescription> taskDescs;
   for (uint32_t arrayIndex = 0; arrayIndex < taskDescriptionsLength;
        arrayIndex++) {
-    JS::Rooted<JS::PropertyKey> indexId(aCx);
-    if (NS_WARN_IF(!JS_IndexToId(aCx, arrayIndex, &indexId))) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
     JS::Rooted<JS::Value> rootedVal(aCx);
-    if (NS_WARN_IF(!JS_GetPropertyById(aCx, taskDescriptionsObj, indexId,
-                                       &rootedVal))) {
+    if (NS_WARN_IF(
+            !JS_GetElement(aCx, taskDescriptionsObj, arrayIndex, &rootedVal))) {
       return NS_ERROR_INVALID_ARG;
     }
 
@@ -359,14 +348,9 @@ JumpListBuilder::PopulateJumpList(JS::Handle<JS::Value> aTaskDescriptions,
   nsTArray<WindowsJumpListShortcutDescription> customDescs;
   for (uint32_t arrayIndex = 0; arrayIndex < customDescriptionsLength;
        arrayIndex++) {
-    JS::Rooted<JS::PropertyKey> indexId(aCx);
-    if (NS_WARN_IF(!JS_IndexToId(aCx, arrayIndex, &indexId))) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
     JS::Rooted<JS::Value> rootedVal(aCx);
-    if (NS_WARN_IF(!JS_GetPropertyById(aCx, customDescriptionsObj, indexId,
-                                       &rootedVal))) {
+    if (NS_WARN_IF(!JS_GetElement(aCx, customDescriptionsObj, arrayIndex,
+                                  &rootedVal))) {
       return NS_ERROR_INVALID_ARG;
     }
 

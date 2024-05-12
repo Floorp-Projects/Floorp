@@ -275,14 +275,14 @@ class TestingJumpListBackend : public JumpListBackend {
  * @param {nsTArray<WindowsJumpListShortcutDescription>&} aArray
  *   The outparam for the array of generated
  * WindowsJumpListShortcutDescriptions.
- * @param {nsTArray<JS::Value>&} aJSValArray
+ * @param {JS::Handle<JSObject*>} aJSArrayObj
  *   The outparam for the array of JS::Value's representing the generated
  *   WindowsJumpListShortcutDescriptions.
  */
 void GenerateWindowsJumpListShortcutDescriptions(
     JSContext* aCx, uint32_t howMany, bool longDescription,
     nsTArray<WindowsJumpListShortcutDescription>& aArray,
-    nsTArray<JS::Value>& aJSValArray) {
+    JS::Handle<JSObject*> aJSArrayObj) {
   for (uint32_t i = 0; i < howMany; ++i) {
     WindowsJumpListShortcutDescription desc;
     nsAutoString title(u"Test Task #");
@@ -321,7 +321,8 @@ void GenerateWindowsJumpListShortcutDescriptions(
     aArray.AppendElement(desc);
     JS::Rooted<JS::Value> descJSValue(aCx);
     ASSERT_TRUE(ToJSValue(aCx, desc, &descJSValue));
-    aJSValArray.AppendElement(std::move(descJSValue));
+
+    MOZ_ALWAYS_TRUE(JS_SetElement(aCx, aJSArrayObj, i, descJSValue));
   }
 }
 
@@ -615,9 +616,13 @@ TEST(JumpListBuilder, PopulateJumpListEmpty)
   JSContext* cx = jsapi.cx();
   RefPtr<Promise> promise;
 
-  nsTArray<JS::Value> taskDescJSVals;
+  JS::Rooted<JSObject*> taskDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> taskDescsJSVal(cx, JS::ObjectValue(*taskDescsObj));
+
   nsAutoString customTitle(u"");
-  nsTArray<JS::Value> customDescJSVals;
+
+  JS::Rooted<JSObject*> customDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> customDescsJSVal(cx, JS::ObjectValue(*customDescsObj));
 
   EXPECT_CALL(*testBackend, AbortList()).Times(1);
   EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
@@ -625,7 +630,7 @@ TEST(JumpListBuilder, PopulateJumpListEmpty)
   EXPECT_CALL(*testBackend, DeleteList(_)).Times(0);
 
   nsresult rv =
-      builder->PopulateJumpList(taskDescJSVals, customTitle, customDescJSVals,
+      builder->PopulateJumpList(taskDescsJSVal, customTitle, customDescsJSVal,
                                 cx, getter_AddRefs(promise));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
@@ -667,13 +672,15 @@ TEST(JumpListBuilder, PopulateJumpListOnlyTasks)
   JSContext* cx = jsapi.cx();
   RefPtr<Promise> promise;
 
-  nsTArray<JS::Value> taskDescJSVals;
+  JS::Rooted<JSObject*> taskDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> taskDescsJSVal(cx, JS::ObjectValue(*taskDescsObj));
   nsTArray<WindowsJumpListShortcutDescription> taskDescs;
   GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, taskDescs,
-                                              taskDescJSVals);
+                                              taskDescsObj);
 
   nsAutoString customTitle(u"");
-  nsTArray<JS::Value> customDescJSVals;
+  JS::Rooted<JSObject*> customDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> customDescsJSVal(cx, JS::ObjectValue(*customDescsObj));
 
   EXPECT_CALL(*testBackend, AbortList()).Times(1);
   EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
@@ -684,7 +691,7 @@ TEST(JumpListBuilder, PopulateJumpListOnlyTasks)
   EXPECT_CALL(*testBackend, DeleteList(_)).Times(0);
 
   nsresult rv =
-      builder->PopulateJumpList(taskDescJSVals, customTitle, customDescJSVals,
+      builder->PopulateJumpList(taskDescsJSVal, customTitle, customDescsJSVal,
                                 cx, getter_AddRefs(promise));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
@@ -726,13 +733,17 @@ TEST(JumpListBuilder, PopulateJumpListOnlyCustomItems)
   JSContext* cx = jsapi.cx();
   RefPtr<Promise> promise;
 
-  nsTArray<WindowsJumpListShortcutDescription> descs;
-  nsTArray<JS::Value> customDescJSVals;
-  GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, descs,
-                                              customDescJSVals);
+  JS::Rooted<JSObject*> taskDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> taskDescsJSVal(cx);
+  taskDescsJSVal.setObject(*taskDescsObj);
 
   nsAutoString customTitle(u"My custom title");
-  nsTArray<JS::Value> taskDescJSVals;
+
+  JS::Rooted<JSObject*> customDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> customDescsJSVal(cx, JS::ObjectValue(*customDescsObj));
+  nsTArray<WindowsJumpListShortcutDescription> descs;
+  GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, descs,
+                                              customDescsObj);
 
   EXPECT_CALL(*testBackend, AbortList()).Times(1);
   EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
@@ -745,7 +756,7 @@ TEST(JumpListBuilder, PopulateJumpListOnlyCustomItems)
   EXPECT_CALL(*testBackend, DeleteList(_)).Times(0);
 
   nsresult rv =
-      builder->PopulateJumpList(taskDescJSVals, customTitle, customDescJSVals,
+      builder->PopulateJumpList(taskDescsJSVal, customTitle, customDescsJSVal,
                                 cx, getter_AddRefs(promise));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
@@ -788,17 +799,19 @@ TEST(JumpListBuilder, PopulateJumpList)
   JSContext* cx = jsapi.cx();
   RefPtr<Promise> promise;
 
+  JS::Rooted<JSObject*> taskDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> taskDescsJSVal(cx, JS::ObjectValue(*taskDescsObj));
   nsTArray<WindowsJumpListShortcutDescription> taskDescs;
-  nsTArray<JS::Value> taskDescJSVals;
   GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, taskDescs,
-                                              taskDescJSVals);
-
-  nsTArray<WindowsJumpListShortcutDescription> customDescs;
-  nsTArray<JS::Value> customDescJSVals;
-  GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, customDescs,
-                                              customDescJSVals);
+                                              taskDescsObj);
 
   nsAutoString customTitle(u"My custom title");
+
+  JS::Rooted<JSObject*> customDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> customDescsJSVal(cx, JS::ObjectValue(*customDescsObj));
+  nsTArray<WindowsJumpListShortcutDescription> customDescs;
+  GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, customDescs,
+                                              customDescsObj);
 
   EXPECT_CALL(*testBackend, AbortList()).Times(1);
   EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
@@ -811,7 +824,7 @@ TEST(JumpListBuilder, PopulateJumpList)
   EXPECT_CALL(*testBackend, DeleteList(_)).Times(0);
 
   nsresult rv =
-      builder->PopulateJumpList(taskDescJSVals, customTitle, customDescJSVals,
+      builder->PopulateJumpList(taskDescsJSVal, customTitle, customDescsJSVal,
                                 cx, getter_AddRefs(promise));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
@@ -889,15 +902,20 @@ TEST(JumpListBuilder, TruncateDescription)
   JSContext* cx = jsapi.cx();
   RefPtr<Promise> promise;
 
+  JS::Rooted<JSObject*> taskDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> taskDescsJSVal(cx, JS::ObjectValue(*taskDescsObj));
   nsTArray<WindowsJumpListShortcutDescription> taskDescs;
-  nsTArray<JS::Value> taskDescJSVals;
   GenerateWindowsJumpListShortcutDescriptions(cx, 2, true, taskDescs,
-                                              taskDescJSVals);
+                                              taskDescsObj);
 
+  nsAutoString customTitle(u"My custom title");
+
+  JS::Rooted<JSObject*> customDescsObj(cx, JS::NewArrayObject(cx, 0));
+  JS::Rooted<JS::Value> customDescsJSVal(cx, JS::ObjectValue(*customDescsObj));
   nsTArray<WindowsJumpListShortcutDescription> customDescs;
-  nsTArray<JS::Value> customDescJSVals;
   GenerateWindowsJumpListShortcutDescriptions(cx, 2, true, customDescs,
-                                              customDescJSVals);
+                                              customDescsObj);
+
   // We expect the long descriptions to be truncated to 260 characters, so
   // we'll truncate the descriptions here ourselves.
   for (auto& taskDesc : taskDescs) {
@@ -906,8 +924,6 @@ TEST(JumpListBuilder, TruncateDescription)
   for (auto& customDesc : customDescs) {
     customDesc.mDescription.SetLength(MAX_PATH - 1);
   }
-
-  nsAutoString customTitle(u"My custom title");
 
   EXPECT_CALL(*testBackend, AbortList()).Times(1);
   EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
@@ -920,7 +936,7 @@ TEST(JumpListBuilder, TruncateDescription)
   EXPECT_CALL(*testBackend, DeleteList(_)).Times(0);
 
   nsresult rv =
-      builder->PopulateJumpList(taskDescJSVals, customTitle, customDescJSVals,
+      builder->PopulateJumpList(taskDescsJSVal, customTitle, customDescsJSVal,
                                 cx, getter_AddRefs(promise));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
