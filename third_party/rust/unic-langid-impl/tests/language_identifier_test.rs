@@ -146,10 +146,43 @@ fn test_matches_as_range() {
 
 #[test]
 fn test_character_direction() {
-    let langid: LanguageIdentifier = "en-US".parse().unwrap();
-    let langid2: LanguageIdentifier = "ar-AF".parse().unwrap();
-    assert_eq!(langid.character_direction(), CharacterDirection::LTR);
-    assert_eq!(langid2.character_direction(), CharacterDirection::RTL);
+    let en_us: LanguageIdentifier = "en-US".parse().unwrap();
+    assert_eq!(en_us.character_direction(), CharacterDirection::LTR);
+
+    let ar_af: LanguageIdentifier = "ar-AF".parse().unwrap();
+    assert_eq!(ar_af.character_direction(), CharacterDirection::RTL);
+
+    let ks: LanguageIdentifier = "ks".parse().unwrap();
+    assert_eq!(ks.character_direction(), CharacterDirection::RTL);
+
+    let ks_deva: LanguageIdentifier = "ks-Deva".parse().unwrap();
+    assert_eq!(ks_deva.character_direction(), CharacterDirection::LTR);
+
+    let mn_mong: LanguageIdentifier = "mn-Mong".parse().unwrap();
+    assert_eq!(mn_mong.character_direction(), CharacterDirection::TTB);
+
+    let lid: LanguageIdentifier = "pa-Guru".parse().unwrap();
+    assert_eq!(lid.character_direction(), CharacterDirection::LTR);
+
+    let lid_pa_pk: LanguageIdentifier = "pa-PK".parse().unwrap();
+    assert_eq!(lid_pa_pk.character_direction(), CharacterDirection::RTL);
+
+    let lid_ar_us: LanguageIdentifier = "ar-US".parse().unwrap();
+    assert_eq!(lid_ar_us.character_direction(), CharacterDirection::RTL);
+}
+
+#[cfg(not(feature = "likelysubtags"))]
+#[test]
+fn test_character_direction_without_likelysubtags() {
+    let lid: LanguageIdentifier = "pa".parse().unwrap();
+    assert_eq!(lid.character_direction(), CharacterDirection::RTL);
+}
+
+#[cfg(feature = "likelysubtags")]
+#[test]
+fn test_character_direction_with_likelysubtags() {
+    let lid_pa: LanguageIdentifier = "pa".parse().unwrap();
+    assert_eq!(lid_pa.character_direction(), CharacterDirection::LTR);
 }
 
 #[test]
