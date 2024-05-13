@@ -792,7 +792,7 @@ function startup() {
               esModuleURI: "resource://autofill/FormAutofillChild.sys.mjs",
               events: {
                 focusin: {},
-                DOMFormBeforeSubmit: {},
+                "form-submission-detected": {},
               },
             },
             allFrames: true,
