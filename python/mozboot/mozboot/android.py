@@ -24,7 +24,7 @@ NDK_VERSION = "r26c"
 CMDLINE_TOOLS_VERSION_STRING = "12.0"
 CMDLINE_TOOLS_VERSION = "11076708"
 
-BUNDLETOOL_VERSION = "1.15.6"
+BUNDLETOOL_VERSION = "1.16.0"
 
 # We expect the emulator AVD definitions to be platform agnostic
 LINUX_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
