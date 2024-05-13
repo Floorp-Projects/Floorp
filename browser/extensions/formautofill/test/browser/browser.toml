@@ -10,8 +10,6 @@ support-files = [
   "./empty.html",
 ]
 
-["browser_active_window_navigation.js"]
-
 ["browser_autocomplete_footer.js"]
 skip-if = ["verify"]
 
@@ -42,6 +40,8 @@ skip-if = [
 ["browser_fathom_cc.js"]
 
 ["browser_manageAddressesDialog.js"]
+
+["browser_page_navigation_in_subtree.js"]
 
 ["browser_privacyPreferences.js"]
 skip-if = [
