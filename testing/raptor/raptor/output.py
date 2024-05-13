@@ -571,6 +571,7 @@ class PerftestOutput(object):
                         "alertThreshold": float(test["alert_threshold"]),
                         "lowerIsBetter": test["subtest_lower_is_better"],
                         "name": sub,
+                        "shouldAlert": True,
                         "replicates": [],
                     }
                 # pylint: disable=W1633
