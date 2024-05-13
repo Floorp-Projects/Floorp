@@ -28,6 +28,8 @@ module.exports = {
       date_range: [], // 2 Dates in YYYY.MM.DD format the first and last date(inclusive)
       startup_cache: true,
       test_cycles: 50,
+      release_channel: "nightly", // either release, nightly, beta, or debug
+      architecture: "arm64-v8a",
     },
   },
 };
