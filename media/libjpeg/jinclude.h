@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1994, Thomas G. Lane.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2022, D. R. Commander.
+ * Copyright (C) 2022-2023, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -122,6 +122,8 @@ static INLINE int GETENV_S(char *buffer, size_t buffer_size, const char *name)
 #define PUTENV_S(name, value)  _putenv_s(name, value)
 
 #else
+
+#include <errno.h>
 
 /* This provides a similar interface to the Microsoft _putenv_s() function, but
  * other than parameter validation, it has no advantages over setenv().

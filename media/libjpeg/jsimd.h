@@ -12,6 +12,8 @@
  *
  */
 
+#ifdef WITH_SIMD
+
 #include "jchuff.h"             /* Declarations shared with jcphuff.c */
 
 EXTERN(int) jsimd_can_rgb_ycc(void);
@@ -121,3 +123,5 @@ EXTERN(int) jsimd_can_encode_mcu_AC_refine_prepare(void);
 EXTERN(int) jsimd_encode_mcu_AC_refine_prepare
   (const JCOEF *block, const int *jpeg_natural_order_start, int Sl, int Al,
    UJCOEF *absvalues, size_t *bits);
+
+#endif /* WITH_SIMD */
