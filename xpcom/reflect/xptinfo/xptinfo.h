@@ -481,9 +481,6 @@ struct nsXPTMethodInfo {
   // nsXPTMethodInfo backwards compatibility //
   /////////////////////////////////////////////
 
-  const char* GetName() const { return Name(); }
-
-  uint8_t GetParamCount() const { return ParamCount(); }
   const nsXPTParamInfo& GetParam(uint8_t aIndex) const { return Param(aIndex); }
 
   ////////////////////////////////////////////////////////////////

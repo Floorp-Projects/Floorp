@@ -21,7 +21,7 @@ extern "C" nsresult ATTRIBUTE_USED PrepareAndDispatch(nsXPTCStubBase* self,
 
   self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
 
-  uint32_t paramCount = info->GetParamCount();
+  uint32_t paramCount = info->ParamCount();
   const uint8_t indexOfJSContext = info->IndexOfJSContext();
 
   uint64_t* ap = args;
