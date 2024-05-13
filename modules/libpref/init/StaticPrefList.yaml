@@ -8445,13 +8445,6 @@
   mirror: always
   rust: true
 
-# Whether Container Queries are enabled
-- name: layout.css.container-queries.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Whether content-box and stroke-box are enabled for transform-box.
 - name: layout.css.transform-box-content-stroke.enabled
   type: RelaxedAtomicBool
