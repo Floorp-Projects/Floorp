@@ -898,8 +898,14 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   display: none;
 }
 
-#invalid-form-popup > description {
-  max-width: 280px;
+#invalid-form-popup {
+  white-space: pre-wrap;
+  word-break: break-word;
+  unicode-bidi: plaintext;
+
+  > description {
+    max-width: 280px;
+  }
 }
 
 .popup-anchor {
