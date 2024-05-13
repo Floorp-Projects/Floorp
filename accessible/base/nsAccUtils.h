@@ -233,12 +233,6 @@ class nsAccUtils {
   static bool MustPrune(Accessible* aAccessible);
 
   /**
-   * Return true if the given accessible is within an ARIA live region; i.e.
-   * the container-live attribute would be something other than "off" or empty.
-   */
-  static bool IsARIALive(const LocalAccessible* aAccessible);
-
-  /**
    * Get the document Accessible which owns a given Accessible.
    * This function is needed because there is no unified base class for local
    * and remote documents.
