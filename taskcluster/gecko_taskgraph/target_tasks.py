@@ -1632,8 +1632,8 @@ def target_tasks_nightly_android(full_task_graph, parameters, graph_config):
         )
 
     index_path = (
-        f"{graph_config['trust-domain']}.v2.{parameters['project']}.branch."
-        f"{parameters['head_ref']}.revision.{parameters['head_rev']}.taskgraph.decision-nightly-android"
+        f"{graph_config['trust-domain']}.v2.{parameters['project']}.revision."
+        f"{parameters['head_rev']}.taskgraph.decision-nightly-android"
     )
     if os.environ.get("MOZ_AUTOMATION") and retry(
         index_exists,
