@@ -131,7 +131,9 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 // Prefixes for observing preference changes.
 #define PREF_JS_OPTIONS_PREFIX "javascript.options."
 #define PREF_MEM_OPTIONS_PREFIX "mem."
-#define PREF_GCZEAL "gczeal"
+#define PREF_GCZEAL_OPTIONS_PREFIX "mem.gc_zeal."
+#define PREF_MODE "mode"
+#define PREF_FREQUENCY "frequency"
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
@@ -229,12 +231,6 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
     return;
   }
 
-#ifdef JS_GC_ZEAL
-  if (prefName.EqualsLiteral(PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) {
-    return;
-  }
-#endif
-
   JS::ContextOptions contextOptions;
   xpc::SetPrefableContextOptions(contextOptions);
 
@@ -264,18 +260,19 @@ void LoadGCZealOptions(const char* /* aPrefName */, void* /* aClosure */) {
     return;
   }
 
-  int32_t gczeal = GetPref<int32_t>(PREF_JS_OPTIONS_PREFIX PREF_GCZEAL, -1);
-  if (gczeal < 0) {
-    gczeal = 0;
+  int32_t mode = GetPref<int32_t>(
+      PREF_JS_OPTIONS_PREFIX PREF_GCZEAL_OPTIONS_PREFIX PREF_MODE, -1);
+  if (mode < 0) {
+    mode = 0;
   }
 
-  int32_t frequency =
-      GetPref<int32_t>(PREF_JS_OPTIONS_PREFIX PREF_GCZEAL ".frequency", -1);
+  int32_t frequency = GetPref<int32_t>(
+      PREF_JS_OPTIONS_PREFIX PREF_GCZEAL_OPTIONS_PREFIX PREF_FREQUENCY, -1);
   if (frequency < 0) {
     frequency = JS::BrowserDefaultGCZealFrequency;
   }
 
-  RuntimeService::SetDefaultGCZeal(uint8_t(gczeal), uint32_t(frequency));
+  RuntimeService::SetDefaultGCZeal(uint8_t(mode), uint32_t(frequency));
 
   if (rts) {
     rts->UpdateAllWorkerGCZeal();
@@ -1406,7 +1403,8 @@ nsresult RuntimeService::Init() {
           PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX)) ||
 #ifdef JS_GC_ZEAL
       NS_FAILED(Preferences::RegisterCallback(
-          LoadGCZealOptions, PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
+          LoadGCZealOptions,
+          PREF_JS_OPTIONS_PREFIX PREF_GCZEAL_OPTIONS_PREFIX)) ||
 #endif
       WORKER_PREF("intl.accept_languages", PrefLanguagesChanged) ||
       WORKER_PREF("general.appversion.override", AppVersionOverrideChanged) ||
@@ -1665,7 +1663,8 @@ void RuntimeService::Cleanup() {
         WORKER_PREF("general.platform.override", PlatformOverrideChanged) ||
 #ifdef JS_GC_ZEAL
         NS_FAILED(Preferences::UnregisterCallback(
-            LoadGCZealOptions, PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
+            LoadGCZealOptions,
+            PREF_JS_OPTIONS_PREFIX PREF_GCZEAL_OPTIONS_PREFIX)) ||
 #endif
         NS_FAILED(Preferences::UnregisterPrefixCallback(
             LoadJSGCMemoryOptions,
