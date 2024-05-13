@@ -502,7 +502,7 @@ bool CallDuringIncrementalGC(uint32_t mode, F&& f) {
 
   const int64_t BudgetMS = 10000;  // 10S should be long enough for anyone.
 
-  JS_SetGCZeal(cx, mode, 0);
+  JS::SetGCZeal(cx, mode, 0);
   JS::PrepareZoneForGC(cx, js::GetContextZone(cx));
   js::SliceBudget budget{TimeBudget(BudgetMS)};
   JS::StartIncrementalGC(cx, JS::GCOptions(), JS::GCReason::DEBUG_GC, budget);

@@ -272,7 +272,7 @@ void LoadGCZealOptions(const char* /* aPrefName */, void* /* aClosure */) {
   int32_t frequency =
       GetPref<int32_t>(PREF_JS_OPTIONS_PREFIX PREF_GCZEAL ".frequency", -1);
   if (frequency < 0) {
-    frequency = JS_DEFAULT_ZEAL_FREQ;
+    frequency = JS::BrowserDefaultGCZealFrequency;
   }
 
   RuntimeService::SetDefaultGCZeal(uint8_t(gczeal), uint32_t(frequency));
@@ -730,7 +730,7 @@ bool InitJSContextForWorker(WorkerPrivate* aWorkerPrivate,
   JS::SetCTypesActivityCallback(aWorkerCx, CTypesActivityCallback);
 
 #ifdef JS_GC_ZEAL
-  JS_SetGCZeal(aWorkerCx, settings.gcZeal, settings.gcZealFrequency);
+  JS::SetGCZeal(aWorkerCx, settings.gcZeal, settings.gcZealFrequency);
 #endif
 
   return true;

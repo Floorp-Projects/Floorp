@@ -788,7 +788,7 @@ bool GCRuntime::parseAndSetZeal(const char* str) {
     return PrintZealHelpAndFail();
   }
 
-  uint32_t frequency = JS_DEFAULT_ZEAL_FREQ;
+  uint32_t frequency = JS::ShellDefaultGCZealFrequency;
   if (parts.length() == 2 && !ParseZealModeNumericParam(parts[1], &frequency)) {
     return PrintZealHelpAndFail();
   }

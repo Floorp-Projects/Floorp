@@ -866,3 +866,24 @@ JS_PUBLIC_API void js::gc::UnlockStoreBuffer(JSRuntime* runtime) {
   MOZ_ASSERT(runtime);
   runtime->gc.unlockStoreBuffer();
 }
+
+#ifdef JS_GC_ZEAL
+JS_PUBLIC_API void JS::GetGCZealBits(JSContext* cx, uint32_t* zealBits,
+                                     uint32_t* frequency,
+                                     uint32_t* nextScheduled) {
+  cx->runtime()->gc.getZealBits(zealBits, frequency, nextScheduled);
+}
+
+JS_PUBLIC_API void JS::SetGCZeal(JSContext* cx, uint8_t zeal,
+                                 uint32_t frequency) {
+  cx->runtime()->gc.setZeal(zeal, frequency);
+}
+
+JS_PUBLIC_API void JS::UnsetGCZeal(JSContext* cx, uint8_t zeal) {
+  cx->runtime()->gc.unsetZeal(zeal);
+}
+
+JS_PUBLIC_API void JS::ScheduleGC(JSContext* cx, uint32_t count) {
+  cx->runtime()->gc.setNextScheduled(count);
+}
+#endif
