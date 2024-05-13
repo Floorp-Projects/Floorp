@@ -2436,11 +2436,6 @@ static bool EvaluateDynamicImportOptions(
 JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                        HandleValue specifierArg,
                                        HandleValue optionsArg) {
-  RootedObject promiseConstructor(cx, JS::GetPromiseConstructor(cx));
-  if (!promiseConstructor) {
-    return nullptr;
-  }
-
   RootedObject promiseObject(cx, JS::NewPromiseObject(cx, nullptr));
   if (!promiseObject) {
     return nullptr;
