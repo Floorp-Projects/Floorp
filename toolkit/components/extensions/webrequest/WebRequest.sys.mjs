@@ -86,6 +86,14 @@ function parseExtra(extra, allowed = [], optionsObj = {}) {
       result[al] = true;
     }
   }
+  // From a parent process perspective an asyncBlocking listener
+  // will be the same as a blocking listener that returned a
+  // promise in the child process (because the callback used
+  // by asyncBlocking listeners is a difference only visible
+  // in the child process where the listener runs).
+  if (result.asyncBlocking) {
+    result.blocking = true;
+  }
   return result;
 }
 
@@ -1290,6 +1298,7 @@ var onHeadersReceived = new HttpEvent("onHeadersReceived", [
   "responseHeaders",
 ]);
 var onAuthRequired = new HttpEvent("onAuthRequired", [
+  "asyncBlocking",
   "blocking",
   "responseHeaders",
 ]);
