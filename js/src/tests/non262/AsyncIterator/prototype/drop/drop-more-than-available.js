@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('AsyncIterator'))
+// |reftest| skip-if(!this.hasOwnProperty('Iterator')||!this.hasOwnProperty('AsyncIterator'))
 
 //
 //
