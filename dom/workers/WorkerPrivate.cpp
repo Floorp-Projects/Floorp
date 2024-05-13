@@ -52,6 +52,7 @@
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/SimpleGlobalObject.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/UseCounterMetrics.h"
 #include "mozilla/dom/WorkerBinding.h"
@@ -118,6 +119,12 @@
 
 // A shrinking GC will run five seconds after the last event is processed.
 #define IDLE_GC_TIMER_DELAY_SEC 5
+
+// Arbitrary short grace period for the currently running task to finish.
+// There isn't an advantage for us to immediately interrupt JS in the middle of
+// execution that might yield soon, especially when there is so much async
+// variability in the data flow prior to us deciding to trigger the interrupt.
+#define DEBUGGER_RUNNABLE_INTERRUPT_AFTER_MS 250
 
 static mozilla::LazyLogModule sWorkerPrivateLog("WorkerPrivate");
 static mozilla::LazyLogModule sWorkerTimeoutsLog("WorkerTimeouts");
@@ -1709,6 +1716,13 @@ nsresult WorkerPrivate::DispatchControlRunnable(
   return NS_OK;
 }
 
+void DebuggerInterruptTimerCallback(nsITimer* aTimer, void* aClosure)
+    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
+  workerPrivate->DebuggerInterruptRequest();
+}
+
 nsresult WorkerPrivate::DispatchDebuggerRunnable(
     already_AddRefed<WorkerRunnable> aDebuggerRunnable) {
   // May be called on any thread!
@@ -1717,23 +1731,54 @@ nsresult WorkerPrivate::DispatchDebuggerRunnable(
 
   MOZ_ASSERT(runnable);
 
-  {
-    MutexAutoLock lock(mMutex);
+  MutexAutoLock lock(mMutex);
+  if (!mDebuggerInterruptTimer) {
+    // There is no timer, so we need to create one.  For locking discipline
+    // purposes we can't manipulate the timer while our mutex is held so
+    // drop the mutex while we build and configure the timer.  Only this
+    // function here on the main thread will create a timer, so we're not
+    // racing anyone to create or assign the timer.
+    nsCOMPtr<nsITimer> timer;
+    {
+      MutexAutoUnlock unlock(mMutex);
+      timer = NS_NewTimer();
+      MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(mWorkerControlEventTarget));
 
-    if (mStatus == Dead) {
-      NS_WARNING(
-          "A debugger runnable was posted to a worker that is already "
-          "shutting down!");
-      return NS_ERROR_UNEXPECTED;
+      // Whenever an event is scheduled on the WorkerControlEventTarget an
+      // interrupt is automatically requested which causes us to yield JS
+      // execution and the next JS execution in the queue to execute. This
+      // allows for simple code reuse of the existing interrupt callback code
+      // used for control events.
+      MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
+          DebuggerInterruptTimerCallback, nullptr,
+          DEBUGGER_RUNNABLE_INTERRUPT_AFTER_MS, nsITimer::TYPE_ONE_SHOT,
+          "dom:DebuggerInterruptTimer"));
     }
 
-    // Transfer ownership to the debugger queue.
-    mDebuggerQueue.Push(runnable.forget().take());
-
-    mCondVar.Notify();
+    // okay, we have our mutex back now, put the timer in place.
+    mDebuggerInterruptTimer.swap(timer);
   }
 
+  if (mStatus == Dead) {
+    NS_WARNING(
+        "A debugger runnable was posted to a worker that is already "
+        "shutting down!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Transfer ownership to the debugger queue.
+  mDebuggerQueue.Push(runnable.forget().take());
+
+  mCondVar.Notify();
+
   return NS_OK;
+}
+
+void WorkerPrivate::DebuggerInterruptRequest() {
+  AssertIsOnWorkerThread();
+
+  auto data = mWorkerThreadAccessible.Access();
+  data->mDebuggerInterruptRequested = true;
 }
 
 already_AddRefed<WorkerRunnable> WorkerPrivate::MaybeWrapAsWorkerRunnable(
@@ -2343,6 +2388,7 @@ WorkerPrivate::WorkerThreadAccessible::WorkerThreadAccessible(
       mNextTimeoutId(1),
       mCurrentTimerNestingLevel(0),
       mFrozen(false),
+      mDebuggerInterruptRequested(false),
       mTimerRunning(false),
       mRunningExpiredTimeouts(false),
       mPeriodicGCTimerRunning(false),
@@ -3396,12 +3442,17 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
 
         DisableMemoryReporter();
 
+        // Move the timer out with the mutex held but only drop the ref
+        // when the mutex is not held.
+        nsCOMPtr<nsITimer> timer;
         {
           MutexAutoLock lock(mMutex);
 
           mStatus = Dead;
           mJSContext = nullptr;
+          mDebuggerInterruptTimer.swap(timer);
         }
+        timer = nullptr;
 
         // After mStatus is set to Dead there can be no more
         // WorkerControlRunnables so no need to lock here.
@@ -3431,24 +3482,12 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
     }
 
     if (debuggerRunnablesPending) {
-      WorkerRunnable* runnable = nullptr;
+      ProcessSingleDebuggerRunnable();
 
       {
         MutexAutoLock lock(mMutex);
-
-        mDebuggerQueue.Pop(runnable);
         debuggerRunnablesPending = !mDebuggerQueue.IsEmpty();
       }
-
-      {
-        MOZ_ASSERT(runnable);
-        AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable);
-        static_cast<nsIRunnable*>(runnable)->Run();
-      }
-      runnable->Release();
-
-      CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
-      ccjs->PerformDebuggerMicroTaskCheckpoint();
 
       if (debuggerRunnablesPending) {
         WorkerDebuggerGlobalScope* globalScope = DebuggerGlobalScope();
@@ -3925,6 +3964,24 @@ bool WorkerPrivate::InterruptCallback(JSContext* aCx) {
   // Make sure the periodic timer gets turned back on here.
   SetGCTimerMode(PeriodicTimer);
 
+  if (data->mDebuggerInterruptRequested) {
+    bool debuggerRunnablesPending = !mDebuggerQueue.IsEmpty();
+    if (debuggerRunnablesPending) {
+      // Prevents interrupting the debugger's own logic unless it has called
+      // back into content
+      WorkerGlobalScope* globalScope = GlobalScope();
+      if (globalScope) {
+        JSObject* global = JS::CurrentGlobalOrNull(aCx);
+        if (global && global == globalScope->GetGlobalJSObject()) {
+          while (!mDebuggerQueue.IsEmpty()) {
+            ProcessSingleDebuggerRunnable();
+          }
+        }
+      }
+    }
+    data->mDebuggerInterruptRequested = false;
+  }
+
   return true;
 }
 
@@ -4141,12 +4198,47 @@ void WorkerPrivate::ClearPreStartRunnables() {
   }
 }
 
+void WorkerPrivate::ProcessSingleDebuggerRunnable() {
+  WorkerRunnable* runnable = nullptr;
+
+  // Move the timer out with the mutex held but only drop the ref
+  // when the mutex is not held.
+  nsCOMPtr<nsITimer> timer;
+  {
+    MutexAutoLock lock(mMutex);
+
+    mDebuggerQueue.Pop(runnable);
+
+    mDebuggerInterruptTimer.swap(timer);
+  }
+  timer = nullptr;
+
+  {
+    MOZ_ASSERT(runnable);
+    AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable);
+    static_cast<nsIRunnable*>(runnable)->Run();
+  }
+  runnable->Release();
+
+  CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
+  ccjs->PerformDebuggerMicroTaskCheckpoint();
+}
+
 void WorkerPrivate::ClearDebuggerEventQueue() {
   while (!mDebuggerQueue.IsEmpty()) {
     WorkerRunnable* runnable = nullptr;
     mDebuggerQueue.Pop(runnable);
     // It should be ok to simply release the runnable, without running it.
     runnable->Release();
+
+    // Move the timer out with the mutex held but only drop the ref
+    // when the mutex is not held.
+    nsCOMPtr<nsITimer> timer;
+    {
+      MutexAutoLock lock(mMutex);
+      mDebuggerInterruptTimer.swap(timer);
+    }
+    timer = nullptr;
   }
 }
 
@@ -4982,19 +5074,7 @@ void WorkerPrivate::EnterDebuggerEventLoop() {
       // Start the periodic GC timer if it is not already running.
       SetGCTimerMode(PeriodicTimer);
 
-      WorkerRunnable* runnable = nullptr;
-
-      {
-        MutexAutoLock lock(mMutex);
-
-        mDebuggerQueue.Pop(runnable);
-      }
-
-      MOZ_ASSERT(runnable);
-      static_cast<nsIRunnable*>(runnable)->Run();
-      runnable->Release();
-
-      ccjscx->PerformDebuggerMicroTaskCheckpoint();
+      ProcessSingleDebuggerRunnable();
 
       // Now *might* be a good time to GC. Let the JS engine make the decision.
       if (GetCurrentEventLoopGlobal()) {
