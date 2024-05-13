@@ -278,6 +278,7 @@ struct TraceWeakResult {
 
   bool isLive() const { return live_; }
   bool isDead() const { return !live_; }
+  bool wasMoved() const { return isLive() && final_ != initial_; }
 
   MOZ_IMPLICIT operator bool() const { return isLive(); }
 
