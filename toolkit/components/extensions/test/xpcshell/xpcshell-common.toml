@@ -593,7 +593,6 @@ skip-if = [
 ["test_ext_webRequest_auth.js"]
 skip-if = [
    "os == 'android' && debug",
-   "condprof" # Bug 1889897: remove after condprof cached schema includes the new postprocess property
 ]
 
 ["test_ext_webRequest_cached.js"]
