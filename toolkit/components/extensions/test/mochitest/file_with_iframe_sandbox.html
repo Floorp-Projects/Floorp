@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<!--
+frame hierarchy:
+- http://mochi.test:8888, https://mochi.test:8888, etc. (this page).
+ - about:srcdoc (sandbox)
+   - data:text/html,<iframe sandbox></iframe>
+     - about:blank
+-->
+<iframe sandbox srcdoc="
+  <iframe src=&quot;data:text/html,<iframe sandbox></iframe>&quot;></iframe>
+"></iframe>
