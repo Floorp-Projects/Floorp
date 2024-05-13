@@ -280,18 +280,17 @@ export class AboutWelcomeChild extends JSWindowActorChild {
     });
   }
 
-  AWFinish() {
-    const shouldFocusNewtabUrlBar =
-      lazy.NimbusFeatures.aboutwelcome.getVariable("newtabUrlBarFocus");
+  focusUrlBar() {
+    this.AWSendToParent("SPECIAL_ACTION", {
+      type: "FOCUS_URLBAR",
+    });
+  }
 
+  AWFinish() {
     this.setDidSeeFinalScreen();
 
     this.contentWindow.location.href = "about:home";
-    if (shouldFocusNewtabUrlBar) {
-      this.AWSendToParent("SPECIAL_ACTION", {
-        type: "FOCUS_URLBAR",
-      });
-    }
+    this.focusUrlBar();
   }
 
   AWEnsureAddonInstalled(addonId) {

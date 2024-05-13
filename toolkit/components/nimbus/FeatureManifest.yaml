@@ -576,11 +576,6 @@ aboutwelcome:
       fallbackPref: browser.aboutwelcome.backdrop
       description: >-
         Specify the color to be used to update the background color
-    newtabUrlBarFocus:
-      type: boolean
-      fallbackPref: browser.aboutwelcome.newtabUrlBarFocus
-      description: >-
-        Should the urlbar be focused when the new tab page loads after new user onboarding
     toolbarButtonEnabled:
       type: boolean
       setPref:
