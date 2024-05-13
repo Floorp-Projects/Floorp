@@ -33,8 +33,8 @@ function log(message) {
 export class FormHistoryChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
-      case "form-submission-detected":
-        this.#onFormSubmission(event);
+      case "DOMFormBeforeSubmit":
+        this.#onDOMFormBeforeSubmit(event.target);
         break;
       default:
         throw new Error("Unexpected event");
@@ -45,8 +45,7 @@ export class FormHistoryChild extends JSWindowActorChild {
     return input.name || input.id;
   }
 
-  #onFormSubmission(event) {
-    const form = event.detail.form;
+  #onDOMFormBeforeSubmit(form) {
     if (
       !lazy.gEnabled ||
       lazy.PrivateBrowsingUtils.isContentWindowPrivate(form.ownerGlobal)
