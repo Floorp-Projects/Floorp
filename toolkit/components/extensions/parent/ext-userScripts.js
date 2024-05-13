@@ -43,6 +43,10 @@ class UserScriptParent {
       excludeGlobs: details.excludeGlobs,
       allFrames: details.allFrames,
       matchAboutBlank: details.matchAboutBlank,
+      // New matchOriginAsFallback option not supported in userScripts API
+      // because the current MV2-only userScripts API is deprecated and will be
+      // superseded by the new one in bug 1875475.
+      matchOriginAsFallback: false,
       runAt: details.runAt || "document_idle",
       jsPaths: details.js,
       userScriptOptions: {

@@ -457,6 +457,7 @@ add_task(async function test_registerContentScripts_js() {
             id: "script-1",
             allFrames: false,
             matches: ["*://test1.example.com/*"],
+            matchOriginAsFallback: false,
             runAt: "document_idle",
             persistAcrossSessions: false,
             js: ["script-1.js"],
@@ -468,6 +469,7 @@ add_task(async function test_registerContentScripts_js() {
               "*://test1.example.com/*",
               "*://example.org/*",
             ],
+            matchOriginAsFallback: false,
             runAt: "document_idle",
             persistAcrossSessions: false,
             js: ["script-2.js"],
@@ -479,6 +481,7 @@ add_task(async function test_registerContentScripts_js() {
               "*://test1.example.com/*",
               "*://example.org/*",
             ],
+            matchOriginAsFallback: false,
             runAt: "document_idle",
             persistAcrossSessions: false,
             excludeMatches: ["*://test1.example.com/*"],
@@ -488,6 +491,7 @@ add_task(async function test_registerContentScripts_js() {
             id: "script-4",
             allFrames: false,
             matches: ["*://test1.example.com/*"],
+            matchOriginAsFallback: false,
             runAt: "document_idle",
             persistAcrossSessions: false,
             js: ["script-4-1.js", "script-4-2.js"],
@@ -496,6 +500,7 @@ add_task(async function test_registerContentScripts_js() {
             id: "script-5",
             allFrames: false,
             matches: ["*://test1.example.com/*"],
+            matchOriginAsFallback: false,
             runAt: "document_idle",
             persistAcrossSessions: false,
             js: ["script-5.js"],
@@ -785,15 +790,25 @@ add_task(async function test_registerContentScripts_with_wrong_matches() {
 add_task(async function test_registerContentScripts_on_about_blank_frames() {
   let extension = makeExtension({
     async background() {
+      browser.test.onMessage.addListener(async msg => {
+        browser.test.assertEq("update-fallback-false", msg, "expected msg");
+        await browser.scripting.updateContentScripts([
+          {
+            id: "a-script",
+            matchOriginAsFallback: false,
+          },
+        ]);
+        browser.test.sendMessage("update-fallback-false:done");
+      });
       await browser.scripting.registerContentScripts([
         {
           id: "a-script",
           js: ["script.js"],
           allFrames: true,
-          // TODO bug 1853411: implement matchOriginAsFallback: true,
-          // For now, we run in about:blank if its origin matches, comparable
-          // to match_about_blank:true in content_scripts in manifest.json.
-          matches: ["*://test1.example.com/*/file_with_about_blank.html"],
+          matchOriginAsFallback: true,
+          matches: ["*://test1.example.com/*"],
+          // ^ we would like to match on file_with_about_blank.html only,
+          // but that is not possible with matchOriginAsFallback.
           persistAcrossSessions: false,
         },
       ]);
@@ -824,6 +839,18 @@ add_task(async function test_registerContentScripts_on_about_blank_frames() {
   await extension.awaitMessage("got_url:about:blank");
   await extension.awaitMessage("got_url:about:srcdoc");
 
+  // Confirm that without matchOriginAsFallback, that we only match once.
+  info("Testing again, now without matchOriginAsFallback");
+  extension.sendMessage("update-fallback-false");
+  await extension.awaitMessage("update-fallback-false:done");
+  let tab2 = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_with_about_blank.html",
+    true
+  );
+  await extension.awaitMessage("got_url:file_with_about_blank.html");
+  await AppTestDelegate.removeTab(window, tab2);
+
   await extension.unload();
 
   // We remove the tab after having unloaded the extensions to avoid failures
@@ -849,12 +876,15 @@ add_task(async function test_registerContentScripts_on_top_level_about_blank() {
           // their scripts running in more contexts than expected, as seen in
           // bug 1853412.
           matches: ["*://test1.example.com/does_not_match_any/*"],
+          // matchOriginAsFallback does not match if path is not "/*".
+          matchOriginAsFallback: true,
           persistAcrossSessions: false,
         },
         {
           id: "script-that-should-run",
           js: ["script_all_urls.js"],
           matches: ["*://*/*"],
+          matchOriginAsFallback: true,
           // Undocumented feature: to only match on "about:blank", specify
           // excludeMatches that excludes the URLs of interest.
           excludeMatches: ["*://*/*"],
@@ -965,6 +995,7 @@ add_task(async function test_getRegisteredContentScripts_during_a_registration()
             id: "a-script",
             allFrames: false,
             matches: ["*://test1.example.com/*"],
+            matchOriginAsFallback: false,
             runAt: "document_idle",
             persistAcrossSessions: false,
             js: ["script.js"],
@@ -1363,6 +1394,7 @@ add_task(async function test_validate_updateContentScripts_params() {
             id: script.id,
             allFrames: false,
             matches: script.matches,
+            matchOriginAsFallback: false,
             runAt: "document_idle",
             persistAcrossSessions: false,
             js: script.js,
@@ -1512,6 +1544,7 @@ add_task(async function test_updateContentScripts() {
       id: SCRIPT_ID,
       allFrames: false,
       matches: ["*://test1.example.com/*"],
+      matchOriginAsFallback: false,
       runAt: "document_idle",
       persistAcrossSessions: false,
       js: ["script-1.js"],
@@ -1529,6 +1562,7 @@ add_task(async function test_updateContentScripts() {
       id: SCRIPT_ID,
       allFrames: false,
       matches: ["*://test1.example.com/*"],
+      matchOriginAsFallback: false,
       runAt: "document_idle",
       persistAcrossSessions: false,
       js: ["script-2.js"],
@@ -1553,6 +1587,7 @@ add_task(async function test_updateContentScripts() {
         "*://test1.example.com/*",
         "*://example.org/*",
       ],
+      matchOriginAsFallback: false,
       runAt: "document_idle",
       persistAcrossSessions: false,
       js: ["script-2.js"],
@@ -1578,6 +1613,7 @@ add_task(async function test_updateContentScripts() {
         "*://test1.example.com/*",
         "*://example.org/*",
       ],
+      matchOriginAsFallback: false,
       runAt: "document_idle",
       persistAcrossSessions: false,
       excludeMatches: ["*://test1.example.com/*"],
@@ -1604,6 +1640,7 @@ add_task(async function test_updateContentScripts() {
         "*://test1.example.com/*",
         "*://example.org/*",
       ],
+      matchOriginAsFallback: false,
       runAt: "document_start",
       persistAcrossSessions: false,
       js: ["script-4.js"],
@@ -1629,6 +1666,7 @@ add_task(async function test_updateContentScripts() {
         "*://test1.example.com/*",
         "*://example.org/*",
       ],
+      matchOriginAsFallback: false,
       runAt: "document_idle",
       persistAcrossSessions: false,
       css: ["style.css"],

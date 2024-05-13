@@ -570,6 +570,7 @@ add_task(async function test_contentscripts_register_all_options() {
     cssPaths,
     jsPaths,
     matchAboutBlank,
+    matchOriginAsFallback, // Note: cannot be set via contentScripts.register.
     runAt,
     originAttributesPatterns,
   } = script;
@@ -580,6 +581,7 @@ add_task(async function test_contentscripts_register_all_options() {
       cssPaths,
       jsPaths,
       matchAboutBlank,
+      matchOriginAsFallback,
       runAt,
       originAttributesPatterns,
     },
@@ -588,6 +590,7 @@ add_task(async function test_contentscripts_register_all_options() {
       cssPaths: [`${baseExtURL}/content_style.css`],
       jsPaths: [`${baseExtURL}/content_script.js`],
       matchAboutBlank: true,
+      matchOriginAsFallback: false, // Default value when not specified.
       runAt: "document_start",
       originAttributesPatterns: null,
     },
