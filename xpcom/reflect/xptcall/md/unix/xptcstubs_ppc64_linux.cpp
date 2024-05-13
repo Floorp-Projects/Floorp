@@ -77,7 +77,7 @@ PrepareAndDispatch(nsXPTCStubBase * self, uint32_t methodIndex,
     if (!info)
         return NS_ERROR_UNEXPECTED;
 
-    paramCount = info->GetParamCount();
+    paramCount = info->ParamCount();
 
     const uint8_t indexOfJSContext = info->IndexOfJSContext();
 

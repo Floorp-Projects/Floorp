@@ -35,7 +35,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
     NS_ASSERTION(self,"no self");
 
     self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
-    paramCount = info->GetParamCount();
+    paramCount = info->ParamCount();
 
     const uint8_t indexOfJSContext = info->IndexOfJSContext();
 

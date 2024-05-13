@@ -33,7 +33,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
   self->mEntry->GetMethodInfo(uint16_t(methodIndex), &info);
   NS_ASSERTION(info,"no interface info");
 
-  paramCount = info->GetParamCount();
+  paramCount = info->ParamCount();
 
   const uint8_t indexOfJSContext = info->IndexOfJSContext();
 
