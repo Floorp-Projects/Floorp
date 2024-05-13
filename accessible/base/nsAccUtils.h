@@ -240,6 +240,12 @@ class nsAccUtils {
   static void GetLiveRegionSetting(Accessible* aAcc, nsAString& aLive);
 
   /**
+   * If the given Accessible is inside a live region, return the root of the
+   * live region. Otherwise, return null.
+   */
+  static Accessible* GetLiveRegionRoot(Accessible* aAcc);
+
+  /**
    * Get the document Accessible which owns a given Accessible.
    * This function is needed because there is no unified base class for local
    * and remote documents.

@@ -85,6 +85,17 @@ class LabelTextLeafRule : public PivotRule {
   }
 };
 
+static void MaybeRaiseUiaLiveRegionEvent(Accessible* aAcc,
+                                         uint32_t aGeckoEvent) {
+  if (!::UiaClientsAreListening()) {
+    return;
+  }
+  if (Accessible* live = nsAccUtils::GetLiveRegionRoot(aAcc)) {
+    auto* uia = MsaaAccessible::GetFrom(live);
+    ::UiaRaiseAutomationEvent(uia, UIA_LiveRegionChangedEventId);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // uiaRawElmProvider
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,6 +128,7 @@ void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
       return;
     case nsIAccessibleEvent::EVENT_NAME_CHANGE:
       property = UIA_NamePropertyId;
+      MaybeRaiseUiaLiveRegionEvent(aAcc, aGeckoEvent);
       break;
     case nsIAccessibleEvent::EVENT_SELECTION:
       ::UiaRaiseAutomationEvent(uia, UIA_SelectionItem_ElementSelectedEventId);
@@ -131,6 +143,10 @@ void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
       return;
     case nsIAccessibleEvent::EVENT_SELECTION_WITHIN:
       ::UiaRaiseAutomationEvent(uia, UIA_Selection_InvalidatedEventId);
+      return;
+    case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
+    case nsIAccessibleEvent::EVENT_TEXT_REMOVED:
+      MaybeRaiseUiaLiveRegionEvent(aAcc, aGeckoEvent);
       return;
     case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
       property = UIA_ValueValuePropertyId;

@@ -152,3 +152,61 @@ addUiaTask(
     );
   }
 );
+
+/**
+ * Test LiveRegionChanged events.
+ */
+addUiaTask(
+  `
+<div id="live" aria-live="polite">
+  a
+  <div id="b" hidden>b</div>
+  <span id="c" hidden role="none">c</span>
+  <button id="d" aria-label="before">button</button>
+</div>
+  `,
+  async function testLiveRegionChangedEvent(browser) {
+    await definePyVar("doc", `getDocUia()`);
+    info("Showing b");
+    await setUpWaitForUiaEvent("LiveRegionChanged", "live");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("b").hidden = false;
+    });
+    await waitForUiaEvent();
+    ok(true, "Got LiveRegionChanged on live");
+
+    // The c span doesn't get an Accessible, so this tests that we get an event
+    // when a text leaf is added directly.
+    info("Showing c");
+    await setUpWaitForUiaEvent("LiveRegionChanged", "live");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("c").hidden = false;
+    });
+    await waitForUiaEvent();
+    ok(true, "Got LiveRegionChanged on live");
+
+    info("Setting d's aria-label");
+    await setUpWaitForUiaEvent("LiveRegionChanged", "live");
+    await invokeSetAttribute(browser, "d", "aria-label", "d");
+    await waitForUiaEvent();
+    ok(true, "Got LiveRegionChanged on live");
+
+    info("Setting live textContent (new text leaf)");
+    await setUpWaitForUiaEvent("LiveRegionChanged", "live");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("live").textContent = "replaced";
+    });
+    await waitForUiaEvent();
+    ok(true, "Got LiveRegionChanged on live");
+
+    info("Mutating live's text node (same text leaf)");
+    await setUpWaitForUiaEvent("LiveRegionChanged", "live");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("live").firstChild.data = "again";
+    });
+    await waitForUiaEvent();
+    ok(true, "Got LiveRegionChanged on live");
+  },
+  // The IA2 -> UIA proxy doesn't fire LiveRegionChanged.
+  { uiaEnabled: true, uiaDisabled: false }
+);
