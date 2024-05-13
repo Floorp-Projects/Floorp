@@ -12103,6 +12103,8 @@ bool InitOptionParser(OptionParser& op) {
                         "property of null or undefined") ||
       !op.addBoolOption('\0', "enable-iterator-helpers",
                         "Enable iterator helpers") ||
+      !op.addBoolOption('\0', "enable-async-iterator-helpers",
+                        "Enable async iterator helpers") ||
       !op.addBoolOption('\0', "enable-json-parse-with-source",
                         "Enable JSON.parse with source") ||
       !op.addBoolOption('\0', "enable-shadow-realms", "Enable ShadowRealms") ||
@@ -12501,6 +12503,9 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   }
   if (op.getBoolOption("enable-iterator-helpers")) {
     JS::Prefs::setAtStartup_experimental_iterator_helpers(true);
+  }
+  if (op.getBoolOption("enable-async-iterator-helpers")) {
+    JS::Prefs::setAtStartup_experimental_async_iterator_helpers(true);
   }
   if (op.getBoolOption("enable-new-set-methods")) {
     JS::Prefs::setAtStartup_experimental_new_set_methods(true);
