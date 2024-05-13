@@ -20,7 +20,7 @@
             "searchTermParamName": "q"
           },
           "suggestions": {
-            "base": "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+            "base": "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox",
             "searchTermParamName": "q"
           }
         }
@@ -141,7 +141,7 @@
             "searchTermParamName": "q"
           },
           "suggestions": {
-            "base": "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+            "base": "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox",
             "searchTermParamName": "q"
           }
         }

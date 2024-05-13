@@ -76,10 +76,6 @@ const CONFIG_V2 = [
               value: "{language}",
             },
             {
-              name: "locale",
-              value: "{moz:locale}",
-            },
-            {
               name: "prefval",
               experimentConfig: "code",
             },

@@ -13,6 +13,7 @@ support-files = [
   "testEngine_mozsearch.xml",
   "tooManyEnginesOffered.html",
 ]
+tags = "searchnontelem"
 
 ["browser_426329.js"]
 

@@ -79,7 +79,7 @@
       "_metaData": {},
       "_urls": [
         {
-          "template": "http://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}",
+          "template": "http://suggestqueries.google.com/complete/search?output=firefox&client=firefox&q={searchTerms}",
           "rels": [],
           "resultDomain": "suggestqueries.google.com",
           "type": "application/x-suggestions+json",

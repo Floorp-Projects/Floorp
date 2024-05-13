@@ -294,11 +294,6 @@ function ParamSubstitution(paramValue, searchTerms, engine) {
       return engine.queryCharset;
     }
 
-    // moz: parameters are only available for default search engines.
-    if (engine.isAppProvided && name == lazy.SearchUtils.MOZ_PARAM.LOCALE) {
-      return Services.locale.requestedLocale;
-    }
-
     // Handle the less common OpenSearch parameters we're confident about.
     if (name == OS_PARAM_LANGUAGE) {
       return Services.locale.requestedLocale || OS_PARAM_LANGUAGE_DEF;

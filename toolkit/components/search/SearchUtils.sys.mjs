@@ -222,10 +222,6 @@ export var SearchUtils = {
   // A tag to denote when we are using the "default_locale" of an engine.
   DEFAULT_TAG: "default",
 
-  MOZ_PARAM: {
-    LOCALE: "moz:locale",
-  },
-
   // Query parameters can have the property "purpose", whose value
   // indicates the context that initiated a search. This list contains
   // defined search contexts.

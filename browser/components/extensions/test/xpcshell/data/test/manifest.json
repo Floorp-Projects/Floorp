@@ -56,10 +56,6 @@
           "value": "{language}"
         },
         {
-          "name": "locale",
-          "value": "{moz:locale}"
-        },
-        {
           "name": "prefval",
           "condition": "pref",
           "pref": "code"

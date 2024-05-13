@@ -32,7 +32,7 @@ const GOOD_CONFIG = [
         },
       ],
       suggest_url:
-        "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}",
+        "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&q={searchTerms}",
     },
     appliesTo: [
       {
