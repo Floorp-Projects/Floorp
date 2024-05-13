@@ -227,7 +227,8 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
     // a MediaCodec. We therefore override the transform to be a simple y-flip
     // to ensure it is rendered correctly.
     const auto hardware = java::sdk::Build::HARDWARE()->ToString();
-    if (hardware.EqualsASCII("mt6735") || hardware.EqualsASCII("kirin980")) {
+    if (hardware.EqualsASCII("mt6735") || hardware.EqualsASCII("kirin980") ||
+        hardware.EqualsASCII("mt8696")) {
       mTransformOverride = Some(
           gfx::Matrix4x4::Scaling(1.0, -1.0, 1.0).PostTranslate(0.0, 1.0, 0.0));
     }
