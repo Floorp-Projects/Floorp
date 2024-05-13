@@ -26,7 +26,6 @@ function log(message) {
   if (!lazy.gDebug) {
     return;
   }
-  dump("satchelFormListener: " + message + "\n");
   Services.console.logStringMessage("satchelFormListener: " + message);
 }
 
