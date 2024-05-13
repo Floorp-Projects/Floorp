@@ -202,3 +202,6 @@ test-pref(intl.accept_languages,"ja-JP,zh-CN,en") ref-pref(intl.accept_languages
 
 # Reset default prefs.
 defaults
+
+# Bug 1787790 - Normalize system fonts when using RFP
+test-pref(privacy.resistFingerprinting,true) == system-font-rfp.html system-font-rfp-ref.html
