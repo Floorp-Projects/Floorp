@@ -4,6 +4,5 @@
 
 toolkit.jar:
 #include ../../shared/mozapps.inc.mn
-  skin/classic/mozapps/downloads/unknownContentType.css           (downloads/unknownContentType.css)
   skin/classic/mozapps/update/updates.css                         (update/updates.css)
   skin/classic/mozapps/handling/handling.css                      (handling/handling.css)

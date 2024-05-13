@@ -17,7 +17,6 @@
 
   skin/classic/global/icons/search-textbox.svg             (../../windows/global/icons/search-textbox.svg)
 
-  skin/classic/mozapps/downloads/unknownContentType.css    (../../windows/mozapps/downloads/unknownContentType.css)
   skin/classic/mozapps/handling/handling.css               (../../windows/mozapps/handling/handling.css)
 
 % override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.svg
