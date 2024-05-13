@@ -26,7 +26,7 @@ extern "C" nsresult ATTRIBUTE_USED PrepareAndDispatch(nsXPTCStubBase* self,
   uint64_t value;
 
   for (uint32_t i = 0; i < paramCount; i++) {
-    const nsXPTParamInfo& param = info->GetParam(i);
+    const nsXPTParamInfo& param = info->Param(i);
     const nsXPTType& type = param.GetType();
     nsXPTCMiniVariant* dp = &paramBuffer[i];
 

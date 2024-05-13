@@ -1276,7 +1276,7 @@ bool CallMethodHelper::GetInterfaceTypeFromParam(const nsXPTType& type,
 
 bool CallMethodHelper::GetOutParamSource(uint8_t paramIndex,
                                          MutableHandleValue srcp) const {
-  const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
+  const nsXPTParamInfo& paramInfo = mMethodInfo->Param(paramIndex);
   bool isRetval = &paramInfo == mMethodInfo->GetRetval();
 
   if (paramInfo.IsOut() && !isRetval) {
@@ -1305,7 +1305,7 @@ bool CallMethodHelper::GatherAndConvertResults() {
   // now we iterate through the native params to gather and convert results
   uint8_t paramCount = mMethodInfo->ParamCount();
   for (uint8_t i = 0; i < paramCount; i++) {
-    const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
+    const nsXPTParamInfo& paramInfo = mMethodInfo->Param(i);
     if (!paramInfo.IsOut()) {
       continue;
     }
@@ -1409,8 +1409,7 @@ bool CallMethodHelper::InitializeDispatchParams() {
     }
 
     // skip over any optional arguments
-    while (requiredArgs &&
-           mMethodInfo->GetParam(requiredArgs - 1).IsOptional()) {
+    while (requiredArgs && mMethodInfo->Param(requiredArgs - 1).IsOptional()) {
       requiredArgs--;
     }
 
@@ -1462,7 +1461,7 @@ bool CallMethodHelper::InitializeDispatchParams() {
 bool CallMethodHelper::ConvertIndependentParams(bool* foundDependentParam) {
   const uint8_t paramCount = mMethodInfo->ParamCount();
   for (uint8_t i = 0; i < paramCount; i++) {
-    const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
+    const nsXPTParamInfo& paramInfo = mMethodInfo->Param(i);
 
     if (paramInfo.GetType().IsDependent()) {
       *foundDependentParam = true;
@@ -1475,7 +1474,7 @@ bool CallMethodHelper::ConvertIndependentParams(bool* foundDependentParam) {
 }
 
 bool CallMethodHelper::ConvertIndependentParam(uint8_t i) {
-  const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
+  const nsXPTParamInfo& paramInfo = mMethodInfo->Param(i);
   const nsXPTType& type = paramInfo.Type();
   nsXPTCVariant* dp = GetDispatchParam(i);
 
@@ -1552,7 +1551,7 @@ bool CallMethodHelper::ConvertIndependentParam(uint8_t i) {
 bool CallMethodHelper::ConvertDependentParams() {
   const uint8_t paramCount = mMethodInfo->ParamCount();
   for (uint8_t i = 0; i < paramCount; i++) {
-    const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
+    const nsXPTParamInfo& paramInfo = mMethodInfo->Param(i);
 
     if (!paramInfo.GetType().IsDependent()) {
       continue;
@@ -1566,7 +1565,7 @@ bool CallMethodHelper::ConvertDependentParams() {
 }
 
 bool CallMethodHelper::ConvertDependentParam(uint8_t i) {
-  const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
+  const nsXPTParamInfo& paramInfo = mMethodInfo->Param(i);
   const nsXPTType& type = paramInfo.Type();
   nsXPTCVariant* dp = GetDispatchParam(i);
 
