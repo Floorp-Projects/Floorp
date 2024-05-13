@@ -25,6 +25,13 @@ struct DefaultMapEntryGCPolicy {
     return GCPolicy<Key>::traceWeak(trc, key) &&
            GCPolicy<Value>::traceWeak(trc, value);
   }
+  static bool needsSweep(JSTracer* trc, const Key* key, const Value* value) {
+    // This is like a const version of the |traceWeak| method. It has the sense
+    // of the return value reversed and does not mutate keys/values. Used during
+    // incremental sweeping by the WeakCache specializations for maps and sets.
+    return GCPolicy<Key>::needsSweep(trc, key) ||
+           GCPolicy<Value>::needsSweep(trc, value);
+  }
 };
 
 // A GCHashMap is a GC-aware HashMap, meaning that it has additional trace
