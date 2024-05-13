@@ -39,7 +39,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint64_t methodIndex, uint64_t* args, u
     uint32_t fpCount = 0;
     for(i = 0; i < paramCount; i++)
     {
-        const nsXPTParamInfo& param = info->GetParam(i);
+        const nsXPTParamInfo& param = info->Param(i);
         const nsXPTType& type = param.GetType();
         nsXPTCMiniVariant* dp = &paramBuffer[i];
 
