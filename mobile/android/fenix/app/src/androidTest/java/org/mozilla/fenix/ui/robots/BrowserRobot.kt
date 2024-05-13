@@ -81,6 +81,23 @@ class BrowserRobot {
         sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
         registerAndCleanupIdlingResources(sessionLoadedIdlingResource) {
+            // Check if toolbar is displayed
+            // Check if a prompt is being displayed
+            if (
+                !itemWithResId("$packageName:id/mozac_browser_toolbar_url_view").exists() &&
+                itemWithResId("$packageName:id/title").exists()
+            ) {
+                Log.i(TAG, "verifyUrl: The toolbar is not displayed")
+                Log.i(TAG, "verifyUrl: A prompt is being displayed")
+                Log.i(TAG, "verifyUrl: Trying to click device back button")
+                // Dismiss the prompt by clicking the device back button
+                mDevice.pressBack()
+                Log.i(TAG, "verifyUrl: Clicked device back button")
+                Log.i(TAG, "verifyUrl: Waiting for $waitingTimeShort ms for $packageName window to be updated")
+                mDevice.waitForWindowUpdate(packageName, waitingTimeShort)
+                Log.i(TAG, "verifyUrl: Waited for $waitingTimeShort ms for $packageName window to be updated")
+            }
+
             assertUIObjectExists(
                 itemWithResIdContainingText(
                     "$packageName:id/mozac_browser_toolbar_url_view",
