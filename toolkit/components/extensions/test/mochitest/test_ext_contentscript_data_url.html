@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test content script at data:-URLs</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.data_uri.block_toplevel_data_uri_navigations", false]],
+  });
+});
+
+add_task(async function test_contentscript_data_url() {
+  const manifest = {
+    content_scripts: [
+      {
+        // match_about_blank is documented to match the parent URL for
+        // about:blank / about:srcdoc, which inherit the parent principal.
+        // data:-URLs used to inherit the principal, until bug 1324406 changed
+        // this. For comprehensive test coverage, verify that we don't match
+        // the parent URL with match_about_blank and data:-URLs.
+        match_about_blank: true,
+        // This HTML file is the test itself.
+        matches: ["*://*/*/test_ext_contentscript_data_url.html"],
+        all_frames: true,
+        js: ["match_about_blank:matches.js"],
+        run_at: "document_start",
+      }, {
+        // match_about_blank may match top-level about:blank documents with a
+        // null principal, as a special case. This same logic was expanded to
+        // top-level data:-URLs in bug 1451463 (undocumented!).
+        match_about_blank: true,
+        matches: ["*://*/*"],
+        js: ["match_about_blank:wildcard.js"],
+        all_frames: true,
+        run_at: "document_start",
+      }, {
+        // Sanity check: without matching matches, this should never match.
+        match_about_blank: true,
+        matches: ["*://*/never_matched"],
+        all_frames: true,
+        js: ["never_matched.js"],
+        run_at: "document_start",
+      },
+    ],
+  };
+
+  const files = {
+    "match_about_blank:matches.js": () => {
+      if (location.protocol === "data:") {
+        browser.test.sendMessage("match_about_blank:matches", location.href);
+      }
+    },
+    "match_about_blank:wildcard.js": () => {
+      if (location.protocol === "data:") {
+        browser.test.sendMessage("match_about_blank:wildcard", location.href);
+      }
+    },
+    "never_matched.js": () => {
+      browser.test.fail(`Unexpected match at: ${location.href}`);
+    },
+  };
+
+  const extension = ExtensionTestUtils.loadExtension({ manifest, files });
+  await extension.startup();
+
+  const DATA_URL_FRAME = "data:,iframe_data";
+  const DATA_URL = `data:text/html,<iframe src="${DATA_URL_FRAME}"></iframe>`;
+
+  let win = window.open(DATA_URL);
+
+  is(
+    await extension.awaitMessage("match_about_blank:wildcard"),
+    DATA_URL,
+    "match_about_blank with wildcard matches data:-URL popup"
+  );
+  // Notably: match_about_blank:wildcard for DATA_URL_FRAME is not sent, because
+  // data:-URLs are not really supported with match_about_blank. Undocumented
+  // support for top-level data:-URLs was introduced in bug 1451463.
+
+  win.close();
+
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

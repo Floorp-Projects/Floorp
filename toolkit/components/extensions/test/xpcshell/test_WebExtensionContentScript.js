@@ -179,6 +179,9 @@ async function test_frame_matching(meta) {
   let urls = {
     topLevel: `${baseURL}/file_toplevel.html`,
     iframe: `${baseURL}/file_iframe.html`,
+    dataURL: "data:,data-URL",
+    javascriptVoid: "javascript://void",
+    javascriptTrue: "javascript:true",
     srcdoc: "about:srcdoc",
     aboutBlank: "about:blank",
   };
@@ -191,6 +194,9 @@ async function test_frame_matching(meta) {
       contentScript: {},
       topLevel: true,
       iframe: false,
+      dataURL: false,
+      javascriptVoid: false,
+      javascriptTrue: false,
       aboutBlank: false,
       srcdoc: false,
     },
@@ -202,6 +208,9 @@ async function test_frame_matching(meta) {
       },
       topLevel: true,
       iframe: false,
+      dataURL: false,
+      javascriptVoid: false,
+      javascriptTrue: false,
       aboutBlank: false,
       srcdoc: false,
     },
@@ -213,6 +222,9 @@ async function test_frame_matching(meta) {
       },
       topLevel: true,
       iframe: true,
+      dataURL: false,
+      javascriptVoid: false,
+      javascriptTrue: false,
       aboutBlank: false,
       srcdoc: false,
     },
@@ -225,11 +237,18 @@ async function test_frame_matching(meta) {
       },
       topLevel: true,
       iframe: true,
+      // data-URLs used to inherit the principal until Firefox 57 (bug 1324406)
+      // but never did so in Chrome. In any case, match_about_blank should not
+      // match documents at data:-URLs.
+      dataURL: false,
+      javascriptVoid: true,
+      javascriptTrue: true,
       aboutBlank: true,
       srcdoc: true,
     },
 
     {
+      // pattern in "matches" does not match.
       matches: ["http://foo.com/data/*"],
       contentScript: {
         allFrames: true,
@@ -237,6 +256,9 @@ async function test_frame_matching(meta) {
       },
       topLevel: false,
       iframe: false,
+      dataURL: false,
+      javascriptVoid: false,
+      javascriptTrue: false,
       aboutBlank: false,
       srcdoc: false,
     },
@@ -249,7 +271,13 @@ async function test_frame_matching(meta) {
     this.windows = new Map();
     this.windows.set(this.content.location.href, this.content);
     for (let c of Array.from(this.content.frames)) {
-      this.windows.set(c.location.href, c);
+      let url = c.location.href;
+      if (url === "about:blank") {
+        // When javascript: URLs are loaded, the resulting URL is about:blank.
+        // Look up the frame's "src" attribute to distinguish them.
+        url = c.frameElement.src;
+      }
+      this.windows.set(url, c);
     }
     const { MatchPatternSet, WebExtensionContentScript, WebExtensionPolicy } =
       Cu.getGlobalForObject(Services);

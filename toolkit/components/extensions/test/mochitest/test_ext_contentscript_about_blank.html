@@ -12,6 +12,10 @@
 <script type="text/javascript">
 "use strict";
 
+// Tests that match_about_blank matches at the expected URLs:
+// - about:blank and about:srcdoc (as documented)
+// - javascript:-URL (loaded in about:blank document)
+// - blob: (not documented, not supported by Chrome, historical behavior)
 add_task(async function test_contentscript_about_blank() {
   const manifest = {
     content_scripts: [
@@ -62,7 +66,8 @@ add_task(async function test_contentscript_about_blank() {
 
   function background() {
     browser.runtime.onMessage.addListener((script, {url}) => {
-      const kind = url.startsWith("about:") ? url : "top";
+      // In this test, we only load http(s):-URLs at the top level.
+      const kind = url.startsWith("http") ? "top" : url;
       browser.test.sendMessage("script", [script, kind, url]);
       browser.test.sendMessage(`${script}:${kind}`);
     });
@@ -110,6 +115,58 @@ add_task(async function test_contentscript_about_blank() {
   is(style.textAlign, "right", "about:blank text is right-aligned");
 
   is(count, 10, "exactly 7 more scripts ran");
+  count = 0;
+  // win.close(); not called because we want to create a blob:-URL associated
+  // with that document's principal, and also test other loads associated with
+  // that principal.
+  const winDocumentURL = win.document.URL;
+  const htmlCode = win.document.documentElement.outerHTML;
+
+  {
+    info(`Testing about:blank toplevel popup from ${winDocumentURL}`);
+    let blankWin = win.window.open("about:blank");
+    await Promise.all([
+      extension.awaitMessage("all:about:blank"),
+      extension.awaitMessage("mochi_with:about:blank"),
+    ]);
+    blankWin.close();
+    is(count, 2, "exactly 2 more scripts ran for toplevel about:blank");
+    count = 0;
+  }
+
+  {
+    info(`Testing javascript:-toplevel popup from ${winDocumentURL}`);
+    let jsWin = win.window.open(`javascript:'<iframe srcdoc="x"></iframe>'`);
+    await Promise.all([
+      // javascript:-URLs are loaded in an about:blank document.
+      extension.awaitMessage("all:about:blank"),
+      extension.awaitMessage("mochi_with:about:blank"),
+      extension.awaitMessage("all:about:srcdoc"),
+      extension.awaitMessage("mochi_with:about:srcdoc"),
+    ]);
+    jsWin.close();
+    is(count, 4, "exactly 4 more scripts ran for javascript:-URL with frame");
+    count = 0;
+  }
+
+  const blob = new Blob([ htmlCode ], { type: "text/html" });
+  const blobUrl = win.URL.createObjectURL(blob);
+  info(`Opening blob:-URL: ${blobUrl} from ${win.document.URL}`);
+
+  let blobWin = window.open(blobUrl);
+  await Promise.all([
+    extension.awaitMessage("all:" + blobUrl),
+    extension.awaitMessage("all:about:blank"),
+    extension.awaitMessage("all:about:srcdoc"),
+    extension.awaitMessage("mochi_without:" + blobUrl),
+    extension.awaitMessage("mochi_with:" + blobUrl),
+    extension.awaitMessage("mochi_with:about:blank"),
+    extension.awaitMessage("mochi_with:about:srcdoc"),
+  ]);
+  is(count, 7, "exactly 7 more scripts ran for blob:-URL");
+
+  blobWin.close();
+
   win.close();
 
   await extension.unload();

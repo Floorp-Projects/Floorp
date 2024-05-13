@@ -192,6 +192,8 @@ skip-if = [
   "verify && debug && os == 'linux'",
 ]
 
+["test_ext_contentscript_data_url.html"]
+
 ["test_ext_contentscript_devtools_metadata.html"]
 skip-if = [
   "http3",
