@@ -1448,10 +1448,8 @@ function isDataScheme(url) {
 function isPdfFile(filename) {
   return typeof filename === "string" && /\.pdf$/i.test(filename);
 }
-function getFilenameFromUrl(url, onlyStripPath = false) {
-  if (!onlyStripPath) {
-    [url] = url.split(/[#?]/, 1);
-  }
+function getFilenameFromUrl(url) {
+  [url] = url.split(/[#?]/, 1);
   return url.substring(url.lastIndexOf("/") + 1);
 }
 function getPdfFilenameFromUrl(url, defaultFilename = "document.pdf") {
@@ -5478,7 +5476,7 @@ class TilingPattern {
   static MAX_PATTERN_SIZE = 3000;
   constructor(IR, color, ctx, canvasGraphicsFactory, baseTransform) {
     this.operatorList = IR[2];
-    this.matrix = IR[3] || [1, 0, 0, 1, 0, 0];
+    this.matrix = IR[3];
     this.bbox = IR[4];
     this.xstep = IR[5];
     this.ystep = IR[6];
@@ -7368,7 +7366,7 @@ class CanvasGraphics {
     }
     this.save();
     this.baseTransformStack.push(this.baseTransform);
-    if (Array.isArray(matrix) && matrix.length === 6) {
+    if (matrix) {
       this.transform(...matrix);
     }
     this.baseTransform = getCurrentTransform(this.ctx);
@@ -7481,7 +7479,7 @@ class CanvasGraphics {
     if (this.baseTransform) {
       this.ctx.setTransform(...this.baseTransform);
     }
-    if (Array.isArray(rect) && rect.length === 4) {
+    if (rect) {
       const width = rect[2] - rect[0];
       const height = rect[3] - rect[1];
       if (hasOwnCanvas && this.annotationCanvasMap) {
@@ -9353,7 +9351,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.3.8",
+    apiVersion: "4.3.27",
     data,
     password,
     disableAutoFetch,
@@ -11013,8 +11011,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.3.8";
-const build = "c419c8333";
+const version = "4.3.27";
+const build = "df23679bc";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -13551,17 +13549,13 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
       isRenderable: true
     });
     const {
-      filename,
-      content,
-      description
-    } = this.data.file;
-    this.filename = getFilenameFromUrl(filename, true);
-    this.content = content;
+      file
+    } = this.data;
+    this.filename = file.filename;
+    this.content = file.content;
     this.linkService.eventBus?.dispatch("fileattachmentannotation", {
       source: this,
-      filename,
-      content,
-      description
+      ...file
     });
   }
   render() {
@@ -17804,8 +17798,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.3.8";
-const pdfjsBuild = "c419c8333";
+const pdfjsVersion = "4.3.27";
+const pdfjsBuild = "df23679bc";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
