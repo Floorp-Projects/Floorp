@@ -101,7 +101,8 @@ class SourcesManager extends EventEmitter {
     this._thread.threadLifetimePool.manage(actor);
 
     this._sourceActors.set(source, actor);
-    if (this._sourcesByInternalSourceId && source.id) {
+    // source.id can be 0 for WASM sources
+    if (this._sourcesByInternalSourceId && Number.isInteger(source.id)) {
       this._sourcesByInternalSourceId.set(source.id, source);
     }
 
@@ -157,7 +158,8 @@ class SourcesManager extends EventEmitter {
     if (!this._sourcesByInternalSourceId) {
       this._sourcesByInternalSourceId = new Map();
       for (const source of this._thread.dbg.findSources()) {
-        if (source.id) {
+        // source.id can be 0 for WASM sources
+        if (Number.isInteger(source.id)) {
           this._sourcesByInternalSourceId.set(source.id, source);
         }
       }

@@ -255,6 +255,10 @@ class Message extends Component {
                     JSON.stringify(
                       this.props.message,
                       function (key, value) {
+                        if (key === "targetFront") {
+                          return null;
+                        }
+
                         // The message can hold one or multiple fronts that we need to serialize
                         if (value?.getGrip) {
                           return value.getGrip();
