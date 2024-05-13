@@ -1020,6 +1020,11 @@ pref("javascript.options.mem.nursery_eager_collection_threshold_percent", 25);
 // JSGC_NURSERY_EAGER_COLLECTION_TIMEOUT_MS
 pref("javascript.options.mem.nursery_eager_collection_timeout_ms", 5000);
 
+#ifdef JS_GC_ZEAL
+pref("javascript.options.mem.gc_zeal.mode", 0);
+pref("javascript.options.mem.gc_zeal.frequency", 5000);
+#endif
+
 pref("javascript.options.shared_memory", true);
 
 pref("javascript.options.throw_on_debuggee_would_run", false);
