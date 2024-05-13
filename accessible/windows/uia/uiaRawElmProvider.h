@@ -196,6 +196,7 @@ class uiaRawElmProvider : public IAccessibleEx,
   Accessible* GetLabeledBy() const;
   long GetLandmarkType() const;
   void GetLocalizedLandmarkType(nsAString& aLocalized) const;
+  long GetLiveSetting() const;
 };
 
 SAFEARRAY* AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs);

@@ -649,6 +649,11 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       aPropertyValue->lVal = acc->GroupPosition().level;
       return S_OK;
 
+    case UIA_LiveSettingPropertyId:
+      aPropertyValue->vt = VT_I4;
+      aPropertyValue->lVal = GetLiveSetting();
+      return S_OK;
+
     case UIA_LocalizedLandmarkTypePropertyId: {
       nsAutoString landmark;
       GetLocalizedLandmarkType(landmark);
@@ -1392,6 +1397,20 @@ void uiaRawElmProvider::GetLocalizedLandmarkType(nsAString& aLocalized) const {
     landmark->ToString(unlocalized);
     Accessible::TranslateString(unlocalized, aLocalized);
   }
+}
+
+long uiaRawElmProvider::GetLiveSetting() const {
+  Accessible* acc = Acc();
+  MOZ_ASSERT(acc);
+  nsAutoString live;
+  nsAccUtils::GetLiveRegionSetting(acc, live);
+  if (live.EqualsLiteral("polite")) {
+    return LiveSetting::Polite;
+  }
+  if (live.EqualsLiteral("assertive")) {
+    return LiveSetting::Assertive;
+  }
+  return LiveSetting::Off;
 }
 
 SAFEARRAY* a11y::AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs) {
