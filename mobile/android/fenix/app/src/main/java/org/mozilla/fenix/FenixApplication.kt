@@ -83,7 +83,6 @@ import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.ShoppingSettings
-import org.mozilla.fenix.GleanMetrics.TabStrip
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.Core
@@ -869,8 +868,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             userHasOnboarded.set(settings.reviewQualityCheckOptInTimeInMillis != 0L)
             disabledAds.set(!settings.isReviewQualityCheckProductRecommendationsEnabled)
         }
-
-        TabStrip.enabled.set(settings.isTabStripEnabled)
     }
 
     @VisibleForTesting

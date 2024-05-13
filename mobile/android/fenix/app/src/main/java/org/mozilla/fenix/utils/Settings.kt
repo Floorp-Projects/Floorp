@@ -863,14 +863,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             return touchExplorationIsEnabled || switchServiceIsEnabled
         }
 
-    /**
-     * Indicates if the user has enabled the tab strip feature.
-     */
-    val isTabStripEnabled by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_tab_strip),
-        default = false,
-    )
-
     var lastKnownMode: BrowsingMode = BrowsingMode.Normal
         get() {
             val lastKnownModeWasPrivate = preferences.getBoolean(
