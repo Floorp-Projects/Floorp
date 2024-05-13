@@ -6,7 +6,9 @@ package org.mozilla.fenix.translations.preferences.nevertranslatesite
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -48,7 +50,9 @@ fun NeverTranslateSitesPreference(
                 .padding(
                     start = 56.dp,
                 )
-                .semantics { heading() },
+                .semantics { heading() }
+                .defaultMinSize(minHeight = 76.dp)
+                .wrapContentHeight(),
             maxLabelLines = Int.MAX_VALUE,
         )
 
@@ -67,7 +71,9 @@ fun NeverTranslateSitesPreference(
                         .clearAndSetSemantics {
                             role = Role.Button
                             contentDescription = itemContentDescription
-                        },
+                        }
+                        .defaultMinSize(minHeight = 76.dp)
+                        .wrapContentHeight(),
                     onClick = { onItemClick(item) },
                     iconPainter = painterResource(R.drawable.mozac_ic_delete_24),
                     onIconClick = { onItemClick(item) },

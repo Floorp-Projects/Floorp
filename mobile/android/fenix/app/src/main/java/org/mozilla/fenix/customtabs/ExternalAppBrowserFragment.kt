@@ -174,16 +174,11 @@ class ExternalAppBrowserFragment : BaseBrowserFragment() {
             ) { toolbarVisible ->
                 browserToolbarView.view.isVisible = toolbarVisible
                 webAppToolbarShouldBeVisible = toolbarVisible
-                val browserEngine =
-                    binding.swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
                 if (!toolbarVisible) {
                     binding.engineView.setDynamicToolbarMaxHeight(0)
+                    val browserEngine =
+                        binding.swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
                     browserEngine.bottomMargin = 0
-                } else {
-                    val toolbarHeight =
-                        resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-                    binding.engineView.setDynamicToolbarMaxHeight(toolbarHeight)
-                    browserEngine.bottomMargin = toolbarHeight
                 }
             },
             owner = this,

@@ -69,6 +69,7 @@ abstract class DownloadDialogFragment : AppCompatDialogFragment() {
 /**
  * Converts the bytes to megabytes with two decimal places and returns a formatted string
  */
+@Suppress("DefaultLocale")
 fun Long.toMegabyteString(): String {
     return String.format("%.2f MB", this / MEGABYTE)
 }
@@ -76,6 +77,7 @@ fun Long.toMegabyteString(): String {
 /**
  * Converts the bytes to kilobytes with two decimal places and returns a formatted string
  */
+@Suppress("DefaultLocale")
 fun Long.toKilobyteString(): String {
     return String.format("%.2f KB", this / KILOBYTE)
 }

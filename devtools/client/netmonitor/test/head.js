@@ -321,6 +321,7 @@ function initNetMonitor(
     expectedEventTimings,
     waitForLoad = true,
     enableCache = false,
+    openInPrivateWindow = false,
   }
 ) {
   info("Initializing a network monitor pane.");
@@ -341,7 +342,22 @@ function initNetMonitor(
       ],
     });
 
-    const tab = await addTab(url, { waitForLoad });
+    let tab = null;
+    let privateWindow = null;
+
+    if (openInPrivateWindow) {
+      privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+        private: true,
+      });
+      ok(
+        PrivateBrowsingUtils.isContentWindowPrivate(privateWindow),
+        "window is private"
+      );
+      tab = BrowserTestUtils.addTab(privateWindow.gBrowser, url);
+    } else {
+      tab = await addTab(url, { waitForLoad });
+    }
+
     info("Net tab added successfully: " + url);
 
     const toolbox = await gDevTools.showToolboxForTab(tab, {
@@ -371,7 +387,7 @@ function initNetMonitor(
       await clearNetworkEvents(monitor);
     }
 
-    return { tab, monitor, toolbox };
+    return { tab, monitor, toolbox, privateWindow };
   })();
 }
 
@@ -408,7 +424,7 @@ async function clearNetworkEvents(monitor) {
   store.dispatch(Actions.clearRequests());
 }
 
-function teardown(monitor) {
+function teardown(monitor, privateWindow) {
   info("Destroying the specified network monitor.");
 
   return (async function () {
@@ -419,6 +435,12 @@ function teardown(monitor) {
 
     await monitor.toolbox.destroy();
     await removeTab(tab);
+
+    if (privateWindow) {
+      const closed = BrowserTestUtils.windowClosed(privateWindow);
+      privateWindow.BrowserCommands.tryToCloseWindow();
+      await closed;
+    }
   })();
 }
 

@@ -13,6 +13,12 @@ support-files = [
 ]
 skip-if = ["!nightly_build"] # to be enabled once ES module in workers is enabled (bug 1812591)
 
+["browser_WorkerDebugger_waiting.initialize.js"]
+support-files = [
+  "WorkerDebugger.initialize_waiting_debugger.js",
+  "WorkerDebugger.initialize_waiting_worker.js"
+]
+
 ["browser_bug1047663.js"]
 
 ["browser_bug1104623.js"]

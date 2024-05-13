@@ -21,6 +21,7 @@
 #include "builtin/Promise.h"
 #include "jit/MIRGenerator.h"
 #include "js/CallAndConstruct.h"
+#include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"
@@ -1669,8 +1670,7 @@ JSObject* GetSuspendingPromiseResult(Instance* instance,
               cx, SuspendingFunctionModuleFactory::ResultsTypeIndex));
   const StructFieldVector& fields = results->typeDef().structType().fields_;
 
-  MOZ_ASSERT(fields.length() <= 1);
-  if (fields.length() == 1) {
+  if (fields.length() > 0) {
     RootedValue jsValue(cx, promise->value());
 
     // The struct object is constructed based on returns of exported function.
@@ -1682,12 +1682,43 @@ JSObject* GetSuspendingPromiseResult(Instance* instance,
     const wasm::FuncType& sig =
         instance->metadata().getFuncExportType(funcExport);
 
-    RootedVal val(cx);
-    MOZ_ASSERT(sig.result(0).storageType() == fields[0].type);
-    if (!Val::fromJSValue(cx, sig.result(0), jsValue, &val)) {
-      return nullptr;
+    if (fields.length() == 1) {
+      RootedVal val(cx);
+      MOZ_ASSERT(sig.result(0).storageType() == fields[0].type);
+      if (!Val::fromJSValue(cx, sig.result(0), jsValue, &val)) {
+        return nullptr;
+      }
+      results->storeVal(val, 0);
+    } else {
+      // The multi-value result is wrapped into ArrayObject/Iterable.
+      Rooted<ArrayObject*> array(cx);
+      if (!IterableToArray(cx, jsValue, &array)) {
+        return nullptr;
+      }
+      if (fields.length() != array->length()) {
+        UniqueChars expected(JS_smprintf("%zu", fields.length()));
+        UniqueChars got(JS_smprintf("%u", array->length()));
+        if (!expected || !got) {
+          ReportOutOfMemory(cx);
+          return nullptr;
+        }
+
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_WRONG_NUMBER_OF_VALUES,
+                                 expected.get(), got.get());
+        return nullptr;
+      }
+
+      for (size_t i = 0; i < fields.length(); i++) {
+        RootedVal val(cx);
+        RootedValue v(cx, array->getDenseElement(i));
+        MOZ_ASSERT(sig.result(i).storageType() == fields[i].type);
+        if (!Val::fromJSValue(cx, sig.result(i), v, &val)) {
+          return nullptr;
+        }
+        results->storeVal(val, i);
+      }
     }
-    results->storeVal(val, 0);
   }
   return results;
 }
@@ -1706,11 +1737,30 @@ int32_t SetPromisingPromiseResults(Instance* instance,
   const StructType& resultType = res->typeDef().structType();
   RootedValue val(cx);
   // Unbox the result value from the struct, if any.
-  if (resultType.fields_.length() > 0) {
-    MOZ_RELEASE_ASSERT(resultType.fields_.length() == 1);
-    if (!res->getField(cx, /*index=*/0, &val)) {
-      return -1;
-    }
+  switch (resultType.fields_.length()) {
+    case 0:
+      break;
+    case 1: {
+      if (!res->getField(cx, /*index=*/0, &val)) {
+        return false;
+      }
+    } break;
+    default: {
+      Rooted<ArrayObject*> array(cx, NewDenseEmptyArray(cx));
+      if (!array) {
+        return false;
+      }
+      for (size_t i = 0; i < resultType.fields_.length(); i++) {
+        RootedValue item(cx);
+        if (!res->getField(cx, i, &item)) {
+          return false;
+        }
+        if (!NewbornArrayPush(cx, array, item)) {
+          return false;
+        }
+      }
+      val.setObject(*array);
+    } break;
   }
   ResolvePromise(cx, promise, val);
   return 0;

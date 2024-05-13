@@ -751,6 +751,8 @@ role HTMLProgressAccessible::NativeRole() const { return roles::PROGRESSBAR; }
 
 uint64_t HTMLProgressAccessible::NativeState() const {
   uint64_t state = LeafAccessible::NativeState();
+  // Progress bars are always readonly.
+  state |= states::READONLY;
 
   // An undetermined progressbar (i.e. without a value) has a mixed state.
   nsAutoString attrValue;

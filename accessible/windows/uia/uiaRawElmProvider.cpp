@@ -85,6 +85,17 @@ class LabelTextLeafRule : public PivotRule {
   }
 };
 
+static void MaybeRaiseUiaLiveRegionEvent(Accessible* aAcc,
+                                         uint32_t aGeckoEvent) {
+  if (!::UiaClientsAreListening()) {
+    return;
+  }
+  if (Accessible* live = nsAccUtils::GetLiveRegionRoot(aAcc)) {
+    auto* uia = MsaaAccessible::GetFrom(live);
+    ::UiaRaiseAutomationEvent(uia, UIA_LiveRegionChangedEventId);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // uiaRawElmProvider
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,6 +128,7 @@ void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
       return;
     case nsIAccessibleEvent::EVENT_NAME_CHANGE:
       property = UIA_NamePropertyId;
+      MaybeRaiseUiaLiveRegionEvent(aAcc, aGeckoEvent);
       break;
     case nsIAccessibleEvent::EVENT_SELECTION:
       ::UiaRaiseAutomationEvent(uia, UIA_SelectionItem_ElementSelectedEventId);
@@ -131,6 +143,10 @@ void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
       return;
     case nsIAccessibleEvent::EVENT_SELECTION_WITHIN:
       ::UiaRaiseAutomationEvent(uia, UIA_Selection_InvalidatedEventId);
+      return;
+    case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
+    case nsIAccessibleEvent::EVENT_TEXT_REMOVED:
+      MaybeRaiseUiaLiveRegionEvent(aAcc, aGeckoEvent);
       return;
     case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
       property = UIA_ValueValuePropertyId;
@@ -489,40 +505,29 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
 
     // ARIA Properties
     case UIA_AriaPropertiesPropertyId: {
-      if (!localAcc) {
-        // XXX Implement a unified version of this. We don't cache explicit
-        // values for many ARIA attributes in RemoteAccessible; e.g. we use the
-        // checked state rather than caching aria-checked:true. Thus, a unified
-        // implementation will need to work with State(), etc.
-        break;
-      }
       nsAutoString ariaProperties;
-
-      aria::AttrIterator attribIter(localAcc->GetContent());
-      while (attribIter.Next()) {
-        nsAutoString attribName, attribValue;
-        nsAutoString value;
-        attribIter.AttrName()->ToString(attribName);
-        attribIter.AttrValue(attribValue);
-        if (StringBeginsWith(attribName, u"aria-"_ns)) {
-          // Found 'aria-'
-          attribName.ReplaceLiteral(0, 5, u"");
+      // We only expose the properties we need to expose here.
+      nsAutoString live;
+      nsAccUtils::GetLiveRegionSetting(acc, live);
+      if (!live.IsEmpty()) {
+        // This is a live region root. The live setting is already exposed via
+        // the LiveSetting property. However, there is no UIA property for
+        // atomic.
+        Maybe<bool> atomic;
+        acc->LiveRegionAttributes(nullptr, nullptr, &atomic, nullptr);
+        if (atomic && *atomic) {
+          ariaProperties.AppendLiteral("atomic=true");
+        } else {
+          // Narrator assumes a default of true, so we need to output the
+          // correct default (false) even if the attribute isn't specified.
+          ariaProperties.AppendLiteral("atomic=false");
         }
-
-        ariaProperties.Append(attribName);
-        ariaProperties.Append('=');
-        ariaProperties.Append(attribValue);
-        ariaProperties.Append(';');
       }
-
       if (!ariaProperties.IsEmpty()) {
-        // remove last delimiter:
-        ariaProperties.Truncate(ariaProperties.Length() - 1);
         aPropertyValue->vt = VT_BSTR;
         aPropertyValue->bstrVal = ::SysAllocString(ariaProperties.get());
         return S_OK;
       }
-
       break;
     }
 
@@ -647,6 +652,11 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_LevelPropertyId:
       aPropertyValue->vt = VT_I4;
       aPropertyValue->lVal = acc->GroupPosition().level;
+      return S_OK;
+
+    case UIA_LiveSettingPropertyId:
+      aPropertyValue->vt = VT_I4;
+      aPropertyValue->lVal = GetLiveSetting();
       return S_OK;
 
     case UIA_LocalizedLandmarkTypePropertyId: {
@@ -1213,8 +1223,8 @@ bool uiaRawElmProvider::IsControl() {
     }
   }
 
-  // Don't treat generic or text containers as controls unless they have a name
-  // or description.
+  // Don't treat generic or text containers as controls except in specific
+  // cases.
   switch (acc->Role()) {
     case roles::EMPHASIS:
     case roles::MARK:
@@ -1225,12 +1235,21 @@ bool uiaRawElmProvider::IsControl() {
     case roles::SUPERSCRIPT:
     case roles::TEXT:
     case roles::TEXT_CONTAINER: {
+      // If there is a name or a description, treat it as a control.
       if (!acc->NameIsEmpty()) {
         return true;
       }
       nsAutoString text;
       acc->Description(text);
       if (!text.IsEmpty()) {
+        return true;
+      }
+      // If this is the root of a live region, treat it as a control, since
+      // Narrator won't correctly traverse the live region's content when
+      // handling changes otherwise.
+      nsAutoString live;
+      nsAccUtils::GetLiveRegionSetting(acc, live);
+      if (!live.IsEmpty()) {
         return true;
       }
       return false;
@@ -1392,6 +1411,20 @@ void uiaRawElmProvider::GetLocalizedLandmarkType(nsAString& aLocalized) const {
     landmark->ToString(unlocalized);
     Accessible::TranslateString(unlocalized, aLocalized);
   }
+}
+
+long uiaRawElmProvider::GetLiveSetting() const {
+  Accessible* acc = Acc();
+  MOZ_ASSERT(acc);
+  nsAutoString live;
+  nsAccUtils::GetLiveRegionSetting(acc, live);
+  if (live.EqualsLiteral("polite")) {
+    return LiveSetting::Polite;
+  }
+  if (live.EqualsLiteral("assertive")) {
+    return LiveSetting::Assertive;
+  }
+  return LiveSetting::Off;
 }
 
 SAFEARRAY* a11y::AccessibleArrayToUiaArray(const nsTArray<Accessible*>& aAccs) {
