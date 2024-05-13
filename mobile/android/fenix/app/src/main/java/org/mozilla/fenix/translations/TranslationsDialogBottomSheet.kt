@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSizeIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
@@ -113,9 +115,9 @@ fun TranslationsDialogBottomSheet(
             onSettingClicked = onSettingClicked,
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
         if (showFirstTimeFlow) {
+            Spacer(modifier = Modifier.height(8.dp))
+
             TranslationsDialogInfoMessage(
                 learnMoreUrl = learnMoreUrl,
                 onLearnMoreClicked = onLearnMoreClicked,
@@ -169,7 +171,7 @@ private fun DialogContentBaseOnTranslationState(
             initialTo = translationsDialogState.initialTo,
         )
     } else {
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         TranslationsDialogContent(
             translateFromLanguages = translationsDialogState.fromLanguages,
@@ -213,7 +215,7 @@ private fun DialogContentTranslated(
     positiveButtonType: PositiveButtonType? = null,
     initialTo: Language? = null,
 ) {
-    Spacer(modifier = Modifier.height(14.dp))
+    Spacer(modifier = Modifier.height(16.dp))
 
     TranslationsDialogContent(
         translateToLanguages = translateToLanguages,
@@ -257,7 +259,7 @@ private fun DialogContentAnErrorOccurred(
             documentLangDisplayName = translationsDialogState.documentLangDisplayName,
         )
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         if (translationError !is TranslationError.CouldNotLoadLanguagesError) {
             TranslationsDialogContent(
@@ -354,8 +356,6 @@ private fun TranslationsDialogContent(
             )
         }
     }
-
-    Spacer(modifier = Modifier.height(16.dp))
 }
 
 @Composable
@@ -566,7 +566,7 @@ private fun TranslationsDialogInfoMessage(
                 learnMoreText,
             ),
             linkTextStates = listOf(learnMoreState),
-            style = FirefoxTheme.typography.subtitle1.copy(
+            style = FirefoxTheme.typography.body2.copy(
                 color = FirefoxTheme.colors.textPrimary,
             ),
             linkTextDecoration = TextDecoration.Underline,
@@ -614,7 +614,10 @@ private fun TranslationsDropdown(
     ) {
         Text(
             text = header,
-            modifier = Modifier.wrapContentSize(),
+            modifier = Modifier
+                .wrapContentSize()
+                .defaultMinSize(minHeight = 16.dp)
+                .wrapContentHeight(),
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.caption,
         )

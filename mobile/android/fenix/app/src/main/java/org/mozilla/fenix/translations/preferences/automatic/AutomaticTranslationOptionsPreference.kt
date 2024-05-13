@@ -6,6 +6,8 @@ package org.mozilla.fenix.translations.preferences.automatic
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -13,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.list.RadioButtonListItem
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -45,6 +48,9 @@ fun AutomaticTranslationOptionsPreference(
                 RadioButtonListItem(
                     label = stringResource(item.titleId),
                     selected = selected.value == item,
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = 76.dp)
+                        .wrapContentHeight(),
                     description = stringResource(
                         item.summaryId.first(),
                         stringResource(item.summaryId.last()),
