@@ -1860,9 +1860,17 @@ export class ExtensionData {
 
       result.contentScripts = [];
       for (let options of manifest.content_scripts || []) {
+        let { match_about_blank, match_origin_as_fallback } = options;
+        if (match_origin_as_fallback !== null) {
+          // match_about_blank is ignored when match_origin_as_fallback is set.
+          // When match_about_blank=true and match_origin_as_fallback=false,
+          // then match_about_blank should be treated as false.
+          match_about_blank = false;
+        }
         result.contentScripts.push({
           allFrames: options.all_frames,
-          matchAboutBlank: options.match_about_blank,
+          matchAboutBlank: match_about_blank,
+          matchOriginAsFallback: match_origin_as_fallback,
           frameID: options.frame_id,
           runAt: options.run_at,
 

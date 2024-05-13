@@ -248,6 +248,40 @@ async function test_frame_matching(meta) {
     },
 
     {
+      // Note: Chrome triggers a hard error when matchOriginAsFallback is used
+      // without a wildcard path (/*). We fail gracefully for simplicity.
+      matches: ["http://example.com/data/*"],
+      contentScript: {
+        allFrames: true,
+        matchOriginAsFallback: true,
+      },
+      topLevel: true,
+      iframe: true,
+      // matchOriginAsFallback only matches 'matches' if the match pattern's
+      // path component is a wildcard. Since 'matches' is not, nothing happens.
+      dataURL: false,
+      javascriptVoid: true,
+      javascriptTrue: true,
+      aboutBlank: true,
+      srcdoc: true,
+    },
+
+    {
+      matches: ["http://example.com/*"],
+      contentScript: {
+        allFrames: true,
+        matchOriginAsFallback: true,
+      },
+      topLevel: true,
+      iframe: true,
+      dataURL: true,
+      javascriptVoid: true,
+      javascriptTrue: true,
+      aboutBlank: true,
+      srcdoc: true,
+    },
+
+    {
       // pattern in "matches" does not match.
       matches: ["http://foo.com/data/*"],
       contentScript: {

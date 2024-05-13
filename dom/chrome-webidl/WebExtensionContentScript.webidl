@@ -43,13 +43,24 @@ interface MozDocumentMatcher {
   readonly attribute boolean checkPermissions;
 
   /**
-   * If true, this (misleadingly-named, but inherited from Chrome) attribute
-   * causes us to match frames with URLs which inherit a principal that
-   * matches one of the match patterns, such as about:blank or about:srcdoc.
+   * If true, this causes us to match about:blank and about:srcdoc documents by
+   * the URL of the inherit principal, usually the initial URL of the document
+   * that triggered the navigation.
    * If false, we only match frames with an explicit matching URL.
    */
   [Constant]
   readonly attribute boolean matchAboutBlank;
+
+  /**
+   * If true, this causes us to match documents with opaque URLs (such as
+   * about:blank, about:srcdoc, data:, blob:, and sandboxed versions thereof)
+   * by the document principal's origin URI. In case of null principals, their
+   * precursor is used for matching.
+   * When true, matchAboutBlank is implicitly true.
+   * If false, we only match frames with an explicit matching URL.
+   */
+  [Constant]
+  readonly attribute boolean matchOriginAsFallback;
 
   /**
    * The outer window ID of the frame in which to run the script, or 0 if it
@@ -95,6 +106,8 @@ dictionary MozDocumentMatcherInit {
   sequence<OriginAttributesPatternDictionary>? originAttributesPatterns = null;
 
   boolean matchAboutBlank = false;
+
+  boolean matchOriginAsFallback = false;
 
   unsigned long long? frameID = null;
 

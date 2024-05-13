@@ -53,6 +53,7 @@ class MOZ_STACK_CLASS DocInfo final {
   // Returns the URL to use for matching against the content script's match
   // patterns. For content principals, this is usually equal to URL().
   // Similarly for null principals when IsNonOpaqueURL() is true.
+  // For null principals with a precursor, their precursor is used.
   // In all other cases, URL() is returned.
   const URLInfo& PrincipalURL() const;
 
@@ -132,6 +133,7 @@ class MozDocumentMatcher : public nsISupports, public nsWrapperCache {
   bool AllFrames() const { return mAllFrames; }
   bool CheckPermissions() const { return mCheckPermissions; }
   bool MatchAboutBlank() const { return mMatchAboutBlank; }
+  bool MatchOriginAsFallback() const { return mMatchOriginAsFallback; }
 
   MatchPatternSet* Matches() { return mMatches; }
   const MatchPatternSet* GetMatches() const { return mMatches; }
@@ -173,6 +175,7 @@ class MozDocumentMatcher : public nsISupports, public nsWrapperCache {
   bool mCheckPermissions;
   Nullable<uint64_t> mFrameID;
   bool mMatchAboutBlank;
+  bool mMatchOriginAsFallback;
   Nullable<dom::Sequence<OriginAttributesPattern>> mOriginAttributesPatterns;
 };
 
