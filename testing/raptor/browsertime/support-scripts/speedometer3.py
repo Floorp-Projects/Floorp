@@ -53,6 +53,7 @@ class Speedometer3Support(BasePythonSupport):
             "lowerIsBetter": lower_is_better,
             "name": measurement_name,
             "replicates": replicates,
+            "shouldAlert": True,
             "value": round(filters.mean(replicates), 3),
         }
 
