@@ -48,6 +48,8 @@ class RLBoxSoundTouch {
   RLBOX_SOUNDTOUCH_API
   RLBoxSoundTouch();
   RLBOX_SOUNDTOUCH_API
+  bool Init();
+  RLBOX_SOUNDTOUCH_API
   ~RLBoxSoundTouch();
 
   RLBOX_SOUNDTOUCH_API
@@ -76,6 +78,7 @@ class RLBoxSoundTouch {
   void flush();
 
  private:
+  bool mCreated{false};
   uint mChannels{0};
   rlbox_sandbox_soundtouch mSandbox;
   tainted_soundtouch<mozilla::AudioDataValue*> mSampleBuffer{nullptr};
