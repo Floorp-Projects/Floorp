@@ -55,6 +55,7 @@
 
 #identity-icon-label {
   padding-inline-start: 4px;
+  margin: 0;
 }
 
 #identity-box[pageproxystate="valid"].notSecureText,

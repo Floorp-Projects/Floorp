@@ -142,12 +142,14 @@
 
 #alertTextLabel {
   padding-inline-end: 8px;
+  margin: 0;
 }
 
 .alertTitle {
   flex: 1;
   font-weight: bold;
   padding: 6px 8px 0;
+  margin: 0;
   width: 255px;
 }
 
@@ -164,6 +166,7 @@
   flex: 1;
   font-size: 83.334%;
   color: GrayText;
+  margin: 0;
 }
 
 #alertSettings {
