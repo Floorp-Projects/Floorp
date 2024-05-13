@@ -10,29 +10,42 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "unic-langid-impl"
-version = "0.9.1"
+version = "0.9.5"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>"]
+build = false
 include = [
     "src/**/*",
     "benches/*.rs",
     "tests/*.rs",
     "Cargo.toml",
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
     "README.md",
 ]
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
 description = "API for managing Unicode Language Identifiers"
 readme = "README.md"
 categories = ["internationalization"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/zbraniecki/unic-locale"
+
+[lib]
+name = "unic_langid_impl"
+path = "src/lib.rs"
 
 [[bin]]
 name = "generate_likelysubtags"
+path = "src/bin/generate_likelysubtags.rs"
 required-features = ["binary"]
 
 [[bin]]
 name = "generate_layout"
+path = "src/bin/generate_layout.rs"
 required-features = ["binary"]
 
 [[test]]
@@ -40,20 +53,36 @@ name = "likelysubtags"
 path = "tests/likelysubtags.rs"
 required-features = ["likelysubtags"]
 
+[[test]]
+name = "canonicalize_test"
+path = "tests/canonicalize_test.rs"
+
+[[test]]
+name = "fixtures"
+path = "tests/fixtures.rs"
+
+[[test]]
+name = "language_identifier_test"
+path = "tests/language_identifier_test.rs"
+
 [[bench]]
 name = "parser"
+path = "benches/parser.rs"
 harness = false
 
 [[bench]]
 name = "langid"
+path = "benches/langid.rs"
 harness = false
 
 [[bench]]
 name = "canonicalize"
+path = "benches/canonicalize.rs"
 harness = false
 
 [[bench]]
 name = "likely_subtags"
+path = "benches/likely_subtags.rs"
 harness = false
 required-features = ["likelysubtags"]
 
