@@ -6,9 +6,9 @@ import shutil
 import sys
 from datetime import datetime, timedelta
 from difflib import unified_diff
+from subprocess import check_call
 from typing import Iterable
 
-import hglib
 from compare_locales.merge import merge_channels
 from compare_locales.paths.configparser import TOMLParser
 from compare_locales.paths.files import ProjectFiles
@@ -17,13 +17,9 @@ from fluent.migrate.validator import Validator
 from fluent.syntax import FluentParser, FluentSerializer
 from mach.util import get_state_dir
 from mozpack.path import join, normpath
-from mozversioncontrol.repoupdate import update_git_repo, update_mercurial_repo
 
 L10N_SOURCE_NAME = "l10n-source"
 L10N_SOURCE_REPO = "https://github.com/mozilla-l10n/firefox-l10n-source.git"
-
-STRINGS_NAME = "gecko-strings"
-STRINGS_REPO = "https://hg.mozilla.org/l10n/gecko-strings"
 
 PULL_AFTER = timedelta(days=2)
 
@@ -33,7 +29,7 @@ def inspect_migration(path):
     return Validator.validate(path)
 
 
-def prepare_directories(cmd, use_git=False):
+def prepare_directories(cmd):
     """
     Ensure object dir exists,
     and that repo dir has a relatively up-to-date clone of l10n-source or gecko-strings.
@@ -44,12 +40,8 @@ def prepare_directories(cmd, use_git=False):
     if not os.path.exists(obj_dir):
         os.makedirs(obj_dir)
 
-    if use_git:
-        repo_dir = join(get_state_dir(), L10N_SOURCE_NAME)
-        marker = join(repo_dir, ".git", "l10n_pull_marker")
-    else:
-        repo_dir = join(get_state_dir(), STRINGS_NAME)
-        marker = join(repo_dir, ".hg", "l10n_pull_marker")
+    repo_dir = join(get_state_dir(), L10N_SOURCE_NAME)
+    marker = join(repo_dir, ".git", "l10n_pull_marker")
 
     try:
         last_pull = datetime.fromtimestamp(os.stat(marker).st_mtime)
@@ -57,10 +49,10 @@ def prepare_directories(cmd, use_git=False):
     except OSError:
         skip_clone = False
     if not skip_clone:
-        if use_git:
-            update_git_repo(L10N_SOURCE_REPO, repo_dir)
+        if os.path.exists(repo_dir):
+            check_call(["git", "pull", L10N_SOURCE_REPO], cwd=repo_dir)
         else:
-            update_mercurial_repo(STRINGS_REPO, repo_dir)
+            check_call(["git", "clone", L10N_SOURCE_REPO, repo_dir])
         with open(marker, "w") as fh:
             fh.flush()
 
@@ -84,7 +76,6 @@ def test_migration(
     cmd,
     obj_dir: str,
     repo_dir: str,
-    use_git: bool,
     to_test: list[str],
     references: Iterable[str],
 ):
@@ -132,7 +123,7 @@ def test_migration(
         if m is None:
             raise ValueError("Bad reference path: " + ref)
         m_c_path = m[1]
-        g_s_path = join(work_dir, L10N_SOURCE_NAME if use_git else STRINGS_NAME, ref)
+        g_s_path = join(work_dir, L10N_SOURCE_NAME, ref)
         resources = [
             b"" if not os.path.exists(f) else open(f, "rb").read()
             for f in (g_s_path, m_c_path)
@@ -142,10 +133,7 @@ def test_migration(
             os.makedirs(ref_dir)
         open(full_ref, "wb").write(merge_channels(ref, resources))
     l10n_root = join(work_dir, "en-US")
-    if use_git:
-        git(work_dir, "clone", repo_dir, l10n_root)
-    else:
-        hglib.clone(source=repo_dir, dest=l10n_root)
+    git(work_dir, "clone", repo_dir, l10n_root)
     client = RepoClient(l10n_root)
     old_tip = client.head()
     run_migration = [
