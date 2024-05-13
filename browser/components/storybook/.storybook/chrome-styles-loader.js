@@ -109,7 +109,7 @@ async function rewriteChromeUris(source) {
 
     // MozTextLabel is a special case for now since we don't use a template.
     if (
-      this.resourcePath.endsWith("/moz-label.mjs") ||
+      path.basename(this.resourcePath) == "moz-label.mjs" ||
       this.resourcePath.endsWith(".js")
     ) {
       rewrittenSource = rewrittenSource.replaceAll(`"${chromeUri}"`, cssImport);
