@@ -9,10 +9,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
 <script>
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 1);
-}
-
+SimpleTest.expectAssertions(0, 1);
 SimpleTest.waitForExplicitFinish();
 async function runTest()
 {
