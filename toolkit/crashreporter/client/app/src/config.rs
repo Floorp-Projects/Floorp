@@ -370,40 +370,16 @@ impl Config {
     // sense that if it were to rely on anything, it would be the `Config` (and that may change in
     // the future).
     pub fn sibling_program_path<N: AsRef<OsStr>>(&self, program: N) -> PathBuf {
-        // Expect shouldn't ever panic here because we need more than one argument to run
-        // the program in the first place (we've already previously iterated args).
-        //
-        // We use argv[0] rather than `std::env::current_exe` because `current_exe` doesn't define
-        // how symlinks are treated, and we want to support running directly from the local build
-        // directory (which uses symlinks on linux and macos).
-        let self_path = PathBuf::from(std::env::args_os().next().expect("failed to get argv[0]"));
+        let self_path = self_path();
         let exe_extension = self_path.extension().unwrap_or_default();
-
-        let mut program_path = self_path.clone();
-        // Pop the executable off to get the parent directory.
-        program_path.pop();
-        program_path.push(program.as_ref());
-        program_path.set_extension(exe_extension);
-
-        if !program_path.exists() && cfg!(all(not(mock), target_os = "macos")) {
-            // On macOS the crash reporter client is shipped as an application bundle contained
-            // within Firefox's main application bundle. So when it's invoked its current working
-            // directory looks like:
-            // Firefox.app/Contents/MacOS/crashreporter.app/Contents/MacOS/
-            // The other applications we ship with Firefox are stored in the main bundle
-            // (Firefox.app/Contents/MacOS/) so we we need to go back three directories
-            // to reach them.
-
-            // 4 pops: 1 for the path that was just pushed, and 3 more for
-            // `crashreporter.app/Contents/MacOS`.
-            for _ in 0..4 {
-                program_path.pop();
-            }
-            program_path.push(program.as_ref());
-            program_path.set_extension(exe_extension);
+        if !exe_extension.is_empty() {
+            let mut p = program.as_ref().to_os_string();
+            p.push(".");
+            p.push(exe_extension);
+            sibling_path(p)
+        } else {
+            sibling_path(program)
         }
-
-        program_path
     }
 
     cfg_if::cfg_if! {
@@ -506,6 +482,52 @@ impl Config {
             }
         }
     }
+}
+
+/// Get the path of a file that is a sibling of the crashreporter.
+///
+/// On MacOS, this assumes that the crashreporter is its own application bundle within the main
+/// program bundle. On other platforms this assumes siblings reside in the same directory as
+/// the crashreporter.
+///
+/// The returned path isn't guaranteed to exist.
+pub fn sibling_path<N: AsRef<OsStr>>(file: N) -> PathBuf {
+    // Expect shouldn't ever panic here because we need more than one argument to run
+    // the program in the first place (we've already previously iterated args).
+    //
+    // We use argv[0] rather than `std::env::current_exe` because `current_exe` doesn't define
+    // how symlinks are treated, and we want to support running directly from the local build
+    // directory (which uses symlinks on linux and macos).
+    let dir_path = {
+        let mut path = self_path();
+        // Pop the executable off to get the parent directory.
+        path.pop();
+        path
+    };
+
+    let mut path = dir_path.join(file.as_ref());
+
+    if !path.exists() && cfg!(all(not(mock), target_os = "macos")) {
+        // On macOS the crash reporter client is shipped as an application bundle contained
+        // within Firefox's main application bundle. So when it's invoked its current working
+        // directory looks like:
+        // Firefox.app/Contents/MacOS/crashreporter.app/Contents/MacOS/
+        // The other applications we ship with Firefox are stored in the main bundle
+        // (Firefox.app/Contents/MacOS/) so we we need to go back three directories
+        // to reach them.
+        path = dir_path;
+        // 3 pops for `crashreporter.app/Contents/MacOS`.
+        for _ in 0..3 {
+            path.pop();
+        }
+        path.push(file.as_ref());
+    }
+
+    path
+}
+
+fn self_path() -> PathBuf {
+    PathBuf::from(std::env::args_os().next().expect("failed to get argv[0]"))
 }
 
 fn env_bool<K: AsRef<OsStr>>(name: K) -> bool {
