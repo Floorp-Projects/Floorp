@@ -33,16 +33,15 @@ function checkFormFields(browsingContext, prefix, username, password) {
   );
 }
 
-function listenForNotifications(count, expectedFormOrigin) {
+function listenForNotifications(count, expectedFormOrigins = []) {
   return new Promise(resolve => {
     let notifications = [];
     LoginManagerParent.setListenerForTests((msg, data) => {
       if (msg == "FormProcessed") {
         notifications.push("FormProcessed: " + data.browsingContext.id);
       } else if (msg == "ShowDoorhanger") {
-        Assert.equal(
-          data.origin,
-          expectedFormOrigin,
+        Assert.ok(
+          expectedFormOrigins.includes(data.origin),
           "Message origin should match expected"
         );
         notifications.push("FormSubmit: " + data.data.usernameField.name);
@@ -95,13 +94,14 @@ async function autocompleteLoginInIFrame(
 
 /*
  * In this test, a frame is loaded with a document that contains a username
- * and password field. This frame also contains another child iframe that
- * itself contains a username and password field. This inner frame is loaded
- * from a different domain than the first.
+ * and password field. This frame also contains another cross-origin child iframe that
+ * itself contains a username and password field.
  *
- * locationMode should be false to submit forms, or true to click a button
- * which changes the location instead. The latter should still save the
- * username and password.
+ * locationMode = false - form is submitted by form submit event
+ * locationMode = true  - form is submitted by changing the location
+ *                        Note: When the location is changed, the page is navigated and let's
+ *                              its parent know of the page navigation. The parent notifies all
+ *                              (same and cross-origin) child frames to submit their existing login forms
  */
 async function submitSomeCrossSiteFrames(locationMode) {
   info("Check with location mode " + locationMode);
@@ -122,8 +122,9 @@ async function submitSomeCrossSiteFrames(locationMode) {
 
   // Fill in the username and password for both the outer and inner frame
   // and submit the inner frame.
-  notifyPromise = listenForNotifications(1, "https://test2.example.org");
-  info("submit page after changing inner form");
+  notifyPromise = listenForNotifications(1, ["https://test2.example.org"]);
+
+  info("Submit inner page after changing outer and inner form");
 
   await SpecialPowers.spawn(outerFrameBC, [], () => {
     let doc = content.document;
@@ -142,9 +143,9 @@ async function submitSomeCrossSiteFrames(locationMode) {
     }
   });
 
-  await acceptPasswordSave();
-
   await verifyNotifications(notifyPromise, ["FormSubmit: username"]);
+
+  await acceptPasswordSave();
 
   // Next, open a second tab with the same page in it to verify that the data gets filled properly.
   notifyPromise = listenForNotifications(2);
@@ -173,8 +174,14 @@ async function submitSomeCrossSiteFrames(locationMode) {
   await checkFormFields(innerFrameBC2, "inner", "inner", "innerpass");
 
   // Next, change the username and password fields in the outer frame and submit.
-  notifyPromise = listenForNotifications(1, "https://test1.example.com");
-  info("submit page after changing outer form");
+  notifyPromise = listenForNotifications(2, [
+    "https://test1.example.com", // outer origin
+    "https://test2.example.org", // inner origin, unchaned values
+  ]);
+
+  info(
+    "Submit outer page after changing outer form and autocompleting inner form"
+  );
 
   await SpecialPowers.spawn(outerFrameBC2, [locationMode], doClick => {
     let doc = content.document;
@@ -185,12 +192,16 @@ async function submitSomeCrossSiteFrames(locationMode) {
     } else {
       doc.getElementById("outer-form").submit();
     }
-
-    doc.getElementById("outer-form").submit();
   });
 
+  // Only the outer values are goign to be captured,
+  // because the outer values were changed and the inner values remain unchanged
+  await verifyNotifications(notifyPromise, [
+    "FormSubmit: outer-username",
+    "FormSubmit: username",
+  ]);
+
   await acceptPasswordSave();
-  await verifyNotifications(notifyPromise, ["FormSubmit: outer-username"]);
 
   // Finally, open a third tab with the same page in it to verify that the data gets filled properly.
   notifyPromise = listenForNotifications(2);
