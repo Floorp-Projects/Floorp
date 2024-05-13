@@ -1207,8 +1207,8 @@ bool uiaRawElmProvider::IsControl() {
     }
   }
 
-  // Don't treat generic or text containers as controls unless they have a name
-  // or description.
+  // Don't treat generic or text containers as controls except in specific
+  // cases.
   switch (acc->Role()) {
     case roles::EMPHASIS:
     case roles::MARK:
@@ -1219,12 +1219,21 @@ bool uiaRawElmProvider::IsControl() {
     case roles::SUPERSCRIPT:
     case roles::TEXT:
     case roles::TEXT_CONTAINER: {
+      // If there is a name or a description, treat it as a control.
       if (!acc->NameIsEmpty()) {
         return true;
       }
       nsAutoString text;
       acc->Description(text);
       if (!text.IsEmpty()) {
+        return true;
+      }
+      // If this is the root of a live region, treat it as a control, since
+      // Narrator won't correctly traverse the live region's content when
+      // handling changes otherwise.
+      nsAutoString live;
+      nsAccUtils::GetLiveRegionSetting(acc, live);
+      if (!live.IsEmpty()) {
         return true;
       }
       return false;

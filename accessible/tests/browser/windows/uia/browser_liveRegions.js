@@ -118,3 +118,37 @@ addUiaTask(
   // The IA2 -> UIA proxy doesn't support atomic.
   { uiaEnabled: true, uiaDisabled: false }
 );
+
+/**
+ * Test that a live region is exposed as a control element.
+ */
+addUiaTask(
+  `
+<div id="live" aria-live="polite">
+  <div id="inner">live</div>
+</div>
+<div id="notLive">notLive</div>
+  `,
+  async function testIsControl() {
+    await definePyVar("doc", `getDocUia()`);
+    ok(
+      await runPython(`findUiaByDomId(doc, "live").CurrentIsControlElement`),
+      "live is a control element"
+    );
+    // The IA2 -> UIA proxy gets this wrong.
+    if (gIsUiaEnabled) {
+      ok(
+        !(await runPython(
+          `findUiaByDomId(doc, "inner").CurrentIsControlElement`
+        )),
+        "inner is not a control element"
+      );
+    }
+    ok(
+      !(await runPython(
+        `findUiaByDomId(doc, "notLive").CurrentIsControlElement`
+      )),
+      "notLive is not a control element"
+    );
+  }
+);
