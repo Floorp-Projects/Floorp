@@ -489,40 +489,29 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
 
     // ARIA Properties
     case UIA_AriaPropertiesPropertyId: {
-      if (!localAcc) {
-        // XXX Implement a unified version of this. We don't cache explicit
-        // values for many ARIA attributes in RemoteAccessible; e.g. we use the
-        // checked state rather than caching aria-checked:true. Thus, a unified
-        // implementation will need to work with State(), etc.
-        break;
-      }
       nsAutoString ariaProperties;
-
-      aria::AttrIterator attribIter(localAcc->GetContent());
-      while (attribIter.Next()) {
-        nsAutoString attribName, attribValue;
-        nsAutoString value;
-        attribIter.AttrName()->ToString(attribName);
-        attribIter.AttrValue(attribValue);
-        if (StringBeginsWith(attribName, u"aria-"_ns)) {
-          // Found 'aria-'
-          attribName.ReplaceLiteral(0, 5, u"");
+      // We only expose the properties we need to expose here.
+      nsAutoString live;
+      nsAccUtils::GetLiveRegionSetting(acc, live);
+      if (!live.IsEmpty()) {
+        // This is a live region root. The live setting is already exposed via
+        // the LiveSetting property. However, there is no UIA property for
+        // atomic.
+        Maybe<bool> atomic;
+        acc->LiveRegionAttributes(nullptr, nullptr, &atomic, nullptr);
+        if (atomic && *atomic) {
+          ariaProperties.AppendLiteral("atomic=true");
+        } else {
+          // Narrator assumes a default of true, so we need to output the
+          // correct default (false) even if the attribute isn't specified.
+          ariaProperties.AppendLiteral("atomic=false");
         }
-
-        ariaProperties.Append(attribName);
-        ariaProperties.Append('=');
-        ariaProperties.Append(attribValue);
-        ariaProperties.Append(';');
       }
-
       if (!ariaProperties.IsEmpty()) {
-        // remove last delimiter:
-        ariaProperties.Truncate(ariaProperties.Length() - 1);
         aPropertyValue->vt = VT_BSTR;
         aPropertyValue->bstrVal = ::SysAllocString(ariaProperties.get());
         return S_OK;
       }
-
       break;
     }
 

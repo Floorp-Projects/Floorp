@@ -69,3 +69,52 @@ addUiaTask(
     );
   }
 );
+
+/**
+ * Test exposure of aria-atomic via the AriaProperties property.
+ */
+addUiaTask(
+  `
+<div id="implicit" aria-live="polite">live</div>
+<div id="false" aria-live="polite" aria-atomic="false">false</div>
+<div id="true" aria-live="polite" aria-atomic="true">true</div>
+<div id="none">none</div>
+  `,
+  async function testAtomic() {
+    await definePyVar("doc", `getDocUia()`);
+    let result = await runPython(
+      `findUiaByDomId(doc, "implicit").CurrentAriaProperties`
+    );
+    isnot(
+      result.indexOf("atomic=false"),
+      -1,
+      "AriaProperties for implicit contains atomic=false"
+    );
+    result = await runPython(
+      `findUiaByDomId(doc, "false").CurrentAriaProperties`
+    );
+    isnot(
+      result.indexOf("atomic=false"),
+      -1,
+      "AriaProperties for false contains atomic=false"
+    );
+    result = await runPython(
+      `findUiaByDomId(doc, "true").CurrentAriaProperties`
+    );
+    isnot(
+      result.indexOf("atomic=true"),
+      -1,
+      "AriaProperties for true contains atomic=true"
+    );
+    result = await runPython(
+      `findUiaByDomId(doc, "none").CurrentAriaProperties`
+    );
+    is(
+      result.indexOf("atomic"),
+      -1,
+      "AriaProperties for none doesn't contain atomic"
+    );
+  },
+  // The IA2 -> UIA proxy doesn't support atomic.
+  { uiaEnabled: true, uiaDisabled: false }
+);
