@@ -295,16 +295,28 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
         }
         return TSFTextStore::OnMouseButtonEvent(aIMENotification);
       case REQUEST_TO_COMMIT_COMPOSITION:
-        if (TSFTextStore::IsComposingOn(aWindow)) {
+        // In the TSF world, a DLL might manage hidden composition and that
+        // might cause a crash if we don't terminate it and disassociate the
+        // context.  Therefore, we should always try to commit composition.
+        if (IsTSFAvailable()) {
           TSFTextStore::CommitComposition(false);
-        } else if (IsIMMActive()) {
+        }
+        // Even if we're in the TSF mode, the active IME may be IMM.  Therefore,
+        // we need to use IMM handler too.
+        if (IsIMMActive()) {
           IMMHandler::CommitComposition(aWindow);
         }
         return NS_OK;
       case REQUEST_TO_CANCEL_COMPOSITION:
-        if (TSFTextStore::IsComposingOn(aWindow)) {
+        // In the TSF world, a DLL might manage hidden composition and that
+        // might cause a crash if we don't terminate it and disassociate the
+        // context.  Therefore, we should always try to commit composition.
+        if (IsTSFAvailable()) {
           TSFTextStore::CommitComposition(true);
-        } else if (IsIMMActive()) {
+        }
+        // Even if we're in the TSF mode, the active IME may be IMM.  Therefore,
+        // we need to use IMM handler too.
+        if (IsIMMActive()) {
           IMMHandler::CancelComposition(aWindow);
         }
         return NS_OK;
