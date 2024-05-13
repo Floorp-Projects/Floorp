@@ -163,6 +163,10 @@ private class AutoSavePeriodically(
 ) : DefaultLifecycleObserver {
     private var scheduledFuture: ScheduledFuture<*>? = null
 
+    // Use of scheduleAtFixedRate is discouraged in favor of scheduleWithFixedDelay.
+    // Our usage is safe, however, because we cancel the scheduled task when the app
+    // is going to the background (see onStop below).
+    @Suppress("DiscouragedApi")
     override fun onStart(owner: LifecycleOwner) {
         scheduledFuture = scheduler.scheduleAtFixedRate(
             {
