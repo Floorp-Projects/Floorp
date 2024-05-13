@@ -387,9 +387,7 @@ addUiaTask(
     await assignPyVarToUiaWithId("progress");
     await definePyVar("pattern", `getUiaPattern(progress, "Value")`);
     ok(await runPython(`bool(pattern)`), "progress has Value pattern");
-    // Gecko a11y doesn't treat progress bars as read only, but it probably
-    // should.
-    todo(
+    ok(
       await runPython(`pattern.CurrentIsReadOnly`),
       "progress has IsReadOnly true"
     );
@@ -509,9 +507,7 @@ addUiaTask(
 
     await testRangeValueProps("rangeBig", false, 500, 0, 1000, 1, 100);
 
-    // Gecko a11y doesn't expose progress bars as read only, but it probably
-    // should.
-    await testRangeValueProps("progress", false, 0.5, 0, 1, 0, 0.1);
+    await testRangeValueProps("progress", true, 0.5, 0, 1, 0, 0.1);
     info("Calling SetValue on progress");
     await testPythonRaises(
       `pattern.SetValue(0.6)`,
