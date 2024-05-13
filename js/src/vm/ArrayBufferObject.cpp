@@ -843,6 +843,8 @@ static ArrayBufferContents AllocateUninitializedArrayBufferContents(
     p = static_cast<uint8_t*>(cx->runtime()->onOutOfMemoryCanGC(
         js::AllocFunction::Malloc, js::ArrayBufferContentsArena, nbytes));
     if (!p) {
+      MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode,
+                            "OOM in AllocateUninitializedArrayBufferContents");
       ReportOutOfMemory(cx);
     }
   }
@@ -1753,6 +1755,7 @@ static ArrayBufferType* NewArrayBufferObject(JSContext* cx, HandleObject proto_,
   if (!proto) {
     proto = GlobalObject::getOrCreatePrototype(cx, JSProto_ArrayBuffer);
     if (!proto) {
+      MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode, "creating ArrayBuffer proto");
       return nullptr;
     }
   }
@@ -1770,6 +1773,7 @@ static ArrayBufferType* NewArrayBufferObject(JSContext* cx, HandleObject proto_,
       SharedShape::getInitialShape(cx, clasp, cx->realm(), AsTaggedProto(proto),
                                    nfixed, ObjectFlags()));
   if (!shape) {
+    MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode, "get ArrayBuffer initial shape");
     return nullptr;
   }
 
@@ -1778,7 +1782,12 @@ static ArrayBufferType* NewArrayBufferObject(JSContext* cx, HandleObject proto_,
   MOZ_ASSERT(!CanNurseryAllocateFinalizedClass(clasp));
   constexpr gc::Heap heap = gc::Heap::Tenured;
 
-  return NativeObject::create<ArrayBufferType>(cx, allocKind, heap, shape);
+  auto* buffer =
+      NativeObject::create<ArrayBufferType>(cx, allocKind, heap, shape);
+  if (!buffer) {
+    MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode, "create NativeObject failed");
+  }
+  return buffer;
 }
 
 // Creates a new ArrayBufferObject with %ArrayBuffer.prototype% as proto and no
@@ -1889,6 +1898,15 @@ ArrayBufferObject::createUninitializedBufferAndData(
                ? AllocateUninitializedArrayBufferContents(cx, nbytes)
                : AllocateArrayBufferContents(cx, nbytes);
     if (!data) {
+      if (cx->brittleMode) {
+        if (nbytes < INT32_MAX) {
+          MOZ_DIAGNOSTIC_ASSERT(false, "ArrayBuffer allocation OOM < 2GB - 1");
+        } else {
+          MOZ_DIAGNOSTIC_ASSERT(
+              false,
+              "ArrayBuffer allocation OOM between 2GB and ByteLengthLimit");
+        }
+      }
       return {nullptr, nullptr};
     }
   }
@@ -2247,6 +2265,7 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
     JSContext* cx, size_t nbytes, HandleObject proto /* = nullptr */) {
   // 24.1.1.1, step 3 (Inlined 6.2.6.1 CreateByteDataBlock, step 2).
   if (!CheckArrayBufferTooLarge(cx, nbytes)) {
+    MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode, "buffer too large");
     return nullptr;
   }
 
@@ -2469,6 +2488,7 @@ bool ArrayBufferObject::ensureNonInline(JSContext* cx,
   if (buffer->isLengthPinned()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_ARRAYBUFFER_LENGTH_PINNED);
+    MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode, "ArrayBuffer length pinned");
     return false;
   }
 
