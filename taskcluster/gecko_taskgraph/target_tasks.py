@@ -1632,18 +1632,19 @@ def target_tasks_nightly_android(full_task_graph, parameters, graph_config):
             "focus-nightly-firebase",
         )
 
-    index_path = (
-        f"{graph_config['trust-domain']}.v2.{parameters['project']}.revision."
-        f"{parameters['head_rev']}.taskgraph.decision-nightly-android"
-    )
-    if os.environ.get("MOZ_AUTOMATION") and retry(
-        index_exists,
-        args=(index_path,),
-        kwargs={
-            "reason": "to avoid triggering multiple nightlies off the same revision",
-        },
-    ):
-        return []
+    for platform in ("android", "all"):
+        index_path = (
+            f"{graph_config['trust-domain']}.v2.{parameters['project']}.revision."
+            f"{parameters['head_rev']}.taskgraph.decision-nightly-{platform}"
+        )
+        if os.environ.get("MOZ_AUTOMATION") and retry(
+            index_exists,
+            args=(index_path,),
+            kwargs={
+                "reason": "to avoid triggering multiple nightlies off the same revision",
+            },
+        ):
+            return []
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
