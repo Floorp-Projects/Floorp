@@ -2433,8 +2433,8 @@ var gBrowserInit = {
       let needSsbOpenWindow = Services.prefs.prefHasUserValue(SsbPrefName);
       if (needSsbOpenWindow) {
         let id = Services.prefs.getStringPref(SsbPrefName);
-        var { SiteSpecificBrowserIdUtils } = ChromeUtils.import(
-          "chrome://browser/content/modules/ssb/SiteSpecificBrowserIdUtils.mjs"
+        var { SiteSpecificBrowserIdUtils } = ChromeUtils.importESModule(
+          "chrome://floorp/content/modules/ssb/SiteSpecificBrowserIdUtils.mjs"
         );
 
         try {
