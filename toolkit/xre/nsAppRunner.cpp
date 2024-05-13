@@ -267,6 +267,9 @@
 #ifdef MOZ_WIDGET_GTK
 #  include "nsAppShell.h"
 #endif
+#ifdef MOZ_ENABLE_DBUS
+#  include "DBusService.h"
+#endif
 
 extern uint32_t gRestartMode;
 extern void InstallSignalHandlers(const char* ProgramName);
@@ -2132,6 +2135,10 @@ static void DumpHelp() {
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
   printf("  --headless         Run without a GUI.\n");
+#endif
+
+#if defined(MOZ_ENABLE_DBUS)
+  printf("  --dbus-service     Run as DBus service.\n");
 #endif
 
   // this works, but only after the components have registered.  so if you drop
@@ -4371,6 +4378,17 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
     *aExitFlag = true;
     return 0;
   }
+
+#ifdef MOZ_ENABLE_DBUS
+  if (CheckArg("dbus-service")) {
+    UniquePtr<DBusService> dbusService = MakeUnique<DBusService>(gArgv[0]);
+    if (dbusService->Init()) {
+      dbusService->Run();
+    }
+    *aExitFlag = true;
+    return 1;
+  }
+#endif
 
   rv = XRE_InitCommandLine(gArgc, gArgv);
   NS_ENSURE_SUCCESS(rv, 1);
