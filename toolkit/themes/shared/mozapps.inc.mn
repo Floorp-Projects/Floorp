@@ -7,6 +7,7 @@
 # be specified once. As a result, the source file paths are relative
 # to the location of the actual manifest.
 
+  skin/classic/mozapps/downloads/unknownContentType.css      (../../shared/downloads/unknownContentType.css)
   skin/classic/mozapps/extensions/dictionaryGeneric.svg      (../../shared/extensions/category-dictionaries.svg)
   skin/classic/mozapps/extensions/extensionGeneric.svg       (../../shared/extensions/extensionGeneric.svg)
   skin/classic/mozapps/extensions/themeGeneric.svg           (../../shared/extensions/category-themes.svg)
@@ -19,9 +20,7 @@
   skin/classic/mozapps/extensions/extension.svg              (../../shared/extensions/extension.svg)
   skin/classic/mozapps/extensions/recommended.svg            (../../shared/extensions/recommended.svg)
   skin/classic/mozapps/extensions/line.svg                   (../../shared/extensions/line.svg)
-#ifndef ANDROID
   skin/classic/mozapps/aboutProfiles.css                     (../../shared/aboutProfiles.css)
-#endif
   skin/classic/mozapps/aboutServiceWorkers.css               (../../shared/aboutServiceWorkers.css)
   skin/classic/mozapps/profileDowngrade.css                  (../../shared/profileDowngrade.css)
   skin/classic/mozapps/profileSelection.css                  (../../shared/profileSelection.css)
