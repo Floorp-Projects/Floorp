@@ -946,15 +946,6 @@ impl ContainerRelativeLength {
     }
 }
 
-#[cfg(feature = "gecko")]
-fn are_container_queries_enabled() -> bool {
-    static_prefs::pref!("layout.css.container-queries.enabled")
-}
-#[cfg(feature = "servo")]
-fn are_container_queries_enabled() -> bool {
-    false
-}
-
 /// A `<length>` without taking `calc` expressions into account
 ///
 /// <https://drafts.csswg.org/css-values/#lengths>
@@ -1138,22 +1129,22 @@ impl NoCalcLength {
             },
             // Container query lengths. Inherit the limitation from viewport units since
             // we may fall back to them.
-            "cqw" if !context.in_page_rule() && are_container_queries_enabled() => {
+            "cqw" if !context.in_page_rule() && cfg!(feature = "gecko") => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqw(value))
             },
-            "cqh" if !context.in_page_rule() && are_container_queries_enabled() => {
+            "cqh" if !context.in_page_rule() && cfg!(feature = "gecko") => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqh(value))
             },
-            "cqi" if !context.in_page_rule() && are_container_queries_enabled() => {
+            "cqi" if !context.in_page_rule() && cfg!(feature = "gecko") => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqi(value))
             },
-            "cqb" if !context.in_page_rule() && are_container_queries_enabled() => {
+            "cqb" if !context.in_page_rule() && cfg!(feature = "gecko") => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqb(value))
             },
-            "cqmin" if !context.in_page_rule() && are_container_queries_enabled() => {
+            "cqmin" if !context.in_page_rule() && cfg!(feature = "gecko") => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqmin(value))
             },
-            "cqmax" if !context.in_page_rule() && are_container_queries_enabled() => {
+            "cqmax" if !context.in_page_rule() && cfg!(feature = "gecko") => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqmax(value))
             },
             _ => return Err(()),

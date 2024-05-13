@@ -4,7 +4,6 @@ prefs = [
   "dom.animations-api.timelines.enabled=true",
   "gfx.omta.background-color=true",
   "gfx.font_loader.delay=0",
-  "layout.css.container-queries.enabled=true",
   "layout.css.individual-transform.enabled=true",
   "layout.css.motion-path-url.enabled=true",
   "layout.css.backdrop-filter.enabled=true",
