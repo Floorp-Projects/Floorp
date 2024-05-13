@@ -174,7 +174,7 @@ static bool GCZeal(JSContext* cx, unsigned argc, JS::Value* vp) {
   uint32_t zeal;
   if (!ToUint32(cx, args.get(0), &zeal)) return false;
 
-  JS_SetGCZeal(cx, uint8_t(zeal), JS_DEFAULT_ZEAL_FREQ);
+  JS::SetGCZeal(cx, uint8_t(zeal), JS::ShellDefaultGCZealFrequency);
   return true;
 }
 #endif

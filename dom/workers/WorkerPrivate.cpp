@@ -5693,7 +5693,7 @@ void WorkerPrivate::UpdateGCZealInternal(JSContext* aCx, uint8_t aGCZeal,
                                          uint32_t aFrequency) {
   auto data = mWorkerThreadAccessible.Access();
 
-  JS_SetGCZeal(aCx, aGCZeal, aFrequency);
+  JS::SetGCZeal(aCx, aGCZeal, aFrequency);
 
   for (uint32_t index = 0; index < data->mChildWorkers.Length(); index++) {
     data->mChildWorkers[index]->UpdateGCZeal(aGCZeal, aFrequency);

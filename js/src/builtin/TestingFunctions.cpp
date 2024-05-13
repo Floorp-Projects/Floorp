@@ -2554,14 +2554,14 @@ static bool GCZeal(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  uint32_t frequency = JS_DEFAULT_ZEAL_FREQ;
+  uint32_t frequency = JS::ShellDefaultGCZealFrequency;
   if (args.length() >= 2) {
     if (!ToUint32(cx, args.get(1), &frequency)) {
       return false;
     }
   }
 
-  JS_SetGCZeal(cx, zeal, frequency);
+  JS::SetGCZeal(cx, zeal, frequency);
   args.rval().setUndefined();
   return true;
 }
@@ -2580,7 +2580,7 @@ static bool UnsetGCZeal(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JS_UnsetGCZeal(cx, zeal);
+  JS::UnsetGCZeal(cx, zeal);
   args.rval().setUndefined();
   return true;
 }
@@ -2598,7 +2598,7 @@ static bool ScheduleGC(JSContext* cx, unsigned argc, Value* vp) {
     /* Fetch next zeal trigger only. */
   } else if (args[0].isNumber()) {
     /* Schedule a GC to happen after |arg| allocations. */
-    JS_ScheduleGC(cx, std::max(int(args[0].toNumber()), 0));
+    JS::ScheduleGC(cx, std::max(int(args[0].toNumber()), 0));
   } else {
     RootedObject callee(cx, &args.callee());
     ReportUsageErrorASCII(cx, callee, "Bad argument - expecting number");
@@ -2608,7 +2608,7 @@ static bool ScheduleGC(JSContext* cx, unsigned argc, Value* vp) {
   uint32_t zealBits;
   uint32_t freq;
   uint32_t next;
-  JS_GetGCZealBits(cx, &zealBits, &freq, &next);
+  JS::GetGCZealBits(cx, &zealBits, &freq, &next);
   args.rval().setInt32(next);
   return true;
 }
@@ -4098,7 +4098,7 @@ bool IterativeFailureTest::setup() {
   MOZ_ASSERT(!cx->isExceptionPending());
 
 #  ifdef JS_GC_ZEAL
-  JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
+  JS::SetGCZeal(cx, 0, JS::ShellDefaultGCZealFrequency);
 #  endif
 
   // Delazify the function here if necessary so we don't end up testing that.

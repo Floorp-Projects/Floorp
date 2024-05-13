@@ -231,7 +231,7 @@ BEGIN_TEST(testIncrementalWeakCacheSweeping) {
   AutoLeaveZeal nozeal(cx);
 
   JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
-  JS_SetGCZeal(cx, 17, 1000000);
+  JS::SetGCZeal(cx, 17, 1000000);
 
   CHECK(TestSet());
   CHECK(TestMap());
@@ -239,7 +239,7 @@ BEGIN_TEST(testIncrementalWeakCacheSweeping) {
   CHECK(TestReplaceDyingInMap());
   CHECK(TestUniqueIDLookups());
 
-  JS_SetGCZeal(cx, 0, 0);
+  JS::SetGCZeal(cx, 0, 0);
   JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, false);
 
   return true;

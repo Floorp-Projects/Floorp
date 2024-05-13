@@ -371,7 +371,7 @@ void WorkletThread::EnsureCycleCollectedJSContext(
   // FIXME: JS_SetSecurityCallbacks
   // FIXME: JS::SetAsyncTaskCallbacks
   // FIXME: JS::SetCTypesActivityCallback
-  // FIXME: JS_SetGCZeal
+  // FIXME: JS::SetGCZeal
 
   // A thread lives strictly longer than its JSRuntime so we can safely
   // store a raw pointer as the callback's closure argument on the JSRuntime.

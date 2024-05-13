@@ -108,7 +108,7 @@ BEGIN_TEST(testTracingIncomingCCWs) {
 #ifdef JS_GC_ZEAL
   // Disable zeal modes because this test needs to control exactly when the GC
   // happens.
-  JS_SetGCZeal(cx, 0, 100);
+  JS::SetGCZeal(cx, 0, 100);
 #endif
   JS_GC(cx);
 
@@ -152,7 +152,7 @@ BEGIN_TEST(testDeadNurseryCCW) {
 #ifdef JS_GC_ZEAL
   // Disable zeal modes because this test needs to control exactly when the GC
   // happens.
-  JS_SetGCZeal(cx, 0, 100);
+  JS::SetGCZeal(cx, 0, 100);
 #endif
   JS_GC(cx);
 
@@ -184,7 +184,7 @@ BEGIN_TEST(testLiveNurseryCCW) {
 #ifdef JS_GC_ZEAL
   // Disable zeal modes because this test needs to control exactly when the GC
   // happens.
-  JS_SetGCZeal(cx, 0, 100);
+  JS::SetGCZeal(cx, 0, 100);
 #endif
   JS_GC(cx);
 
@@ -216,7 +216,7 @@ BEGIN_TEST(testLiveNurseryWrapperCCW) {
 #ifdef JS_GC_ZEAL
   // Disable zeal modes because this test needs to control exactly when the GC
   // happens.
-  JS_SetGCZeal(cx, 0, 100);
+  JS::SetGCZeal(cx, 0, 100);
 #endif
   JS_GC(cx);
 
@@ -253,7 +253,7 @@ BEGIN_TEST(testLiveNurseryWrappeeCCW) {
 #ifdef JS_GC_ZEAL
   // Disable zeal modes because this test needs to control exactly when the GC
   // happens.
-  JS_SetGCZeal(cx, 0, 100);
+  JS::SetGCZeal(cx, 0, 100);
 #endif
   JS_GC(cx);
 
@@ -290,7 +290,7 @@ BEGIN_TEST(testIncrementalRoots) {
 #ifdef JS_GC_ZEAL
   // Disable zeal modes because this test needs to control exactly when the GC
   // happens.
-  JS_SetGCZeal(cx, 0, 100);
+  JS::SetGCZeal(cx, 0, 100);
 #endif
 
   // Construct a big object graph to mark. In JS, the resulting object graph

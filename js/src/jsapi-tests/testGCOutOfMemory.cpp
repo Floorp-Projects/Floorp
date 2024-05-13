@@ -71,7 +71,7 @@ virtual JSContext* createContext() override {
   }
   JS_SetGCParameter(cx, JSGC_MAX_NURSERY_BYTES, js::gc::ChunkSize);
 #ifdef JS_GC_ZEAL
-  JS_UnsetGCZeal(cx, uint8_t(js::gc::ZealMode::GenerationalGC));
+  JS::UnsetGCZeal(cx, uint8_t(js::gc::ZealMode::GenerationalGC));
 #endif
   return cx;
 }
