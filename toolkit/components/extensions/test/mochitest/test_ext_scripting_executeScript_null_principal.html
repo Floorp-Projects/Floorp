@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests scripting.executeScript() on null principal</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+
+"use strict";
+
+add_task(async function test_executeScript_with_sandboxed_iframes() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["scripting"],
+      host_permissions: [ "https://example.com/*" ],
+      granted_host_permissions: true,
+      browser_specific_settings: { gecko: { id: "@executeScript-in-sandbox" } },
+    },
+    useAddonManager: "temporary",
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const target = { tabId: tabs[0].id, allFrames: true };
+
+      await browser.scripting.insertCSS({
+        target,
+        css: "body { color: rgb(123, 45, 67); }",
+      });
+      // Add and remove CSS to verify that removeCSS works.
+      await browser.scripting.insertCSS({
+        target,
+        css: "body { color: rgb(98, 76, 54); }",
+      });
+      await browser.scripting.removeCSS({
+        target,
+        css: "body { color: rgb(98, 76, 54); }",
+      });
+      // Now we should only have the initial code from insertCSS.
+
+      let results = await browser.scripting.executeScript({
+        target,
+        func: () => {
+          let frameDepth = 0;
+          for (let w = window; w !== top; w = w.parent) {
+            frameDepth++;
+          }
+          browser.test.assertEq(
+            "rgb(123, 45, 67)",
+            getComputedStyle(document.body).color,
+            "insertCSS should have succeeded in frame " + frameDepth
+          );
+          return { frameDepth, origin, url: document.URL };
+        },
+      });
+      results.sort((a, b) =>  a.result?.frameDepth - b.result?.frameDepth);
+      results = results.map((r, i) => {
+        browser.test.assertDeepEq(undefined, r.error, `No error at ${i}`);
+        return r.result;
+      });
+
+      browser.test.assertDeepEq(
+        [
+          {
+            frameDepth: 0,
+            origin: "https://example.com",
+            url: "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_with_iframe_sandbox.html",
+          },
+          {
+            frameDepth: 1,
+            origin: "null",
+            url: "about:srcdoc",
+          },
+          {
+            frameDepth: 2,
+            origin: "null",
+            url: "data:text/html,<iframe sandbox></iframe>",
+          },
+          {
+            frameDepth: 3,
+            origin: "null",
+            url: "about:blank",
+          },
+        ],
+        results,
+        "expected origins and URLs in frames"
+      );
+
+      browser.test.notifyPass("execute-script");
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_with_iframe_sandbox.html",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+async function test_activeTab_executeScript_sandboxed_frames(manifest_version) {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version,
+      [manifest_version === 2 ? "browser_action": "action"]: {},
+      permissions: ["scripting", "activeTab"],
+      browser_specific_settings: { gecko: { id: "@executeScript-activeTab" } },
+    },
+    useAddonManager: "temporary",
+    background() {
+      browser.action ??= browser.browserAction; // Polyfill for MV2.
+      browser.action.onClicked.addListener(async tab => {
+        let results = await browser.scripting.executeScript({
+          target: { tabId: tab.id, allFrames: true },
+          func: () => {
+            let frameDepth = 0;
+            for (let w = window; w !== top; w = w.parent) {
+              frameDepth++;
+            }
+            return { frameDepth, origin, url: document.URL };
+          },
+        });
+        results.sort((a, b) =>  a.result?.frameDepth - b.result?.frameDepth);
+        results = results.map((r, i) => {
+          browser.test.assertDeepEq(undefined, r.error, `No error at ${i}`);
+          return r.result;
+        });
+
+        const expectedResults = [
+          {
+            frameDepth: 0,
+            origin: "https://example.com",
+            url: "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_with_iframe_sandbox.html",
+          },
+          {
+            frameDepth: 1,
+            origin: "null",
+            url: "about:srcdoc",
+          },
+          {
+            frameDepth: 2,
+            origin: "null",
+            url: "data:text/html,<iframe sandbox></iframe>",
+          },
+          {
+            frameDepth: 3,
+            origin: "null",
+            url: "about:blank",
+          },
+        ];
+
+        if (browser.runtime.getManifest().manifest_version === 2) {
+          // activeTab in MV2 grants access to all frames.
+          browser.test.assertDeepEq(
+            expectedResults,
+            results,
+            "activeTab grants access to all sandboxed frames (MV2)"
+          );
+        } else {
+          // All frames have an opaque origin, and are thus not same-origin to
+          // the top. In MV3, activeTab only grants access to same-origin
+          // frames.
+          browser.test.assertDeepEq(
+            expectedResults.slice(0, 1),
+            results,
+            "activeTab excludes sandboxed, cross-origin frames (MV3)"
+          );
+        }
+
+        browser.test.notifyPass("execute-script");
+      });
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_with_iframe_sandbox.html",
+    true
+  );
+
+  await extension.startup();
+  await AppTestDelegate.clickBrowserAction(window, extension);
+  await extension.awaitFinish("execute-script");
+  await AppTestDelegate.closeBrowserAction(window, extension);
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+}
+
+add_task(async function test_activeTab_executeScript_sandboxed_frames_mv2() {
+  await test_activeTab_executeScript_sandboxed_frames(2);
+});
+
+add_task(async function test_activeTab_executeScript_sandboxed_frames_mv3() {
+  await test_activeTab_executeScript_sandboxed_frames(3);
+});
+
+</script>
+
+</body>
+</html>
