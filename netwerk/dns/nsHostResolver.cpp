@@ -10,13 +10,13 @@
 #  include <arpa/inet.h>
 #  include <arpa/nameser.h>
 #  include <resolv.h>
-#  define RES_RETRY_ON_FAILURE
 #endif
 
 #include <stdlib.h>
 #include <ctime>
 #include "nsHostResolver.h"
 #include "nsError.h"
+#include "nsIOService.h"
 #include "nsISupports.h"
 #include "nsISupportsUtils.h"
 #include "nsIThreadManager.h"
@@ -98,45 +98,54 @@ LazyLogModule gHostResolverLog("nsHostResolver");
 
 //----------------------------------------------------------------------------
 
-#if defined(RES_RETRY_ON_FAILURE)
+#if defined(HAVE_RES_NINIT)
 
-// this class represents the resolver state for a given thread.  if we
-// encounter a lookup failure, then we can invoke the Reset method on an
-// instance of this class to reset the resolver (in case /etc/resolv.conf
-// for example changed).  this is mainly an issue on GNU systems since glibc
-// only reads in /etc/resolv.conf once per thread.  it may be an issue on
-// other systems as well.
-
-class nsResState {
+// The nsResState class manages the res state.
+// This class ensures the resolver state is reset based on network change events
+// to maintain correct DNS resolutions.
+class MOZ_STACK_CLASS nsResState {
  public:
-  nsResState()
-      // initialize mLastReset to the time when this object
-      // is created.  this means that a reset will not occur
-      // if a thread is too young.  the alternative would be
-      // to initialize this to the beginning of time, so that
-      // the first failure would cause a reset, but since the
-      // thread would have just started up, it likely would
-      // already have current /etc/resolv.conf info.
-      : mLastReset(PR_IntervalNow()) {}
+  // Set mLastReset to now, which should be larger than last network change
+  // time, so we won't reset when the thread just started.
+  nsResState() : mLastReset(PR_IntervalNow()) {}
 
-  bool Reset() {
-    // reset no more than once per second
-    if (PR_IntervalToSeconds(PR_IntervalNow() - mLastReset) < 1) {
-      return false;
+  ~nsResState() {
+    if (_res.options & RES_INIT) {
+      res_nclose(&_res);
+    }
+  }
+
+  void Init() {
+    if (!(_res.options & RES_INIT)) {
+      auto result = res_ninit(&_res);
+      LOG(("nsResState > 'res_ninit' returned %d ", result));
+    }
+  }
+
+  void MaybeReset() {
+    if (mLastReset > gIOService->LastNetworkLinkChange()) {
+      return;
     }
 
-    mLastReset = PR_IntervalNow();
-    auto result = res_ninit(&_res);
+    PRIntervalTime now = PR_IntervalNow();
+    // reset no more than once per second
+    if (PR_IntervalToSeconds(now - mLastReset) < 1) {
+      return;
+    }
 
-    LOG(("nsResState::Reset() > 'res_ninit' returned %d", result));
-    return (result == 0);
+    if (_res.options & RES_INIT) {
+      res_nclose(&_res);
+    }
+
+    mLastReset = now;
+    Init();
   }
 
  private:
   PRIntervalTime mLastReset;
 };
 
-#endif  // RES_RETRY_ON_FAILURE
+#endif  // HAVE_RES_NINIT
 
 class DnsThreadListener final : public nsIThreadPoolListener {
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -223,19 +232,6 @@ nsresult nsHostResolver::Init() MOZ_NO_THREAD_SAFETY_ANALYSIS {
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Could not register DNS pref callback.");
   }
-
-#if defined(HAVE_RES_NINIT)
-  // We want to make sure the system is using the correct resolver settings,
-  // so we force it to reload those settings whenever we startup a subsequent
-  // nsHostResolver instance.  We assume that there is no reason to do this
-  // for the first nsHostResolver instance since that is usually created
-  // during application startup.
-  static int initCount = 0;
-  if (initCount++ > 0) {
-    auto result = res_ninit(&_res);
-    LOG(("nsHostResolver::Init > 'res_ninit' returned %d", result));
-  }
-#endif
 
   // We can configure the threadpool to keep threads alive for a while after
   // the last ThreadFunc task has been executed.
@@ -1845,8 +1841,9 @@ size_t nsHostResolver::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
 void nsHostResolver::ThreadFunc() {
   LOG(("DNS lookup thread - starting execution.\n"));
 
-#if defined(RES_RETRY_ON_FAILURE)
+#if defined(HAVE_RES_NINIT)
   nsResState rs;
+  rs.Init();
 #endif
   RefPtr<nsHostRecord> rec;
   RefPtr<AddrInfo> ai;
@@ -1887,14 +1884,11 @@ void nsHostResolver::ThreadFunc() {
       continue;
     }
 
+#if defined(HAVE_RES_NINIT)
+    rs.MaybeReset();
+#endif
     nsresult status =
         GetAddrInfo(rec->host, rec->af, rec->flags, getter_AddRefs(ai), getTtl);
-#if defined(RES_RETRY_ON_FAILURE)
-    if (NS_FAILED(status) && rs.Reset()) {
-      status = GetAddrInfo(rec->host, rec->af, rec->flags, getter_AddRefs(ai),
-                           getTtl);
-    }
-#endif
 
     mozilla::glean::networking::dns_native_count
         .EnumGet(rec->pb ? glean::networking::DnsNativeCountLabel::ePrivate
