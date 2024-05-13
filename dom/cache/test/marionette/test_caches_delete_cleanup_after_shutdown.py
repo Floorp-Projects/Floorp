@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import time
 
 from marionette_driver import Wait
 from marionette_harness import MarionetteTestCase
@@ -77,26 +78,43 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
             script_args=(CACHE_ID,),
         )
 
+    # asynchronously iterating over body files could be challenging as firefox
+    # might be doing some cleanup while we are iterating over it's morgue dir.
+    # It's expected for this helper to throw FileNotFoundError exception in
+    # such cases.
+    def fallibleCountBodies(self, morgueDir):
+        bodyCount = 0
+        for elem in os.listdir(morgueDir):
+            absPathElem = os.path.join(morgueDir, elem)
+
+            if os.path.isdir(absPathElem):
+                bodyCount += sum(
+                    1
+                    for e in os.listdir(absPathElem)
+                    if os.path.isfile(os.path.join(absPathElem, e))
+                )
+        return bodyCount
+
     def countBodies(self):
         profile = self.marionette.instance.profile.profile
         originDir = (
             self.marionette.absolute_url("")[:-1].replace(":", "+").replace("/", "+")
         )
+
         morgueDir = f"{profile}/storage/default/{originDir}/cache/morgue"
         print("morgueDir path = ", morgueDir)
 
-        bodyCount = -1
-        if os.path.exists(morgueDir):
-            bodyCount = 0
-            for elem in os.listdir(morgueDir):
-                absPathElem = os.path.join(morgueDir, elem)
-                if os.path.isdir(absPathElem):
-                    bodyCount += sum(
-                        1
-                        for e in os.listdir(absPathElem)
-                        if os.path.isfile(os.path.join(absPathElem, e))
-                    )
-        return bodyCount
+        if not os.path.exists(morgueDir):
+            print("morgue directory does not exists.")
+            return -1
+
+        while True:
+            try:
+                return self.fallibleCountBodies(morgueDir)
+            except FileNotFoundError:
+                # we probably just got in the period when firefox was cleaning up.
+                # retry...
+                time.sleep(0.5)
 
     def ensureCleanDirectory(self):
         orphanedBodiesCount = self.countBodies()
