@@ -13,6 +13,7 @@
 
 #include "js/ArrayBuffer.h"
 #include "js/ArrayBufferMaybeShared.h"
+#include "js/Context.h"
 #include "js/experimental/TypedData.h"  // js::Unwrap(Ui|I)nt(8|16|32)Array, js::Get(Ui|I)nt(8|16|32)ArrayLengthAndData, js::UnwrapUint8ClampedArray, js::GetUint8ClampedArrayLengthAndData, js::UnwrapFloat(32|64)Array, js::GetFloat(32|64)ArrayLengthAndData, JS_GetArrayBufferViewType
 #include "js/GCAPI.h"                   // JS::AutoCheckCannotGC
 #include "js/RootingAPI.h"              // JS::Rooted
@@ -671,80 +672,9 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
           MOZ_CRASH("Null js::CheckedUnwrapStatic(mImplObj)");
         }
       }
-      if (!JS::IsArrayBufferViewShared(view)) {
-        JSAutoRealm ar(jsapi.cx(), view);
-        bool unused;
-        bool noBuffer;
-        {
-          JSObject* buffer =
-              JS_GetArrayBufferViewBuffer(jsapi.cx(), view, &unused);
-          noBuffer = !buffer;
-        }
-        if (noBuffer) {
-          if (JS_IsTypedArrayObject(view)) {
-            JS::Value bufferSlot =
-                JS::GetReservedSlot(view, /* BUFFER_SLOT */ 0);
-            if (bufferSlot.isNull()) {
-              MOZ_CRASH("TypedArrayObject with bufferSlot containing null");
-            } else if (bufferSlot.isBoolean()) {
-              // If we're here then TypedArrayObject::ensureHasBuffer must have
-              // failed in the call to JS_GetArrayBufferViewBuffer.
-              if (JS_IsThrowingOutOfMemory(jsapi.cx())) {
-                size_t length = JS_GetTypedArrayByteLength(view);
-                if (!JS::GetReservedSlot(view, /* DATA_SLOT */ 3)
-                         .isUndefined() &&
-                    length <= JS_MaxMovableTypedArraySize()) {
-                  MOZ_CRASH(
-                      "We did run out of memory, maybe trying to uninline the "
-                      "buffer");
-                }
-                if (length < INT32_MAX) {
-                  MOZ_CRASH(
-                      "We did run out of memory trying to create a buffer "
-                      "smaller than 2GB - 1");
-                } else if (length < UINT32_MAX) {
-                  MOZ_CRASH(
-                      "We did run out of memory trying to create a between 2GB "
-                      "and 4GB - 1");
-                } else {
-                  MOZ_CRASH(
-                      "We did run out of memory trying to create a buffer "
-                      "bigger than 4GB - 1");
-                }
-              } else if (JS_IsExceptionPending(jsapi.cx())) {
-                JS::Rooted<JS::Value> exn(jsapi.cx());
-                if (JS_GetPendingException(jsapi.cx(), &exn) &&
-                    exn.isObject()) {
-                  JS::Rooted<JSObject*> exnObj(jsapi.cx(), &exn.toObject());
-                  JSErrorReport* err =
-                      JS_ErrorFromException(jsapi.cx(), exnObj);
-                  if (err && err->errorNumber == JSMSG_BAD_ARRAY_LENGTH) {
-                    MOZ_CRASH("Length was too big");
-                  }
-                }
-              }
-              // Did ArrayBufferObject::createBufferAndData fail without OOM?
-              MOZ_CRASH("TypedArrayObject with bufferSlot containing boolean");
-            } else if (bufferSlot.isObject()) {
-              if (!bufferSlot.toObjectOrNull()) {
-                MOZ_CRASH(
-                    "TypedArrayObject with bufferSlot containing null object");
-              } else {
-                MOZ_CRASH(
-                    "JS_GetArrayBufferViewBuffer failed but bufferSlot "
-                    "contains a non-null object");
-              }
-            } else {
-              MOZ_CRASH(
-                  "TypedArrayObject with bufferSlot containing weird value");
-            }
-          } else {
-            MOZ_CRASH("JS_GetArrayBufferViewBuffer failed for DataViewObject");
-          }
-        }
-      }
     }
 #endif
+    JS::AutoBrittleMode abm(jsapi.cx());
     if (!JS::EnsureNonInlineArrayBufferOrView(jsapi.cx(), mImplObj)) {
       MOZ_CRASH("small oom when moving inline data out-of-line");
     }

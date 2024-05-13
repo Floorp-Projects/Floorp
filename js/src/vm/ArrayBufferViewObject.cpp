@@ -113,7 +113,11 @@ ArrayBufferObjectMaybeShared* ArrayBufferViewObject::ensureBufferObject(
       return nullptr;
     }
   }
-  return thisObject->bufferEither();
+  auto* buffer = thisObject->bufferEither();
+  if (!buffer) {
+    MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode, "ABV has no buffer");
+  }
+  return buffer;
 }
 
 bool ArrayBufferViewObject::init(JSContext* cx,
@@ -451,6 +455,7 @@ JS_PUBLIC_API JSObject* JS_GetArrayBufferViewBuffer(JSContext* cx,
   Rooted<ArrayBufferViewObject*> unwrappedView(
       cx, obj->maybeUnwrapAs<ArrayBufferViewObject>());
   if (!unwrappedView) {
+    MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode, "access to buffer denied");
     ReportAccessDenied(cx);
     return nullptr;
   }
@@ -468,6 +473,7 @@ JS_PUBLIC_API JSObject* JS_GetArrayBufferViewBuffer(JSContext* cx,
 
   RootedObject buffer(cx, unwrappedBuffer);
   if (!cx->compartment()->wrap(cx, &buffer)) {
+    MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode, "wrapping buffer failed");
     return nullptr;
   }
 
@@ -586,6 +592,8 @@ JS_PUBLIC_API bool JS::PinArrayBufferOrViewLength(JSObject* obj, bool pin) {
     return view->pinLength(pin);
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(!js::TlsContext.get()->brittleMode,
+                        "invalid type in PinABOVLength");
   return false;
 }
 
@@ -612,6 +620,7 @@ JS_PUBLIC_API bool JS::EnsureNonInlineArrayBufferOrView(JSContext* cx,
     return ArrayBufferViewObject::ensureNonInline(cx, rootedView);
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(!cx->brittleMode, "unhandled type");
   JS_ReportErrorASCII(cx, "unhandled type");
   return false;
 }
