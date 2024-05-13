@@ -40,8 +40,22 @@ if (proc.exitValue() != 0) {
             "Could not run ./mach environment. Try running ./mach build first.")
 }
 
+def outputString = standardOutput.toString().normalize()
+// Ignore possible lines of output from pip installing packages,
+// so only start at what looks like the beginning of a JSON object
+if (outputString.lastIndexOf("\n") != -1) {
+    outputString = outputString.substring(outputString.lastIndexOf("\n") + 1)
+}
 def slurper = new JsonSlurper()
-def json = slurper.parseText(standardOutput.toString())
+def json;
+try {
+    json = slurper.parseText(outputString)
+} catch (ignored) {
+    logger.info("mozconfig.gradle> Failed to parse JSON output from ./mach environment: \n\n" +
+            outputString);
+    throw new StopExecutionException(
+            "Failed to parse JSON output from ./mach environment.\n\n" + outputString);
+}
 
 if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
     throw new GradleException("Building with Gradle is only supported for Firefox for Android, i.e., MOZ_BUILD_APP == 'mobile/android'.")
