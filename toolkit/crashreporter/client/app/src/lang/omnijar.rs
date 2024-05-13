@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::language_info::LanguageInfo;
+use crate::config::sibling_path;
 use crate::std::{
-    env::current_exe,
     fs::File,
     io::{BufRead, BufReader, Read},
     path::Path,
@@ -16,9 +16,11 @@ use zip::read::ZipArchive;
 ///
 /// Returns (locale name, fluent definitions).
 pub fn read() -> anyhow::Result<LanguageInfo> {
-    let mut path = current_exe().context("failed to get current executable")?;
-    path.pop();
-    path.push("omni.ja");
+    let mut path = sibling_path(if cfg!(target_os = "macos") {
+        "../Resources/omni.ja"
+    } else {
+        "omni.ja"
+    });
 
     let mut zip = read_omnijar_file(&path)?;
     let locales = {
@@ -52,11 +54,16 @@ pub fn read() -> anyhow::Result<LanguageInfo> {
     path.push("omni.ja");
 
     let ftl_branding = 'branding: {
-        for locale in &locales {
-            match read_branding(&locale, &mut zip) {
-                Ok(v) => break 'branding v,
-                Err(e) => log::warn!("failed to read branding from omnijar: {e:#}"),
+        match read_omnijar_file(&path) {
+            Ok(mut zip) => {
+                for locale in &locales {
+                    match read_branding(&locale, &mut zip) {
+                        Ok(v) => break 'branding v,
+                        Err(e) => log::warn!("failed to read branding from omnijar: {e:#}"),
+                    }
+                }
             }
+            Err(e) => log::warn!("failed to read browser omnijar: {e:#}"),
         }
         log::info!("using fallback branding info");
         LanguageInfo::default().ftl_branding
