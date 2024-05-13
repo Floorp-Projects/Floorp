@@ -421,7 +421,7 @@ add_task(async function test_no_preload_at_blob_url_iframe() {
 
 // A sandboxed page has an opaque origin. A http page can be sandboxed by
 // the "sandbox" attribute on an iframe.
-add_task(async function test_no_preload_at_http_iframe_with_sandbox_attr() {
+add_task(async function test_preload_at_http_iframe_with_sandbox_attr() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       content_scripts: [
@@ -479,16 +479,14 @@ add_task(async function test_no_preload_at_http_iframe_with_sandbox_attr() {
     let f = this.content.wrappedJSObject.document.createElement("iframe");
     f.src = "http://example.com/dummy?sandbox_iframe";
     f.sandbox = "allow-scripts"; // no allow-same-origin.
-    let { promise, resolve } = Promise.withResolvers();
-    f.onload = () => resolve();
     this.content.wrappedJSObject.document.body.append(f);
-    return promise;
   });
+  await extension.awaitMessage("script_run");
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
     [
-      // We preload when we should not. See comment at top of file.
       { matches: ["*://example.com/dummy?sandbox_iframe"], isPreload: true },
+      { matches: ["*://example.com/dummy?sandbox_iframe"], isPreload: false },
     ],
     "Should not observe any loads of non-matching sandboxed http document"
   );
@@ -499,7 +497,7 @@ add_task(async function test_no_preload_at_http_iframe_with_sandbox_attr() {
 
 // A sandboxed page has an opaque origin. A http page can be sandboxed by
 // the "sandbox" directive in the response header.
-add_task(async function test_no_preload_at_http_csp_sandbox() {
+add_task(async function test_preload_at_http_csp_sandbox() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       content_scripts: [
@@ -535,11 +533,12 @@ add_task(async function test_no_preload_at_http_csp_sandbox() {
   await ensureContentScriptDetector(extension, contentPage);
 
   await contentPage.loadURL("http://example.com/sandboxed");
+  await extension.awaitMessage("script_run");
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
     [
-      // We preload when we should not. See comment at top of file.
       { matches: ["*://example.com/sandboxed"], isPreload: true },
+      { matches: ["*://example.com/sandboxed"], isPreload: false },
     ],
     "Should not observe any loads of non-matching sandboxed http document"
   );
@@ -606,7 +605,10 @@ add_task(async function test_no_preload_at_data_url() {
   });
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
-    [],
+    [
+      // We preload when we should not. See comment at top of file.
+      { matches: ["<all_urls>"], isPreload: true },
+    ],
     "Should not observe any loads of non-matching data:-URL"
   );
 
@@ -622,7 +624,10 @@ add_task(async function test_no_preload_at_data_url() {
   });
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
-    [],
+    [
+      // We preload when we should not. See comment at top of file.
+      { matches: ["<all_urls>"], isPreload: true },
+    ],
     "Should not observe any loads of non-matching data:-URL"
   );
 

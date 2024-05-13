@@ -522,10 +522,7 @@ bool WebExtensionPolicy::QuarantinedDomainsEnabled(GlobalObject& aGlobal) {
 
 /* static */
 bool WebExtensionPolicy::IsRestrictedDoc(const DocInfo& aDoc) {
-  // With the exception of top-level about:blank documents with null
-  // principals, we never match documents that have non-content principals,
-  // including those with null principals or system principals.
-  if (aDoc.Principal() && !aDoc.Principal()->GetIsContentPrincipal()) {
+  if (aDoc.Principal() && aDoc.Principal()->IsSystemPrincipal()) {
     return true;
   }
 
@@ -809,8 +806,6 @@ bool MozDocumentMatcher::Matches(const DocInfo& aDoc,
     }
   }
 
-  // TODO bug 1411641: we should account for precursorPrincipal if
-  // match_origin_as_fallback is specified (see also bug 1853411).
   if (!mMatchAboutBlank && aDoc.URL().InheritsPrincipal()) {
     return false;
   }
@@ -837,6 +832,12 @@ bool MozDocumentMatcher::Matches(const DocInfo& aDoc,
       return true;
     }
     // Null principal is never going to match, so we may as well return now.
+    return false;
+  }
+
+  if (aDoc.Principal() && aDoc.Principal()->GetIsNullPrincipal() &&
+      !aDoc.URL().IsNonOpaqueURL()) {
+    // TODO bug 1475831: permit if match_origin_as_fallback is true.
     return false;
   }
 
