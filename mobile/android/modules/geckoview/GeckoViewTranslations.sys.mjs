@@ -76,7 +76,8 @@ export class GeckoViewTranslations extends GeckoViewModule {
 
       case "GeckoView:Translations:GetNeverTranslateSite":
         try {
-          var value = this.getActor("Translations").shouldNeverTranslateSite();
+          const value =
+            this.getActor("Translations").shouldNeverTranslateSite();
           aCallback.onSuccess(value);
         } catch (error) {
           aCallback.onError(`Could not set site setting: ${error}`);
@@ -143,7 +144,7 @@ export const GeckoViewTranslationsSettings = {
     const isNever =
       lazy.TranslationsParent.shouldNeverTranslateLanguage(langTag);
     // Default setting is offer.
-    var setting = "offer";
+    let setting = "offer";
 
     if (isAlways & !isNever) {
       setting = "always";
@@ -158,7 +159,7 @@ export const GeckoViewTranslationsSettings = {
   // Helper method to validate BCP 47 tags and reduced to only the language portion. For example, en-US will be reduced to en.
   _checkValidLanguageTagAndMinimize(langTag) {
     // Formats the langTag into a locale, may throw an error
-    var canonicalTag = new Intl.Locale(Intl.getCanonicalLocales(langTag)[0]);
+    const canonicalTag = new Intl.Locale(Intl.getCanonicalLocales(langTag)[0]);
     return canonicalTag.minimize().toString();
   },
   /* eslint-disable complexity */
@@ -324,16 +325,16 @@ export const GeckoViewTranslationsSettings = {
         // Helper function to process remote server records size and download state for GV use
         async function _processLanguageModelData(language, remoteRecords) {
           // Aggregate size of downloads, e.g., one language has many model binary files
-          var size = 0;
+          let size = 0;
           remoteRecords.forEach(item => {
             size += parseInt(item.attachment.size);
           });
           // Check if required files are downloaded
-          var isDownloaded =
+          const isDownloaded =
             await lazy.TranslationsParent.hasAllFilesForLanguage(
               language.langTag
             );
-          var model = {
+          const model = {
             langTag: language.langTag,
             displayName: language.displayName,
             isDownloaded,
@@ -349,7 +350,7 @@ export const GeckoViewTranslationsSettings = {
             // Get language display information,
             const languageList =
               lazy.TranslationsParent.getLanguageList(supportedLanguages);
-            var results = [];
+            const results = [];
             // For each language, process the related remote server model records
             languageList.forEach(language => {
               const recordsResult =
@@ -371,7 +372,7 @@ export const GeckoViewTranslationsSettings = {
             });
             // Aggregate records
             Promise.all(results).then(models => {
-              var response = [];
+              const response = [];
               models.forEach(item => {
                 response.push(item);
               });
@@ -400,7 +401,7 @@ export const GeckoViewTranslationsSettings = {
         }
 
         try {
-          var setting = this._getLanguageSettingName(aData.language);
+          const setting = this._getLanguageSettingName(aData.language);
           aCallback.onSuccess(setting);
         } catch (error) {
           aCallback.onError(`Could not get language setting: ${error}`);
@@ -448,7 +449,7 @@ export const GeckoViewTranslationsSettings = {
       }
 
       case "GeckoView:Translations:SetLanguageSettings": {
-        var { language, languageSetting } = aData;
+        let { language, languageSetting } = aData;
         languageSetting = languageSetting.toLowerCase();
 
         try {
