@@ -7,7 +7,7 @@ use api::{
     ColorSpace, PropertyBinding, PropertyBindingId, CompositeOperator,
     RasterSpace, FilterOpGraphPictureBufferId,
 };
-use api::units::{Au, LayoutVector2D};
+use api::units::Au;
 use crate::scene_building::IsVisible;
 use crate::filterdata::SFilterData;
 use crate::intern::ItemUid;
@@ -1060,7 +1060,6 @@ impl InternablePrimitive for Picture {
         _key: PictureKey,
         _: PictureDataHandle,
         _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         // Should never be hit as this method should not be
         // called for pictures.
