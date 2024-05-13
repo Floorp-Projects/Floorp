@@ -181,7 +181,7 @@ void GPUProcessHost::Shutdown(bool aUnexpectedShutdown) {
 #ifndef NS_FREE_PERMANENT_DATA
     // No need to communicate shutdown, the GPU process doesn't need to
     // communicate anything back.
-    KillHard(/* aGenerateMinidump */ false);
+    KillHard("NormalShutdown");
 #endif
 
     // If we're shutting down unexpectedly, we're in the middle of handling an
@@ -211,18 +211,9 @@ void GPUProcessHost::OnChannelClosed() {
   MOZ_ASSERT(!mGPUChild);
 }
 
-void GPUProcessHost::KillHard(bool aGenerateMinidump) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mGPUChild && aGenerateMinidump) {
-    mGPUChild->GeneratePairedMinidump();
-  }
-
-  const ProcessHandle handle = GetChildProcessHandle();
+void GPUProcessHost::KillHard(const char* aReason) {
+  ProcessHandle handle = GetChildProcessHandle();
   if (!base::KillProcess(handle, base::PROCESS_END_KILLED_BY_USER)) {
-    if (mGPUChild) {
-      mGPUChild->DeletePairedMinidump();
-    }
     NS_WARNING("failed to kill subprocess!");
   }
 
@@ -231,9 +222,7 @@ void GPUProcessHost::KillHard(bool aGenerateMinidump) {
 
 uint64_t GPUProcessHost::GetProcessToken() const { return mProcessToken; }
 
-void GPUProcessHost::KillProcess(bool aGenerateMinidump) {
-  KillHard(aGenerateMinidump);
-}
+void GPUProcessHost::KillProcess() { KillHard("DiagnosticKill"); }
 
 void GPUProcessHost::CrashProcess() { mGPUChild->SendCrashProcess(); }
 
