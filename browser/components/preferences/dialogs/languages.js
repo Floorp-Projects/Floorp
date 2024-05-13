@@ -225,6 +225,7 @@ var gLanguagesDialog = {
 
     this._acceptLanguages[selectedID] = true;
     this._availableLanguages.selectedItem = null;
+    this.onAvailableLanguageSelect();
 
     // Rebuild the available list with the added item removed...
     this._buildAvailableLanguageList().catch(console.error);
