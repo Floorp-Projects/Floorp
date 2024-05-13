@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
@@ -68,6 +70,9 @@ fun SwitchWithLabel(
         ) {
             Text(
                 text = label,
+                modifier = Modifier
+                    .defaultMinSize(minHeight = 24.dp)
+                    .wrapContentHeight(),
                 color = if (enabled) {
                     FirefoxTheme.colors.textPrimary
                 } else {
@@ -79,7 +84,14 @@ fun SwitchWithLabel(
             description?.let {
                 Text(
                     text = description,
-                    color = FirefoxTheme.colors.textSecondary,
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = 20.dp)
+                        .wrapContentHeight(),
+                    color = if (enabled) {
+                        FirefoxTheme.colors.textSecondary
+                    } else {
+                        FirefoxTheme.colors.textDisabled
+                    },
                     style = FirefoxTheme.typography.body2,
                 )
             }
