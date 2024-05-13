@@ -57,8 +57,6 @@
 //   fast_unwind_on_fatal - Use the fast (frame-pointer-based) stack unwinder
 //   to print fatal error reports. The slow unwinder doesn't work on Android.
 //
-//   detect_stack_use_after_return=0 - Work around bug 1768099.
-//
 //   intercept_tls_get_addr=0 - Work around
 //   https://github.com/google/sanitizers/issues/1322 (bug 1635327).
 //
@@ -78,7 +76,6 @@ extern "C" MOZ_ASAN_IGNORE const char* __asan_default_options() {
          ":malloc_fill_byte=228:free_fill_byte=229"
          ":handle_sigill=1"
          ":allocator_may_return_null=1"
-         ":detect_stack_use_after_return=0"
          ":intercept_tls_get_addr=0";
 }
 
