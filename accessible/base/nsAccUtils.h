@@ -233,6 +233,13 @@ class nsAccUtils {
   static bool MustPrune(Accessible* aAccessible);
 
   /**
+   * Get the live region setting (polite, etc.) for this Accessible. This does
+   * not walk ancestors. It does account for implicit live regions as
+   * determined from the ARIA role or markup tag name.
+   */
+  static void GetLiveRegionSetting(Accessible* aAcc, nsAString& aLive);
+
+  /**
    * Get the document Accessible which owns a given Accessible.
    * This function is needed because there is no unified base class for local
    * and remote documents.

@@ -441,6 +441,19 @@ bool nsAccUtils::MustPrune(Accessible* aAccessible) {
   return childRole == roles::TEXT_LEAF || childRole == roles::STATICTEXT;
 }
 
+void nsAccUtils::GetLiveRegionSetting(Accessible* aAcc, nsAString& aLive) {
+  MOZ_ASSERT(aAcc);
+  aAcc->LiveRegionAttributes(&aLive, nullptr, nullptr, nullptr);
+  // aria-live wasn't explicitly set. See if an aria-live value is implied
+  // by an ARIA role or markup element.
+  if (const nsRoleMapEntry* roleMap = aAcc->ARIARoleMap()) {
+    GetLiveAttrValue(roleMap->liveAttRule, aLive);
+  } else if (nsStaticAtom* value =
+                 GetAccService()->MarkupAttribute(aAcc, nsGkAtoms::aria_live)) {
+    value->ToString(aLive);
+  }
+}
+
 Accessible* nsAccUtils::DocumentFor(Accessible* aAcc) {
   if (!aAcc) {
     return nullptr;
