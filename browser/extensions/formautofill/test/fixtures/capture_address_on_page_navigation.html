@@ -19,18 +19,14 @@
             <p><label>email: <input type="text" id="email" name="email" autocomplete="email" /></label></p>
             <p><input type="submit" /></p>
         </form>
-        <p><button id="historyPushState">history.pushState</button></p>
-        <p><button id="windowLocation">window.location.href</button></p>
-        <script>
-            const historyButton = document.getElementById("historyPushState")
-            historyButton.addEventListener("click", () => {
-                history.pushState({},"","")
-            })
-
-            const windowLocationButton = document.getElementById("windowLocation")
-            windowLocationButton.addEventListener("click", () => {
-                window.location.href = "about:blank"
-            })
-        </script>
+        <!-- Handled as page navigation -->
+        <p><button id="historyPushState" onclick="history.pushState({},``,``)">history.pushState</button></p>
+        <p><button id="historyReplaceState" onclick="history.replaceState({},``,``)">history.replaceState</button></p>
+        <p><button id="locationHref" onclick="location.href = `about:blank`">window.location.href</button></p>
+        <p><button id="locationReplace" onclick="location.replace(`about:blank`)">location.replace</button></p>
+        <!-- Not handled as page navigation -->
+        <p><button id="locationReload" onclick="location.reload()">location.reload</button></p>
+        <p><button id="historyGo" onclick="history.go(-1)">history.go</button></p>
+        <p><button id="historyBack" onclick="history.back()">histotry.back</button></p>
     </body>
 </html>
