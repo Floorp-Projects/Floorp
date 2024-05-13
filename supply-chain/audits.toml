@@ -3645,6 +3645,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.151 -> 1.0.152"
 
+[[audits.serde]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "1.0.198 -> 1.0.201"
+
 [[audits.serde_bytes]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -3689,6 +3694,11 @@ delta = "1.0.144 -> 1.0.151"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.151 -> 1.0.152"
+
+[[audits.serde_derive]]
+who = "Erich Gubler <erichdongubler@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "1.0.198 -> 1.0.201"
 
 [[audits.serde_json]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
