@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+SimpleTest.waitForExplicitFinish();
+function run() {
+  const host = document.getElementById("host");
+  const inner = host.shadowRoot.getElementById("inner");
+  const innerRect = inner.getBoundingClientRect();
+
+  const innerHost = host.shadowRoot.getElementById("innerHost");
+  const nested = innerHost.shadowRoot.getElementById("nested");
+  const nestedRect = nested.getBoundingClientRect();
+
+  // Click the center of "NestedText"
+  synthesizeMouse(nested, nestedRect.width / 2, nestedRect.height / 2, { type: "mousedown" });
+  synthesizeMouse(nested, nestedRect.width / 2, nestedRect.height / 2, { type: "mouseup" });
+
+  // Click the center of "InnerText"
+  synthesizeMouse(inner, innerRect.width / 2, innerRect.height / 2, { type: "mousedown", shiftKey: true});
+  synthesizeMouse(inner, innerRect.width / 2, innerRect.height / 2, { type: "mouseup" , shiftKey: true});
+
+  // Above two clicks should select half of the content in "InnerText" and half of the content in "NestedText"
+  let sel = document.getSelection().getComposedRanges(host.shadowRoot, innerHost.shadowRoot)[0];
+
+  // forward selection
+  is(sel.startContainer, inner.firstChild, "startContainer is the InnerText");
+  is(sel.endContainer, nested.firstChild, "endContainer is the NestedText");
+
+  const collapsedRange = document.getSelection().getRangeAt(0);
+  is(collapsedRange.startContainer, inner.firstChild, "normal range's startContainer get collapsed to InnerText");
+  is(collapsedRange.endContainer, inner.firstChild, "normal range's endContainer get collapsed to InnerText");
+
+  SimpleTest.finish();
+}
+</script>
+<body onload="SimpleTest.waitForFocus(run);">
+  <div id="host">
+    <template shadowrootmode="open">
+      <span id="inner">InnerText</span>
+      <div id="innerHost">
+        <template shadowrootmode="open">
+          <span id="nested">NestedText</span>
+        </template>
+      </div>
+    </template>
+  </div>
+</body>

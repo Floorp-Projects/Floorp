@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+SimpleTest.waitForExplicitFinish();
+
+// Test to ensure that things still work correctly when the range boundaries
+// was in different roots initially and moves to the same root afterwards.
+function run() {
+  const outer = document.getElementById("outer");
+
+  const inner = document.getElementById("host").shadowRoot.getElementById("inner");
+  const innerRect = inner.getBoundingClientRect();
+
+  // Click the bottom right of "InnerText"
+  synthesizeMouse(inner, innerRect.width, innerRect.height, { type: "mousedown" });
+  synthesizeMouse(inner, innerRect.width, innerRect.height, { type: "mouseup" });
+
+  // Click the top left of "OuterText"
+  synthesizeMouse(outer, 0, 0, { type: "mousedown", shiftKey: true});
+  synthesizeMouse(outer, 0, 0, { type: "mouseup" , shiftKey: true});
+
+  // Above two clicks should select both "OuterText" and "InnerText"
+  let sel = document.getSelection().getComposedRanges(host.shadowRoot)[0];
+
+  // forward selection
+  is(sel.startContainer, outer.firstChild, "startContainer is the OuterText");
+  is(sel.startOffset, 0, "startOffset starts at the first character");
+  is(sel.endContainer, inner.firstChild, "endContainer is the InnerText");
+  is(sel.endOffset, 9, "endOffset ends at the last character");
+
+  let normalRange = document.getSelection().getRangeAt(0);
+  is(normalRange.startContainer, outer.firstChild, "normal range's startContainer gets collapsed to OuterText");
+  is(normalRange.endContainer, outer.firstChild, "normal range's endContainer gets collapsed the OuterText");
+
+  // Click the center of "InnerText"
+  synthesizeMouse(inner, innerRect.width / 2, innerRect.height / 2, { type: "mousedown", shiftKey: true});
+  synthesizeMouse(inner, innerRect.width / 2, innerRect.height / 2, { type: "mouseup" , shiftKey: true});
+
+  sel = document.getSelection().getComposedRanges(host.shadowRoot)[0];
+  is(sel.startContainer, inner.firstChild, "both startContainer and endContainer are InnerText");
+  is(sel.endContainer, inner.firstChild, "both startContainer and endContainer are InnerText");
+
+  normalRange = document.getSelection().getRangeAt(0);
+  is(normalRange.startContainer, inner.firstChild, "normal range's startContainer gets collapsed to InnerText");
+  is(normalRange.endContainer, inner.firstChild, "normal range's endContainer gets collapsed the InnerText");
+
+  SimpleTest.finish();
+}
+</script>
+<body onload="SimpleTest.waitForFocus(run);">
+  <span id="outer">OuterText</span>
+  <div id="host">
+    <template shadowrootmode="open">
+      <span id="inner">InnerText</span>
+    </template>
+  </div>
+</body>
