@@ -37,5 +37,5 @@
     <string name="mozac_lib_crash_no_crashes">尚未提交任何崩溃报告。</string>
 
     <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
-    <string name="mozac_lib_crash_share">共享</string>
+    <string name="mozac_lib_crash_share">分享</string>
 </resources>
