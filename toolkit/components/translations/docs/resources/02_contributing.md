@@ -1,7 +1,7 @@
-# Contributing
+# Contributing to Translations
 
 The following content goes more in-depth than the [Overview](./01_overview.md) section
-to provide helpful information regarding contributing to Firefox Translations.
+to provide helpful information regarding contributing to Translations.
 
 - [Source Code](#source-code)
 - [Architecture](#architecture)
@@ -18,9 +18,10 @@ to provide helpful information regarding contributing to Firefox Translations.
 ---
 ## Source Code
 
-The primary source code for Firefox Translations lives in the following directory:
+The primary source code for Translations lives in the following directories:
 
 > **[toolkit/components/translations]**
+> **[browser/components/translations]**
 
 ---
 ## Architecture
@@ -43,10 +44,10 @@ The machine-learning models and [WASM] binaries are all hosted in Remote Setting
 
 ### Admin Dashboards
 
-In order to get access to Firefox Translations content in the Remote Settings admin dashboards, you will need to request
+In order to get access to Translations content in the Remote Settings admin dashboards, you will need to request
 access in the Remote Settings component on [Bugzilla].
 
-Once you have access to Firefox Translations content in Remote Settings, you will be able to view it in the admin dashboards:
+Once you have access to Translations content in Remote Settings, you will be able to view it in the admin dashboards:
 
 **Dev**<br>
 > [https://settings.dev.mozaws.net/v0/admin](https://settings.dev.mozaws.net/v1/admin)
@@ -70,11 +71,11 @@ the latest [remote-settings-devtools] Firefox extension.
 
 ### Versioning
 
-Firefox Translations uses semantic versioning for all of its records via the **`version`** property.
+Translations uses semantic versioning for all of its records via the **`version`** property.
 
 #### Non-breaking Changes
 
-Firefox Translations code will always retrieve the maximum compatible version of each record from Remote Settings.
+Translations code will always retrieve the maximum compatible version of each record from Remote Settings.
 If two records exist with different versions, (e.g. **`1.0`** and **`1.1`**) then only the version **`1.1`** record
 will be considered.
 
@@ -84,16 +85,16 @@ in both backward-compatible and forward-compatible ways. These can be released t
 
 #### Breaking Changes
 
-Breaking changes for Firefox Translations are a bit more tricky. These are changes that make older-version records
+Breaking changes for Translations are a bit more tricky. These are changes that make older-version records
 incompatible with the current Firefox source code and/or [WASM] runtimes.
 
 While a breaking change will result in a change of the semver number (e.g. **`1.1 ⟶ 2.0`**), this alone is not
-sufficient. Since Firefox Translations always attempts to use the maximum compatible version, only bumping this number
+sufficient. Since Translations always attempts to use the maximum compatible version, only bumping this number
 would result in older versions of Firefox attempting to use a newer-version record that is no longer compatible with the
 Firefox source code or [WASM] runtimes.
 
-To handle these changes, Firefox Translations utilizes Remote Settings [Filter Expressions] to make certain records
-available to only particular releases of Firefox. This will allow Firefox Translations to make different sets of Remote Settings records available to different versions
+To handle these changes, Translations utilizes Remote Settings [Filter Expressions] to make certain records
+available to only particular releases of Firefox. This will allow Translations to make different sets of Remote Settings records available to different versions
 of Firefox.
 
 ```{admonition} Example
@@ -118,7 +119,7 @@ This means that these records will only be available in Firefox versions greater
 
 ```
 
-Tying breaking changes to releases in this way frees up Firefox Translations to make changes as large as entirely
+Tying breaking changes to releases in this way frees up Translations to make changes as large as entirely
 switching one third-party library for another in the compiled source code, while allowing older versions of Firefox to continue utilizing the old library and allowing newer versions of Firefox to utilize the new library.
 
 ---

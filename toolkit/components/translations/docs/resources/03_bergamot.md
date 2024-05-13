@@ -1,6 +1,6 @@
 # The Bergamot Translator
 
-The [Bergamot Translator](https://github.com/browsermt/bergamot-translator) is the translations engine used to power Firefox translations. The project configures a fork of [Marian NMT](https://marian-nmt.github.io/) that enables translations through a Wasm API.
+The [Bergamot Translator](https://github.com/browsermt/bergamot-translator) is the translations engine used to power Firefox's translations. The project configures a fork of [Marian NMT](https://marian-nmt.github.io/) that enables translations through a Wasm API.
 
 Bergamot adds a few additional pieces of code on top of the Marian code, which includes HTML alignments (matching up source and target tags in a translation) and sentence iteration. It provides the [Wasm API](https://github.com/browsermt/bergamot-translator/tree/main/wasm) that Firefox uses in its own translation implementation. The Bergamot Translator uses a forked copy of the Marian NMT package in order to provide support for quantized translation models.
 

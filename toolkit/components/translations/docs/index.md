@@ -1,8 +1,6 @@
-# Firefox Translations
+# Translations
 
-Firefox Translations is a project initiative to give Firefox the ability to translate web content from one language to another language as first-class functionality in the browser.
-
-This project is based initially on the [Firefox Translations WebExtension].
+Translations in Firefox are done through machine learning models that are downloaded and run locally on the user's device.
 
 ## Resources
 
@@ -13,5 +11,3 @@ This project is based initially on the [Firefox Translations WebExtension].
 
 resources/*
 ```
-
-[Firefox Translations WebExtension]: https://github.com/mozilla/firefox-translations
