@@ -2338,14 +2338,15 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesTelephoneEvent) {
     const JsepTrackNegotiatedDetails* details = track.GetNegotiatedDetails();
     ASSERT_EQ(1U, details->GetEncodingCount());
     const JsepTrackEncoding& encoding = details->GetEncoding(0);
-    ASSERT_EQ(4U, encoding.GetCodecs().size());
+    auto expectedSize = (track.GetDirection() != sdp::kSend) ? 5U : 4U;
+    ASSERT_EQ(expectedSize, encoding.GetCodecs().size());
     ASSERT_TRUE(encoding.HasFormat("109"));
     // we can cast here because we've already checked for audio track
     const JsepAudioCodecDescription* audioCodec =
         static_cast<const JsepAudioCodecDescription*>(
             encoding.GetCodecs()[0].get());
     ASSERT_TRUE(audioCodec);
-    ASSERT_FALSE(audioCodec->mDtmfEnabled);
+    ASSERT_EQ(track.GetDirection() != sdp::kSend, audioCodec->mDtmfEnabled);
   }
 }
 
@@ -3756,7 +3757,7 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParamsNoRed) {
                     ->GetEncoding(0)
                     .GetCodecs()
                     .size());
-  ASSERT_EQ(2U, offerTransceivers[1]
+  ASSERT_EQ(4U, offerTransceivers[1]
                     .mRecvTrack.GetNegotiatedDetails()
                     ->GetEncoding(0)
                     .GetCodecs()

@@ -899,6 +899,134 @@ void RTCRtpTransceiver::Stop(ErrorResult& aRv) {
   mPc->UpdateNegotiationNeeded();
 }
 
+void RTCRtpTransceiver::SetCodecPreferences(
+    const nsTArray<RTCRtpCodec>& aCodecs, ErrorResult& aRv) {
+  nsTArray<RTCRtpCodec> aCodecsFiltered;
+  bool rtxPref =
+      Preferences::GetBool("media.peerconnection.video.use_rtx", false);
+  bool useRtx = false;
+  bool useableCodecs = false;
+
+  // kind = transciever's kind.
+  nsAutoString kind;
+  GetKind(kind);
+
+  if (!aCodecs.IsEmpty()) {
+    struct {
+      bool Equals(const RTCRtpCodec& aA, const RTCRtpCodec& aB) const {
+        return ((aA.mMimeType == aB.mMimeType) &&
+                (aA.mClockRate == aB.mClockRate) &&
+                (aA.mChannels == aB.mChannels) &&
+                (aA.mSdpFmtpLine == aB.mSdpFmtpLine));
+      }
+    } CodecComparator;
+
+    // Remove any duplicate values in codecs, ensuring that the first occurrence
+    // of each value remains in place.
+    for (const auto& codec : aCodecs) {
+      if (!std::any_of(aCodecsFiltered.begin(), aCodecsFiltered.end(),
+                       [&codec, CodecComparator](RTCRtpCodec& alreadyInserted) {
+                         return CodecComparator.Equals(alreadyInserted, codec);
+                       })) {
+        aCodecsFiltered.AppendElement(codec);
+      }
+
+      // Ensure a usable codec was supplied and if RTX is still preferred.
+      if (!useableCodecs && !codec.mMimeType.EqualsLiteral("video/ulpfec") &&
+          !codec.mMimeType.EqualsLiteral("video/red") &&
+          !codec.mMimeType.EqualsLiteral("video/rtx")) {
+        useableCodecs = true;
+      }
+      if (codec.mMimeType.EqualsLiteral("video/rtx")) {
+        useRtx = rtxPref;
+      }
+    }
+
+    // If codecs are not in the codecCapabilities of receiver capabilities
+    // throw InvalidModificationError
+    dom::Nullable<dom::RTCRtpCapabilities> codecCapabilities;
+    PeerConnectionImpl::GetCapabilities(kind, codecCapabilities,
+                                        sdp::Direction::kRecv);
+
+    for (const auto& codec : aCodecsFiltered) {
+      if (!std::any_of(codecCapabilities.Value().mCodecs.begin(),
+                       codecCapabilities.Value().mCodecs.end(),
+                       [&codec, CodecComparator](RTCRtpCodec& recvCap) {
+                         return CodecComparator.Equals(codec, recvCap);
+                       })) {
+        aRv.ThrowInvalidModificationError(
+            nsPrintfCString("Codec %s not in capabilities",
+                            NS_ConvertUTF16toUTF8(codec.mMimeType).get()));
+        return;
+      }
+    }
+
+    // If only RTX, RED, or FEC codecs throw InvalidModificationError
+    if (!useableCodecs) {
+      aRv.ThrowInvalidModificationError("No useable codecs supplied");
+      return;
+    }
+  } else {
+    useRtx = rtxPref;
+  }
+
+  mPreferredCodecs.clear();
+  std::vector<UniquePtr<JsepCodecDescription>> defaultCodecs;
+
+  if (kind.EqualsLiteral("video")) {
+    PeerConnectionImpl::GetDefaultVideoCodecs(defaultCodecs, useRtx);
+  } else if (kind.EqualsLiteral("audio")) {
+    PeerConnectionImpl::GetDefaultAudioCodecs(defaultCodecs);
+  }
+
+  if (!aCodecsFiltered.IsEmpty()) {
+    mPreferredCodecsInUse = true;
+
+    std::vector<std::pair<UniquePtr<JsepCodecDescription>, std::string>>
+        defaultCodecsAndParams;
+    for (auto& codec : defaultCodecs) {
+      UniquePtr<SdpFmtpAttributeList::Parameters> params;
+      codec->ApplyConfigToFmtp(params);
+      std::ostringstream paramsString;
+      if (params != nullptr) {
+        params->Serialize(paramsString);
+      }
+      defaultCodecsAndParams.emplace_back(std::move(codec), paramsString.str());
+    }
+
+    // Take the array of RTCRtpCodec and convert it to a vector of
+    // JsepCodecDescription in order to pass to the receive track and populate
+    // codecs.
+    for (auto& inputCodec : aCodecsFiltered) {
+      auto mimeType = NS_ConvertUTF16toUTF8(inputCodec.mMimeType);
+      for (auto& [defaultCodec, precomputedParamsString] :
+           defaultCodecsAndParams) {
+        bool channelsMatch =
+            (!inputCodec.mChannels.WasPassed() && !defaultCodec->mChannels) ||
+            (inputCodec.mChannels.WasPassed() &&
+             (inputCodec.mChannels.Value() == defaultCodec->mChannels));
+        bool sdpFmtpLinesMatch =
+            (precomputedParamsString.empty() &&
+             !inputCodec.mSdpFmtpLine.WasPassed()) ||
+            ((!precomputedParamsString.empty() &&
+              inputCodec.mSdpFmtpLine.WasPassed()) &&
+             NS_ConvertUTF16toUTF8(inputCodec.mSdpFmtpLine.Value())
+                 .EqualsASCII(precomputedParamsString.c_str()));
+
+        if ((mimeType.Find(defaultCodec->mName) != kNotFound) &&
+            (inputCodec.mClockRate == defaultCodec->mClock) && channelsMatch &&
+            sdpFmtpLinesMatch) {
+          mPreferredCodecs.emplace_back(defaultCodec->Clone());
+          break;
+        }
+      }
+    }
+  } else {
+    mPreferredCodecs.swap(defaultCodecs);
+    mPreferredCodecsInUse = false;
+  }
+}
+
 void RTCRtpTransceiver::StopTransceiving() {
   if (mStopping) {
     MOZ_ASSERT(false);

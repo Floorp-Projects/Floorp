@@ -36,8 +36,8 @@ interface RTCRtpTransceiver {
 
     [Throws]
     undefined stop();
-    // TODO: bug 1396922
-    // undefined setCodecPreferences(sequence<RTCRtpCodecCapability> codecs);
+    [Throws]
+    undefined setCodecPreferences(sequence<RTCRtpCodec> codecs);
 
     [ChromeOnly]
     undefined setDirectionInternal(RTCRtpTransceiverDirection direction);

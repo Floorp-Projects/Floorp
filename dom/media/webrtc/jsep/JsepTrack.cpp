@@ -61,8 +61,10 @@ void JsepTrack::EnsureSsrcs(SsrcGenerator& ssrcGenerator, size_t aNumber) {
 }
 
 void JsepTrack::PopulateCodecs(
-    const std::vector<UniquePtr<JsepCodecDescription>>& prototype) {
+    const std::vector<UniquePtr<JsepCodecDescription>>& prototype,
+    bool aUsePreferredCodecsOrder) {
   mPrototypeCodecs.clear();
+  mUsePreferredCodecsOrder = aUsePreferredCodecsOrder;
   for (const auto& prototypeCodec : prototype) {
     if (prototypeCodec->Type() == mType) {
       mPrototypeCodecs.emplace_back(prototypeCodec->Clone());
@@ -485,8 +487,29 @@ std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
   std::vector<UniquePtr<JsepCodecDescription>> negotiatedPseudoCodecs;
   std::vector<UniquePtr<JsepCodecDescription>> newPrototypePseudoCodecs;
 
+  std::vector<std::string> remoteFormats;
+
+  // If setCodecPreferences has been used we need to ensure the order of codecs
+  // matches what was set.
+  if (mUsePreferredCodecsOrder) {
+    for (auto& codec : mPrototypeCodecs) {
+      if (!codec || !codec->mEnabled) {
+        continue;
+      }
+      for (const std::string& fmt : remote.GetFormats()) {
+        if (!codec->Matches(fmt, remote)) {
+          continue;
+        }
+        remoteFormats.push_back(fmt);
+        break;
+      }
+    }
+  } else {
+    remoteFormats = remote.GetFormats();
+  }
+
   // Outer loop establishes the remote side's preference
-  for (const std::string& fmt : remote.GetFormats()) {
+  for (const std::string& fmt : remoteFormats) {
     // Decide if we want to store this codec for logging.
     const auto* entry = remote.FindRtpmap(fmt);
     if (entry) {
@@ -531,6 +554,35 @@ std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
         }
         break;
       }
+    }
+  }
+
+  // If we are the offerer we need to be prepared to receive all codecs we
+  // offered even codecs missing from the answer. To achieve this we add the
+  // remaining codecs from mPrototypeCodecs to the back of the negotiated
+  // Codecs/PseudoCodecs.
+  for (auto& codec : mPrototypeCodecs) {
+    bool codecEnabled = codec && codec->mEnabled;
+    bool addAllCodecs =
+        !remoteIsOffer && mDirection != sdp::kSend && remote.IsSending();
+    // 0 is a valid PT but not a dynamic PT so we validate if we see 0 that it
+    // is for PCMU
+    bool validPT = codecEnabled && (codec->mDefaultPt.compare("0") != 0 ||
+                                    (codec->mName.compare("PCMU") == 0));
+    if (!codecEnabled || (!addAllCodecs || !validPT)) {
+      continue;
+    }
+
+    UniquePtr<JsepCodecDescription> clone(codec->Clone());
+    // Moves the codec out of mPrototypeCodecs, leaving an empty
+    // UniquePtr, so we don't use it again.
+    if (codec->mName == "red" || codec->mName == "ulpfec" ||
+        codec->mName == "rtx") {
+      newPrototypePseudoCodecs.emplace_back(std::move(codec));
+      negotiatedPseudoCodecs.emplace_back(std::move(clone));
+    } else {
+      newPrototypeCodecs.emplace_back(std::move(codec));
+      negotiatedCodecs.emplace_back(std::move(clone));
     }
   }
 
