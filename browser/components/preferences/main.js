@@ -10,6 +10,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.sys.mjs",
+  UpdateListener: "resource://gre/modules/UpdateListener.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
   WindowsLaunchOnLogin: "resource://gre/modules/WindowsLaunchOnLogin.sys.mjs",
@@ -2577,6 +2578,7 @@ var gMainPane = {
       await aus.stopDownload();
       um.cleanupReadyUpdate();
       um.cleanupDownloadingUpdate();
+      UpdateListener.clearPendingAndActiveNotifications();
     }
   },
 
