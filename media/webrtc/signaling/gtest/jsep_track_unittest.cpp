@@ -166,11 +166,11 @@ class JsepTrackTest : public JsepTrackTestBase {
     }
   }
 
-  void OfferAnswer() {
+  void OfferAnswer(bool offerCodecsMatchAnswer = true) {
     CreateOffer();
     CreateAnswer();
     Negotiate();
-    SanityCheck();
+    SanityCheck(offerCodecsMatchAnswer);
   }
 
   // TODO: Look into writing a macro that wraps an ASSERT_ and returns false
@@ -296,10 +296,13 @@ class JsepTrackTest : public JsepTrackTestBase {
   }
 
   void SanityCheckNegotiatedDetails(const JsepTrackNegotiatedDetails& a,
-                                    const JsepTrackNegotiatedDetails& b) const {
+                                    const JsepTrackNegotiatedDetails& b,
+                                    bool codecsMustMatch) const {
     ASSERT_EQ(a.GetEncodingCount(), b.GetEncodingCount());
-    for (size_t i = 0; i < a.GetEncodingCount(); ++i) {
-      SanityCheckEncodings(a.GetEncoding(i), b.GetEncoding(i));
+    if (codecsMustMatch) {
+      for (size_t i = 0; i < a.GetEncodingCount(); ++i) {
+        SanityCheckEncodings(a.GetEncoding(i), b.GetEncoding(i));
+      }
     }
 
     ASSERT_EQ(a.GetUniqueReceivePayloadTypes().size(),
@@ -310,7 +313,8 @@ class JsepTrackTest : public JsepTrackTestBase {
     }
   }
 
-  void SanityCheckTracks(const JsepTrack& a, const JsepTrack& b) const {
+  void SanityCheckTracks(const JsepTrack& a, const JsepTrack& b,
+                         bool codecsMustMatch) const {
     if (!a.GetNegotiatedDetails()) {
       ASSERT_FALSE(!!b.GetNegotiatedDetails());
       return;
@@ -328,12 +332,12 @@ class JsepTrackTest : public JsepTrackTestBase {
     }
 
     SanityCheckNegotiatedDetails(*a.GetNegotiatedDetails(),
-                                 *b.GetNegotiatedDetails());
+                                 *b.GetNegotiatedDetails(), codecsMustMatch);
   }
 
-  void SanityCheck() const {
-    SanityCheckTracks(mSendOff, mRecvAns);
-    SanityCheckTracks(mRecvOff, mSendAns);
+  void SanityCheck(bool offerCodecsMatchAnswer = true) const {
+    SanityCheckTracks(mSendOff, mRecvAns, true);
+    SanityCheckTracks(mRecvOff, mSendAns, offerCodecsMatchAnswer);
   }
 
  protected:
@@ -450,7 +454,7 @@ TEST_F(JsepTrackTest, AudioNegotiationOffererDtmf) {
 
   InitTracks(SdpMediaSection::kAudio);
   InitSdp(SdpMediaSection::kAudio);
-  OfferAnswer();
+  OfferAnswer(false);
 
   CheckOffEncodingCount(1);
   CheckAnsEncodingCount(1);
@@ -466,7 +470,7 @@ TEST_F(JsepTrackTest, AudioNegotiationOffererDtmf) {
   UniquePtr<JsepAudioCodecDescription> track;
   ASSERT_TRUE((track = GetAudioCodec(mSendOff, 2, 0)));
   ASSERT_EQ("109", track->mDefaultPt);
-  ASSERT_TRUE((track = GetAudioCodec(mRecvOff, 2, 0)));
+  ASSERT_TRUE((track = GetAudioCodec(mRecvOff, 3, 0)));
   ASSERT_EQ("109", track->mDefaultPt);
   ASSERT_TRUE((track = GetAudioCodec(mSendAns, 2, 0)));
   ASSERT_EQ("109", track->mDefaultPt);
@@ -474,7 +478,7 @@ TEST_F(JsepTrackTest, AudioNegotiationOffererDtmf) {
   ASSERT_EQ("109", track->mDefaultPt);
   ASSERT_TRUE((track = GetAudioCodec(mSendOff, 2, 1)));
   ASSERT_EQ("9", track->mDefaultPt);
-  ASSERT_TRUE((track = GetAudioCodec(mRecvOff, 2, 1)));
+  ASSERT_TRUE((track = GetAudioCodec(mRecvOff, 3, 1)));
   ASSERT_EQ("9", track->mDefaultPt);
   ASSERT_TRUE((track = GetAudioCodec(mSendAns, 2, 1)));
   ASSERT_EQ("9", track->mDefaultPt);
@@ -750,7 +754,7 @@ TEST_F(JsepTrackTest, VideoNegotationOffererFEC) {
 
   InitTracks(SdpMediaSection::kVideo);
   InitSdp(SdpMediaSection::kVideo);
-  OfferAnswer();
+  OfferAnswer(false);
 
   CheckOffEncodingCount(1);
   CheckAnsEncodingCount(1);
@@ -763,7 +767,7 @@ TEST_F(JsepTrackTest, VideoNegotationOffererFEC) {
   UniquePtr<JsepVideoCodecDescription> track;
   ASSERT_TRUE((track = GetVideoCodec(mSendOff, 2, 0)));
   ASSERT_EQ("120", track->mDefaultPt);
-  ASSERT_TRUE((track = GetVideoCodec(mRecvOff, 2, 0)));
+  ASSERT_TRUE((track = GetVideoCodec(mRecvOff, 4, 0)));
   ASSERT_EQ("120", track->mDefaultPt);
   ASSERT_TRUE((track = GetVideoCodec(mSendAns, 2, 0)));
   ASSERT_EQ("120", track->mDefaultPt);
@@ -771,7 +775,7 @@ TEST_F(JsepTrackTest, VideoNegotationOffererFEC) {
   ASSERT_EQ("120", track->mDefaultPt);
   ASSERT_TRUE((track = GetVideoCodec(mSendOff, 2, 1)));
   ASSERT_EQ("126", track->mDefaultPt);
-  ASSERT_TRUE((track = GetVideoCodec(mRecvOff, 2, 1)));
+  ASSERT_TRUE((track = GetVideoCodec(mRecvOff, 4, 1)));
   ASSERT_EQ("126", track->mDefaultPt);
   ASSERT_TRUE((track = GetVideoCodec(mSendAns, 2, 1)));
   ASSERT_EQ("126", track->mDefaultPt);
@@ -880,7 +884,7 @@ TEST_F(JsepTrackTest, VideoNegotationOffererAnswererFECMismatch) {
 
   InitTracks(SdpMediaSection::kVideo);
   InitSdp(SdpMediaSection::kVideo);
-  OfferAnswer();
+  OfferAnswer(false);
 
   CheckOffEncodingCount(1);
   CheckAnsEncodingCount(1);
@@ -895,7 +899,7 @@ TEST_F(JsepTrackTest, VideoNegotationOffererAnswererFECMismatch) {
   UniquePtr<JsepVideoCodecDescription> track;
   ASSERT_TRUE((track = GetVideoCodec(mSendOff, 3)));
   ASSERT_EQ("120", track->mDefaultPt);
-  ASSERT_TRUE((track = GetVideoCodec(mRecvOff, 3)));
+  ASSERT_TRUE((track = GetVideoCodec(mRecvOff, 4)));
   ASSERT_EQ("120", track->mDefaultPt);
   ASSERT_TRUE((track = GetVideoCodec(mSendAns, 3)));
   ASSERT_EQ("120", track->mDefaultPt);
@@ -1488,7 +1492,7 @@ TEST_F(JsepTrackTest, RtcpFbWithPayloadTypeAsymmetry) {
   ASSERT_TRUE((codec = GetVideoCodec(mSendOff)));
   ASSERT_EQ("136", codec->mDefaultPt)
       << "Offerer should have seen answer asymmetry!";
-  ASSERT_TRUE((codec = GetVideoCodec(mRecvOff)));
+  ASSERT_TRUE((codec = GetVideoCodec(mRecvOff, 2, 0)));
   ASSERT_EQ("126", codec->mDefaultPt);
   ASSERT_EQ(expectedAckFbTypes, codec->mAckFbTypes);
   ASSERT_EQ(expectedNackFbTypes, codec->mNackFbTypes);

@@ -136,6 +136,7 @@ class JsepTrack {
       mMaxEncodings = rhs.mMaxEncodings;
       mInHaveRemote = rhs.mInHaveRemote;
       mRtxIsAllowed = rhs.mRtxIsAllowed;
+      mUsePreferredCodecsOrder = rhs.mUsePreferredCodecsOrder;
       mFecCodec = rhs.mFecCodec;
       mAudioPreferredCodec = rhs.mAudioPreferredCodec;
       mVideoPreferredCodec = rhs.mVideoPreferredCodec;
@@ -192,8 +193,13 @@ class JsepTrack {
   bool GetRemoteSetSendBit() const { return mRemoteSetSendBit; }
   bool GetReceptive() const { return mReceptive; }
 
+  void PopulatePreferredCodecs(
+      const std::vector<UniquePtr<JsepCodecDescription>>& aPreferredCodecs,
+      bool aUsePreferredCodecsOrder);
+
   virtual void PopulateCodecs(
-      const std::vector<UniquePtr<JsepCodecDescription>>& prototype);
+      const std::vector<UniquePtr<JsepCodecDescription>>& prototype,
+      bool aUsePreferredCodecsOrder = false);
 
   template <class UnaryFunction>
   void ForEachCodec(UnaryFunction func) {
@@ -311,6 +317,10 @@ class JsepTrack {
 
   // See Bug 1642419, this can be removed when all sites are working with RTX.
   bool mRtxIsAllowed = true;
+
+  // Used with setCodecPreferences to determine if an answer created should
+  // match the order of preferred codecs.
+  bool mUsePreferredCodecsOrder = false;
 
   // Codec names for logging
   std::string mFecCodec;
