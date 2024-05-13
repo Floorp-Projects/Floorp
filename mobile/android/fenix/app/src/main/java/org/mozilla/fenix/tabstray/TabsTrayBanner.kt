@@ -146,7 +146,7 @@ fun TabsTrayBanner(
                 onShareSelectedTabs = onShareSelectedTabsClick,
             )
         } else {
-            SingleSelectBanner(
+            TabPageBanner(
                 menuItems = menuItems,
                 selectedPage = selectedPage,
                 normalTabCount = normalTabCount,
@@ -179,7 +179,7 @@ fun TabsTrayBanner(
 
 @Suppress("LongMethod")
 @Composable
-private fun SingleSelectBanner(
+private fun TabPageBanner(
     menuItems: List<MenuItem>,
     selectedPage: Page,
     normalTabCount: Int,

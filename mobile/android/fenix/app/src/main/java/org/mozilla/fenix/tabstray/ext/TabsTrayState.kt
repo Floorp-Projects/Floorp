@@ -60,7 +60,7 @@ fun Mode.getMenuItems(
             onMakeSelectedTabsInactive = onMakeSelectedTabsInactive,
         )
     } else {
-        generateSingleSelectBannerMenuItems(
+        generateTabPageBannerMenuItems(
             resources = resources,
             selectedPage = selectedPage,
             normalTabCount = normalTabCount,
@@ -111,7 +111,7 @@ private fun generateMultiSelectBannerMenuItems(
  *  Builds the menu items list when in normal mode
  */
 @Suppress("LongParameterList")
-private fun generateSingleSelectBannerMenuItems(
+private fun generateTabPageBannerMenuItems(
     resources: Resources,
     selectedPage: Page,
     normalTabCount: Int,
