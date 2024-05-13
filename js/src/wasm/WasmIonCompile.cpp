@@ -5005,7 +5005,7 @@ static bool EmitIf(FunctionCompiler& f) {
   }
 
   // Store the branch hint in the basic block.
-  if (branchHint != BranchHint::Invalid) {
+  if (!f.inDeadCode() && branchHint != BranchHint::Invalid) {
     f.getCurBlock()->setBranchHinting(branchHint);
   }
 
