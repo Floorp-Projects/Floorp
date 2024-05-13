@@ -3727,6 +3727,18 @@ void Selection::NotifySelectionListeners() {
 
   mStyledRanges.mRangesMightHaveChanged = true;
 
+  // This flag will be set to Double or Triple if a selection by double click or
+  // triple click is detected. As soon as the selection is modified, it needs to
+  // be reset to NotApplicable.
+  mFrameSelection->SetClickSelectionType(ClickSelectionType::NotApplicable);
+
+  // If we're batching changes, record our batching flag and bail out, we'll be
+  // called once the batch ends.
+  if (mFrameSelection->IsBatching()) {
+    mFrameSelection->SetChangesDuringBatchingFlag();
+    return;
+  }
+
   // Our internal code should not move focus with using this class while
   // this moves focus nor from selection listeners.
   AutoRestore<bool> calledByJSRestorer(mCalledByJS);
@@ -3742,28 +3754,13 @@ void Selection::NotifySelectionListeners() {
     mStyledRanges.MaybeFocusCommonEditingHost(presShell);
   }
 
-  RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-
-  // This flag will be set to Double or Triple if a selection by double click or
-  // triple click is detected. As soon as the selection is modified, it needs to
-  // be reset to NotApplicable.
-  frameSelection->SetClickSelectionType(ClickSelectionType::NotApplicable);
-
-  if (frameSelection->IsBatching()) {
-    frameSelection->SetChangesDuringBatchingFlag();
-    return;
-  }
-  if (mSelectionListeners.IsEmpty() && !mNotifyAutoCopy &&
-      !mAccessibleCaretEventHub && !mSelectionChangeEventDispatcher) {
-    // If there are no selection listeners, we're done!
-    return;
-  }
-
   nsCOMPtr<Document> doc;
   if (PresShell* presShell = GetPresShell()) {
     doc = presShell->GetDocument();
     presShell->ScheduleContentRelevancyUpdate(ContentRelevancyReason::Selected);
   }
+
+  RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
 
   // We've notified all selection listeners even when some of them are removed
   // (and may be destroyed) during notifying one of them.  Therefore, we should
@@ -3771,12 +3768,11 @@ void Selection::NotifySelectionListeners() {
   const CopyableAutoTArray<nsCOMPtr<nsISelectionListener>, 5>
       selectionListeners = mSelectionListeners;
 
+  int32_t amount = static_cast<int32_t>(frameSelection->GetCaretMoveAmount());
   int16_t reason = frameSelection->PopChangeReasons();
   if (calledByJSRestorer.SavedValue()) {
     reason |= nsISelectionListener::JS_REASON;
   }
-
-  int32_t amount = static_cast<int32_t>(frameSelection->GetCaretMoveAmount());
 
   if (mNotifyAutoCopy) {
     AutoCopyListener::OnSelectionChange(doc, *this, reason);
