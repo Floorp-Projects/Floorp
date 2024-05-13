@@ -92,6 +92,9 @@ class ContentScriptParent {
       excludeGlobs: details.excludeGlobs,
       allFrames: details.allFrames,
       matchAboutBlank: details.matchAboutBlank,
+      // New matchOriginAsFallback option not supported in contentScripts API
+      // because contentScripts is deprecated in favor of scripting API.
+      matchOriginAsFallback: false,
       runAt: details.runAt || "document_idle",
       jsPaths: [],
       cssPaths: [],

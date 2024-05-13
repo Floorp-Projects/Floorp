@@ -80,6 +80,7 @@ add_task(
           id: "a-script",
           allFrames: true,
           matches: ["http://*/*/*.html"],
+          matchOriginAsFallback: true,
           runAt: "document_start",
           persistAcrossSessions: false,
           css: ["style.js"],

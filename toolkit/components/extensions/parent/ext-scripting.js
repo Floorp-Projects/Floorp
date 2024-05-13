@@ -333,6 +333,7 @@ this.scripting = class extends ExtensionAPI {
             script.excludeMatches ??= options.excludeMatches;
             script.js ??= options.jsPaths;
             script.matches ??= options.matches;
+            script.matchOriginAsFallback ??= options.matchOriginAsFallback;
             script.runAt ??= options.runAt;
             script.persistAcrossSessions ??= options.persistAcrossSessions;
 
