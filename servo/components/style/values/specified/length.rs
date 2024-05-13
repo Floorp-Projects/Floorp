@@ -946,6 +946,15 @@ impl ContainerRelativeLength {
     }
 }
 
+#[cfg(feature = "gecko")]
+fn are_container_queries_enabled() -> bool {
+    static_prefs::pref!("layout.css.container-queries.enabled")
+}
+#[cfg(feature = "servo")]
+fn are_container_queries_enabled() -> bool {
+    false
+}
+
 /// A `<length>` without taking `calc` expressions into account
 ///
 /// <https://drafts.csswg.org/css-values/#lengths>
@@ -1129,22 +1138,22 @@ impl NoCalcLength {
             },
             // Container query lengths. Inherit the limitation from viewport units since
             // we may fall back to them.
-            "cqw" if !context.in_page_rule() && cfg!(feature = "gecko") => {
+            "cqw" if !context.in_page_rule() && are_container_queries_enabled() => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqw(value))
             },
-            "cqh" if !context.in_page_rule() && cfg!(feature = "gecko") => {
+            "cqh" if !context.in_page_rule() && are_container_queries_enabled() => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqh(value))
             },
-            "cqi" if !context.in_page_rule() && cfg!(feature = "gecko") => {
+            "cqi" if !context.in_page_rule() && are_container_queries_enabled() => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqi(value))
             },
-            "cqb" if !context.in_page_rule() && cfg!(feature = "gecko") => {
+            "cqb" if !context.in_page_rule() && are_container_queries_enabled() => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqb(value))
             },
-            "cqmin" if !context.in_page_rule() && cfg!(feature = "gecko") => {
+            "cqmin" if !context.in_page_rule() && are_container_queries_enabled() => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqmin(value))
             },
-            "cqmax" if !context.in_page_rule() && cfg!(feature = "gecko") => {
+            "cqmax" if !context.in_page_rule() && are_container_queries_enabled() => {
                 Self::ContainerRelative(ContainerRelativeLength::Cqmax(value))
             },
             _ => return Err(()),

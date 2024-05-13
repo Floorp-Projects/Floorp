@@ -37,6 +37,7 @@ ${helpers.two_properties_shorthand(
     engines="gecko"
     name="container"
     sub_properties="container-name container-type"
+    gecko_pref="layout.css.container-queries.enabled"
     enabled_in="ua"
     spec="https://drafts.csswg.org/css-contain-3/#container-shorthand"
 >
