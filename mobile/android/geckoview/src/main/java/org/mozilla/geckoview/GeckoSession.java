@@ -4951,7 +4951,7 @@ public class GeckoSession {
      */
     @UiThread
     @Deprecated
-    @DeprecationSchedule(id = "geckoview-onlocationchange", version = 127)
+    @DeprecationSchedule(id = "geckoview-onlocationchange", version = 128)
     default void onLocationChange(
         @NonNull GeckoSession session,
         @Nullable String url,
