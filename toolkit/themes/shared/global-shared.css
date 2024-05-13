@@ -117,13 +117,6 @@
 
 /* General styles */
 
-.plain {
-  appearance: none;
-  margin: 0 !important;
-  border: none;
-  padding: 0;
-}
-
 moz-input-box,
 html|input {
   min-width: 0;
