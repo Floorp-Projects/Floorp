@@ -88,6 +88,8 @@ prefs = [
 
 ["browser_aboutPrefs_fc_patch_partialBadSize_completeBadSize.js"]
 
+["browser_discardUpdateNotif.js"]
+
 # Doorhanger Application Update Tests
 
 ["browser_doorhanger_bc_downloadAutoFailures.js"]
