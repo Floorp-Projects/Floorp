@@ -13,9 +13,14 @@
 }
 
 #type {
+  appearance: none;
   flex: 1;
   background-color: transparent;
   color: inherit;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  outline-offset: 0;
 }
 
 #from {
@@ -43,5 +48,6 @@
 
 #source,
 #location {
+  margin: 0;
   contain: inline-size;
 }
