@@ -16,6 +16,8 @@ support-files = ["head.js"]
 
 ["browser_gridPatterns.js"]
 
+["browser_liveRegions.js"]
+
 ["browser_relationProps.js"]
 
 ["browser_selectionPatterns.js"]

@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -49,7 +51,8 @@ fun TranslationOptionsDialog(
     aboutTranslationClicked: () -> Unit,
 ) {
     TranslationOptionsDialogHeader(onBackClicked)
-    translationOptionsList.forEach() { item: TranslationSwitchItem ->
+
+    translationOptionsList.forEach { item: TranslationSwitchItem ->
         Column {
             val translationSwitchItem = TranslationSwitchItem(
                 type = item.type,
@@ -71,9 +74,12 @@ fun TranslationOptionsDialog(
             TextListItem(
                 label = stringResource(id = R.string.translation_option_bottom_sheet_translation_settings),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 56.dp),
-                onClick = { onTranslationSettingsClicked() },
+                    .padding(start = 56.dp)
+                    .defaultMinSize(minHeight = 57.dp)
+                    .wrapContentHeight(),
+                onClick = {
+                    onTranslationSettingsClicked()
+                },
             )
         }
     }
@@ -86,9 +92,13 @@ fun TranslationOptionsDialog(
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 56.dp),
+                .padding(start = 56.dp)
+                .defaultMinSize(minHeight = 57.dp)
+                .wrapContentHeight(),
             onClick = { aboutTranslationClicked() },
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -115,7 +125,7 @@ private fun TranslationOptions(
                 checked,
             )
         },
-        modifier = Modifier.padding(start = 72.dp, end = 16.dp),
+        modifier = Modifier.padding(start = 72.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
     )
 
     if (translationSwitchItem.type.hasDivider) {

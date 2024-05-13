@@ -122,10 +122,12 @@ class HTTPCustomRequestPanel extends Component {
 
   async componentDidMount() {
     let { connector, request } = this.props;
-    const persistedCustomRequest = await asyncStorage.getItem(
-      "devtools.netmonitor.customRequest"
-    );
-    request = request || persistedCustomRequest;
+    if (!connector.currentTarget?.targetForm?.isPrivate) {
+      const persistedCustomRequest = await asyncStorage.getItem(
+        "devtools.netmonitor.customRequest"
+      );
+      request = request || persistedCustomRequest;
+    }
 
     if (!request) {
       this.setState({ _isStateDataReady: true });
@@ -191,7 +193,9 @@ class HTTPCustomRequestPanel extends Component {
   }
 
   componentWillUnmount() {
-    asyncStorage.setItem("devtools.netmonitor.customRequest", this.state);
+    if (!this.props.connector.currentTarget?.targetForm?.isPrivate) {
+      asyncStorage.setItem("devtools.netmonitor.customRequest", this.state);
+    }
   }
 
   handleChangeURL(event) {

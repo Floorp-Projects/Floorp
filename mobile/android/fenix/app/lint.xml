@@ -46,15 +46,15 @@
     <issue id="UselessLeaf" severity="error" />
     <issue id="UselessParent" severity="error" />
     <issue id="UnusedNamespace" severity="error" />
-
-    <!-- Performance: checks we'd like to eventually set to error. -->
-    <issue id="UseCompoundDrawables" severity="warning" />
-    <issue id="Overdraw" severity="warning" />
     <issue id="UnusedResources" severity="error">
         <!-- Using an automated process to remove localized strings after they are removed from the default strings.xml
         means the files for localized strings will contain unused resources for a few days after the original removal operation. -->
         <ignore path="**/values-*/strings.xml" />
     </issue>
+    <issue id="UseCompoundDrawables" severity="error" />
+
+    <!-- Performance: checks we'd like to eventually set to error. -->
+    <issue id="Overdraw" severity="warning" />
 
     <!-- Performance: checks that we're unsure of the value of that we might want to investigate. -->
     <issue id="UnpackedNativeCode" severity="informational" />

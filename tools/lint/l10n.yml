@@ -28,7 +28,7 @@ l10n:
         - mobile/android/locales/l10n.toml
     type: external
     payload: python.l10n_lint:lint
-    setup: python.l10n_lint:gecko_strings_setup
+    setup: python.l10n_lint:source_repo_setup
     support-files:
         - '**/l10n.toml'
         - 'third_party/python/compare-locales/**'

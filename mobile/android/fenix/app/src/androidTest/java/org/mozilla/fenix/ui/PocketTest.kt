@@ -2,7 +2,6 @@ package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.Constants
@@ -64,7 +63,6 @@ class PocketTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252513
-    @Ignore("Bug 1868291 - Intermittent failure in org.mozilla.fenix.ui.PocketTest.openPocketStoryItemTest")
     @Test
     fun openPocketStoryItemTest() {
         activityTestRule.activityRule.applySettingsExceptions {

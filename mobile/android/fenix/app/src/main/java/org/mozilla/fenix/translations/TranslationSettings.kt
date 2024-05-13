@@ -6,8 +6,10 @@ package org.mozilla.fenix.translations
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Text
@@ -65,7 +67,7 @@ fun TranslationSettings(
                     },
                     label = item.textLabel,
                     modifier = Modifier
-                        .padding(start = 72.dp, end = 16.dp),
+                        .padding(start = 72.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
                 )
 
                 if (item.type.hasDivider && showHeader) {
@@ -81,7 +83,7 @@ fun TranslationSettings(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 72.dp, end = 16.dp, bottom = 16.dp, top = 8.dp)
+                            .padding(start = 72.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
                             .semantics { heading() },
                         color = FirefoxTheme.colors.textAccent,
                         style = FirefoxTheme.typography.headline8,
@@ -95,7 +97,9 @@ fun TranslationSettings(
                         label = stringResource(id = R.string.translation_settings_automatic_translation),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 56.dp),
+                            .padding(start = 56.dp)
+                            .defaultMinSize(minHeight = 76.dp)
+                            .wrapContentHeight(),
                         onClick = { onAutomaticTranslationClicked() },
                     )
                 }
@@ -109,7 +113,9 @@ fun TranslationSettings(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 56.dp),
+                            .padding(start = 56.dp)
+                            .defaultMinSize(minHeight = 76.dp)
+                            .wrapContentHeight(),
                         onClick = { onNeverTranslationClicked() },
                     )
                 }
@@ -123,7 +129,9 @@ fun TranslationSettings(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 56.dp),
+                            .padding(start = 56.dp)
+                            .defaultMinSize(minHeight = 76.dp)
+                            .wrapContentHeight(),
                         onClick = { onDownloadLanguageClicked() },
                     )
                 }

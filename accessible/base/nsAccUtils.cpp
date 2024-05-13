@@ -441,50 +441,38 @@ bool nsAccUtils::MustPrune(Accessible* aAccessible) {
   return childRole == roles::TEXT_LEAF || childRole == roles::STATICTEXT;
 }
 
-bool nsAccUtils::IsARIALive(const LocalAccessible* aAccessible) {
-  // Get computed aria-live property based on the closest container with the
-  // attribute. Inner nodes override outer nodes within the same
-  // document.
-  // This should be the same as the container-live attribute, but we don't need
-  // the other container-* attributes, so we can't use the same function.
-  nsIContent* ancestor = aAccessible->GetContent();
-  if (!ancestor) {
-    return false;
+void nsAccUtils::GetLiveRegionSetting(Accessible* aAcc, nsAString& aLive) {
+  MOZ_ASSERT(aAcc);
+  aAcc->LiveRegionAttributes(&aLive, nullptr, nullptr, nullptr);
+  // aria-live wasn't explicitly set. See if an aria-live value is implied
+  // by an ARIA role or markup element.
+  if (const nsRoleMapEntry* roleMap = aAcc->ARIARoleMap()) {
+    GetLiveAttrValue(roleMap->liveAttRule, aLive);
+  } else if (nsStaticAtom* value =
+                 GetAccService()->MarkupAttribute(aAcc, nsGkAtoms::aria_live)) {
+    value->ToString(aLive);
   }
-  dom::Document* doc = ancestor->GetComposedDoc();
-  if (!doc) {
-    return false;
-  }
-  dom::Element* topEl = doc->GetRootElement();
-  while (ancestor) {
-    const nsRoleMapEntry* role = nullptr;
-    if (ancestor->IsElement()) {
-      role = aria::GetRoleMap(ancestor->AsElement());
-    }
-    nsAutoString live;
-    if (HasDefinedARIAToken(ancestor, nsGkAtoms::aria_live)) {
-      GetARIAAttr(ancestor->AsElement(), nsGkAtoms::aria_live, live);
-    } else if (role) {
-      GetLiveAttrValue(role->liveAttRule, live);
-    } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
-                   ancestor, nsGkAtoms::aria_live)) {
-      value->ToString(live);
-    }
-    if (!live.IsEmpty() && !live.EqualsLiteral("off")) {
-      return true;
-    }
+}
 
-    if (ancestor == topEl) {
+Accessible* nsAccUtils::GetLiveRegionRoot(Accessible* aAcc) {
+  MOZ_ASSERT(aAcc);
+  nsAutoString live;
+  Accessible* acc;
+  for (acc = aAcc; acc; acc = acc->Parent()) {
+    GetLiveRegionSetting(acc, live);
+    if (!live.IsEmpty()) {
       break;
     }
-
-    ancestor = ancestor->GetParent();
-    if (!ancestor) {
-      ancestor = topEl;  // Use <body>/<frameset>
+    if (acc->IsDoc()) {
+      // A document can be the root of a live region, but a live region cannot
+      // cross document boundaries.
+      return nullptr;
     }
   }
-
-  return false;
+  if (live.IsEmpty() || live.EqualsLiteral("off")) {
+    return nullptr;
+  }
+  return acc;
 }
 
 Accessible* nsAccUtils::DocumentFor(Accessible* aAcc) {

@@ -4,22 +4,20 @@
 
 import os
 from datetime import datetime, timedelta
+from subprocess import check_call
 
 from compare_locales import parser
 from compare_locales.lint.linter import L10nLinter
 from compare_locales.lint.util import l10n_base_reference_and_tests
 from compare_locales.paths import ProjectFiles, TOMLParser
 from mach import util as mach_util
+from mozfile import which
 from mozlint import pathutils, result
 from mozpack import path as mozpath
 from mozversioncontrol import MissingVCSTool
-from mozversioncontrol.repoupdate import update_git_repo, update_mercurial_repo
 
 L10N_SOURCE_NAME = "l10n-source"
 L10N_SOURCE_REPO = "https://github.com/mozilla-l10n/firefox-l10n-source.git"
-
-STRINGS_NAME = "gecko-strings"
-STRINGS_REPO = "https://hg.mozilla.org/l10n/gecko-strings"
 
 PULL_AFTER = timedelta(days=2)
 
@@ -28,9 +26,7 @@ PULL_AFTER = timedelta(days=2)
 # comm-central defines its own wrapper since comm-central strings are
 # in separate repositories
 def lint(paths, lintconfig, **lintargs):
-    extra_args = lintargs.get("extra_args") or []
-    name = L10N_SOURCE_NAME if "--l10n-git" in extra_args else STRINGS_NAME
-    return lint_strings(name, paths, lintconfig, **lintargs)
+    return lint_strings(L10N_SOURCE_NAME, paths, lintconfig, **lintargs)
 
 
 def lint_strings(name, paths, lintconfig, **lintargs):
@@ -91,16 +87,8 @@ def lint_strings(name, paths, lintconfig, **lintargs):
 
 
 # Similar to the lint/lint_strings wrapper setup, for comm-central support.
-def gecko_strings_setup(**lint_args):
-    extra_args = lint_args.get("extra_args") or []
-    if "--l10n-git" in extra_args:
-        return source_repo_setup(L10N_SOURCE_REPO, L10N_SOURCE_NAME)
-    else:
-        return strings_repo_setup(STRINGS_REPO, STRINGS_NAME)
-
-
-def source_repo_setup(repo: str, name: str):
-    gs = mozpath.join(mach_util.get_state_dir(), name)
+def source_repo_setup(**lint_args):
+    gs = mozpath.join(mach_util.get_state_dir(), L10N_SOURCE_NAME)
     marker = mozpath.join(gs, ".git", "l10n_pull_marker")
     try:
         last_pull = datetime.fromtimestamp(os.stat(marker).st_mtime)
@@ -109,34 +97,16 @@ def source_repo_setup(repo: str, name: str):
         skip_clone = False
     if skip_clone:
         return
-    try:
-        update_git_repo(repo, gs)
-    except MissingVCSTool:
+    git = which("git")
+    if not git:
         if os.environ.get("MOZ_AUTOMATION"):
-            raise
+            raise MissingVCSTool("Unable to obtain git path.")
         print("warning: l10n linter requires Git but was unable to find 'git'")
         return 1
-    with open(marker, "w") as fh:
-        fh.flush()
-
-
-def strings_repo_setup(repo: str, name: str):
-    gs = mozpath.join(mach_util.get_state_dir(), name)
-    marker = mozpath.join(gs, ".hg", "l10n_pull_marker")
-    try:
-        last_pull = datetime.fromtimestamp(os.stat(marker).st_mtime)
-        skip_clone = datetime.now() < last_pull + PULL_AFTER
-    except OSError:
-        skip_clone = False
-    if skip_clone:
-        return
-    try:
-        update_mercurial_repo(repo, gs)
-    except MissingVCSTool:
-        if os.environ.get("MOZ_AUTOMATION"):
-            raise
-        print("warning: l10n linter requires Mercurial but was unable to find 'hg'")
-        return 1
+    if os.path.exists(gs):
+        check_call([git, "pull", L10N_SOURCE_REPO], cwd=gs)
+    else:
+        check_call([git, "clone", L10N_SOURCE_REPO, gs])
     with open(marker, "w") as fh:
         fh.flush()
 

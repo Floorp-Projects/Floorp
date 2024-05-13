@@ -39,3 +39,16 @@ let module = new WebAssembly.Module(wasmTextToBinary(`
 `))
 
 assertEq(wasmParsedBranchHints(module), true);
+
+let deadCode = new WebAssembly.Module(wasmTextToBinary(`
+(module
+    (func $main
+      i32.const 0
+      return
+      (@metadata.code.branch_hint "\\00") if
+      end
+    )
+    (export "_main" (func $main))
+)`));
+
+assertEq(wasmParsedBranchHints(deadCode), true);

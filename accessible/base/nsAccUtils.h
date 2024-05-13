@@ -233,10 +233,17 @@ class nsAccUtils {
   static bool MustPrune(Accessible* aAccessible);
 
   /**
-   * Return true if the given accessible is within an ARIA live region; i.e.
-   * the container-live attribute would be something other than "off" or empty.
+   * Get the live region setting (polite, etc.) for this Accessible. This does
+   * not walk ancestors. It does account for implicit live regions as
+   * determined from the ARIA role or markup tag name.
    */
-  static bool IsARIALive(const LocalAccessible* aAccessible);
+  static void GetLiveRegionSetting(Accessible* aAcc, nsAString& aLive);
+
+  /**
+   * If the given Accessible is inside a live region, return the root of the
+   * live region. Otherwise, return null.
+   */
+  static Accessible* GetLiveRegionRoot(Accessible* aAcc);
 
   /**
    * Get the document Accessible which owns a given Accessible.
