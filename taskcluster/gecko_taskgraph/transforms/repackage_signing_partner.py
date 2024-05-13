@@ -93,7 +93,7 @@ def make_repackage_signing_description(config, jobs):
                     "paths": [
                         get_artifact_path(dep_job, f"{repack_id}/target.installer.exe"),
                     ],
-                    "formats": ["autograph_authenticode_sha2", "autograph_gpg"],
+                    "formats": ["autograph_authenticode_202404", "autograph_gpg"],
                 }
             ]
 
@@ -113,7 +113,7 @@ def make_repackage_signing_description(config, jobs):
                                 f"{repack_id}/target.stub-installer.exe",
                             ),
                         ],
-                        "formats": ["autograph_authenticode_sha2", "autograph_gpg"],
+                        "formats": ["autograph_authenticode_202404", "autograph_gpg"],
                     }
                 )
         elif "mac" in build_platform:
