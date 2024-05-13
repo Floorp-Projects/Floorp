@@ -40,6 +40,7 @@ pub fn args_os() -> ArgsOs {
     })
 }
 
+#[allow(unused)]
 pub fn current_exe() -> std::io::Result<super::path::PathBuf> {
     Ok(MockCurrentExe.get(|r| r.clone().into()))
 }
