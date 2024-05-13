@@ -1098,10 +1098,15 @@ nsIPrincipal* DocInfo::Principal() const {
         return doc->NodePrincipal();
       }
       nsIPrincipal* operator()(LoadInfo aLoadInfo) {
+        // This method tries to return a principal when the principal cannot be
+        // derived from URL(). See PrincipalURL().
         if (!(mThis.URL().InheritsPrincipal() ||
               aLoadInfo->GetForceInheritPrincipal())) {
+          // E.g. http(s):-URLs, data:, or any other arbitrary scheme.
           return nullptr;
         }
+        // E.g. about:srcdoc. In this case the principal cannot be derived from
+        // the URL, so we return the most likely principal here.
         if (auto principal = aLoadInfo->PrincipalToInherit()) {
           return principal;
         }
@@ -1115,6 +1120,27 @@ nsIPrincipal* DocInfo::Principal() const {
 
 const URLInfo& DocInfo::PrincipalURL() const {
   if (!(Principal() && Principal()->GetIsContentPrincipal())) {
+    // TODO bug 1475831: move above content principal check to the logic below,
+    // where we need to account for content principals and null principals.
+    // The remainder of this comment applies to the !Principal() check above.
+    //
+    // This is only possible via non-DOMWindow (see Principal()). We may end up
+    // here via ExtensionPolicyService::CheckRequest(), called before a network
+    // request ("http-on-opening-request" / "document-on-opening-request").
+    // In practice, http(s):, about:srcdoc, data:, and blob: may reach here.
+    // about:blank (and javascript:) does not enter this code path.
+    //
+    // Falling back to the URL is almost always correct, except in these cases:
+    // - documents that end up having a null principal. We cannot know for sure,
+    //   e.g. because it can be forced later by a http header (CSP sandbox).
+    //   In this case we may preload when we should not.
+    //
+    // - URLs that contain the principal such as blob:-URLs. In theory we could
+    //   extract the origin from the URL, but we do not for simplicity.
+    //   In this case we do not preload even though we could.
+    //   ( In practice, blob:-URLs can only be created and loaded by the same
+    //     origin, so it is likely that the content script had been preloaded
+    //     before for that document. )
     return URL();
   }
 

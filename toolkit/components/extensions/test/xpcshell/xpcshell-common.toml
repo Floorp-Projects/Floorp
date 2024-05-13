@@ -155,6 +155,8 @@ skip-if = [
 
 ["test_ext_contentscript_module_import.js"]
 
+["test_ext_contentscript_preloading.js"]
+
 ["test_ext_contentscript_restrictSchemes.js"]
 
 ["test_ext_contentscript_teardown.js"]
