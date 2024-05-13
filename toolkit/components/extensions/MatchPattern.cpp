@@ -68,6 +68,43 @@ bool AtomSet::Intersects(const AtomSet& aOther) const {
   return false;
 }
 
+#define DEFINE_STATIC_ATOM_SET(name, ...)            \
+  static already_AddRefed<AtomSet> name() {          \
+    MOZ_ASSERT(NS_IsMainThread());                   \
+    static StaticRefPtr<AtomSet> sAtomSet;           \
+    RefPtr<AtomSet> atomSet = sAtomSet;              \
+    if (!atomSet) {                                  \
+      atomSet = sAtomSet = new AtomSet{__VA_ARGS__}; \
+      ClearOnShutdown(&sAtomSet);                    \
+    }                                                \
+    return atomSet.forget();                         \
+  }
+
+DEFINE_STATIC_ATOM_SET(PermittedSchemes, nsGkAtoms::http, nsGkAtoms::https,
+                       nsGkAtoms::ws, nsGkAtoms::wss, nsGkAtoms::file,
+                       nsGkAtoms::ftp, nsGkAtoms::data);
+
+// Known schemes that are followed by "://" instead of ":".
+DEFINE_STATIC_ATOM_SET(HostLocatorSchemes, nsGkAtoms::http, nsGkAtoms::https,
+                       nsGkAtoms::ws, nsGkAtoms::wss, nsGkAtoms::file,
+                       nsGkAtoms::ftp, nsGkAtoms::moz_extension,
+                       nsGkAtoms::chrome, nsGkAtoms::resource, nsGkAtoms::moz,
+                       nsGkAtoms::moz_icon, nsGkAtoms::moz_gio);
+
+DEFINE_STATIC_ATOM_SET(WildcardSchemes, nsGkAtoms::http, nsGkAtoms::https,
+                       nsGkAtoms::ws, nsGkAtoms::wss);
+
+// Schemes whose URLs are a meaningful representation of the document URL, even
+// if the origin of that document is opaque (e.g. due to CSP sandbox).
+// Such documents have a null principal, and their precursor (origin) is
+// usually equal to the origin component of such URLs.
+// Counter-examples: about: and data: do not have any embedded origin,
+// blob:-URLs have an origin (becomes "null" when opaque) and no path.
+DEFINE_STATIC_ATOM_SET(NonOpaqueSchemes, nsGkAtoms::http, nsGkAtoms::https,
+                       nsGkAtoms::file);
+
+#undef DEFINE_STATIC_ATOM_SET
+
 /*****************************************************************************
  * URLInfo
  *****************************************************************************/
@@ -156,6 +193,14 @@ bool URLInfo::InheritsPrincipal() const {
   return mInheritsPrincipal.ref();
 }
 
+bool URLInfo::IsNonOpaqueURL() const {
+  if (!mIsNonOpaqueURL.isSome()) {
+    RefPtr<AtomSet> nonOpaqueSchemes = NonOpaqueSchemes();
+    mIsNonOpaqueURL.emplace(nonOpaqueSchemes->Contains(Scheme()));
+  }
+  return mIsNonOpaqueURL.ref();
+}
+
 /*****************************************************************************
  * CookieInfo
  *****************************************************************************/
@@ -193,34 +238,6 @@ const nsCString& CookieInfo::RawHost() const {
 /*****************************************************************************
  * MatchPatternCore
  *****************************************************************************/
-
-#define DEFINE_STATIC_ATOM_SET(name, ...)            \
-  static already_AddRefed<AtomSet> name() {          \
-    MOZ_ASSERT(NS_IsMainThread());                   \
-    static StaticRefPtr<AtomSet> sAtomSet;           \
-    RefPtr<AtomSet> atomSet = sAtomSet;              \
-    if (!atomSet) {                                  \
-      atomSet = sAtomSet = new AtomSet{__VA_ARGS__}; \
-      ClearOnShutdown(&sAtomSet);                    \
-    }                                                \
-    return atomSet.forget();                         \
-  }
-
-DEFINE_STATIC_ATOM_SET(PermittedSchemes, nsGkAtoms::http, nsGkAtoms::https,
-                       nsGkAtoms::ws, nsGkAtoms::wss, nsGkAtoms::file,
-                       nsGkAtoms::ftp, nsGkAtoms::data);
-
-// Known schemes that are followed by "://" instead of ":".
-DEFINE_STATIC_ATOM_SET(HostLocatorSchemes, nsGkAtoms::http, nsGkAtoms::https,
-                       nsGkAtoms::ws, nsGkAtoms::wss, nsGkAtoms::file,
-                       nsGkAtoms::ftp, nsGkAtoms::moz_extension,
-                       nsGkAtoms::chrome, nsGkAtoms::resource, nsGkAtoms::moz,
-                       nsGkAtoms::moz_icon, nsGkAtoms::moz_gio);
-
-DEFINE_STATIC_ATOM_SET(WildcardSchemes, nsGkAtoms::http, nsGkAtoms::https,
-                       nsGkAtoms::ws, nsGkAtoms::wss);
-
-#undef DEFINE_STATIC_ATOM_SET
 
 MatchPatternCore::MatchPatternCore(const nsAString& aPattern, bool aIgnorePath,
                                    bool aRestrictSchemes, ErrorResult& aRv) {
