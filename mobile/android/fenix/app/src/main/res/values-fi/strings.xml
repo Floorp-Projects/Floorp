@@ -201,6 +201,10 @@
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Lisäosat</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Laajennukset</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Hallitse laajennuksia</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Löydä lisää laajennuksia</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Tilin tiedot</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -230,10 +234,14 @@
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Käännä sivu</string>
     <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Tallenna kokoelmaan…</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Tallenna kokoelmaan</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Jaa</string>
 
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">Jaa…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Avaa sovelluksessa %1$s</string>
@@ -287,6 +295,17 @@
     <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
          bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
     <string name="browser_menu_save">Tallenna</string>
+
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">Lisää tämä sivu kirjanmerkkeihin</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">Muokkaa kirjanmerkkiä</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">Tallenna PDF-muodossa…</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">Käännä sivu…</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">Tulosta…</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -596,7 +615,9 @@
     <!-- Preference for language -->
     <string name="preferences_language">Kieli</string>
     <!-- Preference for translation -->
-    <string name="preferences_translation">Käännös</string>
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Käännös</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Käännökset</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Tietovalinnat</string>
     <!-- Preference for data collection -->
@@ -843,6 +864,9 @@
     <string name="fxa_tab_received_notification_name">Välilehti vastaanotettu</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Välilehti laitteesta %s</string>
+
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Näytä viimeksi suljetut välilehdet</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -2712,7 +2736,7 @@
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Välilehtien määrä</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Aktiivinen</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Aktiivinen</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Passiivinen</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->

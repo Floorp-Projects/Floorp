@@ -204,6 +204,10 @@
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Doplňky</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Rozšíření</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Správa rozšíření</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Objevit další rozšíření</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Informace o účtu</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -222,6 +226,8 @@
     <string name="browser_menu_open_in_regular_tab">Otevřít v běžném panelu</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Přidat na plochu</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Přidat na domovskou obrazovku…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Nainstalovat</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -233,9 +239,13 @@
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Přeložit stránku</string>
     <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Uložit do sbírky…</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Uložit do sbírky</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Sdílet</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">Sdílet…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Otevřít v aplikaci %1$s</string>
@@ -289,6 +299,24 @@
     <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
          bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
     <string name="browser_menu_save">Uložit</string>
+
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">Přidat stránku do záložek</string>
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">Upravit záložku</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">Uložit jako PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Zapnout zobrazení čtečky</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Vypnout zobrazení čtečky</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">Přeložit stránku…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">Přeloženo do jazyka %1$s</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">Tisk…</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -594,7 +622,9 @@
     <!-- Preference for language -->
     <string name="preferences_language">Jazyk</string>
     <!-- Preference for translation -->
-    <string name="preferences_translation">Překladač</string>
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Překladač</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Překlady</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Možnosti hlášení</string>
     <!-- Preference for data collection -->
@@ -841,6 +871,9 @@
     <string name="fxa_tab_received_notification_name">Přijatý panel</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Panel z %s</string>
+
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Zobrazení nedávno zavřených panelů</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -2733,7 +2766,9 @@
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Počet panelů</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Aktivní</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Aktivní</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Aktivní</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Neaktivní</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
