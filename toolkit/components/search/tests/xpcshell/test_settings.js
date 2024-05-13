@@ -591,7 +591,7 @@ var EXPECTED_ENGINE = {
           method: "GET",
           template:
             "http://suggestqueries.google.com/complete/search?output=firefox&client=firefox" +
-            "&hl={moz:locale}&q={searchTerms}",
+            "&q={searchTerms}",
           params: "",
         },
         {

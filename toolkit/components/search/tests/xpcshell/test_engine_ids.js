@@ -36,7 +36,7 @@ const CONFIG = [
         },
       ],
       suggest_url:
-        "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}",
+        "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&q={searchTerms}",
     },
     appliesTo: [
       {
@@ -68,7 +68,7 @@ const CONFIG_V2 = [
           searchTermParamName: "q",
         },
         suggestions: {
-          base: "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+          base: "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox",
           searchTermParamName: "q",
         },
       },

@@ -50,7 +50,6 @@ const params = [
   { name: "simple", value: "5" },
   { name: "term", value: "{searchTerms}" },
   { name: "lang", value: "{language}" },
-  { name: "locale", value: "{moz:locale}" },
   { name: "prefval", condition: "pref", pref: "code" },
 ];
 
@@ -120,10 +119,6 @@ const CONFIG_V2 = [
               value: "{language}",
             },
             {
-              name: "locale",
-              value: "{moz:locale}",
-            },
-            {
               name: "prefval",
               experimentConfig: "code",
             },
@@ -189,8 +184,6 @@ add_task(async function test_extension_setting_moz_params() {
       extraParams.push(`${p.name}=test`);
     } else if (p.value == "{language}") {
       extraParams.push(`${p.name}=${Services.locale.requestedLocale || "*"}`);
-    } else if (p.value == "{moz:locale}") {
-      extraParams.push(`${p.name}=${Services.locale.requestedLocale}`);
     } else {
       extraParams.push(`${p.name}=${p.value}`);
     }
@@ -259,8 +252,6 @@ add_task(async function test_nimbus_params() {
       extraParams.push(`${p.name}=test`);
     } else if (p.value == "{language}") {
       extraParams.push(`${p.name}=${Services.locale.requestedLocale || "*"}`);
-    } else if (p.value == "{moz:locale}") {
-      extraParams.push(`${p.name}=${Services.locale.requestedLocale}`);
     } else if (p.condition !== "pref") {
       // Ignoring pref parameters
       extraParams.push(`${p.name}=${p.value}`);

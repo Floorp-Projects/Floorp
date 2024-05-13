@@ -50,25 +50,4 @@ add_task(async function test_paramSubstitution() {
   check("{startIndex?}", "");
   check("{startPage}", "1");
   check("{startPage?}", "");
-
-  check("{moz:locale}", Services.locale.requestedLocale);
-});
-
-add_task(async function test_mozParamsFailForNonAppProvided() {
-  await SearchTestUtils.installSearchExtension();
-
-  let prefix = "https://example.com/?q=";
-  let engine = await Services.search.getEngineByName("Example");
-  let url = engine.wrappedJSObject._getURLOfType("text/html");
-  equal(url.getSubmission("foo", engine).uri.spec, prefix + "foo");
-  // Reset the engine parameters so we can have a clean template to use for
-  // the subsequent tests.
-  url.params = [];
-
-  let check = checkSubstitution.bind(this, url, prefix, engine);
-
-  // Test moz: parameters (only supported for built-in engines, ie _isDefault == true).
-  check("{moz:locale}", "{moz:locale}");
-
-  await promiseAfterSettings();
 });
