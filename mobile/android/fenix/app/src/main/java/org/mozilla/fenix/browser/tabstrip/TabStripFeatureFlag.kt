@@ -9,19 +9,18 @@ import android.content.pm.PackageManager
 import android.os.Build
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.isTablet
-import org.mozilla.fenix.ext.settings
 
 /**
  * Returns true if the tab strip is enabled.
  */
 fun Context.isTabStripEnabled(): Boolean =
-    isTabStripEligible() && settings().isTabStripEnabled
+    isTabStripEligible() && Config.channel.isNightlyOrDebug
 
 /**
  * Returns true if the the device has the prerequisites to enable the tab strip.
  */
-fun Context.isTabStripEligible(): Boolean =
-    Config.channel.isNightlyOrDebug && isTablet() && !doesDeviceHaveHinge()
+private fun Context.isTabStripEligible(): Boolean =
+    isTablet() && !doesDeviceHaveHinge()
 
 /**
  * Check if the device has a hinge sensor.

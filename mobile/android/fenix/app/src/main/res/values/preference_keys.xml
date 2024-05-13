@@ -84,7 +84,6 @@
     <string name="pref_key_enable_debug_drawer" translatable="false">pref_key_enable_debug_drawer</string>
     <string name="pref_key_show_first_time_translation" translatable="false">pref_key_show_first_time_translation</string>
     <string name="pref_key_translations_offer" translatable="false">pref_key_translations_offer</string>
-    <string name="pref_key_enable_tab_strip" translatable="false">pref_key_enable_tab_strip</string>
 
     <!-- Data Choices -->
     <string name="pref_key_telemetry" translatable="false">pref_key_telemetry</string>
