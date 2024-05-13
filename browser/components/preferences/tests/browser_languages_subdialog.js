@@ -19,6 +19,11 @@ add_task(async function () {
     button.doCommand();
   }
 
+  function cancelLanguagesSubdialog(win) {
+    const button = win.document.querySelector("dialog").getButton("cancel");
+    button.doCommand();
+  }
+
   ok(BrowserTestUtils.isHidden(dialogOverlay), "The dialog is invisible.");
   let win = await languagesSubdialogOpened();
   ok(
@@ -167,6 +172,48 @@ add_task(async function () {
     "The Remove button is disabled when there is no language on the list"
   );
   acceptLanguagesSubdialog(win);
+
+  // Testing adding from the available languages list
+  win = await languagesSubdialogOpened();
+  ok(
+    win.document.getElementById("addButton").disabled,
+    "The Add button is disabled after opening the Languages dialog"
+  );
+
+  win.document.getElementById("availableLanguages").click();
+  ok(
+    win.document.getElementById("addButton").disabled,
+    "The Add button is disabled after clicking on the available languages list"
+  );
+
+  let availableLanguages =
+    win.document.getElementById("availableLanguages").menupopup;
+  let target = availableLanguages.querySelector("#he");
+  target.click();
+  is(
+    win.document.getElementById("addButton").disabled,
+    false,
+    "The Add button is enabled after selecting a language from the available languages list"
+  );
+  win.document.getElementById("addButton").click();
+  activeLanguages = win.document.getElementById("activeLanguages").children;
+  Assert.equal(
+    activeLanguages[0].id,
+    "he",
+    "Hebrew language added as topmost item."
+  );
+
+  ok(
+    win.document.getElementById("addButton").disabled,
+    "The Add button is disabled after the selected language has been added"
+  );
+  is(
+    win.document.getElementById("activeLanguages").children[0].id,
+    "he",
+    "Hebrew language added as topmost item."
+  );
+
+  cancelLanguagesSubdialog(win);
 
   gBrowser.removeCurrentTab();
 });
