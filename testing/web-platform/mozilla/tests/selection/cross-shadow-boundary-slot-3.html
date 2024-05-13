@@ -1,0 +1,27 @@
+<!doctype html>
+<head>
+<link rel="match" href="cross-shadow-boundary-slot-3-ref.html"/>
+</head>
+<span id="outer">Outer</span>
+<div id="host">
+  <template shadowrootmode="open">
+    <span>Inner</span>
+    <div id="innerHost">
+      <template shadowrootmode="open">
+        <slot></slot>
+        <span>Nested</span>
+      </template>
+      <span id="slotted">Slotted</span>
+    </div>
+  </template>
+</div>
+<script>
+  // Selected texts are
+  //      er
+  //   Inner
+  //   Slot    Nested
+  const start = outer.firstChild;
+  const end = host.shadowRoot.getElementById("slotted").firstChild;
+  window.getSelection()
+      .setBaseAndExtent(start, 3, end, 4);
+</script>

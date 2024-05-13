@@ -1,0 +1,19 @@
+<!doctype html>
+<span id="outer">Outer</span>
+<div>
+  <span>Inner</span>
+  <div>
+    <span id="slotted">Slotted</span>
+    <span id="nested">Nested</span>
+  </div>
+</div>
+<script>
+  const start = outer.firstChild;
+  const end = document.getElementById("slotted").firstChild;
+  window.getSelection()
+      .setBaseAndExtent(start, 3, end, 4);
+
+  const range = new Range();
+  range.selectNode(nested);
+  window.getSelection().addRange(range);
+</script>
