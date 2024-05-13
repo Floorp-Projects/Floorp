@@ -18,7 +18,7 @@ add_setup(async () => {
   });
 });
 
-add_task(async function test_contentscript_data_url() {
+add_task(async function data_url_via_match_about_blank_true() {
   const manifest = {
     content_scripts: [
       {
@@ -90,6 +90,183 @@ add_task(async function test_contentscript_data_url() {
 
   await extension.unload();
 });
+
+add_task(async function data_url_via_match_origin_as_fallback_true() {
+  const manifest = {
+    content_scripts: [
+      {
+        match_origin_as_fallback: true,
+        // mochi.test is where the test is running from.
+        matches: ["*://mochi.test/*"],
+        all_frames: true,
+        js: ["matched_fallback:host.js"],
+        run_at: "document_start",
+      }, {
+        // When a data:-URL has a precursor, such as when it is opened through
+        // a http(s) as done in this test task, then matching is based on the
+        // origin. include_globs matches the origin.
+        match_origin_as_fallback: true,
+        matches: ["*://mochi.test/*"],
+        include_globs: ["http*"], // matches http://mochi.test:8888
+        all_frames: true,
+        js: ["matched_fallback:glob.js"],
+        run_at: "document_start",
+      }, {
+        // Sanity check: without matching matches, this should never match.
+        match_origin_as_fallback: true,
+        matches: ["*://*/never_matched"],
+        all_frames: true,
+        js: ["never_matched.js"],
+        run_at: "document_start",
+      },
+    ],
+  };
+
+  const files = {
+    "matched_fallback:host.js": () => {
+      if (location.protocol === "data:") {
+        browser.test.sendMessage("matched_fallback:host", location.href);
+      }
+    },
+    "matched_fallback:glob.js": () => {
+      if (location.protocol === "data:") {
+        browser.test.sendMessage("matched_fallback:glob", location.href);
+      }
+    },
+    "never_matched.js": () => {
+      browser.test.fail(`Unexpected match at: ${location.href}`);
+    },
+  };
+
+  const extension = ExtensionTestUtils.loadExtension({ manifest, files });
+  await extension.startup();
+
+  const DATA_URL_FRAME = "data:,iframe_data";
+  const DATA_URL = `data:text/html,<iframe src="${DATA_URL_FRAME}"></iframe>`;
+
+  let win = window.open(DATA_URL);
+
+  is(
+    await extension.awaitMessage("matched_fallback:host"),
+    DATA_URL,
+    "match_origin_as_fallback matches data:-URL popup via matches"
+  );
+  is(
+    await extension.awaitMessage("matched_fallback:glob"),
+    DATA_URL,
+    "match_origin_as_fallback matches data:-URL popup via glob"
+  );
+  is(
+    await extension.awaitMessage("matched_fallback:host"),
+    DATA_URL_FRAME,
+    "match_origin_as_fallback matches frame in data:-URL popup via matches"
+  );
+  is(
+    await extension.awaitMessage("matched_fallback:glob"),
+    DATA_URL_FRAME,
+    "match_origin_as_fallback matches frame in data:-URL popup via glob"
+  );
+
+  win.close();
+
+  await extension.unload();
+});
+
+add_task(async function top_level_data_url_without_precursor() {
+  const manifest = {
+    content_scripts: [
+      {
+        // This is special compared to *://*/*: The data:-schema is part of
+        // <all_urls>, so even if the origin were to somehow not match anything,
+        // then <all_urls> + match_origin_as_fallback could potentially match
+        // data:-URLs without precursor principal, such as when the user
+        // navigates to a data:-URL from the address bar.
+        match_origin_as_fallback: true,
+        matches: ["<all_urls>"],
+        include_globs: ["data:,iframe_data"],
+        all_frames: true,
+        js: ["matched_fallback:glob_iframe.js"],
+        run_at: "document_start",
+      }, {
+        // There is a special case similar to about:blank which is also tested
+        // by top_level_about_blank in test_ext_contentscript_about_blank.html:
+        // When the top-level document is opaque, and 'matches' matches any URL,
+        // then data:-URLs are injected (even though there is no precursor to
+        // match).
+        // Note: this does not match the iframe, because the "origin" to be used
+        // for matching is the data:-URL of the iframe, and "*://*/*" does not
+        // match data:-URLs, unlike <all_urls>.
+        match_origin_as_fallback: true,
+        matches: ["*://*/*"],
+        all_frames: true,
+        js: ["matched_fallback:wildcard.js"],
+        run_at: "document_start",
+      }, {
+        // Sanity check: include_globs can also reject a match.
+        match_origin_as_fallback: true,
+        matches: ["<all_urls>"],
+        include_globs: ["data:,not-matching"],
+        all_frames: true,
+        js: ["never_matched.js"],
+        run_at: "document_start",
+      }, {
+        // Not expected to match: fall through to data:-URL matching only
+        // happens when match_origin_as_fallback is true, not when
+        // match_about_blank is true.
+        match_about_blank: true,
+        matches: ["<all_urls>"],
+        include_globs: ["data:*"],
+        all_frames: true,
+        js: ["never_matched2.js"],
+        run_at: "document_start",
+      },
+    ],
+  };
+
+  const files = {
+    "matched_fallback:wildcard.js": () => {
+      if (location.protocol === "data:") {
+        browser.test.sendMessage("matched_fallback:wildcard", location.href);
+      }
+    },
+    "matched_fallback:glob_iframe.js": () => {
+      if (location.protocol === "data:") {
+        browser.test.sendMessage("matched_fallback:glob_iframe", location.href);
+      }
+    },
+    "never_matched.js": () => {
+      browser.test.fail(`Unexpected match at: ${location.href}`);
+    },
+    "never_matched2.js": () => {
+      browser.test.fail(`Unexpected match 2 at: ${location.href}`);
+    },
+  };
+
+  const extension = ExtensionTestUtils.loadExtension({ manifest, files });
+  await extension.startup();
+
+  const DATA_URL_FRAME = "data:,iframe_data";
+  const DATA_URL = `data:text/html,<iframe src="${DATA_URL_FRAME}"></iframe>`;
+
+  let tab = await AppTestDelegate.openNewForegroundTab(window, DATA_URL, true);
+
+  is(
+    await extension.awaitMessage("matched_fallback:wildcard"),
+    DATA_URL,
+    "match_origin_as_fallback matches data:-URL popup without http(s) origin"
+  );
+
+  is(
+    await extension.awaitMessage("matched_fallback:glob_iframe"),
+    DATA_URL_FRAME,
+    "match_origin_as_fallback matches data:-URL frame by data:-glob pattern"
+  );
+
+  await AppTestDelegate.removeTab(window, tab);
+
+  await extension.unload();
+});
+
 </script>
 
 </body>

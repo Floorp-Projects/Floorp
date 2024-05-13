@@ -254,6 +254,14 @@ add_task(async function test_preload_at_about_blank_iframe() {
           run_at: "document_end",
         },
         {
+          matches: ["*://example.com/*"],
+          exclude_matches: ["*://example.com/dummy?initial-without_cs"],
+          match_origin_as_fallback: true,
+          all_frames: true,
+          js: ["done2.js"],
+          run_at: "document_end",
+        },
+        {
           // about:blank / about:srcdoc matching is based on the principal URL.
           // To verify that the principal URL is used instead of about:blank at
           // preloading, add a script that should not match.
@@ -262,15 +270,30 @@ add_task(async function test_preload_at_about_blank_iframe() {
           // note: "about:*" match pattern requires isPrivileged:true.
           matches: ["about:*"],
           match_about_blank: true,
-          // match_origin_as_fallback: true,
+          match_origin_as_fallback: true,
           all_frames: true,
           js: ["done.js"],
+          run_at: "document_end",
+        },
+        {
+          // The match_origin_as_fallback option should supersede
+          // match_about_blank. Despite match_about_blank being set to true,
+          // it should be interpreted as false because match_origin_as_fallback
+          // was explicitly set to false.
+          matches: ["*://example.com/*", "*://3/"], // 3 to distinguish from ^.
+          exclude_matches: ["*://example.com/dummy?initial-without_cs"],
+          match_about_blank: true,
+          match_origin_as_fallback: false,
+          all_frames: true,
+          js: ["done3.js"],
           run_at: "document_end",
         },
       ],
     },
     files: {
       "done.js": `browser.test.sendMessage("script_run");`,
+      "done2.js": `browser.test.sendMessage("script_run2");`,
+      "done3.js": `browser.test.sendMessage("script_run3");`,
     },
   });
   await extension.startup();
@@ -281,11 +304,17 @@ add_task(async function test_preload_at_about_blank_iframe() {
 
   await contentPage.loadURL("http://example.com/dummy?with_blank");
   await extension.awaitMessage("script_run");
+  await extension.awaitMessage("script_run2");
+  await extension.awaitMessage("script_run3");
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
     [
       { matches: ["*://example.com/dummy?with_blank"], isPreload: true },
+      { matches: ["*://example.com/*"], isPreload: true },
+      { matches: ["*://example.com/*", "*://3/"], isPreload: true },
       { matches: ["*://example.com/dummy?with_blank"], isPreload: false },
+      { matches: ["*://example.com/*"], isPreload: false },
+      { matches: ["*://example.com/*", "*://3/"], isPreload: false },
     ],
     "Should have observed preload in initial http document"
   );
@@ -298,11 +327,13 @@ add_task(async function test_preload_at_about_blank_iframe() {
     this.content.wrappedJSObject.document.body.append(f);
   });
   await extension.awaitMessage("script_run");
+  await extension.awaitMessage("script_run2");
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
     [
       // We don't preload even though we could. See comment at top of file.
       { matches: ["*://example.com/dummy?with_blank"], isPreload: false },
+      { matches: ["*://example.com/*"], isPreload: false },
     ],
     "Preloading is NOT supported in about:blank"
   );
@@ -314,11 +345,13 @@ add_task(async function test_preload_at_about_blank_iframe() {
     this.content.wrappedJSObject.document.body.append(f);
   });
   await extension.awaitMessage("script_run");
+  await extension.awaitMessage("script_run2");
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
     [
       // We don't preload even though we could. See comment at top of file.
       { matches: ["*://example.com/dummy?with_blank"], isPreload: false },
+      { matches: ["*://example.com/*"], isPreload: false },
     ],
     "Preloading is NOT supported in about:blank (javascript:-URL)"
   );
@@ -330,11 +363,14 @@ add_task(async function test_preload_at_about_blank_iframe() {
     this.content.wrappedJSObject.document.body.append(f);
   });
   await extension.awaitMessage("script_run");
+  await extension.awaitMessage("script_run2");
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
     [
       { matches: ["*://example.com/dummy?with_blank"], isPreload: true },
+      { matches: ["*://example.com/*"], isPreload: true },
       { matches: ["*://example.com/dummy?with_blank"], isPreload: false },
+      { matches: ["*://example.com/*"], isPreload: false },
     ],
     "Preloading is supported in about:srcdoc"
   );
@@ -344,18 +380,20 @@ add_task(async function test_preload_at_about_blank_iframe() {
     let f = this.content.wrappedJSObject.document.createElement("iframe");
     f.srcdoc = "This is about:srcdoc in a sandbox";
     f.sandbox = "allow-scripts"; // no allow-same-origin.
-    let { promise, resolve } = Promise.withResolvers();
-    f.onload = () => resolve();
     this.content.wrappedJSObject.document.body.append(f);
-    return promise;
   });
+  await extension.awaitMessage("script_run2");
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
     [
       // We preload when we should not. See comment at top of file.
       { matches: ["*://example.com/dummy?with_blank"], isPreload: true },
+      // With match_origin_as_fallback, we should inject despite the opaque
+      // origin of the sandbox:.
+      { matches: ["*://example.com/*"], isPreload: true },
+      { matches: ["*://example.com/*"], isPreload: false },
     ],
-    "match_about_blank + sandboxed about:srcdoc should not execute"
+    "sandboxed about:srcdoc requires match_origin_as_fallback:true"
   );
 
   await contentPage.close();
@@ -446,7 +484,7 @@ add_task(async function test_preload_at_http_iframe_with_sandbox_attr() {
             "*://example.com/dummy?sandbox_iframe",
           ],
           match_about_blank: true,
-          // match_origin_as_fallback: true,
+          match_origin_as_fallback: true,
           all_frames: true,
           js: ["done.js"],
           run_at: "document_end",
@@ -515,7 +553,7 @@ add_task(async function test_preload_at_http_csp_sandbox() {
             "*://example.com/sandboxed",
           ],
           match_about_blank: true,
-          // match_origin_as_fallback: true,
+          match_origin_as_fallback: true,
           all_frames: true,
           js: ["done.js"],
           run_at: "document_end",
@@ -547,7 +585,7 @@ add_task(async function test_preload_at_http_csp_sandbox() {
   await extension.unload();
 });
 
-add_task(async function test_no_preload_at_data_url() {
+add_task(async function test_preload_at_data_url() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       content_scripts: [
@@ -559,13 +597,23 @@ add_task(async function test_no_preload_at_data_url() {
         },
         {
           // Sanity check: should not execute.
-          matches: ["<all_urls>"],
+          matches: ["<all_urls>", "*://1/"], // 1 to distinguish from below.
           exclude_matches: [
             "*://example.com/dummy?initial-without_cs",
             "*://example.com/dummy?data_parent",
           ],
-          match_about_blank: true,
-          // match_origin_as_fallback: true,
+          match_about_blank: true, // instead of match_origin_as_fallback:true.
+          all_frames: true,
+          js: ["done.js"],
+          run_at: "document_end",
+        },
+        {
+          matches: ["<all_urls>", "*://2/"], // 2 to distinguish from above.
+          exclude_matches: [
+            "*://example.com/dummy?initial-without_cs",
+            "*://example.com/dummy?data_parent",
+          ],
+          match_origin_as_fallback: true, // instead of match_about_blank:true.
           all_frames: true,
           js: ["done.js"],
           run_at: "document_end",
@@ -598,18 +646,19 @@ add_task(async function test_no_preload_at_data_url() {
   await contentPage.spawn([], () => {
     let f = this.content.wrappedJSObject.document.createElement("iframe");
     f.src = "data:,data_url_in_iframe";
-    let { promise, resolve } = Promise.withResolvers();
-    f.onload = () => resolve();
     this.content.wrappedJSObject.document.body.append(f);
-    return promise;
   });
+  await extension.awaitMessage("script_run");
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
     [
       // We preload when we should not. See comment at top of file.
-      { matches: ["<all_urls>"], isPreload: true },
+      { matches: ["<all_urls>", "*://1/"], isPreload: true },
+      // With match_origin_as_fallback:true, this is expected:
+      { matches: ["<all_urls>", "*://2/"], isPreload: true },
+      { matches: ["<all_urls>", "*://2/"], isPreload: false },
     ],
-    "Should not observe any loads of non-matching data:-URL"
+    "Should match data:-URI when match_origin_as_fallback is true"
   );
 
   info("Testing sandboxed data:-URL in iframe");
@@ -617,18 +666,19 @@ add_task(async function test_no_preload_at_data_url() {
     let f = this.content.wrappedJSObject.document.createElement("iframe");
     f.src = "data:,data_url_in_sandboxed_iframe";
     f.sandbox = "allow-scripts"; // no allow-same-origin.
-    let { promise, resolve } = Promise.withResolvers();
-    f.onload = () => resolve();
     this.content.wrappedJSObject.document.body.append(f);
-    return promise;
   });
+  await extension.awaitMessage("script_run");
   Assert.deepEqual(
     await getSeenContentScriptInjections(extension, contentPage),
     [
       // We preload when we should not. See comment at top of file.
-      { matches: ["<all_urls>"], isPreload: true },
+      { matches: ["<all_urls>", "*://1/"], isPreload: true },
+      // With match_origin_as_fallback:true, this is expected:
+      { matches: ["<all_urls>", "*://2/"], isPreload: true },
+      { matches: ["<all_urls>", "*://2/"], isPreload: false },
     ],
-    "Should not observe any loads of non-matching data:-URL"
+    "Should match sandboxed data:-URI when match_origin_as_fallback is true"
   );
 
   await contentPage.close();

@@ -736,7 +736,12 @@
           "match_about_blank": {
             "type": "boolean",
             "optional": true,
-            "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."
+            "description": "If match_about_blank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Ignored if match_origin_as_fallback is specified. By default it is <code>false</code>."
+          },
+          "match_origin_as_fallback": {
+            "type": "boolean",
+            "optional": true,
+            "description": "If match_origin_as_fallback is true, then the code is also injected in about:, data:, blob: when their origin matches the pattern in 'matches', even if the actual document origin is opaque (due to the use of CSP sandbox or iframe sandbox). Match patterns in 'matches' must specify a wildcard path glob. By default it is <code>false</code>."
           },
           "run_at": {
             "$ref": "extensionTypes.RunAt",

@@ -711,7 +711,8 @@ MozDocumentMatcher::MozDocumentMatcher(GlobalObject& aGlobal,
       mAllFrames(aInit.mAllFrames),
       mCheckPermissions(aInit.mCheckPermissions),
       mFrameID(aInit.mFrameID),
-      mMatchAboutBlank(aInit.mMatchAboutBlank) {
+      mMatchAboutBlank(aInit.mMatchAboutBlank || aInit.mMatchOriginAsFallback),
+      mMatchOriginAsFallback(aInit.mMatchOriginAsFallback) {
   MatchPatternOptions options;
   options.mRestrictSchemes = mRestricted;
 
@@ -831,13 +832,12 @@ bool MozDocumentMatcher::Matches(const DocInfo& aDoc,
       // only match if mMatches is present without mIncludeGlobs.
       return true;
     }
-    // Null principal is never going to match, so we may as well return now.
-    return false;
+    // Continue below: when mMatchOriginAsFallback is true, a null principal
+    // with a precursor may result in a match with the specific pattern.
   }
 
-  if (aDoc.Principal() && aDoc.Principal()->GetIsNullPrincipal() &&
-      !aDoc.URL().IsNonOpaqueURL()) {
-    // TODO bug 1475831: permit if match_origin_as_fallback is true.
+  if (!mMatchOriginAsFallback && aDoc.Principal() &&
+      aDoc.Principal()->GetIsNullPrincipal() && !aDoc.URL().IsNonOpaqueURL()) {
     return false;
   }
 
@@ -1120,11 +1120,7 @@ nsIPrincipal* DocInfo::Principal() const {
 }
 
 const URLInfo& DocInfo::PrincipalURL() const {
-  if (!(Principal() && Principal()->GetIsContentPrincipal())) {
-    // TODO bug 1475831: move above content principal check to the logic below,
-    // where we need to account for content principals and null principals.
-    // The remainder of this comment applies to the !Principal() check above.
-    //
+  if (!Principal()) {
     // This is only possible via non-DOMWindow (see Principal()). We may end up
     // here via ExtensionPolicyService::CheckRequest(), called before a network
     // request ("http-on-opening-request" / "document-on-opening-request").
@@ -1147,10 +1143,23 @@ const URLInfo& DocInfo::PrincipalURL() const {
 
   if (mPrincipalURL.isNothing()) {
     nsIPrincipal* prin = Principal();
-    auto* basePrin = BasePrincipal::Cast(prin);
-    nsCOMPtr<nsIURI> uri;
-    if (NS_SUCCEEDED(basePrin->GetURI(getter_AddRefs(uri)))) {
-      MOZ_DIAGNOSTIC_ASSERT(uri);
+    nsCOMPtr<nsIPrincipal> precursor;
+    if (prin->GetIsContentPrincipal()) {
+      // Most common case.
+      nsCOMPtr<nsIURI> uri;
+      BasePrincipal::Cast(prin)->GetURI(getter_AddRefs(uri));
+      mPrincipalURL.emplace(uri);
+    } else if (prin->GetIsNullPrincipal() && !URL().IsNonOpaqueURL() &&
+               (precursor = prin->GetPrecursorPrincipal()) &&
+               precursor->GetIsContentPrincipal()) {
+      // Use precursor from null principal, unless the URL itself is not opaque.
+      // We want to use URL() when IsNonOpaqueURL() because the URL may have
+      // more details such as path and query components, whereas the precursor
+      // URI only has an origin.
+      // This enables matching of sandboxed about:blank / about:srcdoc / blob:
+      // when match_origin_as_fallback:true is used.
+      nsCOMPtr<nsIURI> uri;
+      BasePrincipal::Cast(precursor)->GetURI(getter_AddRefs(uri));
       mPrincipalURL.emplace(uri);
     } else {
       mPrincipalURL.emplace(URL());
