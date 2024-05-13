@@ -1,0 +1,22 @@
+<!doctype html>
+<head>
+<link rel="match" href="cross-shadow-boundary-slot-1-ref.html"/>
+</head>
+<span id="outer">Outer</span>
+<div>
+  <template shadowrootmode="open">
+    <slot></slot>
+    <span>Inner</span>
+  </template>
+  <span id="slotted">Slotted</span>
+</div>
+<script>
+  // Selected contents are:
+  //   er
+  //   Slot Inner
+  // In shadow including order, the shadow root is always before
+  // the light DOM elements, so setting the endpoint to "Slot" causes
+  // the "Inner" to be selected.
+  window.getSelection()
+      .setBaseAndExtent(outer.firstChild, 3, slotted.firstChild, 4);
+</script>

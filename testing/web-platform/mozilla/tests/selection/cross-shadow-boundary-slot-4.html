@@ -1,0 +1,22 @@
+<!doctype html>
+<head>
+<link rel="match" href="cross-shadow-boundary-slot-4-ref.html"/>
+</head>
+<span id="outer">Outer</span>
+<div id="host">
+  <template shadowrootmode="open">
+    <slot></slot>
+    <span id="inner">Inner</span>
+  </template>
+  <span id="slotted">Slotted</span>
+</div>
+<script>
+  // Selected contents are:
+  //   er
+  //        Inner
+  // Since we use shadow including order, contents in flat tree
+  // are not selected.
+  const inner = host.shadowRoot.getElementById("inner");
+  window.getSelection()
+      .setBaseAndExtent(outer.firstChild, 3, inner.firstChild, 5);
+</script>

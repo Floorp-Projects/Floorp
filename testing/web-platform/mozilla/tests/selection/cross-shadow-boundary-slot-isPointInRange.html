@@ -1,0 +1,47 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<span id="outer">Outer</span>
+<div id="host">
+  <template shadowrootmode="open">
+    <slot></slot>
+    <span id="inner">Inner</span>
+  </template>
+  <span id="slotted">Slotted</span>
+</div>
+<script>
+test(function() {
+  const sel = window.getSelection();
+  sel.empty();
+
+  sel.setBaseAndExtent(outer.firstChild, 3, slotted.firstChild, 4);
+
+  assert_equals(sel.anchorNode, outer.firstChild);
+  assert_equals(sel.anchorOffset, 3);
+  assert_equals(sel.focusNode, slotted.firstChild);
+  assert_equals(sel.focusOffset, 4);
+
+  // Since the endpoint is at "Slotted", so it should be in the range
+  assert_true(sel.getRangeAt(0).isPointInRange(slotted.firstChild, 0));
+}, "test isPointInRange returns true when the slotted content is in range");
+
+test(function() {
+  const sel = window.getSelection();
+  sel.empty();
+
+  const inner = host.shadowRoot.getElementById("inner");
+  sel.setBaseAndExtent(outer.firstChild, 3, inner.firstChild, 4);
+
+  const range = sel.getComposedRanges(host.shadowRoot)[0];
+  assert_equals(range.startContainer, outer.firstChild);
+  assert_equals(range.startOffset, 3);
+  assert_equals(range.endContainer, inner.firstChild);
+  assert_equals(range.endOffset, 4);
+
+  // We use shadow including order, so slotted content is not selected, hence
+  // not in the range..
+  assert_false(sel.getRangeAt(0).isPointInRange(slotted.firstChild, 0));
+}, "test isPointInRange returns false when the slotted content is not in range");
+
+</script>
