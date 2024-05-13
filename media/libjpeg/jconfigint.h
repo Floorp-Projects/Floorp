@@ -1,5 +1,8 @@
 /* libjpeg-turbo build number */
-#define BUILD  "20230208"
+#define BUILD  "20240508"
+
+/* How to hide global symbols. */
+#define HIDDEN __attribute__((visibility("hidden")))
 
 /* Need to use Mozilla-specific function inlining. */
 #include "mozilla/Attributes.h"
@@ -13,10 +16,10 @@
 #endif
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "libjpeg-turbo"
+#define PACKAGE_NAME  "libjpeg-turbo"
 
 /* Version number of package */
-#define VERSION  "2.1.5.1"
+#define VERSION  "3.0.3"
 
 /* The size of `size_t', as computed by sizeof. */
 #ifdef HAVE_64BIT_BUILD
@@ -51,4 +54,33 @@
 #endif
 #else
 #define FALLTHROUGH
+#endif
+
+/*
+ * Define BITS_IN_JSAMPLE as either
+ *   8   for 8-bit sample values (the usual setting)
+ *   12  for 12-bit sample values
+ * Only 8 and 12 are legal data precisions for lossy JPEG according to the
+ * JPEG standard, and the IJG code does not support anything else!
+ */
+
+#ifndef BITS_IN_JSAMPLE
+#define BITS_IN_JSAMPLE  8      /* use 8 or 12 */
+#endif
+
+#undef C_ARITH_CODING_SUPPORTED
+#undef D_ARITH_CODING_SUPPORTED
+#undef WITH_SIMD
+
+#if BITS_IN_JSAMPLE == 8
+
+/* Support arithmetic encoding */
+/* #undef C_ARITH_CODING_SUPPORTED */
+
+/* Support arithmetic decoding */
+/* #undef D_ARITH_CODING_SUPPORTED */
+
+/* Use accelerated SIMD routines. */
+#define WITH_SIMD 1
+
 #endif

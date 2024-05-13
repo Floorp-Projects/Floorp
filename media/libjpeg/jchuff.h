@@ -19,12 +19,6 @@
  * Hence the magnitude should always fit in 10 or 14 bits respectively.
  */
 
-#if BITS_IN_JSAMPLE == 8
-#define MAX_COEF_BITS  10
-#else
-#define MAX_COEF_BITS  14
-#endif
-
 /* The progressive Huffman encoder uses an unsigned 16-bit data type to store
  * absolute values of coefficients, because it is possible to inject a
  * coefficient value of -32768 into the encoder by attempting to transform a
