@@ -2768,3 +2768,16 @@ pqcrypto:
         pref: security.tls.enable_kyber
       description: >-
         Whether to enable Xyber768 for TLS.
+
+dtlsWebRTC:
+  description: Pref that controls the use of DTLS.
+  owner: nkulatova@mozilla.com
+  hasExposure: false
+  variables:
+    tlsVersionDTLS:
+      type: int
+      setPref:
+        branch: default
+        pref: media.peerconnection.dtls.version.max
+      description: >-
+        The maximum version of DTLS protocol used in WebRTC (770 = DTLS 1.0, 771 = DTLS 1.2, 772 = DTLS 1.3).
