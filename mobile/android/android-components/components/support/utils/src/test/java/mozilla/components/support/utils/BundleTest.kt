@@ -15,7 +15,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 class BundleTest {
@@ -63,8 +62,7 @@ class BundleTest {
     }
 
     @Test
-    @Config(sdk = [32])
-    fun `getParcelableArrayCompat with unexpected type returns empty array and does not throw exception on SDK 32 and below`() {
+    fun `getParcelableArrayCompat with unexpected type returns empty array and does not throw exception`() {
         val bundle = Bundle()
 
         val testArray = Array(4) { Unexpected() }
@@ -77,8 +75,7 @@ class BundleTest {
     }
 
     @Test
-    @Config(sdk = [32])
-    fun `getParcelableArrayCompat with both expected unexpected type returns array with only expected on SDK 32 and below`() {
+    fun `getParcelableArrayCompat with both expected unexpected type returns array with only expected`() {
         val bundle = Bundle()
 
         val testArray = Array<Parcelable>(4) { Expected() }

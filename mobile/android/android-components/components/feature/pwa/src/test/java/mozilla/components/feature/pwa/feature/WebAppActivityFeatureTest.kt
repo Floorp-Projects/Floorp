@@ -9,7 +9,6 @@ import android.content.pm.ActivityInfo
 import android.os.Looper.getMainLooper
 import android.view.View
 import android.view.Window
-import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
@@ -26,7 +25,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 class WebAppActivityFeatureTest {
@@ -36,8 +34,6 @@ class WebAppActivityFeatureTest {
     @Mock private lateinit var window: Window
 
     @Mock private lateinit var decorView: View
-
-    @Mock private lateinit var insetsController: WindowInsetsController
 
     @Mock private lateinit var layoutParams: WindowManager.LayoutParams
 
@@ -50,30 +46,11 @@ class WebAppActivityFeatureTest {
         `when`(activity.window).thenReturn(window)
         `when`(window.decorView).thenReturn(decorView)
         `when`(window.attributes).thenReturn(layoutParams)
-
         `when`(icons.loadIcon(any())).thenReturn(CompletableDeferred(mock<Icon>()))
     }
 
     @Test
-    @Config(sdk = [28])
-    fun `enters immersive mode only when display mode is fullscreen on SDK 28`() {
-        val basicManifest = WebAppManifest(
-            name = "Demo",
-            startUrl = "https://mozilla.com",
-            display = WebAppManifest.DisplayMode.STANDALONE,
-        )
-        WebAppActivityFeature(activity, icons, basicManifest).onResume(mock())
-
-        val fullscreenManifest = basicManifest.copy(
-            display = WebAppManifest.DisplayMode.FULLSCREEN,
-        )
-        WebAppActivityFeature(activity, icons, fullscreenManifest).onResume(mock())
-    }
-
-    @Test
     fun `enters immersive mode only when display mode is fullscreen`() {
-        `when`(window.insetsController).thenReturn(insetsController)
-
         val basicManifest = WebAppManifest(
             name = "Demo",
             startUrl = "https://mozilla.com",
@@ -100,6 +77,7 @@ class WebAppActivityFeatureTest {
         verify(activity).requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `sets task description`() {
         val manifest = WebAppManifest(
