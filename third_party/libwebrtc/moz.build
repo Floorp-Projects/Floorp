@@ -374,7 +374,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/rolling_accumulator_gn",
     "/third_party/libwebrtc/rtc_base/rtc_event_gn",
     "/third_party/libwebrtc/rtc_base/rtc_numerics_gn",
-    "/third_party/libwebrtc/rtc_base/rtc_task_queue_gn",
     "/third_party/libwebrtc/rtc_base/safe_compare_gn",
     "/third_party/libwebrtc/rtc_base/safe_conversions_gn",
     "/third_party/libwebrtc/rtc_base/safe_minmax_gn",
