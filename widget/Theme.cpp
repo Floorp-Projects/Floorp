@@ -1350,7 +1350,6 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
                                   const LayoutDeviceRect& aRect,
                                   const Colors& aColors, DPIRatio aDpiRatio) {
   const auto& accentColor = aColors.Accent();
-  const bool solid = StaticPrefs::widget_non_native_theme_solid_outline_style();
   LayoutDeviceCoord strokeWidth(ThemeDrawing::SnapBorderWidth(2.0f, aDpiRatio));
 
   LayoutDeviceRect rect(aRect);
@@ -1409,10 +1408,6 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
                           ? aColors.System(StyleSystemColor::Selecteditem)
                           : accentColor.Get();
   DrawRect(primaryColor);
-
-  if (solid) {
-    return;
-  }
 
   offset += strokeWidth;
 
@@ -1486,9 +1481,7 @@ bool Theme::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
   CSSIntMargin overflow;
   switch (aAppearance) {
     case StyleAppearance::FocusOutline: {
-      // 2px * one segment, or 2px + 1px
-      const auto width =
-          StaticPrefs::widget_non_native_theme_solid_outline_style() ? 2 : 3;
+      const auto width = 3;
       overflow.SizeTo(width, width, width, width);
       break;
     }
