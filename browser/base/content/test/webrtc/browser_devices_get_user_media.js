@@ -361,6 +361,23 @@ var gTests = [
         await promise;
         await observerPromise;
 
+        let rememberCheckBoxLabel = "Remember this decision";
+        if (aRequestVideo) {
+          rememberCheckBoxLabel = "Remember for all cameras";
+          if (aRequestAudio) {
+            rememberCheckBoxLabel = "Remember for all cameras and microphones";
+          }
+        } else if (aRequestAudio) {
+          rememberCheckBoxLabel = "Remember for all microphones";
+        }
+
+        is(
+          PopupNotifications.getNotification("webRTC-shareDevices").options
+            .checkbox.label,
+          rememberCheckBoxLabel,
+          "Correct string used for decision checkbox"
+        );
+
         is(
           elt("webRTC-selectMicrophone").hidden,
           !aRequestAudio,
