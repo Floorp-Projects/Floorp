@@ -1441,11 +1441,6 @@ nsresult nsFrameSelection::TakeFocus(nsIContent& aNewFocus,
     }
   }
 
-  // Don't notify selection listeners if batching is on:
-  if (IsBatching()) {
-    return NS_OK;
-  }
-
   // Be aware, the Selection instance may be destroyed after this call.
   return NotifySelectionListeners(SelectionType::eNormal);
 }
