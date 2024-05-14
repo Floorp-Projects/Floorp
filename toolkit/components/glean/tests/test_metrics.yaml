@@ -199,6 +199,7 @@ test_only:
     labels:
       - next_to_the_fridge
       - clean
+      - 1st_counter
 
   mabels_bathroom_counters:
     type: labeled_counter
