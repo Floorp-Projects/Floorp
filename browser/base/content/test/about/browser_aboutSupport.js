@@ -106,10 +106,13 @@ add_task(async function test_nimbus_experiments() {
 
 add_task(async function test_remote_configuration() {
   await ExperimentAPI.ready();
-  let doCleanup = await ExperimentFakes.enrollWithRollout({
-    featureId: NimbusFeatures.aboutwelcome.featureId,
-    value: { enabled: true },
-  });
+  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: NimbusFeatures.aboutwelcome.featureId,
+      value: { enabled: true },
+    },
+    { isRollout: true }
+  );
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:support" },

@@ -319,23 +319,25 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
     featureBar
   );
 
-  let fooCleanup = await ExperimentFakes.enrollWithRollout(
+  let fooCleanup = await ExperimentFakes.enrollWithFeatureConfig(
     {
       featureId: "foo",
       isEarlyStartup: true,
       value: { foo: true },
     },
     {
+      isRollout: true,
       source: "rs-loader",
     }
   );
-  await ExperimentFakes.enrollWithRollout(
+  await ExperimentFakes.enrollWithFeatureConfig(
     {
       featureId: "bar",
       isEarlyStartup: true,
       value: { bar: true },
     },
     {
+      isRollout: true,
       source: "rs-loader",
     }
   );
@@ -544,11 +546,14 @@ add_task(async function remote_defaults_variables_storage() {
     enabled: true,
   };
 
-  let doCleanup = await ExperimentFakes.enrollWithRollout({
-    featureId: "bar",
-    isEarlyStartup: true,
-    value: rolloutValue,
-  });
+  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: "bar",
+      isEarlyStartup: true,
+      value: rolloutValue,
+    },
+    { isRollout: true }
+  );
 
   Assert.ok(
     Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar`, ""),
