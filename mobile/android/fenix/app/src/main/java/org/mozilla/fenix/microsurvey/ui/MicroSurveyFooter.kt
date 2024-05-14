@@ -4,14 +4,13 @@
 
 package org.mozilla.fenix.microsurvey.ui
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +22,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -40,21 +40,20 @@ fun MicroSurveyFooter(
     onLinkClick: () -> Unit,
     onButtonClick: () -> Unit,
 ) {
-    val buttonText = if (isSubmitted) {
-        stringResource(id = R.string.micro_survey_close_button_label)
-    } else {
-        stringResource(id = R.string.micro_survey_submit_button_label)
-    }
-    val buttonColor = if (isContentAnswerSelected) {
-        FirefoxTheme.colors.actionPrimary
-    } else {
-        FirefoxTheme.colors.actionPrimaryDisabled
-    }
-
-    Row(
-        verticalAlignment = Alignment.Bottom,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth(),
     ) {
+        if (!isSubmitted) {
+            PrimaryButton(
+                text = stringResource(id = R.string.micro_survey_submit_button_label),
+                enabled = isContentAnswerSelected,
+                onClick = { onButtonClick() },
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         LinkText(
             text = stringResource(id = R.string.about_privacy_notice),
             linkTextStates = listOf(
@@ -69,24 +68,6 @@ fun MicroSurveyFooter(
             style = FirefoxTheme.typography.caption,
             linkTextDecoration = TextDecoration.Underline,
         )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Button(
-            onClick = { onButtonClick() },
-            enabled = isContentAnswerSelected,
-            shape = RoundedCornerShape(size = 4.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = buttonColor,
-            ),
-            contentPadding = PaddingValues(16.dp, 12.dp),
-        ) {
-            Text(
-                text = buttonText,
-                color = FirefoxTheme.colors.textActionPrimary,
-                style = FirefoxTheme.typography.button,
-            )
-        }
     }
 }
 
@@ -95,11 +76,32 @@ fun MicroSurveyFooter(
 @Composable
 private fun ReviewQualityCheckFooterPreview() {
     FirefoxTheme {
-        MicroSurveyFooter(
-            isSubmitted = false,
-            isContentAnswerSelected = false,
-            onLinkClick = {},
-            onButtonClick = {},
-        )
+        Column(
+            modifier = Modifier
+                .background(FirefoxTheme.colors.layer1)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            MicroSurveyFooter(
+                isSubmitted = false,
+                isContentAnswerSelected = false,
+                onLinkClick = {},
+                onButtonClick = {},
+            )
+
+            MicroSurveyFooter(
+                isSubmitted = false,
+                isContentAnswerSelected = true,
+                onLinkClick = {},
+                onButtonClick = {},
+            )
+
+            MicroSurveyFooter(
+                isSubmitted = true,
+                isContentAnswerSelected = true,
+                onLinkClick = {},
+                onButtonClick = {},
+            )
+        }
     }
 }
