@@ -12,7 +12,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.android.NotificationsDelegate
-import mozilla.components.support.test.any
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -20,11 +19,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.anyBoolean
-import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.spy
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 class CrashNotificationTest {
@@ -145,8 +141,7 @@ class CrashNotificationTest {
     }
 
     @Test
-    @Config(sdk = [32])
-    fun `not showing notification when permission is denied on SDK 32 and below`() {
+    fun `not showing notification when permission is denied`() {
         val notificationManager = testContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val shadowNotificationManager = shadowOf(notificationManager)
 
@@ -158,43 +153,6 @@ class CrashNotificationTest {
         val notificationsDelegate = spy(NotificationsDelegate(notificationManagerCompat))
 
         whenever(notificationManagerCompat.areNotificationsEnabled()).thenReturn(false)
-        doNothing().`when`(notificationsDelegate)
-            .requestNotificationPermission(any(), any(), anyBoolean())
-
-        val crashNotification = CrashNotification(
-            testContext,
-            crash,
-            CrashReporter.PromptConfiguration(
-                appName = "TestApp",
-            ),
-            notificationsDelegate = notificationsDelegate,
-        )
-        crashNotification.show()
-
-        assertEquals(1, shadowNotificationManager.notificationChannels.size)
-        assertEquals(
-            "Crashes",
-            (shadowNotificationManager.notificationChannels[0] as NotificationChannel).name,
-        )
-
-        assertEquals(0, shadowNotificationManager.size())
-    }
-
-    @Test
-    fun `not showing notification when permission is needed and denied`() {
-        val notificationManager = testContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val shadowNotificationManager = shadowOf(notificationManager)
-
-        assertEquals(0, shadowNotificationManager.notificationChannels.size)
-        assertEquals(0, shadowNotificationManager.size())
-
-        val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Boom"), arrayListOf())
-        val notificationManagerCompat = spy(NotificationManagerCompat.from(testContext))
-        val notificationsDelegate = spy(NotificationsDelegate(notificationManagerCompat))
-
-        whenever(notificationManagerCompat.areNotificationsEnabled()).thenReturn(false)
-        doNothing().`when`(notificationsDelegate)
-            .requestNotificationPermission(any(), any(), anyBoolean())
 
         val crashNotification = CrashNotification(
             testContext,
