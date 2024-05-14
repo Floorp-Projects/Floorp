@@ -75,6 +75,8 @@ ifdef MOZ_CODE_COVERAGE
 		--output-file='$(DIST)/$(PKG_PATH)$(CODE_COVERAGE_ARCHIVE_BASENAME).zip'
 endif
 ifdef ENABLE_MOZSEARCH_PLUGIN
+	@echo 'Generating mozsearch chrome-map...'
+	$(PYTHON3) $(topsrcdir)/mach build-backend -b ChromeMap
 	@echo 'Generating mozsearch index tarball...'
 	$(RM) $(MOZSEARCH_ARCHIVE_BASENAME).zip
 	cd $(topobjdir)/mozsearch_index && \
