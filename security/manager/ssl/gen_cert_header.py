@@ -7,6 +7,9 @@ def _file_byte_generator(filename):
     with open(filename, "rb") as f:
         contents = f.read()
 
+        if b"-----BEGIN CERTIFICATE-----" in contents:
+            raise Exception(f"{filename} contains a PEM certificate. Expected DER.")
+
         # Treat empty files the same as a file containing a lone 0;
         # a single-element array will fail cert verifcation just as an
         # empty array would.
