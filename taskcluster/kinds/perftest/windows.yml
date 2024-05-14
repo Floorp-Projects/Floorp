@@ -14,6 +14,7 @@ job-defaults:
         toolchain:
             - win64-node
             - win64-geckodriver
+            - browsertime
     platform: windows10-64-shippable/opt
     require-build:
         windows10-64-shippable/opt: build-win64-shippable/opt

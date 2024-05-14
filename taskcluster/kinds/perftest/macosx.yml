@@ -17,6 +17,7 @@ job-defaults:
         toolchain:
             - macosx64-geckodriver
             - macosx64-node
+            - browsertime
     platform: macosx1015-64-shippable-qr/opt
     require-build:
         macosx1015-64-shippable-qr/opt: build-macosx64-shippable/opt

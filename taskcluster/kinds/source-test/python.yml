@@ -417,10 +417,13 @@ mozperftest:
             by-platform:
                 linux1804-64/opt:
                     - linux64-node
+                    - browsertime
                 macosx1015-64/opt:
                     - macosx64-node
+                    - browsertime
                 windows11-64/opt:
                     - win64-node
+                    - browsertime
     when:
         files-changed:
             - 'testing/performance/**'
