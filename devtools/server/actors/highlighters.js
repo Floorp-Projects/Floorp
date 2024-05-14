@@ -70,7 +70,7 @@ exports.CustomHighlighterActor = class CustomHighligherActor extends Actor {
     if (!isXUL(this._parent.targetActor.window) || constructor.XULSupported) {
       this._highlighterEnv = new HighlighterEnvironment();
       this._highlighterEnv.initFromTargetActor(parent.targetActor);
-      this._highlighter = new constructor(this._highlighterEnv);
+      this._highlighter = new constructor(this._highlighterEnv, parent);
       if (this._highlighter.on) {
         this._highlighter.on(
           "highlighter-event",

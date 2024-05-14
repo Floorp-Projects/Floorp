@@ -336,17 +336,22 @@ RuleEditor.prototype = {
     }
 
     if (this.rule.domRule.type !== CSSRule.KEYFRAME_RULE) {
-      let selector = "";
-      let desugaredSelector = "";
+      // This is a "normal" rule with a selector.
+      let computedSelector = "";
       if (this.rule.domRule.selectors) {
-        // This is a "normal" rule with a selector.
-        selector = this.rule.domRule.selectors.join(", ");
-        desugaredSelector = this.rule.domRule.desugaredSelectors?.join(", ");
+        if (this.rule.domRule.hasMatchedSelectorIndexesTrait) {
+          computedSelector = this.rule.domRule.computedSelector;
+        } else {
+          // @backward-compat { version 128 } This else block can be removed once 128 hits
+          // release.
+          computedSelector = this.rule.domRule.desugaredSelectors?.join(", ");
+        }
         // Otherwise, the rule is either inherited or inline, and selectors will
         // be computed on demand when the highlighter is requested.
       }
 
-      const isHighlighted = this.ruleView.isSelectorHighlighted(selector);
+      const isHighlighted =
+        this.ruleView.isSelectorHighlighted(computedSelector);
       // Handling of click events is delegated to CssRuleView.handleEvent()
       createChild(header, "button", {
         class:
@@ -354,7 +359,7 @@ RuleEditor.prototype = {
           (isHighlighted ? " highlighted" : ""),
         "aria-pressed": isHighlighted,
         // This is used in rules.js for the selector highlighter
-        "data-computed-selector": desugaredSelector,
+        "data-computed-selector": computedSelector,
         title: l10n("rule.selectorHighlighter.tooltip"),
       });
     }
@@ -932,8 +937,16 @@ RuleEditor.prototype = {
     this.isEditing = true;
 
     // Remove highlighter for the previous selector.
-    if (this.ruleView.isSelectorHighlighted(this.rule.selectorText)) {
-      await this.ruleView.toggleSelectorHighlighter(this.rule.selectorText);
+    const computedSelector = this.rule.domRule.hasMatchedSelectorIndexesTrait
+      ? this.rule.domRule.computedSelector
+      : // @backward-compat { version 128 } We can remove the ternary and directly use
+        // this.rule.domRule.computedSelector once 128 hits release
+        this.rule.domRule.desugaredSelectors?.join(", ");
+    if (this.ruleView.isSelectorHighlighted(computedSelector)) {
+      await this.ruleView.toggleSelectorHighlighter(
+        this.rule,
+        computedSelector
+      );
     }
 
     try {
