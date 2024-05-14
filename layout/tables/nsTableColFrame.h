@@ -86,10 +86,10 @@ class nsTableColFrame final : public nsSplittableFrame {
   /** convenience method, calls into cellmap */
   int32_t Count() const;
 
-  BCPixelSize GetIStartBorderWidth() const { return mIStartBorderWidth; }
-  BCPixelSize GetIEndBorderWidth() const { return mIEndBorderWidth; }
-  void SetIStartBorderWidth(BCPixelSize aWidth) { mIStartBorderWidth = aWidth; }
-  void SetIEndBorderWidth(BCPixelSize aWidth) { mIEndBorderWidth = aWidth; }
+  nscoord GetIStartBorderWidth() const { return mIStartBorderWidth; }
+  nscoord GetIEndBorderWidth() const { return mIEndBorderWidth; }
+  void SetIStartBorderWidth(nscoord aWidth) { mIStartBorderWidth = aWidth; }
+  void SetIEndBorderWidth(nscoord aWidth) { mIEndBorderWidth = aWidth; }
 
 #ifdef DEBUG
   void Dump(int32_t aIndent);
@@ -272,9 +272,9 @@ class nsTableColFrame final : public nsSplittableFrame {
   // colgroup
   uint32_t mColIndex;
 
-  // border width in pixels of the inner half of the border only
-  BCPixelSize mIStartBorderWidth;
-  BCPixelSize mIEndBorderWidth;
+  // border widths of the inner half of the border only
+  nscoord mIStartBorderWidth;
+  nscoord mIEndBorderWidth;
 
   bool mHasSpecifiedCoord;
 };

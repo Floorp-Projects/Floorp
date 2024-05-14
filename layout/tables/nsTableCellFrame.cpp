@@ -5,6 +5,7 @@
 
 #include "nsTableCellFrame.h"
 
+#include "celldata.h"
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/ComputedStyle.h"
@@ -962,14 +963,12 @@ nsresult nsBCTableCellFrame::GetFrameName(nsAString& aResult) const {
 #endif
 
 LogicalMargin nsBCTableCellFrame::GetBorderWidth(WritingMode aWM) const {
-  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
-  return LogicalMargin(aWM, BC_BORDER_END_HALF_COORD(d2a, mBStartBorder),
-                       BC_BORDER_START_HALF_COORD(d2a, mIEndBorder),
-                       BC_BORDER_START_HALF_COORD(d2a, mBEndBorder),
-                       BC_BORDER_END_HALF_COORD(d2a, mIStartBorder));
+  return LogicalMargin(
+      aWM, BC_BORDER_END_HALF(mBStartBorder), BC_BORDER_START_HALF(mIEndBorder),
+      BC_BORDER_START_HALF(mBEndBorder), BC_BORDER_END_HALF(mIStartBorder));
 }
 
-BCPixelSize nsBCTableCellFrame::GetBorderWidth(LogicalSide aSide) const {
+nscoord nsBCTableCellFrame::GetBorderWidth(LogicalSide aSide) const {
   switch (aSide) {
     case LogicalSide::BStart:
       return BC_BORDER_END_HALF(mBStartBorder);
@@ -982,7 +981,7 @@ BCPixelSize nsBCTableCellFrame::GetBorderWidth(LogicalSide aSide) const {
   }
 }
 
-void nsBCTableCellFrame::SetBorderWidth(LogicalSide aSide, BCPixelSize aValue) {
+void nsBCTableCellFrame::SetBorderWidth(LogicalSide aSide, nscoord aValue) {
   switch (aSide) {
     case LogicalSide::BStart:
       mBStartBorder = aValue;
@@ -1001,11 +1000,9 @@ void nsBCTableCellFrame::SetBorderWidth(LogicalSide aSide, BCPixelSize aValue) {
 /* virtual */
 nsMargin nsBCTableCellFrame::GetBorderOverflow() {
   WritingMode wm = GetWritingMode();
-  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
-  LogicalMargin halfBorder(wm, BC_BORDER_START_HALF_COORD(d2a, mBStartBorder),
-                           BC_BORDER_END_HALF_COORD(d2a, mIEndBorder),
-                           BC_BORDER_END_HALF_COORD(d2a, mBEndBorder),
-                           BC_BORDER_START_HALF_COORD(d2a, mIStartBorder));
+  LogicalMargin halfBorder(
+      wm, BC_BORDER_START_HALF(mBStartBorder), BC_BORDER_END_HALF(mIEndBorder),
+      BC_BORDER_END_HALF(mBEndBorder), BC_BORDER_START_HALF(mIStartBorder));
   return halfBorder.GetPhysicalMargin(wm);
 }
 
