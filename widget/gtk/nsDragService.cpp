@@ -1059,51 +1059,33 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
     return NS_OK;
   }
 
-  bool isList = IsTargetContextList();
-  if (isList) {
+  if (IsTargetContextList()) {
     if (!mSourceDataItems) {
       *aNumItems = 0;
       return NS_OK;
     }
     mSourceDataItems->GetLength(aNumItems);
-  } else {
-    // text/uri-list
-    GdkAtom gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
-    if (!gdkFlavor) {
-      *aNumItems = 0;
+    LOGDRAGSERVICE("GetNumDropItems(): TargetContextList items %d", *aNumItems);
+    return NS_OK;
+  }
+
+  const GdkAtom fileListFlavors[] = {sURLMimeAtom, sTextUriListTypeAtom,
+                                     sPortalFileAtom, sPortalFileTransferAtom};
+
+  for (auto fileFlavour : fileListFlavors) {
+    RefPtr<DragData> data = GetDragData(fileFlavour);
+    if (data) {
+      *aNumItems = data->GetURIsNum();
+      LOGDRAGSERVICE("GetNumDropItems(): Found MIME %s items %d",
+                     GUniquePtr<gchar>(gdk_atom_name(fileFlavour)).get(),
+                     *aNumItems);
       return NS_OK;
     }
-
-    nsTArray<nsCString> dragFlavors;
-    GetDragFlavors(dragFlavors);
-    GetTargetDragData(gdkFlavor, dragFlavors);
-
-    // application/vnd.portal.files
-    if (!mTargetDragUris) {
-      gdkFlavor = gdk_atom_intern(gPortalFile, FALSE);
-      if (!gdkFlavor) {
-        *aNumItems = 0;
-        return NS_OK;
-      }
-      GetTargetDragData(gdkFlavor, dragFlavors, false /* resetTargetData */);
-    }
-
-    // application/vnd.portal.filetransfer
-    if (!mTargetDragUris) {
-      gdkFlavor = gdk_atom_intern(gPortalFileTransfer, FALSE);
-      if (!gdkFlavor) {
-        *aNumItems = 0;
-        return NS_OK;
-      }
-      GetTargetDragData(gdkFlavor, dragFlavors, false /* resetTargetData */);
-    }
-
-    if (mTargetDragUris) {
-      *aNumItems = g_strv_length(mTargetDragUris.get());
-    } else
-      *aNumItems = 1;
   }
-  LOGDRAGSERVICE("  NumOfDropItems %d", *aNumItems);
+
+  // We're missing any file list MIME, return only one item.
+  *aNumItems = 1;
+  LOGDRAGSERVICE("GetNumDropItems(): no list available");
   return NS_OK;
 }
 
