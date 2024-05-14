@@ -23,6 +23,9 @@ support-files = [
   "../../../browser/base/content/test/general/head.js",
 ]
 
+["browser_mouse_click_screenXY.js"]
+support-files = ["../../../browser/base/content/test/general/dummy_page.html"]
+
 ["browser_mouse_enterleave_switch_tab.js"]
 support-files = ["../../../browser/base/content/test/general/dummy_page.html"]
 fail-if = ["a11y_checks"] # Bug 1854502 clicked tabbrowser-tabpanels may not be accessible
