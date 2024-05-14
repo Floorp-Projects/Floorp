@@ -820,7 +820,6 @@ static bool GetSupportedConfig(const KeySystemConfig& aKeySystem,
                                const MediaKeySystemConfiguration& aCandidate,
                                MediaKeySystemConfiguration& aOutConfig,
                                DecoderDoctorDiagnostics* aDiagnostics,
-                               bool aInPrivateBrowsing,
                                const Document* aDocument) {
   EME_LOG("Compare implementation '%s'\n with request '%s'",
           NS_ConvertUTF16toUTF8(aKeySystem.GetDebugInfo()).get(),
@@ -876,15 +875,6 @@ static bool GetSupportedConfig(const KeySystemConfig& aKeySystem,
     EME_LOG(
         "MediaKeySystemConfiguration (label='%s') rejected; "
         "persistentState requirement not satisfied.",
-        NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
-    return false;
-  }
-
-  if (config.mPersistentState == MediaKeysRequirement::Required &&
-      aInPrivateBrowsing) {
-    EME_LOG(
-        "MediaKeySystemConfiguration (label='%s') rejected; "
-        "persistentState requested in Private Browsing window.",
         NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
     return false;
   }
@@ -1080,8 +1070,7 @@ MediaKeySystemAccess::GetSupportedConfig(MediaKeySystemAccessRequest* aRequest,
   GetSupportedKeySystemConfigs(aRequest->mKeySystem,
                                isHardwareDecryptionRequest)
       ->Then(GetMainThreadSerialEventTarget(), __func__,
-             [promise, aRequest, aIsPrivateBrowsing,
-              document = RefPtr<const Document>{aDocument}](
+             [promise, aRequest, document = RefPtr<const Document>{aDocument}](
                  const KeySystemConfig::SupportedConfigsPromise::
                      ResolveOrRejectValue& aResult) {
                if (aResult.IsResolve()) {
@@ -1091,8 +1080,7 @@ MediaKeySystemAccess::GetSupportedConfig(MediaKeySystemAccessRequest* aRequest,
                         aRequest->mConfigs) {
                      if (mozilla::dom::GetSupportedConfig(
                              implementation, candidate, outConfig,
-                             &aRequest->mDiagnostics, aIsPrivateBrowsing,
-                             document)) {
+                             &aRequest->mDiagnostics, document)) {
                        promise->Resolve(std::move(outConfig), __func__);
                        return;
                      }
