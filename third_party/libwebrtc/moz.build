@@ -165,6 +165,7 @@ DIRS += [
     "/third_party/libwebrtc/media/rtc_simulcast_encoder_adapter_gn",
     "/third_party/libwebrtc/media/rtp_utils_gn",
     "/third_party/libwebrtc/media/stream_params_gn",
+    "/third_party/libwebrtc/media/video_source_base_gn",
     "/third_party/libwebrtc/modules/async_audio_processing/async_audio_processing_gn",
     "/third_party/libwebrtc/modules/audio_coding/audio_coding_gn",
     "/third_party/libwebrtc/modules/audio_coding/audio_coding_module_typedefs_gn",
