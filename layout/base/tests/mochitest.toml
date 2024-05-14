@@ -178,7 +178,6 @@ support-files = [
   "bug977003_inner_3.html",
   "bug977003_inner_4.html",
   "bug977003_inner_5.html",
-  "bug977003_inner_6.html",
 ]
 
 ["test_bug990340.html"]
