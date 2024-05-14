@@ -178,6 +178,7 @@
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/IPCBlob.h"
 #include "mozilla/dom/IPCBlobUtils.h"
@@ -9547,27 +9548,63 @@ static inline bool IsVoidTag(Element* aElement) {
   return FragmentOrElement::IsHTMLVoid(aElement->NodeInfo()->NameAtom());
 }
 
-bool nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
-                                           bool aDescendantsOnly,
-                                           nsAString& aOut) {
-  // If you pass in a DOCUMENT_NODE, you must pass aDescendentsOnly as true
-  MOZ_ASSERT(aDescendantsOnly || aRoot->NodeType() != nsINode::DOCUMENT_NODE);
-
-  nsINode* current =
-      aDescendantsOnly ? aRoot->GetFirstChildOfTemplateOrNode() : aRoot;
-
-  if (!current) {
-    return true;
+static bool StartSerializingShadowDOM(
+    nsINode* aNode, StringBuilder& aBuilder, bool aSerializableShadowRoots,
+    const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots) {
+  ShadowRoot* shadow = aNode->GetShadowRoot();
+  if (!shadow || ((!aSerializableShadowRoots || !shadow->Serializable()) &&
+                  !aShadowRoots.Contains(shadow))) {
+    return false;
   }
 
-  StringBuilder builder;
+  aBuilder.Append(u"<template shadowrootmode=\"");
+  if (shadow->IsClosed()) {
+    aBuilder.Append(u"closed\"");
+  } else {
+    aBuilder.Append(u"open\"");
+  }
+
+  if (shadow->DelegatesFocus()) {
+    aBuilder.Append(u" shadowrootdelegatesfocus=\"\"");
+  }
+  if (shadow->Serializable()) {
+    aBuilder.Append(u" shadowrootserializable=\"\"");
+  }
+  if (shadow->Clonable()) {
+    aBuilder.Append(u" shadowrootclonable=\"\"");
+  }
+
+  aBuilder.Append(u">");
+  return true;
+}
+
+template <SerializeShadowRoots ShouldSerializeShadowRoots>
+static void SerializeNodeToMarkupInternal(
+    nsINode* aRoot, bool aDescendantsOnly, StringBuilder& aBuilder,
+    bool aSerializableShadowRoots,
+    const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots) {
+  nsINode* current =
+      aDescendantsOnly ? aRoot->GetFirstChildOfTemplateOrNode() : aRoot;
+  if (!current) {
+    return;
+  }
+
   nsIContent* next;
   while (true) {
     bool isVoid = false;
     switch (current->NodeType()) {
       case nsINode::ELEMENT_NODE: {
         Element* elem = current->AsElement();
-        StartElement(elem, builder);
+        StartElement(elem, aBuilder);
+
+        if constexpr (ShouldSerializeShadowRoots == SerializeShadowRoots::Yes) {
+          if (StartSerializingShadowDOM(
+                  current, aBuilder, aSerializableShadowRoots, aShadowRoots)) {
+            current = current->GetShadowRoot()->GetFirstChild();
+            continue;
+          }
+        }
+
         isVoid = IsVoidTag(elem);
         if (!isVoid && (next = current->GetFirstChildOfTemplateOrNode())) {
           current = next;
@@ -9581,58 +9618,75 @@ bool nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
         const nsTextFragment* text = &current->AsText()->TextFragment();
         nsIContent* parent = current->GetParent();
         if (ShouldEscape(parent)) {
-          AppendEncodedCharacters(text, builder);
+          AppendEncodedCharacters(text, aBuilder);
         } else {
-          builder.Append(text);
+          aBuilder.Append(text);
         }
         break;
       }
 
       case nsINode::COMMENT_NODE: {
-        builder.Append(u"<!--");
-        builder.Append(static_cast<nsIContent*>(current)->GetText());
-        builder.Append(u"-->");
+        aBuilder.Append(u"<!--");
+        aBuilder.Append(static_cast<nsIContent*>(current)->GetText());
+        aBuilder.Append(u"-->");
         break;
       }
 
       case nsINode::DOCUMENT_TYPE_NODE: {
-        builder.Append(u"<!DOCTYPE ");
-        builder.Append(nsString(current->NodeName()));
-        builder.Append(u">");
+        aBuilder.Append(u"<!DOCTYPE ");
+        aBuilder.Append(nsString(current->NodeName()));
+        aBuilder.Append(u">");
         break;
       }
 
       case nsINode::PROCESSING_INSTRUCTION_NODE: {
-        builder.Append(u"<?");
-        builder.Append(nsString(current->NodeName()));
-        builder.Append(u" ");
-        builder.Append(static_cast<nsIContent*>(current)->GetText());
-        builder.Append(u">");
+        aBuilder.Append(u"<?");
+        aBuilder.Append(nsString(current->NodeName()));
+        aBuilder.Append(u" ");
+        aBuilder.Append(static_cast<nsIContent*>(current)->GetText());
+        aBuilder.Append(u">");
         break;
       }
     }
 
     while (true) {
       if (!isVoid && current->NodeType() == nsINode::ELEMENT_NODE) {
-        builder.Append(u"</");
+        aBuilder.Append(u"</");
         nsIContent* elem = static_cast<nsIContent*>(current);
         if (elem->IsHTMLElement() || elem->IsSVGElement() ||
             elem->IsMathMLElement()) {
-          builder.Append(elem->NodeInfo()->NameAtom());
+          aBuilder.Append(elem->NodeInfo()->NameAtom());
         } else {
-          builder.Append(nsString(current->NodeName()));
+          aBuilder.Append(nsString(current->NodeName()));
         }
-        builder.Append(u">");
+        aBuilder.Append(u">");
       }
       isVoid = false;
 
       if (current == aRoot) {
-        return builder.ToString(aOut);
+        return;
       }
 
       if ((next = current->GetNextSibling())) {
         current = next;
         break;
+      }
+
+      if constexpr (ShouldSerializeShadowRoots == SerializeShadowRoots::Yes) {
+        // If the current node is a shadow root, then we must go to its host.
+        // Since shadow DOMs are serialized declaratively as template elements,
+        // we serialize the end tag of the template before going back to
+        // serializing the shadow host.
+        if (current->IsShadowRoot()) {
+          current = current->GetContainingShadowHost();
+          aBuilder.Append(u"</template>");
+
+          if (current->HasChildren()) {
+            current = current->GetFirstChildOfTemplateOrNode();
+            break;
+          }
+          continue;
+        }
       }
 
       current = current->GetParentNode();
@@ -9649,11 +9703,47 @@ bool nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
       }
 
       if (aDescendantsOnly && current == aRoot) {
-        return builder.ToString(aOut);
+        return;
       }
     }
   }
 }
+
+template <SerializeShadowRoots ShouldSerializeShadowRoots>
+bool nsContentUtils::SerializeNodeToMarkup(
+    nsINode* aRoot, bool aDescendantsOnly, nsAString& aOut,
+    bool aSerializableShadowRoots,
+    const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots) {
+  // If you pass in a DOCUMENT_NODE, you must pass aDescendentsOnly as true
+  MOZ_ASSERT(aDescendantsOnly || aRoot->NodeType() != nsINode::DOCUMENT_NODE);
+
+  StringBuilder builder;
+  if constexpr (ShouldSerializeShadowRoots == SerializeShadowRoots::Yes) {
+    if (aDescendantsOnly &&
+        StartSerializingShadowDOM(aRoot, builder, aSerializableShadowRoots,
+                                  aShadowRoots)) {
+      SerializeNodeToMarkupInternal<SerializeShadowRoots::Yes>(
+          aRoot->GetShadowRoot()->GetFirstChild(), false, builder,
+          aSerializableShadowRoots, aShadowRoots);
+      // The template tag is opened in StartSerializingShadowDOM, so we need
+      // to close it here before serializing any children of aRoot.
+      builder.Append(u"</template>");
+    }
+  }
+
+  SerializeNodeToMarkupInternal<ShouldSerializeShadowRoots>(
+      aRoot, aDescendantsOnly, builder, aSerializableShadowRoots, aShadowRoots);
+  return builder.ToString(aOut);
+}
+
+template bool nsContentUtils::SerializeNodeToMarkup<SerializeShadowRoots::No>(
+    nsINode* aRoot, bool aDescendantsOnly, nsAString& aOut,
+    bool aSerializableShadowRoots,
+    const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots);
+template bool nsContentUtils::SerializeNodeToMarkup<SerializeShadowRoots::Yes>(
+    nsINode* aRoot, bool aDescendantsOnly, nsAString& aOut,
+    bool aSerializableShadowRoots,
+    const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots);
 
 bool nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri) {
   // aUri must start with about: or this isn't the right function to be using.
@@ -11437,6 +11527,7 @@ int32_t nsContentUtils::CompareTreePosition(const nsINode* aNode1,
 nsIContent* nsContentUtils::AttachDeclarativeShadowRoot(nsIContent* aHost,
                                                         ShadowRootMode aMode,
                                                         bool aIsClonable,
+                                                        bool aIsSerializable,
                                                         bool aDelegatesFocus) {
   RefPtr<Element> host = mozilla::dom::Element::FromNodeOrNull(aHost);
   if (!host || host->GetShadowRoot()) {
@@ -11449,6 +11540,7 @@ nsIContent* nsContentUtils::AttachDeclarativeShadowRoot(nsIContent* aHost,
   init.mDelegatesFocus = aDelegatesFocus;
   init.mSlotAssignment = SlotAssignmentMode::Named;
   init.mClonable = aIsClonable;
+  init.mSerializable = aIsSerializable;
 
   RefPtr shadowRoot = host->AttachShadow(init, IgnoreErrors());
   if (shadowRoot) {
