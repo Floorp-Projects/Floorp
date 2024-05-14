@@ -38,6 +38,7 @@ import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.compose.button.TextButton
+import org.mozilla.fenix.compose.ext.thenConditional
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val LIST_ITEM_HEIGHT = 56.dp
@@ -387,18 +388,18 @@ private fun ListItem(
     afterListAction: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
-        modifier = when (onClick != null) {
-            true -> Modifier.clickable(enabled = enabled) { onClick() }
-            false -> Modifier
-        }.then(
-            Modifier.defaultMinSize(minHeight = LIST_ITEM_HEIGHT),
-        ),
+        modifier = modifier
+            .defaultMinSize(minHeight = LIST_ITEM_HEIGHT)
+            .thenConditional(
+                modifier = Modifier.clickable { onClick?.invoke() },
+                predicate = { onClick != null },
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         beforeListAction()
 
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 6.dp)
                 .weight(1f),
         ) {
