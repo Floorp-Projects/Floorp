@@ -397,6 +397,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    vimeo: {
+      "https://*.vimeo.com/*": {
+        showHiddenTextTracks: true,
+      },
+    },
+
     voot: {
       "https://*.voot.com/*": {
         videoWrapperScriptPath: "video-wrappers/voot.js",
