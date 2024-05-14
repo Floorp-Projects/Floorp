@@ -122,6 +122,9 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void PostVisualViewportScrollEvent(VVPScrollEvent* aScrollEvent);
   void DispatchVisualViewportScrollEvents();
 
+  MOZ_CAN_RUN_SCRIPT void DispatchResizeEvents();
+  MOZ_CAN_RUN_SCRIPT void FlushLayoutOnPendingDocsAndFixUpFocus();
+
   /**
    * Add an observer that will be called after each refresh. The caller
    * must remove the observer before it is deleted. This does not trigger
