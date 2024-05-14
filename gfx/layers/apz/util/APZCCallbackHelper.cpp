@@ -6,6 +6,8 @@
 
 #include "APZCCallbackHelper.h"
 
+#include "APZEventState.h"  // for PrecedingPointerDown
+
 #include "gfxPlatform.h"  // For gfxPlatform::UseTiling
 
 #include "mozilla/AsyncEventDispatcher.h"
@@ -510,7 +512,8 @@ nsEventStatus APZCCallbackHelper::DispatchWidgetEvent(WidgetGUIEvent& aEvent) {
 
 nsEventStatus APZCCallbackHelper::DispatchSynthesizedMouseEvent(
     EventMessage aMsg, const LayoutDevicePoint& aRefPoint, Modifiers aModifiers,
-    int32_t aClickCount, nsIWidget* aWidget) {
+    int32_t aClickCount, PrecedingPointerDown aPrecedingPointerDownState,
+    nsIWidget* aWidget) {
   MOZ_ASSERT(aMsg == eMouseMove || aMsg == eMouseDown || aMsg == eMouseUp ||
              aMsg == eMouseLongTap);
 
@@ -522,6 +525,15 @@ nsEventStatus APZCCallbackHelper::DispatchSynthesizedMouseEvent(
                                       : MouseButtonsFlag::eNoButtons;
   event.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH;
   if (aMsg == eMouseLongTap) {
+    event.mFlags.mOnlyChromeDispatch = true;
+  }
+  // If the preceding `pointerdown` was canceled by content, we should not
+  // dispatch the compatibility mouse events into the content, but they are
+  // required to dispatch `click`, `dblclick` and `auxclick` events by
+  // EventStateManager.  Therefore, we need to dispatch them only to chrome.
+  else if (aPrecedingPointerDownState ==
+           PrecedingPointerDown::ConsumedByContent) {
+    event.PreventDefault(false);
     event.mFlags.mOnlyChromeDispatch = true;
   }
   if (aMsg != eMouseMove) {
@@ -551,21 +563,20 @@ PreventDefaultResult APZCCallbackHelper::DispatchMouseEvent(
   return preventDefaultResult;
 }
 
-void APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
-                                            Modifiers aModifiers,
-                                            int32_t aClickCount,
-                                            nsIWidget* aWidget) {
+void APZCCallbackHelper::FireSingleTapEvent(
+    const LayoutDevicePoint& aPoint, Modifiers aModifiers, int32_t aClickCount,
+    PrecedingPointerDown aPrecedingPointerDownState, nsIWidget* aWidget) {
   if (aWidget->Destroyed()) {
     return;
   }
   APZCCH_LOG("Dispatching single-tap component events to %s\n",
              ToString(aPoint).c_str());
   DispatchSynthesizedMouseEvent(eMouseMove, aPoint, aModifiers, aClickCount,
-                                aWidget);
+                                aPrecedingPointerDownState, aWidget);
   DispatchSynthesizedMouseEvent(eMouseDown, aPoint, aModifiers, aClickCount,
-                                aWidget);
+                                aPrecedingPointerDownState, aWidget);
   DispatchSynthesizedMouseEvent(eMouseUp, aPoint, aModifiers, aClickCount,
-                                aWidget);
+                                aPrecedingPointerDownState, aWidget);
 }
 
 static dom::Element* GetDisplayportElementFor(

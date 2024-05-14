@@ -7746,6 +7746,10 @@ void PresShell::EventHandler::MaybeSynthesizeCompatMouseEventsForTouchEnd(
     event.mClickCount = message == eMouseMove ? 0 : 1;
     event.mModifiers = aTouchEndEvent->mModifiers;
     event.convertToPointer = false;
+    if (TouchManager::IsPrecedingTouchPointerDownConsumedByContent()) {
+      event.PreventDefault(false);
+      event.mFlags.mOnlyChromeDispatch = true;
+    }
     nsEventStatus mouseEventStatus = nsEventStatus_eIgnore;
     presShell->HandleEvent(frameForPresShell, &event, false, &mouseEventStatus);
   }
