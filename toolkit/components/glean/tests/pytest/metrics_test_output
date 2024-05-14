@@ -86,31 +86,31 @@ pub mod test {
 
     #[repr(u16)]
     pub enum LabeledBooleanMetricLabelsLabel {
-        OneLabel = 0,
-        TwoLabels = 1,
-        ThreeLabels = 2,
-        FourLabels = 3,
-        FiveLabels = 4,
-        SixLabels = 5,
-        SevenLabels = 6,
-        EightLabels = 7,
-        NineLabels = 8,
-        TenLabels = 9,
+        EOneLabel = 0,
+        ETwoLabels = 1,
+        EThreeLabels = 2,
+        EFourLabels = 3,
+        EFiveLabels = 4,
+        ESixLabels = 5,
+        ESevenLabels = 6,
+        EEightLabels = 7,
+        ENineLabels = 8,
+        ETenLabels = 9,
         __Other__,
     }
     impl From<u16> for LabeledBooleanMetricLabelsLabel {
         fn from(v: u16) -> Self {
             match v {
-                0 => Self::OneLabel,
-                1 => Self::TwoLabels,
-                2 => Self::ThreeLabels,
-                3 => Self::FourLabels,
-                4 => Self::FiveLabels,
-                5 => Self::SixLabels,
-                6 => Self::SevenLabels,
-                7 => Self::EightLabels,
-                8 => Self::NineLabels,
-                9 => Self::TenLabels,
+                0 => Self::EOneLabel,
+                1 => Self::ETwoLabels,
+                2 => Self::EThreeLabels,
+                3 => Self::EFourLabels,
+                4 => Self::EFiveLabels,
+                5 => Self::ESixLabels,
+                6 => Self::ESevenLabels,
+                7 => Self::EEightLabels,
+                8 => Self::ENineLabels,
+                9 => Self::ETenLabels,
                 _ => Self::__Other__,
             }
         }
@@ -118,16 +118,16 @@ pub mod test {
     impl Into<&'static str> for LabeledBooleanMetricLabelsLabel {
         fn into(self) -> &'static str {
             match self {
-                Self::OneLabel => "one_label",
-                Self::TwoLabels => "two_labels",
-                Self::ThreeLabels => "three_labels",
-                Self::FourLabels => "four_labels",
-                Self::FiveLabels => "five_labels",
-                Self::SixLabels => "six_labels",
-                Self::SevenLabels => "seven_labels",
-                Self::EightLabels => "eight_labels",
-                Self::NineLabels => "nine_labels",
-                Self::TenLabels => "ten_labels",
+                Self::EOneLabel => "one_label",
+                Self::ETwoLabels => "two_labels",
+                Self::EThreeLabels => "three_labels",
+                Self::EFourLabels => "four_labels",
+                Self::EFiveLabels => "five_labels",
+                Self::ESixLabels => "six_labels",
+                Self::ESevenLabels => "seven_labels",
+                Self::EEightLabels => "eight_labels",
+                Self::ENineLabels => "nine_labels",
+                Self::ETenLabels => "ten_labels",
                 Self::__Other__ => "__other__",
             }
         }
@@ -166,15 +166,15 @@ pub mod test {
 
     #[repr(u16)]
     pub enum LabeledCounterMetricLabelsLabel {
-        OneLabel = 0,
-        TwoLabels = 1,
+        EOneLabel = 0,
+        ETwoLabels = 1,
         __Other__,
     }
     impl From<u16> for LabeledCounterMetricLabelsLabel {
         fn from(v: u16) -> Self {
             match v {
-                0 => Self::OneLabel,
-                1 => Self::TwoLabels,
+                0 => Self::EOneLabel,
+                1 => Self::ETwoLabels,
                 _ => Self::__Other__,
             }
         }
@@ -182,8 +182,8 @@ pub mod test {
     impl Into<&'static str> for LabeledCounterMetricLabelsLabel {
         fn into(self) -> &'static str {
             match self {
-                Self::OneLabel => "one_label",
-                Self::TwoLabels => "two_labels",
+                Self::EOneLabel => "one_label",
+                Self::ETwoLabels => "two_labels",
                 Self::__Other__ => "__other__",
             }
         }
@@ -222,15 +222,15 @@ pub mod test {
 
     #[repr(u16)]
     pub enum LabeledStringMetricLabelsLabel {
-        OneLabel = 0,
-        TwoLabels = 1,
+        EOneLabel = 0,
+        ETwoLabels = 1,
         __Other__,
     }
     impl From<u16> for LabeledStringMetricLabelsLabel {
         fn from(v: u16) -> Self {
             match v {
-                0 => Self::OneLabel,
-                1 => Self::TwoLabels,
+                0 => Self::EOneLabel,
+                1 => Self::ETwoLabels,
                 _ => Self::__Other__,
             }
         }
@@ -238,8 +238,8 @@ pub mod test {
     impl Into<&'static str> for LabeledStringMetricLabelsLabel {
         fn into(self) -> &'static str {
             match self {
-                Self::OneLabel => "one_label",
-                Self::TwoLabels => "two_labels",
+                Self::EOneLabel => "one_label",
+                Self::ETwoLabels => "two_labels",
                 Self::__Other__ => "__other__",
             }
         }

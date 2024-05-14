@@ -82,7 +82,7 @@ impl ExtraKeys for {{ obj.name|Camelize }}{{ suffix }} {
 pub enum {{ obj.name|Camelize }}Label {
     {% for label in obj.ordered_labels %}
     {# Specifically _not_ using r# as C++ doesn't have it #}
-    {{ label|Camelize }} = {{loop.index0}},
+    E{{ label|Camelize }} = {{loop.index0}},
     {% endfor %}
     __Other__,
 }
@@ -90,7 +90,7 @@ impl From<u16> for {{ obj.name|Camelize }}Label {
     fn from(v: u16) -> Self {
         match v {
             {% for label in obj.ordered_labels %}
-            {{ loop.index0 }} => Self::{{ label|Camelize }},
+            {{ loop.index0 }} => Self::E{{ label|Camelize }},
             {% endfor %}
             _ => Self::__Other__,
         }
@@ -100,7 +100,7 @@ impl Into<&'static str> for {{ obj.name|Camelize }}Label {
     fn into(self) -> &'static str {
         match self {
             {% for label in obj.ordered_labels %}
-            Self::{{ label| Camelize }} => "{{label}}",
+            Self::E{{ label| Camelize }} => "{{label}}",
             {% endfor %}
             Self::__Other__ => "__other__",
         }
