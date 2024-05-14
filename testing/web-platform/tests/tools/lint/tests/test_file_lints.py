@@ -707,6 +707,41 @@ def test_late_timeout():
             ]
 
 
+def test_reference_in_non_reference():
+    code = b"""
+<html xmlns="http://www.w3.org/1999/xhtml">
+<link rel="match" href="test-ref.html"/>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</html>
+"""
+    error_map = check_with_files(code)
+
+    for (filename, (errors, kind)) in error_map.items():
+        check_errors(errors)
+
+        if kind in ["web-lax", "web-strict"]:
+            assert errors == [
+                (
+                    "NON-EXISTENT-REF",
+                    "Reference test with a non-existent 'match' relationship reference: "
+                    "'test-ref.html'",
+                    filename,
+                    None,
+                ),
+                (
+                    "REFERENCE-IN-OTHER-TYPE",
+                    "Reference link included in a testharness test",
+                    filename,
+                    None,
+                ),
+            ]
+        elif kind == "python":
+            assert errors == [
+                ("PARSE-FAILED", "Unable to parse file", filename, 2),
+            ]
+
+
 def test_print_function():
     error_map = check_with_files(b"def foo():\n  print('function')\n")
 
