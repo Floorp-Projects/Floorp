@@ -1423,6 +1423,12 @@ nsresult nsClipboard::SaveStorageOrStream(IDataObject* aDataObject, UINT aIndex,
   }
 
   if (stm.tymed == TYMED_ISTORAGE) {
+    // should never happen -- but theoretically possible, given an ill-behaved
+    // data-source
+    if (stm.pstg == nullptr) {
+      return NS_ERROR_FAILURE;
+    }
+
     RefPtr<IStorage> file;
     hres = StgCreateStorageEx(
         aFileName.Data(), STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
@@ -1442,6 +1448,11 @@ nsresult nsClipboard::SaveStorageOrStream(IDataObject* aDataObject, UINT aIndex,
   }
 
   MOZ_ASSERT(stm.tymed == TYMED_ISTREAM);
+  // should never happen -- but possible given an ill-behaved data-source, and
+  // has been seen in the wild (bug 1895681)
+  if (stm.pstm == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
 
   HANDLE handle = CreateFile(aFileName.Data(), GENERIC_WRITE, FILE_SHARE_READ,
                              NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
