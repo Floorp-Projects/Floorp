@@ -168,10 +168,7 @@ fn saturates_at_boundary() {
     });
 
     counter.add_sync(&glean, 2);
-    counter.add_sync(&glean, i32::max_value());
+    counter.add_sync(&glean, i32::MAX);
 
-    assert_eq!(
-        i32::max_value(),
-        counter.get_value(&glean, Some("store1")).unwrap()
-    );
+    assert_eq!(i32::MAX, counter.get_value(&glean, Some("store1")).unwrap());
 }

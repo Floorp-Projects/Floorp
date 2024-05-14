@@ -10,7 +10,7 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::sync::RwLock;
+use std::sync::{Mutex, RwLock};
 
 use chrono::{DateTime, FixedOffset, Utc};
 
@@ -96,7 +96,7 @@ pub struct EventDatabase {
     /// The in-memory list of events
     event_stores: RwLock<HashMap<String, Vec<StoredEvent>>>,
     /// A lock to be held when doing operations on the filesystem
-    file_lock: RwLock<()>,
+    file_lock: Mutex<()>,
 }
 
 impl EventDatabase {
@@ -113,7 +113,7 @@ impl EventDatabase {
         Ok(Self {
             path,
             event_stores: RwLock::new(HashMap::new()),
-            file_lock: RwLock::new(()),
+            file_lock: Mutex::new(()),
         })
     }
 
@@ -220,7 +220,7 @@ impl EventDatabase {
         // a lock on `event_stores`.
         // This is a potential lock-order-inversion.
         let mut db = self.event_stores.write().unwrap(); // safe unwrap, only error case is poisoning
-        let _lock = self.file_lock.write().unwrap(); // safe unwrap, only error case is poisoning
+        let _lock = self.file_lock.lock().unwrap(); // safe unwrap, only error case is poisoning
 
         for entry in fs::read_dir(&self.path)? {
             let entry = entry?;
@@ -326,7 +326,7 @@ impl EventDatabase {
     /// * `store_name` - The name of the store.
     /// * `event_json` - The event content, as a single-line JSON-encoded string.
     fn write_event_to_disk(&self, store_name: &str, event_json: &str) {
-        let _lock = self.file_lock.write().unwrap(); // safe unwrap, only error case is poisoning
+        let _lock = self.file_lock.lock().unwrap(); // safe unwrap, only error case is poisoning
         if let Err(err) = OpenOptions::new()
             .create(true)
             .append(true)
@@ -576,7 +576,7 @@ impl EventDatabase {
                 .unwrap() // safe unwrap, only error case is poisoning
                 .remove(&store_name.to_string());
 
-            let _lock = self.file_lock.write().unwrap(); // safe unwrap, only error case is poisoning
+            let _lock = self.file_lock.lock().unwrap(); // safe unwrap, only error case is poisoning
             if let Err(err) = fs::remove_file(self.path.join(store_name)) {
                 match err.kind() {
                     std::io::ErrorKind::NotFound => {
@@ -596,7 +596,7 @@ impl EventDatabase {
         self.event_stores.write().unwrap().clear();
 
         // safe unwrap, only error case is poisoning
-        let _lock = self.file_lock.write().unwrap();
+        let _lock = self.file_lock.lock().unwrap();
         std::fs::remove_dir_all(&self.path)?;
         create_dir_all(&self.path)?;
 

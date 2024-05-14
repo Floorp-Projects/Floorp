@@ -167,12 +167,12 @@ mod test {
     fn accumulate_large_numbers() {
         let mut hist = Histogram::linear(1, 500, 10);
 
-        hist.accumulate(u64::max_value());
-        hist.accumulate(u64::max_value());
+        hist.accumulate(u64::MAX);
+        hist.accumulate(u64::MAX);
 
         assert_eq!(2, hist.count());
         // Saturate before overflowing
-        assert_eq!(u64::max_value(), hist.sum());
+        assert_eq!(u64::MAX, hist.sum());
         assert_eq!(2, hist.values[&500]);
     }
 }
