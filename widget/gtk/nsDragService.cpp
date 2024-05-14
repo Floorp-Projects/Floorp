@@ -140,6 +140,24 @@ static const char gTabDropType[] = "application/x-moz-tabbrowser-tab";
 static const char gPortalFile[] = "application/vnd.portal.files";
 static const char gPortalFileTransfer[] = "application/vnd.portal.filetransfer";
 
+GdkAtom nsDragService::sJPEGImageMimeAtom;
+GdkAtom nsDragService::sJPGImageMimeAtom;
+GdkAtom nsDragService::sPNGImageMimeAtom;
+GdkAtom nsDragService::sGIFImageMimeAtom;
+GdkAtom nsDragService::sCustomTypesMimeAtom;
+GdkAtom nsDragService::sURLMimeAtom;
+GdkAtom nsDragService::sRTFMimeAtom;
+GdkAtom nsDragService::sTextMimeAtom;
+GdkAtom nsDragService::sMozUrlTypeAtom;
+GdkAtom nsDragService::sMimeListTypeAtom;
+GdkAtom nsDragService::sTextUriListTypeAtom;
+GdkAtom nsDragService::sTextPlainUTF8TypeAtom;
+GdkAtom nsDragService::sXdndDirectSaveTypeAtom;
+GdkAtom nsDragService::sTabDropTypeAtom;
+GdkAtom nsDragService::sFileMimeAtom;
+GdkAtom nsDragService::sPortalFileAtom;
+GdkAtom nsDragService::sPortalFileTransferAtom;
+
 // See https://docs.gtk.org/gtk3/enum.DragResult.html
 static const char kGtkDragResults[][100]{
     "GTK_DRAG_RESULT_SUCCESS",        "GTK_DRAG_RESULT_NO_TARGET",
@@ -205,6 +223,28 @@ nsDragService::nsDragService()
   mTargetDragDataLen = 0;
   mTempFileTimerID = 0;
   mEventLoopDepth = 0;
+
+  static std::once_flag onceFlag;
+  std::call_once(onceFlag, [] {
+    sJPEGImageMimeAtom = gdk_atom_intern(kJPEGImageMime, FALSE);
+    sJPGImageMimeAtom = gdk_atom_intern(kJPGImageMime, FALSE);
+    sPNGImageMimeAtom = gdk_atom_intern(kPNGImageMime, FALSE);
+    sGIFImageMimeAtom = gdk_atom_intern(kGIFImageMime, FALSE);
+    sCustomTypesMimeAtom = gdk_atom_intern(kCustomTypesMime, FALSE);
+    sURLMimeAtom = gdk_atom_intern(kURLMime, FALSE);
+    sRTFMimeAtom = gdk_atom_intern(kRTFMime, FALSE);
+    sTextMimeAtom = gdk_atom_intern(kTextMime, FALSE);
+    sMozUrlTypeAtom = gdk_atom_intern(gMozUrlType, FALSE);
+    sMimeListTypeAtom = gdk_atom_intern(gMimeListType, FALSE);
+    sTextUriListTypeAtom = gdk_atom_intern(gTextUriListType, FALSE);
+    sTextPlainUTF8TypeAtom = gdk_atom_intern(gTextPlainUTF8Type, FALSE);
+    sXdndDirectSaveTypeAtom = gdk_atom_intern(gXdndDirectSaveType, FALSE);
+    sTabDropTypeAtom = gdk_atom_intern(gTabDropType, FALSE);
+    sFileMimeAtom = gdk_atom_intern(kFileMime, FALSE);
+    sPortalFileAtom = gdk_atom_intern(gPortalFile, FALSE);
+    sPortalFileTransferAtom = gdk_atom_intern(gPortalFileTransfer, FALSE);
+  });
+
   LOGDRAGSERVICE("nsDragService::nsDragService");
 }
 

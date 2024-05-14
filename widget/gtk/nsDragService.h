@@ -264,6 +264,25 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   guint mTempFileTimerID;
   // How deep we're nested in event loops
   int mEventLoopDepth;
+
+ public:
+  static GdkAtom sJPEGImageMimeAtom;
+  static GdkAtom sJPGImageMimeAtom;
+  static GdkAtom sPNGImageMimeAtom;
+  static GdkAtom sGIFImageMimeAtom;
+  static GdkAtom sCustomTypesMimeAtom;
+  static GdkAtom sURLMimeAtom;
+  static GdkAtom sRTFMimeAtom;
+  static GdkAtom sTextMimeAtom;
+  static GdkAtom sMozUrlTypeAtom;
+  static GdkAtom sMimeListTypeAtom;
+  static GdkAtom sTextUriListTypeAtom;
+  static GdkAtom sTextPlainUTF8TypeAtom;
+  static GdkAtom sXdndDirectSaveTypeAtom;
+  static GdkAtom sTabDropTypeAtom;
+  static GdkAtom sFileMimeAtom;
+  static GdkAtom sPortalFileAtom;
+  static GdkAtom sPortalFileTransferAtom;
 };
 
 #endif  // nsDragService_h__
