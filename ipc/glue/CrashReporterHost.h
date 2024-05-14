@@ -12,7 +12,9 @@
 #include "mozilla/UniquePtr.h"
 #include "base/process.h"
 #include "nsExceptionHandler.h"
+#include "nsIFile.h"
 #include "nsThreadUtils.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
 namespace mozilla {
@@ -55,8 +57,7 @@ class CrashReporterHost {
   // GenerateCrashReport does. After this, FinalizeCrashReport may be called.
   //
   // This calls TakeCrashedChildMinidump and FinalizeCrashReport.
-  template <typename Toplevel>
-  bool GenerateMinidumpAndPair(Toplevel* aToplevelProtocol,
+  bool GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcessHost,
                                const nsACString& aPairName) {
     auto childHandle = base::kInvalidProcessHandle;
     const auto cleanup = MakeScopeExit([&]() {
@@ -65,10 +66,10 @@ class CrashReporterHost {
       }
     });
 #ifdef XP_MACOSX
-    childHandle = aToplevelProtocol->Process()->GetChildTask();
+    childHandle = aChildProcessHost->GetChildTask();
 #else
-    if (!base::OpenPrivilegedProcessHandle(aToplevelProtocol->OtherPid(),
-                                           &childHandle)) {
+    if (!base::OpenPrivilegedProcessHandle(
+            aChildProcessHost->GetChildProcessId(), &childHandle)) {
       NS_WARNING("Failed to open child process handle.");
       return false;
     }
