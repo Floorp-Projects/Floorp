@@ -4,7 +4,6 @@ prefs = [
   "gfx.omta.background-color=true",
   "layout.css.basic-shape-rect.enabled=true",
   "layout.css.basic-shape-xywh.enabled=true",
-  "layout.css.individual-transform.enabled=true",
 ]
 support-files = [
   "testcommon.js",

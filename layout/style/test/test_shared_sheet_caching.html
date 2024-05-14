@@ -14,6 +14,7 @@
       `Shouldn't need to parse the stylesheet ${childWin.parent == window ? "frame" : "top"}`
     );
     if (childWin.top == childWin) {
+      childWin.close();
       SimpleTest.finish();
     }
   }
