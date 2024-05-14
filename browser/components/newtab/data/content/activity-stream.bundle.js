@@ -5665,7 +5665,6 @@ const INITIAL_STATE = {
   Weather: {
     // do we have the data from WeatherFeed yet?
     initialized: false,
-    // stub out demo data while building the feature
     suggestions: [],
     lastUpdated: null,
   },
@@ -6425,9 +6424,8 @@ function Weather(prevState = INITIAL_STATE.Weather, action) {
         ...prevState,
         suggestions: action.data.suggestions,
         lastUpdated: action.data.date,
+        initialized: true,
       };
-    case actionTypes.WEATHER_INIT:
-      return { ...prevState, initialized: true };
     default:
       return prevState;
   }
@@ -9668,7 +9666,7 @@ class _Weather extends (external_React_default()).PureComponent {
   render() {
     // Check if weather should be rendered
     const isWeatherEnabled = this.props.Prefs.values["system.showWeather"];
-    if (!isWeatherEnabled) {
+    if (!isWeatherEnabled || !this.props.Weather.initialized) {
       return false;
     }
     const {
