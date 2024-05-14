@@ -559,6 +559,8 @@ support-files = [
   "bug1518339-2-ref.html",
   "bug1529492-1.html",
   "bug1529492-1-ref.html",
+  "bug1896051.html",
+  "bug1896051-ref.html",
   "chrome/blue-32x32.png",
 ]
 

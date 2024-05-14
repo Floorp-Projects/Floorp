@@ -1,0 +1,29 @@
+<!doctype html>
+<html class="reftest-wait">
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  textarea {
+    font: 13px / 1 monospace;
+    border: 1px solid;
+    padding: 0;
+    overflow: hidden;
+    resize: none;
+  }
+</style>
+<textarea rows=5>
+a
+b
+c
+d
+</textarea>
+<script>
+SimpleTest.waitForFocus(function() {
+  let textarea = document.querySelector("textarea");
+  textarea.focus();
+  textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+  setTimeout(() => {
+    document.documentElement.removeAttribute("class");
+  }, 0);
+});
+</script>
