@@ -5598,7 +5598,6 @@ class PDFPageView {
     this.renderingState = RenderingStates.RUNNING;
     const canvasWrapper = document.createElement("div");
     canvasWrapper.classList.add("canvasWrapper");
-    canvasWrapper.setAttribute("aria-hidden", true);
     this.#addLayer(canvasWrapper, "canvasWrapper");
     if (!this.textLayer && this.#textLayerMode !== TextLayerMode.DISABLE && !pdfPage.isPureXfa) {
       this._accessibilityManager ||= new TextAccessibilityManager();
