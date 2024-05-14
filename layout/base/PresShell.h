@@ -1418,9 +1418,8 @@ class PresShell final : public nsStubDocumentObserver,
    */
   bool NeedFlush(FlushType aType) const {
     MOZ_ASSERT(aType >= FlushType::Style);
-    return mNeedStyleFlush ||
-           (mNeedLayoutFlush && aType >= FlushType::InterruptibleLayout) ||
-           aType >= FlushType::Display || mNeedThrottledAnimationFlush;
+    return mNeedStyleFlush || mNeedThrottledAnimationFlush ||
+           (mNeedLayoutFlush && aType >= FlushType::InterruptibleLayout);
   }
 
   /**

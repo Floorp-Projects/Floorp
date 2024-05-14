@@ -140,11 +140,6 @@ function test_getUnanimatedComputedStyle() {
     "FLUSH_LAYOUT option should throw");
 
   SimpleTest.doesThrow(
-    () => utils.getUnanimatedComputedStyle(div, null, "opacity", utils.FLUSH_DISPLAY),
-    "NS_ERROR_INVALID_ARG",
-    "FLUSH_DISPLAY option should throw");
-
-  SimpleTest.doesThrow(
     () => utils.getUnanimatedComputedStyle(div, "::before", "opacity", utils.FLUSH_NONE),
     "NS_ERROR_FAILURE",
     "Non-existent pseudo should throw");
