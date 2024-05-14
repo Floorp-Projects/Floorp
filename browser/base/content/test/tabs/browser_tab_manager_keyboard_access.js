@@ -32,8 +32,6 @@ add_task(async function test_open_tabmanager_keyboard() {
     "popuphidden"
   );
   EventUtils.synthesizeKey("KEY_Escape", { shiftKey: false }, newWindow);
-  // first Esc cancels the tab preview so we need to do it again. Expect this to be fixed in bug 1889646
-  EventUtils.synthesizeKey("KEY_Escape", { shiftKey: false }, newWindow);
   await hidden;
   await BrowserTestUtils.closeWindow(newWindow);
 });

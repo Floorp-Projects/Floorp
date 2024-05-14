@@ -183,7 +183,7 @@ export default class TabPreviewPanel {
   }
 
   get _displayURI() {
-    if (!this._tab || !this._tab.linkedBrowser) {
+    if (!this._tab) {
       return "";
     }
     return this.getPrettyURI(this._tab.linkedBrowser.currentURI.spec);
@@ -200,6 +200,6 @@ export default class TabPreviewPanel {
   }
 
   get _displayActiveness() {
-    return this._tab?.linkedBrowser?.docShellIsActive ? "[A]" : "";
+    return this._tab.linkedBrowser.docShellIsActive ? "[A]" : "";
   }
 }
