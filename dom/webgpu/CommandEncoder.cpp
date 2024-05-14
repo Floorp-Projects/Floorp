@@ -237,7 +237,9 @@ already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
 }
 
 void CommandEncoder::EndComputePass(ffi::WGPURecordedComputePass& aPass) {
-  if (!mBridge->CanSend()) {
+  // Because this can be called during child Cleanup, we need to check
+  // that the bridge is still alive.
+  if (!mBridge || !mBridge->CanSend()) {
     return;
   }
 
@@ -247,7 +249,9 @@ void CommandEncoder::EndComputePass(ffi::WGPURecordedComputePass& aPass) {
 }
 
 void CommandEncoder::EndRenderPass(ffi::WGPURecordedRenderPass& aPass) {
-  if (!mBridge->CanSend()) {
+  // Because this can be called during child Cleanup, we need to check
+  // that the bridge is still alive.
+  if (!mBridge || !mBridge->CanSend()) {
     return;
   }
 
