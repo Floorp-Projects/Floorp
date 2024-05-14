@@ -67,18 +67,17 @@ class OverOutElementsWrapper final : public nsISupports {
 
   void ContentRemoved(nsIContent& aContent);
   void WillDispatchOverAndEnterEvent(nsIContent* aOverEventTarget) {
-    mDeepestEnterEventTarget = aOverEventTarget;
+    StoreOverEventTargetAndDeepestEnterEventTarget(aOverEventTarget);
     // Store the first "over" event target we fire and don't refire "over" event
     // to that element while the first "over" event is still ongoing.
     mDispatchingOverEventTarget = aOverEventTarget;
-    mDeepestEnterEventTargetIsOverEventTarget = true;
   }
   void DidDispatchOverAndEnterEvent(
       nsIContent* aOriginalOverTargetInComposedDoc);
   [[nodiscard]] bool IsDispatchingOverEventOn(
       nsIContent* aOverEventTarget) const {
     MOZ_ASSERT(aOverEventTarget);
-    return mDeepestEnterEventTargetIsOverEventTarget &&
+    return LastOverEventTargetIsOutEventTarget() &&
            mDeepestEnterEventTarget == aOverEventTarget;
   }
   void WillDispatchOutAndOrLeaveEvent() {
@@ -88,17 +87,15 @@ class OverOutElementsWrapper final : public nsISupports {
     mDispatchingOutOrDeepestLeaveEventTarget = mDeepestEnterEventTarget;
   }
   void DidDispatchOutAndOrLeaveEvent() {
-    mLastOverFrame = nullptr;
-    mDeepestEnterEventTarget = mDispatchingOutOrDeepestLeaveEventTarget =
-        nullptr;
+    StoreOverEventTargetAndDeepestEnterEventTarget(nullptr);
+    mDispatchingOutOrDeepestLeaveEventTarget = nullptr;
   }
   [[nodiscard]] bool IsDispatchingOutEventOnLastOverEventTarget() const {
     return mDispatchingOutOrDeepestLeaveEventTarget &&
            mDispatchingOutOrDeepestLeaveEventTarget == mDeepestEnterEventTarget;
   }
   void OverrideOverEventTarget(nsIContent* aOverEventTarget) {
-    mDeepestEnterEventTarget = aOverEventTarget;
-    mDeepestEnterEventTargetIsOverEventTarget = true;
+    StoreOverEventTargetAndDeepestEnterEventTarget(aOverEventTarget);
   }
 
   [[nodiscard]] nsIContent* GetDeepestLeaveEventTarget() const {
@@ -112,7 +109,7 @@ class OverOutElementsWrapper final : public nsISupports {
     // last "over" event target has not been removed from the DOM tree, it's
     // the next "out" event target.  Once the last "over" target is removed,
     // "out" event should not be fired on the target nor its ancestor.
-    return mDeepestEnterEventTargetIsOverEventTarget
+    return LastOverEventTargetIsOutEventTarget()
                ? mDeepestEnterEventTarget.get()
                : nullptr;
   }
@@ -121,6 +118,18 @@ class OverOutElementsWrapper final : public nsISupports {
   WeakFrame mLastOverFrame;
 
  private:
+  /**
+   * Whether the last "over" event target is the target of "out" event if you
+   * dispatch "out" event.
+   */
+  [[nodiscard]] bool LastOverEventTargetIsOutEventTarget() const {
+    return mDeepestEnterEventTargetIsOverEventTarget;
+  }
+
+  void StoreOverEventTargetAndDeepestEnterEventTarget(
+      nsIContent* aOverEventTargetAndDeepestEnterEventTarget);
+  void UpdateDeepestEnterEventTarget(nsIContent* aDeepestEnterEventTarget);
+
   // The deepest event target of the last "enter" event.  If
   // mDeepestEnterEventTargetIsOverEventTarget is true, this is the last "over"
   // event target too.  If it's set to false, this is an ancestor of the last

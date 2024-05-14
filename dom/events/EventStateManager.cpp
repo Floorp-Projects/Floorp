@@ -315,7 +315,7 @@ void OverOutElementsWrapper::ContentRemoved(nsIContent& aContent) {
     MOZ_LOG(logModule, LogLevel::Info,
             ("The last \"over\" event target (%p) is removed",
              mDeepestEnterEventTarget.get()));
-    mDeepestEnterEventTarget = nullptr;
+    StoreOverEventTargetAndDeepestEnterEventTarget(nullptr);
     return;
   }
 
@@ -327,7 +327,7 @@ void OverOutElementsWrapper::ContentRemoved(nsIContent& aContent) {
         mDispatchingOutOrDeepestLeaveEventTarget) {
       MOZ_LOG(logModule, LogLevel::Info,
               ("The dispatching \"%s\" event target (%p) is removed",
-               mDeepestEnterEventTargetIsOverEventTarget ? "out" : "leave",
+               LastOverEventTargetIsOutEventTarget() ? "out" : "leave",
                mDispatchingOutOrDeepestLeaveEventTarget.get()));
       mDispatchingOutOrDeepestLeaveEventTarget = nullptr;
     }
@@ -342,21 +342,20 @@ void OverOutElementsWrapper::ContentRemoved(nsIContent& aContent) {
            mDispatchingOutOrDeepestLeaveEventTarget, &aContent))) {
     MOZ_LOG(logModule, LogLevel::Info,
             ("The dispatching \"%s\" event target (%p) is removed",
-             mDeepestEnterEventTargetIsOverEventTarget ? "out" : "leave",
+             LastOverEventTargetIsOutEventTarget() ? "out" : "leave",
              mDispatchingOutOrDeepestLeaveEventTarget.get()));
     mDispatchingOutOrDeepestLeaveEventTarget = nullptr;
   }
   MOZ_LOG(logModule, LogLevel::Info,
           ("The last \"%s\" event target (%p) is removed and now the last "
            "deepest enter target becomes %s(%p)",
-           mDeepestEnterEventTargetIsOverEventTarget ? "over" : "enter",
+           LastOverEventTargetIsOutEventTarget() ? "over" : "enter",
            mDeepestEnterEventTarget.get(),
            aContent.GetFlattenedTreeParent()
                ? ToString(*aContent.GetFlattenedTreeParent()).c_str()
                : "nullptr",
            aContent.GetFlattenedTreeParent()));
-  mDeepestEnterEventTarget = aContent.GetFlattenedTreeParent();
-  mDeepestEnterEventTargetIsOverEventTarget = false;
+  UpdateDeepestEnterEventTarget(aContent.GetFlattenedTreeParent());
 }
 
 void OverOutElementsWrapper::DidDispatchOverAndEnterEvent(
@@ -392,17 +391,36 @@ void OverOutElementsWrapper::DidDispatchOverAndEnterEvent(
   if ((!StaticPrefs::
            dom_events_mouse_pointer_boundary_keep_enter_targets_after_over_target_removed() &&
        !mDeepestEnterEventTarget) ||
-      (!mDeepestEnterEventTargetIsOverEventTarget && mDeepestEnterEventTarget &&
+      (!LastOverEventTargetIsOutEventTarget() && mDeepestEnterEventTarget &&
        nsContentUtils::ContentIsFlattenedTreeDescendantOf(
            aOriginalOverTargetInComposedDoc, mDeepestEnterEventTarget))) {
-    mDeepestEnterEventTarget = aOriginalOverTargetInComposedDoc;
-    mDeepestEnterEventTargetIsOverEventTarget = true;
+    StoreOverEventTargetAndDeepestEnterEventTarget(
+        aOriginalOverTargetInComposedDoc);
     LogModule* const logModule = mType == BoundaryEventType::Mouse
                                      ? sMouseBoundaryLog
                                      : sPointerBoundaryLog;
     MOZ_LOG(logModule, LogLevel::Info,
             ("The \"over\" event target (%p) is restored",
              mDeepestEnterEventTarget.get()));
+  }
+}
+
+void OverOutElementsWrapper::StoreOverEventTargetAndDeepestEnterEventTarget(
+    nsIContent* aOverEventTargetAndDeepestEnterEventTarget) {
+  mDeepestEnterEventTarget = aOverEventTargetAndDeepestEnterEventTarget;
+  mDeepestEnterEventTargetIsOverEventTarget = true;
+  mLastOverFrame = nullptr;  // Set it after dispatching the "over" event
+}
+
+void OverOutElementsWrapper::UpdateDeepestEnterEventTarget(
+    nsIContent* aDeepestEnterEventTarget) {
+  if (!aDeepestEnterEventTarget) {
+    // If the root element is removed, we don't need to dispatch "leave"
+    // events on any elements.  Therefore, we can forget everything.
+    StoreOverEventTargetAndDeepestEnterEventTarget(nullptr);
+  } else {
+    mDeepestEnterEventTarget = aDeepestEnterEventTarget;
+    mDeepestEnterEventTargetIsOverEventTarget = false;
   }
 }
 
