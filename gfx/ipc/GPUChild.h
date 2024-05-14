@@ -43,6 +43,14 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
   // abnormal.
   void OnUnexpectedShutdown();
 
+  // Generates a minidump for the GPU process paired with one for the main
+  // process. Called prior to force-killing the process.
+  void GeneratePairedMinidump();
+
+  // Deletes a minidump created with GeneratePairedMinidump(). Should be called
+  // if killing the process fails after generating the minidump.
+  void DeletePairedMinidump();
+
   // gfxVarReceiver overrides.
   void OnVarChanged(const GfxVarUpdate& aVar) override;
 
@@ -102,6 +110,13 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
   bool mGPUReady;
   bool mWaitForVarUpdate = false;
   bool mUnexpectedShutdown = false;
+  // Whether a paired minidump has already been generated, meaning we do not
+  // need to create a crash report in ActorDestroy().
+  bool mCreatedPairedMinidumps = false;
+  // The number of paired minidumps that have been created during this session.
+  // Used to ensure we do not accumulate a large number of minidumps on disk
+  // that may never be submitted.
+  int mNumPairedMinidumpsCreated = 0;
 };
 
 }  // namespace gfx
