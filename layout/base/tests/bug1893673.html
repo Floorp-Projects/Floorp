@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  function run() {
+    const text = document.getElementById("text");
+    // Triple click it
+    synthesizeMouse(text, 0, 0, {type: "mousedown", clickCount: 3});
+    synthesizeMouse(text, 0, 0, {type: "mouseup", clickCount: 3});
+
+    function waitForPaint() {
+      return new Promise(r => {
+        window.requestAnimationFrame(function () {
+          window.requestAnimationFrame(function () {
+            r();
+          });
+        });
+      });
+    }
+
+    waitForPaint().then(function () {
+      // Verify that this layout change doesn't cause the visual blue background
+      // of the text selection to disappear.
+      text.style["margin-top"] = "100px";
+      waitForPaint().then(function () {
+        document.documentElement.className = '';
+      });
+    });
+  }
+  SimpleTest.waitForFocus(run);
+</script>
+<body>
+  <div>
+    <div>
+      <span id="text">This is a loonnnnnnnnnnnnnnnnnnnnnnnnnnnng paragraph</span>
+    </div>
+  </div>
+</body>
+</html>

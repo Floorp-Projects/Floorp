@@ -28,7 +28,7 @@ function callbackTestIframe(iframe)
   var reference = iframes[1];
   const shouldBeEqual = true;
   // Using assertSnapshots is important to get the data-URIs of failing tests
-  // dumped into the log in a format that reftest-analyzer.xhtml can process. 
+  // dumped into the log in a format that reftest-analyzer.xhtml can process.
   var passed = assertSnapshots(result.snapshot, reference.snapshot,
                                shouldBeEqual, null /*no fuzz*/, result.src,
                                reference.src);
@@ -112,6 +112,7 @@ var tests = [
     [ 'bug613807-1.html' , 'bug613807-1-ref.html' ] ,
     [ 'bug1082486-1.html', 'bug1082486-1-ref.html'] ,
     [ 'bug1082486-2.html', 'bug1082486-2-ref.html'] ,
+    [ 'bug1893673.html' , 'bug1893673-ref.html' ] ,
     [ 'bug1896051.html', 'bug1896051-ref.html'],
     // The following test cases uses mouse events. We need to make
     // AccessibleCaret unhide for them.
