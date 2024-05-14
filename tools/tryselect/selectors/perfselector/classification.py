@@ -37,6 +37,7 @@ class Apps(ClassificationEnum):
     SAFARI = {"value": "safari", "index": 5}
     CHROMIUM_RELEASE = {"value": "custom-car", "index": 6}
     CHROMIUM_RELEASE_M = {"value": "cstm-car-m", "index": 7}
+    SAFARI_TP = {"value": "safari-tp", "index": 8}
 
 
 class Suites(ClassificationEnum):
@@ -75,6 +76,10 @@ def check_for_custom_car(custom_car=False, **kwargs):
 
 def check_for_safari(safari=False, **kwargs):
     return safari
+
+
+def check_for_safari_tp(safari_tp=False, **kwargs):
+    return safari_tp
 
 
 def check_for_live_sites(live_sites=False, **kwargs):
@@ -123,7 +128,7 @@ class ClassificationProvider:
     def apps(self):
         return {
             Apps.FIREFOX.value: {
-                "query": "!chrom !geckoview !fenix !safari !m-car",
+                "query": "!chrom !geckoview !fenix !safari !m-car !safari-tp",
                 "platforms": [Platforms.DESKTOP.value],
             },
             Apps.CHROME.value: {
@@ -152,6 +157,12 @@ class ClassificationProvider:
                 "query": "'safari",
                 "negation": "!safari",
                 "restriction": check_for_safari,
+                "platforms": [Platforms.MACOSX.value],
+            },
+            Apps.SAFARI_TP.value: {
+                "query": "'safari-tp",
+                "negation": "!safari-tp",
+                "restriction": check_for_safari_tp,
                 "platforms": [Platforms.MACOSX.value],
             },
             Apps.CHROMIUM_RELEASE.value: {
@@ -265,6 +276,18 @@ class ClassificationProvider:
                     Suites.RAPTOR.value: ["'browsertime 'tp6 !tp6-bench"],
                 },
                 "suites": [Suites.RAPTOR.value],
+                "app-restrictions": {
+                    Suites.RAPTOR.value: [
+                        Apps.FIREFOX.value,
+                        Apps.CHROME.value,
+                        Apps.FENIX.value,
+                        Apps.GECKOVIEW.value,
+                        Apps.SAFARI.value,
+                        Apps.CHROMIUM_RELEASE.value,
+                        Apps.CHROMIUM_RELEASE_M.value,
+                        Apps.CHROME_M.value,
+                    ],
+                },
                 "tasks": [],
                 "description": "A group of tests that measures various important pageload metrics. More information "
                 "can about what is exactly measured can found here:"
@@ -305,6 +328,18 @@ class ClassificationProvider:
                 },
                 "suites": [Suites.RAPTOR.value],
                 "variant-restrictions": {Suites.RAPTOR.value: []},
+                "app-restrictions": {
+                    Suites.RAPTOR.value: [
+                        Apps.FIREFOX.value,
+                        Apps.CHROME.value,
+                        Apps.FENIX.value,
+                        Apps.GECKOVIEW.value,
+                        Apps.SAFARI.value,
+                        Apps.CHROMIUM_RELEASE.value,
+                        Apps.CHROMIUM_RELEASE_M.value,
+                        Apps.CHROME_M.value,
+                    ],
+                },
                 "tasks": [],
                 "description": "A group of tests that benchmark how the browser performs in various categories. "
                 "More information about what exact benchmarks we run can be found here: "

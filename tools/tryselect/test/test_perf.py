@@ -195,6 +195,7 @@ TEST_CATEGORIES = {
                         "!chrom",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ]
                 },
                 "Pageload macosx": {
@@ -207,6 +208,7 @@ TEST_CATEGORIES = {
                         "!chrom",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ]
                 },
                 "Resource Usage desktop": {
@@ -220,6 +222,7 @@ TEST_CATEGORIES = {
                         "!chrom",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ],
                     "talos": [
                         "'talos 'xperf | 'tp5",
@@ -246,6 +249,7 @@ TEST_CATEGORIES = {
                         "!chrom",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ]
                 },
                 "Pageload macosx": {
@@ -257,6 +261,7 @@ TEST_CATEGORIES = {
                         "!chrom",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ]
                 },
                 "Pageload macosx live-sites": {
@@ -269,6 +274,7 @@ TEST_CATEGORIES = {
                         "!chrom",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ],
                 },
             },
@@ -293,6 +299,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!chrom",
                         "!m-car",
+                        "!safari-tp",
                     ]
                 },
                 "Pageload macosx safari": {
@@ -321,6 +328,43 @@ TEST_CATEGORIES = {
             ],
         ),
         (
+            {"safari-tp": True},
+            58,
+            {
+                "Benchmarks desktop": {
+                    "raptor": [
+                        "'browsertime 'benchmark",
+                        "!android 'shippable !-32 !clang",
+                        "!bytecode",
+                        "!live",
+                        "!profil",
+                        "!chrom",
+                        "!safari",
+                        "!m-car",
+                        "!safari-tp",
+                    ]
+                },
+                "Pageload macosx": {
+                    "raptor": [
+                        "'browsertime 'tp6",
+                        "'osx 'shippable",
+                        "!bytecode",
+                        "!live",
+                        "!profil",
+                        "!chrom",
+                        "!safari",
+                        "!m-car",
+                        "!safari-tp",
+                    ]
+                },
+            },
+            [
+                "Pageload linux safari-tp",
+                "Pageload windows safari-tp",
+                "Pageload desktop safari-tp",
+            ],
+        ),
+        (
             {"live_sites": True, "chrome": True},
             90,
             {
@@ -332,6 +376,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ]
                 },
                 "Pageload macosx live-sites": {
@@ -343,6 +388,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ],
                 },
             },
@@ -366,6 +412,7 @@ TEST_CATEGORIES = {
                         "!chrom",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ],
                 },
                 "Responsiveness android-a51 geckoview": {
@@ -397,6 +444,7 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ],
                 },
                 "Responsiveness android-a51 chrome-m": {
@@ -424,6 +472,7 @@ TEST_CATEGORIES = {
                         "!live",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ]
                 },
                 "Talos PerfTests desktop profiling": {
@@ -455,6 +504,7 @@ TEST_CATEGORIES = {
                         "!chrom",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ]
                 },
                 "Pageload android-a51 fenix": {
@@ -484,7 +534,7 @@ TEST_CATEGORIES = {
                     "raptor": [
                         "'browsertime 'benchmark",
                         "!-32 'windows 'shippable",
-                        "!chrom !geckoview !fenix !safari !m-car",
+                        "!chrom !geckoview !fenix !safari !m-car !safari-tp",
                         "!bytecode",
                         "!live",
                         "!profil",
@@ -694,7 +744,7 @@ TEST_CATEGORIES = {
                     "raptor": [
                         "'browsertime 'responsive",
                         "!-32 'windows 'shippable",
-                        "!chrom !geckoview !fenix !safari !m-car",
+                        "!chrom !geckoview !fenix !safari !m-car !safari-tp",
                         "!bytecode",
                         "!live",
                         "!profil",
@@ -716,7 +766,7 @@ TEST_CATEGORIES = {
                     "raptor": [
                         "'browsertime 'responsive",
                         "!-32 'windows 'shippable",
-                        "!chrom !geckoview !fenix !safari !m-car",
+                        "!chrom !geckoview !fenix !safari !m-car !safari-tp",
                         "!bytecode",
                         "!profil",
                     ],
@@ -731,6 +781,7 @@ TEST_CATEGORIES = {
                         "!chrom",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ],
                 },
                 "Graphics, & Media Playback windows": {
@@ -742,6 +793,7 @@ TEST_CATEGORIES = {
                         "!chrom",
                         "!safari",
                         "!m-car",
+                        "!safari-tp",
                     ],
                     "talos": [
                         "'talos 'svgr | 'bcv | 'webgl",
@@ -819,7 +871,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
     [
         (
             {},
-            [9, 2, 2, 10, 2, 1],
+            [10, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -830,7 +882,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"query": "'Pageload 'linux 'firefox"},
-            [9, 2, 2, 10, 2, 1],
+            [10, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -841,7 +893,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"cached_revision": "cached_base_revision"},
-            [9, 1, 1, 10, 2, 0],
+            [10, 1, 1, 10, 2, 0],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -852,7 +904,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"dry_run": True},
-            [9, 1, 1, 10, 2, 0],
+            [10, 1, 1, 10, 2, 0],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -885,7 +937,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"single_run": True},
-            [9, 1, 1, 4, 2, 0],
+            [10, 1, 1, 4, 2, 0],
             2,
             (
                 "If you need any help, you can find us in the #perf-help Matrix channel:\n"
@@ -894,7 +946,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"detect_changes": True},
-            [10, 2, 2, 10, 2, 1],
+            [11, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -905,7 +957,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"perfcompare_beta": True},
-            [9, 2, 2, 10, 2, 1],
+            [10, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -943,6 +995,7 @@ def test_full_run(options, call_counts, log_ind, expected_log_message):
             ["", TASKS],
             ["", TASKS],
             ["", TASKS],
+            ["", TASKS],
             ["", ["Perftest Change Detector"]],
         ]
         # Number of side effects for fzf should always be greater than
@@ -968,11 +1021,11 @@ def test_full_run(options, call_counts, log_ind, expected_log_message):
     [
         (
             {"detect_changes": True},
-            [10, 0, 0, 2, 1],
+            [11, 0, 0, 2, 1],
             1,
             (
                 "Executing raptor queries: 'browsertime 'benchmark, !clang 'linux "
-                "'shippable, !bytecode, !live, !profil, !chrom, !safari, !m-car"
+                "'shippable, !bytecode, !live, !profil, !chrom, !safari, !m-car, !safari-tp"
             ),
             InvalidRegressionDetectorQuery,
         ),
