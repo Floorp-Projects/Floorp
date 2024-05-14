@@ -109,7 +109,7 @@ class RendererOGL {
   bool IsPaused();
 
   /// This can be called on the render thread only.
-  void CheckGraphicsResetStatus(DeviceResetDetectPlace aPlace, bool aForce);
+  void CheckGraphicsResetStatus(const char* aCaller, bool aForce);
 
   layers::SyncObjectHost* GetSyncObject() const;
 

@@ -742,12 +742,8 @@ bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
     return CreateReferenceTexture();
   }
 
-  DeviceResetReason reason = DeviceResetReason::OTHER;
-
   if (mDevice) {
-    const auto d3d11Reason = mDevice->GetDeviceRemovedReason();
-    reason = DXGIErrorToDeviceResetReason(d3d11Reason);
-    if (reason == DeviceResetReason::OK) {
+    if (mDevice->GetDeviceRemovedReason() == S_OK) {
       return false;
     }
 
@@ -757,9 +753,13 @@ bool CanvasTranslator::CheckForFreshCanvasDevice(int aLineNumber) {
   }
 
   RefPtr<Runnable> runnable =
-      NS_NewRunnableFunction("CanvasTranslator NotifyDeviceReset", [reason]() {
-        gfx::GPUProcessManager::GPUProcessManager::NotifyDeviceReset(
-            reason, DeviceResetDetectPlace::CANVAS_TRANSLATOR);
+      NS_NewRunnableFunction("CanvasTranslator NotifyDeviceReset", []() {
+        if (XRE_IsGPUProcess()) {
+          gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
+        } else {
+          gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(
+              /* aTrackThreshold */ false);
+        }
       });
 
   // It is safe to wait here because only the Compositor thread waits on us and
