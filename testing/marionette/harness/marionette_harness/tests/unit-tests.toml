@@ -20,11 +20,12 @@
 ["include:../../../../../dom/workers/test/marionette/manifest.toml"]
 
 # browser tests
-["include:../../../../../browser/components/tests/marionette/manifest.toml"]
+["include:../../../../../browser/components/backup/tests/marionette/manifest.toml"]
 ["include:../../../../../browser/components/migration/tests/marionette/manifest.toml"]
 ["include:../../../../../browser/components/places/tests/marionette/manifest.toml"]
 ["include:../../../../../browser/components/search/test/marionette/manifest.toml"]
 ["include:../../../../../browser/components/sessionstore/test/marionette/manifest.toml"]
+["include:../../../../../browser/components/tests/marionette/manifest.toml"]
 
 # extensions tests
 ["include:../../../../../extensions/pref/autoconfig/test/marionette/manifest.toml"]
