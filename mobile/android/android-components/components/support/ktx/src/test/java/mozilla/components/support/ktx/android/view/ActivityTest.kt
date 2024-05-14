@@ -83,6 +83,7 @@ class ActivityTest {
     }
 
     @Test
+    @Config(sdk = [28])
     fun `GIVEN enterImmersiveMode was called WHEN window insets are changed THEN insetsController hides system bars and sets bars behaviour again`() {
         val insetListenerCaptor = argumentCaptor<View.OnApplyWindowInsetsListener>()
         doReturn(30).`when`(windowInsets).systemWindowInsetTop

@@ -46,6 +46,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doNothing
@@ -55,6 +56,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
 
 @RunWith(AndroidJUnit4::class)
@@ -737,7 +739,8 @@ class DownloadsFeatureTest {
     }
 
     @Test
-    fun `when url is data url return only our app as downloader app`() {
+    @Config(sdk = [32])
+    fun `when url is data url return only our app as downloader app on SDK 32 or less`() {
         val context = mock<Context>()
         val download = DownloadState(url = "data:", sessionId = "test-tab")
         val app = mock<ResolveInfo>()
@@ -769,6 +772,62 @@ class DownloadsFeatureTest {
         val mockList = listOf(app)
         @Suppress("DEPRECATION")
         whenever(packageManager.queryIntentActivities(any(), anyInt())).thenReturn(mockList)
+
+        val downloadManager: DownloadManager = mock()
+
+        val feature = DownloadsFeature(
+            context,
+            store,
+            DownloadsUseCases(store),
+            downloadManager = downloadManager,
+            shouldForwardToThirdParties = { true },
+        )
+
+        val appList = feature.getDownloaderApps(context, download)
+
+        assertTrue(download.url.startsWith("data:"))
+        assertEquals(1, appList.size)
+        assertEquals(ourApp, appList[0])
+    }
+
+    @Test
+    fun `when url is data url return only our app as downloader app`() {
+        val context = mock<Context>()
+        val download = DownloadState(url = "data:", sessionId = "test-tab")
+        val app = mock<ResolveInfo>()
+
+        val activityInfo = mock<ActivityInfo>()
+        app.activityInfo = activityInfo
+        val nonLocalizedLabel = "nonLocalizedLabel"
+        val packageName = "packageName"
+        val appName = "Fenix"
+
+        activityInfo.packageName = packageName
+        activityInfo.name = appName
+        activityInfo.exported = true
+
+        val packageManager = mock<PackageManager>()
+        whenever(context.packageManager).thenReturn(packageManager)
+        whenever(context.packageName).thenReturn(packageName)
+        whenever(app.loadLabel(packageManager)).thenReturn(nonLocalizedLabel)
+
+        val ourApp = DownloaderApp(
+            nonLocalizedLabel,
+            app,
+            packageName,
+            appName,
+            download.url,
+            download.contentType,
+        )
+
+        val mockList = listOf(app)
+
+        whenever(
+            packageManager.queryIntentActivities(
+                any(),
+                ArgumentMatchers.any(PackageManager.ResolveInfoFlags::class.java),
+            ),
+        ).thenReturn(mockList)
 
         val downloadManager: DownloadManager = mock()
 

@@ -1374,7 +1374,8 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    fun `onDestroy cancels all running jobs`() = runBlocking {
+    @Config(sdk = [28])
+    fun `onDestroy cancels all running jobs when using legacy file stream`() = runBlocking {
         val download = DownloadState("https://example.com/file.txt", "file.txt")
         val response = Response(
             "https://example.com/file.txt",
@@ -1574,6 +1575,7 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
+    @Config(sdk = [28])
     fun `WHEN a download is completed and the scoped storage is not used it MUST be added manually to the download system database`() = runTest(testsDispatcher) {
         val download = DownloadState(
             url = "http://www.mozilla.org",
@@ -1598,6 +1600,39 @@ class AbstractFetchDownloadServiceTest {
             title = any(),
             description = any(),
             isMediaScannerScannable = eq(true),
+            mimeType = any(),
+            path = any(),
+            length = anyLong(),
+            showNotification = anyBoolean(),
+            download = any(),
+        )
+    }
+
+    @Test
+    fun `WHEN a download is completed and the scoped storage is NOT not used it MUST NOT be added manually to the download system database`() = runTest(testsDispatcher) {
+        val download = DownloadState(
+            url = "http://www.mozilla.org",
+            fileName = "example.apk",
+            destinationDirectory = folder.root.path,
+            status = DownloadState.Status.COMPLETED,
+        )
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
+            },
+        )
+
+        val downloadJobState = DownloadJobState(state = download, status = DownloadState.Status.COMPLETED)
+
+        doReturn(testContext).`when`(service).context
+        service.updateDownloadNotification(DownloadState.Status.COMPLETED, downloadJobState, this)
+
+        verify(service, never()).addCompletedDownload(
+            title = any(),
+            description = any(),
+            isMediaScannerScannable = anyBoolean(),
             mimeType = any(),
             path = any(),
             length = anyLong(),
@@ -1695,7 +1730,8 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     @Suppress("Deprecation")
-    fun `do not pass non-http(s) url to addCompletedDownload`() = runTest(testsDispatcher) {
+    @Config(sdk = [28])
+    fun `WHEN scoped storage is used do not pass non-http(s) url to addCompletedDownload`() = runTest(testsDispatcher) {
         val download = DownloadState(
             url = "blob:moz-extension://d5ea9baa-64c9-4c3d-bb38-49308c47997c/",
             fileName = "example.apk",
@@ -1759,7 +1795,8 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     @Suppress("Deprecation")
-    fun `pass http(s) url to addCompletedDownload`() = runTest(testsDispatcher) {
+    @Config(sdk = [28])
+    fun `WHEN scoped storage is used pass http(s) url to addCompletedDownload`() = runTest(testsDispatcher) {
         val download = DownloadState(
             url = "https://mozilla.com",
             fileName = "example.apk",
@@ -1781,12 +1818,23 @@ class AbstractFetchDownloadServiceTest {
         doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
 
         service.addToDownloadSystemDatabaseCompat(download, this)
-        verify(downloadManager).addCompletedDownload(anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyLong(), anyBoolean(), any(), any())
+        verify(downloadManager).addCompletedDownload(
+            eq("example.apk"),
+            eq("example.apk"),
+            eq(true),
+            eq("*/*"),
+            anyString(),
+            eq(0L),
+            eq(false),
+            eq("https://mozilla.com".toUri()),
+            eq(null),
+        )
     }
 
     @Test
     @Suppress("Deprecation")
-    fun `always call addCompletedDownload with a not empty or null mimeType`() = runTest(testsDispatcher) {
+    @Config(sdk = [28])
+    fun `WHEN scoped storage is used ALWAYS call addCompletedDownload with a not empty or null mimeType`() = runTest(testsDispatcher) {
         val service = spy(
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
@@ -1817,6 +1865,44 @@ class AbstractFetchDownloadServiceTest {
         doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
         service.addToDownloadSystemDatabaseCompat(downloadWithEmptyMimeType, this)
         verify(downloadManager).addCompletedDownload(
+            anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
+            anyString(), anyLong(), anyBoolean(), isNull(), any(),
+        )
+    }
+
+    @Test
+    @Suppress("Deprecation")
+    fun `WHEN scoped storage is NOT used NEVER call addCompletedDownload with a not empty or null mimeType`() = runTest(testsDispatcher) {
+        val service = spy(
+            object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
+            },
+        )
+        val spyContext = spy(testContext)
+        var downloadManager: DownloadManager = mock()
+        doReturn(spyContext).`when`(service).context
+        doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
+        val downloadWithNullMimeType = DownloadState(
+            url = "blob:moz-extension://d5ea9baa-64c9-4c3d-bb38-49308c47997c/",
+            fileName = "example.apk",
+            destinationDirectory = folder.root.path,
+            contentType = null,
+        )
+        val downloadWithEmptyMimeType = downloadWithNullMimeType.copy(contentType = "")
+        val defaultMimeType = "*/*"
+
+        service.addToDownloadSystemDatabaseCompat(downloadWithNullMimeType, this)
+        verify(downloadManager, never()).addCompletedDownload(
+            anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
+            anyString(), anyLong(), anyBoolean(), isNull(), any(),
+        )
+
+        downloadManager = mock()
+        doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
+        service.addToDownloadSystemDatabaseCompat(downloadWithEmptyMimeType, this)
+        verify(downloadManager, never()).addCompletedDownload(
             anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
             anyString(), anyLong(), anyBoolean(), isNull(), any(),
         )
