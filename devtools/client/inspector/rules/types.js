@@ -115,7 +115,11 @@ const selector = (exports.selector = {
   // Function that returns a Promise containing an unique CSS selector.
   getUniqueSelector: PropTypes.func,
   // Array of the selectors that match the selected element.
+  // @backward-compat { version 128 } matchedDesugaredSelectors shouldn't be used anymore
+  // when 128 hits release.
   matchedDesugaredSelectors: PropTypes.arrayOf(PropTypes.string),
+  // Array of the indexes in `selectors` that match the selected element.
+  matchedSelectorIndexes: PropTypes.arrayOf(PropTypes.number),
   // The CSS rule's selector text content.
   selectorText: PropTypes.string,
   // Array of the CSS rule's selectors.

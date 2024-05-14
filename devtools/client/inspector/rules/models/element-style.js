@@ -495,7 +495,12 @@ class ElementStyle {
       // longer matches the node. This strict check avoids accidentally causing
       // declarations to be overridden in the remaining matching rules.
       const isStyleRule =
-        rule.pseudoElement === "" && !!rule.matchedDesugaredSelectors.length;
+        rule.pseudoElement === "" &&
+        // @backward-compat { version 128 } When 128 hits release, we can remove the
+        // ternary and only check rule.matchedSelectorIndexes.length.
+        (rule.domRule.hasMatchedSelectorIndexesTrait
+          ? !!rule.matchedSelectorIndexes.length
+          : !!rule.matchedDesugaredSelectors.length);
 
       // Style rules for pseudo-elements must always be considered, regardless if their
       // selector matches the node. As a convenience, declarations in rules for

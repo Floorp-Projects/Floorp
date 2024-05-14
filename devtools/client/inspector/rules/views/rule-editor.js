@@ -626,7 +626,16 @@ RuleEditor.prototype = {
 
         // Only add matched/unmatched class when the rule does have some matched
         // selectors. We don't always have some (e.g. rules for pseudo elements)
-        if (this.rule.matchedDesugaredSelectors.length) {
+
+        if (this.rule.domRule.hasMatchedSelectorIndexesTrait) {
+          if (this.rule.matchedSelectorIndexes.length) {
+            containerClass += this.rule.matchedSelectorIndexes.includes(i)
+              ? "matched"
+              : "unmatched";
+          }
+        } else if (this.rule.matchedDesugaredSelectors.length) {
+          // @backward-compat { version 128 } This whole elseif block can be removed once 128
+          // hits release, as matchedDesugaredSelectors shouldn't be used then.
           const desugaredSelector = desugaredSelectors[i];
           const matchedSelector =
             this.rule.matchedDesugaredSelectors.includes(desugaredSelector);
