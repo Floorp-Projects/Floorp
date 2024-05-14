@@ -83,8 +83,27 @@ let tests = [
     shouldUntrim: true,
   },
   {
-    description: "Test SHIFT+LEFT untrims",
+    description: "Test SHIFT+LEFT untrims - partial host",
     untrimmedValue: BrowserUIUtils.trimURLProtocol + "www.example.com/",
+    async execute() {
+      EventUtils.synthesizeKey("l", { accelKey: true });
+      EventUtils.synthesizeKey("KEY_ArrowLeft", { shiftKey: true });
+      Assert.equal(
+        gURLBar.selectionStart,
+        BrowserUIUtils.trimURLProtocol.length,
+        "Selection start is 0."
+      );
+      Assert.less(
+        gURLBar.selectionEnd,
+        gURLBar.value.length,
+        "Selection skips last characters."
+      );
+    },
+    shouldUntrim: true,
+  },
+  {
+    description: "Test SHIFT+LEFT untrims - full host",
+    untrimmedValue: BrowserUIUtils.trimURLProtocol + "www.example.com/test",
     async execute() {
       EventUtils.synthesizeKey("l", { accelKey: true });
       EventUtils.synthesizeKey("KEY_ArrowLeft", { shiftKey: true });

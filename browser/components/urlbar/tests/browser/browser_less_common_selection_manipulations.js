@@ -91,12 +91,35 @@ const tests = [
     },
   },
   {
-    description: "Test Drag Selection from the first character",
+    description: "Test Drag Selection from the first character - Partial host",
     async openPanel() {
+      // Select partial string that doesn't complete to a URL.
       this._expectedSelectedText = gURLBar.value.substring(0, 5);
       await selectWithMouseDrag(
         getTextWidth(gURLBar.value[0]) / 2 - 1,
         getTextWidth(gURLBar.value.substring(0, 5))
+      );
+    },
+    get selection() {
+      // When untrimming is enabled, the behavior differs depending on whether
+      // the selected text can generate a valid URL, so there may be an offset.
+      let startOffset = UrlbarPrefs.get("untrimOnUserInteraction.featureGate")
+        ? gURLBar.value.indexOf(this._expectedSelectedText)
+        : 0;
+      return [startOffset, startOffset + this._expectedSelectedText.length];
+    },
+  },
+  {
+    description: "Test Drag Selection from the first character - Full host",
+    async openPanel() {
+      // Select partial string that completes to a URL.
+      let uri = Services.io.newURI(gURLBar._untrimmedValue);
+      let endOfHost =
+        gURLBar.value.indexOf(uri.displayHost) + uri.displayHost.length;
+      this._expectedSelectedText = gURLBar.value.substring(0, endOfHost);
+      await selectWithMouseDrag(
+        getTextWidth(gURLBar.value[0]) / 2 - 1,
+        getTextWidth(this._expectedSelectedText)
       );
     },
     get selection() {
@@ -207,13 +230,13 @@ async function doTest(url) {
       Assert.deepEqual(
         test.selection,
         [gURLBar.selectionStart, gURLBar.selectionEnd],
-        "Check selection"
+        "Check initial selection"
       );
 
       if (test.manipulate) {
         await test.manipulate();
         info(
-          `Selected text is <${gURLBar.value.substring(
+          `Selected text after manipulation is <${gURLBar.value.substring(
             gURLBar.selectionStart,
             gURLBar.selectionEnd
           )}>`
@@ -236,5 +259,6 @@ function getTextWidth(inputText) {
   context.font = window
     .getComputedStyle(gURLBar.inputField)
     .getPropertyValue("font");
-  return context.measureText(inputText).width;
+  let measure = context.measureText(inputText);
+  return measure.actualBoundingBoxLeft + measure.actualBoundingBoxRight;
 }
