@@ -103,6 +103,23 @@ int64_t nsHttpResponseHead::ContentLength() {
   return mContentLength;
 }
 
+void nsHttpResponseHead::ExtractContentType() {
+  RecursiveMutexAutoLock monitor(mRecursiveMutex);
+
+  RefPtr<CMimeType> parsed =
+      CMimeType::ExtractMIMEType(mCombinedContentTypeHeader);
+  if (parsed) {
+    parsed->GetEssence(mContentType);
+    parsed->GetParameterValue("charset"_ns, mContentCharset, false, false);
+  }
+
+  LOG(
+      ("nsHttpResponseHead::ExtractContentType: got content-type "
+       "essence=%s,charset=%s for header value %s\n",
+       mContentType.get(), mContentCharset.get(),
+       mCombinedContentTypeHeader.get()));
+}
+
 void nsHttpResponseHead::ContentType(nsACString& aContentType) const {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   aContentType = mContentType;
@@ -476,14 +493,22 @@ nsresult nsHttpResponseHead::ParseHeaderLine_locked(
     }
 
   } else if (hdr == nsHttp::Content_Type) {
-    if (StaticPrefs::network_standard_content_type_parsing_response_headers() &&
-        CMimeType::Parse(val, mContentType, mContentCharset)) {
+    if (StaticPrefs::network_standard_content_type_parsing_response_headers()) {
+      if (!mCombinedContentTypeHeader.IsEmpty()) {
+        mCombinedContentTypeHeader.Append(", ");
+      }
+      mCombinedContentTypeHeader.Append(val);
+
+      // Ideally we would only call this one after all headers are parsed, but
+      // having several content-type headers is rare enough that we're okay
+      // with calling it now to keep our code simpler.
+      ExtractContentType();
     } else {
       bool dummy;
       net_ParseContentType(val, mContentType, mContentCharset, &dummy);
+      LOG(("ParseContentType [input=%s, type=%s, charset=%s]\n", val.get(),
+           mContentType.get(), mContentCharset.get()));
     }
-    LOG(("ParseContentType [input=%s, type=%s, charset=%s]\n", val.get(),
-         mContentType.get(), mContentCharset.get()));
   } else if (hdr == nsHttp::Cache_Control) {
     ParseCacheControl(val.get());
   } else if (hdr == nsHttp::Pragma) {
@@ -825,6 +850,7 @@ void nsHttpResponseHead::Reset() {
   mCacheControlMaxAge = 0;
   mPragmaNoCache = false;
   mStatusText.Truncate();
+  mCombinedContentTypeHeader.SetIsVoid(true);
   mContentType.Truncate();
   mContentCharset.Truncate();
 }

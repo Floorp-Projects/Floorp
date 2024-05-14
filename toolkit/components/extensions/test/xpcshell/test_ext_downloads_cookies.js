@@ -23,7 +23,7 @@ server.registerPathHandler("/download", (request, response) => {
   let cookies = request.hasHeader("Cookie") ? request.getHeader("Cookie") : "";
   // Assign the result through the MIME-type, to make it easier to read the
   // result via the downloads API.
-  response.setHeader("Content-Type", `dummy/${encodeURIComponent(cookies)}`);
+  response.setHeader("Content-Type", `dummy/x${encodeURIComponent(cookies)}`);
   // Response of length 7.
   response.write("1234567");
 });
@@ -62,7 +62,7 @@ function createDownloadTestExtension(extraPermissions = []) {
         browser.test.assertEq(7, download.fileSize, "download succeeded");
 
         // The "/download" endpoint mirrors received cookies via Content-Type.
-        let cookies = decodeURIComponent(download.mime.replace("dummy/", ""));
+        let cookies = decodeURIComponent(download.mime.replace("dummy/x", ""));
         return cookies;
       }
 
