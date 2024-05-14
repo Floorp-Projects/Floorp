@@ -4,7 +4,6 @@
 
 extern crate bench_collections_gtest;
 extern crate dap_ffi_gtest;
-extern crate dllservices_gtest;
 extern crate fog_gtest;
 #[cfg(feature = "gecko-fuzz-targets")]
 extern crate gecko_fuzz_targets;

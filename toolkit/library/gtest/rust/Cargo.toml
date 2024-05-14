@@ -17,7 +17,6 @@ gkrust-shared = { path = "../../rust/shared" }
 gecko-fuzz-targets = { path = "../../../../tools/fuzzing/rust", optional = true }
 fog-gtest = { path = "../../../components/glean/tests/gtest" }
 dap_ffi-gtest = { path = "../../../components/telemetry/dap/ffi-gtest" }
-dllservices-gtest = { path = "../../../xre/dllservices/tests/gtest/rust" }
 
 # Workarounds for https://github.com/rust-lang/rust/issues/58393
 mozglue-static = { path = "../../../../mozglue/static/rust" }
