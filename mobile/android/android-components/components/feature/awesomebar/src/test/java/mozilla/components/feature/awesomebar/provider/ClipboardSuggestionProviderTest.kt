@@ -5,9 +5,11 @@
 package mozilla.components.feature.awesomebar.provider
 
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.view.textclassifier.TextClassifier
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -27,7 +29,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
@@ -114,7 +118,7 @@ class ClipboardSuggestionProviderTest {
 
     @Test
     fun `provider return suggestion on input start`() = runTestOnMain {
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("Test label", "https://www.mozilla.org"))
+        getSuggestionWithClipboard("https://www.mozilla.org")
 
         val provider = ClipboardSuggestionProvider(testContext, mock())
         val suggestions = provider.onInputStarted()
@@ -136,7 +140,7 @@ class ClipboardSuggestionProviderTest {
 
     @Test
     fun `provider should allow customization of title and icon on suggestion`() = runTestOnMain {
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("Test label", "http://mozilla.org"))
+        getSuggestionWithClipboard("https://www.mozilla.org")
         val bitmap = Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888)
         val provider = ClipboardSuggestionProvider(
             testContext,
@@ -159,12 +163,7 @@ class ClipboardSuggestionProviderTest {
 
     @Test
     fun `clicking suggestion loads url`() = runTestOnMain {
-        clipboardManager.setPrimaryClip(
-            ClipData.newPlainText(
-                "Label",
-                "Hello Mozilla, https://www.mozilla.org",
-            ),
-        )
+        getSuggestionWithClipboard("Hello Mozilla, https://www.mozilla.org")
 
         val useCase: SessionUseCases.LoadUrlUseCase = mock()
 
@@ -206,7 +205,7 @@ class ClipboardSuggestionProviderTest {
         assertTrue(suggestions.isEmpty())
         verify(engine, never()).speculativeConnect(anyString())
 
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("Test label", "https://www.mozilla.org"))
+        getSuggestionWithClipboard("https://www.mozilla.org")
         suggestions = provider.onInputStarted()
         assertEquals(1, suggestions.size)
         verify(engine, times(1)).speculativeConnect(eq("https://www.mozilla.org"))
@@ -230,7 +229,14 @@ class ClipboardSuggestionProviderTest {
     }
 
     private suspend fun getSuggestionWithClipboard(text: String): AwesomeBar.Suggestion? {
-        clipboardManager.setPrimaryClip(ClipData.newPlainText("Test label", text))
+        val clipData = spy(ClipData.newPlainText("Test label", text))
+        val description: ClipDescription = mock()
+
+        doReturn(description).`when`(clipData).description
+        doReturn(0.7F).`when`(description).getConfidenceScore(TextClassifier.TYPE_URL)
+        doReturn(true).`when`(description).hasMimeType("text/plain")
+
+        clipboardManager.setPrimaryClip(clipData)
         return getSuggestion()
     }
 
