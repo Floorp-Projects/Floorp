@@ -75,6 +75,9 @@ gen_rtcd_header win/ia32 x86
 
 gen_rtcd_header linux/arm armv7
 
+# TODO: Parse feature settings from the generated aom_config.h
+gen_rtcd_header mac/arm64 arm64 "--disable-sve --disable-sve2"
+
 gen_rtcd_header generic generic
 
 cd $BASE_DIR/$LIBAOM_SRC_DIR

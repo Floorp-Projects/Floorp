@@ -63,6 +63,22 @@ elif CONFIG['TARGET_CPU'] == 'arm':
         LOCAL_INCLUDES += [
             '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK'],
         ]
+elif CONFIG['TARGET_CPU'] == 'aarch64' and CONFIG['OS_TARGET'] == 'Darwin':
+    EXPORTS.aom += files['ARM64_EXPORTS']
+    ASFLAGS += [
+        '-I%s/media/libaom/config/mac/arm64/' % TOPSRCDIR,
+        '-I%s/libaom' % OBJDIR,
+    ]
+    LOCAL_INCLUDES += [ '/media/libaom/config/mac/arm64/' ]
+    EXPORTS.aom += [ 'config/mac/arm64/config/aom_config.h' ]
+
+    SOURCES += files['ARM64_SOURCES']
+
+    for f in SOURCES:
+        if f.endswith('neon.c'):
+            SOURCES[f].flags += CONFIG['NEON_FLAGS']
+        if f.endswith('neon_i8mm.c'):
+            SOURCES[f].flags += CONFIG['NEON_I8MM_FLAGS']
 else:
     # Generic C-only configuration
     EXPORTS.aom += files['GENERIC_EXPORTS']
