@@ -370,7 +370,7 @@ const VARIATION_TEST_DATA = [
         ".pager": true,
       },
       defaultFocusOrder: [
-        "onboardingNext",
+        "onboardingDialog",
         "onboardingAccept",
         "onboardingLearnMore",
         "onboardingSkipLink",
@@ -702,7 +702,7 @@ const VARIATION_TEST_DATA = [
         ".pager": false,
       },
       defaultFocusOrder: [
-        "onboardingNext",
+        "onboardingDialog",
         "onboardingLearnMore",
         "onboardingAccept",
         "onboardingSkipLink",
