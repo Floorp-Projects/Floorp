@@ -1122,6 +1122,13 @@ void GPUProcessManager::CleanShutdown() {
 }
 
 void GPUProcessManager::KillProcess(bool aGenerateMinidump) {
+  if (!NS_IsMainThread()) {
+    RefPtr<Runnable> task = mTaskFactory.NewRunnableMethod(
+        &GPUProcessManager::KillProcess, aGenerateMinidump);
+    NS_DispatchToMainThread(task.forget());
+    return;
+  }
+
   if (!mProcess) {
     return;
   }
