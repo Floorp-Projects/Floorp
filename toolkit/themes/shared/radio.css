@@ -56,13 +56,17 @@ radio {
   }
 }
 
-@media (-moz-platform: windows) or (-moz-platform: linux) {
+.radio-icon[src] {
+  margin-inline-end: 2px;
+}
+
+/* On the linux native theme, focus is not indicated by the radio itself, so
+ * indicate it in the label.
+ * TODO(emilio): Consider using non-native radio buttons / checkboxes
+ * everywhere instead */
+@media (-moz-platform: linux) {
   radiogroup:focus-visible > radio[focused="true"] > .radio-label-box {
     outline: var(--focus-outline);
-  }
-
-  .radio-icon[src] {
-    margin-inline-end: 2px;
   }
 }
 
@@ -78,9 +82,5 @@ radio {
   .radio-label,
   radiogroup {
     margin: 1px 0;
-  }
-
-  .radio-icon {
-    margin-inline-end: 2px;
   }
 }
