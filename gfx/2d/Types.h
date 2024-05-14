@@ -1022,6 +1022,39 @@ struct GradientStop {
 
 enum class JobStatus { Complete, Wait, Yield, Error };
 
+enum class DeviceResetReason {
+  OK = 0,        // No reset.
+  HUNG,          // Windows specific, guilty device reset.
+  REMOVED,       // Windows specific, device removed or driver upgraded.
+  RESET,         // Guilty device reset.
+  DRIVER_ERROR,  // Innocent device reset.
+  INVALID_CALL,  // Windows specific, guilty device reset.
+  OUT_OF_MEMORY,
+  FORCED_RESET,  // Simulated device reset.
+  OTHER,         // Unrecognized reason for device reset.
+  NVIDIA_VIDEO,  // Linux specific, NVIDIA video memory was reset.
+  UNKNOWN,       // GL specific, unknown if guilty or innocent.
+  _First = OK,
+  _Last = UNKNOWN,
+};
+
+enum class DeviceResetDetectPlace {
+  WR_BEGIN_FRAME = 0,
+  WR_WAIT_FOR_GPU,
+  WR_POST_UPDATE,
+  WR_SYNC_OBJRCT,
+  WR_SIMULATE,
+  WIDGET,
+  CANVAS_TRANSLATOR,
+  _First = WR_BEGIN_FRAME,
+  _Last = CANVAS_TRANSLATOR,
+};
+
+enum class ForcedDeviceResetReason {
+  OPENSHAREDHANDLE = 0,
+  COMPOSITOR_UPDATED,
+};
+
 }  // namespace gfx
 }  // namespace mozilla
 

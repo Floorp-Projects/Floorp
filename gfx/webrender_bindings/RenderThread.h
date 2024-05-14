@@ -275,7 +275,8 @@ class RenderThread final {
   RefPtr<layers::ShaderProgramOGLsHolder> GetProgramsForCompositorOGL();
 
   /// Can only be called from the render thread.
-  void HandleDeviceReset(const char* aWhere, GLenum aReason);
+  void HandleDeviceReset(gfx::DeviceResetDetectPlace aPlace,
+                         gfx::DeviceResetReason aReason);
   /// Can only be called from the render thread.
   bool IsHandlingDeviceReset();
   /// Can be called from any thread.

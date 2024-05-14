@@ -436,12 +436,13 @@ bool gfxWindowsPlatform::InitDWriteSupport() {
 }
 
 bool gfxWindowsPlatform::HandleDeviceReset() {
-  DeviceResetReason resetReason = DeviceResetReason::OK;
+  mozilla::gfx::DeviceResetReason resetReason =
+      mozilla::gfx::DeviceResetReason::OK;
   if (!DidRenderingDeviceReset(&resetReason)) {
     return false;
   }
 
-  if (resetReason != DeviceResetReason::FORCED_RESET) {
+  if (resetReason != mozilla::gfx::DeviceResetReason::FORCED_RESET) {
     Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON,
                           uint32_t(resetReason));
   }
@@ -871,7 +872,7 @@ void gfxWindowsPlatform::GetCommonFallbackFonts(
 }
 
 bool gfxWindowsPlatform::DidRenderingDeviceReset(
-    DeviceResetReason* aResetReason) {
+    mozilla::gfx::DeviceResetReason* aResetReason) {
   DeviceManagerDx* dm = DeviceManagerDx::Get();
   if (!dm) {
     return false;
@@ -881,7 +882,7 @@ bool gfxWindowsPlatform::DidRenderingDeviceReset(
 
 void gfxWindowsPlatform::CompositorUpdated() {
   DeviceManagerDx::Get()->ForceDeviceReset(
-      ForcedDeviceResetReason::COMPOSITOR_UPDATED);
+      mozilla::gfx::ForcedDeviceResetReason::COMPOSITOR_UPDATED);
   UpdateRenderMode();
 }
 
@@ -894,7 +895,8 @@ BOOL CALLBACK InvalidateWindowForDeviceReset(HWND aWnd, LPARAM aMsg) {
 void gfxWindowsPlatform::SchedulePaintIfDeviceReset() {
   AUTO_PROFILER_LABEL("gfxWindowsPlatform::SchedulePaintIfDeviceReset", OTHER);
 
-  DeviceResetReason resetReason = DeviceResetReason::OK;
+  mozilla::gfx::DeviceResetReason resetReason =
+      mozilla::gfx::DeviceResetReason::OK;
   if (!DidRenderingDeviceReset(&resetReason)) {
     return;
   }

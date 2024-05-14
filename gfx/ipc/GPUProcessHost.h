@@ -9,6 +9,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/Types.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/TaskFactory.h"
@@ -49,7 +50,9 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
     // Shutdown().
     virtual void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {}
 
-    virtual void OnRemoteProcessDeviceReset(GPUProcessHost* aHost) {}
+    virtual void OnRemoteProcessDeviceReset(
+        GPUProcessHost* aHost, const DeviceResetReason& aReason,
+        const DeviceResetDetectPlace& aPlace) {}
 
     virtual void OnProcessDeclaredStable() {}
   };

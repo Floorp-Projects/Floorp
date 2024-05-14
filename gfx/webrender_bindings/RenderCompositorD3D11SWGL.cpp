@@ -11,6 +11,7 @@
 #include "gfxConfig.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/widget/CompositorWidget.h"
+#include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/Effects.h"
 #include "mozilla/webrender/RenderD3D11TextureHost.h"
 #include "RenderCompositorRecordedFrame.h"
@@ -155,28 +156,11 @@ void RenderCompositorD3D11SWGL::Pause() {}
 
 bool RenderCompositorD3D11SWGL::Resume() { return true; }
 
-GLenum RenderCompositorD3D11SWGL::IsContextLost(bool aForce) {
+gfx::DeviceResetReason RenderCompositorD3D11SWGL::IsContextLost(bool aForce) {
   // CompositorD3D11 uses ID3D11Device for composite. The device status needs to
   // be checked.
   auto reason = GetDevice()->GetDeviceRemovedReason();
-  switch (reason) {
-    case S_OK:
-      return LOCAL_GL_NO_ERROR;
-    case DXGI_ERROR_DEVICE_REMOVED:
-    case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
-      NS_WARNING("Device reset due to system / different device");
-      return LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB;
-    case DXGI_ERROR_DEVICE_HUNG:
-    case DXGI_ERROR_DEVICE_RESET:
-    case DXGI_ERROR_INVALID_CALL:
-      gfxCriticalError() << "Device reset due to WR device: "
-                         << gfx::hexa(reason);
-      return LOCAL_GL_GUILTY_CONTEXT_RESET_ARB;
-    default:
-      gfxCriticalError() << "Device reset with WR device unexpected reason: "
-                         << gfx::hexa(reason);
-      return LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB;
-  }
+  return layers::DXGIErrorToDeviceResetReason(reason);
 }
 
 UniquePtr<RenderCompositorLayersSWGL::Surface>

@@ -35,6 +35,28 @@ using namespace gfx;
 
 namespace layers {
 
+gfx::DeviceResetReason DXGIErrorToDeviceResetReason(HRESULT aError) {
+  switch (aError) {
+    case S_OK:
+      return gfx::DeviceResetReason::OK;
+    case DXGI_ERROR_DEVICE_REMOVED:
+      return gfx::DeviceResetReason::REMOVED;
+    case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
+      return gfx::DeviceResetReason::DRIVER_ERROR;
+    case DXGI_ERROR_DEVICE_HUNG:
+      return gfx::DeviceResetReason::HUNG;
+    case DXGI_ERROR_DEVICE_RESET:
+      return gfx::DeviceResetReason::RESET;
+    case DXGI_ERROR_INVALID_CALL:
+      return gfx::DeviceResetReason::INVALID_CALL;
+    default:
+      gfxCriticalNote << "Device reset with D3D11Device unexpected reason: "
+                      << gfx::hexa(aError);
+      break;
+  }
+  return gfx::DeviceResetReason::UNKNOWN;
+}
+
 static const GUID sD3D11TextureUsage = {
     0xd89275b0,
     0x6c7d,
@@ -961,7 +983,7 @@ bool DXGITextureHostD3D11::EnsureTextureSource() {
 
   if (!EnsureTexture()) {
     DeviceManagerDx::Get()->ForceDeviceReset(
-        ForcedDeviceResetReason::OPENSHAREDHANDLE);
+        gfx::ForcedDeviceResetReason::OPENSHAREDHANDLE);
     return false;
   }
 

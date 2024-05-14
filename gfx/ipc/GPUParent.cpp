@@ -234,11 +234,13 @@ bool GPUParent::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   return true;
 }
 
-void GPUParent::NotifyDeviceReset() {
+void GPUParent::NotifyDeviceReset(DeviceResetReason aReason,
+                                  DeviceResetDetectPlace aPlace) {
   if (!NS_IsMainThread()) {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "gfx::GPUParent::NotifyDeviceReset",
-        []() -> void { GPUParent::GetSingleton()->NotifyDeviceReset(); }));
+        "gfx::GPUParent::NotifyDeviceReset", [aReason, aPlace]() -> void {
+          GPUParent::GetSingleton()->NotifyDeviceReset(aReason, aPlace);
+        }));
     return;
   }
 
@@ -255,7 +257,7 @@ void GPUParent::NotifyDeviceReset() {
   // and that they should reset their compositors and repaint
   GPUDeviceData data;
   RecvGetDeviceStatus(&data);
-  Unused << SendNotifyDeviceReset(data);
+  Unused << SendNotifyDeviceReset(data, aReason, aPlace);
 }
 
 void GPUParent::NotifyOverlayInfo(layers::OverlayInfo aInfo) {
