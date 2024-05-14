@@ -19,7 +19,6 @@ job-defaults:
         tags: []
         bump: false
         dontbuild: false
-        ignore-closed-tree: true
         push: true
 
 jobs:
@@ -29,6 +28,7 @@ jobs:
         treeherder:
             symbol: android-l10n(I)
         worker:
+            ignore-closed-tree: true
             source-repo: https://hg.mozilla.org/integration/autoland
             android-l10n-import-info:
                 from-repo-url: https://github.com/mozilla-l10n/android-l10n
@@ -46,6 +46,7 @@ jobs:
         treeherder:
             symbol: android-l10n(S)
         worker:
+            ignore-closed-tree: false
             source-repo: https://hg.mozilla.org/releases/mozilla-beta
             android-l10n-sync-info:
                 from-repo-url: https://hg.mozilla.org/mozilla-central
