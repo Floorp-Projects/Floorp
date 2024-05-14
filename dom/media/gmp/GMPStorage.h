@@ -30,7 +30,8 @@ class GMPStorage {
   virtual ~GMPStorage() = default;
 };
 
-already_AddRefed<GMPStorage> CreateGMPMemoryStorage();
+already_AddRefed<GMPStorage> CreateGMPMemoryStorage(const nsACString& aNodeId,
+                                                    const nsAString& aGMPName);
 already_AddRefed<GMPStorage> CreateGMPDiskStorage(const nsACString& aNodeId,
                                                   const nsAString& aGMPName);
 

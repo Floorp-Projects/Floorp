@@ -7,6 +7,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "GMPLog.h"
 #include "GMPParent.h"
 #include "gmp-storage.h"
 #include "mozilla/Unused.h"
@@ -16,6 +17,10 @@
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla::gmp {
+
+#define LOG(msg, ...)                   \
+  MOZ_LOG(GetGMPLog(), LogLevel::Debug, \
+          ("GMPDiskStorage=%p, " msg, this, ##__VA_ARGS__))
 
 // We store the records for a given GMP as files in the profile dir.
 // $profileDir/gmp/$platform/$gmpName/storage/$nodeId/
@@ -72,7 +77,10 @@ static nsresult GetGMPStorageDir(nsIFile** aTempDir, const nsAString& aGMPName,
 class GMPDiskStorage : public GMPStorage {
  public:
   explicit GMPDiskStorage(const nsACString& aNodeId, const nsAString& aGMPName)
-      : mNodeId(aNodeId), mGMPName(aGMPName) {}
+      : mNodeId(aNodeId), mGMPName(aGMPName) {
+    LOG("Created GMPDiskStorage, nodeId=%s, gmpName=%s", mNodeId.BeginReading(),
+        NS_ConvertUTF16toUTF8(mGMPName).get());
+  }
 
   ~GMPDiskStorage() {
     // Close all open file handles.
@@ -82,6 +90,7 @@ class GMPDiskStorage : public GMPStorage {
         record->mFileDesc = nullptr;
       }
     }
+    LOG("Destroyed GMPDiskStorage");
   }
 
   nsresult Init() {
@@ -449,5 +458,7 @@ already_AddRefed<GMPStorage> CreateGMPDiskStorage(const nsACString& aNodeId,
   }
   return storage.forget();
 }
+
+#undef LOG
 
 }  // namespace mozilla::gmp

@@ -45,12 +45,14 @@ nsresult GMPStorageParent::Init() {
   if (persistent) {
     mStorage = CreateGMPDiskStorage(mNodeId, mPlugin->GetPluginBaseName());
   } else {
-    mStorage = mps->GetMemoryStorageFor(mNodeId);
+    mStorage = mps->GetMemoryStorageFor(mNodeId, mPlugin->GetPluginBaseName());
   }
   if (!mStorage) {
     return NS_ERROR_FAILURE;
   }
 
+  LOGD(("GMPStorageParent[%p]::Init succeeded, nodeId=%s, persistent=%d", this,
+        mNodeId.BeginReading(), persistent));
   mShutdown = false;
   return NS_OK;
 }
@@ -179,11 +181,11 @@ void GMPStorageParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 void GMPStorageParent::Shutdown() {
-  LOGD(("GMPStorageParent[%p]::Shutdown()", this));
-
   if (mShutdown) {
     return;
   }
+
+  LOGD(("GMPStorageParent[%p]::Shutdown()", this));
   mShutdown = true;
   Unused << SendShutdown();
 
