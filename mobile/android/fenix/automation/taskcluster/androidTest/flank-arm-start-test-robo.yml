@@ -19,6 +19,7 @@ gcloud:
       locale: en_US
 
   type: robo
+  robo-script: ./automation/taskcluster/androidTest/robo-scripts/default-browser-dismissal.json
 
 flank:
   project: GOOGLE_PROJECT
