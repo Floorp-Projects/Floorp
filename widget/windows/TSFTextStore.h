@@ -1003,7 +1003,9 @@ class TSFTextStore final : public ITextStoreACP,
 
   // While mContentForTSF is valid, this returns the text stored by it.
   // Otherwise, return the current text content retrieved by eQueryTextContent.
-  bool GetCurrentText(nsAString& aTextContent);
+  enum class AllowToFlushLayoutIfNoCache { No, Yes };
+  bool GetCurrentText(nsAString& aTextContent,
+                      AllowToFlushLayoutIfNoCache aAllowToFlushLayoutIfNoCache);
 
   class MouseTracker final {
    public:
