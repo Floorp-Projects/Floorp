@@ -2138,7 +2138,11 @@ static void DumpHelp() {
 #endif
 
 #if defined(MOZ_ENABLE_DBUS)
-  printf("  --dbus-service     Run as DBus service.\n");
+  printf(
+      "  --dbus-service <launcher>  Run as DBus service for "
+      "org.freedesktop.Application and\n"
+      "                             set a launcher (usually /usr/bin/appname "
+      "script) for it.");
 #endif
 
   // this works, but only after the components have registered.  so if you drop
@@ -4380,13 +4384,20 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   }
 
 #ifdef MOZ_ENABLE_DBUS
-  if (CheckArg("dbus-service")) {
-    UniquePtr<DBusService> dbusService = MakeUnique<DBusService>(gArgv[0]);
+  const char* dbusServiceLauncher = nullptr;
+  ar = CheckArg("dbus-service", &dbusServiceLauncher, CheckArgFlag::None);
+  if (ar == ARG_BAD) {
+    Output(true, "Missing launcher param for --dbus-service\n");
+    return 1;
+  }
+  if (ar == ARG_FOUND) {
+    UniquePtr<DBusService> dbusService =
+        MakeUnique<DBusService>(dbusServiceLauncher);
     if (dbusService->Init()) {
       dbusService->Run();
     }
     *aExitFlag = true;
-    return 1;
+    return 0;
   }
 #endif
 
