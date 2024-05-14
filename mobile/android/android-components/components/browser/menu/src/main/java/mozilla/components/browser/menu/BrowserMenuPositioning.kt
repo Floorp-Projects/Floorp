@@ -10,6 +10,7 @@ import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.Px
+import androidx.annotation.VisibleForTesting
 
 /**
  * All data needed for menu positioning.
@@ -67,15 +68,9 @@ internal fun inferMenuPositioningData(
     anchor: View,
     currentData: MenuPositioningData,
 ): MenuPositioningData {
-    // Measure the menu allowing it to expand entirely.
-    val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-    containerView.measure(spec, spec)
-
+    val containerViewHeight = measureContainerHeight(containerView)
     val (availableHeightToTop, availableHeightToBottom) = getMaxAvailableHeightToTopAndBottom(anchor)
-    val containerHeight = containerView.measuredHeight
-
-    val fitsUp = availableHeightToTop >= containerHeight || availableHeightToTop > availableHeightToBottom
-    val fitsDown = availableHeightToBottom >= containerHeight || availableHeightToBottom > availableHeightToTop
+    val (fitsUp, fitsDown) = checkIfMenuFits(availableHeightToTop, availableHeightToBottom, containerViewHeight)
 
     return inferMenuPosition(
         anchor,
@@ -84,9 +79,25 @@ internal fun inferMenuPositioningData(
             fitsDown = fitsDown,
             availableHeightToTop = availableHeightToTop,
             availableHeightToBottom = availableHeightToBottom,
-            containerViewHeight = containerHeight,
+            containerViewHeight = containerViewHeight,
         ),
     )
+}
+
+internal fun measureContainerHeight(containerView: ViewGroup): Int {
+    val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+    containerView.measure(spec, spec)
+    return containerView.measuredHeight
+}
+
+internal fun checkIfMenuFits(
+    availableHeightToTop: Int,
+    availableHeightToBottom: Int,
+    containerHeight: Int,
+): Pair<Boolean, Boolean> {
+    val fitsUp = availableHeightToTop >= containerHeight
+    val fitsDown = availableHeightToBottom >= containerHeight
+    return fitsUp to fitsDown
 }
 
 /**
@@ -99,29 +110,50 @@ internal fun inferMenuPositioningData(
  * @return new MenuPositioningData updated to contain the inferred [BrowserMenuPlacement]
  */
 internal fun inferMenuPosition(anchor: View, currentData: MenuPositioningData): MenuPositioningData {
-    // Try to use the preferred orientation, if doesn't fit fallback to the best fit.
+    return when {
+        canUsePreferredOrientation(currentData) -> usePreferredOrientation(anchor, currentData)
+        neitherOrientationFits(currentData) -> usePlacementWithMostSpaceAvailable(anchor, currentData)
+        else -> useOrientationThatFits(anchor, currentData) // At least one orientation fits.
+    }
+}
 
-    val menuPlacement: BrowserMenuPlacement =
-        if (currentData.askedOrientation == BrowserMenu.Orientation.DOWN && currentData.fitsDown) {
-            BrowserMenuPlacement.AnchoredToTop.Dropdown(anchor)
-        } else if (currentData.askedOrientation == BrowserMenu.Orientation.UP && currentData.fitsUp) {
-            BrowserMenuPlacement.AnchoredToBottom.Dropdown(anchor)
-        } else {
-            if (!currentData.fitsUp && !currentData.fitsDown) {
-                if (currentData.availableHeightToTop < currentData.availableHeightToBottom) {
-                    BrowserMenuPlacement.AnchoredToTop.ManualAnchoring(anchor)
-                } else {
-                    BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring(anchor)
-                }
-            } else {
-                if (currentData.fitsDown) {
-                    BrowserMenuPlacement.AnchoredToTop.Dropdown(anchor)
-                } else {
-                    BrowserMenuPlacement.AnchoredToBottom.Dropdown(anchor)
-                }
-            }
-        }
+@VisibleForTesting
+internal fun canUsePreferredOrientation(currentData: MenuPositioningData): Boolean {
+    return (currentData.askedOrientation == BrowserMenu.Orientation.DOWN && currentData.fitsDown) ||
+        (currentData.askedOrientation == BrowserMenu.Orientation.UP && currentData.fitsUp)
+}
 
+@VisibleForTesting
+internal fun usePreferredOrientation(anchor: View, currentData: MenuPositioningData): MenuPositioningData {
+    val menuPlacement = when (currentData.askedOrientation) {
+        BrowserMenu.Orientation.DOWN -> BrowserMenuPlacement.AnchoredToTop.Dropdown(anchor)
+        BrowserMenu.Orientation.UP -> BrowserMenuPlacement.AnchoredToBottom.Dropdown(anchor)
+    }
+    return currentData.copy(inferredMenuPlacement = menuPlacement)
+}
+
+@VisibleForTesting
+internal fun neitherOrientationFits(currentData: MenuPositioningData): Boolean {
+    return !currentData.fitsUp && !currentData.fitsDown
+}
+
+@VisibleForTesting
+internal fun usePlacementWithMostSpaceAvailable(anchor: View, currentData: MenuPositioningData): MenuPositioningData {
+    val menuPlacement = if (currentData.availableHeightToTop < currentData.availableHeightToBottom) {
+        BrowserMenuPlacement.AnchoredToTop.ManualAnchoring(anchor)
+    } else {
+        BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring(anchor)
+    }
+    return currentData.copy(inferredMenuPlacement = menuPlacement)
+}
+
+@VisibleForTesting
+internal fun useOrientationThatFits(anchor: View, currentData: MenuPositioningData): MenuPositioningData {
+    val menuPlacement = if (currentData.fitsDown) {
+        BrowserMenuPlacement.AnchoredToTop.Dropdown(anchor)
+    } else {
+        BrowserMenuPlacement.AnchoredToBottom.Dropdown(anchor)
+    }
     return currentData.copy(inferredMenuPlacement = menuPlacement)
 }
 
