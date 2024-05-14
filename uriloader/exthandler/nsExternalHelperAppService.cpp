@@ -1051,7 +1051,6 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
   // restriction, only aiming to prevent some types of spoofing attacks
   // from otherwise disjoint browsingcontext trees.
   if (aBrowsingContext && aTriggeringPrincipal &&
-      !StaticPrefs::security_allow_disjointed_external_uri_loads() &&
       // Add-on principals are always allowed:
       !BasePrincipal::Cast(aTriggeringPrincipal)->AddonPolicy() &&
       // As is chrome code:
