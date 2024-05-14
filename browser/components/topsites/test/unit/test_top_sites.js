@@ -1002,15 +1002,6 @@ add_task(async function test_init() {
     })
   );
 
-  info("TopSites.init should initialise the storage");
-  Assert.ok(
-    TopSites.store.dbStorage.getDbTable.calledOnce,
-    "getDbTable called once"
-  );
-  Assert.ok(
-    TopSites.store.dbStorage.getDbTable.calledWithExactly("sectionPrefs")
-  );
-
   sandbox.restore();
   await cleanup();
 });
@@ -1060,7 +1051,7 @@ add_task(async function test_refresh() {
     TopSites.store.dispatch.calledWithExactly(
       ac.BroadcastToContent({
         type: at.TOP_SITES_UPDATED,
-        data: { links: [], pref: { collapsed: false } },
+        data: { links: [] },
       })
     )
   );
@@ -1154,7 +1145,7 @@ add_task(async function test_refresh_to_preloaded() {
     TopSites.store.dispatch.calledWithExactly(
       ac.AlsoToPreloaded({
         type: at.TOP_SITES_UPDATED,
-        data: { links: [], pref: { collapsed: false } },
+        data: { links: [] },
       })
     )
   );
@@ -1207,51 +1198,6 @@ add_task(async function test_refresh_handles_indexedDB_errors() {
   sandbox.restore();
   await cleanup();
 });
-
-add_task(async function test_updateSectionPrefs_on_UPDATE_SECTION_PREFS() {
-  let sandbox = sinon.createSandbox();
-
-  info(
-    "TopSites.onAction should call updateSectionPrefs on UPDATE_SECTION_PREFS"
-  );
-
-  let cleanup = stubTopSites(sandbox);
-  sandbox.stub(TopSites, "updateSectionPrefs");
-  TopSites.onAction({
-    type: at.UPDATE_SECTION_PREFS,
-    data: { id: "topsites" },
-  });
-
-  Assert.ok(
-    TopSites.updateSectionPrefs.calledOnce,
-    "TopSites.updateSectionPrefs called once"
-  );
-
-  sandbox.restore();
-  await cleanup();
-});
-
-add_task(
-  async function test_updateSectionPrefs_dispatch_TOP_SITES_PREFS_UPDATED() {
-    let sandbox = sinon.createSandbox();
-
-    info("TopSites.updateSectionPrefs should dispatch TOP_SITES_PREFS_UPDATED");
-
-    let cleanup = stubTopSites(sandbox);
-    await TopSites.updateSectionPrefs({ collapsed: true });
-    Assert.ok(
-      TopSites.store.dispatch.calledWithExactly(
-        ac.BroadcastToContent({
-          type: at.TOP_SITES_PREFS_UPDATED,
-          data: { pref: { collapsed: true } },
-        })
-      )
-    );
-
-    sandbox.restore();
-    await cleanup();
-  }
-);
 
 add_task(async function test_getScreenshotPreview() {
   let sandbox = sinon.createSandbox();
