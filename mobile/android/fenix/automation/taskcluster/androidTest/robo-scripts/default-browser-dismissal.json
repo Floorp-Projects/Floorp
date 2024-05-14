@@ -1,0 +1,11 @@
+[
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "resourceId": "android:id/button2"
+      }
+    ],
+    "optional": true
+  }
+]
