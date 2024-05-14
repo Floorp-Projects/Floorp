@@ -68,7 +68,7 @@ interface nsINotificationStorage : nsISupports
   void put(in AString origin,
            in AString id,
            in AString title,
-           in AString dir,
+           in ACString dir,
            in AString lang,
            in AString body,
            in AString tag,
