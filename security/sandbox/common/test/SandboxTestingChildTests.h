@@ -711,6 +711,13 @@ void RunTestsRDD(SandboxTestingChild* child) {
     return mknod("/dev/null", S_IFCHR | 0666, makedev(1, 3));
   });
 
+  // Rust panics call getcwd to try to print relative paths in
+  // backtraces.
+  child->ErrnoValueTest("getcwd"_ns, ENOENT, [] {
+    char buf[4096];
+    return (getcwd(buf, sizeof(buf)) == nullptr) ? -1 : 0;
+  });
+
   // nvidia defines some ioctls with the type 0x46 ('F', otherwise
   // used by fbdev) and numbers starting from 200 (0xc8).
   child->ErrnoValueTest("ioctl_nvidia"_ns, ENOTTY,
