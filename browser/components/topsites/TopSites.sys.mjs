@@ -57,7 +57,6 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = [
 ];
 const SECTION_ID = "topsites";
 const ROWS_PREF = "topSitesRows";
-const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 
 // Search experiment stuff
 const FILTER_DEFAULT_SEARCH_PREF = "improvesearch.noDefaultSearchTile";
@@ -74,8 +73,6 @@ const REMOTE_SETTING_DEFAULTS_PREF = "browser.topsites.useRemoteSetting";
 const DEFAULT_SITES_OVERRIDE_PREF =
   "browser.newtabpage.activity-stream.default.sites";
 const DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH = "browser.topsites.experiment.";
-
-const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
@@ -196,20 +193,8 @@ class _TopSites {
     this._useRemoteSetting = true;
     let remoteSettingData = await this._getRemoteConfig();
 
-    const sponsoredBlocklist = JSON.parse(
-      Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
-    );
-
     for (let siteData of remoteSettingData) {
       let hostname = shortURL(siteData);
-      // Also drop those sponsored sites that were blocked by the user before
-      // with the same hostname.
-      if (
-        siteData.sponsored_position &&
-        sponsoredBlocklist.includes(hostname)
-      ) {
-        continue;
-      }
       let link = {
         isDefault: true,
         url: siteData.url,
@@ -224,21 +209,6 @@ class _TopSites {
       }
       if (siteData.search_shortcut) {
         link = await this.topSiteToSearchTopSite(link);
-      } else if (siteData.sponsored_position) {
-        const {
-          sponsored_position,
-          sponsored_tile_id,
-          sponsored_impression_url,
-          sponsored_click_url,
-        } = siteData;
-        link = {
-          sponsored_position,
-          sponsored_tile_id,
-          sponsored_impression_url,
-          sponsored_click_url,
-          show_sponsored_label: link.hostname !== "yandex",
-          ...link,
-        };
       }
       DEFAULT_TOP_SITES.push(link);
     }
@@ -512,13 +482,7 @@ class _TopSites {
     // Get defaults.
     let notBlockedDefaultSites = [];
     for (let link of DEFAULT_TOP_SITES) {
-      // For sponsored Yandex links, default filtering is reversed: we only
-      // show them if Yandex is the default search engine.
-      if (link.sponsored_position && link.hostname === "yandex") {
-        if (link.hostname !== this._currentSearchHostname) {
-          continue;
-        }
-      } else if (this.shouldFilterSearchTile(link.hostname)) {
+      if (this.shouldFilterSearchTile(link.hostname)) {
         continue;
       }
       // Drop blocked default sites.
@@ -538,20 +502,11 @@ class _TopSites {
       ) {
         continue;
       }
-      if (link.sponsored_position) {
-        if (!prefValues[SHOW_SPONSORED_PREF]) {
-          continue;
-        }
-        // Unpin search shortcut if present for the sponsored link to be shown
-        // instead.
-        this._unpinSearchShortcut(link.hostname);
-      } else {
-        notBlockedDefaultSites.push(
-          searchShortcutsExperiment
-            ? await this.topSiteToSearchTopSite(link)
-            : link
-        );
-      }
+      notBlockedDefaultSites.push(
+        searchShortcutsExperiment
+          ? await this.topSiteToSearchTopSite(link)
+          : link
+      );
     }
 
     // Get pinned links augmented with desired properties
