@@ -28,7 +28,7 @@ namespace layers {
 class Compositor;
 
 CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
-    : mTextureInfo(aTextureInfo), mCompositorBridgeID(0) {
+    : mTextureInfo(aTextureInfo) {
   MOZ_COUNT_CTOR(CompositableHost);
 }
 

@@ -88,12 +88,8 @@ class CompositableHost {
   virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures);
   virtual void RemoveTextureHost(TextureHost* aTexture);
 
-  uint64_t GetCompositorBridgeID() const { return mCompositorBridgeID; }
-
   const AsyncCompositableRef& GetAsyncRef() const { return mAsyncRef; }
   void SetAsyncRef(const AsyncCompositableRef& aRef) { mAsyncRef = aRef; }
-
-  void SetCompositorBridgeID(uint64_t aID) { mCompositorBridgeID = aID; }
 
   /// Called when shutting down the layer tree.
   /// This is a good place to clear all potential gpu resources before the
@@ -108,7 +104,6 @@ class CompositableHost {
  protected:
   TextureInfo mTextureInfo;
   AsyncCompositableRef mAsyncRef;
-  uint64_t mCompositorBridgeID;
 };
 
 }  // namespace layers
