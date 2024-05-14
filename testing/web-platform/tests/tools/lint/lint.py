@@ -430,6 +430,10 @@ def check_parsed(repo_root: Text, path: Text, f: IO[bytes]) -> List[rules.Error]
             errors.append(rules.NonexistentRef.error(path,
                                                      (reference_rel, href)))
 
+    if source_file.reftest_nodes:
+        if test_type not in ("print-reftest", "reftest"):
+            errors.append(rules.ReferenceInOtherType.error(path, (test_type,)))
+
     if len(source_file.timeout_nodes) > 1:
         errors.append(rules.MultipleTimeout.error(path))
 

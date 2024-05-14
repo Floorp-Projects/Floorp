@@ -329,6 +329,11 @@ class TestharnessInOtherType(Rule):
     description = "testharness.js included in a %s test"
 
 
+class ReferenceInOtherType(Rule):
+    name = "REFERENCE-IN-OTHER-TYPE"
+    description = "Reference link included in a %s test"
+
+
 class DuplicateBasenamePath(Rule):
     name = "DUPLICATE-BASENAME-PATH"
     description = collapse("""
