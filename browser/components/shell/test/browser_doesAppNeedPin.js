@@ -24,10 +24,13 @@ add_task(async function remote_disable() {
     return;
   }
 
-  let doCleanup = await ExperimentFakes.enrollWithRollout({
-    featureId: NimbusFeatures.shellService.featureId,
-    value: { disablePin: true, enabled: true },
-  });
+  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: NimbusFeatures.shellService.featureId,
+      value: { disablePin: true, enabled: true },
+    },
+    { isRollout: true }
+  );
 
   Assert.equal(
     await ShellService.doesAppNeedPin(),

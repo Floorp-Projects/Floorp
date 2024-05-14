@@ -140,17 +140,6 @@ export const ExperimentTestUtils = {
       )
     );
   },
-  async validateRollouts(rollout) {
-    const schema = await fetchSchema(
-      "resource://nimbus/schemas/NimbusEnrollment.schema.json"
-    );
-
-    return this._validateSchema(
-      schema,
-      rollout,
-      `Rollout configuration ${rollout.slug} is not valid`
-    );
-  },
   /**
    * Add features for tests.
    *
@@ -203,43 +192,6 @@ export const ExperimentFakes = {
       ExperimentAPI._store.once(`update:${slug}`, resolve)
     );
   },
-  async enrollWithRollout(
-    featureConfig,
-    { manager = lazy.ExperimentAPI._manager, source } = {}
-  ) {
-    await manager.store.init();
-    const rollout = this.rollout(`${featureConfig.featureId}-rollout`, {
-      branch: {
-        slug: `${featureConfig.featureId}-rollout-branch`,
-        features: [featureConfig],
-      },
-    });
-    if (source) {
-      rollout.source = source;
-    }
-    await ExperimentTestUtils.validateRollouts(rollout);
-    // After storing the remote configuration to store and updating the feature
-    // we want to flush so that NimbusFeature usage in content process also
-    // receives the update
-    await manager.store.addEnrollment(rollout);
-    manager.store._syncToChildren({ flush: true });
-
-    let unenrollCompleted = slug =>
-      new Promise(resolve =>
-        manager.store.on(`update:${slug}`, (event, enrollment) => {
-          if (enrollment.slug === rollout.slug && !enrollment.active) {
-            manager.store._deleteForTests(rollout.slug);
-            resolve();
-          }
-        })
-      );
-
-    return () => {
-      let promise = unenrollCompleted(rollout.slug);
-      manager.unenroll(rollout.slug, "cleanup");
-      return promise;
-    };
-  },
   /**
    * Enroll in an experiment branch with the given feature configuration.
    *
@@ -248,7 +200,7 @@ export const ExperimentFakes = {
    */
   async enrollWithFeatureConfig(
     featureConfig,
-    { manager = lazy.ExperimentAPI._manager, isRollout = false } = {}
+    { manager = lazy.ExperimentAPI._manager, isRollout = false, source } = {}
   ) {
     await manager.store.ready();
     // Use id passed in featureConfig value to compute experimentId
@@ -277,7 +229,7 @@ export const ExperimentFakes = {
     });
     let { enrollmentPromise, doExperimentCleanup } = this.enrollmentHelper(
       recipe,
-      { manager }
+      { manager, source }
     );
 
     await enrollmentPromise;
