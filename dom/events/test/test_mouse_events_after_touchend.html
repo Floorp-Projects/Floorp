@@ -147,6 +147,30 @@ SimpleTest.waitForFocus(async () => {
       );
     })();
 
+    await (async function test_single_tap_with_consuming_pointerdown() {
+      await promiseFlushingAPZGestureState();
+      info("test_single_tap_with_consuming_pointerdown: testing...");
+      events = [];
+      const waitForTouchEnd = promiseEvent("click");
+      child.addEventListener("pointerdown", event => {
+        event.preventDefault();
+      }, {once: true});
+      synthesizeTouch(child, 5, 5);
+      await waitForTouchEnd;
+      const result = stringifyEvents(events);
+      const expected = stringifyEvents([
+        { type: "touchend", target: child },
+        { type: "click", target: child, detail: 1, button: 0, buttons: 0 },
+      ]);
+      // If testing on Windows, the result is really unstable. Let's allow to
+      // fail for now.
+      (navigator.platform.includes("Win") && result != expected ? todo_is : is)(
+        result,
+        expected,
+        `Single tap should not cause mouse events if pointerdown is consumed, but click event should be fired ${desc}`
+      );
+    })();
+
     await (async function test_single_tap_with_consuming_touchstart() {
       await promiseFlushingAPZGestureState();
       info("test_single_tap_with_consuming_touchstart: testing...");
@@ -223,6 +247,8 @@ SimpleTest.waitForFocus(async () => {
         `Multiple touch should not cause mouse events ${desc}`
       );
     })();
+
+    // FIXME: Add long tap tests which won't frequently fail.
   }
   SimpleTest.finish();
 });

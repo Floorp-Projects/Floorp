@@ -33,6 +33,10 @@ namespace layers {
 
 struct RepaintRequest;
 
+namespace apz {
+enum class PrecedingPointerDown : bool;
+}
+
 /* Refer to documentation on SendSetTargetAPZCNotification for this class */
 class DisplayportSetListener : public ManagedPostRefreshObserver {
  public:
@@ -61,6 +65,8 @@ class APZCCallbackHelper {
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
  public:
+  using PrecedingPointerDown = apz::PrecedingPointerDown;
+
   static void NotifyLayerTransforms(const nsTArray<MatrixMessage>& aTransforms);
 
   /* Applies the scroll and zoom parameters from the given RepaintRequest object
@@ -107,7 +113,8 @@ class APZCCallbackHelper {
   MOZ_CAN_RUN_SCRIPT
   static nsEventStatus DispatchSynthesizedMouseEvent(
       EventMessage aMsg, const LayoutDevicePoint& aRefPoint,
-      Modifiers aModifiers, int32_t aClickCount, nsIWidget* aWidget);
+      Modifiers aModifiers, int32_t aClickCount,
+      PrecedingPointerDown aPrecedingPointerDownState, nsIWidget* aWidget);
 
   /* Dispatch a mouse event with the given parameters.
    * Return whether or not any listeners have called preventDefault on the
@@ -123,9 +130,10 @@ class APZCCallbackHelper {
   /* Fire a single-tap event at the given point. The event is dispatched
    * via the given widget. */
   MOZ_CAN_RUN_SCRIPT
-  static void FireSingleTapEvent(const LayoutDevicePoint& aPoint,
-                                 Modifiers aModifiers, int32_t aClickCount,
-                                 nsIWidget* aWidget);
+  static void FireSingleTapEvent(
+      const LayoutDevicePoint& aPoint, Modifiers aModifiers,
+      int32_t aClickCount, PrecedingPointerDown aPrecedingPointerDownState,
+      nsIWidget* aWidget);
 
   /* Perform hit-testing on the touch points of |aEvent| to determine
    * which scrollable frames they target. If any of these frames don't have

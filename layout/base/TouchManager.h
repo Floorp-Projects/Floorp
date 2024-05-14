@@ -69,6 +69,10 @@ class TouchManager {
   // dispatch mouse events for touch events synthesized without APZ.
   static bool IsSingleTapEndToDoDefault(const WidgetTouchEvent* aTouchEndEvent);
 
+  // Returns true if the preceding `pointerdown` was consumed by content of
+  // the last active pointers of touches.
+  static bool IsPrecedingTouchPointerDownConsumedByContent();
+
  private:
   void EvictTouches(dom::Document* aLimitToDocument = nullptr);
   static void EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
@@ -89,10 +93,20 @@ class TouchManager {
   static layers::LayersId sCaptureTouchLayersId;
   // The last start of a single tap.  This will be set to "Null" if the tap is
   // consumed or becomes not a single tap.
+  // NOTE: This is used for touches without APZ, i.e., if they are synthesized
+  // in-process for tests.
   static TimeStamp sSingleTouchStartTimeStamp;
   // The last start point of the single tap tracked with
   // sSingleTouchStartTimeStamp.
+  // NOTE: This is used for touches without APZ, i.e., if they are synthesized
+  // in-process for tests.
   static LayoutDeviceIntPoint sSingleTouchStartPoint;
+  // Whether the preceding `pointerdown` of the last active touches is consumed
+  // by content or not.  If APZ is enabled, same state is managed by
+  // APZEventState.
+  // NOTE: This is used for touches without APZ, i.e., if they are synthesized
+  // in-process for tests.
+  static bool sPrecedingTouchPointerDownConsumedByContent;
 };
 
 }  // namespace mozilla
