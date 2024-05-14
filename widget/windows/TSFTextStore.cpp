@@ -2934,6 +2934,11 @@ Maybe<TSFTextStore::Selection>& TSFTextStore::SelectionForTSF() {
     mSelectionForTSF = Some(Selection(querySelectedTextEvent));
   }
 
+  if (mPendingToCreateNativeCaret) {
+    mPendingToCreateNativeCaret = false;
+    CreateNativeCaret();
+  }
+
   MOZ_LOG(gIMELog, LogLevel::Debug,
           ("0x%p   TSFTextStore::SelectionForTSF() succeeded, "
            "mSelectionForTSF=%s",
@@ -6459,14 +6464,24 @@ void TSFTextStore::CreateNativeCaret() {
 
   IMEHandler::MaybeDestroyNativeCaret();
 
-  // Don't create native caret after destroyed.
+  // Don't create native caret after destroyed or when we need to wait for end
+  // of query selection.
   if (mDestroyed) {
     return;
   }
 
   MOZ_LOG(gIMELog, LogLevel::Debug,
-          ("0x%p   TSFTextStore::CreateNativeCaret(), mComposition=%s", this,
-           ToString(mComposition).c_str()));
+          ("0x%p   TSFTextStore::CreateNativeCaret(), mComposition=%s, "
+           "mPendingToCreateNativeCaret=%s",
+           this, ToString(mComposition).c_str(),
+           GetBoolName(mPendingToCreateNativeCaret)));
+
+  // If we're initializing selection, we should create native caret when it's
+  // done.
+  if (mIsInitializingSelectionForTSF || mPendingToCreateNativeCaret) {
+    mPendingToCreateNativeCaret = true;
+    return;
+  }
 
   Maybe<Selection>& selectionForTSF = SelectionForTSF();
   if (MOZ_UNLIKELY(selectionForTSF.isNothing())) {
@@ -6489,6 +6504,9 @@ void TSFTextStore::CreateNativeCaret() {
   }
 
   WidgetQueryContentEvent queryCaretRectEvent(true, eQueryCaretRect, mWidget);
+  // Don't request flushing pending layout because we must have the lastest
+  // layout since we already caches selection above.
+  queryCaretRectEvent.mNeedsToFlushLayout = false;
   mWidget->InitEvent(queryCaretRectEvent);
 
   WidgetQueryContentEvent::Options options;
