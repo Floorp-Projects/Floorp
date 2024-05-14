@@ -3,7 +3,7 @@
 const URL =
   "http://example.org/browser/browser/extensions/formautofill/test/browser/autocomplete_basic.html";
 
-add_task(async function setup_storage() {
+add_setup(async function setup_storage() {
   await setStorage(TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3);
 });
 
