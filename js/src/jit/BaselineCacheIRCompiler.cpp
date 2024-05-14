@@ -3690,22 +3690,20 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
 template <typename IdType>
 bool BaselineCacheIRCompiler::emitCallScriptedProxyGetShared(
     ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
-    uint32_t trapOffset, IdType id, uint32_t nargsAndFlags) {
-  Address trapAddr(stubAddress(trapOffset));
+    ObjOperandId trapId, IdType id, uint32_t nargsAndFlags) {
   Register handler = allocator.useRegister(masm, handlerId);
   ValueOperand target = allocator.useValueRegister(masm, targetId);
   Register receiver = allocator.useRegister(masm, receiverId);
+  Register callee = allocator.useRegister(masm, trapId);
   ValueOperand idVal;
   if constexpr (std::is_same_v<IdType, ValOperandId>) {
     idVal = allocator.useValueRegister(masm, id);
   }
 
   AutoScratchRegister code(allocator, masm);
-  AutoScratchRegister callee(allocator, masm);
+
   AutoScratchRegister scratch(allocator, masm);
   ValueOperand scratchVal(scratch);
-
-  masm.loadPtr(trapAddr, callee);
 
   allocator.discardStack(masm);
 
@@ -3780,20 +3778,20 @@ bool BaselineCacheIRCompiler::emitCallScriptedProxyGetShared(
 
 bool BaselineCacheIRCompiler::emitCallScriptedProxyGetResult(
     ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
-    uint32_t trapOffset, uint32_t idOffset, uint32_t nargsAndFlags) {
+    ObjOperandId trapId, uint32_t idOffset, uint32_t nargsAndFlags) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
-  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId,
-                                        trapOffset, idOffset, nargsAndFlags);
+  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId, trapId,
+                                        idOffset, nargsAndFlags);
 }
 
 bool BaselineCacheIRCompiler::emitCallScriptedProxyGetByValueResult(
     ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
-    ValOperandId idId, uint32_t trapOffset, uint32_t nargsAndFlags) {
+    ValOperandId idId, ObjOperandId trapId, uint32_t nargsAndFlags) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
-  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId,
-                                        trapOffset, idId, nargsAndFlags);
+  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId, trapId,
+                                        idId, nargsAndFlags);
 }
 #endif
 

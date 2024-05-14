@@ -1607,16 +1607,16 @@ AttachDecision GetPropIRGenerator::tryAttachScriptedProxy(
     ValOperandId fnValId =
         EmitLoadSlot(writer, trapHolder, trapHolderId, trapSlot);
     ObjOperandId fnObjId = writer.guardToObject(fnValId);
-    writer.guardSpecificFunction(fnObjId, trapFn);
+    emitCalleeGuard(fnObjId, trapFn);
     ValOperandId targetValId = writer.boxObject(targetObjId);
     if (cacheKind_ == CacheKind::GetProp) {
       writer.callScriptedProxyGetResult(targetValId, objId, handlerObjId,
-                                        trapFn, id);
+                                        fnObjId, trapFn, id);
     } else {
       ValOperandId idId = getElemKeyValueId();
       ValOperandId stringIdId = writer.idToStringOrSymbol(idId);
       writer.callScriptedProxyGetByValueResult(targetValId, objId, handlerObjId,
-                                               stringIdId, trapFn);
+                                               stringIdId, fnObjId, trapFn);
     }
   }
   writer.returnFromIC();

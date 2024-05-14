@@ -88,11 +88,9 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
       uint32_t newShapeOffset, mozilla::Maybe<uint32_t> numNewSlotsOffset);
 
   template <typename IdType>
-  [[nodiscard]] bool emitCallScriptedProxyGetShared(ValOperandId targetId,
-                                                    ObjOperandId receiverId,
-                                                    ObjOperandId handlerId,
-                                                    uint32_t trapOffset,
-                                                    IdType id);
+  [[nodiscard]] bool emitCallScriptedProxyGetShared(
+      ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
+      ObjOperandId trapId, IdType id, uint32_t nargsAndFlags);
 
   void pushStubCodePointer();
 

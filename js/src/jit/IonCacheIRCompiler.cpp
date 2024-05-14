@@ -963,11 +963,9 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult(
 
 #ifdef JS_PUNBOX64
 template <typename IdType>
-bool IonCacheIRCompiler::emitCallScriptedProxyGetShared(ValOperandId targetId,
-                                                        ObjOperandId receiverId,
-                                                        ObjOperandId handlerId,
-                                                        uint32_t trapOffset,
-                                                        IdType id) {
+bool IonCacheIRCompiler::emitCallScriptedProxyGetShared(
+    ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
+    ObjOperandId trapId, IdType id, uint32_t nargsAndFlags) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
   AutoOutputRegister output(*this);
@@ -975,12 +973,13 @@ bool IonCacheIRCompiler::emitCallScriptedProxyGetShared(ValOperandId targetId,
   ValueOperand target = allocator.useValueRegister(masm, targetId);
   Register receiver = allocator.useRegister(masm, receiverId);
   Register handler = allocator.useRegister(masm, handlerId);
+  Register callee = allocator.useRegister(masm, trapId);
   ValueOperand idVal;
   if constexpr (std::is_same_v<IdType, ValOperandId>) {
     idVal = allocator.useValueRegister(masm, id);
   }
+  size_t nargs = nargsAndFlags >> JSFunction::ArgCountShift;
 
-  JSFunction* trap = &objectStubField(trapOffset)->as<JSFunction>();
   AutoScratchRegister scratch(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
   ValueOperand scratchVal(scratch);
@@ -1003,14 +1002,14 @@ bool IonCacheIRCompiler::emitCallScriptedProxyGetShared(ValOperandId targetId,
   // The JitFrameLayout pushed below will be aligned to JitStackAlignment,
   // so we just have to make sure the stack is aligned after we push the
   // |this| + argument Values.
-  uint32_t argSize = (std::max(trap->nargs(), (size_t)3) + 1) * sizeof(Value);
+  uint32_t argSize = (std::max(nargs, (size_t)3) + 1) * sizeof(Value);
   uint32_t padding =
       ComputeByteAlignment(masm.framePushed() + argSize, JitStackAlignment);
   MOZ_ASSERT(padding % sizeof(uintptr_t) == 0);
   MOZ_ASSERT(padding < JitStackAlignment);
   masm.reserveStack(padding);
 
-  for (size_t i = 3; i < trap->nargs(); i++) {
+  for (size_t i = 3; i < nargs; i++) {
     masm.Push(UndefinedValue());
   }
 
@@ -1030,9 +1029,7 @@ bool IonCacheIRCompiler::emitCallScriptedProxyGetShared(ValOperandId targetId,
   masm.tagValue(JSVAL_TYPE_OBJECT, handler, scratchVal);
   masm.Push(scratchVal);
 
-  masm.movePtr(ImmGCPtr(trap), scratch);
-
-  masm.Push(scratch);
+  masm.Push(callee);
   masm.PushFrameDescriptorForJitCall(FrameType::IonICCall, /* argc = */ 3);
 
   // Check stack alignment. Add 2 * sizeof(uintptr_t) for the return address and
@@ -1040,8 +1037,7 @@ bool IonCacheIRCompiler::emitCallScriptedProxyGetShared(ValOperandId targetId,
   MOZ_ASSERT(
       ((masm.framePushed() + 2 * sizeof(uintptr_t)) % JitStackAlignment) == 0);
 
-  MOZ_ASSERT(trap->hasJitEntry());
-  masm.loadJitCodeRaw(scratch, scratch);
+  masm.loadJitCodeRaw(callee, scratch);
   masm.callJit(scratch);
 
   masm.storeCallResultValue(output);
@@ -1085,18 +1081,18 @@ bool IonCacheIRCompiler::emitCallScriptedProxyGetShared(ValOperandId targetId,
 
 bool IonCacheIRCompiler::emitCallScriptedProxyGetResult(
     ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
-    uint32_t trapOffset, uint32_t id, uint32_t nargsAndFlags) {
+    ObjOperandId trapId, uint32_t id, uint32_t nargsAndFlags) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId,
-                                        trapOffset, id);
+  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId, trapId,
+                                        id, nargsAndFlags);
 }
 
 bool IonCacheIRCompiler::emitCallScriptedProxyGetByValueResult(
     ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
-    ValOperandId idId, uint32_t trapOffset, uint32_t nargsAndFlags) {
+    ValOperandId idId, ObjOperandId trapId, uint32_t nargsAndFlags) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId,
-                                        trapOffset, idId);
+  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId, trapId,
+                                        idId, nargsAndFlags);
 }
 #endif
 
