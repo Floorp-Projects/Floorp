@@ -21,7 +21,7 @@ import org.mozilla.fenix.ui.robots.homeScreen
 
 class SettingsAboutTest : TestSetup() {
     @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule()
+    val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
     @Rule
     @JvmField
@@ -61,10 +61,6 @@ class SettingsAboutTest : TestSetup() {
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/246961
     @Test
     fun verifyAboutFirefoxMenuItems() {
-        activityIntentTestRule.applySettingsExceptions {
-            it.isJumpBackInCFREnabled = false
-            it.isTCPCFREnabled = false
-        }
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
