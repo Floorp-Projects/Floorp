@@ -1171,7 +1171,7 @@
 - name: browser.contentanalysis.enabled
   type: bool
   value: false
-  mirror: never
+  mirror: always
 
 # What content analysis should return if there is a problem communicating
 # with the agent. (see DefaultResponse enum in ContentAnalysis.h)
@@ -1189,7 +1189,7 @@
 - name: browser.contentanalysis.is_per_user
   type: bool
   value: true
-  mirror: never
+  mirror: always
 
 # Path name of pipe used to connect to a configured DLP agent.
 - name: browser.contentanalysis.pipe_path_name
