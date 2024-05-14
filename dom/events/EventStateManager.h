@@ -14,6 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsRefPtrHashtable.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
@@ -32,6 +33,7 @@ class imgIContainer;
 class nsIDocumentViewer;
 class nsIScrollableFrame;
 class nsITimer;
+class nsIWidget;
 class nsPresContext;
 
 enum class FormControlType : uint8_t;
@@ -65,15 +67,13 @@ class OverOutElementsWrapper final : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(OverOutElementsWrapper)
 
+  already_AddRefed<nsIWidget> GetLastOverWidget() const;
+
   void ContentRemoved(nsIContent& aContent);
-  void WillDispatchOverAndEnterEvent(nsIContent* aOverEventTarget) {
-    StoreOverEventTargetAndDeepestEnterEventTarget(aOverEventTarget);
-    // Store the first "over" event target we fire and don't refire "over" event
-    // to that element while the first "over" event is still ongoing.
-    mDispatchingOverEventTarget = aOverEventTarget;
-  }
+  void WillDispatchOverAndEnterEvent(nsIContent* aOverEventTarget);
   void DidDispatchOverAndEnterEvent(
-      nsIContent* aOriginalOverTargetInComposedDoc);
+      nsIContent* aOriginalOverTargetInComposedDoc,
+      nsIWidget* aOverEventTargetWidget);
   [[nodiscard]] bool IsDispatchingOverEventOn(
       nsIContent* aOverEventTarget) const {
     MOZ_ASSERT(aOverEventTarget);
@@ -96,6 +96,10 @@ class OverOutElementsWrapper final : public nsISupports {
   }
   void OverrideOverEventTarget(nsIContent* aOverEventTarget) {
     StoreOverEventTargetAndDeepestEnterEventTarget(aOverEventTarget);
+    // We don't need the widget for aOverEventTarget because this method is used
+    // for adjusting the "over" event target for the following "out" event
+    // dispatch.
+    mLastOverWidget = nullptr;
   }
 
   [[nodiscard]] nsIContent* GetDeepestLeaveEventTarget() const {
@@ -113,9 +117,6 @@ class OverOutElementsWrapper final : public nsISupports {
                ? mDeepestEnterEventTarget.get()
                : nullptr;
   }
-
- public:
-  WeakFrame mLastOverFrame;
 
  private:
   /**
@@ -145,6 +146,11 @@ class OverOutElementsWrapper final : public nsISupports {
   // "out" event target or the deepest leave event target.  If it's removed from
   // the DOM tree, this is set to nullptr.
   nsCOMPtr<nsIContent> mDispatchingOutOrDeepestLeaveEventTarget;
+
+  // The widget on which we dispatched the last "over" event.  Note that
+  // nsIWidget is not cycle collectable.  Therefore, for avoiding unexpected
+  // memory leaks, we use nsWeakPtr to store the widget here.
+  nsWeakPtr mLastOverWidget;
 
   const BoundaryEventType mType;
 
@@ -476,12 +482,14 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                     nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse/pointer event into a mouse/pointer event targeted at the
-   * specified content.  This returns the primary frame for the content (or null
-   * if it goes away during the event).
+   * specified content.
+   *
+   * @return widget which is the nearest widget from the event target frame.
    */
-  MOZ_CAN_RUN_SCRIPT nsIFrame* DispatchMouseOrPointerEvent(
-      WidgetMouseEvent* aMouseEvent, EventMessage aMessage,
-      nsIContent* aTargetContent, nsIContent* aRelatedContent);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT already_AddRefed<nsIWidget>
+  DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
+                              EventMessage aMessage, nsIContent* aTargetContent,
+                              nsIContent* aRelatedContent);
   /**
    * Synthesize DOM pointerover and pointerout events
    */
