@@ -31,7 +31,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/video_coding/codecs/vp9/svc_config.cc"
+    "/third_party/libwebrtc/media/base/video_adapter.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -224,4 +224,4 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["_GNU_SOURCE"] = True
 
-Library("webrtc_vp9_helpers_gn")
+Library("video_adapter_gn")
