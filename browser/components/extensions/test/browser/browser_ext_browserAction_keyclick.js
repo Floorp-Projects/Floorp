@@ -7,18 +7,14 @@
 // element's `open` property to go back to being `false` if forced to true
 // synchronously in response to keydown.
 async function focusButtonAndPressKeyWithDelay(key, elem, modifiers) {
-  let focused = BrowserTestUtils.waitForEvent(elem, "focus", true);
   elem.setAttribute("tabindex", "-1");
   elem.focus();
-  elem.removeAttribute("tabindex");
-  await focused;
 
   EventUtils.synthesizeKey(key, { type: "keydown", modifiers });
   await new Promise(executeSoon);
   EventUtils.synthesizeKey(key, { type: "keyup", modifiers });
-  let blurred = BrowserTestUtils.waitForEvent(elem, "blur", true);
+  elem.removeAttribute("tabindex");
   elem.blur();
-  await blurred;
 }
 
 // This test verifies that pressing enter while a page action is focused
