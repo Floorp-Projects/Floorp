@@ -97,7 +97,43 @@ this.webRequest = class extends ExtensionAPI {
       return streamFilter;
     }
 
-    const webRequest = {};
+    const webRequest = {
+      onAuthRequired: new EventManager({
+        context,
+        name: "webRequest.onAuthRequired",
+        register: (fire, filter, extra) => {
+          const listener = details => {
+            // NOTE: asyncBlocking and blocking are mutually exclusive
+            // (and an error raised synchronously from schema based
+            // validation).
+            if (!extra.includes("asyncBlocking")) {
+              // NOTE: may return the result or a Promise.
+              return fire.raw(details);
+            }
+
+            // Wrap the call into a promise resolved with what the extension
+            // passed to the additional asyncCallback parameter.
+            let asyncCallback;
+            const promise = new Promise(resolve => {
+              asyncCallback = Cu.exportFunction(value => {
+                resolve(value);
+              }, context.cloneScope);
+            });
+            // Return value is ignored on asyncBlocking listeners
+            // (chrome compatible behavior).
+            fire.raw(details, asyncCallback);
+            return promise;
+          };
+          const parentEvent = context.childManager.getParentEvent(
+            "webRequest.onAuthRequired"
+          );
+          parentEvent.addListener(listener, filter, extra);
+          return () => {
+            parentEvent.removeListener(listener);
+          };
+        },
+      }).api(),
+    };
 
     // For extensions with manifest_version >= 3, an additional webRequestFilterResponse permission
     // is required to get access to the webRequest.filterResponseData API method.

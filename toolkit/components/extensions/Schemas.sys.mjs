@@ -253,6 +253,17 @@ const POSTPROCESSORS = {
 
     return canvas.toDataURL("image/png");
   },
+  mutuallyExclusiveBlockingOrAsyncBlocking(value, context) {
+    if (!Array.isArray(value)) {
+      return value;
+    }
+    if (value.includes("blocking") && value.includes("asyncBlocking")) {
+      throw new context.cloneScope.Error(
+        "'blocking' and 'asyncBlocking' are mutually exclusive"
+      );
+    }
+    return value;
+  },
   webRequestBlockingPermissionRequired(string, context) {
     if (string === "blocking" && !context.hasPermission("webRequestBlocking")) {
       throw new context.cloneScope.Error(

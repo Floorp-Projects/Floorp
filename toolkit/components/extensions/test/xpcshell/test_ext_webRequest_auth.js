@@ -1,5 +1,14 @@
 "use strict";
 
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "42",
+  "42"
+);
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+
 const HOSTS = new Set(["example.com"]);
 
 const server = createHttpServer({ hosts: HOSTS });
@@ -63,7 +72,7 @@ server.registerPathHandler("/authenticate.sjs", (request, response) => {
   }
 });
 
-function getExtension(bgConfig, permissions = ["webRequestBlocking"]) {
+function getExtension(bgConfig, { permissions = ["webRequestBlocking"] } = {}) {
   function background(config) {
     let path = config.path;
     browser.webRequest.onBeforeRequest.addListener(
@@ -83,7 +92,7 @@ function getExtension(bgConfig, permissions = ["webRequestBlocking"]) {
         : []
     );
     browser.webRequest.onAuthRequired.addListener(
-      details => {
+      (details, asyncBlockingCb) => {
         browser.test.log(
           `onAuthRequired called with ${details.requestId} ${details.url}`
         );
@@ -91,6 +100,34 @@ function getExtension(bgConfig, permissions = ["webRequestBlocking"]) {
           config.realm,
           details.realm,
           "providing www authorization"
+        );
+
+        if (config.asyncBlocking) {
+          browser.test.assertEq(
+            "function",
+            typeof asyncBlockingCb,
+            "expect onAuthRequired to receive a callback parameter with asyncBlocking extra"
+          );
+          // Delay the asyncBlockingCb call.
+          // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+          setTimeout(() => {
+            browser.test.sendMessage("onAuthRequired");
+            asyncBlockingCb(
+              config.onAuthRequired.hasOwnProperty("result")
+                ? config.onAuthRequired.result
+                : null
+            );
+          }, 100);
+          // NOTE: Return values from an asyncBlocking listeners are expected to be ignored.
+          // If this return value isn't ignored then the test case is expected to get stuck
+          // and fail with a timeout, and test logs to show that the request was cancelled.
+          return { cancel: true };
+        }
+
+        browser.test.assertEq(
+          undefined,
+          asyncBlockingCb,
+          "expect no onAuthRequired callback parameter without asyncBlocking extra"
         );
         browser.test.sendMessage("onAuthRequired");
         return (
@@ -131,15 +168,19 @@ function getExtension(bgConfig, permissions = ["webRequestBlocking"]) {
   });
 }
 
-async function test_webRequest_auth(permissions) {
+async function test_webRequest_auth(
+  permissions,
+  { asyncBlocking = false } = {}
+) {
   let config = {
+    asyncBlocking,
     path: `${BASE_URL}/*`,
     realm: `webRequest_auth${Math.random()}`,
     onBeforeRequest: {
       extra: permissions.includes("webRequestBlocking") ? ["blocking"] : [],
     },
     onAuthRequired: {
-      extra: ["blocking"],
+      extra: asyncBlocking ? ["asyncBlocking"] : ["blocking"],
       result: {
         authCredentials: {
           username: "testuser",
@@ -149,7 +190,7 @@ async function test_webRequest_auth(permissions) {
     },
   };
 
-  let extension = getExtension(config, permissions);
+  let extension = getExtension(config, { permissions });
   await extension.startup();
 
   let requestUrl = `${BASE_URL}/authenticate.sjs?realm=${config.realm}`;
@@ -182,6 +223,51 @@ add_task(async function test_webRequest_auth_with_webRequestBlocking() {
 
 add_task(async function test_webRequest_auth_with_webRequestAuthProvider() {
   await test_webRequest_auth(["webRequestAuthProvider"]);
+});
+
+add_task(async function test_webRequest_auth_with_asyncBlocking() {
+  info("Test asyncBlocking with webRequestBlocking permission");
+  await test_webRequest_auth(["webRequestBlocking"], { asyncBlocking: true });
+  info("Test asyncBlocking with webRequestAuthProvider permission");
+  await test_webRequest_auth(["webRequestAuthProvider"], {
+    asyncBlocking: true,
+  });
+});
+
+add_task(async function test_mutually_exclusive_asyncBlocking_and_blocking() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestAuthProvider",
+        "https://example.org/*",
+      ],
+    },
+    background() {
+      try {
+        browser.webRequest.onAuthRequired.addListener(
+          () => {},
+          { urls: ["https://example.org/*"] },
+          ["blocking", "asyncBlocking"]
+        );
+        browser.test.fail(
+          "onAuthRequired.addListener should have raised an exception"
+        );
+        browser.test.notifyFail("add-listener-error");
+      } catch (err) {
+        browser.test.assertEq(
+          "'blocking' and 'asyncBlocking' are mutually exclusive",
+          err.message,
+          "Got the expected error when blocking and asyncBlocking are requested for the same listener"
+        );
+        browser.test.notifyPass("add-listener-error");
+      }
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("add-listener-error");
+  await extension.unload();
 });
 
 add_task(async function test_webRequest_auth_cancelled() {
@@ -430,4 +516,64 @@ add_task(async function test_webRequest_auth_proxy() {
   await handlingExt.awaitMessage("done");
   await contentPage.close();
   await handlingExt.unload();
+});
+
+add_task(async function test_asyncBlocking_onAuthRequired_startup_primed() {
+  function background() {
+    browser.webRequest.onAuthRequired.addListener(
+      (detais, asyncBlockingCb) => {
+        asyncBlockingCb({ cancel: true });
+        browser.test.sendMessage("onAuthRequired");
+      },
+      { urls: ["http://example.com/*"] },
+      ["asyncBlocking"]
+    );
+    browser.test.sendMessage("listener-added");
+  }
+
+  await AddonTestUtils.promiseStartupManager();
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      background: { persistent: true },
+      permissions: [
+        "webRequest",
+        "webRequestAuthProvider",
+        "http://example.com/*",
+      ],
+    },
+    background,
+  });
+
+  async function testTriggerPrimedListener() {
+    let requestUrl = `${BASE_URL}/authenticate.sjs?realm=webRequest${Math.random()}`;
+    let contentPagePromise = ExtensionTestUtils.loadContentPage(requestUrl);
+    info("Wait for the background script to be respawned");
+    await extension.awaitMessage("listener-added");
+    info("Wait for the onAuthRequired listener to have been called");
+    await extension.awaitMessage("onAuthRequired");
+    const contentPage = await contentPagePromise;
+    await contentPage.close();
+  }
+
+  await extension.startup();
+  await extension.awaitMessage("listener-added");
+
+  assertPersistentListeners(extension, "webRequest", "onAuthRequired", {
+    primed: false,
+  });
+
+  await AddonTestUtils.promiseRestartManager({ earlyStartup: false });
+  await extension.awaitStartup();
+
+  assertPersistentListeners(extension, "webRequest", "onAuthRequired", {
+    primed: true,
+  });
+  AddonTestUtils.notifyEarlyStartup();
+
+  await testTriggerPrimedListener();
+
+  Services.obs.notifyObservers(null, "net:clear-active-logins");
+  await extension.unload();
 });
