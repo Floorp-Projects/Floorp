@@ -128,16 +128,7 @@ class ProfileAutoCompleteResult {
 
   getLabelAt(index) {
     const label = this.getAt(index);
-    if (typeof label == "string") {
-      return label;
-    }
-
-    let type = this.getTypeOfIndex(index);
-    if (type == "clear" || type == "manage") {
-      return label.primary;
-    }
-
-    return JSON.stringify(label);
+    return typeof label == "string" ? label : label.primary;
   }
 
   /**
@@ -147,6 +138,11 @@ class ProfileAutoCompleteResult {
    * @returns {string} The comment at the specified index
    */
   getCommentAt(index) {
+    const item = this.getAt(index);
+    if (item.style == "status") {
+      return JSON.stringify(item);
+    }
+
     let type = this.getTypeOfIndex(index);
     switch (type) {
       case "clear":
@@ -157,8 +153,12 @@ class ProfileAutoCompleteResult {
         return '{"noLearnMore": true }';
     }
 
-    const item = this.getAt(index);
-    return item.comment ?? JSON.stringify(this._matchingProfiles[index]);
+    if (item.comment) {
+      return item.comment;
+    }
+
+    item.profile = this._matchingProfiles[index];
+    return JSON.stringify(item);
   }
 
   /**

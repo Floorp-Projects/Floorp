@@ -49,7 +49,7 @@ add_setup(async () => {
 
 add_task(async function test_initial_focus() {
   let results = await notifyMenuChanged(3, "name");
-  checkAutoCompleteResults(results, ["name", "name1"], hostname, "Two login results");
+  checkAutoCompleteResults(results.labels, ["name", "name1"], hostname, "Two login results");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();

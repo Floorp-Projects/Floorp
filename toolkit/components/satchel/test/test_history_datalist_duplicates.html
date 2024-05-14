@@ -47,7 +47,7 @@ add_task(async function test_non_duplicate_entries_are_shown_once() {
 
 async function triggerAutofillAndCheckEntriesValue(inputValue, expectedValues) {
   await openPopupOn("#form1 > input", { inputValue });
-  isDeeply(getMenuEntries(), expectedValues, "Matching deduplicated autocomplete list entries with expected values.");
+  isDeeply(getMenuEntries().labels, expectedValues, "Matching deduplicated autocomplete list entries with expected values.");
 }
 
 </script>

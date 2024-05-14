@@ -398,7 +398,7 @@
 
     _adjustAcItem() {
       let originalUrl = this.getAttribute("ac-value");
-      let title = this.getAttribute("ac-comment");
+      let title = this.getAttribute("ac-label");
       this.setAttribute("url", originalUrl);
       this.setAttribute("image", this.getAttribute("ac-image"));
       this.setAttribute("title", title);
@@ -522,8 +522,8 @@
           return;
         }
 
-        let label = this.getAttribute("ac-label");
-        if (label && JSON.parse(label)?.noLearnMore) {
+        let comment = this.getAttribute("ac-comment");
+        if (comment && JSON.parse(comment)?.noLearnMore) {
           return;
         }
 
@@ -659,9 +659,7 @@
     static get inheritedAttributes() {
       return {
         // getLabelAt:
-        ".line1-label": "text=ac-value",
-        // getCommentAt:
-        ".line2-label": "text=ac-label",
+        ".line1-label": "text=ac-label",
         ".ac-site-icon": "src=ac-image",
       };
     }
@@ -681,7 +679,13 @@
     `;
     }
 
-    _adjustAcItem() {}
+    _adjustAcItem() {
+      let comment = JSON.parse(this.getAttribute("ac-comment"));
+      this.querySelector(".line2-label").textContent = comment?.secondary || "";
+
+      this.querySelector(".ac-site-icon").collapsed =
+        this.getAttribute("ac-image") == "";
+    }
 
     _onOverflow() {}
 
@@ -697,46 +701,27 @@
     }
 
     onSecondaryAction() {
-      const details = JSON.parse(this.getAttribute("ac-label"));
+      const comment = JSON.parse(this.getAttribute("ac-comment"));
       LoginHelper.openPasswordManager(window, {
-        loginGuid: details?.guid,
+        loginGuid: comment?.guid,
       });
     }
 
     static get inheritedAttributes() {
       return {
         // getLabelAt:
-        ".line1-label": "text=ac-value",
-        // Don't inherit ac-label with getCommentAt since the label is JSON.
+        ".line1-label": "text=ac-label",
         ".ac-site-icon": "src=ac-image",
       };
-    }
-
-    _adjustAcItem() {
-      super._adjustAcItem();
-
-      let details = JSON.parse(this.getAttribute("ac-label"));
-      this.querySelector(".line2-label").textContent = details.comment;
     }
   }
 
   // This type has an action that is triggered when activated. The comment
-  // for that result should contain a fillMessageName -- the message to send --
-  // and, optionally a secondary label, for example:
-  //   { "fillMessageName": "Fill:Clear", secondary: "Second Label" }
+  // for that result should contain a fillMessageName which is the message to send.
   class MozAutocompleteActionRichlistitem extends MozAutocompleteTwoLineRichlistitem {
     constructor() {
       super();
       this.selectedByMouseOver = true;
-    }
-
-    _adjustAcItem() {
-      super._adjustAcItem();
-
-      let comment = JSON.parse(this.getAttribute("ac-label"));
-      this.querySelector(".line2-label").textContent = comment?.secondary || "";
-      this.querySelector(".ac-site-icon").collapsed =
-        this.getAttribute("ac-image") == "";
     }
   }
 
@@ -776,12 +761,12 @@
           : item;
 
       let comment = JSON.parse(target.getAttribute("ac-comment"));
+
       let statusBox = this.querySelector(".ac-status");
       statusBox.textContent = comment?.status || "";
     }
 
     _adjustAcItem() {
-      super._adjustAcItem();
       this.#setStatus(this);
       this.setAttribute("disabled", "true");
     }
@@ -794,15 +779,15 @@
     }
 
     _adjustAcItem() {
-      let { primary, secondary, ariaLabel } = JSON.parse(
-        this.getAttribute("ac-value")
+      let label = this.getAttribute("ac-label");
+      this.querySelector(".line1-label").textContent = label;
+
+      let { secondary, ariaLabel } = JSON.parse(
+        this.getAttribute("ac-comment")
       );
 
-      let line1Label = this.querySelector(".line1-label");
-      line1Label.textContent = primary.toString();
-
       let line2Label = this.querySelector(".line2-label");
-      line2Label.textContent = secondary.toString();
+      line2Label.textContent = secondary ?? "";
 
       if (ariaLabel) {
         this.setAttribute("aria-label", ariaLabel);
@@ -872,7 +857,7 @@
 
     _adjustAcItem() {
       let { generatedPassword, willAutoSaveGeneratedPassword } = JSON.parse(
-        this.getAttribute("ac-label")
+        this.getAttribute("ac-comment")
       );
       let line2Label = this.querySelector(".line2-label");
       line2Label.textContent = "";
@@ -899,8 +884,7 @@
     static get inheritedAttributes() {
       return {
         // getLabelAt:
-        ".line1-label": "text=ac-value",
-        // Don't inherit ac-label with getCommentAt since the label is JSON.
+        ".line1-label": "text=ac-label",
       };
     }
 
@@ -924,7 +908,7 @@
         this.querySelector(".labels-wrapper"),
         `autocomplete-import-logins-${this.getAttribute("ac-value")}`,
         {
-          host: JSON.parse(this.getAttribute("ac-label")).hostname.replace(
+          host: JSON.parse(this.getAttribute("ac-comment")).hostname.replace(
             /^www\./,
             ""
           ),

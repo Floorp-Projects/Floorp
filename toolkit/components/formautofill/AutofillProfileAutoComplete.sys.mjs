@@ -101,7 +101,7 @@ export const ProfileAutocomplete = {
       ? lastProfileAutoCompleteResult.getCommentAt(selectedIndex)
       : null;
 
-    let profile = JSON.parse(comment);
+    let parsedComment = JSON.parse(comment);
     if (
       selectedIndex == -1 ||
       lastProfileAutoCompleteResult?.getStyleAt(selectedIndex) != "autofill"
@@ -110,7 +110,7 @@ export const ProfileAutocomplete = {
         focusedInput &&
         focusedInput == autocompleteController?.input.focusedInput
       ) {
-        if (profile?.fillMessageName == "FormAutofill:ClearForm") {
+        if (parsedComment?.fillMessageName == "FormAutofill:ClearForm") {
           // The child can do this directly.
           getActorFromWindow(focusedInput.ownerGlobal)?.clearForm();
         } else {

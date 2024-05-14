@@ -707,14 +707,14 @@ This tests the login manager in a secure setting using https. A similar test fil
     const promise1 = notifyMenuChanged(1);
     sendString("z");
     const results1 = await promise1;
-    checkAutoCompleteResults(results1, [], window.location.host,
+    checkAutoCompleteResults(results1.labels, [], window.location.host,
                              "Check popup does not have any login items");
 
     // check that empty results are cached - bug 496466
     const promise2 = notifyMenuChanged(1);
     sendString("z");
     const results2 = await promise2;
-    checkAutoCompleteResults(results2, [], window.location.host,
+    checkAutoCompleteResults(results2.labels, [], window.location.host,
                              "Check popup only has the footer when it opens");
   });
 

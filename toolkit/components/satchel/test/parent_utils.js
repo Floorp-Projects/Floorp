@@ -15,13 +15,18 @@ var gAutocompletePopup =
 assert.ok(gAutocompletePopup, "Got autocomplete popup");
 
 var ParentUtils = {
+  // Returns a object with two fields:
+  //  labels - an array of the labels of the current dropdown
+  //  comments - an array of the comments of the current dropdown
   getMenuEntries() {
-    let entries = [];
+    let labels = [],
+      comments = [];
     let numRows = gAutocompletePopup.view.matchCount;
     for (let i = 0; i < numRows; i++) {
-      entries.push(gAutocompletePopup.view.getValueAt(i));
+      labels.push(gAutocompletePopup.view.getLabelAt(i));
+      comments.push(gAutocompletePopup.view.getCommentAt(i));
     }
-    return entries;
+    return { labels, comments };
   },
 
   cleanUpFormHistory() {
@@ -41,8 +46,8 @@ var ParentUtils = {
   },
 
   popupshownListener() {
-    let results = this.getMenuEntries();
-    sendAsyncMessage("onpopupshown", { results });
+    let entries = this.getMenuEntries();
+    sendAsyncMessage("onpopupshown", entries);
   },
 
   countEntries(name, value) {
@@ -80,6 +85,7 @@ var ParentUtils = {
         return false;
       }
     }, `Waiting for row count change to ${expectedCount}, first value: ${expectedFirstValue}.`);
+
     return this.getMenuEntries();
   },
 

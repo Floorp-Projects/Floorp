@@ -89,7 +89,7 @@ add_task(async function all_saved_fields_less_than_threshold() {
   await setInput("#cc-name", "");
   await expectPopup();
   synthesizeKey("KEY_ArrowDown");
-  checkMenuEntries([reducedMockRecord].map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
+  checkMenuEntriesComment([reducedMockRecord].map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
     primary: cc["cc-name"],
     secondary: replaceStars(cc.ccNumberFmt),
     ariaLabel: `Visa ${cc["cc-name"]} ${cc.ccNumberFmt}`,
@@ -106,7 +106,7 @@ add_task(async function check_menu_when_both_existed() {
   await setInput("#cc-number", "");
   await expectPopup();
   synthesizeKey("KEY_ArrowDown");
-  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
+  checkMenuEntriesComment(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
     primary: replaceStars(cc.ccNumberFmt),
     secondary: cc["cc-name"].toString(),
     ariaLabel: `${getCCTypeName(cc)} ${cc.ccNumberFmt.replaceAll("*", "")} ${cc["cc-name"]}`,
@@ -116,7 +116,7 @@ add_task(async function check_menu_when_both_existed() {
   await setInput("#cc-name", "");
   await expectPopup();
   synthesizeKey("KEY_ArrowDown");
-  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
+  checkMenuEntriesComment(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
     primary: cc["cc-name"].toString(),
     secondary: replaceStars(cc.ccNumberFmt),
     ariaLabel: `${getCCTypeName(cc)} ${cc["cc-name"]} ${cc.ccNumberFmt}`,
@@ -126,7 +126,7 @@ add_task(async function check_menu_when_both_existed() {
   await setInput("#cc-exp-year", "");
   await expectPopup();
   synthesizeKey("KEY_ArrowDown");
-  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
+  checkMenuEntriesComment(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
     primary: cc["cc-exp-year"].toString(),
     secondary: replaceStars(cc.ccNumberFmt),
     ariaLabel: `${getCCTypeName(cc)} ${cc["cc-exp-year"]} ${cc.ccNumberFmt}`,
@@ -136,7 +136,7 @@ add_task(async function check_menu_when_both_existed() {
   await setInput("#cc-exp-month", "");
   await expectPopup();
   synthesizeKey("KEY_ArrowDown");
-  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
+  checkMenuEntriesComment(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
     primary: cc["cc-exp-month"].toString(),
     secondary: replaceStars(cc.ccNumberFmt),
     ariaLabel: `${getCCTypeName(cc)} ${cc["cc-exp-month"]} ${cc.ccNumberFmt}`,
@@ -189,7 +189,7 @@ add_task(async function check_fields_after_form_autofill() {
   synthesizeKey("KEY_ArrowDown");
   // The popup doesn't auto-show on focus because the field isn't empty
   await expectPopup();
-  checkMenuEntries(MOCK_STORAGE.slice(1).map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
+  checkMenuEntriesComment(MOCK_STORAGE.slice(1).map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
     primary: cc["cc-exp-year"].toString(),
     secondary: replaceStars(cc.ccNumberFmt),
     ariaLabel: `${getCCTypeName(cc)} ${cc["cc-exp-year"]} ${cc.ccNumberFmt}`,
@@ -228,7 +228,7 @@ add_task(async function check_cc_popup_on_field_blank() {
 
   await setInput("#cc-name", "", true);
   await expectPopup();
-  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
+  checkMenuEntriesComment(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
     primary: cc["cc-name"],
     secondary: replaceStars(cc.ccNumberFmt),
     ariaLabel: `${getCCTypeName(cc)} ${cc["cc-name"]} ${cc.ccNumberFmt}`,
@@ -248,7 +248,7 @@ add_task(async function check_form_autofill_resume() {
   await setInput("#cc-name", "");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
-  checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
+  checkMenuEntriesComment(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
     primary: cc["cc-name"],
     secondary: replaceStars(cc.ccNumberFmt),
     ariaLabel: `${getCCTypeName(cc)} ${cc["cc-name"]} ${cc.ccNumberFmt}`,

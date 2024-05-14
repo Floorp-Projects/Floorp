@@ -128,7 +128,8 @@ add_task(async function simple_clear() {
   // Ensure the correctness of the autocomplete popup after the form is cleared
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
-  is(4, getMenuEntries().length, `Checking length of expected menu`);
+
+  is(4, getMenuEntries().labels.length, `Checking length of expected menu`);
 });
 
 add_task(async function clear_adapted_record() {
