@@ -779,13 +779,14 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
   return NS_OK;
 }
 
-static nsPresContext* CreatePresContext(Document* aDocument,
-                                        nsPresContext::nsPresContextType aType,
-                                        nsView* aContainerView) {
-  if (aContainerView) {
-    return new nsPresContext(aDocument, aType);
-  }
-  return new nsRootPresContext(aDocument, aType);
+static already_AddRefed<nsPresContext> CreatePresContext(
+    Document* aDocument, nsPresContext::nsPresContextType aType,
+    nsView* aContainerView) {
+  RefPtr<nsPresContext> result = aContainerView
+                                     ? new nsPresContext(aDocument, aType)
+                                     : new nsRootPresContext(aDocument, aType);
+
+  return result.forget();
 }
 
 //-----------------------------------------------
