@@ -547,10 +547,6 @@ nsDragService::nsDragService()
 
   // set up our logging module
   mCanDrop = false;
-  mTargetDragDataReceived = false;
-  mTargetDragUris = nullptr;
-  mTargetDragData = 0;
-  mTargetDragDataLen = 0;
   mTempFileTimerID = 0;
   mEventLoopDepth = 0;
 
@@ -615,7 +611,6 @@ nsDragService::Observe(nsISupports* aSubject, const char* aTopic,
       gtk_widget_destroy(mHiddenWidget);
       mHiddenWidget = 0;
     }
-    TargetResetData();
   } else {
     MOZ_ASSERT_UNREACHABLE("unexpected topic");
     return NS_ERROR_UNEXPECTED;
@@ -1050,37 +1045,6 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
   return NS_OK;
 }
 
-void nsDragService::GetDragFlavors(nsTArray<nsCString>& aFlavors) {
-  for (GList* tmp = gdk_drag_context_list_targets(mTargetDragContext); tmp;
-       tmp = tmp->next) {
-    GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-    GUniquePtr<gchar> name(gdk_atom_name(atom));
-    if (!name) {
-      continue;
-    }
-    aFlavors.AppendElement(nsCString(name.get()));
-  }
-}
-
-nsresult GetReachableFileFromUriList(char** aFileUriList, uint32_t aItemIndex,
-                                     nsCOMPtr<nsIFile>& aFile) {
-  if (!aFileUriList || !(g_strv_length(aFileUriList) > aItemIndex) ||
-      !aFileUriList[aItemIndex]) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  if (GetFileFromUri(nsDependentCString(aFileUriList[aItemIndex]), aFile)) {
-    bool fileExists = false;
-    aFile->Exists(&fileExists);
-    if (fileExists) {
-      LOGDRAG("  good, file %s exists\n", aFileUriList[aItemIndex]);
-      return NS_OK;
-    }
-  }
-  LOGDRAG("  uri %s not reachable/not found\n", aFileUriList[aItemIndex]);
-  aFile = nullptr;
-  return NS_ERROR_FILE_NOT_FOUND;
-}
-
 // Spins event loop, called from JS.
 // Can lead to another round of drag_motion events.
 NS_IMETHODIMP
@@ -1382,15 +1346,6 @@ void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext,
   gdk_drag_status(aDragContext, action, aTime);
 }
 
-void nsDragService::EnsureCachedDataValidForContext(
-    GdkDragContext* aDragContext) {
-  if (mCachedDragContext != (uintptr_t)aDragContext) {
-    mCachedUris.Clear();
-    mCachedData.Clear();
-    mCachedDragContext = (uintptr_t)aDragContext;
-  }
-}
-
 void nsDragService::SetCachedDragContext(GdkDragContext* aDragContext) {
   LOGDRAGSERVICE("nsDragService::SetCachedDragContext(): [drag %p / cached %p]",
                  aDragContext, (void*)mCachedDragContext);
@@ -1596,95 +1551,6 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
 
   cacheClear.release();
   mCachedDragData.InsertOrUpdate(target, dragData);
-}
-
-// Spins event loop, called from eDragTaskMotion handler by
-// DispatchMotionEvents().
-// Can lead to another round of drag_motion events.
-void nsDragService::GetTargetDragData(GdkAtom aFlavor,
-                                      nsTArray<nsCString>& aDropFlavors,
-                                      bool aResetTargetData) {
-  LOGDRAGSERVICE("nsDragService::GetTargetDragData(%p) '%s'\n",
-                 mTargetDragContext.get(),
-                 GUniquePtr<gchar>(gdk_atom_name(aFlavor)).get());
-
-  // reset our target data areas
-  if (aResetTargetData) {
-    TargetResetData();
-  }
-
-  GUniquePtr<gchar> name(gdk_atom_name(aFlavor));
-  nsDependentCString flavor(name.get());
-
-  // Return early when requested MIME is not offered by D&D.
-  if (!aDropFlavors.Contains(flavor)) {
-    LOGDRAGSERVICE("  %s is missing", flavor.get());
-    return;
-  }
-
-  if (mTargetDragContext) {
-    // We keep a copy of the requested data with the same life-time
-    // as mTargetDragContext.
-    // Especially with multiple items the same data is requested
-    // very often.
-    EnsureCachedDataValidForContext(mTargetDragContext);
-    if (auto cached = mCachedUris.Lookup(flavor)) {
-      LOGDRAGSERVICE("  using cached uri list for %s", flavor.get());
-
-      mTargetDragUris = GUniquePtr<gchar*>(g_strdupv(cached->get()));
-      mTargetDragDataReceived = true;
-      LOGDRAGSERVICE("  %s found in cache", flavor.get());
-      return;
-    }
-    if (auto cached = mCachedData.Lookup(flavor)) {
-      mTargetDragDataLen = cached->Length();
-      LOGDRAGSERVICE("  using cached data for %s, length is %d", flavor.get(),
-                     mTargetDragDataLen);
-
-      if (mTargetDragDataLen) {
-        mTargetDragData = g_malloc(mTargetDragDataLen);
-        memcpy(mTargetDragData, cached->Elements(), mTargetDragDataLen);
-      }
-
-      mTargetDragDataReceived = true;
-      LOGDRAGSERVICE("  %s found in cache", flavor.get());
-      return;
-    }
-
-    gtk_drag_get_data(mTargetWidget, mTargetDragContext, aFlavor, mTargetTime);
-
-    LOGDRAGSERVICE("  about to start inner iteration.");
-    gtk_main_iteration();
-
-    PRTime entryTime = PR_Now();
-    while (!mTargetDragDataReceived && mDoingDrag) {
-      // check the number of iterations
-      LOGDRAGSERVICE("  doing iteration...\n");
-      PR_Sleep(PR_MillisecondsToInterval(10)); /* sleep for 10 ms/iteration */
-      if (PR_Now() - entryTime > NS_DND_TIMEOUT) {
-        LOGDRAGSERVICE("  failed to get D&D data in time!\n");
-        break;
-      }
-      gtk_main_iteration();
-    }
-  }
-
-#ifdef MOZ_LOGGING
-  if (mTargetDragUris || (mTargetDragDataLen && mTargetDragData)) {
-    LOGDRAGSERVICE("  %s got from system", flavor.get());
-  } else {
-    LOGDRAGSERVICE("  %s failed to get from system", flavor.get());
-  }
-#endif
-}
-
-void nsDragService::TargetResetData(void) {
-  mTargetDragDataReceived = false;
-  // make sure to free old data if we have to
-  mTargetDragUris = nullptr;
-  g_free(mTargetDragData);
-  mTargetDragData = 0;
-  mTargetDragDataLen = 0;
 }
 
 static void TargetArrayAddTarget(nsTArray<GtkTargetEntry*>& aTargetArray,

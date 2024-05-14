@@ -224,13 +224,11 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   mozilla::LayoutDeviceIntPoint mPendingWindowPoint;
   RefPtr<GdkDragContext> mPendingDragContext;
 
-  // We cache all data for the current drag context,
-  // because waiting for the data in GetTargetDragData can be very slow.
-  nsTHashMap<nsCStringHashKey, nsTArray<uint8_t>> mCachedData;
-  // mCachedData are tied to mCachedDragContext. mCachedDragContext is not
-  // ref counted and may be already deleted on Gtk side.
-  // We used it for mCachedData invalidation only and can't be used for
-  // any D&D operation.
+  // mCachedDragData/mCachedDragFlavors are tied to mCachedDragContext.
+  // mCachedDragContext is not ref counted and may be already deleted
+  // on Gtk side.
+  // We used it for mCachedDragData/mCachedDragFlavors invalidation
+  // only and can't be used for any D&D operation.
   uintptr_t mCachedDragContext;
   nsTHashMap<void*, RefPtr<DragData>> mCachedDragData;
   nsTArray<GdkAtom> mCachedDragFlavors;
@@ -266,25 +264,12 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   bool mCanDrop;
   int mWaitingForDragDataRequests = 0;
 
-  // have we received our drag data?
-  bool mTargetDragDataReceived;
-  // last data received and its length
-  void* mTargetDragData;
-  uint32_t mTargetDragDataLen;
-  mozilla::GUniquePtr<gchar*> mTargetDragUris;
   // is the current target drag context contain a list?
   bool IsTargetContextList(void);
   bool IsDragFlavorAvailable(GdkAtom aRequestedFlavor);
   // this will get the native data from the last target given a
   // specific flavor
   RefPtr<DragData> GetDragData(GdkAtom aRequestedFlavor);
-  void GetTargetDragData(GdkAtom aFlavor, nsTArray<nsCString>& aDropFlavors,
-                         bool aResetTargetData = true);
-  // this will reset all of the target vars
-  void TargetResetData(void);
-  // Ensure our data cache belongs to aDragContext and clear the cache if
-  // aDragContext is different than mCachedDragContext.
-  void EnsureCachedDataValidForContext(GdkDragContext* aDragContext);
 
   // source side vars
 
@@ -318,7 +303,6 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 #ifdef MOZ_LOGGING
   const char* GetDragServiceTaskName(nsDragService::DragTask aTask);
 #endif
-  void GetDragFlavors(nsTArray<nsCString>& aFlavors);
   gboolean DispatchDropEvent();
   static uint32_t GetCurrentModifiers();
 
