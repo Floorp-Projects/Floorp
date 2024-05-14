@@ -128,7 +128,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   bool emitCallScriptedProxyGetShared(ValOperandId targetId,
                                       ObjOperandId receiverId,
                                       ObjOperandId handlerId,
-                                      uint32_t trapOffset, IdType id,
+                                      ObjOperandId trapId, IdType id,
                                       uint32_t nargsAndFlags);
 
   BaselineICPerfSpewer perfSpewer_;

@@ -2053,7 +2053,7 @@
     target: ValId
     receiver: ObjId
     handler: ObjId
-    trap: ObjectField
+    trap: ObjId
     property: IdField
     nargsAndFlags: UInt32Imm
 
@@ -2067,7 +2067,7 @@
     receiver: ObjId
     handler: ObjId
     property: ValId
-    trap: ObjectField
+    trap: ObjId
     nargsAndFlags: UInt32Imm
 #endif
 
