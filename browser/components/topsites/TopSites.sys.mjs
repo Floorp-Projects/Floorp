@@ -126,199 +126,9 @@ const SPONSORED_TILE_PARTNERS = new Set([
   SPONSORED_TILE_PARTNER_MOZ_SALES,
 ]);
 
-const DISPLAY_FAIL_REASON_OVERSOLD = "oversold";
-const DISPLAY_FAIL_REASON_DISMISSED = "dismissed";
-const DISPLAY_FAIL_REASON_UNRESOLVED = "unresolved";
-
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
   return url;
-}
-
-class TopSitesTelemetry {
-  constructor() {
-    this.allSponsoredTiles = {};
-    this.sponsoredTilesConfigured = 0;
-  }
-
-  _tileProviderForTiles(tiles) {
-    // Assumption: the list of tiles is from a single provider
-    return tiles && tiles.length ? this._tileProvider(tiles[0]) : null;
-  }
-
-  _tileProvider(tile) {
-    return tile.partner || SPONSORED_TILE_PARTNER_AMP;
-  }
-
-  _buildPropertyKey(tile) {
-    let provider = this._tileProvider(tile);
-    return provider + shortURL(tile);
-  }
-
-  // Returns an array of strings indicating the property name (based on the
-  // provider and brand) of tiles that have been filtered e.g. ["moz-salesbrand1"]
-  // currentTiles: The list of tiles remaining and may be displayed in new tab.
-  // this.allSponsoredTiles: The original list of tiles set via setTiles prior to any filtering
-  // The returned list indicated the difference between these two lists (excluding any previously filtered tiles).
-  _getFilteredTiles(currentTiles) {
-    let notPreviouslyFilteredTiles = Object.assign(
-      {},
-      ...Object.entries(this.allSponsoredTiles)
-        .filter(
-          ([, v]) =>
-            v.display_fail_reason === null ||
-            v.display_fail_reason === undefined
-        )
-        .map(([k, v]) => ({ [k]: v }))
-    );
-
-    // Get the property names of the newly filtered list.
-    let remainingTiles = currentTiles.map(el => {
-      return this._buildPropertyKey(el);
-    });
-
-    // Get the property names of the tiles that were filtered.
-    let tilesToUpdate = Object.keys(notPreviouslyFilteredTiles).filter(
-      element => !remainingTiles.includes(element)
-    );
-    return tilesToUpdate;
-  }
-
-  setSponsoredTilesConfigured() {
-    const maxSponsored =
-      lazy.NimbusFeatures.pocketNewtab.getVariable(
-        NIMBUS_VARIABLE_MAX_SPONSORED
-      ) ?? MAX_NUM_SPONSORED;
-
-    this.sponsoredTilesConfigured = maxSponsored;
-    Glean.topsites.sponsoredTilesConfigured.set(maxSponsored);
-  }
-
-  clearTilesForProvider(provider) {
-    Object.entries(this.allSponsoredTiles)
-      .filter(([k]) => k.startsWith(provider))
-      .map(([k]) => delete this.allSponsoredTiles[k]);
-  }
-
-  _getAdvertiser(tile) {
-    let label = tile.label || null;
-    let title = tile.title || null;
-
-    return label ?? title ?? shortURL(tile);
-  }
-
-  setTiles(tiles) {
-    // Assumption: the list of tiles is from a single provider,
-    // should be called once per tile source.
-    if (tiles && tiles.length) {
-      let tile_provider = this._tileProviderForTiles(tiles);
-      this.clearTilesForProvider(tile_provider);
-
-      for (let sponsoredTile of tiles) {
-        this.allSponsoredTiles[this._buildPropertyKey(sponsoredTile)] = {
-          advertiser: this._getAdvertiser(sponsoredTile).toLowerCase(),
-          provider: tile_provider,
-          display_position: null,
-          display_fail_reason: null,
-        };
-      }
-    }
-  }
-
-  _setDisplayFailReason(filteredTiles, reason) {
-    for (let tile of filteredTiles) {
-      if (tile in this.allSponsoredTiles) {
-        let tileToUpdate = this.allSponsoredTiles[tile];
-        tileToUpdate.display_position = null;
-        tileToUpdate.display_fail_reason = reason;
-      }
-    }
-  }
-
-  determineFilteredTilesAndSetToOversold(nonOversoldTiles) {
-    let filteredTiles = this._getFilteredTiles(nonOversoldTiles);
-    this._setDisplayFailReason(filteredTiles, DISPLAY_FAIL_REASON_OVERSOLD);
-  }
-
-  determineFilteredTilesAndSetToDismissed(nonDismissedTiles) {
-    let filteredTiles = this._getFilteredTiles(nonDismissedTiles);
-    this._setDisplayFailReason(filteredTiles, DISPLAY_FAIL_REASON_DISMISSED);
-  }
-
-  _setTilePositions(currentTiles) {
-    // This function performs many loops over a small dataset.  The size of
-    // dataset is limited by the number of sponsored tiles displayed on
-    // the newtab instance.
-    if (this.allSponsoredTiles) {
-      let tilePositionsAssigned = [];
-      // processing the currentTiles parameter, assigns a position to the
-      // corresponding property in this.allSponsoredTiles
-      currentTiles.forEach(item => {
-        let tile = this.allSponsoredTiles[this._buildPropertyKey(item)];
-        if (
-          tile &&
-          (tile.display_fail_reason === undefined ||
-            tile.display_fail_reason === null)
-        ) {
-          tile.display_position = item.sponsored_position;
-          // Track assigned tile slots.
-          tilePositionsAssigned.push(item.sponsored_position);
-        }
-      });
-
-      // Need to check if any objects in this.allSponsoredTiles do not
-      // have either a display_fail_reason or a display_position set.
-      // This can happen if the tiles list was updated before the
-      // metric is written to Glean.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1877197
-      let tilesMissingPosition = [];
-      Object.keys(this.allSponsoredTiles).forEach(property => {
-        let tile = this.allSponsoredTiles[property];
-        if (!tile.display_fail_reason && !tile.display_position) {
-          tilesMissingPosition.push(property);
-        }
-      });
-
-      if (tilesMissingPosition.length) {
-        // Determine if any available slots exist based on max number of tiles
-        // and the list of tiles already used and assign to a tile with missing
-        // value.
-        for (let i = 1; i <= this.sponsoredTilesConfigured; i++) {
-          if (!tilePositionsAssigned.includes(i)) {
-            let tileProperty = tilesMissingPosition.shift();
-            this.allSponsoredTiles[tileProperty].display_position = i;
-          }
-        }
-      }
-
-      // At this point we might still have a few unresolved states.  These
-      // rows will be tagged with a display_fail_reason `unresolved`.
-      this._detectErrorConditionAndSetUnresolved();
-    }
-  }
-
-  // Checks the data for inconsistent state and updates the display_fail_reason
-  _detectErrorConditionAndSetUnresolved() {
-    Object.keys(this.allSponsoredTiles).forEach(property => {
-      let tile = this.allSponsoredTiles[property];
-      if (
-        (!tile.display_fail_reason && !tile.display_position) ||
-        (tile.display_fail_reason && tile.display_position)
-      ) {
-        tile.display_position = null;
-        tile.display_fail_reason = DISPLAY_FAIL_REASON_UNRESOLVED;
-      }
-    });
-  }
-
-  finalizeNewtabPingFields(currentTiles) {
-    this._setTilePositions(currentTiles);
-    Glean.topsites.sponsoredTilesReceived.set(
-      JSON.stringify({
-        sponsoredTilesReceived: Object.values(this.allSponsoredTiles),
-      })
-    );
-  }
 }
 
 export class ContileIntegration {
@@ -405,17 +215,12 @@ export class ContileIntegration {
       0
     );
     const validFor = Services.prefs.getIntPref(CONTILE_CACHE_VALID_FOR_PREF, 0);
-    this._topSitesFeed._telemetryUtility.setSponsoredTilesConfigured();
     if (now <= lastFetch + validFor) {
       try {
         let cachedTiles = JSON.parse(
           Services.prefs.getStringPref(CONTILE_CACHE_PREF)
         );
-        this._topSitesFeed._telemetryUtility.setTiles(cachedTiles);
         cachedTiles = this._filterBlockedSponsors(cachedTiles);
-        this._topSitesFeed._telemetryUtility.determineFilteredTilesAndSetToDismissed(
-          cachedTiles
-        );
         this._sites = cachedTiles;
         lazy.log.info("Local cache loaded.");
         return true;
@@ -468,15 +273,11 @@ export class ContileIntegration {
 
       const lastFetch = Math.round(Date.now() / 1000);
       Services.prefs.setIntPref(CONTILE_CACHE_LAST_FETCH_PREF, lastFetch);
-      this._topSitesFeed._telemetryUtility.setSponsoredTilesConfigured();
 
       // Contile returns 204 indicating there is no content at the moment.
       // If this happens, it will clear `this._sites` reset the cached tiles
       // to an empty array.
       if (response.status === 204) {
-        this._topSitesFeed._telemetryUtility.clearTilesForProvider(
-          SPONSORED_TILE_PARTNER_AMP
-        );
         if (this._sites.length) {
           this._sites = [];
           Services.prefs.setStringPref(
@@ -500,27 +301,17 @@ export class ContileIntegration {
         const maxNumFromContile = this._getMaxNumFromContile();
 
         let { tiles } = body;
-        this._topSitesFeed._telemetryUtility.setTiles(tiles);
         if (
           useAdditionalTiles !== undefined &&
           !useAdditionalTiles &&
           tiles.length > maxNumFromContile
         ) {
           tiles.length = maxNumFromContile;
-          this._topSitesFeed._telemetryUtility.determineFilteredTilesAndSetToOversold(
-            tiles
-          );
         }
         tiles = this._filterBlockedSponsors(tiles);
-        this._topSitesFeed._telemetryUtility.determineFilteredTilesAndSetToDismissed(
-          tiles
-        );
         if (tiles.length > maxNumFromContile) {
           lazy.log.info("Remove unused links from Contile");
           tiles.length = maxNumFromContile;
-          this._topSitesFeed._telemetryUtility.determineFilteredTilesAndSetToOversold(
-            tiles
-          );
         }
         this._sites = tiles;
         Services.prefs.setStringPref(
@@ -549,7 +340,6 @@ export class ContileIntegration {
 
 class _TopSites {
   constructor() {
-    this._telemetryUtility = new TopSitesTelemetry();
     this._contile = new ContileIntegration(this);
     this._tippyTopProvider = new TippyTopProvider();
     ChromeUtils.defineLazyGetter(
@@ -731,10 +521,6 @@ class _TopSites {
         DEFAULT_TOP_SITES.push(link);
       }
       hasContileTiles = contilePositionIndex > 0;
-      //This is to catch where we receive 3 tiles but reduce to 2 early in the filtering, before blocked list applied.
-      this._telemetryUtility.determineFilteredTilesAndSetToOversold(
-        DEFAULT_TOP_SITES
-      );
     }
 
     // Read defaults from remote settings.
@@ -1198,12 +984,8 @@ class _TopSites {
         );
       }
     }
-    this._telemetryUtility.determineFilteredTilesAndSetToDismissed(
-      contileSponsored
-    );
 
     const discoverySponsored = this.fetchDiscoveryStreamSpocs();
-    this._telemetryUtility.setTiles(discoverySponsored);
 
     const sponsored = this._mergeSponsoredLinks({
       [SPONSORED_TILE_PARTNER_AMP]: contileSponsored,
@@ -1211,9 +993,6 @@ class _TopSites {
     });
 
     this._maybeCapSponsoredLinks(sponsored);
-
-    // This will set all extra tiles to oversold, including moz-sales.
-    this._telemetryUtility.determineFilteredTilesAndSetToOversold(sponsored);
 
     // Get pinned links augmented with desired properties
     let plainPinned = await this.pinnedCache.request();
@@ -1330,7 +1109,6 @@ class _TopSites {
 
     this._linksWithDefaults = withPinned;
 
-    this._telemetryUtility.finalizeNewtabPingFields(dedupedSponsored);
     return withPinned;
   }
 
