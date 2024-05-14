@@ -85,38 +85,24 @@ static const char* kIntrospectTemplate =
 
 bool DBusService::LaunchApp(const char* aCommand, const char** aURIList,
                             int aURIListLen) {
-  // Allocate space for all uris, executable name, command if supplied and
-  // null terminator
-  int paramsNum = aURIListLen + 2;
+  nsAutoCString param(mAppFile);
   if (aCommand) {
-    paramsNum++;
-  }
-
-  char** argv = (char**)moz_xmalloc(sizeof(char*) * paramsNum);
-  int argc = 0;
-  argv[argc++] = strdup(mAppFile);
-  if (aCommand) {
-    argv[argc++] = strdup(aCommand);
+    param.Append(" ");
+    param.Append(aCommand);
   }
   for (int i = 0; aURIList && i < aURIListLen; i++) {
-    argv[argc++] = strdup(aURIList[i]);
-  }
-  argv[argc++] = nullptr;
-
-  nsAutoCString exePath;
-  nsCOMPtr<nsIFile> lf;
-  bool ret = false;
-  if (NS_SUCCEEDED(XRE_GetBinaryPath(getter_AddRefs(lf)))) {
-    if (NS_SUCCEEDED(lf->GetNativePath(exePath))) {
-      ret = (PR_CreateProcessDetached(exePath.get(), argv, nullptr, nullptr) !=
-             PR_FAILURE);
-    }
+    param.Append(" ");
+    GUniquePtr<char> escUri(g_shell_quote(aURIList[i]));
+    param.Append(escUri.get());
   }
 
-  for (int i = 0; i < argc; i++) {
-    free(argv[i]);
+  char* argv[] = {strdup("/bin/sh"), strdup("-c"), strdup(param.get()),
+                  nullptr};
+  int ret =
+      PR_CreateProcessDetached("/bin/sh", argv, nullptr, nullptr) != PR_FAILURE;
+  for (auto str : argv) {
+    free(str);
   }
-  free(argv);
   return ret;
 }
 
