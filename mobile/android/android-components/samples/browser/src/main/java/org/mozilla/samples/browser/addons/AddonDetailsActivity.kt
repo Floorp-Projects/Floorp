@@ -67,7 +67,7 @@ class AddonDetailsActivity : AppCompatActivity() {
             val reviewCountView = findViewById<TextView>(R.id.users_count)
 
             val ratingContentDescription = getString(
-                addonsR.string.mozac_feature_addons_rating_content_description,
+                addonsR.string.mozac_feature_addons_rating_content_description_2,
             )
             ratingView.contentDescription = String.format(ratingContentDescription, it.average)
             ratingView.rating = it.average
