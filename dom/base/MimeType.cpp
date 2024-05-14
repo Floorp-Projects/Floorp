@@ -8,16 +8,6 @@
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 
-#include "mozilla/Logging.h"
-
-using mozilla::LogLevel;
-
-mozilla::LazyLogModule gMimeTypeLog("MimeType");
-
-#define DEBUG_LOG(args) MOZ_LOG(gMimeTypeLog, LogLevel::Debug, args)
-#define VERBOSE_LOG(args) MOZ_LOG(gMimeTypeLog, LogLevel::Verbose, args)
-#define LOGSTR(x) (mozilla::ToString(x).c_str())
-
 template <typename char_type>
 /* static */ RefPtr<TMimeType<char_type>> TMimeType<char_type>::Parse(
     const nsTSubstring<char_type>& aMimeType) {
@@ -30,7 +20,6 @@ template <typename char_type>
     ++pos;
   }
   if (pos == end) {
-    DEBUG_LOG(("Parse(%s): fail, empty", LOGSTR(aMimeType)));
     return nullptr;
   }
   while (end > pos && NS_IsHTTPWhitespace(*(end - 1))) {
@@ -41,21 +30,17 @@ template <typename char_type>
   const char_type* typeStart = pos;
   while (pos < end && *pos != '/') {
     if (!NS_IsHTTPTokenPoint(*pos)) {
-      DEBUG_LOG(("Parse(%s): fail, type has invalid char '%c'",
-                 LOGSTR(aMimeType), *pos));
       return nullptr;
     }
     ++pos;
   }
   const char_type* typeEnd = pos;
   if (typeStart == typeEnd) {
-    DEBUG_LOG(("Parse(%s): fail, empty type", LOGSTR(aMimeType)));
     return nullptr;
   }
 
   // Step 5
   if (pos == end) {
-    DEBUG_LOG(("Parse(%s): no subtype", LOGSTR(aMimeType)));
     return nullptr;
   }
 
@@ -74,17 +59,12 @@ template <typename char_type>
         ++pos;
         while (pos < end && *pos != ';') {
           if (!NS_IsHTTPWhitespace(*pos)) {
-            DEBUG_LOG(
-                ("Parse(%s): fail, subtype has extra '%c' between space and ;",
-                 LOGSTR(aMimeType), *pos));
             return nullptr;
           }
           ++pos;
         }
         break;
       }
-      DEBUG_LOG(("Parse(%s): fail, subtype has invalid char '%c'",
-                 LOGSTR(aMimeType), *pos));
       return nullptr;
     }
     ++pos;
@@ -93,7 +73,6 @@ template <typename char_type>
     subtypeEnd = pos;
   }
   if (subtypeStart == subtypeEnd) {
-    DEBUG_LOG(("Parse(%s): fail, no subtype", LOGSTR(aMimeType)));
     return nullptr;
   }
 
@@ -153,8 +132,6 @@ template <typename char_type>
     // Step 11.5
     if (pos < end) {
       if (*pos == ';') {
-        VERBOSE_LOG(("Parse(%s): ignoring param %s with no value",
-                     LOGSTR(aMimeType), LOGSTR(paramName)));
         continue;
       }
       ++pos;
@@ -162,8 +139,6 @@ template <typename char_type>
 
     // Step 11.6
     if (pos == end) {
-      VERBOSE_LOG(("Parse(%s): ignoring param %s with no value",
-                   LOGSTR(aMimeType), LOGSTR(paramName)));
       break;
     }
 
@@ -173,9 +148,12 @@ template <typename char_type>
 
     // Step 11.8
     if (*pos == '"') {
-      // Step 11.8.1 (collect an HTTP quoted string)
+      // Step 11.8.1
       ++pos;
+
+      // Step 11.8.2
       while (true) {
+        // Step 11.8.2.1
         while (pos < end && *pos != '"' && *pos != '\\') {
           if (!NS_IsHTTPQuotedStringTokenPoint(*pos)) {
             paramValueHadInvalidChars = true;
@@ -187,8 +165,12 @@ template <typename char_type>
           ++pos;
         }
 
+        // Step 11.8.2.2
         if (pos < end && *pos == '\\') {
+          // Step 11.8.2.2.1
           ++pos;
+
+          // Step 11.8.2.2.2
           if (pos < end) {
             if (!NS_IsHTTPQuotedStringTokenPoint(*pos)) {
               paramValueHadInvalidChars = true;
@@ -201,10 +183,12 @@ template <typename char_type>
             continue;
           }
 
+          // Step 11.8.2.2.3
           paramValue.Append('\\');
           paramValue.mRequiresQuoting = true;
         }
 
+        // Step 11.8.2.3
         break;
       }
 
@@ -230,8 +214,6 @@ template <typename char_type>
 
       // Step 11.9.3
       if (paramValueStart > paramValueLastChar) {
-        VERBOSE_LOG(("Parse(%s): skipping empty unquoted param %s",
-                     LOGSTR(aMimeType), LOGSTR(paramName)));
         continue;
       }
 
@@ -249,256 +231,15 @@ template <typename char_type>
     // Step 11.10
     if (!paramName.IsEmpty() && !paramNameHadInvalidChars &&
         !paramValueHadInvalidChars) {
+      // XXX Is the assigned value used anywhere?
       paramValue = mimeType->mParameters.LookupOrInsertWith(paramName, [&] {
         mimeType->mParameterNames.AppendElement(paramName);
         return paramValue;
       });
-      VERBOSE_LOG(("Parse(%s): found param %s=%s (requires quoting=%d)",
-                   LOGSTR(aMimeType), LOGSTR(paramName), LOGSTR(paramValue),
-                   paramValue.mRequiresQuoting));
-    } else {
-      VERBOSE_LOG(
-          ("Parse(%s): skipping param %s (empty=%d, invalid name=%d, invalid "
-           "value=%d)",
-           LOGSTR(aMimeType), LOGSTR(paramName), paramName.IsEmpty(),
-           paramNameHadInvalidChars, paramValueHadInvalidChars));
     }
   }
 
   // Step 12
-  DEBUG_LOG(("Parse(%s): %s", LOGSTR(aMimeType), LOGSTR(mimeType)));
-  return mimeType;
-}
-
-template <typename char_type>
-const char_type* CollectHTTPQuotedString(const char_type* pos,
-                                         const char_type* end,
-                                         nsTString<char_type>& value,
-                                         bool extractValue = false) {
-  // See https://fetch.spec.whatwg.org/#collect-an-http-quoted-string
-
-  // Step 1 unnecessary, we just add the quotes too as we go if !extractValue.
-
-  // Step 2 intentionally skipped as we're using an outparam for the result.
-
-  // Step 3
-  MOZ_ASSERT(*pos == '"');
-  if (!extractValue) {
-    value.Append('"');
-  }
-
-  // Step 4
-  ++pos;
-
-  // Step 5
-  while (true) {
-    // Step 5.1
-    while (pos < end && *pos != '"' && *pos != '\\') {
-      value.Append(*pos);
-      ++pos;
-    }
-
-    // Step 5.2
-    if (pos >= end) {
-      break;
-    }
-
-    // Step 5.3
-    bool isBackslash = *pos == '\\';
-
-    // Step 5.4
-    ++pos;
-
-    // Step 5.5
-    if (isBackslash) {
-      // Step 5.5.1
-      if (pos >= end) {
-        value.Append('\\');
-        break;
-      }
-
-      // Step 5.5.2
-      value.Append(*pos);
-
-      // Step 5.5.3
-      ++pos;
-
-    } else {
-      // Step 5.6.1
-      MOZ_ASSERT(*(pos - 1) == '"');
-
-      if (!extractValue) {
-        value.Append('"');
-      }
-
-      // Step 5.6.2
-      break;
-    }
-  }
-
-  return pos;
-}
-
-template <typename char_type>
-void GetDecodeAndSplitHeaderValue(
-    const nsTSubstring<char_type>& aHeaderValue,
-    const std::function<
-        void(const nsTDependentSubstring<char_type>& nextValue)>& aCallback) {
-  // See https://fetch.spec.whatwg.org/#header-value-get-decode-and-split
-
-  // Step 1 is already done for us
-
-  // Step 2
-  const char_type* pos = aHeaderValue.BeginReading();
-  const char_type* end = aHeaderValue.EndReading();
-
-  // Steps 3 skipped; we'll just call aCallback for each value.
-
-  // Step 4
-  nsTString<char_type> tempValue;
-
-  // Step 5
-  while (pos < end) {
-    // Step 5.1
-    while (pos < end && *pos != '"' && *pos != ',') {
-      tempValue.Append(*pos);
-      ++pos;
-    }
-
-    // Step 5.2
-    if (pos < end) {
-      // Step 5.2.1
-      if (*pos == '"') {
-        // Step 5.2.1.1
-        pos = CollectHTTPQuotedString(pos, end, tempValue);
-
-        // Step 5.2.1.2
-        if (pos < end) {
-          VERBOSE_LOG(
-              ("GetDecodeAndSplitHeaderValue saw quoted string up to '%c'",
-               *pos));
-          continue;
-        }
-
-        VERBOSE_LOG(
-            ("GetDecodeAndSplitHeaderValue saw quoted string to the end"));
-
-        // Step 5.2.2
-      } else {
-        // Step 5.2.2.1
-        MOZ_ASSERT(*pos == ',');
-
-        // Step 5.2.2.2
-        ++pos;
-      }
-    }
-
-    // Step 5.3
-    const char_type* first = tempValue.BeginReading();
-    const char_type* last = tempValue.EndReading();
-    while (first < last && (*first == ' ' || *first == '\t')) {
-      ++first;
-    }
-    while (last > first && (*last == ' ' || *last == '\t')) {
-      --last;
-    }
-
-    VERBOSE_LOG(("GetDecodeAndSplitHeaderValue found '%s'",
-                 LOGSTR(nsTDependentSubstring<char_type>(first, last))));
-
-    // Step 5.4
-    aCallback(nsTDependentSubstring<char_type>(first, last));
-
-    // Step 5.5
-    tempValue.Truncate();
-  }
-}
-
-template <typename char_type>
-/* static */ RefPtr<TMimeType<char_type>> TMimeType<char_type>::ExtractMIMEType(
-    const nsTSubstring<char_type>& aContentTypeHeader) {
-  // See https://fetch.spec.whatwg.org/#content-type-header
-
-  // Step 5 (might as well do this first)
-  if (aContentTypeHeader.IsEmpty()) {
-    DEBUG_LOG(("ExtractMimeType(empty) failed"));
-    return nullptr;
-  }
-
-  VERBOSE_LOG(("  ExtractMimeType(%s) called", LOGSTR(aContentTypeHeader)));
-
-  // Step 1-3
-  nsTString<char_type> charset, essenceType, essenceSubtype, tempMimeEssence;
-  charset.SetIsVoid(true);
-  essenceType.SetIsVoid(true);
-  essenceSubtype.SetIsVoid(true);
-
-  // Step 3
-  RefPtr<TMimeType<char_type>> mimeType;
-  RefPtr<TMimeType<char_type>> tempMimeType;
-
-  // Steps 4,6
-  GetDecodeAndSplitHeaderValue<char_type>(
-      aContentTypeHeader,
-      [&](const nsTDependentSubstring<char_type>& nextValue) {
-        // Step 6.1
-        VERBOSE_LOG(("  ExtractMimeType 6.1 checking %s", LOGSTR(nextValue)));
-        tempMimeType = TMimeType<char_type>::Parse(nextValue);
-
-        // Step 6.2
-        if (!tempMimeType) {
-          VERBOSE_LOG(("  ExtractMimeType 6.2 skipping, parse failed"));
-          return;
-        }
-
-        if (tempMimeType->mType.Length() == 1 &&
-            tempMimeType->mType[0] == '*' &&
-            tempMimeType->mSubtype.Length() == 1 &&
-            tempMimeType->mSubtype[0] == '*') {
-          VERBOSE_LOG(("  ExtractMimeType 6.2 skipping, is */*"));
-          return;
-        }
-
-        // Step 6.3
-        mimeType = std::move(tempMimeType);
-
-        // Step 6.4
-        static char_type kCHARSET[] = {'c', 'h', 'a', 'r', 's', 'e', 't'};
-        static nsTDependentSubstring<char_type> kCharset(kCHARSET, 7);
-
-        if (!mimeType->mType.Equals(essenceType) ||
-            !mimeType->mSubtype.Equals(essenceSubtype)) {
-          // Steps 6.4.1 and 6.4.2
-          if (mimeType->HasParameter(kCharset)) {
-            mimeType->GetParameterValue(kCharset, charset);
-          } else {
-            charset.SetIsVoid(true);
-          }
-
-          // Step 6.4.3
-          essenceType = mimeType->mType;
-          essenceSubtype = mimeType->mSubtype;
-
-          VERBOSE_LOG(
-              ("  ExtractMimeType 6.4 found essence=%s/%s and charset=%s",
-               LOGSTR(essenceType), LOGSTR(essenceSubtype), LOGSTR(charset)));
-
-          // Step 6.5
-        } else if (!charset.IsVoid() && !mimeType->HasParameter(kCharset)) {
-          VERBOSE_LOG(
-              ("  ExtractMimeType 6.5 set charset=%s", LOGSTR(charset)));
-          mimeType->SetParameterValue(kCharset, charset);
-        }
-      });
-
-  if (mimeType) {
-    DEBUG_LOG(("ExtractMimeType(%s) got %s", LOGSTR(aContentTypeHeader),
-               LOGSTR(mimeType)));
-  } else {
-    DEBUG_LOG(("ExtractMimeType(%s) failed", LOGSTR(aContentTypeHeader)));
-  }
-
-  // Steps 7 and 8 (failure is returning null)
   return mimeType;
 }
 
@@ -657,30 +398,10 @@ void TMimeType<char_type>::SetParameterValue(
   });
 }
 
-template const char* CollectHTTPQuotedString(const char* start, const char* end,
-                                             nsCString& value,
-                                             bool extractValue = false);
-template const char16_t* CollectHTTPQuotedString(const char16_t* start,
-                                                 const char16_t* end,
-                                                 nsString& value,
-                                                 bool extractValue = false);
-template void GetDecodeAndSplitHeaderValue(
-    const nsTSubstring<char>& aHeaderValue,
-    const std::function<void(const nsTDependentSubstring<char>& nextValue)>&
-        aCallback);
-template void GetDecodeAndSplitHeaderValue(
-    const nsTSubstring<char16_t>& aHeaderValue,
-    const std::function<void(const nsTDependentSubstring<char16_t>& nextValue)>&
-        aCallback);
-
 template RefPtr<TMimeType<char16_t>> TMimeType<char16_t>::Parse(
     const nsTSubstring<char16_t>& aMimeType);
 template RefPtr<TMimeType<char>> TMimeType<char>::Parse(
     const nsTSubstring<char>& aMimeType);
-template RefPtr<TMimeType<char>> TMimeType<char>::ExtractMIMEType(
-    const nsTSubstring<char>& aContentTypeHeader);
-template RefPtr<TMimeType<char16_t>> TMimeType<char16_t>::ExtractMIMEType(
-    const nsTSubstring<char16_t>& aContentTypeHeader);
 template bool TMimeType<char16_t>::Parse(
     const nsTSubstring<char16_t>& aMimeType,
     nsTSubstring<char16_t>& aOutEssence, nsTSubstring<char16_t>& aOutCharset);

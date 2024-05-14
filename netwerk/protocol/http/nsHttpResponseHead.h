@@ -55,7 +55,6 @@ class nsHttpResponseHead {
   uint16_t Status() const;
   void StatusText(nsACString& aStatusText);
   int64_t ContentLength();
-  void ExtractContentType();
   void ContentType(nsACString& aContentType) const;
   void ContentCharset(nsACString& aContentCharset);
   bool Public();
@@ -210,7 +209,6 @@ class nsHttpResponseHead {
   uint16_t mStatus MOZ_GUARDED_BY(mRecursiveMutex){200};
   nsCString mStatusText MOZ_GUARDED_BY(mRecursiveMutex);
   int64_t mContentLength MOZ_GUARDED_BY(mRecursiveMutex){-1};
-  nsCString mCombinedContentTypeHeader MOZ_GUARDED_BY(mRecursiveMutex);
   nsCString mContentType MOZ_GUARDED_BY(mRecursiveMutex);
   nsCString mContentCharset MOZ_GUARDED_BY(mRecursiveMutex);
   bool mHasCacheControl MOZ_GUARDED_BY(mRecursiveMutex){false};
