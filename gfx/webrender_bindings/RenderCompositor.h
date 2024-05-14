@@ -108,7 +108,7 @@ class RenderCompositor {
 
   layers::SyncObjectHost* GetSyncObject() const { return mSyncObject.get(); }
 
-  virtual GLenum IsContextLost(bool aForce);
+  virtual gfx::DeviceResetReason IsContextLost(bool aForce);
 
   virtual bool SupportAsyncScreenshot() { return true; }
 

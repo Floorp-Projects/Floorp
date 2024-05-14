@@ -147,7 +147,7 @@ class gfxWindowsPlatform final : public gfxPlatform {
   void CompositorUpdated() override;
 
   bool DidRenderingDeviceReset(
-      DeviceResetReason* aResetReason = nullptr) override;
+      mozilla::gfx::DeviceResetReason* aResetReason = nullptr) override;
   void SchedulePaintIfDeviceReset() override;
   void CheckForContentOnlyDeviceReset();
 

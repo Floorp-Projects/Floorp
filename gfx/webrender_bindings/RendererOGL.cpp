@@ -166,7 +166,8 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
 
   if (mThread->IsHandlingDeviceReset() || !mCompositor->BeginFrame()) {
-    CheckGraphicsResetStatus("BeginFrame", /* aForce */ true);
+    CheckGraphicsResetStatus(gfx::DeviceResetDetectPlace::WR_BEGIN_FRAME,
+                             /* aForce */ true);
     mCompositor->GetWidget()->PostRender(&widgetContext);
     return RenderedFrameId();
   }
@@ -262,18 +263,20 @@ bool RendererOGL::EnsureAsyncScreenshot() {
   return false;
 }
 
-void RendererOGL::CheckGraphicsResetStatus(const char* aCaller, bool aForce) {
+void RendererOGL::CheckGraphicsResetStatus(gfx::DeviceResetDetectPlace aPlace,
+                                           bool aForce) {
   if (mCompositor) {
     auto reason = mCompositor->IsContextLost(aForce);
-    if (reason != LOCAL_GL_NO_ERROR) {
-      RenderThread::Get()->HandleDeviceReset(aCaller, reason);
+    if (reason != gfx::DeviceResetReason::OK) {
+      RenderThread::Get()->HandleDeviceReset(aPlace, reason);
     }
   }
 }
 
 void RendererOGL::WaitForGPU() {
   if (!mCompositor->WaitForGPU()) {
-    CheckGraphicsResetStatus("WaitForGPU", /* aForce */ true);
+    CheckGraphicsResetStatus(gfx::DeviceResetDetectPlace::WR_WAIT_FOR_GPU,
+                             /* aForce */ true);
   }
 }
 

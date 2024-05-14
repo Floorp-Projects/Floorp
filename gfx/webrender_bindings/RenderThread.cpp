@@ -807,7 +807,9 @@ void RenderThread::UpdateAndRender(
     renderer->Update();
   }
   // Check graphics reset status even when rendering is skipped.
-  renderer->CheckGraphicsResetStatus("PostUpdate", /* aForce */ false);
+  renderer->CheckGraphicsResetStatus(
+      gfx::DeviceResetDetectPlace::WR_POST_UPDATE,
+      /* aForce */ false);
 
   TimeStamp end = TimeStamp::Now();
   RefPtr<const WebRenderPipelineInfo> info = renderer->GetLastPipelineInfo();
@@ -1196,32 +1198,12 @@ void RenderThread::PostRunnable(already_AddRefed<nsIRunnable> aRunnable) {
   mThread->Dispatch(runnable.forget());
 }
 
-#ifndef XP_WIN
-static DeviceResetReason GLenumToResetReason(GLenum aReason) {
-  switch (aReason) {
-    case LOCAL_GL_NO_ERROR:
-      return DeviceResetReason::FORCED_RESET;
-    case LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB:
-      return DeviceResetReason::DRIVER_ERROR;
-    case LOCAL_GL_PURGED_CONTEXT_RESET_NV:
-      return DeviceResetReason::NVIDIA_VIDEO;
-    case LOCAL_GL_GUILTY_CONTEXT_RESET_ARB:
-      return DeviceResetReason::RESET;
-    case LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB:
-      return DeviceResetReason::UNKNOWN;
-    case LOCAL_GL_OUT_OF_MEMORY:
-      return DeviceResetReason::OUT_OF_MEMORY;
-    default:
-      return DeviceResetReason::OTHER;
-  }
-}
-#endif
-
-void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
+void RenderThread::HandleDeviceReset(gfx::DeviceResetDetectPlace aPlace,
+                                     gfx::DeviceResetReason aReason) {
   MOZ_ASSERT(IsInRenderThread());
 
   // This happens only on simulate device reset.
-  if (aReason == LOCAL_GL_NO_ERROR) {
+  if (aReason == gfx::DeviceResetReason::FORCED_RESET) {
     if (!mHandlingDeviceReset) {
       mHandlingDeviceReset = true;
 
@@ -1234,15 +1216,8 @@ void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
       // All RenderCompositors will be destroyed by the GPUProcessManager in
       // either OnRemoteProcessDeviceReset via the GPUChild, or
       // OnInProcessDeviceReset here directly.
-      if (XRE_IsGPUProcess()) {
-        gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
-      } else {
-        NS_DispatchToMainThread(NS_NewRunnableFunction(
-            "gfx::GPUProcessManager::OnInProcessDeviceReset", []() -> void {
-              gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(
-                  /* aTrackThreshold */ false);
-            }));
-      }
+      gfx::GPUProcessManager::GPUProcessManager::NotifyDeviceReset(
+          gfx::DeviceResetReason::FORCED_RESET, aPlace);
     }
     return;
   }
@@ -1255,7 +1230,7 @@ void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
 
 #ifndef XP_WIN
   // On Windows, see DeviceManagerDx::MaybeResetAndReacquireDevices.
-  gfx::GPUProcessManager::RecordDeviceReset(GLenumToResetReason(aReason));
+  gfx::GPUProcessManager::RecordDeviceReset(aReason);
 #endif
 
   {
@@ -1270,18 +1245,15 @@ void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
   // either OnRemoteProcessDeviceReset via the GPUChild, or
   // OnInProcessDeviceReset here directly.
   // On Windows, device will be re-created before sessions re-creation.
-  gfxCriticalNote << "GFX: RenderThread detected a device reset in " << aWhere;
   if (XRE_IsGPUProcess()) {
-    gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
+    gfx::GPUProcessManager::GPUProcessManager::NotifyDeviceReset(aReason,
+                                                                 aPlace);
   } else {
 #ifndef XP_WIN
     // FIXME(aosmond): Do we need to do this on Windows? nsWindow::OnPaint
     // seems to do its own detection for the parent process.
-    bool guilty = aReason == LOCAL_GL_GUILTY_CONTEXT_RESET_ARB;
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "gfx::GPUProcessManager::OnInProcessDeviceReset", [guilty]() -> void {
-          gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(guilty);
-        }));
+    gfx::GPUProcessManager::GPUProcessManager::NotifyDeviceReset(aReason,
+                                                                 aPlace);
 #endif
   }
 }
@@ -1299,7 +1271,8 @@ void RenderThread::SimulateDeviceReset() {
     // When this function is called GPUProcessManager::SimulateDeviceReset()
     // already triggers destroying all CompositorSessions before re-creating
     // them.
-    HandleDeviceReset("SimulateDeviceReset", LOCAL_GL_NO_ERROR);
+    HandleDeviceReset(gfx::DeviceResetDetectPlace::WR_SIMULATE,
+                      gfx::DeviceResetReason::FORCED_RESET);
   }
 }
 

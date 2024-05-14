@@ -13,6 +13,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/StackArray.h"
+#include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/ProfilerMarkers.h"
@@ -425,7 +426,8 @@ bool RenderCompositorANGLE::BeginFrame() {
     if (!mSyncObject->Synchronize(/* aFallible */ true)) {
       // It's timeout or other error. Handle the device-reset here.
       RenderThread::Get()->HandleDeviceReset(
-          "SyncObject", LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB);
+          gfx::DeviceResetDetectPlace::WR_SYNC_OBJRCT,
+          gfx::DeviceResetReason::UNKNOWN);
       return false;
     }
   }
@@ -778,29 +780,12 @@ RenderedFrameId RenderCompositorANGLE::UpdateFrameId() {
   return frameId;
 }
 
-GLenum RenderCompositorANGLE::IsContextLost(bool aForce) {
+gfx::DeviceResetReason RenderCompositorANGLE::IsContextLost(bool aForce) {
   // glGetGraphicsResetStatus does not always work to detect timeout detection
   // and recovery (TDR). On Windows, ANGLE itself is just relying upon the same
   // API, so we should not need to check it separately.
   auto reason = mDevice->GetDeviceRemovedReason();
-  switch (reason) {
-    case S_OK:
-      return LOCAL_GL_NO_ERROR;
-    case DXGI_ERROR_DEVICE_REMOVED:
-    case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
-      NS_WARNING("Device reset due to system / different device");
-      return LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB;
-    case DXGI_ERROR_DEVICE_HUNG:
-    case DXGI_ERROR_DEVICE_RESET:
-    case DXGI_ERROR_INVALID_CALL:
-      gfxCriticalError() << "Device reset due to WR device: "
-                         << gfx::hexa(reason);
-      return LOCAL_GL_GUILTY_CONTEXT_RESET_ARB;
-    default:
-      gfxCriticalError() << "Device reset with WR device unexpected reason: "
-                         << gfx::hexa(reason);
-      return LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB;
-  }
+  return layers::DXGIErrorToDeviceResetReason(reason);
 }
 
 bool RenderCompositorANGLE::UseCompositor() {

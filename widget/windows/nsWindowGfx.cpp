@@ -136,26 +136,15 @@ void nsWindow::ForcePresent() {
 }
 
 bool nsWindow::OnPaint(uint32_t aNestingLevel) {
-  DeviceResetReason resetReason = DeviceResetReason::OK;
+  gfx::DeviceResetReason resetReason = gfx::DeviceResetReason::OK;
   if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset(
           &resetReason)) {
     gfxCriticalNote << "(nsWindow) Detected device reset: " << (int)resetReason;
 
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
 
-    bool guilty;
-    switch (resetReason) {
-      case DeviceResetReason::HUNG:
-      case DeviceResetReason::RESET:
-      case DeviceResetReason::INVALID_CALL:
-        guilty = true;
-        break;
-      default:
-        guilty = false;
-        break;
-    }
-
-    GPUProcessManager::Get()->OnInProcessDeviceReset(guilty);
+    GPUProcessManager::GPUProcessManager::NotifyDeviceReset(
+        resetReason, gfx::DeviceResetDetectPlace::WIDGET);
 
     gfxCriticalNote << "(nsWindow) Finished device reset.";
     return false;

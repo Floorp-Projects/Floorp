@@ -732,6 +732,20 @@ struct ParamTraits<mozilla::gfx::ChromaSubsampling>
           mozilla::gfx::ChromaSubsampling::_Last> {};
 
 template <>
+struct ParamTraits<mozilla::gfx::DeviceResetReason>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::gfx::DeviceResetReason,
+          mozilla::gfx::DeviceResetReason::_First,
+          mozilla::gfx::DeviceResetReason::_Last> {};
+
+template <>
+struct ParamTraits<mozilla::gfx::DeviceResetDetectPlace>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::gfx::DeviceResetDetectPlace,
+          mozilla::gfx::DeviceResetDetectPlace::_First,
+          mozilla::gfx::DeviceResetDetectPlace::_Last> {};
+
+template <>
 struct ParamTraits<mozilla::gfx::ImplicitlyCopyableFloatArray>
     : public ParamTraits<nsTArray<float>> {
   typedef mozilla::gfx::ImplicitlyCopyableFloatArray paramType;

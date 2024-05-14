@@ -24,6 +24,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUChild.h"
+#include "mozilla/gfx/GPUParent.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -785,8 +786,8 @@ void GPUProcessManager::NotifyWebRenderError(wr::WebRenderError aError) {
   DisableWebRender(aError, nsCString());
 }
 
-/* static */ void GPUProcessManager::RecordDeviceReset(
-    DeviceResetReason aReason) {
+/* static */
+void GPUProcessManager::RecordDeviceReset(DeviceResetReason aReason) {
   if (aReason != DeviceResetReason::FORCED_RESET) {
     Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(aReason));
   }
@@ -794,6 +795,35 @@ void GPUProcessManager::NotifyWebRenderError(wr::WebRenderError aError) {
   CrashReporter::RecordAnnotationU32(
       CrashReporter::Annotation::DeviceResetReason,
       static_cast<uint32_t>(aReason));
+}
+
+/* static */
+void GPUProcessManager::NotifyDeviceReset(DeviceResetReason aReason,
+                                          DeviceResetDetectPlace aPlace) {
+  if (XRE_IsGPUProcess()) {
+    if (!GPUParent::GetSingleton()) {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      return;
+    }
+    // End up to GPUProcessManager::OnRemoteProcessDeviceReset()
+    GPUParent::GetSingleton()->NotifyDeviceReset(aReason, aPlace);
+  } else {
+    if (!GPUProcessManager::Get()) {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      return;
+    }
+
+    if (NS_IsMainThread()) {
+      GPUProcessManager::Get()->OnInProcessDeviceReset(aReason, aPlace);
+    } else {
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "gfx::GPUProcessManager::OnInProcessDeviceReset",
+          [aReason, aPlace]() -> void {
+            gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(aReason,
+                                                                  aPlace);
+          }));
+    }
+  }
 }
 
 bool GPUProcessManager::OnDeviceReset(bool aTrackThreshold) {
@@ -814,8 +844,24 @@ bool GPUProcessManager::OnDeviceReset(bool aTrackThreshold) {
   return ShouldLimitDeviceResets(mDeviceResetCount, delta);
 }
 
-void GPUProcessManager::OnInProcessDeviceReset(bool aTrackThreshold) {
-  if (OnDeviceReset(aTrackThreshold)) {
+void GPUProcessManager::OnInProcessDeviceReset(DeviceResetReason aReason,
+                                               DeviceResetDetectPlace aPlace) {
+  gfxCriticalNote << "Detect DeviceReset " << aReason << " " << aPlace
+                  << " in Parent process";
+
+  bool guilty;
+  switch (aReason) {
+    case DeviceResetReason::HUNG:
+    case DeviceResetReason::RESET:
+    case DeviceResetReason::INVALID_CALL:
+      guilty = true;
+      break;
+    default:
+      guilty = false;
+      break;
+  }
+
+  if (OnDeviceReset(guilty)) {
     gfxCriticalNoteOnce << "In-process device reset threshold exceeded";
 #ifdef MOZ_WIDGET_GTK
     // FIXME(aosmond): Should we disable WebRender on other platforms?
@@ -831,7 +877,12 @@ void GPUProcessManager::OnInProcessDeviceReset(bool aTrackThreshold) {
   NotifyListenersOnCompositeDeviceReset();
 }
 
-void GPUProcessManager::OnRemoteProcessDeviceReset(GPUProcessHost* aHost) {
+void GPUProcessManager::OnRemoteProcessDeviceReset(
+    GPUProcessHost* aHost, const DeviceResetReason& aReason,
+    const DeviceResetDetectPlace& aPlace) {
+  gfxCriticalNote << "Detect DeviceReset " << aReason << " " << aPlace
+                  << " in GPU process";
+
   if (OnDeviceReset(/* aTrackThreshold */ true) &&
       !DisableWebRenderConfig(wr::WebRenderError::EXCESSIVE_RESETS,
                               nsCString())) {
