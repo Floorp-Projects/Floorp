@@ -65,7 +65,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFormFillController)
 
 nsFormFillController::nsFormFillController()
     : mFocusedInput(nullptr),
-      mRestartAfterAttributeChangeTask(nullptr),
       mListNode(nullptr),
       // The amount of time a context menu event supresses showing a
       // popup from a focus event in ms. This matches the threshold in
@@ -132,17 +131,11 @@ void nsFormFillController::AttributeChanged(mozilla::dom::Element* aElement,
     // Then restart based on the new values.  We have to delay this
     // to avoid ending up in an endless loop due to re-registering our
     // mutation observer (which would notify us again for *this* event).
-    // If there already is a delayed task to restart the controller after an
-    // attribute change, cancel it.
-    if (mRestartAfterAttributeChangeTask) {
-      mRestartAfterAttributeChangeTask->Cancel();
-    }
-    mRestartAfterAttributeChangeTask =
-        mozilla::NewCancelableRunnableMethod<RefPtr<HTMLInputElement>>(
+    nsCOMPtr<nsIRunnable> event =
+        mozilla::NewRunnableMethod<RefPtr<HTMLInputElement>>(
             "nsFormFillController::MaybeStartControllingInput", this,
             &nsFormFillController::MaybeStartControllingInput, focusedInput);
-    RefPtr<Runnable> addrefedRunnable = mRestartAfterAttributeChangeTask;
-    aElement->OwnerDoc()->Dispatch(addrefedRunnable.forget());
+    aElement->OwnerDoc()->Dispatch(event.forget());
   }
 
   if (mListNode && mListNode->Contains(aElement)) {
@@ -848,13 +841,6 @@ nsresult nsFormFillController::HandleFocus(HTMLInputElement* aInput) {
   // Bail if we didn't start controlling the input.
   if (!mFocusedInput) {
     return NS_OK;
-  }
-
-  // if there is a delayed task to restart the controller after an attribute
-  // change, cancel it to prevent it overriding the focused input
-  if (mRestartAfterAttributeChangeTask) {
-    mRestartAfterAttributeChangeTask->Cancel();
-    mRestartAfterAttributeChangeTask = nullptr;
   }
 
   // If this focus doesn't follow a right click within our specified

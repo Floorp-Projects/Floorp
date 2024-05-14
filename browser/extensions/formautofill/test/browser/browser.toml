@@ -27,8 +27,6 @@ skip-if = [
 
 ["browser_autofill_sandboxed_iframe.js"]
 
-["browser_cancel_attribute_change_task.js"]
-
 ["browser_check_installed.js"]
 
 ["browser_dropdown_layout.js"]
