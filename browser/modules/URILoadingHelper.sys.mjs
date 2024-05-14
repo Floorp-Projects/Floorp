@@ -494,6 +494,10 @@ export const URILoadingHelper = {
 
     // We're now committed to loading the link in an existing browser window.
 
+    // Raise the target window before loading the URI, since loading it may
+    // result in a new frontmost window (e.g. "javascript:window.open('');").
+    w.focus();
+
     let targetBrowser;
     let loadInBackground;
     let uriObj;
@@ -546,10 +550,6 @@ export const URILoadingHelper = {
 
     switch (where) {
       case "current":
-        // Raise the target window before loading the URI, since loading it may
-        // result in a new frontmost window (e.g. "javascript:window.open('');")
-        w.focus();
-
         openInCurrentTab(targetBrowser, url, uriObj, params);
 
         // Don't focus the content area if focus is in the address bar and we're
@@ -561,18 +561,11 @@ export const URILoadingHelper = {
       case "tabshifted":
         loadInBackground = !loadInBackground;
       // fall through
-      case "tab": {
+      case "tab":
         focusUrlBar =
           !loadInBackground &&
           w.isBlankPageURL(url) &&
           !lazy.AboutNewTab.willNotifyUser;
-
-        // Don't focus the window when loading in background, since the caller may
-        // be in a non-browser window, and the user might be trying to open several
-        // pages in series.
-        if (!loadInBackground) {
-          w.focus();
-        }
 
         let tabUsedForLoad = w.gBrowser.addTab(url, {
           referrerInfo: params.referrerInfo,
@@ -619,7 +612,6 @@ export const URILoadingHelper = {
           );
         }
         break;
-      }
     }
 
     if (
