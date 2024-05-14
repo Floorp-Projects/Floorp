@@ -6,6 +6,8 @@ use crate::metrics::DistributionData;
 use crate::metrics::TimerId;
 use crate::ErrorType;
 
+use std::time::Duration;
+
 /// A description for the [`TimingDistributionMetric`](crate::metrics::TimingDistributionMetric) type.
 ///
 /// When changing this trait, make sure all the operations are
@@ -102,6 +104,29 @@ pub trait TimingDistribution {
     /// Reports an [`ErrorType::InvalidOverflow`] error for samples that
     /// are longer than `MAX_SAMPLE_TIME`.
     fn accumulate_raw_samples_nanos(&self, samples: Vec<u64>);
+
+    /// Accumulates precisely one duration to the metric.
+    ///
+    /// Like `TimingDistribution::accumulate_single_sample`, but for use when the
+    /// duration is:
+    ///
+    ///  * measured externally, or
+    ///  * is in a unit different from the timing_distribution's internal TimeUnit.
+    ///
+    /// # Arguments
+    ///
+    /// * `duration` - The single duration to be recorded in the metric.
+    ///
+    /// ## Notes
+    ///
+    /// Reports an [`ErrorType::InvalidOverflow`] error if `duration` is longer than
+    /// `MAX_SAMPLE_TIME`.
+    ///
+    /// The API client is responsible for ensuring that `duration` is derived from a
+    /// monotonic clock source that behaves consistently over computer sleep across
+    /// the application's platforms. Otherwise the resulting data may not share the same
+    /// guarantees that other `timing_distribution` metrics' data do.
+    fn accumulate_raw_duration(&self, duration: Duration);
 
     /// **Exported for test purposes.**
     ///

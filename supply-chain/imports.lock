@@ -65,13 +65,6 @@ user-login = "fitzgen"
 user-name = "Nick Fitzgerald"
 
 [[publisher.byteorder]]
-version = "1.4.3"
-when = "2021-03-10"
-user-id = 189
-user-login = "BurntSushi"
-user-name = "Andrew Gallant"
-
-[[publisher.byteorder]]
 version = "1.5.0"
 when = "2023-10-06"
 user-id = 189
@@ -135,13 +128,6 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.core-foundation-sys]]
-version = "0.8.3"
-when = "2021-10-12"
-user-id = 2396
-user-login = "jdm"
-user-name = "Josh Matthews"
-
-[[publisher.core-foundation-sys]]
 version = "0.8.4"
 when = "2023-04-03"
 user-id = 5946
@@ -189,13 +175,6 @@ when = "2021-03-29"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
-
-[[publisher.encoding_rs]]
-version = "0.8.33"
-when = "2023-08-23"
-user-id = 4484
-user-login = "hsivonen"
-user-name = "Henri Sivonen"
 
 [[publisher.encoding_rs]]
 version = "0.8.34"
@@ -247,15 +226,15 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "60.0.0"
-when = "2024-04-22"
+version = "60.1.0"
+when = "2024-05-06"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "60.0.0"
-when = "2024-04-22"
+version = "60.1.0"
+when = "2024-05-06"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -273,13 +252,6 @@ when = "2023-11-15"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
-
-[[publisher.hashbrown]]
-version = "0.14.3"
-when = "2023-11-26"
-user-id = 2915
-user-login = "Amanieu"
-user-name = "Amanieu d'Antras"
 
 [[publisher.hashbrown]]
 version = "0.14.5"
@@ -301,13 +273,6 @@ when = "2022-08-30"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
-
-[[publisher.indexmap]]
-version = "1.9.3"
-when = "2023-03-24"
-user-id = 539
-user-login = "cuviper"
-user-name = "Josh Stone"
 
 [[publisher.indexmap]]
 version = "2.2.6"
@@ -343,13 +308,6 @@ when = "2022-09-23"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
-
-[[publisher.libc]]
-version = "0.2.152"
-when = "2024-01-07"
-user-id = 51017
-user-login = "JohnTitor"
-user-name = "Yuki Okushi"
 
 [[publisher.libc]]
 version = "0.2.153"
@@ -456,12 +414,6 @@ user-id = 52553
 user-login = "embark-studios"
 
 [[publisher.prio]]
-version = "0.15.3"
-when = "2023-10-03"
-user-id = 213776
-user-login = "divviup-github-automation"
-
-[[publisher.prio]]
 version = "0.16.2"
 when = "2024-03-19"
 user-id = 213776
@@ -545,13 +497,6 @@ user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
 [[publisher.serde]]
-version = "1.0.197"
-when = "2024-02-20"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
-
-[[publisher.serde]]
 version = "1.0.198"
 when = "2024-04-16"
 user-id = 3618
@@ -566,22 +511,8 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.serde_derive]]
-version = "1.0.197"
-when = "2024-02-20"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
-
-[[publisher.serde_derive]]
 version = "1.0.198"
 when = "2024-04-16"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
-
-[[publisher.serde_json]]
-version = "1.0.93"
-when = "2023-02-08"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -629,22 +560,8 @@ user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
 [[publisher.thiserror]]
-version = "1.0.57"
-when = "2024-02-11"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
-
-[[publisher.thiserror]]
 version = "1.0.59"
 when = "2024-04-20"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
-
-[[publisher.thiserror-impl]]
-version = "1.0.57"
-when = "2024-02-11"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -932,25 +849,6 @@ who = "Pat Hickey <phickey@fastly.com>"
 criteria = "safe-to-deploy"
 version = "0.21.0"
 notes = "This crate has no dependencies, no build.rs, and contains no unsafe code."
-
-[[audits.bytecode-alliance.audits.bitflags]]
-who = "Jamey Sharp <jsharp@fastly.com>"
-criteria = "safe-to-deploy"
-delta = "2.1.0 -> 2.2.1"
-notes = """
-This version adds unsafe impls of traits from the bytemuck crate when built
-with that library enabled, but I believe the impls satisfy the documented
-safety requirements for bytemuck. The other changes are minor.
-"""
-
-[[audits.bytecode-alliance.audits.bitflags]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-delta = "2.3.2 -> 2.3.3"
-notes = """
-Nothing outside the realm of what one would expect from a bitflags generator,
-all as expected.
-"""
 
 [[audits.bytecode-alliance.audits.block-buffer]]
 who = "Benjamin Bouvier <public@benj.me>"
@@ -1691,13 +1589,6 @@ version = "0.1.2"
 notes = "TOML parser, forked from toml 0.5"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
-[[audits.mozilla.audits.bitflags]]
-who = "Jan-Erik Rediger <jrediger@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "2.4.0 -> 2.4.1"
-notes = "Only allowing new clippy lints"
-aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
-
 [[audits.mozilla.audits.either]]
 who = "Nika Layzell <nika@thelayzells.com>"
 criteria = "safe-to-deploy"
@@ -1707,13 +1598,6 @@ Straightforward crate providing the Either enum and trait implementations with
 no unsafe code.
 """
 aggregated-from = "https://raw.githubusercontent.com/mozilla/cargo-vet/main/supply-chain/audits.toml"
-
-[[audits.mozilla.audits.goblin]]
-who = "Alex Franchuk <afranchuk@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.7.1 -> 0.8.0"
-notes = "Fairly straightforward feature improvements."
-aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.lazy_static]]
 who = "Nika Layzell <nika@thelayzells.com>"

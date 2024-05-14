@@ -279,10 +279,6 @@ criteria = "safe-to-deploy"
 version = "1.3.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.bitflags]]
-version = "1.3.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.bitreader]]
 version = "0.3.6"
 criteria = "safe-to-deploy"
@@ -616,16 +612,16 @@ criteria = "safe-to-deploy"
 version = "0.2.7"
 criteria = "safe-to-deploy"
 
-[[exemptions.objc_exception]]
-version = "0.1.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.object]]
 version = "0.28.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.once_cell]]
 version = "1.12.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.owning_ref]]
+version = "0.4.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.packed_simd]]

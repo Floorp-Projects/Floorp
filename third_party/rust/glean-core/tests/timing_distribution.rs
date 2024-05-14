@@ -296,7 +296,7 @@ fn large_nanoseconds_values() {
     );
 
     let time = Duration::from_secs(10).as_nanos() as u64;
-    assert!(time > u64::from(u32::max_value()));
+    assert!(time > u64::from(u32::MAX));
 
     let id = 4u64.into();
     metric.set_start(id, 0);
