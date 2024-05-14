@@ -16,6 +16,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
@@ -48,9 +49,26 @@ class AndroidAssetFinderTest {
     }
 
     @Test
-    fun `test getAndroidAppAsset returns empty list if name not found`() {
+    @Config(sdk = [28])
+    fun `test getAndroidAppAsset returns empty list if name not found on SDK 28 or less`() {
         @Suppress("DEPRECATION")
         `when`(packageManager.getPackageInfo(anyString(), anyInt()))
+            .thenThrow(PackageManager.NameNotFoundException::class.java)
+
+        assertEquals(
+            emptyList<AssetDescriptor.Android>(),
+            assetFinder.getAndroidAppAsset("com.test.app", packageManager).toList(),
+        )
+    }
+
+    @Test
+    fun `test getAndroidAppAsset returns empty list if name not found`() {
+        `when`(
+            packageManager.getPackageInfo(
+                anyString(),
+                ArgumentMatchers.any(PackageManager.PackageInfoFlags::class.java),
+            ),
+        )
             .thenThrow(PackageManager.NameNotFoundException::class.java)
 
         assertEquals(

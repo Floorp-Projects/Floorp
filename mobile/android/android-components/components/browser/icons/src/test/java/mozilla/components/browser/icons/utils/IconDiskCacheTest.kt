@@ -19,6 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.`when`
+import org.robolectric.annotation.Config
 import java.io.IOException
 import java.io.OutputStream
 
@@ -58,7 +59,8 @@ class IconDiskCacheTest {
     }
 
     @Test
-    fun `Writing and reading bitmap bytes`() {
+    @Config(sdk = [28])
+    fun `Writing and reading bitmap bytes on SDK 28`() {
         val cache = IconDiskCache()
 
         val resource = IconRequest.Resource(
@@ -71,8 +73,35 @@ class IconDiskCacheTest {
         val bitmap: Bitmap = mock()
         `when`(bitmap.compress(any(), anyInt(), any())).thenAnswer {
             @Suppress("DEPRECATION")
-            // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/9555
             assertEquals(Bitmap.CompressFormat.WEBP, it.arguments[0] as Bitmap.CompressFormat)
+            assertEquals(90, it.arguments[1] as Int) // Quality
+
+            val stream = it.arguments[2] as OutputStream
+            stream.write("Hello World".toByteArray())
+            true
+        }
+
+        cache.putIconBitmap(testContext, resource, bitmap)
+
+        val data = cache.getIconData(testContext, resource)
+        assertNotNull(data!!)
+        assertEquals("Hello World", String(data))
+    }
+
+    @Test
+    fun `Writing and reading bitmap bytes`() {
+        val cache = IconDiskCache()
+
+        val resource = IconRequest.Resource(
+            url = "https://www.mozilla.org/icon64.png",
+            sizes = listOf(Size(64, 64)),
+            mimeType = "image/png",
+            type = IconRequest.Resource.Type.FAVICON,
+        )
+
+        val bitmap: Bitmap = mock()
+        `when`(bitmap.compress(any(), anyInt(), any())).thenAnswer {
+            assertEquals(Bitmap.CompressFormat.WEBP_LOSSY, it.arguments[0] as Bitmap.CompressFormat)
             assertEquals(90, it.arguments[1] as Int) // Quality
 
             val stream = it.arguments[2] as OutputStream
