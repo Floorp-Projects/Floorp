@@ -30,10 +30,6 @@ LOCAL_INCLUDES += [
     "/tools/profiler/public"
 ]
 
-UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/video_coding/codecs/vp9/svc_config.cc"
-]
-
 if not CONFIG["MOZ_DEBUG"]:
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
@@ -142,10 +138,6 @@ if CONFIG["TARGET_CPU"] == "aarch64":
 
 if CONFIG["TARGET_CPU"] == "arm":
 
-    CXXFLAGS += [
-        "-mfpu=neon"
-    ]
-
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
@@ -198,12 +190,6 @@ if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "arm":
         "unwind"
     ]
 
-if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86":
-
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
 if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "aarch64":
 
     DEFINES["_GNU_SOURCE"] = True
@@ -214,14 +200,10 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "arm":
 
 if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["_GNU_SOURCE"] = True
 
-Library("webrtc_vp9_helpers_gn")
+Library("adapted_video_track_source_gn")
