@@ -8,6 +8,7 @@ job-defaults:
         toolchain:
             - linux64-node
             - linux64-geckodriver
+            - browsertime
         build:
             - artifact: target.mozinfo.json
             - artifact: target.common.tests.tar.gz

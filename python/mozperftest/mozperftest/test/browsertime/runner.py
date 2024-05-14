@@ -14,8 +14,6 @@ from mozperftest.test.browsertime.visualtools import get_dependencies, xvfb
 from mozperftest.test.noderunner import NodeRunner
 from mozperftest.utils import ON_TRY, get_output_dir, install_package
 
-BROWSERTIME_SRC_ROOT = Path(__file__).parent
-
 
 def matches(args, *flags):
     """Returns True if any argument matches any of the given flags
@@ -116,6 +114,17 @@ class BrowsertimeRunner(NodeRunner):
         return Path(self._mach_context.state_dir, "cache", "browsertime")
 
     @property
+    def browsertime_src_root(self):
+        """Root location of browsertime source code and config"""
+
+        if ON_TRY:
+            moz_fetches_dir = os.environ.get("MOZ_FETCHES_DIR")
+            res = Path(moz_fetches_dir, "browsertime")
+        else:
+            res = Path(self.topsrcdir, "tools", "browsertime")
+        return res
+
+    @property
     def state_path(self):
         """Unpacked artifacts will be kept here."""
         # The convention is $MOZBUILD_STATE_PATH/$FEATURE.
@@ -135,7 +144,11 @@ class BrowsertimeRunner(NodeRunner):
     def visualmetrics_py(self):
         root = os.environ.get("BROWSERTIME", self.state_path)
         path = Path(
-            root, "node_modules", "browsertime", "browsertime", "visualmetrics.py"
+            root,
+            "node_modules",
+            "browsertime",
+            "visualmetrics",
+            "visualmetrics-portable.py",
         )
         if path.exists():
             os.environ["VISUALMETRICS_PY"] = str(path)
@@ -171,7 +184,7 @@ class BrowsertimeRunner(NodeRunner):
             return True
 
         # Browsertime exists, check if it's outdated
-        with Path(BROWSERTIME_SRC_ROOT, "package.json").open() as new:
+        with Path(self.browsertime_src_root, "package.json").open() as new:
             new_pkg = json.load(new)
 
         return not self._get_browsertime_resolved().endswith(
@@ -205,11 +218,10 @@ class BrowsertimeRunner(NodeRunner):
 
         # preparing ~/.mozbuild/browsertime
         for file in ("package.json", "package-lock.json"):
-            src = BROWSERTIME_SRC_ROOT / file
+            src = self.browsertime_src_root / file
             target = self.state_path / file
             # Overwrite the existing files
             shutil.copyfile(str(src), str(target))
-
         package_json_path = self.state_path / "package.json"
 
         if install_url is not None:
@@ -452,6 +464,7 @@ class BrowsertimeRunner(NodeRunner):
                     pass
 
         extra = self.extra_default_args(args=args)
+
         command = [str(self.browsertime_js)] + extra + args
         self.info("Running browsertime with this command %s" % " ".join(command))
 
