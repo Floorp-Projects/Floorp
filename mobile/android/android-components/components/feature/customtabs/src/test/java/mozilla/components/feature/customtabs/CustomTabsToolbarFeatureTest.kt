@@ -60,6 +60,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
+import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 class CustomTabsToolbarFeatureTest {
@@ -127,7 +128,8 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
-    fun `initialize updates toolbar, window and text color`() {
+    @Config(sdk = [28])
+    fun `initialize updates toolbar, window and text color on SDK 28`() {
         val tab = createCustomTab(
             "https://www.mozilla.org",
             id = "mozilla",
@@ -166,6 +168,47 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
+    fun `initialize updates toolbar, window and text color`() {
+        val tab = createCustomTab(
+            "https://www.mozilla.org",
+            id = "mozilla",
+            config = CustomTabConfig(
+                colorSchemes = ColorSchemes(
+                    defaultColorSchemeParams = ColorSchemeParams(
+                        toolbarColor = Color.RED,
+                        navigationBarColor = Color.BLUE,
+                    ),
+                ),
+            ),
+        )
+
+        val store = BrowserStore(
+            BrowserState(
+                customTabs = listOf(tab),
+            ),
+        )
+        val toolbar = spy(BrowserToolbar(testContext))
+        val useCases = CustomTabsUseCases(
+            store = store,
+            loadUrlUseCase = SessionUseCases(store).loadUrl,
+        )
+        val window: Window = mock()
+        `when`(window.decorView).thenReturn(mock())
+        `when`(window.insetsController).thenReturn(mock())
+
+        val feature = CustomTabsToolbarFeature(store, toolbar, sessionId = "mozilla", useCases = useCases, window = window) {}
+
+        feature.init(tab.config)
+
+        verify(toolbar).setBackgroundColor(Color.RED)
+        verify(window).statusBarColor = Color.RED
+        verify(window).navigationBarColor = Color.BLUE
+
+        assertEquals(Color.WHITE, toolbar.display.colors.title)
+        assertEquals(Color.WHITE, toolbar.display.colors.text)
+    }
+
+    @Test
     fun `initialize does not update toolbar background if flag is set`() {
         val tab = createCustomTab(
             "https://www.mozilla.org",
@@ -189,6 +232,7 @@ class CustomTabsToolbarFeatureTest {
         )
         val window: Window = mock()
         `when`(window.decorView).thenReturn(mock())
+        `when`(window.insetsController).thenReturn(mock())
 
         run {
             val feature = CustomTabsToolbarFeature(
