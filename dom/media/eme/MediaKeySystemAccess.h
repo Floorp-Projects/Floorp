@@ -66,7 +66,7 @@ class MediaKeySystemAccess final : public nsISupports, public nsWrapperCache {
 
   static RefPtr<GenericPromise> KeySystemSupportsInitDataType(
       const nsAString& aKeySystem, const nsAString& aInitDataType,
-      bool aIsHardwareDecryption);
+      bool aIsHardwareDecryption, bool aIsPrivateBrowsing);
 
   static nsCString ToCString(
       const Sequence<MediaKeySystemConfiguration>& aConfig);

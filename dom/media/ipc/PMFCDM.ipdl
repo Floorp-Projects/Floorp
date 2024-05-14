@@ -100,6 +100,7 @@ union MFCDMSessionResult {
 struct MFCDMCapabilitiesRequest {
   nsString keySystem;
   bool isHardwareDecryption;
+  bool isPrivateBrowsing;
 };
 
 [ManualDealloc]

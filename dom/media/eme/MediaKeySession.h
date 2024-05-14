@@ -141,6 +141,9 @@ class MediaKeySession final : public DOMEventTargetHelper,
 
   // True if this key session is related with hardware decryption.
   bool mHardwareDecryption;
+
+  // True if this media key session is created under a private browsing mode.
+  const bool mIsPrivateBrowsing;
 };
 
 }  // namespace dom

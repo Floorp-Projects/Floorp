@@ -295,8 +295,8 @@ void KeySystemConfig::GetGMPKeySystemConfigs(dom::Promise* aPromise) {
       continue;
     }
 #endif
-    requests.AppendElement(
-        KeySystemConfigRequest{keySystem, DecryptionInfo::Software});
+    requests.AppendElement(KeySystemConfigRequest{
+        keySystem, DecryptionInfo::Software, false /* IsPrivateBrowsing */});
   }
 
   // Get supported configs
