@@ -60,7 +60,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 //  The maximum time to wait for a "drag_received" arrived in microseconds.
-#define NS_DND_TIMEOUT 1000000
+#define NS_DND_TIMEOUT (5 * 1000000)
 
 //  The maximum time to wait before temporary files resulting
 //  from drag'n'drop events will be removed in miliseconds.
