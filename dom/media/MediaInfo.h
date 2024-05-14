@@ -349,7 +349,32 @@ class VideoInfo : public TrackInfo {
         mExtraData(new MediaByteBuffer),
         mRotation(VideoRotation::kDegree_0) {}
 
-  VideoInfo(const VideoInfo& aOther) = default;
+  VideoInfo(const VideoInfo& aOther) : TrackInfo(aOther) {
+    if (aOther.mCodecSpecificConfig) {
+      mCodecSpecificConfig = new MediaByteBuffer();
+      mCodecSpecificConfig->AppendElements(
+          reinterpret_cast<uint8_t*>(aOther.mCodecSpecificConfig->Elements()),
+          aOther.mCodecSpecificConfig->Length());
+    }
+    if (aOther.mExtraData) {
+      mExtraData = new MediaByteBuffer();
+      mExtraData->AppendElements(
+          reinterpret_cast<uint8_t*>(aOther.mExtraData->Elements()),
+          aOther.mExtraData->Length());
+    }
+    mDisplay = aOther.mDisplay;
+    mStereoMode = aOther.mStereoMode;
+    mImage = aOther.mImage;
+    mRotation = aOther.mRotation;
+    mColorDepth = aOther.mColorDepth;
+    mColorSpace = aOther.mColorSpace;
+    mColorPrimaries = aOther.mColorPrimaries;
+    mTransferFunction = aOther.mTransferFunction;
+    mColorRange = aOther.mColorRange;
+    mImageRect = aOther.mImageRect;
+    mAlphaPresent = aOther.mAlphaPresent;
+    mFrameRate = aOther.mFrameRate;
+  };
 
   bool operator==(const VideoInfo& rhs) const;
 
