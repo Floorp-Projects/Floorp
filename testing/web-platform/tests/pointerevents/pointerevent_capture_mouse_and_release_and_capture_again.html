@@ -72,9 +72,14 @@ addEventListener("load", () => {
       {type: "gotpointercapture", target: listener, pointerType: "mouse"},
       {type: "pointermove", target: listener, pointerType: "mouse"},
       {type: "lostpointercapture", target: listener, pointerType: "mouse"},
+      // The pointer is over the target, not over the listener.  Therefore,
+      // when the listener loses the capture, pointerout should be fired on
+      // the listener since it won't receive pointer events until the pointer
+      // moves over the listener.
+      {type: "pointerout", target: listener, pointerType: "mouse"},
     ];
     assert_equals(stringifyEvents(events), stringifyEvents(expectedEvents));
-  }, "Pointer boundary events should not be fired on the capturing element after losing the capture");
+  }, "A pointerout should be fired on the capturing element after losing the capture");
 }, {once: true});
 </script>
 </head>
