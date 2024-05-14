@@ -13,6 +13,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
 "use strict";
 
+const { Assert } = ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
+);
+
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
@@ -64,15 +68,15 @@ addTest(async function inheritedUserStyles() {
   is(applied[3].rule.type, 1, "Entry 3 should be a rule style");
   is(applied[3].rule.cssText, "font-size: 15px;",
       "Entry 3 should have the expected cssText");
-  ok(!applied[3].matchedDesugaredSelectors,
-      "Shouldn't get matchedDesugaredSelectors with this request.");
+  ok(!applied[3].matchedSelectorIndexes,
+      "Shouldn't get matchedSelectorIndexes with this request.");
 
   is(applied[4].inherited.id, "inheritable-rule-uninheritable-style",
       "Entry 4 should be inherited from the parent's parent");
   is(applied[4].rule.type, 1, "Entry 4 should be an rule style");
   is(applied[4].rule.cssText, "font-size: 15px;",
       "Entry 4 should have the expected cssText");
-  ok(!applied[4].matchedDesugaredSelectors, "Shouldn't get matchedDesugaredSelectors with this request.");
+  ok(!applied[4].matchedSelectorIndexes, "Shouldn't get matchedSelectorIndexes with this request.");
 
   is(applied.length, 5, "Should have 5 rules.");
 
@@ -110,11 +114,8 @@ addTest(async function matchedSelectors() {
   const applied = await gStyles.getApplied(node, {
     inherited: true, filter: "user", matchedSelectors: true,
   });
-  is(applied[3].matchedDesugaredSelectors[0], ".inheritable-rule",
-      "Entry 3 should have a matched selector");
-  is(applied[4].matchedDesugaredSelectors[0], ".inheritable-rule",
-      "Entry 4 should have a matched selector");
-
+  Assert.deepEqual(applied[3].matchedSelectorIndexes, [0], "Entry 3 should have a matched selector");
+  Assert.deepEqual(applied[4].matchedSelectorIndexes, [0], "Entry 4 should have a matched selector");
   runNextTest();
 });
 

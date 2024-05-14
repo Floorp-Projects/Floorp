@@ -861,7 +861,6 @@ class PageStyleActor extends Actor {
         }
 
         const domRule = entry.rule.rawRule;
-        const desugaredSelectors = entry.rule.getDesugaredSelectors();
         const element = entry.inherited
           ? entry.inherited.rawNode
           : node.rawNode;
@@ -869,9 +868,10 @@ class PageStyleActor extends Actor {
         const { bindingElement, pseudo } =
           CssLogic.getBindingElementAndPseudo(element);
         const relevantLinkVisited = CssLogic.hasVisitedState(bindingElement);
-        entry.matchedDesugaredSelectors = [];
+        entry.matchedSelectorIndexes = [];
 
-        for (let i = 0; i < desugaredSelectors.length; i++) {
+        const len = domRule.selectorCount;
+        for (let i = 0; i < len; i++) {
           if (
             domRule.selectorMatchesElement(
               i,
@@ -880,7 +880,7 @@ class PageStyleActor extends Actor {
               relevantLinkVisited
             )
           ) {
-            entry.matchedDesugaredSelectors.push(desugaredSelectors[i]);
+            entry.matchedSelectorIndexes.push(i);
           }
         }
       }
