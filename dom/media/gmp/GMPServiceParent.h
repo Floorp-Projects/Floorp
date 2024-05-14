@@ -68,7 +68,8 @@ class GeckoMediaPluginServiceParent final
   // GMP thread access only
   bool IsShuttingDown();
 
-  already_AddRefed<GMPStorage> GetMemoryStorageFor(const nsACString& aNodeId);
+  already_AddRefed<GMPStorage> GetMemoryStorageFor(const nsACString& aNodeId,
+                                                   const nsAString& aGMPName);
   nsresult ForgetThisSiteNative(
       const nsAString& aSite, const mozilla::OriginAttributesPattern& aPattern);
 

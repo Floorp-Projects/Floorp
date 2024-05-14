@@ -512,6 +512,8 @@ void GMPParent::CloseIfUnused() {
 
     // Shutdown GMPStorage. Given that all protocol actors must be shutdown
     // (!Used() is true), all storage operations should be complete.
+    GMP_PARENT_LOG_DEBUG("%p shutdown storage (sz=%zu)", this,
+                         mStorage.Length());
     for (size_t i = mStorage.Length(); i > 0; i--) {
       mStorage[i - 1]->Shutdown();
     }
