@@ -19,8 +19,8 @@ use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::renderer::{BlendMode, GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF};
 use crate::segment::EdgeAaSegmentMask;
 use crate::space::SpaceMapper;
-use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
-use crate::util::MaxRect;
+use crate::spatial_tree::{CoordinateSpaceMapping, SpatialNodeIndex, SpatialTree};
+use crate::util::{MaxRect, ScaleOffset};
 
 const MIN_AA_SEGMENTS_SIZE: f32 = 4.0;
 const MIN_QUAD_SPLIT_SIZE: f32 = 256.0;
@@ -88,7 +88,6 @@ pub fn push_quad(
         frame_state.clip_store,
         interned_clips,
         prim_is_2d_scale_translation,
-        pattern,
         frame_context.spatial_tree,
     );
 
@@ -133,6 +132,7 @@ pub fn push_quad(
         clip_chain.local_clip_rect,
         pattern.base_color,
         &[],
+        ScaleOffset::identity(),
     );
 
     if let QuadRenderStrategy::Direct = strategy {
@@ -270,6 +270,15 @@ pub fn push_quad(
             let clip_coverage_rect = surface
                 .map_to_device_rect(&clip_chain.pic_coverage_rect, frame_context.spatial_tree);
 
+
+            let local_to_device = match map_prim_to_surface {
+                CoordinateSpaceMapping::Local => ScaleOffset::identity(),
+                CoordinateSpaceMapping::ScaleOffset(scale_offset) => scale_offset.inverse(),
+                CoordinateSpaceMapping::Transform(..) => panic!("bug: nine-patch segments should be axis-aligned only"),
+            }.scale(device_pixel_scale.0);
+
+            let device_prim_rect: DeviceRect = local_to_device.map_rect(&local_rect);                
+
             let local_corner_0 = LayoutRect::new(
                 clip_rect.min,
                 clip_rect.min + radius,
@@ -379,18 +388,12 @@ pub fn push_quad(
             }
 
             if !scratch.quad_direct_segments.is_empty() {
-                let clip_rect = clip_coverage_rect.cast_unit();
-                // TODO(1892398): This is not correct. Patterns rely on the origin of the primitive
-                // rect to work in coordinates relative to the primitive. Passing a rectangle
-                // which is affected by clips causes patterns to shift as the clip changes the
-                // primitive origin.
-                let rect = clip_rect;
-
                 add_pattern_prim(
                     pattern,
+                    local_to_device.inverse(),
                     prim_instance_index,
-                    rect,
-                    clip_rect,
+                    device_prim_rect.cast_unit(),
+                    clip_coverage_rect.cast_unit(),
                     pattern.is_opaque,
                     frame_state,
                     targets,
@@ -420,7 +423,6 @@ fn get_prim_render_strategy(
     clip_store: &ClipStore,
     interned_clips: &DataStore<ClipIntern>,
     can_use_nine_patch: bool,
-    pattern: &Pattern,
     spatial_tree: &SpatialTree,
 ) -> QuadRenderStrategy {
     if !clip_chain.needs_mask {
@@ -437,10 +439,6 @@ fn get_prim_render_strategy(
     let try_split_prim = x_tiles > 1 || y_tiles > 1;
 
     if !try_split_prim {
-        return QuadRenderStrategy::Indirect;
-    }
-
-    if !pattern.supports_segmented_rendering() {
         return QuadRenderStrategy::Indirect;
     }
 
@@ -541,9 +539,8 @@ fn add_render_task_with_mask(
 
 fn add_pattern_prim(
     pattern: &Pattern,
+    pattern_transform: ScaleOffset,
     prim_instance_index: PrimitiveInstanceIndex,
-    // TODO(1892398): At the moment we pass the rect and clip rect either in layout or device
-    // coordinates, which causes some issues.
     rect: LayoutRect,
     clip_rect: LayoutRect,
     is_opaque: bool,
@@ -557,6 +554,7 @@ fn add_pattern_prim(
         clip_rect,
         pattern.base_color,
         segments,
+        pattern_transform,
     );
 
     frame_state.set_segments(segments, targets);
@@ -598,6 +596,7 @@ fn add_composite_prim(
         rect,
         PremultipliedColorF::WHITE,
         segments,
+        ScaleOffset::identity(),
     );
 
     frame_state.set_segments(segments, targets);
@@ -630,11 +629,13 @@ pub fn write_prim_blocks(
     clip_rect: LayoutRect,
     color: PremultipliedColorF,
     segments: &[QuadSegment],
+    scale_offset: ScaleOffset,
 ) -> GpuBufferAddress {
-    let mut writer = builder.write_blocks(3 + segments.len() * 2);
+    let mut writer = builder.write_blocks(4 + segments.len() * 2);
 
     writer.push_one(prim_rect);
     writer.push_one(clip_rect);
+    writer.push_one(scale_offset);
     writer.push_one(color);
 
     for segment in segments {

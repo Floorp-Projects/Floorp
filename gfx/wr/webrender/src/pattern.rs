@@ -67,17 +67,4 @@ impl Pattern {
             is_opaque: false,
         }
     }
-
-    pub fn supports_segmented_rendering(&self) -> bool {
-        match self.kind {
-            PatternKind::ColorOrTexture | PatternKind::Mask => {
-                true
-            }
-            PatternKind::RadialGradient | PatternKind::ConicGradient => {
-                // TODO: We need to fix up the layout coords mismatch in pattern
-                //       and quad rendering to allow these to be segmented.
-                false
-            }
-        }
-    }
 }
