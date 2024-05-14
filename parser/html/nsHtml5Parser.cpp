@@ -418,8 +418,6 @@ nsresult nsHtml5Parser::Parse(const nsAString& aSourceBuffer, void* aKey,
                                                     executor->GetStage(), true);
         mDocWriteSpeculativeTreeBuilder->setScriptingEnabled(
             mTreeBuilder->isScriptingEnabled());
-        mDocWriteSpeculativeTreeBuilder->setAllowDeclarativeShadowRoots(
-            mTreeBuilder->isAllowDeclarativeShadowRoots());
         mDocWriteSpeculativeTokenizer = mozilla::MakeUnique<nsHtml5Tokenizer>(
             mDocWriteSpeculativeTreeBuilder.get(), false);
         mDocWriteSpeculativeTokenizer->setInterner(&mAtomTable);
@@ -650,8 +648,6 @@ nsresult nsHtml5Parser::StartExecutor() {
   RefPtr<nsHtml5TreeOpExecutor> executor(mExecutor);
   executor->SetParser(this);
   mTreeBuilder->setScriptingEnabled(executor->IsScriptEnabled());
-  mTreeBuilder->setAllowDeclarativeShadowRoots(
-      executor->GetDocument()->AllowsDeclarativeShadowRoots());
 
   mTreeBuilder->setIsSrcdocDocument(false);
 
@@ -668,8 +664,6 @@ nsresult nsHtml5Parser::StartExecutor() {
 nsresult nsHtml5Parser::Initialize(mozilla::dom::Document* aDoc, nsIURI* aURI,
                                    nsISupports* aContainer,
                                    nsIChannel* aChannel) {
-  mTreeBuilder->setAllowDeclarativeShadowRoots(
-      aDoc->AllowsDeclarativeShadowRoots());
   return mExecutor->Init(aDoc, aURI, aContainer, aChannel);
 }
 
