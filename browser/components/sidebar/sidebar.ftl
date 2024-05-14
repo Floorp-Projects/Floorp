@@ -31,12 +31,3 @@ sidebar-customize-header = Customize sidebar
 sidebar-customize-firefox-tools = { -brand-product-name } tools
 sidebar-customize-history = History
 sidebar-customize-synced-tabs = Tabs from other devices
-
-## Labels for sidebar context menu items
-
-sidebar-context-menu-manage-extension =
-  .label = Manage extension
-sidebar-context-menu-remove-extension =
-  .label = Remove extension
-sidebar-context-menu-report-extension =
-  .label = Report extension

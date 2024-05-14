@@ -278,18 +278,6 @@
               oncommand="SidebarController.hide()"/>
   </menupopup>
 
-  <menupopup id="sidebar-context-menu">
-    <menuitem data-l10n-id="sidebar-context-menu-manage-extension"
-              id="sidebar-context-menu-manage-extension"
-              contexttype="extension-action"/>
-    <menuitem data-l10n-id="sidebar-context-menu-remove-extension"
-              id="sidebar-context-menu-remove-extension"
-              contexttype="extension-action"/>
-    <menuitem data-l10n-id="sidebar-context-menu-report-extension"
-              id="sidebar-context-menu-report-extension"
-              contexttype="extension-action"/>
-  </menupopup>
-
   <menupopup id="toolbar-context-menu"
              onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); ToolbarContextMenu.updateDownloadsAutoHide(this); ToolbarContextMenu.updateDownloadsAlwaysOpenPanel(this); ToolbarContextMenu.updateExtension(this, event)">
     <menuitem oncommand="ToolbarContextMenu.openAboutAddonsForContextAction(this.parentElement)"

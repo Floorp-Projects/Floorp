@@ -35,29 +35,13 @@ export default class SidebarMain extends MozLitElement {
     this.bottomActions = [];
     this.selectedView = window.SidebarController.currentID;
     this.open = window.SidebarController.isOpen;
-    this.contextMenuTarget = null;
   }
 
   connectedCallback() {
     super.connectedCallback();
     this._sidebarBox = document.getElementById("sidebar-box");
-    this._sidebarMain = document.getElementById("sidebar-main");
-    this._contextMenu = document.getElementById("sidebar-context-menu");
-    this._manageExtensionMenuItem = document.getElementById(
-      "sidebar-context-menu-manage-extension"
-    );
-    this._removeExtensionMenuItem = document.getElementById(
-      "sidebar-context-menu-remove-extension"
-    );
-    this._reportExtensionMenuItem = document.getElementById(
-      "sidebar-context-menu-report-extension"
-    );
-
     this._sidebarBox.addEventListener("sidebar-show", this);
     this._sidebarBox.addEventListener("sidebar-hide", this);
-    this._sidebarMain.addEventListener("contextmenu", this);
-    this._contextMenu.addEventListener("popuphidden", this);
-    this._contextMenu.addEventListener("command", this);
 
     window.addEventListener("SidebarItemAdded", this);
     window.addEventListener("SidebarItemChanged", this);
@@ -70,43 +54,10 @@ export default class SidebarMain extends MozLitElement {
     super.disconnectedCallback();
     this._sidebarBox.removeEventListener("sidebar-show", this);
     this._sidebarBox.removeEventListener("sidebar-hide", this);
-    this._sidebarMain.removeEventListener("contextmenu", this);
-    this._contextMenu.removeEventListener("popuphidden", this);
-    this._contextMenu.removeEventListener("command", this);
 
     window.removeEventListener("SidebarItemAdded", this);
     window.removeEventListener("SidebarItemChanged", this);
     window.removeEventListener("SidebarItemRemoved", this);
-  }
-
-  onSidebarPopupShowing(event) {
-    // Store the context menu target which holds the id required for managing sidebar items
-    this.contextMenuTarget =
-      event.explicitOriginalTarget.flattenedTreeParentNode;
-    if (!this.contextMenuTarget.getAttribute("extensionId")) {
-      event.preventDefault();
-    }
-  }
-
-  async manageExtension() {
-    await window.BrowserAddonUI.manageAddon(
-      this.contextMenuTarget.getAttribute("extensionId"),
-      "sidebar-context-menu"
-    );
-  }
-
-  async removeExtension() {
-    await window.BrowserAddonUI.removeAddon(
-      this.contextMenuTarget.getAttribute("extensionId"),
-      "sidebar-context-menu"
-    );
-  }
-
-  async reportExtension() {
-    await window.BrowserAddonUI.reportAddon(
-      this.contextMenuTarget.getAttribute("extensionId"),
-      "sidebar-context-menu"
-    );
   }
 
   getImageUrl(icon, targetURI) {
@@ -145,27 +96,8 @@ export default class SidebarMain extends MozLitElement {
     );
   }
 
-  async handleEvent(e) {
+  handleEvent(e) {
     switch (e.type) {
-      case "command":
-        switch (e.target.id) {
-          case "sidebar-context-menu-manage-extension":
-            await this.manageExtension();
-            break;
-          case "sidebar-context-menu-report-extension":
-            await this.reportExtension();
-            break;
-          case "sidebar-context-menu-remove-extension":
-            await this.removeExtension();
-            break;
-        }
-        break;
-      case "contextmenu":
-        this.onSidebarPopupShowing(e);
-        break;
-      case "popuphidden":
-        this.contextMenuTarget = null;
-        break;
       case "sidebar-show":
         this.selectedView = e.detail.viewId;
         this.open = true;
@@ -202,7 +134,6 @@ export default class SidebarMain extends MozLitElement {
       data-l10n-id=${ifDefined(action.l10nId)}
       style=${styleMap({ "--action-icon": action.icon })}
       ?extension=${action.view?.includes("-sidebar-action")}
-      extensionId=${ifDefined(action.extensionId)}
     >
     </moz-button>`;
   }
