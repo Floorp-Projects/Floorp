@@ -35,6 +35,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 import java.lang.Thread.sleep
 import java.lang.reflect.Modifier
 
@@ -102,7 +103,8 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `CrashReporter will show prompt if setup with Prompt-ALWAYS`() {
+    @Config(sdk = [28])
+    fun `CrashReporter will show prompt if setup with Prompt-ALWAYS on SDK 28 and below`() {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
@@ -124,6 +126,33 @@ class CrashReporterTest {
         verify(reporter).sendCrashTelemetry(testContext, crash)
         verify(reporter, never()).sendCrashReport(testContext, crash)
         verify(reporter).showPrompt(any(), eq(crash))
+        verify(reporter, never()).showNotification(any(), eq(crash))
+    }
+
+    @Test
+    fun `CrashReporter will show notification if setup with Prompt-ALWAYS`() {
+        val service: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
+
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.ALWAYS,
+                scope = scope,
+                notificationsDelegate = mock(),
+            ).install(testContext),
+        )
+
+        val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
+
+        reporter.onCrash(testContext, crash)
+
+        verify(reporter).sendCrashTelemetry(testContext, crash)
+        verify(reporter, never()).sendCrashReport(testContext, crash)
+        verify(reporter, never()).showPrompt(any(), eq(crash))
+        verify(reporter).showNotification(any(), eq(crash))
     }
 
     @Test
@@ -152,7 +181,8 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `CrashReporter will show prompt for main process native crash and with setup Prompt-ONLY_NATIVE_CRASH`() {
+    @Config(sdk = [28])
+    fun `CrashReporter will show prompt for main process native crash and with setup Prompt-ONLY_NATIVE_CRASH for SDK 28 and below`() {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
@@ -181,12 +211,51 @@ class CrashReporterTest {
 
         verify(reporter).sendCrashTelemetry(testContext, crash)
         verify(reporter).showPrompt(any(), eq(crash))
+        verify(reporter, never()).showNotification(any(), eq(crash))
+
         verify(reporter, never()).sendCrashReport(testContext, crash)
         verify(service, never()).report(crash)
     }
 
     @Test
-    fun `CrashReporter will submit crash telemetry even if crash report requires prompt`() {
+    fun `CrashReporter will show notification for main process native crash and with setup Prompt-ONLY_NATIVE_CRASH`() {
+        val service: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
+
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
+                scope = scope,
+                notificationsDelegate = mock(),
+            ).install(testContext),
+        )
+
+        val crash = Crash.NativeCodeCrash(
+            0,
+            "dump.path",
+            true,
+            "extras.path",
+            processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
+            breadcrumbs = arrayListOf(),
+            remoteType = null,
+        )
+
+        reporter.onCrash(testContext, crash)
+
+        verify(reporter).sendCrashTelemetry(testContext, crash)
+        verify(reporter, never()).showPrompt(any(), eq(crash))
+        verify(reporter).showNotification(any(), eq(crash))
+
+        verify(reporter, never()).sendCrashReport(testContext, crash)
+        verify(service, never()).report(crash)
+    }
+
+    @Test
+    @Config(sdk = [28])
+    fun `CrashReporter will submit crash telemetry through prompt even if crash report requires prompt on SDK 28 and below`() {
         val service: CrashReporterService = mock()
         val telemetryService: CrashTelemetryService = mock()
 
@@ -207,6 +276,32 @@ class CrashReporterTest {
         verify(reporter).sendCrashTelemetry(testContext, crash)
         verify(reporter, never()).sendCrashReport(testContext, crash)
         verify(reporter).showPrompt(any(), eq(crash))
+        verify(reporter, never()).showNotification(testContext, crash)
+    }
+
+    @Test
+    fun `CrashReporter will submit crash telemetry through notification even if crash report requires prompt`() {
+        val service: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
+
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                telemetryServices = listOf(telemetryService),
+                shouldPrompt = CrashReporter.Prompt.ALWAYS,
+                notificationsDelegate = mock(),
+            ).install(testContext),
+        )
+
+        val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
+
+        reporter.onCrash(testContext, crash)
+
+        verify(reporter).sendCrashTelemetry(testContext, crash)
+        verify(reporter, never()).sendCrashReport(testContext, crash)
+        verify(reporter, never()).showPrompt(any(), eq(crash))
+        verify(reporter).showNotification(testContext, crash)
     }
 
     @Test
@@ -232,7 +327,8 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `CrashReporter will not send crash telemetry if there is no telemetry service`() {
+    @Config(sdk = [28])
+    fun `CrashReporter will not send crash telemetry if there is no telemetry service and show prompt on SDK 28 and below`() {
         val service: CrashReporterService = mock()
 
         val reporter = spy(
@@ -250,6 +346,29 @@ class CrashReporterTest {
 
         verify(reporter, never()).sendCrashTelemetry(testContext, crash)
         verify(reporter).showPrompt(any(), eq(crash))
+        verify(reporter, never()).showNotification(any(), any())
+    }
+
+    @Test
+    fun `CrashReporter will not send crash telemetry if there is no telemetry service and show notification `() {
+        val service: CrashReporterService = mock()
+
+        val reporter = spy(
+            CrashReporter(
+                context = testContext,
+                services = listOf(service),
+                shouldPrompt = CrashReporter.Prompt.ALWAYS,
+                notificationsDelegate = mock(),
+            ).install(testContext),
+        )
+
+        val crash: Crash.UncaughtExceptionCrash = createUncaughtExceptionCrash()
+
+        reporter.onCrash(testContext, crash)
+
+        verify(reporter, never()).sendCrashTelemetry(testContext, crash)
+        verify(reporter, never()).showPrompt(any(), any())
+        verify(reporter).showNotification(any(), any())
     }
 
     @Test
@@ -635,7 +754,7 @@ class CrashReporterTest {
         )
         reporter.onCrash(context, nativeCrash)
 
-        verify(pendingIntent).send(eq(context), eq(0), any())
+        verify(pendingIntent).send(eq(context), eq(0), any(), eq(null), eq(null), eq(null), any())
 
         val receivedIntent = shadowOf(context).nextStartedActivity
 

@@ -278,12 +278,17 @@ class CrashReporter(
             // activity here. So instead we fallback to just showing a notification
             // https://developer.android.com/preview/privacy/background-activity-starts
             logger.info("Showing notification")
-            val notification = CrashNotification(context, crash, promptConfiguration, notificationsDelegate)
-            notification.show()
+            showNotification(context, crash)
         } else {
             logger.info("Showing prompt")
             showPrompt(context, crash)
         }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun showNotification(context: Context, crash: Crash) {
+        val notification = CrashNotification(context, crash, promptConfiguration, notificationsDelegate)
+        notification.show()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
