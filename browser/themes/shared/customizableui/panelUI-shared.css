@@ -9,8 +9,8 @@
   --panel-banner-item-background-color: var(--button-bgcolor);
   --panel-banner-item-hover-bgcolor: var(--button-hover-bgcolor);
   --panel-banner-item-active-bgcolor: var(--button-active-bgcolor);
-  --panel-banner-item-update-supported-bgcolor: #2AC3A2;
-  --panel-banner-item-info-icon-bgcolor: #0090ED;
+  --panel-banner-item-update-supported-bgcolor: light-dark(#2ac3a2, #54ffbd);
+  --panel-banner-item-info-icon-bgcolor: light-dark(#0090ed, #80ebff);
 
   --menu-panel-width: 22.35em;
   --menu-panel-width-wide: 29em;
