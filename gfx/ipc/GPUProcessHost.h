@@ -7,6 +7,7 @@
 #ifndef _include_mozilla_gfx_ipc_GPUProcessHost_h_
 #define _include_mozilla_gfx_ipc_GPUProcessHost_h_
 
+#include "gfxPlatform.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -49,7 +50,9 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
     // Shutdown().
     virtual void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {}
 
-    virtual void OnRemoteProcessDeviceReset(GPUProcessHost* aHost) {}
+    virtual void OnRemoteProcessDeviceReset(
+        GPUProcessHost* aHost, const DeviceResetReason& aReason,
+        const DeviceResetDetectPlace& aPlace) {}
 
     virtual void OnProcessDeclaredStable() {}
   };

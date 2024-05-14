@@ -157,13 +157,19 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // Record the device reset in telemetry / annotate the crash report.
   static void RecordDeviceReset(DeviceResetReason aReason);
 
+  static void NotifyDeviceReset(DeviceResetReason aReason,
+                                DeviceResetDetectPlace aPlace);
+
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
   void SimulateDeviceReset();
   void DisableWebRender(wr::WebRenderError aError, const nsCString& aMsg);
   void NotifyWebRenderError(wr::WebRenderError aError);
-  void OnInProcessDeviceReset(bool aTrackThreshold);
-  void OnRemoteProcessDeviceReset(GPUProcessHost* aHost) override;
+  void OnInProcessDeviceReset(DeviceResetReason aReason,
+                              DeviceResetDetectPlace aPlace);
+  void OnRemoteProcessDeviceReset(
+      GPUProcessHost* aHost, const DeviceResetReason& aReason,
+      const DeviceResetDetectPlace& aPlace) override;
   void OnProcessDeclaredStable() override;
   void NotifyListenersOnCompositeDeviceReset();
 

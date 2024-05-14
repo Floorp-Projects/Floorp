@@ -20,6 +20,7 @@
 #  include "nsDebug.h"
 #endif
 #include "2D.h"
+#include "gfxPlatform.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "Point.h"
@@ -701,6 +702,82 @@ class Log final {
           break;
         default:
           mMessage << "Invalid SurfaceType (" << (int)aType << ")";
+          break;
+      }
+    }
+    return *this;
+  }
+
+  Log& operator<<(DeviceResetReason aReason) {
+    if (MOZ_UNLIKELY(LogIt())) {
+      switch (aReason) {
+        case DeviceResetReason::OK:
+          mMessage << "DeviceResetReason::OK";
+          break;
+        case DeviceResetReason::HUNG:
+          mMessage << "DeviceResetReason::HUNG";
+          break;
+        case DeviceResetReason::REMOVED:
+          mMessage << "DeviceResetReason::REMOVED";
+          break;
+        case DeviceResetReason::RESET:
+          mMessage << "DeviceResetReason::RESET";
+          break;
+        case DeviceResetReason::DRIVER_ERROR:
+          mMessage << "DeviceResetReason::DRIVER_ERROR";
+          break;
+        case DeviceResetReason::INVALID_CALL:
+          mMessage << "DeviceResetReason::INVALID_CALL";
+          break;
+        case DeviceResetReason::OUT_OF_MEMORY:
+          mMessage << "DeviceResetReason::OUT_OF_MEMORY";
+          break;
+        case DeviceResetReason::FORCED_RESET:
+          mMessage << "DeviceResetReason::FORCED_RESET";
+          break;
+        case DeviceResetReason::OTHER:
+          mMessage << "DeviceResetReason::OTHER";
+          break;
+        case DeviceResetReason::NVIDIA_VIDEO:
+          mMessage << "DeviceResetReason::NVIDIA_VIDEO";
+          break;
+        case DeviceResetReason::UNKNOWN:
+          mMessage << "DeviceResetReason::UNKNOWN";
+          break;
+        default:
+          mMessage << "DeviceResetReason::UNKNOWN_REASON";
+          break;
+      }
+    }
+    return *this;
+  }
+
+  Log& operator<<(DeviceResetDetectPlace aPlace) {
+    if (MOZ_UNLIKELY(LogIt())) {
+      switch (aPlace) {
+        case DeviceResetDetectPlace::WR_BEGIN_FRAME:
+          mMessage << "DeviceResetDetectPlace::WR_BEGIN_FRAME";
+          break;
+        case DeviceResetDetectPlace::WR_WAIT_FOR_GPU:
+          mMessage << "DeviceResetDetectPlace::WR_WAIT_FOR_GPU";
+          break;
+        case DeviceResetDetectPlace::WR_POST_UPDATE:
+          mMessage << "DeviceResetDetectPlace::WR_POST_UPDATE";
+          break;
+        case DeviceResetDetectPlace::WR_SYNC_OBJRCT:
+          mMessage << "DeviceResetDetectPlace::WR_SYNC_OBJRCT";
+          break;
+        case DeviceResetDetectPlace::WR_SIMULATE:
+          mMessage << "DeviceResetDetectPlace::WR_SIMULATE";
+          break;
+        case DeviceResetDetectPlace::WIDGET:
+          mMessage << "DeviceResetDetectPlace::WIDGET";
+          break;
+        case DeviceResetDetectPlace::CANVAS_TRANSLATOR:
+          mMessage << "DeviceResetDetectPlace::CANVAS_TRANSLATOR";
+          break;
+        default:
+          mMessage << "DeviceResetDetectPlace::UNKNOWN_REASON";
           break;
       }
     }

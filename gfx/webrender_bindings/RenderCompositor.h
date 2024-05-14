@@ -7,6 +7,7 @@
 #ifndef MOZILLA_GFX_RENDERCOMPOSITOR_H
 #define MOZILLA_GFX_RENDERCOMPOSITOR_H
 
+#include "gfxPlatform.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -108,7 +109,7 @@ class RenderCompositor {
 
   layers::SyncObjectHost* GetSyncObject() const { return mSyncObject.get(); }
 
-  virtual GLenum IsContextLost(bool aForce);
+  virtual DeviceResetReason IsContextLost(bool aForce);
 
   virtual bool SupportAsyncScreenshot() { return true; }
 

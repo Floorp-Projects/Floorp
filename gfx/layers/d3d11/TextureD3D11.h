@@ -35,6 +35,8 @@ class GLBlitHelper;
 
 namespace layers {
 
+DeviceResetReason DXGIErrorToDeviceResetReason(HRESULT aError);
+
 already_AddRefed<TextureHost> CreateTextureHostD3D11(
     const SurfaceDescriptor& aDesc, ISurfaceAllocator* aDeallocator,
     LayersBackend aBackend, TextureFlags aFlags);
