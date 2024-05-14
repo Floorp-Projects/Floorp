@@ -18,6 +18,14 @@
 #include "nsServiceManagerUtils.h"
 #include "WinUtils.h"
 
+#ifdef __MINGW32__
+// The PKEY_Link_Arguments property key does not exist in the MINGW32
+// build configuration, so we define it ourselves here.
+#  include <propkeydef.h>  // For DEFINE_PROPERTYKEY() definition
+DEFINE_PROPERTYKEY(PKEY_Link_Arguments, 0x436F2667, 0x14E2, 0x4FEB, 0xB3, 0x0A,
+                   0x14, 0x6C, 0x53, 0xB5, 0xB6, 0x74, 100);
+#endif
+
 using mozilla::dom::Promise;
 using mozilla::dom::WindowsJumpListShortcutDescription;
 
