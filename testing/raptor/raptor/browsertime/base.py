@@ -16,7 +16,7 @@ from copy import deepcopy
 import mozprocess
 import six
 from benchmark import Benchmark
-from cmdline import CHROME_ANDROID_APPS, DESKTOP_APPS
+from cmdline import CHROME_ANDROID_APPS, DESKTOP_APPS, FIREFOX_ANDROID_APPS
 from logger.logger import RaptorLogger
 from manifestparser.util import evaluate_list_from_string
 from perftest import GECKO_PROFILER_APPS, TRACE_APPS, Perftest
@@ -830,26 +830,30 @@ class Browsertime(Perftest):
         proc.wait()
 
     def get_failure_screenshot(self):
-        if not (
-            self.config.get("screenshot_on_failure")
-            and self.config["app"] in DESKTOP_APPS
-        ):
+        if not self.config.get("screenshot_on_failure"):
             return
 
         # Bug 1884178
         # Temporarily disable on Windows + Chrom* applications.
         if self.config["app"] in TRACE_APPS and "win" in self.config["platform"]:
             return
+        if self.config["app"] in DESKTOP_APPS:
+            from mozscreenshot import dump_screen
 
-        from mozscreenshot import dump_screen
+            obj_dir = os.environ.get("MOZ_DEVELOPER_OBJ_DIR", None)
+            if obj_dir is None:
+                build_dir = pathlib.Path(os.environ.get("MOZ_UPLOAD_DIR")).parent
+                utility_path = pathlib.Path(build_dir, "tests", "bin")
+            else:
+                utility_path = os.path.join(obj_dir, "dist", "bin")
+            dump_screen(utility_path, LOG)
 
-        obj_dir = os.environ.get("MOZ_DEVELOPER_OBJ_DIR", None)
-        if obj_dir is None:
-            build_dir = pathlib.Path(os.environ.get("MOZ_UPLOAD_DIR")).parent
-            utility_path = pathlib.Path(build_dir, "tests", "bin")
-        else:
-            utility_path = os.path.join(obj_dir, "dist", "bin")
-        dump_screen(utility_path, LOG)
+        elif self.config["app"] in FIREFOX_ANDROID_APPS + CHROME_ANDROID_APPS:
+            from mozdevice import ADBDeviceFactory
+            from mozscreenshot import dump_device_screen
+
+            device = ADBDeviceFactory(verbose=True)
+            dump_device_screen(device, LOG)
 
     def run_extra_profiler_run(
         self, test, timeout, proc_timeout, output_timeout, line_handler, env
