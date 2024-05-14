@@ -455,18 +455,17 @@ struct nsCallbackEventRequest {
 // bfcache, but font pref changes don't care about that, and maybe / probably
 // shouldn't.
 #ifdef DEBUG
-#  define ASSERT_REFLOW_SCHEDULED_STATE()                                   \
-    {                                                                       \
-      if (ObservingLayoutFlushes()) {                                       \
-        MOZ_ASSERT(                                                         \
-            mDocument->GetBFCacheEntry() ||                                 \
-                mPresContext->RefreshDriver()->IsLayoutFlushObserver(this), \
-            "Unexpected state");                                            \
-      } else {                                                              \
-        MOZ_ASSERT(                                                         \
-            !mPresContext->RefreshDriver()->IsLayoutFlushObserver(this),    \
-            "Unexpected state");                                            \
-      }                                                                     \
+#  define ASSERT_REFLOW_SCHEDULED_STATE()                                      \
+    {                                                                          \
+      if (ObservingStyleFlushes()) {                                           \
+        MOZ_ASSERT(                                                            \
+            mDocument->GetBFCacheEntry() ||                                    \
+                mPresContext->RefreshDriver()->IsStyleFlushObserver(this),     \
+            "Unexpected state");                                               \
+      } else {                                                                 \
+        MOZ_ASSERT(!mPresContext->RefreshDriver()->IsStyleFlushObserver(this), \
+                   "Unexpected state");                                        \
+      }                                                                        \
     }
 #else
 #  define ASSERT_REFLOW_SCHEDULED_STATE() /* nothing */
@@ -775,7 +774,6 @@ PresShell::PresShell(Document* aDocument)
                       nsISelectionDisplay::DISPLAY_IMAGES),
       mChangeNestCount(0),
       mRenderingStateFlags(RenderingStateFlags::None),
-      mInFlush(false),
       mCaretEnabled(false),
       mNeedLayoutFlush(true),
       mNeedStyleFlush(true),
@@ -798,7 +796,6 @@ PresShell::PresShell(Document* aDocument)
       mObservesMutationsForPrint(false),
       mWasLastReflowInterrupted(false),
       mObservingStyleFlushes(false),
-      mObservingLayoutFlushes(false),
       mResizeEventPending(false),
       mFontSizeInflationForceEnabled(false),
       mFontSizeInflationDisabledInMasterProcess(false),
@@ -1355,6 +1352,7 @@ void PresShell::Destroy() {
   // sometimes spins the event queue when plug-ins are involved(!).
   // XXXmats is this still needed now that plugins are gone?
   StopObservingRefreshDriver();
+  mObservingStyleFlushes = false;
 
   if (rd->GetPresContext() == GetPresContext()) {
     rd->RevokeViewManagerFlush();
@@ -1402,9 +1400,6 @@ void PresShell::StopObservingRefreshDriver() {
   if (mResizeEventPending) {
     rd->RemoveResizeEventFlushObserver(this);
   }
-  if (mObservingLayoutFlushes) {
-    rd->RemoveLayoutFlushObserver(this);
-  }
   if (mObservingStyleFlushes) {
     rd->RemoveStyleFlushObserver(this);
   }
@@ -1414,9 +1409,6 @@ void PresShell::StartObservingRefreshDriver() {
   nsRefreshDriver* rd = mPresContext->RefreshDriver();
   if (mResizeEventPending) {
     rd->AddResizeEventFlushObserver(this);
-  }
-  if (mObservingLayoutFlushes) {
-    rd->AddLayoutFlushObserver(this);
   }
   if (mObservingStyleFlushes) {
     rd->AddStyleFlushObserver(this);
@@ -1500,7 +1492,7 @@ void PresShell::AddAuthorSheet(StyleSheet* aSheet) {
   mDocument->ApplicableStylesChanged();
 }
 
-bool PresShell::FixUpFocus() {
+bool PresShell::NeedsFocusFixUp() const {
   if (NS_WARN_IF(!mDocument)) {
     return false;
   }
@@ -1529,6 +1521,13 @@ bool PresShell::FixUpFocus() {
     return false;
   }
 
+  return true;
+}
+
+bool PresShell::FixUpFocus() {
+  if (!NeedsFocusFixUp()) {
+    return false;
+  }
   RefPtr fm = nsFocusManager::GetFocusManager();
   nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
   if (NS_WARN_IF(!window)) {
@@ -1829,7 +1828,7 @@ nsresult PresShell::Initialize() {
     FrameNeedsReflow(rootFrame, IntrinsicDirty::None, NS_FRAME_IS_DIRTY);
     NS_ASSERTION(mDirtyRoots.Contains(rootFrame),
                  "Should be in mDirtyRoots now");
-    NS_ASSERTION(mObservingLayoutFlushes, "Why no reflow scheduled?");
+    NS_ASSERTION(mObservingStyleFlushes, "Why no reflow scheduled?");
   }
 
   // Restore our root scroll position now if we're getting here after EndLoad
@@ -2552,10 +2551,6 @@ void PresShell::EndLoad(Document* aDocument) {
   mDocumentLoading = false;
 }
 
-bool PresShell::IsLayoutFlushObserver() {
-  return GetPresContext()->RefreshDriver()->IsLayoutFlushObserver(this);
-}
-
 void PresShell::LoadComplete() {
   gfxTextPerfMetrics* tp = nullptr;
   if (mPresContext) {
@@ -2833,7 +2828,7 @@ void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
     }
   } while (subtrees.Length() != 0);
 
-  MaybeScheduleReflow();
+  EnsureLayoutFlush();
 }
 
 void PresShell::FrameNeedsToContinueReflow(nsIFrame* aFrame) {
@@ -2901,12 +2896,6 @@ nsIScrollableFrame* PresShell::GetScrollableFrameToScroll(
 
 void PresShell::CancelAllPendingReflows() {
   mDirtyRoots.Clear();
-
-  if (mObservingLayoutFlushes) {
-    GetPresContext()->RefreshDriver()->RemoveLayoutFlushObserver(this);
-    mObservingLayoutFlushes = false;
-  }
-
   ASSERT_REFLOW_SCHEDULED_STATE();
 }
 
@@ -4311,12 +4300,6 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
 
   NS_ASSERTION(flushType >= FlushType::Style, "Why did we get called?");
 
-  mNeedStyleFlush = false;
-  mNeedThrottledAnimationFlush =
-      mNeedThrottledAnimationFlush && !aFlush.mFlushAnimations;
-  mNeedLayoutFlush =
-      mNeedLayoutFlush && (flushType < FlushType::InterruptibleLayout);
-
   bool isSafeToFlush = IsSafeToFlush();
 
   // If layout could possibly trigger scripts, then it's only safe to flush if
@@ -4343,14 +4326,6 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   bool didStyleFlush = false;
   bool didLayoutFlush = false;
   if (isSafeToFlush) {
-    // Record that we are in a flush, so that our optimization in
-    // Document::FlushPendingNotifications doesn't skip any re-entrant
-    // calls to us.  Otherwise, we might miss some needed flushes, since
-    // we clear mNeedStyleFlush / mNeedLayoutFlush here at the top of
-    // the function but we might not have done the work yet.
-    AutoRestore<bool> guard(mInFlush);
-    mInFlush = true;
-
     // We need to make sure external resource documents are flushed too (for
     // example, svg filters that reference a filter in an external document
     // need the frames in the external document to be constructed for the
@@ -4396,14 +4371,13 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
       }
     }
 
-    // The FlushResampleRequests() above flushed style changes.
-    if (MOZ_LIKELY(!mIsDestroying) && aFlush.mFlushAnimations &&
-        mPresContext->EffectCompositor()) {
-      mPresContext->EffectCompositor()->PostRestyleForThrottledAnimations();
-    }
-
-    // The FlushResampleRequests() above flushed style changes.
+    // The FlushResampleRequests() above might have flushed style changes.
     if (MOZ_LIKELY(!mIsDestroying)) {
+      if (aFlush.mFlushAnimations) {
+        mPresContext->EffectCompositor()->PostRestyleForThrottledAnimations();
+        mNeedThrottledAnimationFlush = false;
+      }
+
       nsAutoScriptBlocker scriptBlocker;
       Maybe<uint64_t> innerWindowID;
       if (auto* window = mDocument->GetInnerWindow()) {
@@ -4422,10 +4396,6 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
 
     didStyleFlush = true;
 
-    // There might be more pending constructors now, but we're not going to
-    // worry about them.  They can't be triggered during reflow, so we should
-    // be good.
-
     if (flushType >= (SuppressInterruptibleReflows()
                           ? FlushType::Layout
                           : FlushType::InterruptibleLayout) &&
@@ -4439,6 +4409,11 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
             mContentToScrollTo = nullptr;
           }
         }
+      }
+      // FIXME(emilio): Maybe we should assert here but it's not 100% sure it'd
+      // hold right now, UnsuppressAndInvalidate and so on can run script...
+      if (MOZ_LIKELY(mDirtyRoots.IsEmpty())) {
+        mNeedLayoutFlush = false;
       }
     }
 
@@ -4460,21 +4435,6 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
         viewManager->UpdateWidgetGeometry();
       }
     }
-  }
-
-  if (!didStyleFlush && flushType >= FlushType::Style && !mIsDestroying) {
-    SetNeedStyleFlush();
-    if (aFlush.mFlushAnimations) {
-      SetNeedThrottledAnimationFlush();
-    }
-  }
-
-  if (!didLayoutFlush && flushType >= FlushType::InterruptibleLayout &&
-      !mIsDestroying) {
-    // We suppressed this flush either due to it not being safe to flush,
-    // or due to SuppressInterruptibleReflows().  Either way, the
-    // mNeedLayoutFlush flag needs to be re-set.
-    SetNeedLayoutFlush();
   }
 
   // Update flush counters
@@ -9698,25 +9658,6 @@ void PresShell::Thaw(bool aIncludeSubDocuments) {
 // Start of protected and private methods on the PresShell
 //--------------------------------------------------------
 
-void PresShell::MaybeScheduleReflow() {
-  ASSERT_REFLOW_SCHEDULED_STATE();
-  if (mObservingLayoutFlushes || mIsDestroying || mIsReflowing ||
-      mDirtyRoots.IsEmpty())
-    return;
-
-  if (!mPresContext->HasPendingInterrupt() || !ScheduleReflowOffTimer()) {
-    ScheduleReflow();
-  }
-
-  ASSERT_REFLOW_SCHEDULED_STATE();
-}
-
-void PresShell::ScheduleReflow() {
-  ASSERT_REFLOW_SCHEDULED_STATE();
-  DoObserveLayoutFlushes();
-  ASSERT_REFLOW_SCHEDULED_STATE();
-}
-
 void PresShell::WillCauseReflow() {
   nsContentUtils::AddScriptBlocker();
   ++mChangeNestCount;
@@ -9795,9 +9736,7 @@ void PresShell::DidDoReflow(bool aInterruptible) {
     // after DidDoReflow(), since that method can change whether there are
     // dirty roots around by flushing, and there's no point in posting a
     // reflow event just to have the flush revoke it.
-    MaybeScheduleReflow();
-    // And record that we might need flushing
-    SetNeedLayoutFlush();
+    EnsureLayoutFlush();
   }
 }
 
@@ -9815,26 +9754,23 @@ DOMHighResTimeStamp PresShell::GetPerformanceNowUnclamped() {
   return now;
 }
 
-void PresShell::sReflowContinueCallback(nsITimer* aTimer, void* aPresShell) {
-  RefPtr<PresShell> self = static_cast<PresShell*>(aPresShell);
-
-  MOZ_ASSERT(aTimer == self->mReflowContinueTimer, "Unexpected timer");
-  self->mReflowContinueTimer = nullptr;
-  self->ScheduleReflow();
-}
-
 bool PresShell::ScheduleReflowOffTimer() {
-  MOZ_ASSERT(!mObservingLayoutFlushes, "Shouldn't get here");
+  MOZ_ASSERT(!mObservingStyleFlushes, "Shouldn't get here");
   ASSERT_REFLOW_SCHEDULED_STATE();
-
-  if (!mReflowContinueTimer) {
-    nsresult rv = NS_NewTimerWithFuncCallback(
-        getter_AddRefs(mReflowContinueTimer), sReflowContinueCallback, this, 30,
-        nsITimer::TYPE_ONE_SHOT, "sReflowContinueCallback",
-        GetMainThreadSerialEventTarget());
-    return NS_SUCCEEDED(rv);
+  if (mReflowContinueTimer) {
+    return true;
   }
-  return true;
+  nsresult rv = NS_NewTimerWithFuncCallback(
+      getter_AddRefs(mReflowContinueTimer),
+      [](nsITimer* aTimer, void* aPresShell) {
+        RefPtr<PresShell> self = static_cast<PresShell*>(aPresShell);
+        MOZ_ASSERT(aTimer == self->mReflowContinueTimer, "Unexpected timer");
+        self->mReflowContinueTimer = nullptr;
+        self->EnsureLayoutFlush();
+      },
+      this, 30, nsITimer::TYPE_ONE_SHOT, "ReflowContinueCallback",
+      GetMainThreadSerialEventTarget());
+  return NS_SUCCEEDED(rv);
 }
 
 bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
@@ -10048,7 +9984,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     // should be suppressed now. We don't want to do extra reflow work
     // before our reflow event happens.
     mWasLastReflowInterrupted = true;
-    MaybeScheduleReflow();
+    EnsureLayoutFlush();
   }
 
   // dump text perf metrics for reflows with significant text processing
@@ -10290,15 +10226,6 @@ void PresShell::DoObserveStyleFlushes() {
 
   if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
     mPresContext->RefreshDriver()->AddStyleFlushObserver(this);
-  }
-}
-
-void PresShell::DoObserveLayoutFlushes() {
-  MOZ_ASSERT(!ObservingLayoutFlushes());
-  mObservingLayoutFlushes = true;
-
-  if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
-    mPresContext->RefreshDriver()->AddLayoutFlushObserver(this);
   }
 }
 

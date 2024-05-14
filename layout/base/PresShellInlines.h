@@ -57,6 +57,11 @@ void PresShell::EnsureStyleFlush() {
   ObserveStyleFlushes();
 }
 
+void PresShell::EnsureLayoutFlush() {
+  SetNeedLayoutFlush();
+  ObserveStyleFlushes();
+}
+
 void PresShell::SetNeedThrottledAnimationFlush() {
   mNeedThrottledAnimationFlush = true;
   if (dom::Document* doc = mDocument->GetDisplayDocument()) {

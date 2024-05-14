@@ -91,7 +91,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    *     doesn't require current position data or isn't currently
    *     painting, and, correspondingly, which get notified when there
    *     is a flush during such suppression
-   * and it must be FlushType::Style, FlushType::Layout, or FlushType::Display.
+   * and it must be FlushType::Style, or FlushType::Display.
    *
    * The refresh driver does NOT own a reference to these observers;
    * they must remove themselves before they are destroyed.
@@ -179,33 +179,18 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     mDelayedResizeEventFlushObservers.RemoveElement(aPresShell);
   }
 
-  /**
-   * Add / remove presshells that we should flush style and layout on
-   */
   void AddStyleFlushObserver(mozilla::PresShell* aPresShell) {
-    MOZ_DIAGNOSTIC_ASSERT(!mStyleFlushObservers.Contains(aPresShell),
+    MOZ_DIAGNOSTIC_ASSERT(!IsStyleFlushObserver(aPresShell),
                           "Double-adding style flush observer");
     LogPresShellObserver::LogDispatch(aPresShell, this);
     mStyleFlushObservers.AppendElement(aPresShell);
     EnsureTimerStarted();
   }
-
   void RemoveStyleFlushObserver(mozilla::PresShell* aPresShell) {
     mStyleFlushObservers.RemoveElement(aPresShell);
   }
-  void AddLayoutFlushObserver(mozilla::PresShell* aPresShell) {
-    MOZ_DIAGNOSTIC_ASSERT(!IsLayoutFlushObserver(aPresShell),
-                          "Double-adding layout flush observer");
-    LogPresShellObserver::LogDispatch(aPresShell, this);
-    mLayoutFlushObservers.AppendElement(aPresShell);
-    EnsureTimerStarted();
-  }
-  void RemoveLayoutFlushObserver(mozilla::PresShell* aPresShell) {
-    mLayoutFlushObservers.RemoveElement(aPresShell);
-  }
-
-  bool IsLayoutFlushObserver(mozilla::PresShell* aPresShell) {
-    return mLayoutFlushObservers.Contains(aPresShell);
+  bool IsStyleFlushObserver(mozilla::PresShell* aPresShell) {
+    return mStyleFlushObservers.Contains(aPresShell);
   }
 
   /**
@@ -684,7 +669,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   mozilla::TimeStamp mBeforeFirstContentfulPaintTimerRunningLimit;
 
   // separate arrays for each flush type we support
-  ObserverArray mObservers[4];
+  ObserverArray mObservers[3];
   // These observers should NOT be included in HasObservers() since that method
   // is used to determine whether or not to stop the timer, or restore it when
   // thawing the refresh driver. On the other hand these observers are intended
@@ -707,7 +692,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   AutoTArray<mozilla::PresShell*, 16> mResizeEventFlushObservers;
   AutoTArray<mozilla::PresShell*, 16> mDelayedResizeEventFlushObservers;
   AutoTArray<mozilla::PresShell*, 16> mStyleFlushObservers;
-  AutoTArray<mozilla::PresShell*, 16> mLayoutFlushObservers;
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<Document*> mFrameRequestCallbackDocs;
   nsTArray<Document*> mThrottledFrameRequestCallbackDocs;

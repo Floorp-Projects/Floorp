@@ -942,11 +942,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   uint64_t GetUndisplayedRestyleGeneration() const;
 
   /**
-   * Returns whether there are any pending restyles or reflows.
-   */
-  bool HasPendingRestyleOrReflow();
-
-  /**
    * Notify the prescontext that the presshell is about to reflow a reflow root.
    * The single argument indicates whether this reflow should be interruptible.
    * If aInterruptible is false then CheckForInterrupt and HasPendingInterrupt
