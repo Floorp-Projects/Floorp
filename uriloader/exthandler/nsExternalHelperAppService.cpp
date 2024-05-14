@@ -3486,8 +3486,8 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
   nsAutoString fileName(aFileName);
 
   // Replace known invalid characters.
-  fileName.ReplaceChar(u"" KNOWN_PATH_SEPARATORS, u'_');
-  fileName.ReplaceChar(u"" FILE_ILLEGAL_CHARACTERS, u' ');
+  fileName.ReplaceChar(u"" KNOWN_PATH_SEPARATORS FILE_ILLEGAL_CHARACTERS "%",
+                       u'_');
   fileName.StripChar(char16_t(0));
 
   const char16_t *startStr, *endStr;
@@ -3667,6 +3667,14 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
     // Otherwise, the filename wasn't too long, so just trim off the
     // extra whitespace and periods at the end.
     outFileName.Truncate(lastNonTrimmable);
+  }
+
+  nsAutoString extension;
+  int32_t dotidx = outFileName.RFind(u".");
+  if (dotidx != -1) {
+    extension = Substring(outFileName, dotidx + 1);
+    extension.StripWhitespace();
+    outFileName = Substring(outFileName, 0, dotidx + 1) + extension;
   }
 
 #ifdef XP_WIN
