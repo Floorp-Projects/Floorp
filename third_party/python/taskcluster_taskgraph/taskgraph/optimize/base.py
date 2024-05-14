@@ -22,6 +22,7 @@ from taskgraph.graph import Graph
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.parameterization import resolve_task_references, resolve_timestamps
 from taskgraph.util.python_path import import_sibling_modules
+from taskgraph.util.taskcluster import find_task_id_batched, status_task_batched
 
 logger = logging.getLogger(__name__)
 registry = {}
@@ -51,6 +52,9 @@ def optimize_task_graph(
     Perform task optimization, returning a taskgraph and a map from label to
     assigned taskId, including replacement tasks.
     """
+    # avoid circular import
+    from taskgraph.optimize.strategies import IndexSearch
+
     label_to_taskid = {}
     if not existing_tasks:
         existing_tasks = {}
@@ -70,6 +74,23 @@ def optimize_task_graph(
         do_not_optimize=do_not_optimize,
     )
 
+    # Gather each relevant task's index
+    indexes = set()
+    for label in target_task_graph.graph.visit_postorder():
+        if label in do_not_optimize:
+            continue
+        _, strategy, arg = optimizations(label)
+        if isinstance(strategy, IndexSearch) and arg is not None:
+            indexes.update(arg)
+
+    index_to_taskid = {}
+    taskid_to_status = {}
+    if indexes:
+        # Find their respective status using TC index/queue batch APIs
+        indexes = list(indexes)
+        index_to_taskid = find_task_id_batched(indexes)
+        taskid_to_status = status_task_batched(list(index_to_taskid.values()))
+
     replaced_tasks = replace_tasks(
         target_task_graph=target_task_graph,
         optimizations=optimizations,
@@ -78,6 +99,8 @@ def optimize_task_graph(
         label_to_taskid=label_to_taskid,
         existing_tasks=existing_tasks,
         removed_tasks=removed_tasks,
+        index_to_taskid=index_to_taskid,
+        taskid_to_status=taskid_to_status,
     )
 
     return (
@@ -259,12 +282,17 @@ def replace_tasks(
     label_to_taskid,
     removed_tasks,
     existing_tasks,
+    index_to_taskid,
+    taskid_to_status,
 ):
     """
     Implement the "Replacing Tasks" phase, returning a set of task labels of
     all replaced tasks. The replacement taskIds are added to label_to_taskid as
     a side-effect.
     """
+    # avoid circular import
+    from taskgraph.optimize.strategies import IndexSearch
+
     opt_counts = defaultdict(int)
     replaced = set()
     dependents_of = target_task_graph.graph.reverse_links_dict()
@@ -307,6 +335,10 @@ def replace_tasks(
             deadline = max(
                 resolve_timestamps(now, task.task["deadline"]) for task in dependents
             )
+
+        if isinstance(opt, IndexSearch):
+            arg = arg, index_to_taskid, taskid_to_status
+
         repl = opt.should_replace_task(task, params, deadline, arg)
         if repl:
             if repl is True:
@@ -316,7 +348,7 @@ def replace_tasks(
                 removed_tasks.add(label)
             else:
                 logger.debug(
-                    f"replace_tasks: {label} replaced by optimization strategy"
+                    f"replace_tasks: {label} replaced with {repl} by optimization strategy"
                 )
                 label_to_taskid[label] = repl
                 replaced.add(label)
