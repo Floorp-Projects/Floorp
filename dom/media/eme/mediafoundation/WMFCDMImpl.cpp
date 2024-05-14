@@ -60,7 +60,8 @@ WMFCDMCapabilites::GetCapabilities(
     RefPtr<MFCDMChild> cdm = new MFCDMChild(request.mKeySystem);
     promises.AppendElement(cdm->GetCapabilities(MFCDMCapabilitiesRequest{
         nsString{request.mKeySystem},
-        request.mDecryption == KeySystemConfig::DecryptionInfo::Hardware}));
+        request.mDecryption == KeySystemConfig::DecryptionInfo::Hardware,
+        request.mIsPrivateBrowsing}));
     mCDMs.AppendElement(std::move(cdm));
   }
 

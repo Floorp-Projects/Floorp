@@ -202,10 +202,14 @@ struct KeySystemConfig {
 
 struct KeySystemConfigRequest final {
   KeySystemConfigRequest(const nsAString& aKeySystem,
-                         KeySystemConfig::DecryptionInfo aDecryption)
-      : mKeySystem(aKeySystem), mDecryption(aDecryption) {}
+                         KeySystemConfig::DecryptionInfo aDecryption,
+                         bool aIsPrivateBrowsing)
+      : mKeySystem(aKeySystem),
+        mDecryption(aDecryption),
+        mIsPrivateBrowsing(aIsPrivateBrowsing) {}
   const nsString mKeySystem;
   const KeySystemConfig::DecryptionInfo mDecryption;
+  const bool mIsPrivateBrowsing;
 };
 
 KeySystemConfig::SessionType ConvertToKeySystemConfigSessionType(

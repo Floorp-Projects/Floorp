@@ -102,6 +102,7 @@ class MFCDMParent final : public PMFCDMParent {
     HarewareDecryption,
     NeedHDCPCheck,
     NeedClearLeadCheck,
+    IsPrivateBrowsing,
   };
   using CapabilitesFlagSet = EnumSet<CapabilitesFlag, uint8_t>;
 
