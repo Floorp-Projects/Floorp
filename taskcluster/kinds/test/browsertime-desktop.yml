@@ -18,6 +18,8 @@ job-defaults:
                 - .*64.*shippable.*
             safari:
                 - .*macos.*shippable.*
+            safari-tp:
+                - macosx1400.*
             custom-car:
                 - .*64.*shippable.*
             default: []
@@ -57,6 +59,12 @@ job-defaults:
                             - macosx64-fix-stacks
                         macosx1400.*:
                             - macosx-arm64-custom-car
+                            - macosx64-aarch64-minidump-stackwalk
+                            - macosx64-aarch64-fix-stacks
+                        default: []
+                safari-tp:
+                    by-test-platform:
+                        macosx1400.*:
                             - macosx64-aarch64-minidump-stackwalk
                             - macosx64-aarch64-fix-stacks
                         default: []
@@ -339,14 +347,18 @@ browsertime-tp7:
 browsertime-benchmark:
     description: Raptor (browsertime) Benchmark tests
     raptor:
-        apps: [firefox, chrome, safari, custom-car]
+        apps: [firefox, chrome, safari, safari-tp, custom-car]
         subtests:
             by-test-platform:
                 macosx1400.*shippable.*:
-                    - [speedometer, sp]
-                    - [speedometer3, sp3]
-                    - [motionmark-1-3, mm-1.3]
-                    - [motionmark-htmlsuite-1-3, mm-h-1.3]
+                    by-app:
+                        safari-tp:
+                            - [speedometer3, sp3]
+                        default:
+                            - [speedometer, sp]
+                            - [speedometer3, sp3]
+                            - [motionmark-1-3, mm-1.3]
+                            - [motionmark-htmlsuite-1-3, mm-h-1.3]
                 default:
                     by-app:
                         firefox:
@@ -473,6 +485,10 @@ browsertime-benchmark:
                     custom-car:
                         by-test-platform:
                             (linux|windows10-64).*shippable-qr.*: [mozilla-central]
+                            default: []
+                    safari-tp:
+                        by-test-platform:
+                            macosx1400.*: [mozilla-central]
                             default: []
                     default: []
             unity-webgl:

@@ -1,6 +1,6 @@
 [DEFAULT]
 alert_threshold = 2.0
-apps = "firefox, chrome, safari, custom-car"
+apps = "firefox, chrome, safari, safari-tp, custom-car"
 gecko_profile_interval = 1
 expose_browser_profiler = true
 lower_is_better = false
@@ -13,9 +13,9 @@ test_url = "http://<host>:<port>/Speedometer/index.html?raptor"
 type = "benchmark"
 unit = "score"
 
-["speedometer"]
+[speedometer]
 
-["speedometer3"]
+[speedometer3]
 browser_cycles = 5
 owner = "Performance Team"
 cold = true

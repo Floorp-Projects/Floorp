@@ -195,6 +195,7 @@ class Raptor(
                         "refbrow",
                         "fenix",
                         "safari",
+                        "safari-tp",
                         "custom-car",
                         "cstm-car-m",
                     ],
@@ -644,6 +645,7 @@ class Raptor(
                 "create-virtualenv",
                 "install-chrome-android",
                 "install-chromium-distribution",
+                "install-safari-technology-preview",
                 "install",
                 "run-tests",
             ],
@@ -844,6 +846,19 @@ class Raptor(
         self.device.shell_output("settings put global verifier_verify_adb_installs 1")
         rmtree(tmpdir)
 
+    def install_safari_technology_preview(self):
+        """Ensure latest version of Safari TP binary is running in CI"""
+
+        if self.app != "safari-tp" or self.run_local:
+            return
+
+        import mozprocess
+
+        self.info("Checking for Safari Technology Preview updates...")
+        install_script = "/usr/local/bin/install_safari_softwareupdate_updates.py"
+        cmd = [sys.executable, install_script]
+        mozprocess.run_and_wait(cmd)
+
     def install_chromium_distribution(self):
         """Install Google Chromium distribution in production"""
         linux, mac, win = "linux", "mac", "win"
@@ -970,6 +985,9 @@ class Raptor(
                 )
         elif self.app == "safari" and not self.run_local:
             binary_path = "/Applications/Safari.app/Contents/MacOS/Safari"
+            kw_options["binary"] = binary_path
+        elif self.app == "safari-tp" and not self.run_local:
+            binary_path = "/Applications/Safari Technology Preview.app/Contents/MacOS/Safari Technology Preview"
             kw_options["binary"] = binary_path
         # Running on Chromium
         elif not self.run_local:

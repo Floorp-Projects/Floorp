@@ -30,7 +30,7 @@ KNOWN_TEST_MODIFIERS = [
     "bytecode-cached",
 ]
 NON_FIREFOX_OPTS = ("webrender", "bytecode-cached", "fission")
-NON_FIREFOX_BROWSERS = ("chrome", "custom-car", "safari")
+NON_FIREFOX_BROWSERS = ("chrome", "custom-car", "safari", "safari-tp")
 NON_FIREFOX_BROWSERS_MOBILE = ("chrome-m", "cstm-car-m")
 
 
