@@ -443,6 +443,7 @@ COMPILED_TESTS = \
 	test-algs \
 	test-array \
 	test-bimap \
+	test-cff \
 	test-iter \
 	test-machinery \
 	test-map \
@@ -476,6 +477,10 @@ test_array_LDADD = libharfbuzz.la $(HBLIBS)
 test_bimap_SOURCES = test-bimap.cc hb-static.cc
 test_bimap_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_bimap_LDADD = $(COMPILED_TESTS_LDADD)
+
+test_cff_SOURCES = test-cff.cc hb-static.cc
+test_cff_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_cff_LDADD = $(COMPILED_TESTS_LDADD)
 
 test_iter_SOURCES = test-iter.cc hb-static.cc
 test_iter_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)

@@ -14,6 +14,7 @@ def removeprefix(s):
 
 HBHEADERS = [os.path.basename (x) for x in os.getenv ('HBHEADERS', '').split ()] or \
 	[x for x in os.listdir ('.') if x.startswith ('hb') and x.endswith ('.h')]
+HBHEADERS = [x for x in HBHEADERS if x.endswith ('.h')]
 HBSOURCES = [
     removeprefix(x) for x in os.getenv ('HBSOURCES', '').split ()
 ] or [
