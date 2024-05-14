@@ -114,35 +114,19 @@ async function testCreateBackupHelper(sandbox, taskFn) {
   let backupsFolderPath = PathUtils.join(fakeProfilePath, "backups");
   let stagingPath = PathUtils.join(backupsFolderPath, "staging");
 
-  // For now, we expect a single backup only to be saved. There should also be
-  // a single compressed file for the staging folder.
-  let backupsChildren = await IOUtils.getChildren(backupsFolderPath);
+  // For now, we expect a single backup only to be saved.
+  let backups = await IOUtils.getChildren(backupsFolderPath);
   Assert.equal(
-    backupsChildren.length,
-    2,
-    "There should only be 2 items in the backups folder"
+    backups.length,
+    1,
+    "There should only be 1 backup in the backups folder"
   );
 
-  // The folder and the compressed file should have the same filename, but
-  // the compressed file should have a `.zip` file extension. We sort the
-  // list of directory children to make sure that the folder is first in
-  // the array.
-  backupsChildren.sort();
-
-  let renamedFilename = await PathUtils.filename(backupsChildren[0]);
+  let renamedFilename = await PathUtils.filename(backups[0]);
   let expectedFormatRegex = /^\d{4}(-\d{2}){2}T(\d{2}-){2}\d{2}Z$/;
   Assert.ok(
     renamedFilename.match(expectedFormatRegex),
     "Renamed staging folder should have format YYYY-MM-DDTHH-mm-ssZ"
-  );
-
-  // We also expect a zipped version of that same folder to exist in the
-  // directory, with the same name along with a .zip extension.
-  let archiveFilename = await PathUtils.filename(backupsChildren[1]);
-  Assert.equal(
-    archiveFilename,
-    `${renamedFilename}.zip`,
-    "Compressed staging folder exists."
   );
 
   let stagingPathRenamed = PathUtils.join(backupsFolderPath, renamedFilename);
