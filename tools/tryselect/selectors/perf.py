@@ -153,6 +153,14 @@ class PerfParser(CompareParser):
             },
         ],
         [
+            ["--safari-tp"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Show tests available for Safari Technology Preview(disabled by default).",
+            },
+        ],
+        [
             ["--live-sites"],
             {
                 "action": "store_true",
