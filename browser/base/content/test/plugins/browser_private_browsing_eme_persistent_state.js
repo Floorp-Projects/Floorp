@@ -48,8 +48,8 @@ async function isEmePersistentStateSupported(mode) {
 add_task(async function test() {
   is(
     await isEmePersistentStateSupported({ private: true }),
-    false,
-    "EME persistentState should *NOT* be supported in private browsing window."
+    true,
+    "EME persistentState *SHOULD* be supported in private browsing window."
   );
   is(
     await isEmePersistentStateSupported({ private: false }),
