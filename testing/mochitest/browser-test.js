@@ -380,7 +380,7 @@ Tester.prototype = {
 
   async promiseMainWindowReady() {
     if (window.gBrowserInit) {
-      await window.gBrowserInit.idleTasksFinishedPromise;
+      await window.gBrowserInit.idleTasksFinished.promise;
     }
   },
 

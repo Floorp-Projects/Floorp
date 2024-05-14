@@ -1103,5 +1103,3 @@ var gBrowserInit = {
     window.browserDOMWindow = null;
   },
 };
-
-gBrowserInit.idleTasksFinishedPromise = gBrowserInit.idleTasksFinished.promise;

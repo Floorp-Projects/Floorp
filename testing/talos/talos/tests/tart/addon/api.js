@@ -79,7 +79,7 @@ this.tart = class extends ExtensionAPI {
         break;
 
       case "runTest":
-        win.gBrowserInit.idleTasksFinishedPromise.then(() => {
+        win.gBrowserInit.idleTasksFinished.promise.then(() => {
           new win.Tart().startTest(sendResult, command.data);
         });
         break;
