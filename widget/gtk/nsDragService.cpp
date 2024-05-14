@@ -1206,10 +1206,9 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   }
 
   // check to see if the target context is a list.
-  bool isList = IsTargetContextList();
   // if it is, just look in the internal data since we are the source
   // for it.
-  if (isList) {
+  if (IsTargetContextList()) {
     LOGDRAGSERVICE("  It's a list");
     uint32_t numDragItems = 0;
     // if we don't have mDataItems we didn't start this drag so it's
@@ -1715,7 +1714,7 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
   mSourceDataItems = nullptr;
 
   // Remove this property, if it exists, to satisfy the Direct Save Protocol.
-  GdkAtom property = gdk_atom_intern(gXdndDirectSaveType, FALSE);
+  GdkAtom property = sXdndDirectSaveTypeAtom;
   gdk_property_delete(gdk_drag_context_get_source_window(aContext), property);
 
   if (!mDoingDrag || mScheduledTask == eDragTaskSourceEnd)
@@ -2127,9 +2126,6 @@ void nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   GdkAtom target = gtk_selection_data_get_target(aSelectionData);
   gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"E", 1);
 
-  GdkAtom property = gdk_atom_intern(gXdndDirectSaveType, FALSE);
-  GdkAtom type = gdk_atom_intern(kTextMime, FALSE);
-
   GdkWindow* srcWindow = gdk_drag_context_get_source_window(aContext);
   if (!srcWindow) {
     LOGDRAGSERVICE("  failed to get source GdkWindow!");
@@ -2141,8 +2137,9 @@ void nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   {
     GUniquePtr<guchar> gdata;
     gint length = 0;
-    if (!gdk_property_get(srcWindow, property, type, 0, INT32_MAX, FALSE,
-                          nullptr, nullptr, &length, getter_Transfers(gdata))) {
+    if (!gdk_property_get(srcWindow, sXdndDirectSaveTypeAtom, sTextMimeAtom, 0,
+                          INT32_MAX, FALSE, nullptr, nullptr, &length,
+                          getter_Transfers(gdata))) {
       LOGDRAGSERVICE("  failed to get gXdndDirectSaveType GdkWindow property.");
       return;
     }
@@ -2375,13 +2372,10 @@ void nsDragService::SourceBeginDrag(GdkDragContext* aContext) {
       nsCString fileNameCStr;
       CopyUTF16toUTF8(fileNameStr, fileNameCStr);
 
-      GdkAtom property = gdk_atom_intern(gXdndDirectSaveType, FALSE);
-      GdkAtom type = gdk_atom_intern(kTextMime, FALSE);
-
-      gdk_property_change(gdk_drag_context_get_source_window(aContext),
-                          property, type, 8, GDK_PROP_MODE_REPLACE,
-                          (const guchar*)fileNameCStr.get(),
-                          fileNameCStr.Length());
+      gdk_property_change(
+          gdk_drag_context_get_source_window(aContext), sXdndDirectSaveTypeAtom,
+          sTextMimeAtom, 8, GDK_PROP_MODE_REPLACE,
+          (const guchar*)fileNameCStr.get(), fileNameCStr.Length());
       break;
     }
   }
@@ -2500,8 +2494,7 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
     for (GList* tmp = gdk_drag_context_list_targets(aContext); tmp;
          tmp = tmp->next) {
       GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-      GUniquePtr<gchar> name(gdk_atom_name(atom));
-      if (name && !strcmp(name.get(), gTabDropType)) {
+      if (atom == nsDragService::sTabDropTypeAtom) {
         aResult = GTK_DRAG_RESULT_NO_TARGET;
         LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p): Wayland tab drop",
                              aContext);
