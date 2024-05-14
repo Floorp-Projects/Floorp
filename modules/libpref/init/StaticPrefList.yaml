@@ -13624,7 +13624,7 @@
 # Whether flooding prevention feature is enabled or not.
 - name: places.history.floodingPrevention.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Maximum elapsed time betwen a user interaction and a visit before starting to
