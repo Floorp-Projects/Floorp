@@ -12,6 +12,7 @@
  */
 
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
+use crate::util::ScaleOffset;
 use api::units::{DeviceIntRect, DeviceIntSize, LayoutRect, PictureRect, DeviceRect};
 use api::{PremultipliedColorF, ImageFormat};
 use crate::device::Texel;
@@ -100,6 +101,19 @@ impl Into<GpuBufferBlockF> for LayoutRect {
                 self.min.y,
                 self.max.x,
                 self.max.y,
+            ],
+        }
+    }
+}
+
+impl Into<GpuBufferBlockF> for ScaleOffset {
+    fn into(self) -> GpuBufferBlockF {
+        GpuBufferBlockF {
+            data: [
+                self.scale.x,
+                self.scale.y,
+                self.offset.x,
+                self.offset.y,
             ],
         }
     }

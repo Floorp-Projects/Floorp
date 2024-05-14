@@ -92,13 +92,14 @@ struct PrimitiveInfo {
 struct QuadPrimitive {
     RectWithEndpoint bounds;
     RectWithEndpoint clip;
+    vec4 pattern_scale_offset;
     vec4 color;
 };
 
 QuadSegment fetch_segment(int base, int index) {
     QuadSegment seg;
 
-    vec4 texels[2] = fetch_from_gpu_buffer_2f(base + 3 + index * 2);
+    vec4 texels[2] = fetch_from_gpu_buffer_2f(base + 4 + index * 2);
 
     seg.rect = RectWithEndpoint(texels[0].xy, texels[0].zw);
     seg.uv_rect = RectWithEndpoint(texels[1].xy, texels[1].zw);
@@ -109,11 +110,12 @@ QuadSegment fetch_segment(int base, int index) {
 QuadPrimitive fetch_primitive(int index) {
     QuadPrimitive prim;
 
-    vec4 texels[3] = fetch_from_gpu_buffer_3f(index);
+    vec4 texels[4] = fetch_from_gpu_buffer_4f(index);
 
     prim.bounds = RectWithEndpoint(texels[0].xy, texels[0].zw);
     prim.clip = RectWithEndpoint(texels[1].xy, texels[1].zw);
-    prim.color = texels[2];
+    prim.pattern_scale_offset = texels[2];
+    prim.color = texels[3];
 
     return prim;
 }
@@ -215,9 +217,18 @@ float edge_aa_offset(int edge, int flags) {
     return ((flags & edge) != 0) ? AA_PIXEL_RADIUS : 0.0;
 }
 
-#ifdef WR_VERTEX_SHADER
 void pattern_vertex(PrimitiveInfo prim);
-#endif
+
+vec2 scale_offset_map_point(vec4 scale_offset, vec2 p) {
+    return p * scale_offset.xy + scale_offset.zw;
+}
+
+RectWithEndpoint scale_offset_map_rect(vec4 scale_offset, RectWithEndpoint r) {
+    return RectWithEndpoint(
+        scale_offset_map_point(scale_offset, r.p0),
+        scale_offset_map_point(scale_offset, r.p1)
+    );
+}
 
 PrimitiveInfo quad_primive_info(void) {
     QuadInstance qi = decode_instance();
@@ -326,10 +337,13 @@ PrimitiveInfo quad_primive_info(void) {
 
     v_color = prim.color;
 
+    vec4 pattern_tx = prim.pattern_scale_offset;
+    seg.rect = scale_offset_map_rect(pattern_tx, seg.rect);
+
     return PrimitiveInfo(
-        vi.local_pos,
-        prim.bounds,
-        prim.clip,
+        scale_offset_map_point(pattern_tx, vi.local_pos),
+        scale_offset_map_rect(pattern_tx, prim.bounds),
+        scale_offset_map_rect(pattern_tx, prim.clip),
         seg,
         qi.edge_flags,
         qi.quad_flags,

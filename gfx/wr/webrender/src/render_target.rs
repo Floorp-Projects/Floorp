@@ -32,6 +32,7 @@ use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo, MaskSubPass, SV
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::resource_cache::ResourceCache;
 use crate::spatial_tree::{SpatialNodeIndex};
+use crate::util::ScaleOffset;
 
 
 const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);
@@ -1243,7 +1244,8 @@ fn build_mask_tasks(
                         &[QuadSegment {
                             rect: tile.tile_rect,
                             task_id: tile.task_id,
-                        }]
+                        }],
+                        ScaleOffset::identity(),
                     );
 
                     let texture = render_tasks
@@ -1308,6 +1310,7 @@ fn build_mask_tasks(
                 task_world_rect.cast_unit(),
                 PremultipliedColorF::WHITE,
                 &[],
+                ScaleOffset::identity(),
             );
 
             (ClipSpace::Raster, clip_transform_id, main_prim_address, prim_transform_id, true)
