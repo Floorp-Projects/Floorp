@@ -1,5 +1,15 @@
 "use strict";
 
+const { WeatherFeed } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/WeatherFeed.sys.mjs"
+);
+
+ChromeUtils.defineESModuleGetters(this, {
+  MerinoTestUtils: "resource://testing-common/MerinoTestUtils.sys.mjs",
+});
+
+const { WEATHER_SUGGESTION } = MerinoTestUtils;
+
 test_newtab({
   async before({ pushPrefs }) {
     await pushPrefs(
@@ -119,6 +129,9 @@ test_newtab({
 
 test_newtab({
   async before({ pushPrefs }) {
+    sinon.stub(WeatherFeed.prototype, "MerinoClient").returns({
+      fetch: () => [WEATHER_SUGGESTION],
+    });
     await pushPrefs(
       ["browser.newtabpage.activity-stream.system.showWeather", true],
       ["browser.newtabpage.activity-stream.showWeather", false]
@@ -180,6 +193,9 @@ test_newtab({
   async after() {
     Services.prefs.clearUserPref(
       "browser.newtabpage.activity-stream.showWeather"
+    );
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.system.showWeather"
     );
   },
 });

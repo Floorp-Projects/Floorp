@@ -45,7 +45,7 @@ export class WeatherFeed {
   }
 
   init() {
-    this.fetch();
+    this.fetch(true /* isStartup */);
   }
 
   stopFetching() {
@@ -84,7 +84,7 @@ export class WeatherFeed {
     this.suggestions = suggestions ?? [];
   }
 
-  async fetch() {
+  async fetch(isStartup = false) {
     // Keep a handle on the `MerinoClient` instance that exists at the start of
     // this fetch. If fetching stops or this `Weather` instance is uninitialized
     // during the fetch, `#merino` will be nulled, and the fetch should stop. We
@@ -93,17 +93,20 @@ export class WeatherFeed {
     await this.fetchHelper();
 
     if (this.suggestions.length) {
-      this.update();
+      this.update(isStartup);
     }
   }
 
-  update() {
+  update(isStartup) {
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.WEATHER_UPDATE,
         data: {
           suggestions: this.suggestions,
           lastUpdated: this.lastUpdated,
+        },
+        meta: {
+          isStartup,
         },
       })
     );
@@ -135,7 +138,8 @@ export class WeatherFeed {
         if (action.data.name === "weather.query") {
           await this.fetch();
         } else if (
-          action.data.name === "showWeather" &&
+          (action.data.name === "showWeather" ||
+            action.data.name === "system.showWeather") &&
           action.data.value &&
           this.isEnabled()
         ) {
