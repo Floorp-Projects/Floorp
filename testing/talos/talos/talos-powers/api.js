@@ -314,7 +314,7 @@ TalosPowersService.prototype = {
     // keys off of that notification.
     let topWin = BrowserWindowTracker.getTopWindow();
     if (topWin && topWin.gBrowserInit) {
-      await topWin.gBrowserInit.idleTasksFinishedPromise;
+      await topWin.gBrowserInit.idleTasksFinished.promise;
     }
 
     for (let domWindow of Services.wm.getEnumerator(null)) {

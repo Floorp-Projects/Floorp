@@ -80,7 +80,7 @@ class TestNoErrorsNewProfile(MarionetteTestCase):
             let { BrowserInitState } = ChromeUtils.importESModule("resource:///modules/BrowserGlue.sys.mjs");
             let promises = [
               BrowserInitState.startupIdleTaskPromise,
-              gBrowserInit.idleTasksFinishedPromise,
+              gBrowserInit.idleTasksFinished.promise,
             ];
             Promise.all(promises).then(resolve);
             """
