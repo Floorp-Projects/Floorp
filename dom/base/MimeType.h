@@ -52,6 +52,9 @@ class TMimeType final {
   static RefPtr<TMimeType<char_type>> Parse(
       const nsTSubstring<char_type>& aMimeType);
 
+  static RefPtr<TMimeType<char_type>> ExtractMIMEType(
+      const nsTSubstring<char_type>& aContentTypeHeader);
+
   // @param aMimeType - the mimetype string
   // @param aOutEssence - will hold the value of the content-type
   // @param aOutCharset - will hold the value of the charset
@@ -61,6 +64,15 @@ class TMimeType final {
                     nsTSubstring<char_type>& aOutCharset);
 
   void Serialize(nsTSubstring<char_type>& aStr) const;
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const TMimeType<char_type>& aType) {
+    nsTString<char_type> out;
+    aType.Serialize(out);
+    return aStream << "{MimeType=" << out
+                   << ", mIsBase64=" << (aType.mIsBase64 ? "true" : "false")
+                   << "}";
+  }
 
   // Returns the `<mType>/<mSubtype>`
   void GetEssence(nsTSubstring<char_type>& aOutput) const;
