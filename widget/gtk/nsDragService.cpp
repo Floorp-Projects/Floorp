@@ -180,6 +180,336 @@ static void invisibleSourceDragDataGet(GtkWidget* aWidget,
                                        guint aInfo, guint32 aTime,
                                        gpointer aData);
 
+static void UTF16ToNewUTF8(const char16_t* aUTF16, uint32_t aUTF16Len,
+                           char** aUTF8, uint32_t* aUTF8Len) {
+  nsDependentSubstring utf16(aUTF16, aUTF16Len);
+  *aUTF8 = ToNewUTF8String(utf16, aUTF8Len);
+}
+
+static nsString UTF8ToNewString(const char* aUTF8, uint32_t aUTF8Len = 0) {
+  nsDependentCSubstring utf8(aUTF8, aUTF8Len ? aUTF8Len : strlen(aUTF8));
+  nsString ret;
+  uint32_t convertedTextLen = 0;
+  char16_t* convertedText = UTF8ToNewUnicode(utf8, &convertedTextLen);
+  if (!convertedText) {
+    return ret;
+  }
+  convertedTextLen *= 2;
+
+  // Strip CRLF which might be present in the string.
+  // Not sure where it's added, maybe Gtk?
+  nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(
+      /*  aIsSingleByteChars */ false, (void**)&convertedText,
+      (int32_t*)&convertedTextLen);
+  ret.Adopt(convertedText, convertedTextLen / 2);
+  return ret;
+}
+
+static bool GetFileFromUri(const nsCString& aUri, nsCOMPtr<nsIFile>& aFile) {
+  nsresult rv;
+  nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+  nsCOMPtr<nsIURI> fileURI;
+  if (NS_SUCCEEDED(
+          ioService->NewURI(aUri, nullptr, nullptr, getter_AddRefs(fileURI)))) {
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(fileURI, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(fileURL->GetFile(getter_AddRefs(aFile)))) {
+        return true;
+      }
+    }
+  }
+
+  LOGDRAG("GetFileFromUri() failed");
+  return false;
+}
+
+bool DragData::IsImageFlavor() const {
+  return mDataFlavor == nsDragService::sJPEGImageMimeAtom ||
+         mDataFlavor == nsDragService::sJPGImageMimeAtom ||
+         mDataFlavor == nsDragService::sPNGImageMimeAtom ||
+         mDataFlavor == nsDragService::sGIFImageMimeAtom;
+}
+
+bool DragData::IsFileFlavor() const {
+  return mDataFlavor == nsDragService::sFileMimeAtom ||
+         mDataFlavor == nsDragService::sPortalFileAtom ||
+         mDataFlavor == nsDragService::sPortalFileTransferAtom;
+}
+
+bool DragData::IsTextFlavor() const {
+  return mDataFlavor == nsDragService::sTextMimeAtom ||
+         mDataFlavor == nsDragService::sTextPlainUTF8TypeAtom;
+}
+
+bool DragData::IsURIFlavor() const {
+  // We support x-moz-url URL MIME type only
+  return mDataFlavor == nsDragService::sURLMimeAtom;
+}
+
+int DragData::GetURIsNum() const {
+  int urlNum = 1;
+  if (mDragUris) {
+    urlNum = g_strv_length(mDragUris.get());
+  } else if (IsURIFlavor()) {
+    urlNum = mUris.Length();
+  }
+  LOGDRAG("DragData::GetURIsNum() %d", urlNum);
+  return urlNum;
+}
+
+bool DragData::Export(nsITransferable* aTransferable, uint32_t aItemIndex) {
+  GUniquePtr<gchar> flavorName(gdk_atom_name(mDataFlavor));
+
+  LOGDRAG("DragData::Export() MIME %s index %d", flavorName.get(), aItemIndex);
+
+  if (IsFileFlavor()) {
+    MOZ_ASSERT(mDragUris.get());
+
+    char** list = mDragUris.get();
+    if (aItemIndex >= g_strv_length(list)) {
+      NS_WARNING(
+          nsPrintfCString(
+              "DragData::Export(): Index %d is overflow file list len %d",
+              aItemIndex, g_strv_length(list))
+              .get());
+      return false;
+    }
+    bool fileExists = false;
+    nsCOMPtr<nsIFile> file;
+    if (GetFileFromUri(nsDependentCString(list[aItemIndex]), file)) {
+      file->Exists(&fileExists);
+    }
+    if (!fileExists) {
+      LOGDRAG("  uri %s not reachable/not found\n", list[aItemIndex]);
+      return false;
+    }
+    LOGDRAG("  export file %s (flavor: %s) as %s", list[aItemIndex],
+            flavorName.get(), kFileMime);
+    aTransferable->SetTransferData(kFileMime, file);
+    return true;
+  }
+
+  if (IsURIFlavor()) {
+    MOZ_ASSERT(mAsURIData);
+    if (aItemIndex >= mUris.Length()) {
+      NS_WARNING(nsPrintfCString(
+                     "DragData::Export(): Index %d is overflow uri list len %d",
+                     aItemIndex, (int)mUris.Length())
+                     .get());
+      return false;
+    }
+
+    LOGDRAG("%d URI:\n%s", (int)aItemIndex,
+            NS_ConvertUTF16toUTF8(mUris[aItemIndex]).get());
+
+    // put it into the transferable.
+    nsCOMPtr<nsISupports> genericDataWrapper;
+    nsPrimitiveHelpers::CreatePrimitiveForData(
+        nsAutoCString(kURLMime), mUris[aItemIndex].get(),
+        mUris[aItemIndex].Length() * 2, getter_AddRefs(genericDataWrapper));
+
+    return NS_SUCCEEDED(
+        aTransferable->SetTransferData(kURLMime, genericDataWrapper));
+  }
+
+  if (IsImageFlavor()) {
+    LOGDRAG("  export image %s", flavorName.get());
+    nsCOMPtr<nsIInputStream> byteStream;
+    NS_NewByteInputStream(getter_AddRefs(byteStream),
+                          mozilla::Span((char*)mDragData.get(), mDragDataLen),
+                          NS_ASSIGNMENT_COPY);
+    return NS_SUCCEEDED(
+        aTransferable->SetTransferData(flavorName.get(), byteStream));
+  }
+
+  if (IsTextFlavor()) {
+    LOGDRAG("  export text %s", kTextMime);
+
+    // We get text flavors as UTF8 but we export them as UTF16.
+    if (mData.IsEmpty() && mDragDataLen) {
+      mData = UTF8ToNewString(static_cast<const char*>(mDragData.get()),
+                              mDragDataLen);
+    }
+
+    // put it into the transferable.
+    nsCOMPtr<nsISupports> genericDataWrapper;
+    nsPrimitiveHelpers::CreatePrimitiveForData(
+        nsAutoCString(kTextMime), mData.get(), mData.Length() * 2,
+        getter_AddRefs(genericDataWrapper));
+
+    return NS_SUCCEEDED(
+        aTransferable->SetTransferData(kTextMime, genericDataWrapper));
+  }
+
+  // We export obtained data directly from Gtk. In such case only
+  // update line endings to DOM format.
+  if (!mDragDataDOMEndings &&
+      mDataFlavor != nsDragService::sCustomTypesMimeAtom) {
+    mDragDataDOMEndings = true;
+    void* tmpData = mDragData.release();
+    nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(
+        mDataFlavor == nsDragService::sRTFMimeAtom, &tmpData,
+        (int32_t*)&mDragDataLen);
+    mDragData.reset(tmpData);
+  }
+
+  // put it into the transferable.
+  nsCOMPtr<nsISupports> genericDataWrapper;
+  nsPrimitiveHelpers::CreatePrimitiveForData(
+      nsDependentCString(flavorName.get()), mDragData.get(), mDragDataLen,
+      getter_AddRefs(genericDataWrapper));
+
+  return NS_SUCCEEDED(
+      aTransferable->SetTransferData(flavorName.get(), genericDataWrapper));
+}
+
+RefPtr<DragData> DragData::ConvertToMozURL() const {
+  // "text/uri-list" is exported as URI mime type by Gtk, perhaps in UTF8.
+  // We convert it to "text/x-moz-url" which is UTF16 with line breaks.
+  if (mDataFlavor == nsDragService::sTextUriListTypeAtom) {
+    MOZ_ASSERT(mAsURIData && mDragUris);
+    LOGDRAG("ConvertToMozURL(): text/uri-list => text/x-moz-url");
+
+    RefPtr<DragData> data = new DragData(nsDragService::sURLMimeAtom);
+    data->mAsURIData = true;
+
+    int len = g_strv_length(mDragUris.get());
+    for (int i = 0; i < len; i++) {
+      data->mUris.AppendElement(UTF8ToNewString(mDragUris.get()[i]));
+    }
+    return data;
+  }
+
+  // MozUrlType (_NETSCAPE_URL) MIME is not registered as URI MIME byt Gtk
+  // is it exports it as plain data.  We convert it to "text/x-moz-url"
+  // which is UTF16 with line breaks.
+  if (mDataFlavor == nsDragService::sMozUrlTypeAtom) {
+    MOZ_ASSERT(mDragData);
+    LOGDRAG("ConvertToMozURL(): _NETSCAPE_URL => text/x-moz-url");
+
+    RefPtr<DragData> data = new DragData(nsDragService::sURLMimeAtom);
+    data->mAsURIData = true;
+    data->mUris.AppendElement(
+        UTF8ToNewString((const char*)mDragData.get(), mDragDataLen));
+    return data;
+  }
+
+  LOGDRAG("ConvertToMozURL(): failed, wrong MIME %s to convert!",
+          GUniquePtr<gchar>(gdk_atom_name(mDataFlavor)).get());
+  return nullptr;
+}
+
+RefPtr<DragData> DragData::ConvertToFile() const {
+  // "text/uri-list" is exported as URI mime type by Gtk, perhaps in UTF8.
+  // We convert it to application/x-moz-file.
+  if (mDataFlavor != nsDragService::sTextUriListTypeAtom) {
+    return nullptr;
+  }
+  MOZ_ASSERT(mAsURIData && mDragUris);
+
+  // We can use text/uri-list directly as application/x-moz-file
+  return new DragData(nsDragService::sFileMimeAtom, g_strdupv(mDragUris.get()));
+}
+
+static int CopyURI(const nsAString& aSourceURL, nsAString& aTargetURL,
+                   int aOffset, bool aRequestNewLine) {
+  int32_t uriEnd = aSourceURL.FindChar(u'\n', aOffset);
+  if (uriEnd == aOffset) {
+    return aOffset + 1;
+  }
+  if (uriEnd < 0) {
+    if (aRequestNewLine) {
+      return uriEnd;
+    }
+    // We may miss newline ending on URL title which is correct
+    uriEnd = aSourceURL.Length();
+  }
+
+  int32_t newOffset = uriEnd + 1;
+
+  if (aSourceURL[uriEnd - 1] == u'\r') {
+    uriEnd--;
+  }
+
+  nsDependentSubstring url(aSourceURL, aOffset, uriEnd - aOffset);
+  if (aRequestNewLine) {
+    url.AppendLiteral("\n");
+  }
+  aTargetURL.Append(url);
+
+  return newOffset;
+}
+
+// It holds the URLs of links followed by their titles,
+// separated by a linebreak.
+void DragData::ConvertToMozURIList() {
+  if (mDataFlavor != nsDragService::sURLMimeAtom) {
+    return;
+  }
+  mAsURIData = true;
+
+  const nsDependentSubstring uris((char16_t*)mDragData.get(), mDragDataLen / 2);
+  int32_t uriBegin = 0;
+  do {
+    nsAutoString uri;
+    // First line contains URL and is terminated by newline
+    if ((uriBegin = CopyURI(uris, uri, uriBegin, /* aRequestNewLine */ true)) <
+        0) {
+      break;
+    }
+    // Second line is URL title and may be terminated by newline
+    if ((uriBegin = CopyURI(uris, uri, uriBegin, /* aRequestNewLine */ false)) <
+        0) {
+      break;
+    }
+    mUris.AppendElement(uri);
+  } while (uriBegin < (int32_t)uris.Length());
+
+  mDragData = nullptr;
+  mDragDataLen = 0;
+}
+
+DragData::DragData(GdkAtom aDataFlavor, gchar** aDragUris)
+    : mDataFlavor(aDataFlavor), mAsURIData(true), mDragUris(aDragUris) {}
+
+#ifdef MOZ_LOGGING
+void DragData::Print() const {
+  if (mDragData) {
+    if (IsTextFlavor()) {
+      nsCString text((char*)mDragData.get(), mDragDataLen);
+      LOGDRAG("DragData() plain data MIME: %s : %s",
+              GUniquePtr<gchar>(gdk_atom_name(mDataFlavor)).get(),
+              (char*)text.get());
+    }
+    if (IsURIFlavor()) {
+      nsString text((char16_t*)mDragData.get(), mDragDataLen / 2);
+      LOGDRAG("DragData() plain data MIME: %s : %s",
+              GUniquePtr<gchar>(gdk_atom_name(mDataFlavor)).get(),
+              NS_ConvertUTF16toUTF8(text).get());
+    }
+  } else if (mDragUris) {
+    LOGDRAG("DragData() URI MIME %s",
+            GUniquePtr<gchar>(gdk_atom_name(mDataFlavor)).get());
+    if (MOZ_LOG_TEST(gWidgetDragLog, mozilla::LogLevel::Debug)) {
+      int i = 0;
+      for (gchar** uri = mDragUris.get(); uri && *uri; uri++, i++) {
+        LOGDRAG("%d URI %s", i, *uri);
+      }
+    }
+  } else if (mUris.Length()) {
+    LOGDRAG("DragData() URI MIME: %s len %d",
+            GUniquePtr<gchar>(gdk_atom_name(mDataFlavor)).get(),
+            (int)mUris.Length());
+    for (size_t i = 0; i < mUris.Length(); i++) {
+      LOGDRAG("%d URI:\n%s", (int)i, NS_ConvertUTF16toUTF8(mUris[i]).get());
+    }
+  } else {
+    LOGDRAG("DragData() MIME %s is missing data",
+            GUniquePtr<gchar>(gdk_atom_name(mDataFlavor)).get());
+  }
+}
+#endif
+
 nsDragService::nsDragService()
     : mScheduledTask(eDragTaskNone),
       mTaskSource(0),
@@ -676,12 +1006,6 @@ nsDragService::GetCanDrop(bool* aCanDrop) {
   return NS_OK;
 }
 
-static void UTF16ToNewUTF8(const char16_t* aUTF16, uint32_t aUTF16Len,
-                           char** aUTF8, uint32_t* aUTF8Len) {
-  nsDependentSubstring utf16(aUTF16, aUTF16Len);
-  *aUTF8 = ToNewUTF8String(utf16, aUTF8Len);
-}
-
 static void UTF8ToNewUTF16(const char* aUTF8, uint32_t aUTF8Len,
                            char16_t** aUTF16, uint32_t* aUTF16Len) {
   nsDependentCSubstring utf8(aUTF8, aUTF8Len);
@@ -795,33 +1119,13 @@ void nsDragService::GetDragFlavors(nsTArray<nsCString>& aFlavors) {
   }
 }
 
-static nsresult GetFileFromUri(const nsCString& aUri,
-                               nsCOMPtr<nsIFile>& aFile) {
-  nsresult rv;
-  nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
-  nsCOMPtr<nsIURI> fileURI;
-  rv = ioService->NewURI(aUri, nullptr, nullptr, getter_AddRefs(fileURI));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(fileURI, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = fileURL->GetFile(getter_AddRefs(aFile));
-      if (NS_SUCCEEDED(rv)) {
-        return NS_OK;
-      }
-    }
-  }
-  return rv;
-}
-
 nsresult GetReachableFileFromUriList(char** aFileUriList, uint32_t aItemIndex,
                                      nsCOMPtr<nsIFile>& aFile) {
   if (!aFileUriList || !(g_strv_length(aFileUriList) > aItemIndex) ||
       !aFileUriList[aItemIndex]) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsresult rv;
-  rv = GetFileFromUri(nsDependentCString(aFileUriList[aItemIndex]), aFile);
-  if (NS_SUCCEEDED(rv)) {
+  if (GetFileFromUri(nsDependentCString(aFileUriList[aItemIndex]), aFile)) {
     bool fileExists = false;
     aFile->Exists(&fileExists);
     if (fileExists) {

@@ -24,6 +24,70 @@ class SourceSurface;
 }
 }  // namespace mozilla
 
+class DragData final {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(DragData)
+
+  explicit DragData(GdkAtom aDataFlavor, const void* aData, uint32_t aDataLen)
+      : mDataFlavor(aDataFlavor),
+        mDragDataLen(aDataLen),
+        mDragData(moz_xmemdup(aData, aDataLen)) {
+    // kURLMime (text/x-moz-url) is received as UTF16 raw data as
+    // Gtk doesn't recognize it as URI format. We need to flip it to URI
+    // format.
+    if (IsURIFlavor()) {
+      ConvertToMozURIList();
+    }
+  }
+  explicit DragData(GdkAtom aDataFlavor, gchar** aDragUris);
+
+  GdkAtom GetFlavor() const { return mDataFlavor; }
+
+  // Try to convert text/uri-list or _NETSCAPE_URL MIME to x-moz-url MIME type
+  // which is used internally.
+  RefPtr<DragData> ConvertToMozURL() const;
+
+  // Try to convert text/uri-list MIME to application/x-moz-file MIME type.
+  RefPtr<DragData> ConvertToFile() const;
+
+  bool Export(nsITransferable* aTransferable, uint32_t aItemIndex);
+
+  bool IsImageFlavor() const;
+  bool IsFileFlavor() const;
+  bool IsTextFlavor() const;
+  bool IsURIFlavor() const;
+
+  int GetURIsNum() const;
+
+#ifdef MOZ_LOGGING
+  void Print() const;
+#endif
+
+ private:
+  explicit DragData(GdkAtom aDataFlavor) : mDataFlavor(aDataFlavor) {}
+  ~DragData() = default;
+
+  void ConvertToMozURIList();
+
+  GdkAtom mDataFlavor = nullptr;
+
+  bool mAsURIData = false;
+
+  // In a rare case we export
+  bool mDragDataDOMEndings = false;
+
+  // Data obtained from Gtk
+  uint32_t mDragDataLen = 0;
+  mozilla::UniqueFreePtr<void> mDragData;
+  mozilla::GUniquePtr<gchar*> mDragUris;
+
+  // Data which can be passed to transferable. In some cases we can use Gtk data
+  // directly but in most cases we need to do UTF8/UTF16 conversion
+  // and perform line break;
+  nsString mData;
+  nsTArray<nsString> mUris;
+};
+
 /**
  * Native GTK DragService wrapper
  */
