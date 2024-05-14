@@ -2762,7 +2762,7 @@
     <string name="debug_drawer_back_button_content_description">Ба қафо гузаштан</string>
 
     <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
-    <string name="debug_drawer_fab_content_description">Кушодани таҳиякунандаи ислоҳи хатоҳо</string>
+    <string name="debug_drawer_fab_content_description">Кушодани менюи таҳиякунандаи ислоҳи хатоҳо</string>
 
     <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->

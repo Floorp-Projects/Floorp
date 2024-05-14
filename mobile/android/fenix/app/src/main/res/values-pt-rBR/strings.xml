@@ -303,6 +303,10 @@
     <string name="browser_menu_edit_bookmark">Editar favorito</string>
     <!-- Browser menu label that the saves the currently visited page as a PDF -->
     <string name="browser_menu_save_as_pdf">Salvar como PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Ativar modo de leitura</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Desativar modo de leitura</string>
     <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
     <string name="browser_menu_translate_page">Traduzir página…</string>
     <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
@@ -2753,6 +2757,9 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Voltar à página anterior</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
+    <string name="debug_drawer_fab_content_description">Abrir painel de depuração</string>
+
     <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Ferramentas de abas</string>
@@ -2760,6 +2767,8 @@
     <string name="debug_drawer_tab_tools_tab_count_title">Número de abas</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Ativas</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Ativo</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Inativas</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
