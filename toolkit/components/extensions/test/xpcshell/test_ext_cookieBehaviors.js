@@ -497,7 +497,7 @@ add_task(
         try {
           if (!win.indexedDB) {
             Assert.ok(false, "IndexedDB global should be accessible");
-            return;
+            throw new Error("IndexedDB global was not available!");
           }
 
           await new Promise((resolve, reject) => {
