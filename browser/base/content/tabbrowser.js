@@ -116,6 +116,12 @@
         "browser.tabs.cardPreview.enabled",
         true
       );
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "_allowTransparentBrowser",
+        "browser.tabs.allow_transparent_browser",
+        false
+      );
 
       if (AppConstants.MOZ_CRASHREPORTER) {
         ChromeUtils.defineESModuleGetters(this, {
@@ -2225,6 +2231,10 @@
         // XXX: The `name` property is special in HTML and XUL. Should
         // we use a different attribute name for this?
         b.setAttribute("name", name);
+      }
+
+      if (this._allowTransparentBrowser) {
+        b.setAttribute("transparent", "true");
       }
 
       let stack = document.createXULElement("stack");
