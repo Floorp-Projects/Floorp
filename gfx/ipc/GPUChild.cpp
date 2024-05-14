@@ -221,9 +221,10 @@ mozilla::ipc::IPCResult GPUChild::RecvRecordDiscardedData(
 }
 
 mozilla::ipc::IPCResult GPUChild::RecvNotifyDeviceReset(
-    const GPUDeviceData& aData) {
+    const GPUDeviceData& aData, const DeviceResetReason& aReason,
+    const DeviceResetDetectPlace& aPlace) {
   gfxPlatform::GetPlatform()->ImportGPUDeviceData(aData);
-  mHost->mListener->OnRemoteProcessDeviceReset(mHost);
+  mHost->mListener->OnRemoteProcessDeviceReset(mHost, aReason, aPlace);
   return IPC_OK();
 }
 
