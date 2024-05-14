@@ -168,7 +168,10 @@ add_setup(async function () {
 
   // Make sure autofill is tested without upgrading pages to https
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.https_first_schemeless", false]],
+    set: [
+      ["dom.security.https_first", false],
+      ["dom.security.https_first_schemeless", false],
+    ],
   });
 
   registerCleanupFunction(async () => {
