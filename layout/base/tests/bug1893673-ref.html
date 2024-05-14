@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<script>
+function run() {
+  const text = document.getElementById("text");
+  window.getSelection().setBaseAndExtent(text, 0, text, 1);
+}
+</script>
+<body onload="run()">
+<div>
+  <div>
+     <span style="margin-top: 100px" id="text">This is a loonnnnnnnnnnnnnnnnnnnnnnnnnnnng paragraph</span>
+  </div>
+</div>
+</body>
