@@ -107,19 +107,19 @@
         width: "--button-size-icon",
         height: "--button-size-icon",
         backgroundColor: "--button-background-color",
-        fill: "--icon-color",
+        fill: "--button-text-color",
       });
       assertButtonPropertiesMatch(five, {
         width: "--button-size-icon",
         height: "--button-size-icon",
         backgroundColor: "transparent",
-        fill: "--icon-color",
+        fill: "--button-text-color",
       });
       assertButtonPropertiesMatch(six, {
         width: "--button-size-icon",
         height: "--button-size-icon",
         backgroundColor: "transparent",
-        fill: "--icon-color",
+        fill: "--button-text-color",
       });
       assertButtonPropertiesMatch(seven, {
         backgroundColor: "--button-background-color",
@@ -191,17 +191,17 @@
         let img = button.shadowRoot.querySelector("img");
         ok(!img, "button does not use an img element to display an icon");
         assertButtonPropertiesMatch(button, {
-          fill: "--icon-color",
+          fill: "--button-text-color",
           backgroundSize: "--icon-size-default",
         });
       }
 
-      function verifyImageIcon({ button, isLabelled }) {
+      function verifyImageIcon({ button }) {
         let img = button.shadowRoot.querySelector("img");
         ok(img, "button uses an inner img element to display an icon");
         is(img.src, "chrome://global/skin/icons/edit.svg", "button displays the expected icon");
         assertButtonPropertiesMatch(img, {
-          fill: isLabelled ? "--button-text-color" : "--icon-color",
+          fill: "--button-text-color",
           width: "--icon-size-default",
           height: "--icon-size-default",
         });
@@ -211,9 +211,9 @@
       verifyBackgroundIcon(five);
       verifyBackgroundIcon(six);
 
-      verifyImageIcon({ button: seven, isLabelled: true });
-      verifyImageIcon({ button: eight, isLabelled: false });
-      verifyImageIcon({ button: nine, isLabelled: false });
+      verifyImageIcon({ button: seven });
+      verifyImageIcon({ button: eight });
+      verifyImageIcon({ button: nine });
 
       nine.textContent = "With text";
       // Ensure we've painted before checking styles
