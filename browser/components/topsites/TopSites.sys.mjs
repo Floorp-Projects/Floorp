@@ -13,7 +13,6 @@ import {
 } from "resource://activity-stream/common/Reducers.sys.mjs";
 import { Dedupe } from "resource://activity-stream/common/Dedupe.sys.mjs";
 import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
-import { getDefaultOptions } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
 
 import {
   CUSTOM_SEARCH_SHORTCUTS,
@@ -55,7 +54,6 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = [
   "faviconRef",
   "faviconSize",
 ];
-const SECTION_ID = "topsites";
 const ROWS_PREF = "topSitesRows";
 
 // Search experiment stuff
@@ -108,7 +106,6 @@ class _TopSites {
     lazy.log.debug("Initializing TopSites.");
     // If the feed was previously disabled PREFS_INITIAL_VALUES was never received
     this._readDefaults({ isStartup: true });
-    this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     Services.obs.addObserver(this, "browser-search-engine-modified");
     Services.obs.addObserver(this, "browser-region-updated");
     Services.prefs.addObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
@@ -665,15 +662,10 @@ class _TopSites {
     const links = await this.getLinksWithDefaults({
       isStartup: options.isStartup,
     });
-    const newAction = { type: at.TOP_SITES_UPDATED, data: { links } };
-    let storedPrefs;
-    try {
-      storedPrefs = (await this._storage.get(SECTION_ID)) || {};
-    } catch (e) {
-      storedPrefs = {};
-      console.error("Problem getting stored prefs for TopSites");
-    }
-    newAction.data.pref = getDefaultOptions(storedPrefs);
+    const newAction = {
+      type: at.TOP_SITES_UPDATED,
+      data: { links },
+    };
 
     if (options.isStartup) {
       newAction.meta = {
@@ -821,15 +813,6 @@ class _TopSites {
       type: at.RICH_ICON_MISSING,
       data: { url },
     });
-  }
-
-  updateSectionPrefs(collapsed) {
-    this.store.dispatch(
-      ac.BroadcastToContent({
-        type: at.TOP_SITES_PREFS_UPDATED,
-        data: { pref: collapsed },
-      })
-    );
   }
 
   /**
@@ -1115,11 +1098,6 @@ class _TopSites {
               this.unpinAllSearchShortcuts();
             }
             this.refresh({ broadcast: true });
-        }
-        break;
-      case at.UPDATE_SECTION_PREFS:
-        if (action.data.id === SECTION_ID) {
-          this.updateSectionPrefs(action.data.value);
         }
         break;
       case at.PREFS_INITIAL_VALUES:
