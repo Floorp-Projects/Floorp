@@ -358,6 +358,7 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/mod_ops_gn",
     "/third_party/libwebrtc/rtc_base/moving_max_counter_gn",
     "/third_party/libwebrtc/rtc_base/net_helpers_gn",
+    "/third_party/libwebrtc/rtc_base/network/ecn_marking_gn",
     "/third_party/libwebrtc/rtc_base/network/sent_packet_gn",
     "/third_party/libwebrtc/rtc_base/network_constants_gn",
     "/third_party/libwebrtc/rtc_base/network_route_gn",
