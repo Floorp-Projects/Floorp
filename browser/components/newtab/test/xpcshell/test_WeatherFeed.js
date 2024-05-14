@@ -72,6 +72,9 @@ add_task(async function test_onAction_INIT() {
           suggestions: [WEATHER_SUGGESTION],
           lastUpdated: null,
         },
+        meta: {
+          isStartup: true,
+        },
       })
     )
   );

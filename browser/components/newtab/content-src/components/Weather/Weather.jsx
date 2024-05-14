@@ -52,7 +52,7 @@ export class _Weather extends React.PureComponent {
     // Check if weather should be rendered
     const isWeatherEnabled = this.props.Prefs.values["system.showWeather"];
 
-    if (!isWeatherEnabled) {
+    if (!isWeatherEnabled || !this.props.Weather.initialized) {
       return false;
     }
 
