@@ -1679,6 +1679,9 @@ pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.prop
 // This is a fallback value for when prompt callers do not specify a modalType.
 pref("prompts.defaultModalType", 3);
 
+// Whether to use the discrete Top Sites component.
+pref("browser.topsites.component.enabled", false);
+
 pref("browser.topsites.useRemoteSetting", true);
 // Fetch sponsored Top Sites from Mozilla Tiles Service (Contile)
 pref("browser.topsites.contile.enabled", true);
