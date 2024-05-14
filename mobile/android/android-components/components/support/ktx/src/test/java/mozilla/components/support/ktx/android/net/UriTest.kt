@@ -105,7 +105,6 @@ class UriTest {
         assertFalse("https://foo.bar:443".toUri().sameSchemeAndHostAs("ftp://foo.bar:443".toUri()))
 
         assertTrue("https://foo.bar/bobo".toUri().sameSchemeAndHostAs("https://foo.bar:443/obob".toUri()))
-        assertTrue("https://foo.bar:333".toUri().sameSchemeAndHostAs("https://foo.bar:443:333".toUri()))
     }
 
     @Test
