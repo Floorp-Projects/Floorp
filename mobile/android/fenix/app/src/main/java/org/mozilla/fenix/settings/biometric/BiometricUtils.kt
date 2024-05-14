@@ -69,7 +69,7 @@ fun bindBiometricsCredentialsPromptOrShowWarning(
     if (manager?.isKeyguardSecure == true) {
         val confirmDeviceCredentialIntent = manager.createConfirmDeviceCredentialIntent(
             context.resources.getString(R.string.logins_biometric_prompt_message_pin),
-            context.resources.getString(R.string.logins_biometric_prompt_message),
+            context.resources.getString(R.string.logins_biometric_prompt_message_2),
         )
         onShowPinVerification(confirmDeviceCredentialIntent)
     } else {

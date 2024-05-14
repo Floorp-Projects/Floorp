@@ -4,7 +4,9 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 127.0 (In Development)
+# 128.0 (In Development)
+
+# 127.0
 
 * **feature-prompts** **browser-storage-sync**
   * A new `isLoginAutofillEnabled` callback is available in `PromptFeature` and `GeckoLoginStorageDelegate` to allow clients controlling whether saved logins should be autofilled or not. Default is false

@@ -221,7 +221,7 @@ fun settingsRemoveData() = onView(withText(R.string.preferences_delete_browsing_
 
 fun settingsTelemetry() = onView(withText(R.string.preferences_data_collection)).click()
 
-fun loginsAndPassword() = onView(withText(R.string.preferences_passwords_logins_and_passwords)).click()
+fun loginsAndPassword() = onView(withText(R.string.preferences_passwords_logins_and_passwords_2)).click()
 
 fun addOns() = onView(withText(R.string.preferences_extensions)).click()
 
