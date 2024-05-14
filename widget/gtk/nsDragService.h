@@ -264,6 +264,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 
   // is it OK to drop on us?
   bool mCanDrop;
+  int mWaitingForDragDataRequests = 0;
 
   // have we received our drag data?
   bool mTargetDragDataReceived;
@@ -276,6 +277,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   bool IsDragFlavorAvailable(GdkAtom aRequestedFlavor);
   // this will get the native data from the last target given a
   // specific flavor
+  RefPtr<DragData> GetDragData(GdkAtom aRequestedFlavor);
   void GetTargetDragData(GdkAtom aFlavor, nsTArray<nsCString>& aDropFlavors,
                          bool aResetTargetData = true);
   // this will reset all of the target vars

@@ -1559,106 +1559,6 @@ void nsDragService::SetCachedDragContext(GdkDragContext* aDragContext) {
   }
 }
 
-void nsDragService::TargetDataReceived(GtkWidget* aWidget,
-                                       GdkDragContext* aContext, gint aX,
-                                       gint aY,
-                                       GtkSelectionData* aSelectionData,
-                                       guint aInfo, guint32 aTime) {
-  LOGDRAGSERVICE("nsDragService::TargetDataReceived(%p)", aContext);
-  TargetResetData();
-
-  EnsureCachedDataValidForContext(aContext);
-
-  mTargetDragDataReceived = true;
-
-  GdkAtom target = gtk_selection_data_get_target(aSelectionData);
-  GUniquePtr<gchar> name(gdk_atom_name(target));
-  nsDependentCString flavor(name.get());
-  if (gtk_targets_include_uri(&target, 1)) {
-    // For the vnd.portal.filetransfer and vnd.portal.files we receive numeric
-    // id when it's a local file. The numeric id is then used by
-    // gtk_selection_data_get_uris implementation to get the actual file
-    // available in the flatpak environment.
-    //
-    // However due to GTK implementation also for example the uris like https
-    // are also provided by the vnd.portal.filetransfer target. In this case the
-    // call  gtk_selection_data_get_uris fails. This is a bug in the gtk.
-    // To workaround it we try to create the valid uri and only if we fail
-    // we try to use the gtk_selection_data_get_uris. We ignore the valid uris
-    // for the vnd.portal.file* targets.
-    // See: https://gitlab.gnome.org/GNOME/gtk/-/issues/6563
-    if (flavor.Equals(gPortalFile) || flavor.Equals(gPortalFileTransfer)) {
-      const guchar* data = gtk_selection_data_get_data(aSelectionData);
-      if (!data || data[0] == '\0') {
-        LOGDRAGSERVICE("  Empty data!\n");
-        return;
-      }
-      nsCOMPtr<nsIURI> sourceURI;
-      nsresult rv =
-          NS_NewURI(getter_AddRefs(sourceURI), (const gchar*)data, nullptr);
-      if (NS_FAILED(rv)) {
-        // We're unable to get the URI, we'll use the
-        // gtk_selection_data_get_uris to get the actual file location
-        // accessible from the Firefox runtime.
-        GUniquePtr<gchar*> uris(gtk_selection_data_get_uris(aSelectionData));
-        uris.swap(mTargetDragUris);
-      } else {
-        LOGDRAGSERVICE(
-            "  got valid uri for MIME %s - this is bug in GTK - expected "
-            "numeric value for portal, got %s\n",
-            flavor.get(), data);
-        return;
-      }
-
-    } else {
-      GUniquePtr<gchar*> uris(gtk_selection_data_get_uris(aSelectionData));
-      uris.swap(mTargetDragUris);
-    }
-#ifdef MOZ_LOGGING
-    if (MOZ_LOG_TEST(gWidgetDragLog, mozilla::LogLevel::Debug)) {
-      gchar** uri = mTargetDragUris.get();
-      while (uri && *uri) {
-        LOGDRAGSERVICE("  got uri %s, MIME %s", *uri, flavor.get());
-        uri++;
-      }
-    }
-
-#endif
-
-    if (mTargetDragUris) {
-      mCachedUris.InsertOrUpdate(
-          flavor, GUniquePtr<gchar*>(g_strdupv(mTargetDragUris.get())));
-    } else {
-      LOGDRAGSERVICE("Failed to get uri list\n");
-      mCachedUris.InsertOrUpdate(flavor, GUniquePtr<gchar*>(nullptr));
-    }
-    return;
-  }
-
-  const guchar* data = gtk_selection_data_get_data(aSelectionData);
-  gint len = gtk_selection_data_get_length(aSelectionData);
-  if (len > 0 && data) {
-    mTargetDragDataLen = len;
-    mTargetDragData = g_malloc(mTargetDragDataLen);
-    memcpy(mTargetDragData, data, mTargetDragDataLen);
-
-    LOGDRAGSERVICE("  got data, len = %d", mTargetDragDataLen);
-
-    nsTArray<uint8_t> copy;
-    if (!copy.SetLength(len, fallible)) {
-      return;
-    }
-    memcpy(copy.Elements(), data, len);
-
-    mCachedData.InsertOrUpdate(flavor, std::move(copy));
-  } else {
-    LOGDRAGSERVICE("Failed to get data. selection data len was %d\n",
-                   mTargetDragDataLen);
-    mCachedData.InsertOrUpdate(flavor, nsTArray<uint8_t>());
-  }
-  LOGDRAGSERVICE("  got data, MIME %s", flavor.get());
-}
-
 bool nsDragService::IsTargetContextList(void) {
   bool retval = false;
 
@@ -1702,6 +1602,155 @@ bool nsDragService::IsDragFlavorAvailable(GdkAtom aRequestedFlavor) {
     }
   }
   return mCachedDragFlavors.Contains(aRequestedFlavor);
+}
+
+// Spins event loop, called from eDragTaskMotion handler by
+// DispatchMotionEvents().
+// Can lead to another round of drag_motion events.
+RefPtr<DragData> nsDragService::GetDragData(GdkAtom aRequestedFlavor) {
+  LOGDRAGSERVICE("nsDragService::GetDragData(%p) requested '%s'\n",
+                 mTargetDragContext.get(),
+                 GUniquePtr<gchar>(gdk_atom_name(aRequestedFlavor)).get());
+
+  // Return early when requested MIME is not offered by D&D.
+  if (!IsDragFlavorAvailable(aRequestedFlavor)) {
+    LOGDRAGSERVICE("  %s is missing",
+                   GUniquePtr<gchar>(gdk_atom_name(aRequestedFlavor)).get());
+    return nullptr;
+  }
+
+  if (!mTargetDragContext) {
+    LOGDRAGSERVICE("  failed, missing mTargetDragContext");
+    return nullptr;
+  }
+
+  RefPtr<DragData> data =
+      mCachedDragData.Get(GDK_ATOM_TO_POINTER(aRequestedFlavor));
+  if (data) {
+    LOGDRAGSERVICE("  %s found in cache",
+                   GUniquePtr<gchar>(gdk_atom_name(aRequestedFlavor)).get());
+    return data;
+  }
+
+  mWaitingForDragDataRequests++;
+
+  // We'll get the data by nsDragService::TargetDataReceived()
+  gtk_drag_get_data(mTargetWidget, mTargetDragContext, aRequestedFlavor,
+                    mTargetTime);
+
+  LOGDRAGSERVICE(
+      "  about to start inner iteration, mWaitingForDragDataRequests %d",
+      mWaitingForDragDataRequests);
+  gtk_main_iteration();
+
+  PRTime entryTime = PR_Now();
+  while (mWaitingForDragDataRequests && mDoingDrag) {
+    // check the number of iterations
+    LOGDRAGSERVICE("  doing iteration, mWaitingForDragDataRequests %d ...",
+                   mWaitingForDragDataRequests);
+    PR_Sleep(PR_MillisecondsToInterval(10)); /* sleep for 10 ms/iteration */
+    if (PR_Now() - entryTime > NS_DND_TIMEOUT) {
+      LOGDRAGSERVICE("  failed to get D&D data in time!\n");
+      break;
+    }
+    gtk_main_iteration();
+  }
+
+  // We failed to get all data in time
+  if (mWaitingForDragDataRequests) {
+    LOGDRAGSERVICE("  failed to get all data, mWaitingForDragDataRequests %d",
+                   mWaitingForDragDataRequests);
+  }
+
+  data = mCachedDragData.Get(GDK_ATOM_TO_POINTER(aRequestedFlavor));
+  if (data) {
+    LOGDRAGSERVICE("  %s received",
+                   GUniquePtr<gchar>(gdk_atom_name(aRequestedFlavor)).get());
+    return data;
+  }
+
+  LOGDRAGSERVICE("  %s failed to get from system",
+                 GUniquePtr<gchar>(gdk_atom_name(aRequestedFlavor)).get());
+  return nullptr;
+}
+
+void nsDragService::TargetDataReceived(GtkWidget* aWidget,
+                                       GdkDragContext* aContext, gint aX,
+                                       gint aY,
+                                       GtkSelectionData* aSelectionData,
+                                       guint aInfo, guint32 aTime) {
+  MOZ_ASSERT(mWaitingForDragDataRequests);
+  mWaitingForDragDataRequests--;
+
+  GdkAtom target = gtk_selection_data_get_target(aSelectionData);
+  LOGDRAGSERVICE(
+      "nsDragService::TargetDataReceived(%p) MIME %s "
+      "mWaitingForDragDataRequests %d",
+      aContext, GUniquePtr<gchar>(gdk_atom_name(target)).get(),
+      mWaitingForDragDataRequests);
+
+  auto cacheClear = MakeScopeExit([&] {
+    LOGDRAGSERVICE("  failed to get data, MIME %s",
+                   GUniquePtr<gchar>(gdk_atom_name(target)).get());
+    mCachedDragData.Remove(target);
+  });
+
+  RefPtr<DragData> dragData;
+  if (gtk_targets_include_uri(&target, 1)) {
+    if (target == sPortalFileAtom || target == sPortalFileTransferAtom) {
+      const guchar* data = gtk_selection_data_get_data(aSelectionData);
+      if (!data || data[0] == '\0') {
+        LOGDRAGSERVICE(" TargetDataReceived() failed");
+        return;
+      }
+
+      // A workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/6563
+      //
+      // For the vnd.portal.filetransfer and vnd.portal.files we receive numeric
+      // id when it's a local file. The numeric id is then used by
+      // gtk_selection_data_get_uris implementation to get the actual file
+      // available in the flatpak environment.
+      //
+      // However due to GTK implementation also for example the uris like https
+      // are also provided by the vnd.portal.filetransfer target. In this case
+      // the call  gtk_selection_data_get_uris fails. This is a bug in the gtk.
+      // To workaround it we try to create the valid uri and only if we fail
+      // we try to use the gtk_selection_data_get_uris. We ignore the valid uris
+      // for the vnd.portal.file* targets.
+      nsCOMPtr<nsIURI> sourceURI;
+      nsresult rv =
+          NS_NewURI(getter_AddRefs(sourceURI), (const gchar*)data, nullptr);
+      if (NS_SUCCEEDED(rv)) {
+        LOGDRAGSERVICE(
+            "  TargetDataReceived(): got valid uri for MIME %s - this is bug "
+            "in GTK - expected numeric value for portal, got %s\n",
+            GUniquePtr<gchar>(gdk_atom_name(target)).get(), data);
+        return;
+      }
+    }
+
+    dragData =
+        new DragData(target, gtk_selection_data_get_uris(aSelectionData));
+    LOGDRAGSERVICE("  TargetDataReceived(): URI data, MIME %s",
+                   GUniquePtr<gchar>(gdk_atom_name(target)).get());
+  } else {
+    const guchar* data = gtk_selection_data_get_data(aSelectionData);
+    gint len = gtk_selection_data_get_length(aSelectionData);
+    if (len < 0 && !data) {
+      LOGDRAGSERVICE(" TargetDataReceived() failed");
+      return;
+    }
+    dragData = new DragData(target, data, len);
+    LOGDRAGSERVICE("  TargetDataReceived(): plain data, MIME %s len = %d",
+                   GUniquePtr<gchar>(gdk_atom_name(target)).get(), len);
+  }
+
+#if MOZ_LOGGING
+  dragData->Print();
+#endif
+
+  cacheClear.release();
+  mCachedDragData.InsertOrUpdate(target, dragData);
 }
 
 // Spins event loop, called from eDragTaskMotion handler by
