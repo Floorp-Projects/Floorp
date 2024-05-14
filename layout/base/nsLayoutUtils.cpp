@@ -3655,7 +3655,7 @@ void nsLayoutUtils::RectListBuilder::AddRect(const nsRect& aRect) {
   RefPtr<DOMRect> rect = new DOMRect(mRectList);
 
   rect->SetLayoutRect(aRect);
-  mRectList->Append(rect);
+  mRectList->Append(std::move(rect));
 }
 
 nsIFrame* nsLayoutUtils::GetContainingBlockForClientRect(nsIFrame* aFrame) {

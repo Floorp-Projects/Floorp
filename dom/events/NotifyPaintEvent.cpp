@@ -59,7 +59,7 @@ already_AddRefed<DOMRectList> NotifyPaintEvent::ClientRects(
   for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
     RefPtr<DOMRect> rect = new DOMRect(parent);
     rect->SetLayoutRect(iter.Get());
-    rectList->Append(rect);
+    rectList->Append(std::move(rect));
   }
 
   return rectList.forget();
@@ -73,7 +73,7 @@ already_AddRefed<PaintRequestList> NotifyPaintEvent::PaintRequests(
   for (uint32_t i = 0; i < mInvalidateRequests.Length(); ++i) {
     RefPtr<PaintRequest> r = new PaintRequest(parent);
     r->SetRequest(mInvalidateRequests[i]);
-    requests->Append(r);
+    requests->Append(std::move(r));
   }
 
   return requests.forget();

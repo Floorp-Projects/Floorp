@@ -157,7 +157,9 @@ class DOMRectList final : public nsISupports, public nsWrapperCache {
 
   nsISupports* GetParentObject() { return mParent; }
 
-  void Append(DOMRect* aElement) { mArray.AppendElement(aElement); }
+  void Append(RefPtr<DOMRect>&& aElement) {
+    mArray.AppendElement(std::move(aElement));
+  }
 
   uint32_t Length() { return mArray.Length(); }
   DOMRect* Item(uint32_t aIndex) { return mArray.SafeElementAt(aIndex); }
