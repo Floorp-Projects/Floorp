@@ -117,19 +117,33 @@ add_task(async function test_ext_page_allowed_storage() {
     this.onmessage = async () => {
       try {
         void indexedDB;
+
         await new Promise((resolve, reject) => {
-          const begin = indexedDB.open("door");
-          begin.onerror = err => reject(err.target);
-          begin.onsuccess = () => {
-            indexedDB
-              .databases()
-              .then(() => {
-                const end = indexedDB.deleteDatabase("door");
-                end.onerror = err => reject(err.target);
-                end.onsuccess = resolve;
-              })
-              .catch(reject);
+          const onDatabasesSuccess = () => {
+            try {
+              const end = indexedDB.deleteDatabase("door");
+              end.onerror = err => reject(err.target);
+              end.onsuccess = resolve;
+            } catch (err) {
+              reject(err);
+            }
           };
+
+          const onOpenSuccess = () => {
+            try {
+              indexedDB.databases().then(onDatabasesSuccess, reject);
+            } catch (err) {
+              reject(err);
+            }
+          };
+
+          try {
+            const begin = indexedDB.open("door");
+            begin.onerror = err => reject(err.target);
+            begin.onsuccess = onOpenSuccess;
+          } catch (err) {
+            reject(err);
+          }
         });
         postMessage({ pass: true });
       } catch (err) {
