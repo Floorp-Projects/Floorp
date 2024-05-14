@@ -1546,6 +1546,19 @@ void nsDragService::EnsureCachedDataValidForContext(
   }
 }
 
+void nsDragService::SetCachedDragContext(GdkDragContext* aDragContext) {
+  LOGDRAGSERVICE("nsDragService::SetCachedDragContext(): [drag %p / cached %p]",
+                 aDragContext, (void*)mCachedDragContext);
+  // Clear cache data if we're going to D&D with different drag context.
+  uintptr_t recentDragContext = reinterpret_cast<uintptr_t>(aDragContext);
+  if (recentDragContext && recentDragContext != mCachedDragContext) {
+    LOGDRAGSERVICE("  cache clear, new context %p", (void*)recentDragContext);
+    mCachedDragContext = recentDragContext;
+    mCachedDragData.Clear();
+    mCachedDragFlavors.Clear();
+  }
+}
+
 void nsDragService::TargetDataReceived(GtkWidget* aWidget,
                                        GdkDragContext* aContext, gint aX,
                                        gint aY,
@@ -1675,6 +1688,20 @@ bool nsDragService::IsTargetContextList(void) {
   }
 
   return retval;
+}
+
+bool nsDragService::IsDragFlavorAvailable(GdkAtom aRequestedFlavor) {
+  if (mCachedDragFlavors.IsEmpty()) {
+    for (GList* tmp = gdk_drag_context_list_targets(mTargetDragContext); tmp;
+         tmp = tmp->next) {
+      mCachedDragFlavors.AppendElement(GDK_POINTER_TO_ATOM(tmp->data));
+      LOGDRAGSERVICE(
+          "  drag context available flavor %s",
+          GUniquePtr<gchar>(gdk_atom_name(GDK_POINTER_TO_ATOM(tmp->data)))
+              .get());
+    }
+  }
+  return mCachedDragFlavors.Contains(aRequestedFlavor);
 }
 
 // Spins event loop, called from eDragTaskMotion handler by
@@ -2966,6 +2993,8 @@ gboolean nsDragService::RunScheduledTask() {
                  mPendingDragContext.get(), mTargetDragContext.get());
   mTargetDragContext = std::move(mPendingDragContext);
   mTargetTime = mPendingTime;
+
+  SetCachedDragContext(mTargetDragContext);
 
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
   // (as at 27 December 2010) indicates that a "drop" event should only be

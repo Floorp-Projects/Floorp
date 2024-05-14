@@ -232,6 +232,10 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // We used it for mCachedData invalidation only and can't be used for
   // any D&D operation.
   uintptr_t mCachedDragContext;
+  nsTHashMap<void*, RefPtr<DragData>> mCachedDragData;
+  nsTArray<GdkAtom> mCachedDragFlavors;
+
+  void SetCachedDragContext(GdkDragContext* aDragContext);
 
   nsTHashMap<nsCStringHashKey, mozilla::GUniquePtr<gchar*>> mCachedUris;
 
@@ -269,6 +273,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   mozilla::GUniquePtr<gchar*> mTargetDragUris;
   // is the current target drag context contain a list?
   bool IsTargetContextList(void);
+  bool IsDragFlavorAvailable(GdkAtom aRequestedFlavor);
   // this will get the native data from the last target given a
   // specific flavor
   void GetTargetDragData(GdkAtom aFlavor, nsTArray<nsCString>& aDropFlavors,
