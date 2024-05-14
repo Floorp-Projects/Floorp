@@ -11581,12 +11581,6 @@
   value: true
   mirror: always
 
-# Whether to use challenges in the most secure order. See bug 650091.
-- name: network.auth.choose_most_secure_challenge
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # whether to redirect the channel for auth redirects. See Bug 1820807
 - name: network.auth.use_redirect_for_retries
   type: RelaxedAtomicBool

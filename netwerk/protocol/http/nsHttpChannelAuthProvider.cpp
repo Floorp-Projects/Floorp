@@ -620,28 +620,22 @@ nsresult nsHttpChannelAuthProvider::GetCredentials(
   }
 
   cc.StableSort([](const AuthChallenge& lhs, const AuthChallenge& rhs) {
-    if (StaticPrefs::network_auth_choose_most_secure_challenge()) {
-      // Different auth types
-      if (lhs.rank != rhs.rank) {
-        return lhs.rank < rhs.rank ? 1 : -1;
-      }
-
-      // If they're the same auth type, and not a Digest, then we treat them
-      // as equal (don't reorder them).
-      if (lhs.rank != ChallengeRank::Digest) {
-        return 0;
-      }
-    } else {
-      // Non-digest challenges should not be reordered when the pref is off.
-      if (lhs.algorithm == 0 || rhs.algorithm == 0) {
-        return 0;
-      }
+    // Different auth types
+    if (lhs.rank != rhs.rank) {
+      return lhs.rank < rhs.rank ? 1 : -1;
     }
 
-    // Same algorithm.
-    if (lhs.algorithm == rhs.algorithm) {
+    // If they're the same auth type, and not a Digest, then we treat them
+    // as equal (don't reorder them).
+    if (lhs.rank != ChallengeRank::Digest) {
       return 0;
     }
+
+    // Non-digest challenges should not be reordered when the pref is off.
+    if (lhs.algorithm == 0 || rhs.algorithm == 0) {
+      return 0;
+    }
+
     return lhs.algorithm < rhs.algorithm ? 1 : -1;
   });
 
