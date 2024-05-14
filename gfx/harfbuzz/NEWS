@@ -1,3 +1,18 @@
+Overview of changes leading to 8.5.0
+Monday, May 13, 2024
+====================================
+- API for partial instancing is now stable and have been promoted out of
+  experimental APIs.
+- Support instancing “BASE” table.
+- Speedup AAT shaping by 13–30%.
+- Various build fixes.
+- Various subsetter and instancer fixes.
+
+- New API
++HB_SUBSET_FLAGS_OPTIMIZE_IUP_DELTAS
++hb_subset_input_get_axis_range()
++hb_subset_input_pin_axis_location()
+
 Overview of changes leading to 8.4.0
 Saturday, March 29, 2024
 ====================================
