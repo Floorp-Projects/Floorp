@@ -138,7 +138,6 @@
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "nsWrapperCache.h"
-#include "nsStringBuffer.h"
 #include "nsDeque.h"
 
 #include "nsIScriptSecurityManager.h"

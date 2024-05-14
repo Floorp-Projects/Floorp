@@ -41,7 +41,6 @@
 #include "nsDOMMutationObserver.h"
 #include "nsJSUtils.h"
 #include "nsPIDOMWindow.h"
-#include "nsStringBuffer.h"
 #include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "nsWrapperCache.h"

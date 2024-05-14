@@ -1999,13 +1999,13 @@ and exported to `mozilla/dom/BindingDeclarations.h` that is used for
 Web IDL `DOMString` return values. It has a conversion operator to
 `nsString&` so that it can be passed to methods that take that type or
 `nsAString&`, but callees that care about performance, have an
-`nsStringBuffer` available, and promise to hold on to the
-`nsStringBuffer` at least until the binding code comes off the stack
+`StringBuffer` available, and promise to hold on to the
+`StringBuffer` at least until the binding code comes off the stack
 can also take a `DOMString` directly for their string return value and
-call its `SetStringBuffer` method with the `nsStringBuffer` and its
+call its `SetStringBuffer` method with the `StringBuffer` and its
 length. This allows the binding code to avoid extra reference-counting
 of the string buffer in many cases, and allows it to take a faster
-codepath even if it does end up having to addref the `nsStringBuffer`.
+codepath even if it does end up having to addref the `StringBuffer`.
 
 ### `GlobalObject`
 

@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nsString.h"
-#include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
 #include "UTFStrings.h"
 #include "nsUnicharUtils.h"

@@ -177,7 +177,7 @@ class nsDynamicAtom : public nsAtom {
     return count;
   }
 
-  nsStringBuffer* StringBuffer() const { return mStringBuffer; }
+  mozilla::StringBuffer* StringBuffer() const { return mStringBuffer; }
 
   const char16_t* String() const {
     return reinterpret_cast<const char16_t*>(mStringBuffer->Data());
@@ -193,7 +193,7 @@ class nsDynamicAtom : public nsAtom {
 
   // These shouldn't be used directly, even by friend classes. The
   // Create()/Destroy() methods use them.
-  nsDynamicAtom(already_AddRefed<nsStringBuffer>, uint32_t aLength,
+  nsDynamicAtom(already_AddRefed<mozilla::StringBuffer>, uint32_t aLength,
                 uint32_t aHash, bool aIsAsciiLowercase);
   ~nsDynamicAtom() = default;
 
@@ -201,7 +201,7 @@ class nsDynamicAtom : public nsAtom {
   static void Destroy(nsDynamicAtom* aAtom);
 
   mozilla::ThreadSafeAutoRefCnt mRefCnt;
-  RefPtr<nsStringBuffer> mStringBuffer;
+  RefPtr<mozilla::StringBuffer> mStringBuffer;
 };
 
 const nsStaticAtom* nsAtom::AsStatic() const {

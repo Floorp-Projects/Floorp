@@ -106,7 +106,7 @@ nsTextFragment& nsTextFragment::operator=(const nsTextFragment& aOther) {
         memcpy(const_cast<char*>(m1b), aOther.m1b, aOther.mState.mLength);
       } else {
         // allocate a buffer for a single REPLACEMENT CHARACTER
-        m2b = nsStringBuffer::Alloc(sizeof(char16_t) * 2).take();
+        m2b = StringBuffer::Alloc(sizeof(char16_t) * 2).take();
         if (!m2b) {
           MOZ_CRASH("OOM!");
         }
@@ -202,7 +202,7 @@ bool nsTextFragment::SetTo(const char16_t* aBuffer, uint32_t aLength,
     uint32_t neededSize = aLength * sizeof(char16_t);
     if (!neededSize) {
       if (storageSize < AutoStringDefaultStorageSize) {
-        // If we're storing small enough nsStringBuffer, let's preserve it.
+        // If we're storing small enough StringBuffer, let's preserve it.
 
         static_cast<char16_t*>(m2b->Data())[0] = char16_t(0);
         mState.mLength = 0;
@@ -212,7 +212,7 @@ bool nsTextFragment::SetTo(const char16_t* aBuffer, uint32_t aLength,
     } else if ((neededSize < storageSize) &&
                ((storageSize / 2) <
                 (neededSize + AutoStringDefaultStorageSize))) {
-      // Don't try to reuse the existing nsStringBuffer, if it would have
+      // Don't try to reuse the existing StringBuffer, if it would have
       // lots of unused space.
 
       memcpy(m2b->Data(), aBuffer, neededSize);
@@ -296,7 +296,7 @@ bool nsTextFragment::SetTo(const char16_t* aBuffer, uint32_t aLength,
       return false;
     }
 
-    m2b = nsStringBuffer::Alloc(m2bSize.value()).take();
+    m2b = StringBuffer::Alloc(m2bSize.value()).take();
     if (!m2b) {
       return false;
     }
@@ -373,10 +373,10 @@ bool nsTextFragment::Append(const char16_t* aBuffer, uint32_t aLength,
     size *= sizeof(char16_t);
 
     // Already a 2-byte string so the result will be too
-    nsStringBuffer* buff = nullptr;
-    nsStringBuffer* bufferToRelease = nullptr;
+    StringBuffer* buff = nullptr;
+    StringBuffer* bufferToRelease = nullptr;
     if (m2b->IsReadonly()) {
-      buff = nsStringBuffer::Alloc(size).take();
+      buff = StringBuffer::Alloc(size).take();
       if (!buff) {
         return false;
       }
@@ -384,7 +384,7 @@ bool nsTextFragment::Append(const char16_t* aBuffer, uint32_t aLength,
       memcpy(static_cast<char16_t*>(buff->Data()), m2b->Data(),
              mState.mLength * sizeof(char16_t));
     } else {
-      buff = nsStringBuffer::Realloc(m2b, size);
+      buff = StringBuffer::Realloc(m2b, size);
       if (!buff) {
         return false;
       }
@@ -418,7 +418,7 @@ bool nsTextFragment::Append(const char16_t* aBuffer, uint32_t aLength,
 
     // The old data was 1-byte, but the new is not so we have to expand it
     // all to 2-byte
-    nsStringBuffer* buff = nsStringBuffer::Alloc(size).take();
+    StringBuffer* buff = StringBuffer::Alloc(size).take();
     if (!buff) {
       return false;
     }

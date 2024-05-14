@@ -18,7 +18,7 @@
 
 #include "nsCharTraits.h"
 #include "nsString.h"
-#include "nsStringBuffer.h"
+#include "mozilla/StringBuffer.h"
 #include "nsReadableUtils.h"
 #include "nsISupportsImpl.h"
 
@@ -113,7 +113,7 @@ class nsTextFragment final {
     }
     ReleaseText();
     if (aForce2b && !aUpdateBidi) {
-      if (nsStringBuffer* buffer = aString.GetStringBuffer()) {
+      if (mozilla::StringBuffer* buffer = aString.GetStringBuffer()) {
         NS_ADDREF(m2b = buffer);
         mState.mInHeap = true;
         mState.mIs2b = true;
@@ -296,7 +296,7 @@ class nsTextFragment final {
   void UpdateBidiFlag(const char16_t* aBuffer, uint32_t aLength);
 
   union {
-    nsStringBuffer* m2b;
+    mozilla::StringBuffer* m2b;
     const char* m1b;  // This is const since it can point to shared data
   };
 

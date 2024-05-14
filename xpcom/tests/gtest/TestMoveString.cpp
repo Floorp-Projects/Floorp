@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include "nsASCIIMask.h"
 #include "nsString.h"
-#include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
 #include "nsCRTGlue.h"
 #include "mozilla/RefPtr.h"

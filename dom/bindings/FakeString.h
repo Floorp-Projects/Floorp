@@ -8,7 +8,7 @@
 #define mozilla_dom_FakeString_h__
 
 #include "nsString.h"
-#include "nsStringBuffer.h"
+#include "mozilla/StringBuffer.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
 #include "js/String.h"
@@ -18,7 +18,7 @@ namespace mozilla::dom::binding_detail {
 // A struct that has a layout compatible with nsAString, so that
 // reinterpret-casting a FakeString as a const nsAString is safe, but much
 // faster constructor and destructor behavior. FakeString uses inline storage
-// for small strings and an nsStringBuffer for longer strings.  It can also
+// for small strings and an StringBuffer for longer strings.  It can also
 // point to a literal (static-lifetime) string that's compiled into the binary,
 // or point at the buffer of an nsAString whose lifetime is longer than that of
 // the FakeString.
@@ -43,7 +43,7 @@ struct FakeString {
   ~FakeString() {
     if (mDataFlags & DataFlags::REFCOUNTED) {
       MOZ_ASSERT(mDataInitialized);
-      nsStringBuffer::FromData(mData)->Release();
+      StringBuffer::FromData(mData)->Release();
     }
   }
 
@@ -51,7 +51,7 @@ struct FakeString {
   // depend upon aString's data.  aString should outlive this instance of
   // FakeString.
   void ShareOrDependUpon(const AString& aString) {
-    RefPtr<nsStringBuffer> sharedBuffer = aString.GetStringBuffer();
+    RefPtr<StringBuffer> sharedBuffer = aString.GetStringBuffer();
     if (!sharedBuffer) {
       InitData(aString.BeginReading(), aString.Length());
       if (!aString.IsTerminated()) {
@@ -102,8 +102,8 @@ struct FakeString {
       InitData(mStorage, aLength);
       mDataFlags |= DataFlags::INLINE;
     } else {
-      RefPtr<nsStringBuffer> buf =
-          nsStringBuffer::Alloc((aLength + 1) * sizeof(char_type));
+      RefPtr<StringBuffer> buf =
+          StringBuffer::Alloc((aLength + 1) * sizeof(char_type));
       if (MOZ_UNLIKELY(!buf)) {
         return false;
       }
@@ -124,10 +124,10 @@ struct FakeString {
       return true;
     }
 
-    RefPtr<nsStringBuffer> buffer;
+    RefPtr<StringBuffer> buffer;
     if (mDataFlags & DataFlags::REFCOUNTED) {
       // Make sure we'll drop it when we're done.
-      buffer = dont_AddRef(nsStringBuffer::FromData(mData));
+      buffer = dont_AddRef(StringBuffer::FromData(mData));
       // And make sure we don't release it twice by accident.
     }
     const char_type* oldChars = mData;
@@ -151,7 +151,7 @@ struct FakeString {
     return true;
   }
 
-  void AssignFromStringBuffer(already_AddRefed<nsStringBuffer> aBuffer,
+  void AssignFromStringBuffer(already_AddRefed<StringBuffer> aBuffer,
                               size_t aLength) {
     InitData(static_cast<char_type*>(aBuffer.take()->Data()), aLength);
     mDataFlags |= DataFlags::REFCOUNTED;
@@ -214,7 +214,7 @@ struct FakeString {
   bool IsMutable() {
     return (mDataFlags & DataFlags::INLINE) ||
            ((mDataFlags & DataFlags::REFCOUNTED) &&
-            !nsStringBuffer::FromData(mData)->IsReadonly());
+            !StringBuffer::FromData(mData)->IsReadonly());
   }
 
   friend class NonNull<AString>;
@@ -257,11 +257,15 @@ struct FakeString {
 };
 }  // namespace mozilla::dom::binding_detail
 
+namespace mozilla {
+
 template <typename CharT>
 inline void AssignFromStringBuffer(
-    nsStringBuffer* aBuffer, size_t aLength,
-    mozilla::dom::binding_detail::FakeString<CharT>& aDest) {
+    StringBuffer* aBuffer, size_t aLength,
+    dom::binding_detail::FakeString<CharT>& aDest) {
   aDest.AssignFromStringBuffer(do_AddRef(aBuffer), aLength);
 }
+
+}  // namespace mozilla
 
 #endif /* mozilla_dom_FakeString_h__ */

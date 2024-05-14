@@ -10,7 +10,7 @@
 #include "mozilla/dom/TestFunctionsBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WrapperCachedNonISupportsTestInterface.h"
-#include "nsStringBuffer.h"
+#include "mozilla/StringBuffer.h"
 #include "mozITestInterfaceJS.h"
 #include "nsComponentManagerUtils.h"
 #include "nsGlobalWindowInner.h"
@@ -66,7 +66,7 @@ void TestFunctions::GetStringDataAsDOMString(const Optional<uint32_t>& aLength,
     length = mStringData.Length();
   }
 
-  if (nsStringBuffer* buf = mStringData.GetStringBuffer()) {
+  if (StringBuffer* buf = mStringData.GetStringBuffer()) {
     aString.SetKnownLiveStringBuffer(buf, length);
     return;
   }

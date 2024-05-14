@@ -35,7 +35,6 @@
 #include "nsNSSComponent.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
-#include "nsStringBuffer.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla;

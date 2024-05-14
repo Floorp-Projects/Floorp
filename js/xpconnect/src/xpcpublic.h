@@ -28,12 +28,12 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/dom/DOMString.h"
+#include "mozilla/StringBuffer.h"
 #include "mozilla/fallible.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIURI.h"
-#include "nsStringBuffer.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
@@ -236,11 +236,11 @@ extern bool xpc_DumpJSStack(bool showArgs, bool showLocals, bool showThisProps);
 extern JS::UniqueChars xpc_PrintJSStack(JSContext* cx, bool showArgs,
                                         bool showLocals, bool showThisProps);
 
-inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
+inline void AssignFromStringBuffer(mozilla::StringBuffer* buffer, size_t len,
                                    nsAString& dest) {
   dest.Assign(buffer, len);
 }
-inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
+inline void AssignFromStringBuffer(mozilla::StringBuffer* buffer, size_t len,
                                    nsACString& dest) {
   dest.Assign(buffer, len);
 }
@@ -252,18 +252,18 @@ class XPCStringConvert {
   // get assigned to *sharedBuffer.  Otherwise null will be
   // assigned.
   static bool ReadableToJSVal(JSContext* cx, const nsAString& readable,
-                              nsStringBuffer** sharedBuffer,
+                              mozilla::StringBuffer** sharedBuffer,
                               JS::MutableHandle<JS::Value> vp);
   static bool Latin1ToJSVal(JSContext* cx, const nsACString& latin1,
-                            nsStringBuffer** sharedBuffer,
+                            mozilla::StringBuffer** sharedBuffer,
                             JS::MutableHandle<JS::Value> vp);
   static bool UTF8ToJSVal(JSContext* cx, const nsACString& utf8,
-                          nsStringBuffer** sharedBuffer,
+                          mozilla::StringBuffer** sharedBuffer,
                           JS::MutableHandle<JS::Value> vp);
 
   // Convert the given stringbuffer/length pair to a jsval
   static MOZ_ALWAYS_INLINE bool UCStringBufferToJSVal(
-      JSContext* cx, nsStringBuffer* buf, uint32_t length,
+      JSContext* cx, mozilla::StringBuffer* buf, uint32_t length,
       JS::MutableHandle<JS::Value> rval, bool* sharedBuffer) {
     JSString* str = JS_NewMaybeExternalUCString(
         cx, static_cast<const char16_t*>(buf->Data()), length,
@@ -276,7 +276,7 @@ class XPCStringConvert {
   }
 
   static MOZ_ALWAYS_INLINE bool Latin1StringBufferToJSVal(
-      JSContext* cx, nsStringBuffer* buf, uint32_t length,
+      JSContext* cx, mozilla::StringBuffer* buf, uint32_t length,
       JS::MutableHandle<JS::Value> rval, bool* sharedBuffer) {
     JSString* str = JS_NewMaybeExternalStringLatin1(
         cx, static_cast<const JS::Latin1Char*>(buf->Data()), length,
@@ -289,7 +289,7 @@ class XPCStringConvert {
   }
 
   static MOZ_ALWAYS_INLINE bool UTF8StringBufferToJSVal(
-      JSContext* cx, nsStringBuffer* buf, uint32_t length,
+      JSContext* cx, mozilla::StringBuffer* buf, uint32_t length,
       JS::MutableHandle<JS::Value> rval, bool* sharedBuffer) {
     JSString* str = JS_NewMaybeExternalStringUTF8(
         cx, {static_cast<const char*>(buf->Data()), length},
@@ -387,9 +387,10 @@ class XPCStringConvert {
       // the whole buffer; otherwise we have to copy.
       if (chars[len] == '\0') {
         // NOTE: No need to worry about SrcCharT vs DestCharT, given
-        //       nsStringBuffer::FromData takes void*.
+        //       mozilla::StringBuffer::FromData takes void*.
         AssignFromStringBuffer(
-            nsStringBuffer::FromData(const_cast<DestCharT*>(chars)), len, dest);
+            mozilla::StringBuffer::FromData(const_cast<DestCharT*>(chars)), len,
+            dest);
         return true;
       }
     } else if (callbacks == &sLiteralExternalString) {
@@ -504,7 +505,7 @@ inline bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 
   if (str.HasStringBuffer()) {
     uint32_t length = str.StringBufferLength();
-    nsStringBuffer* buf = str.StringBuffer();
+    mozilla::StringBuffer* buf = str.StringBuffer();
     bool shared;
     if (!XPCStringConvert::UCStringBufferToJSVal(cx, buf, length, rval,
                                                  &shared)) {

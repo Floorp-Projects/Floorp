@@ -97,7 +97,6 @@
 #include "nsDOMJSUtils.h"
 #include "nsExceptionHandler.h"
 #include "nsJSUtils.h"
-#include "nsStringBuffer.h"
 #include "nsWrapperCache.h"
 #include "prenv.h"
 

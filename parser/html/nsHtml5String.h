@@ -7,7 +7,10 @@
 
 #include "nsAtom.h"
 #include "nsString.h"
-#include "nsStringBuffer.h"
+
+namespace mozilla {
+class StringBuffer;
+}
 
 class nsHtml5TreeBuilder;
 
@@ -15,11 +18,11 @@ class nsHtml5TreeBuilder;
  * A pass-by-value type that can represent
  *  * nullptr
  *  * empty string
- *  * Non-empty string as exactly-sized (capacity is length) `nsStringBuffer*`
+ *  * Non-empty string as exactly-sized (capacity is length) `StringBuffer*`
  *  * Non-empty string as an nsAtom*
  *
  * Holding or passing this type is as unsafe as holding or passing
- * `nsStringBuffer*`/`nsAtom*`.
+ * `StringBuffer*`/`nsAtom*`.
  */
 class nsHtml5String final {
  private:
@@ -36,9 +39,9 @@ class nsHtml5String final {
 
   inline Kind GetKind() const { return (Kind)(mBits & kKindMask); }
 
-  inline nsStringBuffer* AsStringBuffer() const {
+  inline mozilla::StringBuffer* AsStringBuffer() const {
     MOZ_ASSERT(GetKind() == eStringBuffer);
-    return reinterpret_cast<nsStringBuffer*>(mBits & kPtrMask);
+    return reinterpret_cast<mozilla::StringBuffer*>(mBits & kPtrMask);
   }
 
   inline nsAtom* AsAtom() const {

@@ -61,7 +61,7 @@ enum class GCKind {
 // replaying.
 Atomic<int32_t, ReleaseAcquire> nsDynamicAtom::gUnusedAtomCount;
 
-nsDynamicAtom::nsDynamicAtom(already_AddRefed<nsStringBuffer> aBuffer,
+nsDynamicAtom::nsDynamicAtom(already_AddRefed<mozilla::StringBuffer> aBuffer,
                              uint32_t aLength, uint32_t aHash,
                              bool aIsAsciiLowercase)
     : nsAtom(aLength, /* aIsStatic = */ false, aHash, aIsAsciiLowercase),
@@ -82,9 +82,9 @@ nsDynamicAtom* nsDynamicAtom::Create(const nsAString& aString, uint32_t aHash) {
   // We tack the chars onto the end of the nsDynamicAtom object.
   const bool isAsciiLower =
       ::IsAsciiLowercase(aString.Data(), aString.Length());
-  RefPtr<nsStringBuffer> buffer = aString.GetStringBuffer();
+  RefPtr<mozilla::StringBuffer> buffer = aString.GetStringBuffer();
   if (!buffer) {
-    buffer = nsStringBuffer::Create(aString.Data(), aString.Length());
+    buffer = mozilla::StringBuffer::Create(aString.Data(), aString.Length());
     if (MOZ_UNLIKELY(!buffer)) {
       MOZ_CRASH("Out of memory atomizing");
     }

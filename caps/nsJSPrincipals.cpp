@@ -8,7 +8,6 @@
 #include "nsString.h"
 #include "nsJSPrincipals.h"
 #include "nsCOMPtr.h"
-#include "nsStringBuffer.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/StructuredCloneTags.h"

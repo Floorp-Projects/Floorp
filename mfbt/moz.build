@@ -107,6 +107,7 @@ EXPORTS.mozilla = [
     "SplayTree.h",
     "SPSCQueue.h",
     "StaticAnalysisFunctions.h",
+    "StringBuffer.h",
     "TaggedAnonymousMemory.h",
     "Tainting.h",
     "TemplateLib.h",

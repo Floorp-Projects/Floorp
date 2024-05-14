@@ -8,10 +8,10 @@
 #define mozilla_dom_DOMString_h
 
 #include "nsString.h"
-#include "nsStringBuffer.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StringBuffer.h"
 #include "nsDOMString.h"
 #include "nsAtom.h"
 
@@ -36,10 +36,10 @@ namespace mozilla::dom {
  * It's only OK to call
  * SetKnownLiveStringBuffer/SetKnownLiveString/SetKnownLiveAtom if the caller of
  * the method in question plans to keep holding a strong ref to the stringbuffer
- * involved, whether it's a raw nsStringBuffer, or stored inside the string or
- * atom being passed.  In the string/atom cases that means the caller must own
- * the string or atom, and not mutate it (in the string case) for the lifetime
- * of the DOMString.
+ * involved, whether it's a raw mozilla::StringBuffer, or stored inside the
+ * string or atom being passed.  In the string/atom cases that means the caller
+ * must own the string or atom, and not mutate it (in the string case) for the
+ * lifetime of the DOMString.
  *
  * The proper way to extract a value is to check IsNull().  If not null, then
  * check IsEmpty().  If neither of those is true, check HasStringBuffer().  If
@@ -86,9 +86,9 @@ class MOZ_STACK_CLASS DOMString {
 
   // Get the stringbuffer.  This can only be called if HasStringBuffer()
   // returned true.  If that's true, it will never return null.  Note that
-  // constructing a string from this nsStringBuffer with length given by
+  // constructing a string from this mozilla::StringBuffer with length given by
   // StringBufferLength() might give you something that is not null-terminated.
-  nsStringBuffer* StringBuffer() const {
+  mozilla::StringBuffer* StringBuffer() const {
     MOZ_ASSERT(HasStringBuffer(),
                "Don't ask for the stringbuffer if we don't have it");
     MOZ_ASSERT(mStringBuffer, "We better have a stringbuffer if we claim to");
@@ -103,8 +103,8 @@ class MOZ_STACK_CLASS DOMString {
     return mLength;
   }
 
-  // Tell the DOMString to relinquish ownership of its nsStringBuffer to the
-  // caller.  Can only be called if HasStringBuffer().
+  // Tell the DOMString to relinquish ownership of its mozilla::StringBuffer to
+  // the caller.  Can only be called if HasStringBuffer().
   void RelinquishBufferOwnership() {
     MOZ_ASSERT(HasStringBuffer(),
                "Don't call this if there is no stringbuffer");
@@ -138,10 +138,10 @@ class MOZ_STACK_CLASS DOMString {
     return mLength;
   }
 
-  // Initialize the DOMString to a (nsStringBuffer, length) pair.  The length
-  // does NOT have to be the full length of the (null-terminated) string in the
-  // nsStringBuffer.
-  void SetKnownLiveStringBuffer(nsStringBuffer* aStringBuffer,
+  // Initialize the DOMString to a (mozilla::StringBuffer, length) pair.  The
+  // length does NOT have to be the full length of the (null-terminated) string
+  // in the mozilla::StringBuffer.
+  void SetKnownLiveStringBuffer(mozilla::StringBuffer* aStringBuffer,
                                 uint32_t aLength) {
     MOZ_ASSERT(mState == State::Empty, "We're already set to a value");
     if (aLength != 0) {
@@ -151,8 +151,9 @@ class MOZ_STACK_CLASS DOMString {
     // else nothing to do
   }
 
-  // Like SetKnownLiveStringBuffer, but holds a reference to the nsStringBuffer.
-  void SetStringBuffer(nsStringBuffer* aStringBuffer, uint32_t aLength) {
+  // Like SetKnownLiveStringBuffer, but holds a reference to the
+  // mozilla::StringBuffer.
+  void SetStringBuffer(mozilla::StringBuffer* aStringBuffer, uint32_t aLength) {
     MOZ_ASSERT(mState == State::Empty, "We're already set to a value");
     if (aLength != 0) {
       SetStringBufferInternal(aStringBuffer, aLength);
@@ -169,7 +170,7 @@ class MOZ_STACK_CLASS DOMString {
     if (MOZ_UNLIKELY(aString.IsVoid())) {
       SetNull();
     } else if (!aString.IsEmpty()) {
-      if (nsStringBuffer* buf = aString.GetStringBuffer()) {
+      if (mozilla::StringBuffer* buf = aString.GetStringBuffer()) {
         SetKnownLiveStringBuffer(buf, aString.Length());
       } else if (aString.IsLiteral()) {
         SetLiteralInternal(aString.BeginReading(), aString.Length());
@@ -228,9 +229,9 @@ class MOZ_STACK_CLASS DOMString {
     } else if (IsEmpty()) {
       aString.Truncate();
     } else if (HasStringBuffer()) {
-      // Don't share the nsStringBuffer with aString if the result would not
-      // be null-terminated.
-      nsStringBuffer* buf = StringBuffer();
+      // Don't share the mozilla::StringBuffer with aString if the result would
+      // not be null-terminated.
+      mozilla::StringBuffer* buf = StringBuffer();
       uint32_t len = StringBufferLength();
       auto chars = static_cast<char16_t*>(buf->Data());
       if (chars[len] == '\0') {
@@ -248,7 +249,7 @@ class MOZ_STACK_CLASS DOMString {
   }
 
  private:
-  void SetStringBufferInternal(nsStringBuffer* aStringBuffer,
+  void SetStringBufferInternal(mozilla::StringBuffer* aStringBuffer,
                                uint32_t aLength) {
     MOZ_ASSERT(mString.isNothing(), "We already have a string?");
     MOZ_ASSERT(mState == State::Empty, "We're already set to a value");
@@ -285,8 +286,9 @@ class MOZ_STACK_CLASS DOMString {
   Maybe<nsAutoString> mString;
 
   union {
-    // The nsStringBuffer in the OwnedStringBuffer/UnownedStringBuffer cases.
-    nsStringBuffer* MOZ_UNSAFE_REF(
+    // The mozilla::StringBuffer in the OwnedStringBuffer/UnownedStringBuffer
+    // cases.
+    mozilla::StringBuffer* MOZ_UNSAFE_REF(
         "The ways in which this can be safe are "
         "documented above and enforced through "
         "assertions") mStringBuffer;

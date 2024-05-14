@@ -36,7 +36,7 @@
 #include "nsTArray.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#include "nsStringBuffer.h"
+#include "mozilla/StringBuffer.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentType.h"
@@ -341,7 +341,7 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   // argument of nsIContentSerializer::Init().
   bool mNeedsPreformatScanning;
   bool mIsCopying;  // Set to true only while copying
-  RefPtr<nsStringBuffer> mCachedBuffer;
+  RefPtr<StringBuffer> mCachedBuffer;
 
   class NodeSerializer {
    public:
@@ -1368,7 +1368,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
   nsString output;
   static const size_t kStringBufferSizeInBytes = 2048;
   if (!mCachedBuffer) {
-    mCachedBuffer = nsStringBuffer::Alloc(kStringBufferSizeInBytes);
+    mCachedBuffer = StringBuffer::Alloc(kStringBufferSizeInBytes);
     if (NS_WARN_IF(!mCachedBuffer)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1406,7 +1406,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
   bool setOutput = false;
   MOZ_ASSERT(!mCachedBuffer);
   // Try to cache the buffer.
-  if (nsStringBuffer* outputBuffer = output.GetStringBuffer()) {
+  if (StringBuffer* outputBuffer = output.GetStringBuffer()) {
     if (outputBuffer->StorageSize() == kStringBufferSizeInBytes &&
         !outputBuffer->IsReadonly()) {
       mCachedBuffer = outputBuffer;

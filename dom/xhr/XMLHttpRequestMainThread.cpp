@@ -83,7 +83,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsIConsoleService.h"
 #include "nsAsyncRedirectVerifyHelper.h"
-#include "nsStringBuffer.h"
 #include "nsIFileChannel.h"
 #include "mozilla/Telemetry.h"
 #include "js/ArrayBuffer.h"  // JS::{Create,Release}MappedArrayBufferContents,New{,Mapped}ArrayBufferWithContents

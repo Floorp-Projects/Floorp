@@ -18,7 +18,6 @@
 #include "mozilla/Span.h"
 #include "mozilla/Try.h"
 #include "mozilla/Unused.h"
-#include "nsStringBuffer.h"
 
 #include "nsTStringRepr.h"
 
@@ -31,7 +30,6 @@
 // memory checking. (Limited to avoid quadratic behavior.)
 const size_t kNsStringBufferMaxPoison = 16;
 
-class nsStringBuffer;
 template <typename T>
 class nsTSubstringSplitter;
 template <typename T>
@@ -283,7 +281,7 @@ class BulkWriteHandle final {
 template <typename T>
 class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   friend class mozilla::BulkWriteHandle<T>;
-  friend class nsStringBuffer;
+  friend class mozilla::StringBuffer;
 
  public:
   typedef nsTSubstring<T> self_type;
@@ -419,11 +417,11 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   [[nodiscard]] bool NS_FASTCALL Assign(const substring_tuple_type&,
                                         const fallible_t&);
 
-  void Assign(nsStringBuffer* aBuffer, size_type aLength) {
+  void Assign(mozilla::StringBuffer* aBuffer, size_type aLength) {
     aBuffer->AddRef();
-    Assign(already_AddRefed<nsStringBuffer>(aBuffer), aLength);
+    Assign(already_AddRefed<mozilla::StringBuffer>(aBuffer), aLength);
   }
-  void NS_FASTCALL Assign(already_AddRefed<nsStringBuffer> aBuffer,
+  void NS_FASTCALL Assign(already_AddRefed<mozilla::StringBuffer> aBuffer,
                           size_type aLength);
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
@@ -1155,9 +1153,9 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    * If the string uses a reference-counted buffer, this method returns a
    * pointer to it without incrementing the buffer's refcount.
    */
-  nsStringBuffer* GetStringBuffer() const {
+  mozilla::StringBuffer* GetStringBuffer() const {
     if (this->mDataFlags & DataFlags::REFCOUNTED) {
-      return nsStringBuffer::FromData(this->mData);
+      return mozilla::StringBuffer::FromData(this->mData);
     }
     return nullptr;
   }

@@ -369,7 +369,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
-#include "nsStringBuffer.h"
 #include "nsStringBundle.h"
 #include "nsStringFlags.h"
 #include "nsStringFwd.h"

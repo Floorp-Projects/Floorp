@@ -17,7 +17,6 @@
 #include "mozilla/DbgMacro.h"
 #include "mozilla/AnimatedPropertyID.h"
 #include "nsStringFwd.h"
-#include "nsStringBuffer.h"
 #include "nsCoord.h"
 #include "nsColor.h"
 #include "nsCSSPropertyID.h"

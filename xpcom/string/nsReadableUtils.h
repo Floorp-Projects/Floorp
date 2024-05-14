@@ -197,7 +197,7 @@ inline void LossyAppendUTF16toASCII(mozilla::Span<const char16_t> aSource,
 // Latin1 to UTF-8
 // Interpret each incoming unsigned byte value as a Unicode scalar value (not
 // windows-1252!).
-// If the input is ASCII, the heap-allocated nsStringBuffer is shared if
+// If the input is ASCII, the heap-allocated mozilla::StringBuffer is shared if
 // possible.
 
 [[nodiscard]] inline bool CopyLatin1toUTF8(const nsACString& aSource,
@@ -231,7 +231,7 @@ inline void AppendLatin1toUTF8(const nsACString& aSource, nsACString& aDest) {
 // points above U+00FF, memory-safely produces garbage in release builds and
 // asserts in debug builds. The nature of the garbage may differ
 // based on CPU architecture and must not be relied upon.
-// If the input is ASCII, the heap-allocated nsStringBuffer is shared if
+// If the input is ASCII, the heap-allocated mozilla::StringBuffer is shared if
 // possible.
 
 [[nodiscard]] inline bool LossyCopyUTF8toLatin1(const nsACString& aSource,
