@@ -17,6 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import java.util.Calendar
 import java.util.Calendar.MILLISECOND
 
@@ -468,12 +469,14 @@ class StringTest {
     }
 
     @Test
+    @Config(sdk = [28])
     fun `should not strip out www if not first subdomain`() {
         "http://foo.www.com" shortenedShouldBecome "foo.www.com"
         "http://www.foo.www.com" shortenedShouldBecome "foo.www.com"
     }
 
     @Test
+    @Config(sdk = [28])
     fun `should convert to lowercase`() {
         "HTTP://FOO.COM" shortenedShouldBecome "foo.com"
     }
@@ -494,6 +497,7 @@ class StringTest {
     }
 
     @Test
+    @Config(sdk = [28])
     fun `should return etld for www gov uk (www-only non-etld)`() {
         "https://www.gov.uk/countersigning" shortenedShouldBecome "gov.uk"
     }
