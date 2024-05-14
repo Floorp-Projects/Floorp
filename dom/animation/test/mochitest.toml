@@ -3,6 +3,7 @@ prefs = [
   "dom.animations-api.compositing.enabled=true",
   "dom.animations-api.timelines.enabled=true",
   "gfx.omta.background-color=true",
+  "layout.css.individual-transform.enabled=true",
   "layout.css.scroll-driven-animations.enabled=true",
   "gfx.font_loader.delay=0",
 ]
