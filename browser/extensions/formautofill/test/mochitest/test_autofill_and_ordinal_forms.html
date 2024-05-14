@@ -46,9 +46,9 @@ add_task(async function check_switch_autofill_form_popup() {
   await setInput("#tel", "");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
-  checkMenuEntries(
+  checkMenuEntriesComment(
     [
-      makeAddressLabel({
+      makeAddressComment({
         primary: "+13453453456",
         secondary: "123 Sesame Street.",
         status: statusText
@@ -77,9 +77,9 @@ add_task(async function check_switch_autofill_form_popup_back() {
   await setInput("#tel", "");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
-  checkMenuEntries(
+  checkMenuEntriesComment(
     [
-      makeAddressLabel({
+      makeAddressComment({
         primary: "+13453453456",
         secondary: "123 Sesame Street.",
         status: statusText

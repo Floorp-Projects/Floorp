@@ -60,8 +60,8 @@ async function checkFormChangeHappened(formId) {
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   synthesizeKey("KEY_ArrowDown");
-  checkMenuEntries(MOCK_STORAGE.map(address =>
-    makeAddressLabel({
+  checkMenuEntriesComment(MOCK_STORAGE.map(address =>
+    makeAddressComment({
       primary: address.tel,
       secondary: address.name,
       status: "Also autofills name, organization"
@@ -91,8 +91,8 @@ async function checkFormChangeHappened(formId) {
   await focusAndWaitForFieldsIdentified(`#${formId} input[name=address-level2]`, true);
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
-  checkMenuEntries(MOCK_STORAGE.map(address =>
-    makeAddressLabel({
+  checkMenuEntriesComment(MOCK_STORAGE.map(address =>
+    makeAddressComment({
       primary: address["address-level2"],
       secondary: address.name,
       status: "Also autofills name, organization, phone"

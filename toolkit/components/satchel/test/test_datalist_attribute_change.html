@@ -42,7 +42,7 @@ add_task(async function test_dropdown_shown_when_type_attribute_changed() {
   await openPopupOn(input);
 
   isDeeply(
-    getMenuEntries(),
+    getMenuEntries().labels,
     ["Mozilla", "Firefox", "Thunderbird"],
     "Datalist shown after changing input type from button to text.");
   input.removeEventListener("click", () => input.setAttribute("type", "text"));

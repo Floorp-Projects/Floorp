@@ -51,12 +51,13 @@ let allFieldNames = [
   "tel",
 ];
 
-function makeAddressLabel({ primary, secondary, status }) {
+function makeAddressComment({ primary, secondary, status, profile }) {
   return JSON.stringify({
     primary,
     secondary,
     status,
     ariaLabel: primary + " " + secondary + " " + status,
+    profile,
   });
 }
 
@@ -75,22 +76,24 @@ let addressTestCases = [
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[0]),
-          label: makeAddressLabel({
+          label: "Sesame Street",
+          comment: makeAddressComment({
             primary: "Sesame Street",
             secondary: "123 Sesame Street.",
             status: "Also autofills address, name, phone",
+            profile: matchingProfiles[0],
           }),
           image: "",
         },
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[1]),
-          label: makeAddressLabel({
+          label: "Mozilla",
+          comment: makeAddressComment({
             primary: "Mozilla",
             secondary: "331 E. Evelyn Avenue",
             status: "Also autofills address, name, phone",
+            profile: matchingProfiles[1],
           }),
           image: "",
         },
@@ -111,33 +114,36 @@ let addressTestCases = [
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[0]),
-          label: makeAddressLabel({
+          label: "1-345-345-3456.",
+          comment: makeAddressComment({
             primary: "1-345-345-3456.",
             secondary: "123 Sesame Street.",
             status: "Also autofills address, name, organization",
+            profile: matchingProfiles[0],
           }),
           image: "",
         },
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[1]),
-          label: makeAddressLabel({
+          label: "1-650-903-0800",
+          comment: makeAddressComment({
             primary: "1-650-903-0800",
             secondary: "331 E. Evelyn Avenue",
             status: "Also autofills address, name, organization",
+            profile: matchingProfiles[1],
           }),
           image: "",
         },
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[2]),
-          label: makeAddressLabel({
+          label: "1-000-000-0000",
+          comment: makeAddressComment({
             primary: "1-000-000-0000",
             secondary: "321, No Name St. 2nd line 3rd line",
             status: "Also autofills address",
+            profile: matchingProfiles[2],
           }),
           image: "",
         },
@@ -158,33 +164,36 @@ let addressTestCases = [
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[0]),
-          label: makeAddressLabel({
+          label: "123 Sesame Street.",
+          comment: makeAddressComment({
             primary: "123 Sesame Street.",
             secondary: "Timothy Berners-Lee",
             status: "Also autofills name, organization, phone",
+            profile: matchingProfiles[0],
           }),
           image: "",
         },
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[1]),
-          label: makeAddressLabel({
+          label: "331 E. Evelyn Avenue",
+          comment: makeAddressComment({
             primary: "331 E. Evelyn Avenue",
             secondary: "John Doe",
             status: "Also autofills name, organization, phone",
+            profile: matchingProfiles[1],
           }),
           image: "",
         },
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[2]),
-          label: makeAddressLabel({
+          label: "321, No Name St. 2nd line 3rd line",
+          comment: makeAddressComment({
             primary: "321, No Name St. 2nd line 3rd line",
             secondary: "1-000-000-0000",
             status: "Also autofills phone",
+            profile: matchingProfiles[2],
           }),
           image: "",
         },
@@ -205,33 +214,36 @@ let addressTestCases = [
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[0]),
-          label: makeAddressLabel({
+          label: "123 Sesame Street.",
+          comment: makeAddressComment({
             primary: "123 Sesame Street.",
             secondary: "Timothy Berners-Lee",
             status: "Also autofills name, organization, phone",
+            profile: matchingProfiles[0],
           }),
           image: "",
         },
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[1]),
-          label: makeAddressLabel({
+          label: "331 E. Evelyn Avenue",
+          comment: makeAddressComment({
             primary: "331 E. Evelyn Avenue",
             secondary: "John Doe",
             status: "Also autofills name, organization, phone",
+            profile: matchingProfiles[1],
           }),
           image: "",
         },
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[2]),
-          label: makeAddressLabel({
+          label: "321, No Name St.",
+          comment: makeAddressComment({
             primary: "321, No Name St.",
             secondary: "1-000-000-0000",
             status: "Also autofills phone",
+            profile: matchingProfiles[2],
           }),
           image: "",
         },
@@ -308,24 +320,26 @@ let creditCardTestCases = [
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[0]),
-          label: JSON.stringify({
+          label: "Timothy Berners-Lee",
+          comment: JSON.stringify({
             primary: "Timothy Berners-Lee",
             secondary: "••••6785",
             ariaLabel: "Visa Timothy Berners-Lee ****6785",
             image: "chrome://formautofill/content/third-party/cc-logo-visa.svg",
+            profile: matchingProfiles[0],
           }),
           image: "chrome://formautofill/content/third-party/cc-logo-visa.svg",
         },
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[1]),
-          label: JSON.stringify({
+          label: "John Doe",
+          comment: JSON.stringify({
             primary: "John Doe",
             secondary: "••••1234",
             ariaLabel: "American Express John Doe ****1234",
             image: "chrome://formautofill/content/third-party/cc-logo-amex.png",
+            profile: matchingProfiles[1],
           }),
           image: "chrome://formautofill/content/third-party/cc-logo-amex.png",
         },
@@ -346,36 +360,39 @@ let creditCardTestCases = [
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[0]),
-          label: JSON.stringify({
+          label: "••••6785",
+          comment: JSON.stringify({
             primary: "••••6785",
             secondary: "Timothy Berners-Lee",
             ariaLabel: "Visa 6785 Timothy Berners-Lee",
             image: "chrome://formautofill/content/third-party/cc-logo-visa.svg",
+            profile: matchingProfiles[0],
           }),
           image: "chrome://formautofill/content/third-party/cc-logo-visa.svg",
         },
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[1]),
-          label: JSON.stringify({
+          label: "••••1234",
+          comment: JSON.stringify({
             primary: "••••1234",
             secondary: "John Doe",
             ariaLabel: "American Express 1234 John Doe",
             image: "chrome://formautofill/content/third-party/cc-logo-amex.png",
+            profile: matchingProfiles[1],
           }),
           image: "chrome://formautofill/content/third-party/cc-logo-amex.png",
         },
         {
           value: "",
           style: "autofill",
-          comment: JSON.stringify(matchingProfiles[2]),
-          label: JSON.stringify({
+          label: "••••5678",
+          comment: JSON.stringify({
             primary: "••••5678",
             secondary: "",
             ariaLabel: "5678",
             image: "chrome://formautofill/content/icon-credit-card-generic.svg",
+            profile: matchingProfiles[2],
           }),
           image: "chrome://formautofill/content/icon-credit-card-generic.svg",
         },

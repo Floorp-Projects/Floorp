@@ -339,8 +339,8 @@ export class LoginAutoCompleteResult {
             item =>
               new GenericAutocompleteItem(
                 item.image,
-                item.title,
-                item.subtitle,
+                item.label,
+                item.secondary,
                 item.fillMessageName,
                 item.fillMessageData
               )

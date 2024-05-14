@@ -612,8 +612,8 @@ export const GeckoViewAutocomplete = {
         case "autofill": {
           const comment = JSON.parse(option.comment);
           debug`delegateSelection ${comment}`;
-          const creditCard = CreditCard.fromGecko(comment);
-          const address = Address.fromGecko(comment);
+          const creditCard = CreditCard.fromGecko(comment.profile);
+          const address = Address.fromGecko(comment.profile);
           if (creditCard.isValid()) {
             selectionType = "creditCard";
             selectOptions.push(

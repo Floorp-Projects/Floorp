@@ -54,7 +54,7 @@ add_task(async function() {
   synthesizeKey("c");
   is(input.value, "abc", "<input>'s value has to be abc for initial data");
   await notifyMenuChanged(4);
-  let values = getMenuEntries();
+  let values = getMenuEntries().labels;
   is(values.length, 4, "expected count of datalist popup");
   for (let i = 0; i < values.length; i++) {
     is(values[i], DATALIST_DATA[input.value][i], "expected data #" + i);
@@ -66,7 +66,7 @@ add_task(async function() {
   synthesizeKey("KEY_ArrowDown");
   await promise;
 
-  values = getMenuEntries();
+  values = getMenuEntries().labels;
   is(values.length, 5, "expected count of datalist popup");
   for (let i = 0; i < values.length; i++) {
     is(values[i], DATALIST_DATA[input.value][i], "expected data #" + i);

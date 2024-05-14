@@ -50,17 +50,21 @@ interface nsIAutoCompleteResult : nsISupports
   readonly attribute unsigned long matchCount;
 
   /**
-   * Get the value of the result at the given index
+   * Get the value of the result at the given index. This is the value that
+   * will be filled into the text field.
    */
   AString getValueAt(in long index);
 
   /**
-   * This returns the string that is displayed in the dropdown
+   * Get the label at the given index. This is the string that is displayed
+   * in the autocomplete dropdown row. If there is additional text to be
+   * displayed, it should be stored within a field in the comment.
    */
   AString getLabelAt(in long index);
 
   /**
-   * Get the comment of the result at the given index
+   * Get the comment of the result at the given index. This is a serialized
+   * JSON object containing additional properties related to the index.
    */
   AString getCommentAt(in long index);
 

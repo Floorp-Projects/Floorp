@@ -27,15 +27,15 @@ XPCOMUtils.defineLazyServiceGetter(
 
 export class ParentAutocompleteOption {
   image;
-  title;
-  subtitle;
+  label;
+  secondary;
   fillMessageName;
   fillMessageData;
 
-  constructor(image, title, subtitle, fillMessageName, fillMessageData) {
+  constructor(image, label, secondary, fillMessageName, fillMessageData) {
     this.image = image;
-    this.title = title;
-    this.subtitle = subtitle;
+    this.label = label;
+    this.secondary = secondary;
     this.fillMessageName = fillMessageName;
     this.fillMessageData = fillMessageData;
   }

@@ -8,7 +8,7 @@ const URL = BASE_URL + "autocomplete_basic.html";
 
 function checkPopup(autoCompletePopup) {
   let first = autoCompletePopup.view.results[0];
-  const { primary, secondary } = JSON.parse(first.label);
+  const { primary, secondary } = JSON.parse(first.comment);
   ok(
     primary.startsWith(TEST_ADDRESS_1["street-address"].split("\n")[0]),
     "Check primary label is street address"

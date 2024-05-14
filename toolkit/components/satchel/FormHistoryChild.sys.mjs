@@ -223,8 +223,8 @@ export class FormHistoryChild extends JSWindowActorChild {
         entry =>
           new lazy.GenericAutocompleteItem(
             entry.image,
-            entry.title,
-            entry.subtitle,
+            entry.label,
+            entry.secondary,
             entry.fillMessageName,
             entry.fillMessageData
           )

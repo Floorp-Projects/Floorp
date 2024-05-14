@@ -179,9 +179,9 @@ function listenForUnexpectedPopupShown() {
 async function popupBy(triggerFn) {
   gPopupShownExpected = true;
   const promise = new Promise(resolve => {
-    gPopupShownListener = ({ results }) => {
+    gPopupShownListener = results => {
       gPopupShownExpected = false;
-      resolve(results);
+      resolve(results.labels);
     };
   });
   if (triggerFn) {
@@ -240,10 +240,10 @@ function promiseNextStorageEvent() {
 function satchelCommonSetup() {
   let chromeURL = SimpleTest.getTestFileURL("parent_utils.js");
   gChromeScript = SpecialPowers.loadChromeScript(chromeURL);
-  gChromeScript.addMessageListener("onpopupshown", ({ results }) => {
+  gChromeScript.addMessageListener("onpopupshown", results => {
     gLastAutoCompleteResults = results;
     if (gPopupShownListener) {
-      gPopupShownListener({ results });
+      gPopupShownListener(results);
     }
   });
 
@@ -292,7 +292,7 @@ function assertValueAfterKeys(input, keys, expectedValue) {
 
 function assertAutocompleteItems(...expectedValues) {
   const actualValues = getMenuEntries();
-  isDeeply(actualValues, expectedValues, "expected autocomplete list");
+  isDeeply(actualValues.labels, expectedValues, "expected autocomplete list");
 }
 
 function deleteSelectedAutocompleteItem() {

@@ -735,7 +735,7 @@ This tests the login manager in a insecure setting using http. A similar test fi
     const promise1 = notifyMenuChanged(2);
     sendString("z");
     const results1 = await promise1;
-    checkAutoCompleteResults(results1, [
+    checkAutoCompleteResults(results1.labels, [
                                "This connection is not secure. Logins entered here could be compromised. Learn More",
     ], window.location.host,
                              "Check popup does not have any login items");
@@ -744,7 +744,7 @@ This tests the login manager in a insecure setting using http. A similar test fi
     const promise2 = notifyMenuChanged(2);
     sendString("z");
     const results2 = await promise2;
-    checkAutoCompleteResults(results2, [
+    checkAutoCompleteResults(results2.labels, [
                                "This connection is not secure. Logins entered here could be compromised. Learn More",
     ], window.location.host,
                              "Check popup only has the footer when it opens");
