@@ -55,18 +55,15 @@ add_task(async function ready() {
 Assert.ok(AppConstants.platform == "win", "Platform is Windows");
 
 add_task(async function remoteEnableWithPDF() {
-  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig(
-    {
-      featureId: NimbusFeatures.shellService.featureId,
-      value: {
-        setDefaultBrowserUserChoice: true,
-        setDefaultPDFHandlerOnlyReplaceBrowsers: false,
-        setDefaultPDFHandler: true,
-        enabled: true,
-      },
+  let doCleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: NimbusFeatures.shellService.featureId,
+    value: {
+      setDefaultBrowserUserChoice: true,
+      setDefaultPDFHandlerOnlyReplaceBrowsers: false,
+      setDefaultPDFHandler: true,
+      enabled: true,
     },
-    { isRollout: true }
-  );
+  });
 
   Assert.equal(
     NimbusFeatures.shellService.getVariable("setDefaultBrowserUserChoice"),
@@ -91,18 +88,15 @@ add_task(async function remoteEnableWithPDF() {
 });
 
 add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
-  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig(
-    {
-      featureId: NimbusFeatures.shellService.featureId,
-      value: {
-        setDefaultBrowserUserChoice: true,
-        setDefaultPDFHandlerOnlyReplaceBrowsers: true,
-        setDefaultPDFHandler: true,
-        enabled: true,
-      },
+  let doCleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: NimbusFeatures.shellService.featureId,
+    value: {
+      setDefaultBrowserUserChoice: true,
+      setDefaultPDFHandlerOnlyReplaceBrowsers: true,
+      setDefaultPDFHandler: true,
+      enabled: true,
     },
-    { isRollout: true }
-  );
+  });
 
   Assert.equal(
     NimbusFeatures.shellService.getVariable("setDefaultBrowserUserChoice"),
@@ -153,17 +147,14 @@ add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
 });
 
 add_task(async function remoteEnableWithoutPDF() {
-  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig(
-    {
-      featureId: NimbusFeatures.shellService.featureId,
-      value: {
-        setDefaultBrowserUserChoice: true,
-        setDefaultPDFHandler: false,
-        enabled: true,
-      },
+  let doCleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: NimbusFeatures.shellService.featureId,
+    value: {
+      setDefaultBrowserUserChoice: true,
+      setDefaultPDFHandler: false,
+      enabled: true,
     },
-    { isRollout: true }
-  );
+  });
 
   Assert.equal(
     NimbusFeatures.shellService.getVariable("setDefaultBrowserUserChoice"),
@@ -185,17 +176,14 @@ add_task(async function remoteEnableWithoutPDF() {
 });
 
 add_task(async function remoteDisable() {
-  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig(
-    {
-      featureId: NimbusFeatures.shellService.featureId,
-      value: {
-        setDefaultBrowserUserChoice: false,
-        setDefaultPDFHandler: true,
-        enabled: false,
-      },
+  let doCleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: NimbusFeatures.shellService.featureId,
+    value: {
+      setDefaultBrowserUserChoice: false,
+      setDefaultPDFHandler: true,
+      enabled: false,
     },
-    { isRollout: true }
-  );
+  });
 
   Assert.equal(
     NimbusFeatures.shellService.getVariable("setDefaultBrowserUserChoice"),

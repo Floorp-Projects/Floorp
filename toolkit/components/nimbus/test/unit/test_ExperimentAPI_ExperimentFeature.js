@@ -63,14 +63,13 @@ add_task(async function test_ExperimentFeature_test_helper_ready() {
 
   const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
 
-  await ExperimentFakes.enrollWithFeatureConfig(
+  await ExperimentFakes.enrollWithRollout(
     {
       featureId: "foo",
       value: { remoteValue: "mochitest", enabled: true },
     },
     {
       manager,
-      isRollout: true,
     }
   );
 
