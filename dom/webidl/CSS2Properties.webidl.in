@@ -1,4 +1,0 @@
-[Exposed=Window]
-interface CSS2Properties : CSSStyleDeclaration {
-${props}
-};
