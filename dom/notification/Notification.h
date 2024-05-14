@@ -254,27 +254,6 @@ class Notification : public DOMEventTargetHelper,
   static NotificationPermission GetPermissionInternal(
       nsPIDOMWindowInner* aWindow, ErrorResult& rv);
 
-  static const nsString DirectionToString(NotificationDirection aDirection) {
-    switch (aDirection) {
-      case NotificationDirection::Ltr:
-        return u"ltr"_ns;
-      case NotificationDirection::Rtl:
-        return u"rtl"_ns;
-      default:
-        return u"auto"_ns;
-    }
-  }
-
-  static NotificationDirection StringToDirection(const nsAString& aDirection) {
-    if (aDirection.EqualsLiteral("ltr")) {
-      return NotificationDirection::Ltr;
-    }
-    if (aDirection.EqualsLiteral("rtl")) {
-      return NotificationDirection::Rtl;
-    }
-    return NotificationDirection::Auto;
-  }
-
   static nsresult GetOrigin(nsIPrincipal* aPrincipal, nsString& aOrigin);
 
   void GetAlertName(nsAString& aRetval) {
