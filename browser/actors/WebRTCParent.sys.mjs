@@ -1237,6 +1237,21 @@ function prompt(aActor, aBrowser, aRequest) {
     return true;
   }
 
+  function getRememberCheckboxLabel() {
+    if (reqVideoInput == "Camera") {
+      if (reqAudioInput == "Microphone") {
+        return "webrtc-remember-allow-checkbox-camera-and-microphone";
+      }
+      return "webrtc-remember-allow-checkbox-camera";
+    }
+
+    if (reqAudioInput == "Microphone") {
+      return "webrtc-remember-allow-checkbox-microphone";
+    }
+
+    return "webrtc-remember-allow-checkbox";
+  }
+
   if (shouldShowAlwaysRemember()) {
     // Disable the permanent 'Allow' action if the connection isn't secure, or for
     // screen/audio sharing (because we can't guess which window the user wants to
@@ -1252,7 +1267,7 @@ function prompt(aActor, aBrowser, aRequest) {
     }
 
     options.checkbox = {
-      label: localization.formatValueSync("webrtc-remember-allow-checkbox"),
+      label: localization.formatValueSync(getRememberCheckboxLabel()),
       checked: principal.isAddonOrExpandedAddonPrincipal,
       checkedState: reason
         ? {

@@ -47,6 +47,14 @@ var gTests = [
         "webRTC-shareMicrophone-notification-icon",
         "anchored to mic icon"
       );
+
+      is(
+        PopupNotifications.getNotification("webRTC-shareDevices").options
+          .checkbox.label,
+        "Remember for all microphones",
+        "Correct string used for decision checkbox"
+      );
+
       checkDeviceSelectors(["microphone"]);
 
       let indicator = promiseIndicatorWindow();
@@ -144,6 +152,14 @@ var gTests = [
         "webRTC-shareDevices-notification-icon",
         "anchored to device icon"
       );
+
+      is(
+        PopupNotifications.getNotification("webRTC-shareDevices").options
+          .checkbox.label,
+        "Remember for all cameras",
+        "Correct string used for decision checkbox"
+      );
+
       checkDeviceSelectors(["camera"]);
 
       let indicator = promiseIndicatorWindow();
