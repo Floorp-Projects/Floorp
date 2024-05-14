@@ -76,13 +76,18 @@ async function show_tab(tab) {
   return tabShown;
 }
 
-async function test_tooltip(icon, expectedTooltip, isActiveTab, tab) {
+async function test_tooltip(icon, expectedTooltip, isActiveTab) {
   let tooltip = document.getElementById("tabbrowser-tab-tooltip");
 
-  let tabContent = tab.querySelector(".tab-content");
-  await hover_icon(tabContent, tooltip);
-
+  let l10nFinishedPromise = BrowserTestUtils.waitForEvent(
+    document,
+    "L10nMutationsFinished"
+  );
   await hover_icon(icon, tooltip);
+  if (document.hasPendingL10nMutations) {
+    // wait for correct menu text
+    await l10nFinishedPromise;
+  }
   if (isActiveTab) {
     // The active tab should have the keybinding shortcut in the tooltip.
     // We check this by ensuring that the strings are not equal but the expected
@@ -101,7 +106,7 @@ async function test_tooltip(icon, expectedTooltip, isActiveTab, tab) {
     is(
       tooltip.getAttribute("label"),
       expectedTooltip,
-      "Tooltips should not be equal"
+      "Tooltips should be equal"
     );
   }
   leave_icon(icon);
@@ -114,12 +119,20 @@ function get_tab_state(tab) {
 async function test_muting_using_menu(tab, expectMuted) {
   // Show the popup menu
   let contextMenu = document.getElementById("tabContextMenu");
+  let l10nFinishedPromise = BrowserTestUtils.waitForEvent(
+    document,
+    "L10nMutationsFinished"
+  );
   let popupShownPromise = BrowserTestUtils.waitForEvent(
     contextMenu,
     "popupshown"
   );
   EventUtils.synthesizeMouseAtCenter(tab, { type: "contextmenu", button: 2 });
   await popupShownPromise;
+  if (document.hasPendingL10nMutations) {
+    // wait for correct menu text
+    await l10nFinishedPromise;
+  }
 
   // Check the menu
   let expectedLabel = expectMuted ? "Unmute Tab" : "Mute Tab";
