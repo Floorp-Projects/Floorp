@@ -76,7 +76,7 @@ collect_meta_name_icons(icons, "msapplication-TileImage");
 
 let message = {
   url: document.location.href,
-  icons: icons,
+  icons,
 };
 
 browser.runtime.sendNativeMessage("MozacBrowserIcons", message);

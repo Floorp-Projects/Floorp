@@ -296,7 +296,7 @@ function fetchDocument(url) {
 function getPreparedDocument(id, url) {
   return new Promise((resolve, reject) => {
     browser.runtime
-      .sendMessage({ action: "getSerializedDoc", id: id })
+      .sendMessage({ action: "getSerializedDoc", id })
       .then(serializedDoc => {
         if (serializedDoc) {
           let doc = new JSDOMParser().parse(serializedDoc, url);
@@ -361,7 +361,7 @@ function connectNativePort() {
         break;
       case "checkReaderState":
         port.postMessage({
-          baseUrl: baseUrl,
+          baseUrl,
           activeUrl: articleUrl,
           readerable: true,
         });
