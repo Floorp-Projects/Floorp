@@ -1870,8 +1870,7 @@ void FragmentOrElement::GetMarkup(bool aIncludeSelf, nsAString& aMarkup) {
 
   Document* doc = OwnerDoc();
   if (IsInHTMLDocument()) {
-    nsContentUtils::SerializeNodeToMarkup(this, !aIncludeSelf, aMarkup, false,
-                                          {});
+    nsContentUtils::SerializeNodeToMarkup(this, !aIncludeSelf, aMarkup);
     return;
   }
 

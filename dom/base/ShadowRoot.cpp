@@ -13,7 +13,6 @@
 #include "nsWindowSizes.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
@@ -53,8 +52,7 @@ NS_IMPL_RELEASE_INHERITED(ShadowRoot, DocumentFragment)
 ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
                        Element::DelegatesFocus aDelegatesFocus,
                        SlotAssignmentMode aSlotAssignment,
-                       IsClonable aIsClonable, IsSerializable aIsSerializable,
-                       Declarative aDeclarative,
+                       IsClonable aIsClonable, Declarative aDeclarative,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : DocumentFragment(std::move(aNodeInfo)),
       DocumentOrShadowRoot(this),
@@ -64,8 +62,7 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
       mIsDetailsShadowTree(aElement->IsHTMLElement(nsGkAtoms::details)),
       mIsAvailableToElementInternals(false),
       mIsDeclarative(aDeclarative),
-      mIsClonable(aIsClonable),
-      mIsSerializable(aIsSerializable) {
+      mIsClonable(aIsClonable) {
   // nsINode.h relies on this.
   MOZ_ASSERT(static_cast<nsINode*>(this) == reinterpret_cast<nsINode*>(this));
   MOZ_ASSERT(static_cast<nsIContent*>(this) ==
@@ -887,10 +884,4 @@ nsresult ShadowRoot::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const {
 void ShadowRoot::SetHTMLUnsafe(const nsAString& aHTML) {
   RefPtr<Element> host = GetHost();
   nsContentUtils::SetHTMLUnsafe(this, host, aHTML);
-}
-
-void ShadowRoot::GetHTML(const GetHTMLOptions& aOptions, nsAString& aResult) {
-  nsContentUtils::SerializeNodeToMarkup<SerializeShadowRoots::Yes>(
-      this, true, aResult, aOptions.mSerializableShadowRoots,
-      aOptions.mShadowRoots);
 }
