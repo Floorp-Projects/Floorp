@@ -32,7 +32,7 @@ class RenderCompositorD3D11SWGL : public RenderCompositorLayersSWGL {
   void Pause() override;
   bool Resume() override;
 
-  DeviceResetReason IsContextLost(bool aForce) override;
+  GLenum IsContextLost(bool aForce) override;
 
   layers::WebRenderCompositor CompositorType() const override {
     return layers::WebRenderCompositor::D3D11;

@@ -252,31 +252,35 @@ void RenderCompositor::GetWindowVisibility(WindowVisibility* aVisibility) {
 #endif
 }
 
-DeviceResetReason RenderCompositor::IsContextLost(bool aForce) {
+GLenum RenderCompositor::IsContextLost(bool aForce) {
   auto* glc = gl();
   // GetGraphicsResetStatus may trigger an implicit MakeCurrent if robustness
   // is not supported, so unless we are forcing, pass on the check.
   if (!glc || (!aForce && !glc->IsSupported(gl::GLFeature::robustness))) {
-    return DeviceResetReason::OK;
+    return LOCAL_GL_NO_ERROR;
   }
   auto resetStatus = glc->fGetGraphicsResetStatus();
   switch (resetStatus) {
     case LOCAL_GL_NO_ERROR:
-      return DeviceResetReason::OK;
+      break;
     case LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB:
-      return DeviceResetReason::DRIVER_ERROR;
+      NS_WARNING("Device reset due to system / different context");
+      break;
     case LOCAL_GL_PURGED_CONTEXT_RESET_NV:
-      return DeviceResetReason::NVIDIA_VIDEO;
+      NS_WARNING("Device reset due to NV video memory purged");
+      break;
     case LOCAL_GL_GUILTY_CONTEXT_RESET_ARB:
-      return DeviceResetReason::RESET;
+      gfxCriticalError() << "Device reset due to WR context";
+      break;
     case LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB:
-      return DeviceResetReason::UNKNOWN;
+      gfxCriticalNote << "Device reset may be due to WR context";
+      break;
     default:
       gfxCriticalError() << "Device reset with WR context unexpected status: "
                          << gfx::hexa(resetStatus);
       break;
   }
-  return DeviceResetReason::OTHER;
+  return resetStatus;
 }
 
 }  // namespace mozilla::wr

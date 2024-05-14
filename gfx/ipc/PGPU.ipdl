@@ -42,8 +42,6 @@ using mozilla::layers::SwapChainInfo from "mozilla/layers/OverlayInfo.h";
 using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
 using mozilla::layers::VideoBridgeSource from "mozilla/layers/VideoBridgeUtils.h";
 using mozilla::hal::BatteryInformation from "mozilla/hal_sandbox/PHal.h";
-using DeviceResetReason from "gfxPlatform.h";
-using DeviceResetDetectPlace from "gfxPlatform.h";
 
 namespace mozilla {
 namespace gfx {
@@ -165,7 +163,7 @@ child:
   async RecordDiscardedData(DiscardedData data);
 
   async DeclareStable();
-  async NotifyDeviceReset(GPUDeviceData status, DeviceResetReason reason, DeviceResetDetectPlace place);
+  async NotifyDeviceReset(GPUDeviceData status);
   async NotifyOverlayInfo(OverlayInfo info);
   async NotifySwapChainInfo(SwapChainInfo info);
   async NotifyDisableRemoteCanvas();

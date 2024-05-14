@@ -70,9 +70,7 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
   void ActorDestroy(ActorDestroyReason aWhy) override;
   mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError);
   mozilla::ipc::IPCResult RecvNotifyUiObservers(const nsCString& aTopic);
-  mozilla::ipc::IPCResult RecvNotifyDeviceReset(
-      const GPUDeviceData& aData, const DeviceResetReason& aReason,
-      const DeviceResetDetectPlace& aPlace);
+  mozilla::ipc::IPCResult RecvNotifyDeviceReset(const GPUDeviceData& aData);
   mozilla::ipc::IPCResult RecvNotifyOverlayInfo(const OverlayInfo aInfo);
   mozilla::ipc::IPCResult RecvNotifySwapChainInfo(const SwapChainInfo aInfo);
   mozilla::ipc::IPCResult RecvNotifyDisableRemoteCanvas();

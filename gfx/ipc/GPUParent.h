@@ -42,8 +42,7 @@ class GPUParent final : public PGPUParent {
 
   bool Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
             const char* aParentBuildID);
-  void NotifyDeviceReset(DeviceResetReason aReason,
-                         DeviceResetDetectPlace aPlace);
+  void NotifyDeviceReset();
   void NotifyOverlayInfo(layers::OverlayInfo aInfo);
   void NotifySwapChainInfo(layers::SwapChainInfo aInfo);
   void NotifyDisableRemoteCanvas();

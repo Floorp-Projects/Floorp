@@ -160,22 +160,9 @@ enum class DeviceResetReason {
   OUT_OF_MEMORY,
   FORCED_RESET,  // Simulated device reset.
   OTHER,         // Unrecognized reason for device reset.
+  D3D9_RESET,    // Windows specific, not used.
   NVIDIA_VIDEO,  // Linux specific, NVIDIA video memory was reset.
   UNKNOWN,       // GL specific, unknown if guilty or innocent.
-  _First = OK,
-  _Last = UNKNOWN,
-};
-
-enum class DeviceResetDetectPlace {
-  WR_BEGIN_FRAME = 0,
-  WR_WAIT_FOR_GPU,
-  WR_POST_UPDATE,
-  WR_SYNC_OBJRCT,
-  WR_SIMULATE,
-  WIDGET,
-  CANVAS_TRANSLATOR,
-  _First = WR_BEGIN_FRAME,
-  _Last = CANVAS_TRANSLATOR,
 };
 
 enum class ForcedDeviceResetReason {
