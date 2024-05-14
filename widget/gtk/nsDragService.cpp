@@ -1006,45 +1006,6 @@ nsDragService::GetCanDrop(bool* aCanDrop) {
   return NS_OK;
 }
 
-static void UTF8ToNewUTF16(const char* aUTF8, uint32_t aUTF8Len,
-                           char16_t** aUTF16, uint32_t* aUTF16Len) {
-  nsDependentCSubstring utf8(aUTF8, aUTF8Len);
-  *aUTF16 = UTF8ToNewUnicode(utf8, aUTF16Len);
-}
-
-// extract an item from text/uri-list formatted data and convert it to
-// unicode.
-static void GetTextUriListItem(const char* data, uint32_t datalen,
-                               uint32_t aItemIndex, char16_t** convertedText,
-                               uint32_t* convertedTextLen) {
-  const char* p = data;
-  const char* endPtr = p + datalen;
-  unsigned int count = 0;
-
-  *convertedText = nullptr;
-  while (p < endPtr) {
-    // skip whitespace (if any)
-    while (p < endPtr && *p != '\0' && isspace(*p)) p++;
-    // if we aren't at the end of the line, we have a url
-    if (p != endPtr && *p != '\0' && *p != '\n' && *p != '\r') count++;
-    // this is the item we are after ...
-    if (aItemIndex + 1 == count) {
-      const char* q = p;
-      while (q < endPtr && *q != '\0' && *q != '\n' && *q != '\r') q++;
-      UTF8ToNewUTF16(p, q - p, convertedText, convertedTextLen);
-      break;
-    }
-    // skip to the end of the line
-    while (p < endPtr && *p != '\0' && *p != '\n') p++;
-    p++;  // skip the actual newline as well.
-  }
-
-  // didn't find the desired item, so just pass the whole lot
-  if (!*convertedText) {
-    UTF8ToNewUTF16(data, datalen, convertedText, convertedTextLen);
-  }
-}
-
 // Spins event loop, called from JS.
 // Can lead to another round of drag_motion events.
 NS_IMETHODIMP
@@ -1147,9 +1108,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
   }
 
   // check to see if this is an internal list
-  bool isList = IsTargetContextList();
-
-  if (isList) {
+  if (IsTargetContextList()) {
     LOGDRAGSERVICE("  Process as a list...");
     // find a matching flavor
     for (uint32_t i = 0; i < flavors.Length(); ++i) {
@@ -1181,182 +1140,86 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
     return NS_ERROR_FAILURE;
   }
 
-  nsTArray<nsCString> dragFlavors;
-  GetDragFlavors(dragFlavors);
-
   // Now walk down the list of flavors. When we find one that is
   // actually present, copy out the data into the transferable in that
   // format. SetTransferData() implicitly handles conversions.
   for (uint32_t i = 0; i < flavors.Length(); ++i) {
     nsCString& flavorStr = flavors[i];
 
-    GdkAtom gdkFlavor;
-    if (flavorStr.EqualsLiteral(kTextMime)) {
-      gdkFlavor = gdk_atom_intern(gTextPlainUTF8Type, FALSE);
-    } else {
-      gdkFlavor = gdk_atom_intern(flavorStr.get(), FALSE);
-    }
-    LOGDRAGSERVICE("  we're getting data %s (gdk flavor %p)\n", flavorStr.get(),
-                   gdkFlavor);
-    bool dataFound = false;
-    nsCOMPtr<nsIFile> file;
-    if (gdkFlavor) {
-      GetTargetDragData(gdkFlavor, dragFlavors);
-      GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
+    GdkAtom requestedFlavor = gdk_atom_intern(flavorStr.get(), FALSE);
+    if (!requestedFlavor) {
+      continue;
     }
 
-    // application/vnd.portal.files
-    if (!file || !mTargetDragUris) {
-      LOGDRAGSERVICE("  file not found, proceed with %s flavor\n", gPortalFile);
-      gdkFlavor = gdk_atom_intern(gPortalFile, FALSE);
-      if (gdkFlavor) {
-        GetTargetDragData(gdkFlavor, dragFlavors, false /* resetTargetData */);
-        GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
+    LOGDRAGSERVICE("  we're getting data %s\n", flavorStr.get());
+
+    RefPtr<DragData> dragData;
+    if (requestedFlavor == sTextMimeAtom) {
+      dragData = GetDragData(sTextPlainUTF8TypeAtom);
+    }
+
+    if (!dragData) {
+      dragData = GetDragData(requestedFlavor);
+    }
+
+    // We're asked to get file mime type but we failed.
+    // Try portal variants and text/uri-list conversion.
+    if (!dragData && requestedFlavor == sFileMimeAtom) {
+      // application/vnd.portal.files
+      dragData = GetDragData(sPortalFileAtom);
+
+      // application/vnd.portal.filetransfer
+      if (!dragData) {
+        dragData = GetDragData(sPortalFileTransferAtom);
+      }
+
+      if (!dragData) {
+        LOGDRAGSERVICE(
+            "  file not found, proceed with conversion %s => %s flavor\n",
+            gTextUriListType, kFileMime);
+        // Conversion text/uri-list => application/x-moz-file
+        dragData = GetDragData(sTextUriListTypeAtom);
+        if (dragData) {
+          dragData = dragData->ConvertToFile();
+          if (dragData) {
+            mCachedDragData.InsertOrUpdate(dragData->GetFlavor(), dragData);
+          }
+        }
       }
     }
 
-    // application/vnd.portal.filetransfer
-    if (!file || !mTargetDragUris) {
-      LOGDRAGSERVICE("  file not found, proceed with %s flavor\n",
-                     gPortalFileTransfer);
-      gdkFlavor = gdk_atom_intern(gPortalFileTransfer, FALSE);
-      if (gdkFlavor) {
-        GetTargetDragData(gdkFlavor, dragFlavors, false /* resetTargetData */);
-        GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
-      }
-    }
-
-    // Conversion from application/x-moz-file to text/uri-list
-    if ((!file || !mTargetDragUris) && (flavorStr.EqualsLiteral(kFileMime))) {
-      LOGDRAGSERVICE(
-          "  file not found, proceed with conversion %s =>  %s flavor\n",
-          kFileMime, gTextUriListType);
-
-      gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
-      if (gdkFlavor) {
-        GetTargetDragData(gdkFlavor, dragFlavors, false /* resetTargetData */);
-        GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
-      }
-    }
-
-    if (file) {
-      LOGDRAGSERVICE("  from drag uris set as file %s - flavor: %s",
-                     mTargetDragUris.get()[aItemIndex], flavorStr.get());
-      aTransferable->SetTransferData(flavorStr.get(), file);
-      return NS_OK;
-    }
-
-    if (mTargetDragData) {
-      LOGDRAGSERVICE("  dataFound = true\n");
-      dataFound = true;
-    } else {
-      LOGDRAGSERVICE("  dataFound = false, try conversions\n");
-      // If we are looking for text/plain, try again with non utf-8 text.
-      if (flavorStr.EqualsLiteral(kTextMime)) {
-        LOGDRAGSERVICE("  conversion %s => %s", kTextMime, kTextMime);
-        gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
-        GetTargetDragData(gdkFlavor, dragFlavors);
-        if (mTargetDragData) {
-          dataFound = true;
-        }  // if plain text flavor present
-      }    // if looking for text/plain
-
+    if (!dragData && requestedFlavor == sURLMimeAtom) {
       // if we are looking for text/x-moz-url and we failed to find
       // it on the clipboard, try again with text/uri-list, and then
       // _NETSCAPE_URL
-      if (flavorStr.EqualsLiteral(kURLMime)) {
-        LOGDRAGSERVICE("  conversion %s => %s", kURLMime, gTextUriListType);
-        gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
-        GetTargetDragData(gdkFlavor, dragFlavors);
-        if (mTargetDragData) {
-          const char* data = reinterpret_cast<char*>(mTargetDragData);
-          char16_t* convertedText = nullptr;
-          uint32_t convertedTextLen = 0;
-
-          GetTextUriListItem(data, mTargetDragDataLen, aItemIndex,
-                             &convertedText, &convertedTextLen);
-
-          if (convertedText) {
-            // out with the old, in with the new
-            g_free(mTargetDragData);
-            mTargetDragData = convertedText;
-            mTargetDragDataLen = convertedTextLen * 2;
-            dataFound = true;
-          }
-        }
-        if (!dataFound) {
-          LOGDRAGSERVICE("  conversion %s => %s", kURLMime, gMozUrlType);
-          gdkFlavor = gdk_atom_intern(gMozUrlType, FALSE);
-          GetTargetDragData(gdkFlavor, dragFlavors);
-          if (mTargetDragData) {
-            const char* castedText = reinterpret_cast<char*>(mTargetDragData);
-            char16_t* convertedText = nullptr;
-            uint32_t convertedTextLen = 0;
-            UTF8ToNewUTF16(castedText, mTargetDragDataLen, &convertedText,
-                           &convertedTextLen);
-            if (convertedText) {
-              // out with the old, in with the new
-              g_free(mTargetDragData);
-              mTargetDragData = convertedText;
-              mTargetDragDataLen = convertedTextLen * 2;
-              dataFound = true;
-            }
+      LOGDRAGSERVICE("  conversion %s => %s", gTextUriListType, kURLMime);
+      dragData = GetDragData(sTextUriListTypeAtom);
+      if (dragData) {
+        dragData = dragData->ConvertToMozURL();
+        mCachedDragData.InsertOrUpdate(dragData->GetFlavor(), dragData);
+      }
+      if (!dragData) {
+        LOGDRAGSERVICE("  conversion %s => %s", gMozUrlType, kURLMime);
+        dragData = GetDragData(sMozUrlTypeAtom);
+        if (dragData) {
+          dragData = dragData->ConvertToMozURL();
+          if (dragData) {
+            mCachedDragData.InsertOrUpdate(dragData->GetFlavor(), dragData);
           }
         }
       }
+    }
 
-    }  // else we try one last ditch effort to find our data
-
-    if (dataFound) {
-      LOGDRAGSERVICE("  actual data found %s\n",
-                     GUniquePtr<gchar>(gdk_atom_name(gdkFlavor)).get());
-
-      if (flavorStr.EqualsLiteral(kTextMime)) {
-        // The text is in UTF-8, so convert the text into UTF-16
-        const char* text = static_cast<char*>(mTargetDragData);
-        NS_ConvertUTF8toUTF16 ucs2string(text, mTargetDragDataLen);
-        char16_t* convertedText = ToNewUnicode(ucs2string, mozilla::fallible);
-        if (convertedText) {
-          g_free(mTargetDragData);
-          mTargetDragData = convertedText;
-          mTargetDragDataLen = ucs2string.Length() * 2;
-        }
-      }
-
-      if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
-          flavorStr.EqualsLiteral(kJPGImageMime) ||
-          flavorStr.EqualsLiteral(kPNGImageMime) ||
-          flavorStr.EqualsLiteral(kGIFImageMime)) {
-        LOGDRAGSERVICE("  saving as image %s\n", flavorStr.get());
-
-        nsCOMPtr<nsIInputStream> byteStream;
-        NS_NewByteInputStream(getter_AddRefs(byteStream),
-                              Span((char*)mTargetDragData, mTargetDragDataLen),
-                              NS_ASSIGNMENT_COPY);
-        aTransferable->SetTransferData(flavorStr.get(), byteStream);
+    if (dragData && dragData->Export(aTransferable, aItemIndex)) {
+      // We usually want to also get URL for images so continue
+      if (dragData->IsImageFlavor()) {
         continue;
       }
-
-      if (!flavorStr.EqualsLiteral(kCustomTypesMime)) {
-        // the DOM only wants LF, so convert from MacOS line endings
-        // to DOM line endings.
-        nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(
-            flavorStr.EqualsLiteral(kRTFMime), &mTargetDragData,
-            reinterpret_cast<int*>(&mTargetDragDataLen));
-      }
-
-      // put it into the transferable.
-      nsCOMPtr<nsISupports> genericDataWrapper;
-      nsPrimitiveHelpers::CreatePrimitiveForData(
-          flavorStr, mTargetDragData, mTargetDragDataLen,
-          getter_AddRefs(genericDataWrapper));
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
-      // we found one, get out of this loop!
-      break;
+      return NS_OK;
     }
   }
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
