@@ -1074,3 +1074,57 @@ TEST(MimeTypeParsing, contentTypes20)
   ASSERT_TRUE(contentType.EqualsLiteral("text/plain"));
   ASSERT_TRUE(contentCharset.EqualsLiteral(""));
 }
+
+// Extract a MIME Type examples from
+// https://fetch.spec.whatwg.org/#example-extract-a-mime-type
+TEST(ExtractMimeType, example1)
+{
+  RefPtr<CMimeType> parsed =
+      CMimeType::ExtractMIMEType("text/plain;charset=gbk, text/html"_ns);
+  nsCString serialized;
+  parsed->Serialize(serialized);
+  ASSERT_TRUE(serialized.EqualsLiteral("text/html"));
+}
+
+TEST(ExtractMimeType, example2)
+{
+  RefPtr<CMimeType> parsed =
+      CMimeType::ExtractMIMEType("text/html;charset=gbk;a=b, text/html;x=y"_ns);
+  nsCString serialized;
+  parsed->Serialize(serialized);
+  ASSERT_TRUE(serialized.EqualsLiteral("text/html;x=y;charset=gbk"));
+}
+
+TEST(ExtractMimeType, example3)
+{
+  RefPtr<CMimeType> parsed = CMimeType::ExtractMIMEType(
+      "text/html;charset=gbk, x/x, text/html;x=y"_ns);
+  nsCString serialized;
+  parsed->Serialize(serialized);
+  ASSERT_TRUE(serialized.EqualsLiteral("text/html;x=y"));
+}
+
+TEST(ExtractMimeType, example4)
+{
+  RefPtr<CMimeType> parsed =
+      CMimeType::ExtractMIMEType("text/html, cannot_parse"_ns);
+  nsCString serialized;
+  parsed->Serialize(serialized);
+  ASSERT_TRUE(serialized.EqualsLiteral("text/html"));
+}
+
+TEST(ExtractMimeType, example5)
+{
+  RefPtr<CMimeType> parsed = CMimeType::ExtractMIMEType("text/html, */*"_ns);
+  nsCString serialized;
+  parsed->Serialize(serialized);
+  ASSERT_TRUE(serialized.EqualsLiteral("text/html"));
+}
+
+TEST(ExtractMimeType, example6)
+{
+  RefPtr<CMimeType> parsed = CMimeType::ExtractMIMEType("text/html, "_ns);
+  nsCString serialized;
+  parsed->Serialize(serialized);
+  ASSERT_TRUE(serialized.EqualsLiteral("text/html"));
+}
