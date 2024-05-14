@@ -120,13 +120,10 @@ add_task(async function test_rollout_expose_Telemetry() {
     description: "Test feature",
     exposureDescription: "Used in tests",
   };
-  const cleanup = await ExperimentFakes.enrollWithFeatureConfig(
-    {
-      featureId: "test-feature",
-      value: { enabled: false },
-    },
-    { isRollout: true }
-  );
+  const cleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: "test-feature",
+    value: { enabled: false },
+  });
 
   let rollout = ExperimentAPI.getRolloutMetaData({
     featureId: "test-feature",

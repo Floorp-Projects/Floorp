@@ -879,14 +879,13 @@ add_task(async function experiment_and_rollout_enroll_and_cleanup() {
 
   await manager.onStartup();
 
-  let rolloutCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+  let rolloutCleanup = await ExperimentFakes.enrollWithRollout(
     {
       featureId: "aboutwelcome",
       value: { enabled: true },
     },
     {
       manager,
-      isRollout: true,
     }
   );
 
