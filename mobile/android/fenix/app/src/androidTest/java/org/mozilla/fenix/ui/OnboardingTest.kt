@@ -1,6 +1,7 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -9,6 +10,7 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.homeScreen
 
+@Ignore("Disabled:https://bugzilla.mozilla.org/show_bug.cgi?id=1894664")
 class OnboardingTest : TestSetup() {
 
     @get:Rule

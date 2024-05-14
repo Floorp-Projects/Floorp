@@ -10,6 +10,7 @@ import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
+import android.os.StrictMode
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +30,7 @@ import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
+import org.mozilla.fenix.ext.isDefaultBrowserPromptSupported
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.requireComponents
@@ -51,7 +53,8 @@ class OnboardingFragment : Fragment() {
 
     private val pagesToDisplay by lazy {
         pagesToDisplay(
-            isNotDefaultBrowser(requireContext()),
+            isNotDefaultBrowser(requireContext()) &&
+                activity?.isDefaultBrowserPromptSupported() == false,
             canShowNotificationPage(requireContext()),
             canShowAddSearchWidgetPrompt(),
         )
@@ -76,9 +79,11 @@ class OnboardingFragment : Fragment() {
             .registerReceiver(pinAppWidgetReceiver, filter)
 
         if (isNotDefaultBrowser(context) &&
-            pagesToDisplay.none { it.type == OnboardingPageUiData.Type.DEFAULT_BROWSER }
+            activity?.isDefaultBrowserPromptSupported() == true
         ) {
-            promptToSetAsDefaultBrowser()
+            requireComponents.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+                promptToSetAsDefaultBrowser()
+            }
         }
     }
 
