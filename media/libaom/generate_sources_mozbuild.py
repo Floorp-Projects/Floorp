@@ -24,13 +24,6 @@ def write_aom_config(system, arch, variables, cache_variables):
     # inherit this from the mozilla build config
     cache_variables.remove('HAVE_PTHREAD_H')
 
-    if arch == 'arm64':
-        print("Please ensure the generated arm64 rtcd headers follow the feature settings here")
-        # The features below are copied from the "ARM64_FLAVORS" in AOM_DIR/build/cmake/cpu.cmake.
-        arm64_flavors = ["NEON", "ARM_CRC32", "NEON_DOTPROD", "NEON_I8MM", "SVE", "SVE2"]
-        for flavor in arm64_flavors:
-            print("ENABLE_{}: {}, HAVE_{}: {}".format(flavor, variables['ENABLE_' + flavor], flavor, variables['HAVE_' + flavor]))
-
     outdir = os.path.join('config', system, arch, 'config')
     try:
         os.makedirs(outdir)
