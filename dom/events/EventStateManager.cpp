@@ -1899,6 +1899,10 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     // process.
   }
 
+  // SendReal* will transform the coordinate to the child process coordinate
+  // space. So restore the coordinate after the event has been dispatched to the
+  // child process to avoid using the transformed coordinate afterward.
+  AutoRestore<LayoutDeviceIntPoint> restore(aEvent->mRefPoint);
   switch (aEvent->mClass) {
     case eMouseEventClass: {
       BrowserParent* oldRemote = BrowserParent::GetLastMouseRemoteTarget();
