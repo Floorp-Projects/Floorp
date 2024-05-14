@@ -79,7 +79,8 @@ using namespace mozilla::gfx;
 extern mozilla::LazyLogModule gWidgetDragLog;
 #  define LOGDRAGSERVICE(str, ...)                    \
     MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, \
-            ("[Depth %d]: " str, GetLoopDepth(), ##__VA_ARGS__))
+            ("[D %d] %*s" str, GetLoopDepth(),        \
+             GetLoopDepth() > 1 ? GetLoopDepth() * 2 : 0, "", ##__VA_ARGS__))
 #  define LOGDRAGSERVICESTATIC(str, ...) \
     MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, (str, ##__VA_ARGS__))
 #else
