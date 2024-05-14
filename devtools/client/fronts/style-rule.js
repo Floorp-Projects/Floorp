@@ -105,9 +105,40 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
    *                          when desugared selectors are not sent by the server.
    */
   get desugaredSelectors() {
+    // @backward-compat { version 128 } This whole function can be removed once 128 hits release
     // We don't send the desugaredSelectors for top-level selectors, so fall back to
     // the regular selectors in that case.
     return this._form.desugaredSelectors || this._form.selectors;
+  }
+
+  /**
+   * Returns a concatenation of the rule's selector and all its ancestor "selectors".
+   * This is different than desugaredSelector as what's returned is not an actual
+   * selector, but some kind of key that represent the rule selectors. This is used
+   * for the selector highlighter, where we need to know what's being highlighted (we shouldn't
+   * use desugaredSelector as it can be very expensive).
+   *
+   * @returns {String}
+   */
+  get computedSelector() {
+    let selector = "";
+    for (const ancestor of this.ancestorData) {
+      let ancestorSelector;
+      if (ancestor.selectors) {
+        ancestorSelector = ancestor.selectors.join(",");
+      } else if (ancestor.type === "container") {
+        ancestorSelector =
+          ancestor.containerName + " " + ancestor.containerQuery;
+      } else if (ancestor.type === "supports") {
+        ancestorSelector = ancestor.conditionText;
+      } else if (ancestor.value) {
+        ancestorSelector = ancestor.value;
+      }
+      selector +=
+        "/" + (ancestor.type ? ancestor.type + " " : "") + ancestorSelector;
+    }
+
+    return (selector ? selector + "/" : "") + this._form.selectors.join(",");
   }
 
   get selectorWarnings() {

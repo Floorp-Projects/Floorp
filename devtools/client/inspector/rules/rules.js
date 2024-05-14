@@ -341,31 +341,44 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Highlight/unhighlight all the nodes that match a given selector
+   * Highlight/unhighlight all the nodes that match a given rule's selector
    * inside the document of the current selected node.
    * Only one selector can be highlighted at a time, so calling the method a
-   * second time with a different selector will first unhighlight the previously
+   * second time with a different rule will first unhighlight the previously
    * highlighted nodes.
-   * Calling the method a second time with the same selector will just
+   * Calling the method a second time with the same rule will just
    * unhighlight the highlighted nodes.
    *
+   * @param {Rule} rule
    * @param {String} selector
    *        Elements matching this selector will be highlighted on the page.
+   * @param {Boolean} highlightFromRulesSelector
    */
-  async toggleSelectorHighlighter(selector) {
+  async toggleSelectorHighlighter(
+    rule,
+    selector,
+    highlightFromRulesSelector = true
+  ) {
     if (this.isSelectorHighlighted(selector)) {
       await this.inspector.highlighters.hideHighlighterType(
         this.inspector.highlighters.TYPES.SELECTOR
       );
     } else {
+      const options = {
+        hideInfoBar: true,
+        hideGuides: true,
+        // we still pass the selector (which can be the StyleRuleFront#computedSelector)
+        // even if highlightFromRulesSelector is set to true, as it's how we keep track
+        // of which selector is highlighted.
+        selector,
+      };
+      if (highlightFromRulesSelector) {
+        options.ruleActorID = rule.domRule.actorID;
+      }
       await this.inspector.highlighters.showHighlighterTypeForNode(
         this.inspector.highlighters.TYPES.SELECTOR,
         this.inspector.selection.nodeFront,
-        {
-          hideInfoBar: true,
-          hideGuides: true,
-          selector,
-        }
+        options
       );
     }
   },
@@ -433,12 +446,14 @@ CssRuleView.prototype = {
     if (target.classList.contains("js-toggle-selector-highlighter")) {
       event.stopPropagation();
       let selector = target.dataset.computedSelector;
+      const highlightFromRulesSelector =
+        !!selector && !target.dataset.isUniqueSelector;
       // dataset.computedSelector will be initially empty for inline styles (inherited or not)
       // Rules associated with a regular selector should have this data-attribute
       // set in devtools/client/inspector/rules/views/rule-editor.js
+      const rule = getRuleFromNode(target, this._elementStyle);
       if (selector === "") {
         try {
-          const rule = getRuleFromNode(target, this._elementStyle);
           if (rule.inherited) {
             // This is an inline style from an inherited rule. Need to resolve the
             // unique selector from the node which this rule is inherited from.
@@ -451,12 +466,17 @@ CssRuleView.prototype = {
 
           // Now that the selector was computed, we can store it for subsequent usage.
           target.dataset.computedSelector = selector;
+          target.dataset.isUniqueSelector = true;
         } finally {
           // Could not resolve a unique selector for the inline style.
         }
       }
 
-      this.toggleSelectorHighlighter(selector);
+      this.toggleSelectorHighlighter(
+        rule,
+        selector,
+        highlightFromRulesSelector
+      );
     }
 
     // Handle click on swatches next to flex and inline-flex CSS properties

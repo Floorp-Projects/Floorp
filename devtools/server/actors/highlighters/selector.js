@@ -20,8 +20,9 @@ const MAX_HIGHLIGHTED_ELEMENTS = 100;
  * to highlight the matching nodes
  */
 class SelectorHighlighter {
-  constructor(highlighterEnv) {
+  constructor(highlighterEnv, inspector) {
     this.highlighterEnv = highlighterEnv;
+    this.inspector = inspector;
     this._highlighters = [];
   }
 
@@ -45,10 +46,19 @@ class SelectorHighlighter {
     }
 
     let nodes = [];
-    try {
-      nodes = [...node.ownerDocument.querySelectorAll(options.selector)];
-    } catch (e) {
-      // It's fine if the provided selector is invalid, `nodes` will be an empty array.
+
+    if (options.ruleActorID && this.inspector) {
+      const pageStyle = await this.inspector.getPageStyle();
+      const rule = pageStyle.getActorByID(options.ruleActorID);
+      if (rule) {
+        nodes = rule.rawRule.querySelectorAll(node.getRootNode());
+      }
+    } else {
+      try {
+        nodes = node.ownerDocument.querySelectorAll(options.selector);
+      } catch (e) {
+        // It's fine if the provided selector is invalid, `nodes` will be an empty array.
+      }
     }
 
     // Prevent passing the `selector` option to BoxModelHighlighter
