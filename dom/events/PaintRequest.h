@@ -52,7 +52,9 @@ class PaintRequestList final : public nsISupports, public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
   nsISupports* GetParentObject() { return mParent; }
 
-  void Append(PaintRequest* aElement) { mArray.AppendElement(aElement); }
+  void Append(RefPtr<PaintRequest>&& aElement) {
+    mArray.AppendElement(std::move(aElement));
+  }
 
   uint32_t Length() { return mArray.Length(); }
 
