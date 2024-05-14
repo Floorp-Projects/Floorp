@@ -91,6 +91,25 @@ var gTabsPanel = {
         ?.scrollIntoView({ block: "center" })
     );
 
+    this.allTabsView.addEventListener("command", event => {
+      let { target } = event;
+      let { PanelUI } = target.ownerGlobal;
+      switch (target.id) {
+        case "allTabsMenu-searchTabs":
+          this.searchTabs();
+          break;
+        case "allTabsMenu-closeDuplicateTabs":
+          gBrowser.removeAllDuplicateTabs();
+          break;
+        case "allTabsMenu-containerTabsButton":
+          PanelUI.showSubView(this.kElements.containerTabsView, target);
+          break;
+        case "allTabsMenu-hiddenTabsButton":
+          PanelUI.showSubView(this.kElements.hiddenTabsView, target);
+          break;
+      }
+    });
+
     let containerTabsMenuSeparator =
       this.containerTabsView.querySelector("toolbarseparator");
     this.containerTabsView.addEventListener("ViewShowing", e => {
