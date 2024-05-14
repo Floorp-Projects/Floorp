@@ -43,6 +43,7 @@ treeherder:
         'Btime-fenix': 'Browsertime performance tests on Fenix'
         'Btime-refbrow': 'Browsertime performance tests on the reference browser'
         'Btime-Saf': 'Browsertime performance tests on Safari'
+        'Btime-STP': 'Browsertime performance tests on Safari Technology Preview'
         'Btime-CaR': 'Browsertime performance tests on Chromium-as-Release'
         'Btime-nofis-CaR': 'Browsertime performance tests on Chromium-as-Release without fission enabled'
         'Fetch': 'Fetch and store content'

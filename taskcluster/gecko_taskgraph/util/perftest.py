@@ -8,6 +8,7 @@ def is_external_browser(label):
         external_browser in label
         for external_browser in (
             "safari",
+            "safari-tp",
             "chrome",
             "custom-car",
             "chrome-m",

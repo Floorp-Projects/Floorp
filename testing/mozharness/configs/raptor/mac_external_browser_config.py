@@ -17,6 +17,7 @@ config = {
         "populate-webroot",
         "create-virtualenv",
         "install-chromium-distribution",
+        "install-safari-technology-preview",
         "run-tests",
     ],
     "run_cmd_checks_enabled": True,

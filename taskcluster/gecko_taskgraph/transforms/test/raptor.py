@@ -79,6 +79,7 @@ def split_apps(config, tests):
         "fenix": "fenix",
         "refbrow": "refbrow",
         "safari": "Saf",
+        "safari-tp": "STP",
         "custom-car": "CaR",
         "cstm-car-m": "CaR",
     }
