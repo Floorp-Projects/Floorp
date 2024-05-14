@@ -24,10 +24,9 @@
       if (currentCookie.localeCompare("REFRESHED") == 0) {
         setCookie("DEFAULT");
         return "DEFAULT";
-      } else {
-        setCookie("REFRESHED");
-        return "REFRESHED";
       }
+      setCookie("REFRESHED");
+      return "REFRESHED";
     }
 
     var textToShow = valSwap();

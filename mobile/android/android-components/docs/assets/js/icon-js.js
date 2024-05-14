@@ -86,11 +86,8 @@ function getFile(iconName, downloadUrl) {
       addSingleItemToTable("Loading");
       let promises = [];
       for (let i = 0; i < response.length; i++) {
-        let iconName = response[i]["name"].substr(
-          0,
-          response[i]["name"].length - 4
-        );
-        promises.push(getFile(iconName, response[i]["download_url"]));
+        let iconName = response[i].name.substr(0, response[i].name.length - 4);
+        promises.push(getFile(iconName, response[i].download_url));
       }
       Promise.all(promises).then(values => {
         document.querySelector("#preview_table > tbody").innerHTML = "";

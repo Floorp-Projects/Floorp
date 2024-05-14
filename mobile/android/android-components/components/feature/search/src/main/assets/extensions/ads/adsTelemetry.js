@@ -52,8 +52,8 @@ function getCookies() {
     value = value.join("=");
 
     result.push({
-      name: name,
-      value: value,
+      name,
+      value,
     });
   });
 
