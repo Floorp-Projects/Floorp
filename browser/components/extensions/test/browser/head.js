@@ -351,10 +351,10 @@ async function focusButtonAndPressKey(key, elem, modifiers) {
 
   elem.setAttribute("tabindex", "-1");
   elem.focus();
-  elem.removeAttribute("tabindex");
   await focused;
 
   EventUtils.synthesizeKey(key, modifiers);
+  elem.removeAttribute("tabindex");
   elem.blur();
 }
 

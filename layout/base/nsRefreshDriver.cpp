@@ -1914,7 +1914,6 @@ uint32_t nsRefreshDriver::ObserverCount() const {
   sum += mAnimationEventFlushObservers.Length();
   sum += mResizeEventFlushObservers.Length();
   sum += mStyleFlushObservers.Length();
-  sum += mLayoutFlushObservers.Length();
   sum += mPendingFullscreenEvents.Length();
   sum += mFrameRequestCallbackDocs.Length();
   sum += mThrottledFrameRequestCallbackDocs.Length();
@@ -1936,7 +1935,7 @@ bool nsRefreshDriver::HasObservers() const {
   // used to determine whether or not to stop the timer or re-start it and timer
   // adjustment observers should not influence timer starting or stopping.
   return (mViewManagerFlushIsPending && !mThrottled) ||
-         !mStyleFlushObservers.IsEmpty() || !mLayoutFlushObservers.IsEmpty() ||
+         !mStyleFlushObservers.IsEmpty() ||
          !mAnimationEventFlushObservers.IsEmpty() ||
          !mResizeEventFlushObservers.IsEmpty() ||
          !mPendingFullscreenEvents.IsEmpty() ||
@@ -1967,10 +1966,6 @@ void nsRefreshDriver::AppendObserverDescriptionsToString(
   if (!mStyleFlushObservers.IsEmpty()) {
     aStr.AppendPrintf("%zux Style flush observer, ",
                       mStyleFlushObservers.Length());
-  }
-  if (!mLayoutFlushObservers.IsEmpty()) {
-    aStr.AppendPrintf("%zux Layout flush observer, ",
-                      mLayoutFlushObservers.Length());
   }
   if (!mPendingFullscreenEvents.IsEmpty()) {
     aStr.AppendPrintf("%zux Pending fullscreen event, ",
@@ -2151,12 +2146,9 @@ nsRefreshDriver::ObserverArray& nsRefreshDriver::ArrayFor(
     case FlushType::Event:
       return mObservers[0];
     case FlushType::Style:
-    case FlushType::Frames:
       return mObservers[1];
-    case FlushType::Layout:
-      return mObservers[2];
     case FlushType::Display:
-      return mObservers[3];
+      return mObservers[2];
     default:
       MOZ_CRASH("We don't track refresh observers for this flush type");
   }
@@ -2487,60 +2479,48 @@ bool nsRefreshDriver::TickObserverArray(uint32_t aIdx, TimeStamp aNowTime) {
     RunFrameRequestCallbacks(aNowTime);
     MaybeIncreaseMeasuredTicksSinceLoading();
 
-    if (mPresContext && mPresContext->GetPresShell()) {
-      AutoTArray<PresShell*, 16> observers;
-      observers.AppendElements(mStyleFlushObservers);
-      for (uint32_t j = observers.Length();
-           j && mPresContext && mPresContext->GetPresShell(); --j) {
-        // Make sure to not process observers which might have been removed
-        // during previous iterations.
-        PresShell* rawPresShell = observers[j - 1];
-        if (!mStyleFlushObservers.RemoveElement(rawPresShell)) {
-          continue;
-        }
-
-        LogPresShellObserver::Run run(rawPresShell, this);
-
-        RefPtr<PresShell> presShell = rawPresShell;
-        presShell->mObservingStyleFlushes = false;
-        presShell->FlushPendingNotifications(
-            ChangesToFlush(FlushType::Style, false));
-        // Inform the FontFaceSet that we ticked, so that it can resolve its
-        // ready promise if it needs to (though it might still be waiting on
-        // a layout flush).
-        presShell->NotifyFontFaceSetOnRefresh();
-        mNeedToRecomputeVisibility = true;
-
-        // Record the telemetry for events that occurred between ticks.
-        presShell->PingPerTickTelemetry(FlushType::Style);
-      }
+    if (!mPresContext || !mPresContext->GetPresShell()) {
+      return false;
     }
-  } else if (aIdx == 2) {
-    // This is the FlushType::Layout case.
+
     AutoTArray<PresShell*, 16> observers;
-    observers.AppendElements(mLayoutFlushObservers);
+    observers.AppendElements(mStyleFlushObservers);
     for (uint32_t j = observers.Length();
          j && mPresContext && mPresContext->GetPresShell(); --j) {
       // Make sure to not process observers which might have been removed
       // during previous iterations.
       PresShell* rawPresShell = observers[j - 1];
-      if (!mLayoutFlushObservers.RemoveElement(rawPresShell)) {
+      if (!mStyleFlushObservers.RemoveElement(rawPresShell)) {
         continue;
       }
 
       LogPresShellObserver::Run run(rawPresShell, this);
 
       RefPtr<PresShell> presShell = rawPresShell;
-      presShell->mObservingLayoutFlushes = false;
       presShell->mWasLastReflowInterrupted = false;
       const ChangesToFlush ctf(FlushType::InterruptibleLayout, false);
       presShell->FlushPendingNotifications(ctf);
-      if (presShell->FixUpFocus()) {
+      const bool fixedUpFocus = presShell->FixUpFocus();
+      if (fixedUpFocus) {
         presShell->FlushPendingNotifications(ctf);
       }
+      // This is a bit subtle: We intentionally mark the pres shell as not
+      // observing style flushes here, rather than above the flush, so that
+      // reflows scheduled from the style flush, but processed by the (same)
+      // layout flush, don't end up needlessly scheduling another tick.
+      // Instead, we re-observe only if after a flush we still need a style /
+      // layout flush / focus fix-up. These should generally never happen, but
+      // the later can for example if you have focus shifts during the focus
+      // fixup event listeners etc.
+      presShell->mObservingStyleFlushes = false;
+      if (NS_WARN_IF(presShell->NeedStyleFlush()) ||
+          NS_WARN_IF(presShell->NeedLayoutFlush()) ||
+          NS_WARN_IF(fixedUpFocus && presShell->NeedsFocusFixUp())) {
+        presShell->ObserveStyleFlushes();
+      }
 
-      // Inform the FontFaceSet that we ticked, so that it can resolve its
-      // ready promise if it needs to.
+      // Inform the FontFaceSet that we ticked, so that it can resolve its ready
+      // promise if it needs to.
       presShell->NotifyFontFaceSetOnRefresh();
       mNeedToRecomputeVisibility = true;
 
@@ -2733,13 +2713,12 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   // have these calls separated out, so that we can figure out which
   // observer-category is involved from the backtrace of crash reports.
   bool keepGoing = true;
-  MOZ_ASSERT(ArrayLength(mObservers) == 4,
+  MOZ_ASSERT(ArrayLength(mObservers) == 3,
              "if this changes, then we need to add or remove calls to "
              "TickObserverArray below");
   keepGoing = keepGoing && TickObserverArray(0, aNowTime);
   keepGoing = keepGoing && TickObserverArray(1, aNowTime);
   keepGoing = keepGoing && TickObserverArray(2, aNowTime);
-  keepGoing = keepGoing && TickObserverArray(3, aNowTime);
   if (!keepGoing) {
     StopTimer();
     return;

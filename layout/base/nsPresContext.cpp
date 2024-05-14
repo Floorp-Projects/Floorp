@@ -2644,11 +2644,6 @@ bool nsPresContext::HavePendingInputEvent() {
   }
 }
 
-bool nsPresContext::HasPendingRestyleOrReflow() {
-  mozilla::PresShell* presShell = PresShell();
-  return presShell->NeedStyleFlush() || presShell->HasPendingReflow();
-}
-
 void nsPresContext::ReflowStarted(bool aInterruptible) {
 #ifdef NOISY_INTERRUPTIBLE_REFLOW
   if (!aInterruptible) {

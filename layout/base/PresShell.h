@@ -424,11 +424,6 @@ class PresShell final : public nsStubDocumentObserver,
   RefPtr<MobileViewportManager> GetMobileViewportManager() const;
 
   /**
-   * Return true if the presshell expects layout flush.
-   */
-  bool IsLayoutFlushObserver();
-
-  /**
    * Called when document load completes.
    */
   void LoadComplete();
@@ -551,8 +546,7 @@ class PresShell final : public nsStubDocumentObserver,
    */
   void NotifyFontFaceSetOnRefresh();
 
-  // Removes ourself from the list of layout / style / and resize refresh driver
-  // observers.
+  // Removes ourself from the list of style and resize refresh driver observers.
   //
   // Right now this is only used for documents in the BFCache, so if you want to
   // use this for anything else you need to ensure we don't end up in those
@@ -560,7 +554,7 @@ class PresShell final : public nsStubDocumentObserver,
   // again.
   //
   // That is handled by the mDocument->GetBFCacheEntry checks in
-  // DoObserve*Flushes functions, though that could conceivably become a boolean
+  // DoObserveStyleFlushes, though that could conceivably become a boolean
   // member in the shell if needed.
   //
   // Callers are responsible of manually calling StartObservingRefreshDriver
@@ -569,8 +563,6 @@ class PresShell final : public nsStubDocumentObserver,
   void StartObservingRefreshDriver();
 
   bool ObservingStyleFlushes() const { return mObservingStyleFlushes; }
-  bool ObservingLayoutFlushes() const { return mObservingLayoutFlushes; }
-
   void ObserveStyleFlushes() {
     if (!ObservingStyleFlushes()) {
       DoObserveStyleFlushes();
@@ -1243,12 +1235,8 @@ class PresShell final : public nsStubDocumentObserver,
     mIsNeverPainting = aNeverPainting;
   }
 
-  /**
-   * True if a reflow event has been scheduled, or is going to be scheduled
-   * to run in the future.
-   */
-  bool HasPendingReflow() const {
-    return mObservingLayoutFlushes || mReflowContinueTimer;
+  bool MightHavePendingFontLoads() const {
+    return ObservingStyleFlushes() || mReflowContinueTimer;
   }
 
   void SyncWindowProperties(bool aSync);
@@ -1288,6 +1276,7 @@ class PresShell final : public nsStubDocumentObserver,
   // Implements the "focus fix-up rule". Returns true if the focus moved (in
   // which case we might need to update layout again).
   // See https://github.com/whatwg/html/issues/8225
+  bool NeedsFocusFixUp() const;
   MOZ_CAN_RUN_SCRIPT bool FixUpFocus();
 
   /**
@@ -1413,6 +1402,7 @@ class PresShell final : public nsStubDocumentObserver,
 
   // Inline methods defined in PresShellInlines.h
   inline void EnsureStyleFlush();
+  inline void EnsureLayoutFlush();
   inline void SetNeedStyleFlush();
   inline void SetNeedLayoutFlush();
   inline void SetNeedThrottledAnimationFlush();
@@ -1427,15 +1417,10 @@ class PresShell final : public nsStubDocumentObserver,
    *   animation flush is required.
    */
   bool NeedFlush(FlushType aType) const {
-    // We check mInFlush to handle re-entrant calls to FlushPendingNotifications
-    // by reporting that we always need a flush in that case.  Otherwise,
-    // we could end up missing needed flushes, since we clear the mNeedXXXFlush
-    // flags at the top of FlushPendingNotifications.
     MOZ_ASSERT(aType >= FlushType::Style);
     return mNeedStyleFlush ||
            (mNeedLayoutFlush && aType >= FlushType::InterruptibleLayout) ||
-           aType >= FlushType::Display || mNeedThrottledAnimationFlush ||
-           mInFlush;
+           aType >= FlushType::Display || mNeedThrottledAnimationFlush;
   }
 
   /**
@@ -1801,7 +1786,6 @@ class PresShell final : public nsStubDocumentObserver,
    * Refresh observer management.
    */
   void DoObserveStyleFlushes();
-  void DoObserveLayoutFlushes();
 
   /**
    * Does the actual work of figuring out the current state of font size
@@ -1870,17 +1854,7 @@ class PresShell final : public nsStubDocumentObserver,
 
   DOMHighResTimeStamp GetPerformanceNowUnclamped();
 
-  // The callback for the mReflowContinueTimer timer.
-  static void sReflowContinueCallback(nsITimer* aTimer, void* aPresShell);
   bool ScheduleReflowOffTimer();
-  // MaybeScheduleReflow checks if posting a reflow is needed, then checks if
-  // the last reflow was interrupted. In the interrupted case ScheduleReflow is
-  // called off a timer, otherwise it is called directly.
-  void MaybeScheduleReflow();
-  // Actually schedules a reflow.  This should only be called by
-  // MaybeScheduleReflow and the reflow timer ScheduleReflowOffTimer
-  // sets up.
-  void ScheduleReflow();
 
   friend class ::AutoPointerEventTargetUpdater;
 
@@ -3159,12 +3133,6 @@ class PresShell final : public nsStubDocumentObserver,
   // re-use old pixels.
   RenderingStateFlags mRenderingStateFlags;
 
-  // Whether we're currently under a FlushPendingNotifications.
-  // This is used to handle flush reentry correctly.
-  // NOTE: This can't be a bitfield since AutoRestore has a reference to this
-  // variable.
-  bool mInFlush;
-
   bool mCaretEnabled : 1;
 
   // True if a layout flush might not be a no-op
@@ -3216,12 +3184,6 @@ class PresShell final : public nsStubDocumentObserver,
 
   // True if we're observing the refresh driver for style flushes.
   bool mObservingStyleFlushes : 1;
-
-  // True if we're observing the refresh driver for layout flushes, that is, if
-  // we have a reflow scheduled.
-  //
-  // Guaranteed to be false if mReflowContinueTimer is non-null.
-  bool mObservingLayoutFlushes : 1;
 
   bool mResizeEventPending : 1;
 

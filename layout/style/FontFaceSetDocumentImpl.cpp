@@ -692,24 +692,26 @@ bool FontFaceSetDocumentImpl::MightHavePendingFontLoads() {
     return true;
   }
 
+  if (!mDocument) {
+    return false;
+  }
+
   // Check for pending restyles or reflows, as they might cause fonts to
   // load as new styles apply and text runs are rebuilt.
-  nsPresContext* presContext = GetPresContext();
-  if (presContext && presContext->HasPendingRestyleOrReflow()) {
+  PresShell* ps = mDocument->GetPresShell();
+  if (ps && ps->MightHavePendingFontLoads()) {
     return true;
   }
 
-  if (mDocument) {
-    // We defer resolving mReady until the document as fully loaded.
-    if (!mDocument->DidFireDOMContentLoaded()) {
-      return true;
-    }
+  // We defer resolving mReady until the document as fully loaded.
+  if (!mDocument->DidFireDOMContentLoaded()) {
+    return true;
+  }
 
-    // And we also wait for any CSS style sheets to finish loading, as their
-    // styles might cause new fonts to load.
-    if (mDocument->CSSLoader()->HasPendingLoads()) {
-      return true;
-    }
+  // And we also wait for any CSS style sheets to finish loading, as their
+  // styles might cause new fonts to load.
+  if (mDocument->CSSLoader()->HasPendingLoads()) {
+    return true;
   }
 
   return false;
