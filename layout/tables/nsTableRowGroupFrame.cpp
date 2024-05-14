@@ -1626,10 +1626,8 @@ LogicalMargin nsTableRowGroupFrame::GetBCBorderWidth(WritingMode aWM) {
        rowFrame = rowFrame->GetNextRow()) {
     lastRowFrame = rowFrame;
   }
-  border.BStart(aWM) = PresContext()->DevPixelsToAppUnits(
-      firstRowFrame->GetBStartBCBorderWidth());
-  border.BEnd(aWM) =
-      PresContext()->DevPixelsToAppUnits(lastRowFrame->GetBEndBCBorderWidth());
+  border.BStart(aWM) = firstRowFrame->GetBStartBCBorderWidth();
+  border.BEnd(aWM) = lastRowFrame->GetBEndBCBorderWidth();
   return border;
 }
 
