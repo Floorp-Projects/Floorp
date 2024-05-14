@@ -1125,6 +1125,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     case ePointerUp:
       LightDismissOpenPopovers(aEvent, aTargetContent);
+      GenerateMouseEnterExit(mouseEvent);
       break;
     case ePointerGotCapture:
       GenerateMouseEnterExit(mouseEvent);
@@ -3990,15 +3991,18 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       PointerEventHandler::ImplicitlyReleasePointerCapture(pointerEvent);
       PointerEventHandler::UpdateActivePointerState(pointerEvent);
 
-      if (pointerEvent->mMessage == ePointerCancel ||
-          pointerEvent->mInputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
-        // After pointercancel, pointer becomes invalid so we can remove
-        // relevant helper from table. Regarding pointerup with non-hoverable
-        // device, the pointer also becomes invalid. Hoverable (mouse/pen)
-        // pointers are valid all the time (not only between down/up).
+      if (
+          // After pointercancel, pointer becomes invalid so we can remove
+          // relevant helper from table.
+          pointerEvent->mMessage == ePointerCancel ||
+          // pointerup for non-hoverable pointer needs to dispatch pointerout
+          // and pointerleave events because the pointer is valid only while the
+          // pointer is "down".
+          !pointerEvent->InputSourceSupportsHover()) {
         GenerateMouseEnterExit(pointerEvent);
         mPointersEnterLeaveHelper.Remove(pointerEvent->pointerId);
       }
+
       break;
     }
     case eMouseUp: {
@@ -5422,25 +5426,79 @@ void EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent) {
       if (targetElement) {
         NotifyMouseOver(aMouseEvent, targetElement);
       }
-    } break;
+      break;
+    }
     case ePointerUp: {
-      // Get the target content target (mousemove target == mouseover target)
-      nsCOMPtr<nsIContent> targetElement = GetEventTargetContent(aMouseEvent);
-      if (!targetElement) {
-        // We're always over the document root, even if we're only
-        // over dead space in a page (whose frame is not associated with
-        // any content) or in print preview dead space
-        targetElement = mDocument->GetRootElement();
-      }
-      if (targetElement) {
-        RefPtr<OverOutElementsWrapper> helper =
-            GetWrapperByEventID(aMouseEvent);
-        if (helper) {
-          helper->OverrideOverEventTarget(targetElement);
+      if (!StaticPrefs::
+              dom_events_mouse_pointer_boundary_keep_enter_targets_after_over_target_removed()) {
+        // In the legacy mode, we should do nothing if the event has not been
+        // dispatched yet (i.e., called by PreHandleEvent).
+        // On the other hand, if the event was dispatched (i.e., called by
+        // PostEventHandler), we need to dispatch "pointerout" and
+        // "pointerleave" events because the pointer will be removed
+        // (invalidated) by the "pointerup" operation.
+        if (!aMouseEvent->mFlags.mDispatchedAtLeastOnce) {
+          break;
         }
-        NotifyMouseOut(aMouseEvent, nullptr);
+        MOZ_ASSERT(!aMouseEvent->InputSourceSupportsHover());
+        // Get the target content target (pointermove target == pointerover
+        // target)
+        nsCOMPtr<nsIContent> targetElement = GetEventTargetContent(aMouseEvent);
+        if (!targetElement) {
+          // We're always over the document root, even if we're only
+          // over dead space in a page (whose frame is not associated with
+          // any content) or in print preview dead space
+          targetElement = mDocument->GetRootElement();
+        }
+        if (targetElement) {
+          // XXX It's odd to override the `pointerout` event target with the
+          // content under the pointer or something because it may have never
+          // received `pointerover` event.  I think that this was required for
+          // digitizer which supports hover state (bug 985511).  However, this
+          // is now not called at ePointerUp if the device supports hover.
+          RefPtr<OverOutElementsWrapper> helper =
+              GetWrapperByEventID(aMouseEvent);
+          if (helper) {
+            helper->OverrideOverEventTarget(targetElement);
+          }
+          NotifyMouseOut(aMouseEvent, nullptr);
+        }
+        break;
       }
-    } break;
+
+      if (aMouseEvent->mFlags.mDispatchedAtLeastOnce) {
+        // If we've already dispatched the pointerup event caused by
+        // non-hoverable input device like touch, we need to synthesize
+        // pointerout and pointerleave events because the poiner is valid only
+        // while it's "down".
+        if (!aMouseEvent->InputSourceSupportsHover()) {
+          NotifyMouseOut(aMouseEvent, nullptr);
+        }
+        break;
+      }
+
+      // If we're going to dispatch the pointerup event and the element under
+      // the pointer is changed from the previous pointer event dispatching, we
+      // need to dispatch pointer boundary events.  If the pointing device is
+      // hoverable, we always need to do it.  Otherwise, an element captures the
+      // pointer by default.  If so, we don't need the boundary events, but if
+      // the capture has already been released, e.g., by the capturing element
+      // is removed, we need to dispatch the pointer boundary event the same
+      // way as with hoverable pointer.
+      if (aMouseEvent->InputSourceSupportsHover() ||
+          !PointerEventHandler::GetPointerCapturingElement(
+              aMouseEvent->pointerId)) {
+        nsCOMPtr<nsIContent> targetElement = GetEventTargetContent(aMouseEvent);
+        if (!targetElement) {
+          targetElement = mDocument->GetRootElement();
+        }
+        if (targetElement) {
+          NotifyMouseOver(aMouseEvent, targetElement);
+        }
+        break;
+      }
+      break;
+    }
     case ePointerLeave:
     case ePointerCancel:
     case eMouseExitFromWidget: {
@@ -5465,7 +5523,8 @@ void EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent) {
       sLastRefPoint = kInvalidRefPoint;
 
       NotifyMouseOut(aMouseEvent, nullptr);
-    } break;
+      break;
+    }
     default:
       break;
   }
