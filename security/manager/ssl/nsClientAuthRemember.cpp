@@ -17,7 +17,6 @@
 #include "nsNetUtil.h"
 #include "nsPromiseFlatString.h"
 #include "nsThreadUtils.h"
-#include "nsStringBuffer.h"
 #include "cert.h"
 #include "nspr.h"
 #include "pk11pub.h"

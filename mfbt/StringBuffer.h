@@ -4,14 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsStringBuffer_h__
-#define nsStringBuffer_h__
+#ifndef StringBuffer_h__
+#define StringBuffer_h__
 
 #include <atomic>
+#include <cstring>
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/RefCounted.h"
+
+namespace mozilla {
 
 /**
  * This structure precedes the string buffers "we" allocate.  It may be the
@@ -22,13 +25,13 @@
  * tracking.  NOTE: A string buffer can be modified only if its reference
  * count is 1.
  */
-class nsStringBuffer {
+class StringBuffer {
  private:
   std::atomic<uint32_t> mRefCount;
   uint32_t mStorageSize;
 
  public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(nsStringBuffer)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(StringBuffer)
 
   /**
    * Allocates a new string buffer, with given size in bytes and a
@@ -47,17 +50,17 @@ class nsStringBuffer {
    *
    * @return new string buffer or null if out of memory.
    */
-  static already_AddRefed<nsStringBuffer> Alloc(size_t aSize) {
+  static already_AddRefed<StringBuffer> Alloc(size_t aSize) {
     MOZ_ASSERT(aSize != 0, "zero capacity allocation not allowed");
-    MOZ_ASSERT(sizeof(nsStringBuffer) + aSize <= size_t(uint32_t(-1)) &&
-                   sizeof(nsStringBuffer) + aSize > aSize,
+    MOZ_ASSERT(sizeof(StringBuffer) + aSize <= size_t(uint32_t(-1)) &&
+                   sizeof(StringBuffer) + aSize > aSize,
                "mStorageSize will truncate");
 
-    auto* hdr = (nsStringBuffer*)malloc(sizeof(nsStringBuffer) + aSize);
+    auto* hdr = (StringBuffer*)malloc(sizeof(StringBuffer) + aSize);
     if (hdr) {
       hdr->mRefCount = 1;
       hdr->mStorageSize = aSize;
-      mozilla::detail::RefCountLogger::logAddRef(hdr, 1);
+      detail::RefCountLogger::logAddRef(hdr, 1);
     }
     return already_AddRefed(hdr);
   }
@@ -68,10 +71,14 @@ class nsStringBuffer {
    * Note that this will allocate extra space for the trailing null byte, which
    * this method will add.
    */
-  static already_AddRefed<nsStringBuffer> Create(const char16_t* aData,
-                                                 size_t aLength);
-  static already_AddRefed<nsStringBuffer> Create(const char* aData,
-                                                 size_t aLength);
+  static already_AddRefed<StringBuffer> Create(const char16_t* aData,
+                                               size_t aLength) {
+    return DoCreate(aData, aLength);
+  }
+  static already_AddRefed<StringBuffer> Create(const char* aData,
+                                               size_t aLength) {
+    return DoCreate(aData, aLength);
+  }
 
   /**
    * Resizes the given string buffer to the specified storage size.  This
@@ -84,7 +91,31 @@ class nsStringBuffer {
    *
    * @see IsReadonly
    */
-  static nsStringBuffer* Realloc(nsStringBuffer* aBuf, size_t aStorageSize);
+  static StringBuffer* Realloc(StringBuffer* aHdr, size_t aSize) {
+    MOZ_ASSERT(aSize != 0, "zero capacity allocation not allowed");
+    MOZ_ASSERT(sizeof(StringBuffer) + aSize <= size_t(uint32_t(-1)) &&
+                   sizeof(StringBuffer) + aSize > aSize,
+               "mStorageSize will truncate");
+
+    // no point in trying to save ourselves if we hit this assertion
+    MOZ_ASSERT(!aHdr->IsReadonly(), "|Realloc| attempted on readonly string");
+
+    // Treat this as a release and addref for refcounting purposes, since we
+    // just asserted that the refcount is 1.  If we don't do that, refcount
+    // logging will claim we've leaked all sorts of stuff.
+    {
+      detail::RefCountLogger::ReleaseLogger logger(aHdr);
+      logger.logRelease(0);
+    }
+
+    aHdr = (StringBuffer*)realloc(aHdr, sizeof(StringBuffer) + aSize);
+    if (aHdr) {
+      detail::RefCountLogger::logAddRef(aHdr, 1);
+      aHdr->mStorageSize = aSize;
+    }
+
+    return aHdr;
+  }
 
   void AddRef() {
     // Memory synchronization is not required when incrementing a
@@ -96,14 +127,14 @@ class nsStringBuffer {
     // synchronization is done by the mechanism that transfers the
     // pointer between threads.
     uint32_t count = mRefCount.fetch_add(1, std::memory_order_relaxed) + 1;
-    mozilla::detail::RefCountLogger::logAddRef(this, count);
+    detail::RefCountLogger::logAddRef(this, count);
   }
 
   void Release() {
     // Since this may be the last release on this thread, we need release
     // semantics so that prior writes on this thread are visible to the thread
     // that destroys the object when it reads mValue with acquire semantics.
-    mozilla::detail::RefCountLogger::ReleaseLogger logger(this);
+    detail::RefCountLogger::ReleaseLogger logger(this);
     uint32_t count = mRefCount.fetch_sub(1, std::memory_order_release) - 1;
     logger.logRelease(count);
     if (count == 0) {
@@ -119,10 +150,10 @@ class nsStringBuffer {
   /**
    * This method returns the string buffer corresponding to the given data
    * pointer.  The data pointer must have been returned previously by a
-   * call to the nsStringBuffer::Data method.
+   * call to the StringBuffer::Data method.
    */
-  static nsStringBuffer* FromData(void* aData) {
-    return reinterpret_cast<nsStringBuffer*>(aData) - 1;
+  static StringBuffer* FromData(void* aData) {
+    return reinterpret_cast<StringBuffer*>(aData) - 1;
   }
 
   /**
@@ -182,8 +213,9 @@ class nsStringBuffer {
   /**
    * This measures the size only if the StringBuffer is unshared.
    */
-  size_t SizeOfIncludingThisIfUnshared(
-      mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const {
+    return IsReadonly() ? 0 : aMallocSizeOf(this);
+  }
 
   /**
    * This measures the size regardless of whether the StringBuffer is
@@ -194,8 +226,24 @@ class nsStringBuffer {
    * please explain clearly in a comment why it's safe and won't lead to
    * double-counting.
    */
-  size_t SizeOfIncludingThisEvenIfShared(
-      mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThisEvenIfShared(MallocSizeOf aMallocSizeOf) const {
+    return aMallocSizeOf(this);
+  }
+
+ private:
+  template <typename CharT>
+  static already_AddRefed<StringBuffer> DoCreate(const CharT* aData,
+                                                 size_t aLength) {
+    StringBuffer* buffer = Alloc((aLength + 1) * sizeof(CharT)).take();
+    if (MOZ_LIKELY(buffer)) {
+      auto* data = reinterpret_cast<CharT*>(buffer->Data());
+      memcpy(data, aData, aLength * sizeof(CharT));
+      data[aLength] = 0;
+    }
+    return already_AddRefed(buffer);
+  }
 };
 
-#endif /* !defined(nsStringBuffer_h__ */
+}  // namespace mozilla
+
+#endif

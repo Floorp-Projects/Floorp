@@ -23,10 +23,9 @@ struct MiscContainer final {
   using ValueType = nsAttrValue::ValueType;
 
   ValueType mType;
-  // mStringBits points to either nsAtom* or nsStringBuffer* and is used when
-  // mType isn't eCSSDeclaration.
-  // Note eStringBase and eAtomBase is used also to handle the type of
-  // mStringBits.
+  // mStringBits points to either nsAtom* or mozilla::StringBuffer* and is used
+  // when mType isn't eCSSDeclaration. Note eStringBase and eAtomBase is used
+  // also to handle the type of mStringBits.
   //
   // Note that we use an atomic here so that we can use Compare-And-Swap
   // to cache the serialization during the parallel servo traversal. This case
@@ -102,10 +101,10 @@ struct MiscContainer final {
     return isString ? nullptr : static_cast<nsAtom*>(ptr);
   }
 
-  nsStringBuffer* GetStoredStringBuffer() const {
+  mozilla::StringBuffer* GetStoredStringBuffer() const {
     bool isString = false;
     void* ptr = GetStringOrAtomPtr(isString);
-    return isString ? static_cast<nsStringBuffer*>(ptr) : nullptr;
+    return isString ? static_cast<mozilla::StringBuffer*>(ptr) : nullptr;
   }
 
   void SetStringBitsMainThread(uintptr_t aBits) {
@@ -247,8 +246,7 @@ inline nsAtom* nsAttrValue::GetAtomValue() const {
 inline void nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const {
   switch (Type()) {
     case eString: {
-      nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
-      if (str) {
+      if (auto* str = static_cast<mozilla::StringBuffer*>(GetPtr())) {
         aResult.SetKnownLiveStringBuffer(
             str, str->StorageSize() / sizeof(char16_t) - 1);
       }

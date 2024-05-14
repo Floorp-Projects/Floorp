@@ -1068,8 +1068,8 @@ already_AddRefed<nsITransferable> DataTransfer::GetTransferable(
             nsCOMPtr<nsIInputStream> inputStream;
             storageStream->NewInputStream(0, getter_AddRefs(inputStream));
 
-            RefPtr<nsStringBuffer> stringBuffer =
-                nsStringBuffer::Alloc(totalCustomLength);
+            RefPtr<StringBuffer> stringBuffer =
+                StringBuffer::Alloc(totalCustomLength);
 
             // Subtract off the null terminator when reading.
             totalCustomLength--;

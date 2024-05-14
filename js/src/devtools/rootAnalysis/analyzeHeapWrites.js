@@ -286,10 +286,6 @@ function checkFieldWrite(entry, location, fields)
 
         if (/\bThreadLocal<\b/.test(field))
             return;
-
-        // Debugging check for string corruption.
-        if (field == "nsStringBuffer.mCanary")
-            return;
     }
 
     var str = "";
@@ -539,7 +535,7 @@ function ignoreContents(entry)
 
     if (entry.isSafeArgument(2)) {
         var secondArgWhitelist = [
-            /nsStringBuffer::ToString/,
+            /StringBuffer::ToString/,
             /AppendUTF\d+toUTF\d+/,
             /AppendASCIItoUTF\d+/,
         ];

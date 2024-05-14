@@ -652,7 +652,7 @@ void FetchUtil::InitWasmAltDataType() {
   MOZ_ASSERT(type.IsEmpty());
 
   RunOnShutdown([]() {
-    // Avoid nsStringBuffer leak tests failures.
+    // Avoid StringBuffer leak tests failures.
     const_cast<nsCString&>(WasmAltDataType).Truncate();
   });
 

@@ -146,9 +146,9 @@ macro_rules! constant_conversion {
     };
 }
 
-/// An intermediate check for avoiding a copy and having an `nsStringBuffer`
-/// refcount increment instead when both `self` and `other` are `nsACString`s,
-/// `other` is entirely ASCII and all old data in `self` is discarded.
+/// An intermediate check for avoiding a copy and having an `StringBuffer` refcount increment
+/// instead when both `self` and `other` are `nsACString`s, `other` is entirely ASCII and all old
+/// data in `self` is discarded.
 ///
 /// `$name` is the name of the function to generate
 /// `$impl` is the underlying conversion that takes a slice and that is used

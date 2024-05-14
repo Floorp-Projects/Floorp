@@ -10,7 +10,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
-#include "nsStringBuffer.h"
+#include "mozilla/StringBuffer.h"
 #include "nsReadableUtils.h"
 #include "nsCRTGlue.h"
 #include "mozilla/RefPtr.h"
@@ -44,6 +44,7 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
 using mozilla::Span;
+using mozilla::StringBuffer;
 
 #define TestExample1                                                           \
   "Sed ut perspiciatis unde omnis iste natus error sit voluptatem "            \
@@ -1172,12 +1173,12 @@ TEST_F(Strings, rfindcharinset) {
 TEST_F(Strings, stringbuffer) {
   const char kData[] = "hello world";
 
-  RefPtr<nsStringBuffer> buf;
+  RefPtr<StringBuffer> buf;
 
-  buf = nsStringBuffer::Alloc(sizeof(kData));
+  buf = StringBuffer::Alloc(sizeof(kData));
   EXPECT_TRUE(!!buf);
 
-  buf = nsStringBuffer::Alloc(sizeof(kData));
+  buf = StringBuffer::Alloc(sizeof(kData));
   EXPECT_TRUE(!!buf);
   char* data = (char*)buf->Data();
   memcpy(data, kData, sizeof(kData));
@@ -1185,7 +1186,7 @@ TEST_F(Strings, stringbuffer) {
   nsCString str;
   str.Assign(buf, sizeof(kData) - 1);
 
-  nsStringBuffer* buf2 = str.GetStringBuffer();
+  StringBuffer* buf2 = str.GetStringBuffer();
   EXPECT_EQ(buf, buf2);
 }
 

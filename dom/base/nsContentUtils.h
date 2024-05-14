@@ -142,6 +142,7 @@ class HTMLEditor;
 class LazyLogModule;
 class LogModule;
 class PresShell;
+class StringBuffer;
 class TextEditor;
 class WidgetDragEvent;
 class WidgetKeyboardEvent;

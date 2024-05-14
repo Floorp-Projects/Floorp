@@ -14,7 +14,7 @@
 #include "mozilla/Char16.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/fallible.h"
-#include "nsStringBuffer.h"
+#include "mozilla/StringBuffer.h"
 #include "nsStringFlags.h"
 #include "nsStringFwd.h"
 #include "nsStringIterator.h"
@@ -74,9 +74,9 @@ class nsTStringLengthStorage {
       "nsTString's maximum length, including the trailing null, must fit "
       "within `int32_t`, as callers will cast to `int32_t` occasionally");
   static_assert(((CheckedInt<uint32_t>{kMax} + 1) * sizeof(T) +
-                 sizeof(nsStringBuffer))
+                 sizeof(mozilla::StringBuffer))
                     .isValid(),
-                "Math required to allocate a nsStringBuffer for a "
+                "Math required to allocate a mozilla::StringBuffer for a "
                 "maximum-capacity string must not overflow uint32_t");
 
   // Implicit conversion and assignment from `size_t` which assert that the

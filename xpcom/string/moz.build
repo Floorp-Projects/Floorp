@@ -18,7 +18,6 @@ EXPORTS += [
     "nsPromiseFlatString.h",
     "nsReadableUtils.h",
     "nsString.h",
-    "nsStringBuffer.h",
     "nsStringFlags.h",
     "nsStringFwd.h",
     "nsStringIterator.h",
@@ -42,7 +41,6 @@ EXPORTS.mozilla += [
 UNIFIED_SOURCES += [
     "nsASCIIMask.cpp",
     "nsReadableUtils.cpp",
-    "nsStringBuffer.cpp",
     "nsTDependentString.cpp",
     "nsTDependentSubstring.cpp",
     "nsTextFormatter.cpp",

@@ -353,14 +353,15 @@ static void DumpSerialNumbers(const SerialHash::ConstIterator& aHashEntry,
 #endif
 
   if (aDumpAsStringBuffer) {
-    // This output will be wrong if the nsStringBuffer was used to
+    // This output will be wrong if the StringBuffer was used to
     // store a char16_t string.
-    auto* buffer = static_cast<const nsStringBuffer*>(aHashEntry.Key());
+    auto* buffer = static_cast<const mozilla::StringBuffer*>(aHashEntry.Key());
     nsDependentCString bufferString(static_cast<char*>(buffer->Data()));
-    fprintf(outputFile,
-            "Contents of leaked nsStringBuffer with storage size %d as a "
-            "char*: %s\n",
-            buffer->StorageSize(), bufferString.get());
+    fprintf(
+        outputFile,
+        "Contents of leaked mozilla::StringBuffer with storage size %d as a "
+        "char*: %s\n",
+        buffer->StorageSize(), bufferString.get());
   }
 
   if (!record->allocationStack.empty()) {
@@ -449,7 +450,7 @@ nsresult nsTraceRefcnt::DumpStatistics() {
 
   if (gSerialNumbers) {
     bool onlyLoggingStringBuffers = gTypesToLog && gTypesToLog->Count() == 1 &&
-                                    gTypesToLog->Contains("nsStringBuffer");
+                                    gTypesToLog->Contains("StringBuffer");
 
     fprintf(gBloatLog, "\nSerial Numbers of Leaked Objects:\n");
     for (auto iter = gSerialNumbers->ConstIter(); !iter.Done(); iter.Next()) {
