@@ -742,7 +742,7 @@ static PresShell* GetPresShellForContent(nsINode* aDOMNode) {
 
   RefPtr<Document> document = content->GetComposedDoc();
   if (document) {
-    document->FlushPendingNotifications(FlushType::Display);
+    document->FlushPendingNotifications(FlushType::Layout);
     return document->GetPresShell();
   }
 
