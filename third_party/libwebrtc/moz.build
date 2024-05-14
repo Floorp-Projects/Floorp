@@ -161,6 +161,7 @@ DIRS += [
     "/third_party/libwebrtc/media/rid_description_gn",
     "/third_party/libwebrtc/media/rtc_media_base_gn",
     "/third_party/libwebrtc/media/rtc_media_config_gn",
+    "/third_party/libwebrtc/media/rtc_sdp_video_format_utils_gn",
     "/third_party/libwebrtc/media/rtc_simulcast_encoder_adapter_gn",
     "/third_party/libwebrtc/media/rtp_utils_gn",
     "/third_party/libwebrtc/media/stream_params_gn",
