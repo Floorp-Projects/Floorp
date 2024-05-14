@@ -23,7 +23,7 @@ class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
-        showToolbar(getString(R.string.preferences_passwords_save_logins))
+        showToolbar(getString(R.string.preferences_passwords_save_logins_2))
         val save = bindSave()
         val neverSave = bindNeverSave()
         addToRadioGroup(save, neverSave)

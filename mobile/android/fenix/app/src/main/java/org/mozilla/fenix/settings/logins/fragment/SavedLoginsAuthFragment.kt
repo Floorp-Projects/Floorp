@@ -57,7 +57,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
     @Suppress("LongMethod")
     override fun onResume() {
         super.onResume()
-        showToolbar(getString(R.string.preferences_passwords_logins_and_passwords))
+        showToolbar(getString(R.string.preferences_passwords_logins_and_passwords_2))
 
         requirePreference<Preference>(R.string.pref_key_save_logins_settings).apply {
             summary = getString(
