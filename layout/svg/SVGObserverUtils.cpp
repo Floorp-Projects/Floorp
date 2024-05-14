@@ -920,9 +920,9 @@ SVGFilterObserverList::SVGFilterObserverList(Span<const StyleFilter> aFilters,
       }
     }
 
-    RefPtr<SVGFilterObserver> observer =
-        new SVGFilterObserver(filterURL, aFilteredElement, this);
-    mObservers.AppendElement(observer);
+    auto observer =
+        MakeRefPtr<SVGFilterObserver>(filterURL, aFilteredElement, this);
+    mObservers.AppendElement(std::move(observer));
   }
 }
 
@@ -1026,9 +1026,9 @@ SVGMaskObserverList::SVGMaskObserverList(nsIFrame* aFrame) : mFrame(aFrame) {
     //
     // And, an URL may refer to an SVG mask resource if it consists of
     // a fragment.
-    SVGPaintingProperty* prop = new SVGPaintingProperty(
+    auto prop = MakeRefPtr<SVGPaintingProperty>(
         hasRef ? maskUri.get() : nullptr, aFrame, false);
-    mProperties.AppendElement(prop);
+    mProperties.AppendElement(std::move(prop));
   }
 }
 
