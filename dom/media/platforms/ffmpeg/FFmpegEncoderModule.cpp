@@ -27,7 +27,7 @@ bool FFmpegEncoderModule<V>::Supports(const EncoderConfig& aConfig) const {
       return false;
     }
   }
-  return SupportsCodec(aConfig.mCodec) != AV_CODEC_ID_NONE;
+  return SupportsCodec(aConfig.mCodec);
 }
 
 template <int V>
