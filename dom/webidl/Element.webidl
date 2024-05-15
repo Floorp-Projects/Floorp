@@ -276,6 +276,8 @@ dictionary ShadowRootInit {
   SlotAssignmentMode slotAssignment = "named";
   [Pref="dom.webcomponents.shadowdom.declarative.enabled"]
   boolean clonable = false;
+  [Pref="dom.webcomponents.shadowdom.declarative.enabled"]
+  boolean serializable = false;
 };
 
 // https://dom.spec.whatwg.org/#element
@@ -403,8 +405,15 @@ partial interface Element {
   undefined setHTML(DOMString aInnerHTML, optional SetHTMLOptions options = {});
 };
 
+dictionary GetHTMLOptions {
+  boolean serializableShadowRoots = false;
+  sequence<ShadowRoot> shadowRoots = [];
+};
+
 partial interface Element {
   // https://html.spec.whatwg.org/#dom-element-sethtmlunsafe
   [Pref="dom.webcomponents.shadowdom.declarative.enabled"]
   undefined setHTMLUnsafe(DOMString html);
+  [Pref="dom.webcomponents.shadowdom.declarative.enabled"]
+  DOMString getHTML(optional GetHTMLOptions options = {});
 };
