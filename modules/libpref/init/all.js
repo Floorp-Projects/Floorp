@@ -3543,6 +3543,18 @@ pref("reader.errors.includeURLs", false);
 // The default relative font size in reader mode (1-9)
 pref("reader.font_size", 5);
 
+// The font type in reader (sans-serif, serif, monospace)
+pref("reader.font_type", "sans-serif");
+
+// Default font types available in reader mode.
+pref("reader.font_type.values", "[\"sans-serif\",\"serif\",\"monospace\"]");
+
+// The default font weight in reader mode (regular, light, bold)
+pref("reader.font_weight", "regular");
+
+// Font weight values available in reader mode.
+pref("reader.font_weight.values", "[\"regular\",\"light\",\"bold\"]");
+
 // The default relative content width in reader mode (1-9)
 pref("reader.content_width", 3);
 
@@ -3553,15 +3565,15 @@ pref("reader.line_height", 4);
 pref("reader.improved_text_menu.enabled", false);
 
 // The default character spacing in reader mode (1-9)
-pref("reader.character_spacing", "");
+pref("reader.character_spacing", 0);
 
 // The default word spacing in reader mode (1-9)
-pref("reader.word_spacing", "");
+pref("reader.word_spacing", 0);
 
 // The default text alignment direction in reader mode
 pref("reader.text_alignment", "start");
 
-// The default color scheme in reader mode (light, dark, sepia, auto)
+// The default color scheme in reader mode (light, dark, sepia, auto, contrast, gray)
 // auto = color automatically adjusts according to ambient light level
 // (auto only works on platforms where the 'devicelight' event is enabled)
 pref("reader.color_scheme", "auto");
@@ -3580,9 +3592,6 @@ pref("reader.custom_colors.unvisited-links", "");
 pref("reader.custom_colors.visited-links", "");
 
 pref("reader.custom_colors.selection-highlight", "");
-
-// The font type in reader (sans-serif, serif)
-pref("reader.font_type", "sans-serif");
 
 // Whether to use a vertical or horizontal toolbar.
 pref("reader.toolbar.vertical", true);
