@@ -1687,6 +1687,13 @@ abstract class BaseBrowserFragment :
         (activity as HomeActivity).browsingModeManager.mode = sessionMode
     }
 
+    /**
+     * A safe version of [getCurrentTab] that safely checks for context nullability.
+     */
+    protected fun getSafeCurrentTab(): SessionState? {
+        return context?.components?.core?.store?.state?.findCustomTabOrSelectedTab(customTabSessionId)
+    }
+
     @VisibleForTesting
     internal fun getCurrentTab(): SessionState? {
         return requireComponents.core.store.state.findCustomTabOrSelectedTab(customTabSessionId)
