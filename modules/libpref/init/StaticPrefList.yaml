@@ -7743,6 +7743,13 @@
     mirror: always
     set_spidermonkey_pref: startup
 
+  # Experimental support for Duplicate Named Capture Groups in JavaScript.
+-   name: javascript.options.experimental.regexp_duplicate_named_groups
+    type: bool
+    value: false
+    mirror: always
+    set_spidermonkey_pref: startup
+
   # Experimental support for Import Assertions in JavaScript.
 -   name: javascript.options.experimental.import_attributes
     type: bool

@@ -4423,6 +4423,12 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
       JS::ContextOptionsRef(cx).setWasmIon(!!value);
       break;
 
+#ifdef NIGHTLY_BUILD
+    case JSJITCOMPILER_REGEXP_DUPLICATE_NAMED_GROUPS:
+      jit::JitOptions.js_regexp_duplicate_named_groups = !!value;
+      break;
+#endif
+
 #ifdef DEBUG
     case JSJITCOMPILER_FULL_DEBUG_CHECKS:
       jit::JitOptions.fullDebugChecks = !!value;
