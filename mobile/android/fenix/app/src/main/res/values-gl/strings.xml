@@ -219,7 +219,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Engadir á páxina de inicio</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen_2">Engadir á pantalla de inicio...</string>
+    <string name="browser_menu_add_to_homescreen_2">Engadir á pantalla de inicio…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Instalar</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -231,7 +231,7 @@
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Traducir a páxina</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Gardar na colección...</string>
+    <string name="browser_menu_save_to_collection">Gardar na colección…</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Gardar na colección</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -294,7 +294,7 @@
     <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
     <string name="browser_menu_edit_bookmark">Editar marcador</string>
     <!-- Browser menu label that the saves the currently visited page as a PDF -->
-    <string name="browser_menu_save_as_pdf">Gardar como PDF...</string>
+    <string name="browser_menu_save_as_pdf">Gardar como PDF…</string>
     <!-- Browser menu label for turning ON reader view of the current visited page -->
     <string name="browser_menu_turn_on_reader_view">Activa a vista de lector</string>
     <!-- Browser menu label for turning OFF reader view of the current visited page -->
