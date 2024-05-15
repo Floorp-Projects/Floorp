@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <dwrite.h>
+#include <float.h>
 #include "2D.h"
 #include "Logging.h"
 #include "ImageScaling.h"
