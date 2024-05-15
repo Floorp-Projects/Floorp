@@ -267,7 +267,7 @@ add_task(async function testRedownload() {
   };
   gAUS.addDownloadListener(listener);
 
-  let bestUpdate = await gAUS.selectUpdate(updates);
+  let bestUpdate = gAUS.selectUpdate(updates);
   await gAUS.downloadUpdate(bestUpdate, false);
 
   await waitForEvent("update-downloaded");

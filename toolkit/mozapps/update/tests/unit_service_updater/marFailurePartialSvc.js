@@ -23,12 +23,12 @@ async function run_test() {
     true
   );
   checkAppBundleModTime();
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContents(LOG_PARTIAL_FAILURE);
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(
+  checkUpdateManager(
     STATE_NONE,
     false,
     STATE_FAILED,

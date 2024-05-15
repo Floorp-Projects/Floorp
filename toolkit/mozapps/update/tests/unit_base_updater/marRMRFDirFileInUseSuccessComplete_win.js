@@ -20,12 +20,12 @@ async function run_test() {
   runUpdate(STATE_SUCCEEDED, false, 0, true);
   await waitForHelperExit();
   await checkPostUpdateAppLog();
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   checkUpdateLogContains(ERR_BACKUP_DISCARD);
   checkUpdateLogContains(STATE_SUCCEEDED + "\n" + CALL_QUIT);
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
+  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkCallbackLog();
 }

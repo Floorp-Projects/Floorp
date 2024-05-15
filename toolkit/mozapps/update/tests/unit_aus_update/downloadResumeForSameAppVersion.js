@@ -18,16 +18,15 @@ async function run_test() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_DOWNLOADING);
 
-  await standardInit();
+  standardInit();
 
-  const history = await gUpdateManager.getHistory();
   Assert.equal(
-    history.length,
+    gUpdateManager.getUpdateCount(),
     0,
     "the update manager updateCount attribute" + MSG_SHOULD_EQUAL
   );
   Assert.equal(
-    (await gUpdateManager.getDownloadingUpdate()).state,
+    gUpdateManager.downloadingUpdate.state,
     STATE_DOWNLOADING,
     "the update manager activeUpdate state attribute" + MSG_SHOULD_EQUAL
   );

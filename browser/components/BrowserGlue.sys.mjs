@@ -122,10 +122,6 @@ if (AppConstants.MOZ_UPDATE_AGENT) {
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
   PushService: ["@mozilla.org/push/Service;1", "nsIPushService"],
-  UpdateServiceStub: [
-    "@mozilla.org/updates/update-service-stub;1",
-    "nsIApplicationUpdateServiceStub",
-  ],
 });
 
 ChromeUtils.defineLazyGetter(
@@ -1519,7 +1515,6 @@ BrowserGlue.prototype = {
         millisecondsIn24Hours;
 
       if (buildDate + acceptableAge < today) {
-        // This is asynchronous, but just kick it off rather than waiting.
         Cc["@mozilla.org/updates/update-service;1"]
           .getService(Ci.nsIApplicationUpdateService)
           .checkForBackgroundUpdates();
@@ -3032,8 +3027,16 @@ BrowserGlue.prototype = {
         name: "BackgroundUpdate",
         condition: AppConstants.MOZ_UPDATE_AGENT,
         task: async () => {
-          // Never in automation!
-          if (!lazy.UpdateServiceStub.updateDisabledForTesting) {
+          // Never in automation!  This is close to
+          // `UpdateService.disabledForTesting`, but without creating the
+          // service, which can perform a good deal of I/O in order to log its
+          // state.  Since this is in the startup path, we avoid all of that.
+          let disabledForTesting =
+            (Cu.isInAutomation ||
+              lazy.Marionette.running ||
+              lazy.RemoteAgent.running) &&
+            Services.prefs.getBoolPref("app.update.disabledForTesting", false);
+          if (!disabledForTesting) {
             try {
               await lazy.BackgroundUpdate.scheduleFirefoxMessagingSystemTargetingSnapshotting();
             } catch (e) {

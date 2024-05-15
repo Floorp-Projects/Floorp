@@ -21,12 +21,12 @@ async function run_test() {
   );
   await runUpdateUsingApp(STATE_SUCCEEDED);
   checkAppBundleModTime();
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
+  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
 
   let updatesDir = getUpdateDirFile(DIR_PATCH);
   Assert.ok(

@@ -20,11 +20,11 @@ async function run_test() {
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_SUCCEEDED, true, 0, true);
   await checkPostUpdateAppLog();
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   checkUpdateLogContents(LOG_REPLACE_SUCCESS, false, true);
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
+  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkCallbackLog();
 }

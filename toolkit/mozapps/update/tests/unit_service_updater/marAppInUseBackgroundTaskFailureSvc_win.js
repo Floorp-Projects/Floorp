@@ -29,7 +29,7 @@ async function run_test() {
   );
   await waitForHelperExit();
 
-  await testPostUpdateProcessing();
+  standardInit();
 
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
@@ -40,7 +40,7 @@ async function run_test() {
     true, // aActiveUpdateExists
     false // aUpdatesExists
   );
-  await checkUpdateManager(
+  checkUpdateManager(
     STATE_PENDING, // aStatusFileState
     true, // aHasActiveUpdate
     STATE_PENDING, // aUpdateStatusState

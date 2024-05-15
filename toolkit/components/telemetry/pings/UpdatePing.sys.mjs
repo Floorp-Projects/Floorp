@@ -47,6 +47,23 @@ export var UpdatePing = {
   },
 
   /**
+   * Get the information about the update we're going to apply/was just applied
+   * from the update manager.
+   *
+   * @return {nsIUpdate} The information about the update, if available, or null.
+   */
+  _getActiveUpdate() {
+    let updateManager = Cc["@mozilla.org/updates/update-manager;1"].getService(
+      Ci.nsIUpdateManager
+    );
+    if (!updateManager || !updateManager.readyUpdate) {
+      return null;
+    }
+
+    return updateManager.readyUpdate;
+  },
+
+  /**
    * Generate an "update" ping with reason "success" and dispatch it
    * to the Telemetry system.
    *
@@ -67,10 +84,7 @@ export var UpdatePing = {
     // update manager should still have information about the active update: given the
     // previous assumptions, we can simply get the channel from the update and assume
     // it matches with the state previous to the update.
-    let updateManager = Cc["@mozilla.org/updates/update-manager;1"].getService(
-      Ci.nsIUpdateManager
-    );
-    let update = updateManager ? updateManager.updateInstalledAtStartup : null;
+    let update = this._getActiveUpdate();
 
     const payload = {
       reason: "success",
@@ -101,7 +115,7 @@ export var UpdatePing = {
    * @param {String} aUpdateState The state of the downloaded patch. See
    *        nsIUpdateService.idl for a list of possible values.
    */
-  async _handleUpdateReady(aUpdateState) {
+  _handleUpdateReady(aUpdateState) {
     const ALLOWED_STATES = [
       "applied",
       "applied-service",
@@ -116,10 +130,7 @@ export var UpdatePing = {
 
     // Get the information about the update we're going to apply from the
     // update manager.
-    let updateManager = Cc["@mozilla.org/updates/update-manager;1"].getService(
-      Ci.nsIUpdateManager
-    );
-    let update = updateManager ? await updateManager.getReadyUpdate() : null;
+    let update = this._getActiveUpdate();
     if (!update) {
       this._log.trace(
         "Cannot get the update manager or no update is currently active."
@@ -153,10 +164,10 @@ export var UpdatePing = {
   /**
    * The notifications handler.
    */
-  async observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     this._log.trace("observe - aTopic: " + aTopic);
     if (aTopic == UPDATE_DOWNLOADED_TOPIC || aTopic == UPDATE_STAGED_TOPIC) {
-      await this._handleUpdateReady(aData);
+      this._handleUpdateReady(aData);
     }
   },
 

@@ -18,10 +18,10 @@ async function run_test() {
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   let path = getUpdateDirFile(DIR_PATCH).parent.path;
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, path, null, null, null);
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
+  checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
   waitForFilesInUse();
 }

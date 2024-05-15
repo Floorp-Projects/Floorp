@@ -739,7 +739,7 @@ nsBrowserContentHandler.prototype = {
             overridePage = Services.urlFormatter.formatURLPref(
               "startup.homepage_override_url"
             );
-            let update = lazy.UpdateManager.updateInstalledAtStartup;
+            let update = lazy.UpdateManager.readyUpdate;
 
             /** If the override URL is provided by an experiment, is a valid
              * Firefox What's New Page URL, and the update version is less than

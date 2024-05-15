@@ -36,12 +36,12 @@ async function run_test() {
     USE_EXECV ? 0 : 1,
     false
   );
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_UPDATE_SETTINGS_FILE_CHANNEL);
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(
+  checkUpdateManager(
     STATE_NONE,
     false,
     STATE_FAILED,

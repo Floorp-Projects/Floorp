@@ -28,12 +28,12 @@ async function run_test() {
   runUpdate(STATE_SUCCEEDED, false, 0, true);
   await checkPostUpdateAppLog();
   checkAppBundleModTime();
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, false, false, true);
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
+  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
 
   // This compares the callback arguments given, including the umask before
   // updating, to the umask set when the app callback is launched.  They should

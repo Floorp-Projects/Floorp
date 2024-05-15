@@ -15,12 +15,12 @@ async function run_test() {
   await runHelperLockFile(getTestFileByName("searchpluginspng1.png"));
   runUpdate(STATE_FAILED_READ_ERROR, false, 1, true);
   await waitForHelperExit();
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_UNABLE_OPEN_DEST);
   checkUpdateLogContains(STATE_FAILED_READ_ERROR + "\n" + CALL_QUIT);
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(STATE_NONE, false, STATE_FAILED, READ_ERROR, 1);
+  checkUpdateManager(STATE_NONE, false, STATE_FAILED, READ_ERROR, 1);
   checkCallbackLog();
 }
