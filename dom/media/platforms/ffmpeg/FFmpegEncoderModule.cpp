@@ -32,7 +32,11 @@ bool FFmpegEncoderModule<V>::Supports(const EncoderConfig& aConfig) const {
 
 template <int V>
 bool FFmpegEncoderModule<V>::SupportsCodec(CodecType aCodec) const {
-  return GetFFmpegEncoderCodecId<V>(aCodec) != AV_CODEC_ID_NONE;
+  AVCodecID id = GetFFmpegEncoderCodecId<V>(aCodec);
+  if (id == AV_CODEC_ID_NONE) {
+    return false;
+  }
+  return !!FFmpegDataEncoder<V>::FindEncoderWithPreference(mLib, id);
 }
 
 template <int V>
