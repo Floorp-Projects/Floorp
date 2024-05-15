@@ -1506,7 +1506,8 @@ bool CanvasRenderingContext2D::BorrowTarget(const IntRect& aPersistedRect,
 
 bool CanvasRenderingContext2D::EnsureTarget(ErrorResult& aError,
                                             const gfx::Rect* aCoveredRect,
-                                            bool aWillClear) {
+                                            bool aWillClear,
+                                            bool aSkipTransform) {
   if (AlreadyShutDown()) {
     gfxCriticalNoteOnce << "Attempt to render into a Canvas2d after shutdown.";
     SetErrorState();
@@ -1552,9 +1553,10 @@ bool CanvasRenderingContext2D::EnsureTarget(ErrorResult& aError,
   // from the previous frame and/or clearing the canvas.
   gfx::Rect canvasRect(0, 0, mWidth, mHeight);
   bool canDiscardContent =
-      aCoveredRect && CurrentState()
-                          .transform.TransformBounds(*aCoveredRect)
-                          .Contains(canvasRect);
+      aCoveredRect &&
+      (aSkipTransform ? *aCoveredRect
+                      : CurrentState().transform.TransformBounds(*aCoveredRect))
+          .Contains(canvasRect);
 
   // If a clip is active we don't know for sure that the next drawing command
   // will really cover the entire canvas.
@@ -6410,7 +6412,7 @@ void CanvasRenderingContext2D::PutImageData_explicit(
   // composition operator must not affect the getImageData() and
   // putImageData() methods.
   const gfx::Rect putRect(dirtyRect);
-  if (!EnsureTarget(aRv, &putRect)) {
+  if (!EnsureTarget(aRv, &putRect, true, true)) {
     return;
   }
 
