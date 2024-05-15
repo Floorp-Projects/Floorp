@@ -715,12 +715,12 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    */
   bool EnsureTarget(ErrorResult& aError,
                     const gfx::Rect* aCoveredRect = nullptr,
-                    bool aWillClear = false);
+                    bool aWillClear = false, bool aSkipTransform = false);
 
   bool EnsureTarget(const gfx::Rect* aCoveredRect = nullptr,
-                    bool aWillClear = false) {
+                    bool aWillClear = false, bool aSkipTransform = false) {
     IgnoredErrorResult error;
-    return EnsureTarget(error, aCoveredRect, aWillClear);
+    return EnsureTarget(error, aCoveredRect, aWillClear, aSkipTransform);
   }
 
   // Attempt to borrow a new target from an existing buffer provider.
