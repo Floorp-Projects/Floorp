@@ -5041,13 +5041,7 @@ impl PicturePrimitive {
                         // Ensure that the dirty rect doesn't extend outside the local valid rect.
                         tile.local_dirty_rect = tile.local_dirty_rect
                             .intersection(&tile.current_descriptor.local_valid_rect)
-                            .unwrap_or_else(PictureRect::zero);
-
-                        let scissor_rect = frame_state.composite_state.get_surface_rect(
-                            &tile.local_dirty_rect,
-                            &tile.local_tile_rect,
-                            tile_cache.transform_index,
-                        ).to_i32();
+                            .unwrap_or_else(|| { tile.is_valid = true; PictureRect::zero() });
 
                         let valid_rect = frame_state.composite_state.get_surface_rect(
                             &tile.current_descriptor.local_valid_rect,
@@ -5104,8 +5098,15 @@ impl PicturePrimitive {
                             // that here and mark the tile non-visible. This is a bit of a hack - we should
                             // ideally handle these in a more accurate way so we don't end up with an empty
                             // rect here.
-                            if !tile.is_valid && (scissor_rect.is_empty() || valid_rect.is_empty()) {
-                                tile.is_visible = false;
+                            if !tile.is_valid {
+                                let scissor_rect = frame_state.composite_state.get_surface_rect(
+                                    &tile.local_dirty_rect,
+                                    &tile.local_tile_rect,
+                                    tile_cache.transform_index,
+                                ).to_i32();
+                                if scissor_rect.is_empty() || valid_rect.is_empty() {
+                                    tile.is_visible = false;
+                                }
                             }
                         }
 
@@ -5306,6 +5307,14 @@ impl PicturePrimitive {
                                     frame_state.resource_cache,
                                     tile_cache.current_tile_size,
                                 );
+
+                                // At this point tile.is_valid and tile.local_dirty_rect could have been changed by a
+                                // call to tile.invalidate. We must recompute the scissor_rect accordingly.
+                                let scissor_rect = frame_state.composite_state.get_surface_rect(
+                                    &tile.local_dirty_rect,
+                                    &tile.local_tile_rect,
+                                    tile_cache.transform_index,
+                                ).to_i32();
 
                                 let composite_task_size = tile_cache.current_tile_size;
 
