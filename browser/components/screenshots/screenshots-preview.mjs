@@ -162,8 +162,16 @@ class ScreenshotsPreview extends MozLitElement {
   }
 
   /**
-   * Disable all the buttons. After a button click, we will always close the
-   * window so there is no need to re-enable the buttons.
+   * Enable all the buttons. This will only happen when the download button is
+   * clicked and the file picker is closed without saving the image.
+   */
+  enableButtons() {
+    this.buttons.forEach(button => (button.disabled = false));
+  }
+
+  /**
+   * Disable all the buttons so they can't be clicked multiple times before
+   * successfully copying or downloading the image.
    */
   disableButtons() {
     this.buttons.forEach(button => (button.disabled = true));
@@ -176,13 +184,18 @@ class ScreenshotsPreview extends MozLitElement {
 
     // Wait for the image to be loaded before we save it
     let imageSrc = await this.imageLoadedPromise();
-    await lazy.ScreenshotsUtils.downloadScreenshot(
+    let downloadSucceeded = await lazy.ScreenshotsUtils.downloadScreenshot(
       null,
       imageSrc,
       this.openerBrowser,
       { object: "preview_download" }
     );
-    this.close();
+
+    if (downloadSucceeded) {
+      this.close();
+    } else {
+      this.enableButtons();
+    }
   }
 
   async saveToClipboard() {
