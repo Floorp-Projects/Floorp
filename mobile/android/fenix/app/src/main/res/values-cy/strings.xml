@@ -202,7 +202,7 @@
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_manage_extensions">Rheoli estyniadau</string>
     <!-- Browser menu button that opens AMO in a tab -->
-    <string name="browser_menu_discover_more_extensions">Darganfod mwy o estyniadau</string>
+    <string name="browser_menu_discover_more_extensions">Darganfod rhagor o estyniadau</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Manylion cyfrif</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -294,15 +294,15 @@
     <string name="browser_menu_save">Cadw</string>
 
     <!-- Browser menu label that bookmarks the currently visited page -->
-    <string name="browser_menu_bookmark_this_page">Llyfrnodwch y dudalen hon</string>
+    <string name="browser_menu_bookmark_this_page">Gosod nod tudalen i\'r dudalen hon</string>
     <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
     <string name="browser_menu_edit_bookmark">Golygu nod tudalen</string>
     <!-- Browser menu label that the saves the currently visited page as a PDF -->
     <string name="browser_menu_save_as_pdf">Cadw fel PDF…</string>
     <!-- Browser menu label for turning ON reader view of the current visited page -->
-    <string name="browser_menu_turn_on_reader_view">Trowch Reader View ymlaen</string>
+    <string name="browser_menu_turn_on_reader_view">Trowch y Golwg Darllen ymlaen</string>
     <!-- Browser menu label for turning OFF reader view of the current visited page -->
-    <string name="browser_menu_turn_off_reader_view">Trowch i ffwrdd Reader View</string>
+    <string name="browser_menu_turn_off_reader_view">Diffodd y Golwg Darllen</string>
     <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
     <string name="browser_menu_translate_page">Cyfieithu tudalen…</string>
     <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
