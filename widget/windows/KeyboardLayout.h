@@ -637,6 +637,7 @@ class MOZ_STACK_CLASS NativeKey final {
   bool IsKeyDownMessage() const {
     return mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN;
   }
+  bool IsSysKeyDownMessage() const { return mMsg.message == WM_SYSKEYDOWN; }
   bool IsKeyUpMessage() const {
     return mMsg.message == WM_KEYUP || mMsg.message == WM_SYSKEYUP;
   }
