@@ -140,6 +140,17 @@ export const ExperimentTestUtils = {
       )
     );
   },
+  async validateRollouts(rollout) {
+    const schema = await fetchSchema(
+      "resource://nimbus/schemas/NimbusEnrollment.schema.json"
+    );
+
+    return this._validateSchema(
+      schema,
+      rollout,
+      `Rollout configuration ${rollout.slug} is not valid`
+    );
+  },
   /**
    * Add features for tests.
    *
@@ -192,6 +203,43 @@ export const ExperimentFakes = {
       ExperimentAPI._store.once(`update:${slug}`, resolve)
     );
   },
+  async enrollWithRollout(
+    featureConfig,
+    { manager = lazy.ExperimentAPI._manager, source } = {}
+  ) {
+    await manager.store.init();
+    const rollout = this.rollout(`${featureConfig.featureId}-rollout`, {
+      branch: {
+        slug: `${featureConfig.featureId}-rollout-branch`,
+        features: [featureConfig],
+      },
+    });
+    if (source) {
+      rollout.source = source;
+    }
+    await ExperimentTestUtils.validateRollouts(rollout);
+    // After storing the remote configuration to store and updating the feature
+    // we want to flush so that NimbusFeature usage in content process also
+    // receives the update
+    await manager.store.addEnrollment(rollout);
+    manager.store._syncToChildren({ flush: true });
+
+    let unenrollCompleted = slug =>
+      new Promise(resolve =>
+        manager.store.on(`update:${slug}`, (event, enrollment) => {
+          if (enrollment.slug === rollout.slug && !enrollment.active) {
+            manager.store._deleteForTests(rollout.slug);
+            resolve();
+          }
+        })
+      );
+
+    return () => {
+      let promise = unenrollCompleted(rollout.slug);
+      manager.unenroll(rollout.slug, "cleanup");
+      return promise;
+    };
+  },
   /**
    * Enroll in an experiment branch with the given feature configuration.
    *
@@ -200,21 +248,15 @@ export const ExperimentFakes = {
    */
   async enrollWithFeatureConfig(
     featureConfig,
-    {
-      manager = lazy.ExperimentAPI._manager,
-      isRollout = false,
-      source,
-      slug = null,
-      branchSlug = "control",
-    } = {}
+    { manager = lazy.ExperimentAPI._manager, isRollout = false } = {}
   ) {
     await manager.store.ready();
-
-    const experimentId =
-      slug ??
-      `${featureConfig.featureId}-${
-        isRollout ? "rollout" : "experiment"
-      }-${Math.random()}`;
+    // Use id passed in featureConfig value to compute experimentId
+    // This help filter telemetry events (such as expose) in race conditions when telemetry
+    // from multiple experiments with same featureId co-exist in snapshot
+    let experimentId = `${featureConfig.featureId}${
+      featureConfig?.value?.id ? "-" + featureConfig?.value?.id : ""
+    }-experiment-${Math.random()}`;
 
     let recipe = this.recipe(experimentId, {
       bucketConfig: {
@@ -226,7 +268,7 @@ export const ExperimentFakes = {
       },
       branches: [
         {
-          slug: branchSlug,
+          slug: "control",
           ratio: 1,
           features: [featureConfig],
         },
@@ -235,7 +277,7 @@ export const ExperimentFakes = {
     });
     let { enrollmentPromise, doExperimentCleanup } = this.enrollmentHelper(
       recipe,
-      { manager, source }
+      { manager }
     );
 
     await enrollmentPromise;
@@ -352,8 +394,8 @@ export const ExperimentFakes = {
       },
       source: "NimbusTestUtils",
       isEnrollmentPaused: true,
-      experimentType: "NimbusTestUtils experiment",
-      userFacingName: "NimbusTestUtils experiment",
+      experimentType: "NimbusTestUtils",
+      userFacingName: "NimbusTestUtils",
       userFacingDescription: "NimbusTestUtils",
       lastSeen: new Date().toJSON(),
       featureIds: props?.branch?.features?.map(f => f.featureId) || [
@@ -380,8 +422,8 @@ export const ExperimentFakes = {
       source: "NimbusTestUtils",
       isEnrollmentPaused: true,
       experimentType: "rollout",
-      userFacingName: "NimbusTestUtils rollout",
-      userFacingDescription: "NimbusTestUtils rollout",
+      userFacingName: "NimbusTestUtils",
+      userFacingDescription: "NimbusTestUtils",
       lastSeen: new Date().toJSON(),
       featureIds: (props?.branch?.features || props?.features)?.map(
         f => f.featureId
@@ -407,7 +449,7 @@ export const ExperimentFakes = {
       application: "firefox-desktop",
       branches: ExperimentFakes.recipe.branches,
       bucketConfig: ExperimentFakes.recipe.bucketConfig,
-      userFacingName: "NimbusTestUtils recipe",
+      userFacingName: "Nimbus recipe",
       userFacingDescription: "NimbusTestUtils recipe",
       featureIds: props?.branches?.[0].features?.map(f => f.featureId) || [
         "testFeature",

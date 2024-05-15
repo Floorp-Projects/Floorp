@@ -319,41 +319,27 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
     featureBar
   );
 
-  let fooCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+  let fooCleanup = await ExperimentFakes.enrollWithRollout(
     {
       featureId: "foo",
       isEarlyStartup: true,
       value: { foo: true },
     },
     {
-      slug: "foo-rollout",
-      branchSlug: REMOTE_CONFIGURATION_FOO.branches[0].slug,
-      isRollout: true,
       source: "rs-loader",
     }
   );
-  await ExperimentFakes.enrollWithFeatureConfig(
+  await ExperimentFakes.enrollWithRollout(
     {
       featureId: "bar",
       isEarlyStartup: true,
       value: { bar: true },
     },
     {
-      slug: "bar-rollout",
-      branchSlug: REMOTE_CONFIGURATION_BAR.branches[0].slug,
-      isRollout: true,
       source: "rs-loader",
     }
   );
-  let stubFoo = sinon.stub().callsFake((...args) => {
-    dump(`
-!!! stubfoo called with ${JSON.stringify(args)}
-
-
-${new Error().stack}
-!!!
-`);
-  });
+  let stubFoo = sinon.stub();
   let stubBar = sinon.stub();
   featureFoo.onUpdate(stubFoo);
   featureBar.onUpdate(stubBar);
@@ -558,14 +544,11 @@ add_task(async function remote_defaults_variables_storage() {
     enabled: true,
   };
 
-  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig(
-    {
-      featureId: "bar",
-      isEarlyStartup: true,
-      value: rolloutValue,
-    },
-    { isRollout: true }
-  );
+  let doCleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: "bar",
+    isEarlyStartup: true,
+    value: rolloutValue,
+  });
 
   Assert.ok(
     Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar`, ""),
