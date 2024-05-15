@@ -28,6 +28,13 @@
 #include "api/video/video_timing.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
+// This file contains class definitions for reading/writing each RTP header
+// extension. Each class must be defined such that it is compatible with being
+// an argument to the templated RtpPacket::GetExtension and
+// RtpPacketToSend::SetExtension methods. New header extensions must have class
+// names ending with "Extension", for the purpose of avoiding collisions with
+// RTP extension information exposed in the public API of WebRTC.
+
 namespace webrtc {
 
 class AbsoluteSendTime {
@@ -75,7 +82,7 @@ class AbsoluteCaptureTimeExtension {
                     const AbsoluteCaptureTime& extension);
 };
 
-class AudioLevel {
+class AudioLevelExtension {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionAudioLevel;
   static constexpr uint8_t kValueSizeBytes = 1;

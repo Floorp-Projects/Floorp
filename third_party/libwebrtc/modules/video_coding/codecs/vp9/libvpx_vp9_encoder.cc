@@ -223,14 +223,28 @@ void LibvpxVp9Encoder::EncoderOutputCodedPacketCallback(vpx_codec_cx_pkt* pkt,
   enc->GetEncodedLayerFrame(pkt);
 }
 
+LibvpxVp9Encoder::LibvpxVp9Encoder(const Environment& env,
+                                   Vp9EncoderSettings settings,
+                                   std::unique_ptr<LibvpxInterface> interface)
+    : LibvpxVp9Encoder(std::move(interface),
+                       settings.profile,
+                       env.field_trials()) {}
+
 LibvpxVp9Encoder::LibvpxVp9Encoder(const cricket::VideoCodec& codec,
                                    std::unique_ptr<LibvpxInterface> interface,
+                                   const FieldTrialsView& trials)
+    : LibvpxVp9Encoder(
+          std::move(interface),
+          ParseSdpForVP9Profile(codec.params).value_or(VP9Profile::kProfile0),
+          trials) {}
+
+LibvpxVp9Encoder::LibvpxVp9Encoder(std::unique_ptr<LibvpxInterface> interface,
+                                   VP9Profile profile,
                                    const FieldTrialsView& trials)
     : libvpx_(std::move(interface)),
       encoded_image_(),
       encoded_complete_callback_(nullptr),
-      profile_(
-          ParseSdpForVP9Profile(codec.params).value_or(VP9Profile::kProfile0)),
+      profile_(profile),
       inited_(false),
       timestamp_(0),
       rc_max_intra_target_(0),
@@ -1043,7 +1057,7 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
 
     if (codec_.mode == VideoCodecMode::kScreensharing) {
       const uint32_t frame_timestamp_ms =
-          1000 * input_image.timestamp() / kVideoPayloadTypeFrequency;
+          1000 * input_image.rtp_timestamp() / kVideoPayloadTypeFrequency;
 
       // To ensure that several rate-limiters with different limits don't
       // interfere, they must be queried in order of increasing limit.
@@ -1804,7 +1818,7 @@ void LibvpxVp9Encoder::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
   UpdateReferenceBuffers(*pkt, pics_since_key_);
 
   TRACE_COUNTER1("webrtc", "EncodedFrameSize", encoded_image_.size());
-  encoded_image_.SetRtpTimestamp(input_image_->timestamp());
+  encoded_image_.SetRtpTimestamp(input_image_->rtp_timestamp());
   encoded_image_.SetCaptureTimeIdentifier(
       input_image_->capture_time_identifier());
   encoded_image_.SetColorSpace(input_image_->color_space());

@@ -18,7 +18,7 @@
 #import "components/video_codec/RTCCodecSpecificInfoH264.h"
 #import "sdk/objc/api/peerconnection/RTCEncodedImage+Private.h"
 #import "sdk/objc/api/peerconnection/RTCVideoCodecInfo+Private.h"
-#import "sdk/objc/api/video_codec/RTCWrappedNativeVideoDecoder.h"
+#import "sdk/objc/api/video_codec/RTCNativeVideoDecoderBuilder+Native.h"
 #import "sdk/objc/helpers/NSString+StdString.h"
 
 #include "api/video_codecs/sdp_video_format.h"
@@ -42,8 +42,7 @@ class ObjCVideoDecoder : public VideoDecoder {
         [decoder_ startDecodeWithNumberOfCores:settings.number_of_cores()] == WEBRTC_VIDEO_CODEC_OK;
   }
 
-  int32_t Decode(const EncodedImage &input_image,
-                 int64_t render_time_ms = -1) override {
+  int32_t Decode(const EncodedImage &input_image, int64_t render_time_ms = -1) override {
     RTC_OBJC_TYPE(RTCEncodedImage) *encodedImage =
         [[RTC_OBJC_TYPE(RTCEncodedImage) alloc] initWithNativeEncodedImage:input_image];
 
@@ -56,15 +55,12 @@ class ObjCVideoDecoder : public VideoDecoder {
   int32_t RegisterDecodeCompleteCallback(DecodedImageCallback *callback) override {
     [decoder_ setCallback:^(RTC_OBJC_TYPE(RTCVideoFrame) * frame) {
       const auto buffer = rtc::make_ref_counted<ObjCFrameBuffer>(frame.buffer);
-      VideoFrame videoFrame =
-          VideoFrame::Builder()
-              .set_video_frame_buffer(buffer)
-              .set_timestamp_rtp((uint32_t)(frame.timeStampNs / rtc::kNumNanosecsPerMicrosec))
-              .set_timestamp_ms(0)
-              .set_rotation((VideoRotation)frame.rotation)
-              .build();
-      videoFrame.set_timestamp(frame.timeStamp);
-
+      VideoFrame videoFrame = VideoFrame::Builder()
+                                  .set_video_frame_buffer(buffer)
+                                  .set_rtp_timestamp(frame.timeStamp)
+                                  .set_timestamp_ms(0)
+                                  .set_rotation((VideoRotation)frame.rotation)
+                                  .build();
       callback->Decoded(videoFrame);
     }];
 
@@ -91,15 +87,15 @@ id<RTC_OBJC_TYPE(RTCVideoDecoderFactory)> ObjCVideoDecoderFactory::wrapped_decod
   return decoder_factory_;
 }
 
-std::unique_ptr<VideoDecoder> ObjCVideoDecoderFactory::CreateVideoDecoder(
-    const SdpVideoFormat &format) {
+std::unique_ptr<VideoDecoder> ObjCVideoDecoderFactory::Create(const Environment &env,
+                                                              const SdpVideoFormat &format) {
   NSString *codecName = [NSString stringWithUTF8String:format.name.c_str()];
   for (RTC_OBJC_TYPE(RTCVideoCodecInfo) * codecInfo in decoder_factory_.supportedCodecs) {
     if ([codecName isEqualToString:codecInfo.name]) {
       id<RTC_OBJC_TYPE(RTCVideoDecoder)> decoder = [decoder_factory_ createDecoder:codecInfo];
 
-      if ([decoder isKindOfClass:[RTC_OBJC_TYPE(RTCWrappedNativeVideoDecoder) class]]) {
-        return [(RTC_OBJC_TYPE(RTCWrappedNativeVideoDecoder) *)decoder releaseWrappedDecoder];
+      if ([decoder conformsToProtocol:@protocol(RTC_OBJC_TYPE(RTCNativeVideoDecoderBuilder))]) {
+        return [((id<RTC_OBJC_TYPE(RTCNativeVideoDecoderBuilder)>)decoder) build:env];
       } else {
         return std::unique_ptr<ObjCVideoDecoder>(new ObjCVideoDecoder(decoder));
       }

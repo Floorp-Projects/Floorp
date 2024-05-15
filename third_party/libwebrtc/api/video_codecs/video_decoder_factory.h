@@ -50,15 +50,9 @@ class RTC_EXPORT VideoDecoderFactory {
                                          bool reference_scaling) const;
 
   // Creates a VideoDecoder for the specified `format`.
-  // TODO: bugs.webrtc.org/15791 - Make pure virtual when implemented in all
-  // derived classes.
-  virtual std::unique_ptr<VideoDecoder> Create(const Environment& env,
-                                               const SdpVideoFormat& format);
-
-  // TODO: bugs.webrtc.org/15791 - Make private or delete when all callers are
-  // migrated to `Create`.
-  virtual std::unique_ptr<VideoDecoder> CreateVideoDecoder(
-      const SdpVideoFormat& format);
+  virtual std::unique_ptr<VideoDecoder> Create(
+      const Environment& env,
+      const SdpVideoFormat& format) = 0;
 };
 
 }  // namespace webrtc

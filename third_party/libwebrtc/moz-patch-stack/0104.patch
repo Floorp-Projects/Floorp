@@ -1,28 +1,31 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Wed, 6 Mar 2024 10:19:00 +0000
-Subject: Bug 1882438 - WebRTC backport: PipeWire camera - use length of device
- id instead display name r=pehrsons,webrtc-reviewers
+From: Randell Jesup <rjesup@mozilla.com>
+Date: Wed, 17 Apr 2024 21:10:00 +0000
+Subject: Bug 1892045: Quiet a thread-safety warning by taking a mutex in v4l2
+ capture r=webrtc-reviewers,pehrsons
 
-This is a simple backport of an WebRTC upstream change.
+Just to make the analyzer happy, no risk here
 
-Upstream commit: 16ac10d9f75cde959f00df062f544c49941882da
-
-Differential Revision: https://phabricator.services.mozilla.com/D203099
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b572eb8b39b03f714234afff4bd80b4612439521
+Differential Revision: https://phabricator.services.mozilla.com/D207758
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0b54a6f17243e15da4609bc82afc92afcc4ac6de
 ---
- modules/video_capture/linux/device_info_pipewire.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/video_capture/linux/video_capture_v4l2.cc | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
-index f9f08a9c27..31d922035b 100644
---- a/modules/video_capture/linux/device_info_pipewire.cc
-+++ b/modules/video_capture/linux/device_info_pipewire.cc
-@@ -96,7 +96,7 @@ int32_t DeviceInfoPipeWire::CreateCapabilityMap(
-       continue;
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index db2450a2c7..e3bdcd5953 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -303,7 +303,12 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
  
-     _captureCapabilities = node.capabilities();
--    _lastUsedDeviceNameLength = node.display_name().length();
-+    _lastUsedDeviceNameLength = node.unique_id().length();
-     _lastUsedDeviceName = static_cast<char*>(
-         realloc(_lastUsedDeviceName, _lastUsedDeviceNameLength + 1));
-     memcpy(_lastUsedDeviceName, deviceUniqueIdUTF8,
+   // start capture thread;
+   if (_captureThread.empty()) {
+-    quit_ = false;
++    {
++      // Probably can't be accessed from another thread with
++      // _captureThread empty, but the analyzer doesn't know this
++      MutexLock lock(&capture_lock_);
++      quit_ = false;
++    }
+     _captureThread = rtc::PlatformThread::SpawnJoinable(
+         [self = scoped_refptr(this)] {
+           while (self->CaptureProcess()) {

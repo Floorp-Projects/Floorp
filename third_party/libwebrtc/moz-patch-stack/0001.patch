@@ -413,7 +413,7 @@ index 3ff4b58a2e..ad0f3c9396 100644
  
  bool RtpExtension::IsSupportedForVideo(absl::string_view uri) {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 613b2b94d2..7c24834f1d 100644
+index 654db9cb1e..57c6f3a516 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -20,6 +20,7 @@ rtc_library("call_interfaces") {
@@ -787,7 +787,7 @@ index de68885519..099b0be1a3 100644
    method_ = new_method;
  }
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index e42a84bd06..b86a7d775c 100644
+index 9f0374b299..c51692b818 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
 @@ -423,6 +423,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
@@ -837,10 +837,10 @@ index e42a84bd06..b86a7d775c 100644
  //
  // E.g. default video or screenshare.
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index 739d4765d0..fff7db0294 100644
+index 7f039ec8ac..9187cb97bc 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.h
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
-@@ -298,6 +298,21 @@ class ColorSpaceExtension {
+@@ -305,6 +305,21 @@ class ColorSpaceExtension {
    static size_t WriteLuminance(uint8_t* data, float f, int denominator);
  };
  
@@ -878,7 +878,7 @@ index 2a95a3a816..b152cdbd9e 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index ac464493b8..44f1a9e742 100644
+index 922a4b15f4..669947838b 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 @@ -123,6 +123,18 @@ constexpr uint8_t kPacketWithMid[] = {
@@ -900,7 +900,7 @@ index ac464493b8..44f1a9e742 100644
  constexpr uint32_t kCsrcs[] = {0x34567890, 0x32435465};
  constexpr uint8_t kPayload[] = {'p', 'a', 'y', 'l', 'o', 'a', 'd'};
  constexpr uint8_t kPacketPaddingSize = 8;
-@@ -397,6 +409,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
+@@ -399,6 +411,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
    EXPECT_EQ(packet.GetExtension<TransportSequenceNumber>(), absl::nullopt);
  }
  
@@ -946,7 +946,7 @@ index 0b87d6d065..d69ae9420b 100644
  }  // namespace webrtc
  
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index d899b4f44e..f4ba024444 100644
+index 07356b8478..e853507174 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -128,6 +128,10 @@ bool IsNonVolatile(RTPExtensionType type) {
@@ -1347,7 +1347,7 @@ index 563ef5abd2..e085ac2df8 100644
  
  VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 428253bf23..66fd0a0ebe 100644
+index 5588fae161..51282183f5 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
 @@ -77,7 +77,6 @@ VideoCaptureImpl::VideoCaptureImpl()
@@ -1454,10 +1454,10 @@ index 5ec1fd4a83..e46e050609 100644
  
    int64_t _lastProcessFrameTimeNanos RTC_GUARDED_BY(capture_checker_);
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-index 20c29abc7c..edbe781639 100644
+index 24d862c4c2..13c8b87c38 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 +++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-@@ -256,6 +256,7 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(const cricket::VideoCodec& codec,
+@@ -270,6 +270,7 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(std::unique_ptr<LibvpxInterface> interface,
        first_frame_in_picture_(true),
        ss_info_needed_(false),
        force_all_active_layers_(false),
@@ -1465,7 +1465,7 @@ index 20c29abc7c..edbe781639 100644
        is_flexible_mode_(false),
        variable_framerate_experiment_(ParseVariableFramerateConfig(trials)),
        variable_framerate_controller_(
-@@ -580,6 +581,7 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
+@@ -594,6 +595,7 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
  
    force_key_frame_ = true;
    pics_since_key_ = 0;
@@ -1473,7 +1473,7 @@ index 20c29abc7c..edbe781639 100644
  
    scalability_mode_ = inst->GetScalabilityMode();
    if (scalability_mode_.has_value()) {
-@@ -1167,6 +1169,14 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
+@@ -1181,6 +1183,14 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
      config_changed_ = false;
    }
  
@@ -1488,7 +1488,7 @@ index 20c29abc7c..edbe781639 100644
    RTC_DCHECK_EQ(input_image.width(), raw_->d_w);
    RTC_DCHECK_EQ(input_image.height(), raw_->d_h);
  
-@@ -1289,6 +1299,48 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
+@@ -1303,6 +1313,48 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
    return WEBRTC_VIDEO_CODEC_OK;
  }
  
@@ -1538,10 +1538,10 @@ index 20c29abc7c..edbe781639 100644
                                               absl::optional<int>* spatial_idx,
                                               absl::optional<int>* temporal_idx,
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h
-index 3ccaa5fa52..ea4e5810ac 100644
+index 349ab0e2d6..8a9aeb8213 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h
 +++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h
-@@ -67,6 +67,9 @@ class LibvpxVp9Encoder : public VP9Encoder {
+@@ -76,6 +76,9 @@ class LibvpxVp9Encoder : public VP9Encoder {
    // Call encoder initialize function and set control settings.
    int InitAndSetControlSettings(const VideoCodec* inst);
  
@@ -1551,7 +1551,7 @@ index 3ccaa5fa52..ea4e5810ac 100644
    bool PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                               absl::optional<int>* spatial_idx,
                               absl::optional<int>* temporal_idx,
-@@ -148,6 +151,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
+@@ -157,6 +160,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
    VideoBitrateAllocation current_bitrate_allocation_;
    bool ss_info_needed_;
    bool force_all_active_layers_;
@@ -1560,7 +1560,7 @@ index 3ccaa5fa52..ea4e5810ac 100644
    std::unique_ptr<ScalableVideoController> svc_controller_;
    absl::optional<ScalabilityMode> scalability_mode_;
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 2cf9c11316..b5e15ac2da 100644
+index 2ba00e0034..abc8916e29 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -463,6 +463,12 @@ rtc_library("logging") {
@@ -1650,7 +1650,7 @@ index b171cfe11e..df7f173f58 100644
  
  //////////////////////////////////////////////////////////////////////
 diff --git a/test/fuzzers/rtp_packet_fuzzer.cc b/test/fuzzers/rtp_packet_fuzzer.cc
-index 60afb986de..0e10a8fa3a 100644
+index 02fc64a2dc..371900eb2d 100644
 --- a/test/fuzzers/rtp_packet_fuzzer.cc
 +++ b/test/fuzzers/rtp_packet_fuzzer.cc
 @@ -164,6 +164,11 @@ void FuzzOneInput(const uint8_t* data, size_t size) {

@@ -17,6 +17,8 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/field_trials_view.h"
 #include "api/rtp_parameters.h"
 #include "api/task_queue/default_task_queue_factory.h"
@@ -45,7 +47,6 @@
 #include "media/engine/webrtc_video_engine.h"
 #include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
-#include "modules/video_coding/codecs/multiplex/include/multiplex_encoder_adapter.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
@@ -382,17 +383,17 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
           allocation_callback_type,
       const FieldTrialsView& field_trials,
       int num_cores)
-      : VideoStreamEncoder(time_controller->GetClock(),
-                           num_cores,
-                           stats_proxy,
-                           settings,
-                           std::unique_ptr<OveruseFrameDetector>(
-                               overuse_detector_proxy_ =
-                                   new CpuOveruseDetectorProxy(stats_proxy)),
-                           std::move(cadence_adapter),
-                           std::move(encoder_queue),
-                           allocation_callback_type,
-                           field_trials),
+      : VideoStreamEncoder(
+            CreateEnvironment(&field_trials, time_controller->GetClock()),
+            num_cores,
+            stats_proxy,
+            settings,
+            std::unique_ptr<OveruseFrameDetector>(
+                overuse_detector_proxy_ =
+                    new CpuOveruseDetectorProxy(stats_proxy)),
+            std::move(cadence_adapter),
+            std::move(encoder_queue),
+            allocation_callback_type),
         time_controller_(time_controller),
         fake_cpu_resource_(FakeResource::Create("FakeResource[CPU]")),
         fake_quality_resource_(FakeResource::Create("FakeResource[QP]")),
@@ -694,15 +695,15 @@ class SimpleVideoStreamEncoderFactory {
       std::unique_ptr<TaskQueueBase, TaskQueueDeleter> encoder_queue,
       const FieldTrialsView* field_trials = nullptr) {
     auto result = std::make_unique<AdaptedVideoStreamEncoder>(
-        time_controller_.GetClock(),
+        CreateEnvironment(&field_trials_, field_trials,
+                          time_controller_.GetClock()),
         /*number_of_cores=*/1,
         /*stats_proxy=*/stats_proxy_.get(), encoder_settings_,
         std::make_unique<CpuOveruseDetectorProxy>(
             /*stats_proxy=*/nullptr),
         std::move(zero_hertz_adapter), std::move(encoder_queue),
         VideoStreamEncoder::BitrateAllocationCallbackType::
-            kVideoBitrateAllocation,
-        field_trials ? *field_trials : field_trials_);
+            kVideoBitrateAllocation);
     result->SetSink(&sink_, /*rotation_applied=*/false);
     return result;
   }
@@ -1230,17 +1231,18 @@ class VideoStreamEncoderTest : public ::testing::Test {
       {
         MutexLock lock(&local_mutex_);
         if (expect_null_frame_) {
-          EXPECT_EQ(input_image.timestamp(), 0u);
+          EXPECT_EQ(input_image.rtp_timestamp(), 0u);
           EXPECT_EQ(input_image.width(), 1);
           last_frame_types_ = *frame_types;
           expect_null_frame_ = false;
         } else {
-          EXPECT_GT(input_image.timestamp(), timestamp_);
+          EXPECT_GT(input_image.rtp_timestamp(), timestamp_);
           EXPECT_GT(input_image.ntp_time_ms(), ntp_time_ms_);
-          EXPECT_EQ(input_image.timestamp(), input_image.ntp_time_ms() * 90);
+          EXPECT_EQ(input_image.rtp_timestamp(),
+                    input_image.ntp_time_ms() * 90);
         }
 
-        timestamp_ = input_image.timestamp();
+        timestamp_ = input_image.rtp_timestamp();
         ntp_time_ms_ = input_image.ntp_time_ms();
         last_input_width_ = input_image.width();
         last_input_height_ = input_image.height();
@@ -8817,16 +8819,6 @@ class VideoStreamEncoderWithRealEncoderTest
       case kVideoCodecH264:
         encoder = H264Encoder::Create();
         break;
-      case kVideoCodecMultiplex:
-        mock_encoder_factory_for_multiplex_ =
-            std::make_unique<MockVideoEncoderFactory>();
-        EXPECT_CALL(*mock_encoder_factory_for_multiplex_, Die);
-        EXPECT_CALL(*mock_encoder_factory_for_multiplex_, CreateVideoEncoder)
-            .WillRepeatedly([] { return VP8Encoder::Create(); });
-        encoder = std::make_unique<MultiplexEncoderAdapter>(
-            mock_encoder_factory_for_multiplex_.get(), SdpVideoFormat("VP8"),
-            false);
-        break;
       case kVideoCodecH265:
         // TODO(bugs.webrtc.org/13485): Use a fake encoder
         break;
@@ -8908,11 +8900,6 @@ TEST_P(VideoStreamEncoderWithRealEncoderTest, EncoderMapsNativeNV12) {
 }
 
 TEST_P(VideoStreamEncoderWithRealEncoderTest, HandlesLayerToggling) {
-  if (codec_type_ == kVideoCodecMultiplex) {
-    // Multiplex codec here uses wrapped mock codecs, ignore for this test.
-    return;
-  }
-
   const size_t kNumSpatialLayers = 3u;
   const float kDownscaleFactors[] = {4.0, 2.0, 1.0};
   const int kFrameWidth = 1280;
@@ -9045,8 +9032,6 @@ constexpr std::pair<VideoCodecType, bool> kVP9DisallowConversion =
     std::make_pair(kVideoCodecVP9, /*allow_i420_conversion=*/false);
 constexpr std::pair<VideoCodecType, bool> kAV1AllowConversion =
     std::make_pair(kVideoCodecAV1, /*allow_i420_conversion=*/false);
-constexpr std::pair<VideoCodecType, bool> kMultiplexDisallowConversion =
-    std::make_pair(kVideoCodecMultiplex, /*allow_i420_conversion=*/false);
 #if defined(WEBRTC_USE_H264)
 constexpr std::pair<VideoCodecType, bool> kH264AllowConversion =
     std::make_pair(kVideoCodecH264, /*allow_i420_conversion=*/true);
@@ -9060,7 +9045,6 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(kVP8DisallowConversion,
                       kVP9DisallowConversion,
                       kAV1AllowConversion,
-                      kMultiplexDisallowConversion,
                       kH264AllowConversion),
     TestParametersVideoCodecAndAllowI420ConversionToString);
 #else
@@ -9069,8 +9053,7 @@ INSTANTIATE_TEST_SUITE_P(
     VideoStreamEncoderWithRealEncoderTest,
     ::testing::Values(kVP8DisallowConversion,
                       kVP9DisallowConversion,
-                      kAV1AllowConversion,
-                      kMultiplexDisallowConversion),
+                      kAV1AllowConversion),
     TestParametersVideoCodecAndAllowI420ConversionToString);
 #endif
 
@@ -9250,11 +9233,12 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
   };
 
   // Lots of boiler plate.
-  test::ScopedKeyValueConfig field_trials;
   GlobalSimulatedTimeController time_controller(Timestamp::Zero());
-  auto stats_proxy = std::make_unique<MockableSendStatisticsProxy>(
-      time_controller.GetClock(), VideoSendStream::Config(nullptr),
-      webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo, field_trials);
+  Environment env = CreateEnvironment(time_controller.GetClock());
+  MockableSendStatisticsProxy stats_proxy(
+      &env.clock(), VideoSendStream::Config(nullptr),
+      webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo,
+      env.field_trials());
   SimpleVideoStreamEncoderFactory::MockFakeEncoder mock_fake_encoder(
       time_controller.GetClock());
   test::VideoEncoderProxyFactory encoder_factory(&mock_fake_encoder);
@@ -9272,20 +9256,19 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
       encoder_queue(new SuperLazyTaskQueue());
 
   // Construct a VideoStreamEncoder instance and let it go out of scope without
-  // doing anything else (including calling Stop()). This should be fine since
-  // the posted init task will simply be deleted.
-  auto encoder = std::make_unique<VideoStreamEncoder>(
-      time_controller.GetClock(), 1, stats_proxy.get(), encoder_settings,
-      std::make_unique<CpuOveruseDetectorProxy>(stats_proxy.get()),
+  // doing anything else. This should be fine since the posted init task will
+  // simply be deleted.
+  VideoStreamEncoder encoder(
+      env, 1, &stats_proxy, encoder_settings,
+      std::make_unique<CpuOveruseDetectorProxy>(&stats_proxy),
       std::move(adapter), std::move(encoder_queue),
       VideoStreamEncoder::BitrateAllocationCallbackType::
-          kVideoBitrateAllocation,
-      field_trials);
+          kVideoBitrateAllocation);
 
   // Stop the encoder explicitly. This additional step tests if we could
   // hang when calling stop and the TQ has been stopped and/or isn't accepting
   // any more tasks.
-  encoder->Stop();
+  encoder.Stop();
 }
 
 TEST(VideoStreamEncoderFrameCadenceTest, ActivatesFrameCadenceOnContentType) {

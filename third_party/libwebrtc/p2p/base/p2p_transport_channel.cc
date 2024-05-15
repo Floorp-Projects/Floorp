@@ -34,7 +34,6 @@
 #include "p2p/base/port.h"
 #include "p2p/base/wrapping_active_ice_controller.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/crc32.h"
 #include "rtc_base/experiments/struct_parameters_parser.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
@@ -46,7 +45,13 @@
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
 
+namespace cricket {
 namespace {
+using ::webrtc::IceCandidateType;
+using ::webrtc::RTCError;
+using ::webrtc::RTCErrorType;
+using ::webrtc::SafeTask;
+using ::webrtc::TimeDelta;
 
 cricket::PortInterface::CandidateOrigin GetOrigin(
     cricket::PortInterface* port,
@@ -92,14 +97,7 @@ rtc::RouteEndpoint CreateRouteEndpointFromCandidate(
                             uses_turn);
 }
 
-using ::webrtc::RTCError;
-using ::webrtc::RTCErrorType;
-using ::webrtc::SafeTask;
-using ::webrtc::TimeDelta;
-
 }  // unnamed namespace
-
-namespace cricket {
 
 bool IceCredentialsChanged(absl::string_view old_ufrag,
                            absl::string_view old_pwd,
@@ -1073,8 +1071,8 @@ void P2PTransportChannel::OnUnknownAddress(PortInterface* port,
     // candidate.
     remote_candidate = Candidate(
         component(), ProtoToString(proto), address, remote_candidate_priority,
-        remote_username, remote_password, PRFLX_PORT_TYPE, remote_generation,
-        "", network_id, network_cost);
+        remote_username, remote_password, IceCandidateType::kPrflx,
+        remote_generation, "", network_id, network_cost);
     if (proto == PROTO_TCP) {
       remote_candidate.set_tcptype(TCPTYPE_ACTIVE_STR);
     }
@@ -1082,8 +1080,7 @@ void P2PTransportChannel::OnUnknownAddress(PortInterface* port,
     // From RFC 5245, section-7.2.1.3:
     // The foundation of the candidate is set to an arbitrary value, different
     // from the foundation for all other remote candidates.
-    remote_candidate.set_foundation(
-        rtc::ToString(rtc::ComputeCrc32(remote_candidate.id())));
+    remote_candidate.ComputePrflxFoundation();
   }
 
   // RFC5245, the agent constructs a pair whose local candidate is equal to
@@ -1413,10 +1410,12 @@ bool P2PTransportChannel::CreateConnection(PortInterface* port,
   }
 
   if (ice_field_trials_.skip_relay_to_non_relay_connections) {
-    if ((port->Type() != remote_candidate.type()) &&
-        (port->Type() == RELAY_PORT_TYPE || remote_candidate.is_relay())) {
+    IceCandidateType port_type = port->Type();
+    if ((port_type != remote_candidate.type()) &&
+        (port_type == IceCandidateType::kRelay ||
+         remote_candidate.is_relay())) {
       RTC_LOG(LS_INFO) << ToString() << ": skip creating connection "
-                       << port->Type() << " to "
+                       << webrtc::IceCandidateTypeToString(port_type) << " to "
                        << remote_candidate.type_name();
       return false;
     }
@@ -1759,7 +1758,7 @@ rtc::NetworkRoute P2PTransportChannel::ConfigureNetworkRoute(
           .local = CreateRouteEndpointFromCandidate(
               /* local= */ true, conn->local_candidate(),
               /* uses_turn= */
-              conn->port()->Type() == RELAY_PORT_TYPE),
+              conn->port()->Type() == IceCandidateType::kRelay),
           .remote = CreateRouteEndpointFromCandidate(
               /* local= */ false, conn->remote_candidate(),
               /* uses_turn= */ conn->remote_candidate().is_relay()),
@@ -2213,17 +2212,14 @@ void P2PTransportChannel::OnReadPacket(Connection* connection,
     last_data_received_ms_ =
         std::max(last_data_received_ms_, connection->last_data_received());
 
-    SignalReadPacket(
-        this, reinterpret_cast<const char*>(packet.payload().data()),
-        packet.payload().size(),
-        packet.arrival_time() ? packet.arrival_time()->us() : -1, 0);
+    NotifyPacketReceived(packet);
 
-  // May need to switch the sending connection based on the receiving media
-  // path if this is the controlled side.
-  if (ice_role_ == ICEROLE_CONTROLLED && connection != selected_connection_) {
-    ice_controller_->OnImmediateSwitchRequest(IceSwitchReason::DATA_RECEIVED,
-                                              connection);
-  }
+    // May need to switch the sending connection based on the receiving media
+    // path if this is the controlled side.
+    if (ice_role_ == ICEROLE_CONTROLLED && connection != selected_connection_) {
+      ice_controller_->OnImmediateSwitchRequest(IceSwitchReason::DATA_RECEIVED,
+                                                connection);
+    }
 }
 
 void P2PTransportChannel::OnSentPacket(const rtc::SentPacket& sent_packet) {

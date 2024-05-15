@@ -57,6 +57,7 @@ using ::testing::DoAll;
 using ::testing::Return;
 using ::testing::ReturnPointee;
 using ::testing::SetArgPointee;
+using ::webrtc::IceCandidateType;
 
 static const SocketAddress kLocalAddr1("11.11.11.11", 0);
 static const SocketAddress kLocalAddr2("22.22.22.22", 0);
@@ -864,7 +865,7 @@ class TurnPortTest : public ::testing::Test,
 
 TEST_F(TurnPortTest, TestTurnPortType) {
   CreateTurnPort(kTurnUsername, kTurnPassword, kTurnUdpProtoAddr);
-  EXPECT_EQ(cricket::RELAY_PORT_TYPE, turn_port_->Type());
+  EXPECT_EQ(IceCandidateType::kRelay, turn_port_->Type());
 }
 
 // Tests that the URL of the servers can be correctly reconstructed when
@@ -1598,7 +1599,8 @@ TEST_F(TurnPortTest, TestCandidateAddressFamilyMatch) {
 
   // Create an IPv4 candidate. It will match the TURN candidate.
   Candidate remote_candidate(ICE_CANDIDATE_COMPONENT_RTP, "udp", kLocalAddr2, 0,
-                             "", "", "local", 0, kCandidateFoundation);
+                             "", "", IceCandidateType::kHost, 0,
+                             kCandidateFoundation);
   remote_candidate.set_address(kLocalAddr2);
   Connection* conn =
       turn_port_->CreateConnection(remote_candidate, Port::ORIGIN_MESSAGE);

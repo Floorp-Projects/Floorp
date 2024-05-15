@@ -6,14 +6,14 @@ Differential Revision: https://phabricator.services.mozilla.com/D45620
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1387b2c480b55ecca3fbdf62bd7649dafc62438d
 ---
  modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc | 2 +-
- modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc | 8 ++++++--
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-index 3466080c83..4c06aca5ad 100644
+index 9a7a6f1498..86ec13fc1f 100644
 --- a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
 +++ b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-@@ -48,7 +48,7 @@ const char kVp8PostProcArmFieldTrial[] = "WebRTC-VP8-Postproc-Config-Arm";
+@@ -47,7 +47,7 @@ const char kVp8PostProcArmFieldTrial[] = "WebRTC-VP8-Postproc-Config-Arm";
  const char kVp8PostProcFieldTrial[] = "WebRTC-VP8-Postproc-Config";
  
  #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
@@ -23,10 +23,10 @@ index 3466080c83..4c06aca5ad 100644
  #else
  constexpr bool kIsArm = false;
 diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-index 52ef6231ea..bff70ed70d 100644
+index a6befaf33b..6205ab74cf 100644
 --- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
 +++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-@@ -749,7 +749,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
+@@ -757,7 +757,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
  }
  
  int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
@@ -35,16 +35,26 @@ index 52ef6231ea..bff70ed70d 100644
    // On mobile platform, use a lower speed setting for lower resolutions for
    // CPUs with 4 or more cores.
    RTC_DCHECK_GT(number_of_cores_, 0);
-@@ -782,7 +782,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
- }
- 
+@@ -792,6 +792,8 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
  int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
--#if defined(WEBRTC_ANDROID)
+ #if defined(WEBRTC_ANDROID)
+   if (android_specific_threading_settings_) {
++#endif
 +#if defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
-   if (width * height >= 320 * 180) {
-     if (cpus >= 4) {
-       // 3 threads for CPUs with 4 and more cores since most of times only 4
-@@ -854,7 +854,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
+     if (width * height >= 320 * 180) {
+       if (cpus >= 4) {
+         // 3 threads for CPUs with 4 and more cores since most of times only 4
+@@ -804,7 +806,9 @@ int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
+       }
+     }
+     return 1;
++#if defined(WEBRTC_ANDROID)
+   }
++#endif
+ #elif defined(WEBRTC_IOS)
+   std::string trial_string =
+       field_trial::FindFullName(kVP8IosMaxNumberOfThreadFieldTrial);
+@@ -862,7 +866,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
    // for getting the denoised frame from the encoder and using that
    // when encoding lower resolution streams. Would it work with the
    // multi-res encoding feature?
