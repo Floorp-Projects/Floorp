@@ -23,6 +23,13 @@ static const char kPHCAvgDelayFirst[] = "memory.phc.avg_delay.first";
 static const char kPHCAvgDelayNormal[] = "memory.phc.avg_delay.normal";
 static const char kPHCAvgDelayPageRuse[] = "memory.phc.avg_delay.page_reuse";
 
+static const char kPHCAvgDelayContentFirst[] =
+    "memory.phc.avg_delay.content.first";
+static const char kPHCAvgDelayContentNormal[] =
+    "memory.phc.avg_delay.content.normal";
+static const char kPHCAvgDelayContentPageRuse[] =
+    "memory.phc.avg_delay.content.page_reuse";
+
 // True if PHC has ever been enabled for this process.
 static bool sWasPHCEnabled = false;
 
@@ -37,9 +44,20 @@ static void UpdatePHCState() {
   if (StaticPrefs::memory_phc_enabled() && mem_size >= min_mem_size) {
     // Set PHC probablities before enabling PHC so that the first allocation
     // delay gets used.
-    SetPHCProbabilities(StaticPrefs::memory_phc_avg_delay_first(),
-                        StaticPrefs::memory_phc_avg_delay_normal(),
-                        StaticPrefs::memory_phc_avg_delay_page_reuse());
+    if (XRE_IsContentProcess()) {
+      // Content processes can come and go and have their own delays
+      // configured.
+      SetPHCProbabilities(
+          StaticPrefs::memory_phc_avg_delay_content_first(),
+          StaticPrefs::memory_phc_avg_delay_content_normal(),
+          StaticPrefs::memory_phc_avg_delay_content_page_reuse());
+    } else {
+      // All other process types tend to exist for the length of the
+      // session, they're grouped here.
+      SetPHCProbabilities(StaticPrefs::memory_phc_avg_delay_first(),
+                          StaticPrefs::memory_phc_avg_delay_normal(),
+                          StaticPrefs::memory_phc_avg_delay_page_reuse());
+    }
 
     SetPHCState(Enabled);
     sWasPHCEnabled = true;
@@ -53,7 +71,10 @@ static void PrefChangeCallback(const char* aPrefName, void* aNull) {
              (0 == strcmp(aPrefName, kPHCMinRamMBPref)) ||
              (0 == strcmp(aPrefName, kPHCAvgDelayFirst)) ||
              (0 == strcmp(aPrefName, kPHCAvgDelayNormal)) ||
-             (0 == strcmp(aPrefName, kPHCAvgDelayPageRuse)));
+             (0 == strcmp(aPrefName, kPHCAvgDelayPageRuse)) ||
+             (0 == strcmp(aPrefName, kPHCAvgDelayContentFirst)) ||
+             (0 == strcmp(aPrefName, kPHCAvgDelayContentNormal)) ||
+             (0 == strcmp(aPrefName, kPHCAvgDelayContentPageRuse)));
 
   UpdatePHCState();
 }
@@ -64,6 +85,10 @@ void InitPHCState() {
   Preferences::RegisterCallback(PrefChangeCallback, kPHCAvgDelayFirst);
   Preferences::RegisterCallback(PrefChangeCallback, kPHCAvgDelayNormal);
   Preferences::RegisterCallback(PrefChangeCallback, kPHCAvgDelayPageRuse);
+  Preferences::RegisterCallback(PrefChangeCallback, kPHCAvgDelayContentFirst);
+  Preferences::RegisterCallback(PrefChangeCallback, kPHCAvgDelayContentNormal);
+  Preferences::RegisterCallback(PrefChangeCallback,
+                                kPHCAvgDelayContentPageRuse);
   UpdatePHCState();
 }
 
