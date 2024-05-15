@@ -385,8 +385,7 @@ var SidebarController = {
     [...browser.children].forEach((node, i) => {
       node.style.order = i + 1;
     });
-    let sidebarMain = document.querySelector("sidebar-main");
-
+    let sidebarMain = document.getElementById("sidebar-main");
     if (!this._positionStart) {
       // DOM ordering is:     sidebar-main |  sidebar-box  | splitter |   appcontent  |
       // Want to display as:  |   appcontent  | splitter |  sidebar-box  | sidebar-main
