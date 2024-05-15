@@ -82,6 +82,18 @@ class Handle;
 #define CHECK_GE(lhs, rhs) MOZ_RELEASE_ASSERT((lhs) >= (rhs))
 #define CONSTEXPR_DCHECK MOZ_ASSERT
 
+// These assertions are necessary to preserve the soundness of the V8
+// sandbox. In V8, they are debug-only if the sandbox is off, but release
+// asserts if the sandbox is turned on. We don't have an equivalent sandbox,
+// so they can be debug checks for now.
+#define SBXCHECK MOZ_ASSERT
+#define SBXCHECK_EQ(lhs, rhs) MOZ_ASSERT((lhs) == (rhs))
+#define SBXCHECK_NE(lhs, rhs) MOZ_ASSERT((lhs) != (rhs))
+#define SBXCHECK_GT(lhs, rhs) MOZ_ASSERT((lhs) > (rhs))
+#define SBXCHECK_GE(lhs, rhs) MOZ_ASSERT((lhs) >= (rhs))
+#define SBXCHECK_LT(lhs, rhs) MOZ_ASSERT((lhs) < (rhs))
+#define SBXCHECK_LE(lhs, rhs) MOZ_ASSERT((lhs) <= (rhs))
+
 #define MemCopy memcpy
 
 // Origin:
@@ -242,6 +254,9 @@ class Optional {
 
   bool has_value() const { return inner_.isSome(); }
   const T& value() const { return inner_.ref(); }
+
+  T* operator->() { return &inner_.ref(); }
+  T& operator*() { return inner_.ref(); }
 };
 
 namespace bits {
