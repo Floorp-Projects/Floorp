@@ -6,6 +6,7 @@
 #define mozilla_FocusModel_h
 
 #include "mozilla/StaticPrefs_accessibility.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/TypedEnumBits.h"
 
 namespace mozilla {
@@ -32,7 +33,13 @@ class FocusModel final {
   }
 
   static bool IsTabFocusable(TabFocusableType aType) {
-    return StaticPrefs::accessibility_tabfocus() & int32_t(aType);
+    if (StaticPrefs::accessibility_tabfocus() & int32_t(aType)) {
+      return true;
+    }
+    if (LookAndFeel::GetInt(LookAndFeel::IntID::FullKeyboardAccess)) {
+      return true;
+    }
+    return false;
   }
 };
 

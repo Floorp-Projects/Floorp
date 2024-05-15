@@ -309,6 +309,9 @@ class LookAndFeel {
     /* The StyleGtkThemeFamily of the current GTK theme. */
     GTKThemeFamily,
 
+    /* Whether macOS' full keyboard access is enabled */
+    FullKeyboardAccess,
+
     /*
      * Not an ID; used to define the range of valid IDs.  Must be last.
      */
