@@ -117,6 +117,8 @@ prefs = [
 
 ["test_protocol_swap.js"]
 
+["test_provider_notification.js"]
+
 ["test_providerAliasEngines.js"]
 
 ["test_providerHeuristicFallback.js"]

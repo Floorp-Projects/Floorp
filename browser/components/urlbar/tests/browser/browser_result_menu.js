@@ -201,10 +201,10 @@ add_task(async function firefoxSuggest() {
     ],
   });
 
-  // Implement the provider's `onLegacyEngagement()` so it removes the result.
-  let onLegacyEngagementCallCount = 0;
-  provider.onLegacyEngagement = (state, queryContext, details, controller) => {
-    onLegacyEngagementCallCount++;
+  // Implement the provider's `onEngagement()` so it removes the result.
+  let onEngagementCallCount = 0;
+  provider.onEngagement = (queryContext, controller, details) => {
+    onEngagementCallCount++;
     controller.removeResult(details.result);
   };
 
@@ -245,7 +245,7 @@ add_task(async function firefoxSuggest() {
   });
 
   Assert.greater(
-    onLegacyEngagementCallCount,
+    onEngagementCallCount,
     0,
     "onLegacyEngagement() should have been called"
   );

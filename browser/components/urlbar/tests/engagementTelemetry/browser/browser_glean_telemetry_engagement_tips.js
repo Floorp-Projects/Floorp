@@ -63,7 +63,7 @@ add_task(async function selected_result_tip() {
         ),
       ],
       priority: 1,
-      onLegacyEngagement: () => {
+      onEngagement: () => {
         deferred.resolve();
       },
     });

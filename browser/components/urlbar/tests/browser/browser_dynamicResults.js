@@ -511,7 +511,7 @@ add_task(async function shouldNavigate() {
     await UrlbarTestUtils.promisePopupClose(window, () =>
       EventUtils.synthesizeKey("KEY_Enter")
     );
-    // Verify that onLegacyEngagement was still called.
+    // Verify that onEngagement was still called.
     let [result, pickedElement] = await pickPromise;
     Assert.equal(result, row.result, "Picked result");
     Assert.equal(pickedElement, element, "Picked element");
@@ -904,7 +904,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
     };
   }
 
-  onLegacyEngagement(state, queryContext, details, _controller) {
+  onEngagement(queryContext, controller, details) {
     if (this._pickPromiseResolve) {
       let { result, element } = details;
       this._pickPromiseResolve([result, element]);

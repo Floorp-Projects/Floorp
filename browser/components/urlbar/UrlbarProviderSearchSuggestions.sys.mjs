@@ -352,12 +352,8 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     return undefined;
   }
 
-  onLegacyEngagement(state, queryContext, details, controller) {
+  onEngagement(queryContext, controller, details) {
     let { result } = details;
-    if (result?.providerName != this.name) {
-      return;
-    }
-
     if (details.selType == "dismiss" && queryContext.formHistoryName) {
       lazy.FormHistory.update({
         op: "remove",

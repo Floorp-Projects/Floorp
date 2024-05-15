@@ -1487,8 +1487,20 @@ class TestProvider extends UrlbarProvider {
    * @param {Function} [options.onSelection]
    *   If given, a function that will be called when
    *   {@link UrlbarView.#selectElement} method is called.
+   * @param {Function} [options.onEngagement]
+   *   If given, a function that will be called when engagement.
    * @param {Function} [options.onLegacyEngagement]
    *   If given, a function that will be called when engagement.
+   *   onLegacyEngagement() is implemented for those who rely on the
+   *   older implementation of onEngagement()
+   * @param {Function} [options.onAbandonment]
+   *   If given, a function that will be called when abandonment.
+   * @param {Function} [options.onImpression]
+   *   If given, a function that will be called when an engagement or
+   *   abandonment has occured.
+   * @param {Function} [options.onSearchSessionEnd]
+   *   If given, a function that will be called when a search session
+   *   concludes.
    * @param {Function} [options.delayResultsPromise]
    *   If given, we'll await on this before returning results.
    */
@@ -1500,6 +1512,10 @@ class TestProvider extends UrlbarProvider {
     addTimeout = 0,
     onCancel = null,
     onSelection = null,
+    onEngagement = null,
+    onAbandonment = null,
+    onImpression = null,
+    onSearchSessionEnd = null,
     onLegacyEngagement = null,
     delayResultsPromise = null,
   } = {}) {
@@ -1517,12 +1533,31 @@ class TestProvider extends UrlbarProvider {
     this._type = type;
     this._onCancel = onCancel;
     this._onSelection = onSelection;
-    this._onLegacyEngagement = onLegacyEngagement;
 
     // As this has been a common source of mistakes, auto-upgrade the provider
     // type to heuristic if any result is heuristic.
     if (!type && this.results?.some(r => r.heuristic)) {
       this.type = UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
+    }
+
+    if (onEngagement) {
+      this.onEngagement = onEngagement.bind(this);
+    }
+
+    if (onAbandonment) {
+      this.onAbandonment = onAbandonment.bind(this);
+    }
+
+    if (onImpression) {
+      this.onImpression = onAbandonment.bind(this);
+    }
+
+    if (onSearchSessionEnd) {
+      this.onSearchSessionEnd = onSearchSessionEnd.bind(this);
+    }
+
+    if (onLegacyEngagement) {
+      this.onLegacyEngagement = onLegacyEngagement.bind(this);
     }
   }
 
@@ -1569,10 +1604,6 @@ class TestProvider extends UrlbarProvider {
 
   onSelection(result, element) {
     this._onSelection?.(result, element);
-  }
-
-  onLegacyEngagement(state, queryContext, details, controller) {
-    this._onLegacyEngagement?.(state, queryContext, details, controller);
   }
 }
 

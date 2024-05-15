@@ -273,17 +273,11 @@ class ProviderSearchTips extends UrlbarProvider {
     lazy.UrlbarPrefs.set(`tipShownCount.${tip}`, MAX_SHOWN_COUNT);
   }
 
-  onLegacyEngagement(state, queryContext, details, controller) {
-    // Ignore engagements on other results that didn't end the session.
-    let { result } = details;
-    if (result?.providerName != this.name && details.isSessionOngoing) {
-      return;
-    }
+  onEngagement(queryContext, controller, details) {
+    this.#pickResult(details.result, controller.browserWindow);
+  }
 
-    if (result?.providerName == this.name) {
-      this.#pickResult(result, controller.browserWindow);
-    }
-
+  onSearchSessionEnd() {
     this.showedTipTypeInCurrentEngagement = TIPS.NONE;
   }
 

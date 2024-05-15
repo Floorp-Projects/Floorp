@@ -2405,8 +2405,110 @@ export class UrlbarProvider {
     // Override this with your clean-up on cancel code.
   }
 
+  // The following `on{Event}` notification methods are invoked only when
+  // defined, thus there is no base class implementation for them
   /**
-   * Called when the user starts and ends an engagement with the urlbar.
+   * Called when a user engages with a result in the urlbar. This is called for
+   * all providers who have implemented this method.
+   *
+   * @param {UrlbarQueryContext} _queryContext
+   *   The engagement's query context. It will always be defined for
+   *   "engagement" and "abandonment".
+   * @param {UrlbarController} _controller
+   *  The associated controller.
+   * @param {object} _details
+   *   This object is non-empty only when `state` is "engagement" or
+   *   "abandonment", and it describes the search string and engaged result.
+   *
+   *   For "engagement", it has the following properties:
+   *
+   *   {UrlbarResult} result
+   *       The engaged result. If a result itself was picked, this will be it.
+   *       If an element related to a result was picked (like a button or menu
+   *       command), this will be that result. This property will be present if
+   *       and only if `state` == "engagement", so it can be used to quickly
+   *       tell when the user engaged with a result.
+   *   {Element} element
+   *       The picked DOM element.
+   *   {boolean} isSessionOngoing
+   *       True if the search session remains ongoing or false if the engagement
+   *       ended it. Typically picking a result ends the session but not always.
+   *       Picking a button or menu command may not end the session; dismissals
+   *       do not, for example.
+   *   {string} searchString
+   *       The search string for the engagement's query.
+   *   {number} selIndex
+   *       The index of the picked result.
+   *   {string} selType
+   *       The type of the selected result.  See TelemetryEvent.record() in
+   *       UrlbarController.sys.mjs.
+   *   {string} provider
+   *       The name of the provider that produced the picked result.
+   *
+   *   For "abandonment", only `searchString` is defined.
+   *
+   * onEngagement(_queryContext, _controller, _details) {}
+   */
+
+  /**
+   * Called when the user abandons a search session without selecting a result.
+   * This could be due to losing focus on the urlbar, switching tabs, or other
+   * actions that imply the user is no longer actively engaging with the search
+   * suggestions. The method is called for all providers who have implemented
+   * this method and whose results were visible at the time of the abandonment.
+   *
+   * @param {UrlbarQueryContext} _queryContext
+   *    The query context at the time of abandonment.
+   * @param {UrlbarController} _controller
+   * The associated controller.
+   *
+   * onAbandonment(_queryContext, _controller) {}
+   */
+
+  /**
+   * Called for providers whose results are visible at the time of either
+   * engagement or abandonment. The method is called when a user actively
+   * interacts with a search result. This interaction could be clicking on a
+   * suggestion, using a keyboard to select a suggestion, or any other form of
+   * direct engagement with the results displayed. It is also called
+   * when a user decides to abandon the search session without engaging with any
+   * of the presented results. This is called for all providers who have
+   * implemented this method.
+   *
+   * @param {string} _state
+   *    The state of the user interaction, either "engagement" or "abandonment".
+   * @param {UrlbarQueryContext} _queryContext
+   *    The current query context.
+   * @param {UrlbarController} _controller
+   *    The associated controller.
+   * @param {Array} _providerVisibleResults
+   *    Array of visible results at the time of either an engagement or
+   *    abandonment event relevant to the provider. Each object in the array
+   *    contains:
+   *    - `index`: The position of the visible result within the original list
+   *               visible results.
+   *    - `result`: The visible result itself
+   *
+   * onImpression(_state, _queryContext, _controller, _providerVisibleResults)
+   * {}
+   */
+
+  /**
+   * Called when a search session concludes regardless of how it ends -
+   * whether through engagement or abandonment or otherwise. This is
+   * called for all providers who have implemented this method.
+   *
+   * @param {UrlbarQueryContext} _queryContext
+   *    The current query context.
+   * @param {UrlbarController} _controller
+   *    The associated controller.
+   *
+   * onSearchSessionEnd(_queryContext, _controller) {}
+   */
+
+  /**
+   * Called when the user starts and ends an engagement with the urlbar. This is
+   * called for all providers who have implemented this method.
    *
    * @param {string} _state
    *   The state of the engagement, one of the following strings:
@@ -2449,8 +2551,9 @@ export class UrlbarProvider {
    *   For "abandonment", only `searchString` is defined.
    * @param {UrlbarController} _controller
    *  The associated controller.
+   *
+   * onLegacyEngagement(_state, _queryContext, _details, _controller) {}
    */
-  onLegacyEngagement(_state, _queryContext, _details, _controller) {}
 
   /**
    * Called before a result from the provider is selected. See `onSelection`
@@ -2468,8 +2571,8 @@ export class UrlbarProvider {
    * Called when a result from the provider is selected. "Selected" refers to
    * the user highlighing the result with the arrow keys/Tab, before it is
    * picked. onSelection is also called when a user clicks a result. In the
-   * event of a click, onSelection is called just before onLegacyEngagement.
-   * Note that this is called when heuristic results are pre-selected.
+   * event of a click, onSelection is called just before onEngagement. Note that
+   * this is called when heuristic results are pre-selected.
    *
    * @param {UrlbarResult} _result
    *   The result that was selected.
@@ -2552,8 +2655,8 @@ export class UrlbarProvider {
   /**
    * Gets the list of commands that should be shown in the result menu for a
    * given result from the provider. All commands returned by this method should
-   * be handled by implementing `onLegacyEngagement()` with the possible
-   * exception of commands automatically handled by the urlbar, like "help".
+   * be handled by implementing `onEngagement()` with the possible exception of
+   * commands automatically handled by the urlbar, like "help".
    *
    * @param {UrlbarResult} _result
    *   The menu will be shown for this result.
@@ -2565,8 +2668,8 @@ export class UrlbarProvider {
    *   {string} name
    *     The name of the command. Must be specified unless `children` is
    *     present. When a command is picked, its name will be passed as
-   *     `details.selType` to `onLegacyEngagement()`. The special name
-   *     "separator" will create a menu separator.
+   *     `details.selType` to `onEngagement()`. The special name "separator"
+   *     will create a menu separator.
    *   {object} l10n
    *     An l10n object for the command's label: `{ id, args }`
    *     Must be specified unless `name` is "separator".

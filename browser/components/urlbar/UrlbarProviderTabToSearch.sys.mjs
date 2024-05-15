@@ -99,10 +99,6 @@ function initializeDynamicResult() {
 class ProviderTabToSearch extends UrlbarProvider {
   constructor() {
     super();
-    this.enginesShown = {
-      onboarding: new Set(),
-      regular: new Set(),
-    };
   }
 
   /**
@@ -194,7 +190,7 @@ class ProviderTabToSearch extends UrlbarProvider {
    * Called when a result from the provider is selected. "Selected" refers to
    * the user highlighing the result with the arrow keys/Tab, before it is
    * picked. onSelection is also called when a user clicks a result. In the
-   * event of a click, onSelection is called just before onLegacyEngagement.
+   * event of a click, onSelection is called just before onEngagement.
    *
    * @param {UrlbarResult} result
    *   The result that was selected.
@@ -226,12 +222,9 @@ class ProviderTabToSearch extends UrlbarProvider {
     }
   }
 
-  onLegacyEngagement(state, queryContext, details) {
+  onEngagement(queryContext, controller, details) {
     let { result, element } = details;
-    if (
-      result?.providerName == this.name &&
-      result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC
-    ) {
+    if (result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC) {
       // Confirm search mode, but only for the onboarding (dynamic) result. The
       // input will handle confirming search mode for the non-onboarding
       // `RESULT_TYPE.SEARCH` result since it sets `providesSearchMode`.
@@ -240,45 +233,44 @@ class ProviderTabToSearch extends UrlbarProvider {
         checkValue: false,
       });
     }
+  }
 
-    if (!this.enginesShown.regular.size && !this.enginesShown.onboarding.size) {
-      return;
-    }
-
+  onImpression(state, queryContext, controller, providerVisibleResults) {
     try {
-      // urlbar.tabtosearch.* is prerelease-only/opt-in for now. See bug 1686330.
-      for (let engine of this.enginesShown.regular) {
-        let scalarKey = lazy.UrlbarSearchUtils.getSearchModeScalarKey({
-          engineName: engine,
-        });
-        Services.telemetry.keyedScalarAdd(
-          "urlbar.tabtosearch.impressions",
-          scalarKey,
-          1
-        );
-      }
-      for (let engine of this.enginesShown.onboarding) {
-        let scalarKey = lazy.UrlbarSearchUtils.getSearchModeScalarKey({
-          engineName: engine,
-        });
-        Services.telemetry.keyedScalarAdd(
-          "urlbar.tabtosearch.impressions_onboarding",
-          scalarKey,
-          1
-        );
-      }
-
-      // We also record in urlbar.tips because only it has been approved for use
-      // in release channels.
+      let regularResultCount = 0;
+      let onboardingResultCount = 0;
+      providerVisibleResults.forEach(({ result }) => {
+        if (result.type === UrlbarUtils.RESULT_TYPE.DYNAMIC) {
+          let scalarKey = lazy.UrlbarSearchUtils.getSearchModeScalarKey({
+            engineName: result?.payload.engine,
+          });
+          Services.telemetry.keyedScalarAdd(
+            "urlbar.tabtosearch.impressions_onboarding",
+            scalarKey,
+            1
+          );
+          onboardingResultCount += 1;
+        } else if (result.type === UrlbarUtils.RESULT_TYPE.SEARCH) {
+          let scalarKey = lazy.UrlbarSearchUtils.getSearchModeScalarKey({
+            engineName: result?.payload.engine,
+          });
+          Services.telemetry.keyedScalarAdd(
+            "urlbar.tabtosearch.impressions",
+            scalarKey,
+            1
+          );
+          regularResultCount += 1;
+        }
+      });
       Services.telemetry.keyedScalarAdd(
         "urlbar.tips",
         "tabtosearch-shown",
-        this.enginesShown.regular.size
+        regularResultCount
       );
       Services.telemetry.keyedScalarAdd(
         "urlbar.tips",
         "tabtosearch_onboard-shown",
-        this.enginesShown.onboarding.size
+        onboardingResultCount
       );
     } catch (ex) {
       // If your test throws this error or causes another test to throw it, it
@@ -288,13 +280,6 @@ class ProviderTabToSearch extends UrlbarProvider {
       this.logger.error(
         `Exception while recording TabToSearch telemetry: ${ex})`
       );
-    } finally {
-      // Even if there's an exception, we want to clear these Sets. Otherwise,
-      // we might get into a state where we repeatedly run the same engines
-      // through the code above and never record telemetry, because there's an
-      // error every time.
-      this.enginesShown.regular.clear();
-      this.enginesShown.onboarding.clear();
     }
   }
 

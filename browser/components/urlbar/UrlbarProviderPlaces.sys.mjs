@@ -1525,12 +1525,8 @@ class ProviderPlaces extends UrlbarProvider {
     search.notifyResult(false);
   }
 
-  onLegacyEngagement(state, queryContext, details, controller) {
+  onEngagement(queryContext, controller, details) {
     let { result } = details;
-    if (result?.providerName != this.name) {
-      return;
-    }
-
     if (details.selType == "dismiss") {
       switch (result.type) {
         case UrlbarUtils.RESULT_TYPE.SEARCH:
