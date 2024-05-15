@@ -34,10 +34,10 @@ add_task(async function disableBackgroundUpdatesBackgroundTask() {
 
   let { updates } = await waitForUpdateCheck(true);
   let bestUpdate = await gAUS.selectUpdate(updates);
-  let success = await gAUS.downloadUpdate(bestUpdate, false);
+  let result = await gAUS.downloadUpdate(bestUpdate, false);
   Assert.equal(
-    success,
-    false,
+    result,
+    Ci.nsIApplicationUpdateService.DOWNLOAD_FAILURE_GENERIC,
     "Update should not download when disableBackgroundUpdates is specified " +
       "and we are in background task mode."
   );

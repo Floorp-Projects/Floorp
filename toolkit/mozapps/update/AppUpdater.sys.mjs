@@ -420,8 +420,8 @@ export class AppUpdater {
   async #downloadUpdate() {
     this.#setStatus(AppUpdater.STATUS.DOWNLOADING);
 
-    let success = await this.aus.downloadUpdate(this.#update, false);
-    if (!success) {
+    let result = await this.aus.downloadUpdate(this.#update, false);
+    if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
       LOG("AppUpdater:#downloadUpdate - downloadUpdate failed.");
       this.#setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
       return;

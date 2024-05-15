@@ -1835,8 +1835,8 @@ async function handleFallbackToCompleteUpdate() {
       "handleFallbackToCompleteUpdate - install of partial patch " +
         "failed, downloading complete patch"
     );
-    var success = await lazy.AUS.downloadUpdate(update);
-    if (!success) {
+    var result = await lazy.AUS.internal.downloadUpdate(update);
+    if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
       LOG(
         "handleFallbackToCompleteUpdate - Starting complete patch download " +
           "failed. Cleaning up downloading patch."
@@ -2698,6 +2698,7 @@ export class UpdateService {
     this._logStatus();
 
     this.internal = {
+      downloadUpdate: async update => this.#downloadUpdate(update),
       QueryInterface: ChromeUtils.generateQI([
         Ci.nsIApplicationUpdateServiceInternal,
       ]),
@@ -3004,10 +3005,10 @@ export class UpdateService {
             "UpdateService:_postUpdateProcessing - resuming patch found in " +
               "downloading state"
           );
-          let success = await this.downloadUpdate(
+          let result = await this.#downloadUpdate(
             lazy.UM.internal.downloadingUpdate
           );
-          if (!success) {
+          if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
             LOG(
               "UpdateService:_postUpdateProcessing - Failed to resume patch. " +
                 "Cleaning up downloading update."
@@ -3340,9 +3341,9 @@ export class UpdateService {
         "UpdateService:_attemptResume - _patch.state: " +
           this._downloader._patch.state
       );
-      let success = await this.downloadUpdate(this._downloader._update);
-      LOG("UpdateService:_attemptResume - downloadUpdate success: " + success);
-      if (!success) {
+      let result = await this.#downloadUpdate(this._downloader._update);
+      LOG("UpdateService:_attemptResume - downloadUpdate result: " + result);
+      if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
         LOG(
           "UpdateService:_attemptResume - Resuming download failed. Cleaning " +
             "up downloading update."
@@ -3847,8 +3848,11 @@ export class UpdateService {
     }
 
     LOG("UpdateService:_selectAndInstallUpdate - download the update");
-    let success = await this.downloadUpdate(update);
-    if (!success && !this.isDownloading) {
+    let result = await this.#downloadUpdate(update);
+    if (
+      result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS &&
+      !this.isDownloading
+    ) {
       LOG(
         "UpdateService:_selectAndInstallUpdate - Failed to start downloading " +
           "update. Cleaning up downloading update."
@@ -4086,6 +4090,10 @@ export class UpdateService {
    * See nsIUpdateService.idl
    */
   async downloadUpdate(update) {
+    return this.#downloadUpdate(update);
+  }
+
+  async #downloadUpdate(update) {
     if (!update) {
       throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
     }
@@ -4112,7 +4120,7 @@ export class UpdateService {
           "update build ID : " +
           update.buildID
       );
-      return false;
+      return Ci.nsIApplicationUpdateService.DOWNLOAD_FAILURE_GENERIC;
     }
     if (updateIsAtLeastAsOldAsReadyUpdate(update)) {
       LOG(
@@ -4131,7 +4139,7 @@ export class UpdateService {
           "available update build ID : " +
           update.buildID
       );
-      return false;
+      return Ci.nsIApplicationUpdateService.DOWNLOAD_FAILURE_GENERIC;
     }
 
     // If a download request is in progress vs. a download ready to resume
@@ -4141,7 +4149,7 @@ export class UpdateService {
           "UpdateService:downloadUpdate - no support for downloading more " +
             "than one update at a time"
         );
-        return true;
+        return Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS;
       }
       this._downloader.cancel();
     }
@@ -5953,7 +5961,7 @@ class Downloader {
    *          A nsIUpdate object to download a patch for. Cannot be null.
    */
   async downloadUpdate(update) {
-    LOG("UpdateService:downloadUpdate");
+    LOG("Downloader:downloadUpdate");
     if (!update) {
       AUSTLMY.pingDownloadCode(undefined, AUSTLMY.DWNLD_ERR_NO_UPDATE);
       throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
@@ -5969,7 +5977,7 @@ class Downloader {
     if (!this._patch) {
       LOG("Downloader:downloadUpdate - no patch to download");
       AUSTLMY.pingDownloadCode(undefined, AUSTLMY.DWNLD_ERR_NO_UPDATE_PATCH);
-      return false;
+      return Ci.nsIApplicationUpdateService.DOWNLOAD_FAILURE_GENERIC;
     }
     // The update and the patch implement nsIWritablePropertyBag. Expose that
     // interface immediately after a patch is assigned so that
@@ -5985,7 +5993,7 @@ class Downloader {
         "Downloader:downloadUpdate - Background update disabled by update " +
           "advertisement"
       );
-      return false;
+      return Ci.nsIApplicationUpdateService.DOWNLOAD_FAILURE_GENERIC;
     }
 
     this.isCompleteUpdate = this._patch.type == "complete";
@@ -6033,7 +6041,8 @@ class Downloader {
           );
           cleanupDownloadingUpdate();
         }
-        return false;
+        return Ci.nsIApplicationUpdateService
+          .DOWNLOAD_FAILURE_CANNOT_RESUME_IN_BACKGROUND;
       }
 
       // The interval is 0 since there is no need to throttle downloads.
@@ -6222,7 +6231,7 @@ class Downloader {
 
     this._notifyDownloadStatusObservers();
 
-    return true;
+    return Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS;
   }
 
   /**
@@ -6772,8 +6781,8 @@ class Downloader {
             "Downloader:onStopRequest - BITS download failed. Falling back " +
               "to nsIIncrementalDownload"
           );
-          let success = await this.downloadUpdate(this._update);
-          if (!success) {
+          let result = await this.downloadUpdate(this._update);
+          if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
             LOG(
               "Downloader:onStopRequest - Failed to fall back to " +
                 "nsIIncrementalDownload. Cleaning up downloading update."
@@ -6795,9 +6804,9 @@ class Downloader {
               "downloading complete update patch"
           );
           this._update.isCompleteUpdate = true;
-          let success = await this.downloadUpdate(this._update);
+          let result = await this.downloadUpdate(this._update);
 
-          if (!success) {
+          if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
             LOG(
               "Downloader:onStopRequest - Failed to fall back to complete " +
                 "patch. Cleaning up downloading update."
