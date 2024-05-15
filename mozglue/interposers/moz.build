@@ -22,4 +22,6 @@ if CONFIG["MOZ_LINKER"]:
         "/mozglue/linker",
     ]
 
+OS_LIBS += CONFIG["DL_LIBS"]
+
 FINAL_LIBRARY = "mozglue"

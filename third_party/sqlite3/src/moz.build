@@ -27,6 +27,8 @@ SOURCES += [
     'sqlite3.c',
 ]
 
+OS_LIBS += CONFIG["DL_LIBS"]
+
 # -DSQLITE_SECURE_DELETE=1 will cause SQLITE to 0-fill delete data so we
 # don't have to vacuum to make sure the data is not visible in the file.
 # -DSQLITE_DEFAULT_PAGE_SIZE=32768 and SQLITE_MAX_DEFAULT_PAGE_SIZE=32768
