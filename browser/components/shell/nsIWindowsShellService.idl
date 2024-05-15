@@ -76,6 +76,93 @@ interface nsIWindowsShellService : nsISupports
   Array<AString> getLaunchOnLoginShortcuts();
 
   /*
+   * Disables the startup task corresponding to the provided taskId
+   * to launch upon OS login. The startup task is declared
+   * within the App Manifest.
+   *
+   * If the task was previously disabled by the user this function
+   * will not re-enable it.
+   *
+   * The APIs used within this function are MSIX only and
+   * will also not work on MINGW.
+   *
+   * @param aTaskId Target taskId to enable
+   *
+   * @return True if the application was successfully set up to
+   *         launch on OS login.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *         If used on a non-MSIX build
+   * @throws NS_ERROR_NOT_IMPLEMENTED
+   *         If used on a MinGW build
+   * @throws NS_ERROR_NOT_SAME_THREAD
+   *         If called off main thread
+   * @throws NS_ERROR_FAILURE
+   *         For other types of failures
+   */
+  [implicit_jscontext]
+  Promise enableLaunchOnLoginMSIXAsync(in AString aTaskId);
+
+  /*
+   * Disables the startup task corresponding to the provided taskId
+   * to launch upon OS login. The startup task is declared
+   * within the App Manifest.
+   *
+   * The APIs used within this function are MSIX only and
+   * will also not work on MINGW.
+   *
+   * @param aTaskId Target taskId to disable
+   *
+   * @return True if the application was successfully disabled from
+   *         launching on OS login.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *         If used on a non-MSIX build
+   * @throws NS_ERROR_NOT_IMPLEMENTED
+   *         If used on a MinGW build
+   * @throws NS_ERROR_NOT_SAME_THREAD
+   *         If called off main thread
+   * @throws NS_ERROR_FAILURE
+   *         For other types of failures
+   */
+  [implicit_jscontext]
+  Promise disableLaunchOnLoginMSIXAsync(in AString aTaskId);
+
+  /*
+   * Determines if the startup task corresponding to the provided taskId to
+   * launch upon OS login is enabled. The startup task is declared
+   * within the App Manifest. The APIs used within this function are MSIX
+   * only and will also not work on MINGW.
+   *
+   * If the user has disabled the application from launching on login, it
+   * cannot be re-enabled by the application.
+   *
+   * @param aTaskId Target taskId to check status of
+   *
+   * @return 0/1/2/3 if the application's OS launch on login is
+             disabled in settings / disabled / enabled / enabled by policy
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *         If used on a non-MSIX build
+   * @throws NS_ERROR_NOT_IMPLEMENTED
+   *         If used on a MinGW build
+   * @throws NS_ERROR_NOT_SAME_THREAD
+   *         If called off main thread
+   * @throws NS_ERROR_FAILURE
+   *         For other types of failures
+   */
+
+  cenum LaunchOnLoginEnabledEnumerator : 8 {
+    LAUNCH_ON_LOGIN_DISABLED_BY_SETTINGS = 0,
+    LAUNCH_ON_LOGIN_DISABLED = 1,
+    LAUNCH_ON_LOGIN_ENABLED = 2,
+    LAUNCH_ON_LOGIN_ENABLED_BY_POLICY = 3,
+  };
+
+  [implicit_jscontext]
+  Promise getLaunchOnLoginEnabledMSIXAsync(in AString aTaskId);
+
+  /*
    * Pin the current app to the taskbar. If aPrivateBrowsing is true, the
    * Private Browsing version of the app (with a different icon and launch
    * arguments) will be pinned instead.
