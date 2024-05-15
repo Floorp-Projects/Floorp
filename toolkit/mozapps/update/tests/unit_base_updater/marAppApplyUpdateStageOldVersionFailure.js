@@ -32,6 +32,7 @@ async function run_test() {
   writeVersionFile("0.9");
   // Try to switch the application to the fake staged application.
   await runUpdateUsingApp(STATE_AFTER_STAGE);
+  reloadUpdateManagerData();
   await testPostUpdateProcessing();
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
