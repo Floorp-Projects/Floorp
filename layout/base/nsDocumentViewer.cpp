@@ -483,8 +483,7 @@ class nsDocumentShownDispatcher : public Runnable {
 
 //------------------------------------------------------------------
 already_AddRefed<nsIDocumentViewer> NS_NewDocumentViewer() {
-  RefPtr<nsDocumentViewer> viewer = new nsDocumentViewer();
-  return viewer.forget();
+  return MakeAndAddRef<nsDocumentViewer>();
 }
 
 void nsDocumentViewer::PrepareToStartLoad() {
@@ -1254,8 +1253,7 @@ nsDocumentViewer::DispatchBeforeUnload() {
   // Now, fire an BeforeUnload event to the document and see if it's ok
   // to unload...
   nsPresContext* presContext = mDocument->GetPresContext();
-  RefPtr<BeforeUnloadEvent> event =
-      new BeforeUnloadEvent(mDocument, presContext, nullptr);
+  auto event = MakeRefPtr<BeforeUnloadEvent>(mDocument, presContext, nullptr);
   event->InitEvent(u"beforeunload"_ns, false, true);
 
   // Dispatching to |window|, but using |document| as the target.
@@ -2094,8 +2092,7 @@ nsDocumentViewer::Show() {
 
   // Notify observers that a new page has been shown. This will get run
   // from the event loop after we actually draw the page.
-  RefPtr<nsDocumentShownDispatcher> event =
-      new nsDocumentShownDispatcher(document);
+  auto event = MakeRefPtr<nsDocumentShownDispatcher>(document);
   document->Dispatch(event.forget());
 
   return NS_OK;
@@ -2888,10 +2885,10 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
   // earlier in this function.
   // TODO(dholbert) Do we need to bother with this stack-owned local RefPtr?
   // (Is there an edge case where it's needed to keep the nsPrintJob alive?)
-  RefPtr<nsPrintJob> printJob =
-      new nsPrintJob(*this, *mContainer, *mDocument,
-                     float(AppUnitsPerCSSInch()) /
-                         float(mDeviceContext->AppUnitsPerDevPixel()));
+  auto printJob =
+      MakeRefPtr<nsPrintJob>(*this, *mContainer, *mDocument,
+                             float(AppUnitsPerCSSInch()) /
+                                 float(mDeviceContext->AppUnitsPerDevPixel()));
   mPrintJob = printJob;
 
   nsresult rv = printJob->Print(*mDocument, aPrintSettings, aRemotePrintJob,
@@ -2931,10 +2928,10 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   // in this function.
   // TODO(dholbert) Do we need to bother with this stack-owned local RefPtr?
   // (Is there an edge case where it's needed to keep the nsPrintJob alive?)
-  RefPtr<nsPrintJob> printJob =
-      new nsPrintJob(*this, *mContainer, *doc,
-                     float(AppUnitsPerCSSInch()) /
-                         float(mDeviceContext->AppUnitsPerDevPixel()));
+  auto printJob =
+      MakeRefPtr<nsPrintJob>(*this, *mContainer, *doc,
+                             float(AppUnitsPerCSSInch()) /
+                                 float(mDeviceContext->AppUnitsPerDevPixel()));
   mPrintJob = printJob;
 
   nsresult rv = printJob->PrintPreview(
@@ -3373,8 +3370,7 @@ NS_IMETHODIMP nsDocumentViewer::SetPrintSettingsForSubdocument(
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    RefPtr<nsDeviceContextSpecProxy> devspec =
-        new nsDeviceContextSpecProxy(aRemotePrintJob);
+    auto devspec = MakeRefPtr<nsDeviceContextSpecProxy>(aRemotePrintJob);
     nsresult rv = devspec->Init(aPrintSettings, /* aIsPrintPreview = */ true);
     NS_ENSURE_SUCCESS(rv, rv);
 

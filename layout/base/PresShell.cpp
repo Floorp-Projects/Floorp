@@ -5700,8 +5700,7 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll) {
   }
 
   if (!mSynthMouseMoveEvent.IsPending()) {
-    RefPtr<nsSynthMouseMoveEvent> ev =
-        new nsSynthMouseMoveEvent(this, aFromScroll);
+    auto ev = MakeRefPtr<nsSynthMouseMoveEvent>(this, aFromScroll);
 
     GetPresContext()->RefreshDriver()->AddRefreshObserver(
         ev, FlushType::Display, "Synthetic mouse move event");
@@ -10500,11 +10499,10 @@ bool PresShell::VerifyIncrementalReflow() {
   }
 
   // Create a presentation context to view the new frame tree
-  RefPtr<nsPresContext> cx = new nsRootPresContext(
+  auto cx = MakeRefPtr<nsRootPresContext>(
       mDocument, mPresContext->IsPaginated()
                      ? nsPresContext::eContext_PrintPreview
                      : nsPresContext::eContext_Galley);
-  NS_ENSURE_TRUE(cx, false);
 
   nsDeviceContext* dc = mPresContext->DeviceContext();
   nsresult rv = cx->Init(dc);
@@ -10516,8 +10514,7 @@ bool PresShell::VerifyIncrementalReflow() {
   nsIWidget* parentWidget = rootView->GetWidget();
 
   // Create a new view manager.
-  RefPtr<nsViewManager> vm = new nsViewManager();
-  NS_ENSURE_TRUE(vm, false);
+  auto vm = MakeRefPtr<nsViewManager>();
   rv = vm->Init(dc);
   NS_ENSURE_SUCCESS(rv, false);
 

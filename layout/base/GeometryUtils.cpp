@@ -455,8 +455,7 @@ already_AddRefed<DOMQuad> ConvertQuadFromNode(
   if (aRv.Failed()) {
     return nullptr;
   }
-  RefPtr<DOMQuad> result = new DOMQuad(aTo->GetParentObject().mObject, points);
-  return result.forget();
+  return MakeAndAddRef<DOMQuad>(aTo->GetParentObject().mObject, points);
 }
 
 already_AddRefed<DOMQuad> ConvertRectFromNode(
@@ -473,8 +472,7 @@ already_AddRefed<DOMQuad> ConvertRectFromNode(
   if (aRv.Failed()) {
     return nullptr;
   }
-  RefPtr<DOMQuad> result = new DOMQuad(aTo->GetParentObject().mObject, points);
-  return result.forget();
+  return MakeAndAddRef<DOMQuad>(aTo->GetParentObject().mObject, points);
 }
 
 already_AddRefed<DOMPoint> ConvertPointFromNode(
@@ -490,9 +488,8 @@ already_AddRefed<DOMPoint> ConvertPointFromNode(
   if (aRv.Failed()) {
     return nullptr;
   }
-  RefPtr<DOMPoint> result =
-      new DOMPoint(aTo->GetParentObject().mObject, point.x, point.y);
-  return result.forget();
+  return MakeAndAddRef<DOMPoint>(aTo->GetParentObject().mObject, point.x,
+                                 point.y);
 }
 
 }  // namespace mozilla

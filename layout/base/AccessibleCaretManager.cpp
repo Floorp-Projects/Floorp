@@ -1436,7 +1436,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
     commonAncestorNode = sel->GetFrameSelection()->GetAncestorLimiter();
   }
 
-  RefPtr<DOMRect> domRect = new DOMRect(ToSupports(doc));
+  auto domRect = MakeRefPtr<DOMRect>(ToSupports(doc));
   nsRect rect = nsLayoutUtils::GetSelectionBoundingRect(sel);
 
   nsIFrame* commonAncestorFrame = nullptr;
