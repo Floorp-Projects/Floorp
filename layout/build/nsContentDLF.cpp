@@ -29,6 +29,7 @@
 
 #undef NOISY_REGISTRY
 
+using namespace mozilla;
 using mozilla::dom::Document;
 
 already_AddRefed<nsIDocumentViewer> NS_NewDocumentViewer();
@@ -63,7 +64,7 @@ nsresult NS_NewContentDocumentLoaderFactory(
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  RefPtr<nsContentDLF> it = new nsContentDLF();
+  auto it = MakeRefPtr<nsContentDLF>();
   it.forget(aResult);
   return NS_OK;
 }

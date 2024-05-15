@@ -207,16 +207,16 @@ nsresult Construct_nsIScriptSecurityManager(REFNSIID aIID, void** aResult) {
 
 nsresult LocalStorageManagerConstructor(REFNSIID aIID, void** aResult) {
   if (NextGenLocalStorageEnabled()) {
-    RefPtr<LocalStorageManager2> manager = new LocalStorageManager2();
+    auto manager = MakeRefPtr<LocalStorageManager2>();
     return manager->QueryInterface(aIID, aResult);
   }
 
-  RefPtr<LocalStorageManager> manager = new LocalStorageManager();
+  auto manager = MakeRefPtr<LocalStorageManager>();
   return manager->QueryInterface(aIID, aResult);
 }
 
 nsresult SessionStorageManagerConstructor(REFNSIID aIID, void** aResult) {
-  RefPtr<SessionStorageManager> manager = new SessionStorageManager(nullptr);
+  auto manager = MakeRefPtr<SessionStorageManager>(nullptr);
   return manager->QueryInterface(aIID, aResult);
 }
 
