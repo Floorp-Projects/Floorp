@@ -607,6 +607,35 @@ impl Color {
         }))
     }
 
+    /// Resolve this Color into an AbsoluteColor if it does not use any of the
+    /// forms that are invalid in an absolute color.
+    ///   https://drafts.csswg.org/css-color-5/#absolute-color
+    /// Returns None if the specified color is not valid as an absolute color.
+    pub fn resolve_to_absolute(&self) -> Option<AbsoluteColor> {
+        use crate::values::specified::percentage::ToPercentage;
+
+        match self {
+            Self::Absolute(c) => return Some(c.color),
+            Self::ColorMix(ref mix) => {
+                if let Some(left) = mix.left.resolve_to_absolute() {
+                    if let Some(right) = mix.right.resolve_to_absolute() {
+                        return Some(crate::color::mix::mix(
+                            mix.interpolation,
+                            &left,
+                            mix.left_percentage.to_percentage(),
+                            &right,
+                            mix.right_percentage.to_percentage(),
+                            mix.flags,
+                        ))
+                    }
+                }
+            },
+            _ => (),
+        };
+
+        None
+    }
+
     /// Parse a color, with quirks.
     ///
     /// <https://quirks.spec.whatwg.org/#the-hashless-hex-color-quirk>

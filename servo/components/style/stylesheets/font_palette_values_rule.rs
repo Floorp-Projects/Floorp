@@ -44,12 +44,17 @@ impl Parse for FontPaletteOverrideColor {
         let index = NonNegativeInteger::parse(context, input)?;
         let location = input.current_source_location();
         let color = SpecifiedColor::parse(context, input)?;
-        // Only absolute colors are accepted here.
-        if let SpecifiedColor::Absolute { .. } = color {
-            Ok(FontPaletteOverrideColor { index, color })
-        } else {
-            Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError))
+        // Only absolute colors are accepted here:
+        //   https://drafts.csswg.org/css-fonts/#override-color
+        //   https://drafts.csswg.org/css-color-5/#absolute-color
+        // so check that the specified color can be resolved without a context
+        // or currentColor value.
+        if color.resolve_to_absolute().is_some() {
+            // We store the specified color (not the resolved absolute color)
+            // because that is what the rule exposes to authors.
+            return Ok(FontPaletteOverrideColor { index, color });
         }
+        Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError))
     }
 }
 
@@ -178,14 +183,15 @@ impl FontPaletteValuesRule {
                 }
             }
             for c in &self.override_colors {
-                if let SpecifiedColor::Absolute(ref absolute) = c.color {
-                    unsafe {
-                        Gecko_SetFontPaletteOverride(
-                            palette_values,
-                            c.index.0.value(),
-                            (&absolute.color) as *const _ as *mut _,
-                        );
-                    }
+                // We checked at parse time that the specified color can be resolved
+                // in this way, so the unwrap() here will succeed.
+                let absolute = c.color.resolve_to_absolute().unwrap();
+                unsafe {
+                    Gecko_SetFontPaletteOverride(
+                        palette_values,
+                        c.index.0.value(),
+                        (&absolute) as *const _ as *mut _,
+                    );
                 }
             }
         }
