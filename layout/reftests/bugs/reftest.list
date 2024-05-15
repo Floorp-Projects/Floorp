@@ -43,7 +43,7 @@
 skip-if(isDebugBuild||AddressSanitizer||ThreadSanitizer||(winWidget&&(!is64Bit))) == 256180-1.html 256180-1-ref.html
 # Debug builds have larger stack frames, so skipped.
 # 32-bit Windows doesn't have enough run-time stack to deal with the test, so skipped.
-skip-if(isDebugBuild||(winWidget&&(!is64Bit))) == 256180-2.html 256180-2-ref.html
+skip-if(isDebugBuild) == 256180-2.html 256180-2-ref.html
 # Debug builds and ASAN builds have larger stack frames, so skipped.
 # 32-bit Windows doesn't have enough run-time stack to deal with the test, so skipped.
 skip-if(isDebugBuild||AddressSanitizer||ThreadSanitizer||(winWidget&&(!is64Bit))) fails-if(geckoview) == 256180-3.html 256180-3-ref.html
@@ -1748,7 +1748,7 @@ test-pref(font.minimum-size.x-western,32) fuzzy-if(Android,0-45,0-324) == 935056
 == 936670-1.svg 936670-1-ref.svg
 == 941940-1.html 941940-1-ref.html
 fails == 942017.html 942017-ref.html # bug 942017
-fuzzy(0-2,0-160000) fuzzy-if(winWidget&&isDebugBuild&&!is64Bit,1-1,12-175) == 942672-1.html 942672-1-ref.html
+fuzzy(0-2,0-160000) == 942672-1.html 942672-1-ref.html
 == 953334-win32-clipping.html 953334-win32-clipping-ref.html
 fuzzy(0-1,0-5) == 956513-1.svg 956513-1-ref.svg
 == 944291-1.html 944291-1-ref.html
