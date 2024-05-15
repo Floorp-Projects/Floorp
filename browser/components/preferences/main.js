@@ -439,8 +439,7 @@ var gMainPane = {
       if (
         Cc["@mozilla.org/toolkit/profile-service;1"].getService(
           Ci.nsIToolkitProfileService
-        ).startWithLastProfile &&
-        !Services.sysinfo.getProperty("hasWinPackageId", false)
+        ).startWithLastProfile
       ) {
         NimbusFeatures.windowsLaunchOnLogin.recordExposureEvent({
           once: true,
@@ -693,12 +692,16 @@ var gMainPane = {
         let launchOnLoginCheckbox = document.getElementById(
           "windowsLaunchOnLogin"
         );
-        launchOnLoginCheckbox.checked =
-          WindowsLaunchOnLogin.getLaunchOnLoginEnabled();
-        let approvedByWindows = WindowsLaunchOnLogin.getLaunchOnLoginApproved();
-        launchOnLoginCheckbox.disabled = !approvedByWindows;
-        document.getElementById("windowsLaunchOnLoginDisabledBox").hidden =
-          approvedByWindows;
+        WindowsLaunchOnLogin.getLaunchOnLoginEnabled().then(enabled => {
+          launchOnLoginCheckbox.checked = enabled;
+        });
+        WindowsLaunchOnLogin.getLaunchOnLoginApproved().then(
+          approvedByWindows => {
+            launchOnLoginCheckbox.disabled = !approvedByWindows;
+            document.getElementById("windowsLaunchOnLoginDisabledBox").hidden =
+              approvedByWindows;
+          }
+        );
 
         // On Windows, the Application Update setting is an installation-
         // specific preference, not a profile-specific one. Show a warning to
@@ -1647,16 +1650,19 @@ var gMainPane = {
       return;
     }
     if (event.target.checked) {
-      // windowsLaunchOnLogin has been checked: create registry key
-      WindowsLaunchOnLogin.createLaunchOnLoginRegistryKey();
+      // windowsLaunchOnLogin has been checked: create registry key or shortcut
+      // The shortcut is created with the same AUMID as Firefox itself. However,
+      // this is not set during browser tests and the fallback of checking the
+      // registry fails. As such we pass an arbitrary AUMID for the purpose
+      // of testing.
+      await WindowsLaunchOnLogin.createLaunchOnLogin();
       Services.prefs.setBoolPref(
         "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
         true
       );
     } else {
       // windowsLaunchOnLogin has been unchecked: delete registry key and shortcut
-      WindowsLaunchOnLogin.removeLaunchOnLoginRegistryKey();
-      await WindowsLaunchOnLogin.removeLaunchOnLoginShortcuts();
+      await WindowsLaunchOnLogin.removeLaunchOnLogin();
     }
   },
 
