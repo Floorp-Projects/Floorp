@@ -750,7 +750,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   RefPtr<ContentChild> mManager;
   RefPtr<BrowsingContext> mBrowsingContext;
   RefPtr<nsBrowserStatusFilter> mStatusFilter;
-  Maybe<CodeNameIndex> mPreviousConsumedKeyDownCode;
   uint32_t mChromeFlags;
   uint32_t mMaxTouchPoints;
   layers::LayersId mLayersId;
@@ -771,6 +770,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   bool mDidFakeShow : 1;
   bool mTriedBrowserInit : 1;
+  bool mIgnoreKeyPressEvent : 1;
   bool mHasValidInnerSize : 1;
   bool mDestroyed : 1;
 

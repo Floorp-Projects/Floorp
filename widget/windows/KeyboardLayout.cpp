@@ -1643,7 +1643,7 @@ void NativeKey::InitWithKeyOrChar() {
                  "The high surrogate input is discarded",
                  this));
       }
-    } else if (pendingHighSurrogate && !mFollowingCharMsgs.IsEmpty()) {
+    } else if (!mFollowingCharMsgs.IsEmpty()) {
       MOZ_LOG(gKeyLog, LogLevel::Warning,
               ("%p   NativeKey::InitWithKeyOrChar(), there is pending "
                "high surrogate input, but received 2 or more character input.  "
@@ -2073,11 +2073,7 @@ nsEventStatus NativeKey::InitKeyEvent(
       // and we should prevent to do "double action" for the key operation.
       // However, for compatibility with older version and other browsers,
       // we should dispatch the events even in the web content.
-      // And also if it's a WM_SYSKEYDOWN which is not followed by WM_SYSCHAR,
-      // the input may be consumed by the builtin IME to input a Unicode
-      // character from the code point.
-      if (mCharMessageHasGone || (IsSysKeyDownMessage() && mIsPrintableKey &&
-                                  mFollowingCharMsgs.IsEmpty())) {
+      if (mCharMessageHasGone) {
         aKeyEvent.PreventDefaultBeforeDispatch(CrossProcessForwarding::eAllow);
       }
       aKeyEvent.mKeyCode = mDOMKeyCode;

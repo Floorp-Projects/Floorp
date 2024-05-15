@@ -503,8 +503,6 @@ skip-if = ["os == 'android'"] # timeout
 
 ["test_unbound_before_in_active_chain.html"]
 
-["test_unicode_input_on_windows_with_emulation.html"]
-
 ["test_use_conflated_keypress_event_model_on_newer_Office_Online_Server.html"]
 
 ["test_use_split_keypress_event_model_on_old_Confluence.html"]
