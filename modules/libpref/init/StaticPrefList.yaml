@@ -2668,6 +2668,13 @@
   value: false
   mirror: always
 
+# Whether to set the incremental flag on the top level document's
+# priority header
+- name: dom.document_priority.incremental
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Allow the content process to create a File from a path. This is allowed just
 # on parent process, on 'file' Content process, or for testing.
 - name: dom.file.createInChild
@@ -7190,6 +7197,12 @@
 - name: image.svg.blob-image
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# Whether to set the incremental attribute in the Priority header for images
+- name: image.priority.incremental
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 # Whether we attempt to decode AVIF images or not.
