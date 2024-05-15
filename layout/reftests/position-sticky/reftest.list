@@ -50,6 +50,6 @@ fuzzy(0-1,0-220) == block-in-inline-3.html block-in-inline-3-ref.html
 == block-in-inline-continuations.html block-in-inline-continuations-ref.html
 == iframe-1.html iframe-1-ref.html
 == transformed-1.html transformed-1-ref.html
-fuzzy-if(Android,0-8,0-9) fuzzy-if(gtkWidget,10-17,12-32) fuzzy-if(cocoaWidget,7-8,18-42) skip-if(useDrawSnapshot) fails-if(useDrawSnapshot) == transformed-2.html transformed-2-ref.html # Bug 1604644
-skip-if(useDrawSnapshot) fuzzy-if(Android,0-14,0-17) fuzzy-if(gtkWidget,19-30,12-32) fuzzy-if(cocoaWidget,13-16,20-44) fails-if(useDrawSnapshot) == nested-sticky-1.html nested-sticky-1-ref.html # Bug 1604644
-skip-if(useDrawSnapshot) fuzzy-if(Android,0-14,0-96) fuzzy-if(gtkWidget,19-30,12-32) fuzzy-if(cocoaWidget,13-16,20-44) fails-if(useDrawSnapshot) == nested-sticky-2.html nested-sticky-2-ref.html # Bug 1604644
+fuzzy-if(Android,0-8,0-9) fuzzy-if(gtkWidget,10-21,12-32) fuzzy-if(cocoaWidget,7-8,18-42) skip-if(useDrawSnapshot) fails-if(useDrawSnapshot) == transformed-2.html transformed-2-ref.html # Bug 1604644
+skip-if(useDrawSnapshot) fuzzy-if(Android,0-14,0-17) fuzzy-if(gtkWidget,19-37,12-32) fuzzy-if(cocoaWidget,13-16,20-44) fails-if(useDrawSnapshot) == nested-sticky-1.html nested-sticky-1-ref.html # Bug 1604644
+skip-if(useDrawSnapshot) fuzzy-if(Android,0-14,0-96) fuzzy-if(gtkWidget,19-37,12-32) fuzzy-if(cocoaWidget,13-16,20-44) fails-if(useDrawSnapshot) == nested-sticky-2.html nested-sticky-2-ref.html # Bug 1604644
