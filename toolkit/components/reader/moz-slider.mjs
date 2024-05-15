@@ -62,6 +62,7 @@ export default class MozSlider extends MozLitElement {
       let tickList = [];
       let value = this.min;
       let stepSize = this.getStepSize();
+      let className = "";
       for (let i = 0; i < this.ticks; i++) {
         let optionId = "";
         let label = "";
@@ -73,6 +74,8 @@ export default class MozSlider extends MozLitElement {
             optionId = "inline-end-label";
             label = this.tickLabels[1];
           }
+        } else {
+          className = "no-tick-labels";
         }
         tickList.push(
           html`<option
@@ -83,7 +86,9 @@ export default class MozSlider extends MozLitElement {
         );
         value += stepSize;
       }
-      return html` <datalist id="slider-ticks">${tickList}</datalist> `;
+      return html`
+        <datalist id="slider-ticks" class=${className}>${tickList}</datalist>
+      `;
     }
     return "";
   }
@@ -104,9 +109,9 @@ export default class MozSlider extends MozLitElement {
         href="chrome://global/content/reader/moz-slider.css"
       />
       <div class="container">
+        <label class="slider-label" for="inputSlider">${this.label}</label>
         ${this.setupIcon()}
         <div class="slider-container">
-          <label class="slider-label" for="inputSlider">${this.label}</label>
           <input
             id="inputSlider"
             max=${this.max}

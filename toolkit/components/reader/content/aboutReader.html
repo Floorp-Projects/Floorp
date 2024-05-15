@@ -74,6 +74,49 @@
             </li>
             <li class="dropdown-popup" id="text-layout-controls">
               <h2
+                data-l10n-id="about-reader-text-header"
+                id="about-reader-text-header"
+              ></h2>
+              <div id="text-size-controls">
+                <span
+                  data-l10n-id="about-reader-text-size-label"
+                  id="about-reader-text-size-label"
+                ></span>
+                <div class="text-size-buttons buttonrow">
+                  <button
+                    class="text-size-plus-button"
+                    data-l10n-id="about-reader-toolbar-plus"
+                  ></button>
+                  <button
+                    class="text-size-minus-button"
+                    data-l10n-id="about-reader-toolbar-minus"
+                  ></button>
+                </div>
+              </div>
+              <div id="font-controls">
+                <div id="font-type-dropdown" class="dropdown-selector">
+                  <label
+                    for="font-type-selector"
+                    data-l10n-id="about-reader-font-type-selector-label"
+                  ></label>
+                  <select
+                    name="font-type-selector"
+                    id="font-type-selector"
+                  ></select>
+                </div>
+                <div id="font-weight-dropdown" class="dropdown-selector">
+                  <label
+                    for="font-weight-selector"
+                    data-l10n-id="about-reader-font-weight-selector-label"
+                  ></label>
+                  <select
+                    name="font-weight-selector"
+                    id="font-weight-selector"
+                  ></select>
+                </div>
+              </div>
+              <hr />
+              <h2
                 data-l10n-id="about-reader-layout-header"
                 id="about-reader-layout-header"
               ></h2>
@@ -101,6 +144,10 @@
                   class="text-alignment-buttons radiorow"
                   id="text-alignment-buttons"
                 ></div>
+                <button
+                  class="text-layout-reset-button reset-button"
+                  data-l10n-id="about-reader-reset-button"
+                ></button>
               </details>
             </li>
           </ul>
@@ -205,8 +252,8 @@
                 <div name="customtheme">
                   <ul class="custom-colors-selection"></ul>
                   <button
-                    class="custom-colors-reset-button"
-                    data-l10n-id="about-reader-custom-colors-reset-button"
+                    class="custom-colors-reset-button reset-button"
+                    data-l10n-id="about-reader-reset-button"
                   ></button>
                 </div>
               </named-deck>

@@ -32,9 +32,9 @@ about-reader-estimated-read-time =
 ## These are used as tooltips in Type Control
 
 about-reader-toolbar-minus =
-    .title = Decrease Font Size
+    .title = Decrease font size
 about-reader-toolbar-plus =
-    .title = Increase Font Size
+    .title = Increase font size
 about-reader-toolbar-contentwidthminus =
     .title = Decrease Content Width
 about-reader-toolbar-contentwidthplus =
@@ -48,6 +48,7 @@ about-reader-toolbar-lineheightplus =
 
 about-reader-font-type-serif = Serif
 about-reader-font-type-sans-serif = Sans-serif
+about-reader-font-type-monospace = Monospace
 
 ## Reader View toolbar buttons
 
@@ -81,16 +82,22 @@ about-reader-custom-colors-visited-links = Visited links
 about-reader-custom-colors-selection-highlight = Highlighter for read aloud
     .title = Edit color
 
-about-reader-custom-colors-reset-button = Reset defaults
+about-reader-reset-button = Reset defaults
 
 ## Reader View improved text and layout menu
 
-about-reader-layout-header = Layout
-about-reader-advanced-layout-header = Advanced
+about-reader-text-header = Text
 
-about-reader-slider-label-width-narrow = Narrow
-about-reader-slider-label-width-wide = Wide
-about-reader-slider-label-spacing-narrow = Narrow
+about-reader-text-size-label = Text size
+about-reader-font-type-selector-label = Font
+about-reader-font-weight-selector-label = Font weight
+
+about-reader-font-weight-light = Light
+about-reader-font-weight-regular = Regular
+about-reader-font-weight-bold = Bold
+
+about-reader-layout-header = Layout
+
 about-reader-slider-label-spacing-standard = Standard
 about-reader-slider-label-spacing-wide = Wide
 
@@ -98,6 +105,9 @@ about-reader-content-width-label =
   .label = Content width
 about-reader-line-spacing-label =
   .label = Line spacing
+
+about-reader-advanced-layout-header = Advanced
+
 about-reader-character-spacing-label =
   .label = Character spacing
 about-reader-word-spacing-label =

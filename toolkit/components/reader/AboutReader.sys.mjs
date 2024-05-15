@@ -9,6 +9,10 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 let gScrollPositions = new Map();
 let lastSelectedTheme = "auto";
+let improvedTextMenuEnabled = Services.prefs.getBoolPref(
+  "reader.improved_text_menu.enabled",
+  false
+);
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.sys.mjs",
@@ -30,6 +34,29 @@ ChromeUtils.defineLazyGetter(
   "l10n",
   () => new Localization(["toolkit/about/aboutReader.ftl"], true)
 );
+
+const FONT_TYPE_L10N_IDS = {
+  serif: "about-reader-font-type-serif",
+  "sans-serif": "about-reader-font-type-sans-serif",
+  monospace: "about-reader-font-type-monospace",
+};
+
+const FONT_WEIGHT_L10N_IDS = {
+  light: "about-reader-font-weight-light",
+  regular: "about-reader-font-weight-regular",
+  bold: "about-reader-font-weight-bold",
+};
+
+const DEFAULT_TEXT_LAYOUT = {
+  fontSize: 5,
+  fontType: "sans-serif",
+  fontWeight: "regular",
+  contentWidth: 3,
+  lineSpacing: 4,
+  characterSpacing: 0,
+  wordSpacing: 0,
+  textAlignment: "start",
+};
 
 const COLORSCHEME_L10N_IDS = {
   auto: "about-reader-color-auto-theme",
@@ -251,22 +278,18 @@ export var AboutReader = function (
 
   // Differentiates between the tick mark labels for width vs spacing controls
   // for localization purposes.
-  const [narrowWidthLabel, wideWidthLabel] = lazy.l10n.formatMessagesSync([
-    "about-reader-slider-label-width-narrow",
-    "about-reader-slider-label-width-wide",
-  ]);
-  const [narrowSpacingLabel, standardSpacingLabel, wideSpacingLabel] =
-    lazy.l10n.formatMessagesSync([
-      "about-reader-slider-label-spacing-narrow",
+  const [standardSpacingLabel, wideSpacingLabel] = lazy.l10n.formatMessagesSync(
+    [
       "about-reader-slider-label-spacing-standard",
       "about-reader-slider-label-spacing-wide",
-    ]);
+    ]
+  );
 
   let contentWidthSliderOptions = {
     min: 1,
     max: 9,
     ticks: 9,
-    tickLabels: `["${narrowWidthLabel.value}", "${wideWidthLabel.value}"]`,
+    tickLabels: `[]`,
     l10nId: "about-reader-content-width-label",
     icon: "chrome://global/skin/reader/content-width-20.svg",
   };
@@ -275,7 +298,7 @@ export var AboutReader = function (
     min: 1,
     max: 9,
     ticks: 9,
-    tickLabels: `["${narrowSpacingLabel.value}", "${wideSpacingLabel.value}"]`,
+    tickLabels: `[]`,
     l10nId: "about-reader-line-spacing-label",
     icon: "chrome://global/skin/reader/line-spacing-20.svg",
   };
@@ -324,9 +347,46 @@ export var AboutReader = function (
     textAlignmentOptions = textAlignmentOptions.reverse();
   }
 
-  if (Services.prefs.getBoolPref("reader.improved_text_menu.enabled", false)) {
+  if (improvedTextMenuEnabled) {
     doc.getElementById("regular-text-menu").hidden = true;
     doc.getElementById("improved-text-menu").hidden = false;
+
+    let selectorFontTypeValues;
+    try {
+      selectorFontTypeValues = JSON.parse(
+        Services.prefs.getCharPref("reader.font_type.values")
+      );
+    } catch (e) {
+      selectorFontTypeValues = ["sans-serif", "serif", "monospace"];
+    }
+
+    this._setupSelector(
+      "font-type",
+      selectorFontTypeValues,
+      fontType,
+      this._setFontTypeSelector.bind(this),
+      FONT_TYPE_L10N_IDS
+    );
+    this._setFontTypeSelector(fontType);
+
+    let fontWeightValues;
+    try {
+      fontWeightValues = JSON.parse(
+        Services.prefs.getCharPref("reader.font_weight.values")
+      );
+    } catch (e) {
+      fontWeightValues = ["regular", "light", "bold"];
+    }
+
+    let fontWeight = Services.prefs.getCharPref("reader.font_weight");
+    this._setupSelector(
+      "font-weight",
+      fontWeightValues,
+      fontWeight,
+      this._setFontWeight.bind(this),
+      FONT_WEIGHT_L10N_IDS
+    );
+    this._setFontWeight(fontWeight);
 
     let contentWidth = Services.prefs.getIntPref("reader.content_width");
     this._setupSlider(
@@ -346,7 +406,7 @@ export var AboutReader = function (
     );
     this._setLineSpacing(lineSpacing);
 
-    let characterSpacing = Services.prefs.getStringPref(
+    let characterSpacing = Services.prefs.getIntPref(
       "reader.character_spacing"
     );
     this._setupSlider(
@@ -357,7 +417,7 @@ export var AboutReader = function (
     );
     this._setCharacterSpacing(characterSpacing);
 
-    let wordSpacing = Services.prefs.getStringPref("reader.word_spacing");
+    let wordSpacing = Services.prefs.getIntPref("reader.word_spacing");
     this._setupSlider(
       "word-spacing",
       wordSpacingSliderOptions,
@@ -374,6 +434,11 @@ export var AboutReader = function (
       this._setTextAlignment.bind(this)
     );
     this._setTextAlignment(textAlignment);
+
+    this._setupButton(
+      "text-layout-reset-button",
+      this._resetTextLayout.bind(this)
+    );
   } else {
     this._setupSegmentedButton(
       "font-type-buttons",
@@ -381,15 +446,15 @@ export var AboutReader = function (
       fontType,
       this._setFontType.bind(this)
     );
+
+    this._setupContentWidthButtons();
+
+    this._setupLineHeightButtons();
+
+    this._setFontType(fontType);
   }
 
   this._setupFontSizeButtons();
-
-  this._setupContentWidthButtons();
-
-  this._setupLineHeightButtons();
-
-  this._setFontType(fontType);
 
   if (win.speechSynthesis && Services.prefs.getBoolPref("narrate.enabled")) {
     new lazy.NarrateControls(win, this._languagePromise);
@@ -683,8 +748,15 @@ AboutReader.prototype = {
   },
 
   _setupFontSizeButtons() {
-    let plusButton = this._doc.querySelector(".plus-button");
-    let minusButton = this._doc.querySelector(".minus-button");
+    let plusButton, minusButton;
+
+    if (improvedTextMenuEnabled) {
+      plusButton = this._doc.querySelector(".text-size-plus-button");
+      minusButton = this._doc.querySelector(".text-size-minus-button");
+    } else {
+      plusButton = this._doc.querySelector(".plus-button");
+      minusButton = this._doc.querySelector(".minus-button");
+    }
 
     let currentSize = Services.prefs.getIntPref("reader.font_size");
     this._setFontSize(currentSize);
@@ -716,12 +788,18 @@ AboutReader.prototype = {
   },
 
   _updateFontSizeButtonControls() {
-    let plusButton = this._doc.querySelector(".plus-button");
-    let minusButton = this._doc.querySelector(".minus-button");
-
+    let plusButton, minusButton;
     let currentSize = this._fontSize;
-    let fontValue = this._doc.querySelector(".font-size-value");
-    fontValue.textContent = currentSize;
+
+    if (improvedTextMenuEnabled) {
+      plusButton = this._doc.querySelector(".text-size-plus-button");
+      minusButton = this._doc.querySelector(".text-size-minus-button");
+    } else {
+      plusButton = this._doc.querySelector(".plus-button");
+      minusButton = this._doc.querySelector(".minus-button");
+      let fontValue = this._doc.querySelector(".font-size-value");
+      fontValue.textContent = currentSize;
+    }
 
     if (currentSize === this.FONT_SIZE_MIN) {
       minusButton.setAttribute("disabled", true);
@@ -909,6 +987,68 @@ AboutReader.prototype = {
     );
   },
 
+  _setupSelector(id, options, initialValue, callback, l10nIds) {
+    let doc = this._doc;
+    let selector = doc.getElementById(`${id}-selector`);
+
+    options.forEach(option => {
+      let selectorOption = doc.createElement("option");
+      let presetl10nId = l10nIds[option];
+      if (presetl10nId) {
+        doc.l10n.setAttributes(selectorOption, presetl10nId);
+      } else {
+        selectorOption.text = option;
+      }
+      selectorOption.value = option;
+      selector.appendChild(selectorOption);
+      if (option == initialValue) {
+        selectorOption.setAttribute("selected", true);
+      }
+    });
+
+    selector.addEventListener("change", e => {
+      callback(e.target.value);
+    });
+  },
+
+  _setFontTypeSelector(newFontType) {
+    if (newFontType === "sans-serif") {
+      this._doc.documentElement.style.setProperty(
+        "--font-family",
+        "Helvetica, Arial, sans-serif"
+      );
+    } else if (newFontType === "serif") {
+      this._doc.documentElement.style.setProperty(
+        "--font-family",
+        'Georgia, "Times New Roman", serif'
+      );
+    } else if (newFontType === "monospace") {
+      this._doc.documentElement.style.setProperty(
+        "--font-family",
+        '"Courier New", Courier, monospace'
+      );
+    } else {
+      this._doc.documentElement.style.setProperty(
+        "--font-family",
+        `"${newFontType}"`
+      );
+    }
+
+    lazy.AsyncPrefs.set("reader.font_type", newFontType);
+  },
+
+  _setFontWeight(newFontWeight) {
+    if (newFontWeight === "light") {
+      this._doc.documentElement.style.setProperty("--font-weight", "lighter");
+    } else if (newFontWeight === "regular") {
+      this._doc.documentElement.style.setProperty("--font-weight", "normal");
+    } else if (newFontWeight === "bold") {
+      this._doc.documentElement.style.setProperty("--font-weight", "bolder");
+    }
+
+    lazy.AsyncPrefs.set("reader.font_weight", newFontWeight);
+  },
+
   _setupSlider(id, options, initialValue, callback) {
     let doc = this._doc;
     let slider = doc.createElement("moz-slider");
@@ -956,7 +1096,7 @@ AboutReader.prototype = {
       "--letter-spacing",
       `${parseFloat(spacing).toFixed(2)}em`
     );
-    lazy.AsyncPrefs.set("reader.character_spacing", newCharSpacing);
+    lazy.AsyncPrefs.set("reader.character_spacing", parseInt(newCharSpacing));
   },
 
   _setWordSpacing(newWordSpacing) {
@@ -966,12 +1106,22 @@ AboutReader.prototype = {
       "--word-spacing",
       `${parseFloat(spacing).toFixed(2)}em`
     );
-    lazy.AsyncPrefs.set("reader.word_spacing", newWordSpacing);
+    lazy.AsyncPrefs.set("reader.word_spacing", parseInt(newWordSpacing));
   },
 
   _setTextAlignment(newTextAlignment) {
     if (this._textAlignment === newTextAlignment) {
       return false;
+    }
+
+    if (newTextAlignment === "start") {
+      let startAlignButton;
+      if (isAppLocaleRTL) {
+        startAlignButton = this._doc.querySelector(".right-align-button");
+      } else {
+        startAlignButton = this._doc.querySelector(".left-align-button");
+      }
+      startAlignButton.click();
     }
 
     this._containerElement.style.setProperty(
@@ -981,6 +1131,41 @@ AboutReader.prototype = {
 
     lazy.AsyncPrefs.set("reader.text_alignment", newTextAlignment);
     return true;
+  },
+
+  async _resetTextLayout() {
+    let doc = this._doc;
+    const initial = DEFAULT_TEXT_LAYOUT;
+    const changeEvent = new Event("change", { bubbles: true });
+
+    this._resetFontSize();
+    let fontType = doc.getElementById("font-type-selector");
+    fontType.value = initial.fontType;
+    fontType.dispatchEvent(changeEvent);
+
+    let fontWeight = doc.getElementById("font-weight-selector");
+    fontWeight.value = initial.fontWeight;
+    fontWeight.dispatchEvent(changeEvent);
+
+    let contentWidth = doc.querySelector("#content-width-slider moz-slider");
+    contentWidth.setAttribute("value", initial.contentWidth);
+    this._setContentWidthSlider(initial.contentWidth);
+
+    let lineSpacing = doc.querySelector("#line-spacing-slider moz-slider");
+    lineSpacing.setAttribute("value", initial.lineSpacing);
+    this._setLineSpacing(initial.lineSpacing);
+
+    let characterSpacing = doc.querySelector(
+      "#character-spacing-slider moz-slider"
+    );
+    characterSpacing.setAttribute("value", initial.characterSpacing);
+    this._setCharacterSpacing(initial.characterSpacing);
+
+    let wordSpacing = doc.querySelector("#word-spacing-slider moz-slider");
+    wordSpacing.setAttribute("value", initial.wordSpacing);
+    this._setWordSpacing(initial.wordSpacing);
+
+    this._setTextAlignment(initial.textAlignment);
   },
 
   _setColorScheme(newColorScheme) {

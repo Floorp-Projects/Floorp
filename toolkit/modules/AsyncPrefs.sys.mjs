@@ -28,6 +28,7 @@ const kAllowedPrefs = new Set([
 
   "reader.font_size",
   "reader.font_type",
+  "reader.font_weight",
   "reader.color_scheme",
   "reader.content_width",
   "reader.line_height",
