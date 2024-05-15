@@ -6,9 +6,6 @@
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
-# for socket
-OS_LIBS += CONFIG["SOCKET_LIBS"]
-
 if CONFIG["OS_TARGET"] != "WINNT":
     SOURCES += [
         "buffered_stun_socket_unittest.cpp",

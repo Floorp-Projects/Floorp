@@ -82,8 +82,6 @@ DEFINES["IMPL_MFBT"] = True
 if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
     OS_LIBS += ["atomic"]
 
-OS_LIBS += CONFIG["DL_LIBS"]
-
 DisableStlWrapping()
 
 include("/mozglue/build/replace_malloc.mozbuild")
