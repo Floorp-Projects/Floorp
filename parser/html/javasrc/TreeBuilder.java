@@ -2990,8 +2990,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         }
 
         boolean shadowRootIsClonable = attributes.contains(AttributeName.SHADOWROOTCLONABLE);
+        boolean shadowRootIsSerializable = attributes.contains(AttributeName.SHADOWROOTSERIALIZABLE);
         boolean shadowRootDelegatesFocus = attributes.contains(AttributeName.SHADOWROOTDELEGATESFOCUS);
-        return getShadowRootFromHost(currentNode, templateNode, shadowRootMode, shadowRootIsClonable, shadowRootDelegatesFocus);
+        return getShadowRootFromHost(currentNode, templateNode, shadowRootMode, shadowRootIsClonable, shadowRootIsSerializable, shadowRootDelegatesFocus);
     }
 
     /**
@@ -5439,7 +5440,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     T getShadowRootFromHost(T host, T template, String shadowRootMode,
-            boolean shadowRootIsClonable, boolean shadowRootDelegatesFocus) {
+            boolean shadowRootIsClonable, boolean shadowRootIsSerializable, boolean shadowRootDelegatesFocus) {
         return null;
     }
 
