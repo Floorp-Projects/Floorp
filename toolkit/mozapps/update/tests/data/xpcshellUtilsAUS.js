@@ -2286,6 +2286,11 @@ function checkSymlink() {
  * Sets the active update and related information for updater tests.
  */
 async function setupActiveUpdate() {
+  // The update system being initialized at an unexpected time could cause
+  // unexpected effects in the reload process. Make sure that initialization
+  // has already run first.
+  await gAUS.init();
+
   let pendingState = gIsServiceTest ? STATE_PENDING_SVC : STATE_PENDING;
   let patchProps = { state: pendingState };
   let patches = getLocalPatchString(patchProps);
@@ -3164,6 +3169,11 @@ async function setupUpdaterTest(
   { requiresOmnijar = false } = {}
 ) {
   debugDump("start - updater test setup");
+  // Make sure that update has already been initialized. If post update
+  // processing unexpectedly runs between this setup and when we use these
+  // files, it may clean them up before we get the chance to use them.
+  await gAUS.init();
+
   let updatesPatchDir = getUpdateDirFile(DIR_PATCH);
   if (!updatesPatchDir.exists()) {
     updatesPatchDir.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);

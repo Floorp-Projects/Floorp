@@ -99,7 +99,7 @@ async function testCleanupSuccessLogsFIFO(
     "Last Update Elevated Log"
   );
 
-  await standardInit();
+  await testPostUpdateProcessing();
 
   Assert.ok(
     !(await gUpdateManager.getDownloadingUpdate()),
