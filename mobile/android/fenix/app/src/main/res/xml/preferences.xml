@@ -85,6 +85,7 @@
         <androidx.preference.Preference
             android:key="@string/pref_key_translation"
             app:iconSpaceReserved="false"
+            app:isPreferenceVisible="false"
             android:title="@string/preferences_translations" />
 
         <org.mozilla.fenix.settings.DefaultBrowserPreference
