@@ -167,22 +167,30 @@ class InterpreterRegisters {
                        int output_register_count)
       : registers_(total_register_count),
         output_registers_(output_registers),
+        total_register_count_(total_register_count),
         output_register_count_(output_register_count) {
     // TODO(jgruber): Use int32_t consistently for registers. Currently, CSA
     // uses int32_t while runtime uses int.
     static_assert(sizeof(int) == sizeof(int32_t));
-    DCHECK_GE(output_register_count, 2);  // At least 2 for the match itself.
-    DCHECK_GE(total_register_count, output_register_count);
-    DCHECK_LE(total_register_count, RegExpMacroAssembler::kMaxRegisterCount);
+    SBXCHECK_GE(output_register_count, 2);  // At least 2 for the match itself.
+    SBXCHECK_GE(total_register_count, output_register_count);
+    SBXCHECK_LE(total_register_count, RegExpMacroAssembler::kMaxRegisterCount);
     DCHECK_NOT_NULL(output_registers);
 
     // Initialize the output register region to -1 signifying 'no match'.
     std::memset(registers_.data(), -1,
                 output_register_count * sizeof(RegisterT));
+    USE(total_register_count_);
   }
 
-  const RegisterT& operator[](size_t index) const { return registers_[index]; }
-  RegisterT& operator[](size_t index) { return registers_[index]; }
+  const RegisterT& operator[](size_t index) const {
+    SBXCHECK_LT(index, total_register_count_);
+    return registers_[index];
+  }
+  RegisterT& operator[](size_t index) {
+    SBXCHECK_LT(index, total_register_count_);
+    return registers_[index];
+  }
 
   void CopyToOutputRegisters() {
     MemCopy(output_registers_, registers_.data(),
@@ -193,6 +201,7 @@ class InterpreterRegisters {
   static constexpr int kStaticCapacity = 64;  // Arbitrary.
   base::SmallVector<RegisterT, kStaticCapacity> registers_;
   RegisterT* const output_registers_;
+  const int total_register_count_;
   const int output_register_count_;
 };
 
