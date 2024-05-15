@@ -1273,15 +1273,18 @@ export var UrlbarTestUtils = {
     this.info("initNimbusFeature awaiting ExperimentAPI.ready");
     await lazy.ExperimentAPI.ready();
 
-    let method =
-      enrollmentType == "rollout"
-        ? "enrollWithRollout"
-        : "enrollWithFeatureConfig";
-    this.info(`initNimbusFeature awaiting ExperimentFakes.${method}`);
-    let doCleanup = await lazy.ExperimentFakes[method]({
-      featureId: lazy.NimbusFeatures[feature].featureId,
-      value: { enabled: true, ...value },
-    });
+    this.info(
+      `initNimbusFeature awaiting ExperimentFakes.enrollWithFeatureConfig`
+    );
+    const doCleanup = await lazy.ExperimentFakes.enrollWithFeatureConfig(
+      {
+        featureId: lazy.NimbusFeatures[feature].featureId,
+        value: { enabled: true, ...value },
+      },
+      {
+        isRollout: enrollmentType === "rollout",
+      }
+    );
 
     this.info("initNimbusFeature done");
 
