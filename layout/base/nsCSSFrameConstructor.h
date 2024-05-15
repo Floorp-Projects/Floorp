@@ -1660,28 +1660,50 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   nsContainerFrame* GetFloatContainingBlock(nsIFrame* aFrame);
 
  private:
-  // Build a scroll frame:
-  //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then
-  //  FinishBuildingScrollFrame.
-  // @param aNewFrame the created scrollframe --- output only
-  // @param aParentFrame the geometric parent that the scrollframe will have.
-  void BuildScrollFrame(nsFrameConstructorState& aState, nsIContent* aContent,
-                        ComputedStyle* aContentStyle, nsIFrame* aScrolledFrame,
-                        nsContainerFrame* aParentFrame,
-                        nsContainerFrame*& aNewFrame);
+  // Build a scroll container frame, and wrap the scrolled frame. The
+  // hierarchy will look like this:
+  //
+  //       ScrollContainerFrame
+  //                 ^
+  //                 |
+  //               Frame (scrolled frame you passed in as aScrolledFrame)
+  //
+  // @param aContent the content node of the child to wrap.
+  //
+  // @param aContentStyle the style that has already been resolved for the
+  // content being passed in.
+  //
+  // @param aScrolledFrame The frame of the content to wrap. This should not be
+  // initialized (i.e. Init() should not yet have been called). This method will
+  // initialize it with a scrolled pseudo and no nsIContent. The content will be
+  // attached to the scroll container frame that this function returns.
+  //
+  // @param aParentFrame The geometric parent to attach the scroll container
+  // frame to.
+  //
+  // @param aNewFrame [in/out] If this is not nullptr, we will just use it as
+  // the scroll container frame, rather than creating a new scroll container
+  // frame. Otherwise (i.e. if it's nullptr), we'll create a new scroll
+  // container frame, and return it by reference via this param.
+  void BuildScrollContainerFrame(nsFrameConstructorState& aState,
+                                 nsIContent* aContent,
+                                 ComputedStyle* aContentStyle,
+                                 nsIFrame* aScrolledFrame,
+                                 nsContainerFrame* aParentFrame,
+                                 nsContainerFrame*& aNewFrame);
 
-  // Builds the initial ScrollFrame
-  already_AddRefed<ComputedStyle> BeginBuildingScrollFrame(
+  // Builds the initial scroll container frame.
+  already_AddRefed<ComputedStyle> BeginBuildingScrollContainerFrame(
       nsFrameConstructorState& aState, nsIContent* aContent,
       ComputedStyle* aContentStyle, nsContainerFrame* aParentFrame,
       mozilla::PseudoStyleType aScrolledPseudo, bool aIsRoot,
       nsContainerFrame*& aNewFrame);
 
-  // Completes the building of the scrollframe:
+  // Completes the building of the scroll container frame.
   // Creates a view for the scrolledframe and makes it the child of the
-  // scrollframe.
-  void FinishBuildingScrollFrame(nsContainerFrame* aScrollFrame,
-                                 nsIFrame* aScrolledFrame);
+  // scroll container frame.
+  void FinishBuildingScrollContainerFrame(
+      nsContainerFrame* aScrollContainerFrame, nsIFrame* aScrolledFrame);
 
   void InitializeListboxSelect(nsFrameConstructorState& aState,
                                nsContainerFrame* aScrollFrame,
