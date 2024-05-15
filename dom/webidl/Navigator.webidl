@@ -219,15 +219,6 @@ partial interface Navigator {
   GamepadServiceTest requestGamepadServiceTest();
 };
 
-// Chrome-only interface for acquiring all gamepads. Normally, a gamepad can
-// only become visible if it gets interacted by the user. This function bypasses
-// this restriction; it allow requesting all gamepad info without user
-// interacting with the gamepads.
-partial interface Navigator {
-  [Throws, ChromeOnly]
-  Promise<sequence<Gamepad>> requestAllGamepads();
-};
-
 // https://immersive-web.github.io/webvr/spec/1.1/#interface-navigator
 partial interface Navigator {
   [NewObject, SecureContext, Pref="dom.vr.enabled"]

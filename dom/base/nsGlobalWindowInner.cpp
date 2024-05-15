@@ -6785,18 +6785,6 @@ void nsGlobalWindowInner::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads) {
   }
 }
 
-already_AddRefed<mozilla::dom::Promise> nsGlobalWindowInner::RequestAllGamepads(
-    ErrorResult& aRv) {
-  RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
-
-  if (!gamepadManager) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  return gamepadManager->RequestAllGamepads(this, aRv);
-}
-
 already_AddRefed<Gamepad> nsGlobalWindowInner::GetGamepad(
     GamepadHandle aHandle) {
   RefPtr<Gamepad> gamepad;

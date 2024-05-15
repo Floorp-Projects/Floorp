@@ -122,15 +122,6 @@ class GamepadPlatformService final {
 
   void MaybeShutdown();
 
-  nsTArray<GamepadAdded> GetAllGamePads() {
-    nsTArray<GamepadAdded> gamepads;
-
-    for (const auto& elem : mGamepadAdded) {
-      gamepads.AppendElement(elem.second);
-    }
-    return gamepads;
-  }
-
  private:
   GamepadPlatformService();
   ~GamepadPlatformService();
