@@ -5,17 +5,12 @@
 package org.mozilla.fenix.components.menu.compose
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.compose.header.SubmenuHeader
 import org.mozilla.fenix.compose.Divider
@@ -37,61 +32,50 @@ internal fun ToolsSubmenu(
     onShareMenuClick: () -> Unit,
     onOpenInAppMenuClick: () -> Unit,
 ) {
-    Column {
-        SubmenuHeader(
-            header = stringResource(id = R.string.browser_menu_tools),
-            onClick = onBackButtonClick,
-        )
+    MenuScaffold(
+        header = {
+            SubmenuHeader(
+                header = stringResource(id = R.string.browser_menu_tools),
+                onClick = onBackButtonClick,
+            )
+        },
+    ) {
+        MenuGroup {
+            ReaderViewMenuItem(
+                isReaderViewActive = isReaderViewActive,
+                onClick = onReaderViewMenuClick,
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Divider(color = FirefoxTheme.colors.borderSecondary)
 
-        Column(
-            modifier = Modifier
-                .padding(
-                    start = 16.dp,
-                    top = 12.dp,
-                    end = 16.dp,
-                    bottom = 32.dp,
-                ),
-            verticalArrangement = Arrangement.spacedBy(32.dp),
-        ) {
-            MenuGroup {
-                ReaderViewMenuItem(
-                    isReaderViewActive = isReaderViewActive,
-                    onClick = onReaderViewMenuClick,
-                )
+            TranslationMenuItem(
+                isTranslated = isTranslated,
+                onClick = onTranslatePageMenuClick,
+            )
+        }
 
-                Divider(color = FirefoxTheme.colors.borderSecondary)
+        MenuGroup {
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_print),
+                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_print_24),
+                onClick = onPrintMenuClick,
+            )
 
-                TranslationMenuItem(
-                    isTranslated = isTranslated,
-                    onClick = onTranslatePageMenuClick,
-                )
-            }
+            Divider(color = FirefoxTheme.colors.borderSecondary)
 
-            MenuGroup {
-                MenuItem(
-                    label = stringResource(id = R.string.browser_menu_print),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_print_24),
-                    onClick = onPrintMenuClick,
-                )
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_share_2),
+                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_share_android_24),
+                onClick = onShareMenuClick,
+            )
 
-                Divider(color = FirefoxTheme.colors.borderSecondary)
+            Divider(color = FirefoxTheme.colors.borderSecondary)
 
-                MenuItem(
-                    label = stringResource(id = R.string.browser_menu_share_2),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_share_android_24),
-                    onClick = onShareMenuClick,
-                )
-
-                Divider(color = FirefoxTheme.colors.borderSecondary)
-
-                MenuItem(
-                    label = stringResource(id = R.string.browser_menu_open_app_link),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_more_grid_24),
-                    onClick = onOpenInAppMenuClick,
-                )
-            }
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_open_app_link),
+                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_more_grid_24),
+                onClick = onOpenInAppMenuClick,
+            )
         }
     }
 }
