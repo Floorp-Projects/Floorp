@@ -340,7 +340,7 @@ wmf-media-engine:
 media-gpu:
     description: "{description} for running media tests on the GPU worker"
     component: "Core::Audio/Video: Playback"
-    expiration: "2024-04-21"
+    expiration: "2024-11-15"
     suffix: "mda-gpu"
     mozinfo: "mda_gpu"
     when:
