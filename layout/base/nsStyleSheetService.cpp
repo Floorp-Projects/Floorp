@@ -155,7 +155,7 @@ nsresult nsStyleSheetService::LoadAndRegisterSheetInternal(
       return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr<css::Loader> loader = new css::Loader;
+  auto loader = MakeRefPtr<css::Loader>();
   auto result = loader->LoadSheetSync(aSheetURI, parsingMode,
                                       css::Loader::UseSystemPrincipal::Yes);
   if (result.isErr()) {

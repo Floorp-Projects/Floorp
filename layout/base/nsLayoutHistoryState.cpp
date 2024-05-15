@@ -34,8 +34,7 @@ class nsLayoutHistoryState final : public nsILayoutHistoryState,
 };
 
 already_AddRefed<nsILayoutHistoryState> NS_NewLayoutHistoryState() {
-  RefPtr<nsLayoutHistoryState> state = new nsLayoutHistoryState();
-  return state.forget();
+  return MakeAndAddRef<nsLayoutHistoryState>();
 }
 
 NS_IMPL_ISUPPORTS(nsLayoutHistoryState, nsILayoutHistoryState,
