@@ -144,16 +144,15 @@ JSObject* HTMLDetailsElement::WrapNode(JSContext* aCx,
   return HTMLDetailsElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void HTMLDetailsElement::HandleInvokeInternal(nsAtom* aAction,
+void HTMLDetailsElement::HandleInvokeInternal(InvokeAction aAction,
                                               ErrorResult& aRv) {
-  if (nsContentUtils::EqualsIgnoreASCIICase(aAction, nsGkAtoms::_auto) ||
-      nsContentUtils::EqualsIgnoreASCIICase(aAction, nsGkAtoms::toggle)) {
+  if (aAction == InvokeAction::Auto || aAction == InvokeAction::Toggle) {
     ToggleOpen();
-  } else if (nsContentUtils::EqualsIgnoreASCIICase(aAction, nsGkAtoms::close)) {
+  } else if (aAction == InvokeAction::Close) {
     if (Open()) {
       SetOpen(false, IgnoreErrors());
     }
-  } else if (nsContentUtils::EqualsIgnoreASCIICase(aAction, nsGkAtoms::open)) {
+  } else if (aAction == InvokeAction::Open) {
     if (!Open()) {
       SetOpen(true, IgnoreErrors());
     }

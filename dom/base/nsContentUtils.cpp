@@ -3659,6 +3659,23 @@ nsresult nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
 }
 
 // static
+bool nsContentUtils::ContainsChar(nsAtom* aAtom, char aChar) {
+  const uint32_t len = aAtom->GetLength();
+  if (!len) {
+    return false;
+  }
+  const char16_t* name = aAtom->GetUTF16String();
+  uint32_t i = 0;
+  while (i < len) {
+    if (name[i] == aChar) {
+      return true;
+    }
+    i++;
+  }
+  return false;
+}
+
+// static
 bool nsContentUtils::IsNameWithDash(nsAtom* aName) {
   // A valid custom element name is a sequence of characters name which
   // must match the PotentialCustomElementName production:

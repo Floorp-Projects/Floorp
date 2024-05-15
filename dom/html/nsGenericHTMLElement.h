@@ -55,6 +55,8 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
  public:
   using Element::Focus;
   using Element::SetTabIndex;
+  using InvokeAction = mozilla::dom::InvokeAction;
+
   explicit nsGenericHTMLElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : nsGenericHTMLElementBase(std::move(aNodeInfo)) {
@@ -1260,7 +1262,7 @@ class nsGenericHTMLFormControlElementWithState
   mozilla::dom::Element* GetInvokeTargetElement() const;
   void SetInvokeTargetElement(mozilla::dom::Element*);
   void GetInvokeAction(nsAString& aValue) const;
-  nsAtom* GetInvokeAction() const;
+  InvokeAction GetInvokeAction(nsAtom* aAtom) const;
   void SetInvokeAction(const nsAString& aValue) {
     SetHTMLAttr(nsGkAtoms::invokeaction, aValue);
   }

@@ -976,6 +976,11 @@ class nsContentUtils {
                                             nsIURI* aBaseURI);
 
   /**
+   * Returns true if |aAtom| contains at least one |aChar|.
+   */
+  static bool ContainsChar(nsAtom* aAtom, char aChar);
+
+  /**
    * Returns true if |aName| is a name with dashes.
    */
   static bool IsNameWithDash(nsAtom* aName);
