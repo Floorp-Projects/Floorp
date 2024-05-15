@@ -2658,21 +2658,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     }
   }
 
-  // Resize events should be fired before layout flushes or calling animation
-  // frame callbacks.
-  // Step 8. For each doc of docs, run the resize steps for doc.
-  // FIXME(emilio, bug 1896760): This should happen per spec below, near the
-  // scroll steps.
-  DispatchResizeEvents();
-  DispatchVisualViewportResizeEvents();
-
-  if (!mPresContext || !mPresContext->GetPresShell()) {
-    return StopTimer();
-  }
-
   // Dispatch coalesced input events.
-  // FIXME(emilio, bug 1896760): This should happen before resize events
-  // probably.
   if (!TickObserverArray(0, aNowTime)) {
     return StopTimer();
   }
@@ -2713,6 +2699,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   // Step 7. For each doc of docs, flush autofocus candidates for doc if its
   // node navigable is a top-level traversable.
   FlushAutoFocusDocuments();
+
+  // Step 8. For each doc of docs, run the resize steps for doc.
+  DispatchResizeEvents();
+  DispatchVisualViewportResizeEvents();
 
   // Step 9. For each doc of docs, run the scroll steps for doc.
   DispatchScrollEvents();
