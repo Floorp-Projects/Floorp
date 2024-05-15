@@ -15,6 +15,12 @@ AllowCompilerWarnings()
 
 OS_LIBS += CONFIG["DL_LIBS"]
 
+# for gethostbyname_r
+OS_LIBS += CONFIG["C_R_LIBS"]
+
+# for socket
+OS_LIBS += CONFIG["SOCKET_LIBS"]
+
 DEFINES["_NSPR_BUILD_"] = True
 if CONFIG["OS_ARCH"] == "Linux":
     OS_LIBS += CONFIG["REALTIME_LIBS"]
