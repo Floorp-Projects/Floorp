@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.geckoview.BuildConfig;
+import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.C;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.DefaultLoadControl;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.ExoPlaybackException;
@@ -355,7 +356,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
   private HttpDataSource.Factory buildHttpDataSourceFactory(
       final DefaultBandwidthMeter bandwidthMeter) {
     return new DefaultHttpDataSourceFactory(
-        BuildConfig.USER_AGENT_GECKOVIEW_MOBILE,
+        GeckoSession.getDefaultUserAgent(),
         bandwidthMeter /* listener */,
         DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
         DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
