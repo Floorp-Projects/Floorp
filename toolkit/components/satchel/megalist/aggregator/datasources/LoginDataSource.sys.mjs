@@ -376,7 +376,7 @@ export class LoginDataSource extends DataSourceBase {
   }
 
   confirmRetryImport() {
-    // TODO: Implement this.
+    this.#header.executeImport();
     this.cancelDialog();
   }
 
