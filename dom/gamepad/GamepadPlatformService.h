@@ -8,6 +8,7 @@
 #define mozilla_dom_GamepadPlatformService_h_
 
 #include "mozilla/dom/GamepadBinding.h"
+#include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadHandle.h"
 
 #include <map>
@@ -18,7 +19,6 @@
 
 namespace mozilla::dom {
 
-class GamepadAdded;
 class GamepadEventChannelParent;
 enum class GamepadLightIndicatorType : uint8_t;
 struct GamepadPoseState;
@@ -121,6 +121,15 @@ class GamepadPlatformService final {
   void RemoveChannelParent(GamepadEventChannelParent* aParent);
 
   void MaybeShutdown();
+
+  nsTArray<GamepadAdded> GetAllGamePads() {
+    nsTArray<GamepadAdded> gamepads;
+
+    for (const auto& elem : mGamepadAdded) {
+      gamepads.AppendElement(elem.second);
+    }
+    return gamepads;
+  }
 
  private:
   GamepadPlatformService();

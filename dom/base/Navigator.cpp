@@ -1643,6 +1643,20 @@ GamepadServiceTest* Navigator::RequestGamepadServiceTest(ErrorResult& aRv) {
   return mGamepadServiceTest;
 }
 
+already_AddRefed<Promise> Navigator::RequestAllGamepads(ErrorResult& aRv) {
+  if (!mWindow || !mWindow->IsFullyActive()) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
+
+  // We need to set the flag to trigger the parent process to start monitoring
+  // gamepads. Otherwise, we cannot get any gamepad information.
+  win->SetHasGamepadEventListener(true);
+  return win->RequestAllGamepads(aRv);
+}
+
 already_AddRefed<Promise> Navigator::GetVRDisplays(ErrorResult& aRv) {
   if (!mWindow || !mWindow->GetDocShell() || !mWindow->GetExtantDoc()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
