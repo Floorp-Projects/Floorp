@@ -9,7 +9,7 @@ registerCleanupFunction(() => SpecialPowers.popPrefEnv());
 add_task(async function test_customize_sidebar_actions() {
   const win = await BrowserTestUtils.openNewBrowserWindow();
   const { document } = win;
-  const sidebar = document.getElementById("sidebar-main");
+  const sidebar = document.querySelector("sidebar-main");
   ok(sidebar, "Sidebar is shown.");
 
   const button = sidebar.customizeButton;
