@@ -577,7 +577,7 @@ function runDoorhangerUpdateTest(params, steps) {
 
       if (checkActiveUpdate) {
         let activeUpdate = await (checkActiveUpdate.state == STATE_DOWNLOADING
-          ? gUpdateManager.downloadingUpdate
+          ? gUpdateManager.getDownloadingUpdate()
           : gUpdateManager.getReadyUpdate());
         ok(!!activeUpdate, "There should be an active update");
         is(
@@ -587,7 +587,7 @@ function runDoorhangerUpdateTest(params, steps) {
         );
       } else {
         ok(
-          !gUpdateManager.downloadingUpdate,
+          !(await gUpdateManager.getDownloadingUpdate()),
           "There should not be a downloading update"
         );
         ok(
@@ -756,7 +756,7 @@ function runAboutDialogUpdateTest(params, steps) {
 
       if (checkActiveUpdate) {
         let activeUpdate = await (checkActiveUpdate.state == STATE_DOWNLOADING
-          ? gUpdateManager.downloadingUpdate
+          ? gUpdateManager.getDownloadingUpdate()
           : gUpdateManager.getReadyUpdate());
         ok(!!activeUpdate, "There should be an active update");
         is(
@@ -766,7 +766,7 @@ function runAboutDialogUpdateTest(params, steps) {
         );
       } else {
         ok(
-          !gUpdateManager.downloadingUpdate,
+          !(await gUpdateManager.getDownloadingUpdate()),
           "There should not be a downloading update"
         );
         ok(
@@ -783,7 +783,7 @@ function runAboutDialogUpdateTest(params, steps) {
           await continueFileHandler(continueFile);
           let patch = getPatchOfType(
             data.patchType,
-            gUpdateManager.downloadingUpdate
+            await gUpdateManager.getDownloadingUpdate()
           );
           // The update is removed early when the last download fails so check
           // that there is a patch before proceeding.
@@ -929,14 +929,16 @@ function runAboutDialogUpdateTest(params, steps) {
         await continueFileHandler(params.continueFile);
       }
       if (params.waitForUpdateState) {
-        let whichUpdate =
+        let whichUpdateFn =
           params.waitForUpdateState == STATE_DOWNLOADING
-            ? "downloadingUpdate"
-            : "readyUpdate";
+            ? "getDownloadingUpdate"
+            : "getReadyUpdate";
+        let update;
         await TestUtils.waitForCondition(
-          () =>
-            gUpdateManager[whichUpdate] &&
-            gUpdateManager[whichUpdate].state == params.waitForUpdateState,
+          async () => {
+            update = await gUpdateManager[whichUpdateFn]();
+            return update && update.state == params.waitForUpdateState;
+          },
           "Waiting for update state: " + params.waitForUpdateState,
           undefined,
           200
@@ -947,7 +949,7 @@ function runAboutDialogUpdateTest(params, steps) {
         });
         // Display the UI after the update state equals the expected value.
         is(
-          gUpdateManager[whichUpdate].state,
+          update.state,
           params.waitForUpdateState,
           "The update state value should equal " + params.waitForUpdateState
         );
@@ -1065,7 +1067,7 @@ function runAboutPrefsUpdateTest(params, steps) {
 
       if (checkActiveUpdate) {
         let activeUpdate = await (checkActiveUpdate.state == STATE_DOWNLOADING
-          ? gUpdateManager.downloadingUpdate
+          ? gUpdateManager.getDownloadingUpdate()
           : gUpdateManager.getReadyUpdate());
         ok(!!activeUpdate, "There should be an active update");
         is(
@@ -1075,7 +1077,7 @@ function runAboutPrefsUpdateTest(params, steps) {
         );
       } else {
         ok(
-          !gUpdateManager.downloadingUpdate,
+          !(await gUpdateManager.getDownloadingUpdate()),
           "There should not be a downloading update"
         );
         ok(
@@ -1094,7 +1096,7 @@ function runAboutPrefsUpdateTest(params, steps) {
           await continueFileHandler(continueFile);
           let patch = getPatchOfType(
             data.patchType,
-            gUpdateManager.downloadingUpdate
+            await gUpdateManager.getDownloadingUpdate()
           );
           // The update is removed early when the last download fails so check
           // that there is a patch before proceeding.
@@ -1265,14 +1267,16 @@ function runAboutPrefsUpdateTest(params, steps) {
       if (params.waitForUpdateState) {
         // Wait until the update state equals the expected value before
         // displaying the UI.
-        let whichUpdate =
+        let whichUpdateFn =
           params.waitForUpdateState == STATE_DOWNLOADING
-            ? "downloadingUpdate"
-            : "readyUpdate";
+            ? "getDownloadingUpdate"
+            : "getReadyUpdate";
+        let update;
         await TestUtils.waitForCondition(
-          () =>
-            gUpdateManager[whichUpdate] &&
-            gUpdateManager[whichUpdate].state == params.waitForUpdateState,
+          async () => {
+            update = await gUpdateManager[whichUpdateFn]();
+            return update && update.state == params.waitForUpdateState;
+          },
           "Waiting for update state: " + params.waitForUpdateState,
           undefined,
           200
@@ -1282,7 +1286,7 @@ function runAboutPrefsUpdateTest(params, steps) {
           logTestInfo(e);
         });
         is(
-          gUpdateManager[whichUpdate].state,
+          update.state,
           params.waitForUpdateState,
           "The update state value should equal " + params.waitForUpdateState
         );

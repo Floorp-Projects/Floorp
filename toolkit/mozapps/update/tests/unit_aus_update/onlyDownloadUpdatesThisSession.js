@@ -53,12 +53,10 @@ add_task(async function onlyDownloadUpdatesThisSession() {
     !(await gUpdateManager.getReadyUpdate()),
     "There should not be a ready update. The update should still be downloading"
   );
-  Assert.ok(
-    !!gUpdateManager.downloadingUpdate,
-    "A downloading update should exist"
-  );
+  const downloadingUpdate = await gUpdateManager.getDownloadingUpdate();
+  Assert.ok(!!downloadingUpdate, "A downloading update should exist");
   Assert.equal(
-    gUpdateManager.downloadingUpdate.state,
+    downloadingUpdate.state,
     STATE_DOWNLOADING,
     "The downloading update should still be in the downloading state"
   );

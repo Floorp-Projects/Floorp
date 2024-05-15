@@ -23,7 +23,7 @@ async function run_test() {
   standardInit();
 
   Assert.ok(
-    !gUpdateManager.downloadingUpdate,
+    !(await gUpdateManager.getDownloadingUpdate()),
     "there should not be a downloading update"
   );
   Assert.ok(

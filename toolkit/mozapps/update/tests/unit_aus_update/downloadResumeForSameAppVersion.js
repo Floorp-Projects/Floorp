@@ -27,7 +27,7 @@ async function run_test() {
     "the update manager updateCount attribute" + MSG_SHOULD_EQUAL
   );
   Assert.equal(
-    gUpdateManager.downloadingUpdate.state,
+    (await gUpdateManager.getDownloadingUpdate()).state,
     STATE_DOWNLOADING,
     "the update manager activeUpdate state attribute" + MSG_SHOULD_EQUAL
   );
