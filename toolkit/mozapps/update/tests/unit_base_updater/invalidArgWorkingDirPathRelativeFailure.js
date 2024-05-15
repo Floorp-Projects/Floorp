@@ -17,7 +17,7 @@ async function run_test() {
   setTestFilesAndDirsForFailure();
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, null, "test", null);
-  await standardInit();
+  await testPostUpdateProcessing();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   await waitForUpdateXMLFiles();
