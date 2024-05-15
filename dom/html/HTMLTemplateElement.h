@@ -65,6 +65,13 @@ class HTMLTemplateElement final : public nsGenericHTMLElement {
     SetHTMLBoolAttr(nsGkAtoms::shadowrootclonable, aValue, aRv);
   }
 
+  bool ShadowRootSerializable() const {
+    return GetBoolAttr(nsGkAtoms::shadowrootserializable);
+  }
+  void SetShadowRootSerializable(bool aValue, ErrorResult& aRv) {
+    SetHTMLBoolAttr(nsGkAtoms::shadowrootserializable, aValue, aRv);
+  }
+
   MOZ_CAN_RUN_SCRIPT
   void SetHTMLUnsafe(const nsAString& aHTML) final;
 

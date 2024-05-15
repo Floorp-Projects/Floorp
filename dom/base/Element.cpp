@@ -1286,12 +1286,14 @@ already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
 
   return AttachShadowWithoutNameChecks(
       aInit.mMode, DelegatesFocus(aInit.mDelegatesFocus), aInit.mSlotAssignment,
-      ShadowRootClonable(aInit.mClonable));
+      ShadowRootClonable(aInit.mClonable),
+      ShadowRootSerializable(aInit.mSerializable));
 }
 
 already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
     ShadowRootMode aMode, DelegatesFocus aDelegatesFocus,
-    SlotAssignmentMode aSlotAssignment, ShadowRootClonable aClonable) {
+    SlotAssignmentMode aSlotAssignment, ShadowRootClonable aClonable,
+    ShadowRootSerializable aSerializable) {
   nsAutoScriptBlocker scriptBlocker;
 
   auto* nim = mNodeInfo->NodeInfoManager();
@@ -1317,7 +1319,7 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
    */
   RefPtr<ShadowRoot> shadowRoot = new (nim)
       ShadowRoot(this, aMode, aDelegatesFocus, aSlotAssignment, aClonable,
-                 ShadowRootDeclarative::No, nodeInfo.forget());
+                 aSerializable, ShadowRootDeclarative::No, nodeInfo.forget());
 
   if (NodeOrAncestorHasDirAuto()) {
     shadowRoot->SetAncestorHasDirAuto();
@@ -5059,6 +5061,18 @@ void Element::SetHTML(const nsAString& aInnerHTML,
   mb.NodesAdded();
   nsContentUtils::FireMutationEventsForDirectParsing(doc, target,
                                                      oldChildCount);
+}
+
+void Element::GetHTML(const GetHTMLOptions& aOptions, nsAString& aResult) {
+  if (aOptions.mSerializableShadowRoots || !aOptions.mShadowRoots.IsEmpty()) {
+    nsContentUtils::SerializeNodeToMarkup<SerializeShadowRoots::Yes>(
+        this, true, aResult, aOptions.mSerializableShadowRoots,
+        aOptions.mShadowRoots);
+  } else {
+    nsContentUtils::SerializeNodeToMarkup<SerializeShadowRoots::No>(
+        this, true, aResult, aOptions.mSerializableShadowRoots,
+        aOptions.mShadowRoots);
+  }
 }
 
 bool Element::Translate() const {
