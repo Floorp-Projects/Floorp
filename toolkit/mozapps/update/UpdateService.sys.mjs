@@ -47,6 +47,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/updates/update-checker;1",
   "nsIUpdateChecker"
 );
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "UpdateServiceStub",
+  "@mozilla.org/updates/update-service-stub;1",
+  "nsIApplicationUpdateServiceStub"
+);
 
 if (AppConstants.ENABLE_WEBDRIVER) {
   XPCOMUtils.defineLazyServiceGetter(
@@ -269,17 +275,6 @@ const DEFAULT_SOCKET_RETRYTIMEOUT = 2000;
 // Default maximum number of elevation cancelations per update version before
 // giving up.
 const DEFAULT_CANCELATIONS_OSX_MAX = 3;
-
-// This maps app IDs to their respective notification topic which signals when
-// the application's user interface has been displayed.
-const APPID_TO_TOPIC = {
-  // Firefox
-  "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}": "sessionstore-windows-restored",
-  // SeaMonkey
-  "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}": "sessionstore-windows-restored",
-  // Thunderbird
-  "{3550f703-e582-4d05-9a08-453d09bdfdc6}": "mail-startup-done",
-};
 
 // The interval for the update xml write deferred task.
 const XML_SAVER_INTERVAL_MS = 200;
@@ -1401,7 +1396,16 @@ function cleanUpReadyUpdateDir(aRemovePatchFiles = true) {
   }
 
   if (aRemovePatchFiles) {
-    let dirEntries = updateDir.directoryEntries;
+    let dirEntries;
+    try {
+      dirEntries = updateDir.directoryEntries;
+    } catch (ex) {
+      // If if doesn't exist, our job is already done.
+      if (ex.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
+        return;
+      }
+      throw ex;
+    }
     while (dirEntries.hasMoreElements()) {
       let file = dirEntries.nextFile;
       // Now, recursively remove this file.  The recursive removal is needed for
@@ -1434,7 +1438,16 @@ function cleanUpDownloadingUpdateDir() {
     return;
   }
 
-  let dirEntries = updateDir.directoryEntries;
+  let dirEntries;
+  try {
+    dirEntries = updateDir.directoryEntries;
+  } catch (ex) {
+    // If if doesn't exist, our job is already done.
+    if (ex.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
+      return;
+    }
+    throw ex;
+  }
   while (dirEntries.hasMoreElements()) {
     let file = dirEntries.nextFile;
     // Now, recursively remove this file.
@@ -2653,6 +2666,8 @@ class Update {
 }
 
 export class UpdateService {
+  #initPromise;
+
   /**
    * The downloader we are using to download updates. There is only ever one of
    * these.
@@ -2698,12 +2713,32 @@ export class UpdateService {
     this._logStatus();
 
     this.internal = {
+      init: async () => this.#init(),
       downloadUpdate: async update => this.#downloadUpdate(update),
+      postUpdateProcessing: async () => this._postUpdateProcessing(),
       stopDownload: async () => this.#stopDownload(),
       QueryInterface: ChromeUtils.generateQI([
         Ci.nsIApplicationUpdateServiceInternal,
       ]),
     };
+  }
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  async init() {
+    await lazy.UpdateServiceStub.initUpdate();
+  }
+
+  /**
+   * See nsIApplicationUpdateServiceInternal.init in nsIUpdateService.idl
+   */
+  async #init() {
+    if (!this.#initPromise) {
+      this.#initPromise = this._postUpdateProcessing();
+    }
+
+    await this.#initPromise;
   }
 
   /**
@@ -2717,42 +2752,6 @@ export class UpdateService {
    */
   async observe(subject, topic, data) {
     switch (topic) {
-      case "post-update-processing":
-        // This pref was not cleared out of profiles after it stopped being used
-        // (Bug 1420514), so clear it out on the next update to avoid confusion
-        // regarding its use.
-        Services.prefs.clearUserPref("app.update.enabled");
-        Services.prefs.clearUserPref("app.update.BITS.inTrialGroup");
-
-        // Background tasks do not notify any delayed startup notifications.
-        if (
-          !lazy.gIsBackgroundTaskMode &&
-          Services.appinfo.ID in APPID_TO_TOPIC
-        ) {
-          // Delay post-update processing to ensure that possible update
-          // dialogs are shown in front of the app window, if possible.
-          // See bug 311614.
-          Services.obs.addObserver(this, APPID_TO_TOPIC[Services.appinfo.ID]);
-          break;
-        }
-      // intentional fallthrough
-      case "sessionstore-windows-restored":
-      case "mail-startup-done":
-        // Background tasks do not notify any delayed startup notifications.
-        if (
-          !lazy.gIsBackgroundTaskMode &&
-          Services.appinfo.ID in APPID_TO_TOPIC
-        ) {
-          Services.obs.removeObserver(
-            this,
-            APPID_TO_TOPIC[Services.appinfo.ID]
-          );
-        }
-      // intentional fallthrough
-      case "test-post-update-processing":
-        // Clean up any extant updates
-        await this._postUpdateProcessing();
-        break;
       case "network:offline-status-changed":
         await this._offlineStatusChanged(data);
         break;
@@ -2815,18 +2814,12 @@ export class UpdateService {
    * from a previous application session - either report install failures (and
    * optionally attempt to fetch a different version if appropriate) or
    * notify the user of install success.
+   *
+   * This will only be called during `UpdateService` initialization and should
+   * not be called again (with possible exceptions in testing).
    */
   /* eslint-disable-next-line complexity */
   async _postUpdateProcessing() {
-    if (this.disabled) {
-      // This function is a point when we can potentially enter the update
-      // system, even with update disabled. Make sure that we do not continue
-      // because update code can have side effects that are visible to the user
-      // and give the impression that updates are enabled. For example, if we
-      // can't write to the update directory, we might complain to the user that
-      // update is broken and they should reinstall.
-      return;
-    }
     if (!this.canCheckForUpdates) {
       LOG(
         "UpdateService:_postUpdateProcessing - unable to check for " +
@@ -2834,7 +2827,8 @@ export class UpdateService {
       );
       return;
     }
-    let status = readStatusFile(getReadyUpdateDir());
+    const readyUpdateDir = getReadyUpdateDir();
+    let status = readStatusFile(readyUpdateDir);
     LOG(`UpdateService:_postUpdateProcessing - status = "${status}"`);
 
     if (!this.canApplyUpdates) {
@@ -2862,24 +2856,40 @@ export class UpdateService {
     }
 
     if (status == STATE_NONE) {
-      // A status of STATE_NONE in _postUpdateProcessing means that the
-      // update.status file is present but there isn't an update in progress.
-      // This isn't an expected state, so if we find ourselves in it, we want
-      // to just clean things up to go back to a good state.
-      LOG(
-        "UpdateService:_postUpdateProcessing - Cleaning up unexpected state."
-      );
-      if (!updates.length) {
-        updates.push(new Update(null));
+      // A status of STATE_NONE in _postUpdateProcessing means that the there
+      // isn't an update in progress. Let's make sure we initialize into a good
+      // state.
+      // Under some edgecases such as Windows system restore the
+      // active-update.xml will contain a pending update without the status
+      // file. We need to deal with that situation gracefully.
+      LOG("UpdateService:_postUpdateProcessing - Initial cleanup");
+
+      const statusFile = readyUpdateDir.clone();
+      statusFile.append(FILE_UPDATE_STATUS);
+      if (statusFile.exists()) {
+        // This file existing but not having a state in it is unexpected. In
+        // addition to putting things in a good state, put a null update in the
+        // update history if we didn't start up with any.
+        LOG("UpdateService:_postUpdateProcessing - Status file is empty?");
+
+        if (!updates.length) {
+          updates.push(new Update(null));
+        }
       }
-      for (let update of updates) {
-        update.state = STATE_FAILED;
-        update.errorCode = ERR_UPDATE_STATE_NONE;
-        update.statusText =
-          lazy.gUpdateBundle.GetStringFromName("statusFailed");
+
+      // There shouldn't be any updates when the update status is null. Mark any
+      // updates that are in there as having failed.
+      if (updates.length) {
+        for (let update of updates) {
+          update.state = STATE_FAILED;
+          update.errorCode = ERR_UPDATE_STATE_NONE;
+          update.statusText =
+            lazy.gUpdateBundle.GetStringFromName("statusFailed");
+        }
+        let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
+        pingStateAndStatusCodes(updates[0], true, newStatus);
       }
-      let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
-      pingStateAndStatusCodes(updates[0], true, newStatus);
+
       cleanupActiveUpdates();
       return;
     }
@@ -3009,7 +3019,12 @@ export class UpdateService {
           let result = await this.#downloadUpdate(
             lazy.UM.internal.downloadingUpdate
           );
-          if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
+          if (
+            result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS &&
+            result !=
+              Ci.nsIApplicationUpdateService
+                .DOWNLOAD_FAILURE_CANNOT_RESUME_IN_BACKGROUND
+          ) {
             LOG(
               "UpdateService:_postUpdateProcessing - Failed to resume patch. " +
                 "Cleaning up downloading update."
@@ -3398,6 +3413,8 @@ export class UpdateService {
    *          application update timer notification.
    */
   async _checkForBackgroundUpdates(isNotify) {
+    await this.init();
+
     if (!this.disabled && AppConstants.NIGHTLY_BUILD) {
       // Scalar ID: update.suppress_prompts
       AUSTLMY.pingSuppressPrompts();
@@ -3770,6 +3787,7 @@ export class UpdateService {
    * See nsIUpdateService.idl
    */
   async selectUpdate(updates) {
+    await this.init();
     return this.#selectUpdate(updates);
   }
 
@@ -4093,6 +4111,7 @@ export class UpdateService {
    * See nsIUpdateService.idl
    */
   async downloadUpdate(update) {
+    await this.init();
     return this.#downloadUpdate(update);
   }
 
@@ -4164,6 +4183,7 @@ export class UpdateService {
    * See nsIUpdateService.idl
    */
   async stopDownload() {
+    await this.init();
     return this.#stopDownload();
   }
 
@@ -4330,29 +4350,7 @@ export class UpdateManager {
       }
       let status = readStatusFile(getReadyUpdateDir());
       LOG(`UpdateManager:UpdateManager - status = "${status}"`);
-      // This check is performed here since UpdateService:_postUpdateProcessing
-      // won't be called when there isn't an update.status file.
-      if (status == STATE_NONE) {
-        // Under some edgecases such as Windows system restore the
-        // active-update.xml will contain a pending update without the status
-        // file. To recover from this situation clean the updates dir and move
-        // the active update to the update history.
-        LOG(
-          "UpdateManager:UpdateManager - Found update data with no status " +
-            "file. Cleaning up..."
-        );
-        this._readyUpdate.state = STATE_FAILED;
-        this._readyUpdate.errorCode = ERR_UPDATE_STATE_NONE;
-        this._readyUpdate.statusText =
-          lazy.gUpdateBundle.GetStringFromName("statusFailed");
-        let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
-        pingStateAndStatusCodes(this._readyUpdate, true, newStatus);
-        this.#addUpdateToHistory(this._readyUpdate);
-        this._readyUpdate = null;
-        this.saveUpdates();
-        cleanUpReadyUpdateDir();
-        cleanUpDownloadingUpdateDir();
-      } else if (status == STATE_DOWNLOADING) {
+      if (status == STATE_DOWNLOADING) {
         // The first update we read out of activeUpdates may not be the ready
         // update, it may be the downloading update.
         if (this._downloadingUpdate) {
@@ -4595,6 +4593,7 @@ export class UpdateManager {
    * See nsIUpdateService.idl
    */
   async getHistory() {
+    await lazy.AUS.init();
     return lazy.UM.internal.getHistory();
   }
 
@@ -4602,6 +4601,7 @@ export class UpdateManager {
    * See nsIUpdateService.idl
    */
   async getReadyUpdate() {
+    await lazy.AUS.init();
     return this._readyUpdate;
   }
 
@@ -4609,6 +4609,7 @@ export class UpdateManager {
    * See nsIUpdateService.idl
    */
   async getDownloadingUpdate() {
+    await lazy.AUS.init();
     return this._downloadingUpdate;
   }
 
@@ -4624,6 +4625,7 @@ export class UpdateManager {
    * See nsIUpdateService.idl
    */
   async addUpdateToHistory(aUpdate) {
+    await lazy.AUS.init();
     this.#addUpdateToHistory(aUpdate);
   }
 
@@ -4769,6 +4771,8 @@ export class UpdateManager {
   async #refreshUpdateStatus() {
     try {
       LOG("UpdateManager:refreshUpdateStatus - Staging done.");
+
+      await lazy.AUS.init();
 
       var update = this._readyUpdate;
       if (!update) {
@@ -4936,6 +4940,7 @@ export class UpdateManager {
     LOG(
       "UpdateManager:cleanupDownloadingUpdate - cleaning up downloading update."
     );
+    await lazy.AUS.init();
     cleanupDownloadingUpdate();
   }
 
@@ -4944,6 +4949,7 @@ export class UpdateManager {
    */
   async cleanupReadyUpdate() {
     LOG("UpdateManager:cleanupReadyUpdate - cleaning up ready update.");
+    await lazy.AUS.init();
     cleanupReadyUpdate();
   }
 
@@ -4952,6 +4958,7 @@ export class UpdateManager {
    */
   async cleanupActiveUpdates() {
     LOG("UpdateManager:cleanupActiveUpdates - cleaning up active updates.");
+    await lazy.AUS.init();
     cleanupActiveUpdates();
   }
 
@@ -4960,6 +4967,8 @@ export class UpdateManager {
    */
   async doInstallCleanup() {
     LOG("UpdateManager:doInstallCleanup - cleaning up");
+    await lazy.AUS.init();
+
     let completionPromises = [];
 
     const delete_or_log = path =>
@@ -5002,6 +5011,7 @@ export class UpdateManager {
    */
   async doUninstallCleanup() {
     LOG("UpdateManager:doUninstallCleanup - cleaning up.");
+    await lazy.AUS.init();
     let completionPromises = [];
 
     completionPromises.push(
@@ -5209,6 +5219,11 @@ export class CheckerService {
   }
 
   #checkForUpdates(checkType, internal) {
+    // Note that we should run update initialization if it was invoked
+    // externally (i.e. `internal == false`). But initialization is async and
+    // the asynchronous work of this function happens in `this.#updateCheck`, so
+    // we will delay initialization until then.
+
     LOG("CheckerService:checkForUpdates - checkType: " + checkType);
     if (!this.#validUpdateCheckType(checkType)) {
       LOG("CheckerService:checkForUpdates - Invalid checkType");
@@ -5218,7 +5233,7 @@ export class CheckerService {
     let checkId = this.#nextUpdateCheckId;
     this.#nextUpdateCheckId += 1;
 
-    // `checkType == FOREGROUND_CHECK`` can override `canCheckForUpdates`. But
+    // `checkType == FOREGROUND_CHECK` can override `canCheckForUpdates`. But
     // nothing should override enterprise policies.
     if (lazy.AUS.disabled) {
       LOG("CheckerService:checkForUpdates - disabled by policy");
@@ -5280,7 +5295,11 @@ export class CheckerService {
     };
   }
 
-  async #updateCheck(checkType, requestKey, _internal) {
+  async #updateCheck(checkType, requestKey, internal) {
+    if (!internal) {
+      await lazy.AUS.init();
+    }
+
     await waitForOtherInstances();
 
     let url;
