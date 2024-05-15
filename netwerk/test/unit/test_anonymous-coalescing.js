@@ -10,7 +10,6 @@
 var h2Port;
 var prefs;
 var http2pref;
-var extpref;
 
 function run_test() {
   h2Port = Services.env.get("MOZHTTP2_PORT");
@@ -22,10 +21,8 @@ function run_test() {
   prefs = Services.prefs;
 
   http2pref = prefs.getBoolPref("network.http.http2.enabled");
-  extpref = prefs.getBoolPref("network.http.originextension");
 
   prefs.setBoolPref("network.http.http2.enabled", true);
-  prefs.setBoolPref("network.http.originextension", true);
   prefs.setCharPref(
     "network.dns.localDomains",
     "foo.example.com, alt1.example.com"
@@ -43,7 +40,6 @@ function run_test() {
 
 function resetPrefs() {
   prefs.setBoolPref("network.http.http2.enabled", http2pref);
-  prefs.setBoolPref("network.http.originextension", extpref);
   prefs.clearUserPref("network.dns.localDomains");
 }
 

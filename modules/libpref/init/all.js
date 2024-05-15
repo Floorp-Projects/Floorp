@@ -1257,9 +1257,6 @@ pref("network.http.http3.alt-svc-mapping-for-testing", "");
 pref("network.http.altsvc.enabled", true);
 pref("network.http.altsvc.oe", false);
 
-// the origin extension impacts h2 coalescing
-pref("network.http.originextension", true);
-
 pref("network.http.diagnostics", false);
 
 pref("network.http.pacing.requests.enabled", true);
