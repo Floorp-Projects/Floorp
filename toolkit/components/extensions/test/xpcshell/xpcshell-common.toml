@@ -231,6 +231,9 @@ skip-if = ["os == 'android'"] # Android: downloads.download goes through the emb
 ["test_ext_dnr_startup_cache.js"]
 
 ["test_ext_dnr_static_rules.js"]
+requesttimeoutfactor = 4 # Prevent TV job failures on Android builds.
+
+["test_ext_dnr_static_rules_limits.js"]
 
 ["test_ext_dnr_system_restrictions.js"]
 
