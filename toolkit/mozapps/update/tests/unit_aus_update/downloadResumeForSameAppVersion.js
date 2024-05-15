@@ -20,8 +20,9 @@ async function run_test() {
 
   standardInit();
 
+  const history = await gUpdateManager.getHistory();
   Assert.equal(
-    gUpdateManager.getUpdateCount(),
+    history.length,
     0,
     "the update manager updateCount attribute" + MSG_SHOULD_EQUAL
   );

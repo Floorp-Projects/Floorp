@@ -37,7 +37,7 @@ async function run_test() {
   setTestFilesAndDirsForFailure();
   checkFilesAfterUpdateFailure(getApplyDirFile);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(
+  await checkUpdateManager(
     STATE_NONE,
     false,
     STATE_FAILED,

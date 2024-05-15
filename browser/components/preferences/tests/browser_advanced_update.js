@@ -39,12 +39,8 @@ const mockUpdateManager = {
     registrar.registerFactory(this._originalClassId, "", this.contractId, null);
   },
 
-  getUpdateCount() {
-    return this._updates.length;
-  },
-
-  getUpdateAt(index) {
-    return this._updates[index];
+  async getHistory() {
+    return [...this._updates];
   },
 
   _updates: [
@@ -114,20 +110,17 @@ add_task(async function () {
   let dialogFrame = dialogOverlay.querySelector(".dialogFrame");
   let frameDoc = dialogFrame.contentDocument;
   let updates = frameDoc.querySelectorAll("richlistitem.update");
+  const history = await mockUpdateManager.getHistory();
 
   // Test the update history numbers are correct
-  is(
-    updates.length,
-    mockUpdateManager.getUpdateCount(),
-    "The update count is incorrect."
-  );
+  is(updates.length, history.length, "The update count is incorrect.");
 
   // Test the updates are displayed correctly
   let update = null;
   let updateData = null;
   for (let i = 0; i < updates.length; ++i) {
     update = updates[i];
-    updateData = mockUpdateManager.getUpdateAt(i);
+    updateData = history[i];
 
     let testcases = [
       {

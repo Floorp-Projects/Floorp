@@ -30,7 +30,7 @@ async function run_test() {
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_VERSION_DOWNGRADE_ERROR);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(
+  await checkUpdateManager(
     STATE_NONE,
     false,
     STATE_FAILED,

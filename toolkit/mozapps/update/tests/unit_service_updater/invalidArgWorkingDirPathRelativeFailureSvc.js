@@ -29,9 +29,9 @@ async function run_test() {
     // launch the maintenance service the update.status file isn't copied from
     // the secure log directory to the patch directory and the update manager
     // won't read the failure from the update.status file.
-    checkUpdateManager(STATE_NONE, false, STATE_PENDING_SVC, 0, 1);
+    await checkUpdateManager(STATE_NONE, false, STATE_PENDING_SVC, 0, 1);
   } else {
-    checkUpdateManager(
+    await checkUpdateManager(
       STATE_NONE,
       false,
       STATE_FAILED,

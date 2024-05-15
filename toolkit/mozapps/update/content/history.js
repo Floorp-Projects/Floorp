@@ -9,21 +9,19 @@ var gUpdateHistory = {
   /**
    * Initialize the User Interface
    */
-  onLoad() {
+  async onLoad() {
     this._view = document.getElementById("historyItems");
 
     var um = Cc["@mozilla.org/updates/update-manager;1"].getService(
       Ci.nsIUpdateManager
     );
-    var uc = um.getUpdateCount();
-    if (uc) {
+    const updateHistory = await um.getHistory();
+    if (updateHistory.length) {
       while (this._view.hasChildNodes()) {
         this._view.firstChild.remove();
       }
 
-      for (var i = 0; i < uc; ++i) {
-        var update = um.getUpdateAt(i);
-
+      for (const update of updateHistory) {
         if (!update || !update.name) {
           continue;
         }
