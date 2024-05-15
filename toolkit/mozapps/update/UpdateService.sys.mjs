@@ -4367,77 +4367,73 @@ export class UpdateManager {
     }
 
     this.internal = {
+      reload: skipFiles => this.#reload(skipFiles),
       QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateManagerInternal]),
     };
   }
 
   /**
-   * See nsIObserver.idl
+   * See `nsIUpdateManagerInternal.reload` in nsIUpdateService.idl
    */
-  observe(subject, topic, data) {
-    // Hack to be able to run and cleanup tests by reloading the update data.
-    if (topic == "um-reload-update-data") {
-      if (!Cu.isInAutomation) {
-        return;
-      }
-      LOG("UpdateManager:observe - Reloading update data.");
-      if (this._updatesXMLSaver) {
-        this._updatesXMLSaver.disarm();
-      }
+  #reload(skipFiles) {
+    if (!Cu.isInAutomation) {
+      return;
+    }
+    LOG("UpdateManager:#reload - Reloading update data.");
+    if (this._updatesXMLSaver) {
+      this._updatesXMLSaver.disarm();
+    }
 
-      let updates = [];
-      this._updatesDirty = true;
-      this._readyUpdate = null;
-      this._downloadingUpdate = null;
-      transitionState(Ci.nsIApplicationUpdateService.STATE_IDLE);
-      if (data != "skip-files") {
-        let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
-        if (activeUpdates.length) {
-          this._readyUpdate = activeUpdates[0];
-          if (activeUpdates.length >= 2) {
-            this._downloadingUpdate = activeUpdates[1];
-          }
-          let status = readStatusFile(getReadyUpdateDir());
-          LOG(`UpdateManager:observe - Got status = ${status}`);
-          if (status == STATE_DOWNLOADING) {
-            this._downloadingUpdate = this._readyUpdate;
-            this._readyUpdate = null;
-            transitionState(Ci.nsIApplicationUpdateService.STATE_DOWNLOADING);
-          } else if (
-            [
-              STATE_PENDING,
-              STATE_PENDING_SERVICE,
-              STATE_PENDING_ELEVATE,
-              STATE_APPLIED,
-              STATE_APPLIED_SERVICE,
-            ].includes(status)
-          ) {
-            transitionState(Ci.nsIApplicationUpdateService.STATE_PENDING);
-          }
+    let updates = [];
+    this._updatesDirty = true;
+    this._readyUpdate = null;
+    this._downloadingUpdate = null;
+    transitionState(Ci.nsIApplicationUpdateService.STATE_IDLE);
+    if (!skipFiles) {
+      let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
+      if (activeUpdates.length) {
+        this._readyUpdate = activeUpdates[0];
+        if (activeUpdates.length >= 2) {
+          this._downloadingUpdate = activeUpdates[1];
         }
-        updates = this._loadXMLFileIntoArray(FILE_UPDATES_XML);
+        let status = readStatusFile(getReadyUpdateDir());
+        LOG(`UpdateManager:#reload - Got status = ${status}`);
+        if (status == STATE_DOWNLOADING) {
+          this._downloadingUpdate = this._readyUpdate;
+          this._readyUpdate = null;
+          transitionState(Ci.nsIApplicationUpdateService.STATE_DOWNLOADING);
+        } else if (
+          [
+            STATE_PENDING,
+            STATE_PENDING_SERVICE,
+            STATE_PENDING_ELEVATE,
+            STATE_APPLIED,
+            STATE_APPLIED_SERVICE,
+          ].includes(status)
+        ) {
+          transitionState(Ci.nsIApplicationUpdateService.STATE_PENDING);
+        }
       }
-      this._updatesCache = updates;
+      updates = this._loadXMLFileIntoArray(FILE_UPDATES_XML);
+    }
+    this._updatesCache = updates;
 
+    LOG(
+      "UpdateManager:#reload - Reloaded downloadingUpdate as " +
+        this._downloadingUpdate
+    );
+    if (this._downloadingUpdate) {
       LOG(
-        "UpdateManager:observe - Reloaded downloadingUpdate as " +
-          this._downloadingUpdate
+        "UpdateManager:#reload - Reloaded downloadingUpdate state as " +
+          this._downloadingUpdate.state
       );
-      if (this._downloadingUpdate) {
-        LOG(
-          "UpdateManager:observe - Reloaded downloadingUpdate state as " +
-            this._downloadingUpdate.state
-        );
-      }
+    }
+    LOG("UpdateManager:#reload - Reloaded readyUpdate as " + this._readyUpdate);
+    if (this._readyUpdate) {
       LOG(
-        "UpdateManager:observe - Reloaded readyUpdate as " + this._readyUpdate
+        "UpdateManager:#reload - Reloaded readyUpdate state as " +
+          this._readyUpdate.state
       );
-      if (this._readyUpdate) {
-        LOG(
-          "UpdateManager:observe - Reloaded readyUpdate state as " +
-            this._readyUpdate.state
-        );
-      }
     }
   }
 
@@ -4973,10 +4969,7 @@ export class UpdateManager {
   }
 
   classID = Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}");
-  QueryInterface = ChromeUtils.generateQI([
-    Ci.nsIUpdateManager,
-    Ci.nsIObserver,
-  ]);
+  QueryInterface = ChromeUtils.generateQI([Ci.nsIUpdateManager]);
 }
 
 /**

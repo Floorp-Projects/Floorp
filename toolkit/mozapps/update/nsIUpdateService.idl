@@ -771,6 +771,15 @@ interface nsIUpdateSyncManager : nsISupports
 [scriptable, uuid(a5739dda-b94f-47e1-a6f3-224d46d6cb8c)]
 interface nsIUpdateManagerInternal : nsISupports
 {
+  /**
+   * ** Test-only Method **
+   *
+   * Reloads the update manager's data. This will only work in testing.
+   * @param skipFiles
+   *        If `true`, don't reload data from the XMLs, just clear out existing
+   *        data.
+   */
+  void reload(in boolean skipFiles);
 };
 
 /**

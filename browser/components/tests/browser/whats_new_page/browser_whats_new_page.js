@@ -103,6 +103,5 @@ add_task(async function whats_new_page() {
   updatesFile.remove(false);
   Cc["@mozilla.org/updates/update-manager;1"]
     .getService(Ci.nsIUpdateManager)
-    .QueryInterface(Ci.nsIObserver)
-    .observe(null, "um-reload-update-data", "");
+    .internal.reload(false);
 });
