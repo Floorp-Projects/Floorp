@@ -11396,12 +11396,12 @@
 
 - name: memory.phc.avg_delay.content.first
   type: uint32_t
-  value: 65536
+  value: 16384
   mirror: always
 
 - name: memory.phc.avg_delay.content.normal
   type: uint32_t
-  value: 16384
+  value: 4096
   mirror: always
 
 - name: memory.phc.avg_delay.content.page_reuse
