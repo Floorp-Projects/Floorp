@@ -513,7 +513,7 @@ class MixModeBlender {
 
     gfxContextAutoSaveRestore save(mSourceCtx);
     mSourceCtx->SetMatrix(Matrix());  // This will be restored right after.
-    RefPtr<gfxPattern> pattern = new gfxPattern(
+    auto pattern = MakeRefPtr<gfxPattern>(
         targetSurf, Matrix::Translation(mTargetOffset.x, mTargetOffset.y));
     mSourceCtx->SetPattern(pattern);
     mSourceCtx->Paint();

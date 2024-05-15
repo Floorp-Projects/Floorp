@@ -1676,8 +1676,7 @@ Element* SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
       aFrame->GetContent()
           ->OwnerDoc()
           ->ReferrerInfoForInternalCSSAndSVGResources();
-  RefPtr<URLAndReferrerInfo> url =
-      new URLAndReferrerInfo(targetURI, referrerInfo);
+  auto url = MakeRefPtr<URLAndReferrerInfo>(targetURI, referrerInfo);
 
   return static_cast<SVGMozElementObserver*>(
              hashtable
