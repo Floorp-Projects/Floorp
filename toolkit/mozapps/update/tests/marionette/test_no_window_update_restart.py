@@ -239,7 +239,7 @@ class TestNoWindowUpdateRestart(MarionetteTestCase):
 
                 let aus = Cc["@mozilla.org/updates/update-service;1"]
                     .getService(Ci.nsIApplicationUpdateService);
-                aus.checkForBackgroundUpdates();
+                await aus.checkForBackgroundUpdates();
 
                 await updateDownloadedPromise;
 

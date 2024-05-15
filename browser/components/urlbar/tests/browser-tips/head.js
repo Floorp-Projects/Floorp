@@ -135,7 +135,7 @@ async function initUpdate(params) {
     getVersionParams();
   if (params.backgroundUpdate) {
     setUpdateURL(updateURL);
-    gAUS.checkForBackgroundUpdates();
+    await gAUS.checkForBackgroundUpdates();
     if (params.continueFile) {
       await continueFileHandler(params.continueFile);
     }

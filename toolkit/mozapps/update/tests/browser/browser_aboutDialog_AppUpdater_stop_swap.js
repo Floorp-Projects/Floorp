@@ -34,9 +34,9 @@ add_task(async function aboutDialog_backgroundCheck_multiUpdate() {
       checkActiveUpdate: { state: STATE_APPLIED },
       continueFile: null,
     },
-    () => {
+    async () => {
       prepareToDownloadVersion(SECOND_UPDATE_VERSION);
-      gAUS.checkForBackgroundUpdates();
+      await gAUS.checkForBackgroundUpdates();
     },
     {
       panelId: "applying",
