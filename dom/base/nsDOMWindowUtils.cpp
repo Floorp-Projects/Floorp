@@ -3315,20 +3315,6 @@ nsDOMWindowUtils::CheckAndClearDisplayListState(Element* aElement,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::IsPartOfOpaqueLayer(Element* aElement, bool* aResult) {
-  if (!aElement) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsIFrame* frame = aElement->GetPrimaryFrame();
-  if (!frame) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::EnableDialogs() {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);

@@ -1744,14 +1744,6 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean checkAndClearDisplayListState(in Element aElement);
 
   /**
-   * Check whether all display items of the primary frame of aElement have been
-   * assigned to the same single PaintedLayer in the last paint. If that is the
-   * case, returns whether that PaintedLayer is opaque; if it's not the case, an
-   * exception is thrown.
-   */
-  boolean isPartOfOpaqueLayer(in Element aElement);
-
-  /**
    * Get internal id of the stored blob, file or file handle.
    */
   [implicit_jscontext] long long getFileId(in jsval aFile);
