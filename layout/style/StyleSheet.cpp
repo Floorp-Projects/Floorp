@@ -743,8 +743,7 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
   loadData->mIsBeingParsed = true;
   MOZ_ASSERT(!mReplacePromise);
   mReplacePromise = promise;
-  RefPtr<css::SheetLoadDataHolder> holder(
-      new css::SheetLoadDataHolder(__func__, loadData, false));
+  auto holder = MakeRefPtr<css::SheetLoadDataHolder>(__func__, loadData, false);
   ParseSheet(*loader, aText, holder)
       ->Then(
           target, __func__,
@@ -1156,8 +1155,8 @@ void StyleSheet::FixUpAfterInnerClone() {
 
 already_AddRefed<StyleSheet> StyleSheet::CreateEmptyChildSheet(
     already_AddRefed<dom::MediaList> aMediaList) const {
-  RefPtr<StyleSheet> child =
-      new StyleSheet(ParsingMode(), CORSMode::CORS_NONE, SRIMetadata());
+  auto child =
+      MakeRefPtr<StyleSheet>(ParsingMode(), CORSMode::CORS_NONE, SRIMetadata());
 
   child->mMedia = aMediaList;
   return child.forget();

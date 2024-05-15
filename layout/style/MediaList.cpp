@@ -65,9 +65,8 @@ void MediaList::DoMediaChange(Func aCallback, ErrorResult& aRv) {
 }
 
 already_AddRefed<MediaList> MediaList::Clone() {
-  RefPtr<MediaList> clone =
-      new MediaList(Servo_MediaList_DeepClone(mRawList).Consume());
-  return clone.forget();
+  return MakeAndAddRef<MediaList>(
+      Servo_MediaList_DeepClone(mRawList).Consume());
 }
 
 MediaList::MediaList() : mRawList(Servo_MediaList_Create().Consume()) {}

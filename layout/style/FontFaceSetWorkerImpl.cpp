@@ -193,8 +193,8 @@ void FontFaceSetWorkerImpl::DispatchToOwningThread(
     std::function<void()> mFunc;
   };
 
-  RefPtr<FontFaceSetWorkerRunnable> runnable =
-      new FontFaceSetWorkerRunnable(workerPrivate, std::move(aFunc));
+  auto runnable =
+      MakeRefPtr<FontFaceSetWorkerRunnable>(workerPrivate, std::move(aFunc));
   runnable->Dispatch(workerPrivate);
 }
 
@@ -262,8 +262,8 @@ nsresult FontFaceSetWorkerImpl::StartLoad(gfxUserFontEntry* aUserFontEntry,
       mWorkerRef->Private(), loadGroup, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsFontFaceLoader> fontLoader =
-      new nsFontFaceLoader(aUserFontEntry, aSrcIndex, this, channel);
+  auto fontLoader =
+      MakeRefPtr<nsFontFaceLoader>(aUserFontEntry, aSrcIndex, this, channel);
 
   if (LOG_ENABLED()) {
     nsCOMPtr<nsIURI> referrer =
