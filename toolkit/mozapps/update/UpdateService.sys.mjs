@@ -4890,7 +4890,7 @@ export class UpdateManager {
   /**
    * See nsIUpdateService.idl
    */
-  cleanupDownloadingUpdate() {
+  async cleanupDownloadingUpdate() {
     LOG(
       "UpdateManager:cleanupDownloadingUpdate - cleaning up downloading update."
     );
@@ -4900,9 +4900,17 @@ export class UpdateManager {
   /**
    * See nsIUpdateService.idl
    */
-  cleanupReadyUpdate() {
+  async cleanupReadyUpdate() {
     LOG("UpdateManager:cleanupReadyUpdate - cleaning up ready update.");
     cleanupReadyUpdate();
+  }
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  async cleanupActiveUpdates() {
+    LOG("UpdateManager:cleanupActiveUpdates - cleaning up active updates.");
+    cleanupActiveUpdates();
   }
 
   /**
