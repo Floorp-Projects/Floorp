@@ -889,6 +889,12 @@ interface nsIUpdateManager : nsISupports
   Promise getDownloadingUpdate();
 
   /**
+   * If Firefox installed an update at the launch of the current session, this
+   * will contain that update. If not, this will be `null`.
+   */
+  readonly attribute nsIUpdate updateInstalledAtStartup;
+
+  /**
    * Adds the specified update to the update history. The update history is
    * limited to 10 items, so this may also remove the last item from the
    * history.
