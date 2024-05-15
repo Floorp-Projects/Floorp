@@ -153,9 +153,18 @@ def _line(raw, skip_indent, lineno, context):
         inline = match.span() != (0, len(line))
 
         for idx, value in enumerate(values):
+            # When using `,` as a list mode in a non-inline environment, put
+            # each expression on its own line.
+            multiline_list = list_chr == "," and not inline
+
             # If we're using ',' as list mode, put a comma between each node.
             if idx > 0 and list_chr == ",":
-                children.append(VerbatimNode(", "))
+                children.append(VerbatimNode(",\n" if multiline_list else ", "))
+
+            # Expr entries such as those used in multiline lists do not indent,
+            # so add a node to handle indenting on each line.
+            if multiline_list:
+                children.append(VerbatimNode("", indent=True))
 
             # If our value isn't a node, turn it into one. Verbatim should be
             # inline unless indent isn't being skipped, and the match isn't
