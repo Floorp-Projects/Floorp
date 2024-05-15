@@ -159,6 +159,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 updateProfilerUI(it)
             },
         )
+
+        findPreference<Preference>(
+            getPreferenceKey(R.string.pref_key_translation),
+        )?.isVisible = FxNimbus.features.translations.value().globalSettingsEnabled
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -515,9 +519,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             findPreference<Preference>(
                 getPreferenceKey(R.string.pref_key_sync_debug),
             )?.isVisible = showSecretDebugMenuThisSession
-            findPreference<Preference>(
-                getPreferenceKey(R.string.pref_key_translation),
-            )?.isVisible = FxNimbus.features.translations.value().globalSettingsEnabled
             preferenceStartProfiler?.isVisible = showSecretDebugMenuThisSession &&
                 (requireContext().components.core.engine.profiler?.isProfilerActive() != null)
         }
