@@ -26,6 +26,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIWindowsRegKey.h"
 #include "nsUnicharUtils.h"
+#include "nsWindowsHelpers.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/dom/Element.h"
@@ -54,6 +55,14 @@ PSSTDAPI PropVariantToString(REFPROPVARIANT propvar, PWSTR psz, UINT cch);
 #  define UNLEN 256
 #else
 #  include <Lmcons.h>  // For UNLEN
+#  include <wrl.h>
+#  include <windows.applicationmodel.activation.h>
+#  include <windows.foundation.h>
+using namespace Microsoft::WRL;
+using namespace ABI::Windows;
+using namespace ABI::Windows::Foundation;
+using namespace ABI::Windows::ApplicationModel;
+using namespace Microsoft::WRL::Wrappers;
 #endif
 
 #include <comutil.h>
@@ -1906,6 +1915,310 @@ nsWindowsShellService::IsCurrentAppPinnedToTaskbarAsync(
   promise.forget(aPromise);
   return NS_OK;
 }
+
+#ifndef __MINGW32__
+#  define RESOLVE_AND_RETURN(HOLDER, RESOLVE, RETURN)               \
+    NS_DispatchToMainThread(                                        \
+        NS_NewRunnableFunction(__func__, [promiseHolder = HOLDER] { \
+          promiseHolder.get()->get()->MaybeResolve(RESOLVE);        \
+        }));                                                        \
+    return RETURN
+
+#  define REJECT_AND_RETURN(HOLDER, REJECT, RETURN)                 \
+    NS_DispatchToMainThread(                                        \
+        NS_NewRunnableFunction(__func__, [promiseHolder = HOLDER] { \
+          promiseHolder.get()->get()->MaybeReject(REJECT);          \
+        }));                                                        \
+    return RETURN
+
+static void EnableLaunchOnLoginMSIXAsyncImpl(
+    const nsString& capturedTaskId,
+    const RefPtr<nsMainThreadPtrHolder<dom::Promise>> promiseHolder) {
+  ComPtr<IStartupTaskStatics> startupTaskStatics;
+  HRESULT hr = GetActivationFactory(
+      HStringReference(RuntimeClass_Windows_ApplicationModel_StartupTask).Get(),
+      &startupTaskStatics);
+  if (FAILED(hr)) {
+    REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, /* void */);
+  }
+  ComPtr<IAsyncOperation<StartupTask*>> getTaskOperation = nullptr;
+  hr = startupTaskStatics->GetAsync(
+      HStringReference(capturedTaskId.get()).Get(), &getTaskOperation);
+  if (FAILED(hr)) {
+    REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, /* void */);
+  }
+  auto getTaskCallback =
+      Callback<IAsyncOperationCompletedHandler<StartupTask*>>(
+          [promiseHolder](IAsyncOperation<StartupTask*>* operation,
+                          AsyncStatus status) -> HRESULT {
+            if (status != AsyncStatus::Completed) {
+              REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, E_FAIL);
+            }
+            ComPtr<IStartupTask> startupTask;
+            HRESULT hr = operation->GetResults(&startupTask);
+            if (FAILED(hr)) {
+              REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, E_FAIL);
+            }
+            ComPtr<IAsyncOperation<StartupTaskState>> enableOperation;
+            hr = startupTask->RequestEnableAsync(&enableOperation);
+            if (FAILED(hr)) {
+              REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, E_FAIL);
+            }
+            // Set another callback for enabling the startup task
+            auto enableHandler =
+                Callback<IAsyncOperationCompletedHandler<StartupTaskState>>(
+                    [promiseHolder](
+                        IAsyncOperation<StartupTaskState>* operation,
+                        AsyncStatus status) -> HRESULT {
+                      StartupTaskState resultState;
+                      HRESULT hr = operation->GetResults(&resultState);
+                      if (SUCCEEDED(hr) && status == AsyncStatus::Completed) {
+                        RESOLVE_AND_RETURN(promiseHolder, true, S_OK);
+                      }
+                      RESOLVE_AND_RETURN(promiseHolder, false, S_OK);
+                    });
+            hr = enableOperation->put_Completed(enableHandler.Get());
+            if (FAILED(hr)) {
+              REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, hr);
+            }
+            return hr;
+          });
+  hr = getTaskOperation->put_Completed(getTaskCallback.Get());
+  if (FAILED(hr)) {
+    REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, /* void */);
+  }
+}
+
+static void DisableLaunchOnLoginMSIXAsyncImpl(
+    const nsString& capturedTaskId,
+    const RefPtr<nsMainThreadPtrHolder<dom::Promise>> promiseHolder) {
+  ComPtr<IStartupTaskStatics> startupTaskStatics;
+  HRESULT hr = GetActivationFactory(
+      HStringReference(RuntimeClass_Windows_ApplicationModel_StartupTask).Get(),
+      &startupTaskStatics);
+  if (FAILED(hr)) {
+    REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, /* void */);
+  }
+  ComPtr<IAsyncOperation<StartupTask*>> getTaskOperation = nullptr;
+  hr = startupTaskStatics->GetAsync(
+      HStringReference(capturedTaskId.get()).Get(), &getTaskOperation);
+  if (FAILED(hr)) {
+    REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, /* void */);
+  }
+  auto getTaskCallback =
+      Callback<IAsyncOperationCompletedHandler<StartupTask*>>(
+          [promiseHolder](IAsyncOperation<StartupTask*>* operation,
+                          AsyncStatus status) -> HRESULT {
+            if (status != AsyncStatus::Completed) {
+              REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, E_FAIL);
+            }
+            ComPtr<IStartupTask> startupTask;
+            HRESULT hr = operation->GetResults(&startupTask);
+            if (FAILED(hr)) {
+              REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, E_FAIL);
+            }
+            hr = startupTask->Disable();
+            if (FAILED(hr)) {
+              REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, E_FAIL);
+            }
+            RESOLVE_AND_RETURN(promiseHolder, true, S_OK);
+          });
+  hr = getTaskOperation->put_Completed(getTaskCallback.Get());
+  if (FAILED(hr)) {
+    REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, /* void */);
+  }
+}
+
+static void GetLaunchOnLoginEnabledMSIXAsyncImpl(
+    const nsString& capturedTaskId,
+    const RefPtr<nsMainThreadPtrHolder<dom::Promise>> promiseHolder) {
+  ComPtr<IStartupTaskStatics> startupTaskStatics;
+  HRESULT hr = GetActivationFactory(
+      HStringReference(RuntimeClass_Windows_ApplicationModel_StartupTask).Get(),
+      &startupTaskStatics);
+  if (FAILED(hr)) {
+    REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, /* void */);
+  }
+  ComPtr<IAsyncOperation<StartupTask*>> getTaskOperation = nullptr;
+  hr = startupTaskStatics->GetAsync(
+      HStringReference(capturedTaskId.get()).Get(), &getTaskOperation);
+  if (FAILED(hr)) {
+    REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, /* void */);
+  }
+  auto getTaskCallback =
+      Callback<IAsyncOperationCompletedHandler<StartupTask*>>(
+          [promiseHolder](IAsyncOperation<StartupTask*>* operation,
+                          AsyncStatus status) -> HRESULT {
+            if (status != AsyncStatus::Completed) {
+              REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, E_FAIL);
+            }
+            ComPtr<IStartupTask> startupTask;
+            HRESULT hr = operation->GetResults(&startupTask);
+            if (FAILED(hr)) {
+              REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, E_FAIL);
+            }
+            StartupTaskState state;
+            hr = startupTask->get_State(&state);
+            if (FAILED(hr)) {
+              REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, E_FAIL);
+            }
+            switch (state) {
+              case StartupTaskState_EnabledByPolicy:
+                RESOLVE_AND_RETURN(
+                    promiseHolder,
+                    nsIWindowsShellService::LaunchOnLoginEnabledEnumerator::
+                        LAUNCH_ON_LOGIN_ENABLED_BY_POLICY,
+                    S_OK);
+                break;
+              case StartupTaskState_Enabled:
+                RESOLVE_AND_RETURN(
+                    promiseHolder,
+                    nsIWindowsShellService::LaunchOnLoginEnabledEnumerator::
+                        LAUNCH_ON_LOGIN_ENABLED,
+                    S_OK);
+                break;
+              case StartupTaskState_DisabledByUser:
+              case StartupTaskState_DisabledByPolicy:
+                RESOLVE_AND_RETURN(
+                    promiseHolder,
+                    nsIWindowsShellService::LaunchOnLoginEnabledEnumerator::
+                        LAUNCH_ON_LOGIN_DISABLED_BY_SETTINGS,
+                    S_OK);
+                break;
+              default:
+                RESOLVE_AND_RETURN(
+                    promiseHolder,
+                    nsIWindowsShellService::LaunchOnLoginEnabledEnumerator::
+                        LAUNCH_ON_LOGIN_DISABLED,
+                    S_OK);
+            }
+          });
+  hr = getTaskOperation->put_Completed(getTaskCallback.Get());
+  if (FAILED(hr)) {
+    REJECT_AND_RETURN(promiseHolder, NS_ERROR_FAILURE, /* void */);
+  }
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::EnableLaunchOnLoginMSIXAsync(
+    const nsAString& aTaskId, JSContext* aCx,
+    /* out */ dom::Promise** aPromise) {
+  if (!widget::WinUtils::HasPackageIdentity()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+  if (MOZ_UNLIKELY(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  // A holder to pass the promise through the background task and back to
+  // the main thread when finished.
+  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
+      "EnableLaunchOnLoginMSIXAsync promise", promise);
+
+  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+      "EnableLaunchOnLoginMSIXAsync",
+      [taskId = nsString(aTaskId), promiseHolder] {
+        EnableLaunchOnLoginMSIXAsyncImpl(taskId, promiseHolder);
+      }));
+
+  promise.forget(aPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::DisableLaunchOnLoginMSIXAsync(
+    const nsAString& aTaskId, JSContext* aCx,
+    /* out */ dom::Promise** aPromise) {
+  if (!widget::WinUtils::HasPackageIdentity()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+  if (MOZ_UNLIKELY(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  // A holder to pass the promise through the background task and back to
+  // the main thread when finished.
+  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
+      "DisableLaunchOnLoginMSIXAsync promise", promise);
+
+  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+      "DisableLaunchOnLoginMSIXAsync",
+      [taskId = nsString(aTaskId), promiseHolder] {
+        DisableLaunchOnLoginMSIXAsyncImpl(taskId, promiseHolder);
+      }));
+
+  promise.forget(aPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::GetLaunchOnLoginEnabledMSIXAsync(
+    const nsAString& aTaskId, JSContext* aCx,
+    /* out */ dom::Promise** aPromise) {
+  if (!widget::WinUtils::HasPackageIdentity()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+  if (MOZ_UNLIKELY(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  // A holder to pass the promise through the background task and back to
+  // the main thread when finished.
+  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
+      "GetLaunchOnLoginEnabledMSIXAsync promise", promise);
+
+  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+      "GetLaunchOnLoginEnabledMSIXAsync",
+      [taskId = nsString(aTaskId), promiseHolder] {
+        GetLaunchOnLoginEnabledMSIXAsyncImpl(taskId, promiseHolder);
+      }));
+
+  promise.forget(aPromise);
+  return NS_OK;
+}
+#else
+NS_IMETHODIMP
+nsWindowsShellService::EnableLaunchOnLoginMSIXAsync(
+    const nsAString& aTaskId, JSContext* aCx,
+    /* out */ dom::Promise** aPromise) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::DisableLaunchOnLoginMSIXAsync(
+    const nsAString& aTaskId, JSContext* aCx,
+    /* out */ dom::Promise** aPromise) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::GetLaunchOnLoginEnabledMSIXAsync(
+    const nsAString& aTaskId, JSContext* aCx,
+    /* out */ dom::Promise** aPromise) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif
 
 NS_IMETHODIMP
 nsWindowsShellService::ClassifyShortcut(const nsAString& aPath,
