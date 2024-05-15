@@ -2280,7 +2280,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
                    !aState.mPresContext->IsPaginated() &&
                    StaticPrefs::layout_tables_scrollable_cells();
     if (isScrollable) {
-      innerPseudoStyle = BeginBuildingScrollFrame(
+      innerPseudoStyle = BeginBuildingScrollContainerFrame(
           aState, content, innerPseudoStyle, cellFrame,
           PseudoStyleType::scrolledContent, false, scrollFrame);
     }
@@ -2311,7 +2311,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
                                       std::move(childList));
 
   if (isScrollable) {
-    FinishBuildingScrollFrame(scrollFrame, cellInnerFrame);
+    FinishBuildingScrollContainerFrame(scrollFrame, cellInnerFrame);
   }
   SetInitialSingleChild(cellFrame, scrollFrame ? scrollFrame : cellInnerFrame);
   aFrameList.AppendFrame(nullptr, cellFrame);
@@ -2817,9 +2817,9 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
     // scrollbars back on the viewport and we don't want to have to
     // reframe the viewport to create the scrollbar content.
     newFrame = nullptr;
-    rootPseudoStyle =
-        BeginBuildingScrollFrame(state, aDocElement, computedStyle,
-                                 viewportFrame, rootPseudo, true, newFrame);
+    rootPseudoStyle = BeginBuildingScrollContainerFrame(
+        state, aDocElement, computedStyle, viewportFrame, rootPseudo, true,
+        newFrame);
     parentFrame = newFrame;
   }
 
@@ -2827,7 +2827,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   rootCanvasFrame->Init(aDocElement, parentFrame, nullptr);
 
   if (isScrollable) {
-    FinishBuildingScrollFrame(parentFrame, rootCanvasFrame);
+    FinishBuildingScrollContainerFrame(parentFrame, rootCanvasFrame);
   }
 
   if (isPaginated) {
@@ -3068,8 +3068,8 @@ void nsCSSFrameConstructor::InitializeListboxSelect(
 
   scrollFrame->Init(aContent, geometricParent, nullptr);
   aState.AddChild(scrollFrame, aFrameList, aContent, aParentFrame);
-  BuildScrollFrame(aState, aContent, aComputedStyle, scrolledFrame,
-                   geometricParent, scrollFrame);
+  BuildScrollContainerFrame(aState, aContent, aComputedStyle, scrolledFrame,
+                            geometricParent, scrollFrame);
   if (aState.mFrameState) {
     // Restore frame state for the scroll frame
     RestoreFrameStateFor(scrollFrame, aState.mFrameState);
@@ -3118,7 +3118,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
   const bool isScrollable = fieldsetContentDisplay->IsScrollableOverflow();
   nsContainerFrame* scrollFrame = nullptr;
   if (isScrollable) {
-    fieldsetContentStyle = BeginBuildingScrollFrame(
+    fieldsetContentStyle = BeginBuildingScrollContainerFrame(
         aState, content, fieldsetContentStyle, fieldsetFrame,
         PseudoStyleType::scrolledContent, false, scrollFrame);
   }
@@ -3203,7 +3203,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
   }
 
   if (isScrollable) {
-    FinishBuildingScrollFrame(scrollFrame, contentFrameTop);
+    FinishBuildingScrollContainerFrame(scrollFrame, contentFrameTop);
   }
 
   // We use AppendFrames here because the rendered legend will already
@@ -3242,8 +3242,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructBlockRubyFrame(
   if ((aItem.mFCData->mBits & FCDATA_MAY_NEED_SCROLLFRAME) &&
       aStyleDisplay->IsScrollableOverflow()) {
     nsContainerFrame* scrollframe = nullptr;
-    BuildScrollFrame(aState, content, computedStyle, blockFrame,
-                     geometricParent, scrollframe);
+    BuildScrollContainerFrame(aState, content, computedStyle, blockFrame,
+                              geometricParent, scrollframe);
     newFrame = scrollframe;
   } else {
     InitAndRestoreFrame(aState, content, geometricParent, blockFrame);
@@ -3727,8 +3727,8 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
     if ((bits & FCDATA_MAY_NEED_SCROLLFRAME) &&
         display->IsScrollableOverflow()) {
       nsContainerFrame* scrollframe = nullptr;
-      BuildScrollFrame(aState, content, computedStyle, newFrame,
-                       geometricParent, scrollframe);
+      BuildScrollContainerFrame(aState, content, computedStyle, newFrame,
+                                geometricParent, scrollframe);
       primaryFrame = scrollframe;
     } else {
       InitAndRestoreFrame(aState, content, geometricParent, newFrame);
@@ -4168,20 +4168,21 @@ nsCSSFrameConstructor::FindXULMenubarData(const Element& aElement,
 }
 #endif /* XP_MACOSX */
 
-already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
+already_AddRefed<ComputedStyle>
+nsCSSFrameConstructor::BeginBuildingScrollContainerFrame(
     nsFrameConstructorState& aState, nsIContent* aContent,
     ComputedStyle* aContentStyle, nsContainerFrame* aParentFrame,
     PseudoStyleType aScrolledPseudo, bool aIsRoot,
     nsContainerFrame*& aNewFrame) {
-  nsContainerFrame* gfxScrollFrame = aNewFrame;
+  nsContainerFrame* scrollContainerFrame = aNewFrame;
 
-  if (!gfxScrollFrame) {
-    gfxScrollFrame =
+  if (!scrollContainerFrame) {
+    scrollContainerFrame =
         NS_NewScrollContainerFrame(mPresShell, aContentStyle, aIsRoot);
-    InitAndRestoreFrame(aState, aContent, aParentFrame, gfxScrollFrame);
+    InitAndRestoreFrame(aState, aContent, aParentFrame, scrollContainerFrame);
   }
 
-  MOZ_ASSERT(gfxScrollFrame);
+  MOZ_ASSERT(scrollContainerFrame);
 
   // if there are any anonymous children for the scroll frame, create
   // frames for them.
@@ -4191,24 +4192,24 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
   // to the scrolledframe.
   AutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> scrollNAC;
   DebugOnly<nsresult> rv =
-      GetAnonymousContent(aContent, gfxScrollFrame, scrollNAC);
+      GetAnonymousContent(aContent, scrollContainerFrame, scrollNAC);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   nsFrameList anonymousList;
   if (!scrollNAC.IsEmpty()) {
     nsFrameConstructorSaveState floatSaveState;
-    aState.MaybePushFloatContainingBlock(gfxScrollFrame, floatSaveState);
+    aState.MaybePushFloatContainingBlock(scrollContainerFrame, floatSaveState);
 
     AutoFrameConstructionItemList items(this);
-    AutoFrameConstructionPageName pageNameTracker(aState, gfxScrollFrame);
-    AddFCItemsForAnonymousContent(aState, gfxScrollFrame, scrollNAC, items,
-                                  pageNameTracker);
-    ConstructFramesFromItemList(aState, items, gfxScrollFrame,
+    AutoFrameConstructionPageName pageNameTracker(aState, scrollContainerFrame);
+    AddFCItemsForAnonymousContent(aState, scrollContainerFrame, scrollNAC,
+                                  items, pageNameTracker);
+    ConstructFramesFromItemList(aState, items, scrollContainerFrame,
                                 /* aParentIsWrapperAnonBox = */ false,
                                 anonymousList);
   }
 
-  aNewFrame = gfxScrollFrame;
-  gfxScrollFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
+  aNewFrame = scrollContainerFrame;
+  scrollContainerFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
 
   // we used the style that was passed in. So resolve another one.
   ServoStyleSet* styleSet = mPresShell->StyleSet();
@@ -4216,69 +4217,31 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
       styleSet->ResolveInheritingAnonymousBoxStyle(aScrolledPseudo,
                                                    aContentStyle);
 
-  gfxScrollFrame->SetInitialChildList(FrameChildListID::Principal,
-                                      std::move(anonymousList));
+  scrollContainerFrame->SetInitialChildList(FrameChildListID::Principal,
+                                            std::move(anonymousList));
 
   return scrolledChildStyle.forget();
 }
 
-void nsCSSFrameConstructor::FinishBuildingScrollFrame(
-    nsContainerFrame* aScrollFrame, nsIFrame* aScrolledFrame) {
-  aScrollFrame->AppendFrames(FrameChildListID::Principal,
-                             nsFrameList(aScrolledFrame, aScrolledFrame));
+void nsCSSFrameConstructor::FinishBuildingScrollContainerFrame(
+    nsContainerFrame* aScrollContainerFrame, nsIFrame* aScrolledFrame) {
+  aScrollContainerFrame->AppendFrames(
+      FrameChildListID::Principal, nsFrameList(aScrolledFrame, aScrolledFrame));
 }
 
-/**
- * Called to wrap a gfx scrollframe around a frame. The hierarchy will look like
- * this
- *
- * ------- for gfx scrollbars ------
- *
- *
- *            ScrollFrame
- *                 ^
- *                 |
- *               Frame (scrolled frame you passed in)
- *
- *
- * -----------------------------------
- * LEGEND:
- *
- * ScrollFrame: This is a frame that manages gfx cross platform frame based
- * scrollbars.
- *
- * @param aContent the content node of the child to wrap.
- *
- * @param aScrolledFrame The frame of the content to wrap. This should not be
- * Initialized. This method will initialize it with a scrolled pseudo and no
- * nsIContent. The content will be attached to the scrollframe returned.
- *
- * @param aContentStyle the style that has already been resolved for the content
- * being passed in.
- *
- * @param aParentFrame   The parent to attach the scroll frame to
- *
- * @param aNewFrame The new scrollframe or gfx scrollframe that we create. It
- * will contain the scrolled frame you passed in. (returned) If this is not
- * null,  we'll just use it
- *
- * @param aScrolledContentStyle the style that was resolved for the scrolled
- * frame. (returned)
- */
-void nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
-                                             nsIContent* aContent,
-                                             ComputedStyle* aContentStyle,
-                                             nsIFrame* aScrolledFrame,
-                                             nsContainerFrame* aParentFrame,
-                                             nsContainerFrame*& aNewFrame) {
-  RefPtr<ComputedStyle> scrolledContentStyle = BeginBuildingScrollFrame(
-      aState, aContent, aContentStyle, aParentFrame,
-      PseudoStyleType::scrolledContent, false, aNewFrame);
+void nsCSSFrameConstructor::BuildScrollContainerFrame(
+    nsFrameConstructorState& aState, nsIContent* aContent,
+    ComputedStyle* aContentStyle, nsIFrame* aScrolledFrame,
+    nsContainerFrame* aParentFrame, nsContainerFrame*& aNewFrame) {
+  RefPtr<ComputedStyle> scrolledContentStyle =
+      BeginBuildingScrollContainerFrame(
+          aState, aContent, aContentStyle, aParentFrame,
+          PseudoStyleType::scrolledContent, false, aNewFrame);
 
   aScrolledFrame->SetComputedStyleWithoutNotification(scrolledContentStyle);
   InitAndRestoreFrame(aState, aContent, aNewFrame, aScrolledFrame);
 
-  FinishBuildingScrollFrame(aNewFrame, aScrolledFrame);
+  FinishBuildingScrollContainerFrame(aNewFrame, aScrolledFrame);
 }
 
 const nsCSSFrameConstructor::FrameConstructionData*
@@ -4477,10 +4440,11 @@ nsIFrame* nsCSSFrameConstructor::ConstructScrollableBlock(
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
   nsContainerFrame* newFrame = nullptr;
-  RefPtr<ComputedStyle> scrolledContentStyle = BeginBuildingScrollFrame(
-      aState, content, computedStyle,
-      aState.GetGeometricParent(*aDisplay, aParentFrame),
-      PseudoStyleType::scrolledContent, false, newFrame);
+  RefPtr<ComputedStyle> scrolledContentStyle =
+      BeginBuildingScrollContainerFrame(
+          aState, content, computedStyle,
+          aState.GetGeometricParent(*aDisplay, aParentFrame),
+          PseudoStyleType::scrolledContent, false, newFrame);
 
   // Create our block frame
   // pass a temporary stylecontext, the correct one will be set later
@@ -4497,7 +4461,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructScrollableBlock(
 
   MOZ_ASSERT(blockList.OnlyChild() == scrolledFrame,
              "Scrollframe's frameList should be exactly the scrolled frame!");
-  FinishBuildingScrollFrame(newFrame, scrolledFrame);
+  FinishBuildingScrollContainerFrame(newFrame, scrolledFrame);
 
   return newFrame;
 }
