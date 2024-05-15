@@ -23,6 +23,7 @@ typealias LabeledMetricType<T> = mozilla.telemetry.glean.private.LabeledMetricTy
 typealias MemoryDistributionMetricType = mozilla.telemetry.glean.private.MemoryDistributionMetricType
 typealias MemoryUnit = mozilla.telemetry.glean.private.MemoryUnit
 typealias NumeratorMetricType = mozilla.telemetry.glean.private.NumeratorMetricType
+typealias ObjectMetricType<T> = mozilla.telemetry.glean.private.ObjectMetricType<T>
 typealias ObjectSerialize = mozilla.telemetry.glean.private.ObjectSerialize
 typealias PingType<T> = mozilla.telemetry.glean.private.PingType<T>
 typealias QuantityMetricType = mozilla.telemetry.glean.private.QuantityMetricType
