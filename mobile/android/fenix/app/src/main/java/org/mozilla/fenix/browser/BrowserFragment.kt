@@ -142,7 +142,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     readerModeAvailable && !reviewQualityCheckAvailable
                 },
                 weight = { READER_MODE_WEIGHT },
-                selected = getCurrentTab()?.let {
+                selected = getSafeCurrentTab()?.let {
                     activity?.components?.core?.store?.state?.findTab(it.id)?.readerState?.active
                 } ?: false,
                 listener = browserToolbarInteractor::onReaderModePressed,
@@ -347,7 +347,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 primaryContentDescription = context.getString(R.string.browser_menu_refresh),
                 primaryImageTintResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
                 isInPrimaryState = {
-                    getCurrentTab()?.content?.loading == false
+                    getSafeCurrentTab()?.content?.loading == false
                 },
                 secondaryImage = AppCompatResources.getDrawable(
                     context,
@@ -592,7 +592,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 )!!,
                 primaryContentDescription = context.getString(R.string.browser_menu_back),
                 primaryImageTintResource = enableTint,
-                isInPrimaryState = { getCurrentTab()?.content?.canGoBack ?: false },
+                isInPrimaryState = { getSafeCurrentTab()?.content?.canGoBack ?: false },
                 secondaryImageTintResource = disableTint,
                 disableInSecondaryState = true,
                 longClickListener = {
@@ -618,7 +618,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 )!!,
                 primaryContentDescription = context.getString(R.string.browser_menu_forward),
                 primaryImageTintResource = enableTint,
-                isInPrimaryState = { getCurrentTab()?.content?.canGoForward ?: false },
+                isInPrimaryState = { getSafeCurrentTab()?.content?.canGoForward ?: false },
                 secondaryImageTintResource = disableTint,
                 disableInSecondaryState = true,
                 longClickListener = {
@@ -651,7 +651,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 primaryContentDescription = context.getString(R.string.browser_menu_refresh),
                 primaryImageTintResource = enableTint,
                 isInPrimaryState = {
-                    getCurrentTab()?.content?.loading == false
+                    getSafeCurrentTab()?.content?.loading == false
                 },
                 secondaryImage = AppCompatResources.getDrawable(
                     context,
