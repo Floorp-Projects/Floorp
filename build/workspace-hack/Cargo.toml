@@ -23,6 +23,8 @@ chrono = { version = "0.4", features = ["serde"], optional = true }
 dist-bin = { path = "../rust/dist-bin", optional = true }
 env_logger = { version = "0.10", default-features = false, features = ["color"], optional = true }
 flate2 = { version = "1", optional = true }
+fluent = { version = "0.16", default-features = false, features = ["fluent-pseudo"], optional = true }
+fluent-langneg = { version = "0.13", features = ["cldr"], optional = true }
 futures-channel = { version = "0.3", features = ["sink"], optional = true }
 futures-sink = { version = "0.3", optional = true }
 futures-core = { version = "0.3", optional = true }
@@ -30,24 +32,35 @@ futures-util = { version = "0.3", features = ["channel", "io", "sink"], optional
 getrandom = { version = "0.2", default-features = false, features = ["std"], optional = true }
 hashbrown = { version = "0.13", optional = true }
 hyper = { version = "0.14", features = ["full"], optional = true }
-indexmap = { version = "1", default-features = false, features = ["serde-1", "std"], optional = true }
+icu_locid = { version = "1", default-features = false, features = ["zerovec"], optional = true }
+indexmap = { version = "2", default-features = false, features = ["serde", "std"], optional = true }
 libc = { version = "0.2", features = ["extra_traits"] }
-log = { version = "0.4", features = ["release_max_level_info"], optional = true }
+log = { version = "0.4", features = ["release_max_level_info", "std"], optional = true }
 mio = { version = "0.8", features = ["log"], optional = true }
 num-integer = { version = "0.1", optional = true }
 num-traits = { version = "0.2", features = ["i128", "libm"], optional = true }
 once_cell = { version = "1", optional = true }
+phf = { version = "0.11", features = ["macros", "phf_macros"], optional = true }
 regex = { version = "1", optional = true }
 semver = { version = "1", features = ["serde"], optional = true }
-serde = { version = "1", features = ["derive", "rc"] }
+serde = { version = "1", features = ["alloc", "derive", "rc"] }
 serde_json = { version = "1", features = ["preserve_order", "unbounded_depth"], optional = true }
 smallvec = { version = "1", features = ["const_new", "serde", "union"], optional = true }
-time = { version = "0.3", features = ["macros", "parsing"], optional = true }
+stable_deref_trait = { version = "1", features = ["std"], optional = true }
+time = { version = "0.3", features = ["macros", "parsing", "serde"], optional = true }
+tinystr = { version = "0.7", features = ["zerovec"], optional = true }
 tokio = { version = "1", features = ["fs", "num_cpus", "rt-multi-thread"], optional = true }
 tokio-util = { version = "0.7", features = ["io"], optional = true }
 tracing = { version = "0.1", features = ["log"], optional = true }
+unic-langid = { version = "0.9", features = ["likelysubtags"], optional = true }
+unic-langid-impl = { version = "0.9", default-features = false, features = ["likelysubtags"], optional = true }
+unicode-bidi = { version = "0.3", features = ["smallvec"], optional = true }
 url = { version = "2", features = ["serde"], optional = true }
 uuid = { version = "1", features = ["serde", "v4"], optional = true }
+yoke = { version = "0.7", features = ["derive"], optional = true }
+zip = { version = "0.6", default-features = false, features = ["deflate", "flate2"], optional = true }
+zerofrom = { version = "0.1", default-features = false, features = ["alloc", "derive"], optional = true }
+zerovec = { version = "0.10", default-features = false, features = ["derive", "yoke"], optional = true }
 
 [target."cfg(windows)".dependencies]
 scopeguard = { version = "1", optional = true }
@@ -55,11 +68,14 @@ scopeguard = { version = "1", optional = true }
 [build-dependencies]
 bindgen = { version = "0.69", default-features = false, features = ["runtime"], optional = true }
 cc = { version = "1.0", features = ["parallel"], optional = true }
+itertools = { version = "0.10", default-features = false, features = ["use_alloc"], optional = true }
 libc = "0.2"
 memchr = { version = "2", optional = true }
 nom = { version = "7", optional = true }
 proc-macro2 = "1"
 quote = "1"
+time-macros = { version = "0.2", default-features = false, features = ["serde"], optional = true }
+toml = { version = "0.5", optional = true }
 regex = { version = "1", default-features = false, features = ["perf"], optional = true }
 semver = { version = "1", features = ["serde"], optional = true }
 serde = { version = "1", features = ["derive"] }
@@ -161,15 +177,22 @@ features = [
 version = "0.52"
 optional = true
 features = [
+    "Wdk_Foundation",
+    "Wdk_Storage",
+    "Wdk_Storage_FileSystem",
+    "Wdk_System_IO",
     "Wdk_System_Threading",
     "Win32_Foundation",
     "Win32_Globalization",
     "Win32_Graphics_Gdi",
+    "Win32_Networking",
+    "Win32_Networking_WinSock",
     "Win32_Security",
     "Win32_Storage_FileSystem",
     "Win32_System_Com",
     "Win32_System_Diagnostics_Debug",
     "Win32_System_ErrorReporting",
+    "Win32_System_IO",
     "Win32_System_Kernel",
     "Win32_System_LibraryLoader",
     "Win32_System_Memory",
@@ -178,22 +201,26 @@ features = [
     "Win32_System_SystemInformation",
     "Win32_System_SystemServices",
     "Win32_System_Threading",
+    "Win32_System_WindowsProgramming",
     "Win32_UI_Controls",
     "Win32_UI_Input_KeyboardAndMouse",
     "Win32_UI_Shell",
     "Win32_UI_WindowsAndMessaging",
 ]
 
+[target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies.core-foundation-sys]
+version = "0.8"
+optional = true
 
 [features]
-builtins-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex", "dep:smallvec"]
-crashreporter = ["dep:env_logger", "dep:hyper", "dep:log", "dep:serde_json", "dep:time", "dep:uuid", "dep:windows-sys"]
-geckodriver = ["dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:uuid", "dep:windows-sys"]
-gkrust = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:env_logger", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:scopeguard", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:url", "dep:uuid", "dep:windows-sys"]
+builtins-static = ["dep:bindgen", "dep:bitflags", "dep:itertools", "dep:memchr", "dep:nom", "dep:regex", "dep:smallvec"]
+crashreporter = ["dep:bindgen", "dep:bitflags", "dep:bytes", "dep:env_logger", "dep:flate2", "dep:fluent", "dep:fluent-langneg", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:itertools", "dep:log", "dep:memchr", "dep:mio", "dep:nom", "dep:once_cell", "dep:phf", "dep:regex", "dep:serde_json", "dep:smallvec", "dep:stable_deref_trait", "dep:time", "dep:time-macros", "dep:tinystr", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:unic-langid", "dep:unic-langid-impl", "dep:uuid", "dep:windows-sys", "dep:yoke", "dep:zerofrom", "dep:zerovec", "dep:zip"]
+geckodriver = ["dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:icu_locid", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:stable_deref_trait", "dep:time", "dep:time-macros", "dep:tinystr", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:unicode-bidi", "dep:url", "dep:uuid", "dep:windows-sys", "dep:yoke", "dep:zerofrom", "dep:zerovec", "dep:zip"]
+gkrust = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:core-foundation-sys", "dep:env_logger", "dep:flate2", "dep:fluent", "dep:fluent-langneg", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:icu_locid", "dep:indexmap", "dep:itertools", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:phf", "dep:regex", "dep:scopeguard", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:stable_deref_trait", "dep:time", "dep:time-macros", "dep:tinystr", "dep:toml", "dep:unic-langid", "dep:unic-langid-impl", "dep:unicode-bidi", "dep:url", "dep:uuid", "dep:windows-sys", "dep:yoke", "dep:zerofrom", "dep:zerovec"]
 gkrust-gtest = ["gkrust"]
-http3server = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:windows-sys", "dep:dist-bin"]
-ipcclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex"]
-jsrust = ["dep:arrayvec", "dep:cc", "dep:env_logger", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:num-traits", "dep:once_cell", "dep:semver", "dep:smallvec", "dep:url"]
-mozwer_s = ["dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:once_cell", "dep:serde_json", "dep:uuid", "dep:windows-sys"]
-nmhproxy = ["dep:serde_json", "dep:url"]
-osclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:env_logger", "dep:log", "dep:memchr", "dep:nom", "dep:regex"]
+http3server = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:chrono", "dep:dist-bin", "dep:env_logger", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:itertools", "dep:log", "dep:memchr", "dep:mio", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:time-macros", "dep:tokio", "dep:tokio-util", "dep:toml", "dep:tracing", "dep:unicode-bidi", "dep:url", "dep:windows-sys"]
+ipcclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:itertools", "dep:memchr", "dep:nom", "dep:regex"]
+jsrust = ["dep:arrayvec", "dep:cc", "dep:env_logger", "dep:getrandom", "dep:hashbrown", "dep:icu_locid", "dep:indexmap", "dep:log", "dep:memchr", "dep:num-traits", "dep:once_cell", "dep:semver", "dep:smallvec", "dep:stable_deref_trait", "dep:tinystr", "dep:unicode-bidi", "dep:url", "dep:yoke", "dep:zerofrom", "dep:zerovec"]
+mozwer_s = ["dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:once_cell", "dep:serde_json", "dep:uuid", "dep:windows-sys"]
+nmhproxy = ["dep:bitflags", "dep:hashbrown", "dep:indexmap", "dep:once_cell", "dep:serde_json", "dep:smallvec", "dep:unicode-bidi", "dep:url", "dep:windows-sys"]
+osclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:core-foundation-sys", "dep:env_logger", "dep:itertools", "dep:log", "dep:memchr", "dep:nom", "dep:regex"]
