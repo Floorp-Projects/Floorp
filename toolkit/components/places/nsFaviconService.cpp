@@ -647,7 +647,7 @@ nsresult nsFaviconService::OptimizeIconSizes(IconData& aIcon) {
   if (payload.mimeType.EqualsLiteral(SVG_MIME_TYPE)) {
     // Nothing to optimize, but check the payload size.
     if (payload.data.Length() >= nsIFaviconService::MAX_FAVICON_BUFFER_SIZE) {
-      aIcon.payloads.Clear();
+      return NS_ERROR_FILE_TOO_BIG;
     }
     return NS_OK;
   }
@@ -719,7 +719,7 @@ nsresult nsFaviconService::OptimizeIconSizes(IconData& aIcon) {
     }
   }
 
-  return NS_OK;
+  return aIcon.payloads.IsEmpty() ? NS_ERROR_FILE_TOO_BIG : NS_OK;
 }
 
 nsresult nsFaviconService::GetFaviconDataAsync(
