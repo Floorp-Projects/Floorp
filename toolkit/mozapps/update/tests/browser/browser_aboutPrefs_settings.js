@@ -69,7 +69,7 @@ async function changeAndVerifyUpdateWrites({
     `We should ${expectPrompt ? "" : "not "}be prompted`
   );
   is(
-    !!gUpdateManager.readyUpdate,
+    !!(await gUpdateManager.getReadyUpdate()),
     expectRemainingUpdate,
     `There should ${expectRemainingUpdate ? "" : "not "}be a ready update`
   );
@@ -92,7 +92,10 @@ add_task(async function testUpdateAutoPrefUI() {
     !gUpdateManager.downloadingUpdate,
     "There should not be a downloading update"
   );
-  ok(!gUpdateManager.readyUpdate, "There should not be a ready update");
+  ok(
+    !(await gUpdateManager.getReadyUpdate()),
+    "There should not be a ready update"
+  );
 
   info("Disable automatic updates and check that works.");
   await changeAndVerifyPref(tab, false);
@@ -100,7 +103,10 @@ add_task(async function testUpdateAutoPrefUI() {
     !gUpdateManager.downloadingUpdate,
     "There should not be a downloading update"
   );
-  ok(!gUpdateManager.readyUpdate, "There should not be a ready update");
+  ok(
+    !(await gUpdateManager.getReadyUpdate()),
+    "There should not be a ready update"
+  );
 
   let patchProps = { state: STATE_PENDING };
   let patches = getLocalPatchString(patchProps);
@@ -109,7 +115,10 @@ add_task(async function testUpdateAutoPrefUI() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_PENDING);
   reloadUpdateManagerData();
-  ok(!!gUpdateManager.readyUpdate, "There should be a ready update");
+  ok(
+    !!(await gUpdateManager.getReadyUpdate()),
+    "There should be a ready update"
+  );
 
   let { prompt } = Services;
   registerCleanupFunction(() => {
