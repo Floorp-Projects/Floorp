@@ -354,7 +354,7 @@ class AddonTest {
     fun `newFromWebExtension - must return an Addon instance`() {
         val version = "1.2.3"
         val permissions = listOf("scripting", "activeTab")
-        val hostPermissions = listOf("https://example.org/")
+        val origins = listOf("https://example.org/")
         val name = "some name"
         val description = "some description"
         val extension: WebExtension = mock()
@@ -363,12 +363,12 @@ class AddonTest {
         whenever(extension.url).thenReturn("some-url")
         whenever(extension.getMetadata()).thenReturn(metadata)
         whenever(metadata.version).thenReturn(version)
-        whenever(metadata.permissions).thenReturn(permissions)
+        whenever(metadata.requiredPermissions).thenReturn(permissions)
         whenever(metadata.optionalPermissions).thenReturn(listOf("clipboardRead"))
         whenever(metadata.grantedOptionalPermissions).thenReturn(listOf("clipboardRead"))
         whenever(metadata.optionalOrigins).thenReturn(listOf("*://*.example.com/*", "*://opt-host-perm.example.com/*"))
         whenever(metadata.grantedOptionalOrigins).thenReturn(listOf("*://*.example.com/*"))
-        whenever(metadata.hostPermissions).thenReturn(hostPermissions)
+        whenever(metadata.requiredOrigins).thenReturn(origins)
         whenever(metadata.name).thenReturn(name)
         whenever(metadata.description).thenReturn(description)
         whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(0))
@@ -389,7 +389,7 @@ class AddonTest {
         assertEquals("some-id", addon.id)
         assertEquals("some-url", addon.homepageUrl)
         assertEquals("some-download-url", addon.downloadUrl)
-        assertEquals(permissions + hostPermissions, addon.permissions)
+        assertEquals(permissions + origins, addon.permissions)
         assertEquals(
             listOf(Addon.Permission(name = "clipboardRead", granted = true)),
             addon.optionalPermissions,

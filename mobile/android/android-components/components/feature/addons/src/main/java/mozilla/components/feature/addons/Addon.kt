@@ -29,9 +29,9 @@ val logger = Logger("Addon")
  *
  * @property id The unique ID of this add-on.
  * @property author Information about the add-on author.
- * @property downloadUrl The (absolute) URL to download the latest version of the add-on file.
+ * @property downloadUrl The (absolute) URL to download the latest version of the add-on.
  * @property version The add-on version e.g "1.23.0".
- * @property permissions List of the add-on permissions for this File.
+ * @property permissions A single list with all the API and origin permissions for this add-on.
  * @property optionalPermissions Optional permissions requested or granted to this add-on.
  * @property optionalOrigins Optional origin permissions requested or granted to this add-on.
  * @property translatableName A map containing the different translations for the add-on name,
@@ -344,8 +344,7 @@ data class Addon(
             val metadata = extension.getMetadata()
             val name = metadata?.name ?: extension.id
             val description = metadata?.description ?: extension.id
-            val permissions = metadata?.permissions.orEmpty() +
-                metadata?.hostPermissions.orEmpty()
+            val permissions = metadata?.requiredPermissions.orEmpty() + metadata?.requiredOrigins.orEmpty()
             val averageRating = metadata?.averageRating ?: 0f
             val reviewCount = metadata?.reviewCount ?: 0
             val homepageUrl = metadata?.homepageUrl.orEmpty()

@@ -143,7 +143,10 @@ class WebExtensionManager
 
   @Nullable
   @Override
-  public GeckoResult<AllowOrDeny> onInstallPrompt(final @NonNull WebExtension extension) {
+  public GeckoResult<AllowOrDeny> onInstallPrompt(
+      final @NonNull WebExtension extension,
+      @NonNull String[] permissions,
+      @NonNull String[] origins) {
     return GeckoResult.allow();
   }
 

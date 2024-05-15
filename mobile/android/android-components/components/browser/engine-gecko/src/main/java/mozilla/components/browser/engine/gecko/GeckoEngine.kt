@@ -341,11 +341,19 @@ class GeckoEngine(
         this.webExtensionDelegate = webExtensionDelegate
 
         val promptDelegate = object : WebExtensionController.PromptDelegate {
-            override fun onInstallPrompt(ext: org.mozilla.geckoview.WebExtension): GeckoResult<AllowOrDeny> {
-                val extension = GeckoWebExtension(ext, runtime)
+            override fun onInstallPrompt(
+                ext: org.mozilla.geckoview.WebExtension,
+                permissions: Array<out String>,
+                origins: Array<out String>,
+            ): GeckoResult<AllowOrDeny>? {
                 val result = GeckoResult<AllowOrDeny>()
 
-                webExtensionDelegate.onInstallPermissionRequest(extension) { allow ->
+                webExtensionDelegate.onInstallPermissionRequest(
+                    GeckoWebExtension(ext, runtime),
+                    // We pass both permissions and origins as a single list of
+                    // permissions to be shown to the user.
+                    permissions.toList() + origins.toList(),
+                ) { allow ->
                     if (allow) result.complete(AllowOrDeny.ALLOW) else result.complete(AllowOrDeny.DENY)
                 }
 
@@ -362,6 +370,8 @@ class GeckoEngine(
                 webExtensionDelegate.onUpdatePermissionRequest(
                     GeckoWebExtension(current, runtime),
                     GeckoWebExtension(updated, runtime),
+                    // We pass both permissions and origins as a single list of
+                    // permissions to be shown to the user.
                     newPermissions.toList() + newOrigins.toList(),
                 ) { allow ->
                     if (allow) result.complete(AllowOrDeny.ALLOW) else result.complete(AllowOrDeny.DENY)

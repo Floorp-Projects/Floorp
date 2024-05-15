@@ -1811,79 +1811,79 @@ public class WebExtension {
     public final @NonNull Image icon;
 
     /**
-     * List of permissions to be prompted to the users.
-     *
-     * <p>Permission identifiers match entries in the manifest, see <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
-     * API permissions </a>.
-     *
-     * @deprecated Use {@link MetaData#promptPermissions} instead.
+     * @deprecated Use {@link MetaData#requiredPermissions} instead.
      */
     @Deprecated
-    @DeprecationSchedule(id = "web-extension-permission", version = 131)
-    public final @NonNull String[] permissions;
-
-    /**
-     * List of permissions to be prompted to the users.
-     *
-     * <p>Permission identifiers match entries in the manifest, see <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
-     * API permissions </a>.
-     */
+    @DeprecationSchedule(id = "web-extension-required-permissions", version = 133)
     public final @NonNull String[] promptPermissions;
 
     /**
-     * API <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/optional_permissions">optional
-     * permissions</a> requested or granted to this extension.
+     * @deprecated Use {@link MetaData#requiredPermissions} instead.
+     */
+    @Deprecated
+    @DeprecationSchedule(id = "web-extension-required-permissions", version = 133)
+    public final @NonNull String[] permissions;
+
+    /**
+     * Required permissions for this extension.
      *
-     * <p>Permission identifiers match entries in the manifest, see <a
+     * <p>See <a
+     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
+     * API permissions </a>.
+     */
+    public final @NonNull String[] requiredPermissions;
+
+    /**
+     * @deprecated Use {@link MetaData#requiredOrigins} instead.
+     */
+    @Deprecated
+    @DeprecationSchedule(id = "web-extension-required-origins", version = 133)
+    public final @NonNull String[] origins;
+
+    /**
+     * Required origin permissions for this extension.
+     *
+     * <p>See <a
+     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#Host_permissions">
+     * Host permissions </a>.
+     */
+    public final @NonNull String[] requiredOrigins;
+
+    /**
+     * Optional permissions for this extension.
+     *
+     * <p>See <a
      * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
      * API permissions </a>.
      */
     public final @NonNull String[] optionalPermissions;
 
     /**
-     * API <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/optional_permissions">optional
-     * permissions</a> granted to this extension.
+     * Granted optional permissions for this extension.
      *
-     * <p>Permission identifiers match entries in the manifest, see <a
+     * <p>See <a
      * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
      * API permissions </a>.
      */
     public final @NonNull String[] grantedOptionalPermissions;
 
     /**
-     * API <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/optional_permissions">
-     * optional origin permissions</a> requested or granted to this extension.
-     *
-     * <p>Permission identifiers match entries in the manifest, see <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
-     * API permissions </a>.
-     */
-    public final @NonNull String[] optionalOrigins;
-
-    /**
-     * API <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/optional_permissions">
-     * optional origin permissions</a> granted to this extension.
-     *
-     * <p>Permission identifiers match entries in the manifest, see <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
-     * API permissions </a>.
-     */
-    public final @NonNull String[] grantedOptionalOrigins;
-
-    /**
-     * Host permissions requested or granted to this extension.
+     * Optional origin permissions for this extension.
      *
      * <p>See <a
      * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#Host_permissions">
      * Host permissions </a>.
      */
-    public final @NonNull String[] origins;
+    public final @NonNull String[] optionalOrigins;
+
+    /**
+     * Granted optional origin permissions for this extension.
+     *
+     * <p>See <a
+     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#Host_permissions">
+     * Host permissions </a>.
+     */
+    public final @NonNull String[] grantedOptionalOrigins;
 
     /**
      * Branding name for this extension.
@@ -2057,11 +2057,13 @@ public class WebExtension {
       icon = null;
       permissions = null;
       promptPermissions = null;
+      origins = null;
+      requiredPermissions = null;
+      requiredOrigins = null;
       optionalPermissions = null;
+      optionalOrigins = null;
       grantedOptionalPermissions = null;
       grantedOptionalOrigins = null;
-      optionalOrigins = null;
-      origins = null;
       name = null;
       description = null;
       version = null;
@@ -2089,14 +2091,15 @@ public class WebExtension {
     }
 
     /* package */ MetaData(final GeckoBundle bundle) {
-      // We only expose permissions that the embedder should prompt for
-      permissions = bundle.getStringArray("promptPermissions");
-      promptPermissions = bundle.getStringArray("promptPermissions");
+      permissions = bundle.getStringArray("requiredPermissions");
+      promptPermissions = bundle.getStringArray("requiredPermissions");
+      requiredPermissions = bundle.getStringArray("requiredPermissions");
+      origins = bundle.getStringArray("requiredOrigins");
+      requiredOrigins = bundle.getStringArray("requiredOrigins");
       optionalPermissions = bundle.getStringArray("optionalPermissions");
-      grantedOptionalPermissions = bundle.getStringArray("grantedOptionalPermissions");
       optionalOrigins = bundle.getStringArray("optionalOrigins");
+      grantedOptionalPermissions = bundle.getStringArray("grantedOptionalPermissions");
       grantedOptionalOrigins = bundle.getStringArray("grantedOptionalOrigins");
-      origins = bundle.getStringArray("origins");
       description = bundle.getString("description");
       version = bundle.getString("version");
       creatorName = bundle.getString("creatorName");

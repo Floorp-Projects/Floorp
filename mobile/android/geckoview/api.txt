@@ -2666,9 +2666,11 @@ package org.mozilla.geckoview {
     field @NonNull public final String[] optionalOrigins;
     field @NonNull public final String[] optionalPermissions;
     field @Nullable public final String optionsPageUrl;
-    field @NonNull public final String[] origins;
-    field @Deprecated @DeprecationSchedule(id="web-extension-permission",version=131) @NonNull public final String[] permissions;
-    field @NonNull public final String[] promptPermissions;
+    field @Deprecated @DeprecationSchedule(id="web-extension-required-origins",version=133) @NonNull public final String[] origins;
+    field @Deprecated @DeprecationSchedule(id="web-extension-required-permissions",version=133) @NonNull public final String[] permissions;
+    field @Deprecated @DeprecationSchedule(id="web-extension-required-permissions",version=133) @NonNull public final String[] promptPermissions;
+    field @NonNull public final String[] requiredOrigins;
+    field @NonNull public final String[] requiredPermissions;
     field public final int reviewCount;
     field @Nullable public final String reviewUrl;
     field public final int signedState;
@@ -2797,7 +2799,8 @@ package org.mozilla.geckoview {
   }
 
   @UiThread public static interface WebExtensionController.PromptDelegate {
-    method @Nullable default public GeckoResult<AllowOrDeny> onInstallPrompt(@NonNull WebExtension);
+    method @Deprecated @DeprecationSchedule(id="web-extension-required-permissions",version=133) @Nullable default public GeckoResult<AllowOrDeny> onInstallPrompt(@NonNull WebExtension);
+    method @Nullable default public GeckoResult<AllowOrDeny> onInstallPrompt(@NonNull WebExtension, @NonNull String[], @NonNull String[]);
     method @Nullable default public GeckoResult<AllowOrDeny> onOptionalPrompt(@NonNull WebExtension, @NonNull String[], @NonNull String[]);
     method @Nullable default public GeckoResult<AllowOrDeny> onUpdatePrompt(@NonNull WebExtension, @NonNull WebExtension, @NonNull String[], @NonNull String[]);
   }

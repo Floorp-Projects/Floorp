@@ -402,7 +402,7 @@ class GeckoWebExtensionTest {
             id = "id",
             location = "uri",
             metaData = mockNativeWebExtensionMetaData(
-                origins = arrayOf("o1", "o2"),
+                requiredOrigins = arrayOf("o1", "o2"),
                 description = "desc",
                 version = "1.0",
                 creatorName = "developer1",
@@ -414,7 +414,7 @@ class GeckoWebExtensionTest {
                 openOptionsPageInTab = false,
                 disabledFlags = DisabledFlags.USER,
                 temporary = true,
-                permissions = arrayOf("p1", "p2"),
+                requiredPermissions = arrayOf("p1", "p2"),
                 optionalPermissions = arrayOf("clipboardRead"),
                 grantedOptionalPermissions = arrayOf("clipboardRead"),
                 optionalOrigins = arrayOf("*://*.example.com/*", "*://opt-host-perm.example.com/*"),
@@ -437,8 +437,8 @@ class GeckoWebExtensionTest {
         assertEquals(listOf("clipboardRead"), metadata.grantedOptionalPermissions)
         assertEquals(listOf("*://*.example.com/*", "*://opt-host-perm.example.com/*"), metadata.optionalOrigins)
         assertEquals(listOf("*://*.example.com/*"), metadata.grantedOptionalOrigins)
-        assertEquals(listOf("p1", "p2"), metadata.permissions)
-        assertEquals(listOf("o1", "o2"), metadata.hostPermissions)
+        assertEquals(listOf("p1", "p2"), metadata.requiredPermissions)
+        assertEquals(listOf("o1", "o2"), metadata.requiredOrigins)
         assertEquals("desc", metadata.description)
         assertEquals("developer1", metadata.developerName)
         assertEquals("https://developer1.dev", metadata.developerUrl)
@@ -473,7 +473,7 @@ class GeckoWebExtensionTest {
                 version = "1.0",
                 baseUrl = "moz-extension://123c5c5b-cd03-4bea-b23f-ac0b9ab40257/",
                 disabledFlags = DisabledFlags.USER,
-                permissions = arrayOf("p1", "p2"),
+                requiredPermissions = arrayOf("p1", "p2"),
                 incognito = null,
             ),
         )
@@ -483,8 +483,8 @@ class GeckoWebExtensionTest {
         assertEquals("1.0", metadata.version)
         assertEquals(0.0f, metadata.averageRating)
         assertEquals(0, metadata.reviewCount)
-        assertEquals(listOf("p1", "p2"), metadata.permissions)
-        assertEquals(emptyList<String>(), metadata.hostPermissions)
+        assertEquals(listOf("p1", "p2"), metadata.requiredPermissions)
+        assertEquals(emptyList<String>(), metadata.requiredOrigins)
         assertEquals("moz-extension://123c5c5b-cd03-4bea-b23f-ac0b9ab40257/", metadata.baseUrl)
         assertNull(metadata.description)
         assertNull(metadata.developerName)

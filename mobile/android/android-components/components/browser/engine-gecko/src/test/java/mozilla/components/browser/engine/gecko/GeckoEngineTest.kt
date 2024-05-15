@@ -1372,6 +1372,8 @@ class GeckoEngineTest {
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
         val extension = mockNativeWebExtension("test", "uri")
+        val permissions = arrayOf("some", "permissions")
+        val origins = arrayOf("and some", "origins")
         val webExtensionsDelegate: WebExtensionDelegate = mock()
         val engine = GeckoEngine(context, runtime = runtime)
 
@@ -1380,12 +1382,16 @@ class GeckoEngineTest {
         val geckoDelegateCaptor = argumentCaptor<WebExtensionController.PromptDelegate>()
         verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
 
-        val result = geckoDelegateCaptor.value.onInstallPrompt(extension)
+        val result = geckoDelegateCaptor.value.onInstallPrompt(extension, permissions, origins)
 
         val extensionCaptor = argumentCaptor<WebExtension>()
         val onConfirmCaptor = argumentCaptor<((Boolean) -> Unit)>()
 
-        verify(webExtensionsDelegate).onInstallPermissionRequest(extensionCaptor.capture(), onConfirmCaptor.capture())
+        verify(webExtensionsDelegate).onInstallPermissionRequest(
+            extensionCaptor.capture(),
+            eq(permissions.asList() + origins.asList()),
+            onConfirmCaptor.capture(),
+        )
 
         onConfirmCaptor.value(true)
 
@@ -1399,6 +1405,8 @@ class GeckoEngineTest {
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
         val extension = mockNativeWebExtension("test", "uri")
+        val permissions = arrayOf("some", "permissions")
+        val origins = arrayOf("and some", "origins")
         val webExtensionsDelegate: WebExtensionDelegate = mock()
         val engine = GeckoEngine(context, runtime = runtime)
 
@@ -1407,12 +1415,16 @@ class GeckoEngineTest {
         val geckoDelegateCaptor = argumentCaptor<WebExtensionController.PromptDelegate>()
         verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
 
-        val result = geckoDelegateCaptor.value.onInstallPrompt(extension)
+        val result = geckoDelegateCaptor.value.onInstallPrompt(extension, permissions, origins)
 
         val extensionCaptor = argumentCaptor<WebExtension>()
         val onConfirmCaptor = argumentCaptor<((Boolean) -> Unit)>()
 
-        verify(webExtensionsDelegate).onInstallPermissionRequest(extensionCaptor.capture(), onConfirmCaptor.capture())
+        verify(webExtensionsDelegate).onInstallPermissionRequest(
+            extensionCaptor.capture(),
+            eq(permissions.asList() + origins.asList()),
+            onConfirmCaptor.capture(),
+        )
 
         onConfirmCaptor.value(false)
 

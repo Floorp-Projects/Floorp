@@ -48,10 +48,12 @@ sealed class WebExtensionPromptRequest {
             /**
              * Value type that represents a request for a required permissions prompt.
              * @property extension The [WebExtension] that requested the dialog to be shown.
+             * @property permissions The permissions to list in the dialog.
              * @property onConfirm A callback indicating whether the permissions were granted or not.
              */
             data class Required(
                 override val extension: WebExtension,
+                val permissions: List<String>,
                 override val onConfirm: (Boolean) -> Unit,
             ) : Permissions(extension, onConfirm)
 
