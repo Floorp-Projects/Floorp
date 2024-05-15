@@ -1312,10 +1312,9 @@ async function checkUpdateManager(
   aUpdateErrCode,
   aUpdateCount
 ) {
-  let activeUpdate =
-    aUpdateStatusState == STATE_DOWNLOADING
-      ? gUpdateManager.downloadingUpdate
-      : gUpdateManager.readyUpdate;
+  let activeUpdate = await (aUpdateStatusState == STATE_DOWNLOADING
+    ? gUpdateManager.downloadingUpdate
+    : gUpdateManager.getReadyUpdate());
   Assert.equal(
     readStatusState(),
     aStatusFileState,
@@ -2286,7 +2285,7 @@ function checkSymlink() {
 /**
  * Sets the active update and related information for updater tests.
  */
-function setupActiveUpdate() {
+async function setupActiveUpdate() {
   let pendingState = gIsServiceTest ? STATE_PENDING_SVC : STATE_PENDING;
   let patchProps = { state: pendingState };
   let patches = getLocalPatchString(patchProps);
@@ -2295,7 +2294,10 @@ function setupActiveUpdate() {
   writeVersionFile(DEFAULT_UPDATE_VERSION);
   writeStatusFile(pendingState);
   reloadUpdateManagerData();
-  Assert.ok(!!gUpdateManager.readyUpdate, "the ready update should be defined");
+  Assert.ok(
+    !!(await gUpdateManager.getReadyUpdate()),
+    "the ready update should be defined"
+  );
 }
 
 /**
@@ -2357,7 +2359,7 @@ async function stageUpdate(
     );
 
     Assert.equal(
-      gUpdateManager.readyUpdate.state,
+      (await gUpdateManager.getReadyUpdate()).state,
       aStateAfterStage,
       "the update state" + MSG_SHOULD_EQUAL
     );
@@ -3299,7 +3301,7 @@ async function setupUpdaterTest(
   });
 
   if (aSetupActiveUpdate) {
-    setupActiveUpdate();
+    await setupActiveUpdate();
   }
 
   if (aPostUpdateAsync !== null) {

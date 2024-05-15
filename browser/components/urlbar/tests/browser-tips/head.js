@@ -228,7 +228,7 @@ async function processUpdateStep(step) {
     );
   } else {
     Assert.ok(
-      !gUpdateManager.readyUpdate,
+      !(await gUpdateManager.getReadyUpdate()),
       "There should not be a ready update"
     );
     Assert.ok(
