@@ -10,8 +10,12 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.unit.dp
 
 /**
@@ -27,18 +31,22 @@ internal fun MenuScaffold(
     header: @Composable ColumnScope.() -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier.nestedScroll(rememberNestedScrollInteropConnection()),
+    ) {
         header()
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Column(
-            modifier = Modifier.padding(
-                start = 16.dp,
-                top = 12.dp,
-                end = 16.dp,
-                bottom = 32.dp,
-            ),
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    start = 16.dp,
+                    top = 12.dp,
+                    end = 16.dp,
+                    bottom = 32.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(32.dp),
         ) {
             content()
