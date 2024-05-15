@@ -943,7 +943,7 @@ static void AddOverflowingChildrenOfElement(const nsIFrame* aFrame,
 
 already_AddRefed<nsINodeList> InspectorUtils::GetOverflowingChildrenOfElement(
     GlobalObject& aGlobal, Element& aElement) {
-  RefPtr<nsSimpleContentList> list = new nsSimpleContentList(&aElement);
+  auto list = MakeRefPtr<nsSimpleContentList>(&aElement);
   const nsIScrollableFrame* scrollFrame = aElement.GetScrollFrame();
   // Element must have a nsIScrollableFrame
   if (!scrollFrame) {
