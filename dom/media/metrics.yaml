@@ -190,3 +190,14 @@ media.playback:
       - av1
       - hevc
     telemetry_mirror: MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT
+  not_supported_video_per_mime_type:
+    type: labeled_counter
+    description:
+      Count the amount of times where video playback is failed to start due to the mime type is not supported by Firefox. The result is accumulated per mime type, eg. video/hevc.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1893523
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1893523#c9
+    notification_emails:
+      - media-alerts@mozilla.com
+    expires: never
