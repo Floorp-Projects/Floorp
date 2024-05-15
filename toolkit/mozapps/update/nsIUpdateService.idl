@@ -818,6 +818,7 @@ interface nsIUpdateManagerInternal : nsISupports
   // Corresponds to `nsIUpdateManager.getDownloadingUpdate()`, but also provides
   // write access.
   attribute nsIUpdate downloadingUpdate;
+  Promise refreshUpdateStatus();
 };
 
 /**
