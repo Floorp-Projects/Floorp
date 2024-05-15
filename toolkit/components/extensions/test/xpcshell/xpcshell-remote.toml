@@ -11,6 +11,7 @@ dupe-manifest = ""
 support-files = [
   "data/**",
   "head_dnr.js",
+  "head_dnr_static_rules.js",
   "xpcshell-content.toml",
 ]
 tags = "webextensions remote-webextensions"

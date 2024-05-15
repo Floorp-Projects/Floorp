@@ -548,7 +548,7 @@
       {
         "name": "updateEnabledRulesets",
         "type": "function",
-        "description": "Returns the ids for the current set of enabled static rulesets.",
+        "description": "Modifies the static rulesets enabled/disabled state.",
         "async": "callback",
         "parameters": [
           {
@@ -577,6 +577,40 @@
         ]
       },
       {
+        "name": "updateStaticRules",
+        "type": "function",
+        "description": "Modified individual static rules enabled/disabled state. Changes to rules belonging to a disabled ruleset will take effect when the ruleset becomes enabled.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "object",
+            "properties": {
+              "rulesetId": {
+                "type": "string"
+              },
+              "disableRuleIds": {
+                "type": "array",
+                "items": { "type": "integer" },
+                "optional": true,
+                "default": []
+              },
+              "enableRuleIds": {
+                "type": "array",
+                "items": { "type": "integer" },
+                "optional": true,
+                "default": []
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": []
+          }
+        ]
+      },
+      {
         "name": "getAvailableStaticRuleCount",
         "type": "function",
         "description": "Returns the remaining number of static rules an extension can enable",
@@ -589,6 +623,36 @@
               {
                 "name": "count",
                 "type": "integer"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "getDisabledRuleIds",
+        "type": "function",
+        "description": "Returns the list of individual disabled static rules from a given static ruleset id.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "object",
+            "properties": {
+              "rulesetId": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "disabledRuleIds",
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
               }
             ]
           }

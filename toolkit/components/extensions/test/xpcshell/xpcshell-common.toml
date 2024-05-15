@@ -238,6 +238,9 @@ skip-if = ["os == 'android'"] # Android: downloads.download goes through the emb
 
 ["test_ext_dnr_testMatchOutcome.js"]
 
+["test_ext_dnr_update_static_rules.js"]
+skip-if = ["condprof"] # bug 1810762: to be removed once schema data cached in the conditioned profile is updated.
+
 ["test_ext_dnr_urlFilter.js"]
 
 ["test_ext_dnr_webrequest.js"]
