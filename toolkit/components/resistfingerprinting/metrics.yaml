@@ -534,33 +534,6 @@ characteristics:
     data_sensitivity:
       - technical
 
-  gamepads:
-    type: string_list
-    description: >
-      The information of the gamepads inserted on the user device. Each string
-      represents one gamepad. We use a JSON array to describe a gamepad, every
-      value represents one property of the gamepad. Following are the details:
-        index 0: The ID of the game pad
-        index 1: Which hand for the gamepad.
-        index 2: Number of buttons
-        index 3: Number of axes
-        index 4: Number of haptics
-        index 5: Number of lights
-        index 6: Number of touches
-    lifetime: application
-    send_in_pings:
-      - user-characteristics
-    notification_emails:
-      - tom@mozilla.com
-      - tihuang@mozilla.com
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1885936
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1885936#c2
-    expires: never
-    data_sensitivity:
-      - technical
-
   prefs_intl_accept_languages:
     type: string
     description: >
