@@ -27,6 +27,7 @@ class nsFormHistory;
 class nsINode;
 
 namespace mozilla {
+class CancelableRunnable;
 namespace dom {
 class EventTarget;
 class HTMLInputElement;
@@ -82,6 +83,17 @@ class nsFormFillController final : public nsIFormFillController,
   MOZ_CAN_RUN_SCRIPT
   void MaybeStartControllingInput(mozilla::dom::HTMLInputElement* aElement);
 
+  // clears the reference mRestartAfterAttributeChangeTask before running
+  // MaybeStartControllingInput()
+  MOZ_CAN_RUN_SCRIPT
+  void MaybeStartControllingInputScheduled(
+      mozilla::dom::HTMLInputElement* aElement);
+
+  // cancels a scheduled AttributeChangeTask and clears the reference
+  // mRestartAfterAttributeChangeTask
+  MOZ_CAN_RUN_SCRIPT
+  void MaybeCancelAttributeChangeTask();
+
   void MaybeObserveDataListMutations();
 
   MOZ_CAN_RUN_SCRIPT void RevalidateDataList();
@@ -101,6 +113,7 @@ class nsFormFillController final : public nsIFormFillController,
 
   nsCOMPtr<nsIAutoCompleteController> mController;
   mozilla::dom::HTMLInputElement* mFocusedInput;
+  RefPtr<mozilla::CancelableRunnable> mRestartAfterAttributeChangeTask;
 
   // mListNode is a <datalist> element which, is set, has the form fill
   // controller as a mutation observer for it.
