@@ -476,6 +476,12 @@ IPCFatalErrorProtocol:
     Name of the protocol used by IPC when a fatal error occurred.
   type: string
 
+IPCMessageLargeBufferShmemFailureSize:
+  description: >
+    Size of failed shmem allocations which led to data being sent inline in the
+    IPC message that caused a crash because it was too large.
+  type: u32
+
 IPCMessageName:
   description: >
     Name of the IPC message that caused a crash because it was too large.

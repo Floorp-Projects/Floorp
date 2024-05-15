@@ -32,6 +32,7 @@ MessageBufferWriter::MessageBufferWriter(MessageWriter* writer,
       // exhaustion or address space fragmentation. Fall back to trying to send
       // data inline.
       shmem_ = nullptr;
+      writer->NoteLargeBufferShmemFailure(full_len);
     }
   }
   remaining_ = full_len;
