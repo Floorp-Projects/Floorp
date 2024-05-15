@@ -184,6 +184,13 @@ bool DispatchToUiThread(const char* aName, Lambda&& aLambda) {
 namespace mozilla {
 namespace widget {
 
+// For double click detection
+static int64_t sLastMouseDownTime = 0;
+static int32_t sLastMouseButtons = 0;
+static int32_t sLastClickCount = 0;
+static float sLastMouseDownX = 0;
+static float sLastMouseDownY = 0;
+
 using WindowPtr = jni::NativeWeakPtr<GeckoViewSupport>;
 
 /**
@@ -543,6 +550,28 @@ class NPZCSupport final
         ConvertScrollDirections(aHandledResult.mOverscrollDirections));
   }
 
+  static bool IsIntoDoubleClickThreshold(float aX, float aY) {
+    int32_t deltaX = abs((int32_t)floorf(sLastMouseDownX - aX));
+    int32_t deltaY = abs((int32_t)floorf(sLastMouseDownY - aY));
+    int32_t threshold = StaticPrefs::widget_double_click_threshold();
+
+    return (deltaX * deltaX + deltaY * deltaY < threshold * threshold);
+  }
+
+  static bool IsDoubleClick(int64_t aTime, float aX, float aY, int buttons) {
+    if (sLastMouseButtons != buttons) {
+      return false;
+    }
+
+    int64_t deltaTime = aTime - sLastMouseDownTime;
+    if (deltaTime < (int64_t)StaticPrefs::widget_double_click_min() ||
+        deltaTime > (int64_t)StaticPrefs::widget_double_click_timeout()) {
+      return false;
+    }
+
+    return IsIntoDoubleClickThreshold(aX, aY);
+  }
+
  public:
   int32_t HandleMouseEvent(int32_t aAction, int64_t aTime, int32_t aMetaState,
                            float aX, float aY, int buttons) {
@@ -568,6 +597,16 @@ class NPZCSupport final
         mouseType = MouseInput::MOUSE_DOWN;
         buttonType = GetButtonType(buttons ^ mPreviousButtons);
         mPreviousButtons = buttons;
+
+        if (IsDoubleClick(aTime, aX, aY, buttons)) {
+          sLastClickCount++;
+        } else {
+          sLastClickCount = 1;
+        }
+        sLastMouseDownTime = aTime;
+        sLastMouseDownX = aX;
+        sLastMouseDownY = aY;
+        sLastMouseButtons = buttons;
         break;
       case java::sdk::MotionEvent::ACTION_UP:
         mouseType = MouseInput::MOUSE_UP;
@@ -576,6 +615,10 @@ class NPZCSupport final
         break;
       case java::sdk::MotionEvent::ACTION_MOVE:
         mouseType = MouseInput::MOUSE_MOVE;
+
+        if (!IsIntoDoubleClickThreshold(aX, aY)) {
+          sLastClickCount = 0;
+        }
         break;
       case java::sdk::MotionEvent::ACTION_HOVER_MOVE:
         mouseType = MouseInput::MOUSE_MOVE;
@@ -606,8 +649,10 @@ class NPZCSupport final
       return INPUT_RESULT_IGNORED;
     }
 
-    PostInputEvent([input = std::move(input), result](nsWindow* window) {
+    PostInputEvent([input = std::move(input), result,
+                    clickCount = sLastClickCount](nsWindow* window) {
       WidgetMouseEvent mouseEvent = input.ToWidgetEvent(window);
+      mouseEvent.mClickCount = clickCount;
       window->ProcessUntransformedAPZEvent(&mouseEvent, result);
       if (MouseInput::SECONDARY_BUTTON == input.mButtonType) {
         if ((StaticPrefs::ui_context_menus_after_mouseup() &&
