@@ -56,54 +56,135 @@ function getUpdateBaseDirNoCreate() {
   return FileUtils.getDir(KEY_UPDROOT, []);
 }
 
-export function UpdateServiceStub() {
-  LOG("UpdateServiceStub - Begin.");
+export class UpdateServiceStub {
+  #initUpdatePromise;
+  #initStubHasRun = false;
 
-  let updateDir = getUpdateBaseDirNoCreate();
-  let prefUpdateDirMigrated =
-    PREF_PREFIX_UPDATE_DIR_MIGRATED + updateDir.leafName;
+  /**
+   * See nsIUpdateService.idl
+   */
+  async init() {
+    await this.#init(false);
+  }
+  async initUpdate() {
+    await this.#init(true);
+  }
 
-  let statusFile = updateDir;
-  statusFile.append(DIR_UPDATES);
-  statusFile.append("0");
-  statusFile.append(FILE_UPDATE_STATUS);
-  updateDir = null; // We don't need updateDir anymore, plus now its nsIFile
-  // contains the status file's path
-
-  // We may need to migrate update data
-  if (
-    AppConstants.platform == "win" &&
-    !Services.prefs.getBoolPref(prefUpdateDirMigrated, false)
-  ) {
-    Services.prefs.setBoolPref(prefUpdateDirMigrated, true);
-    try {
-      migrateUpdateDirectory();
-    } catch (ex) {
-      // For the most part, migrateUpdateDirectory() catches its own errors.
-      // But there are technically things that could happen that might not be
-      // caught, like nsIFile.parent or nsIFile.append could unexpectedly fail.
-      // So we will catch any errors here, just in case.
-      LOG(
-        `UpdateServiceStub:UpdateServiceStub Failed to migrate update ` +
-          `directory. Exception: ${ex}`
-      );
+  #initOnlyStub(updateDir) {
+    // We may need to migrate update data
+    let prefUpdateDirMigrated =
+      PREF_PREFIX_UPDATE_DIR_MIGRATED + updateDir.leafName;
+    if (
+      AppConstants.platform == "win" &&
+      !Services.prefs.getBoolPref(prefUpdateDirMigrated, false)
+    ) {
+      Services.prefs.setBoolPref(prefUpdateDirMigrated, true);
+      try {
+        migrateUpdateDirectory();
+      } catch (ex) {
+        // For the most part, migrateUpdateDirectory() catches its own
+        // errors. But there are technically things that could happen that
+        // might not be caught, like nsIFile.parent or nsIFile.append could
+        // unexpectedly fail.
+        // So we will catch any errors here, just in case.
+        LOG(
+          `UpdateServiceStub:UpdateServiceStub Failed to migrate update ` +
+            `directory. Exception: ${ex}`
+        );
+      }
     }
   }
 
-  // If the update.status file exists then initiate post update processing.
-  if (statusFile.exists()) {
-    let aus = Cc["@mozilla.org/updates/update-service;1"]
-      .getService(Ci.nsIApplicationUpdateService)
-      .QueryInterface(Ci.nsIObserver);
-    aus.observe(null, "post-update-processing", "");
-  }
-}
+  async #initUpdate() {
+    // Ensure that the constructors for the update services have run.
+    const aus = Cc["@mozilla.org/updates/update-service;1"].getService(
+      Ci.nsIApplicationUpdateService
+    );
+    Cc["@mozilla.org/updates/update-manager;1"].getService(Ci.nsIUpdateManager);
+    Cc["@mozilla.org/updates/update-checker;1"].getService(Ci.nsIUpdateChecker);
 
-UpdateServiceStub.prototype = {
-  observe() {},
-  classID: Components.ID("{e43b0010-04ba-4da6-b523-1f92580bc150}"),
-  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-};
+    // Run update service initialization
+    await aus.internal.init();
+  }
+
+  async #init(force_update_init) {
+    // We call into this from many places to ensure that initialization is done,
+    // so we want to optimize for the case where initialization is already
+    // finished.
+    if (this.#initUpdatePromise) {
+      try {
+        await this.#initUpdatePromise;
+      } catch (ex) {
+        // This will already have been logged when the error first happened, we
+        // don't need to log it again now.
+      }
+      return;
+    }
+
+    LOG(`UpdateServiceStub - Begin (force_update_init=${force_update_init})`);
+
+    let initUpdate = force_update_init;
+    try {
+      const updateDir = getUpdateBaseDirNoCreate();
+      if (!this.#initStubHasRun) {
+        this.#initStubHasRun = true;
+        try {
+          this.#initOnlyStub(updateDir);
+        } catch (ex) {
+          LOG(
+            `UpdateServiceStub - Stub initialization failed: ${ex}: ${ex.stack}`
+          );
+        }
+      }
+
+      try {
+        if (!initUpdate) {
+          const statusFile = updateDir.clone();
+          statusFile.append(DIR_UPDATES);
+          statusFile.append("0");
+          statusFile.append(FILE_UPDATE_STATUS);
+          initUpdate = statusFile.exists();
+        }
+      } catch (ex) {
+        LOG(
+          `UpdateServiceStub - Failed to generate the status file: ${ex}: ${ex.stack}`
+        );
+      }
+    } catch (e) {
+      LOG(
+        `UpdateServiceStub - Failed to get update directory: ${e}: ${e.stack}`
+      );
+    }
+
+    if (initUpdate) {
+      this.#initUpdatePromise = this.#initUpdate();
+      try {
+        await this.#initUpdatePromise;
+      } catch (ex) {
+        LOG(`UpdateServiceStub - Init failed: ${ex}: ${ex.stack}`);
+      }
+    }
+  }
+
+  async observe(_subject, topic, _data) {
+    switch (topic) {
+      // This is sort of the "default" way of being initialized. The
+      // "@mozilla.org/updates/update-service-stub;1" contract definition in
+      // `components.conf` registers us for this notification, which we use to
+      // trigger initialization. Note, however, that this calls only `init` and
+      // not `initUpdate`.
+      case "profile-after-change":
+        await this.init();
+        break;
+    }
+  }
+
+  classID = Components.ID("{e43b0010-04ba-4da6-b523-1f92580bc150}");
+  QueryInterface = ChromeUtils.generateQI([
+    Ci.nsIApplicationUpdateServiceStub,
+    Ci.nsIObserver,
+  ]);
+}
 
 /**
  * This function should be called when there are files in the old update
