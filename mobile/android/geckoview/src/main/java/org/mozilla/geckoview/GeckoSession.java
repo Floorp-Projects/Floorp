@@ -1327,7 +1327,13 @@ public class GeckoSession {
    */
   @AnyThread
   public static @NonNull String getDefaultUserAgent() {
-    return BuildConfig.USER_AGENT_GECKOVIEW_MOBILE;
+    // Spoof version "Android 10" for Android OS versions < 10 (Q) to reduce
+    // their fingerprintable user information. For Android OS versions >= 10,
+    // report the real OS version because some enterprise websites only want to
+    // permit clients with recent OS version (like bug 1876742).
+    return Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+        ? BuildConfig.USER_AGENT_GECKOVIEW_MOBILE_ANDROID_10
+        : BuildConfig.USER_AGENT_GECKOVIEW_MOBILE;
   }
 
   /**

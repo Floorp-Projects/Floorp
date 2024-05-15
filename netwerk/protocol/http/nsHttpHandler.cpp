@@ -878,12 +878,29 @@ void nsHttpHandler::InitUserAgentComponents() {
       do_GetService("@mozilla.org/system-info;1");
   MOZ_ASSERT(infoService, "Could not find a system info service");
   nsresult rv;
+
   // Add the Android version number to the Fennec platform identifier.
   nsAutoString androidVersion;
   rv = infoService->GetPropertyAsAString(u"release_version"_ns, androidVersion);
-  if (NS_SUCCEEDED(rv)) {
-    mPlatform += " ";
+  MOZ_ASSERT_IF(
+      NS_SUCCEEDED(rv),
+      // Like version "9"
+      (androidVersion.Length() == 1 && std::isdigit(androidVersion[0])) ||
+          // Or like version "8.1", "10", or "12.1"
+          (androidVersion.Length() >= 2 && std::isdigit(androidVersion[0]) &&
+           (androidVersion[1] == u'.' || std::isdigit(androidVersion[1]))));
+
+  // Spoof version "Android 10" for Android OS versions < 10 to reduce their
+  // fingerprintable user information. For Android OS versions >= 10, report
+  // the real OS version because some enterprise websites only want to permit
+  // clients with recent OS version (like bug 1876742). Two leading digits
+  // in the version string means the version number is >= 10.
+  mPlatform += " ";
+  if (NS_SUCCEEDED(rv) && androidVersion.Length() >= 2 &&
+      std::isdigit(androidVersion[0]) && std::isdigit(androidVersion[1])) {
     mPlatform += NS_LossyConvertUTF16toASCII(androidVersion);
+  } else {
+    mPlatform.AppendLiteral("10");
   }
 
   // Add the `Mobile` or `TV` token when running on device.
