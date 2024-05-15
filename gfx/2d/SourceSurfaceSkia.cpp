@@ -84,7 +84,7 @@ static sk_sp<SkImage> ReadSkImage(const sk_sp<SkImage>& aImage,
   if (sk_sp<SkData> data = MakeSkData(nullptr, aInfo.height(), aStride)) {
     if (aImage->readPixels(aInfo, data->writable_data(), aStride, aX, aY,
                            SkImage::kDisallow_CachingHint)) {
-      return SkImage::MakeRasterData(aInfo, data, aStride);
+      return SkImages::RasterFromData(aInfo, data, aStride);
     }
   }
   return nullptr;
@@ -98,7 +98,7 @@ bool SourceSurfaceSkia::InitFromData(unsigned char* aData, const IntSize& aSize,
   }
 
   SkImageInfo info = MakeSkiaImageInfo(aSize, aFormat);
-  mImage = SkImage::MakeRasterData(info, data, aStride);
+  mImage = SkImages::RasterFromData(info, data, aStride);
   if (!mImage) {
     return false;
   }
