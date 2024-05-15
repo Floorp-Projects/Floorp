@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2b079067648bfe0d0
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index 01286d7150..bdea16668f 100644
+index 5cddf4307e..899c29aecd 100644
 --- a/rtc_base/physical_socket_server.cc
 +++ b/rtc_base/physical_socket_server.cc
-@@ -1454,7 +1454,7 @@ bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
+@@ -1563,7 +1563,7 @@ bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
          int fd = pdispatcher->GetDescriptor();
          // "select"ing a file descriptor that is equal to or larger than
          // FD_SETSIZE will result in undefined behavior.

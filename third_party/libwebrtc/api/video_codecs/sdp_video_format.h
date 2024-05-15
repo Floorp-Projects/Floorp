@@ -26,7 +26,7 @@ namespace webrtc {
 // SDP specification for a single video codec.
 // NOTE: This class is still under development and may change without notice.
 struct RTC_EXPORT SdpVideoFormat {
-  using Parameters [[deprecated(("Use webrtc::CodecParameterMap"))]] =
+  using Parameters [[deprecated("Use webrtc::CodecParameterMap")]] =
       std::map<std::string, std::string>;
 
   explicit SdpVideoFormat(const std::string& name);
@@ -36,6 +36,14 @@ struct RTC_EXPORT SdpVideoFormat {
       const CodecParameterMap& parameters,
       const absl::InlinedVector<ScalabilityMode, kScalabilityModeCount>&
           scalability_modes);
+  // Creates a new SdpVideoFormat object identical to the supplied
+  // SdpVideoFormat except the scalability_modes that are set to be the same as
+  // the supplied scalability modes.
+  SdpVideoFormat(
+      const SdpVideoFormat& format,
+      const absl::InlinedVector<ScalabilityMode, kScalabilityModeCount>&
+          scalability_modes);
+
   SdpVideoFormat(const SdpVideoFormat&);
   SdpVideoFormat(SdpVideoFormat&&);
   SdpVideoFormat& operator=(const SdpVideoFormat&);
@@ -62,6 +70,16 @@ struct RTC_EXPORT SdpVideoFormat {
   std::string name;
   CodecParameterMap parameters;
   absl::InlinedVector<ScalabilityMode, kScalabilityModeCount> scalability_modes;
+
+  // Well-known video codecs and their format parameters.
+  static const SdpVideoFormat VP8();
+  static const SdpVideoFormat H264();
+  static const SdpVideoFormat VP9Profile0();
+  static const SdpVideoFormat VP9Profile1();
+  static const SdpVideoFormat VP9Profile2();
+  static const SdpVideoFormat VP9Profile3();
+  static const SdpVideoFormat AV1Profile0();
+  static const SdpVideoFormat AV1Profile1();
 };
 
 // For not so good reasons sometimes additional parameters are added to an

@@ -1,38 +1,38 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Ensure that last ref to transformation_queue_ is not
- released on itself. r=pehrsons,webrtc-reviewers
+From: stransky <stransky@redhat.com>
+Date: Tue, 29 Aug 2023 12:43:00 +0000
+Subject: Bug 1821629 [DMABuf] Don't use DMABuf if it's disabled by Firefox gfx
+ config r=ng,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D181699
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73561ffd2330865f04fcb1a6d
+Differential Revision: https://phabricator.services.mozilla.com/D172224
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/158a888cad8869a2f0026fa7cfaaa13ecbfcf2ed
 ---
- .../rtp_sender_video_frame_transformer_delegate.cc       | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-index ff15840529..ae9eb6b4bd 100644
---- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-@@ -18,6 +18,7 @@
- #include "api/task_queue/task_queue_factory.h"
- #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/event.h"
- #include "rtc_base/logging.h"
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 6998d655c2..1065adbc60 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -27,6 +27,13 @@
+ #include "rtc_base/synchronization/mutex.h"
+ #include "rtc_base/time_utils.h"
  
++// Wrapper for gfxVars::UseDMABuf() as we can't include gfxVars here.
++// We don't want to use dmabuf of known broken systems.
++// See FEATURE_DMABUF for details.
++namespace mozilla::gfx {
++bool IsDMABufEnabled();
++}
++
  namespace webrtc {
-@@ -257,6 +258,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
-     MutexLock lock(&sender_lock_);
-     sender_ = nullptr;
-   }
-+  // Wait until all pending tasks are executed, to ensure that the last ref
-+  // standing is not on the transformation queue.
-+  rtc::Event flush;
-+  transformation_queue_->PostTask([this, &flush]() {
-+    RTC_DCHECK_RUN_ON(transformation_queue_.get());
-+    flush.Set();
-+  });
-+  flush.Wait(rtc::Event::kForever);
- }
  
- std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+ const int kBytesPerPixel = 4;
+@@ -266,7 +273,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
+   that->modifier_ =
+       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
+   std::vector<const spa_pod*> params;
+-  const int buffer_types = has_modifier
++  const int buffer_types = has_modifier && mozilla::gfx::IsDMABufEnabled()
+                                ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
+                                : (1 << SPA_DATA_MemFd);
+ 

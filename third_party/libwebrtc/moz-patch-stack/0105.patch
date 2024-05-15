@@ -1,27 +1,23 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 5 Mar 2024 08:38:00 +0000
-Subject: Bug 1615282 - WebRTC backport: PipeWire capturer - set capturer as
- failed when session is closed r=pehrsons,webrtc-reviewers
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 19 Apr 2024 06:09:00 +0000
+Subject: Bug 1892221 - Initialize VideoCaptureModuleV4L2::_streaming in ctor.
+ r=webrtc-reviewers,dbaker
 
-This is a simple backport of an WebRTC upstream change.
-
-Upstream commit: 058bfe3ae37a7a245f9c8c6c03f4f7ac48fe179d
-
-Differential Revision: https://phabricator.services.mozilla.com/D202788
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/633149c5da9337f67b6659e5d5bead2233027460
+Differential Revision: https://phabricator.services.mozilla.com/D207926
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/00c4bd7039dc8992dd93d4a5948a9260b72ec2a8
 ---
- modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc | 1 +
+ modules/video_capture/linux/video_capture_v4l2.cc | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-index 40764de7ae..81caa9bd2d 100644
---- a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-+++ b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-@@ -112,6 +112,7 @@ void BaseCapturerPipeWire::OnScreenCastSessionClosed() {
-   if (!capturer_failed_) {
-     options_.screencast_stream()->StopScreenCastStream();
-   }
-+  capturer_failed_ = true;
- }
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index e3bdcd5953..e3061556e8 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -62,6 +62,7 @@ VideoCaptureModuleV4L2::VideoCaptureModuleV4L2()
+       _deviceId(-1),
+       _deviceFd(-1),
+       _buffersAllocatedByDevice(-1),
++      _streaming(false),
+       _captureStarted(false),
+       _pool(NULL) {}
  
- void BaseCapturerPipeWire::UpdateResolution(uint32_t width, uint32_t height) {

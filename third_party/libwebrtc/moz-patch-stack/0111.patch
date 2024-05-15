@@ -1,0 +1,31 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 6 May 2024 07:28:00 +0000
+Subject: Bug 1892329 - Fix threading issues in VideoCaptureModuleV4L2 once and
+ for all. r=webrtc-reviewers,mjf
+
+Differential Revision: https://phabricator.services.mozilla.com/D208187
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/65e120a9c1dcb9c8f1c8930e808b03aa149eaf40
+---
+ modules/video_capture/linux/video_capture_v4l2.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index 29ca864e19..b6e7e79a2a 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -300,7 +300,6 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   _requestedCapability = capability;
+   _captureStarted = true;
+   _streaming = true;
+-  }
+ 
+   // start capture thread;
+   if (!_captureThread.empty()) {
+@@ -308,6 +307,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   }
+ 
+   quit_ = false;
++  }
+ 
+   _captureThread = rtc::PlatformThread::SpawnJoinable(
+       [self = scoped_refptr(this)] {

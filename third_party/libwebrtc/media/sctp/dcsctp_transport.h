@@ -17,6 +17,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/environment/environment.h"
 #include "api/task_queue/task_queue_base.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "net/dcsctp/public/dcsctp_options.h"
@@ -27,6 +28,7 @@
 #include "p2p/base/packet_transport_internal.h"
 #include "rtc_base/containers/flat_map.h"
 #include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/random.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
@@ -39,12 +41,12 @@ class DcSctpTransport : public cricket::SctpTransportInternal,
                         public dcsctp::DcSctpSocketCallbacks,
                         public sigslot::has_slots<> {
  public:
-  DcSctpTransport(rtc::Thread* network_thread,
+  DcSctpTransport(const Environment& env,
+                  rtc::Thread* network_thread,
+                  rtc::PacketTransportInternal* transport);
+  DcSctpTransport(const Environment& env,
+                  rtc::Thread* network_thread,
                   rtc::PacketTransportInternal* transport,
-                  Clock* clock);
-  DcSctpTransport(rtc::Thread* network_thread,
-                  rtc::PacketTransportInternal* transport,
-                  Clock* clock,
                   std::unique_ptr<dcsctp::DcSctpSocketFactory> socket_factory);
   ~DcSctpTransport() override;
 
@@ -94,17 +96,12 @@ class DcSctpTransport : public cricket::SctpTransportInternal,
   void DisconnectTransportSignals();
   void OnTransportWritableState(rtc::PacketTransportInternal* transport);
   void OnTransportReadPacket(rtc::PacketTransportInternal* transport,
-                             const char* data,
-                             size_t length,
-                             const int64_t& /* packet_time_us */,
-                             int flags);
-  void OnTransportClosed(rtc::PacketTransportInternal* transport);
-
+                             const rtc::ReceivedPacket& packet);
   void MaybeConnectSocket();
 
   rtc::Thread* network_thread_;
   rtc::PacketTransportInternal* transport_;
-  Clock* clock_;
+  Environment env_;
   Random random_;
 
   std::unique_ptr<dcsctp::DcSctpSocketFactory> socket_factory_;

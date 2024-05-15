@@ -1966,8 +1966,7 @@ WebRtcVideoSendChannel::WebRtcVideoSendStream::SetRtpParameters(
   webrtc::RTCError error = CheckRtpParametersInvalidModificationAndValues(
       rtp_parameters_, new_parameters);
   if (!error.ok()) {
-    // Error is propagated to the callback at a higher level
-    return error;
+    return webrtc::InvokeSetParametersCallback(callback, error);
   }
 
   bool new_param = false;
@@ -2225,7 +2224,6 @@ WebRtcVideoSendChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
     case webrtc::kVideoCodecVP9:
     case webrtc::kVideoCodecAV1:
     case webrtc::kVideoCodecGeneric:
-    case webrtc::kVideoCodecMultiplex:
       max_qp = kDefaultVideoMaxQpVpx;
       break;
   }
@@ -3117,15 +3115,12 @@ bool WebRtcVideoReceiveChannel::MaybeCreateDefaultReceiveStream(
     absl::optional<uint32_t> current_default_ssrc = GetUnsignaledSsrc();
     if (current_default_ssrc) {
       FindReceiveStream(*current_default_ssrc)->UpdateRtxSsrc(packet.Ssrc());
-    } else {
-      // Received unsignaled RTX packet before a media packet. Create a default
-      // stream with a "random" SSRC and the RTX SSRC from the packet.  The
-      // stream will be recreated on the first media packet, unless we are
-      // extremely lucky and used the right media SSRC.
-      ReCreateDefaultReceiveStream(/*ssrc =*/14795, /*rtx_ssrc=*/packet.Ssrc());
+      return true;
     }
-    return true;
-  } else {
+    // Default media SSRC not known yet. Drop the packet.
+    // BWE has already been notified of this received packet.
+    return false;
+  }
     // Ignore unknown ssrcs if we recently created an unsignalled receive
     // stream since this shouldn't happen frequently. Getting into a state
     // of creating decoders on every packet eats up processing time (e.g.
@@ -3142,7 +3137,7 @@ bool WebRtcVideoReceiveChannel::MaybeCreateDefaultReceiveStream(
         return false;
       }
     }
-  }
+
   // RTX SSRC not yet known.
   ReCreateDefaultReceiveStream(packet.Ssrc(), absl::nullopt);
   last_unsignalled_ssrc_creation_time_ms_ = rtc::TimeMillis();

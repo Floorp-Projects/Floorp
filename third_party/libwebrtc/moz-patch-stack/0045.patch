@@ -1,35 +1,29 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Mon, 26 Jul 2021 22:51:00 -0700
-Subject: Bug 1654112 - fix timestamp issues with RTP sources; r=mjf
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 20 Aug 2021 13:52:00 +0200
+Subject: Bug 1654112 - Don't check the calling thread in
+ webrtc::AudioReceiveStream::GetSources. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D120930
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/de8c14e4972f717bf937b6f2fffcd08c35e21ced
+source_tracker_ is thread safe with its own internal mutex, so this call is safe
+as long as the caller has a guarantee for the lifetime of the
+AudioReceiveStream. This is similar to webrtc::VideoReceiveStream.
+
+Upliftable.
+
+Differential Revision: https://phabricator.services.mozilla.com/D123226
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c186df8a088e46285a15e40149182daa34cc6805
 ---
- modules/rtp_rtcp/source/source_tracker.cc | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ audio/audio_receive_stream.cc | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/modules/rtp_rtcp/source/source_tracker.cc b/modules/rtp_rtcp/source/source_tracker.cc
-index 51e8f1cd38..b54f6cacf8 100644
---- a/modules/rtp_rtcp/source/source_tracker.cc
-+++ b/modules/rtp_rtcp/source/source_tracker.cc
-@@ -47,7 +47,8 @@ void SourceTracker::OnFrameDeliveredInternal(
-       SourceKey key(RtpSourceType::CSRC, csrc);
-       SourceEntry& entry = UpdateEntry(key);
+diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
+index 1e8cff5441..32a8e1c172 100644
+--- a/audio/audio_receive_stream.cc
++++ b/audio/audio_receive_stream.cc
+@@ -368,7 +368,6 @@ int AudioReceiveStreamImpl::GetBaseMinimumPlayoutDelayMs() const {
+ }
  
--      entry.timestamp = now;
-+      const auto packet_time = packet_info.receive_time();
-+      entry.timestamp = packet_time.ms() ? packet_time : now;
-       entry.audio_level = packet_info.audio_level();
-       entry.absolute_capture_time = packet_info.absolute_capture_time();
-       entry.local_capture_clock_offset =
-@@ -86,6 +87,10 @@ std::vector<RtpSource> SourceTracker::GetSources() const {
-             .local_capture_clock_offset = entry.local_capture_clock_offset});
-   }
- 
-+  std::sort(sources.begin(), sources.end(), [](const auto &a, const auto &b){
-+    return a.timestamp().ms() > b.timestamp().ms();
-+  });
-+
-   return sources;
+ std::vector<RtpSource> AudioReceiveStreamImpl::GetSources() const {
+-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+   return source_tracker_.GetSources();
  }
  

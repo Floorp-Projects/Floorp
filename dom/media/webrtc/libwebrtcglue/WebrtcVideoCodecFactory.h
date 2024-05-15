@@ -61,8 +61,9 @@ class WebrtcVideoDecoderFactory : public GmpPluginNotifier,
     return std::vector<webrtc::SdpVideoFormat>();
   }
 
-  std::unique_ptr<webrtc::VideoDecoder> CreateVideoDecoder(
-      const webrtc::SdpVideoFormat& aFormat) override;
+  std::unique_ptr<webrtc::VideoDecoder> Create(
+      const webrtc::Environment& env,
+      const webrtc::SdpVideoFormat& format) override;
 
  private:
   const std::string mPCHandle;
@@ -84,8 +85,9 @@ class WebrtcVideoEncoderFactory : public GmpPluginNotifierInterface,
       return std::vector<webrtc::SdpVideoFormat>();
     }
 
-    std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
-        const webrtc::SdpVideoFormat& aFormat) override;
+    std::unique_ptr<webrtc::VideoEncoder> Create(
+        const webrtc::Environment& env,
+        const webrtc::SdpVideoFormat& format) override;
 
     bool Supports(const webrtc::SdpVideoFormat& aFormat);
 
@@ -104,8 +106,9 @@ class WebrtcVideoEncoderFactory : public GmpPluginNotifierInterface,
     return std::vector<webrtc::SdpVideoFormat>();
   }
 
-  std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
-      const webrtc::SdpVideoFormat& aFormat) override;
+  std::unique_ptr<webrtc::VideoEncoder> Create(
+      const webrtc::Environment& env,
+      const webrtc::SdpVideoFormat& format) override;
 
   void DisconnectAll() override { mInternalFactory->DisconnectAll(); }
 
