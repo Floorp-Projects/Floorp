@@ -33,6 +33,9 @@ SOURCES += [
 
 if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CC_TYPE"] == "clang-cl":
     USE_INTEGRATED_CLANGCL_AS = True
+    # Work around https://github.com/llvm/llvm-project/issues/92229
+    # We don't need debug flags on the command line for this file anyways.
+    ASM_FLAGS["DEBUG"] = []
 
 if CONFIG["TARGET_ENDIANNESS"] == "big":
     GeneratedFile(
