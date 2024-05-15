@@ -60,13 +60,13 @@ export class Aggregator {
     this.#sources.push(source);
   }
 
-  callFunction(dataSource, functionName) {
+  callFunction(dataSource, functionName, ...params) {
     const source = this.#sources.find(
       source => source.constructor.name === dataSource
     );
 
     if (source && source[functionName]) {
-      source[functionName]();
+      source[functionName](params);
     }
   }
 

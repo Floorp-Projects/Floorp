@@ -185,17 +185,22 @@ export class MegalistViewModel {
 
   async receiveCommand({ commandId, snapshotId, value } = {}) {
     const dotIndex = commandId?.indexOf(".");
-    if (dotIndex >= 0) {
-      const dataSourceName = commandId.substring(0, dotIndex);
-      const functionName = commandId.substring(dotIndex + 1);
-      MegalistViewModel.#aggregator.callFunction(dataSourceName, functionName);
-      return;
-    }
-
     const index = snapshotId
       ? snapshotId - this.#firstSnapshotId
       : this.#selectedIndex;
     const snapshot = this.#snapshots[index];
+
+    if (dotIndex >= 0) {
+      const dataSourceName = commandId.substring(0, dotIndex);
+      const functionName = commandId.substring(dotIndex + 1);
+      MegalistViewModel.#aggregator.callFunction(
+        dataSourceName,
+        functionName,
+        snapshot?.record
+      );
+      return;
+    }
+
     if (snapshot) {
       const commands = this.#commandsArray(snapshot);
       commandId = commandId ?? commands[0]?.id;
