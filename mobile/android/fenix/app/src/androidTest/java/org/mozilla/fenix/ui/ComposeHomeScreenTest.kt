@@ -5,7 +5,6 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -37,10 +36,13 @@ class ComposeHomeScreenTest : TestSetup() {
     val retryTestRule = RetryTestRule(3)
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/235396
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
     @Test
     fun homeScreenItemsTest() {
+        // Workaround to make sure the Pocket articles are populated before starting the test.
         homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.goBack {
             verifyHomeWordmark()
             verifyHomePrivateBrowsingButton()
             verifyExistingTopSitesTabs("Wikipedia")
