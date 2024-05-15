@@ -17,27 +17,6 @@
 
 namespace mozilla {
 
-// TODO: Remove this function and simply use `avcodec_find_encoder` once
-// libopenh264 is supported.
-static AVCodec* FindEncoderWithPreference(const FFmpegLibWrapper* aLib,
-                                          AVCodecID aCodecId) {
-  MOZ_ASSERT(aLib);
-
-  AVCodec* codec = nullptr;
-
-  // Prioritize libx264 for now since it's the only h264 codec we tested.
-  if (aCodecId == AV_CODEC_ID_H264) {
-    codec = aLib->avcodec_find_encoder_by_name("libx264");
-    if (codec) {
-      FFMPEGV_LOG("Prefer libx264 for h264 codec");
-      return codec;
-    }
-    FFMPEGV_LOG("Fallback to other h264 library. Fingers crossed");
-  }
-
-  return aLib->avcodec_find_encoder(aCodecId);
-}
-
 template <>
 AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(CodecType aCodec) {
 #if LIBAVCODEC_VERSION_MAJOR >= 58
@@ -49,11 +28,9 @@ AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(CodecType aCodec) {
     return AV_CODEC_ID_VP9;
   }
 
-#  if !defined(USING_MOZFFVPX)
   if (aCodec == CodecType::H264) {
     return AV_CODEC_ID_H264;
   }
-#  endif
 
   if (aCodec == CodecType::AV1) {
     return AV_CODEC_ID_AV1;
@@ -68,6 +45,26 @@ AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(CodecType aCodec) {
   }
 #endif
   return AV_CODEC_ID_NONE;
+}
+
+/* static */
+AVCodec* FFmpegDataEncoder<LIBAV_VER>::FindEncoderWithPreference(
+    const FFmpegLibWrapper* aLib, AVCodecID aCodecId) {
+  MOZ_ASSERT(aLib);
+
+  // Prioritize libx264 for now since it's the only h264 codec we tested. Once
+  // libopenh264 is supported, we can simply use `avcodec_find_encoder` and
+  // rename this function.
+  if (aCodecId == AV_CODEC_ID_H264) {
+    AVCodec* codec = aLib->avcodec_find_encoder_by_name("libx264");
+    if (codec) {
+      FFMPEGV_LOG("Prefer libx264 for h264 codec");
+      return codec;
+    }
+    FFMPEGV_LOG("Fallback to other h264 library. Fingers crossed");
+  }
+
+  return aLib->avcodec_find_encoder(aCodecId);
 }
 
 StaticMutex FFmpegDataEncoder<LIBAV_VER>::sMutex;
