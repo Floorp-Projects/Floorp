@@ -43,7 +43,7 @@ class HTMLOptionsCollection;
  * Frame-based listbox.
  */
 
-class nsListControlFrame final : public nsHTMLScrollFrame,
+class nsListControlFrame final : public mozilla::ScrollContainerFrame,
                                  public nsIFormControlFrame,
                                  public nsISelectControlFrame {
  public:
@@ -195,7 +195,7 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
   bool MightNeedSecondPass() const { return mMightNeedSecondPass; }
 
   void SetSuppressScrollbarUpdate(bool aSuppress) {
-    nsHTMLScrollFrame::SetSuppressScrollbarUpdate(aSuppress);
+    ScrollContainerFrame::SetSuppressScrollbarUpdate(aSuppress);
   }
 
   /**

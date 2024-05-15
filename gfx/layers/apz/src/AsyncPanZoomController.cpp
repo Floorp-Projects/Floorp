@@ -6543,7 +6543,7 @@ Maybe<CSSSnapDestination> AsyncPanZoomController::FindSnapPointNear(
     // GetSnapPointForDestination() can produce a destination that's outside
     // of the scroll frame's scroll range. Clamp it here (this matches the
     // behaviour of the main-thread code path, which clamps it in
-    // nsGfxScrollFrame::ScrollTo()).
+    // ScrollContainerFrame::ScrollTo()).
     return Some(CSSSnapDestination{scrollRange.ClampPoint(cssSnapPoint),
                                    snapDestination->mTargetIds});
   }

@@ -1398,7 +1398,7 @@ nsRect nsLayoutUtils::GetScrolledRect(nsIFrame* aScrolledFrame,
                                       StyleDirection aDirection) {
   WritingMode wm = aScrolledFrame->GetWritingMode();
   // Potentially override the frame's direction to use the direction found
-  // by nsHTMLScrollFrame::GetScrolledFrameDir()
+  // by ScrollContainerFrame::GetScrolledFrameDir()
   wm.SetDirectionFromBidiLevel(aDirection == StyleDirection::Rtl
                                    ? mozilla::intl::BidiEmbeddingLevel::RTL()
                                    : mozilla::intl::BidiEmbeddingLevel::LTR());
@@ -3165,7 +3165,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       // In cases where the root document is a XUL document, we want to take
       // the ViewID from the root element, as that will be the ViewID of the
       // root APZC in the tree. Skip doing this in cases where we know
-      // nsGfxScrollFrame::BuilDisplayList will do it instead.
+      // ScrollContainerFrame::BuilDisplayList will do it instead.
       if (dom::Element* element =
               presShell->GetDocument()->GetDocumentElement()) {
         id = nsLayoutUtils::FindOrCreateIDFor(element);
@@ -4162,7 +4162,7 @@ static bool GetPercentBSize(const LengthPercentage& aStyle, nsIFrame* aFrame,
   MOZ_ASSERT(!aStyle.ConvertsToLength(),
              "GetAbsoluteCoord should have handled this");
 
-  // During reflow, nsHTMLScrollFrame::ReflowScrolledFrame uses
+  // During reflow, ScrollContainerFrame::ReflowScrolledFrame uses
   // SetComputedHeight on the reflow input for its child to propagate its
   // computed height to the scrolled content. So here we skip to the scroll
   // frame that contains this scrolled content in order to get the same

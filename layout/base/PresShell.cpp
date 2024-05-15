@@ -6079,7 +6079,7 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
       // We can properly set the base rect for root scroll frames on top level
       // and root content documents. Otherwise the base rect we compute might
       // be way too big without the limiting that
-      // nsHTMLScrollFrame::DecideScrollableLayer does, so we just ignore the
+      // ScrollContainerFrame::DecideScrollableLayer does, so we just ignore the
       // displayport in that case.
       nsPresContext* pc = aFrame->PresContext();
       if (scrollFrame->IsRootScrollFrameOfDocument() &&
@@ -11476,7 +11476,7 @@ bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
   nsPoint newOffset = aScrollOffset;
   nsIScrollableFrame* rootScrollFrame = GetRootScrollFrameAsScrollable();
   if (rootScrollFrame) {
-    // See the comment in nsHTMLScrollFrame::Reflow above the call to
+    // See the comment in ScrollContainerFrame::Reflow above the call to
     // SetVisualViewportOffset for why we need to do this.
     nsRect scrollRange = rootScrollFrame->GetScrollRangeForUserInputEvents();
     if (!scrollRange.Contains(newOffset)) {

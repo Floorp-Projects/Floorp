@@ -3695,7 +3695,7 @@ static Subgrid* SubgridComputeMarginBorderPadding(
 
   bool scroller = false;
   nsIFrame* outerFrame = [&]() -> nsIFrame* {
-    if (nsHTMLScrollFrame* scrollFrame =
+    if (ScrollContainerFrame* scrollFrame =
             do_QueryFrame(aGridItem.mFrame->GetScrollTargetFrame())) {
       scroller = true;
       return scrollFrame;
@@ -3720,7 +3720,7 @@ static Subgrid* SubgridComputeMarginBorderPadding(
     subgrid->mMarginBorderPadding += szOuterFrame.ComputedLogicalMargin(cbWM) +
                                      szOuterFrame.ComputedLogicalBorder(cbWM);
     if (scroller) {
-      nsMargin ssz = static_cast<nsHTMLScrollFrame*>(outerFrame)
+      nsMargin ssz = static_cast<ScrollContainerFrame*>(outerFrame)
                          ->IntrinsicScrollbarGutterSize();
       subgrid->mMarginBorderPadding += LogicalMargin(cbWM, ssz);
     } else {

@@ -769,7 +769,7 @@ static nsIFrame* GetFrameForChildrenOnlyTransformHint(nsIFrame* aFrame) {
     // GetContent() returns nullptr for ViewportFrame.
     aFrame = aFrame->PrincipalChildList().FirstChild();
   }
-  // For an nsHTMLScrollFrame, this will get the SVG frame that has the
+  // For a ScrollContainerFrame, this will get the SVG frame that has the
   // children-only transforms:
   aFrame = aFrame->GetContent()->GetPrimaryFrame();
   if (aFrame->IsSVGOuterSVGFrame()) {

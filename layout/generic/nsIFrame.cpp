@@ -3219,8 +3219,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
   AutoSaveRestoreContainsBlendMode autoRestoreBlendMode(*aBuilder);
   aBuilder->SetContainsBlendMode(false);
 
-  // NOTE: When changing this condition make sure to tweak nsGfxScrollFrame as
-  // well.
+  // NOTE: When changing this condition make sure to tweak ScrollContainerFrame
+  // as well.
   bool usingBackdropFilter = effects->HasBackdropFilters() &&
                              IsVisibleForPainting() &&
                              !style.IsRootElementStyle();
@@ -11579,7 +11579,7 @@ nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
   }
 
   // clip overflow:clip, except for nsListControlFrame which is
-  // an nsHTMLScrollFrame sub-class.
+  // a ScrollContainerFrame sub-class.
   if (MOZ_UNLIKELY((aDisp->mOverflowX == mozilla::StyleOverflow::Clip ||
                     aDisp->mOverflowY == mozilla::StyleOverflow::Clip) &&
                    !IsListControlFrame())) {

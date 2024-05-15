@@ -213,9 +213,6 @@ nsIFrame* NS_NewMenuPopupFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewTreeBodyFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsHTMLScrollFrame* NS_NewHTMLScrollFrame(PresShell* aPresShell,
-                                         ComputedStyle* aStyle, bool aIsRoot);
-
 nsIFrame* NS_NewSliderFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewScrollbarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
@@ -468,10 +465,10 @@ static nsIFrame* GetIBContainingBlockFor(nsIFrame* aFrame) {
 // Find the multicol containing block suitable for reframing.
 //
 // Note: this function may not return a ColumnSetWrapperFrame. For example, if
-// the multicol containing block has "overflow:scroll" style, HTMLScrollFrame is
-// returned because ColumnSetWrapperFrame is the scrolled frame which has the
-// -moz-scrolled-content pseudo style. We may walk up "too far", but in terms of
-// correctness of reframing, it's OK.
+// the multicol containing block has "overflow:scroll" style,
+// ScrollContainerFrame is returned because ColumnSetWrapperFrame is the
+// scrolled frame which has the -moz-scrolled-content pseudo style. We may walk
+// up "too far", but in terms of correctness of reframing, it's OK.
 static nsContainerFrame* GetMultiColumnContainingBlockFor(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR),
              "Should only be called if the frame has a multi-column ancestor!");
@@ -2684,7 +2681,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   Galley presentation, with scrolling:
 
       ViewportFrame [fixed-cb]
-        nsHTMLScrollFrame (if needed)
+        ScrollContainerFrame (if needed)
           nsCanvasFrame [abs-cb]
             root element frame (nsBlockFrame, SVGOuterSVGFrame,
                                 nsTableWrapperFrame, nsPlaceholderFrame)
@@ -2704,7 +2701,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   Print-preview presentation, non-XUL
 
       ViewportFrame
-        nsHTMLScrollFrame
+        ScrollContainerFrame
           nsCanvasFrame
             nsPageSequenceFrame
               PrintedSheetFrame
@@ -4179,7 +4176,8 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
   nsContainerFrame* gfxScrollFrame = aNewFrame;
 
   if (!gfxScrollFrame) {
-    gfxScrollFrame = NS_NewHTMLScrollFrame(mPresShell, aContentStyle, aIsRoot);
+    gfxScrollFrame =
+        NS_NewScrollContainerFrame(mPresShell, aContentStyle, aIsRoot);
     InitAndRestoreFrame(aState, aContent, aParentFrame, gfxScrollFrame);
   }
 

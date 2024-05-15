@@ -45,12 +45,12 @@ static mozilla::LazyLogModule sAnchorLog("scrollanchor");
 
 namespace mozilla::layout {
 
-nsHTMLScrollFrame* ScrollAnchorContainer::Frame() const {
-  return reinterpret_cast<nsHTMLScrollFrame*>(
-      ((char*)this) - offsetof(nsHTMLScrollFrame, mAnchor));
+ScrollContainerFrame* ScrollAnchorContainer::Frame() const {
+  return reinterpret_cast<ScrollContainerFrame*>(
+      ((char*)this) - offsetof(ScrollContainerFrame, mAnchor));
 }
 
-ScrollAnchorContainer::ScrollAnchorContainer(nsHTMLScrollFrame* aScrollFrame)
+ScrollAnchorContainer::ScrollAnchorContainer(ScrollContainerFrame* aScrollFrame)
     : mDisabled(false),
       mAnchorMightBeSubOptimal(false),
       mAnchorNodeIsDirty(true),
@@ -199,16 +199,16 @@ static nsRect FindScrollAnchoringBoundingRect(const nsIFrame* aScrollFrame,
 
 /**
  * Compute the offset between the scrollable overflow rect start edge of
- * aCandidate and the scroll-port start edge of aScrollFrame, in the block axis
- * of aScrollFrame.
+ * aCandidate and the scroll-port start edge of aScrollContainerFrame, in the
+ * block axis of aScrollContainerFrame.
  */
 static nscoord FindScrollAnchoringBoundingOffset(
-    const nsHTMLScrollFrame* aScrollFrame, nsIFrame* aCandidate) {
-  WritingMode writingMode = aScrollFrame->GetWritingMode();
+    const ScrollContainerFrame* aScrollContainerFrame, nsIFrame* aCandidate) {
+  WritingMode writingMode = aScrollContainerFrame->GetWritingMode();
   nsRect physicalBounding =
-      FindScrollAnchoringBoundingRect(aScrollFrame, aCandidate);
+      FindScrollAnchoringBoundingRect(aScrollContainerFrame, aCandidate);
   LogicalRect logicalBounding(writingMode, physicalBounding,
-                              aScrollFrame->mScrolledFrame->GetSize());
+                              aScrollContainerFrame->mScrolledFrame->GetSize());
   return logicalBounding.BStart(writingMode);
 }
 

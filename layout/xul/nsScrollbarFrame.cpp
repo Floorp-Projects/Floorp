@@ -160,7 +160,7 @@ nsresult nsScrollbarFrame::AttributeChanged(int32_t aNameSpaceID,
   // Update value in our children
   UpdateChildrenAttributeValue(aAttribute, true);
 
-  // if the current position changes, notify any nsGfxScrollFrame
+  // if the current position changes, notify any ScrollContainerFrame
   // parent we may have
   if (aAttribute != nsGkAtoms::curpos) {
     return rv;

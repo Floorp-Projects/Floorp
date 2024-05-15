@@ -35,6 +35,7 @@ class AutoContainsBlendModeCapturer;
 namespace mozilla {
 class PresShell;
 enum class StyleScrollbarWidth : uint8_t;
+class ScrollContainerFrame;
 struct ScrollReflowInput;
 struct StyleScrollSnapAlign;
 namespace layers {
@@ -47,6 +48,12 @@ class ScrollbarActivity;
 
 }  // namespace mozilla
 
+mozilla::ScrollContainerFrame* NS_NewScrollContainerFrame(
+    mozilla::PresShell* aPresShell, mozilla::ComputedStyle* aStyle,
+    bool aIsRoot);
+
+namespace mozilla {
+
 /**
  * The scroll frame creates and manages the scrolling view
  *
@@ -56,11 +63,11 @@ class ScrollbarActivity;
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsHTMLScrollFrame : public nsContainerFrame,
-                          public nsIScrollableFrame,
-                          public nsIAnonymousContentCreator,
-                          public nsIReflowCallback,
-                          public nsIStatefulFrame {
+class ScrollContainerFrame : public nsContainerFrame,
+                             public nsIScrollableFrame,
+                             public nsIAnonymousContentCreator,
+                             public nsIReflowCallback,
+                             public nsIStatefulFrame {
  public:
   using Sides = nsIFrame::Sides;
   using ScrollbarActivity = mozilla::layout::ScrollbarActivity;
@@ -82,12 +89,13 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   using CSSPoint = mozilla::CSSPoint;
   using ScrollReflowInput = mozilla::ScrollReflowInput;
   using ScrollAnchorContainer = mozilla::layout::ScrollAnchorContainer;
-  friend nsHTMLScrollFrame* NS_NewHTMLScrollFrame(
+
+  friend ScrollContainerFrame* ::NS_NewScrollContainerFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle, bool aIsRoot);
   friend class mozilla::layout::ScrollAnchorContainer;
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS(nsHTMLScrollFrame)
+  NS_DECL_FRAMEARENA_HELPERS(ScrollContainerFrame)
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;
@@ -170,7 +178,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void Destroy(DestroyContext&) override;
 
   nsIScrollableFrame* GetScrollTargetFrame() const final {
-    return const_cast<nsHTMLScrollFrame*>(this);
+    return const_cast<ScrollContainerFrame*>(this);
   }
 
   nsContainerFrame* GetContentInsertionFrame() override {
@@ -445,12 +453,12 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 #endif
 
  protected:
-  nsHTMLScrollFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
-                    bool aIsRoot)
-      : nsHTMLScrollFrame(aStyle, aPresContext, kClassID, aIsRoot) {}
-  nsHTMLScrollFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
-                    nsIFrame::ClassID aID, bool aIsRoot);
-  ~nsHTMLScrollFrame();
+  ScrollContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                       bool aIsRoot)
+      : ScrollContainerFrame(aStyle, aPresContext, kClassID, aIsRoot) {}
+  ScrollContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                       nsIFrame::ClassID aID, bool aIsRoot);
+  ~ScrollContainerFrame();
   void SetSuppressScrollbarUpdate(bool aSuppress) {
     mSuppressScrollbarUpdate = aSuppress;
   }
@@ -602,9 +610,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   bool IsProcessingScrollEvent() const { return mProcessingScrollEvent; }
 
  public:
-  static void AsyncScrollCallback(nsHTMLScrollFrame* aInstance,
+  static void AsyncScrollCallback(ScrollContainerFrame* aInstance,
                                   mozilla::TimeStamp aTime);
-  static void AsyncSmoothMSDScrollCallback(nsHTMLScrollFrame* aInstance,
+  static void AsyncSmoothMSDScrollCallback(ScrollContainerFrame* aInstance,
                                            mozilla::TimeDuration aDeltaTime);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -664,8 +672,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
    * behavior.
    *
    * Currently it allows scrolling down and to the right for
-   * nsHTMLScrollFrames with LTR directionality, and allows scrolling down and
-   * to the left for nsHTMLScrollFrames with RTL directionality.
+   * ScrollContainerFrames with LTR directionality, and allows scrolling down
+   * and to the left for ScrollContainerFrames with RTL directionality.
    */
   nsRect GetUnsnappedScrolledRectInternal(const nsRect& aScrolledOverflowArea,
                                           const nsSize& aScrollPortSize) const;
@@ -995,7 +1003,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   friend class AutoScrollbarRepaintSuppression;
   class AutoScrollbarRepaintSuppression {
    public:
-    AutoScrollbarRepaintSuppression(nsHTMLScrollFrame* aFrame,
+    AutoScrollbarRepaintSuppression(ScrollContainerFrame* aFrame,
                                     AutoWeakFrame& aWeakOuter, bool aSuppress)
         : mFrame(aFrame),
           mWeakOuter(aWeakOuter),
@@ -1010,7 +1018,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     }
 
    private:
-    nsHTMLScrollFrame* mFrame;
+    ScrollContainerFrame* mFrame;
     AutoWeakFrame& mWeakOuter;
     bool mOldSuppressValue;
   };
@@ -1091,6 +1099,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   mozilla::UniquePtr<ScrollSnapTargetIds> mLastSnapTargetIds;
 };
 
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsHTMLScrollFrame::OverflowState)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScrollContainerFrame::OverflowState)
+
+}  // namespace mozilla
 
 #endif /* mozilla_ScrollContainerFrame_h_ */
