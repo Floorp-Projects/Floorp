@@ -19,7 +19,11 @@
 #define MEM_SRCDST_SUPPORTED 1
 
 /* Use accelerated SIMD routines. */
+#if defined(__sparc__)
+#undef  WITH_SIMD
+#else
 #define WITH_SIMD 1
+#endif
 
 /* This version of libjpeg-turbo supports run-time selection of data precision,
  * so BITS_IN_JSAMPLE is no longer used to specify the data precision at build
