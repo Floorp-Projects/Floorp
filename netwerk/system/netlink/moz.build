@@ -9,7 +9,4 @@ if CONFIG["OS_ARCH"] == "Linux":
         "NetlinkService.cpp",
     ]
 
-# for socket
-OS_LIBS += CONFIG["SOCKET_LIBS"]
-
 FINAL_LIBRARY = "xul"

@@ -53,33 +53,3 @@ have_res_ninit = try_link(
 )
 
 set_define("HAVE_RES_NINIT", have_res_ninit)
-
-# We don't want to link with libdl even if it's present on OS X, since
-# it's not used and not part of the default installation.
-# We don't want to link against libm or libpthread on Darwin since
-# they both are just symlinks to libSystem and explicitly linking
-# against libSystem causes issues when debugging (see bug 299601).
-with only_when(building_with_gnu_cc & ~target_is_darwin):
-    check_header("dlfcn.h")
-
-    dlopen_check = check_symbol_in_libs(["dl", None], symbol="dlopen")
-    dladdr_check = check_symbol_in_libs(["dl", None], symbol="dladdr")
-
-    set_config("DL_LIBS", ["-ldl"], when=depends(dlopen_check)(lambda check: check.lib))
-
-    set_define(
-        "HAVE_DLADDR", depends(dladdr_check)(lambda check: "1" if check.found else "0")
-    )
-
-set_config(
-    "C_R_LIBS",
-    ["-lc_r"],
-    when=check_symbol_in_lib(
-        "c_r", symbol="gethostbyname_r", when=building_with_gnu_cc
-    ),
-)
-set_config(
-    "SOCKET_LIBS",
-    ["-lsocket"],
-    when=check_symbol_in_lib("socket", symbol="socket", when=building_with_gnu_cc),
-)

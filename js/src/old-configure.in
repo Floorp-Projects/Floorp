@@ -442,6 +442,36 @@ AC_LANG_CPLUSPLUS
 
 MOZ_CXX11
 
+dnl Checks for libraries.
+dnl ========================================================
+AC_CHECK_LIB(c_r, gethostbyname_r)
+
+dnl We don't want to link with libdl even if it's present on OS X, since
+dnl it's not used and not part of the default installation. OS/2 has dlfcn
+dnl in libc.
+dnl We don't want to link against libm or libpthread on Darwin since
+dnl they both are just symlinks to libSystem and explicitly linking
+dnl against libSystem causes issues when debugging (see bug 299601).
+case $target in
+*-darwin*)
+    ;;
+*)
+    AC_SEARCH_LIBS(dlopen, dl,
+        MOZ_CHECK_HEADER(dlfcn.h,
+        AC_DEFINE(HAVE_DLOPEN)))
+    ;;
+esac
+
+_SAVE_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -D_GNU_SOURCE"
+AC_CHECK_FUNCS(dladdr)
+CFLAGS="$_SAVE_CFLAGS"
+
+if test ! "$GNU_CXX"; then
+    AC_CHECK_LIB(C, demangle)
+fi
+
+AC_CHECK_LIB(socket, socket)
 
 dnl ========================================================
 dnl = pthread support

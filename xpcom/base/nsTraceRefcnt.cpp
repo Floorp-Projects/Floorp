@@ -50,7 +50,7 @@
 #include <string>
 #include <vector>
 
-#ifdef HAVE_DLFCN_H
+#ifdef HAVE_DLOPEN
 #  include <dlfcn.h>
 #endif
 
