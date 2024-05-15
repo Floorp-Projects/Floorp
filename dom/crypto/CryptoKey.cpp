@@ -195,6 +195,9 @@ void CryptoKey::GetAlgorithm(JSContext* cx,
     case KeyAlgorithmProxy::AES:
       converted = ToJSValue(cx, mAlgorithm.mAes, &val);
       break;
+    case KeyAlgorithmProxy::KDF:
+      converted = ToJSValue(cx, mAlgorithm.mKDF, &val);
+      break;
     case KeyAlgorithmProxy::HMAC:
       converted = ToJSValue(cx, mAlgorithm.mHmac, &val);
       break;

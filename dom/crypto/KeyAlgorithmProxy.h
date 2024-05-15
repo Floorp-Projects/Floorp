@@ -55,12 +55,7 @@ struct RsaHashedKeyAlgorithmStorage {
 // This class encapuslates a KeyAlgorithm object, and adds several
 // methods that make WebCrypto operations simpler.
 struct KeyAlgorithmProxy {
-  enum KeyAlgorithmType {
-    AES,
-    HMAC,
-    RSA,
-    EC,
-  };
+  enum KeyAlgorithmType { AES, HMAC, RSA, EC, KDF };
   KeyAlgorithmType mType;
 
   // Plain is always populated with the algorithm name
@@ -70,6 +65,7 @@ struct KeyAlgorithmProxy {
   HmacKeyAlgorithm mHmac;
   RsaHashedKeyAlgorithmStorage mRsa;
   EcKeyAlgorithm mEc;
+  KeyAlgorithm mKDF;
 
   // Structured clone
   bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
@@ -90,6 +86,12 @@ struct KeyAlgorithmProxy {
     mName = aName;
     mAes.mName = aName;
     mAes.mLength = aLength;
+  }
+
+  void MakeKDF(const nsString& aName) {
+    mType = KDF;
+    mName = aName;
+    mKDF.mName = aName;
   }
 
   void MakeHmac(uint32_t aLength, const nsString& aHashName) {

@@ -23,6 +23,8 @@ bool KeyAlgorithmProxy::WriteStructuredClone(
   switch (mType) {
     case AES:
       return JS_WriteUint32Pair(aWriter, mAes.mLength, 0);
+    case KDF:
+      return true;
     case HMAC:
       return JS_WriteUint32Pair(aWriter, mHmac.mLength, 0) &&
              StructuredCloneHolder::WriteString(aWriter, mHmac.mHash.mName);
@@ -62,6 +64,10 @@ bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
       mAes.mName = mName;
       return true;
     }
+    case KDF:
+      mType = KDF;
+      mKDF.mName = mName;
+      return true;
     case HMAC: {
       mType = HMAC;
 
