@@ -2122,10 +2122,13 @@ nsIContentHandle* nsHtml5TreeBuilder::getDeclarativeShadowRoot(
   }
   bool shadowRootIsClonable =
       attributes->contains(nsHtml5AttributeName::ATTR_SHADOWROOTCLONABLE);
+  bool shadowRootIsSerializable =
+      attributes->contains(nsHtml5AttributeName::ATTR_SHADOWROOTSERIALIZABLE);
   bool shadowRootDelegatesFocus =
       attributes->contains(nsHtml5AttributeName::ATTR_SHADOWROOTDELEGATESFOCUS);
   return getShadowRootFromHost(currentNode, templateNode, shadowRootMode,
-                               shadowRootIsClonable, shadowRootDelegatesFocus);
+                               shadowRootIsClonable, shadowRootIsSerializable,
+                               shadowRootDelegatesFocus);
 }
 
 nsHtml5String nsHtml5TreeBuilder::extractCharsetFromContent(
