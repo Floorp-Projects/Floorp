@@ -5314,6 +5314,11 @@ class CloneBufferObject : public NativeObject {
       return false;
     }
 
+    if (data == nullptr) {
+      args.rval().setUndefined();
+      return true;
+    }
+
     size_t size = data->Size();
     UniqueChars buffer(js_pod_malloc<char>(size));
     if (!buffer) {
@@ -5347,6 +5352,11 @@ class CloneBufferObject : public NativeObject {
     JSStructuredCloneData* data;
     if (!getData(cx, obj, &data)) {
       return false;
+    }
+
+    if (data == nullptr) {
+      args.rval().setUndefined();
+      return true;
     }
 
     size_t size = data->Size();
