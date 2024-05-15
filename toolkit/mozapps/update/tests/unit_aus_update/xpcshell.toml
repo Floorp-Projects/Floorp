@@ -77,6 +77,8 @@ reason = "Update pref migration is currently Windows only"
 run-if = ["os == 'win'"]
 reason = "Update directory migration is currently Windows only"
 
+["updateEnabledTelemetry.js"]
+
 ["updateManagerXML.js"]
 
 ["updateSyncManager.js"]
