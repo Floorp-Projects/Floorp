@@ -198,6 +198,8 @@
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Додатки</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_extensions">Розширення</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_manage_extensions">Керувати розширеннями</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Ваш обліковий запис</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -217,6 +219,8 @@
     <string name="browser_menu_open_in_regular_tab">Відкрити у звичайній вкладці</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Додати на головний екран</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Додати на головний екран…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Встановити</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -231,6 +235,8 @@
     <string name="browser_menu_save_to_collection_2">Зберегти до збірки</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Поділитися</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share_2">Поділитися…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Відкрити в %1$s</string>
@@ -283,6 +289,18 @@
     <!-- Browser menu label that navigates to the save sub-menu, which contains various save related menu items such as
          bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
     <string name="browser_menu_save">Зберегти</string>
+
+    <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
+    <string name="browser_menu_edit_bookmark">Редагувати закладку</string>
+    <!-- Browser menu label that the saves the currently visited page as a PDF -->
+    <string name="browser_menu_save_as_pdf">Зберегти як PDF…</string>
+    <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
+    <string name="browser_menu_translate_page">Перекласти сторінку…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">Перекладено на %1$s</string>
+    <!-- Browser menu label for the print feature -->
+    <string name="browser_menu_print">Друкувати…</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -593,7 +611,9 @@
     <!-- Preference for language -->
     <string name="preferences_language">Мова</string>
     <!-- Preference for translation -->
-    <string name="preferences_translation">Переклад</string>
+    <string name="preferences_translation" moz:removedIn="127" tools:ignore="UnusedResources">Переклад</string>
+    <!-- Preference for translations -->
+    <string name="preferences_translations">Переклади</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Вибір даних</string>
     <!-- Preference for data collection -->
@@ -2718,13 +2738,16 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Перейти назад</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
+    <string name="debug_drawer_fab_content_description">Відкрити панель налагодження</string>
+
     <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Інструменти вкладки</string>
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Кількість вкладок</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Активні</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Активні</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Неактивні</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->

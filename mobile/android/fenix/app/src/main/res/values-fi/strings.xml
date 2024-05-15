@@ -223,6 +223,8 @@
     <string name="browser_menu_open_in_regular_tab">Avaa tavallisessa välilehdessä</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Lisää aloitusnäytölle</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen_2">Lisää aloitusnäytölle…</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Asenna</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -304,6 +306,9 @@
     <string name="browser_menu_save_as_pdf">Tallenna PDF-muodossa…</string>
     <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
     <string name="browser_menu_translate_page">Käännä sivu…</string>
+    <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.
+         The first parameter is the name of the language that page was translated to (e.g. English). -->
+    <string name="browser_menu_translated_to">Käännetty kielelle %1$s</string>
     <!-- Browser menu label for the print feature -->
     <string name="browser_menu_print">Tulosta…</string>
 
