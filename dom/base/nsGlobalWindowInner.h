@@ -495,6 +495,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
                   mozilla::dom::Gamepad* aGamepad);
   void RemoveGamepad(mozilla::dom::GamepadHandle aHandle);
   void GetGamepads(nsTArray<RefPtr<mozilla::dom::Gamepad>>& aGamepads);
+  already_AddRefed<mozilla::dom::Promise> RequestAllGamepads(
+      mozilla::ErrorResult& aRv);
   already_AddRefed<mozilla::dom::Gamepad> GetGamepad(
       mozilla::dom::GamepadHandle aHandle);
   void SetHasSeenGamepadInput(bool aHasSeen);

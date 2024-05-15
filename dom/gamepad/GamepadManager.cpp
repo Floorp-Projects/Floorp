@@ -659,4 +659,38 @@ already_AddRefed<Promise> GamepadManager::SetLightIndicatorColor(
   ++mPromiseID;
   return promise.forget();
 }
+
+already_AddRefed<Promise> GamepadManager::RequestAllGamepads(
+    nsIGlobalObject* aGlobal, ErrorResult& aRv) {
+  RefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  if (!mChannelChild) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  mChannelChild->SendRequestAllGamepads(
+      [promise](const nsTArray<GamepadAdded>& aAddedGamepads) {
+        nsTArray<RefPtr<Gamepad>> gamepads;
+
+        for (const auto& addedGamepad : aAddedGamepads) {
+          RefPtr<Gamepad> gamepad = new Gamepad(
+              nullptr, addedGamepad.id(), 0, GamepadHandle(),
+              addedGamepad.mapping(), addedGamepad.hand(),
+              addedGamepad.display_id(), addedGamepad.num_buttons(),
+              addedGamepad.num_axes(), addedGamepad.num_haptics(),
+              addedGamepad.num_lights(), addedGamepad.num_touches());
+          gamepads.AppendElement(gamepad);
+        }
+        promise->MaybeResolve(gamepads);
+      },
+      [promise](mozilla::ipc::ResponseRejectReason) {
+        promise->MaybeReject(NS_ERROR_UNEXPECTED);
+      });
+
+  return promise.forget();
+}
 }  // namespace mozilla::dom
