@@ -74,8 +74,6 @@ skip-if = ["!crashreporter"]
 
 ["browser_test_moving_tab_to_new_window.js"]
 
-["browser_test_prevent_events.js"]
-
 ["browser_test_resize.js"]
 
 ["browser_test_selection_size_text.js"]

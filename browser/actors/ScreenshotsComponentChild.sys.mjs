@@ -10,14 +10,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ScreenshotsOverlay: "resource:///modules/ScreenshotsOverlayChild.sys.mjs",
 });
 
-const SCREENSHOTS_PREVENT_CONTENT_EVENTS_PREF =
-  "screenshots.browser.component.preventContentEvents";
-
 export class ScreenshotsComponentChild extends JSWindowActorChild {
   #resizeTask;
   #scrollTask;
   #overlay;
-  #preventableEventsAdded = false;
 
   static OVERLAY_EVENTS = [
     "click",
@@ -26,21 +22,6 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     "pointerup",
     "keyup",
     "keydown",
-  ];
-
-  // The following events are only listened to so we can prevent them from
-  // reaching the content page. The events in OVERLAY_EVENTS are also prevented.
-  static PREVENTABLE_EVENTS = [
-    "mousemove",
-    "mousedown",
-    "mouseup",
-    "touchstart",
-    "touchmove",
-    "touchend",
-    "dblclick",
-    "auxclick",
-    "keypress",
-    "contextmenu",
   ];
 
   get overlay() {
@@ -81,28 +62,19 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
       return;
     }
 
-    // Handle overlay events here
-    if (
-      ScreenshotsComponentChild.OVERLAY_EVENTS.includes(event.type) ||
-      ScreenshotsComponentChild.PREVENTABLE_EVENTS.includes(event.type)
-    ) {
-      if (!this.overlay?.initialized) {
-        return;
-      }
-
-      // Preventing a pointerdown event throws an error in debug builds.
-      // See https://searchfox.org/mozilla-central/rev/b41bb321fe4bd7d03926083698ac498ebec0accf/widget/WidgetEventImpl.cpp#566-572
-      // Don't prevent the default context menu.
-      if (!["contextmenu", "pointerdown"].includes(event.type)) {
-        event.preventDefault();
-      }
-
-      event.stopImmediatePropagation();
-      this.overlay.handleEvent(event);
-      return;
-    }
-
     switch (event.type) {
+      case "click":
+      case "pointerdown":
+      case "pointermove":
+      case "pointerup":
+      case "keyup":
+      case "keydown":
+      case "selectionchange":
+        if (!this.overlay?.initialized) {
+          return;
+        }
+        this.overlay.handleEvent(event);
+        break;
       case "beforeunload":
         this.requestCancelScreenshot("navigation");
         break;
@@ -254,16 +226,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     for (let event of ScreenshotsComponentChild.OVERLAY_EVENTS) {
       chromeEventHandler.addEventListener(event, this, true);
     }
-
     this.document.addEventListener("selectionchange", this);
-
-    if (Services.prefs.getBoolPref(SCREENSHOTS_PREVENT_CONTENT_EVENTS_PREF)) {
-      for (let event of ScreenshotsComponentChild.PREVENTABLE_EVENTS) {
-        chromeEventHandler.addEventListener(event, this, true);
-      }
-
-      this.#preventableEventsAdded = true;
-    }
   }
 
   /**
@@ -301,16 +264,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     for (let event of ScreenshotsComponentChild.OVERLAY_EVENTS) {
       chromeEventHandler.removeEventListener(event, this, true);
     }
-
     this.document.removeEventListener("selectionchange", this);
-
-    if (this.#preventableEventsAdded) {
-      for (let event of ScreenshotsComponentChild.PREVENTABLE_EVENTS) {
-        chromeEventHandler.removeEventListener(event, this, true);
-      }
-    }
-
-    this.#preventableEventsAdded = false;
   }
 
   /**

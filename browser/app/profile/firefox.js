@@ -2441,9 +2441,6 @@ pref("screenshots.browser.component.enabled", true);
 // Preference that determines what button to focus
 pref("screenshots.browser.component.last-saved-method", "download");
 
-// Preference that prevents events from reaching the content page.
-pref("screenshots.browser.component.preventContentEvents", true);
-
 // DoH Rollout: whether to clear the mode value at shutdown.
 pref("doh-rollout.clearModeOnShutdown", false);
 

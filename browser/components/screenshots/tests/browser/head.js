@@ -34,31 +34,16 @@ const gScreenshotUISelectors = {
   copyButton: "button.#copy",
 };
 
-// AnonymousContentEvents is for the mouse, keyboard, and touch events on the Anonymous content
-const AnonymousContentEvents = {
+// MouseEvents is for the mouse events on the Anonymous content
+const MouseEvents = {
   mouse: new Proxy(
     {},
     {
       get: (target, name) =>
         async function (x, y, options = {}, browser) {
-          if (name.includes("click")) {
+          if (name === "click") {
             this.down(x, y, options, browser);
             this.up(x, y, options, browser);
-            if (name.includes("dbl")) {
-              this.down(x, y, options, browser);
-              this.up(x, y, options, browser);
-            }
-          } else if (name === "contextmenu") {
-            await safeSynthesizeMouseEventInContentPage(
-              ":root",
-              x,
-              y,
-              {
-                type: name,
-                ...options,
-              },
-              browser
-            );
           } else {
             await safeSynthesizeMouseEventInContentPage(
               ":root",
@@ -74,40 +59,9 @@ const AnonymousContentEvents = {
         },
     }
   ),
-  key: new Proxy(
-    {},
-    {
-      get: (target, name) =>
-        async function (key, options = {}, browser) {
-          await safeSynthesizeKeyEventInContentPage(
-            key,
-            { type: "key" + name, ...options },
-            browser
-          );
-        },
-    }
-  ),
-  touch: new Proxy(
-    {},
-    {
-      get: (target, name) =>
-        async function (x, y, options = {}, browser) {
-          await safeSynthesizeTouchEventInContentPage(
-            ":root",
-            x,
-            y,
-            {
-              type: "touch" + name,
-              ...options,
-            },
-            browser
-          );
-        },
-    }
-  ),
 };
 
-const { mouse, key, touch } = AnonymousContentEvents;
+const { mouse } = MouseEvents;
 
 class ScreenshotsHelper {
   constructor(browser) {
@@ -867,14 +821,6 @@ class ScreenshotsHelper {
     });
   }
 
-  waitForContentEventOnce(event) {
-    return ContentTask.spawn(this.browser, event, eventType => {
-      return new Promise(resolve => {
-        content.addEventListener(eventType, resolve, { once: true });
-      });
-    });
-  }
-
   /**
    * Copied from screenshots extension
    * A helper that returns the size of the image that was just put into the clipboard by the
@@ -1009,7 +955,7 @@ function getRawClipboardData(flavor) {
 }
 
 /**
- * Synthesize a mouse event on an element
+ * Synthesize a mouse event on an element, after ensuring that it is visible
  * in the viewport.
  *
  * @param {String} selector: The node selector to get the node target for the event.
@@ -1030,49 +976,7 @@ async function safeSynthesizeMouseEventInContentPage(
   } else {
     context = browser.browsingContext;
   }
-  await BrowserTestUtils.synthesizeMouse(selector, x, y, options, context);
-}
-
-/**
- * Synthesize a key event on an element
- * in the viewport.
- *
- * @param {string} key The key
- * @param {object} options: Options that will be passed to BrowserTestUtils.synthesizeKey
- */
-async function safeSynthesizeKeyEventInContentPage(aKey, options, browser) {
-  let context;
-  if (!browser) {
-    context = gBrowser.selectedBrowser.browsingContext;
-  } else {
-    context = browser.browsingContext;
-  }
-  await BrowserTestUtils.synthesizeKey(aKey, options, context);
-}
-
-/**
- * Synthesize a touch event on an element
- * in the viewport.
- *
- * @param {String} selector: The node selector to get the node target for the event.
- * @param {number} x
- * @param {number} y
- * @param {object} options: Options that will be passed to BrowserTestUtils.synthesizeTouch
- */
-async function safeSynthesizeTouchEventInContentPage(
-  selector,
-  x,
-  y,
-  options = {},
-  browser
-) {
-  let context;
-  if (!browser) {
-    context = gBrowser.selectedBrowser.browsingContext;
-  } else {
-    context = browser.browsingContext;
-  }
-  await BrowserTestUtils.synthesizeTouch(selector, x, y, options, context);
+  BrowserTestUtils.synthesizeMouse(selector, x, y, options, context);
 }
 
 add_setup(async () => {
