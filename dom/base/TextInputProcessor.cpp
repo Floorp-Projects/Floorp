@@ -1251,6 +1251,71 @@ nsresult TextInputProcessor::KeyupInternal(
 }
 
 NS_IMETHODIMP
+TextInputProcessor::InsertTextWithKeyPress(const nsAString& aString,
+                                           Event* aDOMKeyEvent,
+                                           uint32_t aKeyFlags,
+                                           uint8_t aOptionalArgc,
+                                           bool* aDoDefault) {
+  MOZ_RELEASE_ASSERT(aDoDefault, "aDoDefault must not be nullptr");
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+
+  nsresult rv = IsValidStateForComposition();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (aOptionalArgc < 1) {
+    aDOMKeyEvent = nullptr;
+  }
+  if (aOptionalArgc < 2) {
+    aKeyFlags = 0;
+  }
+  *aDoDefault = !(aKeyFlags & KEY_DEFAULT_PREVENTED);
+
+  WidgetKeyboardEvent* const originalKeyEvent =
+      aDOMKeyEvent ? aDOMKeyEvent->WidgetEventPtr()->AsKeyboardEvent()
+                   : nullptr;
+  if (NS_WARN_IF(aDOMKeyEvent && !originalKeyEvent)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  WidgetKeyboardEvent keyEvent(true, eKeyPress, nullptr);
+  if (originalKeyEvent) {
+    keyEvent = WidgetKeyboardEvent(*originalKeyEvent);
+    keyEvent.mFlags.mIsTrusted = true;
+    keyEvent.mMessage = eKeyPress;
+  }
+  keyEvent.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
+  keyEvent.mKeyValue = aString;
+  rv = PrepareKeyboardEventToDispatch(keyEvent, aKeyFlags);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  // Do not dispatch modifier key events even if the source event is a modifier
+  // key event because modifier state should be changed before this.
+  // TODO: In some test scenarios, we may need a new flag to use the given
+  // modifier state as-is.
+  keyEvent.mModifiers = GetActiveModifiers();
+
+  // See KeyDownInternal() for the detail of this.
+  if (XRE_IsContentProcess()) {
+    nsresult rv = InitEditCommands(keyEvent);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  nsEventStatus status =
+      *aDoDefault ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
+  RefPtr<TextEventDispatcher> dispatcher(mDispatcher);
+  if (dispatcher->MaybeDispatchKeypressEvents(keyEvent, status)) {
+    *aDoDefault = (status != nsEventStatus_eConsumeNoDefault);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TextInputProcessor::GetModifierState(const nsAString& aModifierKeyName,
                                      bool* aActive) {
   MOZ_RELEASE_ASSERT(aActive, "aActive must not be null");

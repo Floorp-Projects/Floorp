@@ -585,6 +585,25 @@ interface nsITextInputProcessor : nsISupports
                   [optional] in unsigned long aKeyFlags);
 
   /**
+   * insertTextWithKeyPress() is designed for automated tests.  This dispatches
+   * isolated eKeyPress events to insert aString if selection is in an editable
+   * element.
+   *
+   * @aString           The string which will be inserted.
+   * @aKeyboardEvent    [optional]  This is nullable.   If specified as
+   *                    non-nullptr, the insertion is emulated as caused by the
+   *                    key event.
+   * @param aKeyFlags   Special flags.  The values can be some of KEY_*
+   *                    constants.
+   * @return            false if one of the dispatched eKeyPress event is
+   *                    consumed.
+   */
+  [can_run_script, optional_argc]
+    boolean insertTextWithKeyPress(in AString aString,
+                                   [optional] in Event aKeyboardEvent,
+                                   [optional] in unsigned long aKeyFlags);
+
+  /**
    * getModifierState() returns modifier state managed by this instance.
    *
    * @param aModifier       One of modifier key names.  This doesn't support
