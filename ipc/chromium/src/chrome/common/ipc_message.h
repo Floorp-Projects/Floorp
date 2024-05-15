@@ -352,6 +352,13 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   void SetFuzzMsg() { isFuzzMsg = true; }
 #endif
 
+  void NoteLargeBufferShmemFailure(uint32_t size) {
+    large_buffer_shmem_failure_size_ += size;
+  }
+  size_t LargeBufferShmemFailureSize() const {
+    return large_buffer_shmem_failure_size_;
+  }
+
   friend class Channel;
   friend class MessageReplyDeserializer;
   friend class SyncMessage;
@@ -401,6 +408,11 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // deserializing a message.
   mutable nsTArray<mozilla::UniqueMachSendRight> attached_send_rights_;
 #endif
+
+  // Total size of buffers which should have been sent in shared memory, but had
+  // to fall back to being sent inline due to shmem allocation or mapping
+  // failures.
+  uint32_t large_buffer_shmem_failure_size_ = 0;
 
 #ifdef FUZZING_SNAPSHOT
   bool isFuzzMsg = false;

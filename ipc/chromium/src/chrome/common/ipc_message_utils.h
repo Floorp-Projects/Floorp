@@ -116,6 +116,10 @@ class MOZ_STACK_CLASS MessageWriter final {
     mozilla::ipc::PickleFatalError(aErrorMsg, actor_);
   }
 
+  void NoteLargeBufferShmemFailure(uint32_t aLargeBufferSize) {
+    message_.NoteLargeBufferShmemFailure(aLargeBufferSize);
+  }
+
  private:
   Message& message_;
   mozilla::ipc::IProtocol* actor_;
