@@ -240,7 +240,6 @@ nsHttpHandler::nsHttpHandler()
       mDebugObservations(false),
       mEnableAltSvc(false),
       mEnableAltSvcOE(false),
-      mEnableOriginExtension(false),
       mSpdyPingThreshold(PR_SecondsToInterval(
           StaticPrefs::network_http_http2_ping_threshold())),
       mSpdyPingTimeout(PR_SecondsToInterval(
@@ -1365,11 +1364,6 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
   if (PREF_CHANGED(HTTP_PREF("altsvc.oe"))) {
     rv = Preferences::GetBool(HTTP_PREF("altsvc.oe"), &cVar);
     if (NS_SUCCEEDED(rv)) mEnableAltSvcOE = cVar;
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("originextension"))) {
-    rv = Preferences::GetBool(HTTP_PREF("originextension"), &cVar);
-    if (NS_SUCCEEDED(rv)) mEnableOriginExtension = cVar;
   }
 
   if (PREF_CHANGED(HTTP_PREF("http2.push-allowance"))) {

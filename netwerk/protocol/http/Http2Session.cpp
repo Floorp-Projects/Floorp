@@ -2638,12 +2638,6 @@ nsresult Http2Session::RecvOrigin(Http2Session* self) {
     return NS_OK;
   }
 
-  if (!gHttpHandler->AllowOriginExtension()) {
-    LOG3(("Http2Session::RecvOrigin %p origin extension pref'd off", self));
-    self->ResetDownstreamState();
-    return NS_OK;
-  }
-
   uint32_t offset = 0;
   self->mOriginFrameActivated = true;
 
