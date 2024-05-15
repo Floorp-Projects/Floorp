@@ -531,8 +531,9 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
   }
 
   // Otherwise we need to scale it using a draw target.
-  RefPtr<DataSourceSurface> dataSurface =
-      Factory::CreateDataSourceSurface(scaledSize, SurfaceFormat::B8G8R8A8);
+  // Ensure the surface is initialized to clear in case we need to blend to it.
+  RefPtr<DataSourceSurface> dataSurface = Factory::CreateDataSourceSurface(
+      scaledSize, SurfaceFormat::B8G8R8A8, true);
   if (NS_WARN_IF(!dataSurface)) {
     return NS_ERROR_FAILURE;
   }
@@ -550,11 +551,14 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // Prefer using OP_OVER to scale the surface instead of OP_SOURCE, as both
+  // D2D and Skia have specific fast-paths for these, and may give divergent
+  // and slower results when using OP_SOURCE.
   IntSize frameSize = frame->GetSize();
   dt->DrawSurface(frame, Rect(0, 0, scaledSize.width, scaledSize.height),
                   Rect(0, 0, frameSize.width, frameSize.height),
                   DrawSurfaceOptions(),
-                  DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+                  DrawOptions(1.0f, CompositionOp::OP_OVER));
 
   return EncodeImageData(dataSurface, map, aMimeType, aOutputOptions, aStream);
 }
