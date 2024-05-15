@@ -3521,6 +3521,12 @@ class nsIFrame : public nsQueryFrame {
   bool IsImageFrameOrSubclass() const;
 
   /**
+   * Returns true if the frame is an instance of ScrollContainerFrame or one of
+   * its subclasses.
+   */
+  bool IsScrollContainerOrSubclass() const;
+
+  /**
    * Get this frame's CSS containing block.
    *
    * The algorithm is defined in
@@ -4648,14 +4654,6 @@ class nsIFrame : public nsQueryFrame {
   bool IsInSVGTextSubtree() const {
     return HasAnyStateBits(NS_FRAME_IS_SVG_TEXT);
   }
-
-  // https://drafts.csswg.org/css-overflow-3/#scroll-container
-  bool IsScrollContainer() const {
-    const bool result = IsScrollContainerFrame() || IsListControlFrame();
-    MOZ_ASSERT(result == !!GetAsScrollContainer());
-    return result;
-  }
-  nsIScrollableFrame* GetAsScrollContainer() const;
 
   /**
    * Returns true if the frame is an SVG Rendering Observer container.

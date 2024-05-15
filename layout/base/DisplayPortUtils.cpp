@@ -854,7 +854,7 @@ bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
       aFrame->GetContent()->GetID() == nsGkAtoms::tabbrowser_arrowscrollbox) {
     return false;
   }
-  if (aFrame->IsScrollContainer()) {
+  if (aFrame->IsScrollContainerOrSubclass()) {
     if (nsIScrollableFrame* sf = do_QueryFrame(aFrame)) {
       if (MaybeCreateDisplayPort(aBuilder, aFrame, sf, RepaintMode::Repaint)) {
         // If this was the first displayport found in the first scroll frame
