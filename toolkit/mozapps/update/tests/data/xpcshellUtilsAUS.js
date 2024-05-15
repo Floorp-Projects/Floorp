@@ -1313,7 +1313,7 @@ async function checkUpdateManager(
   aUpdateCount
 ) {
   let activeUpdate = await (aUpdateStatusState == STATE_DOWNLOADING
-    ? gUpdateManager.downloadingUpdate
+    ? gUpdateManager.getDownloadingUpdate()
     : gUpdateManager.getReadyUpdate());
   Assert.equal(
     readStatusState(),

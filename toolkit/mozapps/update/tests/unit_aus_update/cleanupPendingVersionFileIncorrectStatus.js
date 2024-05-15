@@ -20,7 +20,7 @@ async function run_test() {
   // Check that there are no active updates first so the updates directory is
   // cleaned up by the UpdateManager before the remaining tests.
   Assert.ok(
-    !gUpdateManager.downloadingUpdate,
+    !(await gUpdateManager.getDownloadingUpdate()),
     "there should not be a downloading update"
   );
   Assert.ok(
