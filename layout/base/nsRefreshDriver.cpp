@@ -831,11 +831,11 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     const TimeDuration previousRate = mVsyncRate;
     const TimeDuration rate = GetTimerRate();
 
-    if (rate != previousRate) {
-      if (auto* const performanceHintSession = GetPerformanceHintSession()) {
-        performanceHintSession->UpdateTargetWorkDuration(
-            ContentChild::GetPerformanceHintTarget(rate));
-      }
+    hal::PerformanceHintSession* const performanceHintSession =
+        GetPerformanceHintSession();
+    if (performanceHintSession && rate != previousRate) {
+      performanceHintSession->UpdateTargetWorkDuration(
+          ContentChild::GetPerformanceHintTarget(rate));
     }
 
     if (TimeDuration::FromMilliseconds(nsRefreshDriver::DefaultInterval()) >
@@ -862,7 +862,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
     TimeStamp tickEnd = TimeStamp::Now();
 
-    if (auto* const performanceHintSession = GetPerformanceHintSession()) {
+    if (performanceHintSession) {
       performanceHintSession->ReportActualWorkDuration(tickEnd - tickStart);
     }
 
