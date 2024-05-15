@@ -23,7 +23,6 @@ UNSUPPORTED_FEATURES = set(
         "Intl.DurationFormat",  # Bug 1648139
         "Atomics.waitAsync",  # Bug 1467846
         "legacy-regexp",  # Bug 1306461
-        "regexp-duplicate-named-groups",  # Bug 1773135
         "set-methods",  # Bug 1805038
         "explicit-resource-management",  # Bug 1569081
         "regexp-modifiers",
@@ -42,6 +41,7 @@ FEATURE_CHECK_NEEDED = {
     "uint8array-base64": "!Uint8Array.fromBase64",  # Bug 1862220
     "json-parse-with-source": "!JSON.hasOwnProperty('isRawJSON')",  # Bug 1658310
     "Float16Array": "!this.hasOwnProperty('Float16Array')",
+    "regexp-duplicate-named-groups": "!(this.hasOwnProperty('getBuildConfiguration')&&!getBuildConfiguration('release_or_beta'))",
 }
 RELEASE_OR_BETA = set(
     [
@@ -58,6 +58,7 @@ SHELL_OPTIONS = {
     "uint8array-base64": "--enable-uint8array-base64",
     "json-parse-with-source": "--enable-json-parse-with-source",
     "Float16Array": "--enable-float16array",
+    "regexp-duplicate-named-groups": "--enable-regexp-duplicate-named-groups",
 }
 
 INCLUDE_FEATURE_DETECTED_OPTIONAL_SHELL_OPTIONS = {
