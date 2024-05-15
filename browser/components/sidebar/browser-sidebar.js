@@ -55,10 +55,7 @@ var SidebarController = {
           icon: `url("chrome://browser/content/firefoxview/view-syncedtabs.svg")`,
         }),
       ],
-    ]);
-
-    if (!this.sidebarRevampEnabled) {
-      this._sidebars.set(
+      [
         "viewBookmarksSidebar",
         this.makeSidebar({
           elementId: "sidebar-switcher-bookmarks",
@@ -67,8 +64,13 @@ var SidebarController = {
           keyId: "viewBookmarksSidebarKb",
           menuL10nId: "menu-view-bookmarks",
           revampL10nId: "sidebar-menu-bookmarks",
-        })
-      );
+          icon: `url("chrome://browser/skin/bookmark-hollow.svg")`,
+          disabled: true,
+        }),
+      ],
+    ]);
+
+    if (!this.sidebarRevampEnabled) {
       if (this.megalistEnabled) {
         this._sidebars.set(
           "viewMegalistSidebar",
@@ -104,16 +106,14 @@ var SidebarController = {
     }
 
     this._toolsAndExtensions = new Map();
-    this.getSidebarPanels(["viewHistorySidebar", "viewTabsSidebar"]).forEach(
-      tool => {
-        this._toolsAndExtensions.set(tool.commandID, {
-          view: tool.commandID,
-          icon: tool.icon,
-          l10nId: tool.revampL10nId,
-          disabled: false,
-        });
-      }
-    );
+    this.getTools().forEach(tool => {
+      this._toolsAndExtensions.set(tool.commandID, {
+        view: tool.commandID,
+        icon: tool.icon,
+        l10nId: tool.revampL10nId,
+        disabled: tool.disabled ?? false,
+      });
+    });
     this.getExtensions().forEach(extension => {
       this._toolsAndExtensions.set(extension.commandID, {
         view: extension.commandID,
@@ -758,20 +758,38 @@ var SidebarController = {
   },
 
   /**
-   * Retrieve the list of sidebar panels
+   * Retrieve the list of tools in the sidebar
    *
-   * @param {Array} commandIds
    * @returns {Array}
    */
-  getSidebarPanels(commandIds) {
+  getTools() {
     const tools = [];
-    for (const commandID of commandIds) {
-      const sidebar = this.sidebars.get(commandID);
-      if (sidebar) {
+    const toolIds = [
+      "viewHistorySidebar",
+      "viewTabsSidebar",
+      "viewBookmarksSidebar",
+    ];
+    for (const [commandID, sidebar] of this.sidebars.entries()) {
+      if (toolIds.includes(commandID)) {
         tools.push({ commandID, ...sidebar });
       }
     }
     return tools;
+  },
+
+  /**
+   * Retrieve the customize sidebar entry
+   *
+   * @returns {object}
+   */
+  getCustomize() {
+    let customize = [];
+    for (const [commandID, sidebar] of this.sidebars.entries()) {
+      if (commandID === "viewCustomizeSidebar") {
+        customize.push({ commandID, ...sidebar });
+      }
+    }
+    return customize;
   },
 
   /**

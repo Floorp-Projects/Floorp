@@ -11,6 +11,7 @@ import "chrome://global/content/elements/moz-button.mjs";
 const l10nMap = new Map([
   ["viewHistorySidebar", "sidebar-customize-history"],
   ["viewTabsSidebar", "sidebar-customize-synced-tabs"],
+  ["viewBookmarksSidebar", "sidebar-customize-bookmarks"],
 ]);
 
 export class SidebarCustomize extends SidebarPage {
