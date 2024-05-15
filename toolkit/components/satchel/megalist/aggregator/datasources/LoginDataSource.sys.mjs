@@ -368,10 +368,8 @@ export class LoginDataSource extends DataSourceBase {
     this.cancelDialog();
   }
 
-  confirmRemoveLogin() {
-    // TODO: Simplify getting record directly.
-    const login = this.lines?.[0]?.record;
-    Services.logins.removeLogin(login);
+  confirmRemoveLogin([record]) {
+    Services.logins.removeLogin(record);
     this.cancelDialog();
   }
 
