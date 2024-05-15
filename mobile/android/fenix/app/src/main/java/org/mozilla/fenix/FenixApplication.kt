@@ -13,6 +13,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.StrictMode
 import android.os.SystemClock
 import android.util.Log.INFO
+import androidx.annotation.OpenForTesting
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.NotificationManagerCompat
@@ -844,23 +845,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             }
         }
 
-        @OptIn(DelicateCoroutinesApi::class)
-        GlobalScope.launch(IO) {
-            try {
-                val autoFillStorage = applicationContext.components.core.autofillStorage
-                Addresses.savedAll.set(autoFillStorage.getAllAddresses().size.toLong())
-                CreditCards.savedAll.set(autoFillStorage.getAllCreditCards().size.toLong())
-            } catch (e: AutofillApiException) {
-                logger.error("Failed to fetch autofill data", e)
-            }
-
-            try {
-                val passwordsStorage = applicationContext.components.core.passwordsStorage
-                Logins.savedAll.set(passwordsStorage.list().size.toLong())
-            } catch (e: LoginsApiException) {
-                logger.error("Failed to fetch list of logins", e)
-            }
-        }
+        setAutofillMetrics()
 
         with(ShoppingSettings) {
             componentOptedOut.set(!settings.isReviewQualityCheckEnabled)
@@ -964,6 +949,28 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             inactiveTabsEnabled.set(settings.inactiveTabsAreEnabled)
         }
         reportHomeScreenMetrics(settings)
+    }
+
+    @VisibleForTesting
+    @OpenForTesting
+    internal open fun setAutofillMetrics() {
+        @OptIn(DelicateCoroutinesApi::class)
+        GlobalScope.launch(IO) {
+            try {
+                val autoFillStorage = applicationContext.components.core.autofillStorage
+                Addresses.savedAll.set(autoFillStorage.getAllAddresses().size.toLong())
+                CreditCards.savedAll.set(autoFillStorage.getAllCreditCards().size.toLong())
+            } catch (e: AutofillApiException) {
+                logger.error("Failed to fetch autofill data", e)
+            }
+
+            try {
+                val passwordsStorage = applicationContext.components.core.passwordsStorage
+                Logins.savedAll.set(passwordsStorage.list().size.toLong())
+            } catch (e: LoginsApiException) {
+                logger.error("Failed to fetch list of logins", e)
+            }
+        }
     }
 
     @VisibleForTesting
