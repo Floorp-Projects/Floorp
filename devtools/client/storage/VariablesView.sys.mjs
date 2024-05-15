@@ -1859,7 +1859,7 @@ Scope.prototype = {
     arrow.className = "arrow theme-twisty";
 
     const name = (this._name = document.createXULElement("label"));
-    name.className = "plain name";
+    name.className = "name";
     if (l10nId) {
       document.l10n.setAttributes(name, l10nId);
     } else {
@@ -2628,11 +2628,11 @@ Variable.prototype = extend(Scope.prototype, {
 
     const separatorLabel = (this._separatorLabel =
       document.createXULElement("label"));
-    separatorLabel.className = "plain separator";
+    separatorLabel.className = "separator";
     separatorLabel.setAttribute("value", this.separatorStr + " ");
 
     const valueLabel = (this._valueLabel = document.createXULElement("label"));
-    valueLabel.className = "plain value";
+    valueLabel.className = "value";
     valueLabel.setAttribute("flex", "1");
     valueLabel.setAttribute("crop", "center");
 
@@ -2690,7 +2690,7 @@ Variable.prototype = extend(Scope.prototype, {
     if ((ownerView.eval && this.getter) || this.setter) {
       const editNode = (this._editNode =
         this.document.createXULElement("toolbarbutton"));
-      editNode.className = "plain variables-view-edit";
+      editNode.className = "variables-view-edit";
       editNode.addEventListener("mousedown", this._onEdit.bind(this));
       this._title.insertBefore(editNode, this._spacer);
     }
@@ -2698,7 +2698,7 @@ Variable.prototype = extend(Scope.prototype, {
     if (ownerView.delete) {
       const deleteNode = (this._deleteNode =
         this.document.createXULElement("toolbarbutton"));
-      deleteNode.className = "plain variables-view-delete";
+      deleteNode.className = "variables-view-delete";
       deleteNode.addEventListener("click", this._onDelete.bind(this));
       this._title.appendChild(deleteNode);
     }
@@ -2706,7 +2706,7 @@ Variable.prototype = extend(Scope.prototype, {
     if (ownerView.new) {
       const addPropertyNode = (this._addPropertyNode =
         this.document.createXULElement("toolbarbutton"));
-      addPropertyNode.className = "plain variables-view-add-property";
+      addPropertyNode.className = "variables-view-add-property";
       addPropertyNode.addEventListener(
         "mousedown",
         this._onAddProperty.bind(this)
@@ -2729,22 +2729,21 @@ Variable.prototype = extend(Scope.prototype, {
 
     if (!descriptor.writable && !ownerView.getter && !ownerView.setter) {
       const nonWritableIcon = this.document.createXULElement("hbox");
-      nonWritableIcon.className =
-        "plain variable-or-property-non-writable-icon";
+      nonWritableIcon.className = "variable-or-property-non-writable-icon";
       nonWritableIcon.setAttribute("optional-visibility", "");
       this._title.appendChild(nonWritableIcon);
     }
     if (descriptor.value && typeof descriptor.value == "object") {
       if (descriptor.value.frozen) {
         const frozenLabel = this.document.createXULElement("label");
-        frozenLabel.className = "plain variable-or-property-frozen-label";
+        frozenLabel.className = "variable-or-property-frozen-label";
         frozenLabel.setAttribute("optional-visibility", "");
         frozenLabel.setAttribute("value", "F");
         this._title.appendChild(frozenLabel);
       }
       if (descriptor.value.sealed) {
         const sealedLabel = this.document.createXULElement("label");
-        sealedLabel.className = "plain variable-or-property-sealed-label";
+        sealedLabel.className = "variable-or-property-sealed-label";
         sealedLabel.setAttribute("optional-visibility", "");
         sealedLabel.setAttribute("value", "S");
         this._title.appendChild(sealedLabel);
@@ -2752,7 +2751,7 @@ Variable.prototype = extend(Scope.prototype, {
       if (!descriptor.value.extensible) {
         const nonExtensibleLabel = this.document.createXULElement("label");
         nonExtensibleLabel.className =
-          "plain variable-or-property-non-extensible-label";
+          "variable-or-property-non-extensible-label";
         nonExtensibleLabel.setAttribute("optional-visibility", "");
         nonExtensibleLabel.setAttribute("value", "N");
         this._title.appendChild(nonExtensibleLabel);
@@ -2865,7 +2864,7 @@ Variable.prototype = extend(Scope.prototype, {
 
     // Add a button to open the node in the inspector
     this._openInspectorNode = this.document.createXULElement("toolbarbutton");
-    this._openInspectorNode.className = "plain variables-view-open-inspector";
+    this._openInspectorNode.className = "variables-view-open-inspector";
     this._openInspectorNode.addEventListener(
       "mousedown",
       this.openNodeInInspector

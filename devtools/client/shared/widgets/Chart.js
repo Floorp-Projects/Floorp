@@ -422,12 +422,12 @@ function createTableChart(document, { title, data, strings, totals, header }) {
   const proxy = new TableChart(container);
 
   const titleNode = document.createElement("span");
-  titleNode.className = "plain table-chart-title";
+  titleNode.className = "table-chart-title";
   titleNode.textContent = title;
   container.appendChild(titleNode);
 
   const tableNode = document.createElement("table");
-  tableNode.className = "plain table-chart-grid";
+  tableNode.className = "table-chart-grid";
   container.appendChild(tableNode);
 
   const headerNode = document.createElement("thead");
@@ -441,7 +441,7 @@ function createTableChart(document, { title, data, strings, totals, header }) {
 
   for (const [key, value] of Object.entries(header)) {
     const headerLabelNode = document.createElement("th");
-    headerLabelNode.className = "plain table-chart-row-label";
+    headerLabelNode.className = "table-chart-row-label";
     headerLabelNode.setAttribute("name", key);
     headerLabelNode.textContent = value;
     if (key == "count") {
@@ -466,7 +466,7 @@ function createTableChart(document, { title, data, strings, totals, header }) {
       const index = data.indexOf(rowInfo);
       const stringified = strings[key] ? strings[key](value, index) : value;
       const labelNode = document.createElement("td");
-      labelNode.className = "plain table-chart-row-label";
+      labelNode.className = "table-chart-row-label";
       labelNode.setAttribute("name", key);
       labelNode.textContent = stringified;
       rowNode.appendChild(labelNode);
@@ -484,7 +484,7 @@ function createTableChart(document, { title, data, strings, totals, header }) {
     const total = data.reduce((acc, e) => acc + e[key], 0);
     const stringified = value ? value(total || 0) : total;
     const labelNode = document.createElement("span");
-    labelNode.className = "plain table-chart-summary-label";
+    labelNode.className = "table-chart-summary-label";
     labelNode.setAttribute("name", key);
     labelNode.textContent = stringified;
     totalsNode.appendChild(labelNode);
