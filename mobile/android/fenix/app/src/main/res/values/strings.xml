@@ -2588,9 +2588,9 @@
     <!-- The privacy notice link -->
     <string name="micro_survey_privacy_notice">Privacy Notice</string>
     <!-- The submit button label text -->
-    <string name="micro_survey_submit_button_label" tools:ignore="UnusedResources">Submit</string>
+    <string name="micro_survey_submit_button_label">Submit</string>
     <!-- The close button label text -->
-    <string name="micro_survey_close_button_label">Close</string>
+    <string name="micro_survey_close_button_label" tools:ignore="UnusedResources">Close</string>
     <!-- The survey completion confirmation text -->
     <string name="micro_survey_feedback_confirmation" tools:ignore="UnusedResources">Thanks for your feedback!</string>
     <!-- Option for likert scale -->
