@@ -11596,6 +11596,13 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# When true, authentication challenges will be sorted even if
+# an authentication is already in progress. This may cause issues sometimes.
+- name: network.auth.sort_challenge_in_progress
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether to allow truncated brotli with empty output. This also fixes
 # throwing an erroring when receiving highly compressed brotli files when
 # no content type is specified (Bug 1715401). This pref can be removed after
