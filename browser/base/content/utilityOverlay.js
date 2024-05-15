@@ -108,11 +108,6 @@ function openUILink(
   );
 }
 
-// This is here for historical reasons. bug 1742889 covers cleaning this up.
-function getRootEvent(aEvent) {
-  return BrowserUtils.getRootEvent(aEvent);
-}
-
 function openTrustedLinkIn(url, where, params) {
   URILoadingHelper.openTrustedLinkIn(window, url, where, params);
 }

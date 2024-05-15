@@ -2096,7 +2096,7 @@ this.PlacesPanelview = class PlacesPanelview extends PlacesViewBase {
   }
 
   _onCommand(event) {
-    event = getRootEvent(event);
+    event = BrowserUtils.getRootEvent(event);
     let button = event.originalTarget;
     if (!button._placesNode) {
       return;
