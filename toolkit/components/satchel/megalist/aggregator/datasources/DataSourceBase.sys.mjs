@@ -4,6 +4,7 @@
 
 import { BinarySearch } from "resource://gre/modules/BinarySearch.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -68,7 +69,7 @@ export class DataSourceBase {
   }
 
   formatMessages = createFormatMessages("preview/megalist.ftl");
-  static ftl = new Localization(["preview/megalist.ftl"]);
+  static ftl = new Localization(["branding/brand.ftl", "preview/megalist.ftl"]);
 
   async localizeStrings(strings) {
     const keys = Object.keys(strings);
@@ -86,6 +87,15 @@ export class DataSourceBase {
       strings[keys[i]] = value;
     }
     return strings;
+  }
+
+  getPlatformFtl(messageId) {
+    if (AppConstants.platform == "macosx") {
+      messageId += "-macosx";
+    } else if (AppConstants.platform == "win") {
+      messageId += "-win";
+    }
+    return messageId;
   }
 
   /**
