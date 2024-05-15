@@ -92,6 +92,18 @@ this.declarativeNetRequest = class extends ExtensionAPI {
           });
         },
 
+        updateStaticRules({ rulesetId, disableRuleIds, enableRuleIds }) {
+          return ExtensionDNR.updateStaticRules(extension, {
+            rulesetId,
+            disableRuleIds,
+            enableRuleIds,
+          });
+        },
+
+        async getDisabledRuleIds({ rulesetId }) {
+          return ExtensionDNR.getDisabledRuleIds(extension, rulesetId);
+        },
+
         async getDynamicRules(details) {
           await ExtensionDNR.ensureInitialized(extension);
           return ExtensionDNR.getRuleManager(extension).getDynamicRules(

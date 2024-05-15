@@ -188,12 +188,20 @@ class Ruleset {
    * @param {string} rulesetId - extension-defined ruleset ID.
    * @param {integer} rulesetPrecedence
    * @param {Rule[]} rules - extension-defined rules
+   * @param {Set<Rule> | null} disabledRuleIds - An optional set of disabled rule ids
    * @param {RuleManager} ruleManager - owner of this ruleset.
    */
-  constructor(rulesetId, rulesetPrecedence, rules, ruleManager) {
+  constructor(
+    rulesetId,
+    rulesetPrecedence,
+    rules,
+    disabledRuleIds,
+    ruleManager
+  ) {
     this.id = rulesetId;
     this.rulesetPrecedence = rulesetPrecedence;
     this.rules = rules;
+    this.disabledRuleIds = disabledRuleIds;
     // For use by MatchedRule.
     this.ruleManager = ruleManager;
   }
@@ -1702,6 +1710,9 @@ class RequestEvaluator {
   /** @param {Ruleset} ruleset */
   #collectMatchInRuleset(ruleset) {
     for (let rule of ruleset.rules) {
+      if (ruleset.disabledRuleIds?.has(rule.id)) {
+        continue;
+      }
       if (!this.#matchesRuleCondition(rule.condition)) {
         continue;
       }
@@ -2127,8 +2138,19 @@ class RuleManager {
     return this.enabledStaticRules.map(ruleset => ruleset.id);
   }
 
-  makeRuleset(rulesetId, rulesetPrecedence, rules = []) {
-    return new Ruleset(rulesetId, rulesetPrecedence, rules, this);
+  makeRuleset(
+    rulesetId,
+    rulesetPrecedence,
+    rules = [],
+    disabledRuleIds = null
+  ) {
+    return new Ruleset(
+      rulesetId,
+      rulesetPrecedence,
+      rules,
+      disabledRuleIds,
+      this
+    );
   }
 
   setSessionRules(validatedSessionRules) {
@@ -2154,16 +2176,24 @@ class RuleManager {
   /**
    * Set the enabled static rulesets.
    *
-   * @param {Array<{ id, rules }>} enabledStaticRulesets
+   * @param {Array<{ id, rules, disabledRuleIds }>} enabledStaticRulesets
    *        Array of objects including the ruleset id and rules.
    *        The order of the rulesets in the Array is expected to
    *        match the order of the rulesets in the extension manifest.
    */
   setEnabledStaticRulesets(enabledStaticRulesets) {
     const rulesets = [];
-    for (const [idx, { id, rules }] of enabledStaticRulesets.entries()) {
+    for (const [
+      idx,
+      { id, rules, disabledRuleIds },
+    ] of enabledStaticRulesets.entries()) {
       rulesets.push(
-        this.makeRuleset(id, idx + PRECEDENCE_STATIC_RULESETS_BASE, rules)
+        this.makeRuleset(
+          id,
+          idx + PRECEDENCE_STATIC_RULESETS_BASE,
+          rules,
+          disabledRuleIds
+        )
       );
     }
     const countRules = rulesets =>
@@ -2448,6 +2478,19 @@ async function updateDynamicRules(extension, updateRuleOptions) {
   await lazy.ExtensionDNRStore.updateDynamicRules(extension, updateRuleOptions);
 }
 
+async function updateStaticRules(extension, updateStaticRulesOptions) {
+  await ensureInitialized(extension);
+  await lazy.ExtensionDNRStore.updateStaticRules(
+    extension,
+    updateStaticRulesOptions
+  );
+}
+
+async function getDisabledRuleIds(extension, rulesetId) {
+  await ensureInitialized(extension);
+  return lazy.ExtensionDNRStore.getDisabledRuleIds(extension, rulesetId);
+}
+
 // exports used by the DNR API implementation.
 export const ExtensionDNR = {
   RuleValidator,
@@ -2455,9 +2498,11 @@ export const ExtensionDNR = {
   clearRuleManager,
   ensureInitialized,
   getMatchedRulesForRequest,
+  getDisabledRuleIds,
   getRuleManager,
   updateDynamicRules,
   updateEnabledStaticRulesets,
+  updateStaticRules,
   validateManifestEntry,
   beforeWebRequestEvent,
   handleRequest,

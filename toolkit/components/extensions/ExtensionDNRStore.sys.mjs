@@ -67,8 +67,13 @@ const requireTestOnlyCallers = () => {
 // enabled static rulesets (while the actual rules would need to be loaded back
 // from the related rules JSON files part of the extension assets).
 class StoreData {
-  // NOTE: Update schema version upgrade handling code in `RulesetsStore.#readData`
+  // NOTE: Update schema version upgrade handling code in `StoreData.fromJSON`
   // along with bumps to the schema version here.
+  //
+  // Changelog:
+  // - 1: Initial DNR store schema:
+  //      Initial implementation officially release in Firefox 113.
+  //      Support for disableStaticRules added in Firefox 128 (Bug 1810762).
   static VERSION = 1;
 
   static getLastUpdateTagPref(extensionUUID) {
@@ -131,6 +136,12 @@ class StoreData {
    *        NOTE: This map is converted in an array of the ruleset_id strings when the StoreData
    *        instance is being stored on disk (see `toJSON` method) and then converted back to a Map
    *        by `Store.prototype.#getManifestStaticRulesets` when the data is loaded back from disk.
+   * @param {object} [params.disabledStaticRuleIds={}]
+   *        map of the disabled static rule ids by ruleset_id. This map is updated by the extension
+   *        calls to the updateStaticRules API method and persisted across browser session,
+   *        and browser and extension updates. Disabled rule ids for a disabled ruleset are going
+   *        to become effective when the disabled ruleset is enabled (e.g. through updateEnabledRulesets
+   *        API calls or through manifest in extension updates).
    * @param {Array<Rule>} [params.dynamicRuleset=[]]
    *        array of dynamic rules stored by the extension.
    */
@@ -140,6 +151,7 @@ class StoreData {
       extVersion,
       lastUpdateTag,
       dynamicRuleset,
+      disabledStaticRuleIds,
       staticRulesets,
       schemaVersion,
     } = {}
@@ -158,6 +170,7 @@ class StoreData {
     this.#initialLastUdateTag = lastUpdateTag;
     this.#updateRulesets({
       staticRulesets: staticRulesets ?? new Map(),
+      disabledStaticRuleIds: disabledStaticRuleIds ?? {},
       dynamicRuleset: dynamicRuleset ?? [],
       lastUpdateTag,
     });
@@ -191,14 +204,21 @@ class StoreData {
    * @param {Map<string, EnabledStaticRuleset>} [params.staticRulesets]
    *        optional new updated Map of static rulesets
    *        (static rulesets are unchanged if not passed).
+   * @param {object} [params.disabledStaticRuleIds]
+   *        optional new updated Map of static rules ids disabled individually.
    * @param {Array<Rule>} [params.dynamicRuleset=[]]
    *        optional array of updated dynamic rules
    *        (dynamic rules are unchanged if not passed).
    */
-  updateRulesets({ staticRulesets, dynamicRuleset } = {}) {
+  updateRulesets({
+    staticRulesets,
+    disabledStaticRuleIds,
+    dynamicRuleset,
+  } = {}) {
     let currentUpdateTag = this.lastUpdateTag;
     let lastUpdateTag = this.#updateRulesets({
       staticRulesets,
+      disabledStaticRuleIds,
       dynamicRuleset,
     });
 
@@ -220,11 +240,16 @@ class StoreData {
 
   #updateRulesets({
     staticRulesets = null,
+    disabledStaticRuleIds = null,
     dynamicRuleset = null,
     lastUpdateTag = Services.uuid.generateUUID().toString(),
   } = {}) {
     if (staticRulesets) {
       this.staticRulesets = staticRulesets;
+    }
+
+    if (disabledStaticRuleIds) {
+      this.disabledStaticRuleIds = disabledStaticRuleIds;
     }
 
     if (dynamicRuleset) {
@@ -249,6 +274,11 @@ class StoreData {
       staticRulesets: this.staticRulesets
         ? Array.from(this.staticRulesets.entries(), ([id, _ruleset]) => id)
         : undefined,
+      disabledStaticRuleIds:
+        this.disabledStaticRuleIds &&
+        Object.keys(this.disabledStaticRuleIds).length
+          ? this.disabledStaticRuleIds
+          : undefined,
       dynamicRuleset: this.dynamicRuleset,
     };
     return data;
@@ -259,12 +289,24 @@ class StoreData {
   // NOTE: this method should be kept in sync with toJSON and make sure that
   // we do deserialize the same property we are serializing into the JSON file.
   static fromJSON(paramsFromJSON, extension) {
-    let { schemaVersion, extVersion, staticRulesets, dynamicRuleset } =
-      paramsFromJSON;
+    // TODO: Add schema versions migrations here if necessary.
+    // if (paramsFromJSON.version < StoreData.VERSION) {
+    //   paramsFromJSON = this.upgradeStoreDataSchema(paramsFromJSON);
+    // }
+
+    let {
+      schemaVersion,
+      extVersion,
+      staticRulesets,
+      disabledStaticRuleIds,
+      dynamicRuleset,
+    } = paramsFromJSON;
+
     return new StoreData(extension, {
       schemaVersion,
       extVersion,
       staticRulesets,
+      disabledStaticRuleIds,
       dynamicRuleset,
     });
   }
@@ -450,13 +492,19 @@ class RulesetsStore {
     return data.staticRulesets;
   }
 
+  /**
+   * Returns the number of static rules still available to the given extension.
+   *
+   * @param {Extension} extension
+   *
+   * @returns {Promise<number>}
+   *          Resolves to the number of static rules available.
+   */
   async getAvailableStaticRuleCount(extension) {
     const { GUARANTEED_MINIMUM_STATIC_RULES } = lazy.ExtensionDNRLimits;
 
-    const ruleResources =
-      extension.manifest.declarative_net_request?.rule_resources;
-    // TODO: return maximum rules count when no static rules is listed in the manifest?
-    if (!Array.isArray(ruleResources)) {
+    const existingRulesetIds = this.#getExistingStaticRulesetIds(extension);
+    if (!existingRulesetIds.length) {
       return GUARANTEED_MINIMUM_STATIC_RULES;
     }
 
@@ -467,6 +515,26 @@ class RulesetsStore {
     );
 
     return GUARANTEED_MINIMUM_STATIC_RULES - enabledRulesCount;
+  }
+
+  /**
+   * Returns the static rule ids disabled individually for the given extension
+   * and static ruleset id.
+   *
+   * @param {Extension} extension
+   * @param {string} rulesetId
+   *
+   * @returns {Promise<Array<number>>}
+   *          Resolves to the array of rule ids disabled.
+   */
+  async getDisabledRuleIds(extension, rulesetId) {
+    const existingRulesetIds = this.#getExistingStaticRulesetIds(extension);
+    if (!existingRulesetIds.includes(rulesetId)) {
+      throw new ExtensionError(`Invalid ruleset id: "${rulesetId}"`);
+    }
+
+    let data = await this.#getDataPromise(extension);
+    return data.disabledStaticRuleIds[rulesetId] ?? [];
   }
 
   /**
@@ -515,7 +583,7 @@ class RulesetsStore {
    *
    * @param {Extension}     extension
    * @param {object}        params
-   * @param {Array<string>} [params.removeRuleIds=[]]
+   * @param {Array<number>} [params.removeRuleIds=[]]
    * @param {Array<Rule>} [params.addRules=[]]
    *
    * @returns {Promise<void>} A promise resolved when the dynamic rules async update has
@@ -526,6 +594,33 @@ class RulesetsStore {
       return this.#updateDynamicRules(extension, {
         removeRuleIds,
         addRules,
+      });
+    });
+  }
+
+  /**
+   * Update the static rules ids disabled individually on a given static ruleset id,
+   * queue changes to prevent races between calls that may be triggered while an
+   * update is still in process.
+   *
+   * @param {Extension}     extension
+   * @param {object}        params
+   * @param {string}        [params.rulesetId]
+   * @param {Array<number>} [params.disableRuleIds]
+   * @param {Array<number>} [params.enableRuleIds]
+   *
+   * @returns {Promise<void>} A promise resolved when the disabled rules async update has
+   *                          been completed.
+   */
+  async updateStaticRules(
+    extension,
+    { rulesetId, disableRuleIds, enableRuleIds }
+  ) {
+    return this._dataUpdateQueues.get(extension.uuid).queueTask(() => {
+      return this.#updateStaticRules(extension, {
+        rulesetId,
+        disableRuleIds,
+        enableRuleIds,
       });
     });
   }
@@ -591,7 +686,13 @@ class RulesetsStore {
         ([_idA, rsA], [_idB, rsB]) => rsA.idx - rsB.idx
       );
       for (const [rulesetId, ruleset] of orderedRulesets) {
-        enabledStaticRules.push({ id: rulesetId, rules: ruleset.rules });
+        enabledStaticRules.push({
+          id: rulesetId,
+          rules: ruleset.rules,
+          disabledRuleIds: data.disabledStaticRuleIds[rulesetId]
+            ? new Set(data.disabledStaticRuleIds[rulesetId])
+            : null,
+        });
       }
       ruleManager.setEnabledStaticRulesets(enabledStaticRules);
     }
@@ -987,6 +1088,16 @@ class RulesetsStore {
     }
   }
 
+  #getExistingStaticRulesetIds(extension) {
+    const ruleResources =
+      extension.manifest.declarative_net_request?.rule_resources;
+    if (!Array.isArray(ruleResources)) {
+      return [];
+    }
+
+    return ruleResources.map(rs => rs.id);
+  }
+
   #hasInstallOrUpdateStartupReason(extension) {
     switch (extension.startupReason) {
       case "ADDON_INSTALL":
@@ -1168,11 +1279,6 @@ class RulesetsStore {
         });
       }
 
-      // TODO: handle DNR store schema changes here when the StoreData.VERSION is being bumped.
-      // if (result && result.version < StoreData.VERSION) {
-      //   result = this.upgradeStoreDataSchema(result);
-      // }
-
       // The extension has already shutting down and we may already got past
       // the unloadData cleanup (given that there is still a promise in
       // the _dataPromises Map).
@@ -1297,6 +1403,7 @@ class RulesetsStore {
 
     if (resetStaticRulesets) {
       data.staticRulesets = undefined;
+      data.disabledStaticRuleIds = {};
       data.extVersion = extension.version;
     }
 
@@ -1533,7 +1640,7 @@ class RulesetsStore {
    *
    * @param {Extension}     extension
    * @param {object}        params
-   * @param {Array<string>} [params.removeRuleIds=[]]
+   * @param {Array<number>} [params.removeRuleIds=[]]
    * @param {Array<Rule>}   [params.addRules=[]]
    */
   async #updateDynamicRules(extension, { removeRuleIds, addRules }) {
@@ -1568,6 +1675,64 @@ class RulesetsStore {
     });
   }
 
+  async #updateStaticRules(
+    extension,
+    { rulesetId, disableRuleIds, enableRuleIds }
+  ) {
+    const existingRulesetIds = this.#getExistingStaticRulesetIds(extension);
+    if (!existingRulesetIds.includes(rulesetId)) {
+      throw new ExtensionError(`Invalid ruleset id: "${rulesetId}"`);
+    }
+
+    const data = this._data.get(extension.uuid);
+    const disabledRuleIdsSet = new Set(data.disabledStaticRuleIds[rulesetId]);
+    const enableSet = new Set(enableRuleIds);
+    const disableSet = new Set(disableRuleIds);
+
+    let changed = false;
+    for (const ruleId of disableSet) {
+      // Skip rule ids that are disabled and enabled in the same call.
+      if (enableSet.delete(ruleId)) {
+        continue;
+      }
+      if (!disabledRuleIdsSet.has(ruleId)) {
+        changed = true;
+      }
+      disabledRuleIdsSet.add(ruleId);
+    }
+    for (const ruleId of enableSet) {
+      if (disabledRuleIdsSet.delete(ruleId)) {
+        changed = true;
+      }
+    }
+
+    if (!changed) {
+      return;
+    }
+
+    // Chrome doesn't seem to validate if the rule id actually exists in the ruleset,
+    // and so set the resulting updated array of disabled rule ids right away.
+    //
+    // For more details, see the "Invalid rules" and "Error handling in updateStaticRules"
+    // section of https://github.com/w3c/webextensions/issues/162#issuecomment-2101003746
+    data.disabledStaticRuleIds[rulesetId] = Array.from(disabledRuleIdsSet);
+
+    await this.save(extension);
+
+    // If the ruleset isn't currently enabled, after saving the updated
+    // disabledRuleIdsSet we are done.
+    if (!data.staticRulesets.has(rulesetId)) {
+      return;
+    }
+    //
+    // updateRulesetManager calls ruleManager.setStaticRules to
+    // update the list of disabled ruleIds.
+    this.updateRulesetManager(extension, {
+      updateDynamicRuleset: false,
+      updateStaticRulesets: true,
+    });
+  }
+
   /**
    * Internal implementation for updating the enabled rulesets and enforcing
    * static rulesets and rules count limits.
@@ -1581,9 +1746,8 @@ class RulesetsStore {
     extension,
     { disableRulesetIds, enableRulesetIds }
   ) {
-    const ruleResources =
-      extension.manifest.declarative_net_request?.rule_resources;
-    if (!Array.isArray(ruleResources)) {
+    const existingIds = new Set(this.#getExistingStaticRulesetIds(extension));
+    if (!existingIds.size) {
       return;
     }
 
@@ -1596,7 +1760,6 @@ class RulesetsStore {
     // including the reserved _session and _dynamic, because static rulesets
     // id are validated as part of the manifest validation and they are not
     // allowed to start with '_').
-    const existingIds = new Set(ruleResources.map(rs => rs.id));
     const errorOnInvalidRulesetIds = rsIdSet => {
       for (const rsId of rsIdSet) {
         if (!existingIds.has(rsId)) {
@@ -1663,6 +1826,7 @@ class RulesetsStore {
 let store = new RulesetsStore();
 
 export const ExtensionDNRStore = {
+  SCHEMA_VERSION: StoreData.VERSION,
   async clearOnUninstall(extensionUUID) {
     return store.clearOnUninstall(extensionUUID);
   },
@@ -1674,6 +1838,12 @@ export const ExtensionDNRStore = {
   },
   async updateEnabledStaticRulesets(extension, updateRulesetOptions) {
     await store.updateEnabledStaticRulesets(extension, updateRulesetOptions);
+  },
+  async updateStaticRules(extension, updateStaticRulesOptions) {
+    await store.updateStaticRules(extension, updateStaticRulesOptions);
+  },
+  getDisabledRuleIds(extension, rulesetId) {
+    return store.getDisabledRuleIds(extension, rulesetId);
   },
   // Test-only helpers
   _getLastUpdateTag(extensionUUID) {
