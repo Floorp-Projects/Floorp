@@ -389,11 +389,11 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
     ];
   }
 
-  onLegacyEngagement(state, queryContext, details, controller) {
+  onEngagement(queryContext, controller, details) {
     if (details.result?.providerName == this.name) {
       let { selType } = details;
 
-      info(`onLegacyEngagement called, selType=` + selType);
+      info(`onEngagement called, selType=` + selType);
 
       if (!this.commandCount.hasOwnProperty(selType)) {
         this.commandCount[selType] = 0;

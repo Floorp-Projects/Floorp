@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests the UrlbarProvider.onLegacyEngagement() method.
+// Tests the UrlbarProvider.onEngagement() method.
 
 "use strict";
 
@@ -119,7 +119,7 @@ async function doTest({
   let endPromise = provider.promiseEngagement();
   let { result, element } = (await endEngagement()) ?? {};
 
-  let [state, queryContext, details, controller] = await endPromise;
+  let [state, queryContext, controller, details] = await endPromise;
 
   Assert.ok(
     ["engagement", "abandonment"].includes(state),
@@ -156,19 +156,19 @@ async function doTest({
     );
     expectedEndDetails.result = result;
     expectedEndDetails.element = element;
-  }
 
-  Assert.deepEqual(
-    details,
-    Object.assign(detailsDefaults, expectedEndDetails),
-    "End details"
-  );
+    Assert.deepEqual(
+      details,
+      Object.assign(detailsDefaults, expectedEndDetails),
+      "End details"
+    );
+  }
 
   UrlbarProvidersManager.unregisterProvider(provider);
 }
 
 /**
- * Test provider that resolves promises when onLegacyEngagement is called.
+ * Test provider that resolves promises when onEngagement is called.
  */
 class TestProvider extends UrlbarTestUtils.TestProvider {
   _resolves = [];
@@ -186,10 +186,17 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
     });
   }
 
-  onLegacyEngagement(...args) {
+  onEngagement(queryContext, controller, details) {
     let resolve = this._resolves.shift();
     if (resolve) {
-      resolve(args);
+      resolve(["engagement", queryContext, controller, details]);
+    }
+  }
+
+  onAbandonment(queryContext, controller) {
+    let resolve = this._resolves.shift();
+    if (resolve) {
+      resolve(["abandonment", queryContext, controller, undefined]);
     }
   }
 

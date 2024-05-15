@@ -63,12 +63,8 @@ class ProviderRecentSearches extends UrlbarProvider {
     return 1;
   }
 
-  onLegacyEngagement(state, queryContext, details, controller) {
+  onEngagement(queryContext, controller, details) {
     let { result } = details;
-    if (result?.providerName != this.name) {
-      return;
-    }
-
     let engine = lazy.UrlbarSearchUtils.getDefaultEngine(
       queryContext.isPrivate
     );

@@ -81,8 +81,8 @@ add_task(async function clear_private() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-// Tests that if multiple interventions of the same type are seen in the same
-// engagement, only one instance is recorded in Telemetry.
+// Tests that only the intervention visible at the time of abandonment or
+// engagement is registered in Telemetry.
 add_task(async function multipleInterventionsInOneEngagement() {
   Services.telemetry.clearScalars();
   let result = (await awaitTip(SEARCH_STRINGS.REFRESH, window))[0];
@@ -113,11 +113,12 @@ add_task(async function multipleInterventionsInOneEngagement() {
     `${UrlbarProviderInterventions.TIP_TYPE.REFRESH}-shown`,
     1
   );
-  TelemetryTestUtils.assertKeyedScalar(
-    scalars,
-    "urlbar.tips",
-    `${UrlbarProviderInterventions.TIP_TYPE.CLEAR}-shown`,
-    1
+  Assert.ok(
+    !scalars["urlbar.tips"][
+      `${UrlbarProviderInterventions.TIP_TYPE.CLEAR}-shown`
+    ],
+    `${UrlbarProviderInterventions.TIP_TYPE.CLEAR}-shown is not recorded as an
+     impression`
   );
 });
 

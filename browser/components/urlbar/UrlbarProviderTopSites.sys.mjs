@@ -159,7 +159,6 @@ class ProviderTopSites extends UrlbarProvider {
     );
     sites = sites.slice(0, numTopSites);
 
-    let sponsoredSites = [];
     let index = 1;
     sites = sites.map(link => {
       let site = {
@@ -187,16 +186,10 @@ class ProviderTopSites extends UrlbarProvider {
           sponsoredClickUrl: sponsored_click_url,
           position: index,
         };
-        sponsoredSites.push(site);
       }
       index++;
       return site;
     });
-
-    // Store Sponsored Top Sites so we can use it in `onLegacyEngagement`
-    if (sponsoredSites.length) {
-      this.sponsoredSites = sponsoredSites;
-    }
 
     let tabUrlsToContextIds;
     if (lazy.UrlbarPrefs.get("suggest.openpage")) {
@@ -333,18 +326,20 @@ class ProviderTopSites extends UrlbarProvider {
     }
   }
 
-  onLegacyEngagement(state, queryContext) {
-    if (!queryContext.isPrivate && this.sponsoredSites) {
-      for (let site of this.sponsoredSites) {
+  onImpression(state, queryContext, controller, providerVisibleResults) {
+    if (queryContext.isPrivate) {
+      return;
+    }
+
+    providerVisibleResults.forEach(({ index, result }) => {
+      if (result?.payload.isSponsored) {
         Services.telemetry.keyedScalarAdd(
           SCALAR_CATEGORY_TOPSITES,
-          `urlbar_${site.position}`,
+          `urlbar_${index}`,
           1
         );
       }
-    }
-
-    this.sponsoredSites = null;
+    });
   }
 
   /**

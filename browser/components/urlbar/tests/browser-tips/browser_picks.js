@@ -110,16 +110,15 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
     });
   }
 
+  const deferred = Promise.withResolvers();
+
   // Add our test provider.
   let provider = new UrlbarTestUtils.TestProvider({
     results: [makeTipResult({ buttonUrl, helpUrl })],
     priority: 1,
+    onEngagement: () => deferred.resolve(),
   });
   UrlbarProvidersManager.registerProvider(provider);
-
-  let onLegacyEngagementPromise = new Promise(
-    resolve => (provider.onLegacyEngagement = resolve)
-  );
 
   // Do a search to show our tip result.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -142,7 +141,7 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
     );
   }
 
-  // Now pick the target and wait for provider.onLegacyEngagement to be called
+  // Now pick the target and wait for provider.onEngagement to be called
   // and the URL to load if necessary.
   let loadPromise;
   if (buttonUrl || helpUrl) {
@@ -160,7 +159,6 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
       EventUtils.synthesizeKey("KEY_Enter");
     }
   });
-  await onLegacyEngagementPromise;
   await loadPromise;
 
   // Check telemetry.

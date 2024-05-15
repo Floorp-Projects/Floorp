@@ -437,8 +437,6 @@ class ProviderInterventions extends UrlbarProvider {
     // The tip we should currently show.
     this.currentTip = TIPS.NONE;
 
-    this.tipsShownInCurrentEngagement = new Set();
-
     // This object is used to match the user's queries to tips.
     ChromeUtils.defineLazyGetter(this, "queryScorer", () => {
       let queryScorer = new QueryScorer({
@@ -661,7 +659,6 @@ class ProviderInterventions extends UrlbarProvider {
       }
     );
     result.suggestedIndex = 1;
-    this.tipsShownInCurrentEngagement.add(this.currentTip);
     addCallback(this, result);
   }
 
@@ -703,21 +700,24 @@ class ProviderInterventions extends UrlbarProvider {
     }
   }
 
-  onLegacyEngagement(state, queryContext, details, controller) {
-    let { result } = details;
-
+  onEngagement(queryContext, controller, details) {
     // `selType` is "tip" when the tip's main button is picked. Ignore clicks on
     // the help command ("tiphelp"), which is handled by UrlbarInput since we
     // set `helpUrl` on the result payload. Currently there aren't any other
     // buttons or commands but this will ignore clicks on them too.
-    if (result?.providerName == this.name && details.selType == "tip") {
-      this.#pickResult(result, controller.browserWindow);
+    if (details.selType == "tip") {
+      this.#pickResult(details.result, controller.browserWindow);
     }
+  }
 
-    for (let tip of this.tipsShownInCurrentEngagement) {
-      Services.telemetry.keyedScalarAdd("urlbar.tips", `${tip}-shown`, 1);
-    }
-    this.tipsShownInCurrentEngagement.clear();
+  onImpression(state, queryContext, controller, providerVisibleResults) {
+    providerVisibleResults.forEach(({ result }) => {
+      Services.telemetry.keyedScalarAdd(
+        "urlbar.tips",
+        `${result.payload.type}-shown`,
+        1
+      );
+    });
   }
 
   /**

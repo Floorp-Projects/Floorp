@@ -210,12 +210,8 @@ class ProviderInputHistory extends UrlbarProvider {
     }
   }
 
-  onLegacyEngagement(state, queryContext, details, controller) {
+  onEngagement(queryContext, controller, details) {
     let { result } = details;
-    if (result?.providerName != this.name) {
-      return;
-    }
-
     if (
       details.selType == "dismiss" &&
       result.type == UrlbarUtils.RESULT_TYPE.URL

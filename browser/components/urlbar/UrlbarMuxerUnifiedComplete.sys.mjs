@@ -1203,18 +1203,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // TODO (Bug 1670185): figure out better strategies to manage this case.
     if (result.providerName == lazy.UrlbarProviderTabToSearch.name) {
       state.canAddTabToSearch = false;
-      // We want to record in urlbar.tips once per engagement per engine. Since
-      // whether these results are shown is dependent on the Muxer, we must
-      // add to `enginesShown` here.
-      if (result.payload.dynamicType) {
-        lazy.UrlbarProviderTabToSearch.enginesShown.onboarding.add(
-          result.payload.engine
-        );
-      } else {
-        lazy.UrlbarProviderTabToSearch.enginesShown.regular.add(
-          result.payload.engine
-        );
-      }
     }
 
     // Sync will send us duplicate remote tabs if multiple copies of a tab are
