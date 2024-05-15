@@ -10,7 +10,7 @@ package glean
 // required imports
 import (
 	"encoding/json"
-	"fmt"
+    "fmt"
 	"strconv"
 	"time"
 
@@ -185,7 +185,11 @@ func (g GleanEventsLogger) Record{{ event|event_type_name }}(
 		{% if metric_type != 'event' %}
 		"{{ metric_type }}": {
 		{% for metric in metrics %}
-			"{{ metric|metric_name }}": params.{{ metric|metric_argument_name }},
+            {% if metric_type =='datetime' %}
+			"{{ metric|metric_name }}": params.{{ metric|metric_argument_name }}.Format("2006-01-02T15:04:05.000Z"),
+            {%  else %}
+            "{{ metric|metric_name }}": params.{{ metric|metric_argument_name }},
+            {% endif %}
 		{% endfor %}
 		},
 		{% endif %}

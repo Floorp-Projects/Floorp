@@ -119,6 +119,23 @@ pub fn register_pings(application_id: Option<&str>) {
     }
 }
 
+/// Schedule pings alongside a parent ping.
+///
+/// Should be called in `submit` of the parent ping
+/// to also submit pings that should ride along.
+///
+/// # Arguments
+///
+/// `submitted_ping`: The parent ping that is submitted
+/// `reason`: The original reason for the submitted ping.
+///           Will be used for the ride-along ping too.
+#[doc(hidden)]
+pub fn schedule_pings(submitted_ping: &str, reason: Option<&str>) {
+    // Ignore arguments.
+    _ = submitted_ping;
+    _ = reason;
+}
+
 #[cfg(feature = "with_gecko")]
 pub(crate) fn submit_ping_by_id(id: u32, reason: Option<&str>) {
     if id & (1 << crate::factory::DYNAMIC_PING_BIT) > 0 {

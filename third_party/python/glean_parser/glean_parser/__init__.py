@@ -6,11 +6,11 @@
 
 """Top-level package for Glean parser."""
 
-from pkg_resources import get_distribution, DistributionNotFound
+import importlib.metadata
 
 try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
+    __version__ = importlib.metadata.version(__name__)
+except importlib.metadata.PackageNotFoundError:
     # package is not installed
     pass
 
