@@ -35,6 +35,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "nsContentUtils.h"
 #include "nsLiteralString.h"
 #include "nsPrintfCString.h"
@@ -1220,6 +1221,11 @@ void MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult) {
         // We have no decoder for this track. Error.
         LOG("No supported decoder for video track (%s)",
             videoInfo->mMimeType.get());
+        if (!videoInfo->mMimeType.IsEmpty()) {
+          mozilla::glean::media_playback::not_supported_video_per_mime_type
+              .Get(videoInfo->mMimeType)
+              .Add(1);
+        }
         mMetadataPromise.Reject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
         return;
       }
