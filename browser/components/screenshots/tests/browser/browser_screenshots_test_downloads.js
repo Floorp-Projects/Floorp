@@ -46,6 +46,18 @@ function waitForFilePicker() {
     MockFilePicker.showCallback = () => {
       MockFilePicker.showCallback = null;
       ok(true, "Saw the file picker");
+
+      resolve();
+    };
+  });
+}
+
+function waitForFilePickerCancel() {
+  return new Promise(resolve => {
+    MockFilePicker.showCallback = () => {
+      MockFilePicker.showCallback = null;
+      ok(true, "Saw the file picker");
+      MockFilePicker.returnValue = MockFilePicker.returnCancel;
       resolve();
     };
   });
@@ -177,6 +189,53 @@ add_task(async function test_download_with_filepicker() {
 
       ok(download.succeeded, "Download should succeed");
       await publicDownloads.removeFinished();
+      await screenshotExit;
+    }
+  );
+});
+
+add_task(async function test_download_filepicker_canceled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.download.useDownloadDir", false]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      let helper = new ScreenshotsHelper(browser);
+
+      helper.triggerUIFromToolbar();
+      await helper.waitForOverlay();
+
+      let screenshotReady = TestUtils.topicObserved(
+        "screenshots-preview-ready"
+      );
+
+      let visiblepageButton = await helper.getPanelButton("#visible-page");
+      visiblepageButton.click();
+      await screenshotReady;
+
+      let downloadButton = helper.getDialogButton("download");
+
+      let filePickerCanceled = waitForFilePickerCancel();
+      downloadButton.click();
+      info("download button clicked");
+      await filePickerCanceled;
+
+      let cancelButton = helper.getDialogButton("cancel");
+
+      await BrowserTestUtils.waitForMutationCondition(
+        cancelButton,
+        { attributes: true },
+        () => !cancelButton.disabled
+      );
+
+      let screenshotExit = TestUtils.topicObserved("screenshots-exit");
+      cancelButton.click();
+
       await screenshotExit;
     }
   );
