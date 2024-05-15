@@ -18,7 +18,7 @@ async function run_test() {
   runUpdate(STATE_SUCCEEDED, false, 0, true);
   await waitForHelperExit();
   await checkPostUpdateAppLog();
-  await standardInit();
+  await testPostUpdateProcessing();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   checkUpdateLogContains(ERR_BACKUP_DISCARD);

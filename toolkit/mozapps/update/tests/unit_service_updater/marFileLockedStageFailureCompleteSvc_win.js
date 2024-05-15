@@ -22,7 +22,7 @@ async function run_test() {
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_FAILED_WRITE_ERROR, false, 1, false);
   await waitForHelperExit();
-  await standardInit();
+  await testPostUpdateProcessing();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
