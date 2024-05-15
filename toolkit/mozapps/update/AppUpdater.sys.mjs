@@ -326,7 +326,7 @@ export class AppUpdater {
       }
 
       LOG("AppUpdater:check - Update check succeeded");
-      this.#update = this.aus.selectUpdate(result.updates);
+      this.#update = await this.aus.selectUpdate(result.updates);
       if (!this.#update) {
         LOG("AppUpdater:check - result: NO_UPDATES_FOUND");
         this.#setStatus(AppUpdater.STATUS.NO_UPDATES_FOUND);
