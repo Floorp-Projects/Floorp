@@ -26,7 +26,7 @@ async function run_test() {
     USE_EXECV ? 0 : 1,
     false
   );
-  standardInit();
+  await standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR);

@@ -24,7 +24,7 @@ async function run_test() {
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_AFTER_RUNUPDATE, true, 1, true);
   await waitForHelperExit();
-  standardInit();
+  await standardInit();
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
   checkFilesAfterUpdateFailure(getApplyDirFile);

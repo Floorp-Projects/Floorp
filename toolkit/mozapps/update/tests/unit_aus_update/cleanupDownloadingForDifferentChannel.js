@@ -20,7 +20,7 @@ async function run_test() {
 
   setUpdateChannel("original_channel");
 
-  standardInit();
+  await standardInit();
 
   Assert.ok(
     !(await gUpdateManager.getDownloadingUpdate()),

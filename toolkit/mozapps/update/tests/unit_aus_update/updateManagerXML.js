@@ -74,7 +74,7 @@ async function run_test() {
   updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
 
-  standardInit();
+  await standardInit();
 
   Assert.ok(
     !(await gUpdateManager.getDownloadingUpdate()),
