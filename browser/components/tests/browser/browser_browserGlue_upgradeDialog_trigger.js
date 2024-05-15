@@ -47,12 +47,15 @@ add_task(async function not_major_upgrade() {
 
 add_task(async function remote_disabled() {
   await ExperimentAPI.ready();
-  let doCleanup = await ExperimentFakes.enrollWithRollout({
-    featureId: NimbusFeatures.upgradeDialog.featureId,
-    value: {
-      enabled: false,
+  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: NimbusFeatures.upgradeDialog.featureId,
+      value: {
+        enabled: false,
+      },
     },
-  });
+    { isRollout: true }
+  );
 
   // Simulate starting from a previous version.
   let cleanupUpgrade = await forceMajorUpgrade();
