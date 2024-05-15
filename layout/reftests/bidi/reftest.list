@@ -177,7 +177,7 @@ fuzzy-if(cocoaWidget,0-1,0-3) fuzzy-if(Android,0-1,0-6) == brackets-3a-rtl.html 
 == 1231175-1.html 1231175-1-ref.html
 == 1366623-1.html 1366623-1-ref.html
 == 1426042-1.html 1426042-1-ref.html # Bug 1392106
-fails-if(release_or_beta) == clone-intrinsic-size-bidi.html clone-intrinsic-size-bidi-ref.html
+== clone-intrinsic-size-bidi.html clone-intrinsic-size-bidi-ref.html
 fuzzy-if(winWidget,70-112,8-8) == slice-intrinsic-size-bidi.html slice-intrinsic-size-bidi-ref.html
 == 1556414-1.html 1556414-1-ref.html
 == 1567036-1.html 1567036-1-ref.html

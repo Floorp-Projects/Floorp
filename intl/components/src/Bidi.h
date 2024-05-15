@@ -7,14 +7,10 @@
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/intl/ICU4CGlue.h"
 
-// Restrict use of the Rust unicode-bidi implementation to Nightly builds,
-// pending investigation of perf regressions; Beta/Release builds will
-// continue to use the ICU4C implementation for now.
-#ifdef NIGHTLY_BUILD
-#  define USE_RUST_UNICODE_BIDI 1
-#else
-#  define USE_RUST_UNICODE_BIDI 0
-#endif
+// Use the Rust unicode-bidi crate to back the Bidi component.
+// (Define to 0 to use the legacy ICU4C implementation instead,
+// until that code is removed altogether.)
+#define USE_RUST_UNICODE_BIDI 1
 
 #if USE_RUST_UNICODE_BIDI
 #  include "mozilla/intl/unicode_bidi_ffi_generated.h"
