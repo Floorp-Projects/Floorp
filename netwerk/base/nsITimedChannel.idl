@@ -86,6 +86,10 @@ interface nsITimedChannel : nsISupports {
   }
   %}
 
+  // Whether this request is render-blocking:
+  // https://w3c.github.io/resource-timing/#dom-renderblockingstatustype
+  [noscript] attribute boolean renderBlocking;
+
   // The following are only set if the document is (partially) read from the
   // cache
   [noscript] readonly attribute TimeStamp cacheReadStart;

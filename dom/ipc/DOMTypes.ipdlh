@@ -246,6 +246,7 @@ struct TimedChannelInfo
   bool allRedirectsSameOrigin;
   bool allRedirectsPassTimingAllowCheck;
   bool? timingAllowCheckForPrincipal;
+  bool renderBlocking;
   TimeStamp launchServiceWorkerStart;
   TimeStamp launchServiceWorkerEnd;
   TimeStamp dispatchFetchEventStart;

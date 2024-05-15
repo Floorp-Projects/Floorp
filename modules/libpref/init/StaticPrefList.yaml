@@ -2406,7 +2406,7 @@
 # Whether the blocking attribute implementation is enabled,
 # see https://html.spec.whatwg.org/#blocking-attributes
 - name: dom.element.blocking.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 

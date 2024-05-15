@@ -1017,6 +1017,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   bool mHasContentDecompressed;
 
+  // A flag that should be false if render-blocking is not stated
+  bool mRenderBlocking;
+
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields3, 8, (
     (bool, AsyncOpenTimeOverriden, 1),

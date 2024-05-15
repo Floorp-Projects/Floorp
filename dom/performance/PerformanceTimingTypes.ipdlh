@@ -39,6 +39,7 @@ struct IPCPerformanceTimingData {
   uint64_t transferSize;
   uint64_t decodedBodySize;
   uint8_t redirectCount;
+  bool renderBlocking;
   bool allRedirectsSameOrigin;
   bool allRedirectsPassTAO;
   bool secureConnection;

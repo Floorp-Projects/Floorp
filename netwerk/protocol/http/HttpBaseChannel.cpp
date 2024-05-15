@@ -246,7 +246,8 @@ HttpBaseChannel::HttpBaseChannel()
           StaticPrefs::browser_opaqueResponseBlocking()),
       mChannelBlockedByOpaqueResponse(false),
       mDummyChannelForImageCache(false),
-      mHasContentDecompressed(false) {
+      mHasContentDecompressed(false),
+      mRenderBlocking(false) {
   StoreApplyConversion(true);
   StoreAllowSTS(true);
   StoreTracingEnabled(true);
@@ -6528,6 +6529,18 @@ HttpBaseChannel::SetHasContentDecompressed(bool aValue) {
 NS_IMETHODIMP
 HttpBaseChannel::GetHasContentDecompressed(bool* value) {
   *value = mHasContentDecompressed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetRenderBlocking(bool aRenderBlocking) {
+  mRenderBlocking = aRenderBlocking;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetRenderBlocking(bool* aRenderBlocking) {
+  *aRenderBlocking = mRenderBlocking;
   return NS_OK;
 }
 
