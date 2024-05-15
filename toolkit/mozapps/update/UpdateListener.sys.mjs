@@ -348,8 +348,8 @@ export var UpdateListener = {
         // If we downloaded or installed an update via the badge or banner
         // while the timer was running, bail out of showing the doorhanger.
         if (
-          lazy.UpdateManager.downloadingUpdate ||
-          lazy.UpdateManager.readyUpdate
+          lazy.AppUpdateService.currentState !=
+          Ci.nsIApplicationUpdateService.STATE_IDLE
         ) {
           return;
         }
