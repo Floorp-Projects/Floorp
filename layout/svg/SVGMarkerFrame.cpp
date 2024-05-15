@@ -134,7 +134,7 @@ void SVGMarkerFrame::PaintMark(gfxContext& aContext,
   ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
   // The CTM of each frame referencing us may be different.
   SVGFrame->NotifySVGChanged(ISVGDisplayableFrame::TRANSFORM_CHANGED);
-  RefPtr<SVGContextPaintImpl> contextPaint = new SVGContextPaintImpl();
+  auto contextPaint = MakeRefPtr<SVGContextPaintImpl>();
   contextPaint->Init(aContext.GetDrawTarget(), aContext.CurrentMatrixDouble(),
                      aMarkedFrame, SVGContextPaint::GetContextPaint(marker),
                      aImgParams);

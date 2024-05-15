@@ -3142,7 +3142,7 @@ void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
   while (run.mFrame) {
     nsTextFrame* frame = run.mFrame;
 
-    RefPtr<SVGContextPaintImpl> contextPaint = new SVGContextPaintImpl();
+    auto contextPaint = MakeRefPtr<SVGContextPaintImpl>();
     DrawMode drawMode = contextPaint->Init(&aDrawTarget, initialMatrix, frame,
                                            outerContextPaint, aImgParams);
     if (drawMode & DrawMode::GLYPH_STROKE) {

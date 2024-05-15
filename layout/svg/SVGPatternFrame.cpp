@@ -688,13 +688,9 @@ already_AddRefed<gfxPattern> SVGPatternFrame::GetPaintServerPattern(
     return nullptr;
   }
 
-  RefPtr<gfxPattern> pattern = new gfxPattern(surface, pMatrix);
-
-  if (!pattern) {
-    return nullptr;
-  }
-
+  auto pattern = MakeRefPtr<gfxPattern>(surface, pMatrix);
   pattern->SetExtend(ExtendMode::REPEAT);
+
   return pattern.forget();
 }
 
