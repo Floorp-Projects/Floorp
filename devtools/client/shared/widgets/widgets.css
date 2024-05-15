@@ -18,6 +18,10 @@
   overflow-x: hidden;
   overflow-y: auto;
   direction: ltr;
+
+  label {
+    margin: 0;
+  }
 }
 
 .variables-view-element-details:not([open]) {
@@ -74,6 +78,11 @@
 }
 
 /* Table Widget */
+
+.table-widget-body label {
+  margin: 0;
+}
+
 .table-widget-body > .devtools-side-splitter:last-child {
   display: none;
 }

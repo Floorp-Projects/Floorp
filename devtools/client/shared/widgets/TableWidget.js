@@ -108,7 +108,7 @@ function TableWidget(node, options = {}) {
 
   // Prepare placeholder
   this.placeholder = this.document.createElement("div");
-  this.placeholder.className = "plain table-widget-empty-text";
+  this.placeholder.className = "table-widget-empty-text";
   this._parent.appendChild(this.placeholder);
   this.setPlaceholder(this.emptyText);
 
@@ -1657,7 +1657,7 @@ function Cell(column, item, nextCell) {
   this.wrapTextInElements = column.wrapTextInElements;
   this.label = document.createXULElement("label");
   this.label.setAttribute("crop", "end");
-  this.label.className = "plain table-widget-cell";
+  this.label.className = "table-widget-cell";
 
   if (nextCell) {
     column.column.insertBefore(this.label, nextCell.label);

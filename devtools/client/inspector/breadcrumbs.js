@@ -469,16 +469,16 @@ HTMLBreadcrumbs.prototype = {
    */
   prettyPrintNodeAsXHTML(node) {
     const tagLabel = this.doc.createElementNS(NS_XHTML, "span");
-    tagLabel.className = "breadcrumbs-widget-item-tag plain";
+    tagLabel.className = "breadcrumbs-widget-item-tag";
 
     const idLabel = this.doc.createElementNS(NS_XHTML, "span");
-    idLabel.className = "breadcrumbs-widget-item-id plain";
+    idLabel.className = "breadcrumbs-widget-item-id";
 
     const classesLabel = this.doc.createElementNS(NS_XHTML, "span");
-    classesLabel.className = "breadcrumbs-widget-item-classes plain";
+    classesLabel.className = "breadcrumbs-widget-item-classes";
 
     const pseudosLabel = this.doc.createElementNS(NS_XHTML, "span");
-    pseudosLabel.className = "breadcrumbs-widget-item-pseudo-classes plain";
+    pseudosLabel.className = "breadcrumbs-widget-item-pseudo-classes";
 
     let tagText = node.isShadowRoot ? SHADOW_ROOT_TAGNAME : node.displayName;
     if (node.isMarkerPseudoElement) {
