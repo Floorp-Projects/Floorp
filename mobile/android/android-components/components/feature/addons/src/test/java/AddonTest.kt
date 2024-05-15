@@ -9,6 +9,7 @@ import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.Incognito
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.feature.addons.Addon.Companion.localizeOptionalPermissions
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -348,6 +349,27 @@ class AddonTest {
             val stringId = Addon.localizeURLAccessPermission(it)
             assertEquals(R.string.mozac_feature_addons_permissions_all_urls_description, stringId)
         }
+    }
+
+    @Test
+    fun `localizeOptionalPermissions - should provide LocalizedPermission list`() {
+        val expectedLocalizedPermissions = listOf(
+            Addon.LocalizedPermission(testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description), Addon.Permission("<all_urls>", false)),
+            Addon.LocalizedPermission(testContext.getString(R.string.mozac_feature_addons_permissions_web_navigation_description), Addon.Permission("webNavigation", false)),
+            Addon.LocalizedPermission(testContext.getString(R.string.mozac_feature_addons_permissions_clipboard_read_description), Addon.Permission("clipboardRead", false)),
+            Addon.LocalizedPermission(testContext.getString(R.string.mozac_feature_addons_permissions_clipboard_write_description), Addon.Permission("clipboardWrite", false)),
+        )
+
+        val permissions = listOf(
+            Addon.Permission("<all_urls>", false),
+            Addon.Permission("webNavigation", false),
+            Addon.Permission("clipboardRead", false),
+            Addon.Permission("clipboardWrite", false),
+        )
+
+        val localizedResult = localizeOptionalPermissions(permissions, testContext)
+
+        assertEquals(expectedLocalizedPermissions, localizedResult)
     }
 
     @Test
