@@ -196,8 +196,7 @@ function getActiveUpdateFile() {
 function reloadUpdateManagerData(skipFiles = false) {
   Cc["@mozilla.org/updates/update-manager;1"]
     .getService(Ci.nsIUpdateManager)
-    .QueryInterface(Ci.nsIObserver)
-    .observe(null, "um-reload-update-data", skipFiles ? "skip-files" : "");
+    .internal.reload(skipFiles);
 }
 
 /**

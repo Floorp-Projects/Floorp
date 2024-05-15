@@ -160,7 +160,7 @@ class TestNoWindowUpdateRestart(MarionetteTestCase):
         self.marionette.execute_script(
             """
             let UM = Cc["@mozilla.org/updates/update-manager;1"].getService(Ci.nsIUpdateManager);
-            UM.QueryInterface(Ci.nsIObserver).observe(null, "um-reload-update-data", "skip-files");
+            UM.internal.reload(true);
 
             let { UpdateListener } = ChromeUtils.importESModule(
                 "resource://gre/modules/UpdateListener.sys.mjs"
