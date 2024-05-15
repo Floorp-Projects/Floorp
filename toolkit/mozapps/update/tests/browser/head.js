@@ -659,7 +659,7 @@ function runDoorhangerUpdateTest(params, steps) {
       writeStatusFile(STATE_FAILED_CRC_ERROR);
       writeUpdatesToXMLFile(getLocalUpdatesXMLString(params.updates), true);
       reloadUpdateManagerData();
-      testPostUpdateProcessing();
+      await testPostUpdateProcessing();
     }
 
     for (let step of steps) {
