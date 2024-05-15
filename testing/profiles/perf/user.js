@@ -97,5 +97,3 @@ user_pref("startup.homepage_welcome_url.additional", "");
 user_pref("browser.tabs.remote.systemTriggeredAboutBlankAnywhere", true);
 // Make sure speech dispatcher notification error does not impact how we measure visual perception in raptor tests
 user_pref("media.webspeech.synth.dont_notify_on_error", true);
-// Turn off update
-user_pref("app.update.disabledForTesting", true);

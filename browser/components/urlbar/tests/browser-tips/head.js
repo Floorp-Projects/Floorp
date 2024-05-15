@@ -135,21 +135,19 @@ async function initUpdate(params) {
     getVersionParams();
   if (params.backgroundUpdate) {
     setUpdateURL(updateURL);
-    await gAUS.checkForBackgroundUpdates();
+    gAUS.checkForBackgroundUpdates();
     if (params.continueFile) {
       await continueFileHandler(params.continueFile);
     }
     if (params.waitForUpdateState) {
-      let whichUpdateFn =
+      let whichUpdate =
         params.waitForUpdateState == STATE_DOWNLOADING
-          ? "getDownloadingUpdate"
-          : "getReadyUpdate";
-      let update;
+          ? "downloadingUpdate"
+          : "readyUpdate";
       await TestUtils.waitForCondition(
-        async () => {
-          update = await gUpdateManager[whichUpdateFn]();
-          return update && update.state == params.waitForUpdateState;
-        },
+        () =>
+          gUpdateManager[whichUpdate] &&
+          gUpdateManager[whichUpdate].state == params.waitForUpdateState,
         "Waiting for update state: " + params.waitForUpdateState,
         undefined,
         200
@@ -160,7 +158,7 @@ async function initUpdate(params) {
       });
       // Display the UI after the update state equals the expected value.
       Assert.equal(
-        update.state,
+        gUpdateManager[whichUpdate].state,
         params.waitForUpdateState,
         "The update state value should equal " + params.waitForUpdateState
       );
@@ -211,28 +209,30 @@ async function processUpdateStep(step) {
   }
 
   if (checkActiveUpdate) {
-    let whichUpdateFn =
+    let whichUpdate =
       checkActiveUpdate.state == STATE_DOWNLOADING
-        ? "getDownloadingUpdate"
-        : "getReadyUpdate";
-    let update;
-    await TestUtils.waitForCondition(async () => {
-      update = await gUpdateManager[whichUpdateFn]();
-      return update;
-    }, "Waiting for active update");
-    Assert.ok(!!update, "There should be an active update");
+        ? "downloadingUpdate"
+        : "readyUpdate";
+    await TestUtils.waitForCondition(
+      () => gUpdateManager[whichUpdate],
+      "Waiting for active update"
+    );
+    Assert.ok(
+      !!gUpdateManager[whichUpdate],
+      "There should be an active update"
+    );
     Assert.equal(
-      update.state,
+      gUpdateManager[whichUpdate].state,
       checkActiveUpdate.state,
       "The active update state should equal " + checkActiveUpdate.state
     );
   } else {
     Assert.ok(
-      !(await gUpdateManager.getReadyUpdate()),
+      !gUpdateManager.readyUpdate,
       "There should not be a ready update"
     );
     Assert.ok(
-      !(await gUpdateManager.getDownloadingUpdate()),
+      !gUpdateManager.downloadingUpdate,
       "There should not be a downloadingUpdate update"
     );
   }
@@ -244,7 +244,7 @@ async function processUpdateStep(step) {
       await continueFileHandler(continueFile);
       let patch = getPatchOfType(
         data.patchType,
-        await gUpdateManager.getDownloadingUpdate()
+        gUpdateManager.downloadingUpdate
       );
       // The update is removed early when the last download fails so check
       // that there is a patch before proceeding.

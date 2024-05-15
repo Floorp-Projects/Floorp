@@ -44,10 +44,9 @@ add_task(async function elevation_dialog() {
     () => !Services.wm.getMostRecentWindow("Update:Elevation"),
     "The Update Elevation dialog should have closed"
   );
-  let readyUpdate = await gUpdateManager.getReadyUpdate();
-  ok(!!readyUpdate, "There should be a ready update");
+  ok(!!gUpdateManager.readyUpdate, "There should be a ready update");
   is(
-    readyUpdate.state,
+    gUpdateManager.readyUpdate.state,
     STATE_PENDING_ELEVATE,
     "The ready update state should equal " + STATE_PENDING_ELEVATE
   );
@@ -65,8 +64,7 @@ add_task(async function elevation_dialog() {
     () => !Services.wm.getMostRecentWindow("Update:Elevation"),
     "The Update Elevation dialog should have closed"
   );
-  readyUpdate = await gUpdateManager.getReadyUpdate();
-  ok(!readyUpdate, "There should not be a ready update");
+  ok(!gUpdateManager.readyUpdate, "There should not be a ready update");
   is(
     readStatusFile(),
     STATE_NONE,
@@ -81,10 +79,9 @@ add_task(async function elevation_dialog() {
     () => !Services.wm.getMostRecentWindow("Update:Elevation"),
     "The Update Elevation dialog should have closed"
   );
-  readyUpdate = await gUpdateManager.getReadyUpdate();
-  ok(!!readyUpdate, "There should be a ready update");
+  ok(!!gUpdateManager.readyUpdate, "There should be a ready update");
   is(
-    readyUpdate.state,
+    gUpdateManager.readyUpdate.state,
     STATE_PENDING_ELEVATE,
     "The active update state should equal " + STATE_PENDING_ELEVATE
   );
@@ -101,8 +98,8 @@ add_task(async function elevation_dialog() {
  * @return A promise that returns the domWindow for the Update Elevation Dialog
  *         and resolves when the Update Elevation Dialog loads.
  */
-async function waitForElevationDialog() {
-  let elevationDialogLoadedPromise = new Promise(resolve => {
+function waitForElevationDialog() {
+  return new Promise(resolve => {
     var listener = {
       onOpenWindow: aXULWindow => {
         debugDump("Update Elevation dialog shown...");
@@ -127,18 +124,16 @@ async function waitForElevationDialog() {
     };
 
     Services.wm.addListener(listener);
+    // Add the active-update.xml and update.status files used for these tests,
+    // reload the update manager, and then simulate startup so the Update
+    // Elevation Dialog is opened.
+    let patchProps = { state: STATE_PENDING_ELEVATE };
+    let patches = getLocalPatchString(patchProps);
+    let updateProps = { checkInterval: "1" };
+    let updates = getLocalUpdateString(updateProps, patches);
+    writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
+    writeStatusFile(STATE_PENDING_ELEVATE);
+    reloadUpdateManagerData();
+    testPostUpdateProcessing();
   });
-  // Add the active-update.xml and update.status files used for these tests,
-  // reload the update manager, and then simulate startup so the Update
-  // Elevation Dialog is opened.
-  let patchProps = { state: STATE_PENDING_ELEVATE };
-  let patches = getLocalPatchString(patchProps);
-  let updateProps = { checkInterval: "1" };
-  let updates = getLocalUpdateString(updateProps, patches);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
-  writeStatusFile(STATE_PENDING_ELEVATE);
-  reloadUpdateManagerData();
-  await testPostUpdateProcessing();
-
-  return elevationDialogLoadedPromise;
 }

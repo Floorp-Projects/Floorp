@@ -27,7 +27,7 @@ async function run_test() {
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_AFTER_RUNUPDATE, true, 1, true);
   await waitForHelperExit();
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
   checkFilesAfterUpdateFailure(getApplyDirFile);
@@ -36,6 +36,6 @@ async function run_test() {
     ERR_MOVE_DESTDIR_7 + "\n" + STATE_FAILED_WRITE_ERROR + "\n" + CALL_QUIT
   );
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
+  checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
   checkCallbackLog();
 }

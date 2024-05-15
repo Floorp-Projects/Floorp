@@ -22,13 +22,13 @@ async function run_test() {
   // Switch the application to the staged application that was updated.
   runUpdate(STATE_FAILED_WRITE_ERROR, false, 1, false);
   await waitForHelperExit();
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
   checkUpdateLogContains(ERR_BACKUP_CREATE_7);
   checkUpdateLogContains(STATE_FAILED_WRITE_ERROR + "\n" + CALL_QUIT);
   await waitForUpdateXMLFiles(true, false);
-  await checkUpdateManager(STATE_PENDING, true, STATE_PENDING, WRITE_ERROR, 0);
+  checkUpdateManager(STATE_PENDING, true, STATE_PENDING, WRITE_ERROR, 0);
   checkCallbackLog();
 }

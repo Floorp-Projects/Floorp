@@ -23,10 +23,10 @@ async function run_test() {
     path = path + "/../";
   }
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, path, null, null, null);
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
+  checkUpdateManager(STATE_NONE, false, STATE_AFTER_RUNUPDATE, 0, 1);
   waitForFilesInUse();
 }

@@ -153,19 +153,15 @@ async function run_test() {
   const pendingPingContents = "arbitrary pending ping file contents";
   writeFile(oldPendingPingFile, pendingPingContents);
 
-  await standardInit();
+  standardInit();
 
   Assert.ok(
-    !(await gUpdateManager.getDownloadingUpdate()),
+    !gUpdateManager.downloadingUpdate,
     "there should not be a downloading update"
   );
-  Assert.ok(
-    !(await gUpdateManager.getReadyUpdate()),
-    "there should not be a ready update"
-  );
-  const history = await gUpdateManager.getHistory();
+  Assert.ok(!gUpdateManager.readyUpdate, "there should not be a ready update");
   Assert.equal(
-    history.length,
+    gUpdateManager.getUpdateCount(),
     1,
     "the update manager update count" + MSG_SHOULD_EQUAL
   );

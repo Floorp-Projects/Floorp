@@ -21,26 +21,17 @@ async function run_test() {
   log = getUpdateDirFile(FILE_UPDATE_ELEVATED_LOG);
   writeFile(log, "Last Update Elevated Log");
 
-  await standardInit();
+  standardInit();
 
   Assert.ok(
-    !(await gUpdateManager.getDownloadingUpdate()),
+    !gUpdateManager.downloadingUpdate,
     "there should not be a downloading update"
   );
-  Assert.ok(
-    !(await gUpdateManager.getReadyUpdate()),
-    "there should not be a ready update"
-  );
-  const history = await gUpdateManager.getHistory();
+  Assert.ok(!gUpdateManager.readyUpdate, "there should not be a ready update");
   Assert.equal(
-    history.length,
+    gUpdateManager.getUpdateCount(),
     1,
     "the update manager update count" + MSG_SHOULD_EQUAL
-  );
-  Assert.equal(
-    gUpdateManager.updateInstalledAtStartup,
-    history[0],
-    "the update installed at startup should be the update from the history"
   );
   await waitForUpdateXMLFiles();
 
@@ -81,16 +72,6 @@ async function run_test() {
 
   let dir = getUpdateDirFile(DIR_PATCH);
   Assert.ok(dir.exists(), MSG_SHOULD_EXIST);
-
-  // Simulate the browser restarting by rerunning update initialization.
-  reloadUpdateManagerData();
-  await testPostUpdateProcessing();
-
-  Assert.equal(
-    gUpdateManager.updateInstalledAtStartup,
-    null,
-    "updateInstalledAtStartup should be cleared on next browser start"
-  );
 
   doTestFinish();
 }

@@ -24,6 +24,11 @@ const { sinon } = ChromeUtils.importESModule(
 
 // We can't reasonably check NO_MOZ_BACKGROUNDTASKS, nor NO_OMNIJAR.
 
+// These tests use per-installation prefs, and those are a shared resource, so
+// they require some non-trivial setup.
+setupTestCommon(null);
+standardInit();
+
 function setup_enterprise_policy_testing() {
   // This initializes the policy engine for xpcshell tests
   let policies = Cc["@mozilla.org/enterprisepolicies;1"].getService(
@@ -44,12 +49,7 @@ async function setupPolicyEngineWithJson(json, customSchema) {
   return EnterprisePolicyTesting.setupPolicyEngineWithJson(json, customSchema);
 }
 
-add_setup(async function test_setup() {
-  // These tests use per-installation prefs, and those are a shared resource, so
-  // they require some non-trivial setup.
-  setupTestCommon(null);
-  await standardInit();
-
+add_setup(function test_setup() {
   // FOG needs a profile directory to put its data in.
   do_get_profile();
 

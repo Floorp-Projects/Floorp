@@ -24,11 +24,11 @@ async function run_test() {
     path = path.repeat(1000); // 10000 characters
   }
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, null, null, null, path);
-  await testPostUpdateProcessing();
+  standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   await waitForUpdateXMLFiles();
-  await checkUpdateManager(
+  checkUpdateManager(
     STATE_NONE,
     false,
     STATE_FAILED,

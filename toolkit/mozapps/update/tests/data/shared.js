@@ -176,16 +176,15 @@ function waitForEvent(topic, status = null) {
 }
 
 /* Triggers post-update processing */
-async function testPostUpdateProcessing() {
-  await gAUS.internal.postUpdateProcessing();
+function testPostUpdateProcessing() {
+  gAUS.observe(null, "test-post-update-processing", "");
 }
 
 /* Initializes the update service stub */
-async function initUpdateServiceStub() {
-  const updateServiceStub = Cc[
-    "@mozilla.org/updates/update-service-stub;1"
-  ].getService(Ci.nsIApplicationUpdateServiceStub);
-  await updateServiceStub.init();
+function initUpdateServiceStub() {
+  Cc["@mozilla.org/updates/update-service-stub;1"].createInstance(
+    Ci.nsISupports
+  );
 }
 
 /**
@@ -197,7 +196,10 @@ async function initUpdateServiceStub() {
  *         to populate the update metadata.
  */
 function reloadUpdateManagerData(skipFiles = false) {
-  gUpdateManager.internal.reload(skipFiles);
+  let observeData = skipFiles ? "skip-files" : "";
+  gUpdateManager
+    .QueryInterface(Ci.nsIObserver)
+    .observe(null, "um-reload-update-data", observeData);
 }
 
 const observer = {

@@ -51,6 +51,3 @@ user_pref('media.autoplay.ask-permission', true);
 user_pref('media.autoplay.blocking_policy', 1);
 user_pref('media.allowed-to-play.enabled', false);
 user_pref('media.block-autoplay-until-in-foreground', true);
-
-// Turn off update
-user_pref("app.update.disabledForTesting", true);

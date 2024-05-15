@@ -30,7 +30,7 @@ const gUpdateElevationDialog = {
     button.label = label;
     button.setAttribute("accesskey", this.getAUSString(string + ".accesskey"));
   },
-  async onLoad() {
+  onLoad() {
     this.strings = document.getElementById("updateStrings");
     this.brandName = document
       .getElementById("brandStrings")
@@ -39,7 +39,7 @@ const gUpdateElevationDialog = {
     let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
       Ci.nsIUpdateManager
     );
-    let update = await um.getReadyUpdate();
+    let update = um.readyUpdate;
     let updateFinishedName = document.getElementById("updateFinishedName");
     updateFinishedName.value = update.name;
 

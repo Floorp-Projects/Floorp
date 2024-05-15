@@ -69,7 +69,7 @@ export var UpdateListener = {
     return Services.prefs.getIntPref("app.update.badgeWaitTime", 4 * 24 * 3600); // 4 days
   },
 
-  async getSuppressedPromptDelay() {
+  get suppressedPromptDelay() {
     // Return the time (in milliseconds) after which a suppressed prompt should
     // be shown. Either 14 days from the last build time, or 7 days from the
     // last update time; whichever comes sooner. If build time is not available
@@ -91,8 +91,7 @@ export var UpdateListener = {
         buildId.slice(10, 12),
         buildId.slice(12, 14)
       ).getTime() ?? 0;
-    const updateHistory = await lazy.UpdateManager.getHistory();
-    let updateTime = updateHistory[0]?.installDate ?? 0;
+    let updateTime = lazy.UpdateManager.getUpdateAt(0)?.installDate ?? 0;
     // Check that update/build times are at most 24 hours after now.
     if (buildTime - now > this.promptMaxFutureVariation) {
       buildTime = 0;
@@ -329,7 +328,7 @@ export var UpdateListener = {
     );
   },
 
-  async scheduleUpdateAvailableNotification(update) {
+  scheduleUpdateAvailableNotification(update) {
     // Show a badge/banner-only notification immediately.
     this.showUpdateAvailableNotification(update, true);
     // Track the latest update, since we will almost certainly have a new update
@@ -343,13 +342,12 @@ export var UpdateListener = {
     // doorhanger would be scheduled at least once per day. If the user
     // downloads the first update, we don't want to keep alerting them.
     if (!this.availablePromptScheduled) {
-      const suppressedPromptDelay = await this.getSuppressedPromptDelay();
-      this.addTimeout(Math.max(0, suppressedPromptDelay), () => {
+      this.addTimeout(Math.max(0, this.suppressedPromptDelay), () => {
         // If we downloaded or installed an update via the badge or banner
         // while the timer was running, bail out of showing the doorhanger.
         if (
-          lazy.AppUpdateService.currentState !=
-          Ci.nsIApplicationUpdateService.STATE_IDLE
+          lazy.UpdateManager.downloadingUpdate ||
+          lazy.UpdateManager.readyUpdate
         ) {
           return;
         }
@@ -445,13 +443,13 @@ export var UpdateListener = {
     }
   },
 
-  async handleUpdateAvailable(update, status) {
+  handleUpdateAvailable(update, status) {
     switch (status) {
       case "show-prompt":
         // If an update is available, show an update available doorhanger unless
         // PREF_APP_UPDATE_SUPPRESS_PROMPTS is true (only on Nightly).
         if (AppConstants.NIGHTLY_BUILD && lazy.SUPPRESS_PROMPTS) {
-          await this.scheduleUpdateAvailableNotification(update);
+          this.scheduleUpdateAvailableNotification(update);
         } else {
           this.showUpdateAvailableNotification(update, false);
         }
@@ -493,7 +491,7 @@ export var UpdateListener = {
     this.clearPendingAndActiveNotifications();
   },
 
-  async observe(subject, topic, status) {
+  observe(subject, topic, status) {
     let update = subject && subject.QueryInterface(Ci.nsIUpdate);
 
     switch (topic) {
@@ -503,7 +501,7 @@ export var UpdateListener = {
           // in case it is set.
           Services.prefs.clearUserPref(PREF_APP_UPDATE_UNSUPPORTED_URL);
         }
-        await this.handleUpdateAvailable(update, status);
+        this.handleUpdateAvailable(update, status);
         break;
       case "update-downloading":
         this.handleUpdateDownloading(status);
