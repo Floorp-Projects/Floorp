@@ -2203,7 +2203,7 @@ void nsRefreshDriver::DispatchResizeEvents() {
   observers.AppendElements(mResizeEventFlushObservers);
   for (RefPtr<PresShell>& presShell : Reversed(observers)) {
     if (!mPresContext || !mPresContext->GetPresShell()) {
-      return StopTimer();
+      break;
     }
     // Make sure to not process observers which might have been removed
     // during previous iterations.
@@ -2665,6 +2665,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   // scroll steps.
   DispatchResizeEvents();
   DispatchVisualViewportResizeEvents();
+
+  if (!mPresContext || !mPresContext->GetPresShell()) {
+    return StopTimer();
+  }
 
   // Dispatch coalesced input events.
   // FIXME(emilio, bug 1896760): This should happen before resize events
