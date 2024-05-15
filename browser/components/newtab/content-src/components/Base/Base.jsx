@@ -236,7 +236,7 @@ export class BaseContent extends React.PureComponent {
       return (
         <p
           className={`wallpaper-attribution`}
-          key={name}
+          key={name.string}
           data-l10n-id="newtab-wallpaper-attribution"
           data-l10n-args={JSON.stringify({
             author_string: name.string,
