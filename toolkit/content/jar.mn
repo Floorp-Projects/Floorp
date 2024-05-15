@@ -95,6 +95,8 @@ toolkit.jar:
    content/global/elements/moz-button-group.mjs    (widgets/moz-button-group/moz-button-group.mjs)
    content/global/elements/moz-card.css         (widgets/moz-card/moz-card.css)
    content/global/elements/moz-card.mjs         (widgets/moz-card/moz-card.mjs)
+   content/global/elements/moz-fieldset.css    (widgets/moz-fieldset/moz-fieldset.css)
+   content/global/elements/moz-fieldset.mjs    (widgets/moz-fieldset/moz-fieldset.mjs)
    content/global/elements/moz-page-nav.css    (widgets/moz-page-nav/moz-page-nav.css)
    content/global/elements/moz-page-nav-button.css    (widgets/moz-page-nav/moz-page-nav-button.css)
    content/global/elements/moz-page-nav.mjs    (widgets/moz-page-nav/moz-page-nav.mjs)

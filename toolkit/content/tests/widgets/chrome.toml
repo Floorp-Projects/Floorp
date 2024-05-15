@@ -28,6 +28,8 @@ skip-if = ["os == 'mac'"]
 
 ["test_moz_card.html"]
 
+["test_moz_fieldset.html"]
+
 ["test_moz_five_star.html"]
 
 ["test_moz_label.html"]

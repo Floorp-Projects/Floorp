@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/design-system/text-and-typography.css");
+
+:host {
+  display: block;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+#description {
+  margin: 0;
+  margin-block-start: var(--space-xxsmall);
+}
+
+#inputs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-medium);
+  margin-top: var(--space-small);
+}

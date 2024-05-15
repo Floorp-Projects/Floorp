@@ -811,6 +811,7 @@
         "chrome://global/content/elements/moz-button-group.mjs",
       ],
       ["moz-card", "chrome://global/content/elements/moz-card.mjs"],
+      ["moz-fieldset", "chrome://global/content/elements/moz-fieldset.mjs"],
       ["moz-five-star", "chrome://global/content/elements/moz-five-star.mjs"],
       [
         "moz-message-bar",
