@@ -129,6 +129,7 @@ enum class GCAbortReason {
   _(RareArgumentsData)                     \
   _(RegExpSharedBytecode)                  \
   _(RegExpSharedNamedCaptureData)          \
+  _(RegExpSharedNamedCaptureSliceData)     \
   _(TypedArrayElements)                    \
   _(NativeIterator)                        \
   _(JitScript)                             \

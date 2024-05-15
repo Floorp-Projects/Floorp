@@ -60,6 +60,27 @@ static PlainObject* CreateGroupsObject(JSContext* cx,
   return PlainObject::createWithTemplate(cx, groupsTemplate);
 }
 
+static inline void getValueAndIndex(HandleRegExpShared re, uint32_t i,
+                                    Handle<ArrayObject*> arr,
+                                    MutableHandleValue val,
+                                    uint32_t& valueIndex) {
+  if (re->numNamedCaptures() == re->numDistinctNamedCaptures()) {
+    valueIndex = re->getNamedCaptureIndex(i);
+    val.set(arr->getDenseElement(valueIndex));
+  } else {
+    mozilla::Span<uint32_t> indicesSlice = re->getNamedCaptureIndices(i);
+    MOZ_ASSERT(!indicesSlice.IsEmpty());
+    valueIndex = indicesSlice[0];
+    for (uint32_t index : indicesSlice) {
+      val.set(arr->getDenseElement(index));
+      if (!val.isUndefined()) {
+        valueIndex = index;
+        break;
+      }
+    }
+  }
+}
+
 /*
  * Implements RegExpBuiltinExec: Steps 18-35
  * https://tc39.es/ecma262/#sec-regexpbuiltinexec
@@ -203,19 +224,20 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
     if (!GetPropertyKeys(cx, groupsTemplate, 0, &keys)) {
       return false;
     }
-    MOZ_ASSERT(keys.length() == re->numNamedCaptures());
+    MOZ_ASSERT(keys.length() == re->numDistinctNamedCaptures());
     RootedId key(cx);
     RootedValue val(cx);
+    uint32_t valueIndex;
     for (uint32_t i = 0; i < keys.length(); i++) {
       key = keys[i];
-      uint32_t idx = re->getNamedCaptureIndex(i);
-      val = arr->getDenseElement(idx);
+      getValueAndIndex(re, i, arr, &val, valueIndex);
       if (!NativeDefineDataProperty(cx, groups, key, val, JSPROP_ENUMERATE)) {
         return false;
       }
+
       // MakeIndicesArray: Step 13.e (reordered)
       if (hasIndices) {
-        val = indices->getDenseElement(idx);
+        val = indices->getDenseElement(valueIndex);
         if (!NativeDefineDataProperty(cx, indicesGroups, key, val,
                                       JSPROP_ENUMERATE)) {
           return false;
@@ -223,13 +245,16 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
       }
     }
   } else {
-    for (uint32_t i = 0; i < re->numNamedCaptures(); i++) {
-      uint32_t idx = re->getNamedCaptureIndex(i);
-      groups->initSlot(i, arr->getDenseElement(idx));
+    RootedValue val(cx);
+    uint32_t valueIndex;
+
+    for (uint32_t i = 0; i < re->numDistinctNamedCaptures(); i++) {
+      getValueAndIndex(re, i, arr, &val, valueIndex);
+      groups->initSlot(i, val);
 
       // MakeIndicesArray: Step 13.e (reordered)
       if (hasIndices) {
-        indicesGroups->initSlot(i, indices->getDenseElement(idx));
+        indicesGroups->initSlot(i, indices->getDenseElement(valueIndex));
       }
     }
   }

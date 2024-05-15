@@ -122,8 +122,22 @@ class RegExpShared
   uint32_t maxRegisters_ = 0;
   uint32_t ticks_ = 0;
 
+  // With duplicate named capture groups, it's possible that the number of
+  // distinct named groups is less than the total number of named captures.
+  // If they are equal, we used the namedCaptureIndices_ array directly to
+  // return the capture index corresponding to a name. If they are not equal,
+  // we use the namedCapturedSliceIndices_ array to keep track of the offsets
+  // into the namedCaptureIndices_ array where indices corresponding to a new
+  // name start.
+  // E.g. if we have a regex like /((<?a>a)|(<?a>A))(<?b>b)/, the
+  // namedCapturedIndices_ array might look like [0, 1, 2], and the
+  // namedCaptureSliceIndices_ array like [0, 2]. Then we can construct the
+  // slice corresponding to `a` as offset 0, length 2, and the slice
+  // corresponding to `b` as offset 2, length 1.
   uint32_t numNamedCaptures_ = {};
+  uint32_t numDistinctNamedCaptures_ = {};
   uint32_t* namedCaptureIndices_ = {};
+  uint32_t* namedCaptureSliceIndices_ = {};
   GCPtr<PlainObject*> groupsTemplate_ = {};
 
   static int CompilationIndex(bool latin1) { return latin1 ? 0 : 1; }
@@ -177,8 +191,10 @@ class RegExpShared
 
   static void InitializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
                                       uint32_t numNamedCaptures,
+                                      uint32_t numDistinctNamedCaptures,
                                       Handle<PlainObject*> templateObject,
-                                      uint32_t* captureIndices);
+                                      uint32_t* captureIndices,
+                                      uint32_t* captureSliceIndices);
   PlainObject* getGroupsTemplate() { return groupsTemplate_; }
 
   void tierUpTick();
@@ -202,10 +218,33 @@ class RegExpShared
   }
 
   uint32_t numNamedCaptures() const { return numNamedCaptures_; }
+  uint32_t numDistinctNamedCaptures() const {
+    return numDistinctNamedCaptures_;
+  }
   int32_t getNamedCaptureIndex(uint32_t idx) const {
     MOZ_ASSERT(idx < numNamedCaptures());
     MOZ_ASSERT(namedCaptureIndices_);
+    MOZ_ASSERT(!namedCaptureSliceIndices_);
     return namedCaptureIndices_[idx];
+  }
+
+  mozilla::Span<uint32_t> getNamedCaptureIndices(uint32_t idx) const {
+    MOZ_ASSERT(idx < numDistinctNamedCaptures());
+    MOZ_ASSERT(namedCaptureIndices_);
+    MOZ_ASSERT(namedCaptureSliceIndices_);
+    // The start of our slice is the value stored in the slice indices.
+    uint32_t* start = &namedCaptureIndices_[namedCaptureSliceIndices_[idx]];
+    size_t length = 0;
+    if (idx + 1 < numDistinctNamedCaptures()) {
+      // If we're not the last slice index, the number of items is the
+      // difference between us and the next index.
+      length =
+          namedCaptureSliceIndices_[idx + 1] - namedCaptureSliceIndices_[idx];
+    } else {
+      // Otherwise, it's the number of remaining capture indices.
+      length = numNamedCaptures() - namedCaptureSliceIndices_[idx];
+    }
+    return mozilla::Span<uint32_t>(start, length);
   }
 
   JSAtom* patternAtom() const { return patternAtom_; }
