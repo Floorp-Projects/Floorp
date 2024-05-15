@@ -5,7 +5,6 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -98,7 +97,6 @@ class DownloadTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/451563
-    @Ignore("Failing: Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1813521")
     @SmokeTest
     @Test
     fun pauseResumeCancelDownloadTest() {
@@ -243,18 +241,16 @@ class DownloadTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2299297
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1842154")
     @Test
     fun notificationCanBeDismissedIfDownloadIsInterruptedTest() {
         downloadRobot {
             openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "1GB.zip")
+            setNetworkEnabled(enabled = false)
+            verifyDownloadFailedPrompt("1GB.zip")
         }
-
-        setNetworkEnabled(enabled = false)
 
         browserScreen {
         }.openNotificationShade {
-            expandNotificationMessage()
             verifySystemNotificationExists("Download failed")
             swipeDownloadNotification("Left", true)
             verifySystemNotificationDoesNotExist("Firefox Fenix")
