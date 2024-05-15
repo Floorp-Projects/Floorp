@@ -5,16 +5,11 @@
 package org.mozilla.fenix.components.menu.compose
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.compose.header.SubmenuHeader
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -30,40 +25,29 @@ internal fun ExtensionsSubmenu(
     onManageExtensionsMenuClick: () -> Unit,
     onDiscoverMoreExtensionsMenuClick: () -> Unit,
 ) {
-    Column {
-        SubmenuHeader(
-            header = stringResource(id = R.string.browser_menu_extensions),
-            onClick = onBackButtonClick,
-        )
+    MenuScaffold(
+        header = {
+            SubmenuHeader(
+                header = stringResource(id = R.string.browser_menu_extensions),
+                onClick = onBackButtonClick,
+            )
+        },
+    ) {
+        MenuGroup {
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_manage_extensions),
+                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_extension_cog_24),
+                onClick = onManageExtensionsMenuClick,
+            )
+        }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Column(
-            modifier = Modifier
-                .padding(
-                    start = 16.dp,
-                    top = 12.dp,
-                    end = 16.dp,
-                    bottom = 32.dp,
-                ),
-            verticalArrangement = Arrangement.spacedBy(32.dp),
-        ) {
-            MenuGroup {
-                MenuItem(
-                    label = stringResource(id = R.string.browser_menu_manage_extensions),
-                    beforeIconPainter = painterResource(id = R.drawable.mozac_ic_extension_cog_24),
-                    onClick = onManageExtensionsMenuClick,
-                )
-            }
-
-            MenuGroup {
-                TextListItem(
-                    label = stringResource(id = R.string.browser_menu_discover_more_extensions),
-                    onClick = onDiscoverMoreExtensionsMenuClick,
-                    iconPainter = painterResource(R.drawable.mozac_ic_external_link_24),
-                    iconTint = FirefoxTheme.colors.iconSecondary,
-                )
-            }
+        MenuGroup {
+            TextListItem(
+                label = stringResource(id = R.string.browser_menu_discover_more_extensions),
+                onClick = onDiscoverMoreExtensionsMenuClick,
+                iconPainter = painterResource(R.drawable.mozac_ic_external_link_24),
+                iconTint = FirefoxTheme.colors.iconSecondary,
+            )
         }
     }
 }
