@@ -23,6 +23,7 @@ object FenixVersions {
     const val androidx_profileinstaller = "1.3.1"
     const val androidx_splash_screen = "1.0.1"
     const val androidx_transition = "1.5.0"
+    const val androidx_viewpager2 = "1.1.0"
     const val google_accompanist = "0.32.0"
 
     const val adjust = "4.38.2"
@@ -52,6 +53,7 @@ object FenixDependencies {
     const val androidx_profileinstaller = "androidx.profileinstaller:profileinstaller:${FenixVersions.androidx_profileinstaller}"
     const val androidx_activity_ktx = "androidx.activity:activity-ktx:${FenixVersions.androidx_activity}"
     const val androidx_transition = "androidx.transition:transition:${FenixVersions.androidx_transition}"
+    const val androidx_viewpager2 = "androidx.viewpager2:viewpager2:${FenixVersions.androidx_viewpager2}"
 
     const val google_accompanist_drawablepainter = "com.google.accompanist:accompanist-drawablepainter:${FenixVersions.google_accompanist}"
 

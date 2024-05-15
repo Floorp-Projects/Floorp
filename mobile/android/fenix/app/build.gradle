@@ -680,6 +680,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_core_ktx
     implementation FenixDependencies.androidx_core_splashscreen
     implementation FenixDependencies.androidx_transition
+    implementation FenixDependencies.androidx_viewpager2
     implementation ComponentsDependencies.androidx_work_runtime
     implementation ComponentsDependencies.androidx_datastore
     implementation ComponentsDependencies.androidx_datastore_preferences
