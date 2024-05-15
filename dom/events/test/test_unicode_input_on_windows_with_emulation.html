@@ -1,0 +1,131 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<title>Test event sequence of Unicode character input of Windows builtin IME</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["test.events.async.enabled", true],
+    ],
+  });
+  const input = document.querySelector("input");
+  input.focus();
+
+  let events = [];
+  function handler(aEvent) {
+    events.push({
+      type: aEvent.type,
+      key: aEvent.key,
+      code: aEvent.code,
+      altKey: aEvent.altKey,
+      defaultPrevented: aEvent.defaultPrevented,
+    });
+  }
+  function stringifyEvents(aEvents) {
+    if (!aEvents.length) {
+      return "[]";
+    }
+    function stringifyEvent(aEvent) {
+      return `{ type: "${aEvent.type}", key: "${aEvent.key}", code: ${aEvent.code}, defaultPrevented: ${
+          aEvent.defaultPrevented
+        }`;
+    }
+    let result = "";
+    for (const event of aEvents) {
+      if (result == "") {
+        result = "[ ";
+      } else {
+        result += ", ";
+      }
+      result += stringifyEvent(event);
+    }
+    return result + " ]";
+  }
+  input.addEventListener("keydown", handler);
+  input.addEventListener("keypress", handler);
+  input.addEventListener("keyup", handler);
+
+  const waitForInput = new Promise(resolve => {
+    input.addEventListener("input", resolve, {once: true});
+  });
+
+  /**
+   * On Windows, users can enable a legacy Unicode input IME with adding a
+   * registry key, `EnableHexNumpad` whose type is `REG_SZ` and value is "1"
+   * under `HKEY_CURRENT_USER\Control Panel\Input Method`.  Then, user can
+   * type a Unicode character with typing the code point in hex while holding
+   * Alt key and typing "+" in the numpad.  Finally, when the Alt key is
+   * released, a Unicode character should be inserted into focused editable
+   * element.  In this case, NativeKey class dispatches the typing "+" and
+   * hex values only with `keydown` and `keyup` events, then, dispatch only
+   * a "keypress" for the Unicode character.
+   *
+   * This test checks whether the events are dispatched as expected in a
+   * content process when it comes from the parent process.
+   */
+
+  const nsITextInputProcessor = SpecialPowers.Ci.nsITextInputProcessor;
+  const TIP = SpecialPowers.Cc["@mozilla.org/text-input-processor;1"].createInstance(nsITextInputProcessor);
+  ok(TIP.beginInputTransactionForTests(window), "beginInputTransactionForTests should've succeeded");
+  TIP.keydown(new KeyboardEvent("keydown", { key: "Alt", code: "AltLeft" }));
+  TIP.keydown(new KeyboardEvent("keydown", { key: "+", code : "NumpadAdd" }), nsITextInputProcessor.KEY_DEFAULT_PREVENTED);
+  TIP.keyup(new KeyboardEvent("keyup", { key: "+", code : "NumpadAdd" }));
+  TIP.keydown(new KeyboardEvent("keydown", { key: "2", code : "Numpad2" }), nsITextInputProcessor.KEY_DEFAULT_PREVENTED);
+  TIP.keyup(new KeyboardEvent("keyup", { key: "2", code : "Numpad2" }));
+  TIP.keydown(new KeyboardEvent("keydown", { key: "7", code : "Numpad7" }), nsITextInputProcessor.KEY_DEFAULT_PREVENTED);
+  TIP.keyup(new KeyboardEvent("keyup", { key: "7", code : "Numpad7" }));
+  TIP.keydown(new KeyboardEvent("keydown", { key: "4", code : "Numpad4" }), nsITextInputProcessor.KEY_DEFAULT_PREVENTED);
+  TIP.keyup(new KeyboardEvent("keyup", { key: "4", code : "Numpad4" }));
+  TIP.keydown(new KeyboardEvent("keydown", { key: "e", code : "KeyE" }), nsITextInputProcessor.KEY_DEFAULT_PREVENTED);
+  TIP.keyup(new KeyboardEvent("keyup", { key: "e", code : "KeyE" }));
+  TIP.keyup(new KeyboardEvent("keyup", { key: "Alt", code: "AltLeft" }));
+  TIP.insertTextWithKeyPress("\u274e", new KeyboardEvent("keyup", { key: "Alt", code: "AltLeft" }));
+
+  info("Waiting for input event...");
+  await waitForInput;
+
+  is(
+    input.value,
+    "\u274e",
+    "Only the unicode character should be inserted"
+  );
+  is(
+    stringifyEvents(events),
+    stringifyEvents([
+      { type: "keydown", key: "Alt", code: "AltLeft", altKey: true, defaultPrevented: false },
+      { type: "keydown", key: "+", code: "NumpadAdd", altKey: true, defaultPrevented: false },
+      { type: "keyup", key: "+", code: "NumpadAdd", altKey: true, defaultPrevented: false },
+      { type: "keydown", key: "2", code: "Numpad2", altKey: true, defaultPrevented: false },
+      { type: "keyup", key: "2", code: "Numpad2", altKey: true, defaultPrevented: false },
+      { type: "keydown", key: "7", code: "Numpad7", altKey: true, defaultPrevented: false },
+      { type: "keyup", key: "7", code: "Numpad7", altKey: true, defaultPrevented: false },
+      { type: "keydown", key: "4", code: "Numpad4", altKey: true, defaultPrevented: false },
+      { type: "keyup", key: "4", code: "Numpad4", altKey: true, defaultPrevented: false },
+      { type: "keydown", key: "e", code: "KeyE", altKey: true, defaultPrevented: false },
+      { type: "keyup", key: "e", code: "KeyE", altKey: true, defaultPrevented: false },
+      { type: "keyup", key: "Alt", code: "AltLeft", altKey: false, defaultPrevented: false },
+      { type: "keypress", key: "\u274e", code: "AltLeft", altKey: false, defaultPrevented: false },
+    ]),
+    "Typing the code point should not cause keypress events but defaultPrevented should be false, " +
+      "and finally, the Unicode character should be inserted with a keypress event"
+  );
+
+  input.removeEventListener("keydown", handler);
+  input.removeEventListener("keypress", handler);
+  input.removeEventListener("keyup", handler);
+
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body>
+<input>
+</body>
+</html>
