@@ -54,25 +54,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIApplicationUpdateServiceStub"
 );
 
-if (AppConstants.ENABLE_WEBDRIVER) {
-  XPCOMUtils.defineLazyServiceGetter(
-    lazy,
-    "Marionette",
-    "@mozilla.org/remote/marionette;1",
-    "nsIMarionette"
-  );
-
-  XPCOMUtils.defineLazyServiceGetter(
-    lazy,
-    "RemoteAgent",
-    "@mozilla.org/remote/agent;1",
-    "nsIRemoteAgent"
-  );
-} else {
-  lazy.Marionette = { running: false };
-  lazy.RemoteAgent = { running: false };
-}
-
 const UPDATESERVICE_CID = Components.ID(
   "{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}"
 );
@@ -90,7 +71,6 @@ const PREF_APP_UPDATE_CHECK_ONLY_INSTANCE_INTERVAL =
   "app.update.checkOnlyInstance.interval";
 const PREF_APP_UPDATE_CHECK_ONLY_INSTANCE_TIMEOUT =
   "app.update.checkOnlyInstance.timeout";
-const PREF_APP_UPDATE_DISABLEDFORTESTING = "app.update.disabledForTesting";
 const PREF_APP_UPDATE_DOWNLOAD_ATTEMPTS = "app.update.download.attempts";
 const PREF_APP_UPDATE_DOWNLOAD_MAXATTEMPTS = "app.update.download.maxAttempts";
 const PREF_APP_UPDATE_ELEVATE_NEVER = "app.update.elevate.never";
@@ -3891,23 +3871,14 @@ export class UpdateService {
   }
 
   get disabledForTesting() {
-    return (
-      (Cu.isInAutomation ||
-        lazy.Marionette.running ||
-        lazy.RemoteAgent.running) &&
-      Services.prefs.getBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false)
-    );
+    return lazy.UpdateServiceStub.updateDisabledForTesting;
   }
 
   /**
    * See nsIUpdateService.idl
    */
   get disabled() {
-    return (
-      (Services.policies && !Services.policies.isAllowed("appUpdate")) ||
-      this.disabledForTesting ||
-      Services.sysinfo.getProperty("isPackagedApp")
-    );
+    return lazy.UpdateServiceStub.updateDisabled;
   }
 
   /**
