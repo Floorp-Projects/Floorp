@@ -1312,11 +1312,9 @@ BrowserGlue.prototype = {
             );
           }
           Services.prefs.setBoolPref(launchOnLoginPref, false);
-          // To reduce confusion when running multiple Gecko profiles,
-          // delete launch on login shortcuts and registry keys so that
-          // users are not presented with the outdated profile selector
-          // dialog.
-          lazy.WindowsLaunchOnLogin.removeLaunchOnLogin();
+          // Only remove registry key, not shortcut here as we can assume
+          // if a user manually created a shortcut they want this behavior.
+          await lazy.WindowsLaunchOnLogin.removeLaunchOnLoginRegistryKey();
         }
         break;
       }
