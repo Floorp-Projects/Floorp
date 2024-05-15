@@ -2422,8 +2422,6 @@ def asan():
 
 
 add_old_configure_assignment("MOZ_ASAN", asan)
-set_define("MOZ_ASAN", True, when=asan)
-set_config("MOZ_ASAN", True, when=asan)
 
 # MSAN
 # ==============================================================
@@ -2437,8 +2435,6 @@ def msan():
 
 
 add_old_configure_assignment("MOZ_MSAN", msan)
-set_define("MOZ_MSAN", True, when=msan)
-set_config("MOZ_MSAN", True, when=msan)
 
 # TSAN
 # ==============================================================
@@ -2452,8 +2448,6 @@ def tsan():
 
 
 add_old_configure_assignment("MOZ_TSAN", tsan)
-set_define("MOZ_TSAN", True, when=tsan)
-set_config("MOZ_TSAN", True, when=tsan)
 
 # UBSAN
 # ==============================================================
@@ -2490,6 +2484,7 @@ def ubsan(options, optimize):
 
 add_old_configure_assignment("MOZ_UBSAN_CHECKS", ubsan)
 
+
 option(
     "--enable-signed-overflow-sanitizer",
     help="Enable UndefinedBehavior Sanitizer (Signed Integer Overflow Parts)",
@@ -2502,8 +2497,6 @@ def ub_signed_overflow_san():
 
 
 add_old_configure_assignment("MOZ_SIGNED_OVERFLOW_SANITIZE", ub_signed_overflow_san)
-set_define("MOZ_SIGNED_OVERFLOW_SANITIZE", True, when=ub_signed_overflow_san)
-set_config("MOZ_SIGNED_OVERFLOW_SANITIZE", True, when=ub_signed_overflow_san)
 
 
 option(
@@ -2518,23 +2511,7 @@ def ub_unsigned_overflow_san():
 
 
 add_old_configure_assignment("MOZ_UNSIGNED_OVERFLOW_SANITIZE", ub_unsigned_overflow_san)
-set_define("MOZ_UNSIGNED_OVERFLOW_SANITIZE", True, when=ub_unsigned_overflow_san)
-set_config("MOZ_UNSIGNED_OVERFLOW_SANITIZE", True, when=ub_unsigned_overflow_san)
 
-#
-
-any_ubsan = ubsan | ub_signed_overflow_san | ub_unsigned_overflow_san
-set_define("MOZ_UBSAN", True, when=any_ubsan)
-set_config("MOZ_UBSAN", any_ubsan)
-
-# The LLVM symbolizer is used by all sanitizers
-check_prog(
-    "LLVM_SYMBOLIZER",
-    ("llvm-symbolizer",),
-    allow_missing=True,
-    paths=clang_search_path,
-    when=asan | msan | tsan | any_ubsan,
-)
 
 # Security Hardening
 # ==============================================================
