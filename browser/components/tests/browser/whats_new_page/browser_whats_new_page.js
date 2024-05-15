@@ -36,11 +36,12 @@ add_task(async function whats_new_page() {
     "Waiting for the ready update to be removed"
   );
   ok(!um.readyUpdate, "There should not be a ready update");
-  await TestUtils.waitForCondition(
-    () => !!um.getUpdateAt(0),
-    "Waiting for the ready update to be moved to the update history"
-  );
-  ok(!!um.getUpdateAt(0), "There should be an update in the update history");
+  let history;
+  await TestUtils.waitForCondition(async () => {
+    history = await um.getHistory();
+    return !!history[0];
+  }, "Waiting for the ready update to be moved to the update history");
+  ok(!!history[0], "There should be an update in the update history");
 
   // Leave no trace. Since this test modifies its support files put them back in
   // their original state.

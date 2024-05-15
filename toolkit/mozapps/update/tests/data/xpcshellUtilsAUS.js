@@ -1305,7 +1305,7 @@ function checkAppBundleModTime() {
  * @param   aUpdateCount
  *          The update history's update count.
  */
-function checkUpdateManager(
+async function checkUpdateManager(
   aStatusFileState,
   aHasActiveUpdate,
   aUpdateStatusState,
@@ -1337,13 +1337,14 @@ function checkUpdateManager(
         msgTags[i] + "the active update should not be defined"
       );
     }
+    const history = await gUpdateManager.getHistory();
     Assert.equal(
-      gUpdateManager.getUpdateCount(),
+      history.length,
       aUpdateCount,
       msgTags[i] + "the update manager updateCount attribute" + MSG_SHOULD_EQUAL
     );
     if (aUpdateCount > 0) {
-      let update = gUpdateManager.getUpdateAt(0);
+      let update = history[0];
       Assert.equal(
         update.state,
         aUpdateStatusState,

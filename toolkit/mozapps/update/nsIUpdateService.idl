@@ -781,6 +781,14 @@ interface nsIUpdateManagerInternal : nsISupports
    *        data.
    */
   void reload(in boolean skipFiles);
+
+  /**
+   * These are identical to the functions with the same name in
+   * `nsIUpdateManager`, but these versions do not ensure the update system has
+   * been initialized before being called.
+   */
+  Array<nsIUpdate> getHistory();
+  void addUpdateToHistory(in nsIUpdate update);
 };
 
 /**
@@ -791,17 +799,12 @@ interface nsIUpdateManagerInternal : nsISupports
 interface nsIUpdateManager : nsISupports
 {
   /**
-   * Gets the update at the specified index
-   * @param   index
-   *          The index within the updates array
-   * @returns The nsIUpdate object at the specified index
+   * @returns Promise<Array<nsIUpdate>>
+   *          Resolves with an array describing the update history. The first
+   *          element in the array represents the most recent item in the
+   *          history.
    */
-  nsIUpdate getUpdateAt(in long index);
-
-  /**
-   * Gets the total number of updates in the history list.
-   */
-  long getUpdateCount();
+  Promise getHistory();
 
   /**
    * The update that has been downloaded, or null if there isn't one.
@@ -822,8 +825,11 @@ interface nsIUpdateManager : nsISupports
    * Adds the specified update to the update history. The update history is
    * limited to 10 items, so this may also remove the last item from the
    * history.
+   * @param update
+   *        The update to add to the history.
+   * @returns Promise<undefined>
    */
-  void addUpdateToHistory(in nsIUpdate update);
+  Promise addUpdateToHistory(in nsIUpdate update);
 
   /**
    * Saves all updates to disk.
