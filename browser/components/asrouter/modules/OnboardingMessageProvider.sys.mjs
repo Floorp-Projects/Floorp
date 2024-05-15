@@ -986,7 +986,7 @@ const BASE_MESSAGES = () => [
     targeting: `source == 'newtab'
     && 'browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt'|preferenceValue == false
     && 'browser.startup.windowsLaunchOnLogin.enabled'|preferenceValue == true && isDefaultBrowser && !activeNotifications
-    && !launchOnLoginEnabled && !isMSIX`,
+    && !launchOnLoginEnabled`,
   },
   {
     id: "INFOBAR_LAUNCH_ON_LOGIN_FINAL",
@@ -1054,7 +1054,7 @@ const BASE_MESSAGES = () => [
     && messageImpressions.INFOBAR_LAUNCH_ON_LOGIN[messageImpressions.INFOBAR_LAUNCH_ON_LOGIN | length - 1]
     && messageImpressions.INFOBAR_LAUNCH_ON_LOGIN[messageImpressions.INFOBAR_LAUNCH_ON_LOGIN | length - 1] <
       currentDate|date - ${FOURTEEN_DAYS_IN_MS}
-    && !launchOnLoginEnabled && !isMSIX`,
+    && !launchOnLoginEnabled`,
   },
   {
     id: "FOX_DOODLE_SET_DEFAULT",
