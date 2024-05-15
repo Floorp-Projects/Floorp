@@ -149,7 +149,9 @@ def check_symbol_flags(linker_ldflags, kernel):
 # a test program. The return value of the template is a check function
 # returning True if the symbol can be found, and None if it is not.
 @template
-def check_symbol(symbol, language="C", flags=None, when=None, onerror=lambda: None):
+def check_symbol(
+    symbol, language="C", flags=None, msg_extra="", when=None, onerror=lambda: None
+):
     if when is None:
         when = always
 
@@ -183,10 +185,62 @@ def check_symbol(symbol, language="C", flags=None, when=None, onerror=lambda: No
         header=comment + ["%schar %s();" % (extern_c, symbol)],
         body="%s();" % symbol,
         flags=flags,
-        check_msg="for %s" % symbol,
+        check_msg="for %s%s" % (symbol, msg_extra),
         when=when,
         onerror=onerror,
     )
+
+
+# Checks for the presence of the given symbol in the given library on the
+# target system by compiling a test program. The return value of the template
+# is a check function returning True if the symbol can be found, and None if it
+# is not.
+@template
+def check_symbol_in_lib(libname, symbol, language="C", when=None, onerror=lambda: None):
+    flag = f"-l{libname}"
+    have_symbol = check_symbol(
+        symbol,
+        flags=[flag],
+        msg_extra=f" in {flag}",
+        language=language,
+        when=when,
+        onerror=onerror,
+    )
+
+    return have_symbol
+
+
+# Same as check_symbol_in_lib but iteratively try libraries in the given libnames until it
+# finds one that contains the given symbol.
+# Returns None if not found, empty tuple if None is in the given libnames and
+# the symbol is present without library linked, a singleton containing the
+# library name if found in that library.
+@template
+def check_symbol_in_libs(
+    libnames, symbol, language="C", when=None, onerror=lambda: None
+):
+    have_symbol = never
+
+    found_lib = dependable(namespace(found=False, lib=None))
+
+    kwargs = {
+        "symbol": symbol,
+        "language": language,
+        "when": when or always,
+        "onerror": onerror,
+    }
+
+    for libname in libnames:
+        kwargs["when"] &= ~have_symbol
+        if libname:
+            have_symbol = check_symbol_in_lib(libname, **kwargs)
+        else:
+            have_symbol = check_symbol(**kwargs)
+
+        add_lib = namespace(found=True, lib=libname)
+        found_lib = depends(have_symbol, found_lib)(lambda h, f: add_lib if h else f)
+
+    return found_lib
 
 
 # Determine whether to add a given flag to the given lists of flags for C or
