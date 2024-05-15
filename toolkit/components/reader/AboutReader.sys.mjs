@@ -274,7 +274,8 @@ export var AboutReader = function (
     },
   ];
 
-  let fontType = Services.prefs.getCharPref("reader.font_type");
+  // TODO: Move font type pref getting alongside other prefs when old menu is retired.
+  let fontType = Services.prefs.getCharPref("reader.font_type", "sans-serif");
 
   // Differentiates between the tick mark labels for width vs spacing controls
   // for localization purposes.
@@ -351,15 +352,17 @@ export var AboutReader = function (
     doc.getElementById("regular-text-menu").hidden = true;
     doc.getElementById("improved-text-menu").hidden = false;
 
-    let selectorFontTypeValues;
+    let selectorFontTypeValues = ["sans-serif", "serif", "monospace"];
     try {
       selectorFontTypeValues = JSON.parse(
         Services.prefs.getCharPref("reader.font_type.values")
       );
     } catch (e) {
-      selectorFontTypeValues = ["sans-serif", "serif", "monospace"];
+      console.error(
+        "There was an error fetching the font type values pref: ",
+        e.message
+      );
     }
-
     this._setupSelector(
       "font-type",
       selectorFontTypeValues,
@@ -369,16 +372,21 @@ export var AboutReader = function (
     );
     this._setFontTypeSelector(fontType);
 
-    let fontWeightValues;
+    let fontWeightValues = ["regular", "light", "bold"];
     try {
       fontWeightValues = JSON.parse(
         Services.prefs.getCharPref("reader.font_weight.values")
       );
     } catch (e) {
-      fontWeightValues = ["regular", "light", "bold"];
+      console.error(
+        "There was an error fetching the font weight values pref: ",
+        e.message
+      );
     }
-
-    let fontWeight = Services.prefs.getCharPref("reader.font_weight");
+    let fontWeight = Services.prefs.getCharPref(
+      "reader.font_weight",
+      "regular"
+    );
     this._setupSelector(
       "font-weight",
       fontWeightValues,
@@ -388,7 +396,7 @@ export var AboutReader = function (
     );
     this._setFontWeight(fontWeight);
 
-    let contentWidth = Services.prefs.getIntPref("reader.content_width");
+    let contentWidth = Services.prefs.getIntPref("reader.content_width", 3);
     this._setupSlider(
       "content-width",
       contentWidthSliderOptions,
@@ -397,7 +405,7 @@ export var AboutReader = function (
     );
     this._setContentWidthSlider(contentWidth);
 
-    let lineSpacing = Services.prefs.getIntPref("reader.line_height");
+    let lineSpacing = Services.prefs.getIntPref("reader.line_height", 4);
     this._setupSlider(
       "line-spacing",
       lineSpacingSliderOptions,
@@ -407,7 +415,8 @@ export var AboutReader = function (
     this._setLineSpacing(lineSpacing);
 
     let characterSpacing = Services.prefs.getIntPref(
-      "reader.character_spacing"
+      "reader.character_spacing",
+      0
     );
     this._setupSlider(
       "character-spacing",
@@ -417,7 +426,7 @@ export var AboutReader = function (
     );
     this._setCharacterSpacing(characterSpacing);
 
-    let wordSpacing = Services.prefs.getIntPref("reader.word_spacing");
+    let wordSpacing = Services.prefs.getIntPref("reader.word_spacing", 0);
     this._setupSlider(
       "word-spacing",
       wordSpacingSliderOptions,
@@ -426,7 +435,10 @@ export var AboutReader = function (
     );
     this._setWordSpacing(wordSpacing);
 
-    let textAlignment = Services.prefs.getCharPref("reader.text_alignment");
+    let textAlignment = Services.prefs.getCharPref(
+      "reader.text_alignment",
+      "start"
+    );
     this._setupSegmentedButton(
       "text-alignment-buttons",
       textAlignmentOptions,
