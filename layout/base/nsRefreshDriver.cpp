@@ -2741,14 +2741,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     return StopTimer();
   }
 
-  // Notify display flush observers.
-  // FIXME(emilio, bug 1896763): Further changes can happen as part of
-  // ResizeObserver handling and so on, probably should notify around
-  // IntersectionObserver timing instead.
-  if (!TickObserverArray(2, aNowTime)) {
-    return StopTimer();
-  }
-
   // Recompute approximate frame visibility if it's necessary and enough time
   // has passed since the last time we did it.
   if (mNeedToRecomputeVisibility && !mThrottled &&
@@ -2786,6 +2778,11 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   // Step 17. For each doc of docs, run the update intersection observations
   // steps for doc.
   UpdateIntersectionObservations(aNowTime);
+
+  // Notify display flush observers (like a11y).
+  if (!TickObserverArray(2, aNowTime)) {
+    return StopTimer();
+  }
 
   UpdateAnimatedImages(previousRefresh, aNowTime);
 
