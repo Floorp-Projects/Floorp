@@ -31,6 +31,16 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+#ifdef __MINGW32__
+// These constants are missing in mingw-w64. This code should be removed once
+// we update to a version which includes them.
+const long UIA_CustomLandmarkTypeId = 80000;
+const long UIA_FormLandmarkTypeId = 80001;
+const long UIA_MainLandmarkTypeId = 80002;
+const long UIA_NavigationLandmarkTypeId = 80003;
+const long UIA_SearchLandmarkTypeId = 80004;
+#endif  // __MINGW32__
+
 // Helper functions
 
 static ToggleState ToToggleState(uint64_t aState) {
