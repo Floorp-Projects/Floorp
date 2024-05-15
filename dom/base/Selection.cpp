@@ -3735,9 +3735,15 @@ void Selection::NotifySelectionListeners() {
   // If we're batching changes, record our batching flag and bail out, we'll be
   // called once the batch ends.
   if (mFrameSelection->IsBatching()) {
-    mFrameSelection->SetChangesDuringBatchingFlag();
+    mChangesDuringBatching = true;
     return;
   }
+  // If being called at end of batching, `mFrameSelection->IsBatching()` will
+  // return false. In this case, this method will only be called if
+  // `mChangesDuringBatching` was true.
+  // (see `nsFrameSelection::EndBatchChanges()`).
+  // Since arriving here means that batching ended, the flag needs to be reset.
+  mChangesDuringBatching = false;
 
   // Our internal code should not move focus with using this class while
   // this moves focus nor from selection listeners.
@@ -3773,22 +3779,22 @@ void Selection::NotifySelectionListeners() {
   if (calledByJSRestorer.SavedValue()) {
     reason |= nsISelectionListener::JS_REASON;
   }
+  if (mSelectionType == SelectionType::eNormal) {
+    if (mNotifyAutoCopy) {
+      AutoCopyListener::OnSelectionChange(doc, *this, reason);
+    }
 
-  if (mNotifyAutoCopy) {
-    AutoCopyListener::OnSelectionChange(doc, *this, reason);
+    if (mAccessibleCaretEventHub) {
+      RefPtr<AccessibleCaretEventHub> hub(mAccessibleCaretEventHub);
+      hub->OnSelectionChange(doc, this, reason);
+    }
+
+    if (mSelectionChangeEventDispatcher) {
+      RefPtr<SelectionChangeEventDispatcher> dispatcher(
+          mSelectionChangeEventDispatcher);
+      dispatcher->OnSelectionChange(doc, this, reason);
+    }
   }
-
-  if (mAccessibleCaretEventHub) {
-    RefPtr<AccessibleCaretEventHub> hub(mAccessibleCaretEventHub);
-    hub->OnSelectionChange(doc, this, reason);
-  }
-
-  if (mSelectionChangeEventDispatcher) {
-    RefPtr<SelectionChangeEventDispatcher> dispatcher(
-        mSelectionChangeEventDispatcher);
-    dispatcher->OnSelectionChange(doc, this, reason);
-  }
-
   for (const auto& listener : selectionListeners) {
     // MOZ_KnownLive because 'selectionListeners' is guaranteed to
     // keep it alive.

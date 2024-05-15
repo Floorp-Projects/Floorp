@@ -819,6 +819,8 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT void NotifySelectionListeners(bool aCalledByJS);
   MOZ_CAN_RUN_SCRIPT void NotifySelectionListeners();
 
+  bool ChangesDuringBatching() const { return mChangesDuringBatching; }
+
   friend struct AutoUserInitiated;
   struct MOZ_RAII AutoUserInitiated {
     explicit AutoUserInitiated(Selection& aSelectionRef)
@@ -1090,6 +1092,16 @@ class Selection final : public nsSupportsWeakReference,
    * true if AutoCopyListner::OnSelectionChange() should be called.
    */
   bool mNotifyAutoCopy;
+
+  /**
+   * Indicates that this selection has changed during a batch change and
+   * `NotifySelectionListener()` should be called after batching ends.
+   *
+   * See `nsFrameSelection::StartBatchChanges()` and `::EndBatchChanges()`.
+   *
+   * This flag is set and reset in `NotifySelectionListener()`.
+   */
+  bool mChangesDuringBatching = false;
 };
 
 // Stack-class to turn on/off selection batching.

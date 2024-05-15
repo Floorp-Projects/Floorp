@@ -2016,20 +2016,30 @@ void nsFrameSelection::EndBatchChanges(const char* aRequesterFuncName,
   MOZ_ASSERT(mBatching.mCounter > 0, "Bad mBatching.mCounter");
   mBatching.mCounter--;
 
-  if (mBatching.mCounter == 0 && mBatching.mChangesDuringBatching) {
+  if (mBatching.mCounter == 0) {
     AddChangeReasons(aReasons);
     mCaretMoveAmount = eSelectNoAmount;
-    mBatching.mChangesDuringBatching = false;
-    // Be aware, the Selection instance may be destroyed after this call.
-    NotifySelectionListeners(SelectionType::eNormal);
+    // Be aware, the Selection instance may be destroyed after this call,
+    // hence make sure that this instance remains until the end of this call.
+    RefPtr frameSelection = this;
+    for (auto selectionType : kPresentSelectionTypes) {
+      // This returns NS_ERROR_FAILURE if being called for a selection that is
+      // not present. We don't care about that here, so we silently ignore it
+      // and continue.
+      Unused << NotifySelectionListeners(selectionType, IsBatchingEnd::Yes);
+    }
   }
 }
 
 nsresult nsFrameSelection::NotifySelectionListeners(
-    SelectionType aSelectionType) {
+    SelectionType aSelectionType, IsBatchingEnd aEndBatching) {
   int8_t index = GetIndexFromSelectionType(aSelectionType);
   if (index >= 0 && mDomSelections[index]) {
     RefPtr<Selection> selection = mDomSelections[index];
+    if (aEndBatching == IsBatchingEnd::Yes &&
+        !selection->ChangesDuringBatching()) {
+      return NS_OK;
+    }
     selection->NotifySelectionListeners();
     mCaretMoveAmount = eSelectNoAmount;
     return NS_OK;
