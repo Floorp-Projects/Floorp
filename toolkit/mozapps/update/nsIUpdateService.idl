@@ -791,6 +791,9 @@ interface nsIUpdateManagerInternal : nsISupports
    */
   Array<nsIUpdate> getHistory();
   void addUpdateToHistory(in nsIUpdate update);
+  // Corresponds to `nsIUpdateManager.getReadyUpdate()`, but also provides
+  // write access.
+  attribute nsIUpdate readyUpdate;
 };
 
 /**
@@ -809,9 +812,10 @@ interface nsIUpdateManager : nsISupports
   Promise getHistory();
 
   /**
-   * The update that has been downloaded, or null if there isn't one.
+   * Returns a Promise that resolves with the nsIUpdate that has been
+   * downloaded, or null if there isn't one.
    */
-  attribute nsIUpdate readyUpdate;
+  Promise getReadyUpdate();
 
   /**
    * The update that is currently downloading, or null if there isn't one.
