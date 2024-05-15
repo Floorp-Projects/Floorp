@@ -751,7 +751,7 @@ dependencies {
     // depend on a separate library for unit tests. This will be removed in future releases.
     testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:${project.ext.glean_version}"
 
-    lintChecks project(":mozilla-lint-rules")
+    lintPublish project(":mozilla-lint-rules")
     lintChecks project(':tooling-lint')
 }
 
