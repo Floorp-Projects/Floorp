@@ -4445,8 +4445,8 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
     //
     // If you do need a pref-controlled, inherited property to have an effect on these elements,
     // then you will need to add some checks to the
-    // nsIAnonymousContentCreator::CreateAnonymousContent implementations of nsHTMLScrollFrame and
-    // nsScrollbarFrame to clear the AnonymousContentKey if a non-initial value is used.
+    // nsIAnonymousContentCreator::CreateAnonymousContent implementations of ScrollContainerFrame
+    // and nsScrollbarFrame to clear the AnonymousContentKey if a non-initial value is used.
     differing_properties.remove_all(&LonghandIdSet::has_no_effect_on_gecko_scrollbars());
 
     if !differing_properties.is_empty() {

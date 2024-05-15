@@ -1145,7 +1145,7 @@ NS_IMETHODIMP
 nsTextControlFrame::RestoreState(PresState* aState) {
   NS_ENSURE_ARG_POINTER(aState);
 
-  // Query the nsIStatefulFrame from the HTMLScrollFrame
+  // Query the nsIStatefulFrame from the ScrollContainerFrame
   if (nsIStatefulFrame* scrollStateFrame =
           do_QueryFrame(GetScrollTargetFrame())) {
     return scrollStateFrame->RestoreState(aState);

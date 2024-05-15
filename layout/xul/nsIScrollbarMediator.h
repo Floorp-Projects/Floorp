@@ -47,7 +47,7 @@ class nsIScrollbarMediator : public nsQueryFrame {
                             mozilla::ScrollSnapFlags aSnapFlags =
                                 mozilla::ScrollSnapFlags::Disabled) = 0;
 
-  // Only implemented for nsGfxScrollFrame, not nsTreeBodyFrame.
+  // Only implemented for ScrollContainerFrame, not nsTreeBodyFrame.
   virtual void ScrollByUnit(nsScrollbarFrame* aScrollbar,
                             mozilla::ScrollMode aMode, int32_t aDirection,
                             mozilla::ScrollUnit aUnit,
@@ -65,7 +65,7 @@ class nsIScrollbarMediator : public nsQueryFrame {
    * aOldPos and aNewPos are scroll positions.
    * The scroll positions start with zero at the left edge; implementors that
    * want zero at the right edge for RTL content will need to adjust
-   * accordingly. (See nsHTMLScrollFrame::ThumbMoved in
+   * accordingly. (See ScrollContainerFrame::ThumbMoved in
    * ScrollContainerFrame.cpp.)
    * @note This method might destroy the frame, pres shell, and other objects.
    */

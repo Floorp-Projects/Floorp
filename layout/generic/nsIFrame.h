@@ -991,7 +991,7 @@ class nsIFrame : public nsQueryFrame {
    *     from the parent.
    *     (@see nsIFrame::Init)
    *   * a scrolled frame propagates its value to its ancestor scroll frame
-   *     (@see nsHTMLScrollFrame::ReloadChildFrames)
+   *     (@see ScrollContainerFrame::ReloadChildFrames)
    */
   mozilla::WritingMode GetWritingMode() const { return mWritingMode; }
 

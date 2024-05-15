@@ -37,7 +37,7 @@ called with a smart pointer like nsRefPtr or nsCOMPtr.
   >
   (lldb) ft this
   Viewport(-1)@0x116017430 [view=0x115efe190] {0,0,60,60} [state=000b063000002623] [sc=0x1160170f8:-moz-viewport]<
-    HTMLScroll(html)(-1)@0x1160180d0 {0,0,0,0} [state=000b020000000403] [content=0x115e4d640] [sc=0x116017768:-moz-viewport-scroll]<
+    ScrollContainer(html)(-1)@0x1160180d0 {0,0,0,0} [state=000b020000000403] [content=0x115e4d640] [sc=0x116017768:-moz-viewport-scroll]<
       ...
       Canvas(html)(-1)@0x116017e08 {0,0,60,60} ink-overflow=0,0,8340,2196 scr-overflow=0,0,8220,2196 [state=000b002000000601] [content=0x115e4d640] [sc=0x11687e0f8:-moz-scrolled-canvas]<
         Block(html)(-1)@0x11687e578 {0,0,60,2196} ink-overflow=0,0,8340,2196 scr-overflow=0,0,8220,2196 [state=000b100000d00601] [content=0x115e4d640] [sc=0x11687e4b8,parent=0x0]<
@@ -45,7 +45,7 @@ called with a smart pointer like nsRefPtr or nsCOMPtr.
             Block(body)(1)@0x11687ebb0 {480,480,0,1236} ink-overflow=-120,-54,7980,1410 scr-overflow=0,0,7740,1236 [state=000b120000100601] [content=0x115ed8980] [sc=0x11687e990]<
               line 0x116899170: count=1 state=inline,clean,prevmarginclean,not impacted,not wrapped,before:nobr,after:nobr[0x0] {0,0,7740,1236} ink-overflow=-120,-54,7980,1410 scr-overflow=0,0,7740,1236 <
                 nsTextControlFrame@0x11687f068 {0,66,7740,1170} ink-overflow=-120,-120,7980,1410 scr-overflow=0,0,7740,1170 [state=0002000000004621] [content=0x115ca2c50] [sc=0x11687ea40]<
-                  HTMLScroll(div)(-1)@0x11687f6b0 {180,240,7380,690} [state=0002000000084409] [content=0x11688c0c0] [sc=0x11687eb00]<
+                  ScrollContainer(div)(-1)@0x11687f6b0 {180,240,7380,690} [state=0002000000084409] [content=0x11688c0c0] [sc=0x11687eb00]<
                     Block(div)(-1)@0x11687fcb8 {0,0,7380,690} [state=0002100000d04601] [content=0x11688c0c0] [sc=0x11687f990:-moz-scrolled-content]<
                       line 0x116899130: count=1 state=inline,clean,prevmarginclean,not impacted,not wrapped,before:nobr,after:nobr[0x100] {60,0,0,690} ink-overflow=60,510,0,0 scr-overflow=60,510,0,0 <
                         Text(0)""@0x1168990c0 {60,510,0,0} [state=0001000020404000] [content=0x11687ca10] [sc=0x11687fd88:-moz-non-element,parent=0x11687eb00] [run=0x115115e80][0,0,T]

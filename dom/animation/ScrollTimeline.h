@@ -244,7 +244,7 @@ class ScrollTimeline : public AnimationTimeline {
  * of scroll driven animations. This is used for all kinds of progress
  * timelines, i.e. anonymous/named scroll timelines and anonymous/named view
  * timelines. And this object is owned by the scroll source (See
- * ElementAnimationData and nsGfxScrollFrame for the usage).
+ * ElementAnimationData and ScrollContainerFrame for the usage).
  */
 class ProgressTimelineScheduler {
  public:

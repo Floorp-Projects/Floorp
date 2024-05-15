@@ -152,8 +152,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * reflowed with the scroll port size given in mScrollPort.
    *
    * Currently it allows scrolling down and to the right for
-   * nsHTMLScrollFrames with LTR directionality, and allows scrolling down and
-   * to the left for nsHTMLScrollFrames with RTL directionality.
+   * ScrollContainerFrames with LTR directionality, and allows scrolling down
+   * and to the left for ScrollContainerFrames with RTL directionality.
    */
   virtual nsRect GetScrolledRect() const = 0;
   /**
