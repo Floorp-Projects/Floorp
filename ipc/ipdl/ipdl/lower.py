@@ -1231,10 +1231,12 @@ class MessageDecl(ipdl.ast.MessageDecl):
             # We also don't move NotNull, as it has no move constructor.
             cxxargs.extend(
                 [
-                    p.var()
-                    if p.ipdltype.isRefcounted()
-                    or (p.ipdltype.isIPDL() and p.ipdltype.isNotNull())
-                    else ExprMove(p.var())
+                    (
+                        p.var()
+                        if p.ipdltype.isRefcounted()
+                        or (p.ipdltype.isIPDL() and p.ipdltype.isNotNull())
+                        else ExprMove(p.var())
+                    )
                     for p in self.params
                 ]
             )
@@ -2582,9 +2584,11 @@ def _generateCxxStruct(sd):
                 sd.name,
                 params=[
                     Decl(
-                        f.forceMoveType()
-                        if _cxxTypeNeedsMoveForData(f.ipdltype)
-                        else f.constRefType(),
+                        (
+                            f.forceMoveType()
+                            if _cxxTypeNeedsMoveForData(f.ipdltype)
+                            else f.constRefType()
+                        ),
                         f.argVar().name,
                     )
                     for f in sd.fields_ipdl_order()
@@ -2613,9 +2617,11 @@ def _generateCxxStruct(sd):
                     sd.name,
                     params=[
                         Decl(
-                            f.forceMoveType()
-                            if _cxxTypeCanMove(f.ipdltype)
-                            else f.constRefType(),
+                            (
+                                f.forceMoveType()
+                                if _cxxTypeCanMove(f.ipdltype)
+                                else f.constRefType()
+                            ),
                             f.argVar().name,
                         )
                         for f in sd.fields_ipdl_order()
@@ -3645,6 +3651,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 FriendClassDecl(_actorName(friend.fullname(), self.prettyside))
             )
 
+        self.cls.addstmt(Label.PUBLIC)
+        protocolid = ExprVar("kProtocolId")
+        self.cls.addcode(
+            """
+            static constexpr ::mozilla::ipc::ProtocolId ${name} = ${value};
+            """,
+            name=protocolid,
+            value=_protocolId(ptype),
+        )
+
         self.cls.addstmt(Label.PROTECTED)
         for typedef in sorted(self.typedefSet):
             self.cls.addstmt(typedef)
@@ -3796,7 +3812,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ctor.memberinits = [
                 ExprMemberInit(
                     ExprVar("mozilla::ipc::IToplevelProtocol"),
-                    [name, _protocolId(ptype), side],
+                    [name, protocolid, side],
                 )
             ]
         else:
@@ -3805,7 +3821,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 if ptype.isRefcounted()
                 else ExprVar("mozilla::ipc::IProtocol")
             )
-            ctor.memberinits = [ExprMemberInit(baseCtor, [_protocolId(ptype), side])]
+            ctor.memberinits = [ExprMemberInit(baseCtor, [protocolid, side])]
 
         ctor.addcode("MOZ_COUNT_CTOR(${clsname});\n", clsname=self.clsname)
         self.cls.addstmts([ctor, Whitespace.NL])
@@ -3854,7 +3870,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     Manager()->DeallocManagee(${protocolId}, this);
                 }
                 """,
-                protocolId=_protocolId(ptype),
+                protocolId=protocolid,
             )
 
         self.cls.addstmts([Label.PROTECTED, actoralloc, actordealloc])
@@ -3890,22 +3906,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
                 self.cls.addstmts([managermeth, Whitespace.NL])
 
-        def actorFromIter(itervar):
-            return ExprCode("${iter}.Get()->GetKey()", iter=itervar)
-
-        def forLoopOverHashtable(hashtable, itervar, const=False):
-            itermeth = "ConstIter" if const else "Iter"
-            return StmtFor(
-                init=ExprCode(
-                    "auto ${itervar} = ${hashtable}.${itermeth}()",
-                    itervar=itervar,
-                    hashtable=hashtable,
-                    itermeth=itermeth,
-                ),
-                cond=ExprCode("!${itervar}.Done()", itervar=itervar),
-                update=ExprCode("${itervar}.Next()", itervar=itervar),
-            )
-
         # Managed[T](Array& inout) const
         # const Array<T>& Managed() const
         for managed in ptype.manages:
@@ -3939,37 +3939,50 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             self.cls.addstmts([meth, refmeth, Whitespace.NL])
 
-        # AllManagedActorsCount() const
-        managedcount = MethodDefn(
+        managedprotocolids = MethodDefn(
             MethodDecl(
-                "AllManagedActorsCount",
-                ret=Type.UINT32,
-                methodspec=MethodSpec.OVERRIDE,
+                "ManagedProtocolIds",
+                ret=_cxxSpanType(Type("mozilla::ipc::ProtocolId")),
+                methodspec=MethodSpec.FINAL,
                 const=True,
             )
         )
-
-        # Count the number of managed actors.
-        managedcount.addcode(
-            """
-            uint32_t total = 0;
-            """
-        )
-        for managed in ptype.manages:
-            managedcount.addcode(
+        if ptype.manages:
+            managedprotocolids.addcode(
                 """
-                total += ${container}.Count();
+                static constexpr ::mozilla::ipc::ProtocolId sIds[] = {
+                    $,{values}
+                };
+                return sIds;
                 """,
-                container=p.managedVar(managed, self.side),
+                values=[_protocolId(managed) for managed in ptype.manages],
             )
-        managedcount.addcode(
-            """
-            return total;
+        else:
+            managedprotocolids.addcode("return {};\n")
 
-            """
+        self.cls.addstmts([managedprotocolids, Whitespace.NL])
+
+        # UntypedManagedContainer& GetManagedActors(ProtocolId)
+        managedactors = MethodDefn(
+            MethodDecl(
+                "GetManagedActors",
+                ret=Type("UntypedManagedContainer", ptr=True),
+                methodspec=MethodSpec.FINAL,
+                params=[Decl(Type("mozilla::ipc::ProtocolId"), "aProtocol")],
+            )
         )
 
-        self.cls.addstmts([managedcount, Whitespace.NL])
+        selectmanagedactors = StmtSwitch(ExprVar("aProtocol"))
+        for managed in ptype.manages:
+            selectmanagedactors.addcase(
+                CaseLabel(_protocolId(managed).name),
+                StmtReturn(ExprAddrOf(p.managedVar(managed, self.side))),
+            )
+        selectmanagedactors.addcase(DefaultLabel(), StmtReturn(ExprLiteral.NULL))
+
+        managedactors.addstmt(selectmanagedactors)
+
+        self.cls.addstmts([managedactors, Whitespace.NL])
 
         # OpenPEndpoint(...)/BindPEndpoint(...)
         for managed in ptype.manages:
@@ -4135,48 +4148,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ]
         )
 
-        # DoomSubtree()
-        doomsubtree = MethodDefn(
-            MethodDecl("DoomSubtree", methodspec=MethodSpec.OVERRIDE)
-        )
-
-        for managed in ptype.manages:
-            doomsubtree.addcode(
-                """
-                for (auto* key : ${container}) {
-                    key->DoomSubtree();
-                }
-                """,
-                container=p.managedVar(managed, self.side),
-            )
-
-        doomsubtree.addcode("SetDoomed();\n")
-
-        self.cls.addstmts([doomsubtree, Whitespace.NL])
-
-        # IProtocol* PeekManagedActor() override
-        peekmanagedactor = MethodDefn(
-            MethodDecl(
-                "PeekManagedActor",
-                methodspec=MethodSpec.OVERRIDE,
-                ret=Type("IProtocol", ptr=True),
-            )
-        )
-
-        for managed in ptype.manages:
-            peekmanagedactor.addcode(
-                """
-                if (IProtocol* actor = ${container}.Peek()) {
-                    return actor;
-                }
-                """,
-                container=p.managedVar(managed, self.side),
-            )
-
-        peekmanagedactor.addcode("return nullptr;\n")
-
-        self.cls.addstmts([peekmanagedactor, Whitespace.NL])
-
         # private methods
         self.cls.addstmt(Label.PRIVATE)
 
@@ -4247,9 +4218,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         )
         bindmeth.addcode(
             """
-            return aEndpoint.Bind(mozilla::ipc::PrivateIPDLInterface(), aActor, this, ${container});
-            """,
-            container=self.protocol.managedVar(managed, self.side),
+            return aEndpoint.Bind(mozilla::ipc::PrivateIPDLInterface(), aActor, this);
+            """
         )
 
         self.cls.addstmts([openmeth, bindmeth, Whitespace.NL])
@@ -4283,57 +4253,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             if msgtype.isCtor() and msgtype.isInout():
                 inoutCtorTypes.append(msgtype.constructedType())
 
-        # all protocols share the "same" RemoveManagee() implementation
-        pvar = ExprVar("aProtocolId")
-        listenervar = ExprVar("aListener")
-        removemanagee = MethodDefn(
-            MethodDecl(
-                p.removeManageeMethod().name,
-                params=[
-                    Decl(_protocolIdType(), pvar.name),
-                    Decl(protocolbase, listenervar.name),
-                ],
-                methodspec=MethodSpec.OVERRIDE,
-            )
-        )
-
-        if not len(p.managesStmts):
-            removemanagee.addcode(
-                """
-                FatalError("unreached");
-                return;
-                """
-            )
-        else:
-            switchontype = StmtSwitch(pvar)
-            for managee in p.managesStmts:
-                manageeipdltype = managee.decl.type
-                manageecxxtype = _cxxBareType(
-                    ipdl.type.ActorType(manageeipdltype), self.side
-                )
-                case = ExprCode(
-                    """
-                    ${container}.EnsureRemoved(static_cast<${manageecxxtype}>(aListener));
-                    return;
-
-                    """,
-                    manageecxxtype=manageecxxtype,
-                    container=p.managedVar(manageeipdltype, self.side),
-                )
-                switchontype.addcase(CaseLabel(_protocolId(manageeipdltype).name), case)
-            switchontype.addcase(
-                DefaultLabel(),
-                ExprCode(
-                    """
-                FatalError("unreached");
-                return;
-                """
-                ),
-            )
-            removemanagee.addstmt(switchontype)
-
         # The `DeallocManagee` method is called for managed actors to trigger
         # deallocation when ActorLifecycleProxy is freed.
+        pvar = ExprVar("aProtocolId")
+        listenervar = ExprVar("aListener")
         deallocmanagee = MethodDefn(
             MethodDecl(
                 p.deallocManageeMethod().name,
@@ -4383,7 +4306,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             )
             deallocmanagee.addstmt(switchontype)
 
-        return methods + [removemanagee, deallocmanagee, Whitespace.NL]
+        return methods + [deallocmanagee, Whitespace.NL]
 
     def genShmemCreatedHandler(self):
         assert self.protocol.decl.type.isToplevel()
@@ -4637,9 +4560,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     return ${errfn};
                 }
 
-                if (${actor}->SetManagerAndRegister($,{setManagerArgs})) {
-                    ${container}.Insert(${actor});
-                } else {
+                if (!${actor}->SetManagerAndRegister($,{setManagerArgs})) {
                     NS_WARNING("Failed to bind ${actorname} actor");
                     return ${errfn};
                 }

@@ -488,6 +488,15 @@ bool IProtocol::SetManagerAndRegister(IRefCountedProtocol* aManager,
   mToplevel->mActorMap.InsertOrUpdate(mId, proxy);
   MOZ_ASSERT(proxy->Get() == this);
 
+  UntypedManagedContainer* container =
+      aManager->GetManagedActors(GetProtocolId());
+  if (container) {
+    container->Insert(this);
+  } else {
+    NS_WARNING("Manager does not manage actors with this ProtocolId");
+    success = false;
+  }
+
   // If our manager is already dying, mark ourselves as doomed as well.
   if (aManager && aManager->mLinkStatus != LinkStatus::Connected) {
     mLinkStatus = LinkStatus::Doomed;
@@ -543,6 +552,14 @@ void IProtocol::WarnMessageDiscarded(IPC::Message* aMsg) {
 }
 #endif
 
+uint32_t IProtocol::AllManagedActorsCount() const {
+  uint32_t total = 0;
+  for (ProtocolId id : ManagedProtocolIds()) {
+    total += GetManagedActors(id)->Count();
+  }
+  return total;
+}
+
 already_AddRefed<ActorLifecycleProxy> IProtocol::ActorConnected() {
   if (mLinkStatus != LinkStatus::Inactive) {
     return nullptr;
@@ -597,7 +614,9 @@ void IProtocol::ActorDisconnected(ActorDestroyReason aWhy) {
       MOZ_DIAGNOSTIC_ASSERT(entry && *entry == actor->GetLifecycleProxy(),
                             "ID must be present and reference this actor");
       entry.Remove();
-      manager->RemoveManagee(actor->GetProtocolId(), actor);
+      if (auto* container = manager->GetManagedActors(actor->GetProtocolId())) {
+        container->EnsureRemoved(actor);
+      }
     }
 
     ipcChannel->RejectPendingResponsesForActor(id);
@@ -630,6 +649,30 @@ void IProtocol::ActorDisconnected(ActorDestroyReason aWhy) {
   if (mLinkStatus == LinkStatus::Doomed) {
     doActorDestroy(this, aWhy);
   }
+}
+
+void IProtocol::DoomSubtree() {
+  MOZ_ASSERT(
+      mLinkStatus == LinkStatus::Connected || mLinkStatus == LinkStatus::Doomed,
+      "Invalid link status for SetDoomed");
+  for (ProtocolId id : ManagedProtocolIds()) {
+    for (IProtocol* actor : *GetManagedActors(id)) {
+      actor->DoomSubtree();
+    }
+  }
+  mLinkStatus = LinkStatus::Doomed;
+}
+
+IProtocol* IProtocol::PeekManagedActor() const {
+  for (ProtocolId id : ManagedProtocolIds()) {
+    const UntypedManagedContainer& container = *GetManagedActors(id);
+    if (!container.IsEmpty()) {
+      // Return the last element first, to reduce the copying required when
+      // removing it.
+      return *(container.end() - 1);
+    }
+  }
+  return nullptr;
 }
 
 IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId,

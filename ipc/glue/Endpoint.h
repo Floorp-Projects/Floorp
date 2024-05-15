@@ -268,13 +268,8 @@ class ManagedEndpoint : public UntypedManagedEndpoint {
       : UntypedManagedEndpoint(aActor) {}
 
   bool Bind(const PrivateIPDLInterface&, PFooSide* aActor,
-            IRefCountedProtocol* aManager,
-            ManagedContainer<PFooSide>& aContainer) {
-    if (!BindCommon(aActor, aManager)) {
-      return false;
-    }
-    aContainer.Insert(aActor);
-    return true;
+            IRefCountedProtocol* aManager) {
+    return BindCommon(aActor, aManager);
   }
 
   // Only invalid ManagedEndpoints can be equal, as valid endpoints are unique.

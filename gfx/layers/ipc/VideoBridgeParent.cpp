@@ -8,6 +8,7 @@
 #include "CompositorThread.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/layers/PTextureParent.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/VideoBridgeUtils.h"
 #include "mozilla/webrender/RenderThread.h"

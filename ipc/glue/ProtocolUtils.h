@@ -89,6 +89,7 @@ class nsISerialEventTarget;
 
 namespace mozilla {
 class SchedulerGroup;
+class UntypedManagedContainer;
 
 namespace dom {
 class ContentParent;
@@ -199,6 +200,8 @@ class IProtocol : public HasResultCodes {
   int32_t Id() const { return mId; }
   IRefCountedProtocol* Manager() const { return mManager; }
 
+  uint32_t AllManagedActorsCount() const;
+
   ActorLifecycleProxy* GetLifecycleProxy() { return mLifecycleProxy; }
   WeakActorLifecycleProxy* GetWeakLifecycleProxy();
 
@@ -212,8 +215,7 @@ class IProtocol : public HasResultCodes {
            mLinkStatus == LinkStatus::Doomed;
   }
 
-  // Remove or deallocate a managee given its type.
-  virtual void RemoveManagee(int32_t, IProtocol*) = 0;
+  // Deallocate a managee given its type.
   virtual void DeallocManagee(int32_t, IProtocol*) = 0;
 
   Maybe<IProtocol*> ReadActor(IPC::MessageReader* aReader, bool aNullable,
@@ -271,27 +273,22 @@ class IProtocol : public HasResultCodes {
     }
   }
 
-  virtual uint32_t AllManagedActorsCount() const = 0;
-
   // Internal method called when the actor becomes connected.
   already_AddRefed<ActorLifecycleProxy> ActorConnected();
 
   // Internal method called when actor becomes disconnected.
   void ActorDisconnected(ActorDestroyReason aWhy);
 
-  // Called by DoomSubtree on each managed actor to mark it as Doomed and
-  // prevent further IPC.
-  void SetDoomed() {
-    MOZ_ASSERT(mLinkStatus == LinkStatus::Connected ||
-                   mLinkStatus == LinkStatus::Doomed,
-               "Invalid link status for SetDoomed");
-    mLinkStatus = LinkStatus::Doomed;
-  }
-  virtual void DoomSubtree() = 0;
+  // Gets the list of ProtocolIds managed by this protocol.
+  virtual Span<const ProtocolId> ManagedProtocolIds() const = 0;
 
-  // Internal function returning an arbitrary directly managed actor. Used to
-  // identify managed actors to destroy when tearing down an actor tree.
-  virtual IProtocol* PeekManagedActor() = 0;
+  // Get the ManagedContainer for actors of the given protocol managed by this
+  // protocol. This returns a container if and only if passed a ProtocolId in
+  // `ManagedProtocolIds()`.
+  virtual UntypedManagedContainer* GetManagedActors(ProtocolId aProtocol) = 0;
+  const UntypedManagedContainer* GetManagedActors(ProtocolId aProtocol) const {
+    return const_cast<IProtocol*>(this)->GetManagedActors(aProtocol);
+  }
 
   // Called when the actor has been destroyed due to an error, a __delete__
   // message, or a __doom__ reply.
@@ -317,9 +314,15 @@ class IProtocol : public HasResultCodes {
   void WarnMessageDiscarded(IPC::Message*) {}
 #endif
 
+  void DoomSubtree();
+
+  // Internal function returning an arbitrary directly managed actor. Used to
+  // identify managed actors to destroy when tearing down an actor tree.
+  IProtocol* PeekManagedActor() const;
+
   int32_t mId;
-  ProtocolId mProtocolId;
-  Side mSide;
+  const ProtocolId mProtocolId;
+  const Side mSide;
   LinkStatus mLinkStatus;
   ActorLifecycleProxy* mLifecycleProxy;
   RefPtr<IRefCountedProtocol> mManager;
@@ -742,42 +745,98 @@ class IPDLResolverInner final {
 
 }  // namespace ipc
 
-template <typename Protocol>
-class ManagedContainer {
+// Base class for `ManagedContainer` - contains a series of IProtocol* instances
+// of the same type (as specified by the subclass), and allows iterating over
+// them.
+class UntypedManagedContainer {
  public:
-  using iterator = typename nsTArray<Protocol*>::const_iterator;
+  using iterator = nsTArray<mozilla::ipc::IProtocol*>::const_iterator;
 
-  iterator begin() const { return mArray.begin(); }
-  iterator end() const { return mArray.end(); }
-  iterator cbegin() const { return begin(); }
-  iterator cend() const { return end(); }
+  iterator begin() const { return mArray.cbegin(); }
+  iterator end() const { return mArray.cend(); }
 
   bool IsEmpty() const { return mArray.IsEmpty(); }
   uint32_t Count() const { return mArray.Length(); }
 
-  void ToArray(nsTArray<Protocol*>& aArray) const {
-    aArray.AppendElements(mArray);
+ protected:
+  explicit UntypedManagedContainer(mozilla::ipc::ProtocolId aProtocolId)
+#ifdef DEBUG
+      : mProtocolId(aProtocolId)
+#endif
+  {
   }
 
-  bool EnsureRemoved(Protocol* aElement) {
+ private:
+  friend class mozilla::ipc::IProtocol;
+
+  bool EnsureRemoved(mozilla::ipc::IProtocol* aElement) {
     return mArray.RemoveElementSorted(aElement);
   }
 
-  void Insert(Protocol* aElement) {
+  void Insert(mozilla::ipc::IProtocol* aElement) {
+    MOZ_ASSERT(aElement->GetProtocolId() == mProtocolId,
+               "ManagedContainer can only contain a single protocol");
     // Equivalent to `InsertElementSorted`, avoiding inserting a duplicate
-    // element.
+    // element. See bug 1896166.
     size_t index = mArray.IndexOfFirstElementGt(aElement);
     if (index == 0 || mArray[index - 1] != aElement) {
       mArray.InsertElementAt(index, aElement);
     }
   }
 
-  Protocol* Peek() { return mArray.IsEmpty() ? nullptr : mArray.LastElement(); }
+  nsTArray<mozilla::ipc::IProtocol*> mArray;
+#ifdef DEBUG
+  mozilla::ipc::ProtocolId mProtocolId;
+#endif
+};
 
-  void Clear() { mArray.Clear(); }
+template <typename Protocol>
+class ManagedContainer : public UntypedManagedContainer {
+ public:
+  ManagedContainer() : UntypedManagedContainer(Protocol::kProtocolId) {}
 
- private:
-  nsTArray<Protocol*> mArray;
+  // Input iterator which downcasts to the protocol type while iterating over
+  // the untyped container.
+  class iterator {
+   public:
+    using value_type = Protocol*;
+    using difference_type = ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type;
+    using iterator_category = std::input_iterator_tag;
+
+   private:
+    friend class ManagedContainer;
+    explicit iterator(const UntypedManagedContainer::iterator& aIter)
+        : mIter(aIter) {}
+    UntypedManagedContainer::iterator mIter;
+
+   public:
+    iterator() = default;
+
+    bool operator==(const iterator& aRhs) const { return mIter == aRhs.mIter; }
+    bool operator!=(const iterator& aRhs) const { return mIter != aRhs.mIter; }
+
+    // NOTE: operator->() cannot be implemented without a proxy type.
+    // This is OK, and the same approach taken by C++20's transform_view.
+    reference operator*() const { return static_cast<value_type>(*mIter); }
+
+    iterator& operator++() {
+      ++mIter;
+      return *this;
+    }
+    iterator operator++(int) { return iterator{mIter++}; }
+  };
+
+  iterator begin() const { return iterator{UntypedManagedContainer::begin()}; }
+  iterator end() const { return iterator{UntypedManagedContainer::end()}; }
+
+  void ToArray(nsTArray<Protocol*>& aArray) const {
+    aArray.SetCapacity(Count());
+    for (Protocol* p : *this) {
+      aArray.AppendElement(p);
+    }
+  }
 };
 
 template <typename Protocol>
@@ -787,7 +846,7 @@ Protocol* LoneManagedOrNullAsserts(
     return nullptr;
   }
   MOZ_ASSERT(aManagees.Count() == 1);
-  return *aManagees.cbegin();
+  return *aManagees.begin();
 }
 
 template <typename Protocol>
@@ -795,7 +854,7 @@ Protocol* SingleManagedOrNull(const ManagedContainer<Protocol>& aManagees) {
   if (aManagees.Count() != 1) {
     return nullptr;
   }
-  return *aManagees.cbegin();
+  return *aManagees.begin();
 }
 
 }  // namespace mozilla
