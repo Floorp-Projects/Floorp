@@ -16683,6 +16683,26 @@
   value: false
   mirror: once
 
+#ifdef ANDROID
+# A threshold value for double click by mouse.
+- name: widget.double-click.threshold
+  type: RelaxedAtomicInt32
+  value: 4
+  mirror: always
+
+# A timeout value for double click by mouse.
+- name: widget.double-click.timeout
+  type: RelaxedAtomicInt32
+  value: 500
+  mirror: always
+
+# A min time value for double click by mouse.
+- name: widget.double-click.min
+  type: RelaxedAtomicInt32
+  value: 40
+  mirror: always
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "zoom."
 #---------------------------------------------------------------------------

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1837119
+-->
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Test to fire dblclick event by Android's widget level</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<style>
+#target {
+  width: 100px;
+  height: 100px;
+  background-color: blue;
+  user-select: none;
+}
+</style>
+<script>
+"use strict";
+// If this test runs repeatedly, we have to reset internal double click state
+// to detect double click correctly.
+function resetMouseState() {
+  const target = document.getElementById("target");
+  const promise =
+    new Promise(resolve => target.addEventListener("click", resolve, { once: true }));
+
+  synthesizeNativeMouseEvent({
+    type: "mousedown",
+    target,
+    offsetX: 30,
+    offsetY: 10,
+  });
+
+  synthesizeNativeMouseEvent({
+    type: "mouseup",
+    target,
+    offsetX: 30,
+    offsetY: 10,
+  });
+
+  return promise;
+}
+
+add_task(async function test_fire_dblclick() {
+  // Don't use min time for double click to reduce execution time.
+  // Also, we cannot make a min time on parent process since
+  // synthesizeNativeMouseEvent is called on child process.
+  await SpecialPowers.pushPrefEnv({
+    set: [["widget.double-click.min", -1]],
+  });
+
+  await SimpleTest.promiseFocus();
+  await resetMouseState();
+
+  const target = document.getElementById("target");
+  let click = 0;
+  target.addEventListener("click", () => {
+    info("click event is received");
+    click++;
+  });
+
+  const promise = new Promise(resolve => {
+    target.addEventListener("dblclick", e => {
+      resolve();
+      e.preventDefault();
+    }, { once: true });
+  });
+
+  for (let i = 0; i < 2; i++) {
+    synthesizeNativeMouseEvent({
+      type: "mousedown",
+      target,
+      offsetX: 10,
+      offsetY: 10,
+      button: 0,
+    });
+
+    synthesizeNativeMouseEvent({
+      type: "mouseup",
+      target,
+      offsetX: 10,
+      offsetY: 10,
+      button: 0,
+    });
+  }
+
+  await promise;
+
+  is(click, 2, "Click event is twice");
+
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_fire_no_dblclick() {
+  await SimpleTest.promiseFocus();
+  await resetMouseState();
+
+  let click = 0;
+  let dblclick = 0;
+
+  const target = document.getElementById("target");
+  const promise = new Promise(resolve => {
+    target.addEventListener("click", () => {
+      info("click event is received");
+      click++;
+      if (click == 2) {
+        resolve();
+      }
+    });
+  })
+  target.addEventListener("dblclick", () => {
+    info("dblclick event is received");
+    dblclick++
+  });
+
+  // no delay means that dblclick isn't fired.
+  for (let i = 0; i < 2; i++) {
+    synthesizeNativeMouseEvent({
+      type: "mousedown",
+      target,
+      offsetX: 10,
+      offsetY: 10,
+      button: 0,
+    });
+
+    synthesizeNativeMouseEvent({
+      type: "mouseup",
+      target,
+      offsetX: 10,
+      offsetY: 10,
+      button: 0,
+    });
+  }
+
+  await promise;
+
+  // This test is that dblclick isn't fired when each click is no delayed.
+  // So we need to spin event loop to check whether dblclick is fired.
+  await new Promise(resolve => window.requestAnimationFrame(resolve));
+
+  is(click, 2, "Click event is twice");
+  is(dblclick, 0, "No double click event is fired");
+});
+
+</script>
+</head>
+<body>
+<div id="target"></div>
+</body>
+</html>
