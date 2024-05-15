@@ -7,6 +7,7 @@
 #include "BodyExtractor.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/XMLHttpRequest.h"
@@ -87,7 +88,8 @@ nsresult BodyExtractor<Document>::GetAsStream(
     aContentTypeWithCharset.AssignLiteral("text/html;charset=UTF-8");
 
     nsString serialized;
-    if (!nsContentUtils::SerializeNodeToMarkup(mBody, true, serialized)) {
+    if (!nsContentUtils::SerializeNodeToMarkup(mBody, true, serialized, false,
+                                               {})) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
