@@ -100,7 +100,7 @@ void nsFrameIterator::Next() {
       }
       result = GetParentFrameNotPopup(parent);
       if (!result || IsRootFrame(result) ||
-          (mLockScroll && result->IsScrollFrame())) {
+          (mLockScroll && result->IsScrollContainerFrame())) {
         result = nullptr;
         break;
       }
@@ -151,7 +151,7 @@ void nsFrameIterator::Prev() {
       }
       result = GetParentFrameNotPopup(parent);
       if (!result || IsRootFrame(result) ||
-          (mLockScroll && result->IsScrollFrame())) {
+          (mLockScroll && result->IsScrollContainerFrame())) {
         result = nullptr;
         break;
       }
@@ -190,7 +190,9 @@ nsIFrame* nsFrameIterator::GetParentFrameNotPopup(nsIFrame* aFrame) {
 
 nsIFrame* nsFrameIterator::GetFirstChild(nsIFrame* aFrame) {
   nsIFrame* result = GetFirstChildInner(aFrame);
-  if (mLockScroll && result && result->IsScrollFrame()) return nullptr;
+  if (mLockScroll && result && result->IsScrollContainerFrame()) {
+    return nullptr;
+  }
   if (result && mFollowOOFs) {
     result = nsPlaceholderFrame::GetRealFrameFor(result);
 
@@ -204,7 +206,9 @@ nsIFrame* nsFrameIterator::GetFirstChild(nsIFrame* aFrame) {
 
 nsIFrame* nsFrameIterator::GetLastChild(nsIFrame* aFrame) {
   nsIFrame* result = GetLastChildInner(aFrame);
-  if (mLockScroll && result && result->IsScrollFrame()) return nullptr;
+  if (mLockScroll && result && result->IsScrollContainerFrame()) {
+    return nullptr;
+  }
   if (result && mFollowOOFs) {
     result = nsPlaceholderFrame::GetRealFrameFor(result);
 

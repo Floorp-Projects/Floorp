@@ -394,7 +394,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
 
   nsIFrame* parent = mFrame->GetParent();
   if (parent && parent->HasAnyStateBits(NS_FRAME_IN_CONSTRAINED_BSIZE) &&
-      !(parent->IsScrollFrame() &&
+      !(parent->IsScrollContainerFrame() &&
         parent->StyleDisplay()->mOverflowY != StyleOverflow::Hidden)) {
     mFrame->AddStateBits(NS_FRAME_IN_CONSTRAINED_BSIZE);
   } else if (type == LayoutFrameType::SVGForeignObject) {
@@ -521,7 +521,7 @@ void ReflowInput::InitCBReflowInput() {
 static bool IsQuirkContainingBlockHeight(const ReflowInput* rs,
                                          LayoutFrameType aFrameType) {
   if (LayoutFrameType::Block == aFrameType ||
-      LayoutFrameType::Scroll == aFrameType) {
+      LayoutFrameType::ScrollContainer == aFrameType) {
     // Note: This next condition could change due to a style change,
     // but that would cause a style reflow anyway, which means we're ok.
     if (NS_UNCONSTRAINEDSIZE == rs->ComputedHeight()) {
@@ -1995,7 +1995,7 @@ static nscoord CalcQuirkContainingBlockHeight(
     // if the ancestor is auto height then skip it and continue up if it
     // is the first block frame and possibly the body/html
     if (LayoutFrameType::Block == frameType ||
-        LayoutFrameType::Scroll == frameType) {
+        LayoutFrameType::ScrollContainer == frameType) {
       secondAncestorRI = firstAncestorRI;
       firstAncestorRI = ri;
 

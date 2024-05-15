@@ -2373,8 +2373,8 @@ bool nsLayoutUtils::ContainsPoint(const nsRect& aRect, const nsPoint& aPoint,
 
 nsRect nsLayoutUtils::ClampRectToScrollFrames(nsIFrame* aFrame,
                                               const nsRect& aRect) {
-  nsIFrame* closestScrollFrame =
-      nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::Scroll);
+  nsIFrame* closestScrollFrame = nsLayoutUtils::GetClosestFrameOfType(
+      aFrame, LayoutFrameType::ScrollContainer);
 
   nsRect resultRect = aRect;
 
@@ -2393,7 +2393,7 @@ nsRect nsLayoutUtils::ClampRectToScrollFrames(nsIFrame* aFrame,
 
     // Get next ancestor scroll frame.
     closestScrollFrame = nsLayoutUtils::GetClosestFrameOfType(
-        closestScrollFrame->GetParent(), LayoutFrameType::Scroll);
+        closestScrollFrame->GetParent(), LayoutFrameType::ScrollContainer);
   }
 
   return resultRect;
@@ -5874,7 +5874,7 @@ bool nsLayoutUtils::GetLastLineBaseline(WritingMode aWM, const nsIFrame* aFrame,
                    kid->GetLogicalNormalPosition(aWM, containerSize).B(aWM);
         return true;
       }
-      if (kid->IsScrollFrame()) {
+      if (kid->IsScrollContainerFrame()) {
         // Defer to nsIFrame::GetLogicalBaseline (which synthesizes a baseline
         // from the margin-box).
         kidBaseline = kid->GetLogicalBaseline(aWM);
@@ -5954,10 +5954,13 @@ nsIFrame* nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame) {
   nsIFrame* layer;
   for (layer = aFrame; layer; layer = layer->GetParent()) {
     if (layer->IsAbsPosContainingBlock() ||
-        (layer->GetParent() && layer->GetParent()->IsScrollFrame()))
+        (layer->GetParent() && layer->GetParent()->IsScrollContainerFrame())) {
       break;
+    }
   }
-  if (layer) return layer;
+  if (layer) {
+    return layer;
+  }
   return aFrame->PresShell()->GetRootFrame();
 }
 

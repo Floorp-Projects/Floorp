@@ -66,7 +66,7 @@ void ViewportFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   // If we have a scrollframe then it takes care of creating the display list
   // for the top layer, but otherwise we need to do it here.
-  if (!kid->IsScrollFrame()) {
+  if (!kid->IsScrollContainerFrame()) {
     bool isOpaque = false;
     if (auto* list = BuildDisplayListForTopLayer(aBuilder, &isOpaque)) {
       if (isOpaque) {

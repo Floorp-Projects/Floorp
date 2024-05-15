@@ -5507,7 +5507,7 @@ nsContainerFrame* nsCSSFrameConstructor::GetAbsoluteContainingBlock(
       }
       type = absPosCBCandidate->Type();
     }
-    if (type == LayoutFrameType::Scroll) {
+    if (type == LayoutFrameType::ScrollContainer) {
       nsIScrollableFrame* scrollFrame = do_QueryFrame(absPosCBCandidate);
       absPosCBCandidate = scrollFrame->GetScrolledFrame();
       if (!absPosCBCandidate) {

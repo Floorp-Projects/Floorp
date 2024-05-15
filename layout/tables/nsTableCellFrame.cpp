@@ -754,7 +754,7 @@ void nsTableCellFrame::Reflow(nsPresContext* aPresContext,
   {
     const auto padding = aReflowInput.ComputedLogicalPadding(kidWM);
     kidReflowInput.Init(aPresContext, Nothing(), Nothing(), Some(padding));
-    if (firstKid->IsScrollFrame()) {
+    if (firstKid->IsScrollContainerFrame()) {
       // Propagate explicit block sizes to our inner frame, if it's a scroll
       // frame. Note that in table layout, explicit heights act as a minimum
       // height, see nsTableRowFrame::CalcCellActualBSize.
