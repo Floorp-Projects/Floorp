@@ -413,7 +413,3 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
     GeneratedFile(
         "buildid.cpp", script="gen_buildid.py", inputs=["!build/%s.list" % libxul_list]
     )
-
-    EXPORTS += [
-        "buildid_section.h",
-    ]
