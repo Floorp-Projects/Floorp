@@ -299,8 +299,6 @@ def _instantiate_pings(
                     ping_schedule_reverse_map[ping_schedule] = set()
                 ping_schedule_reverse_map[ping_schedule].add(ping_key)
 
-            del ping_val["metadata"]["ping_schedule"]
-
         try:
             ping_obj = Ping(
                 defined_in=getattr(ping_val, "defined_in", None),
@@ -331,7 +329,9 @@ def _instantiate_pings(
             sources[ping_key] = filepath
 
     for scheduler, scheduled in ping_schedule_reverse_map.items():
-        if isinstance(all_objects["pings"][scheduler], Ping):
+        if scheduler in all_objects["pings"] and isinstance(
+            all_objects["pings"][scheduler], Ping
+        ):
             scheduler_obj: Ping = cast(Ping, all_objects["pings"][scheduler])
             scheduler_obj.schedules_pings = sorted(list(scheduled))
 

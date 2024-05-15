@@ -275,9 +275,9 @@ frozenlist==1.1.1 ; python_version >= "3.8" and python_version < "4.0" \
 giturlparse==0.10.0 ; python_version >= "3.8" and python_version < "4.0" \
     --hash=sha256:04ba1a3a099c3093fa8d24a422913c6a9b2c2cd22bcffc939cf72e3e98f672d7 \
     --hash=sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337
-glean-parser==14.0.1 ; python_version >= "3.8" and python_version < "4.0" \
-    --hash=sha256:3275ca235885c99da659fa7d9bf929b8fb020df79d26fcbec317328c369cd039 \
-    --hash=sha256:3e9e5f99ad8592300e364b70d6247b21c445774a73a2ad274677fb58a0065809
+glean-parser==14.1.2 ; python_version >= "3.8" and python_version < "4.0" \
+    --hash=sha256:38be7d4e0fab0f83340e3427914e08a8631c7fab088a8c60e9b543cab6ea830c \
+    --hash=sha256:c3e87165fe0a0fcbcb28b76bbad025601a86eb447c5779472b62915c46cd44ab
 idna==2.10 ; python_version >= "3.8" and python_version < "4.0" \
     --hash=sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6 \
     --hash=sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0
@@ -492,6 +492,7 @@ pyyaml==6.0.1 ; python_version >= "3.8" and python_version < "4.0" \
     --hash=sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4 \
     --hash=sha256:9046c58c4395dff28dd494285c82ba00b546adfc7ef001486fbf0324bc174fba \
     --hash=sha256:9eb6caa9a297fc2c2fb8862bc5370d0303ddba53ba97e71f08023b6cd73d16a8 \
+    --hash=sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef \
     --hash=sha256:a0cd17c15d3bb3fa06978b4e8958dcdc6e0174ccea823003a106c7d4d7899ac5 \
     --hash=sha256:afd7e57eddb1a54f0f1a974bc4391af8bcce0b444685d936840f125cf046d5bd \
     --hash=sha256:b1275ad35a5d18c62a7220633c913e1b42d44b46ee12554e5fd39c70a243d6a3 \

@@ -11,7 +11,7 @@ use crate::ipc::need_ipc;
 /// See [Glean Pings](https://mozilla.github.io/glean/book/user/pings/index.html).
 #[derive(Clone)]
 pub enum Ping {
-    Parent(glean::private::PingType),
+    Parent(glean::private::PingType, String),
     Child,
 }
 
@@ -38,16 +38,20 @@ impl Ping {
         if need_ipc() {
             Ping::Child
         } else {
-            Ping::Parent(glean::private::PingType::new(
+            let name = name.into();
+            Ping::Parent(
+                glean::private::PingType::new(
+                    name.clone(),
+                    include_client_id,
+                    send_if_empty,
+                    precise_timestamps,
+                    include_info_sections,
+                    enabled,
+                    schedules_pings,
+                    reason_codes,
+                ),
                 name,
-                include_client_id,
-                send_if_empty,
-                precise_timestamps,
-                include_info_sections,
-                enabled,
-                schedules_pings,
-                reason_codes,
-            ))
+            )
         }
     }
 
@@ -61,7 +65,7 @@ impl Ping {
     /// `send_if_empty` is `false`).
     pub fn test_before_next_submit(&self, cb: impl FnOnce(Option<&str>) + Send + 'static) {
         match self {
-            Ping::Parent(p) => p.test_before_next_submit(cb),
+            Ping::Parent(p, _) => p.test_before_next_submit(cb),
             Ping::Child => {
                 panic!("Cannot use ping test API from non-parent process!");
             }
@@ -79,8 +83,9 @@ impl glean::traits::Ping for Ping {
     ///   `ping_info.reason` part of the payload.
     pub fn submit(&self, reason: Option<&str>) {
         match self {
-            Ping::Parent(p) => {
+            Ping::Parent(p, name) => {
                 p.submit(reason);
+                crate::pings::schedule_pings(&name, reason);
             }
             Ping::Child => {
                 log::error!(

@@ -174,6 +174,22 @@ def extra_keys(allowed_extra_keys):
     return "&[" + ", ".join(map(lambda key: '"' + key + '"', allowed_extra_keys)) + "]"
 
 
+def get_schedule_reverse_map(objs):
+    ping_schedule_reverse_map = dict()
+    if "pings" in objs:
+        for ping_key, ping_val in objs["pings"].items():
+            for ping_schedule in ping_val.metadata.get("ping_schedule", []):
+                if ping_schedule not in ping_schedule_reverse_map:
+                    ping_schedule_reverse_map[ping_schedule] = set()
+                ping_schedule_reverse_map[ping_schedule].add(ping_key)
+
+    for ping, schedules in ping_schedule_reverse_map.items():
+        sorted_schedule = sorted(schedules)
+        ping_schedule_reverse_map[ping] = sorted_schedule
+
+    return ping_schedule_reverse_map
+
+
 def output_rust(objs, output_fd, ping_names_by_app_id, options={}):
     """
     Given a tree of objects, output Rust code to the file-like object `output_fd`.
@@ -205,6 +221,7 @@ def output_rust(objs, output_fd, ping_names_by_app_id, options={}):
     util.get_jinja2_template = get_local_template
     get_metric_id = generate_metric_ids(objs)
     get_ping_id = generate_ping_ids(objs)
+    ping_schedule_reverse_map = get_schedule_reverse_map(objs)
 
     # Map from a tuple (const, typ) to an array of tuples (id, path)
     # where:
@@ -311,6 +328,7 @@ def output_rust(objs, output_fd, ping_names_by_app_id, options={}):
             labeleds_by_id_by_type=labeleds_by_id_by_type,
             submetric_bit=ID_BITS - ID_SIGNAL_BITS,
             ping_names_by_app_id=ping_names_by_app_id,
+            ping_schedule_reverse_map=ping_schedule_reverse_map,
         )
     )
     output_fd.write("\n")

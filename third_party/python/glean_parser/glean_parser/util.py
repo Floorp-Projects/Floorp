@@ -406,7 +406,7 @@ def is_expired(expires: str, major_version: Optional[int] = None) -> bool:
         return parse_expiration_version(expires) <= major_version
     else:
         date = parse_expiration_date(expires)
-        return date <= datetime.datetime.utcnow().date()
+        return date <= datetime.datetime.now(datetime.timezone.utc).date()
 
 
 def validate_expires(expires: str, major_version: Optional[int] = None) -> None:
@@ -458,7 +458,7 @@ def build_date(date: Optional[str]) -> datetime.datetime:
         else:
             ts = datetime_fromisoformat(date).replace(tzinfo=datetime.timezone.utc)
     else:
-        ts = datetime.datetime.utcnow()
+        ts = datetime.datetime.now(datetime.timezone.utc)
 
     return ts
 

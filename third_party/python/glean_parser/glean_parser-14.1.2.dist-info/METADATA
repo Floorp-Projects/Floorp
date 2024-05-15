@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean_parser
-Version: 14.0.1
+Version: 14.1.2
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -76,6 +76,20 @@ $ glean_parser check < ping.json
 
 
 # Changelog
+
+## Unreleased
+
+## 14.1.2
+
+- ping schedule: Gracefully handle missing ping ([#705](https://github.com/mozilla/glean_parser/pull/705))
+
+## 14.1.1
+
+- Replace deprecated methods and package ([#699](https://github.com/mozilla/glean_parser/pull/699))
+
+## 14.1.0
+
+- Add Go log outputter support for datetime (`go_server`) ([#693](https://github.com/mozilla/glean_parser/pull/693))
 
 ## 14.0.1
 

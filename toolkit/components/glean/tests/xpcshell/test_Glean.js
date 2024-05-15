@@ -628,3 +628,31 @@ add_task(async function test_fog_complex_object_works() {
   result = Glean.testOnly.crashStack.testGetValue();
   Assert.deepEqual(stack, result);
 });
+
+add_task(function test_fog_ride_along_pings() {
+  Assert.equal(null, Glean.testOnly.badCode.testGetValue("test-ping"));
+  Assert.equal(null, Glean.testOnly.badCode.testGetValue("ride-along-ping"));
+
+  Glean.testOnly.badCode.add(37);
+  Assert.equal(37, Glean.testOnly.badCode.testGetValue("test-ping"));
+  Assert.equal(37, Glean.testOnly.badCode.testGetValue("ride-along-ping"));
+
+  let testPingSubmitted = false;
+
+  GleanPings.testPing.testBeforeNextSubmit(() => {
+    testPingSubmitted = true;
+  });
+  // FIXME(bug 1896356):
+  // We can't use `testBeforeNextSubmit` for `ride-along-ping`
+  // because it's triggered internally, but the callback would only be available
+  // in the C++ bits, not in the internal Rust parts.
+
+  // Submit only a single ping, the other will ride along.
+  GleanPings.testPing.submit();
+
+  Assert.ok(testPingSubmitted, "Test ping was submitted, callback was called.");
+
+  // Both pings have been submitted, so the values should be cleared.
+  Assert.equal(null, Glean.testOnly.badCode.testGetValue("test-ping"));
+  Assert.equal(null, Glean.testOnly.badCode.testGetValue("ride-along-ping"));
+});
