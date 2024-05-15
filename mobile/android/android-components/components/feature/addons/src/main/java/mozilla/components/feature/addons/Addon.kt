@@ -126,6 +126,19 @@ data class Addon(
     ) : Parcelable
 
     /**
+     * Localized permission from [Permission]
+     *
+     * @property localizedName The localized name of the permission to show in the UI.
+     * @property permission The [Permission] that was localized.
+     */
+    @SuppressLint("ParcelCreator")
+    @Parcelize
+    data class LocalizedPermission(
+        val localizedName: String,
+        val permission: Permission,
+    ) : Parcelable
+
+    /**
      * Returns a list of id resources per each item on the [Addon.permissions] list.
      * Holds the state of the installed web extension of this add-on.
      *
@@ -213,6 +226,14 @@ data class Addon(
      */
     fun translatePermissions(context: Context): List<String> {
         return localizePermissions(permissions, context)
+    }
+
+    /**
+     * Returns a [LocalizedPermission] list of the optional permissions.
+     * @param context Context for resource lookup
+     */
+    fun translateOptionalPermissions(context: Context): List<LocalizedPermission> {
+        return localizeOptionalPermissions(optionalPermissions, context)
     }
 
     /**
@@ -331,6 +352,49 @@ data class Addon(
             }
 
             return localizedNormalPermissions + localizedUrlAccessPermissions
+        }
+
+        /**
+         * Takes a list of optional permissions and returns the list of [LocalizedPermission].
+         *
+         * @param optionalPermissions The list of optional permissions
+         * @param context The context for resource lookup
+         */
+        fun localizeOptionalPermissions(
+            optionalPermissions: List<Permission>,
+            context: Context,
+        ): List<LocalizedPermission> {
+            var allUrlAccessPermissionFound = false
+            val notFoundPermissions = mutableListOf<Permission>()
+            val localizedURLAccessPermissions = mutableListOf<LocalizedPermission>()
+
+            val localizedOptionalPermissions: List<LocalizedPermission> = optionalPermissions.mapNotNull {
+                val resourceId = permissionToTranslation[it.name]
+                if (resourceId != null) {
+                    if (resourceId.isAllURLsPermission()) allUrlAccessPermissionFound = true
+                    LocalizedPermission(context.getString(resourceId), it)
+                } else {
+                    notFoundPermissions.add(it)
+                    null
+                }
+            }
+
+            if (!allUrlAccessPermissionFound && notFoundPermissions.isNotEmpty()) {
+                notFoundPermissions.mapNotNullTo(localizedURLAccessPermissions) { permission ->
+                    when (val localizedResourceId = localizeURLAccessPermission(permission.name)) {
+                        null -> {
+                            // Hide if we can't find a string resource to localize the permission
+                            null
+                        }
+                        else -> {
+                            val localizedName = context.getString(localizedResourceId)
+                            LocalizedPermission(localizedName, permission)
+                        }
+                    }
+                }
+            }
+
+            return localizedOptionalPermissions + localizedURLAccessPermissions
         }
 
         /**
@@ -514,6 +578,14 @@ data class Addon(
 
         private fun Int.isAllURLsPermission(): Boolean {
             return this == R.string.mozac_feature_addons_permissions_all_urls_description
+        }
+
+        /**
+         * Check if a permission is considered [Int.isAllURLsPermission] based on the name
+         */
+        fun Permission.isAllURLsPermission(): Boolean {
+            return permissionToTranslation[name]?.isAllURLsPermission()
+                ?: (localizeURLAccessPermission(name)?.isAllURLsPermission() == true)
         }
 
         internal fun localizeURLAccessPermission(urlAccess: String): Int? {
