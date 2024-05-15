@@ -40,13 +40,45 @@ export class UserCharacteristicsChild extends JSWindowActorChild {
   // that requires loading time.
   async collectUserCharacteristicsDataWithDelay() {
     lazy.console.debug("Calling collectUserCharacteristicsDataWithDelay()");
+
+    await this.populateGamepadsInfo();
+  }
+
+  async populateGamepadsInfo() {
+    lazy.console.debug("Calling populateGamepadsInfo()");
+    let gamepads = await this.contentWindow.navigator.requestAllGamepads();
+
+    lazy.console.debug(`Found ${gamepads.length} gamepads`);
+
+    let gamepadsInfo = [];
+
+    for (const gamepad of gamepads) {
+      // We use an array to represent a gamepad device because it uses less size
+      // then an object when convert to a JSON string. So, we can fit the string
+      // into a Glean string which has a 100 size limitation.
+      let data = [];
+      data.push(gamepad.id);
+      data.push(gamepad?.hand ?? "");
+      data.push(gamepad.buttons.length);
+      data.push(gamepad.axes?.length ?? 0);
+      data.push(gamepad.hapticActuators?.length ?? 0);
+      data.push(gamepad.lightIndicators?.length ?? 0);
+      data.push(gamepad.touchEvents?.length ?? 0);
+
+      gamepadsInfo.push(JSON.stringify(data));
+    }
+
+    lazy.console.debug(`Reporting gamepad: ${gamepadsInfo}`);
+    this.userDataDetails.output.gamepads = gamepadsInfo;
   }
 
   async handleEvent(event) {
     lazy.console.debug("Got ", event.type);
     switch (event.type) {
       case "UserCharacteristicsDataDone":
-        this.userDataDetails = event.detail;
+        // Clone the data so we can modify it. Otherwise, we cannot change it
+        // because it's behind Xray wrapper.
+        this.userDataDetails = structuredClone(event.detail);
 
         await this.collectUserCharacteristicsData();
 
