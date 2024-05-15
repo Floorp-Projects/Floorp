@@ -155,10 +155,6 @@ open class DefaultToolbarMenu(
             },
         )
 
-        registerForIsBookmarkedUpdates()
-
-        registerForScreenReaderUpdates()
-
         BrowserMenuItemToolbar(listOf(back, forward, share, refresh), isSticky = true)
     }
 
@@ -439,6 +435,9 @@ open class DefaultToolbarMenu(
                 if (shouldUseBottomToolbar) BrowserMenuDivider() else null,
                 if (shouldUseBottomToolbar && shouldShowMenuToolbar) menuToolbar else null,
             )
+
+        registerForIsBookmarkedUpdates()
+        registerForScreenReaderUpdates()
 
         menuItems
     }
