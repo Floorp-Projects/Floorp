@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MozFieldset tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="module" src="chrome://global/content/elements/moz-fieldset.mjs"></script>
+  <script>
+    let html, render, renderTarget;
+
+    add_setup(async function setup() {
+      ({ html, render } = await import(
+        "chrome://global/content/vendor/lit.all.mjs"
+      ));
+      renderTarget = document.getElementById("render");
+    });
+
+    add_task(async function testMozFieldsetAttributes() {
+      render(html`
+        <moz-fieldset label="Test label" description="Test description">
+          <label><input type="checkbox"> First setting</label>
+          <label><input type="checkbox"> Second setting</label>
+          <label><input type="checkbox"> Third setting</label>
+        </moz-fieldset>
+      `, renderTarget);
+      // Check initial rendered attributes.
+      let fieldset = renderTarget.querySelector("moz-fieldset");
+      await fieldset.updateComplete;
+
+      let fieldsetEl = fieldset.shadowRoot.querySelector("fieldset");
+      let legend = fieldset.shadowRoot.querySelector("fieldset > legend");
+      let description = fieldset.shadowRoot.querySelector("fieldset > #description");
+
+      is(legend.innerText, "Test label", "legend is set");
+      ok(legend.classList.contains("heading-medium"), "legend is styled");
+      is(description.innerText, "Test description", "description is set");
+      ok(description.classList.contains("text-deemphasized"), "description is styled");
+      is(
+        fieldset.shadowRoot.getElementById(fieldsetEl.getAttribute("aria-describedby")),
+        description,
+        "description describes fieldset"
+      );
+
+      // Changing the attributes should update the DOM.
+      fieldset.label = "New label";
+      fieldset.description = "New description";
+      await fieldset.updateComplete;
+
+      is(legend.innerText, "New label", "legend is set");
+      is(description.innerText, "New description", "description is set");
+
+      // Removing the description should remove the describedby association.
+      fieldset.description = null;
+      await fieldset.updateComplete;
+
+      ok(
+        !fieldsetEl.hasAttribute("aria-describedby"),
+        "aria-describedby removed when no description"
+      );
+    });
+  </script>
+</head>
+<body>
+  <div id="render">
+  </div>
+</body>
+</html>
