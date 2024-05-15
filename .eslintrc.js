@@ -130,6 +130,16 @@ module.exports = {
       },
     },
     {
+      // Turn off no-unassigned-import for files that typically test our
+      // custom elements, which are imported for the side effects (ie
+      // the custom element being registered) rather than any particular
+      // export:
+      files: ["**/*.stories.mjs"],
+      rules: {
+        "import/no-unassigned-import": "off",
+      },
+    },
+    {
       files: [
         // Bug 1773475 - For now, turn off no-unresolved on some paths where we import
         // from node_modules, as the ESLint setup only installs modules at the

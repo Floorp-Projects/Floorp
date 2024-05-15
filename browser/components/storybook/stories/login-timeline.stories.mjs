@@ -4,7 +4,6 @@
 
 import { html } from "lit.all.mjs";
 // Imported for side-effects.
-// eslint-disable-next-line import/no-unassigned-import
 import "../../aboutlogins/content/components/login-timeline.mjs";
 
 export default {

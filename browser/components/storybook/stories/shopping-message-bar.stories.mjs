@@ -4,7 +4,6 @@
 
 // eslint-disable-next-line import/no-unresolved
 import { html, ifDefined } from "lit.all.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "browser/components/shopping/content/shopping-message-bar.mjs";
 
 window.MozXULElement.insertFTLIfNeeded("browser/shopping.ftl");
