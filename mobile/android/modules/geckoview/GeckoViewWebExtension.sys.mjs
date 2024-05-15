@@ -293,7 +293,7 @@ function normalizePermissions(perms) {
   return perms;
 }
 
-async function exportExtension(aAddon, aPermissions, aSourceURI) {
+async function exportExtension(aAddon, aSourceURI) {
   // First, let's make sure the policy is ready if present
   let policy = WebExtensionPolicy.getByID(aAddon.id);
   if (policy?.readyPromise) {
@@ -355,9 +355,6 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
   }
   const baseURL = policy ? policy.getURL() : "";
   const privateBrowsingAllowed = policy ? policy.privateBrowsingAllowed : false;
-  const promptPermissions = aPermissions
-    ? await filterPromptPermissions(aPermissions.permissions)
-    : [];
 
   let updateDate;
   try {
@@ -370,12 +367,15 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     updateDate = null;
   }
 
+  const requiredPermissions = aAddon.userPermissions?.permissions ?? [];
+  const requiredOrigins = aAddon.userPermissions?.origins ?? [];
   const optionalPermissions = aAddon.optionalPermissions?.permissions ?? [];
   const optionalOrigins = aAddon.optionalOriginsNormalized;
-  const grantedPermissions =
-    normalizePermissions(await lazy.ExtensionPermissions.get(id)) ?? {};
-  const grantedOptionalPermissions = grantedPermissions.permissions ?? [];
-  const grantedOptionalOrigins = grantedPermissions.origins ?? [];
+  const grantedPermissions = normalizePermissions(
+    await lazy.ExtensionPermissions.get(id)
+  );
+  const grantedOptionalPermissions = grantedPermissions?.permissions ?? [];
+  const grantedOptionalOrigins = grantedPermissions?.origins ?? [];
 
   return {
     webExtensionId: id,
@@ -401,15 +401,15 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
       name,
       openOptionsPageInTab,
       optionsPageURL: optionsURL,
-      origins: aPermissions ? aPermissions.origins : [],
       privateBrowsingAllowed,
-      promptPermissions,
       reviewCount,
       reviewURL,
       signedState,
       temporary: temporarilyInstalled,
       updateDate,
       version,
+      requiredPermissions,
+      requiredOrigins,
       optionalPermissions,
       optionalOrigins,
       grantedOptionalPermissions,
@@ -509,11 +509,7 @@ class ExtensionInstallListener {
 
   async onInstallEnded(aInstall, aAddon) {
     debug`onInstallEnded addonId=${aAddon.id}`;
-    const extension = await exportExtension(
-      aAddon,
-      aAddon.userPermissions,
-      aInstall.sourceURI
-    );
+    const extension = await exportExtension(aAddon, aInstall.sourceURI);
     this.resolve({ extension });
   }
 }
@@ -527,10 +523,13 @@ class ExtensionPromptObserver {
   async permissionPrompt(aInstall, aAddon, aInfo) {
     const { sourceURI } = aInstall;
     const { permissions } = aInfo;
-    const extension = await exportExtension(aAddon, permissions, sourceURI);
+
+    const extension = await exportExtension(aAddon, sourceURI);
     const response = await lazy.EventDispatcher.instance.sendRequestForResult({
       type: "GeckoView:WebExtension:InstallPrompt",
       extension,
+      permissions: await filterPromptPermissions(permissions.permissions),
+      origins: permissions.origins,
     });
 
     if (response.allow) {
@@ -578,11 +577,7 @@ class AddonInstallObserver {
     // aAddon could also be a valid object without an ID when the xpi file is corrupt.
     let extension = null;
     if (aAddon?.id) {
-      extension = await exportExtension(
-        aAddon,
-        aAddon.userPermissions,
-        /* aSourceURI */ null
-      );
+      extension = await exportExtension(aAddon, /* aSourceURI */ null);
     }
 
     lazy.EventDispatcher.instance.sendRequest({
@@ -640,11 +635,7 @@ class AddonManagerListener {
     if (!addon) {
       return;
     }
-    const extension = await exportExtension(
-      addon,
-      addon.userPermissions,
-      /* aSourceURI */ null
-    );
+    const extension = await exportExtension(addon, /* aSourceURI */ null);
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnOptionalPermissionsChanged",
       extension,
@@ -670,7 +661,6 @@ class AddonManagerListener {
 
     const extension = await exportExtension(
       addonWrapper,
-      addonWrapper.userPermissions,
       /* aSourceURI */ null
     );
     lazy.EventDispatcher.instance.sendRequest({
@@ -682,11 +672,7 @@ class AddonManagerListener {
   async onDisabling(aAddon) {
     debug`onDisabling ${aAddon.id}`;
 
-    const extension = await exportExtension(
-      aAddon,
-      aAddon.userPermissions,
-      /* aSourceURI */ null
-    );
+    const extension = await exportExtension(aAddon, /* aSourceURI */ null);
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnDisabling",
       extension,
@@ -696,11 +682,7 @@ class AddonManagerListener {
   async onDisabled(aAddon) {
     debug`onDisabled ${aAddon.id}`;
 
-    const extension = await exportExtension(
-      aAddon,
-      aAddon.userPermissions,
-      /* aSourceURI */ null
-    );
+    const extension = await exportExtension(aAddon, /* aSourceURI */ null);
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnDisabled",
       extension,
@@ -710,11 +692,7 @@ class AddonManagerListener {
   async onEnabling(aAddon) {
     debug`onEnabling ${aAddon.id}`;
 
-    const extension = await exportExtension(
-      aAddon,
-      aAddon.userPermissions,
-      /* aSourceURI */ null
-    );
+    const extension = await exportExtension(aAddon, /* aSourceURI */ null);
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnEnabling",
       extension,
@@ -724,11 +702,7 @@ class AddonManagerListener {
   async onEnabled(aAddon) {
     debug`onEnabled ${aAddon.id}`;
 
-    const extension = await exportExtension(
-      aAddon,
-      aAddon.userPermissions,
-      /* aSourceURI */ null
-    );
+    const extension = await exportExtension(aAddon, /* aSourceURI */ null);
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnEnabled",
       extension,
@@ -738,11 +712,7 @@ class AddonManagerListener {
   async onUninstalling(aAddon) {
     debug`onUninstalling ${aAddon.id}`;
 
-    const extension = await exportExtension(
-      aAddon,
-      aAddon.userPermissions,
-      /* aSourceURI */ null
-    );
+    const extension = await exportExtension(aAddon, /* aSourceURI */ null);
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnUninstalling",
       extension,
@@ -752,11 +722,7 @@ class AddonManagerListener {
   async onUninstalled(aAddon) {
     debug`onUninstalled ${aAddon.id}`;
 
-    const extension = await exportExtension(
-      aAddon,
-      aAddon.userPermissions,
-      /* aSourceURI */ null
-    );
+    const extension = await exportExtension(aAddon, /* aSourceURI */ null);
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnUninstalled",
       extension,
@@ -766,11 +732,7 @@ class AddonManagerListener {
   async onInstalling(aAddon) {
     debug`onInstalling ${aAddon.id}`;
 
-    const extension = await exportExtension(
-      aAddon,
-      aAddon.userPermissions,
-      /* aSourceURI */ null
-    );
+    const extension = await exportExtension(aAddon, /* aSourceURI */ null);
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnInstalling",
       extension,
@@ -780,11 +742,7 @@ class AddonManagerListener {
   async onInstalled(aAddon) {
     debug`onInstalled ${aAddon.id}`;
 
-    const extension = await exportExtension(
-      aAddon,
-      aAddon.userPermissions,
-      /* aSourceURI */ null
-    );
+    const extension = await exportExtension(aAddon, /* aSourceURI */ null);
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnInstalled",
       extension,
@@ -902,9 +860,13 @@ async function updatePromptHandler(aInfo) {
 
   const currentlyInstalled = await exportExtension(
     aInfo.existingAddon,
-    oldPerms
+    /* aSourceURI */ null
   );
-  const updatedExtension = await exportExtension(aInfo.addon, newPerms);
+  const updatedExtension = await exportExtension(
+    aInfo.addon,
+    /* aSourceURI */ null
+  );
+
   const response = await lazy.EventDispatcher.instance.sendRequestForResult({
     type: "GeckoView:WebExtension:UpdatePrompt",
     currentlyInstalled,
@@ -967,18 +929,14 @@ export var GeckoViewWebExtension = {
       return this.installBuiltIn(aUri);
     }
 
-    const exported = await exportExtension(
-      extension,
-      extension.userPermissions,
-      aUri
-    );
+    const exported = await exportExtension(extension, aUri);
     return { extension: exported };
   },
 
   async installBuiltIn(aUri) {
     await lazy.AddonManager.readyPromise;
     const addon = await lazy.AddonManager.installBuiltinAddon(aUri.spec);
-    const exported = await exportExtension(addon, addon.userPermissions, aUri);
+    const exported = await exportExtension(addon, aUri);
     return { extension: exported };
   },
 
@@ -1014,7 +972,7 @@ export var GeckoViewWebExtension = {
       await addon.reload();
     }
 
-    return exportExtension(addon, addon.userPermissions, /* aSourceURI */ null);
+    return exportExtension(addon, /* aSourceURI */ null);
   },
 
   async uninstallWebExtension(aId) {
@@ -1082,11 +1040,7 @@ export var GeckoViewWebExtension = {
     } else if (aSource === "app") {
       await extension.setEmbedderDisabled(false);
     }
-    return exportExtension(
-      extension,
-      extension.userPermissions,
-      /* aSourceURI */ null
-    );
+    return exportExtension(extension, /* aSourceURI */ null);
   },
 
   async disableWebExtension(aId, aSource) {
@@ -1096,11 +1050,7 @@ export var GeckoViewWebExtension = {
     } else if (aSource === "app") {
       await extension.setEmbedderDisabled(true);
     }
-    return exportExtension(
-      extension,
-      extension.userPermissions,
-      /* aSourceURI */ null
-    );
+    return exportExtension(extension, /* aSourceURI */ null);
   },
 
   /**
@@ -1225,11 +1175,7 @@ export var GeckoViewWebExtension = {
         }
 
         aCallback.onSuccess({
-          extension: await exportExtension(
-            extension,
-            extension.userPermissions,
-            /* aSourceURI */ null
-          ),
+          extension: await exportExtension(extension, /* aSourceURI */ null),
         });
         break;
       }
@@ -1265,11 +1211,7 @@ export var GeckoViewWebExtension = {
             normalized,
             policy?.extension
           );
-          const extension = await exportExtension(
-            addon,
-            addon.userPermissions,
-            /* aSourceURI */ null
-          );
+          const extension = await exportExtension(addon, /* aSourceURI */ null);
           aCallback.onSuccess({ extension });
         } catch (ex) {
           aCallback.onError(`Unexpected error: ${ex}`);
@@ -1291,11 +1233,7 @@ export var GeckoViewWebExtension = {
             normalized,
             policy?.extension
           );
-          const extension = await exportExtension(
-            addon,
-            addon.userPermissions,
-            /* aSourceURI */ null
-          );
+          const extension = await exportExtension(addon, /* aSourceURI */ null);
           aCallback.onSuccess({ extension });
         } catch (ex) {
           aCallback.onError(`Unexpected error: ${ex}`);
@@ -1431,9 +1369,7 @@ export var GeckoViewWebExtension = {
             "extension",
           ]);
           const extensions = await Promise.all(
-            addons.map(addon =>
-              exportExtension(addon, addon.userPermissions, null)
-            )
+            addons.map(addon => exportExtension(addon, /* aSourceURI */ null))
           );
 
           aCallback.onSuccess({ extensions });

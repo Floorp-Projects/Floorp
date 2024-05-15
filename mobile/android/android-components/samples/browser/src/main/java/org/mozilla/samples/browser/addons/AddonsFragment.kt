@@ -160,6 +160,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         val dialog = PermissionsDialogFragment.newInstance(
             addon = addon,
             onPositiveButtonClicked = onConfirmPermissionButtonClicked,
+            permissions = addon.permissions,
         )
 
         if (!isAlreadyADialogCreated() && isAdded) {

@@ -37,7 +37,7 @@ class PermissionsDialogFragmentTest {
             translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
             permissions = listOf("privacy", "<all_urls>", "tabs"),
         )
-        val fragment = createPermissionsDialogFragment(addon)
+        val fragment = createPermissionsDialogFragment(addon, permissions = addon.permissions)
 
         doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
@@ -69,7 +69,7 @@ class PermissionsDialogFragmentTest {
     fun `clicking on dialog buttons notifies lambdas`() {
         val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
 
-        val fragment = createPermissionsDialogFragment(addon)
+        val fragment = createPermissionsDialogFragment(addon, permissions = emptyList())
         var allowedWasExecuted = false
         var denyWasExecuted = false
 
@@ -100,7 +100,7 @@ class PermissionsDialogFragmentTest {
     fun `dismissing the dialog notifies deny lambda`() {
         val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
 
-        val fragment = createPermissionsDialogFragment(addon)
+        val fragment = createPermissionsDialogFragment(addon, permissions = emptyList())
         var denyWasExecuted = false
 
         fragment.onNegativeButtonClicked = {
@@ -123,7 +123,7 @@ class PermissionsDialogFragmentTest {
     fun `dialog must have all the styles of the feature promptsStyling object`() {
         val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
         val styling = PromptsStyling(TOP, true)
-        val fragment = createPermissionsDialogFragment(addon, styling)
+        val fragment = createPermissionsDialogFragment(addon, permissions = emptyList(), styling)
 
         doReturn(testContext).`when`(fragment).requireContext()
 
@@ -140,9 +140,8 @@ class PermissionsDialogFragmentTest {
         val addon = Addon(
             "id",
             translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
-            permissions = emptyList(),
         )
-        val fragment = createPermissionsDialogFragment(addon)
+        val fragment = createPermissionsDialogFragment(addon, permissions = emptyList())
 
         doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
@@ -172,7 +171,7 @@ class PermissionsDialogFragmentTest {
             translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
             permissions = listOf("privacy", "https://example.org/", "tabs"),
         )
-        val fragment = createPermissionsDialogFragment(addon, forOptionalPermissions = true, optionalPermissions = addon.permissions)
+        val fragment = createPermissionsDialogFragment(addon, forOptionalPermissions = true, permissions = addon.permissions)
 
         doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
@@ -223,16 +222,16 @@ class PermissionsDialogFragmentTest {
 
     private fun createPermissionsDialogFragment(
         addon: Addon,
+        permissions: List<String>,
         promptsStyling: PromptsStyling? = null,
         forOptionalPermissions: Boolean = false,
-        optionalPermissions: List<String> = emptyList(),
     ): PermissionsDialogFragment {
         return spy(
             PermissionsDialogFragment.newInstance(
                 addon = addon,
+                permissions = permissions,
                 promptsStyling = promptsStyling,
                 forOptionalPermissions = forOptionalPermissions,
-                optionalPermissions = optionalPermissions,
             ),
         ).apply {
             doNothing().`when`(this).dismiss()
