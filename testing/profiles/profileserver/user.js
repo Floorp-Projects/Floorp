@@ -9,3 +9,5 @@ user_pref("dom.timeout.enable_budget_timer_throttling", false);
 // TODO: Bug 1795750 - Re-enable this pref when we have a new version of the
 // Quitter XPI with a simpler version format.
 user_pref("extensions.webextensions.warnings-as-errors", false);
+// Turn off update
+user_pref("app.update.disabledForTesting", true);
