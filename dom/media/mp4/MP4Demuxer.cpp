@@ -190,6 +190,8 @@ RefPtr<MP4Demuxer::InitPromise> MP4Demuxer::Init() {
         }
         continue;
       }
+      LOG("Created audio track demuxer for info (%s)",
+          info.Ref()->ToString().get());
       RefPtr<MP4TrackDemuxer> demuxer =
           new MP4TrackDemuxer(mResource, std::move(info.Ref()),
                               *indices.Ref().get(), info.Ref()->mTimeScale);
@@ -228,6 +230,8 @@ RefPtr<MP4Demuxer::InitPromise> MP4Demuxer::Init() {
         }
         continue;
       }
+      LOG("Created video track demuxer for info (%s)",
+          info.Ref()->ToString().get());
       RefPtr<MP4TrackDemuxer> demuxer =
           new MP4TrackDemuxer(mResource, std::move(info.Ref()),
                               *indices.Ref().get(), info.Ref()->mTimeScale);

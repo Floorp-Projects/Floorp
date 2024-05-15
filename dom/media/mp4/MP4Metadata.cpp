@@ -446,6 +446,8 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
   }
 
   if (e && e->IsValid()) {
+    MOZ_LOG(gMP4MetadataLog, LogLevel::Debug,
+            ("parsed a track info (%s)", e->ToString().get()));
     return {NS_OK, std::move(e)};
   }
   MOZ_LOG(gMP4MetadataLog, LogLevel::Debug, ("TrackInfo didn't validate"));
