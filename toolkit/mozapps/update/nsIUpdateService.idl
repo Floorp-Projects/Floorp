@@ -387,11 +387,12 @@ interface nsIUpdateChecker : nsISupports
 interface nsIApplicationUpdateServiceInternal : nsISupports
 {
   /**
-   * This is identical to the corresponding function in
-   * `nsIApplicationUpdateService`, but this version does not ensure the update
+   * These are identical to the corresponding functions in
+   * `nsIApplicationUpdateService`, but these versions do not ensure the update
    * system has been initialized before being called.
    */
   Promise downloadUpdate(in nsIUpdate update);
+  Promise stopDownload();
 };
 
 /**

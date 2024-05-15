@@ -1814,7 +1814,7 @@ async function handleFallbackToCompleteUpdate() {
     "handleFallbackToCompleteUpdate - Cleaning up active updates in " +
       "preparation of falling back to complete update."
   );
-  await lazy.AUS.stopDownload();
+  await lazy.AUS.internal.stopDownload();
   cleanupActiveUpdates();
 
   if (!update.selectedPatch) {
@@ -2699,6 +2699,7 @@ export class UpdateService {
 
     this.internal = {
       downloadUpdate: async update => this.#downloadUpdate(update),
+      stopDownload: async () => this.#stopDownload(),
       QueryInterface: ChromeUtils.generateQI([
         Ci.nsIApplicationUpdateServiceInternal,
       ]),
@@ -2780,7 +2781,7 @@ export class UpdateService {
             await this._downloader.cleanup();
           } else {
             // stopDownload() calls _downloader.cleanup()
-            await this.stopDownload();
+            await this.#stopDownload();
           }
         }
         // Prevent leaking the downloader (bug 454964)
@@ -4161,6 +4162,10 @@ export class UpdateService {
    * See nsIUpdateService.idl
    */
   async stopDownload() {
+    return this.#stopDownload();
+  }
+
+  async #stopDownload() {
     if (this.isDownloading) {
       await this._downloader.cancel();
     } else if (this._retryTimer) {
