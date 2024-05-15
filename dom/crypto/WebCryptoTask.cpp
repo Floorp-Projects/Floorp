@@ -1502,7 +1502,6 @@ class ImportSymmetricKeyTask : public ImportKeyTask {
 
   virtual nsresult BeforeCrypto() override {
     nsresult rv;
-
     // If we're doing a JWK import, import the key data
     if (mDataIsJwk) {
       if (!mJwk.mK.WasPassed()) {
@@ -1521,7 +1520,7 @@ class ImportSymmetricKeyTask : public ImportKeyTask {
       return NS_ERROR_DOM_DATA_ERR;
     }
 
-    // Construct an appropriate KeyAlorithm,
+    // Construct an appropriate KeyAlgorithm,
     // and verify that usages are appropriate
     if (mKeyData.Length() > UINT32_MAX / 8) {
       return NS_ERROR_DOM_DATA_ERR;
@@ -1556,7 +1555,7 @@ class ImportSymmetricKeyTask : public ImportKeyTask {
                                   CryptoKey::DERIVEBITS)) {
         return NS_ERROR_DOM_DATA_ERR;
       }
-      mKey->Algorithm().MakeAes(mAlgName, length);
+      mKey->Algorithm().MakeKDF(mAlgName);
 
       if (mDataIsJwk && mJwk.mUse.WasPassed()) {
         // There is not a 'use' value consistent with PBKDF or HKDF
