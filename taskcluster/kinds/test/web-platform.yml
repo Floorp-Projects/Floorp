@@ -251,7 +251,7 @@ web-platform-tests-webgpu:
             default: 1
     max-run-time:
         by-test-platform:
-            .*/debug: 2700  # 45m
+            .*/debug.*: 2700  # 45m
             default: 1800  # 30m
     variants: []  # We don't need sw or nofis testing.
     run-on-projects:
