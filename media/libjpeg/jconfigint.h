@@ -81,6 +81,10 @@
 /* #undef D_ARITH_CODING_SUPPORTED */
 
 /* Use accelerated SIMD routines. */
+#if defined(__sparc__)
+#undef  WITH_SIMD
+#else
 #define WITH_SIMD 1
+#endif
 
 #endif
