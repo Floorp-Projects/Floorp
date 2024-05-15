@@ -8042,7 +8042,7 @@ bool nsIFrame::ComputeCustomOverflow(OverflowAreas& aOverflowAreas) {
 }
 
 bool nsIFrame::DoesClipChildrenInBothAxes() const {
-  if (IsScrollContainer()) {
+  if (IsScrollContainerOrSubclass()) {
     return true;
   }
   const nsStyleDisplay* display = StyleDisplay();
@@ -8149,6 +8149,13 @@ bool nsIFrame::IsBlockFrameOrSubclass() const {
 bool nsIFrame::IsImageFrameOrSubclass() const {
   const nsImageFrame* asImage = do_QueryFrame(this);
   return !!asImage;
+}
+
+bool nsIFrame::IsScrollContainerOrSubclass() const {
+  const bool result = IsScrollContainerFrame() || IsListControlFrame();
+  MOZ_ASSERT(result ==
+             !!static_cast<const ScrollContainerFrame*>(do_QueryFrame(this)));
+  return result;
 }
 
 bool nsIFrame::IsSubgrid() const {
@@ -11520,10 +11527,6 @@ static bool HasNoVisibleDescendants(const nsIFrame* aFrame) {
     }
   }
   return true;
-}
-
-nsIScrollableFrame* nsIFrame::GetAsScrollContainer() const {
-  return do_QueryFrame(this);
 }
 
 void nsIFrame::UpdateVisibleDescendantsState() {
