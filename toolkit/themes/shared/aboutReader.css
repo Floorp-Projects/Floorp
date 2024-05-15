@@ -728,7 +728,7 @@ body.hcm .color-scheme-buttons {
   background-color: var(--popup-button-background);
 
   &.text-size-minus-button {
-    background-image: url("chrome://browser/skin/zoom-out.svg");
+    background-image: url("chrome://global/skin/icons/minus.svg");
   }
 
   &.text-size-plus-button {

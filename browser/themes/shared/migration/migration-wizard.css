@@ -193,7 +193,7 @@ div[name="page-selection"][show-import-all] .resource-selection-preamble {
 }
 
 details[open] .expand-collapse-icon {
-  content: url("chrome://browser/skin/zoom-out.svg");
+  content: url("chrome://global/skin/icons/minus.svg");
 }
 
 .expand-collapse-icon {

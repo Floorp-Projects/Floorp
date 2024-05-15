@@ -310,7 +310,7 @@
 }
 
 #zoom-out-button {
-  list-style-image: url("chrome://browser/skin/zoom-out.svg");
+  list-style-image: url("chrome://global/skin/icons/minus.svg");
 }
 
 #zoom-in-button {

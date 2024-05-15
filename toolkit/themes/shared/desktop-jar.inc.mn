@@ -132,6 +132,7 @@
   skin/classic/global/illustrations/error-malformed-url.svg (../../shared/illustrations/error-malformed-url.svg)
   skin/classic/global/media/picture-in-picture-open.svg    (../../shared/media/picture-in-picture-open.svg)
   skin/classic/global/media/picture-in-picture-closed.svg  (../../shared/media/picture-in-picture-closed.svg)
+  skin/classic/global/icons/minus.svg                      (../../shared/icons/minus.svg)
   skin/classic/global/narrate.css                          (../../shared/narrate.css)
   skin/classic/global/narrate/arrow.svg                    (../../shared/narrate/arrow.svg)
   skin/classic/global/narrate/back.svg                     (../../shared/narrate/back.svg)
