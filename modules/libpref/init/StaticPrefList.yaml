@@ -10803,7 +10803,11 @@
 # Hls
 - name: media.hls.enabled
   type: RelaxedAtomicBool
-  value: @IS_ANDROID@
+#if defined(ANDROID) && !defined(NIGHTLY_BUILD)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
 
 # Max number of HLS players that can be created concurrently. Used only on
