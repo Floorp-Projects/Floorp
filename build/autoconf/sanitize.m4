@@ -40,7 +40,10 @@ if test -n "$MOZ_ASAN"; then
     if test -z "$CLANG_CL"; then
         LDFLAGS="-fsanitize=address -rdynamic $LDFLAGS"
     fi
+    AC_DEFINE(MOZ_ASAN)
+    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
 fi
+AC_SUBST(MOZ_ASAN)
 
 dnl ========================================================
 dnl = Use Memory Sanitizer
@@ -51,7 +54,10 @@ if test -n "$MOZ_MSAN"; then
     if test -z "$CLANG_CL"; then
         LDFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -rdynamic $LDFLAGS"
     fi
+    AC_DEFINE(MOZ_MSAN)
+    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
 fi
+AC_SUBST(MOZ_MSAN)
 
 dnl ========================================================
 dnl = Use Thread Sanitizer
@@ -62,12 +68,16 @@ if test -n "$MOZ_TSAN"; then
     if test -z "$CLANG_CL"; then
         LDFLAGS="-fsanitize=thread -rdynamic $LDFLAGS"
     fi
+    AC_DEFINE(MOZ_TSAN)
+    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
 fi
+AC_SUBST(MOZ_TSAN)
 
 dnl ========================================================
 dnl = Use UndefinedBehavior Sanitizer (with custom checks)
 dnl ========================================================
 if test -n "$MOZ_UBSAN_CHECKS"; then
+    MOZ_UBSAN=1
     UBSAN_TXT="$_objdir/ubsan_blacklist.txt"
     cat $_topsrcdir/build/sanitizers/ubsan_*_blacklist.txt > $UBSAN_TXT
     UBSAN_FLAGS="-fsanitize=$MOZ_UBSAN_CHECKS -fno-sanitize-recover=$MOZ_UBSAN_CHECKS -fsanitize-blacklist=$UBSAN_TXT"
@@ -76,12 +86,16 @@ if test -n "$MOZ_UBSAN_CHECKS"; then
     if test -z "$CLANG_CL"; then
         LDFLAGS="-fsanitize=undefined -rdynamic $LDFLAGS"
     fi
+    AC_DEFINE(MOZ_UBSAN)
+    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
 fi
+AC_SUBST(MOZ_UBSAN)
 
 dnl ========================================================
 dnl = Use UndefinedBehavior Sanitizer to find integer overflows
 dnl ========================================================
 if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
+    MOZ_UBSAN=1
     SANITIZER_BLACKLISTS=""
     if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE"; then
         SANITIZER_BLACKLISTS="-fsanitize-blacklist=$_topsrcdir/build/sanitizers/ubsan_signed_overflow_blacklist.txt $SANITIZER_BLACKLISTS"
@@ -90,6 +104,7 @@ if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
         if test -z "$CLANG_CL"; then
             LDFLAGS="-fsanitize=signed-integer-overflow -rdynamic $LDFLAGS"
         fi
+        AC_DEFINE(MOZ_SIGNED_OVERFLOW_SANITIZE)
     fi
     if test -n "$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
         SANITIZER_BLACKLISTS="-fsanitize-blacklist=$_topsrcdir/build/sanitizers/ubsan_unsigned_overflow_blacklist.txt $SANITIZER_BLACKLISTS"
@@ -98,10 +113,16 @@ if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
         if test -z "$CLANG_CL"; then
             LDFLAGS="-fsanitize=unsigned-integer-overflow -rdynamic $LDFLAGS"
         fi
+        AC_DEFINE(MOZ_UNSIGNED_OVERFLOW_SANITIZE)
     fi
     CFLAGS="$SANITIZER_BLACKLISTS $CFLAGS"
     CXXFLAGS="$SANITIZER_BLACKLISTS $CXXFLAGS"
+    AC_DEFINE(MOZ_UBSAN)
+    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
 fi
+AC_SUBST(MOZ_SIGNED_OVERFLOW_SANITIZE)
+AC_SUBST(MOZ_UNSIGNED_OVERFLOW_SANITIZE)
+AC_SUBST(MOZ_UBSAN)
 
 dnl =======================================================
 dnl = Required for stand-alone (sanitizer-less) libFuzzer.
@@ -109,6 +130,9 @@ dnl =======================================================
 if test -n "$LIBFUZZER"; then
    LDFLAGS="$LIBFUZZER_FLAGS -rdynamic $LDFLAGS"
 fi
+
+# The LLVM symbolizer is used by all sanitizers
+AC_SUBST(LLVM_SYMBOLIZER)
 
 dnl ========================================================
 dnl = Test for whether the compiler is compatible with the
