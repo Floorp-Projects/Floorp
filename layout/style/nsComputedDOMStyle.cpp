@@ -1259,17 +1259,12 @@ static Position MaybeResolvePositionForTransform(const LengthPercentage& aX,
  * it back.
  */
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTransformOrigin() {
-  /* We need to build up a list of two values.  We'll call them
-   * width and height.
-   */
-
   /* Store things as a value list */
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
   /* Now, get the values. */
   const auto& origin = StyleDisplay()->mTransformOrigin;
 
-  RefPtr<nsROCSSPrimitiveValue> width = new nsROCSSPrimitiveValue;
   auto position = MaybeResolvePositionForTransform(
       origin.horizontal, origin.vertical, mInnerFrame);
   SetValueToPosition(position, valueList);
@@ -1285,10 +1280,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTransformOrigin() {
  * it back.
  */
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetPerspectiveOrigin() {
-  /* We need to build up a list of two values.  We'll call them
-   * width and height.
-   */
-
   /* Store things as a value list */
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
@@ -1666,7 +1657,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     // Write any leading explicit tracks before the repeat.
     for (uint32_t i = 0; i < repeatStart; i++) {
       AppendGridLineNames(valueList, aTrackInfo.mResolvedLineNames[i]);
-      RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
       valueList->AppendCSSValue(AppUnitsToCSSValue(*trackSizeIter++));
     }
     auto lineNameIter = aTrackInfo.mResolvedLineNames.cbegin() + repeatStart;
