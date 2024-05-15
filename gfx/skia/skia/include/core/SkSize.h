@@ -9,6 +9,7 @@
 #define SkSize_DEFINED
 
 #include "include/core/SkScalar.h"
+#include "include/private/base/SkTo.h"
 
 #include <cstdint>
 
@@ -35,7 +36,7 @@ struct SkISize {
     constexpr int32_t width() const { return fWidth; }
     constexpr int32_t height() const { return fHeight; }
 
-    constexpr int64_t area() const { return fWidth * fHeight; }
+    constexpr int64_t area() const { return SkToS64(fWidth) * SkToS64(fHeight); }
 
     bool equals(int32_t w, int32_t h) const { return fWidth == w && fHeight == h; }
 };
@@ -52,13 +53,13 @@ struct SkSize {
     SkScalar fWidth;
     SkScalar fHeight;
 
-    static SkSize Make(SkScalar w, SkScalar h) { return {w, h}; }
+    static constexpr SkSize Make(SkScalar w, SkScalar h) { return {w, h}; }
 
-    static SkSize Make(const SkISize& src) {
+    static constexpr SkSize Make(const SkISize& src) {
         return {SkIntToScalar(src.width()), SkIntToScalar(src.height())};
     }
 
-    static SkSize MakeEmpty() { return {0, 0}; }
+    static constexpr SkSize MakeEmpty() { return {0, 0}; }
 
     void set(SkScalar w, SkScalar h) { *this = SkSize{w, h}; }
 

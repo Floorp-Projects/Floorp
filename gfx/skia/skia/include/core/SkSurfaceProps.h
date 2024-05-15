@@ -8,6 +8,7 @@
 #ifndef SkSurfaceProps_DEFINED
 #define SkSurfaceProps_DEFINED
 
+#include "include/core/SkScalar.h"
 #include "include/core/SkTypes.h"
 #include "include/private/base/SkTo.h"
 
@@ -52,33 +53,50 @@ static inline bool SkPixelGeometryIsV(SkPixelGeometry geo) {
 class SK_API SkSurfaceProps {
 public:
     enum Flags {
+        kDefault_Flag = 0,
         kUseDeviceIndependentFonts_Flag = 1 << 0,
         // Use internal MSAA to render to non-MSAA GPU surfaces.
-        kDynamicMSAA_Flag               = 1 << 1
+        kDynamicMSAA_Flag = 1 << 1,
+        // If set, all rendering will have dithering enabled
+        // Currently this only impacts GPU backends
+        kAlwaysDither_Flag = 1 << 2,
     };
-    /** Deprecated alias used by Chromium. Will be removed. */
-    static const Flags kUseDistanceFieldFonts_Flag = kUseDeviceIndependentFonts_Flag;
 
-    /** No flags, unknown pixel geometry. */
+    /** No flags, unknown pixel geometry, platform-default contrast/gamma. */
     SkSurfaceProps();
+    /** TODO(kschmi): Remove this constructor and replace with the one below. **/
     SkSurfaceProps(uint32_t flags, SkPixelGeometry);
+    /** Specified pixel geometry, text contrast, and gamma **/
+    SkSurfaceProps(uint32_t flags, SkPixelGeometry, SkScalar textContrast, SkScalar textGamma);
 
-    SkSurfaceProps(const SkSurfaceProps&);
-    SkSurfaceProps& operator=(const SkSurfaceProps&);
+    SkSurfaceProps(const SkSurfaceProps&) = default;
+    SkSurfaceProps& operator=(const SkSurfaceProps&) = default;
 
     SkSurfaceProps cloneWithPixelGeometry(SkPixelGeometry newPixelGeometry) const {
-        return SkSurfaceProps(fFlags, newPixelGeometry);
+        return SkSurfaceProps(fFlags, newPixelGeometry, fTextContrast, fTextGamma);
     }
+
+    static constexpr SkScalar kMaxContrastInclusive = 1;
+    static constexpr SkScalar kMinContrastInclusive = 0;
+    static constexpr SkScalar kMaxGammaExclusive = 4;
+    static constexpr SkScalar kMinGammaInclusive = 0;
 
     uint32_t flags() const { return fFlags; }
     SkPixelGeometry pixelGeometry() const { return fPixelGeometry; }
+    SkScalar textContrast() const { return fTextContrast; }
+    SkScalar textGamma() const { return fTextGamma; }
 
     bool isUseDeviceIndependentFonts() const {
         return SkToBool(fFlags & kUseDeviceIndependentFonts_Flag);
     }
 
+    bool isAlwaysDither() const {
+        return SkToBool(fFlags & kAlwaysDither_Flag);
+    }
+
     bool operator==(const SkSurfaceProps& that) const {
-        return fFlags == that.fFlags && fPixelGeometry == that.fPixelGeometry;
+        return fFlags == that.fFlags && fPixelGeometry == that.fPixelGeometry &&
+        fTextContrast == that.fTextContrast && fTextGamma == that.fTextGamma;
     }
 
     bool operator!=(const SkSurfaceProps& that) const {
@@ -88,6 +106,11 @@ public:
 private:
     uint32_t        fFlags;
     SkPixelGeometry fPixelGeometry;
+
+    // This gamma value is specifically about blending of mask coverage.
+    // The surface also has a color space, but that applies to the colors.
+    SkScalar fTextContrast;
+    SkScalar fTextGamma;
 };
 
 #endif

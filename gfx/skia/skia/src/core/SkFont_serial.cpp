@@ -5,11 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkTypeface.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/private/base/SkAssert.h"
 #include "include/private/base/SkTo.h"
 #include "src/core/SkFontPriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
+
+#include <cstdint>
 
 // packed int at the beginning of the serialized font:
 //
@@ -94,7 +100,7 @@ bool SkFontPriv::Unflatten(SkFont* font, SkReadBuffer& buffer) {
         font->fSkewX = buffer.readScalar();
     }
     if (packed & kHas_Typeface_Bit) {
-        font->fTypeface = buffer.readTypeface();
+        font->setTypeface(buffer.readTypeface());
     }
 
     SkASSERT(SkFont::kAllFlags <= kMask_For_Flags);

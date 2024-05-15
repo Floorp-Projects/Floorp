@@ -10,7 +10,10 @@
 
 #include "include/core/SkRect.h"
 #include "include/core/SkString.h"
-#include "include/private/SkBitmaskEnum.h"
+#include "src/base/SkBitmaskEnum.h"  // IWYU pragma: keep
+
+#include <cstdint>
+#include <type_traits>
 
 /** \class SkAdvancedTypefaceMetrics
 
@@ -21,7 +24,6 @@
 struct SkAdvancedTypefaceMetrics {
     // The PostScript name of the font. See `FontName` and `BaseFont` in PDF standard.
     SkString fPostScriptName;
-    SkString fFontName;
 
     // These enum values match the values used in the PDF file format.
     enum StyleFlags : uint32_t {

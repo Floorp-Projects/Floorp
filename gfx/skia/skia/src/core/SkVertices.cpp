@@ -4,25 +4,26 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 #include "include/core/SkVertices.h"
 
-#include "include/core/SkData.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkMalloc.h"
 #include "include/private/base/SkTo.h"
 #include "src/base/SkSafeMath.h"
-#include "src/core/SkCanvasPriv.h"
-#include "src/core/SkOpts.h"
+#include "src/core/SkPicturePriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSafeRange.h"
 #include "src/core/SkVerticesPriv.h"
 #include "src/core/SkWriteBuffer.h"
+
 #include <atomic>
 #include <new>
+#include <utility>
 
-static int32_t next_id() {
-    static std::atomic<int32_t> nextID{1};
+static uint32_t next_id() {
+    static std::atomic<uint32_t> nextID{1};
 
-    int32_t id;
+    uint32_t id;
     do {
         id = nextID.fetch_add(1, std::memory_order_relaxed);
     } while (id == SK_InvalidGenID);

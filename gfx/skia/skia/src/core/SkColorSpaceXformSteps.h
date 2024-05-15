@@ -8,13 +8,13 @@
 #ifndef SkColorSpaceXformSteps_DEFINED
 #define SkColorSpaceXformSteps_DEFINED
 
-#include "include/core/SkAlphaType.h"
 #include "modules/skcms/skcms.h"
-#include "src/core/SkVM.h"
-#include <stdint.h>
+
+#include <cstdint>
 
 class SkColorSpace;
 class SkRasterPipeline;
+enum SkAlphaType : int;
 
 struct SkColorSpaceXformSteps {
 
@@ -45,7 +45,6 @@ struct SkColorSpaceXformSteps {
 
     void apply(float rgba[4]) const;
     void apply(SkRasterPipeline*) const;
-    skvm::Color program(skvm::Builder*, skvm::Uniforms*, skvm::Color) const;
 
     Flags flags;
 

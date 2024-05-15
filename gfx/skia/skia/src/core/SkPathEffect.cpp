@@ -4,12 +4,23 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
-#include "include/core/SkPath.h"
 #include "include/core/SkPathEffect.h"
+
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/base/SkAssert.h"
 #include "src/core/SkPathEffectBase.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
+
+#include <cstddef>
+#include <utility>
+
+class SkStrokeRec;
+struct SkDeserialProcs;
+struct SkRect;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -96,7 +107,7 @@ public:
     }
 
     SkComposePathEffect(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner)
-        : INHERITED(outer, inner) {}
+            : INHERITED(std::move(outer), std::move(inner)) {}
 
     bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                        const SkRect* cullRect, const SkMatrix& ctm) const override {
@@ -157,7 +168,7 @@ public:
     }
 
     SkSumPathEffect(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second)
-        : INHERITED(first, second) {}
+            : INHERITED(std::move(first), std::move(second)) {}
 
     bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                       const SkRect* cullRect, const SkMatrix& ctm) const override {

@@ -17,6 +17,7 @@ class Expression;
 class FunctionDeclaration;
 class ProgramElement;
 class Statement;
+class Symbol;
 class Variable;
 
 /**
@@ -44,8 +45,11 @@ public:
     bool operator==(const ProgramUsage& that) const;
     bool operator!=(const ProgramUsage& that) const { return !(*this == that); }
 
-    SkTHashMap<const Variable*, VariableCounts> fVariableCounts;
-    SkTHashMap<const FunctionDeclaration*, int> fCallCounts;
+    // All Symbol* objects in fStructCounts must be StructType*.
+    skia_private::THashMap<const Symbol*, int> fStructCounts;
+    // All Symbol* objects in fCallCounts must be FunctionDeclaration*.
+    skia_private::THashMap<const Symbol*, int> fCallCounts;
+    skia_private::THashMap<const Variable*, VariableCounts> fVariableCounts;
 };
 
 }  // namespace SkSL

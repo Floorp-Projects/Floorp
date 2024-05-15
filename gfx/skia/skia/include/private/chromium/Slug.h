@@ -8,17 +8,22 @@
 #ifndef sktext_gpu_Slug_DEFINED
 #define sktext_gpu_Slug_DEFINED
 
-#include "include/core/SkData.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
+#include "include/private/base/SkAPI.h"
+
+#include <cstddef>
+#include <cstdint>
 
 class SkCanvas;
-class SkMatrix;
+class SkData;
 class SkPaint;
-class SkTextBlob;
 class SkReadBuffer;
 class SkStrikeClient;
+class SkTextBlob;
 class SkWriteBuffer;
+struct SkDeserialProcs;
+struct SkPoint;
 
 namespace sktext::gpu {
 // Slug encapsulates an SkTextBlob at a specific origin, using a specific paint. It can be
@@ -38,21 +43,19 @@ public:
 
     // Set the client parameter to the appropriate SkStrikeClient when typeface ID translation
     // is needed.
-    static sk_sp<Slug> Deserialize(
-            const void* data, size_t size, const SkStrikeClient* client = nullptr);
+    static sk_sp<Slug> Deserialize(const void* data,
+                                   size_t size,
+                                   const SkStrikeClient* client = nullptr);
     static sk_sp<Slug> MakeFromBuffer(SkReadBuffer& buffer);
 
+    // Allows clients to deserialize SkPictures that contain slug data
+    static void AddDeserialProcs(SkDeserialProcs* procs, const SkStrikeClient* client = nullptr);
 
     // Draw the Slug obeying the canvas's mapping and clipping.
-    void draw(SkCanvas* canvas) const;
+    void draw(SkCanvas* canvas, const SkPaint& paint) const;
 
     virtual SkRect sourceBounds() const = 0;
     virtual SkRect sourceBoundsWithOrigin () const = 0;
-
-    // The paint passed into ConvertBlob; this paint is used instead of the paint resulting from
-    // the call to aboutToDraw because when we call draw(), the initial paint is needed to call
-    // aboutToDraw again to get the layer right.
-    virtual const SkPaint& initialPaint() const = 0;
 
     virtual void doFlatten(SkWriteBuffer&) const = 0;
 
@@ -62,6 +65,8 @@ private:
     static uint32_t NextUniqueID();
     const uint32_t  fUniqueID{NextUniqueID()};
 };
+
+
 }  // namespace sktext::gpu
 
 #endif  // sktext_gpu_Slug_DEFINED

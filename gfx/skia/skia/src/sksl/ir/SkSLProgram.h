@@ -10,19 +10,18 @@
 
 #include "src/sksl/ir/SkSLType.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
 
 // name of the uniform used to handle features that are sensitive to whether Y is flipped.
-// TODO: find a better home for this constant
 #define SKSL_RTFLIP_NAME "u_skRTFlip"
 
 namespace SkSL {
 
 class Context;
 class FunctionDeclaration;
-class ModifiersPool;
 class Pool;
 class ProgramElement;
 class ProgramUsage;
@@ -42,27 +41,34 @@ struct UniformInfo {
     int fUniformSlotCount = 0;
 };
 
-/**
- * Represents a fully-digested program, ready for code generation.
- */
-struct Program {
-    struct Inputs {
-        bool fUseFlipRTUniform = false;
-        bool operator==(const Inputs& that) const {
-            return fUseFlipRTUniform == that.fUseFlipRTUniform;
-        }
-        bool operator!=(const Inputs& that) const { return !(*this == that); }
+/** A program's inputs and outputs. */
+struct ProgramInterface {
+    enum RTFlip : uint8_t {
+        kRTFlip_None       = 0b0000'0000,
+        kRTFlip_FragCoord  = 0b0000'0001,
+        kRTFlip_Clockwise  = 0b0000'0010,
+        kRTFlip_Derivative = 0b0000'0100,
     };
+    uint8_t fRTFlipUniform = kRTFlip_None;
+    bool fUseLastFragColor = false;
+    bool fOutputSecondaryColor = false;
 
+    bool operator==(const ProgramInterface& that) const {
+        return fRTFlipUniform == that.fRTFlipUniform &&
+               fUseLastFragColor == that.fUseLastFragColor &&
+               fOutputSecondaryColor == that.fOutputSecondaryColor;
+    }
+    bool operator!=(const ProgramInterface& that) const { return !(*this == that); }
+};
+
+/** Represents a fully-digested program, ready for code generation. */
+struct Program {
     Program(std::unique_ptr<std::string> source,
             std::unique_ptr<ProgramConfig> config,
             std::shared_ptr<Context> context,
             std::vector<std::unique_ptr<ProgramElement>> elements,
-            std::vector<const ProgramElement*> sharedElements,
-            std::unique_ptr<ModifiersPool> modifiers,
-            std::shared_ptr<SymbolTable> symbols,
-            std::unique_ptr<Pool> pool,
-            Inputs inputs);
+            std::unique_ptr<SymbolTable> symbols,
+            std::unique_ptr<Pool> pool);
 
     ~Program();
 
@@ -140,12 +146,6 @@ struct Program {
      */
     const FunctionDeclaration* getFunction(const char* functionName) const;
 
-    /**
-     * Returns a list of uniforms used by this Program. The uniform list will exclude opaque types
-     * like textures, samplers, or child effects.
-     */
-    std::unique_ptr<UniformInfo> getUniformInfo();
-
     std::string description() const;
     const ProgramUsage* usage() const { return fUsage.get(); }
 
@@ -153,17 +153,18 @@ struct Program {
     std::unique_ptr<ProgramConfig> fConfig;
     std::shared_ptr<Context> fContext;
     std::unique_ptr<ProgramUsage> fUsage;
-    std::unique_ptr<ModifiersPool> fModifiers;
     // it's important to keep fOwnedElements defined after (and thus destroyed before) fSymbols,
-    // because destroying elements can modify reference counts in symbols
-    std::shared_ptr<SymbolTable> fSymbols;
+    // because an IR element might access the symbol table during its destruction
+    std::unique_ptr<SymbolTable> fSymbols;
     std::unique_ptr<Pool> fPool;
     // Contains *only* elements owned exclusively by this program.
     std::vector<std::unique_ptr<ProgramElement>> fOwnedElements;
     // Contains *only* elements owned by a built-in module that are included in this program.
     // Use elements() to iterate over the combined set of owned + shared elements.
     std::vector<const ProgramElement*> fSharedElements;
-    Inputs fInputs;
+    ProgramInterface fInterface;
+
+    using Interface = ProgramInterface;
 };
 
 }  // namespace SkSL

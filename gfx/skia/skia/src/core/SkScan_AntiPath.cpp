@@ -5,12 +5,19 @@
  * found in the LICENSE file.
  */
 
+#include "include/core/SkPath.h"
+
+#include "include/core/SkRect.h"
+#include "include/core/SkRegion.h"
+#include "include/private/base/SkAssert.h"
+#include "include/private/base/SkMath.h"
+#include "src/core/SkAAClip.h"
+#include "src/core/SkBlitter.h"
+#include "src/core/SkRasterClip.h"
+#include "src/core/SkScan.h"
 #include "src/core/SkScanPriv.h"
 
-#include "include/core/SkGraphics.h"
-#include "include/core/SkPath.h"
-#include "include/core/SkRegion.h"
-#include "src/core/SkBlitter.h"
+#include <cstdint>
 
 static SkIRect safeRoundOut(const SkRect& src) {
     // roundOut will pin huge floats to max/min int
@@ -23,43 +30,6 @@ static SkIRect safeRoundOut(const SkRect& src) {
     (void)dst.intersect({ -limit, -limit, limit, limit});
 
     return dst;
-}
-
-SkGraphics::PathAnalyticAADeciderProc gAnalyticAADeciderProc = nullptr;
-
-void SkGraphics::SetPathAnalyticAADecider(SkGraphics::PathAnalyticAADeciderProc decider) {
-    gAnalyticAADeciderProc = decider;
-}
-
-static bool ShouldUseAAA(const SkPath& path) {
-#if defined(SK_DISABLE_AAA)
-    return false;
-#elif defined(SK_FORCE_AAA)
-    return true;
-#else
-    if (gAnalyticAADeciderProc) {
-        return gAnalyticAADeciderProc(path);
-    }
-
-    if (gSkForceAnalyticAA) {
-        return true;
-    }
-    if (!gSkUseAnalyticAA) {
-        return false;
-    }
-    if (path.isRect(nullptr)) {
-        return true;
-    }
-
-    const SkRect& bounds = path.getBounds();
-    // When the path have so many points compared to the size of its
-    // bounds/resolution, it indicates that the path is not quite smooth in
-    // the current resolution: the expected number of turning points in
-    // every pixel row/column is significantly greater than zero. Hence
-    // Aanlytic AA is not likely to produce visible quality improvements,
-    // and Analytic AA might be slower than supersampling.
-    return path.countPoints() < std::max(bounds.width(), bounds.height()) / 2 - 10;
-#endif
 }
 
 static int overflows_short_shift(int value, int shift) {
@@ -156,13 +126,7 @@ void SkScan::AntiFillPath(const SkPath& path, const SkRegion& origClip,
         sk_blit_above(blitter, ir, *clipRgn);
     }
 
-    if (ShouldUseAAA(path)) {
-        // Do not use AAA if path is too complicated:
-        // there won't be any speedup or significant visual improvement.
-        SkScan::AAAFillPath(path, blitter, ir, clipRgn->getBounds(), forceRLE);
-    } else {
-        SkScan::SAAFillPath(path, blitter, ir, clipRgn->getBounds(), forceRLE);
-    }
+    SkScan::AAAFillPath(path, blitter, ir, clipRgn->getBounds(), forceRLE);
 
     if (isInverse) {
         sk_blit_below(blitter, ir, *clipRgn);
@@ -170,8 +134,6 @@ void SkScan::AntiFillPath(const SkPath& path, const SkRegion& origClip,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-#include "src/core/SkRasterClip.h"
 
 void SkScan::FillPath(const SkPath& path, const SkRasterClip& clip, SkBlitter* blitter) {
     if (clip.isEmpty() || !path.isFinite()) {

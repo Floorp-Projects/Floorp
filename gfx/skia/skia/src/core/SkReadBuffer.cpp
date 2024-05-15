@@ -15,9 +15,11 @@
 #include "include/core/SkM44.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPath.h"
+#include "include/core/SkPixmap.h"
 #include "include/core/SkPoint3.h"
 #include "include/core/SkRRect.h"
 #include "include/core/SkRegion.h"
+#include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
 #include "include/private/base/SkMalloc.h"
@@ -25,7 +27,6 @@
 #include "src/base/SkMathPriv.h"
 #include "src/base/SkSafeMath.h"
 #include "src/core/SkMatrixPriv.h"
-#include "src/core/SkMipmap.h"
 #include "src/core/SkMipmapBuilder.h"
 #include "src/core/SkWriteBuffer.h"
 
@@ -43,8 +44,8 @@ namespace {
     };
 
     static sk_sp<SkImage> MakeEmptyImage(int width, int height) {
-        return SkImage::MakeFromGenerator(
-              std::make_unique<EmptyImageGenerator>(SkImageInfo::MakeN32Premul(width, height)));
+        return SkImages::DeferredFromGenerator(
+                std::make_unique<EmptyImageGenerator>(SkImageInfo::MakeN32Premul(width, height)));
     }
 
 } // anonymous namespace
@@ -84,6 +85,7 @@ const void* SkReadBuffer::skip(size_t count, size_t size) {
 
 void SkReadBuffer::setDeserialProcs(const SkDeserialProcs& procs) {
     fProcs = procs;
+    this->setAllowSkSL(procs.fAllowSkSL);
 }
 
 bool SkReadBuffer::readBool() {
@@ -130,7 +132,7 @@ uint8_t SkReadBuffer::peekByte() {
         fError = true;
         return 0;
     }
-    return *((uint8_t*)fCurr);
+    return *((const uint8_t*)fCurr);
 }
 
 bool SkReadBuffer::readPad32(void* buffer, size_t bytes) {
@@ -330,14 +332,89 @@ uint32_t SkReadBuffer::getArrayCount() {
     if (!this->validate(IsPtrAlign4(fCurr) && this->isAvailable(inc))) {
         return 0;
     }
-    return *((uint32_t*)fCurr);
+    return *((const uint32_t*)fCurr);
 }
+
+static sk_sp<SkImage> deserialize_image(sk_sp<SkData> data, SkDeserialProcs dProcs,
+                                        std::optional<SkAlphaType> alphaType) {
+    sk_sp<SkImage> image;
+    if (dProcs.fImageDataProc) {
+        image = dProcs.fImageDataProc(data, alphaType, dProcs.fImageCtx);
+    } else if (dProcs.fImageProc) {
+#if !defined(SK_LEGACY_DESERIAL_IMAGE_PROC)
+        image = dProcs.fImageProc(data->data(), data->size(), dProcs.fImageCtx);
+#else
+        image = dProcs.fImageProc(data->data(), data->size(), alphaType, dProcs.fImageCtx);
+#endif
+    }
+    if (image) {
+        return image;
+    }
+#if !defined(SK_DISABLE_LEGACY_IMAGE_READBUFFER)
+    // The default implementation will encode to PNG unless the input SkImages came from
+    // a codec that was built-in (e.g. JPEG/WEBP). Thus, we should be sure to try all
+    // available codecs when reading images out of an SKP.
+    return SkImages::DeferredFromEncodedData(std::move(data), alphaType);
+#else
+    SkDEBUGFAIL("Need to set image proc in SkDeserialProcs");
+    return nullptr;
+#endif
+}
+
+static sk_sp<SkImage> add_mipmaps(sk_sp<SkImage> img, sk_sp<SkData> data,
+                                  SkDeserialProcs dProcs, std::optional<SkAlphaType> alphaType) {
+    SkMipmapBuilder builder(img->imageInfo());
+
+    SkReadBuffer buffer(data->data(), data->size());
+    int count = buffer.read32();
+    if (builder.countLevels() != count) {
+        return img;
+    }
+    for (int i = 0; i < count; ++i) {
+        size_t size = buffer.read32();
+        const void* ptr = buffer.skip(size);
+        if (!ptr) {
+            return img;
+        }
+        // This use of SkData::MakeWithoutCopy is safe because the image goes
+        // out of scope after we read the pixels from it, so we are sure the
+        // data (from buffer) outlives the image.
+        sk_sp<SkImage> mip = deserialize_image(SkData::MakeWithoutCopy(ptr, size), dProcs,
+                                               alphaType);
+        if (!mip) {
+            return img;
+        }
+
+        SkPixmap pm = builder.level(i);
+        if (mip->dimensions() != pm.dimensions()) {
+            return img;
+        }
+        if (!mip->readPixels(nullptr, pm, 0, 0)) {
+            return img;
+        }
+    }
+    if (!buffer.isValid()) {
+        return img;
+    }
+    sk_sp<SkImage> raster = img->makeRasterImage();
+    if (!raster) {
+        return img;
+    }
+    sk_sp<SkImage> rasterWithMips = builder.attachTo(raster);
+    SkASSERT(rasterWithMips); // attachTo should never return null
+    return rasterWithMips;
+}
+
 
 // If we see a corrupt stream, we return null (fail). If we just fail trying to decode
 // the image, we don't fail, but return a 1x1 empty image.
 sk_sp<SkImage> SkReadBuffer::readImage() {
     uint32_t flags = this->read32();
 
+    std::optional<SkAlphaType> alphaType = std::nullopt;
+    if (flags & SkWriteBufferImageFlags::kUnpremul) {
+        alphaType = kUnpremul_SkAlphaType;
+    }
     sk_sp<SkImage> image;
     {
         sk_sp<SkData> data = this->readByteArrayAsData();
@@ -345,23 +422,15 @@ sk_sp<SkImage> SkReadBuffer::readImage() {
             this->validate(false);
             return nullptr;
         }
-        if (fProcs.fImageProc) {
-            image = fProcs.fImageProc(data->data(), data->size(), fProcs.fImageCtx);
-        }
-        if (!image) {
-            std::optional<SkAlphaType> alphaType = std::nullopt;
-            if (flags & SkWriteBufferImageFlags::kUnpremul) {
-                alphaType = kUnpremul_SkAlphaType;
-            }
-            image = SkImage::MakeFromEncoded(std::move(data), alphaType);
-        }
+        image = deserialize_image(data, fProcs, alphaType);
     }
 
+    // This flag is not written by new SKPs anymore.
     if (flags & SkWriteBufferImageFlags::kHasSubsetRect) {
         SkIRect subset;
         this->readIRect(&subset);
         if (image) {
-            image = image->makeSubset(subset);
+            image = image->makeSubset(nullptr, subset);
         }
     }
 
@@ -372,15 +441,7 @@ sk_sp<SkImage> SkReadBuffer::readImage() {
             return nullptr;
         }
         if (image) {
-            SkMipmapBuilder builder(image->imageInfo());
-            if (SkMipmap::Deserialize(&builder, data->data(), data->size())) {
-                // TODO: need to make lazy images support mips
-                if (auto ri = image->makeRasterImage()) {
-                    image = ri;
-                }
-                image = builder.attachTo(image);
-                SkASSERT(image);    // withMipmaps should never return null
-            }
+            image = add_mipmaps(image, std::move(data), fProcs, alphaType);
         }
     }
     return image ? image : MakeEmptyImage(1, 1);
@@ -388,7 +449,7 @@ sk_sp<SkImage> SkReadBuffer::readImage() {
 
 sk_sp<SkTypeface> SkReadBuffer::readTypeface() {
     // Read 32 bits (signed)
-    //   0 -- return null (default font)
+    //   0 -- return null (empty font)
     //  >0 -- index
     //  <0 -- custom (serial procs) : negative size in bytes
 

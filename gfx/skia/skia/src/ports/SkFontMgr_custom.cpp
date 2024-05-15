@@ -16,7 +16,6 @@
 #include "include/private/base/SkTArray.h"
 #include "include/private/base/SkTemplates.h"
 #include "src/core/SkFontDescriptor.h"
-#include "src/ports/SkFontHost_FreeType_common.h"
 #include "src/ports/SkFontMgr_custom.h"
 
 #include <limits>
@@ -27,9 +26,9 @@ using namespace skia_private;
 class SkData;
 
 SkTypeface_Custom::SkTypeface_Custom(const SkFontStyle& style, bool isFixedPitch,
-                                     bool sysFont, const SkString familyName, int index)
+                                     bool sysFont, SkString familyName, int index)
     : INHERITED(style, isFixedPitch)
-    , fIsSysFont(sysFont), fFamilyName(familyName), fIndex(index)
+    , fIsSysFont(sysFont), fFamilyName(std::move(familyName)), fIndex(index)
 { }
 
 bool SkTypeface_Custom::isSysFont() const { return fIsSysFont; }
@@ -59,8 +58,8 @@ sk_sp<SkTypeface> SkTypeface_Empty::onMakeClone(const SkFontArguments& args) con
 std::unique_ptr<SkFontData> SkTypeface_Empty::onMakeFontData() const { return nullptr; }
 
 SkTypeface_File::SkTypeface_File(const SkFontStyle& style, bool isFixedPitch, bool sysFont,
-                                 const SkString familyName, const char path[], int index)
-    : INHERITED(style, isFixedPitch, sysFont, familyName, index)
+                                 SkString familyName, const char path[], int index)
+    : INHERITED(style, isFixedPitch, sysFont, std::move(familyName), index)
     , fPath(path)
 { }
 
@@ -95,7 +94,8 @@ std::unique_ptr<SkFontData> SkTypeface_File::onMakeFontData() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkFontStyleSet_Custom::SkFontStyleSet_Custom(const SkString familyName) : fFamilyName(familyName) {}
+SkFontStyleSet_Custom::SkFontStyleSet_Custom(SkString familyName)
+        : fFamilyName(std::move(familyName)) {}
 
 void SkFontStyleSet_Custom::appendTypeface(sk_sp<SkTypeface> typeface) {
     fStyles.emplace_back(std::move(typeface));
@@ -115,27 +115,29 @@ void SkFontStyleSet_Custom::getStyle(int index, SkFontStyle* style, SkString* na
     }
 }
 
-SkTypeface* SkFontStyleSet_Custom::createTypeface(int index) {
+sk_sp<SkTypeface> SkFontStyleSet_Custom::createTypeface(int index) {
     SkASSERT(index < fStyles.size());
-    return SkRef(fStyles[index].get());
+    return fStyles[index];
 }
 
-SkTypeface* SkFontStyleSet_Custom::matchStyle(const SkFontStyle& pattern) {
+sk_sp<SkTypeface> SkFontStyleSet_Custom::matchStyle(const SkFontStyle& pattern) {
     return this->matchStyleCSS3(pattern);
 }
 
 SkString SkFontStyleSet_Custom::getFamilyName() { return fFamilyName; }
 
+SkFontMgr_Custom::SkFontMgr_Custom(const SystemFontLoader& loader)
+        : fDefaultFamily(nullptr)
+        , fScanner(std::make_unique<SkFontScanner_FreeType>()) {
 
-SkFontMgr_Custom::SkFontMgr_Custom(const SystemFontLoader& loader) : fDefaultFamily(nullptr) {
-    loader.loadSystemFonts(fScanner, &fFamilies);
+    loader.loadSystemFonts(fScanner.get(), &fFamilies);
 
     // Try to pick a default font.
     static const char* defaultNames[] = {
         "Arial", "Verdana", "Times New Roman", "Droid Sans", "DejaVu Serif", nullptr
     };
     for (size_t i = 0; i < std::size(defaultNames); ++i) {
-        sk_sp<SkFontStyleSet_Custom> set(this->onMatchFamily(defaultNames[i]));
+        sk_sp<SkFontStyleSet> set(this->onMatchFamily(defaultNames[i]));
         if (nullptr == set) {
             continue;
         }
@@ -147,11 +149,11 @@ SkFontMgr_Custom::SkFontMgr_Custom(const SystemFontLoader& loader) : fDefaultFam
             continue;
         }
 
-        fDefaultFamily = set.get();
+        fDefaultFamily = set;
         break;
     }
     if (nullptr == fDefaultFamily) {
-        fDefaultFamily = fFamilies[0].get();
+        fDefaultFamily = fFamilies[0];
     }
 }
 
@@ -164,31 +166,31 @@ void SkFontMgr_Custom::onGetFamilyName(int index, SkString* familyName) const {
     familyName->set(fFamilies[index]->getFamilyName());
 }
 
-SkFontStyleSet_Custom* SkFontMgr_Custom::onCreateStyleSet(int index) const {
+sk_sp<SkFontStyleSet> SkFontMgr_Custom::onCreateStyleSet(int index) const {
     SkASSERT(index < fFamilies.size());
-    return SkRef(fFamilies[index].get());
+    return fFamilies[index];
 }
 
-SkFontStyleSet_Custom* SkFontMgr_Custom::onMatchFamily(const char familyName[]) const {
+sk_sp<SkFontStyleSet> SkFontMgr_Custom::onMatchFamily(const char familyName[]) const {
     for (int i = 0; i < fFamilies.size(); ++i) {
         if (fFamilies[i]->getFamilyName().equals(familyName)) {
-            return SkRef(fFamilies[i].get());
+            return fFamilies[i];
         }
     }
     return nullptr;
 }
 
-SkTypeface* SkFontMgr_Custom::onMatchFamilyStyle(const char familyName[],
-                                const SkFontStyle& fontStyle) const
+sk_sp<SkTypeface> SkFontMgr_Custom::onMatchFamilyStyle(const char familyName[],
+                                                       const SkFontStyle& fontStyle) const
 {
     sk_sp<SkFontStyleSet> sset(this->matchFamily(familyName));
     return sset->matchStyle(fontStyle);
 }
 
-SkTypeface* SkFontMgr_Custom::onMatchFamilyStyleCharacter(const char familyName[],
-                                                          const SkFontStyle&,
-                                                          const char* bcp47[], int bcp47Count,
-                                                          SkUnichar character) const
+sk_sp<SkTypeface> SkFontMgr_Custom::onMatchFamilyStyleCharacter(
+    const char familyName[], const SkFontStyle&,
+    const char* bcp47[], int bcp47Count,
+    SkUnichar) const
 {
     return nullptr;
 }
@@ -217,11 +219,11 @@ sk_sp<SkTypeface> SkFontMgr_Custom::onLegacyMakeTypeface(const char familyName[]
     sk_sp<SkTypeface> tf;
 
     if (familyName) {
-        tf.reset(this->onMatchFamilyStyle(familyName, style));
+        tf = this->onMatchFamilyStyle(familyName, style);
     }
 
-    if (nullptr == tf) {
-        tf.reset(fDefaultFamily->matchStyle(style));
+    if (!tf) {
+        tf = fDefaultFamily->matchStyle(style);
     }
 
     return tf;

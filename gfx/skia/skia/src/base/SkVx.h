@@ -19,7 +19,8 @@
 // and alignment and is safe to use across translation units freely.
 // (Ideally we'd only align to T, but that tanks ARMv7 NEON codegen.)
 
-// Please try to keep this file independent of Skia headers.
+#include "include/private/base/SkFeatures.h"
+#include "src/base/SkUtils.h"
 #include <algorithm>         // std::min, std::max
 #include <cassert>           // assert()
 #include <cmath>             // ceilf, floorf, truncf, roundf, sqrtf, etc.
@@ -40,12 +41,17 @@
 #endif
 
 #if SKVX_USE_SIMD
-    #if defined(__SSE__) || defined(__AVX__) || defined(__AVX2__)
+    #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
         #include <immintrin.h>
-    #elif defined(__ARM_NEON)
+    #elif defined(SK_ARM_HAS_NEON)
         #include <arm_neon.h>
     #elif defined(__wasm_simd128__)
         #include <wasm_simd128.h>
+    #elif SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LASX
+        #include <lasxintrin.h>
+        #include <lsxintrin.h>
+    #elif SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
+        #include <lsxintrin.h>
     #endif
 #endif
 
@@ -72,31 +78,76 @@ struct alignas(N*sizeof(T)) Vec;
 template <int... Ix, int N, typename T>
 SI Vec<sizeof...(Ix),T> shuffle(const Vec<N,T>&);
 
-template <typename D, typename S>
-SI D bit_pun(const S& s) {
-    static_assert(sizeof(D) == sizeof(S));
-    D d;
-    memcpy(&d, &s, sizeof(D));
-    return d;
-}
-
 // All Vec have the same simple memory layout, the same as `T vec[N]`.
 template <int N, typename T>
-struct alignas(N*sizeof(T)) VecStorage {
-    SKVX_ALWAYS_INLINE VecStorage() = default;
-    SKVX_ALWAYS_INLINE VecStorage(T s) : lo(s), hi(s) {}
+struct alignas(N*sizeof(T)) Vec {
+    static_assert((N & (N-1)) == 0,        "N must be a power of 2.");
+    static_assert(sizeof(T) >= alignof(T), "What kind of unusual T is this?");
+
+    // Methods belong here in the class declaration of Vec only if:
+    //   - they must be here, like constructors or operator[];
+    //   - they'll definitely never want a specialized implementation.
+    // Other operations on Vec should be defined outside the type.
+
+    SKVX_ALWAYS_INLINE Vec() = default;
+    SKVX_ALWAYS_INLINE Vec(T s) : lo(s), hi(s) {}
+
+    // NOTE: Vec{x} produces x000..., whereas Vec(x) produces xxxx.... since this constructor fills
+    // unspecified lanes with 0s, whereas the single T constructor fills all lanes with the value.
+    SKVX_ALWAYS_INLINE Vec(std::initializer_list<T> xs) {
+        T vals[N] = {0};
+        assert(xs.size() <= (size_t)N);
+        memcpy(vals, xs.begin(), std::min(xs.size(), (size_t)N)*sizeof(T));
+
+        this->lo = Vec<N/2,T>::Load(vals +   0);
+        this->hi = Vec<N/2,T>::Load(vals + N/2);
+    }
+
+    SKVX_ALWAYS_INLINE T  operator[](int i) const { return i<N/2 ? this->lo[i] : this->hi[i-N/2]; }
+    SKVX_ALWAYS_INLINE T& operator[](int i)       { return i<N/2 ? this->lo[i] : this->hi[i-N/2]; }
+
+    SKVX_ALWAYS_INLINE static Vec Load(const void* ptr) {
+        return sk_unaligned_load<Vec>(ptr);
+    }
+    SKVX_ALWAYS_INLINE void store(void* ptr) const {
+        // Note: Calling sk_unaligned_store produces slightly worse code here, for some reason
+        memcpy(ptr, this, sizeof(Vec));
+    }
 
     Vec<N/2,T> lo, hi;
 };
 
+// We have specializations for N == 1 (the base-case), as well as 2 and 4, where we add helpful
+// constructors and swizzle accessors.
 template <typename T>
-struct VecStorage<4,T> {
-    SKVX_ALWAYS_INLINE VecStorage() = default;
-    SKVX_ALWAYS_INLINE VecStorage(T s) : lo(s), hi(s) {}
-    SKVX_ALWAYS_INLINE VecStorage(T x, T y, T z, T w) : lo(x,y), hi(z, w) {}
-    SKVX_ALWAYS_INLINE VecStorage(Vec<2,T> xy, T z, T w) : lo(xy), hi(z,w) {}
-    SKVX_ALWAYS_INLINE VecStorage(T x, T y, Vec<2,T> zw) : lo(x,y), hi(zw) {}
-    SKVX_ALWAYS_INLINE VecStorage(Vec<2,T> xy, Vec<2,T> zw) : lo(xy), hi(zw) {}
+struct alignas(4*sizeof(T)) Vec<4,T> {
+    static_assert(sizeof(T) >= alignof(T), "What kind of unusual T is this?");
+
+    SKVX_ALWAYS_INLINE Vec() = default;
+    SKVX_ALWAYS_INLINE Vec(T s) : lo(s), hi(s) {}
+    SKVX_ALWAYS_INLINE Vec(T x, T y, T z, T w) : lo(x,y), hi(z,w) {}
+    SKVX_ALWAYS_INLINE Vec(Vec<2,T> xy, T z, T w) : lo(xy), hi(z,w) {}
+    SKVX_ALWAYS_INLINE Vec(T x, T y, Vec<2,T> zw) : lo(x,y), hi(zw) {}
+    SKVX_ALWAYS_INLINE Vec(Vec<2,T> xy, Vec<2,T> zw) : lo(xy), hi(zw) {}
+
+    SKVX_ALWAYS_INLINE Vec(std::initializer_list<T> xs) {
+        T vals[4] = {0};
+        assert(xs.size() <= (size_t)4);
+        memcpy(vals, xs.begin(), std::min(xs.size(), (size_t)4)*sizeof(T));
+
+        this->lo = Vec<2,T>::Load(vals + 0);
+        this->hi = Vec<2,T>::Load(vals + 2);
+    }
+
+    SKVX_ALWAYS_INLINE T  operator[](int i) const { return i<2 ? this->lo[i] : this->hi[i-2]; }
+    SKVX_ALWAYS_INLINE T& operator[](int i)       { return i<2 ? this->lo[i] : this->hi[i-2]; }
+
+    SKVX_ALWAYS_INLINE static Vec Load(const void* ptr) {
+        return sk_unaligned_load<Vec>(ptr);
+    }
+    SKVX_ALWAYS_INLINE void store(void* ptr) const {
+        memcpy(ptr, this, sizeof(Vec));
+    }
 
     SKVX_ALWAYS_INLINE Vec<2,T>& xy() { return lo; }
     SKVX_ALWAYS_INLINE Vec<2,T>& zw() { return hi; }
@@ -113,17 +164,38 @@ struct VecStorage<4,T> {
     SKVX_ALWAYS_INLINE T w() const { return hi.hi.val; }
 
     // Exchange-based swizzles. These should take 1 cycle on NEON and 3 (pipelined) cycles on SSE.
-    SKVX_ALWAYS_INLINE Vec<4,T> yxwz() const { return shuffle<1,0,3,2>(bit_pun<Vec<4,T>>(*this)); }
-    SKVX_ALWAYS_INLINE Vec<4,T> zwxy() const { return shuffle<2,3,0,1>(bit_pun<Vec<4,T>>(*this)); }
+    SKVX_ALWAYS_INLINE Vec<4,T> yxwz() const { return shuffle<1,0,3,2>(*this); }
+    SKVX_ALWAYS_INLINE Vec<4,T> zwxy() const { return shuffle<2,3,0,1>(*this); }
 
     Vec<2,T> lo, hi;
 };
 
 template <typename T>
-struct VecStorage<2,T> {
-    SKVX_ALWAYS_INLINE VecStorage() = default;
-    SKVX_ALWAYS_INLINE VecStorage(T s) : lo(s), hi(s) {}
-    SKVX_ALWAYS_INLINE VecStorage(T x, T y) : lo(x), hi(y) {}
+struct alignas(2*sizeof(T)) Vec<2,T> {
+    static_assert(sizeof(T) >= alignof(T), "What kind of unusual T is this?");
+
+    SKVX_ALWAYS_INLINE Vec() = default;
+    SKVX_ALWAYS_INLINE Vec(T s) : lo(s), hi(s) {}
+    SKVX_ALWAYS_INLINE Vec(T x, T y) : lo(x), hi(y) {}
+
+    SKVX_ALWAYS_INLINE Vec(std::initializer_list<T> xs) {
+        T vals[2] = {0};
+        assert(xs.size() <= (size_t)2);
+        memcpy(vals, xs.begin(), std::min(xs.size(), (size_t)2)*sizeof(T));
+
+        this->lo = Vec<1,T>::Load(vals + 0);
+        this->hi = Vec<1,T>::Load(vals + 1);
+    }
+
+    SKVX_ALWAYS_INLINE T  operator[](int i) const { return i<1 ? this->lo[i] : this->hi[i-1]; }
+    SKVX_ALWAYS_INLINE T& operator[](int i)       { return i<1 ? this->lo[i] : this->hi[i-1]; }
+
+    SKVX_ALWAYS_INLINE static Vec Load(const void* ptr) {
+        return sk_unaligned_load<Vec>(ptr);
+    }
+    SKVX_ALWAYS_INLINE void store(void* ptr) const {
+        memcpy(ptr, this, sizeof(Vec));
+    }
 
     SKVX_ALWAYS_INLINE T& x() { return lo.val; }
     SKVX_ALWAYS_INLINE T& y() { return hi.val; }
@@ -132,13 +204,32 @@ struct VecStorage<2,T> {
     SKVX_ALWAYS_INLINE T y() const { return hi.val; }
 
     // This exchange-based swizzle should take 1 cycle on NEON and 3 (pipelined) cycles on SSE.
-    SKVX_ALWAYS_INLINE Vec<2,T> yx() const { return shuffle<1,0>(bit_pun<Vec<2,T>>(*this)); }
-
-    SKVX_ALWAYS_INLINE Vec<4,T> xyxy() const {
-        return Vec<4,T>(bit_pun<Vec<2,T>>(*this), bit_pun<Vec<2,T>>(*this));
-    }
+    SKVX_ALWAYS_INLINE Vec<2,T> yx() const { return shuffle<1,0>(*this); }
+    SKVX_ALWAYS_INLINE Vec<4,T> xyxy() const { return Vec<4,T>(*this, *this); }
 
     Vec<1,T> lo, hi;
+};
+
+template <typename T>
+struct Vec<1,T> {
+    T val = {};
+
+    SKVX_ALWAYS_INLINE Vec() = default;
+    SKVX_ALWAYS_INLINE Vec(T s) : val(s) {}
+
+    SKVX_ALWAYS_INLINE Vec(std::initializer_list<T> xs) : val(xs.size() ? *xs.begin() : 0) {
+        assert(xs.size() <= (size_t)1);
+    }
+
+    SKVX_ALWAYS_INLINE T  operator[](int i) const { assert(i == 0); return val; }
+    SKVX_ALWAYS_INLINE T& operator[](int i)       { assert(i == 0); return val; }
+
+    SKVX_ALWAYS_INLINE static Vec Load(const void* ptr) {
+        return sk_unaligned_load<Vec>(ptr);
+    }
+    SKVX_ALWAYS_INLINE void store(void* ptr) const {
+        memcpy(ptr, this, sizeof(Vec));
+    }
 };
 
 // Translate from a value type T to its corresponding Mask, the result of a comparison.
@@ -146,182 +237,6 @@ template <typename T> struct Mask { using type = T; };
 template <> struct Mask<float > { using type = int32_t; };
 template <> struct Mask<double> { using type = int64_t; };
 template <typename T> using M = typename Mask<T>::type;
-
-template <int N, typename T>
-struct NoConversion { T vals[N]; };
-
-template <int N, typename T>
-struct ConvertNative {
-    typedef NoConversion<N, T> type;
-};
-
-#if SKVX_USE_SIMD && defined(__SSE__)
-template<>
-struct ConvertNative<4, float> {
-    typedef __m128 type;
-};
-
-template<>
-struct ConvertNative<4, int32_t> {
-    typedef __m128i type;
-};
-
-template <>
-struct ConvertNative<4, uint32_t> {
-    typedef __m128i type;
-};
-
-template<>
-struct ConvertNative<8, int16_t> {
-    typedef __m128i type;
-};
-
-template <>
-struct ConvertNative<8, uint16_t> {
-    typedef __m128i type;
-};
-
-template <>
-struct ConvertNative<16, uint8_t> {
-    typedef __m128i type;
-};
-#endif
-
-#if SKVX_USE_SIMD && defined(__AVX__)
-template<>
-struct ConvertNative<8, float> {
-    typedef __m256 type;
-};
-
-template<>
-struct ConvertNative<8, int32_t> {
-    typedef __m256i type;
-};
-
-template <>
-struct ConvertNative<8, uint32_t> {
-    typedef __m256i type;
-};
-
-template<>
-struct ConvertNative<16, int16_t> {
-    typedef __m256i type;
-};
-
-template <>
-struct ConvertNative<16, uint16_t> {
-    typedef __m256i type;
-};
-#endif
-
-#if SKVX_USE_SIMD && defined(__ARM_NEON)
-template<>
-struct ConvertNative<4, float> {
-    typedef float32x4_t type;
-};
-
-template<>
-struct ConvertNative<4, int32_t> {
-    typedef int32x4_t type;
-};
-
-template <>
-struct ConvertNative<4, uint32_t> {
-    typedef uint32x4_t type;
-};
-
-template<>
-struct ConvertNative<4, int16_t> {
-    typedef int16x4_t type;
-};
-
-template <>
-struct ConvertNative<4, uint16_t> {
-    typedef uint16x4_t type;
-};
-
-template<>
-struct ConvertNative<8, int16_t> {
-    typedef int16x8_t type;
-};
-
-template <>
-struct ConvertNative<8, uint16_t> {
-    typedef uint16x8_t type;
-};
-
-template <>
-struct ConvertNative<8, uint8_t> {
-    typedef uint8x8_t type;
-};
-#endif
-
-template <int N, typename T>
-struct alignas(N*sizeof(T)) Vec : public VecStorage<N,T> {
-    typedef T elem_type;
-
-    static_assert((N & (N-1)) == 0,        "N must be a power of 2.");
-    static_assert(sizeof(T) >= alignof(T), "What kind of unusual T is this?");
-
-    // Methods belong here in the class declaration of Vec only if:
-    //   - they must be here, like constructors or operator[];
-    //   - they'll definitely never want a specialized implementation.
-    // Other operations on Vec should be defined outside the type.
-
-    SKVX_ALWAYS_INLINE Vec() = default;
-    SKVX_ALWAYS_INLINE Vec(typename ConvertNative<N, T>::type native) : Vec(bit_pun<Vec>(native)) {}
-
-    using VecStorage<N,T>::VecStorage;
-
-    // NOTE: Vec{x} produces x000..., whereas Vec(x) produces xxxx.... since this constructor fills
-    // unspecified lanes with 0s, whereas the single T constructor fills all lanes with the value.
-    SKVX_ALWAYS_INLINE Vec(std::initializer_list<T> xs) {
-        T vals[N] = {0};
-        memcpy(vals, xs.begin(), std::min(xs.size(), (size_t)N)*sizeof(T));
-
-        this->lo = Vec<N/2,T>::Load(vals +   0);
-        this->hi = Vec<N/2,T>::Load(vals + N/2);
-    }
-
-    operator typename ConvertNative<N, T>::type() const { return bit_pun<typename ConvertNative<N, T>::type>(*this); }
-
-    SKVX_ALWAYS_INLINE T  operator[](int i) const { return i<N/2 ? this->lo[i] : this->hi[i-N/2]; }
-    SKVX_ALWAYS_INLINE T& operator[](int i)       { return i<N/2 ? this->lo[i] : this->hi[i-N/2]; }
-
-    SKVX_ALWAYS_INLINE static Vec Load(const void* ptr) {
-        Vec v;
-        memcpy(&v, ptr, sizeof(Vec));
-        return v;
-    }
-    SKVX_ALWAYS_INLINE void store(void* ptr) const {
-        memcpy(ptr, this, sizeof(Vec));
-    }
-};
-
-template <typename T>
-struct Vec<1,T> {
-    typedef T elem_type;
-
-    T val;
-
-    SKVX_ALWAYS_INLINE Vec() = default;
-
-    Vec(T s) : val(s) {}
-
-    SKVX_ALWAYS_INLINE Vec(std::initializer_list<T> xs) : val(xs.size() ? *xs.begin() : 0) {}
-
-    SKVX_ALWAYS_INLINE T  operator[](int) const { return val; }
-    SKVX_ALWAYS_INLINE T& operator[](int)       { return val; }
-
-    SKVX_ALWAYS_INLINE static Vec Load(const void* ptr) {
-        Vec v;
-        memcpy(&v, ptr, sizeof(Vec));
-        return v;
-    }
-    SKVX_ALWAYS_INLINE void store(void* ptr) const {
-        memcpy(ptr, this, sizeof(Vec));
-    }
-};
 
 // Join two Vec<N,T> into one Vec<2N,T>.
 SINT Vec<2*N,T> join(const Vec<N,T>& lo, const Vec<N,T>& hi) {
@@ -356,11 +271,11 @@ SINT Vec<2*N,T> join(const Vec<N,T>& lo, const Vec<N,T>& hi) {
 
         // For some reason some (new!) versions of GCC cannot seem to deduce N in the generic
         // to_vec<N,T>() below for N=4 and T=float.  This workaround seems to help...
-        SI Vec<4,float> to_vec(VExt<4,float> v) { return bit_pun<Vec<4,float>>(v); }
+        SI Vec<4,float> to_vec(VExt<4,float> v) { return sk_bit_cast<Vec<4,float>>(v); }
     #endif
 
-    SINT VExt<N,T> to_vext(const Vec<N,T>& v) { return bit_pun<VExt<N,T>>(v); }
-    SINT Vec <N,T> to_vec(const VExt<N,T>& v) { return bit_pun<Vec <N,T>>(v); }
+    SINT VExt<N,T> to_vext(const Vec<N,T>& v) { return sk_bit_cast<VExt<N,T>>(v); }
+    SINT Vec <N,T> to_vec(const VExt<N,T>& v) { return sk_bit_cast<Vec <N,T>>(v); }
 
     SINT Vec<N,T> operator+(const Vec<N,T>& x, const Vec<N,T>& y) {
         return to_vec<N,T>(to_vext(x) + to_vext(y));
@@ -384,12 +299,6 @@ SINT Vec<2*N,T> join(const Vec<N,T>& lo, const Vec<N,T>& hi) {
     SINT Vec<N,T> operator|(const Vec<N,T>& x, const Vec<N,T>& y) {
         return to_vec<N,T>(to_vext(x) | to_vext(y));
     }
-    SINT Vec<N,T> operator&&(const Vec<N,T>& x, const Vec<N,T>& y) {
-        return to_vec<N,T>(to_vext(x) & to_vext(y));
-    }
-    SINT Vec<N,T> operator||(const Vec<N,T>& x, const Vec<N,T>& y) {
-        return to_vec<N,T>(to_vext(x) | to_vext(y));
-    }
 
     SINT Vec<N,T> operator!(const Vec<N,T>& x) { return to_vec<N,T>(!to_vext(x)); }
     SINT Vec<N,T> operator-(const Vec<N,T>& x) { return to_vec<N,T>(-to_vext(x)); }
@@ -399,22 +308,22 @@ SINT Vec<2*N,T> join(const Vec<N,T>& lo, const Vec<N,T>& hi) {
     SINT Vec<N,T> operator>>(const Vec<N,T>& x, int k) { return to_vec<N,T>(to_vext(x) >> k); }
 
     SINT Vec<N,M<T>> operator==(const Vec<N,T>& x, const Vec<N,T>& y) {
-        return bit_pun<Vec<N,M<T>>>(to_vext(x) == to_vext(y));
+        return sk_bit_cast<Vec<N,M<T>>>(to_vext(x) == to_vext(y));
     }
     SINT Vec<N,M<T>> operator!=(const Vec<N,T>& x, const Vec<N,T>& y) {
-        return bit_pun<Vec<N,M<T>>>(to_vext(x) != to_vext(y));
+        return sk_bit_cast<Vec<N,M<T>>>(to_vext(x) != to_vext(y));
     }
     SINT Vec<N,M<T>> operator<=(const Vec<N,T>& x, const Vec<N,T>& y) {
-        return bit_pun<Vec<N,M<T>>>(to_vext(x) <= to_vext(y));
+        return sk_bit_cast<Vec<N,M<T>>>(to_vext(x) <= to_vext(y));
     }
     SINT Vec<N,M<T>> operator>=(const Vec<N,T>& x, const Vec<N,T>& y) {
-        return bit_pun<Vec<N,M<T>>>(to_vext(x) >= to_vext(y));
+        return sk_bit_cast<Vec<N,M<T>>>(to_vext(x) >= to_vext(y));
     }
     SINT Vec<N,M<T>> operator< (const Vec<N,T>& x, const Vec<N,T>& y) {
-        return bit_pun<Vec<N,M<T>>>(to_vext(x) <  to_vext(y));
+        return sk_bit_cast<Vec<N,M<T>>>(to_vext(x) <  to_vext(y));
     }
     SINT Vec<N,M<T>> operator> (const Vec<N,T>& x, const Vec<N,T>& y) {
-        return bit_pun<Vec<N,M<T>>>(to_vext(x) >  to_vext(y));
+        return sk_bit_cast<Vec<N,M<T>>>(to_vext(x) >  to_vext(y));
     }
 
 #else
@@ -431,8 +340,6 @@ SINT Vec<2*N,T> join(const Vec<N,T>& lo, const Vec<N,T>& hi) {
     SIT Vec<1,T> operator^(const Vec<1,T>& x, const Vec<1,T>& y) { return x.val ^ y.val; }
     SIT Vec<1,T> operator&(const Vec<1,T>& x, const Vec<1,T>& y) { return x.val & y.val; }
     SIT Vec<1,T> operator|(const Vec<1,T>& x, const Vec<1,T>& y) { return x.val | y.val; }
-    SIT Vec<1,T> operator&&(const Vec<1,T>& x, const Vec<1,T>& y) { return x.val & y.val; }
-    SIT Vec<1,T> operator||(const Vec<1,T>& x, const Vec<1,T>& y) { return x.val | y.val; }
 
     SIT Vec<1,T> operator!(const Vec<1,T>& x) { return !x.val; }
     SIT Vec<1,T> operator-(const Vec<1,T>& x) { return -x.val; }
@@ -483,12 +390,6 @@ SINT Vec<2*N,T> join(const Vec<N,T>& lo, const Vec<N,T>& hi) {
     SINT Vec<N,T> operator|(const Vec<N,T>& x, const Vec<N,T>& y) {
         return join(x.lo | y.lo, x.hi | y.hi);
     }
-    SINT Vec<N,T> operator&&(const Vec<N,T>& x, const Vec<N,T>& y) {
-        return join(x.lo & y.lo, x.hi & y.hi);
-    }
-    SINT Vec<N,T> operator||(const Vec<N,T>& x, const Vec<N,T>& y) {
-        return join(x.lo | y.lo, x.hi | y.hi);
-    }
 
     SINT Vec<N,T> operator!(const Vec<N,T>& x) { return join(!x.lo, !x.hi); }
     SINT Vec<N,T> operator-(const Vec<N,T>& x) { return join(-x.lo, -x.hi); }
@@ -525,8 +426,6 @@ SINTU Vec<N,T>    operator/ (U x, const Vec<N,T>& y) { return Vec<N,T>(x) /  y; 
 SINTU Vec<N,T>    operator^ (U x, const Vec<N,T>& y) { return Vec<N,T>(x) ^  y; }
 SINTU Vec<N,T>    operator& (U x, const Vec<N,T>& y) { return Vec<N,T>(x) &  y; }
 SINTU Vec<N,T>    operator| (U x, const Vec<N,T>& y) { return Vec<N,T>(x) |  y; }
-SINTU Vec<N,T>    operator&&(U x, const Vec<N,T>& y) { return Vec<N,T>(x) && y; }
-SINTU Vec<N,T>    operator||(U x, const Vec<N,T>& y) { return Vec<N,T>(x) || y; }
 SINTU Vec<N,M<T>> operator==(U x, const Vec<N,T>& y) { return Vec<N,T>(x) == y; }
 SINTU Vec<N,M<T>> operator!=(U x, const Vec<N,T>& y) { return Vec<N,T>(x) != y; }
 SINTU Vec<N,M<T>> operator<=(U x, const Vec<N,T>& y) { return Vec<N,T>(x) <= y; }
@@ -541,8 +440,6 @@ SINTU Vec<N,T>    operator/ (const Vec<N,T>& x, U y) { return x /  Vec<N,T>(y); 
 SINTU Vec<N,T>    operator^ (const Vec<N,T>& x, U y) { return x ^  Vec<N,T>(y); }
 SINTU Vec<N,T>    operator& (const Vec<N,T>& x, U y) { return x &  Vec<N,T>(y); }
 SINTU Vec<N,T>    operator| (const Vec<N,T>& x, U y) { return x |  Vec<N,T>(y); }
-SINTU Vec<N,T>    operator&&(const Vec<N,T>& x, U y) { return x && Vec<N,T>(y); }
-SINTU Vec<N,T>    operator||(const Vec<N,T>& x, U y) { return x || Vec<N,T>(y); }
 SINTU Vec<N,M<T>> operator==(const Vec<N,T>& x, U y) { return x == Vec<N,T>(y); }
 SINTU Vec<N,M<T>> operator!=(const Vec<N,T>& x, U y) { return x != Vec<N,T>(y); }
 SINTU Vec<N,M<T>> operator<=(const Vec<N,T>& x, U y) { return x <= Vec<N,T>(y); }
@@ -575,36 +472,50 @@ SINT Vec<N,T>& operator>>=(Vec<N,T>& x, int bits) { return (x = x >> bits); }
 // than if_then_else(), so it's sometimes useful to call it directly when we
 // think an entire expression should optimize away, e.g. min()/max().
 SINT Vec<N,T> naive_if_then_else(const Vec<N,M<T>>& cond, const Vec<N,T>& t, const Vec<N,T>& e) {
-    return bit_pun<Vec<N,T>>(( cond & bit_pun<Vec<N, M<T>>>(t)) |
-                             (~cond & bit_pun<Vec<N, M<T>>>(e)) );
+    return sk_bit_cast<Vec<N,T>>(( cond & sk_bit_cast<Vec<N, M<T>>>(t)) |
+                                 (~cond & sk_bit_cast<Vec<N, M<T>>>(e)) );
 }
 
 SIT Vec<1,T> if_then_else(const Vec<1,M<T>>& cond, const Vec<1,T>& t, const Vec<1,T>& e) {
     // In practice this scalar implementation is unlikely to be used.  See next if_then_else().
-    return bit_pun<Vec<1,T>>(( cond & bit_pun<Vec<1, M<T>>>(t)) |
-                             (~cond & bit_pun<Vec<1, M<T>>>(e)) );
+    return sk_bit_cast<Vec<1,T>>(( cond & sk_bit_cast<Vec<1, M<T>>>(t)) |
+                                 (~cond & sk_bit_cast<Vec<1, M<T>>>(e)) );
 }
 SINT Vec<N,T> if_then_else(const Vec<N,M<T>>& cond, const Vec<N,T>& t, const Vec<N,T>& e) {
     // Specializations inline here so they can generalize what types the apply to.
-#if SKVX_USE_SIMD && defined(__AVX2__)
+#if SKVX_USE_SIMD && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX2
     if constexpr (N*sizeof(T) == 32) {
-        return bit_pun<Vec<N,T>>(_mm256_blendv_epi8(bit_pun<__m256i>(e),
-                                                    bit_pun<__m256i>(t),
-                                                    bit_pun<__m256i>(cond)));
+        return sk_bit_cast<Vec<N,T>>(_mm256_blendv_epi8(sk_bit_cast<__m256i>(e),
+                                                        sk_bit_cast<__m256i>(t),
+                                                        sk_bit_cast<__m256i>(cond)));
     }
 #endif
-#if SKVX_USE_SIMD && defined(__SSE4_1__)
+#if SKVX_USE_SIMD && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
     if constexpr (N*sizeof(T) == 16) {
-        return bit_pun<Vec<N,T>>(_mm_blendv_epi8(bit_pun<__m128i>(e),
-                                                 bit_pun<__m128i>(t),
-                                                 bit_pun<__m128i>(cond)));
+        return sk_bit_cast<Vec<N,T>>(_mm_blendv_epi8(sk_bit_cast<__m128i>(e),
+                                                     sk_bit_cast<__m128i>(t),
+                                                     sk_bit_cast<__m128i>(cond)));
     }
 #endif
-#if SKVX_USE_SIMD && defined(__ARM_NEON)
+#if SKVX_USE_SIMD && defined(SK_ARM_HAS_NEON)
     if constexpr (N*sizeof(T) == 16) {
-        return bit_pun<Vec<N,T>>(vbslq_u8(bit_pun<uint8x16_t>(cond),
-                                          bit_pun<uint8x16_t>(t),
-                                          bit_pun<uint8x16_t>(e)));
+        return sk_bit_cast<Vec<N,T>>(vbslq_u8(sk_bit_cast<uint8x16_t>(cond),
+                                              sk_bit_cast<uint8x16_t>(t),
+                                              sk_bit_cast<uint8x16_t>(e)));
+    }
+#endif
+#if SKVX_USE_SIMD && SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LASX
+    if constexpr (N*sizeof(T) == 32) {
+        return sk_bit_cast<Vec<N,T>>(__lasx_xvbitsel_v(sk_bit_cast<__m256i>(e),
+                                                       sk_bit_cast<__m256i>(t),
+                                                       sk_bit_cast<__m256i>(cond)));
+    }
+#endif
+#if SKVX_USE_SIMD && SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
+    if constexpr (N*sizeof(T) == 16) {
+        return sk_bit_cast<Vec<N,T>>(__lsx_vbitsel_v(sk_bit_cast<__m128i>(e),
+                                                     sk_bit_cast<__m128i>(t),
+                                                     sk_bit_cast<__m128i>(cond)));
     }
 #endif
     // Recurse for large vectors to try to hit the specializations above.
@@ -620,34 +531,48 @@ SIT  bool any(const Vec<1,T>& x) { return x.val != 0; }
 SINT bool any(const Vec<N,T>& x) {
     // For any(), the _mm_testz intrinsics are correct and don't require comparing 'x' to 0, so it's
     // lower latency compared to _mm_movemask + _mm_compneq on plain SSE.
-#if SKVX_USE_SIMD && defined(__AVX2__)
+#if SKVX_USE_SIMD && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX2
     if constexpr (N*sizeof(T) == 32) {
-        return !_mm256_testz_si256(bit_pun<__m256i>(x), _mm256_set1_epi32(-1));
+        return !_mm256_testz_si256(sk_bit_cast<__m256i>(x), _mm256_set1_epi32(-1));
     }
 #endif
-#if SKVX_USE_SIMD && defined(__SSE_4_1__)
+#if SKVX_USE_SIMD && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
     if constexpr (N*sizeof(T) == 16) {
-        return !_mm_testz_si128(bit_pun<__m128i>(x), _mm_set1_epi32(-1));
+        return !_mm_testz_si128(sk_bit_cast<__m128i>(x), _mm_set1_epi32(-1));
     }
 #endif
-#if SKVX_USE_SIMD && defined(__SSE__)
+#if SKVX_USE_SIMD && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
     if constexpr (N*sizeof(T) == 16) {
         // On SSE, movemask checks only the MSB in each lane, which is fine if the lanes were set
         // directly from a comparison op (which sets all bits to 1 when true), but skvx::Vec<>
         // treats any non-zero value as true, so we have to compare 'x' to 0 before calling movemask
-        return _mm_movemask_ps(_mm_cmpneq_ps(bit_pun<__m128>(x), _mm_set1_ps(0))) != 0b0000;
+        return _mm_movemask_ps(_mm_cmpneq_ps(sk_bit_cast<__m128>(x), _mm_set1_ps(0))) != 0b0000;
     }
 #endif
 #if SKVX_USE_SIMD && defined(__aarch64__)
     // On 64-bit NEON, take the max across lanes, which will be non-zero if any lane was true.
     // The specific lane-size doesn't really matter in this case since it's really any set bit
     // that we're looking for.
-    if constexpr (N*sizeof(T) == 8 ) { return vmaxv_u8 (bit_pun<uint8x8_t> (x)) > 0; }
-    if constexpr (N*sizeof(T) == 16) { return vmaxvq_u8(bit_pun<uint8x16_t>(x)) > 0; }
+    if constexpr (N*sizeof(T) == 8 ) { return vmaxv_u8 (sk_bit_cast<uint8x8_t> (x)) > 0; }
+    if constexpr (N*sizeof(T) == 16) { return vmaxvq_u8(sk_bit_cast<uint8x16_t>(x)) > 0; }
 #endif
 #if SKVX_USE_SIMD && defined(__wasm_simd128__)
     if constexpr (N == 4 && sizeof(T) == 4) {
-        return wasm_i32x4_any_true(bit_pun<VExt<4,int>>(x));
+        return wasm_i32x4_any_true(sk_bit_cast<VExt<4,int>>(x));
+    }
+#endif
+#if SKVX_USE_SIMD && SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LASX
+    if constexpr (N*sizeof(T) == 32) {
+        v8i32 retv = (v8i32)__lasx_xvmskltz_w(__lasx_xvslt_wu(__lasx_xvldi(0),
+                                                              sk_bit_cast<__m256i>(x)));
+        return (retv[0] | retv[4]) != 0b0000;
+    }
+#endif
+#if SKVX_USE_SIMD && SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
+    if constexpr (N*sizeof(T) == 16) {
+        v4i32 retv = (v4i32)__lsx_vmskltz_w(__lsx_vslt_wu(__lsx_vldi(0),
+                                                          sk_bit_cast<__m128i>(x)));
+        return retv[0] != 0b0000;
     }
 #endif
     return any(x.lo)
@@ -658,25 +583,39 @@ SIT  bool all(const Vec<1,T>& x) { return x.val != 0; }
 SINT bool all(const Vec<N,T>& x) {
 // Unlike any(), we have to respect the lane layout, or we'll miss cases where a
 // true lane has a mix of 0 and 1 bits.
-#if SKVX_USE_SIMD && defined(__SSE__)
+#if SKVX_USE_SIMD && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
     // Unfortunately, the _mm_testc intrinsics don't let us avoid the comparison to 0 for all()'s
     // correctness, so always just use the plain SSE version.
     if constexpr (N == 4 && sizeof(T) == 4) {
-        return _mm_movemask_ps(_mm_cmpneq_ps(bit_pun<__m128>(x), _mm_set1_ps(0))) == 0b1111;
+        return _mm_movemask_ps(_mm_cmpneq_ps(sk_bit_cast<__m128>(x), _mm_set1_ps(0))) == 0b1111;
     }
 #endif
 #if SKVX_USE_SIMD && defined(__aarch64__)
     // On 64-bit NEON, take the min across the lanes, which will be non-zero if all lanes are != 0.
-    if constexpr (sizeof(T)==1 && N==8)  {return vminv_u8  (bit_pun<uint8x8_t> (x)) > 0;}
-    if constexpr (sizeof(T)==1 && N==16) {return vminvq_u8 (bit_pun<uint8x16_t>(x)) > 0;}
-    if constexpr (sizeof(T)==2 && N==4)  {return vminv_u16 (bit_pun<uint16x4_t>(x)) > 0;}
-    if constexpr (sizeof(T)==2 && N==8)  {return vminvq_u16(bit_pun<uint16x8_t>(x)) > 0;}
-    if constexpr (sizeof(T)==4 && N==2)  {return vminv_u32 (bit_pun<uint32x2_t>(x)) > 0;}
-    if constexpr (sizeof(T)==4 && N==4)  {return vminvq_u32(bit_pun<uint32x4_t>(x)) > 0;}
+    if constexpr (sizeof(T)==1 && N==8)  {return vminv_u8  (sk_bit_cast<uint8x8_t> (x)) > 0;}
+    if constexpr (sizeof(T)==1 && N==16) {return vminvq_u8 (sk_bit_cast<uint8x16_t>(x)) > 0;}
+    if constexpr (sizeof(T)==2 && N==4)  {return vminv_u16 (sk_bit_cast<uint16x4_t>(x)) > 0;}
+    if constexpr (sizeof(T)==2 && N==8)  {return vminvq_u16(sk_bit_cast<uint16x8_t>(x)) > 0;}
+    if constexpr (sizeof(T)==4 && N==2)  {return vminv_u32 (sk_bit_cast<uint32x2_t>(x)) > 0;}
+    if constexpr (sizeof(T)==4 && N==4)  {return vminvq_u32(sk_bit_cast<uint32x4_t>(x)) > 0;}
 #endif
 #if SKVX_USE_SIMD && defined(__wasm_simd128__)
     if constexpr (N == 4 && sizeof(T) == 4) {
-        return wasm_i32x4_all_true(bit_pun<VExt<4,int>>(x));
+        return wasm_i32x4_all_true(sk_bit_cast<VExt<4,int>>(x));
+    }
+#endif
+#if SKVX_USE_SIMD && SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LASX
+    if constexpr (N == 8 && sizeof(T) == 4) {
+        v8i32 retv = (v8i32)__lasx_xvmskltz_w(__lasx_xvslt_wu(__lasx_xvldi(0),
+                                                              sk_bit_cast<__m256i>(x)));
+        return (retv[0] & retv[4]) == 0b1111;
+    }
+#endif
+#if SKVX_USE_SIMD && SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
+    if constexpr (N == 4 && sizeof(T) == 4) {
+        v4i32 retv = (v4i32)__lsx_vmskltz_w(__lsx_vslt_wu(__lsx_vldi(0),
+                                                          sk_bit_cast<__m128i>(x)));
+        return retv[0] == 0b1111;
     }
 #endif
     return all(x.lo)
@@ -778,14 +717,24 @@ SI Vec<1,int> lrint(const Vec<1,float>& x) {
     return (int)lrintf(x.val);
 }
 SIN Vec<N,int> lrint(const Vec<N,float>& x) {
-#if SKVX_USE_SIMD && defined(__AVX__)
+#if SKVX_USE_SIMD && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX
     if constexpr (N == 8) {
-        return bit_pun<Vec<N,int>>(_mm256_cvtps_epi32(bit_pun<__m256>(x)));
+        return sk_bit_cast<Vec<N,int>>(_mm256_cvtps_epi32(sk_bit_cast<__m256>(x)));
     }
 #endif
-#if SKVX_USE_SIMD && defined(__SSE__)
+#if SKVX_USE_SIMD && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
     if constexpr (N == 4) {
-        return bit_pun<Vec<N,int>>(_mm_cvtps_epi32(bit_pun<__m128>(x)));
+        return sk_bit_cast<Vec<N,int>>(_mm_cvtps_epi32(sk_bit_cast<__m128>(x)));
+    }
+#endif
+#if SKVX_USE_SIMD && SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LASX
+    if constexpr (N == 8) {
+        return sk_bit_cast<Vec<N,int>>(__lasx_xvftint_w_s(sk_bit_cast<__m256>(x)));
+    }
+#endif
+#if SKVX_USE_SIMD && SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
+    if constexpr (N == 4) {
+        return sk_bit_cast<Vec<N,int>>(__lsx_vftint_w_s(sk_bit_cast<__m128>(x)));
     }
 #endif
     return join(lrint(x.lo),
@@ -794,67 +743,75 @@ SIN Vec<N,int> lrint(const Vec<N,float>& x) {
 
 SIN Vec<N,float> fract(const Vec<N,float>& x) { return x - floor(x); }
 
-// Assumes inputs are finite and treat/flush denorm half floats as/to zero.
-// Key constants to watch for:
-//    - a float is 32-bit, 1-8-23 sign-exponent-mantissa, with 127 exponent bias;
-//    - a half  is 16-bit, 1-5-10 sign-exponent-mantissa, with  15 exponent bias.
-SIN Vec<N,uint16_t> to_half_finite_ftz(const Vec<N,float>& x) {
-    Vec<N,uint32_t> sem = bit_pun<Vec<N,uint32_t>>(x),
-                    s   = sem & 0x8000'0000,
-                     em = sem ^ s,
-                is_norm =  em > 0x387f'd000, // halfway between largest f16 denorm and smallest norm
-                   norm = (em>>13) - ((127-15)<<10);
-    return cast<uint16_t>((s>>16) | (is_norm & norm));
-}
-SIN Vec<N,float> from_half_finite_ftz(const Vec<N,uint16_t>& x) {
-    Vec<N,uint32_t> wide = cast<uint32_t>(x),
-                      s  = wide & 0x8000,
-                      em = wide ^ s,
-                 is_norm =   em > 0x3ff,
-                    norm = (em<<13) + ((127-15)<<23);
-    return bit_pun<Vec<N,float>>((s<<16) | (is_norm & norm));
-}
-
-// Like if_then_else(), these N=1 base cases won't actually be used unless explicitly called.
-SI Vec<1,uint16_t> to_half(const Vec<1,float>&    x) { return   to_half_finite_ftz(x); }
-SI Vec<1,float>  from_half(const Vec<1,uint16_t>& x) { return from_half_finite_ftz(x); }
-
+// Converts float to half, rounding to nearest even, and supporting de-normal f16 conversion,
+// and overflow to f16 infinity. Should not be called with NaNs, since it can convert NaN->inf.
+// KEEP IN SYNC with skcms' Half_from_F to ensure that f16 colors are computed consistently in both
+// skcms and skvx.
 SIN Vec<N,uint16_t> to_half(const Vec<N,float>& x) {
-#if SKVX_USE_SIMD && defined(__F16C__)
-    if constexpr (N == 8) {
-        return bit_pun<Vec<N,uint16_t>>(_mm256_cvtps_ph(bit_pun<__m256>(x),
-                                                        _MM_FROUND_TO_NEAREST_INT));
-    }
-#endif
-#if SKVX_USE_SIMD && defined(__aarch64__)
-    if constexpr (N == 4) {
-        return bit_pun<Vec<N,uint16_t>>(vcvt_f16_f32(bit_pun<float32x4_t>(x)));
+    assert(all(x == x)); // No NaNs should reach this function
 
-    }
-#endif
+    // Intrinsics for float->half tend to operate on 4 lanes, and the default implementation has
+    // enough instructions that it's better to split and join on 128 bits groups vs.
+    // recursing for each min/max/shift/etc.
     if constexpr (N > 4) {
         return join(to_half(x.lo),
                     to_half(x.hi));
     }
-    return to_half_finite_ftz(x);
-}
 
-SIN Vec<N,float> from_half(const Vec<N,uint16_t>& x) {
-#if SKVX_USE_SIMD && defined(__F16C__)
-    if constexpr (N == 8) {
-        return bit_pun<Vec<N,float>>(_mm256_cvtph_ps(bit_pun<__m128i>(x)));
-    }
-#endif
 #if SKVX_USE_SIMD && defined(__aarch64__)
     if constexpr (N == 4) {
-        return bit_pun<Vec<N,float>>(vcvt_f32_f16(bit_pun<float16x4_t>(x)));
+        return sk_bit_cast<Vec<N,uint16_t>>(vcvt_f16_f32(sk_bit_cast<float32x4_t>(x)));
+
     }
 #endif
+
+#define I(x) sk_bit_cast<Vec<N,int32_t>>(x)
+#define F(x) sk_bit_cast<Vec<N,float>>(x)
+    Vec<N,int32_t> sem = I(x),
+                   s   = sem & 0x8000'0000,
+                    em = min(sem ^ s, 0x4780'0000), // |x| clamped to f16 infinity
+                 // F(em)*8192 increases the exponent by 13, which when added back to em will shift
+                 // the mantissa bits 13 to the right. We clamp to 1/2 for subnormal values, which
+                 // automatically shifts the mantissa to match 2^-14 expected for a subnorm f16.
+                 magic = I(max(F(em) * 8192.f, 0.5f)) & (255 << 23),
+               rounded = I((F(em) + F(magic))), // shift mantissa with automatic round-to-even
+                   // Subtract 127 for f32 bias, subtract 13 to undo the *8192, subtract 1 to remove
+                   // the implicit leading 1., and add 15 to get the f16 biased exponent.
+                   exp = ((magic >> 13) - ((127-15+13+1)<<10)), // shift and re-bias exponent
+                   f16 = rounded + exp; // use + if 'rounded' rolled over into first exponent bit
+    return cast<uint16_t>((s>>16) | f16);
+#undef I
+#undef F
+}
+
+// Converts from half to float, preserving NaN and +/- infinity.
+// KEEP IN SYNC with skcms' F_from_Half to ensure that f16 colors are computed consistently in both
+// skcms and skvx.
+SIN Vec<N,float> from_half(const Vec<N,uint16_t>& x) {
     if constexpr (N > 4) {
         return join(from_half(x.lo),
                     from_half(x.hi));
     }
-    return from_half_finite_ftz(x);
+
+#if SKVX_USE_SIMD && defined(__aarch64__)
+    if constexpr (N == 4) {
+        return sk_bit_cast<Vec<N,float>>(vcvt_f32_f16(sk_bit_cast<float16x4_t>(x)));
+    }
+#endif
+
+    Vec<N,int32_t> wide = cast<int32_t>(x),
+                      s  = wide & 0x8000,
+                      em = wide ^ s,
+              inf_or_nan =  (em >= (31 << 10)) & (255 << 23),  // Expands exponent to fill 8 bits
+                 is_norm =   em > 0x3ff,
+                     // subnormal f16's are 2^-14*0.[m0:9] == 2^-24*[m0:9].0
+                     sub = sk_bit_cast<Vec<N,int32_t>>((cast<float>(em) * (1.f/(1<<24)))),
+                    norm = ((em<<13) + ((127-15)<<23)), // Shifts mantissa, shifts + re-biases exp
+                  finite = (is_norm & norm) | (~is_norm & sub);
+    // If 'x' is f16 +/- infinity, inf_or_nan will be the filled 8-bit exponent but 'norm' will be
+    // all 0s since 'x's mantissa is 0. Thus norm | inf_or_nan becomes f32 infinity. However, if
+    // 'x' is an f16 NaN, some bits of 'norm' will be non-zero, so it stays an f32 NaN after the OR.
+    return sk_bit_cast<Vec<N,float>>((s<<16) | finite | inf_or_nan);
 }
 
 // div255(x) = (x + 127) / 255 is a bit-exact rounding divide-by-255, packing down to 8-bit.
@@ -875,14 +832,20 @@ SIN Vec<N,uint8_t> approx_scale(const Vec<N,uint8_t>& x, const Vec<N,uint8_t>& y
 // saturated_add(x,y) sums values and clamps to the maximum value instead of overflowing.
 SINT std::enable_if_t<std::is_unsigned_v<T>, Vec<N,T>> saturated_add(const Vec<N,T>& x,
                                                                      const Vec<N,T>& y) {
-#if SKVX_USE_SIMD && (defined(__SSE__) || defined(__ARM_NEON))
+#if SKVX_USE_SIMD && (SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1 || defined(SK_ARM_HAS_NEON) || \
+        SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX)
     // Both SSE and ARM have 16-lane saturated adds, so use intrinsics for those and recurse down
     // or join up to take advantage.
     if constexpr (N == 16 && sizeof(T) == 1) {
-        #if defined(__SSE__)
-        return bit_pun<Vec<N,T>>(_mm_adds_epu8(bit_pun<__m128i>(x), bit_pun<__m128i>(y)));
-        #else  // __ARM_NEON
-        return bit_pun<Vec<N,T>>(vqaddq_u8(bit_pun<uint8x16_t>(x), bit_pun<uint8x16_t>(y)));
+        #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
+        return sk_bit_cast<Vec<N,T>>(_mm_adds_epu8(sk_bit_cast<__m128i>(x),
+                                                   sk_bit_cast<__m128i>(y)));
+        #elif SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
+        return sk_bit_cast<Vec<N,T>>(__lsx_vsadd_bu(sk_bit_cast<__m128i>(x),
+                                                    sk_bit_cast<__m128i>(y)));
+        #else  // SK_ARM_HAS_NEON
+        return sk_bit_cast<Vec<N,T>>(vqaddq_u8(sk_bit_cast<uint8x16_t>(x),
+                                               sk_bit_cast<uint8x16_t>(y)));
         #endif
     } else if constexpr (N < 16 && sizeof(T) == 1) {
         return saturated_add(join(x,x), join(y,y)).lo;
@@ -922,7 +885,7 @@ public:
     }
 
     Vec<4, uint32_t> divide(const Vec<4, uint32_t>& numerator) const {
-#if SKVX_USE_SIMD && defined(__ARM_NEON)
+#if SKVX_USE_SIMD && defined(SK_ARM_HAS_NEON)
         uint64x2_t hi = vmull_n_u32(vget_high_u32(to_vext(numerator)), fDivisorFactor);
         uint64x2_t lo = vmull_n_u32(vget_low_u32(to_vext(numerator)),  fDivisorFactor);
 
@@ -942,7 +905,7 @@ private:
 
 SIN Vec<N,uint16_t> mull(const Vec<N,uint8_t>& x,
                          const Vec<N,uint8_t>& y) {
-#if SKVX_USE_SIMD && defined(__ARM_NEON)
+#if SKVX_USE_SIMD && defined(SK_ARM_HAS_NEON)
     // With NEON we can do eight u8*u8 -> u16 in one instruction, vmull_u8 (read, mul-long).
     if constexpr (N == 8) {
         return to_vec<8,uint16_t>(vmull_u8(to_vext(x), to_vext(y)));
@@ -958,7 +921,7 @@ SIN Vec<N,uint16_t> mull(const Vec<N,uint8_t>& x,
 
 SIN Vec<N,uint32_t> mull(const Vec<N,uint16_t>& x,
                          const Vec<N,uint16_t>& y) {
-#if SKVX_USE_SIMD && defined(__ARM_NEON)
+#if SKVX_USE_SIMD && defined(SK_ARM_HAS_NEON)
     // NEON can do four u16*u16 -> u32 in one instruction, vmull_u16
     if constexpr (N == 4) {
         return to_vec<4,uint32_t>(vmull_u16(to_vext(x), to_vext(y)));
@@ -974,10 +937,20 @@ SIN Vec<N,uint32_t> mull(const Vec<N,uint16_t>& x,
 
 SIN Vec<N,uint16_t> mulhi(const Vec<N,uint16_t>& x,
                           const Vec<N,uint16_t>& y) {
-#if SKVX_USE_SIMD && defined(__SSE__)
+#if SKVX_USE_SIMD && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
     // Use _mm_mulhi_epu16 for 8xuint16_t and join or split to get there.
     if constexpr (N == 8) {
-        return bit_pun<Vec<8,uint16_t>>(_mm_mulhi_epu16(bit_pun<__m128i>(x), bit_pun<__m128i>(y)));
+        return sk_bit_cast<Vec<8,uint16_t>>(_mm_mulhi_epu16(sk_bit_cast<__m128i>(x),
+                                                            sk_bit_cast<__m128i>(y)));
+    } else if constexpr (N < 8) {
+        return mulhi(join(x,x), join(y,y)).lo;
+    } else { // N > 8
+        return join(mulhi(x.lo, y.lo), mulhi(x.hi, y.hi));
+    }
+#elif SKVX_USE_SIMD && SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
+    if constexpr (N == 8) {
+        return sk_bit_cast<Vec<8,uint16_t>>(__lsx_vmuh_hu(sk_bit_cast<__m128i>(x),
+                                                          sk_bit_cast<__m128i>(y)));
     } else if constexpr (N < 8) {
         return mulhi(join(x,x), join(y,y)).lo;
     } else { // N > 8
@@ -1055,7 +1028,7 @@ SINT void strided_load4(const T* v,
     strided_load4(v, a.lo, b.lo, c.lo, d.lo);
     strided_load4(v + 4*(N/2), a.hi, b.hi, c.hi, d.hi);
 }
-#if SKVX_USE_SIMD && defined(__ARM_NEON)
+#if SKVX_USE_SIMD && defined(SK_ARM_HAS_NEON)
 #define IMPL_LOAD4_TRANSPOSED(N, T, VLD) \
 SI void strided_load4(const T* v, \
                       Vec<N,T>& a, \
@@ -1063,10 +1036,10 @@ SI void strided_load4(const T* v, \
                       Vec<N,T>& c, \
                       Vec<N,T>& d) { \
     auto mat = VLD(v); \
-    a = bit_pun<Vec<N,T>>(mat.val[0]); \
-    b = bit_pun<Vec<N,T>>(mat.val[1]); \
-    c = bit_pun<Vec<N,T>>(mat.val[2]); \
-    d = bit_pun<Vec<N,T>>(mat.val[3]); \
+    a = sk_bit_cast<Vec<N,T>>(mat.val[0]); \
+    b = sk_bit_cast<Vec<N,T>>(mat.val[1]); \
+    c = sk_bit_cast<Vec<N,T>>(mat.val[2]); \
+    d = sk_bit_cast<Vec<N,T>>(mat.val[3]); \
 }
 IMPL_LOAD4_TRANSPOSED(2, uint32_t, vld4_u32)
 IMPL_LOAD4_TRANSPOSED(4, uint16_t, vld4_u16)
@@ -1084,7 +1057,7 @@ IMPL_LOAD4_TRANSPOSED(16, int8_t, vld4q_s8)
 IMPL_LOAD4_TRANSPOSED(4, float, vld4q_f32)
 #undef IMPL_LOAD4_TRANSPOSED
 
-#elif SKVX_USE_SIMD && defined(__SSE__)
+#elif SKVX_USE_SIMD && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
 
 SI void strided_load4(const float* v,
                       Vec<4,float>& a,
@@ -1096,10 +1069,39 @@ SI void strided_load4(const float* v,
     __m128 c_ = _mm_loadu_ps(v+8);
     __m128 d_ = _mm_loadu_ps(v+12);
     _MM_TRANSPOSE4_PS(a_, b_, c_, d_);
-    a = bit_pun<Vec<4,float>>(a_);
-    b = bit_pun<Vec<4,float>>(b_);
-    c = bit_pun<Vec<4,float>>(c_);
-    d = bit_pun<Vec<4,float>>(d_);
+    a = sk_bit_cast<Vec<4,float>>(a_);
+    b = sk_bit_cast<Vec<4,float>>(b_);
+    c = sk_bit_cast<Vec<4,float>>(c_);
+    d = sk_bit_cast<Vec<4,float>>(d_);
+}
+
+#elif SKVX_USE_SIMD && SKVX_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
+#define _LSX_TRANSPOSE4(row0, row1, row2, row3) \
+do {                                            \
+    __m128i __t0 = __lsx_vilvl_w (row1, row0);  \
+    __m128i __t1 = __lsx_vilvl_w (row3, row2);  \
+    __m128i __t2 = __lsx_vilvh_w (row1, row0);  \
+    __m128i __t3 = __lsx_vilvh_w (row3, row2);  \
+    (row0) = __lsx_vilvl_d (__t1, __t0);        \
+    (row1) = __lsx_vilvh_d (__t1, __t0);        \
+    (row2) = __lsx_vilvl_d (__t3, __t2);        \
+    (row3) = __lsx_vilvh_d (__t3, __t2);        \
+} while (0)
+
+SI void strided_load4(const int* v,
+                      Vec<4,int>& a,
+                      Vec<4,int>& b,
+                      Vec<4,int>& c,
+                      Vec<4,int>& d) {
+    __m128i a_ = __lsx_vld(v, 0);
+    __m128i b_ = __lsx_vld(v, 16);
+    __m128i c_ = __lsx_vld(v, 32);
+    __m128i d_ = __lsx_vld(v, 48);
+    _LSX_TRANSPOSE4(a_, b_, c_, d_);
+    a = sk_bit_cast<Vec<4,int>>(a_);
+    b = sk_bit_cast<Vec<4,int>>(b_);
+    c = sk_bit_cast<Vec<4,int>>(c_);
+    d = sk_bit_cast<Vec<4,int>>(d_);
 }
 #endif
 
@@ -1115,12 +1117,12 @@ SINT void strided_load2(const T* v, Vec<N,T>& a, Vec<N,T>& b) {
     strided_load2(v, a.lo, b.lo);
     strided_load2(v + 2*(N/2), a.hi, b.hi);
 }
-#if SKVX_USE_SIMD && defined(__ARM_NEON)
+#if SKVX_USE_SIMD && defined(SK_ARM_HAS_NEON)
 #define IMPL_LOAD2_TRANSPOSED(N, T, VLD) \
 SI void strided_load2(const T* v, Vec<N,T>& a, Vec<N,T>& b) { \
     auto mat = VLD(v); \
-    a = bit_pun<Vec<N,T>>(mat.val[0]); \
-    b = bit_pun<Vec<N,T>>(mat.val[1]); \
+    a = sk_bit_cast<Vec<N,T>>(mat.val[0]); \
+    b = sk_bit_cast<Vec<N,T>>(mat.val[1]); \
 }
 IMPL_LOAD2_TRANSPOSED(2, uint32_t, vld2_u32)
 IMPL_LOAD2_TRANSPOSED(4, uint16_t, vld2_u16)
@@ -1156,6 +1158,10 @@ using byte16  = Vec<16, uint8_t>;
 using int2    = Vec< 2, int32_t>;
 using int4    = Vec< 4, int32_t>;
 using int8    = Vec< 8, int32_t>;
+
+using ushort2 = Vec< 2, uint16_t>;
+using ushort4 = Vec< 4, uint16_t>;
+using ushort8 = Vec< 8, uint16_t>;
 
 using uint2   = Vec< 2, uint32_t>;
 using uint4   = Vec< 4, uint32_t>;

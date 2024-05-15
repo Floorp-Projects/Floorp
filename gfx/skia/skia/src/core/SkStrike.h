@@ -8,27 +8,30 @@
 #define SkStrike_DEFINED
 
 #include "include/core/SkFontMetrics.h"
-#include "include/core/SkFontTypes.h"
 #include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
 #include "include/private/base/SkMutex.h"
-#include "include/private/base/SkTemplates.h"
+#include "include/private/base/SkSpan_impl.h"
+#include "include/private/base/SkThreadAnnotations.h"
 #include "src/base/SkArenaAlloc.h"
-#include "src/core/SkDescriptor.h"
 #include "src/core/SkGlyph.h"
-#include "src/core/SkGlyphRunPainter.h"
+#include "src/core/SkScalerContext.h"
 #include "src/core/SkStrikeSpec.h"
 #include "src/core/SkTHash.h"
+#include "src/text/StrikeForGPU.h"
 
+#include <cstddef>
 #include <memory>
+#include <vector>
 
-class SkScalerContext;
+class SkDescriptor;
+class SkDrawable;
+class SkPath;
+class SkReadBuffer;
 class SkStrikeCache;
 class SkTraceMemoryDump;
-
-namespace sktext {
-union IDOrPath;
-union IDOrDrawable;
-}  // namespace sktext
+class SkWriteBuffer;
 
 class SkStrikePinner {
 public:
@@ -175,7 +178,7 @@ private:
     // SkGlyphDigest's fIndex field stores the index. This pointer provides an unchanging
     // reference to the SkGlyph as long as the strike is alive, and fGlyphForIndex
     // provides a dense index for glyphs.
-    SkTHashTable<SkGlyphDigest, SkPackedGlyphID, SkGlyphDigest>
+    skia_private::THashTable<SkGlyphDigest, SkPackedGlyphID, SkGlyphDigest>
             fDigestForPackedGlyphID SK_GUARDED_BY(fStrikeLock);
 
     // Maps from a glyphIndex to a glyph

@@ -18,6 +18,7 @@
 #undef GetGlyphIndices
 
 #include "include/core/SkData.h"
+#include "include/core/SkFontTypes.h"
 #include "include/private/base/SkTo.h"
 #include "src/core/SkFontDescriptor.h"
 #include "src/core/SkFontStream.h"
@@ -62,11 +63,13 @@ HRESULT DWriteFontTypeface::initializePalette() {
         "Could not retrieve palette entries.");
 
     fPalette.reset(new SkColor[dwPaletteEntryCount]);
+    fDWPalette.reset(new DWRITE_COLOR_F[dwPaletteEntryCount]);
     for (UINT32 i = 0; i < dwPaletteEntryCount; ++i) {
         fPalette[i] = SkColorSetARGB(sk_float_round2int(dwPaletteEntry[i].a * 255),
                                      sk_float_round2int(dwPaletteEntry[i].r * 255),
                                      sk_float_round2int(dwPaletteEntry[i].g * 255),
                                      sk_float_round2int(dwPaletteEntry[i].b * 255));
+        fDWPalette[i] = dwPaletteEntry[i];
     }
 
     for (int i = 0; i < fRequestedPalette.overrideCount; ++i) {
@@ -75,6 +78,16 @@ HRESULT DWriteFontTypeface::initializePalette() {
             SkTo<UINT32>(paletteOverride.index) < dwPaletteEntryCount)
         {
             fPalette[paletteOverride.index] = paletteOverride.color;
+
+            // Avoid brace initialization as DWRITE_COLOR_F can be defined as four floats
+            // (dxgitype.h, d3d9types.h) or four unions of two floats (dwrite_2.h, d3dtypes.h).
+            // The type changed in Direct3D 10, but the change does not appear to be documented.
+            const SkColor4f skColor = SkColor4f::FromColor(paletteOverride.color);
+            DWRITE_COLOR_F& dwColor = fDWPalette[paletteOverride.index];
+            dwColor.r = skColor.fR;
+            dwColor.g = skColor.fG;
+            dwColor.b = skColor.fB;
+            dwColor.a = skColor.fA;
         }
     }
     fPaletteEntryCount = dwPaletteEntryCount;
@@ -120,6 +133,11 @@ DWriteFontTypeface::DWriteFontTypeface(const SkFontStyle& style,
     if (!SUCCEEDED(fDWriteFontFace->QueryInterface(&fDWriteFontFace4))) {
         SkASSERT_RELEASE(nullptr == fDWriteFontFace4.get());
     }
+#if DWRITE_CORE || (defined(NTDDI_WIN11_ZN) && NTDDI_VERSION >= NTDDI_WIN11_ZN)
+    if (!SUCCEEDED(fDWriteFontFace->QueryInterface(&fDWriteFontFace7))) {
+        SkASSERT_RELEASE(nullptr == fDWriteFontFace7/*.get()*/);
+    }
+#endif
     if (!SUCCEEDED(fFactory->QueryInterface(&fFactory2))) {
         SkASSERT_RELEASE(nullptr == fFactory2.get());
     }
@@ -132,7 +150,13 @@ DWriteFontTypeface::DWriteFontTypeface(const SkFontStyle& style,
     this->initializePalette();
 }
 
-DWriteFontTypeface::~DWriteFontTypeface() = default;
+DWriteFontTypeface::~DWriteFontTypeface() {
+#if DWRITE_CORE || (defined(NTDDI_WIN11_ZN) && NTDDI_VERSION >= NTDDI_WIN11_ZN)
+    if (fDWriteFontFace7) {
+        fDWriteFontFace7->Release();
+    }
+#endif
+}
 
 DWriteFontTypeface::Loaders::~Loaders() {
     // Don't return if any fail, just keep going to free up as much as possible.
@@ -643,20 +667,11 @@ std::unique_ptr<SkAdvancedTypefaceMetrics> DWriteFontTypeface::onGetAdvancedMetr
         }
     }
 
-    // SkAdvancedTypefaceMetrics::fFontName must actually be a family name.
-    SkTScopedComPtr<IDWriteLocalizedStrings> familyNames;
-    if (FAILED(fDWriteFontFamily->GetFamilyNames(&familyNames)) ||
-        FAILED(sk_get_locale_string(familyNames.get(), nullptr, &info->fFontName)))
-    {
-        SkDEBUGF("Unable to get family name for typeface 0x%p\n", this);
-    }
-    if (info->fPostScriptName.isEmpty()) {
-        info->fPostScriptName = info->fFontName;
-    }
-
     DWRITE_FONT_FACE_TYPE fontType = fDWriteFontFace->GetType();
     if (fontType != DWRITE_FONT_FACE_TYPE_TRUETYPE &&
-        fontType != DWRITE_FONT_FACE_TYPE_TRUETYPE_COLLECTION)
+        fontType != DWRITE_FONT_FACE_TYPE_CFF &&
+        fontType != DWRITE_FONT_FACE_TYPE_TRUETYPE_COLLECTION &&
+        fontType != DWRITE_FONT_FACE_TYPE_OPENTYPE_COLLECTION)
     {
         return info;
     }

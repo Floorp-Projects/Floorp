@@ -10,10 +10,10 @@
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRRect.h"
 #include "include/private/SkPathRef.h"
-#include "include/private/base/SkPathEnums.h"
 #include "include/private/base/SkSafe32.h"
 #include "src/base/SkVx.h"
 #include "src/core/SkGeometry.h"
+#include "src/core/SkPathEnums.h"
 #include "src/core/SkPathPriv.h"
 
 #include <algorithm>
@@ -73,8 +73,8 @@ SkPathBuilder& SkPathBuilder::operator=(const SkPath& src) {
 }
 
 void SkPathBuilder::incReserve(int extraPtCount, int extraVbCount) {
-    fPts.reserve_back(  Sk32_sat_add(fPts.size(),   extraPtCount));
-    fVerbs.reserve_back(Sk32_sat_add(fVerbs.size(), extraVbCount));
+    fPts.reserve_exact(Sk32_sat_add(fPts.size(), extraPtCount));
+    fVerbs.reserve_exact(Sk32_sat_add(fVerbs.size(), extraVbCount));
 }
 
 SkRect SkPathBuilder::computeBounds() const {
@@ -196,12 +196,12 @@ SkPath SkPathBuilder::make(sk_sp<SkPathRef> pr) const {
 
     switch (fIsA) {
         case kIsA_Oval:
-            pr->setIsOval( true, fIsACCW, fIsAStart);
+            pr->setIsOval(fIsACCW, fIsAStart);
             convexity = SkPathConvexity::kConvex;
             dir = fIsACCW ? SkPathFirstDirection::kCCW : SkPathFirstDirection::kCW;
             break;
         case kIsA_RRect:
-            pr->setIsRRect(true, fIsACCW, fIsAStart);
+            pr->setIsRRect(fIsACCW, fIsAStart);
             convexity = SkPathConvexity::kConvex;
             dir = fIsACCW ? SkPathFirstDirection::kCCW : SkPathFirstDirection::kCW;
             break;

@@ -6,21 +6,26 @@
  */
 
 #include "include/core/SkSpan.h"
-#include "include/private/SkSLModifiers.h"
-#include "include/private/SkSLString.h"
-#include "include/sksl/SkSLErrorReporter.h"
 #include "src/sksl/SkSLBuiltinTypes.h"
 #include "src/sksl/SkSLCompiler.h"
 #include "src/sksl/SkSLContext.h"
+#include "src/sksl/SkSLErrorReporter.h"
 #include "src/sksl/SkSLProgramSettings.h"
-#include "src/sksl/SkSLThreadContext.h"
-#include "src/sksl/ir/SkSLField.h"
+#include "src/sksl/SkSLString.h"
+#include "src/sksl/ir/SkSLFieldSymbol.h"
 #include "src/sksl/ir/SkSLInterfaceBlock.h"
+#include "src/sksl/ir/SkSLLayout.h"
+#include "src/sksl/ir/SkSLModifierFlags.h"
+#include "src/sksl/ir/SkSLModifiers.h"
 #include "src/sksl/ir/SkSLSymbolTable.h"
+#include "src/sksl/ir/SkSLVarDeclarations.h"
 
 #include <cstddef>
 #include <cstdint>
-#include <vector>
+#include <optional>
+#include <utility>
+
+using namespace skia_private;
 
 namespace SkSL {
 
@@ -33,9 +38,9 @@ InterfaceBlock::~InterfaceBlock() {
     }
 }
 
-static std::optional<int> find_rt_adjust_index(SkSpan<const Type::Field> fields) {
+static std::optional<int> find_rt_adjust_index(SkSpan<const Field> fields) {
     for (size_t index = 0; index < fields.size(); ++index) {
-        const SkSL::Type::Field& f = fields[index];
+        const SkSL::Field& f = fields[index];
         if (f.fName == SkSL::Compiler::RTADJUST_NAME) {
             return index;
         }
@@ -46,71 +51,95 @@ static std::optional<int> find_rt_adjust_index(SkSpan<const Type::Field> fields)
 
 std::unique_ptr<InterfaceBlock> InterfaceBlock::Convert(const Context& context,
                                                         Position pos,
-                                                        Variable* variable,
-                                                        std::shared_ptr<SymbolTable> symbols) {
+                                                        const Modifiers& modifiers,
+                                                        std::string_view typeName,
+                                                        TArray<Field> fields,
+                                                        std::string_view varName,
+                                                        int arraySize) {
     if (SkSL::ProgramKind kind = context.fConfig->fKind; !ProgramConfig::IsFragment(kind) &&
                                                          !ProgramConfig::IsVertex(kind) &&
                                                          !ProgramConfig::IsCompute(kind)) {
         context.fErrors->error(pos, "interface blocks are not allowed in this kind of program");
         return nullptr;
     }
-
     // Find sk_RTAdjust and error out if it's not of type `float4`.
-    SkSpan<const Type::Field> fields = variable->type().componentType().fields();
     std::optional<int> rtAdjustIndex = find_rt_adjust_index(fields);
     if (rtAdjustIndex.has_value()) {
-        const Type::Field& rtAdjustField = fields[*rtAdjustIndex];
+        const Field& rtAdjustField = fields[*rtAdjustIndex];
         if (!rtAdjustField.fType->matches(*context.fTypes.fFloat4)) {
             context.fErrors->error(rtAdjustField.fPosition, "sk_RTAdjust must have type 'float4'");
             return nullptr;
         }
     }
-    return InterfaceBlock::Make(context, pos, variable, rtAdjustIndex, symbols);
+    // Build a struct type corresponding to the passed-in fields.
+    const Type* baseType = context.fSymbolTable->add(context,
+                                                     Type::MakeStructType(context,
+                                                                          pos,
+                                                                          typeName,
+                                                                          std::move(fields),
+                                                                          /*interfaceBlock=*/true));
+    // Array-ify the type if necessary.
+    const Type* type = baseType;
+    if (arraySize > 0) {
+        arraySize = type->convertArraySize(context, pos, pos, arraySize);
+        if (!arraySize) {
+            return nullptr;
+        }
+        type = context.fSymbolTable->addArrayDimension(context, type, arraySize);
+    }
+
+    // Error-check the interface block as if it were being declared as a global variable.
+    VarDeclaration::ErrorCheck(context,
+                               pos,
+                               modifiers.fPosition,
+                               modifiers.fLayout,
+                               modifiers.fFlags,
+                               type,
+                               baseType,
+                               VariableStorage::kGlobal);
+
+    // Create a global variable for the Interface Block.
+    std::unique_ptr<SkSL::Variable> var = SkSL::Variable::Convert(context,
+                                                                  pos,
+                                                                  modifiers.fPosition,
+                                                                  modifiers.fLayout,
+                                                                  modifiers.fFlags,
+                                                                  type,
+                                                                  pos,
+                                                                  varName,
+                                                                  VariableStorage::kGlobal);
+    return InterfaceBlock::Make(context,
+                                pos,
+                                context.fSymbolTable->takeOwnershipOfSymbol(std::move(var)));
 }
 
 std::unique_ptr<InterfaceBlock> InterfaceBlock::Make(const Context& context,
                                                      Position pos,
-                                                     Variable* variable,
-                                                     std::optional<int> rtAdjustIndex,
-                                                     std::shared_ptr<SymbolTable> symbols) {
+                                                     Variable* variable) {
     SkASSERT(ProgramConfig::IsFragment(context.fConfig->fKind) ||
              ProgramConfig::IsVertex(context.fConfig->fKind) ||
              ProgramConfig::IsCompute(context.fConfig->fKind));
 
     SkASSERT(variable->type().componentType().isInterfaceBlock());
-    SkSpan<const Type::Field> fields = variable->type().componentType().fields();
-
-    if (rtAdjustIndex.has_value()) {
-        [[maybe_unused]] const Type::Field& rtAdjustField = fields[*rtAdjustIndex];
-        SkASSERT(rtAdjustField.fName == SkSL::Compiler::RTADJUST_NAME);
-        SkASSERT(rtAdjustField.fType->matches(*context.fTypes.fFloat4));
-
-        ThreadContext::RTAdjustData& rtAdjustData = ThreadContext::RTAdjustState();
-        rtAdjustData.fInterfaceBlock = variable;
-        rtAdjustData.fFieldIndex = *rtAdjustIndex;
-    }
+    SkSpan<const Field> fields = variable->type().componentType().fields();
 
     if (variable->name().empty()) {
         // This interface block is anonymous. Add each field to the top-level symbol table.
         for (size_t i = 0; i < fields.size(); ++i) {
-            symbols->add(std::make_unique<SkSL::Field>(fields[i].fPosition, variable, i));
+            context.fSymbolTable->add(
+                    context, std::make_unique<SkSL::FieldSymbol>(fields[i].fPosition, variable, i));
         }
     } else {
         // Add the global variable to the top-level symbol table.
-        symbols->addWithoutOwnership(variable);
+        context.fSymbolTable->addWithoutOwnership(context, variable);
     }
 
-    return std::make_unique<SkSL::InterfaceBlock>(pos, variable, symbols);
-}
-
-std::unique_ptr<ProgramElement> InterfaceBlock::clone() const {
-    return std::make_unique<InterfaceBlock>(fPosition,
-                                            this->var(),
-                                            SymbolTable::WrapIfBuiltin(this->typeOwner()));
+    return std::make_unique<SkSL::InterfaceBlock>(pos, variable);
 }
 
 std::string InterfaceBlock::description() const {
-    std::string result = this->var()->modifiers().description() +
+    std::string result = this->var()->layout().description() +
+                         this->var()->modifierFlags().description() + ' ' +
                          std::string(this->typeName()) + " {\n";
     const Type* structType = &this->var()->type();
     if (structType->isArray()) {
