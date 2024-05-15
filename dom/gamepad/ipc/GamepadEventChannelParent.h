@@ -29,6 +29,9 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent {
       const uint8_t& aGreen, const uint8_t& aBlue, const uint32_t& aPromiseID);
   void DispatchUpdateEvent(const GamepadChangeEvent& aEvent);
 
+  mozilla::ipc::IPCResult RecvRequestAllGamepads(
+      RequestAllGamepadsResolver&& aResolver);
+
   GamepadEventChannelParent(const GamepadEventChannelParent&) = delete;
   GamepadEventChannelParent(GamepadEventChannelParent&&) = delete;
   GamepadEventChannelParent& operator=(const GamepadEventChannelParent&) =

@@ -21,6 +21,8 @@ protocol PGamepadEventChannel {
     [Tainted] async LightIndicatorColor(GamepadHandle aHandle, uint32_t aLightColorIndex,
                                         [NoTaint=allvalid] uint8_t aRed, [NoTaint=allvalid] uint8_t aGreen,
                                         [NoTaint=allvalid] uint8_t aBlue, [NoTaint=passback] uint32_t aPromiseID);
+    async RequestAllGamepads()
+        returns (GamepadAdded[] gamepads);
 
   child:
     async GamepadUpdate(GamepadChangeEvent aGamepadEvent);

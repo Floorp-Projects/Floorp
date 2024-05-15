@@ -100,6 +100,16 @@ mozilla::ipc::IPCResult GamepadEventChannelParent::RecvLightIndicatorColor(
   return IPC_FAIL(this, "SendReplyGamepadPromise fail.");
 }
 
+mozilla::ipc::IPCResult GamepadEventChannelParent::RecvRequestAllGamepads(
+    RequestAllGamepadsResolver&& aResolver) {
+  RefPtr<GamepadPlatformService> service =
+      GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+
+  aResolver(service->GetAllGamePads());
+  return IPC_OK();
+}
+
 void GamepadEventChannelParent::DispatchUpdateEvent(
     const GamepadChangeEvent& aEvent) {
   mBackgroundEventTarget->Dispatch(new SendGamepadUpdateRunnable(this, aEvent),
