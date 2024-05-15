@@ -689,10 +689,16 @@ function startLogging() {
   if (gLoggingSettings.loggingOutputType === "profiler") {
     const pageContext = "aboutlogging";
     const supportedFeatures = Services.profiler.GetFeatures();
-    if (gLoggingSettings.loggingPreset != "custom") {
+    if (
+      gLoggingSettings.loggingPreset != "custom" ||
+      gLoggingSettings.profilerPreset
+    ) {
       // Change the preset before starting the profiler, so that the
       // underlying profiler code picks up the right configuration.
+      // If a profiler preset has been explicitely provided (via URL parameters),
+      // pick it. Otherwise, pick the preset for this particular logging preset.
       const profilerPreset =
+        gLoggingSettings.profilerPreset ??
         gLoggingPresets[gLoggingSettings.loggingPreset].profilerPreset;
       ProfilerPopupBackground.changePreset(
         "aboutlogging",
