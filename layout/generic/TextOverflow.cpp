@@ -94,7 +94,7 @@ static bool IsInlineAxisOverflowVisible(nsIFrame* aFrame) {
              "expected a block frame");
 
   nsIFrame* f = aFrame;
-  while (f && f->Style()->IsAnonBox() && !f->IsScrollFrame()) {
+  while (f && f->Style()->IsAnonBox() && !f->IsScrollContainerFrame()) {
     f = f->GetParent();
   }
   if (!f) {

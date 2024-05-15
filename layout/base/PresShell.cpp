@@ -2479,7 +2479,7 @@ nsIFrame* PresShell::GetRootScrollFrame() const {
     return nullptr;
   }
   nsIFrame* theFrame = rootFrame->PrincipalChildList().FirstChild();
-  if (!theFrame || !theFrame->IsScrollFrame()) {
+  if (!theFrame || !theFrame->IsScrollContainerFrame()) {
     return nullptr;
   }
   return theFrame;

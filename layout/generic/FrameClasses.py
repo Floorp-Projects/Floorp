@@ -111,7 +111,7 @@ FRAME_CLASSES = [
     Frame("nsRubyFrame", "Ruby", RUBY_CONTENT),
     Frame("nsRubyTextContainerFrame", "RubyTextContainer", {"None"}),
     Frame("nsRubyTextFrame", "RubyText", RUBY_CONTENT),
-    Frame("ScrollContainerFrame", "Scroll", COMMON),
+    Frame("ScrollContainerFrame", "ScrollContainer", COMMON),
     Frame("SimpleXULLeafFrame", "SimpleXULLeaf", COMMON | LEAF),
     Frame("nsScrollbarButtonFrame", "SimpleXULLeaf", COMMON | LEAF),
     Frame("nsScrollbarFrame", "Scrollbar", COMMON),

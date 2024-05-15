@@ -4651,7 +4651,7 @@ class nsIFrame : public nsQueryFrame {
 
   // https://drafts.csswg.org/css-overflow-3/#scroll-container
   bool IsScrollContainer() const {
-    const bool result = IsScrollFrame() || IsListControlFrame();
+    const bool result = IsScrollContainerFrame() || IsListControlFrame();
     MOZ_ASSERT(result == !!GetAsScrollContainer());
     return result;
   }

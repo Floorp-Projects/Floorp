@@ -1303,7 +1303,7 @@ bool RetainedDisplayListBuilder::ShouldBuildPartial(
     // reasons as above, but also because top layer items should to be marked
     // modified if the root scroll frame is modified. Putting this check here
     // means we don't need to check everytime a frame is marked modified though.
-    if (type == LayoutFrameType::Scroll && f->GetParent() &&
+    if (type == LayoutFrameType::ScrollContainer && f->GetParent() &&
         !f->GetParent()->GetParent()) {
       Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::FrameType;
       return false;

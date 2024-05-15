@@ -2174,7 +2174,7 @@ void nsCSSRendering::GetImageLayerClip(
 
   aClipState->mBGClipArea = clipBorderArea;
 
-  if (aForFrame->IsScrollFrame() &&
+  if (aForFrame->IsScrollContainerFrame() &&
       StyleImageLayerAttachment::Local == aLayer.mAttachment) {
     // As of this writing, this is still in discussion in the CSS Working Group
     // http://lists.w3.org/Archives/Public/www-style/2013Jul/0250.html
@@ -2769,7 +2769,7 @@ nsRect nsCSSRendering::ComputeImageLayerPositioningArea(
 
   LayoutFrameType frameType = aForFrame->Type();
   nsIFrame* geometryFrame = aForFrame;
-  if (MOZ_UNLIKELY(frameType == LayoutFrameType::Scroll &&
+  if (MOZ_UNLIKELY(frameType == LayoutFrameType::ScrollContainer &&
                    StyleImageLayerAttachment::Local == aLayer.mAttachment)) {
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(aForFrame);
     positionArea = nsRect(scrollableFrame->GetScrolledFrame()->GetPosition()

@@ -1759,7 +1759,7 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
 
   // If we're all scroll frame, then all descendants will be clipped, so we
   // can't preserve 3d.
-  if (IsScrollFrame()) {
+  if (IsScrollContainerFrame()) {
     return false;
   }
 
@@ -9589,7 +9589,7 @@ std::pair<nsIFrame*, nsIFrame*> nsIFrame::GetContainingBlockForLine(
     }
     parentFrame = frame->GetParent();
     if (parentFrame) {
-      if (aLockScroll && parentFrame->IsScrollFrame()) {
+      if (aLockScroll && parentFrame->IsScrollContainerFrame()) {
         return std::pair(nullptr, nullptr);
       }
       if (parentFrame->CanProvideLineIterator()) {
@@ -10000,7 +10000,7 @@ static nsRect ComputeOutlineInnerRect(
   }
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   LayoutFrameType fType = aFrame->Type();
-  if (fType == LayoutFrameType::Scroll ||
+  if (fType == LayoutFrameType::ScrollContainer ||
       fType == LayoutFrameType::ListControl ||
       fType == LayoutFrameType::SVGOuterSVG) {
     return u;
@@ -10765,7 +10765,7 @@ void nsIFrame::GetFirstLeaf(nsIFrame** aFrame) {
 }
 
 bool nsIFrame::IsFocusableDueToScrollFrame() {
-  if (!IsScrollFrame()) {
+  if (!IsScrollContainerFrame()) {
     if (nsFieldSetFrame* fieldset = do_QueryFrame(this)) {
       // TODO: Do we have similar special-cases like this where we can have
       // anonymous scrollable boxes hanging off a primary frame?
@@ -11549,7 +11549,7 @@ nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
   // the scrollable frame will already clip overflowing content, and because
   // 'contain:paint' should prevent all means of escaping that clipping
   // (e.g. because it forms a fixed-pos containing block).
-  if (aDisp->IsContainPaint() && !IsScrollFrame() &&
+  if (aDisp->IsContainPaint() && !IsScrollContainerFrame() &&
       SupportsContainLayoutAndPaint()) {
     return PhysicalAxes::Both;
   }
