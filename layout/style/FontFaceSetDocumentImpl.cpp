@@ -131,8 +131,8 @@ void FontFaceSetDocumentImpl::DispatchToOwningThread(
     std::function<void()> mFunc;
   };
 
-  RefPtr<FontFaceSetDocumentRunnable> runnable =
-      new FontFaceSetDocumentRunnable(aName, std::move(aFunc));
+  auto runnable =
+      MakeRefPtr<FontFaceSetDocumentRunnable>(aName, std::move(aFunc));
   NS_DispatchToMainThread(runnable.forget());
 }
 

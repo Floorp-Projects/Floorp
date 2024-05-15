@@ -78,7 +78,7 @@ already_AddRefed<StyleLockedCssRules> CSSStyleRule::GetOrCreateRawRules() {
 
 void CSSStyleRuleDeclaration::SetRawAfterClone(
     RefPtr<StyleLockedDeclarationBlock> aRaw) {
-  RefPtr<DeclarationBlock> block = new DeclarationBlock(aRaw.forget());
+  auto block = MakeRefPtr<DeclarationBlock>(aRaw.forget());
   mDecls->SetOwningRule(nullptr);
   mDecls = std::move(block);
   mDecls->SetOwningRule(Rule());
@@ -317,7 +317,7 @@ already_AddRefed<nsINodeList> CSSStyleRule::QuerySelectorAll(nsINode& aRoot) {
   CollectStyleRules(*this, /* aDesugared = */ true, rules);
   StyleSelectorList* list = Servo_StyleRule_GetSelectorList(&rules);
 
-  RefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(&aRoot);
+  auto contentList = MakeRefPtr<nsSimpleContentList>(&aRoot);
   Servo_SelectorList_QueryAll(&aRoot, list, contentList.get(),
                               /* useInvalidation */ false);
   Servo_SelectorList_Drop(list);

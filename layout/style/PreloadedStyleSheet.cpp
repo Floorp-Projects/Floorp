@@ -35,7 +35,7 @@ nsresult PreloadedStyleSheet::GetSheet(StyleSheet** aResult) {
   MOZ_DIAGNOSTIC_ASSERT(mLoaded);
 
   if (!mSheet) {
-    RefPtr<css::Loader> loader = new css::Loader;
+    auto loader = MakeRefPtr<css::Loader>();
     auto result = loader->LoadSheetSync(mURI, mParsingMode,
                                         css::Loader::UseSystemPrincipal::Yes);
     if (result.isErr()) {
@@ -78,9 +78,8 @@ PreloadedStyleSheet::StylesheetPreloadObserver::StyleSheetLoaded(
 nsresult PreloadedStyleSheet::PreloadAsync(NotNull<dom::Promise*> aPromise) {
   MOZ_DIAGNOSTIC_ASSERT(!mLoaded);
 
-  RefPtr<css::Loader> loader = new css::Loader;
-  RefPtr<StylesheetPreloadObserver> obs =
-      new StylesheetPreloadObserver(aPromise, this);
+  auto loader = MakeRefPtr<css::Loader>();
+  auto obs = MakeRefPtr<StylesheetPreloadObserver>(aPromise, this);
   auto result = loader->LoadSheet(mURI, mParsingMode,
                                   css::Loader::UseSystemPrincipal::No, obs);
   if (result.isErr()) {

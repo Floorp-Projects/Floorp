@@ -115,7 +115,7 @@ DeclarationBlock* nsDOMCSSAttributeDeclaration::GetOrCreateCSSDeclaration(
   }
 
   // cannot fail
-  RefPtr<DeclarationBlock> decl = new DeclarationBlock();
+  auto decl = MakeRefPtr<DeclarationBlock>();
   // Mark the declaration dirty so that it can be reused by the caller.
   // Normally SetDirty is called later in SetCSSDeclaration.
   decl->SetDirty();

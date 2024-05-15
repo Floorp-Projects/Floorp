@@ -1372,7 +1372,7 @@ static already_AddRefed<StyleSheet> LoadImportSheet(
   MOZ_ASSERT(aLoader, "Should've catched this before");
   MOZ_ASSERT(aParent, "Only used for @import, so parent should exist!");
 
-  RefPtr<MediaList> media = new MediaList(std::move(aMediaList));
+  auto media = MakeRefPtr<MediaList>(std::move(aMediaList));
   nsCOMPtr<nsIURI> uri = aURL.GetURI();
   nsresult rv = uri ? NS_OK : NS_ERROR_FAILURE;
 
