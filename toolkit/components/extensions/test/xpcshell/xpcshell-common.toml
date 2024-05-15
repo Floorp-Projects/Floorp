@@ -445,6 +445,8 @@ skip-if = ["ccov && os == 'linux'"] # bug 1607581
 
 ["test_ext_runtime_onInstalled_and_onStartup.js"]
 
+["test_ext_runtime_onPerformanceWarning.js"]
+
 ["test_ext_runtime_ports.js"]
 
 ["test_ext_runtime_ports_gc.js"]
