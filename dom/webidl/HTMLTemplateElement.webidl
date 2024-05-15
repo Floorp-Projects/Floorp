@@ -20,6 +20,4 @@ interface HTMLTemplateElement : HTMLElement {
   attribute boolean shadowRootDelegatesFocus;
   [CEReactions, SetterThrows, Pref="dom.webcomponents.shadowdom.declarative.enabled"]
   attribute boolean shadowRootClonable;
-  [CEReactions, SetterThrows, Pref="dom.webcomponents.shadowdom.declarative.enabled"]
-  attribute boolean shadowRootSerializable;
 };
