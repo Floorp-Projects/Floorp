@@ -10,6 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
+enum RenderBlockingStatusType { "blocking", "non-blocking" };
+
 [Exposed=(Window,Worker)]
 interface PerformanceResourceTiming : PerformanceEntry
 {
@@ -53,6 +55,9 @@ interface PerformanceResourceTiming : PerformanceEntry
   // readonly attribute FrozenArray<PerformanceServerTiming> serverTiming;
   [SecureContext, Frozen, Cached, Pure, NeedsSubjectPrincipal]
   readonly attribute sequence<PerformanceServerTiming> serverTiming;
+
+  [Pref="dom.element.blocking.enabled"]
+  readonly attribute RenderBlockingStatusType renderBlockingStatus;
 
   [Default] object toJSON();
 };

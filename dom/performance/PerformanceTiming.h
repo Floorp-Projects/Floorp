@@ -27,6 +27,7 @@ class nsIHttpChannel;
 namespace mozilla::dom {
 
 class PerformanceTiming;
+enum class RenderBlockingStatusType : uint8_t;
 
 class PerformanceTimingData final {
   friend class PerformanceTiming;
@@ -164,6 +165,10 @@ class PerformanceTimingData final {
 
   nsTArray<nsCOMPtr<nsIServerTiming>> GetServerTiming();
 
+  RenderBlockingStatusType RenderBlockingStatus() const {
+    return mRenderBlockingStatus;
+  }
+
  private:
   // Checks if the resource is either same origin as the page that started
   // the load, or if the response contains the Timing-Allow-Origin header
@@ -206,6 +211,8 @@ class PerformanceTimingData final {
   uint64_t mDecodedBodySize = 0;
 
   uint8_t mRedirectCount = 0;
+
+  RenderBlockingStatusType mRenderBlockingStatus;
 
   bool mAllRedirectsSameOrigin = false;
 

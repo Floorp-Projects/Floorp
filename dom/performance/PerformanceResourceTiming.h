@@ -15,6 +15,8 @@
 #include "PerformanceTiming.h"
 
 namespace mozilla::dom {
+enum class RenderBlockingStatusType : uint8_t;
+
 #define IMPL_RESOURCE_TIMING_TAO_PROTECTED_TIMING_PROP(name)                \
   DOMHighResTimeStamp name(nsIPrincipal& aSubjectPrincipal) const {         \
     bool allowed = !mTimingData->RedirectCountReal()                        \
@@ -61,6 +63,8 @@ class PerformanceResourceTiming : public PerformanceEntry {
   void SetInitiatorType(const nsAString& aInitiatorType) {
     mInitiatorType = aInitiatorType;
   }
+
+  RenderBlockingStatusType RenderBlockingStatus() const;
 
   void GetNextHopProtocol(nsAString& aNextHopProtocol) const {
     if (mTimingData->TimingAllowed()) {

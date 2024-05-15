@@ -831,6 +831,16 @@ NS_IMETHODIMP NullHttpChannel::GetDocumentCharacterSet(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+NullHttpChannel::SetRenderBlocking(bool aRenderBlocking) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetRenderBlocking(bool* aRenderBlocking) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #define IMPL_TIMING_ATTR(name)                                           \
   NS_IMETHODIMP                                                          \
   NullHttpChannel::Get##name##Time(PRTime* _retval) {                    \

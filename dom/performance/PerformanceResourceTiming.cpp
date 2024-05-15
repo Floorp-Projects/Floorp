@@ -131,3 +131,8 @@ bool PerformanceResourceTiming::ReportRedirectForCaller(
   return BasePrincipal::Cast(&aCaller)->AddonHasPermission(
       nsGkAtoms::all_urlsPermission);
 }
+
+RenderBlockingStatusType PerformanceResourceTiming::RenderBlockingStatus()
+    const {
+  return mTimingData->RenderBlockingStatus();
+}
