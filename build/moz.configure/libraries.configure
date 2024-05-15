@@ -70,3 +70,16 @@ with only_when(building_with_gnu_cc & ~target_is_darwin):
     set_define(
         "HAVE_DLADDR", depends(dladdr_check)(lambda check: "1" if check.found else "0")
     )
+
+set_config(
+    "C_R_LIBS",
+    ["-lc_r"],
+    when=check_symbol_in_lib(
+        "c_r", symbol="gethostbyname_r", when=building_with_gnu_cc
+    ),
+)
+set_config(
+    "SOCKET_LIBS",
+    ["-lsocket"],
+    when=check_symbol_in_lib("socket", symbol="socket", when=building_with_gnu_cc),
+)
