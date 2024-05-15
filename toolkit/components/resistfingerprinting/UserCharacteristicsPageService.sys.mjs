@@ -181,6 +181,10 @@ export class UserCharacteristicsPageService {
         lazy.console.debug("Populating Glean metrics...");
         Glean.characteristics.timezone.set(data.output.foo);
 
+        for (let gamepad of data.output.gamepads) {
+          Glean.characteristics.gamepads.add(gamepad);
+        }
+
         lazy.console.debug("Unregistering actor");
         Services.obs.notifyObservers(
           null,
