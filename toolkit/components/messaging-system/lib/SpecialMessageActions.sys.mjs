@@ -457,7 +457,7 @@ export const SpecialMessageActions = {
         const { WindowsLaunchOnLogin } = ChromeUtils.importESModule(
           "resource://gre/modules/WindowsLaunchOnLogin.sys.mjs"
         );
-        await WindowsLaunchOnLogin.createLaunchOnLoginRegistryKey();
+        await WindowsLaunchOnLogin.createLaunchOnLogin();
         break;
       case "PIN_CURRENT_TAB":
         let tab = window.gBrowser.selectedTab;
