@@ -794,6 +794,9 @@ interface nsIUpdateManagerInternal : nsISupports
   // Corresponds to `nsIUpdateManager.getReadyUpdate()`, but also provides
   // write access.
   attribute nsIUpdate readyUpdate;
+  // Corresponds to `nsIUpdateManager.getDownloadingUpdate()`, but also provides
+  // write access.
+  attribute nsIUpdate downloadingUpdate;
 };
 
 /**
@@ -818,14 +821,15 @@ interface nsIUpdateManager : nsISupports
   Promise getReadyUpdate();
 
   /**
-   * The update that is currently downloading, or null if there isn't one.
+   * Returns a Promise that resolves with the nsIUpdate that is currently
+   * downloading, or null if there isn't one.
    * An update is no longer considered to be downloading once onStopRequest is
    * called. This means that both onStopRequest handlers for download listeners
    * and observers of the "update-downloaded" topic should expect the update
    * that was just downloaded to be stored in readyUpdate, not
    * downloadingUpdate.
    */
-  attribute nsIUpdate downloadingUpdate;
+  Promise getDownloadingUpdate();
 
   /**
    * Adds the specified update to the update history. The update history is
