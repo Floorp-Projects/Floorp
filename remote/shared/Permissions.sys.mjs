@@ -35,13 +35,22 @@ permissions.getStorageAccessPermissionsType = function (uri) {
  *     State of the permission. It can be `granted`, `denied` or `prompt`.
  * @param {string} origin
  *     The origin which is used as a target for permission update.
+ * @param {string=} userContextId
+ *     The internal id of the user context which should be used as a target
+ *     for permission update.
  *
  * @throws {UnsupportedOperationError}
  *     If <var>state</var> has unsupported value.
  */
-permissions.set = function (descriptor, state, origin) {
-  const principal =
+permissions.set = function (descriptor, state, origin, userContextId) {
+  let principal =
     Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
+
+  if (userContextId) {
+    principal = Services.scriptSecurityManager.principalWithOA(principal, {
+      userContextId,
+    });
+  }
 
   switch (state) {
     case "granted": {

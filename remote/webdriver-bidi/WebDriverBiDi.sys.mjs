@@ -7,6 +7,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  RecommendedPreferences:
+    "chrome://remote/content/shared/RecommendedPreferences.sys.mjs",
   WebDriverNewSessionHandler:
     "chrome://remote/content/webdriver-bidi/NewSessionHandler.sys.mjs",
   WebDriverSession: "chrome://remote/content/shared/webdriver/Session.sys.mjs",
@@ -16,6 +18,12 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.WEBDRIVER_BIDI)
 );
 ChromeUtils.defineLazyGetter(lazy, "textEncoder", () => new TextEncoder());
+
+const RECOMMENDED_PREFS = new Map([
+  // Enables permission isolation by user context.
+  // It should be enabled by default in Nightly in the scope of the bug 1641584.
+  ["permissions.isolateBy.userContext", true],
+]);
 
 /**
  * Entry class for the WebDriver BiDi support.
@@ -174,6 +182,8 @@ export class WebDriverBiDi {
     }
 
     this._running = true;
+
+    lazy.RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
 
     // Install a HTTP handler for direct WebDriver BiDi connection requests.
     this.agent.server.registerPathHandler(

@@ -10,6 +10,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   permissions: "chrome://remote/content/shared/Permissions.sys.mjs",
+  UserContextManager:
+    "chrome://remote/content/shared/UserContextManager.sys.mjs",
 });
 
 export const PermissionState = {
@@ -108,16 +110,20 @@ class PermissionsModule extends Module {
       `Expected "origin" to be a valid URL, got ${origin}`
     )(origin);
 
+    let userContext;
     if (userContextId !== null) {
       lazy.assert.string(
         userContextId,
         `Expected "userContext" to be a string, got ${userContextId}`
       );
 
-      // TODO: Bug 1894217. Add support for "userContext" argument.
-      throw new lazy.error.UnsupportedOperationError(
-        `"userContext" is not supported yet`
-      );
+      if (!lazy.UserContextManager.hasUserContextId(userContextId)) {
+        throw new lazy.error.NoSuchUserContextError(
+          `User Context with id ${userContextId} was not found`
+        );
+      }
+
+      userContext = lazy.UserContextManager.getInternalIdById(userContextId);
     }
 
     const activeWindow = Services.wm.getMostRecentBrowserWindow();
@@ -133,7 +139,7 @@ class PermissionsModule extends Module {
       );
     }
 
-    lazy.permissions.set(typedDescriptor, state, origin);
+    lazy.permissions.set(typedDescriptor, state, origin, userContext);
   }
 }
 
