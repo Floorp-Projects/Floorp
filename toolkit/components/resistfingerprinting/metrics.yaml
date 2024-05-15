@@ -240,6 +240,167 @@ characteristics:
     data_sensitivity:
       - technical
 
+  color_accentcolor:
+    type: quantity
+    unit: RGB
+    description: >
+      The CSS system-color Accentcolor.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    expires: never
+    data_sensitivity:
+      - technical
+
+  color_accentcolortext:
+    type: quantity
+    unit: RGB
+    description: >
+      The CSS system-color Accentcolortext.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    expires: never
+    data_sensitivity:
+      - technical
+
+  color_canvas:
+    type: quantity
+    unit: RGB
+    description: >
+      The CSS system-color Canvas.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    expires: never
+    data_sensitivity:
+      - technical
+
+  color_canvastext:
+    type: quantity
+    unit: RGB
+    description: >
+      The CSS system-color Canvastext.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    expires: never
+    data_sensitivity:
+      - technical
+
+  color_highlight:
+    type: quantity
+    unit: RGB
+    description: >
+      The CSS system-color Highlight.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    expires: never
+    data_sensitivity:
+      - technical
+
+  color_highlighttext:
+    type: quantity
+    unit: RGB
+    description: >
+      The CSS system-color Highlighttext.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    expires: never
+    data_sensitivity:
+      - technical
+
+  color_selecteditem:
+    type: quantity
+    unit: RGB
+    description: >
+      The CSS system-color Selecteditem.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    expires: never
+    data_sensitivity:
+      - technical
+
+  color_selecteditemtext:
+    type: quantity
+    unit: RGB
+    description: >
+      The CSS system-color Selecteditemtext.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    expires: never
+    data_sensitivity:
+      - technical
+
+  use_document_colors:
+    type: boolean
+    description: >
+      This is the derived PreferenceSheet::Prefs::mUseDocumentColors value.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889931
+    expires: never
+    data_sensitivity:
+      - interaction
+
   missing_fonts:
     type: text
     description: >
