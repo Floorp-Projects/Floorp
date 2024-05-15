@@ -2525,7 +2525,7 @@ const BrowserSearch = {
     csp,
     event
   ) {
-    event = getRootEvent(event);
+    event = BrowserUtils.getRootEvent(event);
     let where = BrowserUtils.whereToOpenLink(event);
     if (where == "current") {
       // override: historically search opens in new tab
