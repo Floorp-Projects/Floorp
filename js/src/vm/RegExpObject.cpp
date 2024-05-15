@@ -683,6 +683,11 @@ void RegExpShared::finalize(JS::GCContext* gcx) {
     gcx->free_(this, namedCaptureIndices_, length,
                MemoryUse::RegExpSharedNamedCaptureData);
   }
+  if (namedCaptureSliceIndices_) {
+    size_t length = numDistinctNamedCaptures() * sizeof(uint32_t);
+    gcx->free_(this, namedCaptureSliceIndices_, length,
+               MemoryUse::RegExpSharedNamedCaptureSliceData);
+  }
   tables.~JitCodeTables();
 }
 
@@ -834,17 +839,28 @@ void RegExpShared::useRegExpMatch(size_t pairCount) {
 /* static */
 void RegExpShared::InitializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
                                            uint32_t numNamedCaptures,
+                                           uint32_t numDistinctNamedCaptures,
                                            Handle<PlainObject*> templateObject,
-                                           uint32_t* captureIndices) {
+                                           uint32_t* captureIndices,
+                                           uint32_t* sliceIndices) {
   MOZ_ASSERT(!re->groupsTemplate_);
   MOZ_ASSERT(!re->namedCaptureIndices_);
+  MOZ_ASSERT(!re->namedCaptureSliceIndices_);
 
   re->numNamedCaptures_ = numNamedCaptures;
+  re->numDistinctNamedCaptures_ = numDistinctNamedCaptures;
   re->groupsTemplate_ = templateObject;
   re->namedCaptureIndices_ = captureIndices;
+  re->namedCaptureSliceIndices_ = sliceIndices;
 
   uint32_t arraySize = numNamedCaptures * sizeof(uint32_t);
   js::AddCellMemory(re, arraySize, MemoryUse::RegExpSharedNamedCaptureData);
+
+  if (sliceIndices) {
+    arraySize = numDistinctNamedCaptures * sizeof(uint32_t);
+    js::AddCellMemory(re, arraySize,
+                      MemoryUse::RegExpSharedNamedCaptureSliceData);
+  }
 }
 
 void RegExpShared::tierUpTick() {

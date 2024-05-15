@@ -640,9 +640,24 @@ enum class AssembleResult {
   return AssembleResult::Success;
 }
 
-struct RegExpCaptureIndexLess {
-  bool operator()(const RegExpCapture* lhs, const RegExpCapture* rhs) const {
-    return lhs->index() < rhs->index();
+struct RegExpNamedCapture {
+  const ZoneVector<char16_t>* name;
+  js::Vector<uint32_t> indices;
+
+  RegExpNamedCapture(JSContext* cx, const ZoneVector<char16_t>* name)
+      : name(name), indices(cx) {}
+};
+
+struct RegExpNamedCaptureIndexLess {
+  bool operator()(const RegExpNamedCapture& lhs,
+                  const RegExpNamedCapture& rhs) const {
+    // Every name must have at least one corresponding capture index, and all
+    // the capture indices must be distinct. This allows us to sort on the
+    // lowest capture index.
+    MOZ_ASSERT(!lhs.indices.empty());
+    MOZ_ASSERT(!rhs.indices.empty());
+    MOZ_ASSERT(lhs.indices[0] != rhs.indices[0]);
+    return lhs.indices[0] < rhs.indices[0];
   }
 };
 
@@ -655,10 +670,39 @@ bool InitializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
   // the capture indices as a heap-allocated array.
   uint32_t numNamedCaptures = namedCaptures->size();
 
-  // Named captures are sorted by name (because the set is used to ensure
-  // name uniqueness). But the capture name map must be sorted by index.
-  std::sort(namedCaptures->begin(), namedCaptures->end(),
-            RegExpCaptureIndexLess{});
+  // The input vector of named captures is already sorted by name, and then by
+  // capture index if there are duplicates. We iterate through the captures,
+  // creating groups for each set of indices corresponding to a name. Usually,
+  // there will be a 1:1 mapping.
+  js::Vector<RegExpNamedCapture> groups(cx);
+  if (!groups.reserve(numNamedCaptures)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  const ZoneVector<char16_t>* prevName = nullptr;
+  uint32_t numDistinctNamedCaptures = 0;
+  for (uint32_t i = 0; i < numNamedCaptures; i++) {
+    RegExpCapture* capture = (*namedCaptures)[i];
+    const ZoneVector<char16_t>* name = capture->name();
+    if (!prevName || *name != *prevName) {
+      if (!groups.emplaceBack(RegExpNamedCapture(cx, name))) {
+        js::ReportOutOfMemory(cx);
+        return false;
+      }
+      numDistinctNamedCaptures++;
+      prevName = name;
+    }
+    // Make sure we're getting the indices in the order we expect
+    MOZ_ASSERT_IF(!groups.back().indices.empty(),
+                  groups.back().indices.back() < (uint32_t)capture->index());
+    if (!groups.back().indices.emplaceBack(capture->index())) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  // The capture name map must be sorted by index.
+  std::sort(groups.begin(), groups.end(), RegExpNamedCaptureIndexLess{});
 
   // Create a plain template object.
   Rooted<js::PlainObject*> templateObject(
@@ -676,14 +720,29 @@ bool InitializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
     return false;
   }
 
-  // Initialize the properties of the template and populate the
-  // capture index array.
+  // Allocate the capture slice index array, if necessary. We only use this
+  // if we have duplicate named capture groups.
+  bool hasDuplicateNames = numNamedCaptures != numDistinctNamedCaptures;
+  UniquePtr<uint32_t[], JS::FreePolicy> sliceIndices;
+  if (hasDuplicateNames) {
+    arraySize = numDistinctNamedCaptures * sizeof(uint32_t);
+    sliceIndices.reset(static_cast<uint32_t*>(js_malloc(arraySize)));
+    if (!sliceIndices) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  // Initialize the properties of the template and store capture indices.
   RootedId id(cx);
   RootedValue dummyString(cx, StringValue(cx->runtime()->emptyString));
-  for (uint32_t i = 0; i < numNamedCaptures; i++) {
-    RegExpCapture* capture = (*namedCaptures)[i];
-    JSAtom* name =
-        js::AtomizeChars(cx, capture->name()->data(), capture->name()->size());
+  size_t insertIndex = 0;
+
+  for (size_t i = 0; i < numDistinctNamedCaptures; ++i) {
+    RegExpNamedCapture& group = groups[i];
+    // We store the names as properties on the template object, in the order of
+    // their lowest capture index.
+    JSAtom* name = js::AtomizeChars(cx, group.name->data(), group.name->size());
     if (!name) {
       return false;
     }
@@ -692,11 +751,24 @@ bool InitializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
                                   JSPROP_ENUMERATE)) {
       return false;
     }
-    captureIndices[i] = capture->index();
+    // The slice index keeps track of the captureIndex where indices
+    // corresponding to a name start. The difference between the current slice
+    // index and the next slice index is used to calculate how many values to
+    // return in the slice. This is only needed when we have duplicate capture
+    // names, otherwise, there's a 1:1 mapping, and we don't need the extra
+    // data.
+    if (hasDuplicateNames) {
+      sliceIndices[i] = insertIndex;
+    }
+
+    for (uint32_t captureIndex : groups[i].indices) {
+      captureIndices[insertIndex++] = captureIndex;
+    }
   }
 
   RegExpShared::InitializeNamedCaptures(
-      cx, re, numNamedCaptures, templateObject, captureIndices.release());
+      cx, re, numNamedCaptures, numDistinctNamedCaptures, templateObject,
+      captureIndices.release(), sliceIndices.release());
   return true;
 }
 
