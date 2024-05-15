@@ -910,16 +910,14 @@ class nsFrameSelection final {
 
   bool IsBatching() const { return mBatching.mCounter > 0; }
 
-  void SetChangesDuringBatchingFlag() {
-    MOZ_ASSERT(mBatching.mCounter > 0);
-
-    mBatching.mChangesDuringBatching = true;
-  }
+  enum class IsBatchingEnd : bool { No, Yes };
 
   // nsFrameSelection may get deleted when calling this,
   // so remember to use nsCOMPtr when needed.
   MOZ_CAN_RUN_SCRIPT
-  nsresult NotifySelectionListeners(mozilla::SelectionType aSelectionType);
+  nsresult NotifySelectionListeners(
+      mozilla::SelectionType aSelectionType,
+      IsBatchingEnd aEndBatching = IsBatchingEnd::No);
 
   static nsresult GetCellIndexes(const nsIContent* aCell, int32_t& aRowIndex,
                                  int32_t& aColIndex);
@@ -1044,7 +1042,6 @@ class nsFrameSelection final {
 
   struct Batching {
     uint32_t mCounter = 0;
-    bool mChangesDuringBatching = false;
   };
 
   Batching mBatching;
