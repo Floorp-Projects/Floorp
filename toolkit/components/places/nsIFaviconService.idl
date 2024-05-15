@@ -162,6 +162,9 @@ interface nsIFaviconService : nsISupports
    *        Once we're done setting and/or fetching the favicon, we invoke this
    *        callback.
    *
+   * @throws NS_ERROR_FILE_TOO_BIG if the icon is excessively large and can not
+   *         be optimized internally.
+   *
    * @see PlacesCompletionCallback in PlacesCompletionCallback.idl.
    */
   void setFaviconForPage(

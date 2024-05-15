@@ -770,11 +770,6 @@ AsyncFetchAndSetIconForPage::OnStopRequest(nsIRequest* aRequest,
   rv = favicons->OptimizeIconSizes(mIcon);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If there's not valid payload, don't store the icon into to the database.
-  if (mIcon.payloads.Length() == 0) {
-    return NS_OK;
-  }
-
   mIcon.status = ICON_STATUS_CHANGED;
 
   RefPtr<Database> DB = Database::GetDatabase();

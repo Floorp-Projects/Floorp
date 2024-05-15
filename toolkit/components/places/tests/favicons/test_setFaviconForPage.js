@@ -142,7 +142,7 @@ add_task(async function test_svg() {
   let pageURI = uri("http://example.com/");
   await PlacesTestUtils.addVisits(pageURI);
 
-  const svgContent = "<svg><rect width='1px' height='1px%'/></svg>";
+  const svgContent = "<svg><rect width='1px' height='1px'/></svg>";
 
   await doTestSetFaviconForPage({
     pageURI,
@@ -197,16 +197,18 @@ add_task(async function test_invalidFaviconURI() {
 add_task(async function test_invalidFaviconDataURI() {
   let pageURI = uri("http://example.com/");
   await PlacesTestUtils.addVisits(pageURI);
-  let favicon = createFavicon("favicon-invalidFaviconDataURI.png");
+  let faviconURI = uri("http://example.com/favicon.svg");
 
   for (let invalidURI of [
     null,
     "",
     "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==",
+    // nsIFaviconService::MAX_FAVICON_BUFFER_SIZE = 65536
+    uri(`data:image/svg+xml;utf8,<svg><text>${Array(65536)}</text></svg>`),
   ]) {
     try {
       info(`Invalid favicon data URI test for [${invalidURI}]`);
-      PlacesUtils.favicons.setFaviconForPage(pageURI, favicon.uri, invalidURI);
+      PlacesUtils.favicons.setFaviconForPage(pageURI, faviconURI, invalidURI);
       Assert.ok(false, "Error should happened");
     } catch (e) {
       Assert.ok(true, `Expected error happend [${e.message}]`);

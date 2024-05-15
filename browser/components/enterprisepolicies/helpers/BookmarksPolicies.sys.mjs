@@ -199,7 +199,11 @@ async function insertBookmark(bookmark) {
   });
 
   if (bookmark.Favicon) {
-    setFaviconForBookmark(bookmark);
+    try {
+      setFaviconForBookmark(bookmark);
+    } catch (e) {
+      lazy.log.warn(e);
+    }
   }
 }
 
