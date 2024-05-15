@@ -69,30 +69,14 @@ class ScrollContainerFrame : public nsContainerFrame,
                              public nsIReflowCallback,
                              public nsIStatefulFrame {
  public:
-  using Sides = nsIFrame::Sides;
-  using ScrollbarActivity = mozilla::layout::ScrollbarActivity;
-  using ScrollSnapFlags = mozilla::ScrollSnapFlags;
-  using ScrollTriggeredByScript = mozilla::ScrollTriggeredByScript;
-  using ScrollSnapTargetIds = mozilla::ScrollSnapTargetIds;
-  using FrameMetrics = mozilla::layers::FrameMetrics;
-  using ScrollableLayerGuid = mozilla::layers::ScrollableLayerGuid;
-  using ScrollSnapInfo = mozilla::ScrollSnapInfo;
-  using WebRenderLayerManager = mozilla::layers::WebRenderLayerManager;
-  using APZScrollAnimationType = mozilla::APZScrollAnimationType;
-  using ScrollDirections = mozilla::layers::ScrollDirections;
-  using ScrollDirection = mozilla::layers::ScrollDirection;
-  using Element = mozilla::dom::Element;
-  using SnapTargetSet = nsTHashSet<RefPtr<nsIContent>>;
+  using Element = dom::Element;
   using InScrollingGesture = nsIScrollableFrame::InScrollingGesture;
-
-  using CSSIntPoint = mozilla::CSSIntPoint;
-  using CSSPoint = mozilla::CSSPoint;
-  using ScrollReflowInput = mozilla::ScrollReflowInput;
-  using ScrollAnchorContainer = mozilla::layout::ScrollAnchorContainer;
+  using ScrollAnchorContainer = layout::ScrollAnchorContainer;
+  using SnapTargetSet = nsTHashSet<RefPtr<nsIContent>>;
 
   friend ScrollContainerFrame* ::NS_NewScrollContainerFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle, bool aIsRoot);
-  friend class mozilla::layout::ScrollAnchorContainer;
+  friend class layout::ScrollAnchorContainer;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(ScrollContainerFrame)
@@ -133,11 +117,12 @@ class ScrollContainerFrame : public nsContainerFrame,
   // by the actual scrollbars. That is, if scrollbar-gutter is 'auto', this
   // method just returns empty result.
   nsMargin ComputeStableScrollbarGutter(
-      const mozilla::StyleScrollbarWidth& aStyleScrollbarWidth,
-      const mozilla::StyleScrollbarGutter& aStyleScrollbarGutter) const;
+      const StyleScrollbarWidth& aStyleScrollbarWidth,
+      const StyleScrollbarGutter& aStyleScrollbarGutter) const;
 
   bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
-                      Sides aSkipSides, nscoord aRadii[8]) const final;
+                      nsIFrame::Sides aSkipSides,
+                      nscoord aRadii[8]) const final;
 
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
@@ -148,14 +133,13 @@ class ScrollContainerFrame : public nsContainerFrame,
   void DidReflow(nsPresContext* aPresContext,
                  const ReflowInput* aReflowInput) override;
 
-  bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas) final;
+  bool ComputeCustomOverflow(OverflowAreas& aOverflowAreas) final;
 
   BaselineSharingGroup GetDefaultBaselineSharingGroup() const override;
   nscoord SynthesizeFallbackBaseline(
-      mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup) const override;
+      WritingMode aWM, BaselineSharingGroup aBaselineGroup) const override;
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+      WritingMode aWM, BaselineSharingGroup aBaselineGroup,
       BaselineExportContext aExportContext) const override;
 
   // Recomputes the scrollable overflow area we store in the helper to take
@@ -199,23 +183,22 @@ class ScrollContainerFrame : public nsContainerFrame,
 
   // nsIScrollableFrame
   nsIFrame* GetScrolledFrame() const final { return mScrolledFrame; }
-  mozilla::ScrollStyles GetScrollStyles() const final;
+  ScrollStyles GetScrollStyles() const final;
   bool IsForTextControlWithNoScrollbars() const final;
   bool HasAllNeededScrollbars() const final {
     return GetCurrentAnonymousContent().contains(GetNeededAnonymousContent());
   }
 
-  mozilla::layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo()
+  layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo() const final;
+  layers::ScrollDirections GetAvailableScrollingDirectionsForUserInputEvents()
       const final;
-  ScrollDirections GetAvailableScrollingDirectionsForUserInputEvents()
-      const final;
-  ScrollDirections GetScrollbarVisibility() const final {
-    ScrollDirections result;
+  layers::ScrollDirections GetScrollbarVisibility() const final {
+    layers::ScrollDirections result;
     if (mHasHorizontalScrollbar) {
-      result += ScrollDirection::eHorizontal;
+      result += layers::ScrollDirection::eHorizontal;
     }
     if (mHasVerticalScrollbar) {
-      result += ScrollDirection::eVertical;
+      result += layers::ScrollDirection::eVertical;
     }
     return result;
   }
@@ -224,7 +207,7 @@ class ScrollContainerFrame : public nsContainerFrame,
           nsIScrollableFrame::ScrollbarSizesOptions::NONE) const final;
   nsMargin GetDesiredScrollbarSizes() const final;
   static nscoord GetNonOverlayScrollbarSize(const nsPresContext*,
-                                            mozilla::StyleScrollbarWidth);
+                                            StyleScrollbarWidth);
   nsSize GetLayoutSize() const final {
     if (mIsUsingMinimumScaleSize) {
       return mICBSize;
@@ -270,7 +253,7 @@ class ScrollContainerFrame : public nsContainerFrame,
    */
   void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                          ScrollMode aMode = ScrollMode::Instant) final;
-  void ScrollToCSSPixelsForApz(const mozilla::CSSPoint& aScrollPosition,
+  void ScrollToCSSPixelsForApz(const CSSPoint& aScrollPosition,
                                ScrollSnapTargetIds&& aLastSnapTargetIds) final;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -280,7 +263,7 @@ class ScrollContainerFrame : public nsContainerFrame,
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollBy(nsIntPoint aDelta, mozilla::ScrollUnit aUnit, ScrollMode aMode,
+  void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
                 nsIntPoint* aOverflow,
                 ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
                 nsIScrollableFrame::ScrollMomentum aMomentum =
@@ -326,25 +309,23 @@ class ScrollContainerFrame : public nsContainerFrame,
   nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const final;
   ScrollOrigin LastScrollOrigin() const final { return mLastScrollOrigin; }
   using AnimationState = nsIScrollableFrame::AnimationState;
-  mozilla::EnumSet<AnimationState> ScrollAnimationState() const final;
-  mozilla::MainThreadScrollGeneration CurrentScrollGeneration() const final {
+  EnumSet<AnimationState> ScrollAnimationState() const final;
+  MainThreadScrollGeneration CurrentScrollGeneration() const final {
     return mScrollGeneration;
   }
-  mozilla::APZScrollGeneration ScrollGenerationOnApz() const final {
+  APZScrollGeneration ScrollGenerationOnApz() const final {
     return mScrollGenerationOnApz;
   }
   nsPoint LastScrollDestination() final { return mDestination; }
-  nsTArray<mozilla::ScrollPositionUpdate> GetScrollUpdates() const final;
+  nsTArray<ScrollPositionUpdate> GetScrollUpdates() const final;
   bool HasScrollUpdates() const final { return !mScrollUpdates.IsEmpty(); }
-  void ResetScrollInfoIfNeeded(
-      const mozilla::MainThreadScrollGeneration& aGeneration,
-      const mozilla::APZScrollGeneration& aGenerationOnApz,
-      mozilla::APZScrollAnimationType aAPZScrollAnimationType,
-      InScrollingGesture aInScrollingGesture) final;
+  void ResetScrollInfoIfNeeded(const MainThreadScrollGeneration& aGeneration,
+                               const APZScrollGeneration& aGenerationOnApz,
+                               APZScrollAnimationType aAPZScrollAnimationType,
+                               InScrollingGesture aInScrollingGesture) final;
   bool WantAsyncScroll() const final;
-  mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-      mozilla::layers::WebRenderLayerManager* aLayerManager,
-      const nsIFrame* aItemFrame,
+  Maybe<layers::ScrollMetadata> ComputeScrollMetadata(
+      layers::WebRenderLayerManager* aLayerManager, const nsIFrame* aItemFrame,
       const nsPoint& aOffsetToReferenceFrame) const final;
   void MarkScrollbarsDirtyForReflow() const final;
   void InvalidateScrollbars() const final;
@@ -367,8 +348,8 @@ class ScrollContainerFrame : public nsContainerFrame,
   void TriggerDisplayPortExpiration() final;
 
   // nsIStatefulFrame
-  mozilla::UniquePtr<mozilla::PresState> SaveState() final;
-  NS_IMETHOD RestoreState(mozilla::PresState* aState) final;
+  UniquePtr<PresState> SaveState() final;
+  NS_IMETHOD RestoreState(PresState* aState) final;
 
   // nsIScrollbarMediator
   void ScrollByPage(
@@ -380,7 +361,7 @@ class ScrollContainerFrame : public nsContainerFrame,
   void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
                     ScrollSnapFlags = ScrollSnapFlags::Disabled) final;
   void ScrollByUnit(nsScrollbarFrame* aScrollbar, ScrollMode aMode,
-                    int32_t aDirection, mozilla::ScrollUnit aUnit,
+                    int32_t aDirection, ScrollUnit aUnit,
                     ScrollSnapFlags = ScrollSnapFlags::Disabled) final;
   void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) final;
   void ThumbMoved(nsScrollbarFrame* aScrollbar, nscoord aOldPos,
@@ -413,10 +394,10 @@ class ScrollContainerFrame : public nsContainerFrame,
   PhysicalScrollSnapAlign GetScrollSnapAlignFor(
       const nsIFrame* aFrame) const final;
 
-  bool DragScroll(mozilla::WidgetEvent* aEvent) final;
+  bool DragScroll(WidgetEvent* aEvent) final;
 
-  void AsyncScrollbarDragInitiated(
-      uint64_t aDragBlockId, mozilla::layers::ScrollDirection aDirection) final;
+  void AsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                   layers::ScrollDirection aDirection) final;
 
   void AsyncScrollbarDragRejected() final;
 
@@ -440,16 +421,16 @@ class ScrollContainerFrame : public nsContainerFrame,
 
   bool SmoothScrollVisual(
       const nsPoint& aVisualViewportOffset,
-      mozilla::layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType) final;
+      layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType) final;
 
-  bool IsSmoothScroll(mozilla::dom::ScrollBehavior aBehavior) const final;
+  bool IsSmoothScroll(dom::ScrollBehavior aBehavior) const final;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
 #ifdef ACCESSIBILITY
-  mozilla::a11y::AccType AccessibleType() override;
+  a11y::AccType AccessibleType() override;
 #endif
 
  protected:
@@ -489,8 +470,8 @@ class ScrollContainerFrame : public nsContainerFrame,
     HorizontalScrollbar,
     Resizer,
   };
-  mozilla::EnumSet<AnonymousContentType> GetNeededAnonymousContent() const;
-  mozilla::EnumSet<AnonymousContentType> GetCurrentAnonymousContent() const;
+  EnumSet<AnonymousContentType> GetNeededAnonymousContent() const;
+  EnumSet<AnonymousContentType> GetCurrentAnonymousContent() const;
 
   // If a child frame was added or removed on the scrollframe,
   // reload our child frame list.
@@ -522,8 +503,7 @@ class ScrollContainerFrame : public nsContainerFrame,
   // It should not be called with an ASR setter on the stack, as the
   // top-layer items handle setting up their own ASRs.
   void MaybeCreateTopLayerAndWrapRootItems(
-      nsDisplayListBuilder*, mozilla::nsDisplayListCollection&,
-      bool aCreateAsyncZoom,
+      nsDisplayListBuilder*, nsDisplayListCollection&, bool aCreateAsyncZoom,
       AutoContainsBlendModeCapturer* aAsyncZoomBlendCapture,
       const nsRect& aAsyncZoomClipRect, nscoord* aRadii);
 
@@ -611,9 +591,9 @@ class ScrollContainerFrame : public nsContainerFrame,
 
  public:
   static void AsyncScrollCallback(ScrollContainerFrame* aInstance,
-                                  mozilla::TimeStamp aTime);
+                                  TimeStamp aTime);
   static void AsyncSmoothMSDScrollCallback(ScrollContainerFrame* aInstance,
-                                           mozilla::TimeDuration aDeltaTime);
+                                           TimeDuration aDeltaTime);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * aRange is the range of allowable scroll positions around the desired
@@ -647,14 +627,14 @@ class ScrollContainerFrame : public nsContainerFrame,
    * Returns true if a suitable snap point could be found and aDestination has
    * been updated to a valid snapping position.
    */
-  Maybe<mozilla::SnapDestination> GetSnapPointForDestination(
-      mozilla::ScrollUnit aUnit, ScrollSnapFlags aFlags,
-      const nsPoint& aStartPos, const nsPoint& aDestination);
+  Maybe<SnapDestination> GetSnapPointForDestination(
+      ScrollUnit aUnit, ScrollSnapFlags aFlags, const nsPoint& aStartPos,
+      const nsPoint& aDestination);
 
-  Maybe<mozilla::SnapDestination> GetSnapPointForResnap();
+  Maybe<SnapDestination> GetSnapPointForResnap();
   bool NeedsResnap();
 
-  void SetLastSnapTargetIds(mozilla::UniquePtr<ScrollSnapTargetIds> aId);
+  void SetLastSnapTargetIds(UniquePtr<ScrollSnapTargetIds> aId);
   void AddScrollPositionListener(nsIScrollPositionListener* aListener) final {
     mListeners.AppendElement(aListener);
   }
@@ -718,9 +698,10 @@ class ScrollContainerFrame : public nsContainerFrame,
   // adjust the scrollbar rectangle aRect to account for any visible resizer.
   // aHasResizer specifies if there is a content resizer, however this method
   // will also check if a widget resizer is present as well.
-  void AdjustScrollbarRectForResizer(
-      nsIFrame* aFrame, nsPresContext* aPresContext, nsRect& aRect,
-      bool aHasResizer, mozilla::layers::ScrollDirection aDirection);
+  void AdjustScrollbarRectForResizer(nsIFrame* aFrame,
+                                     nsPresContext* aPresContext, nsRect& aRect,
+                                     bool aHasResizer,
+                                     layers::ScrollDirection aDirection);
   void LayoutScrollbars(ScrollReflowInput& aState,
                         const nsRect& aInsideBorderArea,
                         const nsRect& aOldScrollPort);
@@ -769,11 +750,11 @@ class ScrollContainerFrame : public nsContainerFrame,
   // the physical (visual) viewport.
   nsSize TrueOuterSize(nsDisplayListBuilder* aBuilder) const;
 
-  already_AddRefed<Element> MakeScrollbar(mozilla::dom::NodeInfo* aNodeInfo,
+  already_AddRefed<Element> MakeScrollbar(dom::NodeInfo* aNodeInfo,
                                           bool aVertical,
-                                          mozilla::AnonymousContentKey& aKey);
+                                          AnonymousContentKey& aKey);
 
-  void AppendScrollUpdate(const mozilla::ScrollPositionUpdate& aUpdate);
+  void AppendScrollUpdate(const ScrollPositionUpdate& aUpdate);
 
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<Element> mHScrollbarContent;
@@ -798,14 +779,14 @@ class ScrollContainerFrame : public nsContainerFrame,
   const nsIFrame* mReferenceFrameDuringPainting;
   RefPtr<AsyncScroll> mAsyncScroll;
   RefPtr<AsyncSmoothMSDScroll> mAsyncSmoothMSDScroll;
-  RefPtr<ScrollbarActivity> mScrollbarActivity;
+  RefPtr<layout::ScrollbarActivity> mScrollbarActivity;
   nsTArray<nsIScrollPositionListener*> mListeners;
   ScrollOrigin mLastScrollOrigin;
   Maybe<nsPoint> mApzSmoothScrollDestination;
-  mozilla::MainThreadScrollGeneration mScrollGeneration;
-  mozilla::APZScrollGeneration mScrollGenerationOnApz;
+  MainThreadScrollGeneration mScrollGeneration;
+  APZScrollGeneration mScrollGenerationOnApz;
 
-  nsTArray<mozilla::ScrollPositionUpdate> mScrollUpdates;
+  nsTArray<ScrollPositionUpdate> mScrollUpdates;
 
   nsSize mMinimumScaleSize;
 
@@ -849,7 +830,7 @@ class ScrollContainerFrame : public nsContainerFrame,
 
   nsRect mPrevScrolledRect;
 
-  ScrollableLayerGuid::ViewID mScrollParentID;
+  layers::ScrollableLayerGuid::ViewID mScrollParentID;
 
   // Timer to remove the displayport some time after scrolling has stopped
   nsCOMPtr<nsITimer> mDisplayPortExpiryTimer;
@@ -996,7 +977,7 @@ class ScrollContainerFrame : public nsContainerFrame,
   bool mHasVerticalOverflowForDynamicToolbar : 1;
 #endif
 
-  mozilla::layout::ScrollVelocityQueue mVelocityQueue;
+  layout::ScrollVelocityQueue mVelocityQueue;
 
  protected:
   class AutoScrollbarRepaintSuppression;
@@ -1066,28 +1047,25 @@ class ScrollContainerFrame : public nsContainerFrame,
   void ScrollToWithOrigin(nsPoint aScrollPosition, const nsRect* aRange,
                           ScrollOperationParams&& aParams);
 
-  void CompleteAsyncScroll(
-      const nsPoint& aScrollPosition, const nsRect& aRange,
-      mozilla::UniquePtr<ScrollSnapTargetIds> aSnapTargetIds,
-      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified);
+  void CompleteAsyncScroll(const nsPoint& aStartPosition, const nsRect& aRange,
+                           UniquePtr<ScrollSnapTargetIds> aSnapTargetIds,
+                           ScrollOrigin aOrigin = ScrollOrigin::NotSpecified);
 
   bool HasPerspective() const { return ChildrenHavePerspective(); }
   bool HasBgAttachmentLocal() const;
-  mozilla::StyleDirection GetScrolledFrameDir() const;
+  StyleDirection GetScrolledFrameDir() const;
 
   // Ask APZ to smooth scroll to |aDestination|.
   // This method does not clamp the destination; callers should clamp it to
   // either the layout or the visual scroll range (APZ will happily smooth
   // scroll to either).
-  void ApzSmoothScrollTo(
-      const nsPoint& aDestination, ScrollMode, ScrollOrigin,
-      mozilla::ScrollTriggeredByScript,
-      mozilla::UniquePtr<ScrollSnapTargetIds> aSnapTargetIds);
+  void ApzSmoothScrollTo(const nsPoint& aDestination, ScrollMode, ScrollOrigin,
+                         ScrollTriggeredByScript,
+                         UniquePtr<ScrollSnapTargetIds> aSnapTargetIds);
 
   // Check whether APZ can scroll in the provided directions, keeping in mind
   // that APZ currently cannot scroll along axes which are overflow:hidden.
-  bool CanApzScrollInTheseDirections(
-      mozilla::layers::ScrollDirections aDirections);
+  bool CanApzScrollInTheseDirections(layers::ScrollDirections aDirections);
 
   // Removes any RefreshDriver observers we might have registered.
   void RemoveObservers();
@@ -1096,7 +1074,7 @@ class ScrollContainerFrame : public nsContainerFrame,
   // NOTE: On mobile this value might be factoring into overflow:hidden region
   // in the case of the top level document.
   nsRect mScrollPort;
-  mozilla::UniquePtr<ScrollSnapTargetIds> mLastSnapTargetIds;
+  UniquePtr<ScrollSnapTargetIds> mLastSnapTargetIds;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScrollContainerFrame::OverflowState)
