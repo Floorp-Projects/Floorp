@@ -14,3 +14,6 @@ user_pref("extensions.webextensions.warnings-as-errors", false);
 // disable telemetry bug 1639148
 user_pref("toolkit.telemetry.server", "");
 user_pref("telemetry.fog.test.localhost_port", -1);
+
+// Turn off update
+user_pref("app.update.disabledForTesting", true);

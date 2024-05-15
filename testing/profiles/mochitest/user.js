@@ -23,6 +23,9 @@ user_pref("general.smoothScroll", true);
 // storage access API spec for secure contexts.
 user_pref("dom.storage_access.dont_grant_insecure_contexts", false);
 
+// Turn off update
+user_pref("app.update.disabledForTesting", true);
+
 // This feature restricts to add history when accessing to web page is too
 // frequently, it assumes real human accesses them by clicking and key types.
 // Therefore, in the mochitest, as the frequently in common browser tests can be
