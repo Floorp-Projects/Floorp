@@ -201,7 +201,7 @@ fun:*nsDOMNavigationTiming*TimeStampToDOM*
 # Several unsigned arithmetic operations with -1
 src:*/hal/HalWakeLock.cpp
 
-# Code in layout/generic/nsGfxScrollFrame.cpp that produces
+# Code in layout/generic/ScrollContainerFrame.cpp that produces
 # somewhat frequent signed integer overflows. Probably harmless
 # because it's layout code.
 fun:*ClampAndAlignWithPixels*

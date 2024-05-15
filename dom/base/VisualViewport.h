@@ -45,7 +45,7 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
                        const nsPoint& aPrevLayoutOffset);
 
   // These two events are modelled after the ScrollEvent class in
-  // nsGfxScrollFrame.h.
+  // ScrollContainerFrame.h.
   class VisualViewportResizeEvent : public Runnable {
    public:
     NS_DECL_NSIRUNNABLE
