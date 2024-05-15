@@ -9973,7 +9973,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     if (activeWallpaper && wallpaperList && name.url) {
       return /*#__PURE__*/external_React_default().createElement("p", {
         className: `wallpaper-attribution`,
-        key: name,
+        key: name.string,
         "data-l10n-id": "newtab-wallpaper-attribution",
         "data-l10n-args": JSON.stringify({
           author_string: name.string,
