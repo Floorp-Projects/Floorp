@@ -95,15 +95,16 @@ void PopulateCSSProperties() {
   glean::characteristics::color_scheme.Set(
       (int)PreferenceSheet::ContentPrefs().mColorScheme);
 
-  StylePrefersContrast prefersContrast = [] {
+  const auto& colors =
+      PreferenceSheet::ContentPrefs().ColorsFor(ColorScheme::Light);
+
+  StylePrefersContrast prefersContrast = [&colors] {
     // Replicates Gecko_MediaFeatures_PrefersContrast but without a Document
     if (!PreferenceSheet::ContentPrefs().mUseAccessibilityTheme &&
         PreferenceSheet::ContentPrefs().mUseDocumentColors) {
       return StylePrefersContrast::NoPreference;
     }
 
-    const auto& colors =
-        PreferenceSheet::ContentPrefs().ColorsFor(ColorScheme::Light);
     float ratio = RelativeLuminanceUtils::ContrastRatio(
         colors.mDefaultBackground, colors.mDefault);
     // https://www.w3.org/TR/WCAG21/#contrast-minimum
@@ -117,6 +118,31 @@ void PopulateCSSProperties() {
     return StylePrefersContrast::Custom;
   }();
   glean::characteristics::prefers_contrast.Set((int)prefersContrast);
+
+  glean::characteristics::use_document_colors.Set(
+      PreferenceSheet::ContentPrefs().mUseDocumentColors);
+
+  // These colors aren't using LookAndFeel, see Gecko_ComputeSystemColor.
+  glean::characteristics::color_canvas.Set(colors.mDefaultBackground);
+  glean::characteristics::color_canvastext.Set(colors.mDefault);
+
+  // Similar to NS_TRANSPARENT and other special colors.
+  constexpr nscolor kMissingColor = NS_RGBA(0x42, 0x00, 0x00, 0x00);
+
+#define SYSTEM_COLOR(METRIC_NAME, COLOR_NAME)                                 \
+  glean::characteristics::color_##METRIC_NAME.Set(                            \
+      LookAndFeel::GetColor(LookAndFeel::ColorID::COLOR_NAME,                 \
+                            ColorScheme::Light, LookAndFeel::UseStandins::No) \
+          .valueOr(kMissingColor))
+
+  SYSTEM_COLOR(accentcolor, Accentcolor);
+  SYSTEM_COLOR(accentcolortext, Accentcolortext);
+  SYSTEM_COLOR(highlight, Highlight);
+  SYSTEM_COLOR(highlighttext, Highlighttext);
+  SYSTEM_COLOR(selecteditem, Selecteditem);
+  SYSTEM_COLOR(selecteditemtext, Selecteditemtext);
+
+#undef SYSTEM_COLOR
 }
 
 void PopulateScreenProperties() {
