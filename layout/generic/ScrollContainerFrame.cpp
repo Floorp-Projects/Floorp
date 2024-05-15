@@ -6,7 +6,7 @@
 
 /* rendering object to wrap rendering objects that should be scrollable */
 
-#include "nsGfxScrollFrame.h"
+#include "mozilla/ScrollContainerFrame.h"
 
 #include "ScrollPositionUpdate.h"
 #include "mozilla/layers/LayersTypes.h"

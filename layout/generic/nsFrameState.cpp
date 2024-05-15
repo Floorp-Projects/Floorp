@@ -11,7 +11,6 @@
 #include "nsBlockFrame.h"
 #include "nsFlexContainerFrame.h"
 #include "nsGridContainerFrame.h"
-#include "nsGfxScrollFrame.h"
 #include "nsIFrame.h"
 #include "nsImageFrame.h"
 #include "nsInlineFrame.h"

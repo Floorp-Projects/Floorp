@@ -18,8 +18,8 @@
 #endif
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPtr.h"
-#include "nsGfxScrollFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsISelectControlFrame.h"
 #include "nsSelectsAreaFrame.h"

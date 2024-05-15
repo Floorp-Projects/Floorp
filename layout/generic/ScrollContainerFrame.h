@@ -6,8 +6,8 @@
 
 /* rendering object to wrap rendering objects that should be scrollable */
 
-#ifndef nsGfxScrollFrame_h___
-#define nsGfxScrollFrame_h___
+#ifndef mozilla_ScrollContainerFrame_h_
+#define mozilla_ScrollContainerFrame_h_
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
@@ -1093,4 +1093,4 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsHTMLScrollFrame::OverflowState)
 
-#endif /* nsGfxScrollFrame_h___ */
+#endif /* mozilla_ScrollContainerFrame_h_ */

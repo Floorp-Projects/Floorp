@@ -36,6 +36,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/SelectionMovementUtils.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticAnalysisFunctions.h"
@@ -85,7 +86,6 @@
 #include "nsFrameSelection.h"
 #include "nsGkAtoms.h"
 #include "nsGridContainerFrame.h"
-#include "nsGfxScrollFrame.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCanvasFrame.h"
 
