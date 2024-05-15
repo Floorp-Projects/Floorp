@@ -410,8 +410,10 @@ interface nsIApplicationUpdateService : nsISupports
    * Selects the best update to install from a list of available updates.
    * @param   updates
    *          An array of updates that are available
+   * @returns Promise<nsIUpdate>
+   *          Resolves with the best update to install.
    */
-  nsIUpdate selectUpdate(in Array<nsIUpdate> updates);
+  Promise selectUpdate(in Array<nsIUpdate> updates);
 
   /**
    * Adds a listener that receives progress and state information about the

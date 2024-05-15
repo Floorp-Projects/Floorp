@@ -54,7 +54,7 @@ add_task(async function backgroundUpdate() {
   gResponseBody = getRemoteUpdatesXMLString(updateString);
 
   let { updates } = await waitForUpdateCheck(true);
-  let bestUpdate = gAUS.selectUpdate(updates);
+  let bestUpdate = await gAUS.selectUpdate(updates);
   let success = await gAUS.downloadUpdate(bestUpdate, false);
   Assert.equal(
     success,
