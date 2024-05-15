@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { html } from "../../content/widgets/vendor/lit.all.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/reader/moz-slider.mjs";
 
 export default {

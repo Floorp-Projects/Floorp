@@ -4,7 +4,6 @@
 
 // eslint-disable-next-line import/no-unresolved
 import { html } from "lit.all.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "./login-list-lit-item.mjs";
 
 export default {

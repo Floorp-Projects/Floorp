@@ -4,7 +4,6 @@
 
 import { html } from "lit.all.mjs";
 // Imported for side-effects.
-// eslint-disable-next-line import/no-unassigned-import
 import "toolkit-widgets/named-deck.js";
 
 export default {

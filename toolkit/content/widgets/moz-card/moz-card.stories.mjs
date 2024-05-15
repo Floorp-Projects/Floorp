@@ -4,7 +4,6 @@
 
 // eslint-disable-next-line import/no-unresolved
 import { classMap, html, ifDefined } from "lit.all.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "./moz-card.mjs";
 
 export default {

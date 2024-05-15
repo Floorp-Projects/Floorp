@@ -45,7 +45,6 @@ customElements.define("{element_name}", {class_name});
 
 STORY_HEADER = """{license}
 {html_lit_import}
-// eslint-disable-next-line import/no-unassigned-import
 {fixme_comment}import "{element_path}";
 
 export default {{

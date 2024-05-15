@@ -4,11 +4,8 @@
 
 // eslint-disable-next-line import/no-unresolved
 import { html } from "lit.all.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "./login-password-field.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "./login-username-field.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "./login-origin-field.mjs";
 
 export default {

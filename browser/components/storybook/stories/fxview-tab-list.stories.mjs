@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { html } from "lit.all.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "browser/components/firefoxview/fxview-tab-list.mjs";
 
 const DATE_TIME_FORMATS = {
