@@ -278,6 +278,7 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mUniqueId(aTabId),
       mDidFakeShow(false),
       mTriedBrowserInit(false),
+      mIgnoreKeyPressEvent(false),
       mHasValidInnerSize(false),
       mDestroyed(false),
       mIsTopLevel(aIsTopLevel),
@@ -1982,14 +1983,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealKeyEvent(
                 aEvent.AreAllEditCommandsInitialized());
 
   // If content code called preventDefault() on a keydown event, then we don't
-  // want to process any following keypress events which is caused by the
-  // preceding keydown (i.e., default action of the preceding keydown).
-  // In other words, if the keypress is not a default action of the preceding
-  // keydown, we should not stop dispatching keypress event even if the
-  // immediate preceding keydown was consumed.
+  // want to process any following keypress events.
   const bool isPrecedingKeyDownEventConsumed =
-      aEvent.mMessage == eKeyPress && mPreviousConsumedKeyDownCode.isSome() &&
-      mPreviousConsumedKeyDownCode.value() == aEvent.mCodeNameIndex;
+      aEvent.mMessage == eKeyPress && mIgnoreKeyPressEvent;
 
   WidgetKeyboardEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
@@ -2003,41 +1999,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealKeyEvent(
     UpdateRepeatedKeyEventEndTime(localEvent);
 
     if (aEvent.mMessage == eKeyDown) {
-      // If eKeyDown is consumed, we should stop dispatching the following
-      // eKeyPress events since the events are default action of eKeyDown.
-      // FIXME:  We should synthesize eKeyPress in this process (bug 1181501).
-      if (status == nsEventStatus_eConsumeNoDefault) {
-        MOZ_ASSERT_IF(!aEvent.mFlags.mIsSynthesizedForTests,
-                      aEvent.mCodeNameIndex != CODE_NAME_INDEX_USE_STRING);
-        // If mPreviousConsumedKeyDownCode is not Nothing, 2 or more keys may be
-        // pressed at same time and their eKeyDown are consumed.  However, we
-        // forget the previous eKeyDown event result here and that might cause
-        // dispatching eKeyPress events caused by the previous eKeyDown in
-        // theory.  However, this should not occur because eKeyPress should be
-        // fired before another eKeyDown, although it's depend on how the native
-        // keyboard event handler is implemented.
-        mPreviousConsumedKeyDownCode = Some(aEvent.mCodeNameIndex);
-      }
-      // If eKeyDown is not consumed but we know preceding eKeyDown is consumed,
-      // we need to forget it since we should not stop dispatching following
-      // eKeyPress events which are default action of current eKeyDown.
-      else if (mPreviousConsumedKeyDownCode.isSome() &&
-               aEvent.mCodeNameIndex == mPreviousConsumedKeyDownCode.value()) {
-        mPreviousConsumedKeyDownCode.reset();
-      }
-    }
-    // eKeyPress is a default action of eKeyDown.  Therefore, eKeyPress is fired
-    // between eKeyDown and eKeyUp.  So, received an eKeyUp for eKeyDown which
-    // was consumed means that following eKeyPress events should be dispatched.
-    // Therefore, we need to forget the fact that the preceding eKeyDown was
-    // consumed right now.
-    // NOTE: On Windows, eKeyPress may be fired without preceding eKeyDown if
-    // IME or utility app sends WM_CHAR message.  So, if we don't forget it,
-    // we'd consume unrelated eKeyPress events.
-    else if (aEvent.mMessage == eKeyUp &&
-             mPreviousConsumedKeyDownCode.isSome() &&
-             aEvent.mCodeNameIndex == mPreviousConsumedKeyDownCode.value()) {
-      mPreviousConsumedKeyDownCode.reset();
+      mIgnoreKeyPressEvent = status == nsEventStatus_eConsumeNoDefault;
     }
 
     if (localEvent.mFlags.mIsSuppressedOrDelayed) {
