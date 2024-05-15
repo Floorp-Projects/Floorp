@@ -22,6 +22,8 @@ class nsInputStreamChannel : public nsBaseChannel,
 
   nsInputStreamChannel() = default;
 
+  NS_IMETHOD SetContentType(const nsACString& aContentType) override;
+
  protected:
   virtual ~nsInputStreamChannel() = default;
 

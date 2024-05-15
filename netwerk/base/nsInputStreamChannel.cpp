@@ -97,5 +97,11 @@ nsInputStreamChannel::SetBaseURI(nsIURI* aBaseURI) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsInputStreamChannel::SetContentType(const nsACString& aContentType) {
+  mContentType = aContentType;
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
