@@ -97,11 +97,11 @@ export async function getFilename(filenameTitle, browser) {
     };
     let accepted = await promiseTargetFile(fpParams, browser.ownerGlobal);
     if (!accepted) {
-      return null;
+      return { filename: null, accepted };
     }
     filename = fpParams.file.path;
   }
-  return filename;
+  return { filename, accepted: true };
 }
 
 /**

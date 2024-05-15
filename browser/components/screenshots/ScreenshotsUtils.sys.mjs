@@ -1224,14 +1224,19 @@ export var ScreenshotsUtils = {
    * @param dataUrl The image data
    * @param browser The current browser
    * @param data Telemetry data
+   * @returns true if the download succeeds, otherwise false
    */
   async downloadScreenshot(title, dataUrl, browser, data) {
     // Guard against missing image data.
     if (!dataUrl) {
-      return;
+      return false;
     }
 
-    let filename = await getFilename(title, browser);
+    let { filename, accepted } = await getFilename(title, browser);
+
+    if (!accepted) {
+      return false;
+    }
 
     const targetFile = new lazy.FileUtils.File(filename);
 
@@ -1259,6 +1264,8 @@ export var ScreenshotsUtils = {
           new Blob([filename]).size
         })`
       );
+
+      return false;
     }
 
     let extra = await this.getActor(browser).sendQuery(
@@ -1274,6 +1281,8 @@ export var ScreenshotsUtils = {
       SCREENSHOTS_LAST_SAVED_METHOD_PREF,
       "download"
     );
+
+    return true;
   },
 
   recordTelemetryEvent(type, object, args) {
