@@ -4287,9 +4287,9 @@ async function waitForUpdateCheck(aSuccess, aExpectedValues = {}) {
  */
 async function waitForUpdateDownload(aUpdates, aExpectedStatus) {
   let bestUpdate = await gAUS.selectUpdate(aUpdates);
-  let success = await gAUS.downloadUpdate(bestUpdate, false);
-  if (!success) {
-    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + success);
+  let result = await gAUS.downloadUpdate(bestUpdate, false);
+  if (result != Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS) {
+    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + result);
   }
   return new Promise(resolve =>
     gAUS.addDownloadListener({

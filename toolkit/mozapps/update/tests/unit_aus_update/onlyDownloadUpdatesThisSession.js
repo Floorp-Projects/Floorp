@@ -39,8 +39,12 @@ async function downloadUpdate() {
   });
 
   let bestUpdate = await gAUS.selectUpdate(updates);
-  let success = await gAUS.downloadUpdate(bestUpdate, false);
-  Assert.ok(success, "Update download should have started");
+  let result = await gAUS.downloadUpdate(bestUpdate, false);
+  Assert.equal(
+    result,
+    Ci.nsIApplicationUpdateService.DOWNLOAD_SUCCESS,
+    "Update download should have started"
+  );
   return downloadRestrictionHitPromise;
 }
 

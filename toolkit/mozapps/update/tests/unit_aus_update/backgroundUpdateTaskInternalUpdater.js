@@ -55,10 +55,10 @@ add_task(async function backgroundUpdate() {
 
   let { updates } = await waitForUpdateCheck(true);
   let bestUpdate = await gAUS.selectUpdate(updates);
-  let success = await gAUS.downloadUpdate(bestUpdate, false);
+  let result = await gAUS.downloadUpdate(bestUpdate, false);
   Assert.equal(
-    success,
-    false,
+    result,
+    Ci.nsIApplicationUpdateService.DOWNLOAD_FAILURE_CANNOT_RESUME_IN_BACKGROUND,
     "We should not attempt to download an update in the background when an " +
       "internal update download is already in progress."
   );
