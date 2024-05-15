@@ -258,12 +258,22 @@ web-platform-tests-webgpu:
     mozharness:
         chunked: true
         extra-options:
-            - --test-type=testharness
-            - --skip-implementation-status=backlog
-            - --skip-implementation-status=not-implementing
-            - --default-exclude
-            - --tag=webgpu
-            - --exclude-tag=canvas
+            by-test-platform:
+                macos.*:
+                    - --test-type=testharness
+                    - --skip-implementation-status=backlog
+                    - --skip-implementation-status=not-implementing
+                    - --default-exclude
+                    - --tag=webgpu
+                    - --exclude-tag=canvas
+                    - --setpref=gfx.webgpu.ignore-blocklist=true
+                default:
+                    - --test-type=testharness
+                    - --skip-implementation-status=backlog
+                    - --skip-implementation-status=not-implementing
+                    - --default-exclude
+                    - --tag=webgpu
+                    - --exclude-tag=canvas
 
 web-platform-tests-webgpu-backlog:
     description: "Web platform WebGPU test run (backlog)"
