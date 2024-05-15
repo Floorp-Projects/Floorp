@@ -10,9 +10,10 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap2="http://schemas.microsoft.com/appx/manifest/uap/windows10/2"
   xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap uap2 uap3 uap10 rescap">
+  IgnorableNamespaces="uap uap2 uap3 uap5 uap10 rescap">
 
   <Identity Name="@APPX_IDENTITY@" Publisher="@APPX_PUBLISHER@" Version="@APPX_VERSION@" ProcessorArchitecture="@APPX_ARCH@" />
   <Properties>
@@ -102,6 +103,16 @@
             </com:SurrogateServer>
           </com:ComServer>
         </com:Extension>
+        <uap5:Extension
+          Category="windows.startupTask"
+          Executable="VFS\ProgramFiles\@APPX_INSTDIR@\@MOZ_APP_NAME@.exe"
+          EntryPoint="Windows.FullTrustApplication"
+          uap10:Parameters="-os-autostart">
+          <uap5:StartupTask
+            TaskId="LaunchOnLogin"
+            Enabled="false"
+            DisplayName="@MOZ_APP_DISPLAYNAME@" />
+        </uap5:Extension>
         <desktop:Extension Category="windows.toastNotificationActivation">
           <desktop:ToastNotificationActivation ToastActivatorCLSID="@MOZ_INOTIFICATIONACTIVATION_CLSID@" />
         </desktop:Extension>
