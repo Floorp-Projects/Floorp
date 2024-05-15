@@ -844,13 +844,15 @@ interface nsIUpdateManager : nsISupports
   void elevationOptedIn();
 
   /**
-   * These functions both clean up and remove an active update without applying
+   * These functions clean up and remove an active update without applying
    * it. The first function does this for the update that is currently being
    * downloaded. The second function does this for the update that has already
-   * been downloaded.
+   * been downloaded. The third function does this for both updates.
+   * @returns Promise<undefined>
    */
-  void cleanupDownloadingUpdate();
-  void cleanupReadyUpdate();
+  Promise cleanupDownloadingUpdate();
+  Promise cleanupReadyUpdate();
+  Promise cleanupActiveUpdates();
 
   /**
    * Runs cleanup that ought to happen on a Firefox paveover install to

@@ -2582,8 +2582,7 @@ var gMainPane = {
         Ci.nsIApplicationUpdateService
       );
       await aus.stopDownload();
-      um.cleanupReadyUpdate();
-      um.cleanupDownloadingUpdate();
+      await um.cleanupActiveUpdates();
       UpdateListener.clearPendingAndActiveNotifications();
     }
   },
