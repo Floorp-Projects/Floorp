@@ -20,44 +20,74 @@ add_task(async function test_customize_sidebar_actions() {
   const customizeComponent =
     customizeDocument.querySelector("sidebar-customize");
   let toolEntrypointsCount = sidebar.toolButtons.length;
+  let checkedInputs = Array.from(customizeComponent.toolInputs).filter(
+    input => input.checked
+  );
   is(
-    customizeComponent.toolInputs.length,
+    checkedInputs.length,
     toolEntrypointsCount,
     `${toolEntrypointsCount} inputs to toggle Firefox Tools are shown in the Customize Menu.`
   );
+  is(
+    customizeComponent.toolInputs.length,
+    3,
+    "Three default tools are shown in the customize menu"
+  );
+  let bookmarksInput = Array.from(customizeComponent.toolInputs).find(
+    input => input.name === "viewBookmarksSidebar"
+  );
+  ok(
+    !bookmarksInput.checked,
+    "The bookmarks input is unchecked initally as Bookmarks are disabled initially."
+  );
   for (const toolInput of customizeComponent.toolInputs) {
+    let toolDisabledInitialState = !toolInput.checked;
     toolInput.click();
     await BrowserTestUtils.waitForCondition(() => {
       let toggledTool = win.SidebarController.toolsAndExtensions.get(
         toolInput.name
       );
-      return toggledTool.disabled;
-    }, `The entrypoint for ${toolInput.name} has been disabled in the sidebar.`);
+      return toggledTool.disabled === !toolDisabledInitialState;
+    }, `The entrypoint for ${toolInput.name} has been ${toolDisabledInitialState ? "enabled" : "disabled"} in the sidebar.`);
     toolEntrypointsCount = sidebar.toolButtons.length;
+    checkedInputs = Array.from(customizeComponent.toolInputs).filter(
+      input => input.checked
+    );
     is(
       toolEntrypointsCount,
-      1,
-      `The button for the ${toolInput.name} entrypoint has been removed.`
+      checkedInputs.length,
+      `The button for the ${toolInput.name} entrypoint has been ${
+        toolDisabledInitialState ? "added" : "removed"
+      }.`
     );
     toolInput.click();
     await BrowserTestUtils.waitForCondition(() => {
       let toggledTool = win.SidebarController.toolsAndExtensions.get(
         toolInput.name
       );
-      return !toggledTool.disabled;
-    }, `The entrypoint for ${toolInput.name} has been re-enabled in the sidebar.`);
+      return toggledTool.disabled === toolDisabledInitialState;
+    }, `The entrypoint for ${toolInput.name} has been ${toolDisabledInitialState ? "disabled" : "enabled"} in the sidebar.`);
     toolEntrypointsCount = sidebar.toolButtons.length;
+    checkedInputs = Array.from(customizeComponent.toolInputs).filter(
+      input => input.checked
+    );
     is(
       toolEntrypointsCount,
-      2,
-      `The button for the ${toolInput.name} entrypoint has been added back.`
+      checkedInputs.length,
+      `The button for the ${toolInput.name} entrypoint has been ${
+        toolDisabledInitialState ? "removed" : "added"
+      }.`
     );
     // Check ordering
-    is(
-      sidebar.toolButtons[1].getAttribute("view"),
-      toolInput.name,
-      `The button for the ${toolInput.name} entrypoint has been added back to the end of the list of tools/extensions entrypoints`
-    );
+    if (!toolDisabledInitialState) {
+      is(
+        sidebar.toolButtons[sidebar.toolButtons.length - 1].getAttribute(
+          "view"
+        ),
+        toolInput.name,
+        `The button for the ${toolInput.name} entrypoint has been added back to the end of the list of tools/extensions entrypoints`
+      );
+    }
   }
 
   await BrowserTestUtils.closeWindow(win);

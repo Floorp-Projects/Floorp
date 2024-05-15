@@ -31,6 +31,7 @@ sidebar-customize-header = Customize sidebar
 sidebar-customize-firefox-tools = { -brand-product-name } tools
 sidebar-customize-history = History
 sidebar-customize-synced-tabs = Tabs from other devices
+sidebar-customize-bookmarks = Bookmarks
 
 ## Labels for sidebar context menu items
 

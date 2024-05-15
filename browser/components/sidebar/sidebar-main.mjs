@@ -135,13 +135,13 @@ export default class SidebarMain extends MozLitElement {
 
   setCustomize() {
     this.bottomActions.push(
-      ...window.SidebarController.getSidebarPanels([
-        "viewCustomizeSidebar",
-      ]).map(({ commandID, icon, revampL10nId }) => ({
-        l10nId: revampL10nId,
-        icon,
-        view: commandID,
-      }))
+      ...window.SidebarController.getCustomize().map(
+        ({ commandID, icon, revampL10nId }) => ({
+          l10nId: revampL10nId,
+          icon,
+          view: commandID,
+        })
+      )
     );
   }
 
