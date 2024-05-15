@@ -11,14 +11,15 @@
 #include "include/core/SkSize.h"
 #include "include/private/SkColorData.h"
 #include "include/private/base/SkAssert.h"
+#include "include/private/base/SkTPin.h"
 #include "include/private/base/SkTemplates.h"
 #include "src/base/SkHalf.h"
 #include "src/base/SkRectMemcpy.h"
 #include "src/core/SkColorSpaceXformSteps.h"
 #include "src/core/SkImageInfoPriv.h"
-#include "src/core/SkOpts.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkRasterPipelineOpContexts.h"
+#include "src/core/SkSwizzlePriv.h"
 
 #include <cstdint>
 #include <cstring>
@@ -51,7 +52,9 @@ static bool swizzle_or_premul(const SkImageInfo& dstInfo,       void* dstPixels,
         !is_8888(srcInfo.colorType()) ||
         steps.flags.linearize         ||
         steps.flags.gamut_transform   ||
+#if !defined(SK_ARM_HAS_NEON)
         steps.flags.unpremul          ||
+#endif
         steps.flags.encode) {
         return false;
     }
@@ -63,6 +66,9 @@ static bool swizzle_or_premul(const SkImageInfo& dstInfo,       void* dstPixels,
     if (steps.flags.premul) {
         fn = swapRB ? SkOpts::RGBA_to_bgrA
                     : SkOpts::RGBA_to_rgbA;
+    } else if (steps.flags.unpremul) {
+        fn = swapRB ? SkOpts::rgbA_to_BGRA
+                    : SkOpts::rgbA_to_RGBA;
     } else {
         // If we're not swizzling, we ought to have used rect_memcpy().
         SkASSERT(swapRB);
@@ -199,6 +205,28 @@ static bool convert_to_alpha8(const SkImageInfo& dstInfo,       void* vdst, size
             return true;
         }
 
+        case kBGRA_10101010_XR_SkColorType: {
+            auto src64 = (const uint64_t*) src;
+            for (int y = 0; y < srcInfo.height(); y++) {
+                for (int x = 0; x < srcInfo.width(); x++) {
+                    static constexpr int64_t kZero = 384;
+                    static constexpr int64_t kRange = 510;
+                    static constexpr int64_t kMaxU8 = 0xff;
+                    static constexpr int64_t kMinU8 = 0x00;
+                    static constexpr int64_t kDivisor = kRange / kMaxU8;
+                    int64_t raw_alpha = src64[x] >> 54;
+                    // f(384) = 0
+                    // f(894) = 255
+                    int64_t alpha =
+                            SkTPin((raw_alpha - kZero) / kDivisor, kMinU8, kMaxU8);
+                    dst[x] = static_cast<uint8_t>(alpha);
+                }
+                dst = SkTAddOffset<uint8_t>(dst, dstRB);
+                src64 = SkTAddOffset<const uint64_t>(src64, srcRB);
+            }
+            return true;
+        }
+        case kRGBA_10x6_SkColorType:
         case kR16G16B16A16_unorm_SkColorType: {
             auto src64 = (const uint64_t*) src;
             for (int y = 0; y < srcInfo.height(); y++) {
@@ -218,13 +246,13 @@ static bool convert_to_alpha8(const SkImageInfo& dstInfo,       void* vdst, size
 static void convert_with_pipeline(const SkImageInfo& dstInfo, void* dstRow, int dstStride,
                                   const SkImageInfo& srcInfo, const void* srcRow, int srcStride,
                                   const SkColorSpaceXformSteps& steps) {
-    SkRasterPipeline_MemoryCtx src = { (void*)srcRow, srcStride },
-                               dst = { (void*)dstRow, dstStride };
+    SkRasterPipeline_MemoryCtx src = { const_cast<void*>(srcRow), srcStride },
+                               dst = {                   dstRow,  dstStride };
 
     SkRasterPipeline_<256> pipeline;
-    pipeline.append_load(srcInfo.colorType(), &src);
+    pipeline.appendLoad(srcInfo.colorType(), &src);
     steps.apply(&pipeline);
-    pipeline.append_store(dstInfo.colorType(), &dst);
+    pipeline.appendStore(dstInfo.colorType(), &dst);
     pipeline.run(0,0, srcInfo.width(), srcInfo.height());
 }
 

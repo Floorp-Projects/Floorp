@@ -10,6 +10,7 @@
 #include "include/core/SkAlphaType.h"
 #include "include/core/SkColorPriv.h"
 #include "include/core/SkColorSpace.h"
+#include "include/core/SkColorType.h"
 #include "include/core/SkUnPreMultiply.h"
 #include "include/private/SkColorData.h"
 #include "include/private/base/SkFloatingPoint.h"
@@ -21,8 +22,9 @@
 #include "src/core/SkMask.h"
 #include "src/core/SkReadPixelsRec.h"
 #include "src/core/SkSwizzlePriv.h"
-#include "src/opts/SkUtils_opts.h"
+#include "src/opts/SkMemset_opts.h"
 
+#include <cstdint>
 #include <cstring>
 #include <iterator>
 #include <utility>
@@ -138,6 +140,16 @@ float SkPixmap::getAlphaf(int x, int y) const {
             value = (u32 >> 30) * (1.0f/3);
             break;
         }
+        case kBGRA_10101010_XR_SkColorType: {
+            uint64_t u64 = static_cast<const uint64_t*>(srcPtr)[0];
+            value = ((u64 >> 54) - 384) / 510.f;
+            break;
+        }
+        case kRGBA_10x6_SkColorType: {
+            uint64_t u64 = static_cast<const uint64_t*>(srcPtr)[0];
+            value = (u64 >> 54) * (1.0f/1023);
+            break;
+        }
         case kR16G16B16A16_unorm_SkColorType: {
             uint64_t u64 = static_cast<const uint64_t*>(srcPtr)[0];
             value = (u64 >> 48) * (1.0f/65535);
@@ -145,9 +157,7 @@ float SkPixmap::getAlphaf(int x, int y) const {
         }
         case kRGBA_F16Norm_SkColorType:
         case kRGBA_F16_SkColorType: {
-            uint64_t px;
-            memcpy(&px, srcPtr, sizeof(px));
-            value = SkHalfToFloat_finite_ftz(px)[3];
+            value = from_half(skvx::half4::Load(srcPtr))[3];
             break;
         }
         case kRGBA_F32_SkColorType:
@@ -310,6 +320,21 @@ SkColor SkPixmap::getColor(int x, int y) const {
                  | (uint32_t)( b * 255.0f ) <<  0
                  | (uint32_t)( a * 255.0f ) << 24;
         }
+        case kBGRA_10101010_XR_SkColorType: {
+            SkASSERT(false);
+            return 0;
+        }
+        case kRGBA_10x6_SkColorType: {
+            uint64_t value = *this->addr64(x, y);
+            float r = ((value >>  6) & 0x3ff) * (1/1023.0f),
+                  g = ((value >> 22) & 0x3ff) * (1/1023.0f),
+                  b = ((value >> 38) & 0x3ff) * (1/1023.0f),
+                  a = ((value >> 54) & 0x3ff) * (1/1023.0f);
+            return (uint32_t)( r * 255.0f ) << 16
+                 | (uint32_t)( g * 255.0f ) <<  8
+                 | (uint32_t)( b * 255.0f ) <<  0
+                 | (uint32_t)( a * 255.0f ) << 24;
+        }
         case kR16G16B16A16_unorm_SkColorType: {
             uint64_t value = *this->addr64(x, y);
 
@@ -331,7 +356,7 @@ SkColor SkPixmap::getColor(int x, int y) const {
         case kRGBA_F16_SkColorType: {
             const uint64_t* addr =
                 (const uint64_t*)fPixels + y * (fRowBytes >> 3) + x;
-            skvx::float4 p4 = SkHalfToFloat_finite_ftz(*addr);
+            skvx::float4 p4 = from_half(skvx::half4::Load(addr));
             if (p4[3] && needsUnpremul) {
                 float inva = 1 / p4[3];
                 p4 = p4 * skvx::float4(inva, inva, inva, 1);
@@ -495,6 +520,19 @@ SkColor4f SkPixmap::getColor4f(int x, int y) const {
             }
             return SkColor4f{r, g, b, a};
         }
+        case kBGRA_10101010_XR_SkColorType: {
+            SkASSERT(false);
+            return {};
+        }
+        case kRGBA_10x6_SkColorType: {
+            uint64_t value = *this->addr64(x, y);
+
+            float r = ((value >>  6) & 0x3ff) * (1/1023.0f),
+                  g = ((value >> 22) & 0x3ff) * (1/1023.0f),
+                  b = ((value >> 38) & 0x3ff) * (1/1023.0f),
+                  a = ((value >> 54) & 0x3ff) * (1/1023.0f);
+            return SkColor4f{r, g, b, a};
+        }
         case kR16G16B16A16_unorm_SkColorType: {
             uint64_t value = *this->addr64(x, y);
 
@@ -512,7 +550,7 @@ SkColor4f SkPixmap::getColor4f(int x, int y) const {
         case kRGBA_F16Norm_SkColorType:
         case kRGBA_F16_SkColorType: {
             const uint64_t* addr = (const uint64_t*)fPixels + y * (fRowBytes >> 3) + x;
-            skvx::float4 p4 = SkHalfToFloat_finite_ftz(*addr);
+            skvx::float4 p4 = from_half(skvx::half4::Load(addr));
             if (p4[3] && needsUnpremul) {
                 float inva = 1 / p4[3];
                 p4 = p4 * skvx::float4(inva, inva, inva, 1);
@@ -656,6 +694,31 @@ bool SkPixmap::computeIsOpaque() const {
             }
             return true;
         }
+        case kBGRA_10101010_XR_SkColorType:{
+            static constexpr uint64_t kOne = 510 + 384;
+            for (int y = 0; y < height; ++y) {
+                const uint64_t* row = this->addr64(0, y);
+                for (int x = 0; x < width; ++x) {
+                    if ((row[x] >> 54) < kOne) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        case kRGBA_10x6_SkColorType: {
+            uint16_t acc = 0xFFC0;  // Ignore bottom six bits
+            for (int y = 0; y < height; ++y) {
+                const uint64_t* row = this->addr64(0, y);
+                for (int x = 0; x < width; ++x) {
+                    acc &= (row[x] >> 48);
+                }
+                if (0xFFC0 != acc) {
+                    return false;
+                }
+            }
+            return true;
+        }
         case kR16G16B16A16_unorm_SkColorType: {
             uint16_t acc = 0xFFFF;
             for (int y = 0; y < height; ++y) {
@@ -680,7 +743,7 @@ bool SkPixmap::erase(SkColor color, const SkIRect& subset) const {
     return this->erase(SkColor4f::FromColor(color), &subset);
 }
 
-bool SkPixmap::erase(const SkColor4f& color, SkColorSpace* srcCS, const SkIRect* subset) const {
+bool SkPixmap::erase(const SkColor4f& color, const SkIRect* subset) const {
     if (this->colorType() == kUnknown_SkColorType) {
         return false;
     }
@@ -696,8 +759,7 @@ bool SkPixmap::erase(const SkColor4f& color, SkColorSpace* srcCS, const SkIRect*
 
     const auto dst = SkImageInfo::Make(1, 1, this->colorType(), this->alphaType(),
                                        sk_ref_sp(this->colorSpace()));
-    const auto src = SkImageInfo::Make(1, 1, kRGBA_F32_SkColorType, kPremul_SkAlphaType,
-                                       sk_ref_sp(srcCS));
+    const auto src = SkImageInfo::Make(1, 1, kRGBA_F32_SkColorType, kPremul_SkAlphaType, nullptr);
 
     uint64_t dstPixel[2] = {};   // be large enough for our widest config (F32 x 4)
     SkASSERT((size_t)dst.bytesPerPixel() <= sizeof(dstPixel));

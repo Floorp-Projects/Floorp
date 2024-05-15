@@ -8,12 +8,21 @@
 #ifndef SkColorFilter_DEFINED
 #define SkColorFilter_DEFINED
 
-#include "include/core/SkBlendMode.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkFlattenable.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/base/SkAPI.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <utility>
 
 class SkColorMatrix;
 class SkColorSpace;
+class SkColorTable;
+
+enum class SkBlendMode;
+struct SkDeserialProcs;
 
 /**
 *  ColorFilters are optional objects in the drawing pipeline. When present in
@@ -40,6 +49,12 @@ public:
     // Returns true if the filter is guaranteed to never change the alpha of a color it filters.
     bool isAlphaUnchanged() const;
 
+    /**
+     * Applies this filter to the input color. This function does no color management.
+     *
+     * DEPRECATED: Please use filterColor4f instead. That function supports higher precision,
+     *             wide-gamut color, and is explicit about the color space of the input and output.
+     */
     SkColor filterColor(SkColor) const;
 
     /**
@@ -56,6 +71,12 @@ public:
      */
     sk_sp<SkColorFilter> makeComposed(sk_sp<SkColorFilter> inner) const;
 
+    /** Return a colorfilter that will compute this filter in a specific color space. By default all
+     *  filters operate in the destination (surface) color space. This allows filters like Blend and
+     *  Matrix, or runtime color filters to perform their math in a known space.
+     */
+    sk_sp<SkColorFilter> makeWithWorkingColorSpace(sk_sp<SkColorSpace>) const;
+
     static sk_sp<SkColorFilter> Deserialize(const void* data, size_t size,
                                             const SkDeserialProcs* procs = nullptr);
 
@@ -68,8 +89,10 @@ private:
 
 class SK_API SkColorFilters {
 public:
-    static sk_sp<SkColorFilter> Compose(sk_sp<SkColorFilter> outer, sk_sp<SkColorFilter> inner) {
-        return outer ? outer->makeComposed(inner) : inner;
+    static sk_sp<SkColorFilter> Compose(const sk_sp<SkColorFilter>& outer,
+                                        sk_sp<SkColorFilter> inner) {
+        return outer ? outer->makeComposed(std::move(inner))
+                     : std::move(inner);
     }
 
     // Blends between the constant color (src) and input color (dst) based on the SkBlendMode.
@@ -112,6 +135,11 @@ public:
                                           const uint8_t tableR[256],
                                           const uint8_t tableG[256],
                                           const uint8_t tableB[256]);
+
+    /**
+     * Create a table colorfilter that holds a ref to the shared color table.
+     */
+    static sk_sp<SkColorFilter> Table(sk_sp<SkColorTable> table);
 
     /**
      *  Create a colorfilter that multiplies the RGB channels by one color, and

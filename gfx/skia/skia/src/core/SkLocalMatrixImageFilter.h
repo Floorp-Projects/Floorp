@@ -9,7 +9,17 @@
 #define SkLocalMatrixImageFilter_DEFINED
 
 #include "include/core/SkFlattenable.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "src/core/SkImageFilterTypes.h"
 #include "src/core/SkImageFilter_Base.h"
+
+#include <optional>
+
+class SkImageFilter;
+class SkReadBuffer;
+class SkWriteBuffer;
 
 /**
  *  Wraps another imagefilter + matrix, such that using this filter will give the same result
@@ -17,26 +27,44 @@
  */
 class SkLocalMatrixImageFilter : public SkImageFilter_Base {
 public:
-    static sk_sp<SkImageFilter> Make(const SkMatrix& localM, sk_sp<SkImageFilter> input);
+    static sk_sp<SkImageFilter> Make(const SkMatrix& localMatrix, sk_sp<SkImageFilter> input);
 
     SkRect computeFastBounds(const SkRect&) const override;
 
 protected:
     void flatten(SkWriteBuffer&) const override;
-    sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
-    SkIRect onFilterBounds(const SkIRect& src, const SkMatrix& ctm,
-                           MapDirection, const SkIRect* inputRect) const override;
-
-    MatrixCapability onGetCTMCapability() const override { return MatrixCapability::kComplex; }
 
 private:
     SK_FLATTENABLE_HOOKS(SkLocalMatrixImageFilter)
 
-    SkLocalMatrixImageFilter(const SkMatrix& localM, sk_sp<SkImageFilter> input);
+    SkLocalMatrixImageFilter(const SkMatrix& localMatrix,
+                             const SkMatrix& invLocalMatrix,
+                             sk_sp<SkImageFilter> const* input)
+            : SkImageFilter_Base(input, 1)
+            , fLocalMatrix{localMatrix}
+            , fInvLocalMatrix{invLocalMatrix} {}
 
-    SkMatrix fLocalM;
+    MatrixCapability onGetCTMCapability() const override { return MatrixCapability::kComplex; }
 
-    using INHERITED = SkImageFilter_Base;
+    skif::FilterResult onFilterImage(const skif::Context& ctx) const override;
+
+    skif::LayerSpace<SkIRect> onGetInputLayerBounds(
+            const skif::Mapping&,
+            const skif::LayerSpace<SkIRect>& desiredOutput,
+            std::optional<skif::LayerSpace<SkIRect>> contentBounds) const override;
+
+    std::optional<skif::LayerSpace<SkIRect>> onGetOutputLayerBounds(
+            const skif::Mapping&,
+            std::optional<skif::LayerSpace<SkIRect>> contentBounds) const override;
+
+    skif::Mapping localMapping(const skif::Mapping&) const;
+
+    // NOTE: This is not a ParameterSpace<SkMatrix> like that of SkMatrixTransformImageFilter.
+    // It's a bit pedantic, but does impact the math. A parameter-space transform has to be modified
+    // to represent a layer-space transform: (L*P*L^-1); while this local matrix changes L directly
+    // to L*P for its child filter.
+    SkMatrix fLocalMatrix;
+    SkMatrix fInvLocalMatrix;
 };
 
 #endif

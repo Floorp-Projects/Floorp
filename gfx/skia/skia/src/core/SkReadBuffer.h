@@ -24,13 +24,13 @@
 #include "include/private/base/SkAlign.h"
 #include "include/private/base/SkAssert.h"
 #include "src/core/SkBlenderBase.h"
-#include "src/core/SkColorFilterBase.h"
 #include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkPaintPriv.h"
 #include "src/core/SkPicturePriv.h"
 #include "src/core/SkSamplingPriv.h"
 #include "src/core/SkTHash.h"
+#include "src/effects/colorfilters/SkColorFilterBase.h"
 #include "src/shaders/SkShaderBase.h"
 
 #include <cstddef>
@@ -48,10 +48,6 @@ class SkRegion;
 class SkString;
 class SkTypeface;
 struct SkPoint3;
-
-#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
-#include "include/core/SkDrawLooper.h"
-#endif
 
 class SkReadBuffer {
 public:
@@ -138,9 +134,6 @@ public:
         return sk_sp<T>((T*)this->readFlattenable(T::GetFlattenableType()));
     }
     sk_sp<SkColorFilter> readColorFilter() { return this->readFlattenable<SkColorFilterBase>(); }
-#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
-    sk_sp<SkDrawLooper> readDrawLooper() { return this->readFlattenable<SkDrawLooper>(); }
-#endif
     sk_sp<SkImageFilter> readImageFilter() { return this->readFlattenable<SkImageFilter_Base>(); }
     sk_sp<SkBlender> readBlender() { return this->readFlattenable<SkBlenderBase>(); }
     sk_sp<SkMaskFilter> readMaskFilter() { return this->readFlattenable<SkMaskFilterBase>(); }
@@ -187,6 +180,9 @@ public:
 
     void setDeserialProcs(const SkDeserialProcs& procs);
     const SkDeserialProcs& getDeserialProcs() const { return fProcs; }
+
+    bool allowSkSL() const { return fAllowSkSL; }
+    void setAllowSkSL(bool allow) { fAllowSkSL = allow; }
 
     /**
      *  If isValid is false, sets the buffer to be "invalid". Returns true if the buffer
@@ -242,7 +238,7 @@ private:
     const char* fBase = nullptr;  // beginning of buffer
 
     // Only used if we do not have an fFactoryArray.
-    SkTHashMap<uint32_t, SkFlattenable::Factory> fFlattenableDict;
+    skia_private::THashMap<uint32_t, SkFlattenable::Factory> fFlattenableDict;
 
     int fVersion = 0;
 
@@ -258,6 +254,7 @@ private:
         return SkIsAlign4((uintptr_t)ptr);
     }
 
+    bool fAllowSkSL = true;
     bool fError = false;
 };
 

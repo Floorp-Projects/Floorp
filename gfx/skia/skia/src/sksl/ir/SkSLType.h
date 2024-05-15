@@ -10,27 +10,30 @@
 
 #include "include/core/SkSpan.h"
 #include "include/core/SkTypes.h"
-#include "include/private/SkSLDefines.h"
-#include "include/private/SkSLIRNode.h"
-#include "include/private/SkSLModifiers.h"
-#include "include/private/SkSLSymbol.h"
-#include "include/sksl/SkSLPosition.h"
+#include "include/private/base/SkTArray.h"
+#include "src/sksl/SkSLDefines.h"
+#include "src/sksl/SkSLPosition.h"
+#include "src/sksl/ir/SkSLIRNode.h"
+#include "src/sksl/ir/SkSLLayout.h"
+#include "src/sksl/ir/SkSLModifierFlags.h"
+#include "src/sksl/ir/SkSLSymbol.h"
 #include "src/sksl/spirv.h"
 
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <tuple>
-#include <vector>
 
 namespace SkSL {
 
 class Context;
 class Expression;
 class SymbolTable;
+class Type;
 
 struct CoercionCost {
     static CoercionCost Free()              { return {    0,    0, false }; }
@@ -66,6 +69,26 @@ struct CoercionCost {
 };
 
 /**
+ * Represents a single field in a struct type.
+ */
+struct Field {
+    Field(Position pos, Layout layout, ModifierFlags flags, std::string_view name, const Type* type)
+            : fPosition(pos)
+            , fLayout(layout)
+            , fModifierFlags(flags)
+            , fName(name)
+            , fType(type) {}
+
+    std::string description() const;
+
+    Position fPosition;
+    Layout fLayout;
+    ModifierFlags fModifierFlags;
+    std::string_view fName;
+    const Type* fType;
+};
+
+/**
  * Represents a type, such as int or float4.
  */
 class Type : public Symbol {
@@ -74,20 +97,6 @@ public:
     inline static constexpr int kMaxAbbrevLength = 3;
     // Represents unspecified array dimensions, as in `int[]`.
     inline static constexpr int kUnsizedArray = -1;
-    struct Field {
-        Field(Position pos, Modifiers modifiers, std::string_view name, const Type* type)
-                : fPosition(pos)
-                , fModifiers(modifiers)
-                , fName(name)
-                , fType(type) {}
-
-        std::string description() const;
-
-        Position fPosition;
-        Modifiers fModifiers;
-        std::string_view fName;
-        const Type* fType;
-    };
 
     enum class TypeKind : int8_t {
         kArray,
@@ -128,8 +137,8 @@ public:
     Type(const Type& other) = delete;
 
     /** Creates an array type. `columns` may be kUnsizedArray. */
-    static std::unique_ptr<Type> MakeArrayType(std::string_view name, const Type& componentType,
-                                               int columns);
+    static std::unique_ptr<Type> MakeArrayType(const Context& context, std::string_view name,
+                                               const Type& componentType, int columns);
 
     /** Converts a component type and a size (float, 10) into an array name ("float[10]"). */
     std::string getArrayName(int arraySize) const;
@@ -143,7 +152,9 @@ public:
      * Create a generic type which maps to the listed types--e.g. $genType is a generic type which
      * can match float, float2, float3 or float4.
      */
-    static std::unique_ptr<Type> MakeGenericType(const char* name, SkSpan<const Type* const> types);
+    static std::unique_ptr<Type> MakeGenericType(const char* name,
+                                                 SkSpan<const Type* const> types,
+                                                 const Type* slotType);
 
     /** Create a type for literal scalars. */
     static std::unique_ptr<Type> MakeLiteralType(const char* name, const Type& scalarType,
@@ -175,7 +186,7 @@ public:
     static std::unique_ptr<Type> MakeStructType(const Context& context,
                                                 Position pos,
                                                 std::string_view name,
-                                                std::vector<Field> fields,
+                                                skia_private::TArray<Field> fields,
                                                 bool interfaceBlock = false);
 
     /** Create a texture type. */
@@ -208,16 +219,16 @@ public:
     }
 
     /** Creates a clone of this Type, if needed, and inserts it into a different symbol table. */
-    const Type* clone(SymbolTable* symbolTable) const;
+    const Type* clone(const Context& context, SymbolTable* symbolTable) const;
 
     /**
-     * Returns true if this type is known to come from BuiltinTypes. If this returns true, the Type
-     * will always be available in the root SymbolTable and never needs to be copied to migrate an
-     * Expression from one location to another. If it returns false, the Type might not exist in a
-     * separate SymbolTable and you'll need to consider copying it.
+     * Returns true if this type is known to come from BuiltinTypes, or is declared in a module. If
+     * this returns true, the Type will always be available in the root SymbolTable and never needs
+     * to be copied to migrate an Expression from one location to another. If it returns false, the
+     * Type might not exist in a separate SymbolTable and you'll need to consider cloning it.
      */
-    bool isInBuiltinTypes() const {
-        return !(this->isArray() || this->isStruct());
+    virtual bool isBuiltin() const {
+        return true;
     }
 
     std::string displayName() const {
@@ -234,6 +245,19 @@ public:
     /** Returns true if this type is legal to use in a strict-ES2 program. */
     virtual bool isAllowedInES2() const {
         return true;
+    }
+
+    /**
+     * Returns true if this type is legal to use as a uniform. If false is returned, the
+     * `errorPosition` field may be populated; if it is, this position can be used to emit an extra
+     * diagnostic "caused by: <a field>" for nested types.
+     * Note that runtime effects enforce additional, much stricter rules about uniforms; these
+     * limitations are not handled here.
+     */
+    virtual bool isAllowedInUniform(Position* errorPosition = nullptr) const {
+        // We don't allow samplers, textures or atomics to be marked as uniforms.
+        // This rules out all opaque types.
+        return !this->isOpaque();
     }
 
     /** If this is an alias, returns the underlying type, otherwise returns this. */
@@ -342,6 +366,13 @@ public:
     }
 
     /**
+     * Returns true if this is a storage texture.
+     */
+    bool isStorageTexture() const {
+        return fTypeKind == TypeKind::kTexture && this->dimensions() != SpvDimSubpassData;
+    }
+
+    /**
      * Returns the "priority" of a number type, in order of float > half > int > short.
      * When operating on two number types, the result is the higher-priority type.
      */
@@ -372,6 +403,13 @@ public:
      */
     virtual const Type& componentType() const {
         return *this;
+    }
+
+    /**
+     * For matrix types, returns the type of a single column (`m[n]`). Asserts for all other types.
+     */
+    const Type& columnType(const Context& context) const {
+        return this->componentType().toCompound(context, this->rows(), /*rows=*/1);
     }
 
     /**
@@ -420,7 +458,15 @@ public:
         return 0;
     }
 
-    virtual const std::vector<Field>& fields() const {
+    /**
+     * Returns the type of the value in the nth slot. For scalar, vector and matrix types, should
+     * always match `componentType()`.
+     */
+    virtual const Type& slotType(size_t) const {
+        return *this;
+    }
+
+    virtual SkSpan<const Field> fields() const {
         SK_ABORT("Internal error: not a struct");
     }
 
@@ -433,17 +479,17 @@ public:
     }
 
     virtual SpvDim_ dimensions() const {
-        SkASSERT(false);
+        SkDEBUGFAIL("Internal error: not a texture type");
         return SpvDim1D;
     }
 
     virtual bool isDepth() const {
-        SkASSERT(false);
+        SkDEBUGFAIL("Internal error: not a texture type");
         return false;
     }
 
     virtual bool isArrayedTexture() const {
-        SkASSERT(false);
+        SkDEBUGFAIL("Internal error: not a texture type");
         return false;
     }
 
@@ -455,7 +501,13 @@ public:
         return fTypeKind == TypeKind::kGeneric;
     }
 
-    bool isAtomic() const { return this->typeKind() == TypeKind::kAtomic; }
+    bool isSampler() const {
+        return fTypeKind == TypeKind::kSampler;
+    }
+
+    bool isAtomic() const {
+        return this->typeKind() == TypeKind::kAtomic;
+    }
 
     virtual bool isScalar() const {
         return false;
@@ -512,7 +564,7 @@ public:
     }
 
     bool hasPrecision() const {
-        return this->componentType().isNumber() || fTypeKind == TypeKind::kSampler;
+        return this->componentType().isNumber() || this->isSampler();
     }
 
     bool highPrecision() const {
@@ -523,9 +575,17 @@ public:
         return 0;
     }
 
-    bool isOrContainsArray() const;
-    bool isOrContainsUnsizedArray() const;
-    bool isOrContainsAtomic() const;
+    virtual bool isOrContainsArray() const {
+        return false;
+    }
+
+    virtual bool isOrContainsUnsizedArray() const {
+        return false;
+    }
+
+    virtual bool isOrContainsAtomic() const {
+        return false;
+    }
 
     /**
      * Returns the corresponding vector or matrix type with the specified number of columns and
@@ -534,14 +594,14 @@ public:
     const Type& toCompound(const Context& context, int columns, int rows) const;
 
     /**
-     * Returns a type which honors the precision and access-level qualifiers set in Modifiers. e.g.:
+     * Returns a type which honors the precision and access-level qualifiers set in ModifierFlags.
+     * For example:
      *  - Modifier `mediump` + Type `float2`:     Type `half2`
      *  - Modifier `readonly` + Type `texture2D`: Type `readonlyTexture2D`
      * Generates an error if the qualifiers don't make sense (`highp bool`, `writeonly MyStruct`)
      */
     const Type* applyQualifiers(const Context& context,
-                                Modifiers* modifiers,
-                                SymbolTable* symbols,
+                                ModifierFlags* modifierFlags,
                                 Position pos) const;
 
     /**
@@ -566,27 +626,40 @@ public:
      * Verifies that the expression is a valid constant array size for this type. Returns the array
      * size, or reports errors and returns zero if the expression isn't a valid literal value.
      */
-    SKSL_INT convertArraySize(const Context& context, Position arrayPos,
-            std::unique_ptr<Expression> size) const;
+    SKSL_INT convertArraySize(const Context& context,
+                              Position arrayPos,
+                              std::unique_ptr<Expression> size) const;
+
+    SKSL_INT convertArraySize(const Context& context,
+                              Position arrayPos,
+                              Position sizePos,
+                              SKSL_INT size) const;
 
 protected:
-    Type(std::string_view name, const char* abbrev, TypeKind kind,
-            Position pos = Position())
-        : INHERITED(pos, kIRNodeKind, name)
-        , fTypeKind(kind) {
+    Type(std::string_view name, const char* abbrev, TypeKind kind, Position pos = Position())
+            : INHERITED(pos, kIRNodeKind, name)
+            , fTypeKind(kind) {
         SkASSERT(strlen(abbrev) <= kMaxAbbrevLength);
         strcpy(fAbbreviatedName, abbrev);
     }
 
     const Type* applyPrecisionQualifiers(const Context& context,
-                                         Modifiers* modifiers,
-                                         SymbolTable* symbols,
+                                         ModifierFlags* modifierFlags,
                                          Position pos) const;
 
     const Type* applyAccessQualifiers(const Context& context,
-                                      Modifiers* modifiers,
-                                      SymbolTable* symbols,
+                                      ModifierFlags* modifierFlags,
                                       Position pos) const;
+
+    /** Only structs and arrays can be created in code; all other types exist in the root. */
+    bool isInRootSymbolTable() const {
+        return !(this->isArray() || this->isStruct());
+    }
+
+    /** If the type is a struct, returns the depth of the struct's most deeply-nested field. */
+    virtual int structNestingDepth() const {
+        return 0;
+    }
 
 private:
     using INHERITED = Symbol;

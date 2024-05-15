@@ -8,17 +8,26 @@
 #ifndef SkFont_DEFINED
 #define SkFont_DEFINED
 
-#include "include/core/SkFontTypes.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypeface.h"
-#include "include/private/base/SkTemplates.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkTo.h"
+#include "include/private/base/SkTypeTraits.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
 #include <vector>
 
 class SkMatrix;
 class SkPaint;
 class SkPath;
+enum class SkFontHinting;
+enum class SkTextEncoding;
 struct SkFontMetrics;
+struct SkPoint;
 
 /** \class SkFont
     SkFont controls options applied when drawing and measuring text.
@@ -192,20 +201,14 @@ public:
      */
     SkFont makeWithSize(SkScalar size) const;
 
-    /** Returns SkTypeface if set, or nullptr.
-        Does not alter SkTypeface SkRefCnt.
+    /** Does not alter SkTypeface SkRefCnt.
 
-        @return  SkTypeface if previously set, nullptr otherwise
+        @return  non-null SkTypeface
     */
-    SkTypeface* getTypeface() const {return fTypeface.get(); }
-
-    /** Returns SkTypeface if set, or the default typeface.
-        Does not alter SkTypeface SkRefCnt.
-
-        @return  SkTypeface if previously set or, a pointer to the default typeface if not
-        previously set.
-    */
-    SkTypeface* getTypefaceOrDefault() const;
+    SkTypeface* getTypeface() const {
+        SkASSERT(fTypeface);
+        return fTypeface.get();
+    }
 
     /** Returns text size in points.
 
@@ -229,24 +232,20 @@ public:
 
     /** Increases SkTypeface SkRefCnt by one.
 
-        @return  SkTypeface if previously set, nullptr otherwise
+        @return  A non-null SkTypeface.
     */
-    sk_sp<SkTypeface> refTypeface() const { return fTypeface; }
-
-    /** Increases SkTypeface SkRefCnt by one.
-
-        @return  SkTypeface if previously set or, a pointer to the default typeface if not
-        previously set.
-    */
-    sk_sp<SkTypeface> refTypefaceOrDefault() const;
+    sk_sp<SkTypeface> refTypeface() const {
+        SkASSERT(fTypeface);
+        return fTypeface;
+    }
 
     /** Sets SkTypeface to typeface, decreasing SkRefCnt of the previous SkTypeface.
-        Pass nullptr to clear SkTypeface and use the default typeface. Increments
-        tf SkRefCnt by one.
+        Pass nullptr to clear SkTypeface and use an empty typeface (which draws nothing).
+        Increments tf SkRefCnt by one.
 
         @param tf  font and style used to draw text
     */
-    void setTypeface(sk_sp<SkTypeface> tf) { fTypeface = tf; }
+    void setTypeface(sk_sp<SkTypeface> tf);
 
     /** Sets text size in points.
         Has no effect if textSize is not greater than or equal to zero.

@@ -5,23 +5,78 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkPaint.h"
-
-#include "src/core/SkBlenderBase.h"
-#include "src/core/SkColorFilterBase.h"
-#include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkPaintPriv.h"
+
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkBlender.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorType.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkShader.h"
+#include "include/private/base/SkAssert.h"
+#include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkPicturePriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSafeRange.h"
 #include "src/core/SkWriteBuffer.h"
-#include "src/core/SkXfermodePriv.h"
+#include "src/effects/colorfilters/SkColorFilterBase.h"
 #include "src/shaders/SkColorFilterShader.h"
 #include "src/shaders/SkShaderBase.h"
+
+#include <cstdint>
+#include <optional>
+
+class SkColorSpace;
 
 static bool changes_alpha(const SkPaint& paint) {
     SkColorFilter* cf = paint.getColorFilter();
     return cf && !as_CFB(cf)->isAlphaUnchanged();
+}
+
+enum SrcColorOpacity {
+    // The src color is known to be opaque (alpha == 255)
+    kOpaque_SrcColorOpacity = 0,
+    // The src color is known to be fully transparent (color == 0)
+    kTransparentBlack_SrcColorOpacity = 1,
+    // The src alpha is known to be fully transparent (alpha == 0)
+    kTransparentAlpha_SrcColorOpacity = 2,
+    // The src color opacity is unknown
+    kUnknown_SrcColorOpacity = 3
+};
+
+static bool blend_mode_is_opaque(SkBlendMode mode, SrcColorOpacity opacityType) {
+    SkBlendModeCoeff src, dst;
+    if (!SkBlendMode_AsCoeff(mode, &src, &dst)) {
+        return false;
+    }
+
+    switch (src) {
+        case SkBlendModeCoeff::kDA:
+        case SkBlendModeCoeff::kDC:
+        case SkBlendModeCoeff::kIDA:
+        case SkBlendModeCoeff::kIDC:
+            return false;
+        default:
+            break;
+    }
+
+    switch (dst) {
+        case SkBlendModeCoeff::kZero:
+            return true;
+        case SkBlendModeCoeff::kISA:
+            return kOpaque_SrcColorOpacity == opacityType;
+        case SkBlendModeCoeff::kSA:
+            return kTransparentBlack_SrcColorOpacity == opacityType ||
+                   kTransparentAlpha_SrcColorOpacity == opacityType;
+        case SkBlendModeCoeff::kSC:
+            return kTransparentBlack_SrcColorOpacity == opacityType;
+        default:
+            return false;
+    }
 }
 
 bool SkPaintPriv::Overwrites(const SkPaint* paint, ShaderOverrideOpacity overrideOpacity) {
@@ -31,19 +86,18 @@ bool SkPaintPriv::Overwrites(const SkPaint* paint, ShaderOverrideOpacity overrid
         return overrideOpacity != kNotOpaque_ShaderOverrideOpacity;
     }
 
-    SkXfermode::SrcColorOpacity opacityType = SkXfermode::kUnknown_SrcColorOpacity;
+    SrcColorOpacity opacityType = kUnknown_SrcColorOpacity;
 
     if (!changes_alpha(*paint)) {
         const unsigned paintAlpha = paint->getAlpha();
         if (0xff == paintAlpha && overrideOpacity != kNotOpaque_ShaderOverrideOpacity &&
-            (!paint->getShader() || paint->getShader()->isOpaque()))
-        {
-            opacityType = SkXfermode::kOpaque_SrcColorOpacity;
+            (!paint->getShader() || paint->getShader()->isOpaque())) {
+            opacityType = kOpaque_SrcColorOpacity;
         } else if (0 == paintAlpha) {
             if (overrideOpacity == kNone_ShaderOverrideOpacity && !paint->getShader()) {
-                opacityType = SkXfermode::kTransparentBlack_SrcColorOpacity;
+                opacityType = kTransparentBlack_SrcColorOpacity;
             } else {
-                opacityType = SkXfermode::kTransparentAlpha_SrcColorOpacity;
+                opacityType = kTransparentAlpha_SrcColorOpacity;
             }
         }
     }
@@ -52,7 +106,7 @@ bool SkPaintPriv::Overwrites(const SkPaint* paint, ShaderOverrideOpacity overrid
     if (!bm) {
         return false;   // don't know for sure, so we play it safe and return false.
     }
-    return SkXfermode::IsOpaque(bm.value(), opacityType);
+    return blend_mode_is_opaque(bm.value(), opacityType);
 }
 
 bool SkPaintPriv::ShouldDither(const SkPaint& p, SkColorType dstCT) {
@@ -77,15 +131,17 @@ bool SkPaintPriv::ShouldDither(const SkPaint& p, SkColorType dstCT) {
 
 // return true if the paint is just a single color (i.e. not a shader). If its
 // a shader, then we can't compute a const luminance for it :(
-static bool just_a_color(const SkPaint& paint, SkColor* color) {
-    SkColor c = paint.getColor();
+static bool just_a_color(const SkPaint& paint, SkColor4f* color) {
+    SkColor4f c = paint.getColor4f();
 
     const auto* shader = as_SB(paint.getShader());
     if (shader && !shader->asLuminanceColor(&c)) {
         return false;
     }
     if (paint.getColorFilter()) {
-        c = paint.getColorFilter()->filterColor(c);
+        // TODO: This colorspace is meaningless, replace it with something else
+        SkColorSpace* cs = nullptr;
+        c = paint.getColorFilter()->filterColor4f(c, cs, cs);
     }
     if (color) {
         *color = c;
@@ -94,11 +150,11 @@ static bool just_a_color(const SkPaint& paint, SkColor* color) {
 }
 
 SkColor SkPaintPriv::ComputeLuminanceColor(const SkPaint& paint) {
-    SkColor c;
+    SkColor4f c;
     if (!just_a_color(paint, &c)) {
-        c = SkColorSetRGB(0x7F, 0x80, 0x7F);
+        c = { 0.5f, 0.5f, 0.5f, 1.0f};
     }
-    return c;
+    return c.toSkColor();
 }
 
 void SkPaintPriv::RemoveColorFilter(SkPaint* p, SkColorSpace* dstCS) {

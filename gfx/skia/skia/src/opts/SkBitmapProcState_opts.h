@@ -25,6 +25,10 @@
     #include <immintrin.h>
 #elif defined(SK_ARM_HAS_NEON)
     #include <arm_neon.h>
+#elif SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LASX
+    #include <lasxintrin.h>
+#elif SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
+    #include <lsxintrin.h>
 #endif
 
 namespace SK_OPTS_NS {
@@ -37,138 +41,7 @@ static void decode_packed_coordinates_and_weight(U32 packed, Out* v0, Out* v1, O
     *w  = (packed >> 14) & 0xf; // Lerp weight for v1; weight for v0 is 16-w.
 }
 
-#if 1 && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX2
-    /*not static*/ inline
-    void S32_alpha_D32_filter_DX(const SkBitmapProcState& s,
-                                 const uint32_t* xy, int count, uint32_t* colors) {
-        SkASSERT(count > 0 && colors != nullptr);
-        SkASSERT(s.fBilerp);
-        SkASSERT(kN32_SkColorType == s.fPixmap.colorType());
-        SkASSERT(s.fAlphaScale <= 256);
-
-        // In a _DX variant only X varies; all samples share y0/y1 coordinates and wy weight.
-        int y0, y1, wy;
-        decode_packed_coordinates_and_weight(*xy++, &y0, &y1, &wy);
-
-        const uint32_t* row0 = s.fPixmap.addr32(0,y0);
-        const uint32_t* row1 = s.fPixmap.addr32(0,y1);
-
-        auto bilerp = [&](skvx::Vec<8,uint32_t> packed_x_coordinates) -> skvx::Vec<8,uint32_t> {
-            // Decode up to 8 output pixels' x-coordinates and weights.
-            skvx::Vec<8,uint32_t> x0,x1,wx;
-            decode_packed_coordinates_and_weight(packed_x_coordinates, &x0, &x1, &wx);
-
-            // Splat wx to each color channel.
-            wx = (wx <<  0)
-               | (wx <<  8)
-               | (wx << 16)
-               | (wx << 24);
-
-            auto gather = [](const uint32_t* ptr, skvx::Vec<8,uint32_t> ix) {
-            #if 1
-                // Drop into AVX2 intrinsics for vpgatherdd.
-                return skvx::bit_pun<skvx::Vec<8,uint32_t>>(
-                        _mm256_i32gather_epi32((const int*)ptr, skvx::bit_pun<__m256i>(ix), 4));
-            #else
-                // Portable version... sometimes I don't trust vpgatherdd.
-                return skvx::Vec<8,uint32_t>{
-                    ptr[ix[0]], ptr[ix[1]], ptr[ix[2]], ptr[ix[3]],
-                    ptr[ix[4]], ptr[ix[5]], ptr[ix[6]], ptr[ix[7]],
-                };
-            #endif
-            };
-
-            // Gather the 32 32-bit pixels that we'll bilerp into our 8 output pixels.
-            skvx::Vec<8,uint32_t> tl = gather(row0, x0), tr = gather(row0, x1),
-                                  bl = gather(row1, x0), br = gather(row1, x1);
-
-        #if 1
-            // We'll use _mm256_maddubs_epi16() to lerp much like in the SSSE3 code.
-            auto lerp_x = [&](skvx::Vec<8,uint32_t> L, skvx::Vec<8,uint32_t> R) {
-                __m256i l = skvx::bit_pun<__m256i>(L),
-                        r = skvx::bit_pun<__m256i>(R),
-                       wr = skvx::bit_pun<__m256i>(wx),
-                       wl = _mm256_sub_epi8(_mm256_set1_epi8(16), wr);
-
-                // Interlace l,r bytewise and line them up with their weights, then lerp.
-                __m256i lo = _mm256_maddubs_epi16(_mm256_unpacklo_epi8( l, r),
-                                                  _mm256_unpacklo_epi8(wl,wr));
-                __m256i hi = _mm256_maddubs_epi16(_mm256_unpackhi_epi8( l, r),
-                                                  _mm256_unpackhi_epi8(wl,wr));
-
-                // Those _mm256_unpack??_epi8() calls left us in a bit of an odd order:
-                //
-                //    if   l = a b c d | e f g h
-                //   and   r = A B C D | E F G H
-                //
-                // then   lo = a A b B | e E f F   (low  half of each input)
-                //  and   hi = c C d D | g G h H   (high half of each input)
-                //
-                // To get everything back in original order we need to transpose that.
-                __m256i abcd = _mm256_permute2x128_si256(lo, hi, 0x20),
-                        efgh = _mm256_permute2x128_si256(lo, hi, 0x31);
-
-                return skvx::join(skvx::bit_pun<skvx::Vec<16,uint16_t>>(abcd),
-                                  skvx::bit_pun<skvx::Vec<16,uint16_t>>(efgh));
-            };
-
-            skvx::Vec<32, uint16_t> top = lerp_x(tl, tr),
-                                    bot = lerp_x(bl, br),
-                                    sum = 16*top + (bot-top)*wy;
-        #else
-            // Treat 32-bit pixels as 4 8-bit values, and expand to 16-bit for room to multiply.
-            auto to_16x4 = [](auto v) -> skvx::Vec<32, uint16_t> {
-                return skvx::cast<uint16_t>(skvx::bit_pun<skvx::Vec<32, uint8_t>>(v));
-            };
-
-            // Sum up weighted sample pixels.  The naive, redundant math would be,
-            //
-            //   sum = tl * (16-wy) * (16-wx)
-            //       + bl * (   wy) * (16-wx)
-            //       + tr * (16-wy) * (   wx)
-            //       + br * (   wy) * (   wx)
-            //
-            // But we refactor to eliminate a bunch of those common factors.
-            auto lerp = [](auto lo, auto hi, auto w) {
-                return 16*lo + (hi-lo)*w;
-            };
-            skvx::Vec<32, uint16_t> sum = lerp(lerp(to_16x4(tl), to_16x4(bl), wy),
-                                               lerp(to_16x4(tr), to_16x4(br), wy), to_16x4(wx));
-        #endif
-
-            // Get back to [0,255] by dividing by maximum weight 16x16 = 256.
-            sum >>= 8;
-
-            // Scale by alpha if needed.
-            if(s.fAlphaScale < 256) {
-                sum *= s.fAlphaScale;
-                sum >>= 8;
-            }
-
-            // Pack back to 8-bit channels, undoing to_16x4().
-            return skvx::bit_pun<skvx::Vec<8,uint32_t>>(skvx::cast<uint8_t>(sum));
-        };
-
-        while (count >= 8) {
-            bilerp(skvx::Vec<8,uint32_t>::Load(xy)).store(colors);
-            xy     += 8;
-            colors += 8;
-            count  -= 8;
-        }
-        if (count > 0) {
-            __m256i active = skvx::bit_pun<__m256i>( count > skvx::Vec<8,int>{0,1,2,3, 4,5,6,7} ),
-                    coords = _mm256_maskload_epi32((const int*)xy, active),
-                    pixels;
-
-            bilerp(skvx::bit_pun<skvx::Vec<8,uint32_t>>(coords)).store(&pixels);
-            _mm256_maskstore_epi32((int*)colors, active, pixels);
-
-            sk_msan_mark_initialized(colors, colors+count,
-                                     "MSAN still doesn't understand AVX2 mask loads and stores.");
-        }
-    }
-
-#elif 1 && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSSE3
+#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSSE3
 
     /*not static*/ inline
     void S32_alpha_D32_filter_DX(const SkBitmapProcState& s,
@@ -307,7 +180,7 @@ static void decode_packed_coordinates_and_weight(U32 packed, Out* v0, Out* v1, O
     }
 
 
-#elif 1 && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
+#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
 
     /*not static*/ inline
     void S32_alpha_D32_filter_DX(const SkBitmapProcState& s,
@@ -384,6 +257,175 @@ static void decode_packed_coordinates_and_weight(U32 packed, Out* v0, Out* v1, O
 
             // Pack back into 8-bit values and store.
             *colors++ = _mm_cvtsi128_si32(_mm_packus_epi16(sum, _mm_setzero_si128()));
+        }
+    }
+
+#elif SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LASX
+    /*not static*/ inline
+    void S32_alpha_D32_filter_DX(const SkBitmapProcState& s,
+                                 const uint32_t* xy, int count, uint32_t* colors) {
+        SkASSERT(count > 0 && colors != nullptr);
+        SkASSERT(s.fBilerp);
+        SkASSERT(kN32_SkColorType == s.fPixmap.colorType());
+        SkASSERT(s.fAlphaScale <= 256);
+
+        int y0, y1, wy;
+        decode_packed_coordinates_and_weight(*xy++, &y0, &y1, &wy);
+
+        auto row0 = (const uint32_t*)( (const char*)s.fPixmap.addr() + y0 * s.fPixmap.rowBytes() ),
+             row1 = (const uint32_t*)( (const char*)s.fPixmap.addr() + y1 * s.fPixmap.rowBytes() );
+
+        // We'll put one pixel in the low 16 16-bit lanes to line up with wy,
+        // and another in the upper 16 16-bit lanes to line up with 16 - wy.
+        __m256i allY = __lasx_xvilvl_d(__lasx_xvreplgr2vr_h(16-wy), __lasx_xvreplgr2vr_h(wy));
+
+        while (count --> 0) {
+            int x0, x1, wx;
+            decode_packed_coordinates_and_weight(*xy++, &x0, &x1, &wx);
+
+            // Load the 4 pixels we're interpolating, in this grid:
+            //    | tl  tr |
+            //    | bl  br |
+
+            const __m256i zeros = __lasx_xvldi(0);
+            const __m256i tl = __lasx_xvinsgr2vr_w(zeros, row0[x0], 0),
+                          tr = __lasx_xvinsgr2vr_w(zeros, row0[x1], 0),
+                          bl = __lasx_xvinsgr2vr_w(zeros, row1[x0], 0),
+                          br = __lasx_xvinsgr2vr_w(zeros, row1[x1], 0);
+
+            // We want to calculate a sum of 8 pixels weighted in two directions:
+            //
+            //  sum = tl * (16-wy) * (16-wx)
+            //      + bl * (   wy) * (16-wx)
+            //      + tr * (16-wy) * (   wx)
+            //      + br * (   wy) * (   wx)
+            //
+            // (Notice top --> 16-wy, bottom --> wy, left --> 16-wx, right --> wx.)
+            //
+            // We've already prepared allY as a vector containing [wy, 16-wy] as a way
+            // to apply those y-direction weights.  So we'll start on the x-direction
+            // first, grouping into left and right halves, lined up with allY:
+            //
+            //     L = [bl, tl]
+            //     R = [br, tr]
+            //
+            //   sum = horizontalSum( allY * (L*(16-wx) + R*wx) )
+            //
+            // Rewriting that one more step, we can replace a multiply with a shift:
+            //
+            //   sum = horizontalSum( allY * (16*L + (R-L)*wx) )
+            //
+            // That's how we'll actually do this math.
+
+            __m256i L = __lasx_xvilvl_b(__lasx_xvldi(0), __lasx_xvilvl_w(tl, bl)),
+                    R = __lasx_xvilvl_b(__lasx_xvldi(0), __lasx_xvilvl_w(tr, br));
+
+            __m256i inner = __lasx_xvadd_h(__lasx_xvslli_h(L, 4),
+                                           __lasx_xvmul_h(__lasx_xvsub_h(R,L),
+                                                          __lasx_xvreplgr2vr_h(wx)));
+
+            __m256i sum_in_x = __lasx_xvmul_h(inner, allY);
+
+            // sum = horizontalSum( ... )
+            __m256i sum = __lasx_xvadd_h(sum_in_x, __lasx_xvbsrl_v(sum_in_x, 8));
+
+            // Get back to [0,255] by dividing by maximum weight 16x16 = 256.
+            sum = __lasx_xvsrli_h(sum, 8);
+
+            if (s.fAlphaScale < 256) {
+                // Scale by alpha, which is in [0,256].
+                sum = __lasx_xvmul_h(sum, __lasx_xvreplgr2vr_h(s.fAlphaScale));
+                sum = __lasx_xvsrli_h(sum, 8);
+            }
+
+            // Pack back into 8-bit values and store.
+            *colors++ = __lasx_xvpickve2gr_w(__lasx_xvpickev_b(__lasx_xvldi(0),
+                                                               __lasx_xvsat_hu(sum, 8)), 0);
+        }
+    }
+
+#elif SK_CPU_LSX_LEVEL >= SK_CPU_LSX_LEVEL_LSX
+
+    /*not static*/ inline
+    void S32_alpha_D32_filter_DX(const SkBitmapProcState& s,
+                                 const uint32_t* xy, int count, uint32_t* colors) {
+        SkASSERT(count > 0 && colors != nullptr);
+        SkASSERT(s.fBilerp);
+        SkASSERT(kN32_SkColorType == s.fPixmap.colorType());
+        SkASSERT(s.fAlphaScale <= 256);
+
+        int y0, y1, wy;
+        decode_packed_coordinates_and_weight(*xy++, &y0, &y1, &wy);
+
+        auto row0 = (const uint32_t*)( (const char*)s.fPixmap.addr() + y0 * s.fPixmap.rowBytes() ),
+             row1 = (const uint32_t*)( (const char*)s.fPixmap.addr() + y1 * s.fPixmap.rowBytes() );
+
+        // We'll put one pixel in the low 8 16-bit lanes to line up with wy,
+        // and another in the upper 8 16-bit lanes to line up with 16 - wy.
+        __m128i allY = __lsx_vilvl_d(__lsx_vreplgr2vr_h(16-wy), __lsx_vreplgr2vr_h(wy));
+
+        while (count --> 0) {
+            int x0, x1, wx;
+            decode_packed_coordinates_and_weight(*xy++, &x0, &x1, &wx);
+
+            // Load the 4 pixels we're interpolating, in this grid:
+            //    | tl  tr |
+            //    | bl  br |
+            const __m128i zeros = __lsx_vldi(0);
+            const __m128i tl = __lsx_vinsgr2vr_w(zeros, row0[x0], 0),
+                          tr = __lsx_vinsgr2vr_w(zeros, row0[x1], 0),
+                          bl = __lsx_vinsgr2vr_w(zeros, row1[x0], 0),
+                          br = __lsx_vinsgr2vr_w(zeros, row1[x1], 0);
+
+            // We want to calculate a sum of 8 pixels weighted in two directions:
+            //
+            //  sum = tl * (16-wy) * (16-wx)
+            //      + bl * (   wy) * (16-wx)
+            //      + tr * (16-wy) * (   wx)
+            //      + br * (   wy) * (   wx)
+            //
+            // (Notice top --> 16-wy, bottom --> wy, left --> 16-wx, right --> wx.)
+            //
+            // We've already prepared allY as a vector containing [wy, 16-wy] as a way
+            // to apply those y-direction weights.  So we'll start on the x-direction
+            // first, grouping into left and right halves, lined up with allY:
+            //
+            //     L = [bl, tl]
+            //     R = [br, tr]
+            //
+            //   sum = horizontalSum( allY * (L*(16-wx) + R*wx) )
+            //
+            // Rewriting that one more step, we can replace a multiply with a shift:
+            //
+            //   sum = horizontalSum( allY * (16*L + (R-L)*wx) )
+            //
+            // That's how we'll actually do this math.
+
+
+            __m128i L = __lsx_vilvl_b(__lsx_vldi(0), __lsx_vilvl_w(tl, bl)),
+                    R = __lsx_vilvl_b(__lsx_vldi(0), __lsx_vilvl_w(tr, br));
+
+            __m128i inner = __lsx_vadd_h(__lsx_vslli_h(L, 4),
+                                         __lsx_vmul_h(__lsx_vsub_h(R,L),
+                                                      __lsx_vreplgr2vr_h(wx)));
+
+            __m128i sum_in_x = __lsx_vmul_h(inner, allY);
+
+            // sum = horizontalSum( ... )
+            __m128i sum = __lsx_vadd_h(sum_in_x, __lsx_vbsrl_v(sum_in_x, 8));
+
+            // Get back to [0,255] by dividing by maximum weight 16x16 = 256.
+            sum = __lsx_vsrli_h(sum, 8);
+
+            if (s.fAlphaScale < 256) {
+                // Scale by alpha, which is in [0,256].
+                sum = __lsx_vmul_h(sum, __lsx_vreplgr2vr_h(s.fAlphaScale));
+                sum = __lsx_vsrli_h(sum, 8);
+            }
+
+            // Pack back into 8-bit values and store.
+            *colors++ = __lsx_vpickve2gr_w(__lsx_vpickev_b(__lsx_vldi(0),
+                                                           __lsx_vsat_hu(sum, 8)), 0);
         }
     }
 
@@ -497,40 +539,6 @@ static void decode_packed_coordinates_and_weight(U32 packed, Out* v0, Out* v1, O
         }
     }
 
-#endif
-
-#if defined(SK_ARM_HAS_NEON)
-    /*not static*/ inline
-    void S32_alpha_D32_filter_DXDY(const SkBitmapProcState& s,
-                                   const uint32_t* xy, int count, SkPMColor* colors) {
-        SkASSERT(count > 0 && colors != nullptr);
-        SkASSERT(s.fBilerp);
-        SkASSERT(4 == s.fPixmap.info().bytesPerPixel());
-        SkASSERT(s.fAlphaScale <= 256);
-
-        auto src = (const char*)s.fPixmap.addr();
-        size_t rb = s.fPixmap.rowBytes();
-
-        while (count --> 0) {
-            int y0, y1, wy,
-                x0, x1, wx;
-            decode_packed_coordinates_and_weight(*xy++, &y0, &y1, &wy);
-            decode_packed_coordinates_and_weight(*xy++, &x0, &x1, &wx);
-
-            auto row0 = (const uint32_t*)(src + y0*rb),
-                 row1 = (const uint32_t*)(src + y1*rb);
-
-            filter_and_scale_by_alpha(wx, wy,
-                                      row0[x0], row0[x1],
-                                      row1[x0], row1[x1],
-                                      colors++,
-                                      s.fAlphaScale);
-        }
-    }
-#else
-    // It's not yet clear whether it's worthwhile specializing for SSE2/SSSE3/AVX2.
-    constexpr static void (*S32_alpha_D32_filter_DXDY)(const SkBitmapProcState&,
-                                                       const uint32_t*, int, SkPMColor*) = nullptr;
 #endif
 
 }  // namespace SK_OPTS_NS

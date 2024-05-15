@@ -36,9 +36,6 @@
     #if !defined(SK_RESTRICT)
         #define SK_RESTRICT __restrict
     #endif
-    #if !defined(SK_WARN_UNUSED_RESULT)
-        #define SK_WARN_UNUSED_RESULT
-    #endif
 #endif
 
 #if !defined(SK_RESTRICT)
@@ -68,6 +65,10 @@
   #define SK_CPU_X86 1
 #endif
 
+#if defined(__loongarch__) || defined (__loongarch64)
+  #define SK_CPU_LOONGARCH 1
+#endif
+
 /**
  *  SK_CPU_SSE_LEVEL
  *
@@ -83,6 +84,15 @@
 #define SK_CPU_SSE_LEVEL_AVX      51
 #define SK_CPU_SSE_LEVEL_AVX2     52
 #define SK_CPU_SSE_LEVEL_SKX      60
+
+/**
+ *  SK_CPU_LSX_LEVEL
+ *
+ *  If defined, SK_CPU_LSX_LEVEL should be set to the highest supported level.
+ *  On non-loongarch CPU this should be undefined.
+ */
+#define SK_CPU_LSX_LEVEL_LSX      70
+#define SK_CPU_LSX_LEVEL_LASX     80
 
 // TODO(brianosman,kjlubick) clean up these checks
 
@@ -107,6 +117,14 @@
         #define SK_CPU_SSE_LEVEL    SK_CPU_SSE_LEVEL_SSE3
     #elif defined(__SSE2__)
         #define SK_CPU_SSE_LEVEL    SK_CPU_SSE_LEVEL_SSE2
+    #endif
+#endif
+
+#ifndef SK_CPU_LSX_LEVEL
+    #if defined(__loongarch_asx)
+        #define SK_CPU_LSX_LEVEL    SK_CPU_LSX_LEVEL_LASX
+    #elif defined(__loongarch_sx)
+        #define SK_CPU_LSX_LEVEL    SK_CPU_LSX_LEVEL_LSX
     #endif
 #endif
 
@@ -142,10 +160,6 @@
 // All 64-bit ARM chips have NEON.  Many 32-bit ARM chips do too.
 #if !defined(SK_ARM_HAS_NEON) && defined(__ARM_NEON)
     #define SK_ARM_HAS_NEON
-#endif
-
-#if defined(__ARM_FEATURE_CRC32)
-    #define SK_ARM_HAS_CRC32
 #endif
 
 #endif // SkFeatures_DEFINED

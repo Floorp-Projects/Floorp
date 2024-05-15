@@ -5,15 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkStrokerPriv.h"
+#include "src/core/SkStroke.h"
 
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/private/base/SkFloatingPoint.h"
 #include "include/private/base/SkMacros.h"
 #include "include/private/base/SkTo.h"
 #include "src/core/SkGeometry.h"
+#include "src/core/SkPathEnums.h"
 #include "src/core/SkPathPriv.h"
 #include "src/core/SkPointPriv.h"
+#include "src/core/SkStrokerPriv.h"
 
-#include <utility>
+#include <algorithm>
+#include <array>
 
 enum {
     kTangent_RecursiveLimit,
@@ -689,7 +697,7 @@ SkPathStroker::ReductionType SkPathStroker::CheckConicLinear(const SkConic& coni
     // SkFindConicMaxCurvature would be a better solution, once we know how to
     // implement it. Quad curvature is a reasonable substitute
     SkScalar t = SkFindQuadMaxCurvature(conic.fPts);
-    if (0 == t) {
+    if (0 == t || SkScalarIsNaN(t)) {
         return kLine_ReductionType;
     }
     conic.evalAt(t, reduction, nullptr);
@@ -1185,7 +1193,9 @@ bool SkPathStroker::cubicStroke(const SkPoint cubic[4], SkQuadConstruct* quadPts
 #endif
     if (++fRecursionDepth > kRecursiveLimits[fFoundTangents]) {
         DEBUG_CUBIC_RECURSION_TRACK_DEPTH(fRecursionDepth);
-        return false;  // just abort if projected quad isn't representable
+        // If we stop making progress, just emit a line and move on
+        addDegenerateLine(quadPts);
+        return true;
     }
     SkQuadConstruct half;
     if (!half.initWithStart(quadPts)) {
@@ -1227,7 +1237,9 @@ bool SkPathStroker::conicStroke(const SkConic& conic, SkQuadConstruct* quadPts) 
             fRecursionDepth + 1));
 #endif
     if (++fRecursionDepth > kRecursiveLimits[kConic_RecursiveLimit]) {
-        return false;  // just abort if projected quad isn't representable
+        // If we stop making progress, just emit a line and move on
+        addDegenerateLine(quadPts);
+        return true;
     }
     SkQuadConstruct half;
     (void) half.initWithStart(quadPts);
@@ -1259,7 +1271,9 @@ bool SkPathStroker::quadStroke(const SkPoint quad[3], SkQuadConstruct* quadPts) 
             fRecursionDepth + 1));
 #endif
     if (++fRecursionDepth > kRecursiveLimits[kQuad_RecursiveLimit]) {
-        return false;  // just abort if projected quad isn't representable
+        // If we stop making progress, just emit a line and move on
+        addDegenerateLine(quadPts);
+        return true;
     }
     SkQuadConstruct half;
     (void) half.initWithStart(quadPts);

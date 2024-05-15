@@ -9,13 +9,15 @@
 #define SkGraphics_DEFINED
 
 #include "include/core/SkRefCnt.h"
+#include "include/private/base/SkAPI.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 
 class SkData;
 class SkImageGenerator;
 class SkOpenTypeSVGDecoder;
-class SkPath;
 class SkTraceMemoryDump;
 
 class SK_API SkGraphics {
@@ -68,11 +70,31 @@ public:
     static int SetFontCacheCountLimit(int count);
 
     /**
+     *  Return the current limit to the number of entries in the typeface cache.
+     *  A cache "entry" is associated with each typeface.
+     */
+    static int GetTypefaceCacheCountLimit();
+
+    /**
+     *  Set the limit to the number of entries in the typeface cache, and return
+     *  the previous value. Changes to this only take effect the next time
+     *  each cache object is modified.
+     */
+    static int SetTypefaceCacheCountLimit(int count);
+
+    /**
      *  For debugging purposes, this will attempt to purge the font cache. It
      *  does not change the limit, but will cause subsequent font measures and
      *  draws to be recreated, since they will no longer be in the cache.
      */
     static void PurgeFontCache();
+
+    /**
+     *  If the strike cache is above the cache limit, attempt to purge strikes
+     *  with pinners. This should be called after clients release locks on
+     *  pinned strikes.
+     */
+    static void PurgePinnedFontCache();
 
     /**
      *  This function returns the memory used for temporary images and other resources.
@@ -142,28 +164,6 @@ public:
             std::unique_ptr<SkOpenTypeSVGDecoder> (*)(const uint8_t* svg, size_t length);
     static OpenTypeSVGDecoderFactory SetOpenTypeSVGDecoderFactory(OpenTypeSVGDecoderFactory);
     static OpenTypeSVGDecoderFactory GetOpenTypeSVGDecoderFactory();
-
-    /**
-     *  Call early in main() to allow Skia to use a JIT to accelerate CPU-bound operations.
-     */
-    static void AllowJIT();
-
-    /**
-     *  To override the default AA algorithm choice in the CPU backend, provide a function that
-     *  returns whether to use analytic (true) or supersampled (false) for a given path.
-     *
-     *  NOTE: This is a temporary API, intended for migration of all clients to one algorithm,
-     *        and should not be used.
-     */
-    typedef bool (*PathAnalyticAADeciderProc)(const SkPath&);
-    static void SetPathAnalyticAADecider(PathAnalyticAADeciderProc);
-};
-
-class SkAutoGraphics {
-public:
-    SkAutoGraphics() {
-        SkGraphics::Init();
-    }
 };
 
 #endif

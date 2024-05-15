@@ -8,7 +8,9 @@
 #include "src/core/SkPictureData.h"
 
 #include "include/core/SkFlattenable.h"
+#include "include/core/SkFontMgr.h"
 #include "include/core/SkSerialProcs.h"
+#include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
 #include "include/private/base/SkDebug.h"
@@ -52,9 +54,7 @@ SkPictureData::SkPictureData(const SkPictureRecord& record,
     , fTextBlobs(record.getTextBlobs())
     , fVertices(record.getVertices())
     , fImages(record.getImages())
-#if defined(SK_GANESH)
     , fSlugs(record.getSlugs())
-#endif
     , fInfo(info) {
 
     fOpData = record.opData();
@@ -73,8 +73,6 @@ SkPictureData::SkPictureData(const SkPictureRecord& record,
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-
-#include "include/core/SkStream.h"
 
 static size_t compute_chunk_size(SkFlattenable::Factory* array, int count) {
     size_t size = 4;  // for 'count'
@@ -150,7 +148,11 @@ void SkPictureData::WriteTypefaces(SkWStream* stream, const SkRefCntSet& rec,
                 continue;
             }
         }
-        array[i]->serialize(stream);
+        // With the default serialization and deserialization behavior,
+        // kIncludeDataIfLocal does not always work because there is no default
+        // fontmgr to pass into SkTypeface::MakeDeserialize, so there is no
+        // fontmgr to find a font given the descriptor only.
+        tf->serialize(stream, SkTypeface::SerializeBehavior::kDoIncludeData);
     }
 }
 
@@ -181,14 +183,12 @@ void SkPictureData::flattenToBuffer(SkWriteBuffer& buffer, bool textBlobsOnly) c
         }
     }
 
-#if defined(SK_GANESH)
     if (!textBlobsOnly) {
         write_tag_size(buffer, SK_PICT_SLUG_BUFFER_TAG, fSlugs.size());
         for (const auto& slug : fSlugs) {
             slug->doFlatten(buffer);
         }
     }
-#endif
 
     if (!textBlobsOnly) {
         if (!fVertices.empty()) {
@@ -237,9 +237,8 @@ void SkPictureData::serialize(SkWStream* stream, const SkSerialProcs& procs,
     // We delay serializing the bulk of our data until after we've serialized
     // factories and typefaces by first serializing to an in-memory write buffer.
     SkFactorySet factSet;  // buffer refs factSet, so factSet must come first.
-    SkBinaryWriteBuffer buffer;
+    SkBinaryWriteBuffer buffer(skip_typeface_proc(procs));
     buffer.setFactoryRecorder(sk_ref_sp(&factSet));
-    buffer.setSerialProcs(skip_typeface_proc(procs));
     buffer.setTypefaceRecorder(sk_ref_sp(typefaceSet));
     this->flattenToBuffer(buffer, textBlobsOnly);
 
@@ -350,13 +349,14 @@ bool SkPictureData::parseStreamTag(SkStream* stream,
                 sk_sp<SkTypeface> tf;
                 if (procs.fTypefaceProc) {
                     tf = procs.fTypefaceProc(&stream, sizeof(stream), procs.fTypefaceCtx);
-                } else {
-                    tf = SkTypeface::MakeDeserialize(stream);
+                }
+                else {
+                    tf = SkTypeface::MakeDeserialize(stream, nullptr);
                 }
                 if (!tf) {    // failed to deserialize
                     // fTFPlayback asserts it never has a null, so we plop in
-                    // the default here.
-                    tf = SkTypeface::MakeDefault();
+                    // a default here.
+                    tf = SkTypeface::MakeEmpty();
                 }
                 fTFPlayback[i] = std::move(tf);
             }
@@ -366,7 +366,7 @@ bool SkPictureData::parseStreamTag(SkStream* stream,
             if (StreamRemainingLengthIsBelow(stream, size)) {
                 return false;
             }
-            fPictures.reserve_back(SkToInt(size));
+            fPictures.reserve_exact(SkToInt(size));
 
             for (uint32_t i = 0; i < size; i++) {
                 auto pic = SkPicture::MakeFromStreamPriv(stream, &procs,
@@ -481,9 +481,7 @@ void SkPictureData::parseBufferTag(SkReadBuffer& buffer, uint32_t tag, uint32_t 
             new_array_from_buffer(buffer, size, fTextBlobs, SkTextBlobPriv::MakeFromBuffer);
             break;
         case SK_PICT_SLUG_BUFFER_TAG:
-#if defined(SK_GANESH)
             new_array_from_buffer(buffer, size, fSlugs, sktext::gpu::Slug::MakeFromBuffer);
-#endif
             break;
         case SK_PICT_VERTICES_BUFFER_TAG:
             new_array_from_buffer(buffer, size, fVertices, SkVerticesPriv::Decode);

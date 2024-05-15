@@ -11,8 +11,8 @@
 #include "include/core/SkMilestone.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkString.h"
-#include "include/core/SkTime.h"
 #include "include/private/base/SkNoncopyable.h"
+#include "src/base/SkTime.h"
 
 #define SKPDF_STRING(X) SKPDF_STRING_IMPL(X)
 #define SKPDF_STRING_IMPL(X) #X
@@ -63,6 +63,20 @@ struct StructureElementNode {
     SkString fLang;
 };
 
+struct DateTime {
+    int16_t  fTimeZoneMinutes;  // The number of minutes that this
+                                // is ahead of or behind UTC.
+    uint16_t fYear;          //!< e.g. 2005
+    uint8_t  fMonth;         //!< 1..12
+    uint8_t  fDayOfWeek;     //!< 0..6, 0==Sunday
+    uint8_t  fDay;           //!< 1..31
+    uint8_t  fHour;          //!< 0..23
+    uint8_t  fMinute;        //!< 0..59
+    uint8_t  fSecond;        //!< 0..59
+
+    void toISO8601(SkString* dst) const;
+};
+
 /** Optional metadata to be passed into the PDF factory function.
 */
 struct Metadata {
@@ -96,12 +110,18 @@ struct Metadata {
     /** The date and time the document was created.
         The zero default value represents an unknown/unset time.
     */
-    SkTime::DateTime fCreation = {0, 0, 0, 0, 0, 0, 0, 0};
+    DateTime fCreation = {0, 0, 0, 0, 0, 0, 0, 0};
 
     /** The date and time the document was most recently modified.
         The zero default value represents an unknown/unset time.
     */
-    SkTime::DateTime fModified = {0, 0, 0, 0, 0, 0, 0, 0};
+    DateTime fModified = {0, 0, 0, 0, 0, 0, 0, 0};
+
+    /** The natural language of the text in the PDF. If fLang is empty, the root
+        StructureElementNode::fLang will be used (if not empty). Text not in
+        this language should be marked with StructureElementNode::fLang.
+    */
+    SkString fLang;
 
     /** The DPI (pixels-per-inch) at which features without native PDF support
         will be rasterized (e.g. draw image with perspective, draw text with
@@ -131,6 +151,11 @@ struct Metadata {
     */
     StructureElementNode* fStructureElementTreeRoot = nullptr;
 
+    enum class Outline : int {
+        None = 0,
+        StructureElementHeaders = 1,
+    } fOutline = Outline::None;
+
     /** Executor to handle threaded work within PDF Backend. If this is nullptr,
         then all work will be done serially on the main thread. To have worker
         threads assist with various tasks, set this to a valid SkExecutor
@@ -154,15 +179,9 @@ struct Metadata {
         HighButSlow = 9,
     } fCompressionLevel = CompressionLevel::Default;
 
-    /** Preferred Subsetter. Only respected if both are compiled in.
-
-        The Sfntly subsetter is deprecated.
-
-        Experimental.
-    */
+    /** Preferred Subsetter. */
     enum Subsetter {
         kHarfbuzz_Subsetter,
-        kSfntly_Subsetter,
     } fSubsetter = kHarfbuzz_Subsetter;
 };
 

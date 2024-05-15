@@ -9,6 +9,7 @@
 #define SkImageInfoPriv_DEFINED
 
 #include "include/core/SkColor.h"
+#include "include/core/SkColorType.h"
 #include "include/core/SkImageInfo.h"
 
 static inline uint32_t SkColorTypeChannelFlags(SkColorType ct) {
@@ -25,6 +26,8 @@ static inline uint32_t SkColorTypeChannelFlags(SkColorType ct) {
         case kBGRA_1010102_SkColorType:       return kRGBA_SkColorChannelFlags;
         case kBGR_101010x_SkColorType:        return kRGB_SkColorChannelFlags;
         case kBGR_101010x_XR_SkColorType:     return kRGB_SkColorChannelFlags;
+        case kBGRA_10101010_XR_SkColorType:   return kRGBA_SkColorChannelFlags;
+        case kRGBA_10x6_SkColorType:          return kRGBA_SkColorChannelFlags;
         case kGray_8_SkColorType:             return kGray_SkColorChannelFlag;
         case kRGBA_F16Norm_SkColorType:       return kRGBA_SkColorChannelFlags;
         case kRGBA_F16_SkColorType:           return kRGBA_SkColorChannelFlags;
@@ -63,6 +66,8 @@ static int SkColorTypeShiftPerPixel(SkColorType ct) {
         case kBGRA_1010102_SkColorType:       return 2;
         case kBGR_101010x_SkColorType:        return 2;
         case kBGR_101010x_XR_SkColorType:     return 2;
+        case kBGRA_10101010_XR_SkColorType:   return 3;
+        case kRGBA_10x6_SkColorType:          return 3;
         case kGray_8_SkColorType:             return 0;
         case kRGBA_F16Norm_SkColorType:       return 3;
         case kRGBA_F16_SkColorType:           return 3;
@@ -107,6 +112,7 @@ static inline bool SkColorTypeIsNormalized(SkColorType ct) {
         case kRGB_101010x_SkColorType:
         case kBGRA_1010102_SkColorType:
         case kBGR_101010x_SkColorType:
+        case kRGBA_10x6_SkColorType:
         case kGray_8_SkColorType:
         case kRGBA_F16Norm_SkColorType:
         case kR8G8_unorm_SkColorType:
@@ -118,6 +124,7 @@ static inline bool SkColorTypeIsNormalized(SkColorType ct) {
         case kR8_unorm_SkColorType:
             return true;
 
+        case kBGRA_10101010_XR_SkColorType:
         case kBGR_101010x_XR_SkColorType:
         case kRGBA_F16_SkColorType:
         case kRGBA_F32_SkColorType:
@@ -153,6 +160,8 @@ static inline int SkColorTypeMaxBitsPerChannel(SkColorType ct) {
         case kBGRA_1010102_SkColorType:
         case kBGR_101010x_SkColorType:
         case kBGR_101010x_XR_SkColorType:
+        case kBGRA_10101010_XR_SkColorType:
+        case kRGBA_10x6_SkColorType:
             return 10;
 
         case kRGBA_F16Norm_SkColorType:

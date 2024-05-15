@@ -8,42 +8,58 @@
 #ifndef SkClipStackDevice_DEFINED
 #define SkClipStackDevice_DEFINED
 
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
 #include "src/core/SkClipStack.h"
 #include "src/core/SkDevice.h"
 
-class SkClipStackDevice : public SkBaseDevice {
+#include <cstdint>
+
+class SkPath;
+class SkRRect;
+class SkRegion;
+class SkShader;
+class SkSurfaceProps;
+enum class SkClipOp;
+struct SkImageInfo;
+
+class SkClipStackDevice : public SkDevice {
 public:
     SkClipStackDevice(const SkImageInfo& info, const SkSurfaceProps& props)
-        : SkBaseDevice(info, props)
+        : SkDevice(info, props)
         , fClipStack(fStorage, sizeof(fStorage))
     {}
 
     SkClipStack& cs() { return fClipStack; }
     const SkClipStack& cs() const { return fClipStack; }
 
-protected:
-    void onSave() override;
-    void onRestore() override;
-    void onClipRect(const SkRect& rect, SkClipOp, bool aa) override;
-    void onClipRRect(const SkRRect& rrect, SkClipOp, bool aa) override;
-    void onClipPath(const SkPath& path, SkClipOp, bool aa) override;
-    void onClipShader(sk_sp<SkShader>) override;
-    void onClipRegion(const SkRegion& deviceRgn, SkClipOp) override;
-    void onReplaceClip(const SkIRect& rect) override;
-    bool onClipIsAA() const override;
-    bool onClipIsWideOpen() const override;
-    void onAsRgnClip(SkRegion*) const override;
-    ClipType onGetClipType() const override;
-    SkIRect onDevClipBounds() const override;
+    void pushClipStack() override;
+    void popClipStack() override;
+
+    void clipRect(const SkRect& rect, SkClipOp, bool aa) override;
+    void clipRRect(const SkRRect& rrect, SkClipOp, bool aa) override;
+    void clipPath(const SkPath& path, SkClipOp, bool aa) override;
+    void clipRegion(const SkRegion& deviceRgn, SkClipOp) override;
+
+    void replaceClip(const SkIRect& rect) override;
+
+    bool isClipAntiAliased() const override;
+    bool isClipWideOpen() const override;
+    bool isClipEmpty() const override;
+    bool isClipRect() const override;
+
+    void android_utils_clipAsRgn(SkRegion*) const override;
+
+    SkIRect devClipBounds() const override;
 
 private:
-    enum {
-        kPreallocCount = 16 // empirically determined, adjust as needed to reduce mallocs
-    };
+    // empirically determined, adjust as needed to reduce mallocs
+    static constexpr int kPreallocCount = 16;
+
+    void onClipShader(sk_sp<SkShader>) override;
+
     intptr_t fStorage[kPreallocCount * sizeof(SkClipStack::Element) / sizeof(intptr_t)];
     SkClipStack fClipStack;
-
-    using INHERITED = SkBaseDevice;
 };
 
 #endif

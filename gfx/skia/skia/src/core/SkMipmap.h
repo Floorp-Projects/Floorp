@@ -14,6 +14,7 @@
 #include "src/core/SkCachedData.h"
 #include "src/core/SkImageInfoPriv.h"
 #include "src/shaders/SkShaderBase.h"
+#include <memory>
 
 class SkBitmap;
 class SkData;
@@ -21,6 +22,12 @@ class SkDiscardableMemory;
 class SkMipmapBuilder;
 
 typedef SkDiscardableMemory* (*SkDiscardableFactoryProc)(size_t bytes);
+
+struct SkMipmapDownSampler {
+    virtual ~SkMipmapDownSampler() {}
+
+    virtual void buildLevel(const SkPixmap& dst, const SkPixmap& src) = 0;
+};
 
 /*
  * SkMipmap will generate mipmap levels when given a base mipmap level image.
@@ -49,6 +56,9 @@ public:
     // |level| is an index into the generated mipmap levels. It does not include
     // the base level. So index 0 represents mipmap level 1.
     static SkISize ComputeLevelSize(int baseWidth, int baseHeight, int level);
+    static SkISize ComputeLevelSize(SkISize s, int level) {
+        return ComputeLevelSize(s.width(), s.height(), level);
+    }
 
     // Computes the fractional level based on the scaling in X and Y.
     static float ComputeLevel(SkSize scaleSize);
@@ -74,8 +84,7 @@ public:
 
     bool validForRootLevel(const SkImageInfo&) const;
 
-    sk_sp<SkData> serialize() const;
-    static bool Deserialize(SkMipmapBuilder*, const void* data, size_t size);
+    static std::unique_ptr<SkMipmapDownSampler> MakeDownSampler(const SkPixmap&);
 
 protected:
     void onDataChange(void* oldData, void* newData) override {
