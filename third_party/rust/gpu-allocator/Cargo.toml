@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.65"
 name = "gpu-allocator"
-version = "0.25.0"
+version = "0.26.0"
 authors = ["Traverse Research <opensource@traverseresearch.nl>"]
 include = [
     "/README.md",
@@ -58,6 +58,10 @@ required-features = [
 name = "d3d12-buffer-winrs"
 required-features = ["d3d12"]
 
+[[example]]
+name = "metal-buffer"
+required-features = ["metal"]
+
 [dependencies.ash]
 version = ">=0.34, <=0.37"
 features = ["debug"]
@@ -65,12 +69,12 @@ optional = true
 default-features = false
 
 [dependencies.egui]
-version = "0.24"
+version = ">=0.24, <=0.27"
 optional = true
 default-features = false
 
 [dependencies.egui_extras]
-version = "0.24"
+version = ">=0.24, <=0.27"
 optional = true
 default-features = false
 
@@ -95,17 +99,27 @@ default-features = false
 version = "0.10"
 
 [features]
-d3d12 = ["windows"]
+d3d12 = ["dep:windows"]
 default = [
     "d3d12",
     "vulkan",
 ]
+metal = ["dep:metal"]
 public-winapi = ["dep:winapi"]
 visualizer = [
-    "egui",
-    "egui_extras",
+    "dep:egui",
+    "dep:egui_extras",
 ]
-vulkan = ["ash"]
+vulkan = ["dep:ash"]
+
+[target."cfg(any(target_os = \"macos\", target_os = \"ios\"))".dependencies.metal]
+version = "0.27.0"
+features = [
+    "link",
+    "dispatch",
+]
+optional = true
+default-features = false
 
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.9"

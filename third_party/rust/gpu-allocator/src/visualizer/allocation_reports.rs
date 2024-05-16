@@ -37,9 +37,11 @@ pub(crate) fn render_allocation_reports_ui(
         .enumerate()
         .filter(|(_, report)| report.name.to_lowercase().contains(&breakdown_filter))
         .collect::<Vec<_>>();
+    let total_size_under_filter: u64 = allocations.iter().map(|a| a.1.size).sum();
+
+    ui.label(format!("Total: {}", fmt_bytes(total_size_under_filter)));
 
     let row_height = ui.text_style_height(&egui::TextStyle::Body);
-
     let table = TableBuilder::new(ui)
         .striped(true)
         .resizable(true)
@@ -49,7 +51,7 @@ pub(crate) fn render_allocation_reports_ui(
 
     fn header_button(ui: &mut Ui, label: &str) -> Response {
         let label = WidgetText::from(label).strong();
-        let label = Label::new(label.strong()).sense(Sense::click());
+        let label = Label::new(label).sense(Sense::click());
         ui.add(label)
     }
 
