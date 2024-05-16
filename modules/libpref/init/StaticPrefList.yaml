@@ -4784,12 +4784,6 @@
   value: Error
   mirror: never
 
-# Is support for Window.event enabled?
-- name: dom.window.event.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: dom.window.clientinformation.enabled
   type: bool
   value: true
