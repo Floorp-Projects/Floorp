@@ -1130,6 +1130,14 @@ nsDefaultCommandLineHandler.prototype = {
     var urilist = [];
     var principalList = [];
 
+    if (
+      cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
+      cmdLine.findFlag("os-autostart", true) != -1
+    ) {
+      // Relaunching after reboot (or quickly opening the application on reboot) and launch-on-login interact.  If we see an after reboot command line while already running, ignore it.
+      return;
+    }
+
     if (AppConstants.platform == "win") {
       // Windows itself does disk I/O when the notification service is
       // initialized, so make sure that is lazy.
