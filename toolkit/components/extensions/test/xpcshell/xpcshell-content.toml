@@ -11,10 +11,6 @@ run-sequentially = "very high failure rate in parallel"
 skip-if = ["os == 'linux' && socketprocess_networking && !fission && debug"] # Bug 1759035
 
 ["test_ext_contentScripts_register.js"]
-skip-if = [
-  "os == 'linux' && socketprocess_networking && !fission && debug", # Bug 1759035
-  "fission", # Bug 1762638
-]
 
 ["test_ext_contentscript.js"]
 skip-if = ["socketprocess_networking"] # Bug 1759035
