@@ -171,7 +171,8 @@ h1.translations-panel-header-wrapper {
 
 .select-translations-panel-text-area {
   height: 8em;
-  resize: vertical;
+  min-height: 3.5em;
+  resize: none;
   color: inherit;
   background-color: transparent;
 
