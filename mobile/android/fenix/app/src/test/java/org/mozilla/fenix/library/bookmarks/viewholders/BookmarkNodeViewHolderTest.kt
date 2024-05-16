@@ -5,7 +5,6 @@
 package org.mozilla.fenix.library.bookmarks.viewholders
 
 import androidx.appcompat.content.res.AppCompatResources
-import io.mockk.Called
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -128,7 +127,7 @@ class BookmarkNodeViewHolderTest {
             siteItemView.overflowView.hideAndDisable()
             siteItemView.changeSelected(any())
         }
-        verify { siteItemView.iconView wasNot Called }
+        verify(exactly = 0) { siteItemView.iconView }
     }
 
     @Test

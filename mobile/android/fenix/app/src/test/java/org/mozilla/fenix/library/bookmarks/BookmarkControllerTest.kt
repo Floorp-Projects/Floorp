@@ -11,7 +11,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import io.mockk.Runs
-import io.mockk.called
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -282,7 +281,7 @@ class BookmarkControllerTest {
 
         createController().handleBookmarkSelected(item)
 
-        verify { bookmarkStore.dispatch(BookmarkFragmentAction.Select(item)) wasNot called }
+        verify(exactly = 0) { bookmarkStore.dispatch(BookmarkFragmentAction.Select(item)) }
     }
 
     @Test
