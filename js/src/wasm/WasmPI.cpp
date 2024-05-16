@@ -53,6 +53,11 @@ SuspenderObjectData::SuspenderObjectData(void* stackMemory)
                      SuspendableStackPlusRedZoneSize),
       state_(SuspenderState::Initial) {}
 
+void SuspenderObjectData::releaseStackMemory() {
+  js_free(stackMemory_);
+  stackMemory_ = nullptr;
+}
+
 #  ifdef _WIN64
 // On WIN64, the Thread Information Block stack limits has to be modified to
 // avoid failures on SP checks.
@@ -83,6 +88,7 @@ SuspenderContext::SuspenderContext()
 
 SuspenderContext::~SuspenderContext() {
   MOZ_ASSERT(activeSuspender_ == nullptr);
+  MOZ_ASSERT(suspendedStacks_.isEmpty());
 }
 
 SuspenderObject* SuspenderContext::activeSuspender() {
@@ -269,12 +275,11 @@ void SuspenderObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   }
   SuspenderObjectData* data = suspender.data();
   MOZ_RELEASE_ASSERT(data->state() == SuspenderState::Moribund);
-  js_free(data->stackMemory());
+  MOZ_RELEASE_ASSERT(!data->stackMemory());
   js_free(data);
 }
 
 void SuspenderObject::setMoribund(JSContext* cx) {
-  // TODO make sense to free stackMemory at this point to reduce memory usage?
   MOZ_ASSERT(state() == SuspenderState::Active);
   ResetInstanceStackLimits(cx);
 #  ifdef _WIN64
@@ -282,6 +287,7 @@ void SuspenderObject::setMoribund(JSContext* cx) {
 #  endif
   SuspenderObjectData* data = this->data();
   data->setState(SuspenderState::Moribund);
+  data->releaseStackMemory();
   DecrementSuspendableStacksCount(cx);
   MOZ_ASSERT(
       !cx->wasm().promiseIntegration.suspendedStacks_.ElementProbablyInList(
@@ -538,7 +544,7 @@ bool CallImportOnMainThread(JSContext* cx, Instance* instance,
   return ok;
 }
 
-void UnwindStackSwitch(JSContext* cx) {
+static void CleanupActiveSuspender(JSContext* cx) {
   SuspenderObject* suspender = cx->wasm().promiseIntegration.activeSuspender();
   MOZ_ASSERT(suspender);
   cx->wasm().promiseIntegration.setActiveSuspender(nullptr);
@@ -1008,6 +1014,9 @@ static bool WasmPISuspendTaskContinue(JSContext* cx, unsigned argc, Value* vp) {
   if (Call(cx, UndefinedHandleValue, continueOnSuspendable, argv, &rval)) {
     return true;
   }
+
+  // The stack was unwound during exception -- time to release resources.
+  CleanupActiveSuspender(cx);
 
   if (cx->isThrowingOutOfMemory()) {
     return false;
@@ -1491,6 +1500,9 @@ static bool WasmPIPromisingFunction(JSContext* cx, unsigned argc, Value* vp) {
   if (Call(cx, UndefinedHandleValue, fn, args, args.rval())) {
     return true;
   }
+
+  // During an exception the stack was unwound -- time to release resources.
+  CleanupActiveSuspender(cx);
 
   if (cx->isThrowingOutOfMemory()) {
     return false;

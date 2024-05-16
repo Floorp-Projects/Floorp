@@ -294,9 +294,6 @@ void WasmFrameIter::popFrame() {
 
 #ifdef ENABLE_WASM_JSPI
   stackSwitched_ = callsite->isStackSwitch();
-  if (stackSwitched_ && unwind_ == Unwind::True) {
-    wasm::UnwindStackSwitch(activation_->cx());
-  }
 #endif
 
   MOZ_ASSERT(code_ == &instance()->code());
