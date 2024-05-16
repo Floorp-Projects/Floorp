@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<!--https://bugzilla.mozilla.org/show_bug.cgi?id=1866173-->
+<head>
+<title>Bug 1866173</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+iframe {
+  width: 10px;
+  height: 10px;
+  border: 1px solid blue;
+  display: block;
+}
+</style>
+</head>
+<body>
+<a target="_blank"href="https://bugzilla.mozilla.org/show_bug.cgi?id=1866173">Mozilla Bug 1866173</a><br>
+<iframe src="https://example.com/tests/dom/tests/mochitest/pointerlock/iframe_differentDOM.html"></iframe>
+
+<pre id="test">
+<script type="text/javascript">
+
+function waitForMessage(aType) {
+  return new Promise((resolve) => {
+    window.addEventListener("message", function handler(e) {
+      info(`received ${JSON.stringify(e.data)} message`);
+      if (e.data && e.data.type == aType) {
+        window.removeEventListener("message", handler);
+        resolve(e.data);
+      }
+    });
+  });
+}
+
+async function waitAndTestMouseMoveMessage(aMoveMementX, aMoveMomentY) {
+  let message = await waitForMessage("mousemove");
+  ok(true, `received mouemove event with movementX=${message.movementX} and movementY=${message.movementY}`);
+  return message;
+}
+
+const iframe = document.querySelector("iframe");
+
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({ set: [["test.events.async.enabled", true]] });
+  // Setup iframe for testing.
+  await SpecialPowers.spawn(iframe.contentWindow, [], async () => {
+    content.document.body.style = "margin: 0;";
+    content.document.body.innerHTML = `
+      <div id="container" style="height: 10px; width: 10px; background-color: #555;"></div>
+    `;
+    content.document.addEventListener("click", () => {
+      content.document.body.requestPointerLock();
+    });
+    content.document.addEventListener("pointerlockchange", (e) => {
+      content.parent.postMessage({
+        type: e.type,
+      }, "*");
+    });
+    content.document.addEventListener("mousemove", (e) => {
+      content.parent.postMessage({
+        type: e.type,
+        screenX: e.screenX,
+        screenY: e.screenY,
+        movementX: e.movementX,
+        movementY: e.movementY,
+      }, "*");
+    });
+  });
+});
+
+/**
+ * Test for Bug 1866173
+ */
+add_task(async function test_small_xorigin_iframe() {
+  let iframeCenterWidth = Math.round(iframe.getBoundingClientRect().width / 2);
+  let iframeCenterHeight = Math.round(iframe.getBoundingClientRect().height / 2);
+  // Click iframe to request pointer lock.
+  let promise = Promise.all([
+    waitForMessage("pointerlockchange"),
+    // We force the mouse to move to the center position when entering pointer
+    // lock, which results in an additional mousemove event, see bug 1254044.
+    waitAndTestMouseMoveMessage(0, 0),
+  ]);
+  synthesizeMouse(iframe, iframeCenterWidth, iframeCenterHeight, {});
+  await promise;
+
+  const movement = 2;
+  promise = waitAndTestMouseMoveMessage(movement, movement);
+  synthesizeMouse(iframe, iframeCenterWidth + movement, iframeCenterHeight + movement, { type: "mousemove" });
+  await promise;
+
+  // Exit pointer lock
+  promise = waitForMessage("pointerlockchange");
+  await SpecialPowers.spawn(iframe.contentWindow, [], async () => {
+    content.document.exitPointerLock();
+  });
+  await promise;
+});
+
+</script>
+</pre>
+</body>
+</html>
