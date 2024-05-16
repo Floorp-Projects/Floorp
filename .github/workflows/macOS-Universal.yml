@@ -195,6 +195,10 @@ jobs:
 
         #? https://github.com/mozilla/sccache#known-caveats
         export CARGO_INCREMENTAL=0
+
+        #? install rust version
+        rustup install 1.77.2
+        rustup default 1.77.2
       env:
         GHA_ARCH: ${{matrix.arch}}
 

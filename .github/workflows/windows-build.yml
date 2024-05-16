@@ -216,6 +216,10 @@ jobs:
           rustup target add x86_64-pc-windows-msvc
         fi
 
+        #? install rust version
+        rustup install 1.77.2
+        rustup default 1.77.2
+
         #? https://github.com/mozilla/sccache#known-caveats
         export CARGO_INCREMENTAL=0
       env:
