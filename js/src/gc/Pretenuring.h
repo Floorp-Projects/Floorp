@@ -254,7 +254,8 @@ class AllocSite {
   bool traceWeak(JSTracer* trc);
   bool needsSweep(JSTracer* trc) const;
 
-  static void printInfoHeader(JS::GCReason reason, double promotionRate);
+  static void printInfoHeader(GCRuntime* gc, JS::GCReason reason,
+                              double promotionRate);
   static void printInfoFooter(size_t sitesCreated, size_t sitesActive,
                               size_t sitesPretenured, size_t sitesInvalidated);
   void printInfo(bool hasPromotionRate, double promotionRate,
