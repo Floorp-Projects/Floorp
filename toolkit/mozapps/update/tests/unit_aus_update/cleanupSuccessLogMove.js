@@ -21,7 +21,7 @@ async function run_test() {
   log = getUpdateDirFile(FILE_UPDATE_ELEVATED_LOG);
   writeFile(log, "Last Update Elevated Log");
 
-  standardInit();
+  await standardInit();
 
   Assert.ok(
     !(await gUpdateManager.getDownloadingUpdate()),

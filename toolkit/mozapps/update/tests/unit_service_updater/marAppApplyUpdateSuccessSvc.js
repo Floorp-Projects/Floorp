@@ -21,7 +21,7 @@ async function run_test() {
   );
   await runUpdateUsingApp(STATE_SUCCEEDED);
   checkAppBundleModTime();
-  standardInit();
+  await standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);

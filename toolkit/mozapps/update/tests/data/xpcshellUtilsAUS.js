@@ -1445,9 +1445,9 @@ function checkPostUpdateRunningFile(aShouldExist) {
  * Initializes the most commonly used settings and creates an instance of the
  * update service stub.
  */
-function standardInit() {
+async function standardInit() {
   // Initialize the update service stub component
-  initUpdateServiceStub();
+  await initUpdateServiceStub();
 }
 
 /**

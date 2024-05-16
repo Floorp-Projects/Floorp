@@ -14,7 +14,7 @@ async function run_test() {
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
   runUpdate(STATE_SUCCEEDED, false, 0, true);
   await checkPostUpdateAppLog();
-  standardInit();
+  await standardInit();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);

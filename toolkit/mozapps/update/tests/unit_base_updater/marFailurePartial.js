@@ -23,7 +23,7 @@ async function run_test() {
     true
   );
   checkAppBundleModTime();
-  standardInit();
+  await standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContents(LOG_PARTIAL_FAILURE);
