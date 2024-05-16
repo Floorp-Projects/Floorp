@@ -3598,7 +3598,7 @@ export class UpdateService {
    *          An array of available nsIUpdate items
    * @return  The nsIUpdate to offer.
    */
-  selectUpdate(updates) {
+  #selectUpdate(updates) {
     if (!updates.length) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_UPDATE_FOUND);
       return null;
@@ -3615,66 +3615,66 @@ export class UpdateService {
     var vc = Services.vc;
     let lastCheckCode = AUSTLMY.CHK_NO_COMPAT_UPDATE_FOUND;
 
-    updates.forEach(function (aUpdate) {
+    for (const update of updates) {
       // Ignore updates for older versions of the application and updates for
       // the same version of the application with the same build ID.
-      if (updateIsAtLeastAsOldAsCurrentVersion(aUpdate)) {
+      if (updateIsAtLeastAsOldAsCurrentVersion(update)) {
         LOG(
           "UpdateService:selectUpdate - skipping update because the " +
             "update's application version is not greater than the current " +
             "application version"
         );
         lastCheckCode = AUSTLMY.CHK_UPDATE_PREVIOUS_VERSION;
-        return;
+        continue;
       }
 
-      if (updateIsAtLeastAsOldAsReadyUpdate(aUpdate)) {
+      if (updateIsAtLeastAsOldAsReadyUpdate(update)) {
         LOG(
           "UpdateService:selectUpdate - skipping update because the " +
             "update's application version is not greater than that of the " +
             "currently downloaded update"
         );
         lastCheckCode = AUSTLMY.CHK_UPDATE_PREVIOUS_VERSION;
-        return;
+        continue;
       }
 
-      if (lazy.UM.readyUpdate && !getPatchOfType(aUpdate, "partial")) {
+      if (lazy.UM.readyUpdate && !getPatchOfType(update, "partial")) {
         LOG(
           "UpdateService:selectUpdate - skipping update because no partial " +
             "patch is available and an update has already been downloaded."
         );
         lastCheckCode = AUSTLMY.CHK_NO_PARTIAL_PATCH;
-        return;
+        continue;
       }
 
-      switch (aUpdate.type) {
+      switch (update.type) {
         case "major":
           if (!majorUpdate) {
-            majorUpdate = aUpdate;
+            majorUpdate = update;
           } else if (
-            vc.compare(majorUpdate.appVersion, aUpdate.appVersion) <= 0
+            vc.compare(majorUpdate.appVersion, update.appVersion) <= 0
           ) {
-            majorUpdate = aUpdate;
+            majorUpdate = update;
           }
           break;
         case "minor":
           if (!minorUpdate) {
-            minorUpdate = aUpdate;
+            minorUpdate = update;
           } else if (
-            vc.compare(minorUpdate.appVersion, aUpdate.appVersion) <= 0
+            vc.compare(minorUpdate.appVersion, update.appVersion) <= 0
           ) {
-            minorUpdate = aUpdate;
+            minorUpdate = update;
           }
           break;
         default:
           LOG(
             "UpdateService:selectUpdate - skipping unknown update type: " +
-              aUpdate.type
+              update.type
           );
           lastCheckCode = AUSTLMY.CHK_UPDATE_INVALID_TYPE;
           break;
       }
-    });
+    }
 
     let update = minorUpdate || majorUpdate;
     if (AppConstants.platform == "macosx" && update) {
@@ -3759,6 +3759,13 @@ export class UpdateService {
     return update;
   }
 
+  /*
+   * See nsIUpdateService.idl
+   */
+  async selectUpdate(updates) {
+    return this.#selectUpdate(updates);
+  }
+
   /**
    * Determine which of the specified updates should be installed and begin the
    * download/installation process or notify the user about the update.
@@ -3782,7 +3789,7 @@ export class UpdateService {
       return;
     }
 
-    var update = this.selectUpdate(updates);
+    var update = this.#selectUpdate(updates);
     if (!update || update.elevationFailure) {
       return;
     }
