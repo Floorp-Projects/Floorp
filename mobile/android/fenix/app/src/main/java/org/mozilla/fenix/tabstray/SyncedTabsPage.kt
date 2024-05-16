@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.fenix.tabstray
+
+import androidx.compose.runtime.Composable
+import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsList
+import org.mozilla.fenix.tabstray.syncedtabs.OnTabClick as OnSyncedTabClick
+import org.mozilla.fenix.tabstray.syncedtabs.OnTabCloseClick as OnSyncedTabClose
+
+@Composable
+internal fun SyncedTabsPage(
+    tabsTrayStore: TabsTrayStore,
+    onTabClick: OnSyncedTabClick,
+    onTabClose: OnSyncedTabClose,
+) {
+    val syncedTabs = tabsTrayStore
+        .observeAsComposableState { state -> state.syncedTabs }.value ?: emptyList()
+
+    SyncedTabsList(
+        syncedTabs = syncedTabs,
+        onTabClick = onTabClick,
+        onTabCloseClick = onTabClose,
+    )
+}
