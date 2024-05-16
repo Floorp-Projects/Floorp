@@ -54,7 +54,7 @@ impl DatetimeMetric {
     /// * `nano` - the nanosecond fraction to the last whole second.
     /// * `offset_seconds` - the timezone difference, in seconds, for the Eastern
     ///   Hemisphere. Negative seconds mean Western Hemisphere.
-    #[cfg_attr(not(feature = "with-gecko"), allow(dead_code))]
+    #[cfg_attr(not(feature = "with_gecko"), allow(dead_code))]
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn set_with_details(
         &self,
