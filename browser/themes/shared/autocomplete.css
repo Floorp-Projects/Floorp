@@ -16,6 +16,9 @@
   border-radius: 0;
   padding: 0 1px;
 
+  --status-text-color: currentColor;
+  --status-background-color: rgba(248, 232, 28, .2);
+
   > .ac-site-icon {
     margin-inline: 4px 0;
   }
@@ -168,7 +171,8 @@
   > .ac-status {
     padding: var(--space-xsmall) var(--space-small);
     text-align: center;
-    background-color: var(--color-background-information);
+    background-color: var(--status-background-color);
+    color: var(--status-text-color);
     width: 100%;
     border-bottom: 1px solid rgba(38,38,38,.15);
     font-size: calc(10 / 12 * 1em);
@@ -224,7 +228,7 @@
 
 /* Popup states */
 .autocomplete-richlistitem {
-  &:hover {
+  &:not([disabled="true"]):not([selected]):hover {
     background-color: var(--arrowpanel-dimmed);
   }
 
