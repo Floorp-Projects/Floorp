@@ -79,6 +79,10 @@ elif CONFIG['TARGET_CPU'] == 'aarch64' and CONFIG['OS_TARGET'] == 'Darwin':
             SOURCES[f].flags += CONFIG['NEON_FLAGS']
         if f.endswith('neon_i8mm.c'):
             SOURCES[f].flags += CONFIG['NEON_I8MM_FLAGS']
+        if f.endswith('neon_dotprod.c'):
+            SOURCES[f].flags += ['-march=armv8.2-a+dotprod']
+        if f.endswith('arm_crc32.c'):
+            SOURCES[f].flags += ['-march=armv8-a+crc']
 else:
     # Generic C-only configuration
     EXPORTS.aom += files['GENERIC_EXPORTS']
