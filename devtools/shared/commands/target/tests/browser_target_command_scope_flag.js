@@ -77,10 +77,10 @@ add_task(async function () {
     }
   }
 
-  const newTabProcessID =
+  const firstTabProcessID =
     gBrowser.selectedTab.linkedBrowser.browsingContext.currentWindowGlobal
       .osPid;
-  const newTabInnerWindowId =
+  const firstTabInnerWindowId =
     gBrowser.selectedTab.linkedBrowser.browsingContext.currentWindowGlobal
       .innerWindowId;
 
@@ -89,7 +89,7 @@ add_task(async function () {
     [...targets].find(
       target =>
         target.targetType == TYPES.PROCESS &&
-        target.processID == newTabProcessID
+        target.processID == firstTabProcessID
     )
   );
 
@@ -98,11 +98,9 @@ add_task(async function () {
     [...targets].find(
       target =>
         target.targetType == TYPES.FRAME &&
-        target.innerWindowId == newTabInnerWindowId
+        target.innerWindowId == firstTabInnerWindowId
     )
   );
-
-  let multiprocessTargetCount = targets.size;
 
   info("Disable multiprocess debugging");
   await pushPref("devtools.browsertoolbox.scope", "parent-process");
@@ -133,6 +131,12 @@ add_task(async function () {
     url: TEST_URL,
     forceNewProcess: true,
   });
+  const secondTabProcessID =
+    gBrowser.selectedTab.linkedBrowser.browsingContext.currentWindowGlobal
+      .osPid;
+  const secondTabInnerWindowId =
+    gBrowser.selectedTab.linkedBrowser.browsingContext.currentWindowGlobal
+      .innerWindowId;
 
   await wait(1000);
   is(
@@ -144,33 +148,37 @@ add_task(async function () {
   info("Re-enable multiprocess debugging");
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
-  // The second tab relates to one content process target and one window global target
-  multiprocessTargetCount += 2;
-
-  await waitFor(
-    () => targets.size == multiprocessTargetCount,
-    "Wait for all targets we used to have before disable multiprocess debugging"
-  );
-
-  info("Wait for the tab content process target to be available again");
-  ok(
-    [...targets].some(
+  await waitFor(() => {
+    return [...targets].some(
       target =>
         target.targetType == TYPES.PROCESS &&
-        target.processID == newTabProcessID
-    ),
-    "We have the tab content process target"
-  );
+        target.processID == firstTabProcessID
+    );
+  }, "Wait for the first tab content process target to be available again");
 
-  info("Wait for the tab window global target to be available again");
-  ok(
-    [...targets].some(
+  await waitFor(() => {
+    return [...targets].some(
       target =>
         target.targetType == TYPES.FRAME &&
-        target.innerWindowId == newTabInnerWindowId
-    ),
-    "We have the tab window global target"
-  );
+        target.innerWindowId == firstTabInnerWindowId
+    );
+  }, "Wait for the first tab frame target to be available again");
+
+  await waitFor(() => {
+    return [...targets].some(
+      target =>
+        target.targetType == TYPES.PROCESS &&
+        target.processID == secondTabProcessID
+    );
+  }, "Wait for the second tab content process target to be available again");
+
+  await waitFor(() => {
+    return [...targets].some(
+      target =>
+        target.targetType == TYPES.FRAME &&
+        target.innerWindowId == secondTabInnerWindowId
+    );
+  }, "Wait for the second tab frame target to be available again");
 
   info("Open a third tab in a new content process");
   await BrowserTestUtils.openNewForegroundTab({
