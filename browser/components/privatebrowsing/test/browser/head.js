@@ -120,10 +120,13 @@ async function setupMSExperimentWithMessage(message) {
     Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
     true
   );
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "pbNewtab",
-    value: message,
-  });
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: "pbNewtab",
+      value: message,
+    },
+    { slug: message.id }
+  );
   await SpecialPowers.pushPrefEnv({
     set: [
       [
