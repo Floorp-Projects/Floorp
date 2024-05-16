@@ -7,6 +7,7 @@ package org.mozilla.geckoview;
 
 import android.app.PendingIntent;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
 import com.google.android.gms.fido.Fido;
 import com.google.android.gms.fido.fido2.Fido2ApiClient;
@@ -24,6 +25,7 @@ import com.google.android.gms.fido.fido2.api.common.BrowserPublicKeyCredentialCr
 import com.google.android.gms.fido.fido2.api.common.BrowserPublicKeyCredentialRequestOptions;
 import com.google.android.gms.fido.fido2.api.common.EC2Algorithm;
 import com.google.android.gms.fido.fido2.api.common.FidoAppIdExtension;
+import com.google.android.gms.fido.fido2.api.common.FidoCredentialDetails;
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredential;
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialCreationOptions;
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor;
@@ -37,14 +39,17 @@ import com.google.android.gms.fido.fido2.api.common.ResidentKeyRequirement;
 import com.google.android.gms.tasks.Task;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.WebAuthnCredentialManager;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.WebAuthnUtils;
 
 /* package */ class WebAuthnTokenManager {
   private static final String LOGTAG = "WebAuthnTokenManager";
+  private static final boolean DEBUG = false;
 
   private static final Algorithm[] SUPPORTED_ALGORITHMS = {
     EC2Algorithm.ES256,
@@ -172,100 +177,107 @@ import org.mozilla.gecko.util.WebAuthnUtils;
       return GeckoResult.fromException(new WebAuthnUtils.Exception("NOT_SUPPORTED_ERR"));
     }
 
-    final PublicKeyCredentialCreationOptions requestOptions =
-        getRequestOptionsForMakeCredential(
-            credentialBundle, userId, challenge, excludeList, authenticatorSelection, extensions);
-
-    final Uri origin = Uri.parse(credentialBundle.getString("origin"));
-
-    final BrowserPublicKeyCredentialCreationOptions browserOptions =
-        new BrowserPublicKeyCredentialCreationOptions.Builder()
-            .setPublicKeyCredentialCreationOptions(requestOptions)
-            .setOrigin(origin)
-            .build();
-
-    final Task<PendingIntent> intentTask;
-
-    if (BuildConfig.MOZILLA_OFFICIAL) {
-      // Certain Fenix builds and signing keys are whitelisted for Web Authentication.
-      // See https://wiki.mozilla.org/Security/Web_Authentication
-      //
-      // Third party apps will need to get whitelisted themselves.
-      final Fido2PrivilegedApiClient fidoClient =
-          Fido.getFido2PrivilegedApiClient(GeckoAppShell.getApplicationContext());
-
-      intentTask = fidoClient.getRegisterPendingIntent(browserOptions);
-    } else {
-      // For non-official builds, websites have to opt-in to permit the
-      // particular version of Gecko to perform WebAuthn operations on
-      // them. See https://developers.google.com/digital-asset-links
-      // for the general form, and Step 1 of
-      // https://developers.google.com/identity/fido/android/native-apps
-      // for details about doing this correctly for the FIDO2 API.
-      final Fido2ApiClient fidoClient =
-          Fido.getFido2ApiClient(GeckoAppShell.getApplicationContext());
-
-      intentTask = fidoClient.getRegisterPendingIntent(requestOptions);
-    }
-
     final GeckoResult<WebAuthnUtils.MakeCredentialResponse> result = new GeckoResult<>();
+    try {
+      final PublicKeyCredentialCreationOptions requestOptions =
+          getRequestOptionsForMakeCredential(
+              credentialBundle, userId, challenge, excludeList, authenticatorSelection, extensions);
 
-    intentTask.addOnSuccessListener(
-        pendingIntent -> {
-          GeckoRuntime.getInstance()
-              .startActivityForResult(pendingIntent)
-              .accept(
-                  intent -> {
-                    if (!intent.hasExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA)) {
-                      Log.w(LOGTAG, "Failed to get credential data in FIDO intent");
-                      result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
-                      return;
-                    }
-                    final byte[] rspData =
-                        intent.getByteArrayExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA);
-                    final PublicKeyCredential publicKeyCredentialData =
-                        PublicKeyCredential.deserializeFromBytes(rspData);
+      final Uri origin = Uri.parse(credentialBundle.getString("origin"));
 
-                    final AuthenticatorResponse response = publicKeyCredentialData.getResponse();
-                    final WebAuthnUtils.Exception error = parseErrorResponse(response);
-                    if (error != null) {
-                      result.completeExceptionally(error);
-                      return;
-                    }
+      final BrowserPublicKeyCredentialCreationOptions browserOptions =
+          new BrowserPublicKeyCredentialCreationOptions.Builder()
+              .setPublicKeyCredentialCreationOptions(requestOptions)
+              .setOrigin(origin)
+              .build();
 
-                    if (!(response instanceof AuthenticatorAttestationResponse)) {
-                      Log.w(LOGTAG, "Failed to get attestation response in FIDO intent");
-                      result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
-                      return;
-                    }
+      final Task<PendingIntent> intentTask;
 
-                    final AuthenticatorAttestationResponse responseData =
-                        (AuthenticatorAttestationResponse) response;
-                    final WebAuthnUtils.MakeCredentialResponse credentialResponse =
-                        new WebAuthnUtils.MakeCredentialResponse.Builder()
-                            .setKeyHandle(publicKeyCredentialData.getRawId())
-                            .setAuthenticatorAttachment(
-                                publicKeyCredentialData.getAuthenticatorAttachment())
-                            .setClientDataJson(responseData.getClientDataJSON())
-                            .setAttestationObject(responseData.getAttestationObject())
-                            .setTransports(responseData.getTransports())
-                            .build();
+      if (BuildConfig.MOZILLA_OFFICIAL) {
+        // Certain Fenix builds and signing keys are whitelisted for Web Authentication.
+        // See https://wiki.mozilla.org/Security/Web_Authentication
+        //
+        // Third party apps will need to get whitelisted themselves.
+        final Fido2PrivilegedApiClient fidoClient =
+            Fido.getFido2PrivilegedApiClient(GeckoAppShell.getApplicationContext());
 
-                    Log.d(LOGTAG, "MakeCredentialResponse: " + credentialResponse.toString());
-                    result.complete(credentialResponse);
-                  },
-                  e -> {
-                    Log.w(LOGTAG, "Failed to launch activity: ", e);
-                    result.completeExceptionally(new WebAuthnUtils.Exception("ABORT_ERR"));
-                  });
-        });
+        intentTask = fidoClient.getRegisterPendingIntent(browserOptions);
+      } else {
+        // For non-official builds, websites have to opt-in to permit the
+        // particular version of Gecko to perform WebAuthn operations on
+        // them. See https://developers.google.com/digital-asset-links
+        // for the general form, and Step 1 of
+        // https://developers.google.com/identity/fido/android/native-apps
+        // for details about doing this correctly for the FIDO2 API.
+        final Fido2ApiClient fidoClient =
+            Fido.getFido2ApiClient(GeckoAppShell.getApplicationContext());
 
-    intentTask.addOnFailureListener(
-        e -> {
-          Log.w(LOGTAG, "Failed to get FIDO intent", e);
-          result.completeExceptionally(new WebAuthnUtils.Exception("ABORT_ERR"));
-        });
+        intentTask = fidoClient.getRegisterPendingIntent(requestOptions);
+      }
 
+      intentTask.addOnSuccessListener(
+          pendingIntent -> {
+            GeckoRuntime.getInstance()
+                .startActivityForResult(pendingIntent)
+                .accept(
+                    intent -> {
+                      if (!intent.hasExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA)) {
+                        Log.w(LOGTAG, "Failed to get credential data in FIDO intent");
+                        result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
+                        return;
+                      }
+                      final byte[] rspData =
+                          intent.getByteArrayExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA);
+                      final PublicKeyCredential publicKeyCredentialData =
+                          PublicKeyCredential.deserializeFromBytes(rspData);
+
+                      final AuthenticatorResponse response = publicKeyCredentialData.getResponse();
+                      final WebAuthnUtils.Exception error = parseErrorResponse(response);
+                      if (error != null) {
+                        result.completeExceptionally(error);
+                        return;
+                      }
+
+                      if (!(response instanceof AuthenticatorAttestationResponse)) {
+                        Log.w(LOGTAG, "Failed to get attestation response in FIDO intent");
+                        result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
+                        return;
+                      }
+
+                      final AuthenticatorAttestationResponse responseData =
+                          (AuthenticatorAttestationResponse) response;
+                      final WebAuthnUtils.MakeCredentialResponse credentialResponse =
+                          new WebAuthnUtils.MakeCredentialResponse.Builder()
+                              .setKeyHandle(publicKeyCredentialData.getRawId())
+                              .setAuthenticatorAttachment(
+                                  publicKeyCredentialData.getAuthenticatorAttachment())
+                              .setClientDataJson(responseData.getClientDataJSON())
+                              .setAttestationObject(responseData.getAttestationObject())
+                              .setTransports(responseData.getTransports())
+                              .build();
+
+                      Log.d(LOGTAG, "MakeCredentialResponse: " + credentialResponse.toString());
+                      result.complete(credentialResponse);
+                    },
+                    e -> {
+                      Log.w(LOGTAG, "Failed to launch activity: ", e);
+                      result.completeExceptionally(new WebAuthnUtils.Exception("ABORT_ERR"));
+                    });
+          });
+
+      intentTask.addOnFailureListener(
+          e -> {
+            Log.w(LOGTAG, "Failed to get FIDO intent", e);
+            result.completeExceptionally(new WebAuthnUtils.Exception("ABORT_ERR"));
+          });
+    } catch (final java.lang.Exception e) {
+      // We need to ensure we catch any possible exception here in order to ensure
+      // that the Promise on the content side is appropriately rejected. In particular,
+      // we will get `NoClassDefFoundError` if we're running on a device that does not
+      // have Google Play Services.
+      Log.w(LOGTAG, "Couldn't make credential", e);
+      return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
+    }
     return result;
   }
 
@@ -277,37 +289,59 @@ import org.mozilla.gecko.util.WebAuthnUtils;
       final Object[] idList,
       final ByteBuffer transportList,
       final GeckoBundle authenticatorSelection,
-      final GeckoBundle extensions) {
-    final ArrayList<WebAuthnUtils.WebAuthnPublicCredential> excludeList;
+      final GeckoBundle extensions,
+      final int[] algs,
+      final ByteBuffer clientDataHash) {
+    final ArrayList<WebAuthnUtils.WebAuthnPublicCredential> excludeArrayList;
 
     final byte[] challBytes = new byte[challenge.remaining()];
     final byte[] userBytes = new byte[userId.remaining()];
+    final byte[] clientDataHashBytes = new byte[clientDataHash.remaining()];
     try {
       challenge.get(challBytes);
       userId.get(userBytes);
+      clientDataHash.get(clientDataHashBytes);
 
-      excludeList = WebAuthnUtils.WebAuthnPublicCredential.CombineBuffers(idList, transportList);
+      excludeArrayList =
+          WebAuthnUtils.WebAuthnPublicCredential.CombineBuffers(idList, transportList);
     } catch (final RuntimeException e) {
       Log.w(LOGTAG, "Couldn't extract nio byte arrays!", e);
       return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
     }
 
-    try {
-      return makeCredential(
-          credentialBundle,
-          userBytes,
-          challBytes,
-          excludeList.toArray(new WebAuthnUtils.WebAuthnPublicCredential[0]),
-          authenticatorSelection,
-          extensions);
-    } catch (final Exception e) {
-      // We need to ensure we catch any possible exception here in order to ensure
-      // that the Promise on the content side is appropriately rejected. In particular,
-      // we will get `NoClassDefFoundError` if we're running on a device that does not
-      // have Google Play Services.
-      Log.w(LOGTAG, "Couldn't make credential", e);
-      return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
-    }
+    final WebAuthnUtils.WebAuthnPublicCredential[] excludeList =
+        new WebAuthnUtils.WebAuthnPublicCredential[idList.length];
+    excludeArrayList.toArray(excludeList);
+
+    final GeckoResult<WebAuthnUtils.MakeCredentialResponse> result = new GeckoResult<>();
+    WebAuthnCredentialManager.makeCredential(
+            credentialBundle,
+            userBytes,
+            challBytes,
+            algs,
+            excludeList,
+            authenticatorSelection,
+            clientDataHashBytes)
+        .accept(
+            response -> result.complete(response),
+            exceptionInCredManager -> {
+              if (!exceptionInCredManager.getMessage().equals("NOT_SUPPORTED_ERR")) {
+                result.completeExceptionally(exceptionInCredManager);
+                return;
+              }
+              // If supported error, we try to use GMS FIDO2.
+              makeCredential(
+                      credentialBundle,
+                      userBytes,
+                      challBytes,
+                      excludeList,
+                      authenticatorSelection,
+                      extensions)
+                  .accept(
+                      response -> result.complete(response),
+                      exceptionInGMS -> result.completeExceptionally(exceptionInGMS));
+            });
+    return result;
   }
 
   private static WebAuthnUtils.Exception parseErrorResponse(final AuthenticatorResponse response) {
@@ -364,83 +398,91 @@ import org.mozilla.gecko.util.WebAuthnUtils;
       return GeckoResult.fromException(new WebAuthnUtils.Exception("NOT_SUPPORTED_ERR"));
     }
 
-    final PublicKeyCredentialRequestOptions requestOptions =
-        getRequestOptionsForGetAssertion(challenge, allowList, assertionBundle, extensions);
-
-    final Uri origin = Uri.parse(assertionBundle.getString("origin"));
-    final BrowserPublicKeyCredentialRequestOptions browserOptions =
-        new BrowserPublicKeyCredentialRequestOptions.Builder()
-            .setPublicKeyCredentialRequestOptions(requestOptions)
-            .setOrigin(origin)
-            .build();
-
-    final Task<PendingIntent> intentTask;
-    // See the makeCredential method for documentation about this
-    // conditional.
-    if (BuildConfig.MOZILLA_OFFICIAL) {
-      final Fido2PrivilegedApiClient fidoClient =
-          Fido.getFido2PrivilegedApiClient(GeckoAppShell.getApplicationContext());
-
-      intentTask = fidoClient.getSignPendingIntent(browserOptions);
-    } else {
-      final Fido2ApiClient fidoClient =
-          Fido.getFido2ApiClient(GeckoAppShell.getApplicationContext());
-
-      intentTask = fidoClient.getSignPendingIntent(requestOptions);
-    }
-
     final GeckoResult<WebAuthnUtils.GetAssertionResponse> result = new GeckoResult<>();
-    intentTask.addOnSuccessListener(
-        pendingIntent -> {
-          GeckoRuntime.getInstance()
-              .startActivityForResult(pendingIntent)
-              .accept(
-                  intent -> {
-                    if (!intent.hasExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA)) {
-                      Log.w(LOGTAG, "Failed to get credential data in FIDO intent");
+    try {
+      final PublicKeyCredentialRequestOptions requestOptions =
+          getRequestOptionsForGetAssertion(challenge, allowList, assertionBundle, extensions);
+
+      final Uri origin = Uri.parse(assertionBundle.getString("origin"));
+      final BrowserPublicKeyCredentialRequestOptions browserOptions =
+          new BrowserPublicKeyCredentialRequestOptions.Builder()
+              .setPublicKeyCredentialRequestOptions(requestOptions)
+              .setOrigin(origin)
+              .build();
+
+      final Task<PendingIntent> intentTask;
+      // See the makeCredential method for documentation about this
+      // conditional.
+      if (BuildConfig.MOZILLA_OFFICIAL) {
+        final Fido2PrivilegedApiClient fidoClient =
+            Fido.getFido2PrivilegedApiClient(GeckoAppShell.getApplicationContext());
+
+        intentTask = fidoClient.getSignPendingIntent(browserOptions);
+      } else {
+        final Fido2ApiClient fidoClient =
+            Fido.getFido2ApiClient(GeckoAppShell.getApplicationContext());
+
+        intentTask = fidoClient.getSignPendingIntent(requestOptions);
+      }
+
+      intentTask.addOnSuccessListener(
+          pendingIntent -> {
+            GeckoRuntime.getInstance()
+                .startActivityForResult(pendingIntent)
+                .accept(
+                    intent -> {
+                      if (!intent.hasExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA)) {
+                        Log.w(LOGTAG, "Failed to get credential data in FIDO intent");
+                        result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
+                        return;
+                      }
+
+                      final byte[] rspData =
+                          intent.getByteArrayExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA);
+                      final PublicKeyCredential publicKeyCredentialData =
+                          PublicKeyCredential.deserializeFromBytes(rspData);
+                      final AuthenticatorResponse response = publicKeyCredentialData.getResponse();
+
+                      final WebAuthnUtils.Exception error = parseErrorResponse(response);
+                      if (error != null) {
+                        result.completeExceptionally(error);
+                        return;
+                      }
+
+                      if (!(response instanceof AuthenticatorAssertionResponse)) {
+                        Log.w(LOGTAG, "Failed to get assertion response in FIDO intent");
+                        result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
+                        return;
+                      }
+
+                      final AuthenticatorAssertionResponse responseData =
+                          (AuthenticatorAssertionResponse) response;
+                      final WebAuthnUtils.GetAssertionResponse assertionResponse =
+                          new WebAuthnUtils.GetAssertionResponse.Builder()
+                              .setClientDataJson(responseData.getClientDataJSON())
+                              .setKeyHandle(publicKeyCredentialData.getRawId())
+                              .setAuthData(responseData.getAuthenticatorData())
+                              .setSignature(responseData.getSignature())
+                              .setUserHandle(responseData.getUserHandle())
+                              .setAuthenticatorAttachment(
+                                  publicKeyCredentialData.getAuthenticatorAttachment())
+                              .build();
+                      Log.d(LOGTAG, "GetAssertionResponse: " + assertionResponse.toString());
+                      result.complete(assertionResponse);
+                    },
+                    e -> {
+                      Log.w(LOGTAG, "Failed to get FIDO intent", e);
                       result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
-                      return;
-                    }
-
-                    final byte[] rspData =
-                        intent.getByteArrayExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA);
-                    final PublicKeyCredential publicKeyCredentialData =
-                        PublicKeyCredential.deserializeFromBytes(rspData);
-                    final AuthenticatorResponse response = publicKeyCredentialData.getResponse();
-
-                    final WebAuthnUtils.Exception error = parseErrorResponse(response);
-                    if (error != null) {
-                      result.completeExceptionally(error);
-                      return;
-                    }
-
-                    if (!(response instanceof AuthenticatorAssertionResponse)) {
-                      Log.w(LOGTAG, "Failed to get assertion response in FIDO intent");
-                      result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
-                      return;
-                    }
-
-                    final AuthenticatorAssertionResponse responseData =
-                        (AuthenticatorAssertionResponse) response;
-                    final WebAuthnUtils.GetAssertionResponse assertionResponse =
-                        new WebAuthnUtils.GetAssertionResponse.Builder()
-                            .setClientDataJson(responseData.getClientDataJSON())
-                            .setKeyHandle(publicKeyCredentialData.getRawId())
-                            .setAuthData(responseData.getAuthenticatorData())
-                            .setSignature(responseData.getSignature())
-                            .setUserHandle(responseData.getUserHandle())
-                            .setAuthenticatorAttachment(
-                                publicKeyCredentialData.getAuthenticatorAttachment())
-                            .build();
-                    Log.d(LOGTAG, "GetAssertionResponse: " + assertionResponse.toString());
-                    result.complete(assertionResponse);
-                  },
-                  e -> {
-                    Log.w(LOGTAG, "Failed to get FIDO intent", e);
-                    result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
-                  });
-        });
-
+                    });
+          });
+    } catch (final java.lang.Exception e) {
+      // We need to ensure we catch any possible exception here in order to ensure
+      // that the Promise on the content side is appropriately rejected. In particular,
+      // we will get `NoClassDefFoundError` if we're running on a device that does not
+      // have Google Play Services.
+      Log.w(LOGTAG, "Couldn't make credential", e);
+      return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
+    }
     return result;
   }
 
@@ -450,28 +492,66 @@ import org.mozilla.gecko.util.WebAuthnUtils;
       final Object[] idList,
       final ByteBuffer transportList,
       final GeckoBundle assertionBundle,
-      final GeckoBundle extensions) {
-    final ArrayList<WebAuthnUtils.WebAuthnPublicCredential> allowList;
+      final GeckoBundle extensions,
+      final ByteBuffer clientDataHash) {
+    final ArrayList<WebAuthnUtils.WebAuthnPublicCredential> allowArrayList;
 
     final byte[] challBytes = new byte[challenge.remaining()];
+    final byte[] clientDataHashBytes = new byte[clientDataHash.remaining()];
     try {
       challenge.get(challBytes);
-      allowList = WebAuthnUtils.WebAuthnPublicCredential.CombineBuffers(idList, transportList);
+      clientDataHash.get(clientDataHashBytes);
+      allowArrayList = WebAuthnUtils.WebAuthnPublicCredential.CombineBuffers(idList, transportList);
     } catch (final RuntimeException e) {
       Log.w(LOGTAG, "Couldn't extract nio byte arrays!", e);
       return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
     }
 
-    try {
-      return getAssertion(
-          challBytes,
-          allowList.toArray(new WebAuthnUtils.WebAuthnPublicCredential[0]),
-          assertionBundle,
-          extensions);
-    } catch (final java.lang.Exception e) {
-      Log.w(LOGTAG, "Couldn't get assertion", e);
-      return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
-    }
+    final WebAuthnUtils.WebAuthnPublicCredential[] allowList =
+        new WebAuthnUtils.WebAuthnPublicCredential[idList.length];
+    allowArrayList.toArray(allowList);
+
+    // Unfortunately, we don't know where requested credential is stored.
+    //
+    // 1. Check whether play service has the credential that is included in allow list.
+    //    If found, use play service. If not, step 2.
+    // 2. Try credential manager to get credential.
+    //    If credential manager doesn't support passkeys, step 3.
+    // 3. Try play service to get credential.
+    final GeckoResult<WebAuthnUtils.GetAssertionResponse> result = new GeckoResult<>();
+    hasCredentialInGMS(assertionBundle.getString("rpId"), allowList)
+        .accept(
+            found -> {
+              if (found) {
+                // Use GMS API due to having credential, or older Android
+                getAssertion(challBytes, allowList, assertionBundle, extensions)
+                    .accept(
+                        response -> result.complete(response),
+                        e -> result.completeExceptionally(e));
+                return;
+              }
+
+              WebAuthnCredentialManager.prepareGetAssertion(
+                      challBytes, allowList, assertionBundle, extensions, clientDataHashBytes)
+                  .accept(
+                      pendingHandle -> {
+                        if (pendingHandle != null) {
+                          WebAuthnCredentialManager.getAssertion(pendingHandle)
+                              .accept(
+                                  response -> result.complete(response),
+                                  e -> result.completeExceptionally(e));
+                          return;
+                        }
+                        // Maybe credential manager has no credentials
+                        getAssertion(challBytes, allowList, assertionBundle, extensions)
+                            .accept(
+                                response -> result.complete(response),
+                                e -> result.completeExceptionally(e));
+                      },
+                      e -> result.completeExceptionally(e));
+              return;
+            });
+    return result;
   }
 
   @WrapForJNI(calledFrom = "gecko")
@@ -498,5 +578,47 @@ import org.mozilla.gecko.util.WebAuthnUtils;
           res.complete(false);
         });
     return res;
+  }
+
+  private static GeckoResult<Boolean> hasCredentialInGMS(
+      final String rpId, final WebAuthnUtils.WebAuthnPublicCredential[] allowList) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+      // Always use GMS on old Android
+      return GeckoResult.fromValue(true);
+    }
+    if (!BuildConfig.MOZILLA_OFFICIAL) {
+      // No way to check credential in GMS. Use Credential Manager at first.
+      return GeckoResult.fromValue(false);
+    }
+
+    final GeckoResult<Boolean> result = new GeckoResult<>();
+    try {
+      final Fido2PrivilegedApiClient fidoClient =
+          Fido.getFido2PrivilegedApiClient(GeckoAppShell.getApplicationContext());
+      final Task<List<FidoCredentialDetails>> task = fidoClient.getCredentialList(rpId);
+      task.addOnSuccessListener(
+          credentials -> {
+            for (final FidoCredentialDetails credential : credentials) {
+              if (credential.getIsDiscoverable()) {
+                // All discoverable credentials have to be handled by credential manager
+                continue;
+              }
+
+              for (final WebAuthnUtils.WebAuthnPublicCredential item : allowList) {
+                if (Arrays.equals(credential.getCredentialId(), item.id)) {
+                  // Found credential in GMS.
+                  result.complete(true);
+                  return;
+                }
+              }
+            }
+            result.complete(false);
+          });
+      task.addOnFailureListener(e -> result.complete(false));
+    } catch (final java.lang.Exception e) {
+      // Play service may be nothing.
+      return GeckoResult.fromValue(false);
+    }
+    return result;
   }
 }

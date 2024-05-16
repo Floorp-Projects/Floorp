@@ -49,10 +49,12 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
         reinterpret_cast<uint8_t*>(
             aResponse->AttestationObject()->GetElements().Elements()),
         aResponse->AttestationObject()->Length());
-    mClientDataJSON = Some(nsAutoCString(
-        reinterpret_cast<const char*>(
-            aResponse->ClientDataJson()->GetElements().Elements()),
-        aResponse->ClientDataJson()->Length()));
+    if (aResponse->ClientDataJson()) {
+      mClientDataJSON = Some(nsAutoCString(
+          reinterpret_cast<const char*>(
+              aResponse->ClientDataJson()->GetElements().Elements()),
+          aResponse->ClientDataJson()->Length()));
+    }
     mCredentialId.AppendElements(
         reinterpret_cast<uint8_t*>(
             aResponse->KeyHandle()->GetElements().Elements()),
@@ -171,10 +173,12 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
         reinterpret_cast<uint8_t*>(
             aResponse->AuthData()->GetElements().Elements()),
         aResponse->AuthData()->Length());
-    mClientDataJSON = Some(nsAutoCString(
-        reinterpret_cast<const char*>(
-            aResponse->ClientDataJson()->GetElements().Elements()),
-        aResponse->ClientDataJson()->Length()));
+    if (aResponse->ClientDataJson()) {
+      mClientDataJSON = Some(nsAutoCString(
+          reinterpret_cast<const char*>(
+              aResponse->ClientDataJson()->GetElements().Elements()),
+          aResponse->ClientDataJson()->Length()));
+    }
     mCredentialId.AppendElements(
         reinterpret_cast<uint8_t*>(
             aResponse->KeyHandle()->GetElements().Elements()),

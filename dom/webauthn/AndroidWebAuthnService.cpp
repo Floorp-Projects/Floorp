@@ -134,6 +134,18 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
                 static_cast<const void*>(transportBuf.Elements())),
             transportBuf.Length());
 
+        nsTArray<uint8_t> clientDataHash;
+        Unused << aArgs->GetClientDataHash(clientDataHash);
+        jni::ByteBuffer::LocalRef hash = jni::ByteBuffer::New(
+            const_cast<void*>(
+                static_cast<const void*>(clientDataHash.Elements())),
+            clientDataHash.Length());
+
+        nsTArray<int32_t> coseAlgs;
+        Unused << aArgs->GetCoseAlgs(coseAlgs);
+        jni::IntArray::LocalRef algs =
+            jni::IntArray::New(coseAlgs.Elements(), coseAlgs.Length());
+
         GECKOBUNDLE_START(authSelBundle);
 
         nsString residentKey;
@@ -188,7 +200,7 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
 
         auto result = java::WebAuthnTokenManager::WebAuthnMakeCredential(
             credentialBundle, uid, challenge, idList, transportList,
-            authSelBundle, extensionsBundle);
+            authSelBundle, extensionsBundle, algs, hash);
 
         auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
 
@@ -252,6 +264,13 @@ AndroidWebAuthnService::GetAssertion(uint64_t aTransactionId,
           ix += 1;
         }
 
+        nsTArray<uint8_t> clientDataHash;
+        Unused << aArgs->GetClientDataHash(clientDataHash);
+        jni::ByteBuffer::LocalRef hash = jni::ByteBuffer::New(
+            const_cast<void*>(
+                static_cast<const void*>(clientDataHash.Elements())),
+            clientDataHash.Length());
+
         nsTArray<uint8_t> transportBuf;
         Unused << aArgs->GetAllowListTransports(transportBuf);
         jni::ByteBuffer::LocalRef transportList = jni::ByteBuffer::New(
@@ -298,8 +317,8 @@ AndroidWebAuthnService::GetAssertion(uint64_t aTransactionId,
         GECKOBUNDLE_FINISH(extensionsBundle);
 
         auto result = java::WebAuthnTokenManager::WebAuthnGetAssertion(
-            challenge, idList, transportList, assertionBundle,
-            extensionsBundle);
+            challenge, idList, transportList, assertionBundle, extensionsBundle,
+            hash);
         auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
         MozPromise<RefPtr<WebAuthnSignResult>, AndroidWebAuthnError,
                    true>::FromGeckoResult(geckoResult)
