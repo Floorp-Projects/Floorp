@@ -17,7 +17,7 @@
 #include "threading/CpuCount.h"
 #include "util/Poison.h"
 #include "vm/BigIntType.h"
-#include "vm/JSContext.h"
+#include "vm/FrameIter.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"
 
@@ -25,6 +25,7 @@
 #include "gc/Heap-inl.h"
 #include "gc/PrivateIterators-inl.h"
 #include "vm/JSContext-inl.h"
+#include "vm/JSScript-inl.h"
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -277,6 +278,55 @@ template bool CellAllocator::PreAllocChecks<CanGC>(JSContext* cx,
                                                    AllocKind kind);
 
 #endif  // DEBUG || JS_GC_ZEAL || JS_OOM_BREAKPOINT
+
+#ifdef JS_GC_ZEAL
+
+/* static */
+AllocSite* CellAllocator::MaybeGenerateMissingAllocSite(JSContext* cx,
+                                                        JS::TraceKind traceKind,
+                                                        AllocSite* site) {
+  MOZ_ASSERT(site);
+
+  if (!cx->runtime()->gc.tunables.generateMissingAllocSites()) {
+    return site;
+  }
+
+  if (!site->isUnknown()) {
+    return site;
+  }
+
+  if (cx->inUnsafeCallWithABI) {
+    return site;
+  }
+
+  FrameIter frame(cx);
+  if (frame.done() || !frame.isBaseline()) {
+    return site;
+  }
+
+  MOZ_ASSERT(site == cx->zone()->unknownAllocSite(traceKind));
+  MOZ_ASSERT(frame.hasScript());
+
+  JSScript* script = frame.script();
+  if (cx->zone() != script->zone()) {
+    return site;  // Skip cross-zone allocation.
+  }
+
+  uint32_t pcOffset = script->pcToOffset(frame.pc());
+  if (!script->hasBaselineScript() || pcOffset > AllocSite::MaxValidPCOffset) {
+    return site;
+  }
+
+  AllocSite* missingSite =
+      GetOrCreateMissingAllocSite(cx, script, pcOffset, traceKind);
+  if (!missingSite) {
+    return site;
+  }
+
+  return missingSite;
+}
+
+#endif  // JS_GC_ZEAL
 
 #ifdef DEBUG
 /* static */

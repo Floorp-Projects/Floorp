@@ -49,7 +49,12 @@ enum class CatchAllAllocSite { Unknown, Optimized };
 // unknown sites or JS JIT optimized code.
 class AllocSite {
  public:
-  enum class Kind : uint32_t { Normal = 0, Unknown = 1, Optimized = 2 };
+  enum class Kind : uint32_t {
+    Normal = 0,
+    Unknown = 1,
+    Optimized = 2,
+    Missing = 3
+  };
   enum class State : uint32_t { ShortLived = 0, Unknown = 1, LongLived = 2 };
 
   // The JIT depends on being able to tell the states apart by checking a single
@@ -78,8 +83,7 @@ class AllocSite {
   // this AllocSite, because if we're doing trial-inlining, the script will be
   // the outer script and the pc offset can be in an inlined script.
   uint32_t pcOffset_ : 30;
-  static constexpr uint32_t InvalidPCOffset = (1 << 30) - 1;
-  static constexpr uint32_t MaxValidPCOffset = InvalidPCOffset - 1;
+  static constexpr uint32_t InvalidPCOffset = Bit(30) - 1;
 
   uint32_t kind_ : 2;
 
@@ -107,6 +111,8 @@ class AllocSite {
   uintptr_t rawScript() const { return scriptAndState & ~STATE_MASK; }
 
  public:
+  static constexpr uint32_t MaxValidPCOffset = InvalidPCOffset - 1;
+
   // Default constructor. Clients must call one of the init methods afterwards.
   AllocSite()
       : pcOffset_(InvalidPCOffset),
@@ -117,13 +123,13 @@ class AllocSite {
 
   // Create a site for an opcode in the given script.
   AllocSite(JS::Zone* zone, JSScript* script, uint32_t pcOffset,
-            JS::TraceKind kind)
+            JS::TraceKind traceKind, Kind siteKind = Kind::Normal)
       : zone_(zone),
         pcOffset_(pcOffset),
-        kind_(uint32_t(Kind::Normal)),
+        kind_(uint32_t(siteKind)),
         nurseryPromotedCount(0),
         invalidationCount(0),
-        traceKind_(uint32_t(kind)) {
+        traceKind_(uint32_t(traceKind)) {
     MOZ_ASSERT(pcOffset <= MaxValidPCOffset);
     MOZ_ASSERT(pcOffset_ == pcOffset);
     setScript(script);
@@ -188,9 +194,11 @@ class AllocSite {
   bool isNormal() const { return kind() == Kind::Normal; }
   bool isUnknown() const { return kind() == Kind::Unknown; }
   bool isOptimized() const { return kind() == Kind::Optimized; }
+  bool isMissing() const { return kind() == Kind::Missing; }
 
   Kind kind() const {
-    MOZ_ASSERT((Kind(kind_) == Kind::Normal) == (rawScript() != 0));
+    MOZ_ASSERT((Kind(kind_) == Kind::Normal || Kind(kind_) == Kind::Missing) ==
+               (rawScript() != 0));
     return Kind(kind_);
   }
 
@@ -199,6 +207,9 @@ class AllocSite {
   // Whether allocations at this site should be allocated in the nursery or the
   // tenured heap.
   Heap initialHeap() const {
+    if (!isNormal()) {
+      return Heap::Default;
+    }
     return state() == State::LongLived ? Heap::Tenured : Heap::Default;
   }
 
@@ -227,6 +238,7 @@ class AllocSite {
   enum SiteResult { NoChange, WasPretenured, WasPretenuredAndInvalidated };
   SiteResult processSite(GCRuntime* gc, size_t attentionThreshold,
                          bool reportInfo, size_t reportThreshold);
+  void processMissingSite(bool reportInfo, size_t reportThreshold);
   void processCatchAllSite(bool reportInfo, size_t reportThreshold);
 
   void updateStateOnMinorGC(double promotionRate);
@@ -239,6 +251,8 @@ class AllocSite {
   bool invalidateScript(GCRuntime* gc);
 
   void trace(JSTracer* trc);
+  bool traceWeak(JSTracer* trc);
+  bool needsSweep(JSTracer* trc) const;
 
   static void printInfoHeader(JS::GCReason reason, double promotionRate);
   static void printInfoFooter(size_t sitesCreated, size_t sitesActive,
@@ -393,6 +407,16 @@ class PretenuringNursery {
  private:
   void updateTotalAllocCounts(AllocSite* site);
 };
+
+#ifdef JS_GC_ZEAL
+
+// To help discover good places to add allocation sites, automatically create an
+// allocation site for an allocation that didn't supply one.
+AllocSite* GetOrCreateMissingAllocSite(JSContext* cx, JSScript* script,
+                                       uint32_t pcOffset,
+                                       JS::TraceKind traceKind);
+
+#endif  // JS_GC_ZEAL
 
 }  // namespace js::gc
 

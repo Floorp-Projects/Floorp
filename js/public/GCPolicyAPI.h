@@ -93,6 +93,9 @@ struct StructGCPolicy {
   static void trace(JSTracer* trc, T* tp, const char* name) { tp->trace(trc); }
 
   static bool traceWeak(JSTracer* trc, T* tp) { return tp->traceWeak(trc); }
+  static bool needsSweep(JSTracer* trc, const T* tp) {
+    return tp->needsSweep(trc);
+  }
 
   static bool isValid(const T& tp) { return true; }
 };

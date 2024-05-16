@@ -71,6 +71,12 @@ class CellAllocator {
   }
 #endif
 
+#ifdef JS_GC_ZEAL
+  static AllocSite* MaybeGenerateMissingAllocSite(JSContext* cx,
+                                                  JS::TraceKind traceKind,
+                                                  AllocSite* site);
+#endif
+
 #ifdef DEBUG
   static void CheckIncrementalZoneState(JSContext* cx, void* ptr);
 #endif
