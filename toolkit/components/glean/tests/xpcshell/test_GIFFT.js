@@ -226,7 +226,15 @@ add_task(function test_gifft_events() {
   Assert.equal("test_only.ipc", events[0].category);
   Assert.equal("no_extra_event", events[0].name);
 
-  let extra = { extra1: "can set extras", extra2: "passing more data" };
+  let extra = {
+    value: "a value for Telemetry",
+    extra1: "can set extras",
+    extra2: "passing more data",
+  };
+  // Since `value` will be stripped and used for the value in the Legacy Telemetry API, we need
+  // a copy without it in order to test with `assertEvents` later.
+  let { extra1, extra2 } = extra;
+  let telExtra = { extra1, extra2 };
   Glean.testOnlyIpc.anEvent.record(extra);
   events = Glean.testOnlyIpc.anEvent.testGetValue();
   Assert.equal(1, events.length);
@@ -237,7 +245,7 @@ add_task(function test_gifft_events() {
   TelemetryTestUtils.assertEvents(
     [
       ["telemetry.test", "not_expired_optout", "object1", undefined, undefined],
-      ["telemetry.test", "mirror_with_extra", "object1", null, extra],
+      ["telemetry.test", "mirror_with_extra", "object1", extra.value, telExtra],
     ],
     { category: "telemetry.test" }
   );

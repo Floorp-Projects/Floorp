@@ -45,7 +45,7 @@ This compatibility table explains which Telemetry probe types can be mirrors for
 | [uuid](https://mozilla.github.io/glean/book/reference/metrics/uuid.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.html). Value will be in canonical 8-4-4-4-12 format. Value is not guaranteed to be valid, and invalid values may be present in the mirrored scalar while the uuid metric remains empty. Calling `GenerateAndSet` on the uuid is not mirrored, and will log a warning. |
 | [url](https://mozilla.github.io/glean/book/reference/metrics/url.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.html). The stringified Url will be cropped to the maximum length allowed by the legacy type. |
 | [datetime](https://mozilla.github.io/glean/book/reference/metrics/datetime.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.html). Value will be in ISO8601 format. |
-| [events](https://mozilla.github.io/glean/book/reference/metrics/event.html) | [Events](/toolkit/components/telemetry/collection/events.html). The `value` field will be left empty.  |
+| [events](https://mozilla.github.io/glean/book/reference/metrics/event.html) | [Events](/toolkit/components/telemetry/collection/events.html). The `value` field will be filled by the Glean extra named `value` if defined and present. |
 | [quantity](https://mozilla.github.io/glean/book/reference/metrics/quantity.html) | [Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.html) |
 | [rate](https://mozilla.github.io/glean/book/reference/metrics/rate.html) | [Keyed Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.html). The keys are "numerator" and "denominator". Does not work for `rate` metrics with external denominators. |
 | [text](https://mozilla.github.io/glean/book/reference/metrics/text.html) | *No Supported Telemetry Type* |
@@ -164,6 +164,12 @@ and the event will be Summarized in Telemetry as all disabled events are.
 See
 [the Telemetry Event docs](/toolkit/components/telemetry/collection/events.rst)
 for details on how disabled Telemetry Events behave.
+
+In order to make use of the `value` field in Telemetry Events, you must
+first define an event extra in the metrics.yaml file with the name "value".
+On recording the event with the Glean extra key for the "value" filled in,
+GIFFT will map this to the Telemetry Event `value` property and remove it from
+the list of extras so it is not duplicated.
 
 ### Numeric Values
 

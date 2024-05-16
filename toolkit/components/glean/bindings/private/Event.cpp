@@ -47,6 +47,7 @@ void GleanEvent::Record(
   nsTArray<nsCString> extraKeys;
   nsTArray<nsCString> extraValues;
   CopyableTArray<Telemetry::EventExtraEntry> telExtras;
+  nsCString telValue;
   for (const auto& entry : aExtra.Value().Entries()) {
     if (entry.mValue.IsVoid()) {
       // Someone passed undefined/null for this value.
@@ -58,14 +59,21 @@ void GleanEvent::Record(
 
     extraKeys.AppendElement(snakeKey);
     extraValues.AppendElement(entry.mValue);
-    telExtras.EmplaceBack(Telemetry::EventExtraEntry{entry.mKey, entry.mValue});
+
+    if (snakeKey.EqualsLiteral("value")) {
+      telValue = entry.mValue;
+    } else {
+      telExtras.EmplaceBack(
+          Telemetry::EventExtraEntry{entry.mKey, entry.mValue});
+    }
   }
 
   // Since this calls the implementation directly, we need to implement GIFFT
   // here as well as in EventMetric::Record.
   auto id = EventIdForMetric(mEvent.mId);
   if (id) {
-    Telemetry::RecordEvent(id.extract(), Nothing(),
+    Telemetry::RecordEvent(id.extract(),
+                           telValue.IsEmpty() ? Nothing() : Some(telValue),
                            telExtras.IsEmpty() ? Nothing() : Some(telExtras));
   }
 
