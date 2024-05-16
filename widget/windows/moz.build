@@ -190,10 +190,6 @@ DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
 # Turn `firefox` into `Firefox`.
 DEFINES["MOZ_TOAST_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"].title()
 
-for var in ("MOZ_ENABLE_D3D10_LAYER",):
-    if CONFIG[var]:
-        DEFINES[var] = True
-
 USE_LIBS += [
     "jsoncpp",
 ]

@@ -34,29 +34,29 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     UNIFIED_SOURCES += [
         "IMFYCbCrImage.cpp",
     ]
-    if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
-        EXPORTS.mozilla.layers += [
-            "d3d11/CompositorD3D11.h",
-            "d3d11/DeviceAttachmentsD3D11.h",
-            "d3d11/FenceD3D11.h",
-            "d3d11/GpuProcessD3D11QueryMap.h",
-            "d3d11/GpuProcessD3D11TextureMap.h",
-            "d3d11/HelpersD3D11.h",
-            "d3d11/ShaderDefinitionsD3D11.h",
-            "d3d11/TextureD3D11.h",
-            "d3d11/TextureHostWrapperD3D11.h",
-        ]
-        UNIFIED_SOURCES += [
-            "d3d11/FenceD3D11.cpp",
-            "d3d11/GpuProcessD3D11QueryMap.cpp",
-            "d3d11/GpuProcessD3D11TextureMap.cpp",
-            "d3d11/TextureD3D11.cpp",
-            "d3d11/TextureHostWrapperD3D11.cpp",
-        ]
-        SOURCES += [
-            "d3d11/CompositorD3D11.cpp",
-            "d3d11/DeviceAttachmentsD3D11.cpp",
-        ]
+    EXPORTS.mozilla.layers += [
+        "d3d11/CompositorD3D11.h",
+        "d3d11/DeviceAttachmentsD3D11.h",
+        "d3d11/FenceD3D11.h",
+        "d3d11/GpuProcessD3D11QueryMap.h",
+        "d3d11/GpuProcessD3D11TextureMap.h",
+        "d3d11/HelpersD3D11.h",
+        "d3d11/ShaderDefinitionsD3D11.h",
+        "d3d11/TextureD3D11.h",
+        "d3d11/TextureHostWrapperD3D11.h",
+    ]
+    UNIFIED_SOURCES += [
+        "d3d11/FenceD3D11.cpp",
+        "d3d11/GpuProcessD3D11QueryMap.cpp",
+        "d3d11/GpuProcessD3D11TextureMap.cpp",
+        "d3d11/TextureD3D11.cpp",
+        "d3d11/TextureHostWrapperD3D11.cpp",
+    ]
+    SOURCES += [
+        "d3d11/CompositorD3D11.cpp",
+        "d3d11/DeviceAttachmentsD3D11.cpp",
+    ]
+
     if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
         EXPORTS.mozilla.layers += [
             "DcompSurfaceImage.h",
@@ -502,9 +502,6 @@ FINAL_LIBRARY = "xul"
 
 if CONFIG["MOZ_DEBUG"]:
     DEFINES["D3D_DEBUG_INFO"] = True
-
-if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
-    DEFINES["MOZ_ENABLE_D3D10_LAYER"] = True
 
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["apz/test/gtest"]
