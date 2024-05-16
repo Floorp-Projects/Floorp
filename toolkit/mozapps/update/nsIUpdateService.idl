@@ -986,4 +986,15 @@ interface nsIApplicationUpdateServiceStub : nsISupports
    * @returns Promise<undefined>
    */
   Promise initUpdate();
+
+  /**
+   * This is identical to `nsIApplicationUpdateService.disabled`.
+   */
+  readonly attribute boolean updateDisabled;
+
+  /**
+   * This will be `true` if update is disabled specifically because we are
+   * running a test that didn't opt-in to updating.
+   */
+  readonly attribute boolean updateDisabledForTesting;
 };

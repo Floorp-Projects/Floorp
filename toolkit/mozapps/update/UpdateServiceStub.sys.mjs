@@ -3,14 +3,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   UpdateLog: "resource://gre/modules/UpdateLog.sys.mjs",
 });
+
+if (AppConstants.ENABLE_WEBDRIVER) {
+  XPCOMUtils.defineLazyServiceGetter(
+    lazy,
+    "Marionette",
+    "@mozilla.org/remote/marionette;1",
+    "nsIMarionette"
+  );
+
+  XPCOMUtils.defineLazyServiceGetter(
+    lazy,
+    "RemoteAgent",
+    "@mozilla.org/remote/agent;1",
+    "nsIRemoteAgent"
+  );
+} else {
+  lazy.Marionette = { running: false };
+  lazy.RemoteAgent = { running: false };
+}
 
 const DIR_UPDATES = "updates";
 const FILE_UPDATE_STATUS = "update.status";
@@ -23,6 +43,7 @@ const KEY_OLD_UPDROOT = "OldUpdRootD";
 // happens for every install rather than once per profile)
 const PREF_PREFIX_UPDATE_DIR_MIGRATED = "app.update.migrated.updateDir3.";
 const PREF_APP_UPDATE_ALTUPDATEDIRPATH = "app.update.altUpdateDirPath";
+const PREF_APP_UPDATE_DISABLEDFORTESTING = "app.update.disabledForTesting";
 
 function getUpdateBaseDirNoCreate() {
   if (Cu.isInAutomation) {
@@ -108,6 +129,10 @@ export class UpdateServiceStub {
   }
 
   async #init(force_update_init) {
+    if (this.updateDisabled) {
+      return;
+    }
+
     // We call into this from many places to ensure that initialization is done,
     // so we want to optimize for the case where initialization is already
     // finished.
@@ -164,6 +189,29 @@ export class UpdateServiceStub {
         LOG(`UpdateServiceStub - Init failed: ${ex}: ${ex.stack}`);
       }
     }
+  }
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get updateDisabledForTesting() {
+    return (
+      (Cu.isInAutomation ||
+        lazy.Marionette.running ||
+        lazy.RemoteAgent.running) &&
+      Services.prefs.getBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false)
+    );
+  }
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get updateDisabled() {
+    return (
+      (Services.policies && !Services.policies.isAllowed("appUpdate")) ||
+      this.updateDisabledForTesting ||
+      Services.sysinfo.getProperty("isPackagedApp")
+    );
   }
 
   async observe(_subject, topic, _data) {
