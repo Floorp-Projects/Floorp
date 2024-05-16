@@ -22,7 +22,7 @@ add_task(async function doorhanger_bc_downloaded_disableBITS() {
 
   let patch = getPatchOfType(
     "partial",
-    gUpdateManager.readyUpdate
+    await gUpdateManager.getReadyUpdate()
   ).QueryInterface(Ci.nsIWritablePropertyBag);
   ok(
     !patch.getProperty("bitsId"),

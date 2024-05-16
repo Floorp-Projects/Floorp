@@ -73,9 +73,9 @@ async function downloadUpdate(appUpdateAuto, onDownloadStartCallback) {
   }
   let waitToStartPromise = new Promise(resolve => {
     let listener = {
-      onStartRequest: _aRequest => {
+      onStartRequest: async _aRequest => {
         gAUS.removeDownloadListener(listener);
-        onDownloadStartCallback();
+        await onDownloadStartCallback();
         resolve();
       },
       onProgress: (_aRequest, _aContext, _aProgress, _aMaxProgress) => {},
@@ -197,11 +197,9 @@ async function multi_update_test(appUpdateAuto) {
 
   prepareToDownloadVersion(FIRST_UPDATE_VERSION);
 
-  await downloadUpdate(appUpdateAuto, () => {
-    Assert.ok(
-      !gUpdateManager.readyUpdate,
-      "There should not be a ready update yet"
-    );
+  await downloadUpdate(appUpdateAuto, async () => {
+    const readyUpdate = await gUpdateManager.getReadyUpdate();
+    Assert.ok(!readyUpdate, "There should not be a ready update yet");
     Assert.ok(
       !!gUpdateManager.downloadingUpdate,
       "First update download should be in downloadingUpdate"
@@ -218,21 +216,19 @@ async function multi_update_test(appUpdateAuto) {
     );
   });
 
+  let readyUpdate = await gUpdateManager.getReadyUpdate();
   Assert.ok(
     !gUpdateManager.downloadingUpdate,
     "First update download should no longer be in downloadingUpdate"
   );
-  Assert.ok(
-    !!gUpdateManager.readyUpdate,
-    "First update download should be in readyUpdate"
-  );
+  Assert.ok(!!readyUpdate, "First update download should be in readyUpdate");
   Assert.equal(
-    gUpdateManager.readyUpdate.state,
+    readyUpdate.state,
     STATE_PENDING,
     "readyUpdate should be pending"
   );
   Assert.equal(
-    gUpdateManager.readyUpdate.appVersion,
+    readyUpdate.appVersion,
     FIRST_UPDATE_VERSION,
     "readyUpdate version should be match the version of the first update"
   );
@@ -242,21 +238,22 @@ async function multi_update_test(appUpdateAuto) {
     "Updater state should be pending"
   );
 
-  let existingUpdate = gUpdateManager.readyUpdate;
+  let existingUpdate = readyUpdate;
   await testUpdateDoesNotDownload();
 
+  readyUpdate = await gUpdateManager.getReadyUpdate();
   Assert.equal(
-    gUpdateManager.readyUpdate,
+    readyUpdate,
     existingUpdate,
     "readyUpdate should not have changed when no newer update is available"
   );
   Assert.equal(
-    gUpdateManager.readyUpdate.state,
+    readyUpdate.state,
     STATE_PENDING,
     "readyUpdate should still be pending"
   );
   Assert.equal(
-    gUpdateManager.readyUpdate.appVersion,
+    readyUpdate.appVersion,
     FIRST_UPDATE_VERSION,
     "readyUpdate version should be match the version of the first update"
   );
@@ -271,18 +268,19 @@ async function multi_update_test(appUpdateAuto) {
   prepareToDownloadVersion(SECOND_UPDATE_VERSION, true);
   await testUpdateDoesNotDownload();
 
+  readyUpdate = await gUpdateManager.getReadyUpdate();
   Assert.equal(
-    gUpdateManager.readyUpdate,
+    readyUpdate,
     existingUpdate,
     "readyUpdate should not have changed when no newer partial update is available"
   );
   Assert.equal(
-    gUpdateManager.readyUpdate.state,
+    readyUpdate.state,
     STATE_PENDING,
     "readyUpdate should still be pending"
   );
   Assert.equal(
-    gUpdateManager.readyUpdate.appVersion,
+    readyUpdate.appVersion,
     FIRST_UPDATE_VERSION,
     "readyUpdate version should be match the version of the first update"
   );
@@ -294,7 +292,8 @@ async function multi_update_test(appUpdateAuto) {
 
   prepareToDownloadVersion(SECOND_UPDATE_VERSION);
 
-  await downloadUpdate(appUpdateAuto, () => {
+  await downloadUpdate(appUpdateAuto, async () => {
+    readyUpdate = await gUpdateManager.getReadyUpdate();
     Assert.ok(
       !!gUpdateManager.downloadingUpdate,
       "Second update download should be in downloadingUpdate"
@@ -305,16 +304,16 @@ async function multi_update_test(appUpdateAuto) {
       "downloadingUpdate should be downloading"
     );
     Assert.ok(
-      !!gUpdateManager.readyUpdate,
+      !!readyUpdate,
       "First update download should still be in readyUpdate"
     );
     Assert.equal(
-      gUpdateManager.readyUpdate.state,
+      readyUpdate.state,
       STATE_PENDING,
       "readyUpdate should still be pending"
     );
     Assert.equal(
-      gUpdateManager.readyUpdate.appVersion,
+      readyUpdate.appVersion,
       FIRST_UPDATE_VERSION,
       "readyUpdate version should be match the version of the first update"
     );
@@ -325,21 +324,19 @@ async function multi_update_test(appUpdateAuto) {
     );
   });
 
+  readyUpdate = await gUpdateManager.getReadyUpdate();
   Assert.ok(
     !gUpdateManager.downloadingUpdate,
     "Second update download should no longer be in downloadingUpdate"
   );
-  Assert.ok(
-    !!gUpdateManager.readyUpdate,
-    "Second update download should be in readyUpdate"
-  );
+  Assert.ok(!!readyUpdate, "Second update download should be in readyUpdate");
   Assert.equal(
-    gUpdateManager.readyUpdate.state,
+    readyUpdate.state,
     STATE_PENDING,
     "readyUpdate should be pending"
   );
   Assert.equal(
-    gUpdateManager.readyUpdate.appVersion,
+    readyUpdate.appVersion,
     SECOND_UPDATE_VERSION,
     "readyUpdate version should be match the version of the second update"
   );
@@ -356,7 +353,7 @@ async function multi_update_test(appUpdateAuto) {
   // Second parameter forces a complete MAR download.
   prepareToDownloadVersion(FIRST_UPDATE_VERSION, true);
 
-  await downloadUpdate(appUpdateAuto, () => {
+  await downloadUpdate(appUpdateAuto, async () => {
     Assert.equal(
       gUpdateManager.downloadingUpdate.selectedPatch.type,
       "complete",
@@ -364,8 +361,9 @@ async function multi_update_test(appUpdateAuto) {
     );
   });
 
+  readyUpdate = await gUpdateManager.getReadyUpdate();
   Assert.equal(
-    gUpdateManager.readyUpdate.selectedPatch.type,
+    readyUpdate.selectedPatch.type,
     "complete",
     "First update download should be a complete patch"
   );

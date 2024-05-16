@@ -576,10 +576,9 @@ function runDoorhangerUpdateTest(params, steps) {
       );
 
       if (checkActiveUpdate) {
-        let activeUpdate =
-          checkActiveUpdate.state == STATE_DOWNLOADING
-            ? gUpdateManager.downloadingUpdate
-            : gUpdateManager.readyUpdate;
+        let activeUpdate = await (checkActiveUpdate.state == STATE_DOWNLOADING
+          ? gUpdateManager.downloadingUpdate
+          : gUpdateManager.getReadyUpdate());
         ok(!!activeUpdate, "There should be an active update");
         is(
           activeUpdate.state,
@@ -591,7 +590,10 @@ function runDoorhangerUpdateTest(params, steps) {
           !gUpdateManager.downloadingUpdate,
           "There should not be a downloading update"
         );
-        ok(!gUpdateManager.readyUpdate, "There should not be a ready update");
+        ok(
+          !(await gUpdateManager.getReadyUpdate()),
+          "There should not be a ready update"
+        );
       }
 
       let buttonEl = getNotificationButton(window, notificationId, button);
@@ -753,10 +755,9 @@ function runAboutDialogUpdateTest(params, steps) {
       );
 
       if (checkActiveUpdate) {
-        let activeUpdate =
-          checkActiveUpdate.state == STATE_DOWNLOADING
-            ? gUpdateManager.downloadingUpdate
-            : gUpdateManager.readyUpdate;
+        let activeUpdate = await (checkActiveUpdate.state == STATE_DOWNLOADING
+          ? gUpdateManager.downloadingUpdate
+          : gUpdateManager.getReadyUpdate());
         ok(!!activeUpdate, "There should be an active update");
         is(
           activeUpdate.state,
@@ -768,7 +769,10 @@ function runAboutDialogUpdateTest(params, steps) {
           !gUpdateManager.downloadingUpdate,
           "There should not be a downloading update"
         );
-        ok(!gUpdateManager.readyUpdate, "There should not be a ready update");
+        ok(
+          !(await gUpdateManager.getReadyUpdate()),
+          "There should not be a ready update"
+        );
       }
 
       // Some tests just want to stop at the downloading state. These won't
@@ -1060,10 +1064,9 @@ function runAboutPrefsUpdateTest(params, steps) {
       );
 
       if (checkActiveUpdate) {
-        let activeUpdate =
-          checkActiveUpdate.state == STATE_DOWNLOADING
-            ? gUpdateManager.downloadingUpdate
-            : gUpdateManager.readyUpdate;
+        let activeUpdate = await (checkActiveUpdate.state == STATE_DOWNLOADING
+          ? gUpdateManager.downloadingUpdate
+          : gUpdateManager.getReadyUpdate());
         ok(!!activeUpdate, "There should be an active update");
         is(
           activeUpdate.state,
@@ -1075,7 +1078,10 @@ function runAboutPrefsUpdateTest(params, steps) {
           !gUpdateManager.downloadingUpdate,
           "There should not be a downloading update"
         );
-        ok(!gUpdateManager.readyUpdate, "There should not be a ready update");
+        ok(
+          !(await gUpdateManager.getReadyUpdate()),
+          "There should not be a ready update"
+        );
       }
 
       if (panelId == "downloading") {

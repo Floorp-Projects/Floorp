@@ -50,7 +50,7 @@ add_task(async function onlyDownloadUpdatesThisSession() {
   await downloadUpdate();
 
   Assert.ok(
-    !gUpdateManager.readyUpdate,
+    !(await gUpdateManager.getReadyUpdate()),
     "There should not be a ready update. The update should still be downloading"
   );
   Assert.ok(
