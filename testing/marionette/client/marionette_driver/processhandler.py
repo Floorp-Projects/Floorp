@@ -211,11 +211,8 @@ class ProcessHandlerMixin(object):
         return self.returncode
 
     @_has_valid_proc
-    def poll(self, wait_reader=True):
+    def poll(self):
         """Check if child process has terminated
-
-        :param wait_reader: If set to True, it waits not only for the process
-        to exit but also for all output to be fully read. (Defaults to True).
 
         Returns the current returncode value:
         - None if the process hasn't terminated yet
@@ -226,7 +223,10 @@ class ProcessHandlerMixin(object):
         if hasattr(self, "returncode"):
             return self.returncode
 
-        return self.wait(0, wait_reader=wait_reader)
+        # If the process that is observed wasn't started with Popen there is
+        # no `poll()` method available. Use `wait()` instead and do not wait
+        # for the reader thread because it would cause extra delays.
+        return self.wait(0, wait_reader=False)
 
     def processOutput(self, timeout=None, outputTimeout=None):
         """
