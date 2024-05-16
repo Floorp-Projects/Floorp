@@ -40,7 +40,7 @@ function getIconElement(level, type, title) {
     title = l10n.getStr("logpoint.title");
     classnames.push("logpoint");
   } else if (type === "blockedReason") {
-    title = l10n.getStr("blockedrequest.label");
+    title = l10n.getStr("blockedrequest.label2");
   } else if (type === MESSAGE_TYPE.COMMAND) {
     title = l10n.getStr("command.title");
   } else if (type === MESSAGE_TYPE.RESULT) {
