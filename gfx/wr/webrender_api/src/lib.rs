@@ -12,8 +12,8 @@
 //! there.
 
 #![cfg_attr(feature = "nightly", feature(nonzero))]
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::float_cmp, clippy::too_many_arguments))]
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal, clippy::new_without_default))]
+#![allow(clippy::float_cmp, clippy::too_many_arguments)]
+#![allow(clippy::unreadable_literal, clippy::new_without_default)]
 
 pub extern crate crossbeam_channel;
 pub extern crate euclid;
