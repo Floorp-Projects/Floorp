@@ -153,7 +153,7 @@ async function run_test() {
   const pendingPingContents = "arbitrary pending ping file contents";
   writeFile(oldPendingPingFile, pendingPingContents);
 
-  standardInit();
+  await standardInit();
 
   Assert.ok(
     !(await gUpdateManager.getDownloadingUpdate()),

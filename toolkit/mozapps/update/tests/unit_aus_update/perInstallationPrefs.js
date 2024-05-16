@@ -161,7 +161,7 @@ async function changeAndVerifyPref(
 
 async function run_test() {
   setupTestCommon(null);
-  standardInit();
+  await standardInit();
   await testSetup();
 
   logTestInfo("Testing boolean pref and its observer");

@@ -10,12 +10,12 @@ const { BackgroundUpdate } = ChromeUtils.importESModule(
   "resource://gre/modules/BackgroundUpdate.sys.mjs"
 );
 
-// These tests use per-installation prefs, and those are a shared resource, so
-// they require some non-trivial setup.
-setupTestCommon(null);
-standardInit();
+add_setup(async function test_setup() {
+  // These tests use per-installation prefs, and those are a shared resource, so
+  // they require some non-trivial setup.
+  setupTestCommon(null);
+  await standardInit();
 
-add_setup(function test_setup() {
   // FOG needs a profile directory to put its data in.
   do_get_profile();
 
