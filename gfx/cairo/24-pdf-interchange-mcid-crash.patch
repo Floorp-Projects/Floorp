@@ -1,0 +1,20 @@
+# HG changeset patch
+# User Jonathan Kew <jkew@mozilla.com>
+# Date 1715706811 -3600
+#      Tue May 14 18:13:31 2024 +0100
+# Node ID c3ad2cb3ec3c7833187b9cea6002632cb1b692b4
+# Parent  4df4e109202ff67836eaa61c66a7c65a2f712e11
+Bug 1896173 - Check that we have a render_node name before attempting MCID tagging in pdf output. r=#gfx-reviewers
+
+diff --git a/gfx/cairo/cairo/src/cairo-pdf-interchange.c b/gfx/cairo/cairo/src/cairo-pdf-interchange.c
+--- a/gfx/cairo/cairo/src/cairo-pdf-interchange.c
++++ b/gfx/cairo/cairo/src/cairo-pdf-interchange.c
+@@ -2043,7 +2043,7 @@ cairo_int_status_t
+ 	    if (command_list_has_content (surface, command_id, NULL)) {
+ 		ic->render_next_command_has_content = TRUE;
+ 	    }
+-	} else if (ic->render_next_command_has_content) {
++	} else if (ic->render_next_command_has_content && ic->current_render_node->name) {
+ 	    add_mcid_to_node (surface, ic->current_render_node, ic->command_id, &mcid);
+ 	    status = _cairo_pdf_operators_tag_begin (&surface->pdf_operators,
+ 						     ic->current_render_node->name, mcid);

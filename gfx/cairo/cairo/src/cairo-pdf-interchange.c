@@ -2044,7 +2044,7 @@ _cairo_pdf_interchange_command_id (cairo_pdf_surface_t  *surface,
 	    if (command_list_has_content (surface, command_id, NULL)) {
 		ic->render_next_command_has_content = TRUE;
 	    }
-	} else if (ic->render_next_command_has_content) {
+	} else if (ic->render_next_command_has_content && ic->current_render_node->name) {
 	    add_mcid_to_node (surface, ic->current_render_node, ic->command_id, &mcid);
 	    status = _cairo_pdf_operators_tag_begin (&surface->pdf_operators,
 						     ic->current_render_node->name, mcid);
