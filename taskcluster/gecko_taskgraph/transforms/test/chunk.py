@@ -246,7 +246,11 @@ def split_chunks(config, tasks):
             # so they still show up in the logs. They won't impact runtime much
             # and this way tools like ActiveData are still aware that they
             # exist.
-            if config.params["backstop"] and manifests["active"]:
+            if (
+                config.params["backstop"]
+                and manifests["active"]
+                and "skipped" in manifests
+            ):
                 chunked_manifests[0].extend(manifests["skipped"])
 
         for i in range(task["chunks"]):
