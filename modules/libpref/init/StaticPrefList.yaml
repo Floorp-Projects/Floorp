@@ -13366,6 +13366,11 @@
   value: 10
   mirror: always
 
+- name: network.cache.persist_permanent_redirects_http
+  type: bool
+  value: false
+  mirror: always
+
 # This is used for a temporary workaround for a web-compat issue. If pref is
 # true CORS preflight requests are allowed to send client certificates.
 - name: network.cors_preflight.allow_client_cert
