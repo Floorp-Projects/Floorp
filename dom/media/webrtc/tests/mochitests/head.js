@@ -439,9 +439,8 @@ function setupEnvironment() {
 
   // Platform codec prefs should be matched because fake H.264 GMP codec doesn't
   // produce/consume real bitstreams. [TODO] remove after bug 1509012 is fixed.
-  const platformEncoderEnabled = SpecialPowers.getBoolPref(
-    "media.webrtc.platformencoder"
-  );
+  const platformEncoderEnabled =
+    SpecialPowers.getIntPref("media.webrtc.encoder_creation_strategy") == 1;
   defaultMochitestPrefs.set.push([
     "media.navigator.mediadatadecoder_h264_enabled",
     platformEncoderEnabled,
@@ -459,15 +458,14 @@ function setupEnvironment() {
 
 // [TODO] remove after bug 1509012 is fixed.
 async function matchPlatformH264CodecPrefs() {
-  const hasHW264 =
-    SpecialPowers.getBoolPref("media.webrtc.platformencoder") &&
-    !SpecialPowers.getBoolPref("media.webrtc.platformencoder.sw_only") &&
+  const hasHW264Enc =
+    SpecialPowers.getIntPref("media.webrtc.encoder_creation_strategy") == 1 &&
     (navigator.userAgent.includes("Android") ||
       navigator.userAgent.includes("Mac OS X"));
 
   await pushPrefs(
-    ["media.webrtc.platformencoder", hasHW264],
-    ["media.navigator.mediadatadecoder_h264_enabled", hasHW264]
+    ["media.webrtc.encoder_creation_strategy", hasHW264Enc ? 1 : 0],
+    ["media.navigator.mediadatadecoder_h264_enabled", hasHW264Enc]
   );
 }
 

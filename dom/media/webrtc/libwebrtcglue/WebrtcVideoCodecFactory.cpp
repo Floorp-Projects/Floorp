@@ -94,44 +94,84 @@ WebrtcVideoEncoderFactory::InternalFactory::Create(
   MOZ_ASSERT(Supports(aFormat));
 
   std::unique_ptr<webrtc::VideoEncoder> platformEncoder;
-  platformEncoder.reset(MediaDataCodec::CreateEncoder(aFormat));
-  const bool fallback = StaticPrefs::media_webrtc_software_encoder_fallback();
-  if (!fallback && platformEncoder) {
-    return platformEncoder;
-  }
 
-  std::unique_ptr<webrtc::VideoEncoder> encoder;
-  switch (webrtc::PayloadStringToCodecType(aFormat.name)) {
-    case webrtc::VideoCodecType::kVideoCodecH264: {
-      // get an external encoder
-      auto gmpEncoder =
-          WrapUnique(GmpVideoCodec::CreateEncoder(aFormat, mPCHandle));
-      mCreatedGmpPluginEvent.Forward(*gmpEncoder->InitPluginEvent());
-      mReleasedGmpPluginEvent.Forward(*gmpEncoder->ReleasePluginEvent());
-      encoder.reset(gmpEncoder.release());
-      break;
-    }
-    // libvpx fallbacks.
-    case webrtc::VideoCodecType::kVideoCodecVP8:
-      if (!encoder) {
-        encoder = webrtc::VP8Encoder::Create();
+  auto createPlatformEncoder = [&]() -> std::unique_ptr<webrtc::VideoEncoder> {
+    std::unique_ptr<webrtc::VideoEncoder> platformEncoder;
+    platformEncoder.reset(MediaDataCodec::CreateEncoder(aFormat));
+    return platformEncoder;
+  };
+
+  auto createWebRTCEncoder =
+      [this, &aFormat]() -> std::unique_ptr<webrtc::VideoEncoder> {
+    std::unique_ptr<webrtc::VideoEncoder> encoder;
+    switch (webrtc::PayloadStringToCodecType(aFormat.name)) {
+      case webrtc::VideoCodecType::kVideoCodecH264: {
+        // get an external encoder
+        auto gmpEncoder =
+            WrapUnique(GmpVideoCodec::CreateEncoder(aFormat, mPCHandle));
+        mCreatedGmpPluginEvent.Forward(*gmpEncoder->InitPluginEvent());
+        mReleasedGmpPluginEvent.Forward(*gmpEncoder->ReleasePluginEvent());
+        encoder.reset(gmpEncoder.release());
+        break;
       }
-      break;
-    case webrtc::VideoCodecType::kVideoCodecVP9:
-      encoder = webrtc::VP9Encoder::Create();
-      break;
+      // libvpx fallbacks.
+      case webrtc::VideoCodecType::kVideoCodecVP8:
+        encoder = webrtc::VP8Encoder::Create();
+        break;
+      case webrtc::VideoCodecType::kVideoCodecVP9:
+        encoder = webrtc::VP9Encoder::Create();
+        break;
 
-    default:
-      break;
-  }
-  if (fallback && encoder && platformEncoder) {
-    return webrtc::CreateVideoEncoderSoftwareFallbackWrapper(
-        std::move(encoder), std::move(platformEncoder), false);
-  }
-  if (platformEncoder) {
-    return platformEncoder;
-  }
-  return encoder;
+      default:
+        break;
+    }
+    return encoder;
+  };
+
+  // This is to be synced with the doc for the pref in StaticPrefs.yaml
+  enum EncoderCreationStrategy {
+    PreferWebRTCEncoder = 0,
+    PreferPlatformEncoder = 1
+  };
+
+  std::unique_ptr<webrtc::VideoEncoder> encoder = nullptr;
+  EncoderCreationStrategy strategy = static_cast<EncoderCreationStrategy>(
+      StaticPrefs::media_webrtc_encoder_creation_strategy());
+  switch (strategy) {
+    case EncoderCreationStrategy::PreferWebRTCEncoder: {
+      encoder = createWebRTCEncoder();
+      // In a single case this happens: H264 is requested and OpenH264 isn't
+      // available yet (e.g. first run). Attempt to use a platform encoder in
+      // this case. They are not entirely ready yet but it's better than
+      // erroring out.
+      if (!encoder) {
+        NS_WARNING(
+            "Failed creating libwebrtc video encoder, falling back on platform "
+            "encoder");
+        return createPlatformEncoder();
+      }
+      return encoder;
+    }
+    case EncoderCreationStrategy::PreferPlatformEncoder:
+      platformEncoder = createPlatformEncoder();
+      encoder = createWebRTCEncoder();
+      if (encoder && platformEncoder) {
+        return webrtc::CreateVideoEncoderSoftwareFallbackWrapper(
+            std::move(encoder), std::move(platformEncoder), false);
+      }
+      if (platformEncoder) {
+        NS_WARNING(nsPrintfCString("No WebRTC encoder to fall back to for "
+                                   "codec %s, only using platform encoder",
+                                   aFormat.name.c_str())
+                       .get());
+        return platformEncoder;
+      }
+      return encoder;
+  };
+
+  MOZ_ASSERT_UNREACHABLE("Bad enum value");
+
+  return nullptr;
 }
 
 }  // namespace mozilla

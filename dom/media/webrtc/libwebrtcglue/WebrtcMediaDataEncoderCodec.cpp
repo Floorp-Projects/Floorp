@@ -227,11 +227,9 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
   if (!SetupConfig(aCodecSettings)) {
     return nullptr;
   }
-  const bool swOnly = StaticPrefs::media_webrtc_platformencoder_sw_only();
-  LOG("Request platform encoder for %s, bitRate=%u bps, frameRate=%u"
-      ", sw-only=%d",
+  LOG("Request platform encoder for %s, bitRate=%u bps, frameRate=%u",
       mInfo.mMimeType.get(), mBitrateAdjuster.GetTargetBitrateBps(),
-      aCodecSettings->maxFramerate, swOnly);
+      aCodecSettings->maxFramerate);
 
   size_t keyframeInterval = 1;
   switch (aCodecSettings->codecType) {

@@ -110,7 +110,7 @@
     for (let codec of codecs) {
       info(`Testing video for codec ${codec.name} offset ${codec.offset}`);
       try {
-        let enc = SpecialPowers.getBoolPref('media.webrtc.platformencoder');
+        let enc = SpecialPowers.getIntPref('media.webrtc.encoder_creation_strategy');
         let dec = SpecialPowers.getBoolPref('media.navigator.mediadatadecoder_h264_enabled');
         if (codec.name == "H264") {
           await matchPlatformH264CodecPrefs();
@@ -120,14 +120,14 @@
             // a. SW encoder fallback support (bug 1726617), and
             // b. returning valid bitstream from fake GMP encoder (bug 1509012).
             await pushPrefs(
-              ['media.webrtc.platformencoder', false],
+              ['media.webrtc.encoder_creation_strategy', 0 /* builtin libwertc encoders */],
               ['media.navigator.mediadatadecoder_h264_enabled', false],
             );
           }
         }
         await testVideoCodec(options, codec);
         await pushPrefs(
-          ['media.webrtc.platformencoder', enc],
+          ['media.webrtc.encoder_creation_strategy', enc],
           ['media.navigator.mediadatadecoder_h264_enabled', dec],
         );
       } catch(e) {

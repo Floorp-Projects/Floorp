@@ -10644,6 +10644,7 @@
   value: false
   mirror: always
 
+
 # This pref disables the reception of RTCP. It is used for testing.
 - name: media.webrtc.net.force_disable_rtcp_reception
   type: ReleaseAcquireAtomicBool
@@ -11192,32 +11193,15 @@
   value: 3.0f
   mirror: always
 
-- name: media.webrtc.platformencoder
-  type: RelaxedAtomicBool
-#if defined(MOZ_WIDGET_ANDROID)
-  value: true
-#elif defined(MOZ_WIDGET_GTK)
-  value: false
+# Encoder creation strategy for WebRTC
+# 0: prefer builtin WebRTC encoder (including OpenH264 via GMP)
+# 1: prefer PlatformEncoderModule
+- name: media.webrtc.encoder_creation_strategy
+  type: RelaxedAtomicUint32
+#ifdef ANDROID
+  value: 1
 #else
-  value: @IS_EARLY_BETA_OR_EARLIER@
-#endif
-  mirror: always
-
-- name: media.webrtc.platformencoder.sw_only
-  type: RelaxedAtomicBool
-#if defined(MOZ_WIDGET_ANDROID)
-  value: false
-#else
-  value: true
-#endif
-  mirror: always
-
-- name: media.webrtc.software_encoder.fallback
-  type: RelaxedAtomicBool
-#if !defined(MOZ_WIDGET_GTK)
-  value: true
-#else
-  value: false
+  value: 0
 #endif
   mirror: always
 
