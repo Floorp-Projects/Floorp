@@ -78,3 +78,9 @@ panel[type="autocomplete-richlistbox"] {
   padding: 0 !important;
   margin: 0 !important;
 }
+
+/* On Mac, the autocomplete panel changes color in system dark mode. We need
+   to change the contrast on warning-background-color accordingly. */
+#PopupAutoComplete > richlistbox > richlistitem {
+  --status-background-color: light-dark(rgba(248,232,28,.2), rgba(248,232,28,.6)) !important;
+}
