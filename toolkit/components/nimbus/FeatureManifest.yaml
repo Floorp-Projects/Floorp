@@ -1863,6 +1863,13 @@ fingerprintingProtection:
       description: >-
         The protection overrides to add or remove fingerprinting protection
         targets. Please check RFPTargets.inc for all supported targets.
+    fdlibm_math:
+      type: boolean
+      setPref:
+        branch: default
+        pref: javascript.options.use_fdlibm_for_sin_cos_tan
+      description: >-
+        Uses a different math backend for Math.sin/cos/tan in JavaScript that exposes less entropy
 
 migrationWizard:
   description: Prefs to control the Migration Wizard UI.
