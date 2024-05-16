@@ -492,7 +492,13 @@
    * JSGC_PARALLEL_MARKING_THRESHOLD_MB                                        \
    */                                                                          \
   _(JSGC_PARALLEL_MARKING_THRESHOLD_MB, size_t, parallelMarkingThresholdBytes, \
-    ConvertMB, NoCheck, 4 * 1024 * 1024)
+    ConvertMB, NoCheck, 4 * 1024 * 1024)                                       \
+                                                                               \
+  /*                                                                           \
+   * JSGC_GENERATE_MISSING_ALLOC_SITES                                         \
+   */                                                                          \
+  _(JSGC_GENERATE_MISSING_ALLOC_SITES, bool, generateMissingAllocSites,        \
+    ConvertBool, NoCheck, false)
 
 namespace js {
 
