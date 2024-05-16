@@ -96,6 +96,16 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
     }
   }
 
+  bool needsSweep(JSTracer* trc) const {
+    for (auto r = this->all(); !r.empty(); r.popFront()) {
+      if (MapEntryGCPolicy::needsSweep(trc, &r.front().key(),
+                                       &r.front().value())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // GCHashMap is movable
   GCHashMap(GCHashMap&& rhs) : Base(std::move(rhs)) {}
   void operator=(GCHashMap&& rhs) {
@@ -272,6 +282,15 @@ class GCHashSet : public js::HashSet<T, HashPolicy, AllocPolicy> {
         e.removeFront();
       }
     }
+  }
+
+  bool needsSweep(JSTracer* trc) const {
+    for (auto r = this->all(); !r.empty(); r.popFront()) {
+      if (GCPolicy<T>::needsSweep(trc, &r.front())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // GCHashSet is movable
