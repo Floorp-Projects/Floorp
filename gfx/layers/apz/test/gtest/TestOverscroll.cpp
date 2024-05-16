@@ -2027,3 +2027,102 @@ TEST_F(APZCOverscrollTesterMock, OverscrollIntoPreventDefault) {
             CSSPoint(0, 0));
 }
 #endif
+
+#ifndef MOZ_WIDGET_ANDROID  // Not valid on Android
+// Tests that the scroll offset is shifted with the overscroll amount when the
+// content scroll range got expaned.
+TEST_F(APZCOverscrollTester, FillOutGutterWhilePanning) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  // Scroll to the bottom edge.
+  ScrollMetadata metadata = apzc->GetScrollMetadata();
+  metadata.GetMetrics().SetLayoutScrollOffset(
+      CSSPoint(0, GetScrollRange().YMost()));
+  nsTArray<ScrollPositionUpdate> scrollUpdates;
+  scrollUpdates.AppendElement(ScrollPositionUpdate::NewScroll(
+      ScrollOrigin::Other,
+      CSSPoint::ToAppUnits(CSSPoint(0, GetScrollRange().YMost()))));
+  metadata.SetScrollUpdates(scrollUpdates);
+  metadata.GetMetrics().SetScrollGeneration(
+      scrollUpdates.LastElement().GetGeneration());
+  apzc->NotifyLayersUpdated(metadata, /*aIsFirstPaint=*/false,
+                            /*aThisLayerTreeUpdated=*/true);
+
+  CSSPoint scrollOffset = metadata.GetMetrics().GetLayoutScrollOffset();
+
+  // Start panning to overscroll the content.
+  Pan(apzc, 20, 10, PanOptions::KeepFingerDown);
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  float overscrollY = apzc->GetOverscrollAmount().y;
+  EXPECT_GT(overscrollY, 0);
+
+  // Expand the content scroll range.
+  metadata = apzc->GetScrollMetadata();
+  FrameMetrics& metrics = metadata.GetMetrics();
+  const CSSRect& scrollableRect = metrics.GetScrollableRect();
+  metrics.SetScrollableRect(scrollableRect +
+                            CSSSize(0, scrollableRect.height + 10));
+  apzc->NotifyLayersUpdated(metadata, /*aIsFirstPaint=*/false,
+                            /*aThisLayerTreeUpdated=*/true);
+
+  // Now that the scroll position was shifted with the overscroll amount.
+  EXPECT_EQ(apzc->GetScrollMetadata().GetMetrics().GetVisualScrollOffset().y,
+            scrollOffset.y + overscrollY);
+  EXPECT_FALSE(apzc->IsOverscrolled());
+}
+
+// Similar to FillOutGutterWhilePanning but expanding the content while an
+// overscroll animation is runnig.
+TEST_F(APZCOverscrollTester, FillOutGutterWhileAnimating) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  // Scroll to the bottom edge.
+  ScrollMetadata metadata = apzc->GetScrollMetadata();
+  metadata.GetMetrics().SetLayoutScrollOffset(
+      CSSPoint(0, GetScrollRange().YMost()));
+  nsTArray<ScrollPositionUpdate> scrollUpdates;
+  scrollUpdates.AppendElement(ScrollPositionUpdate::NewScroll(
+      ScrollOrigin::Other,
+      CSSPoint::ToAppUnits(CSSPoint(0, GetScrollRange().YMost()))));
+  metadata.SetScrollUpdates(scrollUpdates);
+  metadata.GetMetrics().SetScrollGeneration(
+      scrollUpdates.LastElement().GetGeneration());
+  apzc->NotifyLayersUpdated(metadata, /*aIsFirstPaint=*/false,
+                            /*aThisLayerTreeUpdated=*/true);
+
+  CSSPoint scrollOffset = metadata.GetMetrics().GetLayoutScrollOffset();
+
+  PanGesture(PanGestureInput::PANGESTURE_START, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 20), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 60),
+             ScreenPoint(0, 10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 50),
+             ScreenPoint(0, 10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  PanGesture(PanGestureInput::PANGESTURE_END, apzc, ScreenIntPoint(50, 50),
+             ScreenPoint(0, 0), mcc->Time());
+  mcc->AdvanceByMillis(5);
+
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  float overscrollY = apzc->GetOverscrollAmount().y;
+  EXPECT_GT(overscrollY, 0);
+
+  // Expand the content scroll range.
+  metadata = apzc->GetScrollMetadata();
+  FrameMetrics& metrics = metadata.GetMetrics();
+  const CSSRect& scrollableRect = metrics.GetScrollableRect();
+  metrics.SetScrollableRect(scrollableRect +
+                            CSSSize(0, scrollableRect.height + 10));
+  apzc->NotifyLayersUpdated(metadata, /*aIsFirstPaint=*/false,
+                            /*aThisLayerTreeUpdated=*/true);
+
+  // Now that the scroll position was shifted with the overscroll amount.
+  EXPECT_EQ(apzc->GetScrollMetadata().GetMetrics().GetVisualScrollOffset().y,
+            scrollOffset.y + overscrollY);
+  EXPECT_FALSE(apzc->IsOverscrolled());
+}
+#endif
