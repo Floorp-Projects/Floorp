@@ -1128,6 +1128,9 @@ class Element : public FragmentOrElement {
     return FindAttributeDependence(aAttribute, aMaps, N);
   }
 
+  virtual bool IsValidInvokeAction(InvokeAction aAction) const {
+    return aAction == InvokeAction::Auto;
+  }
   MOZ_CAN_RUN_SCRIPT virtual void HandleInvokeInternal(InvokeAction aAction,
                                                        ErrorResult& aRv) {}
 

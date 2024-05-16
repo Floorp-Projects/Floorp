@@ -144,6 +144,12 @@ JSObject* HTMLDetailsElement::WrapNode(JSContext* aCx,
   return HTMLDetailsElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+bool HTMLDetailsElement::IsValidInvokeAction(InvokeAction aAction) const {
+  return Element::IsValidInvokeAction(aAction) ||
+         aAction == InvokeAction::Toggle || aAction == InvokeAction::Close ||
+         aAction == InvokeAction::Open;
+}
+
 void HTMLDetailsElement::HandleInvokeInternal(InvokeAction aAction,
                                               ErrorResult& aRv) {
   if (aAction == InvokeAction::Auto || aAction == InvokeAction::Toggle) {
