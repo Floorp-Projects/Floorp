@@ -306,6 +306,7 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
 
   if (!aAllowRestart) {
     gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
+    gfxVars::SetGPUProcessEnabled(false);
   }
 
   bool wantRestart;
@@ -326,6 +327,7 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
 
   if (aAllowRestart) {
     gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
+    gfxVars::SetGPUProcessEnabled(false);
   }
 
   MOZ_ASSERT(!gfxConfig::IsEnabled(Feature::GPU_PROCESS));
