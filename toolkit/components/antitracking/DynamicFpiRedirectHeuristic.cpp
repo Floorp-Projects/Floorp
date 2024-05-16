@@ -155,7 +155,7 @@ void AddConsoleReport(nsIChannel* aNewChannel, nsIURI* aNewURI,
   httpChannel->AddConsoleReport(nsIScriptError::warningFlag,
                                 ANTITRACKING_CONSOLE_CATEGORY,
                                 nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0,
-                                "CookieAllowedForFpiByHeuristic"_ns, params);
+                                "CookieAllowedForDFPIByHeuristic"_ns, params);
 }
 
 bool ShouldRedirectHeuristicApplyTrackingResource(nsIChannel* aOldChannel,
