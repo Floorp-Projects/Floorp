@@ -282,7 +282,7 @@ Structure:
             hasBinaryComponents: <bool>,
             installDay: <number>, // days since UNIX epoch, 0 on failure
             updateDay: <number>, // days since UNIX epoch, 0 on failure
-            signedState: <integer>, // whether the add-on is signed by AMO, only present for extensions
+            signedState: <integer>, // whether the add-on is signed by AMO
             signedTypes: <string>, // JSON-stringified array of signature types found (see nsIAppSignatureInfo's SignatureAlgorithm enum)
             isSystem: <bool>, // true if this is a System Add-on
             isWebExtension: <bool>, // true if this is a WebExtension
@@ -303,6 +303,8 @@ Structure:
           hasBinaryComponents: <bool>
           installDay: <number>, // days since UNIX epoch, 0 on failure
           updateDay: <number>, // days since UNIX epoch, 0 on failure
+          signedState: <integer>, // whether the add-on is signed by AMO
+          signedTypes: <string>, // JSON-stringified array of signature types found (see nsIAppSignatureInfo's SignatureAlgorithm enum)
         },
         activeGMPlugins: {
             <gmp id>: {
