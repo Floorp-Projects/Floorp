@@ -73,11 +73,6 @@ support-files = [
   "test_1629307.html",
   "file_link_header.sjs",
   "file_link_dns_prefetch.sjs",
-  "bug968273_new.html",
-  "bug968273_redirect.html",
-  "bug968273_redirect.html^headers^",
-  "file_bug968273.html",
-  "test_bug968273.html",
 ]
 
 prefs = [
@@ -198,5 +193,3 @@ support-files = [
 skip-if = ["socketprocess_networking"]
 
 ["browser_test_offline_tab.js"]
-
-["browser_bug968273.js"]
