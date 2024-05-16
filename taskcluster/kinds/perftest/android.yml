@@ -42,6 +42,7 @@ hw-a51-aarch64:
 
 hw-a51-startup-fenix-cold-main-first-frame:
     worker-type: t-bitbar-gw-perf-a51
+    run-on-projects: [autoland]
     description: Run android startup perftest on Fenix on a Samsung A51
     treeherder:
         symbol: perftest(startup-fenix-cmff)
@@ -70,6 +71,7 @@ hw-a51-startup-fenix-cold-main-first-frame:
 
 hw-a51-startup-fenix-cold-view-nav-start:
     worker-type: t-bitbar-gw-perf-a51
+    run-on-projects: [autoland]
     description: Run android startup perftest on Fenix on a Samsung A51
     treeherder:
         symbol: perftest(startup-fenix-cvns)
@@ -154,6 +156,7 @@ hw-a51-startup-focus-cold-view-nav-start:
 
 hw-a51-startup-geckoview-cold-main-first-frame:
     worker-type: t-bitbar-gw-perf-a51
+    run-on-projects: [autoland]
     description: Run android startup perftest on Geckoview on a Samsung A51
     treeherder:
         symbol: perftest(startup-geckoview-cmff)
@@ -182,6 +185,7 @@ hw-a51-startup-geckoview-cold-main-first-frame:
 
 hw-a51-startup-geckoview-cold-view-nav-start:
     worker-type: t-bitbar-gw-perf-a51
+    run-on-projects: [autoland]
     description: Run android startup perftest on Geckoview_example on a Samsung A51
     treeherder:
         symbol: perftest(startup-geckoview-cvns)
