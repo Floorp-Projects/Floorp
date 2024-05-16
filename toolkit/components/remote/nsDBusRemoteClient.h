@@ -31,8 +31,8 @@ class nsDBusRemoteClient : public nsRemoteClient {
  private:
   bool GetRemoteDestinationName(const char* aProgram, const char* aProfile,
                                 nsCString& aDestinationName);
-  nsresult DoSendDBusCommandLine(const char* aProgram, const char* aProfile,
-                                 const char* aBuffer, int aLength);
+  nsresult DoSendDBusCommandLine(const char* aProfile, const char* aBuffer,
+                                 int aLength);
 };
 
 #endif  // DBusRemoteClient_h__

@@ -8,6 +8,7 @@
 
 #include "nsDBusRemoteClient.h"
 #include "RemoteUtils.h"
+#include "nsAppRunner.h"
 #include "mozilla/XREAppData.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Base64.h"
@@ -38,7 +39,7 @@ nsDBusRemoteClient::~nsDBusRemoteClient() {
 nsresult nsDBusRemoteClient::SendCommandLine(
     const char* aProgram, const char* aProfile, int32_t argc, char** argv,
     const char* aStartupToken, char** aResponse, bool* aWindowFound) {
-  NS_ENSURE_TRUE(aProgram, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aProfile, NS_ERROR_INVALID_ARG);
 
   LOG("nsDBusRemoteClient::SendCommandLine");
 
@@ -50,8 +51,7 @@ nsresult nsDBusRemoteClient::SendCommandLine(
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv =
-      DoSendDBusCommandLine(aProgram, aProfile, commandLine, commandLineLength);
+  nsresult rv = DoSendDBusCommandLine(aProfile, commandLine, commandLineLength);
   free(commandLine);
 
   *aWindowFound = NS_SUCCEEDED(rv);
@@ -99,14 +99,13 @@ bool nsDBusRemoteClient::GetRemoteDestinationName(const char* aProgram,
   return true;
 }
 
-nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char* aProgram,
-                                                   const char* aProfile,
+nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char* aProfile,
                                                    const char* aBuffer,
                                                    int aLength) {
   LOG("nsDBusRemoteClient::DoSendDBusCommandLine()");
 
-  nsAutoCString appName(aProgram);
-  mozilla::XREAppData::SanitizeNameForDBus(appName);
+  nsAutoCString appName;
+  gAppData->GetDBusAppName(appName);
 
   nsAutoCString destinationName;
   if (!GetRemoteDestinationName(appName.get(), aProfile, destinationName)) {
