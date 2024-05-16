@@ -54,6 +54,7 @@ support-files = [
 ["test_multiple_frames.js"]
 
 ["test_page-icon_protocol.js"]
+prefs = ["dom.security.https_first=false"]
 
 ["test_query_result_favicon_changed_on_child.js"]
 
