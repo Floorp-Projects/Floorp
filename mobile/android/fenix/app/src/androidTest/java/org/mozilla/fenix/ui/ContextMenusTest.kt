@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import org.junit.Rule
 import org.junit.Test
@@ -41,10 +42,16 @@ import org.mozilla.fenix.ui.robots.shareOverlay
 
 class ContextMenusTest : TestSetup() {
 
-    @get:Rule
-    val activityIntentTestRule = HomeActivityIntentTestRule(isJumpBackInCFREnabled = false)
+    @get:Rule(order = 0)
+    val composeTestRule =
+        AndroidComposeTestRule(
+            HomeActivityIntentTestRule(
+                tabsTrayRewriteEnabled = true,
+                isJumpBackInCFREnabled = false,
+            ),
+        ) { it.activity }
 
-    @Rule
+    @Rule(order = 1)
     @JvmField
     val retryTestRule = RetryTestRule(3)
 
@@ -65,8 +72,8 @@ class ContextMenusTest : TestSetup() {
             verifySnackBarText("New tab opened")
             clickSnackbarButton("SWITCH")
             verifyUrl(genericURL.url.toString())
-        }.openTabDrawer {
-            verifyNormalModeSelected()
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyNormalBrowsingButtonIsSelected()
             verifyExistingOpenTabs("Test_Page_1")
             verifyExistingOpenTabs("Test_Page_4")
         }
@@ -89,8 +96,8 @@ class ContextMenusTest : TestSetup() {
             verifySnackBarText("New private tab opened")
             clickSnackbarButton("SWITCH")
             verifyUrl(genericURL.url.toString())
-        }.openTabDrawer {
-            verifyPrivateModeSelected()
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyPrivateBrowsingButtonIsSelected()
             verifyExistingOpenTabs("Test_Page_2")
         }
     }
