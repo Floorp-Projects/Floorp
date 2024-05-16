@@ -10,7 +10,7 @@ use std::{backtrace::Backtrace, fmt, marker::PhantomData, sync::Arc};
 use ash::vk;
 use log::{debug, Level};
 
-use super::allocator::{self, AllocationType};
+use super::allocator;
 use crate::{
     allocator::fmt_bytes, AllocationError, AllocationSizes, AllocatorDebugSettings, MemoryLocation,
     Result,
@@ -459,9 +459,9 @@ impl MemoryType {
         allocation_sizes: &AllocationSizes,
     ) -> Result<Allocation> {
         let allocation_type = if desc.linear {
-            AllocationType::Linear
+            allocator::AllocationType::Linear
         } else {
-            AllocationType::NonLinear
+            allocator::AllocationType::NonLinear
         };
 
         let memblock_size = if self

@@ -12,12 +12,12 @@
 
 ```toml
 [dependencies]
-gpu-allocator = "0.25.0"
+gpu-allocator = "0.26.0"
 ```
 
 ![Visualizer](visualizer.png)
 
-This crate provides a fully written in Rust memory allocator for Vulkan and DirectX 12.
+This crate provides a fully written in Rust memory allocator for Vulkan, DirectX 12 and Metal.
 
 ## [Windows-rs] and [winapi]
 
@@ -130,9 +130,40 @@ drop(resource);
 allocator.free(allocation).unwrap();
 ```
 
+## Setting up the Metal memory allocator
+
+```rust
+use gpu_allocator::metal::*;
+
+let mut allocator = Allocator::new(&AllocatorCreateDesc {
+    device: device.clone(),
+    debug_settings: Default::default(),
+    allocation_sizes: Default::default(),
+});
+```
+
+## Simple Metal allocation example
+```rust
+use gpu_allocator::metal::*;
+use gpu_allocator::MemoryLocation;
+
+let allocation_desc = AllocationCreateDesc::buffer(
+    &device,
+    "Example allocation",
+    512, // size in bytes
+    gpu_allocator::MemoryLocation::GpuOnly,
+);
+let allocation = allocator.allocate(&allocation_desc).unwrap();
+let resource = allocation.make_buffer().unwrap();
+
+// Cleanup
+drop(resource);
+allocator.free(&allocation).unwrap();
+```
+
 ## Minimum Supported Rust Version
 
-The MSRV for this crate and the `vulkan` and `d3d12` features is Rust 1.65.  Any other features such as the `visualizer` (with all the `egui` dependencies) may have a higher requirement and are not tested in our CI.
+The MSRV for this crate and the `vulkan`, `d3d12` and `metal` features is Rust 1.65.  Any other features such as the `visualizer` (with all the `egui` dependencies) may have a higher requirement and are not tested in our CI.
 
 ## License
 

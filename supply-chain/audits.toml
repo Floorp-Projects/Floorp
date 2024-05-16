@@ -1389,7 +1389,7 @@ delta = "0.19.0 -> 0.20.0"
 [[audits.d3d12]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
-delta = "0.20.0 -> 0.20.0@git:d5d683d3c491ec8cd2f5cdb43ac61e526cb7c231"
+delta = "0.20.0 -> 0.20.0@git:2f4522714c4037a1842d27bb448b634f089664ab"
 importable = false
 
 [[audits.darling]]
@@ -2821,7 +2821,7 @@ delta = "0.19.2 -> 0.20.0"
 [[audits.naga]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
-delta = "0.20.0 -> 0.20.0@git:d5d683d3c491ec8cd2f5cdb43ac61e526cb7c231"
+delta = "0.20.0 -> 0.20.0@git:2f4522714c4037a1842d27bb448b634f089664ab"
 importable = false
 
 [[audits.net2]]
@@ -4690,7 +4690,7 @@ delta = "0.19.3 -> 0.20.0"
 [[audits.wgpu-core]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
-delta = "0.20.0 -> 0.20.0@git:d5d683d3c491ec8cd2f5cdb43ac61e526cb7c231"
+delta = "0.20.0 -> 0.20.0@git:2f4522714c4037a1842d27bb448b634f089664ab"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -4754,7 +4754,7 @@ delta = "0.19.3 -> 0.20.0"
 [[audits.wgpu-hal]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
-delta = "0.20.0 -> 0.20.0@git:d5d683d3c491ec8cd2f5cdb43ac61e526cb7c231"
+delta = "0.20.0 -> 0.20.0@git:2f4522714c4037a1842d27bb448b634f089664ab"
 importable = false
 
 [[audits.wgpu-types]]
@@ -4818,7 +4818,7 @@ delta = "0.19.2 -> 0.20.0"
 [[audits.wgpu-types]]
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
-delta = "0.20.0 -> 0.20.0@git:d5d683d3c491ec8cd2f5cdb43ac61e526cb7c231"
+delta = "0.20.0 -> 0.20.0@git:2f4522714c4037a1842d27bb448b634f089664ab"
 importable = false
 
 [[audits.whatsys]]
