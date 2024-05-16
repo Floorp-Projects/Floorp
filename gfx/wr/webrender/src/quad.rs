@@ -19,7 +19,7 @@ use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::renderer::{BlendMode, GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF};
 use crate::segment::EdgeAaSegmentMask;
 use crate::space::SpaceMapper;
-use crate::spatial_tree::{CoordinateSpaceMapping, SpatialNodeIndex, SpatialTree};
+use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
 use crate::util::{MaxRect, ScaleOffset};
 
 const MIN_AA_SEGMENTS_SIZE: f32 = 4.0;
@@ -270,12 +270,9 @@ pub fn push_quad(
             let clip_coverage_rect = surface
                 .map_to_device_rect(&clip_chain.pic_coverage_rect, frame_context.spatial_tree);
 
-
-            let local_to_device = match map_prim_to_surface {
-                CoordinateSpaceMapping::Local => ScaleOffset::identity(),
-                CoordinateSpaceMapping::ScaleOffset(scale_offset) => scale_offset.inverse(),
-                CoordinateSpaceMapping::Transform(..) => panic!("bug: nine-patch segments should be axis-aligned only"),
-            }.scale(device_pixel_scale.0);
+            let local_to_device = map_prim_to_surface.as_2d_scale_offset()
+                .expect("bug: nine-patch segments should be axis-aligned only")
+                .scale(device_pixel_scale.0);
 
             let device_prim_rect: DeviceRect = local_to_device.map_rect(&local_rect);                
 

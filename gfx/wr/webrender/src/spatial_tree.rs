@@ -766,6 +766,19 @@ impl<Src, Dst> CoordinateSpaceMapping<Src, Dst> {
             }
         }
     }
+
+    pub fn as_2d_scale_offset(&self) -> Option<ScaleOffset> {
+        Some(match *self {
+            CoordinateSpaceMapping::Local => ScaleOffset::identity(),
+            CoordinateSpaceMapping::ScaleOffset(transfrom) => transfrom,
+            CoordinateSpaceMapping::Transform(ref transform) => {
+                if !transform.is_2d_scale_translation() {
+                    return None
+                }
+                ScaleOffset::new(transform.m11, transform.m22, transform.m41, transform.m42)
+            }
+        })
+    }
 }
 
 enum TransformScroll {
