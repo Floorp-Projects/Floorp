@@ -803,15 +803,6 @@ if test "$OS_ARCH" = "WINNT"; then
     AC_DEFINE(HAVE_UINT64_T)
 fi
 
-case "$MOZ_WIDGET_TOOLKIT" in
-  windows)
-    if test "$COMPILE_ENVIRONMENT"; then
-      MOZ_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
-    fi
-    ;;
-esac
-AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
-
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)

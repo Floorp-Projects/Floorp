@@ -71,8 +71,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
         "RenderAndroidSurfaceTextureHost.cpp",
     ]
 
-if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
-    DEFINES["MOZ_ENABLE_D3D10_LAYER"] = True
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXPORTS.mozilla.webrender += [
         "DCLayerTree.h",
         "RenderCompositorANGLE.h",
