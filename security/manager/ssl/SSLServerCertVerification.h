@@ -82,7 +82,7 @@ class SSLServerCertVerificationResult final
  private:
   ~SSLServerCertVerificationResult() = default;
 
-  const RefPtr<CommonSocketControl> mSocketControl;
+  RefPtr<CommonSocketControl> mSocketControl;
   nsTArray<nsTArray<uint8_t>> mBuiltChain;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   uint16_t mCertificateTransparencyStatus;
