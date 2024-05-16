@@ -940,7 +940,7 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   const size_t wholeLength = root->length();
   size_t wholeCapacity;
   CharT* wholeChars;
-  bool setRootDependedOn = false;
+  uint32_t newRootFlags = 0;
 
   AutoCheckCannotGC nogc;
 
@@ -1046,7 +1046,7 @@ finish_node: {
                          StringFlagsForCharType<CharT>(INIT_DEPENDENT_FLAGS));
   str->d.s.u3.base =
       reinterpret_cast<JSLinearString*>(root); /* will be true on exit */
-  setRootDependedOn = true;
+  newRootFlags |= DEPENDED_ON_BIT;
 
   // Every interior (rope) node in the rope's tree will be visited during
   // the traversal and post-barriered here, so earlier additions of
@@ -1085,6 +1085,13 @@ finish_root:
     JSString& left = *leftmostChild;
     RemoveCellMemory(&left, left.allocSize(), MemoryUse::StringContents);
 
+    // Inherit NON_DEDUP_BIT from the leftmost string.
+    newRootFlags |= left.flags() & NON_DEDUP_BIT;
+
+    // Set root's DEPENDED_ON_BIT because the leftmost string is now a
+    // dependent.
+    newRootFlags |= DEPENDED_ON_BIT;
+
     uint32_t flags = INIT_DEPENDENT_FLAGS;
     if (left.inStringToAtomCache()) {
       flags |= IN_STRING_TO_ATOM_CACHE;
@@ -1104,14 +1111,11 @@ finish_root:
       // being freed (because the leftmost child may have a tenured dependent
       // string that cannot be updated.)
       root->storeBuffer()->putWholeCell(&left);
-      root->setNonDeduplicatable();
+      newRootFlags |= NON_DEDUP_BIT;
     }
-    setRootDependedOn = true;
   }
 
-  if (setRootDependedOn) {
-    root->setDependedOn();
-  }
+  root->setHeaderFlagBit(newRootFlags);
 
   return &root->asLinear();
 }
