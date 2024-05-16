@@ -209,6 +209,15 @@ function resolveFileURL(
 }
 
 export function getFormattedSourceId(id) {
+  if (typeof id != "string") {
+    console.error(
+      "Expected source id to be a string, got",
+      typeof id,
+      " | id:",
+      id
+    );
+    return "";
+  }
   return id.substring(id.lastIndexOf("/") + 1);
 }
 
