@@ -570,7 +570,7 @@ add_task(async function test_contentscripts_register_all_options() {
     cssPaths,
     jsPaths,
     matchAboutBlank,
-    matchOriginAsFallback, // Note: cannot be set via contentScripts.register.
+    matchOriginAsFallback,
     runAt,
     originAttributesPatterns,
   } = script;
@@ -611,6 +611,31 @@ add_task(async function test_contentscripts_register_all_options() {
     !script.matchesURI(Services.io.newURI("http://localhost/ok_exclude.html")),
     "exclude globs should not match"
   );
+
+  await extension.unload();
+});
+
+add_task(async function test_contentscripts_register_matchOriginAsFallback() {
+  async function background() {
+    await browser.contentScripts.register({
+      js: [{ file: "cs.js" }],
+      matches: ["http://localhost/*"],
+      matchOriginAsFallback: true,
+    });
+    browser.test.sendMessage("ready");
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: { permissions: ["http://localhost/*"] },
+    background,
+    files: { "cs.js": "" },
+  });
+  await extension.startup();
+  await extension.awaitMessage("ready");
+  const script = extension.extension.policy.contentScripts[0];
+
+  equal(script.matchOriginAsFallback, true, "matchOriginAsFallback set");
+  equal(script.matchAboutBlank, true, "matchAboutBlank implied to be true");
 
   await extension.unload();
 });
