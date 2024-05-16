@@ -71,7 +71,6 @@ import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.CrashHandler;
-import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.R;
 
 public class GeckoAppShell {
@@ -1583,12 +1582,8 @@ public class GeckoAppShell {
   @WrapForJNI
   public static native boolean isParentProcess();
 
-  /**
-   * Returns a GeckoResult that will be completed to true if the GPU process is enabled and false if
-   * it is disabled.
-   */
   @WrapForJNI
-  public static native GeckoResult<Boolean> isGpuProcessEnabled();
+  public static native boolean isGpuProcessEnabled();
 
   @SuppressLint("NewApi")
   public static boolean isIsolatedProcess() {

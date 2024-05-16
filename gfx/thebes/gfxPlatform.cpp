@@ -2644,6 +2644,10 @@ void gfxPlatform::InitWebRenderConfig() {
   manager.Init();
   manager.ConfigureWebRender();
 
+  if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+    gfxVars::SetGPUProcessEnabled(true);
+  }
+
   bool hasHardware = gfxConfig::IsEnabled(Feature::WEBRENDER);
 
 #ifdef MOZ_WIDGET_GTK

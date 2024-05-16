@@ -72,11 +72,11 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
    */
   @Override // IProcessManager
   public ISurfaceAllocator getSurfaceAllocator() {
-    final GeckoResult<Boolean> gpuEnabled = GeckoAppShell.isGpuProcessEnabled();
+    final boolean gpuEnabled = GeckoAppShell.isGpuProcessEnabled();
 
     try {
       final GeckoResult<ISurfaceAllocator> allocator = new GeckoResult<>();
-      if (gpuEnabled.poll(1000)) {
+      if (gpuEnabled) {
         // The GPU process is enabled, so look it up and ask it for its surface allocator.
         XPCOMEventTarget.runOnLauncherThread(
             () -> {
