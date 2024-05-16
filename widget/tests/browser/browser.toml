@@ -16,6 +16,9 @@ skip-if = [
   "os == 'linux'", # Bug 1792749
 ]
 
+["browser_test_consumed_alt_char_on_windows.js"]
+skip-if = ["os != 'win'"]
+
 ["browser_test_fullscreen_size.js"]
 
 ["browser_test_ime_state_in_contenteditable_on_focus_move_in_remote_content.js"]
