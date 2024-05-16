@@ -187,7 +187,7 @@ fun Fragment.updateNavBarForConfigurationChange(
 
         // Toolbar already having a parent is an edge case, but it could happen if configurationChange is called after
         // onCreateView with the same orientation. Caught it on a foldable emulator while going from single screen
-        // portrait mode to landscape table, back and forth.
+        // portrait mode to landscape tablet, back and forth.
         val hasParent = toolbarView.parent != null
         if (isToolbarAtBottom && !hasParent) {
             parent.addView(toolbarView)
@@ -202,5 +202,31 @@ fun Fragment.updateNavBarForConfigurationChange(
         }
 
         reinitializeNavBar()
+    }
+}
+
+/**
+ *
+ * Manages the state of the microsurvey prompt on orientation change.
+ *
+ * @param parent The top level [ViewGroup] of the fragment, which will be hosting the [bottomToolbarContainerView].
+ * @param bottomToolbarContainerView The [ToolbarContainerView] hosting the microsurvey prompt.
+ * @param reinitializeMicrosurveyPrompt lambda for re-initializing the microsurvey prompt inside the host [Fragment].
+ */
+fun Fragment.updateMicrosurveyPromptForConfigurationChange(
+    parent: ViewGroup,
+    bottomToolbarContainerView: ToolbarContainerView?,
+    reinitializeMicrosurveyPrompt: () -> Unit,
+) {
+    if (!requireContext().isLandscape()) {
+        // Already having a bottomContainer after switching back to portrait mode will happen when address bar is
+        // positioned at bottom and also as an edge case if configurationChange is called after onCreateView with the
+        // same orientation. Observed on a foldable emulator while going from single screen portrait mode to landscape
+        // tablet, back and forth.
+        bottomToolbarContainerView?.let {
+            parent.removeView(it)
+        }
+
+        reinitializeMicrosurveyPrompt()
     }
 }

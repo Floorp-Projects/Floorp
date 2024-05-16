@@ -150,10 +150,10 @@ import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
+import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerIntegration
 import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerView
 import org.mozilla.fenix.components.toolbar.navbar.BrowserNavBar
 import org.mozilla.fenix.components.toolbar.navbar.EngineViewClippingBehavior
-import org.mozilla.fenix.components.toolbar.navbar.NavbarIntegration
 import org.mozilla.fenix.components.toolbar.navbar.ToolbarContainerView
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.crashes.CrashContentIntegration
@@ -178,10 +178,12 @@ import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.tabClosedUndoMessage
+import org.mozilla.fenix.ext.updateMicrosurveyPromptForConfigurationChange
 import org.mozilla.fenix.ext.updateNavBarForConfigurationChange
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
+import org.mozilla.fenix.microsurvey.ui.MicrosurveyRequestPrompt
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
@@ -247,7 +249,7 @@ abstract class BaseBrowserFragment :
     private val promptsFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
-    private val navbarIntegration = ViewBoundFeatureWrapper<NavbarIntegration>()
+    private val bottomToolbarContainerIntegration = ViewBoundFeatureWrapper<BottomToolbarContainerIntegration>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
@@ -430,7 +432,7 @@ abstract class BaseBrowserFragment :
             },
             onCloseTab = { closedSession ->
                 val closedTab = store.state.findTab(closedSession.id) ?: return@DefaultBrowserToolbarController
-                showUndoSnackbar(requireContext().tabClosedUndoMessage(closedTab.content.private))
+                showUndoSnackbar(context.tabClosedUndoMessage(closedTab.content.private))
             },
         )
         val browserToolbarMenuController = DefaultBrowserToolbarMenuController(
@@ -494,7 +496,7 @@ abstract class BaseBrowserFragment :
                             TabStripMetrics.selectTab.record()
                         },
                         onCloseTabClick = { isPrivate ->
-                            showUndoSnackbar(requireContext().tabClosedUndoMessage(isPrivate))
+                            showUndoSnackbar(context.tabClosedUndoMessage(isPrivate))
                             TabStripMetrics.closeTab.record()
                         },
                     )
@@ -502,10 +504,7 @@ abstract class BaseBrowserFragment :
             },
         )
 
-        // We don't show the navigation bar for tablets and in landscape mode.
-        val shouldAddNavigationBar = IncompleteRedesignToolbarFeature(context.settings()).isEnabled &&
-            !requireContext().isLandscape() &&
-            !isTablet()
+        val shouldAddNavigationBar = shouldAddNavigationBar(context)
         if (shouldAddNavigationBar) {
             initializeNavBar(
                 browserToolbar = browserToolbarView.view,
@@ -515,6 +514,14 @@ abstract class BaseBrowserFragment :
             )
         } else {
             browserToolbarView.view.hidePageActionSeparator()
+        }
+
+        if (!shouldAddNavigationBar && shouldShowMicrosurveyPrompt()) {
+            initializeMicrosurveyPrompt(
+                browserToolbar = browserToolbarView.view,
+                view = view,
+                context = context,
+            )
         }
 
         toolbarIntegration.set(
@@ -1239,7 +1246,7 @@ abstract class BaseBrowserFragment :
         if (isToolbarDynamic(context)) {
             getEngineView().setDynamicToolbarMaxHeight(topToolbarHeight + bottomToolbarHeight)
 
-            if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
+            if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled || shouldShowMicrosurveyPrompt()) {
                 (getSwipeRefreshLayout().layoutParams as CoordinatorLayout.LayoutParams).behavior =
                     EngineViewClippingBehavior(
                         context = context,
@@ -1279,6 +1286,16 @@ abstract class BaseBrowserFragment :
         }
     }
 
+    /**
+     * We don't show the navigation bar for tablets and in landscape mode.
+     */
+    private fun shouldAddNavigationBar(context: Context) =
+        IncompleteRedesignToolbarFeature(context.settings()).isEnabled && !context.isLandscape() && !isTablet()
+
+    // TODO FXDROID-1970 detekt does not like inlining this
+    private val shouldShowMicrosurveyPrompt = false
+    private fun shouldShowMicrosurveyPrompt() = shouldShowMicrosurveyPrompt
+
     @Suppress("LongMethod")
     private fun initializeNavBar(
         browserToolbar: BrowserToolbar,
@@ -1287,7 +1304,7 @@ abstract class BaseBrowserFragment :
         activity: HomeActivity,
     ) {
         browserToolbar.showPageActionSeparator()
-        val isToolbarAtBottom = context.components.settings.toolbarPosition == ToolbarPosition.BOTTOM
+        val isToolbarAtBottom = isToolbarAtBottom(context)
 
         // The toolbar view has already been added directly to the container.
         // We should remove it and add the view to the navigation bar container.
@@ -1298,7 +1315,7 @@ abstract class BaseBrowserFragment :
         }
 
         // We need a second menu button, but we could reuse the existing builder.
-        val menuButton = MenuButton(requireContext()).apply {
+        val menuButton = MenuButton(context).apply {
             menuBuilder = browserToolbarView.menuToolbar.menuBuilder
             // We have to set colorFilter manually as the button isn't being managed by a [BrowserToolbarView].
             setColorFilter(
@@ -1317,6 +1334,10 @@ abstract class BaseBrowserFragment :
             composableContent = {
                 FirefoxTheme {
                     Column {
+                        if (shouldShowMicrosurveyPrompt()) {
+                            MicrosurveyRequestPrompt()
+                        }
+
                         if (isToolbarAtBottom) {
                             AndroidView(factory = { _ -> browserToolbar })
                         } else {
@@ -1386,8 +1407,8 @@ abstract class BaseBrowserFragment :
             },
         )
 
-        navbarIntegration.set(
-            feature = NavbarIntegration(
+        bottomToolbarContainerIntegration.set(
+            feature = BottomToolbarContainerIntegration(
                 toolbar = bottomToolbarContainerView.toolbarContainerView,
                 store = requireComponents.core.store,
                 appStore = requireComponents.appStore,
@@ -1398,6 +1419,54 @@ abstract class BaseBrowserFragment :
             view = view,
         )
     }
+
+    private fun initializeMicrosurveyPrompt(
+        browserToolbar: BrowserToolbar,
+        view: View,
+        context: Context,
+    ) {
+        val isToolbarAtBottom = isToolbarAtBottom(context)
+
+        // The toolbar view has already been added directly to the container.
+        // See initializeNavBar for more details on improving this.
+        if (isToolbarAtBottom) {
+            binding.browserLayout.removeView(browserToolbar)
+        }
+
+        _bottomToolbarContainerView = BottomToolbarContainerView(
+            context = context,
+            parent = binding.browserLayout,
+            hideOnScroll = isToolbarDynamic(context),
+            composableContent = {
+                FirefoxTheme {
+                    Column {
+                        MicrosurveyRequestPrompt()
+
+                        if (isToolbarAtBottom) {
+                            AndroidView(factory = { _ -> browserToolbar })
+                        } else {
+                            Divider()
+                        }
+                    }
+                }
+            },
+        )
+
+        bottomToolbarContainerIntegration.set(
+            feature = BottomToolbarContainerIntegration(
+                toolbar = bottomToolbarContainerView.toolbarContainerView,
+                store = requireComponents.core.store,
+                appStore = requireComponents.appStore,
+                bottomToolbarContainerView = bottomToolbarContainerView,
+                sessionId = customTabSessionId,
+            ),
+            owner = this,
+            view = view,
+        )
+    }
+
+    private fun isToolbarAtBottom(context: Context) =
+        context.components.settings.toolbarPosition == ToolbarPosition.BOTTOM
 
     private fun isToolbarDynamic(context: Context) =
         !context.settings().shouldUseFixedTopToolbar && context.settings().isDynamicToolbarEnabled
@@ -1852,6 +1921,15 @@ abstract class BaseBrowserFragment :
                 reinitializeNavBar = ::reinitializeNavBar,
             )
         }
+
+        // If the microsurvey feature is visible, we should update it's state.
+        if (shouldShowMicrosurveyPrompt()) {
+            updateMicrosurveyPromptForConfigurationChange(
+                parent = binding.browserLayout,
+                bottomToolbarContainerView = _bottomToolbarContainerView?.toolbarContainerView,
+                reinitializeMicrosurveyPrompt = ::reinitializeMicrosurveyPrompt,
+            )
+        }
     }
 
     private fun reinitializeNavBar() {
@@ -1860,6 +1938,14 @@ abstract class BaseBrowserFragment :
             view = requireView(),
             context = requireContext(),
             activity = requireActivity() as HomeActivity,
+        )
+    }
+
+    private fun reinitializeMicrosurveyPrompt() {
+        initializeMicrosurveyPrompt(
+            browserToolbar = browserToolbarView.view,
+            view = requireView(),
+            context = requireContext(),
         )
     }
 

@@ -16,33 +16,32 @@ import mozilla.components.concept.toolbar.ScrollableToolbar
 import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
 import mozilla.components.ui.widgets.behavior.ViewPosition
 
+// TODO the gecko view/engine view height needs changing behind based on this bottom toolbar height FXDROID-2057.
+
 /**
- *  A helper class to add NavigationBar composable to a [ViewGroup].
+ *  A helper class to add a bottom toolbar container view to the given [parent].
  *
- * @param context The Context the view is running in.
- * @param parent The ViewGroup into which the NavigationBar composable will be added.
- * @param hideOnScroll If the container should react to the [EngineView] content being scrolled.
- * @param composableContent
+ * @param context The [Context] the view is running in.
+ * @param parent The [ViewGroup] into which the composable will be added.
+ * @param hideOnScroll If the container should react to the EngineView content being scrolled.
+ * @param composableContent The content of the toolbar to display.
  */
 class BottomToolbarContainerView(
-    context: Context,
-    parent: ViewGroup,
-    hideOnScroll: Boolean = false,
-    composableContent: @Composable () -> Unit,
+    private val context: Context,
+    private val parent: ViewGroup,
+    private val hideOnScroll: Boolean = false,
+    private val composableContent: @Composable () -> Unit,
 ) {
 
     val toolbarContainerView = ToolbarContainerView(context)
-    val composeView: ComposeView
+    val composeView = ComposeView(context).apply {
+        setContent {
+            composableContent()
+        }
+        toolbarContainerView.addView(this)
+    }
 
     init {
-        composeView = ComposeView(context).apply {
-            setContent {
-                composableContent()
-            }
-
-            toolbarContainerView.addView(this)
-        }
-
         toolbarContainerView.layoutParams = CoordinatorLayout.LayoutParams(
             CoordinatorLayout.LayoutParams.MATCH_PARENT,
             CoordinatorLayout.LayoutParams.WRAP_CONTENT,
