@@ -56,8 +56,10 @@ use crate::spatial_tree::SpatialTree;
 #[cfg(feature = "replay")]
 use crate::spatial_tree::SceneSpatialTree;
 use crate::telemetry::Telemetry;
-#[cfg(feature = "serialize")]
-use serde::{Serialize, Deserialize};
+#[cfg(feature = "capture")]
+use serde::Serialize;
+#[cfg(feature = "replay")]
+use serde::Deserialize;
 #[cfg(feature = "replay")]
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::sync::Arc;

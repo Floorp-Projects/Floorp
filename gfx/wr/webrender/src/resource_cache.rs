@@ -1738,9 +1738,9 @@ impl ResourceCache {
             self.delete_image_template(key);
         }
 
-        #[cfg(features="leak_checks")]
+        #[cfg(feature="leak_checks")]
         let check_leaks = true;
-        #[cfg(not(features="leak_checks"))]
+        #[cfg(not(feature="leak_checks"))]
         let check_leaks = false;
 
         if check_leaks {
