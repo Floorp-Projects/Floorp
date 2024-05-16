@@ -32,6 +32,7 @@ enum class GCReason;
 
 namespace js::gc {
 
+struct AllocSiteFilter;
 class GCRuntime;
 class PretenuringNursery;
 
@@ -237,9 +238,9 @@ class AllocSite {
   // Called for every active alloc site after minor GC.
   enum SiteResult { NoChange, WasPretenured, WasPretenuredAndInvalidated };
   SiteResult processSite(GCRuntime* gc, size_t attentionThreshold,
-                         bool reportInfo, size_t reportThreshold);
-  void processMissingSite(bool reportInfo, size_t reportThreshold);
-  void processCatchAllSite(bool reportInfo, size_t reportThreshold);
+                         const AllocSiteFilter& reportFilter);
+  void processMissingSite(const AllocSiteFilter& reportFilter);
+  void processCatchAllSite(const AllocSiteFilter& reportFilter);
 
   void updateStateOnMinorGC(double promotionRate);
 
@@ -373,7 +374,7 @@ class PretenuringZone {
 
 // Pretenuring information stored as part of the the GC nursery.
 class PretenuringNursery {
-  gc::AllocSite* allocatedSites;
+  AllocSite* allocatedSites;
 
   size_t allocSitesCreated = 0;
 
@@ -397,7 +398,7 @@ class PretenuringNursery {
 
   size_t doPretenuring(GCRuntime* gc, JS::GCReason reason,
                        bool validPromotionRate, double promotionRate,
-                       bool reportInfo, size_t reportThreshold);
+                       const AllocSiteFilter& reportFilter);
 
   void maybeStopPretenuring(GCRuntime* gc);
 
@@ -407,6 +408,19 @@ class PretenuringNursery {
 
  private:
   void updateTotalAllocCounts(AllocSite* site);
+};
+
+// Describes which alloc sites to report on, if any.
+struct AllocSiteFilter {
+  size_t allocThreshold = 0;
+  uint8_t siteKindMask = 0;
+  uint8_t traceKindMask = 0;
+  uint8_t stateMask = 0;
+  bool enabled = false;
+
+  bool matches(const AllocSite& site) const;
+
+  static bool readFromString(const char* string, AllocSiteFilter* filter);
 };
 
 #ifdef JS_GC_ZEAL
