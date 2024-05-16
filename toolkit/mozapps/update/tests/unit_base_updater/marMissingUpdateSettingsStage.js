@@ -34,7 +34,7 @@ async function run_test() {
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_UPDATE_SETTINGS_FILE_CHANNEL);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(
+  await checkUpdateManager(
     STATE_NONE,
     false,
     STATE_FAILED,

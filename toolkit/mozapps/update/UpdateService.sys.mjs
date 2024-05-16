@@ -1457,7 +1457,7 @@ function cleanupReadyUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
   if (lazy.UM.readyUpdate) {
     LOG("cleanupReadyUpdate - Clearing readyUpdate");
-    lazy.UM.addUpdateToHistory(lazy.UM.readyUpdate);
+    lazy.UM.internal.addUpdateToHistory(lazy.UM.readyUpdate);
     lazy.UM.readyUpdate = null;
   }
   lazy.UM.saveUpdates();
@@ -1497,7 +1497,7 @@ function cleanupDownloadingUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
   if (lazy.UM.downloadingUpdate) {
     LOG("cleanupDownloadingUpdate - Clearing downloadingUpdate.");
-    lazy.UM.addUpdateToHistory(lazy.UM.downloadingUpdate);
+    lazy.UM.internal.addUpdateToHistory(lazy.UM.downloadingUpdate);
     lazy.UM.downloadingUpdate = null;
   }
   lazy.UM.saveUpdates();
@@ -1534,12 +1534,12 @@ function cleanupActiveUpdates() {
   // Move the update from the Active Update list into the Past Updates list.
   if (lazy.UM.readyUpdate) {
     LOG("cleanupActiveUpdates - Clearing readyUpdate");
-    lazy.UM.addUpdateToHistory(lazy.UM.readyUpdate);
+    lazy.UM.internal.addUpdateToHistory(lazy.UM.readyUpdate);
     lazy.UM.readyUpdate = null;
   }
   if (lazy.UM.downloadingUpdate) {
     LOG("cleanupActiveUpdates - Clearing downloadingUpdate.");
-    lazy.UM.addUpdateToHistory(lazy.UM.downloadingUpdate);
+    lazy.UM.internal.addUpdateToHistory(lazy.UM.downloadingUpdate);
     lazy.UM.downloadingUpdate = null;
   }
   lazy.UM.saveUpdates();
@@ -4322,7 +4322,7 @@ export class UpdateManager {
           lazy.gUpdateBundle.GetStringFromName("statusFailed");
         let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
         pingStateAndStatusCodes(this._readyUpdate, true, newStatus);
-        this.addUpdateToHistory(this._readyUpdate);
+        this.#addUpdateToHistory(this._readyUpdate);
         this._readyUpdate = null;
         this.saveUpdates();
         cleanUpReadyUpdateDir();
@@ -4368,6 +4368,8 @@ export class UpdateManager {
 
     this.internal = {
       reload: skipFiles => this.#reload(skipFiles),
+      getHistory: () => this.#getHistory(),
+      addUpdateToHistory: update => this.#addUpdateToHistory(update),
       QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateManagerInternal]),
     };
   }
@@ -4534,6 +4536,11 @@ export class UpdateManager {
     return updates;
   }
 
+  #getHistory() {
+    const history = this._getUpdates();
+    return [...history];
+  }
+
   /**
    * Loads the update history from the updates.xml file into a cache.
    */
@@ -4547,15 +4554,8 @@ export class UpdateManager {
   /**
    * See nsIUpdateService.idl
    */
-  getUpdateAt(aIndex) {
-    return this._getUpdates()[aIndex];
-  }
-
-  /**
-   * See nsIUpdateService.idl
-   */
-  getUpdateCount() {
-    return this._getUpdates().length;
+  async getHistory() {
+    return lazy.UM.internal.getHistory();
   }
 
   /**
@@ -4578,15 +4578,19 @@ export class UpdateManager {
     this._downloadingUpdate = aUpdate;
   }
 
-  /**
-   * See nsIUpdateService.idl
-   */
-  addUpdateToHistory(aUpdate) {
+  #addUpdateToHistory(aUpdate) {
     this._updatesDirty = true;
     let updates = this._getUpdates();
     updates.unshift(aUpdate);
     // Limit the update history to 10 updates.
     updates.splice(10);
+  }
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  async addUpdateToHistory(aUpdate) {
+    this.#addUpdateToHistory(aUpdate);
   }
 
   /**
@@ -6707,7 +6711,7 @@ class Downloader {
     if (deleteActiveUpdate) {
       LOG("Downloader:onStopRequest - Clearing downloadingUpdate.");
       this._update.installDate = new Date().getTime();
-      lazy.UM.addUpdateToHistory(lazy.UM.downloadingUpdate);
+      lazy.UM.internal.addUpdateToHistory(lazy.UM.downloadingUpdate);
       lazy.UM.downloadingUpdate = null;
     } else if (
       lazy.UM.downloadingUpdate &&

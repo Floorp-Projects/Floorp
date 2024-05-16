@@ -21,6 +21,6 @@ async function run_test() {
   checkUpdateLogContains(ERR_UNABLE_OPEN_DEST);
   checkUpdateLogContains(STATE_FAILED_READ_ERROR + "\n" + CALL_QUIT);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED, READ_ERROR, 1);
+  await checkUpdateManager(STATE_NONE, false, STATE_FAILED, READ_ERROR, 1);
   checkCallbackLog();
 }
