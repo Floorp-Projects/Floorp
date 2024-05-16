@@ -105,15 +105,14 @@ IDBResult<Ok, IDBSpecialValue::Invalid> ConvertArrayValueToKey(
 }
 
 bool IsDetachedBuffer(JSContext* aCx, JS::Handle<JSObject*> aJsBufferSource) {
-  JS::Rooted<JSObject*> jsBufferSource(aCx, aJsBufferSource);
-  if (JS_IsArrayBufferViewObject(jsBufferSource)) {
+  if (JS_IsArrayBufferViewObject(aJsBufferSource)) {
     bool unused = false;
     JS::Rooted<JSObject*> viewedArrayBuffer(
-        aCx, JS_GetArrayBufferViewBuffer(aCx, jsBufferSource, &unused));
+        aCx, JS_GetArrayBufferViewBuffer(aCx, aJsBufferSource, &unused));
     return JS::IsDetachedArrayBufferObject(viewedArrayBuffer);
   }
 
-  return JS::IsDetachedArrayBufferObject(jsBufferSource);
+  return JS::IsDetachedArrayBufferObject(aJsBufferSource);
 }
 
 // To get a copy of the bytes held by the buffer source given a buffer source
@@ -123,10 +122,9 @@ GetByteSpanFromJSBufferSource(JSContext* aCx,
                               JS::Handle<JSObject*> aJsBufferSource) {
   // 1. Let jsBufferSource be the result of converting bufferSource to a
   // JavaScript value.
-  JS::Rooted<JSObject*> jsBufferSource(aCx, aJsBufferSource);
 
   // 2. Let jsArrayBuffer be jsBufferSource.
-  JS::Rooted<JSObject*>& jsArrayBuffer = jsBufferSource;
+  JS::Handle<JSObject*>& jsArrayBuffer = aJsBufferSource;
 
   // 3. Let offset be 0.
   size_t offset = 0u;
@@ -138,7 +136,7 @@ GetByteSpanFromJSBufferSource(JSContext* aCx,
   uint8_t* bytes = nullptr;  // Note: Copy is deferred, no allocation here
 
   // 5. If jsBufferSource has a [[ViewedArrayBuffer]] internal slot, then:
-  if (JS_IsArrayBufferViewObject(jsBufferSource)) {
+  if (JS_IsArrayBufferViewObject(aJsBufferSource)) {
     // 5.1 Set jsArrayBuffer to jsBufferSource.[[ViewedArrayBuffer]].
     // 5.2 Set offset to jsBufferSource.[[ByteOffset]].
     // 5.3 Set length to jsBufferSource.[[ByteLength]].
@@ -156,8 +154,8 @@ GetByteSpanFromJSBufferSource(JSContext* aCx,
     // 6. Otherwise:
   } else {
     // 6.1 Assert: jsBufferSource is an ArrayBuffer or SharedArrayBuffer object.
-    MOZ_RELEASE_ASSERT(JS::IsArrayBufferObject(jsBufferSource) ||
-                       JS::IsSharedArrayBufferObject(jsBufferSource));
+    MOZ_RELEASE_ASSERT(JS::IsArrayBufferObject(aJsBufferSource) ||
+                       JS::IsSharedArrayBufferObject(aJsBufferSource));
 
     // 6.2 Set length to jsBufferSource.[[ArrayBufferByteLength]].
 
@@ -172,7 +170,7 @@ GetByteSpanFromJSBufferSource(JSContext* aCx,
 
   // 7. If IsDetachedBuffer(jsArrayBuffer) is true, then return the empty byte
   // sequence.
-  if (IsDetachedBuffer(aCx, jsArrayBuffer)) {
+  if (IsDetachedBuffer(aCx, aJsBufferSource)) {
     // Note: As the web platform tests assume, and as has been discussed at
     // https://github.com/w3c/IndexedDB/issues/417 - we are better off by
     // throwing a DataCloneError. The spec language is about to be revised.
