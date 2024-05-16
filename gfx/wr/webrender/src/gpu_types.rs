@@ -219,26 +219,6 @@ pub struct ClipMaskInstanceBoxShadow {
     pub shadow_data: BoxShadowData,
 }
 
-/// A clipping primitive drawn into the clipping mask.
-/// Could be an image or a rectangle, which defines the
-/// way `address` is treated.
-#[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[repr(C)]
-pub struct ClipMaskInstance {
-    pub clip_transform_id: TransformPaletteId,
-    pub prim_transform_id: TransformPaletteId,
-    pub clip_data_address: GpuCacheAddress,
-    pub resource_address: GpuCacheAddress,
-    pub local_pos: LayoutPoint,
-    pub tile_rect: LayoutRect,
-    pub sub_rect: DeviceRect,
-    pub task_origin: DevicePoint,
-    pub screen_origin: DevicePoint,
-    pub device_pixel_scale: f32,
-}
-
 // 16 bytes per instance should be enough for anyone!
 #[repr(C)]
 #[derive(Debug, Clone)]

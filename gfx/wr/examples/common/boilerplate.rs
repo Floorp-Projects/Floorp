@@ -45,6 +45,7 @@ impl RenderNotifier for Notifier {
     }
 }
 
+#[allow(dead_code)]
 pub trait HandyDandyRectBuilder {
     fn to(&self, x2: i32, y2: i32) -> LayoutRect;
     fn by(&self, w: i32, h: i32) -> LayoutRect;

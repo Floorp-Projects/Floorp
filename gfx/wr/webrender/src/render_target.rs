@@ -47,12 +47,6 @@ pub enum RenderTargetKind {
     Alpha, // R8
 }
 
-/// Identifies a given `RenderTarget` in a `RenderTargetList`.
-#[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct RenderTargetIndex(pub usize);
-
 pub struct RenderTargetContext<'a, 'rc> {
     pub global_device_pixel_scale: DevicePixelScale,
     pub prim_store: &'a PrimitiveStore,
