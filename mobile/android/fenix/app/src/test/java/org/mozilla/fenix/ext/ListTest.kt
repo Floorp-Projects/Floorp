@@ -4,16 +4,22 @@
 
 package org.mozilla.fenix.ext
 
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.library.downloads.DownloadItem
 import java.io.File
 
 class ListTest {
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     @Test
-    fun `Test download in list but not on disk removed from list`() {
+    fun `Test download in list but not on disk removed from list`() = runTest {
         val filePath1 = "filepath.txt"
         val filePath3 = "filepath3.txt"
 
@@ -29,7 +35,7 @@ class ListTest {
             url = "url",
             fileName = "filepath.txt",
             filePath = filePath1,
-            size = "71 Mb",
+            formattedSize = "71 Mb",
             contentType = "Image/png",
             status = DownloadState.Status.COMPLETED,
         )
@@ -38,7 +44,7 @@ class ListTest {
             url = "url",
             fileName = "filepath2.txt",
             filePath = "filepath2.txt",
-            size = "71 Mb",
+            formattedSize = "71 Mb",
             contentType = "Image/png",
             status = DownloadState.Status.COMPLETED,
         )
@@ -47,7 +53,7 @@ class ListTest {
             url = "url",
             fileName = "filepath3.txt",
             filePath = filePath3,
-            size = "71 Mb",
+            formattedSize = "71 Mb",
             contentType = "Image/png",
             status = DownloadState.Status.COMPLETED,
         )
@@ -55,7 +61,7 @@ class ListTest {
         val testList = mutableListOf(item1, item2, item3)
         val comparisonList: MutableList<DownloadItem> = mutableListOf(item1, item3)
 
-        val resultList = testList.filterNotExistsOnDisk()
+        val resultList = testList.filterExistsOnDisk(coroutinesTestRule.testDispatcher)
 
         assertEquals(comparisonList, resultList)
 
@@ -65,7 +71,7 @@ class ListTest {
     }
 
     @Test
-    fun `Test download in list and on disk remain in list`() {
+    fun `Test download in list and on disk remain in list`() = runTest {
         val filePath1 = "filepath.txt"
         val filePath2 = "filepath.txt"
         val filePath3 = "filepath3.txt"
@@ -84,7 +90,7 @@ class ListTest {
             url = "url",
             fileName = "filepath.txt",
             filePath = filePath1,
-            size = "71 Mb",
+            formattedSize = "71 Mb",
             contentType = "text/plain",
             status = DownloadState.Status.COMPLETED,
         )
@@ -93,7 +99,7 @@ class ListTest {
             url = "url",
             fileName = "filepath2.txt",
             filePath = filePath2,
-            size = "71 Mb",
+            formattedSize = "71 Mb",
             contentType = "text/plain",
             status = DownloadState.Status.COMPLETED,
         )
@@ -102,7 +108,7 @@ class ListTest {
             url = "url",
             fileName = "filepath3.txt",
             filePath = filePath3,
-            size = "71 Mb",
+            formattedSize = "71 Mb",
             contentType = "text/plain",
             status = DownloadState.Status.COMPLETED,
         )
@@ -110,7 +116,7 @@ class ListTest {
         val testList = mutableListOf(item1, item2, item3)
         val comparisonList: MutableList<DownloadItem> = mutableListOf(item1, item2, item3)
 
-        val resultList = testList.filterNotExistsOnDisk()
+        val resultList = testList.filterExistsOnDisk(coroutinesTestRule.testDispatcher)
 
         assertEquals(comparisonList, resultList)
 

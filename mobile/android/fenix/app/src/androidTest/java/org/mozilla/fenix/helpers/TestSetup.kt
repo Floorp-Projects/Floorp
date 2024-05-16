@@ -78,6 +78,8 @@ open class TestSetup {
             if (Locale.getDefault() != Locale.US) {
                 AppAndSystemHelper.setSystemLocale(Locale.US)
             }
+            // Clear the downloads folder after each test even if the test fails.
+            AppAndSystemHelper.clearDownloadsFolder()
         }
     }
 }

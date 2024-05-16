@@ -4,13 +4,14 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.downloadRobot
 
@@ -27,7 +28,10 @@ class DownloadFileTypesTest(fileName: String) : TestSetup() {
     private var downloadFile: String = fileName
 
     @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
+    val activityTestRule =
+        AndroidComposeTestRule(
+            HomeActivityTestRule.withDefaultSettingsOverrides(),
+        ) { it.activity }
 
     companion object {
         // Creating test data. The test will take each file name as a parameter and run it individually.
@@ -55,10 +59,8 @@ class DownloadFileTypesTest(fileName: String) : TestSetup() {
             verifyDownloadCompleteNotificationPopup()
         }.closeDownloadPrompt {
         }.openThreeDotMenu {
-        }.openDownloadsManager {
-            waitForDownloadsListToExist()
-            verifyDownloadedFileName(downloadFile)
-            verifyDownloadedFileIcon()
+        }.openDownloadsManager(activityTestRule) {
+            verifyDownloadedFileExistsInDownloadsList(downloadFile)
         }.exitDownloadsManagerToBrowser { }
     }
 }

@@ -16,7 +16,7 @@ class DownloadFragmentStoreTest {
         url = "url",
         fileName = "title",
         filePath = "url",
-        size = "77",
+        formattedSize = "77",
         contentType = "jpg",
         status = DownloadState.Status.COMPLETED,
     )
@@ -25,7 +25,7 @@ class DownloadFragmentStoreTest {
         url = "url",
         fileName = "title",
         filePath = "url",
-        size = "77",
+        formattedSize = "77",
         contentType = "jpg",
         status = DownloadState.Status.COMPLETED,
     )
@@ -51,6 +51,28 @@ class DownloadFragmentStoreTest {
             store.state.mode,
             DownloadFragmentState.Mode.Editing(setOf(newDownloadItem)),
         )
+    }
+
+    @Test
+    fun allItemsAddedForRemoval() = runTest {
+        val initialState = DownloadFragmentState(
+            items = listOf(downloadItem, newDownloadItem),
+            mode = DownloadFragmentState.Mode.Normal,
+            pendingDeletionIds = emptySet(),
+            isDeletingItems = false,
+        )
+        val store = DownloadFragmentStore(initialState)
+
+        store.dispatch(DownloadFragmentAction.AddAllItemsForRemoval).join()
+
+        val expected = DownloadFragmentState(
+            items = listOf(downloadItem, newDownloadItem),
+            mode = DownloadFragmentState.Mode.Editing(setOf(downloadItem, newDownloadItem)),
+            pendingDeletionIds = emptySet(),
+            isDeletingItems = false,
+        )
+
+        assertEquals(expected, store.state)
     }
 
     @Test

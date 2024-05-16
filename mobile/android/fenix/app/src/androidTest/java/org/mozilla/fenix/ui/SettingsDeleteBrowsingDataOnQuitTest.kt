@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui
 
 import android.Manifest
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.rule.GrantPermissionRule
@@ -33,8 +34,11 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *
  */
 class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
-    @get:Rule
+
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
+
+    @get:Rule
+    val composeTestRule = AndroidComposeTestRule(activityTestRule) { it.activity }
 
     // Automatically allows app permissions, avoiding a system dialog showing up.
     @get:Rule
@@ -185,7 +189,7 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
         restartApp(activityTestRule)
         homeScreen {
         }.openThreeDotMenu {
-        }.openDownloadsManager {
+        }.openDownloadsManager(composeTestRule) {
             verifyEmptyDownloadsList()
         }
     }
