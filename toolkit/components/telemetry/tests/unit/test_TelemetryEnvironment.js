@@ -712,6 +712,64 @@ add_task(async function test_addons() {
   await addon.uninstall();
 });
 
+add_task(async function test_signedTheme() {
+  AddonTestUtils.useRealCertChecks = true;
+
+  const { PKCS7_WITH_SHA1, COSE_WITH_SHA256 } = Ci.nsIAppSignatureInfo;
+
+  const ADDON_THEME_INSTALL_URL = gDataRoot + "webext-implicit-id.xpi";
+  const ADDON_THEME_ID = "{46607a7b-1b2a-40ce-9afe-91cda52c46a6}";
+
+  // Install the theme.
+  let deferred = Promise.withResolvers();
+  TelemetryEnvironment.registerChangeListener(
+    "test_signedAddon",
+    deferred.resolve
+  );
+  let theme = await installXPIFromURL(ADDON_THEME_INSTALL_URL);
+  await theme.enable();
+  ok(theme.isActive, "Theme should be active");
+
+  // Install an extension to force the telemetry environment to be
+  // updated (currently theme add-ons changes do not seem to be
+  // notified as changes, see EnvironmentAddonBuilder _updateAddons
+  // method for how changes to the environment.addons property are
+  // being detected).
+  const ADDON_INSTALL_URL = gDataRoot + "amosigned.xpi";
+  let addon = await installXPIFromURL(ADDON_INSTALL_URL);
+
+  await deferred.promise;
+  TelemetryEnvironment.unregisterChangeListener("test_signedAddon");
+
+  let data = TelemetryEnvironment.currentEnvironment;
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
+
+  // Check signedState and signedTypes on active theme data
+  // (NOTE: other properties of active theme are technically
+  // not covered by any other test task in this xpcshell test).
+  Assert.equal(
+    data.addons.theme.id,
+    ADDON_THEME_ID,
+    "Theme should be in the environment."
+  );
+  Assert.equal(
+    data.addons.theme.signedState,
+    AddonManager.SIGNEDSTATE_SIGNED,
+    "Got expected signedState on activeTheme"
+  );
+  Assert.equal(
+    data.addons.theme.signedTypes,
+    JSON.stringify([COSE_WITH_SHA256, PKCS7_WITH_SHA1]),
+    "Got expected signedTypes on activeTheme"
+  );
+
+  AddonTestUtils.useRealCertChecks = false;
+  await addon.startupPromise;
+  await addon.uninstall();
+  await theme.startupPromise;
+  await theme.uninstall();
+});
+
 add_task(async function test_signedAddon() {
   AddonTestUtils.useRealCertChecks = true;
 
