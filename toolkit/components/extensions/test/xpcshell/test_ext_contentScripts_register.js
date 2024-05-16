@@ -788,10 +788,24 @@ add_task(async function test_contentscripts_register_cookieStoreId() {
     const script = policy.contentScripts[contentScriptIndex];
 
     deepEqual(script.originAttributesPatterns, originAttributesPatternExpected);
+
+    info("Loading initial page to preload styles and scripts");
     let contentPage = await ExtensionTestUtils.loadContentPage(
-      `about:blank`,
+      `${BASE_URL}/file_sample_registered_styles.html`,
       contentPageOptions
     );
+    // Because the scripts have been registered independently, there is no
+    // guarantee that the CSS has applied before the JS executes. So we discard
+    // the initial result (under the assumption that the result may be unstable
+    // due to the styles still loading when we run the JS).
+    await extension.awaitMessage("registered-styles-results");
+
+    // Now that we have triggered compilation and caching of the CSS and JS,
+    // reload the page, with the expectation of getting stable results:
+    // once compiled, the styles apply immediately and there should not be any
+    // intermittent test failures due to missing CSS.
+
+    info("Loading page again, to verify CSS and JS");
     await contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
 
     let registeredStylesResults = await extension.awaitMessage(
