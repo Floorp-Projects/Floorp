@@ -335,7 +335,7 @@ class Nursery {
 
   bool canCreateAllocSite() { return pretenuringNursery.canCreateAllocSite(); }
   void noteAllocSiteCreated() { pretenuringNursery.noteAllocSiteCreated(); }
-  bool reportPretenuring() const { return reportPretenuring_; }
+  bool reportPretenuring() const { return pretenuringReportFilter_.enabled; }
   void maybeStopPretenuring(gc::GCRuntime* gc) {
     pretenuringNursery.maybeStopPretenuring(gc);
   }
@@ -648,8 +648,7 @@ class Nursery {
 
   // Whether to report information on pretenuring, and if so the allocation
   // threshold at which to report details of each allocation site.
-  bool reportPretenuring_;
-  size_t reportPretenuringThreshold_;
+  gc::AllocSiteFilter pretenuringReportFilter_;
 
   // Whether and why a collection of this nursery has been requested. When this
   // happens |prevPosition_| is set to the current position and |position_| set
