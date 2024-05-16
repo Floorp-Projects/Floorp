@@ -141,10 +141,10 @@ async function testUpdateDoesNotDownload() {
   );
   let update = result.updates[0];
 
-  let downloadStarted = await gAUS.downloadUpdate(update, true);
+  let downloadResult = await gAUS.downloadUpdate(update, true);
   Assert.equal(
-    downloadStarted,
-    false,
+    downloadResult,
+    Ci.nsIApplicationUpdateService.DOWNLOAD_FAILURE_GENERIC,
     "Expected that we would not start downloading an update"
   );
 

@@ -386,6 +386,12 @@ interface nsIUpdateChecker : nsISupports
 [scriptable, uuid(7f39bc95-eaf8-4adc-990b-0fc0734f85fa)]
 interface nsIApplicationUpdateServiceInternal : nsISupports
 {
+  /**
+   * This is identical to the corresponding function in
+   * `nsIApplicationUpdateService`, but this version does not ensure the update
+   * system has been initialized before being called.
+   */
+  Promise downloadUpdate(in nsIUpdate update);
 };
 
 /**
@@ -437,13 +443,27 @@ interface nsIApplicationUpdateService : nsISupports
   void removeDownloadListener(in nsIRequestObserver listener);
 
   /**
+   * The below are the possible return values for `downloadUpdate()`.
+   */
+  // An update download was started.
+  const long DOWNLOAD_SUCCESS                                             = 1;
+  // The update download is already in-progress but it is using a download
+  // method that we can't use in the background and Firefox is currently running
+  // as a background task.
+  const long DOWNLOAD_FAILURE_CANNOT_RESUME_IN_BACKGROUND                 = 2;
+  // The update download cannot be started for a reason that doesn't have a more
+  // specific failure code.
+  const long DOWNLOAD_FAILURE_GENERIC                                     = 3;
+
+  /**
    * Starts downloading the update passed. Once the update is downloaded, it
    * will automatically be prepared for installation.
    *
    * @param   update
    *          The update to download.
-   * @returns A promise that resolves to `true` if an update download was
-   *          started, otherwise `false.
+   * @returns A promise that resolves with the integer value of one of the
+   *          `DOWNLOAD_*` constants above indicating whether or not the
+   *          download was started.
    */
   Promise downloadUpdate(in nsIUpdate update);
 
