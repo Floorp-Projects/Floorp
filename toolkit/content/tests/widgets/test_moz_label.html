@@ -35,6 +35,11 @@
     For the nested button:
     <button>Click me too</button>
   </label>
+
+  <label is="moz-label" shownaccesskey="t" class="test-shownaccesskey">
+    Shownaccesskey highlights the key
+    <input type="checkbox" />
+  </label>
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript">
@@ -68,7 +73,7 @@
 
   add_task(async function testAccesskeyUnderlined() {
     labels.forEach(label => {
-      let accessKey = label.getAttribute("accesskey");
+      let accessKey = label.getAttribute("accesskey") || label.getAttribute("shownaccesskey");
       let wrapper = label.querySelector(".accesskey");
       is(wrapper.textContent, accessKey, "The accesskey character is wrapped.")
 
@@ -80,6 +85,9 @@
   add_task(async function testAccesskeyFocus() {
     labels.forEach(label => {
       let accessKey = label.getAttribute("accesskey");
+      if (!accessKey) {
+        return;
+      }
       // Find the labelled element via the "for" attr if there's an ID
       // association, or select the lastElementChild for nested elements
       let element = document.getElementById(label.getAttribute("for")) || label.lastElementChild;
@@ -135,6 +143,16 @@
     input.disabled = true;
     synthesizeMouseAtCenter(label, {});
     ok(input.checked, "The associated input is still checked.")
+  });
+
+  add_task(async function testShownaccesskey() {
+    let label = [...labels].find(l => l.classList.contains("test-shownaccesskey"));
+    let input = label.querySelector("input");
+    is(input.checked, false, "The associated input is not checked.")
+
+    // Input state changes on label click.
+    performAccessKey("t");
+    is(input.checked, false, "The associated input is not triggered by accesskey.")
   });
 </script>
 </pre>
