@@ -5982,6 +5982,11 @@ void ScrollContainerFrame::PostOverflowEvent() {
     return;
   }
 
+  if (!nsContentUtils::IsChromeDoc(PresContext()->Document()) &&
+      !StaticPrefs::layout_overflow_underflow_content_enabled()) {
+    return;
+  }
+
   OverflowState overflowState = GetOverflowState();
 
   bool newVerticalOverflow = !!(overflowState & OverflowState::Vertical);
