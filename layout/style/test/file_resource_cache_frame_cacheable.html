@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Load redirecting CSS</title>
+</head>
+<body>
+hello
+<script>
+var us = window.location.href;
+var baseURL = us.substring(0, us.lastIndexOf('/') + 1);
+var serverFilename = "file_resource_cache_server.sjs";
+
+const s = document.createElement("link");
+s.setAttribute("rel", "stylesheet");
+s.setAttribute("type", "text/css");
+s.href = baseURL + serverFilename + "?redirect-cache";
+document.head.append(s);
+</script>
+</body>
+</html>
