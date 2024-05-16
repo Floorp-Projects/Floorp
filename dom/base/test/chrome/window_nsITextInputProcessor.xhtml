@@ -3648,6 +3648,125 @@ async function runKeyTests()
   window.removeEventListener("keyup", handler);
 }
 
+function runInsertTextWithKeyPressTests() {
+  const description = "runInsertTextWithKeyPressTests(): ";
+
+  var TIP = createTIP();
+  ok(TIP.beginInputTransactionForTests(window),
+     description + "TIP.beginInputTransactionForTests() should succeed");
+
+  input.value = "";
+  input.focus();
+
+  let events = [];
+  function handler(aEvent) {
+    events.push({
+      type: aEvent.type,
+      key: aEvent.key,
+      code: aEvent.code,
+      shiftKey: aEvent.shiftKey,
+      altKey: aEvent.altKey,
+      ctrlKey: aEvent.ctrlKey,
+      metaKey: aEvent.metaKey,
+    });
+  }
+  function stringifyEvents(aEvents) {
+    if (!aEvents.length) {
+      return "[]";
+    }
+    function stringifyEvent(aEvent) {
+      return `{ type: "${aEvent.type}", key: "${aEvent.key}", code: ${aEvent.code}, shiftKey: ${
+          aEvent.shiftKey
+        }, altKey: ${aEvent.altKey}, ctrlKey: ${aEvent.ctrlKey}, metaKey: ${aEvent.metaKey}}`;
+    }
+    let result = "";
+    for (const event of aEvents) {
+      if (result == "") {
+        result = "[ ";
+      } else {
+        result += ", ";
+      }
+      result += stringifyEvent(event);
+    }
+    return result + " ]";
+  }
+  window.addEventListener("keydown", handler);
+  window.addEventListener("keypress", handler);
+  window.addEventListener("keyup", handler);
+
+  events = [];
+  input.value = "";
+  TIP.insertTextWithKeyPress("X");
+  is(
+    input.value,
+    "X",
+    `${description}insertTextWithKeyPress without optional args should cause inserting the string`
+  );
+  is(
+    stringifyEvents(events),
+    stringifyEvents([
+      { type: "keypress", key: "X", code: "", shiftKey: false, altKey: false, ctrlKey: false, metaKey: false },
+    ]),
+    `${description}insertTextWithPress without optional args should cause only a "keypress" event`
+  );
+
+  events = [];
+  input.value = "";
+  TIP.insertTextWithKeyPress("Y", new KeyboardEvent("keydown", {key: "Alt", code: "AltLeft"}));
+  is(
+    input.value,
+    "Y",
+    `${description}insertTextWithKeyPress with Alt keydown event should cause inserting the string`
+  );
+  // The key value should be the inserted string and the code value should be same as the source event's.
+  is(
+    stringifyEvents(events),
+    stringifyEvents([
+      { type: "keypress", key: "Y", code: "AltLeft", shiftKey: false, altKey: false, ctrlKey: false, metaKey: false },
+    ]),
+    `${description}insertTextWithKeyPress with Alt keydown event should cause only a "keypress" event whose code is "AltLeft"`
+  );
+
+  events = [];
+  input.value = "";
+  TIP.insertTextWithKeyPress("Z", new KeyboardEvent("keydown", {key: "Alt", code: "AltLeft", altKey: true}));
+  is(
+    input.value,
+    "Z",
+    `${description}insertTextWithKeyPress with Alt keydown whose altKey is true should cause inserting the string`
+  );
+  // TIP should use its internal modifier state instead of specified modifier state.
+  is(
+    stringifyEvents(events),
+    stringifyEvents([
+      { type: "keypress", key: "Z", code: "AltLeft", shiftKey: false, altKey: false, ctrlKey: false, metaKey: false },
+    ]),
+    `${description}insertTextWithKeyPress with Alt keydown whose altKey is true should cause only a "keypress" event whose altKey is false"`
+  );
+
+  TIP.keydown(new KeyboardEvent("keydown", { key: "Alt" }));
+  events = [];
+  input.value = "";
+  TIP.insertTextWithKeyPress("X", new KeyboardEvent("keydown", {key: "Shift", code: "ShiftLeft", shiftKey: true}));
+  is(
+    input.value,
+    kIsMac ? "X" : "",
+    `${description}insertTextWithKeyPress after Alt keydown should${kIsMac ? "" : " not"} cause inserting the string`
+  );
+  is(
+    stringifyEvents(events),
+    stringifyEvents([
+      { type: "keypress", key: "X", code: "ShiftLeft", shiftKey: false, altKey: true, ctrlKey: false, metaKey: false },
+    ]),
+    `${description}insertTextWithPress after Alt keydown should cause only a "keypress" event whose altKey is true"`
+  );
+  TIP.keyup(new KeyboardEvent("keyup ", { key: "Alt" }));
+
+  window.removeEventListener("keydown", handler);
+  window.removeEventListener("keypress", handler);
+  window.removeEventListener("keyup", handler);
+}
+
 function runErrorTests()
 {
   var description = "runErrorTests(): ";
@@ -4854,6 +4973,7 @@ async function runTests()
   runCompositionWithKeyEventTests();
   runConsumingKeydownBeforeCompositionTests();
   await runKeyTests();
+  runInsertTextWithKeyPressTests();
   runErrorTests();
   runCommitCompositionTests();
   await runCallbackTests(false);
