@@ -233,8 +233,6 @@ js::Nursery::Nursery(GCRuntime* gc)
       canAllocateStrings_(true),
       canAllocateBigInts_(true),
       reportDeduplications_(false),
-      reportPretenuring_(false),
-      reportPretenuringThreshold_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
       prevPosition_(0),
       hasRecentGrowthData(false),
@@ -278,22 +276,15 @@ static bool GetBoolEnvVar(const char* name, const char* helpMessage) {
 }
 
 static void ReadReportPretenureEnv(const char* name, const char* helpMessage,
-                                   bool* enabled, size_t* threshold) {
-  *enabled = false;
-  *threshold = 0;
-
+                                   AllocSiteFilter* filter) {
   const char* env = GetEnvVar(name, helpMessage);
   if (!env) {
     return;
   }
 
-  char* end;
-  *threshold = strtol(env, &end, 10);
-  if (end == env || *end) {
+  if (!AllocSiteFilter::readFromString(env, filter)) {
     PrintAndExit(helpMessage);
   }
-
-  *enabled = true;
 }
 
 bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
@@ -308,10 +299,27 @@ bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
 
   ReadReportPretenureEnv(
       "JS_GC_REPORT_PRETENURE",
-      "JS_GC_REPORT_PRETENURE=N\n"
+      "JS_GC_REPORT_PRETENURE=FILTER\n"
       "\tAfter a minor GC, report information about pretenuring, including\n"
-      "\tallocation sites with at least N allocations.\n",
-      &reportPretenuring_, &reportPretenuringThreshold_);
+      "\tallocation sites which match the filter specification. This is comma\n"
+      "\tseparated list of one or more elements which can include:\n"
+      "\t\tinteger N:    report sites with at least N allocations\n"
+      "\t\t'normal':     report normal sites used for pretenuring\n"
+      "\t\t'unknown':    report catch-all sites for allocations without a\n"
+      "\t\t              specific site associated with them\n"
+      "\t\t'optimized':  report catch-all sites for allocations from\n"
+      "\t\t              optimized JIT code\n"
+      "\t\t'missing':    report automatically generated missing sites\n"
+      "\t\t'object':     report sites associated with JS objects\n"
+      "\t\t'string':     report sites associated with JS strings\n"
+      "\t\t'bigint':     report sites associated with JS big ints\n"
+      "\t\t'longlived':  report sites in the LongLived state (ignored for\n"
+      "\t\t              catch-all sites)\n"
+      "\t\t'shortlived': report sites in the ShortLived state (ignored for\n"
+      "\t\t              catch-all sites)\n"
+      "\tFilters of the same kind are combined with OR and of different kinds\n"
+      "\twith AND. Prefixes of the keywords above are accepted.\n",
+      &pretenuringReportFilter_);
 
   decommitTask = MakeUnique<NurseryDecommitTask>(gc);
   if (!decommitTask) {
@@ -1665,8 +1673,7 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
                                   bool validPromotionRate,
                                   double promotionRate) {
   size_t sitesPretenured = pretenuringNursery.doPretenuring(
-      gc, reason, validPromotionRate, promotionRate, reportPretenuring_,
-      reportPretenuringThreshold_);
+      gc, reason, validPromotionRate, promotionRate, pretenuringReportFilter_);
 
   size_t zonesWhereStringsDisabled = 0;
   size_t zonesWhereBigIntsDisabled = 0;
@@ -1700,12 +1707,12 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
   stats().setStat(gcstats::STAT_STRINGS_TENURED, numStringsTenured);
   stats().setStat(gcstats::STAT_BIGINTS_TENURED, numBigIntsTenured);
 
-  if (reportPretenuring_ && zonesWhereStringsDisabled) {
+  if (reportPretenuring() && zonesWhereStringsDisabled) {
     fprintf(stderr,
             "Pretenuring disabled nursery string allocation in %zu zones\n",
             zonesWhereStringsDisabled);
   }
-  if (reportPretenuring_ && zonesWhereBigIntsDisabled) {
+  if (reportPretenuring() && zonesWhereBigIntsDisabled) {
     fprintf(stderr,
             "Pretenuring disabled nursery big int allocation in %zu zones\n",
             zonesWhereBigIntsDisabled);

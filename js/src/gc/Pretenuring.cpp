@@ -81,8 +81,8 @@ bool PretenuringNursery::canCreateAllocSite() {
 
 size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
                                          bool validPromotionRate,
-                                         double promotionRate, bool reportInfo,
-                                         size_t reportThreshold) {
+                                         double promotionRate,
+                                         const AllocSiteFilter& reportFilter) {
   size_t sitesActive = 0;
   size_t sitesPretenured = 0;
   size_t sitesInvalidated = 0;
@@ -111,7 +111,7 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
     }
   }
 
-  if (reportInfo) {
+  if (reportFilter.enabled) {
     AllocSite::printInfoHeader(gc, reason, promotionRate);
   }
 
@@ -124,8 +124,8 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
     if (site->isNormal()) {
       sitesActive++;
       updateTotalAllocCounts(site);
-      auto result = site->processSite(gc, NormalSiteAttentionThreshold,
-                                      reportInfo, reportThreshold);
+      auto result =
+          site->processSite(gc, NormalSiteAttentionThreshold, reportFilter);
       if (result == AllocSite::WasPretenured ||
           result == AllocSite::WasPretenuredAndInvalidated) {
         sitesPretenured++;
@@ -139,7 +139,7 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
     } else if (site->isMissing()) {
       sitesActive++;
       updateTotalAllocCounts(site);
-      site->processMissingSite(reportInfo, reportThreshold);
+      site->processMissingSite(reportFilter);
     }
 
     site = next;
@@ -152,16 +152,14 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
     for (auto& site : zone->pretenuring.unknownAllocSites) {
       updateTotalAllocCounts(&site);
       if (site.traceKind() == JS::TraceKind::Object) {
-        site.processCatchAllSite(reportInfo, reportThreshold);
+        site.processCatchAllSite(reportFilter);
       } else {
-        site.processSite(gc, UnknownSiteAttentionThreshold, reportInfo,
-                         reportThreshold);
+        site.processSite(gc, UnknownSiteAttentionThreshold, reportFilter);
       }
       // Result checked in Nursery::doPretenuring.
     }
     updateTotalAllocCounts(zone->optimizedAllocSite());
-    zone->optimizedAllocSite()->processCatchAllSite(reportInfo,
-                                                    reportThreshold);
+    zone->optimizedAllocSite()->processCatchAllSite(reportFilter);
 
     // The data from the promoted alloc sites is never used so clear them here.
     for (AllocSite& site : zone->pretenuring.promotedAllocSites) {
@@ -169,7 +167,7 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
     }
   }
 
-  if (reportInfo) {
+  if (reportFilter.enabled) {
     AllocSite::printInfoFooter(allocSitesCreated, sitesActive, sitesPretenured,
                                sitesInvalidated);
     if (zonesWithHighNurserySurvival) {
@@ -183,10 +181,9 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
   return sitesPretenured;
 }
 
-AllocSite::SiteResult AllocSite::processSite(GCRuntime* gc,
-                                             size_t attentionThreshold,
-                                             bool reportInfo,
-                                             size_t reportThreshold) {
+AllocSite::SiteResult AllocSite::processSite(
+    GCRuntime* gc, size_t attentionThreshold,
+    const AllocSiteFilter& reportFilter) {
   MOZ_ASSERT(isNormal() || isUnknown());
   MOZ_ASSERT(nurseryAllocCount >= nurseryPromotedCount);
 
@@ -219,7 +216,7 @@ AllocSite::SiteResult AllocSite::processSite(GCRuntime* gc,
     }
   }
 
-  if (reportInfo && allocCount() >= reportThreshold) {
+  if (reportFilter.matches(*this)) {
     printInfo(hasPromotionRate, promotionRate, wasInvalidated);
   }
 
@@ -228,7 +225,7 @@ AllocSite::SiteResult AllocSite::processSite(GCRuntime* gc,
   return result;
 }
 
-void AllocSite::processMissingSite(bool reportInfo, size_t reportThreshold) {
+void AllocSite::processMissingSite(const AllocSiteFilter& reportFilter) {
   MOZ_ASSERT(isMissing());
   MOZ_ASSERT(nurseryAllocCount >= nurseryPromotedCount);
 
@@ -246,21 +243,21 @@ void AllocSite::processMissingSite(bool reportInfo, size_t reportThreshold) {
     updateStateOnMinorGC(promotionRate);
   }
 
-  if (reportInfo && allocCount() >= reportThreshold) {
+  if (reportFilter.matches(*this)) {
     printInfo(hasPromotionRate, promotionRate, false);
   }
 
   resetNurseryAllocations();
 }
 
-void AllocSite::processCatchAllSite(bool reportInfo, size_t reportThreshold) {
+void AllocSite::processCatchAllSite(const AllocSiteFilter& reportFilter) {
   MOZ_ASSERT(isUnknown() || isOptimized());
 
   if (!hasNurseryAllocations()) {
     return;
   }
 
-  if (reportInfo && allocCount() >= reportThreshold) {
+  if (reportFilter.matches(*this)) {
     printInfo(false, 0.0, false);
   }
 
@@ -574,6 +571,78 @@ const char* AllocSite::stateName() const {
   }
 
   MOZ_CRASH("Unknown state");
+}
+
+static bool StringIsPrefix(const CharRange& prefix, const char* whole) {
+  MOZ_ASSERT(prefix.length() != 0);
+  return strncmp(prefix.begin().get(), whole, prefix.length()) == 0;
+}
+
+/* static */
+bool AllocSiteFilter::readFromString(const char* string,
+                                     AllocSiteFilter* filter) {
+  *filter = AllocSiteFilter();
+
+  CharRangeVector parts;
+  if (!SplitStringBy(string, ',', &parts)) {
+    MOZ_CRASH("OOM parsing AllocSiteFilter");
+  }
+
+  for (const auto& part : parts) {
+    if (StringIsPrefix(part, "normal")) {
+      filter->siteKindMask |= 1 << size_t(AllocSite::Kind::Normal);
+    } else if (StringIsPrefix(part, "unknown")) {
+      filter->siteKindMask |= 1 << size_t(AllocSite::Kind::Unknown);
+    } else if (StringIsPrefix(part, "optimized")) {
+      filter->siteKindMask |= 1 << size_t(AllocSite::Kind::Optimized);
+    } else if (StringIsPrefix(part, "missing")) {
+      filter->siteKindMask |= 1 << size_t(AllocSite::Kind::Missing);
+    } else if (StringIsPrefix(part, "object")) {
+      filter->traceKindMask |= 1 << size_t(JS::TraceKind::Object);
+    } else if (StringIsPrefix(part, "string")) {
+      filter->traceKindMask |= 1 << size_t(JS::TraceKind::String);
+    } else if (StringIsPrefix(part, "bigint")) {
+      filter->traceKindMask |= 1 << size_t(JS::TraceKind::BigInt);
+    } else if (StringIsPrefix(part, "longlived")) {
+      filter->stateMask |= 1 << size_t(AllocSite::State::LongLived);
+    } else if (StringIsPrefix(part, "shortlived")) {
+      filter->stateMask |= 1 << size_t(AllocSite::State::ShortLived);
+    } else {
+      char* end;
+      filter->allocThreshold = strtol(part.begin().get(), &end, 10);
+      if (end < part.end().get()) {
+        return false;
+      }
+    }
+  }
+
+  filter->enabled = true;
+
+  return true;
+}
+
+template <typename Enum>
+static bool MaskFilterMatches(uint8_t mask, Enum value) {
+  static_assert(std::is_enum_v<Enum>);
+
+  if (mask == 0) {
+    return true;  // Match if filter not specified.
+  }
+
+  MOZ_ASSERT(size_t(value) < 8);
+  uint8_t bit = 1 << size_t(value);
+  return (mask & bit) != 0;
+}
+
+bool AllocSiteFilter::matches(const AllocSite& site) const {
+  // The state is not relevant for other kinds so skip filter.
+  bool matchState = site.isNormal() || site.isMissing();
+
+  return enabled &&
+         (allocThreshold == 0 || site.allocCount() >= allocThreshold) &&
+         MaskFilterMatches(siteKindMask, site.kind()) &&
+         MaskFilterMatches(traceKindMask, site.traceKind()) &&
+         (!matchState || MaskFilterMatches(stateMask, site.state()));
 }
 
 #ifdef JS_GC_ZEAL
