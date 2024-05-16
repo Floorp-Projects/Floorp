@@ -66,18 +66,13 @@ import org.mozilla.gecko.util.WebAuthnUtils;
     }
   }
 
-  public static GeckoResult<WebAuthnUtils.MakeCredentialResponse> makeCredential(
+  private static PublicKeyCredentialCreationOptions getRequestOptionsForMakeCredential(
       final GeckoBundle credentialBundle,
       final byte[] userId,
       final byte[] challenge,
       final WebAuthnUtils.WebAuthnPublicCredential[] excludeList,
       final GeckoBundle authenticatorSelection,
       final GeckoBundle extensions) {
-    if (!credentialBundle.containsKey("isWebAuthn")) {
-      // FIDO U2F not supported by Android (for us anyway) at this time
-      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("NOT_SUPPORTED_ERR"));
-    }
-
     final PublicKeyCredentialCreationOptions.Builder requestBuilder =
         new PublicKeyCredentialCreationOptions.Builder();
 
@@ -156,18 +151,34 @@ import org.mozilla.gecko.util.WebAuthnUtils;
             credentialBundle.getString("rpName", ""),
             /* deprecated rpIcon field */ "");
 
+    return requestBuilder
+        .setUser(user)
+        .setAttestationConveyancePreference(pref)
+        .setAuthenticatorSelection(sel)
+        .setAuthenticationExtensions(ext)
+        .setChallenge(challenge)
+        .setRp(rp)
+        .setParameters(params)
+        .setTimeoutSeconds(credentialBundle.getLong("timeoutMS") / 1000.0)
+        .setExcludeList(excludedList)
+        .build();
+  }
+
+  public static GeckoResult<WebAuthnUtils.MakeCredentialResponse> makeCredential(
+      final GeckoBundle credentialBundle,
+      final byte[] userId,
+      final byte[] challenge,
+      final WebAuthnUtils.WebAuthnPublicCredential[] excludeList,
+      final GeckoBundle authenticatorSelection,
+      final GeckoBundle extensions) {
+    if (!credentialBundle.containsKey("isWebAuthn")) {
+      // FIDO U2F not supported by Android (for us anyway) at this time
+      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("NOT_SUPPORTED_ERR"));
+    }
+
     final PublicKeyCredentialCreationOptions requestOptions =
-        requestBuilder
-            .setUser(user)
-            .setAttestationConveyancePreference(pref)
-            .setAuthenticatorSelection(sel)
-            .setAuthenticationExtensions(ext)
-            .setChallenge(challenge)
-            .setRp(rp)
-            .setParameters(params)
-            .setTimeoutSeconds(credentialBundle.getLong("timeoutMS") / 1000.0)
-            .setExcludeList(excludedList)
-            .build();
+        getRequestOptionsForMakeCredential(
+            credentialBundle, userId, challenge, excludeList, authenticatorSelection, extensions);
 
     final Uri origin = Uri.parse(credentialBundle.getString("origin"));
 
@@ -319,17 +330,11 @@ import org.mozilla.gecko.util.WebAuthnUtils;
     return new WebAuthnTokenManager.Exception(responseData.getErrorCode().name());
   }
 
-  private static GeckoResult<WebAuthnUtils.GetAssertionResponse> getAssertion(
+  private static PublicKeyCredentialRequestOptions getRequestOptionsForGetAssertion(
       final byte[] challenge,
       final WebAuthnUtils.WebAuthnPublicCredential[] allowList,
       final GeckoBundle assertionBundle,
       final GeckoBundle extensions) {
-
-    if (!assertionBundle.containsKey("isWebAuthn")) {
-      // FIDO U2F not supported by Android (for us anyway) at this time
-      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("NOT_SUPPORTED_ERR"));
-    }
-
     final List<PublicKeyCredentialDescriptor> allowedList =
         new ArrayList<PublicKeyCredentialDescriptor>();
     for (final WebAuthnUtils.WebAuthnPublicCredential cred : allowList) {
@@ -346,14 +351,28 @@ import org.mozilla.gecko.util.WebAuthnUtils;
     }
     final AuthenticationExtensions ext = extBuilder.build();
 
+    return new PublicKeyCredentialRequestOptions.Builder()
+        .setChallenge(challenge)
+        .setAllowList(allowedList)
+        .setTimeoutSeconds(assertionBundle.getLong("timeoutMS") / 1000.0)
+        .setRpId(assertionBundle.getString("rpId"))
+        .setAuthenticationExtensions(ext)
+        .build();
+  }
+
+  private static GeckoResult<WebAuthnUtils.GetAssertionResponse> getAssertion(
+      final byte[] challenge,
+      final WebAuthnUtils.WebAuthnPublicCredential[] allowList,
+      final GeckoBundle assertionBundle,
+      final GeckoBundle extensions) {
+
+    if (!assertionBundle.containsKey("isWebAuthn")) {
+      // FIDO U2F not supported by Android (for us anyway) at this time
+      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("NOT_SUPPORTED_ERR"));
+    }
+
     final PublicKeyCredentialRequestOptions requestOptions =
-        new PublicKeyCredentialRequestOptions.Builder()
-            .setChallenge(challenge)
-            .setAllowList(allowedList)
-            .setTimeoutSeconds(assertionBundle.getLong("timeoutMS") / 1000.0)
-            .setRpId(assertionBundle.getString("rpId"))
-            .setAuthenticationExtensions(ext)
-            .build();
+        getRequestOptionsForGetAssertion(challenge, allowList, assertionBundle, extensions);
 
     final Uri origin = Uri.parse(assertionBundle.getString("origin"));
     final BrowserPublicKeyCredentialRequestOptions browserOptions =
