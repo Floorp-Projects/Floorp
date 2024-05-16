@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SharedSubResourceCache with redirect</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<iframe id="frame" src="about:blank"></iframe>
+
+<script>
+const us = window.location.href;
+const baseURL = us.substring(0, us.lastIndexOf('/') + 1);
+const serverFilename = "file_resource_cache_server.sjs";
+const frame = document.getElementById("frame");
+
+gWindowUtils = SpecialPowers.getDOMWindowUtils(window);
+
+SimpleTest.waitForExplicitFinish();
+
+async function testReload({ src, clearCache, cacheable, desc }) {
+  // The iframe loads CSS with "file_resource_cache_server.sjs?redirect" URL.
+  // With the first access, it redirects to "file_resource_cache_server.sjs?red"
+  // that makes the body color "red".
+  //
+  // The redirect response has "Cache-Control: no-cache", and the request
+  // shouldn't be cached.
+  await new Promise(r => {
+    frame.addEventListener("load", r, { once: true });
+    frame.src = src;
+  });
+
+  is(frame.contentWindow.getComputedStyle(frame.contentDocument.body).color,
+     "rgb(255, 0, 0)",
+     `body color before reload with ${desc} should be red`);
+
+  if (clearCache) {
+    gWindowUtils.clearSharedStyleSheetCache();
+  }
+
+  // Reload the iframe and wait for reload.
+  //
+  // With the second access, "file_resource_cache_server.sjs?redirect" redirects
+  // to "file_resource_cache_server.sjs?blue" that makes the body color "blue".
+  await new Promise(r => {
+    frame.addEventListener("load", r, { once: true });
+    frame.contentWindow.location.reload();
+  });
+
+  if (cacheable) {
+    is(frame.contentWindow.getComputedStyle(frame.contentDocument.body).color,
+       "rgb(255, 0, 0)",
+       `body color after reload with ${desc} should be red`);
+  } else {
+    is(frame.contentWindow.getComputedStyle(frame.contentDocument.body).color,
+       "rgb(0, 0, 255)",
+       `body color after reload with ${desc} should be blue`);
+  }
+}
+
+async function reset() {
+  // Reset the server-side script state.
+  const resetResponse = await fetch(baseURL + serverFilename + "?reset");
+  is(await resetResponse.text(), "reset", "server side is reset");
+
+  // Reset the iframe.
+  await new Promise(r => {
+    frame.addEventListener("load", r, { once: true });
+    frame.src = "about:blank";
+  });
+
+  // Clear cache.
+  gWindowUtils.clearSharedStyleSheetCache();
+}
+
+async function doTest() {
+  await new Promise(r => window.addEventListener("load", r, { once: true }));
+
+  await testReload({
+    src: "file_resource_cache_frame_not_cacheable.html",
+    clearCache: true,
+    cacheable: false,
+    desc: "clearing SharedSubResourceCache for not-cacheable",
+  });
+
+  await reset();
+
+  await testReload({
+    src: "file_resource_cache_frame_not_cacheable.html",
+    clearCache: false,
+    cacheable: false,
+    desc: "not clearing SharedSubResourceCache for not-cacheable",
+  });
+
+  await reset();
+
+  await testReload({
+    src: "file_resource_cache_frame_cacheable.html",
+    clearCache: true,
+    cacheable: true,
+    desc: "clearing SharedSubResourceCache for cacheable",
+  });
+
+  await reset();
+
+  await testReload({
+    src: "file_resource_cache_frame_cacheable.html",
+    clearCache: false,
+    cacheable: true,
+    desc: "not clearing SharedSubResourceCache for cacheable",
+  });
+
+  SimpleTest.finish();
+}
+
+doTest();
+</script>
+</body>
+</html>

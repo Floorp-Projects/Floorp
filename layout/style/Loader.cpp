@@ -1260,6 +1260,15 @@ nsresult Loader::LoadSheetSyncInternal(SheetLoadData& aLoadData,
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   loadInfo->SetCspNonce(aLoadData.Nonce());
 
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIInterfaceRequestor> prevCallback;
+    channel->GetNotificationCallbacks(getter_AddRefs(prevCallback));
+    MOZ_ASSERT(!prevCallback);
+  }
+#endif
+  channel->SetNotificationCallbacks(streamLoader);
+
   nsCOMPtr<nsIInputStream> stream;
   rv = channel->Open(getter_AddRefs(stream));
 
@@ -1591,6 +1600,15 @@ nsresult Loader::LoadSheetAsyncInternal(SheetLoadData& aLoadData,
     net::PredictorLearn(aLoadData.mURI, mDocument->GetDocumentURI(),
                         nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, mDocument);
   }
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIInterfaceRequestor> prevCallback;
+    channel->GetNotificationCallbacks(getter_AddRefs(prevCallback));
+    MOZ_ASSERT(!prevCallback);
+  }
+#endif
+  channel->SetNotificationCallbacks(streamLoader);
 
   if (aEarlyHintPreloaderId) {
     nsCOMPtr<nsIHttpChannelInternal> channelInternal =
