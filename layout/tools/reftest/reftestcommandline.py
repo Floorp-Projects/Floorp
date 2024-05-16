@@ -386,7 +386,7 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                 return
 
         for test_path in options.tests:
-            for manifest_file, suite in manifests.iteritems():
+            for manifest_file, suite in manifests.items():
                 if os.path.exists(os.path.join(test_path, manifest_file)):
                     options.suite = suite
                     return
