@@ -39,6 +39,7 @@ RefPtr<InitPromise> WMFMediaDataEncoder::Init() {
                      &WMFMediaDataEncoder::ProcessInit);
 }
 RefPtr<EncodePromise> WMFMediaDataEncoder::Encode(const MediaData* aSample) {
+  WMF_ENC_LOGD("Encode ts=%s", aSample->mTime.ToString().get());
   MOZ_ASSERT(aSample);
 
   RefPtr<const VideoData> sample(aSample->As<const VideoData>());
@@ -48,6 +49,7 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::Encode(const MediaData* aSample) {
       std::move(sample));
 }
 RefPtr<EncodePromise> WMFMediaDataEncoder::Drain() {
+  WMF_ENC_LOGD("Drain");
   return InvokeAsync(mTaskQueue, __func__,
                      [self = RefPtr<WMFMediaDataEncoder>(this)]() {
                        nsTArray<RefPtr<IMFSample>> outputs;
@@ -58,6 +60,7 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::Drain() {
                      });
 }
 RefPtr<ShutdownPromise> WMFMediaDataEncoder::Shutdown() {
+  WMF_ENC_LOGD("Shutdown");
   return InvokeAsync(mTaskQueue, __func__,
                      [self = RefPtr<WMFMediaDataEncoder>(this)]() {
                        if (self->mEncoder) {
@@ -92,6 +95,8 @@ nsCString WMFMediaDataEncoder::GetDescriptionName() const {
 
 RefPtr<InitPromise> WMFMediaDataEncoder::ProcessInit() {
   AssertOnTaskQueue();
+
+  WMF_ENC_LOGD("ProcessInit");
 
   MOZ_ASSERT(!mEncoder,
              "Should not initialize encoder again without shutting down");
@@ -166,6 +171,8 @@ RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessEncode(
   AssertOnTaskQueue();
   MOZ_ASSERT(mEncoder);
   MOZ_ASSERT(aSample);
+
+  WMF_ENC_LOGD("ProcessEncode ts=%s", aSample->mTime.ToString().get());
 
   RefPtr<IMFSample> nv12 = ConvertToNV12InputSample(std::move(aSample));
   if (!nv12 || FAILED(mEncoder->PushInput(std::move(nv12)))) {
@@ -307,6 +314,9 @@ already_AddRefed<IMFSample> WMFMediaDataEncoder::ConvertToNV12InputSample(
 RefPtr<EncodePromise> WMFMediaDataEncoder::ProcessOutputSamples(
     nsTArray<RefPtr<IMFSample>>& aSamples) {
   EncodedData frames;
+
+  WMF_ENC_LOGD("ProcessOutputSamples: %zu frames", aSamples.Length());
+
   for (auto sample : aSamples) {
     RefPtr<MediaRawData> frame = IMFSampleToMediaData(sample);
     if (frame) {
@@ -350,6 +360,8 @@ already_AddRefed<MediaRawData> WMFMediaDataEncoder::IMFSampleToMediaData(
   frame->mTime = media::TimeUnit::FromMicroseconds(HNsToUsecs(time));
   frame->mDuration = media::TimeUnit::FromMicroseconds(HNsToUsecs(duration));
   frame->mKeyframe = isKeyframe;
+
+  WMF_ENC_LOGD("IMGSampleToMediaData: ts=%s", frame->mTime.ToString().get());
 
   return frame.forget();
 }
