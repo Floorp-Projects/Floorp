@@ -49,9 +49,9 @@ interface nsIPrompt : nsISupports
 
     const unsigned long BUTTON_TITLE_IS_STRING     = 127;
 
-    const unsigned long BUTTON_POS_0_DEFAULT       = 0 << 24;
+    const unsigned long BUTTON_POS_0_DEFAULT       = 0;
     const unsigned long BUTTON_POS_1_DEFAULT       = 1 << 24;
-    const unsigned long BUTTON_POS_2_DEFAULT       = 2 << 24;
+    const unsigned long BUTTON_POS_2_DEFAULT       = 1 << 25;
 
     /* used for security dialogs, buttons are initially disabled */
     const unsigned long BUTTON_DELAY_ENABLE        = 1 << 26;
