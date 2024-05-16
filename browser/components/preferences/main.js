@@ -2549,6 +2549,9 @@ var gMainPane = {
     let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
       Ci.nsIUpdateManager
     );
+    // We don't want to see an idle state just because the updater hasn't
+    // initialized yet.
+    await aus.init();
     if (aus.currentState == Ci.nsIApplicationUpdateService.STATE_IDLE) {
       return;
     }

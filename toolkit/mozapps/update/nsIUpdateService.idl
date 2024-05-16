@@ -393,12 +393,30 @@ interface nsIUpdateChecker : nsISupports
 interface nsIApplicationUpdateServiceInternal : nsISupports
 {
   /**
+   * To initialize the update system, use the init method on
+   * `nsIApplicationUpdateService` or `nsIApplicationUpdateServiceStub`. This
+   * method is invoked as part of the update initialization process, but is not
+   * an entry point to it.
+   *
+   * @returns Promise<undefined>
+   */
+  Promise init();
+
+  /**
    * These are identical to the corresponding functions in
    * `nsIApplicationUpdateService`, but these versions do not ensure the update
    * system has been initialized before being called.
    */
   Promise downloadUpdate(in nsIUpdate update);
   Promise stopDownload();
+
+  /**
+   * Runs post update processing, even if it has already run. This should only
+   * be done in testing.
+   *
+   * @returns Promise<undefined>
+   */
+  Promise postUpdateProcessing();
 };
 
 /**
@@ -409,6 +427,17 @@ interface nsIApplicationUpdateServiceInternal : nsISupports
 [scriptable, uuid(1107d207-a263-403a-b268-05772ec10757)]
 interface nsIApplicationUpdateService : nsISupports
 {
+  /**
+   * Initializes the update system. It is typically not necessary to call this
+   * since the public methods that require initialization to be meaningful
+   * ensure that initialization has been performed. But this can be useful to
+   * spur the updater to resume or complete any in-progress updates from
+   * previous browser sessions.
+   *
+   * @returns Promise<undefined>
+   */
+  Promise init();
+
   /**
    * Checks for available updates in the background using the listener provided
    * by the application update service for background checks.
@@ -923,4 +952,32 @@ interface nsIUpdateManager : nsISupports
    * See nsIUpdateManagerInternal for details.
    */
   readonly attribute nsIUpdateManagerInternal internal;
+};
+
+/**
+ * A lightweight interface that we can load early in startup that gives us very
+ * limited access to the update system without the startup costs of loading
+ * nsIApplicationUpdateService.
+ */
+[scriptable, uuid(3ca17ada-8501-496f-bbe7-6a9f1c28eb2d)]
+interface nsIApplicationUpdateServiceStub : nsISupports
+{
+  /**
+   * This does the standard initialization of the update service stub. The
+   * primary effect of this is to initialize the update system (the same effect
+   * as `initUpdate`), but only if there are updates from a previous browser
+   * session. This allows us to avoid loading the update system so early if it
+   * would just be sitting idle until the update timer fires or the user visits
+   * the update UI.
+   *
+   * @returns Promise<undefined>
+   */
+  Promise init();
+
+  /**
+   * This is identical to `nsIApplicationUpdateService.init()`.
+   *
+   * @returns Promise<undefined>
+   */
+  Promise initUpdate();
 };
