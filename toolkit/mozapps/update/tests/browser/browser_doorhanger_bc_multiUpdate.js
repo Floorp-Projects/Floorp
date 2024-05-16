@@ -54,7 +54,7 @@ add_task(async function doorhanger_bc_multiUpdate() {
 
       prepareToDownloadVersion(SECOND_UPDATE_VERSION);
       let updateSwapped = waitForEvent("update-swap");
-      gAUS.checkForBackgroundUpdates();
+      await gAUS.checkForBackgroundUpdates();
       await updateSwapped;
       // The badge should be hidden while we swap from one update to the other
       // to prevent restarting to update while staging is occurring. But since

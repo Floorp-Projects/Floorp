@@ -3361,14 +3361,14 @@ export class UpdateService {
    * @param   _timer
    *          The timer that fired
    */
-  notify(_timer) {
-    this._checkForBackgroundUpdates(true);
+  async notify(_timer) {
+    await this._checkForBackgroundUpdates(true);
   }
 
   /**
    * See nsIUpdateService.idl
    */
-  checkForBackgroundUpdates() {
+  async checkForBackgroundUpdates() {
     return this._checkForBackgroundUpdates(false);
   }
 
@@ -3390,7 +3390,7 @@ export class UpdateService {
    *          Whether or not a background update check was initiated by the
    *          application update timer notification.
    */
-  _checkForBackgroundUpdates(isNotify) {
+  async _checkForBackgroundUpdates(isNotify) {
     if (!this.disabled && AppConstants.NIGHTLY_BUILD) {
       // Scalar ID: update.suppress_prompts
       AUSTLMY.pingSuppressPrompts();
