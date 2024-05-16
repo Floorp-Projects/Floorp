@@ -3152,8 +3152,10 @@ def make_shared_library(target, compiler):
                 "-DLL",
                 "-OUT:$@",
                 "-PDB:$(LINK_PDBFILE)",
-                "$(DSO_LDOPTS)",
             ]
+            if compiler.version >= "18.0.0":
+                linker += ["-DEPENDENTLOADFLAG:0x800"]
+            linker += ["$(DSO_LDOPTS)"]
             return namespace(
                 mkshlib=linker,
                 mkcshlib=linker,
