@@ -2543,10 +2543,13 @@ var gMainPane = {
   },
 
   async checkUpdateInProgress() {
+    const aus = Cc["@mozilla.org/updates/update-service;1"].getService(
+      Ci.nsIApplicationUpdateService
+    );
     let um = Cc["@mozilla.org/updates/update-manager;1"].getService(
       Ci.nsIUpdateManager
     );
-    if (!um.readyUpdate && !um.downloadingUpdate) {
+    if (aus.currentState == Ci.nsIApplicationUpdateService.STATE_IDLE) {
       return;
     }
 
@@ -2578,9 +2581,6 @@ var gMainPane = {
       {}
     );
     if (rv != 1) {
-      let aus = Cc["@mozilla.org/updates/update-service;1"].getService(
-        Ci.nsIApplicationUpdateService
-      );
       await aus.stopDownload();
       await um.cleanupActiveUpdates();
       UpdateListener.clearPendingAndActiveNotifications();

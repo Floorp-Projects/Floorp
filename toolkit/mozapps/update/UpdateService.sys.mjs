@@ -1455,10 +1455,10 @@ function cleanUpDownloadingUpdateDir() {
  */
 function cleanupReadyUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
-  if (lazy.UM.readyUpdate) {
+  if (lazy.UM.internal.readyUpdate) {
     LOG("cleanupReadyUpdate - Clearing readyUpdate");
-    lazy.UM.internal.addUpdateToHistory(lazy.UM.readyUpdate);
-    lazy.UM.readyUpdate = null;
+    lazy.UM.internal.addUpdateToHistory(lazy.UM.internal.readyUpdate);
+    lazy.UM.internal.readyUpdate = null;
   }
   lazy.UM.saveUpdates();
 
@@ -1532,10 +1532,10 @@ function cleanupDownloadingUpdate() {
  */
 function cleanupActiveUpdates() {
   // Move the update from the Active Update list into the Past Updates list.
-  if (lazy.UM.readyUpdate) {
+  if (lazy.UM.internal.readyUpdate) {
     LOG("cleanupActiveUpdates - Clearing readyUpdate");
-    lazy.UM.internal.addUpdateToHistory(lazy.UM.readyUpdate);
-    lazy.UM.readyUpdate = null;
+    lazy.UM.internal.addUpdateToHistory(lazy.UM.internal.readyUpdate);
+    lazy.UM.internal.readyUpdate = null;
   }
   if (lazy.UM.downloadingUpdate) {
     LOG("cleanupActiveUpdates - Clearing downloadingUpdate.");
@@ -1800,7 +1800,7 @@ async function handleFallbackToCompleteUpdate() {
 
   // The downloading update will be newer than the ready update, so use that
   // update, if it exists.
-  let update = lazy.UM.downloadingUpdate || lazy.UM.readyUpdate;
+  let update = lazy.UM.downloadingUpdate || lazy.UM.internal.readyUpdate;
   if (!update) {
     LOG(
       "handleFallbackToCompleteUpdate - Unable to find an update to fall " +
@@ -1966,16 +1966,16 @@ function updateIsAtLeastAsOldAsCurrentVersion(update) {
  */
 function updateIsAtLeastAsOldAsReadyUpdate(update) {
   if (
-    !lazy.UM.readyUpdate ||
-    !lazy.UM.readyUpdate.appVersion ||
-    !lazy.UM.readyUpdate.buildID
+    !lazy.UM.internal.readyUpdate ||
+    !lazy.UM.internal.readyUpdate.appVersion ||
+    !lazy.UM.internal.readyUpdate.buildID
   ) {
     return false;
   }
   return updateIsAtLeastAsOldAs(
     update,
-    lazy.UM.readyUpdate.appVersion,
-    lazy.UM.readyUpdate.buildID
+    lazy.UM.internal.readyUpdate.appVersion,
+    lazy.UM.internal.readyUpdate.buildID
   );
 }
 
@@ -2851,8 +2851,8 @@ export class UpdateService {
     }
 
     let updates = [];
-    if (lazy.UM.readyUpdate) {
-      updates.push(lazy.UM.readyUpdate);
+    if (lazy.UM.internal.readyUpdate) {
+      updates.push(lazy.UM.internal.readyUpdate);
     }
     if (lazy.UM.downloadingUpdate) {
       updates.push(lazy.UM.downloadingUpdate);
@@ -2890,8 +2890,8 @@ export class UpdateService {
       return false;
     };
     if (channelChanged(updates)) {
-      let channel = lazy.UM.readyUpdate
-        ? lazy.UM.readyUpdate.channel
+      let channel = lazy.UM.internal.readyUpdate
+        ? lazy.UM.internal.readyUpdate.channel
         : lazy.UM.downloadingUpdate.channel;
       LOG(
         "UpdateService:_postUpdateProcessing - update channel is " +
@@ -2930,12 +2930,12 @@ export class UpdateService {
       let tooOldUpdate;
       if (
         updateIsAtLeastAsOldAs(
-          lazy.UM.readyUpdate,
+          lazy.UM.internal.readyUpdate,
           Services.appinfo.version,
           Services.appinfo.appBuildID
         )
       ) {
-        tooOldUpdate = lazy.UM.readyUpdate;
+        tooOldUpdate = lazy.UM.internal.readyUpdate;
       } else if (
         updateIsAtLeastAsOldAs(
           lazy.UM.downloadingUpdate,
@@ -2979,7 +2979,7 @@ export class UpdateService {
     pingStateAndStatusCodes(
       status == STATE_DOWNLOADING
         ? lazy.UM.downloadingUpdate
-        : lazy.UM.readyUpdate,
+        : lazy.UM.internal.readyUpdate,
       true,
       status
     );
@@ -3028,7 +3028,7 @@ export class UpdateService {
       }
     }
 
-    let update = lazy.UM.readyUpdate;
+    let update = lazy.UM.internal.readyUpdate;
 
     if (status == STATE_APPLYING) {
       // This indicates that the background updater service is in either of the
@@ -3112,12 +3112,12 @@ export class UpdateService {
 
       // The only time that update is not a reference to readyUpdate is when
       // readyUpdate is null.
-      if (!lazy.UM.readyUpdate) {
+      if (!lazy.UM.internal.readyUpdate) {
         LOG(
           "UpdateService:_postUpdateProcessing - Assigning successful update " +
             "readyUpdate before cleaning it up."
         );
-        lazy.UM.readyUpdate = update;
+        lazy.UM.internal.readyUpdate = update;
       }
 
       // Done with this update. Clean it up.
@@ -3274,7 +3274,7 @@ export class UpdateService {
     // update check failures. As far as the user knows, the update status is
     // the status of the ready update. We don't want to confuse them by saying
     // that an update check failed.
-    if (lazy.UM.readyUpdate) {
+    if (lazy.UM.internal.readyUpdate) {
       LOG(
         "UpdateService:onCheckComplete - Ignoring error because another " +
           "update is ready."
@@ -3374,7 +3374,7 @@ export class UpdateService {
 
   // The suffix used for background update check telemetry histogram ID's.
   get _pingSuffix() {
-    if (lazy.UM.readyUpdate) {
+    if (lazy.UM.internal.readyUpdate) {
       // Once an update has been downloaded, all later updates will be reported
       // to telemetry as subsequent updates. We move the first update into
       // readyUpdate as soon as the download is complete, so any update checks
@@ -3536,9 +3536,9 @@ export class UpdateService {
     // do not currently download complete updates if there is already a
     // readyUpdate available.
     if (
-      lazy.UM.readyUpdate &&
-      lazy.UM.readyUpdate.selectedPatch &&
-      lazy.UM.readyUpdate.selectedPatch.type == "complete"
+      lazy.UM.internal.readyUpdate &&
+      lazy.UM.internal.readyUpdate.selectedPatch &&
+      lazy.UM.internal.readyUpdate.selectedPatch.type == "complete"
     ) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADED);
       return false;
@@ -3638,7 +3638,7 @@ export class UpdateService {
         continue;
       }
 
-      if (lazy.UM.readyUpdate && !getPatchOfType(update, "partial")) {
+      if (lazy.UM.internal.readyUpdate && !getPatchOfType(update, "partial")) {
         LOG(
           "UpdateService:selectUpdate - skipping update because no partial " +
             "patch is available and an update has already been downloaded."
@@ -4117,13 +4117,13 @@ export class UpdateService {
           "update that's already been downloaded is the same version or " +
           "newer.\n" +
           "currently downloaded update application version: " +
-          lazy.UM.readyUpdate.appVersion +
+          lazy.UM.internal.readyUpdate.appVersion +
           "\n" +
           "available update application version : " +
           update.appVersion +
           "\n" +
           "currently downloaded update build ID: " +
-          lazy.UM.readyUpdate.buildID +
+          lazy.UM.internal.readyUpdate.buildID +
           "\n" +
           "available update build ID : " +
           update.buildID
@@ -4379,6 +4379,13 @@ export class UpdateManager {
       addUpdateToHistory: update => this.#addUpdateToHistory(update),
       QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateManagerInternal]),
     };
+
+    Object.defineProperty(this.internal, "readyUpdate", {
+      get: () => this._readyUpdate,
+      set: update => {
+        this._readyUpdate = update;
+      },
+    });
   }
 
   /**
@@ -4568,11 +4575,8 @@ export class UpdateManager {
   /**
    * See nsIUpdateService.idl
    */
-  get readyUpdate() {
+  async getReadyUpdate() {
     return this._readyUpdate;
-  }
-  set readyUpdate(aUpdate) {
-    this._readyUpdate = aUpdate;
   }
 
   /**
@@ -5806,7 +5810,7 @@ class Downloader {
       selectedPatch = partialPatch;
     }
     if (!selectedPatch) {
-      if (lazy.UM.readyUpdate) {
+      if (lazy.UM.internal.readyUpdate) {
         // If we already have a ready update, we download partials only.
         LOG(
           "Downloader:_selectPatch - not selecting a complete patch because " +
@@ -6183,7 +6187,7 @@ class Downloader {
       this._pendingRequest = null;
     }
 
-    if (!lazy.UM.readyUpdate) {
+    if (!lazy.UM.internal.readyUpdate) {
       LOG("Downloader:downloadUpdate - Setting status to downloading");
       writeStatusFile(getReadyUpdateDir(), STATE_DOWNLOADING);
     }
@@ -6525,7 +6529,7 @@ class Downloader {
         // Clear out any old update before we notify anyone about the new one.
         // It will be invalid in a moment anyways when we call
         // `cleanUpReadyUpdateDir()`.
-        lazy.UM.readyUpdate = null;
+        lazy.UM.internal.readyUpdate = null;
 
         // We're about to clobber the ready update so we can replace it with the
         // downloading update that just finished. We need to let observers know
@@ -6730,7 +6734,7 @@ class Downloader {
       LOG(
         "Downloader:onStopRequest - Moving downloadingUpdate into readyUpdate"
       );
-      lazy.UM.readyUpdate = lazy.UM.downloadingUpdate;
+      lazy.UM.internal.readyUpdate = lazy.UM.downloadingUpdate;
       lazy.UM.downloadingUpdate = null;
     }
     lazy.UM.saveUpdates();
