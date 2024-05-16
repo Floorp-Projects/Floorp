@@ -15,9 +15,6 @@ namespace mozilla {
 /* static */
 WebrtcVideoEncoder* MediaDataCodec::CreateEncoder(
     const webrtc::SdpVideoFormat& aFormat) {
-  if (!StaticPrefs::media_webrtc_platformencoder()) {
-    return nullptr;
-  }
   if (!WebrtcMediaDataEncoder::CanCreate(
           webrtc::PayloadStringToCodecType(aFormat.name))) {
     return nullptr;
