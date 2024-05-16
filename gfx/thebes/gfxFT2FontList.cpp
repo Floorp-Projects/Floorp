@@ -978,6 +978,7 @@ gfxFT2FontList::gfxFT2FontList() : mJarModifiedTime(0) {
   CheckFamilyList(kBaseFonts_Android9_Higher);
   CheckFamilyList(kBaseFonts_Android9_11);
   CheckFamilyList(kBaseFonts_Android12_Higher);
+  CheckFamilyList(kLangPack_MFR_Android12_Higher);
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
@@ -1315,6 +1316,10 @@ FontVisibility gfxFT2FontList::GetVisibilityForFamily(
       if (FamilyInList(aName, kBaseFonts_Android12_Higher)) {
         return FontVisibility::Base;
       }
+
+      if (FamilyInList(aName, kLangPack_MFR_Android12_Higher)) {
+        return FontVisibility::LangPack;
+      }
     }
   }
 
@@ -1364,6 +1369,9 @@ gfxFT2FontList::GetFilteredPlatformFontLists() {
       fontLists.AppendElement(
           std::make_pair(kBaseFonts_Android12_Higher,
                          ArrayLength(kBaseFonts_Android12_Higher)));
+      fontLists.AppendElement(
+          std::make_pair(kLangPack_MFR_Android12_Higher,
+                         ArrayLength(kLangPack_MFR_Android12_Higher)));
     }
   }
 
