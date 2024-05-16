@@ -198,23 +198,22 @@ bool nsTextFragment::SetTo(const char16_t* aBuffer, uint32_t aLength,
   }
 
   if (aForce2b && mState.mIs2b && !m2b->IsReadonly()) {
+    // Try to re-use our existing StringBuffer.
     uint32_t storageSize = m2b->StorageSize();
     uint32_t neededSize = aLength * sizeof(char16_t);
     if (!neededSize) {
       if (storageSize < AutoStringDefaultStorageSize) {
         // If we're storing small enough StringBuffer, let's preserve it.
-
         static_cast<char16_t*>(m2b->Data())[0] = char16_t(0);
         mState.mLength = 0;
         mState.mIsBidi = false;
         return true;
       }
-    } else if ((neededSize < storageSize) &&
-               ((storageSize / 2) <
-                (neededSize + AutoStringDefaultStorageSize))) {
-      // Don't try to reuse the existing StringBuffer, if it would have
-      // lots of unused space.
-
+    } else if (neededSize < storageSize &&
+               (storageSize / 2) <
+                   (neededSize + AutoStringDefaultStorageSize)) {
+      // Don't try to reuse the existing StringBuffer, if it would have lots of
+      // unused space.
       memcpy(m2b->Data(), aBuffer, neededSize);
       static_cast<char16_t*>(m2b->Data())[aLength] = char16_t(0);
       mState.mLength = aLength;
@@ -226,19 +225,18 @@ bool nsTextFragment::SetTo(const char16_t* aBuffer, uint32_t aLength,
     }
   }
 
-  ReleaseText();
-
   if (aLength == 0) {
+    ReleaseText();
     return true;
   }
 
   char16_t firstChar = *aBuffer;
   if (!aForce2b && aLength == 1 && firstChar < 256) {
+    ReleaseText();
     m1b = sSingleCharSharedString + firstChar;
     mState.mInHeap = false;
     mState.mIs2b = false;
     mState.mLength = 1;
-
     return true;
   }
 
@@ -266,6 +264,7 @@ bool nsTextFragment::SetTo(const char16_t* aBuffer, uint32_t aLength,
 
     if (ucp == uend && endNewLine - start <= TEXTFRAG_MAX_NEWLINES &&
         ucp - endNewLine <= TEXTFRAG_WHITE_AFTER_NEWLINE) {
+      ReleaseText();
       char** strings = space == ' ' ? sSpaceSharedString : sTabSharedString;
       m1b = strings[endNewLine - start];
 
@@ -287,27 +286,29 @@ bool nsTextFragment::SetTo(const char16_t* aBuffer, uint32_t aLength,
 
   if (first16bit != -1) {  // aBuffer contains no non-8bit character
     // Use ucs2 storage because we have to
-    CheckedUint32 m2bSize = CheckedUint32(aLength) + 1;
-    if (!m2bSize.isValid()) {
+    CheckedUint32 size = CheckedUint32(aLength) + 1;
+    if (!size.isValid()) {
       return false;
     }
-    m2bSize *= sizeof(char16_t);
-    if (!m2bSize.isValid()) {
+    size *= sizeof(char16_t);
+    if (!size.isValid()) {
       return false;
     }
 
-    m2b = StringBuffer::Alloc(m2bSize.value()).take();
-    if (!m2b) {
+    RefPtr<StringBuffer> newBuffer = StringBuffer::Alloc(size.value());
+    if (!newBuffer) {
       return false;
     }
-    memcpy(m2b->Data(), aBuffer, aLength * sizeof(char16_t));
-    static_cast<char16_t*>(m2b->Data())[aLength] = char16_t(0);
 
+    ReleaseText();
+    memcpy(newBuffer->Data(), aBuffer, aLength * sizeof(char16_t));
+    static_cast<char16_t*>(newBuffer->Data())[aLength] = char16_t(0);
+
+    m2b = newBuffer.forget().take();
     mState.mIs2b = true;
     if (aUpdateBidi) {
       UpdateBidiFlag(aBuffer + first16bit, aLength - first16bit);
     }
-
   } else {
     // Use 1 byte storage because we can
     char* buff = static_cast<char*>(malloc(aLength));
@@ -315,6 +316,7 @@ bool nsTextFragment::SetTo(const char16_t* aBuffer, uint32_t aLength,
       return false;
     }
 
+    ReleaseText();
     // Copy data
     LossyConvertUtf16toLatin1(Span(aBuffer, aLength), Span(buff, aLength));
     m1b = buff;
