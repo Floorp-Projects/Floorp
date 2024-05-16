@@ -2060,12 +2060,12 @@ function pollForStagingEnd() {
     timeElapsedMs += pollingIntervalMs;
 
     if (timeElapsedMs >= STAGING_POLLING_MAX_DURATION_MS) {
-      lazy.UM.refreshUpdateStatus();
+      lazy.UM.internal.refreshUpdateStatus();
       return;
     }
 
     if (readStatusFile(getReadyUpdateDir()) != STATE_APPLYING) {
-      lazy.UM.refreshUpdateStatus();
+      lazy.UM.internal.refreshUpdateStatus();
       return;
     }
 
@@ -4393,6 +4393,7 @@ export class UpdateManager {
       reload: skipFiles => this.#reload(skipFiles),
       getHistory: () => this.#getHistory(),
       addUpdateToHistory: update => this.#addUpdateToHistory(update),
+      refreshUpdateStatus: async () => this.#refreshUpdateStatus(),
       QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateManagerInternal]),
     };
 
@@ -4760,6 +4761,10 @@ export class UpdateManager {
    * See nsIUpdateService.idl
    */
   async refreshUpdateStatus() {
+    return this.#refreshUpdateStatus();
+  }
+
+  async #refreshUpdateStatus() {
     try {
       LOG("UpdateManager:refreshUpdateStatus - Staging done.");
 
