@@ -209,6 +209,14 @@ void OOPInit() {}
 const char* GetChildNotificationPipe() { return nullptr; }
 #endif
 
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+void InjectCrashReporterIntoProcess(DWORD processID,
+                                    InjectorCrashCallback* cb) {}
+
+void UnregisterInjectorCallback(DWORD processID) {}
+
+#endif  // MOZ_CRASHREPORTER_INJECTOR
+
 bool GetLastRunCrashID(nsAString& id) { return false; }
 
 #if !defined(XP_WIN) && !defined(XP_MACOSX)
