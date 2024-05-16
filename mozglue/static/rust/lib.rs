@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#![cfg_attr(feature = "oom_with_hook", feature(alloc_error_hook))]
-#![cfg_attr(feature = "oom_with_alloc_error_panic", feature(panic_oom_payload))]
+#![cfg_attr(oom_with = "hook", feature(alloc_error_hook))]
+#![cfg_attr(oom_with = "alloc_error_panic", feature(panic_oom_payload))]
 
 use arrayvec::ArrayString;
 use std::alloc::{GlobalAlloc, Layout};
@@ -107,25 +107,25 @@ fn panic_hook(info: &panic::PanicInfo) {
 #[no_mangle]
 pub extern "C" fn install_rust_hooks() {
     panic::set_hook(Box::new(panic_hook));
-    #[cfg(feature = "oom_with_hook")]
+    #[cfg(oom_with = "hook")]
     use std::alloc::set_alloc_error_hook;
-    #[cfg(feature = "oom_with_hook")]
+    #[cfg(oom_with = "hook")]
     set_alloc_error_hook(oom_hook::hook);
 }
 
 mod oom_hook {
-    #[cfg(feature = "oom_with_alloc_error_panic")]
+    #[cfg(oom_with = "alloc_error_panic")]
     use std::alloc::AllocErrorPanicPayload;
     use std::alloc::Layout;
     use std::any::Any;
 
     #[inline(always)]
     pub fn oom_layout(_payload: &dyn Any) -> Option<Layout> {
-        #[cfg(feature = "oom_with_alloc_error_panic")]
+        #[cfg(oom_with = "alloc_error_panic")]
         return _payload
             .downcast_ref::<AllocErrorPanicPayload>()
             .map(|p| p.layout());
-        #[cfg(not(feature = "oom_with_alloc_error_panic"))]
+        #[cfg(not(oom_with = "alloc_error_panic"))]
         return None;
     }
 
@@ -133,7 +133,7 @@ mod oom_hook {
         pub fn RustHandleOOM(size: usize) -> !;
     }
 
-    #[cfg(feature = "oom_with_hook")]
+    #[cfg(oom_with = "hook")]
     pub fn hook(layout: Layout) {
         unsafe {
             RustHandleOOM(layout.size());
