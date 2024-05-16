@@ -111,6 +111,12 @@ if (AppConstants.MOZ_UPDATER) {
   ChromeUtils.defineESModuleGetters(lazy, {
     UpdateListener: "resource://gre/modules/UpdateListener.sys.mjs",
   });
+  XPCOMUtils.defineLazyServiceGetters(lazy, {
+    UpdateServiceStub: [
+      "@mozilla.org/updates/update-service-stub;1",
+      "nsIApplicationUpdateServiceStub",
+    ],
+  });
 }
 if (AppConstants.MOZ_UPDATE_AGENT) {
   ChromeUtils.defineESModuleGetters(lazy, {
@@ -3028,16 +3034,11 @@ BrowserGlue.prototype = {
         name: "BackgroundUpdate",
         condition: AppConstants.MOZ_UPDATE_AGENT,
         task: async () => {
-          // Never in automation!  This is close to
-          // `UpdateService.disabledForTesting`, but without creating the
-          // service, which can perform a good deal of I/O in order to log its
-          // state.  Since this is in the startup path, we avoid all of that.
-          let disabledForTesting =
-            (Cu.isInAutomation ||
-              lazy.Marionette.running ||
-              lazy.RemoteAgent.running) &&
-            Services.prefs.getBoolPref("app.update.disabledForTesting", false);
-          if (!disabledForTesting) {
+          // Never in automation!
+          if (
+            AppConstants.MOZ_UPDATER &&
+            !lazy.UpdateServiceStub.updateDisabledForTesting
+          ) {
             try {
               await lazy.BackgroundUpdate.scheduleFirefoxMessagingSystemTargetingSnapshotting();
             } catch (e) {
