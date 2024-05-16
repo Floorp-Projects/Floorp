@@ -54,6 +54,7 @@ SVGDocumentWrapper::~SVGDocumentWrapper() {
 }
 
 void SVGDocumentWrapper::DestroyViewer() {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mViewer) {
     mViewer->GetDocument()->OnPageHide(false, nullptr);
     mViewer->Close(nullptr);
