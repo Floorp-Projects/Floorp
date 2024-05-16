@@ -526,3 +526,8 @@ Used by android browsertime tasks to track the abi of the product under test.
 apk
 ===
 Used by android browsertime tasks to track the path to the apk of the product under test.
+
+test-manifests
+==============
+
+A list of the test manifests that run in this task.
