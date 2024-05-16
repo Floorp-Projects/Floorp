@@ -9,16 +9,16 @@ import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.components.toolbar.navbar.NavbarIntegration
+import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerIntegration
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
-class NavbarIntegrationTest {
-    private lateinit var feature: NavbarIntegration
+class BottomToolbarContainerIntegrationTest {
+    private lateinit var feature: BottomToolbarContainerIntegration
 
     @Before
     fun setup() {
-        feature = NavbarIntegration(
+        feature = BottomToolbarContainerIntegration(
             toolbar = mockk(),
             store = mockk(),
             appStore = mockk(),

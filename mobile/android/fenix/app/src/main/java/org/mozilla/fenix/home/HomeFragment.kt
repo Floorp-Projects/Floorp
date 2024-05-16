@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
@@ -105,9 +106,9 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerIntegration
 import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerView
 import org.mozilla.fenix.components.toolbar.navbar.HomeNavBar
-import org.mozilla.fenix.components.toolbar.navbar.NavbarIntegration
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.components
@@ -120,6 +121,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.scaleToBottomOfView
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.tabClosedUndoMessage
+import org.mozilla.fenix.ext.updateMicrosurveyPromptForConfigurationChange
 import org.mozilla.fenix.ext.updateNavBarForConfigurationChange
 import org.mozilla.fenix.home.bookmarks.BookmarksFeature
 import org.mozilla.fenix.home.bookmarks.controller.DefaultBookmarksController
@@ -143,6 +145,7 @@ import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.messaging.DefaultMessageController
 import org.mozilla.fenix.messaging.FenixMessageSurfaceId
 import org.mozilla.fenix.messaging.MessagingFeature
+import org.mozilla.fenix.microsurvey.ui.MicrosurveyRequestPrompt
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.search.toolbar.DefaultSearchSelectorController
@@ -247,7 +250,7 @@ class HomeFragment : Fragment() {
     private val historyMetadataFeature = ViewBoundFeatureWrapper<RecentVisitsFeature>()
     private val searchSelectorBinding = ViewBoundFeatureWrapper<SearchSelectorBinding>()
     private val searchSelectorMenuBinding = ViewBoundFeatureWrapper<SearchSelectorMenuBinding>()
-    private val navbarIntegration = ViewBoundFeatureWrapper<NavbarIntegration>()
+    private val bottomToolbarContainerIntegration = ViewBoundFeatureWrapper<BottomToolbarContainerIntegration>()
 
     private lateinit var savedLoginsLauncher: ActivityResultLauncher<Intent>
 
@@ -268,6 +271,7 @@ class HomeFragment : Fragment() {
         )
     }
 
+    // TODO replace repeated uses of requireContent() FXDROID-2055
     @Suppress("LongMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -465,12 +469,13 @@ class HomeFragment : Fragment() {
             searchEngine = components.core.store.state.search.selectedOrDefaultSearchEngine,
         )
 
-        // We don't show the navigation bar for tablets and in landscape mode.
-        val shouldAddNavigationBar = IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled &&
-            !requireContext().isLandscape() &&
-            !isTablet()
+        val shouldAddNavigationBar = shouldAddNavigationBar(requireContext())
         if (shouldAddNavigationBar) {
-            initializeNavBar(activity = activity)
+            initializeNavBar(activity)
+        }
+
+        if (!shouldAddNavigationBar && shouldShowMicrosurveyPrompt()) {
+            initializeMicrosurveyPrompt(requireContext())
         }
 
         sessionControlView = SessionControlView(
@@ -517,6 +522,15 @@ class HomeFragment : Fragment() {
             )
         }
 
+        // If the microsurvey feature is visible, we should update it's state.
+        if (shouldShowMicrosurveyPrompt()) {
+            updateMicrosurveyPromptForConfigurationChange(
+                parent = binding.homeLayout,
+                bottomToolbarContainerView = _bottomToolbarContainerView?.toolbarContainerView,
+                reinitializeMicrosurveyPrompt = { initializeMicrosurveyPrompt(requireContext()) },
+            )
+        }
+
         val currentWallpaperName = requireContext().settings().currentWallpaperName
         applyWallpaper(
             wallpaperName = currentWallpaperName,
@@ -525,9 +539,20 @@ class HomeFragment : Fragment() {
         )
     }
 
+    /**
+     * We don't show the navigation bar for tablets and in landscape mode.
+     */
+    private fun shouldAddNavigationBar(context: Context) =
+        IncompleteRedesignToolbarFeature(context.settings()).isEnabled && !context.isLandscape() && !isTablet()
+
+    // TODO FXDROID-1970 detekt does not like inlining this
+    private val shouldShowMicrosurveyPrompt = false
+    private fun shouldShowMicrosurveyPrompt() = shouldShowMicrosurveyPrompt
+
     @Suppress("LongMethod")
     private fun initializeNavBar(activity: HomeActivity) {
-        val isToolbarAtBottom = requireContext().components.settings.toolbarPosition == ToolbarPosition.BOTTOM
+        val context = requireContext()
+        val isToolbarAtBottom = isToolbarAtBottom(context)
 
         // The toolbar view has already been added directly to the container.
         // We should remove it and add the view to the navigation bar container.
@@ -537,11 +562,11 @@ class HomeFragment : Fragment() {
             binding.root.removeView(binding.toolbarLayout)
         }
 
-        val menuButton = MenuButton(requireContext())
+        val menuButton = MenuButton(context)
         menuButton.recordClickEvent = { NavigationBar.homeMenuTapped.record(NoExtras()) }
         HomeMenuView(
             view = binding.root,
-            context = requireContext(),
+            context = context,
             lifecycleOwner = viewLifecycleOwner,
             homeActivity = activity,
             navController = findNavController(),
@@ -552,13 +577,18 @@ class HomeFragment : Fragment() {
         ).also { it.build() }
 
         _bottomToolbarContainerView = BottomToolbarContainerView(
-            context = requireContext(),
+            context = context,
             parent = binding.homeLayout,
             hideOnScroll = false,
             composableContent = {
                 FirefoxTheme {
                     Column {
+                        if (shouldShowMicrosurveyPrompt()) {
+                            MicrosurveyRequestPrompt()
+                        }
+
                         if (isToolbarAtBottom) {
+                            // TODO android bottom bar shadow causing gap FXDROID-2056
                             AndroidView(factory = { _ -> binding.toolbarLayout })
                         } else {
                             Divider()
@@ -566,7 +596,7 @@ class HomeFragment : Fragment() {
 
                         HomeNavBar(
                             isPrivateMode = activity.browsingModeManager.mode.isPrivate,
-                            browserStore = requireContext().components.core.store,
+                            browserStore = context.components.core.store,
                             menuButton = menuButton,
                             onSearchButtonClick = {
                                 NavigationBar.homeSearchTapped.record(NoExtras())
@@ -607,8 +637,8 @@ class HomeFragment : Fragment() {
             },
         )
 
-        navbarIntegration.set(
-            feature = NavbarIntegration(
+        bottomToolbarContainerIntegration.set(
+            feature = BottomToolbarContainerIntegration(
                 toolbar = bottomToolbarContainerView.toolbarContainerView,
                 store = requireComponents.core.store,
                 appStore = requireComponents.appStore,
@@ -619,6 +649,37 @@ class HomeFragment : Fragment() {
             view = binding.root,
         )
     }
+
+    private fun initializeMicrosurveyPrompt(context: Context) {
+        val isToolbarAtTheBottom = isToolbarAtBottom(context)
+        // The toolbar view has already been added directly to the container.
+        // See initializeNavBar for more details on improving this.
+        if (isToolbarAtBottom(context)) {
+            binding.root.removeView(binding.toolbarLayout)
+        }
+
+        _bottomToolbarContainerView = BottomToolbarContainerView(
+            context = context,
+            parent = binding.homeLayout,
+            composableContent = {
+                FirefoxTheme {
+                    Column {
+                        MicrosurveyRequestPrompt()
+
+                        if (isToolbarAtTheBottom) {
+                            // TODO android bottom bar shadow causing gap FXDROID-2056
+                            AndroidView(factory = { _ -> binding.toolbarLayout })
+                        } else {
+                            Divider()
+                        }
+                    }
+                }
+            },
+        )
+    }
+
+    private fun isToolbarAtBottom(context: Context) =
+        context.components.settings.toolbarPosition == ToolbarPosition.BOTTOM
 
     /**
      * Returns a [TopSitesConfig] which specifies how many top sites to display and whether or

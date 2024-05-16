@@ -17,11 +17,10 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.components.AppStore
 
 /**
- * The feature responsible for scrolling behaviour of the navigation bar.
- * When the content of a tab is being scrolled, the nav bar will react
- * to the user interactions.
+ * The feature responsible for scrolling behaviour of the bottom toolbar container.
+ * When the content of a tab is being scrolled, the toolbar will react to user interactions.
  */
-class NavbarIntegration(
+class BottomToolbarContainerIntegration(
     val toolbar: ScrollableToolbar,
     val store: BrowserStore,
     val appStore: AppStore,
