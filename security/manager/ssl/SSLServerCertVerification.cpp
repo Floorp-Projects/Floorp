@@ -765,6 +765,9 @@ SSLServerCertVerificationJob::Run() {
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   if (!certVerifier) {
     PR_SetError(SEC_ERROR_NOT_INITIALIZED, 0);
+    // We can't release this off the STS thread because some parts of it
+    // are not threadsafe. Just leak the mResultTask
+    Unused << mResultTask.forget();
     return NS_OK;
   }
 
@@ -1075,6 +1078,11 @@ void SSLServerCertVerificationResult::Dispatch(
   nsCOMPtr<nsIEventTarget> stsTarget =
       do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   MOZ_ASSERT(stsTarget, "Failed to get socket transport service event target");
+  if (!stsTarget) {
+    // This has to be released on STS; just leak it
+    Unused << mSocketControl.forget();
+    return;
+  }
   rv = stsTarget->Dispatch(this, NS_DISPATCH_NORMAL);
   MOZ_ASSERT(NS_SUCCEEDED(rv),
              "Failed to dispatch SSLServerCertVerificationResult");
