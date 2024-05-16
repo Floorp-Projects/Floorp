@@ -76,8 +76,6 @@ def get_balrog_platform_name(platform):
 
 def _sanitize_platform(platform):
     platform = get_balrog_platform_name(platform)
-    if platform not in BALROG_PLATFORM_MAP:
-        return platform
     return BALROG_PLATFORM_MAP[platform][0]
 
 
