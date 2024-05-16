@@ -208,16 +208,19 @@ jobs:
 
     - name: setup Rust 🦀
       run: |
+
+        #? install rust version 1.77.2
+        rustup toolchain install 1.77.2
+
         if [[ $GHA_aarch64 == 'true' ]];then
-          rustup target add aarch64-pc-windows-msvc
+          rustup target add aarch64-pc-windows-msvc --toolchain 1.77.2
         elif [[ $GHA_32bit == 'true' ]];then
-          rustup target add i686-pc-windows-msvc
+          rustup target add i686-pc-windows-msvc --toolchain 1.77.2
         else
           rustup target add x86_64-pc-windows-msvc
         fi
 
-        #? install rust version
-        rustup install 1.77.2
+        #? set default toolchain
         rustup default 1.77.2
 
         #? https://github.com/mozilla/sccache#known-caveats
