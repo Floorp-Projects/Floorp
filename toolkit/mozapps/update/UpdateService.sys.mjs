@@ -3356,7 +3356,9 @@ export class UpdateService {
 
     // Kick off an update check
     (async () => {
-      let check = lazy.CheckSvc.checkForUpdates(lazy.CheckSvc.BACKGROUND_CHECK);
+      let check = lazy.CheckSvc.internal.checkForUpdates(
+        lazy.CheckSvc.BACKGROUND_CHECK
+      );
       await this.onCheckComplete(await check.result);
     })();
   }
@@ -5046,6 +5048,7 @@ export class CheckerService {
 
   constructor() {
     this.internal = {
+      checkForUpdates: checkType => this.#checkForUpdates(checkType, true),
       QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateCheckerInternal]),
     };
   }
@@ -5201,8 +5204,11 @@ export class CheckerService {
   /**
    * See nsIUpdateService.idl
    */
-
   checkForUpdates(checkType) {
+    return this.#checkForUpdates(checkType, false);
+  }
+
+  #checkForUpdates(checkType, internal) {
     LOG("CheckerService:checkForUpdates - checkType: " + checkType);
     if (!this.#validUpdateCheckType(checkType)) {
       LOG("CheckerService:checkForUpdates - Invalid checkType");
@@ -5245,7 +5251,7 @@ export class CheckerService {
       );
       this.#updateCheckData[requestKey] = this.#makeUpdateCheckDataObject(
         checkType,
-        this.#updateCheck(checkType, requestKey)
+        this.#updateCheck(checkType, requestKey, internal)
       );
     }
 
@@ -5274,7 +5280,7 @@ export class CheckerService {
     };
   }
 
-  async #updateCheck(checkType, requestKey) {
+  async #updateCheck(checkType, requestKey, _internal) {
     await waitForOtherInstances();
 
     let url;
