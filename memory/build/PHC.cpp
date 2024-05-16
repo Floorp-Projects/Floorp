@@ -1395,21 +1395,27 @@ inline void* MozJemallocPHC::calloc(size_t aNum, size_t aReqSize) {
 //
 // In summary: realloc doesn't change the allocation kind unless it must.
 //
-MOZ_ALWAYS_INLINE static void* MaybePageRealloc(
+// This function may return:
+// - Some(pointer) when PHC handled the reallocation.
+// - Some(nullptr) when PHC should have handled a page-to-normal transition
+//   but couldn't because of OOM.
+// - Nothing() when PHC is disabled or the original allocation was not
+//   under PHC.
+MOZ_ALWAYS_INLINE static Maybe<void*> MaybePageRealloc(
     const Maybe<arena_id_t>& aArenaId, void* aOldPtr, size_t aNewSize) {
   if (!aOldPtr) {
     // Null pointer. Treat like malloc(aNewSize).
-    return PageMalloc(aArenaId, aNewSize);
+    return Some(PageMalloc(aArenaId, aNewSize));
   }
 
   if (!maybe_init()) {
-    return nullptr;
+    return Nothing();
   }
 
   PtrKind pk = gConst->PtrKind(aOldPtr);
   if (pk.IsNothing()) {
     // A normal-to-normal transition.
-    return nullptr;
+    return Nothing();
   }
 
   if (pk.IsGuardPage()) {
@@ -1454,7 +1460,7 @@ MOZ_ALWAYS_INLINE static void* MaybePageRealloc(
     memmove(newPtr, aOldPtr, std::min(oldUsableSize, aNewSize));
     gMut->ResizePageInUse(lock, index, aArenaId, newPtr, stack);
     LOG("PageRealloc-Reuse(%p, %zu) -> %p\n", aOldPtr, aNewSize, newPtr);
-    return newPtr;
+    return Some(newPtr);
   }
 
   // A page-to-normal transition (with the new size greater than page-sized).
@@ -1469,7 +1475,7 @@ MOZ_ALWAYS_INLINE static void* MaybePageRealloc(
                   : MozJemalloc::malloc(aNewSize));
   }
   if (!newPtr) {
-    return nullptr;
+    return Some(nullptr);
   }
 
   Delay reuseDelay = ReuseDelay(lock);
@@ -1484,14 +1490,15 @@ MOZ_ALWAYS_INLINE static void* MaybePageRealloc(
       aOldPtr, index, aNewSize, newPtr, size_t(reuseDelay),
       size_t(GAtomic::Now()) + reuseDelay);
 
-  return newPtr;
+  return Some(newPtr);
 }
 
 MOZ_ALWAYS_INLINE static void* PageRealloc(const Maybe<arena_id_t>& aArenaId,
                                            void* aOldPtr, size_t aNewSize) {
-  void* ptr = MaybePageRealloc(aArenaId, aOldPtr, aNewSize);
+  Maybe<void*> ptr = MaybePageRealloc(aArenaId, aOldPtr, aNewSize);
 
-  return ptr ? ptr
+  return ptr.isSome()
+             ? *ptr
              : (aArenaId.isSome() ? MozJemalloc::moz_arena_realloc(
                                         *aArenaId, aOldPtr, aNewSize)
                                   : MozJemalloc::realloc(aOldPtr, aNewSize));
