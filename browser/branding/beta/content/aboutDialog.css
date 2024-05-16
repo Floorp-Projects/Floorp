@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#aboutDialogContainer {
+  background-color: #20123a;
+  color: #fff;
+}
+
+#clientBox {
+  padding: 10px 0 15px;
+}
+
+#leftBox {
+  background-image: url("chrome://branding/content/about-logo.png");
+  background-repeat: no-repeat;
+  background-size: 192px auto;
+  background-position: center 20%;
+  /* min-width and min-height create room for the logo */
+  min-width: 210px;
+  min-height: 210px;
+  margin-top: 20px;
+  margin-inline-start: 30px;
+}
+
+@media (min-resolution: 2dppx) {
+  #leftBox {
+    background-image: url("chrome://branding/content/about-logo@2x.png");
+  }
+}
+
+.text-link {
+  color: #fff !important;
+  text-decoration: underline;
+}
+
+.text-link:-moz-focusring {
+  border-color: #fff;
+}
+
+#rightBox {
+  margin-inline: 30px;
+}
+
+#bottomBox {
+  background-color: hsla(235, 43%, 10%, .5);
+  padding: 15px 10px 15px;
+}
+
+#trademark {
+  font-size: xx-small;
+  text-align: center;
+  color: #999999;
+  margin-block: 10px;
+}

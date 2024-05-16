@@ -45,25 +45,25 @@
       class="control-item control-button tooltip-under-controls" data-l10n-attrs="tooltip"
 #ifdef XP_MACOSX
       mac="true"
-      tabindex="8"
-#else
       tabindex="9"
+#else
+      tabindex="10"
 #endif
       />
       <button id="unpip"
       class="control-item control-button tooltip-under-controls" data-l10n-id="pictureinpicture-unpip-btn" data-l10n-attrs="tooltip"
 #ifdef XP_MACOSX
       mac="true"
-      tabindex="9"
+      tabindex="10"
 #else
-      tabindex="8"
+      tabindex="9"
 #endif
       />
     <div id="controls-bottom-gradient" class="control-item"></div>
     <div id="controls-bottom">
       <div class="controls-bottom-upper">
           <div class="scrubber-no-drag">
-            <input id="scrubber" class="control-item" min="0" max="1" step=".001" type="range" tabindex="10" hidden="true"/>
+            <input id="scrubber" class="control-item" min="0" max="1" step=".001" type="range" tabindex="11" hidden="true"/>
           </div>
       </div>
       <div class="controls-bottom-lower">
@@ -71,21 +71,22 @@
           <div id="timestamp" class="control-item" hidden="true"></div>
         </div>
         <div class="center-controls">
-          <button id="seekBackward" class="control-item control-button tooltip-over-controls center-tooltip" hidden="true" data-l10n-id="pictureinpicture-seekbackward-btn" data-l10n-attrs="tooltip" tabindex="11"></button>
+          <button id="seekBackward" class="control-item control-button tooltip-over-controls center-tooltip" hidden="true" data-l10n-id="pictureinpicture-seekbackward-btn" data-l10n-attrs="tooltip" tabindex="12"></button>
           <button id="playpause" class="control-item control-button tooltip-over-controls center-tooltip" tabindex="1"
                   data-l10n-id="pictureinpicture-pause-btn" data-l10n-attrs="tooltip"/>
           <button id="seekForward" class="control-item control-button tooltip-over-controls center-tooltip" hidden="true" data-l10n-id="pictureinpicture-seekforward-btn" data-l10n-attrs="tooltip" tabindex="2"></button>
         </div>
         <div class="end-controls">
           <button id="audio" class="control-item control-button tooltip-over-controls center-tooltip" hidden="true" data-l10n-attrs="tooltip" tabindex="3"/>
-          <button id="closed-caption" class="control-item control-button tooltip-over-controls center-tooltip closed-caption" hidden="true" disabled="true" data-l10n-id="pictureinpicture-subtitles-btn" data-l10n-attrs="tooltip" tabindex="4"></button>
+          <input id="audio-scrubber" class="control-item" min="0" max="1" step=".001" type="range" tabindex="4" hidden="true"/>
+          <button id="closed-caption" class="control-item control-button tooltip-over-controls center-tooltip closed-caption" hidden="true" disabled="true" data-l10n-id="pictureinpicture-subtitles-btn" data-l10n-attrs="tooltip" tabindex="5"></button>
           <div id="settings" class="hide panel">
             <fieldset class="box panel-fieldset">
               <legend class="a11y-only panel-legend" data-l10n-id="pictureinpicture-subtitles-panel-accessible"></legend>
               <div class="subtitle-grid">
                 <label id="subtitles-toggle-label" data-l10n-id="pictureinpicture-subtitles-label" class="bold" for="subtitles-toggle"></label>
                 <label class="switch">
-                  <input id="subtitles-toggle" type="checkbox" tabindex="5" checked=""/>
+                  <input id="subtitles-toggle" type="checkbox" tabindex="6" checked=""/>
                   <span class="slider" role="presentation"></span>
                 </label>
               </div>
@@ -93,22 +94,22 @@
               <fieldset class="font-size-selection panel-fieldset">
                 <legend data-l10n-id="pictureinpicture-font-size-label" class="bold panel-legend"></legend>
                 <div id="font-size-selection-radio-small" class="font-size-selection-radio">
-                  <input id="small" type="radio" name="cc-size" tabindex="6"/>
+                  <input id="small" type="radio" name="cc-size" tabindex="7"/>
                   <label data-l10n-id="pictureinpicture-font-size-small" for="small"></label>
                 </div>
                 <div id="font-size-selection-radio-medium" class="font-size-selection-radio">
-                  <input id="medium" type="radio" name="cc-size" tabindex="6"/>
+                  <input id="medium" type="radio" name="cc-size" tabindex="7"/>
                   <label data-l10n-id="pictureinpicture-font-size-medium" for="medium"></label>
                 </div>
                 <div id="font-size-selection-radio-large" class="font-size-selection-radio">
-                  <input id="large" type="radio" name="cc-size" tabindex="6"/>
+                  <input id="large" type="radio" name="cc-size" tabindex="7"/>
                   <label data-l10n-id="pictureinpicture-font-size-large" for="large"></label>
                 </div>
               </fieldset>
             </fieldset>
             <div class="arrow"></div>
           </div>
-          <button id="fullscreen" class="control-item control-button tooltip-over-controls inline-end-tooltip" hidden="true" data-l10n-attrs="tooltip" tabindex="7"></button>
+          <button id="fullscreen" class="control-item control-button tooltip-over-controls inline-end-tooltip" hidden="true" data-l10n-attrs="tooltip" tabindex="8"></button>
         </div>
       </div>
     </div>

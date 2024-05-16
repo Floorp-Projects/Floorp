@@ -70,8 +70,8 @@ export class UrlbarController {
       throw new Error("input is missing 'window' property.");
     }
     if (
-      !options.input.window.location ||
-      options.input.window.location.href != AppConstants.BROWSER_CHROME_URL
+      !options.input.window.location || 
+      !options.input.window.location.href.startsWith(AppConstants.BROWSER_CHROME_URL)
     ) {
       throw new Error("input.window should be an actual browser window.");
     }
@@ -989,6 +989,11 @@ class TelemetryEvent {
         this._controller.browserWindow
       );
       return;
+    }
+
+    // If Search Engine is Floorp Search, We should create Workspaces for showing Search result
+    if (details.result?.payload.engine == "Floorp Search") {
+      this._controller.browserWindow.gWorkspaces.createWorkspace(`ウェブ & AI 検索 -${searchWords}-`, false, false, true, "article", true) 
     }
 
     if (action == "go_button") {

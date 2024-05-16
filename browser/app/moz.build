@@ -159,9 +159,25 @@ if CONFIG["MOZ_LINUX_32_SSE2_STARTUP_ERROR"]:
         "-mfpmath=387",
     ]
 
-for icon in ("firefox", "document", "newwindow", "newtab", "pbmode", "document_pdf"):
+for icon in ("firefox", "document", "newwindow", "newtab", "pbmode"):
     DEFINES[icon.upper() + "_ICO"] = '"%s/%s/%s.ico"' % (
         TOPSRCDIR,
         CONFIG["MOZ_BRANDING_DIRECTORY"],
+        icon,
+    )
+
+if CONFIG["OS_TARGET"] == "WINNT":
+    checkOSBuildFloorp = "windows"
+elif CONFIG["OS_TARGET"] == "Darwin":
+    checkOSBuildFloorp = "mac"
+else:
+    checkOSBuildFloorp = "linux"
+
+for icon in ("document", "document_pdf",):
+    DEFINES[icon.upper() + "_ICO"] = '"%s/%s/%s/%s/%s.ico"' % (
+        TOPSRCDIR,
+        CONFIG["MOZ_BRANDING_DIRECTORY"],
+        "content",
+        checkOSBuildFloorp,
         icon,
     )
