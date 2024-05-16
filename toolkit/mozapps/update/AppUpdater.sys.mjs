@@ -285,7 +285,7 @@ export class AppUpdater {
 
       if (updateState == Ci.nsIApplicationUpdateService.STATE_STAGING) {
         LOG("AppUpdater:check - staging");
-        this.#update = this.um.readyUpdate;
+        this.#update = await this.um.getReadyUpdate();
         await this.#awaitStagingComplete();
         return;
       }
@@ -435,15 +435,21 @@ export class AppUpdater {
    * is reached.
    */
   async #awaitDownloadComplete() {
+    // These cases are unlikely, but we might have just completed really fast.
     let updateState = this.aus.currentState;
-    if (
-      updateState != Ci.nsIApplicationUpdateService.STATE_DOWNLOADING &&
-      updateState != Ci.nsIApplicationUpdateService.STATE_SWAP
-    ) {
-      throw new Error(
-        "AppUpdater:#awaitDownloadComplete invoked in unexpected state: " +
-          this.aus.getStateName(updateState)
-      );
+    switch (updateState) {
+      case Ci.nsIApplicationUpdateService.STATE_IDLE:
+        LOG("AppUpdater:#awaitDownloadComplete - Quick failure.");
+        this.#setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
+        return;
+      case Ci.nsIApplicationUpdateService.STATE_STAGING:
+        LOG("AppUpdater:#awaitDownloadComplete - Quick staging.");
+        await this.#awaitStagingComplete();
+        return;
+      case Ci.nsIApplicationUpdateService.STATE_PENDING:
+        LOG("AppUpdater:#awaitDownloadComplete - Quick pending.");
+        this.#onReadyToRestart();
+        return;
     }
 
     // We may already be in the `DOWNLOADING` state, depending on how we entered
@@ -553,12 +559,25 @@ export class AppUpdater {
    * is reached.
    */
   async #awaitStagingComplete() {
+    // These cases are unlikely, but we might have just completed really fast.
     let updateState = this.aus.currentState;
-    if (updateState != Ci.nsIApplicationUpdateService.STATE_STAGING) {
-      throw new Error(
-        "AppUpdater:#awaitStagingComplete invoked in unexpected state: " +
-          this.aus.getStateName(updateState)
-      );
+    switch (updateState) {
+      case Ci.nsIApplicationUpdateService.STATE_IDLE:
+        LOG("AppUpdater:#awaitStagingComplete - Quick failure.");
+        this.#setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
+        return;
+      case Ci.nsIApplicationUpdateService.STATE_DOWNLOADING:
+        LOG("AppUpdater:#awaitStagingComplete - Quick fallback.");
+        await this.#awaitDownloadComplete();
+        return;
+      case Ci.nsIApplicationUpdateService.STATE_PENDING:
+        LOG("AppUpdater:#awaitStagingComplete - Quick pending.");
+        this.#onReadyToRestart();
+        return;
+      case Ci.nsIApplicationUpdateService.STATE_SWAP:
+        LOG("AppUpdater:#awaitStagingComplete - Quick swap.");
+        await this.#awaitDownloadComplete();
+        return;
     }
 
     LOG("AppUpdater:#awaitStagingComplete - Setting status STAGING.");
@@ -734,7 +753,7 @@ export class AppUpdater {
       // `readyUpdate` and `downloadingUpdate` will be set to `null`.
       this.#update = this.um.downloadingUpdate;
       if (!this.#update) {
-        this.#update = this.um.readyUpdate;
+        this.#update = await this.um.getReadyUpdate();
       }
 
       await this.#awaitDownloadComplete();
