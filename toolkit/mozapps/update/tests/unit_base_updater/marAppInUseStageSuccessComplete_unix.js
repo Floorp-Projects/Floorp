@@ -30,7 +30,7 @@ async function run_test() {
   await checkPostUpdateAppLog();
   checkAppBundleModTime();
   checkSymLinks();
-  await standardInit();
+  await testPostUpdateProcessing();
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_REPLACE_SUCCESS, false, true);

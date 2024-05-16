@@ -15,7 +15,7 @@ async function run_test() {
   await runHelperLockFile(getTestFileByName("searchpluginspng1.png"));
   runUpdate(STATE_FAILED_READ_ERROR, false, 1, true);
   await waitForHelperExit();
-  await standardInit();
+  await testPostUpdateProcessing();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_UNABLE_OPEN_DEST);

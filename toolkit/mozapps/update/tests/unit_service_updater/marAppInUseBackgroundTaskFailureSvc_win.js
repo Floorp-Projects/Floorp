@@ -29,7 +29,7 @@ async function run_test() {
   );
   await waitForHelperExit();
 
-  await standardInit();
+  await testPostUpdateProcessing();
 
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
