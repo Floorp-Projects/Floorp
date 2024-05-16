@@ -21,9 +21,12 @@
 #ifdef __MINGW32__
 // The PKEY_Link_Arguments property key does not exist in the MINGW32
 // build configuration, so we define it ourselves here.
+#  define INITGUID  // This alters the behavior of DEFINE_PROPERTYKEY so that
+                    // we define PKEY_Link_Arguments rather than declare it.
 #  include <propkeydef.h>  // For DEFINE_PROPERTYKEY() definition
 DEFINE_PROPERTYKEY(PKEY_Link_Arguments, 0x436F2667, 0x14E2, 0x4FEB, 0xB3, 0x0A,
                    0x14, 0x6C, 0x53, 0xB5, 0xB6, 0x74, 100);
+#  undef INITGUID
 #endif
 
 using mozilla::dom::Promise;
