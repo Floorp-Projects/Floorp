@@ -12367,7 +12367,10 @@ discourse.team
 
 // Clever Cloud : https://www.clever-cloud.com/
 // Submitted by Quentin Adam <noc@clever-cloud.com>
+cleverapps.cc
+*.services.clever-cloud.com
 cleverapps.io
+cleverapps.tech
 
 // Clerk : https://www.clerk.dev
 // Submitted by Colin Sidoti <systems@clerk.dev>
@@ -13153,6 +13156,11 @@ us-2.evennode.com
 us-3.evennode.com
 us-4.evennode.com
 
+// Expo : https://expo.dev/
+// Submitted by James Ide <psl@expo.dev>
+expo.app
+staging.expo.app
+
 // eDirect Corp. : https://hosting.url.com.tw/
 // Submitted by C.S. chang <cschang@corp.url.com.tw>
 twmail.cc
@@ -13615,7 +13623,8 @@ ro.im
 goip.de
 
 // Google, Inc.
-// Submitted by Eduardo Vela <evn@google.com>
+// Submitted by Shannon McCabe <public-suffix-editors@google.com>
+*.hosted.app
 *.run.app
 web.app
 *.0emm.com
@@ -14418,6 +14427,10 @@ noop.app
 // Submitted by Laurent Pellegrino <security@noticeable.io>
 noticeable.news
 
+// Notion Labs, Inc : https://www.notion.so/
+// Submitted by Jess Yao <trust-core-team@makenotion.com>
+notion.site
+
 // Now-DNS : https://now-dns.com
 // Submitted by Steve Russell <steve@now-dns.com>
 dnsking.ch
@@ -14557,6 +14570,7 @@ prvcy.page
 
 // Observable, Inc. : https://observablehq.com
 // Submitted by Mike Bostock <dns@observablehq.com>
+observablehq.cloud
 static.observableusercontent.com
 
 // Octopodal Solutions, LLC. : https://ulterius.io/
@@ -15545,6 +15559,11 @@ dnsupdate.info
 // Submitted by Ed Moore <Ed.Moore@lib.de.us>
 lib.de.us
 
+// Val Town, Inc : https://val.town/
+// Submitted by Tom MacWright <security@val.town>
+express.val.run
+web.val.run
+
 // VeryPositive SIA : http://very.lv
 // Submitted by Danko Aleksejevs <danko@very.lv>
 2038.io
@@ -15608,6 +15627,10 @@ wedeploy.sh
 // Western Digital Technologies, Inc : https://www.wdc.com
 // Submitted by Jung Jin <jungseok.jin@wdc.com>
 remotewd.com
+
+// Whatbox Inc. : https://whatbox.ca/
+// Submitted by Anthony Ryan <servers@whatbox.ca>
+box.ca
 
 // WIARD Enterprises : https://wiardweb.com
 // Submitted by Kidd Hustle <kiddhustle@wiardweb.com>
@@ -15710,6 +15733,10 @@ za.org
 // ZAP-Hosting GmbH & Co. KG : https://zap-hosting.com
 // Submitted by Julian Alker <security@zap-hosting.com>
 zap.cloud
+
+// Zeabur : https://zeabur.com/
+// Submitted by Zeabur Team <contact@zeabur.com>
+zeabur.app
 
 // Zine EOOD : https://zine.bg/
 // Submitted by Martin Angelov <martin@zine.bg>

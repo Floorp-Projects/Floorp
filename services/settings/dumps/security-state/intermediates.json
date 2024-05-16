@@ -1,24 +1,6 @@
 {
   "data": [
     {
-      "schema": 1714791237816,
-      "derHash": "GH49Z7oIe5+b7zzWIUXn+cJ0esNiZk6YzFWsQmpBkCg=",
-      "subject": "CN=TrustID Enterprise TLS CA 3,O=IdenTrust,C=US",
-      "subjectDN": "MEcxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJZGVuVHJ1c3QxJDAiBgNVBAMTG1RydXN0SUQgRW50ZXJwcmlzZSBUTFMgQ0EgMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "53e98087ee13a616940a25bcb7b29f323e76727d6b09f8a57cbfb312edde1355",
-        "size": 2718,
-        "filename": "Yo1JYtjv0A0JKQdpcsZDiGbDJrXCSPCztPMl6CEDfpQ=.pem",
-        "location": "security-state-staging/intermediates/b5aa0ed9-762a-4350-9342-c28467d8d68d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Yo1JYtjv0A0JKQdpcsZDiGbDJrXCSPCztPMl6CEDfpQ=",
-      "crlite_enrolled": false,
-      "id": "c89e9df3-c41a-4718-878c-dc3107762b8f",
-      "last_modified": 1714791423311
-    },
-    {
       "schema": 1714791237384,
       "derHash": "5b/O2dIW66faNjSBn7U0+5zroez55jee2DWD0usXfBs=",
       "subject": "CN=CrowdStrike TLS RSA CA G5,O=CrowdStrike\\, Inc.,C=US",
@@ -28261,24 +28243,6 @@
       "last_modified": 1601517442835
     },
     {
-      "schema": 1601376765799,
-      "derHash": "2Wy8A7UjzTMVkYZRz0hiFiiH3VY6+yNS0/NLuUV2+T0=",
-      "subject": "CN=Verizon Global Root CA,OU=OmniRoot,O=Verizon Business,C=US",
-      "subjectDN": "MFwxCzAJBgNVBAYTAlVTMRkwFwYDVQQKDBBWZXJpem9uIEJ1c2luZXNzMREwDwYDVQQLDAhPbW5pUm9vdDEfMB0GA1UEAwwWVmVyaXpvbiBHbG9iYWwgUm9vdCBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "522a9129b746a60c4aa7d040da0f639b8349b1fee088f3f0ecf8b8101c7e452a",
-        "size": 1760,
-        "filename": "v-gpCYcuRDTxFcUaVhaAGVlNDgPco2PZ87SDnQurzeU=.pem",
-        "location": "security-state-staging/intermediates/98a3c55c-3f5d-4937-9389-3ca882ba85cf.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "v+gpCYcuRDTxFcUaVhaAGVlNDgPco2PZ87SDnQurzeU=",
-      "crlite_enrolled": false,
-      "id": "62b74836-05bd-4881-9d60-b255969ce226",
-      "last_modified": 1601517442759
-    },
-    {
       "schema": 1601376738922,
       "derHash": "LRK2GaZgzvsBMnGDHYkSE/xDTpgqIVaCVs9OLoYyS+o=",
       "subject": "CN=Starfield Services Root Certificate Authority - G2,O=Starfield Technologies\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
@@ -30943,5 +30907,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1715137023171
+  "timestamp": 1715637423088
 }
