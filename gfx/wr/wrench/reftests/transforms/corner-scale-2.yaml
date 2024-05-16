@@ -1,0 +1,28 @@
+# This test contains a rounded rectangle intended to be drawn using a nine-patch
+# under a transform that ends up being a simple axis-aligned scale using two
+# rotations that cancel each other to exercise the code path where the transform
+# is stored as a matrix.
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [0, 0, 800, 800]
+      transform: [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+      items:
+      - type: stacking-context
+        bounds: [0, 0, 800, 800]
+        transform: rotate(1)
+        items:
+        - type: stacking-context
+          bounds: [0, 0, 800, 800]
+          transform: rotate(-1)
+          items:
+          - type: clip
+            id: 1
+            complex:
+              - rect: [10, 10, 300, 300]
+                radius: 32
+          - type: rect
+            bounds: 10 10 300 300
+            color: red
+            clip-chain: [1]

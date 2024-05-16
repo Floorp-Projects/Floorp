@@ -57,3 +57,4 @@ skip_on(android) == raster-root-scaling-2.yaml raster-root-scaling-2-ref.yaml
 == nested-local-scale.yaml nested-local-scale-ref.yaml
 platform(linux,mac) == perspective-surface-scale.yaml perspective-surface-scale.png
 fuzzy(1,8762) == computed-rotation-yflip.yaml computed-rotation-yflip.png
+fuzzy(5,100) == corner-scale.yaml corner-scale-2.yaml
