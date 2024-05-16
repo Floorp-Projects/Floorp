@@ -62,9 +62,11 @@ async function echo(request, _model, _tokenizer, _processor) {
  *
  * @async
  * @param {object} request - The request object containing image data.
- * @param {string} [request.imageUrl] - The URL of the image to process. Either `imageUrl` or `data` must be provided, but not both.
- * @param {ArrayBuffer} [request.data] - The raw image data to process. Either `data` or `imageUrl` must be provided, but not both.
- * @param {string} request.mimeType - The MIME type of the image data.
+ * @param {string} [request.url] - The URL of the image to process. If `url` is not provided, other fields are used.
+ * @param {ArrayBuffer} [request.data] - The raw image data to process. Ignored if `url` is provided.
+ * @param {number} [request.width] - The image width. Ignored if `url` is provided.
+ * @param {number} [request.height] - The image height. Ignored if `url` is provided.
+ * @param {number} [request.channels] - The image channels. Can be 1, 2, 3 or 4. Defaults to 4. Ignored if `url` is provided.
  * @param {object} model - The model used for inference.
  * @param {object} tokenizer - The tokenizer used for decoding.
  * @param {object} processor - The processor used for preparing image data.
@@ -80,11 +82,15 @@ async function imageToText(request, model, tokenizer, processor) {
   let start = Date.now();
   let rawImage;
 
-  if ("imageUrl" in request) {
-    rawImage = await RawImage.fromUrl(request.imageUrl);
+  if ("url" in request) {
+    rawImage = await RawImage.fromURL(request.url);
   } else {
-    const blob = new Blob([request.data], { type: request.mimeType });
-    rawImage = await RawImage.fromBlob(blob);
+    rawImage = new RawImage(
+      request.data,
+      request.width,
+      request.height,
+      request.channels || 4
+    );
   }
 
   debug("Image loaded in ", Date.now() - start);
