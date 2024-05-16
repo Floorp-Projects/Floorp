@@ -50,7 +50,7 @@ async function run_test() {
   // Reload the update manager now that the update directory files are locked.
   reloadUpdateManagerData();
   await runUpdateUsingApp(STATE_PENDING);
-  await standardInit();
+  await testPostUpdateProcessing();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   await checkUpdateManager(STATE_PENDING, false, STATE_NONE, 0, 0);
