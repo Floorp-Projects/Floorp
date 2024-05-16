@@ -60,12 +60,6 @@ import org.mozilla.gecko.util.WebAuthnUtils;
     RSAAlgorithm.RS512
   };
 
-  public static class Exception extends RuntimeException {
-    public Exception(final String error) {
-      super(error);
-    }
-  }
-
   private static PublicKeyCredentialCreationOptions getRequestOptionsForMakeCredential(
       final GeckoBundle credentialBundle,
       final byte[] userId,
@@ -175,7 +169,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
       final GeckoBundle extensions) {
     if (!credentialBundle.containsKey("isWebAuthn")) {
       // FIDO U2F not supported by Android (for us anyway) at this time
-      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("NOT_SUPPORTED_ERR"));
+      return GeckoResult.fromException(new WebAuthnUtils.Exception("NOT_SUPPORTED_ERR"));
     }
 
     final PublicKeyCredentialCreationOptions requestOptions =
@@ -224,8 +218,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
                   intent -> {
                     if (!intent.hasExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA)) {
                       Log.w(LOGTAG, "Failed to get credential data in FIDO intent");
-                      result.completeExceptionally(
-                          new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+                      result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
                       return;
                     }
                     final byte[] rspData =
@@ -234,7 +227,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
                         PublicKeyCredential.deserializeFromBytes(rspData);
 
                     final AuthenticatorResponse response = publicKeyCredentialData.getResponse();
-                    final WebAuthnTokenManager.Exception error = parseErrorResponse(response);
+                    final WebAuthnUtils.Exception error = parseErrorResponse(response);
                     if (error != null) {
                       result.completeExceptionally(error);
                       return;
@@ -242,8 +235,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
 
                     if (!(response instanceof AuthenticatorAttestationResponse)) {
                       Log.w(LOGTAG, "Failed to get attestation response in FIDO intent");
-                      result.completeExceptionally(
-                          new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+                      result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
                       return;
                     }
 
@@ -264,14 +256,14 @@ import org.mozilla.gecko.util.WebAuthnUtils;
                   },
                   e -> {
                     Log.w(LOGTAG, "Failed to launch activity: ", e);
-                    result.completeExceptionally(new WebAuthnTokenManager.Exception("ABORT_ERR"));
+                    result.completeExceptionally(new WebAuthnUtils.Exception("ABORT_ERR"));
                   });
         });
 
     intentTask.addOnFailureListener(
         e -> {
           Log.w(LOGTAG, "Failed to get FIDO intent", e);
-          result.completeExceptionally(new WebAuthnTokenManager.Exception("ABORT_ERR"));
+          result.completeExceptionally(new WebAuthnUtils.Exception("ABORT_ERR"));
         });
 
     return result;
@@ -297,7 +289,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
       excludeList = WebAuthnUtils.WebAuthnPublicCredential.CombineBuffers(idList, transportList);
     } catch (final RuntimeException e) {
       Log.w(LOGTAG, "Couldn't extract nio byte arrays!", e);
-      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+      return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
     }
 
     try {
@@ -314,12 +306,11 @@ import org.mozilla.gecko.util.WebAuthnUtils;
       // we will get `NoClassDefFoundError` if we're running on a device that does not
       // have Google Play Services.
       Log.w(LOGTAG, "Couldn't make credential", e);
-      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+      return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
     }
   }
 
-  private static WebAuthnTokenManager.Exception parseErrorResponse(
-      final AuthenticatorResponse response) {
+  private static WebAuthnUtils.Exception parseErrorResponse(final AuthenticatorResponse response) {
     if (!(response instanceof AuthenticatorErrorResponse)) {
       return null;
     }
@@ -329,7 +320,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
     Log.e(LOGTAG, "errorCode.name: " + responseData.getErrorCode());
     Log.e(LOGTAG, "errorMessage: " + responseData.getErrorMessage());
 
-    return new WebAuthnTokenManager.Exception(responseData.getErrorCode().name());
+    return new WebAuthnUtils.Exception(responseData.getErrorCode().name());
   }
 
   private static PublicKeyCredentialRequestOptions getRequestOptionsForGetAssertion(
@@ -370,7 +361,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
 
     if (!assertionBundle.containsKey("isWebAuthn")) {
       // FIDO U2F not supported by Android (for us anyway) at this time
-      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("NOT_SUPPORTED_ERR"));
+      return GeckoResult.fromException(new WebAuthnUtils.Exception("NOT_SUPPORTED_ERR"));
     }
 
     final PublicKeyCredentialRequestOptions requestOptions =
@@ -407,8 +398,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
                   intent -> {
                     if (!intent.hasExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA)) {
                       Log.w(LOGTAG, "Failed to get credential data in FIDO intent");
-                      result.completeExceptionally(
-                          new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+                      result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
                       return;
                     }
 
@@ -418,7 +408,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
                         PublicKeyCredential.deserializeFromBytes(rspData);
                     final AuthenticatorResponse response = publicKeyCredentialData.getResponse();
 
-                    final WebAuthnTokenManager.Exception error = parseErrorResponse(response);
+                    final WebAuthnUtils.Exception error = parseErrorResponse(response);
                     if (error != null) {
                       result.completeExceptionally(error);
                       return;
@@ -426,8 +416,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
 
                     if (!(response instanceof AuthenticatorAssertionResponse)) {
                       Log.w(LOGTAG, "Failed to get assertion response in FIDO intent");
-                      result.completeExceptionally(
-                          new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+                      result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
                       return;
                     }
 
@@ -448,7 +437,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
                   },
                   e -> {
                     Log.w(LOGTAG, "Failed to get FIDO intent", e);
-                    result.completeExceptionally(new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+                    result.completeExceptionally(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
                   });
         });
 
@@ -470,7 +459,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
       allowList = WebAuthnUtils.WebAuthnPublicCredential.CombineBuffers(idList, transportList);
     } catch (final RuntimeException e) {
       Log.w(LOGTAG, "Couldn't extract nio byte arrays!", e);
-      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+      return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
     }
 
     try {
@@ -481,7 +470,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
           extensions);
     } catch (final java.lang.Exception e) {
       Log.w(LOGTAG, "Couldn't get assertion", e);
-      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+      return GeckoResult.fromException(new WebAuthnUtils.Exception("UNKNOWN_ERR"));
     }
   }
 
