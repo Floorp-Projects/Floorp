@@ -1505,7 +1505,7 @@ function cleanupDownloadingUpdate() {
   if (status == STATE_DOWNLOADING) {
     let statusFile = readyUpdateDir.clone();
     statusFile.append(FILE_UPDATE_STATUS);
-    statusFile.remove();
+    statusFile.remove(false);
   }
 }
 
@@ -3409,7 +3409,11 @@ export class UpdateService {
       // update checks, because manual update checking uses a completely
       // different code path (AppUpdater.sys.mjs creates its own nsIUpdateChecker),
       // bypassing this function completely.
-      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_BY_POLICY);
+      if (!this.disabledForTesting) {
+        // This can cause some problems for tests that aren't setup properly for
+        // this.
+        AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_BY_POLICY);
+      }
       return false;
     }
 

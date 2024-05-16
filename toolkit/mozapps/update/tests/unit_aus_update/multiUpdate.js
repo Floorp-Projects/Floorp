@@ -103,8 +103,8 @@ async function downloadUpdate(appUpdateAuto, onDownloadStartCallback) {
     await gAUS.downloadUpdate(update, true);
   }
 
-  await continueFileHandler(CONTINUE_DOWNLOAD);
   await waitToStartPromise;
+  await continueFileHandler(CONTINUE_DOWNLOAD);
   await downloadFinishedPromise;
   // Wait an extra tick after the download has finished. If we try to check for
   // another update exactly when "update-downloaded" fires,
@@ -173,7 +173,7 @@ async function testUpdateCheckDoesNotStart() {
 }
 
 function prepareToDownloadVersion(version, onlyCompleteMar = false) {
-  let updateUrl = `${APP_UPDATE_SJS_URL}?useSlowDownloadMar=1&appVersion=${version}`;
+  let updateUrl = `${APP_UPDATE_SJS_URL}?useSlowDownloadMar=1&useFirstByteEarly=1&appVersion=${version}`;
   if (onlyCompleteMar) {
     updateUrl += "&completePatchOnly=1";
   }

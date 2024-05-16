@@ -287,18 +287,6 @@ const startupPhases = {
   // This means that any I/O at this point delayed first paint.
   "before first paint": [
     {
-      // bug 1545119
-      path: "OldUpdRootD:",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1446012
-      path: "UpdRootD:updates/0/update.status",
-      condition: WIN,
-      stat: 1,
-    },
-    {
       path: "XREAppFeat:formautofill@mozilla.org.xpi",
       condition: !WIN,
       stat: 1,

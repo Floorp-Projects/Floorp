@@ -76,6 +76,15 @@ function handleRequest(aRequest, aResponse) {
       return;
     }
 
+    let marBytes = readFileBytes(getTestDataFile(FILE_SIMPLE_MAR));
+    if (params.firstByteEarly) {
+      // Sending the first byte early causes the request's `onStartRequest`
+      // to be fired before the continue file is written.
+      const firstByte = marBytes[0];
+      marBytes = marBytes.substring(1);
+      aResponse.write(firstByte);
+    }
+
     let retries = 0;
     gSlowDownloadTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     gSlowDownloadTimer.initWithCallback(
@@ -92,7 +101,7 @@ function handleRequest(aRequest, aResponse) {
               continueFile.remove(false);
             }
             gSlowDownloadTimer.cancel();
-            aResponse.write(readFileBytes(getTestDataFile(FILE_SIMPLE_MAR)));
+            aResponse.write(marBytes);
             aResponse.finish();
           } catch (e) {}
         }
@@ -142,6 +151,9 @@ function handleRequest(aRequest, aResponse) {
   let url = "";
   if (params.useSlowDownloadMar) {
     url = URL_HTTP_UPDATE_SJS + "?slowDownloadMar=1";
+    if (params.useFirstByteEarly) {
+      url += "&amp;firstByteEarly=1";
+    }
   } else {
     url = params.badURL ? BAD_SERVICE_URL : SERVICE_URL;
   }
