@@ -2695,6 +2695,12 @@ export class UpdateService {
     });
 
     this._logStatus();
+
+    this.internal = {
+      QueryInterface: ChromeUtils.generateQI([
+        Ci.nsIApplicationUpdateServiceInternal,
+      ]),
+    };
   }
 
   /**
@@ -4359,6 +4365,10 @@ export class UpdateManager {
           this._readyUpdate.state
       );
     }
+
+    this.internal = {
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateManagerInternal]),
+    };
   }
 
   /**
@@ -4992,6 +5002,12 @@ export class CheckerService {
   // checks being cancelled) or completed, its key will be removed from this
   // object.
   #updateCheckData = {};
+
+  constructor() {
+    this.internal = {
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateCheckerInternal]),
+    };
+  }
 
   #makeUpdateCheckDataObject(type, promise) {
     return { type, promise, request: null };
