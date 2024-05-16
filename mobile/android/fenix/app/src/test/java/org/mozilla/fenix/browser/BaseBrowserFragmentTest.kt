@@ -170,6 +170,7 @@ class BaseBrowserFragmentTest {
             url = "",
             sessionId = "1",
             destinationDirectory = "/",
+            directoryPath = "/",
         )
 
         val status = DownloadState.Status.values()
@@ -191,6 +192,7 @@ class BaseBrowserFragmentTest {
             url = "",
             sessionId = "1",
             destinationDirectory = "/",
+            directoryPath = "/",
         )
 
         val status = DownloadState.Status.values()
@@ -212,6 +214,7 @@ class BaseBrowserFragmentTest {
             url = "",
             sessionId = "2",
             destinationDirectory = "/",
+            directoryPath = "/",
         )
 
         val status = DownloadState.Status.values()

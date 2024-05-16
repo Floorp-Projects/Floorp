@@ -20,6 +20,7 @@ import java.util.UUID
  * @property status The current status of the download.
  * @property userAgent The user agent to be used for the download.
  * @property destinationDirectory The matching destination directory for this type of download.
+ * @property directoryPath The full path to the directory where the file should be saved.
  * @property filePath The file path the file was saved at.
  * @property referrerUrl The site that linked to this download.
  * @property skipConfirmation Whether or not the confirmation dialog should be shown before the download begins.
@@ -33,7 +34,6 @@ import java.util.UUID
  * @property notificationId Identifies the download notification in the status bar, if this
  * [DownloadState] has one otherwise null.
  */
-@Suppress("Deprecation")
 data class DownloadState(
     val url: String,
     val fileName: String? = null,
@@ -43,6 +43,7 @@ data class DownloadState(
     val status: Status = Status.INITIATED,
     val userAgent: String? = null,
     val destinationDirectory: String = Environment.DIRECTORY_DOWNLOADS,
+    val directoryPath: String = Environment.getExternalStoragePublicDirectory(destinationDirectory).path,
     val referrerUrl: String? = null,
     val skipConfirmation: Boolean = false,
     val openInApp: Boolean = false,
@@ -53,45 +54,51 @@ data class DownloadState(
     val response: Response? = null,
     val notificationId: Int? = null,
 ) {
-    val filePath: String get() =
-        Environment.getExternalStoragePublicDirectory(destinationDirectory).path + File.separatorChar + fileName
-
-    val directoryPath: String get() = Environment.getExternalStoragePublicDirectory(destinationDirectory).path
+    val filePath: String
+        get() = directoryPath + File.separatorChar + fileName
 
     /**
      * Status that represents every state that a download can be in.
      */
-    @Suppress("MagicNumber")
     enum class Status(val id: Int) {
         /**
          * Indicates that the download is in the first state after creation but not yet [DOWNLOADING].
          */
-        INITIATED(1),
+        INITIATED(INITIATED_ID),
 
         /**
          * Indicates that an [INITIATED] download is now actively being downloaded.
          */
-        DOWNLOADING(2),
+        DOWNLOADING(DOWNLOADING_ID),
 
         /**
          * Indicates that the download that has been [DOWNLOADING] has been paused.
          */
-        PAUSED(3),
+        PAUSED(PAUSED_ID),
 
         /**
          * Indicates that the download that has been [DOWNLOADING] has been cancelled.
          */
-        CANCELLED(4),
+        CANCELLED(CANCELLED_ID),
 
         /**
          * Indicates that the download that has been [DOWNLOADING] has moved to failed because
          * something unexpected has happened.
          */
-        FAILED(5),
+        FAILED(FAILED_ID),
 
         /**
          * Indicates that the [DOWNLOADING] download has been completed.
          */
-        COMPLETED(6),
+        COMPLETED(COMPLETED_ID),
+    }
+
+    companion object {
+        private const val INITIATED_ID = 1
+        private const val DOWNLOADING_ID = 2
+        private const val PAUSED_ID = 3
+        private const val CANCELLED_ID = 4
+        private const val FAILED_ID = 5
+        private const val COMPLETED_ID = 6
     }
 }

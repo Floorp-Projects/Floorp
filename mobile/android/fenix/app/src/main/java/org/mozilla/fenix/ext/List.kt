@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.ext
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import org.mozilla.fenix.library.downloads.DownloadItem
 import java.io.File
 
@@ -13,8 +15,9 @@ import java.io.File
  * deleted the downloaded item it should not show on the downloaded
  * list.
  */
-fun List<DownloadItem>.filterNotExistsOnDisk(): List<DownloadItem> {
-    return this.filter {
-        File(it.filePath).exists()
+suspend fun List<DownloadItem>.filterExistsOnDisk(dispatcher: CoroutineDispatcher): List<DownloadItem> =
+    withContext(dispatcher) {
+        filter {
+            File(it.filePath).exists()
+        }
     }
-}

@@ -22,12 +22,20 @@ class DownloadActionTest {
     fun `AddDownloadAction adds download`() {
         val store = BrowserStore(BrowserState())
 
-        val download1 = DownloadState("https://mozilla.org/download1", destinationDirectory = "")
+        val download1 = DownloadState(
+            "https://mozilla.org/download1",
+            destinationDirectory = "",
+            directoryPath = "",
+        )
         store.dispatch(DownloadAction.AddDownloadAction(download1)).joinBlocking()
         assertEquals(download1, store.state.downloads[download1.id])
         assertEquals(1, store.state.downloads.size)
 
-        val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "")
+        val download2 = DownloadState(
+            "https://mozilla.org/download2",
+            destinationDirectory = "",
+            directoryPath = "",
+        )
         store.dispatch(DownloadAction.AddDownloadAction(download2)).joinBlocking()
         assertEquals(download2, store.state.downloads[download2.id])
         assertEquals(2, store.state.downloads.size)
@@ -37,7 +45,12 @@ class DownloadActionTest {
     fun `WHEN DismissDownloadNotificationAction is dispatched THEN notificationId is set to null`() {
         val store = BrowserStore(BrowserState())
 
-        val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "", notificationId = 100)
+        val download = DownloadState(
+            "https://mozilla.org/download1",
+            destinationDirectory = "",
+            directoryPath = "",
+            notificationId = 100,
+        )
         store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
         assertNotNull(store.state.downloads[download.id]!!.notificationId)
 
@@ -49,7 +62,12 @@ class DownloadActionTest {
     fun `WHEN DismissDownloadNotificationAction is dispatched with an invalid downloadId THEN the state must not change`() {
         val store = BrowserStore(BrowserState())
 
-        val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "", notificationId = 100)
+        val download = DownloadState(
+            "https://mozilla.org/download1",
+            destinationDirectory = "",
+            directoryPath = "",
+            notificationId = 100,
+        )
         store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
         assertNotNull(store.state.downloads[download.id]!!.notificationId)
         assertEquals(1, store.state.downloads.size)
@@ -63,12 +81,12 @@ class DownloadActionTest {
     fun `RestoreDownloadStateAction adds download`() {
         val store = BrowserStore(BrowserState())
 
-        val download1 = DownloadState("https://mozilla.org/download1", destinationDirectory = "")
+        val download1 = DownloadState("https://mozilla.org/download1", destinationDirectory = "", directoryPath = "")
         store.dispatch(DownloadAction.RestoreDownloadStateAction(download1)).joinBlocking()
         assertEquals(download1, store.state.downloads[download1.id])
         assertEquals(1, store.state.downloads.size)
 
-        val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "")
+        val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "", directoryPath = "")
         store.dispatch(DownloadAction.RestoreDownloadStateAction(download2)).joinBlocking()
         assertEquals(download2, store.state.downloads[download2.id])
         assertEquals(2, store.state.downloads.size)
@@ -87,7 +105,7 @@ class DownloadActionTest {
     fun `RemoveDownloadAction removes download`() {
         val store = BrowserStore(BrowserState())
 
-        val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "")
+        val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "", directoryPath = "")
         store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
         assertEquals(download, store.state.downloads[download.id])
         assertFalse(store.state.downloads.isEmpty())
@@ -100,8 +118,8 @@ class DownloadActionTest {
     fun `RemoveAllDownloadsAction removes all downloads`() {
         val store = BrowserStore(BrowserState())
 
-        val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "")
-        val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "")
+        val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "", directoryPath = "")
+        val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "", directoryPath = "")
         store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
         store.dispatch(DownloadAction.AddDownloadAction(download2)).joinBlocking()
 
@@ -115,8 +133,8 @@ class DownloadActionTest {
     @Test
     fun `UpdateDownloadAction updates the provided download`() {
         val store = BrowserStore(BrowserState())
-        val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "")
-        val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "")
+        val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "", directoryPath = "")
+        val download2 = DownloadState("https://mozilla.org/download2", destinationDirectory = "", directoryPath = "")
 
         store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
         store.dispatch(DownloadAction.AddDownloadAction(download2)).joinBlocking()

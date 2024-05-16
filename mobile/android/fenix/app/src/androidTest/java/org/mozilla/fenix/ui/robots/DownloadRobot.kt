@@ -10,16 +10,12 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
-import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
@@ -46,7 +42,7 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  * Implementation of Robot Pattern for download UI handling.
  */
 
-class DownloadRobot {
+open class DownloadRobot {
 
     fun verifyDownloadPrompt(fileName: String) {
         var currentTries = 0
@@ -107,63 +103,6 @@ class DownloadRobot {
 
     fun verifyDownloadedFileName(fileName: String) =
         assertUIObjectExists(itemContainingText(fileName))
-
-    fun verifyDownloadedFileIcon() = assertUIObjectExists(itemWithResId("$packageName:id/favicon"))
-
-    fun verifyEmptyDownloadsList() {
-        Log.i(TAG, "verifyEmptyDownloadsList: Waiting for $waitingTime ms for for empty download list to exist")
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/download_empty_view"))
-            .waitForExists(waitingTime)
-        Log.i(TAG, "verifyEmptyDownloadsList: Waited for $waitingTime ms for for empty download list to exist")
-        Log.i(TAG, "verifyEmptyDownloadsList: Trying to verify that the \"No downloaded files\" list message is displayed")
-        onView(withText("No downloaded files")).check(matches(isDisplayed()))
-        Log.i(TAG, "verifyEmptyDownloadsList: Verified that the \"No downloaded files\" list message is displayed")
-    }
-
-    fun waitForDownloadsListToExist() =
-        assertUIObjectExists(itemWithResId("$packageName:id/download_list"))
-
-    fun openDownloadedFile(fileName: String) {
-        Log.i(TAG, "openDownloadedFile: Trying to verify that the downloaded file: $fileName is displayed")
-        downloadedFile(fileName).check(matches(isDisplayed()))
-        Log.i(TAG, "openDownloadedFile: Verified that the downloaded file: $fileName is displayed")
-        Log.i(TAG, "openDownloadedFile: Trying to click downloaded file: $fileName")
-        downloadedFile(fileName).click()
-        Log.i(TAG, "openDownloadedFile: Clicked downloaded file: $fileName")
-    }
-
-    fun deleteDownloadedItem(fileName: String) {
-        Log.i(TAG, "deleteDownloadedItem: Trying to click the trash bin icon to delete downloaded file: $fileName")
-        onView(
-            allOf(
-                withId(R.id.overflow_menu),
-                hasSibling(withText(fileName)),
-            ),
-        ).click()
-        Log.i(TAG, "deleteDownloadedItem: Clicked the trash bin icon to delete downloaded file: $fileName")
-    }
-
-    fun longClickDownloadedItem(title: String) {
-        Log.i(TAG, "longClickDownloadedItem: Trying to long click downloaded file: $title")
-        onView(
-            allOf(
-                withId(R.id.title),
-                withText(title),
-            ),
-        ).perform(longClick())
-        Log.i(TAG, "longClickDownloadedItem: Long clicked downloaded file: $title")
-    }
-
-    fun selectDownloadedItem(title: String) {
-        Log.i(TAG, "selectDownloadedItem: Trying click downloaded file: $title to select it")
-        onView(
-            allOf(
-                withId(R.id.title),
-                withText(title),
-            ),
-        ).perform(click())
-        Log.i(TAG, "selectDownloadedItem: Clicked downloaded file: $title to select it")
-    }
 
     fun openMultiSelectMoreOptionsMenu() {
         Log.i(TAG, "openMultiSelectMoreOptionsMenu: Trying to click multi-select more options button")
@@ -271,7 +210,5 @@ private fun downloadButton() =
 
 private fun openDownloadButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/download_dialog_action_button"))
-
-private fun downloadedFile(fileName: String) = onView(withText(fileName))
 
 private fun goBackButton() = onView(withContentDescription("Navigate up"))

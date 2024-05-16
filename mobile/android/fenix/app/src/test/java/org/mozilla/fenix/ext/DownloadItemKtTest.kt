@@ -18,7 +18,7 @@ class DownloadItemKtTest {
             url = "url",
             fileName = "MyAwesomeFile",
             filePath = "",
-            size = "",
+            formattedSize = "",
             contentType = "image/png",
             status = DownloadState.Status.COMPLETED,
         )

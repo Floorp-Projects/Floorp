@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import org.junit.Before
@@ -32,8 +33,11 @@ import org.mozilla.fenix.ui.robots.longClickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class MainMenuTest : TestSetup() {
-    @get:Rule
+
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
+
+    @get:Rule
+    val composeTestRule = AndroidComposeTestRule(activityTestRule) { it.activity }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/233849
 
@@ -82,7 +86,7 @@ class MainMenuTest : TestSetup() {
             verifyHistoryMenuView()
         }.goBack {
         }.openThreeDotMenu {
-        }.openDownloadsManager {
+        }.openDownloadsManager(composeTestRule) {
             verifyEmptyDownloadsList()
         }.goBack {
         }.openThreeDotMenu {
