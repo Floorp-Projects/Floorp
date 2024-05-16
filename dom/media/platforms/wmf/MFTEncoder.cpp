@@ -575,6 +575,7 @@ HRESULT MFTEncoder::ProcessEvents() {
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
         break;
       case METransformDrainComplete:
+        MFT_ENC_LOGD("State is now DrainState::DRAINED");
         mDrainState = DrainState::DRAINED;
         break;
       default:
@@ -673,6 +674,7 @@ HRESULT MFTEncoder::Drain(nsTArray<RefPtr<IMFSample>>& aOutput) {
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
       }
       SendMFTMessage(MFT_MESSAGE_COMMAND_DRAIN, 0);
+      MFT_ENC_LOGD("State is now DrainState::DRAINING");
       mDrainState = DrainState::DRAINING;
       [[fallthrough]];  // To collect and return outputs.
     case DrainState::DRAINING:
