@@ -313,3 +313,29 @@ add_task(async function test_eval_at_file() {
 
   await extension.unload();
 });
+
+add_task(async function test_eval_at_view_source() {
+  const extension = ExtensionTestUtils.loadExtension({});
+  await extension.startup();
+  const otherExt = ExtensionTestUtils.loadExtension({});
+  await otherExt.startup();
+
+  await checkEvalDenied({
+    extension,
+    description: "view-source at https:-URL",
+    url: "view-source:https://example.com/?somepage",
+  });
+  await checkEvalDenied({
+    extension,
+    description: "view-source from own extension",
+    url: `view-source:moz-extension://${extension.uuid}/manifest.json?`,
+  });
+  await checkEvalDenied({
+    extension,
+    description: "view-source from another extension",
+    url: `view-source:moz-extension://${otherExt.uuid}/manifest.json?`,
+  });
+
+  await otherExt.unload();
+  await extension.unload();
+});
