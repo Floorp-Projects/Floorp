@@ -200,6 +200,8 @@
     <string name="browser_menu_extensions">Розширення</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_manage_extensions">Керувати розширеннями</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Знайти більше розширень</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Ваш обліковий запис</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -231,6 +233,8 @@
     <string name="browser_menu_find_in_page_2">Знайти на сторінці…</string>
     <!-- Browser menu button that opens the translations dialog, which has options to translate the current browser page. -->
     <string name="browser_menu_translations">Перекласти сторінку</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Зберегти до збірки…</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Зберегти до збірки</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -290,6 +294,8 @@
          bookmarking a page, saving to collection, shortcut or as a PDF, and adding to home screen -->
     <string name="browser_menu_save">Зберегти</string>
 
+    <!-- Browser menu label that bookmarks the currently visited page -->
+    <string name="browser_menu_bookmark_this_page">Додати сторінку до закладок</string>
     <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
     <string name="browser_menu_edit_bookmark">Редагувати закладку</string>
     <!-- Browser menu label that the saves the currently visited page as a PDF -->
@@ -863,6 +869,14 @@
     <string name="fxa_tab_received_notification_name">Отримано вкладку</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Вкладка з %s</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">Закрито вкладок %1$s: %2$d</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Переглянути недавно закриті вкладки</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -2748,6 +2762,8 @@
     <string name="debug_drawer_tab_tools_tab_count_title">Кількість вкладок</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Активні</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Активні</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Неактивні</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->

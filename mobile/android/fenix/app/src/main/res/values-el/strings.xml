@@ -207,6 +207,8 @@
     <string name="browser_menu_extensions">Επεκτάσεις</string>
     <!-- Browser menu button that opens the extensions manager -->
     <string name="browser_menu_manage_extensions">Διαχείριση επεκτάσεων</string>
+    <!-- Browser menu button that opens AMO in a tab -->
+    <string name="browser_menu_discover_more_extensions">Ανακαλύψτε περισσότερες επεκτάσεις</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Πληροφορίες λογαριασμού</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -876,6 +878,14 @@
     <string name="fxa_tab_received_notification_name">Ελήφθη καρτέλα</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Καρτέλα από %s</string>
+
+    <!-- Close Synced Tabs -->
+    <!-- The title for a notification shown when the user closes tabs that are currently
+    open on this device from another device that's signed in to the same Mozilla account.
+    %1$s is a placeholder for the app name; %2$d is the number of tabs closed.  -->
+    <string name="fxa_tabs_closed_notification_title">Έκλεισαν %2$d καρτέλες του %1$s</string>
+    <!-- The body for a "closed synced tabs" notification. -->
+    <string name="fxa_tabs_closed_text">Προβολή πρόσφατα κλεισμένων καρτελών</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection exceptions -->
@@ -2758,6 +2768,9 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Πλοήγηση προς τα πίσω</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Open debug drawer. -->
+    <string name="debug_drawer_fab_content_description">Άνοιγμα μενού εντοπισμού σφαλμάτων</string>
+
     <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Εργαλεία καρτελών</string>
@@ -2765,6 +2778,8 @@
     <string name="debug_drawer_tab_tools_tab_count_title">Αριθμός καρτελών</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_normal" moz:removedIn="127" tools:ignore="UnusedResources">Ενεργές</string>
+    <!-- The active tab count category in the tab count section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_count_active">Ενεργές</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_inactive">Ανενεργές</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
