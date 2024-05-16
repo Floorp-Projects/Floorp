@@ -278,7 +278,7 @@ export class AppUpdater {
 
       if (updateState == Ci.nsIApplicationUpdateService.STATE_DOWNLOADING) {
         LOG("AppUpdater:check - downloading");
-        this.#update = this.um.downloadingUpdate;
+        this.#update = await this.um.getDownloadingUpdate();
         await this.#downloadUpdate();
         return;
       }
@@ -371,8 +371,9 @@ export class AppUpdater {
         LOG("AppUpdater:check - Got user approval. Proceeding with download");
         // If we resolved because of `aus.stateTransition`, we may actually be
         // downloading a different update now.
-        if (this.um.downloadingUpdate) {
-          this.#update = this.um.downloadingUpdate;
+        const downloadingUpdate = await this.um.getDownloadingUpdate();
+        if (downloadingUpdate) {
+          this.#update = downloadingUpdate;
         }
       } else {
         LOG(
@@ -751,7 +752,7 @@ export class AppUpdater {
       // During an update swap, the new update will initially be stored in
       // `downloadingUpdate`. Part way through, it will be moved into
       // `readyUpdate` and `downloadingUpdate` will be set to `null`.
-      this.#update = this.um.downloadingUpdate;
+      this.#update = await this.um.getDownloadingUpdate();
       if (!this.#update) {
         this.#update = await this.um.getReadyUpdate();
       }
