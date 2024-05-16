@@ -4917,7 +4917,7 @@ var SessionStoreInternal = {
         winData.tabs
       );
       this._log.debug(
-        `restoreWindow, createTabsForSessionRestore returned {tabs.length} tabs`
+        `restoreWindow, createTabsForSessionRestore returned ${tabs.length} tabs`
       );
     }
 
