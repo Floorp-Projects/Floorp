@@ -289,6 +289,15 @@ interface nsIUpdateCheck : nsISupports
 };
 
 /**
+ * An interface into the internals of the update checker. These should only be
+ * accessed from within update code and tests.
+ */
+[scriptable, uuid(e27f0336-ad86-4c31-bfee-1d96100521f5)]
+interface nsIUpdateCheckerInternal : nsISupports
+{
+};
+
+/**
  * An interface describing an object that knows how to check for updates. It can
  * perform multiple update checks simultaneously or consolidate multiple check
  * requests into a single web request, depending on whether the parameters
@@ -363,6 +372,20 @@ interface nsIUpdateChecker : nsISupports
    * Ends all pending update checks.
    */
   void stopAllChecks();
+
+  /**
+   * See nsIUpdateCheckerInternal for details.
+   */
+  readonly attribute nsIUpdateCheckerInternal internal;
+};
+
+/**
+ * An interface into the internals of the update service. These should only be
+ * accessed from within update code and tests.
+ */
+[scriptable, uuid(7f39bc95-eaf8-4adc-990b-0fc0734f85fa)]
+interface nsIApplicationUpdateServiceInternal : nsISupports
+{
 };
 
 /**
@@ -627,6 +650,11 @@ interface nsIApplicationUpdateService : nsISupports
    * A Promise that resolves immediately after `currentState` changes.
    */
   readonly attribute Promise stateTransition;
+
+  /**
+   * See nsIApplicationUpdateServiceInternal for details.
+   */
+  readonly attribute nsIApplicationUpdateServiceInternal internal;
 };
 
 /**
@@ -737,6 +765,15 @@ interface nsIUpdateSyncManager : nsISupports
 };
 
 /**
+ * An interface into the internals of the update manager. These should only be
+ * accessed from within update code and tests.
+ */
+[scriptable, uuid(a5739dda-b94f-47e1-a6f3-224d46d6cb8c)]
+interface nsIUpdateManagerInternal : nsISupports
+{
+};
+
+/**
  * An interface describing a global application service that maintains a list
  * of updates previously performed as well as the current active update.
  */
@@ -825,4 +862,9 @@ interface nsIUpdateManager : nsISupports
    * conveys that the cleanup has completed.
    */
   Promise doUninstallCleanup();
+
+  /**
+   * See nsIUpdateManagerInternal for details.
+   */
+  readonly attribute nsIUpdateManagerInternal internal;
 };
