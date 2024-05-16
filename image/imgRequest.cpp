@@ -579,9 +579,9 @@ void imgRequest::UpdateCacheEntrySize() {
 }
 
 void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry,
-                                    nsIRequest* aRequest) {
-  /* get the expires info */
-  if (!aCacheEntry || aCacheEntry->GetExpiryTime() != 0) {
+                                    nsIRequest* aRequest,
+                                    bool aForceTouch /* = false */) {
+  if (!aCacheEntry) {
     return;
   }
 
@@ -605,7 +605,7 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry,
     info.mExpirationTime.emplace(nsContentUtils::SecondsFromPRTime(PR_Now()) -
                                  1);
   }
-  aCacheEntry->SetExpiryTime(*info.mExpirationTime);
+  aCacheEntry->AccumulateExpiryTime(*info.mExpirationTime, aForceTouch);
   // Cache entries default to not needing to validate. We ensure that
   // multiple calls to this function don't override an earlier decision to
   // validate by making validation a one-way decision.
@@ -690,7 +690,7 @@ imgRequest::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  SetCacheValidation(mCacheEntry, aRequest);
+  SetCacheValidation(mCacheEntry, aRequest, /* aForceTouch = */ true);
 
   // Shouldn't we be dead already if this gets hit?
   // Probably multipart/x-mixed-replace...
