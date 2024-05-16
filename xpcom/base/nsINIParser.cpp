@@ -242,7 +242,6 @@ nsresult nsINIParser::DeleteString(const char* aSection, const char* aKey) {
       mSections.Remove(aSection);
     } else {
       mSections.InsertOrUpdate(aSection, std::move(val->next));
-      delete val;
     }
     return NS_OK;
   }

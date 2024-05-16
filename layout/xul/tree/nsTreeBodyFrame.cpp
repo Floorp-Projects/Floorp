@@ -3960,7 +3960,7 @@ void nsTreeBodyFrame::RemoveImageCacheEntry(int32_t aRowIndex,
                                             nsTreeColumn* aCol) {
   nsAutoString imageSrc;
   nsCOMPtr<nsITreeView> view = GetExistingView();
-  if (NS_FAILED(view->GetImageSrc(aRowIndex, aCol, imageSrc))) {
+  if (!view || NS_FAILED(view->GetImageSrc(aRowIndex, aCol, imageSrc))) {
     return;
   }
   nsTreeImageCacheEntry entry;

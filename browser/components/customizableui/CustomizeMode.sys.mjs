@@ -27,7 +27,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   DragPositionManager: "resource:///modules/DragPositionManager.sys.mjs",
-  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
@@ -225,7 +224,6 @@ CustomizeMode.prototype = {
     gTab = aTab;
 
     gTab.setAttribute("customizemode", "true");
-    lazy.SessionStore.persistTabAttribute("customizemode");
 
     if (gTab.linkedPanel) {
       gTab.linkedBrowser.stop();

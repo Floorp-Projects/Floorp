@@ -256,8 +256,6 @@
   "resource:///modules/policies/ProxyPolicies.jsm": "browser/components/enterprisepolicies/helpers/ProxyPolicies.jsm",
   "resource:///modules/policies/WebsiteFilter.jsm": "browser/components/enterprisepolicies/helpers/WebsiteFilter.jsm",
   "resource:///modules/policies/schema.jsm": "browser/components/enterprisepolicies/schemas/schema.jsm",
-  "resource:///modules/sessionstore/ContentRestore.jsm": "browser/components/sessionstore/ContentRestore.jsm",
-  "resource:///modules/sessionstore/ContentSessionStore.jsm": "browser/components/sessionstore/ContentSessionStore.jsm",
   "resource:///modules/sessionstore/GlobalState.jsm": "browser/components/sessionstore/GlobalState.jsm",
   "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm": "browser/components/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm",
   "resource:///modules/sessionstore/RunState.jsm": "browser/components/sessionstore/RunState.jsm",

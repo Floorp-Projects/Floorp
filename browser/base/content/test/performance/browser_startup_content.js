@@ -55,12 +55,6 @@ const known_scripts = {
   ]),
 };
 
-if (!Services.appinfo.sessionHistoryInParent) {
-  known_scripts.modules.add(
-    "resource:///modules/sessionstore/ContentSessionStore.sys.mjs"
-  );
-}
-
 if (AppConstants.NIGHTLY_BUILD) {
   // Browser front-end.
   known_scripts.modules.add("resource:///actors/InteractionsChild.sys.mjs");
@@ -71,7 +65,6 @@ if (AppConstants.NIGHTLY_BUILD) {
 const intermittently_loaded_scripts = {
   modules: new Set([
     "resource://gre/modules/nsAsyncShutdown.sys.mjs",
-    "resource://gre/modules/sessionstore/Utils.sys.mjs",
 
     // Translations code which may be preffed on.
     "resource://gre/actors/TranslationsChild.sys.mjs",

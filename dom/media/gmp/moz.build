@@ -129,6 +129,8 @@ PREPROCESSED_IPDL_SOURCES += [
 if CONFIG["OS_TARGET"] in ["WINNT", "Darwin"]:
     DEFINES["SUPPORT_STORAGE_ID"] = 1
 
+DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 if CONFIG["MOZ_SANDBOX"]:

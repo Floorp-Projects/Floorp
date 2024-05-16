@@ -164,6 +164,18 @@ class nsHTTPSOnlyUtils {
                                            nsILoadInfo* aLoadInfo);
 
   /**
+   * Determines which HTTPS-Only status flags should get propagated to
+   * sub-resources or sub-documents. As sub-resources and sub-documents are
+   * exempt when the top-level document is exempt, we need to copy the "exempt"
+   * flag. The HTTPS-First "upgraded" flag should not be copied to prevent a
+   * unwanted downgrade (Bug 1885949).
+   * @param aHttpsOnlyStatus The HTTPS-Only status of the top-level document.
+   * @return The HTTPS-Only status that the sub-resource/document should
+   * receive.
+   */
+  static uint32_t GetStatusForSubresourceLoad(uint32_t aHttpsOnlyStatus);
+
+  /**
    * Checks a top-level load, if it is exempt by HTTPS-First/ Only
    * clear exemption flag.
    * @param aLoadInfo nsILoadInfo of the request

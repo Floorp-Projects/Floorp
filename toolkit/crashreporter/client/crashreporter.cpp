@@ -544,7 +544,12 @@ string GetProgramPath(const string& exename) {
   // The other applications we ship with Firefox are stored in the main bundle
   // (Firefox.app/Contents/MacOS/) so we we need to go back three directories
   // to reach them.
-  path.append("../../../");
+  path.erase(pos - 1);
+  for (size_t i = 0; i < 3; i++) {
+    pos = path.rfind(UI_DIR_SEPARATOR, pos - 1);
+  }
+
+  path.erase(pos + 1);
 #endif  // XP_MACOSX
   path.append(exename + BIN_SUFFIX);
 

@@ -47,6 +47,9 @@ def enable_blessed():
     if os.environ.get("NO_ANSI"):
         return False
 
+    if not os.environ.get("MOZILLABUILD"):
+        return False
+
     # MozillaBuild 4.0.2 is the first Release that supports
     # ANSI escape sequences, so if we're greater than that
     # version, we can enable them (via Blessed).
