@@ -83,6 +83,7 @@ fn set_mock_cfg() {
     // https://github.com/rust-lang/cargo/issues/4789. This seems like an arbitrary and pointless
     // limitation, and only complicates the evaluation of mock behavior. Because of this, we have a
     // `mock` feature which is activated by `toolkit/library/rust/moz.build`.
+    println!("cargo:rustc-check-cfg=cfg(mock)");
     if env::var_os("CARGO_FEATURE_MOCK").is_some() || mozbuild::config::MOZ_CRASHREPORTER_MOCK {
         println!("cargo:rustc-cfg=mock");
     }
