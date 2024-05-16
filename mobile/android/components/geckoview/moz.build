@@ -22,35 +22,10 @@ EXPORTS += [
     "GeckoViewStreamListener.h",
 ]
 
-if CONFIG["MOZ_ANDROID_HISTORY"]:
-    EXPORTS += [
-        "GeckoViewHistory.h",
-    ]
-    SOURCES += [
-        "GeckoViewHistory.cpp",
-    ]
-    include("/ipc/chromium/chromium-config.mozbuild")
+include("/ipc/chromium/chromium-config.mozbuild")
 
 XPCOM_MANIFESTS += [
     "components.conf",
-]
-
-EXTRA_COMPONENTS += [
-    "GeckoView.manifest",
-]
-
-EXTRA_JS_MODULES += [
-    "ColorPickerDelegate.sys.mjs",
-    "FilePickerDelegate.sys.mjs",
-    "GeckoViewPermission.sys.mjs",
-    "GeckoViewPrompt.sys.mjs",
-    "GeckoViewPrompter.sys.mjs",
-    "GeckoViewPush.sys.mjs",
-    "GeckoViewStartup.sys.mjs",
-    "LoginStorageDelegate.sys.mjs",
-    "PromptCollection.sys.mjs",
-    "SessionStoreFunctions.sys.mjs",
-    "ShareDelegate.sys.mjs",
 ]
 
 FINAL_LIBRARY = "xul"

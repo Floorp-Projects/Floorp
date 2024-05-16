@@ -314,12 +314,12 @@ webextensions:
         GeckoView JUnit tests are NOT run.
     paths:  # must be duplicate of test_paths, see bug 1556445
         - browser/components/extensions/test/
-        - mobile/android/components/extensions/test/
+        - mobile/shared/components/extensions/test/
         - toolkit/components/extensions/test/
         - toolkit/mozapps/extensions/test/
     test_paths:  # must be duplicate of paths, see bug 1556445
         - browser/components/extensions/test/
-        - mobile/android/components/extensions/test/
+        - mobile/shared/components/extensions/test/
         - toolkit/components/extensions/test/
         - toolkit/mozapps/extensions/test/
     query:

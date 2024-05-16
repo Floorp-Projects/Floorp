@@ -950,7 +950,7 @@
     "layout/svg/tests/mochitest.toml": ["test-windows11-64-2009/opt-*"],
     "layout/xul/test/browser.toml": ["test-windows11-64-2009-qr/opt-*"],
     "layout/xul/test/chrome.toml": ["test-windows11-64-2009/opt-*-1proc"],
-    "mobile/android/components/extensions/test/mochitest/mochitest.toml": [
+    "mobile/shared/components/extensions/test/mochitest/mochitest.toml": [
       "test-android-em-7.0-x86_64/opt-geckoview-*"
     ],
     "modules/libpref/test/unit/xpcshell.toml": ["test-windows11-64-2009/opt-*"],
@@ -2192,7 +2192,7 @@
     "layout/svg/tests/mochitest.toml": 0.62,
     "layout/xul/test/browser.toml": 0.51,
     "layout/xul/test/chrome.toml": 0.5,
-    "mobile/android/components/extensions/test/mochitest/mochitest.toml": 0.57,
+    "mobile/shared/components/extensions/test/mochitest/mochitest.toml": 0.57,
     "modules/libpref/test/unit/xpcshell.toml": 0.52,
     "netwerk/test/browser/browser.toml": 0.71,
     "netwerk/test/httpserver/test/xpcshell.toml": 0.72,

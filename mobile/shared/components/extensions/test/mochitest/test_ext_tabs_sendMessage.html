@@ -249,7 +249,7 @@ add_task(async function tabsSendMessageNoExceptionOnNonExistentTab() {
     },
 
     async background() {
-      const url = "http://example.com/mochitest/tests/mobile/android/components/extensions/test/mochitest/file_dummy.html";
+      const url = "http://example.com/mochitest/tests/mobile/shared/components/extensions/test/mochitest/file_dummy.html";
       const tab = await browser.tabs.create({url});
 
       try {
