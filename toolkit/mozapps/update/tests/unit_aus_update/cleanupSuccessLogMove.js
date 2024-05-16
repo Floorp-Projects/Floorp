@@ -37,6 +37,11 @@ async function run_test() {
     1,
     "the update manager update count" + MSG_SHOULD_EQUAL
   );
+  Assert.equal(
+    gUpdateManager.updateInstalledAtStartup,
+    history[0],
+    "the update installed at startup should be the update from the history"
+  );
   await waitForUpdateXMLFiles();
 
   let cancelations = Services.prefs.getIntPref(PREF_APP_UPDATE_CANCELATIONS, 0);
@@ -76,6 +81,16 @@ async function run_test() {
 
   let dir = getUpdateDirFile(DIR_PATCH);
   Assert.ok(dir.exists(), MSG_SHOULD_EXIST);
+
+  // Simulate the browser restarting by rerunning update initialization.
+  reloadUpdateManagerData();
+  await testPostUpdateProcessing();
+
+  Assert.equal(
+    gUpdateManager.updateInstalledAtStartup,
+    null,
+    "updateInstalledAtStartup should be cleared on next browser start"
+  );
 
   doTestFinish();
 }

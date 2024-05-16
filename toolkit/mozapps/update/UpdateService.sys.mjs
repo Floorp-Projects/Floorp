@@ -4336,6 +4336,11 @@ export class UpdateManager {
   _updatesDirty = false;
 
   /**
+   * The backing for `nsIUpdateManager.updateInstalledAtStartup`.
+   */
+  #updateInstalledAtStartup = null;
+
+  /**
    * A service to manage active and past updates.
    * @constructor
    */
@@ -4365,6 +4370,8 @@ export class UpdateManager {
         }
         this._downloadingUpdate = this._readyUpdate;
         this._readyUpdate = null;
+      } else if (status == STATE_SUCCEEDED && this._readyUpdate) {
+        this.#updateInstalledAtStartup = this._readyUpdate;
       }
     }
 
@@ -4388,6 +4395,10 @@ export class UpdateManager {
           this._readyUpdate.state
       );
     }
+    LOG(
+      "UpdateManager:UpdateManager - Initialized updateInstalledAtStartup to " +
+        this.#updateInstalledAtStartup
+    );
 
     this.internal = {
       reload: skipFiles => this.#reload(skipFiles),
@@ -4428,6 +4439,7 @@ export class UpdateManager {
     this._updatesDirty = true;
     this._readyUpdate = null;
     this._downloadingUpdate = null;
+    this.#updateInstalledAtStartup = null;
     transitionState(Ci.nsIApplicationUpdateService.STATE_IDLE);
     if (!skipFiles) {
       let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
@@ -4453,6 +4465,9 @@ export class UpdateManager {
         ) {
           transitionState(Ci.nsIApplicationUpdateService.STATE_PENDING);
         }
+        if (status == STATE_SUCCEEDED && this._readyUpdate) {
+          this.#updateInstalledAtStartup = this._readyUpdate;
+        }
       }
       updates = this._loadXMLFileIntoArray(FILE_UPDATES_XML);
     }
@@ -4475,6 +4490,10 @@ export class UpdateManager {
           this._readyUpdate.state
       );
     }
+    LOG(
+      "UpdateManager:UpdateManager - Reloaded updateInstalledAtStartup as  " +
+        this.#updateInstalledAtStartup
+    );
   }
 
   /**
@@ -4611,6 +4630,13 @@ export class UpdateManager {
   async getDownloadingUpdate() {
     await lazy.AUS.init();
     return this._downloadingUpdate;
+  }
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get updateInstalledAtStartup() {
+    return this.#updateInstalledAtStartup;
   }
 
   #addUpdateToHistory(aUpdate) {
