@@ -1238,53 +1238,37 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
     return NS_OK;
   }
 
-  // check the target context vs. this flavor, one at a time
-  GList* tmp = nullptr;
-  if (mTargetDragContext) {
-    tmp = gdk_drag_context_list_targets(mTargetDragContext);
+  GdkAtom requestedFlavor = gdk_atom_intern(aDataFlavor, FALSE);
+  if (IsDragFlavorAvailable(requestedFlavor)) {
+    LOGDRAGSERVICE("  %s is supported", aDataFlavor);
+    *_retval = true;
+    return NS_OK;
   }
-
-  for (; tmp; tmp = tmp->next) {
-    /* Bug 331198 */
-    GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-    GUniquePtr<gchar> name(gdk_atom_name(atom));
-    if (!name) {
-      continue;
-    }
-
-    if (strcmp(name.get(), aDataFlavor) == 0) {
-      *_retval = true;
-    }
-    // check for automatic text/uri-list -> text/x-moz-url mapping
-    else if (strcmp(name.get(), gTextUriListType) == 0 &&
-             (strcmp(aDataFlavor, kURLMime) == 0 ||
-              strcmp(aDataFlavor, kFileMime) == 0)) {
-      *_retval = true;
-    }
-    // check for automatic _NETSCAPE_URL -> text/x-moz-url mapping
-    else if (strcmp(name.get(), gMozUrlType) == 0 &&
-             (strcmp(aDataFlavor, kURLMime) == 0)) {
-      *_retval = true;
-    }
-    // check for file portal
-    // If we're asked for kURLMime/kFileMime we can convert gPortalFile
-    // or gPortalFileTransfer to it.
-    else if ((strcmp(name.get(), gPortalFile) == 0 ||
-              strcmp(name.get(), gPortalFileTransfer) == 0) &&
-             (strcmp(aDataFlavor, kURLMime) == 0 ||
-              strcmp(aDataFlavor, kFileMime) == 0)) {
-      *_retval = true;
-    }
-    if (*_retval) {
-      LOGDRAGSERVICE("  supported, with converting %s => %s", name.get(),
-                     aDataFlavor);
-    }
+  if (requestedFlavor == sTextUriListTypeAtom &&
+      (IsDragFlavorAvailable(sURLMimeAtom) ||
+       IsDragFlavorAvailable(sFileMimeAtom))) {
+    *_retval = true;
   }
-
+  // check for automatic _NETSCAPE_URL -> text/x-moz-url mapping
+  if (requestedFlavor == sMozUrlTypeAtom &&
+      IsDragFlavorAvailable(sURLMimeAtom)) {
+    *_retval = true;
+  }
+  // check for file portal
+  // If we're asked for kURLMime/kFileMime we can convert gPortalFile
+  // or gPortalFileTransfer to it.
+  if ((requestedFlavor == sPortalFileAtom ||
+       requestedFlavor == sPortalFileTransferAtom) &&
+      (IsDragFlavorAvailable(sURLMimeAtom) ||
+       IsDragFlavorAvailable(sFileMimeAtom))) {
+    *_retval = true;
+  }
+  if (*_retval) {
+    LOGDRAGSERVICE("  %s supported with conversion", aDataFlavor);
+  }
   if (!*_retval) {
     LOGDRAGSERVICE("  %s is not supported", aDataFlavor);
   }
-
   return NS_OK;
 }
 
@@ -1359,34 +1343,16 @@ void nsDragService::SetCachedDragContext(GdkDragContext* aDragContext) {
 }
 
 bool nsDragService::IsTargetContextList(void) {
-  bool retval = false;
-
   // gMimeListType drags only work for drags within a single process. The
   // gtk_drag_get_source_widget() function will return nullptr if the source
   // of the drag is another app, so we use it to check if a gMimeListType
   // drop will work or not.
   if (mTargetDragContext &&
       gtk_drag_get_source_widget(mTargetDragContext) == nullptr) {
-    return retval;
+    return false;
   }
 
-  GList* tmp = nullptr;
-  if (mTargetDragContext) {
-    tmp = gdk_drag_context_list_targets(mTargetDragContext);
-  }
-
-  // walk the list of context targets and see if one of them is a list
-  // of items.
-  for (; tmp; tmp = tmp->next) {
-    /* Bug 331198 */
-    GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-    GUniquePtr<gchar> name(gdk_atom_name(atom));
-    if (name && !strcmp(name.get(), gMimeListType)) {
-      return true;
-    }
-  }
-
-  return retval;
+  return IsDragFlavorAvailable(sMimeListTypeAtom);
 }
 
 bool nsDragService::IsDragFlavorAvailable(GdkAtom aRequestedFlavor) {
@@ -2481,7 +2447,8 @@ static void invisibleSourceDragDataGet(GtkWidget* aWidget,
 static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
                                           GdkDragContext* aContext,
                                           gint aResult, gpointer aData) {
-#ifdef MOZ_WAYLAND
+  nsDragService* dragService = (nsDragService*)aData;
+
   // Wayland and X11 uses different drag results here. When drag target is
   // missing X11 passes GDK_DRAG_CANCEL_NO_TARGET
   // (from gdk_dnd_handle_button_event()/gdkdnd-x11.c)
@@ -2490,22 +2457,15 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
   // GDK_DRAG_CANCEL_ERROR error code
   // (see data_source_cancelled/gdkselection-wayland.c).
   // Bug 1527976
-  if (widget::GdkIsWaylandDisplay() && aResult == GTK_DRAG_RESULT_ERROR) {
-    for (GList* tmp = gdk_drag_context_list_targets(aContext); tmp;
-         tmp = tmp->next) {
-      GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-      if (atom == nsDragService::sTabDropTypeAtom) {
-        aResult = GTK_DRAG_RESULT_NO_TARGET;
-        LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p): Wayland tab drop",
-                             aContext);
-        break;
-      }
-    }
+  if (widget::GdkIsWaylandDisplay() && aResult == GTK_DRAG_RESULT_ERROR &&
+      dragService->IsDragFlavorAvailable(nsDragService::sTabDropTypeAtom)) {
+    aResult = GTK_DRAG_RESULT_NO_TARGET;
+    LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p): Wayland tab drop",
+                         aContext);
+  } else {
+    LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p) %s", aContext,
+                         kGtkDragResults[aResult]);
   }
-#endif
-  LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p) %s", aContext,
-                       kGtkDragResults[aResult]);
-  nsDragService* dragService = (nsDragService*)aData;
   // End the drag session now (rather than waiting for the drag-end signal)
   // so that operations performed on dropEffect == none can start immediately
   // rather than waiting for the drag-failed animation to finish.
