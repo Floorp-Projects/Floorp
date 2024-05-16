@@ -92,7 +92,7 @@ partial interface MouseEvent
   // Finger or touch pressure event value
   // ranges between 0.0 and 1.0
   // TODO: Remove mozPressure. (bug 1534199)
-  [Deprecated="MouseEvent_MozPressure"]
+  [NeedsCallerType, Deprecated="MouseEvent_MozPressure"]
   readonly attribute float mozPressure;
 
   const unsigned short    MOZ_SOURCE_UNKNOWN    = 0;
@@ -103,10 +103,10 @@ partial interface MouseEvent
   const unsigned short    MOZ_SOURCE_TOUCH      = 5;
   const unsigned short    MOZ_SOURCE_KEYBOARD   = 6;
 
-  [ChromeOnly]
+  [NeedsCallerType, ChromeOnly]
   readonly attribute unsigned short inputSource;
 
-  [Deprecated="MozInputSource", BinaryName="inputSource"]
+  [NeedsCallerType, Deprecated="MozInputSource", BinaryName="inputSource"]
   readonly attribute unsigned short mozInputSource;
 
   // TODO: Remove initNSMouseEvent. (bug 1165213)
