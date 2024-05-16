@@ -11,6 +11,7 @@
 
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
+#include "jit/BaselineJIT.h"
 #include "jit/Invalidation.h"
 #include "js/Prefs.h"
 
@@ -65,6 +66,11 @@ static constexpr size_t HighNurserySurvivalCountBeforeRecovery = 2;
 AllocSite* const AllocSite::EndSentinel = reinterpret_cast<AllocSite*>(1);
 JSScript* const AllocSite::WasmScript =
     reinterpret_cast<JSScript*>(AllocSite::STATE_MASK + 1);
+
+/* static */
+void AllocSite::staticAsserts() {
+  static_assert(jit::BaselineMaxScriptLength <= MaxValidPCOffset);
+}
 
 bool PretenuringNursery::canCreateAllocSite() {
   MOZ_ASSERT(allocSitesCreated <= MaxAllocSitesPerMinorGC);
@@ -176,7 +182,7 @@ AllocSite::SiteResult AllocSite::processSite(GCRuntime* gc,
                                              size_t attentionThreshold,
                                              bool reportInfo,
                                              size_t reportThreshold) {
-  MOZ_ASSERT(kind() != Kind::Optimized);
+  MOZ_ASSERT(!isOptimized());
   MOZ_ASSERT(nurseryAllocCount >= nurseryPromotedCount);
 
   SiteResult result = NoChange;
@@ -275,19 +281,6 @@ void PretenuringNursery::maybeStopPretenuring(GCRuntime* gc) {
       zone->pretenuring.noteLowYoungTenuredSurvivalRate(lowYoungSurvivalRate);
     }
   }
-}
-
-AllocSite::Kind AllocSite::kind() const {
-  if (isNormal()) {
-    return Kind::Normal;
-  }
-
-  if (this == zone()->optimizedAllocSite()) {
-    return Kind::Optimized;
-  }
-
-  MOZ_ASSERT(this == zone()->unknownAllocSite(traceKind()));
-  return Kind::Unknown;
 }
 
 void AllocSite::updateStateOnMinorGC(double promotionRate) {
@@ -442,7 +435,7 @@ void AllocSite::printInfo(bool hasPromotionRate, double promotionRate,
   // Script, or which kind of catch-all site this is.
   if (!hasScript()) {
     const char* siteKindName = AllocSiteKindName(kind());
-    if (kind() == Kind::Unknown) {
+    if (isUnknown()) {
       char buffer[32];
       const char* traceKindName = JS::GCTraceKindToAscii(traceKind());
       SprintfLiteral(buffer, "%s %s", siteKindName, traceKindName);
@@ -456,7 +449,7 @@ void AllocSite::printInfo(bool hasPromotionRate, double promotionRate,
 
   // Nursery allocation count, missing for optimized sites.
   char buffer[16] = {'\0'};
-  if (kind() != Kind::Optimized) {
+  if (!isOptimized()) {
     SprintfLiteral(buffer, "%8" PRIu32, nurseryAllocCount);
   }
   fprintf(stderr, " %8s", buffer);
@@ -472,7 +465,7 @@ void AllocSite::printInfo(bool hasPromotionRate, double promotionRate,
   fprintf(stderr, " %6s", buffer);
 
   // Current state where applicable.
-  const char* state = kind() != Kind::Optimized ? stateName() : "";
+  const char* state = !isOptimized() ? stateName() : "";
   fprintf(stderr, " %-10s", state);
 
   // Whether the associated script was invalidated.
