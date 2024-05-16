@@ -14,9 +14,8 @@ namespace mozilla::jni {
 template <>
 RefPtr<dom::WebAuthnRegisterResult> Java2Native(
     mozilla::jni::Object::Param aData, JNIEnv* aEnv) {
-  MOZ_ASSERT(
-      aData.IsInstanceOf<java::WebAuthnTokenManager::MakeCredentialResponse>());
-  java::WebAuthnTokenManager::MakeCredentialResponse::LocalRef response(aData);
+  MOZ_ASSERT(aData.IsInstanceOf<java::WebAuthnUtils::MakeCredentialResponse>());
+  java::WebAuthnUtils::MakeCredentialResponse::LocalRef response(aData);
   RefPtr<dom::WebAuthnRegisterResult> result =
       new dom::WebAuthnRegisterResult(response);
   return result;
@@ -25,9 +24,8 @@ RefPtr<dom::WebAuthnRegisterResult> Java2Native(
 template <>
 RefPtr<dom::WebAuthnSignResult> Java2Native(mozilla::jni::Object::Param aData,
                                             JNIEnv* aEnv) {
-  MOZ_ASSERT(
-      aData.IsInstanceOf<java::WebAuthnTokenManager::GetAssertionResponse>());
-  java::WebAuthnTokenManager::GetAssertionResponse::LocalRef response(aData);
+  MOZ_ASSERT(aData.IsInstanceOf<java::WebAuthnUtils::GetAssertionResponse>());
+  java::WebAuthnUtils::GetAssertionResponse::LocalRef response(aData);
   RefPtr<dom::WebAuthnSignResult> result =
       new dom::WebAuthnSignResult(response);
   return result;

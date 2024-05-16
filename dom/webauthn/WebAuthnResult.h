@@ -13,7 +13,7 @@
 #include "nsString.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/java/WebAuthnTokenManagerNatives.h"
+#  include "mozilla/java/WebAuthnUtilsNatives.h"
 #endif
 
 #ifdef XP_WIN
@@ -44,8 +44,7 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
 
 #ifdef MOZ_WIDGET_ANDROID
   explicit WebAuthnRegisterResult(
-      const java::WebAuthnTokenManager::MakeCredentialResponse::LocalRef&
-          aResponse) {
+      const java::WebAuthnUtils::MakeCredentialResponse::LocalRef& aResponse) {
     mAttestationObject.AppendElements(
         reinterpret_cast<uint8_t*>(
             aResponse->AttestationObject()->GetElements().Elements()),
@@ -167,8 +166,7 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
 
 #ifdef MOZ_WIDGET_ANDROID
   explicit WebAuthnSignResult(
-      const java::WebAuthnTokenManager::GetAssertionResponse::LocalRef&
-          aResponse) {
+      const java::WebAuthnUtils::GetAssertionResponse::LocalRef& aResponse) {
     mAuthenticatorData.AppendElements(
         reinterpret_cast<uint8_t*>(
             aResponse->AuthData()->GetElements().Elements()),
