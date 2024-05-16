@@ -41,7 +41,7 @@ doesn't only contain trivial geometry, it can also store another
 [stacking_contexts]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
 */
 
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::unreadable_literal, clippy::new_without_default, clippy::too_many_arguments))]
+#![allow(clippy::unreadable_literal, clippy::new_without_default, clippy::too_many_arguments)]
 
 
 // Cribbed from the |matches| crate, for simplicity.
