@@ -8,6 +8,7 @@
 #include "nsDBusRemoteServer.h"
 
 #include "nsCOMPtr.h"
+#include "nsAppRunner.h"
 #include "mozilla/XREAppData.h"
 #include "mozilla/Base64.h"
 #include "mozilla/ScopeExit.h"
@@ -188,13 +189,14 @@ nsresult nsDBusRemoteServer::Startup(const char* aAppName,
                                      const char* aProfileName) {
   MOZ_DIAGNOSTIC_ASSERT(!mDBusID);
 
-  // Don't even try to start without any application/profile name
-  if (!aAppName || aAppName[0] == '\0' || !aProfileName ||
-      aProfileName[0] == '\0')
-    return NS_ERROR_INVALID_ARG;
+  // Don't even try to start without any profile name
+  if (!aProfileName || aProfileName[0] == '\0') return NS_ERROR_INVALID_ARG;
 
-  mAppName = aAppName;
-  mozilla::XREAppData::SanitizeNameForDBus(mAppName);
+  // aAppName is remoting name which can be something like org.mozilla.appname
+  // or so.
+  // For DBus service we rather use general application DBus identifier
+  // which is shared by all DBus services.
+  gAppData->GetDBusAppName(mAppName);
 
   nsAutoCString profileName;
   MOZ_TRY(
