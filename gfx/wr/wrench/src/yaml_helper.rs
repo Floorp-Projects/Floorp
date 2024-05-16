@@ -26,7 +26,6 @@ pub trait YamlHelper {
     fn as_transform(&self, transform_origin: &LayoutPoint) -> Option<LayoutTransform>;
     fn as_colorf(&self) -> Option<ColorF>;
     fn as_vec_colorf(&self) -> Option<Vec<ColorF>>;
-    fn as_px_to_f32(&self) -> Option<f32>;
     fn as_pt_to_f32(&self) -> Option<f32>;
     fn as_vec_string(&self) -> Option<Vec<String>>;
     fn as_border_radius_component(&self) -> LayoutSize;
@@ -91,7 +90,6 @@ fn string_to_color(color: &str) -> Option<ColorF> {
 
 pub trait StringEnum: Sized {
     fn from_str(_: &str) -> Option<Self>;
-    fn as_str(&self) -> &'static str;
 }
 
 macro_rules! define_string_enum {
@@ -104,11 +102,6 @@ macro_rules! define_string_enum {
                         println!("Unrecognized {} value '{}'", stringify!($T), text);
                         None
                     }
-                }
-            }
-            fn as_str(&self) -> &'static str {
-                match *self {
-                $( $T::$y => $x, )*
                 }
             }
         }
@@ -269,10 +262,6 @@ impl YamlHelper for Yaml {
         } else {
             None
         }
-    }
-
-    fn as_px_to_f32(&self) -> Option<f32> {
-        self.as_force_f32()
     }
 
     fn as_pt_to_f32(&self) -> Option<f32> {
