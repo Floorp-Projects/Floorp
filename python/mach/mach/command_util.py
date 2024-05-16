@@ -113,9 +113,6 @@ MACH_COMMANDS = {
     "generate-test-certs": MachCommandReference(
         "security/manager/tools/mach_commands.py"
     ),
-    "gifft": MachCommandReference(
-        "toolkit/components/telemetry/build_scripts/mach_commands.py"
-    ),
     "gradle": MachCommandReference("mobile/android/mach_commands.py"),
     "gradle-install": MachCommandReference("mobile/android/mach_commands.py"),
     "gtest": MachCommandReference(
