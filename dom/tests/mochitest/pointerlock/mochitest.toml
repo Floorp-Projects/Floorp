@@ -47,3 +47,9 @@ support-files = [
   "file_pointerlock_xorigin_iframe_not_focused.html",
 ]
 skip-if = ["display == 'wayland' && os_version == '22.04'"] # Bug 1857057
+
+["test_pointerlock_xorigin_iframe_movementXY.html"]
+skip-if = [
+  "os == 'android'", # bug 1897103
+  "display == 'wayland' && os_version == '22.04'", # Bug 1857057
+]

@@ -5302,11 +5302,11 @@ static LayoutDeviceIntPoint GetWindowClientRectCenter(nsIWidget* aWidget) {
   NS_ENSURE_TRUE(aWidget, LayoutDeviceIntPoint(0, 0));
 
   LayoutDeviceIntRect rect = aWidget->GetClientBounds();
-  LayoutDeviceIntPoint point(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  LayoutDeviceIntPoint point(rect.width / 2, rect.height / 2);
   int32_t round = aWidget->RoundsWidgetCoordinatesTo();
   point.x = point.x / round * round;
   point.y = point.y / round * round;
-  return point - aWidget->WidgetToScreenOffset();
+  return point;
 }
 
 void EventStateManager::GeneratePointerEnterExit(EventMessage aMessage,
