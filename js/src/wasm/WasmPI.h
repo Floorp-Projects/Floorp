@@ -94,6 +94,8 @@ class SuspenderObjectData
     return suspendedReturnAddress_;
   }
 
+  void releaseStackMemory();
+
 #ifdef _WIN64
   void updateTIBStackFields();
   void restoreTIBStackFields();
@@ -132,8 +134,6 @@ bool ParseSuspendingPromisingString(JSContext* cx, JS::HandleValue val,
 bool CallImportOnMainThread(JSContext* cx, Instance* instance,
                             int32_t funcImportIndex, int32_t argc,
                             uint64_t* argv);
-
-void UnwindStackSwitch(JSContext* cx);
 
 JSFunction* WasmSuspendingFunctionCreate(JSContext* cx, HandleObject func,
                                          wasm::ValTypeVector&& params,
