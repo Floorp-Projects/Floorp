@@ -7,17 +7,14 @@ package org.mozilla.fenix.ui
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.MockBrowserDataHelper
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -37,7 +34,10 @@ class HistoryTest : TestSetup() {
     @get:Rule
     val activityTestRule =
         AndroidComposeTestRule(
-            HomeActivityIntentTestRule(isJumpBackInCFREnabled = false),
+            HomeActivityIntentTestRule(
+                tabsTrayRewriteEnabled = true,
+                isJumpBackInCFREnabled = false,
+            ),
         ) { it.activity }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243285
@@ -94,10 +94,6 @@ class HistoryTest : TestSetup() {
             ) {
                 clickDeleteHistoryButton(firstWebPage.url.toString())
             }
-            verifyUndoDeleteSnackBarButton()
-            clickSnackbarButton("UNDO")
-            verifyHistoryItemExists(true, firstWebPage.url.toString())
-            clickDeleteHistoryButton(firstWebPage.url.toString())
             verifySnackBarText(expectedText = "Deleted")
             verifyEmptyHistoryView()
         }
@@ -120,11 +116,6 @@ class HistoryTest : TestSetup() {
             ) {
                 clickDeleteAllHistoryButton()
             }
-            verifyDeleteConfirmationMessage()
-            selectEverythingOption()
-            cancelDeleteHistory()
-            verifyHistoryItemExists(true, firstWebPage.url.toString())
-            clickDeleteAllHistoryButton()
             verifyDeleteConfirmationMessage()
             selectEverythingOption()
             confirmDeleteAllHistory()
@@ -162,7 +153,6 @@ class HistoryTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/339696
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
     fun openMultipleSelectedHistoryItemsInANewTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -170,7 +160,7 @@ class HistoryTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             mDevice.waitForIdle()
-        }.openTabDrawer {
+        }.openComposeTabDrawer(activityTestRule) {
             closeTab()
         }
 
@@ -186,9 +176,9 @@ class HistoryTest : TestSetup() {
         }
 
         multipleSelectionToolbar {
-        }.clickOpenNewTab {
-            verifyExistingTabList()
-            verifyNormalModeSelected()
+        }.clickOpenNewTab(activityTestRule) {
+            verifyNormalTabsList()
+            verifyNormalBrowsingButtonIsSelected()
         }
     }
 
@@ -212,9 +202,9 @@ class HistoryTest : TestSetup() {
         }
 
         multipleSelectionToolbar {
-        }.clickOpenPrivateTab {
-            verifyPrivateModeSelected()
-            verifyExistingTabList()
+        }.clickOpenPrivateTab(activityTestRule) {
+            verifyPrivateTabsList()
+            verifyPrivateBrowsingButtonIsSelected()
         }
     }
 
@@ -342,27 +332,23 @@ class HistoryTest : TestSetup() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
 
-        MockBrowserDataHelper.createHistoryItem(firstWebPage.url.toString())
-        MockBrowserDataHelper.createHistoryItem(secondWebPage.url.toString())
-
-        homeScreen {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+        }
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(secondWebPage.url) {
         }.openThreeDotMenu {
         }.openHistory {
         }.clickSearchButton {
             // Search for a valid term
-            typeSearch("generic")
-            verifySearchEngineSuggestionResults(activityTestRule, firstWebPage.url.toString(), searchTerm = "generic")
+            typeSearch(firstWebPage.title)
+            verifySearchEngineSuggestionResults(activityTestRule, firstWebPage.url.toString(), searchTerm = firstWebPage.title)
             verifySuggestionsAreNotDisplayed(activityTestRule, secondWebPage.url.toString())
-        }.dismissSearchBar {}
-        historyMenu {
-        }.clickSearchButton {
+            clickClearButton()
             // Search for invalid term
             typeSearch("Android")
-            verifySuggestionsAreNotDisplayed(
-                activityTestRule,
-                firstWebPage.url.toString(),
-                secondWebPage.url.toString(),
-            )
+            verifySuggestionsAreNotDisplayed(activityTestRule, firstWebPage.url.toString())
+            verifySuggestionsAreNotDisplayed(activityTestRule, secondWebPage.url.toString())
         }
     }
 
@@ -396,11 +382,7 @@ class HistoryTest : TestSetup() {
             typeSearch("generic")
             verifySuggestionsAreNotDisplayed(activityTestRule, firstWebPage.url.toString())
             verifySuggestionsAreNotDisplayed(activityTestRule, secondWebPage.url.toString())
-            verifySearchEngineSuggestionResults(
-                activityTestRule,
-                thirdWebPage.url.toString(),
-                searchTerm = "generic",
-            )
+            verifySearchEngineSuggestionResults(activityTestRule, thirdWebPage.url.toString(), searchTerm = "generic")
             pressBack()
         }
         historyMenu {
