@@ -126,7 +126,7 @@ add_task(async function testTabRemovalEvent() {
     });
 
     try {
-      const url = "http://example.com/mochitest/mobile/android/components/extensions/test/mochitest/context.html";
+      const url = "http://example.com/mochitest/mobile/shared/components/extensions/test/mochitest/context.html";
       const tab = await browser.tabs.create({url: url});
       await awaitLoad(tab.id);
 

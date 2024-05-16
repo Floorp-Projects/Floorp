@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.WebExtension;
 
-// Receives API calls via mobile/android/modules/test/AppUiTestDelegate.sys.mjs
+// Receives API calls via mobile/shared/modules/test/AppUiTestDelegate.sys.mjs
 // and forwards the calls to the Api impl.
 //
 // This interface allows JS/HTML-based mochitests to invoke test-only logic

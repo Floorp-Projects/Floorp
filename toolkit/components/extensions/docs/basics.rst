@@ -60,7 +60,7 @@ files:
 
 - ``toolkit/components/extensions/ext-toolkit.json``
 - ``browser/components/extensions/ext-browser.json``
-- ``mobile/android/components/extensions/ext-android.json``
+- ``mobile/shared/components/extensions/ext-android.json``
 
 Here is a sample fragment for a new API:
 
@@ -90,7 +90,7 @@ API implementations are:
   other applications built on Gecko) should go
 - ``browser/components/extensions``: APIs that are only supported on
   Firefox for the desktop.
-- ``mobile/android/components/extensions``: APIs that are only supported
+- ``mobile/shared/components/extensions``: APIs that are only supported
   on Firefox for Android.
 
 Within the appropriate extensions directory, the convention is that the
@@ -249,7 +249,7 @@ all API scripts look to the following source:
 - Only available in the Desktop builds:
   `browser/components/extensions/parent/ext-browser.js <https://searchfox.org/mozilla-central/source/browser/components/extensions/parent/ext-browser.js>`_
 - Only available in the Android builds:
-  `mobile/android/components/extensions/ext-android.js <https://searchfox.org/mozilla-central/source/mobile/android/components/extensions/ext-android.js>`_
+  `mobile/shared/components/extensions/ext-android.js <https://searchfox.org/mozilla-central/source/mobile/shared/components/extensions/ext-android.js>`_
 
 .. warning::
    The extension API authors should never redefine these globals to avoid introducing potential

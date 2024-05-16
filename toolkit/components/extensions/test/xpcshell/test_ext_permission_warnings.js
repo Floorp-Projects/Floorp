@@ -479,7 +479,7 @@ add_task(async function nativeMessaging_permission() {
   if (IS_NATIVE_MESSAGING_PRIVILEGED) {
     // The behavior of nativeMessaging for unprivileged extensions on Android
     // is covered in
-    // mobile/android/components/extensions/test/xpcshell/test_ext_native_messaging_permissions.js
+    // mobile/shared/components/extensions/test/xpcshell/test_ext_native_messaging_permissions.js
     deepEqual(
       manifestPermissions,
       { origins: [], permissions: [] },

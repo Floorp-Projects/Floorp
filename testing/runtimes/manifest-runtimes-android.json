@@ -178,7 +178,7 @@
     "layout/svg/tests/mochitest.ini": 1.65,
     "layout/tables/test/mochitest.ini": 1.24,
     "layout/xul/test/mochitest.ini": 1.53,
-    "mobile/android/components/extensions/test/mochitest/mochitest.ini": 14.14,
+    "mobile/shared/components/extensions/test/mochitest/mochitest.ini": 14.14,
     "modules/libjar/test/mochitest/mochitest.ini": 1.15,
     "netwerk/cookie/test/mochitest/mochitest.ini": 5.56,
     "netwerk/test/mochitests/mochitest.ini": 8.4,

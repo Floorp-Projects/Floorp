@@ -25,7 +25,7 @@ add_task(async function test_onUpdated() {
     },
 
     background: function() {
-      const pageURL = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
+      const pageURL = "http://mochi.test:8888/tests/mobile/shared/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
 
       const expectedSequence = [
         {status: "loading"},
@@ -135,7 +135,7 @@ add_task(async function test_url() {
 
 add_task(async function test_title() {
   await do_test_update(async function background() {
-    const url = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
+    const url = "http://mochi.test:8888/tests/mobile/shared/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
     const tab = await browser.tabs.create({url});
 
     browser.tabs.onUpdated.addListener(async function onUpdated(tabId, changeInfo) {
@@ -155,7 +155,7 @@ add_task(async function test_title() {
 
 add_task(async function test_without_tabs_permission() {
   await do_test_update(async function background() {
-    const url = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
+    const url = "http://mochi.test:8888/tests/mobile/shared/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
     const tab = await browser.tabs.create({url});
     let count = 0;
 

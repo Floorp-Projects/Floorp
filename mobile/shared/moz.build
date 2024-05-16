@@ -4,12 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CONFIGURE_SUBST_FILES += ["installer/Makefile"]
-
 with Files("**"):
-    BUG_COMPONENT = ("Core", "General")
-    SCHEDULES.exclusive = ["ios"]
+    BUG_COMPONENT = ("GeckoView", "General")
+    SCHEDULES.exclusive = ["android", "ios"]
 
 DIRS += [
-    "../shared",
+    "actors",
+    "chrome",
+    "components",
+    "modules",
 ]
