@@ -89,7 +89,7 @@ add_task(async function testUpdateAutoPrefUI() {
   info("Enable automatic updates and check that works.");
   await changeAndVerifyPref(tab, true);
   ok(
-    !gUpdateManager.downloadingUpdate,
+    !(await gUpdateManager.getDownloadingUpdate()),
     "There should not be a downloading update"
   );
   ok(
@@ -100,7 +100,7 @@ add_task(async function testUpdateAutoPrefUI() {
   info("Disable automatic updates and check that works.");
   await changeAndVerifyPref(tab, false);
   ok(
-    !gUpdateManager.downloadingUpdate,
+    !(await gUpdateManager.getDownloadingUpdate()),
     "There should not be a downloading update"
   );
   ok(
