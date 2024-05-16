@@ -217,7 +217,7 @@ jobs:
         elif [[ $GHA_32bit == 'true' ]];then
           rustup target add i686-pc-windows-msvc --toolchain 1.77.2
         else
-          rustup target add x86_64-pc-windows-msvc
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.77.2
         fi
 
         #? set default toolchain
