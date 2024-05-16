@@ -895,6 +895,8 @@ EnvironmentAddonBuilder.prototype = {
         hasBinaryComponents: false,
         installDay: Utils.millisecondsToDays(installDate.getTime()),
         updateDay: Utils.millisecondsToDays(updateDate.getTime()),
+        signedState: theme.signedState,
+        signedTypes: JSON.stringify(theme.signedTypes),
       };
     }
 

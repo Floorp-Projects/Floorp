@@ -18,6 +18,7 @@ support-files = [
   "testNoPDBAArch64.dll",
   "!/toolkit/mozapps/extensions/test/xpcshell/head_addons.js",
   "../../../../mozapps/extensions/test/xpinstall/amosigned.xpi",
+  "../../../../mozapps/extensions/test/xpcshell/data/webext-implicit-id.xpi",
 ]
 generated-files = [
   "system.xpi",
