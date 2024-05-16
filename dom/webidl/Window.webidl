@@ -217,7 +217,7 @@ interface nsIPrintSettings;
   [Throws] undefined stop();
   [Throws, CrossOriginCallable, NeedsCallerType] undefined focus();
   [Throws, CrossOriginCallable, NeedsCallerType] undefined blur();
-  [Replaceable, Pref="dom.window.event.enabled"] readonly attribute (Event or undefined) event;
+  [Replaceable] readonly attribute (Event or undefined) event;
 
   // other browsing contexts
   [Replaceable, Throws, CrossOriginReadable] readonly attribute WindowProxy frames;
