@@ -30,6 +30,7 @@ class CrashReportingTest : TestSetup() {
             isJumpBackInCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
             isTCPCFREnabled = false,
+            tabsTrayRewriteEnabled = true,
         ),
     ) { it.activity }
 
@@ -40,7 +41,7 @@ class CrashReportingTest : TestSetup() {
         }.openNavigationToolbar {
         }.openTabCrashReporter {
         }.clickTabCrashedCloseButton {
-        }.openTabDrawer {
+        }.openComposeTabDrawer(activityTestRule) {
             verifyNoOpenTabsInNormalBrowsing()
         }
     }
@@ -72,7 +73,7 @@ class CrashReportingTest : TestSetup() {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             mDevice.waitForIdle()
-        }.openTabDrawer {
+        }.openComposeTabDrawer(activityTestRule) {
         }.openNewTab {
         }.submitQuery(secondWebPage.url.toString()) {
             waitForPageToLoad()
@@ -81,7 +82,7 @@ class CrashReportingTest : TestSetup() {
         navigationToolbar {
         }.openTabCrashReporter {
             verifyPageContent(tabCrashMessage)
-        }.openTabDrawer {
+        }.openComposeTabDrawer(activityTestRule) {
             verifyExistingOpenTabs(firstWebPage.title)
             verifyExistingOpenTabs("about:crashcontent")
         }.closeTabDrawer {
