@@ -21,18 +21,10 @@ In the example below, an image is converted to text using the `image-to-text` ta
   // We then create the engine object, using the options
   const engine = engineParent.getEngine(options);
 
+  // Preparing a request
+  const request = {url: "https://huggingface.co/datasets/mishig/sample_images/resolve/main/football-match.jpg"};
+
   // At this point we are ready to do some inference.
-
-  // We need to get the image as an array buffer and wrap it into a request object
-  const response = await fetch("https://huggingface.co/datasets/mishig/sample_images/resolve/main/football-match.jpg");
-  const buffer = await response.arrayBuffer();
-  const mimeType = response.headers.get('Content-Type');
-  const request = {
-    data: buffer,
-    mimeType: mimeType
-  };
-
-  // Finally, we run the engine with the request object
   const res = await engine.run(request);
 
   // The result is a string containing the text extracted from the image
