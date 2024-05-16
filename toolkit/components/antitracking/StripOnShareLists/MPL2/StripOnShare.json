@@ -90,5 +90,9 @@
       "www.amazon.sg",
       "www.amazon.ca"
     ]
+  },
+  "handelsblatt": {
+    "queryParams": ["share"],
+    "topLevelSites": ["www.handelsblatt.com"]
   }
 }
