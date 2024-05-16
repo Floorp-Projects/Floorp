@@ -89,7 +89,7 @@ async function downloadUpdate(appUpdateAuto, onDownloadStartCallback) {
     gAUS.addDownloadListener(listener);
   });
 
-  let updateCheckStarted = gAUS.checkForBackgroundUpdates();
+  let updateCheckStarted = await gAUS.checkForBackgroundUpdates();
   Assert.ok(updateCheckStarted, "Update check should have started");
 
   if (!appUpdateAuto) {
@@ -163,8 +163,8 @@ async function testUpdateDoesNotDownload() {
   );
 }
 
-function testUpdateCheckDoesNotStart() {
-  let updateCheckStarted = gAUS.checkForBackgroundUpdates();
+async function testUpdateCheckDoesNotStart() {
+  let updateCheckStarted = await gAUS.checkForBackgroundUpdates();
   Assert.equal(
     updateCheckStarted,
     false,
@@ -372,7 +372,7 @@ async function multi_update_test(appUpdateAuto) {
 
   // Even a newer partial update should not be downloaded at this point.
   prepareToDownloadVersion(SECOND_UPDATE_VERSION);
-  testUpdateCheckDoesNotStart();
+  await testUpdateCheckDoesNotStart();
 }
 
 add_task(async function all_multi_update_tests() {

@@ -399,11 +399,12 @@ interface nsIApplicationUpdateService : nsISupports
   /**
    * Checks for available updates in the background using the listener provided
    * by the application update service for background checks.
-   * @returns true if the update check was started, false if not. Note that the
-   *          check starting does not necessarily mean that the check will
-   *          succeed or that an update will be downloaded.
+   * @returns A promise resolving to `true` if the update check was started, or
+   *          one resolving to `false` if not. Note that the check starting does
+   *          not necessarily mean that the check will succeed or that an
+   *          update will be downloaded.
    */
-  boolean checkForBackgroundUpdates();
+  Promise checkForBackgroundUpdates();
 
   /**
    * Selects the best update to install from a list of available updates.
