@@ -177,6 +177,8 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // set the drag icon during drag-begin
   void SetDragIcon(GdkDragContext* aContext);
 
+  bool IsDragFlavorAvailable(GdkAtom aRequestedFlavor);
+
   class AutoEventLoop {
     RefPtr<nsDragService> mService;
 
@@ -266,7 +268,6 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 
   // is the current target drag context contain a list?
   bool IsTargetContextList(void);
-  bool IsDragFlavorAvailable(GdkAtom aRequestedFlavor);
   // this will get the native data from the last target given a
   // specific flavor
   RefPtr<DragData> GetDragData(GdkAtom aRequestedFlavor);
