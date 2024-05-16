@@ -194,3 +194,9 @@ static const char* kBaseFonts_Android12_Higher[] = {
   "Source Sans Pro",
   "Source Sans Pro SemiBold"
 };
+
+// Additional manufacturer font families that are important for usability.
+// Set as langpack to allow use through FontVisibilityLangPack
+static const char* kLangPack_MFR_Android12_Higher[] = {
+  "One UI Sans KR VF"
+};
