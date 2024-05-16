@@ -43,6 +43,7 @@ class PurgeHTTPCacheAtShutdownTestCase(MarionetteTestCase):
               return Services.dirsvc.get("UpdRootD", Ci.nsIFile).parent.parent.path;
             """
             )
+            os.makedirs(path, exist_ok=True)
             self.lock_dir = Path(path)
 
     def assertNoLocks(self):
