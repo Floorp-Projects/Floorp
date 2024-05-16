@@ -105,7 +105,10 @@ async function testCleanupSuccessLogsFIFO(
     !gUpdateManager.downloadingUpdate,
     "there should not be a downloading update"
   );
-  Assert.ok(!gUpdateManager.readyUpdate, "there should not be a ready update");
+  Assert.ok(
+    !(await gUpdateManager.getReadyUpdate()),
+    "there should not be a ready update"
+  );
   const history = await gUpdateManager.getHistory();
   Assert.equal(
     history.length,
