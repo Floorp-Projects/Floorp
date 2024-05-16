@@ -58,6 +58,9 @@ fail-if = ["os == 'android'"]
 
 ["test_localfile.js"]
 
+["test_logFromPreference.js"]
+skip-if = "(os == 'android' && release_or_beta)" # bug 1841818
+
 ["test_mac_bundle.js"]
 
 ["test_mac_xattrs.js"]
