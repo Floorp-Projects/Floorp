@@ -25,6 +25,7 @@ support-files = ["download.bin"]
 
 ["browser_download_idn_blocklist.js"]
 support-files = ["download.bin"]
+https_first_disabled = true
 
 ["browser_download_open_with_internal_handler.js"]
 support-files = [
