@@ -11665,7 +11665,7 @@
 
 - name: network.cookie.sameSite.noneRequiresSecure
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: @NIGHTLY_BUILD@
   mirror: always
 
 - name: network.cookie.sameSite.schemeful
