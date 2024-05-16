@@ -33,6 +33,9 @@ if CONFIG["MOZ_CRASHREPORTER"]:
             "mozwer-rust",
         ]
 
+        if CONFIG["MOZ_CRASHREPORTER_INJECTOR"]:
+            DIRS += ["breakpad-windows-standalone"]
+
     elif CONFIG["OS_ARCH"] == "Darwin":
         DIRS += [
             "breakpad-client",
@@ -73,6 +76,13 @@ if CONFIG["MOZ_CRASHREPORTER"]:
         "mozannotation_client",
         "mozannotation_server",
     ]
+
+    if CONFIG["MOZ_CRASHREPORTER_INJECTOR"]:
+        DIRS += ["injector"]
+        UNIFIED_SOURCES += [
+            "InjectCrashReporter.cpp",
+            "LoadLibraryRemote.cpp",
+        ]
 
     TEST_DIRS += ["test"]
 

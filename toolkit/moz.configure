@@ -3134,6 +3134,17 @@ with only_when(compile_environment):
             when=depends(target)(lambda t: t.os == "GNU" and t.kernel == "Linux"),
         )
 
+        set_config(
+            "MOZ_CRASHREPORTER_INJECTOR",
+            True,
+            when=depends(target)(lambda t: t.os == "WINNT" and t.bitness == 32),
+        )
+        set_define(
+            "MOZ_CRASHREPORTER_INJECTOR",
+            True,
+            when=depends(target)(lambda t: t.os == "WINNT" and t.bitness == 32),
+        )
+
 
 # If we have any service that uploads data (and requires data submission
 # policy alert), set MOZ_DATA_REPORTING.
