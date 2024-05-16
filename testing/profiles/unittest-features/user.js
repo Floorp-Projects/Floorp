@@ -26,3 +26,5 @@ user_pref("dom.gamepad.non_standard_events.enabled", true);
 // Enable form autofill feature testing.
 user_pref("extensions.formautofill.addresses.available", "on");
 user_pref("extensions.formautofill.creditCards.available", "on");
+// Turn off update
+user_pref("app.update.disabledForTesting", true);
