@@ -5809,6 +5809,29 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     }
   }
 
+  // If our scroll range changed (for example, because the page dynamically
+  // loaded new content, thereby increasing the size of the scrollable rect),
+  // and we're overscrolled, being overscrolled may no longer be a valid
+  // state (for example, we may no longer be at the edge of our scroll range),
+  // then try to fill it out with the new content if the overscroll amount is
+  // inside the new scroll range.
+  if (needToReclampScroll && IsInInvalidOverscroll()) {
+    if (!cumulativeRelativeDelta) {
+      // TODO: If we have a cumulative delta, can we combine the overscroll
+      //  change with it?
+      CSSPoint scrollPositionChange = MaybeFillOutOverscrollGutter(lock);
+      if (scrollPositionChange != CSSPoint()) {
+        cumulativeRelativeDelta = Some(scrollPositionChange);
+      }
+    }
+    if (mState == OVERSCROLL_ANIMATION) {
+      CancelAnimation();
+      didCancelAnimation = true;
+    } else if (IsOverscrolled()) {
+      ClearOverscroll();
+    }
+  }
+
   if (scrollOffsetUpdated) {
     for (auto& sampledState : mSampledState) {
       if (!didCancelAnimation && cumulativeRelativeDelta.isSome()) {
@@ -5845,27 +5868,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(
         cumulativeRelativeDelta && *cumulativeRelativeDelta != CSSPoint() &&
         !didCancelAnimation) {
       SendTransformBeginAndEnd();
-    }
-  }
-
-  // If our scroll range changed (for example, because the page dynamically
-  // loaded new content, thereby increasing the size of the scrollable rect),
-  // and we're overscrolled, being overscrolled may no longer be a valid
-  // state (for example, we may no longer be at the edge of our scroll range),
-  // so clear overscroll and discontinue any overscroll animation.
-  // Ideas for improvements here:
-  //    - Instead of collapsing the overscroll gutter, try to "fill it"
-  //      with newly loaded content. This would basically entail checking
-  //      if (GetVisualScrollOffset() + GetOverscrollAmount()) is a valid
-  //      visual scroll offset in our new scroll range, and if so, scrolling
-  //      there.
-  if (needToReclampScroll) {
-    if (IsInInvalidOverscroll()) {
-      if (mState == OVERSCROLL_ANIMATION) {
-        CancelAnimation();
-      } else if (IsOverscrolled()) {
-        ClearOverscroll();
-      }
     }
   }
 
@@ -6792,6 +6794,20 @@ void AsyncPanZoomController::SetZoomAnimationId(
 Maybe<uint64_t> AsyncPanZoomController::GetZoomAnimationId() const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   return mZoomAnimationId;
+}
+
+CSSPoint AsyncPanZoomController::MaybeFillOutOverscrollGutter(
+    const RecursiveMutexAutoLock& aProofOfLock) {
+  const auto zoom = Metrics().GetZoom();
+  CSSPoint delta = GetOverscrollAmount() / zoom;
+  CSSPoint origin = Metrics().GetVisualScrollOffset();
+  CSSRect scrollRange = Metrics().CalculateScrollRange();
+  if (!scrollRange.ContainsInclusively(origin + delta)) {
+    return CSSPoint();
+  }
+  SetVisualScrollOffset(origin + delta);
+  Metrics().RecalculateLayoutViewportOffset();
+  return Metrics().GetVisualScrollOffset() - origin;
 }
 
 std::ostream& operator<<(std::ostream& aOut,

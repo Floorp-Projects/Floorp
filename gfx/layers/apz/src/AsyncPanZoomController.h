@@ -1993,6 +1993,12 @@ class AsyncPanZoomController {
       const MultiTouchInput& aOriginalEvent, ScreenCoord aPanThreshold,
       float aVectorLength, ExternalPoint& aExtPoint);
 
+  // Fill out the overscroll gutter with the new expanded contents the
+  // overscroll amount is inside the new scroll range. Returns the scroll
+  // position change delta if filling out happened, CSSPoint() otherwise.
+  CSSPoint MaybeFillOutOverscrollGutter(
+      const RecursiveMutexAutoLock& aProofOfLock);
+
   friend std::ostream& operator<<(
       std::ostream& aOut, const AsyncPanZoomController::PanZoomState& aState);
 };
