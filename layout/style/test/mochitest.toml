@@ -29,9 +29,6 @@ support-files = [
   "empty.html",
   "file_computed_style_bfcache_display_none.html",
   "file_computed_style_bfcache_display_none2.html",
-  "file_resource_cache_server.sjs",
-  "file_resource_cache_frame_not_cacheable.html",
-  "file_resource_cache_frame_cacheable.html",
   "media_queries_iframe.html",
   "media_queries_iframe2.html",
   "neverending_font_load.sjs",
@@ -616,8 +613,6 @@ support-files = ["redundant_font_download.sjs"]
 ["test_reframe_pseudo_element.html"]
 
 ["test_rem_unit.html"]
-
-["test_resource_cache.html"]
 
 ["test_restyle_table_wrapper.html"]
 

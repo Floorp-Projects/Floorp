@@ -9,8 +9,6 @@
 
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
-#include "nsIChannelEventSink.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIURI.h"
 #include "nsString.h"
 #include "mozilla/css/SheetLoadData.h"
@@ -20,15 +18,11 @@ class nsIInputStream;
 
 namespace mozilla::css {
 
-class StreamLoader : public nsIThreadRetargetableStreamListener,
-                     public nsIChannelEventSink,
-                     public nsIInterfaceRequestor {
+class StreamLoader : public nsIThreadRetargetableStreamListener {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSICHANNELEVENTSINK
-  NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
   explicit StreamLoader(SheetLoadData&);
