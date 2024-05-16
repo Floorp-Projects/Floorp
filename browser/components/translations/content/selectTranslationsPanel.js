@@ -23,6 +23,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "GfxInfo",
+  "@mozilla.org/gfx/info;1",
+  "nsIGfxInfo"
+);
+
 /**
  * This singleton class controls the SelectTranslations panel.
  *
@@ -566,6 +573,7 @@ var SelectTranslationsPanel = new (class {
     }
 
     textArea.style.resize = "none";
+    textArea.style.maxHeight = null;
     if (sourceText.length < SelectTranslationsPanel.textLengthThreshold) {
       textArea.style.height = SelectTranslationsPanel.shortTextHeight;
     } else {
@@ -694,7 +702,14 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
-   * Conditionally enables the resizer component at the bottom corner of the text area.
+   * Conditionally enables the resizer component at the bottom corner of the text area,
+   * and limits the maximum height that the textarea can be resized.
+   *
+   * For systems using Wayland, this function ensures that the panel cannot be resized past
+   * the border of the current Firefox window.
+   *
+   * For all other systems, this function ensures that the panel cannot be resized past the
+   * bottom edge of the available screen space.
    */
   #maybeEnableTextAreaResizer() {
     // The alignment position of the panel is determined during the "popuppositioned" event
@@ -766,8 +781,140 @@ var SelectTranslationsPanel = new (class {
       }
     }
 
-    const { textArea } = this.elements;
+    const { panel, textArea } = this.elements;
+
+    if (textArea.style.maxHeight) {
+      this.console?.debug(
+        "The text-area resizer has already been enabled at the current panel location."
+      );
+      return;
+    }
+
+    // The visible height of the text area on the screen.
+    const textAreaClientHeight = textArea.clientHeight;
+
+    // The height of the text in the text area, including text that has overflowed beyond the client height.
+    const textAreaScrollHeight = textArea.scrollHeight;
+
+    if (textAreaScrollHeight <= textAreaClientHeight) {
+      this.console?.debug(
+        "Disabling text-area resizer because the text content fits within the text area."
+      );
+      return;
+    }
+
+    // Wayland has no concept of "screen coordinates" which causes getOuterScreenRect to always
+    // return { x: 0, y: 0 } for the location. As such, we cannot tell on Wayland where the panel
+    // is positioned relative to the screen, so we must restrict the panel's resizing limits to be
+    // within the Firefox window itself.
+    let isWayland = false;
+    try {
+      isWayland = GfxInfo.windowProtocol === "wayland";
+    } catch (error) {
+      if (AppConstants.platform === "linux") {
+        this.console?.warn(error);
+        this.console?.debug(
+          "Disabling text-area resizer because we were unable to retrieve the window protocol on Linux."
+        );
+        return;
+      }
+      // Since we're not on Linux, we can safely continue with isWayland = false.
+    }
+
+    const {
+      top: panelTop,
+      left: panelLeft,
+      bottom: panelBottom,
+      right: panelRight,
+    } = isWayland
+      ? // The panel's location relative to the Firefox window.
+        panel.getBoundingClientRect()
+      : // The panel's location relative to the screen.
+        panel.getOuterScreenRect();
+
+    const window =
+      gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
+
+    if (isWayland) {
+      if (panelTop < 0) {
+        this.console?.debug(
+          "Disabling text-area resizer because the panel outside the top edge of the window on Wayland."
+        );
+        return;
+      }
+      if (panelBottom > window.innerHeight) {
+        this.console?.debug(
+          "Disabling text-area resizer because the panel is outside the bottom edge of the window on Wayland."
+        );
+        return;
+      }
+      if (panelLeft < 0) {
+        this.console?.debug(
+          "Disabling text-area resizer because the panel outside the left edge of the window on Wayland."
+        );
+        return;
+      }
+      if (panelRight > window.innerWidth) {
+        this.console?.debug(
+          "Disabling text-area resizer because the panel is outside the right edge of the window on Wayland."
+        );
+        return;
+      }
+    } else if (!panelBottom) {
+      // The location of the panel was unable to be retrieved by getOuterScreenRect() so we should not enable
+      // resizing the text area because we cannot accurately guard against the user resizing the panel off of
+      // the bottom edge of the screen. The worst case for the user here is that they have to utilize the scroll
+      // bar instead of resizing. This happens intermittently, but infrequently.
+      this.console?.debug(
+        "Disabling text-area resizer because the location of the bottom edge of the panel was unavailable."
+      );
+      return;
+    }
+
+    const availableHeight = isWayland
+      ? // The available height of the Firefox window.
+        window.innerHeight
+      : // The available height of the screen.
+        screen.availHeight;
+
+    // The distance in pixels between the bottom edge of the panel to the bottom
+    // edge of our available height, which will either be the bottom of the Firefox
+    // window on Wayland, otherwise the bottom of the available screen space.
+    const panelBottomToBottomEdge = availableHeight - panelBottom;
+
+    // We want to maintain some buffer of pixels between the panel's bottom edge
+    // and the bottom edge of our available space, because if they touch, it can
+    // cause visual glitching to occur.
+    const BOTTOM_EDGE_PIXEL_BUFFER = 20;
+
+    if (panelBottomToBottomEdge < BOTTOM_EDGE_PIXEL_BUFFER) {
+      this.console?.debug(
+        "Disabling text-area resizer because the bottom of the panel is already close to the bottom edge."
+      );
+      return;
+    }
+
+    // The height that the textarea could grow to before hitting the threshold of the buffer that we
+    // intend to keep between the bottom edge of the panel and the bottom edge of available space.
+    const textAreaHeightLimitForEdge =
+      textAreaClientHeight + panelBottomToBottomEdge - BOTTOM_EDGE_PIXEL_BUFFER;
+
+    // This is an arbitrary ratio, but allowing the panel's text area to span 1/2 of the available
+    // vertical real estate, even if it could expand farther, seems like a reasonable constraint.
+    const textAreaHeightLimitUpperBound = Math.trunc(availableHeight / 2);
+
+    // The final maximum height that the text area will be allowed to resize to at its current location.
+    const textAreaMaxHeight = Math.min(
+      textAreaScrollHeight,
+      textAreaHeightLimitForEdge,
+      textAreaHeightLimitUpperBound
+    );
+
     textArea.style.resize = "vertical";
+    textArea.style.maxHeight = `${textAreaMaxHeight}px`;
+    this.console?.debug(
+      `Enabling text-area resizer with a maximum height of ${textAreaMaxHeight} pixels`
+    );
   }
 
   /**
