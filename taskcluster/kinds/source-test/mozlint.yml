@@ -261,6 +261,7 @@ mscom-init:
             - '**/*.cc'
             - '**/*.c'
             - '**/*.h'
+            - '**/*.rs'
             - 'tools/lint/mscom-init.yml'
 
 py-black:
