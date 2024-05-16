@@ -54,23 +54,36 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
         GECKOBUNDLE_PUT(credentialBundle, "isWebAuthn",
                         java::sdk::Integer::ValueOf(1));
 
-        nsString rpId;
-        Unused << aArgs->GetRpId(rpId);
-        GECKOBUNDLE_PUT(credentialBundle, "rpId", jni::StringParam(rpId));
+        {
+          GECKOBUNDLE_START(rpBundle);
 
-        nsString rpName;
-        Unused << aArgs->GetRpName(rpName);
-        GECKOBUNDLE_PUT(credentialBundle, "rpName", jni::StringParam(rpName));
+          nsString rpId;
+          Unused << aArgs->GetRpId(rpId);
+          GECKOBUNDLE_PUT(rpBundle, "id", jni::StringParam(rpId));
 
-        nsString userName;
-        Unused << aArgs->GetUserName(userName);
-        GECKOBUNDLE_PUT(credentialBundle, "userName",
-                        jni::StringParam(userName));
+          nsString rpName;
+          Unused << aArgs->GetRpName(rpName);
+          GECKOBUNDLE_PUT(rpBundle, "name", jni::StringParam(rpName));
 
-        nsString userDisplayName;
-        Unused << aArgs->GetUserDisplayName(userDisplayName);
-        GECKOBUNDLE_PUT(credentialBundle, "userDisplayName",
-                        jni::StringParam(userDisplayName));
+          GECKOBUNDLE_FINISH(rpBundle);
+          GECKOBUNDLE_PUT(credentialBundle, "rp", rpBundle);
+        }
+
+        {
+          GECKOBUNDLE_START(userBundle);
+
+          nsString userName;
+          Unused << aArgs->GetUserName(userName);
+          GECKOBUNDLE_PUT(userBundle, "name", jni::StringParam(userName));
+
+          nsString userDisplayName;
+          Unused << aArgs->GetUserDisplayName(userDisplayName);
+          GECKOBUNDLE_PUT(userBundle, "displayName",
+                          jni::StringParam(userDisplayName));
+
+          GECKOBUNDLE_FINISH(userBundle);
+          GECKOBUNDLE_PUT(credentialBundle, "user", userBundle);
+        }
 
         nsString origin;
         Unused << aArgs->GetOrigin(origin);
@@ -78,8 +91,13 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
 
         uint32_t timeout;
         Unused << aArgs->GetTimeoutMS(&timeout);
-        GECKOBUNDLE_PUT(credentialBundle, "timeoutMS",
+        GECKOBUNDLE_PUT(credentialBundle, "timeout",
                         java::sdk::Double::New(timeout));
+
+        // Add UI support to consent to attestation, bug 1550164
+        GECKOBUNDLE_PUT(credentialBundle, "attestation",
+                        jni::StringParam(u"none"_ns));
+
         GECKOBUNDLE_FINISH(credentialBundle);
 
         nsTArray<uint8_t> userId;
@@ -117,9 +135,6 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
             transportBuf.Length());
 
         GECKOBUNDLE_START(authSelBundle);
-        // Add UI support to consent to attestation, bug 1550164
-        GECKOBUNDLE_PUT(authSelBundle, "attestationPreference",
-                        jni::StringParam(u"none"_ns));
 
         nsString residentKey;
         Unused << aArgs->GetResidentKey(residentKey);
@@ -159,14 +174,11 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
             return;
           }
           if (authenticatorAttachment.EqualsLiteral(
-                  MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM)) {
-            GECKOBUNDLE_PUT(authSelBundle, "requirePlatformAttachment",
-                            java::sdk::Integer::ValueOf(1));
-          } else if (
+                  MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM) ||
               authenticatorAttachment.EqualsLiteral(
                   MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM)) {
-            GECKOBUNDLE_PUT(authSelBundle, "requireCrossPlatformAttachment",
-                            java::sdk::Integer::ValueOf(1));
+            GECKOBUNDLE_PUT(authSelBundle, "authenticatorAttachment",
+                            jni::StringParam(authenticatorAttachment));
           }
         }
         GECKOBUNDLE_FINISH(authSelBundle);
@@ -262,7 +274,7 @@ AndroidWebAuthnService::GetAssertion(uint64_t aTransactionId,
 
         uint32_t timeout;
         Unused << aArgs->GetTimeoutMS(&timeout);
-        GECKOBUNDLE_PUT(assertionBundle, "timeoutMS",
+        GECKOBUNDLE_PUT(assertionBundle, "timeout",
                         java::sdk::Double::New(timeout));
 
         // User Verification Requirement is not currently used in the

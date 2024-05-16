@@ -86,16 +86,16 @@ import org.mozilla.gecko.util.WebAuthnUtils;
               PublicKeyCredentialType.PUBLIC_KEY.toString(), algo.getAlgoValue()));
     }
 
+    final GeckoBundle userBundle = credentialBundle.getBundle("user");
     final PublicKeyCredentialUserEntity user =
         new PublicKeyCredentialUserEntity(
             userId,
-            credentialBundle.getString("userName", ""),
+            userBundle.getString("name", ""),
             /* deprecated userIcon field */ "",
-            credentialBundle.getString("userDisplayName", ""));
+            userBundle.getString("displayName", ""));
 
     AttestationConveyancePreference pref = AttestationConveyancePreference.NONE;
-    final String attestationPreference =
-        authenticatorSelection.getString("attestationPreference", "NONE");
+    final String attestationPreference = credentialBundle.getString("attestation", "NONE");
     if (attestationPreference.equalsIgnoreCase(AttestationConveyancePreference.DIRECT.name())) {
       pref = AttestationConveyancePreference.DIRECT;
     } else if (attestationPreference.equalsIgnoreCase(
@@ -105,10 +105,11 @@ import org.mozilla.gecko.util.WebAuthnUtils;
 
     final AuthenticatorSelectionCriteria.Builder selBuild =
         new AuthenticatorSelectionCriteria.Builder();
-    if (authenticatorSelection.getInt("requirePlatformAttachment", 0) == 1) {
+    final String authenticatorAttachment =
+        authenticatorSelection.getString("authenticatorAttachment", "");
+    if (authenticatorAttachment.equals("platform")) {
       selBuild.setAttachment(Attachment.PLATFORM);
-    }
-    if (authenticatorSelection.getInt("requireCrossPlatformAttachment", 0) == 1) {
+    } else if (authenticatorAttachment.equals("cross-platform")) {
       selBuild.setAttachment(Attachment.CROSS_PLATFORM);
     }
     final String residentKey = authenticatorSelection.getString("residentKey", "");
@@ -145,10 +146,11 @@ import org.mozilla.gecko.util.WebAuthnUtils;
               WebAuthnUtils.getTransportsForByte(cred.transports)));
     }
 
+    final GeckoBundle rpBundle = credentialBundle.getBundle("rp");
     final PublicKeyCredentialRpEntity rp =
         new PublicKeyCredentialRpEntity(
-            credentialBundle.getString("rpId"),
-            credentialBundle.getString("rpName", ""),
+            rpBundle.getString("id"),
+            rpBundle.getString("name", ""),
             /* deprecated rpIcon field */ "");
 
     return requestBuilder
@@ -159,7 +161,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
         .setChallenge(challenge)
         .setRp(rp)
         .setParameters(params)
-        .setTimeoutSeconds(credentialBundle.getLong("timeoutMS") / 1000.0)
+        .setTimeoutSeconds(credentialBundle.getLong("timeout") / 1000.0)
         .setExcludeList(excludedList)
         .build();
   }
@@ -354,7 +356,7 @@ import org.mozilla.gecko.util.WebAuthnUtils;
     return new PublicKeyCredentialRequestOptions.Builder()
         .setChallenge(challenge)
         .setAllowList(allowedList)
-        .setTimeoutSeconds(assertionBundle.getLong("timeoutMS") / 1000.0)
+        .setTimeoutSeconds(assertionBundle.getLong("timeout") / 1000.0)
         .setRpId(assertionBundle.getString("rpId"))
         .setAuthenticationExtensions(ext)
         .build();
