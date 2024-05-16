@@ -93,6 +93,12 @@ class NetworkEventActor extends Actor {
       this._innerWindowId = null;
       this._isNavigationRequest = false;
 
+      this._request = {
+        cookies: [],
+        headers: [],
+        postData: {},
+        rawHeaders: "",
+      };
       this._resource = this._createResource(networkEventOptions, channel);
       return;
     }
