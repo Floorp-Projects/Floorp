@@ -648,6 +648,9 @@ test_only.ipc:
   an_event:
     type: event
     extra_keys:
+      value:
+        type: string
+        description: Maps to Legacy Telemetry `value` property
       extra1:
         type: string
         description: "Some extra data"
