@@ -24,7 +24,7 @@ async function run_test() {
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(
+  await checkUpdateManager(
     STATE_NONE,
     false,
     STATE_FAILED,

@@ -33,7 +33,7 @@ async function run_test() {
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, false, false, true);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
+  await checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
 
   // This compares the callback arguments given, including the umask before
   // updating, to the umask set when the app callback is launched.  They should

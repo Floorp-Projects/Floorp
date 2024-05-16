@@ -20,6 +20,6 @@ async function run_test() {
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContains(ERR_PARENT_PID_PERSISTS);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
+  await checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkCallbackLog();
 }

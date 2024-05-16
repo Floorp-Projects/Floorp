@@ -28,7 +28,7 @@ async function run_test() {
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContents(LOG_PARTIAL_FAILURE);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(
+  await checkUpdateManager(
     STATE_NONE,
     false,
     STATE_FAILED,

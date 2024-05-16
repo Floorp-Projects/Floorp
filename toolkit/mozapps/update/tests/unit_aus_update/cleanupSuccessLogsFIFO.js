@@ -106,8 +106,9 @@ async function testCleanupSuccessLogsFIFO(
     "there should not be a downloading update"
   );
   Assert.ok(!gUpdateManager.readyUpdate, "there should not be a ready update");
+  const history = await gUpdateManager.getHistory();
   Assert.equal(
-    gUpdateManager.getUpdateCount(),
+    history.length,
     1,
     "the update manager update count" + MSG_SHOULD_EQUAL
   );

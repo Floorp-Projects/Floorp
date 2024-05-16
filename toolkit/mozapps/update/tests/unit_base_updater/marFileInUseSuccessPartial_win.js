@@ -22,6 +22,6 @@ async function run_test() {
   checkUpdateLogContains(ERR_BACKUP_DISCARD);
   checkUpdateLogContains(STATE_SUCCEEDED + "\n" + CALL_QUIT);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
+  await checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
   checkCallbackLog();
 }

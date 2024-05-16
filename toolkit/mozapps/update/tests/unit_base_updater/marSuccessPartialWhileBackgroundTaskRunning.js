@@ -96,7 +96,7 @@ async function run_test() {
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
   await waitForUpdateXMLFiles();
-  checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
+  await checkUpdateManager(STATE_NONE, false, STATE_SUCCEEDED, 0, 1);
 
   // Once we've seen what we want, there's no need to let the task wait complete.
   await proc.kill();

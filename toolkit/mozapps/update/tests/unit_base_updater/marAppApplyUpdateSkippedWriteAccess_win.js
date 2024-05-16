@@ -53,7 +53,7 @@ async function run_test() {
   standardInit();
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
-  checkUpdateManager(STATE_PENDING, false, STATE_NONE, 0, 0);
+  await checkUpdateManager(STATE_PENDING, false, STATE_NONE, 0, 0);
 
   let dir = getUpdateDirFile(DIR_PATCH);
   Assert.ok(dir.exists(), MSG_SHOULD_EXIST + getMsgPath(dir.path));
