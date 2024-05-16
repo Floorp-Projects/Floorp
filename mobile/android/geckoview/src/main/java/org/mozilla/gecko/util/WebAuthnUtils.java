@@ -260,4 +260,10 @@ public class WebAuthnUtils {
       return sb.toString();
     }
   }
+
+  public static class Exception extends RuntimeException {
+    public Exception(final String error) {
+      super(error);
+    }
+  }
 }
