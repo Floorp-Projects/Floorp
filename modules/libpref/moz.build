@@ -59,7 +59,6 @@ pref_groups = [
     "javascript",
     "layers",
     "layout",
-    "logging",
     "mathml",
     "media",
     "memory",
