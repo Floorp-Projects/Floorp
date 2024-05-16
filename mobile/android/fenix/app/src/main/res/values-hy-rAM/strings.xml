@@ -24,7 +24,7 @@
     <!-- Placeholder text shown in search bar when using tabs search -->
     <string name="tab_search_hint">Որոնել ներդիրներ</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
-    <string name="application_search_hint">Մուտքագրեք որոնվող բառը</string>
+    <string name="application_search_hint">Մուտքագրեք որոնման եզրույթներ</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Ձեր բաց ներդիրները կցուցադրվեն այստեղ:</string>
 
@@ -907,7 +907,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions_2"><![CDATA[Սկանացրեք <b>firefox.com/pair</b>-ում ցուցադրված QR կոդը]]></string>
+    <string name="pair_instructions_2"><![CDATA[Սկանավորեք <b>firefox.com/pair</b>-ում ցուցադրված QR կոդը]]></string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -1060,7 +1060,7 @@
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">Չեղարկել</string>
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Փոփոխությունները գործադրելու համար դուրս է գալիս հավելվածից…</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Փոփոխությունները կիրառելու համար լքում է հավելվածը…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1129,7 +1129,7 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search_1">Մուտքագրեք որոնվող բառը</string>
+    <string name="history_search_1">Մուտքագրեք որոնման եզրույթներ</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Ջնջել պատմությունը</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -1172,7 +1172,7 @@
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
-    <string name="tab_crash_title_2">Ներողություն. %1$s-ը չի կարող բեռնել այդ էջը:</string>
+    <string name="tab_crash_title_2">Ներողություն: %1$s-ը չի կարող բեռնել այդ էջը:</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Ուղարկել վթարի զեկույցը Mozilla-ին</string>
     <!-- Close tab button text on the tab crash page -->
@@ -1248,7 +1248,7 @@
     <string name="bookmark_undo_deletion">ՀԵՏԱՐԿԵԼ</string>
 
     <!-- Text for the button to search all bookmarks -->
-    <string name="bookmark_search">Մուտքագրեք որոնվող բառը</string>
+    <string name="bookmark_search">Մուտքագրեք որոնման եզրույթներ</string>
 
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
@@ -1304,7 +1304,7 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Անջ.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
-    <string name="tracking_protection_standard">Ստանդարտ</string>
+    <string name="tracking_protection_standard">Սովորական</string>
     <!-- Summary of tracking protection preference if tracking protection is set to strict -->
     <string name="tracking_protection_strict">Խիստ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to custom -->
@@ -1428,7 +1428,7 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Հասկացա</string>
     <!-- Share error message -->
-    <string name="share_error_snackbar">Հնարավոր չէ տարածել այս հավելվածին</string>
+    <string name="share_error_snackbar">Չստացվեց տարածել այս հավելվածին</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Ուղարկել սարքի</string>
     <!-- Text for the warning message on the Add new device screen -->
@@ -1624,7 +1624,7 @@
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Ձեր համակարգչում բացեք Firefox-ը և անցեք <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">Պատրաստ է սկանավորել</string>
+    <string name="sign_in_ready_for_scan">Պատրաստ է սկանավորման</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Մուտք գործել Ձեր տեսախցիկով</string>
     <!-- Text shown for settings option for sign with email -->
@@ -1652,7 +1652,7 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Իմանալ ավելին</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_default_1">Ստանդարտ (սկզբնադիր)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Սովորական (սկզբնադիր)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Էջերը նորմալ կբեռնվեն, բայց արգելափակվելու են ավելի քիչ հետագծիչներ:</string>
     <!--  Accessibility text for the Standard protection information icon  -->
@@ -1924,7 +1924,7 @@
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
-    <string name="preferences_autofill">Ինքնալցում</string>
+    <string name="preferences_autofill">Ինքնալրացում</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Հասցեներ</string>
     <!-- Preference and title for managing the settings for credit cards -->

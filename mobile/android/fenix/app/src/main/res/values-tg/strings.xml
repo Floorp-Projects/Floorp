@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="app_name_private_5">%s-и хусусӣ</string>
+    <string name="app_name_private_5">Хусусӣ %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Хусусӣ)</string>
 
@@ -315,7 +315,7 @@
          The first parameter is the name of the language that page was translated to (e.g. English). -->
     <string name="browser_menu_translated_to">Ба забони %1$s тарҷума шуд</string>
     <!-- Browser menu label for the print feature -->
-    <string name="browser_menu_print">Чоп кардан ...</string>
+    <string name="browser_menu_print">Чоп кардан…</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
