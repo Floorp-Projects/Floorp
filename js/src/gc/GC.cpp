@@ -498,13 +498,11 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       lastAllocRateUpdateTime(TimeStamp::Now()) {
 }
 
-bool js::gc::SplitStringBy(const char* text, char delimiter,
-                           CharRangeVector* result) {
-  return SplitStringBy(CharRange(text, strlen(text)), delimiter, result);
-}
+using CharRange = mozilla::Range<const char>;
+using CharRangeVector = Vector<CharRange, 0, SystemAllocPolicy>;
 
-bool js::gc::SplitStringBy(const CharRange& text, char delimiter,
-                           CharRangeVector* result) {
+static bool SplitStringBy(const CharRange& text, char delimiter,
+                          CharRangeVector* result) {
   auto start = text.begin();
   for (auto ptr = start; ptr != text.end(); ptr++) {
     if (*ptr == delimiter) {
@@ -550,7 +548,8 @@ void js::gc::ReadProfileEnv(const char* envName, const char* helpText,
   }
 
   CharRangeVector parts;
-  if (!SplitStringBy(env, ',', &parts)) {
+  auto text = CharRange(env, strlen(env));
+  if (!SplitStringBy(text, ',', &parts)) {
     MOZ_CRASH("OOM parsing environment variable");
   }
 

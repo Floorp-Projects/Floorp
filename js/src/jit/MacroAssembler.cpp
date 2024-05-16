@@ -4511,9 +4511,8 @@ void MacroAssembler::callWithABINoProfiler(void* fun, ABIType result,
   uint32_t stackAdjust;
   callWithABIPre(&stackAdjust);
 
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
+#ifdef DEBUG
   if (check == CheckUnsafeCallWithABI::Check) {
-    // Set the JSContext::inUnsafeCallWithABI flag.
     push(ReturnReg);
     loadJSContext(ReturnReg);
     Address flagAddr(ReturnReg, JSContext::offsetOfInUnsafeCallWithABI());
@@ -4528,9 +4527,8 @@ void MacroAssembler::callWithABINoProfiler(void* fun, ABIType result,
 
   callWithABIPost(stackAdjust, result);
 
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
+#ifdef DEBUG
   if (check == CheckUnsafeCallWithABI::Check) {
-    // Check JSContext::inUnsafeCallWithABI was cleared as expected.
     Label ok;
     push(ReturnReg);
     loadJSContext(ReturnReg);

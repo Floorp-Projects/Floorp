@@ -1112,7 +1112,6 @@ struct RemoveBarrier<WeakHeapPtr<T>> {
 
 #if MOZ_IS_GCC
 template struct JS_PUBLIC_API StableCellHasher<JSObject*>;
-template struct JS_PUBLIC_API StableCellHasher<JSScript*>;
 #endif
 
 template <typename T>

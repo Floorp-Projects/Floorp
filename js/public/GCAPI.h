@@ -474,15 +474,6 @@ typedef enum JSGCParamKey {
    */
   JSGC_MAX_MARKING_THREADS = 52,
 
-  /**
-   * Whether to automatically generate missing allocation sites so data about
-   * them can be gathered.
-   *
-   * Pref: None, this is an internal engine feature.
-   * Default: false.
-   */
-  JSGC_GENERATE_MISSING_ALLOC_SITES = 53,
-
 } JSGCParamKey;
 
 /*
