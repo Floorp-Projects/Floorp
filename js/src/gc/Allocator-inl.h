@@ -122,10 +122,6 @@ void* CellAllocator::AllocNurseryOrTenuredCell(JSContext* cx,
       site = zone->unknownAllocSite(traceKind);
     }
 
-#ifdef JS_GC_ZEAL
-    site = MaybeGenerateMissingAllocSite(cx, traceKind, site);
-#endif
-
     void* ptr = cx->nursery().tryAllocateCell(site, thingSize, traceKind);
     if (MOZ_LIKELY(ptr)) {
       return ptr;

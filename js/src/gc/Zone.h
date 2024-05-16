@@ -25,7 +25,6 @@
 #include "gc/FindSCCs.h"
 #include "gc/GCMarker.h"
 #include "gc/NurseryAwareHashMap.h"
-#include "gc/Policy.h"
 #include "gc/Pretenuring.h"
 #include "gc/Statistics.h"
 #include "gc/ZoneAllocator.h"
@@ -67,23 +66,6 @@ class ZoneAllCellIter;
 
 template <typename T>
 class ZoneCellIter;
-
-#ifdef JS_GC_ZEAL
-
-class MissingAllocSites {
- public:
-  using SiteMap = JS::GCHashMap<uint32_t, UniquePtr<AllocSite>,
-                                DefaultHasher<uint32_t>, SystemAllocPolicy>;
-
-  using ScriptMap = JS::GCHashMap<WeakHeapPtr<JSScript*>, SiteMap,
-                                  StableCellHasher<WeakHeapPtr<JSScript*>>,
-                                  SystemAllocPolicy>;
-  WeakCache<ScriptMap> scriptMap;
-
-  explicit MissingAllocSites(JS::Zone* zone) : scriptMap(zone) {}
-};
-
-#endif  // JS_GC_ZEAL
 
 }  // namespace gc
 
@@ -501,11 +483,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadOrGCTaskData<ObjectVector> objectsWithWeakPointers;
 
  public:
-#ifdef JS_GC_ZEAL
-  // Must come after weakCaches_ above.
-  js::UniquePtr<js::gc::MissingAllocSites> missingSites;
-#endif  // JS_GC_ZEAL
-
   static JS::Zone* from(ZoneAllocator* zoneAlloc) {
     return static_cast<Zone*>(zoneAlloc);
   }
