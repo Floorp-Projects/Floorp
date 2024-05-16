@@ -295,6 +295,12 @@ interface nsIUpdateCheck : nsISupports
 [scriptable, uuid(e27f0336-ad86-4c31-bfee-1d96100521f5)]
 interface nsIUpdateCheckerInternal : nsISupports
 {
+  /**
+   * This is identical to the corresponding function in `nsIUpdateChecker`, but
+   * this version does not ensure the update system has been initialized before
+   * being called.
+   */
+  nsIUpdateCheck checkForUpdates(in long checkType);
 };
 
 /**
