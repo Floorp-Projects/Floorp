@@ -5091,17 +5091,7 @@ nsresult nsHttpChannel::InitCacheEntry() {
 void nsHttpChannel::UpdateInhibitPersistentCachingFlag() {
   // The no-store directive within the 'Cache-Control:' header indicates
   // that we must not store the response in a persistent cache.
-  if (mResponseHead->NoStore()) {
-    mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
-    return;
-  }
-
-  if (!StaticPrefs::network_cache_persist_permanent_redirects_http() &&
-      mURI->SchemeIs("http") &&
-      nsHttp::IsPermanentRedirect(mResponseHead->Status())) {
-    mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
-    return;
-  }
+  if (mResponseHead->NoStore()) mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
   // Only cache SSL content on disk if the pref is set
   if (!gHttpHandler->IsPersistentHttpsCachingEnabled() &&
