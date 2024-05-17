@@ -64,15 +64,12 @@ exist) and add the following lines.
 The first line tells LLDB to enable inline breakpoints - Android Studio
 will need this if you want to use visual breakpoints.
 
-The remaining lines tell LLDB where to go to find the symbols for
-debugging.
+The next line tells LLDB where to go to find the symbols for debugging.
 
 .. code:: bash
 
    settings set target.inline-breakpoint-strategy always
-   settings append target.exec-search-paths <PATH>/objdir-android-opt/toolkit/library/build
-   settings append target.exec-search-paths <PATH>/objdir-android-opt/mozglue/build
-   settings append target.exec-search-paths <PATH>/objdir-android-opt/security
+   settings append target.exec-search-paths <PATH>/objdir-android-opt/dist/bin
 
 Set up Android Studio to perform native debugging.
 ==================================================
@@ -89,8 +86,8 @@ Set up Android Studio to perform native debugging.
    that configures Gecko and child processes in order to attach
    debuggers at the correct times.
 4. Under ``Symbol Directories``, add a new path pointing to
-   ``<PATH>/objdir-android-opt/toolkit/library/build``, the same path
-   that you entered into your ``.lldbinit`` file.
+   ``<PATH>/objdir-android-opt/dist/bin``, the same path that you
+   entered into your ``.lldbinit`` file.
 5. Select ``Apply`` and ``OK`` to close the window.
 
 Debug Native code in Android Studio
