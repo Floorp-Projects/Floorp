@@ -822,23 +822,22 @@ static nscoord ListImageDefaultLength(const nsImageFrame& aFrame) {
                   nsPresContext::CSSPixelsToAppUnits(1));
 }
 
-static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
-                                          bool aUseMappedRatio,
-                                          nsImageFrame::Kind aKind,
-                                          const nsImageFrame& aFrame) {
-  const auto containAxes = aFrame.GetContainSizeAxes();
+IntrinsicSize nsImageFrame::ComputeIntrinsicSize(
+    bool aIgnoreContainment) const {
+  const auto containAxes =
+      aIgnoreContainment ? ContainSizeAxes(false, false) : GetContainSizeAxes();
   if (containAxes.IsBoth()) {
-    return aFrame.FinishIntrinsicSize(containAxes, IntrinsicSize(0, 0));
+    return FinishIntrinsicSize(containAxes, IntrinsicSize(0, 0));
   }
 
   nsSize size;
-  if (aImage && NS_SUCCEEDED(aImage->GetIntrinsicSize(&size))) {
+  if (mImage && NS_SUCCEEDED(mImage->GetIntrinsicSize(&size))) {
     IntrinsicSize intrinsicSize;
     intrinsicSize.width = size.width == -1 ? Nothing() : Some(size.width);
     intrinsicSize.height = size.height == -1 ? Nothing() : Some(size.height);
-    if (aKind == nsImageFrame::Kind::ListStyleImage) {
+    if (mKind == nsImageFrame::Kind::ListStyleImage) {
       if (intrinsicSize.width.isNothing() || intrinsicSize.height.isNothing()) {
-        nscoord defaultLength = ListImageDefaultLength(aFrame);
+        nscoord defaultLength = ListImageDefaultLength(*this);
         if (intrinsicSize.width.isNothing()) {
           intrinsicSize.width = Some(defaultLength);
         }
@@ -847,44 +846,44 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
         }
       }
     }
-    if (aKind == nsImageFrame::Kind::ImageLoadingContent ||
-        (aKind == nsImageFrame::Kind::XULImage &&
-         aFrame.GetContent()->AsElement()->HasNonEmptyAttr(nsGkAtoms::src))) {
-      ScaleIntrinsicSizeForDensity(aImage, *aFrame.GetContent(), intrinsicSize);
+    if (mKind == nsImageFrame::Kind::ImageLoadingContent ||
+        (mKind == nsImageFrame::Kind::XULImage &&
+         GetContent()->AsElement()->HasNonEmptyAttr(nsGkAtoms::src))) {
+      ScaleIntrinsicSizeForDensity(mImage, *GetContent(), intrinsicSize);
     } else {
       ScaleIntrinsicSizeForDensity(
-          intrinsicSize,
-          aFrame.GetImageFromStyle()->GetResolution(*aFrame.Style()));
+          intrinsicSize, GetImageFromStyle()->GetResolution(*Style()));
     }
-    return aFrame.FinishIntrinsicSize(containAxes, intrinsicSize);
+    return FinishIntrinsicSize(containAxes, intrinsicSize);
   }
 
-  if (aKind == nsImageFrame::Kind::ListStyleImage) {
+  if (mKind == nsImageFrame::Kind::ListStyleImage) {
     // Note: images are handled above, this handles gradients etc.
-    const nscoord defaultLength = ListImageDefaultLength(aFrame);
-    return aFrame.FinishIntrinsicSize(
-        containAxes, IntrinsicSize(defaultLength, defaultLength));
+    const nscoord defaultLength = ListImageDefaultLength(*this);
+    return FinishIntrinsicSize(containAxes,
+                               IntrinsicSize(defaultLength, defaultLength));
   }
 
-  if (aKind == nsImageFrame::Kind::XULImage && aFrame.IsThemed()) {
-    nsPresContext* pc = aFrame.PresContext();
+  if (mKind == nsImageFrame::Kind::XULImage && IsThemed()) {
+    nsPresContext* pc = PresContext();
     // FIXME: const_cast here is a bit evil but IsThemed and so does the same.
     const auto widgetSize = pc->Theme()->GetMinimumWidgetSize(
-        pc, const_cast<nsImageFrame*>(&aFrame),
-        aFrame.StyleDisplay()->EffectiveAppearance());
+        pc, const_cast<nsImageFrame*>(this),
+        StyleDisplay()->EffectiveAppearance());
     const IntrinsicSize intrinsicSize(
         LayoutDeviceIntSize::ToAppUnits(widgetSize, pc->AppUnitsPerDevPixel()));
-    return aFrame.FinishIntrinsicSize(containAxes, intrinsicSize);
+    return FinishIntrinsicSize(containAxes, intrinsicSize);
   }
 
-  if (aFrame.ShouldShowBrokenImageIcon()) {
+  if (ShouldShowBrokenImageIcon()) {
     nscoord edgeLengthToUse = nsPresContext::CSSPixelsToAppUnits(
         ICON_SIZE + (2 * (ICON_PADDING + ALT_BORDER_WIDTH)));
-    return aFrame.FinishIntrinsicSize(
-        containAxes, IntrinsicSize(edgeLengthToUse, edgeLengthToUse));
+    return FinishIntrinsicSize(containAxes,
+                               IntrinsicSize(edgeLengthToUse, edgeLengthToUse));
   }
 
-  if (aUseMappedRatio && aFrame.StylePosition()->mAspectRatio.HasRatio()) {
+  if (ShouldUseMappedAspectRatio() &&
+      StylePosition()->mAspectRatio.HasRatio()) {
     return IntrinsicSize();
   }
 
@@ -913,15 +912,13 @@ bool nsImageFrame::ShouldUseMappedAspectRatio() const {
 
 bool nsImageFrame::UpdateIntrinsicSize() {
   IntrinsicSize oldIntrinsicSize = mIntrinsicSize;
-  mIntrinsicSize =
-      ComputeIntrinsicSize(mImage, ShouldUseMappedAspectRatio(), mKind, *this);
+  mIntrinsicSize = ComputeIntrinsicSize();
   return mIntrinsicSize != oldIntrinsicSize;
 }
 
-static AspectRatio ComputeIntrinsicRatio(imgIContainer* aImage,
-                                         bool aUseMappedRatio,
-                                         const nsImageFrame& aFrame) {
-  if (aFrame.GetContainSizeAxes().IsAny()) {
+AspectRatio nsImageFrame::ComputeIntrinsicRatioForImage(
+    imgIContainer* aImage, bool aIgnoreContainment) const {
+  if (!aIgnoreContainment && GetContainSizeAxes().IsAny()) {
     return AspectRatio();
   }
 
@@ -930,15 +927,15 @@ static AspectRatio ComputeIntrinsicRatio(imgIContainer* aImage,
       return *fromImage;
     }
   }
-  if (aUseMappedRatio) {
-    const StyleAspectRatio& ratio = aFrame.StylePosition()->mAspectRatio;
+  if (ShouldUseMappedAspectRatio()) {
+    const StyleAspectRatio& ratio = StylePosition()->mAspectRatio;
     if (ratio.auto_ && ratio.HasRatio()) {
       // Return the mapped intrinsic aspect ratio stored in
       // nsStylePosition::mAspectRatio.
       return ratio.ratio.AsRatio().ToLayoutRatio(UseBoxSizing::Yes);
     }
   }
-  if (aFrame.ShouldShowBrokenImageIcon()) {
+  if (ShouldShowBrokenImageIcon()) {
     return AspectRatio(1.0f);
   }
   return AspectRatio();
@@ -946,23 +943,12 @@ static AspectRatio ComputeIntrinsicRatio(imgIContainer* aImage,
 
 bool nsImageFrame::UpdateIntrinsicRatio() {
   AspectRatio oldIntrinsicRatio = mIntrinsicRatio;
-  mIntrinsicRatio =
-      ComputeIntrinsicRatio(mImage, ShouldUseMappedAspectRatio(), *this);
+  mIntrinsicRatio = ComputeIntrinsicRatioForImage(mImage);
   return mIntrinsicRatio != oldIntrinsicRatio;
 }
 
 bool nsImageFrame::GetSourceToDestTransform(nsTransform2D& aTransform) {
-  // First, figure out destRect (the rect we're rendering into).
-  // NOTE: We use mComputedSize instead of just GetContentRectRelativeToSelf()'s
-  // own size here, because GetContentRectRelativeToSelf() might be smaller if
-  // we're fragmented, whereas mComputedSize has our full content-box size
-  // (which we need for ComputeObjectDestRect to work correctly).
-  nsRect constraintRect(GetContentRectRelativeToSelf().TopLeft(),
-                        mComputedSize);
-  constraintRect.y -= GetContinuationOffset();
-
-  nsRect destRect = nsLayoutUtils::ComputeObjectDestRect(
-      constraintRect, mIntrinsicSize, mIntrinsicRatio, StylePosition());
+  nsRect destRect = GetDestRect(GetContentRectRelativeToSelf());
   // Set the translation components, based on destRect
   // XXXbz does this introduce rounding errors because of the cast to
   // float?  Should we just manually add that stuff in every time
@@ -1369,8 +1355,8 @@ void nsImageFrame::MaybeDecodeForPredictedSize() {
 
   // ...and our predicted dest rect...
   const int32_t factor = PresContext()->AppUnitsPerDevPixel();
-  const LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
-      PredictedDestRect(frameContentBox), factor);
+  const LayoutDeviceRect destRect =
+      LayoutDeviceRect::FromAppUnits(GetDestRect(frameContentBox), factor);
 
   // ...and use them to compute our predicted size in screen pixels.
   const ScreenSize predictedScreenSize = destRect.Size() * resolutionToScreen;
@@ -1395,14 +1381,24 @@ void nsImageFrame::MaybeDecodeForPredictedSize() {
   mImage->RequestDecodeForSize(predictedImageSize, flags);
 }
 
-nsRect nsImageFrame::PredictedDestRect(const nsRect& aFrameContentBox) {
+nsRect nsImageFrame::GetDestRect(const nsRect& aFrameContentBox,
+                                 nsPoint* aAnchorPoint) {
   // Note: To get the "dest rect", we have to provide the "constraint rect"
   // (which is the content-box, with the effects of fragmentation undone).
   nsRect constraintRect(aFrameContentBox.TopLeft(), mComputedSize);
   constraintRect.y -= GetContinuationOffset();
 
-  return nsLayoutUtils::ComputeObjectDestRect(constraintRect, mIntrinsicSize,
-                                              mIntrinsicRatio, StylePosition());
+  auto intrinsicSize = mIntrinsicSize;
+  auto intrinsicRatio = mIntrinsicRatio;
+  if (GetContainSizeAxes().IsAny()) {
+    // Ignore containment for object-fit computations.
+    const bool ignoreContainment = true;
+    intrinsicSize = ComputeIntrinsicSize(ignoreContainment);
+    intrinsicRatio = ComputeIntrinsicRatioForImage(mImage, ignoreContainment);
+  }
+  return nsLayoutUtils::ComputeObjectDestRect(constraintRect, intrinsicSize,
+                                              intrinsicRatio, StylePosition(),
+                                              aAnchorPoint);
 }
 
 bool nsImageFrame::IsForMarkerPseudo() const {
@@ -2230,26 +2226,7 @@ static bool OldImageHasDifferentRatio(const nsImageFrame& aFrame,
   }
 
   auto currentRatio = aFrame.GetIntrinsicRatio();
-  // If we have an image, we need to have a current request.
-  // Same if we had an image.
-  const bool hasRequest = true;
-#ifdef DEBUG
-  auto currentRatioRecomputed =
-      ComputeIntrinsicRatio(&aImage, hasRequest, aFrame);
-  // If the image encounters an error after decoding the size (and we run
-  // UpdateIntrinsicRatio) then the image will return the empty AspectRatio and
-  // the aspect ratio we compute here will be different from what was computed
-  // and stored before the image went into error state. It would be better to
-  // check that the image has an error here but we need an imgIRequest for that,
-  // not an imgIContainer. In lieu of that we check that
-  // aImage.GetIntrinsicRatio() returns Nothing() as it does when the image is
-  // in the error state and that the recomputed ratio is the zero ratio.
-  MOZ_ASSERT(
-      (!currentRatioRecomputed && aImage.GetIntrinsicRatio() == Nothing()) ||
-          currentRatio == currentRatioRecomputed,
-      "aspect-ratio got out of sync during paint? How?");
-#endif
-  auto oldRatio = ComputeIntrinsicRatio(aPrevImage, hasRequest, aFrame);
+  auto oldRatio = aFrame.ComputeIntrinsicRatioForImage(aPrevImage);
   return oldRatio != currentRatio;
 }
 
@@ -2300,9 +2277,8 @@ void nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
 nsRect nsDisplayImage::GetDestRect() const {
   bool snap = true;
   const nsRect frameContentBox = GetBounds(&snap);
-
   nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
-  return imageFrame->PredictedDestRect(frameContentBox);
+  return imageFrame->GetDestRect(frameContentBox);
 }
 
 nsRegion nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -2345,9 +2321,10 @@ bool nsDisplayImage::CreateWebRenderCommands(
     flags |= imgIContainer::FLAG_RECORD_BLOB;
   }
 
+  const nsRect destAppUnits = GetDestRect();
   const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect destRect(
-      LayoutDeviceRect::FromAppUnits(GetDestRect(), factor));
+      LayoutDeviceRect::FromAppUnits(destAppUnits, factor));
 
   SVGImageContext svgContext;
   Maybe<ImageIntRegion> region;
@@ -2363,7 +2340,7 @@ bool nsDisplayImage::CreateWebRenderCommands(
     LCPHelpers::FinalizeLCPEntryForImage(
         frame->GetContent()->AsElement(),
         static_cast<imgRequestProxy*>(currentRequest.get()),
-        GetDestRect() - ToReferenceFrame());
+        destAppUnits - ToReferenceFrame());
   }
 
   // While we got a container, it may not contain a fully decoded surface. If
@@ -2439,18 +2416,8 @@ ImgDrawResult nsImageFrame::PaintImage(gfxContext& aRenderingContext,
   NS_ASSERTION(GetContentRectRelativeToSelf().width == mComputedSize.width,
                "bad width");
 
-  // NOTE: We use mComputedSize instead of just GetContentRectRelativeToSelf()'s
-  // own size here, because GetContentRectRelativeToSelf() might be smaller if
-  // we're fragmented, whereas mComputedSize has our full content-box size
-  // (which we need for ComputeObjectDestRect to work correctly).
-  nsRect constraintRect(aPt + GetContentRectRelativeToSelf().TopLeft(),
-                        mComputedSize);
-  constraintRect.y -= GetContinuationOffset();
-
   nsPoint anchorPoint;
-  nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
-      constraintRect, mIntrinsicSize, mIntrinsicRatio, StylePosition(),
-      &anchorPoint);
+  nsRect dest = GetDestRect(GetContentRectRelativeToSelf() + aPt, &anchorPoint);
 
   SVGImageContext svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, aImage);
@@ -2524,7 +2491,7 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox clip(
       aBuilder, this, clipFlags);
 
-  if (mComputedSize.width != 0 && mComputedSize.height != 0) {
+  if (!mComputedSize.IsEmpty()) {
     const bool imageOK = mKind != Kind::ImageLoadingContent ||
                          ImageOk(mContent->AsElement()->State());
 

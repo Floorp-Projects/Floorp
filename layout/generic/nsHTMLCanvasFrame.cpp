@@ -65,11 +65,11 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
 
   NS_DISPLAY_DECL_NAME("nsDisplayCanvas", TYPE_CANVAS)
 
-  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap) const override {
+  nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) const override {
     *aSnap = false;
-    nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(Frame());
-    HTMLCanvasElement* canvas = HTMLCanvasElement::FromNode(f->GetContent());
+    auto* f = static_cast<nsHTMLCanvasFrame*>(Frame());
+    auto* canvas = HTMLCanvasElement::FromNode(f->GetContent());
     nsRegion result;
     if (canvas->GetIsOpaque()) {
       // OK, the entire region painted by the canvas is opaque. But what is
@@ -91,13 +91,12 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
     return result;
   }
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) const override {
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override {
     *aSnap = true;
     return Frame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
   }
 
-  virtual bool CreateWebRenderCommands(
+  bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       wr::IpcResourceUpdateQueue& aResources, const StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
@@ -114,7 +113,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
 
       element->FlushOffscreenCanvas();
 
-      nsHTMLCanvasFrame* canvasFrame = static_cast<nsHTMLCanvasFrame*>(mFrame);
+      auto* canvasFrame = static_cast<nsHTMLCanvasFrame*>(mFrame);
       nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
       IntrinsicSize intrinsicSize = IntrinsicSizeFromCanvasSize(canvasSizeInPx);
       AspectRatio intrinsicRatio = IntrinsicRatioFromCanvasSize(canvasSizeInPx);
@@ -238,14 +237,13 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
   // FirstContentfulPaint is supposed to ignore "white" canvases.  We use
   // MaybeModified (if GetContext() was called on the canvas) as a standin for
   // "white"
-  virtual bool IsContentful() const override {
+  bool IsContentful() const override {
     nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(Frame());
     HTMLCanvasElement* canvas = HTMLCanvasElement::FromNode(f->GetContent());
     return canvas->MaybeModified();
   }
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override {
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(Frame());
     HTMLCanvasElement* canvas = HTMLCanvasElement::FromNode(f->GetContent());
 
@@ -357,8 +355,7 @@ nsHTMLCanvasFrame::~nsHTMLCanvasFrame() = default;
 
 nsIntSize nsHTMLCanvasFrame::GetCanvasSize() const {
   nsIntSize size(0, 0);
-  HTMLCanvasElement* canvas = HTMLCanvasElement::FromNodeOrNull(GetContent());
-  if (canvas) {
+  if (auto* canvas = HTMLCanvasElement::FromNodeOrNull(GetContent())) {
     size = canvas->GetSize();
     MOZ_ASSERT(size.width >= 0 && size.height >= 0,
                "we should've required <canvas> width/height attrs to be "
@@ -366,7 +363,6 @@ nsIntSize nsHTMLCanvasFrame::GetCanvasSize() const {
   } else {
     MOZ_ASSERT_UNREACHABLE("couldn't get canvas size");
   }
-
   return size;
 }
 

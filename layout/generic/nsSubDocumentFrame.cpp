@@ -271,11 +271,15 @@ nsRect nsSubDocumentFrame::GetDestRect() {
   nsRect rect = GetContent()->IsHTMLElement(nsGkAtoms::frame)
                     ? GetRectRelativeToSelf()
                     : GetContentRectRelativeToSelf();
+  return GetDestRect(rect);
+}
 
+nsRect nsSubDocumentFrame::GetDestRect(const nsRect& aConstraintRect) {
   // Adjust subdocument size, according to 'object-fit' and the subdocument's
   // intrinsic size and ratio.
   return nsLayoutUtils::ComputeObjectDestRect(
-      rect, GetIntrinsicSize(), GetIntrinsicRatio(), StylePosition());
+      aConstraintRect, ComputeIntrinsicSize(/* aIgnoreContainment = */ true),
+      GetIntrinsicRatio(), StylePosition());
 }
 
 ScreenIntSize nsSubDocumentFrame::GetSubdocumentSize() {
@@ -569,7 +573,13 @@ nscoord nsSubDocumentFrame::GetPrefISize(gfxContext* aRenderingContext) {
 
 /* virtual */
 IntrinsicSize nsSubDocumentFrame::GetIntrinsicSize() {
-  const auto containAxes = GetContainSizeAxes();
+  return ComputeIntrinsicSize();
+}
+
+IntrinsicSize nsSubDocumentFrame::ComputeIntrinsicSize(
+    bool aIgnoreContainment) const {
+  const auto containAxes =
+      aIgnoreContainment ? ContainSizeAxes(false, false) : GetContainSizeAxes();
   if (containAxes.IsBoth()) {
     // Intrinsic size of 'contain:size' replaced elements is determined by
     // contain-intrinsic-size.
@@ -684,10 +694,7 @@ void nsSubDocumentFrame::Reflow(nsPresContext* aPresContext,
                      aDesiredSize.Height() - bp.TopBottom());
 
     // Size & position the view according to 'object-fit' & 'object-position'.
-    nsRect destRect = nsLayoutUtils::ComputeObjectDestRect(
-        nsRect(offset, innerSize), GetIntrinsicSize(), GetIntrinsicRatio(),
-        StylePosition());
-
+    nsRect destRect = GetDestRect(nsRect(offset, innerSize));
     nsViewManager* vm = mInnerView->GetViewManager();
     vm->MoveViewTo(mInnerView, destRect.x, destRect.y);
     vm->ResizeView(mInnerView, nsRect(nsPoint(0, 0), destRect.Size()));
