@@ -326,7 +326,8 @@ class nsContainerFrame : public nsSplittableFrame {
    * overflow containers and adding them to the appropriate list.
    * See nsBlockFrame::Reflow for a sample implementation.
    *
-   * For more information, see https://wiki.mozilla.org/Gecko:Continuation_Model
+   * For more information, see
+   * https://firefox-source-docs.mozilla.org/layout/LayoutOverview.html#fragmentation
    *
    * Note that Flex/GridContainerFrame doesn't use nsOverflowContinuationTracker
    * so the above doesn't apply.  Flex/Grid containers may have items that
