@@ -22,26 +22,12 @@ fn poke_into<V: Peek + Poke>(a: &V) -> Vec<u8> {
     v
 }
 
-#[cfg(not(feature = "option_copy"))]
 fn the_same<V>(a: V)
 where
     V: Debug + Default + PartialEq + Peek + Poke,
 {
     let v = poke_into(&a);
     let (b, end_ptr) = unsafe { peek_poke::peek_from_default(v.as_ptr()) };
-    let size = end_ptr as usize - v.as_ptr() as usize;
-    assert_eq!(size, v.len());
-    assert_eq!(a, b);
-}
-
-#[cfg(feature = "option_copy")]
-fn the_same<V>(a: V)
-where
-    V: Copy + Debug + PartialEq + Peek + Poke,
-{
-    let v = poke_into(&a);
-    let mut b = a;
-    let end_ptr = unsafe { b.peek_from(v.as_ptr()) };
     let size = end_ptr as usize - v.as_ptr() as usize;
     assert_eq!(size, v.len());
     assert_eq!(a, b);
@@ -81,14 +67,6 @@ fn test_bool() {
     the_same(false);
 }
 
-#[cfg(any(feature = "option_copy", feature = "option_default"))]
-#[test]
-fn test_option() {
-    the_same(Some(5usize));
-    //the_same(Some("foo bar".to_string()));
-    the_same(None::<usize>);
-}
-
 #[test]
 fn test_fixed_size_array() {
     the_same([24u32; 32]);
@@ -110,16 +88,12 @@ fn test_basic_struct() {
         a: u32,
         b: u32,
         c: u32,
-        #[cfg(any(feature = "option_copy", feature = "option_default"))]
-        d: Option<u32>,
     }
 
     the_same(Bar {
         a: 2,
         b: 4,
         c: 42,
-        #[cfg(any(feature = "option_copy", feature = "option_default"))]
-        d: None,
     });
 }
 
@@ -226,50 +200,5 @@ fn test_generic_enum() {
         fn default() -> Self {
             PropertyBinding::Value(Default::default())
         }
-    }
-}
-
-#[cfg(all(feature = "extras", feature = "option_copy"))]
-mod extra_tests {
-    use super::*;
-    use euclid::{Point2D, Rect, SideOffsets2D, Size2D, Transform3D, Vector2D};
-    use std::mem::size_of;
-
-    #[test]
-    fn euclid_types() {
-        the_same(Point2D::<f32>::new(1.0, 2.0));
-        assert_eq!(Point2D::<f32>::max_size(), 2 * size_of::<f32>());
-
-        the_same(Rect::<f32>::new(
-            Point2D::<f32>::new(0.0, 0.0),
-            Size2D::<f32>::new(100.0, 80.0),
-        ));
-        assert_eq!(Rect::<f32>::max_size(), 4 * size_of::<f32>());
-
-        the_same(SideOffsets2D::<f32>::new(0.0, 10.0, -1.0, -10.0));
-        assert_eq!(SideOffsets2D::<f32>::max_size(), 4 * size_of::<f32>());
-
-        the_same(Transform3D::<f32>::identity());
-        assert_eq!(Transform3D::<f32>::max_size(), 16 * size_of::<f32>());
-
-        the_same(Vector2D::<f32>::new(1.0, 2.0));
-        assert_eq!(Vector2D::<f32>::max_size(), 2 * size_of::<f32>());
-    }
-
-    #[test]
-    fn webrender_api_types() {
-        type PipelineSourceId = i32;
-        #[derive(Clone, Copy, Debug, PartialEq, PeekPoke)]
-        struct PipelineId(pub PipelineSourceId, pub u32);
-
-        #[derive(Clone, Copy, Debug, PartialEq, PeekPoke)]
-        struct ClipChainId(pub u64, pub PipelineId);
-
-        #[derive(Clone, Copy, Debug, PartialEq, PeekPoke)]
-        struct SpatialId(pub usize, pub PipelineId);
-
-        the_same(PipelineId(42, 2));
-        the_same(ClipChainId(19u64, PipelineId(42, 2)));
-        the_same(SpatialId(19usize, PipelineId(42, 2)));
     }
 }
