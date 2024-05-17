@@ -794,16 +794,6 @@ MOZ_EXPAND_LIBS
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl Check for cairo
-dnl ========================================================
-
-if test "$OS_ARCH" = "WINNT"; then
-    # For now we assume that we will have a uint64_t available through
-    # one of the above headers or mozstdint.h.
-    AC_DEFINE(HAVE_UINT64_T)
-fi
-
-dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
 dnl =
