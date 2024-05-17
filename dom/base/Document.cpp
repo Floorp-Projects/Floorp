@@ -7110,7 +7110,7 @@ void Document::DeletePresShell() {
   // objects for @font-face rules that came from the style set. There's no need
   // to call EnsureStyleFlush either, the shell is going away anyway, so there's
   // no point on it.
-  MarkUserFontSetDirty();
+  mFontFaceSetDirty = true;
 
   if (IsEditingOn()) {
     TurnEditingOff();
