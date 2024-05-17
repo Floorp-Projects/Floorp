@@ -508,6 +508,13 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     return E_NOINTERFACE;
   }
 
+  if (NS_WARN_IF(!NS_IsMainThread())) {
+    // Bug 1896816: JAWS sometimes traverses into Gecko UI from a file dialog
+    // thread. It shouldn't do that, but let's fail gracefully instead of
+    // crashing.
+    return RPC_E_WRONG_THREAD;
+  }
+
   // These interfaces are always available. We can support querying to them
   // even if the Accessible is dead.
   if (IID_IUnknown == iid) {
