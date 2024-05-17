@@ -25,6 +25,12 @@ tree[is="places-tree"] > treechildren::-moz-tree-cell {
   z-index: 1;
 }
 
+.placesTree {
+  appearance: none;
+  margin: 0;
+  border: 0;
+}
+
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
 @media (resolution: 2dppx) {
   #bookmarksChildren,
