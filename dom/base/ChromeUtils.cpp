@@ -896,14 +896,22 @@ static bool JSLazyGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
 static bool DefineLazyGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
                              JS::Handle<JS::Value> aName,
                              JS::Handle<JSObject*> aLambda) {
-  JS::Rooted<jsid> id(aCx);
+  JS::Rooted<JS::PropertyKey> id(aCx);
   if (!JS_ValueToId(aCx, aName, &id)) {
     return false;
   }
 
+  JS::Rooted<JS::PropertyKey> funId(aCx);
+  if (id.isAtom()) {
+    funId = id;
+  } else {
+    // Don't care int and symbol cases.
+    funId = JS::PropertyKey::NonIntAtom(JS_GetEmptyString(aCx));
+  }
+
   JS::Rooted<JSObject*> getter(
-      aCx, JS_GetFunctionObject(
-               js::NewFunctionByIdWithReserved(aCx, JSLazyGetter, 0, 0, id)));
+      aCx, JS_GetFunctionObject(js::NewFunctionByIdWithReserved(
+               aCx, JSLazyGetter, 0, 0, funId)));
   if (!getter) {
     JS_ReportOutOfMemory(aCx);
     return false;
