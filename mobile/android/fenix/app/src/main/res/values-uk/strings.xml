@@ -300,6 +300,10 @@
     <string name="browser_menu_edit_bookmark">Редагувати закладку</string>
     <!-- Browser menu label that the saves the currently visited page as a PDF -->
     <string name="browser_menu_save_as_pdf">Зберегти як PDF…</string>
+    <!-- Browser menu label for turning ON reader view of the current visited page -->
+    <string name="browser_menu_turn_on_reader_view">Увімкнути режим читання</string>
+    <!-- Browser menu label for turning OFF reader view of the current visited page -->
+    <string name="browser_menu_turn_off_reader_view">Вимкнути режим читання</string>
     <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
     <string name="browser_menu_translate_page">Перекласти сторінку…</string>
     <!-- Browser menu label that is displayed when the current page has been translated by the translation feature.

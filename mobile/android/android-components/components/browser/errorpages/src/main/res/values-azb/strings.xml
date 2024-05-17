@@ -83,6 +83,21 @@
     <string name="mozac_browser_errorpages_unknown_protocol_title">تانینمایان پروتکل</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">فایل تاپیلمادی</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">فایلؽن ایشلدیلمه‌سینه ایجازه وئریلمه‌دی</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">پروکسی سرور باغلانتی‌نی رد ائتدی</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">پروکسی سرور تاپیلمادی</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ضرر وئریجی سایت سورونو</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ایستنمیه‌ن سایت سورونو</string>
 
     <!-- The document title and heading of an error page. -->
