@@ -69,6 +69,7 @@ add_setup(async () => {
     set: [
       ["browser.urlbar.suggest.searches", true],
       ["browser.urlbar.suggest.recentsearches", true],
+      ["browser.urlbar.suggest.topsites", false],
       ["browser.urlbar.recentsearches.featureGate", true],
       // Disable UrlbarProviderSearchTips
       [
