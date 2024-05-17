@@ -85,3 +85,32 @@ set_config(
     ["-lsocket"],
     when=check_symbol_in_lib("socket", symbol="socket", when=building_with_gnu_cc),
 )
+
+moz_use_pthreads = (
+    target_is_darwin
+    | check_symbol_in_libs(
+        [None, "pthread"],
+        symbol="pthread_create",
+        when=building_with_gnu_cc & ~target_is_darwin,
+    ).found
+)
+
+with only_when(moz_use_pthreads):
+    check_header("pthread.h")
+
+    pthread_flags = dependable(lambda: namespace(cflags=[]))
+
+    (have_pthread_cflag,) = check_and_add_flags(
+        "-pthread",
+        pthread_flags,
+        ["-Werror", "-pthread"],
+        compiler=c_compiler,
+    )
+
+    @depends(pthread_flags, compilation_flags)
+    def add_pthread_linker_flags(pthread_flags, compilation_flags):
+        # Handle compilation flags update
+        compilation_flags.cflags.extend(pthread_flags.cflags)
+        compilation_flags.cxxflags.extend(pthread_flags.cflags)
+
+    set_config("MOZ_USE_PTHREADS", True)
