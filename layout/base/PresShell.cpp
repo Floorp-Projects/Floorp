@@ -10218,8 +10218,10 @@ bool PresShell::RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver) {
 
 void PresShell::DoObserveStyleFlushes() {
   MOZ_ASSERT(!ObservingStyleFlushes());
+  if (MOZ_UNLIKELY(IsDestroying())) {
+    return;
+  }
   mObservingStyleFlushes = true;
-
   if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
     mPresContext->RefreshDriver()->AddStyleFlushObserver(this);
   }
