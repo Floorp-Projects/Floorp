@@ -2195,12 +2195,13 @@ void nsRefreshDriver::DispatchResizeEvents() {
     if (!mPresContext || !mPresContext->GetPresShell()) {
       break;
     }
-    // Make sure to not process observers which might have been removed during
-    // previous iterations.
+    // Make sure to not process observers which might have been removed
+    // during previous iterations.
     if (!mResizeEventFlushObservers.RemoveElement(presShell)) {
       continue;
     }
-    // MOZ_KnownLive because 'observers' is guaranteed to keep it alive.
+    // MOZ_KnownLive because 'observers' is guaranteed to
+    // keep it alive.
     //
     // Fixing https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 on its own
     // won't help here, because 'observers' is non-const and we have the
@@ -2210,26 +2211,26 @@ void nsRefreshDriver::DispatchResizeEvents() {
 }
 
 void nsRefreshDriver::FlushLayoutOnPendingDocsAndFixUpFocus() {
-  AutoTArray<RefPtr<PresShell>, 16> observers;
+  AutoTArray<PresShell*, 16> observers;
   observers.AppendElements(mStyleFlushObservers);
-  for (RefPtr<PresShell>& presShell : Reversed(observers)) {
-    if (!mPresContext || !mPresContext->GetPresShell()) {
-      break;
-    }
-    // Make sure to not process observers which might have been removed during
-    // previous iterations.
-    if (!mStyleFlushObservers.RemoveElement(presShell)) {
+  for (uint32_t j = observers.Length();
+       j && mPresContext && mPresContext->GetPresShell(); --j) {
+    // Make sure to not process observers which might have been removed
+    // during previous iterations.
+    PresShell* rawPresShell = observers[j - 1];
+    if (!mStyleFlushObservers.RemoveElement(rawPresShell)) {
       continue;
     }
 
-    LogPresShellObserver::Run run(presShell, this);
+    LogPresShellObserver::Run run(rawPresShell, this);
+
+    RefPtr<PresShell> presShell = rawPresShell;
     presShell->mWasLastReflowInterrupted = false;
     const ChangesToFlush ctf(FlushType::InterruptibleLayout, false);
-    // MOZ_KnownLive because 'observers' is guaranteed to keep it alive.
-    MOZ_KnownLive(presShell)->FlushPendingNotifications(ctf);
+    presShell->FlushPendingNotifications(ctf);
     const bool fixedUpFocus = presShell->FixUpFocus();
     if (fixedUpFocus) {
-      MOZ_KnownLive(presShell)->FlushPendingNotifications(ctf);
+      presShell->FlushPendingNotifications(ctf);
     }
     // This is a bit subtle: We intentionally mark the pres shell as not
     // observing style flushes here, rather than above the flush, so that
@@ -2243,9 +2244,7 @@ void nsRefreshDriver::FlushLayoutOnPendingDocsAndFixUpFocus() {
     if (NS_WARN_IF(presShell->NeedStyleFlush()) ||
         NS_WARN_IF(presShell->NeedLayoutFlush()) ||
         NS_WARN_IF(fixedUpFocus && presShell->NeedsFocusFixUp())) {
-      if (MOZ_LIKELY(!presShell->IsDestroying())) {
-        presShell->ObserveStyleFlushes();
-      }
+      presShell->ObserveStyleFlushes();
     }
 
     // Inform the FontFaceSet that we ticked, so that it can resolve its ready

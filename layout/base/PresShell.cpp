@@ -10217,7 +10217,6 @@ bool PresShell::RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver) {
 }
 
 void PresShell::DoObserveStyleFlushes() {
-  MOZ_DIAGNOSTIC_ASSERT(!IsDestroying());
   MOZ_ASSERT(!ObservingStyleFlushes());
   mObservingStyleFlushes = true;
 
