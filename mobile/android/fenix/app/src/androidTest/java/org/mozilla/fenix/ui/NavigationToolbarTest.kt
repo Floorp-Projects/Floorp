@@ -47,7 +47,7 @@ class NavigationToolbarTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
-        }.openTabDrawer {
+        }.openComposeTabDrawer(composeTestRule) {
         }.openNewTab {
         }.submitQuery(secondWebPage.url.toString()) {
             swipeNavBarRight(secondWebPage.url.toString())
@@ -68,7 +68,7 @@ class NavigationToolbarTest : TestSetup() {
         runWithSystemLocaleChanged(arabicLocale, composeTestRule.activityRule) {
             navigationToolbar {
             }.enterURLAndEnterToBrowser(firstWebPage.url) {
-            }.openTabDrawer {
+            }.openComposeTabDrawer(composeTestRule) {
             }.openNewTab {
             }.submitQuery(secondWebPage.url.toString()) {
                 swipeNavBarLeft(secondWebPage.url.toString())
