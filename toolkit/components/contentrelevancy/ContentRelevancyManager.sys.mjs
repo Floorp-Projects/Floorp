@@ -25,6 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(
 const TIMER_ID = "content-relevancy-timer";
 const PREF_TIMER_LAST_UPDATE = `app.update.lastUpdateTime.${TIMER_ID}`;
 const PREF_TIMER_INTERVAL = "toolkit.contentRelevancy.timerInterval";
+const PREF_LOG_ENABLED = "toolkit.contentRelevancy.log";
 // Set the timer interval to 1 day for validation.
 const DEFAULT_TIMER_INTERVAL_SECONDS = 1 * 24 * 60 * 60;
 
@@ -43,17 +44,20 @@ const NIMBUS_VARIABLE_MIN_INPUT_URLS = "minInputUrls";
 const NIMBUS_VARIABLE_TIMER_INTERVAL = "timerInterval";
 const NIMBUS_VARIABLE_INGEST_ENABLED = "ingestEnabled";
 
-ChromeUtils.defineLazyGetter(lazy, "log", () => {
-  return console.createInstance({
-    prefix: "ContentRelevancyManager",
-    maxLogLevel: Services.prefs.getBoolPref(
-      "toolkit.contentRelevancy.log",
-      false
-    )
-      ? "Debug"
-      : "Error",
+// Setup the `lazy.log` object.  This is called on startup and also whenever `PREF_LOG_ENABLED`
+// changes.
+function setupLogging() {
+  ChromeUtils.defineLazyGetter(lazy, "log", () => {
+    return console.createInstance({
+      prefix: "ContentRelevancyManager",
+      maxLogLevel: Services.prefs.getBoolPref(PREF_LOG_ENABLED, false)
+        ? "Debug"
+        : "Error",
+    });
   });
-});
+}
+
+setupLogging();
 
 class RelevancyManager {
   get initialized() {
@@ -79,6 +83,7 @@ class RelevancyManager {
       this.#enable();
     }
 
+    Services.prefs.addObserver(PREF_LOG_ENABLED, this);
     this._nimbusUpdateCallback = this.#onNimbusUpdate.bind(this);
     // This will handle both Nimbus updates and pref changes.
     lazy.NimbusFeatures.contentRelevancy.onUpdate(this._nimbusUpdateCallback);
@@ -93,6 +98,7 @@ class RelevancyManager {
     lazy.log.info("Uninitializing the manager");
 
     lazy.NimbusFeatures.contentRelevancy.offUpdate(this._nimbusUpdateCallback);
+    Services.prefs.removeObserver(PREF_LOG_ENABLED, this);
     this.#disable();
 
     this.#initialized = false;
@@ -365,6 +371,20 @@ class RelevancyManager {
     this.#toggleFeature();
   }
 
+  /**
+   * Preference observer
+   */
+  observe(_subj, topic, data) {
+    switch (topic) {
+      case "nsPref:changed":
+        if (data === PREF_LOG_ENABLED) {
+          // Call setupLogging again so that the logger will be re-created with the updated pref
+          setupLogging();
+        }
+        break;
+    }
+  }
+
   // The `RustRelevancy` store.
   #_store;
 
@@ -387,3 +407,17 @@ class StoreNotAvailableError extends Error {
 }
 
 export var ContentRelevancyManager = new RelevancyManager();
+
+/**
+ * Exposed to provide an easy way for users to run a single classification
+ *
+ * This allows users to test out the relevancy component without too much hassle:
+ *
+ *  - Enable the `toolkit.contentRelevancy.log` pref
+ *  - Enable the `devtools.chrome.enabled` pref if it wasn't already
+ *  - Open the browser console and enter:
+ *    `ChromeUtils.importESModule("resource://gre/modules/ContentRelevancyManager.sys.mjs").classifyOnce()`
+ */
+export function classifyOnce() {
+  ContentRelevancyManager._test_doClassification();
+}
