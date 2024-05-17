@@ -577,7 +577,11 @@ var SidebarController = {
       commandID = this._box.getAttribute("sidebarcommand");
     }
     if (!commandID || !this.sidebars.has(commandID)) {
-      commandID = this.DEFAULT_SIDEBAR_ID;
+      if (this.sidebarRevampEnabled && this.sidebars.size) {
+        commandID = this.sidebars.keys().next().value;
+      } else {
+        commandID = this.DEFAULT_SIDEBAR_ID;
+      }
     }
 
     if (this.isOpen && commandID == this.currentID) {
