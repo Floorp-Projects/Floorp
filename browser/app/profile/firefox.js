@@ -1694,7 +1694,7 @@ pref("browser.newtab.preload", true);
 
 // Weather widget for newtab
 pref("browser.newtabpage.activity-stream.system.showWeather", false);
-pref("browser.newtabpage.activity-stream.showWeather", false);
+pref("browser.newtabpage.activity-stream.showWeather", true);
 pref("browser.newtabpage.activity-stream.weather.query", "");
 pref("browser.newtabpage.activity-stream.weather.locationSearchEnabled", false);
 pref("browser.newtabpage.activity-stream.weather.temperatureUnits", "f");
